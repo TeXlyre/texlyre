@@ -3,12 +3,22 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/png" href="./texlyre-icon-192.png" />
-  <meta name="viewport" content="width=1024, initial-scale=1.0, user-scalable=no" />
+  <link rel="icon" type="image/png" href="/src/assets/images/TeXlyre_notext.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    // Force desktop user agent for mobile browsers
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      Object.defineProperty(navigator, 'userAgent', {
+        get: function() {
+          return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36';
+        }
+      });
+    }
+  </script>
 <!--  <script src="TexlyrePdfTeXEngineSetup.js"></script>-->
 <!--  <script src="TexlyreXeTeXEngineSetup.js"></script>-->
 <!--  <script src="TexlyreDvipdfmxEngineSetup.js"></script>-->
-    <!-- PWA Manifest -->
+  <!-- PWA Manifest -->
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#000000">
 
