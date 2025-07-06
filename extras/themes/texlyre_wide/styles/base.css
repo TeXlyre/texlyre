@@ -1,0 +1,62 @@
+/* extras/themes/texlyre_wide/styles/base.css */
+[data-theme-plugin="texlyre"] {
+	--texlyre-font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+	--texlyre-code-font-family: "Fira Code", "Courier New", monospace;
+	--project-title-width: 460px;
+
+	--texlyre-spacing-xs: 0.25rem;
+	--texlyre-spacing-sm: 0.5rem;
+	--texlyre-spacing-md: 1rem;
+	--texlyre-spacing-lg: 1.5rem;
+	--texlyre-spacing-xl: 2rem;
+
+	--texlyre-radius-sm: 4px;
+	--texlyre-radius-md: 8px;
+	--texlyre-radius-lg: 12px;
+	--texlyre-radius-xl: 16px;
+
+	--texlyre-transition-fast: 0.15s ease;
+	--texlyre-transition-normal: 0.25s ease;
+	--texlyre-transition-slow: 0.4s ease;
+
+	--texlyre-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+	--texlyre-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+	--texlyre-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+	--texlyre-z-index-dropdown: 1000;
+	--texlyre-z-index-sticky: 1010;
+	--texlyre-z-index-fixed: 1020;
+	--texlyre-z-index-modal: 1030;
+	--texlyre-z-index-popup: 1040;
+	--texlyre-z-index-tooltip: 1050;
+
+	font-family: var(--texlyre-font-family);
+}
+
+[data-theme-plugin="texlyre"] .read-the-docs {
+	display: inline-block;
+	padding: var(--texlyre-spacing-xs) var(--texlyre-spacing-sm);
+	border-radius: var(--texlyre-radius-md);
+	font-size: 0.75rem;
+	background-color: var(--accent-background);
+	transition: all var(--texlyre-transition-normal);
+	color: var(--text-color);
+	margin-top: 0.3em;
+}
+
+[data-theme-plugin="texlyre"] .read-the-docs:hover {
+	background-color: var(--pico-primary-focus);
+	color: var(--pico-secondary);
+}
+
+[data-theme-plugin="texlyre"] button {
+	border-radius: var(--texlyre-radius-md);
+	transition: all var(--texlyre-transition-fast);
+	font-weight: 500;
+	color: var(--text-color);
+}
+
+[data-theme-plugin="texlyre"] *:focus-visible {
+	outline: 2px solid var(--pico-primary);
+	outline-offset: 2px;
+}

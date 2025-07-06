@@ -1,0 +1,99 @@
+/* Generic, reusable button styles */
+.button,
+.action-button {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	padding: 0.4rem 0.8rem;
+	background-color: transparent;
+	border: 1px solid var(--accent-border, #ddd);
+	border-radius: var(--radius-sm);
+	color: var(--text-color);
+	font-size: 0.9rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background-color var(--transition-normal);
+	text-decoration: none;
+	justify-content: center;
+}
+
+.button:hover,
+.action-button:hover {
+	background-color: var(--pico-primary-focus);
+}
+
+.button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.button.primary,
+.action-button.primary {
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse, #fff);
+	border: none;
+}
+
+.button.primary:hover,
+.action-button.primary:hover {
+	background-color: var(--pico-primary-hover);
+}
+
+.button.danger,
+.action-button.danger {
+	background-color: var(--color-error);
+	color: white;
+	border: none;
+}
+
+.button.danger:hover,
+.action-button.danger:hover {
+	background-color: #c82333;
+}
+
+.button.icon-only {
+	padding: var(--space-sm);
+	min-width: auto;
+	width: auto;
+	aspect-ratio: 1;
+}
+
+.button.icon-only svg,
+.action-button svg {
+	margin: 0;
+	flex-shrink: 0;
+}
+
+.back-button,
+.logout-button {
+	display: flex;
+	height: var(--button-height-lg);
+	align-items: center;
+	gap: var(--space-sm);
+	padding: 0.4rem 0.8rem;
+	background-color: transparent;
+	border: 1px solid var(--accent-border, #ddd);
+	border-radius: var(--radius-sm);
+	color: var(--text-color);
+	font-size: 0.9rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background-color var(--transition-normal);
+	text-decoration: none;
+	justify-content: center;
+}
+
+.back-button:hover,
+.logout-button:hover {
+	background-color: var(--pico-primary-focus);
+}
+
+.button.small {
+	padding: 0.375rem 0.75rem;
+	font-size: 0.875rem;
+}
+
+.button.smaller {
+	padding: 0.225rem 0.45rem;
+	font-size: 0.575rem;
+}

@@ -1,0 +1,260 @@
+/* extras/renderers/pdf/styles.css */
+.pdf-renderer-viewer,
+.pdf-renderer-viewer *,
+.pdf-renderer-viewer *::before,
+.pdf-renderer-viewer *::after {
+	box-sizing: content-box;
+}
+
+.pdf-renderer-container {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	width: 100%;
+	background-color: var(--pico-background);
+	overflow: hidden;
+	position: relative;
+}
+
+.pdf-toolbar {
+	display: flex;
+	height: 40px;
+	min-height: 40px;
+	padding: 0.5rem;
+	background-color: var(--pico-secondary-background);
+	border-bottom: 1px solid var(--accent-border, #333);
+	z-index: 10;
+}
+
+.toolbar {
+	display: flex;
+	width: 100%;
+}
+
+#toolbarLeft {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.toolbarButtonGroup {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.toolbarButton {
+	padding: 0.2rem 0.5rem;
+	font-size: 0.9rem;
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border, #444);
+	border-radius: 4px;
+	color: var(--text-color);
+	cursor: pointer;
+	transition: background-color 0.2s;
+}
+
+.toolbarButton:hover:not(:disabled) {
+	background-color: var(--pico-primary-focus);
+}
+
+.toolbarButton:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.pageNumber {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	margin: 0 5px;
+}
+
+.pageNumber input {
+	width: 3em;
+	text-align: center;
+	padding: 0.87rem;
+	margin: 0.02rem;
+	border: 1px solid var(--accent-border, #444);
+	border-radius: 4px;
+	background-color: var(--pico-background);
+	color: var(--text-color);
+	height: 24px;
+}
+
+.pdf-renderer-content {
+	position: absolute;
+	top: 40px;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	overflow: auto;
+	background-color: var(--pico-secondary-background);
+}
+
+.pdf-renderer-viewer {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+}
+
+.pdf-renderer-viewer .page {
+	margin: 10px auto;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	position: relative;
+}
+
+.pdf-renderer-loading {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	padding: 1rem 2rem;
+	background-color: var(--pico-background);
+	border-radius: 4px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	color: var(--text-color);
+	z-index: 100;
+}
+
+.pdf-renderer-error {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	padding: 1rem 2rem;
+	background-color: rgba(220, 53, 69, 0.1);
+	border: 1px solid rgba(220, 53, 69, 0.3);
+	border-radius: 4px;
+	color: #dc3545;
+	max-width: 80%;
+	text-align: center;
+	z-index: 100;
+}
+
+.textLayer {
+	position: absolute;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	overflow: hidden;
+	line-height: 1.0;
+	pointer-events: none;
+	z-index: 2;
+}
+
+.textLayer > span {
+	color: transparent;
+	position: absolute;
+	white-space: pre;
+	cursor: text;
+	transform-origin: 0% 0%;
+	user-select: text !important;
+	pointer-events: auto;
+}
+
+.textLayer .highlight {
+	margin: -1px;
+	padding: 1px;
+	background-color: rgba(180, 0, 255, 0.25);
+	border-radius: 4px;
+	pointer-events: none;
+}
+
+.textLayer .highlight.begin {
+	border-radius: 4px 0px 0px 4px;
+}
+
+.textLayer .highlight.end {
+	border-radius: 0px 4px 4px 0px;
+}
+
+.textLayer .highlight.middle {
+	border-radius: 0px;
+}
+
+.textLayer .highlight.selected {
+	background-color: rgba(0, 100, 255, 0.25);
+}
+
+.annotationLayer {
+	position: absolute;
+	top: 0;
+	left: 0;
+	pointer-events: none;
+	z-index: 3;
+}
+
+.annotationLayer section {
+	position: absolute;
+	text-align: initial;
+	pointer-events: auto;
+	user-select: none !important;
+}
+
+.annotationLayer .buttonWidgetAnnotation.pushButton > a {
+	position: absolute;
+	font-size: 1em;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+}
+
+.annotationLayer .textWidgetAnnotation input,
+.annotationLayer .textWidgetAnnotation textarea,
+.annotationLayer .choiceWidgetAnnotation select,
+.annotationLayer .buttonWidgetAnnotation.pushButton > a {
+	background: rgba(0, 54, 255, 0.13);
+	border: 1px solid transparent;
+	box-sizing: border-box;
+	font-size: 9px;
+	height: 100%;
+	margin: 0;
+	padding: 0 3px;
+	vertical-align: top;
+	width: 100%;
+}
+
+.annotationLayer .choiceWidgetAnnotation select option {
+	padding: 0;
+}
+
+.annotationLayer .buttonWidgetAnnotation.pushButton > a:hover,
+.annotationLayer .buttonWidgetAnnotation.pushButton > a:focus {
+	color: rgba(0, 0, 0, 1);
+	background: rgba(0, 54, 255, 0.13);
+}
+
+.annotationLayer .textWidgetAnnotation input:focus,
+.annotationLayer .textWidgetAnnotation textarea:focus,
+.annotationLayer .choiceWidgetAnnotation select:focus {
+	background: rgba(0, 54, 255, 0.13);
+	border: 1px solid transparent;
+}
+
+.annotationLayer .buttonWidgetAnnotation.checkBox input,
+.annotationLayer .buttonWidgetAnnotation.radioButton input {
+	background: rgba(0, 54, 255, 0.13);
+	border: 1px solid transparent;
+	box-sizing: border-box;
+	height: 100%;
+	margin: 0;
+	vertical-align: top;
+	width: 100%;
+}
+
+.annotationLayer .choiceWidgetAnnotation select {
+	background: rgba(0, 54, 255, 0.13);
+}
+
+.annotationLayer .buttonWidgetAnnotation.checkBox input[disabled],
+.annotationLayer .buttonWidgetAnnotation.radioButton input[disabled] {
+	background: rgba(0, 0, 0, 0.2);
+}
+
+.annotationLayer .linkAnnotation > a,
+.annotationLayer .buttonWidgetAnnotation.pushButton > a {
+	pointer-events: auto;
+}

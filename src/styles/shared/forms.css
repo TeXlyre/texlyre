@@ -1,0 +1,200 @@
+.form-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	margin-bottom: var(--space-md);
+}
+
+.form-group label {
+	display: block;
+	margin-bottom: var(--space-xs);
+	font-weight: 500;
+	color: var(--text-color);
+	font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select,
+.file-name-input,
+.search-input,
+.comment-search input,
+.chat-panel-input,
+.engine-select {
+	width: 100%;
+	padding: 0.5rem;
+	border: 1px solid var(--accent-border, #ddd);
+	border-radius: var(--radius-sm);
+	background-color: var(--pico-background);
+	color: var(--text-color);
+	font-family: inherit;
+	font-size: 0.9rem;
+	transition: border-color var(--transition-normal);
+}
+
+input[type="checkbox"],
+input[type="radio"],
+*[type="checkbox"],
+*[type="radio"] {
+	-webkit-appearance: none !important;
+	-moz-appearance: none !important;
+	appearance: none !important;
+	width: 16px !important;
+	height: 16px !important;
+	min-width: 16px !important;
+	min-height: 16px !important;
+	max-width: 16px !important;
+	max-height: 16px !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	margin-right: var(--space-sm) !important;
+	border: 2px solid var(--accent-border, #ddd) !important;
+	border-radius: var(--radius-sm) !important;
+	background-color: var(--pico-background) !important;
+	cursor: pointer !important;
+	position: relative !important;
+	flex-shrink: 0 !important;
+	transform: none !important;
+	box-shadow: none !important;
+	outline: none !important;
+}
+
+input[type="radio"],
+*[type="radio"] {
+	border-radius: 50% !important;
+}
+
+input[type="checkbox"]:checked,
+*[type="checkbox"]:checked {
+	background-color: var(--pico-primary) !important;
+	border-color: var(--pico-primary) !important;
+}
+
+input[type="checkbox"]:checked::before,
+*[type="checkbox"]:checked::before {
+	content: "✓" !important;
+	position: absolute !important;
+	top: 50% !important;
+	left: 50% !important;
+	transform: translate(-50%, -50%) !important;
+	color: white !important;
+	font-size: 10px !important;
+	font-weight: bold !important;
+	line-height: 1 !important;
+}
+
+input[type="radio"]:checked,
+*[type="radio"]:checked {
+	border-color: var(--pico-primary) !important;
+}
+
+input[type="radio"]:checked::before,
+*[type="radio"]:checked::before {
+	content: "" !important;
+	position: absolute !important;
+	top: 50% !important;
+	left: 50% !important;
+	transform: translate(-50%, -50%) !important;
+	width: 8px !important;
+	height: 8px !important;
+	border-radius: 50% !important;
+	background-color: var(--pico-primary) !important;
+}
+
+[data-theme="dark"] input[type="checkbox"],
+[data-theme="dark"] input[type="radio"],
+[data-theme="dark"] *[type="checkbox"],
+[data-theme="dark"] *[type="radio"] {
+	border-color: var(--accent-border, #555) !important;
+	background-color: var(--pico-background) !important;
+}
+
+input[type="checkbox"]:focus,
+input[type="radio"]:focus,
+*[type="checkbox"]:focus,
+*[type="radio"]:focus {
+	outline: 2px solid var(--pico-primary-focus) !important;
+	outline-offset: 2px !important;
+}
+
+input[type="checkbox"]:hover,
+input[type="radio"]:hover,
+*[type="checkbox"]:hover,
+*[type="radio"]:hover {
+	border-color: var(--pico-primary) !important;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus,
+.file-name-input:focus,
+.search-input:focus,
+.comment-search input:focus,
+.chat-panel-input:focus {
+	border-color: var(--pico-primary);
+	outline: none;
+	box-shadow: 0 0 0 2px var(--pico-primary-focus);
+}
+
+.form-group small,
+.setting-description,
+.field-note {
+	display: block;
+	margin-top: var(--space-xs);
+	font-size: 0.8rem;
+	color: var(--pico-secondary);
+}
+
+.form-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-sm);
+	margin-top: var(--space-md);
+}
+
+.checkbox-group,
+.checkbox-control {
+	flex-direction: row;
+	align-items: center;
+	gap: var(--space-sm);
+}
+
+.required {
+	color: var(--color-error);
+}
+
+.color-picker-group {
+	margin-bottom: var(--space-md);
+}
+
+.color-picker-group > label {
+	display: block;
+	margin-bottom: var(--space-sm);
+	font-weight: 500;
+	color: var(--text-color);
+}
+
+.color-picker-row {
+	display: flex;
+	gap: var(--space-md);
+}
+
+.color-picker-item {
+	flex: 1;
+	margin-bottom: 0;
+}
+
+.color-picker-item input[type="color"] {
+	width: 100%;
+	height: 2.5rem;
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	background: none;
+	padding: 0;
+}
+
+.color-picker-item input[type="color"]:disabled {
+	cursor: not-allowed;
+	opacity: 0.6;
+}

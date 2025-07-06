@@ -1,0 +1,53 @@
+:root {
+	/* Component Dimensions */
+	--sidebar-width: 250px;
+	--chat-panel-width: 320px;
+	--latex-output-width: 350px;
+	--comment-panel-width: 300px;
+	--file-explorer-width: 250px;
+	--project-title-width: 250px;
+	--quick-list-height: 350px;
+
+	/* Spacing Scale */
+	--space-us: 0.125rem;
+	--space-xs: 0.25rem;
+	--space-sm: 0.5rem;
+	--space-md: 1rem;
+	--space-lg: 1.5rem;
+	--space-xl: 2rem;
+
+	/* Button heights */
+	--button-height-sm: 32px;
+	--button-height-md: 40px;
+	--button-height-lg: 48px;
+	--button-height-xl: 56px;
+
+	/* Border Radius */
+	--radius-sm: 4px;
+	--radius-md: 6px;
+	--radius-lg: 8px;
+
+	/* Transitions */
+	--transition-fast: 0.15s;
+	--transition-normal: 0.25s;
+	--transition-slow: 0.4s;
+
+	/* Shadows */
+	--shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+	--shadow-md: 0 4px 8px rgba(0, 0, 0, 0.15);
+	--shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+
+	/* Z-Index Scale */
+	--z-dropdown: 1000;
+	--z-sticky: 1010;
+	--z-fixed: 1020;
+	--z-modal: 1030;
+	--z-popup: 1040;
+	--z-tooltip: 1050;
+
+	/* Common Colors */
+	--color-error: #dc3545;
+	--color-success: #28a745;
+	--color-warning: #ffc107;
+	--color-info: #007bff;
+}

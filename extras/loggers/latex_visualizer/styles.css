@@ -1,0 +1,344 @@
+/* extras/loggers/latex_visualizer/styles.css */
+.latex-visualizer {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	background-color: var(--pico-background);
+	color: var(--text-color);
+	border-radius: 8px;
+}
+
+.latex-visualizer-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.75rem 1rem;
+	border-bottom: 1px solid var(--accent-border);
+	background-color: var(--accent-background);
+	border-radius: 8px 8px 0 0;
+	flex-shrink: 0;
+}
+
+.latex-visualizer-header h3 {
+	margin: 0;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--text-color);
+}
+
+.error-stats {
+	display: flex;
+	gap: 1rem;
+	font-size: 0.85rem;
+	font-weight: 500;
+}
+
+.error-count,
+.warning-count {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	cursor: pointer;
+	padding: 0.25rem 0.5rem;
+	border-radius: 4px;
+	transition: background-color 0.2s ease;
+}
+
+.error-count {
+	color: #dc3545;
+}
+
+.warning-count {
+	color: #fd7e14;
+}
+
+.error-count:hover {
+	background-color: rgba(220, 53, 69, 0.1);
+}
+
+.warning-count:hover {
+	background-color: rgba(253, 126, 20, 0.1);
+}
+
+.error-count.active {
+	background-color: rgba(220, 53, 69, 0.15);
+	font-weight: 600;
+}
+
+.warning-count.active {
+	background-color: rgba(253, 126, 20, 0.15);
+	font-weight: 600;
+}
+
+.latex-visualizer-content {
+	flex: 1;
+	overflow-y: auto;
+	overflow-x: hidden;
+	padding: 1rem;
+	max-height: calc(100vh - 120px);
+}
+
+.no-errors {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	color: var(--pico-secondary);
+	text-align: center;
+	padding: 2rem;
+}
+
+.success-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.success-subtitle {
+	font-size: 0.85rem;
+	opacity: 0.8;
+	margin-top: 0.5rem;
+}
+
+.error-list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.error-item {
+	padding: 1rem;
+	border-radius: 8px;
+	border-left: 4px solid;
+	background-color: var(--accent-background);
+	transition: background-color 0.2s ease, box-shadow 0.2s ease;
+	position: relative;
+	box-sizing: border-box;
+}
+
+.error-item.clickable {
+	cursor: pointer;
+}
+
+.error-item.clickable:hover {
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.error-item.error {
+	border-left-color: #dc3545;
+	background-color: rgba(220, 53, 69, 0.05);
+}
+
+.error-item.error.clickable:hover {
+	background-color: rgba(220, 53, 69, 0.1);
+}
+
+.error-item.warning {
+	border-left-color: #fd7e14;
+	background-color: rgba(253, 126, 20, 0.05);
+}
+
+.error-item.warning.clickable:hover {
+	background-color: rgba(253, 126, 20, 0.1);
+}
+
+.error-item.info {
+	border-left-color: #0ea5e9;
+	background-color: rgba(14, 165, 233, 0.05);
+}
+
+.error-item.info.clickable:hover {
+	background-color: rgba(14, 165, 233, 0.1);
+}
+
+.error-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.5rem;
+	font-size: 0.85rem;
+	font-weight: 500;
+}
+
+.error-type-badge {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.25rem 0.5rem;
+	border-radius: 4px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.025em;
+}
+
+.error-item.error .error-type-badge {
+	background-color: rgba(220, 53, 69, 0.15);
+	color: #dc3545;
+}
+
+.error-item.warning .error-type-badge {
+	background-color: rgba(253, 126, 20, 0.15);
+	color: #fd7e14;
+}
+
+.error-item.info .error-type-badge {
+	background-color: rgba(14, 165, 233, 0.15);
+	color: #0ea5e9;
+}
+
+.error-icon {
+	font-size: 0.9rem;
+}
+
+.error-line {
+	color: var(--pico-primary);
+	font-weight: 500;
+	cursor: pointer;
+	padding: 0.25rem 0.5rem;
+	border-radius: 4px;
+	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
+	font-size: 0.75rem;
+	transition: background-color 0.2s ease;
+}
+
+.error-line:hover {
+	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.2);
+}
+
+.latex-error-message {
+	margin-bottom: 0.5rem;
+	font-size: 0.9rem;
+	line-height: 1.4;
+	color: var(--text-color);
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+}
+
+.error-context {
+	background-color: var(--pico-secondary-background);
+	border-radius: 4px;
+	padding: 0.75rem;
+	font-family: var(--code-font-family, "Fira Code", monospace);
+	font-size: 0.8rem;
+	margin: 0;
+	white-space: pre-wrap;
+	word-break: break-word;
+	border: 1px solid var(--accent-border);
+	overflow-x: auto;
+	max-width: 100%;
+}
+
+.error-item.clickable::after {
+	content: "👆";
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+	font-size: 0.8rem;
+	pointer-events: none;
+}
+
+.error-item.clickable:hover::after {
+	opacity: 0.6;
+}
+
+.error-location {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+.error-file {
+	color: var(--pico-secondary);
+	font-weight: 500;
+	font-size: 0.75rem;
+	padding: 0.25rem 0.5rem;
+	border-radius: 4px;
+	background-color: rgba(var(--pico-secondary-rgb, 108, 117, 125), 0.1);
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	cursor: default;
+}
+
+.error-file:hover {
+	background-color: rgba(var(--pico-secondary-rgb, 108, 117, 125), 0.15);
+}
+
+.latex-visualizer-content::-webkit-scrollbar {
+	width: 6px;
+}
+
+.latex-visualizer-content::-webkit-scrollbar-track {
+	background: var(--accent-background);
+}
+
+.latex-visualizer-content::-webkit-scrollbar-thumb {
+	background: var(--accent-border);
+	border-radius: 3px;
+}
+
+.latex-visualizer-content::-webkit-scrollbar-thumb:hover {
+	background: var(--pico-primary);
+}
+
+@media (max-width: 768px) {
+	.latex-visualizer-header {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.5rem;
+	}
+
+	.error-stats {
+		justify-content: center;
+	}
+
+	.error-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.5rem;
+	}
+
+	.error-location {
+		width: 100%;
+		justify-content: flex-start;
+	}
+
+	.error-item {
+		padding: 0.75rem;
+	}
+}
+
+@media (prefers-contrast: high) {
+	.error-item {
+		border: 2px solid var(--accent-border);
+		border-left-width: 6px;
+	}
+
+	.error-item.error {
+		border-color: #dc3545;
+	}
+
+	.error-item.warning {
+		border-color: #fd7e14;
+	}
+
+	.error-item.info {
+		border-color: #0ea5e9;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.error-item,
+	.error-line,
+	.error-count,
+	.warning-count {
+		transition: none;
+	}
+}

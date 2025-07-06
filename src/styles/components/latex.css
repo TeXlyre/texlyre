@@ -1,0 +1,266 @@
+.latex-output-container {
+	background-color: var(--pico-secondary-background);
+	border-radius: var(--radius-lg);
+	border-left: 1px solid var(--accent-border);
+	width: var(--latex-output-width);
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+}
+
+.main-file-display {
+	padding: var(--space-sm) 0;
+	border-bottom: 1px solid var(--accent-border);
+	margin-bottom: var(--space-sm);
+}
+
+.main-file-label,
+.engine-label {
+	font-size: 0.8rem;
+	color: var(--text-secondary-color);
+	margin-bottom: var(--space-xs);
+}
+
+.main-file-path {
+	font-size: 0.9rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.engine-selector {
+	padding: var(--space-sm) 0;
+}
+
+.latex-header-buttons {
+	position: absolute;
+	top: 0;
+	right: 250px;
+	padding: var(--space-md);
+	z-index: 10;
+}
+
+.latex-output {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+}
+
+.output-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: var(--space-sm);
+	border-bottom: 1px solid var(--accent-border);
+	flex-shrink: 0;
+}
+
+.view-tabs {
+	display: flex;
+	gap: var(--space-xs);
+}
+
+.tab-button {
+	padding: var(--space-xs) 0.75rem;
+	border-radius: var(--radius-sm);
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 0.9rem;
+	color: var(--text-color);
+	transition: background-color var(--transition-normal);
+}
+
+.tab-button.active {
+	background-color: var(--pico-primary-focus);
+	font-weight: 500;
+}
+
+.tab-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.output-content {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	height: 100%;
+	padding: 0;
+}
+
+.log-viewer {
+	flex: 1;
+	height: 100%;
+	overflow: auto;
+	font-family: monospace;
+	font-size: 0.85rem;
+	color: var(--text-color);
+	white-space: pre-wrap;
+	background-color: var(--pico-background);
+	padding: var(--space-sm);
+	border-radius: var(--radius-sm);
+	margin: var(--space-sm);
+}
+
+.pdf-viewer {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	height: 100%;
+}
+
+embed {
+	width: 100%;
+	height: 100%;
+	border: none;
+	flex: 1;
+}
+
+.compile-error {
+	padding: var(--space-sm);
+	margin: var(--space-sm);
+	background-color: rgba(220, 53, 69, 0.1);
+	border: 1px solid rgba(220, 53, 69, 0.3);
+	border-radius: var(--radius-sm);
+	color: var(--color-error);
+	font-size: 0.9rem;
+}
+
+.empty-state {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	color: var(--pico-secondary);
+	font-size: 0.9rem;
+	text-align: center;
+	padding: var(--space-md);
+}
+
+.editor-container-outer {
+	display: flex;
+	flex: 1;
+	overflow: hidden;
+	height: 100%;
+}
+
+.editor-output-container {
+	display: flex;
+	flex: 1;
+	height: 100%;
+	overflow: hidden;
+}
+
+.split-log-view {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.visualizer-panel-wrapper {
+	border-bottom: 1px solid var(--accent-border);
+}
+
+.visualizer-panel {
+	height: 100%;
+	overflow: auto;
+}
+
+.raw-log-panel {
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.raw-log-panel .log-viewer {
+	height: 100%;
+	margin: 0;
+	overflow: auto;
+}
+
+/* LaTeX-specific buttons */
+.latex-compile-buttons {
+	display: flex;
+	gap: var(--space-xs);
+	position: relative;
+}
+
+.compile-button-group {
+	display: flex;
+	height: var(--button-height-md);
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+}
+
+.latex-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.4rem;
+	background-color: var(--pico-secondary-background);
+	color: var(--text-color);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	transition: background-color var(--transition-normal);
+}
+
+.latex-dropdown {
+	position: absolute;
+	top: 100%;
+	right: 0;
+	margin-top: 2px;
+	min-width: 220px;
+	padding: var(--space-sm);
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-md);
+	z-index: var(--z-dropdown);
+	overflow: hidden;
+}
+
+.compile-button-group .latex-button {
+	border-radius: 0;
+}
+
+.compile-button-group .compile-button {
+	border-top-left-radius: var(--radius-sm);
+	border-bottom-left-radius: var(--radius-sm);
+}
+
+.compile-button-group .dropdown-toggle {
+	border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+	padding: 0.4rem var(--space-xs);
+	border-left: none;
+	width: 20px;
+}
+
+.latex-button:hover:not(:disabled) {
+	background-color: var(--pico-primary-focus);
+}
+
+.stop-button {
+	background-color: var(--color-error);
+	color: white;
+	border: none;
+}
+
+.stop-button:hover {
+	background-color: #c82333;
+}
+
+.header-compile-button {
+	margin-left: var(--space-md);
+}
+
+.compile-button.compiling {
+	opacity: 0.8;
+	cursor: wait;
+}

@@ -1,0 +1,43 @@
+{
+	"files": {
+		"include": [
+			"src/**/*",
+			"extras/**/*",
+			"scripts/**/*",
+			"build.ts",
+			"vite.config.ts",
+			"plugins.config.js",
+			"package.json",
+			"tsconfig.json",
+			"tsconfig.node.json",
+			"biome.json",
+			"**/*.cjs",
+			"**/*.css",
+			"**/*.html"
+		],
+		"ignore": ["**/__generated__/**", "dist/**", "build/**"]
+	},
+	"linter": {
+		"rules": {
+			"correctness": {
+				"useImportExtensions": "off"
+			}
+		}
+	},
+	"overrides": [
+		{
+			"include": ["**/*.ts", "**/*.tsx"],
+			"linter": {
+				"rules": {
+					"style": {
+						"useImportType": "error",
+						"useConst": "error"
+					},
+					"correctness": {
+						"noUnusedVariables": "error"
+					}
+				}
+			}
+		}
+	]
+}

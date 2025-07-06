@@ -1,0 +1,77 @@
+// src/App.tsx
+import "@picocss/pico/css/pico.min.css";
+
+import "./styles/global.css";
+import "./styles/components/editor.css";
+import "./styles/components/codemirror.css";
+import "./styles/components/file-explorer.css";
+import "./styles/components/backup-collab.css";
+import "./styles/components/resizable-panel.css";
+import "./styles/components/toast.css";
+import "./styles/components/comments.css";
+import "./styles/components/auth.css";
+import "./styles/components/project.css";
+import "./styles/components/share-project.css";
+import "./styles/components/chat.css";
+import "./styles/components/latex.css";
+import "./styles/components/plugin-header.css";
+import "./styles/components/settings.css";
+import "./styles/components/offline.css";
+
+import { useContext } from "react";
+import AppRouter from "./components/app/AppRouter";
+import PasswordModal from "./components/auth/PasswordModal";
+import FileConflictModal from "./components/editor/FileConflictModal";
+import FileOperationToast from "./components/editor/FileOperationToast.tsx";
+import { AuthProvider } from "./contexts/AuthContext";
+import { EditorProvider } from "./contexts/EditorContext";
+import { FileSystemBackupProvider } from "./contexts/FileSystemBackupContext";
+import { OfflineProvider } from "./contexts/OfflineContext";
+import { SecretsContext, SecretsProvider } from "./contexts/SecretsContext";
+import { SettingsProvider } from "./contexts/SettingsContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
+
+function App() {
+	return (
+		<OfflineProvider>
+			<SettingsProvider>
+				<ThemeProvider defaultThemeId="texlyre-theme" defaultVariant="system">
+					<AuthProvider>
+						<SecretsProvider>
+							<FileSystemBackupProvider>
+								<EditorProvider>
+									<AppContent />
+								</EditorProvider>
+							</FileSystemBackupProvider>
+						</SecretsProvider>
+					</AuthProvider>
+				</ThemeProvider>
+			</SettingsProvider>
+		</OfflineProvider>
+	);
+}
+
+function AppContent() {
+	const {
+		isPasswordModalOpen,
+		passwordModalMessage,
+		hidePasswordModal,
+		submitPassword,
+	} = useContext(SecretsContext);
+
+	return (
+		<>
+			<AppRouter />
+			<FileConflictModal />
+			<FileOperationToast />
+			<PasswordModal
+				isOpen={isPasswordModalOpen}
+				onClose={hidePasswordModal}
+				onPasswordSubmit={submitPassword}
+				message={passwordModalMessage}
+			/>
+		</>
+	);
+}
+
+export default App;

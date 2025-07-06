@@ -1,0 +1,46 @@
+// extras/viewers/image/ImageViewerPlugin.ts
+import type { ViewerPlugin } from "../../../src/plugins/PluginInterface";
+import CombinedImageViewer from "./CombinedImageViewer";
+import { imageViewerSettings } from "./settings";
+
+const IMAGE_EXTENSIONS = [
+	"png",
+	"jpg",
+	"jpeg",
+	"gif",
+	"bmp",
+	"webp",
+	"svg",
+	"ico",
+];
+
+const IMAGE_MIMETYPES = [
+	"image/png",
+	"image/jpeg",
+	"image/gif",
+	"image/bmp",
+	"image/webp",
+	"image/svg+xml",
+	"image/x-icon",
+];
+
+const imageViewerPlugin: ViewerPlugin = {
+	id: "texlyre-image-viewer",
+	name: "Image Viewer",
+	version: "1.0.0",
+	type: "viewer",
+	settings: imageViewerSettings, // Add this line
+
+	canHandle: (fileName: string, mimeType?: string): boolean => {
+		if (mimeType && IMAGE_MIMETYPES.includes(mimeType)) {
+			return true;
+		}
+
+		const extension = fileName.split(".").pop()?.toLowerCase();
+		return extension ? IMAGE_EXTENSIONS.includes(extension) : false;
+	},
+
+	renderViewer: CombinedImageViewer,
+};
+
+export default imageViewerPlugin;

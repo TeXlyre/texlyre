@@ -1,0 +1,239 @@
+.auth-container {
+	height: 100vh;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	background-color: var(--pico-background);
+	color: var(--text-color);
+}
+
+.auth-box {
+	width: 400px;
+	max-width: 90%;
+	background-color: var(--pico-secondary-background, #f9f9f9);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-lg);
+	padding: var(--space-xl);
+	margin-bottom: var(--space-xl);
+}
+
+.auth-logo-wrapper {
+	position: relative;
+	display: inline-block;
+	margin: 0 auto;
+}
+
+.auth-logo {
+	height: 80px;
+	position: relative;
+	z-index: 2;
+}
+
+.auth-logo-wrapper::before,
+.auth-logo-wrapper::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	border-radius: 50%;
+	background: radial-gradient(
+		circle,
+		rgba(64, 185, 255, 0.6) 0%,
+		rgba(0, 120, 255, 0) 70%
+	);
+	z-index: 1;
+	opacity: 0;
+	pointer-events: none;
+	animation: pulse-glow 3s infinite ease-in-out;
+}
+
+.auth-logo-wrapper::after {
+	animation-delay: 1.5s;
+	background: radial-gradient(
+		circle,
+		rgba(120, 64, 255, 0.5) 0%,
+		rgba(120, 0, 255, 0) 70%
+	);
+}
+
+@keyframes pulse-glow {
+	0% {
+		transform: scale(0.8);
+		opacity: 0;
+	}
+	50% {
+		opacity: 0.8;
+	}
+	100% {
+		transform: scale(1.2);
+		opacity: 0;
+	}
+}
+
+.auth-logo {
+	animation: logo-subtle-pulse 3s infinite ease-in-out;
+}
+
+@keyframes logo-subtle-pulse {
+	0% {
+		filter: brightness(1);
+	}
+	50% {
+		filter: brightness(1.1) drop-shadow(0 0 10px rgba(120, 64, 255, 0.5));
+	}
+	100% {
+		filter: brightness(1);
+	}
+}
+
+.auth-logo-wrapper:hover::before,
+.auth-logo-wrapper:hover::after {
+	animation-play-state: paused;
+	opacity: 0.8;
+}
+
+.auth-logo-wrapper:hover .auth-logo {
+	animation-play-state: paused;
+	filter: brightness(1.1) drop-shadow(0 0 10px rgba(120, 64, 255, 0.5));
+}
+
+.auth-header {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	margin-bottom: var(--space-lg);
+}
+
+.auth-header h1 {
+	margin-top: var(--space-sm);
+	margin-bottom: 0;
+	font-size: 1.8rem;
+	color: var(--pico-primary);
+}
+
+.auth-form-container {
+	width: 100%;
+}
+
+.auth-form-container h2 {
+	font-size: 1.4rem;
+	margin-bottom: var(--space-lg);
+	text-align: center;
+	color: var(--text-color);
+}
+
+.auth-form {
+	display: flex;
+	flex-direction: column;
+}
+
+.auth-error {
+	padding: var(--space-sm);
+	margin-bottom: var(--space-md);
+	background-color: rgba(220, 53, 69, 0.1);
+	border: 1px solid rgba(220, 53, 69, 0.3);
+	border-radius: var(--radius-sm);
+	color: var(--color-error);
+	font-size: 0.9rem;
+}
+
+.auth-alt-action {
+	text-align: center;
+	margin-top: var(--space-lg);
+	color: var(--text-color);
+}
+
+.text-button {
+	background: none;
+	border: none;
+	color: var(--pico-primary);
+	cursor: pointer;
+	font-weight: 500;
+	padding: var(--space-xs) var(--space-sm);
+	margin-left: var(--space-sm);
+	transition: text-decoration var(--transition-normal);
+}
+
+.text-button:hover:not(:disabled) {
+	text-decoration: underline;
+}
+
+.auth-footer {
+	margin-top: var(--space-md);
+	color: var(--pico-secondary);
+	font-size: 0.9rem;
+}
+
+/* Auth-specific buttons */
+.auth-button {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	padding: 0.4rem 0.8rem;
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse, #fff);
+	border: none;
+	border-radius: var(--radius-sm);
+	font-size: 0.9rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background-color var(--transition-normal);
+	text-decoration: none;
+	justify-content: center;
+}
+
+.auth-button:hover:not(:disabled) {
+	background-color: var(--pico-primary-hover);
+}
+
+.auth-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.auth-button.loading {
+	opacity: 0.8;
+	cursor: wait;
+}
+
+/* User dropdown - authentication/user management specific */
+.user-dropdown-container {
+	position: relative;
+}
+
+.user-dropdown-menu {
+	position: absolute;
+	top: 100%;
+	right: 0;
+	margin-top: var(--space-xs);
+	min-width: 180px;
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-md);
+	z-index: var(--z-dropdown);
+	overflow: hidden;
+}
+
+.user-dropdown-button {
+	display: flex;
+	height: var(--button-height-lg);
+	align-items: center;
+	gap: var(--space-sm);
+	padding: 0.4rem 0.8rem;
+	background-color: transparent;
+	/*border: 1px solid var(--accent-border);*/
+	border-radius: var(--radius-sm);
+	color: var(--text-color);
+	font-size: 0.9rem;
+	cursor: pointer;
+	transition: background-color var(--transition-normal);
+}
+
+.user-dropdown-button:hover {
+	background-color: var(--pico-primary-focus);
+}

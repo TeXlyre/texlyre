@@ -1,0 +1,351 @@
+/* extras/viewers/bibtex/styles.css */
+.bibtex-viewer-container {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	width: 100%;
+	background-color: var(--pico-secondary-background);
+	overflow: hidden;
+}
+
+.bibtex-viewer-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.5rem 1rem;
+	border-bottom: 1px solid var(--accent-border, #333);
+	background-color: var(--accent-background);
+	flex-shrink: 0;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.bibtex-controls {
+	display: flex;
+	gap: 0.75rem;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+/* View toggle special styling */
+.view-toggle {
+	padding: 0;
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+.view-toggle button {
+	border-radius: 0;
+	min-width: 60px;
+	font-size: 0.8rem;
+	border-left: none;
+	border-right: none;
+}
+
+.view-toggle button:first-child {
+	border-left: 1px solid var(--accent-border, #444);
+	border-radius: 4px 0 0 4px;
+}
+
+.view-toggle button:last-child {
+	border-right: 1px solid var(--accent-border, #444);
+	border-radius: 0 4px 4px 0;
+}
+
+.bibtex-viewer-main {
+	display: flex;
+	flex: 1;
+	overflow: hidden;
+}
+
+.bibtex-sidebar {
+	width: 300px;
+	background-color: var(--accent-background);
+	border-right: 1px solid var(--accent-border, #333);
+	overflow-y: auto;
+	flex-shrink: 0;
+}
+
+.sidebar-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.75rem;
+	border-bottom: 1px solid var(--accent-border, #333);
+}
+
+.sidebar-header h4 {
+	margin: 0;
+	color: var(--text-color);
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+
+.reset-button {
+	padding: 0.3rem;
+	font-size: 0.75rem;
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border, #444);
+	border-radius: 4px;
+	color: var(--text-color);
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 24px;
+	height: 24px;
+}
+
+.reset-button:hover {
+	background-color: var(--pico-primary-focus);
+	border-color: var(--pico-primary);
+}
+
+.options-container {
+	padding: 0.75rem;
+}
+
+.option-group {
+	margin-bottom: 1rem;
+}
+
+.option-group h5 {
+	margin: 0 0 0.5rem 0;
+	color: var(--text-color);
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.3px;
+	border-bottom: 1px solid var(--accent-border, #333);
+	padding-bottom: 0.2rem;
+}
+
+.option-item {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.25rem;
+	margin-bottom: 0.4rem;
+	font-size: 0.75rem;
+	color: var(--text-color);
+	cursor: pointer;
+	text-align: left;
+}
+
+.option-item:has(input[type="checkbox"]) {
+	flex-direction: row;
+	align-items: center;
+}
+
+.option-item > span {
+	margin-left: 0;
+	color: var(--text-color);
+	cursor: pointer;
+	text-align: left;
+	font-weight: 500;
+	line-height: 1.2;
+}
+
+.option-item input[type="number"],
+.option-item input[type="text"],
+.option-item select {
+	width: 100%;
+	max-width: 240px;
+	margin-left: 0;
+	padding: 0.25rem 0.35rem;
+	font-size: 0.75rem;
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border, #444);
+	border-radius: 3px;
+	color: var(--text-color);
+	transition: border-color 0.2s ease;
+	line-height: 1.2;
+}
+
+/* Sub-option styling */
+.option-item.sub-option {
+	margin-left: 1.5rem;
+	margin-bottom: 0.3rem;
+	position: relative;
+}
+
+.option-item.sub-option::before {
+	content: "";
+	position: absolute;
+	left: -0.75rem;
+	top: 0.1rem;
+	width: 0.5rem;
+	height: 1px;
+	background-color: var(--accent-border, #444);
+}
+
+.option-item.sub-option > span {
+	color: var(--pico-secondary);
+	font-weight: 400;
+}
+
+.option-item.sub-option input[type="number"],
+.option-item.sub-option input[type="text"],
+.option-item.sub-option select {
+	margin-left: 0;
+	width: 100%;
+}
+
+.option-item > span {
+	font-weight: 500;
+	line-height: 1.2;
+}
+
+.option-item input[type="checkbox"] {
+	width: auto;
+	margin: 0;
+	accent-color: var(--pico-primary);
+	transform: scale(0.9);
+}
+
+.option-item input[type="number"]:focus,
+.option-item input[type="text"]:focus,
+.option-item select:focus {
+	outline: none;
+	border-color: var(--pico-primary);
+}
+
+.option-item select {
+	cursor: pointer;
+}
+
+.option-item select[multiple] {
+	height: auto;
+	min-height: 60px;
+	padding: 0.2rem;
+	margin-left: 0;
+}
+
+.option-item select[multiple] option {
+	padding: 0.2rem 0.35rem;
+	font-size: 0.75rem;
+}
+
+.bibtex-content-area {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	background-color: var(--pico-background);
+}
+
+.bib-error-message {
+	padding: 1rem;
+	background-color: rgba(220, 53, 69, 0.1);
+	border: 1px solid rgba(220, 53, 69, 0.3);
+	border-radius: 8px;
+	color: #dc3545;
+	margin: 1rem;
+	flex-shrink: 0;
+}
+
+.warnings-container {
+	padding: 1rem;
+	background-color: rgba(255, 193, 7, 0.1);
+	border: 1px solid rgba(255, 193, 7, 0.3);
+	border-radius: 8px;
+	margin: 1rem;
+	flex-shrink: 0;
+}
+
+.warnings-container h5 {
+	margin: 0 0 0.5rem 0;
+	color: #856404;
+	font-size: 0.9rem;
+	font-weight: 600;
+}
+
+.warning-item {
+	font-size: 0.85rem;
+	color: #856404;
+	margin-bottom: 0.25rem;
+}
+
+.editor-containers {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.editor-container {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.editor-header {
+	padding: 0.5rem 1rem;
+	background-color: var(--accent-background);
+	border-bottom: 1px solid var(--accent-border, #333);
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--text-color);
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.processing-indicator {
+	color: var(--pico-primary);
+	font-weight: normal;
+	font-size: 0.8rem;
+}
+
+.codemirror-editor-container {
+	flex: 1;
+	overflow: hidden;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+	.bibtex-viewer-header {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.75rem;
+	}
+
+	.bibtex-controls {
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+
+	.control-group {
+		flex: 1;
+		min-width: max-content;
+	}
+
+	.bibtex-sidebar {
+		width: 100%;
+		max-width: 300px;
+	}
+}
+
+/* High contrast theme support */
+@media (prefers-contrast: high) {
+	.control-group {
+		border-width: 2px;
+	}
+
+	.control-group button,
+	.reset-button {
+		border-width: 2px;
+	}
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+	.control-group button,
+	.reset-button,
+	.option-item input,
+	.option-item select {
+		transition: none;
+	}
+}

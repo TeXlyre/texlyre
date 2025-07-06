@@ -1,0 +1,109 @@
+/* extras/themes/texlyre_wide/styles/components/file-explorer.css */
+[data-layout="texlyre-wide"] .view-toggle {
+	background-color: var(--accent-background);
+	border-bottom-color: var(--accent-border);
+}
+
+[data-layout="texlyre-wide"] .view-toggle button {
+	border-radius: 0;
+	padding: var(--texlyre-spacing-sm) var(--texlyre-spacing-md);
+	color: var(--text-color);
+	opacity: 0.7;
+	font-weight: 500;
+	font-size: 0.85rem;
+	transition: all var(--texlyre-transition-fast);
+}
+
+[data-layout="texlyre-wide"] .view-toggle button:hover {
+	opacity: 1;
+	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
+}
+
+[data-layout="texlyre-wide"] .view-toggle button.active {
+	opacity: 1;
+	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.15);
+	border-bottom: 2px solid var(--pico-primary);
+	font-weight: 600;
+}
+
+[data-layout="texlyre-wide"] .file-explorer-header {
+	padding: var(--texlyre-spacing-md) var(--texlyre-spacing-lg);
+	background-color: var(--accent-background);
+	border-bottom-color: var(--accent-border);
+}
+
+[data-layout="texlyre-wide"] .file-explorer-header h3 {
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--text-color);
+}
+
+[data-layout="texlyre-wide"] .action-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border-radius: var(--texlyre-radius-sm);
+	background-color: transparent;
+	border: none;
+	color: var(--text-color);
+	opacity: 0.7;
+	transition: all var(--texlyre-transition-fast);
+}
+
+[data-layout="texlyre-wide"] .action-btn:hover {
+	opacity: 1;
+	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
+}
+
+[data-layout="texlyre-wide"] .file-tree {
+	padding: var(--texlyre-spacing-sm) 0;
+}
+
+[data-layout="texlyre-wide"] .file-node {
+	padding: var(--texlyre-spacing-sm) var(--texlyre-spacing-lg);
+	margin: 1px var(--texlyre-spacing-sm);
+	border-radius: var(--texlyre-radius-sm);
+	transition: all var(--texlyre-transition-fast);
+	color: var(--text-color);
+}
+
+[data-layout="texlyre-wide"] .file-node:hover {
+	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
+}
+
+[data-layout="texlyre-wide"] .file-node.selected {
+	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.15);
+	font-weight: 500;
+}
+
+[data-layout="texlyre-wide"] .file-node.drag-over {
+	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.2);
+	outline: 1px dashed var(--pico-primary);
+}
+
+[data-layout="texlyre-wide"] .file-icon {
+	color: var(--pico-secondary);
+}
+
+[data-layout="texlyre-wide"] .file-node.selected .file-icon {
+	color: var(--pico-primary);
+}
+
+[data-layout="texlyre-wide"] .file-name {
+	font-size: 0.9rem;
+	color: var(--text-color);
+}
+
+[data-layout="texlyre-wide"] .directory-children {
+	margin-left: var(--texlyre-spacing-lg);
+}
+
+[data-layout="texlyre-wide"] .empty-state,
+[data-layout="texlyre-wide"] .loading {
+	color: var(--pico-secondary);
+	padding: var(--texlyre-spacing-lg);
+	text-align: center;
+	font-size: 0.9rem;
+}

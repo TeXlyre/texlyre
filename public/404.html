@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found</title>
+    <style>
+        :root {
+            --primary-color: #33C3F0;
+            --dark-gray: #333;
+        }
+
+        body {
+            font-family: "Raleway", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            color: var(--dark-gray);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 600px;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 6rem;
+            margin: 0;
+            color: var(--primary-color);
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+        }
+
+        p {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #1EAEDB;
+        }
+
+        .equation {
+            font-family: "Times New Roman", Times, serif;
+            font-style: italic;
+            font-size: 1.3rem;
+            margin: 2rem 0;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>404</h1>
+        <h2>Page Not Found</h2>
+        <div class="equation">
+            ∫<sub>page</sub> f(x) dx = 0
+        </div>
+        <p>The LaTeX document you're looking for seems to have vanished into a mathematical void. It might have been moved, isDeleted, or perhaps it never existed in this dimension.</p>
+        <p>Check the URL or navigate back to continue your work.</p>
+        <a href="/public" class="btn">Return to Editor</a>
+    </div>
+</body>
+</html>

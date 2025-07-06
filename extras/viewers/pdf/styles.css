@@ -1,0 +1,162 @@
+/* extras/viewers/pdf/styles.css */
+.pdf-viewer-container {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	width: 100%;
+	background-color: var(--pico-secondary-background);
+	overflow: hidden;
+}
+
+.pdf-viewer-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.5rem 1rem;
+	border-bottom: 1px solid var(--accent-border, #333);
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.pdf-controls {
+	display: flex;
+	gap: 0.75rem;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+/* Special styling for page input and zoom percentage */
+.page-input-group {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	padding: 0.25rem;
+	border-radius: 6px;
+	background-color: var(--accent-background);
+	border: 1px solid var(--accent-border, #444);
+}
+
+.page-input-group input {
+	width: 3em;
+	text-align: center;
+	margin-bottom: 0;
+	border: 1px solid var(--accent-border, #444);
+	border-radius: 4px;
+	background-color: var(--pico-background);
+	color: var(--text-color);
+	font-size: 0.85rem;
+	height: 24px;
+}
+
+.page-input-group span {
+	color: var(--text-color);
+	font-size: 0.85rem;
+	white-space: nowrap;
+}
+
+/* Special styling for zoom percentage button */
+.control-group button.zoom-percentage {
+	min-width: 50px;
+	font-size: 0.75rem;
+	font-weight: 600;
+}
+
+.pdf-viewer-content {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	justify-content: center;
+	overflow: auto;
+	padding: 1rem;
+	background-color: var(--pico-background);
+}
+
+.pdf-container {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	max-height: 100%;
+	max-width: 100%;
+	overflow: auto;
+}
+
+.pdf-page-container {
+	margin: 0 auto;
+	position: relative;
+	display: inline-block;
+	transition: transform 0.2s ease;
+}
+
+.pdf-page-canvas {
+	display: block;
+	margin: 0;
+	border: 1px solid var(--accent-border, #555);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.loading-indicator {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	padding: 2rem;
+	text-align: center;
+	color: var(--pico-secondary);
+	background-color: var(--accent-background);
+	border-radius: 8px;
+	border: 1px solid var(--accent-border);
+}
+
+.pdf-error-message {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	padding: 2rem;
+	text-align: center;
+	color: #dc3545;
+	background-color: rgba(220, 53, 69, 0.1);
+	border: 1px solid rgba(220, 53, 69, 0.3);
+	border-radius: 8px;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+	.pdf-viewer-header {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.75rem;
+	}
+
+	.pdf-controls {
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+
+	.control-group,
+	.page-input-group {
+		flex: 1;
+		min-width: max-content;
+	}
+}
+
+/* High contrast theme support */
+@media (prefers-contrast: high) {
+	.control-group,
+	.page-input-group {
+		border-width: 2px;
+	}
+
+	.control-group button,
+	.page-input-group input {
+		border-width: 2px;
+	}
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+	.control-group button,
+	.pdf-page-container {
+		transition: none;
+	}
+}

@@ -1,0 +1,272 @@
+@import "./shared/variables.css";
+@import "./shared/buttons.css";
+@import "./shared/forms.css";
+@import "./shared/modals.css";
+@import "./shared/dropdowns.css";
+
+:root {
+	font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+	line-height: 1.5;
+	font-weight: 400;
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	-webkit-text-size-adjust: 100%;
+}
+
+html {
+	height: 100%;
+}
+
+body {
+	margin: 0;
+	display: flex;
+	place-items: center;
+	height: 100%;
+	min-width: 320px;
+	min-height: 100vh;
+	color: var(--text-color);
+	background-color: var(--pico-background);
+}
+
+input[type="file"] {
+	color: var(--text-color);
+}
+
+input[type="file"]:disabled {
+	color: var(--pico-secondary);
+}
+
+input[type="file"]::-webkit-file-upload-button {
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+	border: none;
+	padding: var(--space-xs) var(--space-sm);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+input[type="file"]::-ms-browse {
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+	border: none;
+}
+
+a {
+	font-weight: 500;
+	color: var(--pico-primary);
+	text-decoration: inherit;
+}
+
+a:hover {
+	color: var(--pico-primary-hover);
+}
+
+h1 {
+	font-size: 1.8em;
+	line-height: 1.1;
+	margin-bottom: 0.1em;
+	color: var(--text-color);
+}
+
+button,
+select,
+input,
+textarea {
+	font-family: inherit;
+	color: var(--text-color);
+	border-radius: var(--radius-lg);
+	border: 1px solid transparent;
+	background-color: var(--pico-secondary-background);
+}
+
+button {
+	padding: 0.6em 1.2em;
+	font-size: 1em;
+	font-weight: 500;
+	cursor: pointer;
+	transition: border-color var(--transition-normal);
+}
+
+button:hover {
+	border-color: var(--pico-primary);
+}
+
+button:focus,
+button:focus-visible {
+	outline: 2px solid var(--pico-primary-focus);
+}
+
+.user-section {
+	display: flex;
+	align-items: center;
+	gap: var(--space-md);
+}
+
+.username {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	font-weight: 500;
+	color: var(--text-color);
+}
+
+#root {
+	max-width: 60%;
+	min-width: 800px;
+	height: 100%;
+	margin: 0 auto;
+	padding: var(--space-md);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-start;
+	width: 100%;
+}
+
+.app-container {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	width: 100%;
+}
+
+header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: var(--space-md);
+	padding: var(--space-sm) var(--space-md);
+	border-bottom: 1px solid var(--accent-border);
+}
+
+.header-left,
+.header-right {
+	display: flex;
+	min-width: 200px !important;
+	align-items: center;
+	gap: var(--space-md);
+}
+
+.header-center {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-md);
+}
+
+footer {
+	margin-top: var(--space-us);
+}
+
+.footnote {
+	font-size: 0.7em;
+	margin-top: var(--space-sm);
+	text-align: left;
+}
+
+.main-content {
+	display: flex;
+	flex: 1;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	gap: var(--space-md);
+}
+
+.read-the-docs {
+	color: var(--pico-primary);
+	text-align: center;
+	font-size: 0.8em;
+	margin: 0;
+	padding: 0;
+}
+
+.read-the-docs:hover {
+	color: var(--text-color);
+}
+
+.read-the-docs .logo {
+	color: inherit;
+	text-decoration: none;
+	margin-bottom: var(--space-us);
+}
+
+.logo {
+	height: 1.9em;
+	width: 1.9em;
+	padding: 0;
+	padding-left: var(--space-sm);
+	margin: 0;
+	object-fit: contain;
+	flex-shrink: 0;
+	will-change: filter;
+	transition: filter 300ms;
+}
+
+@media (max-width: 1.9em) {
+	.logo {
+		display: none;
+	}
+}
+
+.logo:hover {
+	filter: drop-shadow(0 0 2em var(--pico-primary-focus));
+}
+
+.theme-manager {
+	display: flex;
+	justify-content: center;
+	margin-top: var(--space-sm);
+}
+
+.theme-selector {
+	display: flex;
+	gap: var(--space-sm);
+}
+
+.theme-selector select {
+	padding: 0.3rem var(--space-sm);
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--pico-secondary);
+	background-color: var(--pico-background);
+}
+
+[data-theme="light"] {
+	color-scheme: light;
+}
+
+[data-theme="dark"] {
+	color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+	:root {
+		color-scheme: light;
+	}
+	button {
+		background-color: var(--pico-secondary-background);
+	}
+}
+
+.error-message,
+.warning-message,
+.success-message {
+	padding: 0.75rem;
+	border-radius: var(--radius-sm);
+	margin-bottom: var(--space-md);
+}
+
+.error-message,
+.warning-message {
+	background-color: rgba(220, 53, 69, 0.1);
+	border: 1px solid rgba(220, 53, 69, 0.3);
+	color: var(--color-error);
+}
+
+.success-message {
+	background-color: rgba(40, 167, 69, 0.1);
+	border: 1px solid rgba(40, 167, 69, 0.3);
+	color: var(--color-success);
+}

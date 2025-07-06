@@ -1,0 +1,8 @@
+/* extras/themes/texlyre_wide/styles/components/footer.css */
+[data-layout="texlyre-wide"] footer {
+	font-size: 0.85rem;
+}
+
+[data-layout="texlyre-wide"] footer p {
+	margin: 0;
+}

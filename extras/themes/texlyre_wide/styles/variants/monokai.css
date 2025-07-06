@@ -1,0 +1,21 @@
+/* extras/themes/texlyre_wide/styles/variants/monokai.css */
+[data-theme="monokai"][data-theme-plugin="texlyre"] {
+	--accent-background: #383830;
+	--accent-border: #49483e;
+	--editor-background: #272822;
+	--editor-text: #f8f8f2;
+	--sidebar-background: #1e1f1c;
+	--sidebar-border: #49483e;
+	--text-color: #f8f8f2;
+
+	--pico-primary-rgb: 166, 226, 46;
+	--pico-secondary-rgb: 253, 151, 31;
+
+	--syntax-keyword: #f92672;
+	--syntax-function: #a6e22e;
+	--syntax-string: #e6db74;
+	--syntax-number: #ae81ff;
+	--syntax-comment: #75715e;
+	--syntax-variable: #fd971f;
+	--syntax-tag: #66d9ef;
+}

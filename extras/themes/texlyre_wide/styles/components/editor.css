@@ -1,0 +1,57 @@
+/* extras/themes/texlyre_wide/styles/components/editor.css */
+[data-layout="texlyre-wide"] .editor-wrapper {
+	flex: 1;
+	overflow: hidden;
+}
+
+[data-layout="texlyre-wide"] .cursor-indicators {
+	padding: var(--texlyre-spacing-xs) var(--texlyre-spacing-sm);
+	background-color: var(--accent-background);
+	border-bottom: 1px solid var(--accent-border);
+	gap: var(--texlyre-spacing-sm);
+}
+
+[data-layout="texlyre-wide"] .cursor-indicator {
+	border-radius: var(--texlyre-radius-sm);
+	padding: var(--texlyre-spacing-xs) var(--texlyre-spacing-sm);
+	font-size: 0.75rem;
+	font-weight: 500;
+	color: var(--pico-background);
+}
+
+[data-layout="texlyre-wide"] .editor-container.empty-state {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	color: var(--pico-secondary);
+	padding: var(--texlyre-spacing-xl);
+}
+
+[data-layout="texlyre-wide"] .editor-container.empty-state p {
+	max-width: 500px;
+	text-align: center;
+	opacity: 0.8;
+	font-size: 1.1rem;
+	color: var(--text-color);
+}
+
+[data-layout="texlyre-wide"] .editor-container.binary-file {
+	padding: var(--texlyre-spacing-xl);
+}
+
+[data-layout="texlyre-wide"] .binary-file-message {
+	background-color: var(--accent-background);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--texlyre-radius-lg);
+	padding: var(--texlyre-spacing-xl);
+	box-shadow: var(--texlyre-shadow-md);
+	color: var(--text-color);
+}
+
+[data-layout="texlyre-wide"] .viewer-plugin-info {
+	padding: var(--texlyre-spacing-xs) var(--texlyre-spacing-sm);
+	background-color: var(--accent-background);
+	font-size: 0.5rem;
+	color: var(--pico-secondary);
+}

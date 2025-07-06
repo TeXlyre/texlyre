@@ -1,0 +1,10 @@
+/* extras/themes/texlyre_slim/styles/variants/tomorrow_night_blue.css */
+[data-theme="tomorrow_night_blue"][data-theme-plugin="texlyre-slim"] {
+	--accent-background: #1c2733;
+	--accent-border: #2c3640;
+	--text-color: #d1d5db;
+	--editor-background: #0d1117;
+	--editor-text: #d1d5db;
+	--sidebar-background: #1a242f;
+	--sidebar-border: #30363d;
+}

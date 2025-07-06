@@ -1,0 +1,190 @@
+.settings-container {
+	display: flex;
+	height: 70vh;
+	max-height: 700px;
+	overflow: hidden;
+}
+
+.settings-sidebar {
+	width: 250px;
+	border-right: 1px solid var(--accent-border);
+	overflow-y: auto;
+	background-color: var(--pico-secondary-background);
+}
+
+.settings-search {
+	position: relative;
+	padding: var(--space-sm);
+	border-bottom: 1px solid var(--accent-border);
+}
+
+.settings-search .search-input {
+	width: 100%;
+	padding: var(--space-sm);
+	padding-right: 2rem;
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	background-color: var(--pico-background);
+	color: var(--text-color);
+	font-family: inherit;
+	font-size: 0.9rem;
+}
+
+.settings-search .clear-search-button {
+	position: absolute;
+	right: calc(var(--space-sm) + 0.5rem);
+	top: 40%;
+	transform: translateY(-50%);
+	padding: 0;
+	margin: 0;
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 1.2rem;
+	color: var(--pico-secondary);
+	width: 1.5rem;
+	height: 1.5rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.search-highlight {
+	background-color: yellow;
+	color: black;
+	padding: 0 1px;
+	border-radius: 2px;
+}
+
+.no-results {
+	padding: var(--space-md);
+	text-align: center;
+	color: var(--pico-secondary);
+	font-size: 0.9rem;
+	font-style: italic;
+}
+
+.setting-with-highlight {
+	position: relative;
+}
+
+.settings-content {
+	flex: 1;
+	padding: 0 var(--space-md);
+	overflow-y: auto;
+}
+
+.settings-content h3 {
+	margin-top: var(--space-sm);
+	padding-bottom: var(--space-sm);
+	border-bottom: 1px solid var(--accent-border);
+}
+
+.settings-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+	margin-bottom: var(--space-lg);
+}
+
+.category-item {
+	padding: 0.75rem var(--space-md);
+	cursor: pointer;
+	font-weight: 500;
+	transition: background-color var(--transition-normal);
+}
+
+.category-item:hover {
+	background-color: var(--pico-primary-focus);
+}
+
+.category-item.active {
+	background-color: var(--pico-primary-focus);
+	border-left: 3px solid var(--pico-primary);
+}
+
+.subcategories {
+	margin-left: var(--space-md);
+}
+
+.subcategory-item {
+	padding: var(--space-sm) var(--space-md);
+	cursor: pointer;
+	font-size: 0.9rem;
+	transition: background-color var(--transition-normal);
+}
+
+.subcategory-item:hover {
+	background-color: var(--pico-primary-focus);
+}
+
+.subcategory-item.active {
+	font-weight: 500;
+	color: var(--pico-primary);
+}
+
+.setting-control {
+	margin-bottom: var(--space-md);
+}
+
+.checkbox-control {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	cursor: pointer;
+}
+
+.select-control,
+.text-control,
+.number-control,
+.color-control {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+}
+
+.select-control select,
+.text-control input,
+.number-control input {
+	padding: var(--space-sm);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	background-color: var(--pico-background);
+	color: var(--text-color);
+}
+
+.color-control input {
+	padding: 2px;
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	height: 32px;
+	width: 64px;
+}
+
+.no-settings {
+	padding: var(--space-md);
+	text-align: center;
+	color: var(--pico-secondary);
+}
+
+.settings-button {
+	display: flex;
+	height: var(--button-height-md);
+	align-items: center;
+	gap: var(--space-sm);
+	padding: 0.4rem 0.8rem;
+	background-color: transparent;
+	border: 1px solid var(--accent-border, #ddd);
+	border-radius: var(--radius-sm);
+	color: var(--text-color);
+	font-size: 0.9rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background-color var(--transition-normal);
+	text-decoration: none;
+	justify-content: center;
+}
+
+.settings-button:hover {
+	background-color: var(--pico-primary-focus);
+}

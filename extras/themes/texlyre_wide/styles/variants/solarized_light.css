@@ -1,0 +1,21 @@
+/* extras/themes/texlyre_wide/styles/variants/solarized_light.css */
+[data-theme="solarized_light"][data-theme-plugin="texlyre"] {
+	--accent-background: #eee8d5;
+	--accent-border: #d3cbb7;
+	--editor-background: #fdf6e3;
+	--editor-text: #657b83;
+	--sidebar-background: #eee8d5;
+	--sidebar-border: #d3cbb7;
+	--text-color: #657b83;
+
+	--pico-primary-rgb: 38, 139, 210;
+	--pico-secondary-rgb: 147, 161, 161;
+
+	--syntax-keyword: #859900;
+	--syntax-function: #268bd2;
+	--syntax-string: #2aa198;
+	--syntax-number: #d33682;
+	--syntax-comment: #93a1a1;
+	--syntax-variable: #b58900;
+	--syntax-tag: #dc322f;
+}

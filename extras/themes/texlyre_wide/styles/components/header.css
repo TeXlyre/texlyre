@@ -1,0 +1,113 @@
+/* extras/themes/texlyre_wide/styles/components/header.css */
+[data-layout="texlyre-wide"] header .logo {
+	height: calc(var(--texlyre-header-height) * 0.55);
+	transition: all var(--texlyre-transition-normal);
+}
+
+[data-layout="texlyre-wide"] header .logo:hover {
+	filter: drop-shadow(0 0 2px var(--pico-primary));
+	transform: scale(1.05);
+}
+
+[data-layout="texlyre-wide"] header h1 {
+	font-size: 1.6rem;
+	margin: 0;
+	font-weight: 600;
+	color: var(--pico-primary);
+}
+
+[data-layout="texlyre-wide"] .header-left {
+	display: flex;
+	align-items: center;
+	gap: var(--texlyre-spacing-lg);
+}
+
+[data-layout="texlyre-wide"] .header-center {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
+	max-width: 600px;
+}
+
+[data-layout="texlyre-wide"] .project-title-header {
+	display: flex;
+	align-items: center;
+	gap: var(--texlyre-spacing-sm);
+	max-width: var(--project-title-width, 100%);
+}
+
+[data-layout="texlyre-wide"] .project-title-container {
+	display: flex;
+	align-items: center;
+	gap: var(--texlyre-spacing-sm);
+	cursor: pointer;
+	transition: opacity var(--texlyre-transition-normal);
+}
+
+[data-layout="texlyre-wide"] .project-title {
+	margin: 0;
+	font-size: 0.8rem;
+	color: var(--text-color);
+	font-weight: 600;
+}
+
+[data-layout="texlyre-wide"] .project-description {
+	margin: 2px 0 0 0;
+	padding: 0;
+	color: var(--pico-secondary);
+	font-size: 0.7rem;
+	text-align: center;
+	border: none;
+	max-width: var(--project-title-width, 450px);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+[data-layout="texlyre-wide"] .project-description p {
+	margin: var(--texlyre-spacing-sm);
+	margin-top: 0;
+	margin-bottom: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	padding: var(--texlyre-spacing-sm);
+	padding-top: 0;
+	padding-bottom: 0;
+}
+
+[data-layout="texlyre-wide"] .header-right {
+	display: flex;
+	align-items: center;
+	gap: var(--texlyre-spacing-md);
+}
+
+[data-layout="texlyre-wide"] .theme-selector {
+	display: flex;
+	gap: var(--texlyre-spacing-sm);
+	background-color: var(--accent-background);
+	padding: var(--texlyre-spacing-xs) var(--texlyre-spacing-sm);
+	border-radius: var(--texlyre-radius-md);
+	border: 1px solid var(--accent-border);
+}
+
+[data-layout="texlyre-wide"] .theme-selector select {
+	padding: var(--texlyre-spacing-xs) var(--texlyre-spacing-sm);
+	border-radius: var(--texlyre-radius-sm);
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border);
+	color: var(--text-color);
+	font-size: 0.85rem;
+	transition: all var(--texlyre-transition-fast);
+}
+
+[data-layout="texlyre-wide"] .theme-selector select:hover {
+	border-color: var(--pico-primary);
+}
+
+[data-layout="texlyre-wide"] .theme-selector select:focus {
+	border-color: var(--pico-primary);
+	outline: none;
+	box-shadow: 0 0 0 2px var(--pico-primary-focus);
+}

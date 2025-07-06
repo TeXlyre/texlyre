@@ -1,0 +1,143 @@
+.resizable-panel {
+	overflow: hidden;
+	flex-shrink: 0;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.resize-handle {
+	position: absolute;
+	background-color: transparent;
+	z-index: 10;
+	transition: background-color var(--transition-normal);
+}
+
+.resize-handle:hover,
+.resize-handle:active {
+	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.3);
+}
+
+.resize-handle.horizontal {
+	cursor: col-resize;
+	height: 100%;
+	width: 4px;
+	top: 0;
+}
+
+.resize-handle.horizontal.right {
+	right: 0;
+}
+
+.resize-handle.horizontal.left {
+	left: 0;
+}
+
+.resize-handle.vertical {
+	cursor: row-resize;
+	width: 100%;
+	height: 4px;
+	left: 0;
+}
+
+.resize-handle.vertical.bottom {
+	bottom: 0;
+}
+
+.resize-handle.vertical.top {
+	top: 0;
+}
+
+.collapse-button {
+	position: absolute;
+	z-index: 11;
+	background-color: rgba(255, 255, 255, 0.7);
+	border: none;
+	border-radius: var(--space-sm);
+	width: 24px;
+	height: 24px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	opacity: 0.5;
+	transition: opacity var(--transition-normal);
+}
+
+.collapse-button:hover {
+	opacity: 1;
+}
+
+.collapse-button.right {
+	right: -12px;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.collapse-button.left {
+	left: -12px;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.collapse-button.top {
+	top: -12px;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.collapse-button.bottom {
+	bottom: -12px;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.collapse-button.always-visible {
+	opacity: 1;
+	border: 1px solid var(--pico-primary);
+}
+
+.collapse-icon {
+	display: inline-block;
+	font-weight: bold;
+	transition: transform var(--transition-normal);
+}
+
+.resizable-panel.collapsed {
+	overflow: visible;
+	opacity: 0.8;
+}
+
+.resizable-panel.collapsed:hover {
+	opacity: 1;
+}
+
+.panel-content {
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+}
+
+.panel-content.hidden {
+	display: none;
+}
+
+.resizable-panel.dragging .resize-handle {
+	background-color: var(--pico-primary);
+}
+
+body.resizing,
+body.resizing * {
+	user-select: none !important;
+}
+
+body.resizing.horizontal-resize,
+body.resizing.horizontal-resize * {
+	cursor: col-resize !important;
+}
+
+body.resizing.vertical-resize,
+body.resizing.vertical-resize * {
+	cursor: row-resize !important;
+}

@@ -1,0 +1,10 @@
+/* extras/themes/texlyre_slim/styles/variants/solarized_light.css */
+[data-theme="solarized_light"][data-theme-plugin="texlyre-slim"] {
+	--accent-background: #eee8d5;
+	--accent-border: #d3cbb7;
+	--text-color: #657b83;
+	--editor-background: #fdf6e3;
+	--editor-text: #657b83;
+	--sidebar-background: #eee8d5;
+	--sidebar-border: #d3cbb7;
+}

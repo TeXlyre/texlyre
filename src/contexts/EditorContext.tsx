@@ -1,0 +1,300 @@
+// src/contexts/EditorContext.tsx
+import type React from "react";
+import {
+	type ReactNode,
+	createContext,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
+
+import { useSettings } from "../hooks/useSettings";
+import type {
+	EditorSettings,
+	FontFamily,
+	FontSize,
+} from "../types/editorSettings";
+import {
+	defaultEditorSettings,
+	fontFamilyMap,
+	fontSizeMap,
+} from "../types/editorSettings";
+
+interface EditorContextType {
+	editorSettings: EditorSettings;
+	updateEditorSetting: <K extends keyof EditorSettings>(
+		key: K,
+		value: EditorSettings[K],
+	) => void;
+	getFontSize: () => string;
+	getFontFamily: () => string;
+	getLineNumbersEnabled: () => boolean;
+	getSyntaxHighlightingEnabled: () => boolean;
+	getAutoSaveEnabled: () => boolean;
+	getAutoSaveDelay: () => number;
+	editorSettingsVersion: number;
+}
+
+export const EditorContext = createContext<EditorContextType>({
+	editorSettings: defaultEditorSettings,
+	updateEditorSetting: () => {},
+	getFontSize: () => "14px",
+	getFontFamily: () => fontFamilyMap.monospace,
+	getLineNumbersEnabled: () => true,
+	getSyntaxHighlightingEnabled: () => true,
+	getAutoSaveEnabled: () => false,
+	getAutoSaveDelay: () => 2000,
+	editorSettingsVersion: 0,
+});
+
+interface EditorProviderProps {
+	children: ReactNode;
+}
+
+export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
+	const { getSetting, registerSetting } = useSettings();
+	const [editorSettings, setEditorSettings] = useState<EditorSettings>(
+		defaultEditorSettings,
+	);
+	const [editorSettingsVersion, setEditorSettingsVersion] = useState(0);
+	const settingsRegisteredOnce = useRef(false);
+
+	const updateEditorSetting = useCallback(
+		<K extends keyof EditorSettings>(key: K, value: EditorSettings[K]) => {
+			setEditorSettings((prev) => ({ ...prev, [key]: value }));
+			setEditorSettingsVersion((prev) => prev + 1);
+		},
+		[],
+	);
+
+	const applyCSSProperties = useCallback((settings: EditorSettings) => {
+		document.documentElement.style.setProperty(
+			"--editor-font-size",
+			fontSizeMap[settings.fontSize],
+		);
+		document.documentElement.style.setProperty(
+			"--editor-font-family",
+			fontFamilyMap[settings.fontFamily],
+		);
+	}, []);
+
+	useEffect(() => {
+		if (settingsRegisteredOnce.current) return;
+		settingsRegisteredOnce.current = true;
+
+		const initialFontSize =
+			(getSetting("editor-font-size")?.value as FontSize) ??
+			defaultEditorSettings.fontSize;
+		const initialFontFamily =
+			(getSetting("editor-font-family")?.value as FontFamily) ??
+			defaultEditorSettings.fontFamily;
+		const initialShowLineNumbers =
+			(getSetting("editor-show-line-numbers")?.value as boolean) ??
+			defaultEditorSettings.showLineNumbers;
+		const initialSyntaxHighlighting =
+			(getSetting("editor-syntax-highlighting")?.value as boolean) ??
+			defaultEditorSettings.syntaxHighlighting;
+		const initialAutoSaveEnabled =
+			(getSetting("editor-auto-save-enable")?.value as boolean) ??
+			defaultEditorSettings.autoSaveEnabled;
+		const initialAutoSaveDelay =
+			(getSetting("editor-auto-save-delay")?.value as number) ??
+			defaultEditorSettings.autoSaveDelay;
+		const initialHighlightTheme =
+			(getSetting("editor-theme-highlights")?.value as
+				| "auto"
+				| "light"
+				| "dark") ?? defaultEditorSettings.highlightTheme;
+
+		const loadedSettings = {
+			fontSize: initialFontSize,
+			fontFamily: initialFontFamily,
+			showLineNumbers: initialShowLineNumbers,
+			syntaxHighlighting: initialSyntaxHighlighting,
+			autoSaveEnabled: initialAutoSaveEnabled,
+			autoSaveDelay: initialAutoSaveDelay,
+			highlightTheme: initialHighlightTheme,
+		};
+
+		setEditorSettings(loadedSettings);
+		setEditorSettingsVersion((prev) => prev + 1);
+		applyCSSProperties(loadedSettings);
+
+		registerSetting({
+			id: "editor-font-size",
+			category: "Appearance",
+			subcategory: "Text Editor",
+			type: "select",
+			label: "Font size",
+			description: "Select the font size for the editor",
+			defaultValue: defaultEditorSettings.fontSize,
+			options: [
+				{ label: "Extra Small (10px)", value: "xs" },
+				{ label: "Small (12px)", value: "sm" },
+				{ label: "Base (14px)", value: "base" },
+				{ label: "Large (16px)", value: "lg" },
+				{ label: "Extra Large (18px)", value: "xl" },
+				{ label: "2X Large (20px)", value: "2xl" },
+				{ label: "3X Large (24px)", value: "3xl" },
+			],
+			onChange: (value) => {
+				const fontSize = value as FontSize;
+				updateEditorSetting("fontSize", fontSize);
+				document.documentElement.style.setProperty(
+					"--editor-font-size",
+					fontSizeMap[fontSize],
+				);
+			},
+		});
+
+		registerSetting({
+			id: "editor-font-family",
+			category: "Appearance",
+			subcategory: "Text Editor",
+			type: "select",
+			label: "Font family",
+			description: "Select the font family for the editor",
+			defaultValue: defaultEditorSettings.fontFamily,
+			options: [
+				{ label: "Monospace (System)", value: "monospace" },
+				{ label: "JetBrains Mono", value: "jetbrains-mono" },
+				{ label: "Fira Code", value: "fira-code" },
+				{ label: "Source Code Pro", value: "source-code-pro" },
+				{ label: "Inconsolata", value: "inconsolata" },
+				{ label: "Serif", value: "serif" },
+				{ label: "Sans Serif", value: "sans-serif" },
+			],
+			onChange: (value) => {
+				const fontFamily = value as FontFamily;
+				updateEditorSetting("fontFamily", fontFamily);
+				document.documentElement.style.setProperty(
+					"--editor-font-family",
+					fontFamilyMap[fontFamily],
+				);
+			},
+		});
+
+		registerSetting({
+			id: "editor-show-line-numbers",
+			category: "Appearance",
+			subcategory: "Text Editor",
+			type: "checkbox",
+			label: "Show line numbers",
+			description: "Show line numbers in the editor",
+			defaultValue: defaultEditorSettings.showLineNumbers,
+			onChange: (value) => {
+				updateEditorSetting("showLineNumbers", value as boolean);
+			},
+		});
+
+		registerSetting({
+			id: "editor-syntax-highlighting",
+			category: "Appearance",
+			subcategory: "Text Editor",
+			type: "checkbox",
+			label: "Show syntax highlighting",
+			description:
+				"Show syntax highlighting in the editor including tooltip and linting (LaTeX, BibTeX, and markdown)",
+			defaultValue: defaultEditorSettings.syntaxHighlighting,
+			onChange: (value) => {
+				updateEditorSetting("syntaxHighlighting", value as boolean);
+			},
+		});
+
+		registerSetting({
+			id: "editor-theme-highlights",
+			category: "Appearance",
+			subcategory: "Text Editor",
+			type: "select",
+			label: "Syntax highlighting theme",
+			description: "Choose the color theme for syntax highlighting",
+			defaultValue: defaultEditorSettings.highlightTheme,
+			options: [
+				{ label: "Auto (follows app theme)", value: "auto" },
+				{ label: "Light theme", value: "light" },
+				{ label: "Dark theme (OneDark)", value: "dark" },
+			],
+			onChange: (value) => {
+				updateEditorSetting(
+					"highlightTheme",
+					value as "auto" | "light" | "dark",
+				);
+			},
+		});
+
+		registerSetting({
+			id: "editor-auto-save-enable",
+			category: "Viewers",
+			subcategory: "Text Editor",
+			type: "checkbox",
+			label: "Auto-save on changes",
+			description: "Automatically save file changes while editing",
+			defaultValue: defaultEditorSettings.autoSaveEnabled,
+			onChange: (value) => {
+				updateEditorSetting("autoSaveEnabled", value as boolean);
+			},
+		});
+
+		registerSetting({
+			id: "editor-auto-save-delay",
+			category: "Viewers",
+			subcategory: "Text Editor",
+			type: "number",
+			label: "Auto-save delay (milliseconds)",
+			description: "Delay in milliseconds before saving changes",
+			defaultValue: defaultEditorSettings.autoSaveDelay,
+			min: 500,
+			max: 10000,
+			onChange: (value) => {
+				updateEditorSetting("autoSaveDelay", value as number);
+			},
+		});
+	}, [registerSetting, getSetting, updateEditorSetting, applyCSSProperties]);
+
+	const getFontSize = useCallback(() => {
+		return fontSizeMap[editorSettings.fontSize];
+	}, [editorSettings.fontSize]);
+
+	const getFontFamily = useCallback(() => {
+		return fontFamilyMap[editorSettings.fontFamily];
+	}, [editorSettings.fontFamily]);
+
+	const getLineNumbersEnabled = useCallback(
+		() => editorSettings.showLineNumbers,
+		[editorSettings.showLineNumbers],
+	);
+
+	const getSyntaxHighlightingEnabled = useCallback(
+		() => editorSettings.syntaxHighlighting,
+		[editorSettings.syntaxHighlighting],
+	);
+
+	const getAutoSaveEnabled = useCallback(
+		() => editorSettings.autoSaveEnabled,
+		[editorSettings.autoSaveEnabled],
+	);
+
+	const getAutoSaveDelay = useCallback(
+		() => editorSettings.autoSaveDelay,
+		[editorSettings.autoSaveDelay],
+	);
+
+	const contextValue = {
+		editorSettings,
+		updateEditorSetting,
+		getFontSize,
+		getFontFamily,
+		getLineNumbersEnabled,
+		getSyntaxHighlightingEnabled,
+		getAutoSaveEnabled,
+		getAutoSaveDelay,
+		editorSettingsVersion,
+	};
+
+	return (
+		<EditorContext.Provider value={contextValue}>
+			{children}
+		</EditorContext.Provider>
+	);
+};

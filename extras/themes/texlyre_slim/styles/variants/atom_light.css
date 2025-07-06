@@ -1,0 +1,10 @@
+/* extras/themes/texlyre_slim/styles/variants/atom_light.css */
+[data-theme="atom_light"][data-theme-plugin="texlyre-slim"] {
+	--accent-background: #f0f0f0;
+	--accent-border: #e0e0e0;
+	--text-color: #383a42;
+	--editor-background: #fafafa;
+	--editor-text: #383a42;
+	--sidebar-background: #f0f0f0;
+	--sidebar-border: #e0e0e0;
+}

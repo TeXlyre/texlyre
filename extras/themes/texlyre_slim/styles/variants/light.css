@@ -1,0 +1,10 @@
+/* extras/themes/texlyre_slim/styles/variants/light.css */
+[data-theme="light"][data-theme-plugin="texlyre-slim"] {
+	--accent-background: #f3f7fb;
+	--accent-border: #e0e9f5;
+	--text-color: #11191f;
+	--editor-background: #ffffff;
+	--editor-text: #11191f;
+	--sidebar-background: #f8f9fa;
+	--sidebar-border: #e0e9f5;
+}

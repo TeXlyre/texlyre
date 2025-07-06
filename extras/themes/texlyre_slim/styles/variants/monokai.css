@@ -1,0 +1,10 @@
+/* extras/themes/texlyre_slim/styles/variants/monokai.css */
+[data-theme="monokai"][data-theme-plugin="texlyre-slim"] {
+	--accent-background: #383830;
+	--accent-border: #49483e;
+	--text-color: #f8f8f2;
+	--editor-background: #272822;
+	--editor-text: #f8f8f2;
+	--sidebar-background: #1e1f1c;
+	--sidebar-border: #49483e;
+}
