@@ -22,11 +22,12 @@ const isHttpsMode =
 	window.location.protocol === "https:" &&
 	window.location.hostname !== "localhost";
 
-if ("serviceWorker" in navigator && !isHttpsMode) {
+const enableServiceWorkerForHttps = true; // Set to false to disable SW in HTTPS mode
+
+if ("serviceWorker" in navigator && (!isHttpsMode || enableServiceWorkerForHttps)) {
 	window.addEventListener("load", async () => {
 		await clearExistingServiceWorkers();
 
-		// Use absolute path construction to avoid doubling
 		const swPath = "/texlyre/sw.js";
 		const scope = "/texlyre/";
 
@@ -58,6 +59,8 @@ if ("serviceWorker" in navigator && !isHttpsMode) {
 		console.log(
 			"Service worker registration skipped. HTTPS mode:",
 			isHttpsMode,
+			"Enable SW for HTTPS:",
+			enableServiceWorkerForHttps,
 		);
 	});
 }
