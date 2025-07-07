@@ -1,7 +1,12 @@
 var Module = typeof Module !== "undefined" ? Module : {};
-const TEXCACHEROOT = "/tex";
-const WORKROOT = "/work";
-var Module = {};
+if (typeof TEXCACHEROOT !== 'undefined') {
+    TEXCACHEROOT = TEXCACHEROOT || "/tex";
+    WORKROOT = WORKROOT || "/work";
+} else {
+    var TEXCACHEROOT = "/tex";
+    var WORKROOT = "/work";
+    var Module = {};
+}
 self.memlog = "";
 self.initmem = undefined;
 self.mainfile = "main.tex";
@@ -239,7 +244,16 @@ function dumpDirContent(dir) {
 
 self["onmessage"] = function (ev) {
     let data = ev["data"];
+
+    // Filter out non-LaTeX messages (JSZip, browser internals, etc.)
+    if (!data || typeof data !== 'object' || !data.hasOwnProperty('cmd')) {
+        return;
+    }
     let cmd = data["cmd"];
+    if (cmd === undefined || cmd === null) {
+        return;
+    }
+
     if (cmd === "compilelatex") {
         compileLaTeXRoutine()
     } else if (cmd === "compileformat") {
@@ -279,8 +293,8 @@ self["onmessage"] = function (ev) {
         console.error("Unknown command " + cmd)
     }
 };
-let texlive404_cache = {};
-let texlive200_cache = {};
+self.texlive404_cache = self.texlive404_cache || {};
+self.texlive200_cache = self.texlive200_cache || {};
 
 function kpse_find_file_impl(nameptr, format, _mustexist) {
     const reqname = UTF8ToString(nameptr);
@@ -288,11 +302,11 @@ function kpse_find_file_impl(nameptr, format, _mustexist) {
         return 0
     }
     const cacheKey = format + "/" + reqname;
-    if (cacheKey in texlive404_cache) {
+    if (cacheKey in self.texlive404_cache) {
         return 0
     }
-    if (cacheKey in texlive200_cache) {
-        const savepath = texlive200_cache[cacheKey];
+    if (cacheKey in self.texlive200_cache) {
+        const savepath = self.texlive200_cache[cacheKey];
         return allocate(intArrayFromString(savepath), "i8", ALLOC_NORMAL)
     }
     const remote_url = self.texlive_endpoint + "xetex/" + cacheKey;
@@ -312,11 +326,11 @@ function kpse_find_file_impl(nameptr, format, _mustexist) {
         const fileid = xhr.getResponseHeader("fileid");
         const savepath = TEXCACHEROOT + "/" + fileid;
         FS.writeFile(savepath, new Uint8Array(arraybuffer));
-        texlive200_cache[cacheKey] = savepath;
+        self.texlive200_cache[cacheKey] = savepath;
         return allocate(intArrayFromString(savepath), "i8", ALLOC_NORMAL)
     } else if (xhr.status === 301) {
         console.log("TexLive File not exists " + remote_url);
-        texlive404_cache[cacheKey] = 1;
+        self.texlive404_cache[cacheKey] = 1;
         return 0
     }
     return 0

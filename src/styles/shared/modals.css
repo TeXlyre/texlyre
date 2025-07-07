@@ -88,6 +88,13 @@
 	margin-top: var(--space-md);
 }
 
+.modal-actions p {
+	font-size: 0.9rem;
+	color: var(--text-secondary);
+	margin-top: var(--space-sm);
+	margin-right: var(--space-xl);
+}
+
 .modal-actions .single-actions {
 	display: flex;
 	gap: 0.5rem;

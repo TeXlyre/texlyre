@@ -149,18 +149,7 @@ const FileConflictModal: React.FC = () => {
 							</div>
 						</div>
 					</div>
-
-					<div className="batch-conflict-info">
-						<p>
-							<strong>Current conflict:</strong> {existingFile.name}
-						</p>
-						<p>
-							<strong>Remaining conflicts:</strong>{" "}
-							{conflictCount - currentIndex}
-						</p>
-					</div>
-
-					<div className="modal-actions">
+                    <div className="modal-actions">
 						<div className="single-actions">
 							<button
 								type="button"
@@ -184,24 +173,20 @@ const FileConflictModal: React.FC = () => {
 								Replace This
 							</button>
 						</div>
+                    </div>
+					<div className="batch-conflict-info">
+						<p>
+							<strong>Current conflict:</strong> {existingFile.name}
+						</p>
+						<p>
+							<strong>Remaining conflicts:</strong>{" "}
+							{conflictCount - currentIndex}
+						</p>
+					</div>
 
-						<div
-							className="batch-actions"
-							style={{
-								marginTop: "1rem",
-								paddingTop: "1rem",
-								borderTop: "1px solid var(--border-color)",
-							}}
-						>
-							<p
-								style={{
-									fontSize: "0.875rem",
-									color: "var(--text-secondary)",
-									marginBottom: "0.5rem",
-								}}
-							>
-								Apply to all {conflictCount} conflicts:
-							</p>
+					<div className="modal-actions">
+						<p> Apply to all {conflictCount} conflicts: </p>
+						<div className="batch-actions">
 							<div style={{ display: "flex", gap: "0.5rem" }}>
 								<button
 									type="button"
