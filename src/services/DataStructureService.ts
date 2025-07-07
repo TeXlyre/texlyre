@@ -45,22 +45,22 @@ export interface FileMetadata {
 }
 
 export interface DataStructureService {
-	manifest: UnifiedManifest;
-	account: User;
-	projects: ProjectMetadata[];
-	projectData: Map<
-		string,
-		{
-			metadata: ProjectMetadata;
-			documents: DocumentMetadata[];
-			files: FileMetadata[];
-			documentContents: Map<
-				string,
-				{ yjsState?: Uint8Array; readableContent?: string }
-			>;
-			fileContents: Map<string, ArrayBuffer | string>;
-		}
-	>;
+    manifest: UnifiedManifest;
+    account: User | null;
+    projects: ProjectMetadata[];
+    projectData: Map <
+        string,
+        {
+            metadata: ProjectMetadata;
+            documents: DocumentMetadata[];
+            files: FileMetadata[];
+            documentContents: Map <
+                string,
+                { yjsState?: Uint8Array; readableContent?: string }
+            >;
+            fileContents: Map<string, ArrayBuffer | string>;
+        }
+    >;
 }
 
 export class UnifiedDataStructureService {
@@ -171,7 +171,6 @@ export class UnifiedDataStructureService {
 	validateStructure(data: Partial<DataStructureService>): boolean {
 		return !!(
 			data.manifest?.version &&
-			data.account?.id &&
 			data.projects &&
 			Array.isArray(data.projects)
 		);

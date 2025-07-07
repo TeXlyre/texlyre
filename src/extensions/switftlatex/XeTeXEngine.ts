@@ -87,6 +87,8 @@ export class XeTeXEngine extends BaseEngine {
 		this.setStatus("compiling");
 
 		try {
+			await this.engine.compileLaTeX(); // Do it twice for tables
+			await this.engine.compileLaTeX(); // Do it thrice for good luck and bib
 			const result = await this.engine.compileLaTeX();
 			this.setStatus("ready");
 			this.flushCache();

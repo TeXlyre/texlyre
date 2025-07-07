@@ -228,11 +228,20 @@ export class StorageAdapterService {
 	): Promise<DataStructureService> {
 		const paths = this.unifiedService.getPaths();
 
-		const [manifest, account, projects] = await Promise.all([
+		const [manifest, projects] = await Promise.all([
 			this.readJsonFile(adapter, paths.MANIFEST),
-			this.readJsonFile(adapter, paths.ACCOUNT),
 			this.readJsonFile(adapter, paths.PROJECTS),
 		]);
+
+		let account = null;
+		if (await adapter.exists(paths.ACCOUNT)) {
+			try {
+				account = await this.readJsonFile(adapter, paths.ACCOUNT);
+			} catch (error) {
+				console.warn("Could not read account.json, using null:", error);
+				account = null;
+			}
+		}
 
 		const projectData = new Map();
 		for (const project of projects) {

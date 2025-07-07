@@ -21,6 +21,7 @@ class LaTeXService {
 	private texliveEndpoint = "https://texlive.emaily.re";
 	private storeCache = true;
 	private storeWorkingDirectory = false;
+	private flattenMainDirectory = true; // Flatten main directory structure (keep until we have a better solution)
 	private processedNodes: FileNode[] = [];
 
 	constructor() {
@@ -42,6 +43,10 @@ class LaTeXService {
 
 	setStoreWorkingDirectory(store: boolean): void {
 		this.storeWorkingDirectory = store;
+	}
+
+	setFlattenMainDirectory(flatten: boolean): void {
+		this.flattenMainDirectory = flatten;
 	}
 
 	async initialize(engineType: EngineType = "pdftex"): Promise<void> {
@@ -151,6 +156,11 @@ class LaTeXService {
 		const normalizedMainFile = mainFileName.replace(/^\/+/, "");
 		const baseFileName = normalizedMainFile.replace(/\.(tex|ltx)$/i, "");
 		const dviFileName = `${baseFileName}.xdv`;
+
+		const dirPath = dviFileName.substring(0, dviFileName.lastIndexOf("/"));
+		if (dirPath) {
+			this.createDirectoryStructure(dvipdfmxEngine, dirPath);
+		}
 
 		console.log(
 			`Writing XDV file: ${dviFileName}, size: ${xdvData.length} bytes`,
@@ -286,6 +296,15 @@ class LaTeXService {
 	private preprocessNodes(nodes: FileNode[], mainFileName: string): FileNode[] {
 		const processed: FileNode[] = [];
 		let mainFileProcessed = false;
+		let mainFileDirectory: string | null = null;
+
+		if (this.flattenMainDirectory) {
+			const normalizedMainFile = mainFileName.replace(/^\/+/, "");
+			const lastSlashIndex = normalizedMainFile.lastIndexOf("/");
+			if (lastSlashIndex !== -1) {
+				mainFileDirectory = normalizedMainFile.substring(0, lastSlashIndex);
+			}
+		}
 
 		for (const node of nodes) {
 			if (node.type !== "file") continue;
@@ -307,7 +326,20 @@ class LaTeXService {
 				mainFileProcessed = true;
 			} else {
 				const normalizedPath = node.path.replace(/^\/+/, "");
-				processedNode.path = normalizedPath;
+
+				if (normalizedPath.startsWith(".texlyre_src/") || normalizedPath.startsWith(".texlyre_cache/")) {
+					processedNode.path = normalizedPath;
+				} else if (this.flattenMainDirectory && mainFileDirectory) {
+					const mainDirWithSlash = `${mainFileDirectory}/`;
+					if (normalizedPath.startsWith(mainDirWithSlash)) {
+						const relativePath = normalizedPath.substring(mainDirWithSlash.length);
+						processedNode.path = relativePath;
+					} else {
+						processedNode.path = normalizedPath;
+					}
+				} else {
+					processedNode.path = normalizedPath;
+				}
 			}
 
 			processed.push(processedNode);
@@ -490,7 +522,8 @@ class LaTeXService {
 			await this.createOutputDirectory();
 
 			if (result.pdf && result.pdf.length > 0) {
-				const baseName = mainFile.split(".").slice(0, -1).join(".");
+				const fileName = mainFile.split("/").pop() || mainFile;
+				const baseName = fileName.split(".").slice(0, -1).join(".");
 				const pdfFileName = `${baseName}.pdf`;
 
 				await fileStorageService.storeFile(
@@ -525,7 +558,8 @@ class LaTeXService {
 		try {
 			await this.createOutputDirectory();
 
-			const baseName = mainFile.split(".").slice(0, -1).join(".");
+			const fileName = mainFile.split("/").pop() || mainFile;
+			const baseName = fileName.split(".").slice(0, -1).join(".");
 			const logFileName = `${baseName}.log`;
 
 			const encoder = new TextEncoder();
