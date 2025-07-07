@@ -172,14 +172,21 @@ embed {
 	overflow: auto;
 }
 
+.log-view-container {
+	height: 100%;
+	overflow: hidden;
+}
+
 .raw-log-panel {
 	flex: 1;
 	min-height: 0;
 	overflow: hidden;
+	display: flex;
+	flex-direction: column;
 }
 
 .raw-log-panel .log-viewer {
-	height: 100%;
+	flex: 1;
 	margin: 0;
 	overflow: auto;
 }

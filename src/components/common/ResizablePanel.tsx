@@ -185,15 +185,15 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 	const getCollapseIcon = () => {
 		if (direction === "horizontal") {
 			if (alignment === "start") {
-				return collapsed ? "‹" : "›";
+				return collapsed ? "◂" : "▸";
 			} else {
-				return collapsed ? "›" : "‹";
+				return collapsed ? "▸" : "◂";
 			}
 		} else {
 			if (alignment === "start") {
-				return collapsed ? "▼" : "▲";
+				return collapsed ? "▴" : "▾";
 			} else {
-				return collapsed ? "▲" : "▼";
+				return collapsed ? "▾" : "▴";
 			}
 		}
 	};

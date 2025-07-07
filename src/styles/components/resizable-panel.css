@@ -88,13 +88,13 @@
 }
 
 .collapse-button.top {
-	top: -12px;
+	top: -4px;
 	left: 50%;
 	transform: translateX(-50%);
 }
 
 .collapse-button.bottom {
-	bottom: -12px;
+	bottom: -4px;
 	left: 50%;
 	transform: translateX(-50%);
 }
