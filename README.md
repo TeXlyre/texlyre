@@ -61,7 +61,9 @@ The File System Access API enables direct synchronization with local folders, su
 
 ### Peer-to-peer Sharing
 
-FilePizza integration facilitates secure file sharing between collaborators without uploading to external servers. Large files, images, and datasets can be transferred directly between browsers, maintaining privacy and reducing dependency on external services.
+FilePizza integration facilitates secure file sharing between collaborators over WebRTC. Large files, images, and other non-collaborative text files can be transferred directly between browsers, maintaining privacy and reducing dependency on external services. 
+This protocol although completely independent of the Yjs WebRTC connection, TeXlyre still uses Yjs to manage file metadata and synchronization state, ensuring that all collaborators have access to the latest versions of shared files.
+Yjs facilities facilitates real-time collaboration (e.g., live updates to file lists, shared metadata, cursor tracking, real-time document editing) while FilePizza handles the file transfer of non-collaborative files.
 
 ## Development
 
@@ -87,6 +89,10 @@ interface ViewerPlugin extends Plugin {
 ```
 
 Plugins can extend TeXlyre with custom file viewers, LaTeX log processors, backup providers, and theme variations. The plugin registry automatically discovers and loads compatible plugins during application initialization.
+
+Once a plugin is developed, it can be registered in the `plugins.config.ts` by simply adding its path (excluding the '/extras' prefix). All plugins must be placed in the 'extras' directory to be recognized by the system.
+
+
 
 ## Browser Compatibility
 
