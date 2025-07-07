@@ -10,8 +10,7 @@ import {
 	ZoomInIcon,
 	ZoomOutIcon,
 } from "../../../src/components/common/Icons";
-import { PluginControlGroup } from "../../../src/components/common/PluginControlGroup";
-import { PluginHeader } from "../../../src/components/common/PluginHeader";
+import { PluginHeader, PluginControlGroup } from "../../../src/components/common/PluginHeader";
 import { usePluginFileInfo } from "../../../src/hooks/usePluginFileInfo";
 import { useSettings } from "../../../src/hooks/useSettings";
 import type { ViewerProps } from "../../../src/plugins/PluginInterface";
@@ -367,13 +366,14 @@ const PdfViewer: React.FC<ViewerProps> = ({
 		}
 	};
 
-	const tooltipInfo = `PDF Viewer
-Rendering quality: ${renderingQuality}
-Auto-scale: ${autoScale ? "enabled" : "disabled"}
-Pages: ${totalPages}
-Current page: ${currentPage}
-MIME Type: ${mimeType || "application/pdf"}
-Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`;
+	const tooltipInfo = [
+		`Rendering quality: ${renderingQuality}`,
+		`Auto-scale: ${autoScale ? "enabled" : "disabled"}`,
+		`Pages: ${totalPages}`,
+		`Current page: ${currentPage}`,
+		`MIME Type: ${mimeType || "application/pdf"}`,
+		`Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`
+	];
 
 	const headerControls = (
 		<>

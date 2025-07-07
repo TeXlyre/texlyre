@@ -17,10 +17,26 @@ interface PluginHeaderProps {
 		fileId?: string;
 	} | null;
 }
+interface PluginControlGroupProps {
+	children: React.ReactNode;
+	className?: string;
+}
 
-const formatTooltipInfo = (info: string | string[]): string => {
-	if (typeof info === 'string') return info;
-	return info.filter(line => line.trim()).join('\n');
+const formatTooltipInfo = (info: string | string[], pluginName?: string, pluginVersion?: string): string => {
+    const pluginInfo = pluginName
+        ? `${pluginName}${pluginVersion ? ` v${pluginVersion}` : ''}`
+        : '';
+
+    const contentInfo = typeof info === 'string' ? info : info.filter(line => line.trim()).join('\n');
+
+    return pluginInfo ? `${pluginInfo}\n${contentInfo}` : contentInfo;
+};
+
+export const PluginControlGroup: React.FC<PluginControlGroupProps> = ({
+	children,
+	className = "",
+}) => {
+	return <div className={`control-group ${className}`}>{children}</div>;
 };
 
 export const PluginHeader: React.FC<PluginHeaderProps> = ({
@@ -33,7 +49,7 @@ export const PluginHeader: React.FC<PluginHeaderProps> = ({
 	onNavigateToLinkedFile,
 	linkedFileInfo,
 }) => {
-	const formattedTooltip = formatTooltipInfo(tooltipInfo);
+	const formattedTooltip = formatTooltipInfo(tooltipInfo, pluginName, pluginVersion);
 
 	return (
 		<div className="plugin-header">

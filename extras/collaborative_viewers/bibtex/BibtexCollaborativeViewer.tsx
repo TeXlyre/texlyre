@@ -9,8 +9,7 @@ import {
 	OptionsIcon,
 	SaveIcon,
 } from "../../../src/components/common/Icons";
-import { PluginControlGroup } from "../../../src/components/common/PluginControlGroup";
-import { PluginHeader } from "../../../src/components/common/PluginHeader";
+import { PluginHeader, PluginControlGroup } from "../../../src/components/common/PluginHeader";
 import { usePluginFileInfo } from "../../../src/hooks/usePluginFileInfo";
 import { useSettings } from "../../../src/hooks/useSettings";
 import type { CollaborativeViewerProps } from "../../../src/plugins/PluginInterface";
@@ -251,13 +250,14 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	const displayContent =
 		currentView === "original" ? bibtexContent : processedContent;
 
-	const tooltipInfo = `BibTeX Bibliography (Collaborative)
-Auto-tidy: ${autoTidy ? "enabled" : "disabled"}
-Preset: ${tidyPreset}
-Entries: ${bibtexContent.split("@").length - 1}
-Collaborative Mode: Active
-MIME Type: ${fileInfo.mimeType || "text/x-bibtex"}
-Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`;
+	const tooltipInfo = [
+		`Auto-tidy: ${autoTidy ? "enabled" : "disabled"}`,
+		`Preset: ${tidyPreset}`,
+		`Entries: ${bibtexContent.split("@").length - 1}`,
+		`Collaborative Mode: Active`,
+		`MIME Type: ${fileInfo.mimeType || "text/x-bibtex"}`,
+		`Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`
+	];
 
 	const headerControls = (
 		<>

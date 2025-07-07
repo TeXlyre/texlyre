@@ -19,8 +19,7 @@ import { arrayBufferToString } from "../../utils/fileUtils";
 import CommentPanel from "../comments/CommentPanel";
 import CommentToggleButton from "../comments/CommentToggleButton";
 import { CopyIcon, DownloadIcon, LinkIcon, SaveIcon } from "../common/Icons";
-import { PluginControlGroup } from "../common/PluginControlGroup";
-import { PluginHeader } from "../common/PluginHeader";
+import { PluginHeader, PluginControlGroup } from "../common/PluginHeader";
 
 interface EditorComponentProps {
 	content: string | ArrayBuffer;
@@ -149,7 +148,6 @@ const EditorContent: React.FC<{
 	const tooltipInfo =
 		isEditingFile && fileName
 			? [
-				"Text Editor",
 				`File: ${fileName}`,
 				`Path: ${filePath || fileInfo.filePath}`,
 				`Mode: ${isViewOnly ? "Read-only" : "Editing"}`,
@@ -160,7 +158,6 @@ const EditorContent: React.FC<{
 			]
 			: !isEditingFile && documentId && documents
 				? [
-					"Document Editor",
 					`Document: ${documents.find((d) => d.id === documentId)?.name || "Untitled"}`,
 					linkedFileInfo ? `Linked File: ${linkedFileInfo.fileName}` : "",
 					linkedFileInfo ? `Path: ${linkedFileInfo.filePath}` : "No linked file",

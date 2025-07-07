@@ -299,11 +299,12 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 		}
 	};
 
-	const tooltipInfo = `LaTeX Error Visualizer
-Total errors: ${parsedErrors.filter((e) => e.type === "error").length}
-Total warnings: ${parsedErrors.filter((e) => e.type === "warning").length}
-Log size: ${log ? Math.round(log.length / 1024) + " KB" : "0 KB"}
-Click error items to navigate to line`;
+	const tooltipInfo = [
+        `Total errors: ${parsedErrors.filter((e) => e.type === "error").length}`,
+        `Total warnings: ${parsedErrors.filter((e) => e.type === "warning").length}`,
+        `Log size: ${log ? Math.round(log.length / 1024) + " KB" : "0 KB"}`,
+        `Click error items to navigate to line`
+	];
 
 	const headerControls = (
 		<div className="error-stats">

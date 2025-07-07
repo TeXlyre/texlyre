@@ -17,8 +17,7 @@ import {
 	ZoomInIcon,
 	ZoomOutIcon,
 } from "../../../src/components/common/Icons";
-import { PluginControlGroup } from "../../../src/components/common/PluginControlGroup";
-import { PluginHeader } from "../../../src/components/common/PluginHeader";
+import { PluginHeader, PluginControlGroup } from "../../../src/components/common/PluginHeader";
 import { usePluginFileInfo } from "../../../src/hooks/usePluginFileInfo";
 import { useSettings } from "../../../src/hooks/useSettings";
 import type { ViewerProps } from "../../../src/plugins/PluginInterface";
@@ -320,13 +319,14 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 		);
 	};
 
-	const tooltipInfo = `Image Viewer
-Quality: ${quality}
-Auto center: ${autoCenter ? "enabled" : "disabled"}
-Panning: ${enablePanning ? "enabled" : "disabled"}
-Filters: ${enableFilters ? "enabled" : "disabled"}
-MIME Type: ${mimeType || "Unknown"}
-Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`;
+	const tooltipInfo = [
+        `Quality: ${quality}`,
+        `Auto center: ${autoCenter ? "enabled" : "disabled"}`,
+        `Panning: ${enablePanning ? "enabled" : "disabled"}`,
+        `Filters: ${enableFilters ? "enabled" : "disabled"}`,
+        `MIME Type: ${mimeType || "Unknown"}`,
+        `Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`
+	];
 
 	const headerControls = (
 		<>
