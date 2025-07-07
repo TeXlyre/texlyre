@@ -86,12 +86,6 @@
 }
 
 .comment-toggle-button {
-	position: absolute;
-	top: 10px;
-	right: 10px;
-	margin-right: 6px;
-	z-index: 10;
-	padding: 0.3rem;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -99,30 +93,16 @@
 	color: #fff !important;
 	border-radius: var(--space-sm);
 	height: 32px;
-	box-shadow: var(--shadow-sm);
 	cursor: pointer;
-	transition: background-color var(--transition-normal), opacity
-		var(--transition-normal);
+	transition: background-color var(--transition-normal);
 	font-size: 0.6rem;
-	opacity: 0.4;
+	padding: 0.3rem;
+	border: none;
 }
 
 .comment-toggle-button:hover {
 	background-color: var(--pico-primary-hover);
 	color: #fff !important;
-	opacity: 1;
-}
-
-.comment-toggle-button.active {
-	display: none;
-	color: #fff !important;
-}
-
-.floating-comment-button {
-	position: absolute;
-	top: 10px;
-	right: 10px;
-	z-index: 50;
 }
 
 .no-comments {
@@ -374,4 +354,35 @@
 	height: 8px;
 	background-color: var(--pico-primary);
 	border-radius: 50%;
+}
+
+.comment-button-container {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.comment-count-badge {
+	position: absolute;
+	top: -10px;
+	right: -10px;
+	background-color: var(--color-error);
+	color: white;
+	border-radius: 10px;
+	padding: 1px 5px;
+	font-size: 0.5rem;
+	font-weight: 600;
+	line-height: 1.2;
+	min-width: 16px;
+	height: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+	border: 1px solid var(--pico-background);
+}
+
+.comment-count-badge:empty {
+	display: none;
 }

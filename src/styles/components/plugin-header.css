@@ -44,6 +44,47 @@
 	gap: 0.1rem;
 }
 
+.file-title-row {
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+
+.linked-file-icon {
+	padding: 0.15rem;
+	background: none;
+	border: 1px solid var(--accent-border, #444);
+	border-radius: 3px;
+	color: var(--pico-secondary);
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 16px;
+	height: 16px;
+}
+
+.linked-file-icon:hover {
+	background-color: var(--pico-primary-focus);
+	border-color: var(--pico-primary);
+	color: var(--text-color);
+}
+
+.linked-file-icon svg {
+	width: 0.55rem;
+	height: 0.55rem;
+}
+
+.linked-filepath {
+	cursor: pointer;
+	transition: color 0.2s ease;
+}
+
+.linked-filepath:hover {
+	color: var(--pico-primary);
+}
+
 .info-icon-abbr {
 	border-bottom: none !important;
 	cursor: inherit !important;

@@ -64,6 +64,7 @@ const EditorContent: React.FC<{
 	onNavigateToLinkedFile?: () => void;
 	documents?: Array<{ id: string; name: string }>;
 	shouldShowLatexOutput?: boolean;
+	onSaveDocument?: () => void;
 }> = ({
 	editorRef,
 	textContent,
@@ -84,6 +85,7 @@ const EditorContent: React.FC<{
 	onNavigateToLinkedFile,
 	documents,
 	shouldShowLatexOutput,
+	onSaveDocument,
 }) => {
 	const { parseComments, getCommentAtPosition, addComment, updateComments } =
 		useComments();
@@ -146,20 +148,25 @@ const EditorContent: React.FC<{
 
 	const tooltipInfo =
 		isEditingFile && fileName
-			? `Text Editor
-			File: ${fileName}
-			Path: ${filePath || fileInfo.filePath}
-			Mode: ${isViewOnly ? "Read-only" : "Editing"}
-			${linkedDocumentId ? "Linked to document: " + linkedDocumentId : ""}
-			MIME Type: ${fileInfo.mimeType || "text/plain"}
-			Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}
-			Last Modified: ${fileInfo.lastModified ? new Date(fileInfo.lastModified).toLocaleString() : "Unknown"}`
+			? [
+				"Text Editor",
+				`File: ${fileName}`,
+				`Path: ${filePath || fileInfo.filePath}`,
+				`Mode: ${isViewOnly ? "Read-only" : "Editing"}`,
+				linkedDocumentId ? `Linked to document: ${linkedDocumentId}` : "",
+				`MIME Type: ${fileInfo.mimeType || "text/plain"}`,
+				`Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`,
+				`Last Modified: ${fileInfo.lastModified ? new Date(fileInfo.lastModified).toLocaleString() : "Unknown"}`
+			]
 			: !isEditingFile && documentId && documents
-				? `Document Editor
-			Document: ${documents.find((d) => d.id === documentId)?.name || "Untitled"}
-			${linkedFileInfo ? `Linked File: ${linkedFileInfo.fileName}\nPath: ${linkedFileInfo.filePath}` : "No linked file"}
-			Mode: Collaborative editing
-			Type: Text document`
+				? [
+					"Document Editor",
+					`Document: ${documents.find((d) => d.id === documentId)?.name || "Untitled"}`,
+					linkedFileInfo ? `Linked File: ${linkedFileInfo.fileName}` : "",
+					linkedFileInfo ? `Path: ${linkedFileInfo.filePath}` : "No linked file",
+					"Mode: Collaborative editing",
+					"Type: Text document"
+				]
 				: "";
 
 	const handleCopyLinkedFile = async () => {
@@ -220,7 +227,7 @@ const EditorContent: React.FC<{
 				)}
 				<button
 					onClick={() => copyCleanTextToClipboard(textContent)}
-					title="Copy clean text (without comments)"
+					title="Copy text"
 					className="control-button"
 				>
 					<CopyIcon />
@@ -234,30 +241,51 @@ const EditorContent: React.FC<{
 						<DownloadIcon />
 					</button>
 				)}
+				{!isViewOnly && (
+					<CommentToggleButton className="header-comment-button" />
+				)}
 			</PluginControlGroup>
 		) : !isEditingFile && linkedFileInfo ? (
 			<PluginControlGroup>
+				{onSaveDocument && (
+					<button
+						onClick={onSaveDocument}
+						title="Save Document to Linked File (Ctrl+S)"
+						className="control-button"
+					>
+						<SaveIcon />
+					</button>
+				)}
 				<button
 					onClick={handleCopyLinkedFile}
-					title={`Copy clean content from linked file: ${linkedFileInfo.fileName}`}
+					title={`Copy text from linked file: ${linkedFileInfo.fileName}`}
 					className="control-button"
 				>
 					<CopyIcon />
 				</button>
 				<button
 					onClick={handleDownloadLinkedFile}
-					title={`Download clean version of linked file: ${linkedFileInfo.fileName}`}
+					title={`Download linked file: ${linkedFileInfo.fileName}`}
 					className="control-button"
 				>
 					<DownloadIcon />
 				</button>
+				{!isViewOnly && (
+					<CommentToggleButton className="header-comment-button" />
+				)}
+			</PluginControlGroup>
+		) : !isEditingFile && documentId && documents ? (
+			<PluginControlGroup>
 				<button
-					onClick={onNavigateToLinkedFile}
-					title={`Navigate to linked file: ${linkedFileInfo.fileName}`}
+					onClick={() => copyCleanTextToClipboard(textContent)}
+					title="Copy text"
 					className="control-button"
 				>
-					<LinkIcon />
+					<CopyIcon />
 				</button>
+				{!isViewOnly && (
+					<CommentToggleButton className="header-comment-button" />
+				)}
 			</PluginControlGroup>
 		) : null;
 
@@ -280,6 +308,8 @@ const EditorContent: React.FC<{
 					pluginVersion="1.0.0"
 					tooltipInfo={tooltipInfo}
 					controls={headerControls}
+					onNavigateToLinkedFile={!isEditingFile && linkedFileInfo ? onNavigateToLinkedFile : undefined}
+					linkedFileInfo={!isEditingFile ? linkedFileInfo : null}
 				/>
 			)}
 
@@ -306,9 +336,6 @@ const EditorContent: React.FC<{
 					style={{ flex: 1, position: "relative" }}
 				>
 					<div ref={editorRef} className="codemirror-editor-container" />
-					{!isViewOnly && (
-						<CommentToggleButton className="floating-comment-button" />
-					)}
 
 					{showSaveIndicator && (
 						<div className="save-indicator">
@@ -469,22 +496,24 @@ const Editor: React.FC<EditorComponentProps> = ({
 	const handleSave = async () => {
 		if (!fileId || !isEditingFile) return;
 
-		try {
-			const encoder = new TextEncoder();
-			const contentToSave = textContent;
-			const dataToSave = encoder.encode(contentToSave);
+		if (editorRef.current) {
+			document.dispatchEvent(
+				new CustomEvent("trigger-save", {
+					detail: { fileId, isFile: true },
+				}),
+			);
+		}
+	};
 
-			await fileStorageService.updateFileContent(fileId, dataToSave.buffer);
-
+	const handleSaveDocument = () => {
+		if (!isEditingFile && documentId) {
 			if (editorRef.current) {
 				document.dispatchEvent(
-					new CustomEvent("file-saved", {
-						detail: { fileId: fileId },
+					new CustomEvent("trigger-save", {
+						detail: { documentId, isFile: false },
 					}),
 				);
 			}
-		} catch (error) {
-			console.error("Error saving file:", error);
 		}
 	};
 
@@ -660,6 +689,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 					filePath={filePath}
 					onSave={handleSave}
 					onExport={handleExport}
+					onSaveDocument={handleSaveDocument}
 					linkedFileInfo={linkedFileInfo}
 					onNavigateToLinkedFile={handleNavigateToLinkedFile}
 					documents={documents}

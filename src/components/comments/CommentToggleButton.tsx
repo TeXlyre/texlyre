@@ -2,6 +2,7 @@
 import type React from "react";
 
 import { useComments } from "../../hooks/useComments";
+import { CommentIcon } from "../common/Icons";
 
 interface CommentToggleButtonProps {
 	className?: string;
@@ -12,14 +13,18 @@ const CommentToggleButton: React.FC<CommentToggleButtonProps> = ({
 }) => {
 	const { toggleComments, showComments, comments } = useComments();
 
-	// We want the button to always be visible, even when showComments is true
 	return (
 		<button
-			className={`comment-toggle-button ${className} ${showComments ? "active" : ""}`}
+			className={`control-button ${className} ${showComments ? "active" : ""}`}
 			onClick={toggleComments}
-			title={showComments ? "Hide comments" : "Show comments"}
+			title={`${showComments ? "Hide" : "Show"} comments${comments.length > 0 ? ` (${comments.length})` : ""}`}
 		>
-			Show Comments {comments.length > 0 ? `(${comments.length})` : ""}
+			<div className="comment-button-container">
+				<CommentIcon />
+				{comments.length > 0 && (
+					<span className="comment-count-badge">{comments.length}</span>
+				)}
+			</div>
 		</button>
 	);
 };
