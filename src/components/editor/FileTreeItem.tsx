@@ -3,6 +3,7 @@ import type React from "react";
 
 import { pluginRegistry } from "../../plugins/PluginRegistry";
 import type { FileNode } from "../../types/files";
+import { isTemporaryFile } from "../../utils/fileUtils";
 import DropdownPortal from "../common/DropdownPortal";
 import {
 	CopyIcon,
@@ -119,6 +120,11 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 
 	const hasViewer = hasCompatibleViewer(node);
 
+	const shouldShowLinkButton =
+		node.type === "file" &&
+		!node.isBinary &&
+		!isTemporaryFile(node.name);
+
 	return (
 		<div
 			key={node.path}
@@ -219,7 +225,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 				)}
 
 				<div className="file-actions">
-					{node.type === "file" &&
+					{shouldShowLinkButton &&
 						(!hasDocument ? (
 							<button
 								className="action-btn"
