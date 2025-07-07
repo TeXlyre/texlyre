@@ -46,10 +46,14 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 	const startPosRef = useRef(0);
 	const startSizeRef = useRef(0);
 
-	const handleMouseDown = (e: MouseEvent) => {
+	const handleMouseDown = (e: MouseEvent | React.TouchEvent) => {
 		e.preventDefault();
 		setResizing(true);
-		startPosRef.current = direction === "horizontal" ? e.clientX : e.clientY;
+
+		const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+		const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+		startPosRef.current = direction === "horizontal" ? clientX : clientY;
 		startSizeRef.current = size;
 		document.body.classList.add("resizing");
 		document.body.classList.add(
@@ -58,15 +62,17 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 	};
 
 	useEffect(() => {
-		const handleMouseMove = (e: MouseEvent | unknown) => {
+		const handleMouseMove = (e: Event) => {
 			if (!resizing) return;
 
-			const mouseEvent = e as MouseEvent;
-			const currentPos =
-				direction === "horizontal" ? mouseEvent.clientX : mouseEvent.clientY;
+			const mouseEvent = e as unknown as MouseEvent;
+			const touchEvent = e as unknown as TouchEvent;
 
+			const clientX = touchEvent.touches ? touchEvent.touches[0].clientX : mouseEvent.clientX;
+			const clientY = touchEvent.touches ? touchEvent.touches[0].clientY : mouseEvent.clientY;
+
+			const currentPos = direction === "horizontal" ? clientX : clientY;
 			const delta = currentPos - startPosRef.current;
-
 			const adjustedDelta = alignment === "start" ? -delta : delta;
 
 			let newSize = startSizeRef.current + adjustedDelta;
@@ -93,11 +99,15 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 		if (resizing) {
 			document.addEventListener("mousemove", handleMouseMove);
 			document.addEventListener("mouseup", handleMouseUp);
+			document.addEventListener("touchmove", handleMouseMove);
+			document.addEventListener("touchend", handleMouseUp);
 		}
 
 		return () => {
 			document.removeEventListener("mousemove", handleMouseMove);
 			document.removeEventListener("mouseup", handleMouseUp);
+			document.removeEventListener("touchmove", handleMouseMove);
+			document.removeEventListener("touchend", handleMouseUp);
 		};
 	}, [
 		resizing,
@@ -221,6 +231,7 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 			<div
 				className={getHandleClassName()}
 				onMouseDown={handleMouseDown}
+				onTouchStart={handleMouseDown}
 				onDoubleClick={handleDoubleClick}
 			/>
 			{collapsible && (isHovering || collapsed) && (

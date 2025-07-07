@@ -5,14 +5,14 @@
 }
 
 .codemirror-editor-container .cm-editor {
-	font-size: var(--editor-font-size, 14px) !important;
+	font-size: var(--editor-font-size, 18px) !important;
 	height: 100%;
 }
 
 .codemirror-editor-container .cm-scroller {
 	overflow: auto;
 	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-	font-size: var(--editor-font-size, 14px) !important;
+	font-size: var(--editor-font-size, 18px) !important;
 	line-height: 1.5;
 	height: 100%;
 }
@@ -662,4 +662,14 @@
 	pointer-events: none !important;
 	position: absolute !important;
 	visibility: hidden !important;
+}
+
+@media (max-width: 768px) {
+	.codemirror-editor-container .cm-editor {
+		font-size: max(20px, var(--editor-font-size, 18px)) !important;
+	}
+
+	.codemirror-editor-container .cm-scroller {
+		font-size: max(20px, var(--editor-font-size, 18px)) !important;
+	}
 }
