@@ -23,10 +23,17 @@ const isHttpsMode =
 	window.location.hostname !== "localhost";
 
 const enableServiceWorkerForHttps = true; // Set to false to disable SW in HTTPS mode
+const clearServiceWorkerOnLoad = false; // Set to true to clear existing SWs on load
 
 if ("serviceWorker" in navigator && (!isHttpsMode || enableServiceWorkerForHttps)) {
 	window.addEventListener("load", async () => {
-		await clearExistingServiceWorkers();
+		if (clearServiceWorkerOnLoad) {
+			console.log("Clearing existing service workers...");
+			await clearExistingServiceWorkers();
+
+		} else {
+			console.log("Skipping clearing existing service workers.");
+		}
 
 		const swPath = "/texlyre/sw.js";
 		const scope = "/texlyre/";
