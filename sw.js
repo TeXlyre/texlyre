@@ -1,10 +1,9 @@
-const CACHE_NAME = 'texlyre-v1';
+const CACHE_NAME = `texlyre-v${process.env.npm_package_version || '1'}`;
 const BASE_PATH = '/texlyre/';
 
 console.log('[SW] Service Worker loading with base path:', BASE_PATH);
 
 const STATIC_ASSETS = [
-  BASE_PATH,
   BASE_PATH + 'index.html'
 ];
 
@@ -14,14 +13,28 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('[SW] Caching static assets:', STATIC_ASSETS);
-        return cache.addAll(STATIC_ASSETS);
+        return Promise.all(
+          STATIC_ASSETS.map(async (url) => {
+            try {
+              const response = await fetch(url);
+              if (response.ok) {
+                await cache.put(url, response);
+                console.log('[SW] Successfully cached:', url);
+              } else {
+                console.warn('[SW] Failed to fetch for caching:', url, response.status);
+              }
+            } catch (error) {
+              console.error('[SW] Error caching asset:', url, error);
+            }
+          })
+        );
       })
       .then(() => {
         console.log('[SW] Static assets cached successfully');
         return self.skipWaiting();
       })
       .catch((error) => {
-        console.error('[SW] Error caching static assets:', error);
+        console.error('[SW] Error during cache setup:', error);
       })
   );
 });
@@ -93,7 +106,21 @@ self.addEventListener('message', (event) => {
       caches.open(CACHE_NAME)
         .then((cache) => {
           console.log('[SW] Manually caching URLs:', event.data.urls);
-          return cache.addAll(event.data.urls);
+          return Promise.all(
+            event.data.urls.map(async (url) => {
+              try {
+                const response = await fetch(url);
+                if (response.ok) {
+                  await cache.put(url, response);
+                  console.log('[SW] Successfully cached via message:', url);
+                } else {
+                  console.warn('[SW] Failed to fetch for message caching:', url, response.status);
+                }
+              } catch (error) {
+                console.error('[SW] Error caching URL via message:', url, error);
+              }
+            })
+          );
         })
     );
   }
