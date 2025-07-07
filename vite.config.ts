@@ -11,6 +11,10 @@ const useHttps = process.env.VITE_USE_HTTPS === "true";
 export default defineConfig({
 	base: "/texlyre/",
 
+	define: {
+		'process.env.npm_package_version': JSON.stringify(process.env.npm_package_version || '1.0.0')
+	},
+
 	build: {
 		target: "esnext",
 		commonjsOptions: {
