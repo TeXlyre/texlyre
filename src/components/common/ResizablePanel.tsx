@@ -172,24 +172,20 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 		return `${baseClass} ${directionClass} ${stateClass}`;
 	};
 
-	const getCollapseIconStyle = (): React.CSSProperties => {
-		let transform = "";
-
+	const getCollapseIcon = () => {
 		if (direction === "horizontal") {
 			if (alignment === "start") {
-				transform = collapsed ? "rotate(0deg)" : "rotate(180deg)";
+				return collapsed ? "‹" : "›";
 			} else {
-				transform = collapsed ? "rotate(180deg)" : "rotate(0deg)";
+				return collapsed ? "›" : "‹";
 			}
 		} else {
 			if (alignment === "start") {
-				transform = collapsed ? "rotate(-90deg)" : "rotate(90deg)";
+				return collapsed ? "▼" : "▲";
 			} else {
-				transform = collapsed ? "rotate(90deg)" : "rotate(-90deg)";
+				return collapsed ? "▲" : "▼";
 			}
 		}
-
-		return { transform };
 	};
 
 	const style: React.CSSProperties = {
@@ -236,8 +232,8 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 					}}
 					title={collapsed ? "Expand" : "Collapse"}
 				>
-					<span className="collapse-icon" style={getCollapseIconStyle()}>
-						&larr;
+					<span className="collapse-icon">
+						{getCollapseIcon()}
 					</span>
 				</button>
 			)}
