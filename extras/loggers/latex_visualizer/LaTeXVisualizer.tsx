@@ -38,12 +38,68 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 		setFilter((current) => (current === type ? "all" : type));
 	};
 
+	const preprocessLogLines = (log: string): string => {
+		const lines = log.split('\n');
+		const processedLines: string[] = [];
+
+		for (let i = 0; i < lines.length; i++) {
+			const currentLine = lines[i];
+			const nextLine = lines[i + 1];
+
+			if (nextLine && shouldJoinLines(currentLine, nextLine)) {
+				const joinedLine = joinSplitLine(currentLine, nextLine);
+				processedLines.push(joinedLine);
+				i++;
+			} else {
+				processedLines.push(currentLine);
+			}
+		}
+
+		return processedLines.join('\n');
+	};
+
+	const shouldJoinLines = (currentLine: string, nextLine: string): boolean => {
+		if (!currentLine || !nextLine) return false;
+
+		const trimmedNext = nextLine.trim();
+
+		if (currentLine.includes('bef') && trimmedNext.startsWith('ore ')) {
+			return true;
+		}
+
+		if (currentLine.match(/[a-zA-Z]-?\s*$/) &&
+			trimmedNext.match(/^[a-zA-Z]/) &&
+			trimmedNext.length < 60 &&
+			!trimmedNext.includes(':') &&
+			!trimmedNext.startsWith('!') &&
+			!trimmedNext.startsWith('Package') &&
+			!trimmedNext.startsWith('LaTeX')) {
+			return true;
+		}
+
+		return false;
+	};
+
+	const joinSplitLine = (currentLine: string, nextLine: string): string => {
+		const trimmedNext = nextLine.trim();
+
+		if (currentLine.includes('bef') && trimmedNext.startsWith('ore ')) {
+			return currentLine.replace(/bef\s*$/, 'before ') + trimmedNext.substring(4);
+		}
+
+		if (currentLine.endsWith('-')) {
+			return currentLine.slice(0, -1) + trimmedNext;
+		}
+
+		return currentLine.replace(/\s*$/, '') + trimmedNext;
+	};
+
 	const parseLatexLog = (log: string): ParsedError[] => {
 		const result: ParsedError[] = [];
-		const lines = log.split("\n");
-		const currentFile = "thesis.tex"; // Default file
+		const preprocessedLog = preprocessLogLines(log);
+		const lines = preprocessedLog.split("\n");
+		const currentFile = "main.tex";
 
-		// Track file context by parsing parentheses
 		const getFileFromContext = (lineIndex: number): string => {
 			const fileStack: string[] = [];
 
@@ -51,7 +107,6 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 				const line = lines[i];
 				if (!line) continue;
 
-				// Look for file openings like (filename.tex or (/path/filename.tex
 				const fileMatches = line.matchAll(
 					/\(([^)]*\.(?:tex|sty|cls|def|fd|cfg))/g,
 				);
@@ -61,7 +116,6 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 					fileStack.push(fileName);
 				}
 
-				// Count closing parentheses to pop files from stack
 				const openParens = (line.match(/\(/g) || []).length;
 				const closeParens = (line.match(/\)/g) || []).length;
 				const netClose = closeParens - openParens;
@@ -140,7 +194,6 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 					let lineNumber: number | undefined;
 					const warningFile = contextFile;
 
-					// Check for file-specific warnings like "Citation `name' on page X undefined on input line Y"
 					const fileLineMatch = fullMessage.match(
 						/(.+?)\s+on input line (\d+)/,
 					);
@@ -149,7 +202,6 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 						lineNumber = Number.parseInt(fileLineMatch[2], 10);
 					}
 
-					// Look for explicit file references in warnings
 					const explicitFileMatch = fullMessage.match(
 						/(.+?)\s+on page \d+ undefined on input line (\d+)/,
 					);
