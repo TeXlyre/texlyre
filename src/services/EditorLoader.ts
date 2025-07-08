@@ -600,13 +600,13 @@ export const EditorLoader = (
    		try {
    			const { line, fileId, filePath } = customEvent.detail;
 
-   			if (isEditingFile && currentFileId && currentFileId !== fileId) {
-   				return;
-   			}
+			if (isEditingFile && fileId && currentFileId && currentFileId !== fileId) {
+				return;
+			}
 
-   			if (!isEditingFile && filePath && !filePath.includes(documentId)) {
-   				return;
-   			}
+			if (!isEditingFile && filePath && documentId && !filePath.includes(documentId)) {
+				return;
+			}
 
    			if (line && line > 0) {
    				const view = viewRef.current;

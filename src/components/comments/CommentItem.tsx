@@ -48,9 +48,23 @@ const CommentItem: React.FC<CommentItemProps> = ({
 	const handleLineClick = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		if (comment.line) {
+			// Check if we're in file mode by looking at the URL
+			const currentUrl = window.location.hash;
+			const isFileMode = currentUrl.includes('file:');
+
+			const detail: any = { line: comment.line };
+
+			// If we're in file mode, try to add some context
+			if (isFileMode) {
+				const filePathMatch = currentUrl.match(/file:([^&]+)/);
+				if (filePathMatch) {
+					detail.filePath = decodeURIComponent(filePathMatch[1]);
+				}
+			}
+
 			document.dispatchEvent(
 				new CustomEvent("codemirror-goto-line", {
-					detail: { line: comment.line },
+					detail,
 				}),
 			);
 		}
