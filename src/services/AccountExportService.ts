@@ -7,11 +7,13 @@ import { ProjectDataService } from "./ProjectDataService.ts";
 import { StorageAdapterService, ZipAdapter } from "./StorageAdapterService.ts";
 
 export interface ExportOptions {
-	includeAccount?: boolean;
-	includeDocuments?: boolean;
-	includeFiles?: boolean;
-	projectIds?: string[];
-	format?: "texlyre" | "files-only";
+    includeAccount?: boolean;
+    includeDocuments?: boolean;
+    includeFiles?: boolean;
+    includeTemporaryFiles?: boolean;
+    projectIds?: string[];
+    format?: "texlyre" | "files-only";
+    isSingleProjectExport?: boolean;
 }
 
 class AccountExportService {
@@ -27,6 +29,7 @@ class AccountExportService {
 			includeAccount: true,
 			includeDocuments: true,
 			includeFiles: true,
+			includeTemporaryFiles: false,
 			format: "texlyre",
 		};
 
@@ -54,9 +57,11 @@ class AccountExportService {
 			includeAccount: false,
 			includeDocuments: true,
 			includeFiles: true,
+			includeTemporaryFiles: false,
 			format: "texlyre",
 			...options,
 			projectIds,
+			isSingleProjectExport: projectIds.length === 1,
 		};
 
 		await this.exportWithOptions(user.id, exportOptions);
@@ -108,17 +113,21 @@ class AccountExportService {
 				}
 
 				if (options.includeFiles) {
-					files = await this.dataSerializer.serializeProjectFiles({
-						id: project.id,
-						name: project.name,
-						description: project.description,
-						docUrl: project.docUrl,
-						createdAt: project.createdAt,
-						updatedAt: project.updatedAt,
-						ownerId: project.ownerId,
-						tags: project.tags,
-						isFavorite: project.isFavorite,
-					});
+					files = await this.dataSerializer.serializeProjectFiles(
+						{
+							id: project.id,
+							name: project.name,
+							description: project.description,
+							docUrl: project.docUrl,
+							createdAt: project.createdAt,
+							updatedAt: project.updatedAt,
+							ownerId: project.ownerId,
+							tags: project.tags,
+							isFavorite: project.isFavorite,
+						},
+						false,
+						options.includeTemporaryFiles
+					);
 				}
 
 				projectData.set(project.id, {
@@ -140,7 +149,7 @@ class AccountExportService {
 			const zipAdapter = new ZipAdapter();
 
 			if (options.format === "files-only") {
-				await this.writeFilesOnlyStructure(zipAdapter, unifiedData);
+				await this.writeFilesOnlyStructure(zipAdapter, unifiedData, options);
 			} else {
 				await this.fileSystemManager.writeUnifiedStructure(
 					zipAdapter,
@@ -160,9 +169,16 @@ class AccountExportService {
 					? `texlyre-project-export-${timestamp}.zip`
 					: `texlyre-account-export-${timestamp}.zip`;
 			} else {
-				const formatSuffix =
-					options.format === "files-only" ? "files" : "texlyre";
-				fileName = `texlyre-projects-${formatSuffix}-${timestamp}.zip`;
+				if (options.format === "files-only" && options.isSingleProjectExport) {
+					// Use project name for single project files-only export
+					const projectName = Array.from(unifiedData.projectData.values())[0]?.metadata.name || "project";
+					const sanitizedName = projectName.replace(/[/\\?%*:|"<>]/g, "-");
+					fileName = `${sanitizedName}.zip`;
+				} else {
+					const formatSuffix =
+						options.format === "files-only" ? "files" : "texlyre";
+					fileName = `texlyre-projects-${formatSuffix}-${timestamp}.zip`;
+				}
 			}
 
 			saveAs(zipBlob, fileName);
@@ -175,18 +191,25 @@ class AccountExportService {
 	private async writeFilesOnlyStructure(
 		adapter: ZipAdapter,
 		data: any,
+		options?: ExportOptions,
 	): Promise<void> {
 		const { fileStorageService } = await import("./FileStorageService");
 		const { fileCommentProcessor } = await import("./FileCommentProcessor");
+
+		const isSingleProject = options?.isSingleProjectExport || data.projectData.size === 1;
 
 		for (const [projectId, projectData] of data.projectData) {
 			const projectName = projectData.metadata.name.replace(
 				/[/\\?%*:|"<>]/g,
 				"-",
 			);
-			const projectPath = `${projectName}`;
 
-			await adapter.createDirectory(projectPath);
+			// For single project exports from editor, put files directly in root
+			const projectPath = isSingleProject ? "" : projectName;
+
+			if (projectPath) {
+				await adapter.createDirectory(projectPath);
+			}
 
 			const actualProjectId = projectData.metadata.docUrl.startsWith("yjs:")
 				? projectData.metadata.docUrl.slice(4)
@@ -209,17 +232,25 @@ class AccountExportService {
 			if (fileStorageService.isConnectedToProject(actualProjectId)) {
 				try {
 					const allFiles = await fileStorageService.getAllFiles(false);
-					const fileFiles = allFiles.filter((f) => f.type === "file");
+					let fileFiles = allFiles.filter((f) => f.type === "file");
+
+					if (!options?.includeTemporaryFiles) {
+						const { isTemporaryFile } = await import("../utils/fileUtils");
+						fileFiles = fileFiles.filter((file) => !isTemporaryFile(file.path));
+					}
 
 					for (const file of fileFiles) {
 						if (file.content) {
-							// Process the file to remove comments
 							const processedFile = fileCommentProcessor.processFile(file);
 
 							const cleanPath = file.path.startsWith("/")
 								? file.path.slice(1)
 								: file.path;
-							const exportPath = `${projectPath}/${cleanPath}`;
+
+							// Handle empty projectPath for single project exports
+							const exportPath = projectPath
+								? `${projectPath}/${cleanPath}`
+								: cleanPath;
 
 							const dirPath = exportPath.substring(
 								0,
@@ -244,7 +275,14 @@ class AccountExportService {
 			// Fallback to serialized data if live service didn't work or no files were exported
 			if (!filesExported && projectData.files && projectData.files.length > 0) {
 				try {
-					for (const file of projectData.files) {
+					let filesToProcess = projectData.files.filter((file) => file.type === "file");
+
+					if (!options?.includeTemporaryFiles) {
+						const { isTemporaryFile } = await import("../utils/fileUtils");
+						filesToProcess = filesToProcess.filter((file) => !isTemporaryFile(file.path));
+					}
+
+					for (const file of filesToProcess) {
 						if (file.type === "file") {
 							const content = projectData.fileContents.get(file.path);
 							if (content) {
@@ -255,7 +293,11 @@ class AccountExportService {
 								const cleanPath = file.path.startsWith("/")
 									? file.path.slice(1)
 									: file.path;
-								const exportPath = `${projectPath}/${cleanPath}`;
+
+								// Handle empty projectPath for single project exports
+								const exportPath = projectPath
+									? `${projectPath}/${cleanPath}`
+									: cleanPath;
 
 								const dirPath = exportPath.substring(
 									0,

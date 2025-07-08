@@ -165,6 +165,7 @@ export class ProjectDataService {
 	async serializeProjectFiles(
 		project: Project,
 		includeDeleted = false,
+		includeTemporaryFiles = true,
 	): Promise<{
 		files: FileMetadata[];
 		fileContents: Map<string, ArrayBuffer | string>;
@@ -188,7 +189,12 @@ export class ProjectDataService {
 		}
 
 		try {
-			const allFiles = await fileStorageService.getAllFiles(includeDeleted);
+			let allFiles = await fileStorageService.getAllFiles(includeDeleted);
+
+			if (!includeTemporaryFiles) {
+				const { isTemporaryFile } = await import("../utils/fileUtils");
+				allFiles = allFiles.filter((file) => !isTemporaryFile(file.path));
+			}
 
 			for (const file of allFiles) {
 				const fileMetadata = this.unifiedService.convertFileToMetadata(file);
