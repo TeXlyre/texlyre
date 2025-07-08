@@ -56,11 +56,13 @@ class CommentService {
 			const timeMatch = openTagContent.match(/time:\s*(\d+)/);
 			const contentMatch = openTagContent.match(/content:\s*'([^']*)'/);
 			const responsesMatch = openTagContent.match(/responses:\s*\[(.*?)\]/);
+			const resolvedMatch = openTagContent.match(/resolved:\s*(true|false)/);
 
 			const user = userMatch ? userMatch[1].trim() : "Anonymous";
 			const timestamp = timeMatch ? Number.parseInt(timeMatch[1]) : Date.now();
 			const commentContent = contentMatch ? contentMatch[1] : "";
 			const responsesString = responsesMatch ? responsesMatch[1] : "";
+			const resolved = resolvedMatch ? resolvedMatch[1] === "true" : false;
 
 			const commentedText = editorContent.substring(
 				openTagEnd + 4,
@@ -103,6 +105,7 @@ class CommentService {
 				closeTagEnd,
 				commentedText,
 				line: calculateLineNumber(editorContent, openTagStart),
+				resolved,
 			});
 
 			searchStart = openTagEnd + 4;
@@ -115,7 +118,7 @@ class CommentService {
 		const id = nanoid();
 		const timestamp = Date.now();
 
-		const commentPrefix = `<### comment id: ${id}, user: ${username}, time: ${timestamp}, content: '${content}', responses: [] ###>`;
+		const commentPrefix = `<### comment id: ${id}, user: ${username}, time: ${timestamp}, content: '${content}', responses: [], resolved: false ###>`;
 		const commentSuffix = `</### comment id: ${id} ###>`;
 
 		return {
@@ -132,7 +135,24 @@ class CommentService {
 			})
 			.join(", ");
 
-		const updatedCommentPrefix = `<### comment id: ${comment.id}, user: ${comment.user}, time: ${comment.timestamp}, content: '${comment.content}', responses: [${responsesString}] ###>`;
+		const updatedCommentPrefix = `<### comment id: ${comment.id}, user: ${comment.user}, time: ${comment.timestamp}, content: '${comment.content}', responses: [${responsesString}], resolved: ${comment.resolved} ###>`;
+		const updatedCommentSuffix = `</### comment id: ${comment.id} ###>`;
+
+		return {
+			openTag: updatedCommentPrefix,
+			closeTag: updatedCommentSuffix,
+			commentId: comment.id,
+		};
+	}
+
+	resolveComment(comment: Comment): CommentRaw {
+		const responsesString = comment.responses
+			.map((response) => {
+				return `<#### response id: '${response.id}', user: ${response.user}, time: ${response.timestamp}, content: '${response.content}' ####/>`;
+			})
+			.join(", ");
+
+		const updatedCommentPrefix = `<### comment id: ${comment.id}, user: ${comment.user}, time: ${comment.timestamp}, content: '${comment.content}', responses: [${responsesString}], resolved: ${comment.resolved} ###>`;
 		const updatedCommentSuffix = `</### comment id: ${comment.id} ###>`;
 
 		return {

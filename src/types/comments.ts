@@ -20,6 +20,7 @@ export interface Comment {
 	closeTagEnd?: number;
 	commentedText?: string;
 	line?: number;
+	resolved: boolean;
 }
 
 export interface CommentRaw {
@@ -35,6 +36,7 @@ export interface CommentContextType {
 	addResponse: (commentId: string, content: string) => void;
 	deleteComment: (commentId: string) => void;
 	deleteResponse: (commentId: string, responseId: string) => void;
+	resolveComment: (commentId: string) => void;
 	showComments: boolean;
 	toggleComments: () => void;
 	parseComments: (editorContent: string) => Comment[];

@@ -5,11 +5,11 @@ import { useState } from "react";
 import { useComments } from "../../hooks/useComments";
 import type { Comment } from "../../types/comments";
 import { formatDate } from "../../utils/dateUtils";
-import { TrashIcon } from "../common/Icons";
+import { CheckIcon, TrashIcon } from "../common/Icons";
 
 interface CommentItemProps {
 	comment: Comment;
-	view: "list" | "inline";
+	view: "list" | "resolved";
 	onLineClick?: (line: number) => void;
 }
 
@@ -20,7 +20,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 }) => {
 	const [newResponse, setNewResponse] = useState("");
 	const [isAddingResponse, setIsAddingResponse] = useState(false);
-	const { addResponse, deleteComment, deleteResponse } = useComments();
+	const { addResponse, deleteComment, deleteResponse, resolveComment } = useComments();
 
 	const handleAddResponse = () => {
 		if (newResponse.trim()) {
@@ -32,6 +32,10 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
 	const handleDeleteResponse = (responseId: string) => {
 		deleteResponse(comment.id, responseId);
+	};
+
+	const handleResolveComment = () => {
+		resolveComment(comment.id);
 	};
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -59,7 +63,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 	};
 
 	return (
-		<div className={`comment-item ${view === "inline" ? "inline-view" : ""}`}>
+		<div className={`comment-item ${comment.resolved ? 'resolved' : ''}`}>
 			<div className="comment-header">
 				<div className="comment-author-container">
 					<div className="comment-author" title={comment.user}>
@@ -68,15 +72,13 @@ const CommentItem: React.FC<CommentItemProps> = ({
 					<div className="comment-time">{formatDate(comment.timestamp)}</div>
 				</div>
 				<div className="comment-header-actions">
-					{comment.line && (
-						<button
-							className="comment-line-button"
-							onClick={handleLineClick}
-							title={`Go to line ${comment.line}`}
-						>
-							Line {comment.line}
-						</button>
-					)}
+					<button
+						className="resolve-button"
+						onClick={handleResolveComment}
+						title={comment.resolved ? "Mark as unresolved" : "Mark as resolved"}
+					>
+						<CheckIcon />
+					</button>
 					<button
 						className="delete-button"
 						onClick={() => deleteComment(comment.id)}
@@ -86,6 +88,18 @@ const CommentItem: React.FC<CommentItemProps> = ({
 					</button>
 				</div>
 			</div>
+
+			{comment.line && (
+				<div className="comment-line-section">
+					<button
+						className="comment-line-button"
+						onClick={handleLineClick}
+						title={`Go to line ${comment.line}`}
+					>
+						Line {comment.line}
+					</button>
+				</div>
+			)}
 
 			<div className="comment-content">{comment.content}</div>
 
@@ -116,41 +130,43 @@ const CommentItem: React.FC<CommentItemProps> = ({
 				</div>
 			)}
 
-			{isAddingResponse ? (
-				<div className="add-response-form">
-					<textarea
-						value={newResponse}
-						onChange={(e) => setNewResponse(e.target.value)}
-						onKeyDown={handleKeyDown}
-						placeholder="Type your response..."
-						rows={2}
-					/>
-					<div className="form-actions">
-						<button
-							className="cancel-button"
-							onClick={() => {
-								setIsAddingResponse(false);
-								setNewResponse("");
-							}}
-						>
-							Cancel
-						</button>
-						<button
-							className="submit-button"
-							onClick={handleAddResponse}
-							disabled={!newResponse.trim()}
-						>
-							Submit
-						</button>
+			{!comment.resolved && (
+				isAddingResponse ? (
+					<div className="add-response-form">
+						<textarea
+							value={newResponse}
+							onChange={(e) => setNewResponse(e.target.value)}
+							onKeyDown={handleKeyDown}
+							placeholder="Type your response..."
+							rows={2}
+						/>
+						<div className="form-actions">
+							<button
+								className="cancel-button"
+								onClick={() => {
+									setIsAddingResponse(false);
+									setNewResponse("");
+								}}
+							>
+								Cancel
+							</button>
+							<button
+								className="submit-button"
+								onClick={handleAddResponse}
+								disabled={!newResponse.trim()}
+							>
+								Submit
+							</button>
+						</div>
 					</div>
-				</div>
-			) : (
-				<button
-					className="add-response-button"
-					onClick={() => setIsAddingResponse(true)}
-				>
-					Add response
-				</button>
+				) : (
+					<button
+						className="add-response-button"
+						onClick={() => setIsAddingResponse(true)}
+					>
+						Add response
+					</button>
+				)
 			)}
 		</div>
 	);

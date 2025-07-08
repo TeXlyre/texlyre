@@ -36,7 +36,6 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 
 		const rawComment = commentService.addComment(content, user.username);
 
-		// Show comments panel when adding a new comment
 		setShowComments(true);
 		return rawComment;
 	};
@@ -128,6 +127,38 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 		}
 	};
 
+	const resolveComment = (commentId: string) => {
+		if (!user) return;
+
+		const comment = comments.find((c) => c.id === commentId);
+		if (!comment) return;
+
+		const updatedComment = {
+			...comment,
+			resolved: !comment.resolved,
+		};
+		const rawComment = commentService.resolveComment(updatedComment);
+
+		if (
+			comment.openTagStart !== undefined &&
+			comment.openTagEnd !== undefined &&
+			comment.closeTagStart !== undefined &&
+			comment.closeTagEnd !== undefined
+		) {
+			const event = new CustomEvent("comment-update", {
+				detail: {
+					commentId,
+					openTagStart: comment.openTagStart,
+					openTagEnd: comment.openTagEnd,
+					closeTagStart: comment.closeTagStart,
+					closeTagEnd: comment.closeTagEnd,
+					rawComment: rawComment,
+				},
+			});
+			document.dispatchEvent(event);
+		}
+	};
+
 	const getCommentAtPosition = (position: number) => {
 		for (const comment of comments) {
 			if (
@@ -156,6 +187,7 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 				addResponse,
 				deleteComment,
 				deleteResponse,
+				resolveComment,
 				showComments,
 				toggleComments,
 				parseComments,

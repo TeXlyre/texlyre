@@ -21,6 +21,7 @@ export const addComment = StateEffect.define<{
 		content: { start: number; end: number };
 		closeTag: { start: number; end: number };
 	};
+	resolved?: boolean;
 }>();
 export const clearComments = StateEffect.define<null>();
 
@@ -143,7 +144,6 @@ function preventTagEdits(tr: Transaction): Transaction | null {
 		let { from, to, insert } = change;
 		let processed = false;
 
-		// Sort ranges by position to handle them in order
 		const sortedRanges = [...ranges].sort((a, b) => a.openStart - b.openStart);
 
 		for (const range of sortedRanges) {
@@ -216,13 +216,13 @@ export const commentState = StateField.define<RangeSet<Decoration>>({
 			}
 		}
 
-		// Collect all decorations from all comment effects
 		const allDecorations = [];
 
 		for (const e of tr.effects) {
 			if (e.is(addComment)) {
-				const { id, positions } = e.value;
+				const { id, positions, resolved } = e.value;
 
+				// Always hide the comment tags (both resolved and unresolved)
 				if (
 					positions.openTag &&
 					positions.openTag.start !== undefined &&
@@ -235,24 +235,7 @@ export const commentState = StateField.define<RangeSet<Decoration>>({
 						}),
 						from: positions.openTag.start,
 						to: positions.openTag.end,
-						priority: 1000 + positions.openTag.start, // Higher priority for earlier positions
-					});
-				}
-
-				if (
-					positions.content &&
-					positions.content.start !== undefined &&
-					positions.content.end !== undefined &&
-					positions.content.start < positions.content.end
-				) {
-					allDecorations.push({
-						decoration: Decoration.mark({
-							class: "cm-comment-content",
-							attributes: { "data-comment-id": id },
-						}),
-						from: positions.content.start,
-						to: positions.content.end,
-						priority: 500 + positions.content.start,
+						priority: 1000 + positions.openTag.start,
 					});
 				}
 
@@ -271,10 +254,28 @@ export const commentState = StateField.define<RangeSet<Decoration>>({
 						priority: 1000 + positions.closeTag.start,
 					});
 				}
+
+				// Only apply content highlighting to unresolved comments
+				if (
+					!resolved &&
+					positions.content &&
+					positions.content.start !== undefined &&
+					positions.content.end !== undefined &&
+					positions.content.start < positions.content.end
+				) {
+					allDecorations.push({
+						decoration: Decoration.mark({
+							class: "cm-comment-content",
+							attributes: { "data-comment-id": id },
+						}),
+						from: positions.content.start,
+						to: positions.content.end,
+						priority: 500 + positions.content.start,
+					});
+				}
 			}
 		}
 
-		// Sort decorations by position and apply them
 		if (allDecorations.length > 0) {
 			allDecorations.sort((a, b) => a.from - b.from || b.priority - a.priority);
 
@@ -304,6 +305,7 @@ export function processComments(view: EditorView, comments: Comment[]): void {
 						content: { start: number; end: number };
 						closeTag: { start: number; end: number };
 					};
+					resolved?: boolean;
 			  }>
 		)[] = [];
 
@@ -314,9 +316,8 @@ export function processComments(view: EditorView, comments: Comment[]): void {
 		const docContent = view.state.doc.toString();
 
 		console.log("Processing comments:", comments.length);
-		console.log("Document content:", docContent);
 
-		// Sort comments by position to ensure consistent processing of nested comments
+		// Process ALL comments to hide their tags, but only highlight unresolved ones
 		const sortedComments = [...comments].sort(
 			(a, b) => a.openTagStart - b.openTagStart,
 		);
@@ -329,10 +330,7 @@ export function processComments(view: EditorView, comments: Comment[]): void {
 				comment.closeTagEnd !== undefined
 			) {
 				console.log(
-					`Comment ${comment.id}: open(${comment.openTagStart}-${comment.openTagEnd}) close(${comment.closeTagStart}-${comment.closeTagEnd})`,
-				);
-				console.log(
-					`Comment content: "${docContent.slice(comment.openTagStart, comment.closeTagEnd)}"`,
+					`Comment ${comment.id}: open(${comment.openTagStart}-${comment.openTagEnd}) close(${comment.closeTagStart}-${comment.closeTagEnd}) resolved: ${comment.resolved}`,
 				);
 
 				if (
@@ -367,6 +365,7 @@ export function processComments(view: EditorView, comments: Comment[]): void {
 					addComment.of({
 						id: comment.id,
 						positions,
+						resolved: comment.resolved,
 					}),
 				);
 			}
@@ -478,7 +477,6 @@ class CommentProcessor {
 		to: number,
 		inputType?: string,
 	): boolean {
-		// Sort ranges by position for consistent checking
 		const sortedRanges = [...this.commentRanges].sort(
 			(a, b) => a.openStart - b.openStart,
 		);
