@@ -647,7 +647,14 @@ const Editor: React.FC<EditorComponentProps> = ({
 	if (!isDocumentSelected) {
 		return (
 			<div className="editor-container empty-state">
-				<p>Select a document or create a new one to start editing</p>
+			   <p>Select a file or create a new one to start editing.</p>
+
+			   <br /><br /><br /><br />
+
+			   <p style={{ fontStyle: 'italic'}}>
+				   Linking files allows you to view the cursor positions and text changes by your collaborators in real-time.
+				   To link a text file to a document, select or hover over the file and click the <LinkIcon/>
+				   <strong>Link</strong> button that appears next to it.</p>
 			</div>
 		);
 	}

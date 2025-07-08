@@ -916,6 +916,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 					) : (
 						<div className="empty-state">
 							No files. Upload or create files to get started.
+							Drag any files here to upload them.
 						</div>
 					)}
 				</div>

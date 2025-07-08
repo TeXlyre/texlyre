@@ -87,8 +87,9 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	const { currentLayout } = useTheme();
 	const { getProjectById } = useAuth();
 	const [activeView, setActiveView] = useState<"documents" | "files">(
-		"documents",
+		"files",
 	);
+	const [hasNavigated, setHasNavigated] = useState(false);
 	const [fileContent, setFileContent] = useState<string | ArrayBuffer>("");
 	const [isEditingFile, setIsEditingFile] = useState(false);
 	const [isBinaryFile, setIsBinaryFile] = useState(false);
@@ -442,6 +443,13 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 			document.removeEventListener("document-linked", handleDocumentLinked);
 		};
 	}, [documents]);
+
+	useEffect(() => {
+		// Only auto-navigate to document if targetDocId is explicitly provided
+		if (targetDocId && targetDocId.trim()) {
+			setActiveView("documents");
+		}
+	}, [targetDocId]);
 
 	const handleCreateDocument = (name: string) => {
 		onCreateDocument();

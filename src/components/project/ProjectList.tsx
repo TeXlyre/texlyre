@@ -3,7 +3,7 @@ import type React from "react";
 import { useEffect, useState } from "react";
 
 import type { Project } from "../../types/projects";
-import { ExportIcon, GridIcon, ListIcon } from "../common/Icons";
+import {ExportIcon, GridIcon, ImportIcon, ListIcon} from "../common/Icons";
 import ProjectCard from "./ProjectCard";
 
 interface ProjectListProps {
@@ -220,8 +220,8 @@ const ProjectList: React.FC<ProjectListProps> = ({
 						<p>No projects found matching the current criteria</p>
 						{!isSelectionMode && (
 							<p>
-								You can create a new project by clicking the{" ''+'' "}
-								<strong>New Project</strong> button.
+								To create a new project, click the{" ''+'' "}
+								<strong>New Project</strong> button or <ImportIcon/> <strong>Import</strong> an existing one.
 							</p>
 						)}
 					</div>

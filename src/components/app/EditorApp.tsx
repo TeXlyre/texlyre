@@ -154,10 +154,10 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	}, [doc?.projectMetadata, updateProject, getProjectById]);
 
 	useEffect(() => {
-		if (doc?.currentDocId !== undefined) {
+		if (targetDocId && doc?.currentDocId !== undefined) {
 			setLocalDocId(doc.currentDocId);
 		}
-	}, [doc?.currentDocId]);
+	}, [doc?.currentDocId, targetDocId]);
 
 	useEffect(() => {
 		if (!hasNavigated && doc && doc.documents && targetDocId) {
