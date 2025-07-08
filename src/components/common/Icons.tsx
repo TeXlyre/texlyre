@@ -1,6 +1,49 @@
 // src/components/common/Icons.tsx
 import type React from "react";
 
+export const ScrollIcon: React.FC = () => (
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width="16"
+		height="16"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="2"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+	>
+		<rect x="3" y="2" width="18" height="20" rx="2" ry="2" />
+		<path d="M3 6h18" />
+		<path d="M3 10h18" />
+		<path d="M3 14h18" />
+		<path d="M3 18h18" />
+		<line x1="19" y1="8" x2="19" y2="20" />
+		<line x1="17" y1="10" x2="17" y2="18" />
+	</svg>
+);
+
+export const PageIcon: React.FC = () => (
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width="16"
+		height="16"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="2"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+	>
+		<rect x="6" y="2" width="12" height="20" rx="2" ry="2" />
+		<path d="M9 6h6" />
+		<path d="M9 10h6" />
+		<path d="M9 14h6" />
+		<polyline points="2 12 4 10 6 12" />
+		<polyline points="18 12 20 10 22 12" />
+	</svg>
+);
+
 export const GridIcon: React.FC = () => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"

@@ -1,14 +1,9 @@
 // extras/renderers/pdf/PdfRenderer.tsx
-import * as pdfjs from "pdfjs-dist";
-import pdfWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
-import {
-	EventBus,
-	PDFFindController,
-	PDFLinkService,
-	PDFViewer,
-} from "pdfjs-dist/web/pdf_viewer.mjs";
 import type React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState, useEffect, useMemo, useRef } from "react";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
 
 import {
 	ChevronLeftIcon,
@@ -16,15 +11,17 @@ import {
 	DownloadIcon,
 	ZoomInIcon,
 	ZoomOutIcon,
+	ScrollIcon,
+	PageIcon,
 } from "../../../src/components/common/Icons";
 import { useSettings } from "../../../src/hooks/useSettings";
 import type { RendererProps } from "../../../src/plugins/PluginInterface";
-import "pdfjs-dist/web/pdf_viewer.css";
 import "./styles.css";
 
-if (!pdfjs.GlobalWorkerOptions.workerSrc) {
-	pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker;
-}
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+	'pdfjs-dist/build/pdf.worker.min.mjs',
+	import.meta.url,
+).toString();
 
 const PdfRenderer: React.FC<RendererProps> = ({
 	content,
@@ -35,342 +32,217 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 	const pdfRendererEnable =
 		(getSetting("pdf-renderer-enable")?.value as boolean) ?? true;
-	const pdfRendererInitialZoom =
-		(getSetting("pdf-renderer-initial-zoom")?.value as string) ?? "100";
 	const pdfRendererTextSelection =
 		(getSetting("pdf-renderer-text-selection")?.value as boolean) ?? true;
-	const pdfRendererAnnotations =
-		(getSetting("pdf-renderer-annotations")?.value as boolean) ?? true;
 
-	const [isLoading, setIsLoading] = useState(true);
+	const [numPages, setNumPages] = useState<number>(0);
+	const [currentPage, setCurrentPage] = useState<number>(1);
+	const [scale, setScale] = useState<number>(1.0);
+	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string | null>(null);
-
-	const containerRef = useRef<HTMLDivElement>(null);
-	const viewerContainerRef = useRef<HTMLDivElement>(null);
-	const viewerRef = useRef<HTMLDivElement>(null);
-	const toolbarRef = useRef<HTMLDivElement>(null);
-
-	const pdfViewerRef = useRef<PDFViewer | null>(null);
-	const loadingTaskRef = useRef<pdfjs.PDFDocumentLoadingTask | null>(null);
-	const eventBusRef = useRef<EventBus | null>(null);
-	const toolbarListenersRef = useRef<(() => void)[]>([]);
-
-	// Store original content immediately when component receives it
+	const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
+	const [scrollView, setScrollView] = useState<boolean>(false);
+	const [visiblePages, setVisiblePages] = useState<Set<number>>(new Set());
+	const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+	const contentRef = useRef<ArrayBuffer | null>(null);
 	const originalContentRef = useRef<ArrayBuffer | null>(null);
-	const pdfContentRef = useRef<{
-		data: ArrayBuffer;
-		uint8Data: Uint8Array;
-		isValid: boolean;
-	} | null>(null);
+	const contentHashRef = useRef<string>("");
 
-	// Store the original content as soon as we receive it
-	useEffect(() => {
-		if (content instanceof ArrayBuffer && content.byteLength > 0) {
-			originalContentRef.current = content.slice(0); // Create a copy immediately
-			console.log("PdfRenderer: Original content stored", {
-				size: content.byteLength,
-				type: content.constructor.name,
-			});
-		}
-	}, [content]);
-
-	const initializeContent = useCallback(() => {
-		if (!content || !(content instanceof ArrayBuffer)) {
-			console.error("PdfRenderer: Invalid content provided", content);
-			pdfContentRef.current = null;
-			return false;
-		}
-
-		if (content.byteLength === 0) {
-			console.error("PdfRenderer: Empty content provided");
-			pdfContentRef.current = null;
-			return false;
-		}
-
-		const dataCopy = content.slice(0);
-		const uint8Copy = new Uint8Array(dataCopy);
-
-		pdfContentRef.current = {
-			data: dataCopy,
-			uint8Data: uint8Copy,
-			isValid: true,
-		};
-
-		console.log("PdfRenderer: Content initialized", {
-			size: dataCopy.byteLength,
-			type: content.constructor.name,
-		});
-
-		return true;
-	}, [content]);
-
-	const cleanup = useCallback(() => {
-		console.log("PdfRenderer: Cleaning up...");
-
-		toolbarListenersRef.current.forEach((removeListener) => removeListener());
-		toolbarListenersRef.current = [];
-
-		if (loadingTaskRef.current) {
-			loadingTaskRef.current
-				.destroy()
-				.catch((err) =>
-					console.warn("PdfRenderer: Error destroying loading task:", err),
-				);
-			loadingTaskRef.current = null;
-		}
-
-		if (pdfViewerRef.current) {
-			try {
-				const pdfDocument = pdfViewerRef.current.pdfDocument;
-				if (pdfDocument) {
-					pdfDocument
-						.destroy()
-						.catch((err) =>
-							console.warn("PdfRenderer: Error destroying PDF document:", err),
-						);
-				}
-			} catch (err) {
-				console.warn("PdfRenderer: Error during viewer cleanup:", err);
-			}
-			pdfViewerRef.current = null;
-		}
-
-		eventBusRef.current = null;
-
-		if (viewerRef.current) {
-			viewerRef.current.innerHTML = "";
-			viewerRef.current.removeAttribute("style");
-			viewerRef.current.className = "pdf-renderer-viewer";
-		}
-		if (toolbarRef.current) {
-			const pageNumber = toolbarRef.current.querySelector(
-				"#pageNumber",
-			) as HTMLInputElement;
-			if (pageNumber) pageNumber.value = "1";
-			const pageCount = toolbarRef.current.querySelector("#pageCount");
-			if (pageCount) pageCount.textContent = "0";
-		}
+	const getContentHash = useCallback((buffer: ArrayBuffer): string => {
+		const view = new Uint8Array(buffer);
+		const sample = view.slice(0, Math.min(1024, view.length));
+		return `${buffer.byteLength}-${Array.from(sample.slice(0, 16)).join(',')}`;
 	}, []);
 
 	useEffect(() => {
-		if (!pdfRendererEnable) {
-			setError("Enhanced PDF renderer is disabled");
-			setIsLoading(false);
-			return;
-		}
-
-		if (
-			!containerRef.current ||
-			!viewerContainerRef.current ||
-			!viewerRef.current ||
-			!toolbarRef.current
-		) {
-			console.log("PdfRenderer: Not all refs are ready");
-			return;
-		}
-
-		let isMounted = true;
-
-		const initPdfViewer = async () => {
-			console.log("PdfRenderer: Initializing viewer...");
-
-			if (!initializeContent()) {
-				if (isMounted) {
-					setError("Invalid or empty PDF content");
-					setIsLoading(false);
-				}
-				return;
-			}
-
-			if (isMounted) {
-				setIsLoading(true);
-				setError(null);
-			}
-
-			cleanup();
-
+		if (content instanceof ArrayBuffer && content.byteLength > 0) {
 			try {
-				const eventBus = new EventBus();
-				const linkService = new PDFLinkService({ eventBus });
-				const findController = new PDFFindController({ eventBus, linkService });
-				const viewerOptions = {
-					container: viewerContainerRef.current!,
-					viewer: viewerRef.current!,
-					eventBus,
-					linkService,
-					findController,
-					textLayerMode: pdfRendererTextSelection ? 2 : 0,
-					...(pdfRendererAnnotations && { renderInteractiveForms: true }),
-				};
-				// Use simpler configuration similar to the working old version
-				const viewer = new PDFViewer(viewerOptions as any);
+				const contentHash = getContentHash(content);
 
-				pdfViewerRef.current = viewer;
-				eventBusRef.current = eventBus;
-				linkService.setViewer(viewer);
+				if (contentHashRef.current !== contentHash) {
+					// Create Uint8Array directly from the original ArrayBuffer
+					const data = new Uint8Array(content);
+					// Create a copy of the data for persistence
+					const dataCopy = new Uint8Array(data);
+					setPdfData(dataCopy);
 
-				console.log("PdfRenderer: Loading PDF document...");
-				const loadingTask = pdfjs.getDocument({
-					data: pdfContentRef.current?.uint8Data,
-					cMapUrl: import.meta.env.PROD ? "/texlyre/cmaps/" : "/cmaps/",
-					cMapPacked: true,
-				});
-				loadingTaskRef.current = loadingTask;
+					// Store the copied buffer for export
+					originalContentRef.current = dataCopy.buffer.slice(0);
+					contentRef.current = originalContentRef.current;
+					contentHashRef.current = contentHash;
 
-				const pdfDocument = await loadingTask.promise;
-				console.log(
-					"PdfRenderer: PDF document loaded, pages:",
-					pdfDocument.numPages,
-				);
-
-				if (!isMounted) return;
-
-				await viewer.setDocument(pdfDocument);
-				linkService.setDocument(pdfDocument);
-
-				const initialZoom = Number.parseInt(pdfRendererInitialZoom) / 100;
-				viewer.currentScale = initialZoom;
-
-				setupToolbar(eventBus, linkService, viewer);
-
-				if (isMounted) {
-					setIsLoading(false);
+					// Reset loading state
+					setIsLoading(true);
+					setError(null);
 				}
-			} catch (err) {
-				if (isMounted) {
-					console.error("PdfRenderer: Error loading PDF:", err);
-					setError(`Failed to load PDF document: ${err.message || err}`);
-					setIsLoading(false);
-				}
+			} catch (error) {
+				console.error("Error creating PDF data:", error);
+				setError("Failed to process PDF content");
+				setIsLoading(false);
 			}
-		};
+		} else {
+			setPdfData(null);
+			contentRef.current = null;
+			originalContentRef.current = null;
+			contentHashRef.current = "";
+			setError("No PDF content available");
+			setIsLoading(false);
+		}
+	}, [content, getContentHash]);
 
-		initPdfViewer();
+	const fileData = useMemo(() => {
+		return pdfData ? { data: pdfData } : null;
+	}, [pdfData]);
 
-		return () => {
-			isMounted = false;
-			cleanup();
-		};
-	}, [
-		content,
-		cleanup,
-		initializeContent,
-		pdfRendererEnable,
-		pdfRendererInitialZoom,
-		pdfRendererTextSelection,
-		pdfRendererAnnotations,
-	]);
+	const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
+		setNumPages(numPages);
+		setCurrentPage(1);
+		setIsLoading(false);
+		setError(null);
+	}, []);
 
-	const setupToolbar = (
-		eventBus: EventBus,
-		linkService: PDFLinkService,
-		viewer: PDFViewer,
-	) => {
-		if (!toolbarRef.current) return;
+	const onDocumentLoadError = useCallback((error: Error) => {
+		setError(`Failed to load PDF: ${error.message}`);
+		setIsLoading(false);
+	}, []);
 
-		const toolbar = toolbarRef.current;
-
-		const addListener = (
-			element: Element | null,
-			event: string,
-			handler: EventListener,
-		) => {
-			if (element) {
-				element.addEventListener(event, handler);
-				toolbarListenersRef.current.push(() =>
-					element.removeEventListener(event, handler),
-				);
+	const handlePreviousPage = useCallback(() => {
+		if (scrollView) {
+			const targetPage = Math.max(currentPage - 1, 1);
+			const pageElement = pageRefs.current.get(targetPage);
+			if (pageElement) {
+				pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
 			}
-		};
+		} else {
+			setCurrentPage(prev => Math.max(prev - 1, 1));
+		}
+	}, [scrollView, currentPage]);
 
-		addListener(toolbar.querySelector("#prevPage"), "click", () => {
-			eventBus.dispatch("previouspage", { source: viewer });
-		});
+	const handleNextPage = useCallback(() => {
+		if (scrollView) {
+			const targetPage = Math.min(currentPage + 1, numPages);
+			const pageElement = pageRefs.current.get(targetPage);
+			if (pageElement) {
+				pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			}
+		} else {
+			setCurrentPage(prev => Math.min(prev + 1, numPages));
+		}
+	}, [scrollView, currentPage, numPages]);
 
-		addListener(toolbar.querySelector("#nextPage"), "click", () => {
-			eventBus.dispatch("nextpage", { source: viewer });
-		});
-
-		const pageNumber = toolbar.querySelector("#pageNumber") as HTMLInputElement;
-		if (pageNumber) {
-			const pageNumberHandler = function (this: HTMLInputElement) {
-				const val = Number.parseInt(this.value);
-				if (val && !Number.isNaN(val) && val > 0 && val <= viewer.pagesCount) {
-					linkService.page = val;
-				} else {
-					this.value = linkService.page.toString();
+	const handlePageInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+		const pageNum = parseInt(event.target.value, 10);
+		if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= numPages) {
+			if (scrollView) {
+				const pageElement = pageRefs.current.get(pageNum);
+				if (pageElement) {
+					pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
 				}
-			};
-			addListener(pageNumber, "change", pageNumberHandler);
-
-			const pageChangeHandler = (evt: any) => {
-				pageNumber.value = evt.pageNumber.toString();
-			};
-			eventBus.on("pagechanging", pageChangeHandler);
-			toolbarListenersRef.current.push(() =>
-				eventBus.off("pagechanging", pageChangeHandler),
-			);
+			} else {
+				setCurrentPage(pageNum);
+			}
 		}
+	}, [numPages, scrollView]);
 
-		const pageCount = toolbar.querySelector("#pageCount");
-		if (pageCount) {
-			const pagesLoadedHandler = (evt: any) => {
-				pageCount.textContent = evt.pagesCount.toString();
-			};
-			eventBus.on("pagesloaded", pagesLoadedHandler);
-			toolbarListenersRef.current.push(() =>
-				eventBus.off("pagesloaded", pagesLoadedHandler),
-			);
-		}
-
-		addListener(toolbar.querySelector("#zoomIn"), "click", () => {
-			viewer.increaseScale();
-		});
-
-		addListener(toolbar.querySelector("#zoomOut"), "click", () => {
-			viewer.decreaseScale();
-		});
-
-		const exportButton = toolbar.querySelector("#exportButton");
-		if (exportButton) {
-			addListener(exportButton, "click", () => {
-				console.log("PdfRenderer: Export button clicked");
-
-				if (onDownload && fileName) {
-					console.log("PdfRenderer: Using custom export handler");
-					onDownload(fileName);
-				} else {
-					const contentToExport =
-						originalContentRef.current || pdfContentRef.current?.data;
-
-					if (contentToExport) {
-						console.log("PdfRenderer: Exporting PDF", {
-							size: contentToExport.byteLength,
-							fileName: fileName || "document.pdf",
-							source: originalContentRef.current ? "original" : "processed",
-						});
-
-						const blob = new Blob([contentToExport], {
-							type: "application/pdf",
-						});
-						const url = URL.createObjectURL(blob);
-						const a = document.createElement("a");
-						a.href = url;
-						a.download = fileName || "document.pdf";
-						document.body.appendChild(a);
-						a.click();
-						document.body.removeChild(a);
-						URL.revokeObjectURL(url);
-					} else {
-						console.error(
-							"PdfRenderer: No valid PDF content available for export",
-						);
-						setError("Cannot export: PDF content is not available");
+	const handlePageInputKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
+		if (event.key === 'Enter') {
+			const pageNum = parseInt(event.currentTarget.value, 10);
+			if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= numPages) {
+				if (scrollView) {
+					const pageElement = pageRefs.current.get(pageNum);
+					if (pageElement) {
+						pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
 					}
+				} else {
+					setCurrentPage(pageNum);
 				}
-			});
+			} else {
+				event.currentTarget.value = currentPage.toString();
+			}
 		}
-	};
+	}, [numPages, currentPage, scrollView]);
+
+	const handleZoomIn = useCallback(() => {
+		setScale(prev => Math.min(prev + 0.25, 3));
+	}, []);
+
+	const handleZoomOut = useCallback(() => {
+		setScale(prev => Math.max(prev - 0.25, 0.5));
+	}, []);
+
+	const handleToggleView = useCallback(() => {
+		setScrollView(prev => !prev);
+		// Reset page refs when switching views
+		pageRefs.current.clear();
+	}, []);
+
+	const onPageLoadSuccess = useCallback((pageNumber: number) => {
+		return (page: any) => {
+			// This callback is called when each page finishes loading in scroll view
+		};
+	}, []);
+
+	// Track visible pages in scroll view using Intersection Observer
+	useEffect(() => {
+		if (!scrollView) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				const newVisiblePages = new Set(visiblePages);
+
+				entries.forEach((entry) => {
+					const pageNum = parseInt(entry.target.getAttribute('data-page-number') || '0');
+					if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+						newVisiblePages.add(pageNum);
+					} else {
+						newVisiblePages.delete(pageNum);
+					}
+				});
+
+				setVisiblePages(newVisiblePages);
+
+				// Update current page to the lowest visible page
+				if (newVisiblePages.size > 0) {
+					const lowestVisiblePage = Math.min(...Array.from(newVisiblePages));
+					setCurrentPage(lowestVisiblePage);
+				}
+			},
+			{
+				threshold: [0.5],
+				rootMargin: '-20% 0px -20% 0px'
+			}
+		);
+
+		// Observe all page elements
+		pageRefs.current.forEach((element) => {
+			observer.observe(element);
+		});
+
+		return () => observer.disconnect();
+	}, [scrollView, visiblePages]);
+
+	const handleExport = useCallback(() => {
+		if (onDownload && fileName) {
+			onDownload(fileName);
+		} else if (originalContentRef.current && originalContentRef.current.byteLength > 0) {
+			try {
+				const blob = new Blob([originalContentRef.current], { type: "application/pdf" });
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement("a");
+				a.href = url;
+				a.download = fileName || "document.pdf";
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
+				URL.revokeObjectURL(url);
+			} catch (error) {
+				console.error("Export error:", error);
+				setError("Failed to export PDF");
+			}
+		} else {
+			setError("Cannot export: PDF content is not available");
+		}
+	}, [fileName, onDownload]);
 
 	if (!pdfRendererEnable) {
 		return (
@@ -384,42 +256,78 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	}
 
 	return (
-		<div className="pdf-renderer-container" ref={containerRef}>
-			<div className="pdf-toolbar" ref={toolbarRef}>
+		<div className="pdf-renderer-container">
+			<div className="pdf-toolbar">
 				<div className="toolbar">
 					<div id="toolbarLeft">
 						<div className="toolbarButtonGroup">
 							<button
-								id="prevPage"
+								onClick={handlePreviousPage}
 								className="toolbarButton"
 								title="Previous Page"
+								disabled={currentPage <= 1 || isLoading}
 							>
 								<ChevronLeftIcon />
 							</button>
-							<button id="nextPage" className="toolbarButton" title="Next Page">
+							<button
+								onClick={handleNextPage}
+								className="toolbarButton"
+								title="Next Page"
+								disabled={currentPage >= numPages || isLoading}
+							>
 								<ChevronRightIcon />
 							</button>
 						</div>
 						<div className="toolbarButtonGroup">
 							<div className="pageNumber">
-								<input id="pageNumber" type="number" className="toolbarField" />
+								<input
+									type="number"
+									value={currentPage}
+									onChange={handlePageInputChange}
+									onKeyDown={handlePageInputKeyDown}
+									className="toolbarField"
+									min={1}
+									max={numPages}
+									disabled={isLoading}
+								/>
 								<span>/</span>
-								<span id="pageCount">0</span>
+								<span>{numPages}</span>
 							</div>
 						</div>
 						<div className="toolbarButtonGroup">
-							<button id="zoomOut" className="toolbarButton" title="Zoom Out">
+							<button
+								onClick={handleZoomOut}
+								className="toolbarButton"
+								title="Zoom Out"
+								disabled={isLoading}
+							>
 								<ZoomOutIcon />
 							</button>
-							<button id="zoomIn" className="toolbarButton" title="Zoom In">
+							<button
+								onClick={handleZoomIn}
+								className="toolbarButton"
+								title="Zoom In"
+								disabled={isLoading}
+							>
 								<ZoomInIcon />
 							</button>
 						</div>
 						<div className="toolbarButtonGroup">
 							<button
-								id="exportButton"
+								onClick={handleToggleView}
+								className="toolbarButton"
+								title={scrollView ? "Single Page View" : "Scroll View"}
+								disabled={isLoading}
+							>
+								{scrollView ? <PageIcon /> : <ScrollIcon />}
+							</button>
+						</div>
+						<div className="toolbarButtonGroup">
+							<button
+								onClick={handleExport}
 								className="toolbarButton"
 								title="Download"
+								disabled={isLoading}
 							>
 								<DownloadIcon />
 							</button>
@@ -428,13 +336,59 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				</div>
 			</div>
 
-			<div className="pdf-renderer-content" ref={viewerContainerRef}>
-				<div className="pdf-renderer-viewer" ref={viewerRef} />
+			<div className="pdf-renderer-content">
+				{fileData && (
+					<Document
+						file={fileData}
+						onLoadSuccess={onDocumentLoadSuccess}
+						onLoadError={onDocumentLoadError}
+						loading={
+							<div className="pdf-renderer-loading">Loading PDF document...</div>
+						}
+					>
+						{!isLoading && !error && (
+							scrollView ? (
+								// Render all pages in scroll view
+								Array.from(new Array(numPages), (_, index) => {
+									const pageNumber = index + 1;
+									return (
+										<div
+											key={`page_${pageNumber}`}
+											data-page-number={pageNumber}
+											ref={(el) => {
+												if (el) {
+													pageRefs.current.set(pageNumber, el);
+												} else {
+													pageRefs.current.delete(pageNumber);
+												}
+											}}
+										>
+											<Page
+												pageNumber={pageNumber}
+												scale={scale}
+												renderTextLayer={pdfRendererTextSelection}
+												renderAnnotationLayer={true}
+												loading={<div className="pdf-page-loading">Loading page {pageNumber}...</div>}
+												className="pdf-page-scroll"
+												onLoadSuccess={onPageLoadSuccess(pageNumber)}
+											/>
+										</div>
+									);
+								})
+							) : (
+								// Render single page
+								<Page
+									pageNumber={currentPage}
+									scale={scale}
+									renderTextLayer={pdfRendererTextSelection}
+									renderAnnotationLayer={true}
+									loading={<div className="pdf-page-loading">Loading page...</div>}
+								/>
+							)
+						)}
+					</Document>
+				)}
 			</div>
-
-			{isLoading && (
-				<div className="pdf-renderer-loading">Loading PDF document...</div>
-			)}
 
 			{error && <div className="pdf-renderer-error">{error}</div>}
 		</div>
