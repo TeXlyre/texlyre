@@ -107,21 +107,22 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 				const line = lines[i];
 				if (!line) continue;
 
-				const fileMatches = line.matchAll(
-					/\(([^)]*\.(?:tex|sty|cls|def|fd|cfg))/g,
-				);
-				for (const match of fileMatches) {
-					const filePath = match[1];
-					const fileName = filePath.split("/").pop() || filePath;
-					fileStack.push(fileName);
-				}
+				for (let j = 0; j < line.length; j++) {
+					const char = line[j];
 
-				const openParens = (line.match(/\(/g) || []).length;
-				const closeParens = (line.match(/\)/g) || []).length;
-				const netClose = closeParens - openParens;
-
-				for (let j = 0; j < netClose && fileStack.length > 0; j++) {
-					fileStack.pop();
+					if (char === '(') {
+						const remaining = line.substring(j + 1);
+						const fileMatch = remaining.match(/^([^()]*\.(?:tex|sty|cls|def|fd|cfg))/);
+						if (fileMatch) {
+							const filePath = fileMatch[1];
+							const fileName = filePath.split("/").pop() || filePath;
+							fileStack.push(fileName);
+						}
+					} else if (char === ')') {
+						if (fileStack.length > 0) {
+							fileStack.pop();
+						}
+					}
 				}
 			}
 
@@ -134,25 +135,37 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 			const line = lines[i];
 			const contextFile = getFileFromContext(i);
 
-			if (line.startsWith("! LaTeX Error:")) {
-				const errorMessage = line.substring(14).trim();
+			if (line.startsWith("! LaTeX Error:") || line.startsWith("! Fatal Package")) {
+				const errorMessage = line.startsWith("! LaTeX Error:")
+					? line.substring(14).trim()
+					: line.substring(2).trim();
 				let lineNumber: number | undefined;
 				let lineContent: string | undefined;
 				let fullMessage = errorMessage;
 
-				for (let j = i + 1; j < Math.min(i + 10, lines.length); j++) {
+				for (let j = i + 1; j < Math.min(i + 20, lines.length); j++) {
 					const nextLine = lines[j];
+
 					const lineMatch = nextLine.match(/^l\.(\d+)\s*(.*)/);
 					if (lineMatch) {
 						lineNumber = Number.parseInt(lineMatch[1], 10);
 						lineContent = lineMatch[2];
 						break;
 					}
-					if (
-						nextLine.trim() &&
-						!nextLine.startsWith("Type ") &&
-						!nextLine.startsWith("See ")
-					) {
+
+					if (nextLine.startsWith("Type <return>") ||
+						nextLine.startsWith("!  ==>") ||
+						nextLine.trim() === "" ||
+						nextLine.startsWith("See ")) {
+						break;
+					}
+
+					if (nextLine.match(/^\([^)]+\)\s+/)) {
+						const messageContent = nextLine.replace(/^\([^)]+\)\s+/, "").trim();
+						if (messageContent) {
+							fullMessage += ` ${messageContent}`;
+						}
+					} else if (nextLine.trim() && !nextLine.startsWith("Type ")) {
 						fullMessage += ` ${nextLine.trim()}`;
 					}
 				}
@@ -163,7 +176,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 					line: lineNumber,
 					file: contextFile,
 					lineContent: lineContent,
-					fullMessage: fullMessage,
+					fullMessage: fullMessage.replace(/\s+/g, " ").trim(),
 				});
 			} else if (line.startsWith("! ") && !line.startsWith("! LaTeX Error:")) {
 				const errorMessage = line.substring(2).trim();
