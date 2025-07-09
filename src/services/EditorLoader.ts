@@ -604,7 +604,7 @@ export const EditorLoader = (
 				return;
 			}
 
-			if (!isEditingFile && filePath && documentId && !filePath.includes(documentId)) {
+			if (!isEditingFile && filePath && !filePath.includes(documentId)) {
 				return;
 			}
 

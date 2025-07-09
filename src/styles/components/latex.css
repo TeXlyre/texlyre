@@ -63,27 +63,6 @@
 	gap: var(--space-xs);
 }
 
-.tab-button {
-	padding: var(--space-xs) 0.75rem;
-	border-radius: var(--radius-sm);
-	background: none;
-	border: none;
-	cursor: pointer;
-	font-size: 0.9rem;
-	color: var(--text-color);
-	transition: background-color var(--transition-normal);
-}
-
-.tab-button.active {
-	background-color: var(--pico-primary-focus);
-	font-weight: 500;
-}
-
-.tab-button:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
 .output-content {
 	flex: 1;
 	display: flex;

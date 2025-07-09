@@ -6,7 +6,8 @@ import type { FileNode } from "../../types/files";
 import { isTemporaryFile } from "../../utils/fileUtils";
 import DropdownPortal from "../common/DropdownPortal";
 import {
-	CopyIcon,
+	CopyUrlIcon,
+	DuplicateIcon,
 	DownloadIcon,
 	EditIcon,
 	FileIcon,
@@ -302,7 +303,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 									className="dropdown-item"
 									onClick={() => onDuplicateFile(node)}
 								>
-									<CopyIcon />
+									<DuplicateIcon />
 									<span>Duplicate</span>
 								</button>
 							)}
@@ -347,7 +348,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 								className="dropdown-item"
 								onClick={() => onCopyPath(node)}
 							>
-								<CopyIcon />
+								<CopyUrlIcon />
 								<span>Copy Path</span>
 							</button>
 

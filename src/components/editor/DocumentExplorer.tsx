@@ -8,7 +8,7 @@ import { buildUrlWithFragments, parseUrlFragments } from "../../types/yjs";
 import type { YjsDocUrl } from "../../types/yjs.ts";
 import DropdownPortal from "../common/DropdownPortal.tsx";
 import {
-	CopyIcon,
+	DuplicateIcon,
 	DownloadIcon,
 	EditIcon,
 	FileTextIcon,
@@ -305,7 +305,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 												setActiveMenu(null);
 											}}
 										>
-											<CopyIcon />
+											<DuplicateIcon />
 											<span>Duplicate</span>
 										</button>
 

@@ -466,6 +466,22 @@ class CommentProcessor {
 				}
 			}
 
+			if (from !== to && this.wouldAffectTags(from, to)) {
+				if (event.key === "Backspace" || event.key === "Delete" ||
+					event.key === "Enter" || event.key === "Tab" ||
+					(!event.ctrlKey && !event.altKey && !event.metaKey && event.key.length === 1)) {
+					event.preventDefault();
+					event.stopPropagation();
+
+					const inputType = event.key === "Backspace" ? "deleteContentBackward" :
+									event.key === "Delete" ? "deleteContentForward" : "insertText";
+					const data = (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) ? event.key : null;
+
+					this.handleSkipOperation(from, to, inputType, data);
+					return true;
+				}
+			}
+
 			return false;
 		};
 

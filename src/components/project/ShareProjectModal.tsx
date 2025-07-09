@@ -3,7 +3,7 @@ import QRCode from "qrcode";
 import type React from "react";
 import { useEffect, useState } from "react";
 
-import { CopyIcon, ShareIcon } from "../common/Icons";
+import { CopyUrlIcon, ShareIcon } from "../common/Icons";
 import Modal from "../common/Modal";
 
 interface ShareProjectModalProps {
@@ -102,7 +102,7 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 							className={getCopyButtonClass()}
 							disabled={copyStatus === "copied"}
 						>
-							<CopyIcon />
+							<CopyUrlIcon />
 							{getCopyButtonText()}
 						</button>
 					</div>
