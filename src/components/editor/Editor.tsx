@@ -37,6 +37,12 @@ interface EditorComponentProps {
 	onSwitchToDocuments?: () => void;
 	linkedDocumentId?: string | null;
 	documents?: Array<{ id: string; name: string }>;
+	linkedFileInfo?: {
+		fileName?: string;
+		mimeType?: string;
+		fileId?: string;
+		filePath?: string;
+	};
 }
 
 const EditorContent: React.FC<{
@@ -363,85 +369,14 @@ const Editor: React.FC<EditorComponentProps> = ({
 	onSwitchToDocuments,
 	linkedDocumentId,
 	documents,
+	linkedFileInfo
+
 }) => {
 	const [textContent, setTextContent] = useState<string>("");
 	const [filePath, setFilePath] = useState<string>("");
-	const [linkedFileInfo, setLinkedFileInfo] = useState<{
-		fileName?: string;
-		filePath?: string;
-		fileId?: string;
-	} | null>(null);
+
 	const editorRef = useRef<HTMLDivElement>(null);
 	const isUpdatingRef = useRef<boolean>(false);
-
-	useEffect(() => {
-		const checkLinkedFile = async () => {
-			if (!isEditingFile && documentId && documents) {
-				try {
-					const allFiles = await fileStorageService.getAllFiles();
-					const linkedFile = allFiles.find(
-						(file) => file.documentId === documentId,
-					);
-
-					if (linkedFile) {
-						setLinkedFileInfo({
-							fileName: linkedFile.name,
-							filePath: linkedFile.path,
-							fileId: linkedFile.id,
-						});
-					} else {
-						setLinkedFileInfo(null);
-					}
-				} catch (error) {
-					console.error("Error checking for linked file:", error);
-					setLinkedFileInfo(null);
-				}
-			} else {
-				setLinkedFileInfo(null);
-			}
-		};
-
-		checkLinkedFile();
-	}, [documentId, documents, isEditingFile, documentSelectionChange]);
-
-	useEffect(() => {
-		const handleDocumentSelected = (event: Event) => {
-			const customEvent = event as CustomEvent;
-			const { documentId: selectedDocId } = customEvent.detail;
-
-			if (selectedDocId === documentId && !isEditingFile) {
-				const checkAndUpdateLinkedFile = async () => {
-					try {
-						const allFiles = await fileStorageService.getAllFiles();
-						const linkedFile = allFiles.find(
-							(file) => file.documentId === selectedDocId,
-						);
-
-						if (linkedFile) {
-							setLinkedFileInfo({
-								fileName: linkedFile.name,
-								filePath: linkedFile.path,
-								fileId: linkedFile.id,
-							});
-						} else {
-							setLinkedFileInfo(null);
-						}
-					} catch (error) {
-						console.error("Error checking for linked file:", error);
-						setLinkedFileInfo(null);
-					}
-				};
-
-				checkAndUpdateLinkedFile();
-			}
-		};
-
-		document.addEventListener("document-selected", handleDocumentSelected);
-
-		return () => {
-			document.removeEventListener("document-selected", handleDocumentSelected);
-		};
-	}, [documentId, isEditingFile]);
 
 	const handleNavigateToLinkedFile = () => {
 		if (linkedFileInfo?.filePath) {

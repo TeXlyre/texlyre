@@ -7,7 +7,7 @@ import * as Y from "yjs";
 import { useAuth } from "../../hooks/useAuth";
 import { useFileTree } from "../../hooks/useFileTree";
 import { useTheme } from "../../hooks/useTheme";
-import { fileStorageService } from "../../services/FileStorageService";
+import { fileStorageService, fileStorageEventEmitter } from "../../services/FileStorageService";
 import type { Document } from "../../types/documents";
 import type { FileNode } from "../../types/files";
 import type { Project } from "../../types/projects";
@@ -290,41 +290,33 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	}, [selectedFileId, isEditingFile, getFile]);
 
 	useEffect(() => {
-		const checkLinkedFile = async () => {
-			if (!isEditingFile && selectedDocId && documents) {
-				const selectedDocument = documents.find(
-					(doc) => doc.id === selectedDocId,
-				);
-				if (selectedDocument) {
-					try {
-						const allFiles = await fileStorageService.getAllFiles();
-						const linkedFile = allFiles.find(
-							(file) => file.documentId === selectedDocument.id,
-						);
-						if (linkedFile) {
-							setLinkedFileInfo({
-								fileName: linkedFile.name,
-								mimeType: linkedFile.mimeType,
-								fileId: linkedFile.id,
-								filePath: linkedFile.path,
-							});
-							setLinkedDocumentId(selectedDocument.id);
+		const loadInitialLinkedFile = async () => {
+			if (!isEditingFile && selectedDocId) {
+				try {
+					const allFiles = await fileStorageService.getAllFiles(false);
+					const linkedFile = allFiles.find(
+						(file) => file.documentId === selectedDocId,
+					);
 
-							if (linkedFile.name.endsWith(".tex")) {
-								setShowLatexOutput(true);
-							}
-						} else {
-							setLinkedFileInfo({});
-							setLinkedDocumentId(null);
-							setShowLatexOutput(false);
+					if (linkedFile) {
+						setLinkedFileInfo({
+							fileName: linkedFile.name,
+							filePath: linkedFile.path,
+							fileId: linkedFile.id,
+							mimeType: linkedFile.mimeType,
+						});
+						setLinkedDocumentId(selectedDocId);
+
+						if (linkedFile.name.endsWith(".tex")) {
+							setShowLatexOutput(true);
 						}
-					} catch (error) {
-						console.error("Error checking for linked file:", error);
+					} else {
 						setLinkedFileInfo({});
 						setLinkedDocumentId(null);
 						setShowLatexOutput(false);
 					}
-				} else {
+				} catch (error) {
+					console.error("Error loading initial linked file:", error);
 					setLinkedFileInfo({});
 					setLinkedDocumentId(null);
 					setShowLatexOutput(false);
@@ -335,8 +327,8 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 			}
 		};
 
-		checkLinkedFile();
-	}, [selectedDocId, documents, isEditingFile]);
+		loadInitialLinkedFile();
+	}, [selectedDocId, isEditingFile]);
 
 	useEffect(() => {
 		if (
@@ -384,7 +376,6 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	}, [targetFilePath, fileTree, hasNavigatedToFile, targetDocId]);
 
 	useEffect(() => {
-		// Only handle initial navigation from URL, not tab switching
 		if (
 			selectedFileId &&
 			activeView === "files" &&
@@ -445,7 +436,6 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	}, [documents]);
 
 	useEffect(() => {
-		// Only auto-navigate to document if targetDocId is explicitly provided
 		if (targetDocId && targetDocId.trim()) {
 			setActiveView("documents");
 		}
@@ -539,10 +529,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 				if (file) {
 					const content = await getFileContent(lastUserSelectedFileId);
 					if (content) {
-						// First, update the file tree selection to match
 						selectFile(lastUserSelectedFileId);
-
-						// Then trigger the full file selection flow
 						handleUserFileSelect(
 							lastUserSelectedFileId,
 							content,
@@ -675,6 +662,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 									: null
 						}
 						documents={documents}
+						linkedFileInfo={linkedFileInfo}
 					/>
 				</div>
 
