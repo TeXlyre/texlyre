@@ -281,9 +281,10 @@ class FileSystemBackupService {
 		}
 
 		const account = await this.dataSerializer.serializeUserData(user.id);
-		const projects = localProjects.map((project) =>
-			this.unifiedService.convertProjectToMetadata(project, "backup"),
-		);
+
+		// Read existing projects from filesystem and merge with new ones
+		const existingData = await this.readExistingBackupData();
+		const mergedProjects = this.mergeProjectsData(existingData.projects, localProjects);
 
 		const projectData = new Map();
 		for (const project of localProjects) {
@@ -304,12 +305,66 @@ class FileSystemBackupService {
 			});
 		}
 
+		// Merge existing project data with new project data
+		const mergedProjectData = this.mergeProjectData(existingData.projectData, projectData);
+
 		return {
 			manifest: this.unifiedService.createManifest("backup"),
 			account,
-			projects,
-			projectData,
+			projects: mergedProjects,
+			projectData: mergedProjectData,
 		};
+	}
+
+	private async readExistingBackupData(): Promise<{
+		projects: any[];
+		projectData: Map<string, any>;
+	}> {
+		if (!this.rootHandle) {
+			return { projects: [], projectData: new Map() };
+		}
+
+		try {
+			const adapter = new DirectoryAdapter(this.rootHandle);
+
+			if (!(await adapter.exists(this.unifiedService.getPaths().MANIFEST))) {
+				return { projects: [], projectData: new Map() };
+			}
+
+			const existingData = await this.fileSystemManager.readUnifiedStructure(adapter);
+			return {
+				projects: existingData.projects || [],
+				projectData: existingData.projectData || new Map(),
+			};
+		} catch (error) {
+			console.warn("Could not read existing backup data:", error);
+			return { projects: [], projectData: new Map() };
+		}
+	}
+
+	private mergeProjectsData(existingProjects: any[], newProjects: Project[]): any[] {
+		const existingProjectsMap = new Map();
+		existingProjects.forEach(project => {
+			existingProjectsMap.set(project.docUrl, project);
+		});
+
+		// Convert new projects to metadata and update/add them
+		newProjects.forEach(project => {
+			const metadata = this.unifiedService.convertProjectToMetadata(project, "backup");
+			existingProjectsMap.set(project.docUrl, metadata);
+		});
+
+		return Array.from(existingProjectsMap.values());
+	}
+
+	private mergeProjectData(existingProjectData: Map<string, any>, newProjectData: Map<string, any>): Map<string, any> {
+		const mergedData = new Map(existingProjectData);
+
+		for (const [projectId, data] of newProjectData) {
+			mergedData.set(projectId, data);
+		}
+
+		return mergedData;
 	}
 
 	private async processImport(
