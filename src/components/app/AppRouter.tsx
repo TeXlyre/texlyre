@@ -4,16 +4,24 @@ import { useEffect, useState } from "react";
 
 import { useAuth } from "../../hooks/useAuth";
 import { collabService } from "../../services/CollabService";
+import { fileStorageService } from "../../services/FileStorageService";
 import type { YjsDocUrl } from "../../types/yjs";
 import {
 	buildUrlWithFragments,
 	isValidYjsUrl,
 	parseUrlFragments,
 } from "../../types/yjs";
+import { batchExtractZip } from "../../utils/zipUtils";
 import AuthApp from "./AuthApp.tsx";
 import EditorApp from "./EditorApp";
 import LoadingScreen from "./LoadingScreen";
 import ProjectApp from "./ProjectApp.tsx";
+
+interface UrlProjectParams {
+	newProjectName?: string;
+	newProjectDescription?: string;
+	files?: string;
+}
 
 const AppRouter: React.FC = () => {
 	const {
@@ -23,19 +31,111 @@ const AppRouter: React.FC = () => {
 		createProject,
 		getProjects,
 	} = useAuth();
+
 	const [currentView, setCurrentView] = useState<
 		"auth" | "projects" | "editor"
 	>("auth");
 	const [docUrl, setDocUrl] = useState<YjsDocUrl | null>(null);
-	const [_currentProjectId, setCurrentProjectId] = useState<string | null>(
-		null,
-	);
+	const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
 	const [targetDocId, setTargetDocId] = useState<string | null>(null);
 	const [targetFilePath, setTargetFilePath] = useState<string | null>(null);
+	const [isCreatingProject, setIsCreatingProject] = useState(false);
 
-	// Check if a document URL was provided in the hash
+	const parseUrlProjectParams = (hashUrl: string): UrlProjectParams | null => {
+		try {
+			const params: UrlProjectParams = {};
+			const parts = hashUrl.split('&');
+
+			for (const part of parts) {
+				if (part.startsWith('newProjectName:')) {
+					params.newProjectName = decodeURIComponent(part.slice(15));
+				} else if (part.startsWith('newProjectDescription:')) {
+					params.newProjectDescription = decodeURIComponent(part.slice(22));
+				} else if (part.startsWith('files:')) {
+					params.files = decodeURIComponent(part.slice(6));
+				}
+			}
+
+			return params.newProjectName ? params : null;
+		} catch (error) {
+			console.error('Error parsing URL project params:', error);
+			return null;
+		}
+	};
+
+	const downloadAndExtractZip = async (zipUrl: string, projectId: string): Promise<void> => {
+		try {
+			const response = await fetch(zipUrl);
+			if (!response.ok) {
+				throw new Error(`Failed to download zip: ${response.statusText}`);
+			}
+
+			const zipBlob = await response.blob();
+			const zipFile = new File([zipBlob], 'template.zip', { type: 'application/zip' });
+
+			await fileStorageService.initialize(`yjs:${projectId}`);
+
+			const { files, directories } = await batchExtractZip(zipFile, '/');
+			const allFiles = [...directories, ...files];
+
+			await fileStorageService.batchStoreFiles(allFiles, {
+				showConflictDialog: false,
+				preserveTimestamp: false
+			});
+
+		} catch (error) {
+			console.error('Error downloading and extracting zip:', error);
+		}
+	};
+
+	const createProjectFromUrl = async (params: UrlProjectParams): Promise<string | null> => {
+		if (!isAuthenticated || !params.newProjectName) return null;
+
+		setIsCreatingProject(true);
+
+		try {
+			const newProject = await createProject({
+				name: params.newProjectName,
+				description: params.newProjectDescription || '',
+				tags: [],
+				isFavorite: false,
+			});
+
+			const projectId = newProject.docUrl.startsWith('yjs:')
+				? newProject.docUrl.slice(4)
+				: newProject.docUrl;
+
+			if (params.files) {
+				await downloadAndExtractZip(params.files, projectId);
+			}
+
+			return newProject.docUrl;
+
+		} catch (error) {
+			console.error('Error creating project from URL:', error);
+			return null;
+		} finally {
+			setIsCreatingProject(false);
+		}
+	};
+
 	useEffect(() => {
 		const hashUrl = window.location.hash.substring(1);
+
+		const urlProjectParams = parseUrlProjectParams(hashUrl);
+		if (urlProjectParams && isAuthenticated && !isInitializing) {
+			createProjectFromUrl(urlProjectParams).then((createdDocUrl) => {
+				if (createdDocUrl) {
+					setDocUrl(createdDocUrl);
+					setCurrentView("editor");
+					window.location.hash = createdDocUrl;
+				} else {
+					setCurrentView("projects");
+					window.location.hash = "";
+				}
+			});
+			return;
+		}
 
 		if (hashUrl?.includes("yjs:")) {
 			const fragments = parseUrlFragments(hashUrl);
@@ -59,21 +159,16 @@ const AppRouter: React.FC = () => {
 		}
 	}, [isAuthenticated, isInitializing]);
 
-	// Handle auto-creation of projects for shared documents
 	useEffect(() => {
-		// Only process if authenticated and we have a document URL in the hash
 		const checkAndCreateProject = async () => {
 			if (isAuthenticated && !isInitializing && docUrl) {
-				// Add this guard to prevent multiple runs with the same URL
 				const lastCheckedUrl = sessionStorage.getItem("lastCheckedDocUrl");
 				if (lastCheckedUrl === docUrl) {
-					return; // Skip if we already checked this URL
+					return;
 				}
 
-				// Store the current URL as checked
 				sessionStorage.setItem("lastCheckedDocUrl", docUrl);
 
-				// Check if this document already has a project associated with it
 				try {
 					const existingProjects = await getProjects();
 					const existingProject = existingProjects.find(
@@ -81,11 +176,9 @@ const AppRouter: React.FC = () => {
 					);
 
 					if (existingProject) {
-						// Already exists, store the project ID
 						setCurrentProjectId(existingProject.id);
 						sessionStorage.setItem("currentProjectId", existingProject.id);
 					} else {
-						// New document, try to get metadata using the CollabService
 						const metadata = await collabService.getDocumentMetadata(docUrl);
 
 						if (metadata) {
@@ -95,7 +188,6 @@ const AppRouter: React.FC = () => {
 								metadata.description || "",
 							);
 						} else {
-							// If no metadata, create with default values
 							createProjectForDocument(
 								docUrl,
 								"Shared Document",
@@ -121,7 +213,6 @@ const AppRouter: React.FC = () => {
 		description: string,
 	) => {
 		try {
-			// Wait a moment for metadata to sync
 			await new Promise((resolve) => setTimeout(resolve, 500));
 
 			const project = await createProject({
@@ -132,7 +223,6 @@ const AppRouter: React.FC = () => {
 				isFavorite: false,
 			});
 
-			// Set the current project ID for future updates
 			setCurrentProjectId(project.id);
 			sessionStorage.setItem("currentProjectId", project.id);
 
@@ -143,7 +233,6 @@ const AppRouter: React.FC = () => {
 		}
 	};
 
-	// Handle authentication success
 	const handleAuthSuccess = () => {
 		if (docUrl) {
 			setCurrentView("editor");
@@ -152,43 +241,36 @@ const AppRouter: React.FC = () => {
 		}
 	};
 
-	// Handle opening a project from the project manager
 	const handleOpenProject = (
 		projectDocUrl: string,
 		_projectName?: string,
 		_projectDescription?: string,
 		projectId?: string,
 	) => {
-		// Clear previous targets
 		setTargetDocId(null);
 		setTargetFilePath(null);
 
-		// Handle URLs that already have fragments
 		let finalUrl = projectDocUrl;
 		if (projectDocUrl.includes("&")) {
 			const fragments = parseUrlFragments(projectDocUrl);
 			const baseDocUrl = fragments.yjsUrl;
 
-			// Validate URL format
 			if (!isValidYjsUrl(baseDocUrl)) {
 				console.error("Invalid document URL format:", baseDocUrl);
 				return;
 			}
 
-			// Store the current project ID for later updates
 			if (projectId) {
 				setCurrentProjectId(projectId);
 				sessionStorage.setItem("currentProjectId", projectId);
 			}
 
-			// Set fragment data for the editor to use
 			if (fragments.docId) setTargetDocId(fragments.docId);
 			if (fragments.filePath) setTargetFilePath(fragments.filePath);
 
 			setDocUrl(baseDocUrl);
-			finalUrl = projectDocUrl; // Keep the full URL with fragments
+			finalUrl = projectDocUrl;
 		} else {
-			// Simple YJS URL without fragments
 			if (!isValidYjsUrl(projectDocUrl)) {
 				console.error("Invalid document URL format:", projectDocUrl);
 				return;
@@ -203,12 +285,10 @@ const AppRouter: React.FC = () => {
 			finalUrl = projectDocUrl;
 		}
 
-		// Update the browser URL
 		window.location.hash = finalUrl;
 		setCurrentView("editor");
 	};
 
-	// Handle logging out
 	const handleLogout = async () => {
 		await logout();
 		setCurrentView("auth");
@@ -220,7 +300,6 @@ const AppRouter: React.FC = () => {
 		sessionStorage.removeItem("lastCheckedDocUrl");
 	};
 
-	// Handle returning to projects from the editor
 	const handleBackToProjects = () => {
 		setCurrentView("projects");
 		setDocUrl(null);
@@ -232,12 +311,10 @@ const AppRouter: React.FC = () => {
 		window.location.hash = "";
 	};
 
-	// If still initializing auth, show a loading screen
-	if (isInitializing) {
+	if (isInitializing || isCreatingProject) {
 		return <LoadingScreen />;
 	}
 
-	// Determine which component to render based on current view and authentication status
 	if (!isAuthenticated) {
 		return <AuthApp onAuthSuccess={handleAuthSuccess} />;
 	}
@@ -257,7 +334,6 @@ const AppRouter: React.FC = () => {
 					targetFilePath={targetFilePath}
 				/>
 			) : (
-				// If no docUrl is set but we're in editor view, go back to projects
 				<ProjectApp onOpenProject={handleOpenProject} onLogout={handleLogout} />
 			);
 		default:
