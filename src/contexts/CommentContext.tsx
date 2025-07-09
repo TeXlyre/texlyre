@@ -1,6 +1,6 @@
 // src/contexts/CommentContext.tsx
 import type React from "react";
-import { type ReactNode, createContext, useCallback, useState } from "react";
+import { type ReactNode, createContext, useCallback, useState, useEffect } from "react";
 
 import { useAuth } from "../hooks/useAuth";
 import { commentService } from "../services/CommentService";
@@ -26,6 +26,60 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 	const [comments, setComments] = useState<Comment[]>([]);
 	const [showComments, setShowComments] = useState<boolean>(false);
 	const { user } = useAuth();
+
+	const getCommentById = useCallback((commentId: string) => {
+		return comments.find(comment => comment.id === commentId) || null;
+	}, [comments]);
+
+	const scrollToComment = useCallback((commentId: string) => {
+		console.log('Looking for comment item with data-comment-id:', commentId);
+		const commentElement = document.querySelector(`.comment-item[data-comment-id="${commentId}"]`);
+		console.log('Found element:', commentElement);
+
+		if (commentElement) {
+			console.log('Scrolling to element');
+			commentElement.scrollIntoView({
+				behavior: "smooth",
+				block: "center"
+			});
+
+			commentElement.classList.add("highlight-comment");
+			setTimeout(() => {
+				commentElement.classList.remove("highlight-comment");
+			}, 2000);
+		} else {
+			console.log('Comment item not found - is the comment panel open?');
+		}
+	}, []);
+
+	useEffect(() => {
+		const handleGetCommentById = (event: Event) => {
+			const customEvent = event as CustomEvent;
+			const { commentId } = customEvent.detail;
+			const comment = getCommentById(commentId);
+
+			document.dispatchEvent(
+				new CustomEvent("comment-data-response", {
+					detail: { commentId, comment },
+				})
+			);
+		};
+
+		const handleScrollToComment = (event: Event) => {
+			const customEvent = event as CustomEvent;
+			const { commentId } = customEvent.detail;
+			console.log('Scrolling to comment:', commentId); // Debug log
+			scrollToComment(commentId);
+		};
+
+		document.addEventListener("get-comment-by-id", handleGetCommentById);
+		document.addEventListener("scroll-to-comment", handleScrollToComment);
+
+		return () => {
+			document.removeEventListener("get-comment-by-id", handleGetCommentById);
+			document.removeEventListener("scroll-to-comment", handleScrollToComment);
+		};
+	}, [getCommentById, scrollToComment]);
 
 	const toggleComments = () => {
 		setShowComments(!showComments);

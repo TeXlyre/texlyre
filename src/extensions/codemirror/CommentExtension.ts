@@ -12,6 +12,7 @@ import {
 	WidgetType,
 } from "@codemirror/view";
 
+import { commentBubbleExtension } from "./CommentBubbleExtension";
 import type { Comment } from "../../types/comments";
 
 export const addComment = StateEffect.define<{
@@ -714,14 +715,5 @@ export const commentSystemExtension = [
 	commentRanges,
 	commentState,
 	ViewPlugin.define((view) => new CommentProcessor(view)),
-	EditorView.theme({
-		".comment-open-tag, .comment-close-tag": {
-			display: "none !important",
-			width: "0 !important",
-			height: "0 !important",
-			overflow: "hidden !important",
-			position: "absolute !important",
-			visibility: "hidden !important",
-		},
-	}),
+	...commentBubbleExtension,
 ];

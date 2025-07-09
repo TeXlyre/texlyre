@@ -77,7 +77,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 	};
 
 	return (
-		<div className={`comment-item ${comment.resolved ? 'resolved' : ''}`}>
+		<div className={`comment-item ${comment.resolved ? 'resolved' : ''}`} data-comment-id={comment.id}>
 			<div className="comment-header">
 				<div className="comment-author-container">
 					<div className="comment-author" title={comment.user}>
