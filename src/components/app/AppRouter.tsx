@@ -20,6 +20,7 @@ import ProjectApp from "./ProjectApp.tsx";
 interface UrlProjectParams {
 	newProjectName?: string;
 	newProjectDescription?: string;
+	newProjectTags?: string;
 	files?: string;
 }
 
@@ -51,6 +52,8 @@ const AppRouter: React.FC = () => {
 					params.newProjectName = decodeURIComponent(part.slice(15));
 				} else if (part.startsWith('newProjectDescription:')) {
 					params.newProjectDescription = decodeURIComponent(part.slice(22));
+				} else if (part.startsWith('newProjectTags:')) {
+					params.newProjectTags = decodeURIComponent(part.slice(15));
 				} else if (part.startsWith('files:')) {
 					params.files = decodeURIComponent(part.slice(6));
 				}
@@ -97,7 +100,7 @@ const AppRouter: React.FC = () => {
 			const newProject = await createProject({
 				name: params.newProjectName,
 				description: params.newProjectDescription || '',
-				tags: [],
+				tags: params.newProjectTags.split(',') || [],
 				isFavorite: false,
 			});
 
