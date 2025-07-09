@@ -157,7 +157,7 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 						<div
 							className="collab-dropdown-item"
 							onClick={handleFileSyncClick}
-							disabled={!isCollabConnected}
+							aria-disabled={!isCollabConnected}
 						>
 							<span className="service-indicator">
 								{getServiceStatusIndicator("filesync")}
