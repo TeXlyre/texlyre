@@ -90,6 +90,91 @@ class FileStorageService {
 		}
 	}
 
+	async autoSanitizeDuplicates(): Promise<{ removed: number; kept: number } | null> {
+		if (!this.db) await this.initialize();
+
+		const allFiles = await this.getAllFiles(true);
+		const pathGroups: Record<string, FileNode[]> = {};
+
+		// Group files by path
+		for (const file of allFiles) {
+			if (!pathGroups[file.path]) {
+				pathGroups[file.path] = [];
+			}
+			pathGroups[file.path].push(file);
+		}
+
+		// Check if there are any duplicates
+		const duplicatePaths = Object.entries(pathGroups).filter(([_, files]) => files.length > 1);
+
+		if (duplicatePaths.length === 0) {
+			return null; // No duplicates found
+		}
+
+		let removedCount = 0;
+		let keptCount = 0;
+
+		const tx = this.db!.transaction(this.FILES_STORE, "readwrite");
+		const store = tx.objectStore(this.FILES_STORE);
+
+		try {
+			for (const [path, duplicates] of duplicatePaths) {
+				const fileToKeep = this.selectBestDuplicate(duplicates);
+				const filesToRemove = duplicates.filter(f => f.id !== fileToKeep.id);
+
+				console.log(`[FileStorageService] Auto-fixing ${duplicates.length} duplicates for path: ${path}`);
+
+				// Remove duplicates
+				for (const duplicate of filesToRemove) {
+					await store.delete(duplicate.id);
+					removedCount++;
+				}
+
+				keptCount++;
+			}
+
+			await tx.done;
+			fileStorageEventEmitter.emitChange();
+
+			return { removed: removedCount, kept: keptCount };
+		} catch (error) {
+			tx.abort();
+			console.error("Error during auto-sanitization:", error);
+			throw error;
+		}
+	}
+
+	private selectBestDuplicate(duplicates: FileNode[]): FileNode {
+		const nonDeleted = duplicates.filter(f => !f.isDeleted);
+		const candidates = nonDeleted.length > 0 ? nonDeleted : duplicates;
+
+		return candidates.reduce((best, current) => {
+			// Prefer non-deleted
+			if (!best.isDeleted && current.isDeleted) return best;
+			if (best.isDeleted && !current.isDeleted) return current;
+
+			// Prefer files with content
+			const bestHasContent = best.content && (
+				(typeof best.content === 'string' && best.content.length > 0) ||
+				(best.content instanceof ArrayBuffer && best.content.byteLength > 0)
+			);
+			const currentHasContent = current.content && (
+				(typeof current.content === 'string' && current.content.length > 0) ||
+				(current.content instanceof ArrayBuffer && current.content.byteLength > 0)
+			);
+
+			if (bestHasContent && !currentHasContent) return best;
+			if (!bestHasContent && currentHasContent) return current;
+
+			// Prefer linked files
+			if (best.documentId && !current.documentId) return best;
+			if (!best.documentId && current.documentId) return current;
+
+			// Prefer most recently modified
+			return (current.lastModified || 0) > (best.lastModified || 0) ? current : best;
+		});
+	}
+
 	private async validateLinkedFileOperation(
 		file: FileNode,
 		operation: "delete" | "overwrite" | "rename",

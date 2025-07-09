@@ -25,6 +25,7 @@ import {
 	stringToArrayBuffer,
 } from "../utils/fileUtils";
 import { batchExtractZip } from "../utils/zipUtils";
+import { duplicateKeyDetector } from '../utils/duplicateKeyDetector';
 
 export const FileTreeContext = createContext<FileTreeContextType | null>(null);
 
@@ -47,6 +48,17 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 	const [enableInternalDragDrop, setEnableInternalDragDrop] = useState(true);
 	const storageInitialized = useRef(false);
 	const settingsRegistered = useRef(false);
+
+	useEffect(() => {
+		// Start duplicate detection when file tree is loaded
+		if (!isLoading && fileTree.length > 0) {
+			duplicateKeyDetector.start();
+		}
+
+		return () => {
+			duplicateKeyDetector.stop();
+		};
+	}, [isLoading, fileTree]);
 
 	useEffect(() => {
 		if (settingsRegistered.current) return;
