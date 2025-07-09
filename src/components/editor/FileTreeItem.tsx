@@ -282,7 +282,10 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 						>
 							<button
 								className="dropdown-item"
-								onClick={() => onStartRename(node)}
+								onClick={(e) => {
+									e.stopPropagation();
+									onStartRename(node);
+								}}
 							>
 								<EditIcon />
 								<span>Rename</span>
@@ -291,7 +294,10 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 							{enableInternalDragDrop && (
 								<button
 									className="dropdown-item"
-									onClick={() => onMoveFile(node)}
+									onClick={(e) => {
+										e.stopPropagation();
+										onMoveFile(node);
+									}}
 								>
 									<MoveIcon />
 									<span>Move</span>
@@ -301,7 +307,10 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 							{node.type === "file" && (
 								<button
 									className="dropdown-item"
-									onClick={() => onDuplicateFile(node)}
+									onClick={(e) => {
+										e.stopPropagation();
+										onDuplicateFile(node);
+									}}
 								>
 									<DuplicateIcon />
 									<span>Duplicate</span>
@@ -312,7 +321,10 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 								<>
 									<button
 										className="dropdown-item"
-										onClick={() => onCreateFileInFolder(node.id, node.path)}
+										onClick={(e) => {
+											e.stopPropagation();
+											onCreateFileInFolder(node.id, node.path);
+										}}
 									>
 										<FilePlusIcon />
 										<span>New File</span>
@@ -320,7 +332,10 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 
 									<button
 										className="dropdown-item"
-										onClick={() => onCreateSubfolder(node.path)}
+										onClick={(e) => {
+											e.stopPropagation();
+											onCreateSubfolder(node.path);
+										}}
 									>
 										<FolderPlusIcon />
 										<span>New Folder</span>
@@ -328,7 +343,10 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 
 									<button
 										className="dropdown-item"
-										onClick={() => onExpandAllSubfolders(node)}
+										onClick={(e) => {
+											e.stopPropagation();
+											onExpandAllSubfolders(node);
+										}}
 									>
 										<FolderOpenIcon />
 										<span>Expand All</span>
@@ -336,7 +354,10 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 
 									<button
 										className="dropdown-item"
-										onClick={() => onCollapseAllSubfolders(node)}
+										onClick={(e) => {
+											e.stopPropagation();
+											onCollapseAllSubfolders(node);
+										}}
 									>
 										<FolderIcon />
 										<span>Collapse All</span>
@@ -346,7 +367,10 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 
 							<button
 								className="dropdown-item"
-								onClick={() => onCopyPath(node)}
+								onClick={(e) => {
+									e.stopPropagation();
+									onCopyPath(node);
+								}}
 							>
 								<CopyUrlIcon />
 								<span>Copy Path</span>
@@ -355,7 +379,10 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 							{node.type === "file" && (
 								<button
 									className="dropdown-item"
-									onClick={() => onExportFile(node)}
+									onClick={(e) => {
+										e.stopPropagation();
+										onExportFile(node);
+									}}
 								>
 									<DownloadIcon />
 									<span>Download</span>
@@ -364,7 +391,10 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 
 							<button
 								className="dropdown-item"
-								onClick={() => onShowProperties(node)}
+								onClick={(e) => {
+									e.stopPropagation();
+									onShowProperties(node);
+								}}
 							>
 								<InfoIcon />
 								<span>Properties</span>
@@ -372,7 +402,10 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 
 							<button
 								className="dropdown-item"
-								onClick={() => onDeleteFileOrDirectory(node.id)}
+								onClick={(e) => {
+									e.stopPropagation();
+									onDeleteFileOrDirectory(node.id);
+								}}
 							>
 								<TrashIcon />
 								<span>Delete</span>
