@@ -37,11 +37,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 		}
 	};
 
-	const handleCardClick = () => {
+	const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
+		if ((e.target as HTMLElement).closest('button, input, a')) {
+			return;
+		}
+
 		if (isSelectionMode && onSelectionChange) {
 			onSelectionChange(project.id, !isSelected);
-		} else {
-			onOpen(project);
 		}
 	};
 
@@ -49,26 +51,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 		<div
 			className={`project-card ${isSelectionMode ? "selection-mode" : ""} ${isSelected ? "selected" : ""}`}
 			onClick={handleCardClick}
-			style={{
-				cursor: isSelectionMode ? "pointer" : "default",
-				border: isSelected
-					? "2px solid var(--accent-color, #007bff)"
-					: undefined,
-				backgroundColor: isSelected
-					? "rgba(var(--accent-color-rgb, 0, 123, 255), 0.1)"
-					: undefined,
-			}}
 		>
 			{isSelectionMode && (
-				<div
-					className="selection-checkbox"
-					style={{
-						position: "absolute",
-						top: "0.5rem",
-						left: "0.5rem",
-						zIndex: 1,
-					}}
-				>
+				<div className="selection-checkbox">
 					<input
 						type="checkbox"
 						checked={isSelected}
@@ -82,14 +67,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
 			<div className="project-card-header">
 				<h3
-					className="project-title"
+					className={`project-title ${isSelectionMode ? "selection-mode" : ""}`}
 					onClick={(e) => {
 						if (!isSelectionMode) {
 							e.stopPropagation();
 							onOpen(project);
 						}
 					}}
-					style={{ marginLeft: isSelectionMode ? "2rem" : "0" }}
 				>
 					{project.name}
 				</h3>

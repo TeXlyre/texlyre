@@ -176,8 +176,8 @@ class AccountExportService {
 					fileName = `${sanitizedName}.zip`;
 				} else {
 					const formatSuffix =
-						options.format === "files-only" ? "files" : "texlyre";
-					fileName = `texlyre-projects-${formatSuffix}-${timestamp}.zip`;
+						options.format === "files-only" ? "latex-files" : "texlyre-projects-";
+					fileName = `${formatSuffix}-${timestamp}.zip`;
 				}
 			}
 
@@ -197,15 +197,27 @@ class AccountExportService {
 		const { fileCommentProcessor } = await import("./FileCommentProcessor");
 
 		const isSingleProject = options?.isSingleProjectExport || data.projectData.size === 1;
+		const usedProjectNames = new Set<string>();
 
 		for (const [projectId, projectData] of data.projectData) {
-			const projectName = projectData.metadata.name.replace(
+			const sanitizedName = projectData.metadata.name.replace(
 				/[/\\?%*:|"<>]/g,
 				"-",
 			);
 
-			// For single project exports from editor, put files directly in root
-			const projectPath = isSingleProject ? "" : projectName;
+			let projectPath = "";
+			if (!isSingleProject) {
+				let projectName = sanitizedName;
+				let counter = 1;
+
+				while (usedProjectNames.has(projectName)) {
+					projectName = `${sanitizedName} (${counter})`;
+					counter++;
+				}
+
+				usedProjectNames.add(projectName);
+				projectPath = projectName;
+			}
 
 			if (projectPath) {
 				await adapter.createDirectory(projectPath);

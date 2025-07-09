@@ -29,6 +29,10 @@
   white-space: nowrap;
 }
 
+.project-title.selection-mode {
+  margin-left: 2rem;
+}
+
 .project-description {
   padding: var(--texlyre-spacing-sm);
   color: var(--pico-secondary);
@@ -221,6 +225,16 @@
   background-color: var(--pico-background);
   transition: transform var(--transition-normal), box-shadow var(--transition-normal);
   color: var(--text-color);
+  cursor: default;
+}
+
+.project-card.selection-mode {
+  cursor: pointer;
+}
+
+.project-card.selected {
+  border: 2px solid var(--accent-color, #007bff);
+  background-color: rgba(var(--accent-color-rgb, 0, 123, 255), 0.1);
 }
 
 .project-card:hover {
@@ -298,6 +312,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: clamp(0.75rem, 2vw, 0.7rem);
+}
+
+.selection-checkbox {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1;
 }
 
 .favorite-button {
