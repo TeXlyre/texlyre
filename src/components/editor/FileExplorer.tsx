@@ -2,8 +2,8 @@
 import type React from "react";
 import { type DragEvent, useEffect, useRef, useState } from "react";
 
-import { useFileTree } from "../../hooks/useFileTree.ts";
-import type { FileNode } from "../../types/files.ts";
+import { useFileTree } from "../../hooks/useFileTree";
+import type { FileNode } from "../../types/files";
 import { buildUrlWithFragments, parseUrlFragments } from "../../types/yjs";
 import {
 	ExportIcon,

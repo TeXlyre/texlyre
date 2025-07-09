@@ -144,7 +144,7 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 
 				{showDropdown && (
 					<div className="collab-dropdown">
-						<button
+						<div
 							className="collab-dropdown-item"
 							onClick={handleCollabClick}
 						>
@@ -152,9 +152,9 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 								{getServiceStatusIndicator("collab")}
 							</span>
 							<SyncIcon /> Real-time
-						</button>
+						</div>
 
-						<button
+						<div
 							className="collab-dropdown-item"
 							onClick={handleFileSyncClick}
 							disabled={!isCollabConnected}
@@ -163,7 +163,7 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 								{getServiceStatusIndicator("filesync")}
 							</span>
 							<FileIcon /> Files
-						</button>
+						</div>
 					</div>
 				)}
 			</div>

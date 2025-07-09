@@ -125,28 +125,88 @@
 	margin-bottom: 0;
 }
 
-.share-project-button {
-	background: none;
-	border: none;
-	cursor: pointer;
-	color: var(--pico-secondary);
-	padding: var(--space-xs);
+.share-project-buttons {
+	display: flex;
+	gap: var(--space-xs);
+	position: relative;
+}
+
+.share-button-group {
+	display: flex;
+	height: var(--button-height-md);
 	border-radius: var(--radius-sm);
-	display: inline-flex;
+	overflow: hidden;
+}
+
+.share-button {
+	display: flex;
 	align-items: center;
 	justify-content: center;
-	transition: all var(--transition-normal);
-	opacity: 0.7;
-	flex-shrink: 0;
-	min-width: fit-content;
-}
-
-.share-project-button:hover {
-	background-color: var(--pico-primary-focus);
+	padding: 0.4rem;
+	background-color: var(--pico-secondary-background);
 	color: var(--text-color);
-	opacity: 1;
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	transition: background-color var(--transition-normal);
 }
 
-.share-project-button {
-	opacity: 1;
+.share-button:hover:not(:disabled) {
+	background-color: var(--pico-primary-focus);
+}
+
+.share-button-group .share-button {
+	border-radius: 0;
+}
+
+.share-button-group .main-button {
+	border-top-left-radius: var(--radius-sm);
+	border-bottom-left-radius: var(--radius-sm);
+}
+
+.share-button-group .dropdown-toggle {
+	border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+	padding: 0.4rem var(--space-xs);
+	border-left: none;
+	width: 20px;
+}
+
+.share-dropdown {
+	position: absolute;
+	top: 100%;
+	right: 0;
+	margin-top: 2px;
+	min-width: var(--dropdown-width);
+	padding: var(--space-sm);
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-md);
+	z-index: var(--z-dropdown);
+}
+
+.share-dropdown-item {
+	font-size: 0.8rem;
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	padding: var(--space-sm);
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+	transition: background-color var(--transition-normal);
+}
+
+.share-dropdown-item:not(.disabled):hover {
+	background-color: var(--pico-primary-focus);
+}
+
+.share-dropdown-item.disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.share-dropdown-item .coming-soon {
+	font-size: 0.6rem;
+	margin-left: auto;
+	opacity: 0.7;
 }

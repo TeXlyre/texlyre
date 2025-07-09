@@ -2,14 +2,14 @@ import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-interface DropdownPortalProps {
+interface DropdownMenuProps {
 	children: React.ReactNode;
 	targetRef: React.RefObject<HTMLElement>;
 	isOpen: boolean;
 	onClose: () => void;
 }
 
-const DropdownPortal: React.FC<DropdownPortalProps> = ({
+const DropdownMenu: React.FC<DropdownMenuProps> = ({
 	children,
 	targetRef,
 	isOpen,
@@ -105,4 +105,4 @@ const DropdownPortal: React.FC<DropdownPortalProps> = ({
 	);
 };
 
-export default DropdownPortal;
+export default DropdownMenu;

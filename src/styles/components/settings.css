@@ -174,7 +174,6 @@
 	gap: var(--space-sm);
 	padding: 0.4rem 0.8rem;
 	background-color: transparent;
-	border: 1px solid var(--accent-border, #ddd);
 	border-radius: var(--radius-sm);
 	color: var(--text-color);
 	font-size: 0.9rem;

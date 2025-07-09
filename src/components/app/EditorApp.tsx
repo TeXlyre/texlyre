@@ -30,6 +30,7 @@ import ProfileSettingsModal from "../profile/ProfileSettingsModal";
 import UserDropdown from "../profile/UserDropdown";
 import ProjectForm from "../project/ProjectForm.tsx";
 import ShareProjectModal from "../project/ShareProjectModal";
+import ShareProjectButton from "../project/ShareProjectButton";
 import SettingsButton from "../settings/SettingsButton";
 
 interface EditorAppProps {
@@ -301,17 +302,6 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						<ChevronLeftIcon />
 						Projects
 					</button>
-
-					<button
-						className="share-project-button"
-						title="Share Project"
-						onClick={(e) => {
-							e.stopPropagation();
-							setShowShareModal(true);
-						}}
-					>
-						<ShareIcon />
-					</button>
 				</div>
 				<div className="header-center">
 					<div
@@ -359,6 +349,12 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 							docUrl={docUrl}
 						/>
 					)}
+					<ShareProjectButton
+						className="header-share-button"
+						projectName={projectName}
+						shareUrl={shareUrl}
+						onOpenShareModal={() => setShowShareModal(true)}
+					/>
 					<SettingsButton className="header-settings-button" />
 					<UserDropdown
 						username={user?.username || ""}

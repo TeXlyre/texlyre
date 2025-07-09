@@ -39,6 +39,8 @@
 .page-input-group input {
 	width: 3em;
 	text-align: center;
+	padding-left: 0;
+	padding-right: 0;
 	margin-bottom: 0;
 	border: 1px solid var(--accent-border, #444);
 	border-radius: 4px;

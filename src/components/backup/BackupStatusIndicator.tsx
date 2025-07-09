@@ -151,7 +151,7 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 
 				{showDropdown && (
 					<div className="backup-dropdown">
-						<button
+						<div
 							className="backup-dropdown-item"
 							onClick={handleFileSystemClick}
 						>
@@ -159,12 +159,12 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 								{getServiceStatusIndicator("filesystem")}
 							</span>
 							<FileSystemIcon /> File System
-						</button>
+						</div>
 
 						{backupPlugins.map((plugin) => {
 							const IconComponent = plugin.icon;
 							return (
-								<button
+								<div
 									key={plugin.id}
 									className="backup-dropdown-item"
 									onClick={() => handlePluginClick(plugin.id)}
@@ -173,7 +173,7 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 										{getServiceStatusIndicator("plugin", plugin.id)}
 									</span>
 									<IconComponent /> {plugin.name}
-								</button>
+								</div>
 							);
 						})}
 					</div>

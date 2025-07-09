@@ -202,7 +202,7 @@ embed {
 	top: 100%;
 	right: 0;
 	margin-top: 2px;
-	min-width: 220px;
+	min-width: var(--dropdown-width);
 	padding: var(--space-sm);
 	background-color: var(--pico-background);
 	border: 1px solid var(--accent-border);

@@ -12,22 +12,20 @@
 	height: var(--button-height-md);
 	border-radius: var(--radius-sm);
 	overflow: hidden;
-	border: 1px solid var(--accent-border);
 }
 
 .backup-status-indicator.main-button,
 .collab-status-indicator.main-button {
 	display: flex;
 	align-items: center;
-	gap: 0.25rem;
-	padding: 0.4rem 0.5rem;
+	justify-content: center;
+	padding: 0.4rem;
 	background-color: var(--pico-secondary-background);
 	color: var(--text-color);
-	border: none;
-	border-right: 1px solid var(--accent-border);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
 	cursor: pointer;
 	transition: background-color var(--transition-normal);
-	border-radius: 0;
 }
 
 .backup-button-group .backup-status-indicator.main-button,
@@ -35,9 +33,13 @@
 	border-radius: var(--radius-sm) 0 0 var(--radius-sm);
 }
 
+.backup-button-group .backup-status-indicator.main-button svg,
+.collab-button-group .collab-status-indicator.main-button svg {
+	margin-right: var(--space-xs);
+}
+
 .backup-status-indicator.main-button.single-service {
 	border-radius: var(--radius-sm);
-	border-right: none;
 }
 
 .backup-status-indicator.main-button.connected,
@@ -50,8 +52,8 @@
 	background: rgba(108, 117, 125, 0.1);
 }
 
-.backup-status-indicator.main-button:hover,
-.collab-status-indicator.main-button:hover {
+.backup-status-indicator.main-button:hover:not(:disabled),
+.collab-status-indicator.main-button:hover:not(:disabled) {
 	background-color: var(--pico-primary-focus);
 }
 
@@ -59,6 +61,7 @@
 .collab-status-indicator .status-dot {
 	width: 8px;
 	height: 8px;
+	margin-right: var(--space-xs);
 	border-radius: 50%;
 }
 
@@ -81,26 +84,23 @@
 	padding: 0.4rem var(--space-xs);
 	background-color: var(--pico-secondary-background);
 	color: var(--text-color);
-	border: none;
+	border: 1px solid var(--accent-border);
 	cursor: pointer;
 	transition: background-color var(--transition-normal);
 	width: 20px;
-	border-radius: 0;
-	border-right: none;
-}
-
-.backup-button-group .backup-dropdown-toggle,
-.collab-button-group .collab-dropdown-toggle {
 	border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+	border-left: none;
 }
 
 .backup-dropdown-toggle.connected,
 .collab-dropdown-toggle.connected {
+	border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 	background: rgba(40, 167, 69, 0.1);
 }
 
 .backup-dropdown-toggle.disconnected,
 .collab-dropdown-toggle.disconnected {
+	border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 	background: rgba(108, 117, 125, 0.1);
 }
 
@@ -115,31 +115,27 @@
 	top: 100%;
 	right: 0;
 	margin-top: 2px;
-	min-width: 180px;
-	padding: 0;
+	min-width: var(--dropdown-width);
+	padding: var(--space-sm);
 	background-color: var(--pico-background);
 	border: 1px solid var(--accent-border);
 	border-radius: var(--radius-sm);
 	box-shadow: var(--shadow-md);
 	z-index: var(--z-dropdown);
-	overflow: hidden;
 }
 
 .backup-dropdown-item,
 .collab-dropdown-item {
+	font-weight: 400;
+	font-size: 0.8rem;
 	display: flex;
 	align-items: center;
 	gap: var(--space-sm);
-	width: 100%;
-	padding: 0.5rem;
-	background: none;
-	border: none;
+	padding: var(--space-sm);
 	cursor: pointer;
-	color: var(--text-color);
-	font-size: 0.875rem;
-	text-align: left;
+	background-color: var(--pico-background);
+	border-radius: var(--radius-sm);
 	transition: background-color var(--transition-normal);
-	border-bottom: 1px solid var(--accent-border);
 }
 
 .backup-dropdown-item:last-child,
@@ -147,14 +143,22 @@
 	border-bottom: none;
 }
 
-.backup-dropdown-item:hover,
-.collab-dropdown-item:hover:not(:disabled) {
+.backup-dropdown-item:not(.disabled):hover,
+.collab-dropdown-item:not(.disabled):hover {
 	background-color: var(--pico-primary-focus);
 }
 
-.collab-dropdown-item:disabled {
+.backup-dropdown-item.disabled,
+.collab-dropdown-item.disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
+}
+
+.backup-dropdown-item .coming-soon,
+.collab-dropdown-item .coming-soon {
+	font-size: 0.6rem;
+	margin-left: auto;
+	opacity: 0.7;
 }
 
 .backup-status-dropdown-container,

@@ -4,7 +4,7 @@ import type React from "react";
 import { pluginRegistry } from "../../plugins/PluginRegistry";
 import type { FileNode } from "../../types/files";
 import { isTemporaryFile } from "../../utils/fileUtils";
-import DropdownPortal from "../common/DropdownPortal";
+import DropdownMenu from "./DropdownMenu";
 import {
 	CopyUrlIcon,
 	DuplicateIcon,
@@ -271,7 +271,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 						>
 							<MoreIcon />
 						</button>
-						<DropdownPortal
+						<DropdownMenu
 							targetRef={
 								menuRefs.current.get(node.id)
 									? { current: menuRefs.current.get(node.id)! }
@@ -377,7 +377,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 								<TrashIcon />
 								<span>Delete</span>
 							</button>
-						</DropdownPortal>
+						</DropdownMenu>
 					</div>
 				</div>
 			</div>

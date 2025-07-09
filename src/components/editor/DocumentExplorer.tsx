@@ -3,12 +3,11 @@ import type React from "react";
 import { useRef, useState } from "react";
 
 import { collabService } from "../../services/CollabService";
-import type { Document } from "../../types/documents.ts";
+import type { Document } from "../../types/documents";
 import { buildUrlWithFragments, parseUrlFragments } from "../../types/yjs";
-import type { YjsDocUrl } from "../../types/yjs.ts";
-import DropdownPortal from "../common/DropdownPortal.tsx";
+import type { YjsDocUrl } from "../../types/yjs";
+import DropdownMenu from "./DropdownMenu";
 import {
-	DuplicateIcon,
 	DownloadIcon,
 	EditIcon,
 	FileTextIcon,
@@ -80,20 +79,6 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 		} else if (e.key === "Escape") {
 			setEditingDocId(null);
 		}
-	};
-
-	const handleDuplicateDocument = async (docId: string) => {
-		const doc = documents.find((d) => d.id === docId);
-		if (!doc) return;
-
-		const docContent = await getDocumentContent(docUrl, docId);
-
-		onCreateDocument();
-		const newIndex = documents.length;
-		onRenameDocument(documents[newIndex].id, `${doc.name}_copy`);
-
-		onUpdateContent(docContent);
-		setActiveMenu(null);
 	};
 
 	const handleExportDocument = async (docId: string) => {
@@ -278,7 +263,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 									>
 										<MoreIcon />
 									</button>
-									<DropdownPortal
+									<DropdownMenu
 										targetRef={
 											menuRefs.current.get(doc.id)
 												? { current: menuRefs.current.get(doc.id)! }
@@ -296,17 +281,6 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 										>
 											<EditIcon />
 											<span>Rename</span>
-										</button>
-
-										<button
-											className="dropdown-item"
-											onClick={() => {
-												handleDuplicateDocument(doc.id);
-												setActiveMenu(null);
-											}}
-										>
-											<DuplicateIcon />
-											<span>Duplicate</span>
 										</button>
 
 										<button
@@ -330,7 +304,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 											<InfoIcon />
 											<span>Properties</span>
 										</button>
-									</DropdownPortal>
+									</DropdownMenu>
 								</div>
 							</div>
 						</div>
