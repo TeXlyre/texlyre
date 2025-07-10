@@ -22,6 +22,7 @@ import {
 	MoveIcon,
 	TrashIcon,
 	UnlinkIcon,
+	UploadIcon
 } from "../common/Icons";
 
 interface FileTreeItemProps {
@@ -52,8 +53,10 @@ interface FileTreeItemProps {
 	onCopyPath: (node: FileNode) => void;
 	onExportFile: (node: FileNode) => void;
 	onShowProperties: (node: FileNode) => void;
+	onExportFolder: (node: FileNode) => void;
 	onCreateFileInFolder: (folderId: string, folderPath: string) => void;
 	onCreateSubfolder: (parentPath: string) => void;
+	onUploadToFolder: (folderPath: string) => void;
 	onExpandAllSubfolders: (node: FileNode) => void;
 	onCollapseAllSubfolders: (node: FileNode) => void;
 	onDeleteFileOrDirectory: (fileId: string) => void;
@@ -95,8 +98,10 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 	onCopyPath,
 	onExportFile,
 	onShowProperties,
+	onExportFolder,
 	onCreateFileInFolder,
 	onCreateSubfolder,
+	onUploadToFolder,
 	onExpandAllSubfolders,
 	onCollapseAllSubfolders,
 	onDeleteFileOrDirectory,
@@ -305,20 +310,55 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 							)}
 
 							{node.type === "file" && (
-								<button
-									className="dropdown-item"
-									onClick={(e) => {
-										e.stopPropagation();
-										onDuplicateFile(node);
-									}}
-								>
-									<DuplicateIcon />
-									<span>Duplicate</span>
-								</button>
+								<>
+									<button
+										className="dropdown-item"
+										onClick={(e) => {
+											e.stopPropagation();
+											onDuplicateFile(node);
+										}}
+									>
+										<DuplicateIcon />
+										<span>Duplicate</span>
+									</button>
+
+									<button
+										className="dropdown-item"
+										onClick={(e) => {
+											e.stopPropagation();
+											onCopyPath(node);
+										}}
+									>
+										<CopyUrlIcon />
+										<span>Copy Path</span>
+									</button>
+
+									<button
+										className="dropdown-item"
+										onClick={(e) => {
+											e.stopPropagation();
+											onExportFile(node);
+										}}
+									>
+										<DownloadIcon />
+										<span>Download</span>
+									</button>
+								</>
 							)}
 
 							{node.type === "directory" && (
 								<>
+									<button
+										className="dropdown-item"
+										onClick={(e) => {
+											e.stopPropagation();
+											onUploadToFolder(node.path);
+										}}
+									>
+										<UploadIcon />
+										<span>Upload Files</span>
+									</button>
+
 									<button
 										className="dropdown-item"
 										onClick={(e) => {
@@ -362,31 +402,17 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 										<FolderIcon />
 										<span>Collapse All</span>
 									</button>
+									    <button
+										  className="dropdown-item"
+										  onClick={(e) => {
+											e.stopPropagation();
+											onExportFolder(node);
+										  }}
+										>
+										  <DownloadIcon />
+										  <span>Download as ZIP</span>
+										</button>
 								</>
-							)}
-
-							<button
-								className="dropdown-item"
-								onClick={(e) => {
-									e.stopPropagation();
-									onCopyPath(node);
-								}}
-							>
-								<CopyUrlIcon />
-								<span>Copy Path</span>
-							</button>
-
-							{node.type === "file" && (
-								<button
-									className="dropdown-item"
-									onClick={(e) => {
-										e.stopPropagation();
-										onExportFile(node);
-									}}
-								>
-									<DownloadIcon />
-									<span>Download</span>
-								</button>
 							)}
 
 							<button
@@ -481,8 +507,10 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 								onCopyPath={onCopyPath}
 								onExportFile={onExportFile}
 								onShowProperties={onShowProperties}
+								onExportFolder={onExportFolder}
 								onCreateFileInFolder={onCreateFileInFolder}
 								onCreateSubfolder={onCreateSubfolder}
+								onUploadToFolder={onUploadToFolder}
 								onExpandAllSubfolders={onExpandAllSubfolders}
 								onCollapseAllSubfolders={onCollapseAllSubfolders}
 								onDeleteFileOrDirectory={onDeleteFileOrDirectory}

@@ -14,15 +14,16 @@ import type {
 } from "../../plugins/PluginInterface";
 import { pluginRegistry } from "../../plugins/PluginRegistry";
 import { EditorLoader } from "../../services/EditorLoader.ts";
-import { fileCommentProcessor } from "../../services/FileCommentProcessor";
 import { fileStorageService } from "../../services/FileStorageService";
 import { copyCleanTextToClipboard } from "../../utils/clipboardUtils";
 import { arrayBufferToString } from "../../utils/fileUtils";
+import { fileCommentProcessor } from "../../utils/fileCommentProcessor.ts";
 import CommentPanel from "../comments/CommentPanel";
 import CommentToggleButton from "../comments/CommentToggleButton";
 import UnlinkedDocumentNotice from "./UnlinkedDocumentNotice";
 import { CopyIcon, DownloadIcon, LinkIcon, SaveIcon } from "../common/Icons";
 import { PluginHeader, PluginControlGroup } from "../common/PluginHeader";
+import type {DocumentList} from "../../types/documents.ts";
 
 interface EditorComponentProps {
 	content: string | ArrayBuffer;
@@ -101,7 +102,7 @@ const EditorContent: React.FC<{
 	const { parseComments, getCommentAtPosition, addComment, updateComments } =
 		useComments();
 	const fileInfo = usePluginFileInfo(fileId, fileName);
-	const { changeData } = useCollab<DocumentList>();
+	const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
 	const { viewRef, isUpdatingRef, showSaveIndicator } = EditorLoader(
 		editorRef,
 		docUrl,
@@ -149,7 +150,7 @@ const EditorContent: React.FC<{
 	  if (!isEditingFile && documentId && !linkedFileInfo?.fileName && documents) {
 		timeoutId = setTimeout(() => {
 		  setShowUnlinkedNotice(true);
-		}, 150); // delay showing the unlinked document notice for 150ms to avoid flickering
+		}, 250); // delay showing the unlinked document notice for 250ms to avoid flickering
 	  } else {
 		setShowUnlinkedNotice(false);
 	  }
@@ -272,7 +273,7 @@ const EditorContent: React.FC<{
 					<CommentToggleButton className="header-comment-button" />
 				)}
 			</PluginControlGroup>
-		) : !isEditingFile && linkedFileInfo ? (
+		) : !isEditingFile && linkedFileInfo && !showUnlinkedNotice ? (
 			<PluginControlGroup>
 				{onSaveDocument && (
 					<button
@@ -345,12 +346,12 @@ const EditorContent: React.FC<{
 				  documentId={documentId}
 				  documentName={documents.find(d => d.id === documentId)?.name || "Untitled"}
 				  onDeleteDocument={(docId) => {
-					if (!changeData) {
+					if (!changeDoc) {
 					  console.error("Cannot delete document: changeData not available");
 					  return;
 					}
 
-					changeData((data) => {
+					changeDoc((data) => {
 					  if (!data.documents) return;
 
 					  const docIndex = data.documents.findIndex(d => d.id === docId);

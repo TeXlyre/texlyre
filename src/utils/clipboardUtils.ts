@@ -1,4 +1,4 @@
-import { fileCommentProcessor } from "../services/FileCommentProcessor";
+import { fileCommentProcessor } from "./fileCommentProcessor.ts";
 
 export const copyCleanTextToClipboard = async (text: string): Promise<void> => {
 	try {

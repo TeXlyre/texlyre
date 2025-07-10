@@ -1,5 +1,5 @@
-// src/services/FileCommentProcessor.ts
-import type { FileNode } from "../types/files";
+// src/utils/fileCommentProcessor.ts
+import type { FileNode } from "../types/files.ts";
 
 interface ProcessorStats {
 	total: number;

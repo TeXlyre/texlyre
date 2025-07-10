@@ -15,6 +15,8 @@ import {
 import FileOperationsModal from "./FileOperationsModal";
 import FileTreeItem from "./FileTreeItem";
 import ZipHandlingModal from "./ZipHandlingModal";
+import { createZipFromFolder, downloadZipFile } from "../../utils/zipUtils";
+import { fileCommentProcessor } from "../../utils/fileCommentProcessor.ts";
 
 interface FileExplorerProps {
 	onFileSelect: (
@@ -449,7 +451,16 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	};
 
 	const handleCopyPath = (node: FileNode) => {
-		navigator.clipboard.writeText(node.path);
+		const currentFragment = parseUrlFragments(
+			window.location.hash.substring(1),
+		);
+		const newUrl = buildUrlWithFragments(
+			currentFragment.yjsUrl,
+			undefined,
+			node.path,
+		);
+		const fullUrl = `${window.location.origin}${window.location.pathname}#${newUrl}`;
+		navigator.clipboard.writeText(fullUrl);
 		setActiveMenu(null);
 	};
 
@@ -457,7 +468,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		if (node.type === "file") {
 			const content = await getFileContent(node.id);
 			if (content) {
-				const blob = new Blob([content], {
+				const cleanContent = fileCommentProcessor.cleanContent(content);
+				const blob = new Blob([cleanContent], {
 					type: node.mimeType || "text/plain",
 				});
 				const url = URL.createObjectURL(blob);
@@ -468,6 +480,18 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				a.click();
 				document.body.removeChild(a);
 				URL.revokeObjectURL(url);
+			}
+		}
+		setActiveMenu(null);
+	};
+
+	const handleExportFolder = async (node: FileNode) => {
+		if (node.type === "directory") {
+			try {
+				const zipBlob = await createZipFromFolder(node, getFileContent, getFile);
+				downloadZipFile(zipBlob, node.name);
+			} catch (error) {
+				console.error("Error exporting folder:", error);
 			}
 		}
 		setActiveMenu(null);
@@ -492,6 +516,20 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
 		setPropertiesInfo(info);
 		setShowPropertiesModal(true);
+		setActiveMenu(null);
+	};
+
+	const handleUploadToFolder = (folderPath: string) => {
+		const input = document.createElement('input');
+		input.type = 'file';
+		input.multiple = true;
+		input.onchange = async (e) => {
+			const files = (e.target as HTMLInputElement).files;
+			if (files && files.length > 0) {
+				await processFiles(Array.from(files), folderPath);
+			}
+		};
+		input.click();
 		setActiveMenu(null);
 	};
 
@@ -891,8 +929,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 									onCopyPath={handleCopyPath}
 									onExportFile={handleExportFile}
 									onShowProperties={handleShowProperties}
+									onExportFolder={handleExportFolder}
 									onCreateFileInFolder={handleCreateFileInFolder}
 									onCreateSubfolder={handleCreateSubfolder}
+									onUploadToFolder={handleUploadToFolder}
 									onExpandAllSubfolders={expandAllSubfolders}
 									onCollapseAllSubfolders={collapseAllSubfolders}
 									onDeleteFileOrDirectory={deleteFileOrDirectory}

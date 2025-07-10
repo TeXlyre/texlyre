@@ -2,9 +2,10 @@
 import { saveAs } from "file-saver";
 
 import { authService } from "./AuthService";
-import { UnifiedDataStructureService } from "./DataStructureService.ts";
-import { ProjectDataService } from "./ProjectDataService.ts";
-import { StorageAdapterService, ZipAdapter } from "./StorageAdapterService.ts";
+import { UnifiedDataStructureService } from "./DataStructureService";
+import { ProjectDataService } from "./ProjectDataService";
+import { StorageAdapterService, ZipAdapter } from "./StorageAdapterService";
+import { fileCommentProcessor} from "../utils/fileCommentProcessor";
 
 export interface ExportOptions {
     includeAccount?: boolean;
@@ -194,7 +195,6 @@ class AccountExportService {
 		options?: ExportOptions,
 	): Promise<void> {
 		const { fileStorageService } = await import("./FileStorageService");
-		const { fileCommentProcessor } = await import("./FileCommentProcessor");
 
 		const isSingleProject = options?.isSingleProjectExport || data.projectData.size === 1;
 		const usedProjectNames = new Set<string>();

@@ -35,10 +35,10 @@ import type * as Y from "yjs";
 import { commentSystemExtension } from "../extensions/codemirror/CommentExtension";
 import { useAuth } from "../hooks/useAuth";
 import { useEditor } from "../hooks/useEditor";
-import { autoSaveManager } from "../utils/autoSaveUtils";
 import { collabService } from "./CollabService";
-import { fileCommentProcessor } from "./FileCommentProcessor";
 import { fileStorageService } from "./FileStorageService";
+import { autoSaveManager } from "../utils/autoSaveUtils";
+import { fileCommentProcessor } from "../utils/fileCommentProcessor.ts";
 
 export const EditorLoader = (
 	editorRef: React.RefObject<HTMLDivElement>,
