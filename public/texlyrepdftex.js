@@ -203,13 +203,14 @@ function mkdirRoutine(dirname) {
 
 function writeFileRoutine(filename, content) {
     try {
-        FS.writeFile(WORKROOT + "/" + filename, content);
+        FS.writeFile(filename, content);
         self.postMessage({
             "result": "ok",
             "cmd": "writefile"
         })
+        // console.warn("wrote to mem file", filename);
     } catch (err) {
-        console.error("Unable to write mem file");
+        console.error("Unable to write mem file", filename);
         self.postMessage({
             "result": "failed",
             "cmd": "writefile"

@@ -159,13 +159,13 @@ class LaTeXService {
 
 		const dirPath = dviFileName.substring(0, dviFileName.lastIndexOf("/"));
 		if (dirPath) {
-			this.createDirectoryStructure(dvipdfmxEngine, dirPath);
+			this.createDirectoryStructure(dvipdfmxEngine, `/work/${dirPath}`);
 		}
 
 		console.log(
 			`Writing XDV file: ${dviFileName}, size: ${xdvData.length} bytes`,
 		);
-		dvipdfmxEngine.writeMemFSFile(dviFileName, xdvData);
+		dvipdfmxEngine.writeMemFSFile(`/work/${dviFileName}`, xdvData);
 		dvipdfmxEngine.setEngineMainFile(dviFileName);
 
 		try {
@@ -242,6 +242,8 @@ class LaTeXService {
 				);
 			}
 
+			engine.flushCache()
+
 			return result;
 		} catch (error) {
 			if (this.getStatus() === "error") {
@@ -311,11 +313,7 @@ class LaTeXService {
 
 			const processedNode = { ...node };
 
-			if (node.path.startsWith("/.texlyre_cache/__tex/")) {
-				const relativePath = node.path.replace("/.texlyre_cache/__tex/", "");
-				processedNode.path = relativePath;
-				processedNode.name = relativePath.split("/").pop() || node.name;
-			} else if (node.path === mainFileName) {
+			if (node.path === mainFileName) {
 				if (!mainFileName.startsWith("/") || mainFileName === `/${node.name}`) {
 					processedNode.path = node.name;
 				} else {
@@ -356,36 +354,73 @@ class LaTeXService {
 		engine: BaseEngine,
 		mainFileName: string,
 	): Promise<void> {
-		const directories = new Set<string>();
+		const cacheNodes = this.processedNodes.filter(node =>
+			node.path.startsWith(".texlyre_cache/__tex/")
+		);
+		const workNodes = this.processedNodes.filter(node =>
+			!node.path.startsWith(".texlyre_cache/__tex/") &&
+			!node.path.startsWith(".texlyre_src/")
+		);
 
-		for (const node of this.processedNodes) {
+		const workDirectories = new Set<string>();
+		const texDirectories = new Set<string>();
+
+		for (const node of workNodes) {
 			const dirPath = node.path.substring(0, node.path.lastIndexOf("/"));
 			if (dirPath) {
-				directories.add(dirPath);
+				workDirectories.add(dirPath);
 			}
 		}
 
-		for (const dir of directories) {
-			this.createDirectoryStructure(engine, dir);
+		for (const node of cacheNodes) {
+			const cleanPath = node.path.replace(".texlyre_cache/__tex/", "");
+			const dirPath = cleanPath.substring(0, cleanPath.lastIndexOf("/"));
+			if (dirPath) {
+				texDirectories.add(dirPath);
+			}
 		}
 
-		for (const node of this.processedNodes) {
+		for (const dir of workDirectories) {
+			this.createDirectoryStructure(engine, `/work/${dir}`);
+		}
+
+		for (const dir of texDirectories) {
+			this.createDirectoryStructure(engine, `/work/${dir}`); // Should be `/tex/${dir}`
+		}
+
+		for (const node of workNodes) {
 			try {
 				const fileContent = await this.getFileContent(node);
 				if (fileContent) {
 					if (typeof fileContent === "string") {
-						engine.writeMemFSFile(node.path, fileContent);
+						engine.writeMemFSFile(`/work/${node.path}`, fileContent);
 					} else {
-						engine.writeMemFSFile(node.path, new Uint8Array(fileContent));
+						engine.writeMemFSFile(`/work/${node.path}`, new Uint8Array(fileContent));
 					}
 				}
 			} catch (error) {
-				console.error(`Error writing file ${node.path} to MemFS:`, error);
+				console.error(`Error writing work file ${node.path} to MemFS:`, error);
+			}
+		}
+
+		for (const node of cacheNodes) {
+			try {
+				const fileContent = await this.getFileContent(node);
+				if (fileContent) {
+					const cleanPath = node.path.replace(".texlyre_cache/__tex/", "");
+					if (typeof fileContent === "string") {
+						engine.writeMemFSFile(`/work/${cleanPath}`, fileContent); // Should be `/tex/${cleanPath}`
+					} else {
+						engine.writeMemFSFile(`/work/${cleanPath}`, new Uint8Array(fileContent)); // Should be `/tex/${cleanPath}`
+					}
+				}
+			} catch (error) {
+				console.error(`Error writing cache file ${node.path} to MemFS:`, error);
 			}
 		}
 
 		const normalizedMainFile = mainFileName.replace(/^\/+/, "");
-		const mainFileNode = this.processedNodes.find(
+		const mainFileNode = workNodes.find(
 			(node) =>
 				node.path === normalizedMainFile ||
 				node.path.endsWith(normalizedMainFile.split("/").pop() || ""),
@@ -397,7 +432,7 @@ class LaTeXService {
 			engine.setEngineMainFile(normalizedMainFile);
 		}
 
-		console.log(`Written ${this.processedNodes.length} files to MemFS`);
+		console.log(`Written ${workNodes.length} work files and ${cacheNodes.length} cache files to MemFS`);
 	}
 
 	private async storeOutputDirectories(engine: BaseEngine): Promise<void> {

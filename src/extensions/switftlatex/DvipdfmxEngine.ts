@@ -91,7 +91,7 @@ export class DvipdfmxEngine extends BaseEngine {
 		try {
 			const result = await this.engine.compilePDF();
 			this.setStatus("ready");
-			this.flushCache();
+			// this.flushCache();
 			return {
 				pdf: result.pdf,
 				status: result.status,

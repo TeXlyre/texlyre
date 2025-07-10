@@ -203,7 +203,7 @@ function mkdirRoutine(dirname) {
 
 function writeFileRoutine(filename, content) {
     try {
-        FS.writeFile(WORKROOT + "/" + filename, content);
+        FS.writeFile(filename, content);
         self.postMessage({
             "result": "ok",
             "cmd": "writefile"

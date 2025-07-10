@@ -89,7 +89,7 @@ export class PdfTeXEngine extends BaseEngine {
 			await this.engine.compileLaTeX(); // Do it thrice for good luck and bib
 			const result = await this.engine.compileLaTeX();
 			this.setStatus("ready");
-			this.flushCache();
+			// this.flushCache();
 			return {
 				pdf: result.pdf,
 				status: result.status,

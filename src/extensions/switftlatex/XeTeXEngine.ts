@@ -91,7 +91,7 @@ export class XeTeXEngine extends BaseEngine {
 			await this.engine.compileLaTeX(); // Do it thrice for good luck and bib
 			const result = await this.engine.compileLaTeX();
 			this.setStatus("ready");
-			this.flushCache();
+			// this.flushCache();
 
 			console.log("XeTeX compilation result:", {
 				status: result.status,
