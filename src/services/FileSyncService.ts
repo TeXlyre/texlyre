@@ -37,7 +37,9 @@ class FileSyncService {
 	}
 
 	showLoadingNotification(message: string, operationId?: string): void {
-		notificationService.showLoading(message, operationId);
+		if (this.areNotificationsEnabled()) {
+			notificationService.showLoading(message, operationId);
+		}
 	}
 
 	showSuccessNotification(
@@ -48,7 +50,9 @@ class FileSyncService {
 			data?: Record<string, any>;
 		} = {},
 	): void {
-		notificationService.showSuccess(message, options);
+		if (this.areNotificationsEnabled()) {
+			notificationService.showSuccess(message, options);
+		}
 	}
 
 	showErrorNotification(
@@ -59,7 +63,9 @@ class FileSyncService {
 			data?: Record<string, any>;
 		} = {},
 	): void {
-		notificationService.showError(message, options);
+		if (this.areNotificationsEnabled()) {
+			notificationService.showError(message, options);
+		}
 	}
 
 	showInfoNotification(
@@ -70,7 +76,9 @@ class FileSyncService {
 			data?: Record<string, any>;
 		} = {},
 	): void {
-		notificationService.showInfo(message, options);
+		if (this.areNotificationsEnabled()) {
+			notificationService.showInfo(message, options);
+		}
 	}
 
 	showSyncNotification(
@@ -81,7 +89,9 @@ class FileSyncService {
 			data?: Record<string, any>;
 		} = {},
 	): void {
-		notificationService.showSync(message, options);
+		if (this.areNotificationsEnabled()) {
+			notificationService.showSync(message, options);
+		}
 	}
 
 	trackSyncFailure(peerId: string): boolean {
@@ -776,63 +786,6 @@ class FileSyncService {
 		this.listeners.forEach((listener) => listener(notification));
 	}
 
-	showLoadingNotification(message: string, operationId?: string): void {
-		if (this.areNotificationsEnabled()) {
-			notificationService.showLoading(message, operationId);
-		}
-	}
-
-	showSuccessNotification(
-		message: string,
-		options: {
-			operationId?: string;
-			duration?: number;
-			data?: Record<string, any>;
-		} = {},
-	): void {
-		if (this.areNotificationsEnabled()) {
-			notificationService.showSuccess(message, options);
-		}
-	}
-
-	showErrorNotification(
-		message: string,
-		options: {
-			operationId?: string;
-			duration?: number;
-			data?: Record<string, any>;
-		} = {},
-	): void {
-		if (this.areNotificationsEnabled()) {
-			notificationService.showError(message, options);
-		}
-	}
-
-	showInfoNotification(
-		message: string,
-		options: {
-			operationId?: string;
-			duration?: number;
-			data?: Record<string, any>;
-		} = {},
-	): void {
-		if (this.areNotificationsEnabled()) {
-			notificationService.showInfo(message, options);
-		}
-	}
-
-	showSyncNotification(
-		message: string,
-		options: {
-			operationId?: string;
-			duration?: number;
-			data?: Record<string, any>;
-		} = {},
-	): void {
-		if (this.areNotificationsEnabled()) {
-			notificationService.showSync(message, options);
-		}
-	}
 }
 
 export const fileSyncService = new FileSyncService();
