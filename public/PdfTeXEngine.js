@@ -248,6 +248,17 @@ var PdfTeXEngine = /** @class */ (function () {
             this.latexWorker.postMessage({ 'cmd': 'mkdir', 'url': folder });
         }
     };
+    PdfTeXEngine.prototype.setCacheEntry = function (fileName, format, filePath) {
+        this.checkEngineStatus();
+        if (this.latexWorker !== undefined) {
+            this.latexWorker.postMessage({
+                'cmd': 'setcacheentry',
+                'filename': fileName,
+                'format': format,
+                'filepath': filePath
+            });
+        }
+    };
     PdfTeXEngine.prototype.flushCache = function () {
         this.checkEngineStatus();
         if (this.latexWorker !== undefined) {

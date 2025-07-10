@@ -64,6 +64,11 @@ export class PdfTeXEngine extends BaseEngine {
 		this.engine.setEngineMainFile(filename);
 	}
 
+	setCacheEntry(fileName: string, format: string, filePath: string): void {
+		if (!this.engine) throw new Error("Engine not initialized");
+		this.engine.setCacheEntry(fileName, format, filePath);
+	}
+
 	flushCache(): void {
 		if (!this.engine) throw new Error("Engine not initialized");
 		this.engine.flushCache();

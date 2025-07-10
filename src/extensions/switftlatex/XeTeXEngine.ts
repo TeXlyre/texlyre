@@ -71,6 +71,11 @@ export class XeTeXEngine extends BaseEngine {
 		this.engine.flushCache();
 	}
 
+	setCacheEntry(fileName: string, format: string, filePath: string): void {
+		if (!this.engine) throw new Error("Engine not initialized");
+		this.engine.setCacheEntry(fileName, format, filePath);
+	}
+
 	async dumpDirectory(dir: string): Promise<{ [key: string]: ArrayBuffer }> {
 		if (!this.engine) throw new Error("Engine not initialized");
 		return await this.engine.dumpDirectory(dir);

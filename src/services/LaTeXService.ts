@@ -350,6 +350,46 @@ class LaTeXService {
 		return processed;
 	}
 
+	private async populateTexCache(engine: BaseEngine): Promise<void> {
+		const cacheNodes = this.processedNodes.filter(node =>
+			node.path.startsWith(".texlyre_cache/__tex/")
+		);
+
+		console.log(`Populating TeX cache with ${cacheNodes.length} files`);
+
+		for (const node of cacheNodes) {
+			const cleanPath = node.path.replace(".texlyre_cache/__tex/", "");
+			const fileName = cleanPath.split("/").pop() || cleanPath;
+			const texPath = `/tex/${fileName}`;
+
+			const format = this.getFileFormat(fileName);
+
+			try {
+				engine.setCacheEntry(fileName, format, texPath);
+				console.log(`Set cache entry: ${format}/${fileName} -> ${texPath}`);
+			} catch (error) {
+				console.warn(`Could not set cache entry for ${fileName}:`, error);
+			}
+		}
+	}
+
+	private getFileFormat(fileName: string): string {
+		const ext = fileName.split('.').pop()?.toLowerCase();
+		switch (ext) {
+			case 'tfm': return '5';
+			case 'sty': return '6';
+			case 'cls': return '6';
+			case 'def': return '6';
+			case 'ldf': return '6';
+			case 'fd': return '11';
+			case 'enc': return '44';
+			case 'map': return '58';
+			case 'pfb': return '32';
+			case 'fmt': return '10';
+			default: return '6';
+		}
+	}
+
 	private async writeNodesToMemFS(
 		engine: BaseEngine,
 		mainFileName: string,
@@ -363,7 +403,6 @@ class LaTeXService {
 		);
 
 		const workDirectories = new Set<string>();
-		const texDirectories = new Set<string>();
 
 		for (const node of workNodes) {
 			const dirPath = node.path.substring(0, node.path.lastIndexOf("/"));
@@ -372,20 +411,8 @@ class LaTeXService {
 			}
 		}
 
-		for (const node of cacheNodes) {
-			const cleanPath = node.path.replace(".texlyre_cache/__tex/", "");
-			const dirPath = cleanPath.substring(0, cleanPath.lastIndexOf("/"));
-			if (dirPath) {
-				texDirectories.add(dirPath);
-			}
-		}
-
 		for (const dir of workDirectories) {
 			this.createDirectoryStructure(engine, `/work/${dir}`);
-		}
-
-		for (const dir of texDirectories) {
-			this.createDirectoryStructure(engine, `/work/${dir}`); // Should be `/tex/${dir}`
 		}
 
 		for (const node of workNodes) {
@@ -408,16 +435,21 @@ class LaTeXService {
 				const fileContent = await this.getFileContent(node);
 				if (fileContent) {
 					const cleanPath = node.path.replace(".texlyre_cache/__tex/", "");
+					const fileName = cleanPath.split("/").pop() || cleanPath;
+					const texPath = `/tex/${fileName}`;
+
 					if (typeof fileContent === "string") {
-						engine.writeMemFSFile(`/work/${cleanPath}`, fileContent); // Should be `/tex/${cleanPath}`
+						engine.writeMemFSFile(texPath, fileContent);
 					} else {
-						engine.writeMemFSFile(`/work/${cleanPath}`, new Uint8Array(fileContent)); // Should be `/tex/${cleanPath}`
+						engine.writeMemFSFile(texPath, new Uint8Array(fileContent));
 					}
 				}
 			} catch (error) {
 				console.error(`Error writing cache file ${node.path} to MemFS:`, error);
 			}
 		}
+
+		await this.populateTexCache(engine);
 
 		const normalizedMainFile = mainFileName.replace(/^\/+/, "");
 		const mainFileNode = workNodes.find(
@@ -427,8 +459,10 @@ class LaTeXService {
 		);
 
 		if (mainFileNode) {
+			// Set engine main file to just the relative path, not /work/path
 			engine.setEngineMainFile(mainFileNode.path);
 		} else {
+			// Set engine main file to just the relative path, not /work/path
 			engine.setEngineMainFile(normalizedMainFile);
 		}
 

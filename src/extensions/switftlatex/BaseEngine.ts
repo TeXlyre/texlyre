@@ -31,6 +31,7 @@ export abstract class BaseEngine {
 	abstract makeMemFSFolder(folder: string): void;
 	abstract setEngineMainFile(filename: string): void;
 	abstract flushCache(): void;
+	abstract setCacheEntry(fileName: string, format: string, filePath: string): void;
 	abstract dumpDirectory(dir: string): Promise<{ [key: string]: ArrayBuffer }>;
 	abstract compile(
 		mainFileName: string,

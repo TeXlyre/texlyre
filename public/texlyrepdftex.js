@@ -227,6 +227,24 @@ function setTexliveEndpoint(url) {
     }
 }
 
+function setCacheEntryRoutine(filename, format, filepath) {
+    try {
+        const cacheKey = format + "/" + filename;
+        self.texlive200_cache[cacheKey] = filepath;
+        console.log(`Set cache entry: ${cacheKey} -> ${filepath}`);
+        self.postMessage({
+            "result": "ok",
+            "cmd": "setcacheentry"
+        });
+    } catch (err) {
+        console.error("Unable to set cache entry");
+        self.postMessage({
+            "result": "failed",
+            "cmd": "setcacheentry"
+        });
+    }
+}
+
 function dumpDirContent(dir) {
   const files = {};
   const entries = FS.readdir(dir).filter(item => item !== '.' && item !== '..');
@@ -269,6 +287,8 @@ self["onmessage"] = function(ev) {
     } else if (cmd === "grace") {
         console.error("Gracefully Close");
         self.close()
+    } else if (cmd === "setcacheentry") {
+        setCacheEntryRoutine(data["filename"], data["format"], data["filepath"])
     } else if (cmd === "flushcache") {
         cleanDir(WORKROOT)
     } else if (cmd === "getdir") {
