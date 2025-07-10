@@ -5,7 +5,6 @@ class DuplicateKeyDetector {
     private observer: MutationObserver | null = null;
     private autoSanitizeInProgress = false;
     private lastErrorLogTime = 0;
-    private seenKeys = new Set<string>();
 
     start() {
         if (this.observer) return;
@@ -29,35 +28,22 @@ class DuplicateKeyDetector {
         }
     }
 
-    private checkForDuplicateKeys(mutations: MutationRecord[]) {
-        const fileTreeContainer = document.querySelector('.file-tree-content, .file-tree');
-        if (!fileTreeContainer) return;
+    private async checkForDuplicateKeys(mutations: MutationRecord[]) {
+        if (this.autoSanitizeInProgress) return;
 
-        const fileNodes = fileTreeContainer.querySelectorAll('.file-node');
-        const currentKeys = new Set<string>();
-        let hasDuplicates = false;
+        try {
+            const result = await fileStorageService.autoSanitizeDuplicates();
 
-        fileNodes.forEach((node) => {
-            // Look for file path indicators
-            const fileNameElement = node.querySelector('.file-name');
-            if (fileNameElement) {
-                const fileName = fileNameElement.textContent?.trim();
-                if (fileName) {
-                    if (currentKeys.has(fileName)) {
-                        hasDuplicates = true;
-                        console.log(`[DuplicateKeyDetector] Found duplicate: ${fileName}`);
-                    }
-                    currentKeys.add(fileName);
+            if (result && result.removed > 0) {
+                const now = Date.now();
+                if (now - this.lastErrorLogTime > 5000) {
+                    this.lastErrorLogTime = now;
+                    console.log(`[DuplicateKeyDetector] Found and fixed ${result.removed} duplicates`);
+                    this.handleDuplicateKeyError();
                 }
             }
-        });
-
-        if (hasDuplicates && !this.autoSanitizeInProgress) {
-            const now = Date.now();
-            if (now - this.lastErrorLogTime > 5000) {
-                this.lastErrorLogTime = now;
-                this.handleDuplicateKeyError();
-            }
+        } catch (error) {
+            console.error('Error checking for duplicates:', error);
         }
     }
 
@@ -78,7 +64,6 @@ class DuplicateKeyDetector {
                     { operationId, duration: 4000 }
                 );
 
-                // Trigger a file tree refresh
                 document.dispatchEvent(new CustomEvent('refresh-file-tree'));
             } else {
                 notificationService.dismiss(operationId);

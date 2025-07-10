@@ -365,9 +365,10 @@ class LaTeXService {
 				if (!mainFileName.startsWith("/") || mainFileName === `/${node.name}`) {
 					processedNode.path = node.name;
 				} else {
-					const randomPrefix = Math.random().toString(36).substring(2, 8);
-					processedNode.path = `${randomPrefix}_${node.name}`;
-					processedNode.name = `${randomPrefix}_${node.name}`;
+					// const randomPrefix = `${Math.random().toString(36).substring(2, 8)}_`;
+					const randomPrefix = `_`;
+					processedNode.path = `${randomPrefix}${node.name}`;
+					processedNode.name = `${randomPrefix}${node.name}`;
 				}
 				mainFileProcessed = true;
 			} else {
@@ -487,50 +488,61 @@ class LaTeXService {
 	}
 
 	private async storeOutputDirectories(engine: BaseEngine): Promise<void> {
-		let texFiles: { [key: string]: ArrayBuffer } = {};
-
 		if (this.storeCache) {
-			texFiles = await this.storeCacheDirectory(engine);
+			await this.storeCacheDirectory(engine);
 		}
 
 		if (this.storeWorkingDirectory) {
-			await this.storeWorkDirectory(engine, texFiles);
+			await this.cleanupDirectory("/.texlyre_src/__work");
+			await this.storeWorkDirectory(engine);
 		}
 	}
 
-	private async storeCacheDirectory(engine: BaseEngine): Promise<{ [key: string]: ArrayBuffer }> {
+	private async storeCacheDirectory(engine: BaseEngine): Promise<void> {
 		try {
 			const texFiles = await engine.dumpDirectory("/tex");
 			await this.batchStoreDirectoryContents(texFiles, "/.texlyre_cache/__tex");
-			return texFiles;
 		} catch (error) {
 			console.error("Error saving cache directory:", error);
-			return {};
 		}
 	}
 
-	private async storeWorkDirectory(engine: BaseEngine, texFiles: { [key: string]: ArrayBuffer } = {}): Promise<void> {
+	private async storeWorkDirectory(engine: BaseEngine): Promise<void> {
 		try {
 			const workFiles = await engine.dumpDirectory("/work");
-			const filteredWorkFiles = this.filterWorkFilesExcludingCache(workFiles, texFiles);
+			const filteredWorkFiles = await this.filterWorkFilesExcludingCache(workFiles);
 			await this.batchStoreDirectoryContents(filteredWorkFiles, "/.texlyre_src/__work");
 		} catch (error) {
 			console.error("Error saving work directory:", error);
 		}
 	}
 
-	private filterWorkFilesExcludingCache(
-		workFiles: { [key: string]: ArrayBuffer },
-		texFiles: { [key: string]: ArrayBuffer }
-	): { [key: string]: ArrayBuffer } {
+	private async filterWorkFilesExcludingCache(
+		workFiles: { [key: string]: ArrayBuffer }
+	): Promise<{ [key: string]: ArrayBuffer }> {
 		const filtered: { [key: string]: ArrayBuffer } = {};
-		const texPaths = new Set(Object.keys(texFiles).map(path => path.replace(/^\/tex/, "")));
 
-		for (const [workPath, content] of Object.entries(workFiles)) {
-			const normalizedWorkPath = workPath.replace(/^\/work/, "");
-			if (!texPaths.has(normalizedWorkPath)) {
-				filtered[workPath] = content;
+		try {
+			const existingFiles = await fileStorageService.getAllFiles();
+			const cacheFiles = existingFiles.filter(
+				(file) => file.path.startsWith("/.texlyre_cache/__tex/") &&
+						 file.type === "file" &&
+						 !file.isDeleted
+			);
+
+			const cachePaths = new Set(
+				cacheFiles.map(file => file.path.replace("/.texlyre_cache/__tex", ""))
+			);
+
+			for (const [workPath, content] of Object.entries(workFiles)) {
+				const normalizedWorkPath = workPath.replace(/^\/work/, "");
+				if (!cachePaths.has(normalizedWorkPath)) {
+					filtered[workPath] = content;
+				}
 			}
+		} catch (error) {
+			console.error("Error filtering work files:", error);
+			return workFiles;
 		}
 
 		return filtered;
@@ -642,6 +654,8 @@ class LaTeXService {
 		result: CompileResult,
 	): Promise<void> {
 		try {
+			await this.cleanupDirectory("/.texlyre_src/__output");
+
 			const outputFiles: FileNode[] = [];
 
 			if (result.pdf && result.pdf.length > 0) {
@@ -684,6 +698,7 @@ class LaTeXService {
 		log: string,
 	): Promise<void> {
 		try {
+			await this.cleanupDirectory("/.texlyre_src/__output");
 			await this.ensureOutputDirectoriesExist();
 			const logFile = await this.createCompilationLogFile(mainFile, log);
 
@@ -693,6 +708,26 @@ class LaTeXService {
 			console.log(`Saved compilation log`);
 		} catch (error) {
 			console.error("Error saving compilation log:", error);
+		}
+	}
+
+	private async cleanupDirectory(directoryPath: string): Promise<void> {
+		try {
+			const existingFiles = await fileStorageService.getAllFiles();
+			const filesToCleanup = existingFiles.filter(
+				(file) => file.path.startsWith(directoryPath + "/") && !file.isDeleted
+			);
+
+			if (filesToCleanup.length > 0) {
+				const fileIds = filesToCleanup.map(file => file.id);
+				await fileStorageService.batchDeleteFiles(fileIds, {
+					showDeleteDialog: false,
+					hardDelete: true,
+				});
+				console.log(`Cleaned up ${filesToCleanup.length} files from ${directoryPath}`);
+			}
+		} catch (error) {
+			console.error(`Error cleaning up directory ${directoryPath}:`, error);
 		}
 	}
 
@@ -786,7 +821,10 @@ class LaTeXService {
 		try {
 			const normalizedPath = dirPath.replace(/\\/g, "/");
 			const parts = normalizedPath.split("/").filter((part) => part.length > 0);
-
+			// remove /work/ prefix if it exists
+			if (parts.length > 0 && parts[0] === "work") {
+				parts.shift();
+			}
 			if (parts.length === 0) return;
 
 			let currentPath = "";
