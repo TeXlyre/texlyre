@@ -761,53 +761,76 @@ class FileSyncService {
 		};
 	}
 
+	private areNotificationsEnabled(): boolean {
+		const userId = localStorage.getItem("texlyre-current-user");
+		const storageKey = userId ? `texlyre-user-${userId}-settings` : "texlyre-settings";
+		try {
+			const settings = JSON.parse(localStorage.getItem(storageKey) || '{}');
+			return settings['file-sync-notifications'] !== false;
+		} catch {
+			return true;
+		}
+	}
+
 	private notifyListeners(notification: FileSyncNotification): void {
 		this.listeners.forEach((listener) => listener(notification));
+	}
 
-		switch (notification.type) {
-			case "sync_error":
-				this.showErrorNotification(notification.message, {
-					data: notification.data,
-					duration: 5000,
-				});
-				break;
-			case "sync_complete":
-				this.showSuccessNotification(notification.message, {
-					data: notification.data,
-					duration: 3000,
-				});
-				break;
-			case "sync_progress":
-				this.showSyncNotification(notification.message, {
-					data: notification.data,
-					duration: 4000,
-				});
-				break;
-			case "sync_request":
-				this.showSyncNotification(notification.message, {
-					data: notification.data,
-					duration: 4000,
-				});
-				break;
-			case "verification":
-				if (notification.data?.status === "success") {
-					this.showSuccessNotification(notification.message, {
-						data: notification.data,
-						duration: 3000,
-					});
-				} else {
-					this.showErrorNotification(notification.message, {
-						data: notification.data,
-						duration: 5000,
-					});
-				}
-				break;
-			default:
-				this.showInfoNotification(notification.message, {
-					data: notification.data,
-					duration: 3000,
-				});
-				break;
+	showLoadingNotification(message: string, operationId?: string): void {
+		if (this.areNotificationsEnabled()) {
+			notificationService.showLoading(message, operationId);
+		}
+	}
+
+	showSuccessNotification(
+		message: string,
+		options: {
+			operationId?: string;
+			duration?: number;
+			data?: Record<string, any>;
+		} = {},
+	): void {
+		if (this.areNotificationsEnabled()) {
+			notificationService.showSuccess(message, options);
+		}
+	}
+
+	showErrorNotification(
+		message: string,
+		options: {
+			operationId?: string;
+			duration?: number;
+			data?: Record<string, any>;
+		} = {},
+	): void {
+		if (this.areNotificationsEnabled()) {
+			notificationService.showError(message, options);
+		}
+	}
+
+	showInfoNotification(
+		message: string,
+		options: {
+			operationId?: string;
+			duration?: number;
+			data?: Record<string, any>;
+		} = {},
+	): void {
+		if (this.areNotificationsEnabled()) {
+			notificationService.showInfo(message, options);
+		}
+	}
+
+	showSyncNotification(
+		message: string,
+		options: {
+			operationId?: string;
+			duration?: number;
+			data?: Record<string, any>;
+		} = {},
+	): void {
+		if (this.areNotificationsEnabled()) {
+			notificationService.showSync(message, options);
 		}
 	}
 }
