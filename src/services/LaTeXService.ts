@@ -487,30 +487,53 @@ class LaTeXService {
 	}
 
 	private async storeOutputDirectories(engine: BaseEngine): Promise<void> {
+		let texFiles: { [key: string]: ArrayBuffer } = {};
+
 		if (this.storeCache) {
-			await this.storeCacheDirectory(engine);
+			texFiles = await this.storeCacheDirectory(engine);
 		}
+
 		if (this.storeWorkingDirectory) {
-			await this.storeWorkDirectory(engine);
+			await this.storeWorkDirectory(engine, texFiles);
 		}
 	}
 
-	private async storeCacheDirectory(engine: BaseEngine): Promise<void> {
+	private async storeCacheDirectory(engine: BaseEngine): Promise<{ [key: string]: ArrayBuffer }> {
 		try {
 			const texFiles = await engine.dumpDirectory("/tex");
 			await this.batchStoreDirectoryContents(texFiles, "/.texlyre_cache/__tex");
+			return texFiles;
 		} catch (error) {
 			console.error("Error saving cache directory:", error);
+			return {};
 		}
 	}
 
-	private async storeWorkDirectory(engine: BaseEngine): Promise<void> {
+	private async storeWorkDirectory(engine: BaseEngine, texFiles: { [key: string]: ArrayBuffer } = {}): Promise<void> {
 		try {
 			const workFiles = await engine.dumpDirectory("/work");
-			await this.batchStoreDirectoryContents(workFiles, "/.texlyre_src/__work");
+			const filteredWorkFiles = this.filterWorkFilesExcludingCache(workFiles, texFiles);
+			await this.batchStoreDirectoryContents(filteredWorkFiles, "/.texlyre_src/__work");
 		} catch (error) {
 			console.error("Error saving work directory:", error);
 		}
+	}
+
+	private filterWorkFilesExcludingCache(
+		workFiles: { [key: string]: ArrayBuffer },
+		texFiles: { [key: string]: ArrayBuffer }
+	): { [key: string]: ArrayBuffer } {
+		const filtered: { [key: string]: ArrayBuffer } = {};
+		const texPaths = new Set(Object.keys(texFiles).map(path => path.replace(/^\/tex/, "")));
+
+		for (const [workPath, content] of Object.entries(workFiles)) {
+			const normalizedWorkPath = workPath.replace(/^\/work/, "");
+			if (!texPaths.has(normalizedWorkPath)) {
+				filtered[workPath] = content;
+			}
+		}
+
+		return filtered;
 	}
 
 	private async cleanupStaleFiles(): Promise<void> {
