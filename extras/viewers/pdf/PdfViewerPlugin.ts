@@ -6,10 +6,13 @@ import { pdfViewerSettings } from "./settings";
 const PDF_EXTENSIONS = ["pdf"];
 const PDF_MIMETYPES = ["application/pdf"];
 
+export const PLUGIN_NAME = "PDF.js Viewer (pdfjs-dist 5.3.31)";
+export const PLUGIN_VERSION = "0.1.0";
+
 const pdfViewerPlugin: ViewerPlugin = {
 	id: "texlyre-pdf-viewer",
-	name: "PDF Viewer",
-	version: "1.0.0",
+	name: PLUGIN_NAME,
+	version: PLUGIN_VERSION,
 	type: "viewer",
 	settings: pdfViewerSettings,
 

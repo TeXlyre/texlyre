@@ -1,13 +1,13 @@
 {
     "name": "texlyre",
     "private": true,
-    "version": "0.1.0",
+    "version": "0.1.2",
     "type": "module",
     "scripts": {
         "predev": "node scripts/copy-pdf-cmaps.cjs",
-        "dev": "node scripts/generate-plugins-index.js && vite --host",
+        "dev": "node scripts/generate-plugins-index.js && vite",
         "dev:https": "node scripts/generate-plugins-index.js && cross-env VITE_USE_HTTPS=true vite --host",
-        "build": "node scripts/generate-plugins-index.js && tsc && vite build",
+        "build": "node scripts/update-sw-version.js && node scripts/generate-plugins-index.js && tsc && vite build",
         "build:clean": "node scripts/clean-cache.cjs && npm run build",
         "clean:cache": "node scripts/clean-cache.cjs",
         "generate-plugins": "node scripts/generate-plugins-index.js",

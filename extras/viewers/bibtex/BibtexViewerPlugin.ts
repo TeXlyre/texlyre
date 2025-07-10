@@ -5,10 +5,13 @@ import { bibtexViewerSettings } from "./settings";
 const BIBTEX_EXTENSIONS = ["bib", "bibtex"];
 const BIBTEX_MIMETYPES = ["text/x-bibtex", "application/x-bibtex"];
 
+export const PLUGIN_NAME = "BibTeX Editor (bib-editor 1.14.0)";
+export const PLUGIN_VERSION = "0.1.0";
+
 const bibtexViewerPlugin: ViewerPlugin = {
 	id: "texlyre-bibtex-viewer",
-	name: "BibTeX Viewer",
-	version: "1.0.0",
+	name: PLUGIN_NAME,
+	version: PLUGIN_VERSION,
 	type: "viewer",
 	settings: bibtexViewerSettings,
 

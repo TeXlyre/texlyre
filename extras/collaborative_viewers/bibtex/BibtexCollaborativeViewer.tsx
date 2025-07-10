@@ -21,6 +21,7 @@ import {
 	getPresetOptions,
 } from "../../viewers/bibtex/tidyOptions";
 import "../../viewers/bibtex/styles.css";
+import { PLUGIN_NAME, PLUGIN_VERSION } from "./BibtexCollaborativeViewerPlugin";
 
 const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	content,
@@ -325,8 +326,8 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			<PluginHeader
 				fileName={fileInfo.fileName}
 				filePath={fileInfo.filePath}
-				pluginName="BibTeX Collaborative Viewer"
-				pluginVersion="1.0.0"
+				pluginName={PLUGIN_NAME}
+				pluginVersion={PLUGIN_VERSION}
 				tooltipInfo={tooltipInfo}
 				controls={headerControls}
 			/>

@@ -18,6 +18,7 @@ import { fileStorageService } from "../../../src/services/FileStorageService";
 import { TidyOptionsPanel } from "./TidyOptionsPanel";
 import { type TidyOptions, getPresetOptions } from "./tidyOptions";
 import "./styles.css";
+import { PLUGIN_NAME, PLUGIN_VERSION } from "./BibtexViewerPlugin";
 
 const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	const { getSetting } = useSettings();
@@ -326,8 +327,8 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			<PluginHeader
 				fileName={fileInfo.fileName}
 				filePath={fileInfo.filePath}
-				pluginName="BibTeX Viewer"
-				pluginVersion="1.0.0"
+				pluginName={PLUGIN_NAME}
+				pluginVersion={PLUGIN_VERSION}
 				tooltipInfo={tooltipInfo}
 				controls={headerControls}
 			/>

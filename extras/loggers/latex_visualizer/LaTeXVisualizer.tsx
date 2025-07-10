@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { PluginHeader } from "../../../src/components/common/PluginHeader";
 import type { LoggerProps } from "../../../src/plugins/PluginInterface";
 import "./styles.css";
+import { PLUGIN_NAME, PLUGIN_VERSION } from "./LaTeXVisualizerPlugin";
 
 interface ParsedError {
 	type: "error" | "warning" | "info";
@@ -397,8 +398,8 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 			<PluginHeader
 				fileName="LaTeX Log"
 				filePath="LaTeX Compilation Output"
-				pluginName="LaTeX Error Visualizer"
-				pluginVersion="1.0.0"
+				pluginName={PLUGIN_NAME}
+				pluginVersion={PLUGIN_VERSION}
 				tooltipInfo={tooltipInfo}
 				controls={headerControls}
 			/>

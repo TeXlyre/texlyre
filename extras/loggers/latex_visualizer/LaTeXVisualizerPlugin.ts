@@ -2,10 +2,13 @@
 import type { LoggerPlugin } from "../../../src/plugins/PluginInterface";
 import LaTeXVisualizer from "./LaTeXVisualizer";
 
+export const PLUGIN_NAME = "LaTeX Error Visualizer";
+export const PLUGIN_VERSION = "0.1.0";
+
 const latexVisualizerPlugin: LoggerPlugin = {
 	id: "texlyre-latex-visualizer",
-	name: "LaTeX Error Visualizer",
-	version: "1.0.0",
+	name: PLUGIN_NAME,
+	version: PLUGIN_VERSION,
 	type: "logger",
 
 	canHandle: (logType: string): boolean => {

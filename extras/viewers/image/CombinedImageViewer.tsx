@@ -23,6 +23,7 @@ import { useSettings } from "../../../src/hooks/useSettings";
 import type { ViewerProps } from "../../../src/plugins/PluginInterface";
 import { fileStorageService } from "../../../src/services/FileStorageService";
 import "./styles.css";
+import { PLUGIN_NAME, PLUGIN_VERSION } from "./ImageViewerPlugin";
 
 interface ImageTransform {
 	scale: number;
@@ -436,8 +437,8 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 			<PluginHeader
 				fileName={fileInfo.fileName}
 				filePath={fileInfo.filePath}
-				pluginName="Image Viewer"
-				pluginVersion="1.0.0"
+				pluginName={PLUGIN_NAME}
+				pluginVersion={PLUGIN_VERSION}
 				tooltipInfo={tooltipInfo}
 				controls={headerControls}
 			/>

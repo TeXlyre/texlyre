@@ -24,10 +24,13 @@ const IMAGE_MIMETYPES = [
 	"image/x-icon",
 ];
 
+export const PLUGIN_NAME = "Image Viewer";
+export const PLUGIN_VERSION = "0.1.0";
+
 const imageViewerPlugin: ViewerPlugin = {
 	id: "texlyre-image-viewer",
-	name: "Image Viewer",
-	version: "1.0.0",
+	name: PLUGIN_NAME,
+	version: PLUGIN_VERSION,
 	type: "viewer",
 	settings: imageViewerSettings, // Add this line
 

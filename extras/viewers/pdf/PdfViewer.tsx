@@ -15,6 +15,7 @@ import { usePluginFileInfo } from "../../../src/hooks/usePluginFileInfo";
 import { useSettings } from "../../../src/hooks/useSettings";
 import type { ViewerProps } from "../../../src/plugins/PluginInterface";
 import "./styles.css";
+import { PLUGIN_NAME, PLUGIN_VERSION } from "./PdfViewerPlugin";
 
 if (!pdfjs.GlobalWorkerOptions.workerSrc) {
 	pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker;
@@ -438,8 +439,8 @@ const PdfViewer: React.FC<ViewerProps> = ({
 			<PluginHeader
 				fileName={fileInfo.fileName}
 				filePath={fileInfo.filePath}
-				pluginName="PDF Viewer"
-				pluginVersion="1.0.0"
+				pluginName={PLUGIN_NAME}
+				pluginVersion={PLUGIN_VERSION}
 				tooltipInfo={tooltipInfo}
 				controls={headerControls}
 			/>
