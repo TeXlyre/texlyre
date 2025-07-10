@@ -3,6 +3,7 @@ import type React from "react";
 import { useState } from "react";
 
 import { LinkIcon, TrashIcon } from "../common/Icons";
+import Modal from "../common/Modal";
 import LinkFileModal from "./LinkFileModal";
 
 interface UnlinkedDocumentNoticeProps {
@@ -19,11 +20,11 @@ const UnlinkedDocumentNotice: React.FC<UnlinkedDocumentNoticeProps> = ({
   onDocumentLinked,
 }) => {
   const [showLinkModal, setShowLinkModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleDeleteDocument = () => {
-    if (confirm(`Are you sure you want to delete the document "${documentName}"?`)) {
-      onDeleteDocument(documentId);
-    }
+    onDeleteDocument(documentId);
+    setShowDeleteDialog(false);
   };
 
   return (
@@ -43,7 +44,7 @@ const UnlinkedDocumentNotice: React.FC<UnlinkedDocumentNoticeProps> = ({
           </button>
           <button
             className="link-button delete-action"
-            onClick={handleDeleteDocument}
+            onClick={() => setShowDeleteDialog(true)}
             title="Delete document"
           >
             <TrashIcon />
@@ -63,6 +64,42 @@ const UnlinkedDocumentNotice: React.FC<UnlinkedDocumentNoticeProps> = ({
             onDocumentLinked();
           }}
         />
+      )}
+
+      {showDeleteDialog && (
+        <Modal
+          isOpen={showDeleteDialog}
+          onClose={() => setShowDeleteDialog(false)}
+          title="Delete Document"
+          size="medium"
+        >
+          <div className="delete-document-content">
+            <p>
+              Are you sure you want to delete the document "{documentName}"?
+            </p>
+
+            <div className="warning-message">
+              This action cannot be undone. The document will be permanently removed.
+            </div>
+
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="button secondary"
+                onClick={() => setShowDeleteDialog(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="button danger"
+                onClick={handleDeleteDocument}
+              >
+                Delete Document
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </>
   );
