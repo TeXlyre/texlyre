@@ -21,7 +21,7 @@ import { fileCommentProcessor } from "../../utils/fileCommentProcessor.ts";
 import CommentPanel from "../comments/CommentPanel";
 import CommentToggleButton from "../comments/CommentToggleButton";
 import UnlinkedDocumentNotice from "./UnlinkedDocumentNotice";
-import { CopyIcon, DownloadIcon, LinkIcon, SaveIcon } from "../common/Icons";
+import {CopyIcon, DownloadIcon, FileTextIcon, LinkIcon, SaveIcon} from "../common/Icons";
 import { PluginHeader, PluginControlGroup } from "../common/PluginHeader";
 import type {DocumentList} from "../../types/documents.ts";
 
@@ -341,7 +341,27 @@ const EditorContent: React.FC<{
 				/>
 			)}
 
-			  {showUnlinkedNotice && (
+			<div className="editor-toolbar">
+
+				{isViewOnly && linkedDocumentId && (
+					<div className="linked-file-notice">
+						<span>
+							Read-only: This file is linked to a collaborative document{" "}
+						</span>
+						<div className="linked-file-actions">
+							<button
+								className="link-button"
+								onClick={onDocumentNavigation}
+								title="Navigate to linked document"
+							>
+								<FileTextIcon />
+								View linked doc
+							</button>
+						</div>
+					</div>
+				)}
+
+			   {showUnlinkedNotice && (
 				<UnlinkedDocumentNotice
 				  documentId={documentId}
 				  documentName={documents.find(d => d.id === documentId)?.name || "Untitled"}
@@ -374,7 +394,6 @@ const EditorContent: React.FC<{
 					  window.location.hash = newUrl;
 					} else if (onSelectDocument) {
 					  onSelectDocument("");
-					  // Clear document from URL hash
 					  const currentFragment = parseUrlFragments(window.location.hash.substring(1));
 					  const newUrl = buildUrlWithFragments(currentFragment.yjsUrl);
 					  window.location.hash = newUrl;
@@ -384,23 +403,8 @@ const EditorContent: React.FC<{
 					window.location.reload();
 				  }}
 				/>
-			  )}
+			   )}
 
-			<div className="editor-toolbar">
-				{isViewOnly && linkedDocumentId && (
-					<div className="linked-file-notice">
-						<span>
-							Read-only: This file is linked to a collaborative document{" "}
-						</span>
-						<button
-							className="link-button"
-							onClick={onDocumentNavigation}
-							title="Navigate to linked document"
-						>
-							View linked document
-						</button>
-					</div>
-				)}
 			</div>
 
 			<div className="editor-main-container">

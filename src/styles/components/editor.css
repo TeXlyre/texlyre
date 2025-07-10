@@ -39,6 +39,13 @@
 	background-color: var(--pico-secondary-background);
 }
 
+.editor-toolbar:has(.linked-file-notice),
+.editor-toolbar:has(.unlinked-document-notice) {
+	flex-direction: column;
+	align-items: stretch;
+	gap: var(--space-sm);
+}
+
 .editor-toolbar-button {
 	margin-right: var(--space-sm);
 }
@@ -46,13 +53,41 @@
 .linked-file-notice {
 	display: flex;
 	align-items: center;
+	justify-content: space-between;
 	gap: var(--space-sm);
 	padding: var(--space-sm);
 	background-color: var(--pico-primary-focus);
+	border: 1px solid var(--pico-primary);
 	border-radius: var(--radius-sm);
 	font-size: 0.9rem;
 	color: var(--text-color);
 	width: 100%;
+}
+
+.linked-file-actions {
+	display: flex;
+	gap: var(--space-sm);
+	flex-shrink: 0;
+}
+
+.linked-file-actions .link-button {
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
+	padding: var(--space-xs) var(--space-sm);
+	border: 1px solid currentColor;
+	border-radius: var(--radius-sm);
+	font-size: 0.8rem;
+	font-weight: 500;
+	background: none;
+	color: var(--pico-primary);
+	text-decoration: none;
+	cursor: pointer;
+	transition: background-color var(--transition-normal);
+}
+
+.linked-file-actions .link-button:hover {
+	background-color: var(--pico-primary-focus);
 }
 
 .link-button {
@@ -82,7 +117,7 @@
   border-radius: var(--radius-sm);
   font-size: 0.9rem;
   color: var(--color-error);
-  margin-bottom: var(--space-sm);
+  width: 100%;
 }
 
 .unlinked-document-actions {

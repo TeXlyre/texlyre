@@ -369,3 +369,49 @@
 	background-color: var(--pico-primary-focus);
 	outline: 2px dashed var(--pico-primary);
 }
+
+.temp-file-indicator {
+    color: var(--pico-primary);
+    font-size: 0.8rem;
+    font-weight: 500;
+    vertical-align: baseline;
+    position: relative;
+    top: -2px;
+}
+
+.batch-files-list {
+	max-height: 200px;
+	overflow-y: auto;
+	margin: 1rem 0;
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+}
+
+.batch-file-item {
+	padding: 0.5rem;
+	border-bottom: 1px solid var(--accent-border);
+}
+
+.batch-file-item:last-child {
+	border-bottom: none;
+}
+
+.batch-file-meta {
+	fontSize: 0.875rem;
+	color: var(--pico-secondary);
+	margin-top: 0.25rem;
+}
+
+.batch-files-overflow {
+	padding: 0.5rem;
+	font-style: italic;
+	color: var(--pico-secondary);
+	text-align: center;
+	border-top: 1px solid var(--accent-border);
+}
+
+.temp-indicator {
+	margin-left: 0.5rem;
+	font-size: 0.8rem;
+	opacity: 0.7;
+}

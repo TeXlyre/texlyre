@@ -2,7 +2,8 @@
 import type React from "react";
 
 import type { FileNode } from "../../types/files";
-import { FolderIcon } from "../common/Icons";
+import { isTemporaryFile } from "../../utils/fileUtils";
+import {FolderIcon, TempFileIcon} from "../common/Icons";
 import Modal from "../common/Modal";
 
 interface FilePropertiesInfo {
@@ -26,6 +27,11 @@ interface FileOperationsModalProps {
 	onSetSelectedTargetPath: (path: string) => void;
 	onConfirmMove: () => void;
 	getDirectoryOptions: (currentNode: FileNode | null) => FileNode[];
+	showDragDropDialog: boolean;
+	onCloseDragDropDialog: () => void;
+	dragDropFile: FileNode | null;
+	dragDropTargetPath: string;
+	onConfirmDragDrop: () => void;
 }
 
 const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
@@ -39,7 +45,55 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 	onSetSelectedTargetPath,
 	onConfirmMove,
 	getDirectoryOptions,
+	showDragDropDialog,
+	onCloseDragDropDialog,
+	dragDropFile,
+	dragDropTargetPath,
+	onConfirmDragDrop,
 }) => {
+	const getTemporaryFileWarning = (operation: string, targetPath?: string): string | null => {
+		if (!fileToMove) return null;
+
+		const isSourceTemporary = isTemporaryFile(fileToMove.path);
+		const isTargetTemporary = targetPath ? isTemporaryFile(targetPath) : false;
+
+		if (operation === "move") {
+			if (isSourceTemporary && isTargetTemporary) {
+				return "Moving between temporary locations may cause system instability.";
+			}
+			if (isSourceTemporary) {
+				return "Moving temporary files may break caching or cause system issues.";
+			}
+			if (isTargetTemporary) {
+				return "Moving files to temporary locations means they won't be synced with collaborators. Additionally, temporary locations may be cleared automatically.";
+			}
+		}
+
+		return null;
+	};
+
+	const getDragDropWarning = (): string | null => {
+		if (!dragDropFile) return null;
+
+		const isSourceTemporary = isTemporaryFile(dragDropFile.path);
+		const isTargetTemporary = isTemporaryFile(dragDropTargetPath);
+
+		if (isSourceTemporary && isTargetTemporary) {
+			return "Moving between temporary locations may cause system instability.";
+		}
+		if (isSourceTemporary) {
+			return "Moving temporary files may break caching or cause system issues.";
+		}
+		if (isTargetTemporary) {
+			return "Moving files to temporary locations means they won't be synced with collaborators. Additionally, temporary locations may be cleared automatically.";
+		}
+
+		return null;
+	};
+
+	const moveWarning = getTemporaryFileWarning("move", selectedTargetPath);
+	const dragDropWarning = getDragDropWarning();
+
 	return (
 		<>
 			{showPropertiesModal && propertiesInfo && (
@@ -78,6 +132,11 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 								{propertiesInfo.documentId})
 							</div>
 						)}
+						{isTemporaryFile(propertiesInfo.path) && (
+							<div className="property-item">
+								<strong>Temporary:</strong> Yes (System/Cache file)
+							</div>
+						)}
 					</div>
 				</Modal>
 			)}
@@ -109,9 +168,18 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 								>
 									<FolderIcon />
 									<span>{dir.path}</span>
+									{isTemporaryFile(dir.path) && (
+										<span className="temp-indicator" title="Temporary folder"><TempFileIcon/></span>
+									)}
 								</div>
 							))}
 						</div>
+
+						{moveWarning && (
+							<div className="warning-message" style={{ marginTop: "1rem" }}>
+								{moveWarning}
+							</div>
+						)}
 
 						<div className="modal-actions">
 							<button
@@ -132,6 +200,60 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 								}
 							>
 								Move Here
+							</button>
+						</div>
+					</div>
+				</Modal>
+			)}
+
+			{showDragDropDialog && dragDropFile && (
+				<Modal
+					isOpen={showDragDropDialog}
+					onClose={onCloseDragDropDialog}
+					title="Confirm Move"
+					size="medium"
+				>
+					<div className="drag-drop-confirm-content">
+						<p>
+							Move "{dragDropFile.name}" to{" "}
+							{dragDropTargetPath === "/" ? "root folder" : dragDropTargetPath}?
+						</p>
+
+						<div className="move-info">
+							<div className="move-source">
+								<strong>From:</strong> {dragDropFile.path}
+								{isTemporaryFile(dragDropFile.path) && (
+									<span className="temp-file-indicator"> <TempFileIcon/> Temporary</span>
+								)}
+							</div>
+							<div className="move-target">
+								<strong>To:</strong> {dragDropTargetPath === "/" ? "/" : dragDropTargetPath}
+								{isTemporaryFile(dragDropTargetPath) && (
+									<span className="temp-file-indicator"> <TempFileIcon/> Temporary</span>
+								)}
+							</div>
+						</div>
+
+						{dragDropWarning && (
+							<div className="warning-message">
+								{dragDropWarning}
+							</div>
+						)}
+
+						<div className="modal-actions">
+							<button
+								type="button"
+								className="button secondary"
+								onClick={onCloseDragDropDialog}
+							>
+								Cancel
+							</button>
+							<button
+								type="button"
+								className="button primary"
+								onClick={onConfirmDragDrop}
+							>
+								Move
 							</button>
 						</div>
 					</div>

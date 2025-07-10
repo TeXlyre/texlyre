@@ -78,6 +78,11 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	const dropRef = useRef<HTMLDivElement>(null);
 	const [isDragging, setIsDragging] = useState(false);
 	const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
+	const [showDragDropDialog, setShowDragDropDialog] = useState(false);
+	const [dragDropFile, setDragDropFile] = useState<FileNode | null>(null);
+	const [dragDropTargetPath, setDragDropTargetPath] = useState<string>("");
+	const [pendingDragDropOperation, setPendingDragDropOperation] = useState<(() => Promise<void>) | null>(null);
+
 	const [activeMenu, setActiveMenu] = useState<string | null>(null);
 	const menuRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
@@ -643,9 +648,11 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				nodeType === "directory" &&
 				targetNode.path.startsWith(nodePath + "/")
 			) {
+				setDragOverTarget(null);
 				return;
 			}
 			if (nodePath === targetNode.path) {
+				setDragOverTarget(null);
 				return;
 			}
 
@@ -655,15 +662,20 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 					"handleDropOnDirectory: Dragged file/directory not found:",
 					nodeId,
 				);
+				setDragOverTarget(null);
 				return;
 			}
 
-			const newFullPath =
-				targetNode.path === "/"
+			setDragDropFile(sourceFile);
+			setDragDropTargetPath(targetNode.path);
+			setShowDragDropDialog(true);
+			setPendingDragDropOperation(() => async () => {
+				const newFullPath = targetNode.path === "/"
 					? `/${sourceFile.name}`
 					: `${targetNode.path}/${sourceFile.name}`;
+				await renameFile(nodeId, newFullPath);
+			});
 
-			await renameFile(nodeId, newFullPath);
 		} catch (error) {
 			console.error("Error during internal drag-drop operation:", error);
 		} finally {
@@ -771,14 +783,42 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				return;
 			}
 
-			const newFullPath = `/${sourceFile.name}`;
-			await renameFile(nodeId, newFullPath);
+			// Show confirmation dialog
+			setDragDropFile(sourceFile);
+			setDragDropTargetPath("/");
+			setShowDragDropDialog(true);
+			setPendingDragDropOperation(() => async () => {
+				const newFullPath = `/${sourceFile.name}`;
+				await renameFile(nodeId, newFullPath);
+			});
+
 		} catch (error) {
 			console.error("Error during root drop operation:", error);
 		} finally {
 			setDragOverTarget(null);
 			setIsDragging(false);
 		}
+	};
+
+	const handleConfirmDragDrop = async () => {
+		if (pendingDragDropOperation) {
+			try {
+				await pendingDragDropOperation();
+			} catch (error) {
+				console.error("Error executing drag drop operation:", error);
+			}
+		}
+		setShowDragDropDialog(false);
+		setDragDropFile(null);
+		setDragDropTargetPath("");
+		setPendingDragDropOperation(null);
+	};
+
+	const handleCloseDragDropDialog = () => {
+		setShowDragDropDialog(false);
+		setDragDropFile(null);
+		setDragDropTargetPath("");
+		setPendingDragDropOperation(null);
 	};
 
 	const getDirectoryOptions = (
@@ -973,6 +1013,11 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				onSetSelectedTargetPath={setSelectedTargetPath}
 				onConfirmMove={handleConfirmMove}
 				getDirectoryOptions={getDirectoryOptions}
+				showDragDropDialog={showDragDropDialog}
+				onCloseDragDropDialog={handleCloseDragDropDialog}
+				dragDropFile={dragDropFile}
+				dragDropTargetPath={dragDropTargetPath}
+				onConfirmDragDrop={handleConfirmDragDrop}
 			/>
 
 			<ZipHandlingModal

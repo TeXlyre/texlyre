@@ -126,6 +126,13 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 
 	const hasViewer = hasCompatibleViewer(node);
 
+	const shouldShowTemporaryWarning = (action: string): boolean => {
+		if (action === "delete" && isTemporaryFile(node.path)) return true;
+		if (action === "rename" && isTemporaryFile(node.path)) return true;
+		if (action === "link" && isTemporaryFile(node.path)) return true;
+		return false;
+	};
+
 	const shouldShowLinkButton =
 		node.type === "file" &&
 		!node.isBinary &&
@@ -235,13 +242,14 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 						(!hasDocument ? (
 							<button
 								className="action-btn"
-								title="Link Document"
+								title={isTemporaryFile(node.path) ? "Link Document (Not recommended for temporary files)" : "Link Document"}
 								onClick={(e) => {
 									e.stopPropagation();
 									onLinkToDocument(node.id);
 								}}
 							>
 								<LinkIcon />
+								{isTemporaryFile(node.path) && <span className="warning-indicator">⚠️</span>}
 							</button>
 						) : (
 							<button

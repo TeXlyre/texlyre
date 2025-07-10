@@ -256,6 +256,7 @@ footer {
 	padding: 0.75rem;
 	border-radius: var(--radius-sm);
 	margin-bottom: var(--space-md);
+	margin-top: var(--space-md);
 }
 
 .error-message,
