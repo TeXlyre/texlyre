@@ -74,9 +74,34 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 	const localStorageSettingsRef = useRef<Record<string, unknown> | null>(null);
 	const isLocalStorageLoaded = useRef(false);
 
+	const getCurrentUserId = useCallback((): string | null => {
+		return localStorage.getItem("texlyre-current-user");
+	}, []);
+
+	const getStorageKey = useCallback((): string => {
+		const userId = getCurrentUserId();
+		return userId ? `texlyre-user-${userId}-settings` : "texlyre-settings";
+	}, [getCurrentUserId]);
+
 	useEffect(() => {
+		const userId = getCurrentUserId();
+		const userStorageKey = userId ? `texlyre-user-${userId}-settings` : "texlyre-settings";
+		const globalStorageKey = "texlyre-settings";
+
 		try {
-			const stored = localStorage.getItem("texlyre-settings");
+			// Try to load user-specific settings first
+			let stored = localStorage.getItem(userStorageKey);
+
+			// If user exists but no user-specific settings, check for global settings to migrate
+			if (userId && !stored) {
+				const globalSettings = localStorage.getItem(globalStorageKey);
+				if (globalSettings) {
+					// Duplicate global settings for this user
+					localStorage.setItem(userStorageKey, globalSettings);
+					stored = globalSettings;
+				}
+			}
+
 			if (stored) {
 				localStorageSettingsRef.current = JSON.parse(stored);
 			} else {
@@ -87,13 +112,13 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 				"Error parsing settings from localStorage on initial load:",
 				err,
 			);
-			localStorage.removeItem("texlyre-settings");
+			localStorage.removeItem(userStorageKey);
 			localStorageSettingsRef.current = {};
 		} finally {
 			isLocalStorageLoaded.current = true;
 			pluginSettings.forEach((setting) => registerSetting(setting));
 		}
-	}, []);
+	}, [getCurrentUserId]);
 
 	const loadStoredValue = (setting: Setting): unknown => {
 		if (setting.strictDefaultValue) {
@@ -118,11 +143,12 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 			{} as Record<string, unknown>,
 		);
 		try {
-			localStorage.setItem("texlyre-settings", JSON.stringify(toSave));
+			const storageKey = getStorageKey();
+			localStorage.setItem(storageKey, JSON.stringify(toSave));
 		} catch (error) {
 			console.error("Error saving settings to localStorage:", error);
 		}
-	}, [settings]);
+	}, [settings, getStorageKey]);
 
 	const getSettings = () => settings;
 

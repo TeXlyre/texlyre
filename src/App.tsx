@@ -32,46 +32,46 @@ import { SettingsProvider } from "./contexts/SettingsContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
 function App() {
-	return (
-		<OfflineProvider>
-			<SettingsProvider>
-				<ThemeProvider defaultThemeId="texlyre-theme" defaultVariant="system">
-					<AuthProvider>
-						<SecretsProvider>
-							<FileSystemBackupProvider>
-								<EditorProvider>
-									<AppContent />
-								</EditorProvider>
-							</FileSystemBackupProvider>
-						</SecretsProvider>
-					</AuthProvider>
-				</ThemeProvider>
-			</SettingsProvider>
-		</OfflineProvider>
-	);
+    return (
+       <OfflineProvider>
+          <AuthProvider>
+             <SettingsProvider>
+                <ThemeProvider defaultThemeId="texlyre-theme" defaultVariant="system">
+                   <SecretsProvider>
+                      <FileSystemBackupProvider>
+                         <EditorProvider>
+                            <AppContent />
+                         </EditorProvider>
+                      </FileSystemBackupProvider>
+                   </SecretsProvider>
+                </ThemeProvider>
+             </SettingsProvider>
+          </AuthProvider>
+       </OfflineProvider>
+    );
 }
 
 function AppContent() {
-	const {
-		isPasswordModalOpen,
-		passwordModalMessage,
-		hidePasswordModal,
-		submitPassword,
-	} = useContext(SecretsContext);
+    const {
+       isPasswordModalOpen,
+       passwordModalMessage,
+       hidePasswordModal,
+       submitPassword,
+    } = useContext(SecretsContext);
 
-	return (
-		<>
-			<AppRouter />
-			<FileConflictModal />
-			<FileOperationToast />
-			<PasswordModal
-				isOpen={isPasswordModalOpen}
-				onClose={hidePasswordModal}
-				onPasswordSubmit={submitPassword}
-				message={passwordModalMessage}
-			/>
-		</>
-	);
+    return (
+       <>
+          <AppRouter />
+          <FileConflictModal />
+          <FileOperationToast />
+          <PasswordModal
+             isOpen={isPasswordModalOpen}
+             onClose={hidePasswordModal}
+             onPasswordSubmit={submitPassword}
+             message={passwordModalMessage}
+          />
+       </>
+    );
 }
 
 export default App;
