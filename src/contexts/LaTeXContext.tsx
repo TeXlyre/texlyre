@@ -20,7 +20,7 @@ interface LaTeXProviderProps {
 }
 
 export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
-	const { fileTree } = useFileTree();
+	const { fileTree, refreshFileTree } = useFileTree();
 	const { registerSetting, getSetting } = useSettings();
 	const [isCompiling, setIsCompiling] = useState<boolean>(false);
 	const [compileError, setCompileError] = useState<string | null>(null);
@@ -48,8 +48,6 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			(getSetting("latex-store-working-directory")?.value as boolean) ?? false;
 
 		setLatexEngine(initialEngine);
-		// Don't apply settings to engines immediately - they're not initialized yet
-		// Settings will be applied when engines are initialized
 
 		registerSetting({
 			id: "latex-engine",
@@ -108,7 +106,6 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			},
 		});
 
-		// Apply initial settings to service after registration
 		latexService.setTexliveEndpoint(initialTexliveEndpoint);
 		latexService.setStoreCache(initialStoreCache);
 		latexService.setStoreWorkingDirectory(initialStoreWorkingDirectory);
@@ -155,6 +152,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 				setCompileError("Compilation failed");
 				setCurrentView("log");
 			}
+
+			await refreshFileTree();
 		} catch (error) {
 			setCompileError(error instanceof Error ? error.message : "Unknown error");
 			setCurrentView("log");

@@ -21,8 +21,10 @@ class LaTeXService {
 	private texliveEndpoint = "https://texlive.emaily.re";
 	private storeCache = true;
 	private storeWorkingDirectory = false;
-	private flattenMainDirectory = true; // Flatten main directory structure (keep until we have a better solution)
+	// Flatten main directory causes the main file's directory to be the root of the compilation, Forced with true for now.
+	private flattenMainDirectory = true;
 	private processedNodes: FileNode[] = [];
+	private sourceFileTimestamps: Map<string, number> = new Map();
 
 	constructor() {
 		this.engines.set("pdftex", new PdfTeXEngine());
@@ -228,7 +230,7 @@ class LaTeXService {
 
 			if (result.status === 0 && result.pdf && result.pdf.length > 0) {
 				console.log("Compilation successful!");
-				await this.cleanupSourceDirectory();
+				await this.cleanupStaleFiles();
 				await this.saveCompilationOutput(
 					mainFileName.replace(/^\/+/, ""),
 					result,
@@ -236,6 +238,7 @@ class LaTeXService {
 				await this.storeOutputDirectories(engine);
 			} else {
 				console.log("Compilation failed with errors");
+				await this.cleanupStaleFiles();
 				await this.saveCompilationLog(
 					mainFileName.replace(/^\/+/, ""),
 					result.log,
@@ -266,14 +269,28 @@ class LaTeXService {
 	): Promise<void> {
 		const allNodes = this.collectAllFiles(fileTree);
 
+		this.buildSourceFileTimestamps(allNodes);
+
 		if (this.storeCache) {
-			await this.loadCachedNodes(allNodes);
+			await this.loadAndValidateCachedNodes(allNodes);
 		}
 
 		this.processedNodes = this.preprocessNodes(allNodes, mainFileName);
 	}
 
-	private async loadCachedNodes(nodes: FileNode[]): Promise<void> {
+	private buildSourceFileTimestamps(nodes: FileNode[]): void {
+		this.sourceFileTimestamps.clear();
+
+		for (const node of nodes) {
+			if (node.type === "file" &&
+			    !node.path.startsWith("/.texlyre_cache/") &&
+			    !node.path.startsWith("/.texlyre_src/")) {
+				this.sourceFileTimestamps.set(node.path, node.lastModified || 0);
+			}
+		}
+	}
+
+	private async loadAndValidateCachedNodes(nodes: FileNode[]): Promise<void> {
 		try {
 			const existingFiles = await fileStorageService.getAllFiles();
 			const cachedFiles = existingFiles.filter(
@@ -283,16 +300,47 @@ class LaTeXService {
 					!file.isDeleted,
 			);
 
+			const validCachedFiles: FileNode[] = [];
+			const staleCacheIds: string[] = [];
+
 			for (const cachedFile of cachedFiles) {
-				if (!nodes.some((node) => node.path === cachedFile.path)) {
-					nodes.push(cachedFile);
+				if (await this.isCacheEntryValid(cachedFile)) {
+					validCachedFiles.push(cachedFile);
+				} else {
+					staleCacheIds.push(cachedFile.id);
 				}
 			}
 
-			console.log(`Loaded ${cachedFiles.length} cached TeX files`);
+			if (staleCacheIds.length > 0) {
+				console.log(`Cleaning up ${staleCacheIds.length} stale cache entries`);
+				await fileStorageService.batchDeleteFiles(staleCacheIds, {
+					showDeleteDialog: false,
+					hardDelete: true,
+				});
+			}
+
+			for (const validCache of validCachedFiles) {
+				if (!nodes.some((node) => node.path === validCache.path)) {
+					nodes.push(validCache);
+				}
+			}
+
+			console.log(`Loaded ${validCachedFiles.length} valid cached TeX files`);
 		} catch (error) {
-			console.error("Error loading cached files:", error);
+			console.error("Error loading and validating cached files:", error);
 		}
+	}
+
+	private async isCacheEntryValid(cachedFile: FileNode): Promise<boolean> {
+		const maxAge = 24 * 60 * 60 * 1000;
+		const now = Date.now();
+
+		if (!cachedFile.lastModified || (now - cachedFile.lastModified) > maxAge) {
+			return false;
+		}
+
+		const latestSourceTimestamp = Math.max(...Array.from(this.sourceFileTimestamps.values()));
+		return cachedFile.lastModified >= latestSourceTimestamp;
 	}
 
 	private preprocessNodes(nodes: FileNode[], mainFileName: string): FileNode[] {
@@ -385,7 +433,8 @@ class LaTeXService {
 		}
 
 		for (const dir of texDirectories) {
-			this.createDirectoryStructure(engine, `/work/${dir}`); // Should be `/tex/${dir}`
+			// this.createDirectoryStructure(engine, `/tex/${dir}`);
+			this.createDirectoryStructure(engine, `/work/${dir}`);
 		}
 
 		for (const node of workNodes) {
@@ -409,9 +458,11 @@ class LaTeXService {
 				if (fileContent) {
 					const cleanPath = node.path.replace(".texlyre_cache/__tex/", "");
 					if (typeof fileContent === "string") {
-						engine.writeMemFSFile(`/work/${cleanPath}`, fileContent); // Should be `/tex/${cleanPath}`
+						// engine.writeMemFSFile(`/tex/${cleanPath}`, fileContent);
+						engine.writeMemFSFile(`/work/${cleanPath}`, fileContent);
 					} else {
-						engine.writeMemFSFile(`/work/${cleanPath}`, new Uint8Array(fileContent)); // Should be `/tex/${cleanPath}`
+						// engine.writeMemFSFile(`/tex/${cleanPath}`, new Uint8Array(fileContent));
+						engine.writeMemFSFile(`/work/${cleanPath}`, new Uint8Array(fileContent));
 					}
 				}
 			} catch (error) {
@@ -447,7 +498,7 @@ class LaTeXService {
 	private async storeCacheDirectory(engine: BaseEngine): Promise<void> {
 		try {
 			const texFiles = await engine.dumpDirectory("/tex");
-			await this.storeDirectoryContents(texFiles, "/.texlyre_cache/__tex");
+			await this.batchStoreDirectoryContents(texFiles, "/.texlyre_cache/__tex");
 		} catch (error) {
 			console.error("Error saving cache directory:", error);
 		}
@@ -456,54 +507,54 @@ class LaTeXService {
 	private async storeWorkDirectory(engine: BaseEngine): Promise<void> {
 		try {
 			const workFiles = await engine.dumpDirectory("/work");
-			await this.storeDirectoryContents(workFiles, "/.texlyre_src/__work");
+			await this.batchStoreDirectoryContents(workFiles, "/.texlyre_src/__work");
 		} catch (error) {
 			console.error("Error saving work directory:", error);
 		}
 	}
 
-	private async cleanupSourceDirectory(): Promise<void> {
+	private async cleanupStaleFiles(): Promise<void> {
 		try {
 			const existingFiles = await fileStorageService.getAllFiles();
-			const sourceFiles = existingFiles.filter(
-				(file) => file.path.startsWith("/.texlyre_src/") && !file.isDeleted,
+			const staleFiles = existingFiles.filter(
+				(file) => (file.path.startsWith("/.texlyre_src/") && !file.isDeleted),
 			);
 
-			for (const file of sourceFiles) {
-				await fileStorageService.deleteFile(file.id, {
+			if (staleFiles.length > 0) {
+				const fileIds = staleFiles.map(file => file.id);
+				await fileStorageService.batchDeleteFiles(fileIds, {
 					showDeleteDialog: false,
 					hardDelete: true,
 				});
+				console.log(`Cleaned up ${staleFiles.length} stale LaTeX files`);
 			}
-			console.log("Cleaned up source directory");
 		} catch (error) {
-			console.error("Error cleaning up source directory:", error);
+			console.error("Error cleaning up stale files:", error);
 		}
 	}
 
-	private async storeDirectoryContents(
+	private async batchStoreDirectoryContents(
 		files: { [key: string]: ArrayBuffer },
 		baseDir: string,
 	): Promise<void> {
-		const directories = new Set<string>();
+		if (Object.keys(files).length === 0) return;
+
 		const filesToStore: FileNode[] = [];
-
-		for (const [originalPath, _] of Object.entries(files)) {
-			const storagePath = originalPath.replace(/^\/(tex|work)/, baseDir);
-			const dirPath = storagePath.substring(0, storagePath.lastIndexOf("/"));
-			directories.add(dirPath);
-		}
-
-		for (const dir of directories) {
-			await this.createStorageDirectory(dir);
-		}
+		const directoriesToCreate = new Set<string>();
 
 		for (const [originalPath, content] of Object.entries(files)) {
 			const storagePath = originalPath.replace(/^\/(tex|work)/, baseDir);
+			const dirPath = storagePath.substring(0, storagePath.lastIndexOf("/"));
 			const fileName = storagePath.split("/").pop()!;
 
+			if (dirPath !== baseDir && dirPath) {
+				directoriesToCreate.add(dirPath);
+			}
+
+			const existingFile = await fileStorageService.getFileByPath(storagePath, true);
+
 			filesToStore.push({
-				id: nanoid(),
+				id: existingFile?.id || nanoid(),
 				name: fileName,
 				path: storagePath,
 				type: "file",
@@ -512,40 +563,54 @@ class LaTeXService {
 				size: content.byteLength,
 				mimeType: getMimeType(fileName),
 				isBinary: isBinaryFile(fileName),
+				excludeFromSync: true,
+				isDeleted: false,
 			});
 		}
 
-		await fileStorageService.batchStoreFiles(filesToStore, {
-			showConflictDialog: false,
-		});
+		await this.batchCreateDirectories(Array.from(directoriesToCreate));
+
+		if (filesToStore.length > 0) {
+			await fileStorageService.batchStoreFiles(filesToStore, {
+				showConflictDialog: false,
+				preserveTimestamp: true,
+			});
+			console.log(`Batch stored ${filesToStore.length} files to ${baseDir}`);
+		}
 	}
 
-	private async createStorageDirectory(fullPath: string): Promise<void> {
-		try {
+	private async batchCreateDirectories(directoryPaths: string[]): Promise<void> {
+		const directoriesToCreate: FileNode[] = [];
+		const existingFiles = await fileStorageService.getAllFiles();
+		const existingPaths = new Set(existingFiles.map((file) => file.path));
+
+		const allPaths = new Set<string>();
+		for (const fullPath of directoryPaths) {
 			const parts = fullPath.split("/").filter((p) => p);
 			let currentPath = "";
-
-			const existingFiles = await fileStorageService.getAllFiles();
-			const existingPaths = new Set(existingFiles.map((file) => file.path));
-
 			for (const part of parts) {
 				currentPath = currentPath ? `${currentPath}/${part}` : `/${part}`;
-
-				if (!existingPaths.has(currentPath)) {
-					await fileStorageService.storeFile(
-						{
-							id: nanoid(),
-							name: part,
-							path: currentPath,
-							type: "directory",
-							lastModified: Date.now(),
-						},
-						{ showConflictDialog: false },
-					);
-				}
+				allPaths.add(currentPath);
 			}
-		} catch (error) {
-			console.error("Error creating storage directory:", error);
+		}
+
+		for (const dirPath of allPaths) {
+			if (!existingPaths.has(dirPath)) {
+				const dirName = dirPath.split("/").pop()!;
+				directoriesToCreate.push({
+					id: nanoid(),
+					name: dirName,
+					path: dirPath,
+					type: "directory",
+					lastModified: Date.now(),
+				});
+			}
+		}
+
+		if (directoriesToCreate.length > 0) {
+			await fileStorageService.batchStoreFiles(directoriesToCreate, {
+				showConflictDialog: false,
+			});
 		}
 	}
 
@@ -554,33 +619,38 @@ class LaTeXService {
 		result: CompileResult,
 	): Promise<void> {
 		try {
-			await this.createOutputDirectory();
+			const outputFiles: FileNode[] = [];
 
 			if (result.pdf && result.pdf.length > 0) {
 				const fileName = mainFile.split("/").pop() || mainFile;
 				const baseName = fileName.split(".").slice(0, -1).join(".");
 				const pdfFileName = `${baseName}.pdf`;
 
-				await fileStorageService.storeFile(
-					{
-						id: nanoid(),
-						name: pdfFileName,
-						path: `/.texlyre_src/__output/${pdfFileName}`,
-						type: "file",
-						content: result.pdf.buffer,
-						lastModified: Date.now(),
-						size: result.pdf.length,
-						mimeType: "application/pdf",
-						isBinary: true,
-						excludeFromSync: true,
-					},
-					{ showConflictDialog: false },
-				);
-
-				console.log(`Saved output PDF: /.texlyre_src/__output/${pdfFileName}`);
+				outputFiles.push({
+					id: nanoid(),
+					name: pdfFileName,
+					path: `/.texlyre_src/__output/${pdfFileName}`,
+					type: "file",
+					content: result.pdf.buffer,
+					lastModified: Date.now(),
+					size: result.pdf.length,
+					mimeType: "application/pdf",
+					isBinary: true,
+					excludeFromSync: true,
+				});
 			}
 
-			await this.saveCompilationLog(mainFile, result.log);
+			const logFile = await this.createCompilationLogFile(mainFile, result.log);
+			outputFiles.push(logFile);
+
+			await this.ensureOutputDirectoriesExist();
+
+			if (outputFiles.length > 0) {
+				await fileStorageService.batchStoreFiles(outputFiles, {
+					showConflictDialog: false,
+				});
+				console.log(`Batch stored ${outputFiles.length} output files`);
+			}
 		} catch (error) {
 			console.error("Error saving compilation output:", error);
 		}
@@ -591,89 +661,70 @@ class LaTeXService {
 		log: string,
 	): Promise<void> {
 		try {
-			await this.createOutputDirectory();
+			await this.ensureOutputDirectoriesExist();
+			const logFile = await this.createCompilationLogFile(mainFile, log);
 
-			const fileName = mainFile.split("/").pop() || mainFile;
-			const baseName = fileName.split(".").slice(0, -1).join(".");
-			const logFileName = `${baseName}.log`;
-
-			const encoder = new TextEncoder();
-			const logContent = encoder.encode(log).buffer;
-
-			await fileStorageService.storeFile(
-				{
-					id: nanoid(),
-					name: logFileName,
-					path: `/.texlyre_src/__output/${logFileName}`,
-					type: "file",
-					content: logContent,
-					lastModified: Date.now(),
-					size: encoder.encode(log).length,
-					mimeType: "text/plain",
-					isBinary: false,
-				},
-				{ showConflictDialog: false },
-			);
-
-			console.log(
-				`Saved compilation log: /.texlyre_src/__output/${logFileName}`,
-			);
+			await fileStorageService.batchStoreFiles([logFile], {
+				showConflictDialog: false,
+			});
+			console.log(`Saved compilation log`);
 		} catch (error) {
 			console.error("Error saving compilation log:", error);
 		}
 	}
 
-	private async createOutputDirectory(): Promise<void> {
-		try {
-			await this.createBaseDirectory();
+	private async createCompilationLogFile(mainFile: string, log: string): Promise<FileNode> {
+		const fileName = mainFile.split("/").pop() || mainFile;
+		const baseName = fileName.split(".").slice(0, -1).join(".");
+		const logFileName = `${baseName}.log`;
 
-			const directoriesToCreate = ["__output", "__tex", "__work"];
-			const existingFiles = await fileStorageService.getAllFiles();
-			const existingPaths = new Set(existingFiles.map((file) => file.path));
+		const encoder = new TextEncoder();
+		const logContent = encoder.encode(log).buffer;
 
-			for (const dirName of directoriesToCreate) {
-				const dirPath = `/.texlyre_src/${dirName}`;
-
-				if (!existingPaths.has(dirPath)) {
-					await fileStorageService.storeFile(
-						{
-							id: nanoid(),
-							name: dirName,
-							path: dirPath,
-							type: "directory",
-							lastModified: Date.now(),
-						},
-						{ showConflictDialog: false },
-					);
-				}
-			}
-		} catch (error) {
-			console.error("Error creating output directories:", error);
-		}
+		return {
+			id: nanoid(),
+			name: logFileName,
+			path: `/.texlyre_src/__output/${logFileName}`,
+			type: "file",
+			content: logContent,
+			lastModified: Date.now(),
+			size: encoder.encode(log).length,
+			mimeType: "text/plain",
+			isBinary: false,
+			excludeFromSync: true,
+		};
 	}
 
-	private async createBaseDirectory(): Promise<void> {
-		try {
-			const existingFiles = await fileStorageService.getAllFiles();
-			const baseDir = "/.texlyre_src";
-			const baseDirExists = existingFiles.some(
-				(file) => file.path === baseDir && file.type === "directory",
-			);
+	private async ensureOutputDirectoriesExist(): Promise<void> {
+		const requiredDirectories = [
+			"/.texlyre_src",
+			"/.texlyre_src/__output",
+			"/.texlyre_src/__work",
+			"/.texlyre_cache",
+			"/.texlyre_cache/__tex"
+		];
 
-			if (!baseDirExists) {
-				await fileStorageService.storeFile(
-					{
-						id: nanoid(),
-						name: ".texlyre_src",
-						path: baseDir,
-						type: "directory",
-						lastModified: Date.now(),
-					},
-					{ showConflictDialog: false },
-				);
+		const directoriesToCreate: FileNode[] = [];
+		const existingFiles = await fileStorageService.getAllFiles();
+		const existingPaths = new Set(existingFiles.map((file) => file.path));
+
+		for (const dirPath of requiredDirectories) {
+			if (!existingPaths.has(dirPath)) {
+				const dirName = dirPath.split("/").pop()!;
+				directoriesToCreate.push({
+					id: nanoid(),
+					name: dirName,
+					path: dirPath,
+					type: "directory",
+					lastModified: Date.now(),
+				});
 			}
-		} catch (error) {
-			console.error("Error creating base directory:", error);
+		}
+
+		if (directoriesToCreate.length > 0) {
+			await fileStorageService.batchStoreFiles(directoriesToCreate, {
+				showConflictDialog: false,
+			});
 		}
 	}
 
