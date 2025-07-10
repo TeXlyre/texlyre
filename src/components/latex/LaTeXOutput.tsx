@@ -1,8 +1,10 @@
+// src/components/latex/LaTeXOutput.tsx
 import React from "react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useFileTree } from "../../hooks/useFileTree";
 import { useLaTeX } from "../../hooks/useLaTeX";
+import { useProperties } from "../../hooks/useProperties";
 import { useSettings } from "../../hooks/useSettings";
 import { pluginRegistry } from "../../plugins/PluginRegistry";
 import ResizablePanel from "../common/ResizablePanel";
@@ -32,17 +34,56 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 	const { compileLog, compiledPdf, currentView, toggleOutputView } = useLaTeX();
 	const { selectedFileId, getFile } = useFileTree();
 	const { getSetting } = useSettings();
-	const [visualizerHeight, setVisualizerHeight] = useState(() => {
-		const stored = localStorage.getItem("texlyre-log-visualizer-height");
-		return stored ? Number(stored) : 300;
-	});
+	const { getProperty, setProperty, registerProperty } = useProperties();
+	const propertiesRegistered = useRef(false);
+
+	const [visualizerHeight, setVisualizerHeight] = useState(300);
+	const [visualizerCollapsed, setVisualizerCollapsed] = useState(false);
+
 	const useEnhancedRenderer = getSetting("pdf-renderer-enable")?.value ?? true;
 	const loggerPlugin = pluginRegistry.getLoggerForType("latex");
 	const pdfRendererPlugin = pluginRegistry.getRendererForOutput("pdf");
 
+	useEffect(() => {
+		if (propertiesRegistered.current) return;
+		propertiesRegistered.current = true;
+
+		registerProperty({
+			id: "log-visualizer-height",
+			category: "UI",
+			subcategory: "Layout",
+			defaultValue: 300,
+		});
+
+		registerProperty({
+			id: "log-visualizer-collapsed",
+			category: "UI",
+			subcategory: "Layout",
+			defaultValue: false,
+		});
+	}, [registerProperty]);
+
+	useEffect(() => {
+		const storedHeight = getProperty("log-visualizer-height");
+		const storedCollapsed = getProperty("log-visualizer-collapsed");
+
+		if (storedHeight !== undefined) {
+			setVisualizerHeight(Number(storedHeight));
+		}
+
+		if (storedCollapsed !== undefined) {
+			setVisualizerCollapsed(Boolean(storedCollapsed));
+		}
+	}, [getProperty]);
+
 	const handleVisualizerResize = (height: number) => {
 		setVisualizerHeight(height);
-		localStorage.setItem("texlyre-log-visualizer-height", height.toString());
+		setProperty("log-visualizer-height", height);
+	};
+
+	const handleVisualizerCollapse = (collapsed: boolean) => {
+		setVisualizerCollapsed(collapsed);
+		setProperty("log-visualizer-collapsed", collapsed);
 	};
 
 	const handleLineClick = async (line: number) => {
@@ -128,6 +169,8 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 										maxHeight={600}
 										className="visualizer-panel-wrapper"
 										onResize={handleVisualizerResize}
+										collapsed={visualizerCollapsed}
+										onCollapse={handleVisualizerCollapse}
 									>
 										<div className="visualizer-panel">
 											{React.createElement(loggerPlugin.renderVisualizer, {
@@ -175,3 +218,4 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 };
 
 export default LaTeXOutput;
+

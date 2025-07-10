@@ -1,4 +1,4 @@
-// src/components/fileSync/FileSyncNotificationToast.tsx
+// src/components/collab/FileSyncNotificationToast.tsx
 import type React from "react";
 import { useEffect, useState } from "react";
 import { useFileSync } from "../../hooks/useFileSync.ts";
@@ -11,11 +11,6 @@ const FileSyncNotificationToast: React.FC = () => {
 	>([]);
 
 	useEffect(() => {
-		const notificationsEnabled =
-			localStorage.getItem("texlyre-file-sync-notifications") !== "false";
-
-		if (!notificationsEnabled) return;
-
 		const recentNotifications = notifications
 			.filter((n) => Date.now() - n.timestamp < 10000)
 			.slice(-3);

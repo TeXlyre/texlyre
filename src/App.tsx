@@ -30,21 +30,24 @@ import { OfflineProvider } from "./contexts/OfflineContext";
 import { SecretsContext, SecretsProvider } from "./contexts/SecretsContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import {PropertiesProvider} from "./contexts/PropertiesContext.tsx";
 
 function App() {
     return (
        <OfflineProvider>
           <AuthProvider>
              <SettingsProvider>
-                <ThemeProvider defaultThemeId="texlyre-theme" defaultVariant="system">
-                   <SecretsProvider>
-                      <FileSystemBackupProvider>
-                         <EditorProvider>
-                            <AppContent />
-                         </EditorProvider>
-                      </FileSystemBackupProvider>
-                   </SecretsProvider>
-                </ThemeProvider>
+                 <PropertiesProvider>
+                    <ThemeProvider defaultThemeId="texlyre-theme" defaultVariant="system">
+                       <SecretsProvider>
+                          <FileSystemBackupProvider>
+                             <EditorProvider>
+                                <AppContent />
+                             </EditorProvider>
+                          </FileSystemBackupProvider>
+                       </SecretsProvider>
+                    </ThemeProvider>
+                 </PropertiesProvider>
              </SettingsProvider>
           </AuthProvider>
        </OfflineProvider>

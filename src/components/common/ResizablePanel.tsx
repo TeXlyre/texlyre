@@ -1,4 +1,4 @@
-// src/components/layout/ResizablePanel.tsx
+// src/components/common/ResizablePanel.tsx
 import type React from "react";
 import { type MouseEvent, useEffect, useRef, useState } from "react";
 
@@ -17,6 +17,8 @@ interface ResizablePanelProps {
 	alignment?: "start" | "end";
 	collapsible?: boolean;
 	onCollapse?: (collapsed: boolean) => void;
+	collapsed?: boolean;
+	defaultCollapsed?: boolean;
 }
 
 const ResizablePanel: React.FC<ResizablePanelProps> = ({
@@ -34,9 +36,11 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 	alignment = "end",
 	collapsible = true,
 	onCollapse,
+	collapsed: externalCollapsed,
+	defaultCollapsed = false,
 }) => {
 	const [size, setSize] = useState(direction === "horizontal" ? width : height);
-	const [collapsed, setCollapsed] = useState(false);
+	const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
 	const [previousSize, setPreviousSize] = useState(
 		direction === "horizontal" ? width : height,
 	);
@@ -45,6 +49,8 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 	const panelRef = useRef<HTMLDivElement>(null);
 	const startPosRef = useRef(0);
 	const startSizeRef = useRef(0);
+
+	const collapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
 
 	const handleMouseDown = (e: MouseEvent | React.TouchEvent) => {
 		e.preventDefault();
@@ -121,21 +127,21 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 	]);
 
 	const toggleCollapse = () => {
-		if (collapsed) {
-			// Expand
-			setCollapsed(false);
-			setSize(previousSize);
-			if (onCollapse) {
-				onCollapse(false);
-			}
-		} else {
-			// Collapse
+		const newCollapsed = !collapsed;
+
+		if (externalCollapsed === undefined) {
+			setInternalCollapsed(newCollapsed);
+		}
+
+		if (newCollapsed) {
 			setPreviousSize(size);
-			setCollapsed(true);
 			setSize(0);
-			if (onCollapse) {
-				onCollapse(true);
-			}
+		} else {
+			setSize(previousSize);
+		}
+
+		if (onCollapse) {
+			onCollapse(newCollapsed);
 		}
 	};
 

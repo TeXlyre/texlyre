@@ -1,11 +1,12 @@
 // src/components/editor/FileDocumentController.tsx
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 
 import { useAuth } from "../../hooks/useAuth";
 import { useFileTree } from "../../hooks/useFileTree";
+import { useProperties } from "../../hooks/useProperties";
 import { useTheme } from "../../hooks/useTheme";
 import { fileStorageService, fileStorageEventEmitter } from "../../services/FileStorageService";
 import type { Document } from "../../types/documents";
@@ -86,6 +87,9 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		useFileTree();
 	const { currentLayout } = useTheme();
 	const { getProjectById } = useAuth();
+	const { getProperty, setProperty, registerProperty } = useProperties();
+	const propertiesRegistered = useRef(false);
+	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 	const [activeView, setActiveView] = useState<"documents" | "files">(
 		"files",
 	);
@@ -102,17 +106,12 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		fileId?: string;
 		filePath?: string;
 	}>({});
-	const [sidebarWidth, setSidebarWidth] = useState(() => {
-		const stored = localStorage.getItem("texlyre-sidebar-width");
-		return stored
-			? Number(stored)
-			: currentLayout?.defaultFileExplorerWidth || 250;
-	});
-
-	const [latexOutputWidth, setLatexOutputWidth] = useState(() => {
-		const stored = localStorage.getItem("texlyre-latex-output-width");
-		return stored ? Number(stored) : 550;
-	});
+	const [sidebarWidth, setSidebarWidth] = useState(
+		currentLayout?.defaultFileExplorerWidth || 250
+	);
+	const [latexOutputWidth, setLatexOutputWidth] = useState(550);
+	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+	const [latexOutputCollapsed, setLatexOutputCollapsed] = useState(false);
 	const [showLatexOutput, setShowLatexOutput] = useState(false);
 	const [documentSelectionChange, setDocumentSelectionChange] = useState(0);
 	const [fileSelectionChange, setFileSelectionChange] = useState(0);
@@ -144,6 +143,73 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 			console.error("Error loading project for export:", error);
 		}
 	};
+
+	useEffect(() => {
+		if (propertiesRegistered.current) return;
+		propertiesRegistered.current = true;
+
+		registerProperty({
+			id: "sidebar-width",
+			category: "UI",
+			subcategory: "Layout",
+			defaultValue: currentLayout?.defaultFileExplorerWidth || 250,
+		});
+
+		registerProperty({
+			id: "latex-output-width",
+			category: "UI",
+			subcategory: "Layout",
+			defaultValue: 550,
+		});
+
+		registerProperty({
+			id: "sidebar-collapsed",
+			category: "UI",
+			subcategory: "Layout",
+			defaultValue: false,
+		});
+
+		registerProperty({
+			id: "latex-output-collapsed",
+			category: "UI",
+			subcategory: "Layout",
+			defaultValue: false,
+		});
+	}, [registerProperty]);
+
+	useEffect(() => {
+		if (propertiesLoaded) return;
+
+		const storedSidebarWidth = getProperty("sidebar-width");
+		const storedLatexWidth = getProperty("latex-output-width");
+		const storedSidebarCollapsed = getProperty("sidebar-collapsed");
+		const storedLatexCollapsed = getProperty("latex-output-collapsed");
+
+		// Only load if at least one property is available (meaning registration worked)
+		if (storedSidebarWidth !== undefined || storedLatexWidth !== undefined ||
+			storedSidebarCollapsed !== undefined || storedLatexCollapsed !== undefined) {
+
+			if (storedSidebarWidth !== undefined) {
+				setSidebarWidth(Number(storedSidebarWidth));
+			}
+
+			if (storedLatexWidth !== undefined) {
+				setLatexOutputWidth(Number(storedLatexWidth));
+			}
+
+			if (storedSidebarCollapsed !== undefined) {
+				setSidebarCollapsed(Boolean(storedSidebarCollapsed));
+			}
+
+			if (storedLatexCollapsed !== undefined) {
+				setLatexOutputCollapsed(Boolean(storedLatexCollapsed));
+			}
+
+			setPropertiesLoaded(true);
+		}
+	}, [getProperty, propertiesLoaded]);
+
+
 
 	useEffect(() => {
 		const handleNavigateToLinkedFile = (event: Event) => {
@@ -551,12 +617,22 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 
 	const handleSidebarResize = (width: number) => {
 		setSidebarWidth(width);
-		localStorage.setItem("texlyre-sidebar-width", width.toString());
+		setProperty("sidebar-width", width);
+	};
+
+	const handleSidebarCollapse = (collapsed: boolean) => {
+		setSidebarCollapsed(collapsed);
+		setProperty("sidebar-collapsed", collapsed);
 	};
 
 	const handleLatexOutputWidthResize = (width: number) => {
 		setLatexOutputWidth(width);
-		localStorage.setItem("texlyre-latex-output-width", width.toString());
+		setProperty("latex-output-width", width);
+	};
+
+	const handleLatexOutputCollapse = (collapsed: boolean) => {
+		setLatexOutputCollapsed(collapsed);
+		setProperty("latex-output-collapsed", collapsed);
 	};
 
 	const handleNavigateToLinkedFile = () => {
@@ -586,6 +662,8 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 				minWidth={currentLayout?.minFileExplorerWidth || 200}
 				maxWidth={currentLayout?.maxFileExplorerWidth || 500}
 				onResize={handleSidebarResize}
+				collapsed={sidebarCollapsed}
+				onCollapse={handleSidebarCollapse}
 				className="sidebar-container"
 			>
 				<div className="view-toggle">
@@ -674,6 +752,8 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 						maxWidth={1200}
 						alignment="start"
 						onResize={handleLatexOutputWidthResize}
+						collapsed={latexOutputCollapsed}
+						onCollapse={handleLatexOutputCollapse}
 						className="latex-output-container"
 					>
 						<LaTeXOutput
