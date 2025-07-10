@@ -6,6 +6,8 @@ import { CommentProvider } from "../../contexts/CommentContext";
 import { processComments } from "../../extensions/codemirror/CommentExtension.ts";
 import { useComments } from "../../hooks/useComments";
 import { usePluginFileInfo } from "../../hooks/usePluginFileInfo";
+import { useCollab } from "../../hooks/useCollab";
+import { buildUrlWithFragments, parseUrlFragments } from "../../types/yjs";
 import type {
 	CollaborativeViewerProps,
 	ViewerProps,
@@ -18,6 +20,7 @@ import { copyCleanTextToClipboard } from "../../utils/clipboardUtils";
 import { arrayBufferToString } from "../../utils/fileUtils";
 import CommentPanel from "../comments/CommentPanel";
 import CommentToggleButton from "../comments/CommentToggleButton";
+import UnlinkedDocumentNotice from "./UnlinkedDocumentNotice";
 import { CopyIcon, DownloadIcon, LinkIcon, SaveIcon } from "../common/Icons";
 import { PluginHeader, PluginControlGroup } from "../common/PluginHeader";
 
@@ -70,6 +73,7 @@ const EditorContent: React.FC<{
 	documents?: Array<{ id: string; name: string }>;
 	shouldShowLatexOutput?: boolean;
 	onSaveDocument?: () => void;
+	onSelectDocument?: (docId: string) => void;
 }> = ({
 	editorRef,
 	textContent,
@@ -91,11 +95,13 @@ const EditorContent: React.FC<{
 	documents,
 	shouldShowLatexOutput,
 	onSaveDocument,
+	onSelectDocument
 }) => {
+	const [showUnlinkedNotice, setShowUnlinkedNotice] = useState(false);
 	const { parseComments, getCommentAtPosition, addComment, updateComments } =
 		useComments();
 	const fileInfo = usePluginFileInfo(fileId, fileName);
-
+	const { changeData } = useCollab<DocumentList>();
 	const { viewRef, isUpdatingRef, showSaveIndicator } = EditorLoader(
 		editorRef,
 		docUrl,
@@ -136,6 +142,24 @@ const EditorContent: React.FC<{
 		},
 		[parseComments, updateComments, viewRef],
 	);
+
+	useEffect(() => {
+	  let timeoutId: NodeJS.Timeout;
+
+	  if (!isEditingFile && documentId && !linkedFileInfo?.fileName && documents) {
+		timeoutId = setTimeout(() => {
+		  setShowUnlinkedNotice(true);
+		}, 150); // delay showing the unlinked document notice for 150ms to avoid flickering
+	  } else {
+		setShowUnlinkedNotice(false);
+	  }
+
+	  return () => {
+		if (timeoutId) {
+		  clearTimeout(timeoutId);
+		}
+	  };
+	}, [isEditingFile, documentId, linkedFileInfo?.fileName, documents]);
 
 	useEffect(() => {
 		document.addEventListener(
@@ -315,6 +339,51 @@ const EditorContent: React.FC<{
 					linkedFileInfo={!isEditingFile ? linkedFileInfo : null}
 				/>
 			)}
+
+			  {showUnlinkedNotice && (
+				<UnlinkedDocumentNotice
+				  documentId={documentId}
+				  documentName={documents.find(d => d.id === documentId)?.name || "Untitled"}
+				  onDeleteDocument={(docId) => {
+					if (!changeData) {
+					  console.error("Cannot delete document: changeData not available");
+					  return;
+					}
+
+					changeData((data) => {
+					  if (!data.documents) return;
+
+					  const docIndex = data.documents.findIndex(d => d.id === docId);
+					  if (docIndex >= 0) {
+						data.documents.splice(docIndex, 1);
+					  }
+
+					  if (data.currentDocId === docId) {
+						data.currentDocId = data.documents.length > 0 ? data.documents[0].id : "";
+					  }
+					});
+
+					const remainingDocs = documents.filter(d => d.id !== docId);
+					if (remainingDocs.length > 0 && onSelectDocument) {
+					  const newSelectedId = remainingDocs[0].id;
+					  onSelectDocument(newSelectedId);
+					  // Update URL hash
+					  const currentFragment = parseUrlFragments(window.location.hash.substring(1));
+					  const newUrl = buildUrlWithFragments(currentFragment.yjsUrl, newSelectedId);
+					  window.location.hash = newUrl;
+					} else if (onSelectDocument) {
+					  onSelectDocument("");
+					  // Clear document from URL hash
+					  const currentFragment = parseUrlFragments(window.location.hash.substring(1));
+					  const newUrl = buildUrlWithFragments(currentFragment.yjsUrl);
+					  window.location.hash = newUrl;
+					}
+				  }}
+				  onDocumentLinked={() => {
+					window.location.reload();
+				  }}
+				/>
+			  )}
 
 			<div className="editor-toolbar">
 				{isViewOnly && linkedDocumentId && (
@@ -633,6 +702,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 					onNavigateToLinkedFile={handleNavigateToLinkedFile}
 					documents={documents}
 					shouldShowLatexOutput={shouldShowLatexOutput}
+					onSelectDocument={onSelectDocument}
 				/>
 			</div>
 		</CommentProvider>

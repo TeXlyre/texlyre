@@ -71,6 +71,50 @@
 	opacity: 0.8;
 }
 
+.unlinked-document-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  background-color: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  color: var(--color-error);
+  margin-bottom: var(--space-sm);
+}
+
+.unlinked-document-actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.unlinked-document-actions .link-button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background-color var(--transition-normal);
+}
+
+.unlinked-document-actions .link-button:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+.unlinked-document-actions .delete-action:hover {
+  background-color: rgba(220, 53, 69, 0.2);
+}
+
+.link-file-modal-content {
+  padding: var(--space-sm) 0;
+}
+
 .editor-container.empty-state {
 	display: flex;
 	justify-content: center;
