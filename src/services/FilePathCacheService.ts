@@ -1,43 +1,111 @@
 // src/services/FilePathCacheService.ts
-import type { EditorView } from "codemirror";
-
-import type { FileNode } from "../types/files";
+import type { FileNode, FilePathCache } from "../types/files";
 import { fileStorageEventEmitter } from "./FileStorageService";
-import { updateFilePathCache, setCurrentFilePath } from "../extensions/codemirror/FilePathAutocompleteExtension";
+
+type CacheUpdateCallback = (files: FileNode[]) => void;
+type FilePathUpdateCallback = (filePath: string) => void;
 
 class FilePathCacheService {
 	private cachedFiles: FileNode[] = [];
 	private lastCacheUpdate = 0;
 	private cacheTimeout = 5000;
-	private editorViews = new Set<EditorView>();
+	private cacheUpdateTimeout: NodeJS.Timeout | null = null;
+	private cacheUpdateCallbacks = new Set<CacheUpdateCallback>();
+	private filePathUpdateCallbacks = new Set<FilePathUpdateCallback>();
 
 	initialize() {
-		// Listen for file storage changes
 		fileStorageEventEmitter.onChange(() => {
 			this.invalidateCache();
 		});
 
-		// Listen for file tree refresh events
 		document.addEventListener('refresh-file-tree', () => {
 			this.invalidateCache();
 		});
 	}
 
-	registerEditorView(view: EditorView) {
-		this.editorViews.add(view);
-
+	onCacheUpdate(callback: CacheUpdateCallback) {
+		this.cacheUpdateCallbacks.add(callback);
 		if (this.cachedFiles.length > 0) {
-			updateFilePathCache(view, this.cachedFiles);
+			callback(this.cachedFiles);
 		}
 	}
 
-	unregisterEditorView(view: EditorView) {
-		this.editorViews.delete(view);
+	offCacheUpdate(callback: CacheUpdateCallback) {
+		this.cacheUpdateCallbacks.delete(callback);
+	}
+
+	onFilePathUpdate(callback: FilePathUpdateCallback) {
+		this.filePathUpdateCallbacks.add(callback);
+	}
+
+	offFilePathUpdate(callback: FilePathUpdateCallback) {
+		this.filePathUpdateCallbacks.delete(callback);
 	}
 
 	updateCurrentFilePath(filePath: string) {
-		this.editorViews.forEach(view => {
-			setCurrentFilePath(view, filePath);
+		this.filePathUpdateCallbacks.forEach(callback => {
+			callback(filePath);
+		});
+	}
+
+	buildCacheFromFiles(files: FileNode[]): FilePathCache {
+		return {
+			files,
+			imageFiles: files
+				.filter(f => f.type === "file" && this.isImageFile(f.name))
+				.map(f => f.path),
+			bibFiles: files
+				.filter(f => f.type === "file" && f.name.endsWith('.bib'))
+				.map(f => f.path),
+			texFiles: files
+				.filter(f => f.type === "file" && (f.name.endsWith('.tex') || f.name.endsWith('.sty') || f.name.endsWith('.cls')))
+				.map(f => f.path),
+			allFiles: files
+				.filter(f => f.type === "file")
+				.map(f => f.path),
+			lastUpdate: Date.now(),
+		};
+	}
+
+	getRelativePath(fromPath: string, toPath: string): string {
+		if (!fromPath || fromPath === '/') {
+			return toPath.startsWith('/') ? toPath.slice(1) : toPath;
+		}
+
+		const fromDir = fromPath.substring(0, fromPath.lastIndexOf('/')) || '/';
+		const toDir = toPath.substring(0, toPath.lastIndexOf('/')) || '/';
+		const toFileName = toPath.substring(toPath.lastIndexOf('/') + 1);
+
+		if (fromDir === toDir) {
+			return toFileName;
+		}
+
+		if (toPath.startsWith(fromDir + '/')) {
+			return toPath.substring(fromDir.length + 1);
+		}
+
+		if (fromDir !== '/' && toDir === '/') {
+			return toFileName;
+		}
+
+		return toPath.startsWith('/') ? toPath.slice(1) : toPath;
+	}
+
+	private isImageFile(filename: string): boolean {
+		const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.svg', '.pdf', '.eps', '.ps'];
+		return imageExtensions.some(ext => filename.toLowerCase().endsWith(ext));
+	}
+
+	private invalidateCache() {
+		clearTimeout(this.cacheUpdateTimeout);
+		this.cacheUpdateTimeout = setTimeout(() => {
+			this.updateCache();
+		}, 500);
+	}
+
+	private notifyCacheUpdate() {
+		this.cacheUpdateCallbacks.forEach(callback => {
+			callback(this.cachedFiles);
 		});
 	}
 
@@ -55,21 +123,8 @@ class FilePathCacheService {
 		}
 
 		this.lastCacheUpdate = Date.now();
-
-		// Update all registered editor views
-		this.editorViews.forEach(view => {
-			updateFilePathCache(view, this.cachedFiles);
-		});
+		this.notifyCacheUpdate();
 	}
-
-	private invalidateCache() {
-		clearTimeout(this.cacheUpdateTimeout);
-		this.cacheUpdateTimeout = setTimeout(() => {
-			this.updateCache();
-		}, 500);
-	}
-
-	private cacheUpdateTimeout: NodeJS.Timeout | null = null;
 
 	async getCachedFiles(): Promise<FileNode[]> {
 		const now = Date.now();
@@ -80,8 +135,9 @@ class FilePathCacheService {
 	}
 
 	cleanup() {
-		this.editorViews.clear();
 		this.cachedFiles = [];
+		this.cacheUpdateCallbacks.clear();
+		this.filePathUpdateCallbacks.clear();
 		if (this.cacheUpdateTimeout) {
 			clearTimeout(this.cacheUpdateTimeout);
 			this.cacheUpdateTimeout = null;

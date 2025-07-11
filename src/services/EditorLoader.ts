@@ -279,13 +279,11 @@ export const EditorLoader = (
 		  // Get current file path for relative path calculations
 		  let currentFilePath = '';
 		  if (isEditingFile && currentFileId) {
-			// Get the file path synchronously if possible
 			const getCurrentFilePath = async () => {
 			  const file = await fileStorageService.getFile(currentFileId);
 			  return file?.path || '';
 			};
 
-			// Try to get it immediately for initial setup
 			getCurrentFilePath().then(path => {
 			  currentFilePath = path;
 			});
@@ -384,12 +382,7 @@ export const EditorLoader = (
 		try {
 			const view = new EditorView({ state, parent: editorRef.current });
 			viewRef.current = view;
-
-			// Register view with file path cache service for LaTeX files
 			if (isLatexFile) {
-				filePathCacheService.registerEditorView(view);
-
-				// Update cache with current files
 				filePathCacheService.updateCache();
 			}
 
@@ -416,8 +409,7 @@ export const EditorLoader = (
 
 		return () => {
 			if (viewRef.current) {
-				// Unregister from file path cache service
-				filePathCacheService.unregisterEditorView(viewRef.current);
+				filePathCacheService.cleanup();
 				viewRef.current.destroy();
 				viewRef.current = null;
 			}

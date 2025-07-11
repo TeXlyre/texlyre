@@ -15,6 +15,15 @@ export interface FileNode {
 	excludeFromSync?: boolean;
 }
 
+export interface FilePathCache {
+	files: FileNode[];
+	imageFiles: string[];
+	bibFiles: string[];
+	texFiles: string[];
+	allFiles: string[];
+	lastUpdate: number;
+}
+
 export interface FileTreeContextType {
 	fileTree: FileNode[];
 	selectedFileId: string | null;

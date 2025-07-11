@@ -3,16 +3,8 @@ import { type CompletionContext, type CompletionResult } from "@codemirror/autoc
 import { StateEffect, StateField } from "@codemirror/state";
 import { ViewPlugin, type EditorView } from "@codemirror/view";
 
-import type { FileNode } from "../../types/files";
-
-interface FilePathCache {
-	files: FileNode[];
-	imageFiles: string[];
-	bibFiles: string[];
-	texFiles: string[];
-	allFiles: string[];
-	lastUpdate: number;
-}
+import type { FileNode, FilePathCache } from "../../types/files";
+import { filePathCacheService } from "../../services/FilePathCacheService";
 
 export const updateFileCache = StateEffect.define<FileNode[]>();
 
@@ -30,61 +22,12 @@ const filePathCacheField = StateField.define<FilePathCache>({
 	update(cache, tr) {
 		for (const effect of tr.effects) {
 			if (effect.is(updateFileCache)) {
-				const files = effect.value;
-				return {
-					files,
-					imageFiles: files
-						.filter(f => f.type === "file" && isImageFile(f.name))
-						.map(f => f.path),
-					bibFiles: files
-						.filter(f => f.type === "file" && f.name.endsWith('.bib'))
-						.map(f => f.path),
-					texFiles: files
-						.filter(f => f.type === "file" && (f.name.endsWith('.tex') || f.name.endsWith('.sty') || f.name.endsWith('.cls')))
-						.map(f => f.path),
-					allFiles: files
-						.filter(f => f.type === "file")
-						.map(f => f.path),
-					lastUpdate: Date.now(),
-				};
+				return filePathCacheService.buildCacheFromFiles(effect.value);
 			}
 		}
 		return cache;
 	},
 });
-
-const isImageFile = (filename: string): boolean => {
-	const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.svg', '.pdf', '.eps', '.ps'];
-	return imageExtensions.some(ext => filename.toLowerCase().endsWith(ext));
-};
-
-const getRelativePath = (fromPath: string, toPath: string): string => {
-	if (!fromPath || fromPath === '/') {
-		return toPath.startsWith('/') ? toPath.slice(1) : toPath;
-	}
-
-	const fromDir = fromPath.substring(0, fromPath.lastIndexOf('/')) || '/';
-	const toDir = toPath.substring(0, toPath.lastIndexOf('/')) || '/';
-	const toFileName = toPath.substring(toPath.lastIndexOf('/') + 1);
-
-	// If files are in the same directory (siblings), show just the filename
-	if (fromDir === toDir) {
-		return toFileName;
-	}
-
-	// If target is in a subdirectory of the current file's directory
-	if (toPath.startsWith(fromDir + '/')) {
-		return toPath.substring(fromDir.length + 1);
-	}
-
-	// If current file is in a subdirectory and target is in root
-	if (fromDir !== '/' && toDir === '/') {
-		return toFileName;
-	}
-
-	// For all other cases, return path relative to root
-	return toPath.startsWith('/') ? toPath.slice(1) : toPath;
-};
 
 const latexCommandPatterns = [
 	{
@@ -115,7 +58,27 @@ class FilePathAutocompleteProcessor {
 
 	constructor(view: EditorView) {
 		this.view = view;
+
+		setTimeout(() => {
+			filePathCacheService.onCacheUpdate(this.handleCacheUpdate);
+			filePathCacheService.onFilePathUpdate(this.handleFilePathUpdate);
+		}, 0);
 	}
+
+	destroy() {
+		filePathCacheService.offCacheUpdate(this.handleCacheUpdate);
+		filePathCacheService.offFilePathUpdate(this.handleFilePathUpdate);
+	}
+
+	private handleCacheUpdate = (files: FileNode[]) => {
+		this.view.dispatch({
+			effects: updateFileCache.of(files)
+		});
+	};
+
+	private handleFilePathUpdate = (filePath: string) => {
+		this.currentFilePath = filePath;
+	};
 
 	setCurrentFilePath(filePath: string) {
 		this.currentFilePath = filePath;
@@ -178,10 +141,9 @@ class FilePathAutocompleteProcessor {
 
 		const options = candidates
 			.map(filePath => {
-				const relativePath = getRelativePath(this.currentFilePath, filePath);
+				const relativePath = filePathCacheService.getRelativePath(this.currentFilePath, filePath);
 				const fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
 
-				// For bibliography commands, remove .bib extension
 				const displayPath = fileTypes === 'bib' && relativePath.endsWith('.bib')
 					? relativePath.slice(0, -4)
 					: relativePath;
@@ -196,7 +158,6 @@ class FilePathAutocompleteProcessor {
 				!partial || relativePath.toLowerCase().includes(partial.toLowerCase())
 			)
 			.sort((a, b) => {
-				// Prioritize exact prefix matches
 				const aStartsWith = a.relativePath.toLowerCase().startsWith(partial.toLowerCase());
 				const bStartsWith = b.relativePath.toLowerCase().startsWith(partial.toLowerCase());
 				if (aStartsWith && !bStartsWith) return -1;
@@ -205,10 +166,9 @@ class FilePathAutocompleteProcessor {
 				const lenDiff = a.relativePath.length - b.relativePath.length;
 				if (lenDiff !== 0) return lenDiff;
 
-				// Finally alphabetically
 				return a.relativePath.localeCompare(b.relativePath);
 			})
-			.slice(0, 20) // Limit results
+			.slice(0, 20)
 			.map(({ relativePath, fileName, fullPath }) => ({
 				label: relativePath,
 				detail: fileName !== relativePath ? fileName : undefined,
@@ -223,7 +183,6 @@ class FilePathAutocompleteProcessor {
 		const lineText = line.text;
 		const posInLine = context.pos - line.from;
 
-		// Find the start of the current partial path
 		let partialStart = posInLine;
 		for (const { pattern } of latexCommandPatterns) {
 			const match = lineText.match(pattern);
@@ -244,7 +203,6 @@ class FilePathAutocompleteProcessor {
 	};
 }
 
-// Store processor globally for access
 let globalProcessor: FilePathAutocompleteProcessor | null = null;
 
 export function createFilePathAutocompleteExtension(currentFilePath: string = '') {
@@ -263,6 +221,7 @@ export function createFilePathAutocompleteExtension(currentFilePath: string = ''
 			}
 
 			destroy() {
+				this.processor?.destroy();
 				if (globalProcessor === this.processor) {
 					globalProcessor = null;
 				}
@@ -279,12 +238,6 @@ export function createFilePathAutocompleteExtension(currentFilePath: string = ''
 		plugin,
 		completionSource,
 	];
-}
-
-export function updateFilePathCache(view: EditorView, files: FileNode[]) {
-	view.dispatch({
-		effects: updateFileCache.of(files)
-	});
 }
 
 export function setCurrentFilePath(view: EditorView, filePath: string) {
