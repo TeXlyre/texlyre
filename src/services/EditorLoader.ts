@@ -296,8 +296,8 @@ export const EditorLoader = (
 		  extensions.push(
 			autocompletion({
 			  override: [
-				latexCompletionSource(true),
-				completionSource as CompletionSource
+			   latexCompletionSource(true),
+			   completionSource as CompletionSource
 			  ],
 			  maxRenderedOptions: 20,
 			})
@@ -308,8 +308,15 @@ export const EditorLoader = (
 			setTimeout(async () => {
 			  const file = await fileStorageService.getFile(currentFileId);
 			  if (file && viewRef.current) {
-				setCurrentFilePath(viewRef.current, file.path);
-				filePathCacheService.updateCurrentFilePath(file.path);
+			   setCurrentFilePath(viewRef.current, file.path);
+			   filePathCacheService.updateCurrentFilePath(file.path);
+			  }
+			}, 100);
+		  } else if (!isEditingFile && documentId) {
+			// For YJS documents, try to find linked file path
+			setTimeout(() => {
+			  if (viewRef.current) {
+				filePathCacheService.updateCurrentFilePath('', documentId);
 			  }
 			}, 100);
 		  }

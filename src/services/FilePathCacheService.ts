@@ -42,10 +42,26 @@ class FilePathCacheService {
 		this.filePathUpdateCallbacks.delete(callback);
 	}
 
-	updateCurrentFilePath(filePath: string) {
-		this.filePathUpdateCallbacks.forEach(callback => {
-			callback(filePath);
-		});
+	async getLinkedFilePath(documentId: string): Promise<string> {
+		const cachedFiles = await this.getCachedFiles();
+		const linkedFile = cachedFiles.find(file => file.documentId === documentId);
+		return linkedFile?.path || '';
+	}
+
+	updateCurrentFilePath(filePath: string, documentId?: string) {
+		if (!filePath && documentId) {
+			this.getLinkedFilePath(documentId).then(linkedPath => {
+				if (linkedPath) {
+					this.filePathUpdateCallbacks.forEach(callback => {
+						callback(linkedPath);
+					});
+				}
+			});
+		} else {
+			this.filePathUpdateCallbacks.forEach(callback => {
+				callback(filePath);
+			});
+		}
 	}
 
 	buildCacheFromFiles(files: FileNode[]): FilePathCache {
