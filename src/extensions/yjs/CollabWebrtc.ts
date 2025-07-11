@@ -29,7 +29,7 @@ class WebrtcProviderRegistry {
 		}
 
 		try {
-			console.log(`Creating new WebRTC provider for room: ${roomName}`);
+			console.log(`[CollabWebrtc] Creating new WebRTC provider for room: ${roomName}`);
 			const provider = new WebrtcProvider(roomName, doc, {
 				signaling: options?.signaling || ["wss://ywebrtc.emaily.re"],
 			});
@@ -61,7 +61,7 @@ class WebrtcProviderRegistry {
 		entry.refCount -= 1;
 
 		if (entry.refCount <= 0) {
-			console.log(`Destroying WebRTC provider for room: ${roomName}`);
+			console.log(`[CollabWebrtc] Destroying WebRTC provider for room: ${roomName}`);
 			try {
 				entry.provider.disconnect();
 				entry.provider.destroy();

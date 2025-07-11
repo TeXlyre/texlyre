@@ -84,7 +84,7 @@ const BackupModal: React.FC<BackupModalProps> = ({
 				try {
 					const project = await getProjectById(currentProjectId);
 					setCurrentProjectName(project?.name || "Current project only");
-				} catch (error) {
+				} catch (_error) {
 					setCurrentProjectName("Current project only");
 				}
 			}

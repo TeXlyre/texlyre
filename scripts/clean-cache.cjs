@@ -1,5 +1,5 @@
-const { rmSync, existsSync } = require("fs");
-const path = require("path");
+const { rmSync, existsSync } = require("node:fs");
+const path = require("node:path");
 
 const paths = ["node_modules/.vite", "dist", ".vite"];
 

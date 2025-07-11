@@ -111,7 +111,7 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 					(u.protocol === "ws:" || u.protocol === "wss:") &&
 					u.hostname.length > 0
 				);
-			} catch (e) {
+			} catch (_e) {
 				return false;
 			}
 		};
@@ -137,7 +137,7 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 						`[CollabContext] Warning: Signaling server URL '${serverUrl}' is not a valid WebSocket URL and will be ignored. Please use 'ws://' or 'wss://' with a valid hostname.`,
 					);
 				}
-			} catch (e) {
+			} catch (_e) {
 				console.warn(
 					`[CollabContext] Warning: Invalid URL format for signaling server '${serverUrl}'. Please ensure it's a valid URL.`,
 				);

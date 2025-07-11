@@ -136,7 +136,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const handlePageInputChange = useCallback(
 		(event: React.ChangeEvent<HTMLInputElement>) => {
 			const pageNum = Number.parseInt(event.target.value, 10);
-			if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= numPages) {
+			if (!Number.isNaN(pageNum) && pageNum >= 1 && pageNum <= numPages) {
 				if (scrollView) {
 					const pageElement = pageRefs.current.get(pageNum);
 					if (pageElement) {
@@ -154,7 +154,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		(event: React.KeyboardEvent<HTMLInputElement>) => {
 			if (event.key === "Enter") {
 				const pageNum = Number.parseInt(event.currentTarget.value, 10);
-				if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= numPages) {
+				if (!Number.isNaN(pageNum) && pageNum >= 1 && pageNum <= numPages) {
 					if (scrollView) {
 						const pageElement = pageRefs.current.get(pageNum);
 						if (pageElement) {
@@ -188,8 +188,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		pageRefs.current.clear();
 	}, []);
 
-	const onPageLoadSuccess = useCallback((pageNumber: number) => {
-		return (page: any) => {
+	const onPageLoadSuccess = useCallback((_pageNumber: number) => {
+		return (_page: any) => {
 			// This callback is called when each page finishes loading in scroll view
 		};
 	}, []);

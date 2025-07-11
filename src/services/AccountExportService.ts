@@ -398,7 +398,7 @@ class AccountExportService {
 
 			const importedUser = await this.createUserFromImport(userData);
 
-			console.log(`Successfully imported user: ${userData.username}`);
+			console.log(`[AccountExportService] Successfully imported user: ${userData.username}`);
 			return importedUser;
 		} catch (error) {
 			console.error("Error importing user data:", error);
@@ -432,7 +432,7 @@ class AccountExportService {
 
 		await authDb.put("users", userToImport);
 
-		console.log(`Successfully imported user: ${userData.username}`);
+		console.log(`[AccountExportService] Successfully imported user: ${userData.username}`);
 		return userToImport;
 	}
 
@@ -443,7 +443,7 @@ class AccountExportService {
 			throw new Error("Failed to authenticate imported user");
 		}
 
-		console.log(`Successfully authenticated imported user: ${user.username}`);
+		console.log(`[AccountExportService] Successfully authenticated imported user: ${user.username}`);
 	}
 
 	private async importProjectsData(
@@ -469,7 +469,7 @@ class AccountExportService {
 				await this.createProjectDirectly(projectData, targetUser.id);
 
 				console.log(
-					`Imported project: ${projectData.name} for user: ${targetUser.username}`,
+					`[AccountExportService] Imported project: ${projectData.name} for user: ${targetUser.username}`,
 				);
 			} else {
 				if (

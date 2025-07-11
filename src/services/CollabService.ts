@@ -63,14 +63,13 @@ class CollabService {
 
 		if (this.isOfflineMode()) {
 			return this.createOfflineConnection(docId, collectionName, containerId);
-		} else {
-			return this.createOnlineConnection(
-				docId,
-				collectionName,
-				containerId,
-				options,
-			);
 		}
+		return this.createOnlineConnection(
+			docId,
+			collectionName,
+			containerId,
+			options,
+		);
 	}
 
 	private createOfflineConnection(
@@ -181,7 +180,7 @@ class CollabService {
 			console.log("Set awareness fields for user:", user.username);
 		} else if (container && "isOffline" in container) {
 			console.log(
-				"Skipping user awareness in offline mode for:",
+				"[CollabService] Skipping user awareness in offline mode for:",
 				user.username,
 			);
 		}
@@ -294,7 +293,7 @@ class CollabService {
 		);
 
 		if (this.isOfflineMode()) {
-			console.log(`[CollabService] Offline mode detected - local sync only`);
+			console.log("[CollabService] Offline mode detected - local sync only");
 			onProgress?.(0, 0);
 			return "offline-sync";
 		}
@@ -383,7 +382,7 @@ class CollabService {
 			);
 			return syncId;
 		} catch (error) {
-			console.error(`[CollabService] Error during bulk sync:`, error);
+			console.error("[CollabService] Error during bulk sync:", error);
 			throw error;
 		}
 	}
@@ -391,7 +390,7 @@ class CollabService {
 	public stopSyncAllDocuments(syncId: string): void {
 		if (syncId === "offline-sync") {
 			console.log(
-				`[CollabService] Offline sync session - no connections to stop`,
+				"[CollabService] Offline sync session - no connections to stop",
 			);
 			return;
 		}
@@ -452,13 +451,13 @@ class CollabService {
 			// When going offline, we keep existing connections but they'll naturally
 			// lose WebRTC connectivity. IndexedDB persistence continues to work.
 			console.log(
-				`[CollabService] Network offline - collaboration features disabled`,
+				"[CollabService] Network offline - collaboration features disabled",
 			);
 		} else {
 			// When coming back online, existing connections will naturally reconnect
 			// if they have autoReconnect enabled
 			console.log(
-				`[CollabService] Network online - collaboration features enabled`,
+				"[CollabService] Network online - collaboration features enabled",
 			);
 		}
 	}

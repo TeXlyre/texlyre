@@ -85,7 +85,6 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
 							onChange={(e) => setPassword(e.target.value)}
 							disabled={isSubmitting}
 							autoComplete="current-password"
-							autoFocus
 						/>
 					</div>
 

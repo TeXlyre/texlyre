@@ -557,11 +557,11 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 						files.forEach((file) => {
 							if (file) {
-								const docIndex = d.documents!.findIndex(
+								const docIndex = d.documents?.findIndex(
 									(doc) => doc.name === file.path,
 								);
 								if (docIndex >= 0) {
-									d.documents!.splice(docIndex, 1);
+									d.documents?.splice(docIndex, 1);
 								}
 							}
 						});
@@ -623,10 +623,6 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 	const moveFileOrDirectory = useCallback(
 		async (sourceId: string, targetPath: string) => {
 			try {
-				console.log(
-					`moveFileOrDirectory: sourceId=${sourceId}, targetPath=${targetPath}`,
-				);
-
 				const sourceFile = await fileStorageService.getFile(sourceId);
 				if (!sourceFile) {
 					console.error("Source file not found");
@@ -634,7 +630,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				}
 
 				console.log(
-					`Moving ${sourceFile.name} from ${sourceFile.path} to directory ${targetPath}`,
+					`[FileTreeContext] Moving ${sourceFile.name} from ${sourceFile.path} to directory ${targetPath}`,
 				);
 
 				// For move operations, we pass the target directory path
@@ -646,7 +642,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					},
 				]);
 
-				console.log(`Move completed, new IDs:`, movedIds);
+				console.log("[FileTreeContext] Move completed, new IDs:", movedIds);
 				await refreshFileTree();
 			} catch (error) {
 				console.error("Error in moveFileOrDirectory:", error);
@@ -664,8 +660,6 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 	const renameFile = useCallback(
 		async (fileId: string, newFullPath: string) => {
 			try {
-				console.log(`renameFile: fileId=${fileId}, newFullPath=${newFullPath}`);
-
 				const originalFile = await fileStorageService.getFile(fileId);
 				if (!originalFile) {
 					throw new Error("Original file not found");
@@ -678,7 +672,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				}
 
 				console.log(
-					`Renaming ${originalFile.name} from ${oldPath} to ${newFullPath}`,
+					`[FileTreeContext] Renaming ${originalFile.name} from ${oldPath} to ${newFullPath}`,
 				);
 
 				// For rename operations, we pass the full new path
@@ -692,7 +686,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					{ showConflictDialog: true },
 				);
 
-				console.log(`Rename completed, new IDs:`, movedIds);
+				console.log("Rename completed, new IDs:", movedIds);
 
 				// If no files were moved (cancelled), return original ID
 				if (movedIds.length === 0) {
@@ -714,10 +708,9 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					error.message === "File operation cancelled by user"
 				) {
 					throw error;
-				} else {
-					console.error("Error renaming/moving file:", error);
-					throw error;
 				}
+				console.error("Error renaming/moving file:", error);
+				throw error;
 			}
 		},
 		[refreshFileTree, selectedFileId],

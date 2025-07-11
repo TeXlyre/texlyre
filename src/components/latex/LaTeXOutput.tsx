@@ -92,7 +92,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 		try {
 			const file = await getFile(selectedFileId);
 			if (!file || !file.path.endsWith(".tex")) {
-				console.log("Selected file is not a .tex file");
+				console.log("[LaTeXOutput] Selected file is not a .tex file");
 				return;
 			}
 

@@ -48,7 +48,7 @@ export class XeTeXEngine extends BaseEngine {
 	}
 
 	setTexliveEndpoint(endpoint: string): void {
-		console.log(`TexLive endpoint set for XeTeX: ${endpoint}`);
+		console.log(`[XeTeXEngine] TexLive endpoint set for XeTeX: ${endpoint}`);
 	}
 
 	writeMemFSFile(filename: string, content: string | Uint8Array): void {
@@ -77,8 +77,8 @@ export class XeTeXEngine extends BaseEngine {
 	}
 
 	async compile(
-		mainFileName: string,
-		fileNodes: any[],
+		_mainFileName: string,
+		_fileNodes: any[],
 	): Promise<CompileResult> {
 		if (!this.engine || !this.isReady()) {
 			throw new Error("Engine not ready");
@@ -93,7 +93,7 @@ export class XeTeXEngine extends BaseEngine {
 			this.setStatus("ready");
 			// this.flushCache();
 
-			console.log("XeTeX compilation result:", {
+			console.log("[XeTeXEngine] XeTeX compilation result:", {
 				status: result.status,
 				hasPdf: !!result.pdf,
 				hasXdv: !!result.xdv,
@@ -102,9 +102,6 @@ export class XeTeXEngine extends BaseEngine {
 			});
 
 			if (result.status === 0 && result.pdf) {
-				console.log(
-					"XeTeX produced output (treating as XDV), will trigger DVI conversion",
-				);
 				return {
 					pdf: undefined,
 					status: result.status,

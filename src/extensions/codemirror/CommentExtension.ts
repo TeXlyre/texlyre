@@ -118,7 +118,7 @@ function preventTagEdits(tr: Transaction): Transaction | null {
 	let hasTagEdit = false;
 	const changesArray: Array<{ from: number; to: number; insert: string }> = [];
 
-	tr.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
+	tr.changes.iterChanges((fromA, toA, _fromB, _toB, inserted) => {
 		for (const range of ranges) {
 			if (
 				(fromA < range.openEnd && toA > range.openStart) ||
@@ -154,7 +154,8 @@ function preventTagEdits(tr: Transaction): Transaction | null {
 					adjustedChanges.push({ from: range.openEnd, to, insert: "" });
 					processed = true;
 					break;
-				} else if (from < range.openStart) {
+				}
+				if (from < range.openStart) {
 					to = range.openStart;
 				} else if (to > range.openEnd) {
 					from = range.openEnd;
@@ -170,7 +171,8 @@ function preventTagEdits(tr: Transaction): Transaction | null {
 					adjustedChanges.push({ from: range.closeEnd, to, insert: "" });
 					processed = true;
 					break;
-				} else if (from < range.closeStart) {
+				}
+				if (from < range.closeStart) {
 					to = range.closeStart;
 				} else if (to > range.closeEnd) {
 					from = range.closeEnd;
@@ -314,9 +316,9 @@ export function processComments(view: EditorView, comments: Comment[]): void {
 		effects.push(clearEffect);
 
 		const docLength = view.state.doc.length;
-		const docContent = view.state.doc.toString();
+		const _docContent = view.state.doc.toString();
 
-		console.log("Processing comments:", comments.length);
+		console.log("[CommentExtension] Processing comments:", comments.length);
 
 		// Process ALL comments to hide their tags, but only highlight unresolved ones
 		const sortedComments = [...comments].sort(
@@ -330,10 +332,6 @@ export function processComments(view: EditorView, comments: Comment[]): void {
 				comment.closeTagStart !== undefined &&
 				comment.closeTagEnd !== undefined
 			) {
-				console.log(
-					`Comment ${comment.id}: open(${comment.openTagStart}-${comment.openTagEnd}) close(${comment.closeTagStart}-${comment.closeTagEnd}) resolved: ${comment.resolved}`,
-				);
-
 				if (
 					comment.openTagStart < 0 ||
 					comment.closeTagEnd > docLength ||
@@ -372,7 +370,6 @@ export function processComments(view: EditorView, comments: Comment[]): void {
 			}
 		}
 
-		console.log("Dispatching effects:", effects.length);
 		if (view.state) {
 			view.dispatch({ effects });
 		}
@@ -509,7 +506,7 @@ class CommentProcessor {
 	private wouldAffectTags(
 		from: number,
 		to: number,
-		inputType?: string,
+		_inputType?: string,
 	): boolean {
 		const sortedRanges = [...this.commentRanges].sort(
 			(a, b) => a.openStart - b.openStart,
@@ -617,17 +614,15 @@ class CommentProcessor {
 			if (from < range.openEnd && to > range.openStart) {
 				if (isBackspace) {
 					return range.openStart;
-				} else {
-					return range.openEnd;
 				}
+				return range.openEnd;
 			}
 
 			if (from < range.closeEnd && to > range.closeStart) {
 				if (isBackspace) {
 					return range.closeStart;
-				} else {
-					return range.closeEnd;
 				}
+				return range.closeEnd;
 			}
 		}
 
@@ -637,7 +632,7 @@ class CommentProcessor {
 	private calculateSkipChanges(
 		from: number,
 		to: number,
-		operation: "delete",
+		_operation: "delete",
 	): {
 		changes: Array<{ from: number; to: number; insert: string }>;
 		cursorPos: number;

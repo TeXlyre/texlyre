@@ -143,7 +143,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 			);
 
 			setSyncSession(sessionId);
-			console.log("All documents connected for real-time sync");
+			console.log("[DocumentExplorer] All documents connected for real-time sync");
 		} catch (error) {
 			console.error("Error starting document sync:", error);
 		}
@@ -156,7 +156,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 			collabService.stopSyncAllDocuments(syncSession);
 			setSyncSession(null);
 			setSyncProgress({ current: 0, total: 0 });
-			console.log("Document sync stopped");
+			console.log("[DocumentExplorer] Document sync stopped");
 		} catch (error) {
 			console.error("Error stopping document sync:", error);
 		}

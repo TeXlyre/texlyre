@@ -105,7 +105,8 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 	) => {
 		if (serviceType === "filesystem") {
 			return fileSystemBackup.status.isConnected ? "🟢" : "";
-		} else if (serviceId) {
+		}
+		if (serviceId) {
 			const plugin = backupPlugins.find((p) => p.id === serviceId);
 			if (plugin) {
 				const status = plugin.getService().getStatus();

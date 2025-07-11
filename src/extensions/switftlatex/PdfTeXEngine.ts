@@ -46,7 +46,7 @@ export class PdfTeXEngine extends BaseEngine {
 	setTexliveEndpoint(endpoint: string): void {
 		// Store the endpoint but don't apply it immediately to avoid initialization issues
 		// The engine will use the default endpoint during compilation
-		console.log(`TexLive endpoint set for PdfTeX: ${endpoint}`);
+		console.log(`[PdfTeXEngine] TexLive endpoint set for PdfTeX: ${endpoint}`);
 	}
 
 	writeMemFSFile(filename: string, content: string | Uint8Array): void {
@@ -75,8 +75,8 @@ export class PdfTeXEngine extends BaseEngine {
 	}
 
 	async compile(
-		mainFileName: string,
-		fileNodes: any[],
+		_mainFileName: string,
+		_fileNodes: any[],
 	): Promise<CompileResult> {
 		if (!this.engine || !this.isReady()) {
 			throw new Error("Engine not ready");
@@ -90,6 +90,13 @@ export class PdfTeXEngine extends BaseEngine {
 			const result = await this.engine.compileLaTeX();
 			this.setStatus("ready");
 			// this.flushCache();
+
+			console.log("[PdfTeXEngine] PDFTeX compilation result:", {
+				status: result.status,
+				hasPdf: !!result.pdf,
+				pdfSize: result.pdf?.length
+			});
+
 			return {
 				pdf: result.pdf,
 				status: result.status,

@@ -30,11 +30,9 @@ class PluginRegistryManager {
 
 	private loadPlugins() {
 		try {
-			console.log("Loading plugins from extras module:", plugins);
-
 			// Register regular viewers
 			if (plugins.viewers) {
-				console.log("Loading viewers:", Object.keys(plugins.viewers));
+				console.log("[PluginRegistry] Loading viewers:", Object.keys(plugins.viewers));
 				Object.values(plugins.viewers).forEach((plugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
@@ -46,11 +44,10 @@ class PluginRegistryManager {
 			// Register collaborative viewers
 			if (plugins.collaborative_viewers) {
 				console.log(
-					"Loading collaborative viewers:",
+					"[PluginRegistry] Loading collaborative viewers:",
 					Object.keys(plugins.collaborative_viewers),
 				);
 				Object.values(plugins.collaborative_viewers).forEach((plugin) => {
-					console.log("Registering collaborative viewer plugin:", plugin);
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
 						pluginSettings.push(...plugin.settings);
@@ -60,7 +57,7 @@ class PluginRegistryManager {
 
 			// Register renderer plugins
 			if (plugins.renderers) {
-				console.log("Loading renderers:", Object.keys(plugins.renderers));
+				console.log("[PluginRegistry] Loading renderers:", Object.keys(plugins.renderers));
 				Object.values(plugins.renderers).forEach((plugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
@@ -71,7 +68,7 @@ class PluginRegistryManager {
 
 			// Register logger plugins
 			if (plugins.loggers) {
-				console.log("Loading loggers:", Object.keys(plugins.loggers));
+				console.log("[PluginRegistry] Loading loggers:", Object.keys(plugins.loggers));
 				Object.values(plugins.loggers).forEach((plugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
@@ -82,7 +79,7 @@ class PluginRegistryManager {
 
 			// Register backup plugins
 			if (plugins.backup) {
-				console.log("Loading backup plugins:", Object.keys(plugins.backup));
+				console.log("[PluginRegistry] Loading backup plugins:", Object.keys(plugins.backup));
 				Object.values(plugins.backup).forEach((plugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
@@ -93,7 +90,7 @@ class PluginRegistryManager {
 
 			// Register theme plugins
 			if (plugins.themes) {
-				console.log("Loading themes:", Object.keys(plugins.themes));
+				console.log("[PluginRegistry] Loading themes:", Object.keys(plugins.themes));
 				Object.values(plugins.themes).forEach((plugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
@@ -101,23 +98,13 @@ class PluginRegistryManager {
 					}
 				});
 			}
-
-			console.log("Final plugin registry state:", {
-				viewers: this.registry.viewers.map((p) => p.name),
-				collaborativeViewers: this.registry.collaborativeViewers.map(
-					(p) => p.name,
-				),
-				renderers: this.registry.renderers.map((p) => p.name),
-				loggers: this.registry.loggers.map((p) => p.name),
-				themes: this.registry.themes.map((p) => p.name),
-			});
 		} catch (error) {
 			console.error("Failed to load plugins:", error);
 		}
 	}
 
 	registerPlugin(plugin: Plugin) {
-		console.log("Registering plugin:", plugin.name, "of type:", plugin.type);
+		console.log("[PluginRegistry] Registering plugin:", plugin.name, "of type:", plugin.type);
 
 		switch (plugin.type) {
 			case "viewer":
@@ -166,7 +153,7 @@ class PluginRegistryManager {
 		fileName: string,
 		mimeType?: string,
 	): CollaborativeViewerPlugin | null {
-		console.log("Looking for collaborative viewer for:", fileName, mimeType);
+		console.log("[PluginRegistry] Looking for collaborative viewer for:", fileName, mimeType);
 		console.log(
 			"Available collaborative viewers:",
 			this.registry.collaborativeViewers.map((v) => v.name),

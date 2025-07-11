@@ -101,8 +101,8 @@ export const FileSystemBackupProvider: React.FC<
 	const [backupEnabledSetting, setBackupEnabledSetting] = useState(false);
 	const [tempEnabled, setTempEnabled] = useState(false);
 
-	const [autoBackupOnStartup, setAutoBackupOnStartup] = useState(false);
-	const [autoSyncOnChange, setAutoSyncOnChange] = useState(false);
+	const [_autoBackupOnStartup, setAutoBackupOnStartup] = useState(false);
+	const [_autoSyncOnChange, setAutoSyncOnChange] = useState(false);
 
 	const { registerSetting, getSetting } = useSettings();
 	const settingsRegistered = useRef(false);
@@ -130,7 +130,7 @@ export const FileSystemBackupProvider: React.FC<
 	}, []);
 
 	const setEnabled = useCallback(
-		async (enabled: boolean, isAutoStart = false): Promise<void> => {
+		async (enabled: boolean, _isAutoStart = false): Promise<void> => {
 			setTempEnabled(enabled);
 			return fileSystemBackupService.setEnabled(enabled);
 		},

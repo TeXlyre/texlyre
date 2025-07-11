@@ -165,7 +165,7 @@ class LaTeXService {
 		}
 
 		console.log(
-			`Writing XDV file: ${dviFileName}, size: ${xdvData.length} bytes`,
+			`[LaTeXService] Writing XDV file: ${dviFileName}, size: ${xdvData.length} bytes`,
 		);
 		dvipdfmxEngine.writeMemFSFile(`/work/${dviFileName}`, xdvData);
 		dvipdfmxEngine.setEngineMainFile(dviFileName);
@@ -196,18 +196,16 @@ class LaTeXService {
 		const engine = this.getCurrentEngine();
 
 		if (!engine.isReady()) {
-			console.log("Engine not ready, initializing...");
+			console.log("[LaTeXService] Engine not ready, initializing...");
 			await engine.initialize();
 		}
 
 		try {
 			await this.prepareFileNodes(mainFileName, fileTree);
 			await this.writeNodesToMemFS(engine, mainFileName);
-
-			console.log("Starting compilation...");
 			let result = await engine.compile(mainFileName, this.processedNodes);
 
-			console.log("Initial compilation result:", {
+			console.log("[LaTeXService] Initial compilation result:", {
 				status: result.status,
 				hasPdf: !!result.pdf,
 				hasXdv: !!(result as any).xdv,
@@ -215,7 +213,7 @@ class LaTeXService {
 			});
 
 			if (result.status === 0 && !result.pdf && (result as any).xdv) {
-				console.log("XDV file detected, converting to PDF with Dvipdfmx...");
+				console.log("[LaTeXService] XDV file detected, converting to PDF with Dvipdfmx...");
 				result = await this.processDviToPdf(
 					(result as any).xdv,
 					mainFileName,
@@ -370,7 +368,7 @@ class LaTeXService {
 					processedNode.path = node.name;
 				} else {
 					// const randomPrefix = `${Math.random().toString(36).substring(2, 8)}_`;
-					const randomPrefix = `_`;
+					const randomPrefix = "_";
 					processedNode.path = `${randomPrefix}${node.name}`;
 					processedNode.name = `${randomPrefix}${node.name}`;
 				}
@@ -735,7 +733,7 @@ class LaTeXService {
 			await fileStorageService.batchStoreFiles([logFile], {
 				showConflictDialog: false,
 			});
-			console.log(`Saved compilation log`);
+			console.log("Saved compilation log");
 		} catch (error) {
 			console.error("Error saving compilation log:", error);
 		}
@@ -745,7 +743,7 @@ class LaTeXService {
 		try {
 			const existingFiles = await fileStorageService.getAllFiles();
 			const filesToCleanup = existingFiles.filter(
-				(file) => file.path.startsWith(directoryPath + "/") && !file.isDeleted,
+				(file) => file.path.startsWith(`${directoryPath}/`) && !file.isDeleted,
 			);
 
 			if (filesToCleanup.length > 0) {

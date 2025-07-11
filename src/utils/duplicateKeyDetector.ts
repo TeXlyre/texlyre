@@ -29,7 +29,7 @@ class DuplicateKeyDetector {
 		}
 	}
 
-	private async checkForDuplicateKeys(mutations: MutationRecord[]) {
+	private async checkForDuplicateKeys(_mutations: MutationRecord[]) {
 		if (this.autoSanitizeInProgress) return;
 
 		try {

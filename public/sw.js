@@ -1,58 +1,58 @@
 const CACHE_NAME = `texlyre-v0.1.2`; //`texlyre-v${process.env.npm_package_version || '1'}`;
 const BASE_PATH = '/texlyre/';
 
-console.log('[SW] Service Worker loading with base path:', BASE_PATH);
+console.log('[ServiceWorker] Service Worker loading with base path:', BASE_PATH);
 
 const STATIC_ASSETS = [
   BASE_PATH + 'index.html'
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker');
+  console.log('[ServiceWorker] Installing service worker');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('[SW] Caching static assets:', STATIC_ASSETS);
+        console.log('[ServiceWorker] Caching static assets:', STATIC_ASSETS);
         return Promise.all(
           STATIC_ASSETS.map(async (url) => {
             try {
               const response = await fetch(url);
               if (response.ok) {
                 await cache.put(url, response);
-                console.log('[SW] Successfully cached:', url);
+                console.log('[ServiceWorker] Successfully cached:', url);
               } else {
-                console.warn('[SW] Failed to fetch for caching:', url, response.status);
+                console.warn('Failed to fetch for caching:', url, response.status);
               }
             } catch (error) {
-              console.error('[SW] Error caching asset:', url, error);
+              console.error('Error caching asset:', url, error);
             }
           })
         );
       })
       .then(() => {
-        console.log('[SW] Static assets cached successfully');
+        console.log('[ServiceWorker] Static assets cached successfully');
         return self.skipWaiting();
       })
       .catch((error) => {
-        console.error('[SW] Error during cache setup:', error);
+        console.error('Error during cache setup:', error);
       })
   );
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker');
+  console.log('[ServiceWorker] Activating service worker');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('[SW] Deleting old cache:', cacheName);
+            console.log('[ServiceWorker] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     }).then(() => {
-      console.log('[SW] Service worker activated');
+      console.log('[ServiceWorker] Service worker activated');
       return self.clients.claim();
     })
   );
@@ -73,7 +73,7 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request)
       .then((cachedResponse) => {
         if (cachedResponse) {
-          console.log('[SW] Serving from cache:', event.request.url);
+          console.log('[ServiceWorker] Serving from cache:', event.request.url);
           return cachedResponse;
         }
 
@@ -83,7 +83,7 @@ self.addEventListener('fetch', (event) => {
               const responseClone = response.clone();
               caches.open(CACHE_NAME)
                 .then((cache) => {
-                  console.log('[SW] Caching new resource:', event.request.url);
+                  console.log('[ServiceWorker] Caching new resource:', event.request.url);
                   cache.put(event.request, responseClone);
                 });
             }
@@ -91,7 +91,7 @@ self.addEventListener('fetch', (event) => {
           })
           .catch(() => {
             if (event.request.mode === 'navigate') {
-              console.log('[SW] Serving index.html for navigation');
+              console.log('[ServiceWorker] Serving index.html for navigation');
               return caches.match(BASE_PATH + 'index.html');
             }
             throw new Error('Resource not available offline');
@@ -105,19 +105,19 @@ self.addEventListener('message', (event) => {
     event.waitUntil(
       caches.open(CACHE_NAME)
         .then((cache) => {
-          console.log('[SW] Manually caching URLs:', event.data.urls);
+          console.log('[ServiceWorker] Manually caching URLs:', event.data.urls);
           return Promise.all(
             event.data.urls.map(async (url) => {
               try {
                 const response = await fetch(url);
                 if (response.ok) {
                   await cache.put(url, response);
-                  console.log('[SW] Successfully cached via message:', url);
+                  console.log('[ServiceWorker] Successfully cached via message:', url);
                 } else {
-                  console.warn('[SW] Failed to fetch for message caching:', url, response.status);
+                  console.warn('Failed to fetch for message caching:', url, response.status);
                 }
               } catch (error) {
-                console.error('[SW] Error caching URL via message:', url, error);
+                console.error('Error caching URL via message:', url, error);
               }
             })
           );

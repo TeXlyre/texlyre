@@ -48,7 +48,7 @@ export class DvipdfmxEngine extends BaseEngine {
 	}
 
 	setTexliveEndpoint(endpoint: string): void {
-		console.log(`TexLive endpoint set for Dvipdfmx: ${endpoint}`);
+		console.log(`[DvipdfmxEngine] TexLive endpoint set for Dvipdfmx: ${endpoint}`);
 	}
 
 	writeMemFSFile(filename: string, content: string | Uint8Array): void {
@@ -79,8 +79,8 @@ export class DvipdfmxEngine extends BaseEngine {
 	}
 
 	async compile(
-		mainFileName: string,
-		fileNodes: any[],
+		_mainFileName: string,
+		_fileNodes: any[],
 	): Promise<CompileResult> {
 		if (!this.engine || !this.isReady()) {
 			throw new Error("Engine not ready");

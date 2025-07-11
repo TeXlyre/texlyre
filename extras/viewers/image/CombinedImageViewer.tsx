@@ -330,7 +330,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 		`Panning: ${enablePanning ? "enabled" : "disabled"}`,
 		`Filters: ${enableFilters ? "enabled" : "disabled"}`,
 		`MIME Type: ${mimeType || "Unknown"}`,
-		`Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`,
+		`Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : "Unknown"}`,
 	];
 
 	const headerControls = (

@@ -175,10 +175,9 @@ class FileCommentProcessor {
 			if (this.hasComments(node.content)) {
 				stats.cleaned++;
 				return this.processFile(node, options);
-			} else {
-				stats.skipped++;
-				return node;
 			}
+			stats.skipped++;
+			return node;
 		});
 
 		return { processed, stats };

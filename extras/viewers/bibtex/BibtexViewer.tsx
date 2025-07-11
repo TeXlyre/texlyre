@@ -259,7 +259,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		`Preset: ${tidyPreset}`,
 		`Entries: ${bibtexContent.split("@").length - 1}`,
 		`MIME Type: ${fileInfo.mimeType || "text/x-bibtex"}`,
-		`Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`,
+		`Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : "Unknown"}`,
 	];
 
 	const headerControls = (

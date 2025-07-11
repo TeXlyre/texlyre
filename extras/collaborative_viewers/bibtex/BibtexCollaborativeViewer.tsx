@@ -258,9 +258,9 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		`Auto-tidy: ${autoTidy ? "enabled" : "disabled"}`,
 		`Preset: ${tidyPreset}`,
 		`Entries: ${bibtexContent.split("@").length - 1}`,
-		`Collaborative Mode: Active`,
+		"Collaborative Mode: Active",
 		`MIME Type: ${fileInfo.mimeType || "text/x-bibtex"}`,
-		`Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`,
+		`Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : "Unknown"}`,
 	];
 
 	const headerControls = (

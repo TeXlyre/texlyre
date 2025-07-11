@@ -220,15 +220,15 @@ export class ProjectDataService {
 		newProjectId?: string,
 		newDocUrl?: string,
 	): Promise<void> {
-		console.log("Starting deserialization to IndexedDB...");
-		console.log(`Found ${data.projectData.size} projects to deserialize`);
+		console.log("[ProjectDataService] Starting deserialization to IndexedDB...");
+		console.log(`[ProjectDataService] Found ${data.projectData.size} projects to deserialize`);
 
 		for (const [originalProjectId, projectData] of data.projectData) {
 			const projectId = newProjectId || originalProjectId;
 			const docUrl = newDocUrl || projectData.metadata.docUrl;
 
 			console.log(
-				`Processing project ${projectId}: ${projectData.metadata.name}`,
+				`[ProjectDataService] Processing project ${projectId}: ${projectData.metadata.name}`,
 			);
 			console.log(`  - DocUrl: ${docUrl}`);
 			console.log(`  - Documents: ${projectData.documents.length}`);
@@ -254,7 +254,7 @@ export class ProjectDataService {
 			);
 		}
 
-		console.log("Deserialization to IndexedDB completed");
+		console.log("[ProjectDataService] Deserialization to IndexedDB completed");
 	}
 
 	private async deserializeProjectDocuments(
@@ -271,7 +271,7 @@ export class ProjectDataService {
 		const metadataCollection = `${dbName}-yjs_metadata`;
 
 		console.log(
-			`Deserializing documents for project ${projectId} to database ${dbName}`,
+			`[ProjectDataService] Deserializing documents for project ${projectId} to database ${dbName} ...`,
 		);
 
 		try {

@@ -119,7 +119,7 @@ class FileStorageService {
 		let removedCount = 0;
 		let keptCount = 0;
 
-		const tx = this.db!.transaction(this.FILES_STORE, "readwrite");
+		const tx = this.db?.transaction(this.FILES_STORE, "readwrite");
 		const store = tx.objectStore(this.FILES_STORE);
 
 		try {
@@ -258,7 +258,7 @@ class FileStorageService {
 						await this.db?.delete(this.FILES_STORE, existingFile.id);
 						break;
 				}
-			} else if (existingFile && existingFile.isDeleted) {
+			} else if (existingFile?.isDeleted) {
 				file.id = existingFile.id;
 				file.isDeleted = false;
 			}
@@ -398,10 +398,11 @@ class FileStorageService {
 							}
 							continue;
 
-						case "keep-both":
+						case "keep-both": {
 							const uniqueFile = await this.createUniqueFile(file);
 							filesToStore.push(uniqueFile);
 							break;
+						}
 
 						case "overwrite":
 							file.id = existingFile.id;
@@ -423,7 +424,7 @@ class FileStorageService {
 		}
 
 		if (filesToStore.length > 0) {
-			const tx = this.db!.transaction(this.FILES_STORE, "readwrite");
+			const tx = this.db?.transaction(this.FILES_STORE, "readwrite");
 			const store = tx.objectStore(this.FILES_STORE);
 
 			for (const file of filesToStore) {
@@ -485,7 +486,7 @@ class FileStorageService {
 		}
 
 		if (hardDelete) {
-			const tx = this.db!.transaction(this.FILES_STORE, "readwrite");
+			const tx = this.db?.transaction(this.FILES_STORE, "readwrite");
 			const store = tx.objectStore(this.FILES_STORE);
 
 			for (const file of filesToDelete) {
@@ -503,7 +504,7 @@ class FileStorageService {
 				documentId: allowLinkedFileDelete ? file.documentId : undefined,
 			}));
 
-			const tx = this.db!.transaction(this.FILES_STORE, "readwrite");
+			const tx = this.db?.transaction(this.FILES_STORE, "readwrite");
 			const store = tx.objectStore(this.FILES_STORE);
 			for (const file of filesToUpdate) {
 				await store.put(file);
@@ -587,7 +588,7 @@ class FileStorageService {
 			return sourceFile.id;
 		}
 
-		console.log(`Moving file from ${sourceFile.path} to ${newFullPath}`);
+		console.log(`[FileStorageService] Moving file from ${sourceFile.path} to ${newFullPath}`);
 
 		const existingFile = await this.getFileByPath(newFullPath, true);
 		const filesToDelete: string[] = [];
@@ -611,7 +612,7 @@ class FileStorageService {
 				case "cancel":
 					return null;
 
-				case "keep-both":
+				case "keep-both": {
 					const uniqueFile = await this.createUniqueFile({
 						...sourceFile,
 						path: newFullPath,
@@ -620,6 +621,7 @@ class FileStorageService {
 					newFullPath = uniqueFile.path;
 					newName = uniqueFile.name;
 					break;
+				}
 
 				case "overwrite":
 					filesToDelete.push(existingFile.id);
@@ -640,7 +642,7 @@ class FileStorageService {
 		if (sourceFile.type === "directory") {
 			const allFiles = await this.getAllFiles();
 			const children = allFiles.filter((f) =>
-				f.path.startsWith(sourceFile.path + "/"),
+				f.path.startsWith(`${sourceFile.path}/`),
 			);
 
 			for (const child of children) {
@@ -663,7 +665,7 @@ class FileStorageService {
 
 		filesToDelete.push(sourceFile.id);
 
-		const tx = this.db!.transaction(this.FILES_STORE, "readwrite");
+		const tx = this.db?.transaction(this.FILES_STORE, "readwrite");
 		const store = tx.objectStore(this.FILES_STORE);
 
 		try {
@@ -682,7 +684,7 @@ class FileStorageService {
 			});
 
 			console.log(
-				`Successfully moved file from ${sourceFile.path} to ${newFullPath}`,
+				`[FileStorageService] Successfully moved file from ${sourceFile.path} to ${newFullPath}`,
 			);
 
 			return newFileId;
@@ -722,7 +724,7 @@ class FileStorageService {
 			}
 		}
 
-		const tx = this.db!.transaction(this.FILES_STORE, "readwrite");
+		const tx = this.db?.transaction(this.FILES_STORE, "readwrite");
 		const store = tx.objectStore(this.FILES_STORE);
 
 		for (const file of filesToUnlink) {
@@ -1005,7 +1007,7 @@ class FileStorageService {
 		}
 		this.contentCache.clear();
 		this.projectId = "";
-		console.log(`[FileStorageService] Cleaned up connection`);
+		console.log("[FileStorageService] Cleaned up connection");
 	}
 
 	async switchToProject(docUrl: string): Promise<void> {

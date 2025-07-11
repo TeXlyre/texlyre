@@ -58,7 +58,7 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 		setIsSyncing(true);
 		try {
 			const projectId = docUrl.startsWith("yjs:") ? docUrl.slice(4) : docUrl;
-			await collabService.syncAllDocuments(projectId, (current, total) => {
+			await collabService.syncAllDocuments(projectId, (_current, _total) => {
 				// Progress updates could be shown in modal if needed
 			});
 		} catch (error) {
@@ -101,7 +101,8 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 	const getServiceStatusIndicator = (serviceType: string) => {
 		if (serviceType === "collab") {
 			return isCollabConnected ? "🟢" : "";
-		} else if (serviceType === "filesync") {
+		}
+		if (serviceType === "filesync") {
 			return isFileSyncEnabled ? "🟢" : "";
 		}
 		return "";

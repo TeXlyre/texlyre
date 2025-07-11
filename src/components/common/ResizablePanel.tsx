@@ -197,16 +197,13 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 		if (direction === "horizontal") {
 			if (alignment === "start") {
 				return collapsed ? "◂" : "▸";
-			} else {
-				return collapsed ? "▸" : "◂";
 			}
-		} else {
-			if (alignment === "start") {
-				return collapsed ? "▴" : "▾";
-			} else {
-				return collapsed ? "▾" : "▴";
-			}
+			return collapsed ? "▸" : "◂";
 		}
+		if (alignment === "start") {
+			return collapsed ? "▴" : "▾";
+		}
+		return collapsed ? "▾" : "▴";
 	};
 
 	const style: React.CSSProperties = {

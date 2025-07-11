@@ -61,7 +61,7 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 					? `/${fileName.trim()}`
 					: `${selectedDirectory}/${fileName.trim()}`;
 
-			const file = new File([""], fileName.trim(), { type: "text/plain" });
+			const _file = new File([""], fileName.trim(), { type: "text/plain" });
 			await fileStorageService.createDirectoryPath(filePath);
 
 			const fileNode: FileNode = {

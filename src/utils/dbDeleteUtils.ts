@@ -10,7 +10,7 @@ export const deleteDatabase = async (dbName: string): Promise<void> => {
 		const deleteRequest = indexedDB.deleteDatabase(dbName);
 
 		deleteRequest.onsuccess = () => {
-			console.log(`Successfully deleted database: ${dbName}`);
+			console.log(`[dbDeleteUtils] Successfully deleted database: ${dbName}`);
 			resolve();
 		};
 
@@ -40,7 +40,7 @@ export const closeActiveConnections = async (
 		if (fileStorageService.isConnectedToProject(projectId)) {
 			fileStorageService.cleanup();
 			console.log(
-				`Closed FileStorageService connection for project: ${projectId}`,
+				`[dbDeleteUtils] Closed FileStorageService connection for project: ${projectId}`,
 			);
 		}
 	} catch (error) {
@@ -80,7 +80,7 @@ export const cleanupProjectDatabases = async (
 			}
 		}
 
-		console.log(`Cleaned up databases for project: ${project.name}`);
+		console.log(`[dbDeleteUtils] Cleaned up databases for project: ${project.name}`);
 	} catch (error) {
 		console.error("Error cleaning up project databases:", error);
 	}

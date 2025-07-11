@@ -183,7 +183,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
 		if ((window as any).tempZipModalResolve) {
 			(window as any).tempZipModalResolve();
-			delete (window as any).tempZipModalResolve;
+			(window as any).tempZipModalResolve = undefined;
 		}
 	};
 
@@ -652,7 +652,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
 			if (
 				nodeType === "directory" &&
-				targetNode.path.startsWith(nodePath + "/")
+				targetNode.path.startsWith(`${nodePath}/`)
 			) {
 				setDragOverTarget(null);
 				return;
@@ -836,7 +836,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				if (
 					node.type === "directory" &&
 					node.path !== currentNode?.path &&
-					!node.path.startsWith(currentNode?.path + "/")
+					!node.path.startsWith(`${currentNode?.path}/`)
 				) {
 					directories.push(node);
 					if (node.children) {
@@ -929,7 +929,6 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 									onBlur={handleConfirmNewItem}
 									onKeyDown={handleNewItemKeyDown}
 									className="file-name-input"
-									autoFocus
 								/>
 								<button
 									className="cancel-input-button"

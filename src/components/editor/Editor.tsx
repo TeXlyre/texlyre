@@ -195,7 +195,7 @@ const EditorContent: React.FC<{
 					`Mode: ${isViewOnly ? "Read-only" : "Editing"}`,
 					linkedDocumentId ? `Linked to document: ${linkedDocumentId}` : "",
 					`MIME Type: ${fileInfo.mimeType || "text/plain"}`,
-					`Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`,
+					`Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : "Unknown"}`,
 					`Last Modified: ${fileInfo.lastModified ? new Date(fileInfo.lastModified).toLocaleString() : "Unknown"}`,
 				]
 			: !isEditingFile && documentId && documents
@@ -214,7 +214,7 @@ const EditorContent: React.FC<{
 		if (!linkedFileInfo?.fileId) return;
 		try {
 			const file = await fileStorageService.getFile(linkedFileInfo.fileId);
-			if (file && file.content) {
+			if (file?.content) {
 				const content =
 					typeof file.content === "string"
 						? file.content
@@ -230,7 +230,7 @@ const EditorContent: React.FC<{
 		if (!linkedFileInfo?.fileId || !linkedFileInfo.fileName) return;
 		try {
 			const file = await fileStorageService.getFile(linkedFileInfo.fileId);
-			if (file && file.content) {
+			if (file?.content) {
 				const content =
 					typeof file.content === "string"
 						? file.content
@@ -584,28 +584,11 @@ const Editor: React.FC<EditorComponentProps> = ({
 			? pluginRegistry.getViewerForFile(fileName, mimeType)
 			: null;
 
-	console.log("Editor plugin selection debug:", {
-		isEditingFile,
-		fileName,
-		mimeType,
-		linkedDocumentId,
-		shouldUseCollaborativeViewer,
-		collaborativeViewerPlugin: collaborativeViewerPlugin?.name || "none",
-		viewerPlugin: viewerPlugin?.name || "none",
-		documentId,
-		fileId,
-		isDocumentSelected,
-		availableCollaborativeViewers: pluginRegistry
-			.getCollaborativeViewers()
-			.map((p) => p.name),
-	});
-
 	if (
 		collaborativeViewerPlugin &&
 		!isEditingFile &&
 		shouldUseCollaborativeViewer
 	) {
-		console.log("Using collaborative viewer:", collaborativeViewerPlugin.name);
 		const CollaborativeViewerComponent = collaborativeViewerPlugin.renderViewer;
 
 		return (
@@ -648,7 +631,6 @@ const Editor: React.FC<EditorComponentProps> = ({
 	}
 
 	if (viewerPlugin && isEditingFile) {
-		console.log("Using regular viewer for file editing:", viewerPlugin.name);
 		const ViewerComponent = viewerPlugin.renderViewer;
 		const viewerProps: ViewerProps = {
 			fileId,

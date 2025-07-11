@@ -83,7 +83,6 @@ export const EditorLoader = (
 			await fileStorageService.updateFileContent(currentFileId, contentBuffer);
 			setShowSaveIndicator(true);
 			setTimeout(() => setShowSaveIndicator(false), 1500);
-			console.log(`File saved: ${currentFileId}`);
 		} catch (error) {
 			console.error("Error saving file:", error);
 		}
@@ -100,7 +99,6 @@ export const EditorLoader = (
 				await fileStorageService.updateFileContent(linkedFile.id, content);
 				setShowSaveIndicator(true);
 				setTimeout(() => setShowSaveIndicator(false), 1500);
-				console.log(`Document saved to linked file: ${linkedFile.id}`);
 			}
 		} catch (error) {
 			console.error("Error saving document to linked file:", error);
@@ -447,7 +445,6 @@ export const EditorLoader = (
 						}
 						setShowSaveIndicator(true);
 						setTimeout(() => setShowSaveIndicator(false), 1500);
-						console.log(`Auto-saved: ${saveKey}`);
 					},
 					onError: (error) => {
 						console.error("Auto-save failed:", error);

@@ -200,9 +200,8 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 				const updated = [...prev];
 				updated[idx] = settingWithValue;
 				return updated;
-			} else {
-				return [...prev, settingWithValue];
 			}
+			return [...prev, settingWithValue];
 		});
 	};
 
@@ -213,11 +212,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 	const commitSetting = useCallback(
 		(id: string) => {
 			const settingToCommit = settings.find((s) => s.id === id);
-			if (
-				settingToCommit &&
-				settingToCommit.onChange &&
-				settingToCommit.liveUpdate === false
-			) {
+			if (settingToCommit?.onChange && settingToCommit.liveUpdate === false) {
 				setTimeout(() => settingToCommit.onChange?.(settingToCommit.value), 0);
 			}
 		},

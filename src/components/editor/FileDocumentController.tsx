@@ -94,7 +94,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	const propertiesRegistered = useRef(false);
 	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 	const [activeView, setActiveView] = useState<"documents" | "files">("files");
-	const [hasNavigated, setHasNavigated] = useState(false);
+	const [_hasNavigated, _setHasNavigated] = useState(false);
 	const [fileContent, setFileContent] = useState<string | ArrayBuffer>("");
 	const [isEditingFile, setIsEditingFile] = useState(false);
 	const [isBinaryFile, setIsBinaryFile] = useState(false);
@@ -507,7 +507,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	}, [documents]);
 
 	useEffect(() => {
-		if (targetDocId && targetDocId.trim()) {
+		if (targetDocId?.trim()) {
 			setActiveView("documents");
 		}
 	}, [targetDocId]);
@@ -559,12 +559,6 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		isBinary = false,
 	) => {
 		const file = await getFile(fileId);
-		console.log(
-			"handleUserFileSelect called for fileId:",
-			fileId,
-			"file path:",
-			file?.path,
-		);
 		setLastUserSelectedFileId(fileId);
 		handleFileSelect(fileId, content, isBinary);
 	};

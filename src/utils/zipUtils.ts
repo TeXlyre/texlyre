@@ -87,7 +87,7 @@ export const batchExtractZip = async (
 export const createZipFromFolder = async (
 	folderNode: FileNode,
 	getFileContent: (fileId: string) => Promise<string | ArrayBuffer | null>,
-	getFile: (fileId: string) => Promise<FileNode | null>,
+	_getFile: (fileId: string) => Promise<FileNode | null>,
 ): Promise<Blob> => {
 	const zip = new JSZip();
 

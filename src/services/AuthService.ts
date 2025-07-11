@@ -344,12 +344,11 @@ class AuthService {
 				id: project.id,
 				ownerId: this.currentUser.id,
 			});
-		} else {
-			return this.createProject({
-				...project,
-				docUrl: project.docUrl || this.createNewDocumentUrl(),
-			});
 		}
+		return this.createProject({
+			...project,
+			docUrl: project.docUrl || this.createNewDocumentUrl(),
+		});
 	}
 
 	async deleteProject(id: string): Promise<void> {

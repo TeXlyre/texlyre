@@ -224,7 +224,7 @@ class FileSystemBackupService {
 				type: "import_complete",
 				message: projectId
 					? `Successfully imported project: ${projectId}`
-					: `Successfully imported projects from filesystem`,
+					: "Successfully imported projects from filesystem",
 			});
 			this.updateStatus({
 				status: "idle",
@@ -461,7 +461,7 @@ class FileSystemBackupService {
 						projects,
 					});
 				}
-			} catch (error) {
+			} catch (_error) {
 				this.addActivity({
 					type: "backup_error",
 					message: "Error scanning for importable projects",

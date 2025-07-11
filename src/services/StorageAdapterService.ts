@@ -432,9 +432,7 @@ export class StorageAdapterService {
 				if (contents.some((name) => name.endsWith(".yjs"))) {
 					return path;
 				}
-			} catch {
-				continue;
-			}
+			} catch {}
 		}
 
 		return null;

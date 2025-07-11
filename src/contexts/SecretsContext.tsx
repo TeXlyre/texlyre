@@ -138,7 +138,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 		[],
 	);
 
-	const hashWithPassword = useCallback(
+	const _hashWithPassword = useCallback(
 		async (data: string, password: string): Promise<string> => {
 			const encoder = new TextEncoder();
 			const combined = encoder.encode(data + password);
@@ -243,7 +243,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 				);
 
 				return decoder.decode(decrypted);
-			} catch (error) {
+			} catch (_error) {
 				throw new Error(
 					"Failed to decrypt secret - invalid password or corrupted data",
 				);
@@ -268,7 +268,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 	);
 
 	const loadStoredSecrets = useCallback(
-		async (password: string): Promise<void> => {
+		async (_password: string): Promise<void> => {
 			if (!user) return;
 
 			try {
@@ -314,7 +314,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 		[user, getStorageKey, getSecretId],
 	);
 
-	const saveSecretsToStorage = useCallback(async (): Promise<void> => {
+	const _saveSecretsToStorage = useCallback(async (): Promise<void> => {
 		if (!user || !userPassword) return;
 
 		try {
@@ -498,7 +498,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 			);
 
 			const cached = secretsCache.get(secretId);
-			if (cached && cached.value) {
+			if (cached?.value) {
 				return cached;
 			}
 

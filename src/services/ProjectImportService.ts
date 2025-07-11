@@ -228,7 +228,8 @@ class ProjectImportService {
 					if (options.conflictResolution === "skip") {
 						result.skipped.push(projectId);
 						continue;
-					} else if (options.conflictResolution === "overwrite") {
+					}
+					if (options.conflictResolution === "overwrite") {
 						await authService.deleteProject(projectId);
 						shouldCreateNewProject = true;
 					} else if (options.conflictResolution === "create-new") {

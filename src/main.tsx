@@ -9,9 +9,9 @@ import { authService } from "./services/AuthService";
 async function clearExistingServiceWorkers() {
 	if ("serviceWorker" in navigator) {
 		const registrations = await navigator.serviceWorker.getRegistrations();
-		console.log("Found existing service workers:", registrations.length);
+		console.log("[ServiceWroker] Found existing service workers:", registrations.length);
 		for (const registration of registrations) {
-			console.log("Unregistering existing SW:", registration.scope);
+			console.log("[ServiceWroker] Unregistering existing service worker:", registration.scope);
 			await registration.unregister();
 		}
 	}
@@ -31,26 +31,26 @@ if (
 ) {
 	window.addEventListener("load", async () => {
 		if (clearServiceWorkerOnLoad) {
-			console.log("Clearing existing service workers...");
+			console.log("[ServiceWroker] Clearing existing service workers...");
 			await clearExistingServiceWorkers();
 		} else {
-			console.log("Skipping clearing existing service workers.");
+			console.log("[ServiceWroker] Skipping clearing existing service workers");
 		}
 
 		const swPath = "/texlyre/sw.js";
 		const scope = "/texlyre/";
 
-		console.log("=== Service Worker Registration ===");
+		console.log("[ServiceWroker] ]Service Worker Registration ===");
 		console.log("SW Path:", swPath);
 		console.log("Scope:", scope);
-		console.log("Full SW URL:", window.location.origin + swPath);
+		console.log("Full Service Worker URL:", window.location.origin + swPath);
 
 		try {
-			console.log("Attempting service worker registration...");
+			console.log("[ServiceWroker] Attempting service worker registration...");
 			const registration = await navigator.serviceWorker.register(swPath, {
 				scope,
 			});
-			console.log("SW registered successfully:", registration.scope);
+			console.log("[ServiceWroker] Service worker registered successfully:", registration.scope);
 
 			if (registration.active) {
 				registration.active.postMessage({
@@ -66,7 +66,7 @@ if (
 	window.addEventListener("load", async () => {
 		await clearExistingServiceWorkers();
 		console.log(
-			"Service worker registration skipped. HTTPS mode:",
+			"[ServiceWroker] Service worker registration skipped. HTTPS mode:",
 			isHttpsMode,
 			"Enable SW for HTTPS:",
 			enableServiceWorkerForHttps,

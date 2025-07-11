@@ -376,7 +376,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 		`Pages: ${totalPages}`,
 		`Current page: ${currentPage}`,
 		`MIME Type: ${mimeType || "application/pdf"}`,
-		`Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`,
+		`Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : "Unknown"}`,
 	];
 
 	const headerControls = (

@@ -41,14 +41,11 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 	);
 
 	const scrollToComment = useCallback((commentId: string) => {
-		console.log("Looking for comment item with data-comment-id:", commentId);
 		const commentElement = document.querySelector(
 			`.comment-item[data-comment-id="${commentId}"]`,
 		);
-		console.log("Found element:", commentElement);
 
 		if (commentElement) {
-			console.log("Scrolling to element");
 			commentElement.scrollIntoView({
 				behavior: "smooth",
 				block: "center",
@@ -59,7 +56,7 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 				commentElement.classList.remove("highlight-comment");
 			}, 2000);
 		} else {
-			console.log("Comment item not found - is the comment panel open?");
+			console.log("[CommentContext] Comment item not found - is the comment panel open?");
 		}
 	}, []);
 
@@ -79,7 +76,6 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 		const handleScrollToComment = (event: Event) => {
 			const customEvent = event as CustomEvent;
 			const { commentId } = customEvent.detail;
-			console.log("Scrolling to comment:", commentId); // Debug log
 			scrollToComment(commentId);
 		};
 

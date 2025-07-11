@@ -126,7 +126,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 
 	const hasViewer = hasCompatibleViewer(node);
 
-	const shouldShowTemporaryWarning = (action: string): boolean => {
+	const _shouldShowTemporaryWarning = (action: string): boolean => {
 		if (action === "delete" && isTemporaryFile(node.path)) return true;
 		if (action === "rename" && isTemporaryFile(node.path)) return true;
 		if (action === "link" && isTemporaryFile(node.path)) return true;
@@ -139,7 +139,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 	return (
 		<div
 			key={node.path}
-			style={{ marginLeft: `1rem` }}
+			style={{ marginLeft: "1rem" }}
 			draggable={!isRenaming && enableInternalDragDrop}
 			onDragStart={(e) => {
 				e.stopPropagation();
@@ -210,7 +210,6 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 							onKeyDown={(e) => onRenameKeyDown(e, node)}
 							onClick={(e) => e.stopPropagation()}
 							className="file-name-input"
-							autoFocus
 						/>
 						<button
 							className="cancel-input-button"
@@ -475,7 +474,6 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 									onBlur={onConfirmNewItem}
 									onKeyDown={onNewItemKeyDown}
 									className="file-name-input"
-									autoFocus
 								/>
 								<button
 									className="cancel-input-button"
@@ -488,54 +486,53 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 						</div>
 					)}
 
-					{node.children &&
-						node.children.map((child) => (
-							<FileTreeItem
-								key={child.path}
-								node={child}
-								level={level + 1}
-								selectedFileId={selectedFileId}
-								expandedFolders={expandedFolders}
-								renamingFileId={renamingFileId}
-								renameValue={renameValue}
-								activeMenu={activeMenu}
-								dragOverTarget={dragOverTarget}
-								enableFileSystemDragDrop={enableFileSystemDragDrop}
-								enableInternalDragDrop={enableInternalDragDrop}
-								creatingNewItem={creatingNewItem}
-								newItemName={newItemName}
-								onFileSelect={onFileSelect}
-								onToggleFolder={onToggleFolder}
-								onStartRename={onStartRename}
-								onSaveRename={onSaveRename}
-								onCancelRename={onCancelRename}
-								onRenameKeyDown={onRenameKeyDown}
-								onSetRenameValue={onSetRenameValue}
-								onSetActiveMenu={onSetActiveMenu}
-								onLinkToDocument={onLinkToDocument}
-								onUnlinkFromDocument={onUnlinkFromDocument}
-								onMoveFile={onMoveFile}
-								onDuplicateFile={onDuplicateFile}
-								onCopyPath={onCopyPath}
-								onExportFile={onExportFile}
-								onShowProperties={onShowProperties}
-								onExportFolder={onExportFolder}
-								onCreateFileInFolder={onCreateFileInFolder}
-								onCreateSubfolder={onCreateSubfolder}
-								onUploadToFolder={onUploadToFolder}
-								onExpandAllSubfolders={onExpandAllSubfolders}
-								onCollapseAllSubfolders={onCollapseAllSubfolders}
-								onDeleteFileOrDirectory={onDeleteFileOrDirectory}
-								onDragStart={onDragStart}
-								onDropOnDirectory={onDropOnDirectory}
-								onSetDragOverTarget={onSetDragOverTarget}
-								onSetNewItemName={onSetNewItemName}
-								onConfirmNewItem={onConfirmNewItem}
-								onCancelNewItem={onCancelNewItem}
-								onNewItemKeyDown={onNewItemKeyDown}
-								menuRefs={menuRefs}
-							/>
-						))}
+					{node.children?.map((child) => (
+						<FileTreeItem
+							key={child.path}
+							node={child}
+							level={level + 1}
+							selectedFileId={selectedFileId}
+							expandedFolders={expandedFolders}
+							renamingFileId={renamingFileId}
+							renameValue={renameValue}
+							activeMenu={activeMenu}
+							dragOverTarget={dragOverTarget}
+							enableFileSystemDragDrop={enableFileSystemDragDrop}
+							enableInternalDragDrop={enableInternalDragDrop}
+							creatingNewItem={creatingNewItem}
+							newItemName={newItemName}
+							onFileSelect={onFileSelect}
+							onToggleFolder={onToggleFolder}
+							onStartRename={onStartRename}
+							onSaveRename={onSaveRename}
+							onCancelRename={onCancelRename}
+							onRenameKeyDown={onRenameKeyDown}
+							onSetRenameValue={onSetRenameValue}
+							onSetActiveMenu={onSetActiveMenu}
+							onLinkToDocument={onLinkToDocument}
+							onUnlinkFromDocument={onUnlinkFromDocument}
+							onMoveFile={onMoveFile}
+							onDuplicateFile={onDuplicateFile}
+							onCopyPath={onCopyPath}
+							onExportFile={onExportFile}
+							onShowProperties={onShowProperties}
+							onExportFolder={onExportFolder}
+							onCreateFileInFolder={onCreateFileInFolder}
+							onCreateSubfolder={onCreateSubfolder}
+							onUploadToFolder={onUploadToFolder}
+							onExpandAllSubfolders={onExpandAllSubfolders}
+							onCollapseAllSubfolders={onCollapseAllSubfolders}
+							onDeleteFileOrDirectory={onDeleteFileOrDirectory}
+							onDragStart={onDragStart}
+							onDropOnDirectory={onDropOnDirectory}
+							onSetDragOverTarget={onSetDragOverTarget}
+							onSetNewItemName={onSetNewItemName}
+							onConfirmNewItem={onConfirmNewItem}
+							onCancelNewItem={onCancelNewItem}
+							onNewItemKeyDown={onNewItemKeyDown}
+							menuRefs={menuRefs}
+						/>
+					))}
 				</div>
 			)}
 		</div>

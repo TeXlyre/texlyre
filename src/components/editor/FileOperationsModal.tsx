@@ -201,7 +201,7 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 								disabled={
 									selectedTargetPath === fileToMove.path ||
 									(fileToMove.type === "directory" &&
-										selectedTargetPath.startsWith(fileToMove.path + "/"))
+										selectedTargetPath.startsWith(`${fileToMove.path}/`))
 								}
 							>
 								Move Here

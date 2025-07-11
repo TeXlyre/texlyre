@@ -157,9 +157,8 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 				const updated = [...prev];
 				updated[idx] = propertyWithValue;
 				return updated;
-			} else {
-				return [...prev, propertyWithValue];
 			}
+			return [...prev, propertyWithValue];
 		});
 	}, []);
 

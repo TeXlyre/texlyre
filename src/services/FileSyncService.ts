@@ -1,5 +1,6 @@
-import { FilePizzaDownloader, FilePizzaUploader } from "filepizza-client";
 // src/services/FileSyncService.ts
+import { FilePizzaDownloader, FilePizzaUploader } from "filepizza-client";
+
 import { nanoid } from "nanoid";
 
 import type {
@@ -197,7 +198,8 @@ class FileSyncService {
 					remoteFile.lastModified > localFile.lastModified
 				) {
 					return true;
-				} else if (!remoteFile.deleted && !localFile.deleted) {
+				}
+				if (!remoteFile.deleted && !localFile.deleted) {
 					if (
 						localFile.checksum !== remoteFile.checksum &&
 						!this.shouldIgnoreFileForSync(localFile, remoteFile)
@@ -335,7 +337,7 @@ class FileSyncService {
 
 			for (const file of filesFromDb) {
 				if (!file) {
-					console.warn(`File data not found for one of the IDs`);
+					console.warn("File data not found for one of the IDs");
 					continue;
 				}
 
@@ -397,7 +399,7 @@ class FileSyncService {
 		filePizzaServerUrl?: string,
 	): Promise<void> {
 		console.log(`[FileSyncService] Downloading files from: ${filePizzaLink}`);
-		console.log(`[FileSyncService] Expecting files:`, expectedFiles);
+		console.log("[FileSyncService] Expecting files:", expectedFiles);
 
 		await this.downloadFromLink(
 			filePizzaLink,
@@ -414,7 +416,7 @@ class FileSyncService {
 		expectedPath: string,
 		remoteTimestamp: number,
 		remoteDocumentId?: string,
-		isDeleted?: boolean,
+		_isDeleted?: boolean,
 	): Promise<FileNode | null> {
 		try {
 			await fileStorageService.createDirectoryPath(expectedPath);
@@ -445,7 +447,7 @@ class FileSyncService {
 				);
 			} else {
 				console.warn(
-					`[FileSyncService] Unknown content type, attempting direct use:`,
+					"[FileSyncService] Unknown content type, attempting direct use:",
 					fileContent,
 				);
 				processedContent = fileContent;
@@ -641,7 +643,7 @@ class FileSyncService {
 				.initialize()
 				.then(() => {
 					console.log(
-						`[FileSyncService] Downloader initialized, setting up event handlers`,
+						"[FileSyncService] Downloader initialized, setting up event handlers",
 					);
 
 					downloader.on("error", (error) => {
@@ -674,8 +676,8 @@ class FileSyncService {
 
 						expectedFileCount = filesInfo.length;
 						const availableFiles = filesInfo.map((f) => f.fileName);
-						console.log(`[FileSyncService] Available files:`, availableFiles);
-						console.log(`[FileSyncService] Expected files:`, expectedFiles);
+						console.log("[FileSyncService] Available files:", availableFiles);
+						console.log("[FileSyncService] Expected files:", expectedFiles);
 
 						downloader.startDownload().catch((error) => {
 							console.error(

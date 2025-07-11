@@ -25,7 +25,7 @@ class AutoSaveManager {
 				const contentToSave = getContent();
 
 				if (contentToSave === null || contentToSave === undefined) {
-					console.log("Autosave skipped: content is null/undefined");
+					console.log("[autoSaveUtils] Autosave skipped: content is null/undefined");
 					return;
 				}
 

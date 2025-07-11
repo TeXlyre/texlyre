@@ -37,7 +37,9 @@ const AppRouter: React.FC = () => {
 		"auth" | "projects" | "editor"
 	>("auth");
 	const [docUrl, setDocUrl] = useState<YjsDocUrl | null>(null);
-	const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+	const [_currentProjectId, setCurrentProjectId] = useState<string | null>(
+		null,
+	);
 	const [targetDocId, setTargetDocId] = useState<string | null>(null);
 	const [targetFilePath, setTargetFilePath] = useState<string | null>(null);
 	const [isCreatingProject, setIsCreatingProject] = useState(false);

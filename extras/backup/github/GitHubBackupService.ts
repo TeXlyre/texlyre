@@ -441,8 +441,8 @@ export class GitHubBackupService {
 
 			await this.createCommitWithRetry(
 				credentials.token,
-				this.currentRepo!.owner,
-				this.currentRepo!.repo,
+				this.currentRepo?.owner,
+				this.currentRepo?.repo,
 				commitMessage || `TeXlyre backup: ${new Date().toISOString()}`,
 				filesToCommit,
 				finalBranch,
@@ -489,8 +489,8 @@ export class GitHubBackupService {
 			const finalBranch = branch || credentials.branch;
 			const tree = await gitHubApiService.getRecursiveTree(
 				credentials.token,
-				this.currentRepo!.owner,
-				this.currentRepo!.repo,
+				this.currentRepo?.owner,
+				this.currentRepo?.repo,
 				finalBranch,
 			);
 
@@ -546,7 +546,7 @@ export class GitHubBackupService {
 						projectData.filesMetadataSha = item.sha!;
 					} else if (pathParts[3]) {
 						projectData.files.set(
-							"/" + pathParts.slice(3).join("/"),
+							`/${pathParts.slice(3).join("/")}`,
 							item.sha!,
 						);
 					}
@@ -578,8 +578,8 @@ export class GitHubBackupService {
 				try {
 					const metadataContent = await gitHubApiService.getBlobContent(
 						credentials.token,
-						this.currentRepo!.owner,
-						this.currentRepo!.repo,
+						this.currentRepo?.owner,
+						this.currentRepo?.repo,
 						data.metadataSha!,
 					);
 					const projectMetadata = JSON.parse(metadataContent);
@@ -613,8 +613,8 @@ export class GitHubBackupService {
 				const data = projectFiles.get(projId)!;
 				const metadataContent = await gitHubApiService.getBlobContent(
 					credentials.token,
-					this.currentRepo!.owner,
-					this.currentRepo!.repo,
+					this.currentRepo?.owner,
+					this.currentRepo?.repo,
 					data.metadataSha!,
 				);
 				const projectMetadata = JSON.parse(metadataContent);
@@ -690,8 +690,8 @@ export class GitHubBackupService {
 			try {
 				const metadataContent = await gitHubApiService.getBlobContent(
 					credentials.token,
-					this.currentRepo!.owner,
-					this.currentRepo!.repo,
+					this.currentRepo?.owner,
+					this.currentRepo?.repo,
 					data.documentsMetadataSha,
 				);
 				githubDocumentsMetadata = JSON.parse(metadataContent);
@@ -727,8 +727,8 @@ export class GitHubBackupService {
 			if (docData.txtSha) {
 				contentData.readableContent = await gitHubApiService.getBlobContent(
 					credentials.token,
-					this.currentRepo!.owner,
-					this.currentRepo!.repo,
+					this.currentRepo?.owner,
+					this.currentRepo?.repo,
 					docData.txtSha,
 				);
 			}
@@ -736,8 +736,8 @@ export class GitHubBackupService {
 			if (docData.yjsSha) {
 				const yjsContent = await gitHubApiService.getBlobContent(
 					credentials.token,
-					this.currentRepo!.owner,
-					this.currentRepo!.repo,
+					this.currentRepo?.owner,
+					this.currentRepo?.repo,
 					docData.yjsSha,
 				);
 
@@ -779,8 +779,8 @@ export class GitHubBackupService {
 			try {
 				const metadataContent = await gitHubApiService.getBlobContent(
 					credentials.token,
-					this.currentRepo!.owner,
-					this.currentRepo!.repo,
+					this.currentRepo?.owner,
+					this.currentRepo?.repo,
 					data.filesMetadataSha,
 				);
 				githubFilesMetadata = JSON.parse(metadataContent);
@@ -841,8 +841,8 @@ export class GitHubBackupService {
 			try {
 				const rawContentString = await gitHubApiService.getBlobContent(
 					credentials.token,
-					this.currentRepo!.owner,
-					this.currentRepo!.repo,
+					this.currentRepo?.owner,
+					this.currentRepo?.repo,
 					fileSha,
 				);
 				const existingFile = await fileStorageService.getFileByPath(
