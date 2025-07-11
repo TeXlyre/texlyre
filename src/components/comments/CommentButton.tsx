@@ -17,11 +17,12 @@ const CommentButton: React.FC<CommentButtonProps> = ({
 	const { addComment } = useComments();
 
 	const handleClick = () => {
-		const content = prompt("Add a comment:");
-		if (content) {
-			addComment(content);
-			onCommentAdded();
-		}
+		document.dispatchEvent(
+			new CustomEvent("show-comment-modal", {
+				detail: { selection },
+			})
+		);
+		onCommentAdded();
 	};
 
 	return (

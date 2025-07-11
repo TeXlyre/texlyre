@@ -340,17 +340,12 @@ export const EditorLoader = (
 					const primaryRange = selection.main;
 					if (primaryRange.from !== primaryRange.to) {
 						try {
-							const rawComment = addComment("This is a comment") as any;
-							if (rawComment?.openTag && rawComment.closeTag) {
-								view.dispatch({
-									changes: [
-										{ from: primaryRange.to, insert: rawComment.closeTag },
-										{ from: primaryRange.from, insert: rawComment.openTag },
-									],
-								});
-								updateComments(view.state.doc.toString());
-								return true;
-							}
+							document.dispatchEvent(
+								new CustomEvent("show-comment-modal", {
+									detail: { selection: primaryRange },
+								})
+							);
+							return true;
 						} catch (error) {
 							console.error("Error in commentKeymap:", error);
 						}
@@ -359,6 +354,7 @@ export const EditorLoader = (
 				},
 			},
 		]);
+
 		extensions.push(commentKeymap);
 		extensions.push(commentSystemExtension);
 

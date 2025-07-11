@@ -21,6 +21,7 @@ import { fileCommentProcessor } from "../../utils/fileCommentProcessor.ts";
 import { arrayBufferToString } from "../../utils/fileUtils";
 import CommentPanel from "../comments/CommentPanel";
 import CommentToggleButton from "../comments/CommentToggleButton";
+import CommentModal from "../comments/CommentModal";
 import {
 	CopyIcon,
 	DownloadIcon,
@@ -161,7 +162,7 @@ const EditorContent: React.FC<{
 		) {
 			timeoutId = setTimeout(() => {
 				setShowUnlinkedNotice(true);
-			}, 250); // delay showing the unlinked document notice for 250ms to avoid flickering
+			}, 250);
 		} else {
 			setShowUnlinkedNotice(false);
 		}
@@ -186,6 +187,37 @@ const EditorContent: React.FC<{
 			);
 		};
 	}, [handleContentChanged]);
+
+	useEffect(() => {
+		const handleAddCommentToEditor = (event: Event) => {
+			const customEvent = event as CustomEvent;
+			if (!viewRef.current || isViewOnly) return;
+
+			const { content, selection } = customEvent.detail;
+			if (content && selection && selection.from !== selection.to) {
+				try {
+					const rawComment = addComment(content) as any;
+					if (rawComment?.openTag && rawComment.closeTag) {
+						viewRef.current.dispatch({
+							changes: [
+								{ from: selection.to, insert: rawComment.closeTag },
+								{ from: selection.from, insert: rawComment.openTag },
+							],
+						});
+						updateComments(viewRef.current.state.doc.toString());
+					}
+				} catch (error) {
+					console.error("Error adding comment:", error);
+				}
+			}
+		};
+
+		document.addEventListener("add-comment-to-editor", handleAddCommentToEditor);
+
+		return () => {
+			document.removeEventListener("add-comment-to-editor", handleAddCommentToEditor);
+		};
+	}, [viewRef, isViewOnly, addComment, updateComments]);
 
 	const tooltipInfo =
 		isEditingFile && fileName
@@ -291,7 +323,7 @@ const EditorContent: React.FC<{
 				{onSaveDocument && (
 					<button
 						onClick={onSaveDocument}
-						title="Save Document to Linked File (Ctrl+S)"
+						title="Save document to linked file (Ctrl+S)"
 						className="control-button"
 					>
 						<SaveIcon />
@@ -411,7 +443,6 @@ const EditorContent: React.FC<{
 							if (remainingDocs.length > 0 && onSelectDocument) {
 								const newSelectedId = remainingDocs[0].id;
 								onSelectDocument(newSelectedId);
-								// Update URL hash
 								const currentFragment = parseUrlFragments(
 									window.location.hash.substring(1),
 								);
@@ -476,9 +507,59 @@ const Editor: React.FC<EditorComponentProps> = ({
 }) => {
 	const [textContent, setTextContent] = useState<string>("");
 	const [filePath, setFilePath] = useState<string>("");
+	const [showCommentModal, setShowCommentModal] = useState(false);
+	const [pendingSelection, setPendingSelection] = useState<{ from: number; to: number } | null>(null);
 
 	const editorRef = useRef<HTMLDivElement>(null);
 	const isUpdatingRef = useRef<boolean>(false);
+
+	useEffect(() => {
+		const handleShowCommentModal = (event: Event) => {
+			const customEvent = event as CustomEvent;
+			const { selection } = customEvent.detail;
+			if (selection && selection.from !== selection.to) {
+				setPendingSelection(selection);
+				setShowCommentModal(true);
+			}
+		};
+
+		document.addEventListener("show-comment-modal", handleShowCommentModal);
+
+		return () => {
+			document.removeEventListener("show-comment-modal", handleShowCommentModal);
+		};
+	}, []);
+
+	const handleCommentSubmit = (content: string) => {
+		if (!pendingSelection) return;
+
+		document.dispatchEvent(
+			new CustomEvent("add-comment-to-editor", {
+				detail: { content, selection: pendingSelection },
+			})
+		);
+
+		setPendingSelection(null);
+	};
+
+	const handleShowCommentModal = (event: Event) => {
+		const customEvent = event as CustomEvent;
+		const { selection } = customEvent.detail;
+		if (selection && selection.from !== selection.to) {
+			setPendingSelection(selection);
+			setShowCommentModal(true);
+
+			document.dispatchEvent(new CustomEvent("hide-floating-comment-button"));
+		}
+	};
+
+	const handleCommentModalClose = () => {
+		setShowCommentModal(false);
+		setPendingSelection(null);
+
+		document.dispatchEvent(new CustomEvent("comment-modal-closed"));
+	};
+
 
 	const handleNavigateToLinkedFile = () => {
 		if (linkedFileInfo?.filePath) {
@@ -626,6 +707,11 @@ const Editor: React.FC<EditorComponentProps> = ({
 						}}
 					/>
 				</div>
+				<CommentModal
+					isOpen={showCommentModal}
+					onClose={handleCommentModalClose}
+					onCommentSubmit={handleCommentSubmit}
+				/>
 			</CommentProvider>
 		);
 	}
@@ -725,6 +811,11 @@ const Editor: React.FC<EditorComponentProps> = ({
 					onSelectDocument={onSelectDocument}
 				/>
 			</div>
+			<CommentModal
+				isOpen={showCommentModal}
+				onClose={handleCommentModalClose}
+				onCommentSubmit={handleCommentSubmit}
+			/>
 		</CommentProvider>
 	);
 };

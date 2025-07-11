@@ -25,6 +25,21 @@
 	}
 }
 
+.comment-modal {
+	width: 100%;
+}
+
+.comment-form {
+	display: flex;
+	flex-direction: column;
+}
+
+.comment-form textarea {
+	resize: vertical;
+	min-height: 80px;
+	font-family: inherit;
+}
+
 /* Comment panel styles */
 .comment-panel {
 	order: 2;
@@ -437,6 +452,22 @@
 	box-shadow: var(--shadow-sm);
 	opacity: 0.9;
 	animation: fadeIn var(--transition-normal) ease-in-out;
+}
+
+.floating-comment-button {
+    display: inline-block;
+    padding: 4px 6px;
+    background-color: var(--pico-primary);
+    color: var(--pico-primary-inverse) !important;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 10px;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-normal);
+    white-space: nowrap;
+    width: auto;
+    max-width: fit-content;
 }
 
 @keyframes fadeIn {
