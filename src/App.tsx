@@ -48,26 +48,26 @@ function App() {
 	return (
 		<>
 			<SplashScreen isVisible={isInitializing} />
-			<OfflineProvider>
-				<AuthProvider>
-					<SettingsProvider>
-						<PropertiesProvider>
-							<ThemeProvider
-								defaultThemeId="texlyre-theme"
-								defaultVariant="system"
-							>
-								<SecretsProvider>
-									<FileSystemBackupProvider>
-										<EditorProvider>
-											<AppContent />
-										</EditorProvider>
-									</FileSystemBackupProvider>
-								</SecretsProvider>
-							</ThemeProvider>
-						</PropertiesProvider>
-					</SettingsProvider>
-				</AuthProvider>
-			</OfflineProvider>
+			<SettingsProvider>
+				<OfflineProvider>
+					<AuthProvider>
+							<PropertiesProvider>
+								<ThemeProvider
+									defaultThemeId="texlyre-theme"
+									defaultVariant="system"
+								>
+									<SecretsProvider>
+										<FileSystemBackupProvider>
+											<EditorProvider>
+												<AppContent />
+											</EditorProvider>
+										</FileSystemBackupProvider>
+									</SecretsProvider>
+								</ThemeProvider>
+							</PropertiesProvider>
+					</AuthProvider>
+				</OfflineProvider>
+			</SettingsProvider>
 		</>
 	);
 }
