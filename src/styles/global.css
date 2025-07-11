@@ -24,7 +24,7 @@ body {
 	display: flex;
 	place-items: center;
 	height: 100%;
-	min-width: 320px;
+	min-width: 1200px;
 	min-height: 100vh;
 	color: var(--text-color);
 	background-color: var(--pico-background);
