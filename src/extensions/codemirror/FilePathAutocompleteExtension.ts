@@ -54,21 +54,35 @@ const filePathCacheField = StateField.define<FilePathCache>({
 });
 
 const isImageFile = (filename: string): boolean => {
-	// Note that eps, ps, and svg do not work with swiftlatex but it should suggest them anyway.. Maybe??
 	const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.svg', '.pdf', '.eps', '.ps'];
 	return imageExtensions.some(ext => filename.toLowerCase().endsWith(ext));
 };
 
 const getRelativePath = (fromPath: string, toPath: string): string => {
-	if (!fromPath || fromPath === '/') return toPath.startsWith('/') ? toPath.slice(1) : toPath;
-
-	const fromDir = fromPath.substring(0, fromPath.lastIndexOf('/')) || '/';
-
-	if (toPath.startsWith(fromDir)) {
-		const relative = toPath.substring(fromDir.length);
-		return relative.startsWith('/') ? relative.slice(1) : relative;
+	if (!fromPath || fromPath === '/') {
+		return toPath.startsWith('/') ? toPath.slice(1) : toPath;
 	}
 
+	const fromDir = fromPath.substring(0, fromPath.lastIndexOf('/')) || '/';
+	const toDir = toPath.substring(0, toPath.lastIndexOf('/')) || '/';
+	const toFileName = toPath.substring(toPath.lastIndexOf('/') + 1);
+
+	// If files are in the same directory (siblings), show just the filename
+	if (fromDir === toDir) {
+		return toFileName;
+	}
+
+	// If target is in a subdirectory of the current file's directory
+	if (toPath.startsWith(fromDir + '/')) {
+		return toPath.substring(fromDir.length + 1);
+	}
+
+	// If current file is in a subdirectory and target is in root
+	if (fromDir !== '/' && toDir === '/') {
+		return toFileName;
+	}
+
+	// For all other cases, return path relative to root
 	return toPath.startsWith('/') ? toPath.slice(1) : toPath;
 };
 
@@ -230,28 +244,34 @@ class FilePathAutocompleteProcessor {
 	};
 }
 
-export function createFilePathAutocompleteExtension(currentFilePath: string = '') {
-	let processor: FilePathAutocompleteProcessor | null = null;
+// Store processor globally for access
+let globalProcessor: FilePathAutocompleteProcessor | null = null;
 
+export function createFilePathAutocompleteExtension(currentFilePath: string = '') {
 	const plugin = ViewPlugin.fromClass(
 		class {
+			processor: FilePathAutocompleteProcessor;
+
 			constructor(view: EditorView) {
-				processor = new FilePathAutocompleteProcessor(view);
-				processor.setCurrentFilePath(currentFilePath);
+				this.processor = new FilePathAutocompleteProcessor(view);
+				this.processor.setCurrentFilePath(currentFilePath);
+				globalProcessor = this.processor;
 			}
 
 			update(update: any) {
-				processor?.update(update);
+				this.processor?.update(update);
 			}
 
 			destroy() {
-				processor = null;
+				if (globalProcessor === this.processor) {
+					globalProcessor = null;
+				}
 			}
 		}
 	);
 
 	const completionSource = (context: CompletionContext) => {
-		return processor?.getCompletions(context) || null;
+		return globalProcessor?.getCompletions(context) || null;
 	};
 
 	return [
@@ -268,8 +288,7 @@ export function updateFilePathCache(view: EditorView, files: FileNode[]) {
 }
 
 export function setCurrentFilePath(view: EditorView, filePath: string) {
-	const plugin = view.plugin(ViewPlugin.define(() => ({})));
-	if (plugin && (plugin as any).processor) {
-		(plugin as any).processor.setCurrentFilePath(filePath);
+	if (globalProcessor && typeof globalProcessor.setCurrentFilePath === 'function') {
+		globalProcessor.setCurrentFilePath(filePath);
 	}
 }

@@ -3,7 +3,7 @@ import type { EditorView } from "codemirror";
 
 import type { FileNode } from "../types/files";
 import { fileStorageEventEmitter } from "./FileStorageService";
-import { updateFilePathCache } from "../extensions/codemirror/FilePathAutocompleteExtension";
+import { updateFilePathCache, setCurrentFilePath } from "../extensions/codemirror/FilePathAutocompleteExtension";
 
 class FilePathCacheService {
 	private cachedFiles: FileNode[] = [];
@@ -33,6 +33,12 @@ class FilePathCacheService {
 
 	unregisterEditorView(view: EditorView) {
 		this.editorViews.delete(view);
+	}
+
+	updateCurrentFilePath(filePath: string) {
+		this.editorViews.forEach(view => {
+			setCurrentFilePath(view, filePath);
+		});
 	}
 
 	async updateCache(files?: FileNode[]) {

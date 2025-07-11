@@ -279,12 +279,15 @@ export const EditorLoader = (
 		  // Get current file path for relative path calculations
 		  let currentFilePath = '';
 		  if (isEditingFile && currentFileId) {
-			// Get the file path synchronously if possible, otherwise it will be updated later
-			fileStorageService.getFile(currentFileId).then(file => {
-			  if (file && viewRef.current) {
-				// Update the file path in the extension after the view is created
-				setCurrentFilePath(viewRef.current, file.path);
-			  }
+			// Get the file path synchronously if possible
+			const getCurrentFilePath = async () => {
+			  const file = await fileStorageService.getFile(currentFileId);
+			  return file?.path || '';
+			};
+
+			// Try to get it immediately for initial setup
+			getCurrentFilePath().then(path => {
+			  currentFilePath = path;
 			});
 		  }
 
@@ -301,6 +304,17 @@ export const EditorLoader = (
 			  maxRenderedOptions: 20,
 			})
 		  );
+
+		  // Update the file path after view is created
+		  if (isEditingFile && currentFileId) {
+			setTimeout(async () => {
+			  const file = await fileStorageService.getFile(currentFileId);
+			  if (file && viewRef.current) {
+				setCurrentFilePath(viewRef.current, file.path);
+				filePathCacheService.updateCurrentFilePath(file.path);
+			  }
+			}, 100);
+		  }
 		} else {
 		  extensions.push(autocompletion());
 		}
