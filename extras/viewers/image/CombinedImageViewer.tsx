@@ -17,7 +17,10 @@ import {
 	ZoomInIcon,
 	ZoomOutIcon,
 } from "../../../src/components/common/Icons";
-import { PluginHeader, PluginControlGroup } from "../../../src/components/common/PluginHeader";
+import {
+	PluginControlGroup,
+	PluginHeader,
+} from "../../../src/components/common/PluginHeader";
 import { usePluginFileInfo } from "../../../src/hooks/usePluginFileInfo";
 import { useSettings } from "../../../src/hooks/useSettings";
 import type { ViewerProps } from "../../../src/plugins/PluginInterface";
@@ -257,7 +260,8 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 		return {
 			transform: transformValue,
 			transformOrigin: "center",
-			imageRendering: imageRenderingStyle as React.CSSProperties['imageRendering'],
+			imageRendering:
+				imageRenderingStyle as React.CSSProperties["imageRendering"],
 			filter: filterValue,
 			cursor: enablePanning ? (isPanning ? "grabbing" : "grab") : "default",
 			transition: isPanning ? "none" : "transform 0.2s ease",
@@ -321,12 +325,12 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 	};
 
 	const tooltipInfo = [
-        `Quality: ${quality}`,
-        `Auto center: ${autoCenter ? "enabled" : "disabled"}`,
-        `Panning: ${enablePanning ? "enabled" : "disabled"}`,
-        `Filters: ${enableFilters ? "enabled" : "disabled"}`,
-        `MIME Type: ${mimeType || "Unknown"}`,
-        `Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`
+		`Quality: ${quality}`,
+		`Auto center: ${autoCenter ? "enabled" : "disabled"}`,
+		`Panning: ${enablePanning ? "enabled" : "disabled"}`,
+		`Filters: ${enableFilters ? "enabled" : "disabled"}`,
+		`MIME Type: ${mimeType || "Unknown"}`,
+		`Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`,
 	];
 
 	const headerControls = (

@@ -19,13 +19,13 @@ import { fileStorageService } from "../services/FileStorageService";
 import type { DocumentList } from "../types/documents";
 import type { FileNode, FileTreeContextType } from "../types/files";
 import type { YjsDocUrl } from "../types/yjs";
+import { duplicateKeyDetector } from "../utils/duplicateKeyDetector";
 import {
 	getMimeType,
 	isBinaryFile,
 	stringToArrayBuffer,
 } from "../utils/fileUtils";
 import { batchExtractZip } from "../utils/zipUtils";
-import { duplicateKeyDetector } from '../utils/duplicateKeyDetector';
 
 export const FileTreeContext = createContext<FileTreeContextType | null>(null);
 

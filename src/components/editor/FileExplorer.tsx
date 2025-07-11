@@ -5,6 +5,8 @@ import { type DragEvent, useEffect, useRef, useState } from "react";
 import { useFileTree } from "../../hooks/useFileTree";
 import type { FileNode } from "../../types/files";
 import { buildUrlWithFragments, parseUrlFragments } from "../../types/yjs";
+import { fileCommentProcessor } from "../../utils/fileCommentProcessor.ts";
+import { createZipFromFolder, downloadZipFile } from "../../utils/zipUtils";
 import {
 	ExportIcon,
 	FilePlusIcon,
@@ -15,8 +17,6 @@ import {
 import FileOperationsModal from "./FileOperationsModal";
 import FileTreeItem from "./FileTreeItem";
 import ZipHandlingModal from "./ZipHandlingModal";
-import { createZipFromFolder, downloadZipFile } from "../../utils/zipUtils";
-import { fileCommentProcessor } from "../../utils/fileCommentProcessor.ts";
 
 interface FileExplorerProps {
 	onFileSelect: (
@@ -81,7 +81,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	const [showDragDropDialog, setShowDragDropDialog] = useState(false);
 	const [dragDropFile, setDragDropFile] = useState<FileNode | null>(null);
 	const [dragDropTargetPath, setDragDropTargetPath] = useState<string>("");
-	const [pendingDragDropOperation, setPendingDragDropOperation] = useState<(() => Promise<void>) | null>(null);
+	const [pendingDragDropOperation, setPendingDragDropOperation] = useState<
+		(() => Promise<void>) | null
+	>(null);
 
 	const [activeMenu, setActiveMenu] = useState<string | null>(null);
 	const menuRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -493,7 +495,11 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	const handleExportFolder = async (node: FileNode) => {
 		if (node.type === "directory") {
 			try {
-				const zipBlob = await createZipFromFolder(node, getFileContent, getFile);
+				const zipBlob = await createZipFromFolder(
+					node,
+					getFileContent,
+					getFile,
+				);
 				downloadZipFile(zipBlob, node.name);
 			} catch (error) {
 				console.error("Error exporting folder:", error);
@@ -525,8 +531,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	};
 
 	const handleUploadToFolder = (folderPath: string) => {
-		const input = document.createElement('input');
-		input.type = 'file';
+		const input = document.createElement("input");
+		input.type = "file";
 		input.multiple = true;
 		input.onchange = async (e) => {
 			const files = (e.target as HTMLInputElement).files;
@@ -670,12 +676,12 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			setDragDropTargetPath(targetNode.path);
 			setShowDragDropDialog(true);
 			setPendingDragDropOperation(() => async () => {
-				const newFullPath = targetNode.path === "/"
-					? `/${sourceFile.name}`
-					: `${targetNode.path}/${sourceFile.name}`;
+				const newFullPath =
+					targetNode.path === "/"
+						? `/${sourceFile.name}`
+						: `${targetNode.path}/${sourceFile.name}`;
 				await renameFile(nodeId, newFullPath);
 			});
-
 		} catch (error) {
 			console.error("Error during internal drag-drop operation:", error);
 		} finally {
@@ -791,7 +797,6 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				const newFullPath = `/${sourceFile.name}`;
 				await renameFile(nodeId, newFullPath);
 			});
-
 		} catch (error) {
 			console.error("Error during root drop operation:", error);
 		} finally {
@@ -995,8 +1000,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 						</div>
 					) : (
 						<div className="empty-state">
-							No files. Upload or create files to get started.
-							Drag any files here to upload them.
+							No files. Upload or create files to get started. Drag any files
+							here to upload them.
 						</div>
 					)}
 				</div>

@@ -3,7 +3,7 @@ import type React from "react";
 
 import type { FileNode } from "../../types/files";
 import { isTemporaryFile } from "../../utils/fileUtils";
-import {FolderIcon, TempFileIcon} from "../common/Icons";
+import { FolderIcon, TempFileIcon } from "../common/Icons";
 import Modal from "../common/Modal";
 
 interface FilePropertiesInfo {
@@ -51,7 +51,10 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 	dragDropTargetPath,
 	onConfirmDragDrop,
 }) => {
-	const getTemporaryFileWarning = (operation: string, targetPath?: string): string | null => {
+	const getTemporaryFileWarning = (
+		operation: string,
+		targetPath?: string,
+	): string | null => {
 		if (!fileToMove) return null;
 
 		const isSourceTemporary = isTemporaryFile(fileToMove.path);
@@ -169,7 +172,9 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 									<FolderIcon />
 									<span>{dir.path}</span>
 									{isTemporaryFile(dir.path) && (
-										<span className="temp-indicator" title="Temporary folder"><TempFileIcon/></span>
+										<span className="temp-indicator" title="Temporary folder">
+											<TempFileIcon />
+										</span>
 									)}
 								</div>
 							))}
@@ -223,21 +228,26 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 							<div className="move-source">
 								<strong>From:</strong> {dragDropFile.path}
 								{isTemporaryFile(dragDropFile.path) && (
-									<span className="temp-file-indicator"> <TempFileIcon/> Temporary</span>
+									<span className="temp-file-indicator">
+										{" "}
+										<TempFileIcon /> Temporary
+									</span>
 								)}
 							</div>
 							<div className="move-target">
-								<strong>To:</strong> {dragDropTargetPath === "/" ? "/" : dragDropTargetPath}
+								<strong>To:</strong>{" "}
+								{dragDropTargetPath === "/" ? "/" : dragDropTargetPath}
 								{isTemporaryFile(dragDropTargetPath) && (
-									<span className="temp-file-indicator"> <TempFileIcon/> Temporary</span>
+									<span className="temp-file-indicator">
+										{" "}
+										<TempFileIcon /> Temporary
+									</span>
 								)}
 							</div>
 						</div>
 
 						{dragDropWarning && (
-							<div className="warning-message">
-								{dragDropWarning}
-							</div>
+							<div className="warning-message">{dragDropWarning}</div>
 						)}
 
 						<div className="modal-actions">

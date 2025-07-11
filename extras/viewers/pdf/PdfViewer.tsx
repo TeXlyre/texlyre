@@ -10,7 +10,10 @@ import {
 	ZoomInIcon,
 	ZoomOutIcon,
 } from "../../../src/components/common/Icons";
-import { PluginHeader, PluginControlGroup } from "../../../src/components/common/PluginHeader";
+import {
+	PluginControlGroup,
+	PluginHeader,
+} from "../../../src/components/common/PluginHeader";
 import { usePluginFileInfo } from "../../../src/hooks/usePluginFileInfo";
 import { useSettings } from "../../../src/hooks/useSettings";
 import type { ViewerProps } from "../../../src/plugins/PluginInterface";
@@ -373,7 +376,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 		`Pages: ${totalPages}`,
 		`Current page: ${currentPage}`,
 		`MIME Type: ${mimeType || "application/pdf"}`,
-		`Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`
+		`Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`,
 	];
 
 	const headerControls = (

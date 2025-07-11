@@ -284,7 +284,10 @@ class FileSystemBackupService {
 
 		// Read existing projects from filesystem and merge with new ones
 		const existingData = await this.readExistingBackupData();
-		const mergedProjects = this.mergeProjectsData(existingData.projects, localProjects);
+		const mergedProjects = this.mergeProjectsData(
+			existingData.projects,
+			localProjects,
+		);
 
 		const projectData = new Map();
 		for (const project of localProjects) {
@@ -306,7 +309,10 @@ class FileSystemBackupService {
 		}
 
 		// Merge existing project data with new project data
-		const mergedProjectData = this.mergeProjectData(existingData.projectData, projectData);
+		const mergedProjectData = this.mergeProjectData(
+			existingData.projectData,
+			projectData,
+		);
 
 		return {
 			manifest: this.unifiedService.createManifest("backup"),
@@ -331,7 +337,8 @@ class FileSystemBackupService {
 				return { projects: [], projectData: new Map() };
 			}
 
-			const existingData = await this.fileSystemManager.readUnifiedStructure(adapter);
+			const existingData =
+				await this.fileSystemManager.readUnifiedStructure(adapter);
 			return {
 				projects: existingData.projects || [],
 				projectData: existingData.projectData || new Map(),
@@ -342,22 +349,31 @@ class FileSystemBackupService {
 		}
 	}
 
-	private mergeProjectsData(existingProjects: any[], newProjects: Project[]): any[] {
+	private mergeProjectsData(
+		existingProjects: any[],
+		newProjects: Project[],
+	): any[] {
 		const existingProjectsMap = new Map();
-		existingProjects.forEach(project => {
+		existingProjects.forEach((project) => {
 			existingProjectsMap.set(project.docUrl, project);
 		});
 
 		// Convert new projects to metadata and update/add them
-		newProjects.forEach(project => {
-			const metadata = this.unifiedService.convertProjectToMetadata(project, "backup");
+		newProjects.forEach((project) => {
+			const metadata = this.unifiedService.convertProjectToMetadata(
+				project,
+				"backup",
+			);
 			existingProjectsMap.set(project.docUrl, metadata);
 		});
 
 		return Array.from(existingProjectsMap.values());
 	}
 
-	private mergeProjectData(existingProjectData: Map<string, any>, newProjectData: Map<string, any>): Map<string, any> {
+	private mergeProjectData(
+		existingProjectData: Map<string, any>,
+		newProjectData: Map<string, any>,
+	): Map<string, any> {
 		const mergedData = new Map(existingProjectData);
 
 		for (const [projectId, data] of newProjectData) {

@@ -20,7 +20,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
 }) => {
 	const [newResponse, setNewResponse] = useState("");
 	const [isAddingResponse, setIsAddingResponse] = useState(false);
-	const { addResponse, deleteComment, deleteResponse, resolveComment } = useComments();
+	const { addResponse, deleteComment, deleteResponse, resolveComment } =
+		useComments();
 
 	const handleAddResponse = () => {
 		if (newResponse.trim()) {
@@ -50,7 +51,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 		if (comment.line) {
 			// Check if we're in file mode by looking at the URL
 			const currentUrl = window.location.hash;
-			const isFileMode = currentUrl.includes('file:');
+			const isFileMode = currentUrl.includes("file:");
 
 			const detail: any = { line: comment.line };
 
@@ -77,7 +78,10 @@ const CommentItem: React.FC<CommentItemProps> = ({
 	};
 
 	return (
-		<div className={`comment-item ${comment.resolved ? 'resolved' : ''}`} data-comment-id={comment.id}>
+		<div
+			className={`comment-item ${comment.resolved ? "resolved" : ""}`}
+			data-comment-id={comment.id}
+		>
 			<div className="comment-header">
 				<div className="comment-author-container">
 					<div className="comment-author" title={comment.user}>
@@ -144,8 +148,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
 				</div>
 			)}
 
-			{!comment.resolved && (
-				isAddingResponse ? (
+			{!comment.resolved &&
+				(isAddingResponse ? (
 					<div className="add-response-form">
 						<textarea
 							value={newResponse}
@@ -180,8 +184,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 					>
 						Add response
 					</button>
-				)
-			)}
+				))}
 		</div>
 	);
 };

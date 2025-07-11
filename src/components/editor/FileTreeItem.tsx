@@ -4,11 +4,10 @@ import type React from "react";
 import { pluginRegistry } from "../../plugins/PluginRegistry";
 import type { FileNode } from "../../types/files";
 import { isTemporaryFile } from "../../utils/fileUtils";
-import DropdownMenu from "./DropdownMenu";
 import {
 	CopyUrlIcon,
-	DuplicateIcon,
 	DownloadIcon,
+	DuplicateIcon,
 	EditIcon,
 	FileIcon,
 	FilePlusIcon,
@@ -22,8 +21,9 @@ import {
 	MoveIcon,
 	TrashIcon,
 	UnlinkIcon,
-	UploadIcon
+	UploadIcon,
 } from "../common/Icons";
+import DropdownMenu from "./DropdownMenu";
 
 interface FileTreeItemProps {
 	node: FileNode;
@@ -134,9 +134,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 	};
 
 	const shouldShowLinkButton =
-		node.type === "file" &&
-		!node.isBinary &&
-		!isTemporaryFile(node.name);
+		node.type === "file" && !node.isBinary && !isTemporaryFile(node.name);
 
 	return (
 		<div
@@ -242,14 +240,20 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 						(!hasDocument ? (
 							<button
 								className="action-btn"
-								title={isTemporaryFile(node.path) ? "Link Document (Not recommended for temporary files)" : "Link Document"}
+								title={
+									isTemporaryFile(node.path)
+										? "Link Document (Not recommended for temporary files)"
+										: "Link Document"
+								}
 								onClick={(e) => {
 									e.stopPropagation();
 									onLinkToDocument(node.id);
 								}}
 							>
 								<LinkIcon />
-								{isTemporaryFile(node.path) && <span className="warning-indicator">⚠️</span>}
+								{isTemporaryFile(node.path) && (
+									<span className="warning-indicator">⚠️</span>
+								)}
 							</button>
 						) : (
 							<button
@@ -410,16 +414,16 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 										<FolderIcon />
 										<span>Collapse All</span>
 									</button>
-									    <button
-										  className="dropdown-item"
-										  onClick={(e) => {
+									<button
+										className="dropdown-item"
+										onClick={(e) => {
 											e.stopPropagation();
 											onExportFolder(node);
-										  }}
-										>
-										  <DownloadIcon />
-										  <span>Download as ZIP</span>
-										</button>
+										}}
+									>
+										<DownloadIcon />
+										<span>Download as ZIP</span>
+									</button>
 								</>
 							)}
 

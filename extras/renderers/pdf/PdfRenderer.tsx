@@ -1,6 +1,6 @@
 // extras/renderers/pdf/PdfRenderer.tsx
 import type React from "react";
-import { useCallback, useState, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -9,17 +9,17 @@ import {
 	ChevronLeftIcon,
 	ChevronRightIcon,
 	DownloadIcon,
+	PageIcon,
+	ScrollIcon,
 	ZoomInIcon,
 	ZoomOutIcon,
-	ScrollIcon,
-	PageIcon,
 } from "../../../src/components/common/Icons";
 import { useSettings } from "../../../src/hooks/useSettings";
 import type { RendererProps } from "../../../src/plugins/PluginInterface";
 import "./styles.css";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-	'pdfjs-dist/build/pdf.worker.min.mjs',
+	"pdfjs-dist/build/pdf.worker.min.mjs",
 	import.meta.url,
 ).toString();
 
@@ -51,7 +51,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const getContentHash = useCallback((buffer: ArrayBuffer): string => {
 		const view = new Uint8Array(buffer);
 		const sample = view.slice(0, Math.min(1024, view.length));
-		return `${buffer.byteLength}-${Array.from(sample.slice(0, 16)).join(',')}`;
+		return `${buffer.byteLength}-${Array.from(sample.slice(0, 16)).join(",")}`;
 	}, []);
 
 	useEffect(() => {
@@ -94,12 +94,15 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		return pdfData ? { data: pdfData } : null;
 	}, [pdfData]);
 
-	const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
-		setNumPages(numPages);
-		setCurrentPage(1);
-		setIsLoading(false);
-		setError(null);
-	}, []);
+	const onDocumentLoadSuccess = useCallback(
+		({ numPages }: { numPages: number }) => {
+			setNumPages(numPages);
+			setCurrentPage(1);
+			setIsLoading(false);
+			setError(null);
+		},
+		[],
+	);
 
 	const onDocumentLoadError = useCallback((error: Error) => {
 		setError(`Failed to load PDF: ${error.message}`);
@@ -111,10 +114,10 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			const targetPage = Math.max(currentPage - 1, 1);
 			const pageElement = pageRefs.current.get(targetPage);
 			if (pageElement) {
-				pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+				pageElement.scrollIntoView({ behavior: "smooth", block: "start" });
 			}
 		} else {
-			setCurrentPage(prev => Math.max(prev - 1, 1));
+			setCurrentPage((prev) => Math.max(prev - 1, 1));
 		}
 	}, [scrollView, currentPage]);
 
@@ -123,55 +126,64 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			const targetPage = Math.min(currentPage + 1, numPages);
 			const pageElement = pageRefs.current.get(targetPage);
 			if (pageElement) {
-				pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+				pageElement.scrollIntoView({ behavior: "smooth", block: "start" });
 			}
 		} else {
-			setCurrentPage(prev => Math.min(prev + 1, numPages));
+			setCurrentPage((prev) => Math.min(prev + 1, numPages));
 		}
 	}, [scrollView, currentPage, numPages]);
 
-	const handlePageInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-		const pageNum = parseInt(event.target.value, 10);
-		if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= numPages) {
-			if (scrollView) {
-				const pageElement = pageRefs.current.get(pageNum);
-				if (pageElement) {
-					pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-				}
-			} else {
-				setCurrentPage(pageNum);
-			}
-		}
-	}, [numPages, scrollView]);
-
-	const handlePageInputKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
-		if (event.key === 'Enter') {
-			const pageNum = parseInt(event.currentTarget.value, 10);
+	const handlePageInputChange = useCallback(
+		(event: React.ChangeEvent<HTMLInputElement>) => {
+			const pageNum = Number.parseInt(event.target.value, 10);
 			if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= numPages) {
 				if (scrollView) {
 					const pageElement = pageRefs.current.get(pageNum);
 					if (pageElement) {
-						pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+						pageElement.scrollIntoView({ behavior: "smooth", block: "start" });
 					}
 				} else {
 					setCurrentPage(pageNum);
 				}
-			} else {
-				event.currentTarget.value = currentPage.toString();
 			}
-		}
-	}, [numPages, currentPage, scrollView]);
+		},
+		[numPages, scrollView],
+	);
+
+	const handlePageInputKeyDown = useCallback(
+		(event: React.KeyboardEvent<HTMLInputElement>) => {
+			if (event.key === "Enter") {
+				const pageNum = Number.parseInt(event.currentTarget.value, 10);
+				if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= numPages) {
+					if (scrollView) {
+						const pageElement = pageRefs.current.get(pageNum);
+						if (pageElement) {
+							pageElement.scrollIntoView({
+								behavior: "smooth",
+								block: "start",
+							});
+						}
+					} else {
+						setCurrentPage(pageNum);
+					}
+				} else {
+					event.currentTarget.value = currentPage.toString();
+				}
+			}
+		},
+		[numPages, currentPage, scrollView],
+	);
 
 	const handleZoomIn = useCallback(() => {
-		setScale(prev => Math.min(prev + 0.25, 3));
+		setScale((prev) => Math.min(prev + 0.25, 3));
 	}, []);
 
 	const handleZoomOut = useCallback(() => {
-		setScale(prev => Math.max(prev - 0.25, 0.5));
+		setScale((prev) => Math.max(prev - 0.25, 0.5));
 	}, []);
 
 	const handleToggleView = useCallback(() => {
-		setScrollView(prev => !prev);
+		setScrollView((prev) => !prev);
 		// Reset page refs when switching views
 		pageRefs.current.clear();
 	}, []);
@@ -191,7 +203,9 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				const newVisiblePages = new Set(visiblePages);
 
 				entries.forEach((entry) => {
-					const pageNum = parseInt(entry.target.getAttribute('data-page-number') || '0');
+					const pageNum = Number.parseInt(
+						entry.target.getAttribute("data-page-number") || "0",
+					);
 					if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
 						newVisiblePages.add(pageNum);
 					} else {
@@ -209,8 +223,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			},
 			{
 				threshold: [0.5],
-				rootMargin: '-20% 0px -20% 0px'
-			}
+				rootMargin: "-20% 0px -20% 0px",
+			},
 		);
 
 		// Observe all page elements
@@ -224,9 +238,14 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const handleExport = useCallback(() => {
 		if (onDownload && fileName) {
 			onDownload(fileName);
-		} else if (originalContentRef.current && originalContentRef.current.byteLength > 0) {
+		} else if (
+			originalContentRef.current &&
+			originalContentRef.current.byteLength > 0
+		) {
 			try {
-				const blob = new Blob([originalContentRef.current], { type: "application/pdf" });
+				const blob = new Blob([originalContentRef.current], {
+					type: "application/pdf",
+				});
 				const url = URL.createObjectURL(blob);
 				const a = document.createElement("a");
 				a.href = url;
@@ -343,11 +362,14 @@ const PdfRenderer: React.FC<RendererProps> = ({
 						onLoadSuccess={onDocumentLoadSuccess}
 						onLoadError={onDocumentLoadError}
 						loading={
-							<div className="pdf-renderer-loading">Loading PDF document...</div>
+							<div className="pdf-renderer-loading">
+								Loading PDF document...
+							</div>
 						}
 					>
-						{!isLoading && !error && (
-							scrollView ? (
+						{!isLoading &&
+							!error &&
+							(scrollView ? (
 								// Render all pages in scroll view
 								Array.from(new Array(numPages), (_, index) => {
 									const pageNumber = index + 1;
@@ -368,7 +390,11 @@ const PdfRenderer: React.FC<RendererProps> = ({
 												scale={scale}
 												renderTextLayer={pdfRendererTextSelection}
 												renderAnnotationLayer={true}
-												loading={<div className="pdf-page-loading">Loading page {pageNumber}...</div>}
+												loading={
+													<div className="pdf-page-loading">
+														Loading page {pageNumber}...
+													</div>
+												}
 												className="pdf-page-scroll"
 												onLoadSuccess={onPageLoadSuccess(pageNumber)}
 											/>
@@ -382,10 +408,11 @@ const PdfRenderer: React.FC<RendererProps> = ({
 									scale={scale}
 									renderTextLayer={pdfRendererTextSelection}
 									renderAnnotationLayer={true}
-									loading={<div className="pdf-page-loading">Loading page...</div>}
+									loading={
+										<div className="pdf-page-loading">Loading page...</div>
+									}
 								/>
-							)
-						)}
+							))}
 					</Document>
 				)}
 			</div>

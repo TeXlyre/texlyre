@@ -22,7 +22,10 @@ export interface PropertiesContextType {
 	setProperty: (id: string, value: unknown) => void;
 	registerProperty: (property: Property) => void;
 	unregisterProperty: (id: string) => void;
-	getPropertiesByCategory: (category: string, subcategory?: string) => Property[];
+	getPropertiesByCategory: (
+		category: string,
+		subcategory?: string,
+	) => Property[];
 }
 
 export const PropertiesContext = createContext<PropertiesContextType>({
@@ -41,7 +44,9 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 	children,
 }) => {
 	const [properties, setProperties] = useState<Property[]>([]);
-	const localStoragePropertiesRef = useRef<Record<string, unknown> | null>(null);
+	const localStoragePropertiesRef = useRef<Record<string, unknown> | null>(
+		null,
+	);
 	const isLocalStorageLoaded = useRef(false);
 
 	const getCurrentUserId = useCallback((): string | null => {
@@ -55,7 +60,9 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 
 	useEffect(() => {
 		const userId = getCurrentUserId();
-		const userStorageKey = userId ? `texlyre-user-${userId}-properties` : "texlyre-properties";
+		const userStorageKey = userId
+			? `texlyre-user-${userId}-properties`
+			: "texlyre-properties";
 		const globalStorageKey = "texlyre-properties";
 
 		try {
@@ -113,10 +120,13 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 		}
 	}, [properties, getStorageKey]);
 
-	const getProperty = useCallback((id: string): unknown => {
-		const property = properties.find((p) => p.id === id);
-		return property?.value;
-	}, [properties]);
+	const getProperty = useCallback(
+		(id: string): unknown => {
+			const property = properties.find((p) => p.id === id);
+			return property?.value;
+		},
+		[properties],
+	);
 
 	const setProperty = useCallback((id: string, value: unknown) => {
 		setProperties((prev) =>
@@ -157,13 +167,16 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 		setProperties((prev) => prev.filter((p) => p.id !== id));
 	}, []);
 
-	const getPropertiesByCategory = useCallback((category: string, subcategory?: string) => {
-		return properties.filter(
-			(p) =>
-				p.category === category &&
-				(subcategory === undefined || p.subcategory === subcategory),
-		);
-	}, [properties]);
+	const getPropertiesByCategory = useCallback(
+		(category: string, subcategory?: string) => {
+			return properties.filter(
+				(p) =>
+					p.category === category &&
+					(subcategory === undefined || p.subcategory === subcategory),
+			);
+		},
+		[properties],
+	);
 
 	return (
 		<PropertiesContext.Provider

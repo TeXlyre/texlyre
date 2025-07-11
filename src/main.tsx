@@ -25,12 +25,14 @@ const isHttpsMode =
 const enableServiceWorkerForHttps = true; // Set to false to disable SW in HTTPS mode
 const clearServiceWorkerOnLoad = false; // Set to true to clear existing SWs on load
 
-if ("serviceWorker" in navigator && (!isHttpsMode || enableServiceWorkerForHttps)) {
+if (
+	"serviceWorker" in navigator &&
+	(!isHttpsMode || enableServiceWorkerForHttps)
+) {
 	window.addEventListener("load", async () => {
 		if (clearServiceWorkerOnLoad) {
 			console.log("Clearing existing service workers...");
 			await clearExistingServiceWorkers();
-
 		} else {
 			console.log("Skipping clearing existing service workers.");
 		}

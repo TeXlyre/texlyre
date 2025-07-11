@@ -16,8 +16,8 @@ import {
 import type { FileNode } from "../../types/files";
 import { formatDate } from "../../utils/dateUtils";
 import { isTemporaryFile } from "../../utils/fileUtils";
+import { TempFileIcon } from "../common/Icons.tsx";
 import Modal from "../common/Modal";
-import {TempFileIcon} from "../common/Icons.tsx";
 
 const FileConflictModal: React.FC = () => {
 	const [isOpen, setIsOpen] = useState(false);
@@ -112,41 +112,62 @@ const FileConflictModal: React.FC = () => {
 	};
 
 	const getOperationWarning = (): string | null => {
-		if (conflictType === "delete" && existingFile && isTemporaryFile(existingFile.path)) {
+		if (
+			conflictType === "delete" &&
+			existingFile &&
+			isTemporaryFile(existingFile.path)
+		) {
 			return "Deleting temporary files may break caching or cause system issues.";
 		}
 
-		if (conflictType === "link" && existingFile && isTemporaryFile(existingFile.path)) {
+		if (
+			conflictType === "link" &&
+			existingFile &&
+			isTemporaryFile(existingFile.path)
+		) {
 			return "Linking temporary files is not recommended as they won't sync with collaborators.";
 		}
 
-		if (conflictType === "unlink" && existingFile && isTemporaryFile(existingFile.path)) {
+		if (
+			conflictType === "unlink" &&
+			existingFile &&
+			isTemporaryFile(existingFile.path)
+		) {
 			return "Unlinking temporary files may affect system functionality.";
 		}
 
 		if (conflictType === "batch-delete" && files) {
-			const hasTemporaryFiles = files.some(file => isTemporaryFile(file.path));
+			const hasTemporaryFiles = files.some((file) =>
+				isTemporaryFile(file.path),
+			);
 			if (hasTemporaryFiles) {
 				return "Some files are temporary - deleting them may break caching or cause system issues.";
 			}
 		}
 
 		if (conflictType === "batch-unlink" && files) {
-			const hasTemporaryFiles = files.some(file => isTemporaryFile(file.path));
+			const hasTemporaryFiles = files.some((file) =>
+				isTemporaryFile(file.path),
+			);
 			if (hasTemporaryFiles) {
 				return "Some temporary files are included - unlinking them may affect system functionality.";
 			}
 		}
 
 		if (conflictType === "batch-conflict" && (existingFile || newFile)) {
-			const isExistingTemporary = existingFile && isTemporaryFile(existingFile.path);
+			const isExistingTemporary =
+				existingFile && isTemporaryFile(existingFile.path);
 			const isNewTemporary = newFile && isTemporaryFile(newFile.path);
 			if (isExistingTemporary || isNewTemporary) {
 				return "Temporary files are involved - operations may affect system stability.";
 			}
 		}
 
-		if (conflictType === "linked-file-action" && existingFile && isTemporaryFile(existingFile.path)) {
+		if (
+			conflictType === "linked-file-action" &&
+			existingFile &&
+			isTemporaryFile(existingFile.path)
+		) {
 			return "This operation involves temporary files which may affect system functionality.";
 		}
 
@@ -184,7 +205,9 @@ const FileConflictModal: React.FC = () => {
 								<span>Size: {formatFileSize(existingFile.size)}</span>
 								<span>Modified: {formatDate(existingFile.lastModified)}</span>
 								{isTemporaryFile(existingFile.path) && (
-									<span className="temp-file-indicator"><TempFileIcon/> Temporary file</span>
+									<span className="temp-file-indicator">
+										<TempFileIcon /> Temporary file
+									</span>
 								)}
 							</div>
 						</div>
@@ -196,16 +219,16 @@ const FileConflictModal: React.FC = () => {
 								<span>Size: {formatFileSize(newFile.size)}</span>
 								<span>Modified: {formatDate(newFile.lastModified)}</span>
 								{isTemporaryFile(newFile.path) && (
-									<span className="temp-file-indicator"><TempFileIcon/> Temporary file</span>
+									<span className="temp-file-indicator">
+										<TempFileIcon /> Temporary file
+									</span>
 								)}
 							</div>
 						</div>
 					</div>
 
 					{operationWarning && (
-						<div className="warning-message">
-							{operationWarning}
-						</div>
+						<div className="warning-message">{operationWarning}</div>
 					)}
 
 					<div className="modal-actions">
@@ -297,7 +320,10 @@ const FileConflictModal: React.FC = () => {
 								<div className="batch-file-meta">
 									{file.path} • {formatFileSize(file.size)}
 									{isTemporaryFile(file.path) && (
-										<span className="temp-file-indicator"> • <TempFileIcon/> Temporary</span>
+										<span className="temp-file-indicator">
+											{" "}
+											• <TempFileIcon /> Temporary
+										</span>
 									)}
 								</div>
 							</div>
@@ -310,9 +336,7 @@ const FileConflictModal: React.FC = () => {
 					</div>
 
 					{operationWarning && (
-						<div className="warning-message">
-							{operationWarning}
-						</div>
+						<div className="warning-message">{operationWarning}</div>
 					)}
 
 					<div className="warning-message">This action cannot be undone.</div>
@@ -361,7 +385,10 @@ const FileConflictModal: React.FC = () => {
 								<div className="batch-file-meta">
 									{file.path} • Linked to: {file.documentId}
 									{isTemporaryFile(file.path) && (
-										<span className="temp-file-indicator"> • <TempFileIcon/> Temporary</span>
+										<span className="temp-file-indicator">
+											{" "}
+											• <TempFileIcon /> Temporary
+										</span>
 									)}
 								</div>
 							</div>
@@ -374,9 +401,7 @@ const FileConflictModal: React.FC = () => {
 					</div>
 
 					{operationWarning && (
-						<div className="warning-message">
-							{operationWarning}
-						</div>
+						<div className="warning-message">{operationWarning}</div>
 					)}
 
 					<div className="warning-message">
@@ -424,16 +449,16 @@ const FileConflictModal: React.FC = () => {
 								<span>Size: {formatFileSize(existingFile.size)}</span>
 								<span>Modified: {formatDate(existingFile.lastModified)}</span>
 								{isTemporaryFile(existingFile.path) && (
-									<span className="temp-file-indicator"><TempFileIcon/> Temporary file</span>
+									<span className="temp-file-indicator">
+										<TempFileIcon /> Temporary file
+									</span>
 								)}
 							</div>
 						</div>
 					</div>
 
 					{operationWarning && (
-						<div className="warning-message">
-							{operationWarning}
-						</div>
+						<div className="warning-message">{operationWarning}</div>
 					)}
 
 					<div className="warning-message">This action cannot be undone.</div>
@@ -481,16 +506,16 @@ const FileConflictModal: React.FC = () => {
 								<span>Size: {formatFileSize(existingFile.size)}</span>
 								<span>Modified: {formatDate(existingFile.lastModified)}</span>
 								{isTemporaryFile(existingFile.path) && (
-									<span className="temp-file-indicator"><TempFileIcon/> Temporary file</span>
+									<span className="temp-file-indicator">
+										<TempFileIcon /> Temporary file
+									</span>
 								)}
 							</div>
 						</div>
 					</div>
 
 					{operationWarning && (
-						<div className="warning-message">
-							{operationWarning}
-						</div>
+						<div className="warning-message">{operationWarning}</div>
 					)}
 
 					<div className="warning-message">
@@ -552,16 +577,16 @@ const FileConflictModal: React.FC = () => {
 								<span>Size: {formatFileSize(existingFile.size)}</span>
 								<span>Modified: {formatDate(existingFile.lastModified)}</span>
 								{isTemporaryFile(existingFile.path) && (
-									<span className="temp-file-indicator"><TempFileIcon/> Temporary file</span>
+									<span className="temp-file-indicator">
+										<TempFileIcon /> Temporary file
+									</span>
 								)}
 							</div>
 						</div>
 					</div>
 
 					{operationWarning && (
-						<div className="warning-message">
-							{operationWarning}
-						</div>
+						<div className="warning-message">{operationWarning}</div>
 					)}
 
 					<div className="warning-message">
@@ -634,16 +659,16 @@ const FileConflictModal: React.FC = () => {
 								<span>Modified: {formatDate(existingFile.lastModified)}</span>
 								<span>Linked to document: Yes</span>
 								{isTemporaryFile(existingFile.path) && (
-									<span className="temp-file-indicator"><TempFileIcon/> Temporary file</span>
+									<span className="temp-file-indicator">
+										<TempFileIcon /> Temporary file
+									</span>
 								)}
 							</div>
 						</div>
 					</div>
 
 					{operationWarning && (
-						<div className="warning-message">
-							{operationWarning}
-						</div>
+						<div className="warning-message">{operationWarning}</div>
 					)}
 
 					<div className="warning-message">
@@ -694,7 +719,9 @@ const FileConflictModal: React.FC = () => {
 								<span>Size: {formatFileSize(existingFile.size)}</span>
 								<span>Modified: {formatDate(existingFile.lastModified)}</span>
 								{isTemporaryFile(existingFile.path) && (
-									<span className="temp-file-indicator"><TempFileIcon/> Temporary file</span>
+									<span className="temp-file-indicator">
+										<TempFileIcon /> Temporary file
+									</span>
 								)}
 							</div>
 						</div>
@@ -705,16 +732,16 @@ const FileConflictModal: React.FC = () => {
 								<span>Size: {formatFileSize(newFile.size)}</span>
 								<span>Modified: {formatDate(newFile.lastModified)}</span>
 								{isTemporaryFile(newFile.path) && (
-									<span className="temp-file-indicator"><TempFileIcon/> Temporary file</span>
+									<span className="temp-file-indicator">
+										<TempFileIcon /> Temporary file
+									</span>
 								)}
 							</div>
 						</div>
 					</div>
 
 					{operationWarning && (
-						<div className="warning-message">
-							{operationWarning}
-						</div>
+						<div className="warning-message">{operationWarning}</div>
 					)}
 
 					<div className="modal-actions">

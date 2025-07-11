@@ -4,10 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CommentProvider } from "../../contexts/CommentContext";
 import { processComments } from "../../extensions/codemirror/CommentExtension.ts";
+import { useCollab } from "../../hooks/useCollab";
 import { useComments } from "../../hooks/useComments";
 import { usePluginFileInfo } from "../../hooks/usePluginFileInfo";
-import { useCollab } from "../../hooks/useCollab";
-import { buildUrlWithFragments, parseUrlFragments } from "../../types/yjs";
 import type {
 	CollaborativeViewerProps,
 	ViewerProps,
@@ -15,15 +14,22 @@ import type {
 import { pluginRegistry } from "../../plugins/PluginRegistry";
 import { EditorLoader } from "../../services/EditorLoader.ts";
 import { fileStorageService } from "../../services/FileStorageService";
+import type { DocumentList } from "../../types/documents.ts";
+import { buildUrlWithFragments, parseUrlFragments } from "../../types/yjs";
 import { copyCleanTextToClipboard } from "../../utils/clipboardUtils";
-import { arrayBufferToString } from "../../utils/fileUtils";
 import { fileCommentProcessor } from "../../utils/fileCommentProcessor.ts";
+import { arrayBufferToString } from "../../utils/fileUtils";
 import CommentPanel from "../comments/CommentPanel";
 import CommentToggleButton from "../comments/CommentToggleButton";
+import {
+	CopyIcon,
+	DownloadIcon,
+	FileTextIcon,
+	LinkIcon,
+	SaveIcon,
+} from "../common/Icons";
+import { PluginControlGroup, PluginHeader } from "../common/PluginHeader";
 import UnlinkedDocumentNotice from "./UnlinkedDocumentNotice";
-import {CopyIcon, DownloadIcon, FileTextIcon, LinkIcon, SaveIcon} from "../common/Icons";
-import { PluginHeader, PluginControlGroup } from "../common/PluginHeader";
-import type {DocumentList} from "../../types/documents.ts";
 
 interface EditorComponentProps {
 	content: string | ArrayBuffer;
@@ -96,7 +102,7 @@ const EditorContent: React.FC<{
 	documents,
 	shouldShowLatexOutput,
 	onSaveDocument,
-	onSelectDocument
+	onSelectDocument,
 }) => {
 	const [showUnlinkedNotice, setShowUnlinkedNotice] = useState(false);
 	const { parseComments, getCommentAtPosition, addComment, updateComments } =
@@ -145,21 +151,26 @@ const EditorContent: React.FC<{
 	);
 
 	useEffect(() => {
-	  let timeoutId: NodeJS.Timeout;
+		let timeoutId: NodeJS.Timeout;
 
-	  if (!isEditingFile && documentId && !linkedFileInfo?.fileName && documents) {
-		timeoutId = setTimeout(() => {
-		  setShowUnlinkedNotice(true);
-		}, 250); // delay showing the unlinked document notice for 250ms to avoid flickering
-	  } else {
-		setShowUnlinkedNotice(false);
-	  }
-
-	  return () => {
-		if (timeoutId) {
-		  clearTimeout(timeoutId);
+		if (
+			!isEditingFile &&
+			documentId &&
+			!linkedFileInfo?.fileName &&
+			documents
+		) {
+			timeoutId = setTimeout(() => {
+				setShowUnlinkedNotice(true);
+			}, 250); // delay showing the unlinked document notice for 250ms to avoid flickering
+		} else {
+			setShowUnlinkedNotice(false);
 		}
-	  };
+
+		return () => {
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+			}
+		};
 	}, [isEditingFile, documentId, linkedFileInfo?.fileName, documents]);
 
 	useEffect(() => {
@@ -179,22 +190,24 @@ const EditorContent: React.FC<{
 	const tooltipInfo =
 		isEditingFile && fileName
 			? [
-				`File: ${fileName}`,
-				`Path: ${filePath || fileInfo.filePath}`,
-				`Mode: ${isViewOnly ? "Read-only" : "Editing"}`,
-				linkedDocumentId ? `Linked to document: ${linkedDocumentId}` : "",
-				`MIME Type: ${fileInfo.mimeType || "text/plain"}`,
-				`Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`,
-				`Last Modified: ${fileInfo.lastModified ? new Date(fileInfo.lastModified).toLocaleString() : "Unknown"}`
-			]
+					`File: ${fileName}`,
+					`Path: ${filePath || fileInfo.filePath}`,
+					`Mode: ${isViewOnly ? "Read-only" : "Editing"}`,
+					linkedDocumentId ? `Linked to document: ${linkedDocumentId}` : "",
+					`MIME Type: ${fileInfo.mimeType || "text/plain"}`,
+					`Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`,
+					`Last Modified: ${fileInfo.lastModified ? new Date(fileInfo.lastModified).toLocaleString() : "Unknown"}`,
+				]
 			: !isEditingFile && documentId && documents
 				? [
-					`Document: ${documents.find((d) => d.id === documentId)?.name || "Untitled"}`,
-					linkedFileInfo ? `Linked File: ${linkedFileInfo.fileName}` : "",
-					linkedFileInfo ? `Path: ${linkedFileInfo.filePath}` : "No linked file",
-					"Mode: Collaborative editing",
-					"Type: Text document"
-				]
+						`Document: ${documents.find((d) => d.id === documentId)?.name || "Untitled"}`,
+						linkedFileInfo ? `Linked File: ${linkedFileInfo.fileName}` : "",
+						linkedFileInfo
+							? `Path: ${linkedFileInfo.filePath}`
+							: "No linked file",
+						"Mode: Collaborative editing",
+						"Type: Text document",
+					]
 				: "";
 
 	const handleCopyLinkedFile = async () => {
@@ -336,13 +349,16 @@ const EditorContent: React.FC<{
 					pluginVersion="1.0.0"
 					tooltipInfo={tooltipInfo}
 					controls={headerControls}
-					onNavigateToLinkedFile={!isEditingFile && linkedFileInfo ? onNavigateToLinkedFile : undefined}
+					onNavigateToLinkedFile={
+						!isEditingFile && linkedFileInfo
+							? onNavigateToLinkedFile
+							: undefined
+					}
 					linkedFileInfo={!isEditingFile ? linkedFileInfo : null}
 				/>
 			)}
 
 			<div className="editor-toolbar">
-
 				{isViewOnly && linkedDocumentId && (
 					<div className="linked-file-notice">
 						<span>
@@ -361,50 +377,63 @@ const EditorContent: React.FC<{
 					</div>
 				)}
 
-			   {showUnlinkedNotice && (
-				<UnlinkedDocumentNotice
-				  documentId={documentId}
-				  documentName={documents.find(d => d.id === documentId)?.name || "Untitled"}
-				  onDeleteDocument={(docId) => {
-					if (!changeDoc) {
-					  console.error("Cannot delete document: changeData not available");
-					  return;
-					}
+				{showUnlinkedNotice && (
+					<UnlinkedDocumentNotice
+						documentId={documentId}
+						documentName={
+							documents.find((d) => d.id === documentId)?.name || "Untitled"
+						}
+						onDeleteDocument={(docId) => {
+							if (!changeDoc) {
+								console.error(
+									"Cannot delete document: changeData not available",
+								);
+								return;
+							}
 
-					changeDoc((data) => {
-					  if (!data.documents) return;
+							changeDoc((data) => {
+								if (!data.documents) return;
 
-					  const docIndex = data.documents.findIndex(d => d.id === docId);
-					  if (docIndex >= 0) {
-						data.documents.splice(docIndex, 1);
-					  }
+								const docIndex = data.documents.findIndex(
+									(d) => d.id === docId,
+								);
+								if (docIndex >= 0) {
+									data.documents.splice(docIndex, 1);
+								}
 
-					  if (data.currentDocId === docId) {
-						data.currentDocId = data.documents.length > 0 ? data.documents[0].id : "";
-					  }
-					});
+								if (data.currentDocId === docId) {
+									data.currentDocId =
+										data.documents.length > 0 ? data.documents[0].id : "";
+								}
+							});
 
-					const remainingDocs = documents.filter(d => d.id !== docId);
-					if (remainingDocs.length > 0 && onSelectDocument) {
-					  const newSelectedId = remainingDocs[0].id;
-					  onSelectDocument(newSelectedId);
-					  // Update URL hash
-					  const currentFragment = parseUrlFragments(window.location.hash.substring(1));
-					  const newUrl = buildUrlWithFragments(currentFragment.yjsUrl, newSelectedId);
-					  window.location.hash = newUrl;
-					} else if (onSelectDocument) {
-					  onSelectDocument("");
-					  const currentFragment = parseUrlFragments(window.location.hash.substring(1));
-					  const newUrl = buildUrlWithFragments(currentFragment.yjsUrl);
-					  window.location.hash = newUrl;
-					}
-				  }}
-				  onDocumentLinked={() => {
-					window.location.reload();
-				  }}
-				/>
-			   )}
-
+							const remainingDocs = documents.filter((d) => d.id !== docId);
+							if (remainingDocs.length > 0 && onSelectDocument) {
+								const newSelectedId = remainingDocs[0].id;
+								onSelectDocument(newSelectedId);
+								// Update URL hash
+								const currentFragment = parseUrlFragments(
+									window.location.hash.substring(1),
+								);
+								const newUrl = buildUrlWithFragments(
+									currentFragment.yjsUrl,
+									newSelectedId,
+								);
+								window.location.hash = newUrl;
+							} else if (onSelectDocument) {
+								onSelectDocument("");
+								const currentFragment = parseUrlFragments(
+									window.location.hash.substring(1),
+								);
+								const newUrl = buildUrlWithFragments(currentFragment.yjsUrl);
+								window.location.hash = newUrl;
+							}
+						}}
+						onDocumentLinked={() => {
+							window.location.reload();
+						}}
+					/>
+				)}
 			</div>
 
 			<div className="editor-main-container">
@@ -443,8 +472,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 	onSwitchToDocuments,
 	linkedDocumentId,
 	documents,
-	linkedFileInfo
-
+	linkedFileInfo,
 }) => {
 	const [textContent, setTextContent] = useState<string>("");
 	const [filePath, setFilePath] = useState<string>("");
@@ -656,14 +684,19 @@ const Editor: React.FC<EditorComponentProps> = ({
 	if (!isDocumentSelected) {
 		return (
 			<div className="editor-container empty-state">
-			   <p>Select a file or create a new one to start editing.</p>
+				<p>Select a file or create a new one to start editing.</p>
 
-			   <br /><br /><br /><br />
+				<br />
+				<br />
+				<br />
+				<br />
 
-			   <p style={{ fontStyle: 'italic'}}>
-				   Linking files allows you to view the cursor positions and text changes by your collaborators in real-time.
-				   To link a text file to a document, select or hover over the file and click the <LinkIcon/>
-				   <strong>Link</strong> button that appears next to it.</p>
+				<p style={{ fontStyle: "italic" }}>
+					Linking files allows you to view the cursor positions and text changes
+					by your collaborators in real-time. To link a text file to a document,
+					select or hover over the file and click the <LinkIcon />
+					<strong>Link</strong> button that appears next to it.
+				</p>
 			</div>
 		);
 	}

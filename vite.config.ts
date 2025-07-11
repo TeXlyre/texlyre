@@ -12,7 +12,9 @@ export default defineConfig({
 	base: "/texlyre/",
 
 	define: {
-		'process.env.npm_package_version': JSON.stringify(process.env.npm_package_version || '1.0.0')
+		"process.env.npm_package_version": JSON.stringify(
+			process.env.npm_package_version || "1.0.0",
+		),
 	},
 
 	build: {
@@ -21,14 +23,14 @@ export default defineConfig({
 			esmExternals: true,
 		},
 		rollupOptions: {
-		  output: {
-			manualChunks: {
-			  vendor: ['react', 'react-dom'],
-			  pdfjs: ['pdfjs-dist'],
-			  codemirror: ['@codemirror/state', '@codemirror/view'],
-			  yjs: ['yjs', 'y-indexeddb', 'y-webrtc'],
-			}
-		  }
+			output: {
+				manualChunks: {
+					vendor: ["react", "react-dom"],
+					pdfjs: ["pdfjs-dist"],
+					codemirror: ["@codemirror/state", "@codemirror/view"],
+					yjs: ["yjs", "y-indexeddb", "y-webrtc"],
+				},
+			},
 		},
 	},
 
@@ -41,7 +43,7 @@ export default defineConfig({
 				{
 					src: "node_modules/pdfjs-dist/cmaps/*",
 					dest: "cmaps/",
-				}
+				},
 			],
 		}),
 	],

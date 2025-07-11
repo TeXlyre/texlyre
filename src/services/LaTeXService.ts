@@ -245,7 +245,7 @@ class LaTeXService {
 				);
 			}
 
-			engine.flushCache()
+			engine.flushCache();
 
 			return result;
 		} catch (error) {
@@ -282,9 +282,11 @@ class LaTeXService {
 		this.sourceFileTimestamps.clear();
 
 		for (const node of nodes) {
-			if (node.type === "file" &&
-			    !node.path.startsWith("/.texlyre_cache/") &&
-			    !node.path.startsWith("/.texlyre_src/")) {
+			if (
+				node.type === "file" &&
+				!node.path.startsWith("/.texlyre_cache/") &&
+				!node.path.startsWith("/.texlyre_src/")
+			) {
 				this.sourceFileTimestamps.set(node.path, node.lastModified || 0);
 			}
 		}
@@ -335,11 +337,13 @@ class LaTeXService {
 		const maxAge = 24 * 60 * 60 * 1000;
 		const now = Date.now();
 
-		if (!cachedFile.lastModified || (now - cachedFile.lastModified) > maxAge) {
+		if (!cachedFile.lastModified || now - cachedFile.lastModified > maxAge) {
 			return false;
 		}
 
-		const latestSourceTimestamp = Math.max(...Array.from(this.sourceFileTimestamps.values()));
+		const latestSourceTimestamp = Math.max(
+			...Array.from(this.sourceFileTimestamps.values()),
+		);
 		return cachedFile.lastModified >= latestSourceTimestamp;
 	}
 
@@ -374,12 +378,17 @@ class LaTeXService {
 			} else {
 				const normalizedPath = node.path.replace(/^\/+/, "");
 
-				if (normalizedPath.startsWith(".texlyre_src/") || normalizedPath.startsWith(".texlyre_cache/")) {
+				if (
+					normalizedPath.startsWith(".texlyre_src/") ||
+					normalizedPath.startsWith(".texlyre_cache/")
+				) {
 					processedNode.path = normalizedPath;
 				} else if (this.flattenMainDirectory && mainFileDirectory) {
 					const mainDirWithSlash = `${mainFileDirectory}/`;
 					if (normalizedPath.startsWith(mainDirWithSlash)) {
-						const relativePath = normalizedPath.substring(mainDirWithSlash.length);
+						const relativePath = normalizedPath.substring(
+							mainDirWithSlash.length,
+						);
 						processedNode.path = relativePath;
 					} else {
 						processedNode.path = normalizedPath;
@@ -403,12 +412,13 @@ class LaTeXService {
 		engine: BaseEngine,
 		mainFileName: string,
 	): Promise<void> {
-		const cacheNodes = this.processedNodes.filter(node =>
-			node.path.startsWith(".texlyre_cache/__tex/")
+		const cacheNodes = this.processedNodes.filter((node) =>
+			node.path.startsWith(".texlyre_cache/__tex/"),
 		);
-		const workNodes = this.processedNodes.filter(node =>
-			!node.path.startsWith(".texlyre_cache/__tex/") &&
-			!node.path.startsWith(".texlyre_src/")
+		const workNodes = this.processedNodes.filter(
+			(node) =>
+				!node.path.startsWith(".texlyre_cache/__tex/") &&
+				!node.path.startsWith(".texlyre_src/"),
 		);
 
 		const workDirectories = new Set<string>();
@@ -445,7 +455,10 @@ class LaTeXService {
 					if (typeof fileContent === "string") {
 						engine.writeMemFSFile(`/work/${node.path}`, fileContent);
 					} else {
-						engine.writeMemFSFile(`/work/${node.path}`, new Uint8Array(fileContent));
+						engine.writeMemFSFile(
+							`/work/${node.path}`,
+							new Uint8Array(fileContent),
+						);
 					}
 				}
 			} catch (error) {
@@ -463,7 +476,10 @@ class LaTeXService {
 						engine.writeMemFSFile(`/work/${cleanPath}`, fileContent);
 					} else {
 						// engine.writeMemFSFile(`/tex/${cleanPath}`, new Uint8Array(fileContent));
-						engine.writeMemFSFile(`/work/${cleanPath}`, new Uint8Array(fileContent));
+						engine.writeMemFSFile(
+							`/work/${cleanPath}`,
+							new Uint8Array(fileContent),
+						);
 					}
 				}
 			} catch (error) {
@@ -484,7 +500,9 @@ class LaTeXService {
 			engine.setEngineMainFile(normalizedMainFile);
 		}
 
-		console.log(`Written ${workNodes.length} work files and ${cacheNodes.length} cache files to MemFS`);
+		console.log(
+			`Written ${workNodes.length} work files and ${cacheNodes.length} cache files to MemFS`,
+		);
 	}
 
 	private async storeOutputDirectories(engine: BaseEngine): Promise<void> {
@@ -510,28 +528,35 @@ class LaTeXService {
 	private async storeWorkDirectory(engine: BaseEngine): Promise<void> {
 		try {
 			const workFiles = await engine.dumpDirectory("/work");
-			const filteredWorkFiles = await this.filterWorkFilesExcludingCache(workFiles);
-			await this.batchStoreDirectoryContents(filteredWorkFiles, "/.texlyre_src/__work");
+			const filteredWorkFiles =
+				await this.filterWorkFilesExcludingCache(workFiles);
+			await this.batchStoreDirectoryContents(
+				filteredWorkFiles,
+				"/.texlyre_src/__work",
+			);
 		} catch (error) {
 			console.error("Error saving work directory:", error);
 		}
 	}
 
-	private async filterWorkFilesExcludingCache(
-		workFiles: { [key: string]: ArrayBuffer }
-	): Promise<{ [key: string]: ArrayBuffer }> {
+	private async filterWorkFilesExcludingCache(workFiles: {
+		[key: string]: ArrayBuffer;
+	}): Promise<{ [key: string]: ArrayBuffer }> {
 		const filtered: { [key: string]: ArrayBuffer } = {};
 
 		try {
 			const existingFiles = await fileStorageService.getAllFiles();
 			const cacheFiles = existingFiles.filter(
-				(file) => file.path.startsWith("/.texlyre_cache/__tex/") &&
-						 file.type === "file" &&
-						 !file.isDeleted
+				(file) =>
+					file.path.startsWith("/.texlyre_cache/__tex/") &&
+					file.type === "file" &&
+					!file.isDeleted,
 			);
 
 			const cachePaths = new Set(
-				cacheFiles.map(file => file.path.replace("/.texlyre_cache/__tex", ""))
+				cacheFiles.map((file) =>
+					file.path.replace("/.texlyre_cache/__tex", ""),
+				),
 			);
 
 			for (const [workPath, content] of Object.entries(workFiles)) {
@@ -552,11 +577,11 @@ class LaTeXService {
 		try {
 			const existingFiles = await fileStorageService.getAllFiles();
 			const staleFiles = existingFiles.filter(
-				(file) => (file.path.startsWith("/.texlyre_src/") && !file.isDeleted),
+				(file) => file.path.startsWith("/.texlyre_src/") && !file.isDeleted,
 			);
 
 			if (staleFiles.length > 0) {
-				const fileIds = staleFiles.map(file => file.id);
+				const fileIds = staleFiles.map((file) => file.id);
 				await fileStorageService.batchDeleteFiles(fileIds, {
 					showDeleteDialog: false,
 					hardDelete: true,
@@ -586,7 +611,10 @@ class LaTeXService {
 				directoriesToCreate.add(dirPath);
 			}
 
-			const existingFile = await fileStorageService.getFileByPath(storagePath, true);
+			const existingFile = await fileStorageService.getFileByPath(
+				storagePath,
+				true,
+			);
 
 			filesToStore.push({
 				id: existingFile?.id || nanoid(),
@@ -614,7 +642,9 @@ class LaTeXService {
 		}
 	}
 
-	private async batchCreateDirectories(directoryPaths: string[]): Promise<void> {
+	private async batchCreateDirectories(
+		directoryPaths: string[],
+	): Promise<void> {
 		const directoriesToCreate: FileNode[] = [];
 		const existingFiles = await fileStorageService.getAllFiles();
 		const existingPaths = new Set(existingFiles.map((file) => file.path));
@@ -715,23 +745,28 @@ class LaTeXService {
 		try {
 			const existingFiles = await fileStorageService.getAllFiles();
 			const filesToCleanup = existingFiles.filter(
-				(file) => file.path.startsWith(directoryPath + "/") && !file.isDeleted
+				(file) => file.path.startsWith(directoryPath + "/") && !file.isDeleted,
 			);
 
 			if (filesToCleanup.length > 0) {
-				const fileIds = filesToCleanup.map(file => file.id);
+				const fileIds = filesToCleanup.map((file) => file.id);
 				await fileStorageService.batchDeleteFiles(fileIds, {
 					showDeleteDialog: false,
 					hardDelete: true,
 				});
-				console.log(`Cleaned up ${filesToCleanup.length} files from ${directoryPath}`);
+				console.log(
+					`Cleaned up ${filesToCleanup.length} files from ${directoryPath}`,
+				);
 			}
 		} catch (error) {
 			console.error(`Error cleaning up directory ${directoryPath}:`, error);
 		}
 	}
 
-	private async createCompilationLogFile(mainFile: string, log: string): Promise<FileNode> {
+	private async createCompilationLogFile(
+		mainFile: string,
+		log: string,
+	): Promise<FileNode> {
 		const fileName = mainFile.split("/").pop() || mainFile;
 		const baseName = fileName.split(".").slice(0, -1).join(".");
 		const logFileName = `${baseName}.log`;
@@ -759,7 +794,7 @@ class LaTeXService {
 			"/.texlyre_src/__output",
 			"/.texlyre_src/__work",
 			"/.texlyre_cache",
-			"/.texlyre_cache/__tex"
+			"/.texlyre_cache/__tex",
 		];
 
 		const directoriesToCreate: FileNode[] = [];

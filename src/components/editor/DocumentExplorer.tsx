@@ -6,7 +6,6 @@ import { collabService } from "../../services/CollabService";
 import type { Document } from "../../types/documents";
 import { buildUrlWithFragments, parseUrlFragments } from "../../types/yjs";
 import type { YjsDocUrl } from "../../types/yjs";
-import DropdownMenu from "./DropdownMenu";
 import {
 	DownloadIcon,
 	EditIcon,
@@ -17,6 +16,7 @@ import {
 	SyncIcon,
 } from "../common/Icons.tsx";
 import Modal from "../common/Modal.tsx";
+import DropdownMenu from "./DropdownMenu";
 
 interface FileViewerProps {
 	documents: Document[];

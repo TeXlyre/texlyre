@@ -40,7 +40,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 	};
 
 	const preprocessLogLines = (log: string): string => {
-		const lines = log.split('\n');
+		const lines = log.split("\n");
 		const processedLines: string[] = [];
 
 		for (let i = 0; i < lines.length; i++) {
@@ -56,7 +56,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 			}
 		}
 
-		return processedLines.join('\n');
+		return processedLines.join("\n");
 	};
 
 	const shouldJoinLines = (currentLine: string, nextLine: string): boolean => {
@@ -64,17 +64,19 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 
 		const trimmedNext = nextLine.trim();
 
-		if (currentLine.includes('bef') && trimmedNext.startsWith('ore ')) {
+		if (currentLine.includes("bef") && trimmedNext.startsWith("ore ")) {
 			return true;
 		}
 
-		if (currentLine.match(/[a-zA-Z]-?\s*$/) &&
+		if (
+			currentLine.match(/[a-zA-Z]-?\s*$/) &&
 			trimmedNext.match(/^[a-zA-Z]/) &&
 			trimmedNext.length < 60 &&
-			!trimmedNext.includes(':') &&
-			!trimmedNext.startsWith('!') &&
-			!trimmedNext.startsWith('Package') &&
-			!trimmedNext.startsWith('LaTeX')) {
+			!trimmedNext.includes(":") &&
+			!trimmedNext.startsWith("!") &&
+			!trimmedNext.startsWith("Package") &&
+			!trimmedNext.startsWith("LaTeX")
+		) {
 			return true;
 		}
 
@@ -84,15 +86,17 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 	const joinSplitLine = (currentLine: string, nextLine: string): string => {
 		const trimmedNext = nextLine.trim();
 
-		if (currentLine.includes('bef') && trimmedNext.startsWith('ore ')) {
-			return currentLine.replace(/bef\s*$/, 'before ') + trimmedNext.substring(4);
+		if (currentLine.includes("bef") && trimmedNext.startsWith("ore ")) {
+			return (
+				currentLine.replace(/bef\s*$/, "before ") + trimmedNext.substring(4)
+			);
 		}
 
-		if (currentLine.endsWith('-')) {
+		if (currentLine.endsWith("-")) {
 			return currentLine.slice(0, -1) + trimmedNext;
 		}
 
-		return currentLine.replace(/\s*$/, '') + trimmedNext;
+		return currentLine.replace(/\s*$/, "") + trimmedNext;
 	};
 
 	const parseLatexLog = (log: string): ParsedError[] => {
@@ -111,15 +115,17 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 				for (let j = 0; j < line.length; j++) {
 					const char = line[j];
 
-					if (char === '(') {
+					if (char === "(") {
 						const remaining = line.substring(j + 1);
-						const fileMatch = remaining.match(/^([^()]*\.(?:tex|sty|cls|def|fd|cfg))/);
+						const fileMatch = remaining.match(
+							/^([^()]*\.(?:tex|sty|cls|def|fd|cfg))/,
+						);
 						if (fileMatch) {
 							const filePath = fileMatch[1];
 							const fileName = filePath.split("/").pop() || filePath;
 							fileStack.push(fileName);
 						}
-					} else if (char === ')') {
+					} else if (char === ")") {
 						if (fileStack.length > 0) {
 							fileStack.pop();
 						}
@@ -136,7 +142,10 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 			const line = lines[i];
 			const contextFile = getFileFromContext(i);
 
-			if (line.startsWith("! LaTeX Error:") || line.startsWith("! Fatal Package")) {
+			if (
+				line.startsWith("! LaTeX Error:") ||
+				line.startsWith("! Fatal Package")
+			) {
 				const errorMessage = line.startsWith("! LaTeX Error:")
 					? line.substring(14).trim()
 					: line.substring(2).trim();
@@ -154,10 +163,12 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 						break;
 					}
 
-					if (nextLine.startsWith("Type <return>") ||
+					if (
+						nextLine.startsWith("Type <return>") ||
 						nextLine.startsWith("!  ==>") ||
 						nextLine.trim() === "" ||
-						nextLine.startsWith("See ")) {
+						nextLine.startsWith("See ")
+					) {
 						break;
 					}
 
@@ -366,10 +377,10 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 	};
 
 	const tooltipInfo = [
-        `Total errors: ${parsedErrors.filter((e) => e.type === "error").length}`,
-        `Total warnings: ${parsedErrors.filter((e) => e.type === "warning").length}`,
-        `Log size: ${log ? Math.round(log.length / 1024) + " KB" : "0 KB"}`,
-        `Click error items to navigate to line`
+		`Total errors: ${parsedErrors.filter((e) => e.type === "error").length}`,
+		`Total warnings: ${parsedErrors.filter((e) => e.type === "warning").length}`,
+		`Log size: ${log ? Math.round(log.length / 1024) + " KB" : "0 KB"}`,
+		`Click error items to navigate to line`,
 	];
 
 	const headerControls = (

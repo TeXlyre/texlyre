@@ -22,14 +22,21 @@ interface PluginControlGroupProps {
 	className?: string;
 }
 
-const formatTooltipInfo = (info: string | string[], pluginName?: string, pluginVersion?: string): string => {
-    const pluginInfo = pluginName
-        ? `${pluginName}${pluginVersion ? ` v${pluginVersion}` : ''}`
-        : '';
+const formatTooltipInfo = (
+	info: string | string[],
+	pluginName?: string,
+	pluginVersion?: string,
+): string => {
+	const pluginInfo = pluginName
+		? `${pluginName}${pluginVersion ? ` v${pluginVersion}` : ""}`
+		: "";
 
-    const contentInfo = typeof info === 'string' ? info : info.filter(line => line.trim()).join('\n');
+	const contentInfo =
+		typeof info === "string"
+			? info
+			: info.filter((line) => line.trim()).join("\n");
 
-    return pluginInfo ? `${pluginInfo}\n${contentInfo}` : contentInfo;
+	return pluginInfo ? `${pluginInfo}\n${contentInfo}` : contentInfo;
 };
 
 export const PluginControlGroup: React.FC<PluginControlGroupProps> = ({
@@ -49,7 +56,11 @@ export const PluginHeader: React.FC<PluginHeaderProps> = ({
 	onNavigateToLinkedFile,
 	linkedFileInfo,
 }) => {
-	const formattedTooltip = formatTooltipInfo(tooltipInfo, pluginName, pluginVersion);
+	const formattedTooltip = formatTooltipInfo(
+		tooltipInfo,
+		pluginName,
+		pluginVersion,
+	);
 
 	return (
 		<div className="plugin-header">
@@ -69,8 +80,16 @@ export const PluginHeader: React.FC<PluginHeaderProps> = ({
 				<div className="filepath-info">
 					<span
 						className={linkedFileInfo ? "linked-filepath" : ""}
-						onClick={linkedFileInfo && onNavigateToLinkedFile ? onNavigateToLinkedFile : undefined}
-						title={linkedFileInfo ? `Navigate to linked file: ${linkedFileInfo.fileName}` : undefined}
+						onClick={
+							linkedFileInfo && onNavigateToLinkedFile
+								? onNavigateToLinkedFile
+								: undefined
+						}
+						title={
+							linkedFileInfo
+								? `Navigate to linked file: ${linkedFileInfo.fileName}`
+								: undefined
+						}
 					>
 						{filePath || fileName}
 					</span>

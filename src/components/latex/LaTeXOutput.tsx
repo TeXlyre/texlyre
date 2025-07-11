@@ -218,4 +218,3 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 };
 
 export default LaTeXOutput;
-

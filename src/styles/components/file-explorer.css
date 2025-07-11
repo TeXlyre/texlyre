@@ -371,12 +371,12 @@
 }
 
 .temp-file-indicator {
-    color: var(--pico-primary);
-    font-size: 0.8rem;
-    font-weight: 500;
-    vertical-align: baseline;
-    position: relative;
-    top: -2px;
+	color: var(--pico-primary);
+	font-size: 0.8rem;
+	font-weight: 500;
+	vertical-align: baseline;
+	position: relative;
+	top: -2px;
 }
 
 .batch-files-list {
@@ -397,7 +397,7 @@
 }
 
 .batch-file-meta {
-	fontSize: 0.875rem;
+	font-size: 0.875rem;
 	color: var(--pico-secondary);
 	margin-top: 0.25rem;
 }

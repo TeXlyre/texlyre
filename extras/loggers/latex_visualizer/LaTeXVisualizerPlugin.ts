@@ -2,7 +2,7 @@
 import type { LoggerPlugin } from "../../../src/plugins/PluginInterface";
 import LaTeXVisualizer from "./LaTeXVisualizer";
 
-export const PLUGIN_NAME = "LaTeX Error Visualizer";
+export const PLUGIN_NAME = "LaTeX Log Parser";
 export const PLUGIN_VERSION = "0.1.0";
 
 const latexVisualizerPlugin: LoggerPlugin = {

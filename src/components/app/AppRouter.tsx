@@ -45,28 +45,31 @@ const AppRouter: React.FC = () => {
 	const parseUrlProjectParams = (hashUrl: string): UrlProjectParams | null => {
 		try {
 			const params: UrlProjectParams = {};
-			const parts = hashUrl.split('&');
+			const parts = hashUrl.split("&");
 
 			for (const part of parts) {
-				if (part.startsWith('newProjectName:')) {
+				if (part.startsWith("newProjectName:")) {
 					params.newProjectName = decodeURIComponent(part.slice(15));
-				} else if (part.startsWith('newProjectDescription:')) {
+				} else if (part.startsWith("newProjectDescription:")) {
 					params.newProjectDescription = decodeURIComponent(part.slice(22));
-				} else if (part.startsWith('newProjectTags:')) {
+				} else if (part.startsWith("newProjectTags:")) {
 					params.newProjectTags = decodeURIComponent(part.slice(15));
-				} else if (part.startsWith('files:')) {
+				} else if (part.startsWith("files:")) {
 					params.files = decodeURIComponent(part.slice(6));
 				}
 			}
 
 			return params.newProjectName ? params : null;
 		} catch (error) {
-			console.error('Error parsing URL project params:', error);
+			console.error("Error parsing URL project params:", error);
 			return null;
 		}
 	};
 
-	const downloadAndExtractZip = async (zipUrl: string, projectId: string): Promise<void> => {
+	const downloadAndExtractZip = async (
+		zipUrl: string,
+		projectId: string,
+	): Promise<void> => {
 		try {
 			const response = await fetch(zipUrl);
 			if (!response.ok) {
@@ -74,24 +77,27 @@ const AppRouter: React.FC = () => {
 			}
 
 			const zipBlob = await response.blob();
-			const zipFile = new File([zipBlob], 'template.zip', { type: 'application/zip' });
+			const zipFile = new File([zipBlob], "template.zip", {
+				type: "application/zip",
+			});
 
 			await fileStorageService.initialize(`yjs:${projectId}`);
 
-			const { files, directories } = await batchExtractZip(zipFile, '/');
+			const { files, directories } = await batchExtractZip(zipFile, "/");
 			const allFiles = [...directories, ...files];
 
 			await fileStorageService.batchStoreFiles(allFiles, {
 				showConflictDialog: false,
-				preserveTimestamp: false
+				preserveTimestamp: false,
 			});
-
 		} catch (error) {
-			console.error('Error downloading and extracting zip:', error);
+			console.error("Error downloading and extracting zip:", error);
 		}
 	};
 
-	const createProjectFromUrl = async (params: UrlProjectParams): Promise<string | null> => {
+	const createProjectFromUrl = async (
+		params: UrlProjectParams,
+	): Promise<string | null> => {
 		if (!isAuthenticated || !params.newProjectName) return null;
 
 		setIsCreatingProject(true);
@@ -99,12 +105,12 @@ const AppRouter: React.FC = () => {
 		try {
 			const newProject = await createProject({
 				name: params.newProjectName,
-				description: params.newProjectDescription || '',
-				tags: params.newProjectTags.split(',') || [],
+				description: params.newProjectDescription || "",
+				tags: params.newProjectTags.split(",") || [],
 				isFavorite: false,
 			});
 
-			const projectId = newProject.docUrl.startsWith('yjs:')
+			const projectId = newProject.docUrl.startsWith("yjs:")
 				? newProject.docUrl.slice(4)
 				: newProject.docUrl;
 
@@ -113,9 +119,8 @@ const AppRouter: React.FC = () => {
 			}
 
 			return newProject.docUrl;
-
 		} catch (error) {
-			console.error('Error creating project from URL:', error);
+			console.error("Error creating project from URL:", error);
 			return null;
 		} finally {
 			setIsCreatingProject(false);

@@ -1,20 +1,20 @@
 // src/services/AccountExportService.ts
 import { saveAs } from "file-saver";
 
+import { fileCommentProcessor } from "../utils/fileCommentProcessor";
 import { authService } from "./AuthService";
 import { UnifiedDataStructureService } from "./DataStructureService";
 import { ProjectDataService } from "./ProjectDataService";
 import { StorageAdapterService, ZipAdapter } from "./StorageAdapterService";
-import { fileCommentProcessor} from "../utils/fileCommentProcessor";
 
 export interface ExportOptions {
-    includeAccount?: boolean;
-    includeDocuments?: boolean;
-    includeFiles?: boolean;
-    includeTemporaryFiles?: boolean;
-    projectIds?: string[];
-    format?: "texlyre" | "files-only";
-    isSingleProjectExport?: boolean;
+	includeAccount?: boolean;
+	includeDocuments?: boolean;
+	includeFiles?: boolean;
+	includeTemporaryFiles?: boolean;
+	projectIds?: string[];
+	format?: "texlyre" | "files-only";
+	isSingleProjectExport?: boolean;
 }
 
 class AccountExportService {
@@ -127,7 +127,7 @@ class AccountExportService {
 							isFavorite: project.isFavorite,
 						},
 						false,
-						options.includeTemporaryFiles
+						options.includeTemporaryFiles,
 					);
 				}
 
@@ -172,12 +172,16 @@ class AccountExportService {
 			} else {
 				if (options.format === "files-only" && options.isSingleProjectExport) {
 					// Use project name for single project files-only export
-					const projectName = Array.from(unifiedData.projectData.values())[0]?.metadata.name || "project";
+					const projectName =
+						Array.from(unifiedData.projectData.values())[0]?.metadata.name ||
+						"project";
 					const sanitizedName = projectName.replace(/[/\\?%*:|"<>]/g, "-");
 					fileName = `${sanitizedName}.zip`;
 				} else {
 					const formatSuffix =
-						options.format === "files-only" ? "latex-files" : "texlyre-projects-";
+						options.format === "files-only"
+							? "latex-files"
+							: "texlyre-projects-";
 					fileName = `${formatSuffix}-${timestamp}.zip`;
 				}
 			}
@@ -196,7 +200,8 @@ class AccountExportService {
 	): Promise<void> {
 		const { fileStorageService } = await import("./FileStorageService");
 
-		const isSingleProject = options?.isSingleProjectExport || data.projectData.size === 1;
+		const isSingleProject =
+			options?.isSingleProjectExport || data.projectData.size === 1;
 		const usedProjectNames = new Set<string>();
 
 		for (const [projectId, projectData] of data.projectData) {
@@ -287,11 +292,15 @@ class AccountExportService {
 			// Fallback to serialized data if live service didn't work or no files were exported
 			if (!filesExported && projectData.files && projectData.files.length > 0) {
 				try {
-					let filesToProcess = projectData.files.filter((file) => file.type === "file");
+					let filesToProcess = projectData.files.filter(
+						(file) => file.type === "file",
+					);
 
 					if (!options?.includeTemporaryFiles) {
 						const { isTemporaryFile } = await import("../utils/fileUtils");
-						filesToProcess = filesToProcess.filter((file) => !isTemporaryFile(file.path));
+						filesToProcess = filesToProcess.filter(
+							(file) => !isTemporaryFile(file.path),
+						);
 					}
 
 					for (const file of filesToProcess) {

@@ -29,8 +29,8 @@ import ExportAccountModal from "../profile/ExportAccountModal";
 import ProfileSettingsModal from "../profile/ProfileSettingsModal";
 import UserDropdown from "../profile/UserDropdown";
 import ProjectForm from "../project/ProjectForm.tsx";
-import ShareProjectModal from "../project/ShareProjectModal";
 import ShareProjectButton from "../project/ShareProjectButton";
+import ShareProjectModal from "../project/ShareProjectModal";
 import SettingsButton from "../settings/SettingsButton";
 
 interface EditorAppProps {

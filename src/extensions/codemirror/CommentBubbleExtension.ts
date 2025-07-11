@@ -1,5 +1,5 @@
 import { ViewPlugin } from "@codemirror/view";
-import { EditorView } from "codemirror";
+import type { EditorView } from "codemirror";
 
 const commentBubblePlugin = ViewPlugin.fromClass(
 	class {
@@ -21,11 +21,15 @@ const commentBubblePlugin = ViewPlugin.fromClass(
 					left: rect.right - 20,
 					right: rect.right,
 					top: rect.top - 15,
-					bottom: rect.top + 5
+					bottom: rect.top + 5,
 				};
 
-				if (mouseX >= iconArea.left && mouseX <= iconArea.right &&
-					mouseY >= iconArea.top && mouseY <= iconArea.bottom) {
+				if (
+					mouseX >= iconArea.left &&
+					mouseX <= iconArea.right &&
+					mouseY >= iconArea.top &&
+					mouseY <= iconArea.bottom
+				) {
 					event.preventDefault();
 					event.stopPropagation();
 
@@ -34,7 +38,7 @@ const commentBubblePlugin = ViewPlugin.fromClass(
 						document.dispatchEvent(
 							new CustomEvent("scroll-to-comment", {
 								detail: { commentId },
-							})
+							}),
 						);
 					}
 				}
@@ -44,7 +48,7 @@ const commentBubblePlugin = ViewPlugin.fromClass(
 		destroy() {
 			this.view.dom.removeEventListener("click", this.onClick.bind(this));
 		}
-	}
+	},
 );
 
 export const commentBubbleExtension = [commentBubblePlugin];

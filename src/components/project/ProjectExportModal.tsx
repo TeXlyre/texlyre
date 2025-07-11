@@ -73,11 +73,7 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 			size="medium"
 		>
 			<div className="project-export-modal">
-				{error && (
-					<div className="export-error-message">
-						{error}
-					</div>
-				)}
+				{error && <div className="export-error-message">{error}</div>}
 
 				<div className="export-info">
 					<p>
@@ -191,31 +187,32 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 
 				{exportFormat === "files-only" && selectedProjects.length > 1 && (
 					<div className="format-note">
-						<ExportIcon/> Files will be organized by project name in separate folders. Documents are not included in files-only export.
+						<ExportIcon /> Files will be organized by project name in separate
+						folders. Documents are not included in files-only export.
 					</div>
 				)}
-				</div>
+			</div>
 
-				<div className="modal-actions">
-					<button
-						type="button"
-						className="button secondary"
-						onClick={handleClose}
-						disabled={isExporting}
-					>
-						Cancel
-					</button>
-					<button
-						type="button"
-						className="button primary"
-						onClick={handleExport}
-						disabled={isExporting || (!includeDocuments && !includeFiles)}
-					>
-						{isExporting
-							? "Exporting..."
-							: `Export ${selectedProjects.length} Project${selectedProjects.length === 1 ? "" : "s"}`}
-					</button>
-				</div>
+			<div className="modal-actions">
+				<button
+					type="button"
+					className="button secondary"
+					onClick={handleClose}
+					disabled={isExporting}
+				>
+					Cancel
+				</button>
+				<button
+					type="button"
+					className="button primary"
+					onClick={handleExport}
+					disabled={isExporting || (!includeDocuments && !includeFiles)}
+				>
+					{isExporting
+						? "Exporting..."
+						: `Export ${selectedProjects.length} Project${selectedProjects.length === 1 ? "" : "s"}`}
+				</button>
+			</div>
 		</Modal>
 	);
 };

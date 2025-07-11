@@ -50,14 +50,15 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 	const startPosRef = useRef(0);
 	const startSizeRef = useRef(0);
 
-	const collapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
+	const collapsed =
+		externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
 
 	const handleMouseDown = (e: MouseEvent | React.TouchEvent) => {
 		e.preventDefault();
 		setResizing(true);
 
-		const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-		const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+		const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+		const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
 
 		startPosRef.current = direction === "horizontal" ? clientX : clientY;
 		startSizeRef.current = size;
@@ -74,8 +75,12 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 			const mouseEvent = e as unknown as MouseEvent;
 			const touchEvent = e as unknown as TouchEvent;
 
-			const clientX = touchEvent.touches ? touchEvent.touches[0].clientX : mouseEvent.clientX;
-			const clientY = touchEvent.touches ? touchEvent.touches[0].clientY : mouseEvent.clientY;
+			const clientX = touchEvent.touches
+				? touchEvent.touches[0].clientX
+				: mouseEvent.clientX;
+			const clientY = touchEvent.touches
+				? touchEvent.touches[0].clientY
+				: mouseEvent.clientY;
 
 			const currentPos = direction === "horizontal" ? clientX : clientY;
 			const delta = currentPos - startPosRef.current;
@@ -249,9 +254,7 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 					}}
 					title={collapsed ? "Expand" : "Collapse"}
 				>
-					<span className="collapse-icon">
-						{getCollapseIcon()}
-					</span>
+					<span className="collapse-icon">{getCollapseIcon()}</span>
 				</button>
 			)}
 		</div>

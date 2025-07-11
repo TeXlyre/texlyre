@@ -38,7 +38,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 	};
 
 	const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
-		if ((e.target as HTMLElement).closest('button, input, a')) {
+		if ((e.target as HTMLElement).closest("button, input, a")) {
 			return;
 		}
 

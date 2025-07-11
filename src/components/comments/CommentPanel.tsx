@@ -20,9 +20,10 @@ const CommentPanel: React.FC<CommentPanelProps> = ({
 	const [filteredComments, setFilteredComments] = useState(comments);
 
 	useEffect(() => {
-		const commentsToFilter = activeTab === "resolved"
-			? comments.filter(comment => comment.resolved)
-			: comments.filter(comment => !comment.resolved);
+		const commentsToFilter =
+			activeTab === "resolved"
+				? comments.filter((comment) => comment.resolved)
+				: comments.filter((comment) => !comment.resolved);
 
 		if (searchQuery.trim() === "") {
 			setFilteredComments(commentsToFilter);
@@ -48,9 +49,7 @@ const CommentPanel: React.FC<CommentPanelProps> = ({
 	}
 
 	return (
-		<div
-			className={`comment-panel ${className}`}
-		>
+		<div className={`comment-panel ${className}`}>
 			<div className="comment-panel-header">
 				<h3>Comments</h3>
 				<div className="view-tabs">

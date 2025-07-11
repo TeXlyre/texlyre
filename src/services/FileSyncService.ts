@@ -773,10 +773,12 @@ class FileSyncService {
 
 	private areNotificationsEnabled(): boolean {
 		const userId = localStorage.getItem("texlyre-current-user");
-		const storageKey = userId ? `texlyre-user-${userId}-settings` : "texlyre-settings";
+		const storageKey = userId
+			? `texlyre-user-${userId}-settings`
+			: "texlyre-settings";
 		try {
-			const settings = JSON.parse(localStorage.getItem(storageKey) || '{}');
-			return settings['file-sync-notifications'] !== false;
+			const settings = JSON.parse(localStorage.getItem(storageKey) || "{}");
+			return settings["file-sync-notifications"] !== false;
 		} catch {
 			return true;
 		}
@@ -785,7 +787,6 @@ class FileSyncService {
 	private notifyListeners(notification: FileSyncNotification): void {
 		this.listeners.forEach((listener) => listener(notification));
 	}
-
 }
 
 export const fileSyncService = new FileSyncService();

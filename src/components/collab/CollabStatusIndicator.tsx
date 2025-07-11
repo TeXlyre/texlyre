@@ -144,10 +144,7 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 
 				{showDropdown && (
 					<div className="collab-dropdown">
-						<div
-							className="collab-dropdown-item"
-							onClick={handleCollabClick}
-						>
+						<div className="collab-dropdown-item" onClick={handleCollabClick}>
 							<span className="service-indicator">
 								{getServiceStatusIndicator("collab")}
 							</span>

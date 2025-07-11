@@ -8,7 +8,10 @@ import { useAuth } from "../../hooks/useAuth";
 import { useFileTree } from "../../hooks/useFileTree";
 import { useProperties } from "../../hooks/useProperties";
 import { useTheme } from "../../hooks/useTheme";
-import { fileStorageService, fileStorageEventEmitter } from "../../services/FileStorageService";
+import {
+	fileStorageEventEmitter,
+	fileStorageService,
+} from "../../services/FileStorageService";
 import type { Document } from "../../types/documents";
 import type { FileNode } from "../../types/files";
 import type { Project } from "../../types/projects";
@@ -90,9 +93,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	const { getProperty, setProperty, registerProperty } = useProperties();
 	const propertiesRegistered = useRef(false);
 	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
-	const [activeView, setActiveView] = useState<"documents" | "files">(
-		"files",
-	);
+	const [activeView, setActiveView] = useState<"documents" | "files">("files");
 	const [hasNavigated, setHasNavigated] = useState(false);
 	const [fileContent, setFileContent] = useState<string | ArrayBuffer>("");
 	const [isEditingFile, setIsEditingFile] = useState(false);
@@ -107,7 +108,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		filePath?: string;
 	}>({});
 	const [sidebarWidth, setSidebarWidth] = useState(
-		currentLayout?.defaultFileExplorerWidth || 250
+		currentLayout?.defaultFileExplorerWidth || 250,
 	);
 	const [latexOutputWidth, setLatexOutputWidth] = useState(550);
 	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -186,9 +187,12 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		const storedLatexCollapsed = getProperty("latex-output-collapsed");
 
 		// Only load if at least one property is available (meaning registration worked)
-		if (storedSidebarWidth !== undefined || storedLatexWidth !== undefined ||
-			storedSidebarCollapsed !== undefined || storedLatexCollapsed !== undefined) {
-
+		if (
+			storedSidebarWidth !== undefined ||
+			storedLatexWidth !== undefined ||
+			storedSidebarCollapsed !== undefined ||
+			storedLatexCollapsed !== undefined
+		) {
 			if (storedSidebarWidth !== undefined) {
 				setSidebarWidth(Number(storedSidebarWidth));
 			}
@@ -208,8 +212,6 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 			setPropertiesLoaded(true);
 		}
 	}, [getProperty, propertiesLoaded]);
-
-
 
 	useEffect(() => {
 		const handleNavigateToLinkedFile = (event: Event) => {
@@ -403,7 +405,10 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 			fileTree.length > 0 &&
 			!targetDocId
 		) {
-			const findFileByPath = (nodes: FileNode[], path: string): FileNode | null => {
+			const findFileByPath = (
+				nodes: FileNode[],
+				path: string,
+			): FileNode | null => {
 				for (const node of nodes) {
 					if (node.path === path) {
 						return node;

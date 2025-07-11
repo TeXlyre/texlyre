@@ -3,13 +3,13 @@ import JSZip from "jszip";
 import { nanoid } from "nanoid";
 
 import type { FileNode } from "../types/files";
+import { fileCommentProcessor } from "./fileCommentProcessor";
 import {
 	getMimeType,
 	getParentPath,
 	isBinaryFile,
 	joinPaths,
 } from "./fileUtils";
-import {fileCommentProcessor} from "./fileCommentProcessor";
 
 export const extractZip = async (
 	zipFile: File,
@@ -85,53 +85,54 @@ export const batchExtractZip = async (
 };
 
 export const createZipFromFolder = async (
-    folderNode: FileNode,
-    getFileContent: (fileId: string) => Promise<string | ArrayBuffer | null>,
-    getFile: (fileId: string) => Promise<FileNode | null>
+	folderNode: FileNode,
+	getFileContent: (fileId: string) => Promise<string | ArrayBuffer | null>,
+	getFile: (fileId: string) => Promise<FileNode | null>,
 ): Promise<Blob> => {
-    const zip = new JSZip();
+	const zip = new JSZip();
 
-    const collectFiles = async (node: FileNode, basePath: string = ""): Promise<void> => {
-        if (node.type === "file") {
-            const content = await getFileContent(node.id);
-            if (content !== null) {
+	const collectFiles = async (node: FileNode, basePath = ""): Promise<void> => {
+		if (node.type === "file") {
+			const content = await getFileContent(node.id);
+			if (content !== null) {
 				const cleanContent = fileCommentProcessor.cleanContent(content);
-                const relativePath = basePath ? `${basePath}/${node.name}` : node.name;
+				const relativePath = basePath ? `${basePath}/${node.name}` : node.name;
 
-                if (node.isBinary && cleanContent instanceof ArrayBuffer) {
-                    zip.file(relativePath, cleanContent);
-                } else {
-                    const textContent = typeof cleanContent === 'string'
-                        ? cleanContent
-                        : new TextDecoder().decode(cleanContent);
-                    zip.file(relativePath, textContent);
-                }
-            }
-        } else if (node.type === "directory" && node.children) {
-            const currentPath = basePath ? `${basePath}/${node.name}` : node.name;
+				if (node.isBinary && cleanContent instanceof ArrayBuffer) {
+					zip.file(relativePath, cleanContent);
+				} else {
+					const textContent =
+						typeof cleanContent === "string"
+							? cleanContent
+							: new TextDecoder().decode(cleanContent);
+					zip.file(relativePath, textContent);
+				}
+			}
+		} else if (node.type === "directory" && node.children) {
+			const currentPath = basePath ? `${basePath}/${node.name}` : node.name;
 
-            for (const child of node.children) {
-                await collectFiles(child, currentPath);
-            }
-        }
-    };
+			for (const child of node.children) {
+				await collectFiles(child, currentPath);
+			}
+		}
+	};
 
-    if (folderNode.children) {
-        for (const child of folderNode.children) {
-            await collectFiles(child);
-        }
-    }
+	if (folderNode.children) {
+		for (const child of folderNode.children) {
+			await collectFiles(child);
+		}
+	}
 
-    return await zip.generateAsync({ type: 'blob' });
+	return await zip.generateAsync({ type: "blob" });
 };
 
 export const downloadZipFile = (blob: Blob, filename: string): void => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename.endsWith('.zip') ? filename : `${filename}.zip`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+	const url = URL.createObjectURL(blob);
+	const a = document.createElement("a");
+	a.href = url;
+	a.download = filename.endsWith(".zip") ? filename : `${filename}.zip`;
+	document.body.appendChild(a);
+	a.click();
+	document.body.removeChild(a);
+	URL.revokeObjectURL(url);
 };

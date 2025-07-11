@@ -26,7 +26,10 @@ const createTeXlyreWideTheme = (): ThemePlugin => {
 		if (!colors) return;
 
 		Object.entries(colors).forEach(([key, value]) => {
-			document.documentElement.style.setProperty(`--pico-${key}`, value as string);
+			document.documentElement.style.setProperty(
+				`--pico-${key}`,
+				value as string,
+			);
 		});
 		document.documentElement.style.setProperty("color", colors.color);
 		document.documentElement.style.setProperty("--text-color", colors.color);

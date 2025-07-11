@@ -9,7 +9,10 @@ import {
 	OptionsIcon,
 	SaveIcon,
 } from "../../../src/components/common/Icons";
-import { PluginHeader, PluginControlGroup } from "../../../src/components/common/PluginHeader";
+import {
+	PluginControlGroup,
+	PluginHeader,
+} from "../../../src/components/common/PluginHeader";
 import { usePluginFileInfo } from "../../../src/hooks/usePluginFileInfo";
 import { useSettings } from "../../../src/hooks/useSettings";
 import type { ViewerProps } from "../../../src/plugins/PluginInterface";
@@ -252,12 +255,12 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		currentView === "original" ? bibtexContent : processedContent;
 
 	const tooltipInfo = [
-			`Auto-tidy: ${autoTidy ? "enabled" : "disabled"}`,
-			`Preset: ${tidyPreset}`,
-			`Entries: ${bibtexContent.split("@").length - 1}`,
-			`MIME Type: ${fileInfo.mimeType || "text/x-bibtex"}`,
-			`Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`
-		];
+		`Auto-tidy: ${autoTidy ? "enabled" : "disabled"}`,
+		`Preset: ${tidyPreset}`,
+		`Entries: ${bibtexContent.split("@").length - 1}`,
+		`MIME Type: ${fileInfo.mimeType || "text/x-bibtex"}`,
+		`Size: ${fileInfo.fileSize ? Math.round(fileInfo.fileSize / 1024) + " KB" : "Unknown"}`,
+	];
 
 	const headerControls = (
 		<>

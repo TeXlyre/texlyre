@@ -85,7 +85,9 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 
 	useEffect(() => {
 		const userId = getCurrentUserId();
-		const userStorageKey = userId ? `texlyre-user-${userId}-settings` : "texlyre-settings";
+		const userStorageKey = userId
+			? `texlyre-user-${userId}-settings`
+			: "texlyre-settings";
 		const globalStorageKey = "texlyre-settings";
 
 		try {

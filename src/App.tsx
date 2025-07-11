@@ -27,54 +27,57 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { EditorProvider } from "./contexts/EditorContext";
 import { FileSystemBackupProvider } from "./contexts/FileSystemBackupContext";
 import { OfflineProvider } from "./contexts/OfflineContext";
+import { PropertiesProvider } from "./contexts/PropertiesContext.tsx";
 import { SecretsContext, SecretsProvider } from "./contexts/SecretsContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import {PropertiesProvider} from "./contexts/PropertiesContext.tsx";
 
 function App() {
-    return (
-       <OfflineProvider>
-          <AuthProvider>
-             <SettingsProvider>
-                 <PropertiesProvider>
-                    <ThemeProvider defaultThemeId="texlyre-theme" defaultVariant="system">
-                       <SecretsProvider>
-                          <FileSystemBackupProvider>
-                             <EditorProvider>
-                                <AppContent />
-                             </EditorProvider>
-                          </FileSystemBackupProvider>
-                       </SecretsProvider>
-                    </ThemeProvider>
-                 </PropertiesProvider>
-             </SettingsProvider>
-          </AuthProvider>
-       </OfflineProvider>
-    );
+	return (
+		<OfflineProvider>
+			<AuthProvider>
+				<SettingsProvider>
+					<PropertiesProvider>
+						<ThemeProvider
+							defaultThemeId="texlyre-theme"
+							defaultVariant="system"
+						>
+							<SecretsProvider>
+								<FileSystemBackupProvider>
+									<EditorProvider>
+										<AppContent />
+									</EditorProvider>
+								</FileSystemBackupProvider>
+							</SecretsProvider>
+						</ThemeProvider>
+					</PropertiesProvider>
+				</SettingsProvider>
+			</AuthProvider>
+		</OfflineProvider>
+	);
 }
 
 function AppContent() {
-    const {
-       isPasswordModalOpen,
-       passwordModalMessage,
-       hidePasswordModal,
-       submitPassword,
-    } = useContext(SecretsContext);
+	const {
+		isPasswordModalOpen,
+		passwordModalMessage,
+		hidePasswordModal,
+		submitPassword,
+	} = useContext(SecretsContext);
 
-    return (
-       <>
-          <AppRouter />
-          <FileConflictModal />
-          <FileOperationToast />
-          <PasswordModal
-             isOpen={isPasswordModalOpen}
-             onClose={hidePasswordModal}
-             onPasswordSubmit={submitPassword}
-             message={passwordModalMessage}
-          />
-       </>
-    );
+	return (
+		<>
+			<AppRouter />
+			<FileConflictModal />
+			<FileOperationToast />
+			<PasswordModal
+				isOpen={isPasswordModalOpen}
+				onClose={hidePasswordModal}
+				onPasswordSubmit={submitPassword}
+				message={passwordModalMessage}
+			/>
+		</>
+	);
 }
 
 export default App;

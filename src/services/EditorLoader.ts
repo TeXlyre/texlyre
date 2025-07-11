@@ -35,10 +35,10 @@ import type * as Y from "yjs";
 import { commentSystemExtension } from "../extensions/codemirror/CommentExtension";
 import { useAuth } from "../hooks/useAuth";
 import { useEditor } from "../hooks/useEditor";
-import { collabService } from "./CollabService";
-import { fileStorageService } from "./FileStorageService";
 import { autoSaveManager } from "../utils/autoSaveUtils";
 import { fileCommentProcessor } from "../utils/fileCommentProcessor.ts";
+import { collabService } from "./CollabService";
+import { fileStorageService } from "./FileStorageService";
 
 export const EditorLoader = (
 	editorRef: React.RefObject<HTMLDivElement>,
@@ -245,485 +245,494 @@ export const EditorLoader = (
 		};
 	}, [projectId, documentId, isDocumentSelected, isEditingFile, user]);
 
-   useEffect(() => {
-   	if (
-   		!editorRef.current ||
-   		(!ytextRef.current && !isEditingFile) ||
-   		!isDocumentSelected
-   	) {
-   		return;
-   	}
+	useEffect(() => {
+		if (
+			!editorRef.current ||
+			(!ytextRef.current && !isEditingFile) ||
+			!isDocumentSelected
+		) {
+			return;
+		}
 
-   	if (viewRef.current) {
-   		viewRef.current.destroy();
-   		viewRef.current = null;
-   	}
+		if (viewRef.current) {
+			viewRef.current.destroy();
+			viewRef.current = null;
+		}
 
-   	const extensions = [
-   		...getBasicSetupExtensions(),
-   		...getLanguageExtension(fileName, textContent),
-   	];
-   	if (isViewOnly) extensions.push(EditorState.readOnly.of(true));
+		const extensions = [
+			...getBasicSetupExtensions(),
+			...getLanguageExtension(fileName, textContent),
+		];
+		if (isViewOnly) extensions.push(EditorState.readOnly.of(true));
 
-   	if (!isEditingFile && provider && ytextRef.current) {
-   		extensions.push(keymap.of(yUndoManagerKeymap));
-   		extensions.push(yCollab(ytextRef.current, provider.awareness));
-   	}
+		if (!isEditingFile && provider && ytextRef.current) {
+			extensions.push(keymap.of(yUndoManagerKeymap));
+			extensions.push(yCollab(ytextRef.current, provider.awareness));
+		}
 
-   	const commentKeymap = keymap.of([
-   		{
-   			key: "Alt-c",
-   			run: (view) => {
-   				if (isViewOnly) return false;
-   				const selection = view.state.selection;
-   				const primaryRange = selection.main;
-   				if (primaryRange.from !== primaryRange.to) {
-   					try {
-   						const rawComment = addComment("This is a comment") as any;
-   						if (rawComment?.openTag && rawComment.closeTag) {
-   							view.dispatch({
-   								changes: [
-   									{ from: primaryRange.to, insert: rawComment.closeTag },
-   									{ from: primaryRange.from, insert: rawComment.openTag },
-   								],
-   							});
-   							updateComments(view.state.doc.toString());
-   							return true;
-   						}
-   					} catch (error) {
-   						console.error("Error in commentKeymap:", error);
-   					}
-   				}
-   				return false;
-   			},
-   		},
-   	]);
-   	extensions.push(commentKeymap);
-   	extensions.push(commentSystemExtension);
+		const commentKeymap = keymap.of([
+			{
+				key: "Alt-c",
+				run: (view) => {
+					if (isViewOnly) return false;
+					const selection = view.state.selection;
+					const primaryRange = selection.main;
+					if (primaryRange.from !== primaryRange.to) {
+						try {
+							const rawComment = addComment("This is a comment") as any;
+							if (rawComment?.openTag && rawComment.closeTag) {
+								view.dispatch({
+									changes: [
+										{ from: primaryRange.to, insert: rawComment.closeTag },
+										{ from: primaryRange.from, insert: rawComment.openTag },
+									],
+								});
+								updateComments(view.state.doc.toString());
+								return true;
+							}
+						} catch (error) {
+							console.error("Error in commentKeymap:", error);
+						}
+					}
+					return false;
+				},
+			},
+		]);
+		extensions.push(commentKeymap);
+		extensions.push(commentSystemExtension);
 
-   	const saveKeymap = keymap.of([
-   		{
-   			key: "Ctrl-s",
-   			run: (view) => {
-   				if (!isViewOnly) {
-   					const content = view.state.doc.toString();
-   					if (isEditingFile && currentFileId) {
-   						saveFileToStorage(content);
-   					} else if (!isEditingFile && documentId) {
-   						saveDocumentToLinkedFile(content);
-   					}
-   					return true;
-   				}
-   				return false;
-   			},
-   		},
-   	]);
-   	extensions.push(saveKeymap);
+		const saveKeymap = keymap.of([
+			{
+				key: "Ctrl-s",
+				run: (view) => {
+					if (!isViewOnly) {
+						const content = view.state.doc.toString();
+						if (isEditingFile && currentFileId) {
+							saveFileToStorage(content);
+						} else if (!isEditingFile && documentId) {
+							saveDocumentToLinkedFile(content);
+						}
+						return true;
+					}
+					return false;
+				},
+			},
+		]);
+		extensions.push(saveKeymap);
 
-   	const state = EditorState.create({
-   		doc: isEditingFile ? textContent : ytextRef.current?.toString(),
-   		extensions,
-   	});
+		const state = EditorState.create({
+			doc: isEditingFile ? textContent : ytextRef.current?.toString(),
+			extensions,
+		});
 
-   	try {
-   		const view = new EditorView({ state, parent: editorRef.current });
-   		viewRef.current = view;
+		try {
+			const view = new EditorView({ state, parent: editorRef.current });
+			viewRef.current = view;
 
-   		if (isEditingFile && !isViewOnly) {
-   			const handleInput = () => {
-   				if (!isUpdatingRef.current && viewRef.current) {
-   					const content = viewRef.current.state.doc.toString();
-   					isUpdatingRef.current = true;
-   					try {
-   						onUpdateContent(content);
-   						updateComments(content);
-   						if (autoSaveRef.current) autoSaveRef.current();
-   					} finally {
-   						isUpdatingRef.current = false;
-   					}
-   				}
-   			};
-   			view.dom.addEventListener("input", handleInput);
-   			return () => view.dom.removeEventListener("input", handleInput);
-   		}
-   	} catch (error) {
-   		console.error("Error creating editor view:", error);
-   	}
+			if (isEditingFile && !isViewOnly) {
+				const handleInput = () => {
+					if (!isUpdatingRef.current && viewRef.current) {
+						const content = viewRef.current.state.doc.toString();
+						isUpdatingRef.current = true;
+						try {
+							onUpdateContent(content);
+							updateComments(content);
+							if (autoSaveRef.current) autoSaveRef.current();
+						} finally {
+							isUpdatingRef.current = false;
+						}
+					}
+				};
+				view.dom.addEventListener("input", handleInput);
+				return () => view.dom.removeEventListener("input", handleInput);
+			}
+		} catch (error) {
+			console.error("Error creating editor view:", error);
+		}
 
-   	return () => {
-   		if (viewRef.current) {
-   			viewRef.current.destroy();
-   			viewRef.current = null;
-   		}
-   	};
-   }, [
-   	editorRef,
-   	yDoc,
-   	provider,
-   	isDocumentSelected,
-   	isEditingFile,
-   	textContent,
-   	isViewOnly,
-   	fileName,
-   	editorSettingsVersion,
-   ]);
+		return () => {
+			if (viewRef.current) {
+				viewRef.current.destroy();
+				viewRef.current = null;
+			}
+		};
+	}, [
+		editorRef,
+		yDoc,
+		provider,
+		isDocumentSelected,
+		isEditingFile,
+		textContent,
+		isViewOnly,
+		fileName,
+		editorSettingsVersion,
+	]);
 
-   useEffect(() => {
-   	if (!viewRef.current || !editorRef.current) return;
+	useEffect(() => {
+		if (!viewRef.current || !editorRef.current) return;
 
-   	const handleCopy = (event: ClipboardEvent) => {
-   		const view = viewRef.current;
-   		if (!view) return;
+		const handleCopy = (event: ClipboardEvent) => {
+			const view = viewRef.current;
+			if (!view) return;
 
-   		const selection = view.state.selection;
-   		const primaryRange = selection.main;
+			const selection = view.state.selection;
+			const primaryRange = selection.main;
 
-   		if (primaryRange.from !== primaryRange.to) {
-   			const selectedText = view.state.doc.sliceString(
-   				primaryRange.from,
-   				primaryRange.to,
-   			);
-   			const cleanedText =
-   				fileCommentProcessor.processTextSelection(selectedText);
+			if (primaryRange.from !== primaryRange.to) {
+				const selectedText = view.state.doc.sliceString(
+					primaryRange.from,
+					primaryRange.to,
+				);
+				const cleanedText =
+					fileCommentProcessor.processTextSelection(selectedText);
 
-   			event.clipboardData?.setData("text/plain", cleanedText);
-   			event.preventDefault();
-   		}
-   	};
+				event.clipboardData?.setData("text/plain", cleanedText);
+				event.preventDefault();
+			}
+		};
 
-   	const editorElement = editorRef.current;
-   	editorElement.addEventListener("copy", handleCopy);
+		const editorElement = editorRef.current;
+		editorElement.addEventListener("copy", handleCopy);
 
-   	return () => {
-   		editorElement.removeEventListener("copy", handleCopy);
-   	};
-   }, [editorRef, viewRef]);
+		return () => {
+			editorElement.removeEventListener("copy", handleCopy);
+		};
+	}, [editorRef, viewRef]);
 
-   useEffect(() => {
-   	const autoSaveKey = isEditingFile ? currentFileId : documentId;
+	useEffect(() => {
+		const autoSaveKey = isEditingFile ? currentFileId : documentId;
 
-   	if (autoSaveRef.current && autoSaveKey) {
-   		autoSaveManager.clearAutoSaver(autoSaveKey);
-   		autoSaveRef.current = null;
-   	}
+		if (autoSaveRef.current && autoSaveKey) {
+			autoSaveManager.clearAutoSaver(autoSaveKey);
+			autoSaveRef.current = null;
+		}
 
-   	if (!autoSaveKey || isViewOnly) {
-   		return;
-   	}
+		if (!autoSaveKey || isViewOnly) {
+			return;
+		}
 
-   	const autoSaveEnabled = getAutoSaveEnabled();
-   	const autoSaveDelay = getAutoSaveDelay();
+		const autoSaveEnabled = getAutoSaveEnabled();
+		const autoSaveDelay = getAutoSaveDelay();
 
-   	if (!autoSaveEnabled) {
-   		return;
-   	}
+		if (!autoSaveEnabled) {
+			return;
+		}
 
-   	const setupAutoSave = () => {
-   		if (!viewRef.current) {
-   			setTimeout(setupAutoSave, 100);
-   			return;
-   		}
-
-   		autoSaveRef.current = autoSaveManager.createAutoSaver(
-   			autoSaveKey,
-   			() => {
-   				const currentEditorContent =
-   					viewRef.current?.state?.doc?.toString() || "";
-   				return currentEditorContent;
-   			},
-   			{
-   				enabled: true,
-   				delay: autoSaveDelay,
-   				onSave: async (saveKey, content) => {
-   					if (isEditingFile && currentFileId) {
-   						const encoder = new TextEncoder();
-   						const contentBuffer = encoder.encode(content).buffer;
-   						await fileStorageService.updateFileContent(
-   							currentFileId,
-   							contentBuffer,
-   						);
-   					} else if (!isEditingFile && documentId) {
-   						await saveDocumentToLinkedFile(content);
-   					}
-   					setShowSaveIndicator(true);
-   					setTimeout(() => setShowSaveIndicator(false), 1500);
-   					console.log(`Auto-saved: ${saveKey}`);
-   				},
-   				onError: (error) => {
-   					console.error("Auto-save failed:", error);
-   				},
-   			},
-   		);
-   	};
-
-   	setupAutoSave();
-
-   	return () => {
-   		if (autoSaveKey) {
-   			autoSaveManager.clearAutoSaver(autoSaveKey);
-   		}
-   		autoSaveRef.current = null;
-   	};
-   }, [
-   	isEditingFile,
-   	isViewOnly,
-   	currentFileId,
-   	documentId,
-   	getAutoSaveEnabled,
-   	getAutoSaveDelay,
-   	editorSettingsVersion,
-   ]);
-
-   useEffect(() => {
-   	if (!viewRef.current || !isDocumentSelected) return;
-
-   	const handleCommentResponseAdded = (event: Event) => {
-   		const customEvent = event as CustomEvent;
-   		if (!viewRef.current || isViewOnly) return;
-
-   		try {
-   			const { commentId, rawComment } = customEvent.detail;
-
-   			const currentContent = viewRef.current.state.doc.toString();
-
-   			const openTagStart = currentContent.indexOf(
-   				`<### comment id: ${commentId}`,
-   			);
-   			if (openTagStart === -1) return;
-
-   			const openTagEnd = currentContent.indexOf("###>", openTagStart) + 4;
-
-   			const closeTagStart = currentContent.indexOf(
-   				`</### comment id: ${commentId}`,
-   				openTagEnd,
-   			);
-   			if (closeTagStart === -1) return;
-
-   			const closeTagEnd = currentContent.indexOf("###>", closeTagStart) + 4;
-
-   			const commentedText = currentContent.slice(openTagEnd, closeTagStart);
-
-   			const newContent = `${rawComment.openTag}${commentedText}${rawComment.closeTag}`;
-
-   			const transaction = viewRef.current.state.update({
-   				changes: [
-   					{
-   						from: openTagStart,
-   						to: closeTagEnd,
-   						insert: newContent,
-   					},
-   				],
-   			});
-
-   			viewRef.current.dispatch(transaction);
-
-   			setTimeout(() => {
-   				if (viewRef.current) {
-   					const finalContent = viewRef.current.state.doc.toString();
-   					updateComments(finalContent);
-   				}
-   			}, 10);
-   		} catch (error) {
-   			console.error("Error processing comment response:", error);
-   		}
-   	};
-
-   	const handleCommentDelete = (event: Event) => {
-   		const customEvent = event as CustomEvent;
-   		if (!viewRef.current || isViewOnly) return;
-
-   		try {
-   			const { openTagStart, openTagEnd, closeTagStart, closeTagEnd } =
-   				customEvent.detail;
-
-   			const transaction = viewRef.current.state.update({
-   				changes: [
-   					{ from: closeTagStart, to: closeTagEnd },
-   					{ from: openTagStart, to: openTagEnd },
-   				],
-   			});
-
-   			viewRef.current.dispatch(transaction);
-
-   			setTimeout(() => {
-   				if (viewRef.current) {
-   					const updatedContent = viewRef.current.state.doc.toString();
-   					updateComments(updatedContent);
-   				}
-   			}, 50);
-   		} catch (error) {
-   			console.error("Error processing comment deletion:", error);
-   		}
-   	};
-
-   	const handleCommentUpdate = (event: Event) => {
-   		const customEvent = event as CustomEvent;
-   		if (!viewRef.current || isViewOnly) return;
-
-   		try {
-   			const {
-   				openTagStart,
-   				openTagEnd,
-   				closeTagStart,
-   				closeTagEnd,
-   				rawComment,
-   			} = customEvent.detail;
-
-   			const transaction = viewRef.current.state.update({
-   				changes: [
-   					{
-   						from: closeTagStart,
-   						to: closeTagEnd,
-   						insert: rawComment.closeTag,
-   					},
-   					{ from: openTagStart, to: openTagEnd, insert: rawComment.openTag },
-   				],
-   			});
-
-   			viewRef.current.dispatch(transaction);
-
-   			setTimeout(() => {
-   				if (viewRef.current) {
-   					const updatedContent = viewRef.current.state.doc.toString();
-   					updateComments(updatedContent);
-   				}
-   			}, 50);
-   		} catch (error) {
-   			console.error("Error processing comment update:", error);
-   		}
-   	};
-
-   	const handleGotoLine = (event: Event) => {
-   		const customEvent = event as CustomEvent;
-   		if (!viewRef.current) return;
-
-   		try {
-   			const { line, fileId, filePath } = customEvent.detail;
-
-			if (isEditingFile && fileId && currentFileId && currentFileId !== fileId) {
+		const setupAutoSave = () => {
+			if (!viewRef.current) {
+				setTimeout(setupAutoSave, 100);
 				return;
 			}
 
-			if (!isEditingFile && filePath && !filePath.includes(documentId)) {
-				return;
+			autoSaveRef.current = autoSaveManager.createAutoSaver(
+				autoSaveKey,
+				() => {
+					const currentEditorContent =
+						viewRef.current?.state?.doc?.toString() || "";
+					return currentEditorContent;
+				},
+				{
+					enabled: true,
+					delay: autoSaveDelay,
+					onSave: async (saveKey, content) => {
+						if (isEditingFile && currentFileId) {
+							const encoder = new TextEncoder();
+							const contentBuffer = encoder.encode(content).buffer;
+							await fileStorageService.updateFileContent(
+								currentFileId,
+								contentBuffer,
+							);
+						} else if (!isEditingFile && documentId) {
+							await saveDocumentToLinkedFile(content);
+						}
+						setShowSaveIndicator(true);
+						setTimeout(() => setShowSaveIndicator(false), 1500);
+						console.log(`Auto-saved: ${saveKey}`);
+					},
+					onError: (error) => {
+						console.error("Auto-save failed:", error);
+					},
+				},
+			);
+		};
+
+		setupAutoSave();
+
+		return () => {
+			if (autoSaveKey) {
+				autoSaveManager.clearAutoSaver(autoSaveKey);
 			}
+			autoSaveRef.current = null;
+		};
+	}, [
+		isEditingFile,
+		isViewOnly,
+		currentFileId,
+		documentId,
+		getAutoSaveEnabled,
+		getAutoSaveDelay,
+		editorSettingsVersion,
+	]);
 
-   			if (line && line > 0) {
-   				const view = viewRef.current;
-   				const doc = view.state.doc;
+	useEffect(() => {
+		if (!viewRef.current || !isDocumentSelected) return;
 
-   				const lineNumber = Math.max(1, Math.min(line, doc.lines)) - 1;
-   				const linePos = doc.line(lineNumber + 1).from;
+		const handleCommentResponseAdded = (event: Event) => {
+			const customEvent = event as CustomEvent;
+			if (!viewRef.current || isViewOnly) return;
 
-   				view.dispatch({
-   					selection: { anchor: linePos, head: linePos },
-   					effects: [EditorView.scrollIntoView(linePos, { y: "center" })],
-   				});
+			try {
+				const { commentId, rawComment } = customEvent.detail;
 
-   				view.focus();
-   			}
-   		} catch (error) {
-   			console.error("Error in Codemirror line navigation:", error);
-   		}
-   	};
+				const currentContent = viewRef.current.state.doc.toString();
 
-   	const handleFileSaved = (event: Event) => {
-   		const customEvent = event as CustomEvent;
-   		const { fileId: eventFileId } = customEvent.detail;
+				const openTagStart = currentContent.indexOf(
+					`<### comment id: ${commentId}`,
+				);
+				if (openTagStart === -1) return;
 
-   		if (eventFileId === currentFileId && isEditingFile) {
-   			setShowSaveIndicator(true);
-   			setTimeout(() => setShowSaveIndicator(false), 1500);
-   		}
-   	};
+				const openTagEnd = currentContent.indexOf("###>", openTagStart) + 4;
 
-   	const handleTriggerSave = (event: Event) => {
-   		const customEvent = event as CustomEvent;
-   		const { fileId: eventFileId, documentId: eventDocumentId, isFile } = customEvent.detail;
+				const closeTagStart = currentContent.indexOf(
+					`</### comment id: ${commentId}`,
+					openTagEnd,
+				);
+				if (closeTagStart === -1) return;
 
-   		if (!viewRef.current || isViewOnly) return;
+				const closeTagEnd = currentContent.indexOf("###>", closeTagStart) + 4;
 
-   		const content = viewRef.current.state.doc.toString();
+				const commentedText = currentContent.slice(openTagEnd, closeTagStart);
 
-   		if (isFile && eventFileId === currentFileId && isEditingFile) {
-   			saveFileToStorage(content);
-   		} else if (!isFile && eventDocumentId === documentId && !isEditingFile) {
-   			saveDocumentToLinkedFile(content);
-   		}
-   	};
+				const newContent = `${rawComment.openTag}${commentedText}${rawComment.closeTag}`;
 
-   	document.addEventListener(
-   		"comment-response-added",
-   		handleCommentResponseAdded,
-   	);
-   	document.addEventListener("comment-delete", handleCommentDelete);
-   	document.addEventListener("comment-update", handleCommentUpdate);
-   	document.addEventListener("codemirror-goto-line", handleGotoLine);
-   	document.addEventListener("file-saved", handleFileSaved);
-   	document.addEventListener("trigger-save", handleTriggerSave);
+				const transaction = viewRef.current.state.update({
+					changes: [
+						{
+							from: openTagStart,
+							to: closeTagEnd,
+							insert: newContent,
+						},
+					],
+				});
 
-   	return () => {
-   		document.removeEventListener(
-   			"comment-response-added",
-   			handleCommentResponseAdded,
-   		);
-   		document.removeEventListener("comment-delete", handleCommentDelete);
-   		document.removeEventListener("comment-update", handleCommentUpdate);
-   		document.removeEventListener("codemirror-goto-line", handleGotoLine);
-   		document.removeEventListener("file-saved", handleFileSaved);
-   		document.removeEventListener("trigger-save", handleTriggerSave);
-   	};
-   }, [
-   	viewRef,
-   	isDocumentSelected,
-   	isViewOnly,
-   	updateComments,
-   	isEditingFile,
-   	currentFileId,
-   	documentId,
-   ]);
+				viewRef.current.dispatch(transaction);
 
-   useEffect(() => {
-   	if (!ytextRef.current || !isDocumentSelected || isEditingFile) return;
+				setTimeout(() => {
+					if (viewRef.current) {
+						const finalContent = viewRef.current.state.doc.toString();
+						updateComments(finalContent);
+					}
+				}, 10);
+			} catch (error) {
+				console.error("Error processing comment response:", error);
+			}
+		};
 
-   	const yTextInstance = ytextRef.current;
+		const handleCommentDelete = (event: Event) => {
+			const customEvent = event as CustomEvent;
+			if (!viewRef.current || isViewOnly) return;
 
-   	const observer = () => {
-   		if (isUpdatingRef.current) return;
-   		const content = yTextInstance.toString() || "";
-   		isUpdatingRef.current = true;
-   		try {
-   			onUpdateContent(content);
-   			updateComments(content);
-   			if (autoSaveRef.current) autoSaveRef.current();
-   		} finally {
-   			isUpdatingRef.current = false;
-   		}
-   	};
+			try {
+				const { openTagStart, openTagEnd, closeTagStart, closeTagEnd } =
+					customEvent.detail;
 
-   	yTextInstance.observe(observer);
+				const transaction = viewRef.current.state.update({
+					changes: [
+						{ from: closeTagStart, to: closeTagEnd },
+						{ from: openTagStart, to: openTagEnd },
+					],
+				});
 
-   	return () => {
-   		yTextInstance.unobserve(observer);
-   		isUpdatingRef.current = false;
-   	};
-   }, [
-   	ytextRef,
-   	isDocumentSelected,
-   	onUpdateContent,
-   	updateComments,
-   	isEditingFile,
-   ]);
+				viewRef.current.dispatch(transaction);
 
-   useEffect(() => {
-   	return () => {
-   		const autoSaveKey = isEditingFile ? currentFileId : documentId;
-   		if (autoSaveKey) {
-   			autoSaveManager.flushPendingSaves().catch(console.error);
-   			autoSaveManager.clearAutoSaver(autoSaveKey);
-   		}
-   	};
-   }, [currentFileId, documentId, isEditingFile]);
+				setTimeout(() => {
+					if (viewRef.current) {
+						const updatedContent = viewRef.current.state.doc.toString();
+						updateComments(updatedContent);
+					}
+				}, 50);
+			} catch (error) {
+				console.error("Error processing comment deletion:", error);
+			}
+		};
 
-   return { viewRef, isUpdatingRef, showSaveIndicator };
+		const handleCommentUpdate = (event: Event) => {
+			const customEvent = event as CustomEvent;
+			if (!viewRef.current || isViewOnly) return;
+
+			try {
+				const {
+					openTagStart,
+					openTagEnd,
+					closeTagStart,
+					closeTagEnd,
+					rawComment,
+				} = customEvent.detail;
+
+				const transaction = viewRef.current.state.update({
+					changes: [
+						{
+							from: closeTagStart,
+							to: closeTagEnd,
+							insert: rawComment.closeTag,
+						},
+						{ from: openTagStart, to: openTagEnd, insert: rawComment.openTag },
+					],
+				});
+
+				viewRef.current.dispatch(transaction);
+
+				setTimeout(() => {
+					if (viewRef.current) {
+						const updatedContent = viewRef.current.state.doc.toString();
+						updateComments(updatedContent);
+					}
+				}, 50);
+			} catch (error) {
+				console.error("Error processing comment update:", error);
+			}
+		};
+
+		const handleGotoLine = (event: Event) => {
+			const customEvent = event as CustomEvent;
+			if (!viewRef.current) return;
+
+			try {
+				const { line, fileId, filePath } = customEvent.detail;
+
+				if (
+					isEditingFile &&
+					fileId &&
+					currentFileId &&
+					currentFileId !== fileId
+				) {
+					return;
+				}
+
+				if (!isEditingFile && filePath && !filePath.includes(documentId)) {
+					return;
+				}
+
+				if (line && line > 0) {
+					const view = viewRef.current;
+					const doc = view.state.doc;
+
+					const lineNumber = Math.max(1, Math.min(line, doc.lines)) - 1;
+					const linePos = doc.line(lineNumber + 1).from;
+
+					view.dispatch({
+						selection: { anchor: linePos, head: linePos },
+						effects: [EditorView.scrollIntoView(linePos, { y: "center" })],
+					});
+
+					view.focus();
+				}
+			} catch (error) {
+				console.error("Error in Codemirror line navigation:", error);
+			}
+		};
+
+		const handleFileSaved = (event: Event) => {
+			const customEvent = event as CustomEvent;
+			const { fileId: eventFileId } = customEvent.detail;
+
+			if (eventFileId === currentFileId && isEditingFile) {
+				setShowSaveIndicator(true);
+				setTimeout(() => setShowSaveIndicator(false), 1500);
+			}
+		};
+
+		const handleTriggerSave = (event: Event) => {
+			const customEvent = event as CustomEvent;
+			const {
+				fileId: eventFileId,
+				documentId: eventDocumentId,
+				isFile,
+			} = customEvent.detail;
+
+			if (!viewRef.current || isViewOnly) return;
+
+			const content = viewRef.current.state.doc.toString();
+
+			if (isFile && eventFileId === currentFileId && isEditingFile) {
+				saveFileToStorage(content);
+			} else if (!isFile && eventDocumentId === documentId && !isEditingFile) {
+				saveDocumentToLinkedFile(content);
+			}
+		};
+
+		document.addEventListener(
+			"comment-response-added",
+			handleCommentResponseAdded,
+		);
+		document.addEventListener("comment-delete", handleCommentDelete);
+		document.addEventListener("comment-update", handleCommentUpdate);
+		document.addEventListener("codemirror-goto-line", handleGotoLine);
+		document.addEventListener("file-saved", handleFileSaved);
+		document.addEventListener("trigger-save", handleTriggerSave);
+
+		return () => {
+			document.removeEventListener(
+				"comment-response-added",
+				handleCommentResponseAdded,
+			);
+			document.removeEventListener("comment-delete", handleCommentDelete);
+			document.removeEventListener("comment-update", handleCommentUpdate);
+			document.removeEventListener("codemirror-goto-line", handleGotoLine);
+			document.removeEventListener("file-saved", handleFileSaved);
+			document.removeEventListener("trigger-save", handleTriggerSave);
+		};
+	}, [
+		viewRef,
+		isDocumentSelected,
+		isViewOnly,
+		updateComments,
+		isEditingFile,
+		currentFileId,
+		documentId,
+	]);
+
+	useEffect(() => {
+		if (!ytextRef.current || !isDocumentSelected || isEditingFile) return;
+
+		const yTextInstance = ytextRef.current;
+
+		const observer = () => {
+			if (isUpdatingRef.current) return;
+			const content = yTextInstance.toString() || "";
+			isUpdatingRef.current = true;
+			try {
+				onUpdateContent(content);
+				updateComments(content);
+				if (autoSaveRef.current) autoSaveRef.current();
+			} finally {
+				isUpdatingRef.current = false;
+			}
+		};
+
+		yTextInstance.observe(observer);
+
+		return () => {
+			yTextInstance.unobserve(observer);
+			isUpdatingRef.current = false;
+		};
+	}, [
+		ytextRef,
+		isDocumentSelected,
+		onUpdateContent,
+		updateComments,
+		isEditingFile,
+	]);
+
+	useEffect(() => {
+		return () => {
+			const autoSaveKey = isEditingFile ? currentFileId : documentId;
+			if (autoSaveKey) {
+				autoSaveManager.flushPendingSaves().catch(console.error);
+				autoSaveManager.clearAutoSaver(autoSaveKey);
+			}
+		};
+	}, [currentFileId, documentId, isEditingFile]);
+
+	return { viewRef, isUpdatingRef, showSaveIndicator };
 };

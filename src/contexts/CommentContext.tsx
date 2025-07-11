@@ -1,6 +1,12 @@
 // src/contexts/CommentContext.tsx
 import type React from "react";
-import { type ReactNode, createContext, useCallback, useState, useEffect } from "react";
+import {
+	type ReactNode,
+	createContext,
+	useCallback,
+	useEffect,
+	useState,
+} from "react";
 
 import { useAuth } from "../hooks/useAuth";
 import { commentService } from "../services/CommentService";
@@ -27,20 +33,25 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 	const [showComments, setShowComments] = useState<boolean>(false);
 	const { user } = useAuth();
 
-	const getCommentById = useCallback((commentId: string) => {
-		return comments.find(comment => comment.id === commentId) || null;
-	}, [comments]);
+	const getCommentById = useCallback(
+		(commentId: string) => {
+			return comments.find((comment) => comment.id === commentId) || null;
+		},
+		[comments],
+	);
 
 	const scrollToComment = useCallback((commentId: string) => {
-		console.log('Looking for comment item with data-comment-id:', commentId);
-		const commentElement = document.querySelector(`.comment-item[data-comment-id="${commentId}"]`);
-		console.log('Found element:', commentElement);
+		console.log("Looking for comment item with data-comment-id:", commentId);
+		const commentElement = document.querySelector(
+			`.comment-item[data-comment-id="${commentId}"]`,
+		);
+		console.log("Found element:", commentElement);
 
 		if (commentElement) {
-			console.log('Scrolling to element');
+			console.log("Scrolling to element");
 			commentElement.scrollIntoView({
 				behavior: "smooth",
-				block: "center"
+				block: "center",
 			});
 
 			commentElement.classList.add("highlight-comment");
@@ -48,7 +59,7 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 				commentElement.classList.remove("highlight-comment");
 			}, 2000);
 		} else {
-			console.log('Comment item not found - is the comment panel open?');
+			console.log("Comment item not found - is the comment panel open?");
 		}
 	}, []);
 
@@ -61,14 +72,14 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 			document.dispatchEvent(
 				new CustomEvent("comment-data-response", {
 					detail: { commentId, comment },
-				})
+				}),
 			);
 		};
 
 		const handleScrollToComment = (event: Event) => {
 			const customEvent = event as CustomEvent;
 			const { commentId } = customEvent.detail;
-			console.log('Scrolling to comment:', commentId); // Debug log
+			console.log("Scrolling to comment:", commentId); // Debug log
 			scrollToComment(commentId);
 		};
 
