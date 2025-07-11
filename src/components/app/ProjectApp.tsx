@@ -402,7 +402,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			<footer>
 				<p className="read-the-docs">
 					Built with TeXlyre
-					<a href="https://texlyre.github.io" target="_blank" rel="noreferrer">
+					<a href="https://texlyre.github.io/texlyre/" target="_blank" rel="noreferrer">
 						<img src={texlyreLogo} className="logo" alt="TeXlyre logo" />
 					</a>
 				</p>

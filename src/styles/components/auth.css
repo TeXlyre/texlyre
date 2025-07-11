@@ -1,22 +1,25 @@
 .auth-container {
-	height: 100vh;
+	min-height: 100vh;
 	width: 100%;
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
+	justify-content: flex-start;
 	align-items: center;
 	background-color: var(--pico-background);
 	color: var(--text-color);
+	padding: var(--space-md) 0;
+	transform: scale(0.75);
+	transform-origin: top center;
 }
 
 .auth-box {
-	width: 400px;
+	width: 480px;
 	max-width: 90%;
 	background-color: var(--pico-secondary-background, #f9f9f9);
 	border-radius: var(--radius-lg);
 	box-shadow: var(--shadow-lg);
-	padding: var(--space-xl);
-	margin-bottom: var(--space-xl);
+	padding: var(--space-lg);
+	margin-bottom: var(--space-md);
 }
 
 .auth-logo-wrapper {
@@ -105,13 +108,13 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	margin-bottom: var(--space-lg);
+	margin-bottom: var(--space-md);
 }
 
 .auth-header h1 {
-	margin-top: var(--space-sm);
+	margin-top: var(--space-xs);
 	margin-bottom: 0;
-	font-size: 1.8rem;
+	font-size: 1.6rem;
 	color: var(--pico-primary);
 }
 
@@ -120,8 +123,8 @@
 }
 
 .auth-form-container h2 {
-	font-size: 1.4rem;
-	margin-bottom: var(--space-lg);
+	font-size: 1.2rem;
+	margin-bottom: var(--space-md);
 	text-align: center;
 	color: var(--text-color);
 }
@@ -143,7 +146,7 @@
 
 .auth-alt-action {
 	text-align: center;
-	margin-top: var(--space-lg);
+	margin-top: var(--space-md);
 	color: var(--text-color);
 }
 
@@ -168,6 +171,22 @@
 	font-size: 0.9rem;
 }
 
+.auth-privacy-note {
+	margin-top: var(--space-md);
+	padding: var(--space-xs) var(--space-sm);
+	background-color: rgba(64, 185, 255, 0.1);
+	border: 1px solid rgba(64, 185, 255, 0.2);
+	border-radius: var(--radius-sm);
+	text-align: center;
+}
+
+.auth-privacy-note p {
+	margin: 0;
+	font-size: 0.8rem;
+	color: var(--pico-secondary);
+	line-height: 1.3;
+}
+
 /* Auth-specific buttons */
 .auth-button {
 	display: flex;
@@ -175,7 +194,7 @@
 	gap: var(--space-sm);
 	padding: 0.4rem 0.8rem;
 	background-color: var(--pico-primary);
-	color: var(--pico-primary-inverse, #fff);
+	color: var(--pico-primary-inverse)!important;
 	border: none;
 	border-radius: var(--radius-sm);
 	font-size: 0.9rem;
@@ -236,4 +255,52 @@
 
 .user-dropdown-button:hover {
 	background-color: var(--pico-primary-focus);
+}
+
+.password-info {
+	margin-top: var(--space-xs);
+	margin-bottom: var(--space-sm);
+}
+
+.password-info-container {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+}
+
+.password-info-text {
+	font-size: 0.8rem;
+	color: var(--pico-secondary);
+	line-height: 1.3;
+}
+
+.password-info-help {
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	flex-shrink: 0;
+	border: none;
+}
+
+.password-info-help:hover {
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+}
+
+.password-info-tooltip {
+	position: absolute;
+	top: 50%;
+	left: calc(100% + var(--space-sm));
+	transform: translateY(-50%);
+	width: 300px;
+	padding: var(--space-sm);
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-md);
+	font-size: 0.8rem;
+	color: var(--text-color);
+	line-height: 1.4;
+	z-index: 10;
 }

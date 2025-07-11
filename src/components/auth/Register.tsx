@@ -2,6 +2,7 @@
 import type React from "react";
 import { useState } from "react";
 
+import PasswordInfo from "./PasswordInfo"
 import { useAuth } from "../../hooks/useAuth.ts";
 
 interface RegisterProps {
@@ -103,6 +104,7 @@ const Register: React.FC<RegisterProps> = ({
 				</div>
 
 				<div className="form-group">
+					<PasswordInfo/>
 					<label htmlFor="password">
 						Password <span className="required">*</span>
 					</label>

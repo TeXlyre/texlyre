@@ -17,10 +17,12 @@ import "./styles/components/latex.css";
 import "./styles/components/plugin-header.css";
 import "./styles/components/settings.css";
 import "./styles/components/offline.css";
+import "./styles/components/splash-screen.css"
 
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import AppRouter from "./components/app/AppRouter";
 import PasswordModal from "./components/auth/PasswordModal";
+import SplashScreen from "./components/common/SplashScreen";
 import FileConflictModal from "./components/editor/FileConflictModal";
 import FileOperationToast from "./components/editor/FileOperationToast.tsx";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -33,27 +35,40 @@ import { SettingsProvider } from "./contexts/SettingsContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
 function App() {
+	const [isInitializing, setIsInitializing] = useState(true);
+
+	useEffect(() => {
+		const initTimer = setTimeout(() => {
+			setIsInitializing(false);
+		}, 1500);
+
+		return () => clearTimeout(initTimer);
+	}, []);
+
 	return (
-		<OfflineProvider>
-			<AuthProvider>
-				<SettingsProvider>
-					<PropertiesProvider>
-						<ThemeProvider
-							defaultThemeId="texlyre-theme"
-							defaultVariant="system"
-						>
-							<SecretsProvider>
-								<FileSystemBackupProvider>
-									<EditorProvider>
-										<AppContent />
-									</EditorProvider>
-								</FileSystemBackupProvider>
-							</SecretsProvider>
-						</ThemeProvider>
-					</PropertiesProvider>
-				</SettingsProvider>
-			</AuthProvider>
-		</OfflineProvider>
+		<>
+			<SplashScreen isVisible={isInitializing} />
+			<OfflineProvider>
+				<AuthProvider>
+					<SettingsProvider>
+						<PropertiesProvider>
+							<ThemeProvider
+								defaultThemeId="texlyre-theme"
+								defaultVariant="system"
+							>
+								<SecretsProvider>
+									<FileSystemBackupProvider>
+										<EditorProvider>
+											<AppContent />
+										</EditorProvider>
+									</FileSystemBackupProvider>
+								</SecretsProvider>
+							</ThemeProvider>
+						</PropertiesProvider>
+					</SettingsProvider>
+				</AuthProvider>
+			</OfflineProvider>
+		</>
 	);
 }
 
