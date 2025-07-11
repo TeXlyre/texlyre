@@ -8,7 +8,7 @@
 	background-color: var(--pico-background);
 	color: var(--text-color);
 	padding: var(--space-md) 0;
-	transform: scale(0.75);
+	transform: scale(0.70);
 	transform-origin: top center;
 }
 
