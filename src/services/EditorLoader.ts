@@ -26,19 +26,21 @@ import { type ViewUpdate, keymap } from "@codemirror/view";
 import { lineNumbers } from "@codemirror/view";
 import { EditorView } from "codemirror";
 import { bibtex } from "codemirror-lang-bib";
-import { latex } from "codemirror-lang-latex";
+import { latex, latexCompletionSource } from "codemirror-lang-latex";
 import { useEffect, useRef, useState } from "react";
 import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
 import type { WebrtcProvider } from "y-webrtc";
 import type * as Y from "yjs";
 
 import { commentSystemExtension } from "../extensions/codemirror/CommentExtension";
+import { createFilePathAutocompleteExtension, setCurrentFilePath } from "../extensions/codemirror/FilePathAutocompleteExtension";
 import { useAuth } from "../hooks/useAuth";
 import { useEditor } from "../hooks/useEditor";
 import { autoSaveManager } from "../utils/autoSaveUtils";
 import { fileCommentProcessor } from "../utils/fileCommentProcessor.ts";
 import { collabService } from "./CollabService";
 import { fileStorageService } from "./FileStorageService";
+import { filePathCacheService } from "./FilePathCacheService";
 
 export const EditorLoader = (
 	editorRef: React.RefObject<HTMLDivElement>,
@@ -74,6 +76,15 @@ export const EditorLoader = (
 	const [provider, setProvider] = useState<WebrtcProvider | null>(null);
 
 	const projectId = docUrl.startsWith("yjs:") ? docUrl.slice(4) : docUrl;
+
+	useEffect(() => {
+		// Initialize file path cache service
+		filePathCacheService.initialize();
+
+		return () => {
+			filePathCacheService.cleanup();
+		};
+	}, []);
 
 	const saveFileToStorage = async (content: string) => {
 		if (!currentFileId || !isEditingFile) return;
@@ -183,7 +194,7 @@ export const EditorLoader = (
 			) {
 				return [bibtex()];
 			}
-			return [latex({ autoCloseBrackets: false })];
+			return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
 		}
 
 		const ext = fileName.split(".").pop()?.toLowerCase();
@@ -191,7 +202,7 @@ export const EditorLoader = (
 		switch (ext) {
 			case "tex":
 			case "latex":
-				return [latex({ autoCloseBrackets: false })];
+				return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
 			case "bib":
 			case "bibtex":
 				return [bibtex()];
@@ -206,7 +217,7 @@ export const EditorLoader = (
 				) {
 					return [bibtex()];
 				}
-				return [latex({ autoCloseBrackets: false })];
+				return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
 		}
 	};
 
@@ -261,6 +272,39 @@ export const EditorLoader = (
 			...getBasicSetupExtensions(),
 			...getLanguageExtension(fileName, textContent),
 		];
+
+		// Add file path autocomplete for LaTeX files
+		const isLatexFile = fileName?.endsWith('.tex') || (!fileName && textContent?.includes('\\'));
+		if (isLatexFile) {
+		  // Get current file path for relative path calculations
+		  let currentFilePath = '';
+		  if (isEditingFile && currentFileId) {
+			// Get the file path synchronously if possible, otherwise it will be updated later
+			fileStorageService.getFile(currentFileId).then(file => {
+			  if (file && viewRef.current) {
+				// Update the file path in the extension after the view is created
+				setCurrentFilePath(viewRef.current, file.path);
+			  }
+			});
+		  }
+
+		  // Create unified autocompletion with both LaTeX and file path sources
+		  const filePathExtensions = createFilePathAutocompleteExtension(currentFilePath);
+		  extensions.push(filePathExtensions[0], filePathExtensions[1]);
+
+		  extensions.push(
+			autocompletion({
+			  override: [
+				latexCompletionSource(true), // autoCloseTagsEnabled = true
+				filePathExtensions[2]
+			  ],
+			  maxRenderedOptions: 20,
+			})
+		  );
+		} else {
+		  extensions.push(autocompletion());
+		}
+
 		if (isViewOnly) extensions.push(EditorState.readOnly.of(true));
 
 		if (!isEditingFile && provider && ytextRef.current) {
@@ -327,6 +371,14 @@ export const EditorLoader = (
 			const view = new EditorView({ state, parent: editorRef.current });
 			viewRef.current = view;
 
+			// Register view with file path cache service for LaTeX files
+			if (isLatexFile) {
+				filePathCacheService.registerEditorView(view);
+
+				// Update cache with current files
+				filePathCacheService.updateCache();
+			}
+
 			if (isEditingFile && !isViewOnly) {
 				const handleInput = () => {
 					if (!isUpdatingRef.current && viewRef.current) {
@@ -350,6 +402,8 @@ export const EditorLoader = (
 
 		return () => {
 			if (viewRef.current) {
+				// Unregister from file path cache service
+				filePathCacheService.unregisterEditorView(viewRef.current);
 				viewRef.current.destroy();
 				viewRef.current = null;
 			}
