@@ -1,5 +1,5 @@
 // src/services/EditorLoader.ts
-import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
+import { autocompletion, completionKeymap, type CompletionSource } from "@codemirror/autocomplete";
 import {
 	defaultKeymap,
 	history,
@@ -290,14 +290,14 @@ export const EditorLoader = (
 		  }
 
 		  // Create unified autocompletion with both LaTeX and file path sources
-		  const filePathExtensions = createFilePathAutocompleteExtension(currentFilePath);
-		  extensions.push(filePathExtensions[0], filePathExtensions[1]);
+		  const [cacheField, cachePlugin, completionSource] = createFilePathAutocompleteExtension(currentFilePath);
+		  extensions.push(cacheField, cachePlugin);
 
 		  extensions.push(
 			autocompletion({
 			  override: [
-				latexCompletionSource(true), // autoCloseTagsEnabled = true
-				filePathExtensions[2]
+				latexCompletionSource(true),
+				completionSource as CompletionSource
 			  ],
 			  maxRenderedOptions: 20,
 			})

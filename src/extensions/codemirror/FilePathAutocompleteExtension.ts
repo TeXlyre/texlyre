@@ -1,6 +1,6 @@
 // src/extensions/codemirror/FilePathAutocompleteExtension.ts
-import { type CompletionContext, type CompletionResult } from "@codemirror/autocomplete";
-import { StateEffect, StateField } from "@codemirror/state";
+import { type CompletionContext, type CompletionResult, type CompletionSource } from "@codemirror/autocomplete";
+import { StateEffect, StateField, type Extension } from "@codemirror/state";
 import { ViewPlugin, type EditorView } from "@codemirror/view";
 
 import type { FileNode, FilePathCache } from "../../types/files";
@@ -205,7 +205,7 @@ class FilePathAutocompleteProcessor {
 
 let globalProcessor: FilePathAutocompleteProcessor | null = null;
 
-export function createFilePathAutocompleteExtension(currentFilePath: string = '') {
+export function createFilePathAutocompleteExtension(currentFilePath: string = ''): [Extension, Extension, CompletionSource] {
 	const plugin = ViewPlugin.fromClass(
 		class {
 			processor: FilePathAutocompleteProcessor;
@@ -229,7 +229,7 @@ export function createFilePathAutocompleteExtension(currentFilePath: string = ''
 		}
 	);
 
-	const completionSource = (context: CompletionContext) => {
+	const completionSource: CompletionSource = (context: CompletionContext) => {
 		return globalProcessor?.getCompletions(context) || null;
 	};
 
