@@ -41,7 +41,7 @@ if (
 		const scope = "/texlyre/";
 
 		console.log("[ServiceWroker] ]Service Worker Registration ===");
-		console.log("SW Path:", swPath);
+		console.log("Service Worker Path:", swPath);
 		console.log("Scope:", scope);
 		console.log("Full Service Worker URL:", window.location.origin + swPath);
 
@@ -59,7 +59,7 @@ if (
 				});
 			}
 		} catch (error) {
-			console.error("SW registration failed:", error);
+			console.error("Service worker registration failed:", error);
 		}
 	});
 } else {
@@ -68,7 +68,7 @@ if (
 		console.log(
 			"[ServiceWroker] Service worker registration skipped. HTTPS mode:",
 			isHttpsMode,
-			"Enable SW for HTTPS:",
+			"Enable Service worker for HTTPS:",
 			enableServiceWorkerForHttps,
 		);
 	});
