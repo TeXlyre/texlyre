@@ -155,23 +155,23 @@ class PluginRegistryManager {
 	): CollaborativeViewerPlugin | null {
 		console.log("[PluginRegistry] Looking for collaborative viewer for:", fileName, mimeType);
 		console.log(
-			"Available collaborative viewers:",
+			"[PluginRegistry] Available collaborative viewers:",
 			this.registry.collaborativeViewers.map((v) => v.name),
 		);
 
 		for (const viewer of this.registry.collaborativeViewers) {
 			console.log(
-				"Checking collaborative viewer:",
+				"[PluginRegistry] Checking collaborative viewer:",
 				viewer.name,
 				"canHandle result:",
 				viewer.canHandle(fileName, mimeType),
 			);
 			if (viewer.canHandle(fileName, mimeType)) {
-				console.log("Found matching collaborative viewer:", viewer.name);
+				console.log("[PluginRegistry] Found matching collaborative viewer:", viewer.name);
 				return viewer;
 			}
 		}
-		console.log("No collaborative viewer found for:", fileName, mimeType);
+		console.log("[PluginRegistry] No collaborative viewer found for:", fileName, mimeType);
 		return null;
 	}
 

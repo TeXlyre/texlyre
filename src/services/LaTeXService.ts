@@ -219,7 +219,7 @@ class LaTeXService {
 					mainFileName,
 					result.log,
 				);
-				console.log("Dvipdfmx conversion result:", {
+				console.log("[LaTeXService] Dvipdfmx conversion result:", {
 					status: result.status,
 					hasPdf: !!result.pdf,
 					pdfSize: result.pdf?.length,
@@ -227,7 +227,7 @@ class LaTeXService {
 			}
 
 			if (result.status === 0 && result.pdf && result.pdf.length > 0) {
-				console.log("Compilation successful!");
+				console.log("[LaTeXService] Compilation successful!");
 				await this.cleanupStaleFiles();
 				await this.saveCompilationOutput(
 					mainFileName.replace(/^\/+/, ""),
@@ -235,7 +235,7 @@ class LaTeXService {
 				);
 				await this.storeOutputDirectories(engine);
 			} else {
-				console.log("Compilation failed with errors");
+				console.log("[LaTeXService] Compilation failed with errors");
 				await this.cleanupStaleFiles();
 				await this.saveCompilationLog(
 					mainFileName.replace(/^\/+/, ""),
@@ -249,7 +249,7 @@ class LaTeXService {
 		} catch (error) {
 			if (this.getStatus() === "error") {
 				console.log(
-					"LaTeX Engine failed or was stopped by user, no further action needed.",
+					"[LaTeXService] LaTeX Engine failed or was stopped by user, no further action needed.",
 				);
 				return {
 					pdf: null,
@@ -312,7 +312,7 @@ class LaTeXService {
 			}
 
 			if (staleCacheIds.length > 0) {
-				console.log(`Cleaning up ${staleCacheIds.length} stale cache entries`);
+				console.log(`[LaTeXService] Cleaning up ${staleCacheIds.length} stale cache entries`);
 				await fileStorageService.batchDeleteFiles(staleCacheIds, {
 					showDeleteDialog: false,
 					hardDelete: true,
@@ -325,7 +325,7 @@ class LaTeXService {
 				}
 			}
 
-			console.log(`Loaded ${validCachedFiles.length} valid cached TeX files`);
+			console.log(`[LaTeXService] Loaded ${validCachedFiles.length} valid cached TeX files`);
 		} catch (error) {
 			console.error("Error loading and validating cached files:", error);
 		}
@@ -499,7 +499,7 @@ class LaTeXService {
 		}
 
 		console.log(
-			`Written ${workNodes.length} work files and ${cacheNodes.length} cache files to MemFS`,
+			`[LaTeXService] Written ${workNodes.length} work files and ${cacheNodes.length} cache files to MemFS`,
 		);
 	}
 
@@ -584,7 +584,7 @@ class LaTeXService {
 					showDeleteDialog: false,
 					hardDelete: true,
 				});
-				console.log(`Cleaned up ${staleFiles.length} stale LaTeX files`);
+				console.log(`[LaTeXService] Cleaned up ${staleFiles.length} stale LaTeX files`);
 			}
 		} catch (error) {
 			console.error("Error cleaning up stale files:", error);
@@ -636,7 +636,7 @@ class LaTeXService {
 				showConflictDialog: false,
 				preserveTimestamp: true,
 			});
-			console.log(`Batch stored ${filesToStore.length} files to ${baseDir}`);
+			console.log(`[LaTeXService] Batch stored ${filesToStore.length} files to ${baseDir}`);
 		}
 	}
 
@@ -714,7 +714,7 @@ class LaTeXService {
 				await fileStorageService.batchStoreFiles(outputFiles, {
 					showConflictDialog: false,
 				});
-				console.log(`Batch stored ${outputFiles.length} output files`);
+				console.log(`[LaTeXService] Batch stored ${outputFiles.length} output files`);
 			}
 		} catch (error) {
 			console.error("Error saving compilation output:", error);
@@ -733,7 +733,7 @@ class LaTeXService {
 			await fileStorageService.batchStoreFiles([logFile], {
 				showConflictDialog: false,
 			});
-			console.log("Saved compilation log");
+			console.log("[LaTeXService] Saved compilation log");
 		} catch (error) {
 			console.error("Error saving compilation log:", error);
 		}
@@ -753,7 +753,7 @@ class LaTeXService {
 					hardDelete: true,
 				});
 				console.log(
-					`Cleaned up ${filesToCleanup.length} files from ${directoryPath}`,
+					`[LaTeXService] Cleaned up ${filesToCleanup.length} files from ${directoryPath}`,
 				);
 			}
 		} catch (error) {
