@@ -33,6 +33,7 @@
 	background-color: var(--pico-secondary-background);
 	border-bottom: 1px solid var(--accent-border);
 	margin: 0;
+	width: 100vw;
 	z-index: var(--texlyre-z-index-sticky);
 	box-shadow: var(--texlyre-shadow-sm);
 }
