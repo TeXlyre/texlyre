@@ -21,14 +21,9 @@
 		"noUnusedParameters": false,
 		"noFallthroughCasesInSwitch": false,
 
-		"paths": {
-		  "extras": ["./src/extras"],
-		  "extras/*": ["./src/extras/*"]
-		}
 	},
 	"include": [
 		"src/**/*",
-		"extras/**/*",
 		"scripts/**/*",
 		"build.ts",
 		"plugins.config.js"

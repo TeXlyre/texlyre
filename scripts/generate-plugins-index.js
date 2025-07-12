@@ -11,7 +11,7 @@ import pluginsConfig from "../plugins.config.js";
 function fixImportPaths(filePath) {
     const content = fs.readFileSync(filePath, 'utf8');
 
-    // Simply remove 'src/' from the path since we're now inside src/extras/
+    // Simply remove 'src/' from the path since we're now inside src/plugins/
     const updatedContent = content.replace(
         /from ['"]\.\.\/\.\.\/\.\.\/src\/([^'"]+)['"]/g,
         "from '../../../$1'"
@@ -49,15 +49,15 @@ function generatePluginsIndex() {
     const exports = [];
     const pluginsByType = {};
 
-    const srcExtrasDir = path.join(rootDir, "src", "extras");
+    const srcPluginsDir = path.join(rootDir, "src", "plugins");
     const rootExtrasDir = path.join(rootDir, "extras");
 
-    // Create src/extras directory if it doesn't exist
-    fs.mkdirSync(srcExtrasDir, { recursive: true });
+    // Create src/plugins directory if it doesn't exist
+    fs.mkdirSync(srcPluginsDir, { recursive: true });
 
-    // Copy all extras content to src/extras and fix import paths
-    console.log("Copying extras to src/extras and fixing import paths...");
-    copyAndFixPlugins(rootExtrasDir, srcExtrasDir);
+    // Copy all extras content to src/plugins and fix import paths
+    console.log("Copying extras to src/plugins and fixing import paths...");
+    copyAndFixPlugins(rootExtrasDir, srcPluginsDir);
 
     // For each plugin path in the config
     for (const pluginPath of pluginsConfig.plugins) {
@@ -66,7 +66,8 @@ function generatePluginsIndex() {
         const pluginType = pathParts[0];
         const pluginVarName = `${pluginName}${pluginType.charAt(0).toUpperCase() + pluginType.slice(1)}Plugin`;
 
-        imports.push(`import ${pluginVarName} from './${pluginPath}';`);
+        // Now reference the copied files in src/plugins
+        imports.push(`import ${pluginVarName} from './${pluginPath}/index';`);
         exports.push(pluginVarName);
 
         if (!pluginsByType[pluginType]) {
@@ -101,8 +102,15 @@ ${plugins.map((name) => `  ${name}`).join(",\n")}
         }
     });
 
-    // Write the index file to src/extras
-    const outputPath = path.join(srcExtrasDir, "index.ts");
+    // Add default export with structured plugins object
+    content += `// Export the structured plugins object as default
+export default {
+${Object.keys(pluginsByType).map(type => `  ${type}`).join(",\n")}
+};
+`;
+
+    // Write the index file to src/plugins
+    const outputPath = path.join(srcPluginsDir, "index.ts");
     fs.writeFileSync(outputPath, content);
 
     console.log(`Generated plugins index at ${outputPath}`);

@@ -22,7 +22,7 @@ const isHttpsMode =
 	window.location.protocol === "https:" &&
 	window.location.hostname !== "localhost";
 
-const enableServiceWorkerForHttps = false; // Set to false to disable SW in HTTPS mode
+const enableServiceWorkerForHttps = true; // Set to false to disable SW in HTTPS mode
 const clearServiceWorkerOnLoad = false; // Set to true to clear existing SWs on load
 
 if (

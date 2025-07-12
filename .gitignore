@@ -11,7 +11,9 @@ node_modules
 dist
 dist-ssr
 *.local
-/src/extras/
+src/plugins/
+!src/plugins/PluginRegistry.ts
+!src/plugins/PluginInterface.ts
 
 # Editor directories and files
 .vscode/*
