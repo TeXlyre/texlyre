@@ -1,5 +1,5 @@
 // src/plugins/PluginRegistry.ts
-import * as plugins from "../../extras";
+import * as plugins from "extras";
 import type { Setting } from "../contexts/SettingsContext";
 import type {
 	BackupPlugin,

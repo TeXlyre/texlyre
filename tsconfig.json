@@ -19,7 +19,12 @@
 		"strict": false,
 		"noUnusedLocals": false,
 		"noUnusedParameters": false,
-		"noFallthroughCasesInSwitch": false
+		"noFallthroughCasesInSwitch": false,
+
+		"paths": {
+		  "extras": ["./extras"],
+		  "extras/*": ["./extras/*"]
+		}
 	},
 	"include": [
 		"src/**/*",
