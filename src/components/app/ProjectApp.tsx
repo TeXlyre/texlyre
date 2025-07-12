@@ -3,25 +3,26 @@ import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 
 import texlyreLogo from "../../assets/images/TeXlyre_notext.png";
-import { useAuth } from "../../hooks/useAuth.ts";
+import { useAuth } from "../../hooks/useAuth";
 import { useFileSystemBackup } from "../../hooks/useFileSystemBackup";
-import { useTheme } from "../../hooks/useTheme.ts";
-import type { Project } from "../../types/projects.ts";
+import { useTheme } from "../../hooks/useTheme";
+import type { Project } from "../../types/projects";
 import { isValidYjsUrl } from "../../types/yjs";
 import BackupDiscoveryModal from "../backup/BackupDiscoveryModal";
-import BackupModal from "../backup/BackupModal.tsx";
+import BackupModal from "../backup/BackupModal";
 import BackupStatusIndicator from "../backup/BackupStatusIndicator";
-import Modal from "../common/Modal.tsx";
-import ResizablePanel from "../common/ResizablePanel.tsx";
+import Modal from "../common/Modal";
+import ResizablePanel from "../common/ResizablePanel";
 import ExportAccountModal from "../profile/ExportAccountModal";
 import ProfileSettingsModal from "../profile/ProfileSettingsModal";
 import UserDropdown from "../profile/UserDropdown";
 import ProjectExportModal from "../project/ProjectExportModal";
-import ProjectForm from "../project/ProjectForm.tsx";
+import ProjectForm from "../project/ProjectForm";
 import ProjectImportModal from "../project/ProjectImportModal";
-import ProjectList from "../project/ProjectList.tsx";
-import ProjectToolbar from "../project/ProjectToolbar.tsx";
-import SettingsButton from "../settings/SettingsButton.tsx";
+import ProjectList from "../project/ProjectList";
+import ProjectToolbar from "../project/ProjectToolbar";
+import SettingsButton from "../settings/SettingsButton";
+import PrivacyModal from "../common/PrivacyModal";
 
 interface ProjectManagerProps {
 	onOpenProject: (
@@ -85,9 +86,8 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const [error, setError] = useState<string | null>(null);
 	const [showImportModal, setShowImportModal] = useState(false);
 	const [showExportModal, setShowExportModal] = useState(false);
-	const [selectedProjectsForExport, setSelectedProjectsForExport] = useState<
-		Project[]
-	>([]);
+	const [selectedProjectsForExport, setSelectedProjectsForExport] = useState<Project[]>([]);
+	const [showPrivacy, setShowPrivacy] = useState(false);
 
 	useEffect(() => {
 		setShowAutoBackupModal(shouldShowAutoBackupModal);
@@ -405,8 +405,24 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 					<a href="https://texlyre.github.io/texlyre/" target="_blank" rel="noreferrer">
 						<img src={texlyreLogo} className="logo" alt="TeXlyre logo" />
 					</a>
+					<span className="legal-links">
+					  <br/> <a href="https://github.com/TeXlyre/texlyre/blob/main/LICENSE" target="_blank" rel="noreferrer">
+						AGPL-3.0 License
+					  </a>
+						{" "} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">
+						Source Code
+					  </a>
+					  {" "} • <a href="#" onClick={() => setShowPrivacy(true)} className="privacy-link">
+						Privacy
+					  </a>
+					</span>
 				</p>
 			</footer>
+
+			<PrivacyModal
+			  isOpen={showPrivacy}
+			  onClose={() => setShowPrivacy(false)}
+			/>
 
 			<Modal
 				isOpen={showCreateModal}

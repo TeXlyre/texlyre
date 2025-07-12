@@ -1,25 +1,25 @@
 .auth-container {
-	min-height: 100vh;
-	width: 100%;
-	display: flex;
-	flex-direction: column;
-	justify-content: flex-start;
-	align-items: center;
-	background-color: var(--pico-background);
-	color: var(--text-color);
-	padding: var(--space-md) 0;
-	transform: scale(0.70);
-	transform-origin: top center;
+    min-height: 90vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    background-color: var(--pico-background);
+    color: var(--text-color);
+    padding: var(--space-md) 0;
+    transform-origin: top center;
 }
 
 .auth-box {
-	width: 480px;
-	max-width: 90%;
-	background-color: var(--pico-secondary-background, #f9f9f9);
-	border-radius: var(--radius-lg);
-	box-shadow: var(--shadow-lg);
-	padding: var(--space-lg);
-	margin-bottom: var(--space-md);
+    width: 500px;
+    max-width: 90%;
+    background-color: var(--pico-secondary-background , #f9f9f9);
+    border: 1px solid rgba(224, 224, 224, 0.5);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(224, 224, 224, 0.3);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-xs);
 }
 
 .auth-logo-wrapper {
@@ -166,9 +166,10 @@
 }
 
 .auth-footer {
-	margin-top: var(--space-md);
-	color: var(--pico-secondary);
-	font-size: 0.9rem;
+    margin-top: auto;
+    margin-bottom: var(--space-xs);
+    color: var(--pico-secondary);
+    font-size: 0.9rem;
 }
 
 .auth-privacy-note {

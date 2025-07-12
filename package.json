@@ -2,6 +2,13 @@
 	"name": "texlyre",
 	"private": true,
 	"version": "0.1.10",
+	"description": "A local-first LaTeX web editor with real-time collaboration.",
+	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
+	"license": "AGPL-3.0-or-later",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/texlyre/texlyre.git"
+	},
 	"type": "module",
 	"scripts": {
 		"predev": "node scripts/copy-pdf-cmaps.cjs",

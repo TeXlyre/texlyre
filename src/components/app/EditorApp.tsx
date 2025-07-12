@@ -32,6 +32,7 @@ import ProjectForm from "../project/ProjectForm.tsx";
 import ShareProjectButton from "../project/ShareProjectButton";
 import ShareProjectModal from "../project/ShareProjectModal";
 import SettingsButton from "../settings/SettingsButton";
+import PrivacyModal from "../common/PrivacyModal";
 
 interface EditorAppProps {
 	docUrl: YjsDocUrl;
@@ -82,6 +83,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	} | null>(null);
 	const lastSyncedMetadata = useRef({ name: "", description: "" });
 	const { isOfflineMode } = useOffline();
+	const [showPrivacy, setShowPrivacy] = useState(false);
 
 	const updateContent = (docId: string, content: string) => {
 		// Use `changeData` from the collab context.
@@ -381,14 +383,30 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			)}
 
 			<footer>
-				<p className="read-the-docs">
-					Built with TeXlyre
-					<a href="https://texlyre.github.io/texlyre/" target="_blank" rel="noreferrer">
-						<img src={texlyreLogo} className="logo" alt="TeXlyre logo" />
-					</a>
-				</p>
-				<ChatPanel className="footer-chat" />
+			  <p className="read-the-docs">
+				Built with TeXlyre
+				<a href="https://texlyre.github.io/texlyre/" target="_blank" rel="noreferrer">
+				  <img src={texlyreLogo} className="logo" alt="TeXlyre logo" />
+				</a>
+				<span className="legal-links">
+				  <br/> <a href="https://github.com/TeXlyre/texlyre/blob/main/LICENSE" target="_blank" rel="noreferrer">
+					AGPL-3.0 License
+				  </a>
+					{" "} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">
+					Source Code
+				  </a>
+				  {" "} • <a href="#" onClick={() => setShowPrivacy(true)} className="privacy-link">
+					Privacy
+				  </a>
+				</span>
+			  </p>
+			  <ChatPanel className="footer-chat" />
 			</footer>
+
+			<PrivacyModal
+			  isOpen={showPrivacy}
+			  onClose={() => setShowPrivacy(false)}
+			/>
 
 			<Modal
 				isOpen={isEditingMetadata}

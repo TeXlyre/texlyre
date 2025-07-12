@@ -19,6 +19,8 @@ const Register: React.FC<RegisterProps> = ({
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
+	const [ageConfirmed, setAgeConfirmed] = useState(false);
+	const [privacyAccepted, setPrivacyAccepted] = useState(false);
 	const [email, setEmail] = useState("");
 	const [error, setError] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
@@ -137,11 +139,40 @@ const Register: React.FC<RegisterProps> = ({
 				<button
 					type="submit"
 					className={`auth-button ${isLoading ? "loading" : ""}`}
-					disabled={isLoading}
+					disabled={!ageConfirmed || !privacyAccepted || isLoading}
 				>
 					{isLoading ? "Creating Account..." : "Sign Up"}
 				</button>
 			</form>
+
+				<div className="form-group">
+				  <label className="checkbox-control">
+					<input
+					  type="checkbox"
+					  checked={ageConfirmed}
+					  onChange={(e) => setAgeConfirmed(e.target.checked)}
+					  required
+					/>
+					<span>I confirm I am at least 16 years old</span>
+				  </label>
+				</div>
+
+				<div className="form-group">
+				  <label className="checkbox-control">
+					<input
+					  type="checkbox"
+					  checked={privacyAccepted}
+					  onChange={(e) => setPrivacyAccepted(e.target.checked)}
+					  required
+					/>
+					<span>
+					  I agree to the local storage of my data as described in the{" "}
+					  <a href="#" onClick={(e) => { e.preventDefault(); /* show privacy modal */ }}>
+						privacy information
+					  </a>
+					</span>
+				  </label>
+				</div>
 
 			<div className="auth-alt-action">
 				<span>Already have an account?</span>

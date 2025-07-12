@@ -34,10 +34,10 @@ The platform includes a comprehensive file explorer supporting drag-and-drop ope
 
 ## Quick Start
 
-Installation requires Node.js 16+ and a modern browser with File System Access API support:
+Installation requires Node.js 18+ and a modern browser with File System Access API support:
 
 ```bash
-git clone https://github.com/fabawi/texlyre.git
+git clone https://github.com/TeXlyre/texlyre.git
 cd texlyre
 npm install
 npm run dev
@@ -62,7 +62,7 @@ The File System Access API enables direct synchronization with local folders, su
 ### Peer-to-peer Sharing
 
 FilePizza integration facilitates secure file sharing between collaborators over WebRTC. Large files, images, and other non-collaborative text files can be transferred directly between browsers, maintaining privacy and reducing dependency on external services. 
-This protocol although completely independent of the Yjs WebRTC connection, TeXlyre still uses Yjs to manage file metadata and synchronization state, ensuring that all collaborators have access to the latest versions of shared files.
+This protocol, although completely independent of the Yjs WebRTC connection, we stilluse Yjs to manage file metadata and synchronization state, ensuring that all collaborators have access to the latest versions of shared files.
 Yjs facilities facilitates real-time collaboration (e.g., live updates to file lists, shared metadata, cursor tracking, real-time document editing) while FilePizza handles the file transfer of non-collaborative files.
 
 ## Development
@@ -70,10 +70,12 @@ Yjs facilities facilitates real-time collaboration (e.g., live updates to file l
 ### Building and Development
 
 ```bash
-npm run dev      # Development server with hot reload
-npm run build    # Production build optimization
-npm run preview  # Local preview of production build
-npm run lint     # ESLint code quality checks
+npm install            # Install npm packages
+npm run dev            # Development server with hot reload
+npm run dev:https      # Development HTTPS server with hot reload
+npm run build          # Production build optimization
+npm run preview        # Local preview of production build
+npm run lint           # ESLint code quality checks
 ```
 
 ### Plugin Development
@@ -96,13 +98,57 @@ Once a plugin is developed, it can be registered in the `plugins.config.ts` by s
 
 ## Browser Compatibility
 
-TeXlyre requires modern browser features for optimal functionality. **Chrome and Edge** provide full feature support including File System Access API and WebRTC. **Firefox** supports core collaboration features but has limited file system integration. **Safari** offers partial compatibility with reduced file system access capabilities.
+TeXlyre requires modern browser features for optimal functionality. **Chrome and Edge** provide full feature support including File System Access API and WebRTC. 
+**Firefox** supports core collaboration features but has limited file system integration. **Safari** offers partial compatibility with reduced file system access capabilities.
+The File System API was not thoroughly tested with the mobile device browsers, therefore, use the file system backup feature on TeXlyre with caution.
 
 WebRTC support is essential for real-time collaboration, while the File System Access API enables advanced backup and synchronization features in supported browsers.
 
 ## License
 
-TexLyre is licensed under the GNU Affero General Public License v3.0. This means you can use, modify, and distribute the software freely, but any derivative works must also be open-sourced under the same license - see [LICENSE](LICENSE) file for details.
+TeXlyre is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+
+This means:
+- ✅ You can use, modify, and distribute this software
+- ✅ You can run it for any purpose, including commercial use
+- ⚖️ If you distribute modified versions, you must also distribute the source code
+- ⚖️ If you run a modified version as a network service, you must provide source code to users
+
+See [LICENSE](LICENSE) for the complete license text.
+
+### Why AGPL-3.0?
+
+We chose AGPL-3.0 to ensure that improvements to TeXlyre remain open and available to the community, even when the software is used as a web service.
+
+## Privacy & Data
+
+TeXlyre is privacy-focused by design:
+
+- **Local-first**: All your data stays in your browser
+- **Direct connections**: Peer-to-peer collaboration without server intermediaries  
+- **No tracking**: No analytics, cookies, or data collection
+
+When you collaborate, IP addresses are temporarily processed through signaling servers to establish direct connections. No project content is transmitted through our servers.
+
+### GitHub Integration
+The optional GitHub integration only activates when you explicitly enable it and provide your own GitHub token.
+
+## Infrastructure
+
+TeXlyre uses open source signaling servers for WebRTC connections:
+
+- **Y-WebRTC Signaling**: Based on [y-webrtc](https://github.com/yjs/y-webrtc)
+- **PeerJS Signaling**: Based on [PeerJS Server](https://github.com/peers/peerjs-server)
+- **TeX Live Download Server**: Based on [SwiftLaTeX Texlive On-Demand Server](https://github.com/SwiftLaTeX/Texlive-Ondemand)
+- **FilePizza Server**: Based on [FilePizza](https://github.com/kern/filepizza) which relies on PeerJS (built-in TURN servers are not deployed on TeXlyre servers)
+
+All servers are hosted locally an made publicly available with [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/)
+
+### Self-Hosting
+You can run your own signaling servers by following the setup instructions in our [infrastructure repository](https://github.com/texlyre/texlyre-infrastructure).
+
+
+
 
 ## Acknowledgments
 

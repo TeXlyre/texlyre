@@ -1,0 +1,56 @@
+.legal-links {
+  font-size: 0.85em;
+  color: var(--text-secondary);
+}
+
+.legal-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.legal-links a:hover {
+  text-decoration: underline;
+}
+
+.privacy-link {
+  cursor: pointer;
+}
+
+.privacy-content ul {
+  margin-bottom: 1.5rem;
+}
+
+.privacy-content .contact-info {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.9em;
+  color: var(--text-secondary);
+}
+
+.checkbox-control {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.checkbox-control input[type="checkbox"] {
+  margin-top: 0.125rem;
+}
+
+.gdpr-notice {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: var(--background-secondary);
+  border-radius: 6px;
+  border-left: 3px solid var(--accent-color);
+}
+
+.dropdown-item.danger {
+  color: #dc3545;
+}
+
+.dropdown-item.danger:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+}

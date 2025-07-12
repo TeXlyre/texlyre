@@ -23,9 +23,8 @@ body {
 	margin: 0;
 	display: flex;
 	place-items: center;
-	height: 100%;
-	min-width: 1200px;
 	min-height: 100vh;
+	min-width: 1200px;
 	color: var(--text-color);
 	background-color: var(--pico-background);
 }

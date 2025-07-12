@@ -4,10 +4,11 @@ import { useState } from "react";
 
 import texlyeLogo from "../../assets/images/TeXlyre_notext.png";
 import texlyreLogo from "../../assets/images/TeXlyre_notext.png";
-import { useTheme } from "../../hooks/useTheme.ts";
-import ImportAccount from "../auth/ImportAccount.tsx";
-import Login from "../auth/Login.tsx";
-import Register from "../auth/Register.tsx";
+import { useTheme } from "../../hooks/useTheme";
+import ImportAccount from "../auth/ImportAccount";
+import Login from "../auth/Login";
+import Register from "../auth/Register";
+import PrivacyModal from "../common/PrivacyModal";
 
 interface AuthContainerProps {
 	onAuthSuccess: () => void;
@@ -18,6 +19,7 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 	const [activeView, setActiveView] = useState<"login" | "register" | "import">(
 		"login",
 	);
+	const [showPrivacy, setShowPrivacy] = useState(false);
 
 	const switchToLogin = () => {
 		setActiveView("login");
@@ -63,14 +65,31 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 				<p>Your account and projects stay private in this browser. TeXlyre is fully local.</p>
 			 </div>
 		  </div>
-		  <div className="auth-footer">
+		  <footer className="auth-footer">
 			 <p className="read-the-docs">
 				Built with TeXlyre
 				<a href="https://texlyre.github.io/texlyre/" target="_blank" rel="noreferrer">
 				   <img src={texlyreLogo} className="logo" alt="TeXlyre logo" />
 				</a>
+				 <span className="legal-links">
+				  <br/> <a href="https://github.com/TeXlyre/texlyre/blob/main/LICENSE" target="_blank" rel="noreferrer">
+					AGPL-3.0 License
+				  </a>
+					{" "} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">
+					Source Code
+				  </a>
+				  {" "} • <a href="#" onClick={() => setShowPrivacy(true)} className="privacy-link">
+					Privacy
+				  </a>
+				</span>
 			 </p>
-		  </div>
+		  </footer>
+
+		   <PrivacyModal
+			   isOpen={showPrivacy}
+			   onClose={() => setShowPrivacy(false)}
+		   />
+
 	   </div>
 	);
 
