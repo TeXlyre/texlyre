@@ -1,4 +1,4 @@
-const CACHE_NAME = `texlyre-v0.1.12`; //`texlyre-v${process.env.npm_package_version || '1'}`;
+const CACHE_NAME = `texlyre-v0.1.13`; //`texlyre-v${process.env.npm_package_version || '1'}`;
 const BASE_PATH = '/texlyre/';
 
 console.log('[ServiceWorker] Service Worker loading with base path:', BASE_PATH);

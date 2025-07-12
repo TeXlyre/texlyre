@@ -342,7 +342,9 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						selectedDocId={localDocId}
 						documents={doc?.documents}
 						onNavigateToLinkedFile={handleNavigateToLinkedFile}
-						onExpandLatexOutput={handleExpandLatexOutput}
+						onExpandLatexOutput={() => {
+							document.dispatchEvent(new CustomEvent("expand-latex-output"));
+						}}
 						linkedFileInfo={linkedFileInfo}
 						shouldNavigateOnCompile={true}
 					/>

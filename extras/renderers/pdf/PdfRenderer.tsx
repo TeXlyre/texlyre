@@ -15,6 +15,7 @@ import {
 	ZoomOutIcon,
 } from "../../../src/components/common/Icons";
 import { useSettings } from "../../../src/hooks/useSettings";
+import { useProperties } from "../../../src/hooks/useProperties";
 import type { RendererProps } from "../../../src/plugins/PluginInterface";
 import "./styles.css";
 
@@ -29,6 +30,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	onDownload,
 }) => {
 	const { getSetting } = useSettings();
+	const { getProperty, setProperty, registerProperty } = useProperties();
+	const propertiesRegistered = useRef(false);
 
 	const pdfRendererEnable =
 		(getSetting("pdf-renderer-enable")?.value as boolean) ?? true;
@@ -47,6 +50,40 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const contentRef = useRef<ArrayBuffer | null>(null);
 	const originalContentRef = useRef<ArrayBuffer | null>(null);
 	const contentHashRef = useRef<string>("");
+
+	// Register properties
+	useEffect(() => {
+		if (propertiesRegistered.current) return;
+		propertiesRegistered.current = true;
+
+		registerProperty({
+			id: "pdf-renderer-zoom",
+			category: "UI",
+			subcategory: "PDF Viewer",
+			defaultValue: 1.0,
+		});
+
+		registerProperty({
+			id: "pdf-renderer-scroll-view",
+			category: "UI",
+			subcategory: "PDF Viewer",
+			defaultValue: false,
+		});
+	}, [registerProperty]);
+
+	// Load properties
+	useEffect(() => {
+		const storedZoom = getProperty("pdf-renderer-zoom");
+		const storedScrollView = getProperty("pdf-renderer-scroll-view");
+
+		if (storedZoom !== undefined) {
+			setScale(Number(storedZoom));
+		}
+
+		if (storedScrollView !== undefined) {
+			setScrollView(Boolean(storedScrollView));
+		}
+	}, [getProperty]);
 
 	const getContentHash = useCallback((buffer: ArrayBuffer): string => {
 		const view = new Uint8Array(buffer);
@@ -175,18 +212,30 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	);
 
 	const handleZoomIn = useCallback(() => {
-		setScale((prev) => Math.min(prev + 0.25, 3));
-	}, []);
+		setScale((prev) => {
+			const newScale = Math.min(prev + 0.25, 3);
+			setProperty("pdf-renderer-zoom", newScale);
+			return newScale;
+		});
+	}, [setProperty]);
 
 	const handleZoomOut = useCallback(() => {
-		setScale((prev) => Math.max(prev - 0.25, 0.5));
-	}, []);
+		setScale((prev) => {
+			const newScale = Math.max(prev - 0.25, 0.5);
+			setProperty("pdf-renderer-zoom", newScale);
+			return newScale;
+		});
+	}, [setProperty]);
 
 	const handleToggleView = useCallback(() => {
-		setScrollView((prev) => !prev);
-		// Reset page refs when switching views
-		pageRefs.current.clear();
-	}, []);
+		setScrollView((prev) => {
+			const newScrollView = !prev;
+			setProperty("pdf-renderer-scroll-view", newScrollView);
+			// Reset page refs when switching views
+			pageRefs.current.clear();
+			return newScrollView;
+		});
+	}, [setProperty]);
 
 	const onPageLoadSuccess = useCallback((_pageNumber: number) => {
 		return (_page: any) => {

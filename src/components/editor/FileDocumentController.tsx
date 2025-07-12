@@ -114,6 +114,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 	const [latexOutputCollapsed, setLatexOutputCollapsed] = useState(false);
 	const [showLatexOutput, setShowLatexOutput] = useState(false);
+	const [temporaryLatexExpand, setTemporaryLatexExpand] = useState(false);
 	const [documentSelectionChange, setDocumentSelectionChange] = useState(0);
 	const [fileSelectionChange, setFileSelectionChange] = useState(0);
 	const [hasNavigatedToFile, setHasNavigatedToFile] = useState(false);
@@ -298,12 +299,6 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 			}
 		};
 
-		const handleExpandLatexOutput = () => {
-			if (!showLatexOutput) {
-				setShowLatexOutput(true);
-			}
-		};
-
 		document.addEventListener(
 			"navigate-to-linked-file",
 			handleNavigateToLinkedFile,
@@ -312,7 +307,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 			"navigate-to-compiled-file",
 			handleNavigateToCompiledFile,
 		);
-		document.addEventListener("expand-latex-output", handleExpandLatexOutput);
+		document.addEventListener("expand-latex-output", handleLatexOutputExpand);
 
 		return () => {
 			document.removeEventListener(
@@ -325,7 +320,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 			);
 			document.removeEventListener(
 				"expand-latex-output",
-				handleExpandLatexOutput,
+				handleLatexOutputExpand,
 			);
 		};
 	}, [
@@ -632,6 +627,18 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	const handleLatexOutputCollapse = (collapsed: boolean) => {
 		setLatexOutputCollapsed(collapsed);
 		setProperty("latex-output-collapsed", collapsed);
+		// If user manually collapses, clear temporary expand
+		if (collapsed) {
+			setTemporaryLatexExpand(false);
+		}
+	};
+
+	const handleLatexOutputExpand = () => {
+	if (!showLatexOutput) {
+		setShowLatexOutput(true);
+	}
+	// Temporarily expand without saving to properties
+	setTemporaryLatexExpand(true);
 	};
 
 	const handleNavigateToLinkedFile = () => {
@@ -644,12 +651,6 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 					},
 				}),
 			);
-		}
-	};
-
-	const handleExpandLatexOutput = () => {
-		if (!showLatexOutput) {
-			setShowLatexOutput(true);
 		}
 	};
 
@@ -751,7 +752,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 						maxWidth={1200}
 						alignment="start"
 						onResize={handleLatexOutputWidthResize}
-						collapsed={latexOutputCollapsed}
+						collapsed={latexOutputCollapsed && !temporaryLatexExpand}
 						onCollapse={handleLatexOutputCollapse}
 						className="latex-output-container"
 					>
@@ -759,7 +760,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 							selectedDocId={selectedDocId}
 							documents={documents}
 							onNavigateToLinkedFile={handleNavigateToLinkedFile}
-							onExpandLatexOutput={handleExpandLatexOutput}
+							onExpandLatexOutput={handleLatexOutputExpand}
 							linkedFileInfo={linkedFileInfo}
 						/>
 					</ResizablePanel>
