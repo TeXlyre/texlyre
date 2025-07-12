@@ -124,6 +124,7 @@ const EditorContent: React.FC<{
 		isViewOnly,
 		fileName,
 		fileId,
+		true
 	);
 
 	useEffect(() => {

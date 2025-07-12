@@ -56,6 +56,7 @@ export const EditorLoader = (
 	isViewOnly = false,
 	fileName?: string,
 	currentFileId?: string,
+	enableComments = false,
 ) => {
 	const {
 		getAutoSaveEnabled,
@@ -338,32 +339,35 @@ export const EditorLoader = (
 			extensions.push(yCollab(ytextRef.current, provider.awareness));
 		}
 
-		const commentKeymap = keymap.of([
-			{
-				key: "Alt-c",
-				run: (view) => {
-					if (isViewOnly) return false;
-					const selection = view.state.selection;
-					const primaryRange = selection.main;
-					if (primaryRange.from !== primaryRange.to) {
-						try {
-							document.dispatchEvent(
-								new CustomEvent("show-comment-modal", {
-									detail: { selection: primaryRange },
-								})
-							);
-							return true;
-						} catch (error) {
-							console.error("Error in commentKeymap:", error);
+		// Only add comment system if comments are enabled
+		if (enableComments) {
+			const commentKeymap = keymap.of([
+				{
+					key: "Alt-c",
+					run: (view) => {
+						if (isViewOnly) return false;
+						const selection = view.state.selection;
+						const primaryRange = selection.main;
+						if (primaryRange.from !== primaryRange.to) {
+							try {
+								document.dispatchEvent(
+									new CustomEvent("show-comment-modal", {
+										detail: { selection: primaryRange },
+									})
+								);
+								return true;
+							} catch (error) {
+								console.error("Error in commentKeymap:", error);
+							}
 						}
-					}
-					return false;
+						return false;
+					},
 				},
-			},
-		]);
+			]);
 
-		extensions.push(commentKeymap);
-		extensions.push(commentSystemExtension);
+			extensions.push(commentKeymap);
+			extensions.push(commentSystemExtension);
+		}
 
 		const saveKeymap = keymap.of([
 			{
@@ -403,7 +407,9 @@ export const EditorLoader = (
 						isUpdatingRef.current = true;
 						try {
 							onUpdateContent(content);
-							updateComments(content);
+							if (enableComments) {
+								updateComments(content);
+							}
 							if (autoSaveRef.current) autoSaveRef.current();
 						} finally {
 							isUpdatingRef.current = false;
@@ -434,6 +440,7 @@ export const EditorLoader = (
 		isViewOnly,
 		fileName,
 		editorSettingsVersion,
+		enableComments, // Added to dependencies
 	]);
 
 	useEffect(() => {
@@ -770,7 +777,9 @@ export const EditorLoader = (
 			isUpdatingRef.current = true;
 			try {
 				onUpdateContent(content);
-				updateComments(content);
+				if (enableComments) {
+					updateComments(content);
+				}
 				if (autoSaveRef.current) autoSaveRef.current();
 			} finally {
 				isUpdatingRef.current = false;
@@ -789,6 +798,7 @@ export const EditorLoader = (
 		onUpdateContent,
 		updateComments,
 		isEditingFile,
+		enableComments, // Added to dependencies
 	]);
 
 	useEffect(() => {

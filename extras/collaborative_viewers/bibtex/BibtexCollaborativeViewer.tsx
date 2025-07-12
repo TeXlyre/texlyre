@@ -102,6 +102,8 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					false,
 					false,
 					fileName,
+					undefined,
+					false, // Disable comments for bib files
 				)
 			: EditorLoader(
 					editorRef,
@@ -116,6 +118,8 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					true,
 					false,
 					fileName,
+					undefined,
+					false, // Disable comments for bib files
 				);
 
 	useEffect(() => {
