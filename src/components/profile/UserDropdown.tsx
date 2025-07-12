@@ -8,6 +8,7 @@ interface UserDropdownProps {
 	onLogout: () => void;
 	onOpenProfile: () => void;
 	onOpenExport: () => void;
+	onOpenDeleteAccount: () => void;
 }
 
 const UserDropdown: React.FC<UserDropdownProps> = ({
@@ -15,6 +16,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 	onLogout,
 	onOpenProfile,
 	onOpenExport,
+	onOpenDeleteAccount,
 }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
@@ -66,6 +68,16 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 						}}
 					>
 						Export Account
+					</button>
+					<div className="dropdown-separator" />
+					<button
+						className="dropdown-item danger"
+						onClick={() => {
+							setIsOpen(false);
+							onOpenDeleteAccount();
+						}}
+					>
+						Delete Account
 					</button>
 					<button
 						className="dropdown-item"

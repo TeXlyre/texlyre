@@ -381,7 +381,6 @@
 .sync-info h3,
 .collab-info h3 {
 	margin: 0 0 var(--space-md) 0;
-	color: var(--text-color);
 }
 
 .info-content {

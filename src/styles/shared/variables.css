@@ -45,6 +45,7 @@
 	--z-modal: 1030;
 	--z-popup: 1040;
 	--z-tooltip: 1050;
+	--z-above-all: 1100;
 
 	/* Common Colors */
 	--color-error: #dc3545;

@@ -21,7 +21,6 @@
 .file-explorer-header h3 {
 	margin: 0;
 	font-size: 1rem;
-	color: var(--text-color);
 }
 
 .file-explorer-actions {

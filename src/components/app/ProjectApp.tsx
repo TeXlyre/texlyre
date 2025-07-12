@@ -23,6 +23,7 @@ import ProjectList from "../project/ProjectList";
 import ProjectToolbar from "../project/ProjectToolbar";
 import SettingsButton from "../settings/SettingsButton";
 import PrivacyModal from "../common/PrivacyModal";
+import DeleteAccountModal from "../profile/DeleteAccountModal.tsx";
 
 interface ProjectManagerProps {
 	onOpenProject: (
@@ -86,6 +87,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const [error, setError] = useState<string | null>(null);
 	const [showImportModal, setShowImportModal] = useState(false);
 	const [showExportModal, setShowExportModal] = useState(false);
+	const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
 	const [selectedProjectsForExport, setSelectedProjectsForExport] = useState<Project[]>([]);
 	const [showPrivacy, setShowPrivacy] = useState(false);
 
@@ -116,6 +118,11 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	useEffect(() => {
 		loadProjects();
 	}, [loadProjects]);
+
+	const handleAccountDeleted = async () => {
+		setIsDeleteAccountModalOpen(false);
+		await onLogout();
+	};
 
 	const handleSearch = async (query: string) => {
 		if (!query.trim()) {
@@ -334,6 +341,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						onLogout={onLogout}
 						onOpenProfile={() => setShowProfileModal(true)}
 						onOpenExport={() => setShowAccountExportModal(true)}
+						onOpenDeleteAccount={() => setIsDeleteAccountModalOpen(true)}
 					/>
 				</div>
 			</header>
@@ -501,6 +509,12 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			<ExportAccountModal
 				isOpen={showAccountExportModal}
 				onClose={() => setShowAccountExportModal(false)}
+			/>
+			<DeleteAccountModal
+				isOpen={isDeleteAccountModalOpen}
+				onClose={() => setIsDeleteAccountModalOpen(false)}
+				onAccountDeleted={handleAccountDeleted}
+				onOpenExport={() => setShowAccountExportModal(true)}
 			/>
 			<ProjectImportModal
 				isOpen={showImportModal}

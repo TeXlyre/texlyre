@@ -69,6 +69,10 @@ h1 {
 	color: var(--text-color);
 }
 
+h3 {
+	color: var(--text-color);
+}
+
 button,
 select,
 input,

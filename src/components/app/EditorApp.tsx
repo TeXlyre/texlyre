@@ -26,6 +26,7 @@ import ToastContainer from "../common/ToastContainer";
 import FileDocumentController from "../editor/FileDocumentController.tsx";
 import LaTeXCompileButton from "../latex/LaTeXCompileButton";
 import ExportAccountModal from "../profile/ExportAccountModal";
+import DeleteAccountModal from "../profile/DeleteAccountModal";
 import ProfileSettingsModal from "../profile/ProfileSettingsModal";
 import UserDropdown from "../profile/UserDropdown";
 import ProjectForm from "../project/ProjectForm.tsx";
@@ -69,7 +70,8 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		changeDirectory,
 	} = useFileSystemBackup();
 	const [showProfileModal, setShowProfileModal] = useState(false);
-	const [showExportModal, setShowExportModal] = useState(false);
+	const [showAccountExportModal, setShowAccountExportModal] = useState(false);
+	const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
 	const [showAutoBackupModal, setShowAutoBackupModal] = useState(false);
 	const [showShareModal, setShowShareModal] = useState(false);
 	const [isEditingMetadata, setIsEditingMetadata] = useState(false);
@@ -203,6 +205,11 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		checkLinkedFile();
 	}, [localDocId, doc?.documents]);
 
+	const handleAccountDeleted = async () => {
+		setIsDeleteAccountModalOpen(false);
+		await onLogout();
+	};
+
 	const handleCreateDocument = () => {
 		changeDoc((d) => {
 			if (!d.documents) {
@@ -275,7 +282,6 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	};
 
 	const handleExpandLatexOutput = () => {
-		// Dispatch event to expand LaTeX output
 		document.dispatchEvent(new CustomEvent("expand-latex-output"));
 	};
 
@@ -362,7 +368,8 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						username={user?.username || ""}
 						onLogout={onLogout}
 						onOpenProfile={() => setShowProfileModal(true)}
-						onOpenExport={() => setShowExportModal(true)}
+						onOpenExport={() => setShowAccountExportModal(true)}
+						onOpenDeleteAccount={() => setIsDeleteAccountModalOpen(true)}
 					/>
 				</div>
 			</header>
@@ -442,8 +449,14 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 				onClose={() => setShowProfileModal(false)}
 			/>
 			<ExportAccountModal
-				isOpen={showExportModal}
-				onClose={() => setShowExportModal(false)}
+				isOpen={showAccountExportModal}
+				onClose={() => setShowAccountExportModal(false)}
+			/>
+			<DeleteAccountModal
+				isOpen={isDeleteAccountModalOpen}
+				onClose={() => setIsDeleteAccountModalOpen(false)}
+				onAccountDeleted={handleAccountDeleted}
+				onOpenExport={() => setShowAccountExportModal(true)}
 			/>
 			<BackupModal
 				isOpen={showAutoBackupModal}

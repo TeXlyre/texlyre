@@ -305,3 +305,27 @@
 	line-height: 1.4;
 	z-index: 10;
 }
+
+.export-link-button {
+  background: none;
+  border: none;
+  color: var(--link-color, #007bff);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+}
+
+.export-link-button:hover {
+  color: var(--link-hover-color, #0056b3);
+}
+
+.export-link-button:disabled {
+  color: var(--text-muted, #6c757d);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.modal-overlay:has(.export-account-container) {
+  z-index: var(--z-above-all) !important;
+}

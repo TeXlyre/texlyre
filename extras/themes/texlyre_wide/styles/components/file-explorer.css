@@ -35,7 +35,6 @@
 [data-layout="texlyre-wide"] .file-explorer-header h3 {
 	font-size: 1rem;
 	font-weight: 600;
-	color: var(--text-color);
 }
 
 [data-layout="texlyre-wide"] .action-btn {

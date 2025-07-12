@@ -85,7 +85,6 @@
 .comment-panel-header h3 {
 	margin: 0 var(--space-xs) 0 0;
 	font-size: 0.8rem;
-	color: var(--text-color);
 }
 
 .comment-panel-header .close-button {
