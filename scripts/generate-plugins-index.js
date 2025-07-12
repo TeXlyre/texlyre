@@ -25,7 +25,7 @@ function generatePluginsIndex() {
 		// Push name as in pluginName + pluginType + 'Plugin'
 		const pluginVarName = `${pluginName}${pluginType.charAt(0).toUpperCase() + pluginType.slice(1)}Plugin`;
 
-		imports.push(`import ${pluginVarName} from './${pluginPath}';`);
+		imports.push(`import ${pluginVarName} from '../../extras/${pluginPath}';`);
 		exports.push(pluginVarName);
 
 		if (!pluginsByType[pluginType]) {
@@ -61,7 +61,7 @@ ${plugins.map((name) => `  ${name}`).join(",\n")}
 	});
 
 	// Write the file
-	const outputPath = path.join(rootDir, "extras", "index.ts");
+	const outputPath = path.join(rootDir, "src", "extras", "index.ts");
 	fs.writeFileSync(outputPath, content);
 
 	console.log(`Generated plugins index at ${outputPath}`);
