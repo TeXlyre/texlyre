@@ -25,7 +25,7 @@ import { oneDark } from "@codemirror/theme-one-dark";
 import { type ViewUpdate, keymap } from "@codemirror/view";
 import { lineNumbers } from "@codemirror/view";
 import { EditorView } from "codemirror";
-import { bibtex } from "codemirror-lang-bib";
+import { bibtex, bibtexCompletionSource } from "codemirror-lang-bib";
 import { latex, latexCompletionSource } from "codemirror-lang-latex";
 import { useEffect, useRef, useState } from "react";
 import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
@@ -192,7 +192,7 @@ export const EditorLoader = (
 				content?.includes("@book") ||
 				content?.includes("@inproceedings")
 			) {
-				return [bibtex()];
+				return [bibtex({ enableAutocomplete: false })];
 			}
 			return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
 		}
@@ -205,7 +205,7 @@ export const EditorLoader = (
 				return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
 			case "bib":
 			case "bibtex":
-				return [bibtex()];
+				return [bibtex({ enableAutocomplete: false })];
 			case "md":
 			case "markdown":
 				return [markdown()];
@@ -215,7 +215,7 @@ export const EditorLoader = (
 					content?.includes("@book") ||
 					content?.includes("@inproceedings")
 				) {
-					return [bibtex()];
+					return [bibtex({ enableAutocomplete: false })];
 				}
 				return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
 		}
@@ -275,51 +275,58 @@ export const EditorLoader = (
 
 		// Add file path autocomplete for LaTeX files
 		const isLatexFile = fileName?.endsWith('.tex') || (!fileName && textContent?.includes('\\'));
-		if (isLatexFile) {
-		  // Get current file path for relative path calculations
-		  let currentFilePath = '';
-		  if (isEditingFile && currentFileId) {
-			const getCurrentFilePath = async () => {
-			  const file = await fileStorageService.getFile(currentFileId);
-			  return file?.path || '';
-			};
+		const isBibFile = fileName?.endsWith('.bib') || fileName?.endsWith('.bibtex') || (!fileName && (textContent?.includes('@article') || textContent?.includes('@book') || textContent?.includes('@inproceedings')));
 
-			getCurrentFilePath().then(path => {
-			  currentFilePath = path;
-			});
+		if (isLatexFile || isBibFile) {
+		  const completionSources: CompletionSource[] = [];
+
+		  if (isLatexFile) {
+			// Get current file path for relative path calculations
+			let currentFilePath = '';
+			if (isEditingFile && currentFileId) {
+			  const getCurrentFilePath = async () => {
+				const file = await fileStorageService.getFile(currentFileId);
+				return file?.path || '';
+			  };
+
+			  getCurrentFilePath().then(path => {
+				currentFilePath = path;
+			  });
+			}
+
+			// Create file path autocompletion for LaTeX
+			const [cacheField, cachePlugin, filePathCompletionSource] = createFilePathAutocompleteExtension(currentFilePath);
+			extensions.push(cacheField, cachePlugin);
+
+			completionSources.push(latexCompletionSource(true));
+			completionSources.push(filePathCompletionSource as CompletionSource);
+
+			// Update the file path after view is created
+			if (isEditingFile && currentFileId) {
+			  setTimeout(async () => {
+				const file = await fileStorageService.getFile(currentFileId);
+				if (file && viewRef.current) {
+				 setCurrentFilePath(viewRef.current, file.path);
+				 filePathCacheService.updateCurrentFilePath(file.path);
+				}
+			  }, 100);
+			} else if (!isEditingFile && documentId) {
+			  setTimeout(() => {
+				if (viewRef.current) {
+				  filePathCacheService.updateCurrentFilePath('', documentId);
+				}
+			  }, 100);
+			}
+		  } else if (isBibFile) {
+			completionSources.push(bibtexCompletionSource);
 		  }
-
-		  // Create unified autocompletion with both LaTeX and file path sources
-		  const [cacheField, cachePlugin, completionSource] = createFilePathAutocompleteExtension(currentFilePath);
-		  extensions.push(cacheField, cachePlugin);
 
 		  extensions.push(
 			autocompletion({
-			  override: [
-			   latexCompletionSource(true),
-			   completionSource as CompletionSource
-			  ],
+			  override: completionSources,
 			  maxRenderedOptions: 20,
 			})
 		  );
-
-		  // Update the file path after view is created
-		  if (isEditingFile && currentFileId) {
-			setTimeout(async () => {
-			  const file = await fileStorageService.getFile(currentFileId);
-			  if (file && viewRef.current) {
-			   setCurrentFilePath(viewRef.current, file.path);
-			   filePathCacheService.updateCurrentFilePath(file.path);
-			  }
-			}, 100);
-		  } else if (!isEditingFile && documentId) {
-			// For YJS documents, try to find linked file path
-			setTimeout(() => {
-			  if (viewRef.current) {
-				filePathCacheService.updateCurrentFilePath('', documentId);
-			  }
-			}, 100);
-		  }
 		} else {
 		  extensions.push(autocompletion());
 		}
