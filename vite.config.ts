@@ -23,6 +23,10 @@ export default defineConfig({
 			esmExternals: true,
 		},
 		rollupOptions: {
+			input: {
+				main: path.resolve(__dirname, 'index.html'),
+				extras: path.resolve(__dirname, 'extras/index.ts'),
+			  	},
 			output: {
 				manualChunks: {
 					vendor: ["react", "react-dom"],

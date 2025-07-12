@@ -1,7 +1,7 @@
 {
 	"name": "texlyre",
 	"private": true,
-	"version": "0.1.5",
+	"version": "0.1.6",
 	"type": "module",
 	"scripts": {
 		"predev": "node scripts/copy-pdf-cmaps.cjs",
