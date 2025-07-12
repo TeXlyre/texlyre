@@ -65,11 +65,10 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 			setIsImporting(true);
 			setError(null);
 
-			// Create project from template using the existing URL mechanism
 			const templateUrl = `${window.location.origin}${window.location.pathname}#newProjectName:${encodeURIComponent(template.name)}&newProjectDescription:${encodeURIComponent(template.description)}&newProjectTags:${encodeURIComponent(template.tags.join(','))}&files:${encodeURIComponent(template.downloadUrl)}`;
 
-			// Navigate to the template URL to trigger project creation
 			window.location.href = templateUrl;
+			window.location.reload();
 
 		} catch (error) {
 			setError(
@@ -90,7 +89,6 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 			setIsScanning(true);
 			setError(null);
 
-			// Store the selected file
 			setSelectedZipFile(file);
 
 			const projects = await projectImportService.scanZipFile(file);

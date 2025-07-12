@@ -41,7 +41,8 @@
 	background-color: var(--accent-background);
 	transition: all var(--texlyre-transition-normal);
 	color: var(--text-color);
-	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	line-height: 0.5;
 }
 
 [data-theme-plugin="texlyre"] .read-the-docs:hover {

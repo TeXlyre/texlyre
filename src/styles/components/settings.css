@@ -22,12 +22,11 @@
 	width: 100%;
 	padding: var(--space-sm);
 	padding-right: 2rem;
-	border: 1px solid var(--accent-border);
-	border-radius: var(--radius-sm);
-	background-color: var(--pico-background);
-	color: var(--text-color);
-	font-family: inherit;
-	font-size: 0.9rem;
+	border: 1px solid var(--pico-secondary) !important;
+	border-radius: var(--radius-sm) !important;
+	background-color: var(--pico-background) !important;
+	color: var(--text-color) !important;
+	font-size: 0.9rem !important;
 }
 
 .settings-search .clear-search-button {
