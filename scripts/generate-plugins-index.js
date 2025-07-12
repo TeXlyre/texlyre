@@ -11,56 +11,11 @@ import pluginsConfig from "../plugins.config.js";
 function fixImportPaths(filePath) {
     const content = fs.readFileSync(filePath, 'utf8');
 
-    let updatedContent = content;
-
-    // Fix all common import paths from extras/ to src/extras/
-    const importReplacements = [
-        // PluginInterface (from src/extras/*/index.ts to src/plugins/)
-        {
-            from: /from ['"]\.\.\/\.\.\/\.\.\/src\/plugins\/PluginInterface['"]/g,
-            to: "from '../../../plugins/PluginInterface'"
-        },
-        // SettingsContext
-        {
-            from: /from ['"]\.\.\/\.\.\/\.\.\/src\/contexts\/SettingsContext['"]/g,
-            to: "from '../../../contexts/SettingsContext'"
-        },
-        // Other contexts
-        {
-            from: /from ['"]\.\.\/\.\.\/\.\.\/src\/contexts\/([^'"]+)['"]/g,
-            to: "from '../../../contexts/$1'"
-        },
-        // Services
-        {
-            from: /from ['"]\.\.\/\.\.\/\.\.\/src\/services\/([^'"]+)['"]/g,
-            to: "from '../../../services/$1'"
-        },
-        // Components
-        {
-            from: /from ['"]\.\.\/\.\.\/\.\.\/src\/components\/([^'"]+)['"]/g,
-            to: "from '../../../components/$1'"
-        },
-        // Hooks
-        {
-            from: /from ['"]\.\.\/\.\.\/\.\.\/src\/hooks\/([^'"]+)['"]/g,
-            to: "from '../../../hooks/$1'"
-        },
-        // Utils
-        {
-            from: /from ['"]\.\.\/\.\.\/\.\.\/src\/utils\/([^'"]+)['"]/g,
-            to: "from '../../../utils/$1'"
-        },
-        // Any other src imports
-        {
-            from: /from ['"]\.\.\/\.\.\/\.\.\/src\/([^'"]+)['"]/g,
-            to: "from '../../../$1'"
-        }
-    ];
-
-    // Apply all replacements
-    for (const replacement of importReplacements) {
-        updatedContent = updatedContent.replace(replacement.from, replacement.to);
-    }
+    // Simply remove 'src/' from the path since we're now inside src/extras/
+    const updatedContent = content.replace(
+        /from ['"]\.\.\/\.\.\/\.\.\/src\/([^'"]+)['"]/g,
+        "from '../../../$1'"
+    );
 
     fs.writeFileSync(filePath, updatedContent);
 }
