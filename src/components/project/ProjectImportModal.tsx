@@ -1,6 +1,7 @@
 // src/components/project/ProjectImportModal.tsx
 import type React from "react";
 import { useRef, useState } from "react";
+
 import {
 	type ImportOptions,
 	type ImportableProject,
@@ -9,6 +10,20 @@ import {
 import { formatDate } from "../../utils/dateUtils";
 import { FolderIcon, ImportIcon } from "../common/Icons";
 import Modal from "../common/Modal";
+import TemplateImportModal from "./TemplateImportModal";
+
+interface TemplateProject {
+	id: string;
+	name: string;
+	description: string;
+	category: string;
+	tags: string[];
+	downloadUrl: string;
+	previewImage?: string;
+	author?: string;
+	version?: string;
+	lastUpdated: string;
+}
 
 interface ProjectImportModalProps {
 	isOpen: boolean;
@@ -21,7 +36,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 	onClose,
 	onProjectsImported,
 }) => {
-	const [importSource, setImportSource] = useState<"backup" | "zip" | null>(
+	const [importSource, setImportSource] = useState<"template" | "zip" | null>(
 		null,
 	);
 	const [availableProjects, setAvailableProjects] = useState<
@@ -39,32 +54,29 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 	const [error, setError] = useState<string | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [selectedZipFile, setSelectedZipFile] = useState<File | null>(null);
+	const [showTemplateModal, setShowTemplateModal] = useState(false);
 
-	const handleBackupDirectorySelect = async () => {
+	const handleTemplateImport = () => {
+		setShowTemplateModal(true);
+	};
+
+	const handleTemplateSelected = async (template: TemplateProject) => {
 		try {
-			setIsScanning(true);
+			setIsImporting(true);
 			setError(null);
-			// TODO (fabawi): Need to simply trigger the autodiscovery function rather than open a directory
-			//
-			// if (!("showDirectoryPicker" in window)) {
-			// 	throw new Error("File System Access API not supported");
-			// }
-			//
-			// const dirHandle = await window.showDirectoryPicker({
-			// 	mode: "readonly",
-			// 	id: "texlyre-import",
-			// });
-			//
-			// const projects = await projectImportService.scanBackupDirectory(dirHandle);
-			// setAvailableProjects(projects);
-			// setImportSource("backup");
-			// setSelectedProjects(new Set());
+
+			// Create project from template using the existing URL mechanism
+			const templateUrl = `${window.location.origin}${window.location.pathname}#newProjectName:${encodeURIComponent(template.name)}&newProjectDescription:${encodeURIComponent(template.description)}&newProjectTags:${encodeURIComponent(template.tags.join(','))}&files:${encodeURIComponent(template.downloadUrl)}`;
+
+			// Navigate to the template URL to trigger project creation
+			window.location.href = templateUrl;
+
 		} catch (error) {
-			if (error instanceof Error && error.name !== "AbortError") {
-				setError(error.message);
-			}
+			setError(
+				error instanceof Error ? error.message : "Failed to import template",
+			);
 		} finally {
-			setIsScanning(false);
+			setIsImporting(false);
 		}
 	};
 
@@ -125,20 +137,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 			};
 
 			let result;
-			if (importSource === "backup") {
-				if (!("showDirectoryPicker" in window)) {
-					throw new Error("File System Access API not supported");
-				}
-				const dirHandle = await (window as any).showDirectoryPicker({
-					mode: "readonly",
-					id: "texlyre-import",
-				});
-				result = await projectImportService.importFromBackup(
-					dirHandle,
-					Array.from(selectedProjects),
-					options,
-				);
-			} else if (importSource === "zip") {
+			if (importSource === "zip") {
 				if (!selectedZipFile) {
 					throw new Error("No ZIP file available for import");
 				}
@@ -193,182 +192,189 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 	};
 
 	return (
-		<Modal
-			isOpen={isOpen}
-			onClose={handleClose}
-			title="Import Projects"
-			size="large"
-		>
-			<div className="project-import-modal">
-				{error && (
-					<div className="error-message" style={{ marginBottom: "1rem" }}>
-						{error}
-					</div>
-				)}
-
-				{!importSource && (
-					<div className="import-source-selection">
-						<h3>Choose Import Source</h3>
-
-						<div className="import-options">
-							<button
-								className="import-option-button"
-								onClick={handleBackupDirectorySelect}
-								disabled={isScanning}
-							>
-								<FolderIcon />
-								<div>
-									<strong>From Backup Directory</strong>
-									<p>Import projects from a TeXlyre backup folder</p>
-								</div>
-							</button>
-
-							<label className="import-option-button">
-								<ImportIcon />
-								<div>
-									<strong>From ZIP File</strong>
-									<p>Import projects from a TeXlyre export file</p>
-								</div>
-								<input
-									ref={fileInputRef}
-									type="file"
-									accept=".zip"
-									onChange={handleZipFileSelect}
-									style={{ display: "none" }}
-									disabled={isScanning}
-								/>
-							</label>
+		<>
+			<Modal
+				isOpen={isOpen}
+				onClose={handleClose}
+				title="Import Projects"
+				size="large"
+			>
+				<div className="project-import-modal">
+					{error && (
+						<div className="error-message" style={{ marginBottom: "1rem" }}>
+							{error}
 						</div>
+					)}
 
-						{isScanning && (
-							<div className="scanning-indicator">
-								<div className="loading-spinner" />
-								<p>Scanning for projects...</p>
-							</div>
-						)}
-					</div>
-				)}
+					{!importSource && (
+						<div className="import-source-selection">
+							<h3>Choose Import Source</h3>
 
-				{importSource && availableProjects.length > 0 && (
-					<div className="project-selection">
-						<div className="selection-header">
-							<h3>Available Projects ({availableProjects.length})</h3>
-							<button
-								className="button secondary"
-								onClick={handleSelectAll}
-								disabled={isImporting}
-							>
-								{selectedProjects.size === availableProjects.length
-									? "Deselect All"
-									: "Select All"}
-							</button>
-						</div>
-
-						<div className="import-options-panel">
-							<div className="option-group">
-								<label>Conflict resolution strategy:</label>
-								<select
-									value={conflictResolution}
-									onChange={(e) =>
-										setConflictResolution(
-											e.target.value as "skip" | "overwrite" | "create-new",
-										)
-									}
-									disabled={isImporting}
+							<div className="import-options">
+								<button
+									className="import-option-button"
+									onClick={handleTemplateImport}
+									disabled={isScanning || isImporting}
 								>
-									<option value="skip">Skip existing projects</option>
-									<option value="overwrite">
-										Merge and overwrite existing projects
-									</option>
-									<option value="create-new">
-										Create new projects (create new URLs on conflict)
-									</option>
-								</select>
-							</div>
+									<FolderIcon />
+									<div>
+										<strong>From Template Gallery</strong>
+										<p>Browse and import project templates from the community</p>
+									</div>
+								</button>
 
-							<div className="option-group">
-								<label>
+								<label className="import-option-button">
+									<ImportIcon />
+									<div>
+										<strong>From ZIP File</strong>
+										<p>Import projects from a TeXlyre export file</p>
+									</div>
 									<input
-										type="checkbox"
-										checked={makeCollaborator}
-										onChange={(e) => setMakeCollaborator(e.target.checked)}
-										disabled={isImporting}
+										ref={fileInputRef}
+										type="file"
+										accept=".zip"
+										onChange={handleZipFileSelect}
+										style={{ display: "none" }}
+										disabled={isScanning || isImporting}
 									/>
-									Import as collaborator (preserve original ownership)
 								</label>
 							</div>
-						</div>
 
-						<div className="projects-compact-list">
-							{availableProjects.map((project) => (
-								<div
-									key={project.id}
-									className={`project-item ${selectedProjects.has(project.id) ? "selected" : ""}`}
-									onClick={() =>
-										!isImporting && handleProjectToggle(project.id)
-									}
+							{isScanning && (
+								<div className="scanning-indicator">
+									<div className="loading-spinner" />
+									<p>Scanning for projects...</p>
+								</div>
+							)}
+						</div>
+					)}
+
+					{importSource && availableProjects.length > 0 && (
+						<div className="project-selection">
+							<div className="selection-header">
+								<h3>Available Projects ({availableProjects.length})</h3>
+								<button
+									className="button secondary"
+									onClick={handleSelectAll}
+									disabled={isImporting}
 								>
-									<input
-										type="checkbox"
-										checked={selectedProjects.has(project.id)}
-										onChange={() => handleProjectToggle(project.id)}
+									{selectedProjects.size === availableProjects.length
+										? "Deselect All"
+										: "Select All"}
+								</button>
+							</div>
+
+							<div className="import-options-panel">
+								<div className="option-group">
+									<label>Conflict resolution strategy:</label>
+									<select
+										value={conflictResolution}
+										onChange={(e) =>
+											setConflictResolution(
+												e.target.value as "skip" | "overwrite" | "create-new",
+											)
+										}
 										disabled={isImporting}
-									/>
-									<div className="project-details">
-										<div className="project-name">{project.name}</div>
-										<div className="project-description">
-											{project.description || "No description"}
-										</div>
-										<div className="project-meta">
-											<span>
-												Last modified: {formatDate(project.lastModified)}
-											</span>
-											<span>{getOwnershipText(project)}</span>
+									>
+										<option value="skip">Skip existing projects</option>
+										<option value="overwrite">
+											Merge and overwrite existing projects
+										</option>
+										<option value="create-new">
+											Create new projects (create new URLs on conflict)
+										</option>
+									</select>
+								</div>
+
+								<div className="option-group">
+									<label>
+										<input
+											type="checkbox"
+											checked={makeCollaborator}
+											onChange={(e) => setMakeCollaborator(e.target.checked)}
+											disabled={isImporting}
+										/>
+										Import as collaborator (preserve original ownership)
+									</label>
+								</div>
+							</div>
+
+							<div className="projects-compact-list">
+								{availableProjects.map((project) => (
+									<div
+										key={project.id}
+										className={`project-item ${selectedProjects.has(project.id) ? "selected" : ""}`}
+										onClick={() =>
+											!isImporting && handleProjectToggle(project.id)
+										}
+									>
+										<input
+											type="checkbox"
+											checked={selectedProjects.has(project.id)}
+											onChange={() => handleProjectToggle(project.id)}
+											disabled={isImporting}
+										/>
+										<div className="project-details">
+											<div className="project-name">{project.name}</div>
+											<div className="project-description">
+												{project.description || "No description"}
+											</div>
+											<div className="project-meta">
+												<span>
+													Last modified: {formatDate(project.lastModified)}
+												</span>
+												<span>{getOwnershipText(project)}</span>
+											</div>
 										</div>
 									</div>
-								</div>
-							))}
-						</div>
+								))}
+							</div>
 
-						<div className="modal-actions">
+							<div className="modal-actions">
+								<button
+									type="button"
+									className="button secondary"
+									onClick={handleClose}
+									disabled={isImporting}
+								>
+									Cancel
+								</button>
+								<button
+									type="button"
+									className="button primary"
+									onClick={handleImport}
+									disabled={selectedProjects.size === 0 || isImporting}
+								>
+									{isImporting
+										? "Importing..."
+										: `Import ${selectedProjects.size} Project${selectedProjects.size === 1 ? "" : "s"}`}
+								</button>
+							</div>
+						</div>
+					)}
+
+					{importSource && availableProjects.length === 0 && !isScanning && (
+						<div className="no-projects">
+							<p>
+								No importable projects found in the selected ZIP file.
+							</p>
 							<button
-								type="button"
 								className="button secondary"
-								onClick={handleClose}
-								disabled={isImporting}
+								onClick={() => setImportSource(null)}
 							>
-								Cancel
-							</button>
-							<button
-								type="button"
-								className="button primary"
-								onClick={handleImport}
-								disabled={selectedProjects.size === 0 || isImporting}
-							>
-								{isImporting
-									? "Importing..."
-									: `Import ${selectedProjects.size} Project${selectedProjects.size === 1 ? "" : "s"}`}
+								Choose Different Source
 							</button>
 						</div>
-					</div>
-				)}
+					)}
+				</div>
+			</Modal>
 
-				{importSource && availableProjects.length === 0 && !isScanning && (
-					<div className="no-projects">
-						<p>
-							No importable projects found in the selected{" "}
-							{importSource === "backup" ? "directory" : "ZIP file"}.
-						</p>
-						<button
-							className="button secondary"
-							onClick={() => setImportSource(null)}
-						>
-							Choose Different Source
-						</button>
-					</div>
-				)}
-			</div>
-		</Modal>
+			<TemplateImportModal
+				isOpen={showTemplateModal}
+				onClose={() => setShowTemplateModal(false)}
+				onTemplateSelected={handleTemplateSelected}
+			/>
+		</>
 	);
 };
 
