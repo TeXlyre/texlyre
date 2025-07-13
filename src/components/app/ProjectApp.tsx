@@ -509,6 +509,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			<ExportAccountModal
 				isOpen={showAccountExportModal}
 				onClose={() => setShowAccountExportModal(false)}
+				showProjectSelection={false}
 			/>
 			<DeleteAccountModal
 				isOpen={isDeleteAccountModalOpen}

@@ -208,16 +208,33 @@ export class StorageAdapterService {
 
 	async writeUnifiedStructure(
 		adapter: FileSystemAdapter,
-		data: DataStructureService,
+		data: {
+			manifest: any;
+			account: any;
+			userData?: any;
+			projects: any[];
+			projectData: Map<string, any>;
+		},
 	): Promise<void> {
 		const paths = this.unifiedService.getPaths();
 
-		await Promise.all([
-			adapter.writeFile(paths.MANIFEST, JSON.stringify(data.manifest, null, 2)),
-			adapter.writeFile(paths.ACCOUNT, JSON.stringify(data.account, null, 2)),
-			adapter.writeFile(paths.PROJECTS, JSON.stringify(data.projects, null, 2)),
-		]);
+		// Write manifest
+		await adapter.writeFile(paths.MANIFEST, JSON.stringify(data.manifest, null, 2));
 
+		// Write account if exists
+		if (data.account) {
+			await adapter.writeFile(paths.ACCOUNT, JSON.stringify(data.account, null, 2));
+		}
+
+		// Write userData if exists
+		if (data.userData) {
+			await adapter.writeFile("userdata.json", JSON.stringify(data.userData, null, 2));
+		}
+
+		// Write projects
+		await adapter.writeFile(paths.PROJECTS, JSON.stringify(data.projects, null, 2));
+
+		// Write project data
 		for (const [projectId, projectData] of data.projectData) {
 			await this.writeProjectData(adapter, projectId, projectData);
 		}
@@ -225,14 +242,22 @@ export class StorageAdapterService {
 
 	async readUnifiedStructure(
 		adapter: FileSystemAdapter,
-	): Promise<DataStructureService> {
+	): Promise<{
+		manifest: any;
+		account: any;
+		userData?: any;
+		projects: any[];
+		projectData: Map<string, any>;
+	}> {
 		const paths = this.unifiedService.getPaths();
 
+		// Read manifest and projects
 		const [manifest, projects] = await Promise.all([
 			this.readJsonFile(adapter, paths.MANIFEST),
 			this.readJsonFile(adapter, paths.PROJECTS),
 		]);
 
+		// Read account if exists
 		let account = null;
 		if (await adapter.exists(paths.ACCOUNT)) {
 			try {
@@ -243,13 +268,24 @@ export class StorageAdapterService {
 			}
 		}
 
+		// Read userData if exists
+		let userData = null;
+		try {
+			if (await adapter.exists("userdata.json")) {
+				userData = await this.readJsonFile(adapter, "userdata.json");
+			}
+		} catch (error) {
+			console.warn("Could not read userdata.json:", error);
+		}
+
+		// Read project data
 		const projectData = new Map();
 		for (const project of projects) {
 			const data = await this.readProjectData(adapter, project.id);
 			projectData.set(project.id, data);
 		}
 
-		return { manifest, account, projects, projectData };
+		return { manifest, account, userData, projects, projectData };
 	}
 
 	private async readJsonFile(
@@ -340,10 +376,8 @@ export class StorageAdapterService {
 			const content = projectData.fileContents.get(file.path);
 			if (!content) continue;
 
-			const filePath = this.unifiedService.getFileContentPath(
-				projectId,
-				file.path,
-			);
+			const cleanPath = file.path.startsWith("/") ? file.path.slice(1) : file.path;
+			const filePath = this.unifiedService.getFileContentPath(projectId, cleanPath);
 			const dirPath = filePath.substring(0, filePath.lastIndexOf("/"));
 
 			if (dirPath && dirPath !== this.unifiedService.getFilesPath(projectId)) {
@@ -484,9 +518,10 @@ export class StorageAdapterService {
 
 				for (const file of filesMetadata) {
 					if (file.type === "file") {
+						const cleanPath = file.path.startsWith("/") ? file.path.slice(1) : file.path;
 						const contentPath = this.unifiedService.getFileContentPath(
 							projectId,
-							file.path,
+							cleanPath,
 						);
 
 						if (await adapter.exists(contentPath)) {

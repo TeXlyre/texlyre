@@ -292,7 +292,7 @@
 .project-meta {
   display: flex;
   justify-content: space-between;
-  font-size: 0.8rem;
+  font-size: 0.55rem;
   color: var(--pico-secondary);
   margin-bottom: 0.75rem;
 }

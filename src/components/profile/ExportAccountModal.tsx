@@ -1,23 +1,29 @@
 // src/components/profile/ExportAccountModal.tsx
 import type React from "react";
 import { useState } from "react";
-import { useAuth } from "../../hooks/useAuth";
+
 import { accountExportService } from "../../services/AccountExportService";
+import { useAuth } from "../../hooks/useAuth";
+import { ExportIcon } from "../common/Icons";
 import Modal from "../common/Modal";
 
 interface ExportAccountModalProps {
 	isOpen: boolean;
 	onClose: () => void;
+	showProjectSelection?: boolean;
 }
 
 const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 	isOpen,
 	onClose,
+	showProjectSelection = true,
 }) => {
 	const { user } = useAuth();
-	const [exportOption, setExportOption] = useState<"current" | "all">(
-		"current",
-	);
+	const [exportScope, setExportScope] = useState<"current" | "all">("current");
+	const [includeDocuments, setIncludeDocuments] = useState(true);
+	const [includeFiles, setIncludeFiles] = useState(true);
+	const [includeTemporaryFiles, setIncludeTemporaryFiles] = useState(false);
+	const [includeUserData, setIncludeUserData] = useState(true);
 	const [isExporting, setIsExporting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
@@ -28,79 +34,133 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 		setError(null);
 
 		try {
-			await accountExportService.exportAccount(user.id, exportOption === "all");
+			const exportAllProjects = exportScope === "all";
+			await accountExportService.exportAccount(user.id, exportAllProjects, includeUserData);
 			onClose();
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "Error exporting account");
+			setError(err instanceof Error ? err.message : "Export failed");
 		} finally {
 			setIsExporting(false);
 		}
 	};
 
+	const handleClose = () => {
+		setError(null);
+		setIsExporting(false);
+		onClose();
+	};
+
 	return (
 		<Modal
 			isOpen={isOpen}
-			onClose={onClose}
+			onClose={handleClose}
 			title="Export Account"
+			icon={ExportIcon}
 			size="medium"
 		>
-			<div className="export-account-container">
-				{error && <div className="error-message">{error}</div>}
+			<div className="export-account-modal">
+				{error && <div className="export-error-message">{error}</div>}
 
-				<p>
-					Export your account data as a zip file. This will include your account
-					information and selected projects with all associated documents and
-					files.
-				</p>
+				<div className="export-info">
+					<p>
+						Export your TeXlyre account data including projects, settings, and
+						collaboration history.
+					</p>
+				</div>
 
-				<div className="export-options">
-					<h3>What to export</h3>
-
-					<div className="option-group">
-						<label>
-							<input
-								type="radio"
-								name="exportOption"
-								value="current"
-								checked={exportOption === "current"}
-								onChange={() => setExportOption("current")}
-								disabled={isExporting}
-							/>
-							<span>Current project only</span>
-						</label>
-
-						<label>
-							<input
-								type="radio"
-								name="exportOption"
-								value="all"
-								checked={exportOption === "all"}
-								onChange={() => setExportOption("all")}
-								disabled={isExporting}
-							/>
-							<span>All projects</span>
-						</label>
+				{showProjectSelection && (
+					<div className="export-scope-selection">
+						<h3>Export Scope</h3>
+						<div className="scope-options">
+							<label className="scope-option">
+								<input
+									type="radio"
+									name="exportScope"
+									value="current"
+									checked={exportScope === "current"}
+									onChange={() => setExportScope("current")}
+									disabled={isExporting}
+								/>
+								<span>Current project only</span>
+							</label>
+							<label className="scope-option">
+								<input
+									type="radio"
+									name="exportScope"
+									value="all"
+									checked={exportScope === "all"}
+									onChange={() => setExportScope("all")}
+									disabled={isExporting}
+								/>
+								<span>All projects</span>
+							</label>
+						</div>
 					</div>
+				)}
+
+				<div className="export-option-group">
+					<label className="export-option-label">
+						<input
+							type="checkbox"
+							checked={includeDocuments}
+							onChange={(e) => setIncludeDocuments(e.target.checked)}
+							disabled={isExporting}
+						/>
+						<span>Include documents and collaboration data</span>
+					</label>
+					<label className="export-option-label">
+						<input
+							type="checkbox"
+							checked={includeFiles}
+							onChange={(e) => setIncludeFiles(e.target.checked)}
+							disabled={isExporting}
+						/>
+						<span>Include project files</span>
+					</label>
+					<label className="export-option-label">
+						<input
+							type="checkbox"
+							checked={includeTemporaryFiles}
+							onChange={(e) => setIncludeTemporaryFiles(e.target.checked)}
+							disabled={isExporting}
+						/>
+						<span>Include cache and temporary files</span>
+					</label>
+					<label className="export-option-label">
+						<input
+							type="checkbox"
+							checked={includeUserData}
+							onChange={(e) => setIncludeUserData(e.target.checked)}
+							disabled={isExporting}
+						/>
+						<span>Include settings, properties, and encrypted secrets</span>
+					</label>
 				</div>
 
-				<div className="modal-actions">
-					<button
-						type="button"
-						className="button secondary"
-						onClick={onClose}
-						disabled={isExporting}
-					>
-						Cancel
-					</button>
-					<button
-						type="button"
-						className="button primary"
-						onClick={handleExport}
-						disabled={isExporting}
-					>
-						{isExporting ? "Exporting..." : "Export Account"}
-					</button>
+				<div className="export-note">
+					<ExportIcon />
+					Exported data can be imported into any TeXlyre installation to restore
+					your complete workspace.
 				</div>
+			</div>
+
+			<div className="modal-actions">
+				<button
+					type="button"
+					className="button secondary"
+					onClick={handleClose}
+					disabled={isExporting}
+				>
+					Cancel
+				</button>
+				<button
+					type="button"
+					className="button primary"
+					onClick={handleExport}
+					disabled={isExporting || (!includeDocuments && !includeFiles)}
+				>
+					{isExporting ? "Exporting..." : "Export Account"}
+				</button>
 			</div>
 		</Modal>
 	);

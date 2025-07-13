@@ -8,13 +8,14 @@ import { ProjectDataService } from "./ProjectDataService";
 import { StorageAdapterService, ZipAdapter } from "./StorageAdapterService";
 
 export interface ExportOptions {
-	includeAccount?: boolean;
-	includeDocuments?: boolean;
-	includeFiles?: boolean;
-	includeTemporaryFiles?: boolean;
-	projectIds?: string[];
-	format?: "texlyre" | "files-only";
-	isSingleProjectExport?: boolean;
+    includeAccount?: boolean;
+    includeDocuments?: boolean;
+    includeFiles?: boolean;
+    includeTemporaryFiles?: boolean;
+    includeUserData?: boolean;
+    projectIds?: string[];
+    format?: "texlyre" | "files-only";
+    isSingleProjectExport?: boolean;
 }
 
 class AccountExportService {
@@ -25,12 +26,14 @@ class AccountExportService {
 	async exportAccount(
 		userId: string,
 		exportAllProjects = false,
+		includeUserData = true,
 	): Promise<void> {
 		const options: ExportOptions = {
 			includeAccount: true,
 			includeDocuments: true,
 			includeFiles: true,
 			includeTemporaryFiles: false,
+			includeUserData,
 			format: "texlyre",
 		};
 
@@ -59,6 +62,7 @@ class AccountExportService {
 			includeDocuments: true,
 			includeFiles: true,
 			includeTemporaryFiles: false,
+			includeUserData: false,
 			format: "texlyre",
 			...options,
 			projectIds,
@@ -81,6 +85,11 @@ class AccountExportService {
 			const account = options.includeAccount
 				? await this.dataSerializer.serializeUserData(userId)
 				: null;
+
+			let userData = null;
+			if (options.includeUserData) {
+				userData = await this.exportUserLocalStorageData(userId);
+			}
 
 			const projects = await this.dataSerializer.serializeProjects(
 				userId,
@@ -143,6 +152,7 @@ class AccountExportService {
 			const unifiedData = {
 				manifest,
 				account,
+				userData,
 				projects,
 				projectData,
 			};
@@ -171,7 +181,6 @@ class AccountExportService {
 					: `texlyre-account-export-${timestamp}.zip`;
 			} else {
 				if (options.format === "files-only" && options.isSingleProjectExport) {
-					// Use project name for single project files-only export
 					const projectName =
 						Array.from(unifiedData.projectData.values())[0]?.metadata.name ||
 						"project";
@@ -191,6 +200,48 @@ class AccountExportService {
 			console.error("Error exporting:", error);
 			throw new Error("Failed to export data");
 		}
+	}
+
+	private async exportUserLocalStorageData(userId: string): Promise<any> {
+		const userData: any = {
+			settings: {},
+			properties: {},
+			secrets: {},
+		};
+
+		try {
+			const settingsKey = `texlyre-user-${userId}-settings`;
+			const globalSettingsKey = "texlyre-settings";
+			const settingsData = localStorage.getItem(settingsKey) || localStorage.getItem(globalSettingsKey);
+			if (settingsData) {
+				userData.settings = JSON.parse(settingsData);
+			}
+		} catch (error) {
+			console.warn("Failed to export user settings:", error);
+		}
+
+		try {
+			const propertiesKey = `texlyre-user-${userId}-properties`;
+			const globalPropertiesKey = "texlyre-properties";
+			const propertiesData = localStorage.getItem(propertiesKey) || localStorage.getItem(globalPropertiesKey);
+			if (propertiesData) {
+				userData.properties = JSON.parse(propertiesData);
+			}
+		} catch (error) {
+			console.warn("Failed to export user properties:", error);
+		}
+
+		try {
+			const secretsKey = `texlyre-user-${userId}-secrets`;
+			const secretsData = localStorage.getItem(secretsKey);
+			if (secretsData) {
+				userData.secrets = JSON.parse(secretsData);
+			}
+		} catch (error) {
+			console.warn("Failed to export user secrets:", error);
+		}
+
+		return userData;
 	}
 
 	private async writeFilesOnlyStructure(
@@ -372,6 +423,10 @@ class AccountExportService {
 				importedUser = await this.importUserData(unifiedData.account);
 			}
 
+			if (unifiedData.userData && importedUser) {
+				await this.importUserLocalStorageData(importedUser.id, unifiedData.userData);
+			}
+
 			await this.importProjectsData(unifiedData.projects, importedUser);
 
 			await this.dataSerializer.deserializeToIndexedDB(unifiedData);
@@ -382,6 +437,29 @@ class AccountExportService {
 		} catch (error) {
 			console.error("Error importing account:", error);
 			throw new Error("Failed to import account data");
+		}
+	}
+
+	private async importUserLocalStorageData(userId: string, userData: any): Promise<void> {
+		try {
+			if (userData.settings && Object.keys(userData.settings).length > 0) {
+				const settingsKey = `texlyre-user-${userId}-settings`;
+				localStorage.setItem(settingsKey, JSON.stringify(userData.settings));
+			}
+
+			if (userData.properties && Object.keys(userData.properties).length > 0) {
+				const propertiesKey = `texlyre-user-${userId}-properties`;
+				localStorage.setItem(propertiesKey, JSON.stringify(userData.properties));
+			}
+
+			if (userData.secrets && Object.keys(userData.secrets).length > 0) {
+				const secretsKey = `texlyre-user-${userId}-secrets`;
+				localStorage.setItem(secretsKey, JSON.stringify(userData.secrets));
+			}
+
+			console.log(`[AccountExportService] Successfully imported user data for: ${userId}`);
+		} catch (error) {
+			console.error("Error importing user local storage data:", error);
 		}
 	}
 
