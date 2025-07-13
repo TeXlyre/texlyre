@@ -84,6 +84,27 @@
 	border-color: var(--pico-primary);
 }
 
+.tidy-button {
+	padding: 0.3rem;
+	font-size: 0.75rem;
+	background-color: var(--color-success) !important;
+	border: 1px solid var(--accent-border, #444);
+	border-radius: 4px;
+	color: var(--pico-secondary);
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 32px;
+	height: 24px;
+}
+
+.tidy-button:hover {
+	background-color: var(--pico-primary-focus);
+	border-color: var(--pico-primary);
+}
+
 .options-container {
 	padding: 0.75rem;
 }
@@ -313,7 +334,7 @@
 	border: 1px solid var(--color-warning);
 	border-radius: var(--radius-sm);
 	font-size: 0.75rem;
-	color: var(--text-color);
+	color: var(--pico-secondary);
 	margin-left: auto;
 }
 
@@ -367,6 +388,7 @@
 	}
 
 	.control-group button,
+	.tidy-button,
 	.reset-button {
 		border-width: 2px;
 	}
@@ -374,6 +396,7 @@
 
 @media (prefers-reduced-motion: reduce) {
 	.control-group button,
+	.tidy-button,
 	.reset-button,
 	.option-item input,
 	.option-item select,

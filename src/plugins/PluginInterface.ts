@@ -14,6 +14,7 @@ export interface Plugin {
 // Viewers
 export interface ViewerPlugin extends Plugin {
 	type: "viewer";
+	icon?: React.ComponentType;
 	canHandle: (fileType: string, mimeType?: string) => boolean;
 	renderViewer: React.ComponentType<ViewerProps>;
 }

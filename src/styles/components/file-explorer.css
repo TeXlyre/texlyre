@@ -203,13 +203,13 @@
 	display: flex;
 }
 
-.file-binary-indicator,
+.file-linked-indicator,
 .file-viewer-indicator {
 	margin-left: 4px;
 	color: var(--pico-primary);
 }
 
-.file-binary-indicator {
+.file-linked-indicator {
 	font-size: 1.2em;
 }
 

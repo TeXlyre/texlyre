@@ -120,11 +120,17 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 	const isRenaming = renamingFileId === node.id;
 
 	const hasCompatibleViewer = (node: FileNode): boolean => {
-		if (node.type !== "file" || !node.isBinary) return false;
+		if (node.type !== "file") return false;
 		return !!pluginRegistry.getViewerForFile(node.name, node.mimeType);
 	};
 
 	const hasViewer = hasCompatibleViewer(node);
+
+	const getViewerIcon = (node: FileNode): React.ComponentType | null => {
+		if (node.type !== "file") return null;
+		const viewer = pluginRegistry.getViewerForFile(node.name, node.mimeType);
+		return viewer?.icon || null;
+	};
 
 	const _shouldShowTemporaryWarning = (action: string): boolean => {
 		if (action === "delete" && isTemporaryFile(node.path)) return true;
@@ -189,15 +195,22 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 				}}
 			>
 				<span className="file-icon">
-					{node.type === "directory" ? (
-						<FolderIcon isOpen={isExpanded} />
-					) : node.isBinary ? (
-						<FileIcon />
-					) : hasDocument ? (
-						<FileTextIcon />
-					) : (
-						<FileIcon />
-					)}
+				   {node.type === "directory" ? (
+					  <FolderIcon isOpen={isExpanded} />
+				   ) : (() => {
+					  if (hasDocument) {
+						 return <FileTextIcon />;
+					  }
+					  const ViewerIcon = getViewerIcon(node);
+					  if (ViewerIcon) {
+						 return <ViewerIcon />;
+					  }
+					  return node.isBinary ? (
+						 <FileIcon />
+					  ) : (
+						 <FileIcon />
+					  );
+				   })()}
 				</span>
 
 				{isRenaming ? (
@@ -225,10 +238,10 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 				) : (
 					<span className="file-name">
 						{node.name}
-						{node.isBinary && <span className="file-binary-indicator">•</span>}
+						{hasDocument && <span className="file-linked-indicator">•</span>}
 						{hasViewer && (
 							<span className="file-viewer-indicator" title="Has viewer plugin">
-								👁️
+								{/*👁️*/}
 							</span>
 						)}
 					</span>

@@ -2,6 +2,7 @@
 import type { ViewerPlugin } from "../../../src/plugins/PluginInterface";
 import PdfViewer from "./PdfViewer";
 import { pdfViewerSettings } from "./settings";
+import { PdfIcon } from "./Icon"
 
 const PDF_EXTENSIONS = ["pdf"];
 const PDF_MIMETYPES = ["application/pdf"];
@@ -14,6 +15,7 @@ const pdfViewerPlugin: ViewerPlugin = {
 	name: PLUGIN_NAME,
 	version: PLUGIN_VERSION,
 	type: "viewer",
+	icon: PdfIcon,
 	settings: pdfViewerSettings,
 
 	canHandle: (fileName: string, mimeType?: string): boolean => {

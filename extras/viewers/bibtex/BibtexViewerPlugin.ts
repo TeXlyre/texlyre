@@ -1,6 +1,7 @@
 import type { ViewerPlugin } from "../../../src/plugins/PluginInterface";
 import BibtexViewer from "./BibtexViewer";
 import { bibtexViewerSettings } from "./settings";
+import { BibIcon} from "./Icon";
 
 const BIBTEX_EXTENSIONS = ["bib", "bibtex"];
 const BIBTEX_MIMETYPES = ["text/x-bibtex", "application/x-bibtex"];
@@ -13,6 +14,7 @@ const bibtexViewerPlugin: ViewerPlugin = {
 	name: PLUGIN_NAME,
 	version: PLUGIN_VERSION,
 	type: "viewer",
+	icon: BibIcon,
 	settings: bibtexViewerSettings,
 
 	canHandle: (fileName: string, mimeType?: string): boolean => {

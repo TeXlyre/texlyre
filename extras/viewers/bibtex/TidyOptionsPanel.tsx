@@ -29,19 +29,19 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 				<h4>Tidy Options</h4>
 				<div className="header-buttons">
 					<button
-						onClick={onProcessBibtex}
-						disabled={isProcessing}
-						title="Process BibTeX with Current Settings"
-						className="reset-button"
-					>
-						<CleanIcon />
-					</button>
-					<button
 						className="reset-button"
 						onClick={onResetToDefaults}
 						title="Reset to Standard Preset"
 					>
 						<ResetIcon />
+					</button>
+					<button
+						onClick={onProcessBibtex}
+						disabled={isProcessing}
+						title="Process BibTeX with Current Settings"
+						className="tidy-button"
+					>
+						<CleanIcon />
 					</button>
 				</div>
 			</div>

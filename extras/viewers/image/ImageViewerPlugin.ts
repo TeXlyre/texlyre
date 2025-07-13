@@ -2,6 +2,7 @@
 import type { ViewerPlugin } from "../../../src/plugins/PluginInterface";
 import CombinedImageViewer from "./CombinedImageViewer";
 import { imageViewerSettings } from "./settings";
+import { ImageIcon } from "./Icon"
 
 const IMAGE_EXTENSIONS = [
 	"png",
@@ -32,7 +33,8 @@ const imageViewerPlugin: ViewerPlugin = {
 	name: PLUGIN_NAME,
 	version: PLUGIN_VERSION,
 	type: "viewer",
-	settings: imageViewerSettings, // Add this line
+	icon: ImageIcon,
+	settings: imageViewerSettings,
 
 	canHandle: (fileName: string, mimeType?: string): boolean => {
 		if (mimeType && IMAGE_MIMETYPES.includes(mimeType)) {
