@@ -1,8 +1,10 @@
 # TeXlyre
 
-A **local-first** real-time LaTeX collaboration platform with offline editing capabilities. Built with React, TypeScript, and Yjs for collaborative document editing.
+A **[local-first](https://www.inkandswitch.com/essay/local-first/)** real-time LaTeX collaboration platform with offline editing capabilities. Built with React, TypeScript, and Yjs for collaborative document editing.
 
-[![License: MIT](https://img.shields.io/badge/License-AGPL-yellow.svg)](https://opensource.org/licenses/AGPL-3.0)
+[![GitHub Pages](https://img.shields.io/badge/🟢%20Live%20Demo-GitHub%20Pages-181717.svg?logo=github)](https://texlyre.github.io/texlyre)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/texlyre/texlyre/deploy.yml)](https://github.com/texlyre/texlyre/actions)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://reactjs.org/)
 
@@ -118,7 +120,7 @@ See [LICENSE](LICENSE) for the complete license text.
 
 ### Why AGPL-3.0?
 
-We chose AGPL-3.0 to ensure that improvements to TeXlyre remain open and available to the community, even when the software is used as a web service.
+TeXlyre is licensed under AGPL-3.0 due to our dependency on [SwiftLaTeX's AGPL-licensed LaTeX engine (WASM)](https://github.com/SwiftLaTeX/SwiftLaTeX/) for in-browser LaTeX compilation.
 
 ## Privacy & Data
 
