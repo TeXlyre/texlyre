@@ -66,7 +66,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		}
 	};
 
-	const { viewRef } = EditorLoader(
+	const { viewRef, showSaveIndicator } = EditorLoader(
 		editorRef,
 		"bibtex-viewer",
 		`${currentView}-editor`,
@@ -79,6 +79,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		true,
 		false,
 		fileName,
+		currentView === "original" ? fileId : undefined,
 	);
 
 	useEffect(() => {
@@ -184,7 +185,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		setCurrentView("processed");
 	};
 
-	const handleSave = async () => {
+	const handleSaveProcessed = async () => {
 		if (!fileId) return;
 
 		const currentEditorContent = viewRef.current?.state?.doc?.toString() || "";
@@ -301,8 +302,18 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				</button>
 				{fileId && (
 					<button
-						onClick={handleSave}
-						title="Save Current View to File"
+						onClick={() => {
+							if (currentView === "original") {
+								document.dispatchEvent(
+									new CustomEvent("trigger-save", {
+										detail: { fileId, isFile: true },
+									}),
+								);
+							} else {
+								handleSaveProcessed();
+							}
+						}}
+						title={currentView === "original" ? "Save File (Ctrl+S)" : "Save Current View to File"}
 						disabled={
 							isSaving || (!bibtexContent.trim() && !processedContent.trim())
 						}
@@ -360,7 +371,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 					)}
 
 					<div className="editor-containers">
-						<div className="editor-container">
+						<div className="editor-container" style={{ position: "relative" }}>
 							<div className="editor-header">
 								{currentView === "original" ? "Original" : "Processed"}
 								{isProcessing && (
@@ -371,6 +382,12 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 								)}
 							</div>
 							<div ref={editorRef} className="codemirror-editor-container" />
+
+							{showSaveIndicator && currentView === "original" && (
+								<div className="save-indicator">
+									<span>Saved</span>
+								</div>
+							)}
 						</div>
 					</div>
 				</div>

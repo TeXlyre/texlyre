@@ -87,7 +87,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		}
 	};
 
-	const { viewRef } =
+	const { viewRef, showSaveIndicator } =
 		currentView === "original"
 			? EditorLoader(
 					editorRef,
@@ -103,7 +103,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					false,
 					fileName,
 					undefined,
-					false, // Disable comments for bib files
+					false,
 				)
 			: EditorLoader(
 					editorRef,
@@ -119,7 +119,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					false,
 					fileName,
 					undefined,
-					false, // Disable comments for bib files
+					false,
 				);
 
 	useEffect(() => {
@@ -175,7 +175,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		setCurrentView("processed");
 	};
 
-	const handleSave = async () => {
+	const handleSaveProcessed = async () => {
 		if (!fileId || currentView !== "processed") return;
 
 		const currentEditorContent = viewRef.current?.state?.doc?.toString() || "";
@@ -297,6 +297,21 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			</PluginControlGroup>
 
 			<PluginControlGroup>
+				{currentView === "original" && (
+					<button
+						onClick={() => {
+							document.dispatchEvent(
+								new CustomEvent("trigger-save", {
+									detail: { documentId, isFile: false },
+								}),
+							);
+						}}
+						title="Save Document (Ctrl+S)"
+						className="control-button"
+					>
+						<SaveIcon />
+					</button>
+				)}
 				<button
 					onClick={processBibtex}
 					disabled={isProcessing}
@@ -306,7 +321,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				</button>
 				{fileId && currentView === "processed" && (
 					<button
-						onClick={handleSave}
+						onClick={handleSaveProcessed}
 						title="Save Processed to Original"
 						disabled={isSaving || !processedContent.trim()}
 					>
@@ -337,6 +352,23 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				pluginVersion={PLUGIN_VERSION}
 				tooltipInfo={tooltipInfo}
 				controls={headerControls}
+				onNavigateToLinkedFile={() => {
+					if (fileId && fileInfo.filePath) {
+						document.dispatchEvent(
+							new CustomEvent("navigate-to-linked-file", {
+								detail: {
+									filePath: fileInfo.filePath,
+									fileId: fileId,
+								},
+							}),
+						);
+					}
+				}}
+				linkedFileInfo={{
+					fileName: fileInfo.fileName,
+					filePath: fileInfo.filePath,
+					fileId: fileId,
+				}}
 			/>
 
 			<div className="bibtex-viewer-main">
@@ -363,7 +395,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					)}
 
 					<div className="editor-containers">
-						<div className="editor-container">
+						<div className="editor-container" style={{ position: "relative" }}>
 							<div className="editor-header">
 								{currentView === "original"
 									? "Original (Collaborative)"
@@ -376,6 +408,12 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 								)}
 							</div>
 							<div ref={editorRef} className="codemirror-editor-container" />
+
+							{showSaveIndicator && currentView === "original" && (
+								<div className="save-indicator">
+									<span>Saved</span>
+								</div>
+							)}
 						</div>
 					</div>
 				</div>
