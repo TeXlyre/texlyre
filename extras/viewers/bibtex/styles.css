@@ -305,6 +305,34 @@
 	font-size: 0.8rem;
 }
 
+.processed-save-notice {
+	display: flex;
+	align-items: center;
+	padding: 0.3rem 0.75rem;
+	background-color: color-mix(in srgb, var(--color-warning) 20%, white);
+	border: 1px solid var(--color-warning);
+	border-radius: var(--radius-sm);
+	font-size: 0.75rem;
+	color: var(--text-color);
+	margin-left: auto;
+}
+
+.processed-save-notice svg {
+	padding-bottom: var(--space-us);
+}
+
+.tab-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	background-color: var(--pico-background);
+	color: var(--pico-secondary);
+}
+
+.tab-button:disabled:hover {
+	background-color: var(--pico-background);
+	color: var(--pico-secondary);
+}
+
 .codemirror-editor-container {
 	flex: 1;
 	overflow: hidden;

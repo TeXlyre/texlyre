@@ -133,9 +133,9 @@
 .project-search-container .clear-search-button {
   position: absolute;
   right: 0.5rem;
-  transform: translateY(30%);
   padding: 0;
-  margin: 0;
+  margin: var(--space-md);
+  top: 0;
   background: none;
   border: none;
   cursor: pointer;
@@ -365,6 +365,10 @@
   color: var(--pico-secondary);
   font-size: 0.9rem;
   font-style: italic;
+}
+
+.no-projects p svg {
+  padding-bottom: var(--space-us);
 }
 
 .loading-container {

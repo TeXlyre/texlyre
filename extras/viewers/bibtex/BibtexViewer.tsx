@@ -202,15 +202,9 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	const handleSaveProcessed = async () => {
 		if (!fileId) return;
 
-		const currentEditorContent = (currentView === "original"
-			? originalViewRef.current?.state?.doc?.toString()
-			: processedViewRef.current?.state?.doc?.toString()) || "";
+		const currentEditorContent = processedViewRef.current?.state?.doc?.toString() || processedContent;
 
-		const contentToSave =
-			currentEditorContent ||
-			(currentView === "original" ? bibtexContent : processedContent);
-
-		if (!contentToSave.trim()) {
+		if (!currentEditorContent.trim()) {
 			console.warn("BibtexViewer: Attempted to save empty content");
 			return;
 		}
@@ -220,19 +214,14 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
 		try {
 			const encoder = new TextEncoder();
-			const dataToSave = encoder.encode(contentToSave);
+			const dataToSave = encoder.encode(currentEditorContent);
 
 			await fileStorageService.updateFileContent(fileId, dataToSave.buffer);
 
-			setBibtexContent(contentToSave);
-			setProcessedContent(contentToSave);
+			setBibtexContent(currentEditorContent);
+			setProcessedContent("");
 			setHasChanges(false);
-
-			if (currentView === "processed") {
-				setTimeout(() => {
-					processBibtexWithOptions(contentToSave, options);
-				}, 100);
-			}
+			setCurrentView("original");
 		} catch (error) {
 			console.error("Error saving BibTeX file:", error);
 			setError(
@@ -242,6 +231,17 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			setIsSaving(false);
 		}
 	};
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.ctrlKey && event.key === 's' && currentView === "processed") {
+				event.preventDefault();
+				handleSaveProcessed();
+			}
+		};
+
+		document.addEventListener('keydown', handleKeyDown);
+		return () => document.removeEventListener('keydown', handleKeyDown);
+	}, [currentView, handleSaveProcessed]);
 
 	const handleExport = (content: string, suffix = "") => {
 		try {
@@ -378,10 +378,16 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 									<button
 										className={`tab-button ${currentView === "processed" ? "active" : ""}`}
 										onClick={() => setCurrentView("processed")}
+										disabled={!processedContent.trim()}
 									>
 										Processed
 									</button>
 								</div>
+								{currentView === "processed" && processedContent.trim() && (
+									<div className="processed-save-notice">
+										<span>Not saved automatically. Click the <SaveIcon/> <strong>Save</strong> button or <strong>Ctrl+S</strong></span>
+									</div>
+								)}
 								{isProcessing && (
 									<span className="processing-indicator"> (Processing...)</span>
 								)}

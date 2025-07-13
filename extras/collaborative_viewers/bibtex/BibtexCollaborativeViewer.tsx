@@ -196,7 +196,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			initialContentRef.current = contentToSave;
 
 			setBibtexContent(contentToSave);
-			setProcessedContent(contentToSave);
+			setProcessedContent("");
 
 			setCurrentView("original");
 
@@ -253,6 +253,18 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			);
 		}
 	};
+
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.ctrlKey && event.key === 's' && currentView === "processed") {
+				event.preventDefault();
+				handleSaveProcessed();
+			}
+		};
+
+		document.addEventListener('keydown', handleKeyDown);
+		return () => document.removeEventListener('keydown', handleKeyDown);
+	}, [currentView, handleSaveProcessed]);
 
 	const displayContent =
 		currentView === "original" ? bibtexContent : processedContent;
@@ -384,10 +396,16 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 									<button
 										className={`tab-button ${currentView === "processed" ? "active" : ""}`}
 										onClick={() => setCurrentView("processed")}
+										disabled={!processedContent.trim()}
 									>
 										Processed
 									</button>
 								</div>
+								{currentView === "processed" && processedContent.trim() && (
+									<div className="processed-save-notice">
+										<span>Not saved automatically. Click the <SaveIcon/> <strong>Save</strong> button or <strong>Ctrl+S</strong></span>
+									</div>
+								)}
 								{isProcessing && (
 									<span className="processing-indicator"> (Processing...)</span>
 								)}

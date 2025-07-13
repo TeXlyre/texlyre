@@ -228,6 +228,10 @@
 	font-size: 0.9rem;
 }
 
+.empty-state p svg {
+	padding-bottom: var(--space-xs);
+}
+
 .loading {
 	display: flex;
 	justify-content: center;
