@@ -11,6 +11,7 @@ import { XeTeXEngine } from "../extensions/switftlatex/XeTeXEngine";
 import type { FileNode } from "../types/files";
 import { getMimeType, isBinaryFile } from "../utils/fileUtils";
 import { fileStorageService } from "./FileStorageService";
+import {fileCommentProcessor} from "../utils/fileCommentProcessor.ts";
 
 type EngineType = "pdftex" | "xetex" | "luatex";
 
@@ -448,19 +449,20 @@ class LaTeXService {
 
 		for (const node of workNodes) {
 			try {
-				const fileContent = await this.getFileContent(node);
-				if (fileContent) {
-					if (typeof fileContent === "string") {
-						engine.writeMemFSFile(`/work/${node.path}`, fileContent);
-					} else {
-						engine.writeMemFSFile(
-							`/work/${node.path}`,
-							new Uint8Array(fileContent),
-						);
-					}
-				}
+			   const fileContent = await this.getFileContent(node);
+			   if (fileContent) {
+				  const cleanedFileContent = fileCommentProcessor.cleanContent(fileContent);
+				  if (typeof cleanedFileContent === "string") {
+					 engine.writeMemFSFile(`/work/${node.path}`, cleanedFileContent);
+				  } else {
+					 engine.writeMemFSFile(
+						`/work/${node.path}`,
+						new Uint8Array(cleanedFileContent),
+					 );
+				  }
+			   }
 			} catch (error) {
-				console.error(`Error writing work file ${node.path} to MemFS:`, error);
+			   console.error(`Error writing work file ${node.path} to MemFS:`, error);
 			}
 		}
 
