@@ -46,39 +46,53 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		"original",
 	);
 
-	const editorRef = useRef<HTMLDivElement>(null);
+	const originalEditorRef = useRef<HTMLDivElement>(null);
+	const processedEditorRef = useRef<HTMLDivElement>(null);
 
 	const [options, setOptions] = useState<TidyOptions>(() =>
 		getPresetOptions(tidyPreset),
 	);
 
-	const activeContent =
-		currentView === "original" ? bibtexContent : processedContent;
-
-	const handleContentUpdate = (newContent: string) => {
-		if (currentView === "original") {
-			setBibtexContent(newContent);
-			setHasChanges(true);
-		} else {
-			setProcessedContent(newContent);
-			setHasChanges(true);
-		}
+	const handleOriginalContentUpdate = (newContent: string) => {
+		setBibtexContent(newContent);
+		setHasChanges(true);
 	};
 
-	const { viewRef, showSaveIndicator } = EditorLoader(
-		editorRef,
+	const handleProcessedContentUpdate = (newContent: string) => {
+		setProcessedContent(newContent);
+		setHasChanges(true);
+	};
+
+	const { viewRef: originalViewRef, showSaveIndicator: originalShowSaveIndicator } = EditorLoader(
+		originalEditorRef,
 		"bibtex-viewer",
-		`${currentView}-editor`,
+		`${fileName}-original-editor`,
 		true,
-		activeContent,
-		handleContentUpdate,
+		bibtexContent,
+		handleOriginalContentUpdate,
 		() => [],
 		() => ({}),
 		() => {},
 		true,
 		false,
 		fileName,
-		currentView === "original" ? fileId : undefined,
+		fileId,
+	);
+
+	const { viewRef: processedViewRef, showSaveIndicator: processedShowSaveIndicator } = EditorLoader(
+		processedEditorRef,
+		"bibtex-viewer",
+		`${fileName}-processed-editor`,
+		true,
+		processedContent,
+		handleProcessedContentUpdate,
+		() => [],
+		() => ({}),
+		() => {},
+		true,
+		false,
+		fileName,
+		undefined,
 	);
 
 	useEffect(() => {
@@ -180,14 +194,17 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	};
 
 	const processBibtex = async () => {
-		await processBibtexWithOptions(bibtexContent, options);
+		const currentOriginalContent = originalViewRef.current?.state?.doc?.toString() || bibtexContent;
+		await processBibtexWithOptions(currentOriginalContent, options);
 		setCurrentView("processed");
 	};
 
 	const handleSaveProcessed = async () => {
 		if (!fileId) return;
 
-		const currentEditorContent = viewRef.current?.state?.doc?.toString() || "";
+		const currentEditorContent = (currentView === "original"
+			? originalViewRef.current?.state?.doc?.toString()
+			: processedViewRef.current?.state?.doc?.toString()) || "";
 
 		const contentToSave =
 			currentEditorContent ||
@@ -228,8 +245,9 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
 	const handleExport = (content: string, suffix = "") => {
 		try {
-			const currentEditorContent =
-				viewRef.current?.state?.doc?.toString() || "";
+			const currentEditorContent = (currentView === "original"
+				? originalViewRef.current?.state?.doc?.toString()
+				: processedViewRef.current?.state?.doc?.toString()) || "";
 			const contentToExport = currentEditorContent || content;
 
 			const blob = new Blob([contentToExport], {
@@ -371,9 +389,19 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 									<span className="processing-indicator"> (Saving...)</span>
 								)}
 							</div>
-							<div ref={editorRef} className="codemirror-editor-container" />
 
-							{showSaveIndicator && currentView === "original" && (
+							<div
+								ref={originalEditorRef}
+								className="codemirror-editor-container"
+								style={{ display: currentView === "original" ? "block" : "none" }}
+							/>
+							<div
+								ref={processedEditorRef}
+								className="codemirror-editor-container"
+								style={{ display: currentView === "processed" ? "block" : "none" }}
+							/>
+
+							{originalShowSaveIndicator && currentView === "original" && (
 								<div className="save-indicator">
 									<span>Saved</span>
 								</div>
