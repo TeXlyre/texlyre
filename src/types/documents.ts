@@ -15,5 +15,7 @@ export interface DocumentList {
 	projectMetadata?: {
 		name: string;
 		description: string;
+		mainFile?: string;
+		latexEngine?: "pdftex" | "xetex" | "luatex";
 	};
 }

@@ -13,6 +13,8 @@ export interface ProjectMetadata {
 	id: string;
 	name: string;
 	description: string;
+	mainFile?: string;
+    latexEngine?: "pdftex" | "xetex" | "luatex";
 	docUrl: string;
 	createdAt: number;
 	updatedAt: number;

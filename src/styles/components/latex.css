@@ -245,3 +245,44 @@ embed {
 	opacity: 0.8;
 	cursor: wait;
 }
+
+.main-file-selector {
+	margin-top: 0.75rem;
+	padding-top: 0.75rem;
+	border-top: 1px solid var(--border-color);
+}
+
+.main-file-selector-label {
+	font-size: 0.8rem;
+	color: var(--text-secondary);
+	margin-bottom: 0.5rem;
+}
+
+.main-file-select:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.share-checkbox {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.75rem;
+	color: var(--text-secondary);
+	cursor: pointer;
+}
+
+.share-checkbox input[type="checkbox"] {
+	margin: 0;
+}
+
+.share-checkbox:has(input:disabled) {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.shared-indicator {
+	font-size: 0.75rem;
+	color: var(--accent-color);
+	font-weight: 500;
+}

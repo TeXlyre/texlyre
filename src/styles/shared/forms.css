@@ -20,6 +20,7 @@
 .search-input,
 .comment-search input,
 .chat-panel-input,
+.main-file-select,
 .engine-select {
 	width: 100%;
 	padding: 0.5rem;

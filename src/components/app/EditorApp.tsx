@@ -83,7 +83,12 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		filePath?: string;
 		fileId?: string;
 	} | null>(null);
-	const lastSyncedMetadata = useRef({ name: "", description: "" });
+	const lastSyncedMetadata = useRef({
+		name: "",
+		description: "" ,
+		mainFile: undefined as string | undefined,
+		latexEngine: undefined as ("pdftex" | "xetex" | "luatex") | undefined
+	});
 	const { isOfflineMode } = useOffline();
 	const [showPrivacy, setShowPrivacy] = useState(false);
 
@@ -107,14 +112,13 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		if (doc) {
 			const projectMetadata = sessionStorage.getItem("projectMetadata");
 			if (projectMetadata) {
+				const parsedMetadata = JSON.parse(projectMetadata);
 				changeDoc((d) => {
 					d.projectMetadata = {
-						name: projectMetadata
-							? JSON.parse(projectMetadata).name
-							: "Untitled Project",
-						description: projectMetadata
-							? JSON.parse(projectMetadata).description
-							: "",
+						name: parsedMetadata.name || "Untitled Project",
+						description: parsedMetadata.description || "",
+						mainFile: parsedMetadata.mainFile,
+						latexEngine: parsedMetadata.latexEngine,
 					};
 					sessionStorage.removeItem("projectMetadata");
 				});
@@ -124,7 +128,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
 	useEffect(() => {
 		if (doc?.projectMetadata) {
-			const { name, description } = doc.projectMetadata;
+			const { name, description, mainFile, latexEngine } = doc.projectMetadata;
 			const projectId = sessionStorage.getItem("currentProjectId");
 
 			if (
@@ -135,9 +139,16 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			) {
 				if (
 					lastSyncedMetadata.current.name !== name ||
-					lastSyncedMetadata.current.description !== description
+					lastSyncedMetadata.current.description !== description ||
+					lastSyncedMetadata.current.mainFile !== mainFile ||
+					lastSyncedMetadata.current.latexEngine !== latexEngine
 				) {
-					lastSyncedMetadata.current = { name, description: description || "" };
+					lastSyncedMetadata.current = {
+						name,
+						description: description || "",
+						mainFile,
+						latexEngine
+					};
 					const syncProjectMetadata = async () => {
 						try {
 							const project = await getProjectById(projectId);
@@ -347,6 +358,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						}}
 						linkedFileInfo={linkedFileInfo}
 						shouldNavigateOnCompile={true}
+						useSharedSettings={true}
 					/>
 					<BackupStatusIndicator
 						className="header-backup-indicator"

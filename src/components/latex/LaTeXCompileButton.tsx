@@ -2,8 +2,10 @@
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 
+import { useCollab } from "../../hooks/useCollab";
 import { useFileTree } from "../../hooks/useFileTree";
 import { useLaTeX } from "../../hooks/useLaTeX";
+import type { DocumentList } from "../../types/documents";
 import type { FileNode } from "../../types/files.ts";
 import { ChevronDownIcon, PlayIcon, StopIcon } from "../common/Icons";
 
@@ -19,6 +21,7 @@ interface LaTeXCompileButtonProps {
 		fileId?: string;
 	} | null;
 	shouldNavigateOnCompile?: boolean;
+	useSharedSettings?: boolean;
 }
 
 const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
@@ -29,6 +32,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 	onExpandLatexOutput,
 	linkedFileInfo,
 	shouldNavigateOnCompile = false,
+	useSharedSettings = false,
 }) => {
 	const {
 		isCompiling,
@@ -38,52 +42,66 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		setLatexEngine,
 	} = useLaTeX();
 	const { selectedFileId, getFile, fileTree } = useFileTree();
+	const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-	const [mainFile, setMainFile] = useState<string | undefined>();
+	const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
+	const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
+	const [availableTexFiles, setAvailableTexFiles] = useState<string[]>([]);
 	const [isChangingEngine, setIsChangingEngine] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
+	const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
+	const projectEngine = useSharedSettings ? doc?.projectMetadata?.latexEngine : undefined;
+	const effectiveEngine = projectEngine || latexEngine;
+	const effectiveMainFile = projectMainFile || userSelectedMainFile || autoMainFile;
+
 	useEffect(() => {
+		const findTexFiles = (nodes: FileNode[]): string[] => {
+			const texFiles: string[] = [];
+			for (const node of nodes) {
+				if (node.type === "file" && node.path.endsWith(".tex")) {
+					texFiles.push(node.path);
+				}
+				if (node.children) {
+					texFiles.push(...findTexFiles(node.children));
+				}
+			}
+			return texFiles;
+		};
+
+		const allTexFiles = findTexFiles(fileTree);
+		setAvailableTexFiles(allTexFiles);
+
 		const findMainFile = async () => {
-			// Priority 1: If a document is selected and has a linked .tex file
 			if (
 				selectedDocId &&
 				linkedFileInfo?.filePath &&
 				linkedFileInfo.filePath.endsWith(".tex")
 			) {
-				setMainFile(linkedFileInfo.filePath);
+				setAutoMainFile(linkedFileInfo.filePath);
 				return;
 			}
 
-			// Priority 2: If a .tex file is currently selected
 			if (selectedFileId) {
 				const file = await getFile(selectedFileId);
 				if (file?.path.endsWith(".tex")) {
-					setMainFile(file.path);
+					setAutoMainFile(file.path);
 					return;
 				}
 			}
 
-			// Priority 3: Find any .tex file in the file tree
-			const findTexFile = (nodes: FileNode[]): string | undefined => {
-				for (const node of nodes) {
-					if (node.type === "file" && node.path.endsWith(".tex")) {
-						return node.path;
-					}
-					if (node.children) {
-						const found = findTexFile(node.children);
-						if (found) return found;
-					}
-				}
-				return undefined;
-			};
-
-			const texFile = findTexFile(fileTree);
-			setMainFile(texFile);
+			const texFile = allTexFiles[0];
+			setAutoMainFile(texFile);
 		};
 
 		findMainFile();
 	}, [selectedFileId, getFile, fileTree, selectedDocId, linkedFileInfo]);
+
+	useEffect(() => {
+		if (useSharedSettings && projectEngine && projectEngine !== latexEngine) {
+			setLatexEngine(projectEngine);
+		}
+	}, [projectEngine, latexEngine, setLatexEngine, useSharedSettings]);
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
@@ -104,30 +122,26 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 	const handleCompileOrStop = async () => {
 		if (isCompiling) {
 			stopCompilation();
-		} else if (mainFile) {
-			// Expand LaTeX output panel if collapsed
+		} else if (effectiveMainFile) {
 			if (onExpandLatexOutput) {
 				onExpandLatexOutput();
 			}
 
-			// Navigate to the file being compiled if this is the main compile button
-			if (shouldNavigateOnCompile && onNavigateToLinkedFile && mainFile) {
-				// If we have a linked file and it's the file being compiled, navigate to it
-				if (linkedFileInfo?.filePath === mainFile) {
+			if (shouldNavigateOnCompile && onNavigateToLinkedFile && effectiveMainFile) {
+				if (linkedFileInfo?.filePath === effectiveMainFile) {
 					onNavigateToLinkedFile();
 				} else {
-					// For any other file, dispatch navigation event
 					document.dispatchEvent(
 						new CustomEvent("navigate-to-compiled-file", {
 							detail: {
-								filePath: mainFile,
+								filePath: effectiveMainFile,
 							},
 						}),
 					);
 				}
 			}
 
-			await compileDocument(mainFile);
+			await compileDocument(effectiveMainFile);
 		}
 	};
 
@@ -139,13 +153,72 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 	const handleEngineChange = async (engine: string) => {
 		setIsChangingEngine(true);
 		try {
-			await setLatexEngine(engine as "pdftex" | "xetex" | "luatex");
+			if (useSharedSettings && projectEngine) {
+				// If sharing is enabled, update the shared setting
+				if (changeDoc) {
+					changeDoc((d) => {
+						if (!d.projectMetadata) {
+							d.projectMetadata = { name: "", description: "" };
+						}
+						d.projectMetadata.latexEngine = engine as "pdftex" | "xetex" | "luatex";
+					});
+				}
+			} else {
+				// If sharing is disabled, update local setting
+				await setLatexEngine(engine as "pdftex" | "xetex" | "luatex");
+			}
 			setIsDropdownOpen(false);
 		} catch (error) {
 			console.error("Failed to change engine:", error);
 		} finally {
 			setIsChangingEngine(false);
 		}
+	};
+
+	const handleMainFileChange = (filePath: string) => {
+		if (useSharedSettings && projectMainFile) {
+			// If sharing is enabled, update the shared setting
+			if (!changeDoc) return;
+			changeDoc((d) => {
+				if (!d.projectMetadata) {
+					d.projectMetadata = { name: "", description: "" };
+				}
+				d.projectMetadata.mainFile = filePath === "auto" ? undefined : filePath;
+			});
+		} else {
+			// If sharing is disabled, update local setting
+			setUserSelectedMainFile(filePath === "auto" ? undefined : filePath);
+		}
+	};
+
+	const handleShareMainFile = (checked: boolean) => {
+		if (!useSharedSettings || !changeDoc) return;
+
+		changeDoc((d) => {
+			if (!d.projectMetadata) {
+				d.projectMetadata = { name: "", description: "" };
+			}
+			if (checked) {
+				d.projectMetadata.mainFile = userSelectedMainFile || autoMainFile;
+			} else {
+				delete d.projectMetadata.mainFile;
+			}
+		});
+	};
+
+	const handleShareEngine = (checked: boolean) => {
+		if (!useSharedSettings || !changeDoc) return;
+
+		changeDoc((d) => {
+			if (!d.projectMetadata) {
+				d.projectMetadata = { name: "", description: "" };
+			}
+			if (checked) {
+				d.projectMetadata.latexEngine = latexEngine;
+			} else {
+				delete d.projectMetadata.latexEngine;
+			}
+		});
 	};
 
 	const getFileName = (path?: string) => {
@@ -156,7 +229,6 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 	const getDisplayName = (path?: string) => {
 		if (!path) return "No .tex file";
 
-		// If this is a linked file from a document, show the document name
 		if (selectedDocId && linkedFileInfo?.filePath === path && documents) {
 			const doc = documents.find((d) => d.id === selectedDocId);
 			if (doc) {
@@ -167,7 +239,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		return getFileName(path);
 	};
 
-	const isDisabled = !isCompiling && (!mainFile || isChangingEngine);
+	const isDisabled = !isCompiling && (!effectiveMainFile || isChangingEngine);
 
 	return (
 		<div className={`latex-compile-buttons ${className}`} ref={dropdownRef}>
@@ -201,22 +273,65 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 				<div className="latex-dropdown">
 					<div className="main-file-display">
 						<div className="main-file-label">Main file:</div>
-						<div className="main-file-path" title={mainFile}>
-							{getDisplayName(mainFile)}
+						<div className="main-file-path" title={effectiveMainFile}>
+							{getDisplayName(effectiveMainFile)}
+							{projectMainFile && <span className="shared-indicator"> (shared)</span>}
 						</div>
 					</div>
+
+						{useSharedSettings && (
+							<>
+								<div className="main-file-selector">
+									<div className="main-file-selector-label">Select main file:</div>
+									<select
+										value={projectMainFile || userSelectedMainFile || "auto"}
+										onChange={(e) => handleMainFileChange(e.target.value)}
+										className="main-file-select"
+										disabled={isChangingEngine || isCompiling}
+									>
+										<option value="auto">Auto-detect</option>
+										{availableTexFiles.map((filePath) => (
+											<option key={filePath} value={filePath}>
+												{getFileName(filePath)}
+											</option>
+										))}
+									</select>
+									<label className="share-checkbox">
+										<input
+											type="checkbox"
+											checked={!!projectMainFile}
+											onChange={(e) => handleShareMainFile(e.target.checked)}
+											disabled={isChangingEngine || isCompiling || !effectiveMainFile}
+										/>
+										Share with collaborators
+									</label>
+								</div>
+							</>
+						)}
+
 					<div className="engine-selector">
 						<div className="engine-label">LaTeX Engine:</div>
 						<select
-							value={latexEngine}
+							value={effectiveEngine}
 							onChange={(e) => handleEngineChange(e.target.value)}
 							className="engine-select"
 							disabled={isChangingEngine || isCompiling}
 						>
 							<option value="pdftex">pdfTeX</option>
 							<option value="xetex">XeTeX</option>
-							<option value="luatex">LuaTeX</option>
+							{/*<option value="luatex">LuaTeX</option>*/}
 						</select>
+						{useSharedSettings && (
+							<label className="share-checkbox">
+								<input
+									type="checkbox"
+									checked={!!projectEngine}
+									onChange={(e) => handleShareEngine(e.target.checked)}
+									disabled={isChangingEngine || isCompiling}
+								/>
+								Share with collaborators
+							</label>
+						)}
 						{isChangingEngine && (
 							<div className="engine-status">Switching engine...</div>
 						)}
