@@ -476,8 +476,8 @@ const EditorContent: React.FC<{
 					<div ref={editorRef} className="codemirror-editor-container" />
 
 					{showSaveIndicator && (
-						<div className="save-indicator">
-							<span>Saved</span>
+						<div className={`save-indicator ${isViewOnly ? 'read-only' : ''}`}>
+							<span>{isViewOnly ? 'Cannot Save Read-Only' : 'Saved'}</span>
 						</div>
 					)}
 				</div>
@@ -662,7 +662,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 		: null;
 
 	const viewerPlugin =
-		isEditingFile && fileName
+		isEditingFile && fileName && !linkedDocumentId
 			? pluginRegistry.getViewerForFile(fileName, mimeType)
 			: null;
 

@@ -340,7 +340,7 @@ export const EditorLoader = (
 		}
 
 		// Only add comment system if comments are enabled
-		if (enableComments) {
+		if (enableComments && !isViewOnly) {
 			const commentKeymap = keymap.of([
 				{
 					key: "Alt-c",
@@ -373,16 +373,19 @@ export const EditorLoader = (
 			{
 				key: "Ctrl-s",
 				run: (view) => {
-					if (!isViewOnly) {
-						const content = view.state.doc.toString();
-						if (isEditingFile && currentFileId) {
-							saveFileToStorage(content);
-						} else if (!isEditingFile && documentId) {
-							saveDocumentToLinkedFile(content);
-						}
+					if (isViewOnly) {
+						setShowSaveIndicator(true);
+						setTimeout(() => setShowSaveIndicator(false), 2000);
 						return true;
 					}
-					return false;
+
+					const content = view.state.doc.toString();
+					if (isEditingFile && currentFileId) {
+						saveFileToStorage(content);
+					} else if (!isEditingFile && documentId) {
+						saveDocumentToLinkedFile(content);
+					}
+					return true;
 				},
 			},
 		]);

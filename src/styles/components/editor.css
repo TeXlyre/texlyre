@@ -175,20 +175,26 @@
 }
 
 .save-indicator {
-	position: absolute;
-	bottom: 12px;
-	right: 12px;
-	background-color: var(--pico-secondary);
-	color: var(--pico-secondary-inverse, #fff);
-	padding: var(--space-xs) var(--space-sm);
-	border-radius: 15px;
-	font-size: 0.65rem;
-	font-weight: 500;
-	box-shadow: var(--shadow-sm);
-	z-index: 100;
-	animation: saveIndicatorFadeIn var(--transition-slow) ease-out,
-		saveIndicatorFadeOut var(--transition-slow) ease-out 1.2s forwards;
-	pointer-events: none;
+    position: absolute !important;
+    bottom: var(--mobile-spacing-lg, 12px) !important;
+    right: var(--mobile-spacing-lg, 12px) !important;
+    background-color: var(--color-success);
+    color: var(--pico-secondary-inverse);
+    padding: var(--mobile-spacing-md, 8px) var(--mobile-spacing-lg, 12px) !important;
+    border-radius: var(--mobile-radius-lg, 15px) !important;
+    font-size: 0.65rem !important;
+    font-weight: 700 !important;
+    box-shadow: var(--mobile-shadow-md, 0 2px 8px rgba(0, 0, 0, 0.2)) !important;
+    z-index: 100 !important;
+    animation: saveIndicatorFadeIn var(--mobile-transition-normal, 0.25s) ease-out,
+       saveIndicatorFadeOut var(--mobile-transition-normal, 0.25s) ease-out 1.2s
+       forwards !important;
+    pointer-events: none !important;
+}
+
+.save-indicator.read-only {
+    background-color: var(--color-error, #dc3545) !important;
+    color: var(--pico-secondary-inverse, #fff);
 }
 
 @keyframes saveIndicatorFadeIn {
@@ -217,22 +223,4 @@
 	height: 100% !important;
 	overflow: hidden !important;
 	display: flex !important;
-}
-
-.save-indicator {
-	position: absolute !important;
-	bottom: var(--mobile-spacing-lg, 12px) !important;
-	right: var(--mobile-spacing-lg, 12px) !important;
-	background-color: var(--pico-primary) !important;
-	color: var(--pico-primary-inverse) !important;
-	padding: var(--mobile-spacing-md, 8px) var(--mobile-spacing-lg, 12px) !important;
-	border-radius: var(--mobile-radius-lg, 15px) !important;
-	font-size: 0.65rem !important;
-	font-weight: 700 !important;
-	box-shadow: var(--mobile-shadow-md, 0 2px 8px rgba(0, 0, 0, 0.2)) !important;
-	z-index: 100 !important;
-	animation: saveIndicatorFadeIn var(--mobile-transition-normal, 0.25s) ease-out,
-		saveIndicatorFadeOut var(--mobile-transition-normal, 0.25s) ease-out 1.2s
-		forwards !important;
-	pointer-events: none !important;
 }

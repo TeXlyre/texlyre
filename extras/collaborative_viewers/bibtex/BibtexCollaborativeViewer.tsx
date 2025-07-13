@@ -297,6 +297,13 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			</PluginControlGroup>
 
 			<PluginControlGroup>
+				<button
+					onClick={processBibtex}
+					disabled={isProcessing}
+					title="Process BibTeX with Current Settings"
+				>
+					<CleanIcon />
+				</button>
 				{currentView === "original" && (
 					<button
 						onClick={() => {
@@ -312,13 +319,6 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 						<SaveIcon />
 					</button>
 				)}
-				<button
-					onClick={processBibtex}
-					disabled={isProcessing}
-					title="Process BibTeX with Current Settings"
-				>
-					<CleanIcon />
-				</button>
 				{fileId && currentView === "processed" && (
 					<button
 						onClick={handleSaveProcessed}
