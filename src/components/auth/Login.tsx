@@ -38,6 +38,7 @@ const Login: React.FC<LoginProps> = ({
 		try {
 			await login(username, password);
 			onLoginSuccess();
+			window.location.reload();
 		} catch (err) {
 			setError(
 				err instanceof Error ? err.message : "An error occurred during login",

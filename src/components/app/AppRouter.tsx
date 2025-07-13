@@ -301,13 +301,15 @@ const AppRouter: React.FC = () => {
 
 	const handleLogout = async () => {
 		await logout();
-		setCurrentView("auth");
 		setDocUrl(null);
 		setCurrentProjectId(null);
 		setTargetDocId(null);
 		setTargetFilePath(null);
 		sessionStorage.removeItem("currentProjectId");
 		sessionStorage.removeItem("lastCheckedDocUrl");
+		window.location.hash = "";
+		window.location.reload();
+		setCurrentView("auth");
 	};
 
 	const handleBackToProjects = () => {
