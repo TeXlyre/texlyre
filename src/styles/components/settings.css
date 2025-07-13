@@ -146,7 +146,7 @@
 .text-control input,
 .number-control input {
 	padding: var(--space-sm);
-	border: 1px solid var(--accent-border);
+	border: 1px solid var(--pico-secondary-inverse);
 	border-radius: var(--radius-sm);
 	background-color: var(--pico-background);
 	color: var(--text-color);
