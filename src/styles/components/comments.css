@@ -495,8 +495,3 @@
 	background-color: var(--pico-primary);
 	border-radius: 50%;
 }
-
-.view-tabs {
-	display: flex;
-	gap: var(--space-xs);
-}

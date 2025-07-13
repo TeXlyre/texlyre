@@ -4,7 +4,6 @@ import type React from "react";
 import { useEffect, useRef, useState } from "react";
 
 import {
-	CleanIcon,
 	DownloadIcon,
 	OptionsIcon,
 	SaveIcon,
@@ -279,31 +278,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				</button>
 			</PluginControlGroup>
 
-			<PluginControlGroup className="view-toggle">
-				<button
-					className={currentView === "original" ? "active" : ""}
-					onClick={() => setCurrentView("original")}
-					title="View Original"
-				>
-					Original
-				</button>
-				<button
-					className={currentView === "processed" ? "active" : ""}
-					onClick={() => setCurrentView("processed")}
-					title="View Processed"
-				>
-					Processed
-				</button>
-			</PluginControlGroup>
-
 			<PluginControlGroup>
-				<button
-					onClick={processBibtex}
-					disabled={isProcessing}
-					title="Process BibTeX with Current Settings"
-				>
-					<CleanIcon />
-				</button>
 				{currentView === "original" && (
 					<button
 						onClick={() => {
@@ -377,6 +352,8 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 						options={options}
 						onOptionsChange={setOptions}
 						onResetToDefaults={() => setOptions(getPresetOptions("standard"))}
+						onProcessBibtex={processBibtex}
+						isProcessing={isProcessing}
 					/>
 				)}
 
@@ -397,9 +374,20 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					<div className="editor-containers">
 						<div className="editor-container" style={{ position: "relative" }}>
 							<div className="editor-header">
-								{currentView === "original"
-									? "Original (Collaborative)"
-									: "Processed (Local)"}
+								<div className="view-tabs">
+									<button
+										className={`tab-button ${currentView === "original" ? "active" : ""}`}
+										onClick={() => setCurrentView("original")}
+									>
+										Original
+									</button>
+									<button
+										className={`tab-button ${currentView === "processed" ? "active" : ""}`}
+										onClick={() => setCurrentView("processed")}
+									>
+										Processed
+									</button>
+								</div>
 								{isProcessing && (
 									<span className="processing-indicator"> (Processing...)</span>
 								)}

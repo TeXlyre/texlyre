@@ -1,4 +1,5 @@
 /* extras/viewers/bibtex/styles.css */
+/* extras/viewers/bibtex/styles.css */
 .bibtex-viewer-container {
 	display: flex;
 	flex-direction: column;
@@ -25,31 +26,6 @@
 	gap: 0.75rem;
 	align-items: center;
 	flex-wrap: wrap;
-}
-
-/* View toggle special styling */
-.view-toggle {
-	padding: 0;
-	border-radius: 6px;
-	overflow: hidden;
-}
-
-.view-toggle button {
-	border-radius: 0;
-	min-width: 60px;
-	font-size: 0.8rem;
-	border-left: none;
-	border-right: none;
-}
-
-.view-toggle button:first-child {
-	border-left: 1px solid var(--accent-border, #444);
-	border-radius: 4px 0 0 4px;
-}
-
-.view-toggle button:last-child {
-	border-right: 1px solid var(--accent-border, #444);
-	border-radius: 0 4px 4px 0;
 }
 
 .bibtex-viewer-main {
@@ -79,6 +55,12 @@
 	color: var(--text-color);
 	font-size: 0.85rem;
 	font-weight: 600;
+}
+
+.header-buttons {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
 }
 
 .reset-button {
@@ -163,7 +145,6 @@
 	line-height: 1.2;
 }
 
-/* Sub-option styling */
 .option-item.sub-option {
 	margin-left: 1.5rem;
 	margin-bottom: 0.3rem;
@@ -190,11 +171,6 @@
 .option-item.sub-option select {
 	margin-left: 0;
 	width: 100%;
-}
-
-.option-item > span {
-	font-weight: 500;
-	line-height: 1.2;
 }
 
 .option-item input[type="checkbox"] {
@@ -289,8 +265,38 @@
 	font-weight: 600;
 	color: var(--text-color);
 	display: flex;
+	justify-content: space-between;
 	align-items: center;
-	gap: 0.5rem;
+}
+
+.view-tabs {
+	display: flex;
+	gap: var(--space-xs);
+}
+
+.tab-button {
+	padding: 0.3rem 0.75rem;
+	font-size: 0.8rem;
+	background-color: var(--pico-background);
+	border: none;
+	border-right: 1px solid var(--accent-border, #444);
+	color: var(--text-color);
+	cursor: pointer;
+	transition: all 0.2s ease;
+	min-width: 60px;
+}
+
+.tab-button:last-child {
+	border-right: none;
+}
+
+.tab-button:hover {
+	background-color: var(--pico-primary-focus);
+}
+
+.tab-button.active {
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
 }
 
 .processing-indicator {
@@ -304,7 +310,6 @@
 	overflow: hidden;
 }
 
-/* Responsive design for smaller screens */
 @media (max-width: 768px) {
 	.bibtex-viewer-header {
 		flex-direction: column;
@@ -328,7 +333,6 @@
 	}
 }
 
-/* High contrast theme support */
 @media (prefers-contrast: high) {
 	.control-group {
 		border-width: 2px;
@@ -340,12 +344,12 @@
 	}
 }
 
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
 	.control-group button,
 	.reset-button,
 	.option-item input,
-	.option-item select {
+	.option-item select,
+	.tab-button {
 		transition: none;
 	}
 }

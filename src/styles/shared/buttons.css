@@ -98,6 +98,11 @@
 	font-size: 0.575rem;
 }
 
+.view-tabs {
+	display: flex;
+	gap: var(--space-xs);
+}
+
 .tab-button {
 	padding: var(--space-xs) 0.75rem;
 	border-radius: var(--radius-sm);

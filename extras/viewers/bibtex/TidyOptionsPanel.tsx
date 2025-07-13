@@ -1,17 +1,23 @@
+// extras/viewers/bibtex/TidyOptionsPanel.tsx
 import type React from "react";
-import { ResetIcon } from "../../../src/components/common/Icons";
+
+import { CleanIcon, ResetIcon } from "../../../src/components/common/Icons";
 import type { TidyOptions } from "./tidyOptions";
 
 interface TidyOptionsPanelProps {
 	options: TidyOptions;
 	onOptionsChange: (options: TidyOptions) => void;
 	onResetToDefaults: () => void;
+	onProcessBibtex: () => void;
+	isProcessing: boolean;
 }
 
 export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 	options,
 	onOptionsChange,
 	onResetToDefaults,
+	onProcessBibtex,
+	isProcessing,
 }) => {
 	const updateOption = (key: keyof TidyOptions, value: unknown) => {
 		onOptionsChange({ ...options, [key]: value });
@@ -21,13 +27,23 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 		<div className="bibtex-sidebar">
 			<div className="sidebar-header">
 				<h4>Tidy Options</h4>
-				<button
-					className="reset-button"
-					onClick={onResetToDefaults}
-					title="Reset to Standard Preset"
-				>
-					<ResetIcon />
-				</button>
+				<div className="header-buttons">
+					<button
+						onClick={onProcessBibtex}
+						disabled={isProcessing}
+						title="Process BibTeX with Current Settings"
+						className="reset-button"
+					>
+						<CleanIcon />
+					</button>
+					<button
+						className="reset-button"
+						onClick={onResetToDefaults}
+						title="Reset to Standard Preset"
+					>
+						<ResetIcon />
+					</button>
+				</div>
 			</div>
 
 			<div className="options-container">
