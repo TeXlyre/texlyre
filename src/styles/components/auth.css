@@ -326,6 +326,6 @@
   text-decoration: none;
 }
 
-.modal-overlay:has(.export-account-container) {
+.modal-overlay:has(.export-account-modal) {
   z-index: var(--z-above-all) !important;
 }
