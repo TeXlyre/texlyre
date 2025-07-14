@@ -103,7 +103,6 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 	useEffect(() => {
 		if (!projectId || !collectionName) return;
 
-		// Helper function to validate WebSocket URLs
 		const isValidWebSocketUrl = (url: string): boolean => {
 			try {
 				const u = new URL(url);
@@ -119,72 +118,65 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 		const inputServers = signalingServers.split(",").map((s) => s.trim());
 		const validSignalingServers: string[] = [];
 
-		inputServers.forEach((serverUrl) => {
-			if (serverUrl.length === 0) {
-				return;
-			}
+		for (const serverUrl of inputServers) {
+			if (serverUrl.length === 0) continue;
+
 			try {
 				const urlObj = new URL(serverUrl);
-				if (urlObj.protocol === "http:" || urlObj.protocol === "https:") {
-					// Warn if http/https are provided, as they are not directly supported for WebSockets
-					console.warn(
-						`[CollabContext] Warning: Signaling server URL '${serverUrl}' uses HTTP/HTTPS protocol. Only 'ws://' or 'wss://' are supported for WebRTC signaling. This URL will be ignored.`,
-					);
-				} else if (isValidWebSocketUrl(serverUrl)) {
+				if (window.location.protocol === "https:" && urlObj.protocol === "ws:") {
+					continue; // Skip insecure URLs over HTTPS
+				}
+				if (isValidWebSocketUrl(serverUrl)) {
 					validSignalingServers.push(serverUrl);
-				} else {
-					console.warn(
-						`[CollabContext] Warning: Signaling server URL '${serverUrl}' is not a valid WebSocket URL and will be ignored. Please use 'ws://' or 'wss://' with a valid hostname.`,
-					);
 				}
 			} catch (_e) {
-				console.warn(
-					`[CollabContext] Warning: Invalid URL format for signaling server '${serverUrl}'. Please ensure it's a valid URL.`,
-				);
+				// Invalid URL, skip it
 			}
-		});
+		}
 
-		// If no valid servers are provided after filtering, fall back to a default known good server
-		const serversToUse =
-			validSignalingServers.length > 0
-				? validSignalingServers
-				: ["wss://ywebrtc.emaily.re"];
+		const serversToUse = validSignalingServers.length > 0
+			? validSignalingServers
+			: (JSON.parse(localStorage.getItem("texlyre-settings") || '{}')['collab-signaling-servers'] || ["wss://ywebrtc.emaily.re"]);
 
-		console.log(
-			`[CollabContext] Connecting with signaling servers: ${serversToUse.join(", ")}`,
-		);
+		try {
+			const { doc: ydoc, provider: yprovider } = collabService.connect(
+				projectId,
+				collectionName,
+				{
+					signalingServers: serversToUse,
+					autoReconnect,
+					awarenessTimeout: awarenessTimeout * 1000,
+				},
+			);
+			setDoc(ydoc);
+			setProvider(yprovider);
 
-		const { doc: ydoc, provider: yprovider } = collabService.connect(
-			projectId,
-			collectionName,
-			{
-				signalingServers: serversToUse,
-				autoReconnect,
-				awarenessTimeout: awarenessTimeout * 1000,
-			},
-		);
-		setDoc(ydoc);
-		setProvider(yprovider);
+			const ymap = ydoc.getMap("data");
 
-		const ymap = ydoc.getMap("data");
+			const observer = () => {
+				if (!isUpdatingRef.current) {
+					setData(ymap.toJSON());
+				}
+			};
 
-		const observer = () => {
-			if (!isUpdatingRef.current) {
-				setData(ymap.toJSON());
-			}
-		};
+			ymap.observe(observer);
+			setData(ymap.toJSON());
+			setIsConnected(true);
 
-		ymap.observe(observer);
-		setData(ymap.toJSON());
-		setIsConnected(true);
-
-		return () => {
-			ymap.unobserve(observer);
-			collabService.disconnect(projectId, collectionName);
+			return () => {
+				ymap.unobserve(observer);
+				collabService.disconnect(projectId, collectionName);
+				setIsConnected(false);
+				setDoc(undefined);
+				setProvider(undefined);
+			};
+		} catch (error) {
+			console.warn("[CollabContext] Connection failed, continuing in offline mode:", error);
 			setIsConnected(false);
 			setDoc(undefined);
 			setProvider(undefined);
-		};
+			return () => {};
+		}
 	}, [
 		projectId,
 		collectionName,

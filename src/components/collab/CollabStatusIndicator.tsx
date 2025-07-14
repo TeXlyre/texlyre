@@ -4,12 +4,15 @@ import { useState } from "react";
 
 import { useCollab } from "../../hooks/useCollab";
 import { useFileSync } from "../../hooks/useFileSync";
+import { useOffline } from "../../hooks/useOffline";
+
 import { collabService } from "../../services/CollabService";
 import {
 	ChevronDownIcon,
 	FileIcon,
 	SyncIcon,
 	UsersIcon,
+	OfflineIcon,
 } from "../common/Icons";
 import CollabModal from "./CollabModal";
 import FileSyncModal from "./FileSyncModal";
@@ -24,6 +27,7 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 	docUrl,
 }) => {
 	const { isConnected: isCollabConnected } = useCollab();
+	const { isOfflineMode } = useOffline();
 	const { isEnabled: isFileSyncEnabled, isSyncing: isFileSyncing } =
 		useFileSync();
 	const [showDropdown, setShowDropdown] = useState(false);
@@ -31,8 +35,11 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 	const [showFileSyncModal, setShowFileSyncModal] = useState(false);
 	const [isSyncing, setIsSyncing] = useState(false);
 
+	// Show offline mode if either network is offline OR collab connection failed
+	const showOffline = isOfflineMode || !isCollabConnected;
+
 	const getMainStatus = () => {
-		const hasConnectedService = isCollabConnected;
+		const hasConnectedService = isCollabConnected && !isOfflineMode;
 		const isSyncingAny = isFileSyncing || isSyncing;
 
 		return { connected: hasConnectedService, syncing: isSyncingAny };
@@ -41,13 +48,13 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 	const mainStatus = getMainStatus();
 
 	const getStatusColor = () => {
-		if (!mainStatus.connected) return "#666";
+		if (showOffline) return "#666";
 		if (mainStatus.syncing) return "#ffc107";
 		return "#28a745";
 	};
 
 	const getStatusText = () => {
-		if (!isCollabConnected) return "Collaboration disconnected";
+		if (showOffline) return "Working offline - collaboration disabled";
 		if (mainStatus.syncing) return "Syncing...";
 		return "Collaboration active";
 	};
@@ -69,8 +76,8 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 	};
 
 	const handleMainButtonClick = () => {
-		if (!isCollabConnected) {
-			// Only collab modal when disconnected
+		if (showOffline) {
+			// Show collab modal to explain offline status
 			setShowCollabModal(true);
 		} else if (!isFileSyncEnabled) {
 			// Only collab enabled, open collab directly
@@ -92,7 +99,7 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 	};
 
 	const handleFileSyncClick = () => {
-		if (isCollabConnected) {
+		if (isCollabConnected && !isOfflineMode) {
 			setShowFileSyncModal(true);
 		}
 		setShowDropdown(false);
@@ -100,7 +107,7 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 
 	const getServiceStatusIndicator = (serviceType: string) => {
 		if (serviceType === "collab") {
-			return isCollabConnected ? "🟢" : "";
+			return isCollabConnected && !isOfflineMode ? "🟢" : "";
 		}
 		if (serviceType === "filesync") {
 			return isFileSyncEnabled ? "🟢" : "";
@@ -114,11 +121,11 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 				<div className="collab-button-group">
 					<div
 						className={`collab-status-indicator main-button ${className} ${
-							mainStatus.connected ? "connected" : "disconnected"
+							showOffline ? "offline" : mainStatus.connected ? "connected" : "disconnected"
 						}`}
 						onClick={handleMainButtonClick}
 						title={
-							isFileSyncEnabled && isCollabConnected
+							isFileSyncEnabled && isCollabConnected && !isOfflineMode
 								? "Collaboration Options"
 								: getStatusText()
 						}
@@ -130,20 +137,25 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 								animation: mainStatus.syncing ? "pulse 1.5s infinite" : "none",
 							}}
 						/>
-						<UsersIcon />
-						<span className="collab-label">Collab</span>
+						{showOffline ? <OfflineIcon /> : <UsersIcon />}
+						<span className="collab-label">
+							{showOffline ? "Offline" : "Collab"}
+						</span>
 					</div>
 
 					<button
-						className={`collab-dropdown-toggle ${mainStatus.connected ? "connected" : "disconnected"}`}
+						className={`collab-dropdown-toggle ${
+							showOffline ? "offline" : mainStatus.connected ? "connected" : "disconnected"
+						}`}
 						onClick={handleDropdownToggle}
 						title="Collaboration Options"
+						disabled={showOffline}
 					>
 						<ChevronDownIcon />
 					</button>
 				</div>
 
-				{showDropdown && (
+				{showDropdown && !showOffline && (
 					<div className="collab-dropdown">
 						<div className="collab-dropdown-item" onClick={handleCollabClick}>
 							<span className="service-indicator">
@@ -155,7 +167,7 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 						<div
 							className="collab-dropdown-item"
 							onClick={handleFileSyncClick}
-							aria-disabled={!isCollabConnected}
+							aria-disabled={!isCollabConnected || isOfflineMode}
 						>
 							<span className="service-indicator">
 								{getServiceStatusIndicator("filesync")}
@@ -169,7 +181,7 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 			<CollabModal
 				isOpen={showCollabModal}
 				onClose={() => setShowCollabModal(false)}
-				isConnected={isCollabConnected}
+				isConnected={isCollabConnected && !isOfflineMode}
 				isSyncing={isSyncing}
 				onSyncAll={handleSyncAll}
 				docUrl={docUrl}

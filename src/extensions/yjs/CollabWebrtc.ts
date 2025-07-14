@@ -29,7 +29,6 @@ class WebrtcProviderRegistry {
 		}
 
 		try {
-			console.log(`[CollabWebrtc] Creating new WebRTC provider for room: ${roomName}`);
 			const provider = new WebrtcProvider(roomName, doc, {
 				signaling: options?.signaling || ["wss://ywebrtc.emaily.re"],
 			});
@@ -41,10 +40,7 @@ class WebrtcProviderRegistry {
 
 			return provider;
 		} catch (error) {
-			console.error(
-				`Error creating WebRTC provider for room ${roomName}:`,
-				error,
-			);
+			console.error(`Error creating WebRTC provider for room ${roomName}:`, error);
 			throw error;
 		}
 	}
