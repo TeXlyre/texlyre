@@ -53,6 +53,7 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 				<Register
 				   onRegisterSuccess={onAuthSuccess}
 				   onSwitchToLogin={switchToLogin}
+				   onShowPrivacy={() => setShowPrivacy(true)}
 				/>
 			 ) : (
 				<ImportAccount

@@ -8,11 +8,13 @@ import { useAuth } from "../../hooks/useAuth.ts";
 interface RegisterProps {
 	onRegisterSuccess: () => void;
 	onSwitchToLogin: () => void;
+	onShowPrivacy: () => void;
 }
 
 const Register: React.FC<RegisterProps> = ({
 	onRegisterSuccess,
 	onSwitchToLogin,
+	onShowPrivacy,
 }) => {
 	const { register } = useAuth();
 
@@ -167,7 +169,7 @@ const Register: React.FC<RegisterProps> = ({
 					/>
 					<span>
 					  I agree to the local storage of my data as described in the{" "}
-					  <a href="#" onClick={(e) => { e.preventDefault(); /* show privacy modal */ }}>
+					  <a href="#" onClick={(e) => { e.preventDefault(); onShowPrivacy(); }}>
 						privacy information
 					  </a>
 					</span>
