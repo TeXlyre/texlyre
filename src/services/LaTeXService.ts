@@ -302,22 +302,11 @@ class LaTeXService {
 			);
 
 			const validCachedFiles: FileNode[] = [];
-			const staleCacheIds: string[] = [];
 
 			for (const cachedFile of cachedFiles) {
 				if (await this.isCacheEntryValid(cachedFile)) {
 					validCachedFiles.push(cachedFile);
-				} else {
-					staleCacheIds.push(cachedFile.id);
 				}
-			}
-
-			if (staleCacheIds.length > 0) {
-				console.log(`[LaTeXService] Cleaning up ${staleCacheIds.length} stale cache entries`);
-				await fileStorageService.batchDeleteFiles(staleCacheIds, {
-					showDeleteDialog: false,
-					hardDelete: true,
-				});
 			}
 
 			for (const validCache of validCachedFiles) {
