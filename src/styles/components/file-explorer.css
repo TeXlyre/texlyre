@@ -170,7 +170,6 @@
 .cancel-input-button {
 	position: absolute;
 	right: 2px;
-	top: 50%;
 	transform: translateY(-50%);
 	background: none;
 	border: none;

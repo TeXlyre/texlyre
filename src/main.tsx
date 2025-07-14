@@ -91,6 +91,31 @@ if (
 	});
 }
 
+async function initUserData(): Promise<void> {
+  const settingsKey = 'texlyre-settings';
+  const propertiesKey = 'texlyre-properties';
+
+  const hasSettings = localStorage.getItem(settingsKey) !== null;
+  const hasProperties = localStorage.getItem(propertiesKey) !== null;
+
+  if (!hasSettings || !hasProperties) {
+    try {
+      const response = await fetch('/texlyre/userdata.json');
+      const userData = await response.json();
+
+      if (!hasSettings && userData.settings) {
+        localStorage.setItem(settingsKey, JSON.stringify(userData.settings));
+      }
+
+      if (!hasProperties && userData.properties) {
+        localStorage.setItem(propertiesKey, JSON.stringify(userData.properties));
+      }
+    } catch (error) {
+      console.warn('Failed to load default user data:', error);
+    }
+  }
+}
+
 async function initDatabases() {
 	try {
 		await openDB("texlyre-auth", 1, {
@@ -120,7 +145,7 @@ async function initDatabases() {
 
 async function startApp() {
 	try {
-		await Promise.all([initDatabases(), authService.initialize()]);
+		await Promise.all([initDatabases(), authService.initialize(), initUserData()]);
 	} catch (error) {
 		console.error("Error during initialization:", error);
 	}

@@ -47,6 +47,10 @@ export default defineConfig({
 					src: "node_modules/pdfjs-dist/cmaps/*",
 					dest: "cmaps/",
 				},
+				{
+					src: "userdata.json",
+					dest: "",
+				},
 			],
 		}),
 	],
