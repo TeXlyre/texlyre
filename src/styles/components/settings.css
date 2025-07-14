@@ -193,3 +193,30 @@
 	bottom: var(--space-lg, 12px) !important;
 	right: var(--space-lg, 12px) !important;
 }
+
+.settings-container .refresh-indicator {
+	position: absolute !important;
+	bottom: var(--space-lg, 12px) !important;
+	right: var(--space-lg, 12px) !important;
+	background-color: var(--color-warning, #ffc107) !important;
+	color: var(--pico-secondary-inverse, #000) !important;
+	padding: var(--space-sm, 8px) var(--space-lg, 12px) !important;
+	border-radius: var(--radius-lg, 15px) !important;
+	font-size: 0.65rem !important;
+	font-weight: 700 !important;
+	box-shadow: var(--shadow-md, 0 2px 8px rgba(0, 0, 0, 0.2)) !important;
+	z-index: 100 !important;
+	animation: refreshIndicatorPulse 2s infinite !important;
+	pointer-events: none !important;
+}
+
+@keyframes refreshIndicatorPulse {
+	0%, 100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.8;
+		transform: scale(1.05);
+	}
+}

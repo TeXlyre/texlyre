@@ -20,7 +20,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 	initialCategory,
 	initialSubcategory,
 }) => {
-	const { getCategories, getSettingsByCategory, searchSettings, hasUnsavedChanges } =
+	const { getCategories, getSettingsByCategory, searchSettings, hasUnsavedChanges, needsRefresh } =
 		useSettings();
 	const [searchQuery, setSearchQuery] = useState("");
 	const [filteredData, setFilteredData] = useState<{
@@ -236,6 +236,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 				{hasUnsavedChanges && (
 					<div className="save-indicator">
 						Settings Saved
+					</div>
+				)}
+				{needsRefresh && (
+					<div className="refresh-indicator">
+						Page refresh required
 					</div>
 				)}
 			</div>

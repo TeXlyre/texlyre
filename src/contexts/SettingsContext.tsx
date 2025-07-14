@@ -50,6 +50,7 @@ export interface SettingsContextType {
 		allSettings: Setting[];
 	};
 	hasUnsavedChanges: boolean;
+	needsRefresh: boolean;
 }
 
 export const SettingsContext = createContext<SettingsContextType>({
@@ -63,6 +64,7 @@ export const SettingsContext = createContext<SettingsContextType>({
 	commitSetting: () => {},
 	searchSettings: () => ({ categories: [], allSettings: [] }),
 	hasUnsavedChanges: false,
+	needsRefresh: false,
 });
 
 interface SettingsProviderProps {
@@ -74,6 +76,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 }) => {
 	const [settings, setSettings] = useState<Setting[]>([]);
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+	const [needsRefresh, setNeedsRefresh] = useState(false);
 	const localStorageSettingsRef = useRef<Record<string, unknown> | null>(null);
 	const isLocalStorageLoaded = useRef(false);
 
@@ -173,6 +176,9 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 					(s.liveUpdate === undefined || s.liveUpdate === true)
 				) {
 					s.onChange(value);
+				}
+				if (s.liveUpdate === false) {
+					setNeedsRefresh(true);
 				}
 				return updated;
 			}),
@@ -291,6 +297,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 				commitSetting,
 				searchSettings,
 				hasUnsavedChanges,
+				needsRefresh,
 			}}
 		>
 			{children}
