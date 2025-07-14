@@ -8,7 +8,7 @@ A **[local-first](https://www.inkandswitch.com/essay/local-first/)** real-time L
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://reactjs.org/)
 
-*[Screenshot placeholder: Main editor interface showing split view with LaTeX code on left, compiled PDF on right]*
+![Main editor interface showing split view with LaTeX code on left, compiled PDF on right](showcase/tikz_compile.png)
 
 ## Features
 
@@ -16,13 +16,17 @@ A **[local-first](https://www.inkandswitch.com/essay/local-first/)** real-time L
 
 TeXlyre enables multi-user editing with live cursors and selections visible across all connected clients. The platform uses **Yjs CRDTs** for conflict-free synchronization, ensuring that changes from multiple users are automatically merged without conflicts. Communication happens through **WebRTC** peer-to-peer connections, providing low-latency collaboration without requiring a central server. An integrated chat system allows collaborators to communicate directly within the editing environment.
 
-*[Screenshot placeholder: Multiple users editing simultaneously with different colored cursors]*
+![Multiple users editing simultaneously with different colored cursors](showcase/collab_cursor_zoomed.png)
+
+TeXlyre provides comment and chat features as well for real-time exchanges, reviews, and discussions among collaborators
+
+![Collaborators using the chat panel to discuss progress](showcase/chat_zoomed.png)
 
 ### LaTeX Compilation
 
 The platform integrates **SwiftLaTeX WASM engines** to provide in-browser LaTeX compilation without server dependencies. Currently supports **pdfTeX** and **XeTeX** engines for comprehensive document processing. Live compilation provides immediate feedback with syntax highlighting and error detection, while the integrated PDF viewer offers zoom, navigation, and side-by-side editing capabilities.
 
-*[Screenshot placeholder: LaTeX compilation in progress with error panel and PDF output]*
+![LaTeX compilation in progress with error panel and PDF output](showcase/error_parser_zoomed.png)
 
 ### Local-first Architecture
 
@@ -32,7 +36,7 @@ TeXlyre prioritizes data ownership and offline capability. All documents are sto
 
 The platform includes a comprehensive file explorer supporting drag-and-drop operations for various file types including LaTeX sources, images, and data files. **Document linking** creates connections between collaborative documents and static files, enabling seamless editing workflows. **FilePizza integration** provides secure peer-to-peer file sharing between collaborators, allowing large file transfers without intermediary servers.
 
-*[Screenshot placeholder: Project dashboard with file explorer and project cards]*
+![Project dashboard with file explorer and project cards](showcase/project_viewer_zoomed.png)
 
 ## Quick Start
 
@@ -47,7 +51,9 @@ npm run dev
 
 Navigate to `http://localhost:5173` to access the application. Create a new project to begin editing, or open an existing project by sharing its URL with collaborators. The URL format `http://localhost:5173/#yjs:abc123def456` enables instant collaboration access.
 
-*[Screenshot placeholder: Getting started flow showing project creation and first document]*
+Moreover, you can start your project from a template and share the link with your collaborators.
+
+![Getting started with a template](showcase/templates_zoomed.png)
 
 ## Architecture
 
@@ -55,6 +61,7 @@ TeXlyre's architecture emphasizes **local-first principles** while enabling real
 
 The **plugin system** allows extensibility through custom viewers, renderers, and backup providers. Core plugins handle PDF rendering, LaTeX log visualization, and file system backup operations. Theme plugins provide customizable layouts and visual styles.
 
+![Bib Editor plugin integrated in to the TeXlyre app](showcase/bib_editor_zoomed.png)
 ## File Synchronization
 
 ### Local File System
