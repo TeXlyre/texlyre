@@ -10,6 +10,7 @@ import {
 	DuplicateIcon,
 	EditIcon,
 	FileIcon,
+	UnknownFileIcon,
 	FilePlusIcon,
 	FileTextIcon,
 	FolderIcon,
@@ -194,7 +195,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 					}
 				}}
 			>
-				<span className="file-icon">
+				<span className={`file-icon ${isTemporaryFile(node.path) ? 'temp-file-icon' : ''}`}>
 				   {node.type === "directory" ? (
 					  <FolderIcon isOpen={isExpanded} />
 				   ) : (() => {
@@ -206,7 +207,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 						 return <ViewerIcon />;
 					  }
 					  return node.isBinary ? (
-						 <FileIcon />
+						 <UnknownFileIcon />
 					  ) : (
 						 <FileIcon />
 					  );

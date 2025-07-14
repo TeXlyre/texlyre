@@ -224,3 +224,7 @@
 	overflow: hidden !important;
 	display: flex !important;
 }
+
+.temp-file-icon {
+	opacity: 0.5;
+}
