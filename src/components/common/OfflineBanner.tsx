@@ -1,6 +1,7 @@
 // src/components/common/OfflineBanner.tsx
 import type React from "react";
 import { useOffline } from "../../hooks/useOffline";
+import {OfflineIcon} from "./Icons";
 
 const OfflineBanner: React.FC = () => {
 	const { isOfflineMode, lastOnline } = useOffline();
@@ -14,7 +15,7 @@ const OfflineBanner: React.FC = () => {
 	return (
 		<div className="offline-banner">
 			<div className="offline-content">
-				<span className="offline-icon">📡</span>
+				<span className="offline-icon"><OfflineIcon/></span>
 				<div className="offline-text">
 					<strong>You're currently offline</strong>
 					<div className="offline-details">
