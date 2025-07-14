@@ -163,6 +163,8 @@ You can run your own signaling servers by following the setup instructions in ou
 
 TeXlyre builds upon several key technologies: **SwiftLaTeX** provides WASM-based LaTeX compilation, **Yjs** enables conflict-free collaborative editing, **CodeMirror** powers the advanced text editing interface, and **FilePizza** facilitates secure peer-to-peer file transfers.
 
+Development of TeXlyre was assisted by **Anthropic Claude** for code generation, debugging, and architectural guidance.
+
 ---
 
 **Ready to start collaborating?** [Get started with TeXlyre](https://texlyre.github.io/texlyre/) or [contribute to the project](CONTRIBUTING.md).
