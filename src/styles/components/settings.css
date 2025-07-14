@@ -3,6 +3,7 @@
 	height: 70vh;
 	max-height: 700px;
 	overflow: hidden;
+	position: relative;
 }
 
 .settings-sidebar {
@@ -185,4 +186,10 @@
 
 .settings-button:hover {
 	background-color: var(--pico-primary-focus);
+}
+
+.settings-container .save-indicator {
+	position: absolute !important;
+	bottom: var(--space-lg, 12px) !important;
+	right: var(--space-lg, 12px) !important;
 }
