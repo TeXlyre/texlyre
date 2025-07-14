@@ -41,7 +41,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						title="Process BibTeX with Current Settings"
 						className="tidy-button"
 					>
-						<CleanIcon />
+						<CleanIcon /> Tidy
 					</button>
 				</div>
 			</div>

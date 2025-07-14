@@ -90,7 +90,7 @@
 	background-color: var(--color-success) !important;
 	border: 1px solid var(--accent-border, #444);
 	border-radius: 4px;
-	color: var(--pico-secondary);
+	color: var(--pico-secondary-inverse) !important;
 	cursor: pointer;
 	transition: all 0.2s ease;
 	display: flex;
@@ -98,6 +98,10 @@
 	justify-content: center;
 	min-width: 32px;
 	height: 24px;
+}
+
+.tidy-button svg {
+	padding-right: var(--space-xs);
 }
 
 .tidy-button:hover {

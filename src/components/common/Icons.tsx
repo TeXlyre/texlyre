@@ -871,22 +871,21 @@ export const GitBranchIcon: React.FC = () => (
 );
 
 export const CleanIcon: React.FC = () => (
-	<svg
-		xmlns="http://www.w3.org/2000/svg"
-		width="16"
-		height="16"
-		viewBox="0 0 24 24"
-		fill="none"
-		stroke="currentColor"
-		strokeWidth="2"
-		strokeLinecap="round"
-		strokeLinejoin="round"
-	>
-		<path d="M3 12h18" />
-		<path d="M3 12l2-2 2 2 2-2 2 2 2-2 2 2 2-2 2 2 2-2 2 2" />
-		<rect x="5" y="16" width="14" height="2" rx="1" />
-		<line x1="12" y1="18" x2="12" y2="21" />
-	</svg>
+    <svg
+       xmlns="http://www.w3.org/2000/svg"
+       width="16"
+       height="16"
+       viewBox="0 0 24 24"
+       fill="none"
+       stroke="currentColor"
+       strokeWidth="2"
+       strokeLinecap="round"
+       strokeLinejoin="round"
+    >
+       <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21" />
+       <path d="M22 21H7" />
+       <path d="m5 11 9 9" />
+    </svg>
 );
 
 export const OptionsIcon: React.FC = () => (
