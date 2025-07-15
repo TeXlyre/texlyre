@@ -95,20 +95,26 @@ async function initUserData(): Promise<void> {
   const settingsKey = 'texlyre-settings';
   const propertiesKey = 'texlyre-properties';
 
-  const hasSettings = localStorage.getItem(settingsKey) !== null;
-  const hasProperties = localStorage.getItem(propertiesKey) !== null;
+  const existingSettings = localStorage.getItem(settingsKey);
+  const existingProperties = localStorage.getItem(propertiesKey);
 
-  if (!hasSettings || !hasProperties) {
+  if (!existingSettings || !existingProperties) {
     try {
       const response = await fetch('/texlyre/userdata.json');
       const userData = await response.json();
 
-      if (!hasSettings && userData.settings) {
-        localStorage.setItem(settingsKey, JSON.stringify(userData.settings));
+      if (!existingSettings && userData.settings) {
+        const mergedSettings = existingSettings
+          ? { ...JSON.parse(existingSettings), ...userData.settings }
+          : userData.settings;
+        localStorage.setItem(settingsKey, JSON.stringify(mergedSettings));
       }
 
-      if (!hasProperties && userData.properties) {
-        localStorage.setItem(propertiesKey, JSON.stringify(userData.properties));
+      if (!existingProperties && userData.properties) {
+        const mergedProperties = existingProperties
+          ? { ...JSON.parse(existingProperties), ...userData.properties }
+          : userData.properties;
+        localStorage.setItem(propertiesKey, JSON.stringify(mergedProperties));
       }
     } catch (error) {
       console.warn('Failed to load default user data:', error);
