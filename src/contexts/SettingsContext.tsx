@@ -97,14 +97,11 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 		const globalStorageKey = "texlyre-settings";
 
 		try {
-			// Try to load user-specific settings first
 			let stored = localStorage.getItem(userStorageKey);
 
-			// If user exists but no user-specific settings, check for global settings to migrate
 			if (userId && !stored) {
 				const globalSettings = localStorage.getItem(globalStorageKey);
 				if (globalSettings) {
-					// Duplicate global settings for this user
 					localStorage.setItem(userStorageKey, globalSettings);
 					stored = globalSettings;
 				}
@@ -143,13 +140,18 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 
 	useEffect(() => {
 		if (settings.length === 0 || !isLocalStorageLoaded.current) return;
-		const toSave = settings.reduce(
+
+		const registeredSettings = settings.reduce(
 			(acc, s) => {
 				acc[s.id] = s.value;
 				return acc;
 			},
 			{} as Record<string, unknown>,
 		);
+
+		const existingSettings = localStorageSettingsRef.current || {};
+		const toSave = { ...existingSettings, ...registeredSettings };
+
 		try {
 			const storageKey = getStorageKey();
 			localStorage.setItem(storageKey, JSON.stringify(toSave));

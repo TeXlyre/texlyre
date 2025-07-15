@@ -97,29 +97,29 @@ async function initUserData(): Promise<void> {
 
   const existingSettings = localStorage.getItem(settingsKey);
   const existingProperties = localStorage.getItem(propertiesKey);
-  // TODO (fabawi): Disabled checking for existing properties/settings because it overrides recreation when plugins overwrite the existing settings. Need a better mechanism
-  // if (!existingSettings || !existingProperties) {
+
+  if (!existingSettings || !existingProperties) {
     try {
       const response = await fetch('/texlyre/userdata.json');
       const userData = await response.json();
 
-      // if (!existingSettings && userData.settings) {
+      if (!existingSettings && userData.settings) {
         const mergedSettings = existingSettings
           ? { ...JSON.parse(existingSettings), ...userData.settings }
           : userData.settings;
         localStorage.setItem(settingsKey, JSON.stringify(mergedSettings));
-      // }
+      }
 
-      // if (!existingProperties && userData.properties) {
+      if (!existingProperties && userData.properties) {
         const mergedProperties = existingProperties
           ? { ...JSON.parse(existingProperties), ...userData.properties }
           : userData.properties;
         localStorage.setItem(propertiesKey, JSON.stringify(mergedProperties));
-      // }
+      }
     } catch (error) {
       console.warn('Failed to load default user data:', error);
     }
-  // }
+  }
 }
 
 async function initDatabases() {
