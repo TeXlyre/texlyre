@@ -156,6 +156,8 @@ class LaTeXService {
 			dvipdfmxEngine.setTexliveEndpoint(this.texliveEndpoint);
 		}
 
+		await this.writeNodesToMemFS(dvipdfmxEngine, mainFileName);
+
 		const normalizedMainFile = mainFileName.replace(/^\/+/, "");
 		const baseFileName = normalizedMainFile.replace(/\.(tex|ltx)$/i, "");
 		const dviFileName = `${baseFileName}.xdv`;
