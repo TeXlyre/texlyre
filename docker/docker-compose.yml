@@ -1,0 +1,24 @@
+services:
+  texlyre:
+    image: texlyre:latest
+    container_name: texlyre
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - cfnet
+  # cloudflared:
+  #   image: cloudflare/cloudflared:latest
+  #   container_name: cloudflared
+  #   restart: unless-stopped
+  #   command: tunnel --no-autoupdate run --token ${CF_TUNNEL_TOKEN} # get the token from Cloudflare dashboard
+  #   environment:
+  #     - TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}
+  #   networks:
+  #     - cfnet
+
+networks:
+  cfnet:
+    driver: bridge

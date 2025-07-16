@@ -20,7 +20,8 @@
 		"generate-plugins": "node scripts/generate-plugins-index.js",
 		"lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
 		"clean": "eslint . --ext ts,tsx --fix && npx @biomejs/biome check --fix",
-		"preview": "vite preview"
+		"preview": "vite preview",
+    "start": "vite preview --host --port 5173"
 	},
 	"dependencies": {
 		"@biomejs/biome": "^1.8.3",

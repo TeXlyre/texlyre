@@ -25,3 +25,6 @@ src/plugins/
 *.njsproj
 *.sln
 *.sw?
+
+# Docker .env file
+docker/.env
