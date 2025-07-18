@@ -48,6 +48,7 @@ export class DvipdfmxEngine extends BaseEngine {
 	}
 
 	setTexliveEndpoint(endpoint: string): void {
+		this.engine.setTexliveEndpoint(endpoint);
 		console.log(`[DvipdfmxEngine] TexLive endpoint set for Dvipdfmx: ${endpoint}`);
 	}
 

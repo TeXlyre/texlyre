@@ -12,7 +12,6 @@ import type { YjsDocUrl } from "../types/yjs";
 import { parseUrlFragments } from "../types/yjs";
 import { offlineService } from "./OfflineService";
 
-// Define offline connection interface
 interface OfflineDocContainer {
 	doc: Y.Doc;
 	persistence: IndexeddbPersistence;
@@ -21,7 +20,6 @@ interface OfflineDocContainer {
 	isOffline: true;
 }
 
-// Union type for online and offline containers
 type AnyDocContainer = DocContainer | OfflineDocContainer;
 
 class CollabService {
@@ -29,7 +27,6 @@ class CollabService {
 	private offlineStatusUnsubscribe: (() => void) | null = null;
 
 	constructor() {
-		// Listen to offline status changes
 		this.offlineStatusUnsubscribe = offlineService.addStatusListener(
 			(status) => {
 				this.handleNetworkChange(status.isOnline);
@@ -39,6 +36,44 @@ class CollabService {
 
 	private isOfflineMode(): boolean {
 		return !offlineService.getStatus().isOnline;
+	}
+
+	private validateSignalingServers(signalingServers: string | string[]): string[] {
+		const isValidWebSocketUrl = (url: string): boolean => {
+			try {
+				const u = new URL(url);
+				return (
+					(u.protocol === "ws:" || u.protocol === "wss:") &&
+					u.hostname.length > 0
+				);
+			} catch (_e) {
+				return false;
+			}
+		};
+
+		const inputServers = Array.isArray(signalingServers)
+			? signalingServers
+			: signalingServers.split(",").map((s) => s.trim());
+
+		const validSignalingServers: string[] = [];
+
+		for (const serverUrl of inputServers) {
+			if (serverUrl.length === 0) continue;
+
+			try {
+				const urlObj = new URL(serverUrl);
+				if (window.location.protocol === "https:" && urlObj.protocol === "ws:") {
+					continue;
+				}
+				if (isValidWebSocketUrl(serverUrl)) {
+					validSignalingServers.push(serverUrl);
+				}
+			} catch (_e) {
+				// Invalid URL, skip it
+			}
+		}
+
+		return validSignalingServers;
 	}
 
 	public connect(
@@ -111,8 +146,14 @@ class CollabService {
 		const roomName = `${docId}-${collectionName}`;
 
 		const persistence = new IndexeddbPersistence(persistenceName, doc);
+
+		let finalSignalingServers: string[] = [];
+		if (options?.signalingServers) {
+			finalSignalingServers = this.validateSignalingServers(options.signalingServers);
+		}
+
 		const provider = collabWebrtc.getProvider(roomName, doc, {
-			signaling: options?.signalingServers,
+			signaling: finalSignalingServers.length > 0 ? finalSignalingServers : undefined,
 		});
 
 		if (options?.autoReconnect) {
@@ -161,11 +202,9 @@ class CollabService {
 		const containerId = `${docId}-${collectionName}`;
 		const container = this.docContainers.get(containerId);
 
-		// Only set user info if we have a provider (online mode)
 		if (container && "provider" in container && container.provider?.awareness) {
 			const awareness = container.provider.awareness;
 
-			// Try multiple formats that different libraries might expect
 			awareness.setLocalStateField("user", {
 				id: user.id,
 				username: user.username,
@@ -199,13 +238,11 @@ class CollabService {
 			console.log(`[CollabService] Destroying connection for: ${containerId}`);
 
 			if ("provider" in container && container.provider) {
-				// Online connection cleanup
 				const roomName = `${docId}-${collectionName}`;
 				container.provider.disconnect();
 				collabWebrtc.releaseProvider(roomName);
 			}
 
-			// Common cleanup for both online and offline
 			container.persistence.destroy();
 			container.doc.destroy();
 			this.docContainers.delete(containerId);
@@ -220,7 +257,7 @@ class CollabService {
 			return container.provider.awareness || null;
 		}
 
-		return null; // No awareness in offline mode
+		return null;
 	}
 
 	public getDocContainer(
@@ -298,7 +335,6 @@ class CollabService {
 			return "offline-sync";
 		}
 
-		// Rest of the existing syncAllDocuments implementation...
 		try {
 			const metadataCollection = `texlyre-project-${projectId}-yjs_metadata`;
 			const metadataDoc = new Y.Doc();
@@ -428,7 +464,6 @@ class CollabService {
 		return Array.from(this.syncConnections.keys());
 	}
 
-	// New method to check if the service is operating in offline mode
 	public getConnectionStatus(): {
 		isOnline: boolean;
 		hasActiveConnections: boolean;
@@ -441,28 +476,22 @@ class CollabService {
 		};
 	}
 
-	// Handle network status changes from OfflineService
 	private handleNetworkChange(isOnline: boolean): void {
 		console.log(
 			`[CollabService] Network status changed: ${isOnline ? "online" : "offline"}`,
 		);
 
 		if (!isOnline) {
-			// When going offline, we keep existing connections but they'll naturally
-			// lose WebRTC connectivity. IndexedDB persistence continues to work.
 			console.log(
 				"[CollabService] Network offline - collaboration features disabled",
 			);
 		} else {
-			// When coming back online, existing connections will naturally reconnect
-			// if they have autoReconnect enabled
 			console.log(
 				"[CollabService] Network online - collaboration features enabled",
 			);
 		}
 	}
 
-	// Cleanup method
 	public cleanup(): void {
 		if (this.offlineStatusUnsubscribe) {
 			this.offlineStatusUnsubscribe();

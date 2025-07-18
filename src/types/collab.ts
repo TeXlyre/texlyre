@@ -22,7 +22,7 @@ export interface DocContainer {
 }
 
 export interface CollabConnectOptions {
-	signalingServers?: string[];
+	signalingServers?: string | string[];
 	autoReconnect?: boolean;
 	awarenessTimeout?: number;
 }

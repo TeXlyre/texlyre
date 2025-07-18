@@ -20,6 +20,7 @@ import {
 	fontFamilyMap,
 	fontSizeMap,
 } from "../types/editorSettings";
+import type { CollabConnectOptions } from "../types/collab"
 
 interface EditorContextType {
 	editorSettings: EditorSettings;
@@ -33,6 +34,7 @@ interface EditorContextType {
 	getSyntaxHighlightingEnabled: () => boolean;
 	getAutoSaveEnabled: () => boolean;
 	getAutoSaveDelay: () => number;
+	getCollabOptions: () => CollabConnectOptions;
 	editorSettingsVersion: number;
 }
 
@@ -45,6 +47,7 @@ export const EditorContext = createContext<EditorContextType>({
 	getSyntaxHighlightingEnabled: () => true,
 	getAutoSaveEnabled: () => false,
 	getAutoSaveDelay: () => 2000,
+	getCollabOptions: () => ({}),
 	editorSettingsVersion: 0,
 });
 
@@ -280,6 +283,29 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		[editorSettings.autoSaveDelay],
 	);
 
+	const getCollabOptions = useCallback((): CollabConnectOptions | null => {
+		const signalingServersSetting = getSetting("collab-signaling-servers");
+		const awarenessTimeoutSetting = getSetting("collab-awareness-timeout");
+		const autoReconnectSetting = getSetting("collab-auto-reconnect");
+
+		// Return null if settings are not yet available
+		if (!signalingServersSetting || !awarenessTimeoutSetting || !autoReconnectSetting) {
+			return null;
+		}
+
+		const signalingServers = signalingServersSetting.value as string;
+		const awarenessTimeout = awarenessTimeoutSetting.value as number;
+		const autoReconnect = autoReconnectSetting.value as boolean;
+
+		const serversToUse = signalingServers.split(",").map((s) => s.trim());
+
+		return {
+			signalingServers: serversToUse,
+			autoReconnect,
+			awarenessTimeout: awarenessTimeout * 1000,
+		};
+	}, [getSetting]);
+
 	const contextValue = {
 		editorSettings,
 		updateEditorSetting,
@@ -289,6 +315,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		getSyntaxHighlightingEnabled,
 		getAutoSaveEnabled,
 		getAutoSaveDelay,
+		getCollabOptions,
 		editorSettingsVersion,
 	};
 

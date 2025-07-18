@@ -48,6 +48,7 @@ export class XeTeXEngine extends BaseEngine {
 	}
 
 	setTexliveEndpoint(endpoint: string): void {
+		this.engine.setTexliveEndpoint(endpoint);
 		console.log(`[XeTeXEngine] TexLive endpoint set for XeTeX: ${endpoint}`);
 	}
 

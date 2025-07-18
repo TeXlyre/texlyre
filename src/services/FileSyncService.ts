@@ -22,21 +22,6 @@ class FileSyncService {
 	private activeDownloaders = new Map<string, FilePizzaDownloader>();
 	private listeners: Array<(notification: FileSyncNotification) => void> = [];
 
-	private getFilePizzaServerUrl(): string {
-		return (
-			localStorage.getItem("texlyre-file-sync-server") ||
-			"https://filepizza.emaily.re"
-		);
-	}
-
-	private getConflictResolution(): ConflictResolution {
-		return (
-			(localStorage.getItem(
-				"texlyre-file-sync-conflict-resolution",
-			) as ConflictResolution) || "prefer-latest"
-		);
-	}
-
 	showLoadingNotification(message: string, operationId?: string): void {
 		if (this.areNotificationsEnabled()) {
 			notificationService.showLoading(message, operationId);
@@ -326,7 +311,7 @@ class FileSyncService {
 			);
 
 			const uploader = new FilePizzaUploader({
-				filePizzaServerUrl: filePizzaServerUrl || this.getFilePizzaServerUrl(),
+				filePizzaServerUrl: filePizzaServerUrl,
 				sharedSlug: `file-sync-${requestId}`,
 			});
 
@@ -498,7 +483,7 @@ class FileSyncService {
 			console.log(`[FileSyncService] Starting download from: ${link}`);
 
 			const downloader = new FilePizzaDownloader({
-				filePizzaServerUrl: filePizzaServerUrl || this.getFilePizzaServerUrl(),
+				filePizzaServerUrl: filePizzaServerUrl,
 			});
 
 			let isResolved = false;
