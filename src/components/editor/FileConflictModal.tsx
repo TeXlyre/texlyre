@@ -354,7 +354,7 @@ const FileConflictModal: React.FC = () => {
 							className="button danger"
 							onClick={() => handleResolution("confirm")}
 						>
-							Delete {files.length} Files
+							Delete {files.length} File{files.length > 1 ? "s" : ""}?
 						</button>
 					</div>
 				</div>

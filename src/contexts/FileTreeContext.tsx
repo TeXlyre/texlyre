@@ -23,6 +23,7 @@ import { duplicateKeyDetector } from "../utils/duplicateKeyDetector";
 import {
 	getMimeType,
 	isBinaryFile,
+	isTemporaryFile,
 	stringToArrayBuffer,
 } from "../utils/fileUtils";
 import { batchExtractZip } from "../utils/zipUtils";
@@ -470,6 +471,11 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					.map((id) => allFiles.find((f) => f.id === id))
 					.filter(Boolean) as FileNode[];
 
+				// Check if any files are temporary
+				const hasTemporaryFiles = filesToDelete.some(file =>
+					isTemporaryFile(file.path)
+				);
+
 				// Check for directories and collect all children
 				const allFilesToDelete: string[] = [];
 
@@ -496,7 +502,9 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					allFilesToDelete.push(file.id);
 				}
 
-				await fileStorageService.batchDeleteFiles(allFilesToDelete);
+				await fileStorageService.batchDeleteFiles(allFilesToDelete, {
+					hardDelete: hasTemporaryFiles
+				});
 
 				// Update selected file if any deleted files were selected
 				if (selectedFileId && allFilesToDelete.includes(selectedFileId)) {

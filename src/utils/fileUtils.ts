@@ -121,6 +121,7 @@ export const isBinaryFile = (fileName: string): boolean => {
 		"svg",
 		"swf",
 		"tar",
+		"tec",
 		"tfm",
 		"tiff",
 		"ttf",
