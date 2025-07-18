@@ -40,11 +40,12 @@ const isHttpsMode =
 	window.location.hostname !== "localhost";
 
 const enableServiceWorkerForHttps = true; // Set to false to disable SW in HTTPS mode
+const enableServiceWorkerForHttp = false; // Set to false to disable SW in HTTP mode
 const clearServiceWorkerOnLoad = false; // Set to true to clear existing SWs on load
 
 if (
 	"serviceWorker" in navigator &&
-	(!isHttpsMode || enableServiceWorkerForHttps)
+	((isHttpsMode && enableServiceWorkerForHttps) || (!isHttpsMode && enableServiceWorkerForHttp))
 ) {
 	window.addEventListener("load", async () => {
 		if (clearServiceWorkerOnLoad) {
@@ -87,6 +88,8 @@ if (
 			isHttpsMode,
 			"Enable Service worker for HTTPS:",
 			enableServiceWorkerForHttps,
+			"Enable Service worker for HTTP:",
+			enableServiceWorkerForHttp,
 		);
 	});
 }
