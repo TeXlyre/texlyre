@@ -19,7 +19,7 @@ class LaTeXService {
 	private engines: Map<EngineType | "dvipdfmx", BaseEngine> = new Map();
 	private currentEngineType: EngineType = "pdftex";
 	private statusListeners: Set<() => void> = new Set();
-	private texliveEndpoint = "https://texlive.emaily.re";
+	private texliveEndpoint = "";
 	private storeCache = true;
 	private storeWorkingDirectory = false;
 	// Flatten main directory causes the main file's directory to be the root of the compilation, Forced with true for now.
@@ -35,9 +35,6 @@ class LaTeXService {
 
 	setTexliveEndpoint(endpoint: string): void {
 		this.texliveEndpoint = endpoint;
-		this.engines.forEach((engine) => {
-			engine.setTexliveEndpoint(endpoint);
-		});
 	}
 
 	setStoreCache(store: boolean): void {
@@ -153,9 +150,8 @@ class LaTeXService {
 
 		if (!dvipdfmxEngine.isReady()) {
 			await dvipdfmxEngine.initialize();
-			dvipdfmxEngine.setTexliveEndpoint(this.texliveEndpoint);
 		}
-
+		dvipdfmxEngine.setTexliveEndpoint(this.texliveEndpoint);
 		await this.writeNodesToMemFS(dvipdfmxEngine, mainFileName);
 
 		const normalizedMainFile = mainFileName.replace(/^\/+/, "");
@@ -202,6 +198,7 @@ class LaTeXService {
 			console.log("[LaTeXService] Engine not ready, initializing...");
 			await engine.initialize();
 		}
+		engine.setTexliveEndpoint(this.texliveEndpoint);
 
 		try {
 			await this.prepareFileNodes(mainFileName, fileTree);

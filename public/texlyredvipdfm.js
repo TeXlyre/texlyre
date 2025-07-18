@@ -9,7 +9,7 @@ if (typeof TEXCACHEROOT !== 'undefined') {
 }
 self.memlog = "";
 self.mainfile = "main.tex";
-self.texlive_endpoint = "https://texlive.emaily.re/";  //"https://texlive2.swiftlatex.com/";
+self.texlive_endpoint = "https://texlive.localhost:8082/";  //"https://texlive2.swiftlatex.com/";
 Module["print"] = function(a) {
     self.memlog += a + "\n";
     console.log(a)

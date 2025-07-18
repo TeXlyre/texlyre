@@ -44,8 +44,7 @@ export class PdfTeXEngine extends BaseEngine {
 	}
 
 	setTexliveEndpoint(endpoint: string): void {
-		// Store the endpoint but don't apply it immediately to avoid initialization issues
-		// The engine will use the default endpoint during compilation
+		this.engine.setTexliveEndpoint(endpoint);
 		console.log(`[PdfTeXEngine] TexLive endpoint set for PdfTeX: ${endpoint}`);
 	}
 

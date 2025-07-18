@@ -41,7 +41,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			"pdftex";
 		const initialTexliveEndpoint =
 			(getSetting("latex-texlive-endpoint")?.value as string) ??
-			"https://texlive.emaily.re";
+			"http://texlive.localhost:8082";
 		const initialStoreCache =
 			(getSetting("latex-store-cache")?.value as boolean) ?? true;
 		const initialStoreWorkingDirectory =
