@@ -1,7 +1,7 @@
 {
 	"name": "texlyre",
 	"private": true,
-	"version": "0.2.7",
+	"version": "0.2.8",
 	"description": "A local-first LaTeX web editor with real-time collaboration.",
 	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
 	"license": "AGPL-3.0-or-later",
