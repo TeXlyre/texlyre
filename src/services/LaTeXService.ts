@@ -138,6 +138,10 @@ class LaTeXService {
 		this.statusListeners.forEach((listener) => listener());
 	}
 
+	private getCacheDirectory(engineType: EngineType | "dvipdfmx"): string {
+		return engineType === "dvipdfmx" ? "/.texlyre_cache/__dvi" : "/.texlyre_cache/__tex";
+	}
+
 	private async processDviToPdf(
 		xdvData: Uint8Array,
 		mainFileName: string,
@@ -152,25 +156,41 @@ class LaTeXService {
 			await dvipdfmxEngine.initialize();
 		}
 		dvipdfmxEngine.setTexliveEndpoint(this.texliveEndpoint);
-		await this.writeNodesToMemFS(dvipdfmxEngine, mainFileName);
 
-		const normalizedMainFile = mainFileName.replace(/^\/+/, "");
-		const baseFileName = normalizedMainFile.replace(/\.(tex|ltx)$/i, "");
-		const dviFileName = `${baseFileName}.xdv`;
-
-		const dirPath = dviFileName.substring(0, dviFileName.lastIndexOf("/"));
-		if (dirPath) {
-			this.createDirectoryStructure(dvipdfmxEngine, `/work/${dirPath}`);
-		}
-
-		console.log(
-			`[LaTeXService] Writing XDV file: ${dviFileName}, size: ${xdvData.length} bytes`,
-		);
-		dvipdfmxEngine.writeMemFSFile(`/work/${dviFileName}`, xdvData);
-		dvipdfmxEngine.setEngineMainFile(dviFileName);
+		const originalEngineType = this.currentEngineType;
+		this.currentEngineType = "dvipdfmx" as any;
 
 		try {
+			await this.writeNodesToMemFS(dvipdfmxEngine, mainFileName, "dvipdfmx");
+
+			const normalizedMainFile = mainFileName.replace(/^\/+/, "");
+			const baseFileName = normalizedMainFile.replace(/\.(tex|ltx)$/i, "");
+			const dviFileName = `${baseFileName}.xdv`;
+
+			const dirPath = dviFileName.substring(0, dviFileName.lastIndexOf("/"));
+			if (dirPath) {
+				this.createDirectoryStructure(dvipdfmxEngine, `/work/${dirPath}`);
+			}
+
+			console.log(
+				`[LaTeXService] Writing XDV file: ${dviFileName}, size: ${xdvData.length} bytes`,
+			);
+			dvipdfmxEngine.writeMemFSFile(`/work/${dviFileName}`, xdvData);
+			dvipdfmxEngine.setEngineMainFile(dviFileName);
+
 			const result = await dvipdfmxEngine.compile(dviFileName, []);
+
+			try {
+				const texFiles = await dvipdfmxEngine.dumpDirectory("/tex");
+				const workFiles = await dvipdfmxEngine.dumpDirectory("/work");
+			} catch (error) {
+				console.log("Error dumping dvipdfmx directories:", error);
+			}
+
+			if (result.status === 0 && this.storeCache) {
+				await this.storeCacheDirectory(dvipdfmxEngine);
+			}
+
 			return {
 				pdf: result.pdf,
 				status: result.status,
@@ -185,6 +205,8 @@ class LaTeXService {
 				status: -1,
 				log: `${originalLog}\n\nDvipdfmx conversion failed: ${error.message}`,
 			};
+		} finally {
+			this.currentEngineType = originalEngineType;
 		}
 	}
 
@@ -293,9 +315,10 @@ class LaTeXService {
 	private async loadAndValidateCachedNodes(nodes: FileNode[]): Promise<void> {
 		try {
 			const existingFiles = await fileStorageService.getAllFiles();
+			const cacheDirectory = this.getCacheDirectory(this.currentEngineType);
 			const cachedFiles = existingFiles.filter(
 				(file) =>
-					file.path.startsWith("/.texlyre_cache/__tex/") &&
+					file.path.startsWith(`${cacheDirectory}/`) &&
 					file.type === "file" &&
 					!file.isDeleted,
 			);
@@ -314,7 +337,7 @@ class LaTeXService {
 				}
 			}
 
-			console.log(`[LaTeXService] Loaded ${validCachedFiles.length} valid cached TeX files`);
+			console.log(`[LaTeXService] Loaded ${validCachedFiles.length} valid cached files for ${this.currentEngineType}`);
 		} catch (error) {
 			console.error("Error loading and validating cached files:", error);
 		}
@@ -398,13 +421,16 @@ class LaTeXService {
 	private async writeNodesToMemFS(
 		engine: BaseEngine,
 		mainFileName: string,
+		engineType?: EngineType | "dvipdfmx",
 	): Promise<void> {
+		const currentEngineType = engineType || this.currentEngineType;
+		const cacheDirectory = this.getCacheDirectory(currentEngineType);
 		const cacheNodes = this.processedNodes.filter((node) =>
-			node.path.startsWith(".texlyre_cache/__tex/"),
+			node.path.startsWith(`${cacheDirectory.substring(1)}/`),
 		);
 		const workNodes = this.processedNodes.filter(
 			(node) =>
-				!node.path.startsWith(".texlyre_cache/__tex/") &&
+				!node.path.startsWith(".texlyre_cache/") &&
 				!node.path.startsWith(".texlyre_src/"),
 		);
 
@@ -419,7 +445,7 @@ class LaTeXService {
 		}
 
 		for (const node of cacheNodes) {
-			const cleanPath = node.path.replace(".texlyre_cache/__tex/", "");
+			const cleanPath = node.path.replace(`${cacheDirectory.substring(1)}/`, "");
 			const dirPath = cleanPath.substring(0, cleanPath.lastIndexOf("/"));
 			if (dirPath) {
 				texDirectories.add(dirPath);
@@ -431,7 +457,6 @@ class LaTeXService {
 		}
 
 		for (const dir of texDirectories) {
-			// this.createDirectoryStructure(engine, `/tex/${dir}`);
 			this.createDirectoryStructure(engine, `/work/${dir}`);
 		}
 
@@ -458,12 +483,10 @@ class LaTeXService {
 			try {
 				const fileContent = await this.getFileContent(node);
 				if (fileContent) {
-					const cleanPath = node.path.replace(".texlyre_cache/__tex/", "");
+					const cleanPath = node.path.replace(`${cacheDirectory.substring(1)}/`, "");
 					if (typeof fileContent === "string") {
-						// engine.writeMemFSFile(`/tex/${cleanPath}`, fileContent);
 						engine.writeMemFSFile(`/work/${cleanPath}`, fileContent);
 					} else {
-						// engine.writeMemFSFile(`/tex/${cleanPath}`, new Uint8Array(fileContent));
 						engine.writeMemFSFile(
 							`/work/${cleanPath}`,
 							new Uint8Array(fileContent),
@@ -507,7 +530,8 @@ class LaTeXService {
 	private async storeCacheDirectory(engine: BaseEngine): Promise<void> {
 		try {
 			const texFiles = await engine.dumpDirectory("/tex");
-			await this.batchStoreDirectoryContents(texFiles, "/.texlyre_cache/__tex");
+			const cacheDirectory = this.getCacheDirectory(this.currentEngineType);
+			await this.batchStoreDirectoryContents(texFiles, cacheDirectory);
 		} catch (error) {
 			console.error("Error saving cache directory:", error);
 		}
@@ -534,16 +558,17 @@ class LaTeXService {
 
 		try {
 			const existingFiles = await fileStorageService.getAllFiles();
+			const cacheDirectory = this.getCacheDirectory(this.currentEngineType);
 			const cacheFiles = existingFiles.filter(
 				(file) =>
-					file.path.startsWith("/.texlyre_cache/__tex/") &&
+					file.path.startsWith(`${cacheDirectory}/`) &&
 					file.type === "file" &&
 					!file.isDeleted,
 			);
 
 			const cachePaths = new Set(
 				cacheFiles.map((file) =>
-					file.path.replace("/.texlyre_cache/__tex", ""),
+					file.path.replace(cacheDirectory, ""),
 				),
 			);
 
@@ -783,6 +808,7 @@ class LaTeXService {
 			"/.texlyre_src/__work",
 			"/.texlyre_cache",
 			"/.texlyre_cache/__tex",
+			"/.texlyre_cache/__dvi",
 		];
 
 		const directoriesToCreate: FileNode[] = [];
