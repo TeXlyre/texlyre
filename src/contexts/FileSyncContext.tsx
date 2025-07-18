@@ -66,9 +66,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 	const [_requestTimeoutSeconds, setRequestTimeoutSeconds] = useState(60);
 	const [conflictResolutionStrategy, setConflictResolutionStrategy] =
 		useState("prefer-latest");
-	const [fileSyncServerUrl, setFileSyncServerUrl] = useState(
-		"https://filepizza.emaily.re",
-	);
+	const [fileSyncServerUrl, setFileSyncServerUrl] = useState("",);
 	const [syncNotificationsEnabled, setSyncNotificationsEnabled] =
 		useState(true);
 
@@ -682,7 +680,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 			"prefer-latest";
 		const initialServerUrl =
 			(getSetting("file-sync-server-url")?.value as string) ??
-			"https://filepizza.emaily.re";
+			"http://filepizza.localhost:8082";
 		const initialNotifications =
 			(getSetting("file-sync-notifications")?.value as boolean) ?? true;
 
@@ -801,8 +799,27 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 	useEffect(() => {
 		if (!user || !projectId || isInitializedRef.current) return;
 
+		const signalingServersSetting = getSetting("collab-signaling-servers");
+		const awarenessTimeoutSetting = getSetting("collab-awareness-timeout");
+		const autoReconnectSetting = getSetting("collab-auto-reconnect");
+
+		// Wait until all collaboration settings are available
+		if (!signalingServersSetting || !awarenessTimeoutSetting || !autoReconnectSetting) {
+			return;
+		}
+
+		const signalingServers = signalingServersSetting.value as string;
+		const awarenessTimeout = awarenessTimeoutSetting.value as number;
+		const autoReconnect = autoReconnectSetting.value as boolean;
+
+		const serversToUse = signalingServers.split(",").map((s) => s.trim());
+
 		try {
-			const { doc } = collabService.connect(projectId, "file_sync");
+			const { doc } = collabService.connect(projectId, "file_sync", {
+				signalingServers: serversToUse,
+				autoReconnect,
+				awarenessTimeout: awarenessTimeout * 1000,
+			});
 			ydocRef.current = doc;
 			isInitializedRef.current = true;
 
@@ -868,6 +885,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 		handleIncomingSyncRequest,
 		handleSyncRequestUpdate,
 		handleVerification,
+		getSetting,
 	]);
 
 	useEffect(() => {

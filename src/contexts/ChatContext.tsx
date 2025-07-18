@@ -11,6 +11,7 @@ import {
 import type * as Y from "yjs";
 
 import { useAuth } from "../hooks/useAuth";
+import { useSettings} from "../hooks/useSettings";
 import { collabService } from "../services/CollabService";
 import type { ChatContextType, ChatMessage } from "../types/chat";
 import type { YjsDocUrl } from "../types/yjs";
@@ -27,6 +28,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
 	docUrl,
 }) => {
 	const { user } = useAuth();
+	const { getSetting } = useSettings();
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
 	const [isConnected, setIsConnected] = useState(false);
 	const messagesArrayRef = useRef<Y.Array<ChatMessage> | null>(null);
@@ -36,7 +38,26 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
 	useEffect(() => {
 		if (!projectId) return;
 
-		const { doc } = collabService.connect(projectId, "chat");
+		const signalingServersSetting = getSetting("collab-signaling-servers");
+		const awarenessTimeoutSetting = getSetting("collab-awareness-timeout");
+		const autoReconnectSetting = getSetting("collab-auto-reconnect");
+
+		// Wait until all collaboration settings are available
+		if (!signalingServersSetting || !awarenessTimeoutSetting || !autoReconnectSetting) {
+			return;
+		}
+
+		const signalingServers = signalingServersSetting.value as string;
+		const awarenessTimeout = awarenessTimeoutSetting.value as number;
+		const autoReconnect = autoReconnectSetting.value as boolean;
+
+		const serversToUse = signalingServers.split(",").map((s) => s.trim());
+
+		const { doc } = collabService.connect(projectId, "chat", {
+			signalingServers: serversToUse,
+			autoReconnect,
+			awarenessTimeout: awarenessTimeout * 1000,
+		});
 
 		const messagesArray = doc.getArray<ChatMessage>("messages");
 		messagesArrayRef.current = messagesArray;
@@ -50,14 +71,13 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
 		setIsConnected(true);
 		observer();
 
-		// Disconnect when the component unmounts.
 		return () => {
 			messagesArray.unobserve(observer);
 			collabService.disconnect(projectId, "chat");
 			messagesArrayRef.current = null;
 			setIsConnected(false);
 		};
-	}, [projectId]);
+	}, [projectId, getSetting]);
 
 	const sendMessage = useCallback(
 		(content: string) => {

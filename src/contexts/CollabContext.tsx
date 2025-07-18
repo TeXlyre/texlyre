@@ -38,9 +38,7 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 	const { registerSetting, getSetting, commitSetting } = useSettings();
 	const settingsRegistered = useRef(false);
 
-	const [signalingServers, setSignalingServers] = useState<string>(
-		"wss://ywebrtc.emaily.re",
-	);
+	const [signalingServers, setSignalingServers] = useState<string>("");
 	const [awarenessTimeout, setAwarenessTimeout] = useState(30);
 	const [autoReconnect, setAutoReconnect] = useState(false);
 
@@ -50,7 +48,6 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 			: docUrl.replace(/[^a-zA-Z0-9]/g, "-");
 	}, [docUrl]);
 
-	// Register and load settings
 	useEffect(() => {
 		if (settingsRegistered.current) return;
 		settingsRegistered.current = true;
@@ -62,7 +59,7 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 			type: "text",
 			label: "Signaling servers",
 			description: "Comma-separated list of Yjs WebRTC signaling server URLs",
-			defaultValue: "wss://ywebrtc.emaily.re",
+			defaultValue: "ws://ywebrtc.localhost:8082/",
 			onChange: (value) => {
 				setSignalingServers(value as string);
 			},
@@ -94,7 +91,6 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 				"Automatically attempt to reconnect when the connection is lost",
 			defaultValue: false,
 			onChange: (value) => {
-				// This setting can be live updated
 				setAutoReconnect(value as boolean);
 			},
 		});
@@ -103,40 +99,9 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 	useEffect(() => {
 		if (!projectId || !collectionName) return;
 
-		const isValidWebSocketUrl = (url: string): boolean => {
-			try {
-				const u = new URL(url);
-				return (
-					(u.protocol === "ws:" || u.protocol === "wss:") &&
-					u.hostname.length > 0
-				);
-			} catch (_e) {
-				return false;
-			}
-		};
-
-		const inputServers = signalingServers.split(",").map((s) => s.trim());
-		const validSignalingServers: string[] = [];
-
-		for (const serverUrl of inputServers) {
-			if (serverUrl.length === 0) continue;
-
-			try {
-				const urlObj = new URL(serverUrl);
-				if (window.location.protocol === "https:" && urlObj.protocol === "ws:") {
-					continue; // Skip insecure URLs over HTTPS
-				}
-				if (isValidWebSocketUrl(serverUrl)) {
-					validSignalingServers.push(serverUrl);
-				}
-			} catch (_e) {
-				// Invalid URL, skip it
-			}
-		}
-
-		const serversToUse = validSignalingServers.length > 0
-			? validSignalingServers
-			: (JSON.parse(localStorage.getItem("texlyre-settings") || '{}')['collab-signaling-servers'] || ["wss://ywebrtc.emaily.re"]);
+		const serversToUse = signalingServers.length > 0
+			? signalingServers.split(",").map((s) => s.trim())
+			: (JSON.parse(localStorage.getItem("texlyre-settings") || '{}')['collab-signaling-servers']);
 
 		try {
 			const { doc: ydoc, provider: yprovider } = collabService.connect(

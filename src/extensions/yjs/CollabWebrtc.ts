@@ -30,7 +30,7 @@ class WebrtcProviderRegistry {
 
 		try {
 			const provider = new WebrtcProvider(roomName, doc, {
-				signaling: options?.signaling || ["wss://ywebrtc.emaily.re"],
+				signaling: options?.signaling,
 			});
 
 			this.providers.set(roomName, {

@@ -41,6 +41,7 @@ import { fileCommentProcessor } from "../utils/fileCommentProcessor.ts";
 import { collabService } from "./CollabService";
 import { fileStorageService } from "./FileStorageService";
 import { filePathCacheService } from "./FilePathCacheService";
+import type { CollabConnectOptions } from "../types/collab";
 
 export const EditorLoader = (
 	editorRef: React.RefObject<HTMLDivElement>,
@@ -63,6 +64,7 @@ export const EditorLoader = (
 		getAutoSaveDelay,
 		getLineNumbersEnabled,
 		getSyntaxHighlightingEnabled,
+		getCollabOptions,
 		editorSettingsVersion,
 		editorSettings,
 	} = useEditor();
@@ -228,7 +230,8 @@ export const EditorLoader = (
 		}
 
 		const collectionName = `yjs_${documentId}`;
-		const { doc, provider } = collabService.connect(projectId, collectionName);
+		const collabOptions = getCollabOptions();
+		const { doc, provider } = collabService.connect(projectId, collectionName, collabOptions);
 		setYDoc(doc);
 		setProvider(provider);
 
@@ -253,7 +256,7 @@ export const EditorLoader = (
 			setProvider(null);
 			ytextRef.current = null;
 		};
-	}, [projectId, documentId, isDocumentSelected, isEditingFile, user]);
+	}, [projectId, documentId, isDocumentSelected, isEditingFile, user, getCollabOptions]);
 
 	useEffect(() => {
 		if (
