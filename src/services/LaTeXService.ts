@@ -11,7 +11,8 @@ import { XeTeXEngine } from "../extensions/switftlatex/XeTeXEngine";
 import type { FileNode } from "../types/files";
 import { getMimeType, isBinaryFile } from "../utils/fileUtils";
 import { fileStorageService } from "./FileStorageService";
-import {fileCommentProcessor} from "../utils/fileCommentProcessor.ts";
+import { notificationService} from "./NotificationService";
+import {fileCommentProcessor} from "../utils/fileCommentProcessor";
 
 type EngineType = "pdftex" | "xetex" | "luatex";
 
@@ -215,15 +216,20 @@ class LaTeXService {
 		fileTree: FileNode[],
 	): Promise<CompileResult> {
 		const engine = this.getCurrentEngine();
+		const operationId = `latex-compile-${nanoid()}`;
 
 		if (!engine.isReady()) {
 			console.log("[LaTeXService] Engine not ready, initializing...");
+			this.showLoadingNotification("Initializing LaTeX engine...", operationId);
 			await engine.initialize();
 		}
 		engine.setTexliveEndpoint(this.texliveEndpoint);
 
 		try {
+			this.showLoadingNotification("Preparing files for compilation...", operationId);
 			await this.prepareFileNodes(mainFileName, fileTree);
+
+			this.showLoadingNotification("Compiling LaTeX document...", operationId);
 			await this.writeNodesToMemFS(engine, mainFileName);
 			let result = await engine.compile(mainFileName, this.processedNodes);
 
@@ -236,6 +242,7 @@ class LaTeXService {
 
 			if (result.status === 0 && !result.pdf && (result as any).xdv) {
 				console.log("[LaTeXService] XDV file detected, converting to PDF with Dvipdfmx...");
+				this.showLoadingNotification("Converting XDV to PDF...", operationId);
 				result = await this.processDviToPdf(
 					(result as any).xdv,
 					mainFileName,
@@ -250,12 +257,17 @@ class LaTeXService {
 
 			if (result.status === 0 && result.pdf && result.pdf.length > 0) {
 				console.log("[LaTeXService] Compilation successful!");
+				this.showLoadingNotification("Saving compilation output...", operationId);
 				await this.cleanupStaleFiles();
 				await this.saveCompilationOutput(
 					mainFileName.replace(/^\/+/, ""),
 					result,
 				);
 				await this.storeOutputDirectories(engine);
+				this.showSuccessNotification("LaTeX compilation completed successfully", {
+					operationId,
+					duration: 3000,
+				});
 			} else {
 				console.log("[LaTeXService] Compilation failed with errors");
 				await this.cleanupStaleFiles();
@@ -263,6 +275,10 @@ class LaTeXService {
 					mainFileName.replace(/^\/+/, ""),
 					result.log,
 				);
+				this.showErrorNotification("LaTeX compilation failed", {
+					operationId,
+					duration: 5000,
+				});
 			}
 
 			engine.flushCache();
@@ -273,18 +289,30 @@ class LaTeXService {
 				console.log(
 					"[LaTeXService] LaTeX Engine failed or was stopped by user, no further action needed.",
 				);
+				this.showInfoNotification("Compilation stopped by user", {
+					operationId,
+					duration: 2000,
+				});
 				return {
 					pdf: null,
 					status: -1,
 					log: "Compilation failed or was stopped by user.",
 				};
 			}
+			this.showErrorNotification(`Compilation error: ${error instanceof Error ? error.message : "Unknown error"}`, {
+				operationId,
+				duration: 5000,
+			});
 			throw error;
 		}
 	}
 
 	async clearCacheDirectories(): Promise<void> {
+		const operationId = `latex-clear-cache-${nanoid()}`;
+
 		try {
+			this.showLoadingNotification("Clearing LaTeX cache...", operationId);
+
 			const existingFiles = await fileStorageService.getAllFiles();
 			const cacheFiles = existingFiles.filter(
 				(file) =>
@@ -302,15 +330,23 @@ class LaTeXService {
 				console.log(`[LaTeXService] Hard deleted ${cacheFiles.length} cache and source files`);
 			}
 
-			// Flush engine cache as well
 			try {
 				const engine = this.getCurrentEngine();
 				engine.flushCache();
 			} catch (error) {
 				console.warn("Error flushing engine cache:", error);
 			}
+
+			this.showSuccessNotification("LaTeX cache cleared successfully", {
+				operationId,
+				duration: 2000,
+			});
 		} catch (error) {
 			console.error("Error clearing cache directories:", error);
+			this.showErrorNotification("Failed to clear LaTeX cache", {
+				operationId,
+				duration: 3000,
+			});
 			throw error;
 		}
 	}
@@ -947,6 +983,64 @@ class LaTeXService {
 		} catch (error) {
 			console.error("Failed to reinitialize engine:", error);
 			throw error;
+		}
+	}
+
+	showLoadingNotification(message: string, operationId?: string): void {
+		if (this.areNotificationsEnabled()) {
+			notificationService.showLoading(message, operationId);
+		}
+	}
+
+	showSuccessNotification(
+		message: string,
+		options: {
+			operationId?: string;
+			duration?: number;
+			data?: Record<string, any>;
+		} = {},
+	): void {
+		if (this.areNotificationsEnabled()) {
+			notificationService.showSuccess(message, options);
+		}
+	}
+
+	showErrorNotification(
+		message: string,
+		options: {
+			operationId?: string;
+			duration?: number;
+			data?: Record<string, any>;
+		} = {},
+	): void {
+		if (this.areNotificationsEnabled()) {
+			notificationService.showError(message, options);
+		}
+	}
+
+	showInfoNotification(
+		message: string,
+		options: {
+			operationId?: string;
+			duration?: number;
+			data?: Record<string, any>;
+		} = {},
+	): void {
+		if (this.areNotificationsEnabled()) {
+			notificationService.showInfo(message, options);
+		}
+	}
+
+	private areNotificationsEnabled(): boolean {
+		const userId = localStorage.getItem("texlyre-current-user");
+		const storageKey = userId
+			? `texlyre-user-${userId}-settings`
+			: "texlyre-settings";
+		try {
+			const settings = JSON.parse(localStorage.getItem(storageKey) || "{}");
+			return settings["latex-notifications"] !== false;
+		} catch {
+			return true;
 		}
 	}
 }

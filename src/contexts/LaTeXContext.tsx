@@ -106,6 +106,19 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			},
 		});
 
+		registerSetting({
+			id: "latex-notifications",
+			category: "LaTeX",
+			subcategory: "Compilation",
+			type: "checkbox",
+			label: "Show compilation notifications",
+			description: "Display notifications for LaTeX compilation activities",
+			defaultValue: true,
+			onChange: () => {
+				// Notification setting changes are handled by the service
+			},
+		});
+
 		latexService.setTexliveEndpoint(initialTexliveEndpoint);
 		latexService.setStoreCache(initialStoreCache);
 		latexService.setStoreWorkingDirectory(initialStoreWorkingDirectory);
