@@ -10,6 +10,7 @@ import { FileTreeProvider } from "../../contexts/FileTreeContext";
 import { LaTeXProvider } from "../../contexts/LaTeXContext";
 import { useAuth } from "../../hooks/useAuth";
 import { useCollab } from "../../hooks/useCollab";
+import { useGlobalKeyboard } from "../../hooks/useGlobalKeyboard";
 import { useFileSystemBackup } from "../../hooks/useFileSystemBackup";
 import { useOffline } from "../../hooks/useOffline.ts";
 import { fileStorageService } from "../../services/FileStorageService";
@@ -91,6 +92,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	});
 	const { isOfflineMode } = useOffline();
 	const [showPrivacy, setShowPrivacy] = useState(false);
+	useGlobalKeyboard();
 
 	const updateContent = (docId: string, content: string) => {
 		// Use `changeData` from the collab context.
@@ -107,6 +109,31 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	useEffect(() => {
 		setShowAutoBackupModal(shouldShowAutoBackupModal);
 	}, [shouldShowAutoBackupModal]);
+
+	useEffect(() => {
+		const handleCompile = () => {
+		  const compileButton = document.querySelector('.header-compile-button .compile-button') as HTMLButtonElement;
+		  if (compileButton && !compileButton.disabled) {
+			compileButton.click();
+		  }
+		};
+
+		const handleCompileClean = () => {
+		  // TODO(fabawi): For Shift+F9, need to add logic to clear cache first. Just trigger regular compile for now
+		  const compileButton = document.querySelector('.header-compile-button .compile-button') as HTMLButtonElement;
+		  if (compileButton && !compileButton.disabled) {
+			compileButton.click();
+		  }
+		};
+
+		document.addEventListener('trigger-compile', handleCompile);
+		document.addEventListener('trigger-compile-clean', handleCompileClean);
+
+		return () => {
+		  document.removeEventListener('trigger-compile', handleCompile);
+		  document.removeEventListener('trigger-compile-clean', handleCompileClean);
+		};
+	}, []);
 
 	useEffect(() => {
 		if (doc) {
