@@ -2,6 +2,7 @@
 [data-layout="texlyre-wide"] {
 	--toast-top-offset: calc(
 		var(--texlyre-header-height) +
+		var(--texlyre-spacing-xl) +
 		var(--texlyre-spacing-md)
 	);
 	--toast-right-offset: var(--texlyre-spacing-xl);
@@ -172,7 +173,7 @@
 	[data-layout="texlyre-wide"] {
 		--toast-top-offset: calc(
 			var(--texlyre-header-height) +
-			var(--texlyre-spacing-sm)
+			var(--texlyre-spacing-md)
 		);
 		--toast-right-offset: var(--texlyre-spacing-md);
 		--toast-max-width: calc(100vw - 2 * var(--texlyre-spacing-md));

@@ -106,6 +106,19 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			},
 		});
 
+		registerSetting({
+			id: "latex-notifications",
+			category: "LaTeX",
+			subcategory: "Compilation",
+			type: "checkbox",
+			label: "Show compilation notifications",
+			description: "Display notifications for LaTeX compilation activities",
+			defaultValue: true,
+			onChange: () => {
+				// Notification setting changes are handled by the service
+			},
+		});
+
 		latexService.setTexliveEndpoint(initialTexliveEndpoint);
 		latexService.setStoreCache(initialStoreCache);
 		latexService.setStoreWorkingDirectory(initialStoreWorkingDirectory);
@@ -162,6 +175,45 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 		}
 	};
 
+	const clearCache = async (): Promise<void> => {
+		try {
+			await latexService.clearCacheDirectories();
+			await refreshFileTree();
+		} catch (error) {
+			console.error("Failed to clear cache:", error);
+			setCompileError("Failed to clear cache");
+		}
+	};
+
+	const compileWithClearCache = async (mainFileName: string): Promise<void> => {
+		if (!latexService.isReady()) {
+			await latexService.initialize(latexEngine);
+		}
+
+		setIsCompiling(true);
+		setCompileError(null);
+
+		try {
+			const result = await latexService.clearCacheAndCompile(mainFileName, fileTree);
+
+			setCompileLog(result.log);
+			if (result.status === 0 && result.pdf) {
+				setCompiledPdf(result.pdf);
+				setCurrentView("pdf");
+			} else {
+				setCompileError("Compilation failed");
+				setCurrentView("log");
+			}
+
+			await refreshFileTree();
+		} catch (error) {
+			setCompileError(error instanceof Error ? error.message : "Unknown error");
+			setCurrentView("log");
+		} finally {
+			setIsCompiling(false);
+		}
+	};
+
 	const stopCompilation = () => {
 		if (isCompiling && latexService.isCompiling()) {
 			latexService.stopCompilation();
@@ -187,6 +239,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 				currentView,
 				latexEngine,
 				setLatexEngine: handleSetLatexEngine,
+				clearCache,
+				compileWithClearCache,
 			}}
 		>
 			{children}

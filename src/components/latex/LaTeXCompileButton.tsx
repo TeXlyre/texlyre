@@ -7,7 +7,7 @@ import { useFileTree } from "../../hooks/useFileTree";
 import { useLaTeX } from "../../hooks/useLaTeX";
 import type { DocumentList } from "../../types/documents";
 import type { FileNode } from "../../types/files.ts";
-import { ChevronDownIcon, PlayIcon, StopIcon } from "../common/Icons";
+import {ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon} from "../common/Icons";
 
 interface LaTeXCompileButtonProps {
 	className?: string;
@@ -40,6 +40,8 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		stopCompilation,
 		latexEngine,
 		setLatexEngine,
+		clearCache,
+		compileWithClearCache,
 	} = useLaTeX();
 	const { selectedFileId, getFile, fileTree } = useFileTree();
 	const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
@@ -48,6 +50,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 	const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
 	const [availableTexFiles, setAvailableTexFiles] = useState<string[]>([]);
 	const [isChangingEngine, setIsChangingEngine] = useState(false);
+	const compileButtonRef = useRef<{ clearAndCompile: () => void }>();
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
 	const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
@@ -145,6 +148,49 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		}
 	};
 
+	const handleClearCache = async () => {
+		try {
+			await clearCache();
+		} catch (error) {
+			console.error("Failed to clear cache:", error);
+		}
+	};
+
+	const handleClearCacheAndCompile = async () => {
+		if (!effectiveMainFile) return;
+
+		if (onExpandLatexOutput) {
+			onExpandLatexOutput();
+		}
+
+		if (shouldNavigateOnCompile && onNavigateToLinkedFile && effectiveMainFile) {
+			if (linkedFileInfo?.filePath === effectiveMainFile) {
+				onNavigateToLinkedFile();
+			} else {
+				document.dispatchEvent(
+					new CustomEvent("navigate-to-compiled-file", {
+						detail: {
+							filePath: effectiveMainFile,
+						},
+					}),
+				);
+			}
+		}
+
+		try {
+			await compileWithClearCache(effectiveMainFile);
+		} catch (error) {
+			console.error("Failed to compile with cache clear:", error);
+		}
+	};
+
+    useEffect(() => {
+        const buttonElement = document.querySelector('.header-compile-button');
+        if (buttonElement) {
+            (buttonElement as any).clearAndCompile = handleClearCacheAndCompile;
+        }
+    }, [handleClearCacheAndCompile]);
+
 	const toggleDropdown = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		setIsDropdownOpen(!isDropdownOpen);
@@ -154,7 +200,6 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		setIsChangingEngine(true);
 		try {
 			if (useSharedSettings && projectEngine) {
-				// If sharing is enabled, update the shared setting
 				if (changeDoc) {
 					changeDoc((d) => {
 						if (!d.projectMetadata) {
@@ -164,7 +209,6 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 					});
 				}
 			} else {
-				// If sharing is disabled, update local setting
 				await setLatexEngine(engine as "pdftex" | "xetex" | "luatex");
 			}
 			setIsDropdownOpen(false);
@@ -177,7 +221,6 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
 	const handleMainFileChange = (filePath: string) => {
 		if (useSharedSettings && projectMainFile) {
-			// If sharing is enabled, update the shared setting
 			if (!changeDoc) return;
 			changeDoc((d) => {
 				if (!d.projectMetadata) {
@@ -186,7 +229,6 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 				d.projectMetadata.mainFile = filePath === "auto" ? undefined : filePath;
 			});
 		} else {
-			// If sharing is disabled, update local setting
 			setUserSelectedMainFile(filePath === "auto" ? undefined : filePath);
 		}
 	};
@@ -252,10 +294,10 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 					disabled={isDisabled}
 					title={
 						isCompiling
-							? "Stop Compilation"
+							? "Stop Compilation (F8)"
 							: isChangingEngine
 								? "Switching Engine..."
-								: "Compile LaTeX Document"
+								: "Compile LaTeX Document (F9)"
 					}
 				>
 					{isCompiling ? <StopIcon /> : <PlayIcon />}
@@ -335,6 +377,25 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 						{isChangingEngine && (
 							<div className="engine-status">Switching engine...</div>
 						)}
+					</div>
+
+					<div className="cache-controls">
+						<div
+							className="cache-item clear-cache"
+							onClick={handleClearCache}
+							title="Clear compilation cache and source files"
+						>
+							<TrashIcon />
+							Clear Cache
+						</div>
+						<div
+							className="cache-item clear-and-compile clear-and-compile-button"
+							onClick={handleClearCacheAndCompile}
+							title="Clear cache and compile (Shift+F9)"
+						>
+							<ClearCompileIcon/>
+							Clear & Compile
+						</div>
 					</div>
 				</div>
 			)}

@@ -12,6 +12,8 @@ export interface LaTeXContextType {
 	isCompiling: boolean;
 	compileError: string | null;
 	compiledPdf: Uint8Array | null;
+	clearCache: () => Promise<void>;
+	compileWithClearCache: (mainFileName: string) => Promise<void>;
 	compileLog: string;
 	compileDocument: (mainFileName: string) => Promise<void>;
 	stopCompilation: () => void;

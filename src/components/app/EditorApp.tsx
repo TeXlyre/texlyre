@@ -9,9 +9,11 @@ import { FileSyncProvider } from "../../contexts/FileSyncContext";
 import { FileTreeProvider } from "../../contexts/FileTreeContext";
 import { LaTeXProvider } from "../../contexts/LaTeXContext";
 import { useAuth } from "../../hooks/useAuth";
+import { useLaTeX } from "../../hooks/useLaTeX";
 import { useCollab } from "../../hooks/useCollab";
+import { useGlobalKeyboard } from "../../hooks/useGlobalKeyboard";
 import { useFileSystemBackup } from "../../hooks/useFileSystemBackup";
-import { useOffline } from "../../hooks/useOffline.ts";
+import { useOffline } from "../../hooks/useOffline";
 import { fileStorageService } from "../../services/FileStorageService";
 import type { DocumentList } from "../../types/documents";
 import type { YjsDocUrl } from "../../types/yjs";
@@ -19,17 +21,17 @@ import BackupModal from "../backup/BackupModal";
 import BackupStatusIndicator from "../backup/BackupStatusIndicator";
 import ChatPanel from "../chat/ChatPanel";
 import CollabStatusIndicator from "../collab/CollabStatusIndicator";
-import { ChevronLeftIcon, EditIcon, ShareIcon } from "../common/Icons.tsx";
+import { ChevronLeftIcon, EditIcon, ShareIcon } from "../common/Icons";
 import Modal from "../common/Modal";
 import OfflineBanner from "../common/OfflineBanner";
 import ToastContainer from "../common/ToastContainer";
-import FileDocumentController from "../editor/FileDocumentController.tsx";
+import FileDocumentController from "../editor/FileDocumentController";
 import LaTeXCompileButton from "../latex/LaTeXCompileButton";
 import ExportAccountModal from "../profile/ExportAccountModal";
 import DeleteAccountModal from "../profile/DeleteAccountModal";
 import ProfileSettingsModal from "../profile/ProfileSettingsModal";
 import UserDropdown from "../profile/UserDropdown";
-import ProjectForm from "../project/ProjectForm.tsx";
+import ProjectForm from "../project/ProjectForm";
 import ShareProjectButton from "../project/ShareProjectButton";
 import ShareProjectModal from "../project/ShareProjectModal";
 import SettingsButton from "../settings/SettingsButton";
@@ -89,8 +91,10 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		mainFile: undefined as string | undefined,
 		latexEngine: undefined as ("pdftex" | "xetex" | "luatex") | undefined
 	});
+	const { isCompiling } = useLaTeX();
 	const { isOfflineMode } = useOffline();
 	const [showPrivacy, setShowPrivacy] = useState(false);
+	useGlobalKeyboard();
 
 	const updateContent = (docId: string, content: string) => {
 		// Use `changeData` from the collab context.
@@ -107,6 +111,45 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	useEffect(() => {
 		setShowAutoBackupModal(shouldShowAutoBackupModal);
 	}, [shouldShowAutoBackupModal]);
+
+	useEffect(() => {
+		const handleCompile = () => {
+		   if (isCompiling) return;
+
+		   const compileButton = document.querySelector('.header-compile-button .compile-button') as HTMLButtonElement;
+		   if (compileButton && !compileButton.disabled) {
+			  compileButton.click();
+		   }
+		};
+
+		const handleCompileClean = () => {
+		   if (isCompiling) return;
+
+		   const compileButtonContainer = document.querySelector('.header-compile-button') as any;
+		   if (compileButtonContainer && compileButtonContainer.clearAndCompile) {
+			  compileButtonContainer.clearAndCompile();
+		   }
+		};
+
+		const handleStopCompilation = () => {
+		   if (!isCompiling) return;
+
+		   const compileButton = document.querySelector('.header-compile-button .compile-button') as HTMLButtonElement;
+		   if (compileButton) {
+			  compileButton.click();
+		   }
+		};
+
+		document.addEventListener('trigger-compile', handleCompile);
+		document.addEventListener('trigger-compile-clean', handleCompileClean);
+		document.addEventListener('trigger-stop-compilation', handleStopCompilation);
+
+		return () => {
+		   document.removeEventListener('trigger-compile', handleCompile);
+		   document.removeEventListener('trigger-compile-clean', handleCompileClean);
+		   document.removeEventListener('trigger-stop-compilation', handleStopCompilation);
+		};
+	}, [isCompiling]);
 
 	useEffect(() => {
 		if (doc) {
