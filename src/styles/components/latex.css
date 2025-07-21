@@ -286,3 +286,34 @@ embed {
 	color: var(--accent-color);
 	font-weight: 500;
 }
+
+.cache-controls {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	margin-top: var(--space-sm);
+	padding-top: var(--space-sm);
+	border-top: 1px solid var(--accent-border);
+}
+
+.cache-item {
+	font-weight: 400;
+	font-size: 0.8rem;
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	padding: var(--space-sm);
+	cursor: pointer;
+	background-color: var(--pico-background);
+	border-radius: var(--radius-sm);
+	transition: background-color var(--transition-normal);
+}
+
+.cache-item:hover:not(.disabled) {
+	background-color: var(--pico-primary-focus);
+}
+
+.cache-item.disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}

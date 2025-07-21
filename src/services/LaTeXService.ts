@@ -283,6 +283,43 @@ class LaTeXService {
 		}
 	}
 
+	async clearCacheDirectories(): Promise<void> {
+		try {
+			const existingFiles = await fileStorageService.getAllFiles();
+			const cacheFiles = existingFiles.filter(
+				(file) =>
+					(file.path.startsWith("/.texlyre_cache/") ||
+					 file.path.startsWith("/.texlyre_src/")) &&
+					!file.isDeleted,
+			);
+
+			if (cacheFiles.length > 0) {
+				const fileIds = cacheFiles.map((file) => file.id);
+				await fileStorageService.batchDeleteFiles(fileIds, {
+					showDeleteDialog: false,
+					hardDelete: true,
+				});
+				console.log(`[LaTeXService] Hard deleted ${cacheFiles.length} cache and source files`);
+			}
+
+			// Flush engine cache as well
+			try {
+				const engine = this.getCurrentEngine();
+				engine.flushCache();
+			} catch (error) {
+				console.warn("Error flushing engine cache:", error);
+			}
+		} catch (error) {
+			console.error("Error clearing cache directories:", error);
+			throw error;
+		}
+	}
+
+	async clearCacheAndCompile(mainFileName: string, fileTree: FileNode[]): Promise<CompileResult> {
+		await this.clearCacheDirectories();
+		return this.compileLaTeX(mainFileName, fileTree);
+	}
+
 	private async prepareFileNodes(
 		mainFileName: string,
 		fileTree: FileNode[],

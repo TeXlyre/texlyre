@@ -119,11 +119,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		};
 
 		const handleCompileClean = () => {
-		  // TODO(fabawi): For Shift+F9, need to add logic to clear cache first. Just trigger regular compile for now
-		  const compileButton = document.querySelector('.header-compile-button .compile-button') as HTMLButtonElement;
-		  if (compileButton && !compileButton.disabled) {
-			compileButton.click();
-		  }
+			document.dispatchEvent(new CustomEvent('trigger-clear-and-compile'));
 		};
 
 		document.addEventListener('trigger-compile', handleCompile);
