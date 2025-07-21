@@ -17,6 +17,13 @@ export const useGlobalKeyboard = () => {
         document.dispatchEvent(new CustomEvent('trigger-compile-clean'));
         return;
       }
+
+      // F8 - Stop compilation
+      if (event.key === 'F8' && !event.shiftKey && !event.ctrlKey) {
+          event.preventDefault();
+          document.dispatchEvent(new CustomEvent('trigger-stop-compilation'));
+          return;
+      }
     };
 
     document.addEventListener('keydown', handleKeyDown);

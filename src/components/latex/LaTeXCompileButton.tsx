@@ -7,7 +7,7 @@ import { useFileTree } from "../../hooks/useFileTree";
 import { useLaTeX } from "../../hooks/useLaTeX";
 import type { DocumentList } from "../../types/documents";
 import type { FileNode } from "../../types/files.ts";
-import { ChevronDownIcon, PlayIcon, StopIcon, TrashIcon } from "../common/Icons";
+import {ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon} from "../common/Icons";
 
 interface LaTeXCompileButtonProps {
 	className?: string;
@@ -50,6 +50,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 	const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
 	const [availableTexFiles, setAvailableTexFiles] = useState<string[]>([]);
 	const [isChangingEngine, setIsChangingEngine] = useState(false);
+	const compileButtonRef = useRef<{ clearAndCompile: () => void }>();
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
 	const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
@@ -183,17 +184,12 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		}
 	};
 
-	useEffect(() => {
-		const handleClearAndCompileEvent = () => {
-			handleClearCacheAndCompile();
-		};
-
-		document.addEventListener('trigger-clear-and-compile', handleClearAndCompileEvent);
-
-		return () => {
-			document.removeEventListener('trigger-clear-and-compile', handleClearAndCompileEvent);
-		};
-	}, [handleClearCacheAndCompile]);
+    useEffect(() => {
+        const buttonElement = document.querySelector('.header-compile-button');
+        if (buttonElement) {
+            (buttonElement as any).clearAndCompile = handleClearCacheAndCompile;
+        }
+    }, [handleClearCacheAndCompile]);
 
 	const toggleDropdown = (e: React.MouseEvent) => {
 		e.stopPropagation();
@@ -298,7 +294,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 					disabled={isDisabled}
 					title={
 						isCompiling
-							? "Stop Compilation"
+							? "Stop Compilation (F8)"
 							: isChangingEngine
 								? "Switching Engine..."
 								: "Compile LaTeX Document (F9)"
@@ -393,12 +389,11 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 							Clear Cache
 						</div>
 						<div
-							className="cache-item clear-and-compile"
+							className="cache-item clear-and-compile clear-and-compile-button"
 							onClick={handleClearCacheAndCompile}
 							title="Clear cache and compile (Shift+F9)"
 						>
-							<TrashIcon />
-							<PlayIcon />
+							<ClearCompileIcon/>
 							Clear & Compile
 						</div>
 					</div>
