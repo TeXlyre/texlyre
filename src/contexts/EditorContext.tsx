@@ -34,6 +34,7 @@ interface EditorContextType {
 	getSyntaxHighlightingEnabled: () => boolean;
 	getAutoSaveEnabled: () => boolean;
 	getAutoSaveDelay: () => number;
+	getVimModeEnabled: () => boolean;
 	getCollabOptions: () => CollabConnectOptions;
 	editorSettingsVersion: number;
 }
@@ -47,6 +48,7 @@ export const EditorContext = createContext<EditorContextType>({
 	getSyntaxHighlightingEnabled: () => true,
 	getAutoSaveEnabled: () => false,
 	getAutoSaveDelay: () => 2000,
+	getVimModeEnabled: () => false,
 	getCollabOptions: () => ({}),
 	editorSettingsVersion: 0,
 });
@@ -109,6 +111,9 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 				| "auto"
 				| "light"
 				| "dark") ?? defaultEditorSettings.highlightTheme;
+		const initialVimMode =
+			(getSetting("editor-vim-mode")?.value as boolean) ??
+			defaultEditorSettings.vimMode;
 
 		const loadedSettings = {
 			fontSize: initialFontSize,
@@ -118,6 +123,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 			autoSaveEnabled: initialAutoSaveEnabled,
 			autoSaveDelay: initialAutoSaveDelay,
 			highlightTheme: initialHighlightTheme,
+			vimMode: initialVimMode,
 		};
 
 		setEditorSettings(loadedSettings);
@@ -253,6 +259,19 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 				updateEditorSetting("autoSaveDelay", value as number);
 			},
 		});
+
+		registerSetting({
+			id: "editor-vim-mode",
+			category: "Viewers",
+			subcategory: "Text Editor",
+			type: "checkbox",
+			label: "Enable Vim keybindings",
+			description: "Enable Vim-style keybindings in the editor",
+			defaultValue: defaultEditorSettings.vimMode,
+			onChange: (value) => {
+				updateEditorSetting("vimMode", value as boolean);
+			},
+		});
 	}, [registerSetting, getSetting, updateEditorSetting, applyCSSProperties]);
 
 	const getFontSize = useCallback(() => {
@@ -281,6 +300,11 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 	const getAutoSaveDelay = useCallback(
 		() => editorSettings.autoSaveDelay,
 		[editorSettings.autoSaveDelay],
+	);
+
+	const getVimModeEnabled = useCallback(
+		() => editorSettings.vimMode,
+		[editorSettings.vimMode],
 	);
 
 	const getCollabOptions = useCallback((): CollabConnectOptions | null => {
@@ -315,6 +339,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		getSyntaxHighlightingEnabled,
 		getAutoSaveEnabled,
 		getAutoSaveDelay,
+		getVimModeEnabled,
 		getCollabOptions,
 		editorSettingsVersion,
 	};

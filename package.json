@@ -36,6 +36,7 @@
 		"@lezer/highlight": "^1.0.0",
 		"@lezer/lr": "^1.0.0",
 		"@picocss/pico": "^2.0.6",
+		"@replit/codemirror-vim": "^6.3.0",
 		"bib-editor": "^1.14.0",
 		"codemirror": "^6.0.0",
 		"codemirror-lang-bib": "^0.1.0",

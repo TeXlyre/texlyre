@@ -25,6 +25,7 @@ import { oneDark } from "@codemirror/theme-one-dark";
 import { type ViewUpdate, keymap } from "@codemirror/view";
 import { lineNumbers } from "@codemirror/view";
 import { EditorView } from "codemirror";
+import { vim } from "@replit/codemirror-vim";
 import { bibtex, bibtexCompletionSource } from "codemirror-lang-bib";
 import { latex, latexCompletionSource } from "codemirror-lang-latex";
 import { useEffect, useRef, useState } from "react";
@@ -64,6 +65,7 @@ export const EditorLoader = (
 		getAutoSaveDelay,
 		getLineNumbersEnabled,
 		getSyntaxHighlightingEnabled,
+	    getVimModeEnabled,
 		getCollabOptions,
 		editorSettingsVersion,
 		editorSettings,
@@ -170,6 +172,10 @@ export const EditorLoader = (
 				);
 			}
 		}
+
+	  if (getVimModeEnabled()) {
+		extensions.push(vim());
+	  }
 
 		extensions.push(
 			EditorView.updateListener.of((update: ViewUpdate) => {
