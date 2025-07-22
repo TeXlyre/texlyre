@@ -323,6 +323,18 @@
 	color: var(--pico-primary-inverse);
 }
 
+.tab-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	background-color: var(--pico-background);
+	color: var(--pico-secondary);
+}
+
+.tab-button:disabled:hover {
+	background-color: var(--pico-background);
+	color: var(--pico-secondary);
+}
+
 .processing-indicator {
 	color: var(--pico-primary);
 	font-weight: normal;
@@ -345,23 +357,12 @@
 	padding-bottom: var(--space-us);
 }
 
-.tab-button:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-	background-color: var(--pico-background);
-	color: var(--pico-secondary);
-}
-
-.tab-button:disabled:hover {
-	background-color: var(--pico-background);
-	color: var(--pico-secondary);
-}
-
 .codemirror-editor-container {
 	flex: 1;
 	overflow: hidden;
 }
 
+/* Table Styles */
 .bibtex-table-container {
 	flex: 1;
 	overflow: auto;
@@ -376,7 +377,76 @@
 	border: 1px solid var(--accent-border, #333);
 	border-radius: 8px;
 	overflow: hidden;
+}
+
+.resizable-table {
 	table-layout: fixed;
+}
+
+.resizable-table th {
+	resize: horizontal;
+	overflow: auto;
+	min-width: 80px;
+	white-space: nowrap;
+	position: relative;
+	cursor: auto;
+	padding: 0.5rem 0.75rem;
+}
+
+.header-content {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.field-name {
+	font-weight: 600;
+	font-size: 0.85rem;
+}
+
+.sort-buttons {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+
+.sort-btn {
+	background: none;
+	border: none;
+	padding: 2px 4px;
+	font-size: 0.6rem;
+	line-height: 1;
+	cursor: pointer;
+	color: var(--pico-secondary);
+	border-radius: 2px;
+	transition: all 0.2s ease;
+}
+
+.sort-btn:hover {
+	background-color: var(--pico-primary-focus);
+	color: var(--text-color);
+}
+
+.sort-btn.active {
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+}
+
+.resize-handle {
+	position: absolute;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	width: 8px;
+	cursor: col-resize;
+	background-color: transparent;
+	z-index: 10;
+}
+
+.resize-handle:hover {
+	background-color: var(--pico-primary);
+	opacity: 0.3;
 }
 
 .bibtex-table th {
@@ -389,13 +459,10 @@
 	border-right: 1px solid var(--accent-border, #333);
 	cursor: pointer;
 	user-select: none;
+	position: sticky;
 	top: 0;
 	z-index: 1;
-	min-width: 80px;
-	position: relative;
-	overflow: hidden;
 }
-
 
 .bibtex-table th:hover {
 	background-color: var(--pico-primary-focus);
@@ -407,11 +474,6 @@
 	color: var(--pico-primary-inverse);
 }
 
-.sort-indicator {
-	font-size: 0.7rem;
-	margin-left: 0.25rem;
-}
-
 .bibtex-table td {
 	padding: 0.5rem 0.75rem;
 	border-bottom: 1px solid var(--accent-border, #333);
@@ -420,6 +482,8 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	word-wrap: break-word;
+	overflow-wrap: break-word;
 }
 
 .bibtex-table td:last-child,
@@ -444,88 +508,6 @@
 	background-color: var(--pico-primary-focus);
 }
 
-.bibtex-table td.editing {
-	padding: 0;
-	background-color: var(--pico-background);
-}
-
-.bibtex-table th {
-	background-color: var(--accent-background);
-	padding: 0.75rem;
-	text-align: left;
-	font-weight: 600;
-	font-size: 0.85rem;
-	border-bottom: 2px solid var(--accent-border, #333);
-	border-right: 1px solid var(--accent-border, #333);
-	cursor: pointer;
-	user-select: none;
-	position: sticky;
-	top: 0;
-	z-index: 1;
-	min-width: 80px;
-	position: relative;
-}
-
-.bibtex-table th:hover {
-	background-color: var(--pico-primary-focus);
-}
-
-.bibtex-table th.sorted-asc,
-.bibtex-table th.sorted-desc {
-	background-color: var(--pico-primary);
-	color: var(--pico-primary-inverse);
-}
-
-.column-resizer {
-	position: absolute;
-	right: 0;
-	top: 0;
-	bottom: 0;
-	width: 4px;
-	cursor: col-resize;
-	background-color: transparent;
-	z-index: 2;
-}
-
-.column-resizer:hover {
-	background-color: var(--pico-primary);
-}
-
-.column-resizer.resizing {
-	background-color: var(--pico-primary);
-}
-
-.bibtex-table th.resizing {
-	user-select: none;
-	pointer-events: none;
-}
-
-.resizable-table {
-	table-layout: auto;
-}
-
-.resizable-table th {
-	resize: horizontal;
-	overflow: auto;
-	min-width: 80px;
-	white-space: nowrap;
-}
-
-.resizable-table td {
-	word-wrap: break-word;
-	overflow-wrap: break-word;
-}
-
-.bibtex-table td {
-	padding: 0.5rem 0.75rem;
-	border-bottom: 1px solid var(--accent-border, #333);
-	border-right: 1px solid var(--accent-border, #333);
-	font-size: 0.8rem;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
 .bibtex-table td.non-editable {
 	cursor: default;
 	background-color: var(--pico-secondary-background);
@@ -534,6 +516,11 @@
 
 .bibtex-table td.non-editable:hover {
 	background-color: var(--pico-secondary-background);
+}
+
+.bibtex-table td.editing {
+	padding: 0;
+	background-color: var(--pico-background);
 }
 
 .cell-input {
@@ -558,22 +545,7 @@
 	font-style: italic;
 }
 
-@media (max-width: 768px) {
-	.bibtex-table-container {
-		padding: 0.5rem;
-	}
-
-	.bibtex-table {
-		font-size: 0.75rem;
-	}
-
-	.bibtex-table th,
-	.bibtex-table td {
-		padding: 0.4rem 0.5rem;
-		max-width: 120px;
-	}
-}
-
+/* Media Queries */
 @media (max-width: 768px) {
 	.bibtex-viewer-header {
 		flex-direction: column;
@@ -594,6 +566,20 @@
 	.bibtex-sidebar {
 		width: 100%;
 		max-width: 300px;
+	}
+
+	.bibtex-table-container {
+		padding: 0.5rem;
+	}
+
+	.bibtex-table {
+		font-size: 0.75rem;
+	}
+
+	.bibtex-table th,
+	.bibtex-table td {
+		padding: 0.4rem 0.5rem;
+		max-width: 120px;
 	}
 }
 

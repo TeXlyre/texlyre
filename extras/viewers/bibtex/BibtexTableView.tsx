@@ -1,7 +1,5 @@
-// extras/viewers/bibtex/BibtexTableView.tsx
 import type React from "react";
 import { useState, useMemo, useEffect, useRef } from "react";
-
 import type { BibtexEntry } from "./BibtexParser";
 
 interface BibtexTableViewProps {
@@ -24,6 +22,12 @@ export const BibtexTableView: React.FC<BibtexTableViewProps> = ({
 	const [editValue, setEditValue] = useState("");
 	const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
 	const tableRef = useRef<HTMLTableElement>(null);
+
+	const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+	const [isResizing, setIsResizing] = useState(false);
+	const [resizingField, setResizingField] = useState<string | null>(null);
+	const startXRef = useRef(0);
+	const startWidthRef = useRef(0);
 
 	const allFields = useMemo(() => {
 		const fieldSet = new Set<string>();
@@ -75,11 +79,11 @@ export const BibtexTableView: React.FC<BibtexTableViewProps> = ({
 		});
 	}, [entries, sortConfig]);
 
-	const handleSort = (field: string) => {
-		setSortConfig(prev => ({
+	const handleSort = (field: string, direction: 'asc' | 'desc') => {
+		setSortConfig({
 			key: field,
-			direction: prev.key === field && prev.direction === 'asc' ? 'desc' : 'asc'
-		}));
+			direction: direction
+		});
 	};
 
 	const startEdit = (entryIndex: number, field: string) => {
@@ -154,15 +158,27 @@ export const BibtexTableView: React.FC<BibtexTableViewProps> = ({
 						{allFields.map(field => (
 							<th
 								key={field}
-								onClick={() => handleSort(field)}
 								className={sortConfig.key === field ? `sorted-${sortConfig.direction}` : ''}
 							>
-								{field}
-								{sortConfig.key === field && (
-									<span className="sort-indicator">
-										{sortConfig.direction === 'asc' ? ' ↑' : ' ↓'}
-									</span>
-								)}
+								<div className="header-content">
+									<span className="field-name">{field}</span>
+									<div className="sort-buttons">
+										<button
+											className={`sort-btn ${sortConfig.key === field && sortConfig.direction === 'asc' ? 'active' : ''}`}
+											onClick={() => handleSort(field, 'asc')}
+											title={`Sort ${field} ascending`}
+										>
+											▲
+										</button>
+										<button
+											className={`sort-btn ${sortConfig.key === field && sortConfig.direction === 'desc' ? 'active' : ''}`}
+											onClick={() => handleSort(field, 'desc')}
+											title={`Sort ${field} descending`}
+										>
+											▼
+										</button>
+									</div>
+								</div>
 							</th>
 						))}
 					</tr>
