@@ -1,4 +1,3 @@
-// extras/viewers/bibtex/BibtexViewer.tsx
 import { tidy } from "bib-editor";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
@@ -7,6 +6,7 @@ import {
 	DownloadIcon,
 	OptionsIcon,
 	SaveIcon,
+	ViewIcon,
 } from "../../../src/components/common/Icons";
 import {
 	PluginControlGroup,
@@ -19,6 +19,9 @@ import { EditorLoader } from "../../../src/services/EditorLoader";
 import { fileStorageService } from "../../../src/services/FileStorageService";
 import { TidyOptionsPanel } from "./TidyOptionsPanel";
 import { type TidyOptions, getPresetOptions } from "./tidyOptions";
+import { BibtexTableView } from "./BibtexTableView";
+import { BibtexParser } from "./BibtexParser";
+import type { BibtexEntry } from "./BibtexParser";
 import "./styles.css";
 import { PLUGIN_NAME, PLUGIN_VERSION } from "./BibtexViewerPlugin";
 
@@ -45,6 +48,11 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	const [currentView, setCurrentView] = useState<"original" | "processed">(
 		"original",
 	);
+	const [viewMode, setViewMode] = useState<"editor" | "table">("editor");
+
+	const [parsedEntries, setParsedEntries] = useState<BibtexEntry[]>([]);
+	const [processedParsedEntries, setProcessedParsedEntries] = useState<BibtexEntry[]>([]);
+	const [updateCounter, setUpdateCounter] = useState(0);
 
 	const originalEditorRef = useRef<HTMLDivElement>(null);
 	const processedEditorRef = useRef<HTMLDivElement>(null);
@@ -53,13 +61,105 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		getPresetOptions(tidyPreset),
 	);
 
+	const parseContent = (content: string) => {
+		try {
+			return BibtexParser.parse(content);
+		} catch (error) {
+			console.warn("Failed to parse BibTeX content:", error);
+			return [];
+		}
+	};
+
 	const handleOriginalContentUpdate = (newContent: string) => {
+		console.log('Original content updated:', newContent.length, 'characters');
 		setBibtexContent(newContent);
+		const newParsed = parseContent(newContent);
+		console.log('Parsed entries:', newParsed.length);
+		setParsedEntries(newParsed);
+		setUpdateCounter(prev => prev + 1);
+		setUpdateCounter(prev => prev + 1);
 		setHasChanges(true);
 	};
 
 	const handleProcessedContentUpdate = (newContent: string) => {
+		console.log('Processed content updated:', newContent.length, 'characters');
 		setProcessedContent(newContent);
+		const newParsed = parseContent(newContent);
+		console.log('Processed parsed entries:', newParsed.length);
+		setProcessedParsedEntries(newParsed);
+		setUpdateCounter(prev => prev + 1);
+		setHasChanges(true);
+	};
+
+	const handleSingleTableEntryUpdate = (updatedEntry: BibtexEntry) => {
+		if (currentView === "original") {
+			const newContent = BibtexParser.updateEntryInContent(bibtexContent, updatedEntry);
+			setBibtexContent(newContent);
+
+			const updatedParsedEntries = parsedEntries.map(entry =>
+				entry.originalIndex === updatedEntry.originalIndex ? updatedEntry : entry
+			);
+			setParsedEntries(updatedParsedEntries);
+
+			if (originalViewRef.current) {
+				const position = BibtexParser.findEntryPosition(bibtexContent, updatedEntry);
+				if (position) {
+					const newEntryContent = BibtexParser.serializeEntry(updatedEntry);
+					originalViewRef.current.dispatch({
+						changes: {
+							from: position.start,
+							to: position.end,
+							insert: newEntryContent
+						}
+					});
+				}
+			}
+		} else {
+			const newContent = BibtexParser.updateEntryInContent(processedContent, updatedEntry);
+			setProcessedContent(newContent);
+
+			const updatedParsedEntries = processedParsedEntries.map(entry =>
+				entry.originalIndex === updatedEntry.originalIndex ? updatedEntry : entry
+			);
+			setProcessedParsedEntries(updatedParsedEntries);
+
+			if (processedViewRef.current) {
+				const position = BibtexParser.findEntryPosition(processedContent, updatedEntry);
+				if (position) {
+					const newEntryContent = BibtexParser.serializeEntry(updatedEntry);
+					processedViewRef.current.dispatch({
+						changes: {
+							from: position.start,
+							to: position.end,
+							insert: newEntryContent
+						}
+					});
+				}
+			}
+		}
+		setHasChanges(true);
+	};
+
+	const handleTableEntryUpdate = (updatedEntries: BibtexEntry[]) => {
+		const newContent = BibtexParser.serialize(updatedEntries);
+
+		if (currentView === "original") {
+			setBibtexContent(newContent);
+			setParsedEntries(updatedEntries);
+			if (originalViewRef.current) {
+				originalViewRef.current.dispatch({
+					changes: { from: 0, to: originalViewRef.current.state.doc.length, insert: newContent }
+				});
+			}
+		} else {
+			setProcessedContent(newContent);
+			setProcessedParsedEntries(updatedEntries);
+			if (processedViewRef.current) {
+				processedViewRef.current.dispatch({
+					changes: { from: 0, to: processedViewRef.current.state.doc.length, insert: newContent }
+				});
+			}
+		}
 		setHasChanges(true);
 	};
 
@@ -103,6 +203,8 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
 				setBibtexContent(text);
 				setProcessedContent(text);
+				setParsedEntries(parseContent(text));
+				setProcessedParsedEntries(parseContent(text));
 				setHasChanges(false);
 				setError(null);
 
@@ -118,6 +220,8 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				);
 				setBibtexContent("");
 				setProcessedContent("");
+				setParsedEntries([]);
+				setProcessedParsedEntries([]);
 				setError(
 					`Failed to decode file content: ${error instanceof Error ? error.message : "Unknown error"}`,
 				);
@@ -129,6 +233,8 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
 				setBibtexContent(text);
 				setProcessedContent(text);
+				setParsedEntries(parseContent(text));
+				setProcessedParsedEntries(parseContent(text));
 				setHasChanges(false);
 				setError(null);
 
@@ -144,6 +250,8 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				);
 				setBibtexContent("");
 				setProcessedContent("");
+				setParsedEntries([]);
+				setProcessedParsedEntries([]);
 				setError(
 					`Failed to decode file content: ${error instanceof Error ? error.message : "Unknown error"}`,
 				);
@@ -151,6 +259,8 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		} else if (typeof content === "string") {
 			setBibtexContent(content);
 			setProcessedContent(content);
+			setParsedEntries(parseContent(content));
+			setProcessedParsedEntries(parseContent(content));
 			setHasChanges(false);
 			setError(null);
 
@@ -179,6 +289,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		try {
 			const result = await tidy(content, tidyOptions);
 			setProcessedContent(result.bibtex);
+			setProcessedParsedEntries(parseContent(result.bibtex));
 			setWarnings(result.warnings || []);
 			setHasChanges(true);
 			if (autoTidy) {
@@ -220,6 +331,8 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
 			setBibtexContent(currentEditorContent);
 			setProcessedContent("");
+			setParsedEntries(parseContent(currentEditorContent));
+			setProcessedParsedEntries([]);
 			setHasChanges(false);
 			setCurrentView("original");
 		} catch (error) {
@@ -231,6 +344,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			setIsSaving(false);
 		}
 	};
+
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (event.ctrlKey && event.key === 's' && currentView === "processed") {
@@ -272,6 +386,46 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	const displayContent =
 		currentView === "original" ? bibtexContent : processedContent;
 
+	const currentEntries = currentView === "original" ? parsedEntries : processedParsedEntries;
+
+	// Sync table with current editor content when switching to table view
+	useEffect(() => {
+		if (viewMode === "table") {
+			console.log('Switching to table view - syncing with editor content');
+
+			if (currentView === "original" && originalViewRef.current) {
+				const currentEditorContent = originalViewRef.current.state?.doc?.toString();
+				if (currentEditorContent && currentEditorContent !== bibtexContent) {
+					console.log('Original editor content differs from state, updating...');
+					setBibtexContent(currentEditorContent);
+					const newParsed = parseContent(currentEditorContent);
+					setParsedEntries(newParsed);
+					setUpdateCounter(prev => prev + 1);
+				}
+			} else if (currentView === "processed" && processedViewRef.current) {
+				const currentEditorContent = processedViewRef.current.state?.doc?.toString();
+				if (currentEditorContent && currentEditorContent !== processedContent) {
+					console.log('Processed editor content differs from state, updating...');
+					setProcessedContent(currentEditorContent);
+					const newParsed = parseContent(currentEditorContent);
+					setProcessedParsedEntries(newParsed);
+					setUpdateCounter(prev => prev + 1);
+				}
+			}
+		}
+	}, [viewMode, currentView, bibtexContent, processedContent]);
+
+	// Debug log to track entry changes
+	useEffect(() => {
+		console.log('Current entries changed:', {
+			viewMode,
+			currentView,
+			entriesCount: currentEntries.length,
+			updateCounter,
+			entries: currentEntries.map(e => ({ id: e.id, type: e.type }))
+		});
+	}, [currentEntries, viewMode, currentView, updateCounter]);
+
 	const tooltipInfo = [
 		`Auto-tidy: ${autoTidy ? "enabled" : "disabled"}`,
 		`Preset: ${tidyPreset}`,
@@ -289,6 +443,13 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 					title="Toggle Options Panel"
 				>
 					<OptionsIcon />
+				</button>
+				<button
+					className={`${viewMode === "table" ? "active" : ""}`}
+					onClick={() => setViewMode(viewMode === "editor" ? "table" : "editor")}
+					title={`Switch to ${viewMode === "editor" ? "Table" : "Editor"} View`}
+				>
+					<ViewIcon />
 				</button>
 			</PluginControlGroup>
 
@@ -396,18 +557,32 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 								)}
 							</div>
 
-							<div
-								ref={originalEditorRef}
-								className="codemirror-editor-container"
-								style={{ display: currentView === "original" ? "block" : "none" }}
-							/>
-							<div
-								ref={processedEditorRef}
-								className="codemirror-editor-container"
-								style={{ display: currentView === "processed" ? "block" : "none" }}
-							/>
+							<>
+								<div
+									ref={originalEditorRef}
+									className="codemirror-editor-container"
+									style={{
+										display: currentView === "original" && viewMode === "editor" ? "block" : "none"
+									}}
+								/>
+								<div
+									ref={processedEditorRef}
+									className="codemirror-editor-container"
+									style={{
+										display: currentView === "processed" && viewMode === "editor" ? "block" : "none"
+									}}
+								/>
+								{viewMode === "table" && (
+									<BibtexTableView
+										key={`${currentView}-${updateCounter}`}
+										entries={currentEntries}
+										onEntriesChange={handleTableEntryUpdate}
+										onSingleEntryChange={handleSingleTableEntryUpdate}
+									/>
+								)}
+							</>
 
-							{originalShowSaveIndicator && currentView === "original" && (
+							{originalShowSaveIndicator && currentView === "original" && viewMode === "editor" && (
 								<div className="save-indicator">
 									<span>Saved</span>
 								</div>
