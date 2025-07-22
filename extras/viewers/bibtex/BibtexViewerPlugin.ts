@@ -1,3 +1,4 @@
+// extra/viewers/bibtex/BibtexViewerPlugin.ts
 import type { ViewerPlugin } from "../../../src/plugins/PluginInterface";
 import BibtexViewer from "./BibtexViewer";
 import { bibtexViewerSettings } from "./settings";

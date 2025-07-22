@@ -1,3 +1,4 @@
+// extras/viewers/bibtex/BibtexParser.ts
 export interface BibtexEntry {
 	id: string;
 	type: string;

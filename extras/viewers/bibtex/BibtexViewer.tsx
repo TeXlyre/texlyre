@@ -1,3 +1,4 @@
+// extras/viewers/bibtex/BibtexViewer.tsx
 import { tidy } from "bib-editor";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";

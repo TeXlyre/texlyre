@@ -7,6 +7,7 @@ import {
 	DownloadIcon,
 	OptionsIcon,
 	SaveIcon,
+	ViewIcon,
 } from "../../../src/components/common/Icons";
 import {
 	PluginControlGroup,
@@ -22,6 +23,9 @@ import {
 	type TidyOptions,
 	getPresetOptions,
 } from "../../viewers/bibtex/tidyOptions";
+import { BibtexTableView } from "../../viewers/bibtex/BibtexTableView";
+import { BibtexParser } from "../../viewers/bibtex/BibtexParser";
+import type { BibtexEntry } from "../../viewers/bibtex/BibtexParser";
 import "../../viewers/bibtex/styles.css";
 import { PLUGIN_NAME, PLUGIN_VERSION } from "./BibtexCollaborativeViewerPlugin";
 
@@ -59,6 +63,10 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	const [currentView, setCurrentView] = useState<"original" | "processed">(
 		"original",
 	);
+	const [viewMode, setViewMode] = useState<"editor" | "table">("editor");
+
+	const [processedParsedEntries, setProcessedParsedEntries] = useState<BibtexEntry[]>([]);
+	const [updateCounter, setUpdateCounter] = useState(0);
 
 	const editorRef = useRef<HTMLDivElement>(null);
 	const [options, setOptions] = useState<TidyOptions>(() =>
@@ -75,6 +83,15 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				: "",
 	);
 
+	const parseContent = (content: string) => {
+		try {
+			return BibtexParser.parse(content);
+		} catch (error) {
+			console.warn("Failed to parse BibTeX content:", error);
+			return [];
+		}
+	};
+
 	const handleContentUpdate = (newContent: string) => {
 		if (currentView === "original") {
 			setBibtexContent(newContent);
@@ -82,8 +99,52 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			onUpdateContent(newContent);
 		} else {
 			setProcessedContent(newContent);
+			setProcessedParsedEntries(parseContent(newContent));
+			setUpdateCounter(prev => prev + 1);
 			setHasChanges(true);
 		}
+	};
+
+	const handleSingleTableEntryUpdate = (updatedEntry: BibtexEntry) => {
+		const newContent = BibtexParser.updateEntryInContent(processedContent, updatedEntry);
+		setProcessedContent(newContent);
+
+		const updatedParsedEntries = processedParsedEntries.map(entry =>
+			entry.originalIndex === updatedEntry.originalIndex ? updatedEntry : entry
+		);
+		setProcessedParsedEntries(updatedParsedEntries);
+
+		if (viewRef.current) {
+			const position = BibtexParser.findEntryPosition(processedContent, updatedEntry);
+			if (position) {
+				const newEntryContent = BibtexParser.serializeEntry(updatedEntry);
+				viewRef.current.dispatch({
+					changes: {
+						from: position.start,
+						to: position.end,
+						insert: newEntryContent
+					}
+				});
+			}
+		}
+
+		setUpdateCounter(prev => prev + 1);
+		setHasChanges(true);
+	};
+
+	const handleTableEntryUpdate = (updatedEntries: BibtexEntry[]) => {
+		const newContent = BibtexParser.serialize(updatedEntries);
+		setProcessedContent(newContent);
+		setProcessedParsedEntries(updatedEntries);
+
+		if (viewRef.current) {
+			viewRef.current.dispatch({
+				changes: { from: 0, to: viewRef.current.state.doc.length, insert: newContent }
+			});
+		}
+
+		setUpdateCounter(prev => prev + 1);
+		setHasChanges(true);
 	};
 
 	const { viewRef, showSaveIndicator } =
@@ -136,6 +197,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		}
 		setBibtexContent(text);
 		setProcessedContent(text);
+		setProcessedParsedEntries(parseContent(text));
 		setHasChanges(false);
 		setError(null);
 
@@ -145,6 +207,24 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			}, 500);
 		}
 	}, [content, autoTidy, tidyPreset]);
+
+	// Sync table with current editor content when switching to table view (processed only)
+	useEffect(() => {
+		if (viewMode === "table" && currentView === "processed") {
+			console.log('Switching to table view - syncing with processed editor content');
+
+			if (viewRef.current) {
+				const currentEditorContent = viewRef.current.state?.doc?.toString();
+				if (currentEditorContent && currentEditorContent !== processedContent) {
+					console.log('Processed editor content differs from state, updating...');
+					setProcessedContent(currentEditorContent);
+					const newParsed = parseContent(currentEditorContent);
+					setProcessedParsedEntries(newParsed);
+					setUpdateCounter(prev => prev + 1);
+				}
+			}
+		}
+	}, [viewMode, currentView, processedContent]);
 
 	const processBibtexWithOptions = async (
 		input: string,
@@ -157,6 +237,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		try {
 			const result = await tidy(input, tidyOptions);
 			setProcessedContent(result.bibtex);
+			setProcessedParsedEntries(parseContent(result.bibtex));
 			setWarnings(result.warnings || []);
 			setHasChanges(true);
 			if (autoTidy) setCurrentView("processed");
@@ -197,6 +278,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
 			setBibtexContent(contentToSave);
 			setProcessedContent("");
+			setProcessedParsedEntries([]);
 
 			setCurrentView("original");
 
@@ -288,6 +370,16 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				>
 					<OptionsIcon />
 				</button>
+				{/* Only show table view toggle for processed view */}
+				{currentView === "processed" && (
+					<button
+						className={`${viewMode === "table" ? "active" : ""}`}
+						onClick={() => setViewMode(viewMode === "editor" ? "table" : "editor")}
+						title={`Switch to ${viewMode === "editor" ? "Table" : "Editor"} View`}
+					>
+						<ViewIcon />
+					</button>
+				)}
 			</PluginControlGroup>
 
 			<PluginControlGroup>
@@ -413,7 +505,25 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 									<span className="processing-indicator"> (Saving...)</span>
 								)}
 							</div>
-							<div ref={editorRef} className="codemirror-editor-container" />
+
+							{/* Always show editor, conditionally show table for processed view only */}
+							<div
+								ref={editorRef}
+								className="codemirror-editor-container"
+								style={{
+									display: currentView === "processed" && viewMode === "table" ? "none" : "block"
+								}}
+							/>
+
+							{/* Only show table for processed view */}
+							{currentView === "processed" && viewMode === "table" && (
+								<BibtexTableView
+									key={`processed-${updateCounter}`}
+									entries={processedParsedEntries}
+									onEntriesChange={handleTableEntryUpdate}
+									onSingleEntryChange={handleSingleTableEntryUpdate}
+								/>
+							)}
 
 							{showSaveIndicator && currentView === "original" && (
 								<div className="save-indicator">
