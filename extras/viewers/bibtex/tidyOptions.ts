@@ -1,3 +1,4 @@
+// extras/viewers/bibtex/tidyOptions.ts
 export interface TidyOptions {
 	omit?: string[];
 	curly?: boolean;

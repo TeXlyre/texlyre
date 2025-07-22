@@ -1,5 +1,4 @@
 /* extras/viewers/bibtex/styles.css */
-/* extras/viewers/bibtex/styles.css */
 .bibtex-viewer-container {
 	display: flex;
 	flex-direction: column;
@@ -324,6 +323,18 @@
 	color: var(--pico-primary-inverse);
 }
 
+.tab-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	background-color: var(--pico-background);
+	color: var(--pico-secondary);
+}
+
+.tab-button:disabled:hover {
+	background-color: var(--pico-background);
+	color: var(--pico-secondary);
+}
+
 .processing-indicator {
 	color: var(--pico-primary);
 	font-weight: normal;
@@ -346,23 +357,195 @@
 	padding-bottom: var(--space-us);
 }
 
-.tab-button:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-	background-color: var(--pico-background);
-	color: var(--pico-secondary);
-}
-
-.tab-button:disabled:hover {
-	background-color: var(--pico-background);
-	color: var(--pico-secondary);
-}
-
 .codemirror-editor-container {
 	flex: 1;
 	overflow: hidden;
 }
 
+/* Table Styles */
+.bibtex-table-container {
+	flex: 1;
+	overflow: auto;
+	padding: 1rem;
+	background-color: var(--pico-background);
+}
+
+.bibtex-table {
+	width: 100%;
+	border-collapse: collapse;
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border, #333);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.resizable-table {
+	table-layout: fixed;
+}
+
+.resizable-table th {
+	resize: horizontal;
+	overflow: auto;
+	min-width: 80px;
+	white-space: nowrap;
+	position: relative;
+	cursor: auto;
+	padding: 0.5rem 0.75rem;
+}
+
+.header-content {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.field-name {
+	font-weight: 600;
+	font-size: 0.85rem;
+}
+
+.sort-buttons {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+
+.sort-btn {
+	background: none;
+	border: none;
+	padding: 2px 4px;
+	font-size: 0.6rem;
+	line-height: 1;
+	cursor: pointer;
+	color: var(--pico-secondary);
+	border-radius: 2px;
+	transition: all 0.2s ease;
+}
+
+.sort-btn:hover {
+	background-color: var(--pico-primary-focus);
+	color: var(--text-color);
+}
+
+.sort-btn.active {
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+}
+
+.resize-handle {
+	position: absolute;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	width: 8px;
+	cursor: col-resize;
+	background-color: transparent;
+	z-index: 10;
+}
+
+.resize-handle:hover {
+	background-color: var(--pico-primary);
+	opacity: 0.3;
+}
+
+.bibtex-table th {
+	background-color: var(--accent-background);
+	padding: 0.75rem;
+	text-align: left;
+	font-weight: 600;
+	font-size: 0.85rem;
+	border-bottom: 2px solid var(--accent-border, #333);
+	border-right: 1px solid var(--accent-border, #333);
+	cursor: pointer;
+	user-select: none;
+	position: sticky;
+	top: 0;
+	z-index: 1;
+}
+
+.bibtex-table th:hover {
+	background-color: var(--pico-primary-focus);
+}
+
+.bibtex-table th.sorted-asc,
+.bibtex-table th.sorted-desc {
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+}
+
+.bibtex-table td {
+	padding: 0.5rem 0.75rem;
+	border-bottom: 1px solid var(--accent-border, #333);
+	border-right: 1px solid var(--accent-border, #333);
+	font-size: 0.8rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+}
+
+.bibtex-table td:last-child,
+.bibtex-table th:last-child {
+	border-right: none;
+}
+
+.bibtex-table tr:nth-child(even) {
+	background-color: var(--pico-secondary-background);
+}
+
+.bibtex-table tr:hover {
+	background-color: var(--pico-primary-focus);
+}
+
+.bibtex-table td.editable {
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+
+.bibtex-table td.editable:hover {
+	background-color: var(--pico-primary-focus);
+}
+
+.bibtex-table td.non-editable {
+	cursor: default;
+	background-color: var(--pico-secondary-background);
+	opacity: 0.8;
+}
+
+.bibtex-table td.non-editable:hover {
+	background-color: var(--pico-secondary-background);
+}
+
+.bibtex-table td.editing {
+	padding: 0;
+	background-color: var(--pico-background);
+}
+
+.cell-input {
+	width: 100%;
+	padding: 0.5rem 0.75rem;
+	border: none;
+	outline: 2px solid var(--pico-primary);
+	background-color: var(--pico-background);
+	color: var(--text-color);
+	font-size: 0.8rem;
+	font-family: inherit;
+	resize: none;
+}
+
+.cell-content {
+	display: block;
+	width: 100%;
+}
+
+.empty-field {
+	color: var(--pico-secondary);
+	font-style: italic;
+}
+
+/* Media Queries */
 @media (max-width: 768px) {
 	.bibtex-viewer-header {
 		flex-direction: column;
@@ -383,6 +566,20 @@
 	.bibtex-sidebar {
 		width: 100%;
 		max-width: 300px;
+	}
+
+	.bibtex-table-container {
+		padding: 0.5rem;
+	}
+
+	.bibtex-table {
+		font-size: 0.75rem;
+	}
+
+	.bibtex-table th,
+	.bibtex-table td {
+		padding: 0.4rem 0.5rem;
+		max-width: 120px;
 	}
 }
 
