@@ -33,8 +33,10 @@ import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
 import type { WebrtcProvider } from "y-webrtc";
 import type * as Y from "yjs";
 
+import { pluginRegistry } from "../plugins/PluginRegistry";
 import { commentSystemExtension } from "../extensions/codemirror/CommentExtension";
 import { createFilePathAutocompleteExtension, setCurrentFilePath } from "../extensions/codemirror/FilePathAutocompleteExtension";
+import { createLSPExtension, updateLSPPluginsInView } from "../extensions/codemirror/LSPExtension";
 import { useAuth } from "../hooks/useAuth";
 import { useEditor } from "../hooks/useEditor";
 import { autoSaveManager } from "../utils/autoSaveUtils";
@@ -42,7 +44,6 @@ import { fileCommentProcessor } from "../utils/fileCommentProcessor.ts";
 import { collabService } from "./CollabService";
 import { fileStorageService } from "./FileStorageService";
 import { filePathCacheService } from "./FilePathCacheService";
-import type { CollabConnectOptions } from "../types/collab";
 
 export const EditorLoader = (
 	editorRef: React.RefObject<HTMLDivElement>,
@@ -288,7 +289,24 @@ export const EditorLoader = (
 		const isBibFile = fileName?.endsWith('.bib') || fileName?.endsWith('.bibtex') || (!fileName && (textContent?.includes('@article') || textContent?.includes('@book') || textContent?.includes('@inproceedings')));
 
 		if (isLatexFile || isBibFile) {
+		  const fileExtension = fileName?.split('.').pop()?.toLowerCase() || (isLatexFile ? 'tex' : 'bib');
+		  const availableLSPPlugins = pluginRegistry.getLSPPluginsForFileType(fileExtension);
+
 		  const completionSources: CompletionSource[] = [];
+		  if (availableLSPPlugins.length > 0) {
+			  const [lspField, lspPlugin, lspCompletionSource] = createLSPExtension();
+			  extensions.push(lspField, lspPlugin);
+
+			  if (completionSources) {
+				  completionSources.push(lspCompletionSource);
+			  }
+
+			  setTimeout(() => {
+				  if (viewRef.current) {
+					  updateLSPPluginsInView(viewRef.current, availableLSPPlugins);
+				  }
+			  }, 100);
+		  }
 
 		  if (isLatexFile) {
 			// Get current file path for relative path calculations

@@ -5,6 +5,7 @@ import type {
 	BackupPlugin,
 	CollaborativeViewerPlugin,
 	LoggerPlugin,
+	LSPPlugin,
 	Plugin,
 	PluginRegistry,
 	RendererPlugin,
@@ -20,6 +21,7 @@ class PluginRegistryManager {
 		collaborativeViewers: [],
 		renderers: [],
 		loggers: [],
+		lsp: [],
 		backup: [],
 		themes: [],
 	};
@@ -77,6 +79,17 @@ class PluginRegistryManager {
 				});
 			}
 
+			// Register LSP plugins
+			if (plugins.lsp) {
+				console.log("[PluginRegistry] Loading LSP plugins:", Object.keys(plugins.lsp));
+				Object.values(plugins.lsp).forEach((plugin) => {
+					this.registerPlugin(plugin);
+					if (plugin.settings && Array.isArray(plugin.settings)) {
+						pluginSettings.push(...plugin.settings);
+					}
+				});
+			}
+
 			// Register backup plugins
 			if (plugins.backup) {
 				console.log("[PluginRegistry] Loading backup plugins:", Object.keys(plugins.backup));
@@ -120,6 +133,9 @@ class PluginRegistryManager {
 				break;
 			case "logger":
 				this.registry.loggers.push(plugin as LoggerPlugin);
+				break;
+			case "lsp":
+				this.registry.lsp.push(plugin as LSPPlugin);
 				break;
 			case "backup":
 				this.registry.backup.push(plugin as BackupPlugin);
@@ -199,6 +215,24 @@ class PluginRegistryManager {
 			}
 		}
 		return null;
+	}
+
+	getLSPPlugins(): LSPPlugin[] {
+		return this.registry.lsp;
+	}
+
+	getLSPPlugin(id: string): LSPPlugin | null {
+		return this.registry.lsp.find(plugin => plugin.id === id) || null;
+	}
+
+	getEnabledLSPPlugins(): LSPPlugin[] {
+		return this.registry.lsp.filter(plugin => plugin.isEnabled());
+	}
+
+	getLSPPluginsForFileType(fileType: string): LSPPlugin[] {
+		return this.registry.lsp.filter(plugin =>
+			plugin.isEnabled() && plugin.getSupportedFileTypes().includes(fileType)
+		);
 	}
 
 	getBackup(): BackupPlugin[] {

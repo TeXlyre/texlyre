@@ -1,0 +1,66 @@
+  // extras/lsp/jabref/settings.ts
+import type { Setting } from "../../../src/contexts/SettingsContext";
+
+export const jabrefLSPSettings: Setting[] = [
+	{
+		id: "jabref-lsp-enabled",
+		category: "LSP",
+		subcategory: "JabRef",
+		type: "checkbox",
+		label: "Enable JabRef LSP",
+		description: "Enable JabRef Language Server Protocol integration for bibliography management",
+		defaultValue: false,
+	},
+	{
+		id: "jabref-lsp-server-url",
+		category: "LSP",
+		subcategory: "JabRef",
+		type: "text",
+		label: "LSP Server URL",
+		description: "WebSocket URL for the JabRef LSP server",
+		defaultValue: "ws://localhost:8080/lsp",
+	},
+	{
+		id: "jabref-lsp-auto-connect",
+		category: "LSP",
+		subcategory: "JabRef",
+		type: "checkbox",
+		label: "Auto-connect on startup",
+		description: "Automatically connect to JabRef LSP server when TeXlyre starts",
+		defaultValue: true,
+	},
+	{
+		id: "jabref-lsp-show-panel",
+		category: "LSP",
+		subcategory: "JabRef",
+		type: "checkbox",
+		label: "Show JabRef panel",
+		description: "Display the JabRef bibliography panel in the editor",
+		defaultValue: true,
+	},
+	{
+		id: "jabref-lsp-citation-style",
+		category: "LSP",
+		subcategory: "JabRef",
+		type: "select",
+		label: "Default citation style",
+		description: "Default citation style for auto-completion",
+		defaultValue: "numeric",
+		options: [
+			{ label: "Numeric [1]", value: "numeric" },
+			{ label: "Author-Year (Smith, 2023)", value: "author-year" },
+			{ label: "Alphabetic [Smi23]", value: "alphabetic" },
+		],
+	},
+	{
+		id: "jabref-lsp-max-completions",
+		category: "LSP",
+		subcategory: "JabRef",
+		type: "number",
+		label: "Maximum completion items",
+		description: "Maximum number of citation suggestions to show",
+		defaultValue: 20,
+		min: 5,
+		max: 100,
+	},
+];

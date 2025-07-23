@@ -30,6 +30,7 @@ import "./styles/components/auth.css";
 import "./styles/components/project.css";
 import "./styles/components/share-project.css";
 import "./styles/components/latex-templates.css"
+import "./styles/components/lsp.css";
 import "./styles/components/chat.css";
 import "./styles/components/latex.css";
 import "./styles/components/plugin-header.css";

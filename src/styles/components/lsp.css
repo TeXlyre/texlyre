@@ -1,0 +1,136 @@
+.lsp-toggle-container {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.lsp-toggle-button,
+.lsp-config-button {
+	position: relative;
+	padding: 0.4rem;
+	border-radius: 4px;
+	border: 1px solid var(--accent-border, #444);
+	background-color: var(--pico-background);
+	color: var(--text-color);
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.lsp-toggle-button:hover,
+.lsp-config-button:hover {
+	background-color: var(--pico-primary-focus);
+	border-color: var(--pico-primary);
+}
+
+.lsp-toggle-button.active {
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+	border-color: var(--pico-primary);
+}
+
+.lsp-button-content {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	position: relative;
+}
+
+.connection-indicator {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background-color: var(--pico-secondary);
+	position: absolute;
+	top: -2px;
+	right: -2px;
+}
+
+.connection-indicator.connected {
+	background-color: var(--color-success);
+}
+
+.connection-indicator.connecting {
+	background-color: var(--color-warning);
+	animation: pulse 1s infinite;
+}
+
+.connection-indicator.error {
+	background-color: var(--color-danger);
+}
+
+.lsp-config-button {
+	font-size: 0.7rem;
+	min-width: 24px;
+	height: 24px;
+}
+
+/* LSP Panel Overlay */
+.lsp-panel-overlay {
+	position: fixed;
+	top: 60px;
+	right: 20px;
+	width: 350px;
+	max-height: calc(100vh - 100px);
+	background-color: var(--accent-background);
+	border: 1px solid var(--accent-border, #333);
+	border-radius: 8px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+	z-index: 1000;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+.lsp-panel {
+	flex: 1;
+	overflow: hidden;
+}
+
+.lsp-panel-close {
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	background: none;
+	border: none;
+	color: var(--pico-secondary);
+	cursor: pointer;
+	font-size: 1.2rem;
+	padding: 0.25rem;
+	line-height: 1;
+	border-radius: 4px;
+	transition: all 0.2s ease;
+	z-index: 1001;
+}
+
+.lsp-panel-close:hover {
+	background-color: var(--pico-primary-focus);
+	color: var(--text-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+	.lsp-panel-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		width: 100%;
+		max-height: 100vh;
+		border-radius: 0;
+	}
+
+	.lsp-toggle-container {
+		gap: 0.125rem;
+	}
+
+	.lsp-toggle-button,
+	.lsp-config-button {
+		padding: 0.3rem;
+		min-width: 32px;
+		height: 32px;
+	}
+}
