@@ -61,76 +61,389 @@
 	background-color: var(--color-danger);
 }
 
-.lsp-config-button {
-	font-size: 0.7rem;
-	min-width: 24px;
-	height: 24px;
+@keyframes pulse {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.5; }
 }
 
-/* LSP Panel Overlay */
-.lsp-panel-overlay {
-	position: fixed;
-	top: 60px;
-	right: 20px;
-	width: 350px;
-	max-height: calc(100vh - 100px);
-	background-color: var(--accent-background);
-	border: 1px solid var(--accent-border, #333);
-	border-radius: 8px;
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-	z-index: 1000;
+/* LSP Panel Container */
+.lsp-panel {
+	order: 3;
+	width: var(--lsp-panel-width, 350px);
+	display: flex;
+	flex-direction: column;
+	border-left: 1px solid var(--accent-border);
+	background-color: var(--pico-secondary-background);
+	height: 100%;
+	position: relative;
+	overflow: hidden;
+	flex-shrink: 0;
+}
+
+.editor-lsp-panel {
+	height: 100%;
+	box-shadow: var(--shadow-md);
+}
+
+.lsp-panel-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: var(--space-sm);
+	border-bottom: 1px solid var(--accent-border);
+	gap: var(--space-sm);
+}
+
+.lsp-panel-header h3 {
+	margin: 0;
+	font-size: 0.8rem;
+	flex-shrink: 0;
+}
+
+.lsp-provider-selector {
+	flex: 1;
+	min-width: 120px;
+}
+
+.provider-select {
+	width: 100%;
+	padding: 0.25rem 0.5rem;
+	font-size: 0.75rem;
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border, #444);
+	border-radius: 4px;
+	color: var(--text-color);
+}
+
+.provider-select:focus {
+	outline: none;
+	border-color: var(--pico-primary);
+}
+
+.lsp-panel-content {
+	flex: 1;
 	overflow: hidden;
 	display: flex;
 	flex-direction: column;
 }
 
-.lsp-panel {
-	flex: 1;
-	overflow: hidden;
+.lsp-provider-panel {
+	height: 100%;
+	overflow-y: auto;
 }
 
-.lsp-panel-close {
+.no-provider {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100px;
+	color: var(--pico-secondary);
+	font-style: italic;
+	text-align: center;
+	padding: 1rem;
+}
+
+.lsp-detail-view {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.detail-header {
+	padding: var(--space-sm);
+	border-bottom: 1px solid var(--accent-border);
+}
+
+.detail-content {
+	flex: 1;
+	overflow-y: auto;
+	padding: var(--space-sm);
+}
+
+.reference-detail h4 {
+	margin: 0 0 var(--space-sm) 0;
+	color: var(--text-color);
+	font-size: 0.9rem;
+}
+
+.reference-detail p {
+	margin: 0.5rem 0;
+	font-size: 0.8rem;
+	line-height: 1.4;
+}
+
+.reference-detail code {
+	background-color: var(--pico-primary-focus);
+	padding: 0.125rem 0.25rem;
+	border-radius: 3px;
+	font-size: 0.75rem;
+}
+
+.no-selection {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100px;
+	color: var(--pico-secondary);
+	font-style: italic;
+	text-align: center;
+	padding: 1rem;
+}
+
+/* Generic LSP Provider Panel Content Styles */
+.lsp-provider-panel {
+	height: 100%;
+	font-size: 0.85rem;
+	display: flex;
+	flex-direction: column;
+}
+
+/* Search section - for any LSP provider */
+.lsp-panel-search {
+	position: relative;
+	padding: var(--space-sm);
+	border-bottom: 1px solid var(--accent-border);
+}
+
+.lsp-search-input {
+	width: 100%;
+	padding: 0.5rem;
+	font-size: 0.8rem;
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border, #444);
+	border-radius: 4px;
+	color: var(--text-color);
+	transition: border-color 0.2s ease;
+}
+
+.lsp-search-input:focus {
+	outline: none;
+	border-color: var(--pico-primary);
+}
+
+.lsp-clear-search-button {
 	position: absolute;
-	top: 0.5rem;
 	right: 0.5rem;
+	top: 40%;
+	transform: translateY(-50%);
+	padding: 0;
+	margin: 0;
 	background: none;
 	border: none;
-	color: var(--pico-secondary);
 	cursor: pointer;
 	font-size: 1.2rem;
-	padding: 0.25rem;
-	line-height: 1;
-	border-radius: 4px;
-	transition: all 0.2s ease;
-	z-index: 1001;
+	color: var(--pico-secondary);
+	width: 1.5rem;
+	height: 1.5rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
-.lsp-panel-close:hover {
-	background-color: var(--pico-primary-focus);
+.lsp-clear-search-button:hover {
 	color: var(--text-color);
+}
+
+/* Content area */
+.lsp-panel-content {
+	flex: 1;
+	overflow-y: auto;
+	padding: var(--space-sm);
+}
+
+.lsp-loading-indicator,
+.lsp-no-entries {
+	text-align: center;
+	padding: var(--space-md);
+	color: var(--pico-secondary);
+	font-style: italic;
+}
+
+/* Generic entries list */
+.lsp-entries-list {
+	display: flex;
+	flex-direction: column;
+}
+
+.lsp-entry-item {
+	margin-bottom: var(--space-md);
+	padding: 0.75rem;
+	font-size: 0.8rem;
+	border-radius: var(--radius-lg);
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border);
+	position: relative;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.lsp-entry-item:hover {
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.05);
+}
+
+.lsp-entry-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: var(--space-sm);
+}
+
+.lsp-entry-type-badge {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	padding: 0.25rem 0.5rem;
+	background-color: var(--pico-primary-focus);
+	border-radius: 12px;
+	border: 1px solid var(--pico-primary);
+}
+
+.lsp-entry-type-icon {
+	font-size: 0.9rem;
+}
+
+.lsp-entry-type-text {
+	font-size: 0.65rem;
+	font-weight: 600;
+	color: var(--pico-primary);
+	letter-spacing: 0.5px;
+}
+
+.lsp-entry-key {
+	font-family: var(--editor-font-family, monospace);
+	font-weight: 600;
+	color: var(--pico-primary);
+	font-size: 0.75rem;
+	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
+	padding: 0.2rem 0.4rem;
+	border-radius: 4px;
+}
+
+.lsp-entry-year {
+	color: var(--pico-secondary);
+	font-size: 0.75rem;
+	font-weight: 600;
+	background-color: var(--accent-background);
+	padding: 0.2rem 0.4rem;
+	border-radius: 4px;
+	border: 1px solid var(--accent-border);
+}
+
+.lsp-entry-title {
+	font-weight: 600;
+	color: var(--text-color);
+	margin-bottom: 0.5rem;
+	line-height: 1.4;
+	font-size: 0.8rem;
+	word-break: break-word;
+}
+
+.lsp-entry-authors {
+	color: var(--pico-secondary);
+	font-size: 0.75rem;
+	margin-bottom: 0.4rem;
+	font-weight: 500;
+}
+
+.lsp-entry-venue {
+	color: var(--text-color);
+	font-size: 0.75rem;
+	margin-bottom: 0.4rem;
+	opacity: 0.8;
+	font-style: italic;
+}
+
+.lsp-entry-details {
+	color: var(--pico-secondary);
+	font-size: 0.7rem;
+	margin-bottom: 0.3rem;
+	font-weight: 500;
+}
+
+.lsp-entry-identifier {
+	color: var(--pico-primary);
+	font-size: 0.7rem;
+	font-family: var(--editor-font-family, monospace);
+	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
+	padding: 0.15rem 0.3rem;
+	border-radius: 3px;
+	display: inline-block;
+}
+
+/* Footer */
+.lsp-panel-footer {
+	padding: var(--space-sm);
+	border-top: 1px solid var(--accent-border);
+	background-color: var(--accent-background);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.lsp-footer-stats {
+	flex: 1;
+}
+
+.lsp-entry-count {
+	font-size: 0.7rem;
+	color: var(--pico-secondary);
+	font-weight: 500;
+}
+
+.lsp-refresh-button {
+	padding: 0.4rem 0.8rem;
+	font-size: 0.75rem;
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+	border: 1px solid var(--pico-primary);
+	border-radius: 4px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	white-space: nowrap;
+}
+
+.lsp-refresh-button:hover:not(:disabled) {
+	background-color: var(--pico-primary-focus);
+}
+
+.lsp-refresh-button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-	.lsp-panel-overlay {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
+	.lsp-panel {
 		width: 100%;
-		max-height: 100vh;
-		border-radius: 0;
+		order: 1;
 	}
 
-	.lsp-toggle-container {
-		gap: 0.125rem;
+	.lsp-panel-header {
+		flex-wrap: wrap;
+		gap: 0.5rem;
 	}
 
-	.lsp-toggle-button,
-	.lsp-config-button {
-		padding: 0.3rem;
-		min-width: 32px;
-		height: 32px;
+	.lsp-provider-selector {
+		order: 3;
+		width: 100%;
+	}
+
+	.view-tabs {
+		order: 2;
+	}
+
+	.lsp-provider-panel {
+		font-size: 0.8rem;
+	}
+
+	.lsp-entry-item {
+		padding: 0.5rem;
+	}
+
+	.lsp-panel-search,
+	.lsp-panel-footer {
+		padding: 0.5rem;
 	}
 }

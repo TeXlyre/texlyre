@@ -22,6 +22,7 @@ import { arrayBufferToString } from "../../utils/fileUtils";
 import CommentPanel from "../comments/CommentPanel";
 import CommentToggleButton from "../comments/CommentToggleButton";
 import LSPToggleButton from "../lsp/LSPToggleButton";
+import LSPPanel from "../lsp/LSPPanel";
 import CommentModal from "../comments/CommentModal";
 import {
 	CopyIcon,
@@ -541,6 +542,7 @@ const EditorContent: React.FC<{
 				</div>
 
 				{!isViewOnly && <CommentPanel className="editor-comment-panel" />}
+				{!isViewOnly && <LSPPanel className="editor-lsp-panel" />}
 			</div>
 		</>
 	);

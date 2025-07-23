@@ -229,6 +229,10 @@ class PluginRegistryManager {
 		return this.registry.lsp.filter(plugin => plugin.isEnabled());
 	}
 
+	getAllLSPPlugins(): LSPPlugin[] {
+		return [...this.registry.lsp];
+	}
+
 	getLSPPluginsForFileType(fileType: string): LSPPlugin[] {
 		return this.registry.lsp.filter(plugin =>
 			plugin.isEnabled() && plugin.getSupportedFileTypes().includes(fileType)

@@ -5,11 +5,9 @@ import type { LSPPanelProps } from "../../../src/plugins/PluginInterface";
 
 interface BibEntry {
 	key: string;
-	title: string;
-	authors: string[];
-	year: string;
-	journal?: string;
 	entryType: string;
+	fields: Record<string, string>;
+	rawEntry: string;
 }
 
 const JabRefPanel: React.FC<LSPPanelProps> = ({
@@ -21,7 +19,6 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 	const [entries, setEntries] = useState<BibEntry[]>([]);
 	const [filteredEntries, setFilteredEntries] = useState<BibEntry[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
-	const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected' | 'error'>('disconnected');
 
 	useEffect(() => {
 		// Filter entries based on search query
@@ -30,53 +27,110 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 		} else {
 			const query = searchQuery.toLowerCase();
 			setFilteredEntries(
-				entries.filter(entry =>
-					entry.key.toLowerCase().includes(query) ||
-					entry.title.toLowerCase().includes(query) ||
-					entry.authors.some(author => author.toLowerCase().includes(query)) ||
-					entry.year.includes(query) ||
-					entry.journal?.toLowerCase().includes(query)
-				)
+				entries.filter(entry => {
+					// Search in key
+					if (entry.key.toLowerCase().includes(query)) return true;
+
+					// Search in entry type
+					if (entry.entryType.toLowerCase().includes(query)) return true;
+
+					// Search in all field values
+					return Object.values(entry.fields).some(value =>
+						value.toLowerCase().includes(query)
+					);
+				})
 			);
 		}
 	}, [searchQuery, entries]);
 
+	const parseBibEntry = (bibText: string): BibEntry[] => {
+		const entries: BibEntry[] = [];
+		const entryRegex = /@(\w+)\s*{\s*([^,\s]+)\s*,([\s\S]*?)(?=@\w+\s*{|$)/g;
+
+		let match;
+		while ((match = entryRegex.exec(bibText)) !== null) {
+			const [fullMatch, entryType, key, fieldsText] = match;
+			const fields: Record<string, string> = {};
+
+			// Parse fields - handle nested braces and quotes
+			const fieldRegex = /(\w+)\s*=\s*(?:{([^{}]*(?:{[^{}]*}[^{}]*)*)}|"([^"]*)"|(\w+))\s*,?/g;
+			let fieldMatch;
+
+			while ((fieldMatch = fieldRegex.exec(fieldsText)) !== null) {
+				const [, fieldName, bracedValue, quotedValue, plainValue] = fieldMatch;
+				const value = bracedValue || quotedValue || plainValue || '';
+				fields[fieldName.toLowerCase()] = value.trim();
+			}
+
+			entries.push({
+				key: key.trim(),
+				entryType: entryType.toLowerCase(),
+				fields,
+				rawEntry: fullMatch
+			});
+		}
+
+		return entries;
+	};
+
 	const fetchEntries = async () => {
 		setIsLoading(true);
 		try {
-			// This would be replaced with actual LSP request to JabRef
-			// For now, using mock data
-			const mockEntries: BibEntry[] = [
-				{
-					key: "smith2023",
-					title: "Advanced LaTeX Techniques for Academic Writing",
-					authors: ["John Smith", "Jane Doe"],
-					year: "2023",
-					journal: "Journal of Academic Publishing",
-					entryType: "article"
-				},
-				{
-					key: "doe2022",
-					title: "Bibliography Management Systems: A Comprehensive Review",
-					authors: ["Jane Doe"],
-					year: "2022",
-					journal: "Computer Science Review",
-					entryType: "article"
-				},
-				{
-					key: "johnson2023book",
-					title: "Modern Research Methodologies",
-					authors: ["Alice Johnson", "Bob Wilson"],
-					year: "2023",
-					entryType: "book"
-				}
-			];
+			// Mock bibliography data - in real implementation, this would come from JabRef LSP
+			const mockBibText = `
+@article{smith2023,
+	title={Advanced LaTeX Techniques for Academic Writing},
+	author={John Smith and Jane Doe},
+	journal={Journal of Academic Publishing},
+	volume={15},
+	number={3},
+	pages={123--145},
+	year={2023},
+	publisher={Academic Press},
+	doi={10.1234/jap.2023.15.3.123}
+}
 
-			setEntries(mockEntries);
-			setConnectionStatus('connected');
+@book{johnson2023book,
+	title={Modern Research Methodologies},
+	author={Alice Johnson and Bob Wilson},
+	publisher={University Press},
+	address={New York},
+	year={2023},
+	isbn={978-0123456789},
+	edition={2nd}
+}
+
+@inproceedings{doe2022,
+	title={Bibliography Management Systems: A Comprehensive Review},
+	author={Jane Doe},
+	booktitle={Proceedings of the International Conference on Digital Libraries},
+	pages={45--52},
+	year={2022},
+	organization={IEEE},
+	address={San Francisco, CA}
+}
+
+@phdthesis{brown2021,
+	title={Collaborative Writing Tools in Academic Environments},
+	author={Michael Brown},
+	school={Massachusetts Institute of Technology},
+	year={2021},
+	type={PhD thesis}
+}
+
+@misc{wilson2023web,
+	title={Online Citation Management: Best Practices},
+	author={Sarah Wilson},
+	howpublished={\\url{https://example.com/citations}},
+	year={2023},
+	note={Accessed: 2023-12-01}
+}
+			`;
+
+			const parsedEntries = parseBibEntry(mockBibText);
+			setEntries(parsedEntries);
 		} catch (error) {
 			console.error('Error fetching bibliography entries:', error);
-			setConnectionStatus('error');
 		} finally {
 			setIsLoading(false);
 		}
@@ -91,7 +145,14 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 			onItemSelect({
 				key: entry.key,
 				insertText: entry.key,
-				...entry
+				entryType: entry.entryType,
+				fields: entry.fields,
+				rawEntry: entry.rawEntry,
+				// Legacy fields for backward compatibility
+				title: entry.fields.title || '',
+				authors: entry.fields.author ? [entry.fields.author] : [],
+				year: entry.fields.year || '',
+				journal: entry.fields.journal || entry.fields.booktitle || '',
 			});
 		}
 
@@ -104,52 +165,71 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 	};
 
 	const getEntryTypeIcon = (entryType: string) => {
-		switch (entryType) {
+		switch (entryType.toLowerCase()) {
 			case 'article':
 				return '📄';
 			case 'book':
 				return '📚';
 			case 'inproceedings':
+			case 'conference':
 				return '📋';
+			case 'phdthesis':
+			case 'mastersthesis':
 			case 'thesis':
 				return '🎓';
+			case 'techreport':
+				return '📊';
+			case 'misc':
+			case 'online':
+				return '🌐';
+			case 'inbook':
+			case 'incollection':
+				return '📖';
 			default:
 				return '📄';
 		}
 	};
 
-	const formatAuthors = (authors: string[]) => {
+	const getDisplayTitle = (entry: BibEntry): string => {
+		return entry.fields.title || entry.fields.booktitle || 'Untitled';
+	};
+
+	const getDisplayAuthors = (entry: BibEntry): string => {
+		const author = entry.fields.author || entry.fields.editor;
+		if (!author) return 'Unknown author';
+
+		// Simple author formatting - split by 'and' and take first few
+		const authors = author.split(' and ').map(a => a.trim());
 		if (authors.length === 1) return authors[0];
 		if (authors.length === 2) return `${authors[0]} and ${authors[1]}`;
 		return `${authors[0]} et al.`;
 	};
 
-	return (
-		<div className={`jabref-panel ${className}`}>
-			<div className="jabref-panel-header">
-				<h3>JabRef Bibliography</h3>
-				<div className={`connection-status ${connectionStatus}`}>
-					<span className="status-indicator"></span>
-					<span className="status-text">
-						{connectionStatus === 'connected' && 'Connected'}
-						{connectionStatus === 'connecting' && 'Connecting...'}
-						{connectionStatus === 'disconnected' && 'Disconnected'}
-						{connectionStatus === 'error' && 'Connection Error'}
-					</span>
-				</div>
-			</div>
+	const getDisplayYear = (entry: BibEntry): string => {
+		return entry.fields.year || entry.fields.date || '';
+	};
 
-			<div className="jabref-search">
+	const getDisplayVenue = (entry: BibEntry): string => {
+		return entry.fields.journal ||
+			   entry.fields.booktitle ||
+			   entry.fields.publisher ||
+			   entry.fields.school ||
+			   entry.fields.institution || '';
+	};
+
+	return (
+		<div className={`lsp-provider-panel ${className}`}>
+			<div className="lsp-panel-search">
 				<input
 					type="text"
 					placeholder="Search bibliography..."
 					value={searchQuery}
 					onChange={(e) => onSearchChange?.(e.target.value)}
-					className="search-input"
+					className="lsp-search-input"
 				/>
 				{searchQuery && (
 					<button
-						className="clear-search-button"
+						className="lsp-clear-search-button"
 						onClick={() => onSearchChange?.("")}
 					>
 						×
@@ -157,38 +237,60 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 				)}
 			</div>
 
-			<div className="jabref-panel-content">
+			<div className="lsp-panel-content">
 				{isLoading ? (
-					<div className="loading-indicator">Loading bibliography...</div>
+					<div className="lsp-loading-indicator">Loading bibliography...</div>
 				) : filteredEntries.length === 0 ? (
-					<div className="no-entries">
+					<div className="lsp-no-entries">
 						{searchQuery
 							? "No entries found matching the search criteria"
 							: "No bibliography entries available"
 						}
 					</div>
 				) : (
-					<div className="entries-list">
+					<div className="lsp-entries-list">
 						{filteredEntries.map((entry) => (
 							<div
 								key={entry.key}
-								className="entry-item"
+								className="lsp-entry-item"
 								onClick={() => handleEntryClick(entry)}
 							>
-								<div className="entry-header">
-									<span className="entry-type-icon">
-										{getEntryTypeIcon(entry.entryType)}
-									</span>
-									<span className="entry-key">{entry.key}</span>
-									<span className="entry-year">{entry.year}</span>
+								<div className="lsp-entry-header">
+									<div className="lsp-entry-type-badge">
+										<span className="lsp-entry-type-icon">
+											{getEntryTypeIcon(entry.entryType)}
+										</span>
+										<span className="lsp-entry-type-text">
+											{entry.entryType.toUpperCase()}
+										</span>
+									</div>
+									<span className="lsp-entry-key">{entry.key}</span>
+									{getDisplayYear(entry) && (
+										<span className="lsp-entry-year">{getDisplayYear(entry)}</span>
+									)}
 								</div>
-								<div className="entry-title">{entry.title}</div>
-								<div className="entry-authors">
-									{formatAuthors(entry.authors)}
-								</div>
-								{entry.journal && (
-									<div className="entry-journal">
-										<em>{entry.journal}</em>
+
+								<div className="lsp-entry-title">{getDisplayTitle(entry)}</div>
+
+								<div className="lsp-entry-authors">{getDisplayAuthors(entry)}</div>
+
+								{getDisplayVenue(entry) && (
+									<div className="lsp-entry-venue">
+										<em>{getDisplayVenue(entry)}</em>
+									</div>
+								)}
+
+								{entry.fields.volume && entry.fields.pages && (
+									<div className="lsp-entry-details">
+										Vol. {entry.fields.volume}
+										{entry.fields.number && `, No. ${entry.fields.number}`}
+										, pp. {entry.fields.pages}
+									</div>
+								)}
+
+								{entry.fields.doi && (
+									<div className="lsp-entry-identifier">
+										DOI: {entry.fields.doi}
 									</div>
 								)}
 							</div>
@@ -197,9 +299,16 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 				)}
 			</div>
 
-			<div className="jabref-panel-footer">
+			<div className="lsp-panel-footer">
+				<div className="lsp-footer-stats">
+					{entries.length > 0 && (
+						<span className="lsp-entry-count">
+							{filteredEntries.length} of {entries.length} entries
+						</span>
+					)}
+				</div>
 				<button
-					className="refresh-button"
+					className="lsp-refresh-button"
 					onClick={fetchEntries}
 					disabled={isLoading}
 				>

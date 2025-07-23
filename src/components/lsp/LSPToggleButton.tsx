@@ -15,7 +15,6 @@ const LSPToggleButton: React.FC<LSPToggleButtonProps> = ({
 }) => {
 	const { getSetting } = useSettings();
 	const [showPanel, setShowPanel] = useState(false);
-	const [showConfig, setShowConfig] = useState(false);
 
 	const lspPlugin = pluginRegistry.getLSPPlugin(pluginId);
 	if (!lspPlugin) {
@@ -27,53 +26,34 @@ const LSPToggleButton: React.FC<LSPToggleButtonProps> = ({
 	const showPanelSetting = getSetting(`${pluginId}-show-panel`)?.value as boolean ?? true;
 
 	const connectionStatus = lspPlugin.getConnectionStatus();
-	const PanelComponent = lspPlugin.renderPanel;
 
 	const handleTogglePanel = () => {
 		setShowPanel(!showPanel);
-	};
 
-	// TODO (fabawi): Uncomment this code when the settings are implemented correctly
-	// if (!isEnabled || !showPanelSetting) {
-	// 	console.error(`LSP plugin "${lspPlugin.name}" is not enabled or showPanel setting is false.`);
-	// 	return null;
-	// }
+		// Dispatch event to show LSP panel
+		document.dispatchEvent(
+			new CustomEvent("toggle-lsp-panel", {
+				detail: {
+					show: !showPanel,
+					pluginId: pluginId
+				}
+			})
+		);
+	};
 
 	const IconComponent = lspPlugin.icon;
 
 	return (
-		<>
-			<div className={`lsp-toggle-container ${className}`}>
-				<button
-					className={`control-button lsp-toggle-button ${showPanel ? "active" : ""}`}
-					onClick={handleTogglePanel}
-					title={`${showPanel ? "Hide" : "Show"} ${lspPlugin.name} panel`}
-				>
-					<div className="lsp-button-content">
-						{IconComponent && <IconComponent />}
-						<span className={`connection-indicator ${connectionStatus}`} />
-					</div>
-				</button>
+		<button
+			className={`control-button lsp-toggle-button ${showPanel ? "active" : ""} ${className}`}
+			onClick={handleTogglePanel}
+			title={`${showPanel ? "Hide" : "Show"} ${lspPlugin.name} panel`}
+		>
+			<div className="lsp-button-content">
+				{IconComponent && <IconComponent />}
+				<span className={`connection-indicator ${connectionStatus}`} />
 			</div>
-
-			{showPanel && PanelComponent && (
-				<div className="lsp-panel-overlay">
-					<PanelComponent
-						className="lsp-panel"
-						onItemSelect={(item) => {
-							console.log('LSP item selected:', item);
-							// Handle item selection
-						}}
-					/>
-					<button
-						className="lsp-panel-close"
-						onClick={() => setShowPanel(false)}
-					>
-						×
-					</button>
-				</div>
-			)}
-		</>
+		</button>
 	);
 };
 
