@@ -66,14 +66,12 @@ const CommentPanel: React.FC<CommentPanelProps> = ({
 						Resolved
 					</button>
 				</div>
-				<button className="close-button" onClick={toggleComments}>
-					×
-				</button>
 			</div>
 
 			<div className="comment-search">
 				<input
 					type="text"
+					className={'comment-search-input'}
 					placeholder="Search comments..."
 					value={searchQuery}
 					onChange={(e) => setSearchQuery(e.target.value)}

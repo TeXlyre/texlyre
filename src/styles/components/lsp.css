@@ -66,7 +66,6 @@
 	50% { opacity: 0.5; }
 }
 
-/* LSP Panel Container */
 .lsp-panel {
 	order: 3;
 	width: var(--lsp-panel-width, 350px);
@@ -100,24 +99,185 @@
 	flex-shrink: 0;
 }
 
-.lsp-provider-selector {
-	flex: 1;
-	min-width: 120px;
-}
-
-.provider-select {
-	width: 100%;
-	padding: 0.25rem 0.5rem;
-	font-size: 0.75rem;
-	background-color: var(--pico-background);
-	border: 1px solid var(--accent-border, #444);
-	border-radius: 4px;
+.lsp-panel-header .close-button {
+	background: none;
+	border: none;
+	font-size: 1.25rem;
+	cursor: pointer;
+	padding: 0 var(--space-sm);
 	color: var(--text-color);
 }
 
-.provider-select:focus {
-	outline: none;
-	border-color: var(--pico-primary);
+.lsp-panel-header .close-button:hover {
+	color: var(--pico-primary);
+}
+
+.lsp-controls {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	flex: 1;
+	justify-content: center;
+}
+
+.lsp-indicator-group {
+	margin: var(--space-sm);
+	position: relative;
+	display: flex;
+	height: var(--button-height-md);
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+}
+
+.lsp-indicator-group .lsp-status-indicator.main-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.4rem;
+	background-color: var(--pico-secondary-background);
+	color: var(--text-color);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+	cursor: pointer;
+	transition: background-color var(--transition-normal);
+}
+
+.lsp-indicator-group .lsp-status-indicator.main-button.connected {
+	background: rgba(40, 167, 69, 0.1);
+}
+
+.lsp-indicator-group .lsp-status-indicator.main-button.disconnected {
+	background: rgba(108, 117, 125, 0.1);
+}
+
+.lsp-indicator-group .lsp-status-indicator.main-button.connecting {
+	background: rgba(255, 193, 7, 0.1);
+}
+
+.lsp-indicator-group .lsp-status-indicator.main-button.error {
+	background: rgba(220, 53, 69, 0.1);
+}
+
+.lsp-indicator-group .lsp-status-indicator.main-button:hover:not(:disabled) {
+	background-color: var(--pico-primary-focus);
+}
+
+.lsp-indicator-group .lsp-status-indicator .status-dot {
+	width: 8px;
+	height: 8px;
+	margin-right: var(--space-xs);
+	border-radius: 50%;
+}
+
+.lsp-indicator-group .lsp-status-indicator .lsp-label {
+	font-size: 0.75rem;
+	color: var(--text-color);
+	margin-left: var(--space-xs);
+}
+
+.lsp-indicator-group .lsp-dropdown-toggle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.4rem var(--space-xs);
+	background-color: var(--pico-secondary-background);
+	color: var(--text-color);
+	border: 1px solid var(--accent-border);
+	cursor: pointer;
+	transition: background-color var(--transition-normal);
+	width: 20px;
+	border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+	border-left: none;
+}
+
+.lsp-indicator-group .lsp-dropdown-toggle.connected {
+	background: rgba(40, 167, 69, 0.1);
+}
+
+.lsp-indicator-group .lsp-dropdown-toggle.disconnected {
+	background: rgba(108, 117, 125, 0.1);
+}
+
+.lsp-indicator-group .lsp-dropdown-toggle.connecting {
+	background: rgba(255, 193, 7, 0.1);
+}
+
+.lsp-indicator-group .lsp-dropdown-toggle.error {
+	background: rgba(220, 53, 69, 0.1);
+}
+
+.lsp-indicator-group .lsp-dropdown-toggle:hover {
+	background-color: var(--pico-primary-focus);
+}
+
+.lsp-dropdown {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	margin-top: 2px;
+	min-width: var(--dropdown-width);
+	padding: var(--space-sm);
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-md);
+	z-index: var(--z-dropdown);
+}
+
+.lsp-dropdown-item {
+	font-weight: 400;
+	font-size: 0.8rem;
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	padding: var(--space-sm);
+	cursor: pointer;
+	background-color: var(--pico-background);
+	border-radius: var(--radius-sm);
+	transition: background-color var(--transition-normal);
+}
+
+.lsp-dropdown-item:last-child {
+	border-bottom: none;
+}
+
+.lsp-dropdown-item:not(.disabled):hover {
+	background-color: var(--pico-primary-focus);
+}
+
+.lsp-dropdown-item .service-indicator {
+	font-size: 8px;
+}
+
+.lsp-refresh-button {
+	padding: 0.4rem;
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--accent-border);
+	background-color: var(--pico-secondary-background);
+	color: var(--text-color);
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.lsp-refresh-button:hover:not(:disabled) {
+	background-color: var(--pico-primary-focus);
+}
+
+.lsp-refresh-button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.dropdown-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: calc(var(--z-dropdown) - 1);
 }
 
 .lsp-panel-content {
@@ -190,38 +350,21 @@
 	padding: 1rem;
 }
 
-/* Generic LSP Provider Panel Content Styles */
 .lsp-provider-panel {
 	height: 100%;
 	font-size: 0.85rem;
 	display: flex;
 	flex-direction: column;
+	overflow: auto;
 }
 
-/* Search section - for any LSP provider */
 .lsp-panel-search {
 	position: relative;
 	padding: var(--space-sm);
 	border-bottom: 1px solid var(--accent-border);
 }
 
-.lsp-search-input {
-	width: 100%;
-	padding: 0.5rem;
-	font-size: 0.8rem;
-	background-color: var(--pico-background);
-	border: 1px solid var(--accent-border, #444);
-	border-radius: 4px;
-	color: var(--text-color);
-	transition: border-color 0.2s ease;
-}
-
-.lsp-search-input:focus {
-	outline: none;
-	border-color: var(--pico-primary);
-}
-
-.lsp-clear-search-button {
+.lsp-panel-search .clear-search-button {
 	position: absolute;
 	right: 0.5rem;
 	top: 40%;
@@ -240,17 +383,6 @@
 	justify-content: center;
 }
 
-.lsp-clear-search-button:hover {
-	color: var(--text-color);
-}
-
-/* Content area */
-.lsp-panel-content {
-	flex: 1;
-	overflow-y: auto;
-	padding: var(--space-sm);
-}
-
 .lsp-loading-indicator,
 .lsp-no-entries {
 	text-align: center;
@@ -259,25 +391,24 @@
 	font-style: italic;
 }
 
-/* Generic entries list */
 .lsp-entries-list {
 	display: flex;
 	flex-direction: column;
+	height: 100%;
+	overflow-y: scroll;
 }
 
-.lsp-entry-item {
-	margin-bottom: var(--space-md);
+.lsp-entries-list .lsp-entry-item {
+	margin: var(--space-sm);
 	padding: 0.75rem;
 	font-size: 0.8rem;
 	border-radius: var(--radius-lg);
 	background-color: var(--pico-background);
 	border: 1px solid var(--accent-border);
 	position: relative;
-	cursor: pointer;
-	transition: all 0.2s ease;
 }
 
-.lsp-entry-item:hover {
+.lsp-entries-list .lsp-entry-item:hover {
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.05);
 }
@@ -289,18 +420,23 @@
 	margin-bottom: var(--space-sm);
 }
 
-.lsp-entry-type-badge {
+.lsp-entry-item .lsp-entry-type-badge {
 	display: flex;
-	align-items: center;
-	gap: 0.25rem;
+	justify-content: flex-end;
+	margin-bottom: var(--space-sm);
+	color: var(--pico-primary) !important;
+	font-weight: 500;
 	padding: 0.25rem 0.5rem;
-	background-color: var(--pico-primary-focus);
-	border-radius: 12px;
-	border: 1px solid var(--pico-primary);
+	border-radius: 4px !important;
+	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
+	font-size: 0.55rem;
+	transition: background-color 0.2s ease;
+	border: none;
+	position: relative;
 }
 
 .lsp-entry-type-icon {
-	font-size: 0.9rem;
+	font-size: 0.55rem;
 }
 
 .lsp-entry-type-text {
@@ -331,6 +467,7 @@
 }
 
 .lsp-entry-title {
+	cursor: pointer;
 	font-weight: 600;
 	color: var(--text-color);
 	margin-bottom: 0.5rem;
@@ -371,7 +508,6 @@
 	display: inline-block;
 }
 
-/* Footer */
 .lsp-panel-footer {
 	padding: var(--space-sm);
 	border-top: 1px solid var(--accent-border);
@@ -392,28 +528,6 @@
 	font-weight: 500;
 }
 
-.lsp-refresh-button {
-	padding: 0.4rem 0.8rem;
-	font-size: 0.75rem;
-	background-color: var(--pico-primary);
-	color: var(--pico-primary-inverse);
-	border: 1px solid var(--pico-primary);
-	border-radius: 4px;
-	cursor: pointer;
-	transition: all 0.2s ease;
-	white-space: nowrap;
-}
-
-.lsp-refresh-button:hover:not(:disabled) {
-	background-color: var(--pico-primary-focus);
-}
-
-.lsp-refresh-button:disabled {
-	opacity: 0.6;
-	cursor: not-allowed;
-}
-
-/* Responsive adjustments */
 @media (max-width: 768px) {
 	.lsp-panel {
 		width: 100%;
@@ -425,13 +539,10 @@
 		gap: 0.5rem;
 	}
 
-	.lsp-provider-selector {
+	.lsp-controls {
 		order: 3;
 		width: 100%;
-	}
-
-	.view-tabs {
-		order: 2;
+		justify-content: flex-start;
 	}
 
 	.lsp-provider-panel {

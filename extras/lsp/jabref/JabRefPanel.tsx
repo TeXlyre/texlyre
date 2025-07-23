@@ -256,20 +256,19 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 								onClick={() => handleEntryClick(entry)}
 							>
 								<div className="lsp-entry-header">
-									<div className="lsp-entry-type-badge">
-										<span className="lsp-entry-type-icon">
-											{getEntryTypeIcon(entry.entryType)}
-										</span>
-										<span className="lsp-entry-type-text">
-											{entry.entryType.toUpperCase()}
-										</span>
-									</div>
 									<span className="lsp-entry-key">{entry.key}</span>
 									{getDisplayYear(entry) && (
 										<span className="lsp-entry-year">{getDisplayYear(entry)}</span>
 									)}
 								</div>
-
+								<div className="lsp-entry-type-badge">
+									<span className="lsp-entry-type-icon">
+										{getEntryTypeIcon(entry.entryType)}
+									</span>
+									<span className="lsp-entry-type-text">
+										{entry.entryType.toUpperCase()}
+									</span>
+								</div>
 								<div className="lsp-entry-title">{getDisplayTitle(entry)}</div>
 
 								<div className="lsp-entry-authors">{getDisplayAuthors(entry)}</div>

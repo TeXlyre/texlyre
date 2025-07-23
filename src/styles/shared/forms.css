@@ -19,6 +19,7 @@
 .file-name-input,
 .search-input,
 .comment-search input,
+.lsp-search-input,
 .chat-panel-input,
 .main-file-select,
 .engine-select {
@@ -130,7 +131,8 @@ input[type="radio"]:hover,
 .form-group select:focus,
 .file-name-input:focus,
 .search-input:focus,
-.comment-search input:focus,
+.comment-search-input:focus,
+.lsp-search-input:focus,
 .chat-panel-input:focus {
 	border-color: var(--pico-primary);
 	outline: none;
