@@ -18,7 +18,10 @@ const LSPToggleButton: React.FC<LSPToggleButtonProps> = ({
 	const [showConfig, setShowConfig] = useState(false);
 
 	const lspPlugin = pluginRegistry.getLSPPlugin(pluginId);
-	if (!lspPlugin) return null;
+	if (!lspPlugin) {
+		console.warn(`LSP plugin with ID "${pluginId}" not found.`);
+		return null;
+	}
 
 	const isEnabled = getSetting(`${pluginId}-enabled`)?.value as boolean ?? false;
 	const showPanelSetting = getSetting(`${pluginId}-show-panel`)?.value as boolean ?? true;
@@ -30,23 +33,11 @@ const LSPToggleButton: React.FC<LSPToggleButtonProps> = ({
 		setShowPanel(!showPanel);
 	};
 
-	const handleOpenConfig = () => {
-		setShowConfig(true);
-	};
-
-	const handleCloseConfig = () => {
-		setShowConfig(false);
-	};
-
-	const handleSaveConfig = (config: any) => {
-		// Save configuration logic would go here
-		console.log('Saving LSP config:', config);
-		setShowConfig(false);
-	};
-
-	if (!isEnabled || !showPanelSetting) {
-		return null;
-	}
+	// TODO (fabawi): Uncomment this code when the settings are implemented correctly
+	// if (!isEnabled || !showPanelSetting) {
+	// 	console.error(`LSP plugin "${lspPlugin.name}" is not enabled or showPanel setting is false.`);
+	// 	return null;
+	// }
 
 	const IconComponent = lspPlugin.icon;
 
@@ -62,14 +53,6 @@ const LSPToggleButton: React.FC<LSPToggleButtonProps> = ({
 						{IconComponent && <IconComponent />}
 						<span className={`connection-indicator ${connectionStatus}`} />
 					</div>
-				</button>
-
-				<button
-					className="control-button lsp-config-button"
-					onClick={handleOpenConfig}
-					title={`Configure ${lspPlugin.name}`}
-				>
-					⚙️
 				</button>
 			</div>
 

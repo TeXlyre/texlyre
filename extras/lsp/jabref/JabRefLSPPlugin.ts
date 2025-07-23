@@ -54,6 +54,7 @@ class JabRefLSPPlugin implements LSPPlugin {
 			return new Promise((resolve, reject) => {
 				if (!this.websocket) {
 					reject(new Error('Failed to create WebSocket'));
+					resolve();  // TODO (fabawi): Resolve to avoid hanging promise so we can test UI. Remove this line in production.
 					return;
 				}
 
@@ -65,7 +66,10 @@ class JabRefLSPPlugin implements LSPPlugin {
 					// Send initialize request
 					this.sendInitializeRequest().then(() => {
 						resolve();
-					}).catch(reject);
+					}).catch(() => {
+					  this.connectionStatus = 'error';
+					  resolve();  // TODO (fabawi): Resolve to avoid hanging promise so we can test UI. Remove this line in production.
+					});
 				};
 
 				this.websocket.onmessage = (event) => {
@@ -93,14 +97,17 @@ class JabRefLSPPlugin implements LSPPlugin {
 				// Timeout after 5 seconds
 				setTimeout(() => {
 					if (this.connectionStatus === 'connecting') {
-						reject(new Error('Connection timeout'));
+					  this.connectionStatus = 'error';
+					  this.statusMessage = 'Connection timeout - server may not be running';
+					  resolve();  // TODO (fabawi): Resolve to avoid hanging promise so we can test UI. Remove this line in production.
 					}
 				}, 5000);
 			});
 		} catch (error) {
 			this.connectionStatus = 'error';
 			this.statusMessage = `Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-			throw error;
+			// throw error;
+			console.warn('[JabRefLSP] Connection failed:', error);
 		}
 	}
 
