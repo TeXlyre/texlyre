@@ -21,20 +21,14 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 	const [isLoading, setIsLoading] = useState(false);
 
 	useEffect(() => {
-		// Filter entries based on search query
 		if (searchQuery.trim() === "") {
 			setFilteredEntries(entries);
 		} else {
 			const query = searchQuery.toLowerCase();
 			setFilteredEntries(
 				entries.filter(entry => {
-					// Search in key
 					if (entry.key.toLowerCase().includes(query)) return true;
-
-					// Search in entry type
 					if (entry.entryType.toLowerCase().includes(query)) return true;
-
-					// Search in all field values
 					return Object.values(entry.fields).some(value =>
 						value.toLowerCase().includes(query)
 					);
@@ -43,95 +37,62 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 		}
 	}, [searchQuery, entries]);
 
-	const parseBibEntry = (bibText: string): BibEntry[] => {
-		const entries: BibEntry[] = [];
-		const entryRegex = /@(\w+)\s*{\s*([^,\s]+)\s*,([\s\S]*?)(?=@\w+\s*{|$)/g;
+	const parseCompletionItem = (item: any): BibEntry => {
+		const documentation = item.documentation || '';
+		const fields = parseDocumentationFields(documentation);
 
-		let match;
-		while ((match = entryRegex.exec(bibText)) !== null) {
-			const [fullMatch, entryType, key, fieldsText] = match;
-			const fields: Record<string, string> = {};
+		return {
+			key: item.label || item.insertText || '',
+			entryType: extractEntryType(documentation) || 'article',
+			fields: fields,
+			rawEntry: documentation
+		};
+	};
 
-			// Parse fields - handle nested braces and quotes
-			const fieldRegex = /(\w+)\s*=\s*(?:{([^{}]*(?:{[^{}]*}[^{}]*)*)}|"([^"]*)"|(\w+))\s*,?/g;
-			let fieldMatch;
+	const parseDocumentationFields = (documentation: string): Record<string, string> => {
+		const fields: Record<string, string> = {};
 
-			while ((fieldMatch = fieldRegex.exec(fieldsText)) !== null) {
-				const [, fieldName, bracedValue, quotedValue, plainValue] = fieldMatch;
-				const value = bracedValue || quotedValue || plainValue || '';
-				fields[fieldName.toLowerCase()] = value.trim();
-			}
-
-			entries.push({
-				key: key.trim(),
-				entryType: entryType.toLowerCase(),
-				fields,
-				rawEntry: fullMatch
-			});
+		const titleMatch = documentation.match(/Title:\s*(.+?)(?:\n|$)/);
+		if (titleMatch) {
+			fields.title = titleMatch[1].replace(/[{}]/g, '').trim();
 		}
 
-		return entries;
+		const authorMatch = documentation.match(/Authors?:\s*(.+?)(?:\n|$)/);
+		if (authorMatch) {
+			fields.author = authorMatch[1].trim();
+		}
+
+		const yearMatch = documentation.match(/Year:\s*(\d{4})/);
+		if (yearMatch) {
+			fields.year = yearMatch[1];
+		}
+
+		return fields;
+	};
+
+	const extractEntryType = (documentation: string): string => {
+		if (documentation.includes('Journal')) return 'article';
+		if (documentation.includes('Book')) return 'book';
+		if (documentation.includes('Conference') || documentation.includes('Proceedings')) return 'inproceedings';
+		if (documentation.includes('Thesis')) return 'phdthesis';
+		return 'article';
 	};
 
 	const fetchEntries = async () => {
 		setIsLoading(true);
 		try {
-			// Mock bibliography data - in real implementation, this would come from JabRef LSP
-			const mockBibText = `
-@article{smith2023,
-	title={Advanced LaTeX Techniques for Academic Writing},
-	author={John Smith and Jane Doe},
-	journal={Journal of Academic Publishing},
-	volume={15},
-	number={3},
-	pages={123--145},
-	year={2023},
-	publisher={Academic Press},
-	doi={10.1234/jap.2023.15.3.123}
-}
-
-@book{johnson2023book,
-	title={Modern Research Methodologies},
-	author={Alice Johnson and Bob Wilson},
-	publisher={University Press},
-	address={New York},
-	year={2023},
-	isbn={978-0123456789},
-	edition={2nd}
-}
-
-@inproceedings{doe2022,
-	title={Bibliography Management Systems: A Comprehensive Review},
-	author={Jane Doe},
-	booktitle={Proceedings of the International Conference on Digital Libraries},
-	pages={45--52},
-	year={2022},
-	organization={IEEE},
-	address={San Francisco, CA}
-}
-
-@phdthesis{brown2021,
-	title={Collaborative Writing Tools in Academic Environments},
-	author={Michael Brown},
-	school={Massachusetts Institute of Technology},
-	year={2021},
-	type={PhD thesis}
-}
-
-@misc{wilson2023web,
-	title={Online Citation Management: Best Practices},
-	author={Sarah Wilson},
-	howpublished={\\url{https://example.com/citations}},
-	year={2023},
-	note={Accessed: 2023-12-01}
-}
-			`;
-
-			const parsedEntries = parseBibEntry(mockBibText);
-			setEntries(parsedEntries);
+			const event = new CustomEvent('jabref-request-entries', {
+				detail: {
+					callback: (bibEntries: BibEntry[]) => {
+						setEntries(bibEntries);
+						setIsLoading(false);
+					}
+				}
+			});
+			document.dispatchEvent(event);
 		} catch (error) {
 			console.error('Error fetching bibliography entries:', error);
-		} finally {
+			setEntries([]);
 			setIsLoading(false);
 		}
 	};
@@ -148,7 +109,6 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 				entryType: entry.entryType,
 				fields: entry.fields,
 				rawEntry: entry.rawEntry,
-				// Legacy fields for backward compatibility
 				title: entry.fields.title || '',
 				authors: entry.fields.author ? [entry.fields.author] : [],
 				year: entry.fields.year || '',
@@ -156,7 +116,6 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 			});
 		}
 
-		// Insert citation into editor
 		document.dispatchEvent(
 			new CustomEvent("jabref-citation-selected", {
 				detail: { citationKey: entry.key }
@@ -198,7 +157,6 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 		const author = entry.fields.author || entry.fields.editor;
 		if (!author) return 'Unknown author';
 
-		// Simple author formatting - split by 'and' and take first few
 		const authors = author.split(' and ').map(a => a.trim());
 		if (authors.length === 1) return authors[0];
 		if (authors.length === 2) return `${authors[0]} and ${authors[1]}`;

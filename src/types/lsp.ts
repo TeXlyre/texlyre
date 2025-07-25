@@ -60,3 +60,20 @@ export interface LSPNotification {
 	method: string;
 	params?: any;
 }
+
+export interface LSPServerConfig {
+    transport: 'tcp' | 'websocket' | 'stdio';
+    // For TCP/WebSocket
+    host?: string;
+    port?: number;
+    // For process spawning
+    command?: string;
+    args?: string[];
+    // For WebSocket
+    url?: string;
+    // For stdio
+    cwd?: string;
+    env?: Record<string, string>;
+    // LSP server settings
+    settings?: Record<string, any>;
+}

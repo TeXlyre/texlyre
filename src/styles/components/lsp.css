@@ -305,8 +305,10 @@
 
 .lsp-detail-view {
 	height: 100%;
+	font-size: 0.85rem;
 	display: flex;
 	flex-direction: column;
+	overflow: auto;
 }
 
 .detail-header {

@@ -2,7 +2,7 @@
 import type React from "react";
 import type { Setting } from "../contexts/SettingsContext";
 import type { BackupStatus } from "../types/backup";
-import type { LSPRequest, LSPResponse, LSPNotification } from "../types/lsp";
+import type { LSPRequest, LSPResponse, LSPNotification, LSPServerConfig } from "../types/lsp";
 
 export interface Plugin {
 	id: string;
@@ -72,27 +72,30 @@ export interface LoggerProps {
 
 // Language Server Protocol (LSP) Support
 export interface LSPPlugin extends Plugin {
-	type: "lsp";
-	icon?: React.ComponentType;
+    type: "lsp";
+    icon?: React.ComponentType;
 
-	// Core LSP functionality
-	initialize(): Promise<void>;
-	shutdown(): Promise<void>;
-	isEnabled(): boolean;
-	shouldTriggerCompletion(document: string, position: number, lineText: string): boolean;
-	sendRequest(request: LSPRequest): Promise<LSPResponse>;
-	onNotification(notification: LSPNotification): void;
+    // Core LSP functionality
+    initialize(): Promise<void>;
+    shutdown(): Promise<void>;
+    isEnabled(): boolean;
+    shouldTriggerCompletion(document: string, position: number, lineText: string): boolean;
+    sendRequest(request: LSPRequest): Promise<LSPResponse>;
+    onNotification(notification: LSPNotification): void;
 
-	// UI Components
-	renderPanel?: React.ComponentType<LSPPanelProps>;
+    // Server configuration
+    getServerConfig?(): LSPServerConfig;
 
-	// Plugin-specific configuration
-	getConnectionStatus(): 'connected' | 'connecting' | 'disconnected' | 'error';
-	getStatusMessage(): string;
+    // UI Components
+    renderPanel?: React.ComponentType<LSPPanelProps>;
 
-	// File type support
-	getSupportedFileTypes(): string[];
-	getSupportedLanguages(): string[];
+    // Plugin-specific configuration
+    getConnectionStatus(): 'connected' | 'connecting' | 'disconnected' | 'error';
+    getStatusMessage(): string;
+
+    // File type support
+    getSupportedFileTypes(): string[];
+    getSupportedLanguages(): string[];
 }
 
 export interface LSPPanelProps {

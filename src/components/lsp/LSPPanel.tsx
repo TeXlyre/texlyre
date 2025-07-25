@@ -262,20 +262,28 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 											const displayValue = Array.isArray(value) ? value.join(', ') : String(value);
 											const displayKey = key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
 
-											const renderValue = () => {
-												switch (key) {
-													case 'key':
-														return <code>{displayValue}</code>;
-													case 'rawEntry':
-														return <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.9em', background: '#f5f5f5', padding: '8px', borderRadius: '4px' }}>{displayValue}</pre>;
-													default:
-														return displayValue;
-												}
-											};
+											if (key === 'rawEntry') {
+												return (
+													<div key={key}>
+														<p><strong>{displayKey}:</strong></p>
+														<pre
+															style={{
+																whiteSpace: 'pre-wrap',
+																fontSize: '0.55em',
+																background: '#f5f5f5',
+																padding: '8px',
+																borderRadius: '4px'
+															}}
+														>
+															{displayValue}
+														</pre>
+													</div>
+												);
+											}
 
 											return (
 												<p key={key}>
-													<strong>{displayKey}:</strong> {renderValue()}
+													<strong>{displayKey}:</strong> {displayValue}
 												</p>
 											);
 										})
