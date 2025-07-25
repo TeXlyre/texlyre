@@ -47,8 +47,23 @@ class LSPProcessor {
 		});
 	}
 
+
 	private async initializePlugin(plugin: LSPPlugin) {
 		try {
+			// Inject the request handler into the plugin
+			if (plugin.setLSPRequestHandler) {
+				plugin.setLSPRequestHandler(async (request: LSPRequest) => {
+					const connection = this.connections.get(plugin.id);
+					if (connection && connection.type === 'websocket') {
+						return await this.sendWebSocketRequest(plugin.id, request);
+					} else if (connection && connection.type === 'tcp') {
+						return await this.sendTCPRequest(plugin.id, request);
+					} else {
+						throw new Error('No active connection available');
+					}
+				});
+			}
+
 			const config = plugin.getServerConfig?.();
 
 			if (config?.transport === 'websocket') {
@@ -248,30 +263,6 @@ class LSPProcessor {
 				}
 			}, 10000);
 		});
-	}
-
-	private sendTCPNotification(pluginId: string, notification: any) {
-		const connection = this.connections.get(pluginId);
-		if (connection && connection.client) {
-			connection.client.write(JSON.stringify(notification) + '\n');
-		}
-	}
-
-	private handleTCPMessage(pluginId: string, message: any) {
-		const connection = this.connections.get(pluginId);
-		if (!connection) return;
-
-		if (message.id !== undefined) {
-			const pending = connection.pendingRequests.get(message.id);
-			if (pending) {
-				connection.pendingRequests.delete(message.id);
-				if (message.error) {
-					pending.reject(new Error(message.error.message));
-				} else {
-					pending.resolve(message);
-				}
-			}
-		}
 	}
 
 	async getCompletions(context: CompletionContext): Promise<LSPCompletionItem[]> {

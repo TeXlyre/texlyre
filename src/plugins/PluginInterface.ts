@@ -96,6 +96,8 @@ export interface LSPPlugin extends Plugin {
     // File type support
     getSupportedFileTypes(): string[];
     getSupportedLanguages(): string[];
+
+    setLSPRequestHandler?(handler: (request: LSPRequest) => Promise<LSPResponse>): void;
 }
 
 export interface LSPPanelProps {
@@ -103,6 +105,7 @@ export interface LSPPanelProps {
 	onItemSelect?: (item: any) => void;
 	searchQuery?: string;
 	onSearchChange?: (query: string) => void;
+	pluginInstance?: LSPPlugin;
 }
 
 // Backup and Restore

@@ -15,6 +15,7 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 	onItemSelect,
 	searchQuery = "",
 	onSearchChange,
+	pluginInstance,
 }) => {
 	const [entries, setEntries] = useState<BibEntry[]>([]);
 	const [filteredEntries, setFilteredEntries] = useState<BibEntry[]>([]);
@@ -37,75 +38,31 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 		}
 	}, [searchQuery, entries]);
 
-	const parseCompletionItem = (item: any): BibEntry => {
-		const documentation = item.documentation || '';
-		const fields = parseDocumentationFields(documentation);
-
-		return {
-			key: item.label || item.insertText || '',
-			entryType: extractEntryType(documentation) || 'article',
-			fields: fields,
-			rawEntry: documentation
-		};
-	};
-
-	const parseDocumentationFields = (documentation: string): Record<string, string> => {
-		const fields: Record<string, string> = {};
-
-		const titleMatch = documentation.match(/Title:\s*(.+?)(?:\n|$)/);
-		if (titleMatch) {
-			fields.title = titleMatch[1].replace(/[{}]/g, '').trim();
-		}
-
-		const authorMatch = documentation.match(/Authors?:\s*(.+?)(?:\n|$)/);
-		if (authorMatch) {
-			fields.author = authorMatch[1].trim();
-		}
-
-		const yearMatch = documentation.match(/Year:\s*(\d{4})/);
-		if (yearMatch) {
-			fields.year = yearMatch[1];
-		}
-
-		return fields;
-	};
-
-	const extractEntryType = (documentation: string): string => {
-		if (documentation.includes('Journal')) return 'article';
-		if (documentation.includes('Book')) return 'book';
-		if (documentation.includes('Conference') || documentation.includes('Proceedings')) return 'inproceedings';
-		if (documentation.includes('Thesis')) return 'phdthesis';
-		return 'article';
-	};
-
 	const fetchEntries = async () => {
 		setIsLoading(true);
 		try {
-			const event = new CustomEvent('jabref-request-entries', {
-				detail: {
-					callback: (bibEntries: BibEntry[]) => {
-						setEntries(bibEntries);
-						setIsLoading(false);
-					}
-				}
-			});
-			document.dispatchEvent(event);
+			if (pluginInstance && 'getBibliographyEntries' in pluginInstance) {
+				const bibEntries = await (pluginInstance as any).getBibliographyEntries();
+				setEntries(bibEntries);
+			} else {
+				setEntries([]);
+			}
 		} catch (error) {
 			console.error('Error fetching bibliography entries:', error);
 			setEntries([]);
+		} finally {
 			setIsLoading(false);
 		}
 	};
 
 	useEffect(() => {
 		fetchEntries();
-	}, []);
+	}, [pluginInstance]);
 
 	const handleEntryClick = (entry: BibEntry) => {
 		if (onItemSelect) {
 			onItemSelect({
 				key: entry.key,
-				insertText: entry.key,
 				entryType: entry.entryType,
 				fields: entry.fields,
 				rawEntry: entry.rawEntry,
@@ -211,7 +168,6 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 							<div
 								key={entry.key}
 								className="lsp-entry-item"
-								onClick={() => handleEntryClick(entry)}
 							>
 								<div className="lsp-entry-header">
 									<span className="lsp-entry-key">{entry.key}</span>
@@ -227,8 +183,10 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 										{entry.entryType.toUpperCase()}
 									</span>
 								</div>
-								<div className="lsp-entry-title">{getDisplayTitle(entry)}</div>
-
+								<div className="lsp-entry-title"
+									 onClick={() => handleEntryClick(entry)}
+								>
+									{getDisplayTitle(entry)}</div>
 								<div className="lsp-entry-authors">{getDisplayAuthors(entry)}</div>
 
 								{getDisplayVenue(entry) && (
