@@ -1,7 +1,8 @@
 // extras/lsp/jabref/JabRefPanel.tsx
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { LSPPanelProps } from "../../../src/plugins/PluginInterface";
+import { useSettings } from "../../../src/hooks/useSettings";
 
 interface BibEntry {
 	key: string;
@@ -17,31 +18,30 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 	onSearchChange,
 	pluginInstance,
 }) => {
+	const { getSetting } = useSettings();
 	const [entries, setEntries] = useState<BibEntry[]>([]);
 	const [filteredEntries, setFilteredEntries] = useState<BibEntry[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 
-	useEffect(() => {
-		if (searchQuery.trim() === "") {
-			setFilteredEntries(entries);
-		} else {
-			const query = searchQuery.toLowerCase();
-			setFilteredEntries(
-				entries.filter(entry => {
-					if (entry.key.toLowerCase().includes(query)) return true;
-					if (entry.entryType.toLowerCase().includes(query)) return true;
-					return Object.values(entry.fields).some(value =>
-						value.toLowerCase().includes(query)
-					);
-				})
-			);
-		}
-	}, [searchQuery, entries]);
+	const lspEnabled = (getSetting("jabref-lsp-enabled")?.value as boolean) ?? true;
+	const showPanel = (getSetting("jabref-lsp-show-panel")?.value as boolean) ?? true;
+	const citationStyle = (getSetting("jabref-lsp-citation-style")?.value as string) ?? "numeric";
+	const maxCompletions = (getSetting("jabref-lsp-max-completions")?.value as number) ?? 20;
+	const serverUrl = (getSetting("jabref-lsp-server-url")?.value as string) ?? "ws://localhost:2087/";
 
-	const fetchEntries = async () => {
+	const fetchEntries = useCallback(async () => {
+		if (!pluginInstance) return;
+
+		const connectionStatus = pluginInstance.getConnectionStatus();
+		if (connectionStatus !== 'connected') {
+			console.log('[JabRefPanel] LSP not connected yet, status:', connectionStatus);
+			setEntries([]);
+			return;
+		}
+
 		setIsLoading(true);
 		try {
-			if (pluginInstance && 'getBibliographyEntries' in pluginInstance) {
+			if ('getBibliographyEntries' in pluginInstance) {
 				const bibEntries = await (pluginInstance as any).getBibliographyEntries();
 				setEntries(bibEntries);
 			} else {
@@ -53,11 +53,56 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 		} finally {
 			setIsLoading(false);
 		}
-	};
+	}, [pluginInstance]);
 
 	useEffect(() => {
+		if (searchQuery.trim() === "") {
+			setFilteredEntries(entries.slice(0, maxCompletions));
+		} else {
+			const query = searchQuery.toLowerCase();
+			const filtered = entries.filter(entry => {
+				if (entry.key.toLowerCase().includes(query)) return true;
+				if (entry.entryType.toLowerCase().includes(query)) return true;
+				return Object.values(entry.fields).some(value =>
+					value.toLowerCase().includes(query)
+				);
+			}).slice(0, maxCompletions);
+			setFilteredEntries(filtered);
+		}
+	}, [searchQuery, entries, maxCompletions]);
+
+	useEffect(() => {
+		if (pluginInstance && 'updateServerUrl' in pluginInstance) {
+			(pluginInstance as any).updateServerUrl(serverUrl);
+		}
+	}, [pluginInstance, serverUrl]);
+
+	useEffect(() => {
+		if (!lspEnabled || !showPanel || !pluginInstance) {
+			return;
+		}
+
 		fetchEntries();
-	}, [pluginInstance]);
+
+		let retryCount = 0;
+		const maxRetries = 20;
+
+		const retryInterval = setInterval(() => {
+			if (!pluginInstance) return;
+
+			const connectionStatus = pluginInstance.getConnectionStatus();
+			if (connectionStatus === 'connected') {
+				fetchEntries();
+				clearInterval(retryInterval);
+			} else if (retryCount >= maxRetries) {
+				console.warn('[JabRefPanel] LSP connection timeout after 10 seconds');
+				clearInterval(retryInterval);
+			}
+			retryCount++;
+		}, 500);
+
+		return () => clearInterval(retryInterval);
+	}, [lspEnabled, showPanel, fetchEntries, pluginInstance]);
 
 	const handleEntryClick = (entry: BibEntry) => {
 		if (onItemSelect) {
@@ -132,6 +177,24 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 			   entry.fields.institution || '';
 	};
 
+	const getCitationPreview = (entry: BibEntry): string => {
+		switch (citationStyle) {
+			case "author-year":
+				const authors = getDisplayAuthors(entry);
+				const year = getDisplayYear(entry);
+				return `(${authors}, ${year})`;
+			case "alphabetic":
+				return `[${entry.key.substring(0, 6)}]`;
+			case "numeric":
+			default:
+				return `[${entries.indexOf(entry) + 1}]`;
+		}
+	};
+
+	if (!lspEnabled || !showPanel) {
+		return null;
+	}
+
 	return (
 		<div className={`lsp-provider-panel ${className}`}>
 			<div className="lsp-panel-search">
@@ -153,7 +216,13 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 			</div>
 
 			<div className="lsp-panel-content">
-				{isLoading ? (
+				{!pluginInstance ? (
+					<div className="lsp-loading-indicator">Initializing LSP...</div>
+				) : pluginInstance.getConnectionStatus() !== 'connected' ? (
+					<div className="lsp-loading-indicator">
+						Connecting to LSP server... ({pluginInstance.getConnectionStatus()})
+					</div>
+				) : isLoading ? (
 					<div className="lsp-loading-indicator">Loading bibliography...</div>
 				) : filteredEntries.length === 0 ? (
 					<div className="lsp-no-entries">
@@ -171,6 +240,7 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 							>
 								<div className="lsp-entry-header">
 									<span className="lsp-entry-key">{entry.key}</span>
+									<span className="lsp-citation-preview">{getCitationPreview(entry)}</span>
 									{getDisplayYear(entry) && (
 										<span className="lsp-entry-year">{getDisplayYear(entry)}</span>
 									)}
@@ -219,6 +289,7 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 					{entries.length > 0 && (
 						<span className="lsp-entry-count">
 							{filteredEntries.length} of {entries.length} entries
+							{citationStyle !== "numeric" && ` (${citationStyle} style)`}
 						</span>
 					)}
 				</div>

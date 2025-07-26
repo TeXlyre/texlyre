@@ -84,7 +84,7 @@ export interface LSPPlugin extends Plugin {
     onNotification(notification: LSPNotification): void;
 
     // Server configuration
-    getServerConfig?(): LSPServerConfig;
+    getServerConfig?(): LSPServerConfig | Promise<LSPServerConfig>;
 
     // UI Components
     renderPanel?: React.ComponentType<LSPPanelProps>;

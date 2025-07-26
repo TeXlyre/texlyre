@@ -1,4 +1,4 @@
-  // extras/lsp/jabref/settings.ts
+// extras/lsp/jabref/settings.ts
 import type { Setting } from "../../../src/contexts/SettingsContext";
 
 export const jabrefLSPSettings: Setting[] = [
@@ -9,7 +9,7 @@ export const jabrefLSPSettings: Setting[] = [
 		type: "checkbox",
 		label: "Enable JabRef LSP",
 		description: "Enable JabRef Language Server Protocol integration for bibliography management",
-		defaultValue: false,
+		defaultValue: true,
 	},
 	{
 		id: "jabref-lsp-server-url",
@@ -18,16 +18,7 @@ export const jabrefLSPSettings: Setting[] = [
 		type: "text",
 		label: "LSP Server URL",
 		description: "WebSocket URL for the JabRef LSP server",
-		defaultValue: "ws://localhost:8080/lsp",
-	},
-	{
-		id: "jabref-lsp-auto-connect",
-		category: "LSP",
-		subcategory: "JabRef",
-		type: "checkbox",
-		label: "Auto-connect on startup",
-		description: "Automatically connect to JabRef LSP server when TeXlyre starts",
-		defaultValue: true,
+		defaultValue: "ws://localhost:2087/",
 	},
 	{
 		id: "jabref-lsp-show-panel",

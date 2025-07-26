@@ -50,7 +50,6 @@ class LSPProcessor {
 
 	private async initializePlugin(plugin: LSPPlugin) {
 		try {
-			// Inject the request handler into the plugin
 			if (plugin.setLSPRequestHandler) {
 				plugin.setLSPRequestHandler(async (request: LSPRequest) => {
 					const connection = this.connections.get(plugin.id);
@@ -64,7 +63,8 @@ class LSPProcessor {
 				});
 			}
 
-			const config = plugin.getServerConfig?.();
+			const configResult = plugin.getServerConfig?.();
+			const config = configResult instanceof Promise ? await configResult : configResult;
 
 			if (config?.transport === 'websocket') {
 				await this.connectWebSocket(plugin.id, config);
@@ -88,7 +88,7 @@ class LSPProcessor {
 		};
 
 		try {
-			const wsUrl = `ws://${config.host}:${config.port}`;
+			const wsUrl = `${config.protocol}://${config.host}:${config.port}`;
 			console.log(`[LSPExtension] Connecting to WebSocket at ${wsUrl}`);
 			connection.client = new WebSocket(wsUrl);
 
@@ -134,7 +134,8 @@ class LSPProcessor {
 
 	private async sendWebSocketInitialize(pluginId: string) {
 		const plugin = this.plugins.find(p => p.id === pluginId);
-		const config = plugin?.getServerConfig?.();
+		const configResult = plugin?.getServerConfig?.();
+		const config = configResult instanceof Promise ? await configResult : configResult;
 		const settings = config?.settings || {};
 
 		const initializeRequest = {

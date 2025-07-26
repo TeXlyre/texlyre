@@ -16,7 +16,7 @@ interface BibEntry {
 }
 
 class JabRefLSPPlugin implements LSPPlugin {
-	id = "texlyre-jabref-lsp";
+	id = "jabref-lsp";
 	name = PLUGIN_NAME;
 	version = PLUGIN_VERSION;
 	type = "lsp" as const;
@@ -26,9 +26,60 @@ class JabRefLSPPlugin implements LSPPlugin {
 	private connectionStatus: 'connected' | 'connecting' | 'disconnected' | 'error' = 'disconnected';
 	private statusMessage = '';
 	private lspRequestHandler?: (request: LSPRequest) => Promise<LSPResponse>;
+	private currentServerUrl = 'ws://localhost:2087/';
+	private settingsReady = false;
+	private settingsPromise?: Promise<void>;
+	private settingsResolver?: () => void;
 
 	setLSPRequestHandler(handler: (request: LSPRequest) => Promise<LSPResponse>): void {
 		this.lspRequestHandler = handler;
+	}
+
+	updateServerUrl(url: string): void {
+		this.currentServerUrl = url;
+		if (!this.settingsReady) {
+			this.settingsReady = true;
+			this.settingsResolver?.();
+		}
+	}
+
+	private parseServerUrl(url: string): { protocol: string; host: string; port: number } {
+		try {
+			const urlObj = new URL(url);
+			const protocol = urlObj.protocol === 'wss:' ? 'wss' : 'ws';
+			const host = urlObj.hostname || 'localhost';
+			const port = urlObj.port ? parseInt(urlObj.port, 10) : 2087;
+
+			return { protocol, host, port };
+		} catch (error) {
+			console.warn('[JabRefLSP] Invalid server URL, using defaults:', error);
+			return { protocol: 'ws', host: 'localhost', port: 2087 };
+		}
+	}
+
+	async getServerConfig() {
+		if (!this.settingsReady) {
+			this.settingsPromise = new Promise(resolve => {
+				this.settingsResolver = resolve;
+			});
+			await this.settingsPromise;
+		}
+
+		const { protocol, host, port } = this.parseServerUrl(this.currentServerUrl);
+
+		return {
+			transport: 'websocket' as const,
+			protocol,
+			host,
+			port,
+			settings: {
+				citation: {
+					bibliographies: [
+						"~/Documents/*.bib",
+					]
+				}
+			}
+		};
 	}
 
 	async getBibliographyEntries(): Promise<BibEntry[]> {
@@ -108,21 +159,6 @@ class JabRefLSPPlugin implements LSPPlugin {
 		return true;
 	}
 
-	getServerConfig() {
-		return {
-			transport: 'websocket' as const,
-			host: 'localhost',
-			port: 2087,
-			settings: {
-				citation: {
-					bibliographies: [
-						"~/Documents/*.bib",
-					]
-				}
-			}
-		};
-	}
-
 	getConnectionStatus() {
 		return this.connectionStatus;
 	}
@@ -158,16 +194,13 @@ class JabRefLSPPlugin implements LSPPlugin {
 	}
 
 	onNotification(notification: LSPNotification): void {
-		console.log('[JabRefLSP] Received notification:', notification);
-
 		switch (notification.method) {
 			case 'window/logMessage':
-				console.log('[JabRefLSP] Server log:', notification.params?.message);
 				break;
 			case 'textDocument/publishDiagnostics':
 				break;
 			default:
-				console.log('[JabRefLSP] Unhandled notification:', notification.method);
+				break;
 		}
 	}
 

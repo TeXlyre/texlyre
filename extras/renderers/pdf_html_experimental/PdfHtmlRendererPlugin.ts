@@ -4,7 +4,7 @@ import PdfHtmlRenderer from "./PdfHtmlRenderer.tsx";
 import { pdfHtmlRendererSettings } from "./settings";
 
 const pdfHtmlRendererPlugin: RendererPlugin = {
-	id: "texlyre-pdfhtml-renderer",
+	id: "pdfhtml-renderer",
 	name: "Enhanced PDF HTML Renderer",
 	version: "1.0.0",
 	type: "renderer",

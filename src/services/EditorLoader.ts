@@ -68,6 +68,7 @@ export const EditorLoader = (
 		getSyntaxHighlightingEnabled,
 	    getVimModeEnabled,
 		getCollabOptions,
+		getEnabledLSPPlugins,
 		editorSettingsVersion,
 		editorSettings,
 	} = useEditor();
@@ -288,25 +289,31 @@ export const EditorLoader = (
 		const isLatexFile = fileName?.endsWith('.tex') || (!fileName && textContent?.includes('\\'));
 		const isBibFile = fileName?.endsWith('.bib') || fileName?.endsWith('.bibtex') || (!fileName && (textContent?.includes('@article') || textContent?.includes('@book') || textContent?.includes('@inproceedings')));
 
-		if (isLatexFile || isBibFile) {
-		  const fileExtension = fileName?.split('.').pop()?.toLowerCase() || (isLatexFile ? 'tex' : 'bib');
-		  const availableLSPPlugins = pluginRegistry.getLSPPluginsForFileType(fileExtension);
+	if (isLatexFile || isBibFile) {
+		const fileExtension = fileName?.split('.').pop()?.toLowerCase() || (isLatexFile ? 'tex' : 'bib');
+		const allLSPPlugins = pluginRegistry.getLSPPluginsForFileType(fileExtension);
 
-		  const completionSources: CompletionSource[] = [];
-		  if (availableLSPPlugins.length > 0) {
-			  const [lspField, lspPlugin, lspCompletionSource] = createLSPExtension();
-			  extensions.push(lspField, lspPlugin);
+		// Filter to only enabled plugins
+		const enabledPluginIds = getEnabledLSPPlugins();
+		const availableLSPPlugins = allLSPPlugins.filter(plugin =>
+			enabledPluginIds.includes(plugin.id)
+		);
 
-			  if (completionSources) {
-				  completionSources.push(lspCompletionSource);
-			  }
+		const completionSources: CompletionSource[] = [];
+		if (availableLSPPlugins.length > 0) {
+			const [lspField, lspPlugin, lspCompletionSource] = createLSPExtension();
+			extensions.push(lspField, lspPlugin);
 
-			  setTimeout(() => {
-				  if (viewRef.current) {
-					  updateLSPPluginsInView(viewRef.current, availableLSPPlugins);
-				  }
-			  }, 100);
-		  }
+			if (completionSources) {
+				completionSources.push(lspCompletionSource);
+			}
+
+			setTimeout(() => {
+				if (viewRef.current) {
+					updateLSPPluginsInView(viewRef.current, availableLSPPlugins);
+				}
+			}, 100);
+		}
 
 		  if (isLatexFile) {
 			// Get current file path for relative path calculations
@@ -470,7 +477,8 @@ export const EditorLoader = (
 		isViewOnly,
 		fileName,
 		editorSettingsVersion,
-		enableComments, // Added to dependencies
+		getEnabledLSPPlugins,
+		enableComments,
 	]);
 
 	useEffect(() => {

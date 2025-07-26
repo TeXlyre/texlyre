@@ -6,7 +6,7 @@ export const PLUGIN_NAME = "LaTeX Log Parser";
 export const PLUGIN_VERSION = "0.1.0";
 
 const latexVisualizerPlugin: LoggerPlugin = {
-	id: "texlyre-latex-visualizer",
+	id: "latex-visualizer",
 	name: PLUGIN_NAME,
 	version: PLUGIN_VERSION,
 	type: "logger",

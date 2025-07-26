@@ -10,7 +10,7 @@ export const PLUGIN_NAME = "BibTeX Collaborative Editor (bib-editor 1.14.0)";
 export const PLUGIN_VERSION = "0.1.0";
 
 const bibtexCollaborativeViewerPlugin: CollaborativeViewerPlugin = {
-	id: "texlyre-bibtex-collaborative-viewer",
+	id: "bibtex-collaborative-viewer",
 	name: PLUGIN_NAME,
 	version: PLUGIN_VERSION,
 	type: "collaborative-viewer",
