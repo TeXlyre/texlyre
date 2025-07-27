@@ -4,6 +4,8 @@ import type { LSPRequest, LSPResponse, LSPNotification } from "../../../src/type
 import JabRefPanel from "./JabRefPanel";
 import { JabRefIcon } from "./Icon";
 import { jabrefLSPSettings } from "./settings";
+import { useDynamicBibSettings } from "../../../src/hooks/useDynamicBibSettings";
+import { bibliographyImportService } from "../../../src/services/BibliographyImportService";
 
 export const PLUGIN_NAME = "JabRef LSP";
 export const PLUGIN_VERSION = "0.1.0";
@@ -30,6 +32,43 @@ class JabRefLSPPlugin implements LSPPlugin {
 	private settingsReady = false;
 	private settingsPromise?: Promise<void>;
 	private settingsResolver?: () => void;
+	private dynamicBibSettings?: ReturnType<typeof useDynamicBibSettings>;
+
+	constructor() {
+		// Initialize the import service with BibtexParser if available
+		this.setupBibtexParser();
+		this.initializeDynamicSettings();
+	}
+
+	private setupBibtexParser() {
+		try {
+			// Try to import BibtexParser from the extras plugin if available
+			const { BibtexParser } = require('../../viewers/bibtex/BibtexParser');
+			if (BibtexParser) {
+				bibliographyImportService.setParser({
+					parse: (content: string) => BibtexParser.parse(content),
+					serialize: (entries: any[]) => BibtexParser.serialize(entries),
+					serializeEntry: (entry: any) => BibtexParser.serializeEntry(entry),
+					findEntryPosition: (content: string, entry: any) => BibtexParser.findEntryPosition(content, entry),
+					updateEntryInContent: (content: string, entry: any) => BibtexParser.updateEntryInContent(content, entry)
+				});
+			}
+		} catch (error) {
+			// BibtexParser not available, use the default simple parser
+			console.log('[JabRefLSP] Using default BibTeX parser - BibtexParser not available');
+		}
+	}
+
+	private initializeDynamicSettings() {
+		// Register the target-bib-file setting dynamically
+		// This should be called from a React component that uses the hook
+		setTimeout(() => {
+			// Dispatch event to register the dynamic setting
+			document.dispatchEvent(new CustomEvent('register-lsp-bib-setting', {
+				detail: { pluginId: this.id, pluginName: 'JabRef' }
+			}));
+		}, 100);
+	}
 
 	setLSPRequestHandler(handler: (request: LSPRequest) => Promise<LSPResponse>): void {
 		this.lspRequestHandler = handler;
@@ -114,7 +153,7 @@ class JabRefLSPPlugin implements LSPPlugin {
 			key: item.label || item.insertText || '',
 			entryType: this.extractEntryType(documentation) || 'article',
 			fields: fields,
-			rawEntry: documentation
+			rawEntry: this.constructRawEntry(item.label || item.insertText || '', fields, this.extractEntryType(documentation) || 'article')
 		};
 	}
 
@@ -136,6 +175,11 @@ class JabRefLSPPlugin implements LSPPlugin {
 			fields.year = yearMatch[1];
 		}
 
+		const journalMatch = documentation.match(/Journal:\s*(.+?)(?:\n|$)/);
+		if (journalMatch) {
+			fields.journal = journalMatch[1].trim();
+		}
+
 		return fields;
 	}
 
@@ -145,6 +189,14 @@ class JabRefLSPPlugin implements LSPPlugin {
 		if (documentation.includes('Conference') || documentation.includes('Proceedings')) return 'inproceedings';
 		if (documentation.includes('Thesis')) return 'phdthesis';
 		return 'article';
+	}
+
+	private constructRawEntry(key: string, fields: Record<string, string>, entryType: string): string {
+		const fieldsString = Object.entries(fields)
+			.map(([fieldKey, value]) => `  ${fieldKey} = {${value}}`)
+			.join(',\n');
+
+		return `@${entryType}{${key},\n${fieldsString}\n}`;
 	}
 
 	getSupportedFileTypes(): string[] {

@@ -10,7 +10,7 @@ export const useDynamicBibSettings = () => {
 		try {
 			const allFiles = await fileStorageService.getAllFiles();
 			const bibFiles = allFiles.filter(file =>
-				file.name.endsWith('.bib') &&
+				(file.name.endsWith('.bib') || file.name.endsWith('.bibtex')) &&
 				!file.isDeleted
 			);
 
@@ -25,19 +25,25 @@ export const useDynamicBibSettings = () => {
 				value: "CREATE_NEW"
 			});
 
-			// Update the setting with new options
-			const currentSetting = getSetting("jabref-lsp-target-bib-file");
-			if (currentSetting) {
-				updateSetting("jabref-lsp-target-bib-file", {
-					...currentSetting,
-					options
-				});
-			}
+			// Update all LSP plugin settings that have target-bib-file settings
+			const allSettings = getSetting('') || {};
+			Object.keys(allSettings).forEach(settingId => {
+				if (settingId.endsWith('-target-bib-file')) {
+					const currentSetting = getSetting(settingId);
+					if (currentSetting) {
+						// Update the setting options without changing the value
+						registerSetting({
+							...currentSetting,
+							options
+						});
+					}
+				}
+			});
 
 		} catch (error) {
 			console.error('Error updating bib file options:', error);
 		}
-	}, [getSetting, updateSetting]);
+	}, [getSetting, registerSetting]);
 
 	const createNewBibFile = useCallback(async (fileName: string = 'bibliography.bib'): Promise<string | null> => {
 		try {
@@ -66,9 +72,6 @@ export const useDynamicBibSettings = () => {
 
 			await fileStorageService.storeFile(fileNode, { showConflictDialog: false });
 
-			// Update the setting to use the new file
-			updateSetting("jabref-lsp-target-bib-file", filePath);
-
 			// Refresh options
 			await updateBibFileOptions();
 
@@ -78,35 +81,37 @@ export const useDynamicBibSettings = () => {
 			console.error('Error creating new bib file:', error);
 			return null;
 		}
-	}, [updateSetting, updateBibFileOptions]);
+	}, [updateBibFileOptions]);
 
-	const handleTargetFileChange = useCallback(async (newValue: string) => {
+	const handleTargetFileChange = useCallback(async (settingId: string, newValue: string) => {
 		if (newValue === "CREATE_NEW") {
 			const createdFile = await createNewBibFile();
 			if (createdFile) {
+				// Update the specific setting that triggered this
+				updateSetting(settingId, createdFile);
 				// Dispatch event to refresh file tree
 				document.dispatchEvent(new CustomEvent('refresh-file-tree'));
 			}
 		}
-	}, [createNewBibFile]);
+	}, [createNewBibFile, updateSetting]);
+
+	const registerLSPBibSetting = useCallback((pluginId: string, pluginName: string) => {
+		const settingId = `${pluginId}-target-bib-file`;
+
+		registerSetting({
+			id: settingId,
+			category: "LSP",
+			subcategory: pluginName,
+			type: "select",
+			label: "Target bibliography file",
+			description: `Local .bib file to import ${pluginName} entries into`,
+			defaultValue: "",
+			options: [],
+			onChange: (value: unknown) => handleTargetFileChange(settingId, value as string)
+		});
+	}, [registerSetting, handleTargetFileChange]);
 
 	useEffect(() => {
-		// Register the dynamic setting if it doesn't exist
-		const existingSetting = getSetting("jabref-lsp-target-bib-file");
-		if (!existingSetting) {
-			registerSetting({
-				id: "jabref-lsp-target-bib-file",
-				category: "LSP",
-				subcategory: "JabRef",
-				type: "select",
-				label: "Target bibliography file",
-				description: "Local .bib file to import JabRef entries into",
-				defaultValue: "",
-				options: [],
-				onChange: handleTargetFileChange
-			});
-		}
-
 		// Update options when component mounts
 		updateBibFileOptions();
 
@@ -124,11 +129,12 @@ export const useDynamicBibSettings = () => {
 			document.removeEventListener('refresh-file-tree', handleFileTreeChange);
 			clearInterval(interval);
 		};
-	}, [registerSetting, getSetting, updateBibFileOptions, handleTargetFileChange]);
+	}, [updateBibFileOptions]);
 
 	return {
 		updateBibFileOptions,
 		createNewBibFile,
-		handleTargetFileChange
+		handleTargetFileChange,
+		registerLSPBibSetting
 	};
 };

@@ -72,16 +72,7 @@ export const jabrefLSPSettings: Setting[] = [
 		description: "Preview BibTeX entry before importing",
 		defaultValue: false,
 	},
-	{
-		id: "jabref-lsp-target-bib-file",
-		category: "LSP",
-		subcategory: "JabRef",
-		type: "select",
-		label: "Target bibliography file",
-		description: "Local .bib file to import JabRef entries into",
-		defaultValue: "",
-		options: [], // Will be populated dynamically with .bib files
-	},
+	// Note: jabref-lsp-target-bib-file is dynamically registered by useDynamicBibSettings
 	{
 		id: "jabref-lsp-merge-duplicates",
 		category: "LSP",

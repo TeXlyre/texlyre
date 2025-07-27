@@ -1,6 +1,5 @@
 // src/services/BibliographyImportService.ts
 import { fileStorageService } from './FileStorageService';
-import { BibtexParser } from '../../extras/viewers/bibtex/BibtexParser';
 
 export interface ImportResult {
 	success: boolean;
@@ -18,16 +17,100 @@ export interface ImportOptions {
 	autoImport?: boolean;
 }
 
+export interface BibEntry {
+	key: string;
+	type: string;
+	fields: Record<string, string>;
+	rawEntry: string;
+}
+
+// Simple BibTeX parser interface - plugins can provide their own implementation
+export interface BibTexParser {
+	parse(content: string): BibEntry[];
+	serialize(entries: BibEntry[]): string;
+	serializeEntry(entry: BibEntry): string;
+	findEntryPosition(content: string, entry: BibEntry): { start: number; end: number } | null;
+	updateEntryInContent(content: string, entry: BibEntry): string;
+}
+
+// Default simple parser implementation
+class SimpleBibTexParser implements BibTexParser {
+	parse(content: string): BibEntry[] {
+		const entries: BibEntry[] = [];
+		const entryRegex = /@(\w+)\s*\{\s*([^,\s]+)\s*,?\s*([\s\S]*?)\n\s*\}/g;
+		let match;
+
+		while ((match = entryRegex.exec(content)) !== null) {
+			const [fullMatch, type, key, fieldsString] = match;
+			const fields: Record<string, string> = {};
+
+			// Simple field parsing
+			const fieldRegex = /(\w+)\s*=\s*\{([^}]*)\}/g;
+			let fieldMatch;
+			while ((fieldMatch = fieldRegex.exec(fieldsString)) !== null) {
+				fields[fieldMatch[1].toLowerCase()] = fieldMatch[2];
+			}
+
+			entries.push({
+				key: key.trim(),
+				type: type.toLowerCase(),
+				fields,
+				rawEntry: fullMatch
+			});
+		}
+
+		return entries;
+	}
+
+	serialize(entries: BibEntry[]): string {
+		return entries.map(entry => this.serializeEntry(entry)).join('\n\n');
+	}
+
+	serializeEntry(entry: BibEntry): string {
+		const fieldsString = Object.entries(entry.fields)
+			.map(([key, value]) => `  ${key} = {${value}}`)
+			.join(',\n');
+
+		return `@${entry.type}{${entry.key},\n${fieldsString}\n}`;
+	}
+
+	findEntryPosition(content: string, entry: BibEntry): { start: number; end: number } | null {
+		const index = content.indexOf(entry.rawEntry);
+		if (index === -1) return null;
+
+		return {
+			start: index,
+			end: index + entry.rawEntry.length
+		};
+	}
+
+	updateEntryInContent(content: string, entry: BibEntry): string {
+		const position = this.findEntryPosition(content, entry);
+		if (!position) return content;
+
+		const newEntryContent = this.serializeEntry(entry);
+		return content.substring(0, position.start) +
+			   newEntryContent +
+			   content.substring(position.end);
+	}
+}
+
 export class BibliographyImportService {
 	private static instance: BibliographyImportService;
 	private importQueue: Map<string, Promise<ImportResult>> = new Map();
 	private notificationCallbacks: Array<(result: ImportResult) => void> = [];
+	private parser: BibTexParser = new SimpleBibTexParser();
 
 	static getInstance(): BibliographyImportService {
 		if (!BibliographyImportService.instance) {
 			BibliographyImportService.instance = new BibliographyImportService();
 		}
 		return BibliographyImportService.instance;
+	}
+
+	// Allow plugins to provide their own parser
+	setParser(parser: BibTexParser): void {
+		this.parser = parser;
 	}
 
 	addNotificationCallback(callback: (result: ImportResult) => void): () => void {
@@ -98,8 +181,8 @@ export class BibliographyImportService {
 			}
 
 			// Parse existing entries
-			const existingEntries = BibtexParser.parse(currentContent);
-			const existingEntry = existingEntries.find(entry => entry.id === entryKey);
+			const existingEntries = this.parser.parse(currentContent);
+			const existingEntry = existingEntries.find(entry => entry.key === entryKey);
 
 			// Handle duplicates
 			if (existingEntry) {
@@ -132,10 +215,7 @@ export class BibliographyImportService {
 				? `${currentContent.trim()}\n\n${entryToAppend}\n`
 				: `${entryToAppend}\n`;
 
-			// Update file
 			await fileStorageService.updateFileContent(targetFile.id, newContent);
-
-			// Dispatch file tree refresh event
 			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
 
 			return {
@@ -167,7 +247,7 @@ export class BibliographyImportService {
 			// Find first available .bib file
 			const allFiles = await fileStorageService.getAllFiles();
 			const bibFile = allFiles.find(file =>
-				file.name.endsWith('.bib') &&
+				(file.name.endsWith('.bib') || file.name.endsWith('.bibtex')) &&
 				!file.isDeleted
 			);
 
@@ -181,7 +261,7 @@ export class BibliographyImportService {
 	private async handleDuplicate(
 		entryKey: string,
 		rawEntry: string,
-		existingEntry: any,
+		existingEntry: BibEntry,
 		options: ImportOptions
 	): Promise<{ shouldImport: boolean; newKey?: string }> {
 		const duplicateHandling = options.duplicateHandling || 'keep-local';
@@ -214,13 +294,14 @@ export class BibliographyImportService {
 
 			// Collect all existing keys
 			for (const file of allFiles) {
-				if (file.name.endsWith('.bib') && !file.isDeleted && file.content) {
+				if ((file.name.endsWith('.bib') || file.name.endsWith('.bibtex')) &&
+					!file.isDeleted && file.content) {
 					const content = typeof file.content === 'string'
 						? file.content
 						: new TextDecoder().decode(file.content);
 
-					const entries = BibtexParser.parse(content);
-					entries.forEach(entry => allKeys.add(entry.id));
+					const entries = this.parser.parse(content);
+					entries.forEach(entry => allKeys.add(entry.key));
 				}
 			}
 
