@@ -35,7 +35,7 @@ export interface BibliographyContextType {
 	getAvailableFiles: () => BibliographyFile[];
 	createBibFile: (fileName?: string) => Promise<string | null>;
 	refreshAvailableFiles: () => Promise<void>;
-	registerPluginTargetFile: (pluginId: string, pluginName: string) => void;
+	registerPluginTargetFile: (pluginId: string, pluginName: string) => () => void;
 	getLocalEntries: () => Promise<BibEntry[]>;
 	importEntry: (entry: BibEntry, pluginId: string, projectId?: string, duplicateHandling?: string) => Promise<boolean>;
 	isImporting: (entryKey: string) => boolean;
@@ -47,7 +47,7 @@ export const BibliographyContext = createContext<BibliographyContextType>({
 	getAvailableFiles: () => [],
 	createBibFile: async () => null,
 	refreshAvailableFiles: async () => {},
-	registerPluginTargetFile: () => {},
+	registerPluginTargetFile: () => () => {},
 	getLocalEntries: async () => [],
 	importEntry: async () => false,
 	isImporting: () => false,
@@ -188,14 +188,12 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		try {
 			let targetFile = getTargetFile(pluginId, projectId);
 
-			// If no target file is selected, try to use the first available file or create one
 			if (!targetFile) {
 				if (availableFiles.length > 0) {
 					targetFile = availableFiles[0].path;
 					setTargetFile(pluginId, targetFile, projectId);
 					console.log(`[BibliographyContext] Auto-selected target file: ${targetFile}`);
 				} else {
-					// Create a new bibliography file
 					const createdFile = await createBibFile();
 					if (createdFile) {
 						targetFile = createdFile;
@@ -213,12 +211,11 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 				return false;
 			}
 
-			// Check for duplicates
 			const localEntries = await getLocalEntries();
-			const existingEntry = localEntries.find(local => local.key === entry.key);
+			const existingEntry = localEntries.find(local => local.key === entry.key && local.filePath === targetFile);
 			if (existingEntry && duplicateHandling === 'keep-local') {
 				console.log(`[BibliographyContext] Entry ${entry.key} already exists locally, keeping local version`);
-				return true; // Consider this successful
+				return true;
 			}
 
 			const bibFile = await fileStorageService.getFileByPath(targetFile);
@@ -253,8 +250,10 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 
 			console.log(`[BibliographyContext] Successfully imported ${entry.key} to ${targetFile}`);
 
-			// Dispatch event to refresh file tree and trigger re-parsing
 			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+			document.dispatchEvent(new CustomEvent('jabref-entry-imported', {
+				detail: { entryKey: entry.key, targetFile }
+			}));
 
 			return true;
 
@@ -277,33 +276,42 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 	const registerPluginTargetFile = useCallback((pluginId: string, pluginName: string) => {
 		const propertyId = getPropertyId(pluginId);
 
-		const handleTargetFileChange = async (value: unknown) => {
+		const handleTargetFileChange = async (value: unknown, projectId?: string) => {
 			if (value === "CREATE_NEW") {
 				const createdFile = await createBibFile();
 				if (createdFile) {
-					setProperty(propertyId, createdFile, { scope: "global" });
+					setTargetFile(pluginId, createdFile, projectId);
 					document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+					return createdFile;
 				}
 			}
+			return value;
 		};
 
-		const options = [
-			{ label: "Create new bibliography.bib", value: "CREATE_NEW" },
-			...availableFiles.map(file => ({
-				label: file.name,
-				value: file.path
-			}))
-		];
+		const updateOptions = () => {
+			const options = [
+				{ label: "Create new bibliography.bib", value: "CREATE_NEW" },
+				...availableFiles.map(file => ({
+					label: file.name,
+					value: file.path
+				}))
+			];
 
-		registerProperty({
-			id: propertyId,
-			category: "LSP",
-			subcategory: pluginName,
-			defaultValue: "",
-			options,
-			onChange: handleTargetFileChange
-		});
-	}, [availableFiles, createBibFile, setProperty, registerProperty]);
+			registerProperty({
+				id: propertyId,
+				category: "LSP",
+				subcategory: pluginName,
+				defaultValue: "",
+				options,
+				onChange: handleTargetFileChange
+			});
+		};
+
+		updateOptions();
+
+		const interval = setInterval(updateOptions, 2000);
+		return () => clearInterval(interval);
+	}, [availableFiles, createBibFile, setTargetFile, registerProperty]);
 
 	const getAvailableFiles = useCallback(() => availableFiles, [availableFiles]);
 

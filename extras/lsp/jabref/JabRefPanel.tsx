@@ -3,7 +3,6 @@ import type React from "react";
 import { useEffect, useState, useCallback } from "react";
 import type { LSPPanelProps } from "../../../src/plugins/PluginInterface";
 import { useSettings } from "../../../src/hooks/useSettings";
-import { useBibliography } from "../../../src/hooks/useBibliography";
 import { fileStorageService } from "../../../src/services/FileStorageService";
 
 interface BibEntry {
@@ -16,6 +15,45 @@ interface BibEntry {
 	filePath?: string;
 }
 
+interface BibFile {
+	path: string;
+	name: string;
+	id: string;
+}
+
+// Simple BibTeX parser for local files
+const parseBibTeX = (content: string): BibEntry[] => {
+	const entries: BibEntry[] = [];
+
+	// Match @type{key, ... }
+	const entryRegex = /@(\w+)\s*\{\s*([^,\s]+)\s*,([^}]*(?:\{[^}]*\}[^}]*)*)\}/gs;
+	let match;
+
+	while ((match = entryRegex.exec(content)) !== null) {
+		const [fullMatch, type, key, fieldsContent] = match;
+		const fields: Record<string, string> = {};
+
+		// Parse fields more carefully to handle nested braces
+		const fieldRegex = /(\w+)\s*=\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}\s*,?/g;
+		let fieldMatch;
+
+		while ((fieldMatch = fieldRegex.exec(fieldsContent)) !== null) {
+			const [, fieldName, fieldValue] = fieldMatch;
+			fields[fieldName.toLowerCase()] = fieldValue.trim();
+		}
+
+		entries.push({
+			key: key.trim(),
+			entryType: type.toLowerCase(),
+			fields,
+			rawEntry: fullMatch,
+			source: 'local'
+		});
+	}
+
+	return entries;
+};
+
 const JabRefPanel: React.FC<LSPPanelProps> = ({
 	className = "",
 	onItemSelect,
@@ -24,23 +62,15 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 	pluginInstance,
 }) => {
 	const { getSetting } = useSettings();
-	const {
-		getTargetFile,
-		setTargetFile,
-		getAvailableFiles,
-		createBibFile,
-		refreshAvailableFiles,
-		getLocalEntries,
-		importEntry,
-		isImporting
-	} = useBibliography();
 
 	const [entries, setEntries] = useState<BibEntry[]>([]);
 	const [localEntries, setLocalEntries] = useState<BibEntry[]>([]);
 	const [externalEntries, setExternalEntries] = useState<BibEntry[]>([]);
 	const [filteredEntries, setFilteredEntries] = useState<BibEntry[]>([]);
+	const [availableBibFiles, setAvailableBibFiles] = useState<BibFile[]>([]);
+	const [targetBibFile, setTargetBibFile] = useState<string>("");
 	const [isLoading, setIsLoading] = useState(false);
-	const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+	const [importingEntries, setImportingEntries] = useState<Set<string>>(new Set());
 
 	const lspEnabled = (getSetting("jabref-lsp-enabled")?.value as boolean) ?? true;
 	const showPanel = (getSetting("jabref-lsp-show-panel")?.value as boolean) ?? true;
@@ -50,41 +80,82 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 	const autoImport = (getSetting("jabref-lsp-auto-import")?.value as boolean) ?? true;
 	const duplicateHandling = (getSetting("jabref-lsp-merge-duplicates")?.value as string) ?? "keep-local";
 
-	// Get current project ID
-	useEffect(() => {
-		const getProjectId = () => {
-			try {
-				const currentProjectId = fileStorageService.getCurrentProjectId();
-				setCurrentProjectId(currentProjectId || null);
-			} catch (error) {
-				console.error('[JabRefPanel] Error getting current project ID:', error);
-				setCurrentProjectId(null);
-			}
-		};
+	// Fetch available bib files
+	const refreshAvailableFiles = useCallback(async () => {
+		try {
+			const allFiles = await fileStorageService.getAllFiles();
+			const bibFiles = allFiles
+				.filter(file =>
+					(file.name.endsWith('.bib') || file.name.endsWith('.bibtex')) &&
+					!file.isDeleted
+				)
+				.map(file => ({
+					path: file.path,
+					name: file.name,
+					id: file.id
+				}));
 
-		getProjectId();
-		const interval = setInterval(getProjectId, 1000);
-		return () => clearInterval(interval);
+			console.log('[JabRefPanel] Found bib files:', bibFiles);
+			setAvailableBibFiles(bibFiles);
+		} catch (error) {
+			console.error('[JabRefPanel] Error refreshing available files:', error);
+			setAvailableBibFiles([]);
+		}
 	}, []);
 
-	const targetBibFile = getTargetFile("jabref-lsp", currentProjectId) || "";
-	const availableBibFiles = getAvailableFiles();
-
+	// Fetch local entries from all bib files
 	const fetchLocalEntries = useCallback(async () => {
 		try {
-			const entries = await getLocalEntries();
-			setLocalEntries(entries);
+			console.log('[JabRefPanel] Fetching local entries...');
+			const allFiles = await fileStorageService.getAllFiles();
+			const bibFiles = allFiles.filter(file =>
+				file.name.endsWith('.bib') &&
+				!file.isDeleted &&
+				file.content
+			);
+
+			console.log('[JabRefPanel] Found local bib files:', bibFiles.length);
+
+			const allLocalEntries: BibEntry[] = [];
+
+			for (const bibFile of bibFiles) {
+				try {
+					const content = typeof bibFile.content === 'string'
+						? bibFile.content
+						: new TextDecoder().decode(bibFile.content);
+
+					const parsedEntries = parseBibTeX(content);
+					const bibEntries: BibEntry[] = parsedEntries.map(entry => ({
+						...entry,
+						source: 'local' as const,
+						filePath: bibFile.path
+					}));
+
+					console.log(`[JabRefPanel] Parsed ${bibEntries.length} entries from ${bibFile.name}`);
+					allLocalEntries.push(...bibEntries);
+				} catch (parseError) {
+					console.error(`[JabRefPanel] Error parsing ${bibFile.path}:`, parseError);
+				}
+			}
+
+			console.log('[JabRefPanel] Total local entries:', allLocalEntries.length);
+			setLocalEntries(allLocalEntries);
 		} catch (error) {
 			console.error('[JabRefPanel] Error fetching local entries:', error);
 			setLocalEntries([]);
 		}
-	}, [getLocalEntries]);
+	}, []);
 
+	// Fetch external entries from LSP
 	const fetchExternalEntries = useCallback(async () => {
-		if (!pluginInstance) return;
+		if (!pluginInstance) {
+			console.log('[JabRefPanel] No plugin instance available');
+			return;
+		}
 
 		const connectionStatus = pluginInstance.getConnectionStatus();
 		if (connectionStatus !== 'connected') {
+			console.log('[JabRefPanel] LSP not connected:', connectionStatus);
 			setExternalEntries([]);
 			return;
 		}
@@ -98,6 +169,7 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 					source: 'external' as const,
 					isImported: false
 				}));
+				console.log('[JabRefPanel] Fetched external entries:', externalBibEntries.length);
 				setExternalEntries(externalBibEntries);
 			} else {
 				setExternalEntries([]);
@@ -110,6 +182,129 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 		}
 	}, [pluginInstance]);
 
+	// Create new bib file
+	const createNewBibFile = useCallback(async (fileName: string = 'bibliography.bib'): Promise<string | null> => {
+		try {
+			console.log('[JabRefPanel] Creating new bib file:', fileName);
+			const filePath = `/${fileName}`;
+
+			// Check if file already exists
+			const existingFile = await fileStorageService.getFileByPath(filePath);
+			if (existingFile && !existingFile.isDeleted) {
+				console.log('[JabRefPanel] File already exists:', filePath);
+				return filePath;
+			}
+
+			// Create new file
+			const fileNode = {
+				id: crypto.randomUUID(),
+				name: fileName,
+				path: filePath,
+				type: 'file' as const,
+				content: '% Bibliography file created by TeXlyre\n% Add your BibTeX entries here\n\n',
+				lastModified: Date.now(),
+				size: 0,
+				mimeType: 'text/x-bibtex',
+				isBinary: false,
+				isDeleted: false
+			};
+
+			await fileStorageService.storeFile(fileNode, { showConflictDialog: false });
+			await refreshAvailableFiles();
+
+			console.log('[JabRefPanel] Successfully created file:', filePath);
+			return filePath;
+		} catch (error) {
+			console.error('[JabRefPanel] Error creating new bib file:', error);
+			return null;
+		}
+	}, [refreshAvailableFiles]);
+
+	// Handle target file change
+	const handleTargetFileChange = async (newValue: string) => {
+		console.log('[JabRefPanel] Target file change:', newValue);
+
+		if (newValue === "CREATE_NEW") {
+			const createdFile = await createNewBibFile();
+			if (createdFile) {
+				setTargetBibFile(createdFile);
+				document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+			}
+		} else {
+			setTargetBibFile(newValue);
+		}
+	};
+
+	// Import entry to target file
+	const handleImportEntry = async (entry: BibEntry) => {
+		if (!targetBibFile) {
+			console.error('[JabRefPanel] No target file selected');
+			return;
+		}
+
+		if (importingEntries.has(entry.key)) {
+			console.log('[JabRefPanel] Entry already being imported:', entry.key);
+			return;
+		}
+
+		setImportingEntries(prev => new Set(prev).add(entry.key));
+
+		try {
+			console.log('[JabRefPanel] Importing entry to:', targetBibFile);
+
+			// Get target file
+			const targetFile = await fileStorageService.getFileByPath(targetBibFile);
+			if (!targetFile) {
+				console.error('[JabRefPanel] Target file not found:', targetBibFile);
+				return;
+			}
+
+			// Check for duplicates
+			if (duplicateHandling === 'keep-local') {
+				const isDuplicate = localEntries.some(local =>
+					local.key === entry.key && local.filePath === targetBibFile
+				);
+				if (isDuplicate) {
+					console.log('[JabRefPanel] Entry already exists, keeping local version');
+					return;
+				}
+			}
+
+			// Get current content
+			let currentContent = '';
+			if (targetFile.content) {
+				currentContent = typeof targetFile.content === 'string'
+					? targetFile.content
+					: new TextDecoder().decode(targetFile.content);
+			}
+
+			// Append new entry
+			const newContent = currentContent.trim()
+				? `${currentContent.trim()}\n\n${entry.rawEntry}\n`
+				: `${entry.rawEntry}\n`;
+
+			// Save to file
+			await fileStorageService.updateFileContent(targetFile.id, newContent);
+
+			console.log('[JabRefPanel] Successfully imported entry:', entry.key);
+
+			// Refresh local entries
+			await fetchLocalEntries();
+
+			// Dispatch events
+			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+		} catch (error) {
+			console.error('[JabRefPanel] Error importing entry:', error);
+		} finally {
+			setImportingEntries(prev => {
+				const newSet = new Set(prev);
+				newSet.delete(entry.key);
+				return newSet;
+			});
+		}
+	};
+
+	// Merge local and external entries
 	const mergeEntries = useCallback(() => {
 		const localKeys = new Set(localEntries.map(entry => entry.key));
 
@@ -126,6 +321,7 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 		setEntries(combined);
 	}, [localEntries, externalEntries]);
 
+	// Filter entries based on search
 	useEffect(() => {
 		if (searchQuery.trim() === "") {
 			setFilteredEntries(entries.slice(0, maxCompletions));
@@ -142,25 +338,30 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 		}
 	}, [searchQuery, entries, maxCompletions]);
 
+	// Update merged entries when local or external change
 	useEffect(() => {
 		mergeEntries();
 	}, [mergeEntries]);
 
+	// Update server URL when changed
 	useEffect(() => {
 		if (pluginInstance && 'updateServerUrl' in pluginInstance) {
 			(pluginInstance as any).updateServerUrl(serverUrl);
 		}
 	}, [pluginInstance, serverUrl]);
 
+	// Initial data fetch
 	useEffect(() => {
 		if (!lspEnabled || !showPanel) {
 			return;
 		}
 
+		console.log('[JabRefPanel] Initializing...');
+		refreshAvailableFiles();
 		fetchLocalEntries();
 		fetchExternalEntries();
-		refreshAvailableFiles();
 
+		// Set up retry for LSP connection
 		let retryCount = 0;
 		const maxRetries = 20;
 
@@ -181,39 +382,22 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 		return () => clearInterval(retryInterval);
 	}, [lspEnabled, showPanel, fetchLocalEntries, fetchExternalEntries, pluginInstance, refreshAvailableFiles]);
 
-	// Listen for file tree changes to refresh local entries
+	// Listen for file changes
 	useEffect(() => {
 		const handleFileTreeRefresh = () => {
+			console.log('[JabRefPanel] File tree refreshed, updating data...');
+			refreshAvailableFiles();
 			fetchLocalEntries();
 		};
 
 		document.addEventListener('refresh-file-tree', handleFileTreeRefresh);
+
 		return () => {
 			document.removeEventListener('refresh-file-tree', handleFileTreeRefresh);
 		};
-	}, [fetchLocalEntries]);
+	}, [refreshAvailableFiles, fetchLocalEntries]);
 
-	const handleTargetFileChange = async (newValue: string) => {
-		if (newValue === "CREATE_NEW") {
-			const createdFile = await createBibFile();
-			if (createdFile) {
-				setTargetFile("jabref-lsp", createdFile, currentProjectId);
-				await refreshAvailableFiles();
-				document.dispatchEvent(new CustomEvent('refresh-file-tree'));
-			}
-		} else {
-			setTargetFile("jabref-lsp", newValue, currentProjectId);
-		}
-	};
-
-	const handleImportEntry = async (entry: BibEntry) => {
-		const success = await importEntry(entry, "jabref-lsp", currentProjectId, duplicateHandling);
-		if (success) {
-			// Refresh local entries to show the newly imported entry
-			await fetchLocalEntries();
-		}
-	};
-
+	// Handle entry clicks
 	const handleEntryClick = (entry: BibEntry) => {
 		if (entry.source === 'external' && !entry.isImported) {
 			if (autoImport) {
@@ -242,7 +426,7 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 		);
 	};
 
-	// Helper functions (same as before)
+	// Helper functions
 	const getEntryTypeIcon = (entryType: string) => {
 		switch (entryType.toLowerCase()) {
 			case 'article': return '📄';
@@ -308,7 +492,7 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 			return <span className="entry-source local" title="Local">✓</span>;
 		} else if (entry.isImported) {
 			return <span className="entry-source imported" title="Already imported">✓</span>;
-		} else if (isImporting(entry.key)) {
+		} else if (importingEntries.has(entry.key)) {
 			return <span className="entry-source importing" title="Importing...">⏳</span>;
 		} else {
 			return <span className="entry-source external" title="Click to import">⬇️</span>;
@@ -371,6 +555,11 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 						</option>
 					))}
 				</select>
+				{availableBibFiles.length === 0 && (
+					<div style={{ fontSize: '0.65rem', color: 'var(--pico-secondary)', marginTop: '0.25rem' }}>
+						No .bib files found. Create one to start importing entries.
+					</div>
+				)}
 			</div>
 
 			<div className="lsp-panel-content">
@@ -388,6 +577,11 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 							? "No entries found matching the search criteria"
 							: "No bibliography entries available"
 						}
+						{localEntries.length === 0 && (
+							<div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--pico-secondary)' }}>
+								Add .bib files to your project or connect to an external bibliography source.
+							</div>
+						)}
 					</div>
 				) : (
 					<div className="lsp-entries-list">
@@ -446,9 +640,9 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 												e.stopPropagation();
 												handleImportEntry(entry);
 											}}
-											disabled={isImporting(entry.key)}
+											disabled={importingEntries.has(entry.key)}
 										>
-											{isImporting(entry.key) ? 'Importing...' : 'Import'}
+											{importingEntries.has(entry.key) ? 'Importing...' : 'Import'}
 										</button>
 									</div>
 								)}
@@ -478,9 +672,9 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 					<button
 						className="lsp-refresh-button"
 						onClick={() => {
+							refreshAvailableFiles();
 							fetchLocalEntries();
 							fetchExternalEntries();
-							refreshAvailableFiles();
 						}}
 						disabled={isLoading}
 					>

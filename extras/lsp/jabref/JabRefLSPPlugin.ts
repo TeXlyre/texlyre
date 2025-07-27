@@ -58,9 +58,18 @@ class JabRefLSPPlugin implements LSPPlugin {
 		setTimeout(() => {
 			try {
 				const event = new CustomEvent('register-bibliography-plugin', {
-					detail: { pluginId: this.id, pluginName: 'JabRef' }
+					detail: {
+						pluginId: this.id,
+						pluginName: 'JabRef',
+						registerTargetFile: true
+					}
 				});
 				document.dispatchEvent(event);
+
+				document.addEventListener('jabref-entry-imported', (e) => {
+					const customEvent = e as CustomEvent;
+					console.log(`[JabRefLSP] Entry imported: ${customEvent.detail.entryKey} to ${customEvent.detail.targetFile}`);
+				});
 			} catch (error) {
 				console.error('[JabRefLSP] Error registering bibliography plugin:', error);
 			}

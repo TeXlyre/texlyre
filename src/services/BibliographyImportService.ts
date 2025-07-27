@@ -24,7 +24,6 @@ export interface BibEntry {
 	rawEntry: string;
 }
 
-// Simple BibTeX parser interface - plugins can provide their own implementation
 export interface BibTexParser {
 	parse(content: string): BibEntry[];
 	serialize(entries: BibEntry[]): string;
@@ -33,7 +32,6 @@ export interface BibTexParser {
 	updateEntryInContent(content: string, entry: BibEntry): string;
 }
 
-// Default simple parser implementation
 class SimpleBibTexParser implements BibTexParser {
 	parse(content: string): BibEntry[] {
 		const entries: BibEntry[] = [];
@@ -44,7 +42,6 @@ class SimpleBibTexParser implements BibTexParser {
 			const [fullMatch, type, key, fieldsString] = match;
 			const fields: Record<string, string> = {};
 
-			// Simple field parsing
 			const fieldRegex = /(\w+)\s*=\s*\{([^}]*)\}/g;
 			let fieldMatch;
 			while ((fieldMatch = fieldRegex.exec(fieldsString)) !== null) {
@@ -108,7 +105,6 @@ export class BibliographyImportService {
 		return BibliographyImportService.instance;
 	}
 
-	// Allow plugins to provide their own parser
 	setParser(parser: BibTexParser): void {
 		this.parser = parser;
 	}
@@ -138,7 +134,6 @@ export class BibliographyImportService {
 		rawEntry: string,
 		options: ImportOptions = {}
 	): Promise<ImportResult> {
-		// Check if already importing this entry
 		const existingImport = this.importQueue.get(entryKey);
 		if (existingImport) {
 			return existingImport;
@@ -162,17 +157,15 @@ export class BibliographyImportService {
 		options: ImportOptions
 	): Promise<ImportResult> {
 		try {
-			// Find target file
 			const targetFile = await this.getTargetFile(options.targetFile);
 			if (!targetFile) {
 				return {
 					success: false,
 					entryKey,
-					error: 'No target bibliography file available'
+					error: 'No target bibliography file selected. Please select a target file in the JabRef panel.'
 				};
 			}
 
-			// Get current file content
 			let currentContent = '';
 			if (targetFile.content) {
 				currentContent = typeof targetFile.content === 'string'
@@ -180,11 +173,9 @@ export class BibliographyImportService {
 					: new TextDecoder().decode(targetFile.content);
 			}
 
-			// Parse existing entries
 			const existingEntries = this.parser.parse(currentContent);
 			const existingEntry = existingEntries.find(entry => entry.key === entryKey);
 
-			// Handle duplicates
 			if (existingEntry) {
 				const duplicateResult = await this.handleDuplicate(
 					entryKey,
@@ -209,11 +200,10 @@ export class BibliographyImportService {
 				}
 			}
 
-			// Prepare content to append
 			const entryToAppend = this.formatEntryForAppending(rawEntry);
 			const newContent = currentContent.trim()
-				? `${currentContent.trim()}\n\n${entryToAppend}\n`
-				: `${entryToAppend}\n`;
+				? `${currentContent.trim()}\n\n${entryToAppend}`
+				: entryToAppend;
 
 			await fileStorageService.updateFileContent(targetFile.id, newContent);
 			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
@@ -230,7 +220,7 @@ export class BibliographyImportService {
 			return {
 				success: false,
 				entryKey,
-				error: error instanceof Error ? error.message : 'Unknown error'
+				error: error instanceof Error ? error.message : 'Import failed'
 			};
 		}
 	}
@@ -244,7 +234,6 @@ export class BibliographyImportService {
 				}
 			}
 
-			// Find first available .bib file
 			const allFiles = await fileStorageService.getAllFiles();
 			const bibFile = allFiles.find(file =>
 				(file.name.endsWith('.bib') || file.name.endsWith('.bibtex')) &&
@@ -278,8 +267,6 @@ export class BibliographyImportService {
 				return { shouldImport: true, newKey };
 
 			case 'ask':
-				// For now, default to keep-local
-				// In a full implementation, this would show a dialog
 				return { shouldImport: false };
 
 			default:
@@ -292,7 +279,6 @@ export class BibliographyImportService {
 			const allFiles = await fileStorageService.getAllFiles();
 			const allKeys = new Set<string>();
 
-			// Collect all existing keys
 			for (const file of allFiles) {
 				if ((file.name.endsWith('.bib') || file.name.endsWith('.bibtex')) &&
 					!file.isDeleted && file.content) {
@@ -305,7 +291,6 @@ export class BibliographyImportService {
 				}
 			}
 
-			// Generate unique key
 			let counter = 1;
 			let newKey = `${baseKey}_${counter}`;
 			while (allKeys.has(newKey)) {
@@ -321,10 +306,8 @@ export class BibliographyImportService {
 	}
 
 	private formatEntryForAppending(rawEntry: string): string {
-		// Ensure proper formatting
 		let formatted = rawEntry.trim();
 
-		// Add newline at end if not present
 		if (!formatted.endsWith('\n')) {
 			formatted += '\n';
 		}
