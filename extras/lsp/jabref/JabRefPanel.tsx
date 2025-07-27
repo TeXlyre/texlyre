@@ -3,12 +3,16 @@ import type React from "react";
 import { useEffect, useState, useCallback } from "react";
 import type { LSPPanelProps } from "../../../src/plugins/PluginInterface";
 import { useSettings } from "../../../src/hooks/useSettings";
+import { fileStorageService } from "../../../src/services/FileStorageService";
+import { BibtexParser } from "../../viewers/bibtex/BibtexParser";
 
 interface BibEntry {
 	key: string;
 	entryType: string;
 	fields: Record<string, string>;
 	rawEntry: string;
+	source?: 'local' | 'external';
+	isImported?: boolean;
 }
 
 const JabRefPanel: React.FC<LSPPanelProps> = ({
@@ -20,22 +24,70 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 }) => {
 	const { getSetting } = useSettings();
 	const [entries, setEntries] = useState<BibEntry[]>([]);
+	const [localEntries, setLocalEntries] = useState<BibEntry[]>([]);
+	const [externalEntries, setExternalEntries] = useState<BibEntry[]>([]);
 	const [filteredEntries, setFilteredEntries] = useState<BibEntry[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
+	const [importingEntries, setImportingEntries] = useState<Set<string>>(new Set());
+	const [availableBibFiles, setAvailableBibFiles] = useState<Array<{path: string, name: string}>>([]);
 
 	const lspEnabled = (getSetting("jabref-lsp-enabled")?.value as boolean) ?? true;
 	const showPanel = (getSetting("jabref-lsp-show-panel")?.value as boolean) ?? true;
 	const citationStyle = (getSetting("jabref-lsp-citation-style")?.value as string) ?? "numeric";
 	const maxCompletions = (getSetting("jabref-lsp-max-completions")?.value as number) ?? 20;
 	const serverUrl = (getSetting("jabref-lsp-server-url")?.value as string) ?? "ws://localhost:2087/";
+	const autoImport = (getSetting("jabref-lsp-auto-import")?.value as boolean) ?? true;
+	const showPreview = (getSetting("jabref-lsp-show-import-preview")?.value as boolean) ?? false;
+	const targetBibFile = (getSetting("jabref-lsp-target-bib-file")?.value as string) ?? "";
+	const duplicateHandling = (getSetting("jabref-lsp-merge-duplicates")?.value as string) ?? "keep-local";
 
-	const fetchEntries = useCallback(async () => {
+	const fetchLocalEntries = useCallback(async () => {
+		try {
+			const allFiles = await fileStorageService.getAllFiles();
+			const bibFiles = allFiles.filter(file =>
+				file.name.endsWith('.bib') &&
+				!file.isDeleted &&
+				file.content
+			);
+
+			setAvailableBibFiles(bibFiles.map(file => ({
+				path: file.path,
+				name: file.name
+			})));
+
+			const allLocalEntries: BibEntry[] = [];
+
+			for (const bibFile of bibFiles) {
+				const content = typeof bibFile.content === 'string'
+					? bibFile.content
+					: new TextDecoder().decode(bibFile.content);
+
+				const parsedEntries = BibtexParser.parse(content);
+				const bibEntries: BibEntry[] = parsedEntries.map(entry => ({
+					key: entry.id,
+					entryType: entry.type,
+					fields: entry.fields,
+					rawEntry: BibtexParser.serializeEntry(entry),
+					source: 'local' as const,
+					isImported: false
+				}));
+
+				allLocalEntries.push(...bibEntries);
+			}
+
+			setLocalEntries(allLocalEntries);
+		} catch (error) {
+			console.error('Error fetching local bibliography entries:', error);
+			setLocalEntries([]);
+		}
+	}, []);
+
+	const fetchExternalEntries = useCallback(async () => {
 		if (!pluginInstance) return;
 
 		const connectionStatus = pluginInstance.getConnectionStatus();
 		if (connectionStatus !== 'connected') {
-			console.log('[JabRefPanel] LSP not connected yet, status:', connectionStatus);
-			setEntries([]);
+			setExternalEntries([]);
 			return;
 		}
 
@@ -43,17 +95,40 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 		try {
 			if ('getBibliographyEntries' in pluginInstance) {
 				const bibEntries = await (pluginInstance as any).getBibliographyEntries();
-				setEntries(bibEntries);
+				const externalBibEntries: BibEntry[] = bibEntries.map((entry: any) => ({
+					...entry,
+					source: 'external' as const,
+					isImported: false
+				}));
+				setExternalEntries(externalBibEntries);
 			} else {
-				setEntries([]);
+				setExternalEntries([]);
 			}
 		} catch (error) {
-			console.error('Error fetching bibliography entries:', error);
-			setEntries([]);
+			console.error('Error fetching external bibliography entries:', error);
+			setExternalEntries([]);
 		} finally {
 			setIsLoading(false);
 		}
 	}, [pluginInstance]);
+
+	const mergeEntries = useCallback(() => {
+		const localKeys = new Set(localEntries.map(entry => entry.key));
+
+		// Mark external entries that exist locally
+		const updatedExternalEntries = externalEntries.map(entry => ({
+			...entry,
+			isImported: localKeys.has(entry.key)
+		}));
+
+		// Combine all entries: local first, then external
+		const combined = [
+			...localEntries,
+			...updatedExternalEntries.filter(entry => !entry.isImported)
+		];
+
+		setEntries(combined);
+	}, [localEntries, externalEntries]);
 
 	useEffect(() => {
 		if (searchQuery.trim() === "") {
@@ -72,17 +147,22 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 	}, [searchQuery, entries, maxCompletions]);
 
 	useEffect(() => {
+		mergeEntries();
+	}, [mergeEntries]);
+
+	useEffect(() => {
 		if (pluginInstance && 'updateServerUrl' in pluginInstance) {
 			(pluginInstance as any).updateServerUrl(serverUrl);
 		}
 	}, [pluginInstance, serverUrl]);
 
 	useEffect(() => {
-		if (!lspEnabled || !showPanel || !pluginInstance) {
+		if (!lspEnabled || !showPanel) {
 			return;
 		}
 
-		fetchEntries();
+		fetchLocalEntries();
+		fetchExternalEntries();
 
 		let retryCount = 0;
 		const maxRetries = 20;
@@ -92,7 +172,7 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 
 			const connectionStatus = pluginInstance.getConnectionStatus();
 			if (connectionStatus === 'connected') {
-				fetchEntries();
+				fetchExternalEntries();
 				clearInterval(retryInterval);
 			} else if (retryCount >= maxRetries) {
 				console.warn('[JabRefPanel] LSP connection timeout after 10 seconds');
@@ -102,9 +182,89 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 		}, 500);
 
 		return () => clearInterval(retryInterval);
-	}, [lspEnabled, showPanel, fetchEntries, pluginInstance]);
+	}, [lspEnabled, showPanel, fetchLocalEntries, fetchExternalEntries, pluginInstance]);
+
+	const handleImportEntry = async (entry: BibEntry) => {
+		if (entry.source === 'local' || importingEntries.has(entry.key)) {
+			return;
+		}
+
+		setImportingEntries(prev => new Set(prev).add(entry.key));
+
+		try {
+			const targetFile = targetBibFile || availableBibFiles[0]?.path;
+			if (!targetFile) {
+				console.error('No target bibliography file available');
+				return;
+			}
+
+			// Check for duplicates based on user preference
+			const existingEntry = localEntries.find(local => local.key === entry.key);
+			if (existingEntry && duplicateHandling === 'keep-local') {
+				console.log(`Entry ${entry.key} already exists locally, keeping local version`);
+				return;
+			}
+
+			// Get target file
+			const bibFile = await fileStorageService.getFileByPath(targetFile);
+			if (!bibFile) {
+				console.error(`Target file not found: ${targetFile}`);
+				return;
+			}
+
+			// Prepare the new entry
+			let entryToImport = entry.rawEntry;
+			if (duplicateHandling === 'rename' && existingEntry) {
+				// Generate a unique key
+				let counter = 1;
+				let newKey = `${entry.key}_${counter}`;
+				while (localEntries.some(local => local.key === newKey)) {
+					counter++;
+					newKey = `${entry.key}_${counter}`;
+				}
+				entryToImport = entryToImport.replace(entry.key, newKey);
+			}
+
+			// Get current file content
+			let currentContent = '';
+			if (bibFile.content) {
+				currentContent = typeof bibFile.content === 'string'
+					? bibFile.content
+					: new TextDecoder().decode(bibFile.content);
+			}
+
+			// Append the new entry
+			const newContent = currentContent.trim()
+				? `${currentContent.trim()}\n\n${entryToImport}\n`
+				: `${entryToImport}\n`;
+
+			// Update the file
+			await fileStorageService.updateFileContent(bibFile.id, newContent);
+
+			// Refresh local entries
+			await fetchLocalEntries();
+
+			console.log(`Successfully imported ${entry.key} to ${targetFile}`);
+
+		} catch (error) {
+			console.error(`Error importing entry ${entry.key}:`, error);
+		} finally {
+			setImportingEntries(prev => {
+				const newSet = new Set(prev);
+				newSet.delete(entry.key);
+				return newSet;
+			});
+		}
+	};
 
 	const handleEntryClick = (entry: BibEntry) => {
+		if (entry.source === 'external' && !entry.isImported) {
+			if (autoImport) {
+				handleImportEntry(entry);
+			}
+			return;
+		}
+
 		if (onItemSelect) {
 			onItemSelect({
 				key: entry.key,
@@ -187,7 +347,21 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 				return `[${entry.key.substring(0, 6)}]`;
 			case "numeric":
 			default:
-				return `[${entries.indexOf(entry) + 1}]`;
+				const localEntryIndex = localEntries.findIndex(e => e.key === entry.key);
+				const index = localEntryIndex >= 0 ? localEntryIndex + 1 : entries.indexOf(entry) + 1;
+				return `[${index}]`;
+		}
+	};
+
+	const getSourceIndicator = (entry: BibEntry) => {
+		if (entry.source === 'local') {
+			return <span className="entry-source local" title="Local">✓</span>;
+		} else if (entry.isImported) {
+			return <span className="entry-source imported" title="Already imported">✓</span>;
+		} else if (importingEntries.has(entry.key)) {
+			return <span className="entry-source importing" title="Importing...">⏳</span>;
+		} else {
+			return <span className="entry-source external" title="Click to import">⬇️</span>;
 		}
 	};
 
@@ -235,11 +409,13 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 					<div className="lsp-entries-list">
 						{filteredEntries.map((entry) => (
 							<div
-								key={entry.key}
-								className="lsp-entry-item"
+								key={`${entry.source}-${entry.key}`}
+								className={`lsp-entry-item ${entry.source === 'external' && !entry.isImported ? 'external-entry' : ''}`}
+								onClick={() => handleEntryClick(entry)}
 							>
 								<div className="lsp-entry-header">
 									<span className="lsp-entry-key">{entry.key}</span>
+									{getSourceIndicator(entry)}
 									<span className="lsp-citation-preview">{getCitationPreview(entry)}</span>
 									{getDisplayYear(entry) && (
 										<span className="lsp-entry-year">{getDisplayYear(entry)}</span>
@@ -253,10 +429,9 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 										{entry.entryType.toUpperCase()}
 									</span>
 								</div>
-								<div className="lsp-entry-title"
-									 onClick={() => handleEntryClick(entry)}
-								>
-									{getDisplayTitle(entry)}</div>
+								<div className="lsp-entry-title">
+									{getDisplayTitle(entry)}
+								</div>
 								<div className="lsp-entry-authors">{getDisplayAuthors(entry)}</div>
 
 								{getDisplayVenue(entry) && (
@@ -278,6 +453,21 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 										DOI: {entry.fields.doi}
 									</div>
 								)}
+
+								{entry.source === 'external' && !entry.isImported && !autoImport && (
+									<div className="lsp-entry-actions">
+										<button
+											className="import-button"
+											onClick={(e) => {
+												e.stopPropagation();
+												handleImportEntry(entry);
+											}}
+											disabled={importingEntries.has(entry.key)}
+										>
+											{importingEntries.has(entry.key) ? 'Importing...' : 'Import'}
+										</button>
+									</div>
+								)}
 							</div>
 						))}
 					</div>
@@ -288,18 +478,23 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 				<div className="lsp-footer-stats">
 					{entries.length > 0 && (
 						<span className="lsp-entry-count">
-							{filteredEntries.length} of {entries.length} entries
+							{localEntries.length} local, {externalEntries.filter(e => !e.isImported).length} external
 							{citationStyle !== "numeric" && ` (${citationStyle} style)`}
 						</span>
 					)}
 				</div>
-				<button
-					className="lsp-refresh-button"
-					onClick={fetchEntries}
-					disabled={isLoading}
-				>
-					{isLoading ? 'Refreshing...' : 'Refresh'}
-				</button>
+				<div className="lsp-footer-actions">
+					<button
+						className="lsp-refresh-button"
+						onClick={() => {
+							fetchLocalEntries();
+							fetchExternalEntries();
+						}}
+						disabled={isLoading}
+					>
+						{isLoading ? 'Refreshing...' : 'Refresh'}
+					</button>
+				</div>
 			</div>
 		</div>
 	);

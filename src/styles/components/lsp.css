@@ -560,3 +560,303 @@
 		padding: 0.5rem;
 	}
 }
+
+/* Entry source indicators */
+.lsp-entry-item .entry-source {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	font-size: 12px;
+	border-radius: 50%;
+	margin-left: 0.5rem;
+}
+
+.lsp-entry-item .entry-source.local {
+	background-color: var(--color-success);
+	color: white;
+}
+
+.lsp-entry-item .entry-source.imported {
+	background-color: var(--color-success);
+	color: white;
+	opacity: 0.7;
+}
+
+.lsp-entry-item .entry-source.external {
+	background-color: var(--color-warning);
+	color: white;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.lsp-entry-item .entry-source.external:hover {
+	background-color: var(--color-primary);
+	transform: scale(1.1);
+}
+
+.lsp-entry-item .entry-source.importing {
+	background-color: var(--color-info);
+	color: white;
+	animation: spin 1s linear infinite;
+}
+
+/* External entry styling */
+.lsp-entry-item.external-entry {
+	border-left: 3px solid var(--color-warning);
+	background-color: color-mix(in srgb, var(--color-warning) 5%, transparent);
+	transition: all 0.2s ease;
+}
+
+.lsp-entry-item.external-entry:hover {
+	border-left-color: var(--color-primary);
+	background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.lsp-entry-item.external-entry .lsp-entry-title {
+	font-style: italic;
+	opacity: 0.9;
+}
+
+/* Import actions */
+.lsp-entry-actions {
+	display: flex;
+	justify-content: flex-end;
+	padding: 0.5rem 0;
+	border-top: 1px solid var(--accent-border);
+	margin-top: 0.5rem;
+}
+
+.import-button {
+	padding: 0.25rem 0.75rem;
+	font-size: 0.75rem;
+	background-color: var(--color-primary);
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	min-width: 70px;
+}
+
+.import-button:hover:not(:disabled) {
+	background-color: var(--color-primary-dark);
+	transform: translateY(-1px);
+}
+
+.import-button:disabled {
+	background-color: var(--color-secondary);
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+/* Footer enhancements */
+.lsp-panel-footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.75rem;
+	border-top: 1px solid var(--accent-border);
+	background-color: var(--accent-background);
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.lsp-footer-stats {
+	font-size: 0.75rem;
+	color: var(--pico-secondary);
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.lsp-footer-actions {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.lsp-refresh-button {
+	padding: 0.4rem 0.75rem;
+	font-size: 0.75rem;
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border);
+	border-radius: 4px;
+	color: var(--text-color);
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.lsp-refresh-button:hover:not(:disabled) {
+	background-color: var(--pico-primary-focus);
+	border-color: var(--pico-primary);
+}
+
+.lsp-refresh-button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+/* Completion menu enhancements */
+.cm-completionInfo {
+	max-width: 400px;
+	white-space: pre-wrap;
+}
+
+.cm-completionDetail {
+	font-style: normal;
+}
+
+/* Source indicators in completion menu */
+.cm-completionLabel::after {
+	content: attr(data-source-icon);
+	margin-left: 0.5rem;
+	font-size: 0.8em;
+	opacity: 0.7;
+}
+
+/* Animation for importing state */
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* Toast notifications for import status */
+.import-notification {
+	position: fixed;
+	top: 20px;
+	right: 20px;
+	padding: 0.75rem 1rem;
+	border-radius: 6px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+	z-index: 1000;
+	max-width: 300px;
+	animation: slideInRight 0.3s ease;
+}
+
+.import-notification.success {
+	background-color: var(--color-success);
+	color: white;
+}
+
+.import-notification.error {
+	background-color: var(--color-danger);
+	color: white;
+}
+
+.import-notification.info {
+	background-color: var(--color-info);
+	color: white;
+}
+
+@keyframes slideInRight {
+	from {
+		transform: translateX(100%);
+		opacity: 0;
+	}
+	to {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+/* Bibliography cache status indicator */
+.bib-cache-status {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.75rem;
+	color: var(--pico-secondary);
+	padding: 0.25rem 0.5rem;
+	border-radius: 4px;
+	background-color: var(--pico-secondary-background);
+}
+
+.bib-cache-status.updating {
+	color: var(--color-warning);
+}
+
+.bib-cache-status.error {
+	color: var(--color-danger);
+}
+
+.bib-cache-status.ready {
+	color: var(--color-success);
+}
+
+/* Settings panel enhancements for target file selection */
+.target-file-selector {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-top: 0.25rem;
+}
+
+.target-file-selector select {
+	flex: 1;
+	min-width: 200px;
+}
+
+.create-bib-button {
+	padding: 0.25rem 0.5rem;
+	font-size: 0.75rem;
+	background-color: var(--color-success);
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.create-bib-button:hover {
+	background-color: var(--color-success-dark);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+	.lsp-panel-footer {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.lsp-footer-stats,
+	.lsp-footer-actions {
+		justify-content: center;
+	}
+
+	.import-notification {
+		right: 10px;
+		left: 10px;
+		max-width: none;
+	}
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+	.lsp-entry-item.external-entry {
+		background-color: color-mix(in srgb, var(--color-warning) 8%, transparent);
+	}
+
+	.import-notification {
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+	}
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+	.lsp-entry-item .entry-source {
+		border: 2px solid currentColor;
+	}
+
+	.lsp-entry-item.external-entry {
+		border-left-width: 4px;
+	}
+
+	.import-button {
+		border: 2px solid var(--color-primary);
+	}
+}
