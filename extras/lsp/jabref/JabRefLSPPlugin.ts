@@ -4,7 +4,6 @@ import type { LSPRequest, LSPResponse, LSPNotification } from "../../../src/type
 import JabRefPanel from "./JabRefPanel";
 import { JabRefIcon } from "./Icon";
 import { jabrefLSPSettings } from "./settings";
-import { useDynamicBibSettings } from "../../../src/hooks/useDynamicBibSettings";
 import { bibliographyImportService } from "../../../src/services/BibliographyImportService";
 
 export const PLUGIN_NAME = "JabRef LSP";
@@ -32,17 +31,14 @@ class JabRefLSPPlugin implements LSPPlugin {
 	private settingsReady = false;
 	private settingsPromise?: Promise<void>;
 	private settingsResolver?: () => void;
-	private dynamicBibSettings?: ReturnType<typeof useDynamicBibSettings>;
 
 	constructor() {
-		// Initialize the import service with BibtexParser if available
 		this.setupBibtexParser();
 		this.initializeDynamicSettings();
 	}
 
 	private setupBibtexParser() {
 		try {
-			// Try to import BibtexParser from the extras plugin if available
 			const { BibtexParser } = require('../../viewers/bibtex/BibtexParser');
 			if (BibtexParser) {
 				bibliographyImportService.setParser({
@@ -54,19 +50,20 @@ class JabRefLSPPlugin implements LSPPlugin {
 				});
 			}
 		} catch (error) {
-			// BibtexParser not available, use the default simple parser
 			console.log('[JabRefLSP] Using default BibTeX parser - BibtexParser not available');
 		}
 	}
 
 	private initializeDynamicSettings() {
-		// Register the target-bib-file setting dynamically
-		// This should be called from a React component that uses the hook
 		setTimeout(() => {
-			// Dispatch event to register the dynamic setting
-			document.dispatchEvent(new CustomEvent('register-lsp-bib-setting', {
-				detail: { pluginId: this.id, pluginName: 'JabRef' }
-			}));
+			try {
+				const event = new CustomEvent('register-bibliography-plugin', {
+					detail: { pluginId: this.id, pluginName: 'JabRef' }
+				});
+				document.dispatchEvent(event);
+			} catch (error) {
+				console.error('[JabRefLSP] Error registering bibliography plugin:', error);
+			}
 		}, 100);
 	}
 
