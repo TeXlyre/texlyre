@@ -32,28 +32,159 @@ export interface BibTexParser {
 	updateEntryInContent(content: string, entry: BibEntry): string;
 }
 
-class SimpleBibTexParser implements BibTexParser {
+class DefaultBibTexParser implements BibTexParser {
 	parse(content: string): BibEntry[] {
 		const entries: BibEntry[] = [];
-		const entryRegex = /@(\w+)\s*\{\s*([^,\s]+)\s*,?\s*([\s\S]*?)\n\s*\}/g;
-		let match;
 
-		while ((match = entryRegex.exec(content)) !== null) {
-			const [fullMatch, type, key, fieldsString] = match;
+		// Remove comments and clean content
+		const cleanContent = content
+			.split('\n')
+			.map(line => line.replace(/%.*$/, '').trim())
+			.join('\n');
+
+		// Find all entries using a more robust approach
+		let pos = 0;
+		while (pos < cleanContent.length) {
+			// Find next @ symbol
+			const atPos = cleanContent.indexOf('@', pos);
+			if (atPos === -1) break;
+
+			// Find entry type and opening brace
+			const typeMatch = cleanContent.slice(atPos).match(/^@(\w+)\s*\{\s*([^,\s]+)\s*,/);
+			if (!typeMatch) {
+				pos = atPos + 1;
+				continue;
+			}
+
+			const [, type, key] = typeMatch;
+			const entryStart = atPos;
+			const contentStart = atPos + typeMatch[0].length;
+
+			// Find matching closing brace
+			let braceCount = 1;
+			let currentPos = contentStart;
+			let entryEnd = -1;
+
+			while (currentPos < cleanContent.length && braceCount > 0) {
+				const char = cleanContent[currentPos];
+				if (char === '{') {
+					braceCount++;
+				} else if (char === '}') {
+					braceCount--;
+					if (braceCount === 0) {
+						entryEnd = currentPos;
+						break;
+					}
+				}
+				currentPos++;
+			}
+
+			if (entryEnd === -1) {
+				pos = atPos + 1;
+				continue;
+			}
+
+			// Extract the full entry and field content
+			const fullEntry = cleanContent.slice(entryStart, entryEnd + 1);
+			const fieldsContent = cleanContent.slice(contentStart, entryEnd);
+
+			// Parse fields
 			const fields: Record<string, string> = {};
+			let fieldPos = 0;
 
-			const fieldRegex = /(\w+)\s*=\s*\{([^}]*)\}/g;
-			let fieldMatch;
-			while ((fieldMatch = fieldRegex.exec(fieldsString)) !== null) {
-				fields[fieldMatch[1].toLowerCase()] = fieldMatch[2];
+			while (fieldPos < fieldsContent.length) {
+				// Skip whitespace and commas
+				while (fieldPos < fieldsContent.length && /[\s,]/.test(fieldsContent[fieldPos])) {
+					fieldPos++;
+				}
+
+				if (fieldPos >= fieldsContent.length) break;
+
+				// Find field name
+				const fieldNameMatch = fieldsContent.slice(fieldPos).match(/^(\w+)\s*=/);
+				if (!fieldNameMatch) {
+					fieldPos++;
+					continue;
+				}
+
+				const fieldName = fieldNameMatch[1].toLowerCase();
+				fieldPos += fieldNameMatch[0].length;
+
+				// Skip whitespace after =
+				while (fieldPos < fieldsContent.length && /\s/.test(fieldsContent[fieldPos])) {
+					fieldPos++;
+				}
+
+				if (fieldPos >= fieldsContent.length) break;
+
+				let fieldValue = '';
+				const startChar = fieldsContent[fieldPos];
+
+				if (startChar === '{') {
+					// Brace-delimited value
+					let bracesCount = 1;
+					fieldPos++; // Skip opening brace
+					const valueStart = fieldPos;
+
+					while (fieldPos < fieldsContent.length && bracesCount > 0) {
+						const char = fieldsContent[fieldPos];
+						if (char === '{') {
+							bracesCount++;
+						} else if (char === '}') {
+							bracesCount--;
+						}
+						if (bracesCount > 0) {
+							fieldPos++;
+						}
+					}
+
+					fieldValue = fieldsContent.slice(valueStart, fieldPos).trim();
+					fieldPos++; // Skip closing brace
+				} else if (startChar === '"') {
+					// Quote-delimited value
+					fieldPos++; // Skip opening quote
+					const valueStart = fieldPos;
+
+					while (fieldPos < fieldsContent.length && fieldsContent[fieldPos] !== '"') {
+						if (fieldsContent[fieldPos] === '\\') {
+							fieldPos += 2; // Skip escaped character
+						} else {
+							fieldPos++;
+						}
+					}
+
+					fieldValue = fieldsContent.slice(valueStart, fieldPos).trim();
+					fieldPos++; // Skip closing quote
+				} else {
+					// Unquoted value (until comma or end)
+					const valueStart = fieldPos;
+					while (fieldPos < fieldsContent.length &&
+						   fieldsContent[fieldPos] !== ',' &&
+						   fieldsContent[fieldPos] !== '}') {
+						fieldPos++;
+					}
+					fieldValue = fieldsContent.slice(valueStart, fieldPos).trim();
+				}
+
+				if (fieldValue) {
+					// Clean up field value - remove extra braces and normalize whitespace
+					fieldValue = fieldValue
+						.replace(/^\{+|\}+$/g, '') // Remove outer braces
+						.replace(/\s+/g, ' ') // Normalize whitespace
+						.trim();
+
+					fields[fieldName] = fieldValue;
+				}
 			}
 
 			entries.push({
 				key: key.trim(),
 				type: type.toLowerCase(),
 				fields,
-				rawEntry: fullMatch
+				rawEntry: fullEntry
 			});
+
+			pos = entryEnd + 1;
 		}
 
 		return entries;
@@ -96,7 +227,7 @@ export class BibliographyImportService {
 	private static instance: BibliographyImportService;
 	private importQueue: Map<string, Promise<ImportResult>> = new Map();
 	private notificationCallbacks: Array<(result: ImportResult) => void> = [];
-	private parser: BibTexParser = new SimpleBibTexParser();
+	private parser: BibTexParser = new DefaultBibTexParser();
 
 	static getInstance(): BibliographyImportService {
 		if (!BibliographyImportService.instance) {
@@ -107,6 +238,10 @@ export class BibliographyImportService {
 
 	setParser(parser: BibTexParser): void {
 		this.parser = parser;
+	}
+
+	getParser(): BibTexParser {
+		return this.parser;
 	}
 
 	addNotificationCallback(callback: (result: ImportResult) => void): () => void {

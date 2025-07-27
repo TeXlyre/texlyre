@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import type { LSPPanelProps } from "../../../src/plugins/PluginInterface";
 import { useSettings } from "../../../src/hooks/useSettings";
 import { fileStorageService } from "../../../src/services/FileStorageService";
+import { bibliographyImportService } from "../../../src/services/BibliographyImportService";
 
 interface BibEntry {
 	key: string;
@@ -20,39 +21,6 @@ interface BibFile {
 	name: string;
 	id: string;
 }
-
-// Simple BibTeX parser for local files
-const parseBibTeX = (content: string): BibEntry[] => {
-	const entries: BibEntry[] = [];
-
-	// Match @type{key, ... }
-	const entryRegex = /@(\w+)\s*\{\s*([^,\s]+)\s*,([^}]*(?:\{[^}]*\}[^}]*)*)\}/gs;
-	let match;
-
-	while ((match = entryRegex.exec(content)) !== null) {
-		const [fullMatch, type, key, fieldsContent] = match;
-		const fields: Record<string, string> = {};
-
-		// Parse fields more carefully to handle nested braces
-		const fieldRegex = /(\w+)\s*=\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}\s*,?/g;
-		let fieldMatch;
-
-		while ((fieldMatch = fieldRegex.exec(fieldsContent)) !== null) {
-			const [, fieldName, fieldValue] = fieldMatch;
-			fields[fieldName.toLowerCase()] = fieldValue.trim();
-		}
-
-		entries.push({
-			key: key.trim(),
-			entryType: type.toLowerCase(),
-			fields,
-			rawEntry: fullMatch,
-			source: 'local'
-		});
-	}
-
-	return entries;
-};
 
 const JabRefPanel: React.FC<LSPPanelProps> = ({
 	className = "",
@@ -79,6 +47,9 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 	const serverUrl = (getSetting("jabref-lsp-server-url")?.value as string) ?? "ws://localhost:2087/";
 	const autoImport = (getSetting("jabref-lsp-auto-import")?.value as boolean) ?? true;
 	const duplicateHandling = (getSetting("jabref-lsp-merge-duplicates")?.value as string) ?? "keep-local";
+
+	// Get the parser from the service
+	const parser = bibliographyImportService.getParser();
 
 	// Fetch available bib files
 	const refreshAvailableFiles = useCallback(async () => {
@@ -124,9 +95,13 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 						? bibFile.content
 						: new TextDecoder().decode(bibFile.content);
 
-					const parsedEntries = parseBibTeX(content);
+					// Use the parser from the service
+					const parsedEntries = parser.parse(content);
 					const bibEntries: BibEntry[] = parsedEntries.map(entry => ({
-						...entry,
+						key: entry.key,
+						entryType: entry.type,
+						fields: entry.fields,
+						rawEntry: entry.rawEntry,
 						source: 'local' as const,
 						filePath: bibFile.path
 					}));
@@ -144,7 +119,7 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 			console.error('[JabRefPanel] Error fetching local entries:', error);
 			setLocalEntries([]);
 		}
-	}, []);
+	}, [parser]);
 
 	// Fetch external entries from LSP
 	const fetchExternalEntries = useCallback(async () => {
@@ -495,7 +470,7 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 		} else if (importingEntries.has(entry.key)) {
 			return <span className="entry-source importing" title="Importing...">⏳</span>;
 		} else {
-			return <span className="entry-source external" title="Click to import">⬇️</span>;
+			return <span className="entry-source external" title="Click to import">⬇</span>;
 		}
 	};
 
@@ -541,7 +516,7 @@ const JabRefPanel: React.FC<LSPPanelProps> = ({
 
 			<div className="target-file-selector" style={{ padding: '0.75rem', borderBottom: '1px solid var(--accent-border)' }}>
 				<label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '0.75rem' }}>
-					Target Bibliography File:
+					Bib File:
 				</label>
 				<select
 					value={targetBibFile}
