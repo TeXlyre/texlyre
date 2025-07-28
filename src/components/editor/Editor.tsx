@@ -2,6 +2,7 @@
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { LSPProvider } from '../../contexts/LSPContext';
 import { CommentProvider } from "../../contexts/CommentContext";
 import { processComments } from "../../extensions/codemirror/CommentExtension.ts";
 import { useCollab } from "../../hooks/useCollab";
@@ -734,6 +735,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 		const CollaborativeViewerComponent = collaborativeViewerPlugin.renderViewer;
 
 		return (
+			<LSPProvider>
 			<CommentProvider
 				editorContent={textContent}
 				onUpdateContent={onUpdateContent}
@@ -774,6 +776,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 					onCommentSubmit={handleCommentSubmit}
 				/>
 			</CommentProvider>
+			</LSPProvider>
 		);
 	}
 
@@ -843,6 +846,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 		!isEditingFile && linkedFileInfo?.fileName?.endsWith(".tex");
 
 	return (
+		<LSPProvider>
 		<CommentProvider
 			editorContent={textContent}
 			onUpdateContent={handleContentUpdate}
@@ -878,6 +882,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 				onCommentSubmit={handleCommentSubmit}
 			/>
 		</CommentProvider>
+		</LSPProvider>
 	);
 };
 

@@ -1,0 +1,726 @@
+// src/contexts/LSPContext.tsx
+import type React from "react";
+import {
+	type ReactNode,
+	createContext,
+	useCallback,
+	useEffect,
+	useState,
+} from "react";
+
+import { pluginRegistry } from "../plugins/PluginRegistry";
+import type { LSPPlugin } from "../plugins/PluginInterface";
+import { useSettings } from "../hooks/useSettings";
+import { fileStorageService } from "../services/FileStorageService";
+import { bibliographyImportService } from "../services/BibliographyImportService";
+
+interface BibEntry {
+	key: string;
+	entryType: string;
+	fields: Record<string, string>;
+	rawEntry: string;
+	source?: 'local' | 'external';
+	isImported?: boolean;
+	filePath?: string;
+	providerId?: string;
+}
+
+interface BibFile {
+	path: string;
+	name: string;
+	id: string;
+}
+
+interface LSPContextType {
+	// Panel state
+	showPanel: boolean;
+	setShowPanel: (show: boolean) => void;
+	activeTab: "list" | "detail";
+	setActiveTab: (tab: "list" | "detail") => void;
+	selectedProvider: string | "all";
+	setSelectedProvider: (provider: string | "all") => void;
+	availableProviders: LSPPlugin[];
+	selectedItem: any;
+	setSelectedItem: (item: any) => void;
+	showDropdown: boolean;
+	setShowDropdown: (show: boolean) => void;
+	isRefreshing: boolean;
+	searchQuery: string;
+	setSearchQuery: (query: string) => void;
+
+	// Bibliography state
+	entries: BibEntry[];
+	localEntries: BibEntry[];
+	externalEntries: BibEntry[];
+	filteredEntries: BibEntry[];
+	availableBibFiles: BibFile[];
+	targetBibFile: string;
+	setTargetBibFile: (file: string) => void;
+	isLoading: boolean;
+	importingEntries: Set<string>;
+
+	// Computed properties
+	currentProvider: LSPPlugin | undefined;
+	isBibliographyProvider: boolean;
+
+	// Settings
+	citationStyle: string;
+	maxCompletions: number;
+	autoImport: boolean;
+	duplicateHandling: string;
+	serverUrl: string;
+
+	// Actions
+	handleRefresh: () => Promise<void>;
+	handleProviderSelect: (providerId: string | "all") => void;
+	handleItemSelect: (item: any) => void;
+	handleBackToList: () => void;
+	handleEntryClick: (entry: BibEntry) => void;
+	handleImportEntry: (entry: BibEntry) => Promise<void>;
+	handleTargetFileChange: (newValue: string) => Promise<void>;
+	createNewBibFile: (fileName?: string) => Promise<string | null>;
+
+	// Status methods
+	getConnectionStatus: () => string;
+	getStatusColor: () => string;
+}
+
+export const LSPContext = createContext<LSPContextType | null>(null);
+
+interface LSPProviderProps {
+	children: ReactNode;
+}
+
+export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
+	const { getSetting } = useSettings();
+
+	// Panel state
+	const [showPanel, setShowPanel] = useState(false);
+	const [activeTab, setActiveTab] = useState<"list" | "detail">("list");
+	const [selectedProvider, setSelectedProvider] = useState<string | "all">("all");
+	const [availableProviders, setAvailableProviders] = useState<LSPPlugin[]>([]);
+	const [selectedItem, setSelectedItem] = useState<any>(null);
+	const [showDropdown, setShowDropdown] = useState(false);
+	const [isRefreshing, setIsRefreshing] = useState(false);
+	const [searchQuery, setSearchQuery] = useState("");
+
+	// Bibliography state
+	const [entries, setEntries] = useState<BibEntry[]>([]);
+	const [localEntries, setLocalEntries] = useState<BibEntry[]>([]);
+	const [externalEntries, setExternalEntries] = useState<BibEntry[]>([]);
+	const [filteredEntries, setFilteredEntries] = useState<BibEntry[]>([]);
+	const [availableBibFiles, setAvailableBibFiles] = useState<BibFile[]>([]);
+	const [targetBibFile, setTargetBibFile] = useState<string>("");
+	const [isLoading, setIsLoading] = useState(false);
+	const [importingEntries, setImportingEntries] = useState<Set<string>>(new Set());
+
+	// Computed properties
+	const currentProvider = availableProviders.find(p => p.id === selectedProvider);
+	const isBibliographyProvider = currentProvider && 'getBibliographyEntries' in currentProvider;
+
+	// Get provider-specific settings
+	const getProviderSetting = (settingName: string) => {
+		if (!currentProvider) return undefined;
+		return getSetting(`${currentProvider.id}-${settingName}`)?.value;
+	};
+
+	const citationStyle = (getProviderSetting("citation-style") as string) ?? "numeric";
+	const maxCompletions = (getProviderSetting("max-completions") as number) ?? 20;
+	const autoImport = (getProviderSetting("auto-import") as boolean) ?? true;
+	const duplicateHandling = (getProviderSetting("merge-duplicates") as string) ?? "keep-local";
+	const serverUrl = (getProviderSetting("server-url") as string) ?? "ws://localhost:2087/";
+
+	const parser = bibliographyImportService.getParser();
+
+	// Initialize providers
+	useEffect(() => {
+		const providers = pluginRegistry.getAllLSPPlugins();
+		setAvailableProviders(providers);
+
+		if (providers.length > 0 && selectedProvider === "all") {
+			setSelectedProvider(providers[0].id);
+		}
+	}, []);
+
+	// Listen for panel toggle events
+	useEffect(() => {
+		const handleToggleLSPPanel = (event: Event) => {
+			const customEvent = event as CustomEvent;
+			const { show, pluginId } = customEvent.detail;
+
+			setShowPanel(show);
+			if (show && pluginId) {
+				setSelectedProvider(pluginId);
+			}
+		};
+
+		document.addEventListener("toggle-lsp-panel", handleToggleLSPPanel);
+		return () => {
+			document.removeEventListener("toggle-lsp-panel", handleToggleLSPPanel);
+		};
+	}, []);
+
+	// Update server URL when it changes
+	useEffect(() => {
+		if (currentProvider && 'updateServerUrl' in currentProvider) {
+			(currentProvider as any).updateServerUrl(serverUrl);
+		}
+	}, [currentProvider, serverUrl]);
+
+	// File management methods
+	const refreshAvailableFiles = useCallback(async () => {
+		try {
+			const allFiles = await fileStorageService.getAllFiles();
+			const bibFiles = allFiles
+				.filter(file =>
+					(file.name.endsWith('.bib') || file.name.endsWith('.bibtex')) &&
+					!file.isDeleted
+				)
+				.map(file => ({
+					path: file.path,
+					name: file.name,
+					id: file.id
+				}));
+
+			setAvailableBibFiles(bibFiles);
+		} catch (error) {
+			console.error('[LSPContext] Error refreshing available files:', error);
+			setAvailableBibFiles([]);
+		}
+	}, []);
+
+	const fetchLocalEntries = useCallback(async () => {
+		try {
+			const allFiles = await fileStorageService.getAllFiles();
+			const bibFiles = allFiles.filter(file =>
+				file.name.endsWith('.bib') &&
+				!file.isDeleted &&
+				file.content
+			);
+
+			const allLocalEntries: BibEntry[] = [];
+
+			for (const bibFile of bibFiles) {
+				try {
+					const content = typeof bibFile.content === 'string'
+						? bibFile.content
+						: new TextDecoder().decode(bibFile.content);
+
+					const parsedEntries = parser.parse(content);
+					const bibEntries: BibEntry[] = parsedEntries.map(entry => ({
+						key: entry.key,
+						entryType: entry.type,
+						fields: entry.fields,
+						rawEntry: entry.rawEntry,
+						source: 'local' as const,
+						filePath: bibFile.path
+					}));
+
+					allLocalEntries.push(...bibEntries);
+				} catch (parseError) {
+					console.error(`[LSPContext] Error parsing ${bibFile.path}:`, parseError);
+				}
+			}
+
+			setLocalEntries(allLocalEntries);
+		} catch (error) {
+			console.error('[LSPContext] Error fetching local entries:', error);
+			setLocalEntries([]);
+		}
+	}, [parser]);
+
+	const fetchExternalEntries = useCallback(async () => {
+		if (!currentProvider || !isBibliographyProvider) {
+			setExternalEntries([]);
+			return;
+		}
+
+		const connectionStatus = currentProvider.getConnectionStatus();
+		if (connectionStatus !== 'connected') {
+			console.log(`[LSPContext] Provider ${currentProvider.name} not connected:`, connectionStatus);
+			setExternalEntries([]);
+			return;
+		}
+
+		setIsLoading(true);
+		try {
+			console.log(`[LSPContext] Fetching external entries from ${currentProvider.name}...`);
+			const bibEntries = await (currentProvider as any).getBibliographyEntries();
+			console.log(`[LSPContext] Retrieved ${bibEntries.length} external entries`);
+
+			const externalBibEntries: BibEntry[] = bibEntries.map((entry: any) => ({
+				...entry,
+				source: 'external' as const,
+				isImported: false
+			}));
+			setExternalEntries(externalBibEntries);
+		} catch (error) {
+			console.error(`[LSPContext] Error fetching external entries from ${currentProvider.name}:`, error);
+			setExternalEntries([]);
+		} finally {
+			setIsLoading(false);
+		}
+	}, [currentProvider, isBibliographyProvider]);
+
+	const fetchAllBibliographyEntries = useCallback(async () => {
+		if (selectedProvider !== "all") return;
+
+		const bibliographyProviders = availableProviders.filter(provider =>
+			'getBibliographyEntries' in provider && provider.getConnectionStatus() === 'connected'
+		);
+
+		if (bibliographyProviders.length === 0) {
+			setExternalEntries([]);
+			return;
+		}
+
+		setIsLoading(true);
+		try {
+			const allExternalEntries: BibEntry[] = [];
+
+			for (const provider of bibliographyProviders) {
+				try {
+					console.log(`[LSPContext] Fetching entries from ${provider.name}...`);
+					const bibEntries = await (provider as any).getBibliographyEntries();
+					const providerEntries: BibEntry[] = bibEntries.map((entry: any) => ({
+						...entry,
+						source: 'external' as const,
+						isImported: false,
+						providerId: provider.id
+					}));
+					allExternalEntries.push(...providerEntries);
+					console.log(`[LSPContext] Retrieved ${bibEntries.length} entries from ${provider.name}`);
+				} catch (error) {
+					console.error(`[LSPContext] Error fetching entries from ${provider.name}:`, error);
+				}
+			}
+
+			setExternalEntries(allExternalEntries);
+			console.log(`[LSPContext] Total external entries from all providers: ${allExternalEntries.length}`);
+		} catch (error) {
+			console.error('[LSPContext] Error fetching entries from all bibliography providers:', error);
+			setExternalEntries([]);
+		} finally {
+			setIsLoading(false);
+		}
+	}, [availableProviders, selectedProvider]);
+
+	const createNewBibFile = useCallback(async (fileName: string = 'bibliography.bib'): Promise<string | null> => {
+		try {
+			const filePath = `/${fileName}`;
+
+			const existingFile = await fileStorageService.getFileByPath(filePath);
+			if (existingFile && !existingFile.isDeleted) {
+				return filePath;
+			}
+
+			const fileNode = {
+				id: crypto.randomUUID(),
+				name: fileName,
+				path: filePath,
+				type: 'file' as const,
+				content: '% Bibliography file created by TeXlyre\n% Add your BibTeX entries here\n\n',
+				lastModified: Date.now(),
+				size: 0,
+				mimeType: 'text/x-bibtex',
+				isBinary: false,
+				isDeleted: false
+			};
+
+			await fileStorageService.storeFile(fileNode, { showConflictDialog: false });
+			await refreshAvailableFiles();
+
+			return filePath;
+		} catch (error) {
+			console.error('[LSPContext] Error creating new bib file:', error);
+			return null;
+		}
+	}, [refreshAvailableFiles]);
+
+	// Entry management
+	const mergeEntries = useCallback(() => {
+		const localKeys = new Set(localEntries.map(entry => entry.key));
+
+		const updatedExternalEntries = externalEntries.map(entry => ({
+			...entry,
+			isImported: localKeys.has(entry.key)
+		}));
+
+		const combined = [
+			...localEntries,
+			...updatedExternalEntries.filter(entry => !entry.isImported)
+		];
+
+		setEntries(combined);
+	}, [localEntries, externalEntries]);
+
+	// Filter entries based on search
+	useEffect(() => {
+		if (searchQuery.trim() === "") {
+			setFilteredEntries(entries.slice(0, maxCompletions));
+		} else {
+			const query = searchQuery.toLowerCase();
+			const filtered = entries.filter(entry => {
+				if (entry.key.toLowerCase().includes(query)) return true;
+				if (entry.entryType.toLowerCase().includes(query)) return true;
+				return Object.values(entry.fields).some(value =>
+					value.toLowerCase().includes(query)
+				);
+			}).slice(0, maxCompletions);
+			setFilteredEntries(filtered);
+		}
+	}, [searchQuery, entries, maxCompletions]);
+
+	// Merge entries when local or external entries change
+	useEffect(() => {
+		mergeEntries();
+	}, [mergeEntries]);
+
+	// Provider initialization effect
+	useEffect(() => {
+		if (selectedProvider === "all") {
+			console.log('[LSPContext] Initializing all LSP providers');
+
+			refreshAvailableFiles();
+			fetchLocalEntries();
+
+			const initializeAllProviders = async () => {
+				const initPromises = availableProviders.map(async (provider) => {
+					try {
+						await provider.initialize();
+						console.log(`[LSPContext] Provider ${provider.name} initialized`);
+					} catch (error) {
+						console.error(`[LSPContext] Failed to initialize provider ${provider.name}:`, error);
+					}
+				});
+				await Promise.allSettled(initPromises);
+			};
+
+			initializeAllProviders();
+
+			setTimeout(() => {
+				fetchAllBibliographyEntries();
+			}, 2000);
+
+			let retryCount = 0;
+			const maxRetries = 30;
+
+			const retryInterval = setInterval(() => {
+				const connectedBibProviders = availableProviders.filter(p =>
+					'getBibliographyEntries' in p && p.getConnectionStatus() === 'connected'
+				).length;
+
+				console.log(`[LSPContext] All providers connection check: ${connectedBibProviders} bibliography provider(s) connected (retry ${retryCount}/${maxRetries})`);
+
+				if (connectedBibProviders > 0) {
+					console.log('[LSPContext] At least one bibliography provider connected, fetching entries');
+					fetchAllBibliographyEntries();
+					clearInterval(retryInterval);
+				} else if (retryCount >= maxRetries) {
+					console.warn('[LSPContext] All providers connection timeout after retries');
+					clearInterval(retryInterval);
+				}
+				retryCount++;
+			}, 1000);
+
+			return () => clearInterval(retryInterval);
+		} else if (!isBibliographyProvider || !currentProvider) {
+			return;
+		}
+
+		console.log(`[LSPContext] Initializing bibliography provider: ${currentProvider.name}`);
+
+		const initializeProvider = async () => {
+			try {
+				await currentProvider.initialize();
+				console.log(`[LSPContext] Provider ${currentProvider.name} initialized`);
+			} catch (error) {
+				console.error(`[LSPContext] Failed to initialize provider ${currentProvider.name}:`, error);
+			}
+		};
+
+		initializeProvider();
+		refreshAvailableFiles();
+		fetchLocalEntries();
+
+		setTimeout(() => {
+			fetchExternalEntries();
+		}, 2000);
+
+		let retryCount = 0;
+		const maxRetries = 30;
+
+		const retryInterval = setInterval(() => {
+			if (!currentProvider) return;
+
+			const connectionStatus = currentProvider.getConnectionStatus();
+			console.log(`[LSPContext] Provider ${currentProvider.name} status: ${connectionStatus} (retry ${retryCount}/${maxRetries})`);
+
+			if (connectionStatus === 'connected') {
+				console.log(`[LSPContext] Provider ${currentProvider.name} connected, fetching external entries`);
+				fetchExternalEntries();
+				clearInterval(retryInterval);
+			} else if (retryCount >= maxRetries) {
+				console.warn(`[LSPContext] Provider ${currentProvider.name} connection timeout after ${maxRetries} retries`);
+				clearInterval(retryInterval);
+			}
+			retryCount++;
+		}, 1000);
+
+		return () => clearInterval(retryInterval);
+	}, [currentProvider, isBibliographyProvider, selectedProvider, availableProviders, fetchLocalEntries, fetchExternalEntries, fetchAllBibliographyEntries, refreshAvailableFiles]);
+
+	// Listen for file tree refresh events
+	useEffect(() => {
+		const handleFileTreeRefresh = () => {
+			if (isBibliographyProvider || selectedProvider === "all") {
+				refreshAvailableFiles();
+				fetchLocalEntries();
+			}
+		};
+
+		document.addEventListener('refresh-file-tree', handleFileTreeRefresh);
+		return () => {
+			document.removeEventListener('refresh-file-tree', handleFileTreeRefresh);
+		};
+	}, [isBibliographyProvider, selectedProvider, refreshAvailableFiles, fetchLocalEntries]);
+
+	// Action handlers
+	const handleRefresh = async () => {
+		setIsRefreshing(true);
+		try {
+			if (selectedProvider === "all") {
+				const refreshPromises = availableProviders.map(async (provider) => {
+					try {
+						await provider.initialize?.();
+						console.log(`[LSPContext] Refreshed provider: ${provider.name}`);
+					} catch (error) {
+						console.error(`[LSPContext] Failed to refresh provider ${provider.name}:`, error);
+					}
+				});
+
+				await Promise.allSettled(refreshPromises);
+				console.log(`[LSPContext] Refreshed all ${availableProviders.length} LSP providers`);
+			} else if (currentProvider) {
+				await currentProvider.initialize?.();
+				console.log(`[LSPContext] Refreshed provider: ${currentProvider.name}`);
+			}
+
+			if (isBibliographyProvider || selectedProvider === "all") {
+				await refreshAvailableFiles();
+				await fetchLocalEntries();
+				if (selectedProvider === "all") {
+					await fetchAllBibliographyEntries();
+				} else {
+					await fetchExternalEntries();
+				}
+			}
+		} catch (error) {
+			console.error("Error refreshing LSP provider:", error);
+		} finally {
+			setIsRefreshing(false);
+		}
+	};
+
+	const handleProviderSelect = (providerId: string | "all") => {
+		setSelectedProvider(providerId);
+		setShowDropdown(false);
+		setActiveTab("list");
+		setSelectedItem(null);
+		setSearchQuery("");
+
+		// Reset bibliography state when switching providers
+		setEntries([]);
+		setLocalEntries([]);
+		setExternalEntries([]);
+		setFilteredEntries([]);
+		setTargetBibFile("");
+	};
+
+	const handleItemSelect = (item: any) => {
+		setSelectedItem(item);
+		setActiveTab("detail");
+	};
+
+	const handleBackToList = () => {
+		setActiveTab("list");
+		setSelectedItem(null);
+	};
+
+	const handleEntryClick = (entry: BibEntry) => {
+		if (entry.source === 'external' && !entry.isImported) {
+			if (autoImport) {
+				handleImportEntry(entry);
+			}
+			return;
+		}
+
+		handleItemSelect({
+			key: entry.key,
+			entryType: entry.entryType,
+			fields: entry.fields,
+			rawEntry: entry.rawEntry,
+			title: entry.fields.title || '',
+			authors: entry.fields.author ? [entry.fields.author] : [],
+			year: entry.fields.year || '',
+			journal: entry.fields.journal || entry.fields.booktitle || '',
+		});
+
+		if (currentProvider) {
+			document.dispatchEvent(
+				new CustomEvent(`${currentProvider.id}-citation-selected`, {
+					detail: { citationKey: entry.key }
+				})
+			);
+		}
+	};
+
+	const handleImportEntry = async (entry: BibEntry) => {
+		if (!targetBibFile) {
+			console.error('[LSPContext] No target file selected');
+			return;
+		}
+
+		if (importingEntries.has(entry.key)) {
+			return;
+		}
+
+		setImportingEntries(prev => new Set(prev).add(entry.key));
+
+		try {
+			const targetFile = await fileStorageService.getFileByPath(targetBibFile);
+			if (!targetFile) {
+				console.error('[LSPContext] Target file not found:', targetBibFile);
+				return;
+			}
+
+			if (duplicateHandling === 'keep-local') {
+				const isDuplicate = localEntries.some(local =>
+					local.key === entry.key && local.filePath === targetBibFile
+				);
+				if (isDuplicate) {
+					return;
+				}
+			}
+
+			let currentContent = '';
+			if (targetFile.content) {
+				currentContent = typeof targetFile.content === 'string'
+					? targetFile.content
+					: new TextDecoder().decode(targetFile.content);
+			}
+
+			const newContent = currentContent.trim()
+				? `${currentContent.trim()}\n\n${entry.rawEntry}\n`
+				: `${entry.rawEntry}\n`;
+
+			await fileStorageService.updateFileContent(targetFile.id, newContent);
+			await fetchLocalEntries();
+			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+		} catch (error) {
+			console.error('[LSPContext] Error importing entry:', error);
+		} finally {
+			setImportingEntries(prev => {
+				const newSet = new Set(prev);
+				newSet.delete(entry.key);
+				return newSet;
+			});
+		}
+	};
+
+	const handleTargetFileChange = async (newValue: string) => {
+		if (newValue === "CREATE_NEW") {
+			const createdFile = await createNewBibFile();
+			if (createdFile) {
+				setTargetBibFile(createdFile);
+				document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+			}
+		} else {
+			setTargetBibFile(newValue);
+		}
+	};
+
+	const getConnectionStatus = () => {
+		if (selectedProvider === "all") {
+			const connectedCount = availableProviders.filter(p =>
+				p.getConnectionStatus() === "connected"
+			).length;
+
+			if (availableProviders.length === 0) return "disconnected";
+			if (connectedCount === availableProviders.length) return "connected";
+			if (connectedCount > 0) return "connecting";
+			return "disconnected";
+		}
+		return currentProvider?.getConnectionStatus() || "disconnected";
+	};
+
+	const getStatusColor = () => {
+		const status = getConnectionStatus();
+		switch (status) {
+			case "connected": return "#28a745";
+			case "connecting": return "#ffc107";
+			case "error": return "#dc3545";
+			default: return "#666";
+		}
+	};
+
+	const contextValue: LSPContextType = {
+		// Panel state
+		showPanel,
+		setShowPanel,
+		activeTab,
+		setActiveTab,
+		selectedProvider,
+		setSelectedProvider,
+		availableProviders,
+		selectedItem,
+		setSelectedItem,
+		showDropdown,
+		setShowDropdown,
+		isRefreshing,
+		searchQuery,
+		setSearchQuery,
+
+		// Bibliography state
+		entries,
+		localEntries,
+		externalEntries,
+		filteredEntries,
+		availableBibFiles,
+		targetBibFile,
+		setTargetBibFile,
+		isLoading,
+		importingEntries,
+
+		// Computed properties
+		currentProvider,
+		isBibliographyProvider,
+
+		// Settings
+		citationStyle,
+		maxCompletions,
+		autoImport,
+		duplicateHandling,
+		serverUrl,
+
+		// Actions
+		handleRefresh,
+		handleProviderSelect,
+		handleItemSelect,
+		handleBackToList,
+		handleEntryClick,
+		handleImportEntry,
+		handleTargetFileChange,
+		createNewBibFile,
+
+		// Status methods
+		getConnectionStatus,
+		getStatusColor,
+	};
+
+	return (
+		<LSPContext.Provider value={contextValue}>
+			{children}
+		</LSPContext.Provider>
+	);
+};

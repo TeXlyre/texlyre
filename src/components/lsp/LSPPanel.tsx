@@ -1,493 +1,47 @@
+// src/components/lsp/LSPPanel.tsx
 import type React from "react";
-import { useEffect, useState, useCallback } from "react";
-import { pluginRegistry } from "../../plugins/PluginRegistry";
-import type { LSPPlugin } from "../../plugins/PluginInterface";
-import { useSettings } from "../../hooks/useSettings";
-import { fileStorageService } from "../../services/FileStorageService";
-import { bibliographyImportService } from "../../services/BibliographyImportService";
+import { useLSP } from "../../hooks/useLSP";
 import { SyncIcon, ChevronDownIcon } from "../common/Icons";
 
 interface LSPPanelProps {
 	className?: string;
 }
 
-interface BibEntry {
-	key: string;
-	entryType: string;
-	fields: Record<string, string>;
-	rawEntry: string;
-	source?: 'local' | 'external';
-	isImported?: boolean;
-	filePath?: string;
-}
-
-interface BibFile {
-	path: string;
-	name: string;
-	id: string;
-}
-
 const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
-	const { getSetting } = useSettings();
-
-	const [showPanel, setShowPanel] = useState(false);
-	const [activeTab, setActiveTab] = useState<"list" | "detail">("list");
-	const [selectedProvider, setSelectedProvider] = useState<string | "all">("all");
-	const [availableProviders, setAvailableProviders] = useState<LSPPlugin[]>([]);
-	const [selectedItem, setSelectedItem] = useState<any>(null);
-	const [showDropdown, setShowDropdown] = useState(false);
-	const [isRefreshing, setIsRefreshing] = useState(false);
-	const [searchQuery, setSearchQuery] = useState("");
-
-	// Bibliography-specific state
-	const [entries, setEntries] = useState<BibEntry[]>([]);
-	const [localEntries, setLocalEntries] = useState<BibEntry[]>([]);
-	const [externalEntries, setExternalEntries] = useState<BibEntry[]>([]);
-	const [filteredEntries, setFilteredEntries] = useState<BibEntry[]>([]);
-	const [availableBibFiles, setAvailableBibFiles] = useState<BibFile[]>([]);
-	const [targetBibFile, setTargetBibFile] = useState<string>("");
-	const [isLoading, setIsLoading] = useState(false);
-	const [importingEntries, setImportingEntries] = useState<Set<string>>(new Set());
-
-	useEffect(() => {
-		const providers = pluginRegistry.getAllLSPPlugins();
-		setAvailableProviders(providers);
-
-		if (providers.length > 0 && selectedProvider === "all") {
-			setSelectedProvider(providers[0].id);
-		}
-	}, []);
-
-	useEffect(() => {
-		const handleToggleLSPPanel = (event: Event) => {
-			const customEvent = event as CustomEvent;
-			const { show, pluginId } = customEvent.detail;
-
-			setShowPanel(show);
-			if (show && pluginId) {
-				setSelectedProvider(pluginId);
-			}
-		};
-
-		document.addEventListener("toggle-lsp-panel", handleToggleLSPPanel);
-
-		return () => {
-			document.removeEventListener("toggle-lsp-panel", handleToggleLSPPanel);
-		};
-	}, []);
-
-	const currentProvider = availableProviders.find(p => p.id === selectedProvider);
-	const isBibliographyProvider = currentProvider && 'getBibliographyEntries' in currentProvider;
-
-	// Get provider-specific settings and update server URL
-	const getProviderSetting = (settingName: string) => {
-		if (!currentProvider) return undefined;
-		return getSetting(`${currentProvider.id}-${settingName}`)?.value;
-	};
-
-	const citationStyle = (getProviderSetting("citation-style") as string) ?? "numeric";
-	const maxCompletions = (getProviderSetting("max-completions") as number) ?? 20;
-	const autoImport = (getProviderSetting("auto-import") as boolean) ?? true;
-	const duplicateHandling = (getProviderSetting("merge-duplicates") as string) ?? "keep-local";
-	const serverUrl = (getProviderSetting("server-url") as string) ?? "ws://localhost:2087/";
-
-	// Update server URL when it changes
-	useEffect(() => {
-		if (currentProvider && 'updateServerUrl' in currentProvider) {
-			(currentProvider as any).updateServerUrl(serverUrl);
-		}
-	}, [currentProvider, serverUrl]);
-
-	const parser = bibliographyImportService.getParser();
-
-	const refreshAvailableFiles = useCallback(async () => {
-		try {
-			const allFiles = await fileStorageService.getAllFiles();
-			const bibFiles = allFiles
-				.filter(file =>
-					(file.name.endsWith('.bib') || file.name.endsWith('.bibtex')) &&
-					!file.isDeleted
-				)
-				.map(file => ({
-					path: file.path,
-					name: file.name,
-					id: file.id
-				}));
-
-			setAvailableBibFiles(bibFiles);
-		} catch (error) {
-			console.error('[LSPPanel] Error refreshing available files:', error);
-			setAvailableBibFiles([]);
-		}
-	}, []);
-
-	const fetchLocalEntries = useCallback(async () => {
-		try {
-			const allFiles = await fileStorageService.getAllFiles();
-			const bibFiles = allFiles.filter(file =>
-				file.name.endsWith('.bib') &&
-				!file.isDeleted &&
-				file.content
-			);
-
-			const allLocalEntries: BibEntry[] = [];
-
-			for (const bibFile of bibFiles) {
-				try {
-					const content = typeof bibFile.content === 'string'
-						? bibFile.content
-						: new TextDecoder().decode(bibFile.content);
-
-					const parsedEntries = parser.parse(content);
-					const bibEntries: BibEntry[] = parsedEntries.map(entry => ({
-						key: entry.key,
-						entryType: entry.type,
-						fields: entry.fields,
-						rawEntry: entry.rawEntry,
-						source: 'local' as const,
-						filePath: bibFile.path
-					}));
-
-					allLocalEntries.push(...bibEntries);
-				} catch (parseError) {
-					console.error(`[LSPPanel] Error parsing ${bibFile.path}:`, parseError);
-				}
-			}
-
-			setLocalEntries(allLocalEntries);
-		} catch (error) {
-			console.error('[LSPPanel] Error fetching local entries:', error);
-			setLocalEntries([]);
-		}
-	}, [parser]);
-
-	const fetchExternalEntries = useCallback(async () => {
-		if (!currentProvider || !isBibliographyProvider) {
-			setExternalEntries([]);
-			return;
-		}
-
-		const connectionStatus = currentProvider.getConnectionStatus();
-		if (connectionStatus !== 'connected') {
-			console.log(`[LSPPanel] Provider ${currentProvider.name} not connected:`, connectionStatus);
-			setExternalEntries([]);
-			return;
-		}
-
-		setIsLoading(true);
-		try {
-			console.log(`[LSPPanel] Fetching external entries from ${currentProvider.name}...`);
-			const bibEntries = await (currentProvider as any).getBibliographyEntries();
-			console.log(`[LSPPanel] Retrieved ${bibEntries.length} external entries`);
-
-			const externalBibEntries: BibEntry[] = bibEntries.map((entry: any) => ({
-				...entry,
-				source: 'external' as const,
-				isImported: false
-			}));
-			setExternalEntries(externalBibEntries);
-		} catch (error) {
-			console.error(`[LSPPanel] Error fetching external entries from ${currentProvider.name}:`, error);
-			setExternalEntries([]);
-		} finally {
-			setIsLoading(false);
-		}
-	}, [currentProvider, isBibliographyProvider]);
-
-	const createNewBibFile = useCallback(async (fileName: string = 'bibliography.bib'): Promise<string | null> => {
-		try {
-			const filePath = `/${fileName}`;
-
-			const existingFile = await fileStorageService.getFileByPath(filePath);
-			if (existingFile && !existingFile.isDeleted) {
-				return filePath;
-			}
-
-			const fileNode = {
-				id: crypto.randomUUID(),
-				name: fileName,
-				path: filePath,
-				type: 'file' as const,
-				content: '% Bibliography file created by TeXlyre\n% Add your BibTeX entries here\n\n',
-				lastModified: Date.now(),
-				size: 0,
-				mimeType: 'text/x-bibtex',
-				isBinary: false,
-				isDeleted: false
-			};
-
-			await fileStorageService.storeFile(fileNode, { showConflictDialog: false });
-			await refreshAvailableFiles();
-
-			return filePath;
-		} catch (error) {
-			console.error('[LSPPanel] Error creating new bib file:', error);
-			return null;
-		}
-	}, [refreshAvailableFiles]);
-
-	const handleTargetFileChange = async (newValue: string) => {
-		if (newValue === "CREATE_NEW") {
-			const createdFile = await createNewBibFile();
-			if (createdFile) {
-				setTargetBibFile(createdFile);
-				document.dispatchEvent(new CustomEvent('refresh-file-tree'));
-			}
-		} else {
-			setTargetBibFile(newValue);
-		}
-	};
-
-	const handleImportEntry = async (entry: BibEntry) => {
-		if (!targetBibFile) {
-			console.error('[LSPPanel] No target file selected');
-			return;
-		}
-
-		if (importingEntries.has(entry.key)) {
-			return;
-		}
-
-		setImportingEntries(prev => new Set(prev).add(entry.key));
-
-		try {
-			const targetFile = await fileStorageService.getFileByPath(targetBibFile);
-			if (!targetFile) {
-				console.error('[LSPPanel] Target file not found:', targetBibFile);
-				return;
-			}
-
-			if (duplicateHandling === 'keep-local') {
-				const isDuplicate = localEntries.some(local =>
-					local.key === entry.key && local.filePath === targetBibFile
-				);
-				if (isDuplicate) {
-					return;
-				}
-			}
-
-			let currentContent = '';
-			if (targetFile.content) {
-				currentContent = typeof targetFile.content === 'string'
-					? targetFile.content
-					: new TextDecoder().decode(targetFile.content);
-			}
-
-			const newContent = currentContent.trim()
-				? `${currentContent.trim()}\n\n${entry.rawEntry}\n`
-				: `${entry.rawEntry}\n`;
-
-			await fileStorageService.updateFileContent(targetFile.id, newContent);
-
-			await fetchLocalEntries();
-
-			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
-		} catch (error) {
-			console.error('[LSPPanel] Error importing entry:', error);
-		} finally {
-			setImportingEntries(prev => {
-				const newSet = new Set(prev);
-				newSet.delete(entry.key);
-				return newSet;
-			});
-		}
-	};
-
-	const mergeEntries = useCallback(() => {
-		const localKeys = new Set(localEntries.map(entry => entry.key));
-
-		const updatedExternalEntries = externalEntries.map(entry => ({
-			...entry,
-			isImported: localKeys.has(entry.key)
-		}));
-
-		const combined = [
-			...localEntries,
-			...updatedExternalEntries.filter(entry => !entry.isImported)
-		];
-
-		setEntries(combined);
-	}, [localEntries, externalEntries]);
-
-	useEffect(() => {
-		if (searchQuery.trim() === "") {
-			setFilteredEntries(entries.slice(0, maxCompletions));
-		} else {
-			const query = searchQuery.toLowerCase();
-			const filtered = entries.filter(entry => {
-				if (entry.key.toLowerCase().includes(query)) return true;
-				if (entry.entryType.toLowerCase().includes(query)) return true;
-				return Object.values(entry.fields).some(value =>
-					value.toLowerCase().includes(query)
-				);
-			}).slice(0, maxCompletions);
-			setFilteredEntries(filtered);
-		}
-	}, [searchQuery, entries, maxCompletions]);
-
-	useEffect(() => {
-		mergeEntries();
-	}, [mergeEntries]);
-
-	useEffect(() => {
-		if (!isBibliographyProvider || !currentProvider) return;
-
-		console.log(`[LSPPanel] Initializing bibliography provider: ${currentProvider.name}`);
-
-		// Initialize the LSP plugin if it has initialization
-		const initializeProvider = async () => {
-			try {
-				await currentProvider.initialize();
-				console.log(`[LSPPanel] Provider ${currentProvider.name} initialized`);
-			} catch (error) {
-				console.error(`[LSPPanel] Failed to initialize provider ${currentProvider.name}:`, error);
-			}
-		};
-
-		initializeProvider();
-		refreshAvailableFiles();
-		fetchLocalEntries();
-
-		// Wait a bit more for the LSP connection to be established
-		setTimeout(() => {
-			fetchExternalEntries();
-		}, 2000);
-
-		let retryCount = 0;
-		const maxRetries = 30; // Increased retries
-
-		const retryInterval = setInterval(() => {
-			if (!currentProvider) return;
-
-			const connectionStatus = currentProvider.getConnectionStatus();
-			console.log(`[LSPPanel] Provider ${currentProvider.name} status: ${connectionStatus} (retry ${retryCount}/${maxRetries})`);
-
-			if (connectionStatus === 'connected') {
-				console.log(`[LSPPanel] Provider ${currentProvider.name} connected, fetching external entries`);
-				fetchExternalEntries();
-				clearInterval(retryInterval);
-			} else if (retryCount >= maxRetries) {
-				console.warn(`[LSPPanel] Provider ${currentProvider.name} connection timeout after ${maxRetries} retries`);
-				clearInterval(retryInterval);
-			}
-			retryCount++;
-		}, 1000); // Increased interval
-
-		return () => clearInterval(retryInterval);
-	}, [currentProvider, isBibliographyProvider, fetchLocalEntries, fetchExternalEntries, refreshAvailableFiles]);
-
-	useEffect(() => {
-		const handleFileTreeRefresh = () => {
-			if (isBibliographyProvider) {
-				refreshAvailableFiles();
-				fetchLocalEntries();
-			}
-		};
-
-		document.addEventListener('refresh-file-tree', handleFileTreeRefresh);
-
-		return () => {
-			document.removeEventListener('refresh-file-tree', handleFileTreeRefresh);
-		};
-	}, [isBibliographyProvider, refreshAvailableFiles, fetchLocalEntries]);
-
-	const handleItemSelect = (item: any) => {
-		setSelectedItem(item);
-		setActiveTab("detail");
-	};
-
-	const handleBackToList = () => {
-		setActiveTab("list");
-		setSelectedItem(null);
-	};
-
-	const handleProviderSelect = (providerId: string | "all") => {
-		setSelectedProvider(providerId);
-		setShowDropdown(false);
-		setActiveTab("list");
-		setSelectedItem(null);
-		setSearchQuery("");
-
-		// Reset bibliography state when switching providers
-		setEntries([]);
-		setLocalEntries([]);
-		setExternalEntries([]);
-		setFilteredEntries([]);
-		setTargetBibFile("");
-	};
-
-	const handleRefresh = async () => {
-		setIsRefreshing(true);
-		try {
-			if (selectedProvider === "all") {
-				for (const provider of availableProviders) {
-					await provider.initialize?.();
-				}
-			} else if (currentProvider) {
-				await currentProvider.initialize?.();
-			}
-
-			if (isBibliographyProvider) {
-				await refreshAvailableFiles();
-				await fetchLocalEntries();
-				await fetchExternalEntries();
-			}
-		} catch (error) {
-			console.error("Error refreshing LSP provider:", error);
-		} finally {
-			setIsRefreshing(false);
-		}
-	};
-
-	const handleEntryClick = (entry: BibEntry) => {
-		if (entry.source === 'external' && !entry.isImported) {
-			if (autoImport) {
-				handleImportEntry(entry);
-			}
-			return;
-		}
-
-		handleItemSelect({
-			key: entry.key,
-			entryType: entry.entryType,
-			fields: entry.fields,
-			rawEntry: entry.rawEntry,
-			title: entry.fields.title || '',
-			authors: entry.fields.author ? [entry.fields.author] : [],
-			year: entry.fields.year || '',
-			journal: entry.fields.journal || entry.fields.booktitle || '',
-		});
-
-		if (currentProvider) {
-			document.dispatchEvent(
-				new CustomEvent(`${currentProvider.id}-citation-selected`, {
-					detail: { citationKey: entry.key }
-				})
-			);
-		}
-	};
-
-	const getConnectionStatus = () => {
-		if (selectedProvider === "all") {
-			const connectedCount = availableProviders.filter(p =>
-				p.getConnectionStatus() === "connected"
-			).length;
-			if (connectedCount === availableProviders.length) return "connected";
-			if (connectedCount > 0) return "connecting";
-			return "disconnected";
-		}
-		return currentProvider?.getConnectionStatus() || "disconnected";
-	};
-
-	const getStatusColor = () => {
-		const status = getConnectionStatus();
-		switch (status) {
-			case "connected": return "#28a745";
-			case "connecting": return "#ffc107";
-			case "error": return "#dc3545";
-			default: return "#666";
-		}
-	};
+	const {
+		showPanel,
+		activeTab,
+		setActiveTab,
+		selectedProvider,
+		availableProviders,
+		selectedItem,
+		showDropdown,
+		setShowDropdown,
+		isRefreshing,
+		searchQuery,
+		setSearchQuery,
+		entries,
+		localEntries,
+		externalEntries,
+		filteredEntries,
+		availableBibFiles,
+		targetBibFile,
+		isLoading,
+		importingEntries,
+		currentProvider,
+		isBibliographyProvider,
+		citationStyle,
+		autoImport,
+		handleRefresh,
+		handleProviderSelect,
+		handleItemSelect,
+		handleBackToList,
+		handleEntryClick,
+		handleImportEntry,
+		handleTargetFileChange,
+		getConnectionStatus,
+		getStatusColor,
+	} = useLSP();
 
 	// Bibliography rendering helpers
 	const getEntryTypeIcon = (entryType: string) => {
@@ -508,25 +62,25 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 		}
 	};
 
-	const getDisplayTitle = (entry: BibEntry): string => {
+	const getDisplayTitle = (entry: any): string => {
 		return entry.fields.title || entry.fields.booktitle || 'Untitled';
 	};
 
-	const getDisplayAuthors = (entry: BibEntry): string => {
+	const getDisplayAuthors = (entry: any): string => {
 		const author = entry.fields.author || entry.fields.editor;
 		if (!author) return 'Unknown author';
 
-		const authors = author.split(' and ').map(a => a.trim());
+		const authors = author.split(' and ').map((a: string) => a.trim());
 		if (authors.length === 1) return authors[0];
 		if (authors.length === 2) return `${authors[0]} and ${authors[1]}`;
 		return `${authors[0]} et al.`;
 	};
 
-	const getDisplayYear = (entry: BibEntry): string => {
+	const getDisplayYear = (entry: any): string => {
 		return entry.fields.year || entry.fields.date || '';
 	};
 
-	const getDisplayVenue = (entry: BibEntry): string => {
+	const getDisplayVenue = (entry: any): string => {
 		return entry.fields.journal ||
 			   entry.fields.booktitle ||
 			   entry.fields.publisher ||
@@ -534,7 +88,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 			   entry.fields.institution || '';
 	};
 
-	const getCitationPreview = (entry: BibEntry): string => {
+	const getCitationPreview = (entry: any): string => {
 		switch (citationStyle) {
 			case "author-year":
 				const authors = getDisplayAuthors(entry);
@@ -550,7 +104,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 		}
 	};
 
-	const getSourceIndicator = (entry: BibEntry) => {
+	const getSourceIndicator = (entry: any) => {
 		if (entry.source === 'local') {
 			return <span className="entry-source local" title="Local">✓</span>;
 		} else if (entry.isImported) {
@@ -562,7 +116,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 		}
 	};
 
-	const getUniqueKey = (entry: BibEntry, index: number): string => {
+	const getUniqueKey = (entry: any, index: number): string => {
 		const baseKey = `${entry.source}-${entry.key}`;
 		if (entry.source === 'local' && entry.filePath) {
 			return `${baseKey}-${entry.filePath.replace(/[^a-zA-Z0-9]/g, '_')}-${index}`;
@@ -603,7 +157,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 							return (
 								<div key={key}>
 									<p><strong>{key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}:</strong></p>
-									<div style={{ marginLeft: '20px' }}>
+									<div className="detail-nested">
 										{Object.entries(value).map(([subKey, subValue]) => (
 											<p key={subKey}>
 												<strong>{subKey}:</strong> {String(subValue)}
@@ -621,15 +175,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 							return (
 								<div key={key}>
 									<p><strong>{displayKey}:</strong></p>
-									<pre
-										style={{
-											whiteSpace: 'pre-wrap',
-											fontSize: '0.55em',
-											background: '#f5f5f5',
-											padding: '8px',
-											borderRadius: '4px'
-										}}
-									>
+									<pre className="raw-entry">
 										{displayValue}
 									</pre>
 								</div>
@@ -676,14 +222,14 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 					)}
 				</div>
 
-				<div className="target-file-selector" style={{ padding: '0.75rem', borderBottom: '1px solid var(--accent-border)' }}>
-					<label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '0.75rem' }}>
+				<div className="target-file-selector">
+					<label className="target-file-label">
 						Bib File:
 					</label>
 					<select
 						value={targetBibFile}
 						onChange={(e) => handleTargetFileChange(e.target.value)}
-						style={{ width: '100%', padding: '0.4rem', fontSize: '0.75rem' }}
+						className="target-file-select"
 					>
 						<option value="">Select target file...</option>
 						{targetFileOptions.map(option => (
@@ -693,7 +239,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 						))}
 					</select>
 					{availableBibFiles.length === 0 && (
-						<div style={{ fontSize: '0.65rem', color: 'var(--pico-secondary)', marginTop: '0.25rem' }}>
+						<div className="target-file-hint">
 							No .bib files found. Create one to start importing entries.
 						</div>
 					)}
@@ -715,7 +261,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 								: "No bibliography entries available"
 							}
 							{localEntries.length === 0 && (
-								<div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--pico-secondary)' }}>
+								<div className="lsp-no-entries-hint">
 									Add .bib files to your project or connect to an external bibliography source.
 								</div>
 							)}
@@ -798,7 +344,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 									{citationStyle !== "numeric" && ` (${citationStyle} style)`}
 								</span>
 								{targetBibFile && (
-									<div style={{ fontSize: '0.65rem', color: 'var(--pico-secondary)', marginTop: '0.25rem' }}>
+									<div className="lsp-footer-target">
 										Target: {availableBibFiles.find(f => f.path === targetBibFile)?.name || 'Unknown file'}
 									</div>
 								)}
@@ -820,6 +366,77 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 	};
 
 	const renderGenericList = () => {
+		if (selectedProvider === "all") {
+			const allProviders = availableProviders.filter(provider =>
+				provider.getConnectionStatus() === 'connected' && !('getBibliographyEntries' in provider)
+			);
+
+			if (allProviders.length === 0) {
+				return (
+					<div className="lsp-provider-panel">
+						<div className="lsp-panel-search">
+							<input
+								type="text"
+								placeholder="Search all LSP providers..."
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+								className="lsp-search-input"
+							/>
+							{searchQuery && (
+								<button
+									className="lsp-clear-search-button"
+									onClick={() => setSearchQuery("")}
+								>
+									×
+								</button>
+							)}
+						</div>
+						<div className="no-provider">
+							No LSP providers are currently connected.
+							{availableProviders.length > 0 && (
+								<div>
+									Available providers: {availableProviders.map(p => p.name).join(', ')}
+								</div>
+							)}
+						</div>
+					</div>
+				);
+			}
+
+			return (
+				<div className="lsp-provider-panel">
+					<div className="lsp-panel-search">
+						<input
+							type="text"
+							placeholder="Search all LSP providers..."
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+							className="lsp-search-input"
+						/>
+						{searchQuery && (
+							<button
+								className="lsp-clear-search-button"
+								onClick={() => setSearchQuery("")}
+							>
+								×
+							</button>
+						)}
+					</div>
+					<div className="lsp-panel-content">
+						<div className="lsp-loading-indicator">
+							All LSP aggregation view - {allProviders.length} provider(s) connected
+							<div>
+								Connected: {allProviders.map(p => p.name).join(', ')}
+							</div>
+							<div className="lsp-no-entries-hint">
+								Individual provider panels can be accessed by selecting a specific provider from the dropdown.
+							</div>
+						</div>
+					</div>
+				</div>
+			);
+		}
+
 		const PanelComponent = currentProvider?.renderPanel;
 
 		if (PanelComponent) {
@@ -836,9 +453,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 
 		return (
 			<div className="no-provider">
-				{selectedProvider === "all"
-					? "Select a specific LSP provider"
-					: "No LSP provider available"}
+				No LSP provider available
 			</div>
 		);
 	};
@@ -850,7 +465,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 	return (
 		<div className={`lsp-panel ${className}`}>
 			<div className="lsp-panel-header">
-				<h3>LSP</h3>
+				<h3>Bibliography</h3>
 
 				<div className="view-tabs">
 					<button
@@ -940,7 +555,8 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 				</div>
 
 				{activeTab === "list" ? (
-					isBibliographyProvider ? renderBibliographyList() : renderGenericList()
+					isBibliographyProvider || (selectedProvider === "all" && filteredEntries.length > 0) ?
+						renderBibliographyList() : renderGenericList()
 				) : (
 					<div className="lsp-detail-view">
 						<div className="detail-header">
