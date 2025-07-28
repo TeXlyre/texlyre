@@ -1,4 +1,3 @@
-// extras/lsp/jabref/JabRefLSPPlugin.ts
 import type { LSPPlugin, LSPPanelProps } from "../../../src/plugins/PluginInterface";
 import type { LSPRequest, LSPResponse, LSPNotification } from "../../../src/types/lsp";
 import JabRefPanel from "./JabRefPanel";
@@ -130,7 +129,13 @@ class JabRefLSPPlugin implements LSPPlugin {
 	async getBibliographyEntries(): Promise<BibEntry[]> {
 		try {
 			if (!this.lspRequestHandler) {
-				throw new Error('LSP request handler not available');
+				console.warn('[JabRefLSP] LSP request handler not available yet');
+				return [];
+			}
+
+			if (this.connectionStatus !== 'connected') {
+				console.warn('[JabRefLSP] Not connected to LSP server');
+				return [];
 			}
 
 			const request: LSPRequest = {
@@ -144,6 +149,7 @@ class JabRefLSPPlugin implements LSPPlugin {
 			const response = await this.lspRequestHandler(request);
 			const completionItems = response.result?.items || [];
 
+			console.log(`[JabRefLSP] Retrieved ${completionItems.length} entries from LSP server`);
 			return completionItems.map(item => this.parseCompletionItem(item));
 		} catch (error) {
 			console.error('[JabRefLSP] Error getting bibliography entries:', error);
@@ -225,9 +231,181 @@ class JabRefLSPPlugin implements LSPPlugin {
 		return this.statusMessage;
 	}
 
+	private websocket?: WebSocket;
+	private requestId = 0;
+	private pendingRequests = new Map<number, { resolve: Function; reject: Function }>();
+
 	async initialize(): Promise<void> {
-		this.connectionStatus = 'connected';
-		this.statusMessage = 'Connected to citation language server';
+		console.log('[JabRefLSP] Initializing JabRef LSP plugin...');
+
+		try {
+			if (!this.settingsReady) {
+				await new Promise<void>((resolve) => {
+					this.settingsResolver = resolve;
+					this.updateServerUrl(this.currentServerUrl);
+				});
+			}
+
+			// Set up real LSP connection
+			if (!this.lspRequestHandler) {
+				console.log('[JabRefLSP] Setting up real LSP connection...');
+				await this.setupLSPConnection();
+			}
+
+			this.connectionStatus = 'connected';
+			this.statusMessage = 'Connected to citation language server';
+			console.log('[JabRefLSP] Plugin initialized successfully');
+		} catch (error) {
+			console.error('[JabRefLSP] Failed to initialize:', error);
+			this.connectionStatus = 'error';
+			this.statusMessage = `Failed to connect: ${error.message}`;
+			throw error;
+		}
+	}
+
+	private async setupLSPConnection(): Promise<void> {
+		const config = await this.getServerConfig();
+		console.log('[JabRefLSP] Connecting to server:', `${config.protocol}://${config.host}:${config.port}`);
+
+		this.connectionStatus = 'connecting';
+
+		return new Promise((resolve, reject) => {
+			try {
+				const wsUrl = `${config.protocol}://${config.host}:${config.port}`;
+				this.websocket = new WebSocket(wsUrl);
+
+				this.websocket.onopen = async () => {
+					console.log('[JabRefLSP] WebSocket connected');
+
+					// Set up the LSP request handler
+					this.lspRequestHandler = async (request: LSPRequest): Promise<LSPResponse> => {
+						return this.sendWebSocketRequest(request);
+					};
+
+					// Send initialize request
+					await this.sendInitializeRequest(config);
+					resolve();
+				};
+
+				this.websocket.onmessage = (event) => {
+					try {
+						const message = JSON.parse(event.data);
+						this.handleWebSocketMessage(message);
+					} catch (error) {
+						console.error('[JabRefLSP] Error parsing WebSocket message:', error);
+					}
+				};
+
+				this.websocket.onerror = (error) => {
+					console.error('[JabRefLSP] WebSocket error:', error);
+					this.connectionStatus = 'error';
+					reject(new Error(`Failed to connect to JabRef LSP server at ${wsUrl}`));
+				};
+
+				this.websocket.onclose = () => {
+					console.log('[JabRefLSP] WebSocket disconnected');
+					this.connectionStatus = 'disconnected';
+				};
+
+				// Timeout after 5 seconds
+				setTimeout(() => {
+					if (this.websocket?.readyState === WebSocket.CONNECTING) {
+						this.websocket.close();
+						reject(new Error('Connection timeout'));
+					}
+				}, 5000);
+
+			} catch (error) {
+				reject(error);
+			}
+		});
+	}
+
+	private async sendInitializeRequest(config: any): Promise<void> {
+		const initializeRequest = {
+			method: 'initialize',
+			params: {
+				processId: null,
+				clientInfo: {
+					name: 'TeXlyre',
+					version: '0.3.0'
+				},
+				capabilities: {
+					textDocument: {
+						completion: {
+							completionItem: {
+								snippetSupport: true,
+								commitCharactersSupport: true,
+								documentationFormat: ['markdown', 'plaintext']
+							},
+							contextSupport: true
+						},
+						hover: {},
+						definition: {},
+						references: {}
+					},
+					workspace: {
+						configuration: true
+					}
+				},
+				initializationOptions: config.settings,
+				workspaceFolders: null
+			}
+		};
+
+		await this.sendWebSocketRequest(initializeRequest);
+		this.sendWebSocketNotification({ method: 'initialized', params: {} });
+
+		if (Object.keys(config.settings).length > 0) {
+			this.sendWebSocketNotification({
+				method: 'workspace/didChangeConfiguration',
+				params: {
+					settings: config.settings
+				}
+			});
+		}
+	}
+
+	private async sendWebSocketRequest(request: LSPRequest): Promise<LSPResponse> {
+		if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
+			throw new Error('WebSocket not connected');
+		}
+
+		return new Promise((resolve, reject) => {
+			const id = ++this.requestId;
+			const messageWithId = { ...request, id };
+
+			this.pendingRequests.set(id, { resolve, reject });
+			this.websocket!.send(JSON.stringify(messageWithId));
+
+			setTimeout(() => {
+				if (this.pendingRequests.has(id)) {
+					this.pendingRequests.delete(id);
+					reject(new Error('Request timeout'));
+				}
+			}, 10000);
+		});
+	}
+
+	private sendWebSocketNotification(notification: any): void {
+		if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+			this.websocket.send(JSON.stringify(notification));
+		}
+	}
+
+	private handleWebSocketMessage(message: any): void {
+		if (message.id !== undefined) {
+			const pending = this.pendingRequests.get(message.id);
+			if (pending) {
+				this.pendingRequests.delete(message.id);
+				if (message.error) {
+					console.error('[JabRefLSP] LSP Error:', message.error);
+					pending.reject(new Error(message.error.message || 'LSP Error'));
+				} else {
+					pending.resolve(message);
+				}
+			}
+		}
 	}
 
 	shouldTriggerCompletion(document: string, position: number, lineText: string): boolean {
@@ -265,9 +443,21 @@ class JabRefLSPPlugin implements LSPPlugin {
 	async shutdown(): Promise<void> {
 		this.connectionStatus = 'disconnected';
 		this.statusMessage = '';
+
+		if (this.websocket) {
+			this.websocket.close();
+			this.websocket = undefined;
+		}
+
+		this.pendingRequests.clear();
+		this.lspRequestHandler = undefined;
 	}
 
-	renderPanel = (props: LSPPanelProps) => JabRefPanel({ ...props, pluginInstance: this });
+	renderPanel = (props: LSPPanelProps) => {
+		// JabRef now relies on the main LSP panel for bibliography functionality
+		// The panel automatically detects bibliography providers and renders appropriately
+		return null;
+	};
 }
 
 const jabrefLSPPlugin = new JabRefLSPPlugin();
