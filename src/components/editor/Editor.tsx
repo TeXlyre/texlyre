@@ -2,6 +2,7 @@
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { BibliographyProvider } from '../../contexts/BibliographyContext';
 import { LSPProvider } from '../../contexts/LSPContext';
 import { CommentProvider } from "../../contexts/CommentContext";
 import { processComments } from "../../extensions/codemirror/CommentExtension.ts";
@@ -735,6 +736,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 		const CollaborativeViewerComponent = collaborativeViewerPlugin.renderViewer;
 
 		return (
+			<BibliographyProvider>
 			<LSPProvider>
 			<CommentProvider
 				editorContent={textContent}
@@ -777,6 +779,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 				/>
 			</CommentProvider>
 			</LSPProvider>
+			</BibliographyProvider>
 		);
 	}
 
@@ -846,6 +849,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 		!isEditingFile && linkedFileInfo?.fileName?.endsWith(".tex");
 
 	return (
+		<BibliographyProvider>
 		<LSPProvider>
 		<CommentProvider
 			editorContent={textContent}
@@ -883,6 +887,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 			/>
 		</CommentProvider>
 		</LSPProvider>
+		</BibliographyProvider>
 	);
 };
 

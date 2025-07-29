@@ -1,6 +1,7 @@
+// extras/lsp/jabref/JabRefLSPPlugin.ts
 import type { LSPPlugin, LSPPanelProps } from "../../../src/plugins/PluginInterface";
 import type { LSPRequest, LSPResponse, LSPNotification } from "../../../src/types/lsp";
-import JabRefPanel from "./JabRefPanel";
+// import JabRefPanel from "./JabRefPanel";
 import { JabRefIcon } from "./Icon";
 import { jabrefLSPSettings } from "./settings";
 import { bibliographyImportService } from "../../../src/services/BibliographyImportService";
@@ -246,7 +247,6 @@ class JabRefLSPPlugin implements LSPPlugin {
 				});
 			}
 
-			// Set up real LSP connection
 			if (!this.lspRequestHandler) {
 				console.log('[JabRefLSP] Setting up real LSP connection...');
 				await this.setupLSPConnection();
@@ -277,12 +277,10 @@ class JabRefLSPPlugin implements LSPPlugin {
 				this.websocket.onopen = async () => {
 					console.log('[JabRefLSP] WebSocket connected');
 
-					// Set up the LSP request handler
 					this.lspRequestHandler = async (request: LSPRequest): Promise<LSPResponse> => {
 						return this.sendWebSocketRequest(request);
 					};
 
-					// Send initialize request
 					await this.sendInitializeRequest(config);
 					resolve();
 				};
@@ -307,7 +305,6 @@ class JabRefLSPPlugin implements LSPPlugin {
 					this.connectionStatus = 'disconnected';
 				};
 
-				// Timeout after 5 seconds
 				setTimeout(() => {
 					if (this.websocket?.readyState === WebSocket.CONNECTING) {
 						this.websocket.close();

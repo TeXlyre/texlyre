@@ -83,9 +83,10 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 		scope: "global" | "project" = "global",
 		projectId?: string,
 	): string => {
-		return scope === "project" && projectId
-			? `${id}:${scope}:${projectId}`
-			: `${id}:${scope}`;
+		if (scope === "project" && projectId) {
+			return `${id}:project:${projectId}`;
+		}
+		return `${id}:global`;
 	}, []);
 
 	useEffect(() => {
@@ -135,16 +136,17 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 
 	useEffect(() => {
 		if (properties.length === 0 || !isLocalStorageLoaded.current) return;
-		const toSave = properties.reduce(
-			(acc, p) => {
-				acc[p.id] = p.value;
-				return acc;
-			},
-			{} as Record<string, unknown>,
-		);
+
+		const toSave = { ...localStoragePropertiesRef.current };
+
+		properties.forEach(p => {
+			toSave[p.id] = p.value;
+		});
+
 		try {
 			const storageKey = getStorageKey();
 			localStorage.setItem(storageKey, JSON.stringify(toSave));
+			localStoragePropertiesRef.current = toSave;
 		} catch (error) {
 			console.error("Error saving properties to localStorage:", error);
 		}
@@ -157,6 +159,11 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 		}): unknown => {
 			const scope = options?.scope || "global";
 			const propertyId = getPropertyId(id, scope, options?.projectId);
+
+			if (localStoragePropertiesRef.current && localStoragePropertiesRef.current[propertyId] !== undefined) {
+				return localStoragePropertiesRef.current[propertyId];
+			}
+
 			const property = properties.find((p) => p.id === propertyId);
 			return property?.value;
 		},
@@ -170,13 +177,34 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 		const scope = options?.scope || "global";
 		const propertyId = getPropertyId(id, scope, options?.projectId);
 
-		setProperties((prev) =>
-			prev.map((p) => {
-				if (p.id !== propertyId) return p;
-				return { ...p, value };
-			}),
-		);
-	}, [getPropertyId]);
+		if (localStoragePropertiesRef.current) {
+			localStoragePropertiesRef.current[propertyId] = value;
+		}
+
+		setProperties((prev) => {
+			const existingIndex = prev.findIndex((p) => p.id === propertyId);
+			if (existingIndex >= 0) {
+				return prev.map((p) => {
+					if (p.id !== propertyId) return p;
+					return { ...p, value };
+				});
+			}
+
+			const baseProperty = prev.find((p) => p.id === id);
+			if (baseProperty) {
+				return [...prev, { ...baseProperty, id: propertyId, value }];
+			}
+
+			return prev;
+		});
+
+		try {
+			const storageKey = getStorageKey();
+			localStorage.setItem(storageKey, JSON.stringify(localStoragePropertiesRef.current || {}));
+		} catch (error) {
+			console.error("Error saving property to localStorage:", error);
+		}
+	}, [getPropertyId, getStorageKey]);
 
 	const registerProperty = useCallback((property: Property) => {
 		setProperties((prev) => {
@@ -225,6 +253,11 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 		}): boolean => {
 			const scope = options?.scope || "global";
 			const propertyId = getPropertyId(id, scope, options?.projectId);
+
+			if (localStoragePropertiesRef.current && localStoragePropertiesRef.current[propertyId] !== undefined) {
+				return true;
+			}
+
 			return properties.some((p) => p.id === propertyId);
 		},
 		[properties, getPropertyId],

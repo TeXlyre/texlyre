@@ -1,4 +1,3 @@
-// src/contexts/LSPContext.tsx
 import type React from "react";
 import {
 	type ReactNode,
@@ -11,8 +10,10 @@ import {
 import { pluginRegistry } from "../plugins/PluginRegistry";
 import type { LSPPlugin } from "../plugins/PluginInterface";
 import { useSettings } from "../hooks/useSettings";
+import { useBibliography } from "../hooks/useBibliography";
 import { fileStorageService } from "../services/FileStorageService";
 import { bibliographyImportService } from "../services/BibliographyImportService";
+import { parseUrlFragments } from "../types/yjs";
 
 interface BibEntry {
 	key: string;
@@ -32,7 +33,6 @@ interface BibFile {
 }
 
 interface LSPContextType {
-	// Panel state
 	showPanel: boolean;
 	setShowPanel: (show: boolean) => void;
 	activeTab: "list" | "detail";
@@ -48,7 +48,6 @@ interface LSPContextType {
 	searchQuery: string;
 	setSearchQuery: (query: string) => void;
 
-	// Bibliography state
 	entries: BibEntry[];
 	localEntries: BibEntry[];
 	externalEntries: BibEntry[];
@@ -59,18 +58,15 @@ interface LSPContextType {
 	isLoading: boolean;
 	importingEntries: Set<string>;
 
-	// Computed properties
 	currentProvider: LSPPlugin | undefined;
 	isBibliographyProvider: boolean;
 
-	// Settings
 	citationStyle: string;
 	maxCompletions: number;
 	autoImport: boolean;
 	duplicateHandling: string;
 	serverUrl: string;
 
-	// Actions
 	handleRefresh: () => Promise<void>;
 	handleProviderSelect: (providerId: string | "all") => void;
 	handleItemSelect: (item: any) => void;
@@ -80,7 +76,6 @@ interface LSPContextType {
 	handleTargetFileChange: (newValue: string) => Promise<void>;
 	createNewBibFile: (fileName?: string) => Promise<string | null>;
 
-	// Status methods
 	getConnectionStatus: () => string;
 	getStatusColor: () => string;
 }
@@ -93,8 +88,8 @@ interface LSPProviderProps {
 
 export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	const { getSetting } = useSettings();
+	const { getTargetFile, setTargetFile, getAvailableFiles, createBibFile } = useBibliography();
 
-	// Panel state
 	const [showPanel, setShowPanel] = useState(false);
 	const [activeTab, setActiveTab] = useState<"list" | "detail">("list");
 	const [selectedProvider, setSelectedProvider] = useState<string | "all">("all");
@@ -104,7 +99,6 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	const [isRefreshing, setIsRefreshing] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 
-	// Bibliography state
 	const [entries, setEntries] = useState<BibEntry[]>([]);
 	const [localEntries, setLocalEntries] = useState<BibEntry[]>([]);
 	const [externalEntries, setExternalEntries] = useState<BibEntry[]>([]);
@@ -114,11 +108,9 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [importingEntries, setImportingEntries] = useState<Set<string>>(new Set());
 
-	// Computed properties
 	const currentProvider = availableProviders.find(p => p.id === selectedProvider);
 	const isBibliographyProvider = currentProvider && 'getBibliographyEntries' in currentProvider;
 
-	// Get provider-specific settings
 	const getProviderSetting = (settingName: string) => {
 		if (!currentProvider) return undefined;
 		return getSetting(`${currentProvider.id}-${settingName}`)?.value;
@@ -132,7 +124,11 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 
 	const parser = bibliographyImportService.getParser();
 
-	// Initialize providers
+	const getProjectId = (): string | undefined => {
+		const currentFragment = parseUrlFragments(window.location.hash.substring(1));
+		return currentFragment.yjsUrl ? currentFragment.yjsUrl.slice(4) : undefined;
+	};
+
 	useEffect(() => {
 		const providers = pluginRegistry.getAllLSPPlugins();
 		setAvailableProviders(providers);
@@ -142,7 +138,6 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		}
 	}, []);
 
-	// Listen for panel toggle events
 	useEffect(() => {
 		const handleToggleLSPPanel = (event: Event) => {
 			const customEvent = event as CustomEvent;
@@ -160,14 +155,12 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		};
 	}, []);
 
-	// Update server URL when it changes
 	useEffect(() => {
 		if (currentProvider && 'updateServerUrl' in currentProvider) {
 			(currentProvider as any).updateServerUrl(serverUrl);
 		}
 	}, [currentProvider, serverUrl]);
 
-	// File management methods
 	const refreshAvailableFiles = useCallback(async () => {
 		try {
 			const allFiles = await fileStorageService.getAllFiles();
@@ -237,17 +230,13 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 
 		const connectionStatus = currentProvider.getConnectionStatus();
 		if (connectionStatus !== 'connected') {
-			console.log(`[LSPContext] Provider ${currentProvider.name} not connected:`, connectionStatus);
 			setExternalEntries([]);
 			return;
 		}
 
 		setIsLoading(true);
 		try {
-			console.log(`[LSPContext] Fetching external entries from ${currentProvider.name}...`);
 			const bibEntries = await (currentProvider as any).getBibliographyEntries();
-			console.log(`[LSPContext] Retrieved ${bibEntries.length} external entries`);
-
 			const externalBibEntries: BibEntry[] = bibEntries.map((entry: any) => ({
 				...entry,
 				source: 'external' as const,
@@ -280,7 +269,6 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 
 			for (const provider of bibliographyProviders) {
 				try {
-					console.log(`[LSPContext] Fetching entries from ${provider.name}...`);
 					const bibEntries = await (provider as any).getBibliographyEntries();
 					const providerEntries: BibEntry[] = bibEntries.map((entry: any) => ({
 						...entry,
@@ -289,14 +277,12 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 						providerId: provider.id
 					}));
 					allExternalEntries.push(...providerEntries);
-					console.log(`[LSPContext] Retrieved ${bibEntries.length} entries from ${provider.name}`);
 				} catch (error) {
 					console.error(`[LSPContext] Error fetching entries from ${provider.name}:`, error);
 				}
 			}
 
 			setExternalEntries(allExternalEntries);
-			console.log(`[LSPContext] Total external entries from all providers: ${allExternalEntries.length}`);
 		} catch (error) {
 			console.error('[LSPContext] Error fetching entries from all bibliography providers:', error);
 			setExternalEntries([]);
@@ -306,38 +292,9 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	}, [availableProviders, selectedProvider]);
 
 	const createNewBibFile = useCallback(async (fileName: string = 'bibliography.bib'): Promise<string | null> => {
-		try {
-			const filePath = `/${fileName}`;
+		return await createBibFile(fileName);
+	}, [createBibFile]);
 
-			const existingFile = await fileStorageService.getFileByPath(filePath);
-			if (existingFile && !existingFile.isDeleted) {
-				return filePath;
-			}
-
-			const fileNode = {
-				id: crypto.randomUUID(),
-				name: fileName,
-				path: filePath,
-				type: 'file' as const,
-				content: '% Bibliography file created by TeXlyre\n% Add your BibTeX entries here\n\n',
-				lastModified: Date.now(),
-				size: 0,
-				mimeType: 'text/x-bibtex',
-				isBinary: false,
-				isDeleted: false
-			};
-
-			await fileStorageService.storeFile(fileNode, { showConflictDialog: false });
-			await refreshAvailableFiles();
-
-			return filePath;
-		} catch (error) {
-			console.error('[LSPContext] Error creating new bib file:', error);
-			return null;
-		}
-	}, [refreshAvailableFiles]);
-
-	// Entry management
 	const mergeEntries = useCallback(() => {
 		const localKeys = new Set(localEntries.map(entry => entry.key));
 
@@ -354,7 +311,6 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		setEntries(combined);
 	}, [localEntries, externalEntries]);
 
-	// Filter entries based on search
 	useEffect(() => {
 		if (searchQuery.trim() === "") {
 			setFilteredEntries(entries.slice(0, maxCompletions));
@@ -371,16 +327,42 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		}
 	}, [searchQuery, entries, maxCompletions]);
 
-	// Merge entries when local or external entries change
 	useEffect(() => {
 		mergeEntries();
 	}, [mergeEntries]);
 
-	// Provider initialization effect
+	useEffect(() => {
+		const syncAvailableFiles = () => {
+			const biblioFiles = getAvailableFiles();
+			if (biblioFiles.length > 0) {
+				setAvailableBibFiles(biblioFiles);
+			}
+		};
+
+		refreshAvailableFiles();
+		syncAvailableFiles();
+
+		const interval = setInterval(() => {
+			syncAvailableFiles();
+		}, 2000);
+
+		return () => clearInterval(interval);
+	}, [getAvailableFiles, refreshAvailableFiles]);
+
+	useEffect(() => {
+		if (!currentProvider || availableBibFiles.length === 0) {
+			return;
+		}
+
+		const projectId = getProjectId();
+		const savedTargetFile = getTargetFile(currentProvider.id, projectId);
+		if (savedTargetFile && availableBibFiles.some(file => file.path === savedTargetFile)) {
+			setTargetBibFile(savedTargetFile);
+		}
+	}, [currentProvider, availableBibFiles, getTargetFile]);
+
 	useEffect(() => {
 		if (selectedProvider === "all") {
-			console.log('[LSPContext] Initializing all LSP providers');
-
 			refreshAvailableFiles();
 			fetchLocalEntries();
 
@@ -388,7 +370,6 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 				const initPromises = availableProviders.map(async (provider) => {
 					try {
 						await provider.initialize();
-						console.log(`[LSPContext] Provider ${provider.name} initialized`);
 					} catch (error) {
 						console.error(`[LSPContext] Failed to initialize provider ${provider.name}:`, error);
 					}
@@ -400,40 +381,18 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 
 			setTimeout(() => {
 				fetchAllBibliographyEntries();
-			}, 2000);
-
-			let retryCount = 0;
-			const maxRetries = 30;
-
-			const retryInterval = setInterval(() => {
-				const connectedBibProviders = availableProviders.filter(p =>
-					'getBibliographyEntries' in p && p.getConnectionStatus() === 'connected'
-				).length;
-
-				console.log(`[LSPContext] All providers connection check: ${connectedBibProviders} bibliography provider(s) connected (retry ${retryCount}/${maxRetries})`);
-
-				if (connectedBibProviders > 0) {
-					console.log('[LSPContext] At least one bibliography provider connected, fetching entries');
-					fetchAllBibliographyEntries();
-					clearInterval(retryInterval);
-				} else if (retryCount >= maxRetries) {
-					console.warn('[LSPContext] All providers connection timeout after retries');
-					clearInterval(retryInterval);
-				}
-				retryCount++;
 			}, 1000);
 
-			return () => clearInterval(retryInterval);
-		} else if (!isBibliographyProvider || !currentProvider) {
 			return;
 		}
 
-		console.log(`[LSPContext] Initializing bibliography provider: ${currentProvider.name}`);
+		if (!isBibliographyProvider || !currentProvider) {
+			return;
+		}
 
 		const initializeProvider = async () => {
 			try {
 				await currentProvider.initialize();
-				console.log(`[LSPContext] Provider ${currentProvider.name} initialized`);
 			} catch (error) {
 				console.error(`[LSPContext] Failed to initialize provider ${currentProvider.name}:`, error);
 			}
@@ -445,7 +404,7 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 
 		setTimeout(() => {
 			fetchExternalEntries();
-		}, 2000);
+		}, 1000);
 
 		let retryCount = 0;
 		const maxRetries = 30;
@@ -454,14 +413,14 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 			if (!currentProvider) return;
 
 			const connectionStatus = currentProvider.getConnectionStatus();
-			console.log(`[LSPContext] Provider ${currentProvider.name} status: ${connectionStatus} (retry ${retryCount}/${maxRetries})`);
 
 			if (connectionStatus === 'connected') {
-				console.log(`[LSPContext] Provider ${currentProvider.name} connected, fetching external entries`);
-				fetchExternalEntries();
+				setTimeout(() => {
+					fetchExternalEntries();
+				}, 1000);
+
 				clearInterval(retryInterval);
 			} else if (retryCount >= maxRetries) {
-				console.warn(`[LSPContext] Provider ${currentProvider.name} connection timeout after ${maxRetries} retries`);
 				clearInterval(retryInterval);
 			}
 			retryCount++;
@@ -470,40 +429,42 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		return () => clearInterval(retryInterval);
 	}, [currentProvider, isBibliographyProvider, selectedProvider, availableProviders, fetchLocalEntries, fetchExternalEntries, fetchAllBibliographyEntries, refreshAvailableFiles]);
 
-	// Listen for file tree refresh events
 	useEffect(() => {
+		let timeoutId: NodeJS.Timeout;
+
 		const handleFileTreeRefresh = () => {
-			if (isBibliographyProvider || selectedProvider === "all") {
-				refreshAvailableFiles();
-				fetchLocalEntries();
-			}
+			clearTimeout(timeoutId);
+			timeoutId = setTimeout(() => {
+				if (isBibliographyProvider || selectedProvider === "all") {
+					refreshAvailableFiles();
+					fetchLocalEntries();
+				}
+			}, 300);
 		};
 
 		document.addEventListener('refresh-file-tree', handleFileTreeRefresh);
 		return () => {
 			document.removeEventListener('refresh-file-tree', handleFileTreeRefresh);
+			clearTimeout(timeoutId);
 		};
 	}, [isBibliographyProvider, selectedProvider, refreshAvailableFiles, fetchLocalEntries]);
 
-	// Action handlers
 	const handleRefresh = async () => {
 		setIsRefreshing(true);
+
 		try {
 			if (selectedProvider === "all") {
 				const refreshPromises = availableProviders.map(async (provider) => {
 					try {
 						await provider.initialize?.();
-						console.log(`[LSPContext] Refreshed provider: ${provider.name}`);
 					} catch (error) {
 						console.error(`[LSPContext] Failed to refresh provider ${provider.name}:`, error);
 					}
 				});
 
 				await Promise.allSettled(refreshPromises);
-				console.log(`[LSPContext] Refreshed all ${availableProviders.length} LSP providers`);
 			} else if (currentProvider) {
 				await currentProvider.initialize?.();
-				console.log(`[LSPContext] Refreshed provider: ${currentProvider.name}`);
 			}
 
 			if (isBibliographyProvider || selectedProvider === "all") {
@@ -529,7 +490,6 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		setSelectedItem(null);
 		setSearchQuery("");
 
-		// Reset bibliography state when switching providers
 		setEntries([]);
 		setLocalEntries([]);
 		setExternalEntries([]);
@@ -576,8 +536,8 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	};
 
 	const handleImportEntry = async (entry: BibEntry) => {
-		if (!targetBibFile) {
-			console.error('[LSPContext] No target file selected');
+		if (!targetBibFile || !currentProvider) {
+			console.error('[LSPContext] No target file or provider selected');
 			return;
 		}
 
@@ -633,10 +593,18 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 			const createdFile = await createNewBibFile();
 			if (createdFile) {
 				setTargetBibFile(createdFile);
+				if (currentProvider) {
+					const projectId = getProjectId();
+					setTargetFile(currentProvider.id, createdFile, projectId);
+				}
 				document.dispatchEvent(new CustomEvent('refresh-file-tree'));
 			}
 		} else {
 			setTargetBibFile(newValue);
+			if (currentProvider) {
+				const projectId = getProjectId();
+				setTargetFile(currentProvider.id, newValue, projectId);
+			}
 		}
 	};
 
@@ -665,7 +633,6 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	};
 
 	const contextValue: LSPContextType = {
-		// Panel state
 		showPanel,
 		setShowPanel,
 		activeTab,
@@ -681,7 +648,6 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		searchQuery,
 		setSearchQuery,
 
-		// Bibliography state
 		entries,
 		localEntries,
 		externalEntries,
@@ -692,18 +658,15 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		isLoading,
 		importingEntries,
 
-		// Computed properties
 		currentProvider,
 		isBibliographyProvider,
 
-		// Settings
 		citationStyle,
 		maxCompletions,
 		autoImport,
 		duplicateHandling,
 		serverUrl,
 
-		// Actions
 		handleRefresh,
 		handleProviderSelect,
 		handleItemSelect,
@@ -713,7 +676,6 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		handleTargetFileChange,
 		createNewBibFile,
 
-		// Status methods
 		getConnectionStatus,
 		getStatusColor,
 	};

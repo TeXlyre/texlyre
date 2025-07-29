@@ -8,7 +8,6 @@ import {
 	useState,
 } from "react";
 
-import { useAuth } from "../hooks/useAuth";
 import { useProperties } from "../hooks/useProperties";
 import { fileStorageService } from "../services/FileStorageService";
 import { BibtexParser } from "../../extras/viewers/bibtex/BibtexParser";
@@ -59,7 +58,6 @@ interface BibliographyProviderProps {
 
 export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ children }) => {
 	const { getProperty, setProperty, registerProperty } = useProperties();
-	const { user } = useAuth();
 	const [availableFiles, setAvailableFiles] = useState<BibliographyFile[]>([]);
 	const [importingEntries, setImportingEntries] = useState<Set<string>>(new Set());
 
@@ -68,8 +66,23 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 	const getTargetFile = useCallback((pluginId: string, projectId?: string): string | null => {
 		const propertyId = getPropertyId(pluginId);
 		const scopeOptions = projectId ? { scope: "project" as const, projectId } : { scope: "global" as const };
-		return getProperty(propertyId, scopeOptions) as string | null;
-	}, [getProperty]);
+		const targetFile = getProperty(propertyId, scopeOptions) as string | null;
+
+		if (!targetFile) {
+			return null;
+		}
+
+		if (availableFiles.length === 0) {
+			return targetFile;
+		}
+
+		if (availableFiles.some(file => file.path === targetFile)) {
+			return targetFile;
+		}
+
+		setProperty(propertyId, "", scopeOptions);
+		return null;
+	}, [getProperty, setProperty, availableFiles]);
 
 	const setTargetFile = useCallback((pluginId: string, filePath: string, projectId?: string) => {
 		const propertyId = getPropertyId(pluginId);
@@ -104,7 +117,6 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 
 			const existingFile = await fileStorageService.getFileByPath(filePath);
 			if (existingFile && !existingFile.isDeleted) {
-				console.warn(`[BibliographyContext] File ${filePath} already exists`);
 				return filePath;
 			}
 
@@ -124,7 +136,6 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			await fileStorageService.storeFile(fileNode, { showConflictDialog: false });
 			await refreshAvailableFiles();
 
-			console.log(`[BibliographyContext] Created new bibliography file: ${filePath}`);
 			return filePath;
 		} catch (error) {
 			console.error('[BibliographyContext] Error creating new bib file:', error);
@@ -192,35 +203,29 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 				if (availableFiles.length > 0) {
 					targetFile = availableFiles[0].path;
 					setTargetFile(pluginId, targetFile, projectId);
-					console.log(`[BibliographyContext] Auto-selected target file: ${targetFile}`);
 				} else {
 					const createdFile = await createBibFile();
 					if (createdFile) {
 						targetFile = createdFile;
 						setTargetFile(pluginId, createdFile, projectId);
-						console.log(`[BibliographyContext] Created and selected new target file: ${targetFile}`);
 					} else {
-						console.error('[BibliographyContext] Failed to create new bibliography file');
 						return false;
 					}
 				}
 			}
 
 			if (!targetFile) {
-				console.error('[BibliographyContext] No target bibliography file available and could not create one');
 				return false;
 			}
 
 			const localEntries = await getLocalEntries();
 			const existingEntry = localEntries.find(local => local.key === entry.key && local.filePath === targetFile);
 			if (existingEntry && duplicateHandling === 'keep-local') {
-				console.log(`[BibliographyContext] Entry ${entry.key} already exists locally, keeping local version`);
 				return true;
 			}
 
 			const bibFile = await fileStorageService.getFileByPath(targetFile);
 			if (!bibFile) {
-				console.error(`[BibliographyContext] Target file not found: ${targetFile}`);
 				return false;
 			}
 
@@ -248,8 +253,6 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 
 			await fileStorageService.updateFileContent(bibFile.id, newContent);
 
-			console.log(`[BibliographyContext] Successfully imported ${entry.key} to ${targetFile}`);
-
 			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
 			document.dispatchEvent(new CustomEvent('jabref-entry-imported', {
 				detail: { entryKey: entry.key, targetFile }
@@ -276,11 +279,10 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 	const registerPluginTargetFile = useCallback((pluginId: string, pluginName: string) => {
 		const propertyId = getPropertyId(pluginId);
 
-		const handleTargetFileChange = async (value: unknown, projectId?: string) => {
+		const handleTargetFileChange = async (value: unknown) => {
 			if (value === "CREATE_NEW") {
 				const createdFile = await createBibFile();
 				if (createdFile) {
-					setTargetFile(pluginId, createdFile, projectId);
 					document.dispatchEvent(new CustomEvent('refresh-file-tree'));
 					return createdFile;
 				}
@@ -311,23 +313,30 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 
 		const interval = setInterval(updateOptions, 2000);
 		return () => clearInterval(interval);
-	}, [availableFiles, createBibFile, setTargetFile, registerProperty]);
+	}, [availableFiles, createBibFile, registerProperty]);
 
 	const getAvailableFiles = useCallback(() => availableFiles, [availableFiles]);
 
 	useEffect(() => {
 		refreshAvailableFiles();
 
+		let timeoutId: NodeJS.Timeout;
+
 		const handleFileTreeChange = () => {
-			refreshAvailableFiles();
+			clearTimeout(timeoutId);
+			timeoutId = setTimeout(() => {
+				refreshAvailableFiles();
+			}, 500);
 		};
 
 		document.addEventListener('refresh-file-tree', handleFileTreeChange);
-		const interval = setInterval(refreshAvailableFiles, 5000);
+
+		const interval = setInterval(refreshAvailableFiles, 30000);
 
 		return () => {
 			document.removeEventListener('refresh-file-tree', handleFileTreeChange);
 			clearInterval(interval);
+			clearTimeout(timeoutId);
 		};
 	}, [refreshAvailableFiles]);
 

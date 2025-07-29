@@ -43,7 +43,6 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 		getStatusColor,
 	} = useLSP();
 
-	// Bibliography rendering helpers
 	const getEntryTypeIcon = (entryType: string) => {
 		switch (entryType.toLowerCase()) {
 			case 'article': return '📄';
@@ -241,6 +240,11 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 					{availableBibFiles.length === 0 && (
 						<div className="target-file-hint">
 							No .bib files found. Create one to start importing entries.
+						</div>
+					)}
+					{currentProvider && targetBibFile && (
+						<div className="target-file-hint">
+							Target set for {currentProvider.name}: {availableBibFiles.find(f => f.path === targetBibFile)?.name || 'Unknown file'}
 						</div>
 					)}
 				</div>
