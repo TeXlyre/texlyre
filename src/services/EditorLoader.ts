@@ -313,7 +313,7 @@ export const EditorLoader = (
 
 			const completionSources: CompletionSource[] = [];
 
-			// Set up LSP integration
+			// Set up LSP integration with file path context
 			if (availableLSPPlugins.length > 0) {
 				const [lspField, lspPlugin, lspCompletionSource] = createLSPExtension();
 				extensions.push(lspField, lspPlugin);
@@ -324,11 +324,18 @@ export const EditorLoader = (
 					if (viewRef.current) {
 						updateLSPPluginsInView(viewRef.current, availableLSPPlugins);
 
-						// Set current file path for LSP
+						// Set current file path for ALL LSP plugins
 						if (isEditingFile && currentFileId) {
 							fileStorageService.getFile(currentFileId).then(file => {
 								if (file && viewRef.current) {
 									setCurrentFilePathInLSP(viewRef.current, file.path);
+
+									// Update file path in individual LSP plugins
+									availableLSPPlugins.forEach(plugin => {
+										if ('setCurrentFilePath' in plugin) {
+											(plugin as any).setCurrentFilePath(file.path);
+										}
+									});
 								}
 							});
 						}
@@ -357,23 +364,6 @@ export const EditorLoader = (
 				// Add both enhanced completion (includes bibliography) and latex completion
 				completionSources.push(enhancedCompletionSource);
 				completionSources.push(latexCompletionSource(true));
-
-				// Update the file path after view is created
-				if (isEditingFile && currentFileId) {
-					setTimeout(async () => {
-						const file = await fileStorageService.getFile(currentFileId);
-						if (file && viewRef.current) {
-							setCurrentFilePath(viewRef.current, file.path);
-							filePathCacheService.updateCurrentFilePath(file.path);
-						}
-					}, 100);
-				} else if (!isEditingFile && documentId) {
-					setTimeout(() => {
-						if (viewRef.current) {
-							filePathCacheService.updateCurrentFilePath('', documentId);
-						}
-					}, 100);
-				}
 			} else if (isBibFile) {
 				// For .bib files, we still want enhanced completion but with bibtex base completion
 				const [stateExtensions, filePathPlugin, enhancedCompletionSource] = createFilePathAutocompleteExtension('');
@@ -383,7 +373,31 @@ export const EditorLoader = (
 				completionSources.push(bibtexCompletionSource);
 			}
 
-			// Set up autocompletion with all sources
+			// Update file paths after view creation
+			if (isEditingFile && currentFileId) {
+				setTimeout(async () => {
+					const file = await fileStorageService.getFile(currentFileId);
+					if (file && viewRef.current) {
+						setCurrentFilePath(viewRef.current, file.path);
+						filePathCacheService.updateCurrentFilePath(file.path);
+
+						// Update LSP plugins with file path
+						availableLSPPlugins.forEach(plugin => {
+							if ('setCurrentFilePath' in plugin) {
+								(plugin as any).setCurrentFilePath(file.path);
+							}
+						});
+					}
+				}, 100);
+			} else if (!isEditingFile && documentId) {
+				setTimeout(() => {
+					if (viewRef.current) {
+						filePathCacheService.updateCurrentFilePath('', documentId);
+					}
+				}, 100);
+			}
+
+			// Set up autocompletion with prioritized sources
 			extensions.push(
 				autocompletion({
 					override: completionSources,

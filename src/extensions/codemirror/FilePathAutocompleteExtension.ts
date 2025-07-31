@@ -22,6 +22,7 @@ interface BibliographyEntry {
 	journal?: string;
 	rawEntry?: string;
 	filePath?: string;
+	entryType?: string;
 }
 
 const filePathCacheField = StateField.define<FilePathCache>({
@@ -90,6 +91,13 @@ const citationCommandPatterns = [
 	},
 ];
 
+const bibtexEntryPatterns = [
+	{
+		pattern: /@([a-zA-Z]*)\{([^,}]*)/,
+		type: 'bibtex-entry' as const,
+	},
+];
+
 class EnhancedAutocompleteProcessor {
 	private view: EditorView;
 	private currentFilePath: string = '';
@@ -130,7 +138,6 @@ class EnhancedAutocompleteProcessor {
 			const localEntries = await this.getLocalBibliographyEntries();
 			const externalEntries = await this.getExternalBibliographyEntries();
 
-			// Merge entries, prioritizing local ones
 			const localKeys = new Set(localEntries.map(entry => entry.key));
 			const uniqueExternalEntries = externalEntries.filter(entry => !localKeys.has(entry.key));
 
@@ -170,7 +177,8 @@ class EnhancedAutocompleteProcessor {
 					source: 'local' as const,
 					journal: entry.fields.journal || entry.fields.booktitle || '',
 					rawEntry: BibtexParser.serializeEntry(entry),
-					filePath: bibFile.path
+					filePath: bibFile.path,
+					entryType: entry.type
 				}));
 
 				allEntries.push(...entries);
@@ -200,7 +208,8 @@ class EnhancedAutocompleteProcessor {
 							source: 'lsp' as const,
 							pluginId: plugin.id,
 							journal: entry.fields?.journal || entry.journal || '',
-							rawEntry: entry.rawEntry || ''
+							rawEntry: entry.rawEntry || '',
+							entryType: entry.entryType || 'article'
 						}));
 
 						allExternalEntries.push(...formattedEntries);
@@ -219,11 +228,10 @@ class EnhancedAutocompleteProcessor {
 
 	private async importBibliographyEntry(entry: BibliographyEntry): Promise<boolean> {
 		if (entry.source === 'local') {
-			return true; // Already local
+			return true;
 		}
 
 		try {
-			// Find target .bib file (use first available for now)
 			const allFiles = await fileStorageService.getAllFiles();
 			const targetBibFile = allFiles.find(file =>
 				file.name.endsWith('.bib') &&
@@ -235,7 +243,6 @@ class EnhancedAutocompleteProcessor {
 				return false;
 			}
 
-			// Get current content
 			let currentContent = '';
 			if (targetBibFile.content) {
 				currentContent = typeof targetBibFile.content === 'string'
@@ -243,34 +250,28 @@ class EnhancedAutocompleteProcessor {
 					: new TextDecoder().decode(targetBibFile.content);
 			}
 
-			// Check if entry already exists
 			const existingEntries = BibtexParser.parse(currentContent);
 			if (existingEntries.some(existing => existing.id === entry.key)) {
 				console.log(`[EnhancedAutocomplete] Entry ${entry.key} already exists locally`);
 				return true;
 			}
 
-			// Prepare entry to import
 			let entryToImport = entry.rawEntry;
 			if (!entryToImport) {
-				// Construct basic BibTeX entry if rawEntry is not available
 				const fields = [];
 				if (entry.title) fields.push(`  title = {${entry.title}}`);
 				if (entry.authors.length > 0) fields.push(`  author = {${entry.authors.join(' and ')}}`);
 				if (entry.year) fields.push(`  year = {${entry.year}}`);
 				if (entry.journal) fields.push(`  journal = {${entry.journal}}`);
 
-				entryToImport = `@article{${entry.key},\n${fields.join(',\n')}\n}`;
+				entryToImport = `@${entry.entryType || 'article'}{${entry.key},\n${fields.join(',\n')}\n}`;
 			}
 
-			// Append to file
 			const newContent = currentContent.trim()
 				? `${currentContent.trim()}\n\n${entryToImport}\n`
 				: `${entryToImport}\n`;
 
 			await fileStorageService.updateFileContent(targetBibFile.id, newContent);
-
-			// Update cache
 			await this.updateBibliographyCache();
 
 			console.log(`[EnhancedAutocomplete] Successfully imported ${entry.key}`);
@@ -343,28 +344,110 @@ class EnhancedAutocompleteProcessor {
 		return null;
 	}
 
+	private findBibtexEntry(context: CompletionContext): { entryType: string; partial: string; type: 'bibtex-entry' } | null {
+		const line = context.state.doc.lineAt(context.pos);
+		const lineText = line.text;
+		const posInLine = context.pos - line.from;
+
+		for (const { pattern, type } of bibtexEntryPatterns) {
+			const matches = Array.from(lineText.matchAll(new RegExp(pattern.source, 'g')));
+
+			for (const match of matches) {
+				const matchStart = match.index!;
+				const commandEnd = matchStart + match[0].length;
+
+				if (posInLine >= matchStart && posInLine <= commandEnd + 1) {
+					return {
+						entryType: match[1] || '',
+						partial: match[2] || '',
+						type,
+					};
+				}
+			}
+		}
+
+		return null;
+	}
+
+	private isInBibFile(): boolean {
+		return this.currentFilePath.endsWith('.bib') || this.currentFilePath.endsWith('.bibtex');
+	}
+
 	getBibliographyCompletions = (context: CompletionContext): CompletionResult | null => {
-		const citationInfo = this.findCitationCommand(context);
-		if (!citationInfo) return null;
-
-		const { partial } = citationInfo;
 		const cache = context.state.field(bibliographyCacheField, false) || this.bibliographyCache;
-
 		if (!cache || cache.length === 0) return null;
 
-		const options = cache
-			.filter(entry =>
-				!partial ||
-				entry.key.toLowerCase().includes(partial.toLowerCase()) ||
-				entry.title.toLowerCase().includes(partial.toLowerCase()) ||
-				entry.authors.some(author => author.toLowerCase().includes(partial.toLowerCase()))
-			)
+		const citationInfo = this.findCitationCommand(context);
+		const bibtexInfo = this.findBibtexEntry(context);
+
+		const isCurrentlyInBibFile = this.isInBibFile();
+
+		if (!isCurrentlyInBibFile && citationInfo) {
+			return this.handleLatexCitationCompletion(context, citationInfo, cache);
+		}
+
+		if (isCurrentlyInBibFile && bibtexInfo) {
+			return this.handleBibtexEntryCompletion(context, bibtexInfo, cache);
+		}
+
+		return null;
+	};
+
+	private handleLatexCitationCompletion(context: CompletionContext, citationInfo: any, cache: BibliographyEntry[]): CompletionResult {
+		const partial = citationInfo.partial;
+		const filteredEntries = cache.filter(entry =>
+			!partial ||
+			entry.key.toLowerCase().includes(partial.toLowerCase()) ||
+			entry.title.toLowerCase().includes(partial.toLowerCase()) ||
+			entry.authors.some(author => author.toLowerCase().includes(partial.toLowerCase()))
+		);
+
+		const options = this.createCitationOptions(filteredEntries, partial);
+		if (options.length === 0) return null;
+
+		const partialStart = this.getCitationCompletionStart(context, citationCommandPatterns);
+
+		return {
+			from: partialStart,
+			options,
+			validFor: /^[^}]*$/,
+		};
+	}
+
+	private handleBibtexEntryCompletion(context: CompletionContext, bibtexInfo: any, cache: BibliographyEntry[]): CompletionResult {
+		const partial = bibtexInfo.partial;
+		const entryType = bibtexInfo.entryType.toLowerCase();
+
+		let filteredEntries = cache;
+		if (entryType) {
+			filteredEntries = cache.filter(entry =>
+				entry.entryType?.toLowerCase() === entryType &&
+				(!partial || entry.key.toLowerCase().includes(partial.toLowerCase()))
+			);
+		} else {
+			filteredEntries = cache.filter(entry =>
+				!partial || entry.key.toLowerCase().includes(partial.toLowerCase())
+			);
+		}
+
+		const options = this.createBibtexEntryOptions(filteredEntries, partial, context);
+		if (options.length === 0) return null;
+
+		const partialStart = this.getBibtexCompletionStart(context, bibtexEntryPatterns);
+
+		return {
+			from: partialStart,
+			options,
+			validFor: /^[^}]*$/,
+		};
+	}
+
+	private createCitationOptions(entries: BibliographyEntry[], partial: string) {
+		return entries
 			.sort((a, b) => {
-				// Prioritize local entries
 				if (a.source === 'local' && b.source !== 'local') return -1;
 				if (a.source !== 'local' && b.source === 'local') return 1;
 
-				// Then sort by relevance
 				const aStartsWith = a.key.toLowerCase().startsWith(partial.toLowerCase());
 				const bStartsWith = b.key.toLowerCase().startsWith(partial.toLowerCase());
 				if (aStartsWith && !bStartsWith) return -1;
@@ -392,15 +475,12 @@ class EnhancedAutocompleteProcessor {
 					info: `${sourceLabel} | ${authors} (${entry.year})\n${entry.journal}`,
 					apply: async (view: EditorView, completion: any, from: number, to: number) => {
 						if (!isLocal) {
-							// Import the entry first
 							const success = await this.importBibliographyEntry(entry);
 							if (!success) {
 								console.error(`Failed to import entry: ${entry.key}`);
-								// Still insert the citation key even if import fails
 							}
 						}
 
-						// Insert the citation key
 						view.dispatch({
 							changes: { from, to, insert: entry.key }
 						});
@@ -408,15 +488,86 @@ class EnhancedAutocompleteProcessor {
 					boost: isLocal ? 10 : 5,
 				};
 			});
+	}
 
-		if (options.length === 0) return null;
+	private createBibtexEntryOptions(entries: BibliographyEntry[], partial: string, context: CompletionContext) {
+		return entries
+			.sort((a, b) => {
+				if (a.source === 'local' && b.source !== 'local') return -1;
+				if (a.source !== 'local' && b.source === 'local') return 1;
 
+				const aStartsWith = a.key.toLowerCase().startsWith(partial.toLowerCase());
+				const bStartsWith = b.key.toLowerCase().startsWith(partial.toLowerCase());
+				if (aStartsWith && !bStartsWith) return -1;
+				if (!aStartsWith && bStartsWith) return 1;
+
+				return a.key.localeCompare(b.key);
+			})
+			.slice(0, 20)
+			.map(entry => {
+				const isLocal = entry.source === 'local';
+				const sourceIcon = isLocal ? ' ✓' : ' ⬇️';
+				const sourceLabel = isLocal ? 'Local' : 'External';
+
+				const displayTitle = entry.title.length > 50
+					? `${entry.title.substring(0, 47)}...`
+					: entry.title;
+
+				const authors = entry.authors.length > 0
+					? entry.authors.join(', ')
+					: 'Unknown author';
+
+				return {
+					label: entry.key,
+					detail: `${displayTitle}${sourceIcon}`,
+					info: `${sourceLabel} | ${authors} (${entry.year})\n${entry.journal}`,
+					apply: async (view: EditorView, completion: any, from: number, to: number) => {
+						if (!isLocal) {
+							const success = await this.importBibliographyEntry(entry);
+							if (!success) {
+								console.error(`Failed to import entry: ${entry.key}`);
+							}
+						}
+
+						let fullEntry = entry.rawEntry;
+						if (!fullEntry) {
+							const fields = [];
+							if (entry.title) fields.push(`  title = {${entry.title}}`);
+							if (entry.authors.length > 0) fields.push(`  author = {${entry.authors.join(' and ')}}`);
+							if (entry.year) fields.push(`  year = {${entry.year}}`);
+							if (entry.journal) fields.push(`  journal = {${entry.journal}}`);
+
+							fullEntry = `@${entry.entryType || 'article'}{${entry.key},\n${fields.join(',\n')}\n}`;
+						}
+
+						const line = view.state.doc.lineAt(from);
+						const lineStart = line.from;
+						const currentLine = line.text;
+
+						const atIndex = currentLine.indexOf('@');
+						if (atIndex !== -1) {
+							const replaceFrom = lineStart + atIndex;
+							view.dispatch({
+								changes: { from: replaceFrom, to, insert: fullEntry }
+							});
+						} else {
+							view.dispatch({
+								changes: { from, to, insert: fullEntry }
+							});
+						}
+					},
+					boost: isLocal ? 10 : 5,
+				};
+			});
+	}
+
+	private getCitationCompletionStart(context: CompletionContext, patterns: any[]): number {
 		const line = context.state.doc.lineAt(context.pos);
 		const lineText = line.text;
 		const posInLine = context.pos - line.from;
 
 		let partialStart = posInLine;
-		for (const { pattern } of citationCommandPatterns) {
+		for (const { pattern } of patterns) {
 			const match = lineText.match(pattern);
 			if (match && match.index !== undefined) {
 				const bracePos = lineText.indexOf('{', match.index);
@@ -426,13 +577,27 @@ class EnhancedAutocompleteProcessor {
 				}
 			}
 		}
+		return partialStart;
+	}
 
-		return {
-			from: partialStart,
-			options,
-			validFor: /^[^}]*$/,
-		};
-	};
+	private getBibtexCompletionStart(context: CompletionContext, patterns: any[]): number {
+		const line = context.state.doc.lineAt(context.pos);
+		const lineText = line.text;
+		const posInLine = context.pos - line.from;
+
+		let partialStart = posInLine;
+		for (const { pattern } of patterns) {
+			const match = lineText.match(pattern);
+			if (match && match.index !== undefined) {
+				const bracePos = lineText.indexOf('{', match.index);
+				if (bracePos !== -1 && posInLine > bracePos) {
+					partialStart = line.from + bracePos + 1;
+					break;
+				}
+			}
+		}
+		return partialStart;
+	}
 
 	getFilePathCompletions = (context: CompletionContext): CompletionResult | null => {
 		const commandInfo = this.findLatexCommand(context);
@@ -524,11 +689,9 @@ class EnhancedAutocompleteProcessor {
 	};
 
 	getCompletions = (context: CompletionContext): CompletionResult | null => {
-		// Try bibliography completions first (for citation commands)
 		const bibResult = this.getBibliographyCompletions(context);
 		if (bibResult) return bibResult;
 
-		// Then try file path completions
 		const fileResult = this.getFilePathCompletions(context);
 		if (fileResult) return fileResult;
 
@@ -566,7 +729,6 @@ export function createFilePathAutocompleteExtension(currentFilePath: string = ''
 		return globalProcessor?.getCompletions(context) || null;
 	};
 
-	// Combine the state fields into a single extension
 	const stateExtensions = [filePathCacheField, bibliographyCacheField];
 
 	return [

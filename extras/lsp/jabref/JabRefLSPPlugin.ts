@@ -1,7 +1,6 @@
 // extras/lsp/jabref/JabRefLSPPlugin.ts
 import type { LSPPlugin, LSPPanelProps } from "../../../src/plugins/PluginInterface";
 import type { LSPRequest, LSPResponse, LSPNotification } from "../../../src/types/lsp";
-// import JabRefPanel from "./JabRefPanel";
 import { JabRefIcon } from "./Icon";
 import { jabrefLSPSettings } from "./settings";
 import { bibliographyImportService } from "../../../src/services/BibliographyImportService";
@@ -31,6 +30,7 @@ class JabRefLSPPlugin implements LSPPlugin {
 	private settingsReady = false;
 	private settingsPromise?: Promise<void>;
 	private settingsResolver?: () => void;
+	private currentFilePath?: string;
 
 	constructor() {
 		this.setupBibtexParser();
@@ -78,6 +78,10 @@ class JabRefLSPPlugin implements LSPPlugin {
 
 	setLSPRequestHandler(handler: (request: LSPRequest) => Promise<LSPResponse>): void {
 		this.lspRequestHandler = handler;
+	}
+
+	setCurrentFilePath(filePath: string): void {
+		this.currentFilePath = filePath;
 	}
 
 	updateServerUrl(url: string): void {
@@ -406,6 +410,11 @@ class JabRefLSPPlugin implements LSPPlugin {
 	}
 
 	shouldTriggerCompletion(document: string, position: number, lineText: string): boolean {
+		const isLatexContext = this.isLatexFile() || this.hasLatexContent(document);
+		if (!isLatexContext) {
+			return false;
+		}
+
 		const citationPatterns = [
 			/\\cite\w*\{[^}]*$/,
 			/\\autocite\w*\{[^}]*$/,
@@ -417,6 +426,17 @@ class JabRefLSPPlugin implements LSPPlugin {
 
 		const beforeCursor = lineText.substring(0, position - lineText.length + lineText.length);
 		return citationPatterns.some(pattern => pattern.test(beforeCursor));
+	}
+
+	private isLatexFile(): boolean {
+		return this.currentFilePath?.endsWith('.tex') ||
+			   this.currentFilePath?.endsWith('.latex') || false;
+	}
+
+	private hasLatexContent(document: string): boolean {
+		return document.includes('\\documentclass') ||
+			   document.includes('\\begin{document}') ||
+			   document.includes('\\usepackage');
 	}
 
 	async sendRequest(request: LSPRequest): Promise<LSPResponse> {
@@ -451,8 +471,6 @@ class JabRefLSPPlugin implements LSPPlugin {
 	}
 
 	renderPanel = (props: LSPPanelProps) => {
-		// JabRef now relies on the main LSP panel for bibliography functionality
-		// The panel automatically detects bibliography providers and renders appropriately
 		return null;
 	};
 }

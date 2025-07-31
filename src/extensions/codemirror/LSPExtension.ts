@@ -317,8 +317,6 @@ class LSPProcessor {
 	}
 
 	private async getTargetBibFile(pluginId: string): Promise<string | null> {
-		// Get the configured target bib file for this plugin
-		// For now, use the first .bib file found
 		try {
 			const allFiles = await fileStorageService.getAllFiles();
 			const bibFile = allFiles.find(file =>
@@ -337,7 +335,6 @@ class LSPProcessor {
 			const plugin = this.plugins.find(p => p.id === pluginId);
 			if (!plugin) return false;
 
-			// Get full entry from LSP
 			const request: LSPRequest = {
 				method: 'textDocument/completion',
 				params: {
@@ -357,14 +354,12 @@ class LSPProcessor {
 				return false;
 			}
 
-			// Get target bib file
 			const targetBibPath = await this.getTargetBibFile(pluginId);
 			if (!targetBibPath) {
 				console.error('[LSPExtension] No target bib file configured');
 				return false;
 			}
 
-			// Parse the raw entry from LSP
 			const rawEntry = targetItem.documentation || '';
 			const bibEntry = this.parseLSPEntryToBibTeX(targetItem, rawEntry);
 
@@ -373,17 +368,13 @@ class LSPProcessor {
 				return false;
 			}
 
-			// Check for duplicates
 			const localEntries = this.localBibCache.get(targetBibPath) || [];
 			if (localEntries.some(entry => entry.key === entryKey)) {
 				console.log(`[LSPExtension] Entry ${entryKey} already exists locally`);
-				return true; // Already exists, consider it successful
+				return true;
 			}
 
-			// Append to target file
 			await this.appendToBibFile(targetBibPath, bibEntry);
-
-			// Update local cache
 			await this.updateLocalBibCache(targetBibPath);
 
 			console.log(`[LSPExtension] Successfully imported ${entryKey} to ${targetBibPath}`);
@@ -397,16 +388,13 @@ class LSPProcessor {
 
 	private parseLSPEntryToBibTeX(item: any, documentation: string): string | null {
 		try {
-			// If documentation contains a complete BibTeX entry, use it
 			if (documentation.includes('@')) {
 				return documentation;
 			}
 
-			// Otherwise, construct from metadata
 			const key = item.label || item.insertText;
 			const fields: string[] = [];
 
-			// Extract fields from documentation
 			const titleMatch = documentation.match(/Title:\s*(.+?)(?:\n|$)/);
 			if (titleMatch) {
 				fields.push(`  title = {${titleMatch[1].replace(/[{}]/g, '').trim()}}`);
@@ -422,7 +410,6 @@ class LSPProcessor {
 				fields.push(`  year = {${yearMatch[1]}}`);
 			}
 
-			// Determine entry type
 			let entryType = 'article';
 			if (documentation.includes('Book')) entryType = 'book';
 			else if (documentation.includes('Conference') || documentation.includes('Proceedings')) entryType = 'inproceedings';
@@ -454,7 +441,6 @@ class LSPProcessor {
 					: new TextDecoder().decode(bibFile.content);
 			}
 
-			// Ensure proper spacing
 			const newContent = currentContent.trim()
 				? `${currentContent.trim()}\n\n${bibEntry}\n`
 				: `${bibEntry}\n`;
@@ -484,19 +470,16 @@ class LSPProcessor {
 		const line = context.state.doc.lineAt(position);
 		const character = position - line.from;
 
-		// Check if we're in a citation context
 		if (!this.shouldTriggerCompletion(document, position, line.text)) {
 			return [];
 		}
 
 		const allCompletions: CompletionEntry[] = [];
 
-		// Add local completions
 		for (const [bibPath, entries] of this.localBibCache) {
 			allCompletions.push(...entries);
 		}
 
-		// Add LSP completions
 		for (const plugin of this.plugins) {
 			if (!plugin.isEnabled()) {
 				continue;
@@ -527,7 +510,6 @@ class LSPProcessor {
 							originalData: item
 						}));
 
-						// Filter out entries that already exist locally
 						const localKeys = new Set(allCompletions.filter(e => e.source === 'local').map(e => e.key));
 						const uniqueLspEntries = lspEntries.filter(entry => !localKeys.has(entry.key));
 
@@ -543,6 +525,11 @@ class LSPProcessor {
 	}
 
 	private shouldTriggerCompletion(document: string, position: number, lineText: string): boolean {
+		const isLatexContext = this.isLatexFile() || this.hasLatexContent(document);
+		if (!isLatexContext) {
+			return false;
+		}
+
 		const citationPatterns = [
 			/\\cite\w*\{[^}]*$/,
 			/\\autocite\w*\{[^}]*$/,
@@ -553,6 +540,17 @@ class LSPProcessor {
 
 		const beforeCursor = lineText.substring(0, position - lineText.length + lineText.length);
 		return citationPatterns.some(pattern => pattern.test(beforeCursor));
+	}
+
+	private isLatexFile(): boolean {
+		return this.currentFilePath?.endsWith('.tex') ||
+			   this.currentFilePath?.endsWith('.latex') || false;
+	}
+
+	private hasLatexContent(document: string): boolean {
+		return document.includes('\\documentclass') ||
+			   document.includes('\\begin{document}') ||
+			   document.includes('\\usepackage');
 	}
 
 	private extractTitle(item: any): string {
@@ -663,7 +661,6 @@ export function createLSPExtension(): [Extension, Extension, CompletionSource] {
 				info: `${sourceLabel} | ${entry.authors.join(', ')} (${entry.year})\n${entry.journal}`,
 				apply: async (view: EditorView, completion: any, from: number, to: number) => {
 					if (!isLocal && entry.pluginId) {
-						// Import the entry first
 						const success = await globalProcessor!.handleImportRequest(entry.key, entry.pluginId);
 						if (!success) {
 							console.error(`Failed to import entry: ${entry.key}`);
@@ -671,7 +668,6 @@ export function createLSPExtension(): [Extension, Extension, CompletionSource] {
 						}
 					}
 
-					// Insert the citation key
 					view.dispatch({
 						changes: { from, to, insert: entry.key }
 					});
