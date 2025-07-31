@@ -7,18 +7,15 @@ import type { FileNode, FilePathCache } from "../../types/files";
 import { filePathCacheService } from "../../services/FilePathCacheService";
 import { fileStorageService } from "../../services/FileStorageService";
 import { BibtexParser } from "../../../extras/viewers/bibtex/BibtexParser";
-import { pluginRegistry } from "../../plugins/PluginRegistry";
 
 export const updateFileCache = StateEffect.define<FileNode[]>();
-export const updateBibliographyCache = StateEffect.define<any[]>();
 
 interface BibliographyEntry {
 	key: string;
 	title: string;
 	authors: string[];
 	year: string;
-	source: 'local' | 'lsp';
-	pluginId?: string;
+	source: 'local';
 	journal?: string;
 	rawEntry?: string;
 	filePath?: string;
@@ -51,11 +48,6 @@ const bibliographyCacheField = StateField.define<BibliographyEntry[]>({
 		return [];
 	},
 	update(cache, tr) {
-		for (const effect of tr.effects) {
-			if (effect.is(updateBibliographyCache)) {
-				return effect.value;
-			}
-		}
 		return cache;
 	},
 });
@@ -136,17 +128,7 @@ class EnhancedAutocompleteProcessor {
 	private async updateBibliographyCache() {
 		try {
 			const localEntries = await this.getLocalBibliographyEntries();
-			const externalEntries = await this.getExternalBibliographyEntries();
-
-			const localKeys = new Set(localEntries.map(entry => entry.key));
-			const uniqueExternalEntries = externalEntries.filter(entry => !localKeys.has(entry.key));
-
-			const allEntries = [...localEntries, ...uniqueExternalEntries];
-			this.bibliographyCache = allEntries;
-
-			this.view.dispatch({
-				effects: updateBibliographyCache.of(allEntries)
-			});
+			this.bibliographyCache = localEntries;
 		} catch (error) {
 			console.error('[EnhancedAutocomplete] Error updating bibliography cache:', error);
 		}
@@ -191,107 +173,12 @@ class EnhancedAutocompleteProcessor {
 		}
 	}
 
-	private async getExternalBibliographyEntries(): Promise<BibliographyEntry[]> {
-		try {
-			const lspPlugins = pluginRegistry.getEnabledLSPPlugins();
-			const allExternalEntries: BibliographyEntry[] = [];
-
-			for (const plugin of lspPlugins) {
-				if (plugin.getConnectionStatus() === 'connected' && 'getBibliographyEntries' in plugin) {
-					try {
-						const entries = await (plugin as any).getBibliographyEntries();
-						const formattedEntries: BibliographyEntry[] = entries.map((entry: any) => ({
-							key: entry.key,
-							title: entry.fields?.title || entry.title || '',
-							authors: entry.fields?.author ? [entry.fields.author] : entry.authors || [],
-							year: entry.fields?.year || entry.year || '',
-							source: 'lsp' as const,
-							pluginId: plugin.id,
-							journal: entry.fields?.journal || entry.journal || '',
-							rawEntry: entry.rawEntry || '',
-							entryType: entry.entryType || 'article'
-						}));
-
-						allExternalEntries.push(...formattedEntries);
-					} catch (error) {
-						console.error(`[EnhancedAutocomplete] Error getting entries from ${plugin.name}:`, error);
-					}
-				}
-			}
-
-			return allExternalEntries;
-		} catch (error) {
-			console.error('[EnhancedAutocomplete] Error getting external bibliography entries:', error);
-			return [];
-		}
-	}
-
-	private async importBibliographyEntry(entry: BibliographyEntry): Promise<boolean> {
-		if (entry.source === 'local') {
-			return true;
-		}
-
-		try {
-			const allFiles = await fileStorageService.getAllFiles();
-			const targetBibFile = allFiles.find(file =>
-				file.name.endsWith('.bib') &&
-				!file.isDeleted
-			);
-
-			if (!targetBibFile) {
-				console.error('[EnhancedAutocomplete] No target .bib file found');
-				return false;
-			}
-
-			let currentContent = '';
-			if (targetBibFile.content) {
-				currentContent = typeof targetBibFile.content === 'string'
-					? targetBibFile.content
-					: new TextDecoder().decode(targetBibFile.content);
-			}
-
-			const existingEntries = BibtexParser.parse(currentContent);
-			if (existingEntries.some(existing => existing.id === entry.key)) {
-				console.log(`[EnhancedAutocomplete] Entry ${entry.key} already exists locally`);
-				return true;
-			}
-
-			let entryToImport = entry.rawEntry;
-			if (!entryToImport) {
-				const fields = [];
-				if (entry.title) fields.push(`  title = {${entry.title}}`);
-				if (entry.authors.length > 0) fields.push(`  author = {${entry.authors.join(' and ')}}`);
-				if (entry.year) fields.push(`  year = {${entry.year}}`);
-				if (entry.journal) fields.push(`  journal = {${entry.journal}}`);
-
-				entryToImport = `@${entry.entryType || 'article'}{${entry.key},\n${fields.join(',\n')}\n}`;
-			}
-
-			const newContent = currentContent.trim()
-				? `${currentContent.trim()}\n\n${entryToImport}\n`
-				: `${entryToImport}\n`;
-
-			await fileStorageService.updateFileContent(targetBibFile.id, newContent);
-			await this.updateBibliographyCache();
-
-			console.log(`[EnhancedAutocomplete] Successfully imported ${entry.key}`);
-			return true;
-
-		} catch (error) {
-			console.error(`[EnhancedAutocomplete] Error importing entry ${entry.key}:`, error);
-			return false;
-		}
-	}
-
 	setCurrentFilePath(filePath: string) {
 		this.currentFilePath = filePath;
 	}
 
 	update(update: any) {
-		const bibCache = update.state.field(bibliographyCacheField, false);
-		if (bibCache && bibCache !== this.bibliographyCache) {
-			this.bibliographyCache = bibCache;
-		}
+		// No need to update bibliography cache from state field
 	}
 
 	private findLatexCommand(context: CompletionContext): { command: string; partial: string; fileTypes: 'images' | 'tex' | 'bib' | 'all' } | null {
@@ -343,7 +230,6 @@ class EnhancedAutocompleteProcessor {
 
 		return null;
 	}
-
 	private findBibtexEntry(context: CompletionContext): { entryType: string; partial: string; type: 'bibtex-entry' } | null {
 		const line = context.state.doc.lineAt(context.pos);
 		const lineText = line.text;
@@ -369,20 +255,25 @@ class EnhancedAutocompleteProcessor {
 		return null;
 	}
 
+	private isInLatexFile(): boolean {
+		return this.currentFilePath.endsWith('.tex') || this.currentFilePath.endsWith('.latex');
+	}
+
 	private isInBibFile(): boolean {
 		return this.currentFilePath.endsWith('.bib') || this.currentFilePath.endsWith('.bibtex');
 	}
 
 	getBibliographyCompletions = (context: CompletionContext): CompletionResult | null => {
-		const cache = context.state.field(bibliographyCacheField, false) || this.bibliographyCache;
+		const cache = this.bibliographyCache;
 		if (!cache || cache.length === 0) return null;
 
 		const citationInfo = this.findCitationCommand(context);
 		const bibtexInfo = this.findBibtexEntry(context);
 
 		const isCurrentlyInBibFile = this.isInBibFile();
+		const isCurrentlyInLatexFile = this.isInLatexFile();
 
-		if (!isCurrentlyInBibFile && citationInfo) {
+		if (isCurrentlyInLatexFile && citationInfo) {
 			return this.handleLatexCitationCompletion(context, citationInfo, cache);
 		}
 
@@ -445,22 +336,14 @@ class EnhancedAutocompleteProcessor {
 	private createCitationOptions(entries: BibliographyEntry[], partial: string) {
 		return entries
 			.sort((a, b) => {
-				if (a.source === 'local' && b.source !== 'local') return -1;
-				if (a.source !== 'local' && b.source === 'local') return 1;
-
 				const aStartsWith = a.key.toLowerCase().startsWith(partial.toLowerCase());
 				const bStartsWith = b.key.toLowerCase().startsWith(partial.toLowerCase());
 				if (aStartsWith && !bStartsWith) return -1;
 				if (!aStartsWith && bStartsWith) return 1;
-
 				return a.key.localeCompare(b.key);
 			})
 			.slice(0, 20)
 			.map(entry => {
-				const isLocal = entry.source === 'local';
-				const sourceIcon = isLocal ? ' ✓' : ' ⬇️';
-				const sourceLabel = isLocal ? 'Local' : 'External';
-
 				const displayTitle = entry.title.length > 50
 					? `${entry.title.substring(0, 47)}...`
 					: entry.title;
@@ -471,21 +354,14 @@ class EnhancedAutocompleteProcessor {
 
 				return {
 					label: entry.key,
-					detail: `${displayTitle}${sourceIcon}`,
-					info: `${sourceLabel} | ${authors} (${entry.year})\n${entry.journal}`,
-					apply: async (view: EditorView, completion: any, from: number, to: number) => {
-						if (!isLocal) {
-							const success = await this.importBibliographyEntry(entry);
-							if (!success) {
-								console.error(`Failed to import entry: ${entry.key}`);
-							}
-						}
-
+					detail: `${displayTitle} ✓`,
+					info: `Local | ${authors} (${entry.year})\n${entry.journal}`,
+					apply: (view: EditorView, completion: any, from: number, to: number) => {
 						view.dispatch({
 							changes: { from, to, insert: entry.key }
 						});
 					},
-					boost: isLocal ? 10 : 5,
+					boost: 10,
 				};
 			});
 	}
@@ -493,22 +369,14 @@ class EnhancedAutocompleteProcessor {
 	private createBibtexEntryOptions(entries: BibliographyEntry[], partial: string, context: CompletionContext) {
 		return entries
 			.sort((a, b) => {
-				if (a.source === 'local' && b.source !== 'local') return -1;
-				if (a.source !== 'local' && b.source === 'local') return 1;
-
 				const aStartsWith = a.key.toLowerCase().startsWith(partial.toLowerCase());
 				const bStartsWith = b.key.toLowerCase().startsWith(partial.toLowerCase());
 				if (aStartsWith && !bStartsWith) return -1;
 				if (!aStartsWith && bStartsWith) return 1;
-
 				return a.key.localeCompare(b.key);
 			})
 			.slice(0, 20)
 			.map(entry => {
-				const isLocal = entry.source === 'local';
-				const sourceIcon = isLocal ? ' ✓' : ' ⬇️';
-				const sourceLabel = isLocal ? 'Local' : 'External';
-
 				const displayTitle = entry.title.length > 50
 					? `${entry.title.substring(0, 47)}...`
 					: entry.title;
@@ -519,16 +387,9 @@ class EnhancedAutocompleteProcessor {
 
 				return {
 					label: entry.key,
-					detail: `${displayTitle}${sourceIcon}`,
-					info: `${sourceLabel} | ${authors} (${entry.year})\n${entry.journal}`,
+					detail: `${displayTitle} ✓`,
+					info: `Local | ${authors} (${entry.year})\n${entry.journal}`,
 					apply: async (view: EditorView, completion: any, from: number, to: number) => {
-						if (!isLocal) {
-							const success = await this.importBibliographyEntry(entry);
-							if (!success) {
-								console.error(`Failed to import entry: ${entry.key}`);
-							}
-						}
-
 						let fullEntry = entry.rawEntry;
 						if (!fullEntry) {
 							const fields = [];
@@ -556,7 +417,7 @@ class EnhancedAutocompleteProcessor {
 							});
 						}
 					},
-					boost: isLocal ? 10 : 5,
+					boost: 10,
 				};
 			});
 	}
