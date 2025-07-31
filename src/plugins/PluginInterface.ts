@@ -79,7 +79,6 @@ export interface LSPPlugin extends Plugin {
     initialize(): Promise<void>;
     shutdown(): Promise<void>;
     isEnabled(): boolean;
-    shouldTriggerCompletion(document: string, position: number, lineText: string): boolean;
     sendRequest(request: LSPRequest): Promise<LSPResponse>;
     onNotification(notification: LSPNotification): void;
 

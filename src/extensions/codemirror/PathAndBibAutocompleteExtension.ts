@@ -1,4 +1,4 @@
-// src/extensions/codemirror/FilePathAutocompleteExtension.ts - Enhanced with Bibliography Support
+// src/extensions/codemirror/PathAndBibAutocompleteExtension.ts - Enhanced with Bibliography Support
 import { type CompletionContext, type CompletionResult, type CompletionSource } from "@codemirror/autocomplete";
 import { StateEffect, StateField, type Extension } from "@codemirror/state";
 import { ViewPlugin, type EditorView } from "@codemirror/view";

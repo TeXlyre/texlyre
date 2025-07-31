@@ -35,7 +35,7 @@ import type * as Y from "yjs";
 
 import { pluginRegistry } from "../plugins/PluginRegistry";
 import { commentSystemExtension } from "../extensions/codemirror/CommentExtension";
-import { createFilePathAutocompleteExtension, setCurrentFilePath, refreshBibliographyCache } from "../extensions/codemirror/FilePathAutocompleteExtension";
+import { createFilePathAutocompleteExtension, setCurrentFilePath, refreshBibliographyCache } from "../extensions/codemirror/PathAndBibAutocompleteExtension.ts";
 import { createLSPExtension, updateLSPPluginsInView, setCurrentFilePathInLSP } from "../extensions/codemirror/LSPExtension";
 import { useAuth } from "../hooks/useAuth";
 import { useEditor } from "../hooks/useEditor";

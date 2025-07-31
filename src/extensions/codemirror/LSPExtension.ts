@@ -486,7 +486,7 @@ class LSPProcessor {
 			}
 
 			try {
-				if (plugin.shouldTriggerCompletion(document, position, line.text)) {
+				if (this.shouldTriggerCompletion(document, position, line.text)) {
 					const request: LSPRequest = {
 						method: 'textDocument/completion',
 						params: {

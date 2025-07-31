@@ -409,36 +409,6 @@ class JabRefLSPPlugin implements LSPPlugin {
 		}
 	}
 
-	shouldTriggerCompletion(document: string, position: number, lineText: string): boolean {
-		const isLatexContext = this.isLatexFile() || this.hasLatexContent(document);
-		if (!isLatexContext) {
-			return false;
-		}
-
-		const citationPatterns = [
-			/\\cite\w*\{[^}]*$/,
-			/\\autocite\w*\{[^}]*$/,
-			/\\textcite\w*\{[^}]*$/,
-			/\\parencite\w*\{[^}]*$/,
-			/\\footcite\w*\{[^}]*$/,
-			/@[a-zA-Z_][\w]*$/
-		];
-
-		const beforeCursor = lineText.substring(0, position - lineText.length + lineText.length);
-		return citationPatterns.some(pattern => pattern.test(beforeCursor));
-	}
-
-	private isLatexFile(): boolean {
-		return this.currentFilePath?.endsWith('.tex') ||
-			   this.currentFilePath?.endsWith('.latex') || false;
-	}
-
-	private hasLatexContent(document: string): boolean {
-		return document.includes('\\documentclass') ||
-			   document.includes('\\begin{document}') ||
-			   document.includes('\\usepackage');
-	}
-
 	async sendRequest(request: LSPRequest): Promise<LSPResponse> {
 		if (this.lspRequestHandler) {
 			return this.lspRequestHandler(request);
