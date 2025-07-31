@@ -215,7 +215,7 @@ export const EditorLoader = (
 				content?.includes("@book") ||
 				content?.includes("@inproceedings")
 			) {
-				return [bibtex({ enableAutocomplete: false })];
+				return [bibtex({ autoCloseBrackets: false, enableAutocomplete: false })];
 			}
 			return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
 		}
@@ -228,7 +228,7 @@ export const EditorLoader = (
 				return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
 			case "bib":
 			case "bibtex":
-				return [bibtex({ enableAutocomplete: false })];
+				return [bibtex({ autoCloseBrackets: false, enableAutocomplete: false })];
 			case "md":
 			case "markdown":
 				return [markdown()];
@@ -238,7 +238,7 @@ export const EditorLoader = (
 					content?.includes("@book") ||
 					content?.includes("@inproceedings")
 				) {
-					return [bibtex({ enableAutocomplete: false })];
+					return [bibtex({ autoCloseBrackets: false, enableAutocomplete: false })];
 				}
 				return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
 		}
