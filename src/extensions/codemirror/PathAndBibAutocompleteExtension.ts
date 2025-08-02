@@ -263,10 +263,56 @@ class EnhancedAutocompleteProcessor {
 		return this.currentFilePath.endsWith('.bib') || this.currentFilePath.endsWith('.bibtex');
 	}
 
-	getBibliographyCompletions = (context: CompletionContext): CompletionResult | null => {
-		const cache = this.bibliographyCache;
-		if (!cache || cache.length === 0) return null;
+	private async getExternalBibliographyEntries(): Promise<BibliographyEntry[]> {
+		const allEntries: BibliographyEntry[] = [];
 
+		try {
+			const { pluginRegistry } = await import('../../plugins/PluginRegistry');
+			const lspPlugins = pluginRegistry.getEnabledLSPPlugins();
+
+			for (const plugin of lspPlugins) {
+				if (plugin.getConnectionStatus() !== 'connected') continue;
+
+				if ('getBibliographyEntries' in plugin) {
+					try {
+						const bibEntries = await (plugin as any).getBibliographyEntries();
+						const entries: BibliographyEntry[] = bibEntries.map((entry: any) => ({
+							key: entry.key,
+							title: entry.fields?.title || entry.title || '',
+							authors: entry.fields?.author ? [entry.fields.author] : entry.authors || [],
+							year: entry.fields?.year || entry.year || '',
+							source: 'external' as const,
+							journal: entry.fields?.journal || entry.fields.booktitle || entry.journal || '',
+							rawEntry: entry.rawEntry || this.formatBibEntry(entry),
+							entryType: entry.entryType || entry.type || 'article'
+						}));
+						allEntries.push(...entries);
+					} catch (error) {
+						console.error(`Error getting bibliography entries from ${plugin.name}:`, error);
+					}
+				}
+			}
+		} catch (error) {
+			console.error('Error getting external bibliography entries:', error);
+		}
+
+		return allEntries;
+	}
+
+	private formatBibEntry(entry: any): string {
+		const fields: string[] = [];
+		if (entry.title || entry.fields?.title) fields.push(`  title = {${entry.title || entry.fields.title}}`);
+		if (entry.authors?.length > 0) fields.push(`  author = {${entry.authors.join(' and ')}}`);
+		if (entry.fields?.author) fields.push(`  author = {${entry.fields.author}}`);
+		if (entry.year || entry.fields?.year) fields.push(`  year = {${entry.year || entry.fields.year}}`);
+		if (entry.journal || entry.fields?.journal) fields.push(`  journal = {${entry.journal || entry.fields.journal}}`);
+
+		const entryType = entry.entryType || entry.type || 'article';
+		return `@${entryType}{${entry.key},\n${fields.join(',\n')}\n}`;
+	}
+
+	getBibliographyCompletions = async (context: CompletionContext): Promise<CompletionResult | null> => {
+		const cache = this.bibliographyCache;
 		const citationInfo = this.findCitationCommand(context);
 		const bibtexInfo = this.findBibtexEntry(context);
 
@@ -278,7 +324,7 @@ class EnhancedAutocompleteProcessor {
 		}
 
 		if (isCurrentlyInBibFile && bibtexInfo) {
-			return this.handleBibtexEntryCompletion(context, bibtexInfo, cache);
+			return await this.handleBibtexEntryCompletion(context, bibtexInfo, cache);
 		}
 
 		return null;
@@ -305,18 +351,20 @@ class EnhancedAutocompleteProcessor {
 		};
 	}
 
-	private handleBibtexEntryCompletion(context: CompletionContext, bibtexInfo: any, cache: BibliographyEntry[]): CompletionResult {
+	private async handleBibtexEntryCompletion(context: CompletionContext, bibtexInfo: any, _localCache: BibliographyEntry[]): Promise<CompletionResult | null> {
 		const partial = bibtexInfo.partial;
 		const entryType = bibtexInfo.entryType.toLowerCase();
 
-		let filteredEntries = cache;
+		const externalEntries = await this.getExternalBibliographyEntries();
+
+		let filteredEntries = externalEntries;
 		if (entryType) {
-			filteredEntries = cache.filter(entry =>
+			filteredEntries = externalEntries.filter(entry =>
 				entry.entryType?.toLowerCase() === entryType &&
 				(!partial || entry.key.toLowerCase().includes(partial.toLowerCase()))
 			);
 		} else {
-			filteredEntries = cache.filter(entry =>
+			filteredEntries = externalEntries.filter(entry =>
 				!partial || entry.key.toLowerCase().includes(partial.toLowerCase())
 			);
 		}
@@ -387,19 +435,10 @@ class EnhancedAutocompleteProcessor {
 
 				return {
 					label: entry.key,
-					detail: `${displayTitle} ✓`,
-					info: `Local | ${authors} (${entry.year})\n${entry.journal}`,
+					detail: `${displayTitle} ⬇️`,
+					info: `External | ${authors} (${entry.year})\n${entry.journal}`,
 					apply: async (view: EditorView, completion: any, from: number, to: number) => {
-						let fullEntry = entry.rawEntry;
-						if (!fullEntry) {
-							const fields = [];
-							if (entry.title) fields.push(`  title = {${entry.title}}`);
-							if (entry.authors.length > 0) fields.push(`  author = {${entry.authors.join(' and ')}}`);
-							if (entry.year) fields.push(`  year = {${entry.year}}`);
-							if (entry.journal) fields.push(`  journal = {${entry.journal}}`);
-
-							fullEntry = `@${entry.entryType || 'article'}{${entry.key},\n${fields.join(',\n')}\n}`;
-						}
+						const fullEntry = entry.rawEntry;
 
 						const line = view.state.doc.lineAt(from);
 						const lineStart = line.from;
@@ -549,8 +588,8 @@ class EnhancedAutocompleteProcessor {
 		};
 	};
 
-	getCompletions = (context: CompletionContext): CompletionResult | null => {
-		const bibResult = this.getBibliographyCompletions(context);
+	getCompletions = async (context: CompletionContext): Promise<CompletionResult | null> => {
+		const bibResult = await this.getBibliographyCompletions(context);
 		if (bibResult) return bibResult;
 
 		const fileResult = this.getFilePathCompletions(context);
@@ -586,8 +625,8 @@ export function createFilePathAutocompleteExtension(currentFilePath: string = ''
 		}
 	);
 
-	const completionSource: CompletionSource = (context: CompletionContext) => {
-		return globalProcessor?.getCompletions(context) || null;
+	const completionSource: CompletionSource = async (context: CompletionContext) => {
+		return await globalProcessor?.getCompletions(context) || null;
 	};
 
 	const stateExtensions = [filePathCacheField, bibliographyCacheField];
