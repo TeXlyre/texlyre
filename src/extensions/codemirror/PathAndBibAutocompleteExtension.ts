@@ -76,11 +76,11 @@ const latexCommandPatterns = [
 ];
 
 const citationCommandPatterns = [
-	{
-		commands: ['cite', 'citep', 'citet', 'autocite', 'textcite', 'parencite', 'footcite', 'fullcite'],
-		pattern: /\\(cite|citep|citet|autocite|textcite|parencite|footcite|fullcite)\w*(?:\[[^\]]*\])?(?:\[[^\]]*\])?\{([^}]*)/,
-		type: 'citation' as const,
-	},
+    {
+        commands: ['cite', 'citep', 'citet', 'autocite', 'textcite', 'parencite', 'footcite', 'fullcite'],
+        pattern: /\\(cite|citep|citet|autocite|textcite|parencite|footcite|fullcite)\w*(?:\[[^\]]*\])?(?:\[[^\]]*\])?\{([^}]*)/,
+        type: 'citation' as const,
+    },
 ];
 
 const bibtexEntryPatterns = [
@@ -216,12 +216,20 @@ class EnhancedAutocompleteProcessor {
 
 			for (const match of matches) {
 				const matchStart = match.index!;
-				const commandEnd = matchStart + match[0].length;
+				const braceStart = lineText.indexOf('{', matchStart);
+				const braceEnd = lineText.indexOf('}', braceStart);
 
-				if (posInLine >= matchStart && posInLine <= commandEnd + 1) {
+				if (braceStart !== -1 && posInLine > braceStart && (braceEnd === -1 || posInLine <= braceEnd)) {
+					const textInBraces = lineText.substring(braceStart + 1, posInLine);
+					const lastCommaPos = textInBraces.lastIndexOf(',');
+
+					const partial = lastCommaPos !== -1
+						? textInBraces.substring(lastCommaPos + 1).trim()
+						: textInBraces.trim();
+
 					return {
 						command: match[1],
-						partial: match[2] || '',
+						partial,
 						type,
 					};
 				}
@@ -230,6 +238,7 @@ class EnhancedAutocompleteProcessor {
 
 		return null;
 	}
+
 	private findBibtexEntry(context: CompletionContext): { entryType: string; partial: string; type: 'bibtex-entry' } | null {
 		const line = context.state.doc.lineAt(context.pos);
 		const lineText = line.text;
@@ -405,8 +414,10 @@ class EnhancedAutocompleteProcessor {
 					detail: `${displayTitle} ✓`,
 					info: `Local | ${authors} (${entry.year})\n${entry.journal}`,
 					apply: (view: EditorView, completion: any, from: number, to: number) => {
+						const insertText = entry.key;
 						view.dispatch({
-							changes: { from, to, insert: entry.key }
+							changes: { from, to, insert: insertText },
+							selection: { anchor: from + insertText.length }
 						});
 					},
 					boost: 10,
@@ -466,18 +477,23 @@ class EnhancedAutocompleteProcessor {
 		const lineText = line.text;
 		const posInLine = context.pos - line.from;
 
-		let partialStart = posInLine;
 		for (const { pattern } of patterns) {
 			const match = lineText.match(pattern);
 			if (match && match.index !== undefined) {
 				const bracePos = lineText.indexOf('{', match.index);
 				if (bracePos !== -1 && posInLine > bracePos) {
-					partialStart = line.from + bracePos + 1;
-					break;
+					const textInBraces = lineText.substring(bracePos + 1, posInLine);
+					const lastCommaPos = textInBraces.lastIndexOf(',');
+
+					if (lastCommaPos !== -1) {
+						return line.from + bracePos + 1 + lastCommaPos + 1;
+					} else {
+						return line.from + bracePos + 1;
+					}
 				}
 			}
 		}
-		return partialStart;
+		return posInLine;
 	}
 
 	private getBibtexCompletionStart(context: CompletionContext, patterns: any[]): number {

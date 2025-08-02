@@ -307,12 +307,24 @@ export function createLSPExtension(): [Extension, Extension, CompletionSource] {
 
 		// Find the opening brace of the citation command
 		const citationMatch = beforeCursor.match(/\\(?:cite|autocite|textcite|parencite|footcite)\w*(?:\[[^\]]*\])?(?:\[[^\]]*\])?\{([^}]*)$/);
-		const startPos = citationMatch
-			? line.from + beforeCursor.lastIndexOf('{') + 1
-			: context.pos;
+		if (citationMatch) {
+			const bracePos = beforeCursor.lastIndexOf('{');
+			const textInBraces = beforeCursor.substring(bracePos + 1);
+			const lastCommaPos = textInBraces.lastIndexOf(',');
+
+			const startPos = lastCommaPos !== -1
+				? line.from + bracePos + 1 + lastCommaPos + 1
+				: line.from + bracePos + 1;
+
+			return {
+				from: startPos,
+				options,
+				validFor: /^[a-zA-Z_][\w]*$/,
+			} as CompletionResult;
+		}
 
 		return {
-			from: startPos,
+			from: context.pos,
 			options,
 			validFor: /^[a-zA-Z_][\w]*$/,
 		} as CompletionResult;
