@@ -170,7 +170,8 @@ class JabRefLSPPlugin implements LSPPlugin {
 			key: item.label || item.insertText || '',
 			entryType: this.extractEntryType(documentation) || 'article',
 			fields: fields,
-			rawEntry: this.constructRawEntry(item.label || item.insertText || '', fields, this.extractEntryType(documentation) || 'article')
+			rawEntry: this.constructRawEntry(item.label || item.insertText || '', fields,
+				this.extractEntryType(documentation) || 'article')
 		};
 	}
 

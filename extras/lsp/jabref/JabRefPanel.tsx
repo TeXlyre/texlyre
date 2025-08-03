@@ -1,3 +1,4 @@
+// extras/lsp/jabref/JabRefPanel.tsx
 import type React from "react";
 import type { LSPPanelProps } from "../../../src/plugins/PluginInterface";
 

@@ -323,6 +323,9 @@ const EditorContent: React.FC<{
 							<DownloadIcon />
 						</button>
 					)}
+				</PluginControlGroup>
+
+				<PluginControlGroup>
 					{!isViewOnly && (
 						<CommentToggleButton className="header-comment-button" />
 					)}
@@ -367,11 +370,13 @@ const EditorContent: React.FC<{
 					>
 						<DownloadIcon />
 					</button>
+				</PluginControlGroup>
+
+				<PluginControlGroup>
 					{!isViewOnly && (
 						<CommentToggleButton className="header-comment-button" />
 					)}
 				</PluginControlGroup>
-
 				{/* LSP Plugin Controls for linked files */}
 				{linkedFileInfo?.fileName && (() => {
 					const linkedFileExtension = linkedFileInfo.fileName.split('.').pop()?.toLowerCase();
@@ -401,6 +406,9 @@ const EditorContent: React.FC<{
 					>
 						<CopyIcon />
 					</button>
+				</PluginControlGroup>
+
+				<PluginControlGroup>
 					{!isViewOnly && (
 						<CommentToggleButton className="header-comment-button" />
 					)}

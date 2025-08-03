@@ -227,6 +227,24 @@ export const FolderIcon: React.FC<{ isOpen?: boolean }> = ({
 	</svg>
 );
 
+export const BibliographyIcon: React.FC = () => (
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width="16"
+		height="16"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="2"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+	>
+		<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+		<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+		<path d="M14 2v8l-2-2-2 2V2" />
+	</svg>
+);
+
 export const FileIcon: React.FC = () => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"

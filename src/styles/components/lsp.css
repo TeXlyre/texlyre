@@ -445,6 +445,7 @@
 	height: 16px;
 	font-size: 12px;
 	border-radius: 50%;
+	margin-top: var(--space-xs);
 }
 
 .entry-source.local {
@@ -491,16 +492,22 @@
 }
 
 .lsp-entry-type-badge {
-	display: flex;
-	justify-content: flex-end;
-	margin-bottom: var(--space-sm);
-	color: var(--pico-primary);
-	font-weight: 500;
-	padding: 0.25rem 0.5rem;
-	border-radius: 4px;
-	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
-	font-size: 0.55rem;
-	gap: 0.3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+    color: var(--pico-primary);
+    font-weight: 500;
+    border-radius: 4px;
+    background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
+    font-size: 0.55rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.lsp-entry-type-content {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
 }
 
 .lsp-entry-type-icon {

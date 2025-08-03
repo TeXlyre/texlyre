@@ -63,16 +63,15 @@ export const jabrefLSPSettings: Setting[] = [
 		description: "Automatically import external bibliography entries when selected",
 		defaultValue: true,
 	},
-	{
-		id: "jabref-lsp-show-import-preview",
-		category: "LSP",
-		subcategory: "JabRef",
-		type: "checkbox",
-		label: "Show import preview",
-		description: "Preview BibTeX entry before importing",
-		defaultValue: false,
-	},
-	// Note: jabref-lsp-target-bib-file is dynamically registered by useDynamicBibSettings
+	// {
+	// 	id: "jabref-lsp-show-import-preview",
+	// 	category: "LSP",
+	// 	subcategory: "JabRef",
+	// 	type: "checkbox",
+	// 	label: "Show import preview",
+	// 	description: "Preview BibTeX entry before importing",
+	// 	defaultValue: false,
+	// },
 	{
 		id: "jabref-lsp-merge-duplicates",
 		category: "LSP",

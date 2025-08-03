@@ -1,3 +1,4 @@
+// src/contexts/LSPContext.tsx
 import type React from "react";
 import {
 	type ReactNode,
@@ -5,6 +6,7 @@ import {
 	useCallback,
 	useEffect,
 	useState,
+	useMemo,
 } from "react";
 
 import { pluginRegistry } from "../plugins/PluginRegistry";
@@ -24,6 +26,7 @@ interface BibEntry {
 	isImported?: boolean;
 	filePath?: string;
 	providerId?: string;
+	providerName?: string;
 }
 
 interface BibFile {
@@ -37,8 +40,8 @@ interface LSPContextType {
 	setShowPanel: (show: boolean) => void;
 	activeTab: "list" | "detail";
 	setActiveTab: (tab: "list" | "detail") => void;
-	selectedProvider: string | "all";
-	setSelectedProvider: (provider: string | "all") => void;
+	selectedProvider: string | "all" | "local";
+	setSelectedProvider: (provider: string | "all" | "local") => void;
 	availableProviders: LSPPlugin[];
 	selectedItem: any;
 	setSelectedItem: (item: any) => void;
@@ -68,7 +71,7 @@ interface LSPContextType {
 	serverUrl: string;
 
 	handleRefresh: () => Promise<void>;
-	handleProviderSelect: (providerId: string | "all") => void;
+	handleProviderSelect: (providerId: string | "all" | "local") => void;
 	handleItemSelect: (item: any) => void;
 	handleBackToList: () => void;
 	handleEntryClick: (entry: BibEntry) => void;
@@ -92,7 +95,7 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 
 	const [showPanel, setShowPanel] = useState(false);
 	const [activeTab, setActiveTab] = useState<"list" | "detail">("list");
-	const [selectedProvider, setSelectedProvider] = useState<string | "all">("all");
+	const [selectedProvider, setSelectedProvider] = useState<string | "all" | "local">("local");
 	const [availableProviders, setAvailableProviders] = useState<LSPPlugin[]>([]);
 	const [selectedItem, setSelectedItem] = useState<any>(null);
 	const [showDropdown, setShowDropdown] = useState(false);
@@ -109,7 +112,16 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	const [importingEntries, setImportingEntries] = useState<Set<string>>(new Set());
 
 	const currentProvider = availableProviders.find(p => p.id === selectedProvider);
-	const isBibliographyProvider = currentProvider && 'getBibliographyEntries' in currentProvider;
+
+	const isBibliographyProvider = useMemo(() => {
+		if (selectedProvider === "all") {
+			return availableProviders.some(provider => 'getBibliographyEntries' in provider);
+		}
+		if (selectedProvider === "local") {
+			return true;
+		}
+		return currentProvider && 'getBibliographyEntries' in currentProvider;
+	}, [selectedProvider, currentProvider, availableProviders]);
 
 	const getProviderSetting = (settingName: string) => {
 		if (!currentProvider) return undefined;
@@ -133,8 +145,8 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		const providers = pluginRegistry.getAllLSPPlugins();
 		setAvailableProviders(providers);
 
-		if (providers.length > 0 && selectedProvider === "all") {
-			setSelectedProvider(providers[0].id);
+		if (providers.length > 0 && selectedProvider === "local") {
+			setSelectedProvider("local");
 		}
 	}, []);
 
@@ -223,7 +235,7 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	}, [parser]);
 
 	const fetchExternalEntries = useCallback(async () => {
-		if (!currentProvider || !isBibliographyProvider) {
+		if (!currentProvider || !isBibliographyProvider || selectedProvider === "local") {
 			setExternalEntries([]);
 			return;
 		}
@@ -249,7 +261,7 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		} finally {
 			setIsLoading(false);
 		}
-	}, [currentProvider, isBibliographyProvider]);
+	}, [currentProvider, isBibliographyProvider, selectedProvider]);
 
 	const fetchAllBibliographyEntries = useCallback(async () => {
 		if (selectedProvider !== "all") return;
@@ -274,7 +286,8 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 						...entry,
 						source: 'external' as const,
 						isImported: false,
-						providerId: provider.id
+						providerId: provider.id,
+						providerName: provider.name
 					}));
 					allExternalEntries.push(...providerEntries);
 				} catch (error) {
@@ -296,20 +309,38 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	}, [createBibFile]);
 
 	const mergeEntries = useCallback(() => {
-		const localKeys = new Set(localEntries.map(entry => entry.key));
+		if (selectedProvider === "local") {
+			setEntries(localEntries);
+		} else if (selectedProvider === "all") {
+			const localKeys = new Set(localEntries.map(entry => entry.key));
 
-		const updatedExternalEntries = externalEntries.map(entry => ({
-			...entry,
-			isImported: localKeys.has(entry.key)
-		}));
+			const updatedExternalEntries = externalEntries.map(entry => ({
+				...entry,
+				isImported: localKeys.has(entry.key)
+			}));
 
-		const combined = [
-			...localEntries,
-			...updatedExternalEntries.filter(entry => !entry.isImported)
-		];
+			const combined = [
+				...localEntries,
+				...updatedExternalEntries
+			];
 
-		setEntries(combined);
-	}, [localEntries, externalEntries]);
+			setEntries(combined);
+		} else {
+			const localKeys = new Set(localEntries.map(entry => entry.key));
+
+			const updatedExternalEntries = externalEntries.map(entry => ({
+				...entry,
+				isImported: localKeys.has(entry.key)
+			}));
+
+			const combined = [
+				...localEntries,
+				...updatedExternalEntries.filter(entry => !entry.isImported)
+			];
+
+			setEntries(combined);
+		}
+	}, [selectedProvider, localEntries, externalEntries]);
 
 	useEffect(() => {
 		if (searchQuery.trim() === "") {
@@ -362,6 +393,13 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	}, [currentProvider, availableBibFiles, getTargetFile]);
 
 	useEffect(() => {
+		if (selectedProvider === "local") {
+			refreshAvailableFiles();
+			fetchLocalEntries();
+			setExternalEntries([]);
+			return;
+		}
+
 		if (selectedProvider === "all") {
 			refreshAvailableFiles();
 			fetchLocalEntries();
@@ -435,7 +473,7 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		const handleFileTreeRefresh = () => {
 			clearTimeout(timeoutId);
 			timeoutId = setTimeout(() => {
-				if (isBibliographyProvider || selectedProvider === "all") {
+				if (isBibliographyProvider || selectedProvider === "all" || selectedProvider === "local") {
 					refreshAvailableFiles();
 					fetchLocalEntries();
 				}
@@ -453,7 +491,10 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		setIsRefreshing(true);
 
 		try {
-			if (selectedProvider === "all") {
+			if (selectedProvider === "local") {
+				await refreshAvailableFiles();
+				await fetchLocalEntries();
+			} else if (selectedProvider === "all") {
 				const refreshPromises = availableProviders.map(async (provider) => {
 					try {
 						await provider.initialize?.();
@@ -463,18 +504,14 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 				});
 
 				await Promise.allSettled(refreshPromises);
-			} else if (currentProvider) {
-				await currentProvider.initialize?.();
-			}
-
-			if (isBibliographyProvider || selectedProvider === "all") {
 				await refreshAvailableFiles();
 				await fetchLocalEntries();
-				if (selectedProvider === "all") {
-					await fetchAllBibliographyEntries();
-				} else {
-					await fetchExternalEntries();
-				}
+				await fetchAllBibliographyEntries();
+			} else if (currentProvider) {
+				await currentProvider.initialize?.();
+				await refreshAvailableFiles();
+				await fetchLocalEntries();
+				await fetchExternalEntries();
 			}
 		} catch (error) {
 			console.error("Error refreshing LSP provider:", error);
@@ -483,7 +520,7 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		}
 	};
 
-	const handleProviderSelect = (providerId: string | "all") => {
+	const handleProviderSelect = (providerId: string | "all" | "local") => {
 		setSelectedProvider(providerId);
 		setShowDropdown(false);
 		setActiveTab("list");
@@ -494,7 +531,10 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		setLocalEntries([]);
 		setExternalEntries([]);
 		setFilteredEntries([]);
-		setTargetBibFile("");
+
+		if (providerId !== "local") {
+			setTargetBibFile("");
+		}
 	};
 
 	const handleItemSelect = (item: any) => {
@@ -609,6 +649,9 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	};
 
 	const getConnectionStatus = () => {
+		if (selectedProvider === "local") {
+			return "connected";
+		}
 		if (selectedProvider === "all") {
 			const connectedCount = availableProviders.filter(p =>
 				p.getConnectionStatus() === "connected"
