@@ -2,6 +2,8 @@
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { BibliographyProvider } from '../../contexts/BibliographyContext';
+import { LSPProvider } from '../../contexts/LSPContext';
 import { CommentProvider } from "../../contexts/CommentContext";
 import { processComments } from "../../extensions/codemirror/CommentExtension.ts";
 import { useCollab } from "../../hooks/useCollab";
@@ -21,6 +23,8 @@ import { fileCommentProcessor } from "../../utils/fileCommentProcessor.ts";
 import { arrayBufferToString } from "../../utils/fileUtils";
 import CommentPanel from "../comments/CommentPanel";
 import CommentToggleButton from "../comments/CommentToggleButton";
+import LSPToggleButton from "../lsp/LSPToggleButton";
+import LSPPanel from "../lsp/LSPPanel";
 import CommentModal from "../comments/CommentModal";
 import {
 	CopyIcon,
@@ -286,81 +290,146 @@ const EditorContent: React.FC<{
 			console.error("Error downloading linked file:", error);
 		}
 	};
+	const fileExtension = fileName?.split('.').pop()?.toLowerCase();
+	const availableLSPPlugins = fileExtension ?
+		pluginRegistry.getLSPPluginsForFileType(fileExtension) : [];
 
 	const headerControls =
 		isEditingFile && fileName ? (
-			<PluginControlGroup>
-				{!isViewOnly && onSave && (
+			<>
+				<PluginControlGroup>
+					{!isViewOnly && onSave && (
+						<button
+							onClick={onSave}
+							title="Save File (Ctrl+S)"
+							className="control-button"
+						>
+							<SaveIcon />
+						</button>
+					)}
 					<button
-						onClick={onSave}
-						title="Save File (Ctrl+S)"
+						onClick={() => copyCleanTextToClipboard(textContent)}
+						title="Copy text"
 						className="control-button"
 					>
-						<SaveIcon />
+						<CopyIcon />
 					</button>
+					{onExport && (
+						<button
+							onClick={onExport}
+							title="Download File"
+							className="control-button"
+						>
+							<DownloadIcon />
+						</button>
+					)}
+				</PluginControlGroup>
+
+				<PluginControlGroup>
+					{!isViewOnly && (
+						<CommentToggleButton className="header-comment-button" />
+					)}
+				</PluginControlGroup>
+
+				{/* LSP Plugin Controls */}
+				{availableLSPPlugins.length > 0 && (
+					<PluginControlGroup>
+						{availableLSPPlugins.map(plugin => (
+							<LSPToggleButton
+								key={plugin.id}
+								pluginId={plugin.id}
+								className="header-lsp-button"
+							/>
+						))}
+					</PluginControlGroup>
 				)}
-				<button
-					onClick={() => copyCleanTextToClipboard(textContent)}
-					title="Copy text"
-					className="control-button"
-				>
-					<CopyIcon />
-				</button>
-				{onExport && (
+			</>
+		) : !isEditingFile && linkedFileInfo && !showUnlinkedNotice ? (
+			<>
+				<PluginControlGroup>
+					{onSaveDocument && (
+						<button
+							onClick={onSaveDocument}
+							title="Save document to linked file (Ctrl+S)"
+							className="control-button"
+						>
+							<SaveIcon />
+						</button>
+					)}
 					<button
-						onClick={onExport}
-						title="Download File"
+						onClick={handleCopyLinkedFile}
+						title={`Copy text from linked file: ${linkedFileInfo.fileName}`}
+						className="control-button"
+					>
+						<CopyIcon />
+					</button>
+					<button
+						onClick={handleDownloadLinkedFile}
+						title={`Download linked file: ${linkedFileInfo.fileName}`}
 						className="control-button"
 					>
 						<DownloadIcon />
 					</button>
-				)}
-				{!isViewOnly && (
-					<CommentToggleButton className="header-comment-button" />
-				)}
-			</PluginControlGroup>
-		) : !isEditingFile && linkedFileInfo && !showUnlinkedNotice ? (
-			<PluginControlGroup>
-				{onSaveDocument && (
+				</PluginControlGroup>
+
+				<PluginControlGroup>
+					{!isViewOnly && (
+						<CommentToggleButton className="header-comment-button" />
+					)}
+				</PluginControlGroup>
+				{/* LSP Plugin Controls for linked files */}
+				{linkedFileInfo?.fileName && (() => {
+					const linkedFileExtension = linkedFileInfo.fileName.split('.').pop()?.toLowerCase();
+					const linkedLSPPlugins = linkedFileExtension ?
+						pluginRegistry.getLSPPluginsForFileType(linkedFileExtension) : [];
+
+					return linkedLSPPlugins.length > 0 && (
+						<PluginControlGroup>
+							{linkedLSPPlugins.map(plugin => (
+								<LSPToggleButton
+									key={plugin.id}
+									pluginId={plugin.id}
+									className="header-lsp-button"
+								/>
+							))}
+						</PluginControlGroup>
+					);
+				})()}
+			</>
+		) : !isEditingFile && documentId && documents ? (
+			<>
+				<PluginControlGroup>
 					<button
-						onClick={onSaveDocument}
-						title="Save document to linked file (Ctrl+S)"
+						onClick={() => copyCleanTextToClipboard(textContent)}
+						title="Copy text"
 						className="control-button"
 					>
-						<SaveIcon />
+						<CopyIcon />
 					</button>
-				)}
-				<button
-					onClick={handleCopyLinkedFile}
-					title={`Copy text from linked file: ${linkedFileInfo.fileName}`}
-					className="control-button"
-				>
-					<CopyIcon />
-				</button>
-				<button
-					onClick={handleDownloadLinkedFile}
-					title={`Download linked file: ${linkedFileInfo.fileName}`}
-					className="control-button"
-				>
-					<DownloadIcon />
-				</button>
-				{!isViewOnly && (
-					<CommentToggleButton className="header-comment-button" />
-				)}
-			</PluginControlGroup>
-		) : !isEditingFile && documentId && documents ? (
-			<PluginControlGroup>
-				<button
-					onClick={() => copyCleanTextToClipboard(textContent)}
-					title="Copy text"
-					className="control-button"
-				>
-					<CopyIcon />
-				</button>
-				{!isViewOnly && (
-					<CommentToggleButton className="header-comment-button" />
-				)}
-			</PluginControlGroup>
+				</PluginControlGroup>
+
+				<PluginControlGroup>
+					{!isViewOnly && (
+						<CommentToggleButton className="header-comment-button" />
+					)}
+				</PluginControlGroup>
+
+				{/* LSP Plugin Controls for documents (detect LaTeX content) */}
+				{textContent?.includes('\\') && (() => {
+					const texLSPPlugins = pluginRegistry.getLSPPluginsForFileType('tex');
+					return texLSPPlugins.length > 0 && (
+						<PluginControlGroup>
+							{texLSPPlugins.map(plugin => (
+								<LSPToggleButton
+									key={plugin.id}
+									pluginId={plugin.id}
+									className="header-lsp-button"
+								/>
+							))}
+						</PluginControlGroup>
+					);
+				})()}
+			</>
 		) : null;
 
 	return (
@@ -483,6 +552,7 @@ const EditorContent: React.FC<{
 				</div>
 
 				{!isViewOnly && <CommentPanel className="editor-comment-panel" />}
+				{!isViewOnly && <LSPPanel className="editor-lsp-panel" />}
 			</div>
 		</>
 	);
@@ -674,6 +744,8 @@ const Editor: React.FC<EditorComponentProps> = ({
 		const CollaborativeViewerComponent = collaborativeViewerPlugin.renderViewer;
 
 		return (
+			<BibliographyProvider>
+			<LSPProvider>
 			<CommentProvider
 				editorContent={textContent}
 				onUpdateContent={onUpdateContent}
@@ -714,6 +786,8 @@ const Editor: React.FC<EditorComponentProps> = ({
 					onCommentSubmit={handleCommentSubmit}
 				/>
 			</CommentProvider>
+			</LSPProvider>
+			</BibliographyProvider>
 		);
 	}
 
@@ -783,6 +857,8 @@ const Editor: React.FC<EditorComponentProps> = ({
 		!isEditingFile && linkedFileInfo?.fileName?.endsWith(".tex");
 
 	return (
+		<BibliographyProvider>
+		<LSPProvider>
 		<CommentProvider
 			editorContent={textContent}
 			onUpdateContent={handleContentUpdate}
@@ -818,6 +894,8 @@ const Editor: React.FC<EditorComponentProps> = ({
 				onCommentSubmit={handleCommentSubmit}
 			/>
 		</CommentProvider>
+		</LSPProvider>
+		</BibliographyProvider>
 	);
 };
 

@@ -5,6 +5,7 @@ import type {
 	BackupPlugin,
 	CollaborativeViewerPlugin,
 	LoggerPlugin,
+	LSPPlugin,
 	Plugin,
 	PluginRegistry,
 	RendererPlugin,
@@ -20,6 +21,7 @@ class PluginRegistryManager {
 		collaborativeViewers: [],
 		renderers: [],
 		loggers: [],
+		lsp: [],
 		backup: [],
 		themes: [],
 	};
@@ -30,10 +32,9 @@ class PluginRegistryManager {
 
 	private loadPlugins() {
 		try {
-			// Register regular viewers
-			if (plugins.viewers) {
+			if (plugins.viewers && Object.keys(plugins.viewers).length > 0) {
 				console.log("[PluginRegistry] Loading viewers:", Object.keys(plugins.viewers));
-				Object.values(plugins.viewers).forEach((plugin) => {
+				Object.values(plugins.viewers).forEach((plugin: ViewerPlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
 						pluginSettings.push(...plugin.settings);
@@ -41,13 +42,12 @@ class PluginRegistryManager {
 				});
 			}
 
-			// Register collaborative viewers
-			if (plugins.collaborative_viewers) {
+			if (plugins.collaborative_viewers && Object.keys(plugins.collaborative_viewers).length > 0) {
 				console.log(
 					"[PluginRegistry] Loading collaborative viewers:",
 					Object.keys(plugins.collaborative_viewers),
 				);
-				Object.values(plugins.collaborative_viewers).forEach((plugin) => {
+				Object.values(plugins.collaborative_viewers).forEach((plugin: CollaborativeViewerPlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
 						pluginSettings.push(...plugin.settings);
@@ -55,10 +55,9 @@ class PluginRegistryManager {
 				});
 			}
 
-			// Register renderer plugins
-			if (plugins.renderers) {
+			if (plugins.renderers && Object.keys(plugins.renderers).length > 0) {
 				console.log("[PluginRegistry] Loading renderers:", Object.keys(plugins.renderers));
-				Object.values(plugins.renderers).forEach((plugin) => {
+				Object.values(plugins.renderers).forEach((plugin: RendererPlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
 						pluginSettings.push(...plugin.settings);
@@ -66,10 +65,9 @@ class PluginRegistryManager {
 				});
 			}
 
-			// Register logger plugins
-			if (plugins.loggers) {
+			if (plugins.loggers && Object.keys(plugins.loggers).length > 0) {
 				console.log("[PluginRegistry] Loading loggers:", Object.keys(plugins.loggers));
-				Object.values(plugins.loggers).forEach((plugin) => {
+				Object.values(plugins.loggers).forEach((plugin: LoggerPlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
 						pluginSettings.push(...plugin.settings);
@@ -77,10 +75,19 @@ class PluginRegistryManager {
 				});
 			}
 
-			// Register backup plugins
-			if (plugins.backup) {
+			if (plugins.lsp && Object.keys(plugins.lsp).length > 0) {
+				console.log("[PluginRegistry] Loading LSP plugins:", Object.keys(plugins.lsp));
+				Object.values(plugins.lsp).forEach((plugin: LSPPlugin) => {
+					this.registerPlugin(plugin);
+					if (plugin.settings && Array.isArray(plugin.settings)) {
+						pluginSettings.push(...plugin.settings);
+					}
+				});
+			}
+
+			if (plugins.backup && Object.keys(plugins.backup).length > 0) {
 				console.log("[PluginRegistry] Loading backup plugins:", Object.keys(plugins.backup));
-				Object.values(plugins.backup).forEach((plugin) => {
+				Object.values(plugins.backup).forEach((plugin: BackupPlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
 						pluginSettings.push(...plugin.settings);
@@ -88,10 +95,9 @@ class PluginRegistryManager {
 				});
 			}
 
-			// Register theme plugins
-			if (plugins.themes) {
+			if (plugins.themes && Object.keys(plugins.themes).length > 0) {
 				console.log("[PluginRegistry] Loading themes:", Object.keys(plugins.themes));
-				Object.values(plugins.themes).forEach((plugin) => {
+				Object.values(plugins.themes).forEach((plugin: ThemePlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
 						pluginSettings.push(...plugin.settings);
@@ -120,6 +126,9 @@ class PluginRegistryManager {
 				break;
 			case "logger":
 				this.registry.loggers.push(plugin as LoggerPlugin);
+				break;
+			case "lsp":
+				this.registry.lsp.push(plugin as LSPPlugin);
 				break;
 			case "backup":
 				this.registry.backup.push(plugin as BackupPlugin);
@@ -199,6 +208,28 @@ class PluginRegistryManager {
 			}
 		}
 		return null;
+	}
+
+	getLSPPlugins(): LSPPlugin[] {
+		return this.registry.lsp;
+	}
+
+	getLSPPlugin(id: string): LSPPlugin | null {
+		return this.registry.lsp.find(plugin => plugin.id === id) || null;
+	}
+
+	getEnabledLSPPlugins(): LSPPlugin[] {
+		return this.registry.lsp.filter(plugin => plugin.isEnabled());
+	}
+
+	getAllLSPPlugins(): LSPPlugin[] {
+		return [...this.registry.lsp];
+	}
+
+	getLSPPluginsForFileType(fileType: string): LSPPlugin[] {
+		return this.registry.lsp.filter(plugin =>
+			plugin.isEnabled() && plugin.getSupportedFileTypes().includes(fileType)
+		);
 	}
 
 	getBackup(): BackupPlugin[] {

@@ -29,7 +29,7 @@ export const PLUGIN_NAME = "Image Viewer";
 export const PLUGIN_VERSION = "0.1.0";
 
 const imageViewerPlugin: ViewerPlugin = {
-	id: "texlyre-image-viewer",
+	id: "image-viewer",
 	name: PLUGIN_NAME,
 	version: PLUGIN_VERSION,
 	type: "viewer",

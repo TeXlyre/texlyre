@@ -2,6 +2,7 @@
 import type React from "react";
 import type { Setting } from "../contexts/SettingsContext";
 import type { BackupStatus } from "../types/backup";
+import type { LSPRequest, LSPResponse, LSPNotification, LSPServerConfig } from "../types/lsp";
 
 export interface Plugin {
 	id: string;
@@ -67,6 +68,43 @@ export interface LoggerPlugin extends Plugin {
 export interface LoggerProps {
 	log: string;
 	onLineClick?: (line: number) => void;
+}
+
+// Language Server Protocol (LSP) Support
+export interface LSPPlugin extends Plugin {
+    type: "lsp";
+    icon?: React.ComponentType;
+
+    // Core LSP functionality
+    initialize(): Promise<void>;
+    shutdown(): Promise<void>;
+    isEnabled(): boolean;
+    sendRequest(request: LSPRequest): Promise<LSPResponse>;
+    onNotification(notification: LSPNotification): void;
+
+    // Server configuration
+    getServerConfig?(): LSPServerConfig | Promise<LSPServerConfig>;
+
+    // UI Components
+    renderPanel?: React.ComponentType<LSPPanelProps>;
+
+    // Plugin-specific configuration
+    getConnectionStatus(): 'connected' | 'connecting' | 'disconnected' | 'error';
+    getStatusMessage(): string;
+
+    // File type support
+    getSupportedFileTypes(): string[];
+    getSupportedLanguages(): string[];
+
+    setLSPRequestHandler?(handler: (request: LSPRequest) => Promise<LSPResponse>): void;
+}
+
+export interface LSPPanelProps {
+	className?: string;
+	onItemSelect?: (item: any) => void;
+	searchQuery?: string;
+	onSearchChange?: (query: string) => void;
+	pluginInstance?: LSPPlugin;
 }
 
 // Backup and Restore
@@ -137,6 +175,7 @@ export type PluginRegistry = {
 	collaborativeViewers: CollaborativeViewerPlugin[];
 	renderers: RendererPlugin[];
 	loggers: LoggerPlugin[];
+	lsp: LSPPlugin[];
 	backup: BackupPlugin[];
 	themes: ThemePlugin[];
 };

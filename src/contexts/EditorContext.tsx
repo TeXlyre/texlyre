@@ -9,6 +9,7 @@ import {
 	useState,
 } from "react";
 
+import { pluginRegistry } from "../plugins/PluginRegistry";
 import { useSettings } from "../hooks/useSettings";
 import type {
 	EditorSettings,
@@ -36,6 +37,7 @@ interface EditorContextType {
 	getAutoSaveDelay: () => number;
 	getVimModeEnabled: () => boolean;
 	getCollabOptions: () => CollabConnectOptions;
+	getEnabledLSPPlugins: () => string[];
 	editorSettingsVersion: number;
 }
 
@@ -50,6 +52,8 @@ export const EditorContext = createContext<EditorContextType>({
 	getAutoSaveDelay: () => 2000,
 	getVimModeEnabled: () => false,
 	getCollabOptions: () => ({}),
+	getEnabledLSPPlugins: () =>
+		pluginRegistry.getLSPPlugins().map((plugin) => plugin.id),
 	editorSettingsVersion: 0,
 });
 
@@ -330,6 +334,14 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		};
 	}, [getSetting]);
 
+	const getEnabledLSPPlugins = useCallback((): string[] => {
+		const allLSPPlugins = pluginRegistry.getAllLSPPlugins();
+		return allLSPPlugins.filter(plugin => {
+			const enabledSetting = getSetting(`${plugin.id}-enabled`);
+			return (enabledSetting?.value as boolean) ?? false;
+		}).map(plugin => plugin.id);
+	}, [getSetting]);
+
 	const contextValue = {
 		editorSettings,
 		updateEditorSetting,
@@ -341,6 +353,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		getAutoSaveDelay,
 		getVimModeEnabled,
 		getCollabOptions,
+		getEnabledLSPPlugins,
 		editorSettingsVersion,
 	};
 

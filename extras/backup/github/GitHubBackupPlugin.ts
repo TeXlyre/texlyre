@@ -6,7 +6,7 @@ import GitHubBackupStatusIndicator from "./GitHubBackupStatusIndicator";
 import { GitHubIcon } from "./Icon";
 
 const gitHubBackupPlugin: BackupPlugin = {
-	id: "texlyre-github-backup",
+	id: "github-backup",
 	name: "GitHub",
 	version: "1.0.0",
 	type: "backup",

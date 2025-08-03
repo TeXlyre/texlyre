@@ -7,7 +7,7 @@ export const PLUGIN_NAME = "Enhanced PDF.js Viewer (pdfjs-dist 5.3.31)";
 export const PLUGIN_VERSION = "0.1.0";
 
 const pdfRendererPlugin: RendererPlugin = {
-	id: "texlyre-pdf-renderer",
+	id: "pdf-renderer",
 	name: PLUGIN_NAME,
 	version: PLUGIN_VERSION,
 	type: "renderer",

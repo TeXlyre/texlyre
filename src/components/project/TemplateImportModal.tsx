@@ -318,7 +318,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
               <div className="template-detail-view">
                 <div className="template-detail-header">
                   <button
-                    className="template-back-button"
+                    className="back-button"
                     onClick={() => setSelectedTemplate(null)}
                   >
                     ← Back to Templates

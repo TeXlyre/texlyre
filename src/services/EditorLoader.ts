@@ -1,4 +1,4 @@
-// src/services/EditorLoader.ts
+// src/services/EditorLoader.ts - Updated for bibliography import support
 import { autocompletion, completionKeymap, type CompletionSource } from "@codemirror/autocomplete";
 import {
 	defaultKeymap,
@@ -33,8 +33,10 @@ import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
 import type { WebrtcProvider } from "y-webrtc";
 import type * as Y from "yjs";
 
+import { pluginRegistry } from "../plugins/PluginRegistry";
 import { commentSystemExtension } from "../extensions/codemirror/CommentExtension";
-import { createFilePathAutocompleteExtension, setCurrentFilePath } from "../extensions/codemirror/FilePathAutocompleteExtension";
+import { createFilePathAutocompleteExtension, setCurrentFilePath, refreshBibliographyCache } from "../extensions/codemirror/PathAndBibAutocompleteExtension.ts";
+import { createLSPExtension, updateLSPPluginsInView, setCurrentFilePathInLSP } from "../extensions/codemirror/LSPExtension";
 import { useAuth } from "../hooks/useAuth";
 import { useEditor } from "../hooks/useEditor";
 import { autoSaveManager } from "../utils/autoSaveUtils";
@@ -42,7 +44,6 @@ import { fileCommentProcessor } from "../utils/fileCommentProcessor.ts";
 import { collabService } from "./CollabService";
 import { fileStorageService } from "./FileStorageService";
 import { filePathCacheService } from "./FilePathCacheService";
-import type { CollabConnectOptions } from "../types/collab";
 
 export const EditorLoader = (
 	editorRef: React.RefObject<HTMLDivElement>,
@@ -67,6 +68,7 @@ export const EditorLoader = (
 		getSyntaxHighlightingEnabled,
 	    getVimModeEnabled,
 		getCollabOptions,
+		getEnabledLSPPlugins,
 		editorSettingsVersion,
 		editorSettings,
 	} = useEditor();
@@ -97,6 +99,12 @@ export const EditorLoader = (
 			const encoder = new TextEncoder();
 			const contentBuffer = encoder.encode(content).buffer;
 			await fileStorageService.updateFileContent(currentFileId, contentBuffer);
+
+			// Refresh bibliography cache if this is a .bib file
+			if (fileName?.endsWith('.bib') && viewRef.current) {
+				refreshBibliographyCache(viewRef.current);
+			}
+
 			setShowSaveIndicator(true);
 			setTimeout(() => setShowSaveIndicator(false), 1500);
 		} catch (error) {
@@ -113,6 +121,12 @@ export const EditorLoader = (
 			);
 			if (linkedFile) {
 				await fileStorageService.updateFileContent(linkedFile.id, content);
+
+				// Refresh bibliography cache if this is a .bib file
+				if (linkedFile.name.endsWith('.bib') && viewRef.current) {
+					refreshBibliographyCache(viewRef.current);
+				}
+
 				setShowSaveIndicator(true);
 				setTimeout(() => setShowSaveIndicator(false), 1500);
 			}
@@ -201,7 +215,7 @@ export const EditorLoader = (
 				content?.includes("@book") ||
 				content?.includes("@inproceedings")
 			) {
-				return [bibtex({ enableAutocomplete: false })];
+				return [bibtex({ autoCloseBrackets: false, enableAutocomplete: false })];
 			}
 			return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
 		}
@@ -214,7 +228,7 @@ export const EditorLoader = (
 				return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
 			case "bib":
 			case "bibtex":
-				return [bibtex({ enableAutocomplete: false })];
+				return [bibtex({ autoCloseBrackets: false, enableAutocomplete: false })];
 			case "md":
 			case "markdown":
 				return [markdown()];
@@ -224,7 +238,7 @@ export const EditorLoader = (
 					content?.includes("@book") ||
 					content?.includes("@inproceedings")
 				) {
-					return [bibtex({ enableAutocomplete: false })];
+					return [bibtex({ autoCloseBrackets: false, enableAutocomplete: false })];
 				}
 				return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
 		}
@@ -283,62 +297,116 @@ export const EditorLoader = (
 			...getLanguageExtension(fileName, textContent),
 		];
 
-		// Add file path autocomplete for LaTeX files
+		// Determine file types for enhanced completion
 		const isLatexFile = fileName?.endsWith('.tex') || (!fileName && textContent?.includes('\\'));
 		const isBibFile = fileName?.endsWith('.bib') || fileName?.endsWith('.bibtex') || (!fileName && (textContent?.includes('@article') || textContent?.includes('@book') || textContent?.includes('@inproceedings')));
 
 		if (isLatexFile || isBibFile) {
-		  const completionSources: CompletionSource[] = [];
+			const fileExtension = fileName?.split('.').pop()?.toLowerCase() || (isLatexFile ? 'tex' : 'bib');
+			const allLSPPlugins = pluginRegistry.getLSPPluginsForFileType(fileExtension);
 
-		  if (isLatexFile) {
-			// Get current file path for relative path calculations
-			let currentFilePath = '';
-			if (isEditingFile && currentFileId) {
-			  const getCurrentFilePath = async () => {
-				const file = await fileStorageService.getFile(currentFileId);
-				return file?.path || '';
-			  };
+			// Filter to only enabled plugins
+			const enabledPluginIds = getEnabledLSPPlugins();
+			const availableLSPPlugins = allLSPPlugins.filter(plugin =>
+				enabledPluginIds.includes(plugin.id)
+			);
 
-			  getCurrentFilePath().then(path => {
-				currentFilePath = path;
-			  });
+			const completionSources: CompletionSource[] = [];
+
+			// Set up LSP integration with file path context
+			if (availableLSPPlugins.length > 0) {
+				const [lspField, lspPlugin, lspCompletionSource] = createLSPExtension();
+				extensions.push(lspField, lspPlugin);
+				completionSources.push(lspCompletionSource);
+
+				// Update LSP plugins after a short delay
+				setTimeout(() => {
+					if (viewRef.current) {
+						updateLSPPluginsInView(viewRef.current, availableLSPPlugins);
+
+						// Set current file path for ALL LSP plugins
+						if (isEditingFile && currentFileId) {
+							fileStorageService.getFile(currentFileId).then(file => {
+								if (file && viewRef.current) {
+									setCurrentFilePathInLSP(viewRef.current, file.path);
+
+									// Update file path in individual LSP plugins
+									availableLSPPlugins.forEach(plugin => {
+										if ('setCurrentFilePath' in plugin) {
+											(plugin as any).setCurrentFilePath(file.path);
+										}
+									});
+								}
+							});
+						}
+					}
+				}, 100);
 			}
 
-			// Create file path autocompletion for LaTeX
-			const [cacheField, cachePlugin, filePathCompletionSource] = createFilePathAutocompleteExtension(currentFilePath);
-			extensions.push(cacheField, cachePlugin);
+			if (isLatexFile) {
+				// Get current file path for relative path calculations
+				let currentFilePath = '';
+				if (isEditingFile && currentFileId) {
+					const getCurrentFilePath = async () => {
+						const file = await fileStorageService.getFile(currentFileId);
+						return file?.path || '';
+					};
 
-			completionSources.push(latexCompletionSource(true));
-			completionSources.push(filePathCompletionSource as CompletionSource);
-
-			// Update the file path after view is created
-			if (isEditingFile && currentFileId) {
-			  setTimeout(async () => {
-				const file = await fileStorageService.getFile(currentFileId);
-				if (file && viewRef.current) {
-				 setCurrentFilePath(viewRef.current, file.path);
-				 filePathCacheService.updateCurrentFilePath(file.path);
+					getCurrentFilePath().then(path => {
+						currentFilePath = path;
+					});
 				}
-			  }, 100);
+
+				// Create enhanced file path and bibliography autocompletion
+				const [stateExtensions, filePathPlugin, enhancedCompletionSource] = createFilePathAutocompleteExtension(currentFilePath);
+				extensions.push(stateExtensions, filePathPlugin);
+
+				// Add both enhanced completion (includes bibliography) and latex completion
+				completionSources.push(enhancedCompletionSource);
+				completionSources.push(latexCompletionSource(true));
+			} else if (isBibFile) {
+				// For .bib files, we still want enhanced completion but with bibtex base completion
+				const [stateExtensions, filePathPlugin, enhancedCompletionSource] = createFilePathAutocompleteExtension('');
+				extensions.push(stateExtensions, filePathPlugin);
+
+				completionSources.push(enhancedCompletionSource);
+				completionSources.push(bibtexCompletionSource);
+			}
+
+			// Update file paths after view creation
+			if (isEditingFile && currentFileId) {
+				setTimeout(async () => {
+					const file = await fileStorageService.getFile(currentFileId);
+					if (file && viewRef.current) {
+						setCurrentFilePath(viewRef.current, file.path);
+						filePathCacheService.updateCurrentFilePath(file.path);
+
+						// Update LSP plugins with file path
+						availableLSPPlugins.forEach(plugin => {
+							if ('setCurrentFilePath' in plugin) {
+								(plugin as any).setCurrentFilePath(file.path);
+							}
+						});
+					}
+				}, 100);
 			} else if (!isEditingFile && documentId) {
-			  setTimeout(() => {
-				if (viewRef.current) {
-				  filePathCacheService.updateCurrentFilePath('', documentId);
-				}
-			  }, 100);
+				setTimeout(() => {
+					if (viewRef.current) {
+						filePathCacheService.updateCurrentFilePath('', documentId);
+					}
+				}, 100);
 			}
-		  } else if (isBibFile) {
-			completionSources.push(bibtexCompletionSource);
-		  }
 
-		  extensions.push(
-			autocompletion({
-			  override: completionSources,
-			  maxRenderedOptions: 20,
-			})
-		  );
+			// Set up autocompletion with prioritized sources
+			extensions.push(
+				autocompletion({
+					override: completionSources,
+					maxRenderedOptions: 20,
+					closeOnBlur: false, // Keep open for better bibliography browsing
+				})
+			);
 		} else {
-		  extensions.push(autocompletion());
+			extensions.push(autocompletion());
 		}
 
 		if (isViewOnly) extensions.push(EditorState.readOnly.of(true));
@@ -408,10 +476,13 @@ export const EditorLoader = (
 		try {
 			const view = new EditorView({ state, parent: editorRef.current });
 			viewRef.current = view;
+
+			// Update file path cache for LaTeX files
 			if (isLatexFile) {
 				filePathCacheService.updateCache();
 			}
 
+			// Set up content change handler for file editing
 			if (isEditingFile && !isViewOnly) {
 				const handleInput = () => {
 					if (!isUpdatingRef.current && viewRef.current) {
@@ -452,9 +523,26 @@ export const EditorLoader = (
 		isViewOnly,
 		fileName,
 		editorSettingsVersion,
-		enableComments, // Added to dependencies
+		getEnabledLSPPlugins,
+		enableComments,
 	]);
 
+	// Add event listener for bibliography cache updates
+	useEffect(() => {
+		const handleFileTreeRefresh = () => {
+			if (viewRef.current) {
+				refreshBibliographyCache(viewRef.current);
+			}
+		};
+
+		document.addEventListener('refresh-file-tree', handleFileTreeRefresh);
+
+		return () => {
+			document.removeEventListener('refresh-file-tree', handleFileTreeRefresh);
+		};
+	}, []);
+
+	// Rest of your existing useEffect hooks remain the same...
 	useEffect(() => {
 		if (!viewRef.current || !editorRef.current) return;
 
@@ -810,7 +898,7 @@ export const EditorLoader = (
 		onUpdateContent,
 		updateComments,
 		isEditingFile,
-		enableComments, // Added to dependencies
+		enableComments,
 	]);
 
 	useEffect(() => {

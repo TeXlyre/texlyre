@@ -215,21 +215,6 @@
   border-bottom: 1px solid var(--accent-border);
 }
 
-.template-back-button {
-  background: none;
-  border: none;
-  color: var(--pico-primary);
-  cursor: pointer;
-  font-size: 0.9rem;
-  padding: var(--space-sm);
-  border-radius: var(--radius-sm);
-  transition: background-color var(--transition-normal);
-}
-
-.template-back-button:hover {
-  background-color: var(--pico-primary-focus);
-}
-
 .template-detail-header h3 {
   margin: 0;
   font-size: 1.5rem;

@@ -48,6 +48,7 @@ function generatePluginsIndex() {
     const imports = [];
     const exports = [];
     const pluginsByType = {};
+    const allPluginTypes = ["collaborative_viewers", "viewers", "renderers", "loggers", "lsp", "backup", "themes"];
 
     const srcPluginsDir = path.join(rootDir, "src", "plugins");
     const rootExtrasDir = path.join(rootDir, "extras");
@@ -91,21 +92,20 @@ ${exports.map((name) => `  ${name}`).join(",\n")}
 `;
 
     // Add type-based exports
-    Object.entries(pluginsByType).forEach(([type, plugins]) => {
-        if (plugins.length > 0) {
-            content += `// Export ${type} plugins as a group
+    allPluginTypes.forEach(type => {
+        const plugins = pluginsByType[type] || [];
+        content += `// Export ${type} plugins as a group
 export const ${type} = {
 ${plugins.map((name) => `  ${name}`).join(",\n")}
 };
 
 `;
-        }
     });
 
     // Add default export with structured plugins object
     content += `// Export the structured plugins object as default
 export default {
-${Object.keys(pluginsByType).map(type => `  ${type}`).join(",\n")}
+${allPluginTypes.map(type => `  ${type}`).join(",\n")}
 };
 `;
 

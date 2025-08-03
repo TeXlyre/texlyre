@@ -540,13 +540,15 @@ const EditorApp: React.FC<EditorAppProps> = (props) => {
 	return (
 		<CollabProvider docUrl={props.docUrl} collectionName="yjs_metadata">
 			<ChatProvider docUrl={props.docUrl}>
-				<FileTreeProvider docUrl={props.docUrl}>
-					<FileSyncProvider docUrl={props.docUrl}>
-						<LaTeXProvider>
-							<EditorAppView {...props} />
-						</LaTeXProvider>
-					</FileSyncProvider>
-				</FileTreeProvider>
+
+					<FileTreeProvider docUrl={props.docUrl}>
+							<FileSyncProvider docUrl={props.docUrl}>
+								<LaTeXProvider>
+									<EditorAppView {...props} />
+								</LaTeXProvider>
+							</FileSyncProvider>
+					</FileTreeProvider>
+
 			</ChatProvider>
 		</CollabProvider>
 	);
