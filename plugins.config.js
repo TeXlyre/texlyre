@@ -8,7 +8,7 @@ export default {
 		"renderers/pdf",
 		// "renderers/pdf_html_experimental",
 		"loggers/latex_visualizer",
-		"lsp/jabref",
+		// "lsp/jabref",
 		"backup/github",
 		"themes/texlyre_slim",
 		"themes/texlyre_wide",
