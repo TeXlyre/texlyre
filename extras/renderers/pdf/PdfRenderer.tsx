@@ -128,7 +128,11 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	}, [content, getContentHash]);
 
 	const fileData = useMemo(() => {
-		return pdfData ? { data: pdfData } : null;
+		return pdfData ? {
+			data: pdfData,
+			cMapUrl: import.meta.env.PROD ? "/texlyre/cmaps/" : "/cmaps/",
+			cMapPacked: true,
+		} : null;
 	}, [pdfData]);
 
 	const onDocumentLoadSuccess = useCallback(
