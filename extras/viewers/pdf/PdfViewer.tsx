@@ -163,7 +163,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 		try {
 			const loadingTask = pdfjs.getDocument({
 				data: new Uint8Array(contentRef.current),
-				cMapUrl: import.meta.env.PROD ? "/texlyre/cmaps/" : "/cmaps/",
+				cMapUrl: import.meta.env.PROD ? "/texlyre/cmaps/" : "/texlyre/cmaps/",  // for now, use the same path in dev and prod
 				cMapPacked: true,
 			});
 

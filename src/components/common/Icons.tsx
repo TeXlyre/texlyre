@@ -245,6 +245,24 @@ export const BibliographyIcon: React.FC = () => (
 	</svg>
 );
 
+export const FitToWidthIcon: React.FC = () => (
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width="16"
+		height="16"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="2"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+	>
+		<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+		<path d="M9 9h6v6H9z"/>
+		<path d="M16 3v4M21 8h-4M16 21v-4M21 16h-4M8 3v4M3 8h4M8 21v-4M3 16h4"/>
+	</svg>
+);
+
 export const FileIcon: React.FC = () => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"

@@ -83,6 +83,20 @@
 	height: 24px;
 }
 
+.react-pdf__Document,
+.react-pdf__Document > div,
+.react-pdf__Document__container,
+.react-pdf__Document__container > div {
+	background-color: #f5f5f5 !important;
+	min-height: 100%;
+	width: 100%;
+}
+
+.react-pdf__Page {
+	background-color: white !important;
+	margin: 10px auto !important;
+}
+
 .pdf-renderer-content {
 	position: absolute;
 	top: 40px;
@@ -90,7 +104,7 @@
 	right: 0;
 	bottom: 0;
 	overflow: auto;
-	background-color: var(--pico-secondary-background);
+	background-color: #f5f5f5;
 }
 
 .pdf-renderer-viewer {
@@ -103,6 +117,15 @@
 	margin: 10px auto;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 	position: relative;
+	background-color: white;
+}
+
+.pdf-page-scroll {
+	display: flex;
+	justify-content: center;
+	background-color: #f5f5f5 !important;
+	padding: 10px 0;
+	width: 100%;
 }
 
 .pdf-renderer-loading {
