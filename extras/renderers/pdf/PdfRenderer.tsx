@@ -11,6 +11,7 @@ import {
 	DownloadIcon,
 	PageIcon,
 	ScrollIcon,
+	FitToWidthIcon,
 	ZoomInIcon,
 	ZoomOutIcon,
 } from "../../../src/components/common/Icons";
@@ -130,7 +131,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const fileData = useMemo(() => {
 		return pdfData ? {
 			data: pdfData,
-			cMapUrl: import.meta.env.PROD ? "/texlyre/cmaps/" : "/cmaps/",
+			cMapUrl: import.meta.env.PROD ? "/texlyre/cmaps/" : "/texlyre/cmaps/",  // for now, use the same path in dev and prod
 			cMapPacked: true,
 		} : null;
 	}, [pdfData]);
@@ -214,6 +215,13 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		},
 		[numPages, currentPage, scrollView],
 	);
+
+	const handleFitToWidth = useCallback(() => {
+		const containerWidth = document.querySelector('.pdf-renderer-content')?.clientWidth || 800;
+		const newScale = Math.max(0.5, Math.min(3, (containerWidth - 40) / 595));
+		setScale(newScale);
+		setProperty("pdf-renderer-zoom", newScale);
+	}, [setProperty]);
 
 	const handleZoomIn = useCallback(() => {
 		setScale((prev) => {
@@ -385,6 +393,14 @@ const PdfRenderer: React.FC<RendererProps> = ({
 							</button>
 						</div>
 						<div className="toolbarButtonGroup">
+							<button
+								onClick={handleFitToWidth}
+								className="toolbarButton"
+								title="Fit to Width"
+								disabled={isLoading}
+							>
+								<FitToWidthIcon />
+							</button>
 							<button
 								onClick={handleToggleView}
 								className="toolbarButton"
