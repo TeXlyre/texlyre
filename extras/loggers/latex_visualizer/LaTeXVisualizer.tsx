@@ -144,7 +144,8 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 
 			if (
 				line.startsWith("! LaTeX Error:") ||
-				line.startsWith("! Fatal Package")
+				line.startsWith("! Fatal Package") ||
+				line.startsWith("! Critical Package")
 			) {
 				const errorMessage = line.startsWith("! LaTeX Error:")
 					? line.substring(14).trim()
@@ -153,32 +154,45 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 				let lineContent: string | undefined;
 				let fullMessage = errorMessage;
 
-				for (let j = i + 1; j < Math.min(i + 20, lines.length); j++) {
+				for (let j = i + 1; j < Math.min(i + 30, lines.length); j++) {
 					const nextLine = lines[j];
 
 					const lineMatch = nextLine.match(/^l\.(\d+)\s*(.*)/);
 					if (lineMatch) {
 						lineNumber = Number.parseInt(lineMatch[1], 10);
-						lineContent = lineMatch[2];
+						const content = lineMatch[2].trim();
+						lineContent = content && content.length > 1 ? content : undefined;
+						continue;
+					}
+
+					if (nextLine.startsWith("!  ==>")) {
+						fullMessage += ` ${nextLine.substring(6).trim()}`;
+						continue;
+					}
+
+					if (nextLine.startsWith("Type <return>")) {
+						continue;
+					}
+
+					if (nextLine.startsWith("See ") || nextLine.startsWith("Transcript ")) {
 						break;
 					}
 
-					if (
-						nextLine.startsWith("Type <return>") ||
-						nextLine.startsWith("!  ==>") ||
-						nextLine.trim() === "" ||
-						nextLine.startsWith("See ")
-					) {
-						break;
+					if (nextLine.match(/^\s*\.{3,}\s*$/) || nextLine.trim() === "") {
+						if (j > i + 5) break;
+						continue;
 					}
 
-					if (nextLine.match(/^\([^)]+\)\s+/)) {
+					if (nextLine.match(/^\([^)]+\)\s+(.*)$/)) {
 						const messageContent = nextLine.replace(/^\([^)]+\)\s+/, "").trim();
 						if (messageContent) {
 							fullMessage += ` ${messageContent}`;
 						}
-					} else if (nextLine.trim() && !nextLine.startsWith("Type ")) {
-						fullMessage += ` ${nextLine.trim()}`;
+					} else if (nextLine.trim() && !nextLine.startsWith("Type ") && nextLine.trim() !== "}") {
+						const cleanLine = nextLine.trim();
+						if (cleanLine.length > 0 && !cleanLine.match(/^[a-z]\.\d+/)) {
+							fullMessage += ` ${cleanLine}`;
+						}
 					}
 				}
 
