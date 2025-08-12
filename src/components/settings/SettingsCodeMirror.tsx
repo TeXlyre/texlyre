@@ -1,6 +1,6 @@
 // src/components/settings/SettingsCodeMirror.tsx
 import React, { useRef, useEffect, useContext } from 'react';
-import { EditorView } from '@codemirror/view';
+import { EditorView, lineNumbers } from '@codemirror/view';
 import { EditorState, Compartment } from '@codemirror/state';
 import { basicSetup } from 'codemirror';
 import { javascript } from '@codemirror/lang-javascript';
@@ -68,6 +68,7 @@ export const SettingsCodeMirror: React.FC<SettingsCodeMirrorProps> = ({
   const languageCompartmentRef = useRef(new Compartment());
   const themeCompartmentRef = useRef(new Compartment());
   const heightCompartmentRef = useRef(new Compartment());
+  const lineNumbersCompartmentRef = useRef(new Compartment());
 
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -90,6 +91,7 @@ export const SettingsCodeMirror: React.FC<SettingsCodeMirrorProps> = ({
         '&': { height: `${options.height * 1.5}em` },
         '.cm-scroller': { overflow: 'auto' }
       }) : []),
+      lineNumbersCompartmentRef.current.of(options.lineNumbers ? lineNumbers() : []),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           isInternalUpdateRef.current = true;
@@ -100,10 +102,6 @@ export const SettingsCodeMirror: React.FC<SettingsCodeMirrorProps> = ({
         }
       })
     ];
-
-    if (!options.lineNumbers) {
-      baseExtensions.push(EditorView.lineNumbers.of([]));
-    }
 
     if (options.wordWrap) {
       baseExtensions.push(EditorView.lineWrapping);
@@ -172,6 +170,16 @@ export const SettingsCodeMirror: React.FC<SettingsCodeMirrorProps> = ({
       )
     });
   }, [options.height]);
+
+  useEffect(() => {
+    if (!editorViewRef.current) return;
+
+    editorViewRef.current.dispatch({
+      effects: lineNumbersCompartmentRef.current.reconfigure(
+        options.lineNumbers ? lineNumbers() : []
+      )
+    });
+  }, [options.lineNumbers]);
 
   return (
     <div className="settings-codemirror">
