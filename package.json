@@ -25,7 +25,11 @@
 	"dependencies": {
 		"@biomejs/biome": "^1.8.3",
 		"@codemirror/autocomplete": "^6.0.0",
+		"@codemirror/lang-css": "^6.3.1",
+		"@codemirror/lang-html": "^6.4.9",
+		"@codemirror/lang-json": "^6.0.2",
 		"@codemirror/lang-markdown": "=6.3.2",
+		"@codemirror/lang-python": "^6.2.1",
 		"@codemirror/language": "^6.0.0",
 		"@codemirror/lint": "^6.0.0",
 		"@codemirror/state": "^6.5.0",

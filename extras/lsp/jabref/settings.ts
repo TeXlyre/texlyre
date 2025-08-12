@@ -1,5 +1,5 @@
 // extras/lsp/jabref/settings.ts
-import type { Setting } from "../../../src/contexts/SettingsContext";
+import type { Setting } from '../../../contexts/SettingsContext';
 
 export const jabrefLSPSettings: Setting[] = [
 	{
@@ -87,4 +87,20 @@ export const jabrefLSPSettings: Setting[] = [
 			{ label: "Always ask", value: "ask" },
 		],
 	},
+	// {
+	// 	id: 'jabref-lsp-custom-script',
+	// 	category: 'LSP',
+	//	subcategory: 'JabRef',
+	//	type: 'codemirror',
+	//	label: 'Custom JavaScript',
+	//	description: 'Enter custom JavaScript code',
+	//	defaultValue: '// Your code here\nconsole.log("Hello World");',
+	//	codeMirrorOptions: {
+	//		language: 'javascript',
+	//		height: 15,
+	//		lineNumbers: true,
+	//		resizable: true,
+	//		theme: 'auto',
+	//	}
+	// },
 ];

@@ -1,6 +1,7 @@
 // src/components/settings/SettingControl.tsx
 import type React from "react";
 import type { Setting } from "../../contexts/SettingsContext";
+import { SettingsCodeMirror } from './SettingsCodeMirror';
 import { useSettings } from "../../hooks/useSettings";
 
 interface SettingControlProps {
@@ -61,6 +62,15 @@ const SettingControl: React.FC<SettingControlProps> = ({ setting }) => {
 						/>
 					</div>
 				);
+
+    			case 'codemirror':
+      				return (
+        				<SettingsCodeMirror
+          					setting={setting}
+          					value={setting.value as string}
+          					onChange={(value) => updateSetting(setting.id, value)}
+        					/>
+      				);
 
 			case "number":
 				return (

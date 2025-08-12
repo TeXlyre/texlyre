@@ -11,11 +11,21 @@ import {
 
 import { pluginSettings } from "../plugins/PluginRegistry";
 
-export type SettingType = "checkbox" | "select" | "text" | "number" | "color";
+export type SettingType = "checkbox" | "select" | "text" | "codemirror" | "number" | "color";
 
 export interface SettingOption {
 	label: string;
 	value: string | number | boolean;
+}
+
+export interface SettingCodeMirrorOptions {
+  	language?: string;
+  	height?: number;
+  	lineNumbers?: boolean;
+  	resizable?: boolean;
+  	theme?: 'auto' | 'dark' | 'light';
+ 	readOnly?: boolean;
+  	wordWrap?: boolean;
 }
 
 export interface Setting {
@@ -34,6 +44,7 @@ export interface Setting {
 	onChange?: (value: unknown) => void;
 	strictDefaultValue?: boolean;
 	liveUpdate?: boolean;
+	codeMirrorOptions?: SettingCodeMirrorOptions;
 }
 
 export interface SettingsContextType {
