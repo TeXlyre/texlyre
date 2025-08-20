@@ -1,6 +1,6 @@
 // src/components/app/AppRouter.tsx
 import type React from "react";
-import { useEffect, useState } from "react";
+import { lazy, useEffect, useState, Suspense } from "react";
 
 import { useAuth } from "../../hooks/useAuth";
 import { collabService } from "../../services/CollabService";
@@ -12,10 +12,10 @@ import {
 	parseUrlFragments,
 } from "../../types/yjs";
 import { batchExtractZip } from "../../utils/zipUtils";
-import AuthApp from "./AuthApp.tsx";
+import AuthApp from "./AuthApp";
 import EditorApp from "./EditorApp";
 import LoadingScreen from "./LoadingScreen";
-import ProjectApp from "./ProjectApp.tsx";
+import ProjectApp from "./ProjectApp";
 
 interface UrlProjectParams {
 	newProjectName?: string;
@@ -43,6 +43,9 @@ const AppRouter: React.FC = () => {
 	const [targetDocId, setTargetDocId] = useState<string | null>(null);
 	const [targetFilePath, setTargetFilePath] = useState<string | null>(null);
 	const [isCreatingProject, setIsCreatingProject] = useState(false);
+
+	const [isPdfViewerWindow, setIsPdfViewerWindow] = useState(false);
+	const [pdfViewerProjectId, setPdfViewerProjectId] = useState<string | null>(null);
 
 	const parseUrlProjectParams = (hashUrl: string): UrlProjectParams | null => {
 		try {
@@ -131,6 +134,13 @@ const AppRouter: React.FC = () => {
 
 	useEffect(() => {
 		const hashUrl = window.location.hash.substring(1);
+
+		if (hashUrl.startsWith("pdf-viewer:")) {
+			const projectId = hashUrl.replace("pdf-viewer:", "");
+			setIsPdfViewerWindow(true);        // Mark this as PDF viewer
+			setPdfViewerProjectId(projectId);  // Store which project
+			return; // Don't process normal routing
+		}
 
 		const urlProjectParams = parseUrlProjectParams(hashUrl);
 		if (urlProjectParams && isAuthenticated && !isInitializing) {
@@ -325,6 +335,15 @@ const AppRouter: React.FC = () => {
 
 	if (isInitializing || isCreatingProject) {
 		return <LoadingScreen />;
+	}
+
+	if (isPdfViewerWindow && pdfViewerProjectId) {
+		const PdfViewerWindow = lazy(() => import('../latex/PdfViewerWindow'));
+		return (
+			<Suspense fallback={<LoadingScreen />}>
+				<PdfViewerWindow projectId={pdfViewerProjectId} />
+			</Suspense>
+		);
 	}
 
 	if (!isAuthenticated) {

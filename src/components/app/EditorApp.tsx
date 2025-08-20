@@ -15,6 +15,7 @@ import { useGlobalKeyboard } from "../../hooks/useGlobalKeyboard";
 import { useFileSystemBackup } from "../../hooks/useFileSystemBackup";
 import { useOffline } from "../../hooks/useOffline";
 import { fileStorageService } from "../../services/FileStorageService";
+import { pdfWindowService } from "../../services/PdfWindowService";
 import type { DocumentList } from "../../types/documents";
 import type { YjsDocUrl } from "../../types/yjs";
 import BackupModal from "../backup/BackupModal";
@@ -336,7 +337,9 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	};
 
 	const handleExpandLatexOutput = () => {
-		document.dispatchEvent(new CustomEvent("expand-latex-output"));
+		if (!pdfWindowService.isWindowOpen()) {
+			document.dispatchEvent(new CustomEvent("expand-latex-output"));
+		}
 	};
 
 	const shareUrl = `${window.location.origin}${window.location.pathname}#${docUrl}`;
@@ -396,12 +399,11 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						selectedDocId={localDocId}
 						documents={doc?.documents}
 						onNavigateToLinkedFile={handleNavigateToLinkedFile}
-						onExpandLatexOutput={() => {
-							document.dispatchEvent(new CustomEvent("expand-latex-output"));
-						}}
+						onExpandLatexOutput={handleExpandLatexOutput}
 						linkedFileInfo={linkedFileInfo}
 						shouldNavigateOnCompile={true}
 						useSharedSettings={true}
+						docUrl={docUrl}
 					/>
 					<BackupStatusIndicator
 						className="header-backup-indicator"
