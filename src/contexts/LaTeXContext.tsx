@@ -12,6 +12,7 @@ import { useFileTree } from "../hooks/useFileTree";
 import { useSettings } from "../hooks/useSettings";
 import { latexService } from "../services/LaTeXService";
 import type { LaTeXContextType } from "../types/latex";
+import { pdfWindowService } from "../services/PdfWindowService";
 
 export const LaTeXContext = createContext<LaTeXContextType | null>(null);
 
@@ -146,6 +147,22 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 		}
 	};
 
+	const getProjectName = (): string => {
+		// Try to get project name from document title or URL
+		if (document.title && document.title !== "TeXlyre") {
+			return document.title;
+		}
+
+		// Fallback to extracting from URL hash
+		const hash = window.location.hash;
+		if (hash.includes('yjs:')) {
+			const projectId = hash.split('yjs:')[1].split('&')[0];
+			return `Project ${projectId.substring(0, 8)}`;
+		}
+
+		return "LaTeX Project";
+	};
+
 	const compileDocument = async (mainFileName: string): Promise<void> => {
 		if (!latexService.isReady()) {
 			await latexService.initialize(latexEngine);
@@ -161,15 +178,31 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			if (result.status === 0 && result.pdf) {
 				setCompiledPdf(result.pdf);
 				setCurrentView("pdf");
+
+				// Send PDF to window if open
+				const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx)$/i, '.pdf') || 'output.pdf';
+				const projectName = getProjectName();
+
+				pdfWindowService.sendPdfUpdate(
+					result.pdf,
+					fileName,
+					projectName
+				);
 			} else {
 				setCompileError("Compilation failed");
 				setCurrentView("log");
+
+				// Send compile status to window
+				pdfWindowService.sendCompileResult(result.status, result.log);
 			}
 
 			await refreshFileTree();
 		} catch (error) {
 			setCompileError(error instanceof Error ? error.message : "Unknown error");
 			setCurrentView("log");
+
+			// Send error to window
+			pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : "Unknown error");
 		} finally {
 			setIsCompiling(false);
 		}
@@ -200,15 +233,31 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			if (result.status === 0 && result.pdf) {
 				setCompiledPdf(result.pdf);
 				setCurrentView("pdf");
+
+				// Send PDF to window if open
+				const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx)$/i, '.pdf') || 'output.pdf';
+				const projectName = getProjectName();
+
+				pdfWindowService.sendPdfUpdate(
+					result.pdf,
+					fileName,
+					projectName
+				);
 			} else {
 				setCompileError("Compilation failed");
 				setCurrentView("log");
+
+				// Send compile status to window
+				pdfWindowService.sendCompileResult(result.status, result.log);
 			}
 
 			await refreshFileTree();
 		} catch (error) {
 			setCompileError(error instanceof Error ? error.message : "Unknown error");
 			setCurrentView("log");
+
+			// Send error to window
+			pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : "Unknown error");
 		} finally {
 			setIsCompiling(false);
 		}

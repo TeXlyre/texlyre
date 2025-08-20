@@ -165,11 +165,21 @@ embed {
 	overflow: auto;
 }
 
-/* LaTeX-specific buttons */
 .latex-compile-buttons {
 	display: flex;
 	gap: var(--space-xs);
 	position: relative;
+}
+
+.pdf-window-toggle {
+	background: var(--pico-secondary);
+	border: 1px solid var(--pico-border-color);
+	color: var(--pico-color);
+}
+
+.pdf-window-toggle.active {
+	background: var(--pico-primary);
+	color: var(--pico-primary-inverse);
 }
 
 .compile-button-group {
@@ -177,6 +187,8 @@ embed {
 	height: var(--button-height-md);
 	border-radius: var(--radius-sm);
 	overflow: hidden;
+	align-items: center;
+	gap: 0;
 }
 
 .latex-button {

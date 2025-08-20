@@ -12,6 +12,7 @@ import {
 	fileStorageEventEmitter,
 	fileStorageService,
 } from "../../services/FileStorageService";
+import { pdfWindowService } from "../../services/PdfWindowService";
 import type { Document } from "../../types/documents";
 import type { FileNode } from "../../types/files";
 import type { Project } from "../../types/projects";
@@ -760,8 +761,9 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 							selectedDocId={selectedDocId}
 							documents={documents}
 							onNavigateToLinkedFile={handleNavigateToLinkedFile}
-							onExpandLatexOutput={handleLatexOutputExpand}
+							onExpandLatexOutput={pdfWindowService.isWindowOpen() ? undefined : handleLatexOutputExpand}
 							linkedFileInfo={linkedFileInfo}
+							docUrl={docUrl}
 						/>
 					</ResizablePanel>
 				)}

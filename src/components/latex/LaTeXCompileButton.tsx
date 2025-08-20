@@ -2,11 +2,12 @@
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 
+import PdfWindowToggleButton from "./PdfWindowToggleButton";
 import { useCollab } from "../../hooks/useCollab";
 import { useFileTree } from "../../hooks/useFileTree";
 import { useLaTeX } from "../../hooks/useLaTeX";
 import type { DocumentList } from "../../types/documents";
-import type { FileNode } from "../../types/files.ts";
+import type { FileNode } from "../../types/files";
 import {ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon} from "../common/Icons";
 
 interface LaTeXCompileButtonProps {
@@ -22,6 +23,7 @@ interface LaTeXCompileButtonProps {
 	} | null;
 	shouldNavigateOnCompile?: boolean;
 	useSharedSettings?: boolean;
+	docUrl?: string;
 }
 
 const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
@@ -33,6 +35,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 	linkedFileInfo,
 	shouldNavigateOnCompile = false,
 	useSharedSettings = false,
+	docUrl,
 }) => {
 	const {
 		isCompiling,
@@ -184,12 +187,12 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		}
 	};
 
-    useEffect(() => {
-        const buttonElement = document.querySelector('.header-compile-button');
-        if (buttonElement) {
-            (buttonElement as any).clearAndCompile = handleClearCacheAndCompile;
-        }
-    }, [handleClearCacheAndCompile]);
+	useEffect(() => {
+		const buttonElement = document.querySelector('.header-compile-button');
+		if (buttonElement) {
+			(buttonElement as any).clearAndCompile = handleClearCacheAndCompile;
+		}
+	}, [handleClearCacheAndCompile]);
 
 	const toggleDropdown = (e: React.MouseEvent) => {
 		e.stopPropagation();
@@ -302,6 +305,13 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 				>
 					{isCompiling ? <StopIcon /> : <PlayIcon />}
 				</button>
+
+				<PdfWindowToggleButton
+					className="pdf-window-button"
+					projectId={docUrl?.startsWith("yjs:") ? docUrl.slice(4) : docUrl || 'unknown'}
+					title="Open PDF in new window"
+				/>
+
 				<button
 					className="latex-button dropdown-toggle"
 					onClick={toggleDropdown}
@@ -321,35 +331,35 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 						</div>
 					</div>
 
-						{useSharedSettings && (
-							<>
-								<div className="main-file-selector">
-									<div className="main-file-selector-label">Select main file:</div>
-									<select
-										value={projectMainFile || userSelectedMainFile || "auto"}
-										onChange={(e) => handleMainFileChange(e.target.value)}
-										className="main-file-select"
-										disabled={isChangingEngine || isCompiling}
-									>
-										<option value="auto">Auto-detect</option>
-										{availableTexFiles.map((filePath) => (
-											<option key={filePath} value={filePath}>
-												{getFileName(filePath)}
-											</option>
-										))}
-									</select>
-									<label className="share-checkbox">
-										<input
-											type="checkbox"
-											checked={!!projectMainFile}
-											onChange={(e) => handleShareMainFile(e.target.checked)}
-											disabled={isChangingEngine || isCompiling || !effectiveMainFile}
-										/>
-										Share with collaborators
-									</label>
-								</div>
-							</>
-						)}
+					{useSharedSettings && (
+						<>
+							<div className="main-file-selector">
+								<div className="main-file-selector-label">Select main file:</div>
+								<select
+									value={projectMainFile || userSelectedMainFile || "auto"}
+									onChange={(e) => handleMainFileChange(e.target.value)}
+									className="main-file-select"
+									disabled={isChangingEngine || isCompiling}
+								>
+									<option value="auto">Auto-detect</option>
+									{availableTexFiles.map((filePath) => (
+										<option key={filePath} value={filePath}>
+											{getFileName(filePath)}
+										</option>
+									))}
+								</select>
+								<label className="share-checkbox">
+									<input
+										type="checkbox"
+										checked={!!projectMainFile}
+										onChange={(e) => handleShareMainFile(e.target.checked)}
+										disabled={isChangingEngine || isCompiling || !effectiveMainFile}
+									/>
+									Share with collaborators
+								</label>
+							</div>
+						</>
+					)}
 
 					<div className="engine-selector">
 						<div className="engine-label">LaTeX Engine:</div>

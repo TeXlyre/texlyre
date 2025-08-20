@@ -13,6 +13,7 @@ import LaTeXCompileButton from "./LaTeXCompileButton";
 interface LaTeXOutputProps {
 	className?: string;
 	selectedDocId?: string | null;
+	docUrl?: string;
 	documents?: Array<{ id: string; name: string }>;
 	onNavigateToLinkedFile?: () => void;
 	onExpandLatexOutput?: () => void;
@@ -26,6 +27,7 @@ interface LaTeXOutputProps {
 const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 	className = "",
 	selectedDocId,
+	docUrl,
 	documents,
 	onNavigateToLinkedFile,
 	onExpandLatexOutput,
@@ -149,6 +151,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 					onExpandLatexOutput={onExpandLatexOutput}
 					linkedFileInfo={linkedFileInfo}
 					shouldNavigateOnCompile={false}
+					docUrl={docUrl}
 				/>
 			</div>
 
