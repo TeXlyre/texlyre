@@ -11,6 +11,12 @@ export interface AuthContextType {
 		password: string,
 		email?: string,
 	) => Promise<User>;
+	createGuestAccount: () => Promise<User>;
+	upgradeGuestAccount: (
+		username: string,
+		password: string,
+		email?: string,
+	) => Promise<User>;
 	logout: () => Promise<void>;
 	updateUser: (user: User) => Promise<User>;
 	updateUserColor: (
@@ -34,6 +40,8 @@ export interface AuthContextType {
 	toggleFavorite: (projectId: string) => Promise<Project>;
 	verifyPassword: (userId: string, password: string) => Promise<boolean>;
 	updatePassword: (userId: string, newPassword: string) => Promise<User>;
+	isGuestUser: (user?: User | null) => boolean;
+	cleanupExpiredGuests: () => Promise<void>;
 }
 
 export interface User {
@@ -46,4 +54,7 @@ export interface User {
 	lastLogin?: number;
 	color?: string;
 	colorLight?: string;
+	isGuest?: boolean;
+	sessionId?: string;
+	expiresAt?: number;
 }

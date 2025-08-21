@@ -9,12 +9,16 @@ interface RegisterProps {
 	onRegisterSuccess: () => void;
 	onSwitchToLogin: () => void;
 	onShowPrivacy: () => void;
+	isUpgrade?: boolean;
+	upgradeFunction?: (username: string, password: string, email?: string) => Promise<any>;
 }
 
 const Register: React.FC<RegisterProps> = ({
 	onRegisterSuccess,
 	onSwitchToLogin,
 	onShowPrivacy,
+	isUpgrade = false,
+	upgradeFunction,
 }) => {
 	const { register } = useAuth();
 
@@ -28,14 +32,12 @@ const Register: React.FC<RegisterProps> = ({
 	const [isLoading, setIsLoading] = useState(false);
 
 	const validateEmail = (email: string): boolean => {
-		// Basic email validation
 		return /\S+@\S+\.\S+/.test(email);
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-		// Validation
 		if (!username || !password) {
 			setError("Please fill out all required fields");
 			return;
@@ -60,13 +62,17 @@ const Register: React.FC<RegisterProps> = ({
 		setIsLoading(true);
 
 		try {
-			await register(username, password, email || undefined);
+			if (isUpgrade && upgradeFunction) {
+				await upgradeFunction(username, password, email || undefined);
+			} else {
+				await register(username, password, email || undefined);
+			}
 			onRegisterSuccess();
 		} catch (err) {
 			setError(
 				err instanceof Error
 					? err.message
-					: "An error occurred during registration",
+					: `An error occurred during ${isUpgrade ? 'upgrade' : 'registration'}`,
 			);
 		} finally {
 			setIsLoading(false);
@@ -75,7 +81,7 @@ const Register: React.FC<RegisterProps> = ({
 
 	return (
 		<div className="auth-form-container">
-			<h2>Create an Account</h2>
+			<h2>{isUpgrade ? "Upgrade to Full Account" : "Create an Account"}</h2>
 
 			{error && <div className="auth-error">{error}</div>}
 
@@ -143,7 +149,7 @@ const Register: React.FC<RegisterProps> = ({
 					className={`auth-button ${isLoading ? "loading" : ""}`}
 					disabled={!ageConfirmed || !privacyAccepted || isLoading}
 				>
-					{isLoading ? "Creating Account..." : "Sign Up"}
+					{isLoading ? (isUpgrade ? "Upgrading..." : "Creating Account...") : (isUpgrade ? "Upgrade Account" : "Sign Up")}
 				</button>
 			</form>
 
@@ -168,7 +174,7 @@ const Register: React.FC<RegisterProps> = ({
 					  required
 					/>
 					<span>
-					  I agree to the local storage of my data as described in the{" "}
+					  I understand how my data is handled as described in the{" "}
 					  <a href="#" onClick={(e) => { e.preventDefault(); onShowPrivacy(); }}>
 						privacy information
 					  </a>
@@ -176,16 +182,18 @@ const Register: React.FC<RegisterProps> = ({
 				  </label>
 				</div>
 
-			<div className="auth-alt-action">
-				<span>Already have an account?</span>
-				<button
-					className="text-button"
-					onClick={onSwitchToLogin}
-					disabled={isLoading}
-				>
-					Login
-				</button>
-			</div>
+			{!isUpgrade && (
+				<div className="auth-alt-action">
+					<span>Already have an account?</span>
+					<button
+						className="text-button"
+						onClick={onSwitchToLogin}
+						disabled={isLoading}
+					>
+						Login
+					</button>
+				</div>
+			)}
 		</div>
 	);
 };

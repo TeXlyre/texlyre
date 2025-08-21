@@ -23,6 +23,38 @@ import App from "./App";
 import { openDB } from "idb";
 import { authService } from "./services/AuthService";
 
+// Guest account cleanup - runs every hour when app is active
+const setupGuestCleanup = () => {
+	let cleanupInterval: NodeJS.Timeout;
+
+	const runCleanup = async () => {
+		try {
+			const { authService } = await import("./services/AuthService");
+			await authService.cleanupExpiredGuests();
+		} catch (error) {
+			console.warn("Guest cleanup failed:", error);
+		}
+	};
+
+	const startCleanup = () => {
+		cleanupInterval = setInterval(runCleanup, 60 * 60 * 1000); // Every hour
+	};
+
+	const stopCleanup = () => {
+		if (cleanupInterval) {
+			clearInterval(cleanupInterval);
+		}
+	};
+	document.addEventListener("visibilitychange", () => {
+		if (document.visibilityState === "visible") {
+			runCleanup();
+		}
+	});
+	startCleanup();
+	runCleanup();
+	return stopCleanup;
+};
+
 async function clearExistingServiceWorkers() {
 	if ("serviceWorker" in navigator) {
 		const registrations = await navigator.serviceWorker.getRegistrations();
@@ -166,4 +198,5 @@ async function startApp() {
 	);
 }
 
+setupGuestCleanup();
 startApp();
