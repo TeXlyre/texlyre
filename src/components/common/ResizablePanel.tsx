@@ -171,8 +171,8 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 					? "left"
 					: "right"
 				: alignment === "start"
-					? "top"
-					: "bottom"
+					? "bottom"
+					: "top"
 		}`;
 
 		return `${baseClass} ${alignmentClass} ${handleClassName}`;
