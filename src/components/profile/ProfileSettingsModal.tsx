@@ -138,9 +138,11 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 				colorLight,
 			};
 
-			await updateUser(updatedUser);
-			setSuccessMessage("Profile updated successfully");
+			if (!newPassword) {
+				await updateUser(updatedUser);
+			}
 
+			setSuccessMessage("Profile updated successfully");
 			setCurrentPassword("");
 			setNewPassword("");
 			setConfirmPassword("");

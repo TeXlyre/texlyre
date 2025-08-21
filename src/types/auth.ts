@@ -33,7 +33,7 @@ export interface AuthContextType {
 	searchProjects: (query: string) => Promise<Project[]>;
 	toggleFavorite: (projectId: string) => Promise<Project>;
 	verifyPassword: (userId: string, password: string) => Promise<boolean>;
-	updatePassword: (userId: string, newPassword: string) => Promise<void>;
+	updatePassword: (userId: string, newPassword: string) => Promise<User>;
 }
 
 export interface User {

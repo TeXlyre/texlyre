@@ -42,11 +42,11 @@
 }
 
 .resize-handle.vertical.bottom {
-	bottom: 0;
+	bottom: auto;
 }
 
 .resize-handle.vertical.top {
-	top: 0;
+	top: auto;
 }
 
 .collapse-button {

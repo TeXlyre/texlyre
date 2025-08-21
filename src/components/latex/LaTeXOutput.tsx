@@ -162,36 +162,37 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 			) : (
 				<>
 					{currentView === "log" && (
-						<div className="log-view-container">
-							{loggerPlugin ? (
-								<div className="split-log-view">
-									<ResizablePanel
-										direction="vertical"
-										height={visualizerHeight}
-										minHeight={150}
-										maxHeight={600}
-										className="visualizer-panel-wrapper"
-										onResize={handleVisualizerResize}
-										collapsed={visualizerCollapsed}
-										onCollapse={handleVisualizerCollapse}
-									>
-										<div className="visualizer-panel">
-											{React.createElement(loggerPlugin.renderVisualizer, {
-												log: compileLog,
-												onLineClick: handleLineClick,
-											})}
-										</div>
-									</ResizablePanel>
-									<div className="raw-log-panel">
-										<pre className="log-viewer">{compileLog}</pre>
-									</div>
-								</div>
-							) : (
-								<div className="log-viewer">
-									<pre>{compileLog}</pre>
-								</div>
-							)}
-						</div>
+					  <div className="log-view-container">
+						{loggerPlugin ? (
+						  <div className="split-log-view">
+							<ResizablePanel
+							  direction="vertical"
+							  alignment="end"
+							  height={visualizerHeight}
+							  minHeight={150}
+							  maxHeight={600}
+							  className="visualizer-panel-wrapper"
+							  onResize={handleVisualizerResize}
+							  collapsed={visualizerCollapsed}
+							  onCollapse={handleVisualizerCollapse}
+							>
+							  <div className="visualizer-panel">
+								{React.createElement(loggerPlugin.renderVisualizer, {
+								  log: compileLog,
+								  onLineClick: handleLineClick,
+								})}
+							  </div>
+							</ResizablePanel>
+							<div className="raw-log-panel">
+							  <pre className="log-viewer">{compileLog}</pre>
+							</div>
+						  </div>
+						) : (
+						  <div className="log-viewer">
+							<pre>{compileLog}</pre>
+						  </div>
+						)}
+					  </div>
 					)}
 
 					{currentView === "pdf" && compiledPdf && (

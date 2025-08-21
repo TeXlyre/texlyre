@@ -135,15 +135,17 @@ embed {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
+	position: relative;
 }
 
 .visualizer-panel-wrapper {
-	border-bottom: 1px solid var(--accent-border);
+	flex: 0 0 auto;
 }
 
 .visualizer-panel {
-	height: 100%;
+	flex: 0 0 auto;
 	overflow: auto;
+	border-bottom: 1px solid var(--accent-border);
 }
 
 .log-view-container {

@@ -215,7 +215,7 @@ class AuthService {
 		return user.passwordHash === passwordHash;
 	}
 
-	async updatePassword(userId: string, newPassword: string): Promise<void> {
+	async updatePassword(userId: string, newPassword: string): Promise<User> {
 		if (!this.db) await this.initialize();
 
 		const user = await this.getUserById(userId);
@@ -228,7 +228,7 @@ class AuthService {
 			passwordHash,
 		};
 
-		await this.updateUser(updatedUser);
+		return this.updateUser(updatedUser);
 	}
 
 	private createNewDocumentUrl(
