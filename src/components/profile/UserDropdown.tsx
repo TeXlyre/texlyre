@@ -9,6 +9,7 @@ interface UserDropdownProps {
 	onOpenProfile: () => void;
 	onOpenExport: () => void;
 	onOpenDeleteAccount: () => void;
+	isGuest?: boolean;
 }
 
 const UserDropdown: React.FC<UserDropdownProps> = ({
@@ -17,6 +18,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 	onOpenProfile,
 	onOpenExport,
 	onOpenDeleteAccount,
+	isGuest = false,
 }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
@@ -37,48 +39,54 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 		};
 	}, []);
 
+	const displayUsername = isGuest ? "Guest User" : username;
+
 	return (
 		<div className="user-dropdown-container" ref={dropdownRef}>
 			<button
-				className="user-dropdown-button"
+				className={`user-dropdown-button ${isGuest ? 'guest' : ''}`}
 				onClick={() => setIsOpen(!isOpen)}
 				aria-expanded={isOpen}
 				aria-haspopup="true"
 			>
 				<UserIcon />
-				<span>{username}</span>
+				<span>{displayUsername}</span>
 			</button>
 
 			{isOpen && (
 				<div className="user-dropdown-menu">
-					<button
-						className="dropdown-item"
-						onClick={() => {
-							setIsOpen(false);
-							onOpenProfile();
-						}}
-					>
-						Profile Settings
-					</button>
-					<button
-						className="dropdown-item"
-						onClick={() => {
-							setIsOpen(false);
-							onOpenExport();
-						}}
-					>
-						Export Account
-					</button>
-					<div className="dropdown-separator" />
-					<button
-						className="dropdown-item danger"
-						onClick={() => {
-							setIsOpen(false);
-							onOpenDeleteAccount();
-						}}
-					>
-						Delete Account
-					</button>
+					{!isGuest && (
+						<>
+							<button
+								className="dropdown-item"
+								onClick={() => {
+									setIsOpen(false);
+									onOpenProfile();
+								}}
+							>
+								Profile Settings
+							</button>
+							<button
+								className="dropdown-item"
+								onClick={() => {
+									setIsOpen(false);
+									onOpenExport();
+								}}
+							>
+								Export Account
+							</button>
+							<div className="dropdown-separator" />
+							<button
+								className="dropdown-item danger"
+								onClick={() => {
+									setIsOpen(false);
+									onOpenDeleteAccount();
+								}}
+							>
+								Delete Account
+							</button>
+						</>
+					)}
 					<button
 						className="dropdown-item"
 						onClick={() => {
@@ -86,7 +94,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 							onLogout();
 						}}
 					>
-						Logout
+						{isGuest ? "End Session" : "Logout"}
 					</button>
 				</div>
 			)}

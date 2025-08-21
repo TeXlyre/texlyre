@@ -329,3 +329,273 @@
 .modal-overlay:has(.export-account-modal) {
   z-index: var(--z-above-all) !important;
 }
+
+/* Additional CSS for guest features - add to src/styles/components/auth.css */
+
+/* Guest section styling */
+.guest-section {
+	margin: var(--space-md) 0;
+}
+
+.guest-divider {
+	display: flex;
+	align-items: center;
+	margin: var(--space-md) 0;
+	color: var(--pico-secondary);
+}
+
+.guest-divider::before,
+.guest-divider::after {
+	content: "";
+	flex: 1;
+	height: 1px;
+	background-color: var(--accent-border);
+}
+
+.guest-divider span {
+	padding: 0 var(--space-md);
+	font-size: 0.85rem;
+}
+
+.guest-button {
+	background-color: var(--pico-secondary-background) !important;
+	border: 1px solid var(--accent-border) !important;
+	color: var(--text-color) !important;
+	width: 100%;
+}
+
+.guest-button:hover:not(:disabled) {
+	background-color: var(--pico-primary-focus) !important;
+	border-color: var(--pico-primary) !important;
+}
+
+/* Guest consent modal styling */
+.guest-consent-modal {
+	max-width: 100%;
+}
+
+.guest-info-section {
+	margin-bottom: var(--space-lg);
+}
+
+.guest-info-section h3 {
+	margin-top: 0;
+	margin-bottom: var(--space-sm);
+	color: var(--text-color);
+}
+
+.guest-info-section p {
+	margin-bottom: var(--space-md);
+	line-height: 1.5;
+	color: var(--pico-secondary);
+}
+
+.guest-features h4 {
+	margin: var(--space-md) 0 var(--space-sm) 0;
+	font-size: 0.9rem;
+	color: var(--text-color);
+}
+
+.guest-features ul {
+	margin: 0 0 var(--space-md) var(--space-md);
+	padding: 0;
+}
+
+.guest-features li {
+	margin-bottom: var(--space-xs);
+	font-size: 0.85rem;
+	line-height: 1.4;
+	color: var(--pico-secondary);
+}
+
+.guest-features li strong {
+	color: var(--text-color);
+}
+
+.guest-upgrade-info {
+	padding: var(--space-sm);
+	background-color: rgba(64, 185, 255, 0.1);
+	border: 1px solid rgba(64, 185, 255, 0.2);
+	border-radius: var(--radius-sm);
+}
+
+.guest-upgrade-info h4 {
+	margin: 0 0 var(--space-xs) 0;
+	color: var(--text-color);
+}
+
+.guest-upgrade-info p {
+	margin: 0;
+	font-size: 0.85rem;
+	color: var(--pico-secondary);
+}
+
+.consent-checkboxes {
+	margin: var(--space-lg) 0;
+	padding: var(--space-md);
+	background-color: var(--pico-secondary-background);
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--accent-border);
+}
+
+.privacy-notice {
+	padding: var(--space-sm);
+	background-color: rgba(40, 167, 69, 0.1);
+	border: 1px solid rgba(40, 167, 69, 0.2);
+	border-radius: var(--radius-sm);
+	margin: var(--space-md) 0;
+}
+
+.privacy-notice p {
+	margin: 0;
+	font-size: 0.8rem;
+	color: var(--pico-secondary);
+}
+
+/* Guest upgrade banner styling */
+.guest-upgrade-banner {
+	width: 100%;
+	background: linear-gradient(135deg, rgba(64, 185, 255, 0.1), rgba(120, 64, 255, 0.1));
+	border: 1px solid rgba(64, 185, 255, 0.3);
+	border-radius: var(--radius-sm);
+	padding: var(--space-sm) var(--space-md);
+	margin-bottom: var(--space-lg);
+	animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+	from {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.banner-content {
+	display: flex;
+	align-items: center;
+	gap: var(--space-md);
+}
+
+.banner-icon {
+	color: var(--pico-primary);
+	flex-shrink: 0;
+}
+
+.banner-text {
+	flex: 1;
+	min-width: 0;
+}
+
+.banner-main {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	font-weight: 500;
+	color: var(--text-color);
+	font-size: 0.9rem;
+}
+
+.time-remaining {
+	font-size: 0.8rem;
+	color: var(--pico-secondary);
+	font-weight: normal;
+}
+
+.banner-sub {
+	font-size: 0.8rem;
+	color: var(--pico-secondary);
+	margin-top: var(--space-xs);
+}
+
+.banner-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	flex-shrink: 0;
+}
+
+/* Upgrade modal styling */
+.upgrade-modal-content .upgrade-info {
+	margin-bottom: var(--space-lg);
+}
+
+.upgrade-modal-content .upgrade-info h3 {
+	margin-top: 0;
+	margin-bottom: var(--space-sm);
+	color: var(--text-color);
+}
+
+.upgrade-modal-content .upgrade-info ul {
+	margin: var(--space-sm) 0 var(--space-md) var(--space-md);
+}
+
+.upgrade-modal-content .upgrade-info li {
+	margin-bottom: var(--space-xs);
+	font-size: 0.9rem;
+	color: var(--pico-secondary);
+}
+
+.storage-notice {
+	margin-top: var(--space-md);
+	padding: var(--space-sm);
+	background-color: rgba(255, 193, 7, 0.1);
+	border: 1px solid rgba(255, 193, 7, 0.3);
+	border-radius: var(--radius-sm);
+}
+
+.storage-notice p {
+	margin: 0;
+	font-size: 0.85rem;
+	color: var(--pico-secondary);
+	line-height: 1.4;
+}
+
+.storage-notice strong {
+	color: var(--text-color);
+}
+
+/* User dropdown guest styling */
+.user-dropdown-button.guest {
+	background-color: rgba(64, 185, 255, 0.1);
+	border-color: rgba(64, 185, 255, 0.3);
+}
+
+.user-dropdown-button.guest:hover {
+	background-color: rgba(64, 185, 255, 0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+	.banner-content {
+		flex-direction: column;
+		align-items: stretch;
+		gap: var(--space-sm);
+	}
+
+	.banner-main {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-xs);
+	}
+
+	.banner-actions {
+		justify-content: flex-end;
+	}
+}
+
+/* Z-index fixes for nested modals */
+.modal-overlay:has(.export-account-modal) {
+  z-index: var(--z-above-all) !important;
+}
+
+.modal-overlay:has(.privacy-content) {
+  z-index: calc(var(--z-above-all) + 10) !important;
+}
+
+.modal-overlay:has(.guest-consent-modal) {
+  z-index: var(--z-above-all) !important;
+}

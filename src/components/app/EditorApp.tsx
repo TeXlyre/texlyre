@@ -37,6 +37,7 @@ import ShareProjectButton from "../project/ShareProjectButton";
 import ShareProjectModal from "../project/ShareProjectModal";
 import SettingsButton from "../settings/SettingsButton";
 import PrivacyModal from "../common/PrivacyModal";
+import GuestUpgradeBanner from "../auth/GuestUpgradeBanner";
 
 interface EditorAppProps {
 	docUrl: YjsDocUrl;
@@ -59,7 +60,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		isConnected,
 	} = useCollab<DocumentList>();
 
-	const { user, updateProject, getProjectById } = useAuth();
+	const { user, updateProject, getProjectById, isGuestUser } = useAuth();
 	const {
 		status,
 		activities,
@@ -98,7 +99,6 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	useGlobalKeyboard();
 
 	const updateContent = (docId: string, content: string) => {
-		// Use `changeData` from the collab context.
 		changeDoc((d) => {
 			if (d.documents) {
 				const docIndex = d.documents.findIndex((doc) => doc.id === docId);
@@ -229,7 +229,6 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		}
 	}, [doc, targetDocId, hasNavigated]);
 
-	// Check for linked file when selected document changes
 	useEffect(() => {
 		const checkLinkedFile = async () => {
 			if (localDocId && doc?.documents) {
@@ -361,6 +360,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	return (
 		<div className="app-container">
 			{isOfflineMode && <OfflineBanner />}
+			{isGuestUser(user) && <GuestUpgradeBanner />}
 			<header>
 				<div className="header-left">
 					<button className="back-button" onClick={onBackToProjects}>
@@ -405,11 +405,13 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						useSharedSettings={true}
 						docUrl={docUrl}
 					/>
-					<BackupStatusIndicator
-						className="header-backup-indicator"
-						currentProjectId={sessionStorage.getItem("currentProjectId")}
-						isInEditor={true}
-					/>
+					{!isGuestUser(user) && (
+						<BackupStatusIndicator
+							className="header-backup-indicator"
+							currentProjectId={sessionStorage.getItem("currentProjectId")}
+							isInEditor={true}
+						/>
+					)}
 					{!isOfflineMode && (
 						<CollabStatusIndicator
 							className="header-collab-status"
@@ -429,6 +431,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						onOpenProfile={() => setShowProfileModal(true)}
 						onOpenExport={() => setShowAccountExportModal(true)}
 						onOpenDeleteAccount={() => setIsDeleteAccountModalOpen(true)}
+						isGuest={isGuestUser(user)}
 					/>
 				</div>
 			</header>
@@ -503,36 +506,42 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 				projectName={projectName}
 				shareUrl={shareUrl}
 			/>
-			<ProfileSettingsModal
-				isOpen={showProfileModal}
-				onClose={() => setShowProfileModal(false)}
-			/>
-			<ExportAccountModal
-				isOpen={showAccountExportModal}
-				onClose={() => setShowAccountExportModal(false)}
-			/>
-			<DeleteAccountModal
-				isOpen={isDeleteAccountModalOpen}
-				onClose={() => setIsDeleteAccountModalOpen(false)}
-				onAccountDeleted={handleAccountDeleted}
-				onOpenExport={() => setShowAccountExportModal(true)}
-			/>
-			<BackupModal
-				isOpen={showAutoBackupModal}
-				onClose={() => setShowAutoBackupModal(false)}
-				status={status}
-				activities={activities}
-				onRequestAccess={requestAccess}
-				onSynchronize={synchronize}
-				onExportToFileSystem={synchronize}
-				onImportChanges={importChanges}
-				onDisconnect={disconnect}
-				onClearActivity={clearActivity}
-				onClearAllActivities={clearAllActivities}
-				onChangeDirectory={changeDirectory}
-				currentProjectId={sessionStorage.getItem("currentProjectId")}
-				isInEditor={true}
-			/>
+			{!isGuestUser(user) && (
+				<>
+					<ProfileSettingsModal
+						isOpen={showProfileModal}
+						onClose={() => setShowProfileModal(false)}
+					/>
+					<ExportAccountModal
+						isOpen={showAccountExportModal}
+						onClose={() => setShowAccountExportModal(false)}
+					/>
+					<DeleteAccountModal
+						isOpen={isDeleteAccountModalOpen}
+						onClose={() => setIsDeleteAccountModalOpen(false)}
+						onAccountDeleted={handleAccountDeleted}
+						onOpenExport={() => setShowAccountExportModal(true)}
+					/>
+				</>
+			)}
+			{!isGuestUser(user) && (
+				<BackupModal
+					isOpen={showAutoBackupModal}
+					onClose={() => setShowAutoBackupModal(false)}
+					status={status}
+					activities={activities}
+					onRequestAccess={requestAccess}
+					onSynchronize={synchronize}
+					onExportToFileSystem={synchronize}
+					onImportChanges={importChanges}
+					onDisconnect={disconnect}
+					onClearActivity={clearActivity}
+					onClearAllActivities={clearAllActivities}
+					onChangeDirectory={changeDirectory}
+					currentProjectId={sessionStorage.getItem("currentProjectId")}
+					isInEditor={true}
+				/>
+			)}
 			<ToastContainer />
 		</div>
 	);
@@ -542,7 +551,6 @@ const EditorApp: React.FC<EditorAppProps> = (props) => {
 	return (
 		<CollabProvider docUrl={props.docUrl} collectionName="yjs_metadata">
 			<ChatProvider docUrl={props.docUrl}>
-
 					<FileTreeProvider docUrl={props.docUrl}>
 							<FileSyncProvider docUrl={props.docUrl}>
 								<LaTeXProvider>
@@ -550,7 +558,6 @@ const EditorApp: React.FC<EditorAppProps> = (props) => {
 								</LaTeXProvider>
 							</FileSyncProvider>
 					</FileTreeProvider>
-
 			</ChatProvider>
 		</CollabProvider>
 	);

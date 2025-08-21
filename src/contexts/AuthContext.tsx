@@ -16,17 +16,21 @@ export const AuthContext = createContext<AuthContextType>({
 	register: async () => {
 		throw new Error("Not implemented");
 	},
+	createGuestAccount: async () => {
+		throw new Error("Not implemented");
+	},
+	upgradeGuestAccount: async () => {
+		throw new Error("Not implemented");
+	},
 	logout: async () => {
 		throw new Error("Not implemented");
 	},
 	updateUser: async () => {
 		throw new Error("Not implemented");
 	},
-
 	updateUserColor: async () => {
 		throw new Error("Not implemented");
 	},
-
 	createProject: async () => {
 		throw new Error("Not implemented");
 	},
@@ -55,6 +59,10 @@ export const AuthContext = createContext<AuthContextType>({
 		throw new Error("Not implemented");
 	},
 	updatePassword: async () => {
+		throw new Error("Not implemented");
+	},
+	isGuestUser: () => false,
+	cleanupExpiredGuests: async () => {
 		throw new Error("Not implemented");
 	},
 });
@@ -91,6 +99,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 		const newUser = await authService.register(username, password, email);
 		setUser(newUser);
 		return newUser;
+	};
+
+	const createGuestAccount = async (): Promise<User> => {
+		const guestUser = await authService.createGuestAccount();
+		setUser(guestUser);
+		return guestUser;
+	};
+
+	const upgradeGuestAccount = async (
+		username: string,
+		password: string,
+		email?: string,
+	): Promise<User> => {
+		const upgradedUser = await authService.upgradeGuestAccount(
+			username,
+			password,
+			email,
+		);
+		setUser(upgradedUser);
+		return upgradedUser;
 	};
 
 	const logout = async (): Promise<void> => {
@@ -168,6 +196,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 		return updatedUser;
 	};
 
+	const isGuestUser = (targetUser?: User | null): boolean => {
+		return authService.isGuestUser(targetUser || user);
+	};
+
+	const cleanupExpiredGuests = async (): Promise<void> => {
+		return authService.cleanupExpiredGuests();
+	};
+
 	return (
 		<AuthContext.Provider
 			value={{
@@ -176,6 +212,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 				isInitializing,
 				login,
 				register,
+				createGuestAccount,
+				upgradeGuestAccount,
 				logout,
 				updateUser,
 				updateUserColor,
@@ -189,6 +227,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 				toggleFavorite,
 				verifyPassword,
 				updatePassword,
+				isGuestUser,
+				cleanupExpiredGuests,
 			}}
 		>
 			{children}
