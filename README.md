@@ -2,7 +2,7 @@
 
 A **[local-first](https://www.inkandswitch.com/essay/local-first/)** real-time LaTeX collaboration platform with offline editing capabilities. Built with React, TypeScript, and Yjs for collaborative document editing.
 
-[![GitHub Pages](https://img.shields.io/badge/🟢%20Live%20Page-GitHub%20Pages-181717.svg?logo=github)](https://texlyre.github.io/texlyre)
+[![GitHub Pages](https://img.shields.io/badge/🟢%20Live-GitHub%20Pages-181717.svg?logo=github)](https://texlyre.github.io/texlyre)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/texlyre/texlyre/deploy.yml)](https://github.com/texlyre/texlyre/actions)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](https://www.typescriptlang.org/)
