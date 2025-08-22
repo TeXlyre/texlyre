@@ -1,7 +1,8 @@
 // src/components/profile/UserDropdown.tsx
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
-import { UserIcon } from "../common/Icons";
+
+import { UserIcon, ChevronUpIcon } from "../common/Icons";
 
 interface UserDropdownProps {
 	username: string;
@@ -9,6 +10,7 @@ interface UserDropdownProps {
 	onOpenProfile: () => void;
 	onOpenExport: () => void;
 	onOpenDeleteAccount: () => void;
+	onOpenUpgrade?: () => void;
 	isGuest?: boolean;
 }
 
@@ -18,6 +20,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 	onOpenProfile,
 	onOpenExport,
 	onOpenDeleteAccount,
+	onOpenUpgrade,
 	isGuest = false,
 }) => {
 	const [isOpen, setIsOpen] = useState(false);
@@ -85,6 +88,21 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 							>
 								Delete Account
 							</button>
+						</>
+					)}
+					{isGuest && onOpenUpgrade && (
+						<>
+							<button
+								className="dropdown-item"
+								onClick={() => {
+									setIsOpen(false);
+									onOpenUpgrade();
+								}}
+							>
+								<ChevronUpIcon />
+								Upgrade Account
+							</button>
+							<div className="dropdown-separator" />
 						</>
 					)}
 					<button
