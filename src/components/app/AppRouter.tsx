@@ -16,6 +16,7 @@ import AuthApp from "./AuthApp";
 import EditorApp from "./EditorApp";
 import LoadingScreen from "./LoadingScreen";
 import ProjectApp from "./ProjectApp";
+import PrivacyModal from "../common/PrivacyModal";
 
 interface UrlProjectParams {
 	newProjectName?: string;
@@ -43,6 +44,7 @@ const AppRouter: React.FC = () => {
 	const [targetDocId, setTargetDocId] = useState<string | null>(null);
 	const [targetFilePath, setTargetFilePath] = useState<string | null>(null);
 	const [isCreatingProject, setIsCreatingProject] = useState(false);
+	const [showPrivacy, setShowPrivacy] = useState(false);
 
 	const [isPdfViewerWindow, setIsPdfViewerWindow] = useState(false);
 	const [pdfViewerProjectId, setPdfViewerProjectId] = useState<string | null>(null);
@@ -135,11 +137,16 @@ const AppRouter: React.FC = () => {
 	useEffect(() => {
 		const hashUrl = window.location.hash.substring(1);
 
+		if (hashUrl === "privacy-policy") {
+			setShowPrivacy(true);
+			return;
+		}
+
 		if (hashUrl.startsWith("pdf-viewer:")) {
 			const projectId = hashUrl.replace("pdf-viewer:", "");
-			setIsPdfViewerWindow(true);        // Mark this as PDF viewer
-			setPdfViewerProjectId(projectId);  // Store which project
-			return; // Don't process normal routing
+			setIsPdfViewerWindow(true);
+			setPdfViewerProjectId(projectId);
+			return;
 		}
 
 		const urlProjectParams = parseUrlProjectParams(hashUrl);
@@ -333,6 +340,11 @@ const AppRouter: React.FC = () => {
 		window.location.hash = "";
 	};
 
+	const handleClosePrivacy = () => {
+		setShowPrivacy(false);
+		window.location.hash = "";
+	};
+
 	if (isInitializing || isCreatingProject) {
 		return <LoadingScreen />;
 	}
@@ -346,17 +358,13 @@ const AppRouter: React.FC = () => {
 		);
 	}
 
-	if (!isAuthenticated) {
-		return <AuthApp onAuthSuccess={handleAuthSuccess} />;
-	}
-
-	switch (currentView) {
-		case "projects":
-			return (
+	return (
+		<>
+			{!isAuthenticated ? (
+				<AuthApp onAuthSuccess={handleAuthSuccess} />
+			) : currentView === "projects" ? (
 				<ProjectApp onOpenProject={handleOpenProject} onLogout={handleLogout} />
-			);
-		case "editor":
-			return docUrl ? (
+			) : currentView === "editor" && docUrl ? (
 				<EditorApp
 					docUrl={docUrl}
 					onBackToProjects={handleBackToProjects}
@@ -366,10 +374,14 @@ const AppRouter: React.FC = () => {
 				/>
 			) : (
 				<ProjectApp onOpenProject={handleOpenProject} onLogout={handleLogout} />
-			);
-		default:
-			return <AuthApp onAuthSuccess={handleAuthSuccess} />;
-	}
+			)}
+
+			<PrivacyModal
+				isOpen={showPrivacy}
+				onClose={handleClosePrivacy}
+			/>
+		</>
+	);
 };
 
 export default AppRouter;
