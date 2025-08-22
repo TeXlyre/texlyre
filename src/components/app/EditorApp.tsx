@@ -465,17 +465,17 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			<footer>
 			  <p className="read-the-docs">
 				Built with TeXlyre
-				<a href="https://texlyre.github.io/texlyre/" target="_blank" rel="noreferrer">
+				<a href="https://texlyre.github.io" target="_blank" rel="noreferrer">
 				  <img src={texlyreLogo} className="logo" alt="TeXlyre logo" />
 				</a>
 				<span className="legal-links">
-				  <br/> <a href="https://github.com/TeXlyre/texlyre/blob/main/LICENSE" target="_blank" rel="noreferrer">
-					AGPL-3.0 License
+				  <br/> <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">
+					Documentation
 				  </a>
 					{" "} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">
 					Source Code
 				  </a>
-				  {" "} • <a href="#" onClick={() => setShowPrivacy(true)} className="privacy-link">
+				  {" "} • <a href="javascript:void(0)" onClick={() => setShowPrivacy(true)} className="privacy-link">
 					Privacy
 				  </a>
 				</span>
