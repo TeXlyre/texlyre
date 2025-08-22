@@ -25,6 +25,7 @@ import SettingsButton from "../settings/SettingsButton";
 import PrivacyModal from "../common/PrivacyModal";
 import DeleteAccountModal from "../profile/DeleteAccountModal.tsx";
 import GuestUpgradeBanner from "../auth/GuestUpgradeBanner";
+import GuestUpgradeModal from "../auth/GuestUpgradeModal";
 
 interface ProjectManagerProps {
 	onOpenProject: (
@@ -84,6 +85,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const [showEditModal, setShowEditModal] = useState(false);
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
 	const [showAutoBackupModal, setShowAutoBackupModal] = useState(false);
+	const [showGuestUpgradeModal, setShowGuestUpgradeModal] = useState(false);
 	const [currentProject, setCurrentProject] = useState<Project | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -124,6 +126,10 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const handleAccountDeleted = async () => {
 		setIsDeleteAccountModalOpen(false);
 		await onLogout();
+	};
+
+	const handleGuestUpgradeSuccess = () => {
+		setShowGuestUpgradeModal(false);
 	};
 
 	const handleSearch = async (query: string) => {
@@ -320,7 +326,11 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 
 	return (
 		<div className={`app-container ${currentThemePlugin?.id || "default"}`}>
-			{isGuestUser(user) && <GuestUpgradeBanner />}
+			{isGuestUser(user) && (
+				<GuestUpgradeBanner
+					onOpenUpgradeModal={() => setShowGuestUpgradeModal(true)}
+				/>
+			)}
 			<header>
 				<div className="header-left">
 					<h1>All Projects</h1>
@@ -347,6 +357,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						onOpenProfile={() => setShowProfileModal(true)}
 						onOpenExport={() => setShowAccountExportModal(true)}
 						onOpenDeleteAccount={() => setIsDeleteAccountModalOpen(true)}
+						onOpenUpgrade={() => setShowGuestUpgradeModal(true)}
 						isGuest={isGuestUser(user)}
 					/>
 				</div>
@@ -527,6 +538,14 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						onOpenExport={() => setShowAccountExportModal(true)}
 					/>
 				</>
+			)}
+
+			{isGuestUser(user) && (
+				<GuestUpgradeModal
+					isOpen={showGuestUpgradeModal}
+					onClose={() => setShowGuestUpgradeModal(false)}
+					onUpgradeSuccess={handleGuestUpgradeSuccess}
+				/>
 			)}
 
 			<ProjectImportModal

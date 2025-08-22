@@ -38,6 +38,7 @@ import ShareProjectModal from "../project/ShareProjectModal";
 import SettingsButton from "../settings/SettingsButton";
 import PrivacyModal from "../common/PrivacyModal";
 import GuestUpgradeBanner from "../auth/GuestUpgradeBanner";
+import GuestUpgradeModal from "../auth/GuestUpgradeModal";
 
 interface EditorAppProps {
 	docUrl: YjsDocUrl;
@@ -78,6 +79,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
 	const [showAutoBackupModal, setShowAutoBackupModal] = useState(false);
 	const [showShareModal, setShowShareModal] = useState(false);
+	const [showGuestUpgradeModal, setShowGuestUpgradeModal] = useState(false);
 	const [isEditingMetadata, setIsEditingMetadata] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [localDocId, setLocalDocId] = useState<string>("");
@@ -264,6 +266,10 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		await onLogout();
 	};
 
+	const handleGuestUpgradeSuccess = () => {
+		setShowGuestUpgradeModal(false);
+	};
+
 	const handleCreateDocument = () => {
 		changeDoc((d) => {
 			if (!d.documents) {
@@ -360,7 +366,11 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	return (
 		<div className="app-container">
 			{isOfflineMode && <OfflineBanner />}
-			{isGuestUser(user) && <GuestUpgradeBanner />}
+			{isGuestUser(user) && (
+				<GuestUpgradeBanner
+					onOpenUpgradeModal={() => setShowGuestUpgradeModal(true)}
+				/>
+			)}
 			<header>
 				<div className="header-left">
 					<button className="back-button" onClick={onBackToProjects}>
@@ -431,6 +441,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						onOpenProfile={() => setShowProfileModal(true)}
 						onOpenExport={() => setShowAccountExportModal(true)}
 						onOpenDeleteAccount={() => setIsDeleteAccountModalOpen(true)}
+						onOpenUpgrade={() => setShowGuestUpgradeModal(true)}
 						isGuest={isGuestUser(user)}
 					/>
 				</div>
@@ -523,6 +534,13 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						onOpenExport={() => setShowAccountExportModal(true)}
 					/>
 				</>
+			)}
+			{isGuestUser(user) && (
+				<GuestUpgradeModal
+					isOpen={showGuestUpgradeModal}
+					onClose={() => setShowGuestUpgradeModal(false)}
+					onUpgradeSuccess={handleGuestUpgradeSuccess}
+				/>
 			)}
 			{!isGuestUser(user) && (
 				<BackupModal
