@@ -8,6 +8,7 @@ import { useFileTree } from "../../hooks/useFileTree";
 import { useLaTeX } from "../../hooks/useLaTeX";
 import type { DocumentList } from "../../types/documents";
 import type { FileNode } from "../../types/files";
+import { isTemporaryFile } from "../../utils/fileUtils";
 import {ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon} from "../common/Icons";
 
 interface LaTeXCompileButtonProps {
@@ -65,7 +66,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		const findTexFiles = (nodes: FileNode[]): string[] => {
 			const texFiles: string[] = [];
 			for (const node of nodes) {
-				if (node.type === "file" && node.path.endsWith(".tex")) {
+				if (node.type === "file" && node.path.endsWith(".tex") && !isTemporaryFile(node.path)) {
 					texFiles.push(node.path);
 				}
 				if (node.children) {
