@@ -7,7 +7,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useFileSystemBackup } from "../../hooks/useFileSystemBackup";
 import { useTheme } from "../../hooks/useTheme";
 import type { Project } from "../../types/projects";
-import { isValidYjsUrl } from "../../types/yjs";
+import { isValidYjsUrl, buildUrlWithFragments, parseUrlFragments } from "../../types/yjs";
 import BackupDiscoveryModal from "../backup/BackupDiscoveryModal";
 import BackupModal from "../backup/BackupModal";
 import BackupStatusIndicator from "../backup/BackupStatusIndicator";
@@ -297,6 +297,34 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		setShowDeleteModal(true);
 	};
 
+	const handleOpenDefault = (project: Project) => {
+		if (!project.docUrl) {
+			console.error("Project has no document URL:", project);
+			setError("This project has no associated document. Please try creating a new project.");
+			return;
+		}
+
+		if (!isValidYjsUrl(project.docUrl)) {
+			console.error("Invalid document URL format:", project.docUrl);
+			setError(`Invalid document URL format: ${project.docUrl}`);
+			return;
+		}
+
+		// Build URL with last opened file/doc if available
+		let finalUrl = project.docUrl;
+		if (project.lastOpenedDocId || project.lastOpenedFilePath) {
+			const currentFragment = parseUrlFragments(finalUrl);
+			const newUrl = buildUrlWithFragments(
+				currentFragment.yjsUrl,
+				project.lastOpenedDocId,
+				project.lastOpenedFilePath,
+			);
+			finalUrl = newUrl;
+		}
+
+		onOpenProject(finalUrl, project.name, project.description, project.id);
+	};
+
 	const openProject = async (project: Project) => {
 		if (!project.docUrl) {
 			console.error("Project has no document URL:", project);
@@ -408,6 +436,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						<ProjectList
 							projects={filteredProjects}
 							onOpenProject={openProject}
+							onOpenProjectDefault={handleOpenDefault}
 							onEditProject={openEditModal}
 							onDeleteProject={openDeleteModal}
 							onToggleFavorite={handleToggleFavorite}

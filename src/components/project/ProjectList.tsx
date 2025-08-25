@@ -9,6 +9,7 @@ import ProjectCard from "./ProjectCard";
 interface ProjectListProps {
 	projects: Project[];
 	onOpenProject: (project: Project) => void;
+	onOpenProjectDefault: (project: Project) => void;
 	onEditProject: (project: Project) => void;
 	onDeleteProject: (project: Project) => void;
 	onToggleFavorite: (projectId: string) => void;
@@ -21,6 +22,7 @@ interface ProjectListProps {
 const ProjectList: React.FC<ProjectListProps> = ({
 	projects,
 	onOpenProject,
+	onOpenProjectDefault,
 	onEditProject,
 	onDeleteProject,
 	onToggleFavorite,
@@ -233,6 +235,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
 								key={project.id}
 								project={project}
 								onOpen={onOpenProject}
+								onOpenDefault={onOpenProjectDefault}
 								onEdit={onEditProject}
 								onDelete={onDeleteProject}
 								onToggleFavorite={onToggleFavorite}
