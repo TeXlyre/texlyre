@@ -10,4 +10,6 @@ export interface Project {
 	tags: string[];
 	isFavorite: boolean;
 	collaboratorIds?: string[];
+	lastOpenedDocId?: string;
+	lastOpenedFilePath?: string;
 }

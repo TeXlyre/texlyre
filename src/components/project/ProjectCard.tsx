@@ -1,13 +1,15 @@
-// src/components/project/ProjectCard.tsx
+// Updated src/components/project/ProjectCard.tsx
 import type React from "react";
+import { useRef, useState, useEffect } from "react";
 
 import type { Project } from "../../types/projects.ts";
 import ProjectBackupControls from "../backup/ProjectBackupControls";
-import { EditIcon, FolderIcon, StarIcon, TrashIcon } from "../common/Icons.tsx";
+import {EditIcon, FolderIcon, StarIcon, TrashIcon, ChevronDownIcon, FileTextIcon, FileIcon} from "../common/Icons.tsx";
 
 interface ProjectCardProps {
 	project: Project;
 	onOpen: (project: Project) => void;
+	onOpenDefault: (project: Project) => void; // New prop for default open
 	onEdit: (project: Project) => void;
 	onDelete: (project: Project) => void;
 	onToggleFavorite: (projectId: string) => void;
@@ -19,6 +21,7 @@ interface ProjectCardProps {
 const ProjectCard: React.FC<ProjectCardProps> = ({
 	project,
 	onOpen,
+	onOpenDefault,
 	onEdit,
 	onDelete,
 	onToggleFavorite,
@@ -26,6 +29,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 	isSelected = false,
 	onSelectionChange,
 }) => {
+	const [isOpenDropdownOpen, setIsOpenDropdownOpen] = useState(false);
+	const openDropdownRef = useRef<HTMLDivElement>(null);
+
 	const formatDate = (timestamp: number): string => {
 		return new Date(timestamp).toLocaleDateString();
 	};
@@ -45,6 +51,74 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 		if (isSelectionMode && onSelectionChange) {
 			onSelectionChange(project.id, !isSelected);
 		}
+	};
+
+	const handleDefaultOpen = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		onOpenDefault(project);
+		setIsOpenDropdownOpen(false);
+	};
+
+	const handleProjectOpen = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		onOpen(project);
+		setIsOpenDropdownOpen(false);
+	};
+
+	const toggleOpenDropdown = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		setIsOpenDropdownOpen(!isOpenDropdownOpen);
+	};
+
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				openDropdownRef.current &&
+				!openDropdownRef.current.contains(event.target as Node)
+			) {
+				setIsOpenDropdownOpen(false);
+			}
+		};
+
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, []);
+
+	const getDropdownDisplayText = () => {
+		if (project.lastOpenedFilePath) {
+		   const fileName = project.lastOpenedFilePath.split("/").pop() || "Unknown file";
+		   return `Last: ${fileName}`;
+		} else if (project.lastOpenedDocId) {
+		   return `Last: Document ${project.lastOpenedDocId.slice(0, 8)}...`;
+		}
+		return "Open Project";
+	};
+
+	const getDropdownContent = () => {
+		const displayText = getDropdownDisplayText();
+		if (project.lastOpenedFilePath) {
+		   return (
+			  <>
+				 <FileIcon />
+				 <span>{displayText}</span>
+			  </>
+		   );
+		} else if (project.lastOpenedDocId) {
+		   return (
+			  <>
+				 <FileTextIcon />
+				 <span>{displayText}</span>
+			  </>
+		   );
+		}
+		return (
+		   <>
+			  <FolderIcon />
+			  <span>{displayText}</span>
+		   </>
+		);
 	};
 
 	return (
@@ -71,7 +145,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 					onClick={(e) => {
 						if (!isSelectionMode) {
 							e.stopPropagation();
-							onOpen(project);
+							onOpenDefault(project);
 						}
 					}}
 				>
@@ -105,17 +179,36 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
 			{!isSelectionMode && (
 				<div className="project-actions">
-					<button
-						className="action-button primary"
-						onClick={(e) => {
-							e.stopPropagation();
-							onOpen(project);
-						}}
-						title="Open Project"
-					>
-						<FolderIcon />
-						Open
-					</button>
+					<div className="project-open-buttons" ref={openDropdownRef}>
+						<div className="open-button-group">
+							<button
+								className="action-button primary open-button"
+								onClick={handleDefaultOpen}
+								title={getDropdownDisplayText()}
+							>
+								<FolderIcon />
+								Open
+							</button>
+							<button
+								className="action-button primary dropdown-toggle"
+								onClick={toggleOpenDropdown}
+								title="Open Options"
+							>
+								<ChevronDownIcon />
+							</button>
+						</div>
+						{isOpenDropdownOpen && (
+							<div className="open-dropdown">
+							   <div className="open-dropdown-item" onClick={handleDefaultOpen}>
+								  {getDropdownContent()}
+							   </div>
+							   <div className="open-dropdown-item" onClick={handleProjectOpen}>
+								  <FolderIcon />
+								  <span>Open Project</span>
+							   </div>
+							</div>
+						)}
+					</div>
 					<button
 						className="action-button"
 						onClick={(e) => {
@@ -125,7 +218,6 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 						title="Edit Project"
 					>
 						<EditIcon />
-						Edit
 					</button>
 					<button
 						className="action-button danger"
@@ -136,7 +228,6 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 						title="Delete Project"
 					>
 						<TrashIcon />
-						Delete
 					</button>
 				</div>
 			)}

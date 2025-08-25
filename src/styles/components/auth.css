@@ -230,7 +230,7 @@
 	top: 100%;
 	right: 0;
 	margin-top: var(--space-xs);
-	min-width: 180px;
+	min-width: var(--dropdown-width);
 	background-color: var(--pico-background);
 	border: 1px solid var(--accent-border);
 	border-radius: var(--radius-sm);

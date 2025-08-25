@@ -475,9 +475,10 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					{" "} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">
 					Source Code
 				  </a>
-				  {" "} • <a href="javascript:void(0)" onClick={() => setShowPrivacy(true)} className="privacy-link">
-					Privacy
-				  </a>
+				  {" "} • <a href="#" onClick={(event) => {
+					  event.preventDefault();
+					  setShowPrivacy(true);
+				  }} className="privacy-link"> Privacy </a>
 				</span>
 			  </p>
 			  <ChatPanel className="footer-chat" />

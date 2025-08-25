@@ -90,7 +90,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	const { selectedFileId, getFile, fileTree, selectFile, getFileContent } =
 		useFileTree();
 	const { currentLayout } = useTheme();
-	const { getProjectById } = useAuth();
+	const { getProjectById, updateProject } = useAuth();
 	const { getProperty, setProperty, registerProperty } = useProperties();
 	const propertiesRegistered = useRef(false);
 	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
@@ -508,6 +508,35 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		}
 	}, [targetDocId]);
 
+	const updateProjectLastOpened = async (docId?: string, filePath?: string) => {
+		const projectId = sessionStorage.getItem("currentProjectId");
+		if (!projectId) return;
+
+		try {
+			const project = await getProjectById(projectId);
+			if (!project) return;
+
+			// Only update if there's actually a change
+			const hasDocChange = docId !== project.lastOpenedDocId;
+			const hasFileChange = filePath !== project.lastOpenedFilePath;
+
+			if (hasDocChange || hasFileChange) {
+				const updatedProject = {
+					...project,
+					lastOpenedDocId: docId,
+					lastOpenedFilePath: filePath,
+				};
+
+				// Update project silently
+				updateProject(updatedProject).catch(error => {
+					console.warn("Failed to update project last opened state:", error);
+				});
+			}
+		} catch (error) {
+			console.warn("Error updating project last opened state:", error);
+		}
+	};
+
 	const handleCreateDocument = (name: string) => {
 		onCreateDocument();
 		const lastDoc = documents[documents.length - 1];
@@ -557,6 +586,9 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		const file = await getFile(fileId);
 		setLastUserSelectedFileId(fileId);
 		handleFileSelect(fileId, content, isBinary);
+		if (file) {
+			updateProjectLastOpened(undefined, file.path);
+		}
 	};
 
 	const handleDocumentSelect = (id: string) => {
@@ -569,6 +601,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		);
 		const newUrl = buildUrlWithFragments(currentFragment.yjsUrl, id);
 		window.location.hash = newUrl;
+		updateProjectLastOpened(id, undefined);
 	};
 
 	const handleSwitchToDocuments = () => {

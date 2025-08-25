@@ -2,7 +2,7 @@
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 
-import { UserIcon, ChevronUpIcon } from "../common/Icons";
+import {UserIcon, UpgradeAccountIcon, TrashIcon, ExportIcon, EditIcon, LogoutIcon} from "../common/Icons";
 
 interface UserDropdownProps {
 	username: string;
@@ -67,6 +67,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 									onOpenProfile();
 								}}
 							>
+								<EditIcon/>
 								Profile Settings
 							</button>
 							<button
@@ -76,6 +77,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 									onOpenExport();
 								}}
 							>
+								<ExportIcon/>
 								Export Account
 							</button>
 							<div className="dropdown-separator" />
@@ -86,6 +88,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 									onOpenDeleteAccount();
 								}}
 							>
+								<TrashIcon/>
 								Delete Account
 							</button>
 						</>
@@ -99,20 +102,30 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 									onOpenUpgrade();
 								}}
 							>
-								<ChevronUpIcon />
+								<UpgradeAccountIcon />
 								Upgrade Account
 							</button>
 							<div className="dropdown-separator" />
 						</>
 					)}
 					<button
-						className="dropdown-item"
-						onClick={() => {
-							setIsOpen(false);
-							onLogout();
-						}}
+					   className="dropdown-item"
+					   onClick={() => {
+						  setIsOpen(false);
+						  onLogout();
+					   }}
 					>
-						{isGuest ? "End Session" : "Logout"}
+					   {isGuest ? (
+						  <>
+							 <TrashIcon />
+							 <span>End Session</span>
+						  </>
+					   ) : (
+						  <>
+							 <LogoutIcon />
+							 <span>Logout</span>
+						  </>
+					   )}
 					</button>
 				</div>
 			)}

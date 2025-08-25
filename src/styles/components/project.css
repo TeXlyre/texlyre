@@ -302,14 +302,12 @@
   gap: var(--space-sm);
   margin-top: var(--space-sm);
   max-width: 100%;
-  overflow: hidden;
 }
 
 .project-actions .action-button {
-  flex: 1;
-  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
+  border-radius: var(--radius-lg);
   text-overflow: ellipsis;
   font-size: clamp(0.75rem, 2vw, 0.7rem);
 }
@@ -797,4 +795,92 @@
   font-size: 0.875rem;
   color: var(--text-secondary);
   margin-top: 1rem;
+}
+
+.project-open-buttons {
+	position: relative;
+}
+
+.open-button-group {
+	display: flex;
+	width: 100%;
+}
+
+.open-button-group .open-button {
+	flex: 1;
+    border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+    border-right: none;
+    padding-left: var(--space-lg);
+    padding-right: var(--space-md);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-sm);
+}
+
+.open-button-group .dropdown-toggle {
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+    justify-content: center;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.open-dropdown {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	right: 0;
+	margin-top: 4px;
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-md);
+	z-index: var(--z-dropdown);
+	overflow: hidden;
+    width: max-content;
+    max-width: var(--project-title-width);
+}
+
+.open-dropdown-item {
+	display: flex !important;
+	align-items: center !important;
+	gap: var(--space-sm) !important;
+	width: 100%;
+	padding: 0.5rem var(--space-md);
+	cursor: pointer;
+	color: var(--text-color);
+	font-size: 0.875rem;
+	text-align: left;
+	transition: background-color var(--transition-normal);
+	border-bottom: 1px solid var(--accent-border);
+	background: none;
+	border-left: none;
+	border-right: none;
+	border-top: none;
+}
+
+.open-button-group .dropdown-toggle svg {
+    width: 12px;
+    height: 12px;
+}
+
+.open-dropdown-item:last-child {
+	border-bottom: none;
+}
+
+.open-dropdown-item:hover {
+	background-color: var(--pico-primary-focus);
+}
+
+.open-dropdown-item svg {
+	flex-shrink: 0;
+	width: 12px;
+	height: 12px;
+}
+
+.open-dropdown-item span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }

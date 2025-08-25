@@ -21,6 +21,24 @@ export const OfflineIcon: React.FC = () => (
     </svg>
 );
 
+export const LogoutIcon: React.FC = () => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+        <polyline points="16 17 21 12 16 7" />
+        <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+);
+
 export const ClearCompileIcon: React.FC = () => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
@@ -677,6 +695,25 @@ export const UnlinkIcon: React.FC = () => (
 		<line x1="2" y1="8" x2="5" y2="8" />
 		<line x1="16" y1="19" x2="16" y2="22" />
 		<line x1="19" y1="16" x2="22" y2="16" />
+	</svg>
+);
+
+export const UpgradeAccountIcon: React.FC = () => (
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width="16"
+		height="16"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="2"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+	>
+		<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+		<circle cx="8.5" cy="7" r="4" />
+		<line x1="19" y1="14" x2="19" y2="8" />
+		<polyline points="16 11 19 8 22 11" />
 	</svg>
 );
 
