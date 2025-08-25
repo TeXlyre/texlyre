@@ -56,7 +56,10 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const contentHashRef = useRef<string>("");
 	const containerRef = useRef<HTMLDivElement>(null);
 	const pageWidths = useRef<Map<number, number>>(new Map());
+	const pageHeights = useRef<Map<number, number>>(new Map());
 	const contentElRef = useRef<HTMLDivElement>(null);
+	const [fitMode, setFitMode] = useState<"zoom" | "fit-width" | "fit-height">("zoom");
+	const prevZoomRef = useRef<number>(1.0);
 
 	// Register properties
 	useEffect(() => {
@@ -85,6 +88,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 		if (storedZoom !== undefined) {
 			setScale(Number(storedZoom));
+			prevZoomRef.current = Number(storedZoom);
 		}
 
 		if (storedScrollView !== undefined) {
@@ -222,35 +226,67 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		[numPages, currentPage, scrollView],
 	);
 
-	const handleFitToWidth = useCallback(() => {
+	const computeFitScale = useCallback((mode: "fit-width" | "fit-height") => {
 		const containerWidth =
 			contentElRef.current?.clientWidth ||
 			document.querySelector('.pdf-renderer-content')?.clientWidth ||
 			3840;
+		const containerHeight =
+			contentElRef.current?.clientHeight ||
+			(document.querySelector('.pdf-renderer-content') as HTMLElement | null)?.clientHeight ||
+			2160;
 		let pageWidth = 595;
+		let pageHeight = 842;
 		const currentW = pageWidths.current.get(currentPage);
-		if (typeof currentW === "number") {
-			pageWidth = currentW;
-		} else if (pageWidths.current.size > 0) {
+		const currentH = pageHeights.current.get(currentPage);
+		if (typeof currentW === "number") pageWidth = currentW;
+		if (typeof currentH === "number") pageHeight = currentH;
+		if ((!currentW || !currentH) && pageWidths.current.size > 0) {
 			const firstKey = Math.min(...Array.from(pageWidths.current.keys()));
 			pageWidth = pageWidths.current.get(firstKey) || pageWidth;
+			pageHeight = pageHeights.current.get(firstKey) || pageHeight;
 		}
-		const newScale = Math.max(0.5, Math.min(10, (containerWidth - 40) / pageWidth));
-		setScale(newScale);
-		setProperty("pdf-renderer-zoom", newScale);
-	}, [currentPage, setProperty]);
+		if (mode === "fit-width") {
+			return Math.max(0.5, Math.min(10, (containerWidth - 40) / pageWidth));
+		} else {
+			return Math.max(0.5, Math.min(10, (containerHeight - 40) / pageHeight));
+		}
+	}, [currentPage]);
+
+	const handleFitToggle = useCallback(() => {
+		if (fitMode === "zoom") {
+			const s = computeFitScale("fit-width");
+			setFitMode("fit-width");
+			setScale(s);
+			setProperty("pdf-renderer-zoom", s);
+		} else if (fitMode === "fit-width") {
+			const s = computeFitScale("fit-height");
+			setFitMode("fit-height");
+			setScale(s);
+			setProperty("pdf-renderer-zoom", s);
+		} else {
+			setFitMode("zoom");
+			const s = prevZoomRef.current || scale;
+			setScale(s);
+			setProperty("pdf-renderer-zoom", s);
+		}
+	}, [fitMode, computeFitScale, setProperty, scale]);
 
 	const handleZoomIn = useCallback(() => {
+		setFitMode("zoom");
 		setScale((prev) => {
 			const newScale = Math.min(prev + 0.25, 10);
+			prevZoomRef.current = newScale;
 			setProperty("pdf-renderer-zoom", newScale);
 			return newScale;
 		});
 	}, [setProperty]);
 
 	const handleZoomOut = useCallback(() => {
+		setFitMode("zoom");
 		setScale((prev) => {
 			const newScale = Math.max(prev - 0.25, 0.25);
+			prevZoomRef.current = newScale;
 			setProperty("pdf-renderer-zoom", newScale);
 			return newScale;
 		});
@@ -292,12 +328,18 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const onPageLoadSuccess = useCallback((_pageNumber: number) => {
 		return (_page: any) => {
 			// This callback is called when each page finishes loading in scroll view
-			const w = (typeof _page?.getViewport === "function" ? _page.getViewport({ scale: 1 }).width : undefined) as number | undefined;
-			if (typeof w === "number") {
-				pageWidths.current.set(_pageNumber, w);
+			const v = (typeof _page?.getViewport === "function" ? _page.getViewport({ scale: 1 }) : undefined) as { width: number; height: number } | undefined;
+			if (v && typeof v.width === "number" && typeof v.height === "number") {
+				pageWidths.current.set(_pageNumber, v.width);
+				pageHeights.current.set(_pageNumber, v.height);
+				if (fitMode === "fit-width" || fitMode === "fit-height") {
+					const s = computeFitScale(fitMode);
+					setScale(s);
+					setProperty("pdf-renderer-zoom", s);
+				}
 			}
 		};
-	}, []);
+	}, [fitMode, computeFitScale, setProperty]);
 
 	// Track visible pages in scroll view using Intersection Observer
 	useEffect(() => {
@@ -340,6 +382,14 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		return () => observer.disconnect();
 	}, [scrollView, visiblePages]);
 
+	useEffect(() => {
+		if (fitMode === "fit-width" || fitMode === "fit-height") {
+			const s = computeFitScale(fitMode);
+			setScale(s);
+			setProperty("pdf-renderer-zoom", s);
+		}
+	}, [currentPage, fitMode, computeFitScale, setProperty]);
+
 	const handleExport = useCallback(() => {
 		if (onDownload && fileName) {
 			onDownload(fileName);
@@ -380,7 +430,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	}
 
 	return (
-		<div className="pdf-renderer-container" ref={containerRef}>
+    <div className="pdf-renderer-container" ref={containerRef}>
 			<div className={`pdf-toolbar ${isFullscreen ? "fullscreen-toolbar" : ""}`}>
 				<div className="toolbar">
 					<div id="toolbarLeft">
@@ -438,9 +488,9 @@ const PdfRenderer: React.FC<RendererProps> = ({
 						</div>
 						<div className="toolbarButtonGroup">
 							<button
-								onClick={handleFitToWidth}
+								onClick={handleFitToggle}
 								className="toolbarButton"
-								title="Fit to Width"
+								title={fitMode === "fit-width" ? "Fit to Width" : fitMode === "fit-height" ? "Fit to Height" : "Zoom"}
 								disabled={isLoading}
 							>
 								<FitToWidthIcon />
