@@ -17,6 +17,7 @@ import ExportAccountModal from "../profile/ExportAccountModal";
 import ProfileSettingsModal from "../profile/ProfileSettingsModal";
 import UserDropdown from "../profile/UserDropdown";
 import ProjectExportModal from "../project/ProjectExportModal";
+import ProjectDeleteModal from "../project/ProjectDeleteModal";
 import ProjectForm from "../project/ProjectForm";
 import ProjectImportModal from "../project/ProjectImportModal";
 import ProjectList from "../project/ProjectList";
@@ -91,8 +92,10 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const [error, setError] = useState<string | null>(null);
 	const [showImportModal, setShowImportModal] = useState(false);
 	const [showExportModal, setShowExportModal] = useState(false);
+	const [showMultiDeleteModal, setShowMultiDeleteModal] = useState(false);
 	const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
 	const [selectedProjectsForExport, setSelectedProjectsForExport] = useState<Project[]>([]);
+	const [selectedProjectsForDelete, setSelectedProjectsForDelete] = useState<Project[]>([]);
 	const [showPrivacy, setShowPrivacy] = useState(false);
 
 	useEffect(() => {
@@ -130,6 +133,23 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 
 	const handleGuestUpgradeSuccess = () => {
 		setShowGuestUpgradeModal(false);
+	};
+
+	const handleMultiDeleteProjects = async (projectIds: string[]) => {
+		try {
+			setIsSubmitting(true);
+			for (const projectId of projectIds) {
+				await deleteProject(projectId);
+			}
+			await loadProjects();
+		} catch (error) {
+			console.error("Failed to delete projects:", error);
+			setError(
+				error instanceof Error ? error.message : "Failed to delete projects",
+			);
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
 	const handleSearch = async (query: string) => {
@@ -263,6 +283,19 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		} catch (error) {
 			console.error("Error preparing export:", error);
 			setError("Failed to prepare projects for export");
+		}
+	};
+
+	const handleDeleteSelected = async (selectedIds: string[]) => {
+		try {
+			const selectedProjects = projects.filter((p) =>
+				selectedIds.includes(p.id),
+			);
+			setSelectedProjectsForDelete(selectedProjects);
+			setShowMultiDeleteModal(true);
+		} catch (error) {
+			console.error("Error preparing delete:", error);
+			setError("Failed to prepare projects for deletion");
 		}
 	};
 
@@ -442,6 +475,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 							onToggleFavorite={handleToggleFavorite}
 							onToggleViewMode={handleToggleViewMode}
 							onExportSelected={handleExportSelected}
+							onDeleteSelected={handleDeleteSelected}
 							viewMode={viewMode}
 						/>
 					)}
@@ -450,6 +484,12 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 					isOpen={showExportModal}
 					onClose={() => setShowExportModal(false)}
 					selectedProjects={selectedProjectsForExport}
+				/>
+				<ProjectDeleteModal
+					isOpen={showMultiDeleteModal}
+					onClose={() => setShowMultiDeleteModal(false)}
+					selectedProjects={selectedProjectsForDelete}
+					onDeleteProjects={handleMultiDeleteProjects}
 				/>
 			</div>
 

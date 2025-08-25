@@ -3,7 +3,7 @@ import type React from "react";
 import { useEffect, useState } from "react";
 
 import type { Project } from "../../types/projects";
-import { ExportIcon, GridIcon, ImportIcon, ListIcon } from "../common/Icons";
+import { ExportIcon, GridIcon, ImportIcon, ListIcon, TrashIcon } from "../common/Icons";
 import ProjectCard from "./ProjectCard";
 
 interface ProjectListProps {
@@ -14,6 +14,7 @@ interface ProjectListProps {
 	onDeleteProject: (project: Project) => void;
 	onToggleFavorite: (projectId: string) => void;
 	onExportSelected?: (selectedIds: string[]) => void;
+	onDeleteSelected?: (projectIds: string[]) => Promise<void>;
 	onToggleViewMode?: () => void;
 	viewMode?: "grid" | "list";
 	itemsPerPage?: number;
@@ -27,6 +28,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
 	onDeleteProject,
 	onToggleFavorite,
 	onExportSelected,
+	onDeleteSelected,
 	onToggleViewMode,
 	viewMode = "grid",
 	itemsPerPage = 8,
@@ -41,6 +43,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
 		new Set(),
 	);
 	const [isSelectionMode, setIsSelectionMode] = useState(false);
+	const [showDeleteModal, setShowDeleteModal] = useState(false);
 
 	// Total number of pages
 	const totalPages = Math.ceil(projects.length / itemsPerPage);
@@ -117,6 +120,12 @@ const ProjectList: React.FC<ProjectListProps> = ({
 	const handleExportSelected = () => {
 		if (selectedProjects.size > 0 && onExportSelected) {
 			onExportSelected(Array.from(selectedProjects));
+		}
+	};
+
+	const handleShowDeleteModal = () => {
+		if (selectedProjects.size > 0 && onDeleteSelected) {
+			onDeleteSelected(Array.from(selectedProjects));
 		}
 	};
 
@@ -204,6 +213,14 @@ const ProjectList: React.FC<ProjectListProps> = ({
 							>
 								<ExportIcon />
 								Export ({selectedProjects.size})
+							</button>
+							<button
+								className="button danger smaller icon-only"
+								onClick={handleShowDeleteModal}
+								disabled={selectedProjects.size === 0 || !onDeleteSelected}
+								title={`Delete ${selectedProjects.size} selected project${selectedProjects.size === 1 ? "" : "s"}`}
+							>
+								<TrashIcon />
 							</button>
 							<button
 								className="button secondary smaller"
