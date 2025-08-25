@@ -29,10 +29,6 @@
   white-space: nowrap;
 }
 
-.project-title.selection-mode {
-  margin-left: 2rem;
-}
-
 .project-description {
   padding: var(--texlyre-spacing-sm);
   color: var(--pico-secondary);
@@ -315,7 +311,7 @@
 .selection-checkbox {
   position: absolute;
   top: 0.5rem;
-  left: 0.5rem;
+  right: 0.5rem;
   z-index: 1;
 }
 
@@ -883,4 +879,23 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+.delete-info {
+  margin-bottom: 1rem;
+}
+
+.delete-project-item {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.delete-project-item:last-child {
+  border-bottom: none;
+}
+
+.delete-project-details {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
 }
