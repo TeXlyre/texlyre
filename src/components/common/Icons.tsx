@@ -58,6 +58,46 @@ export const ClearCompileIcon: React.FC = () => (
 	</svg>
 );
 
+export const ExpandIcon: React.FC = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+    <path d="M8 3H5a2 2 0 0 0-2 2v3" transform="rotate(90 12 12)" />
+    <path d="M8 3H5a2 2 0 0 0-2 2v3" transform="rotate(180 12 12)" />
+    <path d="M8 3H5a2 2 0 0 0-2 2v3" transform="rotate(270 12 12)" />
+  </svg>
+);
+
+export const MinimizeIcon: React.FC = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M8 3v3a2 2 0 0 1-2 2H3" />
+    <path d="M8 3v3a2 2 0 0 1-2 2H3" transform="rotate(90 12 12)" />
+    <path d="M8 3v3a2 2 0 0 1-2 2H3" transform="rotate(180 12 12)" />
+    <path d="M8 3v3a2 2 0 0 1-2 2H3" transform="rotate(270 12 12)" />
+  </svg>
+);
+
 export const ViewIcon: React.FC = () => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"

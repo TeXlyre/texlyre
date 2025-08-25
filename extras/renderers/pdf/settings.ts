@@ -28,6 +28,10 @@ export const pdfRendererSettings: Setting[] = [
 			{ label: "150%", value: "150" },
 			{ label: "200%", value: "200" },
 			{ label: "300%", value: "300" },
+			{ label: "400%", value: "400" },
+			{ label: "500%", value: "500" },
+			{ label: "500%", value: "750" },
+			{ label: "500%", value: "1000" }
 		],
 	},
 	{

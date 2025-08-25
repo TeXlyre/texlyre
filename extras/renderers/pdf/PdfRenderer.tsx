@@ -14,6 +14,8 @@ import {
 	FitToWidthIcon,
 	ZoomInIcon,
 	ZoomOutIcon,
+	ExpandIcon,
+	MinimizeIcon,
 } from "../../../src/components/common/Icons";
 import { useSettings } from "../../../src/hooks/useSettings";
 import { useProperties } from "../../../src/hooks/useProperties";
@@ -47,10 +49,14 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
 	const [scrollView, setScrollView] = useState<boolean>(false);
 	const [visiblePages, setVisiblePages] = useState<Set<number>>(new Set());
+	const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 	const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 	const contentRef = useRef<ArrayBuffer | null>(null);
 	const originalContentRef = useRef<ArrayBuffer | null>(null);
 	const contentHashRef = useRef<string>("");
+	const containerRef = useRef<HTMLDivElement>(null);
+	const pageWidths = useRef<Map<number, number>>(new Map());
+	const contentElRef = useRef<HTMLDivElement>(null);
 
 	// Register properties
 	useEffect(() => {
@@ -131,7 +137,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const fileData = useMemo(() => {
 		return pdfData ? {
 			data: pdfData,
-			cMapUrl: import.meta.env.PROD ? "/texlyre/cmaps/" : "/texlyre/cmaps/",  // for now, use the same path in dev and prod
+			cMapUrl: import.meta.env.PROD ? "/texlyre/cmaps/" : "/texlyre/cmaps/",
 			cMapPacked: true,
 		} : null;
 	}, [pdfData]);
@@ -217,15 +223,26 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	);
 
 	const handleFitToWidth = useCallback(() => {
-		const containerWidth = document.querySelector('.pdf-renderer-content')?.clientWidth || 800;
-		const newScale = Math.max(0.5, Math.min(3, (containerWidth - 40) / 595));
+		const containerWidth =
+			contentElRef.current?.clientWidth ||
+			document.querySelector('.pdf-renderer-content')?.clientWidth ||
+			3840;
+		let pageWidth = 595;
+		const currentW = pageWidths.current.get(currentPage);
+		if (typeof currentW === "number") {
+			pageWidth = currentW;
+		} else if (pageWidths.current.size > 0) {
+			const firstKey = Math.min(...Array.from(pageWidths.current.keys()));
+			pageWidth = pageWidths.current.get(firstKey) || pageWidth;
+		}
+		const newScale = Math.max(0.5, Math.min(10, (containerWidth - 40) / pageWidth));
 		setScale(newScale);
 		setProperty("pdf-renderer-zoom", newScale);
-	}, [setProperty]);
+	}, [currentPage, setProperty]);
 
 	const handleZoomIn = useCallback(() => {
 		setScale((prev) => {
-			const newScale = Math.min(prev + 0.25, 3);
+			const newScale = Math.min(prev + 0.25, 10);
 			setProperty("pdf-renderer-zoom", newScale);
 			return newScale;
 		});
@@ -233,7 +250,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 	const handleZoomOut = useCallback(() => {
 		setScale((prev) => {
-			const newScale = Math.max(prev - 0.25, 0.5);
+			const newScale = Math.max(prev - 0.25, 0.25);
 			setProperty("pdf-renderer-zoom", newScale);
 			return newScale;
 		});
@@ -249,9 +266,36 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		});
 	}, [setProperty]);
 
+	const handleToggleFullscreen = useCallback(() => {
+		if (!document.fullscreenElement) {
+			containerRef.current?.requestFullscreen().then(() => {
+				setIsFullscreen(true);
+			});
+		} else {
+			document.exitFullscreen().then(() => {
+				setIsFullscreen(false);
+			});
+		}
+	}, []);
+
+	useEffect(() => {
+		const handleFullscreenChange = () => {
+			setIsFullscreen(!!document.fullscreenElement);
+		};
+
+		document.addEventListener('fullscreenchange', handleFullscreenChange);
+		return () => {
+			document.removeEventListener('fullscreenchange', handleFullscreenChange);
+		};
+	}, []);
+
 	const onPageLoadSuccess = useCallback((_pageNumber: number) => {
 		return (_page: any) => {
 			// This callback is called when each page finishes loading in scroll view
+			const w = (typeof _page?.getViewport === "function" ? _page.getViewport({ scale: 1 }).width : undefined) as number | undefined;
+			if (typeof w === "number") {
+				pageWidths.current.set(_pageNumber, w);
+			}
 		};
 	}, []);
 
@@ -336,8 +380,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	}
 
 	return (
-		<div className="pdf-renderer-container">
-			<div className="pdf-toolbar">
+		<div className="pdf-renderer-container" ref={containerRef}>
+			<div className={`pdf-toolbar ${isFullscreen ? "fullscreen-toolbar" : ""}`}>
 				<div className="toolbar">
 					<div id="toolbarLeft">
 						<div className="toolbarButtonGroup">
@@ -409,6 +453,14 @@ const PdfRenderer: React.FC<RendererProps> = ({
 							>
 								{scrollView ? <PageIcon /> : <ScrollIcon />}
 							</button>
+							<button
+								onClick={handleToggleFullscreen}
+								className="toolbarButton"
+								title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+								disabled={isLoading}
+							>
+								{isFullscreen ? <MinimizeIcon /> : <ExpandIcon />}
+							</button>
 						</div>
 						<div className="toolbarButtonGroup">
 							<button
@@ -424,7 +476,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				</div>
 			</div>
 
-			<div className="pdf-renderer-content">
+			<div className={`pdf-renderer-content ${isFullscreen ? "fullscreen" : ""}`} ref={contentElRef}>
 				{fileData && (
 					<Document
 						file={fileData}
@@ -480,6 +532,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 									loading={
 										<div className="pdf-page-loading">Loading page...</div>
 									}
+									onLoadSuccess={onPageLoadSuccess(currentPage)}
 								/>
 							))}
 					</Document>
