@@ -14,6 +14,8 @@ import {
 	FitToWidthIcon,
 	ZoomInIcon,
 	ZoomOutIcon,
+	ExpandIcon,
+	MinimizeIcon,
 } from "../../../src/components/common/Icons";
 import { useSettings } from "../../../src/hooks/useSettings";
 import { useProperties } from "../../../src/hooks/useProperties";
@@ -41,16 +43,24 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 	const [numPages, setNumPages] = useState<number>(0);
 	const [currentPage, setCurrentPage] = useState<number>(1);
+	const [pageInput, setPageInput] = useState<string>("1");
+	const [isEditingPageInput, setIsEditingPageInput] = useState<boolean>(false);
 	const [scale, setScale] = useState<number>(1.0);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string | null>(null);
 	const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
 	const [scrollView, setScrollView] = useState<boolean>(false);
 	const [visiblePages, setVisiblePages] = useState<Set<number>>(new Set());
+	const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 	const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 	const contentRef = useRef<ArrayBuffer | null>(null);
 	const originalContentRef = useRef<ArrayBuffer | null>(null);
 	const contentHashRef = useRef<string>("");
+	const containerRef = useRef<HTMLDivElement>(null);
+	const pageWidths = useRef<Map<number, number>>(new Map());
+	const pageHeights = useRef<Map<number, number>>(new Map());
+	const contentElRef = useRef<HTMLDivElement>(null);
+	const [fitMode, setFitMode] = useState<"fit-width" | "fit-height">("fit-width");
 
 	// Register properties
 	useEffect(() => {
@@ -131,7 +141,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const fileData = useMemo(() => {
 		return pdfData ? {
 			data: pdfData,
-			cMapUrl: import.meta.env.PROD ? "/texlyre/cmaps/" : "/texlyre/cmaps/",  // for now, use the same path in dev and prod
+			cMapUrl: import.meta.env.PROD ? "/texlyre/cmaps/" : "/texlyre/cmaps/",
 			cMapPacked: true,
 		} : null;
 	}, [pdfData]);
@@ -140,10 +150,11 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		({ numPages }: { numPages: number }) => {
 			setNumPages(numPages);
 			setCurrentPage(1);
+			if (!isEditingPageInput) setPageInput("1");
 			setIsLoading(false);
 			setError(null);
 		},
-		[],
+		[isEditingPageInput],
 	);
 
 	const onDocumentLoadError = useCallback((error: Error) => {
@@ -157,11 +168,17 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			const pageElement = pageRefs.current.get(targetPage);
 			if (pageElement) {
 				pageElement.scrollIntoView({ behavior: "smooth", block: "start" });
+				setCurrentPage(targetPage);
+				if (!isEditingPageInput) setPageInput(String(targetPage));
 			}
 		} else {
-			setCurrentPage((prev) => Math.max(prev - 1, 1));
+			setCurrentPage((prev) => {
+				const p = Math.max(prev - 1, 1);
+				if (!isEditingPageInput) setPageInput(String(p));
+				return p;
+			});
 		}
-	}, [scrollView, currentPage]);
+	}, [scrollView, currentPage, isEditingPageInput]);
 
 	const handleNextPage = useCallback(() => {
 		if (scrollView) {
@@ -169,33 +186,29 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			const pageElement = pageRefs.current.get(targetPage);
 			if (pageElement) {
 				pageElement.scrollIntoView({ behavior: "smooth", block: "start" });
+				setCurrentPage(targetPage);
+				if (!isEditingPageInput) setPageInput(String(targetPage));
 			}
 		} else {
-			setCurrentPage((prev) => Math.min(prev + 1, numPages));
+			setCurrentPage((prev) => {
+				const p = Math.min(prev + 1, numPages);
+				if (!isEditingPageInput) setPageInput(String(p));
+				return p;
+			});
 		}
-	}, [scrollView, currentPage, numPages]);
+	}, [scrollView, currentPage, numPages, isEditingPageInput]);
 
 	const handlePageInputChange = useCallback(
 		(event: React.ChangeEvent<HTMLInputElement>) => {
-			const pageNum = Number.parseInt(event.target.value, 10);
-			if (!Number.isNaN(pageNum) && pageNum >= 1 && pageNum <= numPages) {
-				if (scrollView) {
-					const pageElement = pageRefs.current.get(pageNum);
-					if (pageElement) {
-						pageElement.scrollIntoView({ behavior: "smooth", block: "start" });
-					}
-				} else {
-					setCurrentPage(pageNum);
-				}
-			}
+			setPageInput(event.target.value);
 		},
-		[numPages, scrollView],
+		[],
 	);
 
 	const handlePageInputKeyDown = useCallback(
 		(event: React.KeyboardEvent<HTMLInputElement>) => {
 			if (event.key === "Enter") {
-				const pageNum = Number.parseInt(event.currentTarget.value, 10);
+				const pageNum = Number.parseInt(pageInput, 10);
 				if (!Number.isNaN(pageNum) && pageNum >= 1 && pageNum <= numPages) {
 					if (scrollView) {
 						const pageElement = pageRefs.current.get(pageNum);
@@ -205,27 +218,57 @@ const PdfRenderer: React.FC<RendererProps> = ({
 								block: "start",
 							});
 						}
-					} else {
-						setCurrentPage(pageNum);
 					}
+					setCurrentPage(pageNum);
+					setPageInput(String(pageNum));
 				} else {
-					event.currentTarget.value = currentPage.toString();
+					setPageInput(String(currentPage));
 				}
+				setIsEditingPageInput(false);
+				(event.target as HTMLInputElement).blur();
 			}
 		},
-		[numPages, currentPage, scrollView],
+		[numPages, currentPage, scrollView, pageInput],
 	);
 
-	const handleFitToWidth = useCallback(() => {
-		const containerWidth = document.querySelector('.pdf-renderer-content')?.clientWidth || 800;
-		const newScale = Math.max(0.5, Math.min(3, (containerWidth - 40) / 595));
-		setScale(newScale);
-		setProperty("pdf-renderer-zoom", newScale);
-	}, [setProperty]);
+	const computeFitScale = useCallback((mode: "fit-width" | "fit-height") => {
+		const containerWidth =
+			contentElRef.current?.clientWidth ||
+			document.querySelector('.pdf-renderer-content')?.clientWidth ||
+			3840;
+		const containerHeight =
+			contentElRef.current?.clientHeight ||
+			(document.querySelector('.pdf-renderer-content') as HTMLElement | null)?.clientHeight ||
+			2160;
+		let pageWidth = 595;
+		let pageHeight = 842;
+		const currentW = pageWidths.current.get(currentPage);
+		const currentH = pageHeights.current.get(currentPage);
+		if (typeof currentW === "number") pageWidth = currentW;
+		if (typeof currentH === "number") pageHeight = currentH;
+		if ((!currentW || !currentH) && pageWidths.current.size > 0) {
+			const firstKey = Math.min(...Array.from(pageWidths.current.keys()));
+			pageWidth = pageWidths.current.get(firstKey) || pageWidth;
+			pageHeight = pageHeights.current.get(firstKey) || pageHeight;
+		}
+		if (mode === "fit-width") {
+			return Math.max(0.5, Math.min(10, (containerWidth - 40) / pageWidth));
+		} else {
+			return Math.max(0.5, Math.min(10, (containerHeight - 40) / pageHeight));
+		}
+	}, [currentPage]);
+
+	const handleFitToggle = useCallback(() => {
+		const nextMode = fitMode === "fit-width" ? "fit-height" : "fit-width";
+		setFitMode(nextMode);
+		const s = computeFitScale(nextMode);
+		setScale(s);
+		setProperty("pdf-renderer-zoom", s);
+	}, [fitMode, computeFitScale, setProperty]);
 
 	const handleZoomIn = useCallback(() => {
 		setScale((prev) => {
-			const newScale = Math.min(prev + 0.25, 3);
+			const newScale = Math.min(prev + 0.25, 10);
 			setProperty("pdf-renderer-zoom", newScale);
 			return newScale;
 		});
@@ -233,7 +276,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 	const handleZoomOut = useCallback(() => {
 		setScale((prev) => {
-			const newScale = Math.max(prev - 0.25, 0.5);
+			const newScale = Math.max(prev - 0.25, 0.25);
 			setProperty("pdf-renderer-zoom", newScale);
 			return newScale;
 		});
@@ -249,11 +292,42 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		});
 	}, [setProperty]);
 
+	const handleToggleFullscreen = useCallback(() => {
+		if (!document.fullscreenElement) {
+			containerRef.current?.requestFullscreen().then(() => {
+				setIsFullscreen(true);
+			});
+		} else {
+			document.exitFullscreen().then(() => {
+				setIsFullscreen(false);
+			});
+		}
+	}, []);
+
+	useEffect(() => {
+		const handleFullscreenChange = () => {
+			setIsFullscreen(!!document.fullscreenElement);
+		};
+
+		document.addEventListener('fullscreenchange', handleFullscreenChange);
+		return () => {
+			document.removeEventListener('fullscreenchange', handleFullscreenChange);
+		};
+	}, []);
+
 	const onPageLoadSuccess = useCallback((_pageNumber: number) => {
 		return (_page: any) => {
 			// This callback is called when each page finishes loading in scroll view
+			const v = (typeof _page?.getViewport === "function" ? _page.getViewport({ scale: 1 }) : undefined) as { width: number; height: number } | undefined;
+			if (v && typeof v.width === "number" && typeof v.height === "number") {
+				pageWidths.current.set(_pageNumber, v.width);
+				pageHeights.current.set(_pageNumber, v.height);
+				const s = computeFitScale(fitMode);
+				setScale(s);
+				setProperty("pdf-renderer-zoom", s);
+			}
 		};
-	}, []);
+	}, [fitMode, computeFitScale, setProperty]);
 
 	// Track visible pages in scroll view using Intersection Observer
 	useEffect(() => {
@@ -280,11 +354,13 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				if (newVisiblePages.size > 0) {
 					const lowestVisiblePage = Math.min(...Array.from(newVisiblePages));
 					setCurrentPage(lowestVisiblePage);
+					if (!isEditingPageInput) setPageInput(String(lowestVisiblePage));
 				}
 			},
 			{
 				threshold: [0.5],
 				rootMargin: "-20% 0px -20% 0px",
+				root: contentElRef.current || undefined,
 			},
 		);
 
@@ -294,7 +370,13 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		});
 
 		return () => observer.disconnect();
-	}, [scrollView, visiblePages]);
+	}, [scrollView, visiblePages, isFullscreen, isEditingPageInput]);
+
+	useEffect(() => {
+		const s = computeFitScale(fitMode);
+		setScale(s);
+		setProperty("pdf-renderer-zoom", s);
+	}, [currentPage, fitMode, computeFitScale, setProperty]);
 
 	const handleExport = useCallback(() => {
 		if (onDownload && fileName) {
@@ -324,6 +406,37 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		}
 	}, [fileName, onDownload]);
 
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			// Only react when PDF is selected/focused (normal or fullscreen)
+			if (
+				!document.fullscreenElement &&
+				!containerRef.current?.contains(document.activeElement)
+			) {
+				return;
+			}
+
+			switch (event.key) {
+				case "ArrowLeft":
+				case "ArrowUp":
+					event.preventDefault();
+					handlePreviousPage();
+					break;
+				case "ArrowRight":
+				case "ArrowDown":
+				case " ":
+					event.preventDefault();
+					handleNextPage();
+					break;
+			}
+		};
+
+		window.addEventListener("keydown", handleKeyDown);
+		return () => {
+			window.removeEventListener("keydown", handleKeyDown);
+		};
+	}, [handlePreviousPage, handleNextPage]);
+
 	if (!pdfRendererEnable) {
 		return (
 			<div className="pdf-renderer-container">
@@ -336,8 +449,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	}
 
 	return (
-		<div className="pdf-renderer-container">
-			<div className="pdf-toolbar">
+		<div className="pdf-renderer-container" ref={containerRef}>
+			<div className={`pdf-toolbar ${isFullscreen ? "fullscreen-toolbar" : ""}`}>
 				<div className="toolbar">
 					<div id="toolbarLeft">
 						<div className="toolbarButtonGroup">
@@ -362,9 +475,14 @@ const PdfRenderer: React.FC<RendererProps> = ({
 							<div className="pageNumber">
 								<input
 									type="number"
-									value={currentPage}
+									value={pageInput}
 									onChange={handlePageInputChange}
 									onKeyDown={handlePageInputKeyDown}
+									onFocus={() => setIsEditingPageInput(true)}
+									onBlur={() => {
+										setIsEditingPageInput(false);
+										setPageInput(String(currentPage));
+									}}
 									className="toolbarField"
 									min={1}
 									max={numPages}
@@ -394,9 +512,9 @@ const PdfRenderer: React.FC<RendererProps> = ({
 						</div>
 						<div className="toolbarButtonGroup">
 							<button
-								onClick={handleFitToWidth}
+								onClick={handleFitToggle}
 								className="toolbarButton"
-								title="Fit to Width"
+								title={fitMode === "fit-width" ? "Fit to Width" : "Fit to Height"}
 								disabled={isLoading}
 							>
 								<FitToWidthIcon />
@@ -408,6 +526,14 @@ const PdfRenderer: React.FC<RendererProps> = ({
 								disabled={isLoading}
 							>
 								{scrollView ? <PageIcon /> : <ScrollIcon />}
+							</button>
+							<button
+								onClick={handleToggleFullscreen}
+								className="toolbarButton"
+								title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+								disabled={isLoading}
+							>
+								{isFullscreen ? <MinimizeIcon /> : <ExpandIcon />}
 							</button>
 						</div>
 						<div className="toolbarButtonGroup">
@@ -424,7 +550,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				</div>
 			</div>
 
-			<div className="pdf-renderer-content">
+			<div className={`pdf-renderer-content ${isFullscreen ? "fullscreen" : ""}`} ref={contentElRef}>
 				{fileData && (
 					<Document
 						file={fileData}
@@ -480,6 +606,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 									loading={
 										<div className="pdf-page-loading">Loading page...</div>
 									}
+									onLoadSuccess={onPageLoadSuccess(currentPage)}
 								/>
 							))}
 					</Document>
