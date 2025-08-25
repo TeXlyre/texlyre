@@ -283,6 +283,37 @@
 	pointer-events: auto;
 }
 
-/* styles.css */
 .pdf-page-scroll { scroll-margin-top: 56px; }      /* match toolbar height */
 .fullscreen .pdf-page-scroll { scroll-margin-top: 56px; }
+
+/* Hide scrollbar in fullscreen mode, except on hover */
+.pdf-renderer-content.fullscreen {
+  overflow-y: auto;
+}
+
+.pdf-renderer-content.fullscreen::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+
+.pdf-renderer-content.fullscreen:hover::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.pdf-renderer-content.fullscreen:hover::-webkit-scrollbar-thumb {
+  background: rgba(100, 100, 100, 0.5);
+  border-radius: 4px;
+}
+
+.pdf-renderer-content.fullscreen:hover::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pdf-renderer-content.fullscreen {
+  scrollbar-width: none;
+}
+.pdf-renderer-content.fullscreen:hover {
+  scrollbar-width: thin; /* show thin scrollbar on hover */
+  scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
+}

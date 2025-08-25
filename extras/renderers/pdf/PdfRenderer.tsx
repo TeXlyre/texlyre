@@ -406,6 +406,37 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		}
 	}, [fileName, onDownload]);
 
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			// Only react when PDF is selected/focused (normal or fullscreen)
+			if (
+				!document.fullscreenElement &&
+				!containerRef.current?.contains(document.activeElement)
+			) {
+				return;
+			}
+
+			switch (event.key) {
+				case "ArrowLeft":
+				case "ArrowUp":
+					event.preventDefault();
+					handlePreviousPage();
+					break;
+				case "ArrowRight":
+				case "ArrowDown":
+				case " ":
+					event.preventDefault();
+					handleNextPage();
+					break;
+			}
+		};
+
+		window.addEventListener("keydown", handleKeyDown);
+		return () => {
+			window.removeEventListener("keydown", handleKeyDown);
+		};
+	}, [handlePreviousPage, handleNextPage]);
+
 	if (!pdfRendererEnable) {
 		return (
 			<div className="pdf-renderer-container">
