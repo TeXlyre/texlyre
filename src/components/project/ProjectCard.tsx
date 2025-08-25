@@ -86,7 +86,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 		};
 	}, []);
 
-	const getLastOpenedDisplay = () => {
+	const getDropdownDisplayText = () => {
 		if (project.lastOpenedFilePath) {
 		   const fileName = project.lastOpenedFilePath.split("/").pop() || "Unknown file";
 		   return `Last: ${fileName}`;
@@ -96,8 +96,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 		return "Open Project";
 	};
 
-	const getLastOpenedInfo = () => {
-		const displayText = getLastOpenedDisplay();
+	const getDropdownContent = () => {
+		const displayText = getDropdownDisplayText();
 		if (project.lastOpenedFilePath) {
 		   return (
 			  <>
@@ -184,7 +184,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 							<button
 								className="action-button primary open-button"
 								onClick={handleDefaultOpen}
-								title={getLastOpenedDisplay()}
+								title={getDropdownDisplayText()}
 							>
 								<FolderIcon />
 								Open
@@ -200,7 +200,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 						{isOpenDropdownOpen && (
 							<div className="open-dropdown">
 							   <div className="open-dropdown-item" onClick={handleDefaultOpen}>
-								  {getLastOpenedInfo()}
+								  {getDropdownContent()}
 							   </div>
 							   <div className="open-dropdown-item" onClick={handleProjectOpen}>
 								  <FolderIcon />

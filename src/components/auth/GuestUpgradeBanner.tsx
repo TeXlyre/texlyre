@@ -3,7 +3,7 @@ import type React from "react";
 import { useState, useEffect } from "react";
 
 import { useAuth } from "../../hooks/useAuth";
-import { ChevronUpIcon, UserIcon, CloseIcon } from "../common/Icons";
+import { UpgradeAccountIcon, UserIcon, CloseIcon } from "../common/Icons";
 
 interface GuestUpgradeBannerProps {
 	onOpenUpgradeModal: () => void;
@@ -70,7 +70,7 @@ const GuestUpgradeBanner: React.FC<GuestUpgradeBannerProps> = ({
 						className="button primary small"
 						onClick={onOpenUpgradeModal}
 					>
-						<ChevronUpIcon />
+						<UpgradeAccountIcon />
 						Upgrade Account
 					</button>
 					<button
