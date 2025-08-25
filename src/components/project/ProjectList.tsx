@@ -215,12 +215,13 @@ const ProjectList: React.FC<ProjectListProps> = ({
 								Export ({selectedProjects.size})
 							</button>
 							<button
-								className="button danger smaller icon-only"
+								className="button danger smaller"
 								onClick={handleShowDeleteModal}
 								disabled={selectedProjects.size === 0 || !onDeleteSelected}
 								title={`Delete ${selectedProjects.size} selected project${selectedProjects.size === 1 ? "" : "s"}`}
 							>
 								<TrashIcon />
+								Delete ({selectedProjects.size})
 							</button>
 							<button
 								className="button secondary smaller"
