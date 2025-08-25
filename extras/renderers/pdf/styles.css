@@ -282,3 +282,7 @@
 .annotationLayer .buttonWidgetAnnotation.pushButton > a {
 	pointer-events: auto;
 }
+
+/* styles.css */
+.pdf-page-scroll { scroll-margin-top: 56px; }      /* match toolbar height */
+.fullscreen .pdf-page-scroll { scroll-margin-top: 56px; }
