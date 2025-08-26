@@ -190,14 +190,14 @@ embed {
 	border-radius: var(--radius-sm);
 	overflow: hidden;
 	align-items: center;
-	gap: 0;
 }
 
 .latex-button {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 0.4rem;
+	padding-left: 0.4em;
+	padding-right: 0.4em;
 	background-color: var(--pico-secondary-background);
 	color: var(--text-color);
 	border: 1px solid var(--accent-border);
@@ -232,7 +232,8 @@ embed {
 
 .compile-button-group .dropdown-toggle {
 	border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-	padding: 0.4rem var(--space-xs);
+	padding-left: var(--space-xs);
+	padding-right: var(--space-xs);
 	border-left: none;
 	width: 20px;
 }
