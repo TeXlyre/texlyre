@@ -4,6 +4,7 @@ import {
 	type ReactNode,
 	createContext,
 	useEffect,
+	useCallback,
 	useRef,
 	useState,
 } from "react";
@@ -47,6 +48,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			(getSetting("latex-store-cache")?.value as boolean) ?? true;
 		const initialStoreWorkingDirectory =
 			(getSetting("latex-store-working-directory")?.value as boolean) ?? false;
+		const initialAutoCompile =
+			(getSetting("latex-auto-compile-on-open")?.value as boolean) ?? false;
 
 		setLatexEngine(initialEngine);
 
@@ -79,6 +82,16 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			onChange: (value) => {
 				latexService.setTexliveEndpoint(value as string);
 			},
+		});
+
+		registerSetting({
+			id: "latex-auto-compile-on-open",
+			category: "LaTeX",
+			subcategory: "Compilation",
+			type: "checkbox",
+			label: "Auto-compile on project open",
+			description: "Automatically compile LaTeX when opening a project",
+			defaultValue: initialAutoCompile,
 		});
 
 		registerSetting({
@@ -208,6 +221,14 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 		}
 	};
 
+	const triggerAutoCompile = useCallback(() => {
+		const autoCompileEnabled = getSetting("latex-auto-compile-on-open")?.value as boolean ?? false;
+
+		if (autoCompileEnabled) {
+			document.dispatchEvent(new CustomEvent('trigger-compile'));
+		}
+	}, [getSetting]);
+
 	const clearCache = async (): Promise<void> => {
 		try {
 			await latexService.clearCacheDirectories();
@@ -290,6 +311,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 				setLatexEngine: handleSetLatexEngine,
 				clearCache,
 				compileWithClearCache,
+				triggerAutoCompile,
 			}}
 		>
 			{children}

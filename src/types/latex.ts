@@ -21,4 +21,5 @@ export interface LaTeXContextType {
 	currentView: "log" | "pdf";
 	latexEngine: "pdftex" | "xetex" | "luatex";
 	setLatexEngine: (engine: "pdftex" | "xetex" | "luatex") => Promise<void>;
+	triggerAutoCompile: () => void;
 }
