@@ -7,7 +7,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useFileSystemBackup } from "../../hooks/useFileSystemBackup";
 import { useTheme } from "../../hooks/useTheme";
 import type { Project } from "../../types/projects";
-import { isValidYjsUrl, buildUrlWithFragments, parseUrlFragments } from "../../types/yjs";
+import { isValidYjsUrl, buildUrlWithFragments, parseUrlFragments } from "../../utils/urlUtils";
 import BackupDiscoveryModal from "../backup/BackupDiscoveryModal";
 import BackupModal from "../backup/BackupModal";
 import BackupStatusIndicator from "../backup/BackupStatusIndicator";

@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 
 import { collabService } from "../../services/CollabService";
 import type { Document } from "../../types/documents";
-import { buildUrlWithFragments, parseUrlFragments } from "../../types/yjs";
+import { buildUrlWithFragments, parseUrlFragments } from "../../utils/urlUtils";
 import type { YjsDocUrl } from "../../types/yjs";
 import {
 	DownloadIcon,

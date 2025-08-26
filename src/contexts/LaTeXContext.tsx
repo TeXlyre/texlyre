@@ -13,6 +13,7 @@ import { useFileTree } from "../hooks/useFileTree";
 import { useSettings } from "../hooks/useSettings";
 import { latexService } from "../services/LaTeXService";
 import type { LaTeXContextType } from "../types/latex";
+import { parseUrlFragments } from "../utils/urlUtils";
 import { pdfWindowService } from "../services/PdfWindowService";
 
 export const LaTeXContext = createContext<LaTeXContextType | null>(null);
@@ -25,6 +26,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 	const { fileTree, refreshFileTree } = useFileTree();
 	const { registerSetting, getSetting } = useSettings();
 	const [isCompiling, setIsCompiling] = useState<boolean>(false);
+	const [hasAutoCompiled, setHasAutoCompiled] = useState(false);
 	const [compileError, setCompileError] = useState<string | null>(null);
 	const [compiledPdf, setCompiledPdf] = useState<Uint8Array | null>(null);
 	const [compileLog, setCompileLog] = useState<string>("");
@@ -222,12 +224,29 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 	};
 
 	const triggerAutoCompile = useCallback(() => {
-		const autoCompileEnabled = getSetting("latex-auto-compile-on-open")?.value as boolean ?? false;
+		const hashUrl = window.location.hash.substring(1);
+		const fragments = parseUrlFragments(hashUrl);
 
-		if (autoCompileEnabled) {
-			document.dispatchEvent(new CustomEvent('trigger-compile'));
+		if (fragments.compile) {
+			const cleanUrl = hashUrl.replace(/&compile:[^&]*/, '');
+			window.location.hash = cleanUrl;
+
+			const engine = fragments.compile as "pdftex" | "xetex" | "luatex";
+			if (["pdftex", "xetex", "luatex"].includes(engine)) {
+				handleSetLatexEngine(engine).then(() => {
+					document.dispatchEvent(new CustomEvent('trigger-compile'));
+				});
+				setHasAutoCompiled(true);
+				return;
+			}
 		}
-	}, [getSetting]);
+
+		const autoCompileEnabled = getSetting("latex-auto-compile-on-open")?.value as boolean ?? false;
+		if (autoCompileEnabled && !hasAutoCompiled) {
+			document.dispatchEvent(new CustomEvent('trigger-compile'));
+			setHasAutoCompiled(true);
+		}
+	}, [getSetting, handleSetLatexEngine, hasAutoCompiled]);
 
 	const clearCache = async (): Promise<void> => {
 		try {
