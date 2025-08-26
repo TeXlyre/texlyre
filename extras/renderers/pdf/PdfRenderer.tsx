@@ -268,7 +268,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 	const handleZoomIn = useCallback(() => {
 		setScale((prev) => {
-			const newScale = Math.min(prev + 0.25, 10);
+			const newScale = Math.min(prev + 0.25, 5);
 			setProperty("pdf-renderer-zoom", newScale);
 			return newScale;
 		});
@@ -317,14 +317,18 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 	const onPageLoadSuccess = useCallback((_pageNumber: number) => {
 		return (_page: any) => {
-			// This callback is called when each page finishes loading in scroll view
 			const v = (typeof _page?.getViewport === "function" ? _page.getViewport({ scale: 1 }) : undefined) as { width: number; height: number } | undefined;
 			if (v && typeof v.width === "number" && typeof v.height === "number") {
+				const wasEmpty = pageWidths.current.size === 0;
 				pageWidths.current.set(_pageNumber, v.width);
 				pageHeights.current.set(_pageNumber, v.height);
-				const s = computeFitScale(fitMode);
-				setScale(s);
-				setProperty("pdf-renderer-zoom", s);
+
+				// Only auto-fit on initial load, not on every page change
+				if (wasEmpty) {
+					const s = computeFitScale(fitMode);
+					setScale(s);
+					setProperty("pdf-renderer-zoom", s);
+				}
 			}
 		};
 	}, [fitMode, computeFitScale, setProperty]);
@@ -372,11 +376,11 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		return () => observer.disconnect();
 	}, [scrollView, visiblePages, isFullscreen, isEditingPageInput]);
 
-	useEffect(() => {
-		const s = computeFitScale(fitMode);
-		setScale(s);
-		setProperty("pdf-renderer-zoom", s);
-	}, [currentPage, fitMode, computeFitScale, setProperty]);
+	// useEffect(() => {
+	// 	const s = computeFitScale(fitMode);
+	// 	setScale(s);
+	// 	setProperty("pdf-renderer-zoom", s);
+	// }, [currentPage, fitMode, computeFitScale, setProperty]);
 
 	const handleExport = useCallback(() => {
 		if (onDownload && fileName) {
