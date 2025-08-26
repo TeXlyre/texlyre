@@ -196,8 +196,8 @@ embed {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding-left: 0.4em;
-	padding-right: 0.4em;
+	padding-left: var(--space-sm);
+	padding-right: var(--space-xs);
 	background-color: var(--pico-secondary-background);
 	color: var(--text-color);
 	border: 1px solid var(--accent-border);
