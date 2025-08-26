@@ -4,6 +4,7 @@ import {
 	type ReactNode,
 	createContext,
 	useEffect,
+	useCallback,
 	useRef,
 	useState,
 } from "react";
@@ -12,6 +13,7 @@ import { useFileTree } from "../hooks/useFileTree";
 import { useSettings } from "../hooks/useSettings";
 import { latexService } from "../services/LaTeXService";
 import type { LaTeXContextType } from "../types/latex";
+import { parseUrlFragments } from "../utils/urlUtils";
 import { pdfWindowService } from "../services/PdfWindowService";
 
 export const LaTeXContext = createContext<LaTeXContextType | null>(null);
@@ -24,6 +26,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 	const { fileTree, refreshFileTree } = useFileTree();
 	const { registerSetting, getSetting } = useSettings();
 	const [isCompiling, setIsCompiling] = useState<boolean>(false);
+	const [hasAutoCompiled, setHasAutoCompiled] = useState(false);
 	const [compileError, setCompileError] = useState<string | null>(null);
 	const [compiledPdf, setCompiledPdf] = useState<Uint8Array | null>(null);
 	const [compileLog, setCompileLog] = useState<string>("");
@@ -47,6 +50,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			(getSetting("latex-store-cache")?.value as boolean) ?? true;
 		const initialStoreWorkingDirectory =
 			(getSetting("latex-store-working-directory")?.value as boolean) ?? false;
+		const initialAutoCompile =
+			(getSetting("latex-auto-compile-on-open")?.value as boolean) ?? false;
 
 		setLatexEngine(initialEngine);
 
@@ -79,6 +84,16 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			onChange: (value) => {
 				latexService.setTexliveEndpoint(value as string);
 			},
+		});
+
+		registerSetting({
+			id: "latex-auto-compile-on-open",
+			category: "LaTeX",
+			subcategory: "Compilation",
+			type: "checkbox",
+			label: "Auto-compile on project open",
+			description: "Automatically compile LaTeX when opening a project",
+			defaultValue: initialAutoCompile,
 		});
 
 		registerSetting({
@@ -208,6 +223,31 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 		}
 	};
 
+	const triggerAutoCompile = useCallback(() => {
+		const hashUrl = window.location.hash.substring(1);
+		const fragments = parseUrlFragments(hashUrl);
+
+		if (fragments.compile) {
+			const cleanUrl = hashUrl.replace(/&compile:[^&]*/, '');
+			window.location.hash = cleanUrl;
+
+			const engine = fragments.compile as "pdftex" | "xetex" | "luatex";
+			if (["pdftex", "xetex", "luatex"].includes(engine)) {
+				handleSetLatexEngine(engine).then(() => {
+					document.dispatchEvent(new CustomEvent('trigger-compile'));
+				});
+				setHasAutoCompiled(true);
+				return;
+			}
+		}
+
+		const autoCompileEnabled = getSetting("latex-auto-compile-on-open")?.value as boolean ?? false;
+		if (autoCompileEnabled && !hasAutoCompiled) {
+			document.dispatchEvent(new CustomEvent('trigger-compile'));
+			setHasAutoCompiled(true);
+		}
+	}, [getSetting, handleSetLatexEngine, hasAutoCompiled]);
+
 	const clearCache = async (): Promise<void> => {
 		try {
 			await latexService.clearCacheDirectories();
@@ -290,6 +330,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 				setLatexEngine: handleSetLatexEngine,
 				clearCache,
 				compileWithClearCache,
+				triggerAutoCompile,
 			}}
 		>
 			{children}

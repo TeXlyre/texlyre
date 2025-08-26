@@ -6,11 +6,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { collabService } from "../../services/CollabService";
 import { fileStorageService } from "../../services/FileStorageService";
 import type { YjsDocUrl } from "../../types/yjs";
-import {
-	buildUrlWithFragments,
-	isValidYjsUrl,
-	parseUrlFragments,
-} from "../../types/yjs";
+import { buildUrlWithFragments, isValidYjsUrl, parseUrlFragments } from "../../utils/urlUtils";
 import { batchExtractZip } from "../../utils/zipUtils";
 import AuthApp from "./AuthApp";
 import EditorApp from "./EditorApp";

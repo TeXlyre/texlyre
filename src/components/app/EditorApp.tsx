@@ -95,7 +95,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		mainFile: undefined as string | undefined,
 		latexEngine: undefined as ("pdftex" | "xetex" | "luatex") | undefined
 	});
-	const { isCompiling } = useLaTeX();
+	const { isCompiling, triggerAutoCompile } = useLaTeX();
 	const { isOfflineMode } = useOffline();
 	const [showPrivacy, setShowPrivacy] = useState(false);
 	useGlobalKeyboard();
@@ -153,6 +153,16 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		   document.removeEventListener('trigger-stop-compilation', handleStopCompilation);
 		};
 	}, [isCompiling]);
+
+	useEffect(() => {
+		if (doc && isConnected) {
+			const timer = setTimeout(() => {
+				triggerAutoCompile();
+			}, 1000);
+
+			return () => clearTimeout(timer);
+		}
+	}, [doc, isConnected, triggerAutoCompile]);
 
 	useEffect(() => {
 		if (doc) {

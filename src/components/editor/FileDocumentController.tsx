@@ -16,7 +16,7 @@ import { pdfWindowService } from "../../services/PdfWindowService";
 import type { Document } from "../../types/documents";
 import type { FileNode } from "../../types/files";
 import type { Project } from "../../types/projects";
-import { buildUrlWithFragments, parseUrlFragments } from "../../types/yjs";
+import { buildUrlWithFragments, parseUrlFragments } from "../../utils/urlUtils";
 import type { YjsDocUrl } from "../../types/yjs";
 import ResizablePanel from "../common/ResizablePanel";
 import LaTeXOutput from "../latex/LaTeXOutput";

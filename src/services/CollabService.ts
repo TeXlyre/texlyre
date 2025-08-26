@@ -9,7 +9,7 @@ import { collabWebrtc } from "../extensions/yjs/CollabWebrtc.ts";
 import type { User } from "../types/auth";
 import type { CollabConnectOptions, DocContainer } from "../types/collab";
 import type { YjsDocUrl } from "../types/yjs";
-import { parseUrlFragments } from "../types/yjs";
+import { parseUrlFragments } from "../utils/urlUtils";
 import { offlineService } from "./OfflineService";
 
 interface OfflineDocContainer {

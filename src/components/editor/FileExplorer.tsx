@@ -4,8 +4,8 @@ import { type DragEvent, useEffect, useRef, useState } from "react";
 
 import { useFileTree } from "../../hooks/useFileTree";
 import type { FileNode } from "../../types/files";
-import { buildUrlWithFragments, parseUrlFragments } from "../../types/yjs";
-import { fileCommentProcessor } from "../../utils/fileCommentProcessor.ts";
+import { buildUrlWithFragments, parseUrlFragments } from "../../utils/urlUtils";
+import { fileCommentProcessor } from "../../utils/fileCommentProcessor";
 import { createZipFromFolder, downloadZipFile } from "../../utils/zipUtils";
 import {
 	ExportIcon,

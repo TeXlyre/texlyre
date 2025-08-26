@@ -15,7 +15,7 @@ import { useSettings } from "../hooks/useSettings";
 import { useBibliography } from "../hooks/useBibliography";
 import { fileStorageService } from "../services/FileStorageService";
 import { bibliographyImportService } from "../services/BibliographyImportService";
-import { parseUrlFragments } from "../types/yjs";
+import { parseUrlFragments } from "../utils/urlUtils";
 
 interface BibEntry {
 	key: string;
