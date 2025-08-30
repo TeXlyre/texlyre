@@ -22,6 +22,9 @@ import {
 	fontSizeMap,
 } from "../types/editorSettings";
 import type { CollabConnectOptions } from "../types/collab"
+import { LatexSuitePluginSettingsRaw, SETTINGS_EXPLANATIONS as LATEX_SUITE_SETTINGS_EXPLANATIONS, getSettingsSnippets, DEFAULT_SETTINGS, getSettingsSnippetVariables, parseSnippets, parseSnippetVariables } from "latex-suite";
+import { defaultLatexSuiteSettings } from "../types/latexSuiteSettings";
+import { Setting, SettingCodeMirrorOptions, SettingType } from "./SettingsContext";
 
 interface EditorContextType {
 	editorSettings: EditorSettings;
@@ -57,6 +60,18 @@ export const EditorContext = createContext<EditorContextType>({
 	editorSettingsVersion: 0,
 });
 
+interface LatexSuiteContextType extends LatexSuitePluginSettingsRaw {
+	updateLatexSuiteSetting: <K extends keyof LatexSuitePluginSettingsRaw>(
+		key: K,
+		value: LatexSuitePluginSettingsRaw[K],
+	) => void;
+}
+
+export const LatexSuiteContext = createContext<LatexSuitePluginSettingsRaw>({
+	...defaultLatexSuiteSettings,
+});
+
+
 interface EditorProviderProps {
 	children: ReactNode;
 }
@@ -73,6 +88,17 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		<K extends keyof EditorSettings>(key: K, value: EditorSettings[K]) => {
 			setEditorSettings((prev) => ({ ...prev, [key]: value }));
 			setEditorSettingsVersion((prev) => prev + 1);
+		},
+		[],
+	);
+	const [latexSuiteSettings, setLatexSuiteSettings] = useState<LatexSuitePluginSettingsRaw>(
+		defaultLatexSuiteSettings,
+	);
+	const updateLatexSuiteSetting = useCallback(
+		(key: keyof LatexSuitePluginSettingsRaw, value: LatexSuitePluginSettingsRaw[keyof LatexSuitePluginSettingsRaw]) => {
+			setLatexSuiteSettings((prev) => {
+				return { ...prev, [key]: value };
+			});
 		},
 		[],
 	);
@@ -276,6 +302,63 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 				updateEditorSetting("vimMode", value as boolean);
 			},
 		});
+		
+		for (const [settingId, settingInfo] of Object.entries(LATEX_SUITE_SETTINGS_EXPLANATIONS)) {
+			let type: SettingType;
+			let options = undefined;
+			let codeMirrorOptions: SettingCodeMirrorOptions | undefined = undefined;
+			let strictDefaultValue: boolean = false
+			let onChange = (value: unknown) => {
+				updateLatexSuiteSetting(settingId as keyof LatexSuitePluginSettingsRaw, value as LatexSuitePluginSettingsRaw[keyof LatexSuitePluginSettingsRaw]);
+			};
+			if (settingId === "snippets" || settingId === "snippetVariables") {
+				type = "codemirror";
+				codeMirrorOptions = {
+					language: "javascript",
+					height: 15,
+					lineNumbers: true,
+					resizable: true,
+					theme: "auto",
+				}
+				onChange = async (value) => {
+					try {
+						if (settingId === "snippets") {
+							await parseSnippets(value as string, DEFAULT_SETTINGS.snippetVariables);
+						} else if (settingId === "snippetVariables") {
+							await parseSnippetVariables(value as string);
+						}
+					} catch {
+						return;
+					}
+					updateLatexSuiteSetting(settingId as keyof LatexSuitePluginSettingsRaw, value as LatexSuitePluginSettingsRaw[keyof LatexSuitePluginSettingsRaw]);
+				}
+				strictDefaultValue = true;
+			}
+			else if (settingInfo.type === "array") {
+				type = "text";
+			} else if (settingInfo.type === "boolean") {
+				type = "checkbox";
+			} else if (settingInfo.type === "string") {
+				type = "text";
+			} else if (Array.isArray(settingInfo.type)) {
+				type = "select";
+				options = [...settingInfo.type.map((val) => ({ label: val, value: val }))];
+			}
+			const setting: Setting = {
+				id: `latex-suite-${settingId}`,
+				category: "Plugins",
+				subcategory: "LaTeX Suite",
+				defaultValue: latexSuiteSettings[settingId as keyof LatexSuitePluginSettingsRaw],
+				type,
+				label: settingInfo.title,
+				description: settingInfo.description,
+				options: options,
+				codeMirrorOptions,
+				strictDefaultValue,
+				onChange,
+			};
+			registerSetting(setting);
+		}
 	}, [registerSetting, getSetting, updateEditorSetting, applyCSSProperties]);
 
 	const getFontSize = useCallback(() => {

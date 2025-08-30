@@ -49,6 +49,7 @@
 		"filepizza-client": "^2.0.0-alpha.2",
 		"idb": "^8.0.2",
 		"jszip": "^3.10.1",
+		"latex-suite": "github:superle3/snippet-leaf#04aa7b60523f44bd225ebf5f949513c2f554eeb4",
 		"lib0": "^0.2.42",
 		"lodash": "^4.17.21",
 		"mime": "^4.0.1",

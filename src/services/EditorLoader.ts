@@ -44,6 +44,8 @@ import { fileCommentProcessor } from "../utils/fileCommentProcessor.ts";
 import { collabService } from "./CollabService";
 import { fileStorageService } from "./FileStorageService";
 import { filePathCacheService } from "./FilePathCacheService";
+import { useLatexSuite } from "../hooks/useLatexSuite.ts";
+import { getSettingsSnippets, getSettingsSnippetVariables, latex_suite } from "latex-suite";
 
 export const EditorLoader = (
 	editorRef: React.RefObject<HTMLDivElement>,
@@ -72,6 +74,7 @@ export const EditorLoader = (
 		editorSettingsVersion,
 		editorSettings,
 	} = useEditor();
+	const latexSuiteConfig = useLatexSuite();
 
 	const { user } = useAuth();
 	const ytextRef = useRef<Y.Text | null>(null);
@@ -200,6 +203,18 @@ export const EditorLoader = (
 		);
 		return extensions;
 	};
+	
+	const getExtraExtensions = () => {
+		const extensions: Extension[] = [];
+		// const latexSuiteSnippetVariables = await getSettingsSnippetVariables(latexSuiteConfig.snippetVariables);
+		// const latexSuiteSnippets = await getSettingsSnippets(latexSuiteConfig.snippets, latexSuiteSnippetVariables);
+		extensions.push(
+			latex_suite()
+		);
+
+
+		return extensions;
+	}
 
 	const getLanguageExtension = (
 		fileName?: string,
@@ -296,6 +311,7 @@ export const EditorLoader = (
 			...getBasicSetupExtensions(),
 			...getLanguageExtension(fileName, textContent),
 		];
+		extensions.push(getExtraExtensions())
 
 		// Determine file types for enhanced completion
 		const isLatexFile = fileName?.endsWith('.tex') || (!fileName && textContent?.includes('\\'));
