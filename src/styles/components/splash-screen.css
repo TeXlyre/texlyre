@@ -4,13 +4,18 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: var(--background-color, #1a1a1a);
+  background: #1a1a1a; /* Start with dark background to avoid flash */
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
   opacity: 1;
-  transition: opacity 0.3s ease-out;
+  transition: background-color 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+/* Once theme is loaded, apply the proper background */
+.splash-screen.theme-loaded {
+  background: var(--pico-background);
 }
 
 .splash-content {
@@ -31,9 +36,15 @@
 .splash-title {
   font-size: 2.5rem;
   font-weight: 300;
-  color: var(--text-primary, #ffffff);
+  color: #ffffff; /* Start with white text */
   margin: 1rem 0 2rem 0;
   letter-spacing: 0.1em;
+  transition: color 0.3s ease-out;
+}
+
+/* Once theme is loaded, apply the proper text color */
+.splash-screen.theme-loaded .splash-title {
+  color: var(--text-color);
 }
 
 .splash-loading {
@@ -44,9 +55,15 @@
 }
 
 .splash-loading p {
-  color: var(--text-secondary, #b0b0b0);
+  color: #b0b0b0; /* Start with light gray */
   font-size: 0.9rem;
   margin: 0;
+  transition: color 0.3s ease-out;
+}
+
+/* Once theme is loaded, apply the proper secondary text color */
+.splash-screen.theme-loaded .splash-loading p {
+  color: var(--pico-secondary);
 }
 
 @keyframes splash-fade-in {
