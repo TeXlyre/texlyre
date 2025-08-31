@@ -64,7 +64,7 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 			 )}
 
 			 <div className="auth-privacy-note">
-				<p>Your account and projects stay private in this browser. TeXlyre is fully local.</p>
+				 <p>Your account and projects stay private in this browser. TeXlyre is <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">local-first</a>.</p>
 			 </div>
 		  </div>
 		  <footer className="auth-footer">
