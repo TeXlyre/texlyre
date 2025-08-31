@@ -1,4 +1,3 @@
-/* LSP Toggle Button */
 .lsp-toggle-button {
 	position: relative;
 	padding: 0.4rem;
@@ -63,7 +62,6 @@
 	50% { opacity: 0.5; }
 }
 
-/* LSP Panel */
 .lsp-panel {
 	order: 3;
 	width: var(--lsp-panel-width, 350px);
@@ -291,7 +289,6 @@
 	z-index: calc(var(--z-dropdown) - 1);
 }
 
-/* Provider Panel */
 .lsp-provider-panel {
 	height: 100%;
 	font-size: 0.85rem;
@@ -625,7 +622,6 @@
 	gap: 0.5rem;
 }
 
-/* Detail View */
 .lsp-detail-view {
 	height: 100%;
 	font-size: 0.85rem;
@@ -721,7 +717,6 @@
 	}
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
 	.lsp-panel {
 		width: 100%;

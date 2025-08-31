@@ -1,3 +1,4 @@
+// src/components/project/ShareProjectButton.tsx
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { ChevronDownIcon, ShareIcon } from "../common/Icons";

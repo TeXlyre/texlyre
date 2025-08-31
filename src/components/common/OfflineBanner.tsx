@@ -1,5 +1,6 @@
 // src/components/common/OfflineBanner.tsx
 import type React from "react";
+
 import { useOffline } from "../../hooks/useOffline";
 import {OfflineIcon} from "./Icons";
 

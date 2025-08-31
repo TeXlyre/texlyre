@@ -1,6 +1,7 @@
 // src/components/profile/ProfileSettingsModal.tsx
 import type React from "react";
 import { useEffect, useState } from "react";
+
 import { useAuth } from "../../hooks/useAuth";
 import type { User } from "../../types/auth";
 import Modal from "../common/Modal";

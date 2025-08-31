@@ -1,3 +1,4 @@
+// src/utils/urlUtils.ts
 import {UrlFragments} from "../types/yjs.ts";
 
 export const isValidYjsUrl = (url: string): boolean => {

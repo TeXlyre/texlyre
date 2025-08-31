@@ -2,7 +2,6 @@
 import type React from "react";
 import { useState } from "react";
 
-import texlyeLogo from "../../assets/images/TeXlyre_notext.png";
 import texlyreLogo from "../../assets/images/TeXlyre_notext.png";
 import { useTheme } from "../../hooks/useTheme";
 import ImportAccount from "../auth/ImportAccount";
@@ -38,7 +37,7 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 		  <div className="auth-box">
 			 <div className="auth-header">
 				<div className="auth-logo-wrapper">
-				   <img src={texlyeLogo} className="auth-logo" alt="TeXlyre logo" />
+				   <img src={texlyreLogo} className="auth-logo" alt="TeXlyre logo" />
 				</div>
 				<h1>TeXlyre</h1>
 			 </div>

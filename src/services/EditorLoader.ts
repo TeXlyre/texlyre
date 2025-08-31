@@ -1,4 +1,4 @@
-// src/services/EditorLoader.ts - Updated for bibliography import support
+// src/services/EditorLoader.ts
 import { autocompletion, completionKeymap, type CompletionSource } from "@codemirror/autocomplete";
 import {
 	defaultKeymap,
@@ -85,7 +85,6 @@ export const EditorLoader = (
 	const projectId = docUrl.startsWith("yjs:") ? docUrl.slice(4) : docUrl;
 
 	useEffect(() => {
-		// Initialize file path cache service
 		filePathCacheService.initialize();
 
 		return () => {

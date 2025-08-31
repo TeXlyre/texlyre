@@ -1,4 +1,4 @@
-// src/extensions/codemirror/PathAndBibAutocompleteExtension.ts - Enhanced with Bibliography Support
+// src/extensions/codemirror/PathAndBibAutocompleteExtension.ts
 import { type CompletionContext, type CompletionResult, type CompletionSource } from "@codemirror/autocomplete";
 import { StateEffect, StateField, type Extension } from "@codemirror/state";
 import { ViewPlugin, type EditorView } from "@codemirror/view";
@@ -90,7 +90,7 @@ const bibtexEntryPatterns = [
 	},
 ];
 
-class EnhancedAutocompleteProcessor {
+class AutocompleteProcessor {
 	private view: EditorView;
 	private currentFilePath: string = '';
 	private bibliographyCache: BibliographyEntry[] = [];
@@ -130,7 +130,7 @@ class EnhancedAutocompleteProcessor {
 			const localEntries = await this.getLocalBibliographyEntries();
 			this.bibliographyCache = localEntries;
 		} catch (error) {
-			console.error('[EnhancedAutocomplete] Error updating bibliography cache:', error);
+			console.error('Error updating bibliography cache:', error);
 		}
 	}
 
@@ -168,7 +168,7 @@ class EnhancedAutocompleteProcessor {
 
 			return allEntries;
 		} catch (error) {
-			console.error('[EnhancedAutocomplete] Error getting local bibliography entries:', error);
+			console.error('Error getting local bibliography entries:', error);
 			return [];
 		}
 	}
@@ -615,15 +615,15 @@ class EnhancedAutocompleteProcessor {
 	};
 }
 
-let globalProcessor: EnhancedAutocompleteProcessor | null = null;
+let globalProcessor: AutocompleteProcessor | null = null;
 
 export function createFilePathAutocompleteExtension(currentFilePath: string = ''): [Extension, Extension, CompletionSource] {
 	const plugin = ViewPlugin.fromClass(
 		class {
-			processor: EnhancedAutocompleteProcessor;
+			processor: AutocompleteProcessor;
 
 			constructor(view: EditorView) {
-				this.processor = new EnhancedAutocompleteProcessor(view);
+				this.processor = new AutocompleteProcessor(view);
 				this.processor.setCurrentFilePath(currentFilePath);
 				globalProcessor = this.processor;
 			}

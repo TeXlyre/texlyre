@@ -3,7 +3,7 @@ import type React from "react";
 import { useState } from "react";
 
 import PasswordInfo from "./PasswordInfo"
-import { useAuth } from "../../hooks/useAuth.ts";
+import { useAuth } from "../../hooks/useAuth";
 
 interface RegisterProps {
 	onRegisterSuccess: () => void;

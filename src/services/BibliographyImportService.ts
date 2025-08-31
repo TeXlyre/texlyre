@@ -42,7 +42,6 @@ class DefaultBibTexParser implements BibTexParser {
 			.map(line => line.replace(/%.*$/, '').trim())
 			.join('\n');
 
-		// Find all entries using a more robust approach
 		let pos = 0;
 		while (pos < cleanContent.length) {
 			// Find next @ symbol

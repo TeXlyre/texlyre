@@ -1,3 +1,4 @@
+// src/utils/clipboardUtils.ts
 import { fileCommentProcessor } from "./fileCommentProcessor.ts";
 
 export const copyCleanTextToClipboard = async (text: string): Promise<void> => {
