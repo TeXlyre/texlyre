@@ -153,6 +153,18 @@
 	flex-direction: column;
 }
 
+.refresh-import-button {
+	background: none;
+	border: var(--pico-secondary) 1px solid;
+	text-decoration: underline;
+	color: var(--pico-primary);
+	cursor: pointer;
+	padding: var(--space-lg) var(--space-lg);
+	margin: var(--space-md) 0;
+	transition: text-decoration var(--transition-normal);
+	width: 100%;
+}
+
 .auth-error {
 	padding: var(--space-sm);
 	margin-bottom: var(--space-md);

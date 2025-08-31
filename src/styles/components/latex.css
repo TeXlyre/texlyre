@@ -200,6 +200,7 @@ embed {
 	padding-right: var(--space-xs);
 	height: 100%;
 	background-color: var(--pico-secondary-background);
+	border: 1px solid var(--accent-border);
 	color: var(--text-color);
 	cursor: pointer;
 	transition: background-color var(--transition-normal);
