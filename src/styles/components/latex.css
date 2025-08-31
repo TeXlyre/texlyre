@@ -198,10 +198,9 @@ embed {
 	justify-content: center;
 	padding-left: var(--space-sm);
 	padding-right: var(--space-xs);
+	height: 100%;
 	background-color: var(--pico-secondary-background);
 	color: var(--text-color);
-	border: 1px solid var(--accent-border);
-	border-radius: var(--radius-sm);
 	cursor: pointer;
 	transition: background-color var(--transition-normal);
 }
