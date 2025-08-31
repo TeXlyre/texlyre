@@ -1,7 +1,7 @@
 {
 	"name": "texlyre",
 	"private": true,
-	"version": "0.2.26",
+	"version": "0.2.27",
 	"description": "A local-first LaTeX web editor with real-time collaboration.",
 	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
 	"license": "AGPL-3.0-or-later",
@@ -44,7 +44,7 @@
 		"bib-editor": "^1.14.0",
 		"codemirror": "^6.0.0",
 		"codemirror-lang-bib": "^0.1.1",
-		"codemirror-lang-latex": "^0.1.0-alpha.2",
+		"codemirror-lang-latex": "^0.2.0",
 		"file-saver": "^2.0.5",
 		"filepizza-client": "^2.0.0-alpha.2",
 		"idb": "^8.0.2",
