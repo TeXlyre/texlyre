@@ -1,3 +1,4 @@
+// src/extensions/codemirror/CommentBubbleExtension.ts
 import { ViewPlugin } from "@codemirror/view";
 import type { EditorView } from "codemirror";
 

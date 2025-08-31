@@ -1,8 +1,9 @@
 // src/components/fileSync/FileSyncModal.tsx
 import type React from "react";
 import { useState } from "react";
-import { useFileSync } from "../../hooks/useFileSync.ts";
-import { formatDate } from "../../utils/dateUtils.ts";
+
+import { useFileSync } from "../../hooks/useFileSync";
+import { formatDate } from "../../utils/dateUtils";
 import {
 	DisconnectIcon,
 	FileIcon,

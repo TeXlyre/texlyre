@@ -1,8 +1,9 @@
 // src/components/projects/ProjectToolbar.tsx
 import type React from "react";
 import { useState } from "react";
+
 import type { Project } from "../../types/projects";
-import { ImportIcon, PlusIcon, StarIcon } from "../common/Icons.tsx";
+import { ImportIcon, PlusIcon, StarIcon } from "../common/Icons";
 
 interface ProjectToolbarProps {
 	onCreateProject: () => void;

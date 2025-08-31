@@ -16,11 +16,13 @@ const ImportAccount: React.FC<ImportAccountProps> = ({
 	const [file, setFile] = useState<File | null>(null);
 	const [isImporting, setIsImporting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [success, setSuccess] = useState<string | null>(null);
 
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (e.target.files?.[0]) {
 			setFile(e.target.files[0]);
 			setError(null);
+			setSuccess(null);
 		}
 	};
 
@@ -39,15 +41,21 @@ const ImportAccount: React.FC<ImportAccountProps> = ({
 
 		setIsImporting(true);
 		setError(null);
+		setSuccess(null);
 
 		try {
 			await accountExportService.importAccount(file);
-			onImportSuccess();
+			setSuccess("Account imported successfully!");
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "Error importing account");
 		} finally {
 			setIsImporting(false);
 		}
+	};
+
+	const handleRefresh = () => {
+		onImportSuccess();
+		window.location.reload();
 	};
 
 	return (
@@ -56,37 +64,54 @@ const ImportAccount: React.FC<ImportAccountProps> = ({
 
 			{error && <div className="error-message">{error}</div>}
 
-			<form onSubmit={handleImport}>
-				<div className="form-group">
-					<label htmlFor="importFile">Select account export file (.zip)</label>
-					<input
-						type="file"
-						id="importFile"
-						accept=".zip"
-						onChange={handleFileChange}
-						disabled={isImporting}
-					/>
+			{success && (
+				<div className="success-message">
+					{success}{" "}
+					<button
+						type="button"
+						className="refresh-import-button secondary"
+						onClick={handleRefresh}
+					>
+						Refresh page to access dashboard
+					</button>
 				</div>
+			)}
 
-				<button
-					type="submit"
-					className="auth-button"
-					disabled={!file || isImporting}
-				>
-					{isImporting ? "Importing..." : "Import Account"}
-				</button>
-			</form>
+			{!success && (
+				<>
+					<form onSubmit={handleImport}>
+						<div className="form-group">
+							<label htmlFor="importFile">Select account export file (.zip)</label>
+							<input
+								type="file"
+								id="importFile"
+								accept=".zip"
+								onChange={handleFileChange}
+								disabled={isImporting}
+							/>
+						</div>
 
-			<div className="auth-alt-action">
-				<span>Back to login?</span>
-				<button
-					className="text-button"
-					onClick={onSwitchToLogin}
-					disabled={isImporting}
-				>
-					Login
-				</button>
-			</div>
+						<button
+							type="submit"
+							className="auth-button"
+							disabled={!file || isImporting}
+						>
+							{isImporting ? "Importing..." : "Import Account"}
+						</button>
+					</form>
+
+					<div className="auth-alt-action">
+						<span>Back to login?</span>
+						<button
+							className="text-button"
+							onClick={onSwitchToLogin}
+							disabled={isImporting}
+						>
+							Login
+						</button>
+					</div>
+				</>
+			)}
 		</div>
 	);
 };

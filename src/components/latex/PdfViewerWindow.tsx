@@ -1,5 +1,6 @@
 // src/components/latex/PdfViewerWindow.tsx
 import React, { useEffect, useRef, useState } from "react";
+
 import { pluginRegistry } from "../../plugins/PluginRegistry";
 import { useSettings } from "../../hooks/useSettings";
 

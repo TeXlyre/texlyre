@@ -1,5 +1,5 @@
-import QRCode from "qrcode";
 // src/components/project/ShareProjectModal.tsx
+import QRCode from "qrcode";
 import type React from "react";
 import { useEffect, useState } from "react";
 

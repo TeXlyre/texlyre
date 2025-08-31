@@ -2,13 +2,13 @@
 import type React from "react";
 import { useState } from "react";
 
-import texlyeLogo from "../../assets/images/TeXlyre_notext.png";
 import texlyreLogo from "../../assets/images/TeXlyre_notext.png";
 import { useTheme } from "../../hooks/useTheme";
 import ImportAccount from "../auth/ImportAccount";
 import Login from "../auth/Login";
 import Register from "../auth/Register";
 import PrivacyModal from "../common/PrivacyModal";
+import ThemeToggleButton from "../settings/ThemeToggleButton";
 
 interface AuthContainerProps {
 	onAuthSuccess: () => void;
@@ -36,12 +36,13 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 	return (
 	   <div className={`auth-container ${currentThemePlugin?.id || "default"}`}>
 		  <div className="auth-box">
-			 <div className="auth-header">
-				<div className="auth-logo-wrapper">
-				   <img src={texlyeLogo} className="auth-logo" alt="TeXlyre logo" />
-				</div>
-				<h1>TeXlyre</h1>
-			 </div>
+		<div className="auth-header">
+			<div className="auth-logo-wrapper">
+				<img src={texlyreLogo} className="auth-logo" alt="TeXlyre logo" />
+			</div>
+			<h1>TeXlyre</h1>
+			<ThemeToggleButton className="auth-theme-toggle" />
+		</div>
 
 			 {activeView === "login" ? (
 				<Login
@@ -63,7 +64,7 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 			 )}
 
 			 <div className="auth-privacy-note">
-				<p>Your account and projects stay private in this browser. TeXlyre is fully local.</p>
+				 <p>Your account and projects stay private in this browser. TeXlyre is <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">local-first</a>.</p>
 			 </div>
 		  </div>
 		  <footer className="auth-footer">

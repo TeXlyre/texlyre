@@ -60,7 +60,7 @@ function App() {
 	useEffect(() => {
 		const initTimer = setTimeout(() => {
 			setIsInitializing(false);
-		}, 1500);
+		}, 1200);
 
 		return () => clearTimeout(initTimer);
 	}, []);

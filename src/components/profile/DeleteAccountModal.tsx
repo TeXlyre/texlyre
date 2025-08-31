@@ -1,6 +1,7 @@
 // src/components/profile/DeleteAccountModal.tsx
 import type React from "react";
 import { useState } from "react";
+
 import { useAuth } from "../../hooks/useAuth";
 import { cleanupProjectDatabases } from "../../utils/dbDeleteUtils";
 import { TrashIcon } from "../common/Icons";

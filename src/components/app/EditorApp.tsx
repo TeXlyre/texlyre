@@ -22,7 +22,7 @@ import BackupModal from "../backup/BackupModal";
 import BackupStatusIndicator from "../backup/BackupStatusIndicator";
 import ChatPanel from "../chat/ChatPanel";
 import CollabStatusIndicator from "../collab/CollabStatusIndicator";
-import { ChevronLeftIcon, EditIcon, ShareIcon } from "../common/Icons";
+import { ChevronLeftIcon, EditIcon } from "../common/Icons";
 import Modal from "../common/Modal";
 import OfflineBanner from "../common/OfflineBanner";
 import ToastContainer from "../common/ToastContainer";
@@ -425,6 +425,12 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						useSharedSettings={true}
 						docUrl={docUrl}
 					/>
+					<ShareProjectButton
+						className="header-share-button"
+						projectName={projectName}
+						shareUrl={shareUrl}
+						onOpenShareModal={() => setShowShareModal(true)}
+					/>
 					{!isGuestUser(user) && (
 						<BackupStatusIndicator
 							className="header-backup-indicator"
@@ -438,12 +444,6 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 							docUrl={docUrl}
 						/>
 					)}
-					<ShareProjectButton
-						className="header-share-button"
-						projectName={projectName}
-						shareUrl={shareUrl}
-						onOpenShareModal={() => setShowShareModal(true)}
-					/>
 					<SettingsButton className="header-settings-button" />
 					<UserDropdown
 						username={user?.username || ""}

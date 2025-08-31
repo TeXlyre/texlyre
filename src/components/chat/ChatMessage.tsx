@@ -1,5 +1,6 @@
 // src/components/chat/ChatMessage.tsx
 import type React from "react";
+
 import { formatDate } from "../../utils/dateUtils";
 
 interface ChatMessage {

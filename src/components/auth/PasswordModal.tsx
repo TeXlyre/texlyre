@@ -1,6 +1,7 @@
 // src/components/auth/PasswordModal.tsx
 import type React from "react";
 import { useEffect, useState } from "react";
+
 import { LockIcon } from "../common/Icons";
 import Modal from "../common/Modal";
 

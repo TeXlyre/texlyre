@@ -109,6 +109,7 @@
 	flex-direction: column;
 	align-items: center;
 	margin-bottom: var(--space-md);
+	position: relative;
 }
 
 .auth-header h1 {
@@ -129,9 +130,39 @@
 	color: var(--text-color);
 }
 
+.auth-theme-toggle {
+	position: absolute;
+	top: 0;
+	right: 0;
+	background: none;
+	border: none;
+	padding: var(--space-xs);
+	cursor: pointer;
+	color: var(--pico-secondary);
+	opacity: 0.7;
+	transition: opacity var(--transition-normal);
+}
+
+.auth-theme-toggle:hover {
+	opacity: 1;
+	background-color: var(--pico-primary-focus);
+}
+
 .auth-form {
 	display: flex;
 	flex-direction: column;
+}
+
+.refresh-import-button {
+	background: none;
+	border: var(--pico-secondary) 1px solid;
+	text-decoration: underline;
+	color: var(--pico-primary);
+	cursor: pointer;
+	padding: var(--space-lg) var(--space-lg);
+	margin: var(--space-md) 0;
+	transition: text-decoration var(--transition-normal);
+	width: 100%;
 }
 
 .auth-error {
