@@ -109,6 +109,7 @@
 	flex-direction: column;
 	align-items: center;
 	margin-bottom: var(--space-md);
+	position: relative;
 }
 
 .auth-header h1 {
@@ -127,6 +128,24 @@
 	margin-bottom: var(--space-md);
 	text-align: center;
 	color: var(--text-color);
+}
+
+.auth-theme-toggle {
+	position: absolute;
+	top: 0;
+	right: 0;
+	background: none;
+	border: none;
+	padding: var(--space-xs);
+	cursor: pointer;
+	color: var(--pico-secondary);
+	opacity: 0.7;
+	transition: opacity var(--transition-normal);
+}
+
+.auth-theme-toggle:hover {
+	opacity: 1;
+	background-color: var(--pico-primary-focus);
 }
 
 .auth-form {

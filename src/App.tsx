@@ -67,8 +67,8 @@ function App() {
 
 	return (
 		<>
-			<SplashScreen isVisible={isInitializing} />
 			<SettingsProvider>
+			<SplashScreen isVisible={isInitializing} />
 				<OfflineProvider>
 					<AuthProvider>
 							<PropertiesProvider>

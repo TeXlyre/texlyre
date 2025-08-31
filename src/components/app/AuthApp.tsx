@@ -8,6 +8,7 @@ import ImportAccount from "../auth/ImportAccount";
 import Login from "../auth/Login";
 import Register from "../auth/Register";
 import PrivacyModal from "../common/PrivacyModal";
+import ThemeToggleButton from "../settings/ThemeToggleButton";
 
 interface AuthContainerProps {
 	onAuthSuccess: () => void;
@@ -35,12 +36,13 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 	return (
 	   <div className={`auth-container ${currentThemePlugin?.id || "default"}`}>
 		  <div className="auth-box">
-			 <div className="auth-header">
-				<div className="auth-logo-wrapper">
-				   <img src={texlyreLogo} className="auth-logo" alt="TeXlyre logo" />
-				</div>
-				<h1>TeXlyre</h1>
-			 </div>
+		<div className="auth-header">
+			<div className="auth-logo-wrapper">
+				<img src={texlyreLogo} className="auth-logo" alt="TeXlyre logo" />
+			</div>
+			<h1>TeXlyre</h1>
+			<ThemeToggleButton className="auth-theme-toggle" />
+		</div>
 
 			 {activeView === "login" ? (
 				<Login
