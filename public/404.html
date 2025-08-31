@@ -6,7 +6,7 @@
     <title>404 - Page Not Found</title>
     <style>
         :root {
-            --primary-color: #33C3F0;
+            --primary-color: #01aaff;
             --dark-gray: #333;
         }
 
@@ -29,6 +29,12 @@
             background-color: white;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
         }
 
         h1 {
@@ -60,7 +66,7 @@
         }
 
         .btn:hover {
-            background-color: #1EAEDB;
+            background-color: #79c0ff;
         }
 
         .equation {
@@ -74,6 +80,7 @@
 </head>
 <body>
     <div class="container">
+        <img src="/texlyre-icon-192.png" alt="TeXLyre" class="logo">
         <h1>404</h1>
         <h2>Page Not Found</h2>
         <div class="equation">
@@ -81,7 +88,7 @@
         </div>
         <p>The LaTeX document you're looking for seems to have vanished into a mathematical void. It might have been moved, isDeleted, or perhaps it never existed in this dimension.</p>
         <p>Check the URL or navigate back to continue your work.</p>
-        <a href="/" class="btn">Return to Editor</a>
+        <a href="/texlyre" class="btn">Return to Editor</a>
     </div>
 </body>
 </html>
