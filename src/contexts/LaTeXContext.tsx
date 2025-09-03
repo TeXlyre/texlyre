@@ -66,7 +66,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			options: [
 				{ label: "pdfTeX", value: "pdftex" },
 				{ label: "XeTeX", value: "xetex" },
-				{ label: "LuaTeX", value: "luatex" },
+				// { label: "LuaTeX", value: "luatex" },
 			],
 			onChange: (value) => {
 				handleSetLatexEngine(value as "pdftex" | "xetex" | "luatex");
