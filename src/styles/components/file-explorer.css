@@ -32,6 +32,16 @@
 	outline: 2px dashed var(--pico-primary);
 }
 
+.action-separator {
+	width: 1px;
+	height: 16px;
+	background-image: linear-gradient(to bottom, var(--border-color) 50%, transparent 50%);
+	background-size: 1px 4px;
+	background-repeat: repeat-y;
+	margin: 0 4px;
+	align-self: center;
+}
+
 .action-btn {
 	display: flex;
 	align-items: center;

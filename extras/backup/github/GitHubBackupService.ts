@@ -1,8 +1,8 @@
-import type { SecretsContextType } from "../../../src/contexts/SecretsContext";
 // extras/backup/github/GitHubBackupService.ts
+import type { SecretsContextType } from "../../../src/contexts/SecretsContext";
 import { authService } from "../../../src/services/AuthService";
 import { UnifiedDataStructureService } from "../../../src/services/DataStructureService";
-import { fileStorageService } from "../../../src/services/FileStorageService";
+import { fileStorageService, fileStorageEventEmitter } from "../../../src/services/FileStorageService";
 import { ProjectDataService } from "../../../src/services/ProjectDataService";
 import { getMimeType, isBinaryFile } from "../../../src/utils/fileUtils.ts";
 import { gitHubApiService } from "./GitHubApiService";
@@ -597,6 +597,7 @@ export class GitHubBackupService {
 						type: "import_complete",
 						message: `Auto-imported missing project: ${projectMetadata.name}`,
 					});
+					fileStorageEventEmitter.emitChange();
 				} catch (error) {
 					console.error(
 						`Failed to import missing project ${missingProjId}:`,
@@ -638,6 +639,7 @@ export class GitHubBackupService {
 				lastSync: Date.now(),
 				error: undefined,
 			};
+			fileStorageEventEmitter.emitChange();
 		} catch (error) {
 			this._handleError(error, "import_error", "GitHub import failed");
 		}
@@ -827,6 +829,7 @@ export class GitHubBackupService {
 						type: "import_complete",
 						message: `Restored deleted file metadata: ${filePath}`,
 					});
+					fileStorageEventEmitter.emitChange();
 				} catch (error) {
 					console.error(
 						`Failed to restore deleted file metadata ${filePath}:`,
@@ -931,6 +934,7 @@ export class GitHubBackupService {
 				type: "import_complete",
 				message: `Imported ${importedFilesCount} files for project: ${projectMetadata.name}`,
 			});
+			fileStorageEventEmitter.emitChange();
 		}
 
 		if (documents.length > 0) {
@@ -962,6 +966,7 @@ export class GitHubBackupService {
 				type: "import_complete",
 				message: `Imported ${documents.length} documents for project: ${projectMetadata.name}`,
 			});
+			fileStorageEventEmitter.emitChange();
 		}
 	}
 
