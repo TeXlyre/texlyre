@@ -11,7 +11,7 @@ import {
 	ExportIcon,
 	FilePlusIcon,
 	FolderPlusIcon,
-	ImportIcon,
+	RefreshIcon,
 	UploadIcon,
 } from "../common/Icons.tsx";
 import FileOperationsModal from "./FileOperationsModal";
@@ -868,6 +868,16 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				<div className="file-explorer-header">
 					<h3>Files</h3>
 					<div className="file-explorer-actions">
+						<button
+							className="action-btn"
+							title="Refresh File Tree"
+							onClick={() => refreshFileTree()}
+						>
+							<RefreshIcon />
+						</button>
+
+						<div className="action-separator"></div>
+
 						<button
 							className="action-btn"
 							title="Export Current Project"
