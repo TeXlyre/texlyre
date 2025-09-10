@@ -190,13 +190,7 @@ export const EditorLoader = (
 		extensions.push(vim());
 	  }
 
-		extensions.push(
-			EditorView.updateListener.of((update: ViewUpdate) => {
-				if (update.docChanged && autoSaveRef.current) {
-					autoSaveRef.current();
-				}
-			}),
-		);
+		extensions.push(getCursorTrackingExtension());
 		return extensions;
 	};
 
@@ -241,6 +235,36 @@ export const EditorLoader = (
 				}
 				return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
 		}
+	};
+
+	const getCursorTrackingExtension = (): Extension => {
+		let cursorUpdateTimeout: NodeJS.Timeout | null = null;
+		
+		return EditorView.updateListener.of((update: ViewUpdate) => {
+			// Handle auto-save as before
+			if (update.docChanged && autoSaveRef.current) {
+				autoSaveRef.current();
+			}
+			
+			// Only track cursor position for LaTeX files
+			if (update.selectionSet && (fileName?.endsWith('.tex') || fileName?.endsWith('.latex'))) {
+				if (cursorUpdateTimeout) {
+					clearTimeout(cursorUpdateTimeout);
+				}
+				
+				cursorUpdateTimeout = setTimeout(() => {
+					if (update.view && update.view.state) {
+						const pos = update.view.state.selection.main.head;
+						const line = update.view.state.doc.lineAt(pos).number;
+						
+						// Emit cursor position update event for outline tracking
+						document.dispatchEvent(new CustomEvent('editor-cursor-update', {
+							detail: { line, position: pos }
+						}));
+					}
+				}, 200); // Debounce cursor updates to avoid performance issues
+			}
+		});
 	};
 
 	useEffect(() => {

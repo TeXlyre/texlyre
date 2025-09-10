@@ -739,6 +739,9 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 						initialExpandedPaths={initialExpandedPaths}
 						currentProjectId={sessionStorage.getItem("currentProjectId")}
 						onExportCurrentProject={handleExportCurrentProject}
+						currentFileContent={isEditingFile ? (typeof fileContent === 'string' ? fileContent : '') : ''}
+						currentFileName={isEditingFile ? fileName : ''}
+						isEditingLatexFile={isEditingFile && fileName.endsWith('.tex')}
 					/>
 				)}
 			</ResizablePanel>
