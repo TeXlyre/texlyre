@@ -14,7 +14,6 @@ import {
 	RefreshIcon,
 	UploadIcon,
 } from "../common/Icons.tsx";
-import LaTeXOutline from "./LaTeXOutline";
 import FileOperationsModal from "./FileOperationsModal";
 import FileTreeItem from "./FileTreeItem";
 import ZipHandlingModal from "./ZipHandlingModal";
@@ -31,9 +30,6 @@ interface FileExplorerProps {
 	initialExpandedPaths?: string[];
 	currentProjectId?: string | null;
 	onExportCurrentProject?: (projectId: string) => void;
-	currentFileContent?: string;
-	currentFileName?: string;
-	isEditingLatexFile?: boolean;
 }
 
 interface FilePropertiesInfo {
@@ -53,10 +49,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	initialSelectedFile,
 	initialExpandedPaths,
 	currentProjectId,
-	onExportCurrentProject,
-	currentFileContent = "",
-	currentFileName = "",
-	isEditingLatexFile = false,
+	onExportCurrentProject
 }) => {
 	const {
 		fileTree,
@@ -110,27 +103,12 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	const [zipTargetPath, setZipTargetPath] = useState<string>("/");
 
 	const [hasProcessedInitialFile, setHasProcessedInitialFile] = useState(false);
-	const [currentLine, setCurrentLine] = useState(1);
 
 	const [creatingNewItem, setCreatingNewItem] = useState<{
 		type: "file" | "directory";
 		parentPath: string;
 	} | null>(null);
 	const [newItemName, setNewItemName] = useState("");
-
-	useEffect(() => {
-		const handleCursorUpdate = (event: Event) => {
-			const customEvent = event as CustomEvent;
-			if (customEvent.detail && typeof customEvent.detail.line === 'number') {
-				setCurrentLine(customEvent.detail.line);
-			}
-		};
-
-		document.addEventListener('editor-cursor-update', handleCursorUpdate);
-		return () => {
-			document.removeEventListener('editor-cursor-update', handleCursorUpdate);
-		};
-	}, []);
 
 	useEffect(() => {
 		if (
@@ -873,14 +851,6 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		return collectDirectories(fileTree);
 	};
 
-	const handleOutlineSectionClick = (line: number) => {
-		document.dispatchEvent(
-			new CustomEvent("codemirror-goto-line", {
-				detail: { line },
-			})
-		);
-	};
-
 	if (isLoading) {
 		return <div className="file-explorer loading">Loading files...</div>;
 	}
@@ -1044,15 +1014,6 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 						</div>
 					)}
 				</div>
-
-				{isEditingLatexFile && currentFileContent && (
-					<LaTeXOutline
-						content={currentFileContent}
-						currentLine={currentLine}
-						onSectionClick={handleOutlineSectionClick}
-					/>
-				)}
-
 			</div>
 
 			<FileOperationsModal

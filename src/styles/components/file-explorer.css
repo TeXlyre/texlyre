@@ -5,12 +5,13 @@
 	border-radius: var(--radius-lg);
 	display: flex;
 	flex-direction: column;
-	overflow-y: auto;
 	color: var(--text-color);
 }
 
 .file-explorer-header {
 	display: flex;
+	position: inherit;
+	top: 0;
 	justify-content: space-between;
 	align-items: center;
 	padding: var(--space-sm);
@@ -251,7 +252,6 @@
 .sidebar-container {
 	display: flex;
 	flex-direction: column;
-	height: 100%;
 	background-color: var(--pico-secondary-background);
 	border-radius: var(--radius-lg);
 }

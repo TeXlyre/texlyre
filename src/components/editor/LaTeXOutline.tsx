@@ -1,10 +1,10 @@
 // src/components/editor/LaTeXOutline.tsx
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
-import { LaTeXOutlineParser, type OutlineSection } from "../../utils/latexOutlineParser";
+import { LaTeXOutlineParser } from "../../utils/latexOutlineParser";
 import { ChevronDownIcon, ChevronRightIcon, FileTextIcon } from "../common/Icons";
-import OutlineItem from "./OutlineItem";
+import OutlineItem from "./LaTeXOutlineItem";
 
 interface LaTeXOutlineProps {
 	content: string;
@@ -42,7 +42,6 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 					>
 						{isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
 					</button>
-					<FileTextIcon />
 					<span className="outline-header-title">OUTLINE</span>
 				</div>
 				{!isCollapsed && (
@@ -64,7 +63,6 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 				>
 					{isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
 				</button>
-				<FileTextIcon />
 				<span className="outline-header-title">OUTLINE</span>
 				<span className="outline-section-count">
 					{sections.length}

@@ -19,6 +19,7 @@ import type { Project } from "../../types/projects";
 import { buildUrlWithFragments, parseUrlFragments } from "../../utils/urlUtils";
 import type { YjsDocUrl } from "../../types/yjs";
 import ResizablePanel from "../common/ResizablePanel";
+import LaTeXOutline from "./LaTeXOutline";
 import LaTeXOutput from "../latex/LaTeXOutput";
 import ProjectExportModal from "../project/ProjectExportModal";
 import DocumentExplorer from "./DocumentExplorer";
@@ -108,9 +109,13 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		fileId?: string;
 		filePath?: string;
 	}>({});
+	const [currentLine, setCurrentLine] = useState(1);
+
 	const [sidebarWidth, setSidebarWidth] = useState(
 		currentLayout?.defaultFileExplorerWidth || 250,
 	);
+	const [showOutline, setShowOutline] = useState(false);
+	const [outlineHeight, setOutlineHeight] = useState(600);
 	const [latexOutputWidth, setLatexOutputWidth] = useState(550);
 	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 	const [latexOutputCollapsed, setLatexOutputCollapsed] = useState(false);
@@ -162,7 +167,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 			id: "latex-output-width",
 			category: "UI",
 			subcategory: "Layout",
-			defaultValue: 550,
+			defaultValue: latexOutputWidth,
 		});
 
 		registerProperty({
@@ -178,6 +183,20 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 			subcategory: "Layout",
 			defaultValue: false,
 		});
+		
+		registerProperty({
+			id: "outline-height",
+			category: "UI",
+			subcategory: "Layout", 
+			defaultValue: outlineHeight,
+		});
+
+		registerProperty({
+			id: "outline-collapsed",
+			category: "UI",
+			subcategory: "Layout",
+			defaultValue: false,
+		});
 	}, [registerProperty]);
 
 	useEffect(() => {
@@ -187,11 +206,13 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		const storedLatexWidth = getProperty("latex-output-width");
 		const storedSidebarCollapsed = getProperty("sidebar-collapsed");
 		const storedLatexCollapsed = getProperty("latex-output-collapsed");
+		const storedOutlineHeight = getProperty("outline-height");
 
 		// Only load if at least one property is available (meaning registration worked)
 		if (
 			storedSidebarWidth !== undefined ||
 			storedLatexWidth !== undefined ||
+			storedOutlineHeight !== undefined ||
 			storedSidebarCollapsed !== undefined ||
 			storedLatexCollapsed !== undefined
 		) {
@@ -211,9 +232,27 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 				setLatexOutputCollapsed(Boolean(storedLatexCollapsed));
 			}
 
+			if (storedOutlineHeight !== undefined) {
+				setOutlineHeight(Number(storedOutlineHeight));
+			}
+
 			setPropertiesLoaded(true);
 		}
 	}, [getProperty, propertiesLoaded]);
+
+	useEffect(() => {
+	const handleCursorUpdate = (event: Event) => {
+		const customEvent = event as CustomEvent;
+		if (customEvent.detail && typeof customEvent.detail.line === 'number') {
+		setCurrentLine(customEvent.detail.line);
+		}
+	};
+
+	document.addEventListener('editor-cursor-update', handleCursorUpdate);
+	return () => {
+		document.removeEventListener('editor-cursor-update', handleCursorUpdate);
+	};
+	}, []);
 
 	useEffect(() => {
 		const handleNavigateToLinkedFile = (event: Event) => {
@@ -508,6 +547,11 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		}
 	}, [targetDocId]);
 
+	useEffect(() => {
+	const shouldShowOutline = isEditingFile && fileName.endsWith('.tex');
+	setShowOutline(shouldShowOutline);
+	}, [isEditingFile, fileName]);
+
 	const updateProjectLastOpened = async (docId?: string, filePath?: string) => {
 		const projectId = sessionStorage.getItem("currentProjectId");
 		if (!projectId) return;
@@ -542,6 +586,14 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		const lastDoc = documents[documents.length - 1];
 		onRenameDocument(lastDoc.id, name);
 		return lastDoc.id;
+	};
+
+	const handleOutlineSectionClick = (line: number) => {
+		document.dispatchEvent(
+			new CustomEvent("codemirror-goto-line", {
+			detail: { line },
+			})
+		);
 	};
 
 	const handleFileSelect = async (
@@ -653,6 +705,11 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		setProperty("sidebar-collapsed", collapsed);
 	};
 
+	const handleOutlineResize = (height: number) => {
+	setOutlineHeight(height);
+	setProperty("outline-height", height);
+	};
+
 	const handleLatexOutputWidthResize = (width: number) => {
 		setLatexOutputWidth(width);
 		setProperty("latex-output-width", width);
@@ -700,6 +757,16 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 				onCollapse={handleSidebarCollapse}
 				className="sidebar-container"
 			>
+				<ResizablePanel
+				direction="vertical"
+				height={outlineHeight}
+				minHeight={100}
+				maxHeight={1000}
+				alignment="end"
+				onResize={handleOutlineResize}
+				collapsible={false}
+				className="explorer-container"
+				>
 				<div className="view-toggle">
 					<button
 						className={activeView === "files" ? "active" : ""}
@@ -739,11 +806,19 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 						initialExpandedPaths={initialExpandedPaths}
 						currentProjectId={sessionStorage.getItem("currentProjectId")}
 						onExportCurrentProject={handleExportCurrentProject}
-						currentFileContent={isEditingFile ? (typeof fileContent === 'string' ? fileContent : '') : ''}
-						currentFileName={isEditingFile ? fileName : ''}
-						isEditingLatexFile={isEditingFile && fileName.endsWith('.tex')}
 					/>
 				)}
+				</ResizablePanel>
+
+				{showOutline && (
+
+					<LaTeXOutline
+						content={isEditingFile ? (typeof fileContent === 'string' ? fileContent : '') : content}
+						currentLine={currentLine}
+						onSectionClick={handleOutlineSectionClick}
+					/>
+				)}
+
 			</ResizablePanel>
 
 			<div

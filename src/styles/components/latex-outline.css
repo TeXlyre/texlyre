@@ -2,10 +2,13 @@
 	margin-top: var(--space-sm);
 	border-top: 1px solid var(--accent-border);
 	background-color: var(--pico-secondary-background);
+    margin-right: var(--space-xs);
+    bottom: auto;
 }
 
 .latex-outline-header {
 	display: flex;
+    position: sticky;
 	align-items: center;
 	gap: var(--space-xs);
 	padding: var(--space-sm);
@@ -22,8 +25,6 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 16px;
-	height: 16px;
 	background: none;
 	border: none;
 	cursor: pointer;
@@ -53,7 +54,7 @@
 }
 
 .outline-content {
-	max-height: 400px;
+	max-height: 100%;
 	overflow-y: auto;
 	padding: var(--space-xs) 0;
 }
@@ -105,13 +106,15 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 14px;
-	height: 14px;
 	background: none;
-	border: none;
+    padding-left: var(--space-xs) !important;
+    padding-right: var(--space-xs) !important;
+	border: none !important;
+    outline: none !important;
 	cursor: pointer;
-	color: var(--pico-secondary);
+	color: var(--pico-primary);
 	transition: color var(--transition-normal);
+    font-size: 0.75rem !important;
 	border-radius: 2px;
 	flex-shrink: 0;
 }
@@ -122,7 +125,7 @@
 }
 
 .outline-spacer {
-	width: 14px;
+	width: var(--space-md);
 	height: 14px;
 	flex-shrink: 0;
 }
@@ -130,8 +133,6 @@
 .outline-icon {
 	font-size: 0.9rem;
 	flex-shrink: 0;
-	width: 16px;
-	text-align: center;
 	opacity: 0.8;
 }
 
@@ -179,22 +180,4 @@
 .outline-section[data-type="paragraph"] .outline-title,
 .outline-section[data-type="subparagraph"] .outline-title {
 	font-style: italic;
-}
-
-/* Scrollbar styling for outline content */
-.outline-content::-webkit-scrollbar {
-	width: 6px;
-}
-
-.outline-content::-webkit-scrollbar-track {
-	background: transparent;
-}
-
-.outline-content::-webkit-scrollbar-thumb {
-	background-color: var(--accent-border);
-	border-radius: 3px;
-}
-
-.outline-content::-webkit-scrollbar-thumb:hover {
-	background-color: var(--pico-secondary);
 }
