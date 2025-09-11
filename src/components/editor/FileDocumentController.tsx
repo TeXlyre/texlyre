@@ -116,7 +116,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		currentLayout?.defaultFileExplorerWidth || 250,
 	);
 	const [showOutline, setShowOutline] = useState(false);
-	const [outlineHeight, setOutlineHeight] = useState(600);
+	const [explorerHeight, setOutlineHeight] = useState(600);
 	const [latexOutputWidth, setLatexOutputWidth] = useState(550);
 	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 	const [latexOutputCollapsed, setLatexOutputCollapsed] = useState(false);
@@ -154,91 +154,85 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	};
 
 	useEffect(() => {
-		if (propertiesRegistered.current) return;
-		propertiesRegistered.current = true;
+	if (propertiesRegistered.current) return;
+	propertiesRegistered.current = true;
 
-		registerProperty({
-			id: "sidebar-width",
-			category: "UI",
-			subcategory: "Layout",
-			defaultValue: currentLayout?.defaultFileExplorerWidth || 250,
-		});
+	registerProperty({
+		id: "sidebar-width",
+		category: "UI",
+		subcategory: "Layout",
+		defaultValue: currentLayout?.defaultFileExplorerWidth || 250,
+	});
 
-		registerProperty({
-			id: "latex-output-width",
-			category: "UI",
-			subcategory: "Layout",
-			defaultValue: latexOutputWidth,
-		});
+	registerProperty({
+		id: "latex-output-width",
+		category: "UI",
+		subcategory: "Layout",
+		defaultValue: latexOutputWidth,
+	});
 
-		registerProperty({
-			id: "sidebar-collapsed",
-			category: "UI",
-			subcategory: "Layout",
-			defaultValue: false,
-		});
+	registerProperty({
+		id: "sidebar-collapsed",
+		category: "UI",
+		subcategory: "Layout",
+		defaultValue: false,
+	});
 
-		registerProperty({
-			id: "latex-output-collapsed",
-			category: "UI",
-			subcategory: "Layout",
-			defaultValue: false,
-		});
-		
-		registerProperty({
-			id: "outline-height",
-			category: "UI",
-			subcategory: "Layout", 
-			defaultValue: outlineHeight,
-		});
+	registerProperty({
+		id: "latex-output-collapsed",
+		category: "UI",
+		subcategory: "Layout",
+		defaultValue: false,
+	});
+	
+	registerProperty({
+		id: "explorer-height",
+		category: "UI",
+		subcategory: "Layout", 
+		defaultValue: explorerHeight,
+	});
 
-		registerProperty({
-			id: "outline-collapsed",
-			category: "UI",
-			subcategory: "Layout",
-			defaultValue: false,
-		});
+	registerProperty({
+		id: "outline-collapsed",
+		category: "UI",
+		subcategory: "Layout",
+		defaultValue: false,
+	});
+
+	console.log('Properties registered');
 	}, [registerProperty]);
 
 	useEffect(() => {
-		if (propertiesLoaded) return;
+	if (propertiesLoaded) return;
 
-		const storedSidebarWidth = getProperty("sidebar-width");
-		const storedLatexWidth = getProperty("latex-output-width");
-		const storedSidebarCollapsed = getProperty("sidebar-collapsed");
-		const storedLatexCollapsed = getProperty("latex-output-collapsed");
-		const storedOutlineHeight = getProperty("outline-height");
+	const storedSidebarWidth = getProperty("sidebar-width");
+	const storedLatexWidth = getProperty("latex-output-width");
+	const storedSidebarCollapsed = getProperty("sidebar-collapsed");
+	const storedLatexCollapsed = getProperty("latex-output-collapsed");
+	const storedOutlineHeight = getProperty("explorer-height");
 
-		// Only load if at least one property is available (meaning registration worked)
-		if (
-			storedSidebarWidth !== undefined ||
-			storedLatexWidth !== undefined ||
-			storedOutlineHeight !== undefined ||
-			storedSidebarCollapsed !== undefined ||
-			storedLatexCollapsed !== undefined
-		) {
-			if (storedSidebarWidth !== undefined) {
-				setSidebarWidth(Number(storedSidebarWidth));
-			}
+	// Load each property individually if available
+	if (storedSidebarWidth !== undefined) {
+		setSidebarWidth(Number(storedSidebarWidth));
+	}
 
-			if (storedLatexWidth !== undefined) {
-				setLatexOutputWidth(Number(storedLatexWidth));
-			}
+	if (storedLatexWidth !== undefined) {
+		setLatexOutputWidth(Number(storedLatexWidth));
+	}
 
-			if (storedSidebarCollapsed !== undefined) {
-				setSidebarCollapsed(Boolean(storedSidebarCollapsed));
-			}
+	if (storedSidebarCollapsed !== undefined) {
+		setSidebarCollapsed(Boolean(storedSidebarCollapsed));
+	}
 
-			if (storedLatexCollapsed !== undefined) {
-				setLatexOutputCollapsed(Boolean(storedLatexCollapsed));
-			}
+	if (storedLatexCollapsed !== undefined) {
+		setLatexOutputCollapsed(Boolean(storedLatexCollapsed));
+	}
 
-			if (storedOutlineHeight !== undefined) {
-				setOutlineHeight(Number(storedOutlineHeight));
-			}
-
-			setPropertiesLoaded(true);
-		}
+	if (storedOutlineHeight !== undefined) {
+		setOutlineHeight(Number(storedOutlineHeight));
+	}
+	
+	setPropertiesLoaded(true);
 	}, [getProperty, propertiesLoaded]);
 
 	useEffect(() => {
@@ -584,7 +578,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 			// For documents, use the document content
 			setCurrentEditorContent(content);
 		}
-	}, [isEditingFile, fileContent, content, selectedFileId, fileSelectionChange]);
+	}, [isEditingFile, content, fileContent]);
 
 	const updateProjectLastOpened = async (docId?: string, filePath?: string) => {
 		const projectId = sessionStorage.getItem("currentProjectId");
@@ -754,9 +748,9 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		setProperty("sidebar-collapsed", collapsed);
 	};
 
-	const handleOutlineResize = (height: number) => {
-	setOutlineHeight(height);
-	setProperty("outline-height", height);
+	const handleExplorerResize = (height: number) => {
+		setOutlineHeight(height);
+		setProperty("explorer-height", height);
 	};
 
 	const handleLatexOutputWidthResize = (width: number) => {
@@ -808,11 +802,11 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 			>
 				<ResizablePanel
 				direction="vertical"
-				height={outlineHeight}
+				height={explorerHeight}
 				minHeight={100}
 				maxHeight={1000}
 				alignment="end"
-				onResize={handleOutlineResize}
+				onResize={handleExplorerResize}
 				collapsible={false}
 				className="explorer-container"
 				>
