@@ -191,14 +191,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		subcategory: "Layout", 
 		defaultValue: explorerHeight,
 	});
-
-	registerProperty({
-		id: "outline-collapsed",
-		category: "UI",
-		subcategory: "Layout",
-		defaultValue: false,
-	});
-
+	
 	console.log('Properties registered');
 	}, [registerProperty]);
 

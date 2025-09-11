@@ -67,6 +67,11 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 			direction === "horizontal" ? "horizontal-resize" : "vertical-resize",
 		);
 	};
+	
+	useEffect(() => {
+		const newSize = direction === "horizontal" ? width : height;
+		setSize(newSize);
+	}, [width, height, direction]);
 
 	useEffect(() => {
 		const handleMouseMove = (e: Event) => {
