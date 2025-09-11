@@ -22,6 +22,7 @@ import "./styles/global.css";
 import "./styles/components/editor.css";
 import "./styles/components/codemirror.css";
 import "./styles/components/file-explorer.css";
+import "./styles/components/latex-outline.css";
 import "./styles/components/backup-collab.css";
 import "./styles/components/resizable-panel.css";
 import "./styles/components/toast.css";

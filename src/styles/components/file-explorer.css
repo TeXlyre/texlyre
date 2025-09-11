@@ -1,3 +1,15 @@
+.sidebar-container {
+	display: flex;
+	flex-shrink: 0;
+	flex-direction: column;
+	background-color: var(--pico-secondary-background);
+	border-radius: var(--radius-lg);
+}
+
+.explorer-container {
+  flex-shrink: 0; 
+}
+
 .file-explorer {
 	width: 100%;
 	border-right: 1px solid var(--accent-border);
@@ -5,12 +17,13 @@
 	border-radius: var(--radius-lg);
 	display: flex;
 	flex-direction: column;
-	overflow-y: auto;
 	color: var(--text-color);
 }
 
 .file-explorer-header {
 	display: flex;
+	position: inherit;
+	top: 0;
 	justify-content: space-between;
 	align-items: center;
 	padding: var(--space-sm);
@@ -226,9 +239,6 @@
 	font-size: 0.8em;
 }
 
-.directory-children {
-}
-
 .empty-state,
 .loading {
 	padding: var(--space-md);
@@ -246,14 +256,6 @@
 	justify-content: center;
 	align-items: center;
 	height: 100%;
-}
-
-.sidebar-container {
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-	background-color: var(--pico-secondary-background);
-	border-radius: var(--radius-lg);
 }
 
 .view-toggle {

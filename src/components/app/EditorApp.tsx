@@ -27,7 +27,7 @@ import Modal from "../common/Modal";
 import OfflineBanner from "../common/OfflineBanner";
 import ToastContainer from "../common/ToastContainer";
 import FileDocumentController from "../editor/FileDocumentController";
-import LaTeXCompileButton from "../latex/LaTeXCompileButton";
+import LaTeXCompileButton from "../output/LaTeXCompileButton";
 import ExportAccountModal from "../profile/ExportAccountModal";
 import DeleteAccountModal from "../profile/DeleteAccountModal";
 import ProfileSettingsModal from "../profile/ProfileSettingsModal";

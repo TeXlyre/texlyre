@@ -19,7 +19,8 @@ import type { Project } from "../../types/projects";
 import { buildUrlWithFragments, parseUrlFragments } from "../../utils/urlUtils";
 import type { YjsDocUrl } from "../../types/yjs";
 import ResizablePanel from "../common/ResizablePanel";
-import LaTeXOutput from "../latex/LaTeXOutput";
+import LaTeXOutline from "./LaTeXOutline";
+import LaTeXOutput from "../output/LaTeXOutput";
 import ProjectExportModal from "../project/ProjectExportModal";
 import DocumentExplorer from "./DocumentExplorer";
 import Editor from "./Editor";
@@ -97,6 +98,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	const [activeView, setActiveView] = useState<"documents" | "files">("files");
 	const [_hasNavigated, _setHasNavigated] = useState(false);
 	const [fileContent, setFileContent] = useState<string | ArrayBuffer>("");
+	const [currentEditorContent, setCurrentEditorContent] = useState<string>("");
 	const [isEditingFile, setIsEditingFile] = useState(false);
 	const [isBinaryFile, setIsBinaryFile] = useState(false);
 	const [fileName, setFileName] = useState("");
@@ -108,9 +110,13 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		fileId?: string;
 		filePath?: string;
 	}>({});
+	const [currentLine, setCurrentLine] = useState(1);
+
 	const [sidebarWidth, setSidebarWidth] = useState(
 		currentLayout?.defaultFileExplorerWidth || 250,
 	);
+	const [showOutline, setShowOutline] = useState(false);
+	const [explorerHeight, setOutlineHeight] = useState(600);
 	const [latexOutputWidth, setLatexOutputWidth] = useState(550);
 	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 	const [latexOutputCollapsed, setLatexOutputCollapsed] = useState(false);
@@ -148,72 +154,93 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	};
 
 	useEffect(() => {
-		if (propertiesRegistered.current) return;
-		propertiesRegistered.current = true;
+	if (propertiesRegistered.current) return;
+	propertiesRegistered.current = true;
 
-		registerProperty({
-			id: "sidebar-width",
-			category: "UI",
-			subcategory: "Layout",
-			defaultValue: currentLayout?.defaultFileExplorerWidth || 250,
-		});
+	registerProperty({
+		id: "sidebar-width",
+		category: "UI",
+		subcategory: "Layout",
+		defaultValue: currentLayout?.defaultFileExplorerWidth || 250,
+	});
 
-		registerProperty({
-			id: "latex-output-width",
-			category: "UI",
-			subcategory: "Layout",
-			defaultValue: 550,
-		});
+	registerProperty({
+		id: "latex-output-width",
+		category: "UI",
+		subcategory: "Layout",
+		defaultValue: latexOutputWidth,
+	});
 
-		registerProperty({
-			id: "sidebar-collapsed",
-			category: "UI",
-			subcategory: "Layout",
-			defaultValue: false,
-		});
+	registerProperty({
+		id: "sidebar-collapsed",
+		category: "UI",
+		subcategory: "Layout",
+		defaultValue: false,
+	});
 
-		registerProperty({
-			id: "latex-output-collapsed",
-			category: "UI",
-			subcategory: "Layout",
-			defaultValue: false,
-		});
+	registerProperty({
+		id: "latex-output-collapsed",
+		category: "UI",
+		subcategory: "Layout",
+		defaultValue: false,
+	});
+	
+	registerProperty({
+		id: "explorer-height",
+		category: "UI",
+		subcategory: "Layout", 
+		defaultValue: explorerHeight,
+	});
+	
+	console.log('Properties registered');
 	}, [registerProperty]);
 
 	useEffect(() => {
-		if (propertiesLoaded) return;
+	if (propertiesLoaded) return;
 
-		const storedSidebarWidth = getProperty("sidebar-width");
-		const storedLatexWidth = getProperty("latex-output-width");
-		const storedSidebarCollapsed = getProperty("sidebar-collapsed");
-		const storedLatexCollapsed = getProperty("latex-output-collapsed");
+	const storedSidebarWidth = getProperty("sidebar-width");
+	const storedLatexWidth = getProperty("latex-output-width");
+	const storedSidebarCollapsed = getProperty("sidebar-collapsed");
+	const storedLatexCollapsed = getProperty("latex-output-collapsed");
+	const storedOutlineHeight = getProperty("explorer-height");
 
-		// Only load if at least one property is available (meaning registration worked)
-		if (
-			storedSidebarWidth !== undefined ||
-			storedLatexWidth !== undefined ||
-			storedSidebarCollapsed !== undefined ||
-			storedLatexCollapsed !== undefined
-		) {
-			if (storedSidebarWidth !== undefined) {
-				setSidebarWidth(Number(storedSidebarWidth));
-			}
+	// Load each property individually if available
+	if (storedSidebarWidth !== undefined) {
+		setSidebarWidth(Number(storedSidebarWidth));
+	}
 
-			if (storedLatexWidth !== undefined) {
-				setLatexOutputWidth(Number(storedLatexWidth));
-			}
+	if (storedLatexWidth !== undefined) {
+		setLatexOutputWidth(Number(storedLatexWidth));
+	}
 
-			if (storedSidebarCollapsed !== undefined) {
-				setSidebarCollapsed(Boolean(storedSidebarCollapsed));
-			}
+	if (storedSidebarCollapsed !== undefined) {
+		setSidebarCollapsed(Boolean(storedSidebarCollapsed));
+	}
 
-			if (storedLatexCollapsed !== undefined) {
-				setLatexOutputCollapsed(Boolean(storedLatexCollapsed));
-			}
+	if (storedLatexCollapsed !== undefined) {
+		setLatexOutputCollapsed(Boolean(storedLatexCollapsed));
+	}
 
-			setPropertiesLoaded(true);
-		}
+	if (storedOutlineHeight !== undefined) {
+		setOutlineHeight(Number(storedOutlineHeight));
+	}
+	
+	setPropertiesLoaded(true);
 	}, [getProperty, propertiesLoaded]);
+
+	useEffect(() => {
+	const handleCursorUpdate = (event: Event) => {
+		const customEvent = event as CustomEvent;
+		if (customEvent.detail && typeof customEvent.detail.line === 'number') {
+		setCurrentLine(customEvent.detail.line);
+		}
+	};
+
+	document.addEventListener('editor-cursor-update', handleCursorUpdate);
+	return () => {
+		document.removeEventListener('editor-cursor-update', handleCursorUpdate);
+	};
+	}, []);
 
 	useEffect(() => {
 		const handleNavigateToLinkedFile = (event: Event) => {
@@ -508,6 +535,44 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		}
 	}, [targetDocId]);
 
+	useEffect(() => {
+		// Show outline for:
+		// 1. Editing a .tex file directly
+		// 2. Editing a document linked to a .tex file
+		// 3. Editing a document that contains LaTeX commands
+		const isTexFile = isEditingFile && fileName && fileName.endsWith('.tex');
+		const isDocumentLinkedToTex = !isEditingFile && linkedFileInfo?.fileName?.endsWith('.tex');
+		
+		const hasLatexContent = !isEditingFile && !linkedFileInfo?.fileName && 
+			content && (content.includes('\\section') || content.includes('\\chapter') || 
+			content.includes('\\subsection') || content.includes('\\begin{document}'));
+		
+		const shouldShowOutline = isTexFile || isDocumentLinkedToTex || hasLatexContent;
+		setShowOutline(shouldShowOutline);
+	}, [isEditingFile, fileName, linkedFileInfo?.fileName, content]);
+
+	useEffect(() => {
+		if (isEditingFile) {
+			// For files, use fileContent
+			if (typeof fileContent === 'string') {
+				setCurrentEditorContent(fileContent);
+			} else if (fileContent instanceof ArrayBuffer) {
+				// Try to decode ArrayBuffer as text for tex files
+				try {
+					const decoded = new TextDecoder().decode(fileContent);
+					setCurrentEditorContent(decoded);
+				} catch {
+					setCurrentEditorContent('');
+				}
+			} else {
+				setCurrentEditorContent('');
+			}
+		} else if (!isEditingFile && content) {
+			// For documents, use the document content
+			setCurrentEditorContent(content);
+		}
+	}, [isEditingFile, content, fileContent]);
+
 	const updateProjectLastOpened = async (docId?: string, filePath?: string) => {
 		const projectId = sessionStorage.getItem("currentProjectId");
 		if (!projectId) return;
@@ -544,6 +609,37 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		return lastDoc.id;
 	};
 
+	const handleOutlineSectionClick = (line: number) => {
+		document.dispatchEvent(
+			new CustomEvent("codemirror-goto-line", {
+			detail: { line },
+			})
+		);
+	};
+
+	const handleOutlineRefresh = async () => {
+		if (isEditingFile && selectedFileId) {
+			// For files, re-fetch the file content
+			try {
+				const content = await getFileContent(selectedFileId);
+				if (content) {
+					if (typeof content === 'string') {
+						setCurrentEditorContent(content);
+					} else if (content instanceof ArrayBuffer) {
+						try {
+							const decoded = new TextDecoder().decode(content);
+							setCurrentEditorContent(decoded);
+						} catch {
+							setCurrentEditorContent('');
+						}
+					}
+				}
+			} catch (error) {
+				console.error("Error refreshing file content for outline:", error);
+			}
+		} 
+	};
+	
 	const handleFileSelect = async (
 		fileId: string,
 		content: string | ArrayBuffer,
@@ -553,6 +649,13 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		setIsEditingFile(true);
 		setIsBinaryFile(isBinary);
 		setFileSelectionChange((prev) => prev + 1);
+		
+		// Update current editor content for outline
+		if (typeof content === 'string') {
+			setCurrentEditorContent(content);
+		} else {
+			setCurrentEditorContent('');
+		}
 
 		if (selectedDocId !== null) {
 			onSelectDocument("");
@@ -585,6 +688,11 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	) => {
 		const file = await getFile(fileId);
 		setLastUserSelectedFileId(fileId);
+		if (typeof content === 'string') {
+			setCurrentEditorContent(content);
+		} else {
+			setCurrentEditorContent('');
+		}
 		handleFileSelect(fileId, content, isBinary);
 		if (file) {
 			updateProjectLastOpened(undefined, file.path);
@@ -638,6 +746,9 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	};
 
 	const handleUpdateContent = (content: string) => {
+		// Update the current editor content for outline
+		setCurrentEditorContent(content);
+		
 		if (content !== (isEditingFile ? fileContent : content)) {
 			onUpdateContent(content);
 		}
@@ -651,6 +762,11 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	const handleSidebarCollapse = (collapsed: boolean) => {
 		setSidebarCollapsed(collapsed);
 		setProperty("sidebar-collapsed", collapsed);
+	};
+
+	const handleExplorerResize = (height: number) => {
+		setOutlineHeight(height);
+		setProperty("explorer-height", height);
 	};
 
 	const handleLatexOutputWidthResize = (width: number) => {
@@ -700,6 +816,16 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 				onCollapse={handleSidebarCollapse}
 				className="sidebar-container"
 			>
+				<ResizablePanel
+				direction="vertical"
+				height={explorerHeight}
+				minHeight={100}
+				maxHeight={1000}
+				alignment="end"
+				onResize={handleExplorerResize}
+				collapsible={false}
+				className="explorer-container"
+				>
 				<div className="view-toggle">
 					<button
 						className={activeView === "files" ? "active" : ""}
@@ -741,6 +867,17 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 						onExportCurrentProject={handleExportCurrentProject}
 					/>
 				)}
+				</ResizablePanel>
+
+				{showOutline && (
+					<LaTeXOutline
+						content={currentEditorContent}
+						currentLine={currentLine}
+						onSectionClick={handleOutlineSectionClick}
+						onRefresh={handleOutlineRefresh}
+					/>
+				)}
+
 			</ResizablePanel>
 
 			<div

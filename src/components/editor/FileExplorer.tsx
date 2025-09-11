@@ -49,7 +49,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	initialSelectedFile,
 	initialExpandedPaths,
 	currentProjectId,
-	onExportCurrentProject,
+	onExportCurrentProject
 }) => {
 	const {
 		fileTree,

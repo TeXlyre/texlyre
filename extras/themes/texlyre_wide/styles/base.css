@@ -61,3 +61,21 @@
 	outline: 2px solid var(--pico-primary);
 	outline-offset: 2px;
 }
+
+
+[data-theme-plugin="texlyre"] ::-webkit-scrollbar {
+	width: 6px;
+}
+
+[data-theme-plugin="texlyre"] ::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+[data-theme-plugin="texlyre"] ::-webkit-scrollbar-thumb {
+	background-color: var(--accent-border);
+	border-radius: 3px;
+}
+
+[data-theme-plugin="texlyre"] ::-webkit-scrollbar-thumb:hover {
+	background-color: var(--pico-secondary);
+}
