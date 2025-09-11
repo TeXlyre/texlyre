@@ -617,6 +617,29 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		);
 	};
 
+	const handleOutlineRefresh = async () => {
+		if (isEditingFile && selectedFileId) {
+			// For files, re-fetch the file content
+			try {
+				const content = await getFileContent(selectedFileId);
+				if (content) {
+					if (typeof content === 'string') {
+						setCurrentEditorContent(content);
+					} else if (content instanceof ArrayBuffer) {
+						try {
+							const decoded = new TextDecoder().decode(content);
+							setCurrentEditorContent(decoded);
+						} catch {
+							setCurrentEditorContent('');
+						}
+					}
+				}
+			} catch (error) {
+				console.error("Error refreshing file content for outline:", error);
+			}
+		} 
+	};
+	
 	const handleFileSelect = async (
 		fileId: string,
 		content: string | ArrayBuffer,
@@ -851,6 +874,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 						content={currentEditorContent}
 						currentLine={currentLine}
 						onSectionClick={handleOutlineSectionClick}
+						onRefresh={handleOutlineRefresh}
 					/>
 				)}
 

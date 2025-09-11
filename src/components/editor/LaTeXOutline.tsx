@@ -4,24 +4,27 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useProperties } from "../../hooks/useProperties";
 import { LaTeXOutlineParser } from "../../utils/latexOutlineParser";
-import { ChevronDownIcon, ChevronRightIcon, FileTextIcon } from "../common/Icons";
+import { ChevronDownIcon, ChevronRightIcon, RefreshIcon } from "../common/Icons";
 import OutlineItem from "./LaTeXOutlineItem";
 
 interface LaTeXOutlineProps {
 	content: string;
 	currentLine?: number;
 	onSectionClick: (line: number) => void;
+    onRefresh?: () => Promise<void>;
 }
 
 const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({ 
 	content, 
 	currentLine = 1, 
-	onSectionClick 
+	onSectionClick,
+    onRefresh
 }) => {
 	const { getProperty, setProperty, registerProperty } = useProperties();
 	const propertiesRegistered = useRef(false);
 	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 	const [isCollapsed, setIsCollapsed] = useState(true);
+	const [refreshKey, setRefreshKey] = useState(0);
 
 	useEffect(() => {
 		if (propertiesRegistered.current) return;
@@ -50,11 +53,18 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 	const sections = useMemo(() => {
 		if (!content.trim()) return [];
 		return LaTeXOutlineParser.parse(content);
-	}, [content]);
+	}, [content, refreshKey]);
 
 	const currentSection = useMemo(() => {
 		return LaTeXOutlineParser.getCurrentSection(sections, currentLine);
 	}, [sections, currentLine]);
+
+	const handleRefresh = async () => {
+		if (onRefresh) {
+			await onRefresh();
+		}
+		setRefreshKey(prev => prev + 1);
+	};
 
 	const handleToggleCollapse = () => {
 		const newCollapsed = !isCollapsed;
@@ -73,6 +83,13 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 						{isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
 					</button>
 					<span className="outline-header-title">OUTLINE</span>
+					<button
+						className="action-btn"
+						title="Refresh Outline"
+						onClick={handleRefresh}
+					>
+						<RefreshIcon />
+					</button>
 				</div>
 				{!isCollapsed && (
 					<div className="outline-empty-state">
@@ -97,6 +114,13 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 				<span className="outline-section-count">
 					{sections.length}
 				</span>
+				<button
+					className="action-btn"
+					title="Refresh Outline"
+					onClick={handleRefresh}
+				>
+					<RefreshIcon />
+				</button>
 			</div>
 			
 			{!isCollapsed && (
