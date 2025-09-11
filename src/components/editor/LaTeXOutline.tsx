@@ -1,7 +1,8 @@
 // src/components/editor/LaTeXOutline.tsx
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
+import { useProperties } from "../../hooks/useProperties";
 import { LaTeXOutlineParser } from "../../utils/latexOutlineParser";
 import { ChevronDownIcon, ChevronRightIcon, FileTextIcon } from "../common/Icons";
 import OutlineItem from "./LaTeXOutlineItem";
@@ -17,7 +18,34 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 	currentLine = 1, 
 	onSectionClick 
 }) => {
-	const [isCollapsed, setIsCollapsed] = useState(false);
+	const { getProperty, setProperty, registerProperty } = useProperties();
+	const propertiesRegistered = useRef(false);
+	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
+	const [isCollapsed, setIsCollapsed] = useState(true);
+
+	useEffect(() => {
+		if (propertiesRegistered.current) return;
+		propertiesRegistered.current = true;
+
+		registerProperty({
+			id: "outline-collapsed",
+			category: "UI",
+			subcategory: "Layout",
+			defaultValue: true,
+		});
+	}, [registerProperty]);
+
+	useEffect(() => {
+		if (propertiesLoaded) return;
+
+		const storedCollapsed = getProperty("outline-collapsed");
+
+		if (storedCollapsed !== undefined) {
+			setIsCollapsed(Boolean(storedCollapsed));
+		}
+
+		setPropertiesLoaded(true);
+	}, [getProperty, propertiesLoaded]);
 
 	const sections = useMemo(() => {
 		if (!content.trim()) return [];
@@ -29,7 +57,9 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 	}, [sections, currentLine]);
 
 	const handleToggleCollapse = () => {
-		setIsCollapsed(!isCollapsed);
+		const newCollapsed = !isCollapsed;
+		setIsCollapsed(newCollapsed);
+		setProperty("outline-collapsed", newCollapsed);
 	};
 
 	if (sections.length === 0) {

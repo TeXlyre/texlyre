@@ -1,4 +1,4 @@
-// src/components/latex/LaTeXOutput.tsx
+// src/components/output/LaTeXOutput.tsx
 import React from "react";
 import { useEffect, useRef, useState } from "react";
 

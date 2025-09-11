@@ -20,7 +20,7 @@ import { buildUrlWithFragments, parseUrlFragments } from "../../utils/urlUtils";
 import type { YjsDocUrl } from "../../types/yjs";
 import ResizablePanel from "../common/ResizablePanel";
 import LaTeXOutline from "./LaTeXOutline";
-import LaTeXOutput from "../latex/LaTeXOutput";
+import LaTeXOutput from "../output/LaTeXOutput";
 import ProjectExportModal from "../project/ProjectExportModal";
 import DocumentExplorer from "./DocumentExplorer";
 import Editor from "./Editor";

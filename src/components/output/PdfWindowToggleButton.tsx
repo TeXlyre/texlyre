@@ -1,4 +1,4 @@
-// src/components/pdf/PdfWindowToggleButton.tsx
+// src/components/output/PdfWindowToggleButton.tsx
 import React, { useEffect, useState } from "react";
 
 import { pdfWindowService } from "../../services/PdfWindowService";

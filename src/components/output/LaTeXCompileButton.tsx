@@ -1,4 +1,4 @@
-// src/components/latex/LaTeXCompileButton.tsx
+// src/components/output/LaTeXCompileButton.tsx
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 

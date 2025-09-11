@@ -1,4 +1,4 @@
-// src/components/latex/PdfViewerWindow.tsx
+// src/components/output/PdfViewerWindow.tsx
 import React, { useEffect, useRef, useState } from "react";
 
 import { pluginRegistry } from "../../plugins/PluginRegistry";
