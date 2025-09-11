@@ -98,6 +98,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	const [activeView, setActiveView] = useState<"documents" | "files">("files");
 	const [_hasNavigated, _setHasNavigated] = useState(false);
 	const [fileContent, setFileContent] = useState<string | ArrayBuffer>("");
+	const [currentEditorContent, setCurrentEditorContent] = useState<string>("");
 	const [isEditingFile, setIsEditingFile] = useState(false);
 	const [isBinaryFile, setIsBinaryFile] = useState(false);
 	const [fileName, setFileName] = useState("");
@@ -548,9 +549,42 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	}, [targetDocId]);
 
 	useEffect(() => {
-	const shouldShowOutline = isEditingFile && fileName.endsWith('.tex');
-	setShowOutline(shouldShowOutline);
-	}, [isEditingFile, fileName]);
+		// Show outline for:
+		// 1. Editing a .tex file directly
+		// 2. Editing a document linked to a .tex file
+		// 3. Editing a document that contains LaTeX commands
+		const isTexFile = isEditingFile && fileName && fileName.endsWith('.tex');
+		const isDocumentLinkedToTex = !isEditingFile && linkedFileInfo?.fileName?.endsWith('.tex');
+		
+		const hasLatexContent = !isEditingFile && !linkedFileInfo?.fileName && 
+			content && (content.includes('\\section') || content.includes('\\chapter') || 
+			content.includes('\\subsection') || content.includes('\\begin{document}'));
+		
+		const shouldShowOutline = isTexFile || isDocumentLinkedToTex || hasLatexContent;
+		setShowOutline(shouldShowOutline);
+	}, [isEditingFile, fileName, linkedFileInfo?.fileName, content]);
+
+	useEffect(() => {
+		if (isEditingFile) {
+			// For files, use fileContent
+			if (typeof fileContent === 'string') {
+				setCurrentEditorContent(fileContent);
+			} else if (fileContent instanceof ArrayBuffer) {
+				// Try to decode ArrayBuffer as text for tex files
+				try {
+					const decoded = new TextDecoder().decode(fileContent);
+					setCurrentEditorContent(decoded);
+				} catch {
+					setCurrentEditorContent('');
+				}
+			} else {
+				setCurrentEditorContent('');
+			}
+		} else if (!isEditingFile && content) {
+			// For documents, use the document content
+			setCurrentEditorContent(content);
+		}
+	}, [isEditingFile, fileContent, content, selectedFileId, fileSelectionChange]);
 
 	const updateProjectLastOpened = async (docId?: string, filePath?: string) => {
 		const projectId = sessionStorage.getItem("currentProjectId");
@@ -605,6 +639,13 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		setIsEditingFile(true);
 		setIsBinaryFile(isBinary);
 		setFileSelectionChange((prev) => prev + 1);
+		
+		// Update current editor content for outline
+		if (typeof content === 'string') {
+			setCurrentEditorContent(content);
+		} else {
+			setCurrentEditorContent('');
+		}
 
 		if (selectedDocId !== null) {
 			onSelectDocument("");
@@ -637,6 +678,11 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	) => {
 		const file = await getFile(fileId);
 		setLastUserSelectedFileId(fileId);
+		if (typeof content === 'string') {
+			setCurrentEditorContent(content);
+		} else {
+			setCurrentEditorContent('');
+		}
 		handleFileSelect(fileId, content, isBinary);
 		if (file) {
 			updateProjectLastOpened(undefined, file.path);
@@ -690,6 +736,9 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	};
 
 	const handleUpdateContent = (content: string) => {
+		// Update the current editor content for outline
+		setCurrentEditorContent(content);
+		
 		if (content !== (isEditingFile ? fileContent : content)) {
 			onUpdateContent(content);
 		}
@@ -811,9 +860,8 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 				</ResizablePanel>
 
 				{showOutline && (
-
 					<LaTeXOutline
-						content={isEditingFile ? (typeof fileContent === 'string' ? fileContent : '') : content}
+						content={currentEditorContent}
 						currentLine={currentLine}
 						onSectionClick={handleOutlineSectionClick}
 					/>
