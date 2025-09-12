@@ -225,7 +225,6 @@ export const commentState = StateField.define<RangeSet<Decoration>>({
 			if (e.is(addComment)) {
 				const { id, positions, resolved } = e.value;
 
-				// Always hide the comment tags (both resolved and unresolved)
 				if (
 					positions.openTag &&
 					positions.openTag.start !== undefined &&
@@ -258,7 +257,6 @@ export const commentState = StateField.define<RangeSet<Decoration>>({
 					});
 				}
 
-				// Only apply content highlighting to unresolved comments
 				if (
 					!resolved &&
 					positions.content &&
@@ -298,6 +296,14 @@ export const commentState = StateField.define<RangeSet<Decoration>>({
 export function processComments(view: EditorView, comments: Comment[]): void {
 	if (!view || !comments || !Array.isArray(comments)) return;
 
+	if (comments.length === 0) {
+		const currentState = view.state.field(commentState, false);
+		if (currentState && currentState.size > 0) {
+			view.dispatch({ effects: [clearComments.of(null)] });
+		}
+		return;
+	}
+
 	try {
 		const effects: (
 			| StateEffect<null>
@@ -316,11 +322,9 @@ export function processComments(view: EditorView, comments: Comment[]): void {
 		effects.push(clearEffect);
 
 		const docLength = view.state.doc.length;
-		const _docContent = view.state.doc.toString();
 
 		console.log("[CommentExtension] Processing comments:", comments.length);
 
-		// Process ALL comments to hide their tags, but only highlight unresolved ones
 		const sortedComments = [...comments].sort(
 			(a, b) => a.openTagStart - b.openTagStart,
 		);
@@ -370,7 +374,7 @@ export function processComments(view: EditorView, comments: Comment[]): void {
 			}
 		}
 
-		if (view.state) {
+		if (view.state && effects.length > 1) {
 			view.dispatch({ effects });
 		}
 	} catch (error) {
@@ -385,6 +389,9 @@ class CommentProcessor {
 	private commentRanges: CommentRange[] = [];
 	private inputHandler: ((event: Event) => boolean) | null = null;
 	private keydownHandler: ((event: KeyboardEvent) => boolean) | null = null;
+	private contentChangeTimeout: number | null = null;
+	private lastProcessTime = 0;
+	private readonly PROCESS_DEBOUNCE_DELAY = 150;
 
 	constructor(view: EditorView) {
 		this.view = view;
@@ -695,18 +702,30 @@ class CommentProcessor {
 	}
 
 	scheduleProcess() {
-		if (this.pendingUpdate === null) {
-			this.pendingUpdate = requestAnimationFrame(() => {
-				this.pendingUpdate = null;
-				this.checkContent();
-			});
+		if (this.contentChangeTimeout) {
+			clearTimeout(this.contentChangeTimeout);
+			this.contentChangeTimeout = null;
 		}
+
+		this.contentChangeTimeout = window.setTimeout(() => {
+			this.contentChangeTimeout = null;
+			this.checkContent();
+		}, this.PROCESS_DEBOUNCE_DELAY);
 	}
 
 	checkContent() {
 		const content = this.view.state.doc.toString();
+		
 		if (content !== this.lastContent) {
+			const now = Date.now();
+			
+			if (now - this.lastProcessTime < 100) {
+				this.scheduleProcess();
+				return;
+			}
+			
 			this.lastContent = content;
+			this.lastProcessTime = now;
 
 			const event = new CustomEvent("codemirror-content-changed", {
 				detail: { content, view: this.view },
@@ -721,13 +740,20 @@ class CommentProcessor {
 			this.commentRanges = ranges;
 		}
 
-		this.scheduleProcess();
+		if (update.docChanged) {
+			this.scheduleProcess();
+		}
 	}
 
 	destroy() {
 		if (this.pendingUpdate !== null) {
 			cancelAnimationFrame(this.pendingUpdate);
 			this.pendingUpdate = null;
+		}
+
+		if (this.contentChangeTimeout !== null) {
+			clearTimeout(this.contentChangeTimeout);
+			this.contentChangeTimeout = null;
 		}
 
 		if (this.inputHandler) {
