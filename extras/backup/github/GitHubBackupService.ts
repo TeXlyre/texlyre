@@ -842,6 +842,8 @@ export class GitHubBackupService {
 		let importedFilesCount = 0;
 		for (const [filePath, fileSha] of data.files.entries()) {
 			try {
+				await fileStorageService.createDirectoryPath(filePath);
+
 				const rawContentString = await gitHubApiService.getBlobContent(
 					credentials.token,
 					this.currentRepo?.owner,
