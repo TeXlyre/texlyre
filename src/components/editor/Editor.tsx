@@ -1,6 +1,6 @@
 // src/components/editor/Editor.tsx
 import type React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useMemo, useState } from "react";
 
 import { BibliographyProvider } from '../../contexts/BibliographyContext';
 import { LSPProvider } from '../../contexts/LSPContext';
@@ -727,9 +727,11 @@ const Editor: React.FC<EditorComponentProps> = ({
 
 	const shouldUseCollaborativeViewer =
 		!isEditingFile && fileName && linkedDocumentId;
-	const collaborativeViewerPlugin = shouldUseCollaborativeViewer
-		? pluginRegistry.getCollaborativeViewerForFile(fileName, mimeType)
-		: null;
+		
+	const collaborativeViewerPlugin = useMemo(() => {
+		if (!shouldUseCollaborativeViewer) return null;
+		return pluginRegistry.getCollaborativeViewerForFile(fileName, mimeType);
+	}, [shouldUseCollaborativeViewer, fileName, mimeType]);
 
 	const viewerPlugin =
 		isEditingFile && fileName && !linkedDocumentId
