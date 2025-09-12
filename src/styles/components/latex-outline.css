@@ -1,14 +1,18 @@
 .latex-outline {
-	margin-top: var(--space-sm);
 	border-top: 1px solid var(--accent-border);
 	background-color: var(--pico-secondary-background);
-    margin-right: var(--space-xs);
-    bottom: auto;
+	margin-right: var(--space-xs);
+	display: flex;
+	flex-direction: column;
+	margin-top: auto;
+	min-height: 0;
+	flex: 0 1 auto;
+	overflow: hidden;
 }
 
 .latex-outline-header {
 	display: flex;
-    position: sticky;
+	position: sticky;
 	align-items: center;
 	gap: var(--space-xs);
 	padding: var(--space-sm);
@@ -19,6 +23,7 @@
 	color: var(--text-color);
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
+	flex-shrink: 0;
 }
 
 .outline-toggle-btn {
@@ -54,9 +59,10 @@
 }
 
 .outline-content {
-	max-height: 100%;
+	flex: 1;
 	overflow-y: auto;
 	padding: var(--space-xs) 0;
+	min-height: 0;
 }
 
 .outline-empty-state {

@@ -7,10 +7,10 @@ interface ResizablePanelProps {
 	direction: "horizontal" | "vertical";
 	width?: number;
 	height?: number;
-	minWidth?: number;
-	maxWidth?: number;
-	minHeight?: number;
-	maxHeight?: number;
+	minWidth?: number | string;
+	maxWidth?: number | string;
+	minHeight?: number | string;
+	maxHeight?: number | string;
 	className?: string;
 	handleClassName?: string;
 	onResize?: (size: number) => void;
@@ -19,6 +19,7 @@ interface ResizablePanelProps {
 	onCollapse?: (collapsed: boolean) => void;
 	collapsed?: boolean;
 	defaultCollapsed?: boolean;
+	maintainAlignment?: boolean;
 }
 
 const ResizablePanel: React.FC<ResizablePanelProps> = ({
@@ -38,6 +39,7 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 	onCollapse,
 	collapsed: externalCollapsed,
 	defaultCollapsed = false,
+	maintainAlignment = false,
 }) => {
 	const [size, setSize] = useState(direction === "horizontal" ? width : height);
 	const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
@@ -52,6 +54,37 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 
 	const collapsed =
 		externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
+
+	const parseLimit = (limit: number | string, containerSize: number): number => {
+		if (typeof limit === "string" && limit.endsWith("%")) {
+			const percentage = parseFloat(limit.slice(0, -1));
+			return Math.round((percentage / 100) * containerSize);
+		}
+		return typeof limit === "number" ? limit : parseInt(limit, 10);
+	};
+
+	const getContainerSize = (): number => {
+		if (!panelRef.current?.parentElement) return direction === "horizontal" ? 800 : 600;
+		
+		const parent = panelRef.current.parentElement;
+		return direction === "horizontal" ? parent.clientWidth : parent.clientHeight;
+	};
+
+	const getLimits = () => {
+		const containerSize = getContainerSize();
+		
+		if (direction === "horizontal") {
+			return {
+				min: parseLimit(minWidth, containerSize),
+				max: parseLimit(maxWidth, containerSize)
+			};
+		} else {
+			return {
+				min: parseLimit(minHeight, containerSize),
+				max: parseLimit(maxHeight, containerSize)
+			};
+		}
+	};
 
 	const handleMouseDown = (e: MouseEvent | React.TouchEvent) => {
 		e.preventDefault();
@@ -74,6 +107,27 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 	}, [width, height, direction]);
 
 	useEffect(() => {
+		const handleWindowResize = () => {
+			if (!maintainAlignment || collapsed) return;
+
+			const { min, max } = getLimits();
+			const constrainedSize = Math.max(min, Math.min(max, size));
+			
+			if (constrainedSize !== size) {
+				setSize(constrainedSize);
+				if (onResize) {
+					onResize(constrainedSize);
+				}
+			}
+		};
+
+		if (maintainAlignment) {
+			window.addEventListener("resize", handleWindowResize);
+			return () => window.removeEventListener("resize", handleWindowResize);
+		}
+	}, [maintainAlignment, collapsed, size, minWidth, maxWidth, minHeight, maxHeight, onResize]);
+
+	useEffect(() => {
 		const handleMouseMove = (e: Event) => {
 			if (!resizing) return;
 
@@ -93,11 +147,8 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 
 			let newSize = startSizeRef.current + adjustedDelta;
 
-			if (direction === "horizontal") {
-				newSize = Math.max(minWidth, Math.min(maxWidth, newSize));
-			} else {
-				newSize = Math.max(minHeight, Math.min(maxHeight, newSize));
-			}
+			const { min, max } = getLimits();
+			newSize = Math.max(min, Math.min(max, newSize));
 
 			setSize(newSize);
 			if (onResize) {
@@ -211,21 +262,24 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 		return collapsed ? "▾" : "▴";
 	};
 
+	const { min: minLimit, max: maxLimit } = getLimits();
+
 	const style: React.CSSProperties = {
 		position: "relative",
 		display: "flex",
 		flexDirection: "column",
+		height: "100%",
 		...(direction === "horizontal"
 			? {
 					width: `${size}px`,
-					minWidth: collapsed ? "0" : `${minWidth}px`,
-					maxWidth: collapsed ? "0" : `${maxWidth}px`,
+					minWidth: collapsed ? "0" : `${minLimit}px`,
+					maxWidth: collapsed ? "0" : `${maxLimit}px`,
 					transition: resizing ? "none" : "width 0.2s ease-in-out",
 				}
 			: {
 					height: `${size}px`,
-					minHeight: collapsed ? "0" : `${minHeight}px`,
-					maxHeight: collapsed ? "0" : `${maxHeight}px`,
+					minHeight: collapsed ? "0" : `${minLimit}px`,
+					maxHeight: collapsed ? "0" : `${maxLimit}px`,
 					transition: resizing ? "none" : "height 0.2s ease-in-out",
 				}),
 	};

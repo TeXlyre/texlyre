@@ -639,7 +639,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 			}
 		} 
 	};
-	
+
 	const handleFileSelect = async (
 		fileId: string,
 		content: string | ArrayBuffer,
@@ -817,14 +817,15 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 				className="sidebar-container"
 			>
 				<ResizablePanel
-				direction="vertical"
-				height={explorerHeight}
-				minHeight={100}
-				maxHeight={1000}
-				alignment="end"
-				onResize={handleExplorerResize}
-				collapsible={false}
-				className="explorer-container"
+					direction="vertical"
+					height={explorerHeight}
+					minHeight={100}
+					maxHeight="85%"
+					alignment="end"
+					onResize={handleExplorerResize}
+					collapsible={false}
+					maintainAlignment={true}
+					className="explorer-container"
 				>
 				<div className="view-toggle">
 					<button
