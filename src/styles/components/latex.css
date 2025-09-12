@@ -143,8 +143,8 @@ embed {
 }
 
 .visualizer-panel {
-	flex: 0 0 auto;
-	overflow: auto;
+	flex: 1;
+	overflow-y: auto;
 	border-bottom: 1px solid var(--accent-border);
 }
 
