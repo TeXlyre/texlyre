@@ -583,6 +583,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 													pageRefs.current.delete(pageNumber);
 												}
 											}}
+											className="pdf-page-scroll"
 										>
 											<Page
 												pageNumber={pageNumber}
@@ -594,7 +595,6 @@ const PdfRenderer: React.FC<RendererProps> = ({
 														Loading page {pageNumber}...
 													</div>
 												}
-												className="pdf-page-scroll"
 												onLoadSuccess={onPageLoadSuccess(pageNumber)}
 											/>
 										</div>
