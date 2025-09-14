@@ -317,3 +317,12 @@
   scrollbar-width: thin; /* show thin scrollbar on hover */
   scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
 }
+
+.react-pdf__Page,
+.react-pdf__Page canvas,
+.textLayer,
+.textLayer * ,
+.annotationLayer,
+.annotationLayer * {
+  box-sizing: content-box !important;
+}
