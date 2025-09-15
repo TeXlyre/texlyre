@@ -6,6 +6,7 @@ import PdfWindowToggleButton from "./PdfWindowToggleButton";
 import { useCollab } from "../../hooks/useCollab";
 import { useFileTree } from "../../hooks/useFileTree";
 import { useLaTeX } from "../../hooks/useLaTeX";
+import { useSettings } from "../../hooks/useSettings";
 import type { DocumentList } from "../../types/documents";
 import type { FileNode } from "../../types/files";
 import { isTemporaryFile } from "../../utils/fileUtils";
@@ -49,6 +50,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 	} = useLaTeX();
 	const { selectedFileId, getFile, fileTree } = useFileTree();
 	const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
+	const { getSetting } = useSettings();
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 	const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
 	const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
@@ -126,6 +128,50 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		};
 	}, []);
 
+	const shouldNavigateToMain = async (mainFilePath: string): Promise<boolean> => {
+		const navigationSetting = getSetting("latex-auto-navigate-to-main")?.value as string ?? "conditional";
+		
+		console.log(`[Navigation] Setting: ${navigationSetting}, selectedFileId: ${selectedFileId}, selectedDocId: ${selectedDocId}`);
+		
+		if (navigationSetting === "never") {
+			console.log("[Navigation] Never navigate - setting is 'never'");
+			return false;
+		}
+		
+		if (navigationSetting === "always") {
+			console.log("[Navigation] Always navigate - setting is 'always'");
+			return true;
+		}
+		
+		// Conditional navigation logic
+		if (navigationSetting === "conditional") {
+			// Check if we're currently editing a LaTeX file directly
+			if (selectedFileId) {
+				try {
+					const currentFile = await getFile(selectedFileId);
+					console.log(`[Navigation] Current file: ${currentFile?.path}, isTeX: ${currentFile?.path.endsWith(".tex")}`);
+					if (currentFile?.path.endsWith(".tex")) {
+						console.log(`[Navigation] Not navigating - already editing LaTeX file: ${currentFile.path}`);
+						return false; // Don't navigate if already editing a .tex file
+					}
+				} catch (error) {
+					console.warn("Error getting current file:", error);
+				}
+			}
+			
+			// Check if we're currently editing a document linked to a LaTeX file
+			if (selectedDocId && linkedFileInfo?.fileName?.endsWith(".tex")) {
+				console.log(`[Navigation] Not navigating - already editing LaTeX-linked document: ${linkedFileInfo.fileName}`);
+				return false; // Don't navigate if already editing a LaTeX-linked document
+			}
+			
+			console.log(`[Navigation] Will navigate to main file: ${mainFilePath}`);
+			return true; // Navigate if no LaTeX file is currently open
+		}
+		
+		return false;
+	};
+
 	const handleCompileOrStop = async () => {
 		if (isCompiling) {
 			stopCompilation();
@@ -134,10 +180,15 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 				onExpandLatexOutput();
 			}
 
-			if (shouldNavigateOnCompile && onNavigateToLinkedFile && effectiveMainFile) {
-				if (linkedFileInfo?.filePath === effectiveMainFile) {
+			const shouldNavigate = await shouldNavigateToMain(effectiveMainFile);
+			console.log(`[Navigation] Should navigate: ${shouldNavigate}, shouldNavigateOnCompile: ${shouldNavigateOnCompile}`);
+
+			if (shouldNavigateOnCompile && shouldNavigate) {
+				if (linkedFileInfo?.filePath === effectiveMainFile && onNavigateToLinkedFile) {
+					console.log("[Navigation] Navigating to linked file");
 					onNavigateToLinkedFile();
 				} else {
+					console.log(`[Navigation] Dispatching navigate-to-compiled-file event for: ${effectiveMainFile}`);
 					document.dispatchEvent(
 						new CustomEvent("navigate-to-compiled-file", {
 							detail: {
@@ -167,8 +218,10 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 			onExpandLatexOutput();
 		}
 
-		if (shouldNavigateOnCompile && onNavigateToLinkedFile && effectiveMainFile) {
-			if (linkedFileInfo?.filePath === effectiveMainFile) {
+		const shouldNavigate = await shouldNavigateToMain(effectiveMainFile);
+
+		if (shouldNavigateOnCompile && shouldNavigate) {
+			if (linkedFileInfo?.filePath === effectiveMainFile && onNavigateToLinkedFile) {
 				onNavigateToLinkedFile();
 			} else {
 				document.dispatchEvent(

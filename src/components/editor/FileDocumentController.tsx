@@ -660,7 +660,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		if (selectedDocId !== null) {
 			onSelectDocument("");
 		}
-
+		selectFile(fileId);
 		const file = await getFile(fileId);
 		if (file) {
 			if (file.name.endsWith(".tex")) {

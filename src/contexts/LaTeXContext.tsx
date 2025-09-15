@@ -52,6 +52,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			(getSetting("latex-store-working-directory")?.value as boolean) ?? false;
 		const initialAutoCompile =
 			(getSetting("latex-auto-compile-on-open")?.value as boolean) ?? false;
+		const initialAutoNavigate =
+			(getSetting("latex-auto-navigate-to-main")?.value as string) ?? "conditional";
 
 		setLatexEngine(initialEngine);
 
@@ -94,6 +96,21 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			label: "Auto-compile on project open",
 			description: "Automatically compile LaTeX when opening a project",
 			defaultValue: initialAutoCompile,
+		});
+
+		registerSetting({
+			id: "latex-auto-navigate-to-main",
+			category: "LaTeX",
+			subcategory: "Compilation",
+			type: "select",
+			label: "Auto-navigate to main file on compile",
+			description: "Control when to automatically navigate to the main LaTeX file during compilation",
+			defaultValue: initialAutoNavigate,
+			options: [
+				{ label: "Only when no LaTeX file is open", value: "conditional" },
+				{ label: "Always navigate to main file", value: "always" },
+				{ label: "Never navigate to main file", value: "never" },
+			],
 		});
 
 		registerSetting({
