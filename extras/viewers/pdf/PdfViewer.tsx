@@ -3,6 +3,7 @@ import * as pdfjs from "pdfjs-dist";
 import pdfWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
+
 import {
 	ChevronLeftIcon,
 	ChevronRightIcon,
@@ -18,6 +19,7 @@ import { usePluginFileInfo } from "../../../src/hooks/usePluginFileInfo";
 import { useSettings } from "../../../src/hooks/useSettings";
 import type { ViewerProps } from "../../../src/plugins/PluginInterface";
 import "./styles.css";
+import { pdfViewerSettings } from "./settings";
 import { PLUGIN_NAME, PLUGIN_VERSION } from "./PdfViewerPlugin";
 
 if (!pdfjs.GlobalWorkerOptions.workerSrc) {
@@ -330,8 +332,10 @@ const PdfViewer: React.FC<ViewerProps> = ({
 		setScale((prevScale) => Math.max(prevScale - 0.25, 0.25));
 	};
 
-	const handleResetZoom = () => {
-		setScale(1);
+	const handleZoomChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+		const value = event.target.value;
+		if (value === "custom") return;
+		setScale(parseFloat(value) / 100);
 	};
 
 	const handlePageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -409,20 +413,51 @@ const PdfViewer: React.FC<ViewerProps> = ({
 			</PluginControlGroup>
 
 			<PluginControlGroup>
-				<button onClick={handleZoomOut} title="Zoom Out" disabled={isLoading}>
-					<ZoomOutIcon />
-				</button>
-				<button
-					onClick={handleResetZoom}
-					title="Reset Zoom"
-					disabled={isLoading}
-					className="zoom-percentage"
-				>
-					{Math.round(scale * 100)}%
-				</button>
-				<button onClick={handleZoomIn} title="Zoom In" disabled={isLoading}>
-					<ZoomInIcon />
-				</button>
+				{(() => {
+					const zoomOptions = pdfViewerSettings.find(s => s.id === "pdf-renderer-initial-zoom")?.options || [
+						{ label: "25%", value: "25" },
+						{ label: "50%", value: "50" },
+						{ label: "75%", value: "75" },
+						{ label: "100%", value: "100" },
+						{ label: "125%", value: "125" },
+						{ label: "150%", value: "150" },
+						{ label: "200%", value: "200" },
+						{ label: "300%", value: "300" },
+						{ label: "400%", value: "400" },
+						{ label: "500%", value: "500" },
+					];
+					const currentZoom = Math.round(scale * 100).toString();
+					const hasCustomZoom = !zoomOptions.some(opt => String(opt.value) === currentZoom);
+					
+					return (
+						<>
+							<button onClick={handleZoomOut} title="Zoom Out" disabled={isLoading}>
+								<ZoomOutIcon />
+							</button>
+							<select
+								value={hasCustomZoom ? "custom" : currentZoom}
+								onChange={handleZoomChange}
+								disabled={isLoading}
+								className="zoom-dropdown"
+								title="Zoom Level"
+							>
+								{zoomOptions.map(option => (
+									<option key={String(option.value)} value={String(option.value)}>
+										{option.label}
+									</option>
+								))}
+								{hasCustomZoom && (
+									<option value="custom" className="custom-zoom-option">
+										{Math.round(scale * 100)}%
+									</option>
+								)}
+							</select>
+							<button onClick={handleZoomIn} title="Zoom In" disabled={isLoading}>
+								<ZoomInIcon />
+							</button>
+						</>
+					);
+				})()}
 			</PluginControlGroup>
 
 			<PluginControlGroup>
@@ -461,10 +496,6 @@ const PdfViewer: React.FC<ViewerProps> = ({
 							<canvas
 								ref={canvasRef}
 								className="pdf-page-canvas"
-								style={{
-									transform: `scale(${scale})`,
-									transformOrigin: "center",
-								}}
 							/>
 						</div>
 					</div>

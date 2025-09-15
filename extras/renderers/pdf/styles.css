@@ -63,6 +63,34 @@
 	cursor: not-allowed;
 }
 
+.toolbarZoomSelect {
+	min-width: 70px;
+	text-align: center;
+	padding: 0.2rem 0.2rem;
+	font-size: 0.9rem;
+	margin-top: var(--space-md);
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border, #444);
+	border-radius: 4px;
+	color: var(--text-color);
+	cursor: pointer;
+	transition: background-color 0.2s;
+}
+
+.toolbarZoomSelect:hover:not(:disabled) {
+	background-color: var(--pico-primary-focus);
+}
+
+.toolbarZoomSelect:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.toolbarZoomSelect option {
+	background-color: var(--pico-background);
+	color: var(--text-color);
+}
+
 .pageNumber {
 	display: flex;
 	align-items: center;
@@ -130,7 +158,7 @@
 
 .pdf-page-scroll {
 	display: flex;
-	justify-content: center;
+	justify-content: flex-start;
 	background-color: #f5f5f5 !important;
 	padding: 10px 0;
 	width: 100%;
