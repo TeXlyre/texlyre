@@ -56,11 +56,37 @@
 	white-space: nowrap;
 }
 
-/* Special styling for zoom percentage button */
-.control-group button.zoom-percentage {
-	min-width: 50px;
+.zoom-dropdown {
+	min-width: 70px;
+	text-align: center;
+	padding: 0.25rem 0.5rem;
+	margin-bottom: 0;
+	border: 1px solid var(--accent-border, #444);
+	border-radius: 4px;
+	background-color: var(--pico-background);
+	color: var(--text-color);
 	font-size: 0.75rem;
 	font-weight: 600;
+	height: 32px;
+	cursor: pointer;
+}
+
+.zoom-dropdown:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.zoom-dropdown:hover:not(:disabled) {
+	background-color: var(--pico-primary-focus);
+}
+
+.zoom-dropdown option {
+	background-color: var(--pico-background);
+	color: var(--text-color);
+}
+
+.zoom-dropdown option.custom-zoom-option {
+	font-weight: bold;
 }
 
 .pdf-viewer-content {
@@ -75,18 +101,21 @@
 
 .pdf-container {
 	display: flex;
-	justify-content: center;
-	align-items: center;
-	max-height: 100%;
-	max-width: 100%;
+	justify-content: flex-start;
+	align-items: flex-start;
+	height: 100%;
+	width: 100%;
 	overflow: auto;
+	padding: 2rem;
+	box-sizing: border-box;
 }
 
 .pdf-page-container {
-	margin: 0 auto;
 	position: relative;
 	display: inline-block;
 	transition: transform 0.2s ease;
+	min-width: fit-content;
+	min-height: fit-content;
 }
 
 .pdf-page-canvas {
@@ -94,6 +123,10 @@
 	margin: 0;
 	border: 1px solid var(--accent-border, #555);
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	max-width: none;
+	max-height: none;
+	width: auto;
+	height: auto;
 }
 
 .loading-indicator {

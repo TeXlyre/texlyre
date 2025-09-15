@@ -17,6 +17,7 @@ import {
 	ExpandIcon,
 	MinimizeIcon,
 } from "../../../src/components/common/Icons";
+import { pdfRendererSettings } from "./settings";
 import { useSettings } from "../../../src/hooks/useSettings";
 import { useProperties } from "../../../src/hooks/useProperties";
 import type { RendererProps } from "../../../src/plugins/PluginInterface";
@@ -282,6 +283,14 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		});
 	}, [setProperty]);
 
+	const handleZoomChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
+		const value = event.target.value;
+		if (value === "custom") return;
+		const newScale = parseFloat(value) / 100;
+		setScale(newScale);
+		setProperty("pdf-renderer-zoom", newScale);
+	}, [setProperty]);
+	
 	const handleToggleView = useCallback(() => {
 		setScrollView((prev) => {
 			const newScrollView = !prev;
@@ -505,6 +514,32 @@ const PdfRenderer: React.FC<RendererProps> = ({
 							>
 								<ZoomOutIcon />
 							</button>
+							{(() => {
+								const zoomOptions = pdfRendererSettings.find(s => s.id === "pdf-renderer-initial-zoom")?.options || [];
+								const currentZoom = Math.round(scale * 100).toString();
+								const hasCustomZoom = !zoomOptions.some(opt => String(opt.value) === currentZoom);
+								
+								return (
+									<select
+										value={hasCustomZoom ? "custom" : currentZoom}
+										onChange={handleZoomChange}
+										disabled={isLoading}
+										className="toolbarZoomSelect"
+										title="Zoom Level"
+									>
+										{zoomOptions.map(option => (
+											<option key={String(option.value)} value={String(option.value)}>
+												{option.label}
+											</option>
+										))}
+										{hasCustomZoom && (
+											<option value="custom">
+												{Math.round(scale * 100)}%
+											</option>
+										)}
+									</select>
+								);
+							})()}
 							<button
 								onClick={handleZoomIn}
 								className="toolbarButton"
