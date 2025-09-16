@@ -8,6 +8,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useFileTree } from "../../hooks/useFileTree";
 import { useProperties } from "../../hooks/useProperties";
 import { useTheme } from "../../hooks/useTheme";
+import { useEditorTabs } from "../../hooks/useEditorTabs";
 import {
 	fileStorageEventEmitter,
 	fileStorageService,
@@ -18,7 +19,9 @@ import type { FileNode } from "../../types/files";
 import type { Project } from "../../types/projects";
 import { buildUrlWithFragments, parseUrlFragments } from "../../utils/urlUtils";
 import type { YjsDocUrl } from "../../types/yjs";
+import { EditorTabsProvider } from "../../contexts/EditorTabsContext";
 import ResizablePanel from "../common/ResizablePanel";
+import EditorTabs from "./EditorTabs";
 import LaTeXOutline from "./LaTeXOutline";
 import LaTeXOutput from "../output/LaTeXOutput";
 import ProjectExportModal from "../project/ProjectExportModal";
@@ -76,7 +79,7 @@ const getDocumentContent = async (
 	}
 };
 
-const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
+const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	documents,
 	selectedDocId,
 	onSelectDocument,
@@ -93,6 +96,7 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	const { currentLayout } = useTheme();
 	const { getProjectById, updateProject } = useAuth();
 	const { getProperty, setProperty, registerProperty } = useProperties();
+	const { openTab, getActiveTab, switchToTab, closeTab } = useEditorTabs();
 	const propertiesRegistered = useRef(false);
 	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 	const [activeView, setActiveView] = useState<"documents" | "files">("files");
@@ -135,7 +139,6 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		string | null
 	>(null);
 
-	// Export modal state
 	const [showCurrentProjectExportModal, setShowCurrentProjectExportModal] =
 		useState(false);
 	const [currentProjectForExport, setCurrentProjectForExport] =
@@ -204,7 +207,6 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	const storedLatexCollapsed = getProperty("latex-output-collapsed");
 	const storedOutlineHeight = getProperty("explorer-height");
 
-	// Load each property individually if available
 	if (storedSidebarWidth !== undefined) {
 		setSidebarWidth(Number(storedSidebarWidth));
 	}
@@ -536,10 +538,6 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	}, [targetDocId]);
 
 	useEffect(() => {
-		// Show outline for:
-		// 1. Editing a .tex file directly
-		// 2. Editing a document linked to a .tex file
-		// 3. Editing a document that contains LaTeX commands
 		const isTexFile = isEditingFile && fileName && fileName.endsWith('.tex');
 		const isDocumentLinkedToTex = !isEditingFile && linkedFileInfo?.fileName?.endsWith('.tex');
 		
@@ -553,11 +551,9 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 
 	useEffect(() => {
 		if (isEditingFile) {
-			// For files, use fileContent
 			if (typeof fileContent === 'string') {
 				setCurrentEditorContent(fileContent);
 			} else if (fileContent instanceof ArrayBuffer) {
-				// Try to decode ArrayBuffer as text for tex files
 				try {
 					const decoded = new TextDecoder().decode(fileContent);
 					setCurrentEditorContent(decoded);
@@ -568,7 +564,6 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 				setCurrentEditorContent('');
 			}
 		} else if (!isEditingFile && content) {
-			// For documents, use the document content
 			setCurrentEditorContent(content);
 		}
 	}, [isEditingFile, content, fileContent]);
@@ -581,7 +576,6 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 			const project = await getProjectById(projectId);
 			if (!project) return;
 
-			// Only update if there's actually a change
 			const hasDocChange = docId !== project.lastOpenedDocId;
 			const hasFileChange = filePath !== project.lastOpenedFilePath;
 
@@ -592,7 +586,6 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 					lastOpenedFilePath: filePath,
 				};
 
-				// Update project silently
 				updateProject(updatedProject).catch(error => {
 					console.warn("Failed to update project last opened state:", error);
 				});
@@ -619,7 +612,6 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 
 	const handleOutlineRefresh = async () => {
 		if (isEditingFile && selectedFileId) {
-			// For files, re-fetch the file content
 			try {
 				const content = await getFileContent(selectedFileId);
 				if (content) {
@@ -641,16 +633,15 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	};
 
 	const handleFileSelect = async (
-		fileId: string,
-		content: string | ArrayBuffer,
-		isBinary = false,
+	fileId: string,
+	content: string | ArrayBuffer,
+	isBinary = false,
 	) => {
 		setFileContent(content);
 		setIsEditingFile(true);
 		setIsBinaryFile(isBinary);
 		setFileSelectionChange((prev) => prev + 1);
 		
-		// Update current editor content for outline
 		if (typeof content === 'string') {
 			setCurrentEditorContent(content);
 		} else {
@@ -660,22 +651,26 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		if (selectedDocId !== null) {
 			onSelectDocument("");
 		}
+		
 		selectFile(fileId);
 		const file = await getFile(fileId);
 		if (file) {
 			if (file.name.endsWith(".tex")) {
-				setShowLatexOutput(true);
+			setShowLatexOutput(true);
 			} else {
-				setShowLatexOutput(false);
+			setShowLatexOutput(false);
 			}
 
+			// Create or switch to tab
+			createTabForFile(fileId, file);
+
 			const currentFragment = parseUrlFragments(
-				window.location.hash.substring(1),
+			window.location.hash.substring(1),
 			);
 			const newUrl = buildUrlWithFragments(
-				currentFragment.yjsUrl,
-				undefined,
-				file.path,
+			currentFragment.yjsUrl,
+			undefined,
+			file.path,
 			);
 			window.location.hash = newUrl;
 		}
@@ -703,6 +698,12 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		setIsEditingFile(false);
 		onSelectDocument(id);
 		setDocumentSelectionChange((prev) => prev + 1);
+
+		const document = documents.find(d => d.id === id);
+		if (document) {
+			// Create or switch to tab
+			createTabForDocument(id, document);
+		}
 
 		const currentFragment = parseUrlFragments(
 			window.location.hash.substring(1),
@@ -745,8 +746,118 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 		}
 	};
 
+	const handleTabSwitch = async (tabId: string) => {
+		const activeTab = getActiveTab();
+		if (!activeTab || activeTab.id === tabId) return;
+
+		console.log("Switching to tab:", activeTab.title, activeTab.type);
+
+		if (activeTab.type === 'file' && activeTab.fileId) {
+			try {
+			// Load file content
+			const content = await getFileContent(activeTab.fileId);
+			if (content) {
+				// Get file metadata
+				const file = await getFile(activeTab.fileId);
+				if (file) {
+				// Switch to files view
+				setActiveView("files");
+				
+				// Update component state
+				setFileContent(content);
+				setIsEditingFile(true);
+				setIsBinaryFile(file.isBinary || false);
+				setFileName(file.name);
+				setMimeType(file.mimeType);
+				setLinkedDocumentId(file.documentId || null);
+				
+				// Update current editor content for outline
+				if (typeof content === 'string') {
+					setCurrentEditorContent(content);
+				} else {
+					setCurrentEditorContent('');
+				}
+				
+				// Update file tree selection
+				selectFile(activeTab.fileId);
+				setFileSelectionChange(prev => prev + 1);
+				
+				// Clear document selection
+				if (selectedDocId !== null) {
+					onSelectDocument("");
+				}
+				
+				// Update URL hash
+				const currentFragment = parseUrlFragments(
+					window.location.hash.substring(1),
+				);
+				const newUrl = buildUrlWithFragments(
+					currentFragment.yjsUrl,
+					undefined,
+					file.path,
+				);
+				window.location.hash = newUrl;
+				
+				// Set latex output visibility
+				if (file.name.endsWith(".tex")) {
+					setShowLatexOutput(true);
+				} else {
+					setShowLatexOutput(false);
+				}
+				
+				console.log("Successfully switched to file:", file.name);
+				}
+			}
+			} catch (error) {
+			console.error("Error loading file content for tab:", error);
+			}
+		} else if (activeTab.type === 'document' && activeTab.documentId) {
+			try {
+			// Switch to documents view
+			setActiveView("documents");
+			
+			// Update component state
+			setIsEditingFile(false);
+			setDocumentSelectionChange(prev => prev + 1);
+			
+			// Update document selection
+			onSelectDocument(activeTab.documentId);
+			
+			// Update current editor content for outline
+			setCurrentEditorContent(content);
+			
+			// Update URL hash
+			const currentFragment = parseUrlFragments(
+				window.location.hash.substring(1),
+			);
+			const newUrl = buildUrlWithFragments(currentFragment.yjsUrl, activeTab.documentId);
+			window.location.hash = newUrl;
+			
+			console.log("Successfully switched to document:", activeTab.title);
+			} catch (error) {
+			console.error("Error switching to document:", error);
+			}
+		}
+	};
+
+	const createTabForFile = async (fileId: string, file: FileNode) => {
+		return openTab({
+			title: file.name,
+			type: 'file',
+			fileId: file.id,
+			filePath: file.path,
+		});
+	};
+
+	const createTabForDocument = (documentId: string, document: Document) => {
+		return openTab({
+			title: document.name,
+			type: 'document',
+			documentId: documentId,
+		});
+	};
+
 	const handleUpdateContent = (content: string) => {
-		// Update the current editor content for outline
 		setCurrentEditorContent(content);
 		
 		if (content !== (isEditingFile ? fileContent : content)) {
@@ -777,7 +888,6 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	const handleLatexOutputCollapse = (collapsed: boolean) => {
 		setLatexOutputCollapsed(collapsed);
 		setProperty("latex-output-collapsed", collapsed);
-		// If user manually collapses, clear temporary expand
 		if (collapsed) {
 			setTemporaryLatexExpand(false);
 		}
@@ -787,7 +897,6 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 	if (!showLatexOutput) {
 		setShowLatexOutput(true);
 	}
-	// Temporarily expand without saving to properties
 	setTemporaryLatexExpand(true);
 	};
 
@@ -886,6 +995,8 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 				style={{ flex: 1, display: "flex", minHeight: 0 }}
 			>
 				<div className="editor-container" style={{ flex: 1, minWidth: 0 }}>
+					<EditorTabs onTabSwitch={handleTabSwitch} />
+					
 					<Editor
 						content={isEditingFile ? fileContent : content}
 						documentId={selectedDocId || ""}
@@ -948,6 +1059,14 @@ const FileDocumentController: React.FC<FileDocumentControllerProps> = ({
 				/>
 			)}
 		</div>
+	);
+};
+
+const FileDocumentController: React.FC<FileDocumentControllerProps> = (props) => {
+	return (
+		<EditorTabsProvider>
+			<FileDocumentControllerContent {...props} />
+		</EditorTabsProvider>
 	);
 };
 

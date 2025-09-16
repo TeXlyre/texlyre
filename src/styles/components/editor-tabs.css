@@ -1,0 +1,227 @@
+.editor-tabs-container {
+  background: var(--background-secondary, #f8f9fa);
+  border-bottom: 1px solid var(--border-color, #e1e5e9);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.editor-tabs {
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  min-height: 36px;
+  max-height: 36px;
+}
+
+.editor-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.editor-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--background-primary, #ffffff);
+  border: 1px solid var(--border-color, #e1e5e9);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  min-width: 120px;
+  max-width: 200px;
+  transition: all 0.15s ease;
+  margin-right: -1px;
+  font-size: 13px;
+  height: 32px;
+  box-sizing: border-box;
+}
+
+.editor-tab:hover {
+  background: var(--background-hover, #f5f6f7);
+  border-color: var(--border-hover, #d1d7dd);
+}
+
+.editor-tab.active {
+  background: var(--background-primary, #ffffff);
+  border-color: var(--accent-color, #0969da);
+  border-bottom: 1px solid var(--background-primary, #ffffff);
+  z-index: 1;
+  margin-bottom: -1px;
+}
+
+.editor-tab.active:hover {
+  background: var(--background-primary, #ffffff);
+}
+
+.editor-tab.dirty {
+  font-style: italic;
+}
+
+.editor-tab.dirty .tab-title {
+  color: var(--text-warning, #bf8700);
+}
+
+.tab-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--text-secondary, #656d76);
+}
+
+.editor-tab.active .tab-icon {
+  color: var(--accent-color, #0969da);
+}
+
+.tab-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary, #1f2328);
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.editor-tab.active .tab-title {
+  color: var(--text-primary, #1f2328);
+  font-weight: 500;
+}
+
+.dirty-indicator {
+  color: var(--text-warning, #bf8700);
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 1;
+  margin-left: 2px;
+}
+
+.tab-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: none;
+  border-radius: 3px;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.15s ease;
+  color: var(--text-secondary, #656d76);
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.tab-close:hover {
+  background: var(--background-danger-hover, rgba(212, 53, 53, 0.1));
+  color: var(--text-danger, #d4353f);
+}
+
+.editor-tab:hover .tab-close,
+.editor-tab.active .tab-close {
+  opacity: 1;
+}
+
+.tab-close svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Dark theme support */
+[data-theme="dark"] .editor-tabs-container {
+  background: var(--background-secondary, #21262d);
+  border-bottom-color: var(--border-color, #30363d);
+}
+
+[data-theme="dark"] .editor-tab {
+  background: var(--background-tertiary, #161b22);
+  border-color: var(--border-color, #30363d);
+  color: var(--text-primary, #f0f6fc);
+}
+
+[data-theme="dark"] .editor-tab:hover {
+  background: var(--background-hover, #262c36);
+  border-color: var(--border-hover, #373e47);
+}
+
+[data-theme="dark"] .editor-tab.active {
+  background: var(--background-primary, #0d1117);
+  border-color: var(--accent-color, #1f6feb);
+  border-bottom-color: var(--background-primary, #0d1117);
+}
+
+[data-theme="dark"] .editor-tab.active:hover {
+  background: var(--background-primary, #0d1117);
+}
+
+[data-theme="dark"] .tab-title {
+  color: var(--text-primary, #f0f6fc);
+}
+
+[data-theme="dark"] .tab-icon {
+  color: var(--text-secondary, #8b949e);
+}
+
+[data-theme="dark"] .editor-tab.active .tab-icon {
+  color: var(--accent-color, #1f6feb);
+}
+
+[data-theme="dark"] .tab-close:hover {
+  background: var(--background-danger-hover, rgba(248, 81, 73, 0.15));
+  color: var(--text-danger, #f85149);
+}
+
+/* Focus styles for accessibility */
+.editor-tab:focus-visible {
+  outline: 2px solid var(--accent-color, #0969da);
+  outline-offset: -2px;
+}
+
+.tab-close:focus-visible {
+  outline: 2px solid var(--accent-color, #0969da);
+  outline-offset: 1px;
+}
+
+/* Ensure tabs container doesn't interfere with editor */
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.editor-wrapper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Smooth scrolling for tab overflow */
+.editor-tabs {
+  scroll-behavior: smooth;
+}
+
+/* Animation for tab changes */
+.editor-tab {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
