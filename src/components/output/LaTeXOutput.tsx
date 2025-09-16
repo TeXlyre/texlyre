@@ -1,6 +1,6 @@
 // src/components/output/LaTeXOutput.tsx
 import React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 
 import { useFileTree } from "../../hooks/useFileTree";
 import { useLaTeX } from "../../hooks/useLaTeX";
@@ -111,7 +111,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 		}
 	};
 
-	const handleSavePdf = (fileName: string) => {
+	const handleSavePdf = useCallback((fileName: string) => {
 		if (!compiledPdf) return;
 
 		const blob = new Blob([compiledPdf], { type: "application/pdf" });
@@ -123,7 +123,32 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 		a.click();
 		document.body.removeChild(a);
 		URL.revokeObjectURL(url);
-	};
+	}, [compiledPdf]);
+
+	const pdfViewerContent = useMemo(() => {
+		if (currentView !== "pdf" || !compiledPdf) return null;
+		
+		return (
+			<div className="pdf-viewer">
+				{pdfRendererPlugin && useEnhancedRenderer ? (
+					React.createElement(pdfRendererPlugin.renderOutput, {
+						content: compiledPdf.buffer,
+						mimeType: "application/pdf",
+						fileName: "output.pdf",
+						onSave: handleSavePdf,
+					})
+				) : (
+					<embed
+						src={URL.createObjectURL(
+							new Blob([compiledPdf], { type: "application/pdf" }),
+						)}
+						type="application/pdf"
+						style={{ width: "100%", height: "100%" }}
+					/>
+				)}
+			</div>
+		);
+	}, [currentView, compiledPdf, pdfRendererPlugin, useEnhancedRenderer, handleSavePdf]);
 
 	return (
 		<div className={`latex-output ${className}`}>
@@ -195,26 +220,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 					  </div>
 					)}
 
-					{currentView === "pdf" && compiledPdf && (
-						<div className="pdf-viewer">
-							{pdfRendererPlugin && useEnhancedRenderer ? (
-								React.createElement(pdfRendererPlugin.renderOutput, {
-									content: compiledPdf.buffer,
-									mimeType: "application/pdf",
-									fileName: "output.pdf",
-									onSave: handleSavePdf,
-								})
-							) : (
-								<embed
-									src={URL.createObjectURL(
-										new Blob([compiledPdf], { type: "application/pdf" }),
-									)}
-									type="application/pdf"
-									style={{ width: "100%", height: "100%" }}
-								/>
-							)}
-						</div>
-					)}
+					{pdfViewerContent}
 				</>
 			)}
 		</div>
