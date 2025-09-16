@@ -91,7 +91,7 @@
 }
 
 .editor-tab.active .tab-title {
-  color: var(--text-primary, #1f2328);
+  color: var(--pico-secondary);
   font-weight: 500;
 }
 

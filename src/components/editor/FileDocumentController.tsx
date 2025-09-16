@@ -96,7 +96,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	const { currentLayout } = useTheme();
 	const { getProjectById, updateProject } = useAuth();
 	const { getProperty, setProperty, registerProperty } = useProperties();
-	const { openTab, getActiveTab, switchToTab, closeTab } = useEditorTabs();
+	const { openTab, tabs, getActiveTab } = useEditorTabs();
 	const propertiesRegistered = useRef(false);
 	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 	const [activeView, setActiveView] = useState<"documents" | "files">("files");
@@ -747,96 +747,25 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	};
 
 	const handleTabSwitch = async (tabId: string) => {
-		const activeTab = getActiveTab();
-		if (!activeTab || activeTab.id === tabId) return;
+		const targetTab = tabs.find(tab => tab.id === tabId);
+		if (!targetTab) return;
 
-		console.log("Switching to tab:", activeTab.title, activeTab.type);
+		console.log("Switching to tab:", targetTab.title, targetTab.type);
 
-		if (activeTab.type === 'file' && activeTab.fileId) {
+		if (targetTab.type === 'file' && targetTab.fileId) {
 			try {
-			// Load file content
-			const content = await getFileContent(activeTab.fileId);
+			const content = await getFileContent(targetTab.fileId);
 			if (content) {
-				// Get file metadata
-				const file = await getFile(activeTab.fileId);
+				const file = await getFile(targetTab.fileId);
 				if (file) {
-				// Switch to files view
-				setActiveView("files");
-				
-				// Update component state
-				setFileContent(content);
-				setIsEditingFile(true);
-				setIsBinaryFile(file.isBinary || false);
-				setFileName(file.name);
-				setMimeType(file.mimeType);
-				setLinkedDocumentId(file.documentId || null);
-				
-				// Update current editor content for outline
-				if (typeof content === 'string') {
-					setCurrentEditorContent(content);
-				} else {
-					setCurrentEditorContent('');
-				}
-				
-				// Update file tree selection
-				selectFile(activeTab.fileId);
-				setFileSelectionChange(prev => prev + 1);
-				
-				// Clear document selection
-				if (selectedDocId !== null) {
-					onSelectDocument("");
-				}
-				
-				// Update URL hash
-				const currentFragment = parseUrlFragments(
-					window.location.hash.substring(1),
-				);
-				const newUrl = buildUrlWithFragments(
-					currentFragment.yjsUrl,
-					undefined,
-					file.path,
-				);
-				window.location.hash = newUrl;
-				
-				// Set latex output visibility
-				if (file.name.endsWith(".tex")) {
-					setShowLatexOutput(true);
-				} else {
-					setShowLatexOutput(false);
-				}
-				
-				console.log("Successfully switched to file:", file.name);
+				handleUserFileSelect(targetTab.fileId, content, file.isBinary || false);
 				}
 			}
 			} catch (error) {
 			console.error("Error loading file content for tab:", error);
 			}
-		} else if (activeTab.type === 'document' && activeTab.documentId) {
-			try {
-			// Switch to documents view
-			setActiveView("documents");
-			
-			// Update component state
-			setIsEditingFile(false);
-			setDocumentSelectionChange(prev => prev + 1);
-			
-			// Update document selection
-			onSelectDocument(activeTab.documentId);
-			
-			// Update current editor content for outline
-			setCurrentEditorContent(content);
-			
-			// Update URL hash
-			const currentFragment = parseUrlFragments(
-				window.location.hash.substring(1),
-			);
-			const newUrl = buildUrlWithFragments(currentFragment.yjsUrl, activeTab.documentId);
-			window.location.hash = newUrl;
-			
-			console.log("Successfully switched to document:", activeTab.title);
-			} catch (error) {
-			console.error("Error switching to document:", error);
-			}
+		} else if (targetTab.type === 'document' && targetTab.documentId) {
+			handleDocumentSelect(targetTab.documentId);
 		}
 	};
 

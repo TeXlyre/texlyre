@@ -38,9 +38,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
   return (
     <div className="editor-tabs-container">
       <div className="editor-tabs">
-        {tabs
-          .sort((a, b) => b.lastAccessed - a.lastAccessed)
-          .map(tab => (
+        {tabs.map(tab => (
           <div
             key={tab.id}
             className={`editor-tab ${tab.id === activeTabId ? 'active' : ''} ${tab.isDirty ? 'dirty' : ''}`}

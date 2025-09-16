@@ -27,7 +27,12 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
   const { getProperty, setProperty, registerProperty } = useProperties();
   const [tabs, setTabs] = useState<EditorTab[]>([]);
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
+  const [propertiesLoaded, setPropertiesLoaded] = useState(false);
   const propertiesRegistered = useRef(false);
+
+  const getCurrentProjectId = useCallback(() => {
+    return sessionStorage.getItem("currentProjectId");
+  }, []);
 
   useEffect(() => {
     if (propertiesRegistered.current) return;
@@ -47,24 +52,108 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
       defaultValue: null,
     });
 
-    const savedTabs = getProperty("editor-tabs") as EditorTab[] | undefined;
-    const savedActiveTab = getProperty("editor-active-tab") as string | undefined;
+    // Load saved properties after registration
+    const loadSavedProperties = () => {
+      const currentProjectId = getCurrentProjectId();
+      if (!currentProjectId) {
+        setPropertiesLoaded(true);
+        return;
+      }
 
-    if (savedTabs?.length) {
-      setTabs(savedTabs);
-    }
-    if (savedActiveTab) {
-      setActiveTabId(savedActiveTab);
-    }
-  }, [getProperty, registerProperty]);
+      const savedTabs = getProperty("editor-tabs", {
+        scope: "project",
+        projectId: currentProjectId
+      }) as EditorTab[] | undefined;
+      
+      const savedActiveTab = getProperty("editor-active-tab", {
+        scope: "project",
+        projectId: currentProjectId
+      }) as string | undefined;
+
+      console.log("Loading saved tabs for project:", currentProjectId, savedTabs);
+      console.log("Loading saved active tab for project:", currentProjectId, savedActiveTab);
+
+      if (savedTabs && Array.isArray(savedTabs) && savedTabs.length > 0) {
+        setTabs(savedTabs);
+      }
+      if (savedActiveTab && typeof savedActiveTab === 'string') {
+        setActiveTabId(savedActiveTab);
+      }
+      
+      setPropertiesLoaded(true);
+    };
+
+    // Add a small delay to ensure properties system is fully initialized
+    setTimeout(loadSavedProperties, 100);
+  }, [getProperty, registerProperty, getCurrentProjectId]);
+
+  // Only save to properties after initial load is complete
+  useEffect(() => {
+    if (!propertiesLoaded) return;
+    
+    const currentProjectId = getCurrentProjectId();
+    if (!currentProjectId) return;
+
+    setProperty("editor-tabs", tabs, {
+      scope: "project",
+      projectId: currentProjectId
+    });
+  }, [tabs, setProperty, propertiesLoaded, getCurrentProjectId]);
 
   useEffect(() => {
-    setProperty("editor-tabs", tabs);
-  }, [tabs, setProperty]);
+    if (!propertiesLoaded) return;
+    
+    const currentProjectId = getCurrentProjectId();
+    if (!currentProjectId) return;
 
+    setProperty("editor-active-tab", activeTabId, {
+      scope: "project",
+      projectId: currentProjectId
+    });
+  }, [activeTabId, setProperty, propertiesLoaded, getCurrentProjectId]);
+
+  // Reset tabs when project changes
   useEffect(() => {
-    setProperty("editor-active-tab", activeTabId);
-  }, [activeTabId, setProperty]);
+    const currentProjectId = getCurrentProjectId();
+    
+    const handleStorageChange = () => {
+      const newProjectId = getCurrentProjectId();
+      if (newProjectId !== currentProjectId) {
+        // Project changed, reset tabs and reload
+        setTabs([]);
+        setActiveTabId(null);
+        setPropertiesLoaded(false);
+        
+        // Reload properties for new project
+        setTimeout(() => {
+          const savedTabs = getProperty("editor-tabs", {
+            scope: "project",
+            projectId: newProjectId || undefined
+          }) as EditorTab[] | undefined;
+          
+          const savedActiveTab = getProperty("editor-active-tab", {
+            scope: "project",
+            projectId: newProjectId || undefined
+          }) as string | undefined;
+
+          if (savedTabs && Array.isArray(savedTabs) && savedTabs.length > 0) {
+            setTabs(savedTabs);
+          }
+          if (savedActiveTab && typeof savedActiveTab === 'string') {
+            setActiveTabId(savedActiveTab);
+          }
+          
+          setPropertiesLoaded(true);
+        }, 100);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [getCurrentProjectId, getProperty]);
 
   const openTab = useCallback((tabData: Omit<EditorTab, 'id' | 'lastAccessed' | 'editorState'>) => {
     setTabs(prevTabs => {
@@ -137,13 +226,6 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
   }, [activeTabId]);
 
   const switchToTab = useCallback((tabId: string) => {
-    setTabs(prevTabs => 
-      prevTabs.map(tab =>
-        tab.id === tabId 
-          ? { ...tab, lastAccessed: Date.now() }
-          : tab
-      )
-    );
     setActiveTabId(tabId);
   }, []);
 
