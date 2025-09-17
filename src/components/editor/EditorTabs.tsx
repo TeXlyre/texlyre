@@ -1,6 +1,6 @@
 // src/components/editor/EditorTabs.tsx
 import type React from "react";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 
 import { useEditorTabs } from "../../hooks/useEditorTabs";
 import { CloseIcon, FileTextIcon, FileIcon } from "../common/Icons";
@@ -10,7 +10,7 @@ interface EditorTabsProps {
 }
 
 const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
-  const { tabs, activeTabId, closeTab, switchToTab } = useEditorTabs();
+  const { tabs, activeTabId, closeTab, switchToTab, updateTabEditorState } = useEditorTabs();
 
   const handleTabClick = useCallback((e: React.MouseEvent, tabId: string) => {
     e.preventDefault();
@@ -33,6 +33,30 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
     }
   }, [closeTab]);
 
+  useEffect(() => {
+    const handleCursorUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { line, position, fileId, documentId, isEditingFile } = customEvent.detail;
+      
+      if (typeof line !== 'number' || typeof position !== 'number') return;
+      
+      const targetTab = tabs.find(tab => 
+        (isEditingFile && tab.fileId === fileId) ||
+        (!isEditingFile && tab.documentId === documentId)
+      );
+      
+      if (targetTab && targetTab.id === activeTabId) {
+        updateTabEditorState(targetTab.id, {
+          currentLine: line,
+          cursorPosition: position
+        });
+      }
+    };
+
+    document.addEventListener('editor-cursor-update', handleCursorUpdate);
+    return () => document.removeEventListener('editor-cursor-update', handleCursorUpdate);
+  }, [tabs, activeTabId, updateTabEditorState]);
+
   if (tabs.length === 0) return null;
 
   return (
@@ -44,7 +68,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
             className={`editor-tab ${tab.id === activeTabId ? 'active' : ''} ${tab.isDirty ? 'dirty' : ''}`}
             onClick={(e) => handleTabClick(e, tab.id)}
             onMouseDown={(e) => handleMiddleClick(e, tab.id)}
-            title={tab.filePath || tab.title}
+            title={`${tab.filePath || tab.title}${tab.editorState.currentLine ? ` (Line ${tab.editorState.currentLine})` : ''}`}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
@@ -60,6 +84,9 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
             <span className="tab-title">
               {tab.title}
               {tab.isDirty && <span className="dirty-indicator">•</span>}
+              {tab.editorState.currentLine && (
+                <span className="line-indicator">:{tab.editorState.currentLine}</span>
+              )}
             </span>
             <button
               className="tab-close"

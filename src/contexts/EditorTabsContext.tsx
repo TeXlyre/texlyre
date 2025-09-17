@@ -226,10 +226,37 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
   }, [activeTabId]);
 
   const switchToTab = useCallback((tabId: string) => {
+    const tab = tabs.find(t => t.id === tabId);
+    if (!tab) return;
+    
     setActiveTabId(tabId);
-  }, []);
+    
+    // Use existing goto line mechanism to restore cursor position
+    if (tab.editorState.currentLine) {
+      setTimeout(() => {
+        document.dispatchEvent(new CustomEvent('codemirror-goto-line', {
+          detail: { 
+            line: tab.editorState.currentLine,
+            tabId: tabId,
+            fileId: tab.fileId,
+            documentId: tab.documentId
+          }
+        }));
+      }, 150); // Delay to ensure editor is loaded
+    }
+  }, [tabs]);
 
   const updateTabState = useCallback((tabId: string, editorState: EditorTab['editorState']) => {
+    setTabs(prevTabs =>
+      prevTabs.map(tab =>
+        tab.id === tabId
+          ? { ...tab, editorState: { ...tab.editorState, ...editorState } }
+          : tab
+      )
+    );
+  }, []);
+
+  const updateTabEditorState = useCallback((tabId: string, editorState: Partial<EditorTab['editorState']>) => {
     setTabs(prevTabs =>
       prevTabs.map(tab =>
         tab.id === tabId
@@ -261,6 +288,24 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
     return tabs.find(tab => tab.documentId === documentId);
     }, [tabs]);
 
+  const gotoLineInTab = useCallback((tabId: string, line: number) => {
+    const tab = tabs.find(t => t.id === tabId);
+    if (!tab) return;
+
+    setActiveTabId(tabId);
+    
+    setTimeout(() => {
+      document.dispatchEvent(new CustomEvent('codemirror-goto-line', {
+        detail: { 
+          line, 
+          tabId,
+          fileId: tab.fileId,
+          documentId: tab.documentId 
+        }
+      }));
+    }, 100);
+  }, [tabs]);
+
   const contextValue: EditorTabsContextType = {
     tabs,
     activeTabId,
@@ -268,10 +313,12 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
     closeTab,
     switchToTab,
     updateTabState,
+    updateTabEditorState,
     markTabDirty,
     getActiveTab,
     getTabByFileId,
     getTabByDocumentId,
+    gotoLineInTab,
   };
 
   return (

@@ -12,6 +12,7 @@ export interface EditorTab {
     cursorPosition?: number;
     scrollTop?: number;
     selection?: { from: number; to: number };
+    currentLine?: number;
   };
 }
 
@@ -22,8 +23,10 @@ export interface EditorTabsContextType {
   closeTab: (tabId: string) => void;
   switchToTab: (tabId: string) => void;
   updateTabState: (tabId: string, editorState: EditorTab['editorState']) => void;
+  updateTabEditorState: (tabId: string, editorState: Partial<EditorTab['editorState']>) => void;
   markTabDirty: (tabId: string, isDirty: boolean) => void;
   getActiveTab: () => EditorTab | null;
   getTabByFileId: (fileId: string) => EditorTab | undefined;
   getTabByDocumentId: (documentId: string) => EditorTab | undefined;
+  gotoLineInTab: (tabId: string, line: number) => void;
 }
