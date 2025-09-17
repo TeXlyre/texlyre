@@ -252,6 +252,9 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
     }
 
     const handleEditorReady = (event: Event) => {
+        const pendingGoto = pendingGotoRef.current;
+        if (!pendingGoto) return;
+
         const customEvent = event as CustomEvent;
         const { fileId, documentId, isEditingFile } = customEvent.detail;
         
@@ -259,20 +262,20 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
         const isTargetDoc = !isEditingFile && tab.documentId === documentId;
         
         if (isTargetFile || isTargetDoc) {
-        const { line } = pendingGotoRef.current!;
-        
-        setTimeout(() => {
-            document.dispatchEvent(new CustomEvent('codemirror-goto-line', {
-            detail: { 
-                line: line,
-                tabId: tab.id,
-                fileId: tab.fileId,
-                documentId: tab.documentId
-            }
-            }));
-        }, 50);
-        
-        pendingGotoRef.current = null;
+            const { line } = pendingGoto;
+            
+            setTimeout(() => {
+                document.dispatchEvent(new CustomEvent('codemirror-goto-line', {
+                detail: { 
+                    line: line,
+                    tabId: tab.id,
+                    fileId: tab.fileId,
+                    documentId: tab.documentId
+                }
+                }));
+            }, 50);
+            
+            pendingGotoRef.current = null;
         }
     };
 
@@ -284,6 +287,18 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
         document.removeEventListener(eventType, handleEditorReady);
     };
   }, [tabs, pendingGotoRef.current]);
+
+  useEffect(() => {
+    if (!propertiesLoaded || !activeTabId) return;
+    
+    const activeTab = tabs.find(t => t.id === activeTabId);
+    if (!activeTab || !activeTab.editorState.currentLine) return;
+    
+    pendingGotoRef.current = {
+        tabId: activeTabId,
+        line: activeTab.editorState.currentLine
+    };
+  }, [propertiesLoaded, activeTabId, tabs]);
 
   const updateTabState = useCallback((tabId: string, editorState: EditorTab['editorState']) => {
     setTabs(prevTabs =>
