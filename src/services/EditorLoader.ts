@@ -502,6 +502,17 @@ export const EditorLoader = (
 		try {
 			const view = new EditorView({ state, parent: editorRef.current });
 			viewRef.current = view;
+			
+			// Emit editor ready event
+			setTimeout(() => {
+				document.dispatchEvent(new CustomEvent('editor-ready', {
+				detail: {
+					fileId: currentFileId,
+					documentId: documentId,
+					isEditingFile: isEditingFile
+				}
+				}));
+			}, 50);
 
 			// Update file path cache for LaTeX files
 			if (isLatexFile) {
@@ -528,6 +539,7 @@ export const EditorLoader = (
 				view.dom.addEventListener("input", handleInput);
 				return () => view.dom.removeEventListener("input", handleInput);
 			}
+
 		} catch (error) {
 			console.error("Error creating editor view:", error);
 		}
@@ -903,6 +915,7 @@ export const EditorLoader = (
 		if (!ytextRef.current || !isDocumentSelected || isEditingFile) return;
 
 		const yTextInstance = ytextRef.current;
+		let hasEmittedReady = false;
 
 		const observer = () => {
 			if (isUpdatingRef.current) return;
@@ -914,6 +927,20 @@ export const EditorLoader = (
 					updateComments(content);
 				}
 				if (autoSaveRef.current) autoSaveRef.current();
+
+				// Emit ready event once content is available for documents
+				if (!hasEmittedReady && content && viewRef.current) {
+					hasEmittedReady = true;
+					setTimeout(() => {
+						document.dispatchEvent(new CustomEvent('editor-ready-yjs', {
+							detail: {
+								fileId: currentFileId,
+								documentId: documentId,
+								isEditingFile: isEditingFile
+							}
+						}));
+					}, 50);
+				}
 			} finally {
 				isUpdatingRef.current = false;
 			}
@@ -932,6 +959,8 @@ export const EditorLoader = (
 		updateComments,
 		isEditingFile,
 		enableComments,
+		currentFileId,
+		documentId,
 	]);
 
 	useEffect(() => {

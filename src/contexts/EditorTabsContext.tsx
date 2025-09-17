@@ -29,6 +29,7 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
   const [propertiesLoaded, setPropertiesLoaded] = useState(false);
   const propertiesRegistered = useRef(false);
+  const pendingGotoRef = useRef<{ tabId: string; line: number } | null>(null);
 
   const getCurrentProjectId = useCallback(() => {
     return sessionStorage.getItem("currentProjectId");
@@ -231,20 +232,58 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
     
     setActiveTabId(tabId);
     
-    // Use existing goto line mechanism to restore cursor position
+    // Store the pending goto operation
     if (tab.editorState.currentLine) {
-      setTimeout(() => {
-        document.dispatchEvent(new CustomEvent('codemirror-goto-line', {
-          detail: { 
-            line: tab.editorState.currentLine,
-            tabId: tabId,
-            fileId: tab.fileId,
-            documentId: tab.documentId
-          }
-        }));
-      }, 150); // Delay to ensure editor is loaded
+      pendingGotoRef.current = {
+        tabId: tabId,
+        line: tab.editorState.currentLine
+      };
     }
   }, [tabs]);
+
+  // Listen for editor ready events to trigger pending goto operations
+  useEffect(() => {
+    if (!pendingGotoRef.current) return;
+
+    const tab = tabs.find(t => t.id === pendingGotoRef.current!.tabId);
+    if (!tab) {
+        pendingGotoRef.current = null;
+        return;
+    }
+
+    const handleEditorReady = (event: Event) => {
+        const customEvent = event as CustomEvent;
+        const { fileId, documentId, isEditingFile } = customEvent.detail;
+        
+        const isTargetFile = isEditingFile && tab.fileId === fileId;
+        const isTargetDoc = !isEditingFile && tab.documentId === documentId;
+        
+        if (isTargetFile || isTargetDoc) {
+        const { line } = pendingGotoRef.current!;
+        
+        setTimeout(() => {
+            document.dispatchEvent(new CustomEvent('codemirror-goto-line', {
+            detail: { 
+                line: line,
+                tabId: tab.id,
+                fileId: tab.fileId,
+                documentId: tab.documentId
+            }
+            }));
+        }, 50);
+        
+        pendingGotoRef.current = null;
+        }
+    };
+
+    const eventType = tab.documentId ? 'editor-ready-yjs' : 'editor-ready';
+    
+    document.addEventListener(eventType, handleEditorReady);
+    
+    return () => {
+        document.removeEventListener(eventType, handleEditorReady);
+    };
+  }, [tabs, pendingGotoRef.current]);
 
   const updateTabState = useCallback((tabId: string, editorState: EditorTab['editorState']) => {
     setTabs(prevTabs =>
