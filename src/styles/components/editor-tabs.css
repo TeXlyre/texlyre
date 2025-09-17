@@ -1,0 +1,391 @@
+.editor-tabs-container {
+  background: var(--pico-secondary-background);
+  border-bottom: 1px solid var(--accent-border);
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.editor-tabs {
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  min-height: 36px;
+  max-height: 36px;
+  scroll-behavior: smooth;
+  flex: 1;
+}
+
+.editor-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+/* Scroll buttons */
+.scroll-button {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 8px;
+  border:0;
+  border-radius: 0;
+  cursor: pointer;
+  color: var(--pico-secondary);
+  transition: all var(--transition-normal);
+  flex-shrink: 0;
+  z-index: 3;
+}
+
+.scroll-button:hover {
+  background: var(--pico-primary-focus);
+  color: var(--text-color);
+}
+
+.scroll-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.scroll-button svg {
+  width: 12px;
+  height: 12px;
+}
+
+.scroll-left {
+  border-right: none;
+  border-radius: var(--radius-xs) 0 0 var(--radius-xs);
+}
+
+.scroll-right {
+  border-left: none;
+  border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+}
+
+/* Show scroll buttons when needed */
+.editor-tabs-container.has-overflow .scroll-button {
+  display: flex;
+}
+
+.editor-tabs-container.has-overflow .editor-tabs {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Gradient fade effects */
+.editor-tabs-container::before,
+.editor-tabs-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.editor-tabs-container::before {
+  left: 24px;
+  background: linear-gradient(to right, var(--pico-secondary-background) 0%, transparent 100%);
+}
+
+.editor-tabs-container::after {
+  right: 24px;
+  background: linear-gradient(to left, var(--pico-secondary-background) 0%, transparent 100%);
+}
+
+.editor-tabs-container.has-overflow::before {
+  opacity: 1;
+}
+
+.editor-tabs-container.has-overflow::after {
+  opacity: 1;
+}
+
+/* Hide gradients when at scroll boundaries */
+.editor-tabs-container.at-start::before {
+  opacity: 0;
+}
+
+.editor-tabs-container.at-end::after {
+  opacity: 0;
+}
+
+.editor-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--pico-background);
+  border: 1px solid var(--accent-border);
+  border-bottom: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  min-width: 120px;
+  max-width: 200px;
+  transition: all var(--transition-normal) ease;
+  margin-right: -1px;
+  font-size: 0.8rem;
+  height: 32px;
+  box-sizing: border-box;
+  color: var(--text-color);
+  flex-shrink: 0;
+  scroll-snap-align: start;
+}
+
+.editor-tab:hover {
+  background: var(--pico-primary-focus);
+}
+
+.editor-tab.active {
+  background: var(--pico-background);
+  border-color: var(--pico-primary);
+  border-bottom: 1px solid var(--pico-background);
+  z-index: 1;
+  margin-bottom: -1px;
+  font-weight: 500;
+}
+
+.editor-tab.dirty .tab-title {
+  font-style: italic;
+  color: var(--color-warning);
+}
+
+.editor-tab {
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--transition-normal) ease;
+}
+
+.editor-tab[draggable="true"]:hover {
+  cursor: pointer;
+}
+
+.editor-tab.dragging {
+  opacity: 0.6;
+  transform: scale(0.95);
+  cursor: grabbing;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.editor-tab.drag-over {
+  position: relative;
+}
+
+.editor-tab.drag-over::before {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--pico-primary);
+  border-radius: 2px;
+  animation: dragPulse 0.8s infinite;
+}
+
+.editor-tab.drag-over::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--pico-primary);
+  border-radius: 2px;
+  animation: dragPulse 0.8s infinite;
+}
+
+@keyframes dragPulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scaleY(1);
+  }
+  50% { 
+    opacity: 0.7;
+    transform: scaleY(0.9);
+  }
+}
+
+.editor-tabs {
+  position: relative;
+}
+
+.editor-tabs.dragging {
+  pointer-events: none;
+}
+
+.editor-tabs.dragging .editor-tab:not(.dragging) {
+  pointer-events: auto;
+}
+
+.tab-close {
+  pointer-events: auto;
+}
+
+.editor-tab.dragging .tab-close {
+  pointer-events: none;
+  opacity: 0;
+}
+
+.tab-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--pico-secondary);
+}
+
+.editor-tab.active .tab-icon {
+  color: var(--pico-primary);
+}
+
+.tab-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.dirty-indicator {
+  color: var(--color-warning);
+  font-weight: bold;
+  font-size: 1rem;
+  line-height: 1;
+  margin-left: var(--space-xs);
+}
+
+.line-indicator {
+  color: var(--pico-secondary);
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+.tab-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  opacity: 0;
+  transition: all var(--transition-normal);
+  color: var(--pico-secondary);
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.tab-close:hover {
+  background: rgba(220, 53, 69, 0.1);
+  color: var(--color-error);
+}
+
+.editor-tab:hover .tab-close,
+.editor-tab.active .tab-close {
+  opacity: 1;
+}
+
+.tab-close svg {
+  width: 12px;
+  height: 12px;
+}
+
+.tab-close:focus-visible,
+.editor-tab:focus-visible {
+  outline: 2px solid var(--pico-primary);
+  outline-offset: -2px;
+}
+
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.editor-wrapper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-tab {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.editor-tab-context-menu {
+  position: fixed;
+  background: var(--pico-background);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 180px;
+  padding: var(--space-xs) 0;
+}
+
+.context-menu-item {
+  display: block;
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 0.85rem;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: background-color var(--transition-normal);
+}
+
+.context-menu-item:hover:not(:disabled) {
+  background: var(--pico-primary-focus);
+}
+
+.context-menu-item:disabled {
+  color: var(--pico-muted-color);
+  cursor: not-allowed;
+}
+
+/* Enhanced scrolling experience */
+.editor-tabs {
+  overscroll-behavior-x: contain;
+}
+
+/* For better mouse wheel scrolling on tabs */
+@supports (scrollbar-width: none) {
+  .editor-tabs {
+    scrollbar-width: none;
+  }
+}
+
+/* Ensure tabs don't shrink and maintain minimum width for overflow */
+.editor-tabs {
+  white-space: nowrap;
+}

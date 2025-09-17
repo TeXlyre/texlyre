@@ -81,6 +81,7 @@ export const EditorLoader = (
 	const [showSaveIndicator, setShowSaveIndicator] = useState(false);
 	const [yDoc, setYDoc] = useState<Y.Doc | null>(null);
 	const [provider, setProvider] = useState<WebrtcProvider | null>(null);
+	const hasEmittedReadyRef = useRef<boolean>(false);
 
 	const projectId = docUrl.startsWith("yjs:") ? docUrl.slice(4) : docUrl;
 
@@ -241,32 +242,35 @@ export const EditorLoader = (
 		let cursorUpdateTimeout: NodeJS.Timeout | null = null;
 		
 		return EditorView.updateListener.of((update: ViewUpdate) => {
-			// Handle auto-save as before
 			if (update.docChanged && autoSaveRef.current) {
-				autoSaveRef.current();
+			autoSaveRef.current();
 			}
 			
-			// Only track cursor position for LaTeX files
-			if (update.selectionSet && (fileName?.endsWith('.tex') || fileName?.endsWith('.latex'))) {
-				if (cursorUpdateTimeout) {
-					clearTimeout(cursorUpdateTimeout);
-				}
+			if (update.selectionSet) {
+			if (cursorUpdateTimeout) {
+				clearTimeout(cursorUpdateTimeout);
+			}
+			
+			cursorUpdateTimeout = setTimeout(() => {
+				if (update.view && update.view.state) {
+				const pos = update.view.state.selection.main.head;
+				const line = update.view.state.doc.lineAt(pos).number;
 				
-				cursorUpdateTimeout = setTimeout(() => {
-					if (update.view && update.view.state) {
-						const pos = update.view.state.selection.main.head;
-						const line = update.view.state.doc.lineAt(pos).number;
-						
-						// Emit cursor position update event for outline tracking
-						document.dispatchEvent(new CustomEvent('editor-cursor-update', {
-							detail: { line, position: pos }
-						}));
+				document.dispatchEvent(new CustomEvent('editor-cursor-update', {
+					detail: { 
+					line, 
+					position: pos,
+					fileId: currentFileId,
+					documentId: documentId,
+					isEditingFile
 					}
-				}, 200); // Debounce cursor updates to avoid performance issues
+				}));
+				}
+			}, 200);
 			}
 		});
 	};
-
+	
 	useEffect(() => {
 		if (!isDocumentSelected || isEditingFile || !documentId || !projectId) {
 			return;
@@ -499,6 +503,17 @@ export const EditorLoader = (
 		try {
 			const view = new EditorView({ state, parent: editorRef.current });
 			viewRef.current = view;
+			
+			// Emit editor ready event
+			setTimeout(() => {
+				document.dispatchEvent(new CustomEvent('editor-ready', {
+				detail: {
+					fileId: currentFileId,
+					documentId: documentId,
+					isEditingFile: isEditingFile
+				}
+				}));
+			}, 50);
 
 			// Update file path cache for LaTeX files
 			if (isLatexFile) {
@@ -525,6 +540,7 @@ export const EditorLoader = (
 				view.dom.addEventListener("input", handleInput);
 				return () => view.dom.removeEventListener("input", handleInput);
 			}
+
 		} catch (error) {
 			console.error("Error creating editor view:", error);
 		}
@@ -550,7 +566,7 @@ export const EditorLoader = (
 		enableComments,
 	]);
 
-	// Add event listener for bibliography cache updates
+	// Event listener for bibliography cache updates
 	useEffect(() => {
 		const handleFileTreeRefresh = () => {
 			if (viewRef.current) {
@@ -565,7 +581,6 @@ export const EditorLoader = (
 		};
 	}, []);
 
-	// Rest of your existing useEffect hooks remain the same...
 	useEffect(() => {
 		if (!viewRef.current || !editorRef.current) return;
 
@@ -795,7 +810,7 @@ export const EditorLoader = (
 			if (!viewRef.current) return;
 
 			try {
-				const { line, fileId, filePath } = customEvent.detail;
+				const { line, fileId, filePath, documentId: eventDocId, tabId } = customEvent.detail;
 
 				if (
 					isEditingFile &&
@@ -808,6 +823,14 @@ export const EditorLoader = (
 
 				if (!isEditingFile && filePath && !filePath.includes(documentId)) {
 					return;
+				}
+
+				if (tabId) {
+					// This is a tab-specific goto request
+					const isTargetFile = isEditingFile && fileId && currentFileId === fileId;
+					const isTargetDoc = !isEditingFile && eventDocId && documentId === eventDocId;
+					
+					if (!isTargetFile && !isTargetDoc) return;
 				}
 
 				if (line && line > 0) {
@@ -893,6 +916,7 @@ export const EditorLoader = (
 		if (!ytextRef.current || !isDocumentSelected || isEditingFile) return;
 
 		const yTextInstance = ytextRef.current;
+		let hasEmittedReady = false;
 
 		const observer = () => {
 			if (isUpdatingRef.current) return;
@@ -904,6 +928,20 @@ export const EditorLoader = (
 					updateComments(content);
 				}
 				if (autoSaveRef.current) autoSaveRef.current();
+
+				// Emit ready event once content is available for documents
+				if (!hasEmittedReadyRef.current && content && viewRef.current) {
+					hasEmittedReadyRef.current = true;
+					setTimeout(() => {
+						document.dispatchEvent(new CustomEvent('editor-ready-yjs', {
+							detail: {
+								fileId: currentFileId,
+								documentId: documentId,
+								isEditingFile: isEditingFile
+							}
+						}));
+					}, 50);
+				}
 			} finally {
 				isUpdatingRef.current = false;
 			}
@@ -922,7 +960,13 @@ export const EditorLoader = (
 		updateComments,
 		isEditingFile,
 		enableComments,
+		currentFileId,
+		documentId,
 	]);
+	
+	useEffect(() => {
+		hasEmittedReadyRef.current = false;
+	}, [documentId, isEditingFile]);
 
 	useEffect(() => {
 		return () => {
