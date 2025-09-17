@@ -1,6 +1,6 @@
 .editor-tabs-container {
-  background: var(--background-secondary, #f8f9fa);
-  border-bottom: 1px solid var(--border-color, #e1e5e9);
+  background: var(--pico-secondary-background);
+  border-bottom: 1px solid var(--accent-border);
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -14,6 +14,7 @@
   -ms-overflow-style: none;
   min-height: 36px;
   max-height: 36px;
+  scroll-behavior: smooth;
 }
 
 .editor-tabs::-webkit-scrollbar {
@@ -23,58 +24,52 @@
 .editor-tab {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: var(--background-primary, #ffffff);
-  border: 1px solid var(--border-color, #e1e5e9);
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--pico-background);
+  border: 1px solid var(--accent-border);
   border-bottom: none;
-  border-radius: 6px 6px 0 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   cursor: pointer;
   user-select: none;
   position: relative;
   min-width: 120px;
   max-width: 200px;
-  transition: all 0.15s ease;
+  transition: all var(--transition-normal) ease;
   margin-right: -1px;
-  font-size: 13px;
+  font-size: 0.8rem;
   height: 32px;
   box-sizing: border-box;
+  color: var(--text-color);
 }
 
 .editor-tab:hover {
-  background: var(--background-hover, #f5f6f7);
-  border-color: var(--border-hover, #d1d7dd);
+  background: var(--pico-primary-focus);
 }
 
 .editor-tab.active {
-  background: var(--background-primary, #ffffff);
-  border-color: var(--accent-color, #0969da);
-  border-bottom: 1px solid var(--background-primary, #ffffff);
+  background: var(--pico-background);
+  border-color: var(--pico-primary);
+  border-bottom: 1px solid var(--pico-background);
   z-index: 1;
   margin-bottom: -1px;
-}
-
-.editor-tab.active:hover {
-  background: var(--background-primary, #ffffff);
-}
-
-.editor-tab.dirty {
-  font-style: italic;
+  font-weight: 500;
 }
 
 .editor-tab.dirty .tab-title {
-  color: var(--text-warning, #bf8700);
+  font-style: italic;
+  color: var(--color-warning);
 }
 
 .tab-icon {
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  color: var(--text-secondary, #656d76);
+  color: var(--pico-secondary);
 }
 
 .editor-tab.active .tab-icon {
-  color: var(--accent-color, #0969da);
+  color: var(--pico-primary);
 }
 
 .tab-title {
@@ -83,24 +78,17 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--text-primary, #1f2328);
-  font-weight: 400;
   display: flex;
   align-items: center;
-  gap: 4px;
-}
-
-.editor-tab.active .tab-title {
-  color: var(--pico-secondary);
-  font-weight: 500;
+  gap: var(--space-xs);
 }
 
 .dirty-indicator {
-  color: var(--text-warning, #bf8700);
+  color: var(--color-warning);
   font-weight: bold;
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 1;
-  margin-left: 2px;
+  margin-left: var(--space-xs);
 }
 
 .tab-close {
@@ -111,18 +99,18 @@
   height: 16px;
   border: none;
   background: none;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   cursor: pointer;
   opacity: 0;
-  transition: all 0.15s ease;
-  color: var(--text-secondary, #656d76);
+  transition: all var(--transition-normal);
+  color: var(--pico-secondary);
   flex-shrink: 0;
   padding: 0;
 }
 
 .tab-close:hover {
-  background: var(--background-danger-hover, rgba(212, 53, 53, 0.1));
-  color: var(--text-danger, #d4353f);
+  background: rgba(220, 53, 69, 0.1);
+  color: var(--color-error);
 }
 
 .editor-tab:hover .tab-close,
@@ -135,62 +123,12 @@
   height: 12px;
 }
 
-/* Dark theme support */
-[data-theme="dark"] .editor-tabs-container {
-  background: var(--background-secondary, #21262d);
-  border-bottom-color: var(--border-color, #30363d);
-}
-
-[data-theme="dark"] .editor-tab {
-  background: var(--background-tertiary, #161b22);
-  border-color: var(--border-color, #30363d);
-  color: var(--text-primary, #f0f6fc);
-}
-
-[data-theme="dark"] .editor-tab:hover {
-  background: var(--background-hover, #262c36);
-  border-color: var(--border-hover, #373e47);
-}
-
-[data-theme="dark"] .editor-tab.active {
-  background: var(--background-primary, #0d1117);
-  border-color: var(--accent-color, #1f6feb);
-  border-bottom-color: var(--background-primary, #0d1117);
-}
-
-[data-theme="dark"] .editor-tab.active:hover {
-  background: var(--background-primary, #0d1117);
-}
-
-[data-theme="dark"] .tab-title {
-  color: var(--text-primary, #f0f6fc);
-}
-
-[data-theme="dark"] .tab-icon {
-  color: var(--text-secondary, #8b949e);
-}
-
-[data-theme="dark"] .editor-tab.active .tab-icon {
-  color: var(--accent-color, #1f6feb);
-}
-
-[data-theme="dark"] .tab-close:hover {
-  background: var(--background-danger-hover, rgba(248, 81, 73, 0.15));
-  color: var(--text-danger, #f85149);
-}
-
-/* Focus styles for accessibility */
+.tab-close:focus-visible,
 .editor-tab:focus-visible {
-  outline: 2px solid var(--accent-color, #0969da);
+  outline: 2px solid var(--pico-primary);
   outline-offset: -2px;
 }
 
-.tab-close:focus-visible {
-  outline: 2px solid var(--accent-color, #0969da);
-  outline-offset: 1px;
-}
-
-/* Ensure tabs container doesn't interfere with editor */
 .editor-container {
   display: flex;
   flex-direction: column;
@@ -205,12 +143,6 @@
   flex-direction: column;
 }
 
-/* Smooth scrolling for tab overflow */
-.editor-tabs {
-  scroll-behavior: smooth;
-}
-
-/* Animation for tab changes */
 .editor-tab {
   animation: fadeIn 0.2s ease-in-out;
 }
