@@ -81,6 +81,7 @@ export const EditorLoader = (
 	const [showSaveIndicator, setShowSaveIndicator] = useState(false);
 	const [yDoc, setYDoc] = useState<Y.Doc | null>(null);
 	const [provider, setProvider] = useState<WebrtcProvider | null>(null);
+	const hasEmittedReadyRef = useRef<boolean>(false);
 
 	const projectId = docUrl.startsWith("yjs:") ? docUrl.slice(4) : docUrl;
 
@@ -929,8 +930,8 @@ export const EditorLoader = (
 				if (autoSaveRef.current) autoSaveRef.current();
 
 				// Emit ready event once content is available for documents
-				if (!hasEmittedReady && content && viewRef.current) {
-					hasEmittedReady = true;
+				if (!hasEmittedReadyRef.current && content && viewRef.current) {
+					hasEmittedReadyRef.current = true;
 					setTimeout(() => {
 						document.dispatchEvent(new CustomEvent('editor-ready-yjs', {
 							detail: {
@@ -962,6 +963,10 @@ export const EditorLoader = (
 		currentFileId,
 		documentId,
 	]);
+	
+	useEffect(() => {
+		hasEmittedReadyRef.current = false;
+	}, [documentId, isEditingFile]);
 
 	useEffect(() => {
 		return () => {
