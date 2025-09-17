@@ -206,6 +206,43 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
     return existingTab?.id || `${tabData.type}-${tabData.fileId || tabData.documentId}-${Date.now()}`;
     }, [tabs]);
 
+  const reorderTabs = useCallback((sourceIndex: number, destinationIndex: number) => {
+    setTabs(prevTabs => {
+        const result = [...prevTabs];
+        const [removed] = result.splice(sourceIndex, 1);
+        result.splice(destinationIndex, 0, removed);
+        return result;
+    });
+  }, []);
+
+  const closeOtherTabs = useCallback((currentTabId: string) => {
+    setTabs(prevTabs => {
+        const tabToKeep = prevTabs.find(tab => tab.id === currentTabId);
+        if (!tabToKeep) return prevTabs;
+        
+        setActiveTabId(currentTabId);
+        return [tabToKeep];
+    });
+  }, []);
+
+  const closeTabsToLeft = useCallback((currentTabId: string) => {
+    setTabs(prevTabs => {
+        const tabIndex = prevTabs.findIndex(tab => tab.id === currentTabId);
+        if (tabIndex <= 0) return prevTabs;
+        
+        return prevTabs.slice(tabIndex);
+    });
+  }, []);
+
+  const closeTabsToRight = useCallback((currentTabId: string) => {
+    setTabs(prevTabs => {
+        const tabIndex = prevTabs.findIndex(tab => tab.id === currentTabId);
+        if (tabIndex === -1 || tabIndex === prevTabs.length - 1) return prevTabs;
+        
+        return prevTabs.slice(0, tabIndex + 1);
+    });
+  }, []);
+
   const closeTab = useCallback((tabId: string) => {
     setTabs(prevTabs => {
       const tabIndex = prevTabs.findIndex(tab => tab.id === tabId);
@@ -364,6 +401,10 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
     tabs,
     activeTabId,
     openTab,
+    reorderTabs,
+    closeOtherTabs,
+    closeTabsToLeft,
+    closeTabsToRight,
     closeTab,
     switchToTab,
     updateTabState,

@@ -20,6 +20,10 @@ export interface EditorTabsContextType {
   tabs: EditorTab[];
   activeTabId: string | null;
   openTab: (tab: Omit<EditorTab, 'id' | 'lastAccessed' | 'editorState'>) => string;
+  reorderTabs: (sourceIndex: number, destinationIndex: number) => void;
+  closeOtherTabs: (currentTabId: string) => void;
+  closeTabsToLeft: (currentTabId: string) => void;
+  closeTabsToRight: (currentTabId: string) => void;
   closeTab: (tabId: string) => void;
   switchToTab: (tabId: string) => void;
   updateTabState: (tabId: string, editorState: EditorTab['editorState']) => void;
