@@ -3,7 +3,7 @@ import type React from "react";
 import { useCallback, useEffect, useState, useRef } from "react";
 
 import { useEditorTabs } from "../../hooks/useEditorTabs";
-import { CloseIcon, FileTextIcon, FileIcon } from "../common/Icons";
+import { CloseIcon, FileTextIcon, FileIcon, ChevronLeftIcon, ChevronRightIcon } from "../common/Icons";
 
 interface EditorTabsProps {
   onTabSwitch?: (tabId: string) => void;
@@ -41,6 +41,79 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
   });
 
   const contextMenuRef = useRef<HTMLDivElement>(null);
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
+
+  const updateScrollState = useCallback(() => {
+    const container = tabsContainerRef.current;
+    const tabs = tabsRef.current;
+    
+    if (!container || !tabs) return;
+
+    const hasOverflow = tabs.scrollWidth > tabs.clientWidth;
+    const isAtStart = tabs.scrollLeft <= 0;
+    const isAtEnd = tabs.scrollLeft >= (tabs.scrollWidth - tabs.clientWidth);
+
+    container.classList.toggle('has-overflow', hasOverflow);
+    container.classList.toggle('at-start', isAtStart);
+    container.classList.toggle('at-end', isAtEnd);
+  }, []);
+
+  const scrollLeft = useCallback(() => {
+    const tabs = tabsRef.current;
+    if (!tabs) return;
+    
+    tabs.scrollBy({ left: -120, behavior: 'smooth' });
+  }, []);
+
+  const scrollRight = useCallback(() => {
+    const tabs = tabsRef.current;
+    if (!tabs) return;
+    
+    tabs.scrollBy({ left: 120, behavior: 'smooth' });
+  }, []);
+
+  useEffect(() => {
+    const tabs = tabsRef.current;
+    if (!tabs) return;
+
+    const handleScroll = () => updateScrollState();
+    const handleResize = () => updateScrollState();
+
+    tabs.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize);
+
+    // Initial check
+    updateScrollState();
+
+    return () => {
+      tabs.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [updateScrollState]);
+
+  useEffect(() => {
+    // Update scroll state when tabs change
+    updateScrollState();
+  }, [tabs, updateScrollState]);
+
+  useEffect(() => {
+    const tabs = tabsRef.current;
+    if (!tabs) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        tabs.scrollLeft += e.deltaY;
+      }
+    };
+
+    tabs.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      tabs.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
 
   const handleTabClick = useCallback((e: React.MouseEvent, tabId: string) => {
     e.preventDefault();
@@ -229,8 +302,17 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 
   return (
     <>
-      <div className="editor-tabs-container">
-        <div className="editor-tabs">
+      <div ref={tabsContainerRef} className="editor-tabs-container">
+        <button 
+          className="scroll-button scroll-left"
+          onClick={scrollLeft}
+          title="Scroll left"
+          aria-label="Scroll tabs left"
+        >
+          <ChevronLeftIcon />
+        </button>
+        
+        <div ref={tabsRef} className="editor-tabs">
           {tabs.map((tab, index) => (
             <div
               key={tab.id}
@@ -276,6 +358,15 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
             </div>
           ))}
         </div>
+
+        <button 
+          className="scroll-button scroll-right"
+          onClick={scrollRight}
+          title="Scroll right"
+          aria-label="Scroll tabs right"
+        >
+          <ChevronRightIcon />
+        </button>
       </div>
 
       {contextMenu.isVisible && (

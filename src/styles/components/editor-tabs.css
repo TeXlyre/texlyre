@@ -3,6 +3,9 @@
   border-bottom: 1px solid var(--accent-border);
   overflow: hidden;
   flex-shrink: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .editor-tabs {
@@ -15,10 +18,103 @@
   min-height: 36px;
   max-height: 36px;
   scroll-behavior: smooth;
+  flex: 1;
 }
 
 .editor-tabs::-webkit-scrollbar {
   display: none;
+}
+
+/* Scroll buttons */
+.scroll-button {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 8px;
+  border:0;
+  border-radius: 0;
+  cursor: pointer;
+  color: var(--pico-secondary);
+  transition: all var(--transition-normal);
+  flex-shrink: 0;
+  z-index: 3;
+}
+
+.scroll-button:hover {
+  background: var(--pico-primary-focus);
+  color: var(--text-color);
+}
+
+.scroll-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.scroll-button svg {
+  width: 12px;
+  height: 12px;
+}
+
+.scroll-left {
+  border-right: none;
+  border-radius: var(--radius-xs) 0 0 var(--radius-xs);
+}
+
+.scroll-right {
+  border-left: none;
+  border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+}
+
+/* Show scroll buttons when needed */
+.editor-tabs-container.has-overflow .scroll-button {
+  display: flex;
+}
+
+.editor-tabs-container.has-overflow .editor-tabs {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Gradient fade effects */
+.editor-tabs-container::before,
+.editor-tabs-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.editor-tabs-container::before {
+  left: 24px;
+  background: linear-gradient(to right, var(--pico-secondary-background) 0%, transparent 100%);
+}
+
+.editor-tabs-container::after {
+  right: 24px;
+  background: linear-gradient(to left, var(--pico-secondary-background) 0%, transparent 100%);
+}
+
+.editor-tabs-container.has-overflow::before {
+  opacity: 1;
+}
+
+.editor-tabs-container.has-overflow::after {
+  opacity: 1;
+}
+
+/* Hide gradients when at scroll boundaries */
+.editor-tabs-container.at-start::before {
+  opacity: 0;
+}
+
+.editor-tabs-container.at-end::after {
+  opacity: 0;
 }
 
 .editor-tab {
@@ -41,6 +137,8 @@
   height: 32px;
   box-sizing: border-box;
   color: var(--text-color);
+  flex-shrink: 0;
+  scroll-snap-align: start;
 }
 
 .editor-tab:hover {
@@ -169,6 +267,12 @@
   margin-left: var(--space-xs);
 }
 
+.line-indicator {
+  color: var(--pico-secondary);
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
 .tab-close {
   display: flex;
   align-items: center;
@@ -267,4 +371,21 @@
 .context-menu-item:disabled {
   color: var(--pico-muted-color);
   cursor: not-allowed;
+}
+
+/* Enhanced scrolling experience */
+.editor-tabs {
+  overscroll-behavior-x: contain;
+}
+
+/* For better mouse wheel scrolling on tabs */
+@supports (scrollbar-width: none) {
+  .editor-tabs {
+    scrollbar-width: none;
+  }
+}
+
+/* Ensure tabs don't shrink and maintain minimum width for overflow */
+.editor-tabs {
+  white-space: nowrap;
 }
