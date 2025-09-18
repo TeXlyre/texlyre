@@ -32,5 +32,4 @@ export interface EditorTabsContextType {
   getActiveTab: () => EditorTab | null;
   getTabByFileId: (fileId: string) => EditorTab | undefined;
   getTabByDocumentId: (documentId: string) => EditorTab | undefined;
-  gotoLineInTab: (tabId: string, line: number) => void;
 }
