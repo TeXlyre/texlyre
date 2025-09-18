@@ -852,6 +852,51 @@ export const EditorLoader = (
 			}
 		};
 
+		const handleGotoChar = (event: Event) => {
+			const customEvent = event as CustomEvent;
+			if (!viewRef.current) return;
+
+			try {
+				const { position, fileId, filePath, documentId: eventDocId, tabId } = customEvent.detail;
+
+				if (
+					isEditingFile &&
+					fileId &&
+					currentFileId &&
+					currentFileId !== fileId
+				) {
+					return;
+				}
+
+				if (!isEditingFile && filePath && !filePath.includes(documentId)) {
+					return;
+				}
+
+				if (tabId) {
+					const isTargetFile = isEditingFile && fileId && currentFileId === fileId;
+					const isTargetDoc = !isEditingFile && eventDocId && documentId === eventDocId;
+					
+					if (!isTargetFile && !isTargetDoc) return;
+				}
+
+				if (position !== undefined && position >= 0) {
+					const view = viewRef.current;
+					const doc = view.state.doc;
+
+					const validPosition = Math.max(0, Math.min(position, doc.length));
+
+					view.dispatch({
+						selection: { anchor: validPosition, head: validPosition },
+						effects: [EditorView.scrollIntoView(validPosition, { y: "center" })],
+					});
+
+					view.focus();
+				}
+			} catch (error) {
+				console.error("Error in Codemirror character navigation:", error);
+			}
+		};
+
 		const handleFileSaved = (event: Event) => {
 			const customEvent = event as CustomEvent;
 			const { fileId: eventFileId } = customEvent.detail;
@@ -888,6 +933,7 @@ export const EditorLoader = (
 		document.addEventListener("comment-delete", handleCommentDelete);
 		document.addEventListener("comment-update", handleCommentUpdate);
 		document.addEventListener("codemirror-goto-line", handleGotoLine);
+		document.addEventListener("codemirror-goto-char", handleGotoChar);
 		document.addEventListener("file-saved", handleFileSaved);
 		document.addEventListener("trigger-save", handleTriggerSave);
 
@@ -899,6 +945,7 @@ export const EditorLoader = (
 			document.removeEventListener("comment-delete", handleCommentDelete);
 			document.removeEventListener("comment-update", handleCommentUpdate);
 			document.removeEventListener("codemirror-goto-line", handleGotoLine);
+			document.removeEventListener("codemirror-goto-char", handleGotoChar);
 			document.removeEventListener("file-saved", handleFileSaved);
 			document.removeEventListener("trigger-save", handleTriggerSave);
 		};

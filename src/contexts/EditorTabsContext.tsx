@@ -29,7 +29,7 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
   const [propertiesLoaded, setPropertiesLoaded] = useState(false);
   const propertiesRegistered = useRef(false);
-  const pendingGotoRef = useRef<{ tabId: string; line: number } | null>(null);
+  const pendingGotoRef = useRef<{ tabId: string; position: number } | null>(null);
 
   const getCurrentProjectId = useCallback(() => {
     return sessionStorage.getItem("currentProjectId");
@@ -270,10 +270,10 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
     setActiveTabId(tabId);
     
     // Store the pending goto operation
-    if (tab.editorState.currentLine) {
+    if (tab.editorState.cursorPosition) {
       pendingGotoRef.current = {
         tabId: tabId,
-        line: tab.editorState.currentLine
+        position: tab.editorState.cursorPosition
       };
     }
   }, [tabs]);
@@ -299,12 +299,12 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
         const isTargetDoc = !isEditingFile && tab.documentId === documentId;
         
         if (isTargetFile || isTargetDoc) {
-            const { line } = pendingGoto;
+            const { position } = pendingGoto;
             
             setTimeout(() => {
-                document.dispatchEvent(new CustomEvent('codemirror-goto-line', {
+                document.dispatchEvent(new CustomEvent('codemirror-goto-char', {
                 detail: { 
-                    line: line,
+                    position: position,
                     tabId: tab.id,
                     fileId: tab.fileId,
                     documentId: tab.documentId
@@ -329,11 +329,11 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
     if (!propertiesLoaded || !activeTabId) return;
     
     const activeTab = tabs.find(t => t.id === activeTabId);
-    if (!activeTab || !activeTab.editorState.currentLine) return;
+    if (!activeTab || !activeTab.editorState.cursorPosition) return;
     
     pendingGotoRef.current = {
         tabId: activeTabId,
-        line: activeTab.editorState.currentLine
+        position: activeTab.editorState.cursorPosition
     };
   }, [propertiesLoaded, activeTabId, tabs]);
 
@@ -379,24 +379,6 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
     return tabs.find(tab => tab.documentId === documentId);
     }, [tabs]);
 
-  const gotoLineInTab = useCallback((tabId: string, line: number) => {
-    const tab = tabs.find(t => t.id === tabId);
-    if (!tab) return;
-
-    setActiveTabId(tabId);
-    
-    setTimeout(() => {
-      document.dispatchEvent(new CustomEvent('codemirror-goto-line', {
-        detail: { 
-          line, 
-          tabId,
-          fileId: tab.fileId,
-          documentId: tab.documentId 
-        }
-      }));
-    }, 100);
-  }, [tabs]);
-
   const contextValue: EditorTabsContextType = {
     tabs,
     activeTabId,
@@ -412,8 +394,7 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
     markTabDirty,
     getActiveTab,
     getTabByFileId,
-    getTabByDocumentId,
-    gotoLineInTab,
+    getTabByDocumentId
   };
 
   return (
