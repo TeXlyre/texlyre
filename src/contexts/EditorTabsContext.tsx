@@ -310,7 +310,7 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
                     documentId: tab.documentId
                 }
                 }));
-            }, 50);
+            }, 100);
             
             pendingGotoRef.current = null;
         }

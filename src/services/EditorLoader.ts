@@ -944,6 +944,7 @@ export const EditorLoader = (
 				}
 			} finally {
 				isUpdatingRef.current = false;
+				hasEmittedReadyRef.current = false;
 			}
 		};
 
@@ -964,10 +965,6 @@ export const EditorLoader = (
 		documentId,
 	]);
 	
-	useEffect(() => {
-		hasEmittedReadyRef.current = false;
-	}, [documentId, isEditingFile]);
-
 	useEffect(() => {
 		return () => {
 			const autoSaveKey = isEditingFile ? currentFileId : documentId;
