@@ -61,7 +61,6 @@
 	width: 100vw;
 	height: calc(100vh - var(--mobile-header-height) - var(--mobile-nav-height));
 	margin-top: var(--mobile-header-height);
-	margin-bottom: var(--mobile-nav-height);
 	overflow: hidden;
 	position: relative;
 	display: block;
