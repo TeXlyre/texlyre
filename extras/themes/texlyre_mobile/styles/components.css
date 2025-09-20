@@ -1,0 +1,400 @@
+/* extras/themes/texlyre_mobile/styles/components.css */
+
+/* Mobile Editor Components */
+[data-layout="texlyre-mobile"] .editor-tabs-container {
+	min-height: 50px;
+	max-height: 50px;
+}
+
+[data-layout="texlyre-mobile"] .editor-tab {
+	min-width: 140px;
+	max-width: 200px;
+	height: 40px;
+	font-size: var(--mobile-font-sm);
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+}
+
+[data-layout="texlyre-mobile"] .codemirror-editor-container .cm-editor {
+	font-size: var(--mobile-font-md) !important;
+}
+
+[data-layout="texlyre-mobile"] .codemirror-editor-container .cm-scroller {
+	font-size: var(--mobile-font-md) !important;
+	line-height: 1.6;
+}
+
+[data-layout="texlyre-mobile"] .codemirror-editor-container .cm-content {
+	padding: var(--mobile-spacing-md);
+}
+
+[data-layout="texlyre-mobile"] .codemirror-editor-container .cm-line {
+	padding: 0 var(--mobile-spacing-sm);
+}
+
+/* Mobile File Explorer - Full Width */
+[data-layout="texlyre-mobile"] .file-explorer,
+[data-layout="texlyre-mobile"] .sidebar-container {
+	border-radius: 0 !important;
+	border: none !important;
+	width: 100% !important;
+	max-width: 100% !important;
+	min-width: 100% !important;
+	height: 100% !important;
+}
+
+[data-layout="texlyre-mobile"] .explorer-container {
+	width: 100% !important;
+	max-width: 100% !important;
+	min-width: 100% !important;
+	height: 100% !important;
+	flex: 1 !important;
+}
+
+/* Override any ResizablePanel width constraints */
+[data-layout="texlyre-mobile"] .resizable-panel {
+	width: 100% !important;
+	max-width: 100% !important;
+	min-width: 100% !important;
+}
+
+[data-layout="texlyre-mobile"] .panel-content {
+	width: 100% !important;
+	max-width: 100% !important;
+	min-width: 100% !important;
+}
+
+/* Force all nested components to full width */
+[data-layout="texlyre-mobile"] .file-tree,
+[data-layout="texlyre-mobile"] .view-toggle,
+[data-layout="texlyre-mobile"] .latex-outline {
+	width: 100% !important;
+	max-width: 100% !important;
+}
+
+[data-layout="texlyre-mobile"] .file-explorer-header {
+	padding: var(--mobile-spacing-md);
+	min-height: 60px;
+}
+
+[data-layout="texlyre-mobile"] .file-explorer-header h3 {
+	font-size: var(--mobile-font-lg);
+}
+
+[data-layout="texlyre-mobile"] .file-node {
+	padding: var(--mobile-spacing-md);
+	font-size: var(--mobile-font-sm);
+	min-height: var(--mobile-min-touch-target);
+	border-radius: var(--mobile-radius-md);
+	margin: var(--mobile-spacing-xs) var(--mobile-spacing-sm);
+}
+
+[data-layout="texlyre-mobile"] .file-name {
+	font-size: var(--mobile-font-sm);
+}
+
+[data-layout="texlyre-mobile"] .action-btn {
+	min-width: var(--mobile-min-touch-target);
+	min-height: var(--mobile-min-touch-target);
+	padding: var(--mobile-spacing-sm);
+}
+
+/* Mobile View Toggle - Position at top of explorer */
+[data-layout="texlyre-mobile"] .view-toggle {
+	border-bottom: 2px solid var(--accent-border);
+	margin: 0 !important;
+	padding: 0 !important;
+	position: sticky;
+	top: 0;
+	z-index: 10;
+	background-color: var(--pico-secondary-background);
+}
+
+[data-layout="texlyre-mobile"] .view-toggle button {
+	padding: var(--mobile-spacing-md);
+	font-size: var(--mobile-font-sm);
+	min-height: 50px;
+	font-weight: 600;
+}
+
+/* Ensure view toggle is at the very top of the explorer container */
+[data-layout="texlyre-mobile"] .file-explorer {
+	padding-top: 0 !important;
+	margin-top: 0 !important;
+}
+
+[data-layout="texlyre-mobile"] .file-explorer-header {
+	padding: var(--mobile-spacing-md);
+	min-height: 60px;
+	margin-top: 0 !important;
+	order: 2; /* Put header after view toggle */
+}
+
+/* Reorder elements in file explorer to put view toggle first */
+[data-layout="texlyre-mobile"] .file-explorer {
+	display: flex !important;
+	flex-direction: column !important;
+}
+
+[data-layout="texlyre-mobile"] .view-toggle {
+	order: 1; /* Put view toggle first */
+}
+
+[data-layout="texlyre-mobile"] .file-tree {
+	order: 3; /* Put file tree last */
+	flex: 1;
+}
+
+/* Mobile LaTeX Output - Full Width */
+[data-layout="texlyre-mobile"] .latex-output,
+[data-layout="texlyre-mobile"] .latex-output-container {
+	border-radius: 0;
+	border: none;
+	width: 100% !important;
+	height: 100% !important;
+}
+
+[data-layout="texlyre-mobile"] .output-header {
+	padding: var(--mobile-spacing-md);
+	min-height: 60px;
+}
+
+[data-layout="texlyre-mobile"] .latex-compile-buttons {
+	gap: var(--mobile-spacing-sm);
+}
+
+[data-layout="texlyre-mobile"] .latex-button {
+	min-height: var(--mobile-min-touch-target);
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+	font-size: var(--mobile-font-sm);
+}
+
+[data-layout="texlyre-mobile"] .tab-button {
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+	font-size: var(--mobile-font-sm);
+	min-height: 40px;
+}
+
+/* Ensure PDF viewer and log viewer are visible */
+[data-layout="texlyre-mobile"] .pdf-viewer,
+[data-layout="texlyre-mobile"] .log-viewer {
+	width: 100% !important;
+	height: 100% !important;
+}
+
+[data-layout="texlyre-mobile"] .log-view-container {
+	width: 100% !important;
+	height: 100% !important;
+}
+
+[data-layout="texlyre-mobile"] .split-log-view {
+	width: 100% !important;
+	height: 100% !important;
+}
+
+[data-layout="texlyre-mobile"] .empty-state {
+	width: 100% !important;
+	height: 100% !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+
+/* Force PDF embed to be visible */
+[data-layout="texlyre-mobile"] .pdf-viewer embed {
+	width: 100% !important;
+	height: 100% !important;
+	display: block !important;
+}
+
+/* Ensure output content is properly displayed */
+[data-layout="texlyre-mobile"] .output-content {
+	flex: 1 !important;
+	height: 100% !important;
+	overflow: hidden !important;
+}
+
+/* Mobile LaTeX Outline */
+[data-layout="texlyre-mobile"] .latex-outline-header {
+	padding: var(--mobile-spacing-md);
+	font-size: var(--mobile-font-sm);
+}
+
+[data-layout="texlyre-mobile"] .outline-section {
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+	font-size: var(--mobile-font-sm);
+	min-height: var(--mobile-min-touch-target);
+	border-radius: var(--mobile-radius-md);
+	margin: var(--mobile-spacing-xs);
+}
+
+/* Mobile Chat Panel - Simplified display logic */
+[data-layout="texlyre-mobile"] .chat-panel {
+	border-radius: 0;
+}
+
+[data-layout="texlyre-mobile"] .chat-panel-header {
+	padding: var(--mobile-spacing-md);
+	min-height: 60px;
+}
+
+[data-layout="texlyre-mobile"] .chat-panel-title {
+	font-size: var(--mobile-font-lg);
+}
+
+[data-layout="texlyre-mobile"] .chat-message {
+	margin-bottom: var(--mobile-spacing-md);
+}
+
+[data-layout="texlyre-mobile"] .message-text {
+	font-size: var(--mobile-font-sm);
+	line-height: 1.6;
+}
+
+[data-layout="texlyre-mobile"] .chat-panel-input {
+	font-size: var(--mobile-font-md);
+	padding: var(--mobile-spacing-md);
+	min-height: 120px;
+}
+
+[data-layout="texlyre-mobile"] .chat-panel-send-button {
+	font-size: var(--mobile-font-sm);
+	padding: var(--mobile-spacing-md) var(--mobile-spacing-lg);
+	min-height: var(--mobile-min-touch-target);
+}
+
+/* Mobile Comments */
+[data-layout="texlyre-mobile"] .comment-panel {
+	display: none !important; /* Hide comments panel on mobile for now */
+}
+
+[data-layout="texlyre-mobile"] .comment-toggle-button {
+	display: none !important; /* Hide comments toggle on mobile */
+}
+
+/* Mobile Settings */
+[data-layout="texlyre-mobile"] .settings-button {
+	min-height: var(--mobile-min-touch-target);
+	font-size: var(--mobile-font-sm);
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+}
+
+/* Mobile Modals */
+[data-layout="texlyre-mobile"] .modal-container {
+	margin: var(--mobile-spacing-md);
+	width: calc(100vw - 2 * var(--mobile-spacing-md));
+	max-height: calc(100vh - 2 * var(--mobile-spacing-md));
+	border-radius: var(--mobile-radius-lg);
+}
+
+[data-layout="texlyre-mobile"] .modal-header {
+	padding: var(--mobile-spacing-lg);
+}
+
+[data-layout="texlyre-mobile"] .modal-header h2 {
+	font-size: var(--mobile-font-lg);
+}
+
+[data-layout="texlyre-mobile"] .modal-content {
+	padding: var(--mobile-spacing-lg);
+}
+
+[data-layout="texlyre-mobile"] .modal-close-button {
+	min-width: var(--mobile-min-touch-target);
+	min-height: var(--mobile-min-touch-target);
+	padding: var(--mobile-spacing-sm);
+}
+
+/* Mobile Forms */
+[data-layout="texlyre-mobile"] .form-group label {
+	font-size: var(--mobile-font-sm);
+	margin-bottom: var(--mobile-spacing-sm);
+}
+
+[data-layout="texlyre-mobile"] .form-group input,
+[data-layout="texlyre-mobile"] .form-group textarea,
+[data-layout="texlyre-mobile"] .form-group select {
+	font-size: var(--mobile-font-md);
+	padding: var(--mobile-spacing-md);
+	min-height: var(--mobile-min-touch-target);
+	border-radius: var(--mobile-radius-md);
+}
+
+/* Mobile Buttons */
+[data-layout="texlyre-mobile"] .button,
+[data-layout="texlyre-mobile"] .action-button {
+	min-height: var(--mobile-min-touch-target);
+	font-size: var(--mobile-font-sm);
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+	border-radius: var(--mobile-radius-md);
+}
+
+[data-layout="texlyre-mobile"] .button.small {
+	font-size: var(--mobile-font-xs);
+	padding: var(--mobile-spacing-xs) var(--mobile-spacing-sm);
+	min-height: 36px;
+}
+
+/* Mobile Dropdowns */
+[data-layout="texlyre-mobile"] .dropdown-menu {
+	min-width: 200px;
+	border-radius: var(--mobile-radius-lg);
+	box-shadow: var(--mobile-shadow-lg);
+}
+
+[data-layout="texlyre-mobile"] .dropdown-item {
+	padding: var(--mobile-spacing-md);
+	font-size: var(--mobile-font-sm);
+	min-height: var(--mobile-min-touch-target);
+}
+
+/* Mobile Toast */
+[data-layout="texlyre-mobile"] .toast-container {
+	top: calc(var(--mobile-header-height) + var(--mobile-spacing-md));
+	right: var(--mobile-spacing-md);
+	left: var(--mobile-spacing-md);
+	max-width: none;
+}
+
+[data-layout="texlyre-mobile"] .toast {
+	padding: var(--mobile-spacing-md);
+	border-radius: var(--mobile-radius-lg);
+	font-size: var(--mobile-font-sm);
+}
+
+/* Mobile Specific Utilities */
+[data-layout="texlyre-mobile"] .mobile-hidden {
+	display: none !important;
+}
+
+[data-layout="texlyre-mobile"] .mobile-only {
+	display: block !important;
+}
+
+/* Touch-friendly scrollbars */
+[data-layout="texlyre-mobile"] ::-webkit-scrollbar {
+	width: 8px;
+}
+
+[data-layout="texlyre-mobile"] ::-webkit-scrollbar-thumb {
+	background-color: var(--accent-border);
+	border-radius: 4px;
+}
+
+[data-layout="texlyre-mobile"] ::-webkit-scrollbar-thumb:hover {
+	background-color: var(--pico-secondary);
+}
+
+/* Safe area adjustments for devices with notches */
+@supports (padding: max(0px)) {
+	[data-layout="texlyre-mobile"] header {
+		padding-left: max(var(--mobile-spacing-md), env(safe-area-inset-left));
+		padding-right: max(var(--mobile-spacing-md), env(safe-area-inset-right));
+		padding-top: max(0px, env(safe-area-inset-top));
+	}
+
+	[data-layout="texlyre-mobile"] .mobile-bottom-nav {
+		padding-left: max(0px, env(safe-area-inset-left));
+		padding-right: max(0px, env(safe-area-inset-right));
+		padding-bottom: max(0px, env(safe-area-inset-bottom));
+	}
+}

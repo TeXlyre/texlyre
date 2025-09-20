@@ -1,0 +1,21 @@
+/* extras/themes/texlyre_mobile/styles/variants/github_light.css */
+[data-theme="github_light"][data-theme-plugin="texlyre-mobile"] {
+	--accent-background: #f6f8fa;
+	--accent-border: #d0d7de;
+	--editor-background: #ffffff;
+	--editor-text: #24292f;
+	--sidebar-background: #f6f8fa;
+	--sidebar-border: #d0d7de;
+	--text-color: #24292f;
+
+	--pico-primary-rgb: 9, 105, 218;
+	--pico-secondary-rgb: 101, 109, 118;
+
+	--syntax-keyword: #cf222e;
+	--syntax-function: #8250df;
+	--syntax-string: #0a3069;
+	--syntax-number: #0550ae;
+	--syntax-comment: #6e7781;
+	--syntax-variable: #953800;
+	--syntax-tag: #116329;
+}

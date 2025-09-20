@@ -1,0 +1,21 @@
+/* extras/themes/texlyre_mobile/styles/variants/tomorrow_night_blue.css */
+[data-theme="tomorrow_night_blue"][data-theme-plugin="texlyre-mobile"] {
+	--accent-background: #1c2733;
+	--accent-border: #2c3640;
+	--editor-background: #0d1117;
+	--editor-text: #d1d5db;
+	--sidebar-background: #1a242f;
+	--sidebar-border: #30363d;
+	--text-color: #d1d5db;
+
+	--pico-primary-rgb: 209, 213, 219;
+	--pico-secondary-rgb: 144, 161, 176;
+
+	--syntax-keyword: #ff7b72;
+	--syntax-function: #d2a8ff;
+	--syntax-string: #a5d6ff;
+	--syntax-number: #79c0ff;
+	--syntax-comment: #8b949e;
+	--syntax-variable: #ffa657;
+	--syntax-tag: #7ee787;
+}
