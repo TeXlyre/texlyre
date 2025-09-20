@@ -172,45 +172,152 @@ body.mobile-view-explorer .main-content {
 	margin: 0 !important;
 }
 
+/* Editor view - hide sidebar and latex output, show only editor */
 body.mobile-view-editor .main-content > .sidebar-container {
 	display: none !important;
 }
 
-body.mobile-view-editor .editor-container-outer {
-	width: 100vw !important;
-	height: 100% !important;
-}
-
+/* Hide LaTeX output completely in editor view */
 body.mobile-view-editor .latex-output-container {
 	display: none !important;
 }
 
+body.mobile-view-editor .latex-output {
+	display: none !important;
+}
+
+body.mobile-view-editor .pdf-viewer {
+	display: none !important;
+}
+
+body.mobile-view-editor .log-viewer {
+	display: none !important;
+}
+
+body.mobile-view-editor .log-view-container {
+	display: none !important;
+}
+
+/* Show editor containers in editor view */
+body.mobile-view-editor .editor-container-outer,
+body.mobile-view-editor .editor-output-container {
+	width: 100vw !important;
+	height: 100% !important;
+	flex: 1 !important;
+	display: flex !important;
+}
+
+body.mobile-view-editor .editor-wrapper {
+	width: 100% !important;
+	height: 100% !important;
+	flex: 1 !important;
+	display: flex !important;
+}
+
+/* Output view - hide sidebar and editor, show only latex output */
 body.mobile-view-output .main-content > .sidebar-container {
 	display: none !important;
 }
 
-body.mobile-view-output .editor-container-outer {
+/* Hide editor components in output view */
+body.mobile-view-output .editor-wrapper {
 	display: none !important;
 }
 
-body.mobile-view-output .latex-output-container {
+body.mobile-view-output .editor-container {
+	display: none !important;
+}
+
+body.mobile-view-output .codemirror-editor-container {
+	display: none !important;
+}
+
+body.mobile-view-output .editor-tabs-container {
+	display: none !important;
+}
+
+/* Show editor containers but hide their editor content */
+body.mobile-view-output .editor-container-outer,
+body.mobile-view-output .editor-output-container {
 	width: 100vw !important;
+	height: 100% !important;
+	flex: 1 !important;
+	display: flex !important;
+}
+
+/* Show latex output container ONLY in output view */
+body.mobile-view-output .latex-output-container {
+	display: flex !important;
+	width: 100% !important;
 	height: 100% !important;
 	border: none !important;
 	border-radius: 0 !important;
-	display: flex !important;
-}
-
-/* Ensure LaTeX output is visible when in output view */
-body.mobile-view-output .main-content {
-	display: flex !important;
-}
-
-body.mobile-view-output .main-content > .latex-output-container {
-	display: flex !important;
 	flex: 1 !important;
 }
 
+/* Ensure all latex output components are visible in output view */
+body.mobile-view-output .latex-output {
+	display: flex !important;
+	width: 100% !important;
+	height: 100% !important;
+	flex-direction: column !important;
+}
+
+body.mobile-view-output .output-content {
+	flex: 1 !important;
+	display: flex !important;
+	flex-direction: column !important;
+	overflow: hidden !important;
+	height: 100% !important;
+}
+
+body.mobile-view-output .pdf-viewer {
+	display: flex !important;
+	width: 100% !important;
+	height: 100% !important;
+	flex: 1 !important;
+}
+
+body.mobile-view-output .log-view-container {
+	width: 100% !important;
+	height: 100% !important;
+	flex: 1 !important;
+	display: flex !important;
+}
+
+body.mobile-view-output .log-viewer {
+	width: 100% !important;
+	height: 100% !important;
+	display: block !important;
+}
+
+body.mobile-view-output .pdf-viewer embed {
+	display: block !important;
+	width: 100% !important;
+	height: 100% !important;
+}
+
+body.mobile-view-output .empty-state {
+	width: 100% !important;
+	height: 100% !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+
+body.mobile-view-output .output-header {
+	display: flex !important;
+}
+
+body.mobile-view-output .view-tabs {
+	display: flex !important;
+}
+
+body.mobile-view-output .tab-button {
+	display: flex !important;
+}
+
+/* Chat view */
 body.mobile-view-chat .main-content > *:not(.chat-panel) {
 	display: none !important;
 }
