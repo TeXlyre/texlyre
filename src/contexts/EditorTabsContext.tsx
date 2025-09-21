@@ -30,7 +30,8 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
   const [propertiesLoaded, setPropertiesLoaded] = useState(false);
   const propertiesRegistered = useRef(false);
   const pendingGotoRef = useRef<{ tabId: string; position: number } | null>(null);
-
+  const lastActiveTabIdRef = useRef<string | null>(null);
+  
   const getCurrentProjectId = useCallback(() => {
     return sessionStorage.getItem("currentProjectId");
   }, []);
@@ -328,6 +329,10 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
   useEffect(() => {
     if (!propertiesLoaded || !activeTabId) return;
     
+    // Only set pending goto when switching tabs, not on every update
+    if (lastActiveTabIdRef.current === activeTabId) return;
+    lastActiveTabIdRef.current = activeTabId;
+    
     const activeTab = tabs.find(t => t.id === activeTabId);
     if (!activeTab || !activeTab.editorState.cursorPosition) return;
     
@@ -335,7 +340,7 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
         tabId: activeTabId,
         position: activeTab.editorState.cursorPosition
     };
-  }, [propertiesLoaded, activeTabId, tabs]);
+  }, [propertiesLoaded, activeTabId]);
 
   const updateTabState = useCallback((tabId: string, editorState: EditorTab['editorState']) => {
     setTabs(prevTabs =>
