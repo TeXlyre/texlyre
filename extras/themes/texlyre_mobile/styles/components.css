@@ -1,6 +1,5 @@
 /* extras/themes/texlyre_mobile/styles/components.css */
 
-/* Mobile Editor Components */
 [data-layout="texlyre-mobile"] .editor-tabs-container {
 	min-height: 50px;
 	max-height: 50px;
@@ -14,12 +13,12 @@
 	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
 }
 
-[data-layout="texlyre-mobile"] .codemirror-editor-container .cm-editor {
+[data-layout="texlyre-mobile"] .codemirror-editor-container .cm-editor,
+[data-layout="texlyre-mobile"] .codemirror-editor-container .cm-scroller {
 	font-size: var(--mobile-font-md) !important;
 }
 
 [data-layout="texlyre-mobile"] .codemirror-editor-container .cm-scroller {
-	font-size: var(--mobile-font-md) !important;
 	line-height: 1.6;
 }
 
@@ -31,65 +30,23 @@
 	padding: 0 var(--mobile-spacing-sm);
 }
 
-[data-layout="texlyre-mobile"] .file-explorer,
-[data-layout="texlyre-mobile"] .sidebar-container {
-	border-radius: 0 !important;
-	border: none !important;
-	width: 100% !important;
-	max-width: 100% !important;
-	min-width: 100% !important;
-	height: 100% !important;
-}
-
-[data-layout="texlyre-mobile"] .explorer-container {
-	width: 100% !important;
-	max-width: 100% !important;
-	min-width: 100% !important;
-	height: 100% !important;
-	flex: 1 !important;
-	display: flex !important;
-	flex-direction: column !important;
-}
-
-[data-layout="texlyre-mobile"] .resizable-panel {
-	width: 100% !important;
-	max-width: 100% !important;
-	min-width: 100% !important;
-}
-
-[data-layout="texlyre-mobile"] .panel-content {
-    padding-top: calc(var(--mobile-header-height) + var(--mobile-spacing-md));
-	width: 100% !important;
-	max-width: 100% !important;
-	min-width: 100% !important;
-	display: flex !important;
-	flex-direction: column !important;
-}
-
-[data-layout="texlyre-mobile"] .file-tree,
-[data-layout="texlyre-mobile"] .latex-outline {
-	width: 100% !important;
-	max-width: 100% !important;
-	flex: 1 !important;
-	display: block !important;
-	overflow-y: auto !important;
-}
-
 [data-layout="texlyre-mobile"] .view-toggle {
-	width: 100% !important;
-	max-width: 100% !important;
 	border-bottom: 2px solid var(--accent-border);
-	margin: 0 !important;
-	padding: 0 !important;
-	z-index: 10;
 	background-color: var(--pico-secondary-background);
-	order: -1 !important;
-	flex-shrink: 0 !important;
+}
+
+[data-layout="texlyre-mobile"] .view-toggle button {
+	padding: var(--mobile-spacing-md);
+	font-size: var(--mobile-font-sm);
+	min-height: 50px;
+	font-weight: 600;
 }
 
 [data-layout="texlyre-mobile"] .file-explorer-header {
 	padding: var(--mobile-spacing-md);
 	min-height: 60px;
+	margin-top: 0 !important;
+	flex-shrink: 0 !important;
 }
 
 [data-layout="texlyre-mobile"] .file-explorer-header h3 {
@@ -114,36 +71,6 @@
 	padding: var(--mobile-spacing-sm);
 }
 
-[data-layout="texlyre-mobile"] .view-toggle button {
-	padding: var(--mobile-spacing-md);
-	font-size: var(--mobile-font-sm);
-	min-height: 50px;
-	font-weight: 600;
-}
-
-[data-layout="texlyre-mobile"] .file-explorer {
-	padding-top: 0 !important;
-	margin-top: 0 !important;
-	display: flex !important;
-	flex-direction: column !important;
-	flex: 1 !important;
-}
-
-[data-layout="texlyre-mobile"] .file-explorer-header {
-	padding: var(--mobile-spacing-md);
-	min-height: 60px;
-	margin-top: 0 !important;
-	flex-shrink: 0 !important;
-}
-
-[data-layout="texlyre-mobile"] .latex-output,
-[data-layout="texlyre-mobile"] .latex-output-container {
-	border-radius: 0;
-	border: none;
-	width: 100% !important;
-	height: 100% !important;
-}
-
 [data-layout="texlyre-mobile"] .output-header {
 	padding: var(--mobile-spacing-md);
 	min-height: 60px;
@@ -165,42 +92,6 @@
 	min-height: 40px;
 }
 
-[data-layout="texlyre-mobile"] .pdf-viewer,
-[data-layout="texlyre-mobile"] .log-viewer {
-	width: 100% !important;
-	height: 100% !important;
-}
-
-[data-layout="texlyre-mobile"] .log-view-container {
-	width: 100% !important;
-	height: 100% !important;
-}
-
-[data-layout="texlyre-mobile"] .split-log-view {
-	width: 100% !important;
-	height: 100% !important;
-}
-
-[data-layout="texlyre-mobile"] .empty-state {
-	width: 100% !important;
-	height: 100% !important;
-	display: flex !important;
-	align-items: center !important;
-	justify-content: center !important;
-}
-
-[data-layout="texlyre-mobile"] .pdf-viewer embed {
-	width: 100% !important;
-	height: 100% !important;
-	display: block !important;
-}
-
-[data-layout="texlyre-mobile"] .output-content {
-	flex: 1 !important;
-	height: 100% !important;
-	overflow: hidden !important;
-}
-
 [data-layout="texlyre-mobile"] .latex-outline-header {
 	padding: var(--mobile-spacing-md);
 	font-size: var(--mobile-font-sm);
@@ -214,10 +105,6 @@
 	margin: var(--mobile-spacing-xs);
 }
 
-[data-layout="texlyre-mobile"] .chat-panel {
-	border-radius: 0;
-}
-
 [data-layout="texlyre-mobile"] .chat-panel-header {
 	padding: var(--mobile-spacing-md);
 	min-height: 60px;
@@ -225,10 +112,6 @@
 
 [data-layout="texlyre-mobile"] .chat-panel-title {
 	font-size: var(--mobile-font-lg);
-}
-
-[data-layout="texlyre-mobile"] .chat-panel-content {
-	height: 100% !important;
 }
 
 [data-layout="texlyre-mobile"] .chat-message {
@@ -252,14 +135,6 @@
 	min-height: var(--mobile-min-touch-target);
 }
 
-[data-layout="texlyre-mobile"] .comment-panel {
-	display: none !important;
-}
-
-[data-layout="texlyre-mobile"] .comment-toggle-button {
-	display: none !important;
-}
-
 [data-layout="texlyre-mobile"] .settings-button {
 	min-height: var(--mobile-min-touch-target);
 	font-size: var(--mobile-font-sm);
@@ -267,9 +142,6 @@
 }
 
 [data-layout="texlyre-mobile"] .modal-container {
-	margin: var(--mobile-spacing-md);
-	width: calc(100vw - 2 * var(--mobile-spacing-md));
-	max-height: calc(100vh - 2 * var(--mobile-spacing-md));
 	border-radius: var(--mobile-radius-lg);
 }
 
@@ -331,26 +203,67 @@
 	min-height: var(--mobile-min-touch-target);
 }
 
-[data-layout="texlyre-mobile"] .toast-container {
-	top: calc(var(--mobile-header-height) + var(--mobile-spacing-md));
-	right: var(--mobile-spacing-md);
-	left: var(--mobile-spacing-md);
-	max-width: none;
-    position: absolute;
-}
-
 [data-layout="texlyre-mobile"] .toast {
 	padding: var(--mobile-spacing-md);
 	border-radius: var(--mobile-radius-lg);
 	font-size: var(--mobile-font-sm);
 }
 
-[data-layout="texlyre-mobile"] .mobile-hidden {
-	display: none !important;
+[data-layout="texlyre-mobile"] .project-title {
+	font-size: var(--mobile-font-sm);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 200px;
 }
 
-[data-layout="texlyre-mobile"] .mobile-only {
-	display: block !important;
+[data-layout="texlyre-mobile"] .project-description {
+	font-size: var(--mobile-font-xs);
+	max-width: 200px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.mobile-nav-button {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--mobile-spacing-xs);
+	background: none;
+	border: none;
+	color: var(--pico-secondary);
+	cursor: pointer;
+	transition: all var(--mobile-transition-fast);
+	font-size: var(--mobile-font-xs);
+	font-weight: 500;
+	padding: var(--mobile-spacing-sm);
+	text-align: center;
+	min-height: var(--mobile-nav-height);
+}
+
+.mobile-nav-button:hover,
+.mobile-nav-button.active {
+	color: var(--pico-primary);
+	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
+}
+
+.mobile-nav-button svg {
+	flex-shrink: 0;
+	transition: transform var(--mobile-transition-fast);
+}
+
+.mobile-nav-button.active svg {
+	transform: scale(1.1);
+}
+
+.mobile-nav-button span {
+	font-size: var(--mobile-font-xs);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
 }
 
 [data-layout="texlyre-mobile"] ::-webkit-scrollbar {
@@ -364,18 +277,4 @@
 
 [data-layout="texlyre-mobile"] ::-webkit-scrollbar-thumb:hover {
 	background-color: var(--pico-secondary);
-}
-
-@supports (padding: max(0px)) {
-	[data-layout="texlyre-mobile"] header {
-		padding-left: max(var(--mobile-spacing-md), env(safe-area-inset-left));
-		padding-right: max(var(--mobile-spacing-md), env(safe-area-inset-right));
-		padding-top: max(0px, env(safe-area-inset-top));
-	}
-
-	[data-layout="texlyre-mobile"] .mobile-bottom-nav {
-		padding-left: max(0px, env(safe-area-inset-left));
-		padding-right: max(0px, env(safe-area-inset-right));
-		padding-bottom: max(0px, env(safe-area-inset-bottom));
-	}
 }

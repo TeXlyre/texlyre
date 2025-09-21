@@ -1,10 +1,10 @@
 /* extras/themes/texlyre_mobile/styles/layout.css */
+
 [data-layout="texlyre-mobile"] {
 	--mobile-nav-height: 80px;
 	--mobile-header-height: 60px;
 }
 
-/* Root layout adjustments for mobile */
 [data-layout="texlyre-mobile"] #root {
 	max-width: 100%;
 	min-width: 100%;
@@ -23,7 +23,6 @@
 	overflow-x: hidden;
 }
 
-/* App container for mobile */
 [data-layout="texlyre-mobile"] .app-container {
 	display: flex;
 	flex-direction: column;
@@ -33,11 +32,9 @@
 	position: relative;
 }
 
-/* Mobile header */
 [data-layout="texlyre-mobile"] header {
 	height: var(--mobile-header-height);
 	min-height: var(--mobile-header-height);
-	padding: 0 var(--mobile-spacing-md);
 	background-color: var(--pico-secondary-background);
 	border-bottom: 1px solid var(--accent-border);
 	margin: 0;
@@ -52,9 +49,11 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	padding-left: max(var(--mobile-spacing-md), env(safe-area-inset-left));
+	padding-right: max(var(--mobile-spacing-md), env(safe-area-inset-right));
+	padding-top: max(0px, env(safe-area-inset-top));
 }
 
-/* Main content area */
 [data-layout="texlyre-mobile"] .main-content {
 	flex: 1;
 	width: 100vw;
@@ -67,7 +66,6 @@
 	gap: 0 !important;
 }
 
-/* Mobile bottom navigation */
 .mobile-bottom-nav {
 	position: fixed;
 	bottom: 0;
@@ -79,223 +77,87 @@
 	display: flex;
 	z-index: var(--mobile-z-navigation);
 	box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.1);
+	padding-left: max(0px, env(safe-area-inset-left));
+	padding-right: max(0px, env(safe-area-inset-right));
+	padding-bottom: max(0px, env(safe-area-inset-bottom));
 }
 
-.mobile-nav-button {
-	flex: 1;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: var(--mobile-spacing-xs);
-	background: none;
-	border: none;
-	color: var(--pico-secondary);
-	cursor: pointer;
-	transition: all var(--mobile-transition-fast);
-	font-size: var(--mobile-font-xs);
-	font-weight: 500;
-	padding: var(--mobile-spacing-sm);
-	text-align: center;
-	min-height: var(--mobile-nav-height);
-}
-
-.mobile-nav-button:hover,
-.mobile-nav-button.active {
-	color: var(--pico-primary);
-	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
-}
-
-.mobile-nav-button svg {
-	flex-shrink: 0;
-	transition: transform var(--mobile-transition-fast);
-}
-
-.mobile-nav-button.active svg {
-	transform: scale(1.1);
-}
-
-.mobile-nav-button span {
-	font-size: var(--mobile-font-xs);
-	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 0.5px;
-}
-
-/* Mobile view states */
-body.mobile-view-explorer .main-content > *:not(.sidebar-container) {
-	display: none !important;
-}
-
-body.mobile-view-explorer .sidebar-container {
-	width: 100vw !important;
-	max-width: 100vw !important;
-	min-width: 100vw !important;
-	height: 100% !important;
-	border: none !important;
+[data-layout="texlyre-mobile"] .file-explorer,
+[data-layout="texlyre-mobile"] .sidebar-container,
+[data-layout="texlyre-mobile"] .explorer-container,
+[data-layout="texlyre-mobile"] .resizable-panel,
+[data-layout="texlyre-mobile"] .panel-content {
 	border-radius: 0 !important;
+	border: none !important;
+	width: 100% !important;
+	max-width: 100% !important;
+	min-width: 100% !important;
+	height: 100% !important;
+}
+
+[data-layout="texlyre-mobile"] .panel-content {
+	margin-top: var(--mobile-header-height) !important;
+	display: flex !important;
+	flex-direction: column !important;
+}
+
+[data-layout="texlyre-mobile"] .latex-output-container .panel-content {
+	margin-top: 0 !important;
+	display: flex !important;
+	flex-direction: column !important;
+}
+
+[data-layout="texlyre-mobile"] .explorer-container,
+[data-layout="texlyre-mobile"] .file-explorer {
 	flex: 1 !important;
-	flex-shrink: 0 !important;
-	flex-grow: 1 !important;
+	display: flex !important;
+	flex-direction: column !important;
 }
 
-body.mobile-view-explorer .sidebar-container > * {
+[data-layout="texlyre-mobile"] .file-tree,
+[data-layout="texlyre-mobile"] .latex-outline {
 	width: 100% !important;
 	max-width: 100% !important;
-	min-width: 100% !important;
-	height: 100% !important;
-}
-
-body.mobile-view-explorer .explorer-container {
-	width: 100% !important;
-	max-width: 100% !important;
-	min-width: 100% !important;
-	height: 100% !important;
 	flex: 1 !important;
+	display: block !important;
+	overflow-y: auto !important;
 }
 
-body.mobile-view-explorer .file-explorer {
+[data-layout="texlyre-mobile"] .view-toggle {
 	width: 100% !important;
 	max-width: 100% !important;
-	min-width: 100% !important;
-	height: 100% !important;
-}
-
-/* Force main content to be full width for explorer */
-body.mobile-view-explorer .main-content {
-	width: 100vw !important;
-	max-width: 100vw !important;
-	gap: 0 !important;
-	padding: 0 !important;
 	margin: 0 !important;
+	padding: 0 !important;
+	z-index: 10;
+	order: -1 !important;
+	flex-shrink: 0 !important;
 }
 
-/* Editor view - hide sidebar and latex output, show only editor */
-body.mobile-view-editor .main-content > .sidebar-container {
-	display: none !important;
-}
-
-/* Hide LaTeX output completely in editor view */
-body.mobile-view-editor .latex-output-container {
-	display: none !important;
-}
-
-body.mobile-view-editor .latex-output {
-	display: none !important;
-}
-
-body.mobile-view-editor .pdf-viewer {
-	display: none !important;
-}
-
-body.mobile-view-editor .log-viewer {
-	display: none !important;
-}
-
-body.mobile-view-editor .log-view-container {
-	display: none !important;
-}
-
-/* Show editor containers in editor view */
-body.mobile-view-editor .editor-container-outer,
-body.mobile-view-editor .editor-output-container {
-	width: 100vw !important;
-	height: 100% !important;
-	flex: 1 !important;
-	display: flex !important;
-}
-
-body.mobile-view-editor .editor-wrapper {
+[data-layout="texlyre-mobile"] .latex-output,
+[data-layout="texlyre-mobile"] .latex-output-container,
+[data-layout="texlyre-mobile"] .pdf-viewer,
+[data-layout="texlyre-mobile"] .log-viewer,
+[data-layout="texlyre-mobile"] .log-view-container,
+[data-layout="texlyre-mobile"] .split-log-view {
+	border-radius: 0;
+	border: none;
 	width: 100% !important;
 	height: 100% !important;
+}
+
+[data-layout="texlyre-mobile"] .output-content {
 	flex: 1 !important;
-	display: flex !important;
-}
-
-/* Output view - hide sidebar and editor, show only latex output */
-body.mobile-view-output .main-content > .sidebar-container {
-	display: none !important;
-}
-
-/* Hide editor components in output view */
-body.mobile-view-output .editor-wrapper {
-	display: none !important;
-}
-
-body.mobile-view-output .editor-container {
-	display: none !important;
-}
-
-body.mobile-view-output .codemirror-editor-container {
-	display: none !important;
-}
-
-body.mobile-view-output .editor-tabs-container {
-	display: none !important;
-}
-
-/* Show editor containers but hide their editor content */
-body.mobile-view-output .editor-container-outer,
-body.mobile-view-output .editor-output-container {
-	width: 100vw !important;
 	height: 100% !important;
-	flex: 1 !important;
-	display: flex !important;
-}
-
-/* Show latex output container ONLY in output view */
-body.mobile-view-output .latex-output-container {
-	display: flex !important;
-	width: 100% !important;
-	height: 100% !important;
-	border: none !important;
-	border-radius: 0 !important;
-	flex: 1 !important;
-}
-
-/* Ensure all latex output components are visible in output view */
-body.mobile-view-output .latex-output {
-	display: flex !important;
-	width: 100% !important;
-	height: 100% !important;
-	flex-direction: column !important;
-}
-
-body.mobile-view-output .output-content {
-	flex: 1 !important;
-	display: flex !important;
-	flex-direction: column !important;
 	overflow: hidden !important;
-	height: 100% !important;
 }
 
-body.mobile-view-output .pdf-viewer {
-	display: flex !important;
-	width: 100% !important;
-	height: 100% !important;
-	flex: 1 !important;
-}
-
-body.mobile-view-output .log-view-container {
-	width: 100% !important;
-	height: 100% !important;
-	flex: 1 !important;
-	display: flex !important;
-}
-
-body.mobile-view-output .log-viewer {
+[data-layout="texlyre-mobile"] .pdf-viewer embed {
 	width: 100% !important;
 	height: 100% !important;
 	display: block !important;
 }
 
-body.mobile-view-output .pdf-viewer embed {
-	display: block !important;
-	width: 100% !important;
-	height: 100% !important;
-}
-
-body.mobile-view-output .empty-state {
+[data-layout="texlyre-mobile"] .empty-state {
 	width: 100% !important;
 	height: 100% !important;
 	display: flex !important;
@@ -303,51 +165,42 @@ body.mobile-view-output .empty-state {
 	justify-content: center !important;
 }
 
-body.mobile-view-output .output-header {
-	display: flex !important;
+[data-layout="texlyre-mobile"] .chat-panel {
+	border-radius: 0;
 }
 
-body.mobile-view-output .view-tabs {
-	display: flex !important;
+[data-layout="texlyre-mobile"] .chat-panel-content {
+	height: 100% !important;
 }
 
-body.mobile-view-output .tab-button {
-	display: flex !important;
+[data-layout="texlyre-mobile"] .modal-container {
+	margin: var(--mobile-spacing-md);
+	width: calc(100vw - 2 * var(--mobile-spacing-md));
+	max-height: calc(100vh - 2 * var(--mobile-spacing-md));
 }
 
-/* Chat view */
-body.mobile-view-chat .main-content > *:not(.chat-panel) {
+[data-layout="texlyre-mobile"] .toast-container {
+	top: calc(var(--mobile-header-height) - var(--mobile-nav-height));
+	right: var(--mobile-spacing-md);
+	left: var(--mobile-spacing-md);
+	max-width: none;
+	position: absolute;
+}
+
+[data-layout="texlyre-mobile"] .resize-handle,
+[data-layout="texlyre-mobile"] .collapse-button,
+[data-layout="texlyre-mobile"] .comment-panel,
+[data-layout="texlyre-mobile"] .comment-toggle-button,
+[data-layout="texlyre-mobile"] .mobile-hidden {
 	display: none !important;
 }
 
-/* Show chat panel only in chat view */
-body.mobile-view-chat .chat-panel {
-	display: flex !important;
-	position: static !important;
-	width: 100vw !important;
-	height: calc(100vh - var(--mobile-header-height) + var(--mobile-spacing-md)) !important;
-	border: none !important;
-	border-radius: 0 !important;
-	transform: none !important;
-	flex-direction: column !important;
+[data-layout="texlyre-mobile"] .mobile-only {
+	display: block !important;
 }
 
-/* Hide desktop chat panel specifically, but allow mobile chat to show */
-body:not(.mobile-view-chat) .chat-panel {
-	display: none !important;
-}
-
-/* Hide desktop-specific elements on mobile */
-[data-layout="texlyre-mobile"] .resize-handle {
-	display: none !important;
-}
-
-[data-layout="texlyre-mobile"] .collapse-button {
-	display: none !important;
-}
-
-/* Header adjustments for mobile */
-[data-layout="texlyre-mobile"] .header-left {
+[data-layout="texlyre-mobile"] .header-left,
+[data-layout="texlyre-mobile"] .header-right {
 	flex-shrink: 0;
 }
 
@@ -357,22 +210,130 @@ body:not(.mobile-view-chat) .chat-panel {
 	overflow: hidden;
 }
 
-[data-layout="texlyre-mobile"] .header-right {
-	flex-shrink: 0;
+body.mobile-view-explorer .main-content {
+	width: 100vw !important;
+	max-width: 100vw !important;
+	gap: 0 !important;
+	padding: 0 !important;
+	margin: 0 !important;
 }
 
-[data-layout="texlyre-mobile"] .project-title {
-	font-size: var(--mobile-font-sm);
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	max-width: 200px;
+body.mobile-view-explorer .main-content > *:not(.sidebar-container) {
+	display: none !important;
 }
 
-[data-layout="texlyre-mobile"] .project-description {
-	font-size: var(--mobile-font-xs);
-	max-width: 200px;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+body.mobile-view-explorer .sidebar-container,
+body.mobile-view-explorer .sidebar-container > *,
+body.mobile-view-explorer .explorer-container,
+body.mobile-view-explorer .file-explorer {
+	width: 100vw !important;
+	max-width: 100vw !important;
+	min-width: 100vw !important;
+	height: 100% !important;
+	flex: 1 !important;
+	flex-shrink: 0 !important;
+	flex-grow: 1 !important;
+	border: none !important;
+	border-radius: 0 !important;
+	margin-top: 0 !important;
+}
+
+body.mobile-view-editor .main-content > .sidebar-container,
+body.mobile-view-editor .latex-output-container,
+body.mobile-view-editor .latex-output,
+body.mobile-view-editor .pdf-viewer,
+body.mobile-view-editor .log-viewer,
+body.mobile-view-editor .log-view-container {
+	display: none !important;
+}
+
+body.mobile-view-editor .editor-container-outer,
+body.mobile-view-editor .editor-output-container,
+body.mobile-view-editor .editor-wrapper {
+	width: 100vw !important;
+	height: 100% !important;
+	flex: 1 !important;
+	display: flex !important;
+}
+
+body.mobile-view-output .main-content > .sidebar-container,
+body.mobile-view-output .editor-wrapper,
+body.mobile-view-output .editor-container,
+body.mobile-view-output .codemirror-editor-container,
+body.mobile-view-output .editor-tabs-container {
+	display: none !important;
+}
+
+body.mobile-view-output .editor-container-outer,
+body.mobile-view-output .editor-output-container {
+	width: 100vw !important;
+	height: 100% !important;
+	flex: 1 !important;
+	display: flex !important;
+}
+
+body.mobile-view-output .latex-output-container,
+body.mobile-view-output .latex-output,
+body.mobile-view-output .output-content,
+body.mobile-view-output .pdf-viewer,
+body.mobile-view-output .log-view-container,
+body.mobile-view-output .log-viewer,
+body.mobile-view-output .pdf-viewer embed,
+body.mobile-view-output .empty-state,
+body.mobile-view-output .output-header,
+body.mobile-view-output .view-tabs,
+body.mobile-view-output .tab-button {
+	display: flex !important;
+}
+
+body.mobile-view-output .latex-output-container,
+body.mobile-view-output .latex-output,
+body.mobile-view-output .output-content,
+body.mobile-view-output .pdf-viewer,
+body.mobile-view-output .log-view-container {
+	width: 100% !important;
+	height: 100% !important;
+	flex: 1 !important;
+}
+
+body.mobile-view-output .latex-output,
+body.mobile-view-output .output-content {
+	flex-direction: column !important;
+}
+
+body.mobile-view-output .output-content {
+	overflow: hidden !important;
+}
+
+body.mobile-view-output .log-viewer {
+	display: block !important;
+}
+
+body.mobile-view-output .pdf-viewer embed {
+	width: 100% !important;
+	height: 100% !important;
+}
+
+body.mobile-view-output .empty-state {
+	align-items: center !important;
+	justify-content: center !important;
+}
+
+body.mobile-view-chat .main-content > *:not(.chat-panel) {
+	display: none !important;
+}
+
+body.mobile-view-chat .chat-panel {
+	display: flex !important;
+	position: static !important;
+	width: 100vw !important;
+	height: calc(100vh - var(--mobile-header-height) - var(--mobile-nav-height)) !important;
+	border: none !important;
+	border-radius: 0 !important;
+	transform: none !important;
+	flex-direction: column !important;
+}
+
+body:not(.mobile-view-chat) .chat-panel {
+	display: none !important;
 }
