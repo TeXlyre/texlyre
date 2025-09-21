@@ -31,7 +31,6 @@
 	padding: 0 var(--mobile-spacing-sm);
 }
 
-/* Mobile File Explorer - Full Width */
 [data-layout="texlyre-mobile"] .file-explorer,
 [data-layout="texlyre-mobile"] .sidebar-container {
 	border-radius: 0 !important;
@@ -48,9 +47,10 @@
 	min-width: 100% !important;
 	height: 100% !important;
 	flex: 1 !important;
+	display: flex !important;
+	flex-direction: column !important;
 }
 
-/* Override any ResizablePanel width constraints */
 [data-layout="texlyre-mobile"] .resizable-panel {
 	width: 100% !important;
 	max-width: 100% !important;
@@ -58,17 +58,33 @@
 }
 
 [data-layout="texlyre-mobile"] .panel-content {
+    padding-top: calc(var(--mobile-header-height) + var(--mobile-spacing-md));
 	width: 100% !important;
 	max-width: 100% !important;
 	min-width: 100% !important;
+	display: flex !important;
+	flex-direction: column !important;
 }
 
-/* Force all nested components to full width */
 [data-layout="texlyre-mobile"] .file-tree,
-[data-layout="texlyre-mobile"] .view-toggle,
 [data-layout="texlyre-mobile"] .latex-outline {
 	width: 100% !important;
 	max-width: 100% !important;
+	flex: 1 !important;
+	display: block !important;
+	overflow-y: auto !important;
+}
+
+[data-layout="texlyre-mobile"] .view-toggle {
+	width: 100% !important;
+	max-width: 100% !important;
+	border-bottom: 2px solid var(--accent-border);
+	margin: 0 !important;
+	padding: 0 !important;
+	z-index: 10;
+	background-color: var(--pico-secondary-background);
+	order: -1 !important;
+	flex-shrink: 0 !important;
 }
 
 [data-layout="texlyre-mobile"] .file-explorer-header {
@@ -98,17 +114,6 @@
 	padding: var(--mobile-spacing-sm);
 }
 
-/* Mobile View Toggle - Position at top of explorer */
-[data-layout="texlyre-mobile"] .view-toggle {
-	border-bottom: 2px solid var(--accent-border);
-	margin: 0 !important;
-	padding: 0 !important;
-	position: sticky;
-	top: 0;
-	z-index: 10;
-	background-color: var(--pico-secondary-background);
-}
-
 [data-layout="texlyre-mobile"] .view-toggle button {
 	padding: var(--mobile-spacing-md);
 	font-size: var(--mobile-font-sm);
@@ -116,35 +121,21 @@
 	font-weight: 600;
 }
 
-/* Ensure view toggle is at the very top of the explorer container */
 [data-layout="texlyre-mobile"] .file-explorer {
 	padding-top: 0 !important;
 	margin-top: 0 !important;
+	display: flex !important;
+	flex-direction: column !important;
+	flex: 1 !important;
 }
 
 [data-layout="texlyre-mobile"] .file-explorer-header {
 	padding: var(--mobile-spacing-md);
 	min-height: 60px;
 	margin-top: 0 !important;
-	order: 2; /* Put header after view toggle */
+	flex-shrink: 0 !important;
 }
 
-/* Reorder elements in file explorer to put view toggle first */
-[data-layout="texlyre-mobile"] .file-explorer {
-	display: flex !important;
-	flex-direction: column !important;
-}
-
-[data-layout="texlyre-mobile"] .view-toggle {
-	order: 1; /* Put view toggle first */
-}
-
-[data-layout="texlyre-mobile"] .file-tree {
-	order: 3; /* Put file tree last */
-	flex: 1;
-}
-
-/* Mobile LaTeX Output - Full Width */
 [data-layout="texlyre-mobile"] .latex-output,
 [data-layout="texlyre-mobile"] .latex-output-container {
 	border-radius: 0;
@@ -174,7 +165,6 @@
 	min-height: 40px;
 }
 
-/* Ensure PDF viewer and log viewer are visible */
 [data-layout="texlyre-mobile"] .pdf-viewer,
 [data-layout="texlyre-mobile"] .log-viewer {
 	width: 100% !important;
@@ -199,21 +189,18 @@
 	justify-content: center !important;
 }
 
-/* Force PDF embed to be visible */
 [data-layout="texlyre-mobile"] .pdf-viewer embed {
 	width: 100% !important;
 	height: 100% !important;
 	display: block !important;
 }
 
-/* Ensure output content is properly displayed */
 [data-layout="texlyre-mobile"] .output-content {
 	flex: 1 !important;
 	height: 100% !important;
 	overflow: hidden !important;
 }
 
-/* Mobile LaTeX Outline */
 [data-layout="texlyre-mobile"] .latex-outline-header {
 	padding: var(--mobile-spacing-md);
 	font-size: var(--mobile-font-sm);
@@ -227,7 +214,6 @@
 	margin: var(--mobile-spacing-xs);
 }
 
-/* Mobile Chat Panel - Simplified display logic */
 [data-layout="texlyre-mobile"] .chat-panel {
 	border-radius: 0;
 }
@@ -239,6 +225,10 @@
 
 [data-layout="texlyre-mobile"] .chat-panel-title {
 	font-size: var(--mobile-font-lg);
+}
+
+[data-layout="texlyre-mobile"] .chat-panel-content {
+	height: 100% !important;
 }
 
 [data-layout="texlyre-mobile"] .chat-message {
@@ -262,23 +252,20 @@
 	min-height: var(--mobile-min-touch-target);
 }
 
-/* Mobile Comments */
 [data-layout="texlyre-mobile"] .comment-panel {
-	display: none !important; /* Hide comments panel on mobile for now */
+	display: none !important;
 }
 
 [data-layout="texlyre-mobile"] .comment-toggle-button {
-	display: none !important; /* Hide comments toggle on mobile */
+	display: none !important;
 }
 
-/* Mobile Settings */
 [data-layout="texlyre-mobile"] .settings-button {
 	min-height: var(--mobile-min-touch-target);
 	font-size: var(--mobile-font-sm);
 	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
 }
 
-/* Mobile Modals */
 [data-layout="texlyre-mobile"] .modal-container {
 	margin: var(--mobile-spacing-md);
 	width: calc(100vw - 2 * var(--mobile-spacing-md));
@@ -304,7 +291,6 @@
 	padding: var(--mobile-spacing-sm);
 }
 
-/* Mobile Forms */
 [data-layout="texlyre-mobile"] .form-group label {
 	font-size: var(--mobile-font-sm);
 	margin-bottom: var(--mobile-spacing-sm);
@@ -319,7 +305,6 @@
 	border-radius: var(--mobile-radius-md);
 }
 
-/* Mobile Buttons */
 [data-layout="texlyre-mobile"] .button,
 [data-layout="texlyre-mobile"] .action-button {
 	min-height: var(--mobile-min-touch-target);
@@ -334,7 +319,6 @@
 	min-height: 36px;
 }
 
-/* Mobile Dropdowns */
 [data-layout="texlyre-mobile"] .dropdown-menu {
 	min-width: 200px;
 	border-radius: var(--mobile-radius-lg);
@@ -347,12 +331,12 @@
 	min-height: var(--mobile-min-touch-target);
 }
 
-/* Mobile Toast */
 [data-layout="texlyre-mobile"] .toast-container {
 	top: calc(var(--mobile-header-height) + var(--mobile-spacing-md));
 	right: var(--mobile-spacing-md);
 	left: var(--mobile-spacing-md);
 	max-width: none;
+    position: absolute;
 }
 
 [data-layout="texlyre-mobile"] .toast {
@@ -361,7 +345,6 @@
 	font-size: var(--mobile-font-sm);
 }
 
-/* Mobile Specific Utilities */
 [data-layout="texlyre-mobile"] .mobile-hidden {
 	display: none !important;
 }
@@ -370,7 +353,6 @@
 	display: block !important;
 }
 
-/* Touch-friendly scrollbars */
 [data-layout="texlyre-mobile"] ::-webkit-scrollbar {
 	width: 8px;
 }
@@ -384,7 +366,6 @@
 	background-color: var(--pico-secondary);
 }
 
-/* Safe area adjustments for devices with notches */
 @supports (padding: max(0px)) {
 	[data-layout="texlyre-mobile"] header {
 		padding-left: max(var(--mobile-spacing-md), env(safe-area-inset-left));
