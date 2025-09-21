@@ -1,0 +1,21 @@
+/* extras/themes/texlyre_mobile/styles/variants/light.css */
+[data-theme="light"][data-theme-plugin="texlyre-mobile"] {
+	--accent-background: #f5f8fa;
+	--accent-border: #e1e8ed;
+	--editor-background: #ffffff;
+	--editor-text: #333333;
+	--sidebar-background: #f8f9fa;
+	--sidebar-border: #dfe3e6;
+	--text-color: #11191f;
+
+	--pico-primary-rgb: 16, 149, 193;
+	--pico-secondary-rgb: 89, 107, 120;
+
+	--syntax-keyword: #cf222e;
+	--syntax-function: #8250df;
+	--syntax-string: #0a3069;
+	--syntax-number: #0550ae;
+	--syntax-comment: #6e7781;
+	--syntax-variable: #953800;
+	--syntax-tag: #116329;
+}

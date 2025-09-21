@@ -1,0 +1,21 @@
+/* extras/themes/texlyre_mobile/styles/variants/atom_light.css */
+[data-theme="atom_light"][data-theme-plugin="texlyre-mobile"] {
+	--accent-background: #f0f0f0;
+	--accent-border: #e0e0e0;
+	--editor-background: #fafafa;
+	--editor-text: #383a42;
+	--sidebar-background: #f0f0f0;
+	--sidebar-border: #e0e0e0;
+	--text-color: #383a42;
+
+	--pico-primary-rgb: 64, 120, 242;
+	--pico-secondary-rgb: 105, 108, 119;
+
+	--syntax-keyword: #a626a4;
+	--syntax-function: #4078f2;
+	--syntax-string: #50a14f;
+	--syntax-number: #986801;
+	--syntax-comment: #a0a1a7;
+	--syntax-variable: #e45649;
+	--syntax-tag: #e45649;
+}

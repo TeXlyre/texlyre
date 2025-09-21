@@ -1,0 +1,280 @@
+/* extras/themes/texlyre_mobile/styles/components.css */
+
+[data-layout="texlyre-mobile"] .editor-tabs-container {
+	min-height: 50px;
+	max-height: 50px;
+}
+
+[data-layout="texlyre-mobile"] .editor-tab {
+	min-width: 140px;
+	max-width: 200px;
+	height: 40px;
+	font-size: var(--mobile-font-sm);
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+}
+
+[data-layout="texlyre-mobile"] .codemirror-editor-container .cm-editor,
+[data-layout="texlyre-mobile"] .codemirror-editor-container .cm-scroller {
+	font-size: var(--mobile-font-md) !important;
+}
+
+[data-layout="texlyre-mobile"] .codemirror-editor-container .cm-scroller {
+	line-height: 1.6;
+}
+
+[data-layout="texlyre-mobile"] .codemirror-editor-container .cm-content {
+	padding: var(--mobile-spacing-md);
+}
+
+[data-layout="texlyre-mobile"] .codemirror-editor-container .cm-line {
+	padding: 0 var(--mobile-spacing-sm);
+}
+
+[data-layout="texlyre-mobile"] .view-toggle {
+	border-bottom: 2px solid var(--accent-border);
+	background-color: var(--pico-secondary-background);
+}
+
+[data-layout="texlyre-mobile"] .view-toggle button {
+	padding: var(--mobile-spacing-md);
+	font-size: var(--mobile-font-sm);
+	min-height: 50px;
+	font-weight: 600;
+}
+
+[data-layout="texlyre-mobile"] .file-explorer-header {
+	padding: var(--mobile-spacing-md);
+	min-height: 60px;
+	margin-top: 0 !important;
+	flex-shrink: 0 !important;
+}
+
+[data-layout="texlyre-mobile"] .file-explorer-header h3 {
+	font-size: var(--mobile-font-lg);
+}
+
+[data-layout="texlyre-mobile"] .file-node {
+	padding: var(--mobile-spacing-md);
+	font-size: var(--mobile-font-sm);
+	min-height: var(--mobile-min-touch-target);
+	border-radius: var(--mobile-radius-md);
+	margin: var(--mobile-spacing-xs) var(--mobile-spacing-sm);
+}
+
+[data-layout="texlyre-mobile"] .file-name {
+	font-size: var(--mobile-font-sm);
+}
+
+[data-layout="texlyre-mobile"] .action-btn {
+	min-width: var(--mobile-min-touch-target);
+	min-height: var(--mobile-min-touch-target);
+	padding: var(--mobile-spacing-sm);
+}
+
+[data-layout="texlyre-mobile"] .output-header {
+	padding: var(--mobile-spacing-md);
+	min-height: 60px;
+}
+
+[data-layout="texlyre-mobile"] .latex-compile-buttons {
+	gap: var(--mobile-spacing-sm);
+}
+
+[data-layout="texlyre-mobile"] .latex-button {
+	min-height: var(--mobile-min-touch-target);
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+	font-size: var(--mobile-font-sm);
+}
+
+[data-layout="texlyre-mobile"] .tab-button {
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+	font-size: var(--mobile-font-sm);
+	min-height: 40px;
+}
+
+[data-layout="texlyre-mobile"] .latex-outline-header {
+	padding: var(--mobile-spacing-md);
+	font-size: var(--mobile-font-sm);
+}
+
+[data-layout="texlyre-mobile"] .outline-section {
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+	font-size: var(--mobile-font-sm);
+	min-height: var(--mobile-min-touch-target);
+	border-radius: var(--mobile-radius-md);
+	margin: var(--mobile-spacing-xs);
+}
+
+[data-layout="texlyre-mobile"] .chat-panel-header {
+	padding: var(--mobile-spacing-md);
+	min-height: 60px;
+}
+
+[data-layout="texlyre-mobile"] .chat-panel-title {
+	font-size: var(--mobile-font-lg);
+}
+
+[data-layout="texlyre-mobile"] .chat-message {
+	margin-bottom: var(--mobile-spacing-md);
+}
+
+[data-layout="texlyre-mobile"] .message-text {
+	font-size: var(--mobile-font-sm);
+	line-height: 1.6;
+}
+
+[data-layout="texlyre-mobile"] .chat-panel-input {
+	font-size: var(--mobile-font-md);
+	padding: var(--mobile-spacing-md);
+	min-height: 120px;
+}
+
+[data-layout="texlyre-mobile"] .chat-panel-send-button {
+	font-size: var(--mobile-font-sm);
+	padding: var(--mobile-spacing-md) var(--mobile-spacing-lg);
+	min-height: var(--mobile-min-touch-target);
+}
+
+[data-layout="texlyre-mobile"] .settings-button {
+	min-height: var(--mobile-min-touch-target);
+	font-size: var(--mobile-font-sm);
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+}
+
+[data-layout="texlyre-mobile"] .modal-container {
+	border-radius: var(--mobile-radius-lg);
+}
+
+[data-layout="texlyre-mobile"] .modal-header {
+	padding: var(--mobile-spacing-lg);
+}
+
+[data-layout="texlyre-mobile"] .modal-header h2 {
+	font-size: var(--mobile-font-lg);
+}
+
+[data-layout="texlyre-mobile"] .modal-content {
+	padding: var(--mobile-spacing-lg);
+}
+
+[data-layout="texlyre-mobile"] .modal-close-button {
+	min-width: var(--mobile-min-touch-target);
+	min-height: var(--mobile-min-touch-target);
+	padding: var(--mobile-spacing-sm);
+}
+
+[data-layout="texlyre-mobile"] .form-group label {
+	font-size: var(--mobile-font-sm);
+	margin-bottom: var(--mobile-spacing-sm);
+}
+
+[data-layout="texlyre-mobile"] .form-group input,
+[data-layout="texlyre-mobile"] .form-group textarea,
+[data-layout="texlyre-mobile"] .form-group select {
+	font-size: var(--mobile-font-md);
+	padding: var(--mobile-spacing-md);
+	min-height: var(--mobile-min-touch-target);
+	border-radius: var(--mobile-radius-md);
+}
+
+[data-layout="texlyre-mobile"] .button,
+[data-layout="texlyre-mobile"] .action-button {
+	min-height: var(--mobile-min-touch-target);
+	font-size: var(--mobile-font-sm);
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+	border-radius: var(--mobile-radius-md);
+}
+
+[data-layout="texlyre-mobile"] .button.small {
+	font-size: var(--mobile-font-xs);
+	padding: var(--mobile-spacing-xs) var(--mobile-spacing-sm);
+	min-height: 36px;
+}
+
+[data-layout="texlyre-mobile"] .dropdown-menu {
+	min-width: 200px;
+	border-radius: var(--mobile-radius-lg);
+	box-shadow: var(--mobile-shadow-lg);
+}
+
+[data-layout="texlyre-mobile"] .dropdown-item {
+	padding: var(--mobile-spacing-md);
+	font-size: var(--mobile-font-sm);
+	min-height: var(--mobile-min-touch-target);
+}
+
+[data-layout="texlyre-mobile"] .toast {
+	padding: var(--mobile-spacing-md);
+	border-radius: var(--mobile-radius-lg);
+	font-size: var(--mobile-font-sm);
+}
+
+[data-layout="texlyre-mobile"] .project-title {
+	font-size: var(--mobile-font-sm);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 200px;
+}
+
+[data-layout="texlyre-mobile"] .project-description {
+	font-size: var(--mobile-font-xs);
+	max-width: 200px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.mobile-nav-button {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--mobile-spacing-xs);
+	background: none;
+	border: none;
+	color: var(--pico-secondary);
+	cursor: pointer;
+	transition: all var(--mobile-transition-fast);
+	font-size: var(--mobile-font-xs);
+	font-weight: 500;
+	padding: var(--mobile-spacing-sm);
+	text-align: center;
+	min-height: var(--mobile-nav-height);
+}
+
+.mobile-nav-button:hover,
+.mobile-nav-button.active {
+	color: var(--pico-primary);
+	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
+}
+
+.mobile-nav-button svg {
+	flex-shrink: 0;
+	transition: transform var(--mobile-transition-fast);
+}
+
+.mobile-nav-button.active svg {
+	transform: scale(1.1);
+}
+
+.mobile-nav-button span {
+	font-size: var(--mobile-font-xs);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+[data-layout="texlyre-mobile"] ::-webkit-scrollbar {
+	width: 8px;
+}
+
+[data-layout="texlyre-mobile"] ::-webkit-scrollbar-thumb {
+	background-color: var(--accent-border);
+	border-radius: 4px;
+}
+
+[data-layout="texlyre-mobile"] ::-webkit-scrollbar-thumb:hover {
+	background-color: var(--pico-secondary);
+}

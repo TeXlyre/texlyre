@@ -854,29 +854,30 @@ export const EditorLoader = (
 
 		const handleGotoChar = (event: Event) => {
 			const customEvent = event as CustomEvent;
+			console.log('[EditorLoader] Received goto-char event:', customEvent.detail);
 			if (!viewRef.current) return;
 
 			try {
 				const { position, fileId, filePath, documentId: eventDocId, tabId } = customEvent.detail;
-
-				if (
-					isEditingFile &&
-					fileId &&
-					currentFileId &&
-					currentFileId !== fileId
-				) {
-					return;
-				}
-
-				if (!isEditingFile && filePath && !filePath.includes(documentId)) {
-					return;
-				}
 
 				if (tabId) {
 					const isTargetFile = isEditingFile && fileId && currentFileId === fileId;
 					const isTargetDoc = !isEditingFile && eventDocId && documentId === eventDocId;
 					
 					if (!isTargetFile && !isTargetDoc) return;
+				} else {
+					if (
+						isEditingFile &&
+						fileId &&
+						currentFileId &&
+						currentFileId !== fileId
+					) {
+						return;
+					}
+
+					if (!isEditingFile && filePath && !filePath.includes(documentId)) {
+						return;
+					}
 				}
 
 				if (position !== undefined && position >= 0) {
