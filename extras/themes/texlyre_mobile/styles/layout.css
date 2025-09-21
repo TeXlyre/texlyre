@@ -23,6 +23,14 @@
 	overflow-x: hidden;
 }
 
+[data-layout="texlyre-mobile"] footer .read-the-docs {
+    display: none;
+}
+
+[data-layout="texlyre-mobile"] .latex-outline {
+    display: none !important;
+}
+
 [data-layout="texlyre-mobile"] .app-container {
 	display: flex;
 	flex-direction: column;
@@ -327,7 +335,7 @@ body.mobile-view-chat .chat-panel {
 	display: flex !important;
 	position: static !important;
 	width: 100vw !important;
-	height: calc(100vh - var(--mobile-header-height) - var(--mobile-nav-height)) !important;
+	height: calc(100vh - var(--mobile-header-height)) !important;
 	border: none !important;
 	border-radius: 0 !important;
 	transform: none !important;
