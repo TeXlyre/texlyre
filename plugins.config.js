@@ -12,6 +12,6 @@ export default {
 		"backup/github",
 		"themes/texlyre_slim",
 		"themes/texlyre_wide",
-		"themes/texlyre_mobile",
+		// "themes/texlyre_mobile",
 	],
 };
