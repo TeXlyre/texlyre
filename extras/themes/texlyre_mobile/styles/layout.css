@@ -322,11 +322,11 @@ body.mobile-view-output .empty-state {
 	justify-content: center !important;
 }
 
-body.mobile-view-chat .main-content > *:not(.chat-panel) {
+[data-layout="texlyre-mobile"] body.mobile-view-chat .main-content > *:not(.chat-panel) {
 	display: none !important;
 }
 
-body.mobile-view-chat .chat-panel {
+[data-layout="texlyre-mobile"] body.mobile-view-chat .chat-panel {
 	display: flex !important;
 	position: static !important;
 	width: 100vw !important;
@@ -337,7 +337,7 @@ body.mobile-view-chat .chat-panel {
 	flex-direction: column !important;
 }
 
-body:not(.mobile-view-chat) .chat-panel {
+[data-layout="texlyre-mobile"] body:not(.mobile-view-chat) .chat-panel {
 	display: none !important;
 }
 

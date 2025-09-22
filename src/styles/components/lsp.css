@@ -1,6 +1,6 @@
 .lsp-toggle-button {
 	position: relative;
-	padding: 0.4rem;
+	padding: var(--space-ss);
 	border-radius: 4px;
 	border: 1px solid var(--accent-border, #444);
 	background-color: var(--pico-background);
@@ -26,7 +26,7 @@
 .lsp-button-content {
 	display: flex;
 	align-items: center;
-	gap: 0.25rem;
+	gap: var(--space-xs);
 	position: relative;
 }
 
@@ -148,8 +148,8 @@
 .lsp-status-indicator {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
-	padding: 0.4rem;
+	gap: var(--space-sm);
+	padding: var(--space-ss);
 	background-color: var(--pico-secondary-background);
 	color: var(--text-color);
 	border: 1px solid var(--accent-border);
@@ -193,7 +193,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 0.4rem var(--space-xs);
+	padding: var(--space-ss) var(--space-xs);
 	background-color: var(--pico-secondary-background);
 	color: var(--text-color);
 	border: 1px solid var(--accent-border);
@@ -259,7 +259,7 @@
 }
 
 .lsp-refresh-button {
-	padding: 0.4rem;
+	padding: var(--space-ss);
 	border-radius: var(--radius-sm);
 	border: 1px solid var(--accent-border);
 	background-color: var(--pico-secondary-background);
@@ -353,7 +353,7 @@
 
 .target-file-select {
 	width: 100%;
-	padding: 0.4rem;
+	padding: var(--space-ss);
 	font-size: 0.75rem;
 	border: 1px solid var(--accent-border);
 	border-radius: 3px;
@@ -430,7 +430,7 @@
 	color: var(--pico-primary);
 	font-size: 0.75rem;
 	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
-	padding: 0.2rem 0.4rem;
+	padding: 0.2rem var(--space-ss);
 	border-radius: 4px;
 }
 
@@ -474,7 +474,7 @@
 	font-size: 0.7rem;
 	color: var(--pico-secondary);
 	background-color: var(--accent-background);
-	padding: 0.2rem 0.4rem;
+	padding: 0.2rem var(--space-ss);
 	border-radius: 2px;
 }
 
@@ -483,7 +483,7 @@
 	font-size: 0.75rem;
 	font-weight: 600;
 	background-color: var(--accent-background);
-	padding: 0.2rem 0.4rem;
+	padding: 0.2rem var(--space-ss);
 	border-radius: 4px;
 	border: 1px solid var(--accent-border);
 }
@@ -521,7 +521,7 @@
 .lsp-entry-title {
 	font-weight: 600;
 	color: var(--text-color);
-	margin-bottom: 0.5rem;
+	margin-bottom: var(--space-sm);
 	line-height: 1.4;
 	font-size: 0.8rem;
 	word-break: break-word;
@@ -530,14 +530,14 @@
 .lsp-entry-authors {
 	color: var(--pico-secondary);
 	font-size: 0.75rem;
-	margin-bottom: 0.4rem;
+	margin-bottom: var(--space-ss);
 	font-weight: 500;
 }
 
 .lsp-entry-venue {
 	color: var(--text-color);
 	font-size: 0.75rem;
-	margin-bottom: 0.4rem;
+	margin-bottom: var(--space-ss);
 	opacity: 0.8;
 	font-style: italic;
 }

@@ -73,17 +73,53 @@
 
 [data-layout="texlyre-mobile"] .output-header {
 	padding: var(--mobile-spacing-md);
-	min-height: 60px;
+	min-height: 100px;
 }
 
-[data-layout="texlyre-mobile"] .latex-compile-buttons {
-	gap: var(--mobile-spacing-sm);
-}
-
-[data-layout="texlyre-mobile"] .latex-button {
+[data-layout="texlyre-mobile"] .compile-button-group .compile-button {
 	min-height: var(--mobile-min-touch-target);
 	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
 	font-size: var(--mobile-font-sm);
+}
+
+[data-layout="texlyre-mobile"] .compile-button-group .dropdown-toggle {
+	min-height: var(--mobile-min-touch-target);
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-sm);
+	width: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+[data-layout="texlyre-mobile"] .compile-button-group .dropdown-toggle svg {
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
+}
+
+[data-layout="texlyre-mobile"] .share-project-buttons {
+	gap: var(--mobile-spacing-sm);
+}
+
+[data-layout="texlyre-mobile"] .share-button-group .main-button {
+	min-height: var(--mobile-min-touch-target);
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+	font-size: var(--mobile-font-sm);
+}
+
+[data-layout="texlyre-mobile"] .share-button-group .dropdown-toggle {
+	min-height: var(--mobile-min-touch-target);
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-sm);
+	width: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+[data-layout="texlyre-mobile"] .share-button-group .dropdown-toggle svg {
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
 }
 
 [data-layout="texlyre-mobile"] .tab-button {

@@ -340,7 +340,7 @@
 }
 
 .pagination-button {
-  padding: 0.4rem 0.75rem;
+  padding: var(--space-ss) 0.75rem;
   background-color: var(--pico-secondary-background);
   border: 1px solid var(--accent-border);
   border-radius: var(--radius-sm);
