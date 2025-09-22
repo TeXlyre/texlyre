@@ -345,3 +345,20 @@ body.mobile-view-chat .chat-panel {
 body:not(.mobile-view-chat) .chat-panel {
 	display: none !important;
 }
+
+body.mobile-view-editor .comment-panel {
+	position: fixed !important;
+	right: 0 !important;
+	top: calc(var(--mobile-header-height) * 3) !important;
+	bottom: var(--mobile-nav-height) !important;
+	width: 95vw !important;
+	max-width: 450px !important;
+	z-index: calc(var(--mobile-z-navigation) - 1) !important;
+	background-color: var(--pico-background) !important;
+	border-left: 1px solid var(--accent-border) !important;
+	box-shadow: var(--mobile-shadow-lg) !important;
+}
+
+body.mobile-view-editor .comment-panel.editor-comment-panel {
+	display: flex !important;
+}
