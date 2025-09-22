@@ -145,7 +145,6 @@ export interface ThemeLayout {
 	id: string;
 	name: string;
 	containerClass: string;
-	fileExplorerPosition: "left" | "right";
 	defaultFileExplorerWidth: number;
 	minFileExplorerWidth: number;
 	maxFileExplorerWidth: number;

@@ -493,7 +493,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 									content,
 									file.isBinary || false,
 								);
-								setLastUserSelectedFileId(selectedFileId);
+								
 							}
 						}
 					} catch (error) {
@@ -858,7 +858,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 				<ResizablePanel
 					direction="vertical"
 					height={explorerHeight}
-					minHeight={100}
+					minHeight={350}
 					maxHeight="85%"
 					alignment="end"
 					onResize={handleExplorerResize}

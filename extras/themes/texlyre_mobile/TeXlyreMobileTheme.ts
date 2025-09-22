@@ -15,7 +15,6 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 		id: "texlyre-mobile",
 		name: "TeXlyre Mobile Theme",
 		containerClass: "texlyre-mobile",
-		fileExplorerPosition: "left",
 		defaultFileExplorerWidth: 100, // Mobile uses full width
 		minFileExplorerWidth: 100,
 		maxFileExplorerWidth: 100,

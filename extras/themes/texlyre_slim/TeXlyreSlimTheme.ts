@@ -14,7 +14,6 @@ const createTeXlyreSlimTheme = (): ThemePlugin => {
 		id: "texlyre-slim",
 		name: "TeXlyre Slim Theme",
 		containerClass: "texlyre-slim",
-		fileExplorerPosition: "left",
 		defaultFileExplorerWidth: 250,
 		minFileExplorerWidth: 150,
 		maxFileExplorerWidth: 700,
