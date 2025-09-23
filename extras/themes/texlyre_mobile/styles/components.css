@@ -82,21 +82,6 @@
 	font-size: var(--mobile-font-sm);
 }
 
-[data-layout="texlyre-mobile"] .compile-button-group .dropdown-toggle {
-	min-height: var(--mobile-min-touch-target);
-	padding: var(--mobile-spacing-sm) var(--mobile-spacing-sm);
-	width: 32px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-[data-layout="texlyre-mobile"] .compile-button-group .dropdown-toggle svg {
-	width: 16px;
-	height: 16px;
-	flex-shrink: 0;
-}
-
 [data-layout="texlyre-mobile"] .share-project-buttons {
 	gap: var(--mobile-spacing-sm);
 }
@@ -107,16 +92,34 @@
 	font-size: var(--mobile-font-sm);
 }
 
-[data-layout="texlyre-mobile"] .share-button-group .dropdown-toggle {
+[data-layout="texlyre-mobile"] .backup-button-group .main-button,
+[data-layout="texlyre-mobile"] .collab-button-group .main-button {
+	min-height: var(--mobile-min-touch-target);
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+	font-size: var(--mobile-font-sm);
+}
+
+[data-layout="texlyre-mobile"] .open-button-group .open-button {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+[data-layout="texlyre-mobile"] .dropdown-toggle,
+[data-layout="texlyre-mobile"] .collab-dropdown-toggle,
+[data-layout="texlyre-mobile"] .backup-dropdown-toggle {
 	min-height: var(--mobile-min-touch-target);
 	padding: var(--mobile-spacing-sm) var(--mobile-spacing-sm);
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
 	width: 32px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 }
 
-[data-layout="texlyre-mobile"] .share-button-group .dropdown-toggle svg {
+[data-layout="texlyre-mobile"] .dropdown-toggle svg,
+[data-layout="texlyre-mobile"] .collab-dropdown-toggle svg,
+[data-layout="texlyre-mobile"] .backup-dropdown-toggle svg {
 	width: 16px;
 	height: 16px;
 	flex-shrink: 0;
@@ -259,6 +262,10 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+[data-layout="texlyre-mobile"] .linked-file-icon {
+    border: none;
 }
 
 .mobile-nav-button {

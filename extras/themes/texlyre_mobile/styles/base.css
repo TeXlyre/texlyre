@@ -58,7 +58,7 @@
 	color: var(--text-color);
 	min-height: var(--mobile-min-touch-target);
 	font-size: var(--mobile-font-sm);
-	padding: var(--mobile-spacing-md) 0.3rem;
+	padding: var(--mobile-spacing-sm) 0.3rem;
 }
 
 [data-theme-plugin="texlyre-mobile"] *:focus-visible {
