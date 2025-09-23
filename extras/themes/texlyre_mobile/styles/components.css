@@ -81,6 +81,12 @@
 	min-height: 100px;
 }
 
+
+[data-layout="texlyre-mobile"] .open-button-group .open-button {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
 [data-layout="texlyre-mobile"] .compile-button-group .compile-button {
 	min-height: var(--mobile-min-touch-target);
 	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
@@ -101,12 +107,11 @@
 [data-layout="texlyre-mobile"] .collab-button-group .main-button {
 	min-height: var(--mobile-min-touch-target);
 	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
-	font-size: var(--mobile-font-sm);
 }
 
-[data-layout="texlyre-mobile"] .open-button-group .open-button {
-    border-top-right-radius: 0 !important;
-    border-bottom-right-radius: 0 !important;
+[data-layout="texlyre-mobile"] .backup-button-group .main-button .backup-label,
+[data-layout="texlyre-mobile"] .collab-button-group .main-button .collab-label {
+    font-size: var(--mobile-font-sm);
 }
 
 [data-layout="texlyre-mobile"] .dropdown-toggle,

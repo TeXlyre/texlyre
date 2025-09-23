@@ -48,8 +48,8 @@
 }
 
 [data-layout="texlyre-mobile"] header {
-	height: var(--mobile-header-height);
-	min-height: var(--mobile-header-height);
+	height: auto;
+	min-height: calc(var(--mobile-header-height) * 2);
 	background-color: var(--pico-secondary-background);
 	border-bottom: 1px solid var(--accent-border);
 	margin: 0;
@@ -62,18 +62,39 @@
 	z-index: var(--mobile-z-navigation);
 	box-shadow: var(--mobile-shadow-sm);
 	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding-left: max(var(--mobile-spacing-md), env(safe-area-inset-left));
+	flex-direction: column;
+	/* padding-left: max(var(--mobile-spacing-md), env(safe-area-inset-left));
 	padding-right: max(var(--mobile-spacing-md), env(safe-area-inset-right));
-	padding-top: max(0px, env(safe-area-inset-top));
+	padding-top: max(0px, env(safe-area-inset-top)); */
+}
+
+[data-layout="texlyre-mobile"] .header-row {
+	display: flex;
+	align-items: left;
+	justify-content: space-between;
+	min-height: var(--mobile-header-height);
+	width: 100%;
+}
+
+[data-layout="texlyre-mobile"] .header-row:first-child {
+	flex: 0 0 auto;
+}
+
+[data-layout="texlyre-mobile"] .header-row:last-child {
+	flex: 1;
+	min-height: calc(var(--mobile-header-height) * 1.5);
+}
+
+[data-layout="texlyre-mobile"] .header-left {
+    align-self: flex-start;
+    position: fixed;
 }
 
 [data-layout="texlyre-mobile"] .main-content {
 	flex: 1;
 	width: 100vw;
-	height: calc(100vh - var(--mobile-header-height) - var(--mobile-nav-height));
-	margin-top: var(--mobile-header-height);
+	height: calc(100vh - calc(var(--mobile-header-height) * 2.5) - var(--mobile-nav-height));
+	margin-top: calc(var(--mobile-header-height) * 2.5);
 	overflow: hidden;
 	position: relative;
 	display: block;
@@ -111,12 +132,14 @@
 }
 
 [data-layout="texlyre-mobile"] .panel-content {
-	margin-top: var(--mobile-header-height) !important;
+	height: calc(100vh - calc(var(--mobile-header-height) * 2.5) - var(--mobile-nav-height));
+	margin-top: calc(var(--mobile-header-height) * 2.5) !important;
 	display: flex !important;
 	flex-direction: column !important;
 }
 
 [data-layout="texlyre-mobile"] .latex-output-container .panel-content {
+	height: calc(100vh - calc(var(--mobile-header-height) * 2.5) - var(--mobile-nav-height));
 	margin-top: 0 !important;
 	display: flex !important;
 	flex-direction: column !important;
@@ -337,7 +360,8 @@
 	display: flex !important;
 	position: static !important;
 	width: 100vw !important;
-	height: calc(100vh - var(--mobile-header-height)) !important;
+	height: calc(100vh - calc(var(--mobile-header-height)) - var(--mobile-nav-height));
+	margin-top: var(--mobile-header-height);
 	border: none !important;
 	border-radius: 0 !important;
 	transform: none !important;
@@ -357,10 +381,8 @@
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-editor .comment-panel {
-	position: fixed !important;
+	position: relative !important;
 	right: 0 !important;
-	top: calc(var(--mobile-header-height) * 3) !important;
-	bottom: var(--mobile-nav-height) !important;
 	width: 95vw !important;
 	max-width: 450px !important;
 	z-index: calc(var(--mobile-z-navigation) - 1) !important;
