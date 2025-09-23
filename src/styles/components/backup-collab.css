@@ -9,9 +9,7 @@
 .backup-button-group,
 .collab-button-group {
 	display: flex;
-	height: var(--button-height-md);
-	border-radius: var(--radius-sm);
-	overflow: hidden;
+	align-items: center;
 }
 
 .backup-status-indicator.main-button,
@@ -19,7 +17,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: var(--space-ss);
+	height: var(--button-height-md);
+	padding: 0 var(--space-ss);
 	background-color: var(--pico-secondary-background);
 	color: var(--text-color);
 	border: 1px solid var(--accent-border);
@@ -81,7 +80,9 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: var(--space-ss) var(--space-xs);
+	height: var(--button-height-md);
+	padding-left: var(--space-xs);
+	padding-right: var(--space-xs);
 	background-color: var(--pico-secondary-background);
 	color: var(--text-color);
 	border: 1px solid var(--accent-border);

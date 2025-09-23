@@ -373,3 +373,7 @@
 [data-layout="texlyre-mobile"] body[class*="mobile-view-"] .project-export-modal {
 	display: block !important;
 }
+
+[data-layout="texlyre-mobile"] body.mobile-view-editor .viewer-plugin-info {
+	display: none !important;
+}
