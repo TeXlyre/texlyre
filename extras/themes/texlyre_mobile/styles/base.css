@@ -3,41 +3,38 @@
 	--mobile-font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 	--mobile-code-font-family: "Fira Code", "Courier New", monospace;
 
-	/* Mobile-optimized spacing */
 	--mobile-spacing-xs: 0.5rem;
 	--mobile-spacing-sm: 0.75rem;
 	--mobile-spacing-md: 1rem;
 	--mobile-spacing-lg: 1.5rem;
 	--mobile-spacing-xl: 2rem;
 
-	/* Mobile-optimized border radius */
 	--mobile-radius-sm: 6px;
 	--mobile-radius-md: 12px;
 	--mobile-radius-lg: 16px;
 	--mobile-radius-xl: 20px;
 
-	/* Mobile transitions */
 	--mobile-transition-fast: 0.2s ease;
 	--mobile-transition-normal: 0.3s ease;
 	--mobile-transition-slow: 0.5s ease;
 
-	/* Mobile shadows */
 	--mobile-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
 	--mobile-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
 	--mobile-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
 
-	/* Mobile z-index */
 	--mobile-z-navigation: 100;
 	--mobile-z-dropdown: 200;
 	--mobile-z-modal: 300;
 	--mobile-z-toast: 400;
 
-	/* Mobile dimensions */
 	--mobile-nav-height: 80px;
 	--mobile-header-height: 20px;
-	--mobile-min-touch-target: 44px;
+	--mobile-min-touch-target: 56px;
 
-	/* Font sizes optimized for mobile */
+	--mobile-icon-size-sm: 24px;
+	--mobile-icon-size-md: 28px;
+	--mobile-icon-size-lg: 32px;
+
 	--mobile-font-xs: 0.8rem;
 	--mobile-font-sm: 1rem;
 	--mobile-font-md: 1.125rem;
@@ -50,15 +47,21 @@
 	line-height: 1.6;
 }
 
-/* Mobile-specific button styling */
 [data-theme-plugin="texlyre-mobile"] button {
 	border-radius: var(--mobile-radius-md);
 	transition: all var(--mobile-transition-fast);
 	font-weight: 500;
 	color: var(--text-color);
 	min-height: var(--mobile-min-touch-target);
+	min-width: var(--mobile-min-touch-target);
 	font-size: var(--mobile-font-sm);
 	padding: var(--mobile-spacing-sm) 0.3rem;
+}
+
+[data-theme-plugin="texlyre-mobile"] button svg,
+[data-theme-plugin="texlyre-mobile"] .action-btn svg {
+	width: var(--mobile-icon-size-md);
+	height: var(--mobile-icon-size-md);
 }
 
 [data-theme-plugin="texlyre-mobile"] *:focus-visible {
@@ -66,7 +69,6 @@
 	outline-offset: 2px;
 }
 
-/* Mobile typography overrides */
 [data-theme-plugin="texlyre-mobile"] h1 {
 	font-size: var(--mobile-font-xxl);
 	line-height: 1.2;
@@ -100,7 +102,6 @@
 	font-size: var(--mobile-font-xs);
 }
 
-/* Mobile input styling */
 [data-theme-plugin="texlyre-mobile"] input,
 [data-theme-plugin="texlyre-mobile"] textarea,
 [data-theme-plugin="texlyre-mobile"] select {
@@ -110,14 +111,12 @@
 	min-height: var(--mobile-min-touch-target);
 }
 
-/* Mobile code styling */
 [data-theme-plugin="texlyre-mobile"] code,
 [data-theme-plugin="texlyre-mobile"] pre {
 	font-family: var(--mobile-code-font-family);
 	font-size: var(--mobile-font-sm);
 }
 
-/* Responsive font scaling */
 @media (max-width: 480px) {
 	[data-theme-plugin="texlyre-mobile"] {
 		--mobile-font-xs: 0.75rem;
