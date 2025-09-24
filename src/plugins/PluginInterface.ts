@@ -160,6 +160,7 @@ export interface ThemePlugin extends Plugin {
 	getCurrentTheme: () => ThemeVariant;
 	getLayout: () => ThemeLayout;
 	applyLayout: () => void;
+	cleanup?: () => void;
 }
 
 export interface ThemeVariant {
