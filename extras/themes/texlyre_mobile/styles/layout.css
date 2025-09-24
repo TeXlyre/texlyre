@@ -2,32 +2,26 @@
 
 [data-layout="texlyre-mobile"] {
 	--mobile-nav-height: 80px;
-	--mobile-header-height: 60px;
 }
 
-[data-layout="texlyre-mobile"] html {
+[data-layout="texlyre-mobile"] html,
+[data-layout="texlyre-mobile"] body {
+	height: 100vh;
 	overflow: hidden;
+	margin: 0;
+	padding: 0;
 	width: 100%;
-    height: 100%;
 }
 
 [data-layout="texlyre-mobile"] #root {
-	max-width: 100%;
-	min-width: 100%;
-	width: 100%;
-	height: 100%;
+	height: 100vh;
+	width: 100vw;
+    max-width: 100% !important;
 	margin: 0;
 	padding: 0;
 	overflow: hidden;
-}
-
-[data-layout="texlyre-mobile"] body {
-	min-width: 100%;
-	width: 100%;
-	margin: 0;
-	padding: 0;
-	padding-bottom: var(--mobile-nav-height);
-	overflow: hidden;
+	display: flex;
+	flex-direction: column;
 }
 
 [data-layout="texlyre-mobile"] footer .read-the-docs {
@@ -44,36 +38,30 @@
 	height: 100vh;
 	width: 100vw;
 	overflow: hidden;
-	position: relative;
 }
 
 [data-layout="texlyre-mobile"] header {
-	height: auto;
-	min-height: calc(var(--mobile-header-height) * 2);
+	flex: 0 0 auto;
 	background-color: var(--pico-secondary-background);
 	border-bottom: 1px solid var(--accent-border);
-	margin: 0;
 	width: 100vw;
-	margin-left: 0;
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
+	position: relative;
 	z-index: var(--mobile-z-navigation);
 	box-shadow: var(--mobile-shadow-sm);
 	display: flex;
 	flex-direction: column;
-	/* padding-left: max(var(--mobile-spacing-md), env(safe-area-inset-left));
+	padding-left: max(var(--mobile-spacing-md), env(safe-area-inset-left));
 	padding-right: max(var(--mobile-spacing-md), env(safe-area-inset-right));
-	padding-top: max(0px, env(safe-area-inset-top)); */
+	padding-top: max(var(--mobile-spacing-sm), env(safe-area-inset-top));
 }
 
 [data-layout="texlyre-mobile"] .header-row {
 	display: flex;
-	align-items: left;
+	align-items: center;
 	justify-content: space-between;
-	min-height: var(--mobile-header-height);
+	min-height: 60px;
 	width: 100%;
+	padding: var(--mobile-spacing-sm) 0;
 }
 
 [data-layout="texlyre-mobile"] .header-row:first-child {
@@ -82,24 +70,24 @@
 
 [data-layout="texlyre-mobile"] .header-row:last-child {
 	flex: 1;
-	min-height: calc(var(--mobile-header-height) * 1.5);
+	min-height: 50px;
 }
 
 [data-layout="texlyre-mobile"] .header-left {
     align-self: flex-start;
     position: fixed;
+    left: max(var(--mobile-spacing-md), env(safe-area-inset-left));
 }
 
 [data-layout="texlyre-mobile"] .main-content {
 	flex: 1;
 	width: 100vw;
-	height: calc(100vh - calc(var(--mobile-header-height) * 2.5) - var(--mobile-nav-height));
-	margin-top: calc(var(--mobile-header-height) * 2.5);
 	overflow: hidden;
 	position: relative;
 	display: block;
 	padding: 0 !important;
 	gap: 0 !important;
+	margin-bottom: var(--mobile-nav-height);
 }
 
 [data-layout="texlyre-mobile"] .mobile-bottom-nav {
@@ -107,6 +95,7 @@
 	bottom: 0;
 	left: 0;
 	right: 0;
+	width: 100vw;
 	height: var(--mobile-nav-height);
 	background-color: var(--pico-secondary-background);
 	border-top: 1px solid var(--accent-border);
@@ -129,18 +118,15 @@
 	max-width: 100% !important;
 	min-width: 100% !important;
 	height: 100% !important;
+	overflow-y: auto !important;
 }
 
 [data-layout="texlyre-mobile"] .panel-content {
-	height: calc(100vh - calc(var(--mobile-header-height) * 2.5) - var(--mobile-nav-height));
-	margin-top: calc(var(--mobile-header-height) * 2.5) !important;
 	display: flex !important;
 	flex-direction: column !important;
 }
 
 [data-layout="texlyre-mobile"] .latex-output-container .panel-content {
-	height: calc(100vh - calc(var(--mobile-header-height) * 2.5) - var(--mobile-nav-height));
-	margin-top: 0 !important;
 	display: flex !important;
 	flex-direction: column !important;
 }
@@ -153,7 +139,7 @@
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-explorer .sidebar-container .file-explorer {
-    margin-top: var(--mobile-header-height) !important;
+    margin-top: 0 !important;
 }
 
 [data-layout="texlyre-mobile"] .file-tree,
@@ -185,12 +171,13 @@
 	border: none;
 	width: 100% !important;
 	height: 100% !important;
+	overflow-y: auto !important;
 }
 
 [data-layout="texlyre-mobile"] .output-content {
 	flex: 1 !important;
 	height: 100% !important;
-	overflow: hidden !important;
+	overflow-y: auto !important;
 }
 
 [data-layout="texlyre-mobile"] .pdf-viewer embed {
@@ -214,11 +201,12 @@
 }
 
 [data-layout="texlyre-mobile"] .toast-container {
-	top: var(--mobile-header-height);
+	top: var(--mobile-spacing-md);
 	right: var(--mobile-spacing-md);
 	left: var(--mobile-spacing-md);
 	max-width: none;
-	position: absolute;
+	position: fixed;
+	z-index: var(--mobile-z-toast);
 }
 
 [data-layout="texlyre-mobile"] .resize-handle,
@@ -269,6 +257,7 @@
 	border: none !important;
 	border-radius: 0 !important;
 	margin-top: 0 !important;
+	overflow-y: auto !important;
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-editor .main-content > .sidebar-container,
@@ -287,6 +276,12 @@
 	height: 100% !important;
 	flex: 1 !important;
 	display: flex !important;
+	overflow: hidden !important;
+}
+
+[data-layout="texlyre-mobile"] body.mobile-view-editor .codemirror-editor-container {
+	height: 100% !important;
+	overflow-y: auto !important;
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-output .main-content > .sidebar-container,
@@ -327,6 +322,7 @@
 	width: 100% !important;
 	height: 100% !important;
 	flex: 1 !important;
+	overflow-y: auto !important;
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-output .latex-output,
@@ -335,11 +331,12 @@
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-output .output-content {
-	overflow: hidden !important;
+	overflow-y: auto !important;
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-output .log-viewer {
 	display: block !important;
+	overflow-y: auto !important;
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-output .pdf-viewer embed {
@@ -359,9 +356,8 @@
 [data-layout="texlyre-mobile"] body.mobile-view-chat .chat-panel {
 	display: flex !important;
 	position: static !important;
-	width: 100vw !important;
-	height: calc(100vh - calc(var(--mobile-header-height)) - var(--mobile-nav-height));
-	margin-top: var(--mobile-header-height);
+	width: 100% !important;
+	height: 100% !important;
 	border: none !important;
 	border-radius: 0 !important;
 	transform: none !important;
@@ -377,7 +373,8 @@
 }
 
 [data-layout="texlyre-mobile"] .chat-panel-content {
-	height: 100% !important;
+	flex: 1 !important;
+	overflow-y: auto !important;
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-editor .comment-panel {

@@ -79,58 +79,12 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 			updateMobileView(view);
 			
 			setTimeout(() => {
-				if (view === 'explorer') {
-					const sidebar = document.querySelector('.sidebar-container');
-					const explorer = document.querySelector('.file-explorer');
-					const explorerContainer = document.querySelector('.explorer-container');
-					
-					if (sidebar) {
-						(sidebar as HTMLElement).style.width = '100vw';
-						(sidebar as HTMLElement).style.maxWidth = '100vw';
-						(sidebar as HTMLElement).style.minWidth = '100vw';
-					}
-					if (explorer) {
-						(explorer as HTMLElement).style.width = '100%';
-						(explorer as HTMLElement).style.maxWidth = '100%';
-						(explorer as HTMLElement).style.minWidth = '100%';
-					}
-					if (explorerContainer) {
-						(explorerContainer as HTMLElement).style.width = '100%';
-						(explorerContainer as HTMLElement).style.maxWidth = '100%';
-						(explorerContainer as HTMLElement).style.minWidth = '100%';
-					}
-				} else if (view === 'output') {
-					const latexOutput = document.querySelector('.latex-output-container');
-					if (latexOutput) {
-						(latexOutput as HTMLElement).style.display = 'flex';
-						(latexOutput as HTMLElement).style.width = '100vw';
-						(latexOutput as HTMLElement).style.height = '100%';
-					}
-					
-					const pdfViewer = document.querySelector('.pdf-viewer');
-					if (pdfViewer) {
-						(pdfViewer as HTMLElement).style.display = 'flex';
-						(pdfViewer as HTMLElement).style.width = '100%';
-						(pdfViewer as HTMLElement).style.height = '100%';
-					}
-					
+				if (view === 'output') {
 					const embed = document.querySelector('.pdf-viewer embed');
 					if (embed) {
 						(embed as HTMLElement).style.display = 'block';
 						(embed as HTMLElement).style.width = '100%';
 						(embed as HTMLElement).style.height = '100%';
-					}
-				} else if (view === 'chat') {
-					const chatPanel = document.querySelector('.chat-panel');
-					if (chatPanel) {
-						(chatPanel as HTMLElement).style.display = 'flex';
-						(chatPanel as HTMLElement).style.position = 'static';
-						(chatPanel as HTMLElement).style.width = '100vw';
-						(chatPanel as HTMLElement).style.height = '100%';
-						(chatPanel as HTMLElement).style.transform = 'none';
-						(chatPanel as HTMLElement).style.flexDirection = 'column';
-						(chatPanel as HTMLElement).style.borderRadius = '0';
-						(chatPanel as HTMLElement).style.border = 'none';
 					}
 				}
 				
@@ -157,7 +111,7 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 						(footerChat as HTMLElement).style.visibility = 'hidden';
 					}
 				});
-			}, 100);
+			}, 50);
 		};
 
 		document.addEventListener('click', (e) => {
@@ -225,7 +179,12 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 			`;
 		}
 
-		document.body.appendChild(nav);
+		const appContainer = document.querySelector('.app-container');
+		if (appContainer) {
+			appContainer.appendChild(nav);
+		} else {
+			document.body.appendChild(nav);
+		}
 	};
 
 	const updateMobileView = (view: string) => {
