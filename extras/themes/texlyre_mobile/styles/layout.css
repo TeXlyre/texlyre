@@ -2,25 +2,28 @@
 
 [data-layout="texlyre-mobile"] {
 	--mobile-nav-height: 80px;
-	--mobile-header-height: 60px;
+}
+
+[data-layout="texlyre-mobile"] html,
+[data-layout="texlyre-mobile"] body {
+	height: 100vh;
+	overflow: hidden;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+    min-width: 300px;
+    max-width: 100% !important;
 }
 
 [data-layout="texlyre-mobile"] #root {
-	max-width: 100%;
-	min-width: 100%;
-	width: 100vw;
 	height: 100vh;
-	margin: 0;
-	padding: 0;
-}
-
-[data-layout="texlyre-mobile"] body {
-	min-width: 100vw;
 	width: 100vw;
+    max-width: 100% !important;
 	margin: 0;
 	padding: 0;
-	padding-bottom: var(--mobile-nav-height);
-	overflow-x: hidden;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
 }
 
 [data-layout="texlyre-mobile"] footer .read-the-docs {
@@ -37,48 +40,64 @@
 	height: 100vh;
 	width: 100vw;
 	overflow: hidden;
-	position: relative;
 }
 
 [data-layout="texlyre-mobile"] header {
-	height: var(--mobile-header-height);
-	min-height: var(--mobile-header-height);
+	flex: 0 0 auto;
 	background-color: var(--pico-secondary-background);
 	border-bottom: 1px solid var(--accent-border);
-	margin: 0;
 	width: 100vw;
-	margin-left: 0;
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
+	position: relative;
 	z-index: var(--mobile-z-navigation);
 	box-shadow: var(--mobile-shadow-sm);
 	display: flex;
-	align-items: center;
-	justify-content: space-between;
+	flex-direction: column;
 	padding-left: max(var(--mobile-spacing-md), env(safe-area-inset-left));
 	padding-right: max(var(--mobile-spacing-md), env(safe-area-inset-right));
-	padding-top: max(0px, env(safe-area-inset-top));
+	padding-top: max(var(--mobile-spacing-sm), env(safe-area-inset-top));
+}
+
+[data-layout="texlyre-mobile"] .header-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	min-height: 60px;
+	width: 100%;
+	padding: var(--mobile-spacing-sm) 0;
+}
+
+[data-layout="texlyre-mobile"] .header-row:first-child {
+	flex: 0 0 auto;
+}
+
+[data-layout="texlyre-mobile"] .header-row:last-child {
+	flex: 1;
+	min-height: 50px;
+}
+
+[data-layout="texlyre-mobile"] .header-left {
+    align-self: flex-start;
+    position: fixed;
+    left: max(var(--mobile-spacing-md), env(safe-area-inset-left));
 }
 
 [data-layout="texlyre-mobile"] .main-content {
 	flex: 1;
 	width: 100vw;
-	height: calc(100vh - var(--mobile-header-height) - var(--mobile-nav-height));
-	margin-top: var(--mobile-header-height);
 	overflow: hidden;
 	position: relative;
 	display: block;
 	padding: 0 !important;
 	gap: 0 !important;
+	margin-bottom: var(--mobile-nav-height);
 }
 
-.mobile-bottom-nav {
+[data-layout="texlyre-mobile"] .mobile-bottom-nav {
 	position: fixed;
 	bottom: 0;
 	left: 0;
 	right: 0;
+	width: 100vw;
 	height: var(--mobile-nav-height);
 	background-color: var(--pico-secondary-background);
 	border-top: 1px solid var(--accent-border);
@@ -101,16 +120,15 @@
 	max-width: 100% !important;
 	min-width: 100% !important;
 	height: 100% !important;
+	overflow-y: auto !important;
 }
 
 [data-layout="texlyre-mobile"] .panel-content {
-	margin-top: var(--mobile-header-height) !important;
 	display: flex !important;
 	flex-direction: column !important;
 }
 
 [data-layout="texlyre-mobile"] .latex-output-container .panel-content {
-	margin-top: 0 !important;
 	display: flex !important;
 	flex-direction: column !important;
 }
@@ -120,6 +138,10 @@
 	flex: 1 !important;
 	display: flex !important;
 	flex-direction: column !important;
+}
+
+[data-layout="texlyre-mobile"] body.mobile-view-explorer .sidebar-container .file-explorer {
+    margin-top: 0 !important;
 }
 
 [data-layout="texlyre-mobile"] .file-tree,
@@ -151,12 +173,13 @@
 	border: none;
 	width: 100% !important;
 	height: 100% !important;
+	overflow-y: auto !important;
 }
 
 [data-layout="texlyre-mobile"] .output-content {
 	flex: 1 !important;
 	height: 100% !important;
-	overflow: hidden !important;
+	overflow-y: auto !important;
 }
 
 [data-layout="texlyre-mobile"] .pdf-viewer embed {
@@ -173,14 +196,6 @@
 	justify-content: center !important;
 }
 
-[data-layout="texlyre-mobile"] .chat-panel {
-	border-radius: 0;
-}
-
-[data-layout="texlyre-mobile"] .chat-panel-content {
-	height: 100% !important;
-}
-
 [data-layout="texlyre-mobile"] .modal-container {
 	margin: var(--mobile-spacing-md);
 	width: calc(100vw - 2 * var(--mobile-spacing-md));
@@ -188,11 +203,12 @@
 }
 
 [data-layout="texlyre-mobile"] .toast-container {
-	top: calc(var(--mobile-header-height) - var(--mobile-nav-height));
+	top: var(--mobile-spacing-md);
 	right: var(--mobile-spacing-md);
 	left: var(--mobile-spacing-md);
 	max-width: none;
-	position: absolute;
+	position: fixed;
+	z-index: var(--mobile-z-toast);
 }
 
 [data-layout="texlyre-mobile"] .resize-handle,
@@ -218,7 +234,7 @@
 	overflow: hidden;
 }
 
-body.mobile-view-explorer .main-content {
+[data-layout="texlyre-mobile"] body.mobile-view-explorer .main-content {
 	width: 100vw !important;
 	max-width: 100vw !important;
 	gap: 0 !important;
@@ -226,14 +242,13 @@ body.mobile-view-explorer .main-content {
 	margin: 0 !important;
 }
 
-body.mobile-view-explorer .main-content > *:not(.sidebar-container) {
+[data-layout="texlyre-mobile"] body.mobile-view-explorer .main-content > *:not(.sidebar-container) {
 	display: none !important;
 }
 
-body.mobile-view-explorer .sidebar-container,
-body.mobile-view-explorer .sidebar-container > *,
-body.mobile-view-explorer .explorer-container,
-body.mobile-view-explorer .file-explorer {
+[data-layout="texlyre-mobile"] body.mobile-view-explorer .sidebar-container,
+[data-layout="texlyre-mobile"] body.mobile-view-explorer .sidebar-container > *,
+[data-layout="texlyre-mobile"] body.mobile-view-explorer .explorer-container {
 	width: 100vw !important;
 	max-width: 100vw !important;
 	min-width: 100vw !important;
@@ -244,104 +259,163 @@ body.mobile-view-explorer .file-explorer {
 	border: none !important;
 	border-radius: 0 !important;
 	margin-top: 0 !important;
+	overflow-y: auto !important;
 }
 
-body.mobile-view-editor .main-content > .sidebar-container,
-body.mobile-view-editor .latex-output-container,
-body.mobile-view-editor .latex-output,
-body.mobile-view-editor .pdf-viewer,
-body.mobile-view-editor .log-viewer,
-body.mobile-view-editor .log-view-container {
+[data-layout="texlyre-mobile"] body.mobile-view-editor .main-content > .sidebar-container,
+[data-layout="texlyre-mobile"] body.mobile-view-editor .latex-output-container,
+[data-layout="texlyre-mobile"] body.mobile-view-editor .latex-output,
+[data-layout="texlyre-mobile"] body.mobile-view-editor .pdf-viewer,
+[data-layout="texlyre-mobile"] body.mobile-view-editor .log-viewer,
+[data-layout="texlyre-mobile"] body.mobile-view-editor .log-view-container {
 	display: none !important;
 }
 
-body.mobile-view-editor .editor-container-outer,
-body.mobile-view-editor .editor-output-container,
-body.mobile-view-editor .editor-wrapper {
+[data-layout="texlyre-mobile"] body.mobile-view-editor .editor-container-outer,
+[data-layout="texlyre-mobile"] body.mobile-view-editor .editor-output-container,
+[data-layout="texlyre-mobile"] body.mobile-view-editor .editor-wrapper {
 	width: 100vw !important;
 	height: 100% !important;
 	flex: 1 !important;
 	display: flex !important;
-}
-
-body.mobile-view-output .main-content > .sidebar-container,
-body.mobile-view-output .editor-wrapper,
-body.mobile-view-output .editor-container,
-body.mobile-view-output .codemirror-editor-container,
-body.mobile-view-output .editor-tabs-container {
-	display: none !important;
-}
-
-body.mobile-view-output .editor-container-outer,
-body.mobile-view-output .editor-output-container {
-	width: 100vw !important;
-	height: 100% !important;
-	flex: 1 !important;
-	display: flex !important;
-}
-
-body.mobile-view-output .latex-output-container,
-body.mobile-view-output .latex-output,
-body.mobile-view-output .output-content,
-body.mobile-view-output .pdf-viewer,
-body.mobile-view-output .log-view-container,
-body.mobile-view-output .log-viewer,
-body.mobile-view-output .pdf-viewer embed,
-body.mobile-view-output .empty-state,
-body.mobile-view-output .output-header,
-body.mobile-view-output .view-tabs,
-body.mobile-view-output .tab-button {
-	display: flex !important;
-}
-
-body.mobile-view-output .latex-output-container,
-body.mobile-view-output .latex-output,
-body.mobile-view-output .output-content,
-body.mobile-view-output .pdf-viewer,
-body.mobile-view-output .log-view-container {
-	width: 100% !important;
-	height: 100% !important;
-	flex: 1 !important;
-}
-
-body.mobile-view-output .latex-output,
-body.mobile-view-output .output-content {
-	flex-direction: column !important;
-}
-
-body.mobile-view-output .output-content {
 	overflow: hidden !important;
 }
 
-body.mobile-view-output .log-viewer {
-	display: block !important;
+[data-layout="texlyre-mobile"] body.mobile-view-editor .codemirror-editor-container {
+	height: 100% !important;
+	overflow-y: auto !important;
 }
 
-body.mobile-view-output .pdf-viewer embed {
+[data-layout="texlyre-mobile"] body.mobile-view-output .main-content > .sidebar-container,
+[data-layout="texlyre-mobile"] body.mobile-view-output .editor-wrapper,
+[data-layout="texlyre-mobile"] body.mobile-view-output .editor-container,
+[data-layout="texlyre-mobile"] body.mobile-view-output .codemirror-editor-container,
+[data-layout="texlyre-mobile"] body.mobile-view-output .editor-tabs-container {
+	display: none !important;
+}
+
+[data-layout="texlyre-mobile"] body.mobile-view-output .editor-container-outer,
+[data-layout="texlyre-mobile"] body.mobile-view-output .editor-output-container {
+	width: 100vw !important;
+	height: 100% !important;
+	flex: 1 !important;
+	display: flex !important;
+}
+
+[data-layout="texlyre-mobile"] body.mobile-view-output .latex-output-container,
+[data-layout="texlyre-mobile"] body.mobile-view-output .latex-output,
+[data-layout="texlyre-mobile"] body.mobile-view-output .output-content,
+[data-layout="texlyre-mobile"] body.mobile-view-output .pdf-viewer,
+[data-layout="texlyre-mobile"] body.mobile-view-output .log-view-container,
+[data-layout="texlyre-mobile"] body.mobile-view-output .log-viewer,
+[data-layout="texlyre-mobile"] body.mobile-view-output .pdf-viewer embed,
+[data-layout="texlyre-mobile"] body.mobile-view-output .empty-state,
+[data-layout="texlyre-mobile"] body.mobile-view-output .output-header,
+[data-layout="texlyre-mobile"] body.mobile-view-output .view-tabs,
+[data-layout="texlyre-mobile"] body.mobile-view-output .tab-button {
+	display: flex !important;
+}
+
+[data-layout="texlyre-mobile"] body.mobile-view-output .latex-output-container,
+[data-layout="texlyre-mobile"] body.mobile-view-output .latex-output,
+[data-layout="texlyre-mobile"] body.mobile-view-output .output-content,
+[data-layout="texlyre-mobile"] body.mobile-view-output .pdf-viewer,
+[data-layout="texlyre-mobile"] body.mobile-view-output .log-view-container {
+	width: 100% !important;
+	height: 100% !important;
+	flex: 1 !important;
+	overflow-y: auto !important;
+}
+
+[data-layout="texlyre-mobile"] body.mobile-view-output .latex-output,
+[data-layout="texlyre-mobile"] body.mobile-view-output .output-content {
+	flex-direction: column !important;
+}
+
+[data-layout="texlyre-mobile"] body.mobile-view-output .output-content {
+	overflow-y: auto !important;
+}
+
+[data-layout="texlyre-mobile"] body.mobile-view-output .log-viewer {
+	display: block !important;
+	overflow-y: auto !important;
+}
+
+[data-layout="texlyre-mobile"] body.mobile-view-output .pdf-viewer embed {
 	width: 100% !important;
 	height: 100% !important;
 }
 
-body.mobile-view-output .empty-state {
+[data-layout="texlyre-mobile"] body.mobile-view-output .empty-state {
 	align-items: center !important;
 	justify-content: center !important;
 }
 
-body.mobile-view-chat .main-content > *:not(.chat-panel) {
+[data-layout="texlyre-mobile"] body.mobile-view-chat .main-content > *:not(.chat-panel) {
 	display: none !important;
 }
 
-body.mobile-view-chat .chat-panel {
+[data-layout="texlyre-mobile"] body.mobile-view-chat .chat-panel {
 	display: flex !important;
 	position: static !important;
-	width: 100vw !important;
-	height: calc(100vh - var(--mobile-header-height)) !important;
+	width: 100% !important;
+	height: 100% !important;
 	border: none !important;
 	border-radius: 0 !important;
 	transform: none !important;
 	flex-direction: column !important;
 }
 
-body:not(.mobile-view-chat) .chat-panel {
+[data-layout="texlyre-mobile"] body.mobile-view-chat footer {
+    position: fixed;
+    top:  50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    height: 60%;
+    margin-top: calc(50vh - var(--mobile-nav-height) / 2 - 45vh);
+}
+
+[data-layout="texlyre-mobile"] body:not(.mobile-view-chat) .chat-panel {
+	display: none !important;
+}
+
+[data-layout="texlyre-mobile"] .chat-panel {
+	border-radius: 0;
+}
+
+[data-layout="texlyre-mobile"] .chat-panel-content {
+	flex: 1 !important;
+	overflow-y:scroll !important;
+}
+
+[data-layout="texlyre-mobile"] .chat-panel-input-container {
+	margin-bottom: var(--mobile-nav-height);
+}
+
+[data-layout="texlyre-mobile"] body.mobile-view-editor .comment-panel {
+	position: relative !important;
+	right: 0 !important;
+	width: 95vw !important;
+	max-width: 450px !important;
+	z-index: calc(var(--mobile-z-navigation) - 1) !important;
+	background-color: var(--pico-background) !important;
+	border-left: 1px solid var(--accent-border) !important;
+	box-shadow: var(--mobile-shadow-lg) !important;
+}
+
+[data-layout="texlyre-mobile"] body.mobile-view-editor .comment-panel.editor-comment-panel {
+	display: flex !important;
+}
+
+[data-layout="texlyre-mobile"] body[class*="mobile-view-"] .modal-overlay:has(.project-export-modal) {
+	display: flex !important;
+}
+
+[data-layout="texlyre-mobile"] body[class*="mobile-view-"] .project-export-modal {
+	display: block !important;
+}
+
+[data-layout="texlyre-mobile"] body.mobile-view-editor .viewer-plugin-info {
 	display: none !important;
 }

@@ -133,16 +133,13 @@
 
 .share-button-group {
 	display: flex;
-	height: var(--button-height-md);
-	border-radius: var(--radius-sm);
-	overflow: hidden;
+	align-items: center;
 }
 
 .share-button {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 0.4rem;
 	background-color: var(--pico-secondary-background);
 	color: var(--text-color);
 	border: 1px solid var(--accent-border);
@@ -157,16 +154,22 @@
 
 .share-button-group .share-button {
 	border-radius: 0;
+	padding: 0 var(--space-ss);
+	height: var(--button-height-md);
 }
 
 .share-button-group .main-button {
 	border-top-left-radius: var(--radius-sm);
 	border-bottom-left-radius: var(--radius-sm);
+	padding-left: var(--space-xs);
+	padding-right: var(--space-xs);
+	top: 0 !important;
 }
 
 .share-button-group .dropdown-toggle {
 	border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-	padding: 0.4rem var(--space-xs);
+	padding-left: var(--space-xs);
+	padding-right: var(--space-xs);
 	border-left: none;
 	width: 20px;
 }

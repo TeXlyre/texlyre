@@ -174,6 +174,8 @@ embed {
 }
 
 .pdf-window-toggle {
+	padding-left: var(--space-ss);
+	padding-right: var(--space-ss);
 	background: var(--pico-secondary);
 	border: 1px solid var(--pico-border-color);
 	color: var(--pico-color);
@@ -186,9 +188,6 @@ embed {
 
 .compile-button-group {
 	display: flex;
-	height: var(--button-height-md);
-	border-radius: var(--radius-sm);
-	overflow: hidden;
 	align-items: center;
 }
 
@@ -196,12 +195,10 @@ embed {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding-left: var(--space-sm);
-	padding-right: var(--space-xs);
-	height: 100%;
 	background-color: var(--pico-secondary-background);
-	border: 1px solid var(--accent-border);
 	color: var(--text-color);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
 	cursor: pointer;
 	transition: background-color var(--transition-normal);
 }
@@ -223,6 +220,8 @@ embed {
 
 .compile-button-group .latex-button {
 	border-radius: 0;
+	padding: 0 var(--space-ss);
+	height: var(--button-height-md);
 }
 
 .compile-button-group .compile-button {

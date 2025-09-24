@@ -172,7 +172,7 @@
 	height: var(--button-height-md);
 	align-items: center;
 	gap: var(--space-sm);
-	padding: 0.4rem 0.8rem;
+	padding: var(--space-ss) 0.8rem;
 	background-color: transparent;
 	border-radius: var(--radius-sm);
 	color: var(--text-color);

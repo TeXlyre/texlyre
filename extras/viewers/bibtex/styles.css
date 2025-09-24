@@ -131,8 +131,8 @@
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
-	gap: 0.25rem;
-	margin-bottom: 0.4rem;
+	gap: var(--space-xs);
+	margin-bottom: var(--space-ss);
 	font-size: 0.75rem;
 	color: var(--text-color);
 	cursor: pointer;
@@ -578,7 +578,7 @@
 
 	.bibtex-table th,
 	.bibtex-table td {
-		padding: 0.4rem 0.5rem;
+		padding: var(--space-ss) var(--space-sm);
 		max-width: 120px;
 	}
 }

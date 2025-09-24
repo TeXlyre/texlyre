@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import type { User } from "../../types/auth";
 import Modal from "../common/Modal";
+import { UserIcon } from "../common/Icons";
 
 interface ProfileSettingsModalProps {
 	isOpen: boolean;
@@ -160,6 +161,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 			onClose={onClose}
 			title="Profile Settings"
 			size="medium"
+			icon={UserIcon}
 		>
 			<form onSubmit={handleSubmit} className="profile-form">
 				{error && <div className="error-message">{error}</div>}

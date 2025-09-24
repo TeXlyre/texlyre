@@ -100,16 +100,16 @@
 
 .control-group {
 	display: flex;
-	gap: 0.25rem;
+	gap: var(--space-xs);
 	align-items: center;
-	padding: 0.25rem;
+	padding: var(--space-xs);
 	border-radius: 6px;
 	background-color: var(--accent-background);
 	border: 1px solid var(--accent-border, #444);
 }
 
 .control-group button {
-	padding: 0.4rem;
+	padding: var(--space-ss);
 	font-size: 0.85rem;
 	background-color: var(--pico-background);
 	border: 1px solid var(--accent-border, #444);

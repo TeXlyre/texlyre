@@ -68,22 +68,71 @@
 [data-layout="texlyre-mobile"] .action-btn {
 	min-width: var(--mobile-min-touch-target);
 	min-height: var(--mobile-min-touch-target);
-	padding: var(--mobile-spacing-sm);
+	padding: var(--mobile-spacing-md);
+}
+
+[data-layout="texlyre-mobile"] .action-btn svg {
+	width: var(--mobile-icon-size-md);
+	height: var(--mobile-icon-size-md);
 }
 
 [data-layout="texlyre-mobile"] .output-header {
 	padding: var(--mobile-spacing-md);
-	min-height: 60px;
+	min-height: 100px;
 }
 
-[data-layout="texlyre-mobile"] .latex-compile-buttons {
-	gap: var(--mobile-spacing-sm);
+
+[data-layout="texlyre-mobile"] .open-button-group .open-button {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
 }
 
-[data-layout="texlyre-mobile"] .latex-button {
+[data-layout="texlyre-mobile"] .compile-button-group .compile-button {
 	min-height: var(--mobile-min-touch-target);
 	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
 	font-size: var(--mobile-font-sm);
+}
+
+[data-layout="texlyre-mobile"] .share-project-buttons {
+	gap: var(--mobile-spacing-sm);
+}
+
+[data-layout="texlyre-mobile"] .share-button-group .main-button {
+	min-height: var(--mobile-min-touch-target);
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+	font-size: var(--mobile-font-sm);
+}
+
+[data-layout="texlyre-mobile"] .backup-button-group .main-button,
+[data-layout="texlyre-mobile"] .collab-button-group .main-button {
+	min-height: var(--mobile-min-touch-target);
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+}
+
+[data-layout="texlyre-mobile"] .backup-button-group .main-button .backup-label,
+[data-layout="texlyre-mobile"] .collab-button-group .main-button .collab-label {
+    font-size: var(--mobile-font-sm);
+}
+
+[data-layout="texlyre-mobile"] .dropdown-toggle,
+[data-layout="texlyre-mobile"] .collab-dropdown-toggle,
+[data-layout="texlyre-mobile"] .backup-dropdown-toggle {
+	min-height: var(--mobile-min-touch-target);
+	padding: var(--mobile-spacing-md);
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+	width: var(--mobile-min-touch-target);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+[data-layout="texlyre-mobile"] .dropdown-toggle svg,
+[data-layout="texlyre-mobile"] .collab-dropdown-toggle svg,
+[data-layout="texlyre-mobile"] .backup-dropdown-toggle svg {
+	width: var(--mobile-icon-size-md);
+	height: var(--mobile-icon-size-md);
+	flex-shrink: 0;
 }
 
 [data-layout="texlyre-mobile"] .tab-button {
@@ -160,7 +209,12 @@
 [data-layout="texlyre-mobile"] .modal-close-button {
 	min-width: var(--mobile-min-touch-target);
 	min-height: var(--mobile-min-touch-target);
-	padding: var(--mobile-spacing-sm);
+	padding: var(--mobile-spacing-md);
+}
+
+[data-layout="texlyre-mobile"] .modal-close-button svg {
+	width: var(--mobile-icon-size-md);
+	height: var(--mobile-icon-size-md);
 }
 
 [data-layout="texlyre-mobile"] .form-group label {
@@ -225,6 +279,10 @@
 	white-space: nowrap;
 }
 
+[data-layout="texlyre-mobile"] .linked-file-icon {
+    border: none;
+}
+
 .mobile-nav-button {
 	flex: 1;
 	display: flex;
@@ -239,7 +297,7 @@
 	transition: all var(--mobile-transition-fast);
 	font-size: var(--mobile-font-xs);
 	font-weight: 500;
-	padding: var(--mobile-spacing-sm);
+	padding: var(--mobile-spacing-md) var(--mobile-spacing-sm);
 	text-align: center;
 	min-height: var(--mobile-nav-height);
 }
@@ -251,6 +309,8 @@
 }
 
 .mobile-nav-button svg {
+	width: var(--mobile-icon-size-lg);
+	height: var(--mobile-icon-size-lg);
 	flex-shrink: 0;
 	transition: transform var(--mobile-transition-fast);
 }

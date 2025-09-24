@@ -4,7 +4,7 @@
 	display: flex;
 	align-items: center;
 	gap: var(--space-sm);
-	padding: 0.4rem 0.8rem;
+	padding: var(--space-ss) 0.8rem;
 	background-color: transparent;
 	border: 1px solid var(--accent-border, #ddd);
 	border-radius: var(--radius-sm);
@@ -70,7 +70,7 @@
 	height: var(--button-height-lg);
 	align-items: center;
 	gap: var(--space-sm);
-	padding: 0.4rem 0.8rem;
+	padding: var(--space-ss) 0.8rem;
 	background-color: transparent;
 	border: 1px solid var(--accent-border, #ddd);
 	border-radius: var(--radius-sm);
