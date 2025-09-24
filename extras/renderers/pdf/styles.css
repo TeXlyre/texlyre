@@ -18,7 +18,6 @@
 
 .pdf-toolbar {
 	display: flex;
-	height: 40px;
 	min-height: 40px;
 	padding: 0.5rem;
 	background-color: var(--pico-secondary-background);
@@ -29,6 +28,10 @@
 .toolbar {
 	display: flex;
 	width: 100%;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
 }
 
 #toolbarLeft {
@@ -64,7 +67,7 @@
 }
 
 .toolbarZoomSelect {
-	min-width: 70px;
+	min-width: 40px;
 	text-align: center;
 	padding: 0.2rem 0.2rem;
 	font-size: 0.9rem;
