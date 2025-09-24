@@ -493,7 +493,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 									content,
 									file.isBinary || false,
 								);
-								
+								setLastUserSelectedFileId(selectedFileId);
 							}
 						}
 					} catch (error) {
