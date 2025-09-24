@@ -11,6 +11,8 @@
 	margin: 0;
 	padding: 0;
 	width: 100%;
+    min-width: 300px;
+    max-width: 100% !important;
 }
 
 [data-layout="texlyre-mobile"] #root {
@@ -364,6 +366,16 @@
 	flex-direction: column !important;
 }
 
+[data-layout="texlyre-mobile"] body.mobile-view-chat footer {
+    position: fixed;
+    top:  50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    height: 60%;
+    margin-top: calc(50vh - var(--mobile-nav-height) / 2 - 45vh);
+}
+
 [data-layout="texlyre-mobile"] body:not(.mobile-view-chat) .chat-panel {
 	display: none !important;
 }
@@ -374,7 +386,11 @@
 
 [data-layout="texlyre-mobile"] .chat-panel-content {
 	flex: 1 !important;
-	overflow-y: auto !important;
+	overflow-y:scroll !important;
+}
+
+[data-layout="texlyre-mobile"] .chat-panel-input-container {
+	margin-bottom: var(--mobile-nav-height);
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-editor .comment-panel {
