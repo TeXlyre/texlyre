@@ -29,7 +29,7 @@ export const themes = {
 		primary: "#d1d5db",
 		"primary-hover": "#1ab3e6",
 		"primary-focus": "rgba(16, 149, 193, 0.25)",
-		"primary-inverse": "#fff",
+		"primary-inverse": "#3a3838ff",
 		"secondary-background": "#1a242f",
 		secondary: "#90a1b0",
 	},

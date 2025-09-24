@@ -10,6 +10,8 @@ import "./styles/index.css";
 const createTeXlyreMobileTheme = (): ThemePlugin => {
 	let currentThemeId = "dark";
 	let currentView: "explorer" | "editor" | "output" | "chat" = "editor";
+	let mobileClickHandler: ((e: Event) => void) | null = null;
+	let hashChangeHandler: (() => void) | null = null;
 
 	const layout: ThemeLayout = {
 		id: "texlyre-mobile",
@@ -40,6 +42,25 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 		return hash === '' || hash === '#';
 	};
 
+	const cleanupMobileNavigation = () => {
+		const existingNav = document.querySelector('.mobile-bottom-nav');
+		if (existingNav) {
+			existingNav.remove();
+		}
+		
+		document.body.className = document.body.className.replace(/mobile-view-\w+/g, '');
+		
+		if (mobileClickHandler) {
+			document.removeEventListener('click', mobileClickHandler);
+			mobileClickHandler = null;
+		}
+		
+		if (hashChangeHandler) {
+			window.removeEventListener('hashchange', hashChangeHandler);
+			hashChangeHandler = null;
+		}
+	};
+
 	const handleMobileNavigation = () => {
 		const setupNav = () => {
 			const existingNav = document.querySelector('.mobile-bottom-nav');
@@ -55,7 +76,11 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 			setupNav();
 		}
 
-		window.addEventListener('hashchange', () => {
+		if (hashChangeHandler) {
+			window.removeEventListener('hashchange', hashChangeHandler);
+		}
+
+		hashChangeHandler = () => {
 			const existingNav = document.querySelector('.mobile-bottom-nav');
 			if (existingNav) {
 				existingNav.remove();
@@ -66,7 +91,9 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 				currentView = "editor";
 				updateMobileView("editor");
 			}
-		});
+		};
+
+		window.addEventListener('hashchange', hashChangeHandler);
 	};
 
 	const setupMobileNavigation = () => {
@@ -87,34 +114,14 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 						(embed as HTMLElement).style.height = '100%';
 					}
 				}
-				
-				const footers = document.querySelectorAll('footer');
-				footers.forEach(footer => {
-					const children = footer.children;
-					for (let i = 0; i < children.length; i++) {
-						const child = children[i] as HTMLElement;
-						if (!child.classList.contains('chat-panel')) {
-							child.style.display = 'none';
-							child.style.visibility = 'hidden';
-						}
-					}
-					(footer as HTMLElement).style.background = 'transparent';
-					(footer as HTMLElement).style.border = 'none';
-					(footer as HTMLElement).style.padding = '0';
-					(footer as HTMLElement).style.margin = '0';
-				});
-				
-				const footerChats = document.querySelectorAll('.footer-chat');
-				footerChats.forEach(footerChat => {
-					if (!footerChat.classList.contains('chat-panel')) {
-						(footerChat as HTMLElement).style.display = 'none';
-						(footerChat as HTMLElement).style.visibility = 'hidden';
-					}
-				});
 			}, 50);
 		};
 
-		document.addEventListener('click', (e) => {
+		if (mobileClickHandler) {
+			document.removeEventListener('click', mobileClickHandler);
+		}
+
+		mobileClickHandler = (e: Event) => {
 			const target = e.target as HTMLElement;
 			const navButton = target.closest('.mobile-nav-button');
 			if (navButton) {
@@ -123,7 +130,9 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 					handleViewChange(view);
 				}
 			}
-		});
+		};
+
+		document.addEventListener('click', mobileClickHandler);
 	};
 
 	const createMobileNavigation = () => {
@@ -259,9 +268,35 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 			document.documentElement.setAttribute("data-layout", layout.id);
 			handleMobileNavigation();
 		},
+
+		cleanup(): void {
+			cleanupMobileNavigation();
+		},
 	};
 };
 
 const teXlyreMobileTheme = createTeXlyreMobileTheme();
+
+window.addEventListener('beforeunload', () => {
+	if (teXlyreMobileTheme.cleanup) {
+		teXlyreMobileTheme.cleanup();
+	}
+});
+
+const observer = new MutationObserver((mutations) => {
+	mutations.forEach((mutation) => {
+		if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme-plugin') {
+			const currentPlugin = document.documentElement.getAttribute('data-theme-plugin');
+			if (currentPlugin !== 'texlyre-mobile' && teXlyreMobileTheme.cleanup) {
+				teXlyreMobileTheme.cleanup();
+			}
+		}
+	});
+});
+
+observer.observe(document.documentElement, {
+	attributes: true,
+	attributeFilter: ['data-theme-plugin']
+});
 
 export default teXlyreMobileTheme;
