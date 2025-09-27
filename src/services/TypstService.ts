@@ -5,14 +5,19 @@ import { fileStorageService } from "./FileStorageService";
 import { notificationService } from "./NotificationService";
 import { fileCommentProcessor } from "../utils/fileCommentProcessor";
 
+export type TypstOutputFormat = "pdf" | "png" | "svg";
+
 export interface TypstCompileResult {
     pdf?: Uint8Array;
+    svg?: string;
     status: number;
     log: string;
+    format: TypstOutputFormat;
 }
 
 interface TypstInstance {
     pdf(options: { mainContent: string; sources?: Record<string, string | Uint8Array> }): Promise<Uint8Array>;
+    svg(options: { mainContent: string; sources?: Record<string, string | Uint8Array> }): Promise<string>;
 }
 
 declare global {
@@ -25,6 +30,7 @@ class TypstService {
     private status: "unloaded" | "loading" | "ready" | "compiling" | "error" = "unloaded";
     private statusListeners: Set<() => void> = new Set();
     private processedNodes: FileNode[] = [];
+    private defaultFormat: TypstOutputFormat = "pdf";
 
     async initialize(): Promise<void> {
         if (this.status === "ready") return;
@@ -69,7 +75,23 @@ class TypstService {
         }
     }
 
-    async compileTypst(mainFileName: string, fileTree: FileNode[]): Promise<TypstCompileResult> {
+    setDefaultFormat(format: TypstOutputFormat): void {
+        this.defaultFormat = format;
+    }
+
+    getDefaultFormat(): TypstOutputFormat {
+        return this.defaultFormat;
+    }
+
+    getSupportedFormats(): TypstOutputFormat[] {
+        return ["pdf", "svg"];
+    }
+
+    async compileTypst(
+        mainFileName: string,
+        fileTree: FileNode[],
+        format: TypstOutputFormat = this.defaultFormat
+    ): Promise<TypstCompileResult> {
         if (!window.$typst || !this.isReady()) {
             await this.initialize();
         }
@@ -77,27 +99,78 @@ class TypstService {
         const operationId = `typst-compile-${nanoid()}`;
         this.setStatus("compiling");
 
+        // Normalize the main file name at the start
+        const normalizedMainFileName = mainFileName.replace(/^\/+/, "");
+        console.log(`[TypstService] Starting compilation of: ${mainFileName} -> ${normalizedMainFileName}`);
+        console.log(`[TypstService] Target format: ${format}`);
+        console.log(`[TypstService] Total files in tree: ${fileTree.length}`);
+
         try {
             this.showLoadingNotification("Preparing files for compilation...", operationId);
-            await this.prepareFileNodes(mainFileName, fileTree);
+            await this.prepareFileNodes(normalizedMainFileName, fileTree);
 
-            this.showLoadingNotification("Compiling Typst document...", operationId);
-            const { mainContent, sources } = await this.prepareSources(mainFileName);
+            this.showLoadingNotification(`Compiling Typst document to ${format.toUpperCase()}...`, operationId);
+            const { mainContent, sources } = await this.prepareSources(normalizedMainFileName);
 
-            const pdf = await window.$typst!.pdf({
-                mainContent,
-                sources
-            });
-
-            if (pdf && pdf.length > 0) {
-                this.showLoadingNotification("Saving compilation output...", operationId);
+            // Add validation for main content
+            if (!mainContent || mainContent.trim() === "") {
                 const result: TypstCompileResult = {
-                    pdf,
-                    status: 0,
-                    log: "Compilation successful"
+                    status: 1,
+                    log: `Compilation failed: Main file '${normalizedMainFileName}' is empty or not found. Available files: ${Object.keys(sources).join(', ')}`,
+                    format
                 };
-                await this.saveCompilationOutput(mainFileName.replace(/^\/+/, ""), result);
-                this.showSuccessNotification("Typst compilation completed successfully", {
+                await this.saveCompilationLog(normalizedMainFileName, result.log);
+                this.showErrorNotification("Typst compilation failed: Main file is empty", {
+                    operationId,
+                    duration: 5000,
+                });
+                this.setStatus("ready");
+                return result;
+            }
+
+            console.log(`[TypstService] Compiling with main content length: ${mainContent.length} chars`);
+            console.log(`[TypstService] Sources count: ${Object.keys(sources).length}`);
+            console.log(`[TypstService] Target format: ${format}`);
+            console.log(`[TypstService] Main content preview:`, mainContent.substring(0, 200));
+
+            // Compile to the specified format
+            let output: Uint8Array | string | undefined;
+
+            switch (format) {
+                case "pdf":
+                    output = await window.$typst!.pdf({ mainContent, sources });
+                    break;
+                case "svg":
+                    output = await window.$typst!.svg({ mainContent, sources });
+                    break;
+                default:
+                    throw new Error(`Unsupported format: ${format}`);
+            }
+
+            console.log(`[TypstService] Compilation result - ${format} output length: ${typeof output === 'string' ? output.length : output?.length || 0
+                } ${typeof output === 'string' ? 'chars' : 'bytes'}`);
+
+            if (output && (typeof output === 'string' ? output.length > 0 : output.length > 0)) {
+                this.showLoadingNotification("Saving compilation output...", operationId);
+
+                const result: TypstCompileResult = {
+                    status: 0,
+                    log: "Compilation successful",
+                    format
+                };
+
+                // Set the appropriate output property
+                switch (format) {
+                    case "pdf":
+                        result.pdf = output as Uint8Array;
+                        break;
+                    case "svg":
+                        result.svg = output as string;
+                        break;
+                }
+
+                await this.saveCompilationOutput(normalizedMainFileName, result);
+                this.showSuccessNotification(`Typst compilation to ${format.toUpperCase()} completed successfully`, {
                     operationId,
                     duration: 3000,
                 });
@@ -106,12 +179,12 @@ class TypstService {
                 return result;
             } else {
                 const result: TypstCompileResult = {
-                    pdf: undefined,
                     status: 1,
-                    log: "Compilation failed: No PDF output generated"
+                    log: `Compilation failed: No ${format.toUpperCase()} output generated or output is empty`,
+                    format
                 };
-                await this.saveCompilationLog(mainFileName.replace(/^\/+/, ""), result.log);
-                this.showErrorNotification("Typst compilation failed", {
+                await this.saveCompilationLog(normalizedMainFileName, result.log);
+                this.showErrorNotification(`Typst compilation failed: Empty ${format.toUpperCase()} output`, {
                     operationId,
                     duration: 5000,
                 });
@@ -122,19 +195,20 @@ class TypstService {
         } catch (error) {
             this.setStatus("error");
             const errorMessage = error instanceof Error ? error.message : "Unknown error";
+            console.error("[TypstService] Compilation error:", error);
             this.showErrorNotification(`Compilation error: ${errorMessage}`, {
                 operationId,
                 duration: 5000,
             });
 
             const result: TypstCompileResult = {
-                pdf: undefined,
                 status: 1,
-                log: `Compilation error: ${errorMessage}`
+                log: `Compilation error: ${errorMessage}`,
+                format
             };
 
             try {
-                await this.saveCompilationLog(mainFileName.replace(/^\/+/, ""), result.log);
+                await this.saveCompilationLog(normalizedMainFileName, result.log);
             } catch (saveError) {
                 console.error("Failed to save compilation log:", saveError);
             }
@@ -146,6 +220,7 @@ class TypstService {
     private async prepareFileNodes(mainFileName: string, fileTree: FileNode[]): Promise<void> {
         const allNodes = this.collectAllFiles(fileTree);
         this.processedNodes = this.preprocessNodes(allNodes, mainFileName);
+        console.log(`[TypstService] Prepared ${this.processedNodes.length} files for compilation`);
     }
 
     private collectAllFiles(nodes: FileNode[]): FileNode[] {
@@ -162,11 +237,70 @@ class TypstService {
     }
 
     private preprocessNodes(nodes: FileNode[], mainFileName: string): FileNode[] {
-        return nodes.filter(node =>
-            node.type === "file" &&
-            !node.path.startsWith("/.texlyre_") &&
-            node.content !== undefined
-        );
+        const filteredNodes = nodes.filter(node => {
+            if (node.type !== "file") {
+                console.log(`[TypstService] Skipping non-file: ${node.path}`);
+                return false;
+            }
+            if (node.path.startsWith("/.texlyre_")) {
+                console.log(`[TypstService] Skipping system file: ${node.path}`);
+                return false;
+            }
+            if (node.isDeleted) {
+                console.log(`[TypstService] Skipping deleted file: ${node.path}`);
+                return false;
+            }
+
+            // Check if file has content (either in node or should be retrievable)
+            const hasContent = node.content !== undefined;
+            if (!hasContent) {
+                console.log(`[TypstService] Warning: File has no content: ${node.path}`);
+                // Still include it in case we can retrieve content later
+            }
+
+            const normalizedMainPath = mainFileName.replace(/^\/+/, "");
+            const normalizedNodePath = node.path.replace(/^\/+/, "");
+
+            // Always include .typ files and other relevant files
+            if (normalizedNodePath.endsWith('.typ') ||
+                normalizedNodePath.endsWith('.toml') ||
+                normalizedNodePath.endsWith('.yaml') ||
+                normalizedNodePath.endsWith('.yml') ||
+                normalizedNodePath === normalizedMainPath ||
+                node.path === mainFileName ||
+                node.name === mainFileName ||
+                node.name === normalizedMainPath) {
+                console.log(`[TypstService] Including relevant file: ${node.path} (reason: typ/config/main file)`);
+                return true;
+            }
+
+            // Include image files and other assets
+            if (normalizedNodePath.match(/\.(png|jpg|jpeg|gif|svg|pdf|bib|cls|sty)$/i)) {
+                console.log(`[TypstService] Including asset file: ${node.path}`);
+                return true;
+            }
+
+            // Include files in the same directory as main file
+            const mainDir = normalizedMainPath.includes('/') ?
+                normalizedMainPath.substring(0, normalizedMainPath.lastIndexOf('/')) : '';
+            const nodeDir = normalizedNodePath.includes('/') ?
+                normalizedNodePath.substring(0, normalizedNodePath.lastIndexOf('/')) : '';
+
+            if (mainDir === nodeDir) {
+                console.log(`[TypstService] Including file from same directory: ${node.path}`);
+                return true;
+            }
+
+            console.log(`[TypstService] Excluding file: ${node.path}`);
+            return false;
+        });
+
+        console.log(`[TypstService] Filtered ${filteredNodes.length} from ${nodes.length} total files`);
+        filteredNodes.forEach(node => {
+            console.log(`[TypstService] Final included file: ${node.path}, hasContent: ${!!node.content}, contentType: ${typeof node.content}`);
+        });
+
+        return filteredNodes;
     }
 
     private async prepareSources(mainFileName: string): Promise<{
@@ -176,30 +310,114 @@ class TypstService {
         const sources: Record<string, string | Uint8Array> = {};
         let mainContent = "";
 
+        // Try multiple normalization approaches for the main file
+        const normalizedMainFileName = mainFileName.replace(/^\/+/, "");
+        const mainFileVariants = [
+            mainFileName,                    // Original path
+            normalizedMainFileName,          // Without leading slashes
+            `/${normalizedMainFileName}`,    // With single leading slash
+        ];
+
+        console.log(`[TypstService] Looking for main file variants:`, mainFileVariants);
+        console.log(`[TypstService] Available files:`, this.processedNodes.map(n => ({
+            path: n.path,
+            normalizedPath: n.path.replace(/^\/+/, ""),
+            hasContent: !!n.content,
+            contentType: typeof n.content,
+            contentSize: n.content instanceof ArrayBuffer ? n.content.byteLength :
+                typeof n.content === 'string' ? n.content.length : 0
+        })));
+
         for (const node of this.processedNodes) {
             try {
                 const fileContent = await this.getFileContent(node);
-                if (fileContent) {
-                    const cleanedContent = fileCommentProcessor.cleanContent(fileContent);
-                    const normalizedPath = node.path.replace(/^\/+/, "");
+                if (!fileContent) {
+                    console.log(`[TypstService] No content for file: ${node.path}`);
+                    continue;
+                }
 
-                    if (normalizedPath === mainFileName.replace(/^\/+/, "")) {
-                        if (typeof cleanedContent === "string") {
-                            mainContent = cleanedContent;
-                        } else {
-                            mainContent = new TextDecoder().decode(cleanedContent);
-                        }
-                    }
+                const cleanedContent = fileCommentProcessor.cleanContent(fileContent);
+                const normalizedPath = node.path.replace(/^\/+/, "");
 
+                // Check if this is the main file using multiple comparison methods
+                const isMainFile = mainFileVariants.some(variant => {
+                    const normalizedVariant = variant.replace(/^\/+/, "");
+                    return normalizedPath === normalizedVariant ||
+                        node.path === variant ||
+                        node.name === variant ||
+                        node.name === normalizedVariant;
+                });
+
+                console.log(`[TypstService] Processing file: ${normalizedPath}, is main: ${isMainFile}, content length: ${typeof cleanedContent === 'string' ? cleanedContent.length :
+                    cleanedContent instanceof ArrayBuffer ? cleanedContent.byteLength : 0
+                    }`);
+
+                if (isMainFile) {
                     if (typeof cleanedContent === "string") {
-                        sources[normalizedPath] = cleanedContent;
+                        mainContent = cleanedContent;
                     } else {
-                        sources[normalizedPath] = new Uint8Array(cleanedContent);
+                        mainContent = new TextDecoder().decode(cleanedContent);
                     }
+                    console.log(`[TypstService] Found main file content length: ${mainContent.length}`);
+                    console.log(`[TypstService] Main content preview:`, mainContent.substring(0, 100) + "...");
+                }
+
+                // Add to sources regardless of whether it's the main file
+                if (typeof cleanedContent === "string") {
+                    sources[normalizedPath] = cleanedContent;
+                } else {
+                    sources[normalizedPath] = new Uint8Array(cleanedContent);
                 }
             } catch (error) {
                 console.error(`Error preparing source file ${node.path}:`, error);
             }
+        }
+
+        // Enhanced fallback: if main content is still empty, try multiple strategies
+        if (!mainContent || mainContent.trim() === "") {
+            console.log(`[TypstService] Main file ${normalizedMainFileName} not found or empty, searching for alternatives`);
+
+            // Strategy 1: Find any .typ file with content
+            for (const [path, content] of Object.entries(sources)) {
+                if (path.endsWith('.typ') && typeof content === 'string' && content.trim()) {
+                    console.log(`[TypstService] Using alternative main file: ${path}`);
+                    mainContent = content;
+                    break;
+                }
+            }
+
+            // Strategy 2: Check if the main file exists in sources but with different path format
+            if (!mainContent) {
+                const mainBaseName = normalizedMainFileName.split('/').pop() || normalizedMainFileName;
+                for (const [path, content] of Object.entries(sources)) {
+                    const baseName = path.split('/').pop() || path;
+                    if (baseName === mainBaseName && typeof content === 'string' && content.trim()) {
+                        console.log(`[TypstService] Found main file by basename: ${path}`);
+                        mainContent = content;
+                        break;
+                    }
+                }
+            }
+
+            // Strategy 3: Use the first non-empty text file if still no main content
+            if (!mainContent) {
+                for (const [path, content] of Object.entries(sources)) {
+                    if (typeof content === 'string' && content.trim()) {
+                        console.log(`[TypstService] Using first available text file as main: ${path}`);
+                        mainContent = content;
+                        break;
+                    }
+                }
+            }
+        }
+
+        console.log(`[TypstService] Final main content length: ${mainContent.length}`);
+        console.log(`[TypstService] Total sources: ${Object.keys(sources).length}`);
+
+        if (mainContent.trim() === "") {
+            console.error(`[TypstService] ERROR: Main content is still empty after all fallback strategies`);
+            console.error(`[TypstService] Available sources:`, Object.keys(sources));
+            console.error(`[TypstService] Processed nodes:`, this.processedNodes.map(n => n.path));
         }
 
         return { mainContent, sources };
@@ -207,14 +425,29 @@ class TypstService {
 
     private async getFileContent(node: FileNode): Promise<ArrayBuffer | string | null> {
         try {
+            // First try to get content directly from the node
+            if (node.content !== undefined) {
+                console.log(`[TypstService] Using node content for ${node.path}, type: ${typeof node.content}, size: ${node.content instanceof ArrayBuffer ? node.content.byteLength :
+                    typeof node.content === 'string' ? node.content.length : 0
+                    }`);
+                return node.content;
+            }
+
+            // Fallback to storage service
             const rawFile = await fileStorageService.getFile(node.id);
             if (rawFile?.content) {
+                console.log(`[TypstService] Retrieved content from storage for ${node.path}, type: ${typeof rawFile.content}, size: ${rawFile.content instanceof ArrayBuffer ? rawFile.content.byteLength :
+                    typeof rawFile.content === 'string' ? rawFile.content.length : 0
+                    }`);
                 return rawFile.content;
             }
+
+            console.warn(`[TypstService] No content found for file: ${node.path} (id: ${node.id})`);
+            return null;
         } catch (error) {
-            console.error("Error retrieving file content:", error);
+            console.error(`[TypstService] Error retrieving file content for ${node.path}:`, error);
+            return null;
         }
-        return null;
     }
 
     private async saveCompilationOutput(mainFile: string, result: TypstCompileResult): Promise<void> {
@@ -222,23 +455,47 @@ class TypstService {
             await this.cleanupDirectory("/.typst_output");
             const outputFiles: FileNode[] = [];
 
-            if (result.pdf && result.pdf.length > 0) {
-                const fileName = mainFile.split("/").pop() || mainFile;
-                const baseName = fileName.split(".").slice(0, -1).join(".");
-                const pdfFileName = `${baseName}.pdf`;
+            const fileName = mainFile.split("/").pop() || mainFile;
+            const baseName = fileName.split(".").slice(0, -1).join(".");
 
-                outputFiles.push({
-                    id: nanoid(),
-                    name: pdfFileName,
-                    path: `/.typst_output/${pdfFileName}`,
-                    type: "file",
-                    content: result.pdf.buffer,
-                    lastModified: Date.now(),
-                    size: result.pdf.length,
-                    mimeType: "application/pdf",
-                    isBinary: true,
-                    excludeFromSync: true,
-                });
+            // Save the compiled output based on format
+            switch (result.format) {
+                case "pdf":
+                    if (result.pdf && result.pdf.length > 0) {
+                        const pdfFileName = `${baseName}.pdf`;
+                        outputFiles.push({
+                            id: nanoid(),
+                            name: pdfFileName,
+                            path: `/.typst_output/${pdfFileName}`,
+                            type: "file",
+                            content: result.pdf.buffer,
+                            lastModified: Date.now(),
+                            size: result.pdf.length,
+                            mimeType: "application/pdf",
+                            isBinary: true,
+                            excludeFromSync: true,
+                        });
+                    }
+                    break;
+
+                case "svg":
+                    if (result.svg) {
+                        const svgFileName = `${baseName}.svg`;
+                        const svgContent = new TextEncoder().encode(result.svg).buffer;
+                        outputFiles.push({
+                            id: nanoid(),
+                            name: svgFileName,
+                            path: `/.typst_output/${svgFileName}`,
+                            type: "file",
+                            content: svgContent,
+                            lastModified: Date.now(),
+                            size: svgContent.byteLength,
+                            mimeType: "image/svg+xml",
+                            isBinary: false,
+                            excludeFromSync: true,
+                        });
+                    }
+                    break;
             }
 
             const logFile = await this.createCompilationLogFile(mainFile, result.log);

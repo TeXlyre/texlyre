@@ -39,6 +39,7 @@
 		"@lezer/generator": "^1.0.0",
 		"@lezer/highlight": "^1.0.0",
 		"@lezer/lr": "^1.0.0",
+		"@myriaddreamin/typst-ts-renderer": "^0.6.1-rc3",
 		"@myriaddreamin/typst.ts": "^0.6.1-rc2",
 		"@picocss/pico": "^2.0.6",
 		"@replit/codemirror-vim": "^6.3.0",

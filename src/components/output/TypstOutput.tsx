@@ -31,7 +31,15 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     onExpandTypstOutput,
     linkedFileInfo,
 }) => {
-    const { compileLog, compiledPdf, currentView, toggleOutputView } = useTypst();
+    const {
+        compileLog,
+        compiledPdf,
+        compiledPng,
+        compiledSvg,
+        currentView,
+        toggleOutputView,
+        currentFormat
+    } = useTypst();
     const { selectedFileId, getFile } = useFileTree();
     const { getSetting } = useSettings();
     const { getProperty, setProperty, registerProperty } = useProperties();
@@ -109,6 +117,19 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
         }
     };
 
+    const getCurrentOutput = () => {
+        switch (currentFormat) {
+            case "pdf":
+                return compiledPdf;
+            case "png":
+                return compiledPng;
+            case "svg":
+                return compiledSvg;
+            default:
+                return null;
+        }
+    };
+
     const handleSavePdf = useCallback((fileName: string) => {
         if (!compiledPdf) return;
 
@@ -123,30 +144,108 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
         URL.revokeObjectURL(url);
     }, [compiledPdf]);
 
-    const pdfViewerContent = useMemo(() => {
-        if (currentView !== "pdf" || !compiledPdf) return null;
-        
+    const handleSaveOutput = useCallback((format: string, defaultName: string) => {
+        const currentOutput = getCurrentOutput();
+        if (!currentOutput) return;
+
+        let blob: Blob;
+        switch (format) {
+            case "svg":
+                if (!compiledSvg) return;
+                blob = new Blob([compiledSvg], { type: "image/svg+xml" });
+                break;
+            case "pdf":
+                if (!compiledPdf) return;
+                blob = new Blob([compiledPdf], { type: "application/pdf" });
+                break;
+            default:
+                return;
+        }
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = defaultName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, [compiledPdf, compiledPng, compiledSvg]);
+
+    const outputViewerContent = useMemo(() => {
+        if (currentView !== "output") return null;
+
+        const currentOutput = getCurrentOutput();
+        if (!currentOutput) return null;
+
         return (
-            <div className="pdf-viewer">
-                {pdfRendererPlugin && useEnhancedRenderer ? (
-                    React.createElement(pdfRendererPlugin.renderOutput, {
-                        content: compiledPdf.buffer,
-                        mimeType: "application/pdf",
-                        fileName: "output.pdf",
-                        onSave: handleSavePdf,
-                    })
-                ) : (
-                    <embed
-                        src={URL.createObjectURL(
-                            new Blob([compiledPdf], { type: "application/pdf" }),
+            <div className="output-viewer">
+                {currentFormat === "pdf" && compiledPdf && (
+                    <div className="pdf-viewer">
+                        {pdfRendererPlugin && useEnhancedRenderer ? (
+                            React.createElement(pdfRendererPlugin.renderOutput, {
+                                content: compiledPdf.buffer,
+                                mimeType: "application/pdf",
+                                fileName: "output.pdf",
+                                onSave: handleSavePdf,
+                            })
+                        ) : (
+                            <embed
+                                src={URL.createObjectURL(new Blob([compiledPdf], { type: "application/pdf" }))}
+                                type="application/pdf"
+                                style={{ width: "100%", height: "100%" }}
+                            />
                         )}
-                        type="application/pdf"
-                        style={{ width: "100%", height: "100%" }}
-                    />
+                    </div>
+                )}
+
+                {currentFormat === "svg" && compiledSvg && (
+                    <div className="svg-viewer">
+                        <div
+                            className="svg-content"
+                            style={{
+                                width: "100%",
+                                height: "calc(100% - 60px)",
+                                overflow: "auto",
+                                padding: "1rem",
+                                backgroundColor: "white"
+                            }}
+                        >
+                            <div
+                                dangerouslySetInnerHTML={{ __html: compiledSvg }}
+                                style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "flex-start"
+                                }}
+                            />
+                        </div>
+                        <div className="svg-controls">
+                            <button
+                                onClick={() => handleSaveOutput("svg", "output.svg")}
+                                className="save-button"
+                                style={{
+                                    padding: "0.5rem 1rem",
+                                    backgroundColor: "var(--primary-color)",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "4px",
+                                    cursor: "pointer",
+                                    margin: "1rem"
+                                }}
+                            >
+                                Save SVG
+                            </button>
+                        </div>
+                    </div>
                 )}
             </div>
         );
-    }, [currentView, compiledPdf, pdfRendererPlugin, useEnhancedRenderer, handleSavePdf]);
+    }, [currentView, currentFormat, compiledPdf, compiledPng, compiledSvg, pdfRendererPlugin, useEnhancedRenderer, handleSavePdf, handleSaveOutput]);
+
+    const hasAnyOutput = compiledPdf || compiledPng || compiledSvg;
 
     return (
         <div className={`typst-output ${className}`}>
@@ -159,11 +258,11 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
                         Log
                     </button>
                     <button
-                        className={`tab-button ${currentView === "pdf" ? "active" : ""}`}
-                        onClick={() => currentView !== "pdf" && toggleOutputView()}
-                        disabled={!compiledPdf}
+                        className={`tab-button ${currentView === "output" ? "active" : ""}`}
+                        onClick={() => currentView !== "output" && toggleOutputView()}
+                        disabled={!hasAnyOutput}
                     >
-                        PDF
+                        {currentFormat ? currentFormat.toUpperCase() : "Output"}
                     </button>
                 </div>
                 <TypstCompileButton
@@ -177,7 +276,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
                 />
             </div>
 
-            {!compileLog && !compiledPdf ? (
+            {!compileLog && !hasAnyOutput ? (
                 <div className="empty-state">
                     <p>No output available. Compile a Typst document to see results.</p>
                 </div>
@@ -217,7 +316,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
                         </div>
                     )}
 
-                    {pdfViewerContent}
+                    {outputViewerContent}
                 </>
             )}
         </div>

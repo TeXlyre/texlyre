@@ -3,6 +3,7 @@ import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useFileTree } from "../../hooks/useFileTree";
+import type { TypstOutputFormat } from "../../services/TypstService";
 import { useTypst } from "../../hooks/useTypst";
 import { useSettings } from "../../hooks/useSettings";
 import type { FileNode } from "../../types/files";
@@ -34,6 +35,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 }) => {
     const { isCompiling, compileDocument, stopCompilation, clearCache } = useTypst();
     const { selectedFileId, getFile, fileTree } = useFileTree();
+    const [selectedFormat, setSelectedFormat] = useState<TypstOutputFormat>("pdf");
     const { getSetting } = useSettings();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
@@ -103,15 +105,15 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 
     const shouldNavigateToMain = async (mainFilePath: string): Promise<boolean> => {
         const navigationSetting = getSetting("typst-auto-navigate-to-main")?.value as string ?? "conditional";
-        
+
         if (navigationSetting === "never") {
             return false;
         }
-        
+
         if (navigationSetting === "always") {
             return true;
         }
-        
+
         // Conditional navigation logic
         if (navigationSetting === "conditional") {
             if (selectedFileId) {
@@ -124,14 +126,14 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                     console.warn("Error getting current file:", error);
                 }
             }
-            
+
             if (selectedDocId && linkedFileInfo?.fileName?.endsWith(".typ")) {
                 return false; // Don't navigate if already editing a Typst-linked document
             }
-            
+
             return true; // Navigate if no Typst file is currently open
         }
-        
+
         return false;
     };
 
@@ -159,7 +161,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                 }
             }
 
-            await compileDocument(effectiveMainFile);
+            await compileDocument(effectiveMainFile, selectedFormat);
         }
     };
 
@@ -196,7 +198,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 
         try {
             clearCache();
-            await compileDocument(effectiveMainFile);
+            await compileDocument(effectiveMainFile, selectedFormat);
         } catch (error) {
             console.error("Failed to compile with cache clear:", error);
         }
@@ -255,7 +257,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                     <ChevronDownIcon />
                 </button>
             </div>
-            
+
             {isDropdownOpen && (
                 <div className="typst-dropdown">
                     <div className="main-file-display">
@@ -281,7 +283,19 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                             ))}
                         </select>
                     </div>
-
+                    <div className="format-selector">
+                        <div className="format-label">Output Format:</div>
+                        <select
+                            value={selectedFormat}
+                            onChange={(e) => setSelectedFormat(e.target.value as TypstOutputFormat)}
+                            className="format-select"
+                            disabled={isCompiling}
+                        >
+                            <option value="pdf">PDF</option>
+                            <option value="png">PNG</option>
+                            <option value="svg">SVG</option>
+                        </select>
+                    </div>
                     <div className="cache-controls">
                         <div
                             className="cache-item clear-cache"
@@ -296,7 +310,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                             onClick={handleClearCacheAndCompile}
                             title="Clear cache and compile"
                         >
-                            <ClearCompileIcon/>
+                            <ClearCompileIcon />
                             Clear & Compile
                         </div>
                     </div>

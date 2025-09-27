@@ -11,18 +11,22 @@ import {
 
 import { useFileTree } from "../hooks/useFileTree";
 import { useSettings } from "../hooks/useSettings";
-import { typstService, type TypstCompileResult } from "../services/TypstService";
+import { typstService, type TypstCompileResult, type TypstOutputFormat } from "../services/TypstService";
 import { parseUrlFragments } from "../utils/urlUtils";
 
 export interface TypstContextType {
     isCompiling: boolean;
     compileError: string | null;
     compiledPdf: Uint8Array | null;
+    compiledPng: Uint8Array | null;
+    compiledSvg: string | null;
     compileLog: string;
-    compileDocument: (mainFileName: string) => Promise<void>;
+    currentFormat: TypstOutputFormat;
+    setCurrentFormat: (format: TypstOutputFormat) => void;
+    compileDocument: (mainFileName: string, format?: TypstOutputFormat) => Promise<void>;
     stopCompilation: () => void;
     toggleOutputView: () => void;
-    currentView: "log" | "pdf";
+    currentView: "log" | "output";
     clearCache: () => void;
     triggerAutoCompile: () => void;
 }
@@ -40,16 +44,23 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     const [hasAutoCompiled, setHasAutoCompiled] = useState(false);
     const [compileError, setCompileError] = useState<string | null>(null);
     const [compiledPdf, setCompiledPdf] = useState<Uint8Array | null>(null);
+    const [compiledPng, setCompiledPng] = useState<Uint8Array | null>(null);
+    const [compiledSvg, setCompiledSvg] = useState<string | null>(null);
     const [compileLog, setCompileLog] = useState<string>("");
-    const [currentView, setCurrentView] = useState<"log" | "pdf">("log");
+    const [currentView, setCurrentView] = useState<"log" | "output">("log");
+    const [currentFormat, setCurrentFormat] = useState<TypstOutputFormat>("pdf");
     const settingsRegistered = useRef(false);
 
     useEffect(() => {
         if (settingsRegistered.current) return;
         settingsRegistered.current = true;
 
-        const initialAutoCompile = 
+        const initialAutoCompile =
             (getSetting("typst-auto-compile-on-open")?.value as boolean) ?? false;
+        const initialDefaultFormat =
+            (getSetting("typst-default-format")?.value as TypstOutputFormat) ?? "pdf";
+
+        setCurrentFormat(initialDefaultFormat);
 
         registerSetting({
             id: "typst-auto-compile-on-open",
@@ -62,6 +73,25 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         });
 
         registerSetting({
+            id: "typst-default-format",
+            category: "Typst",
+            subcategory: "Compilation",
+            type: "select",
+            label: "Default output format",
+            description: "Default format for Typst compilation",
+            defaultValue: initialDefaultFormat,
+            options: [
+                { label: "PDF", value: "pdf" },
+                { label: "PNG", value: "png" },
+                { label: "SVG", value: "svg" },
+            ],
+            onChange: (value) => {
+                setCurrentFormat(value as TypstOutputFormat);
+                typstService.setDefaultFormat(value as TypstOutputFormat);
+            },
+        });
+
+        registerSetting({
             id: "typst-notifications",
             category: "Typst",
             subcategory: "Compilation",
@@ -70,6 +100,8 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
             description: "Display notifications for Typst compilation activities",
             defaultValue: true,
         });
+
+        typstService.setDefaultFormat(initialDefaultFormat);
     }, [registerSetting, getSetting]);
 
     useEffect(() => {
@@ -80,7 +112,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         });
     }, []);
 
-    const compileDocument = async (mainFileName: string): Promise<void> => {
+    const compileDocument = async (mainFileName: string, format: TypstOutputFormat = currentFormat): Promise<void> => {
         if (!typstService.isReady()) {
             await typstService.initialize();
         }
@@ -88,13 +120,30 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         setIsCompiling(true);
         setCompileError(null);
 
+        // Clear previous outputs
+        setCompiledPdf(null);
+        setCompiledPng(null);
+        setCompiledSvg(null);
+
         try {
-            const result = await typstService.compileTypst(mainFileName, fileTree);
+            const result = await typstService.compileTypst(mainFileName, fileTree, format);
 
             setCompileLog(result.log);
-            if (result.status === 0 && result.pdf) {
-                setCompiledPdf(result.pdf);
-                setCurrentView("pdf");
+            if (result.status === 0) {
+                switch (result.format) {
+                    case "pdf":
+                        if (result.pdf) {
+                            setCompiledPdf(result.pdf);
+                            setCurrentView("output");
+                        }
+                        break;
+                    case "svg":
+                        if (result.svg) {
+                            setCompiledSvg(result.svg);
+                            setCurrentView("output");
+                        }
+                        break;
+                }
             } else {
                 setCompileError("Compilation failed");
                 setCurrentView("log");
@@ -137,7 +186,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     };
 
     const toggleOutputView = () => {
-        setCurrentView(currentView === "log" ? "pdf" : "log");
+        setCurrentView(currentView === "log" ? "output" : "log");
     };
 
     const clearCache = () => {
@@ -150,7 +199,11 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
                 isCompiling,
                 compileError,
                 compiledPdf,
+                compiledPng,
+                compiledSvg,
                 compileLog,
+                currentFormat,
+                setCurrentFormat,
                 compileDocument,
                 stopCompilation,
                 toggleOutputView,
