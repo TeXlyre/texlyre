@@ -69,6 +69,10 @@ class TypstService {
                 getModule: () => "/texlyre/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm",
             });
 
+            await $typst.setRendererInitOptions({
+                getModule: () => "/texlyre/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm",
+            });
+
             window.$typst = $typst;
         } catch (error) {
             throw new Error(`Failed to load Typst: ${error}`);

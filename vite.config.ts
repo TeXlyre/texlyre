@@ -53,6 +53,10 @@ export default defineConfig({
 					dest: "typst-ts-web-compiler/pkg/",
 				},
 				{
+					src: "node_modules/@myriaddreamin/typst-ts-renderer/pkg/*",
+					dest: "typst-ts-renderer/pkg/",
+				},
+				{
 					src: "userdata.json",
 					dest: "",
 				},
