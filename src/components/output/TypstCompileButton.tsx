@@ -114,13 +114,12 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
             return true;
         }
 
-        // Conditional navigation logic
         if (navigationSetting === "conditional") {
             if (selectedFileId) {
                 try {
                     const currentFile = await getFile(selectedFileId);
                     if (currentFile?.path.endsWith(".typ")) {
-                        return false; // Don't navigate if already editing a .typ file
+                        return false;
                     }
                 } catch (error) {
                     console.warn("Error getting current file:", error);
@@ -128,10 +127,10 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
             }
 
             if (selectedDocId && linkedFileInfo?.fileName?.endsWith(".typ")) {
-                return false; // Don't navigate if already editing a Typst-linked document
+                return false;
             }
 
-            return true; // Navigate if no Typst file is currently open
+            return true;
         }
 
         return false;
@@ -292,7 +291,6 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                             disabled={isCompiling}
                         >
                             <option value="pdf">PDF</option>
-                            <option value="png">PNG</option>
                             <option value="svg">SVG</option>
                         </select>
                     </div>

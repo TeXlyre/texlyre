@@ -18,7 +18,6 @@ export interface TypstContextType {
     isCompiling: boolean;
     compileError: string | null;
     compiledPdf: Uint8Array | null;
-    compiledPng: Uint8Array | null;
     compiledSvg: string | null;
     compileLog: string;
     currentFormat: TypstOutputFormat;
@@ -44,7 +43,6 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     const [hasAutoCompiled, setHasAutoCompiled] = useState(false);
     const [compileError, setCompileError] = useState<string | null>(null);
     const [compiledPdf, setCompiledPdf] = useState<Uint8Array | null>(null);
-    const [compiledPng, setCompiledPng] = useState<Uint8Array | null>(null);
     const [compiledSvg, setCompiledSvg] = useState<string | null>(null);
     const [compileLog, setCompileLog] = useState<string>("");
     const [currentView, setCurrentView] = useState<"log" | "output">("log");
@@ -59,6 +57,8 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
             (getSetting("typst-auto-compile-on-open")?.value as boolean) ?? false;
         const initialDefaultFormat =
             (getSetting("typst-default-format")?.value as TypstOutputFormat) ?? "pdf";
+        const initialAutoNavigate =
+            (getSetting("typst-auto-navigate-to-main")?.value as string) ?? "conditional";
 
         setCurrentFormat(initialDefaultFormat);
 
@@ -73,6 +73,21 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         });
 
         registerSetting({
+            id: "typst-auto-navigate-to-main",
+            category: "Typst",
+            subcategory: "Compilation",
+            type: "select",
+            label: "Auto-navigate to main file on compile",
+            description: "Control when to automatically navigate to the main Typst file during compilation",
+            defaultValue: initialAutoNavigate,
+            options: [
+                { label: "Only when no Typst file is open", value: "conditional" },
+                { label: "Always navigate to main file", value: "always" },
+                { label: "Never navigate to main file", value: "never" },
+            ],
+        });
+
+        registerSetting({
             id: "typst-default-format",
             category: "Typst",
             subcategory: "Compilation",
@@ -82,7 +97,6 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
             defaultValue: initialDefaultFormat,
             options: [
                 { label: "PDF", value: "pdf" },
-                { label: "PNG", value: "png" },
                 { label: "SVG", value: "svg" },
             ],
             onChange: (value) => {
@@ -120,9 +134,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         setIsCompiling(true);
         setCompileError(null);
 
-        // Clear previous outputs
         setCompiledPdf(null);
-        setCompiledPng(null);
         setCompiledSvg(null);
 
         try {
@@ -199,7 +211,6 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
                 isCompiling,
                 compileError,
                 compiledPdf,
-                compiledPng,
                 compiledSvg,
                 compileLog,
                 currentFormat,

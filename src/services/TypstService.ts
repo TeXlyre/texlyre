@@ -5,7 +5,7 @@ import { fileStorageService } from "./FileStorageService";
 import { notificationService } from "./NotificationService";
 import { fileCommentProcessor } from "../utils/fileCommentProcessor";
 
-export type TypstOutputFormat = "pdf" | "png" | "svg";
+export type TypstOutputFormat = "pdf" | "svg";
 
 export interface TypstCompileResult {
     pdf?: Uint8Array;
@@ -103,7 +103,6 @@ class TypstService {
         const operationId = `typst-compile-${nanoid()}`;
         this.setStatus("compiling");
 
-        // Normalize the main file name at the start
         const normalizedMainFileName = mainFileName.replace(/^\/+/, "");
         console.log(`[TypstService] Starting compilation of: ${mainFileName} -> ${normalizedMainFileName}`);
         console.log(`[TypstService] Target format: ${format}`);
@@ -116,7 +115,6 @@ class TypstService {
             this.showLoadingNotification(`Compiling Typst document to ${format.toUpperCase()}...`, operationId);
             const { mainContent, sources } = await this.prepareSources(normalizedMainFileName);
 
-            // Add validation for main content
             if (!mainContent || mainContent.trim() === "") {
                 const result: TypstCompileResult = {
                     status: 1,
@@ -137,7 +135,6 @@ class TypstService {
             console.log(`[TypstService] Target format: ${format}`);
             console.log(`[TypstService] Main content preview:`, mainContent.substring(0, 200));
 
-            // Compile to the specified format
             let output: Uint8Array | string | undefined;
 
             switch (format) {
@@ -163,7 +160,6 @@ class TypstService {
                     format
                 };
 
-                // Set the appropriate output property
                 switch (format) {
                     case "pdf":
                         result.pdf = output as Uint8Array;
@@ -255,17 +251,14 @@ class TypstService {
                 return false;
             }
 
-            // Check if file has content (either in node or should be retrievable)
             const hasContent = node.content !== undefined;
             if (!hasContent) {
                 console.log(`[TypstService] Warning: File has no content: ${node.path}`);
-                // Still include it in case we can retrieve content later
             }
 
             const normalizedMainPath = mainFileName.replace(/^\/+/, "");
             const normalizedNodePath = node.path.replace(/^\/+/, "");
 
-            // Always include .typ files and other relevant files
             if (normalizedNodePath.endsWith('.typ') ||
                 normalizedNodePath.endsWith('.toml') ||
                 normalizedNodePath.endsWith('.yaml') ||
@@ -278,13 +271,11 @@ class TypstService {
                 return true;
             }
 
-            // Include image files and other assets
             if (normalizedNodePath.match(/\.(png|jpg|jpeg|gif|svg|pdf|bib|cls|sty)$/i)) {
                 console.log(`[TypstService] Including asset file: ${node.path}`);
                 return true;
             }
 
-            // Include files in the same directory as main file
             const mainDir = normalizedMainPath.includes('/') ?
                 normalizedMainPath.substring(0, normalizedMainPath.lastIndexOf('/')) : '';
             const nodeDir = normalizedNodePath.includes('/') ?
@@ -314,12 +305,11 @@ class TypstService {
         const sources: Record<string, string | Uint8Array> = {};
         let mainContent = "";
 
-        // Try multiple normalization approaches for the main file
         const normalizedMainFileName = mainFileName.replace(/^\/+/, "");
         const mainFileVariants = [
-            mainFileName,                    // Original path
-            normalizedMainFileName,          // Without leading slashes
-            `/${normalizedMainFileName}`,    // With single leading slash
+            mainFileName,
+            normalizedMainFileName,
+            `/${normalizedMainFileName}`,
         ];
 
         console.log(`[TypstService] Looking for main file variants:`, mainFileVariants);
@@ -343,7 +333,6 @@ class TypstService {
                 const cleanedContent = fileCommentProcessor.cleanContent(fileContent);
                 const normalizedPath = node.path.replace(/^\/+/, "");
 
-                // Check if this is the main file using multiple comparison methods
                 const isMainFile = mainFileVariants.some(variant => {
                     const normalizedVariant = variant.replace(/^\/+/, "");
                     return normalizedPath === normalizedVariant ||
@@ -366,7 +355,6 @@ class TypstService {
                     console.log(`[TypstService] Main content preview:`, mainContent.substring(0, 100) + "...");
                 }
 
-                // Add to sources regardless of whether it's the main file
                 if (typeof cleanedContent === "string") {
                     sources[normalizedPath] = cleanedContent;
                 } else {
@@ -377,11 +365,9 @@ class TypstService {
             }
         }
 
-        // Enhanced fallback: if main content is still empty, try multiple strategies
         if (!mainContent || mainContent.trim() === "") {
             console.log(`[TypstService] Main file ${normalizedMainFileName} not found or empty, searching for alternatives`);
 
-            // Strategy 1: Find any .typ file with content
             for (const [path, content] of Object.entries(sources)) {
                 if (path.endsWith('.typ') && typeof content === 'string' && content.trim()) {
                     console.log(`[TypstService] Using alternative main file: ${path}`);
@@ -390,7 +376,6 @@ class TypstService {
                 }
             }
 
-            // Strategy 2: Check if the main file exists in sources but with different path format
             if (!mainContent) {
                 const mainBaseName = normalizedMainFileName.split('/').pop() || normalizedMainFileName;
                 for (const [path, content] of Object.entries(sources)) {
@@ -403,7 +388,6 @@ class TypstService {
                 }
             }
 
-            // Strategy 3: Use the first non-empty text file if still no main content
             if (!mainContent) {
                 for (const [path, content] of Object.entries(sources)) {
                     if (typeof content === 'string' && content.trim()) {
@@ -429,7 +413,6 @@ class TypstService {
 
     private async getFileContent(node: FileNode): Promise<ArrayBuffer | string | null> {
         try {
-            // First try to get content directly from the node
             if (node.content !== undefined) {
                 console.log(`[TypstService] Using node content for ${node.path}, type: ${typeof node.content}, size: ${node.content instanceof ArrayBuffer ? node.content.byteLength :
                     typeof node.content === 'string' ? node.content.length : 0
@@ -437,7 +420,6 @@ class TypstService {
                 return node.content;
             }
 
-            // Fallback to storage service
             const rawFile = await fileStorageService.getFile(node.id);
             if (rawFile?.content) {
                 console.log(`[TypstService] Retrieved content from storage for ${node.path}, type: ${typeof rawFile.content}, size: ${rawFile.content instanceof ArrayBuffer ? rawFile.content.byteLength :
@@ -456,13 +438,12 @@ class TypstService {
 
     private async saveCompilationOutput(mainFile: string, result: TypstCompileResult): Promise<void> {
         try {
-            await this.cleanupDirectory("/.typst_output");
+            await this.cleanupDirectory("/.texlyre_src/__output");
             const outputFiles: FileNode[] = [];
 
             const fileName = mainFile.split("/").pop() || mainFile;
             const baseName = fileName.split(".").slice(0, -1).join(".");
 
-            // Save the compiled output based on format
             switch (result.format) {
                 case "pdf":
                     if (result.pdf && result.pdf.length > 0) {
@@ -470,7 +451,7 @@ class TypstService {
                         outputFiles.push({
                             id: nanoid(),
                             name: pdfFileName,
-                            path: `/.typst_output/${pdfFileName}`,
+                            path: `/.texlyre_src/__output/${pdfFileName}`,
                             type: "file",
                             content: result.pdf.buffer,
                             lastModified: Date.now(),
@@ -489,7 +470,7 @@ class TypstService {
                         outputFiles.push({
                             id: nanoid(),
                             name: svgFileName,
-                            path: `/.typst_output/${svgFileName}`,
+                            path: `/.texlyre_src/__output/${svgFileName}`,
                             type: "file",
                             content: svgContent,
                             lastModified: Date.now(),
@@ -519,7 +500,7 @@ class TypstService {
 
     private async saveCompilationLog(mainFile: string, log: string): Promise<void> {
         try {
-            await this.cleanupDirectory("/.typst_output");
+            await this.cleanupDirectory("/.texlyre_src/__output");
             await this.ensureOutputDirectoriesExist();
             const logFile = await this.createCompilationLogFile(mainFile, log);
 
@@ -542,7 +523,7 @@ class TypstService {
         return {
             id: nanoid(),
             name: logFileName,
-            path: `/.typst_output/${logFileName}`,
+            path: `/.texlyre_src/__output/${logFileName}`,
             type: "file",
             content: logContent,
             lastModified: Date.now(),
@@ -573,7 +554,7 @@ class TypstService {
     }
 
     private async ensureOutputDirectoriesExist(): Promise<void> {
-        const requiredDirectories = ["/.typst_output"];
+        const requiredDirectories = ["/.texlyre_src", "/.texlyre_src/__output"];
 
         const directoriesToCreate: FileNode[] = [];
         const existingFiles = await fileStorageService.getAllFiles();
@@ -632,8 +613,6 @@ class TypstService {
     }
 
     clearCache(): void {
-        // The high-level API doesn't expose cache clearing
-        // This is a no-op for now
     }
 
     private showLoadingNotification(message: string, operationId?: string): void {
