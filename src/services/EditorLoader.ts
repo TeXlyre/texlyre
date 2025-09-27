@@ -28,6 +28,7 @@ import { EditorView } from "codemirror";
 import { vim } from "@replit/codemirror-vim";
 import { bibtex, bibtexCompletionSource } from "codemirror-lang-bib";
 import { latex, latexCompletionSource } from "codemirror-lang-latex";
+import { typst } from "codemirror-lang-typst";
 import { useEffect, useRef, useState } from "react";
 import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
 import type { WebrtcProvider } from "y-webrtc";
@@ -66,7 +67,7 @@ export const EditorLoader = (
 		getAutoSaveDelay,
 		getLineNumbersEnabled,
 		getSyntaxHighlightingEnabled,
-	    getVimModeEnabled,
+		getVimModeEnabled,
 		getCollabOptions,
 		getEnabledLSPPlugins,
 		editorSettingsVersion,
@@ -187,29 +188,26 @@ export const EditorLoader = (
 			}
 		}
 
-	  if (getVimModeEnabled()) {
-		extensions.push(vim());
-	  }
+		if (getVimModeEnabled()) {
+			extensions.push(vim());
+		}
 
 		extensions.push(getCursorTrackingExtension());
 		return extensions;
 	};
 
-	const getLanguageExtension = (
-		fileName?: string,
-		content?: string,
-	): Extension[] => {
+	const getLanguageExtension = (fileName?: string, content?: string): Extension[] => {
 		if (!getSyntaxHighlightingEnabled()) {
 			return [];
 		}
 
 		if (!fileName) {
-			if (
-				content?.includes("@article") ||
-				content?.includes("@book") ||
-				content?.includes("@inproceedings")
-			) {
+			if (content?.includes("@article") || content?.includes("@book") || content?.includes("@inproceedings")) {
 				return [bibtex({ autoCloseBrackets: false, enableAutocomplete: false })];
+			}
+			// Check for Typst content patterns
+			if (content?.includes("= ") || content?.includes("== ") || content?.includes("#import") || content?.includes("#let")) {
+				return [typst()];
 			}
 			return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
 		}
@@ -220,6 +218,9 @@ export const EditorLoader = (
 			case "tex":
 			case "latex":
 				return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
+			case "typ":
+			case "typst":
+				return [typst()];
 			case "bib":
 			case "bibtex":
 				return [bibtex({ autoCloseBrackets: false, enableAutocomplete: false })];
@@ -227,12 +228,11 @@ export const EditorLoader = (
 			case "markdown":
 				return [markdown()];
 			default:
-				if (
-					content?.includes("@article") ||
-					content?.includes("@book") ||
-					content?.includes("@inproceedings")
-				) {
+				if (content?.includes("@article") || content?.includes("@book") || content?.includes("@inproceedings")) {
 					return [bibtex({ autoCloseBrackets: false, enableAutocomplete: false })];
+				}
+				if (content?.includes("= ") || content?.includes("== ") || content?.includes("#import") || content?.includes("#let")) {
+					return [typst()];
 				}
 				return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
 		}
@@ -240,37 +240,37 @@ export const EditorLoader = (
 
 	const getCursorTrackingExtension = (): Extension => {
 		let cursorUpdateTimeout: NodeJS.Timeout | null = null;
-		
+
 		return EditorView.updateListener.of((update: ViewUpdate) => {
 			if (update.docChanged && autoSaveRef.current) {
-			autoSaveRef.current();
+				autoSaveRef.current();
 			}
-			
+
 			if (update.selectionSet) {
-			if (cursorUpdateTimeout) {
-				clearTimeout(cursorUpdateTimeout);
-			}
-			
-			cursorUpdateTimeout = setTimeout(() => {
-				if (update.view && update.view.state) {
-				const pos = update.view.state.selection.main.head;
-				const line = update.view.state.doc.lineAt(pos).number;
-				
-				document.dispatchEvent(new CustomEvent('editor-cursor-update', {
-					detail: { 
-					line, 
-					position: pos,
-					fileId: currentFileId,
-					documentId: documentId,
-					isEditingFile
-					}
-				}));
+				if (cursorUpdateTimeout) {
+					clearTimeout(cursorUpdateTimeout);
 				}
-			}, 200);
+
+				cursorUpdateTimeout = setTimeout(() => {
+					if (update.view && update.view.state) {
+						const pos = update.view.state.selection.main.head;
+						const line = update.view.state.doc.lineAt(pos).number;
+
+						document.dispatchEvent(new CustomEvent('editor-cursor-update', {
+							detail: {
+								line,
+								position: pos,
+								fileId: currentFileId,
+								documentId: documentId,
+								isEditingFile
+							}
+						}));
+					}
+				}, 200);
 			}
 		});
 	};
-	
+
 	useEffect(() => {
 		if (!isDocumentSelected || isEditingFile || !documentId || !projectId) {
 			return;
@@ -326,10 +326,14 @@ export const EditorLoader = (
 
 		// Determine file types for enhanced completion
 		const isLatexFile = fileName?.endsWith('.tex') || (!fileName && textContent?.includes('\\'));
-		const isBibFile = fileName?.endsWith('.bib') || fileName?.endsWith('.bibtex') || (!fileName && (textContent?.includes('@article') || textContent?.includes('@book') || textContent?.includes('@inproceedings')));
+		const isBibFile = fileName?.endsWith('.bib') || fileName?.endsWith('.bibtex') ||
+			(!fileName && (textContent?.includes('@article') || textContent?.includes('@book') || textContent?.includes('@inproceedings')));
+		const isTypstFile = fileName?.endsWith('.typ') || fileName?.endsWith('.typst') ||
+			(!fileName && (textContent?.includes('= ') || textContent?.includes('== ') || textContent?.includes('#import')));
 
-		if (isLatexFile || isBibFile) {
-			const fileExtension = fileName?.split('.').pop()?.toLowerCase() || (isLatexFile ? 'tex' : 'bib');
+		if (isLatexFile || isBibFile || isTypstFile) {
+			const fileExtension = fileName?.split('.').pop()?.toLowerCase() ||
+				(isLatexFile ? 'tex' : isBibFile ? 'bib' : 'typ');
 			const allLSPPlugins = pluginRegistry.getLSPPluginsForFileType(fileExtension);
 
 			// Filter to only enabled plugins
@@ -370,7 +374,7 @@ export const EditorLoader = (
 				}, 100);
 			}
 
-			if (isLatexFile) {
+			if (isLatexFile || isTypstFile) {
 				// Get current file path for relative path calculations
 				let currentFilePath = '';
 				if (isEditingFile && currentFileId) {
@@ -388,9 +392,13 @@ export const EditorLoader = (
 				const [stateExtensions, filePathPlugin, enhancedCompletionSource] = createFilePathAutocompleteExtension(currentFilePath);
 				extensions.push(stateExtensions, filePathPlugin);
 
-				// Add both enhanced completion (includes bibliography) and latex completion
+				// Add both enhanced completion and language-specific completion
 				completionSources.push(enhancedCompletionSource);
-				completionSources.push(latexCompletionSource(true));
+
+				if (isLatexFile) {
+					completionSources.push(latexCompletionSource(true));
+				}
+				// Note: Typst completions are handled by the Typst language extension itself
 			} else if (isBibFile) {
 				// For .bib files, we still want enhanced completion but with bibtex base completion
 				const [stateExtensions, filePathPlugin, enhancedCompletionSource] = createFilePathAutocompleteExtension('');
@@ -503,20 +511,20 @@ export const EditorLoader = (
 		try {
 			const view = new EditorView({ state, parent: editorRef.current });
 			viewRef.current = view;
-			
+
 			// Emit editor ready event
 			setTimeout(() => {
 				document.dispatchEvent(new CustomEvent('editor-ready', {
-				detail: {
-					fileId: currentFileId,
-					documentId: documentId,
-					isEditingFile: isEditingFile
-				}
+					detail: {
+						fileId: currentFileId,
+						documentId: documentId,
+						isEditingFile: isEditingFile
+					}
 				}));
 			}, 50);
 
-			// Update file path cache for LaTeX files
-			if (isLatexFile) {
+			// Update file path cache for LaTeX and Typst files
+			if (isLatexFile || isTypstFile) {
 				filePathCacheService.updateCache();
 			}
 
@@ -829,7 +837,7 @@ export const EditorLoader = (
 					// This is a tab-specific goto request
 					const isTargetFile = isEditingFile && fileId && currentFileId === fileId;
 					const isTargetDoc = !isEditingFile && eventDocId && documentId === eventDocId;
-					
+
 					if (!isTargetFile && !isTargetDoc) return;
 				}
 
@@ -863,7 +871,7 @@ export const EditorLoader = (
 				if (tabId) {
 					const isTargetFile = isEditingFile && fileId && currentFileId === fileId;
 					const isTargetDoc = !isEditingFile && eventDocId && documentId === eventDocId;
-					
+
 					if (!isTargetFile && !isTargetDoc) return;
 				} else {
 					if (
@@ -1012,7 +1020,7 @@ export const EditorLoader = (
 		currentFileId,
 		documentId,
 	]);
-	
+
 	useEffect(() => {
 		return () => {
 			const autoSaveKey = isEditingFile ? currentFileId : documentId;

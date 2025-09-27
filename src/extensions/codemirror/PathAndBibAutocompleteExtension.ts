@@ -29,6 +29,7 @@ const filePathCacheField = StateField.define<FilePathCache>({
 			imageFiles: [],
 			bibFiles: [],
 			texFiles: [],
+			typstFiles: [],
 			allFiles: [],
 			lastUpdate: 0,
 		};
@@ -75,12 +76,42 @@ const latexCommandPatterns = [
 	},
 ];
 
+const typstCommandPatterns = [
+	{
+		commands: ['include'],
+		pattern: /#include\s+"([^"]*)"/,
+		fileTypes: 'typst' as const,
+	},
+	{
+		commands: ['image'],
+		pattern: /#image\s*\(\s*"([^"]*)"/,
+		fileTypes: 'images' as const,
+	},
+	{
+		commands: ['read'],
+		pattern: /#read\s*\(\s*"([^"]*)"/,
+		fileTypes: 'all' as const,
+	},
+	{
+		commands: ['csv'],
+		pattern: /#csv\s*\(\s*"([^"]*)"/,
+		fileTypes: 'data' as const,
+	},
+	{
+		commands: ['json', 'yaml', 'toml'],
+		pattern: /#(json|yaml|toml)\s*\(\s*"([^"]*)"/,
+		fileTypes: 'data' as const,
+	},
+];
+
+const allCommandPatterns = [...latexCommandPatterns, ...typstCommandPatterns];
+
 const citationCommandPatterns = [
-    {
-        commands: ['cite', 'citep', 'citet', 'autocite', 'textcite', 'parencite', 'footcite', 'fullcite'],
-        pattern: /\\(cite|citep|citet|autocite|textcite|parencite|footcite|fullcite)\w*(?:\[[^\]]*\])?(?:\[[^\]]*\])?\{([^}]*)/,
-        type: 'citation' as const,
-    },
+	{
+		commands: ['cite', 'citep', 'citet', 'autocite', 'textcite', 'parencite', 'footcite', 'fullcite'],
+		pattern: /\\(cite|citep|citet|autocite|textcite|parencite|footcite|fullcite)\w*(?:\[[^\]]*\])?(?:\[[^\]]*\])?\{([^}]*)/,
+		type: 'citation' as const,
+	},
 ];
 
 const bibtexEntryPatterns = [
@@ -181,12 +212,13 @@ class AutocompleteProcessor {
 		// No need to update bibliography cache from state field
 	}
 
-	private findLatexCommand(context: CompletionContext): { command: string; partial: string; fileTypes: 'images' | 'tex' | 'bib' | 'all' } | null {
+	private findLatexCommand(context: CompletionContext): { command: string; partial: string; fileTypes: string } | null {
 		const line = context.state.doc.lineAt(context.pos);
 		const lineText = line.text;
 		const posInLine = context.pos - line.from;
 
-		for (const { pattern, fileTypes } of latexCommandPatterns) {
+		// Check both LaTeX and Typst patterns
+		for (const { pattern, fileTypes } of allCommandPatterns) {
 			const matches = Array.from(lineText.matchAll(new RegExp(pattern.source, 'g')));
 
 			for (const match of matches) {
@@ -196,7 +228,7 @@ class AutocompleteProcessor {
 				if (posInLine >= matchStart && posInLine <= commandEnd + 1) {
 					return {
 						command: match[1],
-						partial: match[2] || '',
+						partial: match[2] || match[3] || '', // Handle different capture groups
 						fileTypes,
 					};
 				}
@@ -266,6 +298,11 @@ class AutocompleteProcessor {
 
 	private isInLatexFile(): boolean {
 		return this.currentFilePath.endsWith('.tex') || this.currentFilePath.endsWith('.latex');
+	}
+
+	private isInTypstFile(): boolean {
+		return this.currentFilePath?.endsWith('.typ') ||
+			this.currentFilePath?.endsWith('.typst') || false;
 	}
 
 	private isInBibFile(): boolean {
@@ -532,8 +569,17 @@ class AutocompleteProcessor {
 			case 'tex':
 				candidates = cache.texFiles;
 				break;
+			case 'typst':
+				candidates = cache.typstFiles || [];
+				break;
 			case 'bib':
 				candidates = cache.bibFiles;
+				break;
+			case 'data':
+				// For Typst data files (CSV, JSON, YAML, TOML)
+				candidates = cache.allFiles.filter(path =>
+					/\.(csv|json|yaml|yml|toml)$/i.test(path)
+				);
 				break;
 			case 'all':
 			default:
@@ -586,12 +632,14 @@ class AutocompleteProcessor {
 		const posInLine = context.pos - line.from;
 
 		let partialStart = posInLine;
-		for (const { pattern } of latexCommandPatterns) {
+		for (const { pattern } of allCommandPatterns) {
 			const match = lineText.match(pattern);
 			if (match && match.index !== undefined) {
-				const bracePos = lineText.indexOf('{', match.index);
-				if (bracePos !== -1 && posInLine > bracePos) {
-					partialStart = line.from + bracePos + 1;
+				// Handle both LaTeX braces and Typst quotes
+				const openChar = lineText.includes('{') ? '{' : '"';
+				const openPos = lineText.indexOf(openChar, match.index);
+				if (openPos !== -1 && posInLine > openPos) {
+					partialStart = line.from + openPos + 1;
 					break;
 				}
 			}
@@ -600,7 +648,7 @@ class AutocompleteProcessor {
 		return {
 			from: partialStart,
 			options,
-			validFor: /^[^}]*$/,
+			validFor: /^[^}\"]*$/,
 		};
 	};
 

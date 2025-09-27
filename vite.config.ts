@@ -25,13 +25,14 @@ export default defineConfig({
 		rollupOptions: {
 			input: {
 				main: path.resolve(__dirname, 'index.html')
-			  	},
+			},
 			output: {
 				manualChunks: {
 					vendor: ["react", "react-dom"],
 					pdfjs: ["pdfjs-dist"],
 					codemirror: ["@codemirror/state", "@codemirror/view"],
 					yjs: ["yjs", "y-indexeddb", "y-webrtc"],
+					typst: ["@myriaddreamin/typst.ts"],
 				},
 			},
 		},
@@ -46,6 +47,10 @@ export default defineConfig({
 				{
 					src: "node_modules/pdfjs-dist/cmaps/*",
 					dest: "cmaps/",
+				},
+				{
+					src: "node_modules/@myriaddreamin/typst-ts-web-compiler/pkg/*",
+					dest: "typst-ts-web-compiler/pkg/",
 				},
 				{
 					src: "userdata.json",
@@ -93,6 +98,9 @@ export default defineConfig({
 			"yjs",
 			"y-codemirror.next",
 			"pdfjs-dist",
+		],
+		exclude: [
+			"@myriaddreamin/typst.ts",
 		],
 	},
 });

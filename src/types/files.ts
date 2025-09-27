@@ -20,6 +20,7 @@ export interface FilePathCache {
 	imageFiles: string[];
 	bibFiles: string[];
 	texFiles: string[];
+	typstFiles: string[];
 	allFiles: string[];
 	lastUpdate: number;
 }

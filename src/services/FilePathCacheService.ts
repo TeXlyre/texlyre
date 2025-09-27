@@ -65,22 +65,46 @@ class FilePathCacheService {
 	}
 
 	buildCacheFromFiles(files: FileNode[]): FilePathCache {
-		return {
-			files,
-			imageFiles: files
-				.filter(f => f.type === "file" && this.isImageFile(f.name))
-				.map(f => f.path),
-			bibFiles: files
-				.filter(f => f.type === "file" && f.name.endsWith('.bib'))
-				.map(f => f.path),
-			texFiles: files
-				.filter(f => f.type === "file" && (f.name.endsWith('.tex') || f.name.endsWith('.sty') || f.name.endsWith('.cls')))
-				.map(f => f.path),
-			allFiles: files
-				.filter(f => f.type === "file")
-				.map(f => f.path),
+		const imageExtensions = new Set(['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp', 'ico']);
+		const bibExtensions = new Set(['bib', 'bibtex']);
+		const texExtensions = new Set(['tex', 'latex']);
+		const typstExtensions = new Set(['typ', 'typst']); // Add this
+
+		const cache: FilePathCache = {
+			files: [],
+			imageFiles: [],
+			bibFiles: [],
+			texFiles: [],
+			typstFiles: [], // Add this
+			allFiles: [],
 			lastUpdate: Date.now(),
 		};
+
+		const processNode = (node: FileNode) => {
+			if (node.type === 'file') {
+				const ext = node.name.split('.').pop()?.toLowerCase();
+
+				cache.files.push(node);
+				cache.allFiles.push(node.path);
+
+				if (ext && imageExtensions.has(ext)) {
+					cache.imageFiles.push(node.path);
+				} else if (ext && bibExtensions.has(ext)) {
+					cache.bibFiles.push(node.path);
+				} else if (ext && texExtensions.has(ext)) {
+					cache.texFiles.push(node.path);
+				} else if (ext && typstExtensions.has(ext)) {
+					cache.typstFiles.push(node.path); // Add this
+				}
+			}
+
+			if (node.children) {
+				node.children.forEach(processNode);
+			}
+		};
+
+		files.forEach(processNode);
+		return cache;
 	}
 
 	getRelativePath(fromPath: string, toPath: string): string {

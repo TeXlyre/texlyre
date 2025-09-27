@@ -8,8 +8,10 @@ import { CollabProvider } from "../../contexts/CollabContext";
 import { FileSyncProvider } from "../../contexts/FileSyncContext";
 import { FileTreeProvider } from "../../contexts/FileTreeContext";
 import { LaTeXProvider } from "../../contexts/LaTeXContext";
+import { TypstProvider } from "../../contexts/TypstContext";
 import { useAuth } from "../../hooks/useAuth";
 import { useLaTeX } from "../../hooks/useLaTeX";
+import { useTypst } from "../../hooks/useTypst";
 import { useCollab } from "../../hooks/useCollab";
 import { useGlobalKeyboard } from "../../hooks/useGlobalKeyboard";
 import { useFileSystemBackup } from "../../hooks/useFileSystemBackup";
@@ -28,6 +30,7 @@ import OfflineBanner from "../common/OfflineBanner";
 import ToastContainer from "../common/ToastContainer";
 import FileDocumentController from "../editor/FileDocumentController";
 import LaTeXCompileButton from "../output/LaTeXCompileButton";
+import TypstCompileButton from "../output/TypstCompileButton";
 import ExportAccountModal from "../profile/ExportAccountModal";
 import DeleteAccountModal from "../profile/DeleteAccountModal";
 import ProfileSettingsModal from "../profile/ProfileSettingsModal";
@@ -91,11 +94,12 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	} | null>(null);
 	const lastSyncedMetadata = useRef({
 		name: "",
-		description: "" ,
+		description: "",
 		mainFile: undefined as string | undefined,
 		latexEngine: undefined as ("pdftex" | "xetex" | "luatex") | undefined
 	});
 	const { isCompiling, triggerAutoCompile } = useLaTeX();
+	const { isCompiling: isTypstCompiling, triggerAutoCompile: triggerTypstAutoCompile } = useTypst();
 	const { isOfflineMode } = useOffline();
 	const [showPrivacy, setShowPrivacy] = useState(false);
 	useGlobalKeyboard();
@@ -112,57 +116,89 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	};
 
 	useEffect(() => {
-		setShowAutoBackupModal(shouldShowAutoBackupModal);
-	}, [shouldShowAutoBackupModal]);
-
-	useEffect(() => {
 		const handleCompile = () => {
-		   if (isCompiling) return;
+			if (isCompiling || isTypstCompiling) return;
 
-		   const compileButton = document.querySelector('.header-compile-button .compile-button') as HTMLButtonElement;
-		   if (compileButton && !compileButton.disabled) {
-			  compileButton.click();
-		   }
+			// First try LaTeX compile button
+			const latexCompileButton = document.querySelector('.header-compile-button .compile-button') as HTMLButtonElement;
+			if (latexCompileButton && !latexCompileButton.disabled) {
+				latexCompileButton.click();
+				return;
+			}
+
+			// Then try Typst compile button if no LaTeX button is active
+			const typstCompileButton = document.querySelector('.header-typst-compile-button .compile-button') as HTMLButtonElement;
+			if (typstCompileButton && !typstCompileButton.disabled) {
+				typstCompileButton.click();
+			}
 		};
 
 		const handleCompileClean = () => {
-		   if (isCompiling) return;
+			if (isCompiling || isTypstCompiling) return;
 
-		   const compileButtonContainer = document.querySelector('.header-compile-button') as any;
-		   if (compileButtonContainer && compileButtonContainer.clearAndCompile) {
-			  compileButtonContainer.clearAndCompile();
-		   }
+			// First try LaTeX clear & compile
+			const latexCompileButtonContainer = document.querySelector('.header-compile-button') as any;
+			if (latexCompileButtonContainer && latexCompileButtonContainer.clearAndCompile) {
+				latexCompileButtonContainer.clearAndCompile();
+				return;
+			}
+
+			// Then try Typst clear & compile
+			const typstCompileButtonContainer = document.querySelector('.header-typst-compile-button') as any;
+			if (typstCompileButtonContainer && typstCompileButtonContainer.clearAndCompile) {
+				typstCompileButtonContainer.clearAndCompile();
+			}
 		};
 
 		const handleStopCompilation = () => {
-		   if (!isCompiling) return;
+			if (isCompiling) {
+				const latexCompileButton = document.querySelector('.header-compile-button .compile-button') as HTMLButtonElement;
+				if (latexCompileButton) {
+					latexCompileButton.click();
+				}
+			}
 
-		   const compileButton = document.querySelector('.header-compile-button .compile-button') as HTMLButtonElement;
-		   if (compileButton) {
-			  compileButton.click();
-		   }
+			if (isTypstCompiling) {
+				const typstCompileButton = document.querySelector('.header-typst-compile-button .compile-button') as HTMLButtonElement;
+				if (typstCompileButton) {
+					typstCompileButton.click();
+				}
+			}
+		};
+
+		// Add Typst-specific event handlers
+		const handleTypstCompile = () => {
+			if (isTypstCompiling) return;
+
+			const typstCompileButton = document.querySelector('.header-typst-compile-button .compile-button') as HTMLButtonElement;
+			if (typstCompileButton && !typstCompileButton.disabled) {
+				typstCompileButton.click();
+			}
 		};
 
 		document.addEventListener('trigger-compile', handleCompile);
 		document.addEventListener('trigger-compile-clean', handleCompileClean);
 		document.addEventListener('trigger-stop-compilation', handleStopCompilation);
+		document.addEventListener('trigger-typst-compile', handleTypstCompile);
 
 		return () => {
-		   document.removeEventListener('trigger-compile', handleCompile);
-		   document.removeEventListener('trigger-compile-clean', handleCompileClean);
-		   document.removeEventListener('trigger-stop-compilation', handleStopCompilation);
+			document.removeEventListener('trigger-compile', handleCompile);
+			document.removeEventListener('trigger-compile-clean', handleCompileClean);
+			document.removeEventListener('trigger-stop-compilation', handleStopCompilation);
+			document.removeEventListener('trigger-typst-compile', handleTypstCompile);
 		};
-	}, [isCompiling]);
+	}, [isCompiling, isTypstCompiling]);
 
 	useEffect(() => {
 		if (doc && isConnected) {
 			const timer = setTimeout(() => {
 				triggerAutoCompile();
+				triggerTypstAutoCompile();
 			}, 1000);
 
 			return () => clearTimeout(timer);
 		}
-	}, [doc, isConnected, triggerAutoCompile]);
+	}, [doc, isConnected, triggerAutoCompile, triggerTypstAutoCompile]);
 
 	useEffect(() => {
 		if (doc) {
@@ -425,6 +461,15 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						useSharedSettings={true}
 						docUrl={docUrl}
 					/>
+					<TypstCompileButton
+						className="header-typst-compile-button"
+						selectedDocId={localDocId}
+						documents={doc?.documents}
+						onNavigateToLinkedFile={handleNavigateToLinkedFile}
+						onExpandTypstOutput={handleExpandLatexOutput}
+						linkedFileInfo={linkedFileInfo}
+						shouldNavigateOnCompile={true}
+					/>
 					<ShareProjectButton
 						className="header-share-button"
 						projectName={projectName}
@@ -473,30 +518,30 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			)}
 
 			<footer>
-			  <p className="read-the-docs">
-				Built with TeXlyre
-				<a href="https://texlyre.github.io" target="_blank" rel="noreferrer">
-				  <img src={texlyreLogo} className="logo" alt="TeXlyre logo" />
-				</a>
-				<span className="legal-links">
-				  <br/> <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">
-					Documentation
-				  </a>
-					{" "} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">
-					Source Code
-				  </a>
-				  {" "} • <a href="#" onClick={(event) => {
-					  event.preventDefault();
-					  setShowPrivacy(true);
-				  }} className="privacy-link"> Privacy </a>
-				</span>
-			  </p>
-			  <ChatPanel className="footer-chat" />
+				<p className="read-the-docs">
+					Built with TeXlyre
+					<a href="https://texlyre.github.io" target="_blank" rel="noreferrer">
+						<img src={texlyreLogo} className="logo" alt="TeXlyre logo" />
+					</a>
+					<span className="legal-links">
+						<br /> <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">
+							Documentation
+						</a>
+						{" "} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">
+							Source Code
+						</a>
+						{" "} • <a href="#" onClick={(event) => {
+							event.preventDefault();
+							setShowPrivacy(true);
+						}} className="privacy-link"> Privacy </a>
+					</span>
+				</p>
+				<ChatPanel className="footer-chat" />
 			</footer>
 
 			<PrivacyModal
-			  isOpen={showPrivacy}
-			  onClose={() => setShowPrivacy(false)}
+				isOpen={showPrivacy}
+				onClose={() => setShowPrivacy(false)}
 			/>
 
 			<Modal
@@ -580,13 +625,15 @@ const EditorApp: React.FC<EditorAppProps> = (props) => {
 	return (
 		<CollabProvider docUrl={props.docUrl} collectionName="yjs_metadata">
 			<ChatProvider docUrl={props.docUrl}>
-					<FileTreeProvider docUrl={props.docUrl}>
-							<FileSyncProvider docUrl={props.docUrl}>
-								<LaTeXProvider>
-									<EditorAppView {...props} />
-								</LaTeXProvider>
-							</FileSyncProvider>
-					</FileTreeProvider>
+				<FileTreeProvider docUrl={props.docUrl}>
+					<FileSyncProvider docUrl={props.docUrl}>
+						<LaTeXProvider>
+							<TypstProvider>
+								<EditorAppView {...props} />
+							</TypstProvider>
+						</LaTeXProvider>
+					</FileSyncProvider>
+				</FileTreeProvider>
 			</ChatProvider>
 		</CollabProvider>
 	);
