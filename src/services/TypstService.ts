@@ -17,23 +17,16 @@ declare global {
 
 type CompilationStatus = "unloaded" | "loading" | "ready" | "compiling" | "error";
 
-/**
- * TypstService
- * - Offloads all Typst compilation to a Web Worker to keep the UI responsive
- * - Maps AbortController -> worker.terminate() for deterministic cancellation
- */
 class TypstService {
     private status: CompilationStatus = "unloaded";
     private statusListeners: Set<() => void> = new Set();
     private defaultFormat: TypstOutputFormat = "pdf";
     private compilationAbortController: AbortController | null = null;
 
-    // Worker plumbing
     private worker: Worker | null = null;
     private pendingResolves: Map<string, (v: any) => void> = new Map();
     private pendingRejects: Map<string, (e: any) => void> = new Map();
 
-    // ========= Initialization =========
 
     async initialize(): Promise<void> {
         if (this.status === "ready") return;
@@ -43,8 +36,6 @@ class TypstService {
 
         this.setStatus("loading");
         try {
-            // No more WASM init on main thread — we just ensure the worker can boot.
-            // Spinning a worker now avoids first-compile jank later.
             await this.warmWorker();
             this.setStatus("ready");
         } catch (error) {
@@ -64,19 +55,15 @@ class TypstService {
         });
     }
 
-    /** Create the worker (if needed) and ping it once so it's hot. */
     private async warmWorker(): Promise<void> {
         const worker = this.getWorker();
         await this.callWorker("ping", undefined);
     }
 
-    // ========= Worker core =========
-
     private getWorker(): Worker {
         if (this.worker) return this.worker;
 
-        // IMPORTANT: ensure your bundler supports `new URL(..., import.meta.url)` for workers (Vite, Rollup, etc.)
-        this.worker = new Worker(new URL("../workers/typst-worker.ts", import.meta.url), {
+        this.worker = new Worker(new URL("/typst-worker.ts", import.meta.url), {
             type: "module",
         });
 
@@ -154,8 +141,6 @@ class TypstService {
 
         return promise;
     }
-
-    // ========= Public API =========
 
     async compileTypst(
         mainFileName: string,
@@ -273,8 +258,6 @@ class TypstService {
     clearCache(): void {
         // no-op for now
     }
-
-    // ========= Internal helpers =========
 
     private async performCompilationInWorker(
         { mainContent, sources }: { mainContent: string; sources: Record<string, string | Uint8Array> },
