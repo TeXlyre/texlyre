@@ -393,6 +393,12 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		}
 	};
 
+	const handleExpandTypstOutput = () => {
+		if (!pdfWindowService.isWindowOpen()) {
+			document.dispatchEvent(new CustomEvent("expand-typst-output"));
+		}
+	};
+
 	const shareUrl = `${window.location.origin}${window.location.pathname}#${docUrl}`;
 	const selectedDocument = doc?.documents?.find((d) => d.id === localDocId);
 	const projectName = doc?.projectMetadata?.name || "Untitled Project";
@@ -466,7 +472,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						selectedDocId={localDocId}
 						documents={doc?.documents}
 						onNavigateToLinkedFile={handleNavigateToLinkedFile}
-						onExpandTypstOutput={handleExpandLatexOutput}
+						onExpandTypstOutput={handleExpandTypstOutput}
 						linkedFileInfo={linkedFileInfo}
 						shouldNavigateOnCompile={true}
 					/>

@@ -123,11 +123,14 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	const [showOutline, setShowOutline] = useState(false);
 	const [explorerHeight, setOutlineHeight] = useState(600);
 	const [latexOutputWidth, setLatexOutputWidth] = useState(550);
+	const [typstOutputWidth, setTypstOutputWidth] = useState(550);
 	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 	const [latexOutputCollapsed, setLatexOutputCollapsed] = useState(false);
+	const [typstOutputCollapsed, setTypstOutputCollapsed] = useState(false);
 	const [showLatexOutput, setShowLatexOutput] = useState(false);
 	const [showTypstOutput, setShowTypstOutput] = useState(false);
 	const [temporaryLatexExpand, setTemporaryLatexExpand] = useState(false);
+	const [temporaryTypstExpand, setTemporaryTypstExpand] = useState(false);
 	const [documentSelectionChange, setDocumentSelectionChange] = useState(0);
 	const [fileSelectionChange, setFileSelectionChange] = useState(0);
 	const [hasNavigatedToFile, setHasNavigatedToFile] = useState(false);
@@ -177,6 +180,13 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		});
 
 		registerProperty({
+			id: "typst-output-width",
+			category: "UI",
+			subcategory: "Layout",
+			defaultValue: typstOutputWidth,
+		});
+
+		registerProperty({
 			id: "sidebar-collapsed",
 			category: "UI",
 			subcategory: "Layout",
@@ -185,6 +195,13 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
 		registerProperty({
 			id: "latex-output-collapsed",
+			category: "UI",
+			subcategory: "Layout",
+			defaultValue: false,
+		});
+
+		registerProperty({
+			id: "typst-output-collapsed",
 			category: "UI",
 			subcategory: "Layout",
 			defaultValue: false,
@@ -205,8 +222,10 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
 		const storedSidebarWidth = getProperty("sidebar-width");
 		const storedLatexWidth = getProperty("latex-output-width");
+		const storedTypstWidth = getProperty("typst-output-width");
 		const storedSidebarCollapsed = getProperty("sidebar-collapsed");
 		const storedLatexCollapsed = getProperty("latex-output-collapsed");
+		const storedTypstCollapsed = getProperty("typst-output-collapsed");
 		const storedOutlineHeight = getProperty("explorer-height");
 
 		if (storedSidebarWidth !== undefined) {
@@ -217,12 +236,20 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 			setLatexOutputWidth(Number(storedLatexWidth));
 		}
 
+		if (storedTypstWidth !== undefined) {
+			setTypstOutputWidth(Number(storedTypstWidth));
+		}
+
 		if (storedSidebarCollapsed !== undefined) {
 			setSidebarCollapsed(Boolean(storedSidebarCollapsed));
 		}
 
 		if (storedLatexCollapsed !== undefined) {
 			setLatexOutputCollapsed(Boolean(storedLatexCollapsed));
+		}
+
+		if (storedTypstCollapsed !== undefined) {
+			setTypstOutputCollapsed(Boolean(storedTypstCollapsed));
 		}
 
 		if (storedOutlineHeight !== undefined) {
@@ -340,6 +367,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 			handleNavigateToCompiledFile,
 		);
 		document.addEventListener("expand-latex-output", handleLatexOutputExpand);
+		document.addEventListener("expand-typst-output", handleTypstOutputExpand);
 
 		return () => {
 			document.removeEventListener(
@@ -354,9 +382,14 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 				"expand-latex-output",
 				handleLatexOutputExpand,
 			);
+			document.removeEventListener(
+				"expand-typst-output",
+				handleTypstOutputExpand,
+			);
 		};
 	}, [
 		showLatexOutput,
+		showTypstOutput,
 		fileTree,
 		isEditingFile,
 		selectedFileId,
@@ -375,10 +408,10 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 					// Only show one output at a time
 					if (file.name.endsWith(".tex")) {
 						setShowLatexOutput(true);
-						setShowTypstOutput(false);  // Ensure Typst is hidden
+						setShowTypstOutput(false);
 					} else if (file.name.endsWith(".typ")) {
 						setShowTypstOutput(true);
-						setShowLatexOutput(false);  // Ensure LaTeX is hidden
+						setShowLatexOutput(false);
 					} else {
 						setShowLatexOutput(false);
 						setShowTypstOutput(false);
@@ -411,10 +444,10 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 						// Only show one output at a time
 						if (linkedFile.name.endsWith(".tex")) {
 							setShowLatexOutput(true);
-							setShowTypstOutput(false);  // Ensure Typst is hidden
+							setShowTypstOutput(false);
 						} else if (linkedFile.name.endsWith(".typ")) {
 							setShowTypstOutput(true);
-							setShowLatexOutput(false);  // Ensure LaTeX is hidden
+							setShowLatexOutput(false);
 						} else {
 							setShowLatexOutput(false);
 							setShowTypstOutput(false);
@@ -861,6 +894,26 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		setTemporaryLatexExpand(true);
 	};
 
+	const handleTypstOutputWidthResize = (width: number) => {
+		setTypstOutputWidth(width);
+		setProperty("typst-output-width", width);
+	}
+
+	const handleTypstOutputCollapse = (collapsed: boolean) => {
+		setTypstOutputCollapsed(collapsed);
+		setProperty("typst-output-collapsed", collapsed);
+		if (collapsed) {
+			setTemporaryTypstExpand(false);
+		}
+	};
+
+	const handleTypstOutputExpand = () => {
+		if (!showTypstOutput) {
+			setShowTypstOutput(true);
+		}
+		setTemporaryTypstExpand(true);
+	};
+
 	const handleNavigateToLinkedFile = () => {
 		if (linkedFileInfo?.filePath) {
 			document.dispatchEvent(
@@ -1014,20 +1067,20 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 				{showTypstOutput && (
 					<ResizablePanel
 						direction="horizontal"
-						width={latexOutputWidth}
+						width={typstOutputWidth}
 						minWidth={400}
 						maxWidth={1200}
 						alignment="start"
-						onResize={handleLatexOutputWidthResize}
-						collapsed={latexOutputCollapsed && !temporaryLatexExpand}
-						onCollapse={handleLatexOutputCollapse}
+						onResize={handleTypstOutputWidthResize}
+						collapsed={typstOutputCollapsed && !temporaryTypstExpand}
+						onCollapse={handleTypstOutputCollapse}
 						className="typst-output-container"
 					>
 						<TypstOutput
 							selectedDocId={selectedDocId}
 							documents={documents}
 							onNavigateToLinkedFile={handleNavigateToLinkedFile}
-							onExpandTypstOutput={handleLatexOutputExpand}
+							onExpandTypstOutput={handleTypstOutputExpand}
 							linkedFileInfo={linkedFileInfo}
 						/>
 					</ResizablePanel>

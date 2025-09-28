@@ -34,7 +34,19 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 	const [latexEngine, setLatexEngine] = useState<"pdftex" | "xetex" | "luatex">(
 		"pdftex",
 	);
+	const [activeCompiler, setActiveCompiler] = useState<string | null>(null);
 	const settingsRegistered = useRef(false);
+
+	useEffect(() => {
+		const handleCompilerActive = (event: CustomEvent) => {
+			setActiveCompiler(event.detail.type);
+		};
+
+		document.addEventListener('compiler-active', handleCompilerActive as EventListener);
+		return () => {
+			document.removeEventListener('compiler-active', handleCompilerActive as EventListener);
+		};
+	}, []);
 
 	useEffect(() => {
 		if (settingsRegistered.current) return;
@@ -202,6 +214,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
 		setIsCompiling(true);
 		setCompileError(null);
+		setActiveCompiler('latex');
 
 		try {
 			const result = await latexService.compileLaTeX(mainFileName, fileTree);
@@ -282,6 +295,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
 		setIsCompiling(true);
 		setCompileError(null);
+		setActiveCompiler('latex');
 
 		try {
 			const result = await latexService.clearCacheAndCompile(mainFileName, fileTree);
@@ -348,6 +362,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 				clearCache,
 				compileWithClearCache,
 				triggerAutoCompile,
+				activeCompiler,
 			}}
 		>
 			{children}

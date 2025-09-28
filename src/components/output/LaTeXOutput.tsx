@@ -33,11 +33,15 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 	onExpandLatexOutput,
 	linkedFileInfo,
 }) => {
-	const { compileLog, compiledPdf, currentView, toggleOutputView } = useLaTeX();
+	const { compileLog, compiledPdf, currentView, toggleOutputView, activeCompiler } = useLaTeX();
 	const { selectedFileId, getFile } = useFileTree();
 	const { getSetting } = useSettings();
 	const { getProperty, setProperty, registerProperty } = useProperties();
 	const propertiesRegistered = useRef(false);
+
+	if (activeCompiler !== 'latex' && !compileLog && !compiledPdf) {
+		return null;
+	}
 
 	const [visualizerHeight, setVisualizerHeight] = useState(300);
 	const [visualizerCollapsed, setVisualizerCollapsed] = useState(false);
@@ -127,7 +131,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 
 	const pdfViewerContent = useMemo(() => {
 		if (currentView !== "pdf" || !compiledPdf) return null;
-		
+
 		return (
 			<div className="pdf-viewer">
 				{pdfRendererPlugin && useEnhancedRenderer ? (
@@ -187,37 +191,37 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 			) : (
 				<>
 					{currentView === "log" && (
-					  <div className="log-view-container">
-						{loggerPlugin ? (
-						  <div className="split-log-view">
-							<ResizablePanel
-							  direction="vertical"
-							  alignment="end"
-							  height={visualizerHeight}
-							  minHeight={150}
-							  maxHeight={600}
-							  className="visualizer-panel-wrapper"
-							  onResize={handleVisualizerResize}
-							  collapsed={visualizerCollapsed}
-							  onCollapse={handleVisualizerCollapse}
-							>
-							  <div className="visualizer-panel">
-								{React.createElement(loggerPlugin.renderVisualizer, {
-								  log: compileLog,
-								  onLineClick: handleLineClick,
-								})}
-							  </div>
-							</ResizablePanel>
-							<div className="raw-log-panel">
-							  <pre className="log-viewer">{compileLog}</pre>
-							</div>
-						  </div>
-						) : (
-						  <div className="log-viewer">
-							<pre>{compileLog}</pre>
-						  </div>
-						)}
-					  </div>
+						<div className="log-view-container">
+							{loggerPlugin ? (
+								<div className="split-log-view">
+									<ResizablePanel
+										direction="vertical"
+										alignment="end"
+										height={visualizerHeight}
+										minHeight={150}
+										maxHeight={600}
+										className="visualizer-panel-wrapper"
+										onResize={handleVisualizerResize}
+										collapsed={visualizerCollapsed}
+										onCollapse={handleVisualizerCollapse}
+									>
+										<div className="visualizer-panel">
+											{React.createElement(loggerPlugin.renderVisualizer, {
+												log: compileLog,
+												onLineClick: handleLineClick,
+											})}
+										</div>
+									</ResizablePanel>
+									<div className="raw-log-panel">
+										<pre className="log-viewer">{compileLog}</pre>
+									</div>
+								</div>
+							) : (
+								<div className="log-viewer">
+									<pre>{compileLog}</pre>
+								</div>
+							)}
+						</div>
 					)}
 
 					{pdfViewerContent}

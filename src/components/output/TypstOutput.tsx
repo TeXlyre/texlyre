@@ -36,7 +36,8 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
         compiledSvg,
         currentView,
         toggleOutputView,
-        currentFormat
+        currentFormat,
+        activeCompiler
     } = useTypst();
     const { selectedFileId, getFile } = useFileTree();
     const { getSetting } = useSettings();
@@ -179,7 +180,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
                             content: compiledPdf.buffer,
                             mimeType: "application/pdf",
                             fileName: "output.pdf",
-                            onSave: handleSavePdf,  // Changed from onDownload to onSave
+                            onSave: handleSavePdf,
                         })
                     ) : (
                         <embed

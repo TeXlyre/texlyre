@@ -11,24 +11,9 @@ import {
 
 import { useFileTree } from "../hooks/useFileTree";
 import { useSettings } from "../hooks/useSettings";
-import { typstService, type TypstCompileResult, type TypstOutputFormat } from "../services/TypstService";
+import type { TypstContextType, TypstOutputFormat } from "../types/typst";
+import { typstService } from "../services/TypstService";
 import { parseUrlFragments } from "../utils/urlUtils";
-
-export interface TypstContextType {
-    isCompiling: boolean;
-    compileError: string | null;
-    compiledPdf: Uint8Array | null;
-    compiledSvg: string | null;
-    compileLog: string;
-    currentFormat: TypstOutputFormat;
-    setCurrentFormat: (format: TypstOutputFormat) => void;
-    compileDocument: (mainFileName: string, format?: TypstOutputFormat) => Promise<void>;
-    stopCompilation: () => void;
-    toggleOutputView: () => void;
-    currentView: "log" | "output";
-    clearCache: () => void;
-    triggerAutoCompile: () => void;
-}
 
 export const TypstContext = createContext<TypstContextType | null>(null);
 
@@ -47,6 +32,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     const [compileLog, setCompileLog] = useState<string>("");
     const [currentView, setCurrentView] = useState<"log" | "output">("log");
     const [currentFormat, setCurrentFormat] = useState<TypstOutputFormat>("pdf");
+    const [activeCompiler, setActiveCompiler] = useState<string | null>(null);
     const settingsRegistered = useRef(false);
 
     useEffect(() => {
@@ -133,6 +119,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 
         setIsCompiling(true);
         setCompileError(null);
+        setActiveCompiler('typst');
 
         setCompiledPdf(null);
         setCompiledSvg(null);
@@ -221,6 +208,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
                 currentView,
                 clearCache,
                 triggerAutoCompile,
+                activeCompiler,
             }}
         >
             {children}

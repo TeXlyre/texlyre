@@ -1,19 +1,11 @@
 // src/services/TypstService.ts
 import { nanoid } from "nanoid";
+
+import type { TypstCompileResult, TypstOutputFormat } from "../types/typst";
 import type { FileNode } from "../types/files";
 import { fileStorageService } from "./FileStorageService";
 import { notificationService } from "./NotificationService";
 import { fileCommentProcessor } from "../utils/fileCommentProcessor";
-
-export type TypstOutputFormat = "pdf" | "svg";
-
-export interface TypstCompileResult {
-    pdf?: Uint8Array;
-    svg?: string;
-    status: number;
-    log: string;
-    format: TypstOutputFormat;
-}
 
 interface TypstInstance {
     pdf(options: { mainContent: string; sources?: Record<string, string | Uint8Array> }): Promise<Uint8Array>;
