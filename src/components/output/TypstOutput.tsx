@@ -171,87 +171,86 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     const outputViewerContent = useMemo(() => {
         if (currentView !== "output") return null;
 
-        const currentOutput = getCurrentOutput();
-        if (!currentOutput) return null;
+        if (currentFormat === "pdf" && compiledPdf) {
+            return (
+                <div className="pdf-viewer">
+                    {pdfRendererPlugin && useEnhancedRenderer ? (
+                        React.createElement(pdfRendererPlugin.renderOutput, {
+                            content: compiledPdf.buffer,
+                            mimeType: "application/pdf",
+                            fileName: "output.pdf",
+                            onSave: handleSavePdf,  // Changed from onDownload to onSave
+                        })
+                    ) : (
+                        <embed
+                            src={URL.createObjectURL(new Blob([compiledPdf], { type: "application/pdf" }))}
+                            type="application/pdf"
+                            style={{ width: "100%", height: "100%" }}
+                        />
+                    )}
+                </div>
+            );
+        }
 
-        return (
-            <div className="output-viewer">
-                {currentFormat === "pdf" && compiledPdf && (
-                    <div className="pdf-viewer">
-                        {pdfRendererPlugin && useEnhancedRenderer ? (
-                            React.createElement(pdfRendererPlugin.renderOutput, {
-                                content: compiledPdf.buffer,
-                                mimeType: "application/pdf",
-                                fileName: "output.pdf",
-                                onSave: handleSavePdf,
-                            })
-                        ) : (
-                            <embed
-                                src={URL.createObjectURL(new Blob([compiledPdf], { type: "application/pdf" }))}
-                                type="application/pdf"
-                                style={{ width: "100%", height: "100%" }}
-                            />
-                        )}
+        if (currentFormat === "svg" && compiledSvg) {
+            return (
+                <div className="svg-viewer">
+                    <div className="svg-canvas-container" style={{
+                        width: "100%",
+                        height: "calc(100% - 60px)",
+                        overflow: "auto",
+                        padding: "1rem",
+                        backgroundColor: "white",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center"
+                    }}>
+                        <canvas
+                            ref={(canvas) => {
+                                if (canvas && compiledSvg) {
+                                    const ctx = canvas.getContext('2d');
+                                    const img = new Image();
+                                    const svgBlob = new Blob([compiledSvg], { type: 'image/svg+xml' });
+                                    const url = URL.createObjectURL(svgBlob);
+
+                                    img.onload = () => {
+                                        canvas.width = img.width || 800;
+                                        canvas.height = img.height || 600;
+                                        ctx?.drawImage(img, 0, 0);
+                                        URL.revokeObjectURL(url);
+                                    };
+                                    img.src = url;
+                                }
+                            }}
+                            style={{
+                                maxWidth: "100%",
+                                maxHeight: "100%",
+                                border: "1px solid #ddd"
+                            }}
+                        />
                     </div>
-                )}
-
-                {currentFormat === "svg" && compiledSvg && (
-                    <div className="svg-viewer">
-                        <div className="svg-canvas-container" style={{
-                            width: "100%",
-                            height: "calc(100% - 60px)",
-                            overflow: "auto",
-                            padding: "1rem",
-                            backgroundColor: "white",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center"
-                        }}>
-                            <canvas
-                                ref={(canvas) => {
-                                    if (canvas && compiledSvg) {
-                                        const ctx = canvas.getContext('2d');
-                                        const img = new Image();
-                                        const svgBlob = new Blob([compiledSvg], { type: 'image/svg+xml' });
-                                        const url = URL.createObjectURL(svgBlob);
-
-                                        img.onload = () => {
-                                            canvas.width = img.width || 800;
-                                            canvas.height = img.height || 600;
-                                            ctx?.drawImage(img, 0, 0);
-                                            URL.revokeObjectURL(url);
-                                        };
-                                        img.src = url;
-                                    }
-                                }}
-                                style={{
-                                    maxWidth: "100%",
-                                    maxHeight: "100%",
-                                    border: "1px solid #ddd"
-                                }}
-                            />
-                        </div>
-                        <div className="svg-controls">
-                            <button
-                                onClick={() => handleSaveOutput("svg", "output.svg")}
-                                className="save-button"
-                                style={{
-                                    padding: "0.5rem 1rem",
-                                    backgroundColor: "var(--primary-color)",
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "4px",
-                                    cursor: "pointer",
-                                    margin: "1rem"
-                                }}
-                            >
-                                Save SVG
-                            </button>
-                        </div>
+                    <div className="svg-controls">
+                        <button
+                            onClick={() => handleSaveOutput("svg", "output.svg")}
+                            className="save-button"
+                            style={{
+                                padding: "0.5rem 1rem",
+                                backgroundColor: "var(--primary-color)",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "4px",
+                                cursor: "pointer",
+                                margin: "1rem"
+                            }}
+                        >
+                            Save SVG
+                        </button>
                     </div>
-                )}
-            </div>
-        );
+                </div>
+            );
+        }
+
+        return null;
     }, [currentView, currentFormat, compiledPdf, compiledSvg, pdfRendererPlugin, useEnhancedRenderer, handleSavePdf, handleSaveOutput]);
 
     const hasAnyOutput = compiledPdf || compiledSvg;

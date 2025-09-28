@@ -1,4 +1,5 @@
-.latex-output-container {
+.latex-output-container,
+.typst-output-container {
 	background-color: var(--pico-secondary-background);
 	border-radius: var(--radius-lg);
 	border-left: 1px solid var(--accent-border);
@@ -41,7 +42,8 @@
 	z-index: 10;
 }
 
-.latex-output {
+.latex-output,
+.typst-output {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
@@ -167,7 +169,8 @@ embed {
 	overflow: auto;
 }
 
-.latex-compile-buttons {
+.latex-compile-buttons,
+.typst-compile-buttons {
 	display: flex;
 	gap: var(--space-xs);
 	position: relative;
@@ -191,7 +194,8 @@ embed {
 	align-items: center;
 }
 
-.latex-button {
+.latex-button,
+.typst-button {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -203,7 +207,8 @@ embed {
 	transition: background-color var(--transition-normal);
 }
 
-.latex-dropdown {
+.latex-dropdown,
+.typst-dropdown {
 	position: absolute;
 	top: 100%;
 	right: 0;
@@ -218,7 +223,8 @@ embed {
 	overflow: hidden;
 }
 
-.compile-button-group .latex-button {
+.compile-button-group .latex-button,
+.compile-button-group .typst-button {
 	border-radius: 0;
 	padding: 0 var(--space-ss);
 	height: var(--button-height-md);
