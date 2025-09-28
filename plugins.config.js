@@ -7,6 +7,8 @@ export default {
 		"viewers/pdf",
 		"renderers/pdf",
 		// "renderers/pdf_html_experimental",
+		"renderers/svg",
+		"renderers/canvas",
 		"loggers/latex_visualizer",
 		// "lsp/jabref",
 		"backup/github",

@@ -3,10 +3,10 @@ import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useFileTree } from "../../hooks/useFileTree";
-import type { TypstOutputFormat } from "../../services/TypstService";
 import { useTypst } from "../../hooks/useTypst";
 import { useSettings } from "../../hooks/useSettings";
 import type { FileNode } from "../../types/files";
+import type { TypstOutputFormat } from "../../types/typst";
 import { isTemporaryFile } from "../../utils/fileUtils";
 import { ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon } from "../common/Icons";
 
@@ -292,6 +292,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                         >
                             <option value="pdf">PDF</option>
                             <option value="svg">SVG</option>
+                            <option value="canvas">Canvas</option>
                         </select>
                     </div>
                     <div className="cache-controls">

@@ -29,6 +29,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     const [compileError, setCompileError] = useState<string | null>(null);
     const [compiledPdf, setCompiledPdf] = useState<Uint8Array | null>(null);
     const [compiledSvg, setCompiledSvg] = useState<string | null>(null);
+    const [compiledCanvas, setCompiledCanvas] = useState<Uint8Array | null>(null);
     const [compileLog, setCompileLog] = useState<string>("");
     const [currentView, setCurrentView] = useState<"log" | "output">("log");
     const [currentFormat, setCurrentFormat] = useState<TypstOutputFormat>("pdf");
@@ -84,6 +85,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
             options: [
                 { label: "PDF", value: "pdf" },
                 { label: "SVG", value: "svg" },
+                { label: "Canvas", value: "canvas" },
             ],
             onChange: (value) => {
                 setCurrentFormat(value as TypstOutputFormat);
@@ -123,6 +125,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 
         setCompiledPdf(null);
         setCompiledSvg(null);
+        setCompiledCanvas(null);
 
         try {
             const result = await typstService.compileTypst(mainFileName, fileTree, format);
@@ -139,6 +142,12 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
                     case "svg":
                         if (result.svg) {
                             setCompiledSvg(result.svg);
+                            setCurrentView("output");
+                        }
+                        break;
+                    case "canvas":
+                        if (result.canvas) {
+                            setCompiledCanvas(result.canvas);
                             setCurrentView("output");
                         }
                         break;
@@ -199,6 +208,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
                 compileError,
                 compiledPdf,
                 compiledSvg,
+                compiledCanvas,
                 compileLog,
                 currentFormat,
                 setCurrentFormat,

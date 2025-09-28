@@ -188,13 +188,21 @@ class PluginRegistryManager {
 		return this.registry.renderers;
 	}
 
-	getRendererForOutput(outputType: string): RendererPlugin | null {
-		for (const renderer of this.registry.renderers) {
-			if (renderer.canHandle(outputType)) {
-				return renderer;
-			}
+	getRendererForOutput(outputType: string, preferredRenderer?: string): RendererPlugin | null {
+		const availableRenderers = this.registry.renderers.filter(renderer =>
+			renderer.canHandle(outputType)
+		);
+
+		if (availableRenderers.length === 0) return null;
+
+		if (preferredRenderer) {
+			const preferred = availableRenderers.find(renderer =>
+				renderer.id === preferredRenderer
+			);
+			if (preferred) return preferred;
 		}
-		return null;
+
+		return availableRenderers[0];
 	}
 
 	getLoggers(): LoggerPlugin[] {
