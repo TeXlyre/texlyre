@@ -18,6 +18,7 @@ import { svgRendererSettings } from "./settings";
 import { useSettings } from "../../../src/hooks/useSettings";
 import { useProperties } from "../../../src/hooks/useProperties";
 import type { RendererProps } from "../../../src/plugins/PluginInterface";
+import { SvgPageManager } from "./SvgPageManager";
 import "./styles.css";
 
 const SvgRenderer: React.FC<RendererProps> = ({
@@ -43,7 +44,8 @@ const SvgRenderer: React.FC<RendererProps> = ({
     const [scrollView, setScrollView] = useState<boolean>(false);
     const [visiblePages, setVisiblePages] = useState<Set<number>>(new Set());
     const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-    const [svgPages, setSvgPages] = useState<string[]>([]);
+    const [pageManager] = useState(() => new SvgPageManager(10, 2));
+    const [loadedPageNumbers, setLoadedPageNumbers] = useState<Set<number>>(new Set());
     const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
     const containerRef = useRef<HTMLDivElement>(null);
     const contentElRef = useRef<HTMLDivElement>(null);
@@ -97,17 +99,12 @@ const SvgRenderer: React.FC<RendererProps> = ({
                 const svgText = textDecoder.decode(content);
                 setSvgContent(svgText);
 
-                const svgDoc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
-                const svgElements = svgDoc.querySelectorAll('svg');
+                const pageCount = pageManager.parseSvgDocument(svgText);
+                setNumPages(pageCount);
 
-                if (svgElements.length > 1) {
-                    const pages = Array.from(svgElements).map(svg => svg.outerHTML);
-                    setSvgPages(pages);
-                    setNumPages(pages.length);
-                } else {
-                    setSvgPages([svgText]);
-                    setNumPages(1);
-                }
+                pageManager.getPage(1);
+                pageManager.preloadPages(1, scrollView);
+                setLoadedPageNumbers(new Set([1]));
 
                 setCurrentPage(1);
                 if (!isEditingPageInput) setPageInput("1");
@@ -120,7 +117,21 @@ const SvgRenderer: React.FC<RendererProps> = ({
         };
 
         loadSvgContent();
-    }, [content, isEditingPageInput]);
+    }, [content, isEditingPageInput, pageManager, scrollView]);
+
+    useEffect(() => {
+        if (!isLoading && numPages > 0) {
+            pageManager.preloadPages(currentPage, scrollView);
+
+            const newLoadedPages = new Set<number>();
+            for (let i = 1; i <= numPages; i++) {
+                if (pageManager.isPageLoaded(i)) {
+                    newLoadedPages.add(i);
+                }
+            }
+            setLoadedPageNumbers(newLoadedPages);
+        }
+    }, [currentPage, scrollView, pageManager, numPages, isLoading]);
 
     const handlePreviousPage = useCallback(() => {
         if (scrollView) {
@@ -276,8 +287,40 @@ const SvgRenderer: React.FC<RendererProps> = ({
     }, []);
 
     const renderSvgPage = useCallback((pageNumber: number) => {
-        const pageContent = svgPages[pageNumber - 1];
-        if (!pageContent) return null;
+        const pageContent = pageManager.getPage(pageNumber);
+
+        if (!pageContent) {
+            const metadata = pageManager.getPageMetadata(pageNumber);
+            const width = metadata?.width || 595;
+            const height = metadata?.height || 842;
+
+            return (
+                <div
+                    className="svg-page-container"
+                    style={{
+                        transform: `scale(${scale})`,
+                        transformOrigin: 'top left',
+                        maxWidth: '100%',
+                        overflow: 'visible'
+                    }}
+                >
+                    <div
+                        style={{
+                            width: `${width}px`,
+                            height: `${height}px`,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            backgroundColor: '#f5f5f5',
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                            margin: '10px'
+                        }}
+                    >
+                        <span style={{ color: '#999' }}>Loading page {pageNumber}...</span>
+                    </div>
+                </div>
+            );
+        }
 
         return (
             <div
@@ -302,7 +345,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
                 />
             </div>
         );
-    }, [svgPages, scale]);
+    }, [pageManager, scale]);
 
     useEffect(() => {
         if (!scrollView) return;
@@ -317,6 +360,8 @@ const SvgRenderer: React.FC<RendererProps> = ({
                     );
                     if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
                         newVisiblePages.add(pageNum);
+                        pageManager.getPage(pageNum);
+                        pageManager.preloadPages(pageNum, true);
                     } else {
                         newVisiblePages.delete(pageNum);
                     }
@@ -329,6 +374,14 @@ const SvgRenderer: React.FC<RendererProps> = ({
                     setCurrentPage(lowestVisiblePage);
                     if (!isEditingPageInput) setPageInput(String(lowestVisiblePage));
                 }
+
+                const newLoadedPages = new Set<number>();
+                for (let i = 1; i <= numPages; i++) {
+                    if (pageManager.isPageLoaded(i)) {
+                        newLoadedPages.add(i);
+                    }
+                }
+                setLoadedPageNumbers(newLoadedPages);
             },
             {
                 threshold: [0.5],
@@ -342,7 +395,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
         });
 
         return () => observer.disconnect();
-    }, [scrollView, visiblePages, isFullscreen, isEditingPageInput]);
+    }, [scrollView, visiblePages, isFullscreen, isEditingPageInput, pageManager, numPages]);
 
     const handleExport = useCallback(() => {
         if (onDownload && fileName) {
@@ -394,6 +447,12 @@ const SvgRenderer: React.FC<RendererProps> = ({
             window.removeEventListener("keydown", handleKeyDown);
         };
     }, [handlePreviousPage, handleNextPage]);
+
+    useEffect(() => {
+        return () => {
+            pageManager.clear();
+        };
+    }, [pageManager]);
 
     if (!svgRendererEnable) {
         return (
@@ -541,7 +600,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
                     </div>
                 )}
 
-                {!isLoading && !error && svgPages.length > 0 && (
+                {!isLoading && !error && numPages > 0 && (
                     scrollView ? (
                         Array.from(new Array(numPages), (_, index) => {
                             const pageNumber = index + 1;
