@@ -34,7 +34,7 @@ import "./styles/components/share-project.css";
 import "./styles/components/latex-templates.css"
 import "./styles/components/lsp.css";
 import "./styles/components/chat.css";
-import "./styles/components/latex.css";
+import "./styles/components/latex-typst.css";
 import "./styles/components/plugin-header.css";
 import "./styles/components/settings.css";
 import "./styles/components/offline.css";
@@ -73,20 +73,20 @@ function App() {
 			<SettingsProvider>
 				<OfflineProvider>
 					<AuthProvider>
-							<PropertiesProvider>
-								<ThemeProvider
-									defaultThemeId="texlyre-theme"
-									defaultVariant="system"
-								>
-									<SecretsProvider>
-										<FileSystemBackupProvider>
-											<EditorProvider>
-												<AppContent />
-											</EditorProvider>
-										</FileSystemBackupProvider>
-									</SecretsProvider>
-								</ThemeProvider>
-							</PropertiesProvider>
+						<PropertiesProvider>
+							<ThemeProvider
+								defaultThemeId="texlyre-theme"
+								defaultVariant="system"
+							>
+								<SecretsProvider>
+									<FileSystemBackupProvider>
+										<EditorProvider>
+											<AppContent />
+										</EditorProvider>
+									</FileSystemBackupProvider>
+								</SecretsProvider>
+							</ThemeProvider>
+						</PropertiesProvider>
 					</AuthProvider>
 				</OfflineProvider>
 			</SettingsProvider>
