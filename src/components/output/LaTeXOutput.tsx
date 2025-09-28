@@ -39,10 +39,6 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 	const { getProperty, setProperty, registerProperty } = useProperties();
 	const propertiesRegistered = useRef(false);
 
-	if (activeCompiler !== 'latex' && !compileLog && !compiledPdf) {
-		return null;
-	}
-
 	const [visualizerHeight, setVisualizerHeight] = useState(300);
 	const [visualizerCollapsed, setVisualizerCollapsed] = useState(false);
 

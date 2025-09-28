@@ -1,5 +1,6 @@
 // src/services/TypstService.ts
 import { nanoid } from "nanoid";
+import { $typst } from "@myriaddreamin/typst.ts";
 
 import type { TypstCompileResult, TypstOutputFormat } from "../types/typst";
 import type { FileNode } from "../types/files";
@@ -7,16 +8,10 @@ import { fileStorageService } from "./FileStorageService";
 import { notificationService } from "./NotificationService";
 import { fileCommentProcessor } from "../utils/fileCommentProcessor";
 
-interface TypstAPI {
-    pdf(options: { mainContent: string; sources?: Record<string, string | Uint8Array> }): Promise<Uint8Array>;
-    svg(options: { mainContent: string; sources?: Record<string, string | Uint8Array> }): Promise<string>;
-    setCompilerInitOptions(options: { getModule: () => string }): Promise<void>;
-    setRendererInitOptions(options: { getModule: () => string }): Promise<void>;
-}
 
 declare global {
     interface Window {
-        $typst?: TypstAPI;
+        $typst?: typeof $typst;
     }
 }
 

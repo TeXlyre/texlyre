@@ -341,8 +341,8 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
                     )}
                     {currentView === "log" && (
                         <button
-                            className={`tab-button ${currentView === "output" ? "active" : ""}`}
-                            onClick={() => currentView !== "output" && toggleOutputView()}
+                            className={`tab-button`}
+                            onClick={() => toggleOutputView()}
                             disabled={!hasAnyOutput}
                         >
                             Output
