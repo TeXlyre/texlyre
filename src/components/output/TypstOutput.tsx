@@ -37,6 +37,8 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
         currentView,
         toggleOutputView,
         currentFormat,
+        setCurrentFormat,
+        compileDocument,
         activeCompiler
     } = useTypst();
     const { selectedFileId, getFile } = useFileTree();
@@ -46,6 +48,8 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 
     const [visualizerHeight, setVisualizerHeight] = useState(300);
     const [visualizerCollapsed, setVisualizerCollapsed] = useState(false);
+
+    const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
     const useEnhancedRenderer = getSetting("pdf-renderer-enable")?.value ?? true;
     const loggerPlugin = pluginRegistry.getLoggerForType("typst");
@@ -82,6 +86,8 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
             setVisualizerCollapsed(Boolean(storedCollapsed));
         }
     }, [getProperty]);
+
+
 
     const handleVisualizerResize = (height: number) => {
         setVisualizerHeight(height);
@@ -169,6 +175,22 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
         URL.revokeObjectURL(url);
     }, [compiledPdf, compiledSvg]);
 
+    const handleTabSwitch = useCallback((format: "pdf" | "svg") => {
+        if (currentFormat !== format) {
+            setCurrentFormat(format);
+
+            if (selectedDocId && linkedFileInfo?.filePath?.endsWith(".typ")) {
+                compileDocument(linkedFileInfo.filePath, format);
+            } else if (selectedFileId) {
+                getFile(selectedFileId).then(file => {
+                    if (file?.path.endsWith(".typ")) {
+                        compileDocument(file.path, format);
+                    }
+                });
+            }
+        }
+    }, [currentFormat, setCurrentFormat, compileDocument, selectedDocId, linkedFileInfo, selectedFileId, getFile]);
+
     const outputViewerContent = useMemo(() => {
         if (currentView !== "output") return null;
 
@@ -193,42 +215,54 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
             );
         }
 
-        if (currentFormat === "svg" && compiledSvg) {
+        if (currentFormat === "svg") {
             return (
-                <div className="svg-viewer">
+                <div className="svg-viewer" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                     <div className="svg-canvas-container" style={{
                         width: "100%",
-                        height: "calc(100% - 60px)",
-                        overflow: "auto",
+                        flex: 1,
+                        overflow: "hidden",
                         padding: "1rem",
                         backgroundColor: "white",
                         display: "flex",
                         justifyContent: "center",
-                        alignItems: "center"
+                        alignItems: "center",
+                        minHeight: "400px"
                     }}>
-                        <canvas
-                            ref={(canvas) => {
-                                if (canvas && compiledSvg) {
-                                    const ctx = canvas.getContext('2d');
-                                    const img = new Image();
-                                    const svgBlob = new Blob([compiledSvg], { type: 'image/svg+xml' });
-                                    const url = URL.createObjectURL(svgBlob);
-
-                                    img.onload = () => {
-                                        canvas.width = img.width || 800;
-                                        canvas.height = img.height || 600;
-                                        ctx?.drawImage(img, 0, 0);
-                                        URL.revokeObjectURL(url);
-                                    };
-                                    img.src = url;
-                                }
-                            }}
-                            style={{
-                                maxWidth: "100%",
-                                maxHeight: "100%",
-                                border: "1px solid #ddd"
-                            }}
-                        />
+                        {compiledSvg && (
+                            <iframe
+                                ref={iframeRef}
+                                title="SVG Output"
+                                srcDoc={`<!DOCTYPE html>
+                                <html>
+                                  <head>
+                                    <style>
+                                      body, html { 
+                                        margin: 0; 
+                                        padding: 0; 
+                                        height: 100%; 
+                                        width: 100%; 
+                                        overflow: hidden; 
+                                        display: flex;
+                                        justify-content: center;
+                                        align-items: center;
+                                      }
+                                      svg { 
+                                        max-width: 100%; 
+                                        max-height: 100%; 
+                                      }
+                                    </style>
+                                  </head>
+                                  <body>${compiledSvg}</body>
+                                </html>`}
+                                style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    border: "1px solid #ddd",
+                                    backgroundColor: "white"
+                                }}
+                            />
+                        )}
                     </div>
                     <div className="svg-controls">
                         <button
@@ -266,13 +300,31 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
                     >
                         Log
                     </button>
-                    <button
-                        className={`tab-button ${currentView === "output" ? "active" : ""}`}
-                        onClick={() => currentView !== "output" && toggleOutputView()}
-                        disabled={!hasAnyOutput}
-                    >
-                        {currentFormat ? currentFormat.toUpperCase() : "Output"}
-                    </button>
+                    {currentView === "output" && (
+                        <>
+                            <button
+                                className={`tab-button ${currentView === "output" && currentFormat === "pdf" ? "active" : ""}`}
+                                onClick={() => handleTabSwitch("pdf")}
+                            >
+                                PDF
+                            </button>
+                            <button
+                                className={`tab-button ${currentView === "output" && currentFormat === "svg" ? "active" : ""}`}
+                                onClick={() => handleTabSwitch("svg")}
+                            >
+                                Canvas
+                            </button>
+                        </>
+                    )}
+                    {currentView === "log" && (
+                        <button
+                            className={`tab-button ${currentView === "output" ? "active" : ""}`}
+                            onClick={() => currentView !== "output" && toggleOutputView()}
+                            disabled={!hasAnyOutput}
+                        >
+                            Output
+                        </button>
+                    )}
                 </div>
                 <TypstCompileButton
                     className="output-compile-button"
