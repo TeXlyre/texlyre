@@ -284,7 +284,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
                 className="svg-page-container"
                 style={{
                     transform: `scale(${scale})`,
-                    transformOrigin: 'top center',
+                    transformOrigin: 'top left',
                     maxWidth: '100%',
                     overflow: 'visible'
                 }}
