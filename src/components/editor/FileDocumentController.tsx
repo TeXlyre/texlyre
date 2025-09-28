@@ -372,13 +372,13 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 					setMimeType(file.mimeType);
 					setLinkedDocumentId(file.documentId || null);
 
-					// Handle both LaTeX and Typst files
+					// Only show one output at a time
 					if (file.name.endsWith(".tex")) {
 						setShowLatexOutput(true);
-						setShowTypstOutput(false);
+						setShowTypstOutput(false);  // Ensure Typst is hidden
 					} else if (file.name.endsWith(".typ")) {
 						setShowTypstOutput(true);
-						setShowLatexOutput(false);
+						setShowLatexOutput(false);  // Ensure LaTeX is hidden
 					} else {
 						setShowLatexOutput(false);
 						setShowTypstOutput(false);
@@ -408,13 +408,13 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 						});
 						setLinkedDocumentId(selectedDocId);
 
-						// Handle both LaTeX and Typst linked files
+						// Only show one output at a time
 						if (linkedFile.name.endsWith(".tex")) {
 							setShowLatexOutput(true);
-							setShowTypstOutput(false);
+							setShowTypstOutput(false);  // Ensure Typst is hidden
 						} else if (linkedFile.name.endsWith(".typ")) {
 							setShowTypstOutput(true);
-							setShowLatexOutput(false);
+							setShowLatexOutput(false);  // Ensure LaTeX is hidden
 						} else {
 							setShowLatexOutput(false);
 							setShowTypstOutput(false);

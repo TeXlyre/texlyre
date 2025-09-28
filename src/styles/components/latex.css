@@ -34,7 +34,8 @@
 	padding: var(--space-sm) 0;
 }
 
-.latex-header-buttons {
+.latex-header-buttons,
+.typst-header-buttons {
 	position: absolute;
 	top: 0;
 	right: 250px;
@@ -243,7 +244,8 @@ embed {
 	width: 20px;
 }
 
-.latex-button:hover:not(:disabled) {
+.latex-button:hover:not(:disabled),
+.typst-button:hover:not(:disabled) {
 	background-color: var(--pico-primary-focus);
 }
 
