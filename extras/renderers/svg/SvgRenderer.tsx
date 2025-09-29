@@ -540,7 +540,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
             </div>
 
             <div className={`svg-renderer-content ${isFullscreen ? "fullscreen" : ""}`} ref={contentElRef}>
-                <div className="svg-renderer-viewer" style={{ transform: `scale(${scale})`, transformOrigin: 'top center' }}>
+                <div className="svg-renderer-viewer" style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
                     {!isLoading && !error && numPages > 0 && (
                         scrollView ? (
                             Array.from(new Array(numPages), (_, index) => {
