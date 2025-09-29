@@ -9,6 +9,7 @@ import { useSettings } from "../../hooks/useSettings";
 import { pluginRegistry } from "../../plugins/PluginRegistry";
 import ResizablePanel from "../common/ResizablePanel";
 import TypstCompileButton from "./TypstCompileButton";
+import { toArrayBuffer } from "../../utils/fileUtils";
 
 interface TypstOutputProps {
     className?: string;
@@ -137,7 +138,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     const handleSavePdf = useCallback((fileName: string) => {
         if (!compiledPdf) return;
 
-        const blob = new Blob([compiledPdf], { type: "application/pdf" });
+        const blob = new Blob([toArrayBuffer(compiledPdf)], { type: "application/pdf" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -160,11 +161,11 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
                 break;
             case "pdf":
                 if (!compiledPdf) return;
-                blob = new Blob([compiledPdf], { type: "application/pdf" });
+                blob = new Blob([toArrayBuffer(compiledPdf)], { type: "application/pdf" });
                 break;
             case "canvas":
                 if (!compiledCanvas) return;
-                blob = new Blob([compiledCanvas], { type: "text/plain" });
+                blob = new Blob([toArrayBuffer(compiledCanvas)], { type: "text/plain" });
                 break;
             default:
                 return;
@@ -205,14 +206,14 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
                 <div className="pdf-viewer">
                     {pdfRenderer && useEnhancedRenderer ? (
                         React.createElement(pdfRenderer.renderOutput, {
-                            content: compiledPdf.buffer,
+                            content: toArrayBuffer(compiledPdf.buffer),
                             mimeType: "application/pdf",
                             fileName: "output.pdf",
                             onSave: handleSavePdf,
                         })
                     ) : (
                         <embed
-                            src={URL.createObjectURL(new Blob([compiledPdf], { type: "application/pdf" }))}
+                            src={URL.createObjectURL(new Blob([toArrayBuffer(compiledPdf)], { type: "application/pdf" }))}
                             type="application/pdf"
                             style={{ width: "100%", height: "100%" }}
                         />
@@ -288,7 +289,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
                 <div className="canvas-viewer">
                     {canvasRenderer ? (
                         React.createElement(canvasRenderer.renderOutput, {
-                            content: compiledCanvas.buffer,
+                            content: toArrayBuffer(compiledCanvas.buffer),
                             mimeType: "text/plain",
                             fileName: "output.typ",
                             onSave: (fileName) => handleSaveOutput("canvas", fileName),

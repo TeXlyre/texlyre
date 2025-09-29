@@ -9,6 +9,7 @@ import { useSettings } from "../../hooks/useSettings";
 import { pluginRegistry } from "../../plugins/PluginRegistry";
 import ResizablePanel from "../common/ResizablePanel";
 import LaTeXCompileButton from "./LaTeXCompileButton";
+import { toArrayBuffer } from "../../utils/fileUtils";
 
 interface LaTeXOutputProps {
 	className?: string;
@@ -114,7 +115,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 	const handleSavePdf = useCallback((fileName: string) => {
 		if (!compiledPdf) return;
 
-		const blob = new Blob([compiledPdf], { type: "application/pdf" });
+		const blob = new Blob([toArrayBuffer(compiledPdf)], { type: "application/pdf" });
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement("a");
 		a.href = url;
@@ -132,7 +133,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 			<div className="pdf-viewer">
 				{pdfRendererPlugin && useEnhancedRenderer ? (
 					React.createElement(pdfRendererPlugin.renderOutput, {
-						content: compiledPdf.buffer,
+						content: toArrayBuffer(compiledPdf.buffer),
 						mimeType: "application/pdf",
 						fileName: "output.pdf",
 						onSave: handleSavePdf,
@@ -140,7 +141,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 				) : (
 					<embed
 						src={URL.createObjectURL(
-							new Blob([compiledPdf], { type: "application/pdf" }),
+							new Blob([toArrayBuffer(compiledPdf)], { type: "application/pdf" }),
 						)}
 						type="application/pdf"
 						style={{ width: "100%", height: "100%" }}

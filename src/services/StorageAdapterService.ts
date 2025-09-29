@@ -1,9 +1,11 @@
 // src/services/StorageAdapterService.ts
 import JSZip from "jszip";
+
 import {
 	type DataStructureService,
 	UnifiedDataStructureService,
 } from "./DataStructureService";
+import { toArrayBuffer } from "../utils/fileUtils";
 
 export interface FileSystemAdapter {
 	writeFile(
@@ -17,7 +19,7 @@ export interface FileSystemAdapter {
 }
 
 export class DirectoryAdapter implements FileSystemAdapter {
-	constructor(private rootHandle: FileSystemDirectoryHandle) {}
+	constructor(private rootHandle: FileSystemDirectoryHandle) { }
 
 	async writeFile(
 		path: string,
@@ -29,7 +31,7 @@ export class DirectoryAdapter implements FileSystemAdapter {
 			create: true,
 		});
 		const writable = await fileHandle.createWritable();
-		await writable.write(content);
+		await writable.write(toArrayBuffer(content));
 		await writable.close();
 	}
 
@@ -466,7 +468,7 @@ export class StorageAdapterService {
 				if (contents.some((name) => name.endsWith(".yjs"))) {
 					return path;
 				}
-			} catch {}
+			} catch { }
 		}
 
 		return null;

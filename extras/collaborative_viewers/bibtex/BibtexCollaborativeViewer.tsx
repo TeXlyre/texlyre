@@ -150,37 +150,37 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	const { viewRef, showSaveIndicator } =
 		currentView === "original"
 			? EditorLoader(
-					editorRef,
-					docUrl,
-					documentId,
-					isDocumentSelected,
-					initialContentRef.current,
-					handleContentUpdate,
-					parseComments || (() => []),
-					addComment || (() => ({ openTag: "", closeTag: "", commentId: "" })),
-					updateComments || (() => {}),
-					false,
-					false,
-					fileName,
-					undefined,
-					false,
-				)
+				editorRef,
+				docUrl,
+				documentId,
+				isDocumentSelected,
+				initialContentRef.current,
+				handleContentUpdate,
+				parseComments || (() => []),
+				addComment || (() => ({ openTag: "", closeTag: "", commentId: "" })),
+				updateComments || (() => { }),
+				false,
+				false,
+				fileName,
+				undefined,
+				false,
+			)
 			: EditorLoader(
-					editorRef,
-					"bibtex-viewer",
-					`${documentId}-processed`,
-					true,
-					processedContent,
-					handleContentUpdate,
-					() => [],
-					() => ({ openTag: "", closeTag: "", commentId: "" }),
-					() => {},
-					true,
-					false,
-					fileName,
-					undefined,
-					false,
-				);
+				editorRef,
+				"bibtex-viewer",
+				`${documentId}-processed`,
+				true,
+				processedContent,
+				handleContentUpdate,
+				() => [],
+				() => ({ openTag: "", closeTag: "", commentId: "" }),
+				() => { },
+				true,
+				false,
+				fileName,
+				undefined,
+				false,
+			);
 
 	useEffect(() => {
 		let text = "";
@@ -268,11 +268,9 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		setError(null);
 
 		try {
-			const encoder = new TextEncoder();
 			await fileStorageService.updateFileContent(
 				fileId,
-				encoder.encode(contentToSave),
-			);
+				contentToSave);
 
 			initialContentRef.current = contentToSave;
 
@@ -495,7 +493,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 								</div>
 								{currentView === "processed" && processedContent.trim() && (
 									<div className="processed-save-notice">
-										<span>Not saved automatically. Click the <SaveIcon/> <strong>Save</strong> button or <strong>Ctrl+S</strong></span>
+										<span>Not saved automatically. Click the <SaveIcon /> <strong>Save</strong> button or <strong>Ctrl+S</strong></span>
 									</div>
 								)}
 								{isProcessing && (

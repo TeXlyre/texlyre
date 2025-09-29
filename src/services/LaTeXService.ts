@@ -9,10 +9,10 @@ import { DvipdfmxEngine } from "../extensions/switftlatex/DvipdfmxEngine";
 import { PdfTeXEngine } from "../extensions/switftlatex/PdfTeXEngine";
 import { XeTeXEngine } from "../extensions/switftlatex/XeTeXEngine";
 import type { FileNode } from "../types/files";
-import { getMimeType, isBinaryFile } from "../utils/fileUtils";
+import { getMimeType, isBinaryFile, toArrayBuffer } from "../utils/fileUtils";
 import { fileStorageService } from "./FileStorageService";
-import { notificationService} from "./NotificationService";
-import {fileCommentProcessor} from "../utils/fileCommentProcessor";
+import { notificationService } from "./NotificationService";
+import { fileCommentProcessor } from "../utils/fileCommentProcessor";
 
 type EngineType = "pdftex" | "xetex" | "luatex";
 
@@ -317,7 +317,7 @@ class LaTeXService {
 			const cacheFiles = existingFiles.filter(
 				(file) =>
 					(file.path.startsWith("/.texlyre_cache/") ||
-					 file.path.startsWith("/.texlyre_src/")) &&
+						file.path.startsWith("/.texlyre_src/")) &&
 					!file.isDeleted,
 			);
 
@@ -535,20 +535,20 @@ class LaTeXService {
 
 		for (const node of workNodes) {
 			try {
-			   const fileContent = await this.getFileContent(node);
-			   if (fileContent) {
-				  const cleanedFileContent = fileCommentProcessor.cleanContent(fileContent);
-				  if (typeof cleanedFileContent === "string") {
-					 engine.writeMemFSFile(`/work/${node.path}`, cleanedFileContent);
-				  } else {
-					 engine.writeMemFSFile(
-						`/work/${node.path}`,
-						new Uint8Array(cleanedFileContent),
-					 );
-				  }
-			   }
+				const fileContent = await this.getFileContent(node);
+				if (fileContent) {
+					const cleanedFileContent = fileCommentProcessor.cleanContent(fileContent);
+					if (typeof cleanedFileContent === "string") {
+						engine.writeMemFSFile(`/work/${node.path}`, cleanedFileContent);
+					} else {
+						engine.writeMemFSFile(
+							`/work/${node.path}`,
+							new Uint8Array(cleanedFileContent),
+						);
+					}
+				}
 			} catch (error) {
-			   console.error(`Error writing work file ${node.path} to MemFS:`, error);
+				console.error(`Error writing work file ${node.path} to MemFS:`, error);
 			}
 		}
 
@@ -784,7 +784,7 @@ class LaTeXService {
 					name: pdfFileName,
 					path: `/.texlyre_src/__output/${pdfFileName}`,
 					type: "file",
-					content: result.pdf.buffer,
+					content: toArrayBuffer(result.pdf.buffer),
 					lastModified: Date.now(),
 					size: result.pdf.length,
 					mimeType: "application/pdf",
@@ -960,7 +960,7 @@ class LaTeXService {
 
 				try {
 					engine.makeMemFSFolder(currentPath);
-				} catch (_e) {}
+				} catch (_e) { }
 			}
 		} catch (error) {
 			console.warn(`Error in directory creation: ${error.message}`);

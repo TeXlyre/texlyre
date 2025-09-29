@@ -142,7 +142,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const fileData = useMemo(() => {
 		return pdfData ? {
 			data: pdfData,
-			cMapUrl: import.meta.env.PROD ? "/texlyre/cmaps/" : "/texlyre/cmaps/",
+			cMapUrl: "/texlyre/cmaps/",
 			cMapPacked: true,
 		} : null;
 	}, [pdfData]);
@@ -290,7 +290,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		setScale(newScale);
 		setProperty("pdf-renderer-zoom", newScale);
 	}, [setProperty]);
-	
+
 	const handleToggleView = useCallback(() => {
 		setScrollView((prev) => {
 			const newScrollView = !prev;
@@ -518,7 +518,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 								const zoomOptions = pdfRendererSettings.find(s => s.id === "pdf-renderer-initial-zoom")?.options || [];
 								const currentZoom = Math.round(scale * 100).toString();
 								const hasCustomZoom = !zoomOptions.some(opt => String(opt.value) === currentZoom);
-								
+
 								return (
 									<select
 										value={hasCustomZoom ? "custom" : currentZoom}

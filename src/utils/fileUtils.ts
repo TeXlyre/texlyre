@@ -1,12 +1,31 @@
 // src/utils/fileUtils.ts
 import mime from "mime";
 
-export const arrayBufferToString = (buffer: ArrayBuffer): string => {
+export const arrayBufferToString = (buffer: ArrayBuffer | Uint8Array): string => {
 	return new TextDecoder().decode(buffer);
 };
 
 export const stringToArrayBuffer = (str: string): ArrayBuffer => {
 	return new TextEncoder().encode(str).buffer;
+};
+
+export const toArrayBuffer = (data: string | ArrayBuffer | SharedArrayBuffer | ArrayBufferView): ArrayBuffer => {
+	if (typeof data === "string") return stringToArrayBuffer(data);
+	if (data instanceof ArrayBuffer) return data;
+	if (ArrayBuffer.isView(data)) {
+		const { buffer, byteOffset, byteLength } = data;
+		if (buffer instanceof ArrayBuffer && byteOffset === 0 && byteLength === buffer.byteLength) return buffer;
+		const out = new Uint8Array(byteLength);
+		out.set(new Uint8Array(buffer, byteOffset, byteLength));
+		return out.buffer;
+	}
+	if (typeof SharedArrayBuffer !== "undefined" && data instanceof SharedArrayBuffer) {
+		const src = new Uint8Array(data);
+		const out = new Uint8Array(src.byteLength);
+		out.set(src);
+		return out.buffer;
+	}
+	throw new Error("Unsupported binary content type");
 };
 
 export const getFilenameFromPath = (path: string): string => {

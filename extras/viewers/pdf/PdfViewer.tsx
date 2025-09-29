@@ -165,7 +165,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 		try {
 			const loadingTask = pdfjs.getDocument({
 				data: new Uint8Array(contentRef.current),
-				cMapUrl: import.meta.env.PROD ? "/texlyre/cmaps/" : "/texlyre/cmaps/",  // for now, use the same path in dev and prod
+				cMapUrl: "/texlyre/cmaps/",  //  import.meta.env.PROD ? "/texlyre/cmaps/" : "/texlyre/cmaps/", for now, use the same path in dev and prod
 				cMapPacked: true,
 			});
 
@@ -428,7 +428,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 					];
 					const currentZoom = Math.round(scale * 100).toString();
 					const hasCustomZoom = !zoomOptions.some(opt => String(opt.value) === currentZoom);
-					
+
 					return (
 						<>
 							<button onClick={handleZoomOut} title="Zoom Out" disabled={isLoading}>

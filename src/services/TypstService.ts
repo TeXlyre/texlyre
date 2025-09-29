@@ -1,3 +1,4 @@
+// src/services/TypstService.ts
 import { nanoid } from "nanoid";
 
 import type { TypstCompileResult, TypstOutputFormat } from "../types/typst";
@@ -5,7 +6,8 @@ import type { FileNode } from "../types/files";
 import { fileStorageService } from "./FileStorageService";
 import { notificationService } from "./NotificationService";
 import { fileCommentProcessor } from "../utils/fileCommentProcessor";
-import { TypstCompilerService } from "../extensions/typst.ts/TypstCompilerService";
+import { TypstCompilerEngine } from "../extensions/typst.ts/TypstCompilerEngine";
+import { toArrayBuffer } from "../utils/fileUtils";
 
 type CompilationStatus = "unloaded" | "loading" | "ready" | "compiling" | "error";
 
@@ -14,7 +16,7 @@ class TypstService {
     private statusListeners: Set<() => void> = new Set();
     private defaultFormat: TypstOutputFormat = "pdf";
     private compilationAbortController: AbortController | null = null;
-    private compilerService: TypstCompilerService = new TypstCompilerService();
+    private compilerEngine: TypstCompilerEngine = new TypstCompilerEngine();
 
     async initialize(): Promise<void> {
         if (this.status === "ready") return;
@@ -44,7 +46,7 @@ class TypstService {
     }
 
     private async warmWorker(): Promise<void> {
-        await this.compilerService.ping();
+        await this.compilerEngine.ping();
     }
 
     async compileTypst(
@@ -162,7 +164,7 @@ class TypstService {
     }
 
     clearCache(): void {
-        this.compilerService.terminate();
+        this.compilerEngine.terminate();
     }
 
     private async performCompilationInWorker(
@@ -171,7 +173,7 @@ class TypstService {
         format: TypstOutputFormat,
         signal: AbortSignal
     ): Promise<Uint8Array | string> {
-        const result = await this.compilerService.compile(
+        const result = await this.compilerEngine.compile(
             mainFilePath,
             sources,
             format,
@@ -365,7 +367,7 @@ class TypstService {
     }
 
     private createFileNode(name: string, content: ArrayBuffer | ArrayBufferLike, mimeType: string, isBinary: boolean): FileNode {
-        const buffer = content instanceof ArrayBuffer ? content : content as ArrayBuffer;
+        const buffer = content instanceof ArrayBuffer ? content : toArrayBuffer(content) as ArrayBuffer;
         return {
             id: nanoid(),
             name,

@@ -19,7 +19,7 @@ export interface SecretValue {
 export interface SecretEntry {
 	pluginId: string;
 	scope: "global" | "project";
-	projectId?: string;
+	projectId?: string | null;
 	secretKey: string;
 	encryptedValue: string;
 	metadata?: Record<string, any>;
@@ -36,7 +36,7 @@ export interface SecretsContextType {
 		value: string,
 		options?: {
 			scope?: "global" | "project";
-			projectId?: string;
+			projectId?: string | null;
 			metadata?: Record<string, any>;
 		},
 	) => Promise<void>;
@@ -45,7 +45,7 @@ export interface SecretsContextType {
 		secretKey: string,
 		options?: {
 			scope?: "global" | "project";
-			projectId?: string;
+			projectId?: string | null;
 		},
 	) => Promise<SecretValue | null>;
 	removeSecret: (
@@ -53,7 +53,7 @@ export interface SecretsContextType {
 		secretKey: string,
 		options?: {
 			scope?: "global" | "project";
-			projectId?: string;
+			projectId?: string | null;
 		},
 	) => Promise<void>;
 	hasSecret: (
@@ -61,7 +61,7 @@ export interface SecretsContextType {
 		secretKey: string,
 		options?: {
 			scope?: "global" | "project";
-			projectId?: string;
+			projectId?: string | null;
 		},
 	) => boolean;
 	promptForPassword: (message?: string) => Promise<string | null>;
@@ -70,7 +70,7 @@ export interface SecretsContextType {
 		secretKey: string,
 		options?: {
 			scope?: "global" | "project";
-			projectId?: string;
+			projectId?: string | null;
 		},
 	) => Record<string, any> | null;
 	clearAllSecrets: (pluginId?: string) => Promise<void>;
@@ -84,18 +84,18 @@ export interface SecretsContextType {
 export const SecretsContext = createContext<SecretsContextType>({
 	isPasswordSet: false,
 	setPassword: async () => false,
-	clearPassword: () => {},
-	setSecret: async () => {},
+	clearPassword: () => { },
+	setSecret: async () => { },
 	getSecret: async () => null,
-	removeSecret: async () => {},
+	removeSecret: async () => { },
 	hasSecret: () => false,
 	promptForPassword: async () => null,
 	getSecretMetadata: () => null,
-	clearAllSecrets: async () => {},
+	clearAllSecrets: async () => { },
 	isPasswordModalOpen: false,
 	passwordModalMessage: "",
 	showPasswordModal: async () => null,
-	hidePasswordModal: () => {},
+	hidePasswordModal: () => { },
 	submitPassword: async () => false,
 });
 
@@ -129,7 +129,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 			pluginId: string,
 			secretKey: string,
 			scope: "global" | "project" = "global",
-			projectId?: string,
+			projectId?: string | null,
 		): string => {
 			return scope === "project" && projectId
 				? `${pluginId}:${scope}:${projectId}:${secretKey}`
@@ -399,7 +399,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 			value: string,
 			options?: {
 				scope?: "global" | "project";
-				projectId?: string;
+				projectId?: string | null;
 				metadata?: Record<string, any>;
 			},
 		): Promise<void> => {
@@ -484,7 +484,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 			secretKey: string,
 			options?: {
 				scope?: "global" | "project";
-				projectId?: string;
+				projectId?: string | null;
 			},
 		): Promise<SecretValue | null> => {
 			if (!user) return null;
@@ -562,7 +562,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 			secretKey: string,
 			options?: {
 				scope?: "global" | "project";
-				projectId?: string;
+				projectId?: string | null;
 			},
 		): Promise<void> => {
 			if (!user) return;
@@ -611,7 +611,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 			secretKey: string,
 			options?: {
 				scope?: "global" | "project";
-				projectId?: string;
+				projectId?: string | null;
 			},
 		): boolean => {
 			if (!user) return false;
@@ -646,7 +646,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 			secretKey: string,
 			options?: {
 				scope?: "global" | "project";
-				projectId?: string;
+				projectId?: string | null;
 			},
 		): Record<string, any> | null => {
 			if (!user) return null;

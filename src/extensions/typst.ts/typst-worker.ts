@@ -1,3 +1,4 @@
+// src/extensions/typst.ts/typst-worker.ts
 /// <reference lib="webworker" />
 export { };
 

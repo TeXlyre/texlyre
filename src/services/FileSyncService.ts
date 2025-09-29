@@ -11,7 +11,7 @@ import type {
 	FileSyncVerification,
 } from "../types/fileSync";
 import type { FileNode } from "../types/files";
-import { isBinaryFile, isTemporaryFile } from "../utils/fileUtils.ts";
+import { isBinaryFile, isTemporaryFile, toArrayBuffer } from "../utils/fileUtils.ts";
 import { fileStorageService } from "./FileStorageService";
 import { notificationService } from "./NotificationService";
 
@@ -414,10 +414,10 @@ class FileSyncService {
 			} else if (fileContent instanceof ArrayBuffer) {
 				processedContent = fileContent;
 			} else if (fileContent instanceof Uint8Array) {
-				processedContent = fileContent.buffer.slice(
+				processedContent = toArrayBuffer(fileContent.buffer.slice(
 					fileContent.byteOffset,
 					fileContent.byteOffset + fileContent.byteLength,
-				);
+				));
 			} else if (fileContent instanceof Blob) {
 				processedContent = await fileContent.arrayBuffer();
 			} else if (typeof fileContent === "string") {

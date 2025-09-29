@@ -1,3 +1,4 @@
+// src/extensions/typst.ts/TypstCompilerEngine.ts
 import { nanoid } from "nanoid";
 
 export type TypstWorkerMessage =
@@ -9,7 +10,7 @@ export type TypstWorkerResponse =
     | { id: string; type: "done"; result: { format: string; output: Uint8Array | string } }
     | { id: string; type: "error"; error: string };
 
-export class TypstCompilerService {
+export class TypstCompilerEngine {
     private worker: Worker | null = null;
     private pendingResolves: Map<string, (v: any) => void> = new Map();
     private pendingRejects: Map<string, (e: any) => void> = new Map();
