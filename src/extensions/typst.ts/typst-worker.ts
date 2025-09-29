@@ -1,5 +1,50 @@
+/// <reference lib="webworker" />
+export { };
+
 import { createTypstCompiler } from "@myriaddreamin/typst.ts/compiler";
 import { createTypstRenderer } from "@myriaddreamin/typst.ts/renderer";
+
+// Tell TS we're in a Dedicated Worker context.
+declare const self: DedicatedWorkerGlobalScope;
+
+type OutputFormat = "pdf" | "svg" | "canvas";
+
+type CompileMessage = {
+    id: string;
+    type: "compile";
+    payload: {
+        mainFilePath: string;
+        sources: Record<string, string | Uint8Array>;
+        format: OutputFormat;
+    };
+};
+
+type PingMessage = {
+    id: string;
+    type: "ping";
+};
+
+type InboundMessage = CompileMessage | PingMessage;
+
+type DoneResponse = {
+    id: string;
+    type: "done";
+    result: {
+        format: OutputFormat;
+        output: Uint8Array | string;
+    };
+};
+
+type PongResponse = {
+    id: string;
+    type: "pong";
+};
+
+type ErrorResponse = {
+    id: string;
+    type: "error";
+    error: string;
+};
 
 let compiler: any = null;
 let renderer: any = null;
@@ -21,22 +66,21 @@ async function ensureInit() {
     initialized = true;
 }
 
-self.onmessage = async (e: MessageEvent) => {
-    const data = e.data as
-        | { id: string; type: "compile"; payload: { mainFilePath: string; sources: Record<string, string | Uint8Array>; format: "pdf" | "svg" | "canvas" } }
-        | { id: string; type: "ping" };
-
+self.addEventListener("message", async (e: MessageEvent<InboundMessage>) => {
+    const data = e.data;
     const { id, type } = data;
 
     try {
         if (type === "ping") {
-            postMessage({ id, type: "pong" });
+            const resp: PongResponse = { id, type: "pong" };
+            self.postMessage(resp);
             return;
         }
 
         await ensureInit();
 
-        const payload = (data as Extract<typeof data, { type: "compile" }>).payload;
+        // From here, it's a compile message
+        const { payload } = data as CompileMessage;
         const { mainFilePath, sources, format } = payload;
 
         compiler.resetShadow();
@@ -50,7 +94,8 @@ self.onmessage = async (e: MessageEvent) => {
             }
         }
 
-        const absoluteMainPath = mainFilePath.startsWith("/") ? mainFilePath : `/${mainFilePath}`;
+        const absoluteMainPath =
+            mainFilePath.startsWith("/") ? mainFilePath : `/${mainFilePath}`;
 
         let output: Uint8Array | string;
 
@@ -59,24 +104,36 @@ self.onmessage = async (e: MessageEvent) => {
                 mainFilePath: absoluteMainPath,
                 format: "pdf",
             });
-            output = compileResult.result;
+            output = compileResult.result as Uint8Array;
         } else {
             const compileResult = await compiler.compile({
                 mainFilePath: absoluteMainPath,
                 format: "vector",
             });
 
+            // SVG/Canvas renderer returns string (SVG markup) or binary depending on API
             output = await renderer.renderSvg({
                 artifactContent: compileResult.result,
             });
         }
 
-        const transfer = output instanceof Uint8Array ? [output.buffer as ArrayBuffer] : [];
-        postMessage(
-            { id, type: "done", result: { format, output } },
-            transfer
-        );
-    } catch (err: any) {
-        postMessage({ id, type: "error", error: String(err?.message || err) });
+        // Transfer ArrayBuffer when possible to avoid copying
+        const transferList: Transferable[] =
+            output instanceof Uint8Array ? [output.buffer as ArrayBuffer] : [];
+
+        const resp: DoneResponse = {
+            id,
+            type: "done",
+            result: { format, output },
+        };
+
+        self.postMessage(resp, transferList);
+    } catch (err: unknown) {
+        const message =
+            typeof err === "object" && err && "message" in err
+                ? String((err as any).message)
+                : String(err);
+        const resp: ErrorResponse = { id, type: "error", error: message };
+        self.postMessage(resp);
     }
-};
+});
