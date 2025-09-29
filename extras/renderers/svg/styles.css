@@ -1,4 +1,3 @@
-/* extras/renderers/svg/styles.css */
 .svg-renderer-viewer,
 .svg-renderer-viewer *,
 .svg-renderer-viewer *::before,
@@ -25,6 +24,95 @@
     z-index: 10;
 }
 
+.toolbar {
+    display: flex;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
+}
+
+#toolbarLeft {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toolbarButtonGroup {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.toolbarButton {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.9rem;
+    background-color: var(--pico-background);
+    border: 1px solid var(--accent-border, #444);
+    border-radius: 4px;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.toolbarButton:hover:not(:disabled) {
+    background-color: var(--pico-primary-focus);
+}
+
+.toolbarButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.toolbarZoomSelect {
+    min-width: 40px;
+    text-align: center;
+    padding: 0.2rem 0.2rem;
+    font-size: 0.9rem;
+    margin-top: var(--space-md);
+    background-color: var(--pico-background);
+    border: 1px solid var(--accent-border, #444);
+    border-radius: 4px;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.toolbarZoomSelect:hover:not(:disabled) {
+    background-color: var(--pico-primary-focus);
+}
+
+.toolbarZoomSelect:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.toolbarZoomSelect option {
+    background-color: var(--pico-background);
+    color: var(--text-color);
+}
+
+.pageNumber {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0 5px;
+    padding: 0;
+}
+
+.pageNumber input {
+    width: 3em;
+    text-align: center;
+    padding: 0.87rem 0;
+    margin: 0.02rem;
+    border: 1px solid var(--accent-border, #444);
+    border-radius: 4px;
+    background-color: var(--pico-background);
+    color: var(--text-color);
+    height: 24px;
+}
+
 .svg-renderer-content {
     position: absolute;
     top: 100px;
@@ -33,26 +121,21 @@
     bottom: 0;
     overflow: auto;
     background-color: #f5f5f5;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 1rem;
 }
 
-.svg-single-page {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    width: 100%;
+.svg-renderer-viewer {
     min-height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.svg-page-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    min-height: 400px;
+.svg-page {
+    background-color: white;
+    margin: 10px auto;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
 }
 
 .svg-page-scroll {
@@ -62,6 +145,18 @@
     padding: 10px 0;
     width: 100%;
     scroll-margin-top: 56px;
+}
+
+.svg-page-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    margin: 10px auto;
+    min-width: 595px;
+    min-height: 842px;
+    color: #999;
 }
 
 .svg-renderer-loading {
@@ -90,6 +185,10 @@
     max-width: 80%;
     text-align: center;
     z-index: 100;
+}
+
+.fullscreen .svg-page-scroll {
+    scroll-margin-top: 56px;
 }
 
 .svg-renderer-content.fullscreen {
