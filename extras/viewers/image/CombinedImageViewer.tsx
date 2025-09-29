@@ -295,23 +295,25 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
                   padding: 0; 
                   height: 100%; 
                   width: 100%; 
-                  overflow: hidden; 
+                  overflow: auto; 
+				  align-items: center;
+				  justify-content: left;
+				  background: transparent;
                   ${centerCss}
                 }
                 svg { 
                   max-width: 100%; 
                   max-height: 100%; 
                   transform: ${transformValue};
-                  transform-origin: center;
+                  transform-origin: top left;
                   filter: ${filterValue};
-                  cursor: ${enablePanning ? (isPanning ? "grabbing" : "grab") : "default"};
-                  transition: ${isPanning ? "none" : "transform 0.2s ease"};
                 }
               </style>
             </head>
             <body>${svgContent}</body>
           </html>`}
 				style={{
+					overflow: "auto",
 					width: "100%",
 					height: "100%",
 					border: "none",
