@@ -1,4 +1,3 @@
-// src/services/TypstService.ts
 import { nanoid } from "nanoid";
 
 import type { TypstCompileResult, TypstOutputFormat } from "../types/typst";
@@ -6,14 +5,7 @@ import type { FileNode } from "../types/files";
 import { fileStorageService } from "./FileStorageService";
 import { notificationService } from "./NotificationService";
 import { fileCommentProcessor } from "../utils/fileCommentProcessor";
-
-declare global {
-    interface Window {
-        // We intentionally no longer rely on window.$typst for compilation.
-        // Keeping the declaration here in case other parts of the app read it.
-        $typst?: unknown;
-    }
-}
+import { TypstCompilerService } from "../extensions/typst.ts/TypstCompilerService";
 
 type CompilationStatus = "unloaded" | "loading" | "ready" | "compiling" | "error";
 
@@ -22,11 +14,7 @@ class TypstService {
     private statusListeners: Set<() => void> = new Set();
     private defaultFormat: TypstOutputFormat = "pdf";
     private compilationAbortController: AbortController | null = null;
-
-    private worker: Worker | null = null;
-    private pendingResolves: Map<string, (v: any) => void> = new Map();
-    private pendingRejects: Map<string, (e: any) => void> = new Map();
-
+    private compilerService: TypstCompilerService = new TypstCompilerService();
 
     async initialize(): Promise<void> {
         if (this.status === "ready") return;
@@ -56,90 +44,7 @@ class TypstService {
     }
 
     private async warmWorker(): Promise<void> {
-        const worker = this.getWorker();
-        await this.callWorker("ping", undefined);
-    }
-
-    private getWorker(): Worker {
-        if (this.worker) return this.worker;
-
-        this.worker = new Worker(new URL("/typst-worker.ts", import.meta.url), {
-            type: "module",
-        });
-
-        this.worker.onmessage = (e: MessageEvent) => {
-            const { id, type, result, error } = e.data as {
-                id: string;
-                type: "pong" | "done" | "error";
-                result?: unknown;
-                error?: string;
-            };
-
-            if (!id) return;
-
-            if (type === "done" || type === "pong") {
-                const resolve = this.pendingResolves.get(id);
-                if (resolve) resolve(result);
-            } else if (type === "error") {
-                const reject = this.pendingRejects.get(id);
-                if (reject) reject(new Error(error || "Worker error"));
-            }
-
-            this.pendingResolves.delete(id);
-            this.pendingRejects.delete(id);
-        };
-
-        this.worker.onerror = (ev) => {
-            // Reject all in-flight promises on crash
-            const err = new Error(`Typst worker error: ${String(ev.message || ev)}`);
-            this.pendingRejects.forEach((reject) => reject(err));
-            this.pendingResolves.clear();
-            this.pendingRejects.clear();
-            // Reset worker so next call will re-create it
-            this.worker = null;
-        };
-
-        return this.worker;
-    }
-
-    private callWorker<TType extends "compile" | "ping">(
-        type: TType,
-        payload: TType extends "compile"
-            ? { mainContent: string; sources: Record<string, string | Uint8Array>; format: TypstOutputFormat }
-            : undefined,
-        signal?: AbortSignal
-    ): Promise<any> {
-        const id = nanoid();
-        const worker = this.getWorker();
-
-        const promise = new Promise((resolve, reject) => {
-            this.pendingResolves.set(id, resolve);
-            this.pendingRejects.set(id, reject);
-        });
-
-        // Wire cancellation to hard-terminate the worker (deterministic cancel)
-        const abort = () => {
-            if (this.worker) {
-                this.worker.terminate();
-                this.worker = null;
-            }
-            const reject = this.pendingRejects.get(id);
-            if (reject) reject(new Error("Compilation was cancelled"));
-            this.pendingResolves.delete(id);
-            this.pendingRejects.delete(id);
-        };
-
-        if (signal) {
-            if (signal.aborted) {
-                abort();
-                return Promise.reject(new Error("Compilation was cancelled"));
-            }
-            signal.addEventListener("abort", abort, { once: true });
-        }
-
-        worker.postMessage({ id, type, payload });
-
-        return promise;
+        await this.compilerService.ping();
     }
 
     async compileTypst(
@@ -179,7 +84,8 @@ class TypstService {
             this.showNotification("info", `Compiling to ${format.toUpperCase()}...`, operationId);
 
             const output = await this.performCompilationInWorker(
-                { mainContent, sources },
+                normalizedMainFileName,
+                sources,
                 format,
                 this.compilationAbortController.signal
             );
@@ -256,22 +162,23 @@ class TypstService {
     }
 
     clearCache(): void {
-        // no-op for now
+        this.compilerService.terminate();
     }
 
     private async performCompilationInWorker(
-        { mainContent, sources }: { mainContent: string; sources: Record<string, string | Uint8Array> },
+        mainFilePath: string,
+        sources: Record<string, string | Uint8Array>,
         format: TypstOutputFormat,
         signal: AbortSignal
     ): Promise<Uint8Array | string> {
-        const result = await this.callWorker(
-            "compile",
-            { mainContent, sources, format },
+        const result = await this.compilerService.compile(
+            mainFilePath,
+            sources,
+            format,
             signal
         );
 
-        // Worker returns { format, output }
-        return (result?.output ?? result) as Uint8Array | string;
+        return result.output;
     }
 
     private createSuccessResult(output: Uint8Array | string, format: TypstOutputFormat): TypstCompileResult {
@@ -289,7 +196,6 @@ class TypstService {
                 result.svg = output as string;
                 break;
             case "canvas":
-                // store SVG content as binary for canvas renderer
                 result.canvas = new TextEncoder().encode(output as string);
                 break;
         }
@@ -333,7 +239,6 @@ class TypstService {
             }
         }
 
-        // Fallback: use first .typ file as main if not found
         if (!mainContent) {
             for (const [path, content] of Object.entries(sources)) {
                 if (path.endsWith(".typ") && typeof content === "string" && content.trim()) {
@@ -358,22 +263,18 @@ class TypstService {
 
             const normalizedPath = this.normalizePath(file.path);
 
-            // Include main file and Typst files
             if (this.isMainFile(file, mainFileName) || normalizedPath.endsWith(".typ")) {
                 return true;
             }
 
-            // Include config files
             if (normalizedPath.match(/\.(toml|yaml|yml)$/)) {
                 return true;
             }
 
-            // Include assets
             if (normalizedPath.match(/\.(png|jpg|jpeg|gif|svg|pdf|bib|cls|sty)$/i)) {
                 return true;
             }
 
-            // Include files in same directory as main file
             const fileDir = this.getDirectoryPath(normalizedPath);
             if (fileDir === mainDir) {
                 return true;
@@ -447,9 +348,9 @@ class TypstService {
         const files: FileNode[] = [];
         const baseName = this.getBaseName(mainFile);
 
-        // Add output file based on format
         if (result.pdf && result.format === "pdf") {
-            files.push(this.createFileNode(`${baseName}.pdf`, result.pdf.buffer, "application/pdf", true));
+            const buffer = result.pdf instanceof Uint8Array ? result.pdf.buffer : result.pdf;
+            files.push(this.createFileNode(`${baseName}.pdf`, buffer, "application/pdf", true));
         } else if (result.svg && (result.format === "svg" || result.format === "canvas")) {
             const content = result.format === "svg" ? result.svg : new TextDecoder().decode(result.canvas!);
             const buffer = new TextEncoder().encode(content).buffer;
@@ -458,21 +359,21 @@ class TypstService {
             files.push(this.createFileNode(`${baseName}.${extension}`, buffer, mimeType, false));
         }
 
-        // Add log file
         files.push(this.createLogFile(baseName, result.log));
 
         return files;
     }
 
-    private createFileNode(name: string, content: ArrayBuffer, mimeType: string, isBinary: boolean): FileNode {
+    private createFileNode(name: string, content: ArrayBuffer | ArrayBufferLike, mimeType: string, isBinary: boolean): FileNode {
+        const buffer = content instanceof ArrayBuffer ? content : content as ArrayBuffer;
         return {
             id: nanoid(),
             name,
             path: `/.texlyre_src/__output/${name}`,
             type: "file",
-            content,
+            content: buffer,
             lastModified: Date.now(),
-            size: content.byteLength,
+            size: buffer.byteLength,
             mimeType,
             isBinary,
             excludeFromSync: true,
