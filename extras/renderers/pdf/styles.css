@@ -21,6 +21,7 @@
 	min-height: 40px;
 	background-color: var(--pico-secondary-background);
 	border-bottom: 1px solid var(--accent-border, #333);
+	overflow-y: hidden;
 	z-index: 10;
 }
 
