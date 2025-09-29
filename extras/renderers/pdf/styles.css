@@ -19,7 +19,6 @@
 .pdf-toolbar {
 	display: flex;
 	min-height: 40px;
-	padding: 0.5rem;
 	background-color: var(--pico-secondary-background);
 	border-bottom: 1px solid var(--accent-border, #333);
 	z-index: 10;
@@ -143,7 +142,7 @@
 
 .pdf-renderer-content {
 	position: absolute;
-	top: 100px;
+	top: 60px;
 	left: 0;
 	right: 0;
 	bottom: 0;
