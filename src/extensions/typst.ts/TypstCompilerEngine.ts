@@ -7,7 +7,7 @@ export type TypstWorkerMessage =
 
 export type TypstWorkerResponse =
     | { id: string; type: "pong" }
-    | { id: string; type: "done"; result: { format: string; output: Uint8Array | string } }
+    | { id: string; type: "done"; result: { format: string; output: Uint8Array | string; diagnostics?: any[] } }
     | { id: string; type: "error"; error: string };
 
 export class TypstCompilerEngine {
@@ -59,7 +59,7 @@ export class TypstCompilerEngine {
         sources: Record<string, string | Uint8Array>,
         format: "pdf" | "svg" | "canvas",
         signal?: AbortSignal
-    ): Promise<{ format: string; output: Uint8Array | string }> {
+    ): Promise<{ format: string; output: Uint8Array | string; diagnostics?: any[] }> {
         return this.callWorker("compile", { mainFilePath, sources, format }, signal);
     }
 

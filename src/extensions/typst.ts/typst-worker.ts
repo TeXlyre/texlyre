@@ -30,6 +30,7 @@ type DoneResponse = {
     result: {
         format: OutputFormat;
         output: Uint8Array | string;
+        diagnostics?: any[];
     };
 };
 
@@ -145,27 +146,32 @@ self.addEventListener("message", async (e: MessageEvent<InboundMessage>) => {
         const absoluteMainPath =
             mainFilePath.startsWith("/") ? mainFilePath : `/${mainFilePath}`;
         let output: Uint8Array | string;
+        let diagnostics: any[] = [];
+
         if (format === "pdf") {
             const compileResult = await compiler.compile({
                 mainFilePath: absoluteMainPath,
                 format: "pdf",
             });
             output = compileResult.result as Uint8Array;
+            diagnostics = compileResult.diagnostics || [];
         } else {
             const compileResult = await compiler.compile({
                 mainFilePath: absoluteMainPath,
                 format: "vector",
             });
+            diagnostics = compileResult.diagnostics || [];
             output = await renderer.renderSvg({
                 artifactContent: compileResult.result,
             });
         }
+
         const transferList: Transferable[] =
             output instanceof Uint8Array ? [output.buffer as ArrayBuffer] : [];
         const resp: DoneResponse = {
             id,
             type: "done",
-            result: { format, output },
+            result: { format, output, diagnostics },
         };
         self.postMessage(resp, transferList);
     } catch (err: unknown) {

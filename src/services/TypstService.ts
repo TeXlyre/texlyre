@@ -85,14 +85,28 @@ class TypstService {
 
             this.showNotification("info", `Compiling to ${format.toUpperCase()}...`, operationId);
 
-            const output = await this.performCompilationInWorker(
+            const { output, diagnostics } = await this.performCompilationInWorker(
                 normalizedMainFileName,
                 sources,
                 format,
                 this.compilationAbortController.signal
             );
 
-            const result = this.createSuccessResult(output, format);
+            const formattedLog = this.formatDiagnostics(diagnostics);
+            const hasErrors = diagnostics?.some((d: any) => d.severity === "error");
+
+            if (hasErrors) {
+                const result: TypstCompileResult = {
+                    status: 1,
+                    log: formattedLog || "Compilation failed with errors",
+                    format,
+                };
+                this.handleCompilationError(operationId, "Compilation failed");
+                await this.saveCompilationLog(normalizedMainFileName, result.log);
+                return result;
+            }
+
+            const result = this.createSuccessResult(output, format, formattedLog);
             await this.saveCompilationOutput(normalizedMainFileName, result);
 
             this.showNotification("success", `${format.toUpperCase()} compilation completed`, operationId, 3000);
@@ -172,7 +186,7 @@ class TypstService {
         sources: Record<string, string | Uint8Array>,
         format: TypstOutputFormat,
         signal: AbortSignal
-    ): Promise<Uint8Array | string> {
+    ): Promise<{ output: Uint8Array | string; diagnostics?: any[] }> {
         const result = await this.compilerEngine.compile(
             mainFilePath,
             sources,
@@ -180,10 +194,10 @@ class TypstService {
             signal
         );
 
-        return result.output;
+        return { output: result.output, diagnostics: result.diagnostics };
     }
 
-    private createSuccessResult(output: Uint8Array | string, format: TypstOutputFormat): TypstCompileResult {
+    private createSuccessResult(output: Uint8Array | string, format: TypstOutputFormat, log?: string): TypstCompileResult {
         console.log('[TypstService] createSuccessResult', {
             format,
             outputType: typeof output,
@@ -194,7 +208,7 @@ class TypstService {
 
         const result: TypstCompileResult = {
             status: 0,
-            log: "Compilation successful",
+            log: log || "Compilation successful",
             format,
         };
 
@@ -478,6 +492,41 @@ class TypstService {
                 notificationService.showError(message, { operationId, duration });
                 break;
         }
+    }
+
+    private formatDiagnostics(diagnostics?: any[]): string {
+        if (!diagnostics || diagnostics.length === 0) {
+            return "Compilation successful";
+        }
+
+        const lines: string[] = [];
+
+        for (const diag of diagnostics) {
+            const severity = diag.severity || "error";
+            const message = diag.message || "Unknown error";
+            const path = diag.path || "";
+            const range = diag.range || "";
+
+            let location = "";
+            if (path) {
+                location = path.replace(/^\//, "");
+                if (range) {
+                    const startPos = range.split('-')[0];
+                    location += `:${startPos}`;
+                }
+            }
+
+            const prefix = severity === "error" ? "error" : severity === "warning" ? "warning" : "info";
+            lines.push(location ? `${prefix}[${location}]: ${message}` : `${prefix}: ${message}`);
+
+            if (diag.hints && Array.isArray(diag.hints) && diag.hints.length > 0) {
+                for (const hint of diag.hints) {
+                    lines.push(`  hint: ${hint}`);
+                }
+            }
+        }
+
+        return lines.join("\n");
     }
 
     private areNotificationsEnabled(): boolean {
