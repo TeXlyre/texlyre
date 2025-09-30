@@ -41,14 +41,14 @@
     "collab-auto-reconnect": false
   },
   "properties": {
-    "sidebar-width": 502,
-    "latex-output-width": 700,
-    "sidebar-collapsed": false,
-    "latex-output-collapsed": true,
-    "log-visualizer-height": 600,
-    "log-visualizer-collapsed": false,
-    "pdf-renderer-zoom": 1,
-    "pdf-renderer-scroll-view": true
+    "sidebar-width:global": 502,
+    "latex-output-width:global": 700,
+    "sidebar-collapsed:global": false,
+    "latex-output-collapsed:global": true,
+    "log-visualizer-height:global": 600,
+    "log-visualizer-collapsed:global": false,
+    "pdf-renderer-zoom:global": 1,
+    "pdf-renderer-scroll-view:global": false
   },
   "secrets": {}
 }
