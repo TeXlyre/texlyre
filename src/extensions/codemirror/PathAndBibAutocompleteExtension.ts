@@ -84,27 +84,25 @@ const typstCommandPatterns = [
 	},
 	{
 		commands: ['image'],
-		pattern: /#image\s*\(\s*"([^"]*)"/,
+		pattern: /\bimage\s*\(\s*"([^"]*)"/,
 		fileTypes: 'images' as const,
 	},
 	{
 		commands: ['read'],
-		pattern: /#read\s*\(\s*"([^"]*)"/,
+		pattern: /\bread\s*\(\s*"([^"]*)"/,
 		fileTypes: 'all' as const,
 	},
 	{
 		commands: ['csv'],
-		pattern: /#csv\s*\(\s*"([^"]*)"/,
+		pattern: /\bcsv\s*\(\s*"([^"]*)"/,
 		fileTypes: 'data' as const,
 	},
 	{
 		commands: ['json', 'yaml', 'toml'],
-		pattern: /#(json|yaml|toml)\s*\(\s*"([^"]*)"/,
+		pattern: /\b(json|yaml|toml)\s*\(\s*"([^"]*)"/,
 		fileTypes: 'data' as const,
 	},
 ];
-
-const allCommandPatterns = [...latexCommandPatterns, ...typstCommandPatterns];
 
 const typstCitationPatterns = [
 	{
@@ -254,7 +252,7 @@ class AutocompleteProcessor {
 		const lineText = line.text;
 		const posInLine = context.pos - line.from;
 
-		for (const { pattern, fileTypes } of typstCommandPatterns) {
+		for (const { pattern, fileTypes, commands } of typstCommandPatterns) {
 			const matches = Array.from(lineText.matchAll(new RegExp(pattern.source, 'g')));
 
 			for (const match of matches) {
@@ -264,7 +262,7 @@ class AutocompleteProcessor {
 
 				if (quoteStart !== -1 && posInLine > quoteStart && (quoteEnd === -1 || posInLine <= quoteEnd)) {
 					const partial = lineText.substring(quoteStart + 1, posInLine);
-					return { command: match[1], partial, fileTypes };
+					return { command: commands[0], partial, fileTypes };
 				}
 			}
 		}
