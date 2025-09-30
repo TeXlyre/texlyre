@@ -68,14 +68,14 @@ class FilePathCacheService {
 		const imageExtensions = new Set(['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp', 'ico']);
 		const bibExtensions = new Set(['bib', 'bibtex']);
 		const texExtensions = new Set(['tex', 'latex']);
-		const typstExtensions = new Set(['typ', 'typst']); // Add this
+		const typstExtensions = new Set(['typ', 'typst']);
 
 		const cache: FilePathCache = {
 			files: [],
 			imageFiles: [],
 			bibFiles: [],
 			texFiles: [],
-			typstFiles: [], // Add this
+			typstFiles: [],
 			allFiles: [],
 			lastUpdate: Date.now(),
 		};
@@ -94,7 +94,7 @@ class FilePathCacheService {
 				} else if (ext && texExtensions.has(ext)) {
 					cache.texFiles.push(node.path);
 				} else if (ext && typstExtensions.has(ext)) {
-					cache.typstFiles.push(node.path); // Add this
+					cache.typstFiles.push(node.path);
 				}
 			}
 
@@ -107,7 +107,7 @@ class FilePathCacheService {
 		return cache;
 	}
 
-	getRelativePath(fromPath: string, toPath: string): string {
+	getLatexRelativePath(fromPath: string, toPath: string): string {
 		if (!fromPath || fromPath === '/') {
 			return toPath.startsWith('/') ? toPath.slice(1) : toPath;
 		}
@@ -129,6 +129,22 @@ class FilePathCacheService {
 		}
 
 		return toPath.startsWith('/') ? toPath.slice(1) : toPath;
+	}
+
+	getTypstRelativePath(fromPath: string, toPath: string): string {
+		if (!fromPath || fromPath === '/') {
+			return toPath.startsWith('/') ? toPath.slice(1) : toPath;
+		}
+
+		const fromDir = fromPath.substring(0, fromPath.lastIndexOf('/')) || '/';
+		const toDir = toPath.substring(0, toPath.lastIndexOf('/')) || '/';
+		const toFileName = toPath.substring(toPath.lastIndexOf('/') + 1);
+
+		if (fromDir === toDir) {
+			return toFileName;
+		}
+
+		return '/' + (toPath.startsWith('/') ? toPath.slice(1) : toPath);
 	}
 
 	private isImageFile(filename: string): boolean {

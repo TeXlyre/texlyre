@@ -673,10 +673,12 @@ class AutocompleteProcessor {
 
 		const options = candidates
 			.map(filePath => {
-				const relativePath = filePathCacheService.getRelativePath(this.currentFilePath, filePath);
+				const relativePath = isCurrentlyInTypstFile
+					? filePathCacheService.getTypstRelativePath(this.currentFilePath, filePath)
+					: filePathCacheService.getLatexRelativePath(this.currentFilePath, filePath);
 				const fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
 
-				const displayPath = fileTypes === 'bib' && relativePath.endsWith('.bib')
+				const displayPath = fileTypes === 'bib' && !isCurrentlyInTypstFile && relativePath.endsWith('.bib')
 					? relativePath.slice(0, -4)
 					: relativePath;
 
