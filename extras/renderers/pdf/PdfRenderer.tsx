@@ -637,16 +637,18 @@ const PdfRenderer: React.FC<RendererProps> = ({
 								})
 							) : (
 								// Render single page
-								<Page
-									pageNumber={currentPage}
-									scale={scale}
-									renderTextLayer={pdfRendererTextSelection}
-									renderAnnotationLayer={true}
-									loading={
-										<div className="pdf-page-loading">Loading page...</div>
-									}
-									onLoadSuccess={onPageLoadSuccess(currentPage)}
-								/>
+								<div className="pdf-page-scroll">
+									<Page
+										pageNumber={currentPage}
+										scale={scale}
+										renderTextLayer={pdfRendererTextSelection}
+										renderAnnotationLayer={true}
+										loading={
+											<div className="pdf-page-loading">Loading page...</div>
+										}
+										onLoadSuccess={onPageLoadSuccess(currentPage)}
+									/>
+								</div>
 							))}
 					</Document>
 				)}

@@ -144,7 +144,7 @@
 
 .svg-page-scroll {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     background-color: #f5f5f5;
     padding: 10px 0;
     width: 100%;
