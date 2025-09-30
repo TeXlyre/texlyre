@@ -79,40 +79,45 @@ const latexCommandPatterns = [
 const typstCommandPatterns = [
 	{
 		commands: ['include'],
-		pattern: /#include\s+"([^"]*)"/,
+		pattern: /#include\s+"/,
 		fileTypes: 'typst' as const,
 	},
 	{
 		commands: ['image'],
-		pattern: /\bimage\s*\(\s*"([^"]*)"/,
+		pattern: /\bimage\s*\(\s*"/,
 		fileTypes: 'images' as const,
 	},
 	{
 		commands: ['read'],
-		pattern: /\bread\s*\(\s*"([^"]*)"/,
+		pattern: /\bread\s*\(\s*"/,
 		fileTypes: 'all' as const,
 	},
 	{
 		commands: ['csv'],
-		pattern: /\bcsv\s*\(\s*"([^"]*)"/,
+		pattern: /\bcsv\s*\(\s*"/,
 		fileTypes: 'data' as const,
 	},
 	{
 		commands: ['json', 'yaml', 'toml'],
-		pattern: /\b(json|yaml|toml)\s*\(\s*"([^"]*)"/,
+		pattern: /\b(json|yaml|toml)\s*\(\s*"/,
 		fileTypes: 'data' as const,
 	},
+	{
+		commands: ['bibliography'],
+		pattern: /#bibliography\("/,
+		fileTypes: 'bib' as const,
+	}
 ];
 
 const typstCitationPatterns = [
 	{
 		commands: ['cite'],
-		pattern: /#cite\s*\(\s*<([^>]*)>/,
+		pattern: /#cite\s*\(\s*</,
 		type: 'citation' as const,
 	},
 	{
 		commands: ['cite-label'],
-		pattern: /#cite\s*\(\s*label\s*\(\s*"([^"]*)"/,
+		pattern: /#cite\s*\(\s*label\s*\(\s*"/,
 		type: 'citation' as const,
 	},
 ];
@@ -249,21 +254,15 @@ class AutocompleteProcessor {
 
 	private findTypstCommand(context: CompletionContext): { command: string; partial: string; fileTypes: string } | null {
 		const line = context.state.doc.lineAt(context.pos);
-		const lineText = line.text;
-		const posInLine = context.pos - line.from;
+		const lineText = line.text.substring(0, context.pos - line.from);
 
 		for (const { pattern, fileTypes, commands } of typstCommandPatterns) {
-			const matches = Array.from(lineText.matchAll(new RegExp(pattern.source, 'g')));
+			const match = lineText.match(pattern);
 
-			for (const match of matches) {
-				const matchStart = match.index!;
-				const quoteStart = lineText.indexOf('"', matchStart);
-				const quoteEnd = lineText.indexOf('"', quoteStart + 1);
-
-				if (quoteStart !== -1 && posInLine > quoteStart && (quoteEnd === -1 || posInLine <= quoteEnd)) {
-					const partial = lineText.substring(quoteStart + 1, posInLine);
-					return { command: commands[0], partial, fileTypes };
-				}
+			if (match) {
+				const quoteStart = match.index! + match[0].length - 1;
+				const partial = lineText.substring(quoteStart + 1);
+				return { command: commands[0], partial, fileTypes };
 			}
 		}
 
@@ -274,30 +273,25 @@ class AutocompleteProcessor {
 		const line = context.state.doc.lineAt(context.pos);
 		const lineText = line.text;
 		const posInLine = context.pos - line.from;
+		const textBeforeCursor = lineText.substring(0, posInLine);
 
 		for (const { pattern, type } of citationCommandPatterns) {
-			const matches = Array.from(lineText.matchAll(new RegExp(pattern.source, 'g')));
+			const isTypstCitation = pattern.source.includes('#cite');
 
-			for (const match of matches) {
-				const matchStart = match.index!;
-				const isTypstCitation = match[0].startsWith('#cite');
+			if (isTypstCitation) {
+				const match = textBeforeCursor.match(pattern);
 
-				if (isTypstCitation) {
-					const angleStart = lineText.indexOf('<', matchStart);
-					const angleEnd = lineText.indexOf('>', angleStart);
-					const quoteStart = lineText.indexOf('"', matchStart);
-					const quoteEnd = lineText.indexOf('"', quoteStart + 1);
+				if (match) {
+					const delimiter = match[0].endsWith('<') ? '<' : '"';
+					const delimiterPos = match.index! + match[0].length - 1;
+					const partial = textBeforeCursor.substring(delimiterPos + 1).trim();
+					return { command: 'cite', partial, type };
+				}
+			} else {
+				const matches = Array.from(lineText.matchAll(new RegExp(pattern.source, 'g')));
 
-					if (angleStart !== -1 && posInLine > angleStart && (angleEnd === -1 || posInLine <= angleEnd)) {
-						const partial = lineText.substring(angleStart + 1, posInLine).trim();
-						return { command: 'cite', partial, type };
-					}
-
-					if (quoteStart !== -1 && posInLine > quoteStart && (quoteEnd === -1 || posInLine <= quoteEnd)) {
-						const partial = lineText.substring(quoteStart + 1, posInLine).trim();
-						return { command: 'cite', partial, type };
-					}
-				} else {
+				for (const match of matches) {
+					const matchStart = match.index!;
 					const braceStart = lineText.indexOf('{', matchStart);
 					const braceEnd = lineText.indexOf('}', braceStart);
 
