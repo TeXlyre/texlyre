@@ -231,20 +231,40 @@ class AutocompleteProcessor {
 		const lineText = line.text;
 		const posInLine = context.pos - line.from;
 
-		// Check both LaTeX and Typst patterns
-		for (const { pattern, fileTypes } of allCommandPatterns) {
+		for (const { pattern, fileTypes } of latexCommandPatterns) {
 			const matches = Array.from(lineText.matchAll(new RegExp(pattern.source, 'g')));
 
 			for (const match of matches) {
 				const matchStart = match.index!;
-				const commandEnd = matchStart + match[0].length;
+				const braceStart = lineText.indexOf('{', matchStart);
+				const braceEnd = lineText.indexOf('}', braceStart);
 
-				if (posInLine >= matchStart && posInLine <= commandEnd + 1) {
-					return {
-						command: match[1],
-						partial: match[2] || match[3] || '', // Handle different capture groups
-						fileTypes,
-					};
+				if (braceStart !== -1 && posInLine > braceStart && (braceEnd === -1 || posInLine <= braceEnd)) {
+					const partial = lineText.substring(braceStart + 1, posInLine);
+					return { command: match[1], partial, fileTypes };
+				}
+			}
+		}
+
+		return null;
+	}
+
+	private findTypstCommand(context: CompletionContext): { command: string; partial: string; fileTypes: string } | null {
+		const line = context.state.doc.lineAt(context.pos);
+		const lineText = line.text;
+		const posInLine = context.pos - line.from;
+
+		for (const { pattern, fileTypes } of typstCommandPatterns) {
+			const matches = Array.from(lineText.matchAll(new RegExp(pattern.source, 'g')));
+
+			for (const match of matches) {
+				const matchStart = match.index!;
+				const quoteStart = lineText.indexOf('"', matchStart);
+				const quoteEnd = lineText.indexOf('"', quoteStart + 1);
+
+				if (quoteStart !== -1 && posInLine > quoteStart && (quoteEnd === -1 || posInLine <= quoteEnd)) {
+					const partial = lineText.substring(quoteStart + 1, posInLine);
+					return { command: match[1], partial, fileTypes };
 				}
 			}
 		}
@@ -622,7 +642,11 @@ class AutocompleteProcessor {
 	}
 
 	getFilePathCompletions = (context: CompletionContext): CompletionResult | null => {
-		const commandInfo = this.findLatexCommand(context);
+		const isCurrentlyInTypstFile = this.isInTypstFile();
+		const commandInfo = isCurrentlyInTypstFile
+			? this.findTypstCommand(context)
+			: this.findLatexCommand(context);
+
 		if (!commandInfo) return null;
 
 		const cache = context.state.field(filePathCacheField, false);
@@ -645,7 +669,6 @@ class AutocompleteProcessor {
 				candidates = cache.bibFiles;
 				break;
 			case 'data':
-				// For Typst data files (CSV, JSON, YAML, TOML)
 				candidates = cache.allFiles.filter(path =>
 					/\.(csv|json|yaml|yml|toml)$/i.test(path)
 				);
@@ -701,11 +724,12 @@ class AutocompleteProcessor {
 		const posInLine = context.pos - line.from;
 
 		let partialStart = posInLine;
-		for (const { pattern } of allCommandPatterns) {
+		const patterns = isCurrentlyInTypstFile ? typstCommandPatterns : latexCommandPatterns;
+
+		for (const { pattern } of patterns) {
 			const match = lineText.match(pattern);
 			if (match && match.index !== undefined) {
-				// Handle both LaTeX braces and Typst quotes
-				const openChar = lineText.includes('{') ? '{' : '"';
+				const openChar = isCurrentlyInTypstFile ? '"' : '{';
 				const openPos = lineText.indexOf(openChar, match.index);
 				if (openPos !== -1 && posInLine > openPos) {
 					partialStart = line.from + openPos + 1;
@@ -717,7 +741,7 @@ class AutocompleteProcessor {
 		return {
 			from: partialStart,
 			options,
-			validFor: /^[^}\">]*$/,
+			validFor: isCurrentlyInTypstFile ? /^[^\"]*/ : /^[^}]*/,
 		};
 	};
 
