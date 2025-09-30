@@ -106,12 +106,26 @@ const typstCommandPatterns = [
 
 const allCommandPatterns = [...latexCommandPatterns, ...typstCommandPatterns];
 
+const typstCitationPatterns = [
+	{
+		commands: ['cite'],
+		pattern: /#cite\s*\(\s*<([^>]*)>/,
+		type: 'citation' as const,
+	},
+	{
+		commands: ['cite-label'],
+		pattern: /#cite\s*\(\s*label\s*\(\s*"([^"]*)"/,
+		type: 'citation' as const,
+	},
+];
+
 const citationCommandPatterns = [
 	{
 		commands: ['cite', 'citep', 'citet', 'autocite', 'textcite', 'parencite', 'footcite', 'fullcite'],
 		pattern: /\\(cite|citep|citet|autocite|textcite|parencite|footcite|fullcite)\w*(?:\[[^\]]*\])?(?:\[[^\]]*\])?\{([^}]*)/,
 		type: 'citation' as const,
 	},
+	...typstCitationPatterns,
 ];
 
 const bibtexEntryPatterns = [
@@ -248,22 +262,37 @@ class AutocompleteProcessor {
 
 			for (const match of matches) {
 				const matchStart = match.index!;
-				const braceStart = lineText.indexOf('{', matchStart);
-				const braceEnd = lineText.indexOf('}', braceStart);
+				const isTypstCitation = match[0].startsWith('#cite');
 
-				if (braceStart !== -1 && posInLine > braceStart && (braceEnd === -1 || posInLine <= braceEnd)) {
-					const textInBraces = lineText.substring(braceStart + 1, posInLine);
-					const lastCommaPos = textInBraces.lastIndexOf(',');
+				if (isTypstCitation) {
+					const angleStart = lineText.indexOf('<', matchStart);
+					const angleEnd = lineText.indexOf('>', angleStart);
+					const quoteStart = lineText.indexOf('"', matchStart);
+					const quoteEnd = lineText.indexOf('"', quoteStart + 1);
 
-					const partial = lastCommaPos !== -1
-						? textInBraces.substring(lastCommaPos + 1).trim()
-						: textInBraces.trim();
+					if (angleStart !== -1 && posInLine > angleStart && (angleEnd === -1 || posInLine <= angleEnd)) {
+						const partial = lineText.substring(angleStart + 1, posInLine).trim();
+						return { command: 'cite', partial, type };
+					}
 
-					return {
-						command: match[1],
-						partial,
-						type,
-					};
+					if (quoteStart !== -1 && posInLine > quoteStart && (quoteEnd === -1 || posInLine <= quoteEnd)) {
+						const partial = lineText.substring(quoteStart + 1, posInLine).trim();
+						return { command: 'cite', partial, type };
+					}
+				} else {
+					const braceStart = lineText.indexOf('{', matchStart);
+					const braceEnd = lineText.indexOf('}', braceStart);
+
+					if (braceStart !== -1 && posInLine > braceStart && (braceEnd === -1 || posInLine <= braceEnd)) {
+						const textInBraces = lineText.substring(braceStart + 1, posInLine);
+						const lastCommaPos = textInBraces.lastIndexOf(',');
+
+						const partial = lastCommaPos !== -1
+							? textInBraces.substring(lastCommaPos + 1).trim()
+							: textInBraces.trim();
+
+						return { command: match[1], partial, type };
+					}
 				}
 			}
 		}
@@ -364,9 +393,14 @@ class AutocompleteProcessor {
 
 		const isCurrentlyInBibFile = this.isInBibFile();
 		const isCurrentlyInLatexFile = this.isInLatexFile();
+		const isCurrentlyInTypstFile = this.isInTypstFile();
 
 		if (isCurrentlyInLatexFile && citationInfo) {
 			return this.handleLatexCitationCompletion(context, citationInfo, cache);
+		}
+
+		if (isCurrentlyInTypstFile && citationInfo) {
+			return this.handleTypstCitationCompletion(context, citationInfo, cache);
 		}
 
 		if (isCurrentlyInBibFile && bibtexInfo) {
@@ -394,6 +428,27 @@ class AutocompleteProcessor {
 			from: partialStart,
 			options,
 			validFor: /^[^}]*$/,
+		};
+	}
+
+	private handleTypstCitationCompletion(context: CompletionContext, citationInfo: any, cache: BibliographyEntry[]): CompletionResult {
+		const partial = citationInfo.partial;
+		const filteredEntries = cache.filter(entry =>
+			!partial ||
+			entry.key.toLowerCase().includes(partial.toLowerCase()) ||
+			entry.title.toLowerCase().includes(partial.toLowerCase()) ||
+			entry.authors.some(author => author.toLowerCase().includes(partial.toLowerCase()))
+		);
+
+		const options = this.createCitationOptions(filteredEntries, partial);
+		if (options.length === 0) return null;
+
+		const partialStart = this.getCitationCompletionStart(context, typstCitationPatterns);
+
+		return {
+			from: partialStart,
+			options,
+			validFor: /^[^>\">]*$/,
 		};
 	}
 
@@ -517,15 +572,29 @@ class AutocompleteProcessor {
 		for (const { pattern } of patterns) {
 			const match = lineText.match(pattern);
 			if (match && match.index !== undefined) {
-				const bracePos = lineText.indexOf('{', match.index);
-				if (bracePos !== -1 && posInLine > bracePos) {
-					const textInBraces = lineText.substring(bracePos + 1, posInLine);
-					const lastCommaPos = textInBraces.lastIndexOf(',');
+				const isTypstCitation = match[0].startsWith('#cite');
 
-					if (lastCommaPos !== -1) {
-						return line.from + bracePos + 1 + lastCommaPos + 1;
-					} else {
-						return line.from + bracePos + 1;
+				if (isTypstCitation) {
+					const anglePos = lineText.indexOf('<', match.index);
+					const quotePos = lineText.indexOf('"', match.index);
+
+					if (anglePos !== -1 && posInLine > anglePos) {
+						return line.from + anglePos + 1;
+					}
+					if (quotePos !== -1 && posInLine > quotePos) {
+						return line.from + quotePos + 1;
+					}
+				} else {
+					const bracePos = lineText.indexOf('{', match.index);
+					if (bracePos !== -1 && posInLine > bracePos) {
+						const textInBraces = lineText.substring(bracePos + 1, posInLine);
+						const lastCommaPos = textInBraces.lastIndexOf(',');
+
+						if (lastCommaPos !== -1) {
+							return line.from + bracePos + 1 + lastCommaPos + 1;
+						} else {
+							return line.from + bracePos + 1;
+						}
 					}
 				}
 			}
@@ -648,7 +717,7 @@ class AutocompleteProcessor {
 		return {
 			from: partialStart,
 			options,
-			validFor: /^[^}\"]*$/,
+			validFor: /^[^}\">]*$/,
 		};
 	};
 
