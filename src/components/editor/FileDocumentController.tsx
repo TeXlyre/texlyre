@@ -23,6 +23,7 @@ import { EditorTabsProvider } from "../../contexts/EditorTabsContext";
 import ResizablePanel from "../common/ResizablePanel";
 import EditorTabs from "./EditorTabs";
 import LaTeXOutline from "./LaTeXOutline";
+import TypstOutline from "./TypstOutline";
 import LaTeXOutput from "../output/LaTeXOutput";
 import TypstOutput from "../output/TypstOutput";
 import ProjectExportModal from "../project/ProjectExportModal";
@@ -993,14 +994,28 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 					)}
 				</ResizablePanel>
 
-				{showOutline && (
-					<LaTeXOutline
-						content={currentEditorContent}
-						currentLine={currentLine}
-						onSectionClick={handleOutlineSectionClick}
-						onRefresh={handleOutlineRefresh}
-					/>
-				)}
+				{showOutline && (() => {
+					const isTypstFile = (isEditingFile && fileName?.endsWith('.typ')) ||
+						(!isEditingFile && linkedFileInfo?.fileName?.endsWith('.typ')) ||
+						(!isEditingFile && !linkedFileInfo?.fileName &&
+							currentEditorContent?.includes('= '));
+
+					return isTypstFile ? (
+						<TypstOutline
+							content={currentEditorContent}
+							currentLine={currentLine}
+							onSectionClick={handleOutlineSectionClick}
+							onRefresh={handleOutlineRefresh}
+						/>
+					) : (
+						<LaTeXOutline
+							content={currentEditorContent}
+							currentLine={currentLine}
+							onSectionClick={handleOutlineSectionClick}
+							onRefresh={handleOutlineRefresh}
+						/>
+					);
+				})()}
 
 			</ResizablePanel>
 

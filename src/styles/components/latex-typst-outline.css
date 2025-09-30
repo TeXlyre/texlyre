@@ -1,4 +1,5 @@
-.latex-outline {
+.latex-outline,
+.typst-outline {
 	border-top: 1px solid var(--accent-border);
 	background-color: var(--pico-secondary-background);
 	margin-right: var(--space-xs);
@@ -10,7 +11,8 @@
 	overflow: hidden;
 }
 
-.latex-outline-header {
+.latex-outline-header,
+.typst-outline-header {
 	display: flex;
 	position: sticky;
 	align-items: center;
@@ -113,14 +115,14 @@
 	align-items: center;
 	justify-content: center;
 	background: none;
-    padding-left: var(--space-xs) !important;
-    padding-right: var(--space-xs) !important;
+	padding-left: var(--space-xs) !important;
+	padding-right: var(--space-xs) !important;
 	border: none !important;
-    outline: none !important;
+	outline: none !important;
 	cursor: pointer;
 	color: var(--pico-primary);
 	transition: color var(--transition-normal);
-    font-size: 0.75rem !important;
+	font-size: 0.75rem !important;
 	border-radius: 2px;
 	flex-shrink: 0;
 }
