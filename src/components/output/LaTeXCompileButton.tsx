@@ -2,7 +2,7 @@
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 
-import PdfWindowToggleButton from "./PdfWindowToggleButton";
+import PdfWindowToggleButton from "./PopoutViewerToggleButton";
 import { useCollab } from "../../hooks/useCollab";
 import { useFileTree } from "../../hooks/useFileTree";
 import { useLaTeX } from "../../hooks/useLaTeX";
@@ -10,7 +10,7 @@ import { useSettings } from "../../hooks/useSettings";
 import type { DocumentList } from "../../types/documents";
 import type { FileNode } from "../../types/files";
 import { isTemporaryFile } from "../../utils/fileUtils";
-import {ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon} from "../common/Icons";
+import { ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon } from "../common/Icons";
 
 interface LaTeXCompileButtonProps {
 	className?: string;
@@ -130,19 +130,19 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
 	const shouldNavigateToMain = async (mainFilePath: string): Promise<boolean> => {
 		const navigationSetting = getSetting("latex-auto-navigate-to-main")?.value as string ?? "conditional";
-		
+
 		console.log(`[Navigation] Setting: ${navigationSetting}, selectedFileId: ${selectedFileId}, selectedDocId: ${selectedDocId}`);
-		
+
 		if (navigationSetting === "never") {
 			console.log("[Navigation] Never navigate - setting is 'never'");
 			return false;
 		}
-		
+
 		if (navigationSetting === "always") {
 			console.log("[Navigation] Always navigate - setting is 'always'");
 			return true;
 		}
-		
+
 		// Conditional navigation logic
 		if (navigationSetting === "conditional") {
 			// Check if we're currently editing a LaTeX file directly
@@ -158,17 +158,17 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 					console.warn("Error getting current file:", error);
 				}
 			}
-			
+
 			// Check if we're currently editing a document linked to a LaTeX file
 			if (selectedDocId && linkedFileInfo?.fileName?.endsWith(".tex")) {
 				console.log(`[Navigation] Not navigating - already editing LaTeX-linked document: ${linkedFileInfo.fileName}`);
 				return false; // Don't navigate if already editing a LaTeX-linked document
 			}
-			
+
 			console.log(`[Navigation] Will navigate to main file: ${mainFilePath}`);
 			return true; // Navigate if no LaTeX file is currently open
 		}
-		
+
 		return false;
 	};
 
@@ -344,9 +344,8 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		<div className={`latex-compile-buttons ${className}`} ref={dropdownRef}>
 			<div className="compile-button-group">
 				<button
-					className={`latex-button compile-button ${
-						isCompiling ? "compiling" : ""
-					} ${isChangingEngine ? "loading" : ""}`}
+					className={`latex-button compile-button ${isCompiling ? "compiling" : ""
+						} ${isChangingEngine ? "loading" : ""}`}
 					onClick={handleCompileOrStop}
 					disabled={isDisabled}
 					title={
@@ -457,7 +456,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 							onClick={handleClearCacheAndCompile}
 							title="Clear cache and compile (Shift+F9)"
 						>
-							<ClearCompileIcon/>
+							<ClearCompileIcon />
 							Clear & Compile
 						</div>
 					</div>

@@ -17,7 +17,8 @@
 }
 
 .main-file-label,
-.engine-label {
+.engine-label,
+.format-label {
 	font-size: 0.8rem;
 	color: var(--text-secondary-color);
 	margin-bottom: var(--space-xs);
@@ -30,7 +31,8 @@
 	white-space: nowrap;
 }
 
-.engine-selector {
+.engine-selector,
+.format-selector {
 	padding: var(--space-sm) 0;
 }
 

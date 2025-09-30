@@ -13,6 +13,7 @@ import { useFileTree } from "../hooks/useFileTree";
 import { useSettings } from "../hooks/useSettings";
 import type { TypstContextType, TypstOutputFormat } from "../types/typst";
 import { typstService } from "../services/TypstService";
+import { pdfWindowService } from "../services/PdfWindowService";
 import { parseUrlFragments } from "../utils/urlUtils";
 
 export const TypstContext = createContext<TypstContextType | null>(null);
@@ -114,6 +115,20 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         });
     }, []);
 
+    const getProjectName = (): string => {
+        if (document.title && document.title !== "TeXlyre") {
+            return document.title;
+        }
+
+        const hash = window.location.hash;
+        if (hash.includes('yjs:')) {
+            const projectId = hash.split('yjs:')[1].split('&')[0];
+            return `Project ${projectId.substring(0, 8)}`;
+        }
+
+        return "Typst Project";
+    };
+
     const compileDocument = async (mainFileName: string, format: TypstOutputFormat = currentFormat): Promise<void> => {
         if (!typstService.isReady()) {
             await typstService.initialize();
@@ -137,6 +152,15 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
                         if (result.pdf) {
                             setCompiledPdf(result.pdf);
                             setCurrentView("output");
+
+                            const fileName = mainFileName.split('/').pop()?.replace(/\.typ$/i, '.pdf') || 'output.pdf';
+                            const projectName = getProjectName();
+
+                            pdfWindowService.sendPdfUpdate(
+                                result.pdf,
+                                fileName,
+                                projectName
+                            );
                         }
                         break;
                     case "svg":
@@ -155,12 +179,16 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
             } else {
                 setCompileError("Compilation failed");
                 setCurrentView("log");
+
+                pdfWindowService.sendCompileResult(result.status, result.log);
             }
 
             await refreshFileTree();
         } catch (error) {
             setCompileError(error instanceof Error ? error.message : "Unknown error");
             setCurrentView("log");
+
+            pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : "Unknown error");
         } finally {
             setIsCompiling(false);
         }

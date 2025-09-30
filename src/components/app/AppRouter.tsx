@@ -346,7 +346,7 @@ const AppRouter: React.FC = () => {
 	}
 
 	if (isPdfViewerWindow && pdfViewerProjectId) {
-		const PdfViewerWindow = lazy(() => import('../output/PdfViewerWindow'));
+		const PdfViewerWindow = lazy(() => import('../output/PopoutViewerWindow'));
 		return (
 			<Suspense fallback={<LoadingScreen />}>
 				<PdfViewerWindow projectId={pdfViewerProjectId} />

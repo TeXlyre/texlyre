@@ -103,6 +103,7 @@ const PdfViewerWindow: React.FC<PdfViewerWindowProps> = ({ projectId }) => {
 	return (
 		<div style={{
 			height: '100vh',
+			width: '100%',
 			display: 'flex',
 			flexDirection: 'column',
 			backgroundColor: 'var(--pico-background, #fff)',
@@ -110,6 +111,7 @@ const PdfViewerWindow: React.FC<PdfViewerWindowProps> = ({ projectId }) => {
 		}}>
 			<header style={{
 				padding: '0.5rem 1rem',
+				width: '100%',
 				borderBottom: '1px solid var(--pico-border-color, #ddd)',
 				backgroundColor: 'var(--pico-secondary-background, #f8f9fa)',
 				display: 'flex',

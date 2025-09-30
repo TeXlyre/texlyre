@@ -475,6 +475,8 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						onExpandTypstOutput={handleExpandTypstOutput}
 						linkedFileInfo={linkedFileInfo}
 						shouldNavigateOnCompile={true}
+						useSharedSettings={true}
+						docUrl={docUrl}
 					/>
 					<ShareProjectButton
 						className="header-share-button"

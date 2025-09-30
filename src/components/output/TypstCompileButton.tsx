@@ -1,10 +1,13 @@
 // src/components/output/TypstCompileButton.tsx
 import type React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import PdfWindowToggleButton from "./PopoutViewerToggleButton";
+import { useCollab } from "../../hooks/useCollab";
 import { useFileTree } from "../../hooks/useFileTree";
 import { useTypst } from "../../hooks/useTypst";
 import { useSettings } from "../../hooks/useSettings";
+import type { DocumentList } from "../../types/documents";
 import type { FileNode } from "../../types/files";
 import type { TypstOutputFormat } from "../../types/typst";
 import { isTemporaryFile } from "../../utils/fileUtils";
@@ -22,6 +25,8 @@ interface TypstCompileButtonProps {
         fileId?: string;
     } | null;
     shouldNavigateOnCompile?: boolean;
+    useSharedSettings?: boolean;
+    docUrl?: string;
 }
 
 const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
@@ -32,18 +37,22 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     onExpandTypstOutput,
     linkedFileInfo,
     shouldNavigateOnCompile = false,
+    useSharedSettings = false,
+    docUrl,
 }) => {
     const { isCompiling, compileDocument, stopCompilation, clearCache } = useTypst();
     const { selectedFileId, getFile, fileTree } = useFileTree();
-    const [selectedFormat, setSelectedFormat] = useState<TypstOutputFormat>("pdf");
+    const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
     const { getSetting } = useSettings();
+    const [selectedFormat, setSelectedFormat] = useState<TypstOutputFormat>("pdf");
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
     const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
     const [availableTypstFiles, setAvailableTypstFiles] = useState<string[]>([]);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const effectiveMainFile = userSelectedMainFile || autoMainFile;
+    const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
+    const effectiveMainFile = projectMainFile || userSelectedMainFile || autoMainFile;
 
     useEffect(() => {
         const findTypstFiles = (nodes: FileNode[]): string[] => {
@@ -209,7 +218,32 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     };
 
     const handleMainFileChange = (filePath: string) => {
-        setUserSelectedMainFile(filePath === "auto" ? undefined : filePath);
+        if (useSharedSettings && projectMainFile) {
+            if (!changeDoc) return;
+            changeDoc((d) => {
+                if (!d.projectMetadata) {
+                    d.projectMetadata = { name: "", description: "" };
+                }
+                d.projectMetadata.mainFile = filePath === "auto" ? undefined : filePath;
+            });
+        } else {
+            setUserSelectedMainFile(filePath === "auto" ? undefined : filePath);
+        }
+    };
+
+    const handleShareMainFile = (checked: boolean) => {
+        if (!useSharedSettings || !changeDoc) return;
+
+        changeDoc((d) => {
+            if (!d.projectMetadata) {
+                d.projectMetadata = { name: "", description: "" };
+            }
+            if (checked) {
+                d.projectMetadata.mainFile = userSelectedMainFile || autoMainFile;
+            } else {
+                delete d.projectMetadata.mainFile;
+            }
+        });
     };
 
     const getFileName = (path?: string) => {
@@ -248,6 +282,12 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                     {isCompiling ? <StopIcon /> : <PlayIcon />}
                 </button>
 
+                <PdfWindowToggleButton
+                    className="pdf-window-button"
+                    projectId={docUrl?.startsWith("yjs:") ? docUrl.slice(4) : docUrl || 'unknown'}
+                    title="Open PDF in new window"
+                />
+
                 <button
                     className="typst-button dropdown-toggle"
                     onClick={toggleDropdown}
@@ -263,25 +303,38 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                         <div className="main-file-label">Main file:</div>
                         <div className="main-file-path" title={effectiveMainFile}>
                             {getDisplayName(effectiveMainFile)}
+                            {projectMainFile && <span className="shared-indicator"> (shared)</span>}
                         </div>
                     </div>
 
-                    <div className="main-file-selector">
-                        <div className="main-file-selector-label">Select main file:</div>
-                        <select
-                            value={userSelectedMainFile || "auto"}
-                            onChange={(e) => handleMainFileChange(e.target.value)}
-                            className="main-file-select"
-                            disabled={isCompiling}
-                        >
-                            <option value="auto">Auto-detect</option>
-                            {availableTypstFiles.map((filePath) => (
-                                <option key={filePath} value={filePath}>
-                                    {getFileName(filePath)}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                    {useSharedSettings && (
+                        <div className="main-file-selector">
+                            <div className="main-file-selector-label">Select main file:</div>
+                            <select
+                                value={projectMainFile || userSelectedMainFile || "auto"}
+                                onChange={(e) => handleMainFileChange(e.target.value)}
+                                className="main-file-select"
+                                disabled={isCompiling}
+                            >
+                                <option value="auto">Auto-detect</option>
+                                {availableTypstFiles.map((filePath) => (
+                                    <option key={filePath} value={filePath}>
+                                        {getFileName(filePath)}
+                                    </option>
+                                ))}
+                            </select>
+                            <label className="share-checkbox">
+                                <input
+                                    type="checkbox"
+                                    checked={!!projectMainFile}
+                                    onChange={(e) => handleShareMainFile(e.target.checked)}
+                                    disabled={isCompiling || !effectiveMainFile}
+                                />
+                                Share with collaborators
+                            </label>
+                        </div>
+                    )}
+
                     <div className="format-selector">
                         <div className="format-label">Output Format:</div>
                         <select
@@ -295,6 +348,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                             <option value="canvas">Canvas</option>
                         </select>
                     </div>
+
                     <div className="cache-controls">
                         <div
                             className="cache-item clear-cache"

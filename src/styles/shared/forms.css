@@ -22,7 +22,8 @@
 .lsp-search-input,
 .chat-panel-input,
 .main-file-select,
-.engine-select {
+.engine-select,
+.format-select {
 	width: 100%;
 	padding: 0.5rem;
 	border: 1px solid var(--accent-border, #ddd);
@@ -170,7 +171,7 @@ input[type="radio"]:hover,
 	margin-bottom: var(--space-md);
 }
 
-.color-picker-group > label {
+.color-picker-group>label {
 	display: block;
 	margin-bottom: var(--space-sm);
 	font-weight: 500;
