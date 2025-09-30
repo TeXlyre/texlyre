@@ -130,6 +130,8 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     };
 
     const compileDocument = async (mainFileName: string, format: TypstOutputFormat = currentFormat): Promise<void> => {
+        console.log('[TypstContext] compileDocument called', { mainFileName, format });
+        setCurrentFormat(format);
         if (!typstService.isReady()) {
             await typstService.initialize();
         }
@@ -144,7 +146,14 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 
         try {
             const result = await typstService.compileTypst(mainFileName, fileTree, format);
-
+            console.log('[TypstContext] Compilation result', {
+                status: result.status,
+                format: result.format,
+                hasPdf: !!result.pdf,
+                hasSvg: !!result.svg,
+                hasCanvas: !!result.canvas,
+                canvasLength: result.canvas?.length
+            });
             setCompileLog(result.log);
             if (result.status === 0) {
                 switch (result.format) {
@@ -170,9 +179,13 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
                         }
                         break;
                     case "canvas":
+                        console.log('[TypstContext] Setting Canvas', { hasCanvas: !!result.canvas });
                         if (result.canvas) {
+                            console.log('[TypstContext] Canvas content length:', result.canvas.length);
                             setCompiledCanvas(result.canvas);
                             setCurrentView("output");
+                        } else {
+                            console.error('[TypstContext] result.canvas is null/undefined!');
                         }
                         break;
                 }

@@ -184,6 +184,14 @@ class TypstService {
     }
 
     private createSuccessResult(output: Uint8Array | string, format: TypstOutputFormat): TypstCompileResult {
+        console.log('[TypstService] createSuccessResult', {
+            format,
+            outputType: typeof output,
+            isUint8Array: output instanceof Uint8Array,
+            isString: typeof output === 'string',
+            outputLength: output instanceof Uint8Array ? output.length : output.length
+        });
+
         const result: TypstCompileResult = {
             status: 0,
             log: "Compilation successful",
@@ -198,7 +206,9 @@ class TypstService {
                 result.svg = output as string;
                 break;
             case "canvas":
+                console.log('[TypstService] Creating canvas result, encoding string to Uint8Array');
                 result.canvas = new TextEncoder().encode(output as string);
+                console.log('[TypstService] Canvas result created', { canvasLength: result.canvas.length });
                 break;
         }
 
@@ -353,12 +363,10 @@ class TypstService {
         if (result.pdf && result.format === "pdf") {
             const buffer = result.pdf instanceof Uint8Array ? result.pdf.buffer : result.pdf;
             files.push(this.createFileNode(`${baseName}.pdf`, buffer, "application/pdf", true));
-        } else if (result.svg && (result.format === "svg" || result.format === "canvas")) {
+        } else if ((result.svg || result.canvas) && (result.format === "svg" || result.format === "canvas")) {
             const content = result.format === "svg" ? result.svg : new TextDecoder().decode(result.canvas!);
             const buffer = new TextEncoder().encode(content).buffer;
-            const mimeType = result.format === "svg" ? "image/svg+xml" : "text/plain";
-            const extension = result.format === "svg" ? "svg" : "typ";
-            files.push(this.createFileNode(`${baseName}.${extension}`, buffer, mimeType, false));
+            files.push(this.createFileNode(`${baseName}.svg`, buffer, "image/svg+xml", false));
         }
 
         files.push(this.createLogFile(baseName, result.log));

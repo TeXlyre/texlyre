@@ -198,6 +198,13 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     }, [currentFormat, setCurrentFormat, compileDocument, selectedDocId, linkedFileInfo, selectedFileId, getFile]);
 
     const outputViewerContent = useMemo(() => {
+        console.log('[TypstOutput] outputViewerContent recalculating', {
+            currentView,
+            currentFormat,
+            hasCompiledPdf: !!compiledPdf,
+            hasCompiledSvg: !!compiledSvg,
+            hasCompiledCanvas: !!compiledCanvas
+        });
         if (currentView !== "output") return null;
 
         if (currentFormat === "pdf" && compiledPdf) {
@@ -284,14 +291,27 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
         }
 
         if (currentFormat === "canvas" && compiledCanvas) {
+            console.log('[TypstOutput] Rendering canvas', {
+                hasCompiledCanvas: !!compiledCanvas,
+                compiledCanvasLength: compiledCanvas?.length,
+                compiledCanvasBuffer: compiledCanvas?.buffer
+            });
+
             const canvasRenderer = pluginRegistry.getRendererForOutput("canvas", "canvas-renderer");
+
+            console.log('[TypstOutput] Canvas renderer found:', !!canvasRenderer);
+
+            if (!canvasRenderer) {
+                console.error('[TypstOutput] No canvas renderer available!');
+            }
+
             return (
                 <div className="canvas-viewer">
                     {canvasRenderer ? (
                         React.createElement(canvasRenderer.renderOutput, {
-                            content: toArrayBuffer(compiledCanvas.buffer),
-                            mimeType: "text/plain",
-                            fileName: "output.typ",
+                            content: compiledCanvas.buffer,
+                            mimeType: "image/svg+xml",
+                            fileName: "output.svg",
                             onSave: (fileName) => handleSaveOutput("canvas", fileName),
                         })
                     ) : (
