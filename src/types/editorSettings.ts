@@ -18,6 +18,7 @@ export interface EditorSettings {
 	autoSaveDelay: number;
 	highlightTheme: "auto" | "light" | "dark";
 	vimMode: boolean;
+	spellCheck: boolean;
 }
 
 export const defaultEditorSettings: EditorSettings = {
@@ -29,6 +30,7 @@ export const defaultEditorSettings: EditorSettings = {
 	autoSaveDelay: 2000,
 	highlightTheme: "auto",
 	vimMode: false,
+	spellCheck: true,
 };
 
 export const fontSizeMap: Record<FontSize, string> = {

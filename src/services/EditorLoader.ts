@@ -68,6 +68,7 @@ export const EditorLoader = (
 		getLineNumbersEnabled,
 		getSyntaxHighlightingEnabled,
 		getVimModeEnabled,
+		getSpellCheckEnabled,
 		getCollabOptions,
 		getEnabledLSPPlugins,
 		editorSettingsVersion,
@@ -136,6 +137,16 @@ export const EditorLoader = (
 		}
 	};
 
+	const spellCheckExtension = () => {
+		if (!getSpellCheckEnabled()) {
+			return [];
+		}
+		return EditorView.contentAttributes.of({
+			spellcheck: "true",
+			contenteditable: "true"
+		});
+	};
+
 	const getBasicSetupExtensions = (): Extension[] => {
 		const extensions = [
 			EditorView.theme({
@@ -157,6 +168,7 @@ export const EditorLoader = (
 			autocompletion(),
 			highlightSelectionMatches(),
 			search(),
+			spellCheckExtension(),
 			keymap.of([
 				indentWithTab,
 				...defaultKeymap,

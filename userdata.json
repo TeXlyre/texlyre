@@ -5,6 +5,7 @@
     "editor-show-line-numbers": true,
     "editor-syntax-highlighting": true,
     "editor-theme-highlights": "auto",
+    "editor-spell-check": false,
     "editor-auto-save-enable": true,
     "editor-auto-save-delay": 1000,
     "file-system-backup-enable": false,

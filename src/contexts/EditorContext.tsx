@@ -36,6 +36,7 @@ interface EditorContextType {
 	getAutoSaveEnabled: () => boolean;
 	getAutoSaveDelay: () => number;
 	getVimModeEnabled: () => boolean;
+	getSpellCheckEnabled: () => boolean;
 	getCollabOptions: () => CollabConnectOptions;
 	getEnabledLSPPlugins: () => string[];
 	editorSettingsVersion: number;
@@ -43,7 +44,7 @@ interface EditorContextType {
 
 export const EditorContext = createContext<EditorContextType>({
 	editorSettings: defaultEditorSettings,
-	updateEditorSetting: () => {},
+	updateEditorSetting: () => { },
 	getFontSize: () => "14px",
 	getFontFamily: () => fontFamilyMap.monospace,
 	getLineNumbersEnabled: () => true,
@@ -51,6 +52,7 @@ export const EditorContext = createContext<EditorContextType>({
 	getAutoSaveEnabled: () => false,
 	getAutoSaveDelay: () => 2000,
 	getVimModeEnabled: () => false,
+	getSpellCheckEnabled: () => true,
 	getCollabOptions: () => ({}),
 	getEnabledLSPPlugins: () =>
 		pluginRegistry.getLSPPlugins().map((plugin) => plugin.id),
@@ -118,6 +120,10 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		const initialVimMode =
 			(getSetting("editor-vim-mode")?.value as boolean) ??
 			defaultEditorSettings.vimMode;
+		const initialSpellCheck =
+			(getSetting("editor-spell-check")?.value as boolean) ??
+			defaultEditorSettings.spellCheck;
+
 
 		const loadedSettings = {
 			fontSize: initialFontSize,
@@ -128,6 +134,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 			autoSaveDelay: initialAutoSaveDelay,
 			highlightTheme: initialHighlightTheme,
 			vimMode: initialVimMode,
+			spellCheck: initialSpellCheck,
 		};
 
 		setEditorSettings(loadedSettings);
@@ -208,7 +215,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 			type: "checkbox",
 			label: "Show syntax highlighting",
 			description:
-				"Show syntax highlighting in the editor including tooltip and linting (LaTeX, BibTeX, and markdown)",
+				"Show syntax highlighting in the editor including tooltip and linting (LaTeX, typst, BibTeX, and markdown)",
 			defaultValue: defaultEditorSettings.syntaxHighlighting,
 			onChange: (value) => {
 				updateEditorSetting("syntaxHighlighting", value as boolean);
@@ -276,6 +283,19 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 				updateEditorSetting("vimMode", value as boolean);
 			},
 		});
+
+		registerSetting({
+			id: "editor-spell-check",
+			category: "Viewers",
+			subcategory: "Text Editor",
+			type: "checkbox",
+			label: "Enable spell checking",
+			description: "Enable browser spell checking in the editor (note: not compatible with typesetter syntax)",
+			defaultValue: defaultEditorSettings.spellCheck,
+			onChange: (value) => {
+				updateEditorSetting("spellCheck", value as boolean);
+			},
+		});
 	}, [registerSetting, getSetting, updateEditorSetting, applyCSSProperties]);
 
 	const getFontSize = useCallback(() => {
@@ -309,6 +329,11 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 	const getVimModeEnabled = useCallback(
 		() => editorSettings.vimMode,
 		[editorSettings.vimMode],
+	);
+
+	const getSpellCheckEnabled = useCallback(
+		() => editorSettings.spellCheck,
+		[editorSettings.spellCheck],
 	);
 
 	const getCollabOptions = useCallback((): CollabConnectOptions | null => {
@@ -352,6 +377,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		getAutoSaveEnabled,
 		getAutoSaveDelay,
 		getVimModeEnabled,
+		getSpellCheckEnabled,
 		getCollabOptions,
 		getEnabledLSPPlugins,
 		editorSettingsVersion,

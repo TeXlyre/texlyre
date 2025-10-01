@@ -4,6 +4,7 @@
     "editor-font-family": "monospace",
     "editor-show-line-numbers": true,
     "editor-syntax-highlighting": true,
+    "editor-spell-check": false,
     "editor-theme-highlights": "auto",
     "editor-auto-save-enable": true,
     "editor-auto-save-delay": 1000,
