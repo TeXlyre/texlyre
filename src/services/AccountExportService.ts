@@ -8,14 +8,14 @@ import { ProjectDataService } from "./ProjectDataService";
 import { StorageAdapterService, ZipAdapter } from "./StorageAdapterService";
 
 export interface ExportOptions {
-    includeAccount?: boolean;
-    includeDocuments?: boolean;
-    includeFiles?: boolean;
-    includeTemporaryFiles?: boolean;
-    includeUserData?: boolean;
-    projectIds?: string[];
-    format?: "texlyre" | "files-only";
-    isSingleProjectExport?: boolean;
+	includeAccount?: boolean;
+	includeDocuments?: boolean;
+	includeFiles?: boolean;
+	includeTemporaryFiles?: boolean;
+	includeUserData?: boolean;
+	projectIds?: string[];
+	format?: "texlyre" | "files-only";
+	isSingleProjectExport?: boolean;
 }
 
 class AccountExportService {
@@ -113,6 +113,7 @@ class AccountExportService {
 						id: project.id,
 						name: project.name,
 						description: project.description,
+						type: project.type || "latex",
 						docUrl: project.docUrl,
 						createdAt: project.createdAt,
 						updatedAt: project.updatedAt,
@@ -128,6 +129,7 @@ class AccountExportService {
 							id: project.id,
 							name: project.name,
 							description: project.description,
+							type: project.type || "latex",
 							docUrl: project.docUrl,
 							createdAt: project.createdAt,
 							updatedAt: project.updatedAt,

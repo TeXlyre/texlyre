@@ -279,7 +279,7 @@ class CollabService {
 
 	public async getDocumentMetadata(
 		url: YjsDocUrl,
-	): Promise<{ name: string; description: string } | null> {
+	): Promise<{ name: string; description: string, type: string } | null> {
 		const fragments = parseUrlFragments(url);
 		const yjsUrl = fragments.yjsUrl;
 

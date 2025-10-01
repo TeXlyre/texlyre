@@ -33,6 +33,7 @@ interface ProjectManagerProps {
 		docUrl: string,
 		projectName?: string,
 		projectDescription?: string,
+		projectType?: "latex" | "typst",
 		projectId?: string,
 	) => void;
 	onLogout: () => void;
@@ -175,6 +176,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const handleCreateProject = async (projectData: {
 		name: string;
 		description: string;
+		type: "latex" | "typst";
 		tags: string[];
 		docUrl?: string;
 		isFavorite: boolean;
@@ -193,12 +195,14 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 					JSON.stringify({
 						name: projectData.name,
 						description: projectData.description,
+						type: projectData.type,
 					}),
 				);
 				onOpenProject(
 					newProject.docUrl,
 					newProject.name,
 					newProject.description,
+					newProject.type,
 					newProject.id,
 				);
 			}
@@ -355,7 +359,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			finalUrl = newUrl;
 		}
 
-		onOpenProject(finalUrl, project.name, project.description, project.id);
+		onOpenProject(finalUrl, project.name, project.description, project.type, project.id);
 	};
 
 	const openProject = async (project: Project) => {
@@ -377,6 +381,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			project.docUrl,
 			project.name,
 			project.description,
+			project.type,
 			project.id,
 		);
 	};
@@ -500,23 +505,23 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						<img src={texlyreLogo} className="logo" alt="TeXlyre logo" />
 					</a>
 					<span className="legal-links">
-					  <br/> <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">
-						Documentation
-					  </a>
+						<br /> <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">
+							Documentation
+						</a>
 						{" "} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">
-						Source Code
-					  </a>
-					  {" "} • <a href="#" onClick={(event) => {
-						  event.preventDefault();
-						  setShowPrivacy(true);
-					  }} className="privacy-link"> Privacy </a>
+							Source Code
+						</a>
+						{" "} • <a href="#" onClick={(event) => {
+							event.preventDefault();
+							setShowPrivacy(true);
+						}} className="privacy-link"> Privacy </a>
 					</span>
 				</p>
 			</footer>
 
 			<PrivacyModal
-			  isOpen={showPrivacy}
-			  onClose={() => setShowPrivacy(false)}
+				isOpen={showPrivacy}
+				onClose={() => setShowPrivacy(false)}
 			/>
 
 			<Modal

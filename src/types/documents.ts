@@ -15,7 +15,10 @@ export interface DocumentList {
 	projectMetadata?: {
 		name: string;
 		description: string;
+		type?: "latex" | "typst";
 		mainFile?: string;
 		latexEngine?: "pdftex" | "xetex" | "luatex";
+		typstEngine?: string;
+		typstOutputFormat?: "pdf" | "svg" | "canvas";
 	};
 }

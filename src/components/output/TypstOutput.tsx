@@ -309,7 +309,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
                 <div className="canvas-viewer">
                     {canvasRenderer ? (
                         React.createElement(canvasRenderer.renderOutput, {
-                            content: compiledCanvas.buffer,
+                            content: toArrayBuffer(compiledCanvas.buffer),
                             mimeType: "image/svg+xml",
                             fileName: "output.svg",
                             onSave: (fileName) => handleSaveOutput("canvas", fileName),

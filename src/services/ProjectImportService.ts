@@ -250,6 +250,7 @@ class ProjectImportService {
 					> = {
 						name: finalProjectName,
 						description: projectMetadata.description,
+						type: projectMetadata.type || "latex",
 						docUrl: finalDocUrl,
 						tags: projectMetadata.tags || [],
 						isFavorite: false,
@@ -332,6 +333,7 @@ class ProjectImportService {
 			id: projectId,
 			name: projectData.name,
 			description: projectData.description,
+			type: projectData.type || "latex",
 			docUrl: projectData.docUrl,
 			createdAt: now,
 			updatedAt: now,

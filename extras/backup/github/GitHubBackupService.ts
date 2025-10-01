@@ -19,12 +19,12 @@ interface BackupStatus {
 interface BackupActivity {
 	id: string;
 	type:
-		| "backup_start"
-		| "backup_complete"
-		| "backup_error"
-		| "import_start"
-		| "import_complete"
-		| "import_error";
+	| "backup_start"
+	| "backup_complete"
+	| "backup_error"
+	| "import_start"
+	| "import_complete"
+	| "import_error";
 	message: string;
 	timestamp: number;
 	data?: any;
@@ -659,6 +659,11 @@ export class GitHubBackupService {
 		const newProject = {
 			id: projectMetadata.id,
 			name: projectMetadata.name,
+			type: projectMetadata.type || "latex",
+			latexEngine: projectMetadata.latexEngine || "pdftex",
+			typstEngine: projectMetadata.typstEngine || "typst",
+			typstOutputFormat: projectMetadata.typstOutputFormat || "pdf",
+			mainFile: projectMetadata.mainFile || "main.tex",
 			description: projectMetadata.description,
 			docUrl: projectMetadata.docUrl,
 			createdAt: projectMetadata.createdAt,

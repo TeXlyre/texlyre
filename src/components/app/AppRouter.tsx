@@ -17,6 +17,7 @@ import PrivacyModal from "../common/PrivacyModal";
 interface UrlProjectParams {
 	newProjectName?: string;
 	newProjectDescription?: string;
+	newProjectType?: string;
 	newProjectTags?: string;
 	files?: string;
 }
@@ -55,6 +56,8 @@ const AppRouter: React.FC = () => {
 					params.newProjectName = decodeURIComponent(part.slice(15));
 				} else if (part.startsWith("newProjectDescription:")) {
 					params.newProjectDescription = decodeURIComponent(part.slice(22));
+				} else if (part.startsWith("newProjectType:")) {
+					params.newProjectType = decodeURIComponent(part.slice(15));
 				} else if (part.startsWith("newProjectTags:")) {
 					params.newProjectTags = decodeURIComponent(part.slice(15));
 				} else if (part.startsWith("files:")) {
@@ -109,6 +112,7 @@ const AppRouter: React.FC = () => {
 			const newProject = await createProject({
 				name: params.newProjectName,
 				description: params.newProjectDescription || "",
+				type: params.newProjectType || "latex",
 				tags: params.newProjectTags.split(",") || [],
 				isFavorite: false,
 			});
@@ -209,12 +213,14 @@ const AppRouter: React.FC = () => {
 								docUrl,
 								metadata.name || "Untitled Project",
 								metadata.description || "",
+								metadata.type || "latex",
 							);
 						} else {
 							createProjectForDocument(
 								docUrl,
 								"Shared Document",
 								"Shared via URL",
+								"latex",
 							);
 						}
 					}
@@ -234,6 +240,7 @@ const AppRouter: React.FC = () => {
 		docUrl: string,
 		name: string,
 		description: string,
+		type: string,
 	) => {
 		try {
 			await new Promise((resolve) => setTimeout(resolve, 500));
@@ -241,6 +248,7 @@ const AppRouter: React.FC = () => {
 			const project = await createProject({
 				name,
 				description,
+				type,
 				docUrl,
 				tags: [],
 				isFavorite: false,

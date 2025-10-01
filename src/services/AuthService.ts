@@ -523,6 +523,7 @@ class AuthService {
 	private createNewDocumentUrl(
 		projectName = "Untitled Project",
 		projectDescription = "",
+		projectType?: "latex" | "typst",
 	): string {
 		try {
 			const projectId =
@@ -544,6 +545,7 @@ class AuthService {
 				ymap.set("projectMetadata", {
 					name: projectName,
 					description: projectDescription,
+					type: projectType || "latex",
 				});
 			});
 
@@ -570,7 +572,7 @@ class AuthService {
 
 		const docUrl =
 			project.docUrl ||
-			this.createNewDocumentUrl(project.name, project.description);
+			this.createNewDocumentUrl(project.name, project.description, project.type);
 
 		const now = Date.now();
 		const newProject: Project = {
@@ -698,6 +700,20 @@ class AuthService {
 		);
 	}
 
+	async getProjectsByType(type: "latex" | "typst"): Promise<Project[]> {
+		if (!this.db) await this.initialize();
+
+		if (!this.currentUser) {
+			return [];
+		}
+		const tx = this.db?.transaction(this.PROJECT_STORE, "readonly");
+		const projects: Project[] = await tx.store.getAll();
+
+		return projects.filter(
+			(project) => project.ownerId === this.currentUser?.id && project.type === type,
+		);
+	}
+
 	async searchProjects(query: string): Promise<Project[]> {
 		if (!this.db) await this.initialize();
 
@@ -714,6 +730,7 @@ class AuthService {
 				project.ownerId === this.currentUser?.id &&
 				(project.name.toLowerCase().includes(lowerQuery) ||
 					project.description.toLowerCase().includes(lowerQuery) ||
+					project.type.toLowerCase().includes(lowerQuery) ||
 					project.tags.some((tag) => tag.toLowerCase().includes(lowerQuery))),
 		);
 	}

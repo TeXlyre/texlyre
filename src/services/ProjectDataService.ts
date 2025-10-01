@@ -246,6 +246,7 @@ export class ProjectDataService {
 				projectData.documentContents,
 				projectData.metadata.name,
 				projectData.metadata.description,
+				projectData.metadata.type,
 			);
 			await this.deserializeProjectFilesSafely(
 				actualProjectId,
@@ -266,6 +267,7 @@ export class ProjectDataService {
 		>,
 		projectName?: string,
 		projectDescription?: string,
+		projectType?: "latex" | "typst",
 	): Promise<void> {
 		const dbName = `texlyre-project-${projectId}`;
 		const metadataCollection = `${dbName}-yjs_metadata`;
@@ -295,6 +297,7 @@ export class ProjectDataService {
 				documentContents,
 				projectName,
 				projectDescription,
+				projectType
 			);
 
 			console.log(
@@ -346,6 +349,7 @@ export class ProjectDataService {
 		>,
 		projectName?: string,
 		projectDescription?: string,
+		projectType?: "latex" | "typst",
 	): Promise<void> {
 		return new Promise<void>((resolve, reject) => {
 			try {
@@ -374,6 +378,7 @@ export class ProjectDataService {
 							dataMap.set("projectMetadata", {
 								name: projectName,
 								description: projectDescription,
+								type: projectType || "latex",
 							});
 						}
 					});

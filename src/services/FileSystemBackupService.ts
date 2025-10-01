@@ -270,8 +270,8 @@ class FileSystemBackupService {
 
 		const localProjects = projectId
 			? [await authService.getProjectById(projectId)].filter(
-					(p): p is Project => !!p,
-				)
+				(p): p is Project => !!p,
+			)
 			: await authService.getProjectsByUser(user.id);
 
 		if (localProjects.length === 0) {
@@ -432,6 +432,7 @@ class FileSystemBackupService {
 			id: projectMetadata.id,
 			name: projectMetadata.name,
 			description: projectMetadata.description,
+			type: projectMetadata.type || "latex",
 			docUrl: projectMetadata.docUrl,
 			createdAt: projectMetadata.createdAt,
 			updatedAt: Date.now(),

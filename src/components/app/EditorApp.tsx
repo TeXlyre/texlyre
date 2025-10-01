@@ -28,6 +28,7 @@ import { ChevronLeftIcon, EditIcon } from "../common/Icons";
 import Modal from "../common/Modal";
 import OfflineBanner from "../common/OfflineBanner";
 import ToastContainer from "../common/ToastContainer";
+import TypesetterInfo from "../common/TypesetterInfo";
 import FileDocumentController from "../editor/FileDocumentController";
 import LaTeXCompileButton from "../output/LaTeXCompileButton";
 import TypstCompileButton from "../output/TypstCompileButton";
@@ -95,8 +96,11 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const lastSyncedMetadata = useRef({
 		name: "",
 		description: "",
+		type: "latex" as "latex" | "typst",
 		mainFile: undefined as string | undefined,
-		latexEngine: undefined as ("pdftex" | "xetex" | "luatex") | undefined
+		latexEngine: undefined as ("pdftex" | "xetex" | "luatex") | undefined,
+		typstEngine: undefined as string | undefined,
+		typstOutputFormat: undefined as ("pdf" | "svg" | "canvas") | undefined,
 	});
 	const { isCompiling, triggerAutoCompile } = useLaTeX();
 	const { isCompiling: isTypstCompiling, triggerAutoCompile: triggerTypstAutoCompile } = useTypst();
@@ -209,8 +213,11 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					d.projectMetadata = {
 						name: parsedMetadata.name || "Untitled Project",
 						description: parsedMetadata.description || "",
+						type: parsedMetadata.type || "latex",
 						mainFile: parsedMetadata.mainFile,
 						latexEngine: parsedMetadata.latexEngine,
+						typstEngine: parsedMetadata.typstEngine,
+						typstOutputFormat: parsedMetadata.typstOutputFormat
 					};
 					sessionStorage.removeItem("projectMetadata");
 				});
@@ -220,7 +227,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
 	useEffect(() => {
 		if (doc?.projectMetadata) {
-			const { name, description, mainFile, latexEngine } = doc.projectMetadata;
+			const { name, description, type, mainFile, latexEngine, typstEngine, typstOutputFormat } = doc.projectMetadata;
 			const projectId = sessionStorage.getItem("currentProjectId");
 
 			if (
@@ -232,14 +239,20 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 				if (
 					lastSyncedMetadata.current.name !== name ||
 					lastSyncedMetadata.current.description !== description ||
+					lastSyncedMetadata.current.type !== type ||
 					lastSyncedMetadata.current.mainFile !== mainFile ||
-					lastSyncedMetadata.current.latexEngine !== latexEngine
+					lastSyncedMetadata.current.latexEngine !== latexEngine ||
+					lastSyncedMetadata.current.typstEngine !== typstEngine ||
+					lastSyncedMetadata.current.typstOutputFormat !== typstOutputFormat
 				) {
 					lastSyncedMetadata.current = {
 						name,
 						description: description || "",
+						type: type || "latex",
 						mainFile,
-						latexEngine
+						latexEngine,
+						typstEngine,
+						typstOutputFormat
 					};
 					const syncProjectMetadata = async () => {
 						try {
@@ -249,6 +262,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 									...project,
 									name,
 									description: description || "",
+									type: type || "latex",
 								});
 							}
 						} catch (error) {
@@ -357,6 +371,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const handleUpdateProjectMetadata = (projectData: {
 		name: string;
 		description: string;
+		type?: "latex" | "typst";
 	}) => {
 		setIsSubmitting(true);
 		changeDoc((d) => {
@@ -364,10 +379,12 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 				d.projectMetadata = {
 					name: projectData.name,
 					description: projectData.description,
+					type: projectData.type || "latex",
 				};
 			} else {
 				d.projectMetadata.name = projectData.name;
 				d.projectMetadata.description = projectData.description;
+				d.projectMetadata.type = projectData.type || "latex";
 			}
 		});
 		setIsSubmitting(false);
@@ -403,6 +420,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const selectedDocument = doc?.documents?.find((d) => d.id === localDocId);
 	const projectName = doc?.projectMetadata?.name || "Untitled Project";
 	const projectDescription = doc?.projectMetadata?.description || "";
+	const projectType = doc?.projectMetadata?.type || "latex";
 
 	if (!isConnected && !doc) {
 		return (
@@ -526,6 +544,11 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			)}
 
 			<footer>
+
+				<div className="project-type-badge">
+					Typesetter: <TypesetterInfo type={projectType} />
+				</div>
+
 				<p className="read-the-docs">
 					Built with TeXlyre
 					<a href="https://texlyre.github.io" target="_blank" rel="noreferrer">
@@ -562,6 +585,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						id: docUrl,
 						name: projectName,
 						description: projectDescription,
+						type: projectType || "latex",
 						docUrl: docUrl,
 						createdAt: 0,
 						updatedAt: 0,

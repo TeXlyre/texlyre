@@ -27,6 +27,7 @@ export interface AuthContextType {
 	createProject: (project: {
 		name: string;
 		description: string;
+		type: string;
 		tags: string[];
 		docUrl?: string;
 		isFavorite: boolean;

@@ -13,8 +13,11 @@ export interface ProjectMetadata {
 	id: string;
 	name: string;
 	description: string;
+	type?: "latex" | "typst";
 	mainFile?: string;
-    latexEngine?: "pdftex" | "xetex" | "luatex";
+	latexEngine?: "pdftex" | "xetex" | "luatex";
+	typstEngine?: string;
+	typstOutputFormat?: "pdf" | "svg" | "canvas";
 	docUrl: string;
 	createdAt: number;
 	updatedAt: number;
@@ -125,6 +128,7 @@ export class UnifiedDataStructureService {
 			id: project.id,
 			name: project.name,
 			description: project.description,
+			type: project.type,
 			docUrl: project.docUrl,
 			createdAt: project.createdAt,
 			updatedAt: project.updatedAt,
@@ -147,6 +151,7 @@ export class UnifiedDataStructureService {
 			id: metadata.id,
 			name: metadata.name,
 			description: metadata.description,
+			type: metadata.type || "latex",
 			docUrl: metadata.docUrl,
 			createdAt: metadata.createdAt,
 			updatedAt: metadata.updatedAt,

@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 
 import { pluginRegistry } from "../../plugins/PluginRegistry";
 import { useSettings } from "../../hooks/useSettings";
+import { toArrayBuffer } from "../../utils/fileUtils";
 
 interface PdfMessage {
 	type: 'pdf-update' | 'pdf-clear' | 'window-ready' | 'window-closed';
@@ -89,7 +90,7 @@ const PdfViewerWindow: React.FC<PdfViewerWindowProps> = ({ projectId }) => {
 	const handleSavePdf = (fileName: string) => {
 		if (!pdfData) return;
 
-		const blob = new Blob([pdfData], { type: "application/pdf" });
+		const blob = new Blob([toArrayBuffer(pdfData)], { type: "application/pdf" });
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement("a");
 		a.href = url;
@@ -177,14 +178,14 @@ const PdfViewerWindow: React.FC<PdfViewerWindowProps> = ({ projectId }) => {
 					<div style={{ height: '100%', width: '100%' }}>
 						{pdfRendererPlugin && useEnhancedRenderer ? (
 							React.createElement(pdfRendererPlugin.renderOutput, {
-								content: pdfData.buffer,
+								content: toArrayBuffer(pdfData.buffer),
 								mimeType: "application/pdf",
 								fileName: fileName,
 								onSave: handleSavePdf,
 							})
 						) : (
 							<embed
-								src={URL.createObjectURL(new Blob([pdfData], { type: "application/pdf" }))}
+								src={URL.createObjectURL(new Blob([toArrayBuffer(pdfData)], { type: "application/pdf" }))}
 								type="application/pdf"
 								style={{ width: "100%", height: "100%" }}
 							/>

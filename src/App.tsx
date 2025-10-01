@@ -38,6 +38,7 @@ import "./styles/components/latex-typst.css";
 import "./styles/components/plugin-header.css";
 import "./styles/components/settings.css";
 import "./styles/components/offline.css";
+import "./styles/components/typsetter.css";
 import "./styles/components/splash-screen.css"
 import "./styles/components/legal.css"
 
