@@ -9,6 +9,7 @@ interface ProjectFormProps {
 	onSubmit: (projectData: {
 		name: string;
 		description: string;
+		type: "latex" | "typst";
 		tags: string[];
 		docUrl?: string;
 		isFavorite: boolean;
@@ -29,6 +30,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 }) => {
 	const [name, setName] = useState("");
 	const [description, setDescription] = useState("");
+	const [type, setType] = useState<"latex" | "typst">("latex");
 	const [tagInput, setTagInput] = useState("");
 	const [tags, setTags] = useState<string[]>([]);
 	const [docUrl, setDocUrl] = useState("");
@@ -40,6 +42,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 		if (project) {
 			setName(project.name);
 			setDescription(project.description || "");
+			setType(project.type);
 			setTags(project.tags || []);
 			setDocUrl(project.docUrl || "");
 			setIsFavorite(project.isFavorite);
@@ -57,6 +60,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 		onSubmit({
 			name: name.trim(),
 			description: description.trim(),
+			type,
 			tags,
 			docUrl: docUrl || undefined,
 			isFavorite,
@@ -124,6 +128,26 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 						disabled={isSubmitting || disableNameAndDescription}
 						rows={3}
 					/>
+				)}
+			</div>
+
+			<div className="form-group">
+				<label htmlFor="project-type">Typesetter Type</label>
+				{disableNameAndDescription ? (
+					<div className="disabled-field">
+						<span>{type === "latex" ? "LaTeX" : "Typst"}</span>
+						<div className="field-note">Open the project to edit its typesetter type</div>
+					</div>
+				) : (
+					<select
+						id="project-type"
+						value={type}
+						onChange={(e) => setType(e.target.value as "latex" | "typst")}
+						disabled={isSubmitting}
+					>
+						<option value="latex">LaTeX</option>
+						<option value="typst">Typst</option>
+					</select>
 				)}
 			</div>
 

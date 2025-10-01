@@ -87,7 +87,7 @@ async function loadFonts(baseUrl: string = '/texlyre/assets/fonts') {
         }
     });
     const fonts = await Promise.all(fontPromises);
-    return fonts.filter((f): f is Uint8Array => f !== null);
+    return fonts.filter((f) => f !== null) as Uint8Array[];
 }
 
 async function ensureInit() {
