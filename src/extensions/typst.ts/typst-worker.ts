@@ -2,6 +2,7 @@
 export { };
 import { createTypstCompiler } from "@myriaddreamin/typst.ts/compiler";
 import { createTypstRenderer } from "@myriaddreamin/typst.ts/renderer";
+import { TypstSnippet } from "@myriaddreamin/typst.ts/dist/esm/contrib/snippet.mjs";
 
 declare const self: DedicatedWorkerGlobalScope;
 
@@ -93,11 +94,13 @@ async function ensureInit() {
     if (initialized) return;
 
     const fonts = await loadFonts();
+    const packageRegistry = TypstSnippet.fetchPackageRegistry();
 
     compiler = createTypstCompiler();
     await compiler.init({
         getModule: () => "/texlyre/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm",
         beforeBuild: [
+            ...packageRegistry.provides,
             async (_: any, { builder }: any) => {
                 for (const font of fonts) {
                     await builder.add_raw_font(font);
