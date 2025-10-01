@@ -215,7 +215,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 			type: "checkbox",
 			label: "Show syntax highlighting",
 			description:
-				"Show syntax highlighting in the editor including tooltip and linting (LaTeX, typst, BibTeX, and markdown)",
+				"Show syntax highlighting in the editor including tooltip and linting (LaTeX, Typst, BibTeX, and markdown)",
 			defaultValue: defaultEditorSettings.syntaxHighlighting,
 			onChange: (value) => {
 				updateEditorSetting("syntaxHighlighting", value as boolean);

@@ -4,7 +4,7 @@
 }
 
 .typesetter-tooltip {
-    position: absolute;
+    position: fixed;
     width: 320px;
     padding: var(--space-md);
     background-color: var(--pico-background);
@@ -15,6 +15,8 @@
     color: var(--text-color);
     line-height: 1.4;
     z-index: 1000;
+    max-height: calc(100vh - 16px);
+    overflow: auto;
 }
 
 .typesetter-tooltip-title {

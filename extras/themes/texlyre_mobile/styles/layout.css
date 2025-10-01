@@ -38,6 +38,12 @@
 	bottom: auto;
 	left: auto;
 	z-index: var(--mobile-z-navigation);
+	font-size: var(--mobile-font-xs);
+	filter: brightness(0.8);
+}
+
+.project-type-badge .type-info-help {
+	font-size: var(--mobile-font-xs);
 }
 
 [data-layout="texlyre-mobile"] .latex-outline,
