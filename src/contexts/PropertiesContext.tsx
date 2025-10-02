@@ -1,5 +1,5 @@
 // src/contexts/PropertiesContext.tsx
-import type React from "react";
+import type React from 'react';
 import {
 	type ReactNode,
 	createContext,
@@ -7,7 +7,7 @@ import {
 	useEffect,
 	useRef,
 	useState,
-} from "react";
+} from 'react';
 
 export interface Property {
 	id: string;
@@ -21,11 +21,11 @@ export interface Property {
 
 export interface PropertiesContextType {
 	getProperty: (id: string, options?: {
-		scope?: "global" | "project";
+		scope?: 'global' | 'project';
 		projectId?: string;
 	}) => unknown;
 	setProperty: (id: string, value: unknown, options?: {
-		scope?: "global" | "project";
+		scope?: 'global' | 'project';
 		projectId?: string;
 	}) => void;
 	registerProperty: (property: Property) => void;
@@ -35,11 +35,11 @@ export interface PropertiesContextType {
 		subcategory?: string,
 	) => Property[];
 	hasProperty: (id: string, options?: {
-		scope?: "global" | "project";
+		scope?: 'global' | 'project';
 		projectId?: string;
 	}) => boolean;
 	getPropertyMetadata: (id: string, options?: {
-		scope?: "global" | "project";
+		scope?: 'global' | 'project';
 		projectId?: string;
 	}) => Record<string, any> | null;
 	clearAllProperties: (pluginId?: string) => void;
@@ -70,20 +70,20 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 	const isLocalStorageLoaded = useRef(false);
 
 	const getCurrentUserId = useCallback((): string | null => {
-		return localStorage.getItem("texlyre-current-user");
+		return localStorage.getItem('texlyre-current-user');
 	}, []);
 
 	const getStorageKey = useCallback((): string => {
 		const userId = getCurrentUserId();
-		return userId ? `texlyre-user-${userId}-properties` : "texlyre-properties";
+		return userId ? `texlyre-user-${userId}-properties` : 'texlyre-properties';
 	}, [getCurrentUserId]);
 
 	const getPropertyId = useCallback((
 		id: string,
-		scope: "global" | "project" = "global",
+		scope: 'global' | 'project' = 'global',
 		projectId?: string,
 	): string => {
-		if (scope === "project" && projectId) {
+		if (scope === 'project' && projectId) {
 			return `${id}:project:${projectId}`;
 		}
 		return `${id}:global`;
@@ -93,8 +93,8 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 		const userId = getCurrentUserId();
 		const userStorageKey = userId
 			? `texlyre-user-${userId}-properties`
-			: "texlyre-properties";
-		const globalStorageKey = "texlyre-properties";
+			: 'texlyre-properties';
+		const globalStorageKey = 'texlyre-properties';
 
 		try {
 			let stored = localStorage.getItem(userStorageKey);
@@ -114,7 +114,7 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 			}
 		} catch (err) {
 			console.error(
-				"Error parsing properties from localStorage on initial load:",
+				'Error parsing properties from localStorage on initial load:',
 				err,
 			);
 			localStorage.removeItem(userStorageKey);
@@ -148,16 +148,16 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 			localStorage.setItem(storageKey, JSON.stringify(toSave));
 			localStoragePropertiesRef.current = toSave;
 		} catch (error) {
-			console.error("Error saving properties to localStorage:", error);
+			console.error('Error saving properties to localStorage:', error);
 		}
 	}, [properties, getStorageKey]);
 
 	const getProperty = useCallback(
 		(id: string, options?: {
-			scope?: "global" | "project";
+			scope?: 'global' | 'project';
 			projectId?: string;
 		}): unknown => {
-			const scope = options?.scope || "global";
+			const scope = options?.scope || 'global';
 			const propertyId = getPropertyId(id, scope, options?.projectId);
 
 			if (localStoragePropertiesRef.current && localStoragePropertiesRef.current[propertyId] !== undefined) {
@@ -171,10 +171,10 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 	);
 
 	const setProperty = useCallback((id: string, value: unknown, options?: {
-		scope?: "global" | "project";
+		scope?: 'global' | 'project';
 		projectId?: string;
 	}) => {
-		const scope = options?.scope || "global";
+		const scope = options?.scope || 'global';
 		const propertyId = getPropertyId(id, scope, options?.projectId);
 
 		if (localStoragePropertiesRef.current) {
@@ -202,7 +202,7 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 			const storageKey = getStorageKey();
 			localStorage.setItem(storageKey, JSON.stringify(localStoragePropertiesRef.current || {}));
 		} catch (error) {
-			console.error("Error saving property to localStorage:", error);
+			console.error('Error saving property to localStorage:', error);
 		}
 	}, [getPropertyId, getStorageKey]);
 
@@ -248,10 +248,10 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 
 	const hasProperty = useCallback(
 		(id: string, options?: {
-			scope?: "global" | "project";
+			scope?: 'global' | 'project';
 			projectId?: string;
 		}): boolean => {
-			const scope = options?.scope || "global";
+			const scope = options?.scope || 'global';
 			const propertyId = getPropertyId(id, scope, options?.projectId);
 
 			if (localStoragePropertiesRef.current && localStoragePropertiesRef.current[propertyId] !== undefined) {
@@ -265,10 +265,10 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 
 	const getPropertyMetadata = useCallback(
 		(id: string, options?: {
-			scope?: "global" | "project";
+			scope?: 'global' | 'project';
 			projectId?: string;
 		}): Record<string, any> | null => {
-			const scope = options?.scope || "global";
+			const scope = options?.scope || 'global';
 			const propertyId = getPropertyId(id, scope, options?.projectId);
 			const property = properties.find((p) => p.id === propertyId);
 			return property ? {

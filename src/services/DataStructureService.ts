@@ -1,23 +1,23 @@
 // src/services/DataStructureService.ts
-import type { User } from "../types/auth";
-import type { FileNode } from "../types/files";
-import type { Project } from "../types/projects";
+import type { User } from '../types/auth';
+import type { FileNode } from '../types/files';
+import type { Project } from '../types/projects';
 
 export interface UnifiedManifest {
 	version: string;
 	lastSync: number;
-	mode: "backup" | "export" | "import";
+	mode: 'backup' | 'export' | 'import';
 }
 
 export interface ProjectMetadata {
 	id: string;
 	name: string;
 	description: string;
-	type?: "latex" | "typst";
+	type?: 'latex' | 'typst';
 	mainFile?: string;
-	latexEngine?: "pdftex" | "xetex" | "luatex";
+	latexEngine?: 'pdftex' | 'xetex' | 'luatex';
 	typstEngine?: string;
-	typstOutputFormat?: "pdf" | "svg" | "canvas";
+	typstOutputFormat?: 'pdf' | 'svg' | 'canvas';
 	docUrl: string;
 	createdAt: number;
 	updatedAt: number;
@@ -40,7 +40,7 @@ export interface FileMetadata {
 	id: string;
 	name: string;
 	path: string;
-	type: "file" | "directory";
+	type: 'file' | 'directory';
 	lastModified: number;
 	size?: number;
 	mimeType?: string;
@@ -69,18 +69,18 @@ export interface DataStructureService {
 }
 
 export class UnifiedDataStructureService {
-	private readonly VERSION = "1.0.0";
+	private readonly VERSION = '1.0.0';
 	private readonly PATHS = {
-		MANIFEST: "manifest.json",
-		ACCOUNT: "account.json",
-		PROJECTS: "projects.json",
-		PROJECTS_DIR: "projects",
-		DOCUMENTS_DIR: "documents",
-		FILES_DIR: "files",
-		FILES_METADATA: "metadata.json",
+		MANIFEST: 'manifest.json',
+		ACCOUNT: 'account.json',
+		PROJECTS: 'projects.json',
+		PROJECTS_DIR: 'projects',
+		DOCUMENTS_DIR: 'documents',
+		FILES_DIR: 'files',
+		FILES_METADATA: 'metadata.json',
 	} as const;
 
-	createManifest(mode: "backup" | "export" | "import"): UnifiedManifest {
+	createManifest(mode: 'backup' | 'export' | 'import'): UnifiedManifest {
 		return {
 			version: this.VERSION,
 			lastSync: Date.now(),
@@ -122,7 +122,7 @@ export class UnifiedDataStructureService {
 
 	convertProjectToMetadata(
 		project: Project,
-		mode: "backup" | "export",
+		mode: 'backup' | 'export',
 	): ProjectMetadata {
 		const metadata: ProjectMetadata = {
 			id: project.id,
@@ -137,7 +137,7 @@ export class UnifiedDataStructureService {
 			isFavorite: project.isFavorite,
 		};
 
-		if (mode === "backup") {
+		if (mode === 'backup') {
 			metadata.lastSync = Date.now();
 		} else {
 			metadata.exportedAt = Date.now();
@@ -151,7 +151,7 @@ export class UnifiedDataStructureService {
 			id: metadata.id,
 			name: metadata.name,
 			description: metadata.description,
-			type: metadata.type || "latex",
+			type: metadata.type || 'latex',
 			docUrl: metadata.docUrl,
 			createdAt: metadata.createdAt,
 			updatedAt: metadata.updatedAt,

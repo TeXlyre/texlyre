@@ -1,8 +1,8 @@
 // src/contexts/OfflineContext.tsx
-import type React from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import type React from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
-import { type OfflineStatus, offlineService } from "../services/OfflineService";
+import { type OfflineStatus, offlineService } from '../services/OfflineService';
 
 interface OfflineContextType extends OfflineStatus {
 	isOfflineMode: boolean;

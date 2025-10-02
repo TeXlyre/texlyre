@@ -1,3 +1,3 @@
-import canvasRendererPlugin from "./CanvasRendererPlugin";
+import canvasRendererPlugin from './CanvasRendererPlugin';
 
 export default canvasRendererPlugin;

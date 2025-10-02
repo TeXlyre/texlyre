@@ -1,16 +1,16 @@
 // src/contexts/BibliographyContext.tsx
-import type React from "react";
+import type React from 'react';
 import {
 	type ReactNode,
 	createContext,
 	useCallback,
 	useEffect,
 	useState,
-} from "react";
+} from 'react';
 
-import { useProperties } from "../hooks/useProperties";
-import { fileStorageService } from "../services/FileStorageService";
-import { BibtexParser } from "../../extras/viewers/bibtex/BibtexParser";
+import { useProperties } from '../hooks/useProperties';
+import { fileStorageService } from '../services/FileStorageService';
+import { BibtexParser } from '../../extras/viewers/bibtex/BibtexParser';
 
 export interface BibliographyFile {
 	path: string;
@@ -65,7 +65,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 
 	const getTargetFile = useCallback((pluginId: string, projectId?: string): string | null => {
 		const propertyId = getPropertyId(pluginId);
-		const scopeOptions = projectId ? { scope: "project" as const, projectId } : { scope: "global" as const };
+		const scopeOptions = projectId ? { scope: 'project' as const, projectId } : { scope: 'global' as const };
 		const targetFile = getProperty(propertyId, scopeOptions) as string | null;
 
 		if (!targetFile) {
@@ -80,13 +80,13 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			return targetFile;
 		}
 
-		setProperty(propertyId, "", scopeOptions);
+		setProperty(propertyId, '', scopeOptions);
 		return null;
 	}, [getProperty, setProperty, availableFiles]);
 
 	const setTargetFile = useCallback((pluginId: string, filePath: string, projectId?: string) => {
 		const propertyId = getPropertyId(pluginId);
-		const scopeOptions = projectId ? { scope: "project" as const, projectId } : { scope: "global" as const };
+		const scopeOptions = projectId ? { scope: 'project' as const, projectId } : { scope: 'global' as const };
 		setProperty(propertyId, filePath, scopeOptions);
 	}, [setProperty]);
 
@@ -280,7 +280,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		const propertyId = getPropertyId(pluginId);
 
 		const handleTargetFileChange = async (value: unknown) => {
-			if (value === "CREATE_NEW") {
+			if (value === 'CREATE_NEW') {
 				const createdFile = await createBibFile();
 				if (createdFile) {
 					document.dispatchEvent(new CustomEvent('refresh-file-tree'));
@@ -292,7 +292,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 
 		const updateOptions = () => {
 			const options = [
-				{ label: "Create new bibliography.bib", value: "CREATE_NEW" },
+				{ label: 'Create new bibliography.bib', value: 'CREATE_NEW' },
 				...availableFiles.map(file => ({
 					label: file.name,
 					value: file.path
@@ -301,9 +301,9 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 
 			registerProperty({
 				id: propertyId,
-				category: "LSP",
+				category: 'LSP',
 				subcategory: pluginName,
-				defaultValue: "",
+				defaultValue: '',
 				options,
 				onChange: handleTargetFileChange
 			});

@@ -1,37 +1,37 @@
 // src/components/chat/ChatPanel.tsx
-import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import { useAuth } from "../../hooks/useAuth";
-import { useChat } from "../../hooks/useChat";
-import { ChevronDownIcon, ChevronUpIcon } from "../common/Icons";
-import ChatMessage from "./ChatMessage";
+import { useAuth } from '../../hooks/useAuth';
+import { useChat } from '../../hooks/useChat';
+import { ChevronDownIcon, ChevronUpIcon } from '../common/Icons';
+import ChatMessage from './ChatMessage';
 
 interface ChatPanelProps {
 	className?: string;
 }
 
-const ChatPanel: React.FC<ChatPanelProps> = ({ className = "" }) => {
+const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
 	const { user } = useAuth();
 	const { messages, isConnected, sendMessage } = useChat();
 	const [isCollapsed, setIsCollapsed] = useState(true);
-	const [inputValue, setInputValue] = useState("");
+	const [inputValue, setInputValue] = useState('');
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		if (messagesEndRef.current && !isCollapsed) {
-			messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+			messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
 		}
 	}, [messages, isCollapsed]);
 
 	const handleSendMessage = () => {
 		if (!inputValue.trim()) return;
 		sendMessage(inputValue);
-		setInputValue("");
+		setInputValue('');
 	};
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === "Enter" && !e.shiftKey) {
+		if (e.key === 'Enter' && !e.shiftKey) {
 			e.preventDefault();
 			handleSendMessage();
 		}
@@ -43,7 +43,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ className = "" }) => {
 
 	return (
 		<div
-			className={`chat-panel ${isCollapsed ? "collapsed" : "expanded"} ${className}`}
+			className={`chat-panel ${isCollapsed ? 'collapsed' : 'expanded'} ${className}`}
 		>
 			<div className="chat-panel-header" onClick={toggleCollapsed}>
 				<span className="chat-panel-title">Project Chat</span>

@@ -1,22 +1,22 @@
 // src/utils/urlUtils.ts
-import {UrlFragments} from "../types/yjs.ts";
+import {UrlFragments} from '../types/yjs.ts';
 
 export const isValidYjsUrl = (url: string): boolean => {
-	return url.startsWith("yjs:");
+	return url.startsWith('yjs:');
 };
 
 export const parseUrlFragments = (url: string): UrlFragments => {
-	const parts = url.split("&");
-	const result: UrlFragments = { yjsUrl: "" };
+	const parts = url.split('&');
+	const result: UrlFragments = { yjsUrl: '' };
 
 	for (const part of parts) {
-		if (part.startsWith("yjs:")) {
+		if (part.startsWith('yjs:')) {
 			result.yjsUrl = part; // leave as-is or optionally decode
-		} else if (part.startsWith("doc:")) {
+		} else if (part.startsWith('doc:')) {
 			result.docId = decodeURIComponent(part.slice(4));
-		} else if (part.startsWith("file:")) {
+		} else if (part.startsWith('file:')) {
 			result.filePath = decodeURIComponent(part.slice(5));
-		} else if (part.startsWith("compile:")) {
+		} else if (part.startsWith('compile:')) {
 			result.compile = decodeURIComponent(part.slice(8));
 		}
 	}

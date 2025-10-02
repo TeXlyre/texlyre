@@ -1,11 +1,11 @@
 // src/components/profile/DeleteAccountModal.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import { useAuth } from "../../hooks/useAuth";
-import { cleanupProjectDatabases } from "../../utils/dbDeleteUtils";
-import { TrashIcon } from "../common/Icons";
-import Modal from "../common/Modal";
+import { useAuth } from '../../hooks/useAuth';
+import { cleanupProjectDatabases } from '../../utils/dbDeleteUtils';
+import { TrashIcon } from '../common/Icons';
+import Modal from '../common/Modal';
 
 interface DeleteAccountModalProps {
 	isOpen: boolean;
@@ -21,12 +21,12 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 	onOpenExport,
 }) => {
 	const { user, verifyPassword, getProjects } = useAuth();
-	const [currentPassword, setCurrentPassword] = useState("");
-	const [confirmationText, setConfirmationText] = useState("");
+	const [currentPassword, setCurrentPassword] = useState('');
+	const [confirmationText, setConfirmationText] = useState('');
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	const expectedConfirmationText = `DELETE ${user?.username || ""}`;
+	const expectedConfirmationText = `DELETE ${user?.username || ''}`;
 
 	const handleDelete = async () => {
 		if (!user) return;
@@ -36,7 +36,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 
 		try {
 			if (!currentPassword) {
-				throw new Error("Password is required to delete your account");
+				throw new Error('Password is required to delete your account');
 			}
 
 			if (confirmationText !== expectedConfirmationText) {
@@ -45,13 +45,13 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 
 			const isPasswordValid = await verifyPassword(user.id, currentPassword);
 			if (!isPasswordValid) {
-				throw new Error("Incorrect password");
+				throw new Error('Incorrect password');
 			}
 
 			await deleteUserAccount(user.id);
 			onAccountDeleted();
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "Failed to delete account");
+			setError(err instanceof Error ? err.message : 'Failed to delete account');
 		} finally {
 			setIsDeleting(false);
 		}
@@ -68,20 +68,20 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 
 		// Import authService only for direct database access
 		// This is needed because we need to delete from multiple stores in a transaction
-		const { authService } = await import("../../services/AuthService");
+		const { authService } = await import('../../services/AuthService');
 
 		const authDb = authService.db;
 		if (!authDb) {
-			throw new Error("Database not available");
+			throw new Error('Database not available');
 		}
 
 		// Delete all user data in a single transaction
-		const tx = authDb.transaction(["projects", "users"], "readwrite");
-		const projectStore = tx.objectStore("projects");
-		const userStore = tx.objectStore("users");
+		const tx = authDb.transaction(['projects', 'users'], 'readwrite');
+		const projectStore = tx.objectStore('projects');
+		const userStore = tx.objectStore('users');
 
 		// Delete all user's projects from the database
-		const userProjects = await projectStore.index("ownerId").getAll(userId);
+		const userProjects = await projectStore.index('ownerId').getAll(userId);
 		for (const project of userProjects) {
 			await projectStore.delete(project.id);
 		}
@@ -98,7 +98,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 		localStorage.removeItem(userSettingsKey);
 		localStorage.removeItem(userPropertiesKey);
 		localStorage.removeItem(userSecretsKey);
-		localStorage.removeItem("texlyre-current-user");
+		localStorage.removeItem('texlyre-current-user');
 
 		console.log(`Successfully deleted account for user: ${userId}`);
 	};
@@ -111,8 +111,8 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 	};
 
 	const handleClose = () => {
-		setCurrentPassword("");
-		setConfirmationText("");
+		setCurrentPassword('');
+		setConfirmationText('');
 		setError(null);
 		setIsDeleting(false);
 		onClose();
@@ -176,7 +176,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 
 				<div className="export-reminder">
 					<p>
-						<strong>Reminder:</strong> If you want to keep your data, use the{" "}
+						<strong>Reminder:</strong> If you want to keep your data, use the{' '}
 						{onOpenExport ? (
 							<button
 								type="button"
@@ -188,7 +188,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 							</button>
 						) : (
 							<strong>Export Account</strong>
-						)}{" "}
+						)}{' '}
 						option before deleting your account.
 					</p>
 				</div>
@@ -212,7 +212,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 							confirmationText !== expectedConfirmationText
 						}
 					>
-						{isDeleting ? "Deleting Account..." : "Delete Account"}
+						{isDeleting ? 'Deleting Account...' : 'Delete Account'}
 					</button>
 				</div>
 			</div>

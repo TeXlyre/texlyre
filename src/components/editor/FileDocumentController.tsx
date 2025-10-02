@@ -1,35 +1,35 @@
 // src/components/editor/FileDocumentController.tsx
-import type React from "react";
-import { useEffect, useRef, useState } from "react";
-import { IndexeddbPersistence } from "y-indexeddb";
-import * as Y from "yjs";
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { IndexeddbPersistence } from 'y-indexeddb';
+import * as Y from 'yjs';
 
-import { useAuth } from "../../hooks/useAuth";
-import { useFileTree } from "../../hooks/useFileTree";
-import { useProperties } from "../../hooks/useProperties";
-import { useTheme } from "../../hooks/useTheme";
-import { useEditorTabs } from "../../hooks/useEditorTabs";
+import { useAuth } from '../../hooks/useAuth';
+import { useFileTree } from '../../hooks/useFileTree';
+import { useProperties } from '../../hooks/useProperties';
+import { useTheme } from '../../hooks/useTheme';
+import { useEditorTabs } from '../../hooks/useEditorTabs';
 import {
 	fileStorageEventEmitter,
 	fileStorageService,
-} from "../../services/FileStorageService";
-import { pdfWindowService } from "../../services/PdfWindowService";
-import type { Document } from "../../types/documents";
-import type { FileNode } from "../../types/files";
-import type { Project } from "../../types/projects";
-import { buildUrlWithFragments, parseUrlFragments } from "../../utils/urlUtils";
-import type { YjsDocUrl } from "../../types/yjs";
-import { EditorTabsProvider } from "../../contexts/EditorTabsContext";
-import ResizablePanel from "../common/ResizablePanel";
-import EditorTabs from "./EditorTabs";
-import LaTeXOutline from "./LaTeXOutline";
-import TypstOutline from "./TypstOutline";
-import LaTeXOutput from "../output/LaTeXOutput";
-import TypstOutput from "../output/TypstOutput";
-import ProjectExportModal from "../project/ProjectExportModal";
-import DocumentExplorer from "./DocumentExplorer";
-import Editor from "./Editor";
-import FileExplorer from "./FileExplorer";
+} from '../../services/FileStorageService';
+import { pdfWindowService } from '../../services/PdfWindowService';
+import type { Document } from '../../types/documents';
+import type { FileNode } from '../../types/files';
+import type { Project } from '../../types/projects';
+import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
+import type { YjsDocUrl } from '../../types/yjs';
+import { EditorTabsProvider } from '../../contexts/EditorTabsContext';
+import ResizablePanel from '../common/ResizablePanel';
+import EditorTabs from './EditorTabs';
+import LaTeXOutline from './LaTeXOutline';
+import TypstOutline from './TypstOutline';
+import LaTeXOutput from '../output/LaTeXOutput';
+import TypstOutput from '../output/TypstOutput';
+import ProjectExportModal from '../project/ProjectExportModal';
+import DocumentExplorer from './DocumentExplorer';
+import Editor from './Editor';
+import FileExplorer from './FileExplorer';
 
 interface FileDocumentControllerProps {
 	documents: Document[];
@@ -48,7 +48,7 @@ const getDocumentContent = async (
 	projectUrl: string,
 	docId: string,
 ): Promise<string> => {
-	const projectId = projectUrl.startsWith("yjs:")
+	const projectId = projectUrl.startsWith('yjs:')
 		? projectUrl.slice(4)
 		: projectUrl;
 	const dbName = `texlyre-project-${projectId}`;
@@ -63,21 +63,21 @@ const getDocumentContent = async (
 				resolve();
 			}, 2000);
 
-			docPersistence.once("synced", () => {
+			docPersistence.once('synced', () => {
 				clearTimeout(timeout);
 				resolve();
 			});
 		});
 
-		const textContent = docYDoc.getText("codemirror").toString();
+		const textContent = docYDoc.getText('codemirror').toString();
 
 		docPersistence.destroy();
 		docYDoc.destroy();
 
 		return textContent;
 	} catch (error) {
-		console.error("Error getting document content:", error);
-		return "";
+		console.error('Error getting document content:', error);
+		return '';
 	}
 };
 
@@ -101,13 +101,13 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	const { openTab, tabs, getActiveTab } = useEditorTabs();
 	const propertiesRegistered = useRef(false);
 	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
-	const [activeView, setActiveView] = useState<"documents" | "files">("files");
+	const [activeView, setActiveView] = useState<'documents' | 'files'>('files');
 	const [_hasNavigated, _setHasNavigated] = useState(false);
-	const [fileContent, setFileContent] = useState<string | ArrayBuffer>("");
-	const [currentEditorContent, setCurrentEditorContent] = useState<string>("");
+	const [fileContent, setFileContent] = useState<string | ArrayBuffer>('');
+	const [currentEditorContent, setCurrentEditorContent] = useState<string>('');
 	const [isEditingFile, setIsEditingFile] = useState(false);
 	const [isBinaryFile, setIsBinaryFile] = useState(false);
-	const [fileName, setFileName] = useState("");
+	const [fileName, setFileName] = useState('');
 	const [mimeType, setMimeType] = useState<string | undefined>(undefined);
 	const [linkedDocumentId, setLinkedDocumentId] = useState<string | null>(null);
 	const [linkedFileInfo, setLinkedFileInfo] = useState<{
@@ -158,7 +158,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 				setShowCurrentProjectExportModal(true);
 			}
 		} catch (error) {
-			console.error("Error loading project for export:", error);
+			console.error('Error loading project for export:', error);
 		}
 	};
 
@@ -167,51 +167,51 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		propertiesRegistered.current = true;
 
 		registerProperty({
-			id: "sidebar-width",
-			category: "UI",
-			subcategory: "Layout",
+			id: 'sidebar-width',
+			category: 'UI',
+			subcategory: 'Layout',
 			defaultValue: currentLayout?.defaultFileExplorerWidth || 250,
 		});
 
 		registerProperty({
-			id: "latex-output-width",
-			category: "UI",
-			subcategory: "Layout",
+			id: 'latex-output-width',
+			category: 'UI',
+			subcategory: 'Layout',
 			defaultValue: latexOutputWidth,
 		});
 
 		registerProperty({
-			id: "typst-output-width",
-			category: "UI",
-			subcategory: "Layout",
+			id: 'typst-output-width',
+			category: 'UI',
+			subcategory: 'Layout',
 			defaultValue: typstOutputWidth,
 		});
 
 		registerProperty({
-			id: "sidebar-collapsed",
-			category: "UI",
-			subcategory: "Layout",
+			id: 'sidebar-collapsed',
+			category: 'UI',
+			subcategory: 'Layout',
 			defaultValue: false,
 		});
 
 		registerProperty({
-			id: "latex-output-collapsed",
-			category: "UI",
-			subcategory: "Layout",
+			id: 'latex-output-collapsed',
+			category: 'UI',
+			subcategory: 'Layout',
 			defaultValue: false,
 		});
 
 		registerProperty({
-			id: "typst-output-collapsed",
-			category: "UI",
-			subcategory: "Layout",
+			id: 'typst-output-collapsed',
+			category: 'UI',
+			subcategory: 'Layout',
 			defaultValue: false,
 		});
 
 		registerProperty({
-			id: "explorer-height",
-			category: "UI",
-			subcategory: "Layout",
+			id: 'explorer-height',
+			category: 'UI',
+			subcategory: 'Layout',
 			defaultValue: explorerHeight,
 		});
 
@@ -221,13 +221,13 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	useEffect(() => {
 		if (propertiesLoaded) return;
 
-		const storedSidebarWidth = getProperty("sidebar-width");
-		const storedLatexWidth = getProperty("latex-output-width");
-		const storedTypstWidth = getProperty("typst-output-width");
-		const storedSidebarCollapsed = getProperty("sidebar-collapsed");
-		const storedLatexCollapsed = getProperty("latex-output-collapsed");
-		const storedTypstCollapsed = getProperty("typst-output-collapsed");
-		const storedOutlineHeight = getProperty("explorer-height");
+		const storedSidebarWidth = getProperty('sidebar-width');
+		const storedLatexWidth = getProperty('latex-output-width');
+		const storedTypstWidth = getProperty('typst-output-width');
+		const storedSidebarCollapsed = getProperty('sidebar-collapsed');
+		const storedLatexCollapsed = getProperty('latex-output-collapsed');
+		const storedTypstCollapsed = getProperty('typst-output-collapsed');
+		const storedOutlineHeight = getProperty('explorer-height');
 
 		if (storedSidebarWidth !== undefined) {
 			setSidebarWidth(Number(storedSidebarWidth));
@@ -280,15 +280,15 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 			const { filePath, fileId } = customEvent.detail;
 
 			if (filePath && fileId) {
-				setActiveView("files");
+				setActiveView('files');
 
 				const expandPaths: string[] = [];
-				let currentPath = "";
-				const pathSegments = filePath.split("/").filter((segment) => segment);
+				let currentPath = '';
+				const pathSegments = filePath.split('/').filter((segment) => segment);
 
 				for (let i = 0; i < pathSegments.length - 1; i++) {
 					currentPath =
-						currentPath === ""
+						currentPath === ''
 							? `/${pathSegments[i]}`
 							: `${currentPath}/${pathSegments[i]}`;
 					expandPaths.push(currentPath);
@@ -310,7 +310,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 					path: string,
 				): FileNode | null => {
 					for (const node of nodes) {
-						if (node.path === path && node.type === "file") {
+						if (node.path === path && node.type === 'file') {
 							return node;
 						}
 						if (node.children) {
@@ -323,15 +323,15 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
 				const targetFile = findFileByPath(fileTree, filePath);
 				if (targetFile) {
-					setActiveView("files");
+					setActiveView('files');
 
 					const expandPaths: string[] = [];
-					let currentPath = "";
-					const pathSegments = filePath.split("/").filter((segment) => segment);
+					let currentPath = '';
+					const pathSegments = filePath.split('/').filter((segment) => segment);
 
 					for (let i = 0; i < pathSegments.length - 1; i++) {
 						currentPath =
-							currentPath === ""
+							currentPath === ''
 								? `/${pathSegments[i]}`
 								: `${currentPath}/${pathSegments[i]}`;
 						expandPaths.push(currentPath);
@@ -352,7 +352,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 								);
 							}
 						} catch (error) {
-							console.error("Error loading compiled file:", error);
+							console.error('Error loading compiled file:', error);
 						}
 					}
 				}
@@ -360,31 +360,31 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		};
 
 		document.addEventListener(
-			"navigate-to-linked-file",
+			'navigate-to-linked-file',
 			handleNavigateToLinkedFile,
 		);
 		document.addEventListener(
-			"navigate-to-compiled-file",
+			'navigate-to-compiled-file',
 			handleNavigateToCompiledFile,
 		);
-		document.addEventListener("expand-latex-output", handleLatexOutputExpand);
-		document.addEventListener("expand-typst-output", handleTypstOutputExpand);
+		document.addEventListener('expand-latex-output', handleLatexOutputExpand);
+		document.addEventListener('expand-typst-output', handleTypstOutputExpand);
 
 		return () => {
 			document.removeEventListener(
-				"navigate-to-linked-file",
+				'navigate-to-linked-file',
 				handleNavigateToLinkedFile,
 			);
 			document.removeEventListener(
-				"navigate-to-compiled-file",
+				'navigate-to-compiled-file',
 				handleNavigateToCompiledFile,
 			);
 			document.removeEventListener(
-				"expand-latex-output",
+				'expand-latex-output',
 				handleLatexOutputExpand,
 			);
 			document.removeEventListener(
-				"expand-typst-output",
+				'expand-typst-output',
 				handleTypstOutputExpand,
 			);
 		};
@@ -407,10 +407,10 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 					setLinkedDocumentId(file.documentId || null);
 
 					// Only show one output at a time
-					if (file.name.endsWith(".tex")) {
+					if (file.name.endsWith('.tex')) {
 						setShowLatexOutput(true);
 						setShowTypstOutput(false);
-					} else if (file.name.endsWith(".typ")) {
+					} else if (file.name.endsWith('.typ')) {
 						setShowTypstOutput(true);
 						setShowLatexOutput(false);
 					} else {
@@ -443,10 +443,10 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 						setLinkedDocumentId(selectedDocId);
 
 						// Only show one output at a time
-						if (linkedFile.name.endsWith(".tex")) {
+						if (linkedFile.name.endsWith('.tex')) {
 							setShowLatexOutput(true);
 							setShowTypstOutput(false);
-						} else if (linkedFile.name.endsWith(".typ")) {
+						} else if (linkedFile.name.endsWith('.typ')) {
 							setShowTypstOutput(true);
 							setShowLatexOutput(false);
 						} else {
@@ -460,7 +460,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 						setShowTypstOutput(false);
 					}
 				} catch (error) {
-					console.error("Error loading initial linked file:", error);
+					console.error('Error loading initial linked file:', error);
 					setLinkedFileInfo({});
 					setLinkedDocumentId(null);
 					setShowLatexOutput(false);
@@ -499,18 +499,18 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 			};
 
 			const targetFile = findFileByPath(fileTree, targetFilePath);
-			if (targetFile && targetFile.type === "file") {
-				setActiveView("files");
+			if (targetFile && targetFile.type === 'file') {
+				setActiveView('files');
 
 				const expandPaths: string[] = [];
-				let currentPath = "";
+				let currentPath = '';
 				const pathSegments = targetFilePath
-					.split("/")
+					.split('/')
 					.filter((segment) => segment);
 
 				for (let i = 0; i < pathSegments.length - 1; i++) {
 					currentPath =
-						currentPath === ""
+						currentPath === ''
 							? `/${pathSegments[i]}`
 							: `${currentPath}/${pathSegments[i]}`;
 					expandPaths.push(currentPath);
@@ -526,7 +526,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	useEffect(() => {
 		if (
 			selectedFileId &&
-			activeView === "files" &&
+			activeView === 'files' &&
 			!isEditingFile &&
 			!lastUserSelectedFileId
 		) {
@@ -549,7 +549,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 							}
 						}
 					} catch (error) {
-						console.error("Error loading selected file:", error);
+						console.error('Error loading selected file:', error);
 					}
 				};
 
@@ -571,22 +571,22 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 			const { documentId } = customEvent.detail;
 
 			if (documentId && documents) {
-				setActiveView("documents");
+				setActiveView('documents');
 				handleDocumentSelect(documentId);
 				window.location.reload();
 			}
 		};
 
-		document.addEventListener("document-linked", handleDocumentLinked);
+		document.addEventListener('document-linked', handleDocumentLinked);
 
 		return () => {
-			document.removeEventListener("document-linked", handleDocumentLinked);
+			document.removeEventListener('document-linked', handleDocumentLinked);
 		};
 	}, [documents]);
 
 	useEffect(() => {
 		if (targetDocId?.trim()) {
-			setActiveView("documents");
+			setActiveView('documents');
 		}
 	}, [targetDocId]);
 
@@ -629,7 +629,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	}, [isEditingFile, content, fileContent]);
 
 	const updateProjectLastOpened = async (docId?: string, filePath?: string) => {
-		const projectId = sessionStorage.getItem("currentProjectId");
+		const projectId = sessionStorage.getItem('currentProjectId');
 		if (!projectId) return;
 
 		try {
@@ -647,11 +647,11 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 				};
 
 				updateProject(updatedProject).catch(error => {
-					console.warn("Failed to update project last opened state:", error);
+					console.warn('Failed to update project last opened state:', error);
 				});
 			}
 		} catch (error) {
-			console.warn("Error updating project last opened state:", error);
+			console.warn('Error updating project last opened state:', error);
 		}
 	};
 
@@ -664,7 +664,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
 	const handleOutlineSectionClick = (line: number) => {
 		document.dispatchEvent(
-			new CustomEvent("codemirror-goto-line", {
+			new CustomEvent('codemirror-goto-line', {
 				detail: { line },
 			})
 		);
@@ -687,7 +687,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 					}
 				}
 			} catch (error) {
-				console.error("Error refreshing file content for outline:", error);
+				console.error('Error refreshing file content for outline:', error);
 			}
 		}
 	};
@@ -709,17 +709,17 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		}
 
 		if (selectedDocId !== null) {
-			onSelectDocument("");
+			onSelectDocument('');
 		}
 
 		selectFile(fileId);
 		const file = await getFile(fileId);
 		if (file) {
 			// Handle both file types
-			if (file.name.endsWith(".tex")) {
+			if (file.name.endsWith('.tex')) {
 				setShowLatexOutput(true);
 				setShowTypstOutput(false);
-			} else if (file.name.endsWith(".typ")) {
+			} else if (file.name.endsWith('.typ')) {
 				setShowTypstOutput(true);
 				setShowLatexOutput(false);
 			} else {
@@ -780,21 +780,21 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	};
 
 	const handleSwitchToDocuments = () => {
-		setActiveView("documents");
+		setActiveView('documents');
 		setIsEditingFile(false);
 	};
 
 	const handleSwitchToFiles = async () => {
 		console.log(
-			"handleSwitchToFiles called, lastUserSelectedFileId:",
+			'handleSwitchToFiles called, lastUserSelectedFileId:',
 			lastUserSelectedFileId,
 		);
-		setActiveView("files");
+		setActiveView('files');
 
 		if (lastUserSelectedFileId && !isEditingFile) {
 			try {
 				const file = await getFile(lastUserSelectedFileId);
-				console.log("Retrieved file for restoration:", file?.path);
+				console.log('Retrieved file for restoration:', file?.path);
 				if (file) {
 					const content = await getFileContent(lastUserSelectedFileId);
 					if (content) {
@@ -807,7 +807,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 					}
 				}
 			} catch (error) {
-				console.error("Error restoring last user selected file:", error);
+				console.error('Error restoring last user selected file:', error);
 			}
 		}
 	};
@@ -816,7 +816,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		const targetTab = tabs.find(tab => tab.id === tabId);
 		if (!targetTab) return;
 
-		console.log("Switching to tab:", targetTab.title, targetTab.type);
+		console.log('Switching to tab:', targetTab.title, targetTab.type);
 
 		if (targetTab.type === 'file' && targetTab.fileId) {
 			try {
@@ -828,7 +828,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 					}
 				}
 			} catch (error) {
-				console.error("Error loading file content for tab:", error);
+				console.error('Error loading file content for tab:', error);
 			}
 		} else if (targetTab.type === 'document' && targetTab.documentId) {
 			handleDocumentSelect(targetTab.documentId);
@@ -862,27 +862,27 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
 	const handleSidebarResize = (width: number) => {
 		setSidebarWidth(width);
-		setProperty("sidebar-width", width);
+		setProperty('sidebar-width', width);
 	};
 
 	const handleSidebarCollapse = (collapsed: boolean) => {
 		setSidebarCollapsed(collapsed);
-		setProperty("sidebar-collapsed", collapsed);
+		setProperty('sidebar-collapsed', collapsed);
 	};
 
 	const handleExplorerResize = (height: number) => {
 		setOutlineHeight(height);
-		setProperty("explorer-height", height);
+		setProperty('explorer-height', height);
 	};
 
 	const handleLatexOutputWidthResize = (width: number) => {
 		setLatexOutputWidth(width);
-		setProperty("latex-output-width", width);
+		setProperty('latex-output-width', width);
 	};
 
 	const handleLatexOutputCollapse = (collapsed: boolean) => {
 		setLatexOutputCollapsed(collapsed);
-		setProperty("latex-output-collapsed", collapsed);
+		setProperty('latex-output-collapsed', collapsed);
 		if (collapsed) {
 			setTemporaryLatexExpand(false);
 		}
@@ -897,12 +897,12 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
 	const handleTypstOutputWidthResize = (width: number) => {
 		setTypstOutputWidth(width);
-		setProperty("typst-output-width", width);
+		setProperty('typst-output-width', width);
 	}
 
 	const handleTypstOutputCollapse = (collapsed: boolean) => {
 		setTypstOutputCollapsed(collapsed);
-		setProperty("typst-output-collapsed", collapsed);
+		setProperty('typst-output-collapsed', collapsed);
 		if (collapsed) {
 			setTemporaryTypstExpand(false);
 		}
@@ -918,7 +918,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	const handleNavigateToLinkedFile = () => {
 		if (linkedFileInfo?.filePath) {
 			document.dispatchEvent(
-				new CustomEvent("navigate-to-linked-file", {
+				new CustomEvent('navigate-to-linked-file', {
 					detail: {
 						filePath: linkedFileInfo.filePath,
 						fileId: linkedFileInfo.fileId,
@@ -953,20 +953,20 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 				>
 					<div className="view-toggle">
 						<button
-							className={activeView === "files" ? "active" : ""}
+							className={activeView === 'files' ? 'active' : ''}
 							onClick={handleSwitchToFiles}
 						>
 							Files
 						</button>
 						<button
-							className={activeView === "documents" ? "active" : ""}
+							className={activeView === 'documents' ? 'active' : ''}
 							onClick={handleSwitchToDocuments}
 						>
 							Docs
 						</button>
 					</div>
 
-					{activeView === "documents" ? (
+					{activeView === 'documents' ? (
 						<DocumentExplorer
 							documents={documents}
 							selectedDocId={selectedDocId}
@@ -988,7 +988,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 							}))}
 							initialSelectedFile={initialSelectedFile}
 							initialExpandedPaths={initialExpandedPaths}
-							currentProjectId={sessionStorage.getItem("currentProjectId")}
+							currentProjectId={sessionStorage.getItem('currentProjectId')}
 							onExportCurrentProject={handleExportCurrentProject}
 						/>
 					)}
@@ -1021,21 +1021,21 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
 			<div
 				className="editor-container-outer"
-				style={{ flex: 1, display: "flex", minHeight: 0 }}
+				style={{ flex: 1, display: 'flex', minHeight: 0 }}
 			>
 				<div className="editor-container" style={{ flex: 1, minWidth: 0 }}>
 					<EditorTabs onTabSwitch={handleTabSwitch} />
 
 					<Editor
 						content={isEditingFile ? fileContent : content}
-						documentId={selectedDocId || ""}
+						documentId={selectedDocId || ''}
 						onUpdateContent={handleUpdateContent}
 						isDocumentSelected={isEditingFile || !!selectedDocId}
 						isBinaryFile={isEditingFile && isBinaryFile}
 						fileName={isEditingFile ? fileName : linkedFileInfo.fileName}
 						mimeType={isEditingFile ? mimeType : linkedFileInfo.mimeType}
 						fileId={
-							isEditingFile ? selectedFileId || "" : linkedFileInfo.fileId || ""
+							isEditingFile ? selectedFileId || '' : linkedFileInfo.fileId || ''
 						}
 						docUrl={docUrl}
 						documentSelectionChange={

@@ -1,7 +1,7 @@
 // src/extensions/yjs/CollabWebrtc.ts
-import * as random from "lib0/random";
-import { WebrtcProvider } from "y-webrtc";
-import type * as Y from "yjs";
+import * as random from 'lib0/random';
+import { WebrtcProvider } from 'y-webrtc';
+import type * as Y from 'yjs';
 
 // Define an interface for the provider options that CollabService will pass
 interface WebrtcProviderOptions {

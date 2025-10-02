@@ -1,14 +1,14 @@
 // extras/loggers/typst_visualizer/TypstVisualizer.tsx
-import type React from "react";
-import { useEffect, useState } from "react";
+import type React from 'react';
+import { useEffect, useState } from 'react';
 
-import { PluginHeader } from "../../../src/components/common/PluginHeader";
-import type { LoggerProps } from "../../../src/plugins/PluginInterface";
-import "./styles.css";
-import { PLUGIN_NAME, PLUGIN_VERSION } from "./TypstVisualizerPlugin";
+import { PluginHeader } from '../../../src/components/common/PluginHeader';
+import type { LoggerProps } from '../../../src/plugins/PluginInterface';
+import './styles.css';
+import { PLUGIN_NAME, PLUGIN_VERSION } from './TypstVisualizerPlugin';
 
 interface ParsedDiagnostic {
-    type: "error" | "warning" | "info";
+    type: 'error' | 'warning' | 'info';
     message: string;
     line?: number;
     file?: string;
@@ -18,7 +18,7 @@ interface ParsedDiagnostic {
 
 const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
     const [parsedDiagnostics, setParsedDiagnostics] = useState<ParsedDiagnostic[]>([]);
-    const [filter, setFilter] = useState<"all" | "error" | "warning">("all");
+    const [filter, setFilter] = useState<'all' | 'error' | 'warning'>('all');
 
     useEffect(() => {
         if (!log) {
@@ -31,17 +31,17 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
     }, [log]);
 
     const filteredDiagnostics = parsedDiagnostics.filter((diagnostic) => {
-        if (filter === "all") return true;
+        if (filter === 'all') return true;
         return diagnostic.type === filter;
     });
 
-    const handleFilterClick = (type: "error" | "warning") => {
-        setFilter((current) => (current === type ? "all" : type));
+    const handleFilterClick = (type: 'error' | 'warning') => {
+        setFilter((current) => (current === type ? 'all' : type));
     };
 
     const parseTypstLog = (log: string): ParsedDiagnostic[] => {
         const result: ParsedDiagnostic[] = [];
-        const lines = log.split("\n");
+        const lines = log.split('\n');
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
@@ -55,7 +55,7 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 
             if (errorMatch) {
                 diagnostic = {
-                    type: "error",
+                    type: 'error',
                     message: errorMatch[2].trim(),
                     file: undefined,
                     line: undefined,
@@ -69,7 +69,7 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
                 }
             } else if (warningMatch) {
                 diagnostic = {
-                    type: "warning",
+                    type: 'warning',
                     message: warningMatch[2].trim(),
                     file: undefined,
                     line: undefined,
@@ -83,7 +83,7 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
                 }
             } else if (infoMatch) {
                 diagnostic = {
-                    type: "info",
+                    type: 'info',
                     message: infoMatch[2].trim(),
                     file: undefined,
                     line: undefined,
@@ -103,7 +103,7 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
                 for (let j = i + 1; j < lines.length; j++) {
                     const nextLine = lines[j].trim();
 
-                    if (nextLine.startsWith("hint:")) {
+                    if (nextLine.startsWith('hint:')) {
                         const hint = nextLine.substring(5).trim();
                         diagnostic.hints?.push(hint);
                         continue;
@@ -113,12 +113,12 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
                         break;
                     }
 
-                    if (nextLine && !nextLine.startsWith("hint:")) {
+                    if (nextLine && !nextLine.startsWith('hint:')) {
                         fullMessage += ` ${nextLine}`;
                     }
                 }
 
-                diagnostic.fullMessage = fullMessage.replace(/\s+/g, " ").trim();
+                diagnostic.fullMessage = fullMessage.replace(/\s+/g, ' ').trim();
                 result.push(diagnostic);
             }
         }
@@ -144,41 +144,41 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 
     const getTypeIcon = (type: string) => {
         switch (type) {
-            case "error":
-                return "❌";
-            case "warning":
-                return "⚠️";
-            case "info":
-                return "ℹ️";
+            case 'error':
+                return '❌';
+            case 'warning':
+                return '⚠️';
+            case 'info':
+                return 'ℹ️';
             default:
-                return "•";
+                return '•';
         }
     };
 
     const tooltipInfo = [
-        `Total errors: ${parsedDiagnostics.filter((d) => d.type === "error").length}`,
-        `Total warnings: ${parsedDiagnostics.filter((d) => d.type === "warning").length}`,
-        `Log size: ${log ? `${Math.round(log.length / 1024)} KB` : "0 KB"}`,
-        "Click diagnostic items to navigate to line",
+        `Total errors: ${parsedDiagnostics.filter((d) => d.type === 'error').length}`,
+        `Total warnings: ${parsedDiagnostics.filter((d) => d.type === 'warning').length}`,
+        `Log size: ${log ? `${Math.round(log.length / 1024)} KB` : '0 KB'}`,
+        'Click diagnostic items to navigate to line',
     ];
 
     const headerControls = (
         <div className="error-stats">
             <span
-                className={`error-count ${filter === "error" ? "active" : ""}`}
-                onClick={() => handleFilterClick("error")}
+                className={`error-count ${filter === 'error' ? 'active' : ''}`}
+                onClick={() => handleFilterClick('error')}
                 title="Click to filter errors"
             >
-                {getTypeIcon("error")}{" "}
-                {parsedDiagnostics.filter((d) => d.type === "error").length}
+                {getTypeIcon('error')}{' '}
+                {parsedDiagnostics.filter((d) => d.type === 'error').length}
             </span>
             <span
-                className={`warning-count ${filter === "warning" ? "active" : ""}`}
-                onClick={() => handleFilterClick("warning")}
+                className={`warning-count ${filter === 'warning' ? 'active' : ''}`}
+                onClick={() => handleFilterClick('warning')}
                 title="Click to filter warnings"
             >
-                {getTypeIcon("warning")}{" "}
-                {parsedDiagnostics.filter((d) => d.type === "warning").length}
+                {getTypeIcon('warning')}{' '}
+                {parsedDiagnostics.filter((d) => d.type === 'warning').length}
             </span>
         </div>
     );
@@ -200,12 +200,12 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
                         <div className="success-icon">✅</div>
                         <div>
                             {parsedDiagnostics.length === 0
-                                ? "No errors or warnings found."
+                                ? 'No errors or warnings found.'
                                 : `No ${filter}s found.`}
                         </div>
                         <div className="success-subtitle">
                             {parsedDiagnostics.length === 0
-                                ? "Compilation appears successful!"
+                                ? 'Compilation appears successful!'
                                 : `Showing ${filter} items only.`}
                         </div>
                     </div>
@@ -214,7 +214,7 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
                         {filteredDiagnostics.map((diagnostic, index) => (
                             <li
                                 key={index}
-                                className={`diagnostic-item ${diagnostic.type} ${diagnostic.line ? "clickable" : ""}`}
+                                className={`diagnostic-item ${diagnostic.type} ${diagnostic.line ? 'clickable' : ''}`}
                                 onClick={() => handleDiagnosticClick(diagnostic)}
                                 title={
                                     diagnostic.line ? `Click to go to line ${diagnostic.line}` : undefined

@@ -1,15 +1,15 @@
 // src/utils/zipUtils.ts
-import JSZip from "jszip";
-import { nanoid } from "nanoid";
+import JSZip from 'jszip';
+import { nanoid } from 'nanoid';
 
-import type { FileNode } from "../types/files";
-import { fileCommentProcessor } from "./fileCommentProcessor";
+import type { FileNode } from '../types/files';
+import { fileCommentProcessor } from './fileCommentProcessor';
 import {
 	getMimeType,
 	getParentPath,
 	isBinaryFile,
 	joinPaths,
-} from "./fileUtils";
+} from './fileUtils';
 
 export const extractZip = async (
 	zipFile: File,
@@ -29,29 +29,29 @@ export const extractZip = async (
 			const fullPath = joinPaths(currentPath, relativePath);
 			const parentDir = getParentPath(fullPath);
 
-			let currentDir = "";
-			const pathSegments = parentDir.split("/").filter((segment) => segment);
+			let currentDir = '';
+			const pathSegments = parentDir.split('/').filter((segment) => segment);
 			for (const segment of pathSegments) {
 				if (!segment) continue;
 
 				currentDir =
-					currentDir === "" ? `/${segment}` : `${currentDir}/${segment}`;
+					currentDir === '' ? `/${segment}` : `${currentDir}/${segment}`;
 
 				if (
-					!files.some((f) => f.path === currentDir && f.type === "directory")
+					!files.some((f) => f.path === currentDir && f.type === 'directory')
 				) {
 					files.push({
 						id: nanoid(),
 						name: segment,
 						path: currentDir,
-						type: "directory",
+						type: 'directory',
 						lastModified: Date.now(),
 					});
 				}
 			}
 
-			const fileContent = await zipEntry.async("arraybuffer");
-			const fileName = relativePath.split("/").pop() || "";
+			const fileContent = await zipEntry.async('arraybuffer');
+			const fileName = relativePath.split('/').pop() || '';
 			const fileMimeType = getMimeType(fileName);
 			const fileBinary = isBinaryFile(fileName);
 
@@ -59,7 +59,7 @@ export const extractZip = async (
 				id: nanoid(),
 				name: fileName,
 				path: fullPath,
-				type: "file",
+				type: 'file',
 				content: fileContent,
 				lastModified: Date.now(),
 				size: fileContent.byteLength,
@@ -79,8 +79,8 @@ export const batchExtractZip = async (
 ): Promise<{ files: FileNode[]; directories: FileNode[] }> => {
 	const files = await extractZip(zipFile, currentPath);
 	return {
-		files: files.filter((f) => f.type === "file"),
-		directories: files.filter((f) => f.type === "directory"),
+		files: files.filter((f) => f.type === 'file'),
+		directories: files.filter((f) => f.type === 'directory'),
 	};
 };
 
@@ -91,8 +91,8 @@ export const createZipFromFolder = async (
 ): Promise<Blob> => {
 	const zip = new JSZip();
 
-	const collectFiles = async (node: FileNode, basePath = ""): Promise<void> => {
-		if (node.type === "file") {
+	const collectFiles = async (node: FileNode, basePath = ''): Promise<void> => {
+		if (node.type === 'file') {
 			const content = await getFileContent(node.id);
 			if (content !== null) {
 				const cleanContent = fileCommentProcessor.cleanContent(content);
@@ -102,13 +102,13 @@ export const createZipFromFolder = async (
 					zip.file(relativePath, cleanContent);
 				} else {
 					const textContent =
-						typeof cleanContent === "string"
+						typeof cleanContent === 'string'
 							? cleanContent
 							: new TextDecoder().decode(cleanContent);
 					zip.file(relativePath, textContent);
 				}
 			}
-		} else if (node.type === "directory" && node.children) {
+		} else if (node.type === 'directory' && node.children) {
 			const currentPath = basePath ? `${basePath}/${node.name}` : node.name;
 
 			for (const child of node.children) {
@@ -123,14 +123,14 @@ export const createZipFromFolder = async (
 		}
 	}
 
-	return await zip.generateAsync({ type: "blob" });
+	return await zip.generateAsync({ type: 'blob' });
 };
 
 export const downloadZipFile = (blob: Blob, filename: string): void => {
 	const url = URL.createObjectURL(blob);
-	const a = document.createElement("a");
+	const a = document.createElement('a');
 	a.href = url;
-	a.download = filename.endsWith(".zip") ? filename : `${filename}.zip`;
+	a.download = filename.endsWith('.zip') ? filename : `${filename}.zip`;
 	document.body.appendChild(a);
 	a.click();
 	document.body.removeChild(a);

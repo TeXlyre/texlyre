@@ -1,6 +1,6 @@
 // src/utils/duplicateKeyDetector.ts
-import { fileStorageService } from "../services/FileStorageService";
-import { notificationService } from "../services/NotificationService";
+import { fileStorageService } from '../services/FileStorageService';
+import { notificationService } from '../services/NotificationService';
 
 class DuplicateKeyDetector {
 	private observer: MutationObserver | null = null;
@@ -18,7 +18,7 @@ class DuplicateKeyDetector {
 			childList: true,
 			subtree: true,
 			attributes: true,
-			attributeFilter: ["data-testid", "class", "id"],
+			attributeFilter: ['data-testid', 'class', 'id'],
 		});
 	}
 
@@ -46,7 +46,7 @@ class DuplicateKeyDetector {
 				}
 			}
 		} catch (error) {
-			console.error("Error checking for duplicates:", error);
+			console.error('Error checking for duplicates:', error);
 		}
 	}
 
@@ -58,7 +58,7 @@ class DuplicateKeyDetector {
 
 		try {
 			notificationService.showLoading(
-				"Detecting duplicate files...",
+				'Detecting duplicate files...',
 				operationId,
 			);
 
@@ -66,18 +66,18 @@ class DuplicateKeyDetector {
 
 			if (result && result.removed > 0) {
 				notificationService.showSuccess(
-					`Fixed ${result.removed} duplicate file${result.removed === 1 ? "" : "s"} automatically`,
+					`Fixed ${result.removed} duplicate file${result.removed === 1 ? '' : 's'} automatically`,
 					{ operationId, duration: 4000 },
 				);
 
-				document.dispatchEvent(new CustomEvent("refresh-file-tree"));
+				document.dispatchEvent(new CustomEvent('refresh-file-tree'));
 			} else {
 				notificationService.dismiss(operationId);
 			}
 		} catch (error) {
-			console.error("Error auto-sanitizing duplicates:", error);
+			console.error('Error auto-sanitizing duplicates:', error);
 			notificationService.showError(
-				"Failed to fix duplicate files automatically",
+				'Failed to fix duplicate files automatically',
 				{ operationId },
 			);
 		} finally {

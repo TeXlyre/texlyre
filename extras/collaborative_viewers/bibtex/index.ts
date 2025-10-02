@@ -1,4 +1,4 @@
 // extras/collaborative_viewers/bibtex/index.ts
-import bibtexCollaborativeViewerPlugin from "./BibtexCollaborativeViewerPlugin";
+import bibtexCollaborativeViewerPlugin from './BibtexCollaborativeViewerPlugin';
 
 export default bibtexCollaborativeViewerPlugin;

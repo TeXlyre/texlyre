@@ -1,14 +1,14 @@
 // src/contexts/SecretsContext.tsx
-import type React from "react";
+import type React from 'react';
 import {
 	type ReactNode,
 	createContext,
 	useCallback,
 	useEffect,
 	useState,
-} from "react";
+} from 'react';
 
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from '../hooks/useAuth';
 
 export interface SecretValue {
 	value: string;
@@ -18,7 +18,7 @@ export interface SecretValue {
 
 export interface SecretEntry {
 	pluginId: string;
-	scope: "global" | "project";
+	scope: 'global' | 'project';
 	projectId?: string | null;
 	secretKey: string;
 	encryptedValue: string;
@@ -35,7 +35,7 @@ export interface SecretsContextType {
 		secretKey: string,
 		value: string,
 		options?: {
-			scope?: "global" | "project";
+			scope?: 'global' | 'project';
 			projectId?: string | null;
 			metadata?: Record<string, any>;
 		},
@@ -44,7 +44,7 @@ export interface SecretsContextType {
 		pluginId: string,
 		secretKey: string,
 		options?: {
-			scope?: "global" | "project";
+			scope?: 'global' | 'project';
 			projectId?: string | null;
 		},
 	) => Promise<SecretValue | null>;
@@ -52,7 +52,7 @@ export interface SecretsContextType {
 		pluginId: string,
 		secretKey: string,
 		options?: {
-			scope?: "global" | "project";
+			scope?: 'global' | 'project';
 			projectId?: string | null;
 		},
 	) => Promise<void>;
@@ -60,7 +60,7 @@ export interface SecretsContextType {
 		pluginId: string,
 		secretKey: string,
 		options?: {
-			scope?: "global" | "project";
+			scope?: 'global' | 'project';
 			projectId?: string | null;
 		},
 	) => boolean;
@@ -69,7 +69,7 @@ export interface SecretsContextType {
 		pluginId: string,
 		secretKey: string,
 		options?: {
-			scope?: "global" | "project";
+			scope?: 'global' | 'project';
 			projectId?: string | null;
 		},
 	) => Record<string, any> | null;
@@ -93,7 +93,7 @@ export const SecretsContext = createContext<SecretsContextType>({
 	getSecretMetadata: () => null,
 	clearAllSecrets: async () => { },
 	isPasswordModalOpen: false,
-	passwordModalMessage: "",
+	passwordModalMessage: '',
 	showPasswordModal: async () => null,
 	hidePasswordModal: () => { },
 	submitPassword: async () => false,
@@ -113,7 +113,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 	);
 
 	const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-	const [passwordModalMessage, setPasswordModalMessage] = useState("");
+	const [passwordModalMessage, setPasswordModalMessage] = useState('');
 	const [passwordResolve, setPasswordResolve] = useState<
 		((password: string | null) => void) | null
 	>(null);
@@ -128,10 +128,10 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 		(
 			pluginId: string,
 			secretKey: string,
-			scope: "global" | "project" = "global",
+			scope: 'global' | 'project' = 'global',
 			projectId?: string | null,
 		): string => {
-			return scope === "project" && projectId
+			return scope === 'project' && projectId
 				? `${pluginId}:${scope}:${projectId}:${secretKey}`
 				: `${pluginId}:${scope}:${secretKey}`;
 		},
@@ -142,9 +142,9 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 		async (data: string, password: string): Promise<string> => {
 			const encoder = new TextEncoder();
 			const combined = encoder.encode(data + password);
-			const hashBuffer = await crypto.subtle.digest("SHA-256", combined);
+			const hashBuffer = await crypto.subtle.digest('SHA-256', combined);
 			const hashArray = Array.from(new Uint8Array(hashBuffer));
-			return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+			return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 		},
 		[],
 	);
@@ -156,32 +156,32 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 			const passwordBuffer = encoder.encode(password);
 			const keyMaterial = await crypto.subtle.importKey(
-				"raw",
+				'raw',
 				passwordBuffer,
-				{ name: "PBKDF2" },
+				{ name: 'PBKDF2' },
 				false,
-				["deriveKey"],
+				['deriveKey'],
 			);
 
 			const salt = crypto.getRandomValues(new Uint8Array(16));
 
 			const key = await crypto.subtle.deriveKey(
 				{
-					name: "PBKDF2",
+					name: 'PBKDF2',
 					salt: salt,
 					iterations: 100000,
-					hash: "SHA-256",
+					hash: 'SHA-256',
 				},
 				keyMaterial,
-				{ name: "AES-GCM", length: 256 },
+				{ name: 'AES-GCM', length: 256 },
 				false,
-				["encrypt"],
+				['encrypt'],
 			);
 
 			const iv = crypto.getRandomValues(new Uint8Array(12));
 
 			const encrypted = await crypto.subtle.encrypt(
-				{ name: "AES-GCM", iv: iv },
+				{ name: 'AES-GCM', iv: iv },
 				key,
 				dataBuffer,
 			);
@@ -206,7 +206,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 				const data = new Uint8Array(
 					atob(encryptedData)
-						.split("")
+						.split('')
 						.map((c) => c.charCodeAt(0)),
 				);
 
@@ -216,28 +216,28 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 				const passwordBuffer = encoder.encode(password);
 				const keyMaterial = await crypto.subtle.importKey(
-					"raw",
+					'raw',
 					passwordBuffer,
-					{ name: "PBKDF2" },
+					{ name: 'PBKDF2' },
 					false,
-					["deriveKey"],
+					['deriveKey'],
 				);
 
 				const key = await crypto.subtle.deriveKey(
 					{
-						name: "PBKDF2",
+						name: 'PBKDF2',
 						salt: salt,
 						iterations: 100000,
-						hash: "SHA-256",
+						hash: 'SHA-256',
 					},
 					keyMaterial,
-					{ name: "AES-GCM", length: 256 },
+					{ name: 'AES-GCM', length: 256 },
 					false,
-					["decrypt"],
+					['decrypt'],
 				);
 
 				const decrypted = await crypto.subtle.decrypt(
-					{ name: "AES-GCM", iv: iv },
+					{ name: 'AES-GCM', iv: iv },
 					key,
 					encrypted,
 				);
@@ -245,7 +245,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 				return decoder.decode(decrypted);
 			} catch (_error) {
 				throw new Error(
-					"Failed to decrypt secret - invalid password or corrupted data",
+					'Failed to decrypt secret - invalid password or corrupted data',
 				);
 			}
 		},
@@ -257,10 +257,10 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 			if (!user) return false;
 
 			try {
-				const { authService } = await import("../services/AuthService");
+				const { authService } = await import('../services/AuthService');
 				return await authService.verifyPassword(user.id, password);
 			} catch (error) {
-				console.error("Error verifying password:", error);
+				console.error('Error verifying password:', error);
 				return false;
 			}
 		},
@@ -293,7 +293,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 						);
 
 						newCache.set(secretId, {
-							value: "",
+							value: '',
 							metadata: entry.metadata,
 							lastModified: entry.lastModified,
 						});
@@ -307,7 +307,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 				setSecretsCache(newCache);
 			} catch (error) {
-				console.error("Error loading stored secrets:", error);
+				console.error('Error loading stored secrets:', error);
 				setSecretsCache(new Map());
 			}
 		},
@@ -326,7 +326,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 			localStorage.setItem(storageKey, JSON.stringify(existingSecrets));
 		} catch (error) {
-			console.error("Error saving secrets to storage:", error);
+			console.error('Error saving secrets to storage:', error);
 		}
 	}, [user, userPassword, getStorageKey]);
 
@@ -355,7 +355,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 			return new Promise((resolve) => {
 				setPasswordModalMessage(
-					message || "Enter your TeXlyre password to access encrypted secrets:",
+					message || 'Enter your TeXlyre password to access encrypted secrets:',
 				);
 				setPasswordResolve(() => resolve);
 				setIsPasswordModalOpen(true);
@@ -398,18 +398,18 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 			secretKey: string,
 			value: string,
 			options?: {
-				scope?: "global" | "project";
+				scope?: 'global' | 'project';
 				projectId?: string | null;
 				metadata?: Record<string, any>;
 			},
 		): Promise<void> => {
 			if (!user || !value.trim())
-				throw new Error("Invalid user or empty secret value");
+				throw new Error('Invalid user or empty secret value');
 
 			const password = await promptForPassword();
-			if (!password) throw new Error("Password required to store secrets");
+			if (!password) throw new Error('Password required to store secrets');
 
-			const scope = options?.scope || "global";
+			const scope = options?.scope || 'global';
 			const secretId = getSecretId(
 				pluginId,
 				secretKey,
@@ -464,8 +464,8 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 				localStorage.setItem(storageKey, JSON.stringify(secrets));
 			} catch (error) {
-				console.error("Error storing secret:", error);
-				throw new Error("Failed to store secret");
+				console.error('Error storing secret:', error);
+				throw new Error('Failed to store secret');
 			}
 		},
 		[
@@ -483,13 +483,13 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 			pluginId: string,
 			secretKey: string,
 			options?: {
-				scope?: "global" | "project";
+				scope?: 'global' | 'project';
 				projectId?: string | null;
 			},
 		): Promise<SecretValue | null> => {
 			if (!user) return null;
 
-			const scope = options?.scope || "global";
+			const scope = options?.scope || 'global';
 			const secretId = getSecretId(
 				pluginId,
 				secretKey,
@@ -538,11 +538,11 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 					return secretValue;
 				} catch (decryptError) {
-					console.error("Failed to decrypt secret:", decryptError);
-					throw new Error("Invalid password or corrupted secret data");
+					console.error('Failed to decrypt secret:', decryptError);
+					throw new Error('Invalid password or corrupted secret data');
 				}
 			} catch (error) {
-				console.error("Error retrieving secret:", error);
+				console.error('Error retrieving secret:', error);
 				return null;
 			}
 		},
@@ -561,13 +561,13 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 			pluginId: string,
 			secretKey: string,
 			options?: {
-				scope?: "global" | "project";
+				scope?: 'global' | 'project';
 				projectId?: string | null;
 			},
 		): Promise<void> => {
 			if (!user) return;
 
-			const scope = options?.scope || "global";
+			const scope = options?.scope || 'global';
 			const secretId = getSecretId(
 				pluginId,
 				secretKey,
@@ -599,7 +599,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 					localStorage.setItem(storageKey, JSON.stringify(filteredSecrets));
 				}
 			} catch (error) {
-				console.error("Error removing secret from storage:", error);
+				console.error('Error removing secret from storage:', error);
 			}
 		},
 		[user, getSecretId, getStorageKey],
@@ -610,13 +610,13 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 			pluginId: string,
 			secretKey: string,
 			options?: {
-				scope?: "global" | "project";
+				scope?: 'global' | 'project';
 				projectId?: string | null;
 			},
 		): boolean => {
 			if (!user) return false;
 
-			const scope = options?.scope || "global";
+			const scope = options?.scope || 'global';
 
 			try {
 				const storageKey = getStorageKey(user.id);
@@ -633,7 +633,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 						s.projectId === options?.projectId,
 				);
 			} catch (error) {
-				console.error("Error checking secret existence:", error);
+				console.error('Error checking secret existence:', error);
 				return false;
 			}
 		},
@@ -645,13 +645,13 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 			pluginId: string,
 			secretKey: string,
 			options?: {
-				scope?: "global" | "project";
+				scope?: 'global' | 'project';
 				projectId?: string | null;
 			},
 		): Record<string, any> | null => {
 			if (!user) return null;
 
-			const scope = options?.scope || "global";
+			const scope = options?.scope || 'global';
 
 			try {
 				const storageKey = getStorageKey(user.id);
@@ -670,7 +670,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 				return entry?.metadata || null;
 			} catch (error) {
-				console.error("Error getting secret metadata:", error);
+				console.error('Error getting secret metadata:', error);
 				return null;
 			}
 		},
@@ -708,7 +708,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 					setSecretsCache(new Map());
 				}
 			} catch (error) {
-				console.error("Error clearing secrets:", error);
+				console.error('Error clearing secrets:', error);
 			}
 		},
 		[user, getStorageKey],

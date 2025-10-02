@@ -1,5 +1,5 @@
 // src/contexts/CollabContext.tsx
-import type React from "react";
+import type React from 'react';
 import {
 	type ReactNode,
 	createContext,
@@ -8,14 +8,14 @@ import {
 	useMemo,
 	useRef,
 	useState,
-} from "react";
-import type { WebrtcProvider } from "y-webrtc";
-import type * as Y from "yjs";
+} from 'react';
+import type { WebrtcProvider } from 'y-webrtc';
+import type * as Y from 'yjs';
 
-import { useSettings } from "../hooks/useSettings";
-import { collabService } from "../services/CollabService";
-import type { CollabContextType } from "../types/collab";
-import type { YjsDocUrl } from "../types/yjs";
+import { useSettings } from '../hooks/useSettings';
+import { collabService } from '../services/CollabService';
+import type { CollabContextType } from '../types/collab';
+import type { YjsDocUrl } from '../types/yjs';
 
 export const CollabContext = createContext<CollabContextType | null>(null);
 
@@ -38,14 +38,14 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 	const { registerSetting, getSetting, commitSetting } = useSettings();
 	const settingsRegistered = useRef(false);
 
-	const [signalingServers, setSignalingServers] = useState<string>("");
+	const [signalingServers, setSignalingServers] = useState<string>('');
 	const [awarenessTimeout, setAwarenessTimeout] = useState(30);
 	const [autoReconnect, setAutoReconnect] = useState(false);
 
 	const projectId = useMemo(() => {
-		return docUrl.startsWith("yjs:")
+		return docUrl.startsWith('yjs:')
 			? docUrl.slice(4)
-			: docUrl.replace(/[^a-zA-Z0-9]/g, "-");
+			: docUrl.replace(/[^a-zA-Z0-9]/g, '-');
 	}, [docUrl]);
 
 	useEffect(() => {
@@ -53,13 +53,13 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 		settingsRegistered.current = true;
 
 		registerSetting({
-			id: "collab-signaling-servers",
-			category: "Collaboration",
-			subcategory: "Real-time Synchronization",
-			type: "text",
-			label: "Signaling servers",
-			description: "Comma-separated list of Yjs WebRTC signaling server URLs",
-			defaultValue: "ws://ywebrtc.localhost:8082/",
+			id: 'collab-signaling-servers',
+			category: 'Collaboration',
+			subcategory: 'Real-time Synchronization',
+			type: 'text',
+			label: 'Signaling servers',
+			description: 'Comma-separated list of Yjs WebRTC signaling server URLs',
+			defaultValue: 'ws://ywebrtc.localhost:8082/',
 			onChange: (value) => {
 				setSignalingServers(value as string);
 			},
@@ -67,12 +67,12 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 		});
 
 		registerSetting({
-			id: "collab-awareness-timeout",
-			category: "Collaboration",
-			subcategory: "Real-time Synchronization",
-			type: "number",
-			label: "Awareness timeout (seconds)",
-			description: "How long to wait before considering other users inactive",
+			id: 'collab-awareness-timeout',
+			category: 'Collaboration',
+			subcategory: 'Real-time Synchronization',
+			type: 'number',
+			label: 'Awareness timeout (seconds)',
+			description: 'How long to wait before considering other users inactive',
 			defaultValue: 30,
 			min: 10,
 			max: 300,
@@ -82,13 +82,13 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 		});
 
 		registerSetting({
-			id: "collab-auto-reconnect",
-			category: "Collaboration",
-			subcategory: "Real-time Synchronization",
-			type: "checkbox",
-			label: "Auto-reconnect on disconnect",
+			id: 'collab-auto-reconnect',
+			category: 'Collaboration',
+			subcategory: 'Real-time Synchronization',
+			type: 'checkbox',
+			label: 'Auto-reconnect on disconnect',
 			description:
-				"Automatically attempt to reconnect when the connection is lost",
+				'Automatically attempt to reconnect when the connection is lost',
 			defaultValue: false,
 			onChange: (value) => {
 				setAutoReconnect(value as boolean);
@@ -100,8 +100,8 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 		if (!projectId || !collectionName) return;
 
 		const serversToUse = signalingServers.length > 0
-			? signalingServers.split(",").map((s) => s.trim())
-			: (JSON.parse(localStorage.getItem("texlyre-settings") || '{}')['collab-signaling-servers']);
+			? signalingServers.split(',').map((s) => s.trim())
+			: (JSON.parse(localStorage.getItem('texlyre-settings') || '{}')['collab-signaling-servers']);
 
 		try {
 			const { doc: ydoc, provider: yprovider } = collabService.connect(
@@ -116,7 +116,7 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 			setDoc(ydoc);
 			setProvider(yprovider);
 
-			const ymap = ydoc.getMap("data");
+			const ymap = ydoc.getMap('data');
 
 			const observer = () => {
 				if (!isUpdatingRef.current) {
@@ -136,7 +136,7 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 				setProvider(undefined);
 			};
 		} catch (error) {
-			console.warn("[CollabContext] Connection failed, continuing in offline mode:", error);
+			console.warn('[CollabContext] Connection failed, continuing in offline mode:', error);
 			setIsConnected(false);
 			setDoc(undefined);
 			setProvider(undefined);
@@ -154,7 +154,7 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 		(fn: (currentData: any) => void) => {
 			if (!doc) return;
 
-			const ymap = doc.getMap("data");
+			const ymap = doc.getMap('data');
 			isUpdatingRef.current = true;
 
 			doc.transact(() => {
@@ -164,7 +164,7 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 				for (const key of ymap.keys()) {
 					ymap.delete(key);
 				}
-				if (typeof currentData === "object" && currentData !== null) {
+				if (typeof currentData === 'object' && currentData !== null) {
 					Object.entries(currentData).forEach(([key, value]) => {
 						ymap.set(key, value);
 					});

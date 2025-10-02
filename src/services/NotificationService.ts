@@ -1,10 +1,10 @@
 // src/services/NotificationService.ts
 export type NotificationType =
-	| "loading"
-	| "success"
-	| "error"
-	| "info"
-	| "sync";
+	| 'loading'
+	| 'success'
+	| 'error'
+	| 'info'
+	| 'sync';
 
 export interface NotificationOptions {
 	operationId?: string;
@@ -38,34 +38,34 @@ class NotificationService {
 	}
 
 	showLoading(message: string, operationId?: string): void {
-		this.show("loading", message, { operationId, duration: 0 });
+		this.show('loading', message, { operationId, duration: 0 });
 	}
 
 	showSuccess(message: string, options: NotificationOptions = {}): void {
-		this.show("success", message, options);
+		this.show('success', message, options);
 		if (options.operationId) {
 			this.activeOperations.delete(options.operationId);
 		}
 	}
 
 	showError(message: string, options: NotificationOptions = {}): void {
-		this.show("error", message, options);
+		this.show('error', message, options);
 		if (options.operationId) {
 			this.activeOperations.delete(options.operationId);
 		}
 	}
 
 	showInfo(message: string, options: NotificationOptions = {}): void {
-		this.show("info", message, options);
+		this.show('info', message, options);
 	}
 
 	showSync(message: string, options: NotificationOptions = {}): void {
-		this.show("sync", message, options);
+		this.show('sync', message, options);
 	}
 
 	updateProgress(operationId: string, message: string): void {
 		if (this.activeOperations.has(operationId)) {
-			this.show("loading", message, { operationId, duration: 0 });
+			this.show('loading', message, { operationId, duration: 0 });
 		}
 	}
 
@@ -75,7 +75,7 @@ class NotificationService {
 			clearTimeout(existing.timeoutId);
 		}
 		this.activeOperations.delete(operationId);
-		this.emit("dismiss", "", operationId);
+		this.emit('dismiss', '', operationId);
 	}
 
 	private emit(
@@ -86,7 +86,7 @@ class NotificationService {
 		data?: Record<string, any>,
 	): void {
 		document.dispatchEvent(
-			new CustomEvent("toast-notification", {
+			new CustomEvent('toast-notification', {
 				detail: { type, message, operationId, duration, data },
 			}),
 		);

@@ -1,9 +1,9 @@
 // src/components/editor/OutlineItem.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import type { OutlineSection } from "../../utils/latexOutlineParser";
-import { ChevronRightIcon, ChevronDownIcon } from "../common/Icons";
+import type { OutlineSection } from '../../utils/latexOutlineParser';
+import { ChevronRightIcon, ChevronDownIcon } from '../common/Icons';
 
 interface OutlineItemProps {
 	section: OutlineSection;

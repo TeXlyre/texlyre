@@ -1,8 +1,8 @@
 // src/components/common/ToastContainer.tsx
-import type React from "react";
-import { useEffect, useState } from "react";
+import type React from 'react';
+import { useEffect, useState } from 'react';
 
-import Toast, { type ToastNotification } from "./Toast";
+import Toast, { type ToastNotification } from './Toast';
 
 const ToastContainer: React.FC = () => {
 	const [notifications, setNotifications] = useState<ToastNotification[]>([]);
@@ -11,7 +11,7 @@ const ToastContainer: React.FC = () => {
 		const handleToastEvent = (event: CustomEvent) => {
 			const { type, message, operationId, duration, data } = event.detail;
 
-			if (type === "dismiss" && operationId) {
+			if (type === 'dismiss' && operationId) {
 				setNotifications((prev) =>
 					prev.filter((n) => n.operationId !== operationId),
 				);
@@ -45,20 +45,20 @@ const ToastContainer: React.FC = () => {
 			});
 		};
 
-		document.addEventListener("toast-notification", handleToastEvent);
+		document.addEventListener('toast-notification', handleToastEvent);
 		return () =>
-			document.removeEventListener("toast-notification", handleToastEvent);
+			document.removeEventListener('toast-notification', handleToastEvent);
 	}, []);
 
 	const getDefaultDuration = (type: string): number => {
 		switch (type) {
-			case "loading":
+			case 'loading':
 				return 0; // Persistent until explicitly dismissed
-			case "success":
+			case 'success':
 				return 3000;
-			case "error":
+			case 'error':
 				return 5000;
-			case "sync":
+			case 'sync':
 				return 4000;
 			default:
 				return 3000;
@@ -70,8 +70,8 @@ const ToastContainer: React.FC = () => {
 		if (operationId) {
 			// Notify the service to clean up
 			document.dispatchEvent(
-				new CustomEvent("toast-notification", {
-					detail: { type: "dismiss", message: "", operationId },
+				new CustomEvent('toast-notification', {
+					detail: { type: 'dismiss', message: '', operationId },
 				}),
 			);
 		}

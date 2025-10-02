@@ -1,13 +1,13 @@
 // src/components/editor/FileOperationToast.tsx
-import type React from "react";
-import { useEffect, useState } from "react";
+import type React from 'react';
+import { useEffect, useState } from 'react';
 
-import { AlertCircleIcon, CheckIcon, LoaderIcon } from "../common/Icons";
+import { AlertCircleIcon, CheckIcon, LoaderIcon } from '../common/Icons';
 
 interface FileOperationToast {
 	id: string;
 	operationId?: string;
-	type: "loading" | "success" | "error";
+	type: 'loading' | 'success' | 'error';
 	message: string;
 	timestamp: number;
 }
@@ -19,7 +19,7 @@ const FileOperationToast: React.FC = () => {
 		const handleFileOperation = (event: CustomEvent) => {
 			const { type, message, operationId } = event.detail;
 
-			if (type === "dismiss" && operationId) {
+			if (type === 'dismiss' && operationId) {
 				setToasts((prev) => prev.filter((t) => t.operationId !== operationId));
 				return;
 			}
@@ -50,9 +50,9 @@ const FileOperationToast: React.FC = () => {
 			});
 		};
 
-		document.addEventListener("file-operation", handleFileOperation);
+		document.addEventListener('file-operation', handleFileOperation);
 		return () =>
-			document.removeEventListener("file-operation", handleFileOperation);
+			document.removeEventListener('file-operation', handleFileOperation);
 	}, []);
 
 	const dismissToast = (id: string, operationId?: string) => {
@@ -60,8 +60,8 @@ const FileOperationToast: React.FC = () => {
 		if (operationId) {
 			// Also notify the service to clean up
 			document.dispatchEvent(
-				new CustomEvent("file-operation", {
-					detail: { type: "dismiss", message: "", operationId },
+				new CustomEvent('file-operation', {
+					detail: { type: 'dismiss', message: '', operationId },
 				}),
 			);
 		}
@@ -74,12 +74,12 @@ const FileOperationToast: React.FC = () => {
 			{toasts.map((toast) => (
 				<div key={toast.id} className={`file-operation-toast ${toast.type}`}>
 					<div className="toast-icon">
-						{toast.type === "loading" && <LoaderIcon />}
-						{toast.type === "success" && <CheckIcon />}
-						{toast.type === "error" && <AlertCircleIcon />}
+						{toast.type === 'loading' && <LoaderIcon />}
+						{toast.type === 'success' && <CheckIcon />}
+						{toast.type === 'error' && <AlertCircleIcon />}
 					</div>
 					<span className="toast-message">{toast.message}</span>
-					{toast.type !== "loading" && (
+					{toast.type !== 'loading' && (
 						<button
 							className="toast-dismiss"
 							onClick={() => dismissToast(toast.id, toast.operationId)}

@@ -1,8 +1,8 @@
 // src/components/common/Modal.tsx
-import type React from "react";
-import { type ReactNode, useEffect, useRef } from "react";
+import type React from 'react';
+import { type ReactNode, useEffect, useRef } from 'react';
 
-import { CloseIcon } from "./Icons";
+import { CloseIcon } from './Icons';
 
 interface ModalProps {
 	isOpen: boolean;
@@ -10,7 +10,7 @@ interface ModalProps {
 	title: string;
 	icon?: React.ComponentType;
 	children: ReactNode;
-	size?: "small" | "medium" | "large";
+	size?: 'small' | 'medium' | 'large';
 	showCloseButton?: boolean;
 	headerActions?: ReactNode;
 }
@@ -21,7 +21,7 @@ const Modal: React.FC<ModalProps> = ({
 	title,
 	icon,
 	children,
-	size = "medium",
+	size = 'medium',
 	showCloseButton = true,
 	headerActions,
 }) => {
@@ -30,7 +30,7 @@ const Modal: React.FC<ModalProps> = ({
 
 	useEffect(() => {
 		const handleEscape = (event: KeyboardEvent) => {
-			if (event.key === "Escape") {
+			if (event.key === 'Escape') {
 				onClose();
 			}
 		};
@@ -42,7 +42,7 @@ const Modal: React.FC<ModalProps> = ({
 			) {
 				// Check if the click is inside any modal
 				const clickedElement = event.target as Element;
-				const isInsideAnyModal = clickedElement.closest(".modal-container");
+				const isInsideAnyModal = clickedElement.closest('.modal-container');
 
 				// Only close if the click is not inside any modal
 				if (!isInsideAnyModal) {
@@ -52,18 +52,18 @@ const Modal: React.FC<ModalProps> = ({
 		};
 
 		if (isOpen) {
-			document.addEventListener("keydown", handleEscape);
-			document.addEventListener("mousedown", handleClickOutside);
-			document.body.style.overflow = "hidden";
+			document.addEventListener('keydown', handleEscape);
+			document.addEventListener('mousedown', handleClickOutside);
+			document.body.style.overflow = 'hidden';
 		}
 
 		return () => {
-			document.removeEventListener("keydown", handleEscape);
-			document.removeEventListener("mousedown", handleClickOutside);
+			document.removeEventListener('keydown', handleEscape);
+			document.removeEventListener('mousedown', handleClickOutside);
 			// Only restore body overflow if no other modals are open
-			const openModals = document.querySelectorAll(".modal-overlay");
+			const openModals = document.querySelectorAll('.modal-overlay');
 			if (openModals.length <= 1) {
-				document.body.style.overflow = "auto";
+				document.body.style.overflow = 'auto';
 			}
 		};
 	}, [isOpen, onClose]);
@@ -79,10 +79,10 @@ const Modal: React.FC<ModalProps> = ({
 							<span>
 								<IconComponent />
 							</span>
-						)}{" "}
+						)}{' '}
 						{title}
 					</h2>
-					<div style={{ display: "flex", gap: "0.5rem" }}>
+					<div style={{ display: 'flex', gap: '0.5rem' }}>
 						{headerActions}
 						{showCloseButton && (
 							<button className="modal-close-button" onClick={onClose}>

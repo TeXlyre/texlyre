@@ -1,5 +1,5 @@
 // src/services/FileOperationNotificationService.ts
-import { notificationService } from "./NotificationService";
+import { notificationService } from './NotificationService';
 
 class FileOperationNotificationService {
 	showLoading(operationId: string, message: string): void {

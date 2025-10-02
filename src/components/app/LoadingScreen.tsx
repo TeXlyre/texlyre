@@ -1,5 +1,5 @@
 // src/components/app/LoadingScreen.tsx
-import type React from "react";
+import type React from 'react';
 
 const LoadingScreen: React.FC = () => {
 	return (

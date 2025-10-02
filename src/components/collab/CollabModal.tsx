@@ -1,10 +1,10 @@
 // src/components/collab/CollabModal.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import { DisconnectIcon, SettingsIcon, SyncIcon } from "../common/Icons";
-import Modal from "../common/Modal";
-import SettingsModal from "../settings/SettingsModal";
+import { DisconnectIcon, SettingsIcon, SyncIcon } from '../common/Icons';
+import Modal from '../common/Modal';
+import SettingsModal from '../settings/SettingsModal';
 
 interface CollabModalProps {
 	isOpen: boolean;
@@ -47,12 +47,12 @@ const CollabModal: React.FC<CollabModalProps> = ({
 					<div className="collab-status">
 						<div className="status-info">
 							<div className="status-item">
-								<strong>Status:</strong>{" "}
-								{isConnected ? "Connected" : "Disconnected"}
+								<strong>Status:</strong>{' '}
+								{isConnected ? 'Connected' : 'Disconnected'}
 							</div>
 							<div className="status-item">
-								<strong>Project:</strong>{" "}
-								{docUrl.startsWith("yjs:") ? docUrl.slice(4) : docUrl}
+								<strong>Project:</strong>{' '}
+								{docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl}
 							</div>
 						</div>
 
@@ -65,7 +65,7 @@ const CollabModal: React.FC<CollabModalProps> = ({
 										disabled={!isConnected || isSyncing}
 									>
 										<SyncIcon />
-										{isSyncing ? "Syncing All..." : "Sync All Documents"}
+										{isSyncing ? 'Syncing All...' : 'Sync All Documents'}
 									</button>
 								</div>
 							</div>

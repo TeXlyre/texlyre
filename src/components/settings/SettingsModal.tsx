@@ -1,11 +1,11 @@
 // src/components/settings/SettingsModal.tsx
-import type React from "react";
-import { useEffect, useState } from "react";
+import type React from 'react';
+import { useEffect, useState } from 'react';
 
-import { useSettings } from "../../hooks/useSettings";
-import { SettingsIcon } from "../common/Icons";
-import Modal from "../common/Modal";
-import SettingControl from "./SettingControl";
+import { useSettings } from '../../hooks/useSettings';
+import { SettingsIcon } from '../common/Icons';
+import Modal from '../common/Modal';
+import SettingControl from './SettingControl';
 
 interface SettingsModalProps {
 	isOpen: boolean;
@@ -22,13 +22,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
 	const { getCategories, getSettingsByCategory, searchSettings, hasUnsavedChanges, needsRefresh } =
 		useSettings();
-	const [searchQuery, setSearchQuery] = useState("");
+	const [searchQuery, setSearchQuery] = useState('');
 	const [filteredData, setFilteredData] = useState<{
 		categories: { category: string; subcategories: string[] }[];
 		allSettings: any[];
 	}>({ categories: [], allSettings: [] });
 
-	const [activeCategory, setActiveCategory] = useState("");
+	const [activeCategory, setActiveCategory] = useState('');
 	const [activeSubcategory, setActiveSubcategory] = useState<
 		string | undefined
 	>();
@@ -95,8 +95,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 		if (!query.trim()) return text;
 
 		const regex = new RegExp(
-			`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
-			"gi",
+			`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`,
+			'gi',
 		);
 		const parts = text.split(regex);
 
@@ -113,7 +113,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
 	const renderTitle = () => {
 		if (!searchQuery) {
-			return `${activeCategory}${activeSubcategory ? ` - ${activeSubcategory}` : ""}`;
+			return `${activeCategory}${activeSubcategory ? ` - ${activeSubcategory}` : ''}`;
 		}
 
 		return (
@@ -121,7 +121,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 				{highlightText(activeCategory, searchQuery)}
 				{activeSubcategory && (
 					<>
-						{" - "}
+						{' - '}
 						{highlightText(activeSubcategory, searchQuery)}
 					</>
 				)}
@@ -163,7 +163,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 							{searchQuery && (
 								<button
 									className="clear-search-button"
-									onClick={() => setSearchQuery("")}
+									onClick={() => setSearchQuery('')}
 								>
 									×
 								</button>
@@ -174,7 +174,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 					{filteredData.categories.map(({ category, subcategories }) => (
 						<div key={category} className="settings-category">
 							<div
-								className={`category-item ${activeCategory === category ? "active" : ""}`}
+								className={`category-item ${activeCategory === category ? 'active' : ''}`}
 								onClick={() => {
 									setActiveCategory(category);
 									setActiveSubcategory(subcategories[0]);
@@ -187,7 +187,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 									{subcategories.map((subcategory) => (
 										<div
 											key={subcategory}
-											className={`subcategory-item ${activeSubcategory === subcategory ? "active" : ""}`}
+											className={`subcategory-item ${activeSubcategory === subcategory ? 'active' : ''}`}
 											onClick={() => setActiveSubcategory(subcategory)}
 										>
 											{highlightText(subcategory, searchQuery)}

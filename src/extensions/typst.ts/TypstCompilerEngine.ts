@@ -1,14 +1,14 @@
 // src/extensions/typst.ts/TypstCompilerEngine.ts
-import { nanoid } from "nanoid";
+import { nanoid } from 'nanoid';
 
 export type TypstWorkerMessage =
-    | { id: string; type: "compile"; payload: { mainFilePath: string; sources: Record<string, string | Uint8Array>; format: "pdf" | "svg" | "canvas" } }
-    | { id: string; type: "ping" };
+    | { id: string; type: 'compile'; payload: { mainFilePath: string; sources: Record<string, string | Uint8Array>; format: 'pdf' | 'svg' | 'canvas' } }
+    | { id: string; type: 'ping' };
 
 export type TypstWorkerResponse =
-    | { id: string; type: "pong" }
-    | { id: string; type: "done"; result: { format: string; output: Uint8Array | string; diagnostics?: any[] } }
-    | { id: string; type: "error"; error: string };
+    | { id: string; type: 'pong' }
+    | { id: string; type: 'done'; result: { format: string; output: Uint8Array | string; diagnostics?: any[] } }
+    | { id: string; type: 'error'; error: string };
 
 export class TypstCompilerEngine {
     private worker: Worker | null = null;
@@ -18,8 +18,8 @@ export class TypstCompilerEngine {
     getWorker(): Worker {
         if (this.worker) return this.worker;
 
-        this.worker = new Worker(new URL("./typst-worker.ts", import.meta.url), {
-            type: "module",
+        this.worker = new Worker(new URL('./typst-worker.ts', import.meta.url), {
+            type: 'module',
         });
 
         this.worker.onmessage = (e: MessageEvent<TypstWorkerResponse>) => {
@@ -27,12 +27,12 @@ export class TypstCompilerEngine {
 
             if (!id) return;
 
-            if (type === "done" || type === "pong") {
+            if (type === 'done' || type === 'pong') {
                 const resolve = this.pendingResolves.get(id);
-                if (resolve) resolve("result" in e.data ? e.data.result : undefined);
-            } else if (type === "error") {
+                if (resolve) resolve('result' in e.data ? e.data.result : undefined);
+            } else if (type === 'error') {
                 const reject = this.pendingRejects.get(id);
-                if (reject) reject(new Error(e.data.error || "Worker error"));
+                if (reject) reject(new Error(e.data.error || 'Worker error'));
             }
 
             this.pendingResolves.delete(id);
@@ -51,16 +51,16 @@ export class TypstCompilerEngine {
     }
 
     async ping(): Promise<void> {
-        return this.callWorker("ping", undefined);
+        return this.callWorker('ping', undefined);
     }
 
     async compile(
         mainFilePath: string,
         sources: Record<string, string | Uint8Array>,
-        format: "pdf" | "svg" | "canvas",
+        format: 'pdf' | 'svg' | 'canvas',
         signal?: AbortSignal
     ): Promise<{ format: string; output: Uint8Array | string; diagnostics?: any[] }> {
-        return this.callWorker("compile", { mainFilePath, sources, format }, signal);
+        return this.callWorker('compile', { mainFilePath, sources, format }, signal);
     }
 
     terminate(): void {
@@ -72,10 +72,10 @@ export class TypstCompilerEngine {
         this.pendingRejects.clear();
     }
 
-    private callWorker<TType extends "compile" | "ping">(
+    private callWorker<TType extends 'compile' | 'ping'>(
         type: TType,
-        payload: TType extends "compile"
-            ? { mainFilePath: string; sources: Record<string, string | Uint8Array>; format: "pdf" | "svg" | "canvas" }
+        payload: TType extends 'compile'
+            ? { mainFilePath: string; sources: Record<string, string | Uint8Array>; format: 'pdf' | 'svg' | 'canvas' }
             : undefined,
         signal?: AbortSignal
     ): Promise<any> {
@@ -93,7 +93,7 @@ export class TypstCompilerEngine {
                 this.worker = null;
             }
             const reject = this.pendingRejects.get(id);
-            if (reject) reject(new Error("Compilation was cancelled"));
+            if (reject) reject(new Error('Compilation was cancelled'));
             this.pendingResolves.delete(id);
             this.pendingRejects.delete(id);
         };
@@ -101,9 +101,9 @@ export class TypstCompilerEngine {
         if (signal) {
             if (signal.aborted) {
                 abort();
-                return Promise.reject(new Error("Compilation was cancelled"));
+                return Promise.reject(new Error('Compilation was cancelled'));
             }
-            signal.addEventListener("abort", abort, { once: true });
+            signal.addEventListener('abort', abort, { once: true });
         }
 
         worker.postMessage({ id, type, payload });

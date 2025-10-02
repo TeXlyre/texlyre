@@ -1,11 +1,11 @@
 // src/components/editor/TypstOutline.tsx
-import type React from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import type React from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { useProperties } from "../../hooks/useProperties";
-import { TypstOutlineParser } from "../../utils/typstOutlineParser";
-import { ChevronDownIcon, ChevronRightIcon, RefreshIcon } from "../common/Icons";
-import TypstOutlineItem from "./TypstOutlineItem";
+import { useProperties } from '../../hooks/useProperties';
+import { TypstOutlineParser } from '../../utils/typstOutlineParser';
+import { ChevronDownIcon, ChevronRightIcon, RefreshIcon } from '../common/Icons';
+import TypstOutlineItem from './TypstOutlineItem';
 
 interface TypstOutlineProps {
     content: string;
@@ -31,9 +31,9 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
         propertiesRegistered.current = true;
 
         registerProperty({
-            id: "typst-outline-collapsed",
-            category: "UI",
-            subcategory: "Layout",
+            id: 'typst-outline-collapsed',
+            category: 'UI',
+            subcategory: 'Layout',
             defaultValue: true,
         });
     }, [registerProperty]);
@@ -41,7 +41,7 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
     useEffect(() => {
         if (propertiesLoaded) return;
 
-        const storedCollapsed = getProperty("typst-outline-collapsed");
+        const storedCollapsed = getProperty('typst-outline-collapsed');
 
         if (storedCollapsed !== undefined) {
             setIsCollapsed(Boolean(storedCollapsed));
@@ -69,7 +69,7 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
     const handleToggleCollapse = () => {
         const newCollapsed = !isCollapsed;
         setIsCollapsed(newCollapsed);
-        setProperty("typst-outline-collapsed", newCollapsed);
+        setProperty('typst-outline-collapsed', newCollapsed);
     };
 
     if (sections.length === 0) {

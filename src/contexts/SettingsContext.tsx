@@ -1,5 +1,5 @@
 // src/contexts/SettingsContext.tsx
-import type React from "react";
+import type React from 'react';
 import {
 	type ReactNode,
 	createContext,
@@ -7,11 +7,11 @@ import {
 	useEffect,
 	useRef,
 	useState,
-} from "react";
+} from 'react';
 
-import { pluginSettings } from "../plugins/PluginRegistry";
+import { pluginSettings } from '../plugins/PluginRegistry';
 
-export type SettingType = "checkbox" | "select" | "text" | "codemirror" | "number" | "color";
+export type SettingType = 'checkbox' | 'select' | 'text' | 'codemirror' | 'number' | 'color';
 
 export interface SettingOption {
 	label: string;
@@ -92,20 +92,20 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 	const isLocalStorageLoaded = useRef(false);
 
 	const getCurrentUserId = useCallback((): string | null => {
-		return localStorage.getItem("texlyre-current-user");
+		return localStorage.getItem('texlyre-current-user');
 	}, []);
 
 	const getStorageKey = useCallback((): string => {
 		const userId = getCurrentUserId();
-		return userId ? `texlyre-user-${userId}-settings` : "texlyre-settings";
+		return userId ? `texlyre-user-${userId}-settings` : 'texlyre-settings';
 	}, [getCurrentUserId]);
 
 	useEffect(() => {
 		const userId = getCurrentUserId();
 		const userStorageKey = userId
 			? `texlyre-user-${userId}-settings`
-			: "texlyre-settings";
-		const globalStorageKey = "texlyre-settings";
+			: 'texlyre-settings';
+		const globalStorageKey = 'texlyre-settings';
 
 		try {
 			let stored = localStorage.getItem(userStorageKey);
@@ -125,7 +125,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 			}
 		} catch (err) {
 			console.error(
-				"Error parsing settings from localStorage on initial load:",
+				'Error parsing settings from localStorage on initial load:',
 				err,
 			);
 			localStorage.removeItem(userStorageKey);
@@ -167,7 +167,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 			const storageKey = getStorageKey();
 			localStorage.setItem(storageKey, JSON.stringify(toSave));
 		} catch (error) {
-			console.error("Error saving settings to localStorage:", error);
+			console.error('Error saving settings to localStorage:', error);
 		}
 	}, [settings, getStorageKey]);
 

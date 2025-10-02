@@ -1,72 +1,72 @@
 // src/contexts/AuthContext.tsx
-import type React from "react";
-import { type ReactNode, createContext, useEffect, useState } from "react";
+import type React from 'react';
+import { type ReactNode, createContext, useEffect, useState } from 'react';
 
-import { authService } from "../services/AuthService";
-import type { AuthContextType, User } from "../types/auth";
-import type { Project } from "../types/projects";
+import { authService } from '../services/AuthService';
+import type { AuthContextType, User } from '../types/auth';
+import type { Project } from '../types/projects';
 
 export const AuthContext = createContext<AuthContextType>({
 	user: null,
 	isAuthenticated: false,
 	isInitializing: true,
 	login: async () => {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	},
 	register: async () => {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	},
 	createGuestAccount: async () => {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	},
 	upgradeGuestAccount: async () => {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	},
 	logout: async () => {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	},
 	updateUser: async () => {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	},
 	updateUserColor: async () => {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	},
 	createProject: async () => {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	},
 	updateProject: async () => {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	},
 	deleteProject: async () => {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	},
 	getProjectById: async () => {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	},
 	getProjects: async () => {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	},
 	getProjectsByTag: async () => {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	},
-	getProjectsByType: async (type: "latex" | "typst") => {
-		throw new Error("Not implemented");
+	getProjectsByType: async (type: 'latex' | 'typst') => {
+		throw new Error('Not implemented');
 	},
 	searchProjects: async () => {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	},
 	toggleFavorite: async () => {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	},
 	verifyPassword: async () => {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	},
 	updatePassword: async () => {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	},
 	isGuestUser: () => false,
 	cleanupExpiredGuests: async () => {
-		throw new Error("Not implemented");
+		throw new Error('Not implemented');
 	},
 });
 
@@ -150,7 +150,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 	};
 
 	const createProject = async (
-		projectData: Omit<Project, "id" | "createdAt" | "updatedAt" | "ownerId">,
+		projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'ownerId'>,
 	): Promise<Project> => {
 		return authService.createProject(projectData);
 	};
@@ -175,7 +175,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 		return authService.getProjectsByTag(tag);
 	};
 
-	const getProjectsByType = async (type: "latex" | "typst"): Promise<Project[]> => {
+	const getProjectsByType = async (type: 'latex' | 'typst'): Promise<Project[]> => {
 		return authService.getProjectsByType(type);
 	};
 

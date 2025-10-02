@@ -14,8 +14,8 @@ export interface EngineConfig {
 
 export abstract class BaseEngine {
 	protected engine: any = undefined;
-	protected status: "unloaded" | "loading" | "ready" | "compiling" | "error" =
-		"unloaded";
+	protected status: 'unloaded' | 'loading' | 'ready' | 'compiling' | 'error' =
+		'unloaded';
 	protected statusListeners: Set<() => void> = new Set();
 	protected config: EngineConfig;
 
@@ -41,11 +41,11 @@ export abstract class BaseEngine {
 	}
 
 	isReady(): boolean {
-		return this.status === "ready";
+		return this.status === 'ready';
 	}
 
 	isCompiling(): boolean {
-		return this.status === "compiling";
+		return this.status === 'compiling';
 	}
 
 	addStatusListener(listener: () => void): () => void {
@@ -63,13 +63,13 @@ export abstract class BaseEngine {
 	}
 
 	async initialize(): Promise<void> {
-		if (this.status === "ready") return;
-		if (this.status === "loading") {
+		if (this.status === 'ready') return;
+		if (this.status === 'loading') {
 			return new Promise((resolve, reject) => {
 				const checkStatus = () => {
-					if (this.status === "ready") {
+					if (this.status === 'ready') {
 						resolve();
-					} else if (this.status === "error") {
+					} else if (this.status === 'error') {
 						reject(
 							new Error(`Failed to initialize ${this.config.name} engine`),
 						);
@@ -81,7 +81,7 @@ export abstract class BaseEngine {
 			});
 		}
 
-		this.setStatus("loading");
+		this.setStatus('loading');
 		try {
 			await this.loadScripts();
 			this.engine = this.createEngine();
@@ -89,9 +89,9 @@ export abstract class BaseEngine {
 			// Set up the engine without calling methods that might send messages
 			await this.engine.loadEngine();
 
-			this.setStatus("ready");
+			this.setStatus('ready');
 		} catch (error) {
-			this.setStatus("error");
+			this.setStatus('error');
 			throw error;
 		}
 	}
@@ -106,21 +106,21 @@ export abstract class BaseEngine {
 			try {
 				this.engine.closeWorker();
 			} catch (error) {
-				console.warn("Error during engine cleanup:", error);
+				console.warn('Error during engine cleanup:', error);
 			}
 			this.engine = undefined;
 		}
-		this.setStatus("unloaded");
+		this.setStatus('unloaded');
 	}
 
 	stopCompilation(): void {
 		if (this.isCompiling() && this.engine) {
 			try {
 				this.engine.closeWorker();
-				this.setStatus("error");
-				this.status = "ready";
+				this.setStatus('error');
+				this.status = 'ready';
 			} catch (error) {
-				console.warn("Error stopping compilation:", error);
+				console.warn('Error stopping compilation:', error);
 			}
 		}
 	}

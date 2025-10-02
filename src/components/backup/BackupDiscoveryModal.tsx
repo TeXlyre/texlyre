@@ -1,14 +1,14 @@
 // src/components/backup/BackupDiscoveryModal.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
 import {
 	type ImportableProject,
 	projectImportService,
-} from "../../services/ProjectImportService";
-import { formatDate } from "../../utils/dateUtils";
-import { ImportIcon } from "../common/Icons";
-import Modal from "../common/Modal";
+} from '../../services/ProjectImportService';
+import { formatDate } from '../../utils/dateUtils';
+import { ImportIcon } from '../common/Icons';
+import Modal from '../common/Modal';
 
 interface BackupDiscoveryModalProps {
 	isOpen: boolean;
@@ -61,13 +61,13 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 				Array.from(selectedProjects),
 				{
 					makeCollaborator: true,
-					conflictResolution: "create-new" as const,
+					conflictResolution: 'create-new' as const,
 				},
 			);
 
 			if (result.errors.length > 0) {
 				setError(
-					`Import completed with errors: ${result.errors.map((e) => e.error).join(", ")}`,
+					`Import completed with errors: ${result.errors.map((e) => e.error).join(', ')}`,
 				);
 			}
 
@@ -76,7 +76,7 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 				onClose();
 			}
 		} catch (error) {
-			setError(error instanceof Error ? error.message : "Import failed");
+			setError(error instanceof Error ? error.message : 'Import failed');
 		} finally {
 			setIsImporting(false);
 		}
@@ -98,7 +98,7 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 		>
 			<div className="backup-discovery-modal">
 				{error && (
-					<div className="error-message" style={{ marginBottom: "1rem" }}>
+					<div className="error-message" style={{ marginBottom: '1rem' }}>
 						{error}
 					</div>
 				)}
@@ -106,10 +106,10 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 				<div className="discovery-info">
 					<p>
 						We found {discoveredProjects.length} project
-						{discoveredProjects.length === 1 ? "" : "s"} in your backup that{" "}
+						{discoveredProjects.length === 1 ? '' : 's'} in your backup that{' '}
 						{discoveredProjects.length === 1 ? "isn't" : "aren't"} on TeXlyre.
-						Would you like to import{" "}
-						{discoveredProjects.length === 1 ? "it" : "them"}?
+						Would you like to import{' '}
+						{discoveredProjects.length === 1 ? 'it' : 'them'}?
 					</p>
 				</div>
 
@@ -120,8 +120,8 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 						disabled={isImporting}
 					>
 						{selectedProjects.size === discoveredProjects.length
-							? "Deselect All"
-							: "Select All"}
+							? 'Deselect All'
+							: 'Select All'}
 					</button>
 				</div>
 
@@ -129,7 +129,7 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 					{discoveredProjects.map((project) => (
 						<div
 							key={project.id}
-							className={`project-item ${selectedProjects.has(project.id) ? "selected" : ""}`}
+							className={`project-item ${selectedProjects.has(project.id) ? 'selected' : ''}`}
 							onClick={() => !isImporting && handleProjectToggle(project.id)}
 						>
 							<input
@@ -141,7 +141,7 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 							<div className="project-details">
 								<div className="project-name">{project.name}</div>
 								<div className="project-description">
-									{project.description || "No description"}
+									{project.description || 'No description'}
 								</div>
 								<div className="project-meta">
 									<span>Last modified: {formatDate(project.lastModified)}</span>
@@ -175,8 +175,8 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 						disabled={selectedProjects.size === 0 || isImporting}
 					>
 						{isImporting
-							? "Importing..."
-							: `Import ${selectedProjects.size} Project${selectedProjects.size === 1 ? "" : "s"}`}
+							? 'Importing...'
+							: `Import ${selectedProjects.size} Project${selectedProjects.size === 1 ? '' : 's'}`}
 					</button>
 				</div>
 			</div>

@@ -1,8 +1,8 @@
 // src/components/profile/UserDropdown.tsx
-import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import {UserIcon, UpgradeAccountIcon, TrashIcon, ExportIcon, EditIcon, LogoutIcon} from "../common/Icons";
+import {UserIcon, UpgradeAccountIcon, TrashIcon, ExportIcon, EditIcon, LogoutIcon} from '../common/Icons';
 
 interface UserDropdownProps {
 	username: string;
@@ -36,13 +36,13 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 			}
 		};
 
-		document.addEventListener("mousedown", handleClickOutside);
+		document.addEventListener('mousedown', handleClickOutside);
 		return () => {
-			document.removeEventListener("mousedown", handleClickOutside);
+			document.removeEventListener('mousedown', handleClickOutside);
 		};
 	}, []);
 
-	const displayUsername = isGuest ? "Guest User" : username;
+	const displayUsername = isGuest ? 'Guest User' : username;
 
 	return (
 		<div className="user-dropdown-container" ref={dropdownRef}>

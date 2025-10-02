@@ -1,3 +1,3 @@
-import gitHubBackupPlugin from "./GitHubBackupPlugin";
+import gitHubBackupPlugin from './GitHubBackupPlugin';
 
 export default gitHubBackupPlugin;

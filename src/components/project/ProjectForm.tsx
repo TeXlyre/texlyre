@@ -1,15 +1,15 @@
 // src/components/projects/ProjectForm.tsx
-import type React from "react";
-import { useEffect, useState } from "react";
+import type React from 'react';
+import { useEffect, useState } from 'react';
 
-import type { Project } from "../../types/projects.ts";
+import type { Project } from '../../types/projects.ts';
 
 interface ProjectFormProps {
 	project?: Project;
 	onSubmit: (projectData: {
 		name: string;
 		description: string;
-		type: "latex" | "typst";
+		type: 'latex' | 'typst';
 		tags: string[];
 		docUrl?: string;
 		isFavorite: boolean;
@@ -28,12 +28,12 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 	simpleMode = false, // Default to full form
 	disableNameAndDescription = false,
 }) => {
-	const [name, setName] = useState("");
-	const [description, setDescription] = useState("");
-	const [type, setType] = useState<"latex" | "typst">("latex");
-	const [tagInput, setTagInput] = useState("");
+	const [name, setName] = useState('');
+	const [description, setDescription] = useState('');
+	const [type, setType] = useState<'latex' | 'typst'>('latex');
+	const [tagInput, setTagInput] = useState('');
 	const [tags, setTags] = useState<string[]>([]);
-	const [docUrl, setDocUrl] = useState("");
+	const [docUrl, setDocUrl] = useState('');
 	const [isFavorite, setIsFavorite] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
@@ -41,10 +41,10 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 	useEffect(() => {
 		if (project) {
 			setName(project.name);
-			setDescription(project.description || "");
+			setDescription(project.description || '');
 			setType(project.type);
 			setTags(project.tags || []);
-			setDocUrl(project.docUrl || "");
+			setDocUrl(project.docUrl || '');
 			setIsFavorite(project.isFavorite);
 		}
 	}, [project]);
@@ -53,7 +53,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 		e.preventDefault();
 
 		if (!name.trim()) {
-			setError("Project name is required");
+			setError('Project name is required');
 			return;
 		}
 
@@ -71,12 +71,12 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 		const trimmedTag = tagInput.trim();
 		if (trimmedTag && !tags.includes(trimmedTag)) {
 			setTags([...tags, trimmedTag]);
-			setTagInput("");
+			setTagInput('');
 		}
 	};
 
 	const handleTagKeyPress = (e: React.KeyboardEvent) => {
-		if (e.key === "Enter" || e.key === ",") {
+		if (e.key === 'Enter' || e.key === ',') {
 			e.preventDefault();
 			handleAddTag();
 		}
@@ -115,7 +115,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 				<label htmlFor="project-description">Description</label>
 				{disableNameAndDescription ? (
 					<div className="disabled-field">
-						<span>{description || "No description"}</span>
+						<span>{description || 'No description'}</span>
 						<div className="field-note">
 							Open the project to edit its description
 						</div>
@@ -135,14 +135,14 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 				<label htmlFor="project-type">Typesetter Type</label>
 				{disableNameAndDescription ? (
 					<div className="disabled-field">
-						<span>{type === "latex" ? "LaTeX" : "Typst"}</span>
+						<span>{type === 'latex' ? 'LaTeX' : 'Typst'}</span>
 						<div className="field-note">Open the project to edit its typesetter type</div>
 					</div>
 				) : (
 					<select
 						id="project-type"
 						value={type}
-						onChange={(e) => setType(e.target.value as "latex" | "typst")}
+						onChange={(e) => setType(e.target.value as 'latex' | 'typst')}
 						disabled={isSubmitting}
 					>
 						<option value="latex">LaTeX</option>
@@ -226,11 +226,11 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 				>
 					{isSubmitting
 						? project
-							? "Updating..."
-							: "Creating..."
+							? 'Updating...'
+							: 'Creating...'
 						: project
-							? "Update Project"
-							: "Create Project"}
+							? 'Update Project'
+							: 'Create Project'}
 				</button>
 			</div>
 		</form>

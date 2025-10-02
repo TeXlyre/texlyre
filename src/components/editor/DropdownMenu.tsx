@@ -1,7 +1,7 @@
 // src/components/editor/DropdownMenu.tsx
-import type React from "react";
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface DropdownMenuProps {
 	children: React.ReactNode;
@@ -76,12 +76,12 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
 
 		// Use a slight delay to ensure the dropdown is fully rendered
 		const timeoutId = setTimeout(() => {
-			document.addEventListener("mousedown", handleClickOutside, true);
+			document.addEventListener('mousedown', handleClickOutside, true);
 		}, 10);
 
 		return () => {
 			clearTimeout(timeoutId);
-			document.removeEventListener("mousedown", handleClickOutside, true);
+			document.removeEventListener('mousedown', handleClickOutside, true);
 		};
 	}, [isOpen, onClose, targetRef]);
 
@@ -92,11 +92,11 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
 			ref={dropdownRef}
 			className="dropdown-menu"
 			style={{
-				position: "fixed",
+				position: 'fixed',
 				top: `${position.top}px`,
 				left: `${position.left}px`,
 				zIndex: 1001,
-				minWidth: "200px",
+				minWidth: '200px',
 			}}
 			// Remove onClick stopPropagation to allow clicks to bubble
 		>

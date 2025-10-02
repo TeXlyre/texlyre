@@ -1,7 +1,7 @@
 // src/components/comments/CommentButton.tsx
-import type React from "react";
+import type React from 'react';
 
-import { useComments } from "../../hooks/useComments";
+import { useComments } from '../../hooks/useComments';
 
 interface CommentButtonProps {
 	position: { x: number; y: number };
@@ -18,7 +18,7 @@ const CommentButton: React.FC<CommentButtonProps> = ({
 
 	const handleClick = () => {
 		document.dispatchEvent(
-			new CustomEvent("show-comment-modal", {
+			new CustomEvent('show-comment-modal', {
 				detail: { selection },
 			})
 		);
@@ -29,7 +29,7 @@ const CommentButton: React.FC<CommentButtonProps> = ({
 		<div
 			className="comment-button"
 			style={{
-				position: "absolute",
+				position: 'absolute',
 				left: `${position.x}px`,
 				top: `${position.y}px`,
 			}}

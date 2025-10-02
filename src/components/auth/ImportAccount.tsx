@@ -1,8 +1,8 @@
 // src/components/auth/ImportAccount.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import { accountExportService } from "../../services/AccountExportService";
+import { accountExportService } from '../../services/AccountExportService';
 
 interface ImportAccountProps {
 	onImportSuccess: () => void;
@@ -30,12 +30,12 @@ const ImportAccount: React.FC<ImportAccountProps> = ({
 		e.preventDefault();
 
 		if (!file) {
-			setError("Please select a file to import");
+			setError('Please select a file to import');
 			return;
 		}
 
-		if (!file.name.endsWith(".zip")) {
-			setError("Please select a valid TeXlyre export file (.zip)");
+		if (!file.name.endsWith('.zip')) {
+			setError('Please select a valid TeXlyre export file (.zip)');
 			return;
 		}
 
@@ -45,9 +45,9 @@ const ImportAccount: React.FC<ImportAccountProps> = ({
 
 		try {
 			await accountExportService.importAccount(file);
-			setSuccess("Account imported successfully!");
+			setSuccess('Account imported successfully!');
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "Error importing account");
+			setError(err instanceof Error ? err.message : 'Error importing account');
 		} finally {
 			setIsImporting(false);
 		}
@@ -66,7 +66,7 @@ const ImportAccount: React.FC<ImportAccountProps> = ({
 
 			{success && (
 				<div className="success-message">
-					{success}{" "}
+					{success}{' '}
 					<button
 						type="button"
 						className="refresh-import-button secondary"
@@ -96,7 +96,7 @@ const ImportAccount: React.FC<ImportAccountProps> = ({
 							className="auth-button"
 							disabled={!file || isImporting}
 						>
-							{isImporting ? "Importing..." : "Import Account"}
+							{isImporting ? 'Importing...' : 'Import Account'}
 						</button>
 					</form>
 

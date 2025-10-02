@@ -1,8 +1,8 @@
 // src/components/common/SplashScreen.tsx
-import type React from "react";
-import { useEffect, useState } from "react";
+import type React from 'react';
+import { useEffect, useState } from 'react';
 
-import texlyreLogo from "../../assets/images/TeXlyre_notext.png";
+import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
 
 interface SplashScreenProps {
   isVisible: boolean;

@@ -1,8 +1,8 @@
 // src/components/common/OfflineBanner.tsx
-import type React from "react";
+import type React from 'react';
 
-import { useOffline } from "../../hooks/useOffline";
-import {OfflineIcon} from "./Icons";
+import { useOffline } from '../../hooks/useOffline';
+import {OfflineIcon} from './Icons';
 
 const OfflineBanner: React.FC = () => {
 	const { isOfflineMode, lastOnline } = useOffline();
@@ -11,7 +11,7 @@ const OfflineBanner: React.FC = () => {
 
 	const lastOnlineText = lastOnline
 		? new Date(lastOnline).toLocaleString()
-		: "Unknown";
+		: 'Unknown';
 
 	return (
 		<div className="offline-banner">

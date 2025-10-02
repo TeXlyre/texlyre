@@ -18,9 +18,9 @@ export interface LaTeXContextType {
 	compileDocument: (mainFileName: string) => Promise<void>;
 	stopCompilation: () => void;
 	toggleOutputView: () => void;
-	currentView: "log" | "pdf";
-	latexEngine: "pdftex" | "xetex" | "luatex";
+	currentView: 'log' | 'pdf';
+	latexEngine: 'pdftex' | 'xetex' | 'luatex';
 	activeCompiler: string | null;
-	setLatexEngine: (engine: "pdftex" | "xetex" | "luatex") => Promise<void>;
+	setLatexEngine: (engine: 'pdftex' | 'xetex' | 'luatex') => Promise<void>;
 	triggerAutoCompile: () => void;
 }

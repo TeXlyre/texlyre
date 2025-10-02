@@ -1,40 +1,40 @@
 // src/components/editor/Editor.tsx
-import type React from "react";
-import { useCallback, useEffect, useRef, useMemo, useState } from "react";
+import type React from 'react';
+import { useCallback, useEffect, useRef, useMemo, useState } from 'react';
 
 import { BibliographyProvider } from '../../contexts/BibliographyContext';
 import { LSPProvider } from '../../contexts/LSPContext';
-import { CommentProvider } from "../../contexts/CommentContext";
-import { processComments } from "../../extensions/codemirror/CommentExtension.ts";
-import { useCollab } from "../../hooks/useCollab";
-import { useComments } from "../../hooks/useComments";
-import { usePluginFileInfo } from "../../hooks/usePluginFileInfo";
+import { CommentProvider } from '../../contexts/CommentContext';
+import { processComments } from '../../extensions/codemirror/CommentExtension.ts';
+import { useCollab } from '../../hooks/useCollab';
+import { useComments } from '../../hooks/useComments';
+import { usePluginFileInfo } from '../../hooks/usePluginFileInfo';
 import type {
 	CollaborativeViewerProps,
 	ViewerProps,
-} from "../../plugins/PluginInterface";
-import { pluginRegistry } from "../../plugins/PluginRegistry";
-import { EditorLoader } from "../../services/EditorLoader.ts";
-import { fileStorageService } from "../../services/FileStorageService";
-import type { DocumentList } from "../../types/documents.ts";
-import { buildUrlWithFragments, parseUrlFragments } from "../../utils/urlUtils";
-import { copyCleanTextToClipboard } from "../../utils/clipboardUtils";
-import { fileCommentProcessor } from "../../utils/fileCommentProcessor";
-import { arrayBufferToString } from "../../utils/fileUtils";
-import CommentPanel from "../comments/CommentPanel";
-import CommentToggleButton from "../comments/CommentToggleButton";
-import LSPToggleButton from "../lsp/LSPToggleButton";
-import LSPPanel from "../lsp/LSPPanel";
-import CommentModal from "../comments/CommentModal";
+} from '../../plugins/PluginInterface';
+import { pluginRegistry } from '../../plugins/PluginRegistry';
+import { EditorLoader } from '../../services/EditorLoader.ts';
+import { fileStorageService } from '../../services/FileStorageService';
+import type { DocumentList } from '../../types/documents.ts';
+import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
+import { copyCleanTextToClipboard } from '../../utils/clipboardUtils';
+import { fileCommentProcessor } from '../../utils/fileCommentProcessor';
+import { arrayBufferToString } from '../../utils/fileUtils';
+import CommentPanel from '../comments/CommentPanel';
+import CommentToggleButton from '../comments/CommentToggleButton';
+import LSPToggleButton from '../lsp/LSPToggleButton';
+import LSPPanel from '../lsp/LSPPanel';
+import CommentModal from '../comments/CommentModal';
 import {
 	CopyIcon,
 	DownloadIcon,
 	FileTextIcon,
 	LinkIcon,
 	SaveIcon,
-} from "../common/Icons";
-import { PluginControlGroup, PluginHeader } from "../common/PluginHeader";
-import UnlinkedDocumentNotice from "./UnlinkedDocumentNotice";
+} from '../common/Icons';
+import { PluginControlGroup, PluginHeader } from '../common/PluginHeader';
+import UnlinkedDocumentNotice from './UnlinkedDocumentNotice';
 
 interface EditorComponentProps {
 	content: string | ArrayBuffer;
@@ -139,7 +139,7 @@ const EditorContent: React.FC<{
 
 	useEffect(() => {
 		if (shouldShowLatexOutput) {
-			document.dispatchEvent(new CustomEvent("show-latex-output"));
+			document.dispatchEvent(new CustomEvent('show-latex-output'));
 		}
 	}, [shouldShowLatexOutput]);
 
@@ -181,13 +181,13 @@ const EditorContent: React.FC<{
 
 	useEffect(() => {
 		document.addEventListener(
-			"codemirror-content-changed",
+			'codemirror-content-changed',
 			handleContentChanged,
 		);
 
 		return () => {
 			document.removeEventListener(
-				"codemirror-content-changed",
+				'codemirror-content-changed',
 				handleContentChanged,
 			);
 		};
@@ -212,15 +212,15 @@ const EditorContent: React.FC<{
 						updateComments(viewRef.current.state.doc.toString());
 					}
 				} catch (error) {
-					console.error("Error adding comment:", error);
+					console.error('Error adding comment:', error);
 				}
 			}
 		};
 
-		document.addEventListener("add-comment-to-editor", handleAddCommentToEditor);
+		document.addEventListener('add-comment-to-editor', handleAddCommentToEditor);
 
 		return () => {
-			document.removeEventListener("add-comment-to-editor", handleAddCommentToEditor);
+			document.removeEventListener('add-comment-to-editor', handleAddCommentToEditor);
 		};
 	}, [viewRef, isViewOnly, addComment, updateComments]);
 
@@ -229,23 +229,23 @@ const EditorContent: React.FC<{
 			? [
 					`File: ${fileName}`,
 					`Path: ${filePath || fileInfo.filePath}`,
-					`Mode: ${isViewOnly ? "Read-only" : "Editing"}`,
-					linkedDocumentId ? `Linked to document: ${linkedDocumentId}` : "",
-					`MIME Type: ${fileInfo.mimeType || "text/plain"}`,
-					`Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : "Unknown"}`,
-					`Last Modified: ${fileInfo.lastModified ? new Date(fileInfo.lastModified).toLocaleString() : "Unknown"}`,
+					`Mode: ${isViewOnly ? 'Read-only' : 'Editing'}`,
+					linkedDocumentId ? `Linked to document: ${linkedDocumentId}` : '',
+					`MIME Type: ${fileInfo.mimeType || 'text/plain'}`,
+					`Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : 'Unknown'}`,
+					`Last Modified: ${fileInfo.lastModified ? new Date(fileInfo.lastModified).toLocaleString() : 'Unknown'}`,
 				]
 			: !isEditingFile && documentId && documents
 				? [
-						`Document: ${documents.find((d) => d.id === documentId)?.name || "Untitled"}`,
-						linkedFileInfo ? `Linked File: ${linkedFileInfo.fileName}` : "",
+						`Document: ${documents.find((d) => d.id === documentId)?.name || 'Untitled'}`,
+						linkedFileInfo ? `Linked File: ${linkedFileInfo.fileName}` : '',
 						linkedFileInfo
 							? `Path: ${linkedFileInfo.filePath}`
-							: "No linked file",
-						"Mode: Collaborative editing",
-						"Type: Text document",
+							: 'No linked file',
+						'Mode: Collaborative editing',
+						'Type: Text document',
 					]
-				: "";
+				: '';
 
 	const handleCopyLinkedFile = async () => {
 		if (!linkedFileInfo?.fileId) return;
@@ -253,13 +253,13 @@ const EditorContent: React.FC<{
 			const file = await fileStorageService.getFile(linkedFileInfo.fileId);
 			if (file?.content) {
 				const content =
-					typeof file.content === "string"
+					typeof file.content === 'string'
 						? file.content
 						: new TextDecoder().decode(file.content);
 				await copyCleanTextToClipboard(content);
 			}
 		} catch (error) {
-			console.error("Error copying linked file:", error);
+			console.error('Error copying linked file:', error);
 		}
 	};
 
@@ -269,16 +269,16 @@ const EditorContent: React.FC<{
 			const file = await fileStorageService.getFile(linkedFileInfo.fileId);
 			if (file?.content) {
 				const content =
-					typeof file.content === "string"
+					typeof file.content === 'string'
 						? file.content
 						: new TextDecoder().decode(file.content);
 				const cleanedContent =
 					fileCommentProcessor.processTextSelection(content);
 				const blob = new Blob([cleanedContent], {
-					type: "text/plain;charset=utf-8",
+					type: 'text/plain;charset=utf-8',
 				});
 				const url = URL.createObjectURL(blob);
-				const a = document.createElement("a");
+				const a = document.createElement('a');
 				a.href = url;
 				a.download = linkedFileInfo.fileName;
 				document.body.appendChild(a);
@@ -287,7 +287,7 @@ const EditorContent: React.FC<{
 				URL.revokeObjectURL(url);
 			}
 		} catch (error) {
-			console.error("Error downloading linked file:", error);
+			console.error('Error downloading linked file:', error);
 		}
 	};
 	const fileExtension = fileName?.split('.').pop()?.toLowerCase();
@@ -440,14 +440,14 @@ const EditorContent: React.FC<{
 					fileName={
 						isEditingFile
 							? fileInfo.fileName
-							: documents?.find((d) => d.id === documentId)?.name || "Document"
+							: documents?.find((d) => d.id === documentId)?.name || 'Document'
 					}
 					filePath={
 						isEditingFile
 							? filePath || fileInfo.filePath
 							: linkedFileInfo?.filePath
 					}
-					pluginName={isEditingFile ? "Text Editor" : "Document Editor"}
+					pluginName={isEditingFile ? 'Text Editor' : 'Document Editor'}
 					pluginVersion="1.0.0"
 					tooltipInfo={tooltipInfo}
 					controls={headerControls}
@@ -464,7 +464,7 @@ const EditorContent: React.FC<{
 				{isViewOnly && linkedDocumentId && (
 					<div className="linked-file-notice">
 						<span>
-							Read-only: This file is linked to a collaborative document{" "}
+							Read-only: This file is linked to a collaborative document{' '}
 						</span>
 						<div className="linked-file-actions">
 							<button
@@ -483,12 +483,12 @@ const EditorContent: React.FC<{
 					<UnlinkedDocumentNotice
 						documentId={documentId}
 						documentName={
-							documents.find((d) => d.id === documentId)?.name || "Untitled"
+							documents.find((d) => d.id === documentId)?.name || 'Untitled'
 						}
 						onDeleteDocument={(docId) => {
 							if (!changeDoc) {
 								console.error(
-									"Cannot delete document: changeData not available",
+									'Cannot delete document: changeData not available',
 								);
 								return;
 							}
@@ -505,7 +505,7 @@ const EditorContent: React.FC<{
 
 								if (data.currentDocId === docId) {
 									data.currentDocId =
-										data.documents.length > 0 ? data.documents[0].id : "";
+										data.documents.length > 0 ? data.documents[0].id : '';
 								}
 							});
 
@@ -522,7 +522,7 @@ const EditorContent: React.FC<{
 								);
 								window.location.hash = newUrl;
 							} else if (onSelectDocument) {
-								onSelectDocument("");
+								onSelectDocument('');
 								const currentFragment = parseUrlFragments(
 									window.location.hash.substring(1),
 								);
@@ -540,7 +540,7 @@ const EditorContent: React.FC<{
 			<div className="editor-main-container">
 				<div
 					className="editor-wrapper"
-					style={{ flex: 1, position: "relative" }}
+					style={{ flex: 1, position: 'relative' }}
 				>
 					<div ref={editorRef} className="codemirror-editor-container" />
 
@@ -564,9 +564,9 @@ const Editor: React.FC<EditorComponentProps> = ({
 	onUpdateContent,
 	isDocumentSelected,
 	isBinaryFile = false,
-	fileName = "",
+	fileName = '',
 	mimeType,
-	fileId = "",
+	fileId = '',
 	docUrl,
 	documentSelectionChange = 0,
 	isEditingFile = false,
@@ -576,8 +576,8 @@ const Editor: React.FC<EditorComponentProps> = ({
 	documents,
 	linkedFileInfo,
 }) => {
-	const [textContent, setTextContent] = useState<string>("");
-	const [filePath, setFilePath] = useState<string>("");
+	const [textContent, setTextContent] = useState<string>('');
+	const [filePath, setFilePath] = useState<string>('');
 	const [showCommentModal, setShowCommentModal] = useState(false);
 	const [pendingSelection, setPendingSelection] = useState<{ from: number; to: number } | null>(null);
 
@@ -594,10 +594,10 @@ const Editor: React.FC<EditorComponentProps> = ({
 			}
 		};
 
-		document.addEventListener("show-comment-modal", handleShowCommentModal);
+		document.addEventListener('show-comment-modal', handleShowCommentModal);
 
 		return () => {
-			document.removeEventListener("show-comment-modal", handleShowCommentModal);
+			document.removeEventListener('show-comment-modal', handleShowCommentModal);
 		};
 	}, []);
 
@@ -605,7 +605,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 		if (!pendingSelection) return;
 
 		document.dispatchEvent(
-			new CustomEvent("add-comment-to-editor", {
+			new CustomEvent('add-comment-to-editor', {
 				detail: { content, selection: pendingSelection },
 			})
 		);
@@ -620,7 +620,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 			setPendingSelection(selection);
 			setShowCommentModal(true);
 
-			document.dispatchEvent(new CustomEvent("hide-floating-comment-button"));
+			document.dispatchEvent(new CustomEvent('hide-floating-comment-button'));
 		}
 	};
 
@@ -628,14 +628,14 @@ const Editor: React.FC<EditorComponentProps> = ({
 		setShowCommentModal(false);
 		setPendingSelection(null);
 
-		document.dispatchEvent(new CustomEvent("comment-modal-closed"));
+		document.dispatchEvent(new CustomEvent('comment-modal-closed'));
 	};
 
 
 	const handleNavigateToLinkedFile = () => {
 		if (linkedFileInfo?.filePath) {
 			document.dispatchEvent(
-				new CustomEvent("navigate-to-linked-file", {
+				new CustomEvent('navigate-to-linked-file', {
 					detail: {
 						filePath: linkedFileInfo.filePath,
 						fileId: linkedFileInfo.fileId,
@@ -648,10 +648,10 @@ const Editor: React.FC<EditorComponentProps> = ({
 	useEffect(() => {
 		if (content instanceof ArrayBuffer) {
 			setTextContent(arrayBufferToString(content));
-		} else if (typeof content === "string") {
+		} else if (typeof content === 'string') {
 			setTextContent(content);
 		} else {
-			setTextContent("");
+			setTextContent('');
 		}
 	}, [content]);
 
@@ -664,7 +664,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 						setFilePath(file.path);
 					}
 				} catch (error) {
-					console.error("Error loading file path:", error);
+					console.error('Error loading file path:', error);
 				}
 			}
 		};
@@ -684,7 +684,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 
 		if (editorRef.current) {
 			document.dispatchEvent(
-				new CustomEvent("trigger-save", {
+				new CustomEvent('trigger-save', {
 					detail: { fileId, isFile: true },
 				}),
 			);
@@ -695,7 +695,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 		if (!isEditingFile && documentId) {
 			if (editorRef.current) {
 				document.dispatchEvent(
-					new CustomEvent("trigger-save", {
+					new CustomEvent('trigger-save', {
 						detail: { documentId, isFile: false },
 					}),
 				);
@@ -710,10 +710,10 @@ const Editor: React.FC<EditorComponentProps> = ({
 			const cleanedText =
 				fileCommentProcessor.processTextSelection(textContent);
 			const blob = new Blob([cleanedText], {
-				type: "text/plain;charset=utf-8",
+				type: 'text/plain;charset=utf-8',
 			});
 			const url = URL.createObjectURL(blob);
-			const a = document.createElement("a");
+			const a = document.createElement('a');
 			a.href = url;
 			a.download = fileName;
 			document.body.appendChild(a);
@@ -721,7 +721,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} catch (error) {
-			console.error("Error exporting file:", error);
+			console.error('Error exporting file:', error);
 		}
 	};
 
@@ -836,7 +836,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 				<br />
 				<br />
 
-				<p style={{ fontStyle: "italic" }}>
+				<p style={{ fontStyle: 'italic' }}>
 					Linking files allows you to view the cursor positions and text changes
 					by your collaborators in real-time. To link a text file to a document,
 					select or hover over the file and click the <LinkIcon />
@@ -856,7 +856,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 	};
 
 	const shouldShowLatexOutput =
-		!isEditingFile && linkedFileInfo?.fileName?.endsWith(".tex");
+		!isEditingFile && linkedFileInfo?.fileName?.endsWith('.tex');
 
 	return (
 		<BibliographyProvider>

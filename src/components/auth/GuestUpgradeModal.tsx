@@ -1,12 +1,12 @@
 // src/components/auth/GuestUpgradeModal.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import { useAuth } from "../../hooks/useAuth";
-import { UserIcon } from "../common/Icons";
-import Modal from "../common/Modal";
-import PrivacyModal from "../common/PrivacyModal";
-import Register from "./Register";
+import { useAuth } from '../../hooks/useAuth';
+import { UserIcon } from '../common/Icons';
+import Modal from '../common/Modal';
+import PrivacyModal from '../common/PrivacyModal';
+import Register from './Register';
 
 interface GuestUpgradeModalProps {
 	isOpen: boolean;

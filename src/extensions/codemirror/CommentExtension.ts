@@ -4,16 +4,16 @@ import {
 	StateEffect,
 	StateField,
 	type Transaction,
-} from "@codemirror/state";
+} from '@codemirror/state';
 import {
 	Decoration,
 	EditorView,
 	ViewPlugin,
 	WidgetType,
-} from "@codemirror/view";
+} from '@codemirror/view';
 
-import type { Comment } from "../../types/comments";
-import { commentBubbleExtension } from "./CommentBubbleExtension";
+import type { Comment } from '../../types/comments';
+import { commentBubbleExtension } from './CommentBubbleExtension';
 
 export const addComment = StateEffect.define<{
 	id: string;
@@ -28,7 +28,7 @@ export const clearComments = StateEffect.define<null>();
 
 class CommentWidget extends WidgetType {
 	constructor(
-		private type: "open" | "close",
+		private type: 'open' | 'close',
 		private id: string,
 	) {
 		super();
@@ -39,7 +39,7 @@ class CommentWidget extends WidgetType {
 	}
 
 	toDOM(): HTMLElement {
-		const span = document.createElement("span");
+		const span = document.createElement('span');
 		span.className = `comment-${this.type}-tag`;
 		span.dataset.commentId = this.id;
 		return span;
@@ -151,7 +151,7 @@ function preventTagEdits(tr: Transaction): Transaction | null {
 			if (from < range.openEnd && to > range.openStart) {
 				if (from < range.openStart && to > range.openEnd) {
 					adjustedChanges.push({ from, to: range.openStart, insert });
-					adjustedChanges.push({ from: range.openEnd, to, insert: "" });
+					adjustedChanges.push({ from: range.openEnd, to, insert: '' });
 					processed = true;
 					break;
 				}
@@ -168,7 +168,7 @@ function preventTagEdits(tr: Transaction): Transaction | null {
 			if (!processed && from < range.closeEnd && to > range.closeStart) {
 				if (from < range.closeStart && to > range.closeEnd) {
 					adjustedChanges.push({ from, to: range.closeStart, insert });
-					adjustedChanges.push({ from: range.closeEnd, to, insert: "" });
+					adjustedChanges.push({ from: range.closeEnd, to, insert: '' });
 					processed = true;
 					break;
 				}
@@ -199,7 +199,7 @@ function preventTagEdits(tr: Transaction): Transaction | null {
 			effects: tr.effects,
 		});
 	} catch (error) {
-		console.error("Error creating adjusted transaction:", error);
+		console.error('Error creating adjusted transaction:', error);
 		return tr;
 	}
 }
@@ -232,7 +232,7 @@ export const commentState = StateField.define<RangeSet<Decoration>>({
 				) {
 					allDecorations.push({
 						decoration: Decoration.replace({
-							widget: new CommentWidget("open", id),
+							widget: new CommentWidget('open', id),
 							inclusive: false,
 						}),
 						from: positions.openTag.start,
@@ -248,7 +248,7 @@ export const commentState = StateField.define<RangeSet<Decoration>>({
 				) {
 					allDecorations.push({
 						decoration: Decoration.replace({
-							widget: new CommentWidget("close", id),
+							widget: new CommentWidget('close', id),
 							inclusive: false,
 						}),
 						from: positions.closeTag.start,
@@ -266,8 +266,8 @@ export const commentState = StateField.define<RangeSet<Decoration>>({
 				) {
 					allDecorations.push({
 						decoration: Decoration.mark({
-							class: "cm-comment-content",
-							attributes: { "data-comment-id": id },
+							class: 'cm-comment-content',
+							attributes: { 'data-comment-id': id },
 						}),
 						from: positions.content.start,
 						to: positions.content.end,
@@ -323,7 +323,7 @@ export function processComments(view: EditorView, comments: Comment[]): void {
 
 		const docLength = view.state.doc.length;
 
-		console.log("[CommentExtension] Processing comments:", comments.length);
+		console.log('[CommentExtension] Processing comments:', comments.length);
 
 		const sortedComments = [...comments].sort(
 			(a, b) => a.openTagStart - b.openTagStart,
@@ -378,13 +378,13 @@ export function processComments(view: EditorView, comments: Comment[]): void {
 			view.dispatch({ effects });
 		}
 	} catch (error) {
-		console.error("Error dispatching comment effects:", error);
+		console.error('Error dispatching comment effects:', error);
 	}
 }
 
 class CommentProcessor {
 	private view: EditorView;
-	private lastContent = "";
+	private lastContent = '';
 	private pendingUpdate: number | null = null;
 	private commentRanges: CommentRange[] = [];
 	private inputHandler: ((event: Event) => boolean) | null = null;
@@ -409,10 +409,10 @@ class CommentProcessor {
 
 			if (
 				inputEvent.inputType &&
-				(inputEvent.inputType.includes("delete") ||
-					inputEvent.inputType.includes("insert") ||
-					inputEvent.inputType === "insertText" ||
-					inputEvent.inputType === "insertCompositionText")
+				(inputEvent.inputType.includes('delete') ||
+					inputEvent.inputType.includes('insert') ||
+					inputEvent.inputType === 'insertText' ||
+					inputEvent.inputType === 'insertCompositionText')
 			) {
 				if (this.wouldAffectTags(from, to, inputEvent.inputType)) {
 					event.preventDefault();
@@ -436,12 +436,12 @@ class CommentProcessor {
 			const selection = this.view.state.selection.main;
 			const { from, to } = selection;
 
-			if (event.key === "Backspace" || event.key === "Delete") {
+			if (event.key === 'Backspace' || event.key === 'Delete') {
 				let deleteFrom: number;
 				let deleteTo: number;
 
 				if (from === to) {
-					if (event.key === "Backspace") {
+					if (event.key === 'Backspace') {
 						deleteFrom = Math.max(0, from - 1);
 						deleteTo = from;
 					} else {
@@ -455,16 +455,16 @@ class CommentProcessor {
 
 				if (
 					deleteFrom < deleteTo &&
-					this.wouldAffectTags(deleteFrom, deleteTo, "deleteContentBackward")
+					this.wouldAffectTags(deleteFrom, deleteTo, 'deleteContentBackward')
 				) {
 					event.preventDefault();
 					event.stopPropagation();
 					this.handleSkipOperation(
 						deleteFrom,
 						deleteTo,
-						event.key === "Backspace"
-							? "deleteContentBackward"
-							: "deleteContentForward",
+						event.key === 'Backspace'
+							? 'deleteContentBackward'
+							: 'deleteContentForward',
 					);
 					return true;
 				}
@@ -472,10 +472,10 @@ class CommentProcessor {
 
 			if (from !== to && this.wouldAffectTags(from, to)) {
 				if (
-					event.key === "Backspace" ||
-					event.key === "Delete" ||
-					event.key === "Enter" ||
-					event.key === "Tab" ||
+					event.key === 'Backspace' ||
+					event.key === 'Delete' ||
+					event.key === 'Enter' ||
+					event.key === 'Tab' ||
 					(!event.ctrlKey &&
 						!event.altKey &&
 						!event.metaKey &&
@@ -485,11 +485,11 @@ class CommentProcessor {
 					event.stopPropagation();
 
 					const inputType =
-						event.key === "Backspace"
-							? "deleteContentBackward"
-							: event.key === "Delete"
-								? "deleteContentForward"
-								: "insertText";
+						event.key === 'Backspace'
+							? 'deleteContentBackward'
+							: event.key === 'Delete'
+								? 'deleteContentForward'
+								: 'insertText';
 					const data =
 						event.key.length === 1 &&
 						!event.ctrlKey &&
@@ -506,8 +506,8 @@ class CommentProcessor {
 			return false;
 		};
 
-		this.view.dom.addEventListener("beforeinput", this.inputHandler, true);
-		this.view.dom.addEventListener("keydown", this.keydownHandler, true);
+		this.view.dom.addEventListener('beforeinput', this.inputHandler, true);
+		this.view.dom.addEventListener('keydown', this.keydownHandler, true);
 	}
 
 	private wouldAffectTags(
@@ -538,9 +538,9 @@ class CommentProcessor {
 	) {
 		if (
 			data &&
-			(inputType === "insertText" || inputType === "insertCompositionText")
+			(inputType === 'insertText' || inputType === 'insertCompositionText')
 		) {
-			const deleteChanges = this.calculateSkipChanges(from, to, "delete");
+			const deleteChanges = this.calculateSkipChanges(from, to, 'delete');
 			if (deleteChanges.changes.length > 0) {
 				try {
 					this.view.dispatch({
@@ -565,7 +565,7 @@ class CommentProcessor {
 						});
 					}, 0);
 				} catch (error) {
-					console.error("Error applying insertion with skip operation:", error);
+					console.error('Error applying insertion with skip operation:', error);
 				}
 			}
 			return;
@@ -579,13 +579,13 @@ class CommentProcessor {
 						selection: { anchor: newCursorPos, head: newCursorPos },
 					});
 				} catch (error) {
-					console.error("Error moving cursor for single char deletion:", error);
+					console.error('Error moving cursor for single char deletion:', error);
 				}
 				return;
 			}
 		}
 
-		const result = this.calculateSkipChanges(from, to, "delete");
+		const result = this.calculateSkipChanges(from, to, 'delete');
 
 		if (result.changes.length > 0) {
 			try {
@@ -594,7 +594,7 @@ class CommentProcessor {
 					selection: { anchor: result.cursorPos, head: result.cursorPos },
 				});
 			} catch (error) {
-				console.error("Error applying skip operation:", error);
+				console.error('Error applying skip operation:', error);
 			}
 		} else if (result.cursorPos !== from) {
 			try {
@@ -602,7 +602,7 @@ class CommentProcessor {
 					selection: { anchor: result.cursorPos, head: result.cursorPos },
 				});
 			} catch (error) {
-				console.error("Error moving cursor:", error);
+				console.error('Error moving cursor:', error);
 			}
 		}
 	}
@@ -612,7 +612,7 @@ class CommentProcessor {
 		to: number,
 		inputType?: string,
 	): number | null {
-		const isBackspace = inputType === "deleteContentBackward";
+		const isBackspace = inputType === 'deleteContentBackward';
 		const sortedRanges = [...this.commentRanges].sort(
 			(a, b) => a.openStart - b.openStart,
 		);
@@ -639,7 +639,7 @@ class CommentProcessor {
 	private calculateSkipChanges(
 		from: number,
 		to: number,
-		_operation: "delete",
+		_operation: 'delete',
 	): {
 		changes: Array<{ from: number; to: number; insert: string }>;
 		cursorPos: number;
@@ -660,7 +660,7 @@ class CommentProcessor {
 
 			if (currentFrom < range.openEnd && currentTo > range.openStart) {
 				if (currentFrom < range.openStart) {
-					changes.push({ from: currentFrom, to: range.openStart, insert: "" });
+					changes.push({ from: currentFrom, to: range.openStart, insert: '' });
 					newCursorPos = range.openStart;
 				}
 
@@ -675,7 +675,7 @@ class CommentProcessor {
 			if (currentFrom >= range.openEnd && currentFrom < range.closeStart) {
 				const contentEnd = Math.min(currentTo, range.closeStart);
 				if (currentFrom < contentEnd) {
-					changes.push({ from: currentFrom, to: contentEnd, insert: "" });
+					changes.push({ from: currentFrom, to: contentEnd, insert: '' });
 					newCursorPos = currentFrom;
 				}
 				currentFrom = contentEnd;
@@ -692,7 +692,7 @@ class CommentProcessor {
 		}
 
 		if (currentFrom < currentTo) {
-			changes.push({ from: currentFrom, to: currentTo, insert: "" });
+			changes.push({ from: currentFrom, to: currentTo, insert: '' });
 			if (changes.length === 1 && currentFrom === from) {
 				newCursorPos = currentFrom;
 			}
@@ -727,7 +727,7 @@ class CommentProcessor {
 			this.lastContent = content;
 			this.lastProcessTime = now;
 
-			const event = new CustomEvent("codemirror-content-changed", {
+			const event = new CustomEvent('codemirror-content-changed', {
 				detail: { content, view: this.view },
 			});
 			document.dispatchEvent(event);
@@ -757,10 +757,10 @@ class CommentProcessor {
 		}
 
 		if (this.inputHandler) {
-			this.view.dom.removeEventListener("beforeinput", this.inputHandler, true);
+			this.view.dom.removeEventListener('beforeinput', this.inputHandler, true);
 		}
 		if (this.keydownHandler) {
-			this.view.dom.removeEventListener("keydown", this.keydownHandler, true);
+			this.view.dom.removeEventListener('keydown', this.keydownHandler, true);
 		}
 	}
 }

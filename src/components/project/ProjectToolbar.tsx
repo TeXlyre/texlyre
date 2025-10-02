@@ -1,9 +1,9 @@
 // src/components/projects/ProjectToolbar.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import type { Project } from "../../types/projects";
-import { ImportIcon, PlusIcon, StarIcon } from "../common/Icons";
+import type { Project } from '../../types/projects';
+import { ImportIcon, PlusIcon, StarIcon } from '../common/Icons';
 
 interface ProjectToolbarProps {
 	onCreateProject: () => void;
@@ -26,9 +26,9 @@ const ProjectToolbar: React.FC<ProjectToolbarProps> = ({
 	projects,
 	availableTags,
 }) => {
-	const [searchQuery, setSearchQuery] = useState("");
-	const [selectedTag, setSelectedTag] = useState<string>("");
-	const [selectedType, setSelectedType] = useState<string>("");
+	const [searchQuery, setSearchQuery] = useState('');
+	const [selectedTag, setSelectedTag] = useState<string>('');
+	const [selectedType, setSelectedType] = useState<string>('');
 
 	const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const query = e.target.value;
@@ -37,8 +37,8 @@ const ProjectToolbar: React.FC<ProjectToolbarProps> = ({
 	};
 
 	const handleClearSearch = () => {
-		setSearchQuery("");
-		onSearch("");
+		setSearchQuery('');
+		onSearch('');
 	};
 
 	const handleTagChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -70,8 +70,8 @@ const ProjectToolbar: React.FC<ProjectToolbarProps> = ({
 		const diffMs = now.getTime() - date.getTime();
 		const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-		if (diffDays === 0) return "Today";
-		if (diffDays === 1) return "Yesterday";
+		if (diffDays === 0) return 'Today';
+		if (diffDays === 1) return 'Yesterday';
 		if (diffDays < 7) return `${diffDays} days ago`;
 		return date.toLocaleDateString();
 	};

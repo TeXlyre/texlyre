@@ -1,5 +1,5 @@
 // src/contexts/ThemeContext.tsx
-import type React from "react";
+import type React from 'react';
 import {
 	type ReactNode,
 	createContext,
@@ -7,11 +7,11 @@ import {
 	useEffect,
 	useRef,
 	useState,
-} from "react";
+} from 'react';
 
-import { useSettings } from "../hooks/useSettings";
-import type { ThemeLayout, ThemePlugin } from "../plugins/PluginInterface";
-import { pluginRegistry } from "../plugins/PluginRegistry";
+import { useSettings } from '../hooks/useSettings';
+import type { ThemeLayout, ThemePlugin } from '../plugins/PluginInterface';
+import { pluginRegistry } from '../plugins/PluginRegistry';
 
 interface ThemeContextType {
 	currentThemePlugin: ThemePlugin | null;
@@ -24,7 +24,7 @@ interface ThemeContextType {
 
 export const ThemeContext = createContext<ThemeContextType>({
 	currentThemePlugin: null,
-	currentVariant: "dark",
+	currentVariant: 'dark',
 	currentLayout: null,
 	setTheme: () => {},
 	setVariant: () => {},
@@ -39,8 +39,8 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 	children,
-	defaultThemeId = "texlyre-theme",
-	defaultVariant = "dark",
+	defaultThemeId = 'texlyre-theme',
+	defaultVariant = 'dark',
 }) => {
 	const [currentThemePlugin, setCurrentThemePlugin] =
 		useState<ThemePlugin | null>(null);
@@ -74,7 +74,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 			const plugin = availableThemes.find((theme) => theme.id === pluginId);
 			if (plugin) {
 				if (currentThemePlugin) {
-					document.documentElement.removeAttribute("data-layout");
+					document.documentElement.removeAttribute('data-layout');
 				}
 				setCurrentThemePlugin(plugin);
 				// Apply the new theme using the *current* variant from the ref.
@@ -106,9 +106,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
 		// Get initial values from the settings system or defaults
 		const initialThemeId =
-			(getSetting("theme-plugin")?.value as string) || defaultThemeId;
+			(getSetting('theme-plugin')?.value as string) || defaultThemeId;
 		const initialVariantId =
-			(getSetting("theme-variant")?.value as string) || defaultVariant;
+			(getSetting('theme-variant')?.value as string) || defaultVariant;
 
 		const initialThemePlugin =
 			availableThemes.find((theme) => theme.id === initialThemeId) ||
@@ -125,12 +125,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
 		// Register theme plugin setting (only once initially)
 		registerSetting({
-			id: "theme-plugin",
-			category: "Appearance",
-			subcategory: "Theme",
-			type: "select",
-			label: "Theme",
-			description: "Select the theme to use for TeXlyre",
+			id: 'theme-plugin',
+			category: 'Appearance',
+			subcategory: 'Theme',
+			type: 'select',
+			label: 'Theme',
+			description: 'Select the theme to use for TeXlyre',
 			defaultValue: initialThemePlugin?.id || defaultThemeId,
 			options: availableThemes.map((theme) => ({
 				label: theme.name,
@@ -170,7 +170,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 		const defaultVariantForCurrentTheme =
 			variants.find((v) => v.id === currentVariantRef.current)?.id ||
 			variantOptions[0]?.value ||
-			"";
+			'';
 
 		// Check if options have actually changed to avoid unnecessary re-registrations
 		// This prevents the infinite loop caused by SettingsContext's onChange
@@ -178,7 +178,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 		if (lastRegisteredVariantOptions.current === serializedVariantOptions) {
 			// If options haven't changed, and the current value in settings already matches the default,
 			// then there's no need to re-register.
-			const currentSetting = getSetting("theme-variant");
+			const currentSetting = getSetting('theme-variant');
 			if (
 				currentSetting &&
 				currentSetting.defaultValue === defaultVariantForCurrentTheme
@@ -189,12 +189,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 		lastRegisteredVariantOptions.current = serializedVariantOptions; // Update ref
 
 		registerSetting({
-			id: "theme-variant",
-			category: "Appearance",
-			subcategory: "Theme",
-			type: "select",
-			label: "Variant",
-			description: "Select the theme variant",
+			id: 'theme-variant',
+			category: 'Appearance',
+			subcategory: 'Theme',
+			type: 'select',
+			label: 'Variant',
+			description: 'Select the theme variant',
 			// Ensure the default value is one of the new options
 			defaultValue: defaultVariantForCurrentTheme,
 			options: variantOptions,
@@ -206,16 +206,16 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
 	// Listen for system theme changes (prefers-color-scheme)
 	useEffect(() => {
-		const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+		const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 		const handleChange = () => {
-			if (currentThemePlugin && currentVariant === "system") {
-				currentThemePlugin.applyTheme("system");
+			if (currentThemePlugin && currentVariant === 'system') {
+				currentThemePlugin.applyTheme('system');
 			}
 		};
 
-		mediaQuery.addEventListener("change", handleChange);
+		mediaQuery.addEventListener('change', handleChange);
 		return () => {
-			mediaQuery.removeEventListener("change", handleChange);
+			mediaQuery.removeEventListener('change', handleChange);
 		};
 	}, [currentThemePlugin, currentVariant]);
 

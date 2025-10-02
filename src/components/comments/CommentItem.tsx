@@ -1,15 +1,15 @@
 // src/components/comments/CommentItem.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import { useComments } from "../../hooks/useComments";
-import type { Comment } from "../../types/comments";
-import { formatDate } from "../../utils/dateUtils";
-import { CheckIcon, TrashIcon } from "../common/Icons";
+import { useComments } from '../../hooks/useComments';
+import type { Comment } from '../../types/comments';
+import { formatDate } from '../../utils/dateUtils';
+import { CheckIcon, TrashIcon } from '../common/Icons';
 
 interface CommentItemProps {
 	comment: Comment;
-	view: "list" | "resolved";
+	view: 'list' | 'resolved';
 	onLineClick?: (line: number) => void;
 }
 
@@ -18,7 +18,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 	view,
 	onLineClick,
 }) => {
-	const [newResponse, setNewResponse] = useState("");
+	const [newResponse, setNewResponse] = useState('');
 	const [isAddingResponse, setIsAddingResponse] = useState(false);
 	const { addResponse, deleteComment, deleteResponse, resolveComment } =
 		useComments();
@@ -26,7 +26,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 	const handleAddResponse = () => {
 		if (newResponse.trim()) {
 			addResponse(comment.id, newResponse);
-			setNewResponse("");
+			setNewResponse('');
 			setIsAddingResponse(false);
 		}
 	};
@@ -40,7 +40,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 	};
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === "Enter" && !e.shiftKey) {
+		if (e.key === 'Enter' && !e.shiftKey) {
 			e.preventDefault();
 			handleAddResponse();
 		}
@@ -51,7 +51,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 		if (comment.line) {
 			// Check if we're in file mode by looking at the URL
 			const currentUrl = window.location.hash;
-			const isFileMode = currentUrl.includes("file:");
+			const isFileMode = currentUrl.includes('file:');
 
 			const detail: any = { line: comment.line };
 
@@ -64,7 +64,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 			}
 
 			document.dispatchEvent(
-				new CustomEvent("codemirror-goto-line", {
+				new CustomEvent('codemirror-goto-line', {
 					detail,
 				}),
 			);
@@ -79,7 +79,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
 	return (
 		<div
-			className={`comment-item ${comment.resolved ? "resolved" : ""}`}
+			className={`comment-item ${comment.resolved ? 'resolved' : ''}`}
 			data-comment-id={comment.id}
 		>
 			<div className="comment-header">
@@ -93,7 +93,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 					<button
 						className="resolve-button"
 						onClick={handleResolveComment}
-						title={comment.resolved ? "Mark as unresolved" : "Mark as resolved"}
+						title={comment.resolved ? 'Mark as unresolved' : 'Mark as resolved'}
 					>
 						<CheckIcon />
 					</button>
@@ -163,7 +163,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 								className="cancel-button"
 								onClick={() => {
 									setIsAddingResponse(false);
-									setNewResponse("");
+									setNewResponse('');
 								}}
 							>
 								Cancel

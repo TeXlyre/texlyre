@@ -1,9 +1,9 @@
 // src/components/project/TemplateImportModal.tsx
-import type React from "react";
-import { useEffect, useState } from "react";
+import type React from 'react';
+import { useEffect, useState } from 'react';
 
-import { FolderIcon, ImportIcon } from "../common/Icons";
-import Modal from "../common/Modal";
+import { FolderIcon, ImportIcon } from '../common/Icons';
+import Modal from '../common/Modal';
 
 interface TemplateProject {
   id: string;
@@ -40,8 +40,8 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
   const [allTemplates, setAllTemplates] = useState<TemplateProject[]>([]);
   const [filteredTemplates, setFilteredTemplates] = useState<TemplateProject[]>([]);
   const [paginatedTemplates, setPaginatedTemplates] = useState<TemplateProject[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateProject | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -50,7 +50,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
 
   const TEMPLATES_PER_PAGE = 12;
-  const TEMPLATES_API_URL = "https://texlyre.github.io/texlyre-templates/api/templates.json";
+  const TEMPLATES_API_URL = 'https://texlyre.github.io/texlyre-templates/api/templates.json';
 
   useEffect(() => {
     if (isOpen) {
@@ -87,8 +87,8 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
       const allTemplatesFlat = data.categories?.flatMap((cat: any) => cat.templates) || [];
       setAllTemplates(allTemplatesFlat);
     } catch (error) {
-      console.error("Error loading templates:", error);
-      setError(error instanceof Error ? error.message : "Failed to load templates");
+      console.error('Error loading templates:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load templates');
     } finally {
       setIsLoading(false);
     }
@@ -97,7 +97,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
   const filterAndPaginateTemplates = () => {
     let filtered: TemplateProject[] = [];
 
-    if (selectedCategory === "all") {
+    if (selectedCategory === 'all') {
       filtered = allTemplates;
     } else {
       filtered = allTemplates.filter(template => template.category === selectedCategory);
@@ -163,8 +163,8 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
   };
 
   const handleClose = () => {
-    setSearchQuery("");
-    setSelectedCategory("all");
+    setSearchQuery('');
+    setSelectedCategory('all');
     setSelectedTemplate(null);
     setCurrentPage(1);
     setAllTemplates([]);
@@ -182,7 +182,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
       const pages = [];
       const maxVisible = 5;
       let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-      let end = Math.min(totalPages, start + maxVisible - 1);
+      const end = Math.min(totalPages, start + maxVisible - 1);
 
       if (end - start + 1 < maxVisible) {
         start = Math.max(1, end - maxVisible + 1);
@@ -271,7 +271,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
     >
       <div className="template-import-modal">
         {error && (
-          <div className="error-message" style={{ marginBottom: "1rem" }}>
+          <div className="error-message" style={{ marginBottom: '1rem' }}>
             {error}
           </div>
         )}

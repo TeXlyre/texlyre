@@ -1,9 +1,9 @@
 // src/components/editor/EditorTabs.tsx
-import type React from "react";
-import { useCallback, useEffect, useState, useRef } from "react";
+import type React from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 
-import { useEditorTabs } from "../../hooks/useEditorTabs";
-import { CloseIcon, FileTextIcon, FileIcon, ChevronLeftIcon, ChevronRightIcon } from "../common/Icons";
+import { useEditorTabs } from '../../hooks/useEditorTabs';
+import { CloseIcon, FileTextIcon, FileIcon, ChevronLeftIcon, ChevronRightIcon } from '../common/Icons';
 
 interface EditorTabsProps {
   onTabSwitch?: (tabId: string) => void;

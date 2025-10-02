@@ -1,9 +1,9 @@
 // src/components/output/PdfViewerWindow.tsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from 'react';
 
-import { pluginRegistry } from "../../plugins/PluginRegistry";
-import { useSettings } from "../../hooks/useSettings";
-import { toArrayBuffer } from "../../utils/fileUtils";
+import { pluginRegistry } from '../../plugins/PluginRegistry';
+import { useSettings } from '../../hooks/useSettings';
+import { toArrayBuffer } from '../../utils/fileUtils';
 
 interface PdfMessage {
 	type: 'pdf-update' | 'pdf-clear' | 'window-ready' | 'window-closed';
@@ -23,16 +23,16 @@ interface PdfViewerWindowProps {
 
 const PdfViewerWindow: React.FC<PdfViewerWindowProps> = ({ projectId }) => {
 	const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
-	const [fileName, setFileName] = useState<string>("output.pdf");
-	const [projectName, setProjectName] = useState<string>("PDF Output");
-	const [compileLog, setCompileLog] = useState<string>("");
+	const [fileName, setFileName] = useState<string>('output.pdf');
+	const [projectName, setProjectName] = useState<string>('PDF Output');
+	const [compileLog, setCompileLog] = useState<string>('');
 	const [compileStatus, setCompileStatus] = useState<number>(0);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const channelRef = useRef<BroadcastChannel | null>(null);
 	const { getSetting } = useSettings();
 
-	const useEnhancedRenderer = getSetting("pdf-renderer-enable")?.value ?? true;
-	const pdfRendererPlugin = pluginRegistry.getRendererForOutput("pdf");
+	const useEnhancedRenderer = getSetting('pdf-renderer-enable')?.value ?? true;
+	const pdfRendererPlugin = pluginRegistry.getRendererForOutput('pdf');
 
 	useEffect(() => {
 		const channel = new BroadcastChannel(`texlyre-pdf-${projectId}`);
@@ -58,7 +58,7 @@ const PdfViewerWindow: React.FC<PdfViewerWindowProps> = ({ projectId }) => {
 					break;
 				case 'pdf-clear':
 					setPdfData(null);
-					setCompileLog("");
+					setCompileLog('');
 					setCompileStatus(0);
 					setIsLoading(false);
 					break;
@@ -90,9 +90,9 @@ const PdfViewerWindow: React.FC<PdfViewerWindowProps> = ({ projectId }) => {
 	const handleSavePdf = (fileName: string) => {
 		if (!pdfData) return;
 
-		const blob = new Blob([toArrayBuffer(pdfData)], { type: "application/pdf" });
+		const blob = new Blob([toArrayBuffer(pdfData)], { type: 'application/pdf' });
 		const url = URL.createObjectURL(blob);
-		const a = document.createElement("a");
+		const a = document.createElement('a');
 		a.href = url;
 		a.download = fileName;
 		document.body.appendChild(a);
@@ -179,15 +179,15 @@ const PdfViewerWindow: React.FC<PdfViewerWindowProps> = ({ projectId }) => {
 						{pdfRendererPlugin && useEnhancedRenderer ? (
 							React.createElement(pdfRendererPlugin.renderOutput, {
 								content: toArrayBuffer(pdfData.buffer),
-								mimeType: "application/pdf",
+								mimeType: 'application/pdf',
 								fileName: fileName,
 								onSave: handleSavePdf,
 							})
 						) : (
 							<embed
-								src={URL.createObjectURL(new Blob([toArrayBuffer(pdfData)], { type: "application/pdf" }))}
+								src={URL.createObjectURL(new Blob([toArrayBuffer(pdfData)], { type: 'application/pdf' }))}
 								type="application/pdf"
-								style={{ width: "100%", height: "100%" }}
+								style={{ width: '100%', height: '100%' }}
 							/>
 						)}
 					</div>

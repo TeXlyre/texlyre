@@ -1,10 +1,10 @@
 // src/components/editor/UnlinkedDocumentNotice.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import { LinkIcon, TrashIcon } from "../common/Icons";
-import Modal from "../common/Modal";
-import LinkFileModal from "./LinkFileModal";
+import { LinkIcon, TrashIcon } from '../common/Icons';
+import Modal from '../common/Modal';
+import LinkFileModal from './LinkFileModal';
 
 interface UnlinkedDocumentNoticeProps {
 	documentId: string;

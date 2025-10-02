@@ -1,9 +1,9 @@
 // src/components/common/TypesetterInfo.tsx
-import type React from "react";
-import { useState, useRef, useEffect } from "react";
+import type React from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface TypesetterInfoProps {
-    type: "latex" | "typst";
+    type: 'latex' | 'typst';
 }
 
 interface TooltipPosition {
@@ -12,7 +12,7 @@ interface TooltipPosition {
     left?: string;
     right?: string;
     transform?: string;
-    position?: "fixed";
+    position?: 'fixed';
 }
 
 const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
@@ -42,10 +42,10 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
                 top: el.style.top,
                 visibility: el.style.visibility,
             };
-            el.style.position = "fixed";
-            el.style.left = "-9999px";
-            el.style.top = "-9999px";
-            el.style.visibility = "hidden";
+            el.style.position = 'fixed';
+            el.style.left = '-9999px';
+            el.style.top = '-9999px';
+            el.style.visibility = 'hidden';
             tooltipWidth = el.offsetWidth || tooltipWidth;
             tooltipHeight = el.offsetHeight || tooltipHeight;
             el.style.position = prev.position;
@@ -54,7 +54,7 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
             el.style.visibility = prev.visibility;
         }
 
-        const position: TooltipPosition = { position: "fixed" };
+        const position: TooltipPosition = { position: 'fixed' };
 
         const preferHorizontal = vw - rect.right > rect.left;
 
@@ -75,7 +75,7 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
             p.x + tooltipWidth <= vw - padding &&
             p.y + tooltipHeight <= vh - padding;
 
-        const order = preferHorizontal ? ["right", "left"] : ["left", "right"] as const;
+        const order = preferHorizontal ? ['right', 'left'] : ['left', 'right'] as const;
 
         let chosen = placements[order[0]];
         if (!fits(chosen) && fits(placements[order[1]])) {
@@ -94,7 +94,7 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
     }, [showTooltip]);
 
     const getTooltipContent = () => {
-        if (type === "latex") {
+        if (type === 'latex') {
             return (
                 <>
                     <h4 className="typesetter-tooltip-title">LaTeX</h4>
@@ -146,7 +146,7 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
                 onMouseLeave={() => setShowTooltip(false)}
                 onClick={() => setShowTooltip(!showTooltip)}
             >
-                {type === "latex" ? "LaTeX" : "Typst"}
+                {type === 'latex' ? 'LaTeX' : 'Typst'}
             </button>
             {showTooltip && (
                 <div className="typesetter-tooltip" ref={tooltipRef} style={tooltipPosition}>

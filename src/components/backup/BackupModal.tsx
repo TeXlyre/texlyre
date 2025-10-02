@@ -1,10 +1,10 @@
 // src/components/backup/BackupModal.tsx
-import type React from "react";
-import { useEffect, useState } from "react";
+import type React from 'react';
+import { useEffect, useState } from 'react';
 
-import { useAuth } from "../../hooks/useAuth";
-import { notificationService } from "../../services/NotificationService";
-import { formatDate } from "../../utils/dateUtils";
+import { useAuth } from '../../hooks/useAuth';
+import { notificationService } from '../../services/NotificationService';
+import { formatDate } from '../../utils/dateUtils';
 import {
 	DisconnectIcon,
 	ExportIcon,
@@ -13,27 +13,27 @@ import {
 	ImportIcon,
 	SettingsIcon,
 	TrashIcon,
-} from "../common/Icons";
-import Modal from "../common/Modal";
-import SettingsModal from "../settings/SettingsModal";
+} from '../common/Icons';
+import Modal from '../common/Modal';
+import SettingsModal from '../settings/SettingsModal';
 
 interface BackupStatus {
 	isConnected: boolean;
 	isEnabled: boolean;
 	lastSync: number | null;
-	status: "idle" | "syncing" | "error";
+	status: 'idle' | 'syncing' | 'error';
 	error?: string;
 }
 
 interface BackupActivity {
 	id: string;
 	type:
-		| "backup_start"
-		| "backup_complete"
-		| "backup_error"
-		| "import_start"
-		| "import_complete"
-		| "import_error";
+		| 'backup_start'
+		| 'backup_complete'
+		| 'backup_error'
+		| 'import_start'
+		| 'import_complete'
+		| 'import_error';
 	message: string;
 	timestamp: number;
 	data?: any;
@@ -73,19 +73,19 @@ const BackupModal: React.FC<BackupModalProps> = ({
 	isInEditor = false,
 }) => {
 	const [showSettings, setShowSettings] = useState(false);
-	const [syncScope, setSyncScope] = useState<"current" | "all">("current");
+	const [syncScope, setSyncScope] = useState<'current' | 'all'>('current');
 	const [isOperating, setIsOperating] = useState(false);
 	const { getProjectById } = useAuth();
-	const [currentProjectName, setCurrentProjectName] = useState<string>("");
+	const [currentProjectName, setCurrentProjectName] = useState<string>('');
 
 	useEffect(() => {
 		const loadProjectName = async () => {
 			if (currentProjectId) {
 				try {
 					const project = await getProjectById(currentProjectId);
-					setCurrentProjectName(project?.name || "Current project only");
+					setCurrentProjectName(project?.name || 'Current project only');
 				} catch (_error) {
-					setCurrentProjectName("Current project only");
+					setCurrentProjectName('Current project only');
 				}
 			}
 		};
@@ -96,46 +96,46 @@ const BackupModal: React.FC<BackupModalProps> = ({
 	}, [currentProjectId, getProjectById, isInEditor]);
 
 	const getStatusText = () => {
-		if (!status.isConnected) return "No backup folder";
-		if (status.status === "error") return "Backup error";
-		if (status.status === "syncing") return "Syncing...";
+		if (!status.isConnected) return 'No backup folder';
+		if (status.status === 'error') return 'Backup error';
+		if (status.status === 'syncing') return 'Syncing...';
 		if (status.lastSync) {
 			return `Last sync: ${formatDate(status.lastSync)}`;
 		}
-		return "Ready to sync";
+		return 'Ready to sync';
 	};
 
 	const getActivityIcon = (type: string) => {
 		switch (type) {
-			case "backup_error":
-			case "import_error":
-				return "❌";
-			case "backup_complete":
-			case "import_complete":
-				return "✅";
-			case "backup_start":
-				return "📤";
-			case "import_start":
-				return "📥";
+			case 'backup_error':
+			case 'import_error':
+				return '❌';
+			case 'backup_complete':
+			case 'import_complete':
+				return '✅';
+			case 'backup_start':
+				return '📤';
+			case 'import_start':
+				return '📥';
 			default:
-				return "ℹ️";
+				return 'ℹ️';
 		}
 	};
 
 	const getActivityColor = (type: string) => {
 		switch (type) {
-			case "backup_error":
-			case "import_error":
-				return "#dc3545";
-			case "backup_complete":
-			case "import_complete":
-				return "#28a745";
-			case "backup_start":
-				return "#007bff";
-			case "import_start":
-				return "#6f42c1";
+			case 'backup_error':
+			case 'import_error':
+				return '#dc3545';
+			case 'backup_complete':
+			case 'import_complete':
+				return '#28a745';
+			case 'backup_start':
+				return '#007bff';
+			case 'import_start':
+				return '#6f42c1';
 			default:
-				return "#6c757d";
+				return '#6c757d';
 		}
 	};
 
@@ -144,14 +144,14 @@ const BackupModal: React.FC<BackupModalProps> = ({
 
 		setIsOperating(true);
 		const projectId =
-			isInEditor && syncScope === "current" ? currentProjectId : undefined;
+			isInEditor && syncScope === 'current' ? currentProjectId : undefined;
 		const operationId = `backup-export-${Date.now()}`;
 
 		try {
 			notificationService.showLoading(
 				projectId
 					? `Exporting ${currentProjectName}...`
-					: "Exporting all projects...",
+					: 'Exporting all projects...',
 				operationId,
 			);
 
@@ -160,12 +160,12 @@ const BackupModal: React.FC<BackupModalProps> = ({
 			notificationService.showSuccess(
 				projectId
 					? `${currentProjectName} exported successfully`
-					: "All projects exported successfully",
+					: 'All projects exported successfully',
 				{ operationId },
 			);
 		} catch (error) {
 			notificationService.showError(
-				`Backup export failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+				`Backup export failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
 				{ operationId },
 			);
 		} finally {
@@ -178,14 +178,14 @@ const BackupModal: React.FC<BackupModalProps> = ({
 
 		setIsOperating(true);
 		const projectId =
-			isInEditor && syncScope === "current" ? currentProjectId : undefined;
+			isInEditor && syncScope === 'current' ? currentProjectId : undefined;
 		const operationId = `backup-import-${Date.now()}`;
 
 		try {
 			notificationService.showLoading(
 				projectId
 					? `Importing changes for ${currentProjectName}...`
-					: "Importing all changes...",
+					: 'Importing all changes...',
 				operationId,
 			);
 
@@ -194,12 +194,12 @@ const BackupModal: React.FC<BackupModalProps> = ({
 			notificationService.showSuccess(
 				projectId
 					? `Changes imported for ${currentProjectName}`
-					: "All changes imported successfully",
+					: 'All changes imported successfully',
 				{ operationId },
 			);
 		} catch (error) {
 			notificationService.showError(
-				`Backup import failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+				`Backup import failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
 				{ operationId },
 			);
 		} finally {
@@ -215,17 +215,17 @@ const BackupModal: React.FC<BackupModalProps> = ({
 
 		try {
 			notificationService.showLoading(
-				"Connecting to backup folder...",
+				'Connecting to backup folder...',
 				operationId,
 			);
 			await onRequestAccess();
-			notificationService.showSuccess("Backup folder connected successfully", {
+			notificationService.showSuccess('Backup folder connected successfully', {
 				operationId,
 			});
 			// onClose();
 		} catch (error) {
 			notificationService.showError(
-				`Failed to connect backup folder: ${error instanceof Error ? error.message : "Unknown error"}`,
+				`Failed to connect backup folder: ${error instanceof Error ? error.message : 'Unknown error'}`,
 				{ operationId },
 			);
 		} finally {
@@ -241,17 +241,17 @@ const BackupModal: React.FC<BackupModalProps> = ({
 
 		try {
 			notificationService.showLoading(
-				"Changing backup directory...",
+				'Changing backup directory...',
 				operationId,
 			);
 			await onChangeDirectory();
-			notificationService.showSuccess("Backup directory changed successfully", {
+			notificationService.showSuccess('Backup directory changed successfully', {
 				operationId,
 			});
 			// onClose();
 		} catch (error) {
 			notificationService.showError(
-				`Failed to change backup directory: ${error instanceof Error ? error.message : "Unknown error"}`,
+				`Failed to change backup directory: ${error instanceof Error ? error.message : 'Unknown error'}`,
 				{ operationId },
 			);
 		} finally {
@@ -266,15 +266,15 @@ const BackupModal: React.FC<BackupModalProps> = ({
 		const operationId = `backup-disconnect-${Date.now()}`;
 
 		try {
-			notificationService.showLoading("Disconnecting backup...", operationId);
+			notificationService.showLoading('Disconnecting backup...', operationId);
 			await onDisconnect();
-			notificationService.showSuccess("Backup disconnected successfully", {
+			notificationService.showSuccess('Backup disconnected successfully', {
 				operationId,
 			});
 			// onClose();
 		} catch (error) {
 			notificationService.showError(
-				`Failed to disconnect backup: ${error instanceof Error ? error.message : "Unknown error"}`,
+				`Failed to disconnect backup: ${error instanceof Error ? error.message : 'Unknown error'}`,
 				{ operationId },
 			);
 		} finally {
@@ -312,7 +312,7 @@ const BackupModal: React.FC<BackupModalProps> = ({
 											disabled={isOperating}
 										>
 											<FolderIcon />
-											{isOperating ? "Connecting..." : "Connect Folder"}
+											{isOperating ? 'Connecting...' : 'Connect Folder'}
 										</button>
 									</>
 								) : (
@@ -320,33 +320,33 @@ const BackupModal: React.FC<BackupModalProps> = ({
 										{isInEditor && (
 											<div
 												className="sync-scope-selector"
-												style={{ marginBottom: "1rem" }}
+												style={{ marginBottom: '1rem' }}
 											>
 												<label
 													style={{
-														display: "block",
-														marginBottom: "0.5rem",
-														fontWeight: "bold",
+														display: 'block',
+														marginBottom: '0.5rem',
+														fontWeight: 'bold',
 													}}
 												>
 													Backup Scope:
 												</label>
-												<div style={{ display: "flex", gap: "1rem" }}>
+												<div style={{ display: 'flex', gap: '1rem' }}>
 													<label
 														style={{
-															display: "flex",
-															alignItems: "center",
-															gap: "0.5rem",
+															display: 'flex',
+															alignItems: 'center',
+															gap: '0.5rem',
 														}}
 													>
 														<input
 															type="radio"
 															name="syncScope"
 															value="current"
-															checked={syncScope === "current"}
+															checked={syncScope === 'current'}
 															onChange={(e) =>
 																setSyncScope(
-																	e.target.value as "current" | "all",
+																	e.target.value as 'current' | 'all',
 																)
 															}
 															disabled={isOperating}
@@ -355,19 +355,19 @@ const BackupModal: React.FC<BackupModalProps> = ({
 													</label>
 													<label
 														style={{
-															display: "flex",
-															alignItems: "center",
-															gap: "0.5rem",
+															display: 'flex',
+															alignItems: 'center',
+															gap: '0.5rem',
 														}}
 													>
 														<input
 															type="radio"
 															name="syncScope"
 															value="all"
-															checked={syncScope === "all"}
+															checked={syncScope === 'all'}
 															onChange={(e) =>
 																setSyncScope(
-																	e.target.value as "current" | "all",
+																	e.target.value as 'current' | 'all',
 																)
 															}
 															disabled={isOperating}
@@ -382,7 +382,7 @@ const BackupModal: React.FC<BackupModalProps> = ({
 												<button
 													className="button secondary"
 													onClick={handleExport}
-													disabled={status.status === "syncing" || isOperating}
+													disabled={status.status === 'syncing' || isOperating}
 												>
 													<ExportIcon />
 													Export To PC
@@ -390,7 +390,7 @@ const BackupModal: React.FC<BackupModalProps> = ({
 												<button
 													className="button secondary"
 													onClick={handleImport}
-													disabled={status.status === "syncing" || isOperating}
+													disabled={status.status === 'syncing' || isOperating}
 												>
 													<ImportIcon />
 													Import From PC
@@ -422,8 +422,8 @@ const BackupModal: React.FC<BackupModalProps> = ({
 
 						<div className="status-info">
 							<div className="status-item">
-								<strong>File System Backup:</strong>{" "}
-								{status.isConnected ? "Connected" : "Disconnected"}
+								<strong>File System Backup:</strong>{' '}
+								{status.isConnected ? 'Connected' : 'Disconnected'}
 							</div>
 							{status.isConnected && (
 								<div className="status-item">

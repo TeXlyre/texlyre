@@ -1,48 +1,48 @@
 // src/components/app/EditorApp.tsx
-import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import texlyreLogo from "../../assets/images/TeXlyre_notext.png";
-import { ChatProvider } from "../../contexts/ChatContext";
-import { CollabProvider } from "../../contexts/CollabContext";
-import { FileSyncProvider } from "../../contexts/FileSyncContext";
-import { FileTreeProvider } from "../../contexts/FileTreeContext";
-import { LaTeXProvider } from "../../contexts/LaTeXContext";
-import { TypstProvider } from "../../contexts/TypstContext";
-import { useAuth } from "../../hooks/useAuth";
-import { useLaTeX } from "../../hooks/useLaTeX";
-import { useTypst } from "../../hooks/useTypst";
-import { useCollab } from "../../hooks/useCollab";
-import { useGlobalKeyboard } from "../../hooks/useGlobalKeyboard";
-import { useFileSystemBackup } from "../../hooks/useFileSystemBackup";
-import { useOffline } from "../../hooks/useOffline";
-import { fileStorageService } from "../../services/FileStorageService";
-import { pdfWindowService } from "../../services/PdfWindowService";
-import type { DocumentList } from "../../types/documents";
-import type { YjsDocUrl } from "../../types/yjs";
-import BackupModal from "../backup/BackupModal";
-import BackupStatusIndicator from "../backup/BackupStatusIndicator";
-import ChatPanel from "../chat/ChatPanel";
-import CollabStatusIndicator from "../collab/CollabStatusIndicator";
-import { ChevronLeftIcon, EditIcon } from "../common/Icons";
-import Modal from "../common/Modal";
-import OfflineBanner from "../common/OfflineBanner";
-import ToastContainer from "../common/ToastContainer";
-import TypesetterInfo from "../common/TypesetterInfo";
-import FileDocumentController from "../editor/FileDocumentController";
-import LaTeXCompileButton from "../output/LaTeXCompileButton";
-import TypstCompileButton from "../output/TypstCompileButton";
-import ExportAccountModal from "../profile/ExportAccountModal";
-import DeleteAccountModal from "../profile/DeleteAccountModal";
-import ProfileSettingsModal from "../profile/ProfileSettingsModal";
-import UserDropdown from "../profile/UserDropdown";
-import ProjectForm from "../project/ProjectForm";
-import ShareProjectButton from "../project/ShareProjectButton";
-import ShareProjectModal from "../project/ShareProjectModal";
-import SettingsButton from "../settings/SettingsButton";
-import PrivacyModal from "../common/PrivacyModal";
-import GuestUpgradeBanner from "../auth/GuestUpgradeBanner";
-import GuestUpgradeModal from "../auth/GuestUpgradeModal";
+import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
+import { ChatProvider } from '../../contexts/ChatContext';
+import { CollabProvider } from '../../contexts/CollabContext';
+import { FileSyncProvider } from '../../contexts/FileSyncContext';
+import { FileTreeProvider } from '../../contexts/FileTreeContext';
+import { LaTeXProvider } from '../../contexts/LaTeXContext';
+import { TypstProvider } from '../../contexts/TypstContext';
+import { useAuth } from '../../hooks/useAuth';
+import { useLaTeX } from '../../hooks/useLaTeX';
+import { useTypst } from '../../hooks/useTypst';
+import { useCollab } from '../../hooks/useCollab';
+import { useGlobalKeyboard } from '../../hooks/useGlobalKeyboard';
+import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
+import { useOffline } from '../../hooks/useOffline';
+import { fileStorageService } from '../../services/FileStorageService';
+import { pdfWindowService } from '../../services/PdfWindowService';
+import type { DocumentList } from '../../types/documents';
+import type { YjsDocUrl } from '../../types/yjs';
+import BackupModal from '../backup/BackupModal';
+import BackupStatusIndicator from '../backup/BackupStatusIndicator';
+import ChatPanel from '../chat/ChatPanel';
+import CollabStatusIndicator from '../collab/CollabStatusIndicator';
+import { ChevronLeftIcon, EditIcon } from '../common/Icons';
+import Modal from '../common/Modal';
+import OfflineBanner from '../common/OfflineBanner';
+import ToastContainer from '../common/ToastContainer';
+import TypesetterInfo from '../common/TypesetterInfo';
+import FileDocumentController from '../editor/FileDocumentController';
+import LaTeXCompileButton from '../output/LaTeXCompileButton';
+import TypstCompileButton from '../output/TypstCompileButton';
+import ExportAccountModal from '../profile/ExportAccountModal';
+import DeleteAccountModal from '../profile/DeleteAccountModal';
+import ProfileSettingsModal from '../profile/ProfileSettingsModal';
+import UserDropdown from '../profile/UserDropdown';
+import ProjectForm from '../project/ProjectForm';
+import ShareProjectButton from '../project/ShareProjectButton';
+import ShareProjectModal from '../project/ShareProjectModal';
+import SettingsButton from '../settings/SettingsButton';
+import PrivacyModal from '../common/PrivacyModal';
+import GuestUpgradeBanner from '../auth/GuestUpgradeBanner';
+import GuestUpgradeModal from '../auth/GuestUpgradeModal';
 
 interface EditorAppProps {
 	docUrl: YjsDocUrl;
@@ -86,7 +86,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const [showGuestUpgradeModal, setShowGuestUpgradeModal] = useState(false);
 	const [isEditingMetadata, setIsEditingMetadata] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [localDocId, setLocalDocId] = useState<string>("");
+	const [localDocId, setLocalDocId] = useState<string>('');
 	const [hasNavigated, setHasNavigated] = useState(false);
 	const [linkedFileInfo, setLinkedFileInfo] = useState<{
 		fileName?: string;
@@ -94,13 +94,13 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		fileId?: string;
 	} | null>(null);
 	const lastSyncedMetadata = useRef({
-		name: "",
-		description: "",
-		type: "latex" as "latex" | "typst",
+		name: '',
+		description: '',
+		type: 'latex' as 'latex' | 'typst',
 		mainFile: undefined as string | undefined,
-		latexEngine: undefined as ("pdftex" | "xetex" | "luatex") | undefined,
+		latexEngine: undefined as ('pdftex' | 'xetex' | 'luatex') | undefined,
 		typstEngine: undefined as string | undefined,
-		typstOutputFormat: undefined as ("pdf" | "svg" | "canvas") | undefined,
+		typstOutputFormat: undefined as ('pdf' | 'svg' | 'canvas') | undefined,
 	});
 	const { isCompiling, triggerAutoCompile } = useLaTeX();
 	const { isCompiling: isTypstCompiling, triggerAutoCompile: triggerTypstAutoCompile } = useTypst();
@@ -206,20 +206,20 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
 	useEffect(() => {
 		if (doc) {
-			const projectMetadata = sessionStorage.getItem("projectMetadata");
+			const projectMetadata = sessionStorage.getItem('projectMetadata');
 			if (projectMetadata) {
 				const parsedMetadata = JSON.parse(projectMetadata);
 				changeDoc((d) => {
 					d.projectMetadata = {
-						name: parsedMetadata.name || "Untitled Project",
-						description: parsedMetadata.description || "",
-						type: parsedMetadata.type || "latex",
+						name: parsedMetadata.name || 'Untitled Project',
+						description: parsedMetadata.description || '',
+						type: parsedMetadata.type || 'latex',
 						mainFile: parsedMetadata.mainFile,
 						latexEngine: parsedMetadata.latexEngine,
 						typstEngine: parsedMetadata.typstEngine,
 						typstOutputFormat: parsedMetadata.typstOutputFormat
 					};
-					sessionStorage.removeItem("projectMetadata");
+					sessionStorage.removeItem('projectMetadata');
 				});
 			}
 		}
@@ -228,12 +228,12 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	useEffect(() => {
 		if (doc?.projectMetadata) {
 			const { name, description, type, mainFile, latexEngine, typstEngine, typstOutputFormat } = doc.projectMetadata;
-			const projectId = sessionStorage.getItem("currentProjectId");
+			const projectId = sessionStorage.getItem('currentProjectId');
 
 			if (
 				name &&
-				name !== "Untitled Project" &&
-				name !== "Shared Project" &&
+				name !== 'Untitled Project' &&
+				name !== 'Shared Project' &&
 				projectId
 			) {
 				if (
@@ -247,8 +247,8 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 				) {
 					lastSyncedMetadata.current = {
 						name,
-						description: description || "",
-						type: type || "latex",
+						description: description || '',
+						type: type || 'latex',
 						mainFile,
 						latexEngine,
 						typstEngine,
@@ -261,12 +261,12 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 								await updateProject({
 									...project,
 									name,
-									description: description || "",
-									type: type || "latex",
+									description: description || '',
+									type: type || 'latex',
 								});
 							}
 						} catch (error) {
-							console.error("Failed to sync project metadata:", error);
+							console.error('Failed to sync project metadata:', error);
 						}
 					};
 					syncProjectMetadata();
@@ -310,7 +310,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						setLinkedFileInfo(null);
 					}
 				} catch (error) {
-					console.error("Error checking for linked file:", error);
+					console.error('Error checking for linked file:', error);
 					setLinkedFileInfo(null);
 				}
 			} else {
@@ -340,7 +340,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			d.documents.push({
 				id: newDocId,
 				name: newDocName,
-				content: "",
+				content: '',
 			});
 			d.currentDocId = newDocId;
 		});
@@ -371,7 +371,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const handleUpdateProjectMetadata = (projectData: {
 		name: string;
 		description: string;
-		type?: "latex" | "typst";
+		type?: 'latex' | 'typst';
 	}) => {
 		setIsSubmitting(true);
 		changeDoc((d) => {
@@ -379,12 +379,12 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 				d.projectMetadata = {
 					name: projectData.name,
 					description: projectData.description,
-					type: projectData.type || "latex",
+					type: projectData.type || 'latex',
 				};
 			} else {
 				d.projectMetadata.name = projectData.name;
 				d.projectMetadata.description = projectData.description;
-				d.projectMetadata.type = projectData.type || "latex";
+				d.projectMetadata.type = projectData.type || 'latex';
 			}
 		});
 		setIsSubmitting(false);
@@ -394,7 +394,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const handleNavigateToLinkedFile = () => {
 		if (linkedFileInfo?.filePath) {
 			document.dispatchEvent(
-				new CustomEvent("navigate-to-linked-file", {
+				new CustomEvent('navigate-to-linked-file', {
 					detail: {
 						filePath: linkedFileInfo.filePath,
 						fileId: linkedFileInfo.fileId,
@@ -406,21 +406,21 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
 	const handleExpandLatexOutput = () => {
 		if (!pdfWindowService.isWindowOpen()) {
-			document.dispatchEvent(new CustomEvent("expand-latex-output"));
+			document.dispatchEvent(new CustomEvent('expand-latex-output'));
 		}
 	};
 
 	const handleExpandTypstOutput = () => {
 		if (!pdfWindowService.isWindowOpen()) {
-			document.dispatchEvent(new CustomEvent("expand-typst-output"));
+			document.dispatchEvent(new CustomEvent('expand-typst-output'));
 		}
 	};
 
 	const shareUrl = `${window.location.origin}${window.location.pathname}#${docUrl}`;
 	const selectedDocument = doc?.documents?.find((d) => d.id === localDocId);
-	const projectName = doc?.projectMetadata?.name || "Untitled Project";
-	const projectDescription = doc?.projectMetadata?.description || "";
-	const projectType = doc?.projectMetadata?.type || "latex";
+	const projectName = doc?.projectMetadata?.name || 'Untitled Project';
+	const projectDescription = doc?.projectMetadata?.description || '';
+	const projectType = doc?.projectMetadata?.type || 'latex';
 
 	if (!isConnected && !doc) {
 		return (
@@ -505,7 +505,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					{!isGuestUser(user) && (
 						<BackupStatusIndicator
 							className="header-backup-indicator"
-							currentProjectId={sessionStorage.getItem("currentProjectId")}
+							currentProjectId={sessionStorage.getItem('currentProjectId')}
 							isInEditor={true}
 						/>
 					)}
@@ -517,7 +517,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					)}
 					<SettingsButton className="header-settings-button" />
 					<UserDropdown
-						username={user?.username || ""}
+						username={user?.username || ''}
 						onLogout={onLogout}
 						onOpenProfile={() => setShowProfileModal(true)}
 						onOpenExport={() => setShowAccountExportModal(true)}
@@ -536,7 +536,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					onCreateDocument={handleCreateDocument}
 					onRenameDocument={handleRenameDocument}
 					onUpdateContent={handleUpdateContent}
-					content={selectedDocument?.content || ""}
+					content={selectedDocument?.content || ''}
 					docUrl={docUrl}
 					targetDocId={targetDocId}
 					targetFilePath={targetFilePath}
@@ -558,10 +558,10 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						<br /> <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">
 							Documentation
 						</a>
-						{" "} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">
+						{' '} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">
 							Source Code
 						</a>
-						{" "} • <a href="#" onClick={(event) => {
+						{' '} • <a href="#" onClick={(event) => {
 							event.preventDefault();
 							setShowPrivacy(true);
 						}} className="privacy-link"> Privacy </a>
@@ -585,11 +585,11 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						id: docUrl,
 						name: projectName,
 						description: projectDescription,
-						type: projectType || "latex",
+						type: projectType || 'latex',
 						docUrl: docUrl,
 						createdAt: 0,
 						updatedAt: 0,
-						ownerId: user?.id || "",
+						ownerId: user?.id || '',
 						tags: [],
 						isFavorite: false,
 					}}
@@ -644,7 +644,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					onClearActivity={clearActivity}
 					onClearAllActivities={clearAllActivities}
 					onChangeDirectory={changeDirectory}
-					currentProjectId={sessionStorage.getItem("currentProjectId")}
+					currentProjectId={sessionStorage.getItem('currentProjectId')}
 					isInEditor={true}
 				/>
 			)}

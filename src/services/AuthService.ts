@@ -1,22 +1,22 @@
 // src/services/AuthService.ts
-import { type IDBPDatabase, openDB } from "idb";
-import { IndexeddbPersistence } from "y-indexeddb";
-import * as Y from "yjs";
+import { type IDBPDatabase, openDB } from 'idb';
+import { IndexeddbPersistence } from 'y-indexeddb';
+import * as Y from 'yjs';
 
-import type { User } from "../types/auth";
-import type { Project } from "../types/projects";
-import { cleanupProjectDatabases } from "../utils/dbDeleteUtils";
-import { fileSystemBackupService } from "./FileSystemBackupService";
+import type { User } from '../types/auth';
+import type { Project } from '../types/projects';
+import { cleanupProjectDatabases } from '../utils/dbDeleteUtils';
+import { fileSystemBackupService } from './FileSystemBackupService';
 
 const shouldAutoSync = (): boolean => {
-	return localStorage.getItem("texlyre-auto-sync") === "true";
+	return localStorage.getItem('texlyre-auto-sync') === 'true';
 };
 
 class AuthService {
 	public db: IDBPDatabase | null = null;
-	private readonly DB_NAME = "texlyre-auth";
-	private readonly USER_STORE = "users";
-	private readonly PROJECT_STORE = "projects";
+	private readonly DB_NAME = 'texlyre-auth';
+	private readonly USER_STORE = 'users';
+	private readonly PROJECT_STORE = 'projects';
 	private readonly DB_VERSION = 1;
 	private currentUser: User | null = null;
 
@@ -26,19 +26,19 @@ class AuthService {
 				upgrade: (db, _oldVersion, _newVersion) => {
 					if (!db.objectStoreNames.contains(this.USER_STORE)) {
 						const userStore = db.createObjectStore(this.USER_STORE, {
-							keyPath: "id",
+							keyPath: 'id',
 						});
-						userStore.createIndex("username", "username", { unique: false });
-						userStore.createIndex("email", "email", { unique: false });
-						userStore.createIndex("sessionId", "sessionId", { unique: false });
+						userStore.createIndex('username', 'username', { unique: false });
+						userStore.createIndex('email', 'email', { unique: false });
+						userStore.createIndex('sessionId', 'sessionId', { unique: false });
 					}
 
 					if (!db.objectStoreNames.contains(this.PROJECT_STORE)) {
 						const projectStore = db.createObjectStore(this.PROJECT_STORE, {
-							keyPath: "id",
+							keyPath: 'id',
 						});
-						projectStore.createIndex("ownerId", "ownerId", { unique: false });
-						projectStore.createIndex("tags", "tags", {
+						projectStore.createIndex('ownerId', 'ownerId', { unique: false });
+						projectStore.createIndex('tags', 'tags', {
 							unique: false,
 							multiEntry: true,
 						});
@@ -46,7 +46,7 @@ class AuthService {
 				},
 			});
 
-			const userId = localStorage.getItem("texlyre-current-user");
+			const userId = localStorage.getItem('texlyre-current-user');
 			if (userId) {
 				try {
 					const user = await this.getUserById(userId);
@@ -54,34 +54,34 @@ class AuthService {
 						if (this.isGuestUser(user) && this.isGuestExpired(user)) {
 							console.log(`[AuthService] Guest session expired: ${userId}`);
 							await this.cleanupExpiredGuest(user);
-							localStorage.removeItem("texlyre-current-user");
+							localStorage.removeItem('texlyre-current-user');
 						} else {
 							this.currentUser = user;
 							console.log(`[AuthService] Restored user session: ${user.username} (${this.isGuestUser(user) ? 'guest' : 'full'})`);
 						}
 					} else {
 						console.log(`[AuthService] User not found: ${userId}`);
-						localStorage.removeItem("texlyre-current-user");
+						localStorage.removeItem('texlyre-current-user');
 					}
 				} catch (error) {
-					console.error("Error restoring user session:", error);
-					localStorage.removeItem("texlyre-current-user");
+					console.error('Error restoring user session:', error);
+					localStorage.removeItem('texlyre-current-user');
 				}
 			}
 
 			// Run cleanup on initialization
 			this.cleanupExpiredGuests();
 		} catch (error) {
-			console.error("Failed to initialize database:", error);
+			console.error('Failed to initialize database:', error);
 			throw error;
 		}
 	}
 
 	async hashPassword(password: string): Promise<string> {
 		const msgBuffer = new TextEncoder().encode(password);
-		const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+		const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
 		const hashArray = Array.from(new Uint8Array(hashBuffer));
-		return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+		return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 	}
 
 	generateSessionId(): string {
@@ -99,7 +99,7 @@ class AuthService {
 
 	async createGuestAccount(): Promise<User> {
 		if (!this.db) {
-			console.log("[AuthService] Database not initialized, initializing...");
+			console.log('[AuthService] Database not initialized, initializing...');
 			await this.initialize();
 		}
 
@@ -113,7 +113,7 @@ class AuthService {
 
 		const guestUser: User = {
 			id: userId,
-			username: `Guest User`,
+			username: 'Guest User',
 			passwordHash: await this.hashPassword(sessionId),
 			isGuest: true,
 			sessionId,
@@ -131,17 +131,17 @@ class AuthService {
 			// Verify the user was created
 			const verifyUser = await this.db?.get(this.USER_STORE, userId);
 			if (!verifyUser) {
-				throw new Error("Failed to verify guest user creation");
+				throw new Error('Failed to verify guest user creation');
 			}
 
 			this.currentUser = guestUser;
-			localStorage.setItem("texlyre-current-user", userId);
+			localStorage.setItem('texlyre-current-user', userId);
 
 			console.log(`[AuthService] Successfully created guest account: ${sessionId}`);
 			return guestUser;
 		} catch (error) {
-			console.error("Failed to create guest account:", error);
-			throw new Error("Failed to create guest session. Please refresh the page and try again.");
+			console.error('Failed to create guest account:', error);
+			throw new Error('Failed to create guest session. Please refresh the page and try again.');
 		}
 	}
 
@@ -152,27 +152,27 @@ class AuthService {
 	): Promise<User> {
 		if (!this.db) await this.initialize();
 		if (!this.currentUser || !this.isGuestUser(this.currentUser)) {
-			throw new Error("No guest account to upgrade");
+			throw new Error('No guest account to upgrade');
 		}
 
 		// Check for existing non-guest users only
 		const existingUser = await this.db?.getFromIndex(
 			this.USER_STORE,
-			"username",
+			'username',
 			username,
 		);
 		if (existingUser && !this.isGuestUser(existingUser)) {
-			throw new Error("Username already exists");
+			throw new Error('Username already exists');
 		}
 
 		if (email) {
 			const existingEmail = await this.db?.getFromIndex(
 				this.USER_STORE,
-				"email",
+				'email',
 				email,
 			);
 			if (existingEmail && !this.isGuestUser(existingEmail)) {
-				throw new Error("Email already exists");
+				throw new Error('Email already exists');
 			}
 		}
 
@@ -208,7 +208,7 @@ class AuthService {
 		await this.db?.delete(this.USER_STORE, oldGuestId);
 
 		this.currentUser = upgradedUser;
-		localStorage.setItem("texlyre-current-user", newUserId);
+		localStorage.setItem('texlyre-current-user', newUserId);
 
 		console.log(`[AuthService] Upgraded guest account ${oldGuestId} to full account: ${username} (${newUserId})`);
 		return upgradedUser;
@@ -231,7 +231,7 @@ class AuthService {
 
 			console.log(`[AuthService] Transferred ${guestProjects.length} projects from guest ${oldUserId} to user ${newUserId}`);
 		} catch (error) {
-			console.error("Error transferring guest projects:", error);
+			console.error('Error transferring guest projects:', error);
 		}
 	}
 
@@ -239,8 +239,8 @@ class AuthService {
 		if (!this.db) return;
 
 		try {
-			const tx = this.db.transaction([this.USER_STORE, this.PROJECT_STORE], "readwrite");
-			const userStore = tx.objectStore("users");
+			const tx = this.db.transaction([this.USER_STORE, this.PROJECT_STORE], 'readwrite');
+			const userStore = tx.objectStore('users');
 
 			const allUsers = await userStore.getAll();
 			const expiredGuests = allUsers.filter(user =>
@@ -253,7 +253,7 @@ class AuthService {
 
 			console.log(`[AuthService] Cleaned up ${expiredGuests.length} expired guest accounts`);
 		} catch (error) {
-			console.error("Error during guest cleanup:", error);
+			console.error('Error during guest cleanup:', error);
 		}
 	}
 
@@ -278,10 +278,10 @@ class AuthService {
 
 			// Remove projects from database
 			if (guestProjects.length > 0) {
-				const projectTx = this.db.transaction(this.PROJECT_STORE, "readwrite");
+				const projectTx = this.db.transaction(this.PROJECT_STORE, 'readwrite');
 				for (const project of guestProjects) {
 					try {
-						await projectTx.objectStore("projects").delete(project.id);
+						await projectTx.objectStore('projects').delete(project.id);
 					} catch (error) {
 						console.warn(`Failed to delete project ${project.id}:`, error);
 					}
@@ -289,8 +289,8 @@ class AuthService {
 			}
 
 			// Remove user from database
-			const userTx = this.db.transaction(this.USER_STORE, "readwrite");
-			await userTx.objectStore("users").delete(guestUser.id);
+			const userTx = this.db.transaction(this.USER_STORE, 'readwrite');
+			await userTx.objectStore('users').delete(guestUser.id);
 
 			console.log(`[AuthService] Successfully cleaned up guest: ${guestUser.id}`);
 		} catch (error) {
@@ -365,21 +365,21 @@ class AuthService {
 		// Check for existing non-guest users only
 		const existingUser = await this.db?.getFromIndex(
 			this.USER_STORE,
-			"username",
+			'username',
 			username,
 		);
 		if (existingUser && !this.isGuestUser(existingUser)) {
-			throw new Error("Username already exists");
+			throw new Error('Username already exists');
 		}
 
 		if (email) {
 			const existingEmail = await this.db?.getFromIndex(
 				this.USER_STORE,
-				"email",
+				'email',
 				email,
 			);
 			if (existingEmail && !this.isGuestUser(existingEmail)) {
-				throw new Error("Email already exists");
+				throw new Error('Email already exists');
 			}
 		}
 
@@ -398,7 +398,7 @@ class AuthService {
 
 		await this.db?.put(this.USER_STORE, newUser);
 		this.currentUser = newUser;
-		localStorage.setItem("texlyre-current-user", userId);
+		localStorage.setItem('texlyre-current-user', userId);
 
 		return newUser;
 	}
@@ -408,23 +408,23 @@ class AuthService {
 
 		const user = await this.db?.getFromIndex(
 			this.USER_STORE,
-			"username",
+			'username',
 			username,
 		);
 		if (!user || this.isGuestUser(user)) {
-			throw new Error("User not found");
+			throw new Error('User not found');
 		}
 
 		const passwordHash = await this.hashPassword(password);
 		if (user.passwordHash !== passwordHash) {
-			throw new Error("Invalid password");
+			throw new Error('Invalid password');
 		}
 
 		user.lastLogin = Date.now();
 		await this.db?.put(this.USER_STORE, user);
 
 		this.currentUser = user;
-		localStorage.setItem("texlyre-current-user", user.id);
+		localStorage.setItem('texlyre-current-user', user.id);
 
 		return user;
 	}
@@ -436,7 +436,7 @@ class AuthService {
 		}
 
 		this.currentUser = null;
-		localStorage.removeItem("texlyre-current-user");
+		localStorage.removeItem('texlyre-current-user');
 	}
 
 	async updateUser(user: User): Promise<User> {
@@ -459,7 +459,7 @@ class AuthService {
 
 		const user = await this.getUserById(userId);
 		if (!user) {
-			throw new Error("User not found");
+			throw new Error('User not found');
 		}
 
 		const updatedUser: User = {
@@ -481,7 +481,7 @@ class AuthService {
 		const user = await this.getUserById(userId);
 		if (user) {
 			this.currentUser = user;
-			localStorage.setItem("texlyre-current-user", userId);
+			localStorage.setItem('texlyre-current-user', userId);
 		}
 		return user;
 	}
@@ -508,7 +508,7 @@ class AuthService {
 		if (!this.db) await this.initialize();
 
 		const user = await this.getUserById(userId);
-		if (!user) throw new Error("User not found");
+		if (!user) throw new Error('User not found');
 
 		const passwordHash = await this.hashPassword(newPassword);
 
@@ -521,9 +521,9 @@ class AuthService {
 	}
 
 	private createNewDocumentUrl(
-		projectName = "Untitled Project",
-		projectDescription = "",
-		projectType?: "latex" | "typst",
+		projectName = 'Untitled Project',
+		projectDescription = '',
+		projectType?: 'latex' | 'typst',
 	): string {
 		try {
 			const projectId =
@@ -536,16 +536,16 @@ class AuthService {
 			const persistence = new IndexeddbPersistence(yjsCollection, ydoc);
 
 			ydoc.transact(() => {
-				const ymap = ydoc.getMap("data");
+				const ymap = ydoc.getMap('data');
 
-				ymap.set("documents", []);
-				ymap.set("currentDocId", "");
-				ymap.set("cursors", []);
-				ymap.set("chatMessages", []);
-				ymap.set("projectMetadata", {
+				ymap.set('documents', []);
+				ymap.set('currentDocId', '');
+				ymap.set('cursors', []);
+				ymap.set('chatMessages', []);
+				ymap.set('projectMetadata', {
 					name: projectName,
 					description: projectDescription,
-					type: projectType || "latex",
+					type: projectType || 'latex',
 				});
 			});
 
@@ -556,18 +556,18 @@ class AuthService {
 
 			return `yjs:${projectId}`;
 		} catch (error) {
-			console.error("Error creating new document:", error);
-			throw new Error("Failed to create document for project");
+			console.error('Error creating new document:', error);
+			throw new Error('Failed to create document for project');
 		}
 	}
 
 	async createProject(
-		project: Omit<Project, "id" | "createdAt" | "updatedAt" | "ownerId">,
+		project: Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'ownerId'>,
 		requireAuth = true,
 	): Promise<Project> {
 		if (!this.db) await this.initialize();
 		if (requireAuth && !this.currentUser) {
-			throw new Error("User not authenticated");
+			throw new Error('User not authenticated');
 		}
 
 		const docUrl =
@@ -598,11 +598,11 @@ class AuthService {
 
 		const existingProject = await this.db?.get(this.PROJECT_STORE, project.id);
 		if (!existingProject) {
-			throw new Error("Project not found");
+			throw new Error('Project not found');
 		}
 
 		if (existingProject.ownerId !== this.currentUser?.id) {
-			throw new Error("You do not have permission to update this project");
+			throw new Error('You do not have permission to update this project');
 		}
 
 		const updatedProject: Project = {
@@ -626,7 +626,7 @@ class AuthService {
 		if (!this.db) await this.initialize();
 
 		if (requireAuth && !this.currentUser) {
-			throw new Error("User not authenticated");
+			throw new Error('User not authenticated');
 		}
 
 		if (project.id) {
@@ -647,11 +647,11 @@ class AuthService {
 
 		const project = await this.db?.get(this.PROJECT_STORE, id);
 		if (!project) {
-			throw new Error("Project not found");
+			throw new Error('Project not found');
 		}
 
 		if (project.ownerId !== this.currentUser?.id) {
-			throw new Error("You do not have permission to delete this project");
+			throw new Error('You do not have permission to delete this project');
 		}
 
 		await this.db?.delete(this.PROJECT_STORE, id);
@@ -675,8 +675,8 @@ class AuthService {
 			return [];
 		}
 
-		const tx = this.db?.transaction(this.PROJECT_STORE, "readonly");
-		const index = tx.store.index("ownerId");
+		const tx = this.db?.transaction(this.PROJECT_STORE, 'readonly');
+		const index = tx.store.index('ownerId');
 		return index.getAll(targetUserId);
 	}
 
@@ -691,8 +691,8 @@ class AuthService {
 			return [];
 		}
 
-		const tx = this.db?.transaction(this.PROJECT_STORE, "readonly");
-		const index = tx.store.index("tags");
+		const tx = this.db?.transaction(this.PROJECT_STORE, 'readonly');
+		const index = tx.store.index('tags');
 		const projects = await index.getAll(tag);
 
 		return projects.filter(
@@ -700,13 +700,13 @@ class AuthService {
 		);
 	}
 
-	async getProjectsByType(type: "latex" | "typst"): Promise<Project[]> {
+	async getProjectsByType(type: 'latex' | 'typst'): Promise<Project[]> {
 		if (!this.db) await this.initialize();
 
 		if (!this.currentUser) {
 			return [];
 		}
-		const tx = this.db?.transaction(this.PROJECT_STORE, "readonly");
+		const tx = this.db?.transaction(this.PROJECT_STORE, 'readonly');
 		const projects: Project[] = await tx.store.getAll();
 
 		return projects.filter(
@@ -721,7 +721,7 @@ class AuthService {
 			return [];
 		}
 
-		const tx = this.db?.transaction(this.PROJECT_STORE, "readonly");
+		const tx = this.db?.transaction(this.PROJECT_STORE, 'readonly');
 		const projects: Project[] = await tx.store.getAll();
 
 		const lowerQuery = query.toLowerCase();
@@ -740,11 +740,11 @@ class AuthService {
 
 		const project = await this.db?.get(this.PROJECT_STORE, projectId);
 		if (!project) {
-			throw new Error("Project not found");
+			throw new Error('Project not found');
 		}
 
 		if (project.ownerId !== this.currentUser?.id) {
-			throw new Error("You do not have permission to modify this project");
+			throw new Error('You do not have permission to modify this project');
 		}
 
 		const updatedProject: Project = {

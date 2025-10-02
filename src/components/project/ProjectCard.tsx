@@ -1,11 +1,11 @@
 // Updated src/components/project/ProjectCard.tsx
-import type React from "react";
-import { useRef, useState, useEffect } from "react";
+import type React from 'react';
+import { useRef, useState, useEffect } from 'react';
 
-import type { Project } from "../../types/projects.ts";
-import ProjectBackupControls from "../backup/ProjectBackupControls";
-import { EditIcon, FolderIcon, StarIcon, TrashIcon, ChevronDownIcon, FileTextIcon, FileIcon } from "../common/Icons.tsx";
-import TypesetterInfo from "../common/TypesetterInfo";
+import type { Project } from '../../types/projects.ts';
+import ProjectBackupControls from '../backup/ProjectBackupControls';
+import { EditIcon, FolderIcon, StarIcon, TrashIcon, ChevronDownIcon, FileTextIcon, FileIcon } from '../common/Icons.tsx';
+import TypesetterInfo from '../common/TypesetterInfo';
 
 interface ProjectCardProps {
 	project: Project;
@@ -45,7 +45,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 	};
 
 	const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
-		if ((e.target as HTMLElement).closest("button, input, a")) {
+		if ((e.target as HTMLElement).closest('button, input, a')) {
 			return;
 		}
 
@@ -81,20 +81,20 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 			}
 		};
 
-		document.addEventListener("mousedown", handleClickOutside);
+		document.addEventListener('mousedown', handleClickOutside);
 		return () => {
-			document.removeEventListener("mousedown", handleClickOutside);
+			document.removeEventListener('mousedown', handleClickOutside);
 		};
 	}, []);
 
 	const getDropdownDisplayText = () => {
 		if (project.lastOpenedFilePath) {
-			const fileName = project.lastOpenedFilePath.split("/").pop() || "Unknown file";
+			const fileName = project.lastOpenedFilePath.split('/').pop() || 'Unknown file';
 			return `Last: ${fileName}`;
 		} else if (project.lastOpenedDocId) {
 			return `Last: Document ${project.lastOpenedDocId.slice(0, 8)}...`;
 		}
-		return "Open Project";
+		return 'Open Project';
 	};
 
 	const getDropdownContent = () => {
@@ -124,7 +124,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
 	return (
 		<div
-			className={`project-card ${isSelectionMode ? "selection-mode" : ""} ${isSelected ? "selected" : ""}`}
+			className={`project-card ${isSelectionMode ? 'selection-mode' : ''} ${isSelected ? 'selected' : ''}`}
 			onClick={handleCardClick}
 		>
 			{isSelectionMode && (
@@ -142,7 +142,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
 			<div className="project-card-header">
 				<h3
-					className={`project-title ${isSelectionMode ? "selection-mode" : ""}`}
+					className={`project-title ${isSelectionMode ? 'selection-mode' : ''}`}
 					onClick={(e) => {
 						if (!isSelectionMode) {
 							e.stopPropagation();
@@ -159,13 +159,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 					</div>
 					{!isSelectionMode && (
 						<button
-							className={`favorite-button ${project.isFavorite ? "favorited" : ""}`}
+							className={`favorite-button ${project.isFavorite ? 'favorited' : ''}`}
 							onClick={(e) => {
 								e.stopPropagation();
 								onToggleFavorite(project.id);
 							}}
 							title={
-								project.isFavorite ? "Remove from favorites" : "Add to favorites"
+								project.isFavorite ? 'Remove from favorites' : 'Add to favorites'
 							}
 						>
 							<StarIcon filled={project.isFavorite} />
@@ -175,7 +175,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 			</div>
 
 			<p className="project-description">
-				{project.description || "No description provided"}
+				{project.description || 'No description provided'}
 			</p>
 
 			<div className="project-meta">

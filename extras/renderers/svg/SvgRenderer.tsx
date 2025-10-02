@@ -1,5 +1,5 @@
-import type React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import type React from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
     ChevronLeftIcon,
@@ -12,13 +12,13 @@ import {
     ZoomOutIcon,
     ExpandIcon,
     MinimizeIcon,
-} from "../../../src/components/common/Icons";
-import { svgRendererSettings } from "./settings";
-import { useSettings } from "../../../src/hooks/useSettings";
-import { useProperties } from "../../../src/hooks/useProperties";
-import type { RendererProps } from "../../../src/plugins/PluginInterface";
-import { SvgPageManager } from "./SvgPageManager";
-import "./styles.css";
+} from '../../../src/components/common/Icons';
+import { svgRendererSettings } from './settings';
+import { useSettings } from '../../../src/hooks/useSettings';
+import { useProperties } from '../../../src/hooks/useProperties';
+import type { RendererProps } from '../../../src/plugins/PluginInterface';
+import { SvgPageManager } from './SvgPageManager';
+import './styles.css';
 
 const SvgRenderer: React.FC<RendererProps> = ({
     content,
@@ -30,11 +30,11 @@ const SvgRenderer: React.FC<RendererProps> = ({
     const propertiesRegistered = useRef(false);
 
     const svgRendererEnable =
-        (getSetting("svg-renderer-enable")?.value as boolean) ?? true;
+        (getSetting('svg-renderer-enable')?.value as boolean) ?? true;
 
     const [numPages, setNumPages] = useState<number>(0);
     const [currentPage, setCurrentPage] = useState<number>(1);
-    const [pageInput, setPageInput] = useState<string>("1");
+    const [pageInput, setPageInput] = useState<string>('1');
     const [isEditingPageInput, setIsEditingPageInput] = useState<boolean>(false);
     const [scale, setScale] = useState<number>(1.0);
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -47,30 +47,30 @@ const SvgRenderer: React.FC<RendererProps> = ({
     const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
     const containerRef = useRef<HTMLDivElement>(null);
     const contentElRef = useRef<HTMLDivElement>(null);
-    const [fitMode, setFitMode] = useState<"fit-width" | "fit-height">("fit-width");
+    const [fitMode, setFitMode] = useState<'fit-width' | 'fit-height'>('fit-width');
 
     useEffect(() => {
         if (propertiesRegistered.current) return;
         propertiesRegistered.current = true;
 
         registerProperty({
-            id: "svg-renderer-zoom",
-            category: "UI",
-            subcategory: "SVG Viewer",
+            id: 'svg-renderer-zoom',
+            category: 'UI',
+            subcategory: 'SVG Viewer',
             defaultValue: 1.0,
         });
 
         registerProperty({
-            id: "svg-renderer-scroll-view",
-            category: "UI",
-            subcategory: "SVG Viewer",
+            id: 'svg-renderer-scroll-view',
+            category: 'UI',
+            subcategory: 'SVG Viewer',
             defaultValue: false,
         });
     }, [registerProperty]);
 
     useEffect(() => {
-        const storedZoom = getProperty("svg-renderer-zoom");
-        const storedScrollView = getProperty("svg-renderer-scroll-view");
+        const storedZoom = getProperty('svg-renderer-zoom');
+        const storedScrollView = getProperty('svg-renderer-scroll-view');
 
         if (storedZoom !== undefined) {
             setScale(Number(storedZoom));
@@ -84,7 +84,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
     useEffect(() => {
         const loadSvgContent = async () => {
             if (!content) {
-                setError("No SVG content available");
+                setError('No SVG content available');
                 setIsLoading(false);
                 return;
             }
@@ -104,10 +104,10 @@ const SvgRenderer: React.FC<RendererProps> = ({
                 pageManager.preloadPages(1, scrollView);
 
                 setCurrentPage(1);
-                if (!isEditingPageInput) setPageInput("1");
+                if (!isEditingPageInput) setPageInput('1');
                 setIsLoading(false);
             } catch (error) {
-                console.error("Error loading SVG content:", error);
+                console.error('Error loading SVG content:', error);
                 setError(`Failed to load SVG: ${error}`);
                 setIsLoading(false);
             }
@@ -127,7 +127,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
             const targetPage = Math.max(currentPage - 1, 1);
             const pageElement = pageRefs.current.get(targetPage);
             if (pageElement) {
-                pageElement.scrollIntoView({ behavior: "smooth", block: "start" });
+                pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 setCurrentPage(targetPage);
                 if (!isEditingPageInput) setPageInput(String(targetPage));
             }
@@ -145,7 +145,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
             const targetPage = Math.min(currentPage + 1, numPages);
             const pageElement = pageRefs.current.get(targetPage);
             if (pageElement) {
-                pageElement.scrollIntoView({ behavior: "smooth", block: "start" });
+                pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 setCurrentPage(targetPage);
                 if (!isEditingPageInput) setPageInput(String(targetPage));
             }
@@ -167,15 +167,15 @@ const SvgRenderer: React.FC<RendererProps> = ({
 
     const handlePageInputKeyDown = useCallback(
         (event: React.KeyboardEvent<HTMLInputElement>) => {
-            if (event.key === "Enter") {
+            if (event.key === 'Enter') {
                 const pageNum = Number.parseInt(pageInput, 10);
                 if (!Number.isNaN(pageNum) && pageNum >= 1 && pageNum <= numPages) {
                     if (scrollView) {
                         const pageElement = pageRefs.current.get(pageNum);
                         if (pageElement) {
                             pageElement.scrollIntoView({
-                                behavior: "smooth",
-                                block: "start",
+                                behavior: 'smooth',
+                                block: 'start',
                             });
                         }
                     }
@@ -191,7 +191,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
         [numPages, currentPage, scrollView, pageInput],
     );
 
-    const computeFitScale = useCallback((mode: "fit-width" | "fit-height") => {
+    const computeFitScale = useCallback((mode: 'fit-width' | 'fit-height') => {
         const containerWidth =
             contentElRef.current?.clientWidth ||
             document.querySelector('.svg-renderer-content')?.clientWidth ||
@@ -204,7 +204,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
         const pageWidth = 595;
         const pageHeight = 842;
 
-        if (mode === "fit-width") {
+        if (mode === 'fit-width') {
             return Math.max(0.5, Math.min(10, (containerWidth - 40) / pageWidth));
         } else {
             return Math.max(0.5, Math.min(10, (containerHeight - 40) / pageHeight));
@@ -212,17 +212,17 @@ const SvgRenderer: React.FC<RendererProps> = ({
     }, []);
 
     const handleFitToggle = useCallback(() => {
-        const nextMode = fitMode === "fit-width" ? "fit-height" : "fit-width";
+        const nextMode = fitMode === 'fit-width' ? 'fit-height' : 'fit-width';
         setFitMode(nextMode);
         const s = computeFitScale(nextMode);
         setScale(s);
-        setProperty("svg-renderer-zoom", s);
+        setProperty('svg-renderer-zoom', s);
     }, [fitMode, computeFitScale, setProperty]);
 
     const handleZoomIn = useCallback(() => {
         setScale((prev) => {
             const newScale = Math.min(prev + 0.25, 5);
-            setProperty("svg-renderer-zoom", newScale);
+            setProperty('svg-renderer-zoom', newScale);
             return newScale;
         });
     }, [setProperty]);
@@ -230,23 +230,23 @@ const SvgRenderer: React.FC<RendererProps> = ({
     const handleZoomOut = useCallback(() => {
         setScale((prev) => {
             const newScale = Math.max(prev - 0.25, 0.25);
-            setProperty("svg-renderer-zoom", newScale);
+            setProperty('svg-renderer-zoom', newScale);
             return newScale;
         });
     }, [setProperty]);
 
     const handleZoomChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
         const value = event.target.value;
-        if (value === "custom") return;
+        if (value === 'custom') return;
         const newScale = parseFloat(value) / 100;
         setScale(newScale);
-        setProperty("svg-renderer-zoom", newScale);
+        setProperty('svg-renderer-zoom', newScale);
     }, [setProperty]);
 
     const handleToggleView = useCallback(() => {
         setScrollView((prev) => {
             const newScrollView = !prev;
-            setProperty("svg-renderer-scroll-view", newScrollView);
+            setProperty('svg-renderer-scroll-view', newScrollView);
             pageRefs.current.clear();
             return newScrollView;
         });
@@ -310,7 +310,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
 
                 entries.forEach((entry) => {
                     const pageNum = Number.parseInt(
-                        entry.target.getAttribute("data-page-number") || "0",
+                        entry.target.getAttribute('data-page-number') || '0',
                     );
                     if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
                         newVisiblePages.add(pageNum);
@@ -331,7 +331,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
             },
             {
                 threshold: [0.5],
-                rootMargin: "-20% 0px -20% 0px",
+                rootMargin: '-20% 0px -20% 0px',
                 root: contentElRef.current || undefined,
             },
         );
@@ -348,18 +348,18 @@ const SvgRenderer: React.FC<RendererProps> = ({
             onDownload(fileName);
         } else if (svgContent) {
             try {
-                const blob = new Blob([svgContent], { type: "image/svg+xml" });
+                const blob = new Blob([svgContent], { type: 'image/svg+xml' });
                 const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
+                const a = document.createElement('a');
                 a.href = url;
-                a.download = fileName?.replace(/\.typ$/, '.svg') || "output.svg";
+                a.download = fileName?.replace(/\.typ$/, '.svg') || 'output.svg';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             } catch (error) {
-                console.error("Export error:", error);
-                setError("Failed to export SVG");
+                console.error('Export error:', error);
+                setError('Failed to export SVG');
             }
         }
     }, [svgContent, fileName, onDownload]);
@@ -374,23 +374,23 @@ const SvgRenderer: React.FC<RendererProps> = ({
             }
 
             switch (event.key) {
-                case "ArrowLeft":
-                case "ArrowUp":
+                case 'ArrowLeft':
+                case 'ArrowUp':
                     event.preventDefault();
                     handlePreviousPage();
                     break;
-                case "ArrowRight":
-                case "ArrowDown":
-                case " ":
+                case 'ArrowRight':
+                case 'ArrowDown':
+                case ' ':
                     event.preventDefault();
                     handleNextPage();
                     break;
             }
         };
 
-        window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener('keydown', handleKeyDown);
         return () => {
-            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener('keydown', handleKeyDown);
         };
     }, [handlePreviousPage, handleNextPage]);
 
@@ -413,7 +413,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
 
     return (
         <div className="svg-renderer-container" ref={containerRef}>
-            <div className={`svg-toolbar ${isFullscreen ? "fullscreen-toolbar" : ""}`}>
+            <div className={`svg-toolbar ${isFullscreen ? 'fullscreen-toolbar' : ''}`}>
                 <div className="toolbar">
                     <div id="toolbarLeft">
                         <div className="toolbarButtonGroup">
@@ -465,13 +465,13 @@ const SvgRenderer: React.FC<RendererProps> = ({
                                 <ZoomOutIcon />
                             </button>
                             {(() => {
-                                const zoomOptions = svgRendererSettings.find(s => s.id === "svg-renderer-initial-zoom")?.options || [];
+                                const zoomOptions = svgRendererSettings.find(s => s.id === 'svg-renderer-initial-zoom')?.options || [];
                                 const currentZoom = Math.round(scale * 100).toString();
                                 const hasCustomZoom = !zoomOptions.some(opt => String(opt.value) === currentZoom);
 
                                 return (
                                     <select
-                                        value={hasCustomZoom ? "custom" : currentZoom}
+                                        value={hasCustomZoom ? 'custom' : currentZoom}
                                         onChange={handleZoomChange}
                                         disabled={isLoading}
                                         className="toolbarZoomSelect"
@@ -503,7 +503,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
                             <button
                                 onClick={handleFitToggle}
                                 className="toolbarButton"
-                                title={fitMode === "fit-width" ? "Fit to Width" : "Fit to Height"}
+                                title={fitMode === 'fit-width' ? 'Fit to Width' : 'Fit to Height'}
                                 disabled={isLoading}
                             >
                                 <FitToWidthIcon />
@@ -511,7 +511,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
                             <button
                                 onClick={handleToggleView}
                                 className="toolbarButton"
-                                title={scrollView ? "Single Page View" : "Scroll View"}
+                                title={scrollView ? 'Single Page View' : 'Scroll View'}
                                 disabled={isLoading}
                             >
                                 {scrollView ? <PageIcon /> : <ScrollIcon />}
@@ -519,7 +519,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
                             <button
                                 onClick={handleToggleFullscreen}
                                 className="toolbarButton"
-                                title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                                title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
                                 disabled={isLoading}
                             >
                                 {isFullscreen ? <MinimizeIcon /> : <ExpandIcon />}
@@ -539,7 +539,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
                 </div>
             </div>
 
-            <div className={`svg-renderer-content ${isFullscreen ? "fullscreen" : ""}`} ref={contentElRef}>
+            <div className={`svg-renderer-content ${isFullscreen ? 'fullscreen' : ''}`} ref={contentElRef}>
                 <div className="svg-renderer-viewer" style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
                     {!isLoading && !error && numPages > 0 && (
                         scrollView ? (

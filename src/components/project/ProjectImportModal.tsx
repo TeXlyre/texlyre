@@ -1,16 +1,16 @@
 // src/components/project/ProjectImportModal.tsx
-import type React from "react";
-import { useRef, useState } from "react";
+import type React from 'react';
+import { useRef, useState } from 'react';
 
 import {
 	type ImportOptions,
 	type ImportableProject,
 	projectImportService,
-} from "../../services/ProjectImportService";
-import { formatDate } from "../../utils/dateUtils";
-import { FolderIcon, ImportIcon } from "../common/Icons";
-import Modal from "../common/Modal";
-import TemplateImportModal from "./TemplateImportModal";
+} from '../../services/ProjectImportService';
+import { formatDate } from '../../utils/dateUtils';
+import { FolderIcon, ImportIcon } from '../common/Icons';
+import Modal from '../common/Modal';
+import TemplateImportModal from './TemplateImportModal';
 
 interface TemplateProject {
 	id: string;
@@ -36,7 +36,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 	onClose,
 	onProjectsImported,
 }) => {
-	const [importSource, setImportSource] = useState<"template" | "zip" | null>(
+	const [importSource, setImportSource] = useState<'template' | 'zip' | null>(
 		null,
 	);
 	const [availableProjects, setAvailableProjects] = useState<
@@ -48,8 +48,8 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 	const [isScanning, setIsScanning] = useState(false);
 	const [isImporting, setIsImporting] = useState(false);
 	const [conflictResolution, setConflictResolution] = useState<
-		"skip" | "overwrite" | "create-new"
-	>("create-new");
+		'skip' | 'overwrite' | 'create-new'
+	>('create-new');
 	const [makeCollaborator, setMakeCollaborator] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
@@ -72,7 +72,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 
 		} catch (error) {
 			setError(
-				error instanceof Error ? error.message : "Failed to import template",
+				error instanceof Error ? error.message : 'Failed to import template',
 			);
 		} finally {
 			setIsImporting(false);
@@ -93,11 +93,11 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 
 			const projects = await projectImportService.scanZipFile(file);
 			setAvailableProjects(projects);
-			setImportSource("zip");
+			setImportSource('zip');
 			setSelectedProjects(new Set());
 		} catch (error) {
 			setError(
-				error instanceof Error ? error.message : "Error scanning zip file",
+				error instanceof Error ? error.message : 'Error scanning zip file',
 			);
 		} finally {
 			setIsScanning(false);
@@ -135,9 +135,9 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 			};
 
 			let result;
-			if (importSource === "zip") {
+			if (importSource === 'zip') {
 				if (!selectedZipFile) {
-					throw new Error("No ZIP file available for import");
+					throw new Error('No ZIP file available for import');
 				}
 				result = await projectImportService.importFromZip(
 					selectedZipFile,
@@ -145,22 +145,22 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 					options,
 				);
 			} else {
-				throw new Error("Invalid import source");
+				throw new Error('Invalid import source');
 			}
 
 			if (result.errors.length > 0) {
 				setError(
-					`Import completed with errors: ${result.errors.map((e) => e.error).join(", ")}`,
+					`Import completed with errors: ${result.errors.map((e) => e.error).join(', ')}`,
 				);
 			}
 
 			if (result.imported.length > 0) {
-				document.dispatchEvent(new CustomEvent("projects-imported"));
+				document.dispatchEvent(new CustomEvent('projects-imported'));
 				onProjectsImported();
 				onClose();
 			}
 		} catch (error) {
-			setError(error instanceof Error ? error.message : "Import failed");
+			setError(error instanceof Error ? error.message : 'Import failed');
 		} finally {
 			setIsImporting(false);
 		}
@@ -175,18 +175,18 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 		setIsScanning(false);
 		setIsImporting(false);
 		if (fileInputRef.current) {
-			fileInputRef.current.value = "";
+			fileInputRef.current.value = '';
 		}
 		onClose();
 	};
 
 	const getOwnershipText = (project: ImportableProject) => {
-		if (project.originalOwnerId === "current-user-id") {
-			return "Owned by you";
+		if (project.originalOwnerId === 'current-user-id') {
+			return 'Owned by you';
 		}
 		return makeCollaborator
-			? "Will be imported as collaborator"
-			: "Will be imported as owner";
+			? 'Will be imported as collaborator'
+			: 'Will be imported as owner';
 	};
 
 	return (
@@ -199,7 +199,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 			>
 				<div className="project-import-modal">
 					{error && (
-						<div className="error-message" style={{ marginBottom: "1rem" }}>
+						<div className="error-message" style={{ marginBottom: '1rem' }}>
 							{error}
 						</div>
 					)}
@@ -232,7 +232,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 										type="file"
 										accept=".zip"
 										onChange={handleZipFileSelect}
-										style={{ display: "none" }}
+										style={{ display: 'none' }}
 										disabled={isScanning || isImporting}
 									/>
 								</label>
@@ -257,8 +257,8 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 									disabled={isImporting}
 								>
 									{selectedProjects.size === availableProjects.length
-										? "Deselect All"
-										: "Select All"}
+										? 'Deselect All'
+										: 'Select All'}
 								</button>
 							</div>
 
@@ -269,7 +269,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 										value={conflictResolution}
 										onChange={(e) =>
 											setConflictResolution(
-												e.target.value as "skip" | "overwrite" | "create-new",
+												e.target.value as 'skip' | 'overwrite' | 'create-new',
 											)
 										}
 										disabled={isImporting}
@@ -301,7 +301,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 								{availableProjects.map((project) => (
 									<div
 										key={project.id}
-										className={`project-item ${selectedProjects.has(project.id) ? "selected" : ""}`}
+										className={`project-item ${selectedProjects.has(project.id) ? 'selected' : ''}`}
 										onClick={() =>
 											!isImporting && handleProjectToggle(project.id)
 										}
@@ -315,7 +315,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 										<div className="project-details">
 											<div className="project-name">{project.name}</div>
 											<div className="project-description">
-												{project.description || "No description"}
+												{project.description || 'No description'}
 											</div>
 											<div className="project-meta">
 												<span>
@@ -344,8 +344,8 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 									disabled={selectedProjects.size === 0 || isImporting}
 								>
 									{isImporting
-										? "Importing..."
-										: `Import ${selectedProjects.size} Project${selectedProjects.size === 1 ? "" : "s"}`}
+										? 'Importing...'
+										: `Import ${selectedProjects.size} Project${selectedProjects.size === 1 ? '' : 's'}`}
 								</button>
 							</div>
 						</div>

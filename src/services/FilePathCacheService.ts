@@ -1,6 +1,6 @@
 // src/services/FilePathCacheService.ts
-import type { FileNode, FilePathCache } from "../types/files";
-import { fileStorageEventEmitter } from "./FileStorageService";
+import type { FileNode, FilePathCache } from '../types/files';
+import { fileStorageEventEmitter } from './FileStorageService';
 
 type CacheUpdateCallback = (files: FileNode[]) => void;
 type FilePathUpdateCallback = (filePath: string) => void;

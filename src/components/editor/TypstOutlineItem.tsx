@@ -1,9 +1,9 @@
 // src/components/editor/TypstOutlineItem.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import type { TypstOutlineSection } from "../../utils/typstOutlineParser";
-import { ChevronRightIcon, ChevronDownIcon } from "../common/Icons";
+import type { TypstOutlineSection } from '../../utils/typstOutlineParser';
+import { ChevronRightIcon, ChevronDownIcon } from '../common/Icons';
 
 interface TypstOutlineItemProps {
     section: TypstOutlineSection;

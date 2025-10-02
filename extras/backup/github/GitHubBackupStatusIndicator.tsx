@@ -1,7 +1,7 @@
 // extras/backup/github/GitHubBackupStatusIndicator.tsx
-import React, { useState } from "react";
-import GitHubBackupModal from "./GitHubBackupModal";
-import { gitHubBackupService } from "./GitHubBackupService";
+import React, { useState } from 'react';
+import GitHubBackupModal from './GitHubBackupModal';
+import { gitHubBackupService } from './GitHubBackupService';
 
 interface GitHubBackupStatusIndicatorProps {
 	className?: string;
@@ -11,7 +11,7 @@ interface GitHubBackupStatusIndicatorProps {
 
 const GitHubBackupStatusIndicator: React.FC<
 	GitHubBackupStatusIndicatorProps
-> = ({ className = "", currentProjectId, isInEditor = false }) => {
+> = ({ className = '', currentProjectId, isInEditor = false }) => {
 	const [status, setStatus] = useState(gitHubBackupService.getStatus());
 	const [activities, setActivities] = useState(
 		gitHubBackupService.getActivities(),
@@ -30,16 +30,16 @@ const GitHubBackupStatusIndicator: React.FC<
 	}, []);
 
 	const getStatusColor = () => {
-		if (!status.isConnected) return "#666";
-		if (status.status === "error") return "#dc3545";
-		if (status.status === "syncing") return "#ffc107";
-		return "#28a745";
+		if (!status.isConnected) return '#666';
+		if (status.status === 'error') return '#dc3545';
+		if (status.status === 'syncing') return '#ffc107';
+		return '#28a745';
 	};
 
 	const getStatusText = () => {
-		if (!status.isConnected) return "GitHub not connected";
-		if (status.status === "error") return "GitHub error";
-		if (status.status === "syncing") return "Syncing...";
+		if (!status.isConnected) return 'GitHub not connected';
+		if (status.status === 'error') return 'GitHub error';
+		if (status.status === 'syncing') return 'Syncing...';
 		if (status.lastSync) {
 			const lastSync = new Date(status.lastSync);
 			return `Last sync: ${lastSync.toLocaleTimeString()}`;
@@ -53,7 +53,7 @@ const GitHubBackupStatusIndicator: React.FC<
 		<>
 			<div
 				className={`backup-status-indicator main-button single-service ${className} ${
-					status.isConnected ? "connected" : "disconnected"
+					status.isConnected ? 'connected' : 'disconnected'
 				}`}
 				onClick={() => setShowModal(true)}
 				title={getStatusText()}

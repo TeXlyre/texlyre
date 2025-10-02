@@ -1,9 +1,9 @@
 // src/components/backup/ProjectBackupControls.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import { useFileSystemBackup } from "../../hooks/useFileSystemBackup";
-import { ExportIcon, ImportIcon } from "../common/Icons";
+import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
+import { ExportIcon, ImportIcon } from '../common/Icons';
 
 interface ProjectBackupControlsProps {
 	projectId: string;
@@ -12,7 +12,7 @@ interface ProjectBackupControlsProps {
 
 const ProjectBackupControls: React.FC<ProjectBackupControlsProps> = ({
 	projectId,
-	className = "",
+	className = '',
 }) => {
 	const { status, synchronize, exportToFileSystem, importChanges } =
 		useFileSystemBackup();
@@ -40,7 +40,7 @@ const ProjectBackupControls: React.FC<ProjectBackupControlsProps> = ({
 		return null;
 	}
 
-	const isSyncing = status.status === "syncing" || isProjectSyncing;
+	const isSyncing = status.status === 'syncing' || isProjectSyncing;
 
 	return (
 		<div className={`project-backup-controls ${className}`}>

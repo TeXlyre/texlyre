@@ -1,6 +1,6 @@
 // src/contexts/FileTreeContext.tsx
-import { nanoid } from "nanoid";
-import type React from "react";
+import { nanoid } from 'nanoid';
+import type React from 'react';
 import {
 	type ReactNode,
 	createContext,
@@ -8,25 +8,25 @@ import {
 	useEffect,
 	useRef,
 	useState,
-} from "react";
+} from 'react';
 
-import { useCollab } from "../hooks/useCollab";
-import { useSettings } from "../hooks/useSettings";
-import { collabService } from "../services/CollabService";
-import { fileConflictService } from "../services/FileConflictService";
-import { fileOperationNotificationService } from "../services/FileOperationNotificationService";
-import { fileStorageService } from "../services/FileStorageService";
-import type { DocumentList } from "../types/documents";
-import type { FileNode, FileTreeContextType } from "../types/files";
-import type { YjsDocUrl } from "../types/yjs";
-import { duplicateKeyDetector } from "../utils/duplicateKeyDetector";
+import { useCollab } from '../hooks/useCollab';
+import { useSettings } from '../hooks/useSettings';
+import { collabService } from '../services/CollabService';
+import { fileConflictService } from '../services/FileConflictService';
+import { fileOperationNotificationService } from '../services/FileOperationNotificationService';
+import { fileStorageService } from '../services/FileStorageService';
+import type { DocumentList } from '../types/documents';
+import type { FileNode, FileTreeContextType } from '../types/files';
+import type { YjsDocUrl } from '../types/yjs';
+import { duplicateKeyDetector } from '../utils/duplicateKeyDetector';
 import {
 	getMimeType,
 	isBinaryFile,
 	isTemporaryFile,
 	stringToArrayBuffer,
-} from "../utils/fileUtils";
-import { batchExtractZip } from "../utils/zipUtils";
+} from '../utils/fileUtils';
+import { batchExtractZip } from '../utils/zipUtils';
 
 export const FileTreeContext = createContext<FileTreeContextType | null>(null);
 
@@ -66,21 +66,21 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 		settingsRegistered.current = true;
 
 		const initialFileSystemDragDrop =
-			(getSetting("file-tree-filesystem-drag-drop")?.value as boolean) ?? true;
+			(getSetting('file-tree-filesystem-drag-drop')?.value as boolean) ?? true;
 		const initialInternalDragDrop =
-			(getSetting("file-tree-internal-drag-drop")?.value as boolean) ?? true;
+			(getSetting('file-tree-internal-drag-drop')?.value as boolean) ?? true;
 
 		setEnableFileSystemDragDrop(initialFileSystemDragDrop);
 		setEnableInternalDragDrop(initialInternalDragDrop);
 
 		registerSetting({
-			id: "file-tree-filesystem-drag-drop",
-			category: "Viewers",
-			subcategory: "File Explorer",
-			type: "checkbox",
-			label: "Enable file system drag and drop",
+			id: 'file-tree-filesystem-drag-drop',
+			category: 'Viewers',
+			subcategory: 'File Explorer',
+			type: 'checkbox',
+			label: 'Enable file system drag and drop',
 			description:
-				"Allow dragging files from your file system into the file explorer",
+				'Allow dragging files from your file system into the file explorer',
 			defaultValue: true,
 			onChange: (value) => {
 				setEnableFileSystemDragDrop(value as boolean);
@@ -88,13 +88,13 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 		});
 
 		registerSetting({
-			id: "file-tree-internal-drag-drop",
-			category: "Viewers",
-			subcategory: "File Explorer",
-			type: "checkbox",
-			label: "Enable internal (local) drag and drop",
+			id: 'file-tree-internal-drag-drop',
+			category: 'Viewers',
+			subcategory: 'File Explorer',
+			type: 'checkbox',
+			label: 'Enable internal (local) drag and drop',
 			description:
-				"Allow dragging files and folders within the TeXlyre file explorer to move them",
+				'Allow dragging files and folders within the TeXlyre file explorer to move them',
 			defaultValue: true,
 			onChange: (value) => {
 				setEnableInternalDragDrop(value as boolean);
@@ -112,7 +112,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					setFileTree(tree);
 					setIsLoading(false);
 				} catch (error) {
-					console.error("Failed to initialize file storage:", error);
+					console.error('Failed to initialize file storage:', error);
 					setIsLoading(false);
 				}
 			};
@@ -126,7 +126,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			setFileTree(tree);
 			return tree;
 		} catch (error) {
-			console.error("Error refreshing file tree:", error);
+			console.error('Error refreshing file tree:', error);
 			return [];
 		}
 	}, []);
@@ -146,7 +146,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			try {
 				if (targetDirectoryId) {
 					const targetDir = await fileStorageService.getFile(targetDirectoryId);
-					if (targetDir && targetDir.type === "directory") {
+					if (targetDir && targetDir.type === 'directory') {
 						targetPath = targetDir.path;
 					}
 				}
@@ -156,7 +156,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				for (let i = 0; i < files.length; i++) {
 					const file = files[i];
 					const filePath =
-						targetPath === "/" ? `/${file.name}` : `${targetPath}/${file.name}`;
+						targetPath === '/' ? `/${file.name}` : `${targetPath}/${file.name}`;
 					const fileContent = await file.arrayBuffer();
 					const mimeType = getMimeType(file.name);
 					const binary = isBinaryFile(file.name);
@@ -164,7 +164,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 						id: nanoid(),
 						name: file.name,
 						path: filePath,
-						type: "file",
+						type: 'file',
 						content: fileContent,
 						lastModified: file.lastModified,
 						size: file.size,
@@ -179,7 +179,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				} catch (error) {
 					if (
 						error instanceof Error &&
-						error.message === "File operation cancelled by user"
+						error.message === 'File operation cancelled by user'
 					) {
 						return;
 					}
@@ -188,7 +188,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 				await refreshFileTree();
 			} catch (error) {
-				console.error("Error uploading files:", error);
+				console.error('Error uploading files:', error);
 			} finally {
 				setIsLoading(false);
 			}
@@ -240,17 +240,17 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 		async (zipFile: File, targetPath: string) => {
 			try {
 				const filePath =
-					targetPath === "/"
+					targetPath === '/'
 						? `/${zipFile.name}`
 						: `${targetPath}/${zipFile.name}`;
 				const fileContent = await zipFile.arrayBuffer();
-				const mimeType = "application/zip";
+				const mimeType = 'application/zip';
 
 				const rawFile: FileNode = {
 					id: nanoid(),
 					name: zipFile.name,
 					path: filePath,
-					type: "file",
+					type: 'file',
 					content: fileContent,
 					lastModified: zipFile.lastModified,
 					size: zipFile.size,
@@ -263,9 +263,9 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			} catch (error) {
 				if (
 					error instanceof Error &&
-					error.message !== "File operation cancelled by user"
+					error.message !== 'File operation cancelled by user'
 				) {
-					console.error("Failed to store ZIP file:", error);
+					console.error('Failed to store ZIP file:', error);
 					throw error;
 				}
 			}
@@ -290,18 +290,18 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				if (file && changeDoc && doc) {
 					const linkConfirmation = await fileConflictService.confirmLink(file);
 
-					if (linkConfirmation === "cancel") {
+					if (linkConfirmation === 'cancel') {
 						return;
 					}
 
-					const shouldCopyContent = linkConfirmation === "link-with-copy";
-					let textContent = "";
+					const shouldCopyContent = linkConfirmation === 'link-with-copy';
+					let textContent = '';
 
 					if (shouldCopyContent) {
 						const fileContent = await fileStorageService.getFile(fileId);
 						if (fileContent?.content instanceof ArrayBuffer) {
 							textContent = new TextDecoder().decode(fileContent.content);
-						} else if (typeof fileContent?.content === "string") {
+						} else if (typeof fileContent?.content === 'string') {
 							textContent = fileContent.content;
 						}
 					}
@@ -320,7 +320,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 							d.documents.push({
 								id: newDocId,
 								name: file.path,
-								content: "",
+								content: '',
 							});
 							d.currentDocId = newDocId;
 							createdDocId = newDocId;
@@ -333,14 +333,14 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					});
 
 					if (createdDocId && shouldCopyContent && textContent) {
-						const projectId = docUrl.startsWith("yjs:")
+						const projectId = docUrl.startsWith('yjs:')
 							? docUrl.slice(4)
 							: docUrl;
 						const collectionName = `yjs_${createdDocId}`;
 
-						const signalingServersSetting = getSetting("collab-signaling-servers");
-						const awarenessTimeoutSetting = getSetting("collab-awareness-timeout");
-						const autoReconnectSetting = getSetting("collab-auto-reconnect");
+						const signalingServersSetting = getSetting('collab-signaling-servers');
+						const awarenessTimeoutSetting = getSetting('collab-awareness-timeout');
+						const autoReconnectSetting = getSetting('collab-auto-reconnect');
 
 						// Only proceed if all collaboration settings are available
 						if (signalingServersSetting && awarenessTimeoutSetting && autoReconnectSetting) {
@@ -348,7 +348,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 							const awarenessTimeout = awarenessTimeoutSetting.value as number;
 							const autoReconnect = autoReconnectSetting.value as boolean;
 
-							const serversToUse = signalingServers.split(",").map((s) => s.trim());
+							const serversToUse = signalingServers.split(',').map((s) => s.trim());
 
 							const { doc: newYDoc } = collabService.connect(
 								projectId,
@@ -363,7 +363,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 							await new Promise((resolve) => setTimeout(resolve, 100));
 
 							newYDoc.transact(() => {
-								const ytext = newYDoc.getText("codemirror");
+								const ytext = newYDoc.getText('codemirror');
 								if (ytext.length === 0) {
 									ytext.insert(0, textContent);
 								}
@@ -376,7 +376,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 					await refreshFileTree();
 					if (createdDocId) {
-						const event = new CustomEvent("document-linked", {
+						const event = new CustomEvent('document-linked', {
 							detail: { documentId: createdDocId },
 						});
 						document.dispatchEvent(event);
@@ -385,11 +385,11 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			} catch (error) {
 				if (
 					error instanceof Error &&
-					error.message === "Link operation cancelled by user"
+					error.message === 'Link operation cancelled by user'
 				) {
 					return;
 				}
-				console.error("Error linking file to document:", error);
+				console.error('Error linking file to document:', error);
 			}
 		},
 		[changeDoc, doc, refreshFileTree, docUrl, setupFileSyncListener, getSetting],
@@ -404,7 +404,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					const unlinkConfirmation =
 						await fileConflictService.confirmUnlink(file);
 
-					if (unlinkConfirmation === "cancel") {
+					if (unlinkConfirmation === 'cancel') {
 						return;
 					}
 
@@ -427,11 +427,11 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			} catch (error) {
 				if (
 					error instanceof Error &&
-					error.message === "Unlink operation cancelled by user"
+					error.message === 'Unlink operation cancelled by user'
 				) {
 					return;
 				}
-				console.error("Error unlinking file from document:", error);
+				console.error('Error unlinking file from document:', error);
 			}
 		},
 		[changeDoc, doc, refreshFileTree],
@@ -441,12 +441,12 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 		async (name: string, path: string) => {
 			if (!name) return;
 			try {
-				const dirPath = path === "/" ? `/${name}` : `${path}/${name}`;
+				const dirPath = path === '/' ? `/${name}` : `${path}/${name}`;
 				const directory: FileNode = {
 					id: nanoid(),
 					name,
 					path: dirPath,
-					type: "directory",
+					type: 'directory',
 					lastModified: Date.now(),
 				};
 				await fileStorageService.storeFile(directory);
@@ -454,9 +454,9 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			} catch (error) {
 				if (
 					error instanceof Error &&
-					error.message !== "File operation cancelled by user"
+					error.message !== 'File operation cancelled by user'
 				) {
-					console.error("Error creating directory:", error);
+					console.error('Error creating directory:', error);
 				}
 			}
 		},
@@ -480,7 +480,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				const allFilesToDelete: string[] = [];
 
 				for (const file of filesToDelete) {
-					if (file.type === "directory") {
+					if (file.type === 'directory') {
 						const linkedFilesInDirectory = allFiles.filter(
 							(f) =>
 								f.path.startsWith(file.path) &&
@@ -490,7 +490,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 						if (linkedFilesInDirectory.length > 0) {
 							throw new Error(
-								"Cannot delete directory containing linked files. Please unlink files first.",
+								'Cannot delete directory containing linked files. Please unlink files first.',
 							);
 						}
 
@@ -513,7 +513,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 				await refreshFileTree();
 			} catch (error) {
-				console.error("Error in batch delete:", error);
+				console.error('Error in batch delete:', error);
 				if (error instanceof Error) {
 					alert(error.message);
 				}
@@ -551,9 +551,9 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 				if (
 					error instanceof Error &&
-					error.message !== "File operation cancelled by user"
+					error.message !== 'File operation cancelled by user'
 				) {
-					console.error("Error in batch move:", error);
+					console.error('Error in batch move:', error);
 				}
 				throw error;
 			}
@@ -610,9 +610,9 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 				if (
 					error instanceof Error &&
-					error.message !== "Unlink operation cancelled by user"
+					error.message !== 'Unlink operation cancelled by user'
 				) {
-					console.error("Error in batch unlink:", error);
+					console.error('Error in batch unlink:', error);
 				}
 				throw error;
 			}
@@ -632,7 +632,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			const file = await fileStorageService.getFile(fileId);
 			return file?.content;
 		} catch (error) {
-			console.error("Error getting file content:", error);
+			console.error('Error getting file content:', error);
 			return undefined;
 		}
 	}, []);
@@ -641,7 +641,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 		try {
 			return await fileStorageService.getFile(fileId);
 		} catch (error) {
-			console.error("Error getting file:", error);
+			console.error('Error getting file:', error);
 			return undefined;
 		}
 	}, []);
@@ -651,7 +651,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			try {
 				const sourceFile = await fileStorageService.getFile(sourceId);
 				if (!sourceFile) {
-					console.error("Source file not found");
+					console.error('Source file not found');
 					return;
 				}
 
@@ -668,15 +668,15 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					},
 				]);
 
-				console.log("[FileTreeContext] Move completed, new IDs:", movedIds);
+				console.log('[FileTreeContext] Move completed, new IDs:', movedIds);
 				await refreshFileTree();
 			} catch (error) {
-				console.error("Error in moveFileOrDirectory:", error);
+				console.error('Error in moveFileOrDirectory:', error);
 				if (
 					error instanceof Error &&
-					error.message !== "File operation cancelled by user"
+					error.message !== 'File operation cancelled by user'
 				) {
-					console.error("Error moving file or directory:", error);
+					console.error('Error moving file or directory:', error);
 				}
 			}
 		},
@@ -688,7 +688,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			try {
 				const originalFile = await fileStorageService.getFile(fileId);
 				if (!originalFile) {
-					throw new Error("Original file not found");
+					throw new Error('Original file not found');
 				}
 
 				const oldPath = originalFile.path;
@@ -712,7 +712,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					{ showConflictDialog: true },
 				);
 
-				console.log("Rename completed, new IDs:", movedIds);
+				console.log('Rename completed, new IDs:', movedIds);
 
 				// If no files were moved (cancelled), return original ID
 				if (movedIds.length === 0) {
@@ -728,14 +728,14 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				await refreshFileTree();
 				return newFileId;
 			} catch (error) {
-				console.error("Error in renameFile:", error);
+				console.error('Error in renameFile:', error);
 				if (
 					error instanceof Error &&
-					error.message === "File operation cancelled by user"
+					error.message === 'File operation cancelled by user'
 				) {
 					throw error;
 				}
-				console.error("Error renaming/moving file:", error);
+				console.error('Error renaming/moving file:', error);
 				throw error;
 			}
 		},
@@ -749,7 +749,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				await fileStorageService.updateFileContent(fileId, contentBuffer);
 				await refreshFileTree();
 			} catch (error) {
-				console.error("Error updating file content:", error);
+				console.error('Error updating file content:', error);
 			}
 		},
 		[refreshFileTree],

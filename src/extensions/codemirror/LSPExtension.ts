@@ -1,10 +1,11 @@
 // src/extensions/codemirror/LSPExtension.ts
-import { type CompletionContext, type CompletionResult, type CompletionSource } from "@codemirror/autocomplete";
-import { StateEffect, StateField, type Extension } from "@codemirror/state";
-import { ViewPlugin, type EditorView } from "@codemirror/view";
-import { type LSPRequest, type LSPResponse } from "../../types/lsp";
-import type { LSPPlugin } from "../../plugins/PluginInterface";
-import { fileStorageService } from "../../services/FileStorageService";
+// TODO (fabawi): Make compatible with Typst as well
+import { type CompletionContext, type CompletionResult, type CompletionSource } from '@codemirror/autocomplete';
+import { StateEffect, StateField, type Extension } from '@codemirror/state';
+import { ViewPlugin, type EditorView } from '@codemirror/view';
+import { type LSPRequest, type LSPResponse } from '../../types/lsp';
+import type { LSPPlugin } from '../../plugins/PluginInterface';
+import { fileStorageService } from '../../services/FileStorageService';
 
 export const updateLSPPlugins = StateEffect.define<LSPPlugin[]>();
 

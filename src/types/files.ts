@@ -3,7 +3,7 @@ export interface FileNode {
 	id: string;
 	name: string;
 	path: string;
-	type: "file" | "directory";
+	type: 'file' | 'directory';
 	content?: string | ArrayBuffer;
 	children?: FileNode[];
 	documentId?: string;

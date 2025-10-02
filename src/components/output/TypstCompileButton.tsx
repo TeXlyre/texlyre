@@ -1,17 +1,17 @@
 // src/components/output/TypstCompileButton.tsx
-import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import PdfWindowToggleButton from "./PopoutViewerToggleButton";
-import { useCollab } from "../../hooks/useCollab";
-import { useFileTree } from "../../hooks/useFileTree";
-import { useTypst } from "../../hooks/useTypst";
-import { useSettings } from "../../hooks/useSettings";
-import type { DocumentList } from "../../types/documents";
-import type { FileNode } from "../../types/files";
-import type { TypstOutputFormat } from "../../types/typst";
-import { isTemporaryFile } from "../../utils/fileUtils";
-import { ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon } from "../common/Icons";
+import PdfWindowToggleButton from './PopoutViewerToggleButton';
+import { useCollab } from '../../hooks/useCollab';
+import { useFileTree } from '../../hooks/useFileTree';
+import { useTypst } from '../../hooks/useTypst';
+import { useSettings } from '../../hooks/useSettings';
+import type { DocumentList } from '../../types/documents';
+import type { FileNode } from '../../types/files';
+import type { TypstOutputFormat } from '../../types/typst';
+import { isTemporaryFile } from '../../utils/fileUtils';
+import { ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon } from '../common/Icons';
 
 interface TypstCompileButtonProps {
     className?: string;
@@ -30,7 +30,7 @@ interface TypstCompileButtonProps {
 }
 
 const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
-    className = "",
+    className = '',
     selectedDocId,
     documents,
     onNavigateToLinkedFile,
@@ -44,7 +44,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     const { selectedFileId, getFile, fileTree } = useFileTree();
     const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
     const { getSetting } = useSettings();
-    const [selectedFormat, setSelectedFormat] = useState<TypstOutputFormat>("pdf");
+    const [selectedFormat, setSelectedFormat] = useState<TypstOutputFormat>('pdf');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
     const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
@@ -58,7 +58,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
         const findTypstFiles = (nodes: FileNode[]): string[] => {
             const typstFiles: string[] = [];
             for (const node of nodes) {
-                if (node.type === "file" && node.path.endsWith(".typ") && !isTemporaryFile(node.path)) {
+                if (node.type === 'file' && node.path.endsWith('.typ') && !isTemporaryFile(node.path)) {
                     typstFiles.push(node.path);
                 }
                 if (node.children) {
@@ -75,7 +75,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
             if (
                 selectedDocId &&
                 linkedFileInfo?.filePath &&
-                linkedFileInfo.filePath.endsWith(".typ")
+                linkedFileInfo.filePath.endsWith('.typ')
             ) {
                 setAutoMainFile(linkedFileInfo.filePath);
                 return;
@@ -83,7 +83,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 
             if (selectedFileId) {
                 const file = await getFile(selectedFileId);
-                if (file?.path.endsWith(".typ")) {
+                if (file?.path.endsWith('.typ')) {
                     setAutoMainFile(file.path);
                     return;
                 }
@@ -106,36 +106,36 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
             }
         };
 
-        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener('mousedown', handleClickOutside);
         return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
 
     const shouldNavigateToMain = async (mainFilePath: string): Promise<boolean> => {
-        const navigationSetting = getSetting("typst-auto-navigate-to-main")?.value as string ?? "conditional";
+        const navigationSetting = getSetting('typst-auto-navigate-to-main')?.value as string ?? 'conditional';
 
-        if (navigationSetting === "never") {
+        if (navigationSetting === 'never') {
             return false;
         }
 
-        if (navigationSetting === "always") {
+        if (navigationSetting === 'always') {
             return true;
         }
 
-        if (navigationSetting === "conditional") {
+        if (navigationSetting === 'conditional') {
             if (selectedFileId) {
                 try {
                     const currentFile = await getFile(selectedFileId);
-                    if (currentFile?.path.endsWith(".typ")) {
+                    if (currentFile?.path.endsWith('.typ')) {
                         return false;
                     }
                 } catch (error) {
-                    console.warn("Error getting current file:", error);
+                    console.warn('Error getting current file:', error);
                 }
             }
 
-            if (selectedDocId && linkedFileInfo?.fileName?.endsWith(".typ")) {
+            if (selectedDocId && linkedFileInfo?.fileName?.endsWith('.typ')) {
                 return false;
             }
 
@@ -160,7 +160,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                     onNavigateToLinkedFile();
                 } else {
                     document.dispatchEvent(
-                        new CustomEvent("navigate-to-compiled-file", {
+                        new CustomEvent('navigate-to-compiled-file', {
                             detail: {
                                 filePath: effectiveMainFile,
                             },
@@ -177,7 +177,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
         try {
             clearCache();
         } catch (error) {
-            console.error("Failed to clear cache:", error);
+            console.error('Failed to clear cache:', error);
         }
     };
 
@@ -195,7 +195,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                 onNavigateToLinkedFile();
             } else {
                 document.dispatchEvent(
-                    new CustomEvent("navigate-to-compiled-file", {
+                    new CustomEvent('navigate-to-compiled-file', {
                         detail: {
                             filePath: effectiveMainFile,
                         },
@@ -208,7 +208,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
             clearCache();
             await compileDocument(effectiveMainFile, selectedFormat);
         } catch (error) {
-            console.error("Failed to compile with cache clear:", error);
+            console.error('Failed to compile with cache clear:', error);
         }
     };
 
@@ -222,12 +222,12 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
             if (!changeDoc) return;
             changeDoc((d) => {
                 if (!d.projectMetadata) {
-                    d.projectMetadata = { name: "", description: "" };
+                    d.projectMetadata = { name: '', description: '' };
                 }
-                d.projectMetadata.mainFile = filePath === "auto" ? undefined : filePath;
+                d.projectMetadata.mainFile = filePath === 'auto' ? undefined : filePath;
             });
         } else {
-            setUserSelectedMainFile(filePath === "auto" ? undefined : filePath);
+            setUserSelectedMainFile(filePath === 'auto' ? undefined : filePath);
         }
     };
 
@@ -236,7 +236,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 
         changeDoc((d) => {
             if (!d.projectMetadata) {
-                d.projectMetadata = { name: "", description: "" };
+                d.projectMetadata = { name: '', description: '' };
             }
             if (checked) {
                 d.projectMetadata.mainFile = userSelectedMainFile || autoMainFile;
@@ -247,12 +247,12 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     };
 
     const getFileName = (path?: string) => {
-        if (!path) return "No .typ file";
-        return path.split("/").pop() || path;
+        if (!path) return 'No .typ file';
+        return path.split('/').pop() || path;
     };
 
     const getDisplayName = (path?: string) => {
-        if (!path) return "No .typ file";
+        if (!path) return 'No .typ file';
 
         if (selectedDocId && linkedFileInfo?.filePath === path && documents) {
             const doc = documents.find((d) => d.id === selectedDocId);
@@ -270,13 +270,13 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
         <div className={`typst-compile-buttons ${className}`} ref={dropdownRef}>
             <div className="compile-button-group">
                 <button
-                    className={`typst-button compile-button ${isCompiling ? "compiling" : ""}`}
+                    className={`typst-button compile-button ${isCompiling ? 'compiling' : ''}`}
                     onClick={handleCompileOrStop}
                     disabled={isDisabled}
                     title={
                         isCompiling
-                            ? "Stop Compilation"
-                            : "Compile Typst Document"
+                            ? 'Stop Compilation'
+                            : 'Compile Typst Document'
                     }
                 >
                     {isCompiling ? <StopIcon /> : <PlayIcon />}
@@ -284,7 +284,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 
                 <PdfWindowToggleButton
                     className="pdf-window-button"
-                    projectId={docUrl?.startsWith("yjs:") ? docUrl.slice(4) : docUrl || 'unknown'}
+                    projectId={docUrl?.startsWith('yjs:') ? docUrl.slice(4) : docUrl || 'unknown'}
                     title="Open PDF in new window"
                 />
 
@@ -311,7 +311,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                         <div className="main-file-selector">
                             <div className="main-file-selector-label">Select main file:</div>
                             <select
-                                value={projectMainFile || userSelectedMainFile || "auto"}
+                                value={projectMainFile || userSelectedMainFile || 'auto'}
                                 onChange={(e) => handleMainFileChange(e.target.value)}
                                 className="main-file-select"
                                 disabled={isCompiling}

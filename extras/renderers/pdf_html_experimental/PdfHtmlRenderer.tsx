@@ -1,9 +1,9 @@
 // extras/renderers/pdf_html_experimental/PdfHtmlRenderer.tsx
-import type React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useSettings } from "../../../src/hooks/useSettings";
-import type { RendererProps } from "../../../src/plugins/PluginInterface";
-import "./styles.css";
+import type React from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSettings } from '../../../src/hooks/useSettings';
+import type { RendererProps } from '../../../src/plugins/PluginInterface';
+import './styles.css';
 
 const PdfHtmlRenderer: React.FC<RendererProps> = ({
 	content,
@@ -12,7 +12,7 @@ const PdfHtmlRenderer: React.FC<RendererProps> = ({
 }) => {
 	const { getSetting } = useSettings();
 	const pdfHtmlRendererEnable =
-		(getSetting("pdfhtml-renderer-enable")?.value as boolean) ?? true;
+		(getSetting('pdfhtml-renderer-enable')?.value as boolean) ?? true;
 
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -197,7 +197,7 @@ const PdfHtmlRenderer: React.FC<RendererProps> = ({
       eventBus: null,
       findController: null,
       customDownload: ${!!onDownload},
-      fileName: '${fileName || "document.pdf"}',
+      fileName: '${fileName || 'document.pdf'}',
       
       async initialize() {
         try {
@@ -446,7 +446,7 @@ const PdfHtmlRenderer: React.FC<RendererProps> = ({
 
 	useEffect(() => {
 		if (!pdfHtmlRendererEnable) {
-			setError("Enhanced PDF renderer is disabled");
+			setError('Enhanced PDF renderer is disabled');
 			setIsLoading(false);
 			return;
 		}
@@ -456,7 +456,7 @@ const PdfHtmlRenderer: React.FC<RendererProps> = ({
 			!(content instanceof ArrayBuffer) ||
 			content.byteLength === 0
 		) {
-			setError("Invalid or empty PDF content");
+			setError('Invalid or empty PDF content');
 			setIsLoading(false);
 			return;
 		}
@@ -467,24 +467,24 @@ const PdfHtmlRenderer: React.FC<RendererProps> = ({
 			cleanup();
 
 			try {
-				console.log("Creating PDF blob...", { size: content.byteLength });
+				console.log('Creating PDF blob...', { size: content.byteLength });
 
-				const pdfBlob = new Blob([content], { type: "application/pdf" });
+				const pdfBlob = new Blob([content], { type: 'application/pdf' });
 				const pdfBlobUrl = URL.createObjectURL(pdfBlob);
 				contentBlobRef.current = pdfBlobUrl;
 
-				console.log("Creating viewer HTML...");
+				console.log('Creating viewer HTML...');
 				const viewerHTML = createViewerHTML(pdfBlobUrl);
-				const viewerBlob = new Blob([viewerHTML], { type: "text/html" });
+				const viewerBlob = new Blob([viewerHTML], { type: 'text/html' });
 				const viewerUrl = URL.createObjectURL(viewerBlob);
 				viewerBlobRef.current = viewerUrl;
 
 				if (isMounted && iframeRef.current) {
-					console.log("Loading viewer iframe...");
+					console.log('Loading viewer iframe...');
 					iframeRef.current.src = viewerUrl;
 				}
 			} catch (err) {
-				console.error("PdfHtmlRenderer: Error creating viewer:", err);
+				console.error('PdfHtmlRenderer: Error creating viewer:', err);
 				if (isMounted) {
 					setError(`Failed to load PDF: ${err.message || err}`);
 					setIsLoading(false);
@@ -501,31 +501,31 @@ const PdfHtmlRenderer: React.FC<RendererProps> = ({
 	}, [content, pdfHtmlRendererEnable, cleanup, createViewerHTML]);
 
 	const handleIframeLoad = useCallback(() => {
-		console.log("Iframe loaded");
+		console.log('Iframe loaded');
 		setIsLoading(false);
 	}, []);
 
 	const handleIframeError = useCallback(() => {
-		console.error("Iframe failed to load");
-		setError("Failed to load PDF viewer");
+		console.error('Iframe failed to load');
+		setError('Failed to load PDF viewer');
 		setIsLoading(false);
 	}, []);
 
 	useEffect(() => {
 		const handleMessage = (event: MessageEvent) => {
-			if (event.data?.type === "DOWNLOAD_REQUEST" && onDownload && fileName) {
+			if (event.data?.type === 'DOWNLOAD_REQUEST' && onDownload && fileName) {
 				onDownload(fileName);
-			} else if (event.data?.type === "PDF_LOADED") {
+			} else if (event.data?.type === 'PDF_LOADED') {
 				setIsLoading(false);
 				setError(null);
-			} else if (event.data?.type === "PDF_ERROR") {
-				setError(event.data.message || "Failed to load PDF");
+			} else if (event.data?.type === 'PDF_ERROR') {
+				setError(event.data.message || 'Failed to load PDF');
 				setIsLoading(false);
 			}
 		};
 
-		window.addEventListener("message", handleMessage);
-		return () => window.removeEventListener("message", handleMessage);
+		window.addEventListener('message', handleMessage);
+		return () => window.removeEventListener('message', handleMessage);
 	}, [onDownload, fileName]);
 
 	if (!pdfHtmlRendererEnable) {

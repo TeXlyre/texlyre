@@ -6,28 +6,28 @@ import React, {
 	type ReactNode,
 	useCallback,
 	useRef,
-} from "react";
-import { useSettings } from "../hooks/useSettings";
-import { fileSystemBackupService } from "../services/FileSystemBackupService";
-import type { ImportableProject } from "../services/ProjectImportService";
+} from 'react';
+import { useSettings } from '../hooks/useSettings';
+import { fileSystemBackupService } from '../services/FileSystemBackupService';
+import type { ImportableProject } from '../services/ProjectImportService';
 
 interface BackupStatus {
 	isConnected: boolean;
 	isEnabled: boolean;
 	lastSync: number | null;
-	status: "idle" | "syncing" | "error";
+	status: 'idle' | 'syncing' | 'error';
 	error?: string;
 }
 
 interface BackupActivity {
 	id: string;
 	type:
-		| "backup_start"
-		| "backup_complete"
-		| "backup_error"
-		| "import_start"
-		| "import_complete"
-		| "import_error";
+		| 'backup_start'
+		| 'backup_complete'
+		| 'backup_error'
+		| 'import_start'
+		| 'import_complete'
+		| 'import_error';
 	message: string;
 	timestamp: number;
 	data?: any;
@@ -58,7 +58,7 @@ export const FileSystemBackupContext =
 			isConnected: false,
 			isEnabled: false,
 			lastSync: null,
-			status: "idle",
+			status: 'idle',
 		},
 		activities: [],
 		discoveredProjects: [],
@@ -88,7 +88,7 @@ export const FileSystemBackupProvider: React.FC<
 		isConnected: false,
 		isEnabled: false,
 		lastSync: null,
-		status: "idle",
+		status: 'idle',
 	});
 	const [activities, setActivities] = useState<BackupActivity[]>([]);
 	const [discoveredProjects, setDiscoveredProjects] = useState<
@@ -201,7 +201,7 @@ export const FileSystemBackupProvider: React.FC<
 					isEnabled: prevStatus.isEnabled || tempEnabled,
 				}));
 				const currentAutoBackupSetting =
-					(getSetting("file-system-backup-auto-backup")?.value as boolean) ??
+					(getSetting('file-system-backup-auto-backup')?.value as boolean) ??
 					false;
 				setShouldShowAutoBackupModal(
 					currentAutoBackupSetting && !newStatus.isConnected,
@@ -236,11 +236,11 @@ export const FileSystemBackupProvider: React.FC<
 		settingsRegistered.current = true;
 
 		const initialBackupEnabled =
-			(getSetting("file-system-backup-enable")?.value as boolean) ?? false;
+			(getSetting('file-system-backup-enable')?.value as boolean) ?? false;
 		const initialAutoBackup =
-			(getSetting("file-system-backup-auto-backup")?.value as boolean) ?? false;
+			(getSetting('file-system-backup-auto-backup')?.value as boolean) ?? false;
 		const initialAutoSync =
-			(getSetting("file-system-backup-auto-sync")?.value as boolean) ?? false;
+			(getSetting('file-system-backup-auto-sync')?.value as boolean) ?? false;
 
 		setBackupEnabledSetting(initialBackupEnabled);
 		setAutoBackupOnStartup(initialAutoBackup);
@@ -253,13 +253,13 @@ export const FileSystemBackupProvider: React.FC<
 		}
 
 		registerSetting({
-			id: "file-system-backup-enable",
-			category: "Backup",
-			subcategory: "File System",
-			type: "checkbox",
-			label: "Enable file system backup",
+			id: 'file-system-backup-enable',
+			category: 'Backup',
+			subcategory: 'File System',
+			type: 'checkbox',
+			label: 'Enable file system backup',
 			description:
-				"Sync your data to a local folder for backup and sharing via cloud storage",
+				'Sync your data to a local folder for backup and sharing via cloud storage',
 			defaultValue: false,
 			onChange: (value) => {
 				const enabled = value as boolean;
@@ -267,20 +267,20 @@ export const FileSystemBackupProvider: React.FC<
 				setTempEnabled(enabled);
 				setEnabled(
 					enabled,
-					(getSetting("file-system-backup-auto-backup")?.value as boolean) ??
+					(getSetting('file-system-backup-auto-backup')?.value as boolean) ??
 						false,
 				);
 			},
 		});
 
 		registerSetting({
-			id: "file-system-backup-auto-backup",
-			category: "Backup",
-			subcategory: "File System",
-			type: "checkbox",
-			label: "Auto-backup connection on startup",
+			id: 'file-system-backup-auto-backup',
+			category: 'Backup',
+			subcategory: 'File System',
+			type: 'checkbox',
+			label: 'Auto-backup connection on startup',
 			description:
-				"Automatically start connection to file system when the application loads (requires folder authorization)",
+				'Automatically start connection to file system when the application loads (requires folder authorization)',
 			defaultValue: false,
 			onChange: (value) => {
 				const autoBackup = value as boolean;

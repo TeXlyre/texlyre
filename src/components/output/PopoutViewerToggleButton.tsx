@@ -1,8 +1,8 @@
 // src/components/output/PdfWindowToggleButton.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
-import { pdfWindowService } from "../../services/PdfWindowService";
-import { ExternalLinkIcon } from "../common/Icons";
+import { pdfWindowService } from '../../services/PdfWindowService';
+import { ExternalLinkIcon } from '../common/Icons';
 
 interface PdfWindowToggleButtonProps {
 	className?: string;
@@ -11,9 +11,9 @@ interface PdfWindowToggleButtonProps {
 }
 
 const PdfWindowToggleButton: React.FC<PdfWindowToggleButtonProps> = ({
-	className = "",
+	className = '',
 	projectId,
-	title = "Open PDF in new window"
+	title = 'Open PDF in new window'
 }) => {
 	const [isWindowOpen, setIsWindowOpen] = useState(false);
 

@@ -1,12 +1,12 @@
 // src/services/EditorLoader.ts
-import { autocompletion, completionKeymap, type CompletionSource } from "@codemirror/autocomplete";
+import { autocompletion, completionKeymap, type CompletionSource } from '@codemirror/autocomplete';
 import {
 	defaultKeymap,
 	history,
 	historyKeymap,
 	indentWithTab,
-} from "@codemirror/commands";
-import { markdown } from "@codemirror/lang-markdown";
+} from '@codemirror/commands';
+import { markdown } from '@codemirror/lang-markdown';
 import {
 	bracketMatching,
 	defaultHighlightStyle,
@@ -14,37 +14,37 @@ import {
 	foldKeymap,
 	indentOnInput,
 	syntaxHighlighting,
-} from "@codemirror/language";
+} from '@codemirror/language';
 import {
 	highlightSelectionMatches,
 	search,
 	searchKeymap,
-} from "@codemirror/search";
-import { EditorState, type Extension } from "@codemirror/state";
-import { oneDark } from "@codemirror/theme-one-dark";
-import { type ViewUpdate, keymap } from "@codemirror/view";
-import { lineNumbers } from "@codemirror/view";
-import { EditorView } from "codemirror";
-import { vim } from "@replit/codemirror-vim";
-import { bibtex, bibtexCompletionSource } from "codemirror-lang-bib";
-import { latex, latexCompletionSource } from "codemirror-lang-latex";
-import { typst } from "codemirror-lang-typst";
-import { useEffect, useRef, useState } from "react";
-import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
-import type { WebrtcProvider } from "y-webrtc";
-import type * as Y from "yjs";
+} from '@codemirror/search';
+import { EditorState, type Extension } from '@codemirror/state';
+import { oneDark } from '@codemirror/theme-one-dark';
+import { type ViewUpdate, keymap } from '@codemirror/view';
+import { lineNumbers } from '@codemirror/view';
+import { EditorView } from 'codemirror';
+import { vim } from '@replit/codemirror-vim';
+import { bibtex, bibtexCompletionSource } from 'codemirror-lang-bib';
+import { latex, latexCompletionSource } from 'codemirror-lang-latex';
+import { typst } from 'codemirror-lang-typst';
+import { useEffect, useRef, useState } from 'react';
+import { yCollab, yUndoManagerKeymap } from 'y-codemirror.next';
+import type { WebrtcProvider } from 'y-webrtc';
+import type * as Y from 'yjs';
 
-import { pluginRegistry } from "../plugins/PluginRegistry";
-import { commentSystemExtension } from "../extensions/codemirror/CommentExtension";
-import { createFilePathAutocompleteExtension, setCurrentFilePath, refreshBibliographyCache } from "../extensions/codemirror/PathAndBibAutocompleteExtension.ts";
-import { createLSPExtension, updateLSPPluginsInView, setCurrentFilePathInLSP } from "../extensions/codemirror/LSPExtension";
-import { useAuth } from "../hooks/useAuth";
-import { useEditor } from "../hooks/useEditor";
-import { autoSaveManager } from "../utils/autoSaveUtils";
-import { fileCommentProcessor } from "../utils/fileCommentProcessor.ts";
-import { collabService } from "./CollabService";
-import { fileStorageService } from "./FileStorageService";
-import { filePathCacheService } from "./FilePathCacheService";
+import { pluginRegistry } from '../plugins/PluginRegistry';
+import { commentSystemExtension } from '../extensions/codemirror/CommentExtension';
+import { createFilePathAutocompleteExtension, setCurrentFilePath, refreshBibliographyCache } from '../extensions/codemirror/PathAndBibAutocompleteExtension.ts';
+import { createLSPExtension, updateLSPPluginsInView, setCurrentFilePathInLSP } from '../extensions/codemirror/LSPExtension';
+import { useAuth } from '../hooks/useAuth';
+import { useEditor } from '../hooks/useEditor';
+import { autoSaveManager } from '../utils/autoSaveUtils';
+import { fileCommentProcessor } from '../utils/fileCommentProcessor.ts';
+import { collabService } from './CollabService';
+import { fileStorageService } from './FileStorageService';
+import { filePathCacheService } from './FilePathCacheService';
 
 export const EditorLoader = (
 	editorRef: React.RefObject<HTMLDivElement>,
@@ -85,7 +85,7 @@ export const EditorLoader = (
 	const [provider, setProvider] = useState<WebrtcProvider | null>(null);
 	const hasEmittedReadyRef = useRef<boolean>(false);
 
-	const projectId = docUrl.startsWith("yjs:") ? docUrl.slice(4) : docUrl;
+	const projectId = docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl;
 
 	useEffect(() => {
 		filePathCacheService.initialize();
@@ -110,7 +110,7 @@ export const EditorLoader = (
 			setShowSaveIndicator(true);
 			setTimeout(() => setShowSaveIndicator(false), 1500);
 		} catch (error) {
-			console.error("Error saving file:", error);
+			console.error('Error saving file:', error);
 		}
 	};
 
@@ -133,7 +133,7 @@ export const EditorLoader = (
 				setTimeout(() => setShowSaveIndicator(false), 1500);
 			}
 		} catch (error) {
-			console.error("Error saving document to linked file:", error);
+			console.error('Error saving document to linked file:', error);
 		}
 	};
 
@@ -142,22 +142,22 @@ export const EditorLoader = (
 			return [];
 		}
 		return EditorView.contentAttributes.of({
-			spellcheck: "true",
-			contenteditable: "true"
+			spellcheck: 'true',
+			contenteditable: 'true'
 		});
 	};
 
 	const getBasicSetupExtensions = (): Extension[] => {
 		const extensions = [
 			EditorView.theme({
-				"&": {
-					fontSize: "var(--editor-font-size, 14px)",
+				'&': {
+					fontSize: 'var(--editor-font-size, 14px)',
 				},
-				".cm-scroller": {
-					fontSize: "var(--editor-font-size, 14px)",
+				'.cm-scroller': {
+					fontSize: 'var(--editor-font-size, 14px)',
 				},
-				".cm-content": {
-					fontFamily: "var(--editor-font-family, monospace)",
+				'.cm-content': {
+					fontFamily: 'var(--editor-font-family, monospace)',
 				},
 			}),
 			EditorView.lineWrapping,
@@ -181,13 +181,13 @@ export const EditorLoader = (
 
 		if (getLineNumbersEnabled()) extensions.push(lineNumbers());
 		if (getSyntaxHighlightingEnabled()) {
-			const highlightTheme = editorSettings.highlightTheme || "auto";
+			const highlightTheme = editorSettings.highlightTheme || 'auto';
 
 			let useDarkTheme = false;
-			if (highlightTheme === "auto") {
+			if (highlightTheme === 'auto') {
 				useDarkTheme =
-					document.documentElement.getAttribute("data-theme") === "dark";
-			} else if (highlightTheme === "dark") {
+					document.documentElement.getAttribute('data-theme') === 'dark';
+			} else if (highlightTheme === 'dark') {
 				useDarkTheme = true;
 			}
 
@@ -214,36 +214,36 @@ export const EditorLoader = (
 		}
 
 		if (!fileName) {
-			if (content?.includes("@article") || content?.includes("@book") || content?.includes("@inproceedings")) {
+			if (content?.includes('@article') || content?.includes('@book') || content?.includes('@inproceedings')) {
 				return [bibtex({ autoCloseBrackets: false, enableAutocomplete: false })];
 			}
 			// Check for Typst content patterns
-			if (content?.includes("= ") || content?.includes("== ") || content?.includes("#import") || content?.includes("#let")) {
+			if (content?.includes('= ') || content?.includes('== ') || content?.includes('#import') || content?.includes('#let')) {
 				return [typst()];
 			}
 			return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
 		}
 
-		const ext = fileName.split(".").pop()?.toLowerCase();
+		const ext = fileName.split('.').pop()?.toLowerCase();
 
 		switch (ext) {
-			case "tex":
-			case "latex":
+			case 'tex':
+			case 'latex':
 				return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
-			case "typ":
-			case "typst":
+			case 'typ':
+			case 'typst':
 				return [typst()];
-			case "bib":
-			case "bibtex":
+			case 'bib':
+			case 'bibtex':
 				return [bibtex({ autoCloseBrackets: false, enableAutocomplete: false })];
-			case "md":
-			case "markdown":
+			case 'md':
+			case 'markdown':
 				return [markdown()];
 			default:
-				if (content?.includes("@article") || content?.includes("@book") || content?.includes("@inproceedings")) {
+				if (content?.includes('@article') || content?.includes('@book') || content?.includes('@inproceedings')) {
 					return [bibtex({ autoCloseBrackets: false, enableAutocomplete: false })];
 				}
-				if (content?.includes("= ") || content?.includes("== ") || content?.includes("#import") || content?.includes("#let")) {
+				if (content?.includes('= ') || content?.includes('== ') || content?.includes('#import') || content?.includes('#let')) {
 					return [typst()];
 				}
 				return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
@@ -294,7 +294,7 @@ export const EditorLoader = (
 		setYDoc(doc);
 		setProvider(provider);
 
-		const ytext = doc.getText("codemirror");
+		const ytext = doc.getText('codemirror');
 		ytextRef.current = ytext;
 
 		if (user) {
@@ -304,7 +304,7 @@ export const EditorLoader = (
 				name: user.name,
 				color: user.color,
 				colorLight: user.colorLight,
-				passwordHash: "",
+				passwordHash: '',
 				createdAt: 0,
 			});
 		}
@@ -467,7 +467,7 @@ export const EditorLoader = (
 		if (enableComments && !isViewOnly) {
 			const commentKeymap = keymap.of([
 				{
-					key: "Alt-c",
+					key: 'Alt-c',
 					run: (view) => {
 						if (isViewOnly) return false;
 						const selection = view.state.selection;
@@ -475,13 +475,13 @@ export const EditorLoader = (
 						if (primaryRange.from !== primaryRange.to) {
 							try {
 								document.dispatchEvent(
-									new CustomEvent("show-comment-modal", {
+									new CustomEvent('show-comment-modal', {
 										detail: { selection: primaryRange },
 									})
 								);
 								return true;
 							} catch (error) {
-								console.error("Error in commentKeymap:", error);
+								console.error('Error in commentKeymap:', error);
 							}
 						}
 						return false;
@@ -495,7 +495,7 @@ export const EditorLoader = (
 
 		const saveKeymap = keymap.of([
 			{
-				key: "Ctrl-s",
+				key: 'Ctrl-s',
 				run: (view) => {
 					if (isViewOnly) {
 						setShowSaveIndicator(true);
@@ -557,12 +557,12 @@ export const EditorLoader = (
 						}
 					}
 				};
-				view.dom.addEventListener("input", handleInput);
-				return () => view.dom.removeEventListener("input", handleInput);
+				view.dom.addEventListener('input', handleInput);
+				return () => view.dom.removeEventListener('input', handleInput);
 			}
 
 		} catch (error) {
-			console.error("Error creating editor view:", error);
+			console.error('Error creating editor view:', error);
 		}
 
 		return () => {
@@ -619,16 +619,16 @@ export const EditorLoader = (
 				const cleanedText =
 					fileCommentProcessor.processTextSelection(selectedText);
 
-				event.clipboardData?.setData("text/plain", cleanedText);
+				event.clipboardData?.setData('text/plain', cleanedText);
 				event.preventDefault();
 			}
 		};
 
 		const editorElement = editorRef.current;
-		editorElement.addEventListener("copy", handleCopy);
+		editorElement.addEventListener('copy', handleCopy);
 
 		return () => {
-			editorElement.removeEventListener("copy", handleCopy);
+			editorElement.removeEventListener('copy', handleCopy);
 		};
 	}, [editorRef, viewRef]);
 
@@ -661,7 +661,7 @@ export const EditorLoader = (
 				autoSaveKey,
 				() => {
 					const currentEditorContent =
-						viewRef.current?.state?.doc?.toString() || "";
+						viewRef.current?.state?.doc?.toString() || '';
 					return currentEditorContent;
 				},
 				{
@@ -682,7 +682,7 @@ export const EditorLoader = (
 						setTimeout(() => setShowSaveIndicator(false), 1500);
 					},
 					onError: (error) => {
-						console.error("Auto-save failed:", error);
+						console.error('Auto-save failed:', error);
 					},
 				},
 			);
@@ -723,7 +723,7 @@ export const EditorLoader = (
 				);
 				if (openTagStart === -1) return;
 
-				const openTagEnd = currentContent.indexOf("###>", openTagStart) + 4;
+				const openTagEnd = currentContent.indexOf('###>', openTagStart) + 4;
 
 				const closeTagStart = currentContent.indexOf(
 					`</### comment id: ${commentId}`,
@@ -731,7 +731,7 @@ export const EditorLoader = (
 				);
 				if (closeTagStart === -1) return;
 
-				const closeTagEnd = currentContent.indexOf("###>", closeTagStart) + 4;
+				const closeTagEnd = currentContent.indexOf('###>', closeTagStart) + 4;
 
 				const commentedText = currentContent.slice(openTagEnd, closeTagStart);
 
@@ -756,7 +756,7 @@ export const EditorLoader = (
 					}
 				}, 10);
 			} catch (error) {
-				console.error("Error processing comment response:", error);
+				console.error('Error processing comment response:', error);
 			}
 		};
 
@@ -784,7 +784,7 @@ export const EditorLoader = (
 					}
 				}, 50);
 			} catch (error) {
-				console.error("Error processing comment deletion:", error);
+				console.error('Error processing comment deletion:', error);
 			}
 		};
 
@@ -821,7 +821,7 @@ export const EditorLoader = (
 					}
 				}, 50);
 			} catch (error) {
-				console.error("Error processing comment update:", error);
+				console.error('Error processing comment update:', error);
 			}
 		};
 
@@ -862,13 +862,13 @@ export const EditorLoader = (
 
 					view.dispatch({
 						selection: { anchor: linePos, head: linePos },
-						effects: [EditorView.scrollIntoView(linePos, { y: "center" })],
+						effects: [EditorView.scrollIntoView(linePos, { y: 'center' })],
 					});
 
 					view.focus();
 				}
 			} catch (error) {
-				console.error("Error in Codemirror line navigation:", error);
+				console.error('Error in Codemirror line navigation:', error);
 			}
 		};
 
@@ -908,13 +908,13 @@ export const EditorLoader = (
 
 					view.dispatch({
 						selection: { anchor: validPosition, head: validPosition },
-						effects: [EditorView.scrollIntoView(validPosition, { y: "center" })],
+						effects: [EditorView.scrollIntoView(validPosition, { y: 'center' })],
 					});
 
 					view.focus();
 				}
 			} catch (error) {
-				console.error("Error in Codemirror character navigation:", error);
+				console.error('Error in Codemirror character navigation:', error);
 			}
 		};
 
@@ -948,27 +948,27 @@ export const EditorLoader = (
 		};
 
 		document.addEventListener(
-			"comment-response-added",
+			'comment-response-added',
 			handleCommentResponseAdded,
 		);
-		document.addEventListener("comment-delete", handleCommentDelete);
-		document.addEventListener("comment-update", handleCommentUpdate);
-		document.addEventListener("codemirror-goto-line", handleGotoLine);
-		document.addEventListener("codemirror-goto-char", handleGotoChar);
-		document.addEventListener("file-saved", handleFileSaved);
-		document.addEventListener("trigger-save", handleTriggerSave);
+		document.addEventListener('comment-delete', handleCommentDelete);
+		document.addEventListener('comment-update', handleCommentUpdate);
+		document.addEventListener('codemirror-goto-line', handleGotoLine);
+		document.addEventListener('codemirror-goto-char', handleGotoChar);
+		document.addEventListener('file-saved', handleFileSaved);
+		document.addEventListener('trigger-save', handleTriggerSave);
 
 		return () => {
 			document.removeEventListener(
-				"comment-response-added",
+				'comment-response-added',
 				handleCommentResponseAdded,
 			);
-			document.removeEventListener("comment-delete", handleCommentDelete);
-			document.removeEventListener("comment-update", handleCommentUpdate);
-			document.removeEventListener("codemirror-goto-line", handleGotoLine);
-			document.removeEventListener("codemirror-goto-char", handleGotoChar);
-			document.removeEventListener("file-saved", handleFileSaved);
-			document.removeEventListener("trigger-save", handleTriggerSave);
+			document.removeEventListener('comment-delete', handleCommentDelete);
+			document.removeEventListener('comment-update', handleCommentUpdate);
+			document.removeEventListener('codemirror-goto-line', handleGotoLine);
+			document.removeEventListener('codemirror-goto-char', handleGotoChar);
+			document.removeEventListener('file-saved', handleFileSaved);
+			document.removeEventListener('trigger-save', handleTriggerSave);
 		};
 	}, [
 		viewRef,
@@ -984,11 +984,11 @@ export const EditorLoader = (
 		if (!ytextRef.current || !isDocumentSelected || isEditingFile) return;
 
 		const yTextInstance = ytextRef.current;
-		let hasEmittedReady = false;
+		const hasEmittedReady = false;
 
 		const observer = () => {
 			if (isUpdatingRef.current) return;
-			const content = yTextInstance.toString() || "";
+			const content = yTextInstance.toString() || '';
 			isUpdatingRef.current = true;
 			try {
 				onUpdateContent(content);

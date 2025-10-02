@@ -1,23 +1,23 @@
 // src/components/comments/CommentToggleButton.tsx
-import type React from "react";
+import type React from 'react';
 
-import { useComments } from "../../hooks/useComments";
-import { CommentIcon } from "../common/Icons";
+import { useComments } from '../../hooks/useComments';
+import { CommentIcon } from '../common/Icons';
 
 interface CommentToggleButtonProps {
 	className?: string;
 }
 
 const CommentToggleButton: React.FC<CommentToggleButtonProps> = ({
-	className = "",
+	className = '',
 }) => {
 	const { toggleComments, showComments, comments } = useComments();
 
 	return (
 		<button
-			className={`control-button ${className} ${showComments ? "active" : ""}`}
+			className={`control-button ${className} ${showComments ? 'active' : ''}`}
 			onClick={toggleComments}
-			title={`${showComments ? "Hide" : "Show"} comments${comments.length > 0 ? ` (${comments.length})` : ""}`}
+			title={`${showComments ? 'Hide' : 'Show'} comments${comments.length > 0 ? ` (${comments.length})` : ''}`}
 		>
 			<div className="comment-button-container">
 				<CommentIcon />

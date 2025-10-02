@@ -1,18 +1,18 @@
 /// <reference lib="webworker" />
 export { };
-import { createTypstCompiler } from "@myriaddreamin/typst.ts/compiler";
-import { createTypstRenderer } from "@myriaddreamin/typst.ts/renderer";
-import { TypstSnippet } from "@myriaddreamin/typst.ts/dist/esm/contrib/snippet.mjs";
+import { createTypstCompiler } from '@myriaddreamin/typst.ts/compiler';
+import { createTypstRenderer } from '@myriaddreamin/typst.ts/renderer';
+import { TypstSnippet } from '@myriaddreamin/typst.ts/dist/esm/contrib/snippet.mjs';
 
 const BASE_PATH = __BASE_PATH__;
 
 declare const self: DedicatedWorkerGlobalScope;
 
-type OutputFormat = "pdf" | "svg" | "canvas";
+type OutputFormat = 'pdf' | 'svg' | 'canvas';
 
 type CompileMessage = {
     id: string;
-    type: "compile";
+    type: 'compile';
     payload: {
         mainFilePath: string;
         sources: Record<string, string | Uint8Array>;
@@ -22,14 +22,14 @@ type CompileMessage = {
 
 type PingMessage = {
     id: string;
-    type: "ping";
+    type: 'ping';
 };
 
 type InboundMessage = CompileMessage | PingMessage;
 
 type DoneResponse = {
     id: string;
-    type: "done";
+    type: 'done';
     result: {
         format: OutputFormat;
         output: Uint8Array | string;
@@ -39,12 +39,12 @@ type DoneResponse = {
 
 type PongResponse = {
     id: string;
-    type: "pong";
+    type: 'pong';
 };
 
 type ErrorResponse = {
     id: string;
-    type: "error";
+    type: 'error';
     error: string;
 };
 
@@ -139,12 +139,12 @@ async function ensureInit() {
     initialized = true;
 }
 
-self.addEventListener("message", async (e: MessageEvent<InboundMessage>) => {
+self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
     const data = e.data;
     const { id, type } = data;
     try {
-        if (type === "ping") {
-            const resp: PongResponse = { id, type: "pong" };
+        if (type === 'ping') {
+            const resp: PongResponse = { id, type: 'pong' };
             self.postMessage(resp);
             return;
         }
@@ -154,29 +154,29 @@ self.addEventListener("message", async (e: MessageEvent<InboundMessage>) => {
         const { mainFilePath, sources, format } = payload;
         compiler.resetShadow();
         for (const [path, content] of Object.entries(sources)) {
-            const absolutePath = path.startsWith("/") ? path : `/${path}`;
-            if (typeof content === "string") {
+            const absolutePath = path.startsWith('/') ? path : `/${path}`;
+            if (typeof content === 'string') {
                 compiler.addSource(absolutePath, content);
             } else {
                 compiler.mapShadow(absolutePath, content);
             }
         }
         const absoluteMainPath =
-            mainFilePath.startsWith("/") ? mainFilePath : `/${mainFilePath}`;
+            mainFilePath.startsWith('/') ? mainFilePath : `/${mainFilePath}`;
         let output: Uint8Array | string;
         let diagnostics: any[] = [];
 
-        if (format === "pdf") {
+        if (format === 'pdf') {
             const compileResult = await compiler.compile({
                 mainFilePath: absoluteMainPath,
-                format: "pdf",
+                format: 'pdf',
             });
             output = compileResult.result as Uint8Array;
             diagnostics = compileResult.diagnostics || [];
         } else {
             const compileResult = await compiler.compile({
                 mainFilePath: absoluteMainPath,
-                format: "vector",
+                format: 'vector',
             });
             diagnostics = compileResult.diagnostics || [];
             output = await renderer.renderSvg({
@@ -188,16 +188,16 @@ self.addEventListener("message", async (e: MessageEvent<InboundMessage>) => {
             output instanceof Uint8Array ? [output.buffer as ArrayBuffer] : [];
         const resp: DoneResponse = {
             id,
-            type: "done",
+            type: 'done',
             result: { format, output, diagnostics },
         };
         self.postMessage(resp, transferList);
     } catch (err: unknown) {
         const message =
-            typeof err === "object" && err && "message" in err
+            typeof err === 'object' && err && 'message' in err
                 ? String((err as any).message)
                 : String(err);
-        const resp: ErrorResponse = { id, type: "error", error: message };
+        const resp: ErrorResponse = { id, type: 'error', error: message };
         self.postMessage(resp);
     }
 });

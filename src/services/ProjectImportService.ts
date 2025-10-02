@@ -1,13 +1,13 @@
 // src/services/ProjectImportService.ts
-import type { Project } from "../types/projects";
-import { authService } from "./AuthService";
-import { UnifiedDataStructureService } from "./DataStructureService";
-import { ProjectDataService } from "./ProjectDataService";
+import type { Project } from '../types/projects';
+import { authService } from './AuthService';
+import { UnifiedDataStructureService } from './DataStructureService';
+import { ProjectDataService } from './ProjectDataService';
 import {
 	DirectoryAdapter,
 	StorageAdapterService,
 	ZipAdapter,
-} from "./StorageAdapterService";
+} from './StorageAdapterService';
 
 export interface ImportableProject {
 	id: string;
@@ -15,13 +15,13 @@ export interface ImportableProject {
 	description: string;
 	originalOwnerId: string;
 	lastModified: number;
-	source: "backup" | "zip" | "directory";
+	source: 'backup' | 'zip' | 'directory';
 	sourcePath?: string;
 }
 
 export interface ImportOptions {
 	makeCollaborator?: boolean;
-	conflictResolution?: "skip" | "overwrite" | "create-new";
+	conflictResolution?: 'skip' | 'overwrite' | 'create-new';
 }
 
 export interface ImportResult {
@@ -92,12 +92,12 @@ class ProjectImportService {
 						originalOwnerId: project.ownerId,
 						lastModified:
 							project.lastSync || project.exportedAt || project.updatedAt,
-						source: "backup",
+						source: 'backup',
 					});
 				}
 			}
 		} catch (error) {
-			console.error("Error scanning backup directory:", error);
+			console.error('Error scanning backup directory:', error);
 		}
 
 		return importableProjects;
@@ -129,12 +129,12 @@ class ProjectImportService {
 					originalOwnerId: project.ownerId,
 					lastModified:
 						project.lastSync || project.exportedAt || project.updatedAt,
-					source: "zip",
+					source: 'zip',
 					sourcePath: file.name,
 				});
 			}
 		} catch (error) {
-			console.error("Error scanning zip file:", error);
+			console.error('Error scanning zip file:', error);
 		}
 
 		return importableProjects;
@@ -153,11 +153,11 @@ class ProjectImportService {
 
 			await this.processImport(data, projectIds, options, result);
 		} catch (error) {
-			console.error("Error importing from backup:", error);
+			console.error('Error importing from backup:', error);
 			projectIds.forEach((id) => {
 				result.errors.push({
 					projectId: id,
-					error: error instanceof Error ? error.message : "Unknown error",
+					error: error instanceof Error ? error.message : 'Unknown error',
 				});
 			});
 		}
@@ -180,11 +180,11 @@ class ProjectImportService {
 
 			await this.processImport(data, projectIds, options, result);
 		} catch (error) {
-			console.error("Error importing from zip:", error);
+			console.error('Error importing from zip:', error);
 			projectIds.forEach((id) => {
 				result.errors.push({
 					projectId: id,
-					error: error instanceof Error ? error.message : "Unknown error",
+					error: error instanceof Error ? error.message : 'Unknown error',
 				});
 			});
 		}
@@ -199,7 +199,7 @@ class ProjectImportService {
 		result: ImportResult,
 	): Promise<void> {
 		const currentUser = authService.getCurrentUser();
-		if (!currentUser) throw new Error("No authenticated user");
+		if (!currentUser) throw new Error('No authenticated user');
 
 		const existingProjects = await authService.getProjectsByUser(
 			currentUser.id,
@@ -214,7 +214,7 @@ class ProjectImportService {
 				if (!projectMetadata) {
 					result.errors.push({
 						projectId,
-						error: "Project not found in source",
+						error: 'Project not found in source',
 					});
 					continue;
 				}
@@ -225,14 +225,14 @@ class ProjectImportService {
 				let shouldCreateNewProject = true;
 
 				if (existingProjects.some((p) => p.id === projectId)) {
-					if (options.conflictResolution === "skip") {
+					if (options.conflictResolution === 'skip') {
 						result.skipped.push(projectId);
 						continue;
 					}
-					if (options.conflictResolution === "overwrite") {
+					if (options.conflictResolution === 'overwrite') {
 						await authService.deleteProject(projectId);
 						shouldCreateNewProject = true;
-					} else if (options.conflictResolution === "create-new") {
+					} else if (options.conflictResolution === 'create-new') {
 						finalProjectId = crypto.randomUUID();
 						finalProjectName = this.generateUniqueProjectName(
 							projectMetadata.name,
@@ -246,11 +246,11 @@ class ProjectImportService {
 				if (shouldCreateNewProject) {
 					const projectToCreate: Omit<
 						Project,
-						"id" | "createdAt" | "updatedAt" | "ownerId"
+						'id' | 'createdAt' | 'updatedAt' | 'ownerId'
 					> = {
 						name: finalProjectName,
 						description: projectMetadata.description,
-						type: projectMetadata.type || "latex",
+						type: projectMetadata.type || 'latex',
 						docUrl: finalDocUrl,
 						tags: projectMetadata.tags || [],
 						isFavorite: false,
@@ -285,7 +285,7 @@ class ProjectImportService {
 			} catch (error) {
 				result.errors.push({
 					projectId,
-					error: error instanceof Error ? error.message : "Unknown error",
+					error: error instanceof Error ? error.message : 'Unknown error',
 				});
 			}
 		}
@@ -299,9 +299,9 @@ class ProjectImportService {
 	): Promise<void> {
 		const filteredData = {
 			manifest: {
-				version: "1.0.0",
+				version: '1.0.0',
 				lastSync: Date.now(),
-				mode: "import" as const,
+				mode: 'import' as const,
 			},
 			account: null,
 			projects: [metadata],
@@ -316,7 +316,7 @@ class ProjectImportService {
 	}
 
 	private async createProjectDirectly(
-		projectData: Omit<Project, "id" | "createdAt" | "updatedAt" | "ownerId">,
+		projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'ownerId'>,
 		projectId: string,
 		ownerId: string,
 	): Promise<void> {
@@ -325,7 +325,7 @@ class ProjectImportService {
 			(await authService.initialize().then(() => authService.db));
 
 		if (!authDb) {
-			throw new Error("Could not access auth database");
+			throw new Error('Could not access auth database');
 		}
 
 		const now = Date.now();
@@ -333,7 +333,7 @@ class ProjectImportService {
 			id: projectId,
 			name: projectData.name,
 			description: projectData.description,
-			type: projectData.type || "latex",
+			type: projectData.type || 'latex',
 			docUrl: projectData.docUrl,
 			createdAt: now,
 			updatedAt: now,
@@ -342,7 +342,7 @@ class ProjectImportService {
 			isFavorite: projectData.isFavorite,
 		};
 
-		await authDb.put("projects", newProject);
+		await authDb.put('projects', newProject);
 	}
 
 	private async updateProjectCollaborators(
@@ -359,7 +359,7 @@ class ProjectImportService {
 				await authService.updateProject(updatedProject);
 			}
 		} catch (error) {
-			console.error("Error updating project collaborators:", error);
+			console.error('Error updating project collaborators:', error);
 		}
 	}
 }

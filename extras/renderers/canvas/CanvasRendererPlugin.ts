@@ -1,19 +1,19 @@
-import type { RendererPlugin } from "../../../src/plugins/PluginInterface";
-import CanvasRenderer from "./CanvasRenderer";
-import { canvasRendererSettings } from "./settings";
+import type { RendererPlugin } from '../../../src/plugins/PluginInterface';
+import CanvasRenderer from './CanvasRenderer';
+import { canvasRendererSettings } from './settings';
 
-export const PLUGIN_NAME = "Canvas Renderer";
-export const PLUGIN_VERSION = "0.1.0";
+export const PLUGIN_NAME = 'Canvas Renderer';
+export const PLUGIN_VERSION = '0.1.0';
 
 const canvasRendererPlugin: RendererPlugin = {
-    id: "canvas-renderer",
+    id: 'canvas-renderer',
     name: PLUGIN_NAME,
     version: PLUGIN_VERSION,
-    type: "renderer",
+    type: 'renderer',
     settings: canvasRendererSettings,
 
     canHandle: (outputType: string): boolean => {
-        return outputType === "canvas";
+        return outputType === 'canvas';
     },
 
     renderOutput: CanvasRenderer,

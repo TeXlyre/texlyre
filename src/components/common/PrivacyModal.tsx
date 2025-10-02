@@ -1,8 +1,8 @@
 // src/components/common/PrivacyModal.tsx
-import type React from "react";
+import type React from 'react';
 
-import { InfoIcon } from "./Icons";
-import Modal from "./Modal";
+import { InfoIcon } from './Icons';
+import Modal from './Modal';
 
 interface PrivacyModalProps {
   isOpen: boolean;
@@ -37,7 +37,7 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) => {
 
         <h3>Open Infrastructure</h3>
         <p>
-          TeXlyre uses open source signaling servers. The server code is available on{" "}
+          TeXlyre uses open source signaling servers. The server code is available on{' '}
           <a href="https://github.com/texlyre/texlyre-infrastructure" target="_blank" rel="noreferrer">
             GitHub
           </a>.

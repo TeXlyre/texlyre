@@ -1,9 +1,9 @@
 // src/components/comments/CommentPanel.tsx
-import type React from "react";
-import { useEffect, useState } from "react";
+import type React from 'react';
+import { useEffect, useState } from 'react';
 
-import { useComments } from "../../hooks/useComments";
-import CommentItem from "./CommentItem";
+import { useComments } from '../../hooks/useComments';
+import CommentItem from './CommentItem';
 
 interface CommentPanelProps {
 	className?: string;
@@ -11,21 +11,21 @@ interface CommentPanelProps {
 }
 
 const CommentPanel: React.FC<CommentPanelProps> = ({
-	className = "",
+	className = '',
 	onLineClick,
 }) => {
 	const { comments, showComments, toggleComments } = useComments();
-	const [activeTab, setActiveTab] = useState<"list" | "resolved">("list");
-	const [searchQuery, setSearchQuery] = useState("");
+	const [activeTab, setActiveTab] = useState<'list' | 'resolved'>('list');
+	const [searchQuery, setSearchQuery] = useState('');
 	const [filteredComments, setFilteredComments] = useState(comments);
 
 	useEffect(() => {
 		const commentsToFilter =
-			activeTab === "resolved"
+			activeTab === 'resolved'
 				? comments.filter((comment) => comment.resolved)
 				: comments.filter((comment) => !comment.resolved);
 
-		if (searchQuery.trim() === "") {
+		if (searchQuery.trim() === '') {
 			setFilteredComments(commentsToFilter);
 		} else {
 			const query = searchQuery.toLowerCase();
@@ -54,14 +54,14 @@ const CommentPanel: React.FC<CommentPanelProps> = ({
 				<h3>Comments</h3>
 				<div className="view-tabs">
 					<button
-						className={`tab-button ${activeTab === "list" ? "active" : ""}`}
-						onClick={() => setActiveTab("list")}
+						className={`tab-button ${activeTab === 'list' ? 'active' : ''}`}
+						onClick={() => setActiveTab('list')}
 					>
 						Active
 					</button>
 					<button
-						className={`tab-button ${activeTab === "resolved" ? "active" : ""}`}
-						onClick={() => setActiveTab("resolved")}
+						className={`tab-button ${activeTab === 'resolved' ? 'active' : ''}`}
+						onClick={() => setActiveTab('resolved')}
 					>
 						Resolved
 					</button>
@@ -79,7 +79,7 @@ const CommentPanel: React.FC<CommentPanelProps> = ({
 				{searchQuery && (
 					<button
 						className="clear-search-button"
-						onClick={() => setSearchQuery("")}
+						onClick={() => setSearchQuery('')}
 					>
 						×
 					</button>
@@ -90,10 +90,10 @@ const CommentPanel: React.FC<CommentPanelProps> = ({
 				{filteredComments.length === 0 ? (
 					<div className="no-comments">
 						{searchQuery
-							? "No comments found matching the search criteria"
-							: activeTab === "resolved"
-								? "No resolved comments yet."
-								: "No active comments."}
+							? 'No comments found matching the search criteria'
+							: activeTab === 'resolved'
+								? 'No resolved comments yet.'
+								: 'No active comments.'}
 					</div>
 				) : (
 					<div className={`comments-${activeTab}`}>

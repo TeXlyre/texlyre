@@ -1,5 +1,5 @@
 // src/contexts/LSPContext.tsx
-import type React from "react";
+import type React from 'react';
 import {
 	type ReactNode,
 	createContext,
@@ -7,15 +7,15 @@ import {
 	useEffect,
 	useState,
 	useMemo,
-} from "react";
+} from 'react';
 
-import { pluginRegistry } from "../plugins/PluginRegistry";
-import type { LSPPlugin } from "../plugins/PluginInterface";
-import { useSettings } from "../hooks/useSettings";
-import { useBibliography } from "../hooks/useBibliography";
-import { fileStorageService } from "../services/FileStorageService";
-import { bibliographyImportService } from "../services/BibliographyImportService";
-import { parseUrlFragments } from "../utils/urlUtils";
+import { pluginRegistry } from '../plugins/PluginRegistry';
+import type { LSPPlugin } from '../plugins/PluginInterface';
+import { useSettings } from '../hooks/useSettings';
+import { useBibliography } from '../hooks/useBibliography';
+import { fileStorageService } from '../services/FileStorageService';
+import { bibliographyImportService } from '../services/BibliographyImportService';
+import { parseUrlFragments } from '../utils/urlUtils';
 
 interface BibEntry {
 	key: string;
@@ -38,10 +38,10 @@ interface BibFile {
 interface LSPContextType {
 	showPanel: boolean;
 	setShowPanel: (show: boolean) => void;
-	activeTab: "list" | "detail";
-	setActiveTab: (tab: "list" | "detail") => void;
-	selectedProvider: string | "all" | "local";
-	setSelectedProvider: (provider: string | "all" | "local") => void;
+	activeTab: 'list' | 'detail';
+	setActiveTab: (tab: 'list' | 'detail') => void;
+	selectedProvider: string | 'all' | 'local';
+	setSelectedProvider: (provider: string | 'all' | 'local') => void;
 	availableProviders: LSPPlugin[];
 	selectedItem: any;
 	setSelectedItem: (item: any) => void;
@@ -71,7 +71,7 @@ interface LSPContextType {
 	serverUrl: string;
 
 	handleRefresh: () => Promise<void>;
-	handleProviderSelect: (providerId: string | "all" | "local") => void;
+	handleProviderSelect: (providerId: string | 'all' | 'local') => void;
 	handleItemSelect: (item: any) => void;
 	handleBackToList: () => void;
 	handleEntryClick: (entry: BibEntry) => void;
@@ -94,30 +94,30 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	const { getTargetFile, setTargetFile, getAvailableFiles, createBibFile } = useBibliography();
 
 	const [showPanel, setShowPanel] = useState(false);
-	const [activeTab, setActiveTab] = useState<"list" | "detail">("list");
-	const [selectedProvider, setSelectedProvider] = useState<string | "all" | "local">("local");
+	const [activeTab, setActiveTab] = useState<'list' | 'detail'>('list');
+	const [selectedProvider, setSelectedProvider] = useState<string | 'all' | 'local'>('local');
 	const [availableProviders, setAvailableProviders] = useState<LSPPlugin[]>([]);
 	const [selectedItem, setSelectedItem] = useState<any>(null);
 	const [showDropdown, setShowDropdown] = useState(false);
 	const [isRefreshing, setIsRefreshing] = useState(false);
-	const [searchQuery, setSearchQuery] = useState("");
+	const [searchQuery, setSearchQuery] = useState('');
 
 	const [entries, setEntries] = useState<BibEntry[]>([]);
 	const [localEntries, setLocalEntries] = useState<BibEntry[]>([]);
 	const [externalEntries, setExternalEntries] = useState<BibEntry[]>([]);
 	const [filteredEntries, setFilteredEntries] = useState<BibEntry[]>([]);
 	const [availableBibFiles, setAvailableBibFiles] = useState<BibFile[]>([]);
-	const [targetBibFile, setTargetBibFile] = useState<string>("");
+	const [targetBibFile, setTargetBibFile] = useState<string>('');
 	const [isLoading, setIsLoading] = useState(false);
 	const [importingEntries, setImportingEntries] = useState<Set<string>>(new Set());
 
 	const currentProvider = availableProviders.find(p => p.id === selectedProvider);
 
 	const isBibliographyProvider = useMemo(() => {
-		if (selectedProvider === "all") {
+		if (selectedProvider === 'all') {
 			return availableProviders.some(provider => 'getBibliographyEntries' in provider);
 		}
-		if (selectedProvider === "local") {
+		if (selectedProvider === 'local') {
 			return true;
 		}
 		return currentProvider && 'getBibliographyEntries' in currentProvider;
@@ -128,11 +128,11 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		return getSetting(`${currentProvider.id}-${settingName}`)?.value;
 	};
 
-	const citationStyle = (getProviderSetting("citation-style") as string) ?? "numeric";
-	const maxCompletions = (getProviderSetting("max-completions") as number) ?? 20;
-	const autoImport = (getProviderSetting("auto-import") as boolean) ?? true;
-	const duplicateHandling = (getProviderSetting("merge-duplicates") as string) ?? "keep-local";
-	const serverUrl = (getProviderSetting("server-url") as string) ?? "ws://localhost:2087/";
+	const citationStyle = (getProviderSetting('citation-style') as string) ?? 'numeric';
+	const maxCompletions = (getProviderSetting('max-completions') as number) ?? 20;
+	const autoImport = (getProviderSetting('auto-import') as boolean) ?? true;
+	const duplicateHandling = (getProviderSetting('merge-duplicates') as string) ?? 'keep-local';
+	const serverUrl = (getProviderSetting('server-url') as string) ?? 'ws://localhost:2087/';
 
 	const parser = bibliographyImportService.getParser();
 
@@ -145,8 +145,8 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		const providers = pluginRegistry.getAllLSPPlugins();
 		setAvailableProviders(providers);
 
-		if (providers.length > 0 && selectedProvider === "local") {
-			setSelectedProvider("local");
+		if (providers.length > 0 && selectedProvider === 'local') {
+			setSelectedProvider('local');
 		}
 	}, []);
 
@@ -161,9 +161,9 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 			}
 		};
 
-		document.addEventListener("toggle-lsp-panel", handleToggleLSPPanel);
+		document.addEventListener('toggle-lsp-panel', handleToggleLSPPanel);
 		return () => {
-			document.removeEventListener("toggle-lsp-panel", handleToggleLSPPanel);
+			document.removeEventListener('toggle-lsp-panel', handleToggleLSPPanel);
 		};
 	}, []);
 
@@ -235,7 +235,7 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	}, [parser]);
 
 	const fetchExternalEntries = useCallback(async () => {
-		if (!currentProvider || !isBibliographyProvider || selectedProvider === "local") {
+		if (!currentProvider || !isBibliographyProvider || selectedProvider === 'local') {
 			setExternalEntries([]);
 			return;
 		}
@@ -264,7 +264,7 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	}, [currentProvider, isBibliographyProvider, selectedProvider]);
 
 	const fetchAllBibliographyEntries = useCallback(async () => {
-		if (selectedProvider !== "all") return;
+		if (selectedProvider !== 'all') return;
 
 		const bibliographyProviders = availableProviders.filter(provider =>
 			'getBibliographyEntries' in provider && provider.getConnectionStatus() === 'connected'
@@ -309,9 +309,9 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	}, [createBibFile]);
 
 	const mergeEntries = useCallback(() => {
-		if (selectedProvider === "local") {
+		if (selectedProvider === 'local') {
 			setEntries(localEntries);
-		} else if (selectedProvider === "all") {
+		} else if (selectedProvider === 'all') {
 			const localKeys = new Set(localEntries.map(entry => entry.key));
 
 			const updatedExternalEntries = externalEntries.map(entry => ({
@@ -343,7 +343,7 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	}, [selectedProvider, localEntries, externalEntries]);
 
 	useEffect(() => {
-		if (searchQuery.trim() === "") {
+		if (searchQuery.trim() === '') {
 			setFilteredEntries(entries.slice(0, maxCompletions));
 		} else {
 			const query = searchQuery.toLowerCase();
@@ -393,14 +393,14 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	}, [currentProvider, availableBibFiles, getTargetFile]);
 
 	useEffect(() => {
-		if (selectedProvider === "local") {
+		if (selectedProvider === 'local') {
 			refreshAvailableFiles();
 			fetchLocalEntries();
 			setExternalEntries([]);
 			return;
 		}
 
-		if (selectedProvider === "all") {
+		if (selectedProvider === 'all') {
 			refreshAvailableFiles();
 			fetchLocalEntries();
 
@@ -473,7 +473,7 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		const handleFileTreeRefresh = () => {
 			clearTimeout(timeoutId);
 			timeoutId = setTimeout(() => {
-				if (isBibliographyProvider || selectedProvider === "all" || selectedProvider === "local") {
+				if (isBibliographyProvider || selectedProvider === 'all' || selectedProvider === 'local') {
 					refreshAvailableFiles();
 					fetchLocalEntries();
 				}
@@ -491,10 +491,10 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		setIsRefreshing(true);
 
 		try {
-			if (selectedProvider === "local") {
+			if (selectedProvider === 'local') {
 				await refreshAvailableFiles();
 				await fetchLocalEntries();
-			} else if (selectedProvider === "all") {
+			} else if (selectedProvider === 'all') {
 				const refreshPromises = availableProviders.map(async (provider) => {
 					try {
 						await provider.initialize?.();
@@ -514,36 +514,36 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 				await fetchExternalEntries();
 			}
 		} catch (error) {
-			console.error("Error refreshing LSP provider:", error);
+			console.error('Error refreshing LSP provider:', error);
 		} finally {
 			setIsRefreshing(false);
 		}
 	};
 
-	const handleProviderSelect = (providerId: string | "all" | "local") => {
+	const handleProviderSelect = (providerId: string | 'all' | 'local') => {
 		setSelectedProvider(providerId);
 		setShowDropdown(false);
-		setActiveTab("list");
+		setActiveTab('list');
 		setSelectedItem(null);
-		setSearchQuery("");
+		setSearchQuery('');
 
 		setEntries([]);
 		setLocalEntries([]);
 		setExternalEntries([]);
 		setFilteredEntries([]);
 
-		if (providerId !== "local") {
-			setTargetBibFile("");
+		if (providerId !== 'local') {
+			setTargetBibFile('');
 		}
 	};
 
 	const handleItemSelect = (item: any) => {
 		setSelectedItem(item);
-		setActiveTab("detail");
+		setActiveTab('detail');
 	};
 
 	const handleBackToList = () => {
-		setActiveTab("list");
+		setActiveTab('list');
 		setSelectedItem(null);
 	};
 
@@ -629,7 +629,7 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	};
 
 	const handleTargetFileChange = async (newValue: string) => {
-		if (newValue === "CREATE_NEW") {
+		if (newValue === 'CREATE_NEW') {
 			const createdFile = await createNewBibFile();
 			if (createdFile) {
 				setTargetBibFile(createdFile);
@@ -649,29 +649,29 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	};
 
 	const getConnectionStatus = () => {
-		if (selectedProvider === "local") {
-			return "connected";
+		if (selectedProvider === 'local') {
+			return 'connected';
 		}
-		if (selectedProvider === "all") {
+		if (selectedProvider === 'all') {
 			const connectedCount = availableProviders.filter(p =>
-				p.getConnectionStatus() === "connected"
+				p.getConnectionStatus() === 'connected'
 			).length;
 
-			if (availableProviders.length === 0) return "disconnected";
-			if (connectedCount === availableProviders.length) return "connected";
-			if (connectedCount > 0) return "connecting";
-			return "disconnected";
+			if (availableProviders.length === 0) return 'disconnected';
+			if (connectedCount === availableProviders.length) return 'connected';
+			if (connectedCount > 0) return 'connecting';
+			return 'disconnected';
 		}
-		return currentProvider?.getConnectionStatus() || "disconnected";
+		return currentProvider?.getConnectionStatus() || 'disconnected';
 	};
 
 	const getStatusColor = () => {
 		const status = getConnectionStatus();
 		switch (status) {
-			case "connected": return "#28a745";
-			case "connecting": return "#ffc107";
-			case "error": return "#dc3545";
-			default: return "#666";
+			case 'connected': return '#28a745';
+			case 'connecting': return '#ffc107';
+			case 'error': return '#dc3545';
+			default: return '#666';
 		}
 	};
 

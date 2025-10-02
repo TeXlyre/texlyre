@@ -1,9 +1,9 @@
 // src/components/auth/PasswordModal.tsx
-import type React from "react";
-import { useEffect, useState } from "react";
+import type React from 'react';
+import { useEffect, useState } from 'react';
 
-import { LockIcon } from "../common/Icons";
-import Modal from "../common/Modal";
+import { LockIcon } from '../common/Icons';
+import Modal from '../common/Modal';
 
 interface PasswordModalProps {
 	isOpen: boolean;
@@ -17,16 +17,16 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
 	isOpen,
 	onClose,
 	onPasswordSubmit,
-	message = "Enter your TeXlyre password to access encrypted secrets:",
-	title = "Password Required",
+	message = 'Enter your TeXlyre password to access encrypted secrets:',
+	title = 'Password Required',
 }) => {
-	const [password, setPassword] = useState("");
+	const [password, setPassword] = useState('');
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
 		if (isOpen) {
-			setPassword("");
+			setPassword('');
 			setError(null);
 			setIsSubmitting(false);
 		}
@@ -36,7 +36,7 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
 		e.preventDefault();
 
 		if (!password.trim()) {
-			setError("Password is required");
+			setError('Password is required');
 			return;
 		}
 
@@ -48,10 +48,10 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
 			if (success) {
 				onClose();
 			} else {
-				setError("Incorrect password");
+				setError('Incorrect password');
 			}
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "Authentication failed");
+			setError(err instanceof Error ? err.message : 'Authentication failed');
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -103,7 +103,7 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
 							className="button primary"
 							disabled={isSubmitting || !password.trim()}
 						>
-							{isSubmitting ? "Verifying..." : "Unlock"}
+							{isSubmitting ? 'Verifying...' : 'Unlock'}
 						</button>
 					</div>
 				</form>

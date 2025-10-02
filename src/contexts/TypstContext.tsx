@@ -1,5 +1,5 @@
 // src/contexts/TypstContext.tsx
-import type React from "react";
+import type React from 'react';
 import {
     type ReactNode,
     createContext,
@@ -7,14 +7,14 @@ import {
     useCallback,
     useRef,
     useState,
-} from "react";
+} from 'react';
 
-import { useFileTree } from "../hooks/useFileTree";
-import { useSettings } from "../hooks/useSettings";
-import type { TypstContextType, TypstOutputFormat } from "../types/typst";
-import { typstService } from "../services/TypstService";
-import { pdfWindowService } from "../services/PdfWindowService";
-import { parseUrlFragments } from "../utils/urlUtils";
+import { useFileTree } from '../hooks/useFileTree';
+import { useSettings } from '../hooks/useSettings';
+import type { TypstContextType, TypstOutputFormat } from '../types/typst';
+import { typstService } from '../services/TypstService';
+import { pdfWindowService } from '../services/PdfWindowService';
+import { parseUrlFragments } from '../utils/urlUtils';
 
 export const TypstContext = createContext<TypstContextType | null>(null);
 
@@ -31,9 +31,9 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     const [compiledPdf, setCompiledPdf] = useState<Uint8Array | null>(null);
     const [compiledSvg, setCompiledSvg] = useState<string | null>(null);
     const [compiledCanvas, setCompiledCanvas] = useState<Uint8Array | null>(null);
-    const [compileLog, setCompileLog] = useState<string>("");
-    const [currentView, setCurrentView] = useState<"log" | "output">("log");
-    const [currentFormat, setCurrentFormat] = useState<TypstOutputFormat>("pdf");
+    const [compileLog, setCompileLog] = useState<string>('');
+    const [currentView, setCurrentView] = useState<'log' | 'output'>('log');
+    const [currentFormat, setCurrentFormat] = useState<TypstOutputFormat>('pdf');
     const [activeCompiler, setActiveCompiler] = useState<string | null>(null);
     const settingsRegistered = useRef(false);
 
@@ -42,51 +42,51 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         settingsRegistered.current = true;
 
         const initialAutoCompile =
-            (getSetting("typst-auto-compile-on-open")?.value as boolean) ?? false;
+            (getSetting('typst-auto-compile-on-open')?.value as boolean) ?? false;
         const initialDefaultFormat =
-            (getSetting("typst-default-format")?.value as TypstOutputFormat) ?? "pdf";
+            (getSetting('typst-default-format')?.value as TypstOutputFormat) ?? 'pdf';
         const initialAutoNavigate =
-            (getSetting("typst-auto-navigate-to-main")?.value as string) ?? "conditional";
+            (getSetting('typst-auto-navigate-to-main')?.value as string) ?? 'conditional';
 
         setCurrentFormat(initialDefaultFormat);
 
         registerSetting({
-            id: "typst-auto-compile-on-open",
-            category: "Typst",
-            subcategory: "Compilation",
-            type: "checkbox",
-            label: "Auto-compile on project open",
-            description: "Automatically compile Typst when opening a project",
+            id: 'typst-auto-compile-on-open',
+            category: 'Typst',
+            subcategory: 'Compilation',
+            type: 'checkbox',
+            label: 'Auto-compile on project open',
+            description: 'Automatically compile Typst when opening a project',
             defaultValue: initialAutoCompile,
         });
 
         registerSetting({
-            id: "typst-auto-navigate-to-main",
-            category: "Typst",
-            subcategory: "Compilation",
-            type: "select",
-            label: "Auto-navigate to main file on compile",
-            description: "Control when to automatically navigate to the main Typst file during compilation",
+            id: 'typst-auto-navigate-to-main',
+            category: 'Typst',
+            subcategory: 'Compilation',
+            type: 'select',
+            label: 'Auto-navigate to main file on compile',
+            description: 'Control when to automatically navigate to the main Typst file during compilation',
             defaultValue: initialAutoNavigate,
             options: [
-                { label: "Only when no Typst file is open", value: "conditional" },
-                { label: "Always navigate to main file", value: "always" },
-                { label: "Never navigate to main file", value: "never" },
+                { label: 'Only when no Typst file is open', value: 'conditional' },
+                { label: 'Always navigate to main file', value: 'always' },
+                { label: 'Never navigate to main file', value: 'never' },
             ],
         });
 
         registerSetting({
-            id: "typst-default-format",
-            category: "Typst",
-            subcategory: "Compilation",
-            type: "select",
-            label: "Default output format",
-            description: "Default format for Typst compilation",
+            id: 'typst-default-format',
+            category: 'Typst',
+            subcategory: 'Compilation',
+            type: 'select',
+            label: 'Default output format',
+            description: 'Default format for Typst compilation',
             defaultValue: initialDefaultFormat,
             options: [
-                { label: "PDF", value: "pdf" },
-                { label: "SVG", value: "svg" },
-                { label: "Canvas", value: "canvas" },
+                { label: 'PDF', value: 'pdf' },
+                { label: 'SVG', value: 'svg' },
+                { label: 'Canvas', value: 'canvas' },
             ],
             onChange: (value) => {
                 setCurrentFormat(value as TypstOutputFormat);
@@ -95,12 +95,12 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         });
 
         registerSetting({
-            id: "typst-notifications",
-            category: "Typst",
-            subcategory: "Compilation",
-            type: "checkbox",
-            label: "Show compilation notifications",
-            description: "Display notifications for Typst compilation activities",
+            id: 'typst-notifications',
+            category: 'Typst',
+            subcategory: 'Compilation',
+            type: 'checkbox',
+            label: 'Show compilation notifications',
+            description: 'Display notifications for Typst compilation activities',
             defaultValue: true,
         });
 
@@ -111,12 +111,12 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         typstService.initialize().catch(console.error);
 
         return typstService.addStatusListener(() => {
-            setIsCompiling(typstService.getStatus() === "compiling");
+            setIsCompiling(typstService.getStatus() === 'compiling');
         });
     }, []);
 
     const getProjectName = (): string => {
-        if (document.title && document.title !== "TeXlyre") {
+        if (document.title && document.title !== 'TeXlyre') {
             return document.title;
         }
 
@@ -126,7 +126,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
             return `Project ${projectId.substring(0, 8)}`;
         }
 
-        return "Typst Project";
+        return 'Typst Project';
     };
 
     const compileDocument = async (mainFileName: string, format: TypstOutputFormat = currentFormat): Promise<void> => {
@@ -157,10 +157,10 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
             setCompileLog(result.log);
             if (result.status === 0) {
                 switch (result.format) {
-                    case "pdf":
+                    case 'pdf':
                         if (result.pdf) {
                             setCompiledPdf(result.pdf);
-                            setCurrentView("output");
+                            setCurrentView('output');
 
                             const fileName = mainFileName.split('/').pop()?.replace(/\.typ$/i, '.pdf') || 'output.pdf';
                             const projectName = getProjectName();
@@ -172,36 +172,36 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
                             );
                         }
                         break;
-                    case "svg":
+                    case 'svg':
                         if (result.svg) {
                             setCompiledSvg(result.svg);
-                            setCurrentView("output");
+                            setCurrentView('output');
                         }
                         break;
-                    case "canvas":
+                    case 'canvas':
                         console.log('[TypstContext] Setting Canvas', { hasCanvas: !!result.canvas });
                         if (result.canvas) {
                             console.log('[TypstContext] Canvas content length:', result.canvas.length);
                             setCompiledCanvas(result.canvas);
-                            setCurrentView("output");
+                            setCurrentView('output');
                         } else {
                             console.error('[TypstContext] result.canvas is null/undefined!');
                         }
                         break;
                 }
             } else {
-                setCompileError("Compilation failed");
-                setCurrentView("log");
+                setCompileError('Compilation failed');
+                setCurrentView('log');
 
                 pdfWindowService.sendCompileResult(result.status, result.log);
             }
 
             await refreshFileTree();
         } catch (error) {
-            setCompileError(error instanceof Error ? error.message : "Unknown error");
-            setCurrentView("log");
+            setCompileError(error instanceof Error ? error.message : 'Unknown error');
+            setCurrentView('log');
 
-            pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : "Unknown error");
+            pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : 'Unknown error');
         } finally {
             setIsCompiling(false);
         }
@@ -211,7 +211,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         const hashUrl = window.location.hash.substring(1);
         const fragments = parseUrlFragments(hashUrl);
 
-        if (fragments.compile === "typst") {
+        if (fragments.compile === 'typst') {
             const cleanUrl = hashUrl.replace(/&compile:[^&]*/, '');
             window.location.hash = cleanUrl;
             document.dispatchEvent(new CustomEvent('trigger-typst-compile'));
@@ -219,7 +219,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
             return;
         }
 
-        const autoCompileEnabled = getSetting("typst-auto-compile-on-open")?.value as boolean ?? false;
+        const autoCompileEnabled = getSetting('typst-auto-compile-on-open')?.value as boolean ?? false;
         if (autoCompileEnabled && !hasAutoCompiled) {
             document.dispatchEvent(new CustomEvent('trigger-typst-compile'));
             setHasAutoCompiled(true);
@@ -230,12 +230,12 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         if (isCompiling) {
             typstService.stopCompilation();
             setIsCompiling(false);
-            setCompileError("Compilation stopped by user");
+            setCompileError('Compilation stopped by user');
         }
     };
 
     const toggleOutputView = () => {
-        setCurrentView(currentView === "log" ? "output" : "log");
+        setCurrentView(currentView === 'log' ? 'output' : 'log');
     };
 
     const clearCache = () => {

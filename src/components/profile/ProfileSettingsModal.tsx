@@ -1,11 +1,11 @@
 // src/components/profile/ProfileSettingsModal.tsx
-import type React from "react";
-import { useEffect, useState } from "react";
+import type React from 'react';
+import { useEffect, useState } from 'react';
 
-import { useAuth } from "../../hooks/useAuth";
-import type { User } from "../../types/auth";
-import Modal from "../common/Modal";
-import { UserIcon } from "../common/Icons";
+import { useAuth } from '../../hooks/useAuth';
+import type { User } from '../../types/auth';
+import Modal from '../common/Modal';
+import { UserIcon } from '../common/Icons';
 
 interface ProfileSettingsModalProps {
 	isOpen: boolean;
@@ -18,13 +18,13 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 }) => {
 	const { user, updateUser, verifyPassword, updatePassword } = useAuth();
 
-	const [username, setUsername] = useState("");
-	const [email, setEmail] = useState("");
-	const [color, setColor] = useState("");
-	const [colorLight, setColorLight] = useState("");
-	const [currentPassword, setCurrentPassword] = useState("");
-	const [newPassword, setNewPassword] = useState("");
-	const [confirmPassword, setConfirmPassword] = useState("");
+	const [username, setUsername] = useState('');
+	const [email, setEmail] = useState('');
+	const [color, setColor] = useState('');
+	const [colorLight, setColorLight] = useState('');
+	const [currentPassword, setCurrentPassword] = useState('');
+	const [newPassword, setNewPassword] = useState('');
+	const [confirmPassword, setConfirmPassword] = useState('');
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -88,7 +88,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 	useEffect(() => {
 		if (user) {
 			setUsername(user.username);
-			setEmail(user.email || "");
+			setEmail(user.email || '');
 			setColor(user.color || generateRandomColor(false));
 			setColorLight(user.colorLight || generateRandomColor(true));
 		}
@@ -106,15 +106,15 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 		try {
 			if (newPassword) {
 				if (newPassword.length < 6) {
-					throw new Error("New password must be at least 6 characters long");
+					throw new Error('New password must be at least 6 characters long');
 				}
 
 				if (newPassword !== confirmPassword) {
-					throw new Error("New passwords do not match");
+					throw new Error('New passwords do not match');
 				}
 
 				if (!currentPassword) {
-					throw new Error("Current password is required to set a new password");
+					throw new Error('Current password is required to set a new password');
 				}
 
 				const isCurrentPasswordValid = await verifyPassword(
@@ -122,14 +122,14 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 					currentPassword,
 				);
 				if (!isCurrentPasswordValid) {
-					throw new Error("Current password is incorrect");
+					throw new Error('Current password is incorrect');
 				}
 
 				await updatePassword(user.id, newPassword);
 			}
 
 			if (email && !/\S+@\S+\.\S+/.test(email)) {
-				throw new Error("Please enter a valid email address");
+				throw new Error('Please enter a valid email address');
 			}
 
 			const updatedUser: User = {
@@ -144,12 +144,12 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 				await updateUser(updatedUser);
 			}
 
-			setSuccessMessage("Profile updated successfully");
-			setCurrentPassword("");
-			setNewPassword("");
-			setConfirmPassword("");
+			setSuccessMessage('Profile updated successfully');
+			setCurrentPassword('');
+			setNewPassword('');
+			setConfirmPassword('');
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "An error occurred");
+			setError(err instanceof Error ? err.message : 'An error occurred');
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -267,7 +267,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 						className="button primary"
 						disabled={isSubmitting}
 					>
-						{isSubmitting ? "Saving..." : "Save Changes"}
+						{isSubmitting ? 'Saving...' : 'Save Changes'}
 					</button>
 				</div>
 			</form>

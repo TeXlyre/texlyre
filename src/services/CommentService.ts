@@ -1,11 +1,11 @@
 // src/services/CommentService.ts
-import { nanoid } from "nanoid";
+import { nanoid } from 'nanoid';
 
-import type { Comment, CommentRaw, CommentResponse } from "../types/comments";
+import type { Comment, CommentRaw, CommentResponse } from '../types/comments';
 
 const calculateLineNumber = (content: string, position: number): number => {
 	const beforePosition = content.substring(0, position);
-	return beforePosition.split("\n").length;
+	return beforePosition.split('\n').length;
 };
 
 class CommentService {
@@ -15,12 +15,12 @@ class CommentService {
 
 		while (searchStart < editorContent.length) {
 			const openTagStart = editorContent.indexOf(
-				"<### comment id:",
+				'<### comment id:',
 				searchStart,
 			);
 			if (openTagStart === -1) break;
 
-			const openTagEnd = editorContent.indexOf("###>", openTagStart);
+			const openTagEnd = editorContent.indexOf('###>', openTagStart);
 			if (openTagEnd === -1) break;
 
 			const openTagContent = editorContent.substring(
@@ -46,7 +46,7 @@ class CommentService {
 				continue;
 			}
 
-			const closeTagEnd = editorContent.indexOf("###>", closeTagStart) + 4;
+			const closeTagEnd = editorContent.indexOf('###>', closeTagStart) + 4;
 			if (closeTagEnd < closeTagStart) {
 				searchStart = openTagEnd + 4;
 				continue;
@@ -58,11 +58,11 @@ class CommentService {
 			const responsesMatch = openTagContent.match(/responses:\s*\[(.*?)\]/);
 			const resolvedMatch = openTagContent.match(/resolved:\s*(true|false)/);
 
-			const user = userMatch ? userMatch[1].trim() : "Anonymous";
+			const user = userMatch ? userMatch[1].trim() : 'Anonymous';
 			const timestamp = timeMatch ? Number.parseInt(timeMatch[1]) : Date.now();
-			const commentContent = contentMatch ? contentMatch[1] : "";
-			const responsesString = responsesMatch ? responsesMatch[1] : "";
-			const resolved = resolvedMatch ? resolvedMatch[1] === "true" : false;
+			const commentContent = contentMatch ? contentMatch[1] : '';
+			const responsesString = responsesMatch ? responsesMatch[1] : '';
+			const resolved = resolvedMatch ? resolvedMatch[1] === 'true' : false;
 
 			const commentedText = editorContent.substring(
 				openTagEnd + 4,
@@ -133,7 +133,7 @@ class CommentService {
 			.map((response) => {
 				return `<#### response id: '${response.id}', user: ${response.user}, time: ${response.timestamp}, content: '${response.content}' ####/>`;
 			})
-			.join(", ");
+			.join(', ');
 
 		const updatedCommentPrefix = `<### comment id: ${comment.id}, user: ${comment.user}, time: ${comment.timestamp}, content: '${comment.content}', responses: [${responsesString}], resolved: ${comment.resolved} ###>`;
 		const updatedCommentSuffix = `</### comment id: ${comment.id} ###>`;
@@ -150,7 +150,7 @@ class CommentService {
 			.map((response) => {
 				return `<#### response id: '${response.id}', user: ${response.user}, time: ${response.timestamp}, content: '${response.content}' ####/>`;
 			})
-			.join(", ");
+			.join(', ');
 
 		const updatedCommentPrefix = `<### comment id: ${comment.id}, user: ${comment.user}, time: ${comment.timestamp}, content: '${comment.content}', responses: [${responsesString}], resolved: ${comment.resolved} ###>`;
 		const updatedCommentSuffix = `</### comment id: ${comment.id} ###>`;

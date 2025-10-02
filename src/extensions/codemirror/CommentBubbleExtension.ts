@@ -1,6 +1,6 @@
 // src/extensions/codemirror/CommentBubbleExtension.ts
-import { ViewPlugin } from "@codemirror/view";
-import type { EditorView } from "codemirror";
+import { ViewPlugin } from '@codemirror/view';
+import type { EditorView } from 'codemirror';
 
 const commentBubblePlugin = ViewPlugin.fromClass(
 	class {
@@ -9,13 +9,13 @@ const commentBubblePlugin = ViewPlugin.fromClass(
 		private modalOpen: boolean = false;
 
 		constructor(private view: EditorView) {
-			this.view.dom.addEventListener("click", this.onClick.bind(this));
-			this.view.dom.addEventListener("mouseup", this.onMouseUp.bind(this));
-			this.view.dom.addEventListener("selectionchange", this.onSelectionChange.bind(this));
-			document.addEventListener("selectionchange", this.onSelectionChange.bind(this));
-			document.addEventListener("show-comment-modal", this.onModalOpen.bind(this));
-			document.addEventListener("comment-modal-closed", this.onModalClose.bind(this));
-			document.addEventListener("hide-floating-comment-button", this.hideFloatingButton.bind(this));
+			this.view.dom.addEventListener('click', this.onClick.bind(this));
+			this.view.dom.addEventListener('mouseup', this.onMouseUp.bind(this));
+			this.view.dom.addEventListener('selectionchange', this.onSelectionChange.bind(this));
+			document.addEventListener('selectionchange', this.onSelectionChange.bind(this));
+			document.addEventListener('show-comment-modal', this.onModalOpen.bind(this));
+			document.addEventListener('comment-modal-closed', this.onModalClose.bind(this));
+			document.addEventListener('hide-floating-comment-button', this.hideFloatingButton.bind(this));
 		}
 
 		onModalOpen() {
@@ -34,7 +34,7 @@ const commentBubblePlugin = ViewPlugin.fromClass(
 				return;
 			}
 
-			const commentElement = target.closest(".cm-comment-content");
+			const commentElement = target.closest('.cm-comment-content');
 
 			if (commentElement) {
 				const rect = commentElement.getBoundingClientRect();
@@ -57,10 +57,10 @@ const commentBubblePlugin = ViewPlugin.fromClass(
 					event.preventDefault();
 					event.stopPropagation();
 
-					const commentId = commentElement.getAttribute("data-comment-id");
+					const commentId = commentElement.getAttribute('data-comment-id');
 					if (commentId) {
 						document.dispatchEvent(
-							new CustomEvent("scroll-to-comment", {
+							new CustomEvent('scroll-to-comment', {
 								detail: { commentId },
 							}),
 						);
@@ -125,7 +125,7 @@ const commentBubblePlugin = ViewPlugin.fromClass(
 				const selection = this.view.state.selection.main;
 				this.modalOpen = true;
 				document.dispatchEvent(
-					new CustomEvent("show-comment-modal", {
+					new CustomEvent('show-comment-modal', {
 						detail: { selection: { from: selection.from, to: selection.to } },
 					})
 				);
@@ -163,13 +163,13 @@ const commentBubblePlugin = ViewPlugin.fromClass(
 		}
 
 		destroy() {
-			this.view.dom.removeEventListener("click", this.onClick.bind(this));
-			this.view.dom.removeEventListener("mouseup", this.onMouseUp.bind(this));
-			this.view.dom.removeEventListener("selectionchange", this.onSelectionChange.bind(this));
-			document.removeEventListener("selectionchange", this.onSelectionChange.bind(this));
-			document.removeEventListener("show-comment-modal", this.onModalOpen.bind(this));
-			document.removeEventListener("comment-modal-closed", this.onModalClose.bind(this));
-			document.removeEventListener("hide-floating-comment-button", this.hideFloatingButton.bind(this));
+			this.view.dom.removeEventListener('click', this.onClick.bind(this));
+			this.view.dom.removeEventListener('mouseup', this.onMouseUp.bind(this));
+			this.view.dom.removeEventListener('selectionchange', this.onSelectionChange.bind(this));
+			document.removeEventListener('selectionchange', this.onSelectionChange.bind(this));
+			document.removeEventListener('show-comment-modal', this.onModalOpen.bind(this));
+			document.removeEventListener('comment-modal-closed', this.onModalClose.bind(this));
+			document.removeEventListener('hide-floating-comment-button', this.hideFloatingButton.bind(this));
 
 			if (this.hideTimeout) {
 				clearTimeout(this.hideTimeout);

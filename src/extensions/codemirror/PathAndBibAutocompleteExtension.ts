@@ -1,12 +1,12 @@
 // src/extensions/codemirror/PathAndBibAutocompleteExtension.ts
-import { type CompletionContext, type CompletionResult, type CompletionSource } from "@codemirror/autocomplete";
-import { StateEffect, StateField, type Extension } from "@codemirror/state";
-import { ViewPlugin, type EditorView } from "@codemirror/view";
+import { type CompletionContext, type CompletionResult, type CompletionSource } from '@codemirror/autocomplete';
+import { StateEffect, StateField, type Extension } from '@codemirror/state';
+import { ViewPlugin, type EditorView } from '@codemirror/view';
 
-import type { FileNode, FilePathCache } from "../../types/files";
-import { filePathCacheService } from "../../services/FilePathCacheService";
-import { fileStorageService } from "../../services/FileStorageService";
-import { BibtexParser } from "../../../extras/viewers/bibtex/BibtexParser";
+import type { FileNode, FilePathCache } from '../../types/files';
+import { filePathCacheService } from '../../services/FilePathCacheService';
+import { fileStorageService } from '../../services/FileStorageService';
+import { BibtexParser } from '../../../extras/viewers/bibtex/BibtexParser';
 
 export const updateFileCache = StateEffect.define<FileNode[]>();
 

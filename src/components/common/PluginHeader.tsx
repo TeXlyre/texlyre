@@ -1,7 +1,7 @@
 // src/components/common/PluginHeader.tsx
-import type React from "react";
+import type React from 'react';
 
-import { InfoIcon, LinkIcon } from "./Icons";
+import { InfoIcon, LinkIcon } from './Icons';
 
 interface PluginHeaderProps {
 	fileName: string;
@@ -28,20 +28,20 @@ const formatTooltipInfo = (
 	pluginVersion?: string,
 ): string => {
 	const pluginInfo = pluginName
-		? `${pluginName}${pluginVersion ? ` v${pluginVersion}` : ""}`
-		: "";
+		? `${pluginName}${pluginVersion ? ` v${pluginVersion}` : ''}`
+		: '';
 
 	const contentInfo =
-		typeof info === "string"
+		typeof info === 'string'
 			? info
-			: info.filter((line) => line.trim()).join("\n");
+			: info.filter((line) => line.trim()).join('\n');
 
 	return pluginInfo ? `${pluginInfo}\n${contentInfo}` : contentInfo;
 };
 
 export const PluginControlGroup: React.FC<PluginControlGroupProps> = ({
 	children,
-	className = "",
+	className = '',
 }) => {
 	return <div className={`control-group ${className}`}>{children}</div>;
 };
@@ -79,7 +79,7 @@ export const PluginHeader: React.FC<PluginHeaderProps> = ({
 				</div>
 				<div className="filepath-info">
 					<span
-						className={linkedFileInfo ? "linked-filepath" : ""}
+						className={linkedFileInfo ? 'linked-filepath' : ''}
 						onClick={
 							linkedFileInfo && onNavigateToLinkedFile
 								? onNavigateToLinkedFile

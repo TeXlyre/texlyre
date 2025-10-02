@@ -1,18 +1,18 @@
 // src/components/app/AppRouter.tsx
-import type React from "react";
-import { lazy, useEffect, useState, Suspense } from "react";
+import type React from 'react';
+import { lazy, useEffect, useState, Suspense } from 'react';
 
-import { useAuth } from "../../hooks/useAuth";
-import { collabService } from "../../services/CollabService";
-import { fileStorageService } from "../../services/FileStorageService";
-import type { YjsDocUrl } from "../../types/yjs";
-import { isValidYjsUrl, parseUrlFragments } from "../../utils/urlUtils";
-import { batchExtractZip } from "../../utils/zipUtils";
-import AuthApp from "./AuthApp";
-import EditorApp from "./EditorApp";
-import LoadingScreen from "./LoadingScreen";
-import ProjectApp from "./ProjectApp";
-import PrivacyModal from "../common/PrivacyModal";
+import { useAuth } from '../../hooks/useAuth';
+import { collabService } from '../../services/CollabService';
+import { fileStorageService } from '../../services/FileStorageService';
+import type { YjsDocUrl } from '../../types/yjs';
+import { isValidYjsUrl, parseUrlFragments } from '../../utils/urlUtils';
+import { batchExtractZip } from '../../utils/zipUtils';
+import AuthApp from './AuthApp';
+import EditorApp from './EditorApp';
+import LoadingScreen from './LoadingScreen';
+import ProjectApp from './ProjectApp';
+import PrivacyModal from '../common/PrivacyModal';
 
 interface UrlProjectParams {
 	newProjectName?: string;
@@ -32,8 +32,8 @@ const AppRouter: React.FC = () => {
 	} = useAuth();
 
 	const [currentView, setCurrentView] = useState<
-		"auth" | "projects" | "editor"
-	>("auth");
+		'auth' | 'projects' | 'editor'
+	>('auth');
 	const [docUrl, setDocUrl] = useState<YjsDocUrl | null>(null);
 	const [_currentProjectId, setCurrentProjectId] = useState<string | null>(
 		null,
@@ -49,25 +49,25 @@ const AppRouter: React.FC = () => {
 	const parseUrlProjectParams = (hashUrl: string): UrlProjectParams | null => {
 		try {
 			const params: UrlProjectParams = {};
-			const parts = hashUrl.split("&");
+			const parts = hashUrl.split('&');
 
 			for (const part of parts) {
-				if (part.startsWith("newProjectName:")) {
+				if (part.startsWith('newProjectName:')) {
 					params.newProjectName = decodeURIComponent(part.slice(15));
-				} else if (part.startsWith("newProjectDescription:")) {
+				} else if (part.startsWith('newProjectDescription:')) {
 					params.newProjectDescription = decodeURIComponent(part.slice(22));
-				} else if (part.startsWith("newProjectType:")) {
+				} else if (part.startsWith('newProjectType:')) {
 					params.newProjectType = decodeURIComponent(part.slice(15));
-				} else if (part.startsWith("newProjectTags:")) {
+				} else if (part.startsWith('newProjectTags:')) {
 					params.newProjectTags = decodeURIComponent(part.slice(15));
-				} else if (part.startsWith("files:")) {
+				} else if (part.startsWith('files:')) {
 					params.files = decodeURIComponent(part.slice(6));
 				}
 			}
 
 			return params.newProjectName ? params : null;
 		} catch (error) {
-			console.error("Error parsing URL project params:", error);
+			console.error('Error parsing URL project params:', error);
 			return null;
 		}
 	};
@@ -83,13 +83,13 @@ const AppRouter: React.FC = () => {
 			}
 
 			const zipBlob = await response.blob();
-			const zipFile = new File([zipBlob], "template.zip", {
-				type: "application/zip",
+			const zipFile = new File([zipBlob], 'template.zip', {
+				type: 'application/zip',
 			});
 
 			await fileStorageService.initialize(`yjs:${projectId}`);
 
-			const { files, directories } = await batchExtractZip(zipFile, "/");
+			const { files, directories } = await batchExtractZip(zipFile, '/');
 			const allFiles = [...directories, ...files];
 
 			await fileStorageService.batchStoreFiles(allFiles, {
@@ -97,7 +97,7 @@ const AppRouter: React.FC = () => {
 				preserveTimestamp: false,
 			});
 		} catch (error) {
-			console.error("Error downloading and extracting zip:", error);
+			console.error('Error downloading and extracting zip:', error);
 		}
 	};
 
@@ -111,13 +111,13 @@ const AppRouter: React.FC = () => {
 		try {
 			const newProject = await createProject({
 				name: params.newProjectName,
-				description: params.newProjectDescription || "",
-				type: params.newProjectType || "latex",
-				tags: params.newProjectTags.split(",") || [],
+				description: params.newProjectDescription || '',
+				type: params.newProjectType || 'latex',
+				tags: params.newProjectTags.split(',') || [],
 				isFavorite: false,
 			});
 
-			const projectId = newProject.docUrl.startsWith("yjs:")
+			const projectId = newProject.docUrl.startsWith('yjs:')
 				? newProject.docUrl.slice(4)
 				: newProject.docUrl;
 
@@ -127,7 +127,7 @@ const AppRouter: React.FC = () => {
 
 			return newProject.docUrl;
 		} catch (error) {
-			console.error("Error creating project from URL:", error);
+			console.error('Error creating project from URL:', error);
 			return null;
 		} finally {
 			setIsCreatingProject(false);
@@ -137,13 +137,13 @@ const AppRouter: React.FC = () => {
 	useEffect(() => {
 		const hashUrl = window.location.hash.substring(1);
 
-		if (hashUrl === "privacy-policy") {
+		if (hashUrl === 'privacy-policy') {
 			setShowPrivacy(true);
 			return;
 		}
 
-		if (hashUrl.startsWith("pdf-viewer:")) {
-			const projectId = hashUrl.replace("pdf-viewer:", "");
+		if (hashUrl.startsWith('pdf-viewer:')) {
+			const projectId = hashUrl.replace('pdf-viewer:', '');
 			setIsPdfViewerWindow(true);
 			setPdfViewerProjectId(projectId);
 			return;
@@ -154,17 +154,17 @@ const AppRouter: React.FC = () => {
 			createProjectFromUrl(urlProjectParams).then((createdDocUrl) => {
 				if (createdDocUrl) {
 					setDocUrl(createdDocUrl);
-					setCurrentView("editor");
+					setCurrentView('editor');
 					window.location.hash = createdDocUrl;
 				} else {
-					setCurrentView("projects");
-					window.location.hash = "";
+					setCurrentView('projects');
+					window.location.hash = '';
 				}
 			});
 			return;
 		}
 
-		if (hashUrl?.includes("yjs:")) {
+		if (hashUrl?.includes('yjs:')) {
 			const fragments = parseUrlFragments(hashUrl);
 
 			if (fragments.yjsUrl && isValidYjsUrl(fragments.yjsUrl)) {
@@ -173,28 +173,28 @@ const AppRouter: React.FC = () => {
 				setTargetFilePath(fragments.filePath || null);
 
 				if (isAuthenticated && !isInitializing) {
-					setCurrentView("editor");
+					setCurrentView('editor');
 				}
 			}
 		} else if (isValidYjsUrl(hashUrl)) {
 			setDocUrl(hashUrl);
 			if (isAuthenticated && !isInitializing) {
-				setCurrentView("editor");
+				setCurrentView('editor');
 			}
 		} else if (isAuthenticated && !isInitializing && !hashUrl) {
-			setCurrentView("projects");
+			setCurrentView('projects');
 		}
 	}, [isAuthenticated, isInitializing]);
 
 	useEffect(() => {
 		const checkAndCreateProject = async () => {
 			if (isAuthenticated && !isInitializing && docUrl) {
-				const lastCheckedUrl = sessionStorage.getItem("lastCheckedDocUrl");
+				const lastCheckedUrl = sessionStorage.getItem('lastCheckedDocUrl');
 				if (lastCheckedUrl === docUrl) {
 					return;
 				}
 
-				sessionStorage.setItem("lastCheckedDocUrl", docUrl);
+				sessionStorage.setItem('lastCheckedDocUrl', docUrl);
 
 				try {
 					const existingProjects = await getProjects();
@@ -204,29 +204,29 @@ const AppRouter: React.FC = () => {
 
 					if (existingProject) {
 						setCurrentProjectId(existingProject.id);
-						sessionStorage.setItem("currentProjectId", existingProject.id);
+						sessionStorage.setItem('currentProjectId', existingProject.id);
 					} else {
 						const metadata = await collabService.getDocumentMetadata(docUrl);
 
 						if (metadata) {
 							createProjectForDocument(
 								docUrl,
-								metadata.name || "Untitled Project",
-								metadata.description || "",
-								metadata.type || "latex",
+								metadata.name || 'Untitled Project',
+								metadata.description || '',
+								metadata.type || 'latex',
 							);
 						} else {
 							createProjectForDocument(
 								docUrl,
-								"Shared Document",
-								"Shared via URL",
-								"latex",
+								'Shared Document',
+								'Shared via URL',
+								'latex',
 							);
 						}
 					}
 				} catch (error) {
 					console.error(
-						"Error checking/creating project for shared document:",
+						'Error checking/creating project for shared document:',
 						error,
 					);
 				}
@@ -255,20 +255,20 @@ const AppRouter: React.FC = () => {
 			});
 
 			setCurrentProjectId(project.id);
-			sessionStorage.setItem("currentProjectId", project.id);
+			sessionStorage.setItem('currentProjectId', project.id);
 
 			return project;
 		} catch (error) {
-			console.error("Failed to create project for document:", error);
+			console.error('Failed to create project for document:', error);
 			throw error;
 		}
 	};
 
 	const handleAuthSuccess = () => {
 		if (docUrl) {
-			setCurrentView("editor");
+			setCurrentView('editor');
 		} else {
-			setCurrentView("projects");
+			setCurrentView('projects');
 		}
 	};
 
@@ -282,18 +282,18 @@ const AppRouter: React.FC = () => {
 		setTargetFilePath(null);
 
 		let finalUrl = projectDocUrl;
-		if (projectDocUrl.includes("&")) {
+		if (projectDocUrl.includes('&')) {
 			const fragments = parseUrlFragments(projectDocUrl);
 			const baseDocUrl = fragments.yjsUrl;
 
 			if (!isValidYjsUrl(baseDocUrl)) {
-				console.error("Invalid document URL format:", baseDocUrl);
+				console.error('Invalid document URL format:', baseDocUrl);
 				return;
 			}
 
 			if (projectId) {
 				setCurrentProjectId(projectId);
-				sessionStorage.setItem("currentProjectId", projectId);
+				sessionStorage.setItem('currentProjectId', projectId);
 			}
 
 			if (fragments.docId) setTargetDocId(fragments.docId);
@@ -303,13 +303,13 @@ const AppRouter: React.FC = () => {
 			finalUrl = projectDocUrl;
 		} else {
 			if (!isValidYjsUrl(projectDocUrl)) {
-				console.error("Invalid document URL format:", projectDocUrl);
+				console.error('Invalid document URL format:', projectDocUrl);
 				return;
 			}
 
 			if (projectId) {
 				setCurrentProjectId(projectId);
-				sessionStorage.setItem("currentProjectId", projectId);
+				sessionStorage.setItem('currentProjectId', projectId);
 			}
 
 			setDocUrl(projectDocUrl);
@@ -317,7 +317,7 @@ const AppRouter: React.FC = () => {
 		}
 
 		window.location.hash = finalUrl;
-		setCurrentView("editor");
+		setCurrentView('editor');
 	};
 
 	const handleLogout = async () => {
@@ -326,27 +326,27 @@ const AppRouter: React.FC = () => {
 		setCurrentProjectId(null);
 		setTargetDocId(null);
 		setTargetFilePath(null);
-		sessionStorage.removeItem("currentProjectId");
-		sessionStorage.removeItem("lastCheckedDocUrl");
-		window.location.hash = "";
+		sessionStorage.removeItem('currentProjectId');
+		sessionStorage.removeItem('lastCheckedDocUrl');
+		window.location.hash = '';
 		window.location.reload();
-		setCurrentView("auth");
+		setCurrentView('auth');
 	};
 
 	const handleBackToProjects = () => {
-		setCurrentView("projects");
+		setCurrentView('projects');
 		setDocUrl(null);
 		setCurrentProjectId(null);
 		setTargetDocId(null);
 		setTargetFilePath(null);
-		sessionStorage.removeItem("currentProjectId");
-		sessionStorage.removeItem("lastCheckedDocUrl");
-		window.location.hash = "";
+		sessionStorage.removeItem('currentProjectId');
+		sessionStorage.removeItem('lastCheckedDocUrl');
+		window.location.hash = '';
 	};
 
 	const handleClosePrivacy = () => {
 		setShowPrivacy(false);
-		window.location.hash = "";
+		window.location.hash = '';
 	};
 
 	if (isInitializing || isCreatingProject) {
@@ -366,9 +366,9 @@ const AppRouter: React.FC = () => {
 		<>
 			{!isAuthenticated ? (
 				<AuthApp onAuthSuccess={handleAuthSuccess} />
-			) : currentView === "projects" ? (
+			) : currentView === 'projects' ? (
 				<ProjectApp onOpenProject={handleOpenProject} onLogout={handleLogout} />
-			) : currentView === "editor" && docUrl ? (
+			) : currentView === 'editor' && docUrl ? (
 				<EditorApp
 					docUrl={docUrl}
 					onBackToProjects={handleBackToProjects}

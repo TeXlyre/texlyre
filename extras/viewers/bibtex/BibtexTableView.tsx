@@ -1,6 +1,6 @@
-import type React from "react";
-import { useState, useMemo, useEffect, useRef } from "react";
-import type { BibtexEntry } from "./BibtexParser";
+import type React from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import type { BibtexEntry } from './BibtexParser';
 
 interface BibtexTableViewProps {
 	entries: BibtexEntry[];
@@ -19,7 +19,7 @@ export const BibtexTableView: React.FC<BibtexTableViewProps> = ({
 	onSingleEntryChange,
 }) => {
 	const [editingCell, setEditingCell] = useState<{ entryIndex: number; field: string } | null>(null);
-	const [editValue, setEditValue] = useState("");
+	const [editValue, setEditValue] = useState('');
 	const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
 	const tableRef = useRef<HTMLTableElement>(null);
 
@@ -126,12 +126,12 @@ export const BibtexTableView: React.FC<BibtexTableViewProps> = ({
 		}
 
 		setEditingCell(null);
-		setEditValue("");
+		setEditValue('');
 	};
 
 	const cancelEdit = () => {
 		setEditingCell(null);
-		setEditValue("");
+		setEditValue('');
 	};
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {

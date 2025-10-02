@@ -1,9 +1,9 @@
 // src/utils/dbDeleteUtils.ts
-import { IndexeddbPersistence } from "y-indexeddb";
-import * as Y from "yjs";
+import { IndexeddbPersistence } from 'y-indexeddb';
+import * as Y from 'yjs';
 
-import { fileStorageService } from "../services/FileStorageService";
-import type { Project } from "../types/projects";
+import { fileStorageService } from '../services/FileStorageService';
+import type { Project } from '../types/projects';
 
 export const deleteDatabase = async (dbName: string): Promise<void> => {
 	return new Promise((resolve, reject) => {
@@ -44,7 +44,7 @@ export const closeActiveConnections = async (
 			);
 		}
 	} catch (error) {
-		console.warn("Error closing FileStorageService connection:", error);
+		console.warn('Error closing FileStorageService connection:', error);
 	}
 };
 
@@ -52,7 +52,7 @@ export const cleanupProjectDatabases = async (
 	project: Project,
 ): Promise<void> => {
 	try {
-		const projectId = project.docUrl.startsWith("yjs:")
+		const projectId = project.docUrl.startsWith('yjs:')
 			? project.docUrl.slice(4)
 			: project.docUrl;
 
@@ -82,7 +82,7 @@ export const cleanupProjectDatabases = async (
 
 		console.log(`[dbDeleteUtils] Cleaned up databases for project: ${project.name}`);
 	} catch (error) {
-		console.error("Error cleaning up project databases:", error);
+		console.error('Error cleaning up project databases:', error);
 	}
 };
 
@@ -101,14 +101,14 @@ export const cleanupDocumentDatabases = async (
 
 		await new Promise<void>((resolve) => {
 			const timeout = setTimeout(() => resolve(), 2000);
-			persistence.once("synced", () => {
+			persistence.once('synced', () => {
 				clearTimeout(timeout);
 				resolve();
 			});
 		});
 
-		const dataMap = metadataDoc.getMap("data");
-		const documents = dataMap.get("documents") || [];
+		const dataMap = metadataDoc.getMap('data');
+		const documents = dataMap.get('documents') || [];
 
 		persistence.destroy();
 		metadataDoc.destroy();
@@ -130,6 +130,6 @@ export const cleanupDocumentDatabases = async (
 			}
 		}
 	} catch (error) {
-		console.error("Error cleaning up document databases:", error);
+		console.error('Error cleaning up document databases:', error);
 	}
 };

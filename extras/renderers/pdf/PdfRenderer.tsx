@@ -1,9 +1,9 @@
 // extras/renderers/pdf/PdfRenderer.tsx
-import type React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
+import type React from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 
 import {
 	ChevronLeftIcon,
@@ -16,17 +16,17 @@ import {
 	ZoomOutIcon,
 	ExpandIcon,
 	MinimizeIcon,
-} from "../../../src/components/common/Icons";
-import { pdfRendererSettings } from "./settings";
-import { useSettings } from "../../../src/hooks/useSettings";
-import { useProperties } from "../../../src/hooks/useProperties";
-import type { RendererProps } from "../../../src/plugins/PluginInterface";
-import "./styles.css";
+} from '../../../src/components/common/Icons';
+import { pdfRendererSettings } from './settings';
+import { useSettings } from '../../../src/hooks/useSettings';
+import { useProperties } from '../../../src/hooks/useProperties';
+import type { RendererProps } from '../../../src/plugins/PluginInterface';
+import './styles.css';
 
 const BASE_PATH = __BASE_PATH__
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-	"pdfjs-dist/build/pdf.worker.min.mjs",
+	'pdfjs-dist/build/pdf.worker.min.mjs',
 	import.meta.url,
 ).toString();
 
@@ -40,13 +40,13 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const propertiesRegistered = useRef(false);
 
 	const pdfRendererEnable =
-		(getSetting("pdf-renderer-enable")?.value as boolean) ?? true;
+		(getSetting('pdf-renderer-enable')?.value as boolean) ?? true;
 	const pdfRendererTextSelection =
-		(getSetting("pdf-renderer-text-selection")?.value as boolean) ?? true;
+		(getSetting('pdf-renderer-text-selection')?.value as boolean) ?? true;
 
 	const [numPages, setNumPages] = useState<number>(0);
 	const [currentPage, setCurrentPage] = useState<number>(1);
-	const [pageInput, setPageInput] = useState<string>("1");
+	const [pageInput, setPageInput] = useState<string>('1');
 	const [isEditingPageInput, setIsEditingPageInput] = useState<boolean>(false);
 	const [scale, setScale] = useState<number>(1.0);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -59,13 +59,13 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 	const contentRef = useRef<ArrayBuffer | null>(null);
 	const originalContentRef = useRef<ArrayBuffer | null>(null);
-	const contentHashRef = useRef<string>("");
+	const contentHashRef = useRef<string>('');
 	const containerRef = useRef<HTMLDivElement>(null);
 	const pageWidths = useRef<Map<number, number>>(new Map());
 	const pageHeights = useRef<Map<number, number>>(new Map());
 	const contentElRef = useRef<HTMLDivElement>(null);
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
-	const [fitMode, setFitMode] = useState<"fit-width" | "fit-height">("fit-width");
+	const [fitMode, setFitMode] = useState<'fit-width' | 'fit-height'>('fit-width');
 	const BUFFER_PAGES = 2;
 
 	useEffect(() => {
@@ -73,23 +73,23 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		propertiesRegistered.current = true;
 
 		registerProperty({
-			id: "pdf-renderer-zoom",
-			category: "UI",
-			subcategory: "PDF Viewer",
+			id: 'pdf-renderer-zoom',
+			category: 'UI',
+			subcategory: 'PDF Viewer',
 			defaultValue: 1.0,
 		});
 
 		registerProperty({
-			id: "pdf-renderer-scroll-view",
-			category: "UI",
-			subcategory: "PDF Viewer",
+			id: 'pdf-renderer-scroll-view',
+			category: 'UI',
+			subcategory: 'PDF Viewer',
 			defaultValue: false,
 		});
 	}, [registerProperty]);
 
 	useEffect(() => {
-		const storedZoom = getProperty("pdf-renderer-zoom");
-		const storedScrollView = getProperty("pdf-renderer-scroll-view");
+		const storedZoom = getProperty('pdf-renderer-zoom');
+		const storedScrollView = getProperty('pdf-renderer-scroll-view');
 
 		if (storedZoom !== undefined) {
 			setScale(Number(storedZoom));
@@ -103,7 +103,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const getContentHash = useCallback((buffer: ArrayBuffer): string => {
 		const view = new Uint8Array(buffer);
 		const sample = view.slice(0, Math.min(1024, view.length));
-		return `${buffer.byteLength}-${Array.from(sample.slice(0, 16)).join(",")}`;
+		return `${buffer.byteLength}-${Array.from(sample.slice(0, 16)).join(',')}`;
 	}, []);
 
 	useEffect(() => {
@@ -124,16 +124,16 @@ const PdfRenderer: React.FC<RendererProps> = ({
 					setError(null);
 				}
 			} catch (error) {
-				console.error("Error creating PDF data:", error);
-				setError("Failed to process PDF content");
+				console.error('Error creating PDF data:', error);
+				setError('Failed to process PDF content');
 				setIsLoading(false);
 			}
 		} else {
 			setPdfData(null);
 			contentRef.current = null;
 			originalContentRef.current = null;
-			contentHashRef.current = "";
-			setError("No PDF content available");
+			contentHashRef.current = '';
+			setError('No PDF content available');
 			setIsLoading(false);
 		}
 	}, [content, getContentHash]);
@@ -150,7 +150,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		({ numPages }: { numPages: number }) => {
 			setNumPages(numPages);
 			setCurrentPage(1);
-			if (!isEditingPageInput) setPageInput("1");
+			if (!isEditingPageInput) setPageInput('1');
 			setIsLoading(false);
 			setError(null);
 		},
@@ -175,7 +175,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			const targetPage = Math.max(currentPage - 1, 1);
 			const targetTop = getPageTop(targetPage);
 			if (scrollContainerRef.current) {
-				scrollContainerRef.current.scrollTo({ top: targetTop, behavior: "smooth" });
+				scrollContainerRef.current.scrollTo({ top: targetTop, behavior: 'smooth' });
 			}
 			setCurrentPage(targetPage);
 			if (!isEditingPageInput) setPageInput(String(targetPage));
@@ -193,7 +193,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			const targetPage = Math.min(currentPage + 1, numPages);
 			const targetTop = getPageTop(targetPage);
 			if (scrollContainerRef.current) {
-				scrollContainerRef.current.scrollTo({ top: targetTop, behavior: "smooth" });
+				scrollContainerRef.current.scrollTo({ top: targetTop, behavior: 'smooth' });
 			}
 			setCurrentPage(targetPage);
 			if (!isEditingPageInput) setPageInput(String(targetPage));
@@ -215,13 +215,13 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 	const handlePageInputKeyDown = useCallback(
 		(event: React.KeyboardEvent<HTMLInputElement>) => {
-			if (event.key === "Enter") {
+			if (event.key === 'Enter') {
 				const pageNum = Number.parseInt(pageInput, 10);
 				if (!Number.isNaN(pageNum) && pageNum >= 1 && pageNum <= numPages) {
 					if (scrollView) {
 						const targetTop = getPageTop(pageNum);
 						if (scrollContainerRef.current) {
-							scrollContainerRef.current.scrollTo({ top: targetTop, behavior: "smooth" });
+							scrollContainerRef.current.scrollTo({ top: targetTop, behavior: 'smooth' });
 						}
 					}
 					setCurrentPage(pageNum);
@@ -236,7 +236,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		[numPages, currentPage, scrollView, pageInput, getPageTop],
 	);
 
-	const computeFitScale = useCallback((mode: "fit-width" | "fit-height") => {
+	const computeFitScale = useCallback((mode: 'fit-width' | 'fit-height') => {
 		const containerWidth =
 			contentElRef.current?.clientWidth ||
 			document.querySelector('.pdf-renderer-content')?.clientWidth ||
@@ -249,14 +249,14 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		let pageHeight = 842;
 		const currentW = pageWidths.current.get(currentPage);
 		const currentH = pageHeights.current.get(currentPage);
-		if (typeof currentW === "number") pageWidth = currentW;
-		if (typeof currentH === "number") pageHeight = currentH;
+		if (typeof currentW === 'number') pageWidth = currentW;
+		if (typeof currentH === 'number') pageHeight = currentH;
 		if ((!currentW || !currentH) && pageWidths.current.size > 0) {
 			const firstKey = Math.min(...Array.from(pageWidths.current.keys()));
 			pageWidth = pageWidths.current.get(firstKey) || pageWidth;
 			pageHeight = pageHeights.current.get(firstKey) || pageHeight;
 		}
-		if (mode === "fit-width") {
+		if (mode === 'fit-width') {
 			return Math.max(0.5, Math.min(10, (containerWidth - 40) / pageWidth));
 		} else {
 			return Math.max(0.5, Math.min(10, (containerHeight - 40) / pageHeight));
@@ -264,17 +264,17 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	}, [currentPage]);
 
 	const handleFitToggle = useCallback(() => {
-		const nextMode = fitMode === "fit-width" ? "fit-height" : "fit-width";
+		const nextMode = fitMode === 'fit-width' ? 'fit-height' : 'fit-width';
 		setFitMode(nextMode);
 		const s = computeFitScale(nextMode);
 		setScale(s);
-		setProperty("pdf-renderer-zoom", s);
+		setProperty('pdf-renderer-zoom', s);
 	}, [fitMode, computeFitScale, setProperty]);
 
 	const handleZoomIn = useCallback(() => {
 		setScale((prev) => {
 			const newScale = Math.min(prev + 0.25, 5);
-			setProperty("pdf-renderer-zoom", newScale);
+			setProperty('pdf-renderer-zoom', newScale);
 			return newScale;
 		});
 	}, [setProperty]);
@@ -282,23 +282,23 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const handleZoomOut = useCallback(() => {
 		setScale((prev) => {
 			const newScale = Math.max(prev - 0.25, 0.25);
-			setProperty("pdf-renderer-zoom", newScale);
+			setProperty('pdf-renderer-zoom', newScale);
 			return newScale;
 		});
 	}, [setProperty]);
 
 	const handleZoomChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
 		const value = event.target.value;
-		if (value === "custom") return;
+		if (value === 'custom') return;
 		const newScale = parseFloat(value) / 100;
 		setScale(newScale);
-		setProperty("pdf-renderer-zoom", newScale);
+		setProperty('pdf-renderer-zoom', newScale);
 	}, [setProperty]);
 
 	const handleToggleView = useCallback(() => {
 		setScrollView((prev) => {
 			const newScrollView = !prev;
-			setProperty("pdf-renderer-scroll-view", newScrollView);
+			setProperty('pdf-renderer-scroll-view', newScrollView);
 			pageRefs.current.clear();
 			return newScrollView;
 		});
@@ -329,8 +329,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 	const onPageLoadSuccess = useCallback((_pageNumber: number) => {
 		return (_page: any) => {
-			const v = (typeof _page?.getViewport === "function" ? _page.getViewport({ scale: 1 }) : undefined) as { width: number; height: number } | undefined;
-			if (v && typeof v.width === "number" && typeof v.height === "number") {
+			const v = (typeof _page?.getViewport === 'function' ? _page.getViewport({ scale: 1 }) : undefined) as { width: number; height: number } | undefined;
+			if (v && typeof v.width === 'number' && typeof v.height === 'number') {
 				const wasEmpty = pageWidths.current.size === 0;
 				pageWidths.current.set(_pageNumber, v.width);
 				pageHeights.current.set(_pageNumber, v.height);
@@ -344,7 +344,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				if (wasEmpty) {
 					const s = computeFitScale(fitMode);
 					setScale(s);
-					setProperty("pdf-renderer-zoom", s);
+					setProperty('pdf-renderer-zoom', s);
 				}
 			}
 		};
@@ -413,7 +413,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			(entries) => {
 				entries.forEach((entry) => {
 					const pageNum = Number.parseInt(
-						entry.target.getAttribute("data-page-number") || "0",
+						entry.target.getAttribute('data-page-number') || '0',
 					);
 					if (entry.isIntersecting && entry.intersectionRatio > 0.3) {
 						setCurrentPage(pageNum);
@@ -443,22 +443,22 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		) {
 			try {
 				const blob = new Blob([originalContentRef.current], {
-					type: "application/pdf",
+					type: 'application/pdf',
 				});
 				const url = URL.createObjectURL(blob);
-				const a = document.createElement("a");
+				const a = document.createElement('a');
 				a.href = url;
-				a.download = fileName || "document.pdf";
+				a.download = fileName || 'document.pdf';
 				document.body.appendChild(a);
 				a.click();
 				document.body.removeChild(a);
 				URL.revokeObjectURL(url);
 			} catch (error) {
-				console.error("Export error:", error);
-				setError("Failed to export PDF");
+				console.error('Export error:', error);
+				setError('Failed to export PDF');
 			}
 		} else {
-			setError("Cannot export: PDF content is not available");
+			setError('Cannot export: PDF content is not available');
 		}
 	}, [fileName, onDownload]);
 
@@ -472,23 +472,23 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			}
 
 			switch (event.key) {
-				case "ArrowLeft":
-				case "ArrowUp":
+				case 'ArrowLeft':
+				case 'ArrowUp':
 					event.preventDefault();
 					handlePreviousPage();
 					break;
-				case "ArrowRight":
-				case "ArrowDown":
-				case " ":
+				case 'ArrowRight':
+				case 'ArrowDown':
+				case ' ':
 					event.preventDefault();
 					handleNextPage();
 					break;
 			}
 		};
 
-		window.addEventListener("keydown", handleKeyDown);
+		window.addEventListener('keydown', handleKeyDown);
 		return () => {
-			window.removeEventListener("keydown", handleKeyDown);
+			window.removeEventListener('keydown', handleKeyDown);
 		};
 	}, [handlePreviousPage, handleNextPage]);
 
@@ -505,7 +505,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 	return (
 		<div className="pdf-renderer-container" ref={containerRef}>
-			<div className={`pdf-toolbar ${isFullscreen ? "fullscreen-toolbar" : ""}`}>
+			<div className={`pdf-toolbar ${isFullscreen ? 'fullscreen-toolbar' : ''}`}>
 				<div className="toolbar">
 					<div id="toolbarLeft">
 						<div className="toolbarButtonGroup">
@@ -557,13 +557,13 @@ const PdfRenderer: React.FC<RendererProps> = ({
 								<ZoomOutIcon />
 							</button>
 							{(() => {
-								const zoomOptions = pdfRendererSettings.find(s => s.id === "pdf-renderer-initial-zoom")?.options || [];
+								const zoomOptions = pdfRendererSettings.find(s => s.id === 'pdf-renderer-initial-zoom')?.options || [];
 								const currentZoom = Math.round(scale * 100).toString();
 								const hasCustomZoom = !zoomOptions.some(opt => String(opt.value) === currentZoom);
 
 								return (
 									<select
-										value={hasCustomZoom ? "custom" : currentZoom}
+										value={hasCustomZoom ? 'custom' : currentZoom}
 										onChange={handleZoomChange}
 										disabled={isLoading}
 										className="toolbarZoomSelect"
@@ -595,7 +595,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 							<button
 								onClick={handleFitToggle}
 								className="toolbarButton"
-								title={fitMode === "fit-width" ? "Fit to Width" : "Fit to Height"}
+								title={fitMode === 'fit-width' ? 'Fit to Width' : 'Fit to Height'}
 								disabled={isLoading}
 							>
 								<FitToWidthIcon />
@@ -603,7 +603,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 							<button
 								onClick={handleToggleView}
 								className="toolbarButton"
-								title={scrollView ? "Single Page View" : "Scroll View"}
+								title={scrollView ? 'Single Page View' : 'Scroll View'}
 								disabled={isLoading}
 							>
 								{scrollView ? <PageIcon /> : <ScrollIcon />}
@@ -611,7 +611,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 							<button
 								onClick={handleToggleFullscreen}
 								className="toolbarButton"
-								title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+								title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
 								disabled={isLoading}
 							>
 								{isFullscreen ? <MinimizeIcon /> : <ExpandIcon />}
@@ -631,7 +631,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				</div>
 			</div>
 
-			<div className={`pdf-renderer-content ${isFullscreen ? "fullscreen" : ""}`} ref={scrollView ? scrollContainerRef : contentElRef}>
+			<div className={`pdf-renderer-content ${isFullscreen ? 'fullscreen' : ''}`} ref={scrollView ? scrollContainerRef : contentElRef}>
 				{fileData && (
 					<Document
 						file={fileData}

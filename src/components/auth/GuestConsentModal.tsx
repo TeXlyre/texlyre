@@ -1,9 +1,9 @@
 // src/components/auth/GuestConsentModal.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import { UserIcon } from "../common/Icons";
-import Modal from "../common/Modal";
+import { UserIcon } from '../common/Icons';
+import Modal from '../common/Modal';
 
 interface GuestConsentModalProps {
 	isOpen: boolean;
@@ -123,7 +123,7 @@ const GuestConsentModal: React.FC<GuestConsentModalProps> = ({
 								required
 							/>
 							<span>
-								I understand this is a temporary session and how my data is handled as described in the{" "}
+								I understand this is a temporary session and how my data is handled as described in the{' '}
 								<a href="#" onClick={(e) => { e.preventDefault(); onShowPrivacy(); }}>
 									privacy information
 								</a>

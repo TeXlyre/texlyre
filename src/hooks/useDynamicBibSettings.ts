@@ -21,8 +21,8 @@ export const useDynamicBibSettings = () => {
 
 			// Add option to create new file
 			options.unshift({
-				label: "Create new bibliography.bib",
-				value: "CREATE_NEW"
+				label: 'Create new bibliography.bib',
+				value: 'CREATE_NEW'
 			});
 
 			// Update all LSP plugin settings that have target-bib-file settings
@@ -84,7 +84,7 @@ export const useDynamicBibSettings = () => {
 	}, [updateBibFileOptions]);
 
 	const handleTargetFileChange = useCallback(async (settingId: string, newValue: string) => {
-		if (newValue === "CREATE_NEW") {
+		if (newValue === 'CREATE_NEW') {
 			const createdFile = await createNewBibFile();
 			if (createdFile) {
 				// Update the specific setting that triggered this
@@ -100,12 +100,12 @@ export const useDynamicBibSettings = () => {
 
 		registerSetting({
 			id: settingId,
-			category: "LSP",
+			category: 'LSP',
 			subcategory: pluginName,
-			type: "select",
-			label: "Target bibliography file",
+			type: 'select',
+			label: 'Target bibliography file',
 			description: `Local .bib file to import ${pluginName} entries into`,
-			defaultValue: "",
+			defaultValue: '',
 			options: [],
 			onChange: (value: unknown) => handleTargetFileChange(settingId, value as string)
 		});

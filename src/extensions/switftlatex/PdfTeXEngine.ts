@@ -3,8 +3,8 @@ import {
 	BaseEngine,
 	type CompileResult,
 	type EngineConfig,
-} from "./BaseEngine";
-import { EngineLoader } from "./EngineLoader";
+} from './BaseEngine';
+import { EngineLoader } from './EngineLoader';
 
 const BASE_PATH = __BASE_PATH__;
 
@@ -17,16 +17,16 @@ declare global {
 export class PdfTeXEngine extends BaseEngine {
 	constructor() {
 		const config: EngineConfig = {
-			name: "PdfTeX",
+			name: 'PdfTeX',
 			setupScript: `${BASE_PATH}/core/swiftlatex/TexlyrePdfTeXEngineSetup.js`,
 			engineScript: `${BASE_PATH}/core/swiftlatex/texlyrepdftex.js`,
-			engineClass: "PdfTeXEngine",
+			engineClass: 'PdfTeXEngine',
 		};
 		super(config);
 	}
 
 	async loadScripts(): Promise<void> {
-		if (typeof window.PdfTeXEngine === "function") {
+		if (typeof window.PdfTeXEngine === 'function') {
 			return;
 		}
 
@@ -35,8 +35,8 @@ export class PdfTeXEngine extends BaseEngine {
 			this.config.engineScript,
 		]);
 
-		if (typeof window.PdfTeXEngine !== "function") {
-			throw new Error("PdfTeXEngine not available after loading scripts");
+		if (typeof window.PdfTeXEngine !== 'function') {
+			throw new Error('PdfTeXEngine not available after loading scripts');
 		}
 	}
 
@@ -50,27 +50,27 @@ export class PdfTeXEngine extends BaseEngine {
 	}
 
 	writeMemFSFile(filename: string, content: string | Uint8Array): void {
-		if (!this.engine) throw new Error("Engine not initialized");
+		if (!this.engine) throw new Error('Engine not initialized');
 		this.engine.writeMemFSFile(filename, content);
 	}
 
 	makeMemFSFolder(folder: string): void {
-		if (!this.engine) throw new Error("Engine not initialized");
+		if (!this.engine) throw new Error('Engine not initialized');
 		this.engine.makeMemFSFolder(folder);
 	}
 
 	setEngineMainFile(filename: string): void {
-		if (!this.engine) throw new Error("Engine not initialized");
+		if (!this.engine) throw new Error('Engine not initialized');
 		this.engine.setEngineMainFile(filename);
 	}
 
 	flushCache(): void {
-		if (!this.engine) throw new Error("Engine not initialized");
+		if (!this.engine) throw new Error('Engine not initialized');
 		this.engine.flushCache();
 	}
 
 	async dumpDirectory(dir: string): Promise<{ [key: string]: ArrayBuffer }> {
-		if (!this.engine) throw new Error("Engine not initialized");
+		if (!this.engine) throw new Error('Engine not initialized');
 		return await this.engine.dumpDirectory(dir);
 	}
 
@@ -79,19 +79,19 @@ export class PdfTeXEngine extends BaseEngine {
 		_fileNodes: any[],
 	): Promise<CompileResult> {
 		if (!this.engine || !this.isReady()) {
-			throw new Error("Engine not ready");
+			throw new Error('Engine not ready');
 		}
 
-		this.setStatus("compiling");
+		this.setStatus('compiling');
 
 		try {
 			await this.engine.compileLaTeX(); // Do it twice for tables
 			await this.engine.compileLaTeX(); // Do it thrice for good luck and bib
 			const result = await this.engine.compileLaTeX();
-			this.setStatus("ready");
+			this.setStatus('ready');
 			// this.flushCache();
 
-			console.log("[PdfTeXEngine] PDFTeX compilation result:", {
+			console.log('[PdfTeXEngine] PDFTeX compilation result:', {
 				status: result.status,
 				hasPdf: !!result.pdf,
 				pdfSize: result.pdf?.length
@@ -104,7 +104,7 @@ export class PdfTeXEngine extends BaseEngine {
 			};
 		} catch (error) {
 			this.flushCache();
-			this.setStatus("error");
+			this.setStatus('error');
 			throw error;
 		}
 	}

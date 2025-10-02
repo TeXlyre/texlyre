@@ -1,13 +1,13 @@
 // src/components/editor/LinkFileModal.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import { useFileTree } from "../../hooks/useFileTree";
-import { fileStorageService } from "../../services/FileStorageService";
-import type { FileNode } from "../../types/files";
-import { isTemporaryFile } from "../../utils/fileUtils";
-import { FolderIcon } from "../common/Icons";
-import Modal from "../common/Modal";
+import { useFileTree } from '../../hooks/useFileTree';
+import { fileStorageService } from '../../services/FileStorageService';
+import type { FileNode } from '../../types/files';
+import { isTemporaryFile } from '../../utils/fileUtils';
+import { FolderIcon } from '../common/Icons';
+import Modal from '../common/Modal';
 
 interface LinkFileModalProps {
 	isOpen: boolean;
@@ -25,10 +25,10 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 	onLinked,
 }) => {
 	const { fileTree, refreshFileTree } = useFileTree();
-	const [selectedDirectory, setSelectedDirectory] = useState<string>("/");
+	const [selectedDirectory, setSelectedDirectory] = useState<string>('/');
 	const [fileName, setFileName] = useState(() => {
-		const baseName = documentName.replace(/[^a-zA-Z0-9_-]/g, "_");
-		return baseName.endsWith(".tex") ? baseName : `${baseName}.tex`;
+		const baseName = documentName.replace(/[^a-zA-Z0-9_-]/g, '_');
+		return baseName.endsWith('.tex') ? baseName : `${baseName}.tex`;
 	});
 	const [isCreating, setIsCreating] = useState(false);
 
@@ -37,7 +37,7 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 			let directories: FileNode[] = [];
 
 			for (const node of nodes) {
-				if (node.type === "directory" && !isTemporaryFile(node.path)) {
+				if (node.type === 'directory' && !isTemporaryFile(node.path)) {
 					directories.push(node);
 					if (node.children) {
 						directories = directories.concat(collectDirectories(node.children));
@@ -57,22 +57,22 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 		setIsCreating(true);
 		try {
 			const filePath =
-				selectedDirectory === "/"
+				selectedDirectory === '/'
 					? `/${fileName.trim()}`
 					: `${selectedDirectory}/${fileName.trim()}`;
 
-			const _file = new File([""], fileName.trim(), { type: "text/plain" });
+			const _file = new File([''], fileName.trim(), { type: 'text/plain' });
 			await fileStorageService.createDirectoryPath(filePath);
 
 			const fileNode: FileNode = {
 				id: crypto.randomUUID(),
 				name: fileName.trim(),
 				path: filePath,
-				type: "file",
+				type: 'file',
 				content: new ArrayBuffer(0),
 				lastModified: Date.now(),
 				size: 0,
-				mimeType: "text/plain",
+				mimeType: 'text/plain',
 				isBinary: false,
 				documentId: documentId,
 			};
@@ -83,12 +83,12 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 		} catch (error) {
 			if (
 				error instanceof Error &&
-				error.message === "File operation cancelled by user"
+				error.message === 'File operation cancelled by user'
 			) {
 				// User cancelled due to conflict
 				return;
 			}
-			console.error("Error creating linked file:", error);
+			console.error('Error creating linked file:', error);
 		} finally {
 			setIsCreating(false);
 		}
@@ -120,8 +120,8 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 					<label>Select destination folder</label>
 					<div className="directory-tree">
 						<div
-							className={`directory-option ${selectedDirectory === "/" ? "selected" : ""}`}
-							onClick={() => setSelectedDirectory("/")}
+							className={`directory-option ${selectedDirectory === '/' ? 'selected' : ''}`}
+							onClick={() => setSelectedDirectory('/')}
 						>
 							<FolderIcon />
 							<span>/</span>
@@ -130,7 +130,7 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 						{getDirectoryOptions().map((dir) => (
 							<div
 								key={dir.path}
-								className={`directory-option ${selectedDirectory === dir.path ? "selected" : ""}`}
+								className={`directory-option ${selectedDirectory === dir.path ? 'selected' : ''}`}
 								onClick={() => setSelectedDirectory(dir.path)}
 							>
 								<FolderIcon />
@@ -155,7 +155,7 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 						onClick={handleCreate}
 						disabled={isCreating || !fileName.trim()}
 					>
-						{isCreating ? "Creating..." : "Create & Link"}
+						{isCreating ? 'Creating...' : 'Create & Link'}
 					</button>
 				</div>
 			</div>

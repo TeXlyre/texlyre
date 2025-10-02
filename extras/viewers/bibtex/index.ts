@@ -1,3 +1,3 @@
-import bibtexViewerPlugin from "./BibtexViewerPlugin";
+import bibtexViewerPlugin from './BibtexViewerPlugin';
 
 export default bibtexViewerPlugin;

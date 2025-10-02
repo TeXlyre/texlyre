@@ -1,6 +1,6 @@
 // src/types/typst.ts
 
-export type TypstOutputFormat = "pdf" | "svg" | "canvas";
+export type TypstOutputFormat = 'pdf' | 'svg' | 'canvas';
 
 export interface TypstCompileResult {
     status: number;
@@ -23,7 +23,7 @@ export interface TypstContextType {
     compileDocument: (mainFileName: string, format?: TypstOutputFormat) => Promise<void>;
     stopCompilation: () => void;
     toggleOutputView: () => void;
-    currentView: "log" | "output";
+    currentView: 'log' | 'output';
     clearCache: () => void;
     triggerAutoCompile: () => void;
     activeCompiler: string | null;

@@ -1,5 +1,5 @@
 // src/components/common/Icons.tsx
-import type React from "react";
+import type React from 'react';
 
 export const OfflineIcon: React.FC = () => (
     <svg
@@ -976,7 +976,7 @@ export const StarIcon: React.FC<{ filled?: boolean }> = ({
 		width="16"
 		height="16"
 		viewBox="0 0 24 24"
-		fill={filled ? "currentColor" : "none"}
+		fill={filled ? 'currentColor' : 'none'}
 		stroke="currentColor"
 		strokeWidth="2"
 		strokeLinecap="round"

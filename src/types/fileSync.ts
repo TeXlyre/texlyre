@@ -19,7 +19,7 @@ export interface FileSyncHoldSignal {
 	targetPeerId: string;
 	timestamp: number;
 	expiresAt: number;
-	status: "active" | "expired" | "released";
+	status: 'active' | 'expired' | 'released';
 }
 
 export interface FileSyncRequest {
@@ -34,7 +34,7 @@ export interface FileSyncRequest {
 	documentIds?: (string | undefined)[];
 	deletionStates?: boolean[];
 	timestamp: number;
-	status: "pending" | "ready" | "completed" | "failed";
+	status: 'pending' | 'ready' | 'completed' | 'failed';
 	filePizzaLink?: string;
 	holdSignalId: string;
 }
@@ -46,19 +46,19 @@ export interface FileSyncVerification {
 	verifierUsername: string;
 	providerId: string;
 	timestamp: number;
-	status: "success" | "failure";
+	status: 'success' | 'failure';
 	message?: string;
 }
 
 export interface FileSyncNotification {
 	id: string;
 	type:
-		| "sync_progress"
-		| "sync_complete"
-		| "sync_error"
-		| "sync_request"
-		| "hold_signal"
-		| "verification";
+		| 'sync_progress'
+		| 'sync_complete'
+		| 'sync_error'
+		| 'sync_request'
+		| 'hold_signal'
+		| 'verification';
 	message: string;
 	timestamp: number;
 	data?: Record<string, any>;

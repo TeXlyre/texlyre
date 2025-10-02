@@ -1,27 +1,27 @@
-import type { Setting } from "../../../src/contexts/SettingsContext";
+import type { Setting } from '../../../src/contexts/SettingsContext';
 
 export const bibtexViewerSettings: Setting[] = [
 	{
-		id: "bibtex-viewer-auto-tidy",
-		category: "Viewers",
-		subcategory: "BibTeX Editor",
-		type: "checkbox",
-		label: "Auto-tidy on open",
-		description: "Automatically tidy BibTeX files when they are opened",
+		id: 'bibtex-viewer-auto-tidy',
+		category: 'Viewers',
+		subcategory: 'BibTeX Editor',
+		type: 'checkbox',
+		label: 'Auto-tidy on open',
+		description: 'Automatically tidy BibTeX files when they are opened',
 		defaultValue: true,
 	},
 	{
-		id: "bibtex-viewer-tidy-options",
-		category: "Viewers",
-		subcategory: "BibTeX Editor",
-		type: "select",
-		label: "Tidy preset",
-		description: "Choose a preset for tidying BibTeX files",
-		defaultValue: "standard",
+		id: 'bibtex-viewer-tidy-options',
+		category: 'Viewers',
+		subcategory: 'BibTeX Editor',
+		type: 'select',
+		label: 'Tidy preset',
+		description: 'Choose a preset for tidying BibTeX files',
+		defaultValue: 'standard',
 		options: [
-			{ label: "Minimal", value: "minimal" },
-			{ label: "Standard", value: "standard" },
-			{ label: "Strict", value: "strict" },
+			{ label: 'Minimal', value: 'minimal' },
+			{ label: 'Standard', value: 'standard' },
+			{ label: 'Strict', value: 'strict' },
 		],
 	},
 ];

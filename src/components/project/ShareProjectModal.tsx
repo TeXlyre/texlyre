@@ -1,10 +1,10 @@
 // src/components/project/ShareProjectModal.tsx
-import QRCode from "qrcode";
-import type React from "react";
-import { useEffect, useState } from "react";
+import QRCode from 'qrcode';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 
-import { CopyUrlIcon, ShareIcon } from "../common/Icons";
-import Modal from "../common/Modal";
+import { CopyUrlIcon, ShareIcon } from '../common/Icons';
+import Modal from '../common/Modal';
 
 interface ShareProjectModalProps {
 	isOpen: boolean;
@@ -19,9 +19,9 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 	projectName,
 	shareUrl,
 }) => {
-	const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
-	const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">(
-		"idle",
+	const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+	const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>(
+		'idle',
 	);
 
 	useEffect(() => {
@@ -30,8 +30,8 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 				width: 200,
 				margin: 2,
 				color: {
-					dark: "#000000",
-					light: "#ffffff",
+					dark: '#000000',
+					light: '#ffffff',
 				},
 			})
 				.then(setQrCodeUrl)
@@ -42,34 +42,34 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 	const handleCopyLink = async () => {
 		try {
 			await navigator.clipboard.writeText(shareUrl);
-			setCopyStatus("copied");
-			setTimeout(() => setCopyStatus("idle"), 2000);
+			setCopyStatus('copied');
+			setTimeout(() => setCopyStatus('idle'), 2000);
 		} catch (error) {
-			console.error("Failed to copy to clipboard:", error);
-			setCopyStatus("error");
-			setTimeout(() => setCopyStatus("idle"), 2000);
+			console.error('Failed to copy to clipboard:', error);
+			setCopyStatus('error');
+			setTimeout(() => setCopyStatus('idle'), 2000);
 		}
 	};
 
 	const getCopyButtonText = () => {
 		switch (copyStatus) {
-			case "copied":
-				return "Copied!";
-			case "error":
-				return "Failed to copy";
+			case 'copied':
+				return 'Copied!';
+			case 'error':
+				return 'Failed to copy';
 			default:
-				return "";
+				return '';
 		}
 	};
 
 	const getCopyButtonClass = () => {
 		switch (copyStatus) {
-			case "copied":
-				return "button primary smaller";
-			case "error":
-				return "button danger smaller";
+			case 'copied':
+				return 'button primary smaller';
+			case 'error':
+				return 'button danger smaller';
 			default:
-				return "button secondary icon-only";
+				return 'button secondary icon-only';
 		}
 	};
 
@@ -100,7 +100,7 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 						<button
 							onClick={handleCopyLink}
 							className={getCopyButtonClass()}
-							disabled={copyStatus === "copied"}
+							disabled={copyStatus === 'copied'}
 						>
 							<CopyUrlIcon />
 							{getCopyButtonText()}
