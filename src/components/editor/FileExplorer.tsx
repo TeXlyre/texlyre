@@ -30,6 +30,7 @@ interface FileExplorerProps {
 	initialExpandedPaths?: string[];
 	currentProjectId?: string | null;
 	onExportCurrentProject?: (projectId: string) => void;
+	projectType?: 'latex' | 'typst';
 }
 
 interface FilePropertiesInfo {
@@ -49,7 +50,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	initialSelectedFile,
 	initialExpandedPaths,
 	currentProjectId,
-	onExportCurrentProject
+	onExportCurrentProject,
+	projectType
 }) => {
 	const {
 		fileTree,
@@ -210,8 +212,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	};
 
 	const handleStartCreateFile = (parentPath = '/') => {
+		const extension = projectType === 'typst' ? '.typ' : '.tex';
 		setCreatingNewItem({ type: 'file', parentPath });
-		setNewItemName('new_file.tex');
+		setNewItemName(`new_file${extension}`);
 		setActiveMenu(null);
 	};
 

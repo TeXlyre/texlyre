@@ -109,124 +109,124 @@ const EditorContent: React.FC<{
 	onSaveDocument,
 	onSelectDocument,
 }) => {
-	const [showUnlinkedNotice, setShowUnlinkedNotice] = useState(false);
-	const { parseComments, getCommentAtPosition, addComment, updateComments } =
-		useComments();
-	const fileInfo = usePluginFileInfo(fileId, fileName);
-	const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
-	const { viewRef, isUpdatingRef, showSaveIndicator } = EditorLoader(
-		editorRef,
-		docUrl,
-		documentId,
-		isDocumentSelected,
-		textContent,
-		onUpdateContent,
-		parseComments,
-		addComment,
-		updateComments,
-		isEditingFile,
-		isViewOnly,
-		fileName,
-		fileId,
-		true
-	);
-
-	useEffect(() => {
-		if (isDocumentSelected && textContent) {
-			updateComments(textContent);
-		}
-	}, [textContent, isDocumentSelected, updateComments]);
-
-	useEffect(() => {
-		if (shouldShowLatexOutput) {
-			document.dispatchEvent(new CustomEvent('show-latex-output'));
-		}
-	}, [shouldShowLatexOutput]);
-
-	const handleContentChanged = useCallback(
-		(event: Event) => {
-			const customEvent = event as CustomEvent;
-			if (customEvent.detail && customEvent.detail.view === viewRef.current) {
-				const editorContent = customEvent.detail.content;
-				updateComments(editorContent);
-				const comments = parseComments(editorContent);
-				processComments(viewRef.current!, comments);
-			}
-		},
-		[parseComments, updateComments, viewRef],
-	);
-
-	useEffect(() => {
-		let timeoutId: NodeJS.Timeout;
-
-		if (
-			!isEditingFile &&
-			documentId &&
-			!linkedFileInfo?.fileName &&
-			documents
-		) {
-			timeoutId = setTimeout(() => {
-				setShowUnlinkedNotice(true);
-			}, 250);
-		} else {
-			setShowUnlinkedNotice(false);
-		}
-
-		return () => {
-			if (timeoutId) {
-				clearTimeout(timeoutId);
-			}
-		};
-	}, [isEditingFile, documentId, linkedFileInfo?.fileName, documents]);
-
-	useEffect(() => {
-		document.addEventListener(
-			'codemirror-content-changed',
-			handleContentChanged,
+		const [showUnlinkedNotice, setShowUnlinkedNotice] = useState(false);
+		const { parseComments, getCommentAtPosition, addComment, updateComments } =
+			useComments();
+		const fileInfo = usePluginFileInfo(fileId, fileName);
+		const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
+		const { viewRef, isUpdatingRef, showSaveIndicator } = EditorLoader(
+			editorRef,
+			docUrl,
+			documentId,
+			isDocumentSelected,
+			textContent,
+			onUpdateContent,
+			parseComments,
+			addComment,
+			updateComments,
+			isEditingFile,
+			isViewOnly,
+			fileName,
+			fileId,
+			true
 		);
 
-		return () => {
-			document.removeEventListener(
+		useEffect(() => {
+			if (isDocumentSelected && textContent) {
+				updateComments(textContent);
+			}
+		}, [textContent, isDocumentSelected, updateComments]);
+
+		useEffect(() => {
+			if (shouldShowLatexOutput) {
+				document.dispatchEvent(new CustomEvent('show-latex-output'));
+			}
+		}, [shouldShowLatexOutput]);
+
+		const handleContentChanged = useCallback(
+			(event: Event) => {
+				const customEvent = event as CustomEvent;
+				if (customEvent.detail && customEvent.detail.view === viewRef.current) {
+					const editorContent = customEvent.detail.content;
+					updateComments(editorContent);
+					const comments = parseComments(editorContent);
+					processComments(viewRef.current!, comments);
+				}
+			},
+			[parseComments, updateComments, viewRef],
+		);
+
+		useEffect(() => {
+			let timeoutId: NodeJS.Timeout;
+
+			if (
+				!isEditingFile &&
+				documentId &&
+				!linkedFileInfo?.fileName &&
+				documents
+			) {
+				timeoutId = setTimeout(() => {
+					setShowUnlinkedNotice(true);
+				}, 250);
+			} else {
+				setShowUnlinkedNotice(false);
+			}
+
+			return () => {
+				if (timeoutId) {
+					clearTimeout(timeoutId);
+				}
+			};
+		}, [isEditingFile, documentId, linkedFileInfo?.fileName, documents]);
+
+		useEffect(() => {
+			document.addEventListener(
 				'codemirror-content-changed',
 				handleContentChanged,
 			);
-		};
-	}, [handleContentChanged]);
 
-	useEffect(() => {
-		const handleAddCommentToEditor = (event: Event) => {
-			const customEvent = event as CustomEvent;
-			if (!viewRef.current || isViewOnly) return;
+			return () => {
+				document.removeEventListener(
+					'codemirror-content-changed',
+					handleContentChanged,
+				);
+			};
+		}, [handleContentChanged]);
 
-			const { content, selection } = customEvent.detail;
-			if (content && selection && selection.from !== selection.to) {
-				try {
-					const rawComment = addComment(content) as any;
-					if (rawComment?.openTag && rawComment.closeTag) {
-						viewRef.current.dispatch({
-							changes: [
-								{ from: selection.to, insert: rawComment.closeTag },
-								{ from: selection.from, insert: rawComment.openTag },
-							],
-						});
-						updateComments(viewRef.current.state.doc.toString());
+		useEffect(() => {
+			const handleAddCommentToEditor = (event: Event) => {
+				const customEvent = event as CustomEvent;
+				if (!viewRef.current || isViewOnly) return;
+
+				const { content, selection } = customEvent.detail;
+				if (content && selection && selection.from !== selection.to) {
+					try {
+						const rawComment = addComment(content) as any;
+						if (rawComment?.openTag && rawComment.closeTag) {
+							viewRef.current.dispatch({
+								changes: [
+									{ from: selection.to, insert: rawComment.closeTag },
+									{ from: selection.from, insert: rawComment.openTag },
+								],
+							});
+							updateComments(viewRef.current.state.doc.toString());
+						}
+					} catch (error) {
+						console.error('Error adding comment:', error);
 					}
-				} catch (error) {
-					console.error('Error adding comment:', error);
 				}
-			}
-		};
+			};
 
-		document.addEventListener('add-comment-to-editor', handleAddCommentToEditor);
+			document.addEventListener('add-comment-to-editor', handleAddCommentToEditor);
 
-		return () => {
-			document.removeEventListener('add-comment-to-editor', handleAddCommentToEditor);
-		};
-	}, [viewRef, isViewOnly, addComment, updateComments]);
+			return () => {
+				document.removeEventListener('add-comment-to-editor', handleAddCommentToEditor);
+			};
+		}, [viewRef, isViewOnly, addComment, updateComments]);
 
-	const tooltipInfo =
-		isEditingFile && fileName
-			? [
+		const tooltipInfo =
+			isEditingFile && fileName
+				? [
 					`File: ${fileName}`,
 					`Path: ${filePath || fileInfo.filePath}`,
 					`Mode: ${isViewOnly ? 'Read-only' : 'Editing'}`,
@@ -235,8 +235,8 @@ const EditorContent: React.FC<{
 					`Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : 'Unknown'}`,
 					`Last Modified: ${fileInfo.lastModified ? new Date(fileInfo.lastModified).toLocaleString() : 'Unknown'}`,
 				]
-			: !isEditingFile && documentId && documents
-				? [
+				: !isEditingFile && documentId && documents
+					? [
 						`Document: ${documents.find((d) => d.id === documentId)?.name || 'Untitled'}`,
 						linkedFileInfo ? `Linked File: ${linkedFileInfo.fileName}` : '',
 						linkedFileInfo
@@ -245,318 +245,319 @@ const EditorContent: React.FC<{
 						'Mode: Collaborative editing',
 						'Type: Text document',
 					]
-				: '';
+					: '';
 
-	const handleCopyLinkedFile = async () => {
-		if (!linkedFileInfo?.fileId) return;
-		try {
-			const file = await fileStorageService.getFile(linkedFileInfo.fileId);
-			if (file?.content) {
-				const content =
-					typeof file.content === 'string'
-						? file.content
-						: new TextDecoder().decode(file.content);
-				await copyCleanTextToClipboard(content);
+		const handleCopyLinkedFile = async () => {
+			if (!linkedFileInfo?.fileId) return;
+			try {
+				const file = await fileStorageService.getFile(linkedFileInfo.fileId);
+				if (file?.content) {
+					const content =
+						typeof file.content === 'string'
+							? file.content
+							: new TextDecoder().decode(file.content);
+					await copyCleanTextToClipboard(content);
+				}
+			} catch (error) {
+				console.error('Error copying linked file:', error);
 			}
-		} catch (error) {
-			console.error('Error copying linked file:', error);
-		}
-	};
+		};
 
-	const handleDownloadLinkedFile = async () => {
-		if (!linkedFileInfo?.fileId || !linkedFileInfo.fileName) return;
-		try {
-			const file = await fileStorageService.getFile(linkedFileInfo.fileId);
-			if (file?.content) {
-				const content =
-					typeof file.content === 'string'
-						? file.content
-						: new TextDecoder().decode(file.content);
-				const cleanedContent =
-					fileCommentProcessor.processTextSelection(content);
-				const blob = new Blob([cleanedContent], {
-					type: 'text/plain;charset=utf-8',
-				});
-				const url = URL.createObjectURL(blob);
-				const a = document.createElement('a');
-				a.href = url;
-				a.download = linkedFileInfo.fileName;
-				document.body.appendChild(a);
-				a.click();
-				document.body.removeChild(a);
-				URL.revokeObjectURL(url);
+		const handleDownloadLinkedFile = async () => {
+			if (!linkedFileInfo?.fileId || !linkedFileInfo.fileName) return;
+			try {
+				const file = await fileStorageService.getFile(linkedFileInfo.fileId);
+				if (file?.content) {
+					const content =
+						typeof file.content === 'string'
+							? file.content
+							: new TextDecoder().decode(file.content);
+					const cleanedContent =
+						fileCommentProcessor.processTextSelection(content);
+					const blob = new Blob([cleanedContent], {
+						type: 'text/plain;charset=utf-8',
+					});
+					const url = URL.createObjectURL(blob);
+					const a = document.createElement('a');
+					a.href = url;
+					a.download = linkedFileInfo.fileName;
+					document.body.appendChild(a);
+					a.click();
+					document.body.removeChild(a);
+					URL.revokeObjectURL(url);
+				}
+			} catch (error) {
+				console.error('Error downloading linked file:', error);
 			}
-		} catch (error) {
-			console.error('Error downloading linked file:', error);
-		}
-	};
-	const fileExtension = fileName?.split('.').pop()?.toLowerCase();
-	const availableLSPPlugins = fileExtension ?
-		pluginRegistry.getLSPPluginsForFileType(fileExtension) : [];
+		};
+		const fileExtension = fileName?.split('.').pop()?.toLowerCase();
+		const availableLSPPlugins = fileExtension ?
+			pluginRegistry.getLSPPluginsForFileType(fileExtension) : [];
 
-	const headerControls =
-		isEditingFile && fileName ? (
-			<>
-				<PluginControlGroup>
-					{!isViewOnly && onSave && (
+		const headerControls =
+			isEditingFile && fileName ? (
+				<>
+					<PluginControlGroup>
+						{!isViewOnly && onSave && (
+							<button
+								onClick={onSave}
+								title="Save File (Ctrl+S)"
+								className="control-button"
+							>
+								<SaveIcon />
+							</button>
+						)}
 						<button
-							onClick={onSave}
-							title="Save File (Ctrl+S)"
+							onClick={() => copyCleanTextToClipboard(textContent)}
+							title="Copy text"
 							className="control-button"
 						>
-							<SaveIcon />
+							<CopyIcon />
 						</button>
+						{onExport && (
+							<button
+								onClick={onExport}
+								title="Download File"
+								className="control-button"
+							>
+								<DownloadIcon />
+							</button>
+						)}
+					</PluginControlGroup>
+
+					<PluginControlGroup>
+						{!isViewOnly && (
+							<CommentToggleButton className="header-comment-button" />
+						)}
+					</PluginControlGroup>
+
+					{/* LSP Plugin Controls */}
+					{availableLSPPlugins.length > 0 && (
+						<PluginControlGroup>
+							{availableLSPPlugins.map(plugin => (
+								<LSPToggleButton
+									key={plugin.id}
+									pluginId={plugin.id}
+									className="header-lsp-button"
+								/>
+							))}
+						</PluginControlGroup>
 					)}
-					<button
-						onClick={() => copyCleanTextToClipboard(textContent)}
-						title="Copy text"
-						className="control-button"
-					>
-						<CopyIcon />
-					</button>
-					{onExport && (
+				</>
+			) : !isEditingFile && linkedFileInfo && !showUnlinkedNotice ? (
+				<>
+					<PluginControlGroup>
+						{onSaveDocument && (
+							<button
+								onClick={onSaveDocument}
+								title="Save document to linked file (Ctrl+S)"
+								className="control-button"
+							>
+								<SaveIcon />
+							</button>
+						)}
 						<button
-							onClick={onExport}
-							title="Download File"
+							onClick={handleCopyLinkedFile}
+							title={`Copy text from linked file: ${linkedFileInfo.fileName}`}
+							className="control-button"
+						>
+							<CopyIcon />
+						</button>
+						<button
+							onClick={handleDownloadLinkedFile}
+							title={`Download linked file: ${linkedFileInfo.fileName}`}
 							className="control-button"
 						>
 							<DownloadIcon />
 						</button>
-					)}
-				</PluginControlGroup>
-
-				<PluginControlGroup>
-					{!isViewOnly && (
-						<CommentToggleButton className="header-comment-button" />
-					)}
-				</PluginControlGroup>
-
-				{/* LSP Plugin Controls */}
-				{availableLSPPlugins.length > 0 && (
-					<PluginControlGroup>
-						{availableLSPPlugins.map(plugin => (
-							<LSPToggleButton
-								key={plugin.id}
-								pluginId={plugin.id}
-								className="header-lsp-button"
-							/>
-						))}
 					</PluginControlGroup>
-				)}
-			</>
-		) : !isEditingFile && linkedFileInfo && !showUnlinkedNotice ? (
-			<>
-				<PluginControlGroup>
-					{onSaveDocument && (
+
+					<PluginControlGroup>
+						{!isViewOnly && (
+							<CommentToggleButton className="header-comment-button" />
+						)}
+					</PluginControlGroup>
+					{/* LSP Plugin Controls for linked files */}
+					{linkedFileInfo?.fileName && (() => {
+						const linkedFileExtension = linkedFileInfo.fileName.split('.').pop()?.toLowerCase();
+						const linkedLSPPlugins = linkedFileExtension ?
+							pluginRegistry.getLSPPluginsForFileType(linkedFileExtension) : [];
+
+						return linkedLSPPlugins.length > 0 && (
+							<PluginControlGroup>
+								{linkedLSPPlugins.map(plugin => (
+									<LSPToggleButton
+										key={plugin.id}
+										pluginId={plugin.id}
+										className="header-lsp-button"
+									/>
+								))}
+							</PluginControlGroup>
+						);
+					})()}
+				</>
+			) : !isEditingFile && documentId && documents ? (
+				<>
+					<PluginControlGroup>
 						<button
-							onClick={onSaveDocument}
-							title="Save document to linked file (Ctrl+S)"
+							onClick={() => copyCleanTextToClipboard(textContent)}
+							title="Copy text"
 							className="control-button"
 						>
-							<SaveIcon />
+							<CopyIcon />
 						</button>
-					)}
-					<button
-						onClick={handleCopyLinkedFile}
-						title={`Copy text from linked file: ${linkedFileInfo.fileName}`}
-						className="control-button"
-					>
-						<CopyIcon />
-					</button>
-					<button
-						onClick={handleDownloadLinkedFile}
-						title={`Download linked file: ${linkedFileInfo.fileName}`}
-						className="control-button"
-					>
-						<DownloadIcon />
-					</button>
-				</PluginControlGroup>
+					</PluginControlGroup>
 
-				<PluginControlGroup>
-					{!isViewOnly && (
-						<CommentToggleButton className="header-comment-button" />
-					)}
-				</PluginControlGroup>
-				{/* LSP Plugin Controls for linked files */}
-				{linkedFileInfo?.fileName && (() => {
-					const linkedFileExtension = linkedFileInfo.fileName.split('.').pop()?.toLowerCase();
-					const linkedLSPPlugins = linkedFileExtension ?
-						pluginRegistry.getLSPPluginsForFileType(linkedFileExtension) : [];
+					<PluginControlGroup>
+						{!isViewOnly && (
+							<CommentToggleButton className="header-comment-button" />
+						)}
+					</PluginControlGroup>
 
-					return linkedLSPPlugins.length > 0 && (
-						<PluginControlGroup>
-							{linkedLSPPlugins.map(plugin => (
-								<LSPToggleButton
-									key={plugin.id}
-									pluginId={plugin.id}
-									className="header-lsp-button"
-								/>
-							))}
-						</PluginControlGroup>
-					);
-				})()}
-			</>
-		) : !isEditingFile && documentId && documents ? (
+					{/* LSP Plugin Controls for documents (detect LaTeX content) */}
+					{textContent?.includes('\\') && (() => {
+						const texLSPPlugins = pluginRegistry.getLSPPluginsForFileType('tex');
+						return texLSPPlugins.length > 0 && (
+							<PluginControlGroup>
+								{texLSPPlugins.map(plugin => (
+									<LSPToggleButton
+										key={plugin.id}
+										pluginId={plugin.id}
+										className="header-lsp-button"
+									/>
+								))}
+							</PluginControlGroup>
+						);
+					})()}
+				</>
+			) : null;
+
+		return (
 			<>
-				<PluginControlGroup>
-					<button
-						onClick={() => copyCleanTextToClipboard(textContent)}
-						title="Copy text"
-						className="control-button"
-					>
-						<CopyIcon />
-					</button>
-				</PluginControlGroup>
-
-				<PluginControlGroup>
-					{!isViewOnly && (
-						<CommentToggleButton className="header-comment-button" />
+				{((isEditingFile && fileName) ||
+					(!isEditingFile && documentId && documents)) && (
+						<PluginHeader
+							fileName={
+								isEditingFile
+									? fileInfo.fileName
+									: documents?.find((d) => d.id === documentId)?.name || 'Document'
+							}
+							filePath={
+								isEditingFile
+									? filePath || fileInfo.filePath
+									: linkedFileInfo?.filePath
+							}
+							pluginName={isEditingFile ? 'Text Editor' : 'Document Editor'}
+							pluginVersion="1.0.0"
+							tooltipInfo={tooltipInfo}
+							controls={headerControls}
+							onNavigateToLinkedFile={
+								!isEditingFile && linkedFileInfo
+									? onNavigateToLinkedFile
+									: undefined
+							}
+							linkedFileInfo={!isEditingFile ? linkedFileInfo : null}
+						/>
 					)}
-				</PluginControlGroup>
 
-				{/* LSP Plugin Controls for documents (detect LaTeX content) */}
-				{textContent?.includes('\\') && (() => {
-					const texLSPPlugins = pluginRegistry.getLSPPluginsForFileType('tex');
-					return texLSPPlugins.length > 0 && (
-						<PluginControlGroup>
-							{texLSPPlugins.map(plugin => (
-								<LSPToggleButton
-									key={plugin.id}
-									pluginId={plugin.id}
-									className="header-lsp-button"
-								/>
-							))}
-						</PluginControlGroup>
-					);
-				})()}
-			</>
-		) : null;
-
-	return (
-		<>
-			{((isEditingFile && fileName) ||
-				(!isEditingFile && documentId && documents)) && (
-				<PluginHeader
-					fileName={
-						isEditingFile
-							? fileInfo.fileName
-							: documents?.find((d) => d.id === documentId)?.name || 'Document'
-					}
-					filePath={
-						isEditingFile
-							? filePath || fileInfo.filePath
-							: linkedFileInfo?.filePath
-					}
-					pluginName={isEditingFile ? 'Text Editor' : 'Document Editor'}
-					pluginVersion="1.0.0"
-					tooltipInfo={tooltipInfo}
-					controls={headerControls}
-					onNavigateToLinkedFile={
-						!isEditingFile && linkedFileInfo
-							? onNavigateToLinkedFile
-							: undefined
-					}
-					linkedFileInfo={!isEditingFile ? linkedFileInfo : null}
-				/>
-			)}
-
-			<div className="editor-toolbar">
-				{isViewOnly && linkedDocumentId && (
-					<div className="linked-file-notice">
-						<span>
-							Read-only: This file is linked to a collaborative document{' '}
-						</span>
-						<div className="linked-file-actions">
-							<button
-								className="link-button"
-								onClick={onDocumentNavigation}
-								title="Navigate to linked document"
-							>
-								<FileTextIcon />
-								View linked doc
-							</button>
+				<div className="editor-toolbar">
+					{isViewOnly && linkedDocumentId && (
+						<div className="linked-file-notice">
+							<span>
+								Read-only: This file is linked to a collaborative document{' '}
+							</span>
+							<div className="linked-file-actions">
+								<button
+									className="link-button"
+									onClick={onDocumentNavigation}
+									title="Navigate to linked document"
+								>
+									<FileTextIcon />
+									View linked doc
+								</button>
+							</div>
 						</div>
-					</div>
-				)}
+					)}
 
-				{showUnlinkedNotice && (
-					<UnlinkedDocumentNotice
-						documentId={documentId}
-						documentName={
-							documents.find((d) => d.id === documentId)?.name || 'Untitled'
-						}
-						onDeleteDocument={(docId) => {
-							if (!changeDoc) {
-								console.error(
-									'Cannot delete document: changeData not available',
-								);
-								return;
+					{showUnlinkedNotice && (
+						<UnlinkedDocumentNotice
+							documentId={documentId}
+							documentName={
+								documents.find((d) => d.id === documentId)?.name || 'Untitled'
 							}
-
-							changeDoc((data) => {
-								if (!data.documents) return;
-
-								const docIndex = data.documents.findIndex(
-									(d) => d.id === docId,
-								);
-								if (docIndex >= 0) {
-									data.documents.splice(docIndex, 1);
+							projectType={doc?.projectMetadata?.type || 'latex'}
+							onDeleteDocument={(docId) => {
+								if (!changeDoc) {
+									console.error(
+										'Cannot delete document: changeData not available',
+									);
+									return;
 								}
 
-								if (data.currentDocId === docId) {
-									data.currentDocId =
-										data.documents.length > 0 ? data.documents[0].id : '';
+								changeDoc((data) => {
+									if (!data.documents) return;
+
+									const docIndex = data.documents.findIndex(
+										(d) => d.id === docId,
+									);
+									if (docIndex >= 0) {
+										data.documents.splice(docIndex, 1);
+									}
+
+									if (data.currentDocId === docId) {
+										data.currentDocId =
+											data.documents.length > 0 ? data.documents[0].id : '';
+									}
+								});
+
+								const remainingDocs = documents.filter((d) => d.id !== docId);
+								if (remainingDocs.length > 0 && onSelectDocument) {
+									const newSelectedId = remainingDocs[0].id;
+									onSelectDocument(newSelectedId);
+									const currentFragment = parseUrlFragments(
+										window.location.hash.substring(1),
+									);
+									const newUrl = buildUrlWithFragments(
+										currentFragment.yjsUrl,
+										newSelectedId,
+									);
+									window.location.hash = newUrl;
+								} else if (onSelectDocument) {
+									onSelectDocument('');
+									const currentFragment = parseUrlFragments(
+										window.location.hash.substring(1),
+									);
+									const newUrl = buildUrlWithFragments(currentFragment.yjsUrl);
+									window.location.hash = newUrl;
 								}
-							});
-
-							const remainingDocs = documents.filter((d) => d.id !== docId);
-							if (remainingDocs.length > 0 && onSelectDocument) {
-								const newSelectedId = remainingDocs[0].id;
-								onSelectDocument(newSelectedId);
-								const currentFragment = parseUrlFragments(
-									window.location.hash.substring(1),
-								);
-								const newUrl = buildUrlWithFragments(
-									currentFragment.yjsUrl,
-									newSelectedId,
-								);
-								window.location.hash = newUrl;
-							} else if (onSelectDocument) {
-								onSelectDocument('');
-								const currentFragment = parseUrlFragments(
-									window.location.hash.substring(1),
-								);
-								const newUrl = buildUrlWithFragments(currentFragment.yjsUrl);
-								window.location.hash = newUrl;
-							}
-						}}
-						onDocumentLinked={() => {
-							window.location.reload();
-						}}
-					/>
-				)}
-			</div>
-
-			<div className="editor-main-container">
-				<div
-					className="editor-wrapper"
-					style={{ flex: 1, position: 'relative' }}
-				>
-					<div ref={editorRef} className="codemirror-editor-container" />
-
-					{showSaveIndicator && (
-						<div className={`save-indicator ${isViewOnly ? 'read-only' : ''}`}>
-							<span>{isViewOnly ? 'Cannot Save Read-Only' : 'Saved'}</span>
-						</div>
+							}}
+							onDocumentLinked={() => {
+								window.location.reload();
+							}}
+						/>
 					)}
 				</div>
 
-				{!isViewOnly && <CommentPanel className="editor-comment-panel" />}
-				{!isViewOnly && <LSPPanel className="editor-lsp-panel" />}
-			</div>
-		</>
-	);
-};
+				<div className="editor-main-container">
+					<div
+						className="editor-wrapper"
+						style={{ flex: 1, position: 'relative' }}
+					>
+						<div ref={editorRef} className="codemirror-editor-container" />
+
+						{showSaveIndicator && (
+							<div className={`save-indicator ${isViewOnly ? 'read-only' : ''}`}>
+								<span>{isViewOnly ? 'Cannot Save Read-Only' : 'Saved'}</span>
+							</div>
+						)}
+					</div>
+
+					{!isViewOnly && <CommentPanel className="editor-comment-panel" />}
+					{!isViewOnly && <LSPPanel className="editor-lsp-panel" />}
+				</div>
+			</>
+		);
+	};
 
 const Editor: React.FC<EditorComponentProps> = ({
 	content,
@@ -727,7 +728,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 
 	const shouldUseCollaborativeViewer =
 		!isEditingFile && fileName && linkedDocumentId;
-		
+
 	const collaborativeViewerPlugin = useMemo(() => {
 		if (!shouldUseCollaborativeViewer) return null;
 		return pluginRegistry.getCollaborativeViewerForFile(fileName, mimeType);
@@ -747,48 +748,48 @@ const Editor: React.FC<EditorComponentProps> = ({
 
 		return (
 			<BibliographyProvider>
-			<LSPProvider>
-			<CommentProvider
-				editorContent={textContent}
-				onUpdateContent={onUpdateContent}
-			>
-				<div className="editor-container viewer-container collaborative-viewer">
-					<div className="viewer-plugin-info">
-						<span>
-							Collaborative viewing with {collaborativeViewerPlugin.name} v
-							{collaborativeViewerPlugin.version}
-						</span>
-					</div>
-					<CollaborativeViewerComponent
-						fileId={fileId}
-						content={content as ArrayBuffer}
-						mimeType={mimeType}
-						fileName={fileName}
-						docUrl={docUrl}
-						documentId={documentId}
-						isDocumentSelected={isDocumentSelected}
+				<LSPProvider>
+					<CommentProvider
+						editorContent={textContent}
 						onUpdateContent={onUpdateContent}
-						parseComments={(text: string) => {
-							const { parseComments } = useComments();
-							return parseComments(text);
-						}}
-						addComment={(content: string) => {
-							const { addComment } = useComments();
-							return addComment(content);
-						}}
-						updateComments={(content: string) => {
-							const { updateComments } = useComments();
-							updateComments(content);
-						}}
-					/>
-				</div>
-				<CommentModal
-					isOpen={showCommentModal}
-					onClose={handleCommentModalClose}
-					onCommentSubmit={handleCommentSubmit}
-				/>
-			</CommentProvider>
-			</LSPProvider>
+					>
+						<div className="editor-container viewer-container collaborative-viewer">
+							<div className="viewer-plugin-info">
+								<span>
+									Collaborative viewing with {collaborativeViewerPlugin.name} v
+									{collaborativeViewerPlugin.version}
+								</span>
+							</div>
+							<CollaborativeViewerComponent
+								fileId={fileId}
+								content={content as ArrayBuffer}
+								mimeType={mimeType}
+								fileName={fileName}
+								docUrl={docUrl}
+								documentId={documentId}
+								isDocumentSelected={isDocumentSelected}
+								onUpdateContent={onUpdateContent}
+								parseComments={(text: string) => {
+									const { parseComments } = useComments();
+									return parseComments(text);
+								}}
+								addComment={(content: string) => {
+									const { addComment } = useComments();
+									return addComment(content);
+								}}
+								updateComments={(content: string) => {
+									const { updateComments } = useComments();
+									updateComments(content);
+								}}
+							/>
+						</div>
+						<CommentModal
+							isOpen={showCommentModal}
+							onClose={handleCommentModalClose}
+							onCommentSubmit={handleCommentSubmit}
+						/>
+					</CommentProvider>
+				</LSPProvider>
 			</BibliographyProvider>
 		);
 	}
@@ -860,43 +861,43 @@ const Editor: React.FC<EditorComponentProps> = ({
 
 	return (
 		<BibliographyProvider>
-		<LSPProvider>
-		<CommentProvider
-			editorContent={textContent}
-			onUpdateContent={handleContentUpdate}
-		>
-			<div className="editor-container">
-				<EditorContent
-					editorRef={editorRef}
-					textContent={textContent}
-					onUpdateContent={onUpdateContent}
-					documentId={documentId}
-					docUrl={docUrl}
-					isDocumentSelected={isDocumentSelected}
-					isEditingFile={isEditingFile}
-					isViewOnly={isViewOnly}
-					linkedDocumentId={linkedDocumentId}
-					onDocumentNavigation={handleDocumentNavigation}
-					fileName={fileName}
-					fileId={fileId}
-					filePath={filePath}
-					onSave={handleSave}
-					onExport={handleExport}
-					onSaveDocument={handleSaveDocument}
-					linkedFileInfo={linkedFileInfo}
-					onNavigateToLinkedFile={handleNavigateToLinkedFile}
-					documents={documents}
-					shouldShowLatexOutput={shouldShowLatexOutput}
-					onSelectDocument={onSelectDocument}
-				/>
-			</div>
-			<CommentModal
-				isOpen={showCommentModal}
-				onClose={handleCommentModalClose}
-				onCommentSubmit={handleCommentSubmit}
-			/>
-		</CommentProvider>
-		</LSPProvider>
+			<LSPProvider>
+				<CommentProvider
+					editorContent={textContent}
+					onUpdateContent={handleContentUpdate}
+				>
+					<div className="editor-container">
+						<EditorContent
+							editorRef={editorRef}
+							textContent={textContent}
+							onUpdateContent={onUpdateContent}
+							documentId={documentId}
+							docUrl={docUrl}
+							isDocumentSelected={isDocumentSelected}
+							isEditingFile={isEditingFile}
+							isViewOnly={isViewOnly}
+							linkedDocumentId={linkedDocumentId}
+							onDocumentNavigation={handleDocumentNavigation}
+							fileName={fileName}
+							fileId={fileId}
+							filePath={filePath}
+							onSave={handleSave}
+							onExport={handleExport}
+							onSaveDocument={handleSaveDocument}
+							linkedFileInfo={linkedFileInfo}
+							onNavigateToLinkedFile={handleNavigateToLinkedFile}
+							documents={documents}
+							shouldShowLatexOutput={shouldShowLatexOutput}
+							onSelectDocument={onSelectDocument}
+						/>
+					</div>
+					<CommentModal
+						isOpen={showCommentModal}
+						onClose={handleCommentModalClose}
+						onCommentSubmit={handleCommentSubmit}
+					/>
+				</CommentProvider>
+			</LSPProvider>
 		</BibliographyProvider>
 	);
 };

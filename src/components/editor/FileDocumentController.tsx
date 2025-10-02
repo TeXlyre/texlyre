@@ -98,7 +98,8 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	const { currentLayout } = useTheme();
 	const { getProjectById, updateProject } = useAuth();
 	const { getProperty, setProperty, registerProperty } = useProperties();
-	const { openTab, tabs, getActiveTab } = useEditorTabs();
+	const { openTab, tabs } = useEditorTabs();
+	const [projectType, setProjectType] = useState<'latex' | 'typst'>('latex');
 	const propertiesRegistered = useRef(false);
 	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 	const [activeView, setActiveView] = useState<'documents' | 'files'>('files');
@@ -259,6 +260,19 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
 		setPropertiesLoaded(true);
 	}, [getProperty, propertiesLoaded]);
+
+	useEffect(() => {
+		const loadProjectType = async () => {
+			const projectId = sessionStorage.getItem('currentProjectId');
+			if (projectId) {
+				const project = await getProjectById(projectId);
+				if (project) {
+					setProjectType(project.type || 'latex');
+				}
+			}
+		};
+		loadProjectType();
+	}, [getProjectById]);
 
 	useEffect(() => {
 		const handleCursorUpdate = (event: Event) => {
@@ -990,6 +1004,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 							initialExpandedPaths={initialExpandedPaths}
 							currentProjectId={sessionStorage.getItem('currentProjectId')}
 							onExportCurrentProject={handleExportCurrentProject}
+							projectType={projectType}
 						/>
 					)}
 				</ResizablePanel>

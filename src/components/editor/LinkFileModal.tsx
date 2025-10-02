@@ -15,6 +15,7 @@ interface LinkFileModalProps {
 	documentId: string;
 	documentName: string;
 	onLinked: () => void;
+	projectType?: 'latex' | 'typst';
 }
 
 const LinkFileModal: React.FC<LinkFileModalProps> = ({
@@ -23,12 +24,14 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 	documentId,
 	documentName,
 	onLinked,
+	projectType = 'latex'
 }) => {
 	const { fileTree, refreshFileTree } = useFileTree();
 	const [selectedDirectory, setSelectedDirectory] = useState<string>('/');
 	const [fileName, setFileName] = useState(() => {
 		const baseName = documentName.replace(/[^a-zA-Z0-9_-]/g, '_');
-		return baseName.endsWith('.tex') ? baseName : `${baseName}.tex`;
+		const extension = projectType === 'typst' ? '.typ' : '.tex';
+		return baseName.endsWith(extension) ? baseName : `${baseName}${extension}`;
 	});
 	const [isCreating, setIsCreating] = useState(false);
 
