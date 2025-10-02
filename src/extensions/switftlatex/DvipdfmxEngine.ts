@@ -6,6 +6,8 @@ import {
 } from "./BaseEngine";
 import { EngineLoader } from "./EngineLoader";
 
+const BASE_PATH = __BASE_PATH__
+
 interface DvipdfmxCompileResult extends CompileResult {
 	xdv?: Uint8Array;
 }
@@ -20,10 +22,9 @@ export class DvipdfmxEngine extends BaseEngine {
 	constructor() {
 		const config: EngineConfig = {
 			name: "Dvipdfmx",
-			setupScript: "./TexlyreDvipdfmxEngineSetup.js",
-			engineScript: "./texlyredvipdfm.js",
+			setupScript: `${BASE_PATH}/core/swiftlatex/TexlyreDvipdfmxEngineSetup.js`,
+			engineScript: `${BASE_PATH}/core/swiftlatex/texlyredvipdfm.js`,
 			engineClass: "DvipdfmxEngine",
-			enginePath: "texlyredvipdfm.js",
 		};
 		super(config);
 	}

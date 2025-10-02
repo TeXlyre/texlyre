@@ -23,6 +23,8 @@ import { useProperties } from "../../../src/hooks/useProperties";
 import type { RendererProps } from "../../../src/plugins/PluginInterface";
 import "./styles.css";
 
+const BASE_PATH = __BASE_PATH__
+
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 	"pdfjs-dist/build/pdf.worker.min.mjs",
 	import.meta.url,
@@ -139,7 +141,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const fileData = useMemo(() => {
 		return pdfData ? {
 			data: pdfData,
-			cMapUrl: "/texlyre/cmaps/",
+			cMapUrl: `${BASE_PATH}/assets/cmaps/`,
 			cMapPacked: true,
 		} : null;
 	}, [pdfData]);

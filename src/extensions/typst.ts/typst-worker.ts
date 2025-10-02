@@ -4,6 +4,8 @@ import { createTypstCompiler } from "@myriaddreamin/typst.ts/compiler";
 import { createTypstRenderer } from "@myriaddreamin/typst.ts/renderer";
 import { TypstSnippet } from "@myriaddreamin/typst.ts/dist/esm/contrib/snippet.mjs";
 
+const BASE_PATH = __BASE_PATH__;
+
 declare const self: DedicatedWorkerGlobalScope;
 
 type OutputFormat = "pdf" | "svg" | "canvas";
@@ -70,7 +72,7 @@ const defaultFonts = [
     'NewCMMath-Regular.otf',
 ];
 
-async function loadFonts(baseUrl: string = '/texlyre/assets/fonts') {
+async function loadFonts(baseUrl: string = `${BASE_PATH}/assets/fonts`) {
     const fontPaths = defaultFonts.map(font => `${baseUrl}/${font}`);
     const fontPromises = fontPaths.map(async (path) => {
         try {
@@ -98,7 +100,7 @@ async function ensureInit() {
 
     compiler = createTypstCompiler();
     await compiler.init({
-        getModule: () => "/texlyre/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm",
+        getModule: () => `${BASE_PATH}/core/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm`,
         beforeBuild: [
             ...packageRegistry.provides,
             async (_: any, { builder }: any) => {
@@ -111,7 +113,7 @@ async function ensureInit() {
 
     renderer = createTypstRenderer();
     await renderer.init({
-        getModule: () => "/texlyre/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm",
+        getModule: () => `${BASE_PATH}/core/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm`,
         beforeBuild: [
             async (_: any, { builder }: any) => {
                 for (const font of fonts) {

@@ -6,6 +6,8 @@ import {
 } from "./BaseEngine";
 import { EngineLoader } from "./EngineLoader";
 
+const BASE_PATH = __BASE_PATH__
+
 declare global {
 	interface Window {
 		XeTeXEngine: any;
@@ -20,10 +22,9 @@ export class XeTeXEngine extends BaseEngine {
 	constructor() {
 		const config: EngineConfig = {
 			name: "XeTeX",
-			setupScript: "./TexlyreXeTeXEngineSetup.js",
-			engineScript: "./texlyrexetex.js",
+			setupScript: `${BASE_PATH}/core/swiftlatex/TexlyreXeTeXEngineSetup.js`,
+			engineScript: `${BASE_PATH}/core/swiftlatex/texlyrexetex.js`,
 			engineClass: "XeTeXEngine",
-			enginePath: "texlyrexetex.js",
 		};
 		super(config);
 	}

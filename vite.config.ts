@@ -7,14 +7,17 @@ import wasm from "vite-plugin-wasm";
 
 const useHttps = process.env.VITE_USE_HTTPS === "true";
 
+const basePath = "/texlyre/";
+
 // @ts-ignore
 export default defineConfig({
-	base: "/texlyre/",
+	base: basePath,
 
 	define: {
 		"process.env.npm_package_version": JSON.stringify(
 			process.env.npm_package_version || "1.0.0",
 		),
+		__BASE_PATH__: JSON.stringify(basePath.slice(0, -1)),
 	},
 
 	build: {
@@ -46,15 +49,15 @@ export default defineConfig({
 			targets: [
 				{
 					src: "node_modules/pdfjs-dist/cmaps/*",
-					dest: "cmaps/",
+					dest: "assets/cmaps/",
 				},
 				{
 					src: "node_modules/@myriaddreamin/typst-ts-web-compiler/pkg/*",
-					dest: "typst-ts-web-compiler/pkg/",
+					dest: "core/typst-ts-web-compiler/pkg/",
 				},
 				{
 					src: "node_modules/@myriaddreamin/typst-ts-renderer/pkg/*",
-					dest: "typst-ts-renderer/pkg/",
+					dest: "core/typst-ts-renderer/pkg/",
 				},
 				{
 					src: "userdata.json",

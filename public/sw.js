@@ -1,5 +1,7 @@
+// *** WARNING: THESE VALUES ARE CHANGED AUTOMATICALLY ON BUILD **
 const CACHE_NAME = `texlyre-v0.3.0`; //`texlyre-v${process.env.npm_package_version || '1'}`;
-const BASE_PATH = '/texlyre/';
+const BASE_PATH = '/texlyre/wiki/';
+// *** END AUTOMATIC CHANGE ***
 
 console.log('[ServiceWorker] Service Worker loading with base path:', BASE_PATH);
 

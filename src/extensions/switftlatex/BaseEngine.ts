@@ -10,7 +10,6 @@ export interface EngineConfig {
 	setupScript: string;
 	engineScript: string;
 	engineClass: string;
-	enginePath: string;
 }
 
 export abstract class BaseEngine {

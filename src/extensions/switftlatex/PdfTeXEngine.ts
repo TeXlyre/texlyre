@@ -6,6 +6,8 @@ import {
 } from "./BaseEngine";
 import { EngineLoader } from "./EngineLoader";
 
+const BASE_PATH = __BASE_PATH__;
+
 declare global {
 	interface Window {
 		PdfTeXEngine: any;
@@ -16,10 +18,9 @@ export class PdfTeXEngine extends BaseEngine {
 	constructor() {
 		const config: EngineConfig = {
 			name: "PdfTeX",
-			setupScript: "./TexlyrePdfTeXEngineSetup.js",
-			engineScript: "./texlyrepdftex.js",
+			setupScript: `${BASE_PATH}/core/swiftlatex/TexlyrePdfTeXEngineSetup.js`,
+			engineScript: `${BASE_PATH}/core/swiftlatex/texlyrepdftex.js`,
 			engineClass: "PdfTeXEngine",
-			enginePath: "texlyrepdftex.js",
 		};
 		super(config);
 	}

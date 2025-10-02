@@ -22,6 +22,8 @@ import "./styles.css";
 import { pdfViewerSettings } from "./settings";
 import { PLUGIN_NAME, PLUGIN_VERSION } from "./PdfViewerPlugin";
 
+const BASE_PATH = __BASE_PATH__
+
 if (!pdfjs.GlobalWorkerOptions.workerSrc) {
 	pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker;
 }
@@ -165,7 +167,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 		try {
 			const loadingTask = pdfjs.getDocument({
 				data: new Uint8Array(contentRef.current),
-				cMapUrl: "/texlyre/cmaps/",  //  import.meta.env.PROD ? "/texlyre/cmaps/" : "/texlyre/cmaps/", for now, use the same path in dev and prod
+				cMapUrl: `${BASE_PATH}/assets/cmaps/`,  //  import.meta.env.PROD ? "/texlyre/assets/cmaps/" : "/texlyre/assets/cmaps/", for now, use the same path in dev and prod
 				cMapPacked: true,
 			});
 

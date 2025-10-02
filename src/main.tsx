@@ -1,5 +1,5 @@
 /*
- * TeXlyre - Collaborative LaTeX Editor
+ * TeXlyre - Collaborative LaTeX and Typst Editor
  * Copyright (C) 2025 Fares Abawi
  *
  * This program is free software: you can redistribute it and/or modify
@@ -22,6 +22,8 @@ import App from "./App";
 
 import { openDB } from "idb";
 import { authService } from "./services/AuthService";
+
+const BASE_PATH = __BASE_PATH__
 
 // Guest account cleanup - runs every hour when app is active
 const setupGuestCleanup = () => {
@@ -87,8 +89,8 @@ if (
 			console.log("[ServiceWroker] Skipping clearing existing service workers");
 		}
 
-		const swPath = "/texlyre/sw.js";
-		const scope = "/texlyre/";
+		const swPath = `${BASE_PATH}/sw.js`;
+		const scope = `${BASE_PATH}/`;
 
 		console.log("[ServiceWroker] ]Service Worker Registration ===");
 		console.log("Service Worker Path:", swPath);
@@ -105,7 +107,7 @@ if (
 			if (registration.active) {
 				registration.active.postMessage({
 					type: "CACHE_URLS",
-					urls: ["/texlyre/src/assets/images/TeXlyre_notext.png"],
+					urls: [`${BASE_PATH}/src/assets/images/TeXlyre_notext.png`],
 				});
 			}
 		} catch (error) {
@@ -127,34 +129,34 @@ if (
 }
 
 async function initUserData(): Promise<void> {
-  const settingsKey = 'texlyre-settings';
-  const propertiesKey = 'texlyre-properties';
+	const settingsKey = 'texlyre-settings';
+	const propertiesKey = 'texlyre-properties';
 
-  const existingSettings = localStorage.getItem(settingsKey);
-  const existingProperties = localStorage.getItem(propertiesKey);
+	const existingSettings = localStorage.getItem(settingsKey);
+	const existingProperties = localStorage.getItem(propertiesKey);
 
-  if (!existingSettings || !existingProperties) {
-    try {
-      const response = await fetch('/texlyre/userdata.json');
-      const userData = await response.json();
+	if (!existingSettings || !existingProperties) {
+		try {
+			const response = await fetch(`${BASE_PATH}/userdata.json`);
+			const userData = await response.json();
 
-      if (!existingSettings && userData.settings) {
-        const mergedSettings = existingSettings
-          ? { ...JSON.parse(existingSettings), ...userData.settings }
-          : userData.settings;
-        localStorage.setItem(settingsKey, JSON.stringify(mergedSettings));
-      }
+			if (!existingSettings && userData.settings) {
+				const mergedSettings = existingSettings
+					? { ...JSON.parse(existingSettings), ...userData.settings }
+					: userData.settings;
+				localStorage.setItem(settingsKey, JSON.stringify(mergedSettings));
+			}
 
-      if (!existingProperties && userData.properties) {
-        const mergedProperties = existingProperties
-          ? { ...JSON.parse(existingProperties), ...userData.properties }
-          : userData.properties;
-        localStorage.setItem(propertiesKey, JSON.stringify(mergedProperties));
-      }
-    } catch (error) {
-      console.warn('Failed to load default user data:', error);
-    }
-  }
+			if (!existingProperties && userData.properties) {
+				const mergedProperties = existingProperties
+					? { ...JSON.parse(existingProperties), ...userData.properties }
+					: userData.properties;
+				localStorage.setItem(propertiesKey, JSON.stringify(mergedProperties));
+			}
+		} catch (error) {
+			console.warn('Failed to load default user data:', error);
+		}
+	}
 }
 
 async function initDatabases() {

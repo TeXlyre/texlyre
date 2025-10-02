@@ -1,5 +1,5 @@
 // extras/lsp/jabref/settings.ts
-import type { Setting } from '../../../contexts/SettingsContext';
+import type { Setting } from '../../../src/contexts/SettingsContext';
 
 export const jabrefLSPSettings: Setting[] = [
 	{
