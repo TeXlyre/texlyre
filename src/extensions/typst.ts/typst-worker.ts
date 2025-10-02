@@ -73,7 +73,20 @@ const defaultFonts = [
 ];
 
 async function loadFonts(baseUrl: string = `${BASE_PATH}/assets/fonts`) {
-    const fontPaths = defaultFonts.map(font => `${baseUrl}/${font}`);
+    const fontExtensions = ['.ttf', '.otf'];
+    const fontPaths: string[] = [];
+
+    try {
+        const indexResponse = await fetch(`${baseUrl}/fonts.json`);
+        if (indexResponse.ok) {
+            const fontList = await indexResponse.json();
+            fontPaths.push(...fontList.map((font: string) => `${baseUrl}/${font}`));
+        }
+    } catch {
+        console.warn('fonts.json not found, using default font list');
+        fontPaths.push(...defaultFonts.map(font => `${baseUrl}/${font}`));
+    }
+
     const fontPromises = fontPaths.map(async (path) => {
         try {
             const response = await fetch(path);

@@ -1,4 +1,4 @@
-// scripts/copy-pdf-cmaps.js - For development only
+// scripts/copy-pdf-cmaps.cjs - For development only
 const fs = require("fs-extra");
 const path = require("node:path");
 
@@ -10,9 +10,9 @@ async function copyCmaps() {
 	try {
 		await fs.ensureDir(cmapsDestination);
 		await fs.copy(cmapsSource, cmapsDestination);
-		console.log("✅ PDF.js cMaps copied to public/assets/cmaps for development");
+		console.log("PDF.js cMaps copied to public/assets/cmaps for development");
 	} catch (err) {
-		console.error("❌ Error copying PDF.js cMaps:", err);
+		console.error("Error copying PDF.js cMaps:", err);
 	}
 }
 

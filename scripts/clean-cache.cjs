@@ -1,3 +1,4 @@
+// scripts/clean-cache.cjs
 const { rmSync, existsSync } = require("node:fs");
 const path = require("node:path");
 
