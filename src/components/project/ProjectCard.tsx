@@ -4,12 +4,13 @@ import { useRef, useState, useEffect } from "react";
 
 import type { Project } from "../../types/projects.ts";
 import ProjectBackupControls from "../backup/ProjectBackupControls";
-import {EditIcon, FolderIcon, StarIcon, TrashIcon, ChevronDownIcon, FileTextIcon, FileIcon} from "../common/Icons.tsx";
+import { EditIcon, FolderIcon, StarIcon, TrashIcon, ChevronDownIcon, FileTextIcon, FileIcon } from "../common/Icons.tsx";
+import TypesetterInfo from "../common/TypesetterInfo";
 
 interface ProjectCardProps {
 	project: Project;
 	onOpen: (project: Project) => void;
-	onOpenDefault: (project: Project) => void; // New prop for default open
+	onOpenDefault: (project: Project) => void;
 	onEdit: (project: Project) => void;
 	onDelete: (project: Project) => void;
 	onToggleFavorite: (projectId: string) => void;
@@ -88,10 +89,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
 	const getDropdownDisplayText = () => {
 		if (project.lastOpenedFilePath) {
-		   const fileName = project.lastOpenedFilePath.split("/").pop() || "Unknown file";
-		   return `Last: ${fileName}`;
+			const fileName = project.lastOpenedFilePath.split("/").pop() || "Unknown file";
+			return `Last: ${fileName}`;
 		} else if (project.lastOpenedDocId) {
-		   return `Last: Document ${project.lastOpenedDocId.slice(0, 8)}...`;
+			return `Last: Document ${project.lastOpenedDocId.slice(0, 8)}...`;
 		}
 		return "Open Project";
 	};
@@ -99,25 +100,25 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 	const getDropdownContent = () => {
 		const displayText = getDropdownDisplayText();
 		if (project.lastOpenedFilePath) {
-		   return (
-			  <>
-				 <FileIcon />
-				 <span>{displayText}</span>
-			  </>
-		   );
+			return (
+				<>
+					<FileIcon />
+					<span>{displayText}</span>
+				</>
+			);
 		} else if (project.lastOpenedDocId) {
-		   return (
-			  <>
-				 <FileTextIcon />
-				 <span>{displayText}</span>
-			  </>
-		   );
+			return (
+				<>
+					<FileTextIcon />
+					<span>{displayText}</span>
+				</>
+			);
 		}
 		return (
-		   <>
-			  <FolderIcon />
-			  <span>{displayText}</span>
-		   </>
+			<>
+				<FolderIcon />
+				<span>{displayText}</span>
+			</>
 		);
 	};
 
@@ -152,20 +153,25 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 					{project.name}
 				</h3>
 
-				{!isSelectionMode && (
-					<button
-						className={`favorite-button ${project.isFavorite ? "favorited" : ""}`}
-						onClick={(e) => {
-							e.stopPropagation();
-							onToggleFavorite(project.id);
-						}}
-						title={
-							project.isFavorite ? "Remove from favorites" : "Add to favorites"
-						}
-					>
-						<StarIcon filled={project.isFavorite} />
-					</button>
-				)}
+				<div className="project-card-header-actions">
+					<div className="project-type-info">
+						<TypesetterInfo type={project.type} />
+					</div>
+					{!isSelectionMode && (
+						<button
+							className={`favorite-button ${project.isFavorite ? "favorited" : ""}`}
+							onClick={(e) => {
+								e.stopPropagation();
+								onToggleFavorite(project.id);
+							}}
+							title={
+								project.isFavorite ? "Remove from favorites" : "Add to favorites"
+							}
+						>
+							<StarIcon filled={project.isFavorite} />
+						</button>
+					)}
+				</div>
 			</div>
 
 			<p className="project-description">
@@ -199,13 +205,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 						</div>
 						{isOpenDropdownOpen && (
 							<div className="open-dropdown">
-							   <div className="open-dropdown-item" onClick={handleDefaultOpen}>
-								  {getDropdownContent()}
-							   </div>
-							   <div className="open-dropdown-item" onClick={handleProjectOpen}>
-								  <FolderIcon />
-								  <span>Open Project</span>
-							   </div>
+								<div className="open-dropdown-item" onClick={handleDefaultOpen}>
+									{getDropdownContent()}
+								</div>
+								<div className="open-dropdown-item" onClick={handleProjectOpen}>
+									<FolderIcon />
+									<span>Open Project</span>
+								</div>
 							</div>
 						)}
 					</div>

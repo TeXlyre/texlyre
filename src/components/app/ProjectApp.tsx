@@ -47,6 +47,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		user,
 		getProjects,
 		getProjectsByTag,
+		getProjectsByType,
 		searchProjects,
 		createProject,
 		updateProject,
@@ -170,6 +171,16 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		}
 
 		const results = await getProjectsByTag(tag);
+		setFilteredProjects(results);
+	};
+
+	const handleFilterByType = async (type: string) => {
+		if (!type) {
+			setFilteredProjects(projects);
+			return;
+		}
+
+		const results = await getProjectsByType(type as "latex" | "typst");
 		setFilteredProjects(results);
 	};
 
@@ -443,6 +454,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						onImportProject={openImportModal}
 						onSearch={handleSearch}
 						onFilterByTag={handleFilterByTag}
+						onFilterByType={handleFilterByType}
 						onOpenProject={openProject}
 						projects={projects}
 						availableTags={availableTags}

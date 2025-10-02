@@ -265,8 +265,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 0.1rem;
+  margin-top: 0;
   margin-bottom: var(--space-sm);
+}
+
+.project-card-header-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-right: var(--space-md);
+  gap: var(--space-sm);
+  align-items: first baseline;
 }
 
 .project-card .project-title {
@@ -308,6 +317,30 @@
   font-size: 0.8rem;
 }
 
+.project-type-info {
+  color: var(--text-color);
+  display: flex;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  opacity: 0.7;
+  transition: opacity var(--transition-normal);
+}
+
+.project-type-info .type-info-help {
+  background: var(--pico-secondary-background);
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xs);
+  margin-top: var(--space-md);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--pico-primary);
+}
+
+.project-type-info:hover {
+  opacity: 1;
+}
+
 .project-meta {
   display: flex;
   justify-content: space-between;
@@ -343,10 +376,7 @@
   border: none;
   cursor: pointer;
   color: var(--pico-secondary);
-  padding: var(--space-xs);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 0;
 }
 
 .favorite-button.favorited {
@@ -457,6 +487,16 @@
 }
 
 .tag-filter {
+  padding-right: 2rem;
+  margin: var(--space-xs);
+  width: 95%;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--pico-background);
+  color: var(--text-color);
+}
+
+.type-filter {
   padding-right: 2rem;
   margin: var(--space-xs);
   width: 95%;

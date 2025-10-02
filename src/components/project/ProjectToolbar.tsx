@@ -10,6 +10,7 @@ interface ProjectToolbarProps {
 	onImportProject: () => void;
 	onSearch: (query: string) => void;
 	onFilterByTag: (tag: string) => void;
+	onFilterByType: (type: string) => void;
 	onOpenProject?: (project: Project) => void;
 	projects: Project[];
 	availableTags: string[];
@@ -20,12 +21,14 @@ const ProjectToolbar: React.FC<ProjectToolbarProps> = ({
 	onImportProject,
 	onSearch,
 	onFilterByTag,
+	onFilterByType,
 	onOpenProject,
 	projects,
 	availableTags,
 }) => {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedTag, setSelectedTag] = useState<string>("");
+	const [selectedType, setSelectedType] = useState<string>("");
 
 	const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const query = e.target.value;
@@ -42,6 +45,12 @@ const ProjectToolbar: React.FC<ProjectToolbarProps> = ({
 		const tag = e.target.value;
 		setSelectedTag(tag);
 		onFilterByTag(tag);
+	};
+
+	const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		const type = e.target.value;
+		setSelectedType(type);
+		onFilterByType(type);
 	};
 
 	const favoriteProjects = projects.filter((p) => p.isFavorite).slice(0, 5);
@@ -114,6 +123,16 @@ const ProjectToolbar: React.FC<ProjectToolbarProps> = ({
 							{tag}
 						</option>
 					))}
+				</select>
+
+				<select
+					value={selectedType}
+					onChange={handleTypeChange}
+					className="type-filter"
+				>
+					<option value="">All types</option>
+					<option value="latex">LaTeX</option>
+					<option value="typst">Typst</option>
 				</select>
 
 				{favoriteProjects.length > 0 && (
