@@ -10,6 +10,7 @@ export default {
 		"renderers/svg",
 		"renderers/canvas",
 		"loggers/latex_visualizer",
+		"loggers/typst_visualizer",
 		// "lsp/jabref",
 		"backup/github",
 		"themes/texlyre_slim",
