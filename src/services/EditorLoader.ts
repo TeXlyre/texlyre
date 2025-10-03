@@ -540,26 +540,26 @@ export const EditorLoader = (
 				filePathCacheService.updateCache();
 			}
 
-			// Set up content change handler for file editing
-			if (isEditingFile && !isViewOnly) {
-				const handleInput = () => {
-					if (!isUpdatingRef.current && viewRef.current) {
-						const content = viewRef.current.state.doc.toString();
-						isUpdatingRef.current = true;
-						try {
-							onUpdateContent(content);
-							if (enableComments) {
-								updateComments(content);
-							}
-							if (autoSaveRef.current) autoSaveRef.current();
-						} finally {
-							isUpdatingRef.current = false;
-						}
-					}
-				};
-				view.dom.addEventListener('input', handleInput);
-				return () => view.dom.removeEventListener('input', handleInput);
-			}
+			// // Set up content change handler for file editing
+			// if (isEditingFile && !isViewOnly) {
+			// 	const handleInput = () => {
+			// 		if (!isUpdatingRef.current && viewRef.current) {
+			// 			const content = viewRef.current.state.doc.toString();
+			// 			isUpdatingRef.current = true;
+			// 			try {
+			// 				onUpdateContent(content);
+			// 				if (enableComments) {
+			// 					updateComments(content);
+			// 				}
+			// 				if (autoSaveRef.current) autoSaveRef.current();
+			// 			} finally {
+			// 				isUpdatingRef.current = false;
+			// 			}
+			// 		}
+			// 	};
+			// 	view.dom.addEventListener('input', handleInput);
+			// 	return () => view.dom.removeEventListener('input', handleInput);
+			// }
 
 		} catch (error) {
 			console.error('Error creating editor view:', error);
