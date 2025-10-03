@@ -75,7 +75,7 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
                 <>
                     <h4 className="typesetter-tooltip-title">LaTeX</h4>
                     <div className="typesetter-tooltip-section">
-                        <strong>Engine:</strong> SwiftLaTeX
+                        <strong>Engine:</strong> SwiftLaTeX v20/02/2022
                     </div>
                     <div className="typesetter-tooltip-section">
                         <strong>Compilers:</strong>
@@ -95,10 +95,13 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
             <>
                 <h4 className="typesetter-tooltip-title">Typst</h4>
                 <div className="typesetter-tooltip-section">
-                    <strong>Engine:</strong> @myriaddreamin/typst.ts
+                    <strong>Engine:</strong> @myriaddreamin/typst.ts v0.6.1-rc2
                 </div>
                 <div className="typesetter-tooltip-section">
-                    <strong>Version:</strong> 0.13.1 (2025)
+                    <strong>Renderer:</strong> @myriaddreamin/typst-ts-renderer v0.6.1-rc3
+                </div>
+                <div className="typesetter-tooltip-section">
+                    <strong>Typst Version:</strong> 0.13.1 (2025)
                 </div>
                 <div className="typesetter-tooltip-section">
                     <strong>Output Formats:</strong>

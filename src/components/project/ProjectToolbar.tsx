@@ -3,7 +3,7 @@ import type React from 'react';
 import { useState } from 'react';
 
 import type { Project } from '../../types/projects';
-import { ImportIcon, NewProjectIcon, PlusIcon, StarIcon } from '../common/Icons';
+import { ImportIcon, NewProjectIcon, StarIcon } from '../common/Icons';
 
 interface ProjectToolbarProps {
 	onCreateProject: () => void;
