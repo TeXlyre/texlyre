@@ -390,7 +390,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
                         onClick={handleTemplateConfirm}
                       >
                         <ImportIcon />
-                        Use This Template
+                        Import Template
                       </button>
                     </div>
                   </div>
