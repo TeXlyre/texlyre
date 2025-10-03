@@ -3,7 +3,7 @@ import type React from 'react';
 import { useState } from 'react';
 
 import type { Project } from '../../types/projects';
-import { ImportIcon, PlusIcon, StarIcon } from '../common/Icons';
+import { ImportIcon, NewProjectIcon, PlusIcon, StarIcon } from '../common/Icons';
 
 interface ProjectToolbarProps {
 	onCreateProject: () => void;
@@ -86,7 +86,7 @@ const ProjectToolbar: React.FC<ProjectToolbarProps> = ({
 						title="New Project"
 						onClick={onCreateProject}
 					>
-						<PlusIcon />
+						<NewProjectIcon />
 					</button>
 					<button
 						className="action-btn"

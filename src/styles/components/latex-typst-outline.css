@@ -46,7 +46,7 @@
 }
 
 .outline-header-title {
-	flex: 1;
+	margin-right: var(--space-md);
 	margin-left: var(--space-xs);
 }
 
