@@ -1,9 +1,11 @@
 // src/components/project/TemplateImportModal.tsx
 import type React from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
+import { useSettings } from '../../hooks/useSettings';
 import { FolderIcon, ImportIcon, TemplatesIcon } from '../common/Icons';
 import Modal from '../common/Modal';
+import TypesetterInfo from '../common/TypesetterInfo';
 
 interface TemplateProject {
   id: string;
@@ -16,6 +18,7 @@ interface TemplateProject {
   author?: string;
   version?: string;
   lastUpdated: string;
+  type?: 'latex' | 'typst';
 }
 
 interface TemplateCategory {
@@ -36,11 +39,15 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
   onClose,
   onTemplateSelected,
 }) => {
+  const { registerSetting, getSetting } = useSettings();
+  const settingsRegistered = useRef(false);
+
   const [categories, setCategories] = useState<TemplateCategory[]>([]);
   const [allTemplates, setAllTemplates] = useState<TemplateProject[]>([]);
   const [filteredTemplates, setFilteredTemplates] = useState<TemplateProject[]>([]);
   const [paginatedTemplates, setPaginatedTemplates] = useState<TemplateProject[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedType, setSelectedType] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateProject | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -49,8 +56,48 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
 
-  const TEMPLATES_PER_PAGE = 12;
-  const TEMPLATES_API_URL = 'https://texlyre.github.io/texlyre-templates/api/templates.json';
+  const [templatesApiUrl, setTemplatesApiUrl] = useState('https://texlyre.github.io/texlyre-templates/api/templates.json');
+  const [templatesPerPage, setTemplatesPerPage] = useState(12);
+
+  useEffect(() => {
+    if (settingsRegistered.current) return;
+    settingsRegistered.current = true;
+
+    const initialUrl = (getSetting('templates-api-url')?.value as string) ??
+      'https://texlyre.github.io/texlyre-templates/api/templates.json';
+    const initialPerPage = (getSetting('templates-per-page')?.value as number) ?? 12;
+
+    setTemplatesApiUrl(initialUrl);
+    setTemplatesPerPage(initialPerPage);
+
+    registerSetting({
+      id: 'templates-api-url',
+      category: 'Templates',
+      subcategory: 'Template Gallery',
+      type: 'text',
+      label: 'Template gallery API URL',
+      description: 'URL endpoint for fetching project templates',
+      defaultValue: initialUrl,
+      onChange: (value) => {
+        setTemplatesApiUrl(value as string);
+      },
+    });
+
+    registerSetting({
+      id: 'templates-per-page',
+      category: 'Templates',
+      subcategory: 'Template Gallery',
+      type: 'number',
+      label: 'Templates per page',
+      description: 'Number of templates to display per page',
+      defaultValue: 12,
+      min: 6,
+      max: 48,
+      onChange: (value) => {
+        setTemplatesPerPage(value as number);
+      },
+    });
+  }, [registerSetting, getSetting]);
 
   useEffect(() => {
     if (isOpen) {
@@ -60,10 +107,9 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 
   useEffect(() => {
     filterAndPaginateTemplates();
-  }, [allTemplates, selectedCategory, searchQuery, currentPage]);
+  }, [allTemplates, selectedCategory, selectedType, searchQuery, currentPage, templatesPerPage]);
 
   useEffect(() => {
-    // Load preview images for currently visible templates
     paginatedTemplates.forEach(template => {
       if (template.previewImage && !loadedImages.has(template.id)) {
         loadImage(template.id, template.previewImage);
@@ -76,7 +122,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(TEMPLATES_API_URL);
+      const response = await fetch(templatesApiUrl);
       if (!response.ok) {
         throw new Error(`Failed to fetch templates: ${response.statusText}`);
       }
@@ -84,7 +130,12 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
       const data = await response.json();
       setCategories(data.categories || []);
 
-      const allTemplatesFlat = data.categories?.flatMap((cat: any) => cat.templates) || [];
+      const allTemplatesFlat = data.categories?.flatMap((cat: any) =>
+        cat.templates.map((template: any) => ({
+          ...template,
+          type: template.type || 'latex'
+        }))
+      ) || [];
       setAllTemplates(allTemplatesFlat);
     } catch (error) {
       console.error('Error loading templates:', error);
@@ -103,6 +154,10 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
       filtered = allTemplates.filter(template => template.category === selectedCategory);
     }
 
+    if (selectedType !== 'all') {
+      filtered = filtered.filter(template => (template.type || 'latex') === selectedType);
+    }
+
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(template =>
@@ -113,10 +168,10 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
     }
 
     setFilteredTemplates(filtered);
-    setTotalPages(Math.ceil(filtered.length / TEMPLATES_PER_PAGE));
+    setTotalPages(Math.ceil(filtered.length / templatesPerPage));
 
-    const startIndex = (currentPage - 1) * TEMPLATES_PER_PAGE;
-    const endIndex = startIndex + TEMPLATES_PER_PAGE;
+    const startIndex = (currentPage - 1) * templatesPerPage;
+    const endIndex = startIndex + templatesPerPage;
     setPaginatedTemplates(filtered.slice(startIndex, endIndex));
   };
 
@@ -162,9 +217,15 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
     setCurrentPage(1);
   };
 
+  const handleTypeChange = (value: string) => {
+    setSelectedType(value);
+    setCurrentPage(1);
+  };
+
   const handleClose = () => {
     setSearchQuery('');
     setSelectedCategory('all');
+    setSelectedType('all');
     setSelectedTemplate(null);
     setCurrentPage(1);
     setAllTemplates([]);
@@ -194,8 +255,8 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
       return pages;
     };
 
-    const startItem = (currentPage - 1) * TEMPLATES_PER_PAGE + 1;
-    const endItem = Math.min(currentPage * TEMPLATES_PER_PAGE, filteredTemplates.length);
+    const startItem = (currentPage - 1) * templatesPerPage + 1;
+    const endItem = Math.min(currentPage * templatesPerPage, filteredTemplates.length);
 
     return (
       <div className="template-pagination">
@@ -300,6 +361,17 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
                 </option>
               ))}
             </select>
+
+            <select
+              value={selectedType}
+              onChange={(e) => handleTypeChange(e.target.value)}
+              className="template-type-select"
+              disabled={isLoading}
+            >
+              <option value="all">All Types</option>
+              <option value="latex">LaTeX</option>
+              <option value="typst">Typst</option>
+            </select>
           </div>
         </div>
 
@@ -330,13 +402,18 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
                   <div className="template-detail-preview">
                     {selectedTemplate.previewImage ? (
                       loadedImages.has(selectedTemplate.id) ? (
-                        <img
-                          src={selectedTemplate.previewImage}
-                          alt={`${selectedTemplate.name} preview`}
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                          }}
-                        />
+                        <div style={{ position: 'relative' }}>
+                          <img
+                            src={selectedTemplate.previewImage}
+                            alt={`${selectedTemplate.name} preview`}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                          <div className="template-type-info">
+                            <TypesetterInfo type={selectedTemplate.type || 'latex'} />
+                          </div>
+                        </div>
                       ) : (
                         <div className="template-preview-loading">
                           <div className="loading-spinner" />
@@ -408,13 +485,18 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
                       {template.previewImage ? (
                         <div className="template-preview">
                           {loadedImages.has(template.id) ? (
-                            <img
-                              src={template.previewImage}
-                              alt={`${template.name} preview`}
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = 'none';
-                              }}
-                            />
+                            <>
+                              <img
+                                src={template.previewImage}
+                                alt={`${template.name} preview`}
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                              <div className="template-type-info">
+                                <TypesetterInfo type={template.type || 'latex'} />
+                              </div>
+                            </>
                           ) : (
                             <div className="template-preview-loading">
                               <div className="loading-spinner" />
@@ -425,6 +507,9 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
                         <div className="template-preview">
                           <div className="template-preview-placeholder">
                             <FolderIcon />
+                          </div>
+                          <div className="template-type-info">
+                            <TypesetterInfo type={template.type || 'latex'} />
                           </div>
                         </div>
                       )}

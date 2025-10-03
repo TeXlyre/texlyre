@@ -28,7 +28,17 @@
 }
 
 .template-import-modal .template-search-controls .template-category-select {
-  flex: 0 0 180px;
+  flex: 0 0 215px;
+  padding: var(--space-md) !important;
+  border: 1px solid var(--accent-border) !important;
+  border-radius: var(--radius-sm) !important;
+  background-color: var(--pico-background) !important;
+  color: var(--text-color) !important;
+  font-size: 0.9rem !important;
+}
+
+.template-import-modal .template-search-controls .template-type-select {
+  flex: 0 0 140px;
   padding: var(--space-md) !important;
   border: 1px solid var(--accent-border) !important;
   border-radius: var(--radius-sm) !important;
@@ -77,19 +87,46 @@
 
 .template-preview {
   width: 100%;
-  height: 100px;
+  height: 200px;
   overflow: hidden;
   background-color: var(--pico-secondary-background);
   display: flex;
   align-items: center;
   justify-content: center;
   border-bottom: 1px solid var(--accent-border);
+  position: relative;
 }
 
 .template-preview img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.template-import-modal .template-type-info {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  color: var(--text-color);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  transition: opacity var(--transition-normal);
+  z-index: 1;
+}
+
+.template-import-modal .template-type-info .type-info-help {
+  background: var(--pico-secondary-background);
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xs);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--pico-primary);
+}
+
+.template-import-modal .template-preview,
+.template-import-modal .template-detail-preview>div {
+  position: relative;
 }
 
 .template-content {
