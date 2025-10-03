@@ -168,7 +168,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 							/>
 							<button
 								type="button"
-								className="tag-add-button"
+								className="button primary"
 								onClick={handleAddTag}
 								disabled={!tagInput.trim() || isSubmitting}
 							>

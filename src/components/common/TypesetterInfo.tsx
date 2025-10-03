@@ -1,96 +1,71 @@
-// src/components/common/TypesetterInfo.tsx
 import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface TypesetterInfoProps {
     type: 'latex' | 'typst';
 }
 
-interface TooltipPosition {
-    top?: string;
-    bottom?: string;
-    left?: string;
-    right?: string;
-    transform?: string;
-    position?: 'fixed';
-}
-
 const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
     const [showTooltip, setShowTooltip] = useState(false);
-    const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition>({});
+    const [position, setPosition] = useState({ top: 0, left: 0 });
     const buttonRef = useRef<HTMLButtonElement>(null);
     const tooltipRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (!showTooltip || !buttonRef.current) return;
+        if (!showTooltip || !buttonRef.current || !tooltipRef.current) return;
 
-        const rect = buttonRef.current.getBoundingClientRect();
-        const spacing = 12;
-        const padding = 8;
+        const updatePosition = () => {
+            if (!buttonRef.current || !tooltipRef.current) return;
 
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
+            const buttonRect = buttonRef.current.getBoundingClientRect();
+            const tooltipRect = tooltipRef.current.getBoundingClientRect();
+            const spacing = 12;
+            const padding = 8;
 
-        let tooltipWidth = 320;
-        let tooltipHeight = 200;
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
 
-        if (tooltipRef.current) {
-            const el = tooltipRef.current;
-            const prev = {
-                position: el.style.position,
-                left: el.style.left,
-                top: el.style.top,
-                visibility: el.style.visibility,
-            };
-            el.style.position = 'fixed';
-            el.style.left = '-9999px';
-            el.style.top = '-9999px';
-            el.style.visibility = 'hidden';
-            tooltipWidth = el.offsetWidth || tooltipWidth;
-            tooltipHeight = el.offsetHeight || tooltipHeight;
-            el.style.position = prev.position;
-            el.style.left = prev.left;
-            el.style.top = prev.top;
-            el.style.visibility = prev.visibility;
-        }
+            const spaceRight = viewportWidth - buttonRect.right;
+            const spaceLeft = buttonRect.left;
+            const spaceBelow = viewportHeight - buttonRect.bottom;
+            const spaceAbove = buttonRect.top;
 
-        const position: TooltipPosition = { position: 'fixed' };
+            let top = 0;
+            let left = 0;
 
-        const preferHorizontal = vw - rect.right > rect.left;
+            if (spaceRight >= tooltipRect.width + spacing) {
+                left = buttonRect.right + spacing;
+                top = buttonRect.top + buttonRect.height / 2 - tooltipRect.height / 2;
+            } else if (spaceLeft >= tooltipRect.width + spacing) {
+                left = buttonRect.left - tooltipRect.width - spacing;
+                top = buttonRect.top + buttonRect.height / 2 - tooltipRect.height / 2;
+            } else if (spaceBelow >= tooltipRect.height + spacing) {
+                top = buttonRect.bottom + spacing;
+                left = buttonRect.left + buttonRect.width / 2 - tooltipRect.width / 2;
+            } else if (spaceAbove >= tooltipRect.height + spacing) {
+                top = buttonRect.top - tooltipRect.height - spacing;
+                left = buttonRect.left + buttonRect.width / 2 - tooltipRect.width / 2;
+            } else {
+                left = buttonRect.right + spacing;
+                top = buttonRect.top + buttonRect.height / 2 - tooltipRect.height / 2;
+            }
 
-        const placements = {
-            right: {
-                x: rect.right + spacing,
-                y: rect.top + rect.height / 2 - tooltipHeight / 2,
-            },
-            left: {
-                x: rect.left - spacing - tooltipWidth,
-                y: rect.top + rect.height / 2 - tooltipHeight / 2,
-            },
-        } as const;
+            top = Math.max(padding, Math.min(top, viewportHeight - tooltipRect.height - padding));
+            left = Math.max(padding, Math.min(left, viewportWidth - tooltipRect.width - padding));
 
-        const fits = (p: { x: number; y: number }) =>
-            p.x >= padding &&
-            p.y >= padding &&
-            p.x + tooltipWidth <= vw - padding &&
-            p.y + tooltipHeight <= vh - padding;
-
-        const order = preferHorizontal ? ['right', 'left'] : ['left', 'right'] as const;
-
-        let chosen = placements[order[0]];
-        if (!fits(chosen) && fits(placements[order[1]])) {
-            chosen = placements[order[1]];
-        }
-
-        const clamped = {
-            x: Math.min(Math.max(chosen.x, padding), vw - tooltipWidth - padding),
-            y: Math.min(Math.max(chosen.y, padding), vh - tooltipHeight - padding),
+            setPosition({ top, left });
         };
 
-        position.left = `${Math.round(clamped.x)}px`;
-        position.top = `${Math.round(clamped.y)}px`;
+        updatePosition();
 
-        setTooltipPosition(position);
+        window.addEventListener('scroll', updatePosition, true);
+        window.addEventListener('resize', updatePosition);
+
+        return () => {
+            window.removeEventListener('scroll', updatePosition, true);
+            window.removeEventListener('resize', updatePosition);
+        };
     }, [showTooltip]);
 
     const getTooltipContent = () => {
@@ -137,7 +112,7 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
     };
 
     return (
-        <div className="typesetter-info-container">
+        <>
             <button
                 ref={buttonRef}
                 type="button"
@@ -148,12 +123,23 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
             >
                 {type === 'latex' ? 'LaTeX' : 'Typst'}
             </button>
-            {showTooltip && (
-                <div className="typesetter-tooltip" ref={tooltipRef} style={tooltipPosition}>
-                    {getTooltipContent()}
-                </div>
-            )}
-        </div>
+            {showTooltip &&
+                createPortal(
+                    <div
+                        className="typesetter-tooltip"
+                        ref={tooltipRef}
+                        style={{
+                            top: `${position.top}px`,
+                            left: `${position.left}px`,
+                        }}
+                        onMouseEnter={() => setShowTooltip(true)}
+                        onMouseLeave={() => setShowTooltip(false)}
+                    >
+                        {getTooltipContent()}
+                    </div>,
+                    document.body
+                )}
+        </>
     );
 };
 
