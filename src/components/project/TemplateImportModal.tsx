@@ -3,8 +3,9 @@ import type React from 'react';
 import { useEffect, useState, useRef } from 'react';
 
 import { useSettings } from '../../hooks/useSettings';
-import { FolderIcon, ImportIcon, TemplatesIcon } from '../common/Icons';
+import { FolderIcon, ImportIcon, TemplatesIcon, SettingsIcon } from '../common/Icons';
 import Modal from '../common/Modal';
+import SettingsModal from '../settings/SettingsModal';
 import TypesetterInfo from '../common/TypesetterInfo';
 
 interface TemplateProject {
@@ -41,6 +42,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 }) => {
   const { registerSetting, getSetting } = useSettings();
   const settingsRegistered = useRef(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const [categories, setCategories] = useState<TemplateCategory[]>([]);
   const [allTemplates, setAllTemplates] = useState<TemplateProject[]>([]);
@@ -323,241 +325,259 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleClose}
-      title="Import Template"
-      icon={TemplatesIcon}
-      size="large"
-    >
-      <div className="template-import-modal">
-        {error && (
-          <div className="error-message" style={{ marginBottom: '1rem' }}>
-            {error}
+    <>
+      <Modal
+        isOpen={isOpen}
+        onClose={handleClose}
+        title="Import Template"
+        icon={TemplatesIcon}
+        size="large"
+        headerActions={
+          <button
+            className="modal-close-button"
+            onClick={() => setShowSettings(true)}
+            title="File System Settings"
+          >
+            <SettingsIcon />
+          </button>
+        }
+      >
+        <div className="template-import-modal">
+          {error && (
+            <div className="error-message" style={{ marginBottom: '1rem' }}>
+              {error}
+            </div>
+          )}
+
+          <div className="template-search-controls">
+            <div className="template-search-row">
+              <input
+                type="text"
+                placeholder="Search templates..."
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="template-search-input"
+                disabled={isLoading}
+              />
+
+              <select
+                value={selectedCategory}
+                onChange={(e) => handleCategoryChange(e.target.value)}
+                className="template-category-select"
+                disabled={isLoading}
+              >
+                <option value="all">All Categories</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={selectedType}
+                onChange={(e) => handleTypeChange(e.target.value)}
+                className="template-type-select"
+                disabled={isLoading}
+              >
+                <option value="all">All Types</option>
+                <option value="latex">LaTeX</option>
+                <option value="typst">Typst</option>
+              </select>
+            </div>
           </div>
-        )}
 
-        <div className="template-search-controls">
-          <div className="template-search-row">
-            <input
-              type="text"
-              placeholder="Search templates..."
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="template-search-input"
-              disabled={isLoading}
-            />
-
-            <select
-              value={selectedCategory}
-              onChange={(e) => handleCategoryChange(e.target.value)}
-              className="template-category-select"
-              disabled={isLoading}
-            >
-              <option value="all">All Categories</option>
-              {categories.map(category => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={selectedType}
-              onChange={(e) => handleTypeChange(e.target.value)}
-              className="template-type-select"
-              disabled={isLoading}
-            >
-              <option value="all">All Types</option>
-              <option value="latex">LaTeX</option>
-              <option value="typst">Typst</option>
-            </select>
-          </div>
-        </div>
-
-        {isLoading ? (
-          <div className="template-loading">
-            <div className="loading-spinner" />
-            <p>Loading templates...</p>
-          </div>
-        ) : (
-          <div className="template-list">
-            {filteredTemplates.length === 0 ? (
-              <div className="no-templates">
-                <p>No templates found matching your criteria.</p>
-              </div>
-            ) : selectedTemplate ? (
-              <div className="template-detail-view">
-                <div className="template-detail-header">
-                  <button
-                    className="back-button"
-                    onClick={() => setSelectedTemplate(null)}
-                  >
-                    ← Back to Templates
-                  </button>
-                  <h3>{selectedTemplate.name}</h3>
+          {isLoading ? (
+            <div className="template-loading">
+              <div className="loading-spinner" />
+              <p>Loading templates...</p>
+            </div>
+          ) : (
+            <div className="template-list">
+              {filteredTemplates.length === 0 ? (
+                <div className="no-templates">
+                  <p>No templates found matching your criteria.</p>
                 </div>
-
-                <div className="template-detail-content">
-                  <div className="template-detail-preview">
-                    {selectedTemplate.previewImage ? (
-                      loadedImages.has(selectedTemplate.id) ? (
-                        <div style={{ position: 'relative' }}>
-                          <img
-                            src={selectedTemplate.previewImage}
-                            alt={`${selectedTemplate.name} preview`}
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                          <div className="template-type-info">
-                            <TypesetterInfo type={selectedTemplate.type || 'latex'} />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="template-preview-loading">
-                          <div className="loading-spinner" />
-                          <span>Loading preview...</span>
-                        </div>
-                      )
-                    ) : (
-                      <div className="template-preview-placeholder">
-                        <FolderIcon />
-                        <span>No preview available</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="template-detail-info">
-                    <div className="template-detail-meta">
-                      <span className="template-category">{selectedTemplate.category}</span>
-                      {selectedTemplate.version && (
-                        <span className="template-version">v{selectedTemplate.version}</span>
-                      )}
-                    </div>
-
-                    <p className="template-detail-description">{selectedTemplate.description}</p>
-
-                    {selectedTemplate.tags.length > 0 && (
-                      <div className="template-tags">
-                        {selectedTemplate.tags.map(tag => (
-                          <span key={tag} className="template-tag">{tag}</span>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="template-detail-footer">
-                      {selectedTemplate.author && (
-                        <span className="template-author">by {selectedTemplate.author}</span>
-                      )}
-                      <span className="template-updated">
-                        Updated {new Date(selectedTemplate.lastUpdated).toLocaleDateString()}
-                      </span>
-                    </div>
-
-                    <div className="template-actions">
-                      <button
-                        className="button secondary"
-                        onClick={() => setSelectedTemplate(null)}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        className="button primary"
-                        onClick={handleTemplateConfirm}
-                      >
-                        <ImportIcon />
-                        Import Template
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="template-grid">
-                  {paginatedTemplates.map(template => (
-                    <div
-                      key={template.id}
-                      className="template-card"
-                      onClick={() => handleTemplateSelect(template)}
+              ) : selectedTemplate ? (
+                <div className="template-detail-view">
+                  <div className="template-detail-header">
+                    <button
+                      className="back-button"
+                      onClick={() => setSelectedTemplate(null)}
                     >
-                      {template.previewImage ? (
-                        <div className="template-preview">
-                          {loadedImages.has(template.id) ? (
-                            <>
-                              <img
-                                src={template.previewImage}
-                                alt={`${template.name} preview`}
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display = 'none';
-                                }}
-                              />
-                              <div className="template-type-info">
-                                <TypesetterInfo type={template.type || 'latex'} />
-                              </div>
-                            </>
-                          ) : (
-                            <div className="template-preview-loading">
-                              <div className="loading-spinner" />
+                      ← Back to Templates
+                    </button>
+                    <h3>{selectedTemplate.name}</h3>
+                  </div>
+
+                  <div className="template-detail-content">
+                    <div className="template-detail-preview">
+                      {selectedTemplate.previewImage ? (
+                        loadedImages.has(selectedTemplate.id) ? (
+                          <div style={{ position: 'relative' }}>
+                            <img
+                              src={selectedTemplate.previewImage}
+                              alt={`${selectedTemplate.name} preview`}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                            <div className="template-type-info">
+                              <TypesetterInfo type={selectedTemplate.type || 'latex'} />
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        ) : (
+                          <div className="template-preview-loading">
+                            <div className="loading-spinner" />
+                            <span>Loading preview...</span>
+                          </div>
+                        )
                       ) : (
-                        <div className="template-preview">
-                          <div className="template-preview-placeholder">
-                            <FolderIcon />
-                          </div>
-                          <div className="template-type-info">
-                            <TypesetterInfo type={template.type || 'latex'} />
-                          </div>
+                        <div className="template-preview-placeholder">
+                          <FolderIcon />
+                          <span>No preview available</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="template-detail-info">
+                      <div className="template-detail-meta">
+                        <span className="template-category">{selectedTemplate.category}</span>
+                        {selectedTemplate.version && (
+                          <span className="template-version">v{selectedTemplate.version}</span>
+                        )}
+                      </div>
+
+                      <p className="template-detail-description">{selectedTemplate.description}</p>
+
+                      {selectedTemplate.tags.length > 0 && (
+                        <div className="template-tags">
+                          {selectedTemplate.tags.map(tag => (
+                            <span key={tag} className="template-tag">{tag}</span>
+                          ))}
                         </div>
                       )}
 
-                      <div className="template-content">
-                        <div className="template-header">
-                          <h3 className="template-name">{template.name}</h3>
-                          <span className="template-category">{template.category}</span>
-                        </div>
+                      <div className="template-detail-footer">
+                        {selectedTemplate.author && (
+                          <span className="template-author">by {selectedTemplate.author}</span>
+                        )}
+                        <span className="template-updated">
+                          Updated {new Date(selectedTemplate.lastUpdated).toLocaleDateString()}
+                        </span>
+                      </div>
 
-                        <p className="template-description">{template.description}</p>
-
-                        {template.tags.length > 0 && (
-                          <div className="template-tags">
-                            {template.tags.slice(0, 3).map(tag => (
-                              <span key={tag} className="template-tag">{tag}</span>
-                            ))}
-                            {template.tags.length > 3 && (
-                              <span className="template-tag-more">+{template.tags.length - 3}</span>
+                      <div className="template-actions">
+                        <button
+                          className="button secondary"
+                          onClick={() => setSelectedTemplate(null)}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          className="button primary"
+                          onClick={handleTemplateConfirm}
+                        >
+                          <ImportIcon />
+                          Import Template
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="template-grid">
+                    {paginatedTemplates.map(template => (
+                      <div
+                        key={template.id}
+                        className="template-card"
+                        onClick={() => handleTemplateSelect(template)}
+                      >
+                        {template.previewImage ? (
+                          <div className="template-preview">
+                            {loadedImages.has(template.id) ? (
+                              <>
+                                <img
+                                  src={template.previewImage}
+                                  alt={`${template.name} preview`}
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                />
+                                <div className="template-type-info">
+                                  <TypesetterInfo type={template.type || 'latex'} />
+                                </div>
+                              </>
+                            ) : (
+                              <div className="template-preview-loading">
+                                <div className="loading-spinner" />
+                              </div>
                             )}
+                          </div>
+                        ) : (
+                          <div className="template-preview">
+                            <div className="template-preview-placeholder">
+                              <FolderIcon />
+                            </div>
+                            <div className="template-type-info">
+                              <TypesetterInfo type={template.type || 'latex'} />
+                            </div>
                           </div>
                         )}
 
-                        <div className="template-meta">
-                          {template.author && (
-                            <span className="template-author">by {template.author}</span>
+                        <div className="template-content">
+                          <div className="template-header">
+                            <h3 className="template-name">{template.name}</h3>
+                            <span className="template-category">{template.category}</span>
+                          </div>
+
+                          <p className="template-description">{template.description}</p>
+
+                          {template.tags.length > 0 && (
+                            <div className="template-tags">
+                              {template.tags.slice(0, 3).map(tag => (
+                                <span key={tag} className="template-tag">{tag}</span>
+                              ))}
+                              {template.tags.length > 3 && (
+                                <span className="template-tag-more">+{template.tags.length - 3}</span>
+                              )}
+                            </div>
                           )}
-                          <span className="template-updated">
-                            Updated {new Date(template.lastUpdated).toLocaleDateString()}
-                          </span>
+
+                          <div className="template-meta">
+                            {template.author && (
+                              <span className="template-author">by {template.author}</span>
+                            )}
+                            <span className="template-updated">
+                              Updated {new Date(template.lastUpdated).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="template-action">
+                          <FolderIcon />
+                          View Details
                         </div>
                       </div>
+                    ))}
+                  </div>
 
-                      <div className="template-action">
-                        <FolderIcon />
-                        View Details
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                  {renderPaginationControls()}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </Modal>
 
-                {renderPaginationControls()}
-              </>
-            )}
-          </div>
-        )}
-      </div>
-    </Modal>
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        initialCategory="Templates"
+        initialSubcategory="Template Gallery"
+      />
+    </>
   );
 };
 
