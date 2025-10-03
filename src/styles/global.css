@@ -262,7 +262,8 @@ footer {
 
 .error-message,
 .warning-message,
-.success-message {
+.success-message,
+.info-message {
 	padding: 0.75rem;
 	border-radius: var(--radius-sm);
 	margin-bottom: var(--space-md);
@@ -275,10 +276,17 @@ footer {
 	color: var(--color-error);
 }
 
+.error-message * {
+	color: var(--color-error);
+}
+
 .warning-message {
-	background-color:
-		color-mix(in srgb, var(--color-warning) 20%, white);
+	background-color: color-mix(in srgb, var(--color-warning) 20%, white);
 	border: 1px solid var(--color-warning);
+	color: var(--pico-secondary);
+}
+
+.warning-message * {
 	color: var(--pico-secondary);
 }
 
@@ -286,4 +294,33 @@ footer {
 	background-color: rgba(40, 167, 69, 0.1);
 	border: 1px solid rgba(40, 167, 69, 0.3);
 	color: var(--color-success);
+}
+
+.success-message * {
+	color: var(--color-success);
+}
+
+.info-message {
+	background-color: var(--pico-primary-focus);
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--pico-primary);
+}
+
+.info-message * {
+	color: var(--text-color);
+}
+
+.info-message ul {
+	margin: 0;
+	padding-left: var(--space-lg);
+}
+
+.info-message li {
+	font-size: 0.85rem;
+	margin-bottom: var(--space-xs);
+	line-height: 1.4;
+}
+
+.info-message li:last-child {
+	margin-bottom: 0;
 }

@@ -137,7 +137,7 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 					</label>
 				</div>
 
-				<div className="export-note success-message">
+				<div className="export-note info-message">
 					Exported data can be imported into any TeXlyre installation to restore
 					your complete workspace.
 				</div>

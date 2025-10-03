@@ -173,7 +173,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		handleOriginalContentUpdate,
 		() => [],
 		() => ({}),
-		() => {},
+		() => { },
 		true,
 		false,
 		fileName,
@@ -189,7 +189,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		handleProcessedContentUpdate,
 		() => [],
 		() => ({}),
-		() => {},
+		() => { },
 		true,
 		false,
 		fileName,
@@ -547,7 +547,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 								</div>
 								{currentView === 'processed' && processedContent.trim() && (
 									<div className="processed-save-notice">
-										<span>Not saved automatically. Click the <SaveIcon/> <strong>Save</strong> button or <strong>Ctrl+S</strong></span>
+										<span>Not saved automatically. Click the <SaveIcon /> <strong>Save</strong> button or <strong>Ctrl+S</strong></span>
 									</div>
 								)}
 								{isProcessing && (

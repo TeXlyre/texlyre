@@ -129,7 +129,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 			<div className="delete-account-container">
 				{error && <div className="error-message">{error}</div>}
 
-				<div className="warning-section warning-message">
+				<div className="warning-message">
 					<h3>⚠️ Warning: This action cannot be undone</h3>
 					<p>
 						Deleting your account will permanently remove:

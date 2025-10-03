@@ -118,7 +118,7 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 					</div>
 				)}
 
-				<div className="share-tips">
+				<div className="info-message">
 					<h5>Sharing Tips</h5>
 					<ul>
 						<li>All collaborators can edit documents and files in real-time</li>
