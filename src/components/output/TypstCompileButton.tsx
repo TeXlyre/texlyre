@@ -53,6 +53,9 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 
     const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
     const effectiveMainFile = projectMainFile || userSelectedMainFile || autoMainFile;
+    const projectFormat = useSharedSettings ? doc?.projectMetadata?.typstOutputFormat : undefined;
+    const [localFormat, setLocalFormat] = useState<TypstOutputFormat>('pdf');
+    const effectiveFormat = projectFormat || localFormat;
 
     useEffect(() => {
         const findTypstFiles = (nodes: FileNode[]): string[] => {
@@ -169,7 +172,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                 }
             }
 
-            await compileDocument(effectiveMainFile, selectedFormat);
+            await compileDocument(effectiveMainFile, effectiveFormat);
         }
     };
 
@@ -206,7 +209,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 
         try {
             clearCache();
-            await compileDocument(effectiveMainFile, selectedFormat);
+            await compileDocument(effectiveMainFile, effectiveFormat);
         } catch (error) {
             console.error('Failed to compile with cache clear:', error);
         }
@@ -246,6 +249,21 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
         });
     };
 
+    const handleShareFormat = (checked: boolean) => {
+        if (!useSharedSettings || !changeDoc) return;
+
+        changeDoc((d) => {
+            if (!d.projectMetadata) {
+                d.projectMetadata = { name: '', description: '' };
+            }
+            if (checked) {
+                d.projectMetadata.typstOutputFormat = effectiveFormat;
+            } else {
+                delete d.projectMetadata.typstOutputFormat;
+            }
+        });
+    };
+
     const getFileName = (path?: string) => {
         if (!path) return 'No .typ file';
         return path.split('/').pop() || path;
@@ -276,7 +294,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                     title={
                         isCompiling
                             ? 'Stop Compilation'
-                            : 'Compile Typst Document'
+                            : 'Compile Typst Document (F9)'
                     }
                 >
                     {isCompiling ? <StopIcon /> : <PlayIcon />}
@@ -306,7 +324,6 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                             {projectMainFile && <span className="shared-indicator"> (shared)</span>}
                         </div>
                     </div>
-
                     {useSharedSettings && (
                         <div className="main-file-selector">
                             <div className="main-file-selector-label">Select main file:</div>
@@ -330,7 +347,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                                     onChange={(e) => handleShareMainFile(e.target.checked)}
                                     disabled={isCompiling || !effectiveMainFile}
                                 />
-                                Share with collaborators
+                                Save and share with collaborators
                             </label>
                         </div>
                     )}
@@ -338,8 +355,21 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                     <div className="format-selector">
                         <div className="format-label">Output Format:</div>
                         <select
-                            value={selectedFormat}
-                            onChange={(e) => setSelectedFormat(e.target.value as TypstOutputFormat)}
+                            value={effectiveFormat}
+                            onChange={(e) => {
+                                const format = e.target.value as TypstOutputFormat;
+                                if (useSharedSettings && projectFormat) {
+                                    if (!changeDoc) return;
+                                    changeDoc((d) => {
+                                        if (!d.projectMetadata) {
+                                            d.projectMetadata = { name: '', description: '' };
+                                        }
+                                        d.projectMetadata.typstOutputFormat = format;
+                                    });
+                                } else {
+                                    setLocalFormat(format);
+                                }
+                            }}
                             className="format-select"
                             disabled={isCompiling}
                         >
@@ -347,6 +377,17 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                             <option value="svg">SVG</option>
                             <option value="canvas">Canvas</option>
                         </select>
+                        {useSharedSettings && (
+                            <label className="share-checkbox">
+                                <input
+                                    type="checkbox"
+                                    checked={!!projectFormat}
+                                    onChange={(e) => handleShareFormat(e.target.checked)}
+                                    disabled={isCompiling}
+                                />
+                                Save and share with collaborators
+                            </label>
+                        )}
                     </div>
 
                     <div className="cache-controls">
@@ -361,7 +402,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                         <div
                             className="cache-item clear-and-compile"
                             onClick={handleClearCacheAndCompile}
-                            title="Clear cache and compile"
+                            title="Clear cache and compile (Shift+F9)"
                         >
                             <ClearCompileIcon />
                             Clear & Compile

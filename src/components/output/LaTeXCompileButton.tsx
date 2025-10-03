@@ -408,7 +408,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 										onChange={(e) => handleShareMainFile(e.target.checked)}
 										disabled={isChangingEngine || isCompiling || !effectiveMainFile}
 									/>
-									Share with collaborators
+									Save and share with collaborators
 								</label>
 							</div>
 						</>
@@ -434,7 +434,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 									onChange={(e) => handleShareEngine(e.target.checked)}
 									disabled={isChangingEngine || isCompiling}
 								/>
-								Share with collaborators
+								Save and share with collaborators
 							</label>
 						)}
 						{isChangingEngine && (

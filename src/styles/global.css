@@ -140,22 +140,22 @@ button:focus-visible {
 }
 
 header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-md);
-    padding: var(--space-sm) var(--space-md);
-    border-bottom: 1px solid var(--accent-border);
-    width: 99vw;
-    margin-left: calc(-50vw + 50%);
-    position: relative;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: var(--space-md);
+	padding: var(--space-sm) var(--space-md);
+	border-bottom: 1px solid var(--accent-border);
+	width: 99vw;
+	margin-left: calc(-50vw + 50%);
+	position: relative;
 }
 
 .header-left,
 .header-right {
-    display: flex;
-    align-items: center;
-    gap: var(--space-md);
+	display: flex;
+	align-items: center;
+	gap: var(--space-md);
 }
 
 .header-center {
@@ -254,6 +254,7 @@ footer {
 	:root {
 		color-scheme: light;
 	}
+
 	button {
 		background-color: var(--pico-secondary-background);
 	}
@@ -268,11 +269,17 @@ footer {
 	margin-top: var(--space-md);
 }
 
-.error-message,
-.warning-message {
+.error-message {
 	background-color: rgba(220, 53, 69, 0.1);
 	border: 1px solid rgba(220, 53, 69, 0.3);
 	color: var(--color-error);
+}
+
+.warning-message {
+	background-color:
+		color-mix(in srgb, var(--color-warning) 20%, white);
+	border: 1px solid var(--color-warning);
+	color: var(--pico-secondary);
 }
 
 .success-message {

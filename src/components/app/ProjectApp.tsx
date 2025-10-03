@@ -24,9 +24,10 @@ import ProjectList from '../project/ProjectList';
 import ProjectToolbar from '../project/ProjectToolbar';
 import SettingsButton from '../settings/SettingsButton';
 import PrivacyModal from '../common/PrivacyModal';
-import DeleteAccountModal from '../profile/DeleteAccountModal.tsx';
+import DeleteAccountModal from '../profile/DeleteAccountModal';
 import GuestUpgradeBanner from '../auth/GuestUpgradeBanner';
 import GuestUpgradeModal from '../auth/GuestUpgradeModal';
+import { NewProjectIcon } from '../common/Icons';
 
 interface ProjectManagerProps {
 	onOpenProject: (
@@ -540,6 +541,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 				isOpen={showCreateModal}
 				onClose={() => setShowCreateModal(false)}
 				title="Create New Project"
+				icon={NewProjectIcon}
 			>
 				{error && (
 					<div className="form-error" style={{ marginBottom: '1rem' }}>

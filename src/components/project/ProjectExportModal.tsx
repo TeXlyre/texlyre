@@ -7,7 +7,7 @@ import {
 } from '../../services/AccountExportService';
 import type { Project } from '../../types/projects';
 import { formatDate } from '../../utils/dateUtils';
-import { ExportIcon, FileIcon, FolderIcon } from '../common/Icons';
+import { ExportIcon, FileIcon, FileTextIcon, FolderIcon, ZipFileIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 
 interface ProjectExportModalProps {
@@ -70,6 +70,7 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 			isOpen={isOpen}
 			onClose={handleClose}
 			title="Export Projects"
+			icon={ZipFileIcon}
 			size="medium"
 		>
 			<div className="project-export-modal">
@@ -112,7 +113,7 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 								/>
 								<div className="option-content">
 									<div className="option-header">
-										<FolderIcon />
+										<FileTextIcon />
 										<strong>TeXlyre Format</strong>
 									</div>
 									<p>
@@ -208,9 +209,14 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 					onClick={handleExport}
 					disabled={isExporting || (!includeDocuments && !includeFiles)}
 				>
-					{isExporting
-						? 'Exporting...'
-						: `Export ${selectedProjects.length} Project${selectedProjects.length === 1 ? '' : 's'}`}
+					{isExporting ? (
+						'Exporting...'
+					) : (
+						<>
+							<ExportIcon />
+							Export {selectedProjects.length} Project{selectedProjects.length === 1 ? '' : 's'}
+						</>
+					)}
 				</button>
 			</div>
 		</Modal>

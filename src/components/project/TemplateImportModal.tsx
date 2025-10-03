@@ -2,7 +2,7 @@
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
-import { FolderIcon, ImportIcon } from '../common/Icons';
+import { FolderIcon, ImportIcon, TemplatesIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 
 interface TemplateProject {
@@ -266,7 +266,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
       isOpen={isOpen}
       onClose={handleClose}
       title="Import Template"
-      icon={ImportIcon}
+      icon={TemplatesIcon}
       size="large"
     >
       <div className="template-import-modal">

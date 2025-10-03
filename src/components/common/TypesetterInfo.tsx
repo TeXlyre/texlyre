@@ -1,3 +1,4 @@
+// src/components/common/TypesetterInfo.tsx
 import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -97,7 +98,7 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
                     <strong>Engine:</strong> @myriaddreamin/typst.ts
                 </div>
                 <div className="typesetter-tooltip-section">
-                    <strong>Version:</strong> 0.13.1
+                    <strong>Version:</strong> 0.13.1 (2025)
                 </div>
                 <div className="typesetter-tooltip-section">
                     <strong>Output Formats:</strong>

@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { useAuth } from '../../hooks/useAuth';
 import { cleanupProjectDatabases } from '../../utils/dbDeleteUtils';
-import { TrashIcon } from '../common/Icons';
+import { TrashIcon, ExportIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 
 interface DeleteAccountModalProps {
@@ -129,7 +129,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 			<div className="delete-account-container">
 				{error && <div className="error-message">{error}</div>}
 
-				<div className="warning-section">
+				<div className="warning-section warning-message">
 					<h3>⚠️ Warning: This action cannot be undone</h3>
 					<p>
 						Deleting your account will permanently remove:
@@ -184,6 +184,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 								onClick={handleOpenExport}
 								disabled={isDeleting}
 							>
+								<ExportIcon />
 								Export Account
 							</button>
 						) : (

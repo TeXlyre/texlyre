@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { accountExportService } from '../../services/AccountExportService';
 import { useAuth } from '../../hooks/useAuth';
-import { ExportIcon } from '../common/Icons';
+import { ExportIcon, ZipFileIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 
 interface ExportAccountModalProps {
@@ -55,7 +55,7 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 			isOpen={isOpen}
 			onClose={handleClose}
 			title="Export Account"
-			icon={ExportIcon}
+			icon={ZipFileIcon}
 			size="medium"
 		>
 			<div className="export-account-modal">
@@ -137,8 +137,7 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 					</label>
 				</div>
 
-				<div className="export-note">
-					<ExportIcon />
+				<div className="export-note success-message">
 					Exported data can be imported into any TeXlyre installation to restore
 					your complete workspace.
 				</div>
@@ -159,7 +158,14 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 					onClick={handleExport}
 					disabled={isExporting || (!includeDocuments && !includeFiles)}
 				>
-					{isExporting ? 'Exporting...' : 'Export Account'}
+					{isExporting ? (
+						'Exporting...'
+					) : (
+						<>
+							<ExportIcon />
+							Export Account
+						</>
+					)}
 				</button>
 			</div>
 		</Modal>

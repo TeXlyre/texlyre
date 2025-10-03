@@ -8,7 +8,7 @@ import {
 	projectImportService,
 } from '../../services/ProjectImportService';
 import { formatDate } from '../../utils/dateUtils';
-import { FolderIcon, ImportIcon } from '../common/Icons';
+import { FolderIcon, ImportIcon, TemplatesIcon, ZipFileIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 import TemplateImportModal from './TemplateImportModal';
 
@@ -195,6 +195,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 				isOpen={isOpen}
 				onClose={handleClose}
 				title="Import Projects"
+				icon={ImportIcon}
 				size="large"
 			>
 				<div className="project-import-modal">
@@ -209,23 +210,26 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 							<h3>Choose Import Source</h3>
 
 							<div className="import-options">
-								<button
+								<label
 									className="import-option-button"
 									onClick={handleTemplateImport}
-									disabled={isScanning || isImporting}
+									style={{
+										pointerEvents: isScanning || isImporting ? 'none' : 'auto',
+										opacity: isScanning || isImporting ? 0.5 : 1
+									}}
 								>
-									<FolderIcon />
+									<TemplatesIcon />
 									<div>
 										<strong>From Template Gallery</strong>
 										<p>Browse and import project templates from the community</p>
 									</div>
-								</button>
+								</label>
 
 								<label className="import-option-button">
-									<ImportIcon />
+									<ZipFileIcon />
 									<div>
 										<strong>From ZIP File</strong>
-										<p>Import projects from a TeXlyre export file</p>
+										<p>Import projects from a TeXlyre export file: Supports LaTeX and Typst</p>
 									</div>
 									<input
 										ref={fileInputRef}
