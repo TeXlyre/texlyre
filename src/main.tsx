@@ -89,7 +89,7 @@ if (
 			console.log('[ServiceWroker] Skipping clearing existing service workers');
 		}
 
-		const swPath = '/sw.js'; // `${BASE_PATH}/sw.js`;
+		const swPath = '/texlyre/sw.js'; // `${BASE_PATH}/sw.js`;
 		const scope = '/texlyre/'; // `${BASE_PATH}/`;
 
 		console.log('[ServiceWroker] ]Service Worker Registration ===');
