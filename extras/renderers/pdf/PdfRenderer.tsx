@@ -327,29 +327,6 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		};
 	}, []);
 
-	const onPageLoadSuccess = useCallback((_pageNumber: number) => {
-		return (_page: any) => {
-			const v = (typeof _page?.getViewport === 'function' ? _page.getViewport({ scale: 1 }) : undefined) as { width: number; height: number } | undefined;
-			if (v && typeof v.width === 'number' && typeof v.height === 'number') {
-				const wasEmpty = pageWidths.current.size === 0;
-				pageWidths.current.set(_pageNumber, v.width);
-				pageHeights.current.set(_pageNumber, v.height);
-
-				setPageHeightMap(prev => {
-					const next = new Map(prev);
-					next.set(_pageNumber, v.height * scale + 20);
-					return next;
-				});
-
-				if (wasEmpty) {
-					const s = computeFitScale(fitMode);
-					setScale(s);
-					setProperty('pdf-renderer-zoom', s);
-				}
-			}
-		};
-	}, [fitMode, computeFitScale, setProperty, scale]);
-
 	const calculateVisibleRange = useCallback(() => {
 		if (!scrollView || !scrollContainerRef.current) return;
 
@@ -676,7 +653,6 @@ const PdfRenderer: React.FC<RendererProps> = ({
 															Loading page {pageNumber}...
 														</div>
 													}
-													onLoadSuccess={onPageLoadSuccess(pageNumber)}
 												/>
 											) : null}
 										</div>
@@ -692,7 +668,6 @@ const PdfRenderer: React.FC<RendererProps> = ({
 										loading={
 											<div className="pdf-page-loading">Loading page...</div>
 										}
-										onLoadSuccess={onPageLoadSuccess(currentPage)}
 									/>
 								</div>
 							))}
