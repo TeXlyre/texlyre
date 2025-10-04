@@ -1,6 +1,6 @@
 # TeXlyre
 
-A **[local-first](https://www.inkandswitch.com/essay/local-first/)** real-time [LaTeX](https://www.latex-project.org/) and [Typst] collaboration platform with offline editing capabilities. Built with React, TypeScript, and Yjs for collaborative document editing.
+A **[local-first](https://www.inkandswitch.com/essay/local-first/)** real-time [LaTeX](https://www.latex-project.org/) and [Typst](https://typst.app) collaboration platform with offline editing capabilities. Built with React, TypeScript, and Yjs for collaborative document editing.
 
 [![GitHub Pages](https://img.shields.io/badge/🟢%20Live-GitHub%20Pages-181717.svg?logo=github)](https://texlyre.github.io/texlyre)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/texlyre/texlyre/deploy.yml)](https://github.com/texlyre/texlyre/actions)
