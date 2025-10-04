@@ -1,5 +1,5 @@
 // src/utils/fileCommentProcessor.ts
-import type { FileNode } from "../types/files.ts";
+import type { FileNode } from '../types/files.ts';
 
 interface ProcessorStats {
 	total: number;
@@ -24,7 +24,7 @@ class FileCommentProcessor {
 
 	private hasBinaryComments(buffer: ArrayBuffer): boolean {
 		const view = new Uint8Array(buffer);
-		const marker = new TextEncoder().encode("<### comment id:");
+		const marker = new TextEncoder().encode('<### comment id:');
 
 		for (let i = 0; i <= view.length - marker.length; i++) {
 			let found = true;
@@ -55,12 +55,12 @@ class FileCommentProcessor {
 
 			while (searchStart < cleanedText.length) {
 				const openTagStart = cleanedText.indexOf(
-					"<### comment id:",
+					'<### comment id:',
 					searchStart,
 				);
 				if (openTagStart === -1) break;
 
-				const openTagEnd = cleanedText.indexOf("###>", openTagStart);
+				const openTagEnd = cleanedText.indexOf('###>', openTagStart);
 				if (openTagEnd === -1) break;
 
 				const openTagContent = cleanedText.substring(
@@ -87,7 +87,7 @@ class FileCommentProcessor {
 					continue;
 				}
 
-				const closeTagEnd = cleanedText.indexOf("###>", closeTagStart) + 4;
+				const closeTagEnd = cleanedText.indexOf('###>', closeTagStart) + 4;
 				if (closeTagEnd < closeTagStart) {
 					searchStart = openTagEnd + 4;
 					continue;
@@ -128,7 +128,7 @@ class FileCommentProcessor {
 	}
 
 	processFile(fileNode: FileNode, options: ProcessorOptions = {}): FileNode {
-		if (fileNode.type === "directory" || fileNode.isBinary) {
+		if (fileNode.type === 'directory' || fileNode.isBinary) {
 			return fileNode;
 		}
 
@@ -167,7 +167,7 @@ class FileCommentProcessor {
 		};
 
 		const processed = fileNodes.map((node) => {
-			if (node.type === "directory" || node.isBinary || !node.content) {
+			if (node.type === 'directory' || node.isBinary || !node.content) {
 				stats.skipped++;
 				return node;
 			}

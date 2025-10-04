@@ -1,9 +1,9 @@
 // src/types/collab.ts
-import type { IndexeddbPersistence } from "y-indexeddb";
-import type { WebrtcProvider } from "y-webrtc";
-import type * as Y from "yjs";
+import type { IndexeddbPersistence } from 'y-indexeddb';
+import type { WebrtcProvider } from 'y-webrtc';
+import type * as Y from 'yjs';
 
-import type { collabService } from "../services/CollabService";
+import type { collabService } from '../services/CollabService';
 
 export interface CollabContextType<T = unknown> {
 	collabService: typeof collabService;

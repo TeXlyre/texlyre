@@ -12,8 +12,8 @@ class OfflineService {
 	};
 
 	constructor() {
-		window.addEventListener("online", this.handleOnline);
-		window.addEventListener("offline", this.handleOffline);
+		window.addEventListener('online', this.handleOnline);
+		window.addEventListener('offline', this.handleOffline);
 	}
 
 	private handleOnline = () => {
@@ -46,8 +46,8 @@ class OfflineService {
 	}
 
 	cleanup() {
-		window.removeEventListener("online", this.handleOnline);
-		window.removeEventListener("offline", this.handleOffline);
+		window.removeEventListener('online', this.handleOnline);
+		window.removeEventListener('offline', this.handleOffline);
 	}
 }
 

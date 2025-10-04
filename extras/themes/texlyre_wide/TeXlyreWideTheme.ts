@@ -3,21 +3,21 @@ import type {
 	ThemeLayout,
 	ThemePlugin,
 	ThemeVariant,
-} from "../../../src/plugins/PluginInterface";
-import { themes } from "./colors";
-import "./styles/index.css";
+} from '../../../src/plugins/PluginInterface';
+import { themes } from './colors';
+import './styles/index.css';
 
 const createTeXlyreWideTheme = (): ThemePlugin => {
-	let currentThemeId = "dark";
+	let currentThemeId = 'dark';
 
 	const layout: ThemeLayout = {
-		id: "texlyre-wide",
-		name: "TeXlyre Wide Theme",
-		containerClass: "texlyre-wide",
+		id: 'texlyre-wide',
+		name: 'TeXlyre Wide Theme',
+		containerClass: 'texlyre-wide',
 		defaultFileExplorerWidth: 320,
 		minFileExplorerWidth: 250,
 		maxFileExplorerWidth: 1250,
-		stylesheetPath: "./styles/layout.css",
+		stylesheetPath: './styles/layout.css',
 	};
 
 	const applyThemeColors = (themeId: string) => {
@@ -30,24 +30,24 @@ const createTeXlyreWideTheme = (): ThemePlugin => {
 				value as string,
 			);
 		});
-		document.documentElement.style.setProperty("color", colors.color);
-		document.documentElement.style.setProperty("--text-color", colors.color);
+		document.documentElement.style.setProperty('color', colors.color);
+		document.documentElement.style.setProperty('--text-color', colors.color);
 	};
 
 	return {
-		id: "texlyre-wide-theme",
-		name: "TeXlyre Wide Theme",
-		version: "2.0.0",
-		type: "theme",
+		id: 'texlyre-wide-theme',
+		name: 'TeXlyre Wide Theme',
+		version: '2.0.0',
+		type: 'theme',
 		themes: [
-			{ id: "light", name: "Light", isDark: false },
-			{ id: "dark", name: "Dark", isDark: true },
-			{ id: "system", name: "System", isDark: false },
-			{ id: "monokai", name: "Monokai", isDark: true },
-			{ id: "tomorrow_night_blue", name: "Tomorrow Night Blue", isDark: true },
-			{ id: "github_light", name: "GitHub Light", isDark: false },
-			{ id: "solarized_light", name: "Solarized Light", isDark: false },
-			{ id: "atom_light", name: "Atom Light", isDark: false },
+			{ id: 'light', name: 'Light', isDark: false },
+			{ id: 'dark', name: 'Dark', isDark: true },
+			{ id: 'system', name: 'System', isDark: false },
+			{ id: 'monokai', name: 'Monokai', isDark: true },
+			{ id: 'tomorrow_night_blue', name: 'Tomorrow Night Blue', isDark: true },
+			{ id: 'github_light', name: 'GitHub Light', isDark: false },
+			{ id: 'solarized_light', name: 'Solarized Light', isDark: false },
+			{ id: 'atom_light', name: 'Atom Light', isDark: false },
 		],
 
 		applyTheme(variantId: string): boolean {
@@ -56,17 +56,17 @@ const createTeXlyreWideTheme = (): ThemePlugin => {
 
 			currentThemeId = variantId;
 
-			if (variantId === "system") {
+			if (variantId === 'system') {
 				const prefersDark = window.matchMedia(
-					"(prefers-color-scheme: dark)",
+					'(prefers-color-scheme: dark)',
 				).matches;
-				applyThemeColors(prefersDark ? "dark" : "light");
+				applyThemeColors(prefersDark ? 'dark' : 'light');
 			} else {
 				applyThemeColors(variantId);
 			}
 
-			document.documentElement.setAttribute("data-theme", variantId);
-			document.documentElement.setAttribute("data-theme-plugin", "texlyre");
+			document.documentElement.setAttribute('data-theme', variantId);
+			document.documentElement.setAttribute('data-theme-plugin', 'texlyre');
 			return true;
 		},
 
@@ -83,7 +83,7 @@ const createTeXlyreWideTheme = (): ThemePlugin => {
 		},
 
 		applyLayout(): void {
-			document.documentElement.setAttribute("data-layout", layout.id);
+			document.documentElement.setAttribute('data-layout', layout.id);
 		},
 	};
 };

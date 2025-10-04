@@ -1,8 +1,8 @@
 // src/components/auth/PasswordInfo.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import { InfoIcon } from "../common/Icons";
+import { InfoIcon } from '../common/Icons';
 
 const PasswordInfo: React.FC = () => {
     const [showTooltip, setShowTooltip] = useState(false);

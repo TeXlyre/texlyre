@@ -1,38 +1,40 @@
 // src/components/app/ProjectApp.tsx
-import type React from "react";
-import { useCallback, useEffect, useState } from "react";
+import type React from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-import texlyreLogo from "../../assets/images/TeXlyre_notext.png";
-import { useAuth } from "../../hooks/useAuth";
-import { useFileSystemBackup } from "../../hooks/useFileSystemBackup";
-import { useTheme } from "../../hooks/useTheme";
-import type { Project } from "../../types/projects";
-import { isValidYjsUrl, buildUrlWithFragments, parseUrlFragments } from "../../utils/urlUtils";
-import BackupDiscoveryModal from "../backup/BackupDiscoveryModal";
-import BackupModal from "../backup/BackupModal";
-import BackupStatusIndicator from "../backup/BackupStatusIndicator";
-import Modal from "../common/Modal";
-import ResizablePanel from "../common/ResizablePanel";
-import ExportAccountModal from "../profile/ExportAccountModal";
-import ProfileSettingsModal from "../profile/ProfileSettingsModal";
-import UserDropdown from "../profile/UserDropdown";
-import ProjectExportModal from "../project/ProjectExportModal";
-import ProjectDeleteModal from "../project/ProjectDeleteModal";
-import ProjectForm from "../project/ProjectForm";
-import ProjectImportModal from "../project/ProjectImportModal";
-import ProjectList from "../project/ProjectList";
-import ProjectToolbar from "../project/ProjectToolbar";
-import SettingsButton from "../settings/SettingsButton";
-import PrivacyModal from "../common/PrivacyModal";
-import DeleteAccountModal from "../profile/DeleteAccountModal.tsx";
-import GuestUpgradeBanner from "../auth/GuestUpgradeBanner";
-import GuestUpgradeModal from "../auth/GuestUpgradeModal";
+import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
+import { useAuth } from '../../hooks/useAuth';
+import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
+import { useTheme } from '../../hooks/useTheme';
+import type { Project } from '../../types/projects';
+import { isValidYjsUrl, buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
+import BackupDiscoveryModal from '../backup/BackupDiscoveryModal';
+import BackupModal from '../backup/BackupModal';
+import BackupStatusIndicator from '../backup/BackupStatusIndicator';
+import Modal from '../common/Modal';
+import ResizablePanel from '../common/ResizablePanel';
+import ExportAccountModal from '../profile/ExportAccountModal';
+import ProfileSettingsModal from '../profile/ProfileSettingsModal';
+import UserDropdown from '../profile/UserDropdown';
+import ProjectExportModal from '../project/ProjectExportModal';
+import ProjectDeleteModal from '../project/ProjectDeleteModal';
+import ProjectForm from '../project/ProjectForm';
+import ProjectImportModal from '../project/ProjectImportModal';
+import ProjectList from '../project/ProjectList';
+import ProjectToolbar from '../project/ProjectToolbar';
+import SettingsButton from '../settings/SettingsButton';
+import PrivacyModal from '../common/PrivacyModal';
+import DeleteAccountModal from '../profile/DeleteAccountModal';
+import GuestUpgradeBanner from '../auth/GuestUpgradeBanner';
+import GuestUpgradeModal from '../auth/GuestUpgradeModal';
+import { NewProjectIcon } from '../common/Icons';
 
 interface ProjectManagerProps {
 	onOpenProject: (
 		docUrl: string,
 		projectName?: string,
 		projectDescription?: string,
+		projectType?: 'latex' | 'typst',
 		projectId?: string,
 	) => void;
 	onLogout: () => void;
@@ -46,6 +48,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		user,
 		getProjects,
 		getProjectsByTag,
+		getProjectsByType,
 		searchProjects,
 		createProject,
 		updateProject,
@@ -74,7 +77,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const [projects, setProjects] = useState<Project[]>([]);
 	const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
-	const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+	const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 	const [availableTags, setAvailableTags] = useState<string[]>([]);
 	const [sidebarWidth, setSidebarWidth] = useState(
 		currentLayout?.defaultFileExplorerWidth || 250,
@@ -116,7 +119,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 
 			setAvailableTags(Array.from(tags));
 		} catch (error) {
-			console.error("Failed to load projects:", error);
+			console.error('Failed to load projects:', error);
 		} finally {
 			setIsLoading(false);
 		}
@@ -143,9 +146,9 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			}
 			await loadProjects();
 		} catch (error) {
-			console.error("Failed to delete projects:", error);
+			console.error('Failed to delete projects:', error);
 			setError(
-				error instanceof Error ? error.message : "Failed to delete projects",
+				error instanceof Error ? error.message : 'Failed to delete projects',
 			);
 		} finally {
 			setIsSubmitting(false);
@@ -172,9 +175,20 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		setFilteredProjects(results);
 	};
 
+	const handleFilterByType = async (type: string) => {
+		if (!type) {
+			setFilteredProjects(projects);
+			return;
+		}
+
+		const results = await getProjectsByType(type as 'latex' | 'typst');
+		setFilteredProjects(results);
+	};
+
 	const handleCreateProject = async (projectData: {
 		name: string;
 		description: string;
+		type: 'latex' | 'typst';
 		tags: string[];
 		docUrl?: string;
 		isFavorite: boolean;
@@ -189,23 +203,25 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 
 			if (newProject.docUrl) {
 				sessionStorage.setItem(
-					"projectMetadata",
+					'projectMetadata',
 					JSON.stringify({
 						name: projectData.name,
 						description: projectData.description,
+						type: projectData.type,
 					}),
 				);
 				onOpenProject(
 					newProject.docUrl,
 					newProject.name,
 					newProject.description,
+					newProject.type,
 					newProject.id,
 				);
 			}
 		} catch (error) {
-			console.error("Failed to create project:", error);
+			console.error('Failed to create project:', error);
 			setError(
-				error instanceof Error ? error.message : "Failed to create project",
+				error instanceof Error ? error.message : 'Failed to create project',
 			);
 		} finally {
 			setIsSubmitting(false);
@@ -233,9 +249,9 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			setShowEditModal(false);
 			await loadProjects();
 		} catch (error) {
-			console.error("Failed to update project:", error);
+			console.error('Failed to update project:', error);
 			setError(
-				error instanceof Error ? error.message : "Failed to update project",
+				error instanceof Error ? error.message : 'Failed to update project',
 			);
 		} finally {
 			setIsSubmitting(false);
@@ -251,9 +267,9 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			setShowDeleteModal(false);
 			await loadProjects();
 		} catch (error) {
-			console.error("Failed to delete project:", error);
+			console.error('Failed to delete project:', error);
 			setError(
-				error instanceof Error ? error.message : "Failed to delete project",
+				error instanceof Error ? error.message : 'Failed to delete project',
 			);
 		} finally {
 			setIsSubmitting(false);
@@ -265,12 +281,12 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			await toggleFavorite(projectId);
 			await loadProjects();
 		} catch (error) {
-			console.error("Failed to toggle favorite status:", error);
+			console.error('Failed to toggle favorite status:', error);
 		}
 	};
 
 	const handleToggleViewMode = () => {
-		setViewMode((prev) => (prev === "grid" ? "list" : "grid"));
+		setViewMode((prev) => (prev === 'grid' ? 'list' : 'grid'));
 	};
 
 	const handleExportSelected = async (selectedIds: string[]) => {
@@ -281,8 +297,8 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			setSelectedProjectsForExport(selectedProjects);
 			setShowExportModal(true);
 		} catch (error) {
-			console.error("Error preparing export:", error);
-			setError("Failed to prepare projects for export");
+			console.error('Error preparing export:', error);
+			setError('Failed to prepare projects for export');
 		}
 	};
 
@@ -294,8 +310,8 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			setSelectedProjectsForDelete(selectedProjects);
 			setShowMultiDeleteModal(true);
 		} catch (error) {
-			console.error("Error preparing delete:", error);
-			setError("Failed to prepare projects for deletion");
+			console.error('Error preparing delete:', error);
+			setError('Failed to prepare projects for deletion');
 		}
 	};
 
@@ -332,13 +348,13 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 
 	const handleOpenDefault = (project: Project) => {
 		if (!project.docUrl) {
-			console.error("Project has no document URL:", project);
-			setError("This project has no associated document. Please try creating a new project.");
+			console.error('Project has no document URL:', project);
+			setError('This project has no associated document. Please try creating a new project.');
 			return;
 		}
 
 		if (!isValidYjsUrl(project.docUrl)) {
-			console.error("Invalid document URL format:", project.docUrl);
+			console.error('Invalid document URL format:', project.docUrl);
 			setError(`Invalid document URL format: ${project.docUrl}`);
 			return;
 		}
@@ -355,20 +371,20 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			finalUrl = newUrl;
 		}
 
-		onOpenProject(finalUrl, project.name, project.description, project.id);
+		onOpenProject(finalUrl, project.name, project.description, project.type, project.id);
 	};
 
 	const openProject = async (project: Project) => {
 		if (!project.docUrl) {
-			console.error("Project has no document URL:", project);
+			console.error('Project has no document URL:', project);
 			setError(
-				"This project has no associated document. Please try creating a new project.",
+				'This project has no associated document. Please try creating a new project.',
 			);
 			return;
 		}
 
 		if (!isValidYjsUrl(project.docUrl)) {
-			console.error("Invalid document URL format:", project.docUrl);
+			console.error('Invalid document URL format:', project.docUrl);
 			setError(`Invalid document URL format: ${project.docUrl}`);
 			return;
 		}
@@ -377,6 +393,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			project.docUrl,
 			project.name,
 			project.description,
+			project.type,
 			project.id,
 		);
 	};
@@ -386,7 +403,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	};
 
 	return (
-		<div className={`app-container ${currentThemePlugin?.id || "default"}`}>
+		<div className={`app-container ${currentThemePlugin?.id || 'default'}`}>
 			{isGuestUser(user) && (
 				<GuestUpgradeBanner
 					onOpenUpgradeModal={() => setShowGuestUpgradeModal(true)}
@@ -413,7 +430,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 					)}
 					<SettingsButton className="header-settings-button" />
 					<UserDropdown
-						username={user?.username || ""}
+						username={user?.username || ''}
 						onLogout={onLogout}
 						onOpenProfile={() => setShowProfileModal(true)}
 						onOpenExport={() => setShowAccountExportModal(true)}
@@ -438,6 +455,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						onImportProject={openImportModal}
 						onSearch={handleSearch}
 						onFilterByTag={handleFilterByTag}
+						onFilterByType={handleFilterByType}
 						onOpenProject={openProject}
 						projects={projects}
 						availableTags={availableTags}
@@ -449,11 +467,11 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						<div
 							className="error-message"
 							style={{
-								padding: "1rem",
-								color: "red",
-								backgroundColor: "rgba(255,0,0,0.1)",
-								margin: "1rem",
-								borderRadius: "4px",
+								padding: '1rem',
+								color: 'red',
+								backgroundColor: 'rgba(255,0,0,0.1)',
+								margin: '1rem',
+								borderRadius: '4px',
 							}}
 						>
 							{error}
@@ -500,32 +518,33 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						<img src={texlyreLogo} className="logo" alt="TeXlyre logo" />
 					</a>
 					<span className="legal-links">
-					  <br/> <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">
-						Documentation
-					  </a>
-						{" "} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">
-						Source Code
-					  </a>
-					  {" "} • <a href="#" onClick={(event) => {
-						  event.preventDefault();
-						  setShowPrivacy(true);
-					  }} className="privacy-link"> Privacy </a>
+						<br /> <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">
+							Documentation
+						</a>
+						{' '} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">
+							Source Code
+						</a>
+						{' '} • <a href="#" onClick={(event) => {
+							event.preventDefault();
+							setShowPrivacy(true);
+						}} className="privacy-link"> Privacy </a>
 					</span>
 				</p>
 			</footer>
 
 			<PrivacyModal
-			  isOpen={showPrivacy}
-			  onClose={() => setShowPrivacy(false)}
+				isOpen={showPrivacy}
+				onClose={() => setShowPrivacy(false)}
 			/>
 
 			<Modal
 				isOpen={showCreateModal}
 				onClose={() => setShowCreateModal(false)}
 				title="Create New Project"
+				icon={NewProjectIcon}
 			>
 				{error && (
-					<div className="form-error" style={{ marginBottom: "1rem" }}>
+					<div className="form-error" style={{ marginBottom: '1rem' }}>
 						{error}
 					</div>
 				)}
@@ -542,7 +561,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 				title="Edit Project"
 			>
 				{error && (
-					<div className="form-error" style={{ marginBottom: "1rem" }}>
+					<div className="form-error" style={{ marginBottom: '1rem' }}>
 						{error}
 					</div>
 				)}
@@ -583,7 +602,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 							onClick={handleDeleteProject}
 							disabled={isSubmitting}
 						>
-							{isSubmitting ? "Deleting..." : "Delete Project"}
+							{isSubmitting ? 'Deleting...' : 'Delete Project'}
 						</button>
 					</div>
 				</div>
@@ -647,7 +666,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						onClearActivity={clearActivity}
 						onClearAllActivities={clearAllActivities}
 						onChangeDirectory={changeDirectory}
-						currentProjectId={sessionStorage.getItem("currentProjectId")}
+						currentProjectId={sessionStorage.getItem('currentProjectId')}
 						isInEditor={true}
 					/>
 				</>

@@ -1,9 +1,9 @@
 // src/components/auth/GuestUpgradeBanner.tsx
-import type React from "react";
-import { useState, useEffect } from "react";
+import type React from 'react';
+import { useState, useEffect } from 'react';
 
-import { useAuth } from "../../hooks/useAuth";
-import { UpgradeAccountIcon, UserIcon, CloseIcon } from "../common/Icons";
+import { useAuth } from '../../hooks/useAuth';
+import { UpgradeAccountIcon, UserIcon, CloseIcon } from '../common/Icons';
 
 interface GuestUpgradeBannerProps {
 	onOpenUpgradeModal: () => void;
@@ -14,7 +14,7 @@ const GuestUpgradeBanner: React.FC<GuestUpgradeBannerProps> = ({
 }) => {
 	const { user, isGuestUser } = useAuth();
 	const [isVisible, setIsVisible] = useState(true);
-	const [timeRemaining, setTimeRemaining] = useState<string>("");
+	const [timeRemaining, setTimeRemaining] = useState<string>('');
 
 	useEffect(() => {
 		if (!user || !isGuestUser(user)) return;
@@ -25,7 +25,7 @@ const GuestUpgradeBanner: React.FC<GuestUpgradeBannerProps> = ({
 				const remaining = user.expiresAt - now;
 
 				if (remaining <= 0) {
-					setTimeRemaining("Expired");
+					setTimeRemaining('Expired');
 					return;
 				}
 

@@ -1,6 +1,6 @@
 // src/plugins/PluginRegistry.ts
-import plugins from "./index";
-import type { Setting } from "../contexts/SettingsContext";
+import plugins from './index';
+import type { Setting } from '../contexts/SettingsContext';
 import type {
 	BackupPlugin,
 	CollaborativeViewerPlugin,
@@ -11,7 +11,7 @@ import type {
 	RendererPlugin,
 	ThemePlugin,
 	ViewerPlugin,
-} from "./PluginInterface";
+} from './PluginInterface';
 
 export const pluginSettings: Setting[] = [];
 
@@ -33,7 +33,7 @@ class PluginRegistryManager {
 	private loadPlugins() {
 		try {
 			if (plugins.viewers && Object.keys(plugins.viewers).length > 0) {
-				console.log("[PluginRegistry] Loading viewers:", Object.keys(plugins.viewers));
+				console.log('[PluginRegistry] Loading viewers:', Object.keys(plugins.viewers));
 				Object.values(plugins.viewers).forEach((plugin: ViewerPlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
@@ -44,7 +44,7 @@ class PluginRegistryManager {
 
 			if (plugins.collaborative_viewers && Object.keys(plugins.collaborative_viewers).length > 0) {
 				console.log(
-					"[PluginRegistry] Loading collaborative viewers:",
+					'[PluginRegistry] Loading collaborative viewers:',
 					Object.keys(plugins.collaborative_viewers),
 				);
 				Object.values(plugins.collaborative_viewers).forEach((plugin: CollaborativeViewerPlugin) => {
@@ -56,7 +56,7 @@ class PluginRegistryManager {
 			}
 
 			if (plugins.renderers && Object.keys(plugins.renderers).length > 0) {
-				console.log("[PluginRegistry] Loading renderers:", Object.keys(plugins.renderers));
+				console.log('[PluginRegistry] Loading renderers:', Object.keys(plugins.renderers));
 				Object.values(plugins.renderers).forEach((plugin: RendererPlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
@@ -66,7 +66,7 @@ class PluginRegistryManager {
 			}
 
 			if (plugins.loggers && Object.keys(plugins.loggers).length > 0) {
-				console.log("[PluginRegistry] Loading loggers:", Object.keys(plugins.loggers));
+				console.log('[PluginRegistry] Loading loggers:', Object.keys(plugins.loggers));
 				Object.values(plugins.loggers).forEach((plugin: LoggerPlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
@@ -76,7 +76,7 @@ class PluginRegistryManager {
 			}
 
 			if (plugins.lsp && Object.keys(plugins.lsp).length > 0) {
-				console.log("[PluginRegistry] Loading LSP plugins:", Object.keys(plugins.lsp));
+				console.log('[PluginRegistry] Loading LSP plugins:', Object.keys(plugins.lsp));
 				Object.values(plugins.lsp).forEach((plugin: LSPPlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
@@ -86,7 +86,7 @@ class PluginRegistryManager {
 			}
 
 			if (plugins.backup && Object.keys(plugins.backup).length > 0) {
-				console.log("[PluginRegistry] Loading backup plugins:", Object.keys(plugins.backup));
+				console.log('[PluginRegistry] Loading backup plugins:', Object.keys(plugins.backup));
 				Object.values(plugins.backup).forEach((plugin: BackupPlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
@@ -96,7 +96,7 @@ class PluginRegistryManager {
 			}
 
 			if (plugins.themes && Object.keys(plugins.themes).length > 0) {
-				console.log("[PluginRegistry] Loading themes:", Object.keys(plugins.themes));
+				console.log('[PluginRegistry] Loading themes:', Object.keys(plugins.themes));
 				Object.values(plugins.themes).forEach((plugin: ThemePlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
@@ -105,35 +105,35 @@ class PluginRegistryManager {
 				});
 			}
 		} catch (error) {
-			console.error("Failed to load plugins:", error);
+			console.error('Failed to load plugins:', error);
 		}
 	}
 
 	registerPlugin(plugin: Plugin) {
-		console.log("[PluginRegistry] Registering plugin:", plugin.name, "of type:", plugin.type);
+		console.log('[PluginRegistry] Registering plugin:', plugin.name, 'of type:', plugin.type);
 
 		switch (plugin.type) {
-			case "viewer":
+			case 'viewer':
 				this.registry.viewers.push(plugin as ViewerPlugin);
 				break;
-			case "collaborative-viewer":
+			case 'collaborative-viewer':
 				this.registry.collaborativeViewers.push(
 					plugin as CollaborativeViewerPlugin,
 				);
 				break;
-			case "renderer":
+			case 'renderer':
 				this.registry.renderers.push(plugin as RendererPlugin);
 				break;
-			case "logger":
+			case 'logger':
 				this.registry.loggers.push(plugin as LoggerPlugin);
 				break;
-			case "lsp":
+			case 'lsp':
 				this.registry.lsp.push(plugin as LSPPlugin);
 				break;
-			case "backup":
+			case 'backup':
 				this.registry.backup.push(plugin as BackupPlugin);
 				break;
-			case "theme":
+			case 'theme':
 				this.registry.themes.push(plugin as ThemePlugin);
 				break;
 			default:
@@ -162,25 +162,25 @@ class PluginRegistryManager {
 		fileName: string,
 		mimeType?: string,
 	): CollaborativeViewerPlugin | null {
-		console.log("[PluginRegistry] Looking for collaborative viewer for:", fileName, mimeType);
+		console.log('[PluginRegistry] Looking for collaborative viewer for:', fileName, mimeType);
 		console.log(
-			"[PluginRegistry] Available collaborative viewers:",
+			'[PluginRegistry] Available collaborative viewers:',
 			this.registry.collaborativeViewers.map((v) => v.name),
 		);
 
 		for (const viewer of this.registry.collaborativeViewers) {
 			console.log(
-				"[PluginRegistry] Checking collaborative viewer:",
+				'[PluginRegistry] Checking collaborative viewer:',
 				viewer.name,
-				"canHandle result:",
+				'canHandle result:',
 				viewer.canHandle(fileName, mimeType),
 			);
 			if (viewer.canHandle(fileName, mimeType)) {
-				console.log("[PluginRegistry] Found matching collaborative viewer:", viewer.name);
+				console.log('[PluginRegistry] Found matching collaborative viewer:', viewer.name);
 				return viewer;
 			}
 		}
-		console.log("[PluginRegistry] No collaborative viewer found for:", fileName, mimeType);
+		console.log('[PluginRegistry] No collaborative viewer found for:', fileName, mimeType);
 		return null;
 	}
 
@@ -188,13 +188,21 @@ class PluginRegistryManager {
 		return this.registry.renderers;
 	}
 
-	getRendererForOutput(outputType: string): RendererPlugin | null {
-		for (const renderer of this.registry.renderers) {
-			if (renderer.canHandle(outputType)) {
-				return renderer;
-			}
+	getRendererForOutput(outputType: string, preferredRenderer?: string): RendererPlugin | null {
+		const availableRenderers = this.registry.renderers.filter(renderer =>
+			renderer.canHandle(outputType)
+		);
+
+		if (availableRenderers.length === 0) return null;
+
+		if (preferredRenderer) {
+			const preferred = availableRenderers.find(renderer =>
+				renderer.id === preferredRenderer
+			);
+			if (preferred) return preferred;
 		}
-		return null;
+
+		return availableRenderers[0];
 	}
 
 	getLoggers(): LoggerPlugin[] {

@@ -1,12 +1,12 @@
 // src/extensions/codemirror/PathAndBibAutocompleteExtension.ts
-import { type CompletionContext, type CompletionResult, type CompletionSource } from "@codemirror/autocomplete";
-import { StateEffect, StateField, type Extension } from "@codemirror/state";
-import { ViewPlugin, type EditorView } from "@codemirror/view";
+import { type CompletionContext, type CompletionResult, type CompletionSource } from '@codemirror/autocomplete';
+import { StateEffect, StateField, type Extension } from '@codemirror/state';
+import { ViewPlugin, type EditorView } from '@codemirror/view';
 
-import type { FileNode, FilePathCache } from "../../types/files";
-import { filePathCacheService } from "../../services/FilePathCacheService";
-import { fileStorageService } from "../../services/FileStorageService";
-import { BibtexParser } from "../../../extras/viewers/bibtex/BibtexParser";
+import type { FileNode, FilePathCache } from '../../types/files';
+import { filePathCacheService } from '../../services/FilePathCacheService';
+import { fileStorageService } from '../../services/FileStorageService';
+import { BibtexParser } from '../../../extras/viewers/bibtex/BibtexParser';
 
 export const updateFileCache = StateEffect.define<FileNode[]>();
 
@@ -29,6 +29,7 @@ const filePathCacheField = StateField.define<FilePathCache>({
 			imageFiles: [],
 			bibFiles: [],
 			texFiles: [],
+			typstFiles: [],
 			allFiles: [],
 			lastUpdate: 0,
 		};
@@ -75,12 +76,59 @@ const latexCommandPatterns = [
 	},
 ];
 
+const typstCommandPatterns = [
+	{
+		commands: ['include'],
+		pattern: /#include\s+"/,
+		fileTypes: 'typst' as const,
+	},
+	{
+		commands: ['image'],
+		pattern: /\bimage\s*\(\s*"/,
+		fileTypes: 'images' as const,
+	},
+	{
+		commands: ['read'],
+		pattern: /\bread\s*\(\s*"/,
+		fileTypes: 'all' as const,
+	},
+	{
+		commands: ['csv'],
+		pattern: /\bcsv\s*\(\s*"/,
+		fileTypes: 'data' as const,
+	},
+	{
+		commands: ['json', 'yaml', 'toml'],
+		pattern: /\b(json|yaml|toml)\s*\(\s*"/,
+		fileTypes: 'data' as const,
+	},
+	{
+		commands: ['bibliography'],
+		pattern: /#bibliography\("/,
+		fileTypes: 'bib' as const,
+	}
+];
+
+const typstCitationPatterns = [
+	{
+		commands: ['cite'],
+		pattern: /#cite\s*\(\s*</,
+		type: 'citation' as const,
+	},
+	{
+		commands: ['cite-label'],
+		pattern: /#cite\s*\(\s*label\s*\(\s*"/,
+		type: 'citation' as const,
+	},
+];
+
 const citationCommandPatterns = [
-    {
-        commands: ['cite', 'citep', 'citet', 'autocite', 'textcite', 'parencite', 'footcite', 'fullcite'],
-        pattern: /\\(cite|citep|citet|autocite|textcite|parencite|footcite|fullcite)\w*(?:\[[^\]]*\])?(?:\[[^\]]*\])?\{([^}]*)/,
-        type: 'citation' as const,
-    },
+	{
+		commands: ['cite', 'citep', 'citet', 'autocite', 'textcite', 'parencite', 'footcite', 'fullcite'],
+		pattern: /\\(cite|citep|citet|autocite|textcite|parencite|footcite|fullcite)\w*(?:\[[^\]]*\])?(?:\[[^\]]*\])?\{([^}]*)/,
+		type: 'citation' as const,
+	},
+	...typstCitationPatterns,
 ];
 
 const bibtexEntryPatterns = [
@@ -181,7 +229,7 @@ class AutocompleteProcessor {
 		// No need to update bibliography cache from state field
 	}
 
-	private findLatexCommand(context: CompletionContext): { command: string; partial: string; fileTypes: 'images' | 'tex' | 'bib' | 'all' } | null {
+	private findLatexCommand(context: CompletionContext): { command: string; partial: string; fileTypes: string } | null {
 		const line = context.state.doc.lineAt(context.pos);
 		const lineText = line.text;
 		const posInLine = context.pos - line.from;
@@ -191,15 +239,30 @@ class AutocompleteProcessor {
 
 			for (const match of matches) {
 				const matchStart = match.index!;
-				const commandEnd = matchStart + match[0].length;
+				const braceStart = lineText.indexOf('{', matchStart);
+				const braceEnd = lineText.indexOf('}', braceStart);
 
-				if (posInLine >= matchStart && posInLine <= commandEnd + 1) {
-					return {
-						command: match[1],
-						partial: match[2] || '',
-						fileTypes,
-					};
+				if (braceStart !== -1 && posInLine > braceStart && (braceEnd === -1 || posInLine <= braceEnd)) {
+					const partial = lineText.substring(braceStart + 1, posInLine);
+					return { command: match[1], partial, fileTypes };
 				}
+			}
+		}
+
+		return null;
+	}
+
+	private findTypstCommand(context: CompletionContext): { command: string; partial: string; fileTypes: string } | null {
+		const line = context.state.doc.lineAt(context.pos);
+		const lineText = line.text.substring(0, context.pos - line.from);
+
+		for (const { pattern, fileTypes, commands } of typstCommandPatterns) {
+			const match = lineText.match(pattern);
+
+			if (match) {
+				const quoteStart = match.index! + match[0].length - 1;
+				const partial = lineText.substring(quoteStart + 1);
+				return { command: commands[0], partial, fileTypes };
 			}
 		}
 
@@ -210,28 +273,38 @@ class AutocompleteProcessor {
 		const line = context.state.doc.lineAt(context.pos);
 		const lineText = line.text;
 		const posInLine = context.pos - line.from;
+		const textBeforeCursor = lineText.substring(0, posInLine);
 
 		for (const { pattern, type } of citationCommandPatterns) {
-			const matches = Array.from(lineText.matchAll(new RegExp(pattern.source, 'g')));
+			const isTypstCitation = pattern.source.includes('#cite');
 
-			for (const match of matches) {
-				const matchStart = match.index!;
-				const braceStart = lineText.indexOf('{', matchStart);
-				const braceEnd = lineText.indexOf('}', braceStart);
+			if (isTypstCitation) {
+				const match = textBeforeCursor.match(pattern);
 
-				if (braceStart !== -1 && posInLine > braceStart && (braceEnd === -1 || posInLine <= braceEnd)) {
-					const textInBraces = lineText.substring(braceStart + 1, posInLine);
-					const lastCommaPos = textInBraces.lastIndexOf(',');
+				if (match) {
+					const delimiter = match[0].endsWith('<') ? '<' : '"';
+					const delimiterPos = match.index! + match[0].length - 1;
+					const partial = textBeforeCursor.substring(delimiterPos + 1).trim();
+					return { command: 'cite', partial, type };
+				}
+			} else {
+				const matches = Array.from(lineText.matchAll(new RegExp(pattern.source, 'g')));
 
-					const partial = lastCommaPos !== -1
-						? textInBraces.substring(lastCommaPos + 1).trim()
-						: textInBraces.trim();
+				for (const match of matches) {
+					const matchStart = match.index!;
+					const braceStart = lineText.indexOf('{', matchStart);
+					const braceEnd = lineText.indexOf('}', braceStart);
 
-					return {
-						command: match[1],
-						partial,
-						type,
-					};
+					if (braceStart !== -1 && posInLine > braceStart && (braceEnd === -1 || posInLine <= braceEnd)) {
+						const textInBraces = lineText.substring(braceStart + 1, posInLine);
+						const lastCommaPos = textInBraces.lastIndexOf(',');
+
+						const partial = lastCommaPos !== -1
+							? textInBraces.substring(lastCommaPos + 1).trim()
+							: textInBraces.trim();
+
+						return { command: match[1], partial, type };
+					}
 				}
 			}
 		}
@@ -266,6 +339,11 @@ class AutocompleteProcessor {
 
 	private isInLatexFile(): boolean {
 		return this.currentFilePath.endsWith('.tex') || this.currentFilePath.endsWith('.latex');
+	}
+
+	private isInTypstFile(): boolean {
+		return this.currentFilePath?.endsWith('.typ') ||
+			this.currentFilePath?.endsWith('.typst') || false;
 	}
 
 	private isInBibFile(): boolean {
@@ -327,9 +405,14 @@ class AutocompleteProcessor {
 
 		const isCurrentlyInBibFile = this.isInBibFile();
 		const isCurrentlyInLatexFile = this.isInLatexFile();
+		const isCurrentlyInTypstFile = this.isInTypstFile();
 
 		if (isCurrentlyInLatexFile && citationInfo) {
 			return this.handleLatexCitationCompletion(context, citationInfo, cache);
+		}
+
+		if (isCurrentlyInTypstFile && citationInfo) {
+			return this.handleTypstCitationCompletion(context, citationInfo, cache);
 		}
 
 		if (isCurrentlyInBibFile && bibtexInfo) {
@@ -357,6 +440,27 @@ class AutocompleteProcessor {
 			from: partialStart,
 			options,
 			validFor: /^[^}]*$/,
+		};
+	}
+
+	private handleTypstCitationCompletion(context: CompletionContext, citationInfo: any, cache: BibliographyEntry[]): CompletionResult {
+		const partial = citationInfo.partial;
+		const filteredEntries = cache.filter(entry =>
+			!partial ||
+			entry.key.toLowerCase().includes(partial.toLowerCase()) ||
+			entry.title.toLowerCase().includes(partial.toLowerCase()) ||
+			entry.authors.some(author => author.toLowerCase().includes(partial.toLowerCase()))
+		);
+
+		const options = this.createCitationOptions(filteredEntries, partial);
+		if (options.length === 0) return null;
+
+		const partialStart = this.getCitationCompletionStart(context, typstCitationPatterns);
+
+		return {
+			from: partialStart,
+			options,
+			validFor: /^[^>\">]*$/,
 		};
 	}
 
@@ -480,15 +584,29 @@ class AutocompleteProcessor {
 		for (const { pattern } of patterns) {
 			const match = lineText.match(pattern);
 			if (match && match.index !== undefined) {
-				const bracePos = lineText.indexOf('{', match.index);
-				if (bracePos !== -1 && posInLine > bracePos) {
-					const textInBraces = lineText.substring(bracePos + 1, posInLine);
-					const lastCommaPos = textInBraces.lastIndexOf(',');
+				const isTypstCitation = match[0].startsWith('#cite');
 
-					if (lastCommaPos !== -1) {
-						return line.from + bracePos + 1 + lastCommaPos + 1;
-					} else {
-						return line.from + bracePos + 1;
+				if (isTypstCitation) {
+					const anglePos = lineText.indexOf('<', match.index);
+					const quotePos = lineText.indexOf('"', match.index);
+
+					if (anglePos !== -1 && posInLine > anglePos) {
+						return line.from + anglePos + 1;
+					}
+					if (quotePos !== -1 && posInLine > quotePos) {
+						return line.from + quotePos + 1;
+					}
+				} else {
+					const bracePos = lineText.indexOf('{', match.index);
+					if (bracePos !== -1 && posInLine > bracePos) {
+						const textInBraces = lineText.substring(bracePos + 1, posInLine);
+						const lastCommaPos = textInBraces.lastIndexOf(',');
+
+						if (lastCommaPos !== -1) {
+							return line.from + bracePos + 1 + lastCommaPos + 1;
+						} else {
+							return line.from + bracePos + 1;
+						}
 					}
 				}
 			}
@@ -516,7 +634,11 @@ class AutocompleteProcessor {
 	}
 
 	getFilePathCompletions = (context: CompletionContext): CompletionResult | null => {
-		const commandInfo = this.findLatexCommand(context);
+		const isCurrentlyInTypstFile = this.isInTypstFile();
+		const commandInfo = isCurrentlyInTypstFile
+			? this.findTypstCommand(context)
+			: this.findLatexCommand(context);
+
 		if (!commandInfo) return null;
 
 		const cache = context.state.field(filePathCacheField, false);
@@ -532,8 +654,16 @@ class AutocompleteProcessor {
 			case 'tex':
 				candidates = cache.texFiles;
 				break;
+			case 'typst':
+				candidates = cache.typstFiles || [];
+				break;
 			case 'bib':
 				candidates = cache.bibFiles;
+				break;
+			case 'data':
+				candidates = cache.allFiles.filter(path =>
+					/\.(csv|json|yaml|yml|toml)$/i.test(path)
+				);
 				break;
 			case 'all':
 			default:
@@ -543,10 +673,12 @@ class AutocompleteProcessor {
 
 		const options = candidates
 			.map(filePath => {
-				const relativePath = filePathCacheService.getRelativePath(this.currentFilePath, filePath);
+				const relativePath = isCurrentlyInTypstFile
+					? filePathCacheService.getTypstRelativePath(this.currentFilePath, filePath)
+					: filePathCacheService.getLatexRelativePath(this.currentFilePath, filePath);
 				const fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
 
-				const displayPath = fileTypes === 'bib' && relativePath.endsWith('.bib')
+				const displayPath = fileTypes === 'bib' && !isCurrentlyInTypstFile && relativePath.endsWith('.bib')
 					? relativePath.slice(0, -4)
 					: relativePath;
 
@@ -586,12 +718,15 @@ class AutocompleteProcessor {
 		const posInLine = context.pos - line.from;
 
 		let partialStart = posInLine;
-		for (const { pattern } of latexCommandPatterns) {
+		const patterns = isCurrentlyInTypstFile ? typstCommandPatterns : latexCommandPatterns;
+
+		for (const { pattern } of patterns) {
 			const match = lineText.match(pattern);
 			if (match && match.index !== undefined) {
-				const bracePos = lineText.indexOf('{', match.index);
-				if (bracePos !== -1 && posInLine > bracePos) {
-					partialStart = line.from + bracePos + 1;
+				const openChar = isCurrentlyInTypstFile ? '"' : '{';
+				const openPos = lineText.indexOf(openChar, match.index);
+				if (openPos !== -1 && posInLine > openPos) {
+					partialStart = line.from + openPos + 1;
 					break;
 				}
 			}
@@ -600,7 +735,7 @@ class AutocompleteProcessor {
 		return {
 			from: partialStart,
 			options,
-			validFor: /^[^}]*$/,
+			validFor: isCurrentlyInTypstFile ? /^[^\"]*/ : /^[^}]*/,
 		};
 	};
 

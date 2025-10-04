@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
-import { fileStorageService } from "../services/FileStorageService";
+import { fileStorageService } from '../services/FileStorageService';
 
 interface PluginFileInfo {
 	fileName: string;
@@ -12,8 +12,8 @@ interface PluginFileInfo {
 
 export const usePluginFileInfo = (fileId?: string, fileName?: string) => {
 	const [fileInfo, setFileInfo] = useState<PluginFileInfo>({
-		fileName: fileName || "Unknown file",
-		filePath: fileName || "Unknown file",
+		fileName: fileName || 'Unknown file',
+		filePath: fileName || 'Unknown file',
 	});
 
 	useEffect(() => {
@@ -31,7 +31,7 @@ export const usePluginFileInfo = (fileId?: string, fileName?: string) => {
 						});
 					}
 				} catch (error) {
-					console.error("Error loading file info:", error);
+					console.error('Error loading file info:', error);
 				}
 			} else if (fileName) {
 				setFileInfo({

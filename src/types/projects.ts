@@ -3,6 +3,7 @@ export interface Project {
 	id: string;
 	name: string;
 	description: string;
+	type: 'latex' | 'typst';
 	docUrl: string;
 	createdAt: number;
 	updatedAt: number;

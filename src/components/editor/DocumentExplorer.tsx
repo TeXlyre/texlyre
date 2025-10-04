@@ -1,11 +1,11 @@
 // src/components/editor/DocumentExplorer.tsx
-import type React from "react";
-import { useRef, useState } from "react";
+import type React from 'react';
+import { useRef, useState } from 'react';
 
-import { collabService } from "../../services/CollabService";
-import type { Document } from "../../types/documents";
-import { buildUrlWithFragments, parseUrlFragments } from "../../utils/urlUtils";
-import type { YjsDocUrl } from "../../types/yjs";
+import { collabService } from '../../services/CollabService';
+import type { Document } from '../../types/documents';
+import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
+import type { YjsDocUrl } from '../../types/yjs';
 import {
 	DownloadIcon,
 	EditIcon,
@@ -14,9 +14,9 @@ import {
 	MoreIcon,
 	PlusIcon,
 	SyncIcon,
-} from "../common/Icons.tsx";
-import Modal from "../common/Modal.tsx";
-import DropdownMenu from "./DropdownMenu";
+} from '../common/Icons.tsx';
+import Modal from '../common/Modal.tsx';
+import DropdownMenu from './DropdownMenu';
 
 interface FileViewerProps {
 	documents: Document[];
@@ -48,7 +48,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 	getDocumentContent,
 }) => {
 	const [editingDocId, setEditingDocId] = useState<string | null>(null);
-	const [editName, setEditName] = useState("");
+	const [editName, setEditName] = useState('');
 	const [activeMenu, setActiveMenu] = useState<string | null>(null);
 	const menuRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 	const [showPropertiesModal, setShowPropertiesModal] = useState(false);
@@ -62,7 +62,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 	const handleStartRename = (docId: string) => {
 		setEditingDocId(docId);
 		const doc = documents.find((d) => d.id === docId);
-		setEditName(doc?.name || "");
+		setEditName(doc?.name || '');
 		setActiveMenu(null);
 	};
 
@@ -74,9 +74,9 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 	};
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === "Enter") {
+		if (e.key === 'Enter') {
 			handleSaveRename();
-		} else if (e.key === "Escape") {
+		} else if (e.key === 'Escape') {
 			setEditingDocId(null);
 		}
 	};
@@ -87,9 +87,9 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 
 		const exportContent = await getDocumentContent(docUrl, docId);
 
-		const blob = new Blob([exportContent], { type: "text/plain" });
+		const blob = new Blob([exportContent], { type: 'text/plain' });
 		const url = URL.createObjectURL(blob);
-		const a = document.createElement("a");
+		const a = document.createElement('a');
 		a.href = url;
 		a.download = `${doc.name}.txt`;
 		document.body.appendChild(a);
@@ -133,7 +133,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 			setSyncProgress({ current: 0, total: 0 });
 
 			// Extract project ID from docUrl
-			const projectId = docUrl.startsWith("yjs:") ? docUrl.slice(4) : docUrl;
+			const projectId = docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl;
 
 			const sessionId = await collabService.syncAllDocuments(
 				projectId,
@@ -143,9 +143,9 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 			);
 
 			setSyncSession(sessionId);
-			console.log("[DocumentExplorer] All documents connected for real-time sync");
+			console.log('[DocumentExplorer] All documents connected for real-time sync');
 		} catch (error) {
-			console.error("Error starting document sync:", error);
+			console.error('Error starting document sync:', error);
 		}
 	};
 
@@ -156,15 +156,15 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 			collabService.stopSyncAllDocuments(syncSession);
 			setSyncSession(null);
 			setSyncProgress({ current: 0, total: 0 });
-			console.log("[DocumentExplorer] Document sync stopped");
+			console.log('[DocumentExplorer] Document sync stopped');
 		} catch (error) {
-			console.error("Error stopping document sync:", error);
+			console.error('Error stopping document sync:', error);
 		}
 	};
 
 	const getSyncButtonText = () => {
-		if (!syncSession) return "Sync All";
-		if (syncProgress.total === 0) return "Connecting...";
+		if (!syncSession) return 'Sync All';
+		if (syncProgress.total === 0) return 'Connecting...';
 		return `Sync Active (${syncProgress.current}/${syncProgress.total})`;
 	};
 
@@ -179,7 +179,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 								className="action-btn"
 								title="Stop Sync"
 								onClick={handleStopSync}
-								style={{ backgroundColor: "var(--accent-color)" }}
+								style={{ backgroundColor: 'var(--accent-color)' }}
 							>
 								<SyncIcon />
 							</button>
@@ -207,11 +207,11 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 					<div
 						className="sync-progress"
 						style={{
-							padding: "0.5rem",
-							fontSize: "0.8rem",
-							color: "var(--accent-color)",
-							borderBottom: "1px solid var(--border-color)",
-							backgroundColor: "var(--accent-color)",
+							padding: '0.5rem',
+							fontSize: '0.8rem',
+							color: 'var(--accent-color)',
+							borderBottom: '1px solid var(--border-color)',
+							backgroundColor: 'var(--accent-color)',
 						}}
 					>
 						🔄 {getSyncButtonText()} - Real-time sync active
@@ -222,7 +222,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 					{documents.map((doc) => (
 						<div
 							key={doc.id}
-							className={`file-node ${selectedDocId === doc.id ? "selected" : ""}`}
+							className={`file-node ${selectedDocId === doc.id ? 'selected' : ''}`}
 							onClick={() => handleDocumentSelect(doc.id)}
 						>
 							<span className="file-icon">
@@ -324,7 +324,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 							<strong>Name:</strong> {propertiesInfo.name}
 						</div>
 						<div className="property-item">
-							<strong>Content Length:</strong> {propertiesInfo.contentLength}{" "}
+							<strong>Content Length:</strong> {propertiesInfo.contentLength}{' '}
 							characters
 						</div>
 					</div>

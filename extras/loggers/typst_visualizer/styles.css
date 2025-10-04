@@ -1,0 +1,251 @@
+.typst-visualizer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: var(--pico-background);
+    color: var(--text-color);
+    border-radius: 8px;
+}
+
+.typst-visualizer-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1rem;
+    max-height: calc(100vh - 120px);
+}
+
+.diagnostic-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.diagnostic-item {
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid;
+    background-color: var(--accent-background);
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.diagnostic-item.clickable {
+    cursor: pointer;
+}
+
+.diagnostic-item.clickable:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.diagnostic-item.error {
+    border-left-color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.05);
+}
+
+.diagnostic-item.error.clickable:hover {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.diagnostic-item.warning {
+    border-left-color: #fd7e14;
+    background-color: rgba(253, 126, 20, 0.05);
+}
+
+.diagnostic-item.warning.clickable:hover {
+    background-color: rgba(253, 126, 20, 0.1);
+}
+
+.diagnostic-item.info {
+    border-left-color: #0ea5e9;
+    background-color: rgba(14, 165, 233, 0.05);
+}
+
+.diagnostic-item.info.clickable:hover {
+    background-color: rgba(14, 165, 233, 0.1);
+}
+
+.diagnostic-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.diagnostic-type-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.diagnostic-item.error .diagnostic-type-badge {
+    background-color: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+}
+
+.diagnostic-item.warning .diagnostic-type-badge {
+    background-color: rgba(253, 126, 20, 0.15);
+    color: #fd7e14;
+}
+
+.diagnostic-item.info .diagnostic-type-badge {
+    background-color: rgba(14, 165, 233, 0.15);
+    color: #0ea5e9;
+}
+
+.diagnostic-icon {
+    font-size: 0.9rem;
+}
+
+.diagnostic-line {
+    color: var(--pico-primary);
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
+    font-size: 0.75rem;
+    transition: background-color 0.2s ease;
+}
+
+.diagnostic-line:hover {
+    background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.2);
+}
+
+.typst-diagnostic-message {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--text-color);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.diagnostic-hints {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.diagnostic-hint {
+    background-color: var(--pico-secondary-background);
+    border-radius: 4px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    border-left: 3px solid var(--pico-primary);
+    color: var(--text-color);
+}
+
+.diagnostic-item.clickable::after {
+    content: "👆";
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-size: 0.8rem;
+    pointer-events: none;
+}
+
+.diagnostic-item.clickable:hover::after {
+    opacity: 0.6;
+}
+
+.diagnostic-location {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.diagnostic-file {
+    color: var(--pico-secondary);
+    font-weight: 500;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    background-color: rgba(var(--pico-secondary-rgb, 108, 117, 125), 0.1);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    cursor: default;
+}
+
+.diagnostic-file:hover {
+    background-color: rgba(var(--pico-secondary-rgb, 108, 117, 125), 0.15);
+}
+
+.typst-visualizer-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.typst-visualizer-content::-webkit-scrollbar-track {
+    background: var(--accent-background);
+}
+
+.typst-visualizer-content::-webkit-scrollbar-thumb {
+    background: var(--accent-border);
+    border-radius: 3px;
+}
+
+.typst-visualizer-content::-webkit-scrollbar-thumb:hover {
+    background: var(--pico-primary);
+}
+
+@media (max-width: 768px) {
+    .diagnostic-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .diagnostic-location {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .diagnostic-item {
+        padding: 0.75rem;
+    }
+}
+
+@media (prefers-contrast: high) {
+    .diagnostic-item {
+        border: 2px solid var(--accent-border);
+        border-left-width: 6px;
+    }
+
+    .diagnostic-item.error {
+        border-color: #dc3545;
+    }
+
+    .diagnostic-item.warning {
+        border-color: #fd7e14;
+    }
+
+    .diagnostic-item.info {
+        border-color: #0ea5e9;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .diagnostic-item,
+    .diagnostic-line {
+        transition: none;
+    }
+}

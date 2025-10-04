@@ -1,11 +1,11 @@
 // extras/lsp/jabref/JabRefPanel.tsx
-import type React from "react";
-import type { LSPPanelProps } from "../../../src/plugins/PluginInterface";
+import type React from 'react';
+import type { LSPPanelProps } from '../../../src/plugins/PluginInterface';
 
 const JabRefPanel: React.FC<LSPPanelProps> = ({
-	className = "",
+	className = '',
 	onItemSelect,
-	searchQuery = "",
+	searchQuery = '',
 	onSearchChange,
 	pluginInstance,
 }) => {

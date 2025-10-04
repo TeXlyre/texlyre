@@ -1,9 +1,9 @@
 // src/services/FileStorageService.ts
-import { type IDBPDatabase, openDB } from "idb";
-import { nanoid } from "nanoid";
+import { type IDBPDatabase, openDB } from 'idb';
+import { nanoid } from 'nanoid';
 
-import type { FileNode } from "../types/files";
-import { fileConflictService } from "./FileConflictService";
+import type { FileNode } from '../types/files';
+import { fileConflictService } from './FileConflictService';
 
 type FileStorageListener = () => void;
 const listeners: FileStorageListener[] = [];
@@ -27,10 +27,10 @@ export const fileStorageEventEmitter = {
 
 class FileStorageService {
 	public db: IDBPDatabase | null = null;
-	private readonly DB_PREFIX = "texlyre-project-";
-	private readonly FILES_STORE = "files";
+	private readonly DB_PREFIX = 'texlyre-project-';
+	private readonly FILES_STORE = 'files';
 	private readonly DB_VERSION = 1;
-	private projectId = "";
+	private projectId = '';
 	private contentCache: Map<string, string> = new Map();
 
 	getCurrentProjectId(): string {
@@ -44,7 +44,7 @@ class FileStorageService {
 	async initialize(docUrl?: string): Promise<void> {
 		try {
 			if (docUrl) {
-				const hash = docUrl.split(":").pop() || "";
+				const hash = docUrl.split(':').pop() || '';
 				const newProjectId = hash;
 
 				if (this.projectId !== newProjectId) {
@@ -54,7 +54,7 @@ class FileStorageService {
 			}
 
 			if (!this.projectId) {
-				throw new Error("Project ID not set");
+				throw new Error('Project ID not set');
 			}
 
 			if (this.db && this.isConnectedToProject(this.projectId)) {
@@ -74,9 +74,9 @@ class FileStorageService {
 				upgrade: (db, _oldVersion) => {
 					if (!db.objectStoreNames.contains(this.FILES_STORE)) {
 						const store = db.createObjectStore(this.FILES_STORE, {
-							keyPath: "id",
+							keyPath: 'id',
 						});
-						store.createIndex("path", "path", { unique: false });
+						store.createIndex('path', 'path', { unique: false });
 					}
 				},
 			});
@@ -85,7 +85,7 @@ class FileStorageService {
 				`[FileStorageService] Initialized for project: ${this.projectId}`,
 			);
 		} catch (error) {
-			console.error("Failed to initialize file storage:", error);
+			console.error('Failed to initialize file storage:', error);
 			throw error;
 		}
 	}
@@ -119,7 +119,7 @@ class FileStorageService {
 		let removedCount = 0;
 		let keptCount = 0;
 
-		const tx = this.db?.transaction(this.FILES_STORE, "readwrite");
+		const tx = this.db?.transaction(this.FILES_STORE, 'readwrite');
 		const store = tx.objectStore(this.FILES_STORE);
 
 		try {
@@ -146,7 +146,7 @@ class FileStorageService {
 			return { removed: removedCount, kept: keptCount };
 		} catch (error) {
 			tx.abort();
-			console.error("Error during auto-sanitization:", error);
+			console.error('Error during auto-sanitization:', error);
 			throw error;
 		}
 	}
@@ -163,11 +163,11 @@ class FileStorageService {
 			// Prefer files with content
 			const bestHasContent =
 				best.content &&
-				((typeof best.content === "string" && best.content.length > 0) ||
+				((typeof best.content === 'string' && best.content.length > 0) ||
 					(best.content instanceof ArrayBuffer && best.content.byteLength > 0));
 			const currentHasContent =
 				current.content &&
-				((typeof current.content === "string" && current.content.length > 0) ||
+				((typeof current.content === 'string' && current.content.length > 0) ||
 					(current.content instanceof ArrayBuffer &&
 						current.content.byteLength > 0));
 
@@ -187,29 +187,29 @@ class FileStorageService {
 
 	private async validateLinkedFileOperation(
 		file: FileNode,
-		operation: "delete" | "overwrite" | "rename",
+		operation: 'delete' | 'overwrite' | 'rename',
 	): Promise<boolean> {
 		if (!file.documentId) return true;
 
-		if (operation === "delete" || operation === "overwrite") {
+		if (operation === 'delete' || operation === 'overwrite') {
 			const confirmation = await fileConflictService.confirmLinkedFileAction(
 				file,
 				operation,
 			);
 
-			if (confirmation === "cancel") {
-				throw new Error("File operation cancelled by user");
+			if (confirmation === 'cancel') {
+				throw new Error('File operation cancelled by user');
 			}
 
-			if (confirmation === "show-unlink-dialog") {
+			if (confirmation === 'show-unlink-dialog') {
 				const unlinkConfirmation =
 					await fileConflictService.confirmUnlink(file);
-				if (unlinkConfirmation === "confirm") {
+				if (unlinkConfirmation === 'confirm') {
 					file.documentId = undefined;
 					await this.storeFile(file, { showConflictDialog: false });
 					return true;
 				}
-				throw new Error("File operation cancelled by user");
+				throw new Error('File operation cancelled by user');
 			}
 		}
 
@@ -238,7 +238,7 @@ class FileStorageService {
 		if (showDialog) {
 			if (existingFile && !existingFile.isDeleted) {
 				if (existingFile.documentId) {
-					await this.validateLinkedFileOperation(existingFile, "overwrite");
+					await this.validateLinkedFileOperation(existingFile, 'overwrite');
 				}
 
 				const resolution = await fileConflictService.resolveConflict(
@@ -247,14 +247,14 @@ class FileStorageService {
 				);
 
 				switch (resolution) {
-					case "cancel":
-						throw new Error("File operation cancelled by user");
+					case 'cancel':
+						throw new Error('File operation cancelled by user');
 
-					case "keep-both":
+					case 'keep-both':
 						file = await this.createUniqueFile(file);
 						break;
 
-					case "overwrite":
+					case 'overwrite':
 						await this.db?.delete(this.FILES_STORE, existingFile.id);
 						break;
 				}
@@ -283,7 +283,7 @@ class FileStorageService {
 		if (!this.db) await this.initialize();
 		if (!this.db) return [];
 
-		const tx = this.db.transaction(this.FILES_STORE, "readonly");
+		const tx = this.db.transaction(this.FILES_STORE, 'readonly');
 		const store = tx.objectStore(this.FILES_STORE);
 		const files: FileNode[] = [];
 
@@ -332,9 +332,9 @@ class FileStorageService {
 		}
 
 		let batchResolution:
-			| "overwrite-all"
-			| "keep-both-all"
-			| "cancel-all"
+			| 'overwrite-all'
+			| 'keep-both-all'
+			| 'cancel-all'
 			| null = null;
 
 		for (let i = 0; i < files.length; i++) {
@@ -357,13 +357,13 @@ class FileStorageService {
 					existingFile.id !== file.id
 				) {
 					if (existingFile.documentId) {
-						await this.validateLinkedFileOperation(existingFile, "overwrite");
+						await this.validateLinkedFileOperation(existingFile, 'overwrite');
 					}
 
 					let resolution: string;
 
 					if (batchResolution) {
-						resolution = batchResolution.replace("-all", "");
+						resolution = batchResolution.replace('-all', '');
 					} else if (conflicts.length > 1) {
 						const batchResult = await fileConflictService.resolveBatchConflict(
 							existingFile,
@@ -374,12 +374,12 @@ class FileStorageService {
 							) + 1,
 						);
 
-						if (batchResult.endsWith("-all")) {
+						if (batchResult.endsWith('-all')) {
 							batchResolution = batchResult as
-								| "overwrite-all"
-								| "keep-both-all"
-								| "cancel-all";
-							resolution = batchResult.replace("-all", "");
+								| 'overwrite-all'
+								| 'keep-both-all'
+								| 'cancel-all';
+							resolution = batchResult.replace('-all', '');
 						} else {
 							resolution = batchResult;
 						}
@@ -392,19 +392,19 @@ class FileStorageService {
 					}
 
 					switch (resolution) {
-						case "cancel":
-							if (batchResolution === "cancel-all") {
+						case 'cancel':
+							if (batchResolution === 'cancel-all') {
 								return storedIds;
 							}
 							continue;
 
-						case "keep-both": {
+						case 'keep-both': {
 							const uniqueFile = await this.createUniqueFile(file);
 							filesToStore.push(uniqueFile);
 							break;
 						}
 
-						case "overwrite":
+						case 'overwrite':
 							file.id = existingFile.id;
 							filesToStore.push(file);
 							break;
@@ -424,7 +424,7 @@ class FileStorageService {
 		}
 
 		if (filesToStore.length > 0) {
-			const tx = this.db?.transaction(this.FILES_STORE, "readwrite");
+			const tx = this.db?.transaction(this.FILES_STORE, 'readwrite');
 			const store = tx.objectStore(this.FILES_STORE);
 
 			for (const file of filesToStore) {
@@ -469,7 +469,7 @@ class FileStorageService {
 
 		if (linkedFiles.length > 0) {
 			for (const file of linkedFiles) {
-				await this.validateLinkedFileOperation(file, "delete");
+				await this.validateLinkedFileOperation(file, 'delete');
 			}
 		}
 
@@ -480,13 +480,13 @@ class FileStorageService {
 		) {
 			const confirmation =
 				await fileConflictService.confirmBatchDelete(filesToDelete);
-			if (confirmation === "cancel") {
-				throw new Error("Delete operation cancelled by user");
+			if (confirmation === 'cancel') {
+				throw new Error('Delete operation cancelled by user');
 			}
 		}
 
 		if (hardDelete) {
-			const tx = this.db?.transaction(this.FILES_STORE, "readwrite");
+			const tx = this.db?.transaction(this.FILES_STORE, 'readwrite');
 			const store = tx.objectStore(this.FILES_STORE);
 
 			for (const file of filesToDelete) {
@@ -504,7 +504,7 @@ class FileStorageService {
 				documentId: allowLinkedFileDelete ? file.documentId : undefined,
 			}));
 
-			const tx = this.db?.transaction(this.FILES_STORE, "readwrite");
+			const tx = this.db?.transaction(this.FILES_STORE, 'readwrite');
 			const store = tx.objectStore(this.FILES_STORE);
 			for (const file of filesToUpdate) {
 				await store.put(file);
@@ -559,7 +559,7 @@ class FileStorageService {
 		if (operation.newName) {
 			newName = operation.newName;
 			newFullPath =
-				operation.targetPath === "/"
+				operation.targetPath === '/'
 					? `/${operation.newName}`
 					: `${operation.targetPath}/${operation.newName}`;
 		} else {
@@ -569,16 +569,16 @@ class FileStorageService {
 
 			if (
 				targetEndsWithFileName ||
-				(operation.targetPath !== "/" &&
-					!operation.targetPath.endsWith("/") &&
-					operation.targetPath.includes("/"))
+				(operation.targetPath !== '/' &&
+					!operation.targetPath.endsWith('/') &&
+					operation.targetPath.includes('/'))
 			) {
 				newFullPath = operation.targetPath;
-				newName = operation.targetPath.split("/").pop() || sourceFile.name;
+				newName = operation.targetPath.split('/').pop() || sourceFile.name;
 			} else {
 				newName = sourceFile.name;
 				newFullPath =
-					operation.targetPath === "/"
+					operation.targetPath === '/'
 						? `/${sourceFile.name}`
 						: `${operation.targetPath}/${sourceFile.name}`;
 			}
@@ -600,7 +600,7 @@ class FileStorageService {
 			existingFile.id !== sourceFile.id
 		) {
 			if (existingFile.documentId) {
-				await this.validateLinkedFileOperation(existingFile, "overwrite");
+				await this.validateLinkedFileOperation(existingFile, 'overwrite');
 			}
 
 			const resolution = await fileConflictService.resolveConflict(
@@ -609,10 +609,10 @@ class FileStorageService {
 			);
 
 			switch (resolution) {
-				case "cancel":
+				case 'cancel':
 					return null;
 
-				case "keep-both": {
+				case 'keep-both': {
 					const uniqueFile = await this.createUniqueFile({
 						...sourceFile,
 						path: newFullPath,
@@ -623,7 +623,7 @@ class FileStorageService {
 					break;
 				}
 
-				case "overwrite":
+				case 'overwrite':
 					filesToDelete.push(existingFile.id);
 					break;
 			}
@@ -639,7 +639,7 @@ class FileStorageService {
 		};
 
 		const childrenToMove: Array<{ oldId: string; newFile: FileNode }> = [];
-		if (sourceFile.type === "directory") {
+		if (sourceFile.type === 'directory') {
 			const allFiles = await this.getAllFiles();
 			const children = allFiles.filter((f) =>
 				f.path.startsWith(`${sourceFile.path}/`),
@@ -665,7 +665,7 @@ class FileStorageService {
 
 		filesToDelete.push(sourceFile.id);
 
-		const tx = this.db?.transaction(this.FILES_STORE, "readwrite");
+		const tx = this.db?.transaction(this.FILES_STORE, 'readwrite');
 		const store = tx.objectStore(this.FILES_STORE);
 
 		try {
@@ -719,12 +719,12 @@ class FileStorageService {
 		if (showDialog) {
 			const confirmation =
 				await fileConflictService.confirmBatchUnlink(filesToUnlink);
-			if (confirmation === "cancel") {
-				throw new Error("Unlink operation cancelled by user");
+			if (confirmation === 'cancel') {
+				throw new Error('Unlink operation cancelled by user');
 			}
 		}
 
-		const tx = this.db?.transaction(this.FILES_STORE, "readwrite");
+		const tx = this.db?.transaction(this.FILES_STORE, 'readwrite');
 		const store = tx.objectStore(this.FILES_STORE);
 
 		for (const file of filesToUnlink) {
@@ -759,7 +759,7 @@ class FileStorageService {
 		includeDeleted = false,
 	): Promise<FileNode | undefined> {
 		if (!this.db) await this.initialize();
-		const index = this.db?.transaction(this.FILES_STORE).store.index("path");
+		const index = this.db?.transaction(this.FILES_STORE).store.index('path');
 		let cursor = await index.openCursor(IDBKeyRange.only(path));
 
 		while (cursor) {
@@ -777,7 +777,7 @@ class FileStorageService {
 		if (!this.db) await this.initialize();
 
 		const tx = this.db?.transaction(this.FILES_STORE);
-		const index = tx.store.index("path");
+		const index = tx.store.index('path');
 		const files: FileNode[] = [];
 
 		let cursor = await index.openCursor();
@@ -788,7 +788,7 @@ class FileStorageService {
 			if (
 				filePath.startsWith(path) &&
 				filePath !== path &&
-				!filePath.slice(path.length + 1).includes("/")
+				!filePath.slice(path.length + 1).includes('/')
 			) {
 				files.push(file);
 			}
@@ -843,7 +843,7 @@ class FileStorageService {
 
 			const hasContent =
 				content &&
-				((typeof content === "string" && content.length > 0) ||
+				((typeof content === 'string' && content.length > 0) ||
 					(content instanceof ArrayBuffer && content.byteLength > 0));
 
 			if (hasContent && file.isDeleted) {
@@ -856,10 +856,10 @@ class FileStorageService {
 	}
 
 	private async createUniqueFile(file: FileNode): Promise<FileNode> {
-		const baseName = file.name.replace(/\.[^/.]+$/, "");
-		const extension = file.name.includes(".")
-			? `.${file.name.split(".").pop()}`
-			: "";
+		const baseName = file.name.replace(/\.[^/.]+$/, '');
+		const extension = file.name.includes('.')
+			? `.${file.name.split('.').pop()}`
+			: '';
 		let counter = 1;
 		let newName = `${baseName} (${counter})${extension}`;
 		let newPath = file.path.replace(file.name, newName);
@@ -895,13 +895,13 @@ class FileStorageService {
 		if (!file) return;
 
 		if (file.documentId && !allowLinkedFileDelete) {
-			await this.validateLinkedFileOperation(file, "delete");
+			await this.validateLinkedFileOperation(file, 'delete');
 		}
 
 		if (showDialog && !file.documentId) {
 			const confirmation = await fileConflictService.confirmDelete(file);
-			if (confirmation === "cancel") {
-				throw new Error("Delete operation cancelled by user");
+			if (confirmation === 'cancel') {
+				throw new Error('Delete operation cancelled by user');
 			}
 		}
 
@@ -922,10 +922,10 @@ class FileStorageService {
 	}
 
 	async createDirectoryPath(filePath: string): Promise<void> {
-		const pathParts = filePath.split("/").filter((part) => part.length > 0);
+		const pathParts = filePath.split('/').filter((part) => part.length > 0);
 		pathParts.pop();
 
-		let currentPath = "";
+		let currentPath = '';
 
 		for (const part of pathParts) {
 			currentPath += `/${part}`;
@@ -936,7 +936,7 @@ class FileStorageService {
 					id: nanoid(),
 					name: part,
 					path: currentPath,
-					type: "directory",
+					type: 'directory',
 					lastModified: Date.now(),
 					size: 0,
 					isDeleted: false,
@@ -971,7 +971,7 @@ class FileStorageService {
 				size: file.size,
 				isBinary: file.isBinary,
 				mimeType: file.mimeType,
-				children: file.type === "directory" ? [] : undefined,
+				children: file.type === 'directory' ? [] : undefined,
 			};
 
 			pathMap[file.path] = node;
@@ -980,14 +980,14 @@ class FileStorageService {
 		files.forEach((file) => {
 			const node = pathMap[file.path];
 
-			if (file.path === "/") {
+			if (file.path === '/') {
 				tree.push(node);
 				return;
 			}
 
-			const lastSlashIndex = file.path.lastIndexOf("/");
+			const lastSlashIndex = file.path.lastIndexOf('/');
 			const parentPath =
-				lastSlashIndex === 0 ? "/" : file.path.substring(0, lastSlashIndex);
+				lastSlashIndex === 0 ? '/' : file.path.substring(0, lastSlashIndex);
 
 			const parentNode = pathMap[parentPath];
 			if (parentNode?.children) {
@@ -1006,12 +1006,12 @@ class FileStorageService {
 			this.db = null;
 		}
 		this.contentCache.clear();
-		this.projectId = "";
-		console.log("[FileStorageService] Cleaned up connection");
+		this.projectId = '';
+		console.log('[FileStorageService] Cleaned up connection');
 	}
 
 	async switchToProject(docUrl: string): Promise<void> {
-		const hash = docUrl.split(":").pop() || "";
+		const hash = docUrl.split(':').pop() || '';
 		const newProjectId = hash;
 
 		if (this.projectId !== newProjectId) {

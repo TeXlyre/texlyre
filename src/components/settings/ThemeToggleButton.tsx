@@ -1,14 +1,14 @@
 // src/components/settings/ThemeToggleButton.tsx
-import type React from "react";
+import type React from 'react';
 
-import { useSettings } from "../../hooks/useSettings";
-import { SunIcon, MoonIcon } from "../common/Icons";
+import { useSettings } from '../../hooks/useSettings';
+import { SunIcon, MoonIcon } from '../common/Icons';
 
 interface ThemeToggleButtonProps {
 	className?: string;
 }
 
-const ThemeToggleButton: React.FC<ThemeToggleButtonProps> = ({ className = "" }) => {
+const ThemeToggleButton: React.FC<ThemeToggleButtonProps> = ({ className = '' }) => {
 	const { getSetting, updateSetting } = useSettings();
 
 	const themeVariantSetting = getSetting('theme-variant');

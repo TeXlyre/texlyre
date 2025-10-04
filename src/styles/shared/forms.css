@@ -22,7 +22,8 @@
 .lsp-search-input,
 .chat-panel-input,
 .main-file-select,
-.engine-select {
+.engine-select,
+.format-select {
 	width: 100%;
 	padding: 0.5rem;
 	border: 1px solid var(--accent-border, #ddd);
@@ -59,30 +60,47 @@ input[type="radio"],
 	transform: none !important;
 	box-shadow: none !important;
 	outline: none !important;
+	accent-color: var(--pico-primary-inverse) !important;
 }
 
-input[type="radio"],
-*[type="radio"] {
-	border-radius: 50% !important;
+input[type="checkbox"]:focus,
+input[type="radio"]:focus,
+*[type="checkbox"]:focus,
+*[type="radio"]:focus {
+	outline: 2px solid var(--pico-primary-focus) !important;
+	outline-offset: 2px !important;
+}
+
+input[type="checkbox"]:hover,
+input[type="radio"]:hover,
+*[type="checkbox"]:hover,
+*[type="radio"]:hover {
+	border-color: var(--pico-primary) !important;
 }
 
 input[type="checkbox"]:checked,
 *[type="checkbox"]:checked {
 	background-color: var(--pico-primary) !important;
 	border-color: var(--pico-primary) !important;
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	accent-color: var(--pico-primary-inverse) !important;
 }
 
-input[type="checkbox"]:checked::before,
-*[type="checkbox"]:checked::before {
-	content: "✓" !important;
-	position: absolute !important;
-	top: 50% !important;
-	left: 50% !important;
-	transform: translate(-50%, -50%) !important;
-	color: white !important;
-	font-size: 10px !important;
-	font-weight: bold !important;
-	line-height: 1 !important;
+input[type="checkbox"]:checked::after,
+*[type="checkbox"]:checked::after {
+	background-color: var(--pico-primary) !important;
+	border-color: var(--pico-primary) !important;
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	accent-color: var(--pico-primary-inverse) !important;
+}
+
+input[type="radio"],
+*[type="radio"] {
+	border-radius: 50% !important;
 }
 
 input[type="radio"]:checked,
@@ -101,29 +119,6 @@ input[type="radio"]:checked::before,
 	height: 8px !important;
 	border-radius: 50% !important;
 	background-color: var(--pico-primary) !important;
-}
-
-[data-theme="dark"] input[type="checkbox"],
-[data-theme="dark"] input[type="radio"],
-[data-theme="dark"] *[type="checkbox"],
-[data-theme="dark"] *[type="radio"] {
-	border-color: var(--accent-border, #555) !important;
-	background-color: var(--pico-background) !important;
-}
-
-input[type="checkbox"]:focus,
-input[type="radio"]:focus,
-*[type="checkbox"]:focus,
-*[type="radio"]:focus {
-	outline: 2px solid var(--pico-primary-focus) !important;
-	outline-offset: 2px !important;
-}
-
-input[type="checkbox"]:hover,
-input[type="radio"]:hover,
-*[type="checkbox"]:hover,
-*[type="radio"]:hover {
-	border-color: var(--pico-primary) !important;
 }
 
 .form-group input:focus,
@@ -170,7 +165,7 @@ input[type="radio"]:hover,
 	margin-bottom: var(--space-md);
 }
 
-.color-picker-group > label {
+.color-picker-group>label {
 	display: block;
 	margin-bottom: var(--space-sm);
 	font-weight: 500;

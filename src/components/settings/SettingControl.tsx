@@ -1,8 +1,8 @@
 // src/components/settings/SettingControl.tsx
-import type React from "react";
-import type { Setting } from "../../contexts/SettingsContext";
+import type React from 'react';
+import type { Setting } from '../../contexts/SettingsContext';
 import { SettingsCodeMirror } from './SettingsCodeMirror';
-import { useSettings } from "../../hooks/useSettings";
+import { useSettings } from '../../hooks/useSettings';
 
 interface SettingControlProps {
 	setting: Setting & {
@@ -22,7 +22,7 @@ const SettingControl: React.FC<SettingControlProps> = ({ setting }) => {
 
 	const renderControl = () => {
 		switch (setting.type) {
-			case "checkbox":
+			case 'checkbox':
 				return (
 					<label className="checkbox-control">
 						<input
@@ -34,7 +34,7 @@ const SettingControl: React.FC<SettingControlProps> = ({ setting }) => {
 					</label>
 				);
 
-			case "select":
+			case 'select':
 				return (
 					<div className="select-control">
 						<label>{setting.label}</label>
@@ -51,7 +51,7 @@ const SettingControl: React.FC<SettingControlProps> = ({ setting }) => {
 					</div>
 				);
 
-			case "text":
+			case 'text':
 				return (
 					<div className="text-control">
 						<label>{setting.label}</label>
@@ -72,7 +72,7 @@ const SettingControl: React.FC<SettingControlProps> = ({ setting }) => {
         					/>
       				);
 
-			case "number":
+			case 'number':
 				return (
 					<div className="number-control">
 						<label>{setting.label}</label>
@@ -86,7 +86,7 @@ const SettingControl: React.FC<SettingControlProps> = ({ setting }) => {
 					</div>
 				);
 
-			case "color":
+			case 'color':
 				return (
 					<div className="color-control">
 						<label>{setting.label}</label>

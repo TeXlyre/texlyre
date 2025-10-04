@@ -1,5 +1,5 @@
 // src/contexts/EditorContext.tsx
-import type React from "react";
+import type React from 'react';
 import {
 	type ReactNode,
 	createContext,
@@ -7,21 +7,21 @@ import {
 	useEffect,
 	useRef,
 	useState,
-} from "react";
+} from 'react';
 
-import { pluginRegistry } from "../plugins/PluginRegistry";
-import { useSettings } from "../hooks/useSettings";
+import { pluginRegistry } from '../plugins/PluginRegistry';
+import { useSettings } from '../hooks/useSettings';
 import type {
 	EditorSettings,
 	FontFamily,
 	FontSize,
-} from "../types/editorSettings";
+} from '../types/editorSettings';
 import {
 	defaultEditorSettings,
 	fontFamilyMap,
 	fontSizeMap,
-} from "../types/editorSettings";
-import type { CollabConnectOptions } from "../types/collab"
+} from '../types/editorSettings';
+import type { CollabConnectOptions } from '../types/collab'
 
 interface EditorContextType {
 	editorSettings: EditorSettings;
@@ -36,6 +36,7 @@ interface EditorContextType {
 	getAutoSaveEnabled: () => boolean;
 	getAutoSaveDelay: () => number;
 	getVimModeEnabled: () => boolean;
+	getSpellCheckEnabled: () => boolean;
 	getCollabOptions: () => CollabConnectOptions;
 	getEnabledLSPPlugins: () => string[];
 	editorSettingsVersion: number;
@@ -43,14 +44,15 @@ interface EditorContextType {
 
 export const EditorContext = createContext<EditorContextType>({
 	editorSettings: defaultEditorSettings,
-	updateEditorSetting: () => {},
-	getFontSize: () => "14px",
+	updateEditorSetting: () => { },
+	getFontSize: () => '14px',
 	getFontFamily: () => fontFamilyMap.monospace,
 	getLineNumbersEnabled: () => true,
 	getSyntaxHighlightingEnabled: () => true,
 	getAutoSaveEnabled: () => false,
 	getAutoSaveDelay: () => 2000,
 	getVimModeEnabled: () => false,
+	getSpellCheckEnabled: () => true,
 	getCollabOptions: () => ({}),
 	getEnabledLSPPlugins: () =>
 		pluginRegistry.getLSPPlugins().map((plugin) => plugin.id),
@@ -79,11 +81,11 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 
 	const applyCSSProperties = useCallback((settings: EditorSettings) => {
 		document.documentElement.style.setProperty(
-			"--editor-font-size",
+			'--editor-font-size',
 			fontSizeMap[settings.fontSize],
 		);
 		document.documentElement.style.setProperty(
-			"--editor-font-family",
+			'--editor-font-family',
 			fontFamilyMap[settings.fontFamily],
 		);
 	}, []);
@@ -93,31 +95,35 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		settingsRegisteredOnce.current = true;
 
 		const initialFontSize =
-			(getSetting("editor-font-size")?.value as FontSize) ??
+			(getSetting('editor-font-size')?.value as FontSize) ??
 			defaultEditorSettings.fontSize;
 		const initialFontFamily =
-			(getSetting("editor-font-family")?.value as FontFamily) ??
+			(getSetting('editor-font-family')?.value as FontFamily) ??
 			defaultEditorSettings.fontFamily;
 		const initialShowLineNumbers =
-			(getSetting("editor-show-line-numbers")?.value as boolean) ??
+			(getSetting('editor-show-line-numbers')?.value as boolean) ??
 			defaultEditorSettings.showLineNumbers;
 		const initialSyntaxHighlighting =
-			(getSetting("editor-syntax-highlighting")?.value as boolean) ??
+			(getSetting('editor-syntax-highlighting')?.value as boolean) ??
 			defaultEditorSettings.syntaxHighlighting;
 		const initialAutoSaveEnabled =
-			(getSetting("editor-auto-save-enable")?.value as boolean) ??
+			(getSetting('editor-auto-save-enable')?.value as boolean) ??
 			defaultEditorSettings.autoSaveEnabled;
 		const initialAutoSaveDelay =
-			(getSetting("editor-auto-save-delay")?.value as number) ??
+			(getSetting('editor-auto-save-delay')?.value as number) ??
 			defaultEditorSettings.autoSaveDelay;
 		const initialHighlightTheme =
-			(getSetting("editor-theme-highlights")?.value as
-				| "auto"
-				| "light"
-				| "dark") ?? defaultEditorSettings.highlightTheme;
+			(getSetting('editor-theme-highlights')?.value as
+				| 'auto'
+				| 'light'
+				| 'dark') ?? defaultEditorSettings.highlightTheme;
 		const initialVimMode =
-			(getSetting("editor-vim-mode")?.value as boolean) ??
+			(getSetting('editor-vim-mode')?.value as boolean) ??
 			defaultEditorSettings.vimMode;
+		const initialSpellCheck =
+			(getSetting('editor-spell-check')?.value as boolean) ??
+			defaultEditorSettings.spellCheck;
+
 
 		const loadedSettings = {
 			fontSize: initialFontSize,
@@ -128,6 +134,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 			autoSaveDelay: initialAutoSaveDelay,
 			highlightTheme: initialHighlightTheme,
 			vimMode: initialVimMode,
+			spellCheck: initialSpellCheck,
 		};
 
 		setEditorSettings(loadedSettings);
@@ -135,145 +142,158 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		applyCSSProperties(loadedSettings);
 
 		registerSetting({
-			id: "editor-font-size",
-			category: "Appearance",
-			subcategory: "Text Editor",
-			type: "select",
-			label: "Font size",
-			description: "Select the font size for the editor",
+			id: 'editor-font-size',
+			category: 'Appearance',
+			subcategory: 'Text Editor',
+			type: 'select',
+			label: 'Font size',
+			description: 'Select the font size for the editor',
 			defaultValue: defaultEditorSettings.fontSize,
 			options: [
-				{ label: "Extra Small (10px)", value: "xs" },
-				{ label: "Small (12px)", value: "sm" },
-				{ label: "Base (14px)", value: "base" },
-				{ label: "Large (16px)", value: "lg" },
-				{ label: "Extra Large (18px)", value: "xl" },
-				{ label: "2X Large (20px)", value: "2xl" },
-				{ label: "3X Large (24px)", value: "3xl" },
+				{ label: 'Extra Small (10px)', value: 'xs' },
+				{ label: 'Small (12px)', value: 'sm' },
+				{ label: 'Base (14px)', value: 'base' },
+				{ label: 'Large (16px)', value: 'lg' },
+				{ label: 'Extra Large (18px)', value: 'xl' },
+				{ label: '2X Large (20px)', value: '2xl' },
+				{ label: '3X Large (24px)', value: '3xl' },
 			],
 			onChange: (value) => {
 				const fontSize = value as FontSize;
-				updateEditorSetting("fontSize", fontSize);
+				updateEditorSetting('fontSize', fontSize);
 				document.documentElement.style.setProperty(
-					"--editor-font-size",
+					'--editor-font-size',
 					fontSizeMap[fontSize],
 				);
 			},
 		});
 
 		registerSetting({
-			id: "editor-font-family",
-			category: "Appearance",
-			subcategory: "Text Editor",
-			type: "select",
-			label: "Font family",
-			description: "Select the font family for the editor",
+			id: 'editor-font-family',
+			category: 'Appearance',
+			subcategory: 'Text Editor',
+			type: 'select',
+			label: 'Font family',
+			description: 'Select the font family for the editor',
 			defaultValue: defaultEditorSettings.fontFamily,
 			options: [
-				{ label: "Monospace (System)", value: "monospace" },
-				{ label: "JetBrains Mono", value: "jetbrains-mono" },
-				{ label: "Fira Code", value: "fira-code" },
-				{ label: "Source Code Pro", value: "source-code-pro" },
-				{ label: "Inconsolata", value: "inconsolata" },
-				{ label: "Serif", value: "serif" },
-				{ label: "Sans Serif", value: "sans-serif" },
+				{ label: 'Monospace (System)', value: 'monospace' },
+				{ label: 'JetBrains Mono', value: 'jetbrains-mono' },
+				{ label: 'Fira Code', value: 'fira-code' },
+				{ label: 'Source Code Pro', value: 'source-code-pro' },
+				{ label: 'Inconsolata', value: 'inconsolata' },
+				{ label: 'Serif', value: 'serif' },
+				{ label: 'Sans Serif', value: 'sans-serif' },
 			],
 			onChange: (value) => {
 				const fontFamily = value as FontFamily;
-				updateEditorSetting("fontFamily", fontFamily);
+				updateEditorSetting('fontFamily', fontFamily);
 				document.documentElement.style.setProperty(
-					"--editor-font-family",
+					'--editor-font-family',
 					fontFamilyMap[fontFamily],
 				);
 			},
 		});
 
 		registerSetting({
-			id: "editor-show-line-numbers",
-			category: "Appearance",
-			subcategory: "Text Editor",
-			type: "checkbox",
-			label: "Show line numbers",
-			description: "Show line numbers in the editor",
+			id: 'editor-show-line-numbers',
+			category: 'Appearance',
+			subcategory: 'Text Editor',
+			type: 'checkbox',
+			label: 'Show line numbers',
+			description: 'Show line numbers in the editor',
 			defaultValue: defaultEditorSettings.showLineNumbers,
 			onChange: (value) => {
-				updateEditorSetting("showLineNumbers", value as boolean);
+				updateEditorSetting('showLineNumbers', value as boolean);
 			},
 		});
 
 		registerSetting({
-			id: "editor-syntax-highlighting",
-			category: "Appearance",
-			subcategory: "Text Editor",
-			type: "checkbox",
-			label: "Show syntax highlighting",
+			id: 'editor-syntax-highlighting',
+			category: 'Appearance',
+			subcategory: 'Text Editor',
+			type: 'checkbox',
+			label: 'Show syntax highlighting',
 			description:
-				"Show syntax highlighting in the editor including tooltip and linting (LaTeX, BibTeX, and markdown)",
+				'Show syntax highlighting in the editor including tooltip and linting (LaTeX, Typst, BibTeX, and markdown)',
 			defaultValue: defaultEditorSettings.syntaxHighlighting,
 			onChange: (value) => {
-				updateEditorSetting("syntaxHighlighting", value as boolean);
+				updateEditorSetting('syntaxHighlighting', value as boolean);
 			},
 		});
 
 		registerSetting({
-			id: "editor-theme-highlights",
-			category: "Appearance",
-			subcategory: "Text Editor",
-			type: "select",
-			label: "Syntax highlighting theme",
-			description: "Choose the color theme for syntax highlighting",
+			id: 'editor-theme-highlights',
+			category: 'Appearance',
+			subcategory: 'Text Editor',
+			type: 'select',
+			label: 'Syntax highlighting theme',
+			description: 'Choose the color theme for syntax highlighting',
 			defaultValue: defaultEditorSettings.highlightTheme,
 			options: [
-				{ label: "Auto (follows app theme)", value: "auto" },
-				{ label: "Light theme", value: "light" },
-				{ label: "Dark theme (OneDark)", value: "dark" },
+				{ label: 'Auto (follows app theme)', value: 'auto' },
+				{ label: 'Light theme', value: 'light' },
+				{ label: 'Dark theme (OneDark)', value: 'dark' },
 			],
 			onChange: (value) => {
 				updateEditorSetting(
-					"highlightTheme",
-					value as "auto" | "light" | "dark",
+					'highlightTheme',
+					value as 'auto' | 'light' | 'dark',
 				);
 			},
 		});
 
 		registerSetting({
-			id: "editor-auto-save-enable",
-			category: "Viewers",
-			subcategory: "Text Editor",
-			type: "checkbox",
-			label: "Auto-save on changes",
-			description: "Automatically save file changes while editing",
+			id: 'editor-auto-save-enable',
+			category: 'Viewers',
+			subcategory: 'Text Editor',
+			type: 'checkbox',
+			label: 'Auto-save on changes',
+			description: 'Automatically save file changes while editing',
 			defaultValue: defaultEditorSettings.autoSaveEnabled,
 			onChange: (value) => {
-				updateEditorSetting("autoSaveEnabled", value as boolean);
+				updateEditorSetting('autoSaveEnabled', value as boolean);
 			},
 		});
 
 		registerSetting({
-			id: "editor-auto-save-delay",
-			category: "Viewers",
-			subcategory: "Text Editor",
-			type: "number",
-			label: "Auto-save delay (milliseconds)",
-			description: "Delay in milliseconds before saving changes",
+			id: 'editor-auto-save-delay',
+			category: 'Viewers',
+			subcategory: 'Text Editor',
+			type: 'number',
+			label: 'Auto-save delay (milliseconds)',
+			description: 'Delay in milliseconds before saving changes',
 			defaultValue: defaultEditorSettings.autoSaveDelay,
 			min: 500,
 			max: 10000,
 			onChange: (value) => {
-				updateEditorSetting("autoSaveDelay", value as number);
+				updateEditorSetting('autoSaveDelay', value as number);
 			},
 		});
 
 		registerSetting({
-			id: "editor-vim-mode",
-			category: "Viewers",
-			subcategory: "Text Editor",
-			type: "checkbox",
-			label: "Enable Vim keybindings",
-			description: "Enable Vim-style keybindings in the editor",
+			id: 'editor-vim-mode',
+			category: 'Viewers',
+			subcategory: 'Text Editor',
+			type: 'checkbox',
+			label: 'Enable Vim keybindings',
+			description: 'Enable Vim-style keybindings in the editor',
 			defaultValue: defaultEditorSettings.vimMode,
 			onChange: (value) => {
-				updateEditorSetting("vimMode", value as boolean);
+				updateEditorSetting('vimMode', value as boolean);
+			},
+		});
+
+		registerSetting({
+			id: 'editor-spell-check',
+			category: 'Viewers',
+			subcategory: 'Text Editor',
+			type: 'checkbox',
+			label: 'Enable spell checking',
+			description: 'Enable browser spell checking in the editor (note: not compatible with typesetter syntax)',
+			defaultValue: defaultEditorSettings.spellCheck,
+			onChange: (value) => {
+				updateEditorSetting('spellCheck', value as boolean);
 			},
 		});
 	}, [registerSetting, getSetting, updateEditorSetting, applyCSSProperties]);
@@ -311,10 +331,15 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		[editorSettings.vimMode],
 	);
 
+	const getSpellCheckEnabled = useCallback(
+		() => editorSettings.spellCheck,
+		[editorSettings.spellCheck],
+	);
+
 	const getCollabOptions = useCallback((): CollabConnectOptions | null => {
-		const signalingServersSetting = getSetting("collab-signaling-servers");
-		const awarenessTimeoutSetting = getSetting("collab-awareness-timeout");
-		const autoReconnectSetting = getSetting("collab-auto-reconnect");
+		const signalingServersSetting = getSetting('collab-signaling-servers');
+		const awarenessTimeoutSetting = getSetting('collab-awareness-timeout');
+		const autoReconnectSetting = getSetting('collab-auto-reconnect');
 
 		// Return null if settings are not yet available
 		if (!signalingServersSetting || !awarenessTimeoutSetting || !autoReconnectSetting) {
@@ -325,7 +350,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		const awarenessTimeout = awarenessTimeoutSetting.value as number;
 		const autoReconnect = autoReconnectSetting.value as boolean;
 
-		const serversToUse = signalingServers.split(",").map((s) => s.trim());
+		const serversToUse = signalingServers.split(',').map((s) => s.trim());
 
 		return {
 			signalingServers: serversToUse,
@@ -352,6 +377,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		getAutoSaveEnabled,
 		getAutoSaveDelay,
 		getVimModeEnabled,
+		getSpellCheckEnabled,
 		getCollabOptions,
 		getEnabledLSPPlugins,
 		editorSettingsVersion,

@@ -1,7 +1,7 @@
 // src/components/chat/ChatMessage.tsx
-import type React from "react";
+import type React from 'react';
 
-import { formatDate } from "../../utils/dateUtils";
+import { formatDate } from '../../utils/dateUtils';
 
 interface ChatMessage {
 	id: string;
@@ -22,7 +22,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isOwnMessage }) => {
 
 		// Less than 1 minute
 		if (diff < 60000) {
-			return "Just now";
+			return 'Just now';
 		}
 
 		// Less than 1 hour
@@ -43,7 +43,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isOwnMessage }) => {
 
 	return (
 		<div
-			className={`chat-message ${isOwnMessage ? "own-message" : "other-message"}`}
+			className={`chat-message ${isOwnMessage ? 'own-message' : 'other-message'}`}
 		>
 			<div className="message-content">
 				{!isOwnMessage && <div className="message-user">{message.user}</div>}

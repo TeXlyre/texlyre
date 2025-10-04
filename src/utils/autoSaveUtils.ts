@@ -1,6 +1,6 @@
 // src/utils/autoSaveUtils.ts
-import { debounce } from "lodash";
-import { fileStorageService } from "../services/FileStorageService";
+import { debounce } from 'lodash';
+import { fileStorageService } from '../services/FileStorageService';
 
 interface AutoSaveOptions {
 	enabled: boolean;
@@ -25,7 +25,7 @@ class AutoSaveManager {
 				const contentToSave = getContent();
 
 				if (contentToSave === null || contentToSave === undefined) {
-					console.log("[autoSaveUtils] Autosave skipped: content is null/undefined");
+					console.log('[autoSaveUtils] Autosave skipped: content is null/undefined');
 					return;
 				}
 

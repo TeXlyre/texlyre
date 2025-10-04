@@ -1,6 +1,6 @@
 // src/components/common/Toast.tsx
-import type React from "react";
-import { useEffect, useState } from "react";
+import type React from 'react';
+import { useEffect, useState } from 'react';
 
 import {
 	AlertCircleIcon,
@@ -8,11 +8,11 @@ import {
 	InfoIcon,
 	LoaderIcon,
 	SyncIcon,
-} from "./Icons";
+} from './Icons';
 
 export interface ToastNotification {
 	id: string;
-	type: "loading" | "success" | "error" | "info" | "sync";
+	type: 'loading' | 'success' | 'error' | 'info' | 'sync';
 	message: string;
 	timestamp: number;
 	operationId?: string;
@@ -49,13 +49,13 @@ const Toast: React.FC<ToastProps> = ({ notification, onDismiss }) => {
 
 	const getIcon = () => {
 		switch (notification.type) {
-			case "loading":
+			case 'loading':
 				return <LoaderIcon />;
-			case "success":
+			case 'success':
 				return <CheckIcon />;
-			case "error":
+			case 'error':
 				return <AlertCircleIcon />;
-			case "sync":
+			case 'sync':
 				return <SyncIcon />;
 			default:
 				return <InfoIcon />;
@@ -64,26 +64,26 @@ const Toast: React.FC<ToastProps> = ({ notification, onDismiss }) => {
 
 	const getTypeClass = () => {
 		switch (notification.type) {
-			case "loading":
-				return "toast-loading";
-			case "success":
-				return "toast-success";
-			case "error":
-				return "toast-error";
-			case "sync":
-				return "toast-sync";
+			case 'loading':
+				return 'toast-loading';
+			case 'success':
+				return 'toast-success';
+			case 'error':
+				return 'toast-error';
+			case 'sync':
+				return 'toast-sync';
 			default:
-				return "toast-info";
+				return 'toast-info';
 		}
 	};
 
 	return (
 		<div
-			className={`toast ${getTypeClass()} ${isVisible ? "toast-visible" : "toast-hidden"}`}
+			className={`toast ${getTypeClass()} ${isVisible ? 'toast-visible' : 'toast-hidden'}`}
 		>
 			<div className="toast-icon">{getIcon()}</div>
 			<span className="toast-message">{notification.message}</span>
-			{notification.type !== "loading" && (
+			{notification.type !== 'loading' && (
 				<button
 					className="toast-dismiss"
 					onClick={() => onDismiss(notification.id, notification.operationId)}

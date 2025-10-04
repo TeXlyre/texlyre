@@ -19,9 +19,9 @@
 .pdf-toolbar {
 	display: flex;
 	min-height: 40px;
-	padding: 0.5rem;
 	background-color: var(--pico-secondary-background);
 	border-bottom: 1px solid var(--accent-border, #333);
+	overflow-y: hidden;
 	z-index: 10;
 }
 
@@ -116,29 +116,34 @@
 
 .react-pdf__Document,
 .react-pdf__Document__container {
-  background-color: #f5f5f5 !important;
-  min-height: 100%;
-  width: 100%;
+	background-color: #f5f5f5 !important;
+	min-height: 100%;
+	width: 100%;
 }
 
 .react-pdf__Page .textLayer,
-.react-pdf__Page .annotationLayer { inset: 0; position: absolute; }
+.react-pdf__Page .annotationLayer {
+	inset: 0;
+	position: absolute;
+}
 
 .react-pdf__Page,
 .react-pdf__Page canvas,
 .react-pdf__Page .textLayer,
-.react-pdf__Page .annotationLayer { box-sizing: content-box !important; }
+.react-pdf__Page .annotationLayer {
+	box-sizing: content-box !important;
+}
 
 .react-pdf__Page {
 	background-color: white !important;
 	margin: 10px auto !important;
-	width: auto !important; 
+	width: auto !important;
 	max-width: none !important;
 }
 
 .pdf-renderer-content {
 	position: absolute;
-	top: 40px;
+	top: 60px;
 	left: 0;
 	right: 0;
 	bottom: 0;
@@ -207,7 +212,7 @@
 	z-index: 2;
 }
 
-.textLayer > span {
+.textLayer>span {
 	color: transparent;
 	position: absolute;
 	white-space: pre;
@@ -256,7 +261,7 @@
 	user-select: none !important;
 }
 
-.annotationLayer .buttonWidgetAnnotation.pushButton > a {
+.annotationLayer .buttonWidgetAnnotation.pushButton>a {
 	position: absolute;
 	font-size: 1em;
 	left: 0;
@@ -268,7 +273,7 @@
 .annotationLayer .textWidgetAnnotation input,
 .annotationLayer .textWidgetAnnotation textarea,
 .annotationLayer .choiceWidgetAnnotation select,
-.annotationLayer .buttonWidgetAnnotation.pushButton > a {
+.annotationLayer .buttonWidgetAnnotation.pushButton>a {
 	background: rgba(0, 54, 255, 0.13);
 	border: 1px solid transparent;
 	box-sizing: border-box;
@@ -284,8 +289,8 @@
 	padding: 0;
 }
 
-.annotationLayer .buttonWidgetAnnotation.pushButton > a:hover,
-.annotationLayer .buttonWidgetAnnotation.pushButton > a:focus {
+.annotationLayer .buttonWidgetAnnotation.pushButton>a:hover,
+.annotationLayer .buttonWidgetAnnotation.pushButton>a:focus {
 	color: rgba(0, 0, 0, 1);
 	background: rgba(0, 54, 255, 0.13);
 }
@@ -317,43 +322,50 @@
 	background: rgba(0, 0, 0, 0.2);
 }
 
-.annotationLayer .linkAnnotation > a,
-.annotationLayer .buttonWidgetAnnotation.pushButton > a {
+.annotationLayer .linkAnnotation>a,
+.annotationLayer .buttonWidgetAnnotation.pushButton>a {
 	pointer-events: auto;
 }
 
-.pdf-page-scroll { scroll-margin-top: 56px; }      /* match toolbar height */
-.fullscreen .pdf-page-scroll { scroll-margin-top: 56px; }
+.pdf-page-scroll {
+	scroll-margin-top: 56px;
+}
+
+/* match toolbar height */
+.fullscreen .pdf-page-scroll {
+	scroll-margin-top: 56px;
+}
 
 /* Hide scrollbar in fullscreen mode, except on hover */
 .pdf-renderer-content.fullscreen {
-  overflow-y: auto;
+	overflow-y: auto;
 }
 
 .pdf-renderer-content.fullscreen::-webkit-scrollbar {
-  width: 0px;
-  height: 0px;
+	width: 0px;
+	height: 0px;
 }
 
 .pdf-renderer-content.fullscreen:hover::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+	width: 8px;
+	height: 8px;
 }
 
 .pdf-renderer-content.fullscreen:hover::-webkit-scrollbar-thumb {
-  background: rgba(100, 100, 100, 0.5);
-  border-radius: 4px;
+	background: rgba(100, 100, 100, 0.5);
+	border-radius: 4px;
 }
 
 .pdf-renderer-content.fullscreen:hover::-webkit-scrollbar-track {
-  background: transparent;
+	background: transparent;
 }
 
 .pdf-renderer-content.fullscreen {
-  scrollbar-width: none;
-}
-.pdf-renderer-content.fullscreen:hover {
-  scrollbar-width: thin; /* show thin scrollbar on hover */
-  scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
+	scrollbar-width: none;
 }
 
+.pdf-renderer-content.fullscreen:hover {
+	scrollbar-width: thin;
+	/* show thin scrollbar on hover */
+	scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
+}

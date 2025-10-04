@@ -3,7 +3,7 @@ export interface FileNode {
 	id: string;
 	name: string;
 	path: string;
-	type: "file" | "directory";
+	type: 'file' | 'directory';
 	content?: string | ArrayBuffer;
 	children?: FileNode[];
 	documentId?: string;
@@ -20,6 +20,7 @@ export interface FilePathCache {
 	imageFiles: string[];
 	bibFiles: string[];
 	texFiles: string[];
+	typstFiles: string[];
 	allFiles: string[];
 	lastUpdate: number;
 }

@@ -1,5 +1,5 @@
 // src/contexts/ChatContext.tsx
-import type React from "react";
+import type React from 'react';
 import {
 	type ReactNode,
 	createContext,
@@ -7,14 +7,14 @@ import {
 	useEffect,
 	useRef,
 	useState,
-} from "react";
-import type * as Y from "yjs";
+} from 'react';
+import type * as Y from 'yjs';
 
-import { useAuth } from "../hooks/useAuth";
-import { useSettings} from "../hooks/useSettings";
-import { collabService } from "../services/CollabService";
-import type { ChatContextType, ChatMessage } from "../types/chat";
-import type { YjsDocUrl } from "../types/yjs";
+import { useAuth } from '../hooks/useAuth';
+import { useSettings} from '../hooks/useSettings';
+import { collabService } from '../services/CollabService';
+import type { ChatContextType, ChatMessage } from '../types/chat';
+import type { YjsDocUrl } from '../types/yjs';
 
 export const ChatContext = createContext<ChatContextType | null>(null);
 
@@ -33,14 +33,14 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
 	const [isConnected, setIsConnected] = useState(false);
 	const messagesArrayRef = useRef<Y.Array<ChatMessage> | null>(null);
 
-	const projectId = docUrl.startsWith("yjs:") ? docUrl.slice(4) : docUrl;
+	const projectId = docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl;
 
 	useEffect(() => {
 		if (!projectId) return;
 
-		const signalingServersSetting = getSetting("collab-signaling-servers");
-		const awarenessTimeoutSetting = getSetting("collab-awareness-timeout");
-		const autoReconnectSetting = getSetting("collab-auto-reconnect");
+		const signalingServersSetting = getSetting('collab-signaling-servers');
+		const awarenessTimeoutSetting = getSetting('collab-awareness-timeout');
+		const autoReconnectSetting = getSetting('collab-auto-reconnect');
 
 		// Wait until all collaboration settings are available
 		if (!signalingServersSetting || !awarenessTimeoutSetting || !autoReconnectSetting) {
@@ -51,15 +51,15 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
 		const awarenessTimeout = awarenessTimeoutSetting.value as number;
 		const autoReconnect = autoReconnectSetting.value as boolean;
 
-		const serversToUse = signalingServers.split(",").map((s) => s.trim());
+		const serversToUse = signalingServers.split(',').map((s) => s.trim());
 
-		const { doc } = collabService.connect(projectId, "chat", {
+		const { doc } = collabService.connect(projectId, 'chat', {
 			signalingServers: serversToUse,
 			autoReconnect,
 			awarenessTimeout: awarenessTimeout * 1000,
 		});
 
-		const messagesArray = doc.getArray<ChatMessage>("messages");
+		const messagesArray = doc.getArray<ChatMessage>('messages');
 		messagesArrayRef.current = messagesArray;
 
 		const observer = () => {
@@ -73,7 +73,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
 
 		return () => {
 			messagesArray.unobserve(observer);
-			collabService.disconnect(projectId, "chat");
+			collabService.disconnect(projectId, 'chat');
 			messagesArrayRef.current = null;
 			setIsConnected(false);
 		};

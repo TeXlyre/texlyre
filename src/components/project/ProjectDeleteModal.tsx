@@ -1,10 +1,10 @@
 // src/components/project/ProjectDeleteModal.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import type { Project } from "../../types/projects";
-import { formatDate } from "../../utils/dateUtils";
-import Modal from "../common/Modal";
+import type { Project } from '../../types/projects';
+import { formatDate } from '../../utils/dateUtils';
+import Modal from '../common/Modal';
 
 interface ProjectDeleteModalProps {
 	isOpen: boolean;
@@ -33,7 +33,7 @@ const ProjectDeleteModal: React.FC<ProjectDeleteModalProps> = ({
 			await onDeleteProjects(projectIds);
 			handleClose();
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "Delete failed");
+			setError(err instanceof Error ? err.message : 'Delete failed');
 		} finally {
 			setIsDeleting(false);
 		}
@@ -61,7 +61,7 @@ const ProjectDeleteModal: React.FC<ProjectDeleteModalProps> = ({
 				<div className="delete-info">
 					<p>
 						Are you sure you want to delete {selectedProjects.length} project
-						{selectedProjects.length === 1 ? "" : "s"}? This action cannot be undone.
+						{selectedProjects.length === 1 ? '' : 's'}? This action cannot be undone.
 					</p>
 				</div>
 
@@ -70,7 +70,7 @@ const ProjectDeleteModal: React.FC<ProjectDeleteModalProps> = ({
 						<div key={project.id} className="delete-project-item">
 							<strong>{project.name}</strong>
 							<div className="delete-project-details">
-								{project.description || "No description"} • Last modified:{" "}
+								{project.description || 'No description'} • Last modified:{' '}
 								{formatDate(project.updatedAt)}
 							</div>
 						</div>
@@ -98,8 +98,8 @@ const ProjectDeleteModal: React.FC<ProjectDeleteModalProps> = ({
 						disabled={isDeleting}
 					>
 						{isDeleting
-							? "Deleting..."
-							: `Delete ${selectedProjects.length} Project${selectedProjects.length === 1 ? "" : "s"}`}
+							? 'Deleting...'
+							: `Delete ${selectedProjects.length} Project${selectedProjects.length === 1 ? '' : 's'}`}
 					</button>
 				</div>
 			</div>

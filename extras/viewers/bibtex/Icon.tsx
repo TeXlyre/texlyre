@@ -1,5 +1,5 @@
 // extras/viewers/bibtex/Icon.tsx
-import type React from "react";
+import type React from 'react';
 
 export const BibIcon: React.FC = () => (
     <svg

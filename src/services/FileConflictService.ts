@@ -1,38 +1,38 @@
 // src/services/FileConflictService.ts
-import type { FileNode } from "../types/files";
+import type { FileNode } from '../types/files';
 
-export type ConflictResolution = "overwrite" | "keep-both" | "cancel";
+export type ConflictResolution = 'overwrite' | 'keep-both' | 'cancel';
 export type BatchConflictResolution =
-	| "overwrite"
-	| "keep-both"
-	| "cancel"
-	| "overwrite-all"
-	| "keep-both-all"
-	| "cancel-all";
-export type DeleteConfirmation = "confirm" | "cancel";
+	| 'overwrite'
+	| 'keep-both'
+	| 'cancel'
+	| 'overwrite-all'
+	| 'keep-both-all'
+	| 'cancel-all';
+export type DeleteConfirmation = 'confirm' | 'cancel';
 export type LinkConfirmation =
-	| "link-with-copy"
-	| "link-without-copy"
-	| "cancel";
-export type UnlinkConfirmation = "confirm" | "cancel";
-export type LinkedFileConfirmation = "show-unlink-dialog" | "cancel";
-export type BatchDeleteConfirmation = "confirm" | "cancel";
-export type BatchUnlinkConfirmation = "confirm" | "cancel";
+	| 'link-with-copy'
+	| 'link-without-copy'
+	| 'cancel';
+export type UnlinkConfirmation = 'confirm' | 'cancel';
+export type LinkedFileConfirmation = 'show-unlink-dialog' | 'cancel';
+export type BatchDeleteConfirmation = 'confirm' | 'cancel';
+export type BatchUnlinkConfirmation = 'confirm' | 'cancel';
 
 interface FileConflictEvent {
 	type:
-		| "conflict"
-		| "delete"
-		| "link"
-		| "unlink"
-		| "linked-file-action"
-		| "batch-conflict"
-		| "batch-delete"
-		| "batch-unlink";
+		| 'conflict'
+		| 'delete'
+		| 'link'
+		| 'unlink'
+		| 'linked-file-action'
+		| 'batch-conflict'
+		| 'batch-delete'
+		| 'batch-unlink';
 	existingFile?: FileNode;
 	newFile?: FileNode;
 	files?: FileNode[];
-	action?: "rename" | "delete" | "overwrite";
+	action?: 'rename' | 'delete' | 'overwrite';
 	conflictCount?: number;
 	currentIndex?: number;
 	resolve: (
@@ -58,7 +58,7 @@ class FileConflictService {
 	): Promise<ConflictResolution> {
 		return new Promise((resolve, reject) => {
 			const event: FileConflictEvent = {
-				type: "conflict",
+				type: 'conflict',
 				existingFile,
 				newFile,
 				resolve: (resolution) => resolve(resolution as ConflictResolution),
@@ -71,7 +71,7 @@ class FileConflictService {
 	async confirmDelete(file: FileNode): Promise<DeleteConfirmation> {
 		return new Promise((resolve, reject) => {
 			const event: FileConflictEvent = {
-				type: "delete",
+				type: 'delete',
 				existingFile: file,
 				resolve: (resolution) => resolve(resolution as DeleteConfirmation),
 				reject,
@@ -83,7 +83,7 @@ class FileConflictService {
 	async confirmLink(file: FileNode): Promise<LinkConfirmation> {
 		return new Promise((resolve, reject) => {
 			const event: FileConflictEvent = {
-				type: "link",
+				type: 'link',
 				existingFile: file,
 				resolve: (resolution) => resolve(resolution as LinkConfirmation),
 				reject,
@@ -95,7 +95,7 @@ class FileConflictService {
 	async confirmUnlink(file: FileNode): Promise<UnlinkConfirmation> {
 		return new Promise((resolve, reject) => {
 			const event: FileConflictEvent = {
-				type: "unlink",
+				type: 'unlink',
 				existingFile: file,
 				resolve: (resolution) => resolve(resolution as UnlinkConfirmation),
 				reject,
@@ -106,11 +106,11 @@ class FileConflictService {
 
 	async confirmLinkedFileAction(
 		file: FileNode,
-		action: "rename" | "delete" | "overwrite",
+		action: 'rename' | 'delete' | 'overwrite',
 	): Promise<LinkedFileConfirmation> {
 		return new Promise((resolve, reject) => {
 			const event: FileConflictEvent = {
-				type: "linked-file-action",
+				type: 'linked-file-action',
 				existingFile: file,
 				action,
 				resolve: (resolution) => resolve(resolution as LinkedFileConfirmation),
@@ -128,7 +128,7 @@ class FileConflictService {
 	): Promise<BatchConflictResolution> {
 		return new Promise((resolve, reject) => {
 			const event: FileConflictEvent = {
-				type: "batch-conflict",
+				type: 'batch-conflict',
 				existingFile,
 				newFile,
 				conflictCount,
@@ -145,7 +145,7 @@ class FileConflictService {
 	): Promise<BatchDeleteConfirmation> {
 		return new Promise((resolve, reject) => {
 			const event: FileConflictEvent = {
-				type: "batch-delete",
+				type: 'batch-delete',
 				files,
 				resolve: (resolution) => resolve(resolution as BatchDeleteConfirmation),
 				reject,
@@ -159,7 +159,7 @@ class FileConflictService {
 	): Promise<BatchUnlinkConfirmation> {
 		return new Promise((resolve, reject) => {
 			const event: FileConflictEvent = {
-				type: "batch-unlink",
+				type: 'batch-unlink',
 				files,
 				resolve: (resolution) => resolve(resolution as BatchUnlinkConfirmation),
 				reject,

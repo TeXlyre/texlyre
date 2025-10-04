@@ -1,16 +1,16 @@
-import { IndexeddbPersistence } from "y-indexeddb";
-import { removeAwarenessStates } from "y-protocols/awareness";
+import { IndexeddbPersistence } from 'y-indexeddb';
+import { removeAwarenessStates } from 'y-protocols/awareness';
 // src/services/CollabService.ts
-import type { WebrtcProvider } from "y-webrtc";
-import * as Y from "yjs";
+import type { WebrtcProvider } from 'y-webrtc';
+import * as Y from 'yjs';
 
-import * as random from "lib0/random";
-import { collabWebrtc } from "../extensions/yjs/CollabWebrtc.ts";
-import type { User } from "../types/auth";
-import type { CollabConnectOptions, DocContainer } from "../types/collab";
-import type { YjsDocUrl } from "../types/yjs";
-import { parseUrlFragments } from "../utils/urlUtils";
-import { offlineService } from "./OfflineService";
+import * as random from 'lib0/random';
+import { collabWebrtc } from '../extensions/yjs/CollabWebrtc.ts';
+import type { User } from '../types/auth';
+import type { CollabConnectOptions, DocContainer } from '../types/collab';
+import type { YjsDocUrl } from '../types/yjs';
+import { parseUrlFragments } from '../utils/urlUtils';
+import { offlineService } from './OfflineService';
 
 interface OfflineDocContainer {
 	doc: Y.Doc;
@@ -43,7 +43,7 @@ class CollabService {
 			try {
 				const u = new URL(url);
 				return (
-					(u.protocol === "ws:" || u.protocol === "wss:") &&
+					(u.protocol === 'ws:' || u.protocol === 'wss:') &&
 					u.hostname.length > 0
 				);
 			} catch (_e) {
@@ -53,7 +53,7 @@ class CollabService {
 
 		const inputServers = Array.isArray(signalingServers)
 			? signalingServers
-			: signalingServers.split(",").map((s) => s.trim());
+			: signalingServers.split(',').map((s) => s.trim());
 
 		const validSignalingServers: string[] = [];
 
@@ -62,7 +62,7 @@ class CollabService {
 
 			try {
 				const urlObj = new URL(serverUrl);
-				if (window.location.protocol === "https:" && urlObj.protocol === "ws:") {
+				if (window.location.protocol === 'https:' && urlObj.protocol === 'ws:') {
 					continue;
 				}
 				if (isValidWebSocketUrl(serverUrl)) {
@@ -88,7 +88,7 @@ class CollabService {
 			container.refCount++;
 			return {
 				doc: container.doc,
-				provider: "provider" in container ? container.provider : null,
+				provider: 'provider' in container ? container.provider : null,
 			};
 		}
 
@@ -157,7 +157,7 @@ class CollabService {
 		});
 
 		if (options?.autoReconnect) {
-			provider.on("status", (event: { connected: boolean }) => {
+			provider.on('status', (event: { connected: boolean }) => {
 				if (!event.connected) {
 					console.log(
 						`[CollabService] Connection lost for ${containerId}, attempting reconnect...`,
@@ -173,14 +173,14 @@ class CollabService {
 
 		const awarenessTimeout = options?.awarenessTimeout ?? 30000;
 		if (provider.awareness) {
-			provider.awareness.on("update", () => {
+			provider.awareness.on('update', () => {
 				const states = provider.awareness.getStates();
 				const now = Date.now();
 
 				states.forEach((state, clientId) => {
 					if (clientId !== provider.awareness.clientID && state.lastSeen) {
 						if (now - state.lastSeen > awarenessTimeout) {
-							removeAwarenessStates(provider.awareness, [clientId], "timeout");
+							removeAwarenessStates(provider.awareness, [clientId], 'timeout');
 						}
 					}
 				});
@@ -202,10 +202,10 @@ class CollabService {
 		const containerId = `${docId}-${collectionName}`;
 		const container = this.docContainers.get(containerId);
 
-		if (container && "provider" in container && container.provider?.awareness) {
+		if (container && 'provider' in container && container.provider?.awareness) {
 			const awareness = container.provider.awareness;
 
-			awareness.setLocalStateField("user", {
+			awareness.setLocalStateField('user', {
 				id: user.id,
 				username: user.username,
 				name: user.username,
@@ -213,13 +213,13 @@ class CollabService {
 				colorLight: user.colorLight,
 			});
 
-			awareness.setLocalStateField("name", user.username);
-			awareness.setLocalStateField("username", user.username);
+			awareness.setLocalStateField('name', user.username);
+			awareness.setLocalStateField('username', user.username);
 
-			console.log("Set awareness fields for user:", user.username);
-		} else if (container && "isOffline" in container) {
+			console.log('Set awareness fields for user:', user.username);
+		} else if (container && 'isOffline' in container) {
 			console.log(
-				"[CollabService] Skipping user awareness in offline mode for:",
+				'[CollabService] Skipping user awareness in offline mode for:',
 				user.username,
 			);
 		}
@@ -237,7 +237,7 @@ class CollabService {
 		if (container.refCount <= 0) {
 			console.log(`[CollabService] Destroying connection for: ${containerId}`);
 
-			if ("provider" in container && container.provider) {
+			if ('provider' in container && container.provider) {
 				const roomName = `${docId}-${collectionName}`;
 				container.provider.disconnect();
 				collabWebrtc.releaseProvider(roomName);
@@ -253,7 +253,7 @@ class CollabService {
 		const containerId = `${docId}-${collectionName}`;
 		const container = this.docContainers.get(containerId);
 
-		if (container && "provider" in container && container.provider) {
+		if (container && 'provider' in container && container.provider) {
 			return container.provider.awareness || null;
 		}
 
@@ -274,18 +274,18 @@ class CollabService {
 
 		if (!container) return false;
 
-		return "provider" in container && container.provider !== null;
+		return 'provider' in container && container.provider !== null;
 	}
 
 	public async getDocumentMetadata(
 		url: YjsDocUrl,
-	): Promise<{ name: string; description: string } | null> {
+	): Promise<{ name: string; description: string, type: string } | null> {
 		const fragments = parseUrlFragments(url);
 		const yjsUrl = fragments.yjsUrl;
 
-		const projectId = yjsUrl.startsWith("yjs:")
+		const projectId = yjsUrl.startsWith('yjs:')
 			? yjsUrl.slice(4)
-			: yjsUrl.replace(/[^a-zA-Z0-9]/g, "-");
+			: yjsUrl.replace(/[^a-zA-Z0-9]/g, '-');
 
 		const doc = new Y.Doc();
 		const persistenceName = `texlyre-project-${projectId}-yjs_metadata`;
@@ -293,18 +293,18 @@ class CollabService {
 
 		try {
 			await new Promise<void>((resolve) => {
-				persistence.once("synced", () => {
+				persistence.once('synced', () => {
 					resolve();
 				});
 				setTimeout(resolve, 1000);
 			});
 
-			const ymap = doc.getMap("data");
+			const ymap = doc.getMap('data');
 			const docData = ymap.toJSON();
 
 			return (docData?.projectMetadata as any) ?? null;
 		} catch (error) {
-			console.error("Error checking document metadata:", error);
+			console.error('Error checking document metadata:', error);
 			return null;
 		} finally {
 			persistence.destroy();
@@ -330,9 +330,9 @@ class CollabService {
 		);
 
 		if (this.isOfflineMode()) {
-			console.log("[CollabService] Offline mode detected - local sync only");
+			console.log('[CollabService] Offline mode detected - local sync only');
 			onProgress?.(0, 0);
-			return "offline-sync";
+			return 'offline-sync';
 		}
 
 		try {
@@ -345,14 +345,14 @@ class CollabService {
 
 			await new Promise<void>((resolve) => {
 				const timeout = setTimeout(() => resolve(), 2000);
-				metadataPersistence.once("synced", () => {
+				metadataPersistence.once('synced', () => {
 					clearTimeout(timeout);
 					resolve();
 				});
 			});
 
-			const dataMap = metadataDoc.getMap("data");
-			const documents = dataMap.get("documents") || [];
+			const dataMap = metadataDoc.getMap('data');
+			const documents = dataMap.get('documents') || [];
 
 			metadataPersistence.destroy();
 			metadataDoc.destroy();
@@ -362,7 +362,7 @@ class CollabService {
 					`[CollabService] No documents found for project: ${projectId}`,
 				);
 				onProgress?.(0, 0);
-				return "";
+				return '';
 			}
 
 			const documentsToSync = documents.filter((doc) => {
@@ -418,15 +418,15 @@ class CollabService {
 			);
 			return syncId;
 		} catch (error) {
-			console.error("[CollabService] Error during bulk sync:", error);
+			console.error('[CollabService] Error during bulk sync:', error);
 			throw error;
 		}
 	}
 
 	public stopSyncAllDocuments(syncId: string): void {
-		if (syncId === "offline-sync") {
+		if (syncId === 'offline-sync') {
 			console.log(
-				"[CollabService] Offline sync session - no connections to stop",
+				'[CollabService] Offline sync session - no connections to stop',
 			);
 			return;
 		}
@@ -478,16 +478,16 @@ class CollabService {
 
 	private handleNetworkChange(isOnline: boolean): void {
 		console.log(
-			`[CollabService] Network status changed: ${isOnline ? "online" : "offline"}`,
+			`[CollabService] Network status changed: ${isOnline ? 'online' : 'offline'}`,
 		);
 
 		if (!isOnline) {
 			console.log(
-				"[CollabService] Network offline - collaboration features disabled",
+				'[CollabService] Network offline - collaboration features disabled',
 			);
 		} else {
 			console.log(
-				"[CollabService] Network online - collaboration features enabled",
+				'[CollabService] Network online - collaboration features enabled',
 			);
 		}
 	}

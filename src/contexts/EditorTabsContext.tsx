@@ -1,5 +1,5 @@
 // src/contexts/EditorTabsContext.tsx
-import type React from "react";
+import type React from 'react';
 import {
   type ReactNode,
   createContext,
@@ -8,10 +8,10 @@ import {
   useRef,
   useState,
   useContext,
-} from "react";
+} from 'react';
 
-import { useProperties } from "../hooks/useProperties";
-import type { EditorTab, EditorTabsContextType } from "../types/editorTabs";
+import { useProperties } from '../hooks/useProperties';
+import type { EditorTab, EditorTabsContextType } from '../types/editorTabs';
 
 export const EditorTabsContext = createContext<EditorTabsContextType | null>(null);
 
@@ -33,7 +33,7 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
   const lastActiveTabIdRef = useRef<string | null>(null);
   
   const getCurrentProjectId = useCallback(() => {
-    return sessionStorage.getItem("currentProjectId");
+    return sessionStorage.getItem('currentProjectId');
   }, []);
 
   useEffect(() => {
@@ -41,16 +41,16 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
     propertiesRegistered.current = true;
 
     registerProperty({
-      id: "editor-tabs",
-      category: "UI",
-      subcategory: "Editor",
+      id: 'editor-tabs',
+      category: 'UI',
+      subcategory: 'Editor',
       defaultValue: [],
     });
 
     registerProperty({
-      id: "editor-active-tab",
-      category: "UI", 
-      subcategory: "Editor",
+      id: 'editor-active-tab',
+      category: 'UI', 
+      subcategory: 'Editor',
       defaultValue: null,
     });
 
@@ -62,18 +62,18 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
         return;
       }
 
-      const savedTabs = getProperty("editor-tabs", {
-        scope: "project",
+      const savedTabs = getProperty('editor-tabs', {
+        scope: 'project',
         projectId: currentProjectId
       }) as EditorTab[] | undefined;
       
-      const savedActiveTab = getProperty("editor-active-tab", {
-        scope: "project",
+      const savedActiveTab = getProperty('editor-active-tab', {
+        scope: 'project',
         projectId: currentProjectId
       }) as string | undefined;
 
-      console.log("Loading saved tabs for project:", currentProjectId, savedTabs);
-      console.log("Loading saved active tab for project:", currentProjectId, savedActiveTab);
+      console.log('Loading saved tabs for project:', currentProjectId, savedTabs);
+      console.log('Loading saved active tab for project:', currentProjectId, savedActiveTab);
 
       if (savedTabs && Array.isArray(savedTabs) && savedTabs.length > 0) {
         setTabs(savedTabs);
@@ -96,8 +96,8 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
     const currentProjectId = getCurrentProjectId();
     if (!currentProjectId) return;
 
-    setProperty("editor-tabs", tabs, {
-      scope: "project",
+    setProperty('editor-tabs', tabs, {
+      scope: 'project',
       projectId: currentProjectId
     });
   }, [tabs, setProperty, propertiesLoaded, getCurrentProjectId]);
@@ -108,8 +108,8 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
     const currentProjectId = getCurrentProjectId();
     if (!currentProjectId) return;
 
-    setProperty("editor-active-tab", activeTabId, {
-      scope: "project",
+    setProperty('editor-active-tab', activeTabId, {
+      scope: 'project',
       projectId: currentProjectId
     });
   }, [activeTabId, setProperty, propertiesLoaded, getCurrentProjectId]);
@@ -128,13 +128,13 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
         
         // Reload properties for new project
         setTimeout(() => {
-          const savedTabs = getProperty("editor-tabs", {
-            scope: "project",
+          const savedTabs = getProperty('editor-tabs', {
+            scope: 'project',
             projectId: newProjectId || undefined
           }) as EditorTab[] | undefined;
           
-          const savedActiveTab = getProperty("editor-active-tab", {
-            scope: "project",
+          const savedActiveTab = getProperty('editor-active-tab', {
+            scope: 'project',
             projectId: newProjectId || undefined
           }) as string | undefined;
 

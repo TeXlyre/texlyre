@@ -1,8 +1,8 @@
 // extras/viewers/bibtex/TidyOptionsPanel.tsx
-import type React from "react";
+import type React from 'react';
 
-import { CleanIcon, ResetIcon } from "../../../src/components/common/Icons";
-import type { TidyOptions } from "./tidyOptions";
+import { CleanIcon, ResetIcon } from '../../../src/components/common/Icons';
+import type { TidyOptions } from './tidyOptions';
 
 interface TidyOptionsPanelProps {
 	options: TidyOptions;
@@ -54,12 +54,12 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<span>Remove fields (comma-separated):</span>
 						<input
 							type="text"
-							value={options.omit?.join(",") || ""}
+							value={options.omit?.join(',') || ''}
 							onChange={(e) =>
 								updateOption(
-									"omit",
+									'omit',
 									e.target.value
-										.split(",")
+										.split(',')
 										.map((s) => s.trim())
 										.filter(Boolean),
 								)
@@ -73,7 +73,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 							type="checkbox"
 							checked={Boolean(options.removeEmptyFields)}
 							onChange={(e) =>
-								updateOption("removeEmptyFields", e.target.checked)
+								updateOption('removeEmptyFields', e.target.checked)
 							}
 						/>
 						<span>Remove empty fields</span>
@@ -84,7 +84,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 							type="checkbox"
 							checked={Boolean(options.removeDuplicateFields)}
 							onChange={(e) =>
-								updateOption("removeDuplicateFields", e.target.checked)
+								updateOption('removeDuplicateFields', e.target.checked)
 							}
 						/>
 						<span>Remove duplicate fields</span>
@@ -94,7 +94,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<input
 							type="checkbox"
 							checked={Boolean(options.sortFields)}
-							onChange={(e) => updateOption("sortFields", !!e.target.checked)}
+							onChange={(e) => updateOption('sortFields', !!e.target.checked)}
 						/>
 						<span>Sort fields within entries</span>
 					</label>
@@ -107,7 +107,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<input
 							type="checkbox"
 							checked={Boolean(options.curly)}
-							onChange={(e) => updateOption("curly", e.target.checked)}
+							onChange={(e) => updateOption('curly', e.target.checked)}
 						/>
 						<span>Enclose values in braces</span>
 					</label>
@@ -116,7 +116,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<input
 							type="checkbox"
 							checked={Boolean(options.numeric)}
-							onChange={(e) => updateOption("numeric", e.target.checked)}
+							onChange={(e) => updateOption('numeric', e.target.checked)}
 						/>
 						<span>Use numeric values</span>
 					</label>
@@ -125,7 +125,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<input
 							type="checkbox"
 							checked={Boolean(options.months)}
-							onChange={(e) => updateOption("months", e.target.checked)}
+							onChange={(e) => updateOption('months', e.target.checked)}
 						/>
 						<span>Abbreviate months</span>
 					</label>
@@ -135,7 +135,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 							type="checkbox"
 							checked={Boolean(options.stripEnclosingBraces)}
 							onChange={(e) =>
-								updateOption("stripEnclosingBraces", e.target.checked)
+								updateOption('stripEnclosingBraces', e.target.checked)
 							}
 						/>
 						<span>Strip double braces</span>
@@ -145,7 +145,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<input
 							type="checkbox"
 							checked={Boolean(options.dropAllCaps)}
-							onChange={(e) => updateOption("dropAllCaps", e.target.checked)}
+							onChange={(e) => updateOption('dropAllCaps', e.target.checked)}
 						/>
 						<span>Convert ALL CAPS to Title Case</span>
 					</label>
@@ -154,7 +154,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<input
 							type="checkbox"
 							checked={Boolean(options.escape)}
-							onChange={(e) => updateOption("escape", e.target.checked)}
+							onChange={(e) => updateOption('escape', e.target.checked)}
 						/>
 						<span>Escape special characters</span>
 					</label>
@@ -163,7 +163,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<input
 							type="checkbox"
 							checked={Boolean(options.lowercase)}
-							onChange={(e) => updateOption("lowercase", e.target.checked)}
+							onChange={(e) => updateOption('lowercase', e.target.checked)}
 						/>
 						<span>Lowercase field names</span>
 					</label>
@@ -172,7 +172,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<input
 							type="checkbox"
 							checked={Boolean(options.trailingCommas)}
-							onChange={(e) => updateOption("trailingCommas", e.target.checked)}
+							onChange={(e) => updateOption('trailingCommas', e.target.checked)}
 						/>
 						<span>Trailing commas</span>
 					</label>
@@ -181,7 +181,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<input
 							type="checkbox"
 							checked={Boolean(options.encodeUrls)}
-							onChange={(e) => updateOption("encodeUrls", e.target.checked)}
+							onChange={(e) => updateOption('encodeUrls', e.target.checked)}
 						/>
 						<span>Encode URLs</span>
 					</label>
@@ -196,8 +196,8 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 							checked={Boolean(options.enclosingBraces)}
 							onChange={(e) =>
 								updateOption(
-									"enclosingBraces",
-									e.target.checked ? ["title"] : false,
+									'enclosingBraces',
+									e.target.checked ? ['title'] : false,
 								)
 							}
 						/>
@@ -211,14 +211,14 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 								type="text"
 								value={
 									Array.isArray(options.enclosingBraces)
-										? options.enclosingBraces.join(",")
-										: "title"
+										? options.enclosingBraces.join(',')
+										: 'title'
 								}
 								onChange={(e) =>
 									updateOption(
-										"enclosingBraces",
+										'enclosingBraces',
 										e.target.value
-											.split(",")
+											.split(',')
 											.map((s) => s.trim())
 											.filter(Boolean),
 									)
@@ -234,8 +234,8 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 							checked={Boolean(options.removeBraces)}
 							onChange={(e) =>
 								updateOption(
-									"removeBraces",
-									e.target.checked ? ["title"] : false,
+									'removeBraces',
+									e.target.checked ? ['title'] : false,
 								)
 							}
 						/>
@@ -249,14 +249,14 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 								type="text"
 								value={
 									Array.isArray(options.removeBraces)
-										? options.removeBraces.join(",")
-										: "title"
+										? options.removeBraces.join(',')
+										: 'title'
 								}
 								onChange={(e) =>
 									updateOption(
-										"removeBraces",
+										'removeBraces',
 										e.target.value
-											.split(",")
+											.split(',')
 											.map((s) => s.trim())
 											.filter(Boolean),
 									)
@@ -274,7 +274,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<input
 							type="checkbox"
 							checked={Boolean(options.tab)}
-							onChange={(e) => updateOption("tab", e.target.checked)}
+							onChange={(e) => updateOption('tab', e.target.checked)}
 						/>
 						<span>Use tabs for indentation</span>
 					</label>
@@ -286,9 +286,9 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 								type="number"
 								min="1"
 								max="8"
-								value={typeof options.space === "number" ? options.space : 2}
+								value={typeof options.space === 'number' ? options.space : 2}
 								onChange={(e) =>
-									updateOption("space", Number.parseInt(e.target.value))
+									updateOption('space', Number.parseInt(e.target.value))
 								}
 							/>
 						</label>
@@ -300,9 +300,9 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 							type="number"
 							min="0"
 							max="50"
-							value={typeof options.align === "number" ? options.align : 14}
+							value={typeof options.align === 'number' ? options.align : 14}
 							onChange={(e) =>
-								updateOption("align", Number.parseInt(e.target.value))
+								updateOption('align', Number.parseInt(e.target.value))
 							}
 						/>
 					</label>
@@ -311,7 +311,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<input
 							type="checkbox"
 							checked={Boolean(options.blankLines)}
-							onChange={(e) => updateOption("blankLines", e.target.checked)}
+							onChange={(e) => updateOption('blankLines', e.target.checked)}
 						/>
 						<span>Insert blank lines between entries</span>
 					</label>
@@ -321,7 +321,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 							type="checkbox"
 							checked={Boolean(options.wrap)}
 							onChange={(e) =>
-								updateOption("wrap", e.target.checked ? 80 : false)
+								updateOption('wrap', e.target.checked ? 80 : false)
 							}
 						/>
 						<span>Wrap long values</span>
@@ -334,9 +334,9 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 								type="number"
 								min="40"
 								max="200"
-								value={typeof options.wrap === "number" ? options.wrap : 80}
+								value={typeof options.wrap === 'number' ? options.wrap : 80}
 								onChange={(e) =>
-									updateOption("wrap", Number.parseInt(e.target.value))
+									updateOption('wrap', Number.parseInt(e.target.value))
 								}
 							/>
 						</label>
@@ -351,7 +351,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 							type="checkbox"
 							checked={Boolean(options.sort)}
 							onChange={(e) =>
-								updateOption("sort", e.target.checked ? ["key"] : false)
+								updateOption('sort', e.target.checked ? ['key'] : false)
 							}
 						/>
 						<span>Sort entries</span>
@@ -363,13 +363,13 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 							<input
 								type="text"
 								value={
-									Array.isArray(options.sort) ? options.sort.join(",") : "key"
+									Array.isArray(options.sort) ? options.sort.join(',') : 'key'
 								}
 								onChange={(e) =>
 									updateOption(
-										"sort",
+										'sort',
 										e.target.value
-											.split(",")
+											.split(',')
 											.map((s) => s.trim())
 											.filter(Boolean),
 									)
@@ -389,8 +389,8 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 							checked={Boolean(options.duplicates)}
 							onChange={(e) =>
 								updateOption(
-									"duplicates",
-									e.target.checked ? ["doi", "citation", "abstract"] : false,
+									'duplicates',
+									e.target.checked ? ['doi', 'citation', 'abstract'] : false,
 								)
 							}
 						/>
@@ -406,14 +406,14 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 									value={
 										Array.isArray(options.duplicates)
 											? options.duplicates
-											: ["doi", "citation", "abstract"]
+											: ['doi', 'citation', 'abstract']
 									}
 									onChange={(e) => {
 										const values = Array.from(
 											e.target.selectedOptions,
 											(option) => option.value,
-										) as ("doi" | "key" | "abstract" | "citation")[];
-										updateOption("duplicates", values);
+										) as ('doi' | 'key' | 'abstract' | 'citation')[];
+										updateOption('duplicates', values);
 									}}
 								>
 									<option value="doi">DOI</option>
@@ -427,12 +427,12 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 								<span>Merge strategy:</span>
 								<select
 									value={
-										typeof options.merge === "string" ? options.merge : "false"
+										typeof options.merge === 'string' ? options.merge : 'false'
 									}
 									onChange={(e) =>
 										updateOption(
-											"merge",
-											e.target.value === "false" ? false : e.target.value,
+											'merge',
+											e.target.value === 'false' ? false : e.target.value,
 										)
 									}
 								>
@@ -454,7 +454,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<input
 							type="checkbox"
 							checked={Boolean(options.stripComments)}
-							onChange={(e) => updateOption("stripComments", e.target.checked)}
+							onChange={(e) => updateOption('stripComments', e.target.checked)}
 						/>
 						<span>Remove comments</span>
 					</label>
@@ -463,7 +463,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<input
 							type="checkbox"
 							checked={Boolean(options.tidyComments)}
-							onChange={(e) => updateOption("tidyComments", e.target.checked)}
+							onChange={(e) => updateOption('tidyComments', e.target.checked)}
 						/>
 						<span>Tidy comments</span>
 					</label>
@@ -478,9 +478,9 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 							checked={Boolean(options.generateKeys)}
 							onChange={(e) =>
 								updateOption(
-									"generateKeys",
+									'generateKeys',
 									e.target.checked
-										? "[auth:required:lower][year:required][veryshorttitle:lower][duplicateNumber]"
+										? '[auth:required:lower][year:required][veryshorttitle:lower][duplicateNumber]'
 										: false,
 								)
 							}
@@ -494,11 +494,11 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 							<input
 								type="text"
 								value={
-									typeof options.generateKeys === "string"
+									typeof options.generateKeys === 'string'
 										? options.generateKeys
-										: "[auth:required:lower][year:required][veryshorttitle:lower][duplicateNumber]"
+										: '[auth:required:lower][year:required][veryshorttitle:lower][duplicateNumber]'
 								}
-								onChange={(e) => updateOption("generateKeys", e.target.value)}
+								onChange={(e) => updateOption('generateKeys', e.target.value)}
 								placeholder="JabRef pattern"
 							/>
 						</label>
@@ -510,10 +510,10 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 							type="number"
 							min="1"
 							max="20"
-							value={options.maxAuthors || ""}
+							value={options.maxAuthors || ''}
 							onChange={(e) =>
 								updateOption(
-									"maxAuthors",
+									'maxAuthors',
 									e.target.value ? Number.parseInt(e.target.value) : undefined,
 								)
 							}
@@ -525,7 +525,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 						<input
 							type="checkbox"
 							checked={Boolean(options.lookupDois)}
-							onChange={(e) => updateOption("lookupDois", e.target.checked)}
+							onChange={(e) => updateOption('lookupDois', e.target.checked)}
 						/>
 						<span>Lookup missing DOIs</span>
 					</label>

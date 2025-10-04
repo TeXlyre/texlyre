@@ -1,0 +1,51 @@
+.typesetter-tooltip {
+    position: fixed;
+    width: 320px;
+    padding: var(--space-md);
+    background-color: var(--pico-background);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    font-size: 0.85rem;
+    color: var(--text-color);
+    line-height: 1.4;
+    z-index: 10000;
+    max-height: calc(100vh - 16px);
+    overflow: auto;
+    pointer-events: auto;
+}
+
+.typesetter-tooltip-title {
+    margin: 0 0 var(--space-sm) 0;
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--pico-primary);
+}
+
+.typesetter-tooltip-section {
+    margin-bottom: var(--space-sm);
+}
+
+.typesetter-tooltip-section:last-child {
+    margin-bottom: 0;
+}
+
+.typesetter-tooltip-section strong {
+    display: block;
+    margin-bottom: var(--space-xs);
+    color: var(--text-color);
+}
+
+.typesetter-tooltip-section ul {
+    margin: 0;
+    padding-left: var(--space-md);
+    list-style-type: disc;
+}
+
+.typesetter-tooltip-section li {
+    margin-bottom: var(--space-xs);
+}
+
+.typesetter-tooltip-section li:last-child {
+    margin-bottom: 0;
+}

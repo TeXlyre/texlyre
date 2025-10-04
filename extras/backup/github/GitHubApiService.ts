@@ -4,7 +4,7 @@ interface GitHubFile {
 	path: string;
 	content?: string;
 	sha?: string;
-	type: "file" | "dir";
+	type: 'file' | 'dir';
 	download_url?: string;
 }
 interface GitHubRepo {
@@ -15,15 +15,15 @@ interface GitHubRepo {
 }
 interface GitHubTreeItem {
 	path: string;
-	mode: "100644" | "100755" | "040000" | "160000" | "120000";
-	type: "blob" | "tree" | "commit";
+	mode: '100644' | '100755' | '040000' | '160000' | '120000';
+	type: 'blob' | 'tree' | 'commit';
 	sha: string | null;
 	url?: string;
 	size?: number;
 }
 
 export class GitHubApiService {
-	private readonly baseUrl = "https://api.github.com";
+	private readonly baseUrl = 'https://api.github.com';
 
 	private async _request<T>(
 		token: string,
@@ -33,17 +33,17 @@ export class GitHubApiService {
 		const url = `${this.baseUrl}/${endpoint}`;
 		const headers = new Headers({
 			Authorization: `token ${token}`,
-			Accept: "application/vnd.github.v3+json",
+			Accept: 'application/vnd.github.v3+json',
 			...options.headers,
 		});
-		if (options.body) headers.set("Content-Type", "application/json");
+		if (options.body) headers.set('Content-Type', 'application/json');
 
 		const response = await fetch(url, { ...options, headers });
 
 		if (!response.ok) {
 			const errorData = await response.json().catch(() => ({}));
 			throw new Error(
-				`GitHub API request to '${endpoint}' failed: ${response.statusText}. ${errorData.message || ""}`,
+				`GitHub API request to '${endpoint}' failed: ${response.statusText}. ${errorData.message || ''}`,
 			);
 		}
 
@@ -51,12 +51,12 @@ export class GitHubApiService {
 	}
 
 	private _encodeContent(content: string | Uint8Array | ArrayBuffer): string {
-		if (typeof content === "string")
+		if (typeof content === 'string')
 			return btoa(unescape(encodeURIComponent(content)));
 
 		const uint8Array =
 			content instanceof ArrayBuffer ? new Uint8Array(content) : content;
-		let binaryString = "";
+		let binaryString = '';
 		for (let i = 0; i < uint8Array.length; i++) {
 			binaryString += String.fromCharCode(uint8Array[i]);
 		}
@@ -75,14 +75,14 @@ export class GitHubApiService {
 	}
 
 	async getRepositories(token: string): Promise<GitHubRepo[]> {
-		return this._request<GitHubRepo[]>(token, "user/repos?per_page=100");
+		return this._request<GitHubRepo[]>(token, 'user/repos?per_page=100');
 	}
 
 	async getRepositoryContents(
 		token: string,
 		owner: string,
 		repo: string,
-		path = "",
+		path = '',
 	): Promise<GitHubFile[]> {
 		return this._request<GitHubFile[]>(
 			token,
@@ -100,7 +100,7 @@ export class GitHubApiService {
 			token,
 			`repos/${owner}/${repo}/contents/${path}`,
 		);
-		return atob(data.content.replace(/\n/g, ""));
+		return atob(data.content.replace(/\n/g, ''));
 	}
 
 	async createOrUpdateFile(
@@ -116,7 +116,7 @@ export class GitHubApiService {
 		await this._request<void>(
 			token,
 			`repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`,
-			{ method: "PUT", body: JSON.stringify(body) },
+			{ method: 'PUT', body: JSON.stringify(body) },
 		);
 	}
 
@@ -127,13 +127,13 @@ export class GitHubApiService {
 		path: string,
 		message: string,
 		sha: string,
-		branch = "main",
+		branch = 'main',
 	): Promise<void> {
 		await this._request<void>(
 			token,
 			`repos/${owner}/${repo}/contents/${path}`,
 			{
-				method: "DELETE",
+				method: 'DELETE',
 				body: JSON.stringify({ message, sha, branch }),
 			},
 		);
@@ -157,11 +157,11 @@ export class GitHubApiService {
 		repo: string,
 		content: string | Uint8Array | ArrayBuffer,
 	): Promise<string> {
-		const body = { content: this._encodeContent(content), encoding: "base64" };
+		const body = { content: this._encodeContent(content), encoding: 'base64' };
 		const data = await this._request<{ sha: string }>(
 			token,
 			`repos/${owner}/${repo}/git/blobs`,
-			{ method: "POST", body: JSON.stringify(body) },
+			{ method: 'POST', body: JSON.stringify(body) },
 		);
 		return data.sha;
 	}
@@ -174,11 +174,11 @@ export class GitHubApiService {
 		treeItems: GitHubTreeItem[],
 	): Promise<string> {
 		const validatedItems = treeItems.filter((item) => {
-			if (!item.path || item.path.includes("//") || item.path.startsWith("/")) {
+			if (!item.path || item.path.includes('//') || item.path.startsWith('/')) {
 				console.warn(`Invalid tree item path: ${item.path}`);
 				return false;
 			}
-			if (item.type === "blob" && item.sha === undefined) {
+			if (item.type === 'blob' && item.sha === undefined) {
 				console.warn(`Blob item missing sha: ${item.path}`);
 				return false;
 			}
@@ -192,13 +192,13 @@ export class GitHubApiService {
 				token,
 				`repos/${owner}/${repo}/git/trees`,
 				{
-					method: "POST",
+					method: 'POST',
 					body: JSON.stringify(body),
 				},
 			);
 			return data.sha;
 		} catch (error) {
-			console.error("Tree creation failed with items:", validatedItems);
+			console.error('Tree creation failed with items:', validatedItems);
 			throw error;
 		}
 	}
@@ -215,7 +215,7 @@ export class GitHubApiService {
 		const data = await this._request<{ sha: string }>(
 			token,
 			`repos/${owner}/${repo}/git/commits`,
-			{ method: "POST", body: JSON.stringify(body) },
+			{ method: 'POST', body: JSON.stringify(body) },
 		);
 		return data.sha;
 	}
@@ -230,7 +230,7 @@ export class GitHubApiService {
 		await this._request<void>(
 			token,
 			`repos/${owner}/${repo}/git/refs/heads/${branch}`,
-			{ method: "PATCH", body: JSON.stringify({ sha: commitSha }) },
+			{ method: 'PATCH', body: JSON.stringify({ sha: commitSha }) },
 		);
 	}
 
@@ -240,28 +240,28 @@ export class GitHubApiService {
 		repo: string,
 		commitMessage: string,
 		files: { path: string; content: string | Uint8Array | ArrayBuffer }[],
-		branch = "main",
+		branch = 'main',
 		deletions: { path: string }[] = [],
 	): Promise<void> {
 		const latestCommit = await this.getLatestCommit(token, owner, repo, branch);
 		const treeItems: GitHubTreeItem[] = [];
 
 		for (const file of files) {
-			const cleanPath = file.path.replace(/^\/+/, "").replace(/\/+/g, "/");
+			const cleanPath = file.path.replace(/^\/+/, '').replace(/\/+/g, '/');
 			if (!cleanPath) continue;
 
 			const blobSha = await this.createBlob(token, owner, repo, file.content);
 			treeItems.push({
 				path: cleanPath,
-				mode: "100644" as const,
-				type: "blob" as const,
+				mode: '100644' as const,
+				type: 'blob' as const,
 				sha: blobSha,
 			});
 		}
 
 		if (deletions.length > 0) {
 			const cleanDeletionPaths = deletions
-				.map((d) => d.path.replace(/^\/+/, "").replace(/\/+/g, "/"))
+				.map((d) => d.path.replace(/^\/+/, '').replace(/\/+/g, '/'))
 				.filter((path) => path);
 
 			const existingFiles = await this.getExistingFiles(
@@ -275,8 +275,8 @@ export class GitHubApiService {
 			for (const path of existingFiles) {
 				treeItems.push({
 					path,
-					mode: "100644" as const,
-					type: "blob" as const,
+					mode: '100644' as const,
+					type: 'blob' as const,
 					sha: null,
 				});
 			}
@@ -311,7 +311,7 @@ export class GitHubApiService {
 	): Promise<Set<string>> {
 		const tree = await this.getRecursiveTree(token, owner, repo, branch);
 		const existingPaths = new Set(
-			tree.filter((item) => item.type === "blob").map((item) => item.path),
+			tree.filter((item) => item.type === 'blob').map((item) => item.path),
 		);
 		return new Set(paths.filter((path) => existingPaths.has(path)));
 	}
@@ -320,7 +320,7 @@ export class GitHubApiService {
 		token: string,
 		owner: string,
 		repo: string,
-		branch = "main",
+		branch = 'main',
 	): Promise<GitHubTreeItem[]> {
 		const latestCommit = await this.getLatestCommit(token, owner, repo, branch);
 		const data = await this._request<{ tree: GitHubTreeItem[] }>(
@@ -340,9 +340,9 @@ export class GitHubApiService {
 			token,
 			`repos/${owner}/${repo}/git/blobs/${blobSha}`,
 		);
-		if (data.encoding !== "base64")
+		if (data.encoding !== 'base64')
 			throw new Error(`Unsupported blob encoding: ${data.encoding}`);
-		return atob(data.content.replace(/\n/g, ""));
+		return atob(data.content.replace(/\n/g, ''));
 	}
 
 	async getBranches(

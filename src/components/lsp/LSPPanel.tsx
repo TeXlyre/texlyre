@@ -1,13 +1,13 @@
 // src/components/lsp/LSPPanel.tsx
-import type React from "react";
-import { useLSP } from "../../hooks/useLSP";
-import { SyncIcon, ChevronDownIcon, BibliographyIcon } from "../common/Icons";
+import type React from 'react';
+import { useLSP } from '../../hooks/useLSP';
+import { SyncIcon, ChevronDownIcon, BibliographyIcon } from '../common/Icons';
 
 interface LSPPanelProps {
 	className?: string;
 }
 
-const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
+const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
 	const {
 		showPanel,
 		activeTab,
@@ -89,13 +89,13 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 
 	const getCitationPreview = (entry: any): string => {
 		switch (citationStyle) {
-			case "author-year":
+			case 'author-year':
 				const authors = getDisplayAuthors(entry);
 				const year = getDisplayYear(entry);
 				return `(${authors}, ${year})`;
-			case "alphabetic":
+			case 'alphabetic':
 				return `[${entry.key.substring(0, 6)}]`;
-			case "numeric":
+			case 'numeric':
 			default:
 				const localEntryIndex = localEntries.findIndex(e => e.key === entry.key);
 				const index = localEntryIndex >= 0 ? localEntryIndex + 1 : entries.indexOf(entry) + 1;
@@ -194,7 +194,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 
 	const renderBibliographyList = () => {
 		const targetFileOptions = [
-			{ label: "Create new bibliography.bib", value: "CREATE_NEW" },
+			{ label: 'Create new bibliography.bib', value: 'CREATE_NEW' },
 			...availableBibFiles.map(file => ({
 				label: file.name,
 				value: file.path
@@ -207,9 +207,9 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 					<input
 						type="text"
 						placeholder={
-							selectedProvider === "all" ? "Search all bibliography sources..." :
-							selectedProvider === "local" ? "Search local bibliography..." :
-							"Search bibliography..."
+							selectedProvider === 'all' ? 'Search all bibliography sources...' :
+							selectedProvider === 'local' ? 'Search local bibliography...' :
+							'Search bibliography...'
 						}
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
@@ -218,14 +218,14 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 					{searchQuery && (
 						<button
 							className="lsp-clear-search-button"
-							onClick={() => setSearchQuery("")}
+							onClick={() => setSearchQuery('')}
 						>
 							×
 						</button>
 					)}
 				</div>
 
-				{selectedProvider !== "all" && selectedProvider !== "local" && (
+				{selectedProvider !== 'all' && selectedProvider !== 'local' && (
 					<div className="target-file-selector">
 						<label className="target-file-label">
 							Bib File:
@@ -256,7 +256,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 				)}
 
 				<div className="lsp-panel-content">
-					{selectedProvider === "all" ? renderAggregatedContent() : renderSingleProviderContent()}
+					{selectedProvider === 'all' ? renderAggregatedContent() : renderSingleProviderContent()}
 				</div>
 
 				<div className="lsp-panel-footer">
@@ -264,15 +264,15 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 						{entries.length > 0 && (
 							<div>
 								<span className="lsp-entry-count">
-									{selectedProvider === "all"
+									{selectedProvider === 'all'
 										? `${entries.length} entries from ${availableProviders.filter(p => p.getConnectionStatus() === 'connected').length} providers`
-										: selectedProvider === "local"
+										: selectedProvider === 'local'
 										? `${localEntries.length} local entries`
 										: `${localEntries.length} local, ${externalEntries.filter(e => !e.isImported).length} external`
 									}
-									{citationStyle !== "numeric" && ` (${citationStyle} style)`}
+									{citationStyle !== 'numeric' && ` (${citationStyle} style)`}
 								</span>
-								{targetBibFile && selectedProvider !== "all" && selectedProvider !== "local" && (
+								{targetBibFile && selectedProvider !== 'all' && selectedProvider !== 'local' && (
 									<div className="lsp-footer-target">
 										Target: {availableBibFiles.find(f => f.path === targetBibFile)?.name || 'Unknown file'}
 									</div>
@@ -307,8 +307,8 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 			return (
 				<div className="lsp-no-entries">
 					{searchQuery
-						? "No entries found matching the search criteria across all providers"
-						: "No entries available from any connected provider"
+						? 'No entries found matching the search criteria across all providers'
+						: 'No entries available from any connected provider'
 					}
 				</div>
 			);
@@ -373,7 +373,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 	};
 
 	const renderSingleProviderContent = () => {
-		if (selectedProvider === "local") {
+		if (selectedProvider === 'local') {
 			if (isLoading) {
 				return <div className="lsp-loading-indicator">Loading local bibliography...</div>;
 			}
@@ -382,8 +382,8 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 				return (
 					<div className="lsp-no-entries">
 						{searchQuery
-							? "No local entries found matching the search criteria"
-							: "No local bibliography entries available"
+							? 'No local entries found matching the search criteria'
+							: 'No local bibliography entries available'
 						}
 						{localEntries.length === 0 && (
 							<div className="lsp-no-entries-hint">
@@ -414,8 +414,8 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 				return (
 					<div className="lsp-no-entries">
 						{searchQuery
-							? "No entries found matching the search criteria"
-							: "No bibliography entries available"
+							? 'No entries found matching the search criteria'
+							: 'No bibliography entries available'
 						}
 						{localEntries.length === 0 && (
 							<div className="lsp-no-entries-hint">
@@ -496,7 +496,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 	};
 
 	const renderGenericList = () => {
-		if (selectedProvider === "all") {
+		if (selectedProvider === 'all') {
 			const allProviders = availableProviders.filter(provider =>
 				provider.getConnectionStatus() === 'connected' && !('getBibliographyEntries' in provider)
 			);
@@ -515,7 +515,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 							{searchQuery && (
 								<button
 									className="lsp-clear-search-button"
-									onClick={() => setSearchQuery("")}
+									onClick={() => setSearchQuery('')}
 								>
 									×
 								</button>
@@ -546,7 +546,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 						{searchQuery && (
 							<button
 								className="lsp-clear-search-button"
-								onClick={() => setSearchQuery("")}
+								onClick={() => setSearchQuery('')}
 							>
 								×
 							</button>
@@ -599,15 +599,15 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 
 				<div className="view-tabs">
 					<button
-						className={`tab-button ${activeTab === "list" ? "active" : ""}`}
-						onClick={() => setActiveTab("list")}
+						className={`tab-button ${activeTab === 'list' ? 'active' : ''}`}
+						onClick={() => setActiveTab('list')}
 						disabled={!selectedItem}
 					>
 						Items
 					</button>
 					<button
-						className={`tab-button ${activeTab === "detail" ? "active" : ""}`}
-						onClick={() => setActiveTab("detail")}
+						className={`tab-button ${activeTab === 'detail' ? 'active' : ''}`}
+						onClick={() => setActiveTab('detail')}
 						disabled={!selectedItem}
 					>
 						Detail
@@ -625,9 +625,9 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 								className="status-dot"
 								style={{ backgroundColor: getStatusColor() }}
 							/>
-							{selectedProvider === "all" ? (
+							{selectedProvider === 'all' ? (
 								<span className="lsp-label">All LSP</span>
-							) : selectedProvider === "local" ? (
+							) : selectedProvider === 'local' ? (
 								<span className="lsp-label"><BibliographyIcon/> Local Bibliography</span>
 							) : currentProvider ? (
 								<>
@@ -651,7 +651,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 								{availableProviders.length > 1 && (
 									<div
 										className="lsp-dropdown-item"
-										onClick={() => handleProviderSelect("all")}
+										onClick={() => handleProviderSelect('all')}
 									>
 										All LSP
 									</div>
@@ -659,7 +659,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 
 								<div
 									className="lsp-dropdown-item"
-									onClick={() => handleProviderSelect("local")}
+									onClick={() => handleProviderSelect('local')}
 								>
 									<BibliographyIcon/> Local Bibliography
 								</div>
@@ -674,7 +674,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 											onClick={() => handleProviderSelect(provider.id)}
 										>
 											<span className="service-indicator">
-												{status === "connected" ? "🟢" : ""}
+												{status === 'connected' ? '🟢' : ''}
 											</span>
 											<IconComponent /> {provider.name}
 										</div>
@@ -689,16 +689,16 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = "" }) => {
 						onClick={handleRefresh}
 						disabled={isRefreshing}
 						title={
-							selectedProvider === "all" ? "Refresh all LSP providers" :
-							selectedProvider === "local" ? "Refresh local bibliography" :
-							`Refresh ${currentProvider?.name || "LSP"}`
+							selectedProvider === 'all' ? 'Refresh all LSP providers' :
+							selectedProvider === 'local' ? 'Refresh local bibliography' :
+							`Refresh ${currentProvider?.name || 'LSP'}`
 						}
 					>
 						<SyncIcon />
 					</button>
 				</div>
 
-				{activeTab === "list" ? (
+				{activeTab === 'list' ? (
 					(isBibliographyProvider || entries.length > 0) ?
 						renderBibliographyList() : renderGenericList()
 				) : (

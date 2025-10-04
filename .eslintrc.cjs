@@ -24,6 +24,7 @@ module.exports = {
 			{ allowConstantExport: true },
 		],
 		"@typescript-eslint/naming-convention": "warn",
+		"quotes": ["error", "single", { avoidEscape: true }],
 	},
 	overrides: [
 		{
@@ -59,8 +60,8 @@ module.exports = {
 					},
 				],
 				"@typescript-eslint/no-explicit-any": [
-					"error",
-					{ ignoreRestArgs: true, fixToUnknown: true },
+					"warn",
+					{ ignoreRestArgs: true },
 				],
 			},
 		},

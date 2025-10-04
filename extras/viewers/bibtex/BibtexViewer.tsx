@@ -1,55 +1,55 @@
 // extras/viewers/bibtex/BibtexViewer.tsx
-import { tidy } from "bib-editor";
-import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import { tidy } from 'bib-editor';
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
 	DownloadIcon,
 	OptionsIcon,
 	SaveIcon,
 	ViewIcon,
-} from "../../../src/components/common/Icons";
+} from '../../../src/components/common/Icons';
 import {
 	PluginControlGroup,
 	PluginHeader,
-} from "../../../src/components/common/PluginHeader";
-import { usePluginFileInfo } from "../../../src/hooks/usePluginFileInfo";
-import { useSettings } from "../../../src/hooks/useSettings";
-import type { ViewerProps } from "../../../src/plugins/PluginInterface";
-import { EditorLoader } from "../../../src/services/EditorLoader";
-import { fileStorageService } from "../../../src/services/FileStorageService";
-import { TidyOptionsPanel } from "./TidyOptionsPanel";
-import { type TidyOptions, getPresetOptions } from "./tidyOptions";
-import { BibtexTableView } from "./BibtexTableView";
-import { BibtexParser } from "./BibtexParser";
-import type { BibtexEntry } from "./BibtexParser";
-import "./styles.css";
-import { PLUGIN_NAME, PLUGIN_VERSION } from "./BibtexViewerPlugin";
+} from '../../../src/components/common/PluginHeader';
+import { usePluginFileInfo } from '../../../src/hooks/usePluginFileInfo';
+import { useSettings } from '../../../src/hooks/useSettings';
+import type { ViewerProps } from '../../../src/plugins/PluginInterface';
+import { EditorLoader } from '../../../src/services/EditorLoader';
+import { fileStorageService } from '../../../src/services/FileStorageService';
+import { TidyOptionsPanel } from './TidyOptionsPanel';
+import { type TidyOptions, getPresetOptions } from './tidyOptions';
+import { BibtexTableView } from './BibtexTableView';
+import { BibtexParser } from './BibtexParser';
+import type { BibtexEntry } from './BibtexParser';
+import './styles.css';
+import { PLUGIN_NAME, PLUGIN_VERSION } from './BibtexViewerPlugin';
 
 const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	const { getSetting } = useSettings();
 	const fileInfo = usePluginFileInfo(fileId, fileName);
 
 	const autoTidy =
-		(getSetting("bibtex-viewer-auto-tidy")?.value as boolean) ?? true;
+		(getSetting('bibtex-viewer-auto-tidy')?.value as boolean) ?? true;
 	const tidyPreset =
-		(getSetting("bibtex-viewer-tidy-options")?.value as
-			| "minimal"
-			| "standard"
-			| "strict") ?? "standard";
+		(getSetting('bibtex-viewer-tidy-options')?.value as
+			| 'minimal'
+			| 'standard'
+			| 'strict') ?? 'standard';
 
-	const [bibtexContent, setBibtexContent] = useState<string>("");
-	const [processedContent, setProcessedContent] = useState<string>("");
+	const [bibtexContent, setBibtexContent] = useState<string>('');
+	const [processedContent, setProcessedContent] = useState<string>('');
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [_hasChanges, setHasChanges] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [warnings, setWarnings] = useState<unknown[]>([]);
 	const [showSidebar, setShowSidebar] = useState(true);
-	const [currentView, setCurrentView] = useState<"original" | "processed">(
-		"original",
+	const [currentView, setCurrentView] = useState<'original' | 'processed'>(
+		'original',
 	);
-	const [viewMode, setViewMode] = useState<"editor" | "table">("editor");
+	const [viewMode, setViewMode] = useState<'editor' | 'table'>('editor');
 
 	const [parsedEntries, setParsedEntries] = useState<BibtexEntry[]>([]);
 	const [processedParsedEntries, setProcessedParsedEntries] = useState<BibtexEntry[]>([]);
@@ -66,7 +66,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		try {
 			return BibtexParser.parse(content);
 		} catch (error) {
-			console.warn("Failed to parse BibTeX content:", error);
+			console.warn('Failed to parse BibTeX content:', error);
 			return [];
 		}
 	};
@@ -93,7 +93,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	};
 
 	const handleSingleTableEntryUpdate = (updatedEntry: BibtexEntry) => {
-		if (currentView === "original") {
+		if (currentView === 'original') {
 			const newContent = BibtexParser.updateEntryInContent(bibtexContent, updatedEntry);
 			setBibtexContent(newContent);
 
@@ -144,7 +144,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	const handleTableEntryUpdate = (updatedEntries: BibtexEntry[]) => {
 		const newContent = BibtexParser.serialize(updatedEntries);
 
-		if (currentView === "original") {
+		if (currentView === 'original') {
 			setBibtexContent(newContent);
 			setParsedEntries(updatedEntries);
 			if (originalViewRef.current) {
@@ -166,14 +166,14 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
 	const { viewRef: originalViewRef, showSaveIndicator: originalShowSaveIndicator } = EditorLoader(
 		originalEditorRef,
-		"bibtex-viewer",
+		'bibtex-viewer',
 		`${fileName}-original-editor`,
 		true,
 		bibtexContent,
 		handleOriginalContentUpdate,
 		() => [],
 		() => ({}),
-		() => {},
+		() => { },
 		true,
 		false,
 		fileName,
@@ -182,14 +182,14 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
 	const { viewRef: processedViewRef, showSaveIndicator: processedShowSaveIndicator } = EditorLoader(
 		processedEditorRef,
-		"bibtex-viewer",
+		'bibtex-viewer',
 		`${fileName}-processed-editor`,
 		true,
 		processedContent,
 		handleProcessedContentUpdate,
 		() => [],
 		() => ({}),
-		() => {},
+		() => { },
 		true,
 		false,
 		fileName,
@@ -199,7 +199,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	useEffect(() => {
 		if (content instanceof ArrayBuffer) {
 			try {
-				const decoder = new TextDecoder("utf-8");
+				const decoder = new TextDecoder('utf-8');
 				const text = decoder.decode(content);
 
 				setBibtexContent(text);
@@ -216,20 +216,20 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				}
 			} catch (error) {
 				console.error(
-					"BibtexViewer: Error decoding ArrayBuffer content:",
+					'BibtexViewer: Error decoding ArrayBuffer content:',
 					error,
 				);
-				setBibtexContent("");
-				setProcessedContent("");
+				setBibtexContent('');
+				setProcessedContent('');
 				setParsedEntries([]);
 				setProcessedParsedEntries([]);
 				setError(
-					`Failed to decode file content: ${error instanceof Error ? error.message : "Unknown error"}`,
+					`Failed to decode file content: ${error instanceof Error ? error.message : 'Unknown error'}`,
 				);
 			}
 		} else if ((content as any) instanceof Uint8Array) {
 			try {
-				const decoder = new TextDecoder("utf-8");
+				const decoder = new TextDecoder('utf-8');
 				const text = decoder.decode(content);
 
 				setBibtexContent(text);
@@ -246,18 +246,18 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				}
 			} catch (error) {
 				console.error(
-					"BibtexViewer: Error decoding Uint8Array content:",
+					'BibtexViewer: Error decoding Uint8Array content:',
 					error,
 				);
-				setBibtexContent("");
-				setProcessedContent("");
+				setBibtexContent('');
+				setProcessedContent('');
 				setParsedEntries([]);
 				setProcessedParsedEntries([]);
 				setError(
-					`Failed to decode file content: ${error instanceof Error ? error.message : "Unknown error"}`,
+					`Failed to decode file content: ${error instanceof Error ? error.message : 'Unknown error'}`,
 				);
 			}
-		} else if (typeof content === "string") {
+		} else if (typeof content === 'string') {
 			setBibtexContent(content);
 			setProcessedContent(content);
 			setParsedEntries(parseContent(content));
@@ -294,11 +294,11 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			setWarnings(result.warnings || []);
 			setHasChanges(true);
 			if (autoTidy) {
-				setCurrentView("processed");
+				setCurrentView('processed');
 			}
 		} catch (err) {
 			setError(
-				err instanceof Error ? err.message : "Failed to process BibTeX file",
+				err instanceof Error ? err.message : 'Failed to process BibTeX file',
 			);
 		} finally {
 			setIsProcessing(false);
@@ -308,7 +308,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	const processBibtex = async () => {
 		const currentOriginalContent = originalViewRef.current?.state?.doc?.toString() || bibtexContent;
 		await processBibtexWithOptions(currentOriginalContent, options);
-		setCurrentView("processed");
+		setCurrentView('processed');
 	};
 
 	const handleSaveProcessed = async () => {
@@ -317,7 +317,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		const currentEditorContent = processedViewRef.current?.state?.doc?.toString() || processedContent;
 
 		if (!currentEditorContent.trim()) {
-			console.warn("BibtexViewer: Attempted to save empty content");
+			console.warn('BibtexViewer: Attempted to save empty content');
 			return;
 		}
 
@@ -331,15 +331,15 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			await fileStorageService.updateFileContent(fileId, dataToSave.buffer);
 
 			setBibtexContent(currentEditorContent);
-			setProcessedContent("");
+			setProcessedContent('');
 			setParsedEntries(parseContent(currentEditorContent));
 			setProcessedParsedEntries([]);
 			setHasChanges(false);
-			setCurrentView("original");
+			setCurrentView('original');
 		} catch (error) {
-			console.error("Error saving BibTeX file:", error);
+			console.error('Error saving BibTeX file:', error);
 			setError(
-				`Failed to save file: ${error instanceof Error ? error.message : "Unknown error"}`,
+				`Failed to save file: ${error instanceof Error ? error.message : 'Unknown error'}`,
 			);
 		} finally {
 			setIsSaving(false);
@@ -348,7 +348,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.ctrlKey && event.key === 's' && currentView === "processed") {
+			if (event.ctrlKey && event.key === 's' && currentView === 'processed') {
 				event.preventDefault();
 				handleSaveProcessed();
 			}
@@ -358,43 +358,43 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		return () => document.removeEventListener('keydown', handleKeyDown);
 	}, [currentView, handleSaveProcessed]);
 
-	const handleExport = (content: string, suffix = "") => {
+	const handleExport = (content: string, suffix = '') => {
 		try {
-			const currentEditorContent = (currentView === "original"
+			const currentEditorContent = (currentView === 'original'
 				? originalViewRef.current?.state?.doc?.toString()
-				: processedViewRef.current?.state?.doc?.toString()) || "";
+				: processedViewRef.current?.state?.doc?.toString()) || '';
 			const contentToExport = currentEditorContent || content;
 
 			const blob = new Blob([contentToExport], {
-				type: "text/plain;charset=utf-8",
+				type: 'text/plain;charset=utf-8',
 			});
 			const url = URL.createObjectURL(blob);
-			const a = document.createElement("a");
+			const a = document.createElement('a');
 			a.href = url;
-			a.download = `${fileName.replace(/\.bib$/i, "") + suffix}.bib`;
+			a.download = `${fileName.replace(/\.bib$/i, '') + suffix}.bib`;
 			document.body.appendChild(a);
 			a.click();
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} catch (error) {
-			console.error("Error exporting file:", error);
+			console.error('Error exporting file:', error);
 			setError(
-				`Failed to export file: ${error instanceof Error ? error.message : "Unknown error"}`,
+				`Failed to export file: ${error instanceof Error ? error.message : 'Unknown error'}`,
 			);
 		}
 	};
 
 	const displayContent =
-		currentView === "original" ? bibtexContent : processedContent;
+		currentView === 'original' ? bibtexContent : processedContent;
 
-	const currentEntries = currentView === "original" ? parsedEntries : processedParsedEntries;
+	const currentEntries = currentView === 'original' ? parsedEntries : processedParsedEntries;
 
 	// Sync table with current editor content when switching to table view
 	useEffect(() => {
-		if (viewMode === "table") {
+		if (viewMode === 'table') {
 			console.log('Switching to table view - syncing with editor content');
 
-			if (currentView === "original" && originalViewRef.current) {
+			if (currentView === 'original' && originalViewRef.current) {
 				const currentEditorContent = originalViewRef.current.state?.doc?.toString();
 				if (currentEditorContent && currentEditorContent !== bibtexContent) {
 					console.log('Original editor content differs from state, updating...');
@@ -403,7 +403,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 					setParsedEntries(newParsed);
 					setUpdateCounter(prev => prev + 1);
 				}
-			} else if (currentView === "processed" && processedViewRef.current) {
+			} else if (currentView === 'processed' && processedViewRef.current) {
 				const currentEditorContent = processedViewRef.current.state?.doc?.toString();
 				if (currentEditorContent && currentEditorContent !== processedContent) {
 					console.log('Processed editor content differs from state, updating...');
@@ -428,27 +428,27 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	}, [currentEntries, viewMode, currentView, updateCounter]);
 
 	const tooltipInfo = [
-		`Auto-tidy: ${autoTidy ? "enabled" : "disabled"}`,
+		`Auto-tidy: ${autoTidy ? 'enabled' : 'disabled'}`,
 		`Preset: ${tidyPreset}`,
-		`Entries: ${bibtexContent.split("@").length - 1}`,
-		`MIME Type: ${fileInfo.mimeType || "text/x-bibtex"}`,
-		`Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : "Unknown"}`,
+		`Entries: ${bibtexContent.split('@').length - 1}`,
+		`MIME Type: ${fileInfo.mimeType || 'text/x-bibtex'}`,
+		`Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : 'Unknown'}`,
 	];
 
 	const headerControls = (
 		<>
 			<PluginControlGroup>
 				<button
-					className={`${showSidebar ? "active" : ""}`}
+					className={`${showSidebar ? 'active' : ''}`}
 					onClick={() => setShowSidebar(!showSidebar)}
 					title="Toggle Options Panel"
 				>
 					<OptionsIcon />
 				</button>
 				<button
-					className={`${viewMode === "table" ? "active" : ""}`}
-					onClick={() => setViewMode(viewMode === "editor" ? "table" : "editor")}
-					title={`Switch to ${viewMode === "editor" ? "Table" : "Editor"} View`}
+					className={`${viewMode === 'table' ? 'active' : ''}`}
+					onClick={() => setViewMode(viewMode === 'editor' ? 'table' : 'editor')}
+					title={`Switch to ${viewMode === 'editor' ? 'Table' : 'Editor'} View`}
 				>
 					<ViewIcon />
 				</button>
@@ -458,9 +458,9 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				{fileId && (
 					<button
 						onClick={() => {
-							if (currentView === "original") {
+							if (currentView === 'original') {
 								document.dispatchEvent(
-									new CustomEvent("trigger-save", {
+									new CustomEvent('trigger-save', {
 										detail: { fileId, isFile: true },
 									}),
 								);
@@ -468,7 +468,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 								handleSaveProcessed();
 							}
 						}}
-						title={currentView === "original" ? "Save File (Ctrl+S)" : "Save Current View to File"}
+						title={currentView === 'original' ? 'Save File (Ctrl+S)' : 'Save Current View to File'}
 						disabled={
 							isSaving || (!bibtexContent.trim() && !processedContent.trim())
 						}
@@ -480,7 +480,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 					onClick={() =>
 						handleExport(
 							displayContent,
-							currentView === "original" ? "_original" : "_tidied",
+							currentView === 'original' ? '_original' : '_tidied',
 						)
 					}
 					title="Download Current View"
@@ -507,7 +507,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 					<TidyOptionsPanel
 						options={options}
 						onOptionsChange={setOptions}
-						onResetToDefaults={() => setOptions(getPresetOptions("standard"))}
+						onResetToDefaults={() => setOptions(getPresetOptions('standard'))}
 						onProcessBibtex={processBibtex}
 						isProcessing={isProcessing}
 					/>
@@ -528,26 +528,26 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 					)}
 
 					<div className="editor-containers">
-						<div className="editor-container" style={{ position: "relative" }}>
+						<div className="editor-container" style={{ position: 'relative' }}>
 							<div className="editor-header">
 								<div className="view-tabs">
 									<button
-										className={`tab-button ${currentView === "original" ? "active" : ""}`}
-										onClick={() => setCurrentView("original")}
+										className={`tab-button ${currentView === 'original' ? 'active' : ''}`}
+										onClick={() => setCurrentView('original')}
 									>
 										Original
 									</button>
 									<button
-										className={`tab-button ${currentView === "processed" ? "active" : ""}`}
-										onClick={() => setCurrentView("processed")}
+										className={`tab-button ${currentView === 'processed' ? 'active' : ''}`}
+										onClick={() => setCurrentView('processed')}
 										disabled={!processedContent.trim()}
 									>
 										Processed
 									</button>
 								</div>
-								{currentView === "processed" && processedContent.trim() && (
+								{currentView === 'processed' && processedContent.trim() && (
 									<div className="processed-save-notice">
-										<span>Not saved automatically. Click the <SaveIcon/> <strong>Save</strong> button or <strong>Ctrl+S</strong></span>
+										<span>Not saved automatically. Click the <SaveIcon /> <strong>Save</strong> button or <strong>Ctrl+S</strong></span>
 									</div>
 								)}
 								{isProcessing && (
@@ -563,17 +563,17 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 									ref={originalEditorRef}
 									className="codemirror-editor-container"
 									style={{
-										display: currentView === "original" && viewMode === "editor" ? "block" : "none"
+										display: currentView === 'original' && viewMode === 'editor' ? 'block' : 'none'
 									}}
 								/>
 								<div
 									ref={processedEditorRef}
 									className="codemirror-editor-container"
 									style={{
-										display: currentView === "processed" && viewMode === "editor" ? "block" : "none"
+										display: currentView === 'processed' && viewMode === 'editor' ? 'block' : 'none'
 									}}
 								/>
-								{viewMode === "table" && (
+								{viewMode === 'table' && (
 									<BibtexTableView
 										key={`${currentView}-${updateCounter}`}
 										entries={currentEntries}
@@ -583,7 +583,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 								)}
 							</>
 
-							{originalShowSaveIndicator && currentView === "original" && viewMode === "editor" && (
+							{originalShowSaveIndicator && currentView === 'original' && viewMode === 'editor' && (
 								<div className="save-indicator">
 									<span>Saved</span>
 								</div>

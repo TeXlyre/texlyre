@@ -3,8 +3,10 @@ import {
 	BaseEngine,
 	type CompileResult,
 	type EngineConfig,
-} from "./BaseEngine";
-import { EngineLoader } from "./EngineLoader";
+} from './BaseEngine';
+import { EngineLoader } from './EngineLoader';
+
+const BASE_PATH = __BASE_PATH__
 
 declare global {
 	interface Window {
@@ -19,17 +21,16 @@ interface XeTeXCompileResult extends CompileResult {
 export class XeTeXEngine extends BaseEngine {
 	constructor() {
 		const config: EngineConfig = {
-			name: "XeTeX",
-			setupScript: "./TexlyreXeTeXEngineSetup.js",
-			engineScript: "./texlyrexetex.js",
-			engineClass: "XeTeXEngine",
-			enginePath: "texlyrexetex.js",
+			name: 'XeTeX',
+			setupScript: `${BASE_PATH}/core/swiftlatex/TexlyreXeTeXEngineSetup.js`,
+			engineScript: `${BASE_PATH}/core/swiftlatex/texlyrexetex.js`,
+			engineClass: 'XeTeXEngine',
 		};
 		super(config);
 	}
 
 	async loadScripts(): Promise<void> {
-		if (typeof window.XeTeXEngine === "function") {
+		if (typeof window.XeTeXEngine === 'function') {
 			return;
 		}
 
@@ -38,8 +39,8 @@ export class XeTeXEngine extends BaseEngine {
 			this.config.engineScript,
 		]);
 
-		if (typeof window.XeTeXEngine !== "function") {
-			throw new Error("XeTeXEngine not available after loading scripts");
+		if (typeof window.XeTeXEngine !== 'function') {
+			throw new Error('XeTeXEngine not available after loading scripts');
 		}
 	}
 
@@ -53,27 +54,27 @@ export class XeTeXEngine extends BaseEngine {
 	}
 
 	writeMemFSFile(filename: string, content: string | Uint8Array): void {
-		if (!this.engine) throw new Error("Engine not initialized");
+		if (!this.engine) throw new Error('Engine not initialized');
 		this.engine.writeMemFSFile(filename, content);
 	}
 
 	makeMemFSFolder(folder: string): void {
-		if (!this.engine) throw new Error("Engine not initialized");
+		if (!this.engine) throw new Error('Engine not initialized');
 		this.engine.makeMemFSFolder(folder);
 	}
 
 	setEngineMainFile(filename: string): void {
-		if (!this.engine) throw new Error("Engine not initialized");
+		if (!this.engine) throw new Error('Engine not initialized');
 		this.engine.setEngineMainFile(filename);
 	}
 
 	flushCache(): void {
-		if (!this.engine) throw new Error("Engine not initialized");
+		if (!this.engine) throw new Error('Engine not initialized');
 		this.engine.flushCache();
 	}
 
 	async dumpDirectory(dir: string): Promise<{ [key: string]: ArrayBuffer }> {
-		if (!this.engine) throw new Error("Engine not initialized");
+		if (!this.engine) throw new Error('Engine not initialized');
 		return await this.engine.dumpDirectory(dir);
 	}
 
@@ -82,19 +83,19 @@ export class XeTeXEngine extends BaseEngine {
 		_fileNodes: any[],
 	): Promise<CompileResult> {
 		if (!this.engine || !this.isReady()) {
-			throw new Error("Engine not ready");
+			throw new Error('Engine not ready');
 		}
 
-		this.setStatus("compiling");
+		this.setStatus('compiling');
 
 		try {
 			await this.engine.compileLaTeX(); // Do it twice for tables
 			await this.engine.compileLaTeX(); // Do it thrice for good luck and bib
 			const result = await this.engine.compileLaTeX();
-			this.setStatus("ready");
+			this.setStatus('ready');
 			// this.flushCache();
 
-			console.log("[XeTeXEngine] XeTeX compilation result:", {
+			console.log('[XeTeXEngine] XeTeX compilation result:', {
 				status: result.status,
 				hasPdf: !!result.pdf,
 				hasXdv: !!result.xdv,
@@ -118,7 +119,7 @@ export class XeTeXEngine extends BaseEngine {
 			};
 		} catch (error) {
 			this.flushCache();
-			this.setStatus("error");
+			this.setStatus('error');
 			throw error;
 		}
 	}

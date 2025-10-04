@@ -3,8 +3,10 @@ import {
 	BaseEngine,
 	type CompileResult,
 	type EngineConfig,
-} from "./BaseEngine";
-import { EngineLoader } from "./EngineLoader";
+} from './BaseEngine';
+import { EngineLoader } from './EngineLoader';
+
+const BASE_PATH = __BASE_PATH__
 
 interface DvipdfmxCompileResult extends CompileResult {
 	xdv?: Uint8Array;
@@ -19,17 +21,16 @@ declare global {
 export class DvipdfmxEngine extends BaseEngine {
 	constructor() {
 		const config: EngineConfig = {
-			name: "Dvipdfmx",
-			setupScript: "./TexlyreDvipdfmxEngineSetup.js",
-			engineScript: "./texlyredvipdfm.js",
-			engineClass: "DvipdfmxEngine",
-			enginePath: "texlyredvipdfm.js",
+			name: 'Dvipdfmx',
+			setupScript: `${BASE_PATH}/core/swiftlatex/TexlyreDvipdfmxEngineSetup.js`,
+			engineScript: `${BASE_PATH}/core/swiftlatex/texlyredvipdfm.js`,
+			engineClass: 'DvipdfmxEngine',
 		};
 		super(config);
 	}
 
 	async loadScripts(): Promise<void> {
-		if (typeof window.DvipdfmxEngine === "function") {
+		if (typeof window.DvipdfmxEngine === 'function') {
 			return;
 		}
 
@@ -38,8 +39,8 @@ export class DvipdfmxEngine extends BaseEngine {
 			this.config.engineScript,
 		]);
 
-		if (typeof window.DvipdfmxEngine !== "function") {
-			throw new Error("DvipdfmxEngine not available after loading scripts");
+		if (typeof window.DvipdfmxEngine !== 'function') {
+			throw new Error('DvipdfmxEngine not available after loading scripts');
 		}
 	}
 
@@ -53,29 +54,29 @@ export class DvipdfmxEngine extends BaseEngine {
 	}
 
 	writeMemFSFile(filename: string, content: string | Uint8Array): void {
-		if (!this.engine) throw new Error("Engine not initialized");
+		if (!this.engine) throw new Error('Engine not initialized');
 		this.engine.writeMemFSFile(filename, content);
 	}
 
 	makeMemFSFolder(folder: string): void {
-		if (!this.engine) throw new Error("Engine not initialized");
+		if (!this.engine) throw new Error('Engine not initialized');
 		this.engine.makeMemFSFolder(folder);
 	}
 
 	setEngineMainFile(filename: string): void {
-		if (!this.engine) throw new Error("Engine not initialized");
+		if (!this.engine) throw new Error('Engine not initialized');
 		this.engine.setEngineMainFile(filename);
 	}
 
 	flushCache(): void {
-		if (!this.engine) throw new Error("Engine not initialized");
+		if (!this.engine) throw new Error('Engine not initialized');
 		if (this.engine.flushCache) {
 			this.engine.flushCache();
 		}
 	}
 
 	async dumpDirectory(dir: string): Promise<{ [key: string]: ArrayBuffer }> {
-		if (!this.engine) throw new Error("Engine not initialized");
+		if (!this.engine) throw new Error('Engine not initialized');
 		return await this.engine.dumpDirectory(dir);
 	}
 
@@ -84,14 +85,14 @@ export class DvipdfmxEngine extends BaseEngine {
 		_fileNodes: any[],
 	): Promise<CompileResult> {
 		if (!this.engine || !this.isReady()) {
-			throw new Error("Engine not ready");
+			throw new Error('Engine not ready');
 		}
 
-		this.setStatus("compiling");
+		this.setStatus('compiling');
 
 		try {
 			const result = await this.engine.compilePDF();
-			this.setStatus("ready");
+			this.setStatus('ready');
 			// this.flushCache();
 			return {
 				pdf: result.pdf,
@@ -100,7 +101,7 @@ export class DvipdfmxEngine extends BaseEngine {
 			};
 		} catch (error) {
 			this.flushCache();
-			this.setStatus("error");
+			this.setStatus('error');
 			throw error;
 		}
 	}

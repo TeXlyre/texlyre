@@ -1,22 +1,22 @@
 // src/components/editor/FileExplorer.tsx
-import type React from "react";
-import { type DragEvent, useEffect, useRef, useState } from "react";
+import type React from 'react';
+import { type DragEvent, useEffect, useRef, useState } from 'react';
 
-import { useFileTree } from "../../hooks/useFileTree";
-import type { FileNode } from "../../types/files";
-import { buildUrlWithFragments, parseUrlFragments } from "../../utils/urlUtils";
-import { fileCommentProcessor } from "../../utils/fileCommentProcessor";
-import { createZipFromFolder, downloadZipFile } from "../../utils/zipUtils";
+import { useFileTree } from '../../hooks/useFileTree';
+import type { FileNode } from '../../types/files';
+import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
+import { fileCommentProcessor } from '../../utils/fileCommentProcessor';
+import { createZipFromFolder, downloadZipFile } from '../../utils/zipUtils';
 import {
 	ExportIcon,
 	FilePlusIcon,
 	FolderPlusIcon,
 	RefreshIcon,
 	UploadIcon,
-} from "../common/Icons.tsx";
-import FileOperationsModal from "./FileOperationsModal";
-import FileTreeItem from "./FileTreeItem";
-import ZipHandlingModal from "./ZipHandlingModal";
+} from '../common/Icons.tsx';
+import FileOperationsModal from './FileOperationsModal';
+import FileTreeItem from './FileTreeItem';
+import ZipHandlingModal from './ZipHandlingModal';
 
 interface FileExplorerProps {
 	onFileSelect: (
@@ -30,6 +30,7 @@ interface FileExplorerProps {
 	initialExpandedPaths?: string[];
 	currentProjectId?: string | null;
 	onExportCurrentProject?: (projectId: string) => void;
+	projectType?: 'latex' | 'typst';
 }
 
 interface FilePropertiesInfo {
@@ -49,7 +50,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	initialSelectedFile,
 	initialExpandedPaths,
 	currentProjectId,
-	onExportCurrentProject
+	onExportCurrentProject,
+	projectType
 }) => {
 	const {
 		fileTree,
@@ -71,16 +73,16 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		refreshFileTree,
 	} = useFileTree();
 
-	const [currentPath, _setCurrentPath] = useState("/");
+	const [currentPath, _setCurrentPath] = useState('/');
 	const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
-		new Set(["/"]),
+		new Set(['/']),
 	);
 	const dropRef = useRef<HTMLDivElement>(null);
 	const [isDragging, setIsDragging] = useState(false);
 	const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
 	const [showDragDropDialog, setShowDragDropDialog] = useState(false);
 	const [dragDropFile, setDragDropFile] = useState<FileNode | null>(null);
-	const [dragDropTargetPath, setDragDropTargetPath] = useState<string>("");
+	const [dragDropTargetPath, setDragDropTargetPath] = useState<string>('');
 	const [pendingDragDropOperation, setPendingDragDropOperation] = useState<
 		(() => Promise<void>) | null
 	>(null);
@@ -89,26 +91,26 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	const menuRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
 	const [renamingFileId, setRenamingFileId] = useState<string | null>(null);
-	const [renameValue, setRenameValue] = useState("");
+	const [renameValue, setRenameValue] = useState('');
 	const [showPropertiesModal, setShowPropertiesModal] = useState(false);
 	const [propertiesInfo, setPropertiesInfo] =
 		useState<FilePropertiesInfo | null>(null);
 
 	const [showMoveDialog, setShowMoveDialog] = useState(false);
 	const [fileToMove, setFileToMove] = useState<FileNode | null>(null);
-	const [selectedTargetPath, setSelectedTargetPath] = useState<string>("/");
+	const [selectedTargetPath, setSelectedTargetPath] = useState<string>('/');
 
 	const [showZipModal, setShowZipModal] = useState(false);
 	const [pendingZipFile, setPendingZipFile] = useState<File | null>(null);
-	const [zipTargetPath, setZipTargetPath] = useState<string>("/");
+	const [zipTargetPath, setZipTargetPath] = useState<string>('/');
 
 	const [hasProcessedInitialFile, setHasProcessedInitialFile] = useState(false);
 
 	const [creatingNewItem, setCreatingNewItem] = useState<{
-		type: "file" | "directory";
+		type: 'file' | 'directory';
 		parentPath: string;
 	} | null>(null);
-	const [newItemName, setNewItemName] = useState("");
+	const [newItemName, setNewItemName] = useState('');
 
 	useEffect(() => {
 		if (
@@ -127,10 +129,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
 	const processFiles = async (files: File[], targetPath: string) => {
 		const zipFiles = files.filter((file) =>
-			file.name.toLowerCase().endsWith(".zip"),
+			file.name.toLowerCase().endsWith('.zip'),
 		);
 		const regularFiles = files.filter(
-			(file) => !file.name.toLowerCase().endsWith(".zip"),
+			(file) => !file.name.toLowerCase().endsWith('.zip'),
 		);
 
 		if (regularFiles.length > 0) {
@@ -160,7 +162,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			try {
 				await extractZipFile(pendingZipFile, zipTargetPath);
 			} catch (error) {
-				console.error("Error extracting ZIP:", error);
+				console.error('Error extracting ZIP:', error);
 			}
 		}
 		handleZipModalClose();
@@ -171,7 +173,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			try {
 				await storeZipFile(pendingZipFile, zipTargetPath);
 			} catch (error) {
-				console.error("Error storing ZIP:", error);
+				console.error('Error storing ZIP:', error);
 			}
 		}
 		handleZipModalClose();
@@ -193,7 +195,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		const files = event.target.files;
 		if (files && files.length > 0) {
 			await processFiles(Array.from(files), currentPath);
-			event.target.value = "";
+			event.target.value = '';
 		}
 	};
 
@@ -203,15 +205,16 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		}
 	};
 
-	const handleStartCreateDirectory = (parentPath = "/") => {
-		setCreatingNewItem({ type: "directory", parentPath });
-		setNewItemName("new_folder");
+	const handleStartCreateDirectory = (parentPath = '/') => {
+		setCreatingNewItem({ type: 'directory', parentPath });
+		setNewItemName('new_folder');
 		setActiveMenu(null);
 	};
 
-	const handleStartCreateFile = (parentPath = "/") => {
-		setCreatingNewItem({ type: "file", parentPath });
-		setNewItemName("new_file.tex");
+	const handleStartCreateFile = (parentPath = '/') => {
+		const extension = projectType === 'typst' ? '.typ' : '.tex';
+		setCreatingNewItem({ type: 'file', parentPath });
+		setNewItemName(`new_file${extension}`);
 		setActiveMenu(null);
 	};
 
@@ -219,17 +222,17 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		const newExpandedFolders = new Set(expandedFolders);
 
 		// Split the path and build all parent paths
-		const pathSegments = dirPath.split("/").filter((segment) => segment);
-		let currentPath = "";
+		const pathSegments = dirPath.split('/').filter((segment) => segment);
+		let currentPath = '';
 
 		for (const segment of pathSegments) {
 			currentPath =
-				currentPath === "" ? `/${segment}` : `${currentPath}/${segment}`;
+				currentPath === '' ? `/${segment}` : `${currentPath}/${segment}`;
 			newExpandedFolders.add(currentPath);
 		}
 
 		// Always ensure root is expanded
-		newExpandedFolders.add("/");
+		newExpandedFolders.add('/');
 
 		setExpandedFolders(newExpandedFolders);
 	};
@@ -238,25 +241,25 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		if (!creatingNewItem || !newItemName.trim()) return;
 
 		try {
-			if (creatingNewItem.type === "directory") {
+			if (creatingNewItem.type === 'directory') {
 				await createDirectory(newItemName.trim(), creatingNewItem.parentPath);
 
 				// Expand all parent directories including the newly created one
 				const newDirPath =
-					creatingNewItem.parentPath === "/"
+					creatingNewItem.parentPath === '/'
 						? `/${newItemName.trim()}`
 						: `${creatingNewItem.parentPath}/${newItemName.trim()}`;
 
 				expandAllParentDirectories(newDirPath);
 			} else {
-				const file = new File([""], newItemName.trim(), { type: "text/plain" });
+				const file = new File([''], newItemName.trim(), { type: 'text/plain' });
 				await uploadFiles([file], creatingNewItem.parentPath);
 
 				// Expand all parent directories first
 				expandAllParentDirectories(creatingNewItem.parentPath);
 
 				const newFilePath =
-					creatingNewItem.parentPath === "/"
+					creatingNewItem.parentPath === '/'
 						? `/${newItemName.trim()}`
 						: `${creatingNewItem.parentPath}/${newItemName.trim()}`;
 
@@ -269,7 +272,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 					path: string,
 				): FileNode | null => {
 					for (const node of nodes) {
-						if (node.path === path && node.type === "file") {
+						if (node.path === path && node.type === 'file') {
 							return node;
 						}
 						if (node.children) {
@@ -300,7 +303,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 						window.location.hash = newUrl;
 					}
 				} else {
-					console.warn("Could not find newly created file:", newFilePath);
+					console.warn('Could not find newly created file:', newFilePath);
 				}
 			}
 		} catch (error) {
@@ -308,24 +311,24 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		}
 
 		setCreatingNewItem(null);
-		setNewItemName("");
+		setNewItemName('');
 	};
 
 	const handleCancelNewItem = () => {
 		setCreatingNewItem(null);
-		setNewItemName("");
+		setNewItemName('');
 	};
 
 	const handleNewItemKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === "Enter") {
+		if (e.key === 'Enter') {
 			handleConfirmNewItem();
-		} else if (e.key === "Escape") {
+		} else if (e.key === 'Escape') {
 			handleCancelNewItem();
 		}
 	};
 
 	const handleFileSelect = async (node: FileNode) => {
-		if (node.type === "file") {
+		if (node.type === 'file') {
 			selectFile(node.id);
 			const content = await getFileContent(node.id);
 			if (content) {
@@ -363,52 +366,52 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	const handleSaveRename = async (node: FileNode) => {
 		if (renamingFileId) {
 			try {
-				const parentPath = node.path.substring(0, node.path.lastIndexOf("/"));
+				const parentPath = node.path.substring(0, node.path.lastIndexOf('/'));
 				const newFullPath =
-					parentPath === ""
+					parentPath === ''
 						? `/${renameValue.trim()}`
 						: `${parentPath}/${renameValue.trim()}`;
 
 				if (node.path === newFullPath) {
 					setRenamingFileId(null);
-					setRenameValue("");
+					setRenameValue('');
 					return;
 				}
 
 				await renameFile(node.id, newFullPath);
 			} catch (error) {
 				if (error instanceof Error) {
-					if (error.message === "File operation cancelled by user") {
+					if (error.message === 'File operation cancelled by user') {
 					} else if (
-						error.message === "File unlinked. Please try rename again."
+						error.message === 'File unlinked. Please try rename again.'
 					) {
 						return;
 					} else {
-						console.error("Error renaming file:", error);
+						console.error('Error renaming file:', error);
 					}
 				}
 			}
 		}
 		setRenamingFileId(null);
-		setRenameValue("");
+		setRenameValue('');
 	};
 
 	const handleCancelRename = () => {
 		setRenamingFileId(null);
-		setRenameValue("");
+		setRenameValue('');
 	};
 
 	const handleRenameKeyDown = (e: React.KeyboardEvent, node: FileNode) => {
-		if (e.key === "Enter") {
+		if (e.key === 'Enter') {
 			handleSaveRename(node);
-		} else if (e.key === "Escape") {
+		} else if (e.key === 'Escape') {
 			handleCancelRename();
 		}
 	};
 
 	const handleMoveFile = (node: FileNode) => {
 		setFileToMove(node);
-		setSelectedTargetPath("/");
+		setSelectedTargetPath('/');
 		setShowMoveDialog(true);
 		setActiveMenu(null);
 	};
@@ -417,7 +420,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		if (fileToMove && selectedTargetPath !== fileToMove.path) {
 			try {
 				const newFullPath =
-					selectedTargetPath === "/"
+					selectedTargetPath === '/'
 						? `/${fileToMove.name}`
 						: `${selectedTargetPath}/${fileToMove.name}`;
 
@@ -431,27 +434,27 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				setShowMoveDialog(false);
 				setFileToMove(null);
 			} catch (error) {
-				console.error("Error moving file:", error);
+				console.error('Error moving file:', error);
 			}
 		}
 	};
 
 	const handleDuplicateFile = async (node: FileNode) => {
-		if (node.type === "file") {
+		if (node.type === 'file') {
 			const content = await getFileContent(node.id);
 			if (content) {
-				const nameWithoutExt = node.name.replace(/\.[^/.]+$/, "");
-				const extension = node.name.includes(".")
-					? `.${node.name.split(".").pop()}`
-					: "";
+				const nameWithoutExt = node.name.replace(/\.[^/.]+$/, '');
+				const extension = node.name.includes('.')
+					? `.${node.name.split('.').pop()}`
+					: '';
 				const duplicateName = `${nameWithoutExt}_copy${extension}`;
 
-				const parentPath = node.path.substring(0, node.path.lastIndexOf("/"));
+				const parentPath = node.path.substring(0, node.path.lastIndexOf('/'));
 
 				const file = new File([content], duplicateName, {
-					type: node.mimeType || "text/plain",
+					type: node.mimeType || 'text/plain',
 				});
-				await uploadFiles([file], parentPath || "/");
+				await uploadFiles([file], parentPath || '/');
 			}
 		}
 		setActiveMenu(null);
@@ -472,15 +475,15 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	};
 
 	const handleExportFile = async (node: FileNode) => {
-		if (node.type === "file") {
+		if (node.type === 'file') {
 			const content = await getFileContent(node.id);
 			if (content) {
 				const cleanContent = fileCommentProcessor.cleanContent(content);
 				const blob = new Blob([cleanContent], {
-					type: node.mimeType || "text/plain",
+					type: node.mimeType || 'text/plain',
 				});
 				const url = URL.createObjectURL(blob);
-				const a = document.createElement("a");
+				const a = document.createElement('a');
 				a.href = url;
 				a.download = node.name;
 				document.body.appendChild(a);
@@ -493,7 +496,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	};
 
 	const handleExportFolder = async (node: FileNode) => {
-		if (node.type === "directory") {
+		if (node.type === 'directory') {
 			try {
 				const zipBlob = await createZipFromFolder(
 					node,
@@ -502,7 +505,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				);
 				downloadZipFile(zipBlob, node.name);
 			} catch (error) {
-				console.error("Error exporting folder:", error);
+				console.error('Error exporting folder:', error);
 			}
 		}
 		setActiveMenu(null);
@@ -517,7 +520,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			documentId: node.documentId,
 		};
 
-		if (node.type === "file") {
+		if (node.type === 'file') {
 			const file = await getFile(node.id);
 			if (file) {
 				info.size = file.size;
@@ -531,8 +534,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	};
 
 	const handleUploadToFolder = (folderPath: string) => {
-		const input = document.createElement("input");
-		input.type = "file";
+		const input = document.createElement('input');
+		input.type = 'file';
 		input.multiple = true;
 		input.onchange = async (e) => {
 			const files = (e.target as HTMLInputElement).files;
@@ -560,7 +563,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		const newExpandedFolders = new Set(expandedFolders);
 
 		const addAllChildren = (currentNode: FileNode) => {
-			if (currentNode.type === "directory") {
+			if (currentNode.type === 'directory') {
 				newExpandedFolders.add(currentNode.path);
 				if (currentNode.children) {
 					currentNode.children.forEach(addAllChildren);
@@ -577,7 +580,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		const newExpandedFolders = new Set(expandedFolders);
 
 		const removeAllChildren = (currentNode: FileNode) => {
-			if (currentNode.type === "directory") {
+			if (currentNode.type === 'directory') {
 				newExpandedFolders.delete(currentNode.path);
 				if (currentNode.children) {
 					currentNode.children.forEach(removeAllChildren);
@@ -600,14 +603,14 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
 		e.stopPropagation();
 		e.dataTransfer.setData(
-			"text/plain",
+			'text/plain',
 			JSON.stringify({
 				nodeId: node.id,
 				nodePath: node.path,
 				nodeType: node.type,
 			}),
 		);
-		e.dataTransfer.effectAllowed = "move";
+		e.dataTransfer.effectAllowed = 'move';
 	};
 
 	const handleDropOnDirectory = async (
@@ -617,11 +620,11 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		e.preventDefault();
 		e.stopPropagation();
 
-		if (targetNode.type !== "directory") return;
+		if (targetNode.type !== 'directory') return;
 
-		const rawDragData = e.dataTransfer.getData("text/plain");
+		const rawDragData = e.dataTransfer.getData('text/plain');
 		const isFileDrop = Array.from(e.dataTransfer.items).some(
-			(item) => item.kind === "file",
+			(item) => item.kind === 'file',
 		);
 
 		if (isFileDrop && enableFileSystemDragDrop) {
@@ -638,9 +641,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			return;
 		}
 
-		if (!rawDragData || rawDragData.trim() === "") {
+		if (!rawDragData || rawDragData.trim() === '') {
 			console.warn(
-				"handleDropOnDirectory: No drag data available for internal move",
+				'handleDropOnDirectory: No drag data available for internal move',
 			);
 			setDragOverTarget(null);
 			return;
@@ -651,7 +654,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			const { nodeId, nodePath, nodeType } = dragData;
 
 			if (
-				nodeType === "directory" &&
+				nodeType === 'directory' &&
 				targetNode.path.startsWith(`${nodePath}/`)
 			) {
 				setDragOverTarget(null);
@@ -665,7 +668,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			const sourceFile = await getFile(nodeId);
 			if (!sourceFile) {
 				console.warn(
-					"handleDropOnDirectory: Dragged file/directory not found:",
+					'handleDropOnDirectory: Dragged file/directory not found:',
 					nodeId,
 				);
 				setDragOverTarget(null);
@@ -677,13 +680,13 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			setShowDragDropDialog(true);
 			setPendingDragDropOperation(() => async () => {
 				const newFullPath =
-					targetNode.path === "/"
+					targetNode.path === '/'
 						? `/${sourceFile.name}`
 						: `${targetNode.path}/${sourceFile.name}`;
 				await renameFile(nodeId, newFullPath);
 			});
 		} catch (error) {
-			console.error("Error during internal drag-drop operation:", error);
+			console.error('Error during internal drag-drop operation:', error);
 		} finally {
 			setDragOverTarget(null);
 			setIsDragging(false);
@@ -718,9 +721,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		nodeId?: string,
 	) => {
 		const isFileDrop = Array.from(event.dataTransfer.items).some(
-			(item) => item.kind === "file",
+			(item) => item.kind === 'file',
 		);
-		const isInternalDrop = event.dataTransfer.getData("text/plain");
+		const isInternalDrop = event.dataTransfer.getData('text/plain');
 
 		if (
 			(isFileDrop && !enableFileSystemDragDrop) ||
@@ -735,25 +738,25 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		if (nodeId) {
 			setDragOverTarget(nodeId);
 		} else {
-			setDragOverTarget("root");
+			setDragOverTarget('root');
 		}
 
-		event.dataTransfer.dropEffect = isFileDrop ? "copy" : "move";
+		event.dataTransfer.dropEffect = isFileDrop ? 'copy' : 'move';
 	};
 
 	const handleDropOnRoot = async (e: React.DragEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
 
-		const rawDragData = e.dataTransfer.getData("text/plain");
+		const rawDragData = e.dataTransfer.getData('text/plain');
 		const isFileDrop = Array.from(e.dataTransfer.items).some(
-			(item) => item.kind === "file",
+			(item) => item.kind === 'file',
 		);
 
 		if (isFileDrop && enableFileSystemDragDrop) {
 			const files = Array.from(e.dataTransfer.files);
 			if (files.length > 0) {
-				await processFiles(files, "/");
+				await processFiles(files, '/');
 			}
 			setDragOverTarget(null);
 			setIsDragging(false);
@@ -766,7 +769,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			return;
 		}
 
-		if (!rawDragData || rawDragData.trim() === "") {
+		if (!rawDragData || rawDragData.trim() === '') {
 			setDragOverTarget(null);
 			setIsDragging(false);
 			return;
@@ -776,7 +779,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			const dragData = JSON.parse(rawDragData);
 			const { nodeId, nodePath } = dragData;
 
-			if (nodePath === "/") {
+			if (nodePath === '/') {
 				setDragOverTarget(null);
 				setIsDragging(false);
 				return;
@@ -791,14 +794,14 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
 			// Show confirmation dialog
 			setDragDropFile(sourceFile);
-			setDragDropTargetPath("/");
+			setDragDropTargetPath('/');
 			setShowDragDropDialog(true);
 			setPendingDragDropOperation(() => async () => {
 				const newFullPath = `/${sourceFile.name}`;
 				await renameFile(nodeId, newFullPath);
 			});
 		} catch (error) {
-			console.error("Error during root drop operation:", error);
+			console.error('Error during root drop operation:', error);
 		} finally {
 			setDragOverTarget(null);
 			setIsDragging(false);
@@ -810,19 +813,19 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			try {
 				await pendingDragDropOperation();
 			} catch (error) {
-				console.error("Error executing drag drop operation:", error);
+				console.error('Error executing drag drop operation:', error);
 			}
 		}
 		setShowDragDropDialog(false);
 		setDragDropFile(null);
-		setDragDropTargetPath("");
+		setDragDropTargetPath('');
 		setPendingDragDropOperation(null);
 	};
 
 	const handleCloseDragDropDialog = () => {
 		setShowDragDropDialog(false);
 		setDragDropFile(null);
-		setDragDropTargetPath("");
+		setDragDropTargetPath('');
 		setPendingDragDropOperation(null);
 	};
 
@@ -834,7 +837,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
 			for (const node of nodes) {
 				if (
-					node.type === "directory" &&
+					node.type === 'directory' &&
 					node.path !== currentNode?.path &&
 					!node.path.startsWith(`${currentNode?.path}/`)
 				) {
@@ -858,7 +861,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	return (
 		<>
 			<div
-				className={`file-explorer ${isDragging ? "dragging" : ""} ${dragOverTarget === "root" ? "root-drag-over" : ""}`}
+				className={`file-explorer ${isDragging ? 'dragging' : ''} ${dragOverTarget === 'root' ? 'root-drag-over' : ''}`}
 				ref={dropRef}
 				onDragEnter={handleDragEnter}
 				onDragOver={(e) => handleDragOver(e)}
@@ -890,7 +893,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 						<button
 							className="action-btn"
 							title="Upload Files"
-							onClick={() => document.getElementById("file-input").click()}
+							onClick={() => document.getElementById('file-input').click()}
 						>
 							<UploadIcon />
 						</button>
@@ -900,13 +903,13 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 							type="file"
 							multiple
 							onChange={handleFileUpload}
-							style={{ display: "none" }}
+							style={{ display: 'none' }}
 						/>
 
 						<button
 							className="action-btn"
 							title="New File"
-							onClick={() => handleStartCreateFile("/")}
+							onClick={() => handleStartCreateFile('/')}
 						>
 							<FilePlusIcon />
 						</button>
@@ -914,7 +917,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 						<button
 							className="action-btn"
 							title="New Folder"
-							onClick={() => handleStartCreateDirectory("/")}
+							onClick={() => handleStartCreateDirectory('/')}
 						>
 							<FolderPlusIcon />
 						</button>
@@ -922,10 +925,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 				</div>
 
 				<div className="file-tree">
-					{creatingNewItem && creatingNewItem.parentPath === "/" && (
+					{creatingNewItem && creatingNewItem.parentPath === '/' && (
 						<div className="file-node creating-new-item">
 							<span className="file-icon">
-								{creatingNewItem.type === "directory" ? (
+								{creatingNewItem.type === 'directory' ? (
 									<FolderPlusIcon />
 								) : (
 									<FilePlusIcon />
@@ -1001,7 +1004,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 								/>
 							))}
 
-							{dragOverTarget === "root" && (
+							{dragOverTarget === 'root' && (
 								<div className="root-drop-indicator">
 									Drop here to move to root directory
 								</div>

@@ -9,8 +9,8 @@ export interface TidyOptions {
 	align?: number | boolean;
 	blankLines?: boolean;
 	sort?: string[] | boolean;
-	duplicates?: ("doi" | "key" | "abstract" | "citation")[] | boolean;
-	merge?: "first" | "last" | "combine" | "overwrite" | boolean;
+	duplicates?: ('doi' | 'key' | 'abstract' | 'citation')[] | boolean;
+	merge?: 'first' | 'last' | 'combine' | 'overwrite' | boolean;
 	stripEnclosingBraces?: boolean;
 	dropAllCaps?: boolean;
 	escape?: boolean;
@@ -32,7 +32,7 @@ export interface TidyOptions {
 
 export const getPresetOptions = (preset: string): TidyOptions => {
 	switch (preset) {
-		case "minimal":
+		case 'minimal':
 			return {
 				omit: [],
 				curly: false,
@@ -63,7 +63,7 @@ export const getPresetOptions = (preset: string): TidyOptions => {
 				wrap: false,
 				lookupDois: false,
 			};
-		case "strict":
+		case 'strict':
 			return {
 				omit: [],
 				curly: true,
@@ -73,9 +73,9 @@ export const getPresetOptions = (preset: string): TidyOptions => {
 				tab: false,
 				align: 14,
 				blankLines: true,
-				sort: ["key"],
-				duplicates: ["doi", "citation", "abstract"],
-				merge: "combine",
+				sort: ['key'],
+				duplicates: ['doi', 'citation', 'abstract'],
+				merge: 'combine',
 				stripEnclosingBraces: true,
 				dropAllCaps: true,
 				escape: true,
@@ -89,7 +89,7 @@ export const getPresetOptions = (preset: string): TidyOptions => {
 				generateKeys: false,
 				maxAuthors: undefined,
 				lowercase: true,
-				enclosingBraces: ["title"],
+				enclosingBraces: ['title'],
 				removeBraces: false,
 				wrap: 80,
 				lookupDois: false,

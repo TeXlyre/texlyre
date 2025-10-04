@@ -52,7 +52,7 @@
 .collapse-button {
 	position: absolute;
 	z-index: 999;
-	background-color: var(--pico-background-color);
+	background-color: var(--pico-primary);
 	border: 1px solid var(--pico-muted-border-color);
 	border-radius: var(--space-sm);
 	width: 24px;
@@ -61,7 +61,7 @@
 	align-items: center;
 	justify-content: center;
 	cursor: pointer;
-	opacity: 0.5;
+	opacity: 0.2;
 	transition: opacity var(--transition-normal), width var(--transition-normal),
 		height var(--transition-normal);
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

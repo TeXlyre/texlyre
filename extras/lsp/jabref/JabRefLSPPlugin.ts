@@ -1,12 +1,12 @@
 // extras/lsp/jabref/JabRefLSPPlugin.ts
-import type { LSPPlugin, LSPPanelProps } from "../../../src/plugins/PluginInterface";
-import type { LSPRequest, LSPResponse, LSPNotification } from "../../../src/types/lsp";
-import { JabRefIcon } from "./Icon";
-import { jabrefLSPSettings } from "./settings";
-import { bibliographyImportService } from "../../../src/services/BibliographyImportService";
+import type { LSPPlugin, LSPPanelProps } from '../../../src/plugins/PluginInterface';
+import type { LSPRequest, LSPResponse, LSPNotification } from '../../../src/types/lsp';
+import { JabRefIcon } from './Icon';
+import { jabrefLSPSettings } from './settings';
+import { bibliographyImportService } from '../../../src/services/BibliographyImportService';
 
-export const PLUGIN_NAME = "JabRef LSP";
-export const PLUGIN_VERSION = "0.1.0";
+export const PLUGIN_NAME = 'JabRef LSP';
+export const PLUGIN_VERSION = '0.1.0';
 
 interface BibEntry {
 	key: string;
@@ -16,10 +16,10 @@ interface BibEntry {
 }
 
 class JabRefLSPPlugin implements LSPPlugin {
-	id = "jabref-lsp";
+	id = 'jabref-lsp';
 	name = PLUGIN_NAME;
 	version = PLUGIN_VERSION;
-	type = "lsp" as const;
+	type = 'lsp' as const;
 	icon = JabRefIcon;
 	settings = jabrefLSPSettings;
 
@@ -124,7 +124,7 @@ class JabRefLSPPlugin implements LSPPlugin {
 			settings: {
 				citation: {
 					bibliographies: [
-						"~/Documents/*.bib",
+						'~/Documents/*.bib',
 					]
 				}
 			}

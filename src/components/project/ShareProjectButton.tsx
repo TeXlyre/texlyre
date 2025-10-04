@@ -1,7 +1,7 @@
 // src/components/project/ShareProjectButton.tsx
-import type React from "react";
-import { useEffect, useRef, useState } from "react";
-import { ChevronDownIcon, ShareIcon } from "../common/Icons";
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronDownIcon, ShareIcon } from '../common/Icons';
 
 interface ShareProjectButtonProps {
 	className?: string;
@@ -11,7 +11,7 @@ interface ShareProjectButtonProps {
 }
 
 const ShareProjectButton: React.FC<ShareProjectButtonProps> = ({
-	className = "",
+	className = '',
 	projectName,
 	shareUrl,
 	onOpenShareModal,
@@ -29,9 +29,9 @@ const ShareProjectButton: React.FC<ShareProjectButtonProps> = ({
 			}
 		};
 
-		document.addEventListener("mousedown", handleClickOutside);
+		document.addEventListener('mousedown', handleClickOutside);
 		return () => {
-			document.removeEventListener("mousedown", handleClickOutside);
+			document.removeEventListener('mousedown', handleClickOutside);
 		};
 	}, []);
 

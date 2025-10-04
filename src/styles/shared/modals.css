@@ -49,6 +49,15 @@
 	color: var(--text-color);
 }
 
+.modal-header h2 span svg {
+	margin-bottom: var(--space-xs);
+	font-size: 1.25rem;
+	font-weight: 600;
+	width: 25px;
+	height: 25px;
+	color: var(--text-color);
+}
+
 .modal-header h2 span {
 	display: inline-block;
 	margin-top: 0;
@@ -116,6 +125,7 @@
 		opacity: 0;
 		transform: translateY(-20px);
 	}
+
 	to {
 		opacity: 1;
 		transform: translateY(0);

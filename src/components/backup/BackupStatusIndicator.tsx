@@ -1,11 +1,11 @@
 // src/components/backup/BackupStatusIndicator.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import { useFileSystemBackup } from "../../hooks/useFileSystemBackup";
-import { pluginRegistry } from "../../plugins/PluginRegistry";
-import { BackupIcon, ChevronDownIcon, FileSystemIcon } from "../common/Icons";
-import BackupModal from "./BackupModal";
+import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
+import { pluginRegistry } from '../../plugins/PluginRegistry';
+import { BackupIcon, ChevronDownIcon, FileSystemIcon } from '../common/Icons';
+import BackupModal from './BackupModal';
 
 interface BackupStatusIndicatorProps {
 	className?: string;
@@ -14,7 +14,7 @@ interface BackupStatusIndicatorProps {
 }
 
 const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
-	className = "",
+	className = '',
 	currentProjectId,
 	isInEditor = false,
 }) => {
@@ -29,13 +29,13 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 		const enabled = [];
 
 		if (fileSystemBackup.status.isConnected) {
-			enabled.push({ type: "filesystem", name: "File System" });
+			enabled.push({ type: 'filesystem', name: 'File System' });
 		}
 
 		backupPlugins.forEach((plugin) => {
 			const status = plugin.getService().getStatus();
 			if (status.isConnected) {
-				enabled.push({ type: "plugin", name: plugin.name, id: plugin.id });
+				enabled.push({ type: 'plugin', name: plugin.name, id: plugin.id });
 			}
 		});
 
@@ -50,7 +50,7 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 		} else if (enabledServices.length === 1) {
 			// Open the single enabled service directly
 			const service = enabledServices[0];
-			if (service.type === "filesystem") {
+			if (service.type === 'filesystem') {
 				setShowFileSystemModal(true);
 			} else {
 				setActivePlugin(service.id);
@@ -85,8 +85,8 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 		const hasConnectedService =
 			status.isConnected || pluginStatuses.some((s) => s.isConnected);
 		const isSyncing =
-			status.status === "syncing" ||
-			pluginStatuses.some((s) => s.status === "syncing");
+			status.status === 'syncing' ||
+			pluginStatuses.some((s) => s.status === 'syncing');
 
 		return { connected: hasConnectedService, syncing: isSyncing };
 	};
@@ -94,26 +94,26 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 	const mainStatus = getMainStatus();
 
 	const getStatusColor = () => {
-		if (!mainStatus.connected) return "#666";
-		if (mainStatus.syncing) return "#ffc107";
-		return "#28a745";
+		if (!mainStatus.connected) return '#666';
+		if (mainStatus.syncing) return '#ffc107';
+		return '#28a745';
 	};
 
 	const getServiceStatusIndicator = (
 		serviceType: string,
 		serviceId?: string,
 	) => {
-		if (serviceType === "filesystem") {
-			return fileSystemBackup.status.isConnected ? "🟢" : "";
+		if (serviceType === 'filesystem') {
+			return fileSystemBackup.status.isConnected ? '🟢' : '';
 		}
 		if (serviceId) {
 			const plugin = backupPlugins.find((p) => p.id === serviceId);
 			if (plugin) {
 				const status = plugin.getService().getStatus();
-				return status.isConnected ? "🟢" : "";
+				return status.isConnected ? '🟢' : '';
 			}
 		}
-		return "";
+		return '';
 	};
 
 	return (
@@ -122,13 +122,13 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 				<div className="backup-button-group">
 					<div
 						className={`backup-status-indicator main-button ${className} ${
-							backupPlugins.length === 0 ? "single-service" : ""
-						} ${mainStatus.connected ? "connected" : "disconnected"}`}
+							backupPlugins.length === 0 ? 'single-service' : ''
+						} ${mainStatus.connected ? 'connected' : 'disconnected'}`}
 						onClick={handleMainButtonClick}
 						title={
 							enabledServices.length === 1
 								? `Open ${enabledServices[0].name}`
-								: "Backup Options"
+								: 'Backup Options'
 						}
 					>
 						<div
@@ -141,7 +141,7 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 
 					{backupPlugins.length > 0 && (
 						<button
-							className={`backup-dropdown-toggle ${mainStatus.connected ? "connected" : "disconnected"}`}
+							className={`backup-dropdown-toggle ${mainStatus.connected ? 'connected' : 'disconnected'}`}
 							onClick={handleDropdownToggle}
 							title="Backup Options"
 						>
@@ -157,7 +157,7 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 							onClick={handleFileSystemClick}
 						>
 							<span className="service-indicator">
-								{getServiceStatusIndicator("filesystem")}
+								{getServiceStatusIndicator('filesystem')}
 							</span>
 							<FileSystemIcon /> File System
 						</div>
@@ -171,7 +171,7 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 									onClick={() => handlePluginClick(plugin.id)}
 								>
 									<span className="service-indicator">
-										{getServiceStatusIndicator("plugin", plugin.id)}
+										{getServiceStatusIndicator('plugin', plugin.id)}
 									</span>
 									<IconComponent /> {plugin.name}
 								</div>

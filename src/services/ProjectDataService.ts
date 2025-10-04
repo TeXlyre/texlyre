@@ -1,27 +1,27 @@
 // src/services/ProjectDataService.ts
-import { openDB } from "idb";
-import { IndexeddbPersistence } from "y-indexeddb";
-import * as Y from "yjs";
+import { openDB } from 'idb';
+import { IndexeddbPersistence } from 'y-indexeddb';
+import * as Y from 'yjs';
 
-import type { User } from "../types/auth";
-import type { FileNode } from "../types/files";
-import type { Project } from "../types/projects";
-import { getMimeType, isBinaryFile } from "../utils/fileUtils";
-import { authService } from "./AuthService";
+import type { User } from '../types/auth';
+import type { FileNode } from '../types/files';
+import type { Project } from '../types/projects';
+import { getMimeType, isBinaryFile } from '../utils/fileUtils';
+import { authService } from './AuthService';
 import {
 	type DataStructureService,
 	type DocumentMetadata,
 	type FileMetadata,
 	type ProjectMetadata,
 	UnifiedDataStructureService,
-} from "./DataStructureService";
+} from './DataStructureService';
 
 export class ProjectDataService {
 	private unifiedService = new UnifiedDataStructureService();
 
 	async serializeUserData(userId: string): Promise<User> {
 		const user = await authService.getUserById(userId);
-		if (!user) throw new Error("User not found");
+		if (!user) throw new Error('User not found');
 
 		return {
 			id: user.id,
@@ -37,7 +37,7 @@ export class ProjectDataService {
 
 	async serializeProjects(
 		userId: string,
-		mode: "backup" | "export",
+		mode: 'backup' | 'export',
 		projectIds?: string[],
 	): Promise<ProjectMetadata[]> {
 		let projects;
@@ -83,7 +83,7 @@ export class ProjectDataService {
 			return { documents, documentContents };
 		}
 
-		const projectId = project.docUrl.startsWith("yjs:")
+		const projectId = project.docUrl.startsWith('yjs:')
 			? project.docUrl.slice(4)
 			: project.docUrl;
 		const dbName = `texlyre-project-${projectId}`;
@@ -98,14 +98,14 @@ export class ProjectDataService {
 
 			await new Promise<void>((resolve) => {
 				const timeout = setTimeout(() => resolve(), 2000);
-				metadataPersistence.once("synced", () => {
+				metadataPersistence.once('synced', () => {
 					clearTimeout(timeout);
 					resolve();
 				});
 			});
 
-			const dataMap = metadataDoc.getMap("data");
-			const documentsArray = dataMap.get("documents") || [];
+			const dataMap = metadataDoc.getMap('data');
+			const documentsArray = dataMap.get('documents') || [];
 
 			if (Array.isArray(documentsArray)) {
 				for (const doc of documentsArray) {
@@ -131,14 +131,14 @@ export class ProjectDataService {
 
 						await new Promise<void>((resolve) => {
 							const timeout = setTimeout(() => resolve(), 2000);
-							docPersistence.once("synced", () => {
+							docPersistence.once('synced', () => {
 								clearTimeout(timeout);
 								resolve();
 							});
 						});
 
 						const yjsState = Y.encodeStateAsUpdate(docYDoc);
-						const readableContent = docYDoc.getText("codemirror").toString();
+						const readableContent = docYDoc.getText('codemirror').toString();
 
 						documentContents.set(doc.id, {
 							yjsState,
@@ -156,7 +156,7 @@ export class ProjectDataService {
 			metadataPersistence.destroy();
 			metadataDoc.destroy();
 		} catch (error) {
-			console.error("Error serializing project documents:", error);
+			console.error('Error serializing project documents:', error);
 		}
 
 		return { documents, documentContents };
@@ -179,8 +179,8 @@ export class ProjectDataService {
 			return { files, fileContents, deletedFiles };
 		}
 
-		const { fileStorageService } = await import("./FileStorageService");
-		const actualProjectId = project.docUrl.startsWith("yjs:")
+		const { fileStorageService } = await import('./FileStorageService');
+		const actualProjectId = project.docUrl.startsWith('yjs:')
 			? project.docUrl.slice(4)
 			: project.docUrl;
 
@@ -192,7 +192,7 @@ export class ProjectDataService {
 			let allFiles = await fileStorageService.getAllFiles(includeDeleted);
 
 			if (!includeTemporaryFiles) {
-				const { isTemporaryFile } = await import("../utils/fileUtils");
+				const { isTemporaryFile } = await import('../utils/fileUtils');
 				allFiles = allFiles.filter((file) => !isTemporaryFile(file.path));
 			}
 
@@ -203,13 +203,13 @@ export class ProjectDataService {
 					deletedFiles.push(fileMetadata);
 				} else {
 					files.push(fileMetadata);
-					if (file.type === "file" && file.content !== undefined) {
+					if (file.type === 'file' && file.content !== undefined) {
 						fileContents.set(file.path, file.content);
 					}
 				}
 			}
 		} catch (error) {
-			console.error("Error serializing project files:", error);
+			console.error('Error serializing project files:', error);
 		}
 
 		return { files, fileContents, deletedFiles };
@@ -220,7 +220,7 @@ export class ProjectDataService {
 		newProjectId?: string,
 		newDocUrl?: string,
 	): Promise<void> {
-		console.log("[ProjectDataService] Starting deserialization to IndexedDB...");
+		console.log('[ProjectDataService] Starting deserialization to IndexedDB...');
 		console.log(`[ProjectDataService] Found ${data.projectData.size} projects to deserialize`);
 
 		for (const [originalProjectId, projectData] of data.projectData) {
@@ -234,7 +234,7 @@ export class ProjectDataService {
 			console.log(`  - Documents: ${projectData.documents.length}`);
 			console.log(`  - Files: ${projectData.files.length}`);
 
-			const actualProjectId = docUrl.startsWith("yjs:")
+			const actualProjectId = docUrl.startsWith('yjs:')
 				? docUrl.slice(4)
 				: docUrl;
 
@@ -246,6 +246,7 @@ export class ProjectDataService {
 				projectData.documentContents,
 				projectData.metadata.name,
 				projectData.metadata.description,
+				projectData.metadata.type,
 			);
 			await this.deserializeProjectFilesSafely(
 				actualProjectId,
@@ -254,7 +255,7 @@ export class ProjectDataService {
 			);
 		}
 
-		console.log("[ProjectDataService] Deserialization to IndexedDB completed");
+		console.log('[ProjectDataService] Deserialization to IndexedDB completed');
 	}
 
 	private async deserializeProjectDocuments(
@@ -266,6 +267,7 @@ export class ProjectDataService {
 		>,
 		projectName?: string,
 		projectDescription?: string,
+		projectType?: 'latex' | 'typst',
 	): Promise<void> {
 		const dbName = `texlyre-project-${projectId}`;
 		const metadataCollection = `${dbName}-yjs_metadata`;
@@ -295,13 +297,14 @@ export class ProjectDataService {
 				documentContents,
 				projectName,
 				projectDescription,
+				projectType
 			);
 
 			console.log(
 				`Successfully deserialized ${documents.length} documents for project ${projectId}`,
 			);
 		} catch (error) {
-			console.error("Error deserializing project documents:", error);
+			console.error('Error deserializing project documents:', error);
 		}
 	}
 
@@ -319,7 +322,7 @@ export class ProjectDataService {
 				const docPersistence = new IndexeddbPersistence(collection, docYDoc);
 
 				// Wait for initial sync, then force a save
-				docPersistence.once("synced", () => {
+				docPersistence.once('synced', () => {
 					// Force another transaction to ensure persistence
 					docYDoc.transact(() => {
 						// This empty transaction forces the persistence to save the applied state
@@ -346,6 +349,7 @@ export class ProjectDataService {
 		>,
 		projectName?: string,
 		projectDescription?: string,
+		projectType?: 'latex' | 'typst',
 	): Promise<void> {
 		return new Promise<void>((resolve, reject) => {
 			try {
@@ -355,25 +359,26 @@ export class ProjectDataService {
 					metadataDoc,
 				);
 
-				metadataPersistence.once("synced", () => {
+				metadataPersistence.once('synced', () => {
 					metadataDoc.transact(() => {
-						const dataMap = metadataDoc.getMap("data");
+						const dataMap = metadataDoc.getMap('data');
 
 						const docsArray = documents.map((doc) => ({
 							id: doc.id,
 							name: doc.name,
-							content: documentContents.get(doc.id)?.readableContent || "",
+							content: documentContents.get(doc.id)?.readableContent || '',
 						}));
 
-						dataMap.set("documents", docsArray);
-						dataMap.set("currentDocId", documents[0]?.id || "");
-						dataMap.set("cursors", []);
-						dataMap.set("chatMessages", []);
+						dataMap.set('documents', docsArray);
+						dataMap.set('currentDocId', documents[0]?.id || '');
+						dataMap.set('cursors', []);
+						dataMap.set('chatMessages', []);
 
 						if (projectName && projectDescription !== undefined) {
-							dataMap.set("projectMetadata", {
+							dataMap.set('projectMetadata', {
 								name: projectName,
 								description: projectDescription,
+								type: projectType || 'latex',
 							});
 						}
 					});
@@ -397,24 +402,24 @@ export class ProjectDataService {
 	): Promise<void> {
 		if (files.length === 0) return;
 
-		const docId = projectId.startsWith("yjs:") ? projectId.slice(4) : projectId;
+		const docId = projectId.startsWith('yjs:') ? projectId.slice(4) : projectId;
 
 		try {
 			// Import the file storage service
-			const { fileStorageService } = await import("./FileStorageService");
+			const { fileStorageService } = await import('./FileStorageService');
 
 			// Initialize the service for this project
 			await fileStorageService.initialize(`yjs:${docId}`);
 
 			const filesToStore = files.map((file) => {
 				const content =
-					file.type === "file" ? fileContents.get(file.path) : undefined;
+					file.type === 'file' ? fileContents.get(file.path) : undefined;
 
 				return {
 					id: file.id,
 					name: file.name,
 					path: file.path,
-					type: file.type as "file" | "directory",
+					type: file.type as 'file' | 'directory',
 					lastModified: file.lastModified,
 					size: file.size,
 					mimeType: file.mimeType,
@@ -437,7 +442,7 @@ export class ProjectDataService {
 			);
 		} catch (error) {
 			console.error(
-				"Error importing files via fileStorageService, falling back to direct DB access:",
+				'Error importing files via fileStorageService, falling back to direct DB access:',
 				error,
 			);
 
@@ -445,16 +450,16 @@ export class ProjectDataService {
 			const dbName = `texlyre-project-${docId}`;
 			const db = await openDB(dbName, 1, {
 				upgrade(db) {
-					if (!db.objectStoreNames.contains("files")) {
-						const store = db.createObjectStore("files", { keyPath: "id" });
-						store.createIndex("path", "path", { unique: false });
+					if (!db.objectStoreNames.contains('files')) {
+						const store = db.createObjectStore('files', { keyPath: 'id' });
+						store.createIndex('path', 'path', { unique: false });
 					}
 				},
 			});
 
 			const filesToStore = files.map((file) => {
 				const content =
-					file.type === "file" ? fileContents.get(file.path) : undefined;
+					file.type === 'file' ? fileContents.get(file.path) : undefined;
 
 				return {
 					id: file.id,
@@ -471,8 +476,8 @@ export class ProjectDataService {
 				};
 			});
 
-			const tx = db.transaction("files", "readwrite");
-			const store = tx.objectStore("files");
+			const tx = db.transaction('files', 'readwrite');
+			const store = tx.objectStore('files');
 
 			await Promise.all(filesToStore.map((file) => store.put(file)));
 			await tx.done;
@@ -491,13 +496,13 @@ export class ProjectDataService {
 	): Promise<void> {
 		if (files.length === 0) return;
 
-		const { fileStorageService } = await import("./FileStorageService");
+		const { fileStorageService } = await import('./FileStorageService');
 
 		await fileStorageService.initialize(`yjs:${projectId}`);
 
 		const filesToStore: FileNode[] = files.map((file) => {
 			const content =
-				file.type === "file" ? fileContents.get(file.path) : undefined;
+				file.type === 'file' ? fileContents.get(file.path) : undefined;
 
 			return {
 				id: file.id,
@@ -535,12 +540,12 @@ export class ProjectDataService {
 		// Convert the simplified format to proper metadata format
 		const fileMetadata: FileMetadata[] = data.files.map((file) => ({
 			id: Math.random().toString(36).substring(2), // Generate ID if not provided
-			name: file.path.split("/").pop() || "unknown",
+			name: file.path.split('/').pop() || 'unknown',
 			path: file.path,
-			type: "file" as const,
+			type: 'file' as const,
 			lastModified: Date.now(),
 			size:
-				typeof file.content === "string"
+				typeof file.content === 'string'
 					? file.content.length
 					: file.content.byteLength,
 			mimeType: getMimeType(file.path),

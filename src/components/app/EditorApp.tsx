@@ -1,44 +1,48 @@
 // src/components/app/EditorApp.tsx
-import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import texlyreLogo from "../../assets/images/TeXlyre_notext.png";
-import { ChatProvider } from "../../contexts/ChatContext";
-import { CollabProvider } from "../../contexts/CollabContext";
-import { FileSyncProvider } from "../../contexts/FileSyncContext";
-import { FileTreeProvider } from "../../contexts/FileTreeContext";
-import { LaTeXProvider } from "../../contexts/LaTeXContext";
-import { useAuth } from "../../hooks/useAuth";
-import { useLaTeX } from "../../hooks/useLaTeX";
-import { useCollab } from "../../hooks/useCollab";
-import { useGlobalKeyboard } from "../../hooks/useGlobalKeyboard";
-import { useFileSystemBackup } from "../../hooks/useFileSystemBackup";
-import { useOffline } from "../../hooks/useOffline";
-import { fileStorageService } from "../../services/FileStorageService";
-import { pdfWindowService } from "../../services/PdfWindowService";
-import type { DocumentList } from "../../types/documents";
-import type { YjsDocUrl } from "../../types/yjs";
-import BackupModal from "../backup/BackupModal";
-import BackupStatusIndicator from "../backup/BackupStatusIndicator";
-import ChatPanel from "../chat/ChatPanel";
-import CollabStatusIndicator from "../collab/CollabStatusIndicator";
-import { ChevronLeftIcon, EditIcon } from "../common/Icons";
-import Modal from "../common/Modal";
-import OfflineBanner from "../common/OfflineBanner";
-import ToastContainer from "../common/ToastContainer";
-import FileDocumentController from "../editor/FileDocumentController";
-import LaTeXCompileButton from "../output/LaTeXCompileButton";
-import ExportAccountModal from "../profile/ExportAccountModal";
-import DeleteAccountModal from "../profile/DeleteAccountModal";
-import ProfileSettingsModal from "../profile/ProfileSettingsModal";
-import UserDropdown from "../profile/UserDropdown";
-import ProjectForm from "../project/ProjectForm";
-import ShareProjectButton from "../project/ShareProjectButton";
-import ShareProjectModal from "../project/ShareProjectModal";
-import SettingsButton from "../settings/SettingsButton";
-import PrivacyModal from "../common/PrivacyModal";
-import GuestUpgradeBanner from "../auth/GuestUpgradeBanner";
-import GuestUpgradeModal from "../auth/GuestUpgradeModal";
+import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
+import { ChatProvider } from '../../contexts/ChatContext';
+import { CollabProvider } from '../../contexts/CollabContext';
+import { FileSyncProvider } from '../../contexts/FileSyncContext';
+import { FileTreeProvider } from '../../contexts/FileTreeContext';
+import { LaTeXProvider } from '../../contexts/LaTeXContext';
+import { TypstProvider } from '../../contexts/TypstContext';
+import { useAuth } from '../../hooks/useAuth';
+import { useLaTeX } from '../../hooks/useLaTeX';
+import { useTypst } from '../../hooks/useTypst';
+import { useCollab } from '../../hooks/useCollab';
+import { useGlobalKeyboard } from '../../hooks/useGlobalKeyboard';
+import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
+import { useOffline } from '../../hooks/useOffline';
+import { fileStorageService } from '../../services/FileStorageService';
+import { pdfWindowService } from '../../services/PdfWindowService';
+import type { DocumentList } from '../../types/documents';
+import type { YjsDocUrl } from '../../types/yjs';
+import BackupModal from '../backup/BackupModal';
+import BackupStatusIndicator from '../backup/BackupStatusIndicator';
+import ChatPanel from '../chat/ChatPanel';
+import CollabStatusIndicator from '../collab/CollabStatusIndicator';
+import { ChevronLeftIcon, EditIcon } from '../common/Icons';
+import Modal from '../common/Modal';
+import OfflineBanner from '../common/OfflineBanner';
+import ToastContainer from '../common/ToastContainer';
+import TypesetterInfo from '../common/TypesetterInfo';
+import FileDocumentController from '../editor/FileDocumentController';
+import LaTeXCompileButton from '../output/LaTeXCompileButton';
+import TypstCompileButton from '../output/TypstCompileButton';
+import ExportAccountModal from '../profile/ExportAccountModal';
+import DeleteAccountModal from '../profile/DeleteAccountModal';
+import ProfileSettingsModal from '../profile/ProfileSettingsModal';
+import UserDropdown from '../profile/UserDropdown';
+import ProjectForm from '../project/ProjectForm';
+import ShareProjectButton from '../project/ShareProjectButton';
+import ShareProjectModal from '../project/ShareProjectModal';
+import SettingsButton from '../settings/SettingsButton';
+import PrivacyModal from '../common/PrivacyModal';
+import GuestUpgradeBanner from '../auth/GuestUpgradeBanner';
+import GuestUpgradeModal from '../auth/GuestUpgradeModal';
 
 interface EditorAppProps {
 	docUrl: YjsDocUrl;
@@ -82,7 +86,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const [showGuestUpgradeModal, setShowGuestUpgradeModal] = useState(false);
 	const [isEditingMetadata, setIsEditingMetadata] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [localDocId, setLocalDocId] = useState<string>("");
+	const [localDocId, setLocalDocId] = useState<string>('');
 	const [hasNavigated, setHasNavigated] = useState(false);
 	const [linkedFileInfo, setLinkedFileInfo] = useState<{
 		fileName?: string;
@@ -90,12 +94,16 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		fileId?: string;
 	} | null>(null);
 	const lastSyncedMetadata = useRef({
-		name: "",
-		description: "" ,
+		name: '',
+		description: '',
+		type: 'latex' as 'latex' | 'typst',
 		mainFile: undefined as string | undefined,
-		latexEngine: undefined as ("pdftex" | "xetex" | "luatex") | undefined
+		latexEngine: undefined as ('pdftex' | 'xetex' | 'luatex') | undefined,
+		typstEngine: undefined as string | undefined,
+		typstOutputFormat: undefined as ('pdf' | 'svg' | 'canvas') | undefined,
 	});
 	const { isCompiling, triggerAutoCompile } = useLaTeX();
+	const { isCompiling: isTypstCompiling, triggerAutoCompile: triggerTypstAutoCompile } = useTypst();
 	const { isOfflineMode } = useOffline();
 	const [showPrivacy, setShowPrivacy] = useState(false);
 	useGlobalKeyboard();
@@ -112,71 +120,105 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	};
 
 	useEffect(() => {
-		setShowAutoBackupModal(shouldShowAutoBackupModal);
-	}, [shouldShowAutoBackupModal]);
-
-	useEffect(() => {
 		const handleCompile = () => {
-		   if (isCompiling) return;
+			if (isCompiling || isTypstCompiling) return;
 
-		   const compileButton = document.querySelector('.header-compile-button .compile-button') as HTMLButtonElement;
-		   if (compileButton && !compileButton.disabled) {
-			  compileButton.click();
-		   }
+			const projectType = doc?.projectMetadata?.type || 'latex';
+			const buttonSelectors = projectType === 'typst'
+				? ['.header-typst-compile-button .compile-button', '.header-compile-button .compile-button']
+				: ['.header-compile-button .compile-button', '.header-typst-compile-button .compile-button'];
+
+			for (const selector of buttonSelectors) {
+				const button = document.querySelector(selector) as HTMLButtonElement;
+				if (button && !button.disabled) {
+					button.click();
+					return;
+				}
+			}
 		};
 
 		const handleCompileClean = () => {
-		   if (isCompiling) return;
+			if (isCompiling || isTypstCompiling) return;
 
-		   const compileButtonContainer = document.querySelector('.header-compile-button') as any;
-		   if (compileButtonContainer && compileButtonContainer.clearAndCompile) {
-			  compileButtonContainer.clearAndCompile();
-		   }
+			const projectType = doc?.projectMetadata?.type || 'latex';
+			const containerSelectors = projectType === 'typst'
+				? ['.header-typst-compile-button', '.header-compile-button']
+				: ['.header-compile-button', '.header-typst-compile-button'];
+
+			for (const selector of containerSelectors) {
+				const container = document.querySelector(selector) as any;
+				if (container && container.clearAndCompile) {
+					container.clearAndCompile();
+					return;
+				}
+			}
 		};
 
 		const handleStopCompilation = () => {
-		   if (!isCompiling) return;
+			if (isCompiling) {
+				const latexCompileButton = document.querySelector('.header-compile-button .compile-button') as HTMLButtonElement;
+				if (latexCompileButton) {
+					latexCompileButton.click();
+				}
+			}
 
-		   const compileButton = document.querySelector('.header-compile-button .compile-button') as HTMLButtonElement;
-		   if (compileButton) {
-			  compileButton.click();
-		   }
+			if (isTypstCompiling) {
+				const typstCompileButton = document.querySelector('.header-typst-compile-button .compile-button') as HTMLButtonElement;
+				if (typstCompileButton) {
+					typstCompileButton.click();
+				}
+			}
+		};
+
+		const handleTypstCompile = () => {
+			if (isTypstCompiling) return;
+
+			const typstCompileButton = document.querySelector('.header-typst-compile-button .compile-button') as HTMLButtonElement;
+			if (typstCompileButton && !typstCompileButton.disabled) {
+				typstCompileButton.click();
+			}
 		};
 
 		document.addEventListener('trigger-compile', handleCompile);
 		document.addEventListener('trigger-compile-clean', handleCompileClean);
 		document.addEventListener('trigger-stop-compilation', handleStopCompilation);
+		document.addEventListener('trigger-typst-compile', handleTypstCompile);
 
 		return () => {
-		   document.removeEventListener('trigger-compile', handleCompile);
-		   document.removeEventListener('trigger-compile-clean', handleCompileClean);
-		   document.removeEventListener('trigger-stop-compilation', handleStopCompilation);
+			document.removeEventListener('trigger-compile', handleCompile);
+			document.removeEventListener('trigger-compile-clean', handleCompileClean);
+			document.removeEventListener('trigger-stop-compilation', handleStopCompilation);
+			document.removeEventListener('trigger-typst-compile', handleTypstCompile);
 		};
-	}, [isCompiling]);
+	}, [isCompiling, isTypstCompiling]);
 
 	useEffect(() => {
 		if (doc && isConnected) {
 			const timer = setTimeout(() => {
 				triggerAutoCompile();
+				triggerTypstAutoCompile();
 			}, 1000);
 
 			return () => clearTimeout(timer);
 		}
-	}, [doc, isConnected, triggerAutoCompile]);
+	}, [doc, isConnected, triggerAutoCompile, triggerTypstAutoCompile]);
 
 	useEffect(() => {
 		if (doc) {
-			const projectMetadata = sessionStorage.getItem("projectMetadata");
+			const projectMetadata = sessionStorage.getItem('projectMetadata');
 			if (projectMetadata) {
 				const parsedMetadata = JSON.parse(projectMetadata);
 				changeDoc((d) => {
 					d.projectMetadata = {
-						name: parsedMetadata.name || "Untitled Project",
-						description: parsedMetadata.description || "",
+						name: parsedMetadata.name || 'Untitled Project',
+						description: parsedMetadata.description || '',
+						type: parsedMetadata.type || 'latex',
 						mainFile: parsedMetadata.mainFile,
 						latexEngine: parsedMetadata.latexEngine,
+						typstEngine: parsedMetadata.typstEngine,
+						typstOutputFormat: parsedMetadata.typstOutputFormat
 					};
-					sessionStorage.removeItem("projectMetadata");
+					sessionStorage.removeItem('projectMetadata');
 				});
 			}
 		}
@@ -184,26 +226,32 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
 	useEffect(() => {
 		if (doc?.projectMetadata) {
-			const { name, description, mainFile, latexEngine } = doc.projectMetadata;
-			const projectId = sessionStorage.getItem("currentProjectId");
+			const { name, description, type, mainFile, latexEngine, typstEngine, typstOutputFormat } = doc.projectMetadata;
+			const projectId = sessionStorage.getItem('currentProjectId');
 
 			if (
 				name &&
-				name !== "Untitled Project" &&
-				name !== "Shared Project" &&
+				name !== 'Untitled Project' &&
+				name !== 'Shared Project' &&
 				projectId
 			) {
 				if (
 					lastSyncedMetadata.current.name !== name ||
 					lastSyncedMetadata.current.description !== description ||
+					lastSyncedMetadata.current.type !== type ||
 					lastSyncedMetadata.current.mainFile !== mainFile ||
-					lastSyncedMetadata.current.latexEngine !== latexEngine
+					lastSyncedMetadata.current.latexEngine !== latexEngine ||
+					lastSyncedMetadata.current.typstEngine !== typstEngine ||
+					lastSyncedMetadata.current.typstOutputFormat !== typstOutputFormat
 				) {
 					lastSyncedMetadata.current = {
 						name,
-						description: description || "",
+						description: description || '',
+						type: type || 'latex',
 						mainFile,
-						latexEngine
+						latexEngine,
+						typstEngine,
+						typstOutputFormat
 					};
 					const syncProjectMetadata = async () => {
 						try {
@@ -212,11 +260,12 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 								await updateProject({
 									...project,
 									name,
-									description: description || "",
+									description: description || '',
+									type: type || 'latex',
 								});
 							}
 						} catch (error) {
-							console.error("Failed to sync project metadata:", error);
+							console.error('Failed to sync project metadata:', error);
 						}
 					};
 					syncProjectMetadata();
@@ -260,7 +309,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						setLinkedFileInfo(null);
 					}
 				} catch (error) {
-					console.error("Error checking for linked file:", error);
+					console.error('Error checking for linked file:', error);
 					setLinkedFileInfo(null);
 				}
 			} else {
@@ -290,7 +339,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			d.documents.push({
 				id: newDocId,
 				name: newDocName,
-				content: "",
+				content: '',
 			});
 			d.currentDocId = newDocId;
 		});
@@ -321,6 +370,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const handleUpdateProjectMetadata = (projectData: {
 		name: string;
 		description: string;
+		type?: 'latex' | 'typst';
 	}) => {
 		setIsSubmitting(true);
 		changeDoc((d) => {
@@ -328,10 +378,12 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 				d.projectMetadata = {
 					name: projectData.name,
 					description: projectData.description,
+					type: projectData.type || 'latex',
 				};
 			} else {
 				d.projectMetadata.name = projectData.name;
 				d.projectMetadata.description = projectData.description;
+				d.projectMetadata.type = projectData.type || 'latex';
 			}
 		});
 		setIsSubmitting(false);
@@ -341,7 +393,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const handleNavigateToLinkedFile = () => {
 		if (linkedFileInfo?.filePath) {
 			document.dispatchEvent(
-				new CustomEvent("navigate-to-linked-file", {
+				new CustomEvent('navigate-to-linked-file', {
 					detail: {
 						filePath: linkedFileInfo.filePath,
 						fileId: linkedFileInfo.fileId,
@@ -353,14 +405,52 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
 	const handleExpandLatexOutput = () => {
 		if (!pdfWindowService.isWindowOpen()) {
-			document.dispatchEvent(new CustomEvent("expand-latex-output"));
+			document.dispatchEvent(new CustomEvent('expand-latex-output'));
 		}
+	};
+
+	const handleExpandTypstOutput = () => {
+		if (!pdfWindowService.isWindowOpen()) {
+			document.dispatchEvent(new CustomEvent('expand-typst-output'));
+		}
+	};
+
+	const CompileButtons = () => {
+		const buttons = [
+			<LaTeXCompileButton
+				key="latex"
+				className="header-compile-button"
+				selectedDocId={localDocId}
+				documents={doc?.documents}
+				onNavigateToLinkedFile={handleNavigateToLinkedFile}
+				onExpandLatexOutput={handleExpandLatexOutput}
+				linkedFileInfo={linkedFileInfo}
+				shouldNavigateOnCompile={true}
+				useSharedSettings={true}
+				docUrl={docUrl}
+			/>,
+			<TypstCompileButton
+				key="typst"
+				className="header-typst-compile-button"
+				selectedDocId={localDocId}
+				documents={doc?.documents}
+				onNavigateToLinkedFile={handleNavigateToLinkedFile}
+				onExpandTypstOutput={handleExpandTypstOutput}
+				linkedFileInfo={linkedFileInfo}
+				shouldNavigateOnCompile={true}
+				useSharedSettings={true}
+				docUrl={docUrl}
+			/>
+		];
+
+		return projectType === 'typst' ? <>{buttons[1]}</> : <>{buttons[0]}</>;
 	};
 
 	const shareUrl = `${window.location.origin}${window.location.pathname}#${docUrl}`;
 	const selectedDocument = doc?.documents?.find((d) => d.id === localDocId);
-	const projectName = doc?.projectMetadata?.name || "Untitled Project";
-	const projectDescription = doc?.projectMetadata?.description || "";
+	const projectName = doc?.projectMetadata?.name || 'Untitled Project';
+	const projectDescription = doc?.projectMetadata?.description || '';
+	const projectType = doc?.projectMetadata?.type || 'latex';
 
 	if (!isConnected && !doc) {
 		return (
@@ -414,17 +504,8 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					)}
 				</div>
 				<div className="header-right">
-					<LaTeXCompileButton
-						className="header-compile-button"
-						selectedDocId={localDocId}
-						documents={doc?.documents}
-						onNavigateToLinkedFile={handleNavigateToLinkedFile}
-						onExpandLatexOutput={handleExpandLatexOutput}
-						linkedFileInfo={linkedFileInfo}
-						shouldNavigateOnCompile={true}
-						useSharedSettings={true}
-						docUrl={docUrl}
-					/>
+					<CompileButtons />
+
 					<ShareProjectButton
 						className="header-share-button"
 						projectName={projectName}
@@ -434,7 +515,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					{!isGuestUser(user) && (
 						<BackupStatusIndicator
 							className="header-backup-indicator"
-							currentProjectId={sessionStorage.getItem("currentProjectId")}
+							currentProjectId={sessionStorage.getItem('currentProjectId')}
 							isInEditor={true}
 						/>
 					)}
@@ -446,7 +527,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					)}
 					<SettingsButton className="header-settings-button" />
 					<UserDropdown
-						username={user?.username || ""}
+						username={user?.username || ''}
 						onLogout={onLogout}
 						onOpenProfile={() => setShowProfileModal(true)}
 						onOpenExport={() => setShowAccountExportModal(true)}
@@ -465,7 +546,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					onCreateDocument={handleCreateDocument}
 					onRenameDocument={handleRenameDocument}
 					onUpdateContent={handleUpdateContent}
-					content={selectedDocument?.content || ""}
+					content={selectedDocument?.content || ''}
 					docUrl={docUrl}
 					targetDocId={targetDocId}
 					targetFilePath={targetFilePath}
@@ -473,30 +554,35 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			)}
 
 			<footer>
-			  <p className="read-the-docs">
-				Built with TeXlyre
-				<a href="https://texlyre.github.io" target="_blank" rel="noreferrer">
-				  <img src={texlyreLogo} className="logo" alt="TeXlyre logo" />
-				</a>
-				<span className="legal-links">
-				  <br/> <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">
-					Documentation
-				  </a>
-					{" "} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">
-					Source Code
-				  </a>
-				  {" "} • <a href="#" onClick={(event) => {
-					  event.preventDefault();
-					  setShowPrivacy(true);
-				  }} className="privacy-link"> Privacy </a>
-				</span>
-			  </p>
-			  <ChatPanel className="footer-chat" />
+
+				<div className="project-type-badge">
+					Typesetter: <TypesetterInfo type={projectType} />
+				</div>
+
+				<p className="read-the-docs">
+					Built with TeXlyre
+					<a href="https://texlyre.github.io" target="_blank" rel="noreferrer">
+						<img src={texlyreLogo} className="logo" alt="TeXlyre logo" />
+					</a>
+					<span className="legal-links">
+						<br /> <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">
+							Documentation
+						</a>
+						{' '} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">
+							Source Code
+						</a>
+						{' '} • <a href="#" onClick={(event) => {
+							event.preventDefault();
+							setShowPrivacy(true);
+						}} className="privacy-link"> Privacy </a>
+					</span>
+				</p>
+				<ChatPanel className="footer-chat" />
 			</footer>
 
 			<PrivacyModal
-			  isOpen={showPrivacy}
-			  onClose={() => setShowPrivacy(false)}
+				isOpen={showPrivacy}
+				onClose={() => setShowPrivacy(false)}
 			/>
 
 			<Modal
@@ -509,10 +595,11 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						id: docUrl,
 						name: projectName,
 						description: projectDescription,
+						type: projectType || 'latex',
 						docUrl: docUrl,
 						createdAt: 0,
 						updatedAt: 0,
-						ownerId: user?.id || "",
+						ownerId: user?.id || '',
 						tags: [],
 						isFavorite: false,
 					}}
@@ -567,7 +654,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					onClearActivity={clearActivity}
 					onClearAllActivities={clearAllActivities}
 					onChangeDirectory={changeDirectory}
-					currentProjectId={sessionStorage.getItem("currentProjectId")}
+					currentProjectId={sessionStorage.getItem('currentProjectId')}
 					isInEditor={true}
 				/>
 			)}
@@ -580,13 +667,15 @@ const EditorApp: React.FC<EditorAppProps> = (props) => {
 	return (
 		<CollabProvider docUrl={props.docUrl} collectionName="yjs_metadata">
 			<ChatProvider docUrl={props.docUrl}>
-					<FileTreeProvider docUrl={props.docUrl}>
-							<FileSyncProvider docUrl={props.docUrl}>
-								<LaTeXProvider>
-									<EditorAppView {...props} />
-								</LaTeXProvider>
-							</FileSyncProvider>
-					</FileTreeProvider>
+				<FileTreeProvider docUrl={props.docUrl}>
+					<FileSyncProvider docUrl={props.docUrl}>
+						<LaTeXProvider>
+							<TypstProvider>
+								<EditorAppView {...props} />
+							</TypstProvider>
+						</LaTeXProvider>
+					</FileSyncProvider>
+				</FileTreeProvider>
 			</ChatProvider>
 		</CollabProvider>
 	);

@@ -11,14 +11,14 @@
 	margin: 0;
 	padding: 0;
 	width: 100%;
-    min-width: 300px;
-    max-width: 100% !important;
+	min-width: 300px;
+	max-width: 100% !important;
 }
 
 [data-layout="texlyre-mobile"] #root {
 	height: 100vh;
 	width: 100vw;
-    max-width: 100% !important;
+	max-width: 100% !important;
 	margin: 0;
 	padding: 0;
 	overflow: hidden;
@@ -27,11 +27,28 @@
 }
 
 [data-layout="texlyre-mobile"] footer .read-the-docs {
-    display: none;
+	display: none;
 }
 
-[data-layout="texlyre-mobile"] .latex-outline {
-    display: none !important;
+
+[data-layout="texlyre-mobile"] footer .project-type-badge {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	bottom: auto;
+	left: auto;
+	z-index: var(--mobile-z-navigation);
+	font-size: var(--mobile-font-xs);
+	filter: brightness(0.8);
+}
+
+.project-type-badge .type-info-help {
+	font-size: var(--mobile-font-xs);
+}
+
+[data-layout="texlyre-mobile"] .latex-outline,
+[data-layout="texlyre-mobile"] .typst-outline {
+	display: none !important;
 }
 
 [data-layout="texlyre-mobile"] .app-container {
@@ -76,9 +93,9 @@
 }
 
 [data-layout="texlyre-mobile"] .header-left {
-    align-self: flex-start;
-    position: fixed;
-    left: max(var(--mobile-spacing-md), env(safe-area-inset-left));
+	align-self: flex-start;
+	position: fixed;
+	left: max(var(--mobile-spacing-md), env(safe-area-inset-left));
 }
 
 [data-layout="texlyre-mobile"] .main-content {
@@ -128,7 +145,8 @@
 	flex-direction: column !important;
 }
 
-[data-layout="texlyre-mobile"] .latex-output-container .panel-content {
+[data-layout="texlyre-mobile"] .latex-output-container .panel-content,
+[data-layout="texlyre-mobile"] .typst-output-container .panel-content {
 	display: flex !important;
 	flex-direction: column !important;
 }
@@ -141,11 +159,12 @@
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-explorer .sidebar-container .file-explorer {
-    margin-top: 0 !important;
+	margin-top: 0 !important;
 }
 
 [data-layout="texlyre-mobile"] .file-tree,
-[data-layout="texlyre-mobile"] .latex-outline {
+[data-layout="texlyre-mobile"] .latex-outline,
+[data-layout="texlyre-mobile"] .typst-outline {
 	width: 100% !important;
 	max-width: 100% !important;
 	flex: 1 !important;
@@ -165,6 +184,8 @@
 
 [data-layout="texlyre-mobile"] .latex-output,
 [data-layout="texlyre-mobile"] .latex-output-container,
+[data-layout="texlyre-mobile"] .typst-output,
+[data-layout="texlyre-mobile"] .typst-output-container,
 [data-layout="texlyre-mobile"] .pdf-viewer,
 [data-layout="texlyre-mobile"] .log-viewer,
 [data-layout="texlyre-mobile"] .log-view-container,
@@ -242,12 +263,12 @@
 	margin: 0 !important;
 }
 
-[data-layout="texlyre-mobile"] body.mobile-view-explorer .main-content > *:not(.sidebar-container) {
+[data-layout="texlyre-mobile"] body.mobile-view-explorer .main-content>*:not(.sidebar-container) {
 	display: none !important;
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-explorer .sidebar-container,
-[data-layout="texlyre-mobile"] body.mobile-view-explorer .sidebar-container > *,
+[data-layout="texlyre-mobile"] body.mobile-view-explorer .sidebar-container>*,
 [data-layout="texlyre-mobile"] body.mobile-view-explorer .explorer-container {
 	width: 100vw !important;
 	max-width: 100vw !important;
@@ -262,9 +283,11 @@
 	overflow-y: auto !important;
 }
 
-[data-layout="texlyre-mobile"] body.mobile-view-editor .main-content > .sidebar-container,
+[data-layout="texlyre-mobile"] body.mobile-view-editor .main-content>.sidebar-container,
 [data-layout="texlyre-mobile"] body.mobile-view-editor .latex-output-container,
 [data-layout="texlyre-mobile"] body.mobile-view-editor .latex-output,
+[data-layout="texlyre-mobile"] body.mobile-view-editor .typst-output-container,
+[data-layout="texlyre-mobile"] body.mobile-view-editor .typst-output,
 [data-layout="texlyre-mobile"] body.mobile-view-editor .pdf-viewer,
 [data-layout="texlyre-mobile"] body.mobile-view-editor .log-viewer,
 [data-layout="texlyre-mobile"] body.mobile-view-editor .log-view-container {
@@ -286,7 +309,7 @@
 	overflow-y: auto !important;
 }
 
-[data-layout="texlyre-mobile"] body.mobile-view-output .main-content > .sidebar-container,
+[data-layout="texlyre-mobile"] body.mobile-view-output .main-content>.sidebar-container,
 [data-layout="texlyre-mobile"] body.mobile-view-output .editor-wrapper,
 [data-layout="texlyre-mobile"] body.mobile-view-output .editor-container,
 [data-layout="texlyre-mobile"] body.mobile-view-output .codemirror-editor-container,
@@ -304,6 +327,8 @@
 
 [data-layout="texlyre-mobile"] body.mobile-view-output .latex-output-container,
 [data-layout="texlyre-mobile"] body.mobile-view-output .latex-output,
+[data-layout="texlyre-mobile"] body.mobile-view-output .typst-output-container,
+[data-layout="texlyre-mobile"] body.mobile-view-output .typst-output,
 [data-layout="texlyre-mobile"] body.mobile-view-output .output-content,
 [data-layout="texlyre-mobile"] body.mobile-view-output .pdf-viewer,
 [data-layout="texlyre-mobile"] body.mobile-view-output .log-view-container,
@@ -318,6 +343,8 @@
 
 [data-layout="texlyre-mobile"] body.mobile-view-output .latex-output-container,
 [data-layout="texlyre-mobile"] body.mobile-view-output .latex-output,
+[data-layout="texlyre-mobile"] body.mobile-view-output .typst-output-container,
+[data-layout="texlyre-mobile"] body.mobile-view-output .typst-output,
 [data-layout="texlyre-mobile"] body.mobile-view-output .output-content,
 [data-layout="texlyre-mobile"] body.mobile-view-output .pdf-viewer,
 [data-layout="texlyre-mobile"] body.mobile-view-output .log-view-container {
@@ -328,6 +355,7 @@
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-output .latex-output,
+[data-layout="texlyre-mobile"] body.mobile-view-output .typst-output,
 [data-layout="texlyre-mobile"] body.mobile-view-output .output-content {
 	flex-direction: column !important;
 }
@@ -351,7 +379,7 @@
 	justify-content: center !important;
 }
 
-[data-layout="texlyre-mobile"] body.mobile-view-chat .main-content > *:not(.chat-panel) {
+[data-layout="texlyre-mobile"] body.mobile-view-chat .main-content>*:not(.chat-panel) {
 	display: none !important;
 }
 
@@ -367,13 +395,13 @@
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-chat footer {
-    position: fixed;
-    top:  50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    height: 60%;
-    margin-top: calc(50vh - var(--mobile-nav-height) / 2 - 45vh);
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 90%;
+	height: 60%;
+	margin-top: calc(50vh - var(--mobile-nav-height) / 2 - 45vh);
 }
 
 [data-layout="texlyre-mobile"] body:not(.mobile-view-chat) .chat-panel {
@@ -386,7 +414,7 @@
 
 [data-layout="texlyre-mobile"] .chat-panel-content {
 	flex: 1 !important;
-	overflow-y:scroll !important;
+	overflow-y: scroll !important;
 }
 
 [data-layout="texlyre-mobile"] .chat-panel-input-container {

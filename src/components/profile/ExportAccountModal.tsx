@@ -1,11 +1,11 @@
 // src/components/profile/ExportAccountModal.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import { accountExportService } from "../../services/AccountExportService";
-import { useAuth } from "../../hooks/useAuth";
-import { ExportIcon } from "../common/Icons";
-import Modal from "../common/Modal";
+import { accountExportService } from '../../services/AccountExportService';
+import { useAuth } from '../../hooks/useAuth';
+import { ExportIcon, ZipFileIcon } from '../common/Icons';
+import Modal from '../common/Modal';
 
 interface ExportAccountModalProps {
 	isOpen: boolean;
@@ -19,7 +19,7 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 	showProjectSelection = true,
 }) => {
 	const { user } = useAuth();
-	const [exportScope, setExportScope] = useState<"current" | "all">("current");
+	const [exportScope, setExportScope] = useState<'current' | 'all'>('all');
 	const [includeDocuments, setIncludeDocuments] = useState(true);
 	const [includeFiles, setIncludeFiles] = useState(true);
 	const [includeTemporaryFiles, setIncludeTemporaryFiles] = useState(false);
@@ -34,11 +34,11 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 		setError(null);
 
 		try {
-			const exportAllProjects = exportScope === "all";
+			const exportAllProjects = exportScope === 'all';
 			await accountExportService.exportAccount(user.id, exportAllProjects, includeUserData);
 			onClose();
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "Export failed");
+			setError(err instanceof Error ? err.message : 'Export failed');
 		} finally {
 			setIsExporting(false);
 		}
@@ -55,7 +55,7 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 			isOpen={isOpen}
 			onClose={handleClose}
 			title="Export Account"
-			icon={ExportIcon}
+			icon={ZipFileIcon}
 			size="medium"
 		>
 			<div className="export-account-modal">
@@ -77,8 +77,8 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 									type="radio"
 									name="exportScope"
 									value="current"
-									checked={exportScope === "current"}
-									onChange={() => setExportScope("current")}
+									checked={exportScope === 'current'}
+									onChange={() => setExportScope('current')}
 									disabled={isExporting}
 								/>
 								<span>Current project only</span>
@@ -88,8 +88,8 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 									type="radio"
 									name="exportScope"
 									value="all"
-									checked={exportScope === "all"}
-									onChange={() => setExportScope("all")}
+									checked={exportScope === 'all'}
+									onChange={() => setExportScope('all')}
 									disabled={isExporting}
 								/>
 								<span>All projects</span>
@@ -137,8 +137,7 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 					</label>
 				</div>
 
-				<div className="export-note">
-					<ExportIcon />
+				<div className="export-note info-message">
 					Exported data can be imported into any TeXlyre installation to restore
 					your complete workspace.
 				</div>
@@ -159,7 +158,14 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 					onClick={handleExport}
 					disabled={isExporting || (!includeDocuments && !includeFiles)}
 				>
-					{isExporting ? "Exporting..." : "Export Account"}
+					{isExporting ? (
+						'Exporting...'
+					) : (
+						<>
+							<ExportIcon />
+							Export Account
+						</>
+					)}
 				</button>
 			</div>
 		</Modal>

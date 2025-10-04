@@ -1,8 +1,8 @@
 // src/components/lsp/LSPToggleButton.tsx
-import type React from "react";
-import { useState } from "react";
-import { useSettings } from "../../hooks/useSettings";
-import { pluginRegistry } from "../../plugins/PluginRegistry";
+import type React from 'react';
+import { useState } from 'react';
+import { useSettings } from '../../hooks/useSettings';
+import { pluginRegistry } from '../../plugins/PluginRegistry';
 
 interface LSPToggleButtonProps {
 	className?: string;
@@ -10,7 +10,7 @@ interface LSPToggleButtonProps {
 }
 
 const LSPToggleButton: React.FC<LSPToggleButtonProps> = ({
-	className = "",
+	className = '',
 	pluginId,
 }) => {
 	const { getSetting } = useSettings();
@@ -32,7 +32,7 @@ const LSPToggleButton: React.FC<LSPToggleButtonProps> = ({
 
 		// Dispatch event to show LSP panel
 		document.dispatchEvent(
-			new CustomEvent("toggle-lsp-panel", {
+			new CustomEvent('toggle-lsp-panel', {
 				detail: {
 					show: !showPanel,
 					pluginId: pluginId
@@ -45,9 +45,9 @@ const LSPToggleButton: React.FC<LSPToggleButtonProps> = ({
 
 	return (
 		<button
-			className={`control-button lsp-toggle-button ${showPanel ? "active" : ""} ${className}`}
+			className={`control-button lsp-toggle-button ${showPanel ? 'active' : ''} ${className}`}
 			onClick={handleTogglePanel}
-			title={`${showPanel ? "Hide" : "Show"} ${lspPlugin.name} panel`}
+			title={`${showPanel ? 'Hide' : 'Show'} ${lspPlugin.name} panel`}
 		>
 			<div className="lsp-button-content">
 				{IconComponent && <IconComponent />}

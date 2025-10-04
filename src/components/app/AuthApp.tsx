@@ -1,14 +1,14 @@
 // src/components/app/AuthApp.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import texlyreLogo from "../../assets/images/TeXlyre_notext.png";
-import { useTheme } from "../../hooks/useTheme";
-import ImportAccount from "../auth/ImportAccount";
-import Login from "../auth/Login";
-import Register from "../auth/Register";
-import PrivacyModal from "../common/PrivacyModal";
-import ThemeToggleButton from "../settings/ThemeToggleButton";
+import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
+import { useTheme } from '../../hooks/useTheme';
+import ImportAccount from '../auth/ImportAccount';
+import Login from '../auth/Login';
+import Register from '../auth/Register';
+import PrivacyModal from '../common/PrivacyModal';
+import ThemeToggleButton from '../settings/ThemeToggleButton';
 
 interface AuthContainerProps {
 	onAuthSuccess: () => void;
@@ -16,25 +16,25 @@ interface AuthContainerProps {
 
 const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 	const { currentThemePlugin, currentVariant } = useTheme();
-	const [activeView, setActiveView] = useState<"login" | "register" | "import">(
-		"login",
+	const [activeView, setActiveView] = useState<'login' | 'register' | 'import'>(
+		'login',
 	);
 	const [showPrivacy, setShowPrivacy] = useState(false);
 
 	const switchToLogin = () => {
-		setActiveView("login");
+		setActiveView('login');
 	};
 
 	const switchToRegister = () => {
-		setActiveView("register");
+		setActiveView('register');
 	};
 
 	const switchToImport = () => {
-		setActiveView("import");
+		setActiveView('import');
 	};
 
 	return (
-	   <div className={`auth-container ${currentThemePlugin?.id || "default"}`}>
+	   <div className={`auth-container ${currentThemePlugin?.id || 'default'}`}>
 		  <div className="auth-box">
 		<div className="auth-header">
 			<div className="auth-logo-wrapper">
@@ -44,13 +44,13 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 			<ThemeToggleButton className="auth-theme-toggle" />
 		</div>
 
-			 {activeView === "login" ? (
+			 {activeView === 'login' ? (
 				<Login
 				   onLoginSuccess={onAuthSuccess}
 				   onSwitchToRegister={switchToRegister}
 				   onSwitchToImport={switchToImport}
 				/>
-			 ) : activeView === "register" ? (
+			 ) : activeView === 'register' ? (
 				<Register
 				   onRegisterSuccess={onAuthSuccess}
 				   onSwitchToLogin={switchToLogin}
@@ -77,10 +77,10 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 				  <br/> <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">
 					Documentation
 				  </a>
-					{" "} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">
+					{' '} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">
 					Source Code
 				  </a>
-				  {" "} • <a href="#" onClick={(event) => {
+				  {' '} • <a href="#" onClick={(event) => {
 					  event.preventDefault();
 					  setShowPrivacy(true);
 					}} className="privacy-link"> Privacy </a>

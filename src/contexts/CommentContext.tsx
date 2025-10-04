@@ -1,20 +1,20 @@
 // src/contexts/CommentContext.tsx
-import type React from "react";
+import type React from 'react';
 import {
 	type ReactNode,
 	createContext,
 	useCallback,
 	useEffect,
 	useState,
-} from "react";
+} from 'react';
 
-import { useAuth } from "../hooks/useAuth";
-import { commentService } from "../services/CommentService";
+import { useAuth } from '../hooks/useAuth';
+import { commentService } from '../services/CommentService';
 import type {
 	Comment,
 	CommentContextType,
 	CommentRaw,
-} from "../types/comments";
+} from '../types/comments';
 
 export const CommentContext = createContext<CommentContextType | null>(null);
 
@@ -47,16 +47,16 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 
 		if (commentElement) {
 			commentElement.scrollIntoView({
-				behavior: "smooth",
-				block: "center",
+				behavior: 'smooth',
+				block: 'center',
 			});
 
-			commentElement.classList.add("highlight-comment");
+			commentElement.classList.add('highlight-comment');
 			setTimeout(() => {
-				commentElement.classList.remove("highlight-comment");
+				commentElement.classList.remove('highlight-comment');
 			}, 2000);
 		} else {
-			console.log("[CommentContext] Comment item not found - is the comment panel open?");
+			console.log('[CommentContext] Comment item not found - is the comment panel open?');
 		}
 	}, []);
 
@@ -67,7 +67,7 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 			const comment = getCommentById(commentId);
 
 			document.dispatchEvent(
-				new CustomEvent("comment-data-response", {
+				new CustomEvent('comment-data-response', {
 					detail: { commentId, comment },
 				}),
 			);
@@ -79,12 +79,12 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 			scrollToComment(commentId);
 		};
 
-		document.addEventListener("get-comment-by-id", handleGetCommentById);
-		document.addEventListener("scroll-to-comment", handleScrollToComment);
+		document.addEventListener('get-comment-by-id', handleGetCommentById);
+		document.addEventListener('scroll-to-comment', handleScrollToComment);
 
 		return () => {
-			document.removeEventListener("get-comment-by-id", handleGetCommentById);
-			document.removeEventListener("scroll-to-comment", handleScrollToComment);
+			document.removeEventListener('get-comment-by-id', handleGetCommentById);
+			document.removeEventListener('scroll-to-comment', handleScrollToComment);
 		};
 	}, [getCommentById, scrollToComment]);
 
@@ -93,7 +93,7 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 	};
 
 	const addComment = (content: string): CommentRaw => {
-		if (!user) return { openTag: "", closeTag: "", commentId: "" };
+		if (!user) return { openTag: '', closeTag: '', commentId: '' };
 
 		const rawComment = commentService.addComment(content, user.username);
 
@@ -119,7 +119,7 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 			responses: updatedResponses,
 		};
 		const rawComment = commentService.updateCommentResponses(updatedComment);
-		const event = new CustomEvent("comment-response-added", {
+		const event = new CustomEvent('comment-response-added', {
 			detail: {
 				commentId,
 				updatedComment,
@@ -139,7 +139,7 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 			comment.closeTagStart !== undefined &&
 			comment.closeTagEnd !== undefined
 		) {
-			const event = new CustomEvent("comment-delete", {
+			const event = new CustomEvent('comment-delete', {
 				detail: {
 					commentId,
 					openTagStart: comment.openTagStart,
@@ -174,7 +174,7 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 			comment.closeTagStart !== undefined &&
 			comment.closeTagEnd !== undefined
 		) {
-			const event = new CustomEvent("comment-update", {
+			const event = new CustomEvent('comment-update', {
 				detail: {
 					commentId,
 					openTagStart: comment.openTagStart,
@@ -206,7 +206,7 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 			comment.closeTagStart !== undefined &&
 			comment.closeTagEnd !== undefined
 		) {
-			const event = new CustomEvent("comment-update", {
+			const event = new CustomEvent('comment-update', {
 				detail: {
 					commentId,
 					openTagStart: comment.openTagStart,

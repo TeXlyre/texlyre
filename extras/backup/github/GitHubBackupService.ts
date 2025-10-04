@@ -1,17 +1,17 @@
 // extras/backup/github/GitHubBackupService.ts
-import type { SecretsContextType } from "../../../src/contexts/SecretsContext";
-import { authService } from "../../../src/services/AuthService";
-import { UnifiedDataStructureService } from "../../../src/services/DataStructureService";
-import { fileStorageService, fileStorageEventEmitter } from "../../../src/services/FileStorageService";
-import { ProjectDataService } from "../../../src/services/ProjectDataService";
-import { getMimeType, isBinaryFile } from "../../../src/utils/fileUtils.ts";
-import { gitHubApiService } from "./GitHubApiService";
+import type { SecretsContextType } from '../../../src/contexts/SecretsContext';
+import { authService } from '../../../src/services/AuthService';
+import { UnifiedDataStructureService } from '../../../src/services/DataStructureService';
+import { fileStorageService, fileStorageEventEmitter } from '../../../src/services/FileStorageService';
+import { ProjectDataService } from '../../../src/services/ProjectDataService';
+import { getMimeType, isBinaryFile } from '../../../src/utils/fileUtils.ts';
+import { gitHubApiService } from './GitHubApiService';
 
 interface BackupStatus {
 	isConnected: boolean;
 	isEnabled: boolean;
 	lastSync: number | null;
-	status: "idle" | "syncing" | "error";
+	status: 'idle' | 'syncing' | 'error';
 	error?: string;
 	repository?: string;
 }
@@ -19,12 +19,12 @@ interface BackupStatus {
 interface BackupActivity {
 	id: string;
 	type:
-		| "backup_start"
-		| "backup_complete"
-		| "backup_error"
-		| "import_start"
-		| "import_complete"
-		| "import_error";
+	| 'backup_start'
+	| 'backup_complete'
+	| 'backup_error'
+	| 'import_start'
+	| 'import_complete'
+	| 'import_error';
 	message: string;
 	timestamp: number;
 	data?: any;
@@ -35,7 +35,7 @@ export class GitHubBackupService {
 		isConnected: false,
 		isEnabled: false,
 		lastSync: null,
-		status: "idle",
+		status: 'idle',
 	};
 	private listeners: Array<(status: BackupStatus) => void> = [];
 	private activities: BackupActivity[] = [];
@@ -46,27 +46,27 @@ export class GitHubBackupService {
 	private secretsContext: SecretsContextType | null = null;
 	private lastOperationTime = 0;
 	private readonly MIN_OPERATION_INTERVAL = 2000;
-	private readonly PLUGIN_ID = "texlyre-github-backup";
+	private readonly PLUGIN_ID = 'texlyre-github-backup';
 	private readonly SECRET_KEYS = {
-		TOKEN: "github-token",
-		REPOSITORY: "selected-repository",
+		TOKEN: 'github-token',
+		REPOSITORY: 'selected-repository',
 	} as const;
 
 	private _getScopeOptions(projectId?: string) {
 		return {
-			scope: projectId ? "project" : ("global" as "project" | "global"),
+			scope: projectId ? 'project' : ('global' as 'project' | 'global'),
 			projectId,
 		};
 	}
 
 	private _handleError(
 		error: unknown,
-		type: "backup_error" | "import_error",
+		type: 'backup_error' | 'import_error',
 		messagePrefix: string,
 	) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		this.addActivity({ type, message: `${messagePrefix}: ${errorMessage}` });
-		this.status = { ...this.status, status: "error", error: errorMessage };
+		this.status = { ...this.status, status: 'error', error: errorMessage };
 		this.notifyListeners();
 	}
 
@@ -86,7 +86,7 @@ export class GitHubBackupService {
 
 	async requestAccess(): Promise<{ success: boolean; error?: string }> {
 		if (!authService.getCurrentUser()) {
-			return { success: false, error: "No authenticated user" };
+			return { success: false, error: 'No authenticated user' };
 		}
 		return { success: true };
 	}
@@ -96,7 +96,7 @@ export class GitHubBackupService {
 	): Promise<{ success: boolean; repositories?: any[]; error?: string }> {
 		try {
 			if (!(await gitHubApiService.testConnection(token)))
-				return { success: false, error: "Invalid GitHub token" };
+				return { success: false, error: 'Invalid GitHub token' };
 			const repositories = await gitHubApiService.getRepositories(token);
 			return { success: true, repositories };
 		} catch (error) {
@@ -105,7 +105,7 @@ export class GitHubBackupService {
 				error:
 					error instanceof Error
 						? error.message
-						: "Failed to connect to GitHub",
+						: 'Failed to connect to GitHub',
 			};
 		}
 	}
@@ -114,15 +114,15 @@ export class GitHubBackupService {
 		token: string,
 		repoName: string,
 		projectId?: string,
-		branch = "main",
+		branch = 'main',
 	): Promise<boolean> {
 		try {
 			if (!this.secretsContext)
-				throw new Error("Secrets context not initialized");
-			if (!repoName || !repoName.includes("/"))
-				throw new Error("Invalid repository format. Use owner/repo");
+				throw new Error('Secrets context not initialized');
+			if (!repoName || !repoName.includes('/'))
+				throw new Error('Invalid repository format. Use owner/repo');
 
-			const [owner, repo] = repoName.split("/");
+			const [owner, repo] = repoName.split('/');
 			this.currentRepo = { owner, repo };
 			const scopeOptions = this._getScopeOptions(projectId);
 
@@ -132,7 +132,7 @@ export class GitHubBackupService {
 				token,
 				{
 					...scopeOptions,
-					metadata: { tokenType: "github-personal-access-token" },
+					metadata: { tokenType: 'github-personal-access-token' },
 				},
 			);
 			await this.secretsContext.setSecret(
@@ -160,18 +160,18 @@ export class GitHubBackupService {
 			};
 			this.notifyListeners();
 			this.addActivity({
-				type: "backup_complete",
+				type: 'backup_complete',
 				message: `Connected to GitHub repository: ${repoName} (${branch})`,
 			});
 			return true;
 		} catch (error) {
 			this.status = {
 				...this.status,
-				status: "error",
+				status: 'error',
 				error:
 					error instanceof Error
 						? error.message
-						: "Failed to connect to GitHub",
+						: 'Failed to connect to GitHub',
 			};
 			this.notifyListeners();
 			return false;
@@ -220,7 +220,7 @@ export class GitHubBackupService {
 			if (!tokenSecret?.value || !repoSecret?.value) return null;
 			return { token: tokenSecret.value, repository: repoSecret.value };
 		} catch (error) {
-			console.error("Error retrieving GitHub credentials:", error);
+			console.error('Error retrieving GitHub credentials:', error);
 			return null;
 		}
 	}
@@ -236,13 +236,13 @@ export class GitHubBackupService {
 	}
 
 	async getStoredBranch(projectId?: string): Promise<string> {
-		if (!this.secretsContext) return "main";
+		if (!this.secretsContext) return 'main';
 		const repoMetadata = await this.secretsContext.getSecretMetadata(
 			this.PLUGIN_ID,
 			this.SECRET_KEYS.REPOSITORY,
 			this._getScopeOptions(projectId),
 		);
-		return repoMetadata?.branch || "main";
+		return repoMetadata?.branch || 'main';
 	}
 
 	async hasStoredCredentials(projectId?: string): Promise<boolean> {
@@ -267,11 +267,11 @@ export class GitHubBackupService {
 		const credentials = await this.getGitHubCredentials(projectId);
 		const branch = await this.getStoredBranch(projectId);
 		if (!credentials)
-			throw new Error("GitHub credentials not available. Please reconnect.");
+			throw new Error('GitHub credentials not available. Please reconnect.');
 		if (!(await gitHubApiService.testConnection(credentials.token)))
-			throw new Error("GitHub token is invalid or expired. Please reconnect.");
+			throw new Error('GitHub token is invalid or expired. Please reconnect.');
 
-		const [owner, repo] = credentials.repository.split("/");
+		const [owner, repo] = credentials.repository.split('/');
 		this.currentRepo = { owner, repo };
 		this.status = {
 			...this.status,
@@ -293,7 +293,7 @@ export class GitHubBackupService {
 			path: string;
 			content: string | Uint8Array | ArrayBuffer;
 		}[],
-		branch = "main",
+		branch = 'main',
 		filesToDelete: { path: string }[] = [],
 		maxRetries = 3,
 	): Promise<void> {
@@ -302,7 +302,7 @@ export class GitHubBackupService {
 				if (attempt > 1) {
 					await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
 					this.addActivity({
-						type: "backup_start",
+						type: 'backup_start',
 						message: `Retrying commit (attempt ${attempt}/${maxRetries})...`,
 					});
 				}
@@ -329,18 +329,18 @@ export class GitHubBackupService {
 		branch?: string,
 	): Promise<void> {
 		await this._throttleOperation();
-		this.status = { ...this.status, status: "syncing" };
+		this.status = { ...this.status, status: 'syncing' };
 		this.addActivity({
-			type: "backup_start",
+			type: 'backup_start',
 			message: projectId
 				? `Syncing project: ${projectId}`
-				: "Syncing all projects...",
+				: 'Syncing all projects...',
 		});
 		this.notifyListeners();
 
 		try {
 			const user = await authService.getCurrentUser();
-			if (!user) throw new Error("No authenticated user");
+			if (!user) throw new Error('No authenticated user');
 
 			const credentials = await this.ensureValidCredentials(projectId);
 			const finalBranch = branch || credentials.branch;
@@ -348,7 +348,7 @@ export class GitHubBackupService {
 				? [await authService.getProjectById(projectId)]
 				: await authService.getProjectsByUser(user.id);
 			if (!localProjects || localProjects.some((p) => !p))
-				throw new Error("Could not load projects.");
+				throw new Error('Could not load projects.');
 
 			const filesToCommit: {
 				path: string;
@@ -369,7 +369,7 @@ export class GitHubBackupService {
 				filesToCommit.push({
 					path: `${projectPath}/metadata.json`,
 					content: JSON.stringify(
-						this.unifiedService.convertProjectToMetadata(project, "backup"),
+						this.unifiedService.convertProjectToMetadata(project, 'backup'),
 						null,
 						2,
 					),
@@ -423,7 +423,7 @@ export class GitHubBackupService {
 
 				files.files.forEach((file) => {
 					const content = files.fileContents.get(file.path);
-					if (file.type === "file" && content !== undefined) {
+					if (file.type === 'file' && content !== undefined) {
 						filesToCommit.push({
 							path: `${projectPath}/files${file.path}`,
 							content,
@@ -432,7 +432,7 @@ export class GitHubBackupService {
 				});
 
 				for (const deletedFile of files.deletedFiles) {
-					if (deletedFile.type === "file") {
+					if (deletedFile.type === 'file') {
 						const filePath = `${projectPath}/files${deletedFile.path}`;
 						filesToDelete.push({ path: filePath });
 					}
@@ -450,17 +450,17 @@ export class GitHubBackupService {
 			);
 
 			this.addActivity({
-				type: "backup_complete",
-				message: "GitHub sync completed successfully",
+				type: 'backup_complete',
+				message: 'GitHub sync completed successfully',
 			});
 			this.status = {
 				...this.status,
-				status: "idle",
+				status: 'idle',
 				lastSync: Date.now(),
 				error: undefined,
 			};
 		} catch (error) {
-			this._handleError(error, "backup_error", "GitHub sync failed");
+			this._handleError(error, 'backup_error', 'GitHub sync failed');
 		}
 		this.notifyListeners();
 	}
@@ -475,12 +475,12 @@ export class GitHubBackupService {
 
 	async importChanges(projectId?: string, branch?: string): Promise<void> {
 		await this._throttleOperation();
-		this.status = { ...this.status, status: "syncing" };
+		this.status = { ...this.status, status: 'syncing' };
 		this.addActivity({
-			type: "import_start",
+			type: 'import_start',
 			message: projectId
 				? `Importing project: ${projectId}`
-				: "Importing from GitHub...",
+				: 'Importing from GitHub...',
 		});
 		this.notifyListeners();
 
@@ -509,9 +509,9 @@ export class GitHubBackupService {
 			>();
 
 			for (const item of tree) {
-				if (item.type !== "blob" || !item.path?.startsWith("projects/"))
+				if (item.type !== 'blob' || !item.path?.startsWith('projects/'))
 					continue;
-				const pathParts = item.path.split("/");
+				const pathParts = item.path.split('/');
 				const currentProjectId = pathParts[1];
 				if (projectId && currentProjectId !== projectId) continue;
 
@@ -523,30 +523,30 @@ export class GitHubBackupService {
 				}
 				const projectData = projectFiles.get(currentProjectId)!;
 
-				if (pathParts[2] === "metadata.json") {
+				if (pathParts[2] === 'metadata.json') {
 					projectData.metadataSha = item.sha!;
-				} else if (pathParts[2] === "documents") {
-					if (pathParts[3] === "metadata.json") {
+				} else if (pathParts[2] === 'documents') {
+					if (pathParts[3] === 'metadata.json') {
 						projectData.documentsMetadataSha = item.sha!;
 					} else if (pathParts[3]) {
 						const fileName = pathParts[3];
-						const docId = fileName.replace(/\.(txt|yjs)$/, "");
+						const docId = fileName.replace(/\.(txt|yjs)$/, '');
 						if (!projectData.documents.has(docId)) {
 							projectData.documents.set(docId, { txtSha: null, yjsSha: null });
 						}
 						const docData = projectData.documents.get(docId)!;
-						if (fileName.endsWith(".txt")) {
+						if (fileName.endsWith('.txt')) {
 							docData.txtSha = item.sha!;
-						} else if (fileName.endsWith(".yjs")) {
+						} else if (fileName.endsWith('.yjs')) {
 							docData.yjsSha = item.sha!;
 						}
 					}
-				} else if (pathParts[2] === "files") {
-					if (pathParts[3] === "metadata.json") {
+				} else if (pathParts[2] === 'files') {
+					if (pathParts[3] === 'metadata.json') {
 						projectData.filesMetadataSha = item.sha!;
 					} else if (pathParts[3]) {
 						projectData.files.set(
-							`/${pathParts.slice(3).join("/")}`,
+							`/${pathParts.slice(3).join('/')}`,
 							item.sha!,
 						);
 					}
@@ -554,7 +554,7 @@ export class GitHubBackupService {
 			}
 
 			const user = await authService.getCurrentUser();
-			if (!user) throw new Error("No authenticated user");
+			if (!user) throw new Error('No authenticated user');
 
 			const existingProjects = await authService.getProjectsByUser(user.id);
 			const existingProjectIds = new Set(existingProjects.map((p) => p.id));
@@ -594,7 +594,7 @@ export class GitHubBackupService {
 					importedMissingCount++;
 
 					this.addActivity({
-						type: "import_complete",
+						type: 'import_complete',
 						message: `Auto-imported missing project: ${projectMetadata.name}`,
 					});
 					fileStorageEventEmitter.emitChange();
@@ -604,7 +604,7 @@ export class GitHubBackupService {
 						error,
 					);
 					this.addActivity({
-						type: "import_error",
+						type: 'import_error',
 						message: `Failed to import missing project: ${missingProjId}`,
 					});
 				}
@@ -627,21 +627,21 @@ export class GitHubBackupService {
 				);
 			}
 
-			let successMessage = "GitHub import completed successfully";
+			let successMessage = 'GitHub import completed successfully';
 			if (importedMissingCount > 0) {
-				successMessage += ` (${importedMissingCount} missing project${importedMissingCount === 1 ? "" : "s"} auto-imported)`;
+				successMessage += ` (${importedMissingCount} missing project${importedMissingCount === 1 ? '' : 's'} auto-imported)`;
 			}
 
-			this.addActivity({ type: "import_complete", message: successMessage });
+			this.addActivity({ type: 'import_complete', message: successMessage });
 			this.status = {
 				...this.status,
-				status: "idle",
+				status: 'idle',
 				lastSync: Date.now(),
 				error: undefined,
 			};
 			fileStorageEventEmitter.emitChange();
 		} catch (error) {
-			this._handleError(error, "import_error", "GitHub import failed");
+			this._handleError(error, 'import_error', 'GitHub import failed');
 		}
 		this.notifyListeners();
 	}
@@ -653,12 +653,17 @@ export class GitHubBackupService {
 		const authDb =
 			(await authService.db) ||
 			(await authService.initialize().then(() => authService.db));
-		if (!authDb) throw new Error("Could not access auth database");
+		if (!authDb) throw new Error('Could not access auth database');
 
 		const now = Date.now();
 		const newProject = {
 			id: projectMetadata.id,
 			name: projectMetadata.name,
+			type: projectMetadata.type || 'latex',
+			latexEngine: projectMetadata.latexEngine || 'pdftex',
+			typstEngine: projectMetadata.typstEngine || 'typst',
+			typstOutputFormat: projectMetadata.typstOutputFormat || 'pdf',
+			mainFile: projectMetadata.mainFile || 'main.tex',
 			description: projectMetadata.description,
 			docUrl: projectMetadata.docUrl,
 			createdAt: projectMetadata.createdAt,
@@ -668,7 +673,7 @@ export class GitHubBackupService {
 			isFavorite: projectMetadata.isFavorite,
 		};
 
-		await authDb.put("projects", newProject);
+		await authDb.put('projects', newProject);
 	}
 
 	private async importProjectSafely(
@@ -698,7 +703,7 @@ export class GitHubBackupService {
 				);
 				githubDocumentsMetadata = JSON.parse(metadataContent);
 			} catch (error) {
-				console.error("Failed to load documents metadata from GitHub:", error);
+				console.error('Failed to load documents metadata from GitHub:', error);
 			}
 		}
 
@@ -743,7 +748,7 @@ export class GitHubBackupService {
 					docData.yjsSha,
 				);
 
-				if (typeof yjsContent === "string") {
+				if (typeof yjsContent === 'string') {
 					const bytes = new Uint8Array(yjsContent.length);
 					for (let i = 0; i < yjsContent.length; i++) {
 						bytes[i] = yjsContent.charCodeAt(i);
@@ -787,7 +792,7 @@ export class GitHubBackupService {
 				);
 				githubFilesMetadata = JSON.parse(metadataContent);
 			} catch (error) {
-				console.error("Failed to load files metadata from GitHub:", error);
+				console.error('Failed to load files metadata from GitHub:', error);
 			}
 		}
 
@@ -810,7 +815,7 @@ export class GitHubBackupService {
 							`deleted-${Math.random().toString(36).substring(2, 15)}`,
 						name: fileMetadata.name,
 						path: fileMetadata.path,
-						type: fileMetadata.type as "file" | "directory",
+						type: fileMetadata.type as 'file' | 'directory',
 						lastModified: fileMetadata.lastModified || Date.now(),
 						size: 0,
 						mimeType: fileMetadata.mimeType,
@@ -826,7 +831,7 @@ export class GitHubBackupService {
 					});
 
 					this.addActivity({
-						type: "import_complete",
+						type: 'import_complete',
 						message: `Restored deleted file metadata: ${filePath}`,
 					});
 					fileStorageEventEmitter.emitChange();
@@ -880,7 +885,7 @@ export class GitHubBackupService {
 							`github-import-${Math.random().toString(36).substring(2, 15)}`,
 						name: githubMetadata.name,
 						path: githubMetadata.path,
-						type: githubMetadata.type as "file" | "directory",
+						type: githubMetadata.type as 'file' | 'directory',
 						lastModified: githubMetadata.lastModified || Date.now(),
 						size:
 							githubMetadata.size ||
@@ -894,7 +899,7 @@ export class GitHubBackupService {
 						isDeleted: false,
 					};
 				} else {
-					const fileName = filePath.split("/").pop() || "";
+					const fileName = filePath.split('/').pop() || '';
 					const fileSize =
 						finalContent instanceof ArrayBuffer
 							? finalContent.byteLength
@@ -906,7 +911,7 @@ export class GitHubBackupService {
 							`github-import-${Math.random().toString(36).substring(2, 15)}`,
 						name: fileName,
 						path: filePath,
-						type: "file" as const,
+						type: 'file' as const,
 						lastModified: Date.now(),
 						size: fileSize,
 						mimeType: getMimeType(filePath),
@@ -925,7 +930,7 @@ export class GitHubBackupService {
 			} catch (error) {
 				console.error(`Failed to import file ${filePath}:`, error);
 				this.addActivity({
-					type: "import_error",
+					type: 'import_error',
 					message: `Failed to import file: ${filePath}`,
 				});
 			}
@@ -933,7 +938,7 @@ export class GitHubBackupService {
 
 		if (importedFilesCount > 0) {
 			this.addActivity({
-				type: "import_complete",
+				type: 'import_complete',
 				message: `Imported ${importedFilesCount} files for project: ${projectMetadata.name}`,
 			});
 			fileStorageEventEmitter.emitChange();
@@ -941,7 +946,7 @@ export class GitHubBackupService {
 
 		if (documents.length > 0) {
 			const unifiedData = {
-				manifest: this.unifiedService.createManifest("import"),
+				manifest: this.unifiedService.createManifest('import'),
 				account: null,
 				projects: [projectMetadata],
 				projectData: new Map([
@@ -965,7 +970,7 @@ export class GitHubBackupService {
 			);
 
 			this.addActivity({
-				type: "import_complete",
+				type: 'import_complete',
 				message: `Imported ${documents.length} documents for project: ${projectMetadata.name}`,
 			});
 			fileStorageEventEmitter.emitChange();
@@ -1006,7 +1011,7 @@ export class GitHubBackupService {
 		this.activityListeners.forEach((listener) => listener(this.activities));
 	};
 
-	private addActivity(activity: Omit<BackupActivity, "id" | "timestamp">) {
+	private addActivity(activity: Omit<BackupActivity, 'id' | 'timestamp'>) {
 		const fullActivity: BackupActivity = {
 			id: Math.random().toString(36).substring(2),
 			timestamp: Date.now(),

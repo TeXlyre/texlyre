@@ -1,18 +1,18 @@
 // src/components/fileSync/FileSyncModal.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import { useFileSync } from "../../hooks/useFileSync";
-import { formatDate } from "../../utils/dateUtils";
+import { useFileSync } from '../../hooks/useFileSync';
+import { formatDate } from '../../utils/dateUtils';
 import {
 	DisconnectIcon,
 	FileIcon,
 	SettingsIcon,
 	SyncIcon,
 	TrashIcon,
-} from "../common/Icons.tsx";
-import Modal from "../common/Modal.tsx";
-import SettingsModal from "../settings/SettingsModal.tsx";
+} from '../common/Icons.tsx';
+import Modal from '../common/Modal.tsx';
+import SettingsModal from '../settings/SettingsModal.tsx';
 
 interface FileSyncModalProps {
 	isOpen: boolean;
@@ -36,35 +36,35 @@ const FileSyncModal: React.FC<FileSyncModalProps> = ({ isOpen, onClose }) => {
 
 	const getNotificationIcon = (type: string) => {
 		switch (type) {
-			case "sync_error":
-				return "❌";
-			case "sync_complete":
-				return "✅";
-			case "sync_request":
-				return "📤";
-			case "sync_response":
-				return "📥";
-			case "sync_progress":
-				return "⏳";
+			case 'sync_error':
+				return '❌';
+			case 'sync_complete':
+				return '✅';
+			case 'sync_request':
+				return '📤';
+			case 'sync_response':
+				return '📥';
+			case 'sync_progress':
+				return '⏳';
 			default:
-				return "ℹ️";
+				return 'ℹ️';
 		}
 	};
 
 	const getNotificationColor = (type: string) => {
 		switch (type) {
-			case "sync_error":
-				return "#dc3545";
-			case "sync_complete":
-				return "#28a745";
-			case "sync_request":
-				return "#007bff";
-			case "sync_response":
-				return "#6f42c1";
-			case "sync_progress":
-				return "#ffc107";
+			case 'sync_error':
+				return '#dc3545';
+			case 'sync_complete':
+				return '#28a745';
+			case 'sync_request':
+				return '#007bff';
+			case 'sync_response':
+				return '#6f42c1';
+			case 'sync_progress':
+				return '#ffc107';
 			default:
-				return "#6c757d";
+				return '#6c757d';
 		}
 	};
 
@@ -112,7 +112,7 @@ const FileSyncModal: React.FC<FileSyncModalProps> = ({ isOpen, onClose }) => {
 												disabled={isSyncing}
 											>
 												<SyncIcon />
-												{isSyncing ? "Syncing..." : "Sync Now"}
+												{isSyncing ? 'Syncing...' : 'Sync Now'}
 											</button>
 										</div>
 										<div className="secondary-actions">
@@ -132,13 +132,13 @@ const FileSyncModal: React.FC<FileSyncModalProps> = ({ isOpen, onClose }) => {
 
 						<div className="status-info">
 							<div className="status-item">
-								<strong>File Sync:</strong> {isEnabled ? "Enabled" : "Disabled"}
+								<strong>File Sync:</strong> {isEnabled ? 'Enabled' : 'Disabled'}
 							</div>
 							{isEnabled && (
 								<>
 									<div className="status-item">
-										<strong>Status:</strong>{" "}
-										{isSyncing ? "Syncing..." : "Ready"}
+										<strong>Status:</strong>{' '}
+										{isSyncing ? 'Syncing...' : 'Ready'}
 									</div>
 									{lastSync && (
 										<div className="status-item">

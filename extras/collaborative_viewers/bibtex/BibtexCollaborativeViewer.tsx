@@ -1,33 +1,33 @@
 // extras/collaborative_viewers/bibtex/BibtexCollaborativeViewer.tsx
-import { tidy } from "bib-editor";
-import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import { tidy } from 'bib-editor';
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
 	DownloadIcon,
 	OptionsIcon,
 	SaveIcon,
 	ViewIcon,
-} from "../../../src/components/common/Icons";
+} from '../../../src/components/common/Icons';
 import {
 	PluginControlGroup,
 	PluginHeader,
-} from "../../../src/components/common/PluginHeader";
-import { usePluginFileInfo } from "../../../src/hooks/usePluginFileInfo";
-import { useSettings } from "../../../src/hooks/useSettings";
-import type { CollaborativeViewerProps } from "../../../src/plugins/PluginInterface";
-import { EditorLoader } from "../../../src/services/EditorLoader";
-import { fileStorageService } from "../../../src/services/FileStorageService";
-import { TidyOptionsPanel } from "../../viewers/bibtex/TidyOptionsPanel";
+} from '../../../src/components/common/PluginHeader';
+import { usePluginFileInfo } from '../../../src/hooks/usePluginFileInfo';
+import { useSettings } from '../../../src/hooks/useSettings';
+import type { CollaborativeViewerProps } from '../../../src/plugins/PluginInterface';
+import { EditorLoader } from '../../../src/services/EditorLoader';
+import { fileStorageService } from '../../../src/services/FileStorageService';
+import { TidyOptionsPanel } from '../../viewers/bibtex/TidyOptionsPanel';
 import {
 	type TidyOptions,
 	getPresetOptions,
-} from "../../viewers/bibtex/tidyOptions";
-import { BibtexTableView } from "../../viewers/bibtex/BibtexTableView";
-import { BibtexParser } from "../../viewers/bibtex/BibtexParser";
-import type { BibtexEntry } from "../../viewers/bibtex/BibtexParser";
-import "../../viewers/bibtex/styles.css";
-import { PLUGIN_NAME, PLUGIN_VERSION } from "./BibtexCollaborativeViewerPlugin";
+} from '../../viewers/bibtex/tidyOptions';
+import { BibtexTableView } from '../../viewers/bibtex/BibtexTableView';
+import { BibtexParser } from '../../viewers/bibtex/BibtexParser';
+import type { BibtexEntry } from '../../viewers/bibtex/BibtexParser';
+import '../../viewers/bibtex/styles.css';
+import { PLUGIN_NAME, PLUGIN_VERSION } from './BibtexCollaborativeViewerPlugin';
 
 const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	content,
@@ -45,25 +45,25 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	const fileInfo = usePluginFileInfo(fileId, fileName);
 
 	const autoTidy =
-		(getSetting("bibtex-viewer-auto-tidy")?.value as boolean) ?? true;
+		(getSetting('bibtex-viewer-auto-tidy')?.value as boolean) ?? true;
 	const tidyPreset =
-		(getSetting("bibtex-viewer-tidy-options")?.value as
-			| "minimal"
-			| "standard"
-			| "strict") ?? "standard";
+		(getSetting('bibtex-viewer-tidy-options')?.value as
+			| 'minimal'
+			| 'standard'
+			| 'strict') ?? 'standard';
 
-	const [bibtexContent, setBibtexContent] = useState<string>("");
-	const [processedContent, setProcessedContent] = useState<string>("");
+	const [bibtexContent, setBibtexContent] = useState<string>('');
+	const [processedContent, setProcessedContent] = useState<string>('');
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [_hasChanges, setHasChanges] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [warnings, setWarnings] = useState<unknown[]>([]);
 	const [showSidebar, setShowSidebar] = useState(true);
-	const [currentView, setCurrentView] = useState<"original" | "processed">(
-		"original",
+	const [currentView, setCurrentView] = useState<'original' | 'processed'>(
+		'original',
 	);
-	const [viewMode, setViewMode] = useState<"editor" | "table">("editor");
+	const [viewMode, setViewMode] = useState<'editor' | 'table'>('editor');
 
 	const [processedParsedEntries, setProcessedParsedEntries] = useState<BibtexEntry[]>([]);
 	const [updateCounter, setUpdateCounter] = useState(0);
@@ -73,27 +73,27 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		getPresetOptions(tidyPreset),
 	);
 	const _activeContent =
-		currentView === "original" ? bibtexContent : processedContent;
+		currentView === 'original' ? bibtexContent : processedContent;
 
 	const initialContentRef = useRef<string>(
-		typeof content === "string"
+		typeof content === 'string'
 			? content
 			: content instanceof ArrayBuffer
-				? new TextDecoder("utf-8").decode(content)
-				: "",
+				? new TextDecoder('utf-8').decode(content)
+				: '',
 	);
 
 	const parseContent = (content: string) => {
 		try {
 			return BibtexParser.parse(content);
 		} catch (error) {
-			console.warn("Failed to parse BibTeX content:", error);
+			console.warn('Failed to parse BibTeX content:', error);
 			return [];
 		}
 	};
 
 	const handleContentUpdate = (newContent: string) => {
-		if (currentView === "original") {
+		if (currentView === 'original') {
 			setBibtexContent(newContent);
 			setHasChanges(true);
 			onUpdateContent(newContent);
@@ -148,51 +148,51 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	};
 
 	const { viewRef, showSaveIndicator } =
-		currentView === "original"
+		currentView === 'original'
 			? EditorLoader(
-					editorRef,
-					docUrl,
-					documentId,
-					isDocumentSelected,
-					initialContentRef.current,
-					handleContentUpdate,
-					parseComments || (() => []),
-					addComment || (() => ({ openTag: "", closeTag: "", commentId: "" })),
-					updateComments || (() => {}),
-					false,
-					false,
-					fileName,
-					undefined,
-					false,
-				)
+				editorRef,
+				docUrl,
+				documentId,
+				isDocumentSelected,
+				initialContentRef.current,
+				handleContentUpdate,
+				parseComments || (() => []),
+				addComment || (() => ({ openTag: '', closeTag: '', commentId: '' })),
+				updateComments || (() => { }),
+				false,
+				false,
+				fileName,
+				undefined,
+				false,
+			)
 			: EditorLoader(
-					editorRef,
-					"bibtex-viewer",
-					`${documentId}-processed`,
-					true,
-					processedContent,
-					handleContentUpdate,
-					() => [],
-					() => ({ openTag: "", closeTag: "", commentId: "" }),
-					() => {},
-					true,
-					false,
-					fileName,
-					undefined,
-					false,
-				);
+				editorRef,
+				'bibtex-viewer',
+				`${documentId}-processed`,
+				true,
+				processedContent,
+				handleContentUpdate,
+				() => [],
+				() => ({ openTag: '', closeTag: '', commentId: '' }),
+				() => { },
+				true,
+				false,
+				fileName,
+				undefined,
+				false,
+			);
 
 	useEffect(() => {
-		let text = "";
+		let text = '';
 		if (content instanceof ArrayBuffer) {
 			try {
-				text = new TextDecoder("utf-8").decode(content);
+				text = new TextDecoder('utf-8').decode(content);
 			} catch (e) {
-				console.error("BibtexCollaborativeViewer: Error decoding content:", e);
-				setError("Failed to decode file content");
+				console.error('BibtexCollaborativeViewer: Error decoding content:', e);
+				setError('Failed to decode file content');
 				return;
 			}
-		} else if (typeof content === "string") {
+		} else if (typeof content === 'string') {
 			text = content;
 		}
 		setBibtexContent(text);
@@ -210,7 +210,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
 	// Sync table with current editor content when switching to table view (processed only)
 	useEffect(() => {
-		if (viewMode === "table" && currentView === "processed") {
+		if (viewMode === 'table' && currentView === 'processed') {
 			console.log('Switching to table view - syncing with processed editor content');
 
 			if (viewRef.current) {
@@ -240,10 +240,10 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			setProcessedParsedEntries(parseContent(result.bibtex));
 			setWarnings(result.warnings || []);
 			setHasChanges(true);
-			if (autoTidy) setCurrentView("processed");
+			if (autoTidy) setCurrentView('processed');
 		} catch (err) {
 			setError(
-				err instanceof Error ? err.message : "Failed to process BibTeX file",
+				err instanceof Error ? err.message : 'Failed to process BibTeX file',
 			);
 		} finally {
 			setIsProcessing(false);
@@ -252,13 +252,13 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
 	const processBibtex = async () => {
 		await processBibtexWithOptions(bibtexContent, options);
-		setCurrentView("processed");
+		setCurrentView('processed');
 	};
 
 	const handleSaveProcessed = async () => {
-		if (!fileId || currentView !== "processed") return;
+		if (!fileId || currentView !== 'processed') return;
 
-		const currentEditorContent = viewRef.current?.state?.doc?.toString() || "";
+		const currentEditorContent = viewRef.current?.state?.doc?.toString() || '';
 		const contentToSave = currentEditorContent.trim()
 			? currentEditorContent
 			: processedContent;
@@ -268,19 +268,17 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		setError(null);
 
 		try {
-			const encoder = new TextEncoder();
 			await fileStorageService.updateFileContent(
 				fileId,
-				encoder.encode(contentToSave),
-			);
+				contentToSave);
 
 			initialContentRef.current = contentToSave;
 
 			setBibtexContent(contentToSave);
-			setProcessedContent("");
+			setProcessedContent('');
 			setProcessedParsedEntries([]);
 
-			setCurrentView("original");
+			setCurrentView('original');
 
 			setTimeout(() => {
 				onUpdateContent(contentToSave);
@@ -300,7 +298,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 									},
 								});
 							} catch (error) {
-								console.error("Error updating editor content:", error);
+								console.error('Error updating editor content:', error);
 							}
 						}
 					}
@@ -308,37 +306,37 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				}, 200);
 			}, 100);
 		} catch (e) {
-			console.error("Error saving processed BibTeX file:", e);
+			console.error('Error saving processed BibTeX file:', e);
 			setError(
-				`Failed to save file: ${e instanceof Error ? e.message : "Unknown error"}`,
+				`Failed to save file: ${e instanceof Error ? e.message : 'Unknown error'}`,
 			);
 		} finally {
 			setIsSaving(false);
 		}
 	};
 
-	const handleExport = (text: string, suffix = "") => {
+	const handleExport = (text: string, suffix = '') => {
 		try {
-			const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+			const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
 			const url = URL.createObjectURL(blob);
-			const a = document.createElement("a");
+			const a = document.createElement('a');
 			a.href = url;
-			a.download = `${fileName.replace(/\.bib$/i, "") + suffix}.bib`;
+			a.download = `${fileName.replace(/\.bib$/i, '') + suffix}.bib`;
 			document.body.appendChild(a);
 			a.click();
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} catch (e) {
-			console.error("Error exporting file:", e);
+			console.error('Error exporting file:', e);
 			setError(
-				`Failed to export file: ${e instanceof Error ? e.message : "Unknown error"}`,
+				`Failed to export file: ${e instanceof Error ? e.message : 'Unknown error'}`,
 			);
 		}
 	};
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.ctrlKey && event.key === 's' && currentView === "processed") {
+			if (event.ctrlKey && event.key === 's' && currentView === 'processed') {
 				event.preventDefault();
 				handleSaveProcessed();
 			}
@@ -349,33 +347,33 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	}, [currentView, handleSaveProcessed]);
 
 	const displayContent =
-		currentView === "original" ? bibtexContent : processedContent;
+		currentView === 'original' ? bibtexContent : processedContent;
 
 	const tooltipInfo = [
-		`Auto-tidy: ${autoTidy ? "enabled" : "disabled"}`,
+		`Auto-tidy: ${autoTidy ? 'enabled' : 'disabled'}`,
 		`Preset: ${tidyPreset}`,
-		`Entries: ${bibtexContent.split("@").length - 1}`,
-		"Collaborative Mode: Active",
-		`MIME Type: ${fileInfo.mimeType || "text/x-bibtex"}`,
-		`Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : "Unknown"}`,
+		`Entries: ${bibtexContent.split('@').length - 1}`,
+		'Collaborative Mode: Active',
+		`MIME Type: ${fileInfo.mimeType || 'text/x-bibtex'}`,
+		`Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : 'Unknown'}`,
 	];
 
 	const headerControls = (
 		<>
 			<PluginControlGroup>
 				<button
-					className={`${showSidebar ? "active" : ""}`}
+					className={`${showSidebar ? 'active' : ''}`}
 					onClick={() => setShowSidebar(!showSidebar)}
 					title="Toggle Options Panel"
 				>
 					<OptionsIcon />
 				</button>
 				{/* Only show table view toggle for processed view */}
-				{currentView === "processed" && (
+				{currentView === 'processed' && (
 					<button
-						className={`${viewMode === "table" ? "active" : ""}`}
-						onClick={() => setViewMode(viewMode === "editor" ? "table" : "editor")}
-						title={`Switch to ${viewMode === "editor" ? "Table" : "Editor"} View`}
+						className={`${viewMode === 'table' ? 'active' : ''}`}
+						onClick={() => setViewMode(viewMode === 'editor' ? 'table' : 'editor')}
+						title={`Switch to ${viewMode === 'editor' ? 'Table' : 'Editor'} View`}
 					>
 						<ViewIcon />
 					</button>
@@ -383,11 +381,11 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			</PluginControlGroup>
 
 			<PluginControlGroup>
-				{currentView === "original" && (
+				{currentView === 'original' && (
 					<button
 						onClick={() => {
 							document.dispatchEvent(
-								new CustomEvent("trigger-save", {
+								new CustomEvent('trigger-save', {
 									detail: { documentId, isFile: false },
 								}),
 							);
@@ -398,7 +396,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 						<SaveIcon />
 					</button>
 				)}
-				{fileId && currentView === "processed" && (
+				{fileId && currentView === 'processed' && (
 					<button
 						onClick={handleSaveProcessed}
 						title="Save Processed to Original"
@@ -411,7 +409,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					onClick={() =>
 						handleExport(
 							displayContent,
-							currentView === "original" ? "_original" : "_tidied",
+							currentView === 'original' ? '_original' : '_tidied',
 						)
 					}
 					title="Download Current View"
@@ -434,7 +432,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				onNavigateToLinkedFile={() => {
 					if (fileId && fileInfo.filePath) {
 						document.dispatchEvent(
-							new CustomEvent("navigate-to-linked-file", {
+							new CustomEvent('navigate-to-linked-file', {
 								detail: {
 									filePath: fileInfo.filePath,
 									fileId: fileId,
@@ -455,7 +453,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					<TidyOptionsPanel
 						options={options}
 						onOptionsChange={setOptions}
-						onResetToDefaults={() => setOptions(getPresetOptions("standard"))}
+						onResetToDefaults={() => setOptions(getPresetOptions('standard'))}
 						onProcessBibtex={processBibtex}
 						isProcessing={isProcessing}
 					/>
@@ -476,32 +474,32 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					)}
 
 					<div className="editor-containers">
-						<div className="editor-container" style={{ position: "relative" }}>
+						<div className="editor-container" style={{ position: 'relative' }}>
 							<div className="editor-header">
 								<div className="view-tabs">
 									<button
-										className={`tab-button ${currentView === "original" ? "active" : ""}`}
-										onClick={() => setCurrentView("original")}
+										className={`tab-button ${currentView === 'original' ? 'active' : ''}`}
+										onClick={() => setCurrentView('original')}
 									>
 										Original
 									</button>
 									<button
-										className={`tab-button ${currentView === "processed" ? "active" : ""}`}
-										onClick={() => setCurrentView("processed")}
+										className={`tab-button ${currentView === 'processed' ? 'active' : ''}`}
+										onClick={() => setCurrentView('processed')}
 										disabled={!processedContent.trim()}
 									>
 										Processed
 									</button>
 								</div>
-								{currentView === "processed" && processedContent.trim() && (
+								{currentView === 'processed' && processedContent.trim() && (
 									<div className="processed-save-notice">
-										<span>Not saved automatically. Click the <SaveIcon/> <strong>Save</strong> button or <strong>Ctrl+S</strong></span>
+										<span>Not saved automatically. Click the <SaveIcon /> <strong>Save</strong> button or <strong>Ctrl+S</strong></span>
 									</div>
 								)}
 								{isProcessing && (
 									<span className="processing-indicator"> (Processing...)</span>
 								)}
-								{isSaving && currentView === "processed" && (
+								{isSaving && currentView === 'processed' && (
 									<span className="processing-indicator"> (Saving...)</span>
 								)}
 							</div>
@@ -511,12 +509,12 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 								ref={editorRef}
 								className="codemirror-editor-container"
 								style={{
-									display: currentView === "processed" && viewMode === "table" ? "none" : "block"
+									display: currentView === 'processed' && viewMode === 'table' ? 'none' : 'block'
 								}}
 							/>
 
 							{/* Only show table for processed view */}
-							{currentView === "processed" && viewMode === "table" && (
+							{currentView === 'processed' && viewMode === 'table' && (
 								<BibtexTableView
 									key={`processed-${updateCounter}`}
 									entries={processedParsedEntries}
@@ -525,7 +523,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 								/>
 							)}
 
-							{showSaveIndicator && currentView === "original" && (
+							{showSaveIndicator && currentView === 'original' && (
 								<div className="save-indicator">
 									<span>Saved</span>
 								</div>

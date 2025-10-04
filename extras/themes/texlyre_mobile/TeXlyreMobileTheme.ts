@@ -3,24 +3,24 @@ import type {
 	ThemeLayout,
 	ThemePlugin,
 	ThemeVariant,
-} from "../../../src/plugins/PluginInterface";
-import { themes } from "./colors";
-import "./styles/index.css";
+} from '../../../src/plugins/PluginInterface';
+import { themes } from './colors';
+import './styles/index.css';
 
 const createTeXlyreMobileTheme = (): ThemePlugin => {
-	let currentThemeId = "dark";
-	let currentView: "explorer" | "editor" | "output" | "chat" = "editor";
+	let currentThemeId = 'dark';
+	let currentView: 'explorer' | 'editor' | 'output' | 'chat' = 'editor';
 	let mobileClickHandler: ((e: Event) => void) | null = null;
 	let hashChangeHandler: (() => void) | null = null;
 
 	const layout: ThemeLayout = {
-		id: "texlyre-mobile",
-		name: "TeXlyre Mobile Theme",
-		containerClass: "texlyre-mobile",
+		id: 'texlyre-mobile',
+		name: 'TeXlyre Mobile Theme',
+		containerClass: 'texlyre-mobile',
 		defaultFileExplorerWidth: 100,
 		minFileExplorerWidth: 100,
 		maxFileExplorerWidth: 100,
-		stylesheetPath: "./styles/layout.css",
+		stylesheetPath: './styles/layout.css',
 	};
 
 	const applyThemeColors = (themeId: string) => {
@@ -33,8 +33,8 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 				value as string,
 			);
 		});
-		document.documentElement.style.setProperty("color", colors.color);
-		document.documentElement.style.setProperty("--text-color", colors.color);
+		document.documentElement.style.setProperty('color', colors.color);
+		document.documentElement.style.setProperty('--text-color', colors.color);
 	};
 
 	const isProjectsView = () => {
@@ -88,8 +88,8 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 			createMobileNavigation();
 			
 			if (isProjectsView()) {
-				currentView = "editor";
-				updateMobileView("editor");
+				currentView = 'editor';
+				updateMobileView('editor');
 			}
 		};
 
@@ -208,19 +208,19 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 	};
 
 	return {
-		id: "texlyre-mobile-theme",
-		name: "TeXlyre Mobile Theme",
-		version: "1.0.0",
-		type: "theme",
+		id: 'texlyre-mobile-theme',
+		name: 'TeXlyre Mobile Theme',
+		version: '1.0.0',
+		type: 'theme',
 		themes: [
-			{ id: "light", name: "Light", isDark: false },
-			{ id: "dark", name: "Dark", isDark: true },
-			{ id: "system", name: "System", isDark: false },
-			{ id: "monokai", name: "Monokai", isDark: true },
-			{ id: "tomorrow_night_blue", name: "Tomorrow Night Blue", isDark: true },
-			{ id: "github_light", name: "GitHub Light", isDark: false },
-			{ id: "solarized_light", name: "Solarized Light", isDark: false },
-			{ id: "atom_light", name: "Atom Light", isDark: false },
+			{ id: 'light', name: 'Light', isDark: false },
+			{ id: 'dark', name: 'Dark', isDark: true },
+			{ id: 'system', name: 'System', isDark: false },
+			{ id: 'monokai', name: 'Monokai', isDark: true },
+			{ id: 'tomorrow_night_blue', name: 'Tomorrow Night Blue', isDark: true },
+			{ id: 'github_light', name: 'GitHub Light', isDark: false },
+			{ id: 'solarized_light', name: 'Solarized Light', isDark: false },
+			{ id: 'atom_light', name: 'Atom Light', isDark: false },
 		],
 
 		applyTheme(variantId: string): boolean {
@@ -229,17 +229,17 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 
 			currentThemeId = variantId;
 
-			if (variantId === "system") {
+			if (variantId === 'system') {
 				const prefersDark = window.matchMedia(
-					"(prefers-color-scheme: dark)",
+					'(prefers-color-scheme: dark)',
 				).matches;
-				applyThemeColors(prefersDark ? "dark" : "light");
+				applyThemeColors(prefersDark ? 'dark' : 'light');
 			} else {
 				applyThemeColors(variantId);
 			}
 
-			document.documentElement.setAttribute("data-theme", variantId);
-			document.documentElement.setAttribute("data-theme-plugin", "texlyre-mobile");
+			document.documentElement.setAttribute('data-theme', variantId);
+			document.documentElement.setAttribute('data-theme-plugin', 'texlyre-mobile');
 			
 			handleMobileNavigation();
 			
@@ -265,7 +265,7 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 		},
 
 		applyLayout(): void {
-			document.documentElement.setAttribute("data-layout", layout.id);
+			document.documentElement.setAttribute('data-layout', layout.id);
 			handleMobileNavigation();
 		},
 

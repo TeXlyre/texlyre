@@ -1,8 +1,8 @@
 // src/plugins/PluginInterface.ts
-import type React from "react";
-import type { Setting } from "../contexts/SettingsContext";
-import type { BackupStatus } from "../types/backup";
-import type { LSPRequest, LSPResponse, LSPNotification, LSPServerConfig } from "../types/lsp";
+import type React from 'react';
+import type { Setting } from '../contexts/SettingsContext';
+import type { BackupStatus } from '../types/backup';
+import type { LSPRequest, LSPResponse, LSPNotification, LSPServerConfig } from '../types/lsp';
 
 export interface Plugin {
 	id: string;
@@ -14,7 +14,7 @@ export interface Plugin {
 
 // Viewers
 export interface ViewerPlugin extends Plugin {
-	type: "viewer";
+	type: 'viewer';
 	icon?: React.ComponentType;
 	canHandle: (fileType: string, mimeType?: string) => boolean;
 	renderViewer: React.ComponentType<ViewerProps>;
@@ -28,7 +28,7 @@ export interface ViewerProps {
 }
 
 export interface CollaborativeViewerPlugin extends Plugin {
-	type: "collaborative-viewer";
+	type: 'collaborative-viewer';
 	canHandle: (fileType: string, mimeType?: string) => boolean;
 	renderViewer: React.ComponentType<CollaborativeViewerProps>;
 }
@@ -45,7 +45,7 @@ export interface CollaborativeViewerProps extends ViewerProps {
 
 // Renderers - For rendering output from compilation processes
 export interface RendererPlugin extends Plugin {
-	type: "renderer";
+	type: 'renderer';
 	canHandle: (outputType: string) => boolean;
 	renderOutput: React.ComponentType<RendererProps>;
 }
@@ -60,7 +60,7 @@ export interface RendererProps {
 
 // Loggers
 export interface LoggerPlugin extends Plugin {
-	type: "logger";
+	type: 'logger';
 	canHandle: (logType: string) => boolean;
 	renderVisualizer: React.ComponentType<LoggerProps>;
 }
@@ -72,7 +72,7 @@ export interface LoggerProps {
 
 // Language Server Protocol (LSP) Support
 export interface LSPPlugin extends Plugin {
-    type: "lsp";
+    type: 'lsp';
     icon?: React.ComponentType;
 
     // Core LSP functionality
@@ -109,7 +109,7 @@ export interface LSPPanelProps {
 
 // Backup and Restore
 export interface BackupPlugin extends Plugin {
-	type: "backup";
+	type: 'backup';
 	icon: React.ComponentType;
 	canHandle: (backupType: string) => boolean;
 	renderStatusIndicator: React.ComponentType<BackupStatusIndicatorProps>;
@@ -153,7 +153,7 @@ export interface ThemeLayout {
 
 // Themes
 export interface ThemePlugin extends Plugin {
-	type: "theme";
+	type: 'theme';
 	themes: ThemeVariant[];
 	applyTheme: (variant: string) => void;
 	getThemeVariants: () => ThemeVariant[];

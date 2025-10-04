@@ -1,6 +1,6 @@
 // extras/viewers/image/CombinedImageViewer.tsx
-import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
 	BrightnessDownIcon,
@@ -16,17 +16,17 @@ import {
 	SaveIcon,
 	ZoomInIcon,
 	ZoomOutIcon,
-} from "../../../src/components/common/Icons";
+} from '../../../src/components/common/Icons';
 import {
 	PluginControlGroup,
 	PluginHeader,
-} from "../../../src/components/common/PluginHeader";
-import { usePluginFileInfo } from "../../../src/hooks/usePluginFileInfo";
-import { useSettings } from "../../../src/hooks/useSettings";
-import type { ViewerProps } from "../../../src/plugins/PluginInterface";
-import { fileStorageService } from "../../../src/services/FileStorageService";
-import "./styles.css";
-import { PLUGIN_NAME, PLUGIN_VERSION } from "./ImageViewerPlugin";
+} from '../../../src/components/common/PluginHeader';
+import { usePluginFileInfo } from '../../../src/hooks/usePluginFileInfo';
+import { useSettings } from '../../../src/hooks/useSettings';
+import type { ViewerProps } from '../../../src/plugins/PluginInterface';
+import { fileStorageService } from '../../../src/services/FileStorageService';
+import './styles.css';
+import { PLUGIN_NAME, PLUGIN_VERSION } from './ImageViewerPlugin';
 
 interface ImageTransform {
 	scale: number;
@@ -49,19 +49,19 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 	const fileInfo = usePluginFileInfo(fileId, fileName);
 
 	const autoCenter =
-		(getSetting("image-viewer-auto-center")?.value as boolean) ?? true;
+		(getSetting('image-viewer-auto-center')?.value as boolean) ?? true;
 	const quality =
-		(getSetting("image-viewer-quality")?.value as "low" | "medium" | "high") ??
-		"high";
+		(getSetting('image-viewer-quality')?.value as 'low' | 'medium' | 'high') ??
+		'high';
 	const enablePanning =
-		(getSetting("image-viewer-enable-panning")?.value as boolean) ?? true;
+		(getSetting('image-viewer-enable-panning')?.value as boolean) ?? true;
 	const enableFilters =
-		(getSetting("image-viewer-enable-filters")?.value as boolean) ?? true;
+		(getSetting('image-viewer-enable-filters')?.value as boolean) ?? true;
 
 	const imageRenderingStyle = {
-		low: "pixelated",
-		medium: "crisp-edges",
-		high: "auto",
+		low: 'pixelated',
+		medium: 'crisp-edges',
+		high: 'auto',
 	}[quality];
 
 	const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -95,23 +95,23 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 
 		setIsLoading(true);
 		const isSvgFile =
-			mimeType === "image/svg+xml" || fileName.toLowerCase().endsWith(".svg");
+			mimeType === 'image/svg+xml' || fileName.toLowerCase().endsWith('.svg');
 		setIsSvg(isSvgFile);
 
 		try {
 			if (isSvgFile) {
-				const decoder = new TextDecoder("utf-8");
+				const decoder = new TextDecoder('utf-8');
 				setSvgContent(decoder.decode(content));
 				setImageSrc(null);
 			} else {
-				const blob = new Blob([content], { type: mimeType || "image/png" });
+				const blob = new Blob([content], { type: mimeType || 'image/png' });
 				const url = URL.createObjectURL(blob);
 				setImageSrc(url);
 				setSvgContent(null);
 				return () => URL.revokeObjectURL(url);
 			}
 		} catch (error) {
-			console.error("Error processing image:", error);
+			console.error('Error processing image:', error);
 		} finally {
 			setIsLoading(false);
 		}
@@ -168,7 +168,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 				setHasChanges(false);
 			}
 		} catch (error) {
-			console.error("Error saving image:", error);
+			console.error('Error saving image:', error);
 		} finally {
 			setIsSaving(false);
 		}
@@ -181,7 +181,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 			const img = new Image();
 			img.onload = () => {
 				const canvas = canvasRef.current!;
-				const ctx = canvas.getContext("2d")!;
+				const ctx = canvas.getContext('2d')!;
 
 				canvas.width = img.width;
 				canvas.height = img.height;
@@ -200,7 +200,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 					} else {
 						resolve(null);
 					}
-				}, mimeType || "image/png");
+				}, mimeType || 'image/png');
 			};
 			img.src = imageSrc;
 		});
@@ -208,16 +208,16 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 
 	const handleExport = () => {
 		if (imageSrc && !isSvg) {
-			const a = document.createElement("a");
+			const a = document.createElement('a');
 			a.href = imageSrc;
 			a.download = fileName;
 			document.body.appendChild(a);
 			a.click();
 			document.body.removeChild(a);
 		} else if (svgContent && isSvg) {
-			const blob = new Blob([svgContent], { type: "image/svg+xml" });
+			const blob = new Blob([svgContent], { type: 'image/svg+xml' });
 			const url = URL.createObjectURL(blob);
-			const a = document.createElement("a");
+			const a = document.createElement('a');
 			a.href = url;
 			a.download = fileName;
 			document.body.appendChild(a);
@@ -255,16 +255,16 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 
 		const filterValue = enableFilters
 			? `brightness(${transform.brightness}%) contrast(${transform.contrast}%)`
-			: "none";
+			: 'none';
 
 		return {
 			transform: transformValue,
-			transformOrigin: "center",
+			transformOrigin: 'center',
 			imageRendering:
-				imageRenderingStyle as React.CSSProperties["imageRendering"],
+				imageRenderingStyle as React.CSSProperties['imageRendering'],
 			filter: filterValue,
-			cursor: enablePanning ? (isPanning ? "grabbing" : "grab") : "default",
-			transition: isPanning ? "none" : "transform 0.2s ease",
+			cursor: enablePanning ? (isPanning ? 'grabbing' : 'grab') : 'default',
+			transition: isPanning ? 'none' : 'transform 0.2s ease',
 		};
 	};
 
@@ -272,8 +272,8 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 		if (!svgContent) return null;
 		const centerCss =
 			autoCenter && transform.translateX === 0 && transform.translateY === 0
-				? "display:flex;justify-content:center;align-items:center;"
-				: "";
+				? 'display:flex;justify-content:center;align-items:center;'
+				: '';
 
 		const scaleX = transform.flipH ? -transform.scale : transform.scale;
 		const scaleY = transform.flipV ? -transform.scale : transform.scale;
@@ -281,7 +281,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 
 		const filterValue = enableFilters
 			? `brightness(${transform.brightness}%) contrast(${transform.contrast}%)`
-			: "none";
+			: 'none';
 
 		return (
 			<iframe
@@ -295,26 +295,28 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
                   padding: 0; 
                   height: 100%; 
                   width: 100%; 
-                  overflow: hidden; 
+                  overflow: auto; 
+				  align-items: center;
+				  justify-content: left;
+				  background: transparent;
                   ${centerCss}
                 }
                 svg { 
                   max-width: 100%; 
                   max-height: 100%; 
                   transform: ${transformValue};
-                  transform-origin: center;
+                  transform-origin: top left;
                   filter: ${filterValue};
-                  cursor: ${enablePanning ? (isPanning ? "grabbing" : "grab") : "default"};
-                  transition: ${isPanning ? "none" : "transform 0.2s ease"};
                 }
               </style>
             </head>
             <body>${svgContent}</body>
           </html>`}
 				style={{
-					width: "100%",
-					height: "100%",
-					border: "none",
+					overflow: 'auto',
+					width: '100%',
+					height: '100%',
+					border: 'none',
 				}}
 				onMouseDown={(e) => enablePanning && handleMouseDown(e)}
 				onMouseMove={(e) => enablePanning && handleMouseMove(e)}
@@ -326,11 +328,11 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 
 	const tooltipInfo = [
 		`Quality: ${quality}`,
-		`Auto center: ${autoCenter ? "enabled" : "disabled"}`,
-		`Panning: ${enablePanning ? "enabled" : "disabled"}`,
-		`Filters: ${enableFilters ? "enabled" : "disabled"}`,
-		`MIME Type: ${mimeType || "Unknown"}`,
-		`Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : "Unknown"}`,
+		`Auto center: ${autoCenter ? 'enabled' : 'disabled'}`,
+		`Panning: ${enablePanning ? 'enabled' : 'disabled'}`,
+		`Filters: ${enableFilters ? 'enabled' : 'disabled'}`,
+		`MIME Type: ${mimeType || 'Unknown'}`,
+		`Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : 'Unknown'}`,
 	];
 
 	const headerControls = (
@@ -360,14 +362,14 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 				<button
 					onClick={handleFlipH}
 					title="Flip Horizontal"
-					className={transform.flipH ? "active" : ""}
+					className={transform.flipH ? 'active' : ''}
 				>
 					<FlipHorizontalIcon />
 				</button>
 				<button
 					onClick={handleFlipV}
 					title="Flip Vertical"
-					className={transform.flipV ? "active" : ""}
+					className={transform.flipV ? 'active' : ''}
 				>
 					<FlipVerticalIcon />
 				</button>
@@ -376,8 +378,8 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 			{enablePanning && (
 				<PluginControlGroup>
 					<button
-						title={`Panning ${enablePanning ? "enabled" : "disabled"}`}
-						className={enablePanning ? "active" : ""}
+						title={`Panning ${enablePanning ? 'enabled' : 'disabled'}`}
+						className={enablePanning ? 'active' : ''}
 					>
 						<MoveIcon />
 					</button>
@@ -422,7 +424,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 						onClick={handleSave}
 						title="Save Changes to File"
 						disabled={!hasChanges || isSaving}
-						className={hasChanges ? "active" : ""}
+						className={hasChanges ? 'active' : ''}
 					>
 						<SaveIcon />
 					</button>
@@ -436,7 +438,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 
 	return (
 		<div className="image-viewer-container">
-			<canvas ref={canvasRef} style={{ display: "none" }} />
+			<canvas ref={canvasRef} style={{ display: 'none' }} />
 
 			<PluginHeader
 				fileName={fileInfo.fileName}
@@ -459,7 +461,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 
 				{!isLoading && imageSrc && !isSvg && (
 					<div
-						className={`image-container${autoCenter && transform.translateX === 0 && transform.translateY === 0 ? "" : " no-center"}`}
+						className={`image-container${autoCenter && transform.translateX === 0 && transform.translateY === 0 ? '' : ' no-center'}`}
 					>
 						<img
 							src={imageSrc}
@@ -472,8 +474,8 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 
 				{!isLoading && isSvg && (
 					<div
-						className={`svg-container${autoCenter && transform.translateX === 0 && transform.translateY === 0 ? "" : " no-center"}`}
-						style={{ width: "100%", height: "100%" }}
+						className={`svg-container${autoCenter && transform.translateX === 0 && transform.translateY === 0 ? '' : ' no-center'}`}
+						style={{ width: '100%', height: '100%' }}
 					>
 						{renderSvgIframe()}
 					</div>

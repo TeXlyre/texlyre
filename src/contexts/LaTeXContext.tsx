@@ -1,5 +1,5 @@
 // src/contexts/LaTeXContext.tsx
-import type React from "react";
+import type React from 'react';
 import {
 	type ReactNode,
 	createContext,
@@ -7,14 +7,14 @@ import {
 	useCallback,
 	useRef,
 	useState,
-} from "react";
+} from 'react';
 
-import { useFileTree } from "../hooks/useFileTree";
-import { useSettings } from "../hooks/useSettings";
-import { latexService } from "../services/LaTeXService";
-import type { LaTeXContextType } from "../types/latex";
-import { parseUrlFragments } from "../utils/urlUtils";
-import { pdfWindowService } from "../services/PdfWindowService";
+import { useFileTree } from '../hooks/useFileTree';
+import { useSettings } from '../hooks/useSettings';
+import { latexService } from '../services/LaTeXService';
+import type { LaTeXContextType } from '../types/latex';
+import { parseUrlFragments } from '../utils/urlUtils';
+import { pdfWindowService } from '../services/PdfWindowService';
 
 export const LaTeXContext = createContext<LaTeXContextType | null>(null);
 
@@ -29,59 +29,71 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 	const [hasAutoCompiled, setHasAutoCompiled] = useState(false);
 	const [compileError, setCompileError] = useState<string | null>(null);
 	const [compiledPdf, setCompiledPdf] = useState<Uint8Array | null>(null);
-	const [compileLog, setCompileLog] = useState<string>("");
-	const [currentView, setCurrentView] = useState<"log" | "pdf">("log");
-	const [latexEngine, setLatexEngine] = useState<"pdftex" | "xetex" | "luatex">(
-		"pdftex",
+	const [compileLog, setCompileLog] = useState<string>('');
+	const [currentView, setCurrentView] = useState<'log' | 'pdf'>('log');
+	const [latexEngine, setLatexEngine] = useState<'pdftex' | 'xetex' | 'luatex'>(
+		'pdftex',
 	);
+	const [activeCompiler, setActiveCompiler] = useState<string | null>(null);
 	const settingsRegistered = useRef(false);
+
+	useEffect(() => {
+		const handleCompilerActive = (event: CustomEvent) => {
+			setActiveCompiler(event.detail.type);
+		};
+
+		document.addEventListener('compiler-active', handleCompilerActive as EventListener);
+		return () => {
+			document.removeEventListener('compiler-active', handleCompilerActive as EventListener);
+		};
+	}, []);
 
 	useEffect(() => {
 		if (settingsRegistered.current) return;
 		settingsRegistered.current = true;
 
 		const initialEngine =
-			(getSetting("latex-engine")?.value as "pdftex" | "xetex" | "luatex") ??
-			"pdftex";
+			(getSetting('latex-engine')?.value as 'pdftex' | 'xetex' | 'luatex') ??
+			'pdftex';
 		const initialTexliveEndpoint =
-			(getSetting("latex-texlive-endpoint")?.value as string) ??
-			"http://texlive.localhost:8082";
+			(getSetting('latex-texlive-endpoint')?.value as string) ??
+			'http://texlive.localhost:8082';
 		const initialStoreCache =
-			(getSetting("latex-store-cache")?.value as boolean) ?? true;
+			(getSetting('latex-store-cache')?.value as boolean) ?? true;
 		const initialStoreWorkingDirectory =
-			(getSetting("latex-store-working-directory")?.value as boolean) ?? false;
+			(getSetting('latex-store-working-directory')?.value as boolean) ?? false;
 		const initialAutoCompile =
-			(getSetting("latex-auto-compile-on-open")?.value as boolean) ?? false;
+			(getSetting('latex-auto-compile-on-open')?.value as boolean) ?? false;
 		const initialAutoNavigate =
-			(getSetting("latex-auto-navigate-to-main")?.value as string) ?? "conditional";
+			(getSetting('latex-auto-navigate-to-main')?.value as string) ?? 'conditional';
 
 		setLatexEngine(initialEngine);
 
 		registerSetting({
-			id: "latex-engine",
-			category: "LaTeX",
-			subcategory: "Compilation",
-			type: "select",
-			label: "LaTeX Engine",
-			description: "Choose the LaTeX engine for compilation",
+			id: 'latex-engine',
+			category: 'LaTeX',
+			subcategory: 'Compilation',
+			type: 'select',
+			label: 'LaTeX Engine',
+			description: 'Choose the LaTeX engine for compilation',
 			defaultValue: initialEngine,
 			options: [
-				{ label: "pdfTeX", value: "pdftex" },
-				{ label: "XeTeX", value: "xetex" },
+				{ label: 'pdfTeX', value: 'pdftex' },
+				{ label: 'XeTeX', value: 'xetex' },
 				// { label: "LuaTeX", value: "luatex" },
 			],
 			onChange: (value) => {
-				handleSetLatexEngine(value as "pdftex" | "xetex" | "luatex");
+				handleSetLatexEngine(value as 'pdftex' | 'xetex' | 'luatex');
 			},
 		});
 
 		registerSetting({
-			id: "latex-texlive-endpoint",
-			category: "LaTeX",
-			subcategory: "Compilation",
-			type: "text",
-			label: "TexLive server endpoint",
-			description: "URL endpoint for TexLive package downloads",
+			id: 'latex-texlive-endpoint',
+			category: 'LaTeX',
+			subcategory: 'Compilation',
+			type: 'text',
+			label: 'TexLive server endpoint',
+			description: 'URL endpoint for TexLive package downloads',
 			defaultValue: initialTexliveEndpoint,
 			onChange: (value) => {
 				latexService.setTexliveEndpoint(value as string);
@@ -89,37 +101,37 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 		});
 
 		registerSetting({
-			id: "latex-auto-compile-on-open",
-			category: "LaTeX",
-			subcategory: "Compilation",
-			type: "checkbox",
-			label: "Auto-compile on project open",
-			description: "Automatically compile LaTeX when opening a project",
+			id: 'latex-auto-compile-on-open',
+			category: 'LaTeX',
+			subcategory: 'Compilation',
+			type: 'checkbox',
+			label: 'Auto-compile on project open',
+			description: 'Automatically compile LaTeX when opening a project',
 			defaultValue: initialAutoCompile,
 		});
 
 		registerSetting({
-			id: "latex-auto-navigate-to-main",
-			category: "LaTeX",
-			subcategory: "Compilation",
-			type: "select",
-			label: "Auto-navigate to main file on compile",
-			description: "Control when to automatically navigate to the main LaTeX file during compilation",
+			id: 'latex-auto-navigate-to-main',
+			category: 'LaTeX',
+			subcategory: 'Compilation',
+			type: 'select',
+			label: 'Auto-navigate to main file on compile',
+			description: 'Control when to automatically navigate to the main LaTeX file during compilation',
 			defaultValue: initialAutoNavigate,
 			options: [
-				{ label: "Only when no LaTeX file is open", value: "conditional" },
-				{ label: "Always navigate to main file", value: "always" },
-				{ label: "Never navigate to main file", value: "never" },
+				{ label: 'Only when no LaTeX file is open', value: 'conditional' },
+				{ label: 'Always navigate to main file', value: 'always' },
+				{ label: 'Never navigate to main file', value: 'never' },
 			],
 		});
 
 		registerSetting({
-			id: "latex-store-cache",
-			category: "LaTeX",
-			subcategory: "Compilation",
-			type: "checkbox",
-			label: "Store compilation cache",
-			description: "Save TeX cache files for faster subsequent compilations",
+			id: 'latex-store-cache',
+			category: 'LaTeX',
+			subcategory: 'Compilation',
+			type: 'checkbox',
+			label: 'Store compilation cache',
+			description: 'Save TeX cache files for faster subsequent compilations',
 			defaultValue: initialStoreCache,
 			onChange: (value) => {
 				latexService.setStoreCache(value as boolean);
@@ -127,12 +139,12 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 		});
 
 		registerSetting({
-			id: "latex-store-working-directory",
-			category: "LaTeX",
-			subcategory: "Compilation",
-			type: "checkbox",
-			label: "Store working directory",
-			description: "Save all working directory files after compilation",
+			id: 'latex-store-working-directory',
+			category: 'LaTeX',
+			subcategory: 'Compilation',
+			type: 'checkbox',
+			label: 'Store working directory',
+			description: 'Save all working directory files after compilation',
 			defaultValue: initialStoreWorkingDirectory,
 			onChange: (value) => {
 				latexService.setStoreWorkingDirectory(value as boolean);
@@ -140,12 +152,12 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 		});
 
 		registerSetting({
-			id: "latex-notifications",
-			category: "LaTeX",
-			subcategory: "Compilation",
-			type: "checkbox",
-			label: "Show compilation notifications",
-			description: "Display notifications for LaTeX compilation activities",
+			id: 'latex-notifications',
+			category: 'LaTeX',
+			subcategory: 'Compilation',
+			type: 'checkbox',
+			label: 'Show compilation notifications',
+			description: 'Display notifications for LaTeX compilation activities',
 			defaultValue: true,
 			onChange: () => {
 				// Notification setting changes are handled by the service
@@ -161,12 +173,12 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 		latexService.initialize(latexEngine).catch(console.error);
 
 		return latexService.addStatusListener(() => {
-			setIsCompiling(latexService.getStatus() === "compiling");
+			setIsCompiling(latexService.getStatus() === 'compiling');
 		});
 	}, [latexEngine]);
 
 	const handleSetLatexEngine = async (
-		engine: "pdftex" | "xetex" | "luatex",
+		engine: 'pdftex' | 'xetex' | 'luatex',
 	) => {
 		if (engine === latexEngine) return;
 
@@ -181,7 +193,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
 	const getProjectName = (): string => {
 		// Try to get project name from document title or URL
-		if (document.title && document.title !== "TeXlyre") {
+		if (document.title && document.title !== 'TeXlyre') {
 			return document.title;
 		}
 
@@ -192,7 +204,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			return `Project ${projectId.substring(0, 8)}`;
 		}
 
-		return "LaTeX Project";
+		return 'LaTeX Project';
 	};
 
 	const compileDocument = async (mainFileName: string): Promise<void> => {
@@ -202,6 +214,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
 		setIsCompiling(true);
 		setCompileError(null);
+		setActiveCompiler('latex');
 
 		try {
 			const result = await latexService.compileLaTeX(mainFileName, fileTree);
@@ -209,7 +222,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			setCompileLog(result.log);
 			if (result.status === 0 && result.pdf) {
 				setCompiledPdf(result.pdf);
-				setCurrentView("pdf");
+				setCurrentView('pdf');
 
 				// Send PDF to window if open
 				const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx)$/i, '.pdf') || 'output.pdf';
@@ -221,8 +234,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 					projectName
 				);
 			} else {
-				setCompileError("Compilation failed");
-				setCurrentView("log");
+				setCompileError('Compilation failed');
+				setCurrentView('log');
 
 				// Send compile status to window
 				pdfWindowService.sendCompileResult(result.status, result.log);
@@ -230,11 +243,11 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
 			await refreshFileTree();
 		} catch (error) {
-			setCompileError(error instanceof Error ? error.message : "Unknown error");
-			setCurrentView("log");
+			setCompileError(error instanceof Error ? error.message : 'Unknown error');
+			setCurrentView('log');
 
 			// Send error to window
-			pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : "Unknown error");
+			pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : 'Unknown error');
 		} finally {
 			setIsCompiling(false);
 		}
@@ -248,8 +261,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			const cleanUrl = hashUrl.replace(/&compile:[^&]*/, '');
 			window.location.hash = cleanUrl;
 
-			const engine = fragments.compile as "pdftex" | "xetex" | "luatex";
-			if (["pdftex", "xetex", "luatex"].includes(engine)) {
+			const engine = fragments.compile as 'pdftex' | 'xetex' | 'luatex';
+			if (['pdftex', 'xetex', 'luatex'].includes(engine)) {
 				handleSetLatexEngine(engine).then(() => {
 					document.dispatchEvent(new CustomEvent('trigger-compile'));
 				});
@@ -258,7 +271,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			}
 		}
 
-		const autoCompileEnabled = getSetting("latex-auto-compile-on-open")?.value as boolean ?? false;
+		const autoCompileEnabled = getSetting('latex-auto-compile-on-open')?.value as boolean ?? false;
 		if (autoCompileEnabled && !hasAutoCompiled) {
 			document.dispatchEvent(new CustomEvent('trigger-compile'));
 			setHasAutoCompiled(true);
@@ -270,8 +283,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			await latexService.clearCacheDirectories();
 			await refreshFileTree();
 		} catch (error) {
-			console.error("Failed to clear cache:", error);
-			setCompileError("Failed to clear cache");
+			console.error('Failed to clear cache:', error);
+			setCompileError('Failed to clear cache');
 		}
 	};
 
@@ -282,6 +295,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
 		setIsCompiling(true);
 		setCompileError(null);
+		setActiveCompiler('latex');
 
 		try {
 			const result = await latexService.clearCacheAndCompile(mainFileName, fileTree);
@@ -289,7 +303,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			setCompileLog(result.log);
 			if (result.status === 0 && result.pdf) {
 				setCompiledPdf(result.pdf);
-				setCurrentView("pdf");
+				setCurrentView('pdf');
 
 				// Send PDF to window if open
 				const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx)$/i, '.pdf') || 'output.pdf';
@@ -301,8 +315,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 					projectName
 				);
 			} else {
-				setCompileError("Compilation failed");
-				setCurrentView("log");
+				setCompileError('Compilation failed');
+				setCurrentView('log');
 
 				// Send compile status to window
 				pdfWindowService.sendCompileResult(result.status, result.log);
@@ -310,11 +324,11 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
 			await refreshFileTree();
 		} catch (error) {
-			setCompileError(error instanceof Error ? error.message : "Unknown error");
-			setCurrentView("log");
+			setCompileError(error instanceof Error ? error.message : 'Unknown error');
+			setCurrentView('log');
 
 			// Send error to window
-			pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : "Unknown error");
+			pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : 'Unknown error');
 		} finally {
 			setIsCompiling(false);
 		}
@@ -324,12 +338,12 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 		if (isCompiling && latexService.isCompiling()) {
 			latexService.stopCompilation();
 			setIsCompiling(false);
-			setCompileError("Compilation stopped by user");
+			setCompileError('Compilation stopped by user');
 		}
 	};
 
 	const toggleOutputView = () => {
-		setCurrentView(currentView === "log" ? "pdf" : "log");
+		setCurrentView(currentView === 'log' ? 'pdf' : 'log');
 	};
 
 	return (
@@ -348,6 +362,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 				clearCache,
 				compileWithClearCache,
 				triggerAutoCompile,
+				activeCompiler,
 			}}
 		>
 			{children}

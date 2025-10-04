@@ -83,8 +83,8 @@
 
 
 [data-layout="texlyre-mobile"] .open-button-group .open-button {
-    border-top-right-radius: 0 !important;
-    border-bottom-right-radius: 0 !important;
+	border-top-right-radius: 0 !important;
+	border-bottom-right-radius: 0 !important;
 }
 
 [data-layout="texlyre-mobile"] .compile-button-group .compile-button {
@@ -111,7 +111,7 @@
 
 [data-layout="texlyre-mobile"] .backup-button-group .main-button .backup-label,
 [data-layout="texlyre-mobile"] .collab-button-group .main-button .collab-label {
-    font-size: var(--mobile-font-sm);
+	font-size: var(--mobile-font-sm);
 }
 
 [data-layout="texlyre-mobile"] .dropdown-toggle,
@@ -119,8 +119,8 @@
 [data-layout="texlyre-mobile"] .backup-dropdown-toggle {
 	min-height: var(--mobile-min-touch-target);
 	padding: var(--mobile-spacing-md);
-    border-top-left-radius: 0 !important;
-    border-bottom-left-radius: 0 !important;
+	border-top-left-radius: 0 !important;
+	border-bottom-left-radius: 0 !important;
 	width: var(--mobile-min-touch-target);
 	display: flex;
 	align-items: center;
@@ -141,7 +141,8 @@
 	min-height: 40px;
 }
 
-[data-layout="texlyre-mobile"] .latex-outline-header {
+[data-layout="texlyre-mobile"] .latex-outline-header,
+[data-layout="texlyre-mobile"] .typst-outline-header {
 	padding: var(--mobile-spacing-md);
 	font-size: var(--mobile-font-sm);
 }
@@ -279,8 +280,16 @@
 	white-space: nowrap;
 }
 
+[data-layout="texlyre-mobile"] .back-button {
+	min-height: calc(var(--mobile-min-touch-target) - 10px);
+	font-size: var(--mobile-font-sm);
+	padding: var(--mobile-spacing-xs) var(--mobile-spacing-md);
+	background: none;
+	border: none;
+}
+
 [data-layout="texlyre-mobile"] .linked-file-icon {
-    border: none;
+	border: none;
 }
 
 .mobile-nav-button {

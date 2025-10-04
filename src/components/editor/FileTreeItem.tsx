@@ -1,9 +1,9 @@
 // src/components/editor/FileTreeItem.tsx
-import type React from "react";
+import type React from 'react';
 
-import { pluginRegistry } from "../../plugins/PluginRegistry";
-import type { FileNode } from "../../types/files";
-import { isTemporaryFile } from "../../utils/fileUtils";
+import { pluginRegistry } from '../../plugins/PluginRegistry';
+import type { FileNode } from '../../types/files';
+import { isTemporaryFile } from '../../utils/fileUtils';
 import {
 	CopyUrlIcon,
 	DownloadIcon,
@@ -23,8 +23,8 @@ import {
 	TrashIcon,
 	UnlinkIcon,
 	UploadIcon,
-} from "../common/Icons";
-import DropdownMenu from "./DropdownMenu";
+} from '../common/Icons';
+import DropdownMenu from './DropdownMenu';
 
 interface FileTreeItemProps {
 	node: FileNode;
@@ -37,7 +37,7 @@ interface FileTreeItemProps {
 	dragOverTarget: string | null;
 	enableFileSystemDragDrop: boolean;
 	enableInternalDragDrop: boolean;
-	creatingNewItem: { type: "file" | "directory"; parentPath: string } | null;
+	creatingNewItem: { type: 'file' | 'directory'; parentPath: string } | null;
 	newItemName: string;
 	onFileSelect: (node: FileNode) => void;
 	onToggleFolder: (folderId: string) => void;
@@ -121,32 +121,32 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 	const isRenaming = renamingFileId === node.id;
 
 	const hasCompatibleViewer = (node: FileNode): boolean => {
-		if (node.type !== "file") return false;
+		if (node.type !== 'file') return false;
 		return !!pluginRegistry.getViewerForFile(node.name, node.mimeType);
 	};
 
 	const hasViewer = hasCompatibleViewer(node);
 
 	const getViewerIcon = (node: FileNode): React.ComponentType | null => {
-		if (node.type !== "file") return null;
+		if (node.type !== 'file') return null;
 		const viewer = pluginRegistry.getViewerForFile(node.name, node.mimeType);
 		return viewer?.icon || null;
 	};
 
 	const _shouldShowTemporaryWarning = (action: string): boolean => {
-		if (action === "delete" && isTemporaryFile(node.path)) return true;
-		if (action === "rename" && isTemporaryFile(node.path)) return true;
-		if (action === "link" && isTemporaryFile(node.path)) return true;
+		if (action === 'delete' && isTemporaryFile(node.path)) return true;
+		if (action === 'rename' && isTemporaryFile(node.path)) return true;
+		if (action === 'link' && isTemporaryFile(node.path)) return true;
 		return false;
 	};
 
 	const shouldShowLinkButton =
-		node.type === "file" && !node.isBinary && !isTemporaryFile(node.name);
+		node.type === 'file' && !node.isBinary && !isTemporaryFile(node.name);
 
 	return (
 		<div
 			key={node.path}
-			style={{ marginLeft: "1rem" }}
+			style={{ marginLeft: '1rem' }}
 			draggable={!isRenaming && enableInternalDragDrop}
 			onDragStart={(e) => {
 				e.stopPropagation();
@@ -154,21 +154,21 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 			}}
 		>
 			<div
-				className={`file-node ${selectedFileId === node.id ? "selected" : ""}
-                    ${isDragOver && node.type === "directory" ? "drag-over" : ""}
-                    ${hasViewer ? "has-viewer" : ""}`}
+				className={`file-node ${selectedFileId === node.id ? 'selected' : ''}
+                    ${isDragOver && node.type === 'directory' ? 'drag-over' : ''}
+                    ${hasViewer ? 'has-viewer' : ''}`}
 				onClick={() =>
 					!isRenaming &&
-					(node.type === "directory"
+					(node.type === 'directory'
 						? onToggleFolder(node.path)
 						: onFileSelect(node))
 				}
 				onDragOver={(e) => {
-					if (node.type === "directory") {
+					if (node.type === 'directory') {
 						const isFileDrop = Array.from(e.dataTransfer.items).some(
-							(item) => item.kind === "file",
+							(item) => item.kind === 'file',
 						);
-						const isInternalDrop = e.dataTransfer.getData("text/plain");
+						const isInternalDrop = e.dataTransfer.getData('text/plain');
 
 						if (
 							(isFileDrop && !enableFileSystemDragDrop) ||
@@ -179,7 +179,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 
 						e.preventDefault();
 						e.stopPropagation();
-						e.dataTransfer.dropEffect = isFileDrop ? "copy" : "move";
+						e.dataTransfer.dropEffect = isFileDrop ? 'copy' : 'move';
 						onSetDragOverTarget(node.id);
 					}
 				}}
@@ -188,7 +188,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 					onSetDragOverTarget(null);
 				}}
 				onDrop={(e) => {
-					if (node.type === "directory") {
+					if (node.type === 'directory') {
 						e.stopPropagation();
 						onDropOnDirectory(e, node);
 						onSetDragOverTarget(null);
@@ -196,7 +196,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 				}}
 			>
 				<span className={`file-icon ${isTemporaryFile(node.path) ? 'temp-file-icon' : ''}`}>
-				   {node.type === "directory" ? (
+				   {node.type === 'directory' ? (
 					  <FolderIcon isOpen={isExpanded} />
 				   ) : (() => {
 					  if (hasDocument) {
@@ -255,8 +255,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 								className="action-btn"
 								title={
 									isTemporaryFile(node.path)
-										? "Link Document (Not recommended for temporary files)"
-										: "Link Document"
+										? 'Link Document (Not recommended for temporary files)'
+										: 'Link Document'
 								}
 								onClick={(e) => {
 									e.stopPropagation();
@@ -334,7 +334,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 								</button>
 							)}
 
-							{node.type === "file" && (
+							{node.type === 'file' && (
 								<>
 									<button
 										className="dropdown-item"
@@ -371,7 +371,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 								</>
 							)}
 
-							{node.type === "directory" && (
+							{node.type === 'directory' && (
 								<>
 									<button
 										className="dropdown-item"
@@ -466,15 +466,15 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 				</div>
 			</div>
 
-			{node.type === "directory" && isExpanded && (
+			{node.type === 'directory' && isExpanded && (
 				<div className="directory-children">
 					{creatingNewItem && creatingNewItem.parentPath === node.path && (
 						<div
 							className="file-node creating-new-item"
-							style={{ marginLeft: "1rem" }}
+							style={{ marginLeft: '1rem' }}
 						>
 							<span className="file-icon">
-								{creatingNewItem.type === "directory" ? (
+								{creatingNewItem.type === 'directory' ? (
 									<FolderPlusIcon />
 								) : (
 									<FilePlusIcon />

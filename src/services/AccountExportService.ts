@@ -1,21 +1,21 @@
 // src/services/AccountExportService.ts
-import { saveAs } from "file-saver";
+import { saveAs } from 'file-saver';
 
-import { fileCommentProcessor } from "../utils/fileCommentProcessor";
-import { authService } from "./AuthService";
-import { UnifiedDataStructureService } from "./DataStructureService";
-import { ProjectDataService } from "./ProjectDataService";
-import { StorageAdapterService, ZipAdapter } from "./StorageAdapterService";
+import { fileCommentProcessor } from '../utils/fileCommentProcessor';
+import { authService } from './AuthService';
+import { UnifiedDataStructureService } from './DataStructureService';
+import { ProjectDataService } from './ProjectDataService';
+import { StorageAdapterService, ZipAdapter } from './StorageAdapterService';
 
 export interface ExportOptions {
-    includeAccount?: boolean;
-    includeDocuments?: boolean;
-    includeFiles?: boolean;
-    includeTemporaryFiles?: boolean;
-    includeUserData?: boolean;
-    projectIds?: string[];
-    format?: "texlyre" | "files-only";
-    isSingleProjectExport?: boolean;
+	includeAccount?: boolean;
+	includeDocuments?: boolean;
+	includeFiles?: boolean;
+	includeTemporaryFiles?: boolean;
+	includeUserData?: boolean;
+	projectIds?: string[];
+	format?: 'texlyre' | 'files-only';
+	isSingleProjectExport?: boolean;
 }
 
 class AccountExportService {
@@ -34,12 +34,12 @@ class AccountExportService {
 			includeFiles: true,
 			includeTemporaryFiles: false,
 			includeUserData,
-			format: "texlyre",
+			format: 'texlyre',
 		};
 
 		const currentProjectId = exportAllProjects
 			? undefined
-			: sessionStorage.getItem("currentProjectId");
+			: sessionStorage.getItem('currentProjectId');
 
 		if (currentProjectId) {
 			options.projectIds = [currentProjectId];
@@ -54,7 +54,7 @@ class AccountExportService {
 	): Promise<void> {
 		const user = authService.getCurrentUser();
 		if (!user) {
-			throw new Error("User not authenticated");
+			throw new Error('User not authenticated');
 		}
 
 		const exportOptions: ExportOptions = {
@@ -63,7 +63,7 @@ class AccountExportService {
 			includeFiles: true,
 			includeTemporaryFiles: false,
 			includeUserData: false,
-			format: "texlyre",
+			format: 'texlyre',
 			...options,
 			projectIds,
 			isSingleProjectExport: projectIds.length === 1,
@@ -79,7 +79,7 @@ class AccountExportService {
 		try {
 			const user = authService.getCurrentUser();
 			if (!user || user.id !== userId) {
-				throw new Error("User not authenticated or ID mismatch");
+				throw new Error('User not authenticated or ID mismatch');
 			}
 
 			const account = options.includeAccount
@@ -93,11 +93,11 @@ class AccountExportService {
 
 			const projects = await this.dataSerializer.serializeProjects(
 				userId,
-				"export",
+				'export',
 				options.projectIds,
 			);
 
-			const manifest = this.unifiedService.createManifest("export");
+			const manifest = this.unifiedService.createManifest('export');
 			const projectData = new Map();
 
 			for (const project of projects) {
@@ -113,6 +113,7 @@ class AccountExportService {
 						id: project.id,
 						name: project.name,
 						description: project.description,
+						type: project.type || 'latex',
 						docUrl: project.docUrl,
 						createdAt: project.createdAt,
 						updatedAt: project.updatedAt,
@@ -128,6 +129,7 @@ class AccountExportService {
 							id: project.id,
 							name: project.name,
 							description: project.description,
+							type: project.type || 'latex',
 							docUrl: project.docUrl,
 							createdAt: project.createdAt,
 							updatedAt: project.updatedAt,
@@ -159,7 +161,7 @@ class AccountExportService {
 
 			const zipAdapter = new ZipAdapter();
 
-			if (options.format === "files-only") {
+			if (options.format === 'files-only') {
 				await this.writeFilesOnlyStructure(zipAdapter, unifiedData, options);
 			} else {
 				await this.fileSystemManager.writeUnifiedStructure(
@@ -171,7 +173,7 @@ class AccountExportService {
 			const zipBlob = await zipAdapter.generateZip();
 			const timestamp = new Date()
 				.toISOString()
-				.replace(/:/g, "-")
+				.replace(/:/g, '-')
 				.substring(0, 19);
 
 			let fileName: string;
@@ -180,25 +182,25 @@ class AccountExportService {
 					? `texlyre-project-export-${timestamp}.zip`
 					: `texlyre-account-export-${timestamp}.zip`;
 			} else {
-				if (options.format === "files-only" && options.isSingleProjectExport) {
+				if (options.format === 'files-only' && options.isSingleProjectExport) {
 					const projectName =
 						Array.from(unifiedData.projectData.values())[0]?.metadata.name ||
-						"project";
-					const sanitizedName = projectName.replace(/[/\\?%*:|"<>]/g, "-");
+						'project';
+					const sanitizedName = projectName.replace(/[/\\?%*:|"<>]/g, '-');
 					fileName = `${sanitizedName}.zip`;
 				} else {
 					const formatSuffix =
-						options.format === "files-only"
-							? "latex-files"
-							: "texlyre-projects-";
+						options.format === 'files-only'
+							? 'latex-files'
+							: 'texlyre-projects-';
 					fileName = `${formatSuffix}-${timestamp}.zip`;
 				}
 			}
 
 			saveAs(zipBlob, fileName);
 		} catch (error) {
-			console.error("Error exporting:", error);
-			throw new Error("Failed to export data");
+			console.error('Error exporting:', error);
+			throw new Error('Failed to export data');
 		}
 	}
 
@@ -211,24 +213,24 @@ class AccountExportService {
 
 		try {
 			const settingsKey = `texlyre-user-${userId}-settings`;
-			const globalSettingsKey = "texlyre-settings";
+			const globalSettingsKey = 'texlyre-settings';
 			const settingsData = localStorage.getItem(settingsKey) || localStorage.getItem(globalSettingsKey);
 			if (settingsData) {
 				userData.settings = JSON.parse(settingsData);
 			}
 		} catch (error) {
-			console.warn("Failed to export user settings:", error);
+			console.warn('Failed to export user settings:', error);
 		}
 
 		try {
 			const propertiesKey = `texlyre-user-${userId}-properties`;
-			const globalPropertiesKey = "texlyre-properties";
+			const globalPropertiesKey = 'texlyre-properties';
 			const propertiesData = localStorage.getItem(propertiesKey) || localStorage.getItem(globalPropertiesKey);
 			if (propertiesData) {
 				userData.properties = JSON.parse(propertiesData);
 			}
 		} catch (error) {
-			console.warn("Failed to export user properties:", error);
+			console.warn('Failed to export user properties:', error);
 		}
 
 		try {
@@ -238,7 +240,7 @@ class AccountExportService {
 				userData.secrets = JSON.parse(secretsData);
 			}
 		} catch (error) {
-			console.warn("Failed to export user secrets:", error);
+			console.warn('Failed to export user secrets:', error);
 		}
 
 		return userData;
@@ -249,7 +251,7 @@ class AccountExportService {
 		data: any,
 		options?: ExportOptions,
 	): Promise<void> {
-		const { fileStorageService } = await import("./FileStorageService");
+		const { fileStorageService } = await import('./FileStorageService');
 
 		const isSingleProject =
 			options?.isSingleProjectExport || data.projectData.size === 1;
@@ -258,10 +260,10 @@ class AccountExportService {
 		for (const [projectId, projectData] of data.projectData) {
 			const sanitizedName = projectData.metadata.name.replace(
 				/[/\\?%*:|"<>]/g,
-				"-",
+				'-',
 			);
 
-			let projectPath = "";
+			let projectPath = '';
 			if (!isSingleProject) {
 				let projectName = sanitizedName;
 				let counter = 1;
@@ -279,7 +281,7 @@ class AccountExportService {
 				await adapter.createDirectory(projectPath);
 			}
 
-			const actualProjectId = projectData.metadata.docUrl.startsWith("yjs:")
+			const actualProjectId = projectData.metadata.docUrl.startsWith('yjs:')
 				? projectData.metadata.docUrl.slice(4)
 				: projectData.metadata.docUrl;
 
@@ -300,10 +302,10 @@ class AccountExportService {
 			if (fileStorageService.isConnectedToProject(actualProjectId)) {
 				try {
 					const allFiles = await fileStorageService.getAllFiles(false);
-					let fileFiles = allFiles.filter((f) => f.type === "file");
+					let fileFiles = allFiles.filter((f) => f.type === 'file');
 
 					if (!options?.includeTemporaryFiles) {
-						const { isTemporaryFile } = await import("../utils/fileUtils");
+						const { isTemporaryFile } = await import('../utils/fileUtils');
 						fileFiles = fileFiles.filter((file) => !isTemporaryFile(file.path));
 					}
 
@@ -311,7 +313,7 @@ class AccountExportService {
 						if (file.content) {
 							const processedFile = fileCommentProcessor.processFile(file);
 
-							const cleanPath = file.path.startsWith("/")
+							const cleanPath = file.path.startsWith('/')
 								? file.path.slice(1)
 								: file.path;
 
@@ -322,7 +324,7 @@ class AccountExportService {
 
 							const dirPath = exportPath.substring(
 								0,
-								exportPath.lastIndexOf("/"),
+								exportPath.lastIndexOf('/'),
 							);
 							if (dirPath && dirPath !== projectPath) {
 								await adapter.createDirectory(dirPath);
@@ -344,25 +346,25 @@ class AccountExportService {
 			if (!filesExported && projectData.files && projectData.files.length > 0) {
 				try {
 					let filesToProcess = projectData.files.filter(
-						(file) => file.type === "file",
+						(file) => file.type === 'file',
 					);
 
 					if (!options?.includeTemporaryFiles) {
-						const { isTemporaryFile } = await import("../utils/fileUtils");
+						const { isTemporaryFile } = await import('../utils/fileUtils');
 						filesToProcess = filesToProcess.filter(
 							(file) => !isTemporaryFile(file.path),
 						);
 					}
 
 					for (const file of filesToProcess) {
-						if (file.type === "file") {
+						if (file.type === 'file') {
 							const content = projectData.fileContents.get(file.path);
 							if (content) {
 								// Clean the content using FileCommentProcessor
 								const cleanedContent =
 									fileCommentProcessor.cleanContent(content);
 
-								const cleanPath = file.path.startsWith("/")
+								const cleanPath = file.path.startsWith('/')
 									? file.path.slice(1)
 									: file.path;
 
@@ -373,7 +375,7 @@ class AccountExportService {
 
 								const dirPath = exportPath.substring(
 									0,
-									exportPath.lastIndexOf("/"),
+									exportPath.lastIndexOf('/'),
 								);
 								if (dirPath && dirPath !== projectPath) {
 									await adapter.createDirectory(dirPath);
@@ -410,11 +412,11 @@ class AccountExportService {
 				await this.fileSystemManager.readUnifiedStructure(zipAdapter);
 
 			if (!this.unifiedService.validateStructure(unifiedData)) {
-				throw new Error("Invalid export file format");
+				throw new Error('Invalid export file format');
 			}
 
 			const isAccountExport =
-				unifiedData.manifest.mode === "export" &&
+				unifiedData.manifest.mode === 'export' &&
 				unifiedData.account &&
 				unifiedData.projects.length > 0;
 
@@ -435,8 +437,8 @@ class AccountExportService {
 				await this.authenticateImportedUser(importedUser);
 			}
 		} catch (error) {
-			console.error("Error importing account:", error);
-			throw new Error("Failed to import account data");
+			console.error('Error importing account:', error);
+			throw new Error('Failed to import account data');
 		}
 	}
 
@@ -459,7 +461,7 @@ class AccountExportService {
 
 			console.log(`[AccountExportService] Successfully imported user data for: ${userId}`);
 		} catch (error) {
-			console.error("Error importing user local storage data:", error);
+			console.error('Error importing user local storage data:', error);
 		}
 	}
 
@@ -479,9 +481,9 @@ class AccountExportService {
 			console.log(`[AccountExportService] Successfully imported user: ${userData.username}`);
 			return importedUser;
 		} catch (error) {
-			console.error("Error importing user data:", error);
+			console.error('Error importing user data:', error);
 			console.warn(
-				"User import failed - projects will be imported for current user",
+				'User import failed - projects will be imported for current user',
 			);
 			return null;
 		}
@@ -493,22 +495,22 @@ class AccountExportService {
 			(await authService.initialize().then(() => authService.db));
 
 		if (!authDb) {
-			throw new Error("Could not access auth database");
+			throw new Error('Could not access auth database');
 		}
 
 		const userToImport = {
 			id: userData.id,
 			username: userData.username,
-			name: userData.name || "",
-			color: userData.color || "",
-			colorLight: userData.colorLight || "",
+			name: userData.name || '',
+			color: userData.color || '',
+			colorLight: userData.colorLight || '',
 			passwordHash: userData.passwordHash,
 			email: userData.email,
 			createdAt: userData.createdAt,
 			lastLogin: Date.now(),
 		};
 
-		await authDb.put("users", userToImport);
+		await authDb.put('users', userToImport);
 
 		console.log(`[AccountExportService] Successfully imported user: ${userData.username}`);
 		return userToImport;
@@ -518,7 +520,7 @@ class AccountExportService {
 		const authenticatedUser = await authService.setCurrentUser(user.id);
 
 		if (!authenticatedUser) {
-			throw new Error("Failed to authenticate imported user");
+			throw new Error('Failed to authenticate imported user');
 		}
 
 		console.log(`[AccountExportService] Successfully authenticated imported user: ${user.username}`);
@@ -536,7 +538,7 @@ class AccountExportService {
 
 		if (!targetUser) {
 			throw new Error(
-				"No user available for project import. Please log in first.",
+				'No user available for project import. Please log in first.',
 			);
 		}
 
@@ -577,7 +579,7 @@ class AccountExportService {
 			(await authService.initialize().then(() => authService.db));
 
 		if (!authDb) {
-			throw new Error("Could not access auth database");
+			throw new Error('Could not access auth database');
 		}
 
 		const now = Date.now();
@@ -593,7 +595,7 @@ class AccountExportService {
 			isFavorite: projectData.isFavorite,
 		};
 
-		await authDb.put("projects", newProject);
+		await authDb.put('projects', newProject);
 
 		console.log(
 			`Created project directly: ${projectData.name} with docUrl: ${projectData.docUrl}`,

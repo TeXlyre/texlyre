@@ -1,9 +1,9 @@
 // src/components/comments/CommentModal.tsx
-import type React from "react";
-import { useEffect, useState } from "react";
+import type React from 'react';
+import { useEffect, useState } from 'react';
 
-import { CommentIcon } from "../common/Icons";
-import Modal from "../common/Modal";
+import { CommentIcon } from '../common/Icons';
+import Modal from '../common/Modal';
 
 interface CommentModalProps {
 	isOpen: boolean;
@@ -16,13 +16,13 @@ const CommentModal: React.FC<CommentModalProps> = ({
 	isOpen,
 	onClose,
 	onCommentSubmit,
-	title = "Add Comment",
+	title = 'Add Comment',
 }) => {
-	const [content, setContent] = useState("");
+	const [content, setContent] = useState('');
 
 	useEffect(() => {
 		if (isOpen) {
-			setContent("");
+			setContent('');
 		}
 	}, [isOpen]);
 
@@ -38,7 +38,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
 	};
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+		if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
 			e.preventDefault();
 			handleSubmit(e);
 		}

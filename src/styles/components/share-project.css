@@ -95,36 +95,6 @@
 	text-align: center;
 }
 
-.share-tips {
-	background-color: var(--pico-primary-focus);
-	padding: var(--space-md);
-	border-radius: var(--radius-sm);
-	border: 1px solid var(--pico-primary);
-}
-
-.share-tips h5 {
-	margin: 0 0 var(--space-sm) 0;
-	color: var(--text-color);
-	font-weight: 600;
-	font-size: 0.9rem;
-}
-
-.share-tips ul {
-	margin: 0;
-	padding-left: var(--space-lg);
-	color: var(--text-color);
-}
-
-.share-tips li {
-	font-size: 0.85rem;
-	margin-bottom: var(--space-xs);
-	line-height: 1.4;
-}
-
-.share-tips li:last-child {
-	margin-bottom: 0;
-}
-
 .share-project-buttons {
 	display: flex;
 	gap: var(--space-xs);

@@ -1,16 +1,17 @@
 // src/components/editor/UnlinkedDocumentNotice.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import { LinkIcon, TrashIcon } from "../common/Icons";
-import Modal from "../common/Modal";
-import LinkFileModal from "./LinkFileModal";
+import { LinkIcon, TrashIcon } from '../common/Icons';
+import Modal from '../common/Modal';
+import LinkFileModal from './LinkFileModal';
 
 interface UnlinkedDocumentNoticeProps {
 	documentId: string;
 	documentName: string;
 	onDeleteDocument: (docId: string) => void;
 	onDocumentLinked: () => void;
+	projectType?: 'latex' | 'typst';
 }
 
 const UnlinkedDocumentNotice: React.FC<UnlinkedDocumentNoticeProps> = ({
@@ -18,6 +19,7 @@ const UnlinkedDocumentNotice: React.FC<UnlinkedDocumentNoticeProps> = ({
 	documentName,
 	onDeleteDocument,
 	onDocumentLinked,
+	projectType = 'latex',
 }) => {
 	const [showLinkModal, setShowLinkModal] = useState(false);
 	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -60,6 +62,7 @@ const UnlinkedDocumentNotice: React.FC<UnlinkedDocumentNoticeProps> = ({
 					onClose={() => setShowLinkModal(false)}
 					documentId={documentId}
 					documentName={documentName}
+					projectType={projectType}
 					onLinked={() => {
 						setShowLinkModal(false);
 						onDocumentLinked();

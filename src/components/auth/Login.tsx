@@ -1,11 +1,11 @@
 // src/components/auth/Login.tsx
-import type React from "react";
-import { useState } from "react";
+import type React from 'react';
+import { useState } from 'react';
 
-import { useAuth } from "../../hooks/useAuth";
-import { useTheme } from "../../hooks/useTheme";
-import GuestConsentModal from "./GuestConsentModal";
-import PrivacyModal from "../common/PrivacyModal";
+import { useAuth } from '../../hooks/useAuth';
+import { useTheme } from '../../hooks/useTheme';
+import GuestConsentModal from './GuestConsentModal';
+import PrivacyModal from '../common/PrivacyModal';
 
 interface LoginProps {
 	onLoginSuccess: () => void;
@@ -21,8 +21,8 @@ const Login: React.FC<LoginProps> = ({
 	const { login, createGuestAccount } = useAuth();
 	const { currentThemePlugin } = useTheme();
 
-	const [username, setUsername] = useState("");
-	const [password, setPassword] = useState("");
+	const [username, setUsername] = useState('');
+	const [password, setPassword] = useState('');
 	const [error, setError] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [showGuestModal, setShowGuestModal] = useState(false);
@@ -32,7 +32,7 @@ const Login: React.FC<LoginProps> = ({
 		e.preventDefault();
 
 		if (!username || !password) {
-			setError("Please enter both username and password");
+			setError('Please enter both username and password');
 			return;
 		}
 
@@ -45,7 +45,7 @@ const Login: React.FC<LoginProps> = ({
 			window.location.reload();
 		} catch (err) {
 			setError(
-				err instanceof Error ? err.message : "An error occurred during login",
+				err instanceof Error ? err.message : 'An error occurred during login',
 			);
 		} finally {
 			setIsLoading(false);
@@ -66,15 +66,15 @@ const Login: React.FC<LoginProps> = ({
 		setIsLoading(true);
 
 		try {
-			console.log("[Login] Starting guest session creation...");
+			console.log('[Login] Starting guest session creation...');
 			const guestUser = await createGuestAccount();
-			console.log("[Login] Guest session created successfully:", guestUser.id);
+			console.log('[Login] Guest session created successfully:', guestUser.id);
 			setShowGuestModal(false);
 			onLoginSuccess();
 		} catch (err) {
-			console.error("[Login] Guest session creation failed:", err);
+			console.error('[Login] Guest session creation failed:', err);
 			setError(
-				err instanceof Error ? err.message : "Failed to create guest session",
+				err instanceof Error ? err.message : 'Failed to create guest session',
 			);
 		} finally {
 			setIsLoading(false);
@@ -115,10 +115,10 @@ const Login: React.FC<LoginProps> = ({
 
 					<button
 						type="submit"
-						className={`auth-button ${isLoading ? "loading" : ""}`}
+						className={`auth-button ${isLoading ? 'loading' : ''}`}
 						disabled={isLoading}
 					>
-						{isLoading ? "Logging in..." : "Login"}
+						{isLoading ? 'Logging in...' : 'Login'}
 					</button>
 				</form>
 

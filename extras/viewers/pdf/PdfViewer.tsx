@@ -1,8 +1,8 @@
 // extras/viewers/pdf/PdfViewer.tsx
-import * as pdfjs from "pdfjs-dist";
-import pdfWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
-import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import * as pdfjs from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
 	ChevronLeftIcon,
@@ -10,17 +10,19 @@ import {
 	DownloadIcon,
 	ZoomInIcon,
 	ZoomOutIcon,
-} from "../../../src/components/common/Icons";
+} from '../../../src/components/common/Icons';
 import {
 	PluginControlGroup,
 	PluginHeader,
-} from "../../../src/components/common/PluginHeader";
-import { usePluginFileInfo } from "../../../src/hooks/usePluginFileInfo";
-import { useSettings } from "../../../src/hooks/useSettings";
-import type { ViewerProps } from "../../../src/plugins/PluginInterface";
-import "./styles.css";
-import { pdfViewerSettings } from "./settings";
-import { PLUGIN_NAME, PLUGIN_VERSION } from "./PdfViewerPlugin";
+} from '../../../src/components/common/PluginHeader';
+import { usePluginFileInfo } from '../../../src/hooks/usePluginFileInfo';
+import { useSettings } from '../../../src/hooks/useSettings';
+import type { ViewerProps } from '../../../src/plugins/PluginInterface';
+import './styles.css';
+import { pdfViewerSettings } from './settings';
+import { PLUGIN_NAME, PLUGIN_VERSION } from './PdfViewerPlugin';
+
+const BASE_PATH = __BASE_PATH__
 
 if (!pdfjs.GlobalWorkerOptions.workerSrc) {
 	pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker;
@@ -36,12 +38,12 @@ const PdfViewer: React.FC<ViewerProps> = ({
 	const fileInfo = usePluginFileInfo(fileId, fileName);
 
 	const autoScale =
-		(getSetting("pdf-viewer-auto-scale")?.value as boolean) ?? true;
+		(getSetting('pdf-viewer-auto-scale')?.value as boolean) ?? true;
 	const renderingQuality =
-		(getSetting("pdf-viewer-rendering-quality")?.value as
-			| "low"
-			| "medium"
-			| "high") ?? "high";
+		(getSetting('pdf-viewer-rendering-quality')?.value as
+			| 'low'
+			| 'medium'
+			| 'high') ?? 'high';
 
 	const _qualityScaleMap = {
 		low: 0.75,
@@ -66,7 +68,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 	useEffect(() => {
 		if (content instanceof ArrayBuffer && content.byteLength > 0) {
 			originalContentRef.current = content.slice(0);
-			console.log("PdfViewer: Original content stored", {
+			console.log('PdfViewer: Original content stored', {
 				size: content.byteLength,
 				type: content.constructor.name,
 			});
@@ -92,7 +94,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 					try {
 						prevDoc.destroy();
 					} catch (e) {
-						console.error("Error destroying previous PDF document:", e);
+						console.error('Error destroying previous PDF document:', e);
 					}
 				}
 				return null;
@@ -112,14 +114,14 @@ const PdfViewer: React.FC<ViewerProps> = ({
 					await loadPdf(loadingTaskRef, isMounted);
 				} catch (err) {
 					if (isMounted.current) {
-						console.error("Error initializing PDF:", err);
-						setError("Failed to initialize PDF document.");
+						console.error('Error initializing PDF:', err);
+						setError('Failed to initialize PDF document.');
 						setIsLoading(false);
 					}
 				}
 			} else {
 				if (isMounted.current) {
-					setError("Invalid PDF content.");
+					setError('Invalid PDF content.');
 					setIsLoading(false);
 				}
 			}
@@ -144,7 +146,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 					try {
 						prevDoc.destroy();
 					} catch (e) {
-						console.error("Error destroying PDF document:", e);
+						console.error('Error destroying PDF document:', e);
 					}
 				}
 				return null;
@@ -165,7 +167,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 		try {
 			const loadingTask = pdfjs.getDocument({
 				data: new Uint8Array(contentRef.current),
-				cMapUrl: import.meta.env.PROD ? "/texlyre/cmaps/" : "/texlyre/cmaps/",  // for now, use the same path in dev and prod
+				cMapUrl: `${BASE_PATH}/assets/cmaps/`,  //  import.meta.env.PROD ? "/texlyre/assets/cmaps/" : "/texlyre/assets/cmaps/", for now, use the same path in dev and prod
 				cMapPacked: true,
 			});
 
@@ -194,11 +196,11 @@ const PdfViewer: React.FC<ViewerProps> = ({
 			if (isMounted.current) {
 				if (
 					err instanceof Error &&
-					!err.message.includes("Loading task cancelled") &&
-					!err.message.includes("Worker was destroyed")
+					!err.message.includes('Loading task cancelled') &&
+					!err.message.includes('Worker was destroyed')
 				) {
-					console.error("Error loading PDF:", err);
-					setError("Failed to load PDF document.");
+					console.error('Error loading PDF:', err);
+					setError('Failed to load PDF document.');
 				}
 			}
 		} finally {
@@ -260,10 +262,10 @@ const PdfViewer: React.FC<ViewerProps> = ({
 				const canvas = canvasRef.current;
 				if (!canvas) return;
 
-				const context = canvas.getContext("2d");
+				const context = canvas.getContext('2d');
 
 				if (!context) {
-					throw new Error("Could not get canvas context");
+					throw new Error('Could not get canvas context');
 				}
 
 				context.clearRect(0, 0, canvas.width, canvas.height);
@@ -284,10 +286,10 @@ const PdfViewer: React.FC<ViewerProps> = ({
 				if (
 					isMounted.current &&
 					err instanceof Error &&
-					!err.message.includes("Rendering cancelled") &&
-					!err.message.includes("Worker was destroyed")
+					!err.message.includes('Rendering cancelled') &&
+					!err.message.includes('Worker was destroyed')
 				) {
-					console.error("Error rendering PDF page:", err);
+					console.error('Error rendering PDF page:', err);
 					setError(`Failed to render page ${currentPage}.`);
 				}
 			}
@@ -334,7 +336,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 
 	const handleZoomChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
 		const value = event.target.value;
-		if (value === "custom") return;
+		if (value === 'custom') return;
 		setScale(parseFloat(value) / 100);
 	};
 
@@ -353,15 +355,15 @@ const PdfViewer: React.FC<ViewerProps> = ({
 		const contentToExport = originalContentRef.current || contentRef.current;
 
 		if (contentToExport) {
-			console.log("PdfViewer: Exporting PDF", {
+			console.log('PdfViewer: Exporting PDF', {
 				size: contentToExport.byteLength,
 				fileName: fileName,
-				source: originalContentRef.current ? "original" : "processed",
+				source: originalContentRef.current ? 'original' : 'processed',
 			});
 
-			const blob = new Blob([contentToExport], { type: "application/pdf" });
+			const blob = new Blob([contentToExport], { type: 'application/pdf' });
 			const url = URL.createObjectURL(blob);
-			const a = document.createElement("a");
+			const a = document.createElement('a');
 			a.href = url;
 			a.download = fileName;
 			document.body.appendChild(a);
@@ -369,18 +371,18 @@ const PdfViewer: React.FC<ViewerProps> = ({
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} else {
-			console.error("PdfViewer: No valid PDF content available for export");
-			setError("Cannot export: PDF content is not available");
+			console.error('PdfViewer: No valid PDF content available for export');
+			setError('Cannot export: PDF content is not available');
 		}
 	};
 
 	const tooltipInfo = [
 		`Rendering quality: ${renderingQuality}`,
-		`Auto-scale: ${autoScale ? "enabled" : "disabled"}`,
+		`Auto-scale: ${autoScale ? 'enabled' : 'disabled'}`,
 		`Pages: ${totalPages}`,
 		`Current page: ${currentPage}`,
-		`MIME Type: ${mimeType || "application/pdf"}`,
-		`Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : "Unknown"}`,
+		`MIME Type: ${mimeType || 'application/pdf'}`,
+		`Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : 'Unknown'}`,
 	];
 
 	const headerControls = (
@@ -414,28 +416,28 @@ const PdfViewer: React.FC<ViewerProps> = ({
 
 			<PluginControlGroup>
 				{(() => {
-					const zoomOptions = pdfViewerSettings.find(s => s.id === "pdf-renderer-initial-zoom")?.options || [
-						{ label: "25%", value: "25" },
-						{ label: "50%", value: "50" },
-						{ label: "75%", value: "75" },
-						{ label: "100%", value: "100" },
-						{ label: "125%", value: "125" },
-						{ label: "150%", value: "150" },
-						{ label: "200%", value: "200" },
-						{ label: "300%", value: "300" },
-						{ label: "400%", value: "400" },
-						{ label: "500%", value: "500" },
+					const zoomOptions = pdfViewerSettings.find(s => s.id === 'pdf-renderer-initial-zoom')?.options || [
+						{ label: '25%', value: '25' },
+						{ label: '50%', value: '50' },
+						{ label: '75%', value: '75' },
+						{ label: '100%', value: '100' },
+						{ label: '125%', value: '125' },
+						{ label: '150%', value: '150' },
+						{ label: '200%', value: '200' },
+						{ label: '300%', value: '300' },
+						{ label: '400%', value: '400' },
+						{ label: '500%', value: '500' },
 					];
 					const currentZoom = Math.round(scale * 100).toString();
 					const hasCustomZoom = !zoomOptions.some(opt => String(opt.value) === currentZoom);
-					
+
 					return (
 						<>
 							<button onClick={handleZoomOut} title="Zoom Out" disabled={isLoading}>
 								<ZoomOutIcon />
 							</button>
 							<select
-								value={hasCustomZoom ? "custom" : currentZoom}
+								value={hasCustomZoom ? 'custom' : currentZoom}
 								onChange={handleZoomChange}
 								disabled={isLoading}
 								className="zoom-dropdown"
