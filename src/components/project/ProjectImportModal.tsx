@@ -16,6 +16,7 @@ interface TemplateProject {
 	id: string;
 	name: string;
 	description: string;
+	type: "latex" | "typst";
 	category: string;
 	tags: string[];
 	downloadUrl: string;
@@ -65,7 +66,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 			setIsImporting(true);
 			setError(null);
 
-			const templateUrl = `${window.location.origin}${window.location.pathname}#newProjectName:${encodeURIComponent(template.name)}&newProjectDescription:${encodeURIComponent(template.description)}&newProjectTags:${encodeURIComponent(template.tags.join(','))}&files:${encodeURIComponent(template.downloadUrl)}`;
+			const templateUrl = `${window.location.origin}${window.location.pathname}#newProjectName:${encodeURIComponent(template.name)}&newProjectDescription:${encodeURIComponent(template.description)}&newProjectType:${encodeURIComponent(template.type)}&newProjectTags:${encodeURIComponent(template.tags.join(','))}&files:${encodeURIComponent(template.downloadUrl)}`;
 
 			window.location.href = templateUrl;
 			window.location.reload();
