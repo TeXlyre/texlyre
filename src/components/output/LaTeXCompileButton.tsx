@@ -350,10 +350,10 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 					disabled={isDisabled}
 					title={
 						isCompiling
-							? 'Stop Compilation (F8)'
+							? `Stop Compilation${useSharedSettings ? ' (F8)' : ''}`
 							: isChangingEngine
 								? 'Switching Engine...'
-								: 'Compile LaTeX Document (F9)'
+								: `Compile LaTeX Document${useSharedSettings ? ' (F9)' : ''}`
 					}
 				>
 					{isCompiling ? <StopIcon /> : <PlayIcon />}
@@ -454,7 +454,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 						<div
 							className="cache-item clear-and-compile clear-and-compile-button"
 							onClick={handleClearCacheAndCompile}
-							title="Clear cache and compile (Shift+F9)"
+							title={`Clear cache and compile${useSharedSettings ? ' (Shift+F9)' : ''}`}
 						>
 							<ClearCompileIcon />
 							Clear & Compile

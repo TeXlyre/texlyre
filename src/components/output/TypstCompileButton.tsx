@@ -293,8 +293,8 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                     disabled={isDisabled}
                     title={
                         isCompiling
-                            ? 'Stop Compilation'
-                            : 'Compile Typst Document (F9)'
+                            ? `Stop Compilation${useSharedSettings ? ' (F8)' : ''}`
+                            : `Compile Typst Document${useSharedSettings ? ' (F9)' : ''}`
                     }
                 >
                     {isCompiling ? <StopIcon /> : <PlayIcon />}
@@ -402,7 +402,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                         <div
                             className="cache-item clear-and-compile"
                             onClick={handleClearCacheAndCompile}
-                            title="Clear cache and compile (Shift+F9)"
+                            title={`Clear cache and compile${useSharedSettings ? ' (Shift+F9)' : ''}`}
                         >
                             <ClearCompileIcon />
                             Clear & Compile

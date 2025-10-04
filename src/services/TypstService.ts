@@ -65,7 +65,7 @@ class TypstService {
         const normalizedMainFileName = this.normalizePath(mainFileName);
 
         try {
-            this.showNotification('info', 'Preparing files for compilation...', operationId);
+            this.showNotification('info', 'Preparing files for Typst compilation...', operationId);
 
             const { mainContent, sources } = await this.prepareSources(
                 normalizedMainFileName,
@@ -83,7 +83,7 @@ class TypstService {
                 return result;
             }
 
-            this.showNotification('info', `Compiling to ${format.toUpperCase()}...`, operationId);
+            this.showNotification('info', `Compiling Typst to ${format.toUpperCase()}...`, operationId);
 
             const { output, diagnostics } = await this.performCompilationInWorker(
                 normalizedMainFileName,
@@ -109,7 +109,7 @@ class TypstService {
             const result = this.createSuccessResult(output, format, formattedLog);
             await this.saveCompilationOutput(normalizedMainFileName, result);
 
-            this.showNotification('success', `${format.toUpperCase()} compilation completed`, operationId, 3000);
+            this.showNotification('success', `Typst ${format.toUpperCase()} compilation completed`, operationId, 3000);
 
             return result;
         } catch (error) {
@@ -470,7 +470,7 @@ class TypstService {
 
     private handleCompilationError(operationId: string, message: string): void {
         this.setStatus('ready');
-        this.showNotification('error', `Compilation failed: ${message}`, operationId, 5000);
+        this.showNotification('error', `Typst compilation failed: ${message}`, operationId, 5000);
     }
 
     private showNotification(

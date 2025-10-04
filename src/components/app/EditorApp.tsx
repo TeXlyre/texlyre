@@ -123,34 +123,34 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		const handleCompile = () => {
 			if (isCompiling || isTypstCompiling) return;
 
-			// First try LaTeX compile button
-			const latexCompileButton = document.querySelector('.header-compile-button .compile-button') as HTMLButtonElement;
-			if (latexCompileButton && !latexCompileButton.disabled) {
-				latexCompileButton.click();
-				return;
-			}
+			const projectType = doc?.projectMetadata?.type || 'latex';
+			const buttonSelectors = projectType === 'typst'
+				? ['.header-typst-compile-button .compile-button', '.header-compile-button .compile-button']
+				: ['.header-compile-button .compile-button', '.header-typst-compile-button .compile-button'];
 
-			// Then try Typst compile button if no LaTeX button is active
-			const typstCompileButton = document.querySelector('.header-typst-compile-button .compile-button') as HTMLButtonElement;
-			if (typstCompileButton && !typstCompileButton.disabled) {
-				typstCompileButton.click();
+			for (const selector of buttonSelectors) {
+				const button = document.querySelector(selector) as HTMLButtonElement;
+				if (button && !button.disabled) {
+					button.click();
+					return;
+				}
 			}
 		};
 
 		const handleCompileClean = () => {
 			if (isCompiling || isTypstCompiling) return;
 
-			// First try LaTeX clear & compile
-			const latexCompileButtonContainer = document.querySelector('.header-compile-button') as any;
-			if (latexCompileButtonContainer && latexCompileButtonContainer.clearAndCompile) {
-				latexCompileButtonContainer.clearAndCompile();
-				return;
-			}
+			const projectType = doc?.projectMetadata?.type || 'latex';
+			const containerSelectors = projectType === 'typst'
+				? ['.header-typst-compile-button', '.header-compile-button']
+				: ['.header-compile-button', '.header-typst-compile-button'];
 
-			// Then try Typst clear & compile
-			const typstCompileButtonContainer = document.querySelector('.header-typst-compile-button') as any;
-			if (typstCompileButtonContainer && typstCompileButtonContainer.clearAndCompile) {
-				typstCompileButtonContainer.clearAndCompile();
+			for (const selector of containerSelectors) {
+				const container = document.querySelector(selector) as any;
+				if (container && container.clearAndCompile) {
+					container.clearAndCompile();
+					return;
+				}
 			}
 		};
 
@@ -170,7 +170,6 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			}
 		};
 
-		// Add Typst-specific event handlers
 		const handleTypstCompile = () => {
 			if (isTypstCompiling) return;
 
@@ -416,6 +415,37 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		}
 	};
 
+	const CompileButtons = () => {
+		const buttons = [
+			<LaTeXCompileButton
+				key="latex"
+				className="header-compile-button"
+				selectedDocId={localDocId}
+				documents={doc?.documents}
+				onNavigateToLinkedFile={handleNavigateToLinkedFile}
+				onExpandLatexOutput={handleExpandLatexOutput}
+				linkedFileInfo={linkedFileInfo}
+				shouldNavigateOnCompile={true}
+				useSharedSettings={true}
+				docUrl={docUrl}
+			/>,
+			<TypstCompileButton
+				key="typst"
+				className="header-typst-compile-button"
+				selectedDocId={localDocId}
+				documents={doc?.documents}
+				onNavigateToLinkedFile={handleNavigateToLinkedFile}
+				onExpandTypstOutput={handleExpandTypstOutput}
+				linkedFileInfo={linkedFileInfo}
+				shouldNavigateOnCompile={true}
+				useSharedSettings={true}
+				docUrl={docUrl}
+			/>
+		];
+
+		return projectType === 'typst' ? <>{buttons[1]}</> : <>{buttons[0]}</>;
+	};
+
 	const shareUrl = `${window.location.origin}${window.location.pathname}#${docUrl}`;
 	const selectedDocument = doc?.documents?.find((d) => d.id === localDocId);
 	const projectName = doc?.projectMetadata?.name || 'Untitled Project';
@@ -474,28 +504,8 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					)}
 				</div>
 				<div className="header-right">
-					<LaTeXCompileButton
-						className="header-compile-button"
-						selectedDocId={localDocId}
-						documents={doc?.documents}
-						onNavigateToLinkedFile={handleNavigateToLinkedFile}
-						onExpandLatexOutput={handleExpandLatexOutput}
-						linkedFileInfo={linkedFileInfo}
-						shouldNavigateOnCompile={true}
-						useSharedSettings={true}
-						docUrl={docUrl}
-					/>
-					<TypstCompileButton
-						className="header-typst-compile-button"
-						selectedDocId={localDocId}
-						documents={doc?.documents}
-						onNavigateToLinkedFile={handleNavigateToLinkedFile}
-						onExpandTypstOutput={handleExpandTypstOutput}
-						linkedFileInfo={linkedFileInfo}
-						shouldNavigateOnCompile={true}
-						useSharedSettings={true}
-						docUrl={docUrl}
-					/>
+					<CompileButtons />
+
 					<ShareProjectButton
 						className="header-share-button"
 						projectName={projectName}
