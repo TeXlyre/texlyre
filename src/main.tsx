@@ -81,51 +81,39 @@ if (
 	'serviceWorker' in navigator &&
 	((isHttpsMode && enableServiceWorkerForHttps) || (!isHttpsMode && enableServiceWorkerForHttp))
 ) {
-	window.addEventListener('load', async () => {
+	(async () => {
 		if (clearServiceWorkerOnLoad) {
-			console.log('[ServiceWroker] Clearing existing service workers...');
+			console.log('[ServiceWorker] Clearing existing service workers...');
 			await clearExistingServiceWorkers();
 		} else {
-			console.log('[ServiceWroker] Skipping clearing existing service workers');
+			console.log('[ServiceWorker] Skipping clearing existing service workers');
 		}
 
-		const swPath = '/texlyre/sw.js'; // `${BASE_PATH}/sw.js`;
-		const scope = '/texlyre/'; // `${BASE_PATH}/`;
+		const swPath = '/texlyre/sw.js';
+		const scope = '/texlyre/';
 
-		console.log('[ServiceWroker] ]Service Worker Registration ===');
+		console.log('[ServiceWorker] Service Worker Registration ===');
 		console.log('Service Worker Path:', swPath);
 		console.log('Scope:', scope);
 		console.log('Full Service Worker URL:', window.location.origin + swPath);
 
 		try {
-			console.log('[ServiceWroker] Attempting service worker registration...');
+			console.log('[ServiceWorker] Attempting service worker registration...');
 			const registration = await navigator.serviceWorker.register(swPath, {
 				scope,
 			});
-			console.log('[ServiceWroker] Service worker registered successfully:', registration.scope);
+			console.log('[ServiceWorker] Service worker registered successfully:', registration.scope);
 
 			if (registration.active) {
 				registration.active.postMessage({
 					type: 'CACHE_URLS',
-					urls: ['/texlyre/src/assets/images/TeXlyre_notext.png'], //[`${BASE_PATH}/src/assets/images/TeXlyre_notext.png`],
+					urls: ['/texlyre/src/assets/images/TeXlyre_notext.png'],
 				});
 			}
 		} catch (error) {
 			console.error('Service worker registration failed:', error);
 		}
-	});
-} else {
-	window.addEventListener('load', async () => {
-		await clearExistingServiceWorkers();
-		console.log(
-			'[ServiceWroker] Service worker registration skipped. HTTPS mode:',
-			isHttpsMode,
-			'Enable Service worker for HTTPS:',
-			enableServiceWorkerForHttps,
-			'Enable Service worker for HTTP:',
-			enableServiceWorkerForHttp,
-		);
-	});
+	})();
 }
 
 async function initUserData(): Promise<void> {
