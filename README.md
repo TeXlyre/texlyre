@@ -1,6 +1,6 @@
 # TeXlyre
 
-A **[local-first](https://www.inkandswitch.com/essay/local-first/)** real-time LaTeX and Typst collaboration platform with offline editing capabilities. Built with React, TypeScript, and Yjs for collaborative document editing.
+A **[local-first](https://www.inkandswitch.com/essay/local-first/)** real-time [LaTeX](https://www.latex-project.org/) and [Typst] collaboration platform with offline editing capabilities. Built with React, TypeScript, and Yjs for collaborative document editing.
 
 [![GitHub Pages](https://img.shields.io/badge/🟢%20Live-GitHub%20Pages-181717.svg?logo=github)](https://texlyre.github.io/texlyre)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/texlyre/texlyre/deploy.yml)](https://github.com/texlyre/texlyre/actions)
@@ -24,13 +24,17 @@ TeXlyre provides comment and chat features for real-time exchanges, reviews, and
 
 ### LaTeX Compilation
 
-The platform integrates **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX) WASM engines** to provide in-browser LaTeX compilation without server dependencies. Currently supports **pdfTeX** and **XeTeX** engines for comprehensive document processing. Live compilation provides immediate feedback with syntax highlighting and error detection, while the integrated PDF viewer offers zoom, navigation, and side-by-side editing capabilities.
+The platform integrates **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX) WASM engines** to provide in-browser LaTeX compilation without server dependencies. Currently supports **pdfTeX** and **XeTeX** engines for document processing. TeXlyre supports real-time syntax highlighting and error detection, with an integrated PDF viewer that offers zoom, navigation, and side-by-side editing capabilities.
 
-![LaTeX compilation in progress with error panel and PDF output](showcase/error_parser_zoomed.png)
+![LaTeX compilation in progress with error panel and PDF output](showcase/error_parser_zoomed_latex.png)
 
 ### Typst Compilation
 
-The platform integrates **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)** to provide in-browser Typst compilation without server dependencies. Live compilation provides immediate feedback with syntax highlighting and error detection, while the integrated PDF viewer offers zoom, navigation, and side-by-side editing capabilities.
+The platform integrates **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)** to provide in-browser [Typst](https://github.com/typst/typst) compilation without server dependencies. Currently supports PDF, SVG, and canvas compilation, however, SVG and HTML compilation are experimental, and are not guaranteed to work as expected at the time being.  
+
+![Typst compilation in progress with error panel and PDF output](showcase/error_parser_zoomed_typst.png)
+
+**Coming soon: Real-time compilation as you type**
 
 ### Local-first Architecture
 
@@ -38,7 +42,7 @@ TeXlyre prioritizes data ownership and offline capability. All documents are sto
 
 ### File Management and Synchronization
 
-The platform includes a comprehensive file explorer supporting drag-and-drop operations for various file types including LaTeX sources, Typst sources, images, and data files. **Document linking** creates connections between collaborative documents and static files, enabling seamless editing workflows. **[FilePizza](https://github.com/kern/filepizza) integration** provides secure peer-to-peer file sharing between collaborators, allowing large file transfers without intermediary servers.
+The platform includes a file explorer supporting drag-and-drop operations for various file types including LaTeX sources, Typst sources, images, and data files. **Document linking** creates connections between collaborative documents and static files, enabling seamless editing workflows. **[FilePizza](https://github.com/kern/filepizza) integration** provides secure peer-to-peer file sharing between collaborators, allowing large file transfers without intermediary servers.
 
 ![Project dashboard with file explorer and project cards](showcase/project_viewer_zoomed.png)
 
@@ -63,7 +67,7 @@ Moreover, you can start your project from a template and share the link with you
 
 TeXlyre's architecture emphasizes **local-first principles** while enabling real-time collaboration. The React frontend communicates with Yjs documents stored in IndexedDB, providing offline-first functionality. WebRTC establishes direct peer connections for real-time synchronization, while **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX) WASM engines** and **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)** handle LaTeX and Typst compilation entirely in the browser.
 
-The **plugin system** allows extensibility through custom viewers, renderers, and backup providers. Core plugins handle PDF rendering, LaTeX log visualization, and file system backup operations. Theme plugins provide customizable layouts and visual styles.
+The **plugin system** allows extensibility through custom viewers, renderers, and backup providers. Core plugins handle PDF rendering, LaTeX and Typst log visualization, and file system backup operations. Theme plugins provide customizable layouts and visual styles.
 
 ![Bib Editor plugin integrated into the TeXlyre app](showcase/bib_editor_zoomed.png)
 
@@ -102,7 +106,7 @@ interface ViewerPlugin extends Plugin {
 }
 ```
 
-Plugins can extend TeXlyre with custom file viewers, LaTeX/Typst log processors, backup providers, and theme variations. The plugin registry automatically discovers and loads compatible plugins during application initialization.
+Plugins can extend TeXlyre with custom file viewers, LaTeX/Typst log processors, backup providers, and theme variations (including a mobile theme). The plugin registry automatically discovers and loads compatible plugins during application initialization.
 
 Once a plugin is developed, it can be registered in the `plugins.config.ts` by simply adding its path (excluding the '/extras' prefix). All plugins must be placed in the 'extras' directory to be recognized by the system.
 
@@ -110,7 +114,7 @@ Once a plugin is developed, it can be registered in the `plugins.config.ts` by s
 
 TeXlyre requires modern browser features for optimal functionality. **Chrome and Edge** provide full feature support including File System Access API and WebRTC. **Firefox** supports core collaboration features but has limited file system integration. **Safari** offers partial compatibility with reduced file system access capabilities. The File System API was not thoroughly tested with mobile device browsers; therefore, use the file system backup feature on TeXlyre with caution.
 
-WebRTC support is essential for real-time collaboration, while the File System Access API enables advanced backup and synchronization features in supported browsers.
+WebRTC support is required for real-time collaboration, while the File System Access API enables backup and synchronization features in supported browsers.
 
 ## License
 
@@ -157,7 +161,7 @@ You can run your own signaling servers by following the setup instructions in ou
 
 ## Acknowledgments
 
-TeXlyre builds upon several key technologies: **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX)** provides WASM-based LaTeX compilation, **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)** provides WASM-based Typst compilation, **[Yjs](https://github.com/yjs/yjs)** enables conflict-free collaborative editing, **[CodeMirror](https://codemirror.net/)** powers the advanced text editing interface, and **[FilePizza](https://github.com/kern/filepizza)** facilitates secure peer-to-peer file transfers.
+TeXlyre builds upon several key technologies: **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX)** provides WASM-based LaTeX compilation, **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)** provides WASM-based Typst compilation, **[Yjs](https://github.com/yjs/yjs)** enables conflict-free collaborative editing, **[CodeMirror](https://codemirror.net/)** powers the text editing interface, and **[FilePizza](https://github.com/kern/filepizza)** facilitates secure peer-to-peer file transfers.
 
 Development of TeXlyre was assisted by **Anthropic Claude** for code generation, debugging, and architectural guidance.
 
