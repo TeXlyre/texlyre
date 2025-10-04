@@ -89,8 +89,8 @@ if (
 			console.log('[ServiceWroker] Skipping clearing existing service workers');
 		}
 
-		const swPath = `${BASE_PATH}/sw.js`;
-		const scope = `${BASE_PATH}/`;
+		const swPath = '/sw.js'; // `${BASE_PATH}/sw.js`;
+		const scope = '/texlyre/'; // `${BASE_PATH}/`;
 
 		console.log('[ServiceWroker] ]Service Worker Registration ===');
 		console.log('Service Worker Path:', swPath);
@@ -107,7 +107,7 @@ if (
 			if (registration.active) {
 				registration.active.postMessage({
 					type: 'CACHE_URLS',
-					urls: [`${BASE_PATH}/src/assets/images/TeXlyre_notext.png`],
+					urls: ['/texlyre/src/assets/images/TeXlyre_notext.png'], //[`${BASE_PATH}/src/assets/images/TeXlyre_notext.png`],
 				});
 			}
 		} catch (error) {
@@ -137,7 +137,7 @@ async function initUserData(): Promise<void> {
 
 	if (!existingSettings || !existingProperties) {
 		try {
-			const response = await fetch(`${BASE_PATH}/userdata.json`);
+			const response = await fetch('/texlyre/userdata.json'); // await fetch(`${BASE_PATH}/userdata.json`);
 			const userData = await response.json();
 
 			if (!existingSettings && userData.settings) {
