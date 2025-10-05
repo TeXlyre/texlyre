@@ -40,10 +40,12 @@
 	z-index: var(--mobile-z-navigation);
 	font-size: var(--mobile-font-xs);
 	filter: brightness(0.8);
+	display: none;
 }
 
 .project-type-badge .type-info-help {
 	font-size: var(--mobile-font-xs);
+	display: none;
 }
 
 [data-layout="texlyre-mobile"] .latex-outline,
