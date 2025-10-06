@@ -34,66 +34,66 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 	};
 
 	return (
-	   <div className={`auth-container ${currentThemePlugin?.id || 'default'}`}>
-		  <div className="auth-box">
-		<div className="auth-header">
-			<div className="auth-logo-wrapper">
-				<img src={texlyreLogo} className="auth-logo" alt="TeXlyre logo" />
+		<div className={`auth-container ${currentThemePlugin?.id || 'default'}`}>
+			<div className="auth-box">
+				<div className="auth-header">
+					<div className="auth-logo-wrapper">
+						<img src={texlyreLogo} className="auth-logo" alt="TeXlyre logo" />
+					</div>
+					<h1>TeXlyre</h1>
+					<ThemeToggleButton className="auth-theme-toggle" />
+				</div>
+
+				{activeView === 'login' ? (
+					<Login
+						onLoginSuccess={onAuthSuccess}
+						onSwitchToRegister={switchToRegister}
+						onSwitchToImport={switchToImport}
+					/>
+				) : activeView === 'register' ? (
+					<Register
+						onRegisterSuccess={onAuthSuccess}
+						onSwitchToLogin={switchToLogin}
+						onShowPrivacy={() => setShowPrivacy(true)}
+					/>
+				) : (
+					<ImportAccount
+						onImportSuccess={onAuthSuccess}
+						onSwitchToLogin={switchToLogin}
+					/>
+				)}
+
+				<div className="auth-privacy-note">
+					<p>Your account and projects stay private in this browser. TeXlyre is <a href="https://www.inkandswitch.com/essay/local-first/" target="_blank" rel="noreferrer">local-first</a>.</p>
+				</div>
 			</div>
-			<h1>TeXlyre</h1>
-			<ThemeToggleButton className="auth-theme-toggle" />
+			<footer className="auth-footer">
+				<p className="read-the-docs">
+					Built with TeXlyre
+					<a href="https://texlyre.github.io" target="_blank" rel="noreferrer">
+						<img src={texlyreLogo} className="logo" alt="TeXlyre logo" />
+					</a>
+					<span className="legal-links">
+						<br /> <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">
+							Documentation
+						</a>
+						{' '} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">
+							Source Code
+						</a>
+						{' '} • <a href="#" onClick={(event) => {
+							event.preventDefault();
+							setShowPrivacy(true);
+						}} className="privacy-link"> Privacy </a>
+					</span>
+				</p>
+			</footer>
+
+			<PrivacyModal
+				isOpen={showPrivacy}
+				onClose={() => setShowPrivacy(false)}
+			/>
+
 		</div>
-
-			 {activeView === 'login' ? (
-				<Login
-				   onLoginSuccess={onAuthSuccess}
-				   onSwitchToRegister={switchToRegister}
-				   onSwitchToImport={switchToImport}
-				/>
-			 ) : activeView === 'register' ? (
-				<Register
-				   onRegisterSuccess={onAuthSuccess}
-				   onSwitchToLogin={switchToLogin}
-				   onShowPrivacy={() => setShowPrivacy(true)}
-				/>
-			 ) : (
-				<ImportAccount
-				   onImportSuccess={onAuthSuccess}
-				   onSwitchToLogin={switchToLogin}
-				/>
-			 )}
-
-			 <div className="auth-privacy-note">
-				 <p>Your account and projects stay private in this browser. TeXlyre is <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">local-first</a>.</p>
-			 </div>
-		  </div>
-		  <footer className="auth-footer">
-			 <p className="read-the-docs">
-				Built with TeXlyre
-				<a href="https://texlyre.github.io" target="_blank" rel="noreferrer">
-				   <img src={texlyreLogo} className="logo" alt="TeXlyre logo" />
-				</a>
-				 <span className="legal-links">
-				  <br/> <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">
-					Documentation
-				  </a>
-					{' '} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">
-					Source Code
-				  </a>
-				  {' '} • <a href="#" onClick={(event) => {
-					  event.preventDefault();
-					  setShowPrivacy(true);
-					}} className="privacy-link"> Privacy </a>
-				</span>
-			 </p>
-		  </footer>
-
-		   <PrivacyModal
-			   isOpen={showPrivacy}
-			   onClose={() => setShowPrivacy(false)}
-		   />
-
-	   </div>
 	);
 
 };

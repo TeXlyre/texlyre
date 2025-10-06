@@ -8,7 +8,7 @@ A **[local-first](https://www.inkandswitch.com/essay/local-first/)** real-time [
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://reactjs.org/)
 
-![Main editor interface showing split view with LaTeX code on left, compiled PDF on right](showcase/tikz_compile.png)
+![Main editor interface showing split view with LaTeX code on left, compiled PDF on right](showcase/main_showcase_dark.png)
 
 ## Features
 
@@ -16,23 +16,31 @@ A **[local-first](https://www.inkandswitch.com/essay/local-first/)** real-time [
 
 TeXlyre enables multi-user editing with live cursors and selections visible across all connected clients. The platform uses **[Yjs](https://github.com/yjs/yjs) CRDTs** for conflict-free synchronization, ensuring that changes from multiple users are automatically merged without conflicts. Communication happens through **WebRTC** peer-to-peer connections, providing low-latency collaboration without requiring a central server. An integrated chat system allows collaborators to communicate directly within the editing environment.
 
-![Multiple users editing simultaneously with different colored cursors](showcase/collab_cursor_zoomed.png)
+<p align="center">
+<img src="showcase/collab_cursor_zoomed.png" alt="Multiple users editing simultaneously with different colored cursors" >
+</p>
 
 TeXlyre provides comment and chat features for real-time exchanges, reviews, and discussions among collaborators.
 
-![Collaborators using the chat panel to discuss progress](showcase/chat_zoomed.png)
+<p align="center">
+<img src="showcase/chat_zoomed.png" alt="Collaborators using the chat panel to discuss progress">
+</p>
 
 ### LaTeX Compilation
 
 The platform integrates **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX) WASM engines** to provide in-browser LaTeX compilation without server dependencies. Currently supports **pdfTeX** and **XeTeX** engines for document processing. TeXlyre supports real-time syntax highlighting and error detection, with an integrated PDF viewer that offers zoom, navigation, and side-by-side editing capabilities.
 
-![LaTeX compilation in progress with error panel and PDF output](showcase/error_parser_zoomed_latex.png)
+<p align="center">
+<img src="showcase/error_parser_zoomed_latex.png" alt="LaTeX compilation in progress with error panel and PDF output" width="600">
+</p>
 
 ### Typst Compilation
 
 The platform integrates **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)** to provide in-browser [Typst](https://github.com/typst/typst) compilation without server dependencies. Currently supports PDF, SVG, and canvas compilation, however, SVG and HTML compilation are experimental, and are not guaranteed to work as expected at the time being.  
 
-![Typst compilation in progress with error panel and PDF output](showcase/error_parser_zoomed_typst.png)
+<p align="center">
+<img src="showcase/error_parser_zoomed_typst.png" alt="Typst compilation in progress" width="600">
+</p>
 
 **Coming soon: Real-time compilation as you type**
 
@@ -61,8 +69,9 @@ Navigate to `http://localhost:5173` to access the application. Create a new proj
 
 Moreover, you can start your project from a template and share the link with your collaborators.
 
-![Getting started with a template](showcase/templates_zoomed.png)
-
+<p align="center">
+<img src="showcase/templates_zoomed.png" alt="Getting started with a template">
+</p>
 ## Architecture
 
 TeXlyre's architecture emphasizes **local-first principles** while enabling real-time collaboration. The React frontend communicates with Yjs documents stored in IndexedDB, providing offline-first functionality. WebRTC establishes direct peer connections for real-time synchronization, while **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX) WASM engines** and **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)** handle LaTeX and Typst compilation entirely in the browser.
