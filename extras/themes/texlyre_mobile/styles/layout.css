@@ -43,7 +43,7 @@
 	display: none;
 }
 
-.project-type-badge .type-info-help {
+[data-layout="texlyre-mobile"] footer .project-type-badge .type-info-help {
 	font-size: var(--mobile-font-xs);
 	display: none;
 }
