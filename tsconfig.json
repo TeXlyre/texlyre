@@ -22,6 +22,15 @@
 		"noUnusedLocals": false,
 		"noUnusedParameters": false,
 		"noFallthroughCasesInSwitch": false,
+		"baseUrl": ".",
+		"paths": {
+			"@src/*": [
+				"src/*"
+			],
+			"@tests/*": [
+				"tests/*"
+			]
+		}
 	},
 	"include": [
 		"src/**/*",
