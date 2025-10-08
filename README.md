@@ -57,22 +57,31 @@ The platform includes a file explorer supporting drag-and-drop operations for va
 
 ## Quick Start
 
-Installation requires Node.js 18+ and a modern browser with File System Access API support:
+Installation requires Node.js 20+ and a modern browser with File System Access API support:
 
 ```bash
 git clone https://github.com/TeXlyre/texlyre.git
 cd texlyre
 npm install
-npm run dev
+npm run start
 ```
 
-Navigate to `http://localhost:5173` to access the application. Create a new project to begin editing, or open an existing project by sharing its URL with collaborators. The URL format `http://localhost:5173/#yjs:abc123def456` enables instant collaboration access.
+Navigate to `http://localhost:4173` to access the application. Create a new project to begin editing, or open an existing project by sharing its URL with collaborators. The URL format `http://localhost:4173/#yjs:abc123def456` enables instant collaboration access.
 
 Moreover, you can start your project from a template and share the link with your collaborators.
 
 <p align="center">
 <img src="showcase/templates_zoomed.png" alt="Getting started with a template">
 </p>
+
+```bash
+npm install
+npm run start
+```
+
+For detailed installation instructions, advanced configuration, and development workflows, see the [installation documentation](https://texlyre.github.io/docs/installation). 
+
+For configuring TeXlyre's theme, properties, and supported plugins, see the [configuration documentation](https://texlyre.github.io/docs/configuration#configuration-files). 
 
 ## Architecture
 
@@ -92,20 +101,7 @@ The File System Access API enables direct synchronization with local folders, su
 
 **[FilePizza](https://github.com/kern/filepizza) integration** facilitates secure file sharing between collaborators over WebRTC. Large files, images, and other non-collaborative text files can be transferred directly between browsers, maintaining privacy and reducing dependency on external services. This protocol, although completely independent of the Yjs WebRTC connection, still uses Yjs to manage file metadata and synchronization state, ensuring that all collaborators have access to the latest versions of shared files. Yjs facilitates real-time collaboration (e.g., live updates to file lists, shared metadata, cursor tracking, real-time document editing) while FilePizza handles the file transfer of non-collaborative files.
 
-## Development
-
-### Deployment
-
-```bash
-npm install
-npm run start
-```
-
-For detailed installation instructions, advanced configuration, and development workflows, see the [installation documentation](https://texlyre.github.io/docs/installation). 
-
-For configuring TeXlyre's theme, properties, and supported plugins, see the [configuration documentation](https://texlyre.github.io/docs/configuration#configuration-files). 
-
-### Plugin Development
+## Plugin Development
 
 The plugin architecture supports custom functionality through typed interfaces:
 
