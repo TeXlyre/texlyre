@@ -73,6 +73,7 @@ Moreover, you can start your project from a template and share the link with you
 <p align="center">
 <img src="showcase/templates_zoomed.png" alt="Getting started with a template">
 </p>
+
 ## Architecture
 
 TeXlyre's architecture emphasizes **local-first principles** while enabling real-time collaboration. The React frontend communicates with Yjs documents stored in IndexedDB, providing offline-first functionality. WebRTC establishes direct peer connections for real-time synchronization, while **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX) WASM engines** and **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)** handle LaTeX and Typst compilation entirely in the browser.
@@ -169,6 +170,7 @@ TeXlyre uses open source signaling servers for WebRTC connections:
 All servers are hosted locally and made publicly available with [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/).
 
 ### Self-Hosting
+
 You can run your own signaling servers by following the setup instructions in our [infrastructure repository](https://github.com/texlyre/texlyre-infrastructure).
 
 ## Acknowledgments
