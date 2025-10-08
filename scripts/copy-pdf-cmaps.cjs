@@ -1,11 +1,10 @@
-// scripts/copy-pdf-cmaps.cjs - For development only
+// scripts/copy-pdf-cmaps.cjs
 const fs = require("fs-extra");
 const path = require("node:path");
 
 const cmapsSource = path.resolve(__dirname, "../node_modules/pdfjs-dist/cmaps");
 const cmapsDestination = path.resolve(__dirname, "../public/assets/cmaps");
 
-// Copy cmaps to public directory for development
 async function copyCmaps() {
 	try {
 		await fs.ensureDir(cmapsDestination);

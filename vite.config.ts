@@ -84,6 +84,8 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			"@": path.resolve(__dirname, "./src"),
+			'@src': path.resolve(__dirname, './src'),
+			'@tests': path.resolve(__dirname, './tests'),
 			"@codemirror/state": path.resolve("./node_modules/@codemirror/state"),
 			"@codemirror/view": path.resolve("./node_modules/@codemirror/view"),
 			yjs: path.resolve("./node_modules/yjs"),

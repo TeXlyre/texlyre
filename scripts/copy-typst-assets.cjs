@@ -1,4 +1,4 @@
-// scripts/copy-typst-assets.cjs - For development only
+// scripts/copy-typst-assets.cjs
 const fs = require("fs-extra");
 const path = require("node:path");
 
