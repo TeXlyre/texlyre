@@ -1,7 +1,7 @@
 {
 	"name": "texlyre",
 	"private": true,
-	"version": "0.3.1",
+	"version": "0.3.2",
 	"description": "A local-first LaTeX web editor with real-time collaboration.",
 	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
 	"license": "AGPL-3.0-or-later",
@@ -11,12 +11,14 @@
 	},
 	"type": "module",
 	"scripts": {
+		"start": "npm run generate-configs && npm run build && npm run test && npm run preview",
 		"predev": "node scripts/copy-pdf-cmaps.cjs && node scripts/copy-typst-assets.cjs",
 		"dev": "npm run generate-plugins && vite",
 		"dev:https": "npm run generate-plugins && cross-env VITE_USE_HTTPS=true vite --host",
 		"build": "node scripts/update-sw-version.js && npm run generate-plugins && npm run generate-fonts && tsc && vite build",
 		"build:clean": "node scripts/clean-cache.cjs && npm run build",
 		"clean:cache": "node scripts/clean-cache.cjs",
+		"generate-configs": "node --loader ts-node/esm scripts/generate-configs.ts",
 		"generate-plugins": "node scripts/generate-plugins-index.js",
 		"generate-fonts": "node scripts/generate-font-manifest.cjs",
 		"lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
