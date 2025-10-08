@@ -31,7 +31,8 @@ function flattenSettings(settings: any, prefix = ''): Record<string, any> {
     const result: Record<string, any> = {};
 
     for (const [key, value] of Object.entries(settings)) {
-        const newKey = prefix ? `${prefix}-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}` : key;
+        const kebabKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+        const newKey = prefix ? `${prefix}-${kebabKey}` : kebabKey;
 
         if (value && typeof value === 'object' && !Array.isArray(value)) {
             Object.assign(result, flattenSettings(value, newKey));
