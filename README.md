@@ -57,6 +57,11 @@ The platform includes a file explorer supporting drag-and-drop operations for va
 
 ## Quick Start
 
+
+For detailed installation instructions, advanced configuration, and development workflows, see the [installation documentation](https://texlyre.github.io/docs/installation). 
+
+For configuring TeXlyre's theme, properties, and supported plugins, see the [configuration documentation](https://texlyre.github.io/docs/configuration#configuration-files). 
+
 Installation requires Node.js 20+ and a modern browser with File System Access API support:
 
 ```bash
@@ -73,15 +78,6 @@ Moreover, you can start your project from a template and share the link with you
 <p align="center">
 <img src="showcase/templates_zoomed.png" alt="Getting started with a template">
 </p>
-
-```bash
-npm install
-npm run start
-```
-
-For detailed installation instructions, advanced configuration, and development workflows, see the [installation documentation](https://texlyre.github.io/docs/installation). 
-
-For configuring TeXlyre's theme, properties, and supported plugins, see the [configuration documentation](https://texlyre.github.io/docs/configuration#configuration-files). 
 
 ## Architecture
 
