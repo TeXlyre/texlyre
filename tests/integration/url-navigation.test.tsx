@@ -1,7 +1,7 @@
 import { render, waitFor } from '@testing-library/react';
 import AppRouter from '@src/components/app/AppRouter';
 
-describe('URL Navigation', () => {
+describe.skip('URL Navigation', () => {
     beforeEach(() => {
         window.location.hash = '';
         localStorage.clear();

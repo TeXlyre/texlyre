@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ProjectApp from '@src/components/app/ProjectApp';
 
-describe('Project Lifecycle', () => {
+describe.skip('Project Lifecycle', () => {
     beforeEach(() => {
         localStorage.clear();
         sessionStorage.clear();

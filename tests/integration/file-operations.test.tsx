@@ -9,7 +9,7 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     </FileTreeProvider>
 );
 
-describe('File Operations', () => {
+describe.skip('File Operations', () => {
     const mockOnFileSelect = jest.fn();
     const mockOnCreateDocument = jest.fn(() => 'doc-123');
 

@@ -127,7 +127,7 @@ describe('ProjectCard Component', () => {
 
         render(<ProjectCard project={projectWithLastOpened} {...mockHandlers} />);
 
-        expect(screen.getByText(/Last: intro.tex/i)).toBeInTheDocument();
+        expect(screen.getByTitle('Last: intro.tex')).toBeInTheDocument();
     });
 
     it('should handle Typst project type', () => {

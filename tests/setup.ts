@@ -10,8 +10,47 @@ configure({
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder as any;
 
+global.structuredClone = (obj: any) => {
+    return JSON.parse(JSON.stringify(obj));
+};
+
 const FDBFactory = require('fake-indexeddb/lib/FDBFactory');
+const FDBDatabase = require('fake-indexeddb/lib/FDBDatabase');
+const FDBObjectStore = require('fake-indexeddb/lib/FDBObjectStore');
+const FDBIndex = require('fake-indexeddb/lib/FDBIndex');
+const FDBCursor = require('fake-indexeddb/lib/FDBCursor');
+const FDBCursorWithValue = require('fake-indexeddb/lib/FDBCursorWithValue');
+const FDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange');
+const FDBRequest = require('fake-indexeddb/lib/FDBRequest');
+const FDBOpenDBRequest = require('fake-indexeddb/lib/FDBOpenDBRequest');
+const FDBTransaction = require('fake-indexeddb/lib/FDBTransaction');
+
 global.indexedDB = new FDBFactory();
+global.IDBDatabase = FDBDatabase;
+global.IDBObjectStore = FDBObjectStore;
+global.IDBIndex = FDBIndex;
+global.IDBCursor = FDBCursor;
+global.IDBCursorWithValue = FDBCursorWithValue;
+global.IDBKeyRange = FDBKeyRange;
+global.IDBRequest = FDBRequest;
+global.IDBOpenDBRequest = FDBOpenDBRequest;
+global.IDBTransaction = FDBTransaction;
+
+jest.mock('src/plugins/renderers/pdf/PdfRenderer', () => {
+    const React = require('react');
+    return {
+        __esModule: true,
+        default: () => React.createElement('div', { 'data-testid': 'pdf-renderer' }, 'PDF Renderer Mock'),
+    };
+});
+
+jest.mock('src/plugins/viewers/pdf/PdfViewer', () => {
+    const React = require('react');
+    return {
+        __esModule: true,
+        default: () => React.createElement('div', { 'data-testid': 'pdf-viewer' }, 'PDF Viewer Mock'),
+    };
+});
 
 class MockBroadcastChannel {
     name: string;
