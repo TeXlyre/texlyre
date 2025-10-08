@@ -20,6 +20,8 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm ci
+      - name: Generate plugins
+        run: npm run generate-plugins
       - name: Run tests
         run: npm run test:ci
       - name: Upload coverage
