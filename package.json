@@ -17,6 +17,7 @@
 		"dev:https": "npm run generate-plugins && cross-env VITE_USE_HTTPS=true vite --host",
 		"build": "tsc && vite build",
 		"build:prod": "npm run generate-configs && tsx scripts/update-sw-version.js && npm run generate-plugins && npm run generate-fonts && tsc && vite build",
+		"build:local": "tsx scripts/update-sw-version.js && npm run generate-plugins && npm run generate-fonts && tsc && vite build",
 		"clean:cache": "node scripts/clean-cache.cjs",
 		"generate-configs": "tsx scripts/generate-configs.ts",
 		"generate-plugins": "tsx scripts/generate-plugins-index.js",
