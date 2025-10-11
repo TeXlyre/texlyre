@@ -59,7 +59,7 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
             type: 'text',
             label: 'Repository proxy URL',
             description: 'Proxy URL to prepend ONLY to repository ZIP downloads to circumvent CORS policy (optional)',
-            defaultValue: 'https://proxy.corsfix.com/?',
+            defaultValue: 'https://proxy.emaily.re/?url=',
             onChange: (value) => {
                 setRepositoryProxyUrl(value as string);
             },
