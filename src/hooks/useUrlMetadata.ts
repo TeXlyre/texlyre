@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { fetchPageMetadata } from '../utils/urlMetadataExtractor';
 
-export const usePageMetadata = (url: string | null) => {
+export const usePageMetadata = (url: string | null, proxyUrl: string | null = null) => {
     const [metadata, setMetadata] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -19,7 +19,7 @@ export const usePageMetadata = (url: string | null) => {
             setError(null);
 
             try {
-                const data = await fetchPageMetadata(url);
+                const data = await fetchPageMetadata(url, proxyUrl);
                 setMetadata(data);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to fetch metadata');
@@ -30,7 +30,7 @@ export const usePageMetadata = (url: string | null) => {
         };
 
         fetchData();
-    }, [url]);
+    }, [url, proxyUrl]);
 
     return { metadata, loading, error };
 };

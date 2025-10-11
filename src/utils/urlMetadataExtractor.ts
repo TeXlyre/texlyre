@@ -39,7 +39,16 @@ const detectTypeFromLanguages = (languages: Record<string, number>): 'latex' | '
     return null;
 };
 
-const fetchGitHubMetadata = async (owner: string, repo: string): Promise<PageMetadata | null> => {
+const applyProxyToZipUrl = (zipUrl: string, proxyUrl: string | null): string => {
+    if (!proxyUrl || !proxyUrl.trim()) return zipUrl;
+
+    const trimmedProxy = proxyUrl.trim();
+    // const normalizedProxy = trimmedProxy.endsWith('/') ? trimmedProxy.slice(0, -1) : trimmedProxy;
+
+    return `${trimmedProxy}${zipUrl}`;
+};
+
+const fetchGitHubMetadata = async (owner: string, repo: string, proxyUrl: string | null): Promise<PageMetadata | null> => {
     try {
         const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
         if (!response.ok) return null;
@@ -51,6 +60,7 @@ const fetchGitHubMetadata = async (owner: string, repo: string): Promise<PageMet
 
         const detectedType = detectTypeFromLanguages(languages);
         const socialImageUrl = `https://opengraph.githubassets.com/1/${owner}/${repo}`;
+        const zipUrl = `https://github.com/${owner}/${repo}/archive/refs/heads/${data.default_branch}.zip`;
 
         return {
             title: data.name,
@@ -58,14 +68,14 @@ const fetchGitHubMetadata = async (owner: string, repo: string): Promise<PageMet
             image: socialImageUrl,
             tags: data.topics || [],
             type: detectedType,
-            zipUrl: `https://github.com/${owner}/${repo}/archive/refs/heads/${data.default_branch}.zip`
+            zipUrl: applyProxyToZipUrl(zipUrl, proxyUrl)
         };
     } catch {
         return null;
     }
 };
 
-const fetchGitLabMetadata = async (owner: string, repo: string): Promise<PageMetadata | null> => {
+const fetchGitLabMetadata = async (owner: string, repo: string, proxyUrl: string | null): Promise<PageMetadata | null> => {
     try {
         const projectPath = encodeURIComponent(`${owner}/${repo}`);
         const response = await fetch(`https://gitlab.com/api/v4/projects/${projectPath}`);
@@ -77,6 +87,7 @@ const fetchGitLabMetadata = async (owner: string, repo: string): Promise<PageMet
         const languages = languagesResponse.ok ? await languagesResponse.json() : {};
 
         const detectedType = detectTypeFromLanguages(languages);
+        const zipUrl = `https://gitlab.com/${owner}/${repo}/-/archive/${data.default_branch}/${repo}-${data.default_branch}.zip`;
 
         return {
             title: data.name,
@@ -84,14 +95,14 @@ const fetchGitLabMetadata = async (owner: string, repo: string): Promise<PageMet
             image: data.avatar_url,
             tags: data.topics || data.tag_list || [],
             type: detectedType,
-            zipUrl: `https://gitlab.com/${owner}/${repo}/-/archive/${data.default_branch}/${repo}-${data.default_branch}.zip`
+            zipUrl: applyProxyToZipUrl(zipUrl, proxyUrl)
         };
     } catch {
         return null;
     }
 };
 
-const fetchGiteaMetadata = async (hostname: string, owner: string, repo: string): Promise<PageMetadata | null> => {
+const fetchGiteaMetadata = async (hostname: string, owner: string, repo: string, proxyUrl: string | null): Promise<PageMetadata | null> => {
     try {
         const response = await fetch(`https://${hostname}/api/v1/repos/${owner}/${repo}`);
         if (!response.ok) return null;
@@ -102,6 +113,7 @@ const fetchGiteaMetadata = async (hostname: string, owner: string, repo: string)
         const languages = languagesResponse.ok ? await languagesResponse.json() : {};
 
         const detectedType = detectTypeFromLanguages(languages);
+        const zipUrl = `https://${hostname}/${owner}/${repo}/archive/${data.default_branch}.zip`;
 
         return {
             title: data.name,
@@ -109,7 +121,7 @@ const fetchGiteaMetadata = async (hostname: string, owner: string, repo: string)
             image: data.avatar_url || data.owner?.avatar_url,
             tags: data.topics || [],
             type: detectedType,
-            zipUrl: `https://${hostname}/${owner}/${repo}/archive/${data.default_branch}.zip`
+            zipUrl: applyProxyToZipUrl(zipUrl, proxyUrl)
         };
     } catch {
         return null;
@@ -127,7 +139,7 @@ const detectGiteaInstance = async (hostname: string) => {
     }
 };
 
-export const fetchPageMetadata = async (url: string): Promise<PageMetadata> => {
+export const fetchPageMetadata = async (url: string, proxyUrl: string | null = null): Promise<PageMetadata> => {
     const parsed = parseGitUrl(url);
 
     if (parsed) {
@@ -135,15 +147,15 @@ export const fetchPageMetadata = async (url: string): Promise<PageMetadata> => {
         let metadata = null;
 
         if (hostname === 'github.com') {
-            metadata = await fetchGitHubMetadata(owner, repo);
+            metadata = await fetchGitHubMetadata(owner, repo, proxyUrl);
         } else if (hostname === 'gitlab.com') {
-            metadata = await fetchGitLabMetadata(owner, repo);
+            metadata = await fetchGitLabMetadata(owner, repo, proxyUrl);
         } else if (hostname === 'codeberg.org') {
-            metadata = await fetchGiteaMetadata(hostname, owner, repo);
+            metadata = await fetchGiteaMetadata(hostname, owner, repo, proxyUrl);
         } else {
             const isGitea = await detectGiteaInstance(hostname);
             if (isGitea) {
-                metadata = await fetchGiteaMetadata(hostname, owner, repo);
+                metadata = await fetchGiteaMetadata(hostname, owner, repo, proxyUrl);
             }
         }
 

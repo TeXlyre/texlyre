@@ -63,11 +63,13 @@
     position: absolute;
     top: var(--space-sm);
     right: var(--space-sm);
-    opacity: 0.8;
+    opacity: 1;
 }
 
 .preview-type-badge .type-info-help {
-    padding: 0;
+    background-color: var(--pico-primary);
+    color: var(--pico-primary-inverse);
+    padding: var(--space-xs);
     margin: 0;
     font-size: 0.8rem;
     font-weight: 600;
