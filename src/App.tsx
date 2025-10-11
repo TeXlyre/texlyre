@@ -32,6 +32,7 @@ import './styles/components/auth.css';
 import './styles/components/project.css';
 import './styles/components/share-project.css';
 import './styles/components/latex-typst-templates.css'
+import './styles/components/url-metadata.css'
 import './styles/components/lsp.css';
 import './styles/components/chat.css';
 import './styles/components/latex-typst.css';

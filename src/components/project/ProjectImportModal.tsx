@@ -8,9 +8,10 @@ import {
 	projectImportService,
 } from '../../services/ProjectImportService';
 import { formatDate } from '../../utils/dateUtils';
-import { FolderIcon, ImportIcon, TemplatesIcon, ZipFileIcon } from '../common/Icons';
+import { GlobeIcon, ImportIcon, TemplatesIcon, ZipFileIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 import TemplateImportModal from './TemplateImportModal';
+import UrlImportModal from './UrlImportModal';
 
 interface TemplateProject {
 	id: string;
@@ -56,12 +57,47 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [selectedZipFile, setSelectedZipFile] = useState<File | null>(null);
 	const [showTemplateModal, setShowTemplateModal] = useState(false);
+	const [showUrlModal, setShowUrlModal] = useState(false);
 
 	const handleTemplateImport = () => {
 		setShowTemplateModal(true);
 	};
 
-	const handleTemplateSelected = async (template: TemplateProject) => {
+	const handleUrlImport = () => {
+		setShowUrlModal(true);
+	};
+
+	const handleUrlImportSelect = async (data: {
+		name: string;
+		description: string;
+		type: 'latex' | 'typst';
+		tags: string[];
+		zipUrl: string;
+	}) => {
+		try {
+			setIsImporting(true);
+			setError(null);
+
+			const urlParams = new URLSearchParams({
+				newProjectName: data.name,
+				newProjectDescription: data.description,
+				newProjectType: data.type,
+				newProjectTags: data.tags.join(','),
+				files: data.zipUrl,
+			});
+
+			window.location.href = `${window.location.origin}${window.location.pathname}#${urlParams}`;
+			window.location.reload();
+		} catch (error) {
+			setError(
+				error instanceof Error ? error.message : 'Failed to import from URL'
+			);
+		} finally {
+			setIsImporting(false);
+		}
+	};
+
+	const handleTemplateSelect = async (template: TemplateProject) => {
 		try {
 			setIsImporting(true);
 			setError(null);
@@ -226,6 +262,20 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 									</div>
 								</label>
 
+								<label
+									className="import-option-button"
+									onClick={handleUrlImport}
+									style={{
+										pointerEvents: isScanning || isImporting ? 'none' : 'auto',
+										opacity: isScanning || isImporting ? 0.5 : 1
+									}}
+								>
+									<GlobeIcon />
+									<div>
+										<strong>From URL</strong>
+										<p>Import from URL: GitHub, GitLab, Codeberg repositories or ZIP link</p>
+									</div>
+								</label>
 								<label className="import-option-button">
 									<ZipFileIcon />
 									<div>
@@ -375,7 +425,13 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 			<TemplateImportModal
 				isOpen={showTemplateModal}
 				onClose={() => setShowTemplateModal(false)}
-				onTemplateSelected={handleTemplateSelected}
+				onTemplateSelected={handleTemplateSelect}
+			/>
+
+			<UrlImportModal
+				isOpen={showUrlModal}
+				onClose={() => setShowUrlModal(false)}
+				onUrlImport={handleUrlImportSelect}
 			/>
 		</>
 	);
