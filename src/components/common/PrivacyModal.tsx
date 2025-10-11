@@ -56,6 +56,7 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) => {
         <ul>
           <li><strong>Crossref API:</strong> Paper titles and authors when using the BibTeX DOI lookup feature (<a href="https://www.crossref.org/privacy/" target="_blank" rel="noreferrer">Privacy Policy</a>)</li>
           <li><strong>GitHub API:</strong> When you enable GitHub integration with your own token (<a href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement" target="_blank" rel="noreferrer">Privacy Policy</a>)</li>
+          <li><strong>CORSfix Proxy:</strong> When importing projects from repository URLs (GitHub, GitLab, Codeberg), downloads are proxied through <a href="https://proxy.corsfix.com" target="_blank" rel="noreferrer">CORSfix</a> to bypass browser CORS restrictions (<a href="https://corsfix.com/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>). This can be changed in Settings → Import → Repository Import</li>
         </ul>
         <p>
           TeXlyre is hosted on <a href="https://pages.github.com/" target="_blank" rel="noreferrer">GitHub Pages</a> and uses <a href="https://workers.cloudflare.com/" target="_blank" rel="noreferrer">Cloudflare Workers</a> for signaling and download servers.
@@ -72,9 +73,9 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) => {
         <div className="contact-info">
           <p><strong>Questions? </strong>
             <a href="https://github.com/texlyre/texlyre/issues" target="_blank" rel="noreferrer">
-            Open an issue on our GitHub repository
+              Open an issue on our GitHub repository
             </a>.
-           </p>
+          </p>
         </div>
       </div>
     </Modal>
