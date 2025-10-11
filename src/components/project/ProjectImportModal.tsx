@@ -78,15 +78,9 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 			setIsImporting(true);
 			setError(null);
 
-			const urlParams = new URLSearchParams({
-				newProjectName: data.name,
-				newProjectDescription: data.description,
-				newProjectType: data.type,
-				newProjectTags: data.tags.join(','),
-				files: data.zipUrl,
-			});
+			const templateUrl = `${window.location.origin}${window.location.pathname}#newProjectName:${encodeURIComponent(data.name)}&newProjectDescription:${encodeURIComponent(data.description)}&newProjectType:${encodeURIComponent(data.type)}&newProjectTags:${encodeURIComponent(data.tags.join(','))}&files:${encodeURIComponent(data.zipUrl)}`;
 
-			window.location.href = `${window.location.origin}${window.location.pathname}#${urlParams}`;
+			window.location.href = templateUrl;
 			window.location.reload();
 		} catch (error) {
 			setError(
