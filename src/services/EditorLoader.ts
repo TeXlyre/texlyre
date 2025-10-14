@@ -36,6 +36,7 @@ import type * as Y from 'yjs';
 
 import { pluginRegistry } from '../plugins/PluginRegistry';
 import { commentSystemExtension } from '../extensions/codemirror/CommentExtension';
+import { searchHighlightExtension, setSearchHighlights, clearSearchHighlights } from '../extensions/codemirror/SearchHighlightExtension';
 import { createFilePathAutocompleteExtension, setCurrentFilePath, refreshBibliographyCache } from '../extensions/codemirror/PathAndBibAutocompleteExtension.ts';
 import { createLSPExtension, updateLSPPluginsInView, setCurrentFilePathInLSP } from '../extensions/codemirror/LSPExtension';
 import { useAuth } from '../hooks/useAuth';
@@ -205,6 +206,7 @@ export const EditorLoader = (
 		}
 
 		extensions.push(getCursorTrackingExtension());
+		extensions.push(searchHighlightExtension);
 		return extensions;
 	};
 
@@ -957,6 +959,35 @@ export const EditorLoader = (
 		currentFileId,
 		documentId,
 	]);
+
+	useEffect(() => {
+		const handleHighlightSearch = (event: Event) => {
+			const customEvent = event as CustomEvent;
+			const { query, caseSensitive } = customEvent.detail;
+
+			if (viewRef.current && query) {
+				viewRef.current.dispatch({
+					effects: setSearchHighlights.of({ query, caseSensitive }),
+				});
+			}
+		};
+
+		const handleClearHighlights = () => {
+			if (viewRef.current) {
+				viewRef.current.dispatch({
+					effects: clearSearchHighlights.of(null),
+				});
+			}
+		};
+
+		document.addEventListener('highlight-search-in-editor', handleHighlightSearch);
+		document.addEventListener('clear-search-highlights', handleClearHighlights);
+
+		return () => {
+			document.removeEventListener('highlight-search-in-editor', handleHighlightSearch);
+			document.removeEventListener('clear-search-highlights', handleClearHighlights);
+		};
+	}, []);
 
 	useEffect(() => {
 		if (!ytextRef.current || !isDocumentSelected || isEditingFile) return;

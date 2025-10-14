@@ -6,6 +6,7 @@ import * as Y from 'yjs';
 
 import { useAuth } from '../../hooks/useAuth';
 import { useFileTree } from '../../hooks/useFileTree';
+import { useSearch } from '../../hooks/useSearch';
 import { useProperties } from '../../hooks/useProperties';
 import { useTheme } from '../../hooks/useTheme';
 import { useEditorTabs } from '../../hooks/useEditorTabs';
@@ -20,6 +21,7 @@ import type { Project } from '../../types/projects';
 import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
 import type { YjsDocUrl } from '../../types/yjs';
 import { EditorTabsProvider } from '../../contexts/EditorTabsContext';
+import { SearchProvider } from '../../contexts/SearchContext';
 import ResizablePanel from '../common/ResizablePanel';
 import EditorTabs from './EditorTabs';
 import LaTeXOutline from './LaTeXOutline';
@@ -30,6 +32,7 @@ import ProjectExportModal from '../project/ProjectExportModal';
 import DocumentExplorer from './DocumentExplorer';
 import Editor from './Editor';
 import FileExplorer from './FileExplorer';
+import SearchPanel from './SearchPanel';
 
 interface FileDocumentControllerProps {
 	documents: Document[];
@@ -102,7 +105,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	const [projectType, setProjectType] = useState<'latex' | 'typst'>('latex');
 	const propertiesRegistered = useRef(false);
 	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
-	const [activeView, setActiveView] = useState<'documents' | 'files'>('files');
+	const [activeView, setActiveView] = useState<'documents' | 'files' | 'search'>('files');
 	const [_hasNavigated, _setHasNavigated] = useState(false);
 	const [fileContent, setFileContent] = useState<string | ArrayBuffer>('');
 	const [currentEditorContent, setCurrentEditorContent] = useState<string>('');
@@ -978,9 +981,38 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 						>
 							Docs
 						</button>
+						<button
+							className={activeView === 'search' ? 'active' : ''}
+							onClick={() => setActiveView('search')}
+						>
+							Search
+						</button>
 					</div>
 
-					{activeView === 'documents' ? (
+					{activeView === 'search' ? (
+						<SearchPanel
+							onNavigateToResult={async (fileId, line, column) => {
+								const file = await getFile(fileId);
+								if (file) {
+									const content = await getFileContent(fileId);
+									if (content) {
+										// setActiveView('files');
+										handleUserFileSelect(fileId, content, file.isBinary || false);
+
+										setTimeout(() => {
+											if (line !== undefined) {
+												document.dispatchEvent(
+													new CustomEvent('codemirror-goto-line', {
+														detail: { line, fileId },
+													})
+												);
+											}
+										}, 100);
+									}
+								}
+							}}
+						/>
+					) : activeView === 'documents' ? (
 						<DocumentExplorer
 							documents={documents}
 							selectedDocId={selectedDocId}
@@ -1130,9 +1162,11 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
 const FileDocumentController: React.FC<FileDocumentControllerProps> = (props) => {
 	return (
-		<EditorTabsProvider>
-			<FileDocumentControllerContent {...props} />
-		</EditorTabsProvider>
+		<SearchProvider>
+			<EditorTabsProvider>
+				<FileDocumentControllerContent {...props} />
+			</EditorTabsProvider>
+		</SearchProvider>
 	);
 };
 
