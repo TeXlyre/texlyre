@@ -991,23 +991,38 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
 					{activeView === 'search' ? (
 						<SearchPanel
-							onNavigateToResult={async (fileId, line, column) => {
-								const file = await getFile(fileId);
-								if (file) {
-									const content = await getFileContent(fileId);
-									if (content) {
-										// setActiveView('files');
-										handleUserFileSelect(fileId, content, file.isBinary || false);
+							onNavigateToResult={async (fileId, line, column, documentId, isLinkedDocument) => {
+								if (isLinkedDocument && documentId) {
+									// Navigate to the linked document instead
+									handleDocumentSelect(documentId);
 
-										setTimeout(() => {
-											if (line !== undefined) {
-												document.dispatchEvent(
-													new CustomEvent('codemirror-goto-line', {
-														detail: { line, fileId },
-													})
-												);
-											}
-										}, 100);
+									setTimeout(() => {
+										if (line !== undefined) {
+											document.dispatchEvent(
+												new CustomEvent('codemirror-goto-line', {
+													detail: { line, documentId },
+												})
+											);
+										}
+									}, 100);
+								} else {
+									// Navigate to the file
+									const file = await getFile(fileId);
+									if (file) {
+										const content = await getFileContent(fileId);
+										if (content) {
+											handleUserFileSelect(fileId, content, file.isBinary || false);
+
+											setTimeout(() => {
+												if (line !== undefined) {
+													document.dispatchEvent(
+														new CustomEvent('codemirror-goto-line', {
+															detail: { line, fileId },
+														})
+													);
+												}
+											}, 100);
+										}
 									}
 								}
 							}}

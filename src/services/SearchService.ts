@@ -7,6 +7,8 @@ export interface SearchResult {
     filePath: string;
     matches: SearchMatch[];
     matchType: 'filename' | 'content';
+    documentId?: string;
+    isLinkedDocument?: boolean;
 }
 
 export interface SearchMatch {
@@ -45,13 +47,27 @@ class SearchService {
 
         const results: SearchResult[] = [];
         const allFiles = await fileStorageService.getAllFiles(false);
-        const textFiles = allFiles.filter(
+
+        // Separate linked files from unlinked files
+        const linkedFileIds = new Set<string>();
+        const linkedDocumentIds = new Set<string>();
+
+        allFiles.forEach(file => {
+            if (file.documentId) {
+                linkedFileIds.add(file.id);
+                linkedDocumentIds.add(file.documentId);
+            }
+        });
+
+        // Only search unlinked files
+        const unlinkedFiles = allFiles.filter(file => !file.documentId);
+        const textFiles = unlinkedFiles.filter(
             (file) => file.type === 'file' && !file.isBinary
         );
 
         if (includeFilenames) {
             const filenameResults = this.searchFilenames(
-                allFiles,
+                unlinkedFiles,
                 query,
                 caseSensitive,
                 signal
@@ -68,6 +84,54 @@ class SearchService {
                 signal
             );
             results.push(...contentResults);
+        }
+
+        // Search linked documents instead of linked files
+        if (includeContent && linkedDocumentIds.size > 0) {
+            const documentResults = await this.searchLinkedDocuments(
+                Array.from(linkedDocumentIds),
+                allFiles,
+                query,
+                caseSensitive,
+                wholeWord,
+                signal
+            );
+            results.push(...documentResults);
+        }
+
+        return results;
+    }
+
+    private async searchLinkedDocuments(
+        documentIds: string[],
+        allFiles: FileNode[],
+        query: string,
+        caseSensitive: boolean,
+        wholeWord: boolean,
+        signal: AbortSignal
+    ): Promise<SearchResult[]> {
+        const results: SearchResult[] = [];
+        const searchRegex = this.buildSearchRegex(query, caseSensitive, wholeWord);
+
+        // We need to get the document content from Yjs
+        // For now, we'll search the linked files but mark them as documents
+        const linkedFiles = allFiles.filter(file =>
+            file.documentId && documentIds.includes(file.documentId)
+        );
+
+        for (const file of linkedFiles) {
+            if (signal.aborted) break;
+
+            const result = await this.searchFileContent(file, searchRegex, signal);
+
+            if (result.matches.length > 0) {
+                // Mark this as a linked document result
+                result.isLinkedDocument = true;
+                result.documentId = file.documentId;
+                // Keep the file name but indicate it's a document
+                result.fileName = `${file.name} (Document)`;
+                results.push(result);
+            }
         }
 
         return results;

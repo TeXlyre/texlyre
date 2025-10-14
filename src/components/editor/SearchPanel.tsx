@@ -5,7 +5,13 @@ import { SearchIcon, CloseIcon, FileTextIcon } from '../common/Icons';
 
 interface SearchPanelProps {
     className?: string;
-    onNavigateToResult: (fileId: string, line?: number, column?: number) => void;
+    onNavigateToResult: (
+        fileId: string,
+        line?: number,
+        column?: number,
+        documentId?: string,
+        isLinkedDocument?: boolean
+    ) => void;
 }
 
 const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToResult }) => {
@@ -44,8 +50,14 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
         };
     }, [query, caseSensitive, wholeWord]);
 
-    const handleResultClick = (fileId: string, line?: number, column?: number) => {
-        onNavigateToResult(fileId, line, column);
+    const handleResultClick = (
+        fileId: string,
+        line?: number,
+        column?: number,
+        documentId?: string,
+        isLinkedDocument?: boolean
+    ) => {
+        onNavigateToResult(fileId, line, column, documentId, isLinkedDocument);
 
         document.dispatchEvent(
             new CustomEvent('highlight-search-in-editor', {
@@ -55,6 +67,8 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
     };
 
     const highlightMatch = (text: string, matchStart: number, matchEnd: number) => {
+        if (!text) return null;
+
         return (
             <>
                 {text.substring(0, matchStart)}
@@ -118,40 +132,63 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                             {results.length} file{results.length !== 1 ? 's' : ''} found
                         </div>
 
-                        {results.map((result) => (
-                            <div key={`${result.fileId}-${result.matchType}`} className="search-result-file">
+                        {results.map((result, resultIdx) => (
+                            <div
+                                key={`${result.fileId}-${result.matchType}-${resultIdx}`}
+                                className="search-result-file"
+                            >
                                 <div className="search-result-file-header">
                                     <FileTextIcon />
-                                    <span className="search-result-filename">{result.fileName}</span>
-                                    <span className="search-result-filepath">{result.filePath}</span>
+                                    <span className="search-result-filename">
+                                        {result.fileName || 'Untitled'}
+                                    </span>
+                                    <span className="search-result-filepath">
+                                        {result.filePath || ''}
+                                    </span>
                                 </div>
 
-                                {result.matchType === 'filename' ? (
+                                {result.matchType === 'filename' && result.matches.length > 0 ? (
                                     <div
                                         className="search-result-match"
-                                        onClick={() => handleResultClick(result.fileId)}
+                                        onClick={() => handleResultClick(
+                                            result.fileId,
+                                            undefined,
+                                            undefined,
+                                            result.documentId,
+                                            result.isLinkedDocument
+                                        )}
                                     >
                                         <span className="search-result-match-text">
                                             {highlightMatch(
-                                                result.matches[0].text,
+                                                result.matches[0].text || result.fileName,
                                                 result.matches[0].matchStart,
                                                 result.matches[0].matchEnd
                                             )}
                                         </span>
                                     </div>
-                                ) : (
+                                ) : result.matchType === 'content' && result.matches.length > 0 ? (
                                     <div className="search-result-matches">
                                         {result.matches.slice(0, 50).map((match, idx) => (
                                             <div
-                                                key={idx}
+                                                key={`${result.fileId}-${match.line}-${idx}`}
                                                 className="search-result-match"
                                                 onClick={() =>
-                                                    handleResultClick(result.fileId, match.line, match.column)
+                                                    handleResultClick(
+                                                        result.fileId,
+                                                        match.line,
+                                                        match.column,
+                                                        result.documentId,
+                                                        result.isLinkedDocument
+                                                    )
                                                 }
                                             >
                                                 <span className="search-result-line">{match.line}</span>
                                                 <span className="search-result-match-text">
-                                                    {highlightMatch(match.text, match.matchStart, match.matchEnd)}
+                                                    {highlightMatch(
+                                                        match.text || '',
+                                                        match.matchStart,
+                                                        match.matchEnd
+                                                    )}
                                                 </span>
                                             </div>
                                         ))}
@@ -161,7 +198,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                                             </div>
                                         )}
                                     </div>
-                                )}
+                                ) : null}
                             </div>
                         ))}
                     </>
