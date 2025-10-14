@@ -388,6 +388,13 @@
 	outline: 2px dashed var(--pico-primary);
 }
 
+.root-drop-indicator-note {
+	padding: var(--space-sm);
+	font-size: 0.65rem;
+	color: var(--pico-secondary);
+	border-bottom: 1px solid var(--accent-border);
+}
+
 .temp-file-indicator {
 	color: var(--pico-primary);
 	font-size: 0.8rem;

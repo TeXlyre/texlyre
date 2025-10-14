@@ -1005,7 +1005,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 							))}
 
 							{dragOverTarget === 'root' && (
-								<div className="root-drop-indicator">
+								<div className="root-drop-indicator-note">
 									Drop here to move to root directory
 								</div>
 							)}

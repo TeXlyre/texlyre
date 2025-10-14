@@ -195,7 +195,9 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                         <div className="search-results-header">
                             {results.length} file{results.length !== 1 ? 's' : ''} found
                         </div>
-
+                        <div className="search-results-note">
+                            Click once to open file or document, twice to navigate to match
+                        </div>
                         {results.map((result, resultIdx) => (
                             <div
                                 key={`${result.fileId}-${result.matchType}-${resultIdx}`}
