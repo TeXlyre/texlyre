@@ -1,7 +1,7 @@
 import type React from 'react';
 import { useEffect, useRef } from 'react';
 import { useSearch } from '../../hooks/useSearch';
-import { SearchIcon, CloseIcon, FileTextIcon } from '../common/Icons';
+import { SearchIcon, ReplaceIcon, CloseIcon, FileTextIcon } from '../common/Icons';
 
 interface SearchPanelProps {
     className?: string;
@@ -17,15 +17,22 @@ interface SearchPanelProps {
 const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToResult }) => {
     const {
         query,
+        replaceText,
         results,
         isSearching,
+        isReplacing,
         caseSensitive,
         wholeWord,
+        showReplace,
         setQuery,
+        setReplaceText,
         performSearch,
         toggleCaseSensitive,
         toggleWholeWord,
+        toggleReplace,
         clearSearch,
+        replaceInFile,
+        replaceAll,
     } = useSearch();
 
     const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -66,6 +73,20 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
         );
     };
 
+    const handleReplaceInFile = async (fileId: string, event: React.MouseEvent) => {
+        event.stopPropagation();
+        await replaceInFile(fileId);
+    };
+
+    const handleReplaceAll = async () => {
+        if (!window.confirm(`Replace all occurrences in ${results.length} files?`)) {
+            return;
+        }
+
+        const count = await replaceAll();
+        alert(`Replaced in ${count} files`);
+    };
+
     const highlightMatch = (text: string, matchStart: number, matchEnd: number) => {
         if (!text) return null;
 
@@ -81,7 +102,25 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
     return (
         <div className={`search-panel ${className}`}>
             <div className="search-panel-header">
-                <h3>Search</h3>
+                <div className="search-panel-title">
+                    <h3>Search</h3>
+                    <div className="search-mode-toggle">
+                        <button
+                            className={`mode-toggle-btn ${!showReplace ? 'active' : ''}`}
+                            onClick={() => showReplace && toggleReplace()}
+                            title="Search only"
+                        >
+                            <SearchIcon />
+                        </button>
+                        <button
+                            className={`mode-toggle-btn ${showReplace ? 'active' : ''}`}
+                            onClick={toggleReplace}
+                            title="Search and Replace"
+                        >
+                            <ReplaceIcon />
+                        </button>
+                    </div>
+                </div>
                 <button className="action-btn" onClick={clearSearch} title="Clear search">
                     <CloseIcon />
                 </button>
@@ -97,6 +136,27 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                     className="search-input"
                 />
             </div>
+
+            {showReplace && (
+                <div className="search-input-container">
+                    <ReplaceIcon />
+                    <input
+                        type="text"
+                        placeholder="Replace with..."
+                        value={replaceText}
+                        onChange={(e) => setReplaceText(e.target.value)}
+                        className="search-input"
+                    />
+                    <button
+                        className="replace-all-btn"
+                        onClick={handleReplaceAll}
+                        disabled={!query.trim() || !replaceText || results.length === 0 || isReplacing}
+                        title="Replace all"
+                    >
+                        Replace All
+                    </button>
+                </div>
+            )}
 
             <div className="search-options">
                 <button
@@ -116,17 +176,21 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
             </div>
 
             <div className="search-results">
-                {isSearching && <div className="search-loading">Searching...</div>}
+                {(isSearching || isReplacing) && (
+                    <div className="search-loading">
+                        {isSearching ? 'Searching...' : 'Replacing...'}
+                    </div>
+                )}
 
-                {!isSearching && results.length === 0 && query.trim() && (
+                {!isSearching && !isReplacing && results.length === 0 && query.trim() && (
                     <div className="search-empty">No results found</div>
                 )}
 
-                {!isSearching && query.trim() === '' && (
+                {!isSearching && !isReplacing && query.trim() === '' && (
                     <div className="search-empty">Enter a search query to find files</div>
                 )}
 
-                {!isSearching && results.length > 0 && (
+                {!isSearching && !isReplacing && results.length > 0 && (
                     <>
                         <div className="search-results-header">
                             {results.length} file{results.length !== 1 ? 's' : ''} found
@@ -145,6 +209,16 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                                     <span className="search-result-filepath">
                                         {result.filePath || ''}
                                     </span>
+                                    {showReplace && result.matchType === 'content' && !result.isLinkedDocument && (
+                                        <button
+                                            className="replace-file-btn"
+                                            onClick={(e) => handleReplaceInFile(result.fileId, e)}
+                                            disabled={!replaceText || isReplacing}
+                                            title="Replace in this file"
+                                        >
+                                            Replace
+                                        </button>
+                                    )}
                                 </div>
 
                                 {result.matchType === 'filename' && result.matches.length > 0 ? (

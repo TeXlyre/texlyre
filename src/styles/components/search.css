@@ -138,6 +138,71 @@
     font-style: italic;
 }
 
+.search-panel-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.search-mode-toggle {
+    display: flex;
+    gap: var(--space-xs);
+}
+
+.mode-toggle-btn {
+    padding: var(--space-xs);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--text-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-normal);
+    opacity: 0.5;
+}
+
+.mode-toggle-btn:hover {
+    opacity: 0.8;
+}
+
+.mode-toggle-btn.active {
+    background-color: var(--pico-primary);
+    color: var(--pico-primary-inverse);
+    opacity: 1;
+    border-color: var(--pico-primary);
+}
+
+.replace-all-btn,
+.replace-file-btn {
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid var(--pico-primary);
+    border-radius: var(--radius-sm);
+    background-color: var(--pico-primary);
+    color: var(--pico-primary-inverse);
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: opacity var(--transition-normal);
+}
+
+.replace-all-btn:hover:not(:disabled),
+.replace-file-btn:hover:not(:disabled) {
+    opacity: 0.8;
+}
+
+.replace-all-btn:disabled,
+.replace-file-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.replace-file-btn {
+    margin-left: auto;
+}
+
 .search-highlight,
 mark.search-highlight {
     background-color: yellow;

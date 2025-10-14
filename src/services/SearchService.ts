@@ -266,6 +266,71 @@ class SearchService {
         return new RegExp(pattern, flags);
     }
 
+    async replaceInFile(
+        fileId: string,
+        searchQuery: string,
+        replaceText: string,
+        options: {
+            caseSensitive?: boolean;
+            wholeWord?: boolean;
+        } = {}
+    ): Promise<boolean> {
+        const { caseSensitive = false, wholeWord = false } = options;
+
+        try {
+            const fileData = await fileStorageService.getFile(fileId);
+            if (!fileData?.content) return false;
+
+            let content: string;
+            if (typeof fileData.content === 'string') {
+                content = fileData.content;
+            } else if (fileData.content instanceof ArrayBuffer) {
+                content = new TextDecoder().decode(fileData.content);
+            } else {
+                return false;
+            }
+
+            const searchRegex = this.buildSearchRegex(searchQuery, caseSensitive, wholeWord);
+            const newContent = content.replace(searchRegex, replaceText);
+
+            if (newContent !== content) {
+                await fileStorageService.updateFileContent(fileId, newContent);
+                return true;
+            }
+
+            return false;
+        } catch (error) {
+            console.error(`Error replacing in file ${fileId}:`, error);
+            return false;
+        }
+    }
+
+    async replaceAll(
+        results: SearchResult[],
+        searchQuery: string,
+        replaceText: string,
+        options: {
+            caseSensitive?: boolean;
+            wholeWord?: boolean;
+        } = {}
+    ): Promise<number> {
+        let replacedCount = 0;
+
+        for (const result of results) {
+            if (result.matchType === 'content' && !result.isLinkedDocument) {
+                const replaced = await this.replaceInFile(
+                    result.fileId,
+                    searchQuery,
+                    replaceText,
+                    options
+                );
+                if (replaced) replacedCount++;
+            }
+        }
+
+        return replacedCount;
+    }
+
     cancel(): void {
         this.currentAbortController?.abort();
         this.currentAbortController = null;
