@@ -73,9 +73,13 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
         );
     };
 
-    const handleReplaceInFile = async (fileId: string, event: React.MouseEvent) => {
+    const handleReplaceInFile = async (
+        fileId: string,
+        event: React.MouseEvent,
+        documentId?: string
+    ) => {
         event.stopPropagation();
-        await replaceInFile(fileId);
+        await replaceInFile(fileId, documentId);
     };
 
     const handleReplaceAll = async () => {
@@ -101,62 +105,28 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
 
     return (
         <div className={`search-panel ${className}`}>
-            <div className="search-panel-header">
-                <div className="search-panel-title">
-                    <h3>Search</h3>
-                    <div className="search-mode-toggle">
-                        <button
-                            className={`mode-toggle-btn ${!showReplace ? 'active' : ''}`}
-                            onClick={() => showReplace && toggleReplace()}
-                            title="Search only"
-                        >
-                            <SearchIcon />
-                        </button>
-                        <button
-                            className={`mode-toggle-btn ${showReplace ? 'active' : ''}`}
-                            onClick={toggleReplace}
-                            title="Search and Replace"
-                        >
-                            <ReplaceIcon />
-                        </button>
-                    </div>
-                </div>
-                <button className="action-btn" onClick={clearSearch} title="Clear search">
-                    <CloseIcon />
-                </button>
-            </div>
-
-            <div className="search-input-container">
-                <SearchIcon />
-                <input
-                    type="text"
-                    placeholder="Search in files..."
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    className="search-input"
-                />
-            </div>
-
-            {showReplace && (
-                <div className="search-input-container">
-                    <ReplaceIcon />
-                    <input
-                        type="text"
-                        placeholder="Replace with..."
-                        value={replaceText}
-                        onChange={(e) => setReplaceText(e.target.value)}
-                        className="search-input"
-                    />
+            <div className="file-explorer-header">
+                <h3>Search</h3>
+                <div className="search-mode-toggle file-explorer-actions">
                     <button
-                        className="replace-all-btn"
-                        onClick={handleReplaceAll}
-                        disabled={!query.trim() || !replaceText || results.length === 0 || isReplacing}
-                        title="Replace all"
+                        className={`mode-toggle-btn ${!showReplace ? 'active' : ''}`}
+                        onClick={() => showReplace && toggleReplace()}
+                        title="Search only"
                     >
-                        Replace All
+                        <SearchIcon />
+                    </button>
+                    <button
+                        className={`mode-toggle-btn ${showReplace ? 'active' : ''}`}
+                        onClick={toggleReplace}
+                        title="Search and Replace"
+                    >
+                        <ReplaceIcon />
                     </button>
                 </div>
-            )}
+            </div>
+            <button className="action-btn" onClick={clearSearch} title="Clear search">
+                <CloseIcon />
+            </button>
 
             <div className="search-options">
                 <button
@@ -174,6 +144,36 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                     |w|
                 </button>
             </div>
+
+            <div className="search-input-container">
+                <input
+                    type="text"
+                    placeholder="Search in files..."
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="search-input"
+                />
+            </div>
+
+            {showReplace && (
+                <div className="search-input-container">
+                    <input
+                        type="text"
+                        placeholder="Replace with..."
+                        value={replaceText}
+                        onChange={(e) => setReplaceText(e.target.value)}
+                        className="search-input"
+                    />
+                    <button
+                        className="replace-all-btn"
+                        onClick={handleReplaceAll}
+                        disabled={!query.trim() || !replaceText || results.length === 0 || isReplacing}
+                        title="Replace all"
+                    >
+                        Replace All
+                    </button>
+                </div>
+            )}
 
             <div className="search-results">
                 {(isSearching || isReplacing) && (
@@ -209,12 +209,16 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                                     <span className="search-result-filepath">
                                         {result.filePath || ''}
                                     </span>
-                                    {showReplace && result.matchType === 'content' && !result.isLinkedDocument && (
+                                    {showReplace && result.matchType === 'content' && (
                                         <button
                                             className="replace-file-btn"
-                                            onClick={(e) => handleReplaceInFile(result.fileId, e)}
+                                            onClick={(e) => handleReplaceInFile(
+                                                result.fileId,
+                                                e,
+                                                result.isLinkedDocument ? result.documentId : undefined
+                                            )}
                                             disabled={!replaceText || isReplacing}
-                                            title="Replace in this file"
+                                            title={result.isLinkedDocument ? "Replace in this document" : "Replace in this file"}
                                         >
                                             Replace
                                         </button>

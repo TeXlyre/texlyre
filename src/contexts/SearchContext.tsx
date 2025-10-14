@@ -1,5 +1,5 @@
 import type React from 'react';
-import { createContext, useCallback, useState } from 'react';
+import { createContext, useCallback, useState, useEffect } from 'react';
 import { searchService, type SearchResult } from '../services/SearchService';
 
 export interface SearchContextType {
@@ -18,7 +18,7 @@ export interface SearchContextType {
     toggleWholeWord: () => void;
     toggleReplace: () => void;
     clearSearch: () => void;
-    replaceInFile: (fileId: string) => Promise<boolean>;
+    replaceInFile: (fileId: string, documentId?: string) => Promise<boolean>;
     replaceAll: () => Promise<number>;
 }
 
@@ -33,6 +33,15 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [caseSensitive, setCaseSensitive] = useState(false);
     const [wholeWord, setWholeWord] = useState(false);
     const [showReplace, setShowReplace] = useState(false);
+    const [projectId, setProjectId] = useState<string>('');
+
+    useEffect(() => {
+        const hash = window.location.hash.substring(1);
+        const yjsUrl = hash.split('&')[0];
+        if (yjsUrl.startsWith('yjs:')) {
+            setProjectId(yjsUrl.slice(4));
+        }
+    }, []);
 
     const performSearch = useCallback(async () => {
         if (!query.trim()) {
@@ -57,17 +66,29 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     }, [query, caseSensitive, wholeWord]);
 
-    const replaceInFile = useCallback(async (fileId: string): Promise<boolean> => {
+    const replaceInFile = useCallback(async (fileId: string, documentId?: string): Promise<boolean> => {
         if (!query.trim() || !replaceText) return false;
 
         setIsReplacing(true);
         try {
-            const success = await searchService.replaceInFile(
-                fileId,
-                query,
-                replaceText,
-                { caseSensitive, wholeWord }
-            );
+            let success = false;
+
+            if (documentId) {
+                success = await searchService.replaceInDocument(
+                    documentId,
+                    projectId,
+                    query,
+                    replaceText,
+                    { caseSensitive, wholeWord }
+                );
+            } else {
+                success = await searchService.replaceInFile(
+                    fileId,
+                    query,
+                    replaceText,
+                    { caseSensitive, wholeWord }
+                );
+            }
 
             if (success) {
                 await performSearch();
@@ -80,7 +101,7 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         } finally {
             setIsReplacing(false);
         }
-    }, [query, replaceText, caseSensitive, wholeWord, performSearch]);
+    }, [query, replaceText, caseSensitive, wholeWord, projectId, performSearch]);
 
     const replaceAll = useCallback(async (): Promise<number> => {
         if (!query.trim() || !replaceText) return 0;
@@ -91,6 +112,7 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 results,
                 query,
                 replaceText,
+                projectId,
                 { caseSensitive, wholeWord }
             );
 
@@ -105,7 +127,7 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         } finally {
             setIsReplacing(false);
         }
-    }, [query, replaceText, results, caseSensitive, wholeWord, performSearch]);
+    }, [query, replaceText, results, caseSensitive, wholeWord, projectId, performSearch]);
 
     const toggleCaseSensitive = useCallback(() => {
         setCaseSensitive((prev) => !prev);

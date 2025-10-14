@@ -305,10 +305,85 @@ class SearchService {
         }
     }
 
+    async replaceInDocument(
+        documentId: string,
+        projectId: string,
+        searchQuery: string,
+        replaceText: string,
+        options: {
+            caseSensitive?: boolean;
+            wholeWord?: boolean;
+        } = {}
+    ): Promise<boolean> {
+        const { caseSensitive = false, wholeWord = false } = options;
+
+        try {
+            const { IndexeddbPersistence } = await import('y-indexeddb');
+            const Y = await import('yjs');
+
+            const dbName = `texlyre-project-${projectId}`;
+            const docCollection = `${dbName}-yjs_${documentId}`;
+
+            const docYDoc = new Y.Doc();
+            const docPersistence = new IndexeddbPersistence(docCollection, docYDoc);
+
+            await new Promise<void>((resolve) => {
+                const timeout = setTimeout(() => resolve(), 2000);
+                docPersistence.once('synced', () => {
+                    clearTimeout(timeout);
+                    resolve();
+                });
+            });
+
+            const ytext = docYDoc.getText('codemirror');
+            const content = ytext.toString();
+
+            const searchRegex = this.buildSearchRegex(searchQuery, caseSensitive, wholeWord);
+            const matches: Array<{ start: number; end: number; text: string }> = [];
+
+            let match: RegExpExecArray | null;
+            searchRegex.lastIndex = 0;
+            while ((match = searchRegex.exec(content)) !== null) {
+                matches.push({
+                    start: match.index,
+                    end: match.index + match[0].length,
+                    text: match[0],
+                });
+            }
+
+            if (matches.length > 0) {
+                docYDoc.transact(() => {
+                    // Process matches in reverse order to maintain correct positions
+                    for (let i = matches.length - 1; i >= 0; i--) {
+                        const { start, end } = matches[i];
+                        ytext.delete(start, end - start);
+                        ytext.insert(start, replaceText);
+                    }
+                });
+
+                await new Promise((resolve) => setTimeout(resolve, 500));
+
+                docPersistence.destroy();
+                docYDoc.destroy();
+
+                return true;
+            }
+
+            docPersistence.destroy();
+            docYDoc.destroy();
+
+            return false;
+        } catch (error) {
+            console.error(`Error replacing in document ${documentId}:`, error);
+            return false;
+        }
+    }
+
     async replaceAll(
         results: SearchResult[],
         searchQuery: string,
         replaceText: string,
+        projectId: string,
         options: {
             caseSensitive?: boolean;
             wholeWord?: boolean;
@@ -317,13 +392,26 @@ class SearchService {
         let replacedCount = 0;
 
         for (const result of results) {
-            if (result.matchType === 'content' && !result.isLinkedDocument) {
-                const replaced = await this.replaceInFile(
-                    result.fileId,
-                    searchQuery,
-                    replaceText,
-                    options
-                );
+            if (result.matchType === 'content') {
+                let replaced = false;
+
+                if (result.isLinkedDocument && result.documentId) {
+                    replaced = await this.replaceInDocument(
+                        result.documentId,
+                        projectId,
+                        searchQuery,
+                        replaceText,
+                        options
+                    );
+                } else {
+                    replaced = await this.replaceInFile(
+                        result.fileId,
+                        searchQuery,
+                        replaceText,
+                        options
+                    );
+                }
+
                 if (replaced) replacedCount++;
             }
         }
