@@ -1,11 +1,11 @@
-// src/components/projects/ProjectToolbar.tsx
+// src/components/projects/ProjectPanel.tsx
 import type React from 'react';
 import { useState } from 'react';
 
 import type { Project } from '../../types/projects';
 import { ImportIcon, NewProjectIcon, StarIcon } from '../common/Icons';
 
-interface ProjectToolbarProps {
+interface ProjectPanelProps {
 	onCreateProject: () => void;
 	onImportProject: () => void;
 	onSearch: (query: string) => void;
@@ -16,7 +16,7 @@ interface ProjectToolbarProps {
 	availableTags: string[];
 }
 
-const ProjectToolbar: React.FC<ProjectToolbarProps> = ({
+const ProjectPanel: React.FC<ProjectPanelProps> = ({
 	onCreateProject,
 	onImportProject,
 	onSearch,
@@ -176,4 +176,4 @@ const ProjectToolbar: React.FC<ProjectToolbarProps> = ({
 	);
 };
 
-export default ProjectToolbar;
+export default ProjectPanel;

@@ -466,17 +466,15 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 	const batchDeleteFiles = useCallback(
 		async (fileIds: string[]) => {
 			try {
-				const allFiles = await fileStorageService.getAllFiles();
+				const allFiles = await fileStorageService.getAllFiles(false);
 				const filesToDelete = fileIds
 					.map((id) => allFiles.find((f) => f.id === id))
 					.filter(Boolean) as FileNode[];
 
-				// Check if any files are temporary
 				const hasTemporaryFiles = filesToDelete.some(file =>
 					isTemporaryFile(file.path)
 				);
 
-				// Check for directories and collect all children
 				const allFilesToDelete: string[] = [];
 
 				for (const file of filesToDelete) {
@@ -506,7 +504,6 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					hardDelete: hasTemporaryFiles
 				});
 
-				// Update selected file if any deleted files were selected
 				if (selectedFileId && allFilesToDelete.includes(selectedFileId)) {
 					setSelectedFileId(null);
 				}

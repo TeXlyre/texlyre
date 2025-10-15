@@ -41,16 +41,16 @@ const FileConflictModal: React.FC = () => {
 	const [currentIndex, setCurrentIndex] = useState<number>(0);
 	const [resolveCallback, setResolveCallback] = useState<
 		| ((
-				resolution:
-					| ConflictResolution
-					| DeleteConfirmation
-					| LinkConfirmation
-					| UnlinkConfirmation
-					| LinkedFileConfirmation
-					| BatchConflictResolution
-					| BatchDeleteConfirmation
-					| BatchUnlinkConfirmation,
-		  ) => void)
+			resolution:
+				| ConflictResolution
+				| DeleteConfirmation
+				| LinkConfirmation
+				| UnlinkConfirmation
+				| LinkedFileConfirmation
+				| BatchConflictResolution
+				| BatchDeleteConfirmation
+				| BatchUnlinkConfirmation,
+		) => void)
 		| null
 	>(null);
 	const [rejectCallback, setRejectCallback] = useState<(() => void) | null>(
@@ -309,7 +309,7 @@ const FileConflictModal: React.FC = () => {
 			>
 				<div className="file-conflict-content">
 					<p>
-						Are you sure you want to delete {files.length} file
+						Are you sure you want to delete {files.length} item
 						{files.length > 1 ? 's' : ''}?
 					</p>
 
@@ -354,7 +354,7 @@ const FileConflictModal: React.FC = () => {
 							className="button danger"
 							onClick={() => handleResolution('confirm')}
 						>
-							Delete {files.length} File{files.length > 1 ? 's' : ''}?
+							Delete {files.length} Item{files.length > 1 ? 's' : ''}?
 						</button>
 					</div>
 				</div>

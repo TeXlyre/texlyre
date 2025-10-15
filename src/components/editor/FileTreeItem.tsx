@@ -149,6 +149,10 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 			style={{ marginLeft: '1rem' }}
 			draggable={!isRenaming && enableInternalDragDrop}
 			onDragStart={(e) => {
+				if (isRenaming) {
+					e.preventDefault();
+					return;
+				}
 				e.stopPropagation();
 				onDragStart(e, node);
 			}}
@@ -196,22 +200,22 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 				}}
 			>
 				<span className={`file-icon ${isTemporaryFile(node.path) ? 'temp-file-icon' : ''}`}>
-				   {node.type === 'directory' ? (
-					  <FolderIcon isOpen={isExpanded} />
-				   ) : (() => {
-					  if (hasDocument) {
-						 return <FileTextIcon />;
-					  }
-					  const ViewerIcon = getViewerIcon(node);
-					  if (ViewerIcon) {
-						 return <ViewerIcon />;
-					  }
-					  return node.isBinary ? (
-						 <UnknownFileIcon />
-					  ) : (
-						 <FileIcon />
-					  );
-				   })()}
+					{node.type === 'directory' ? (
+						<FolderIcon isOpen={isExpanded} />
+					) : (() => {
+						if (hasDocument) {
+							return <FileTextIcon />;
+						}
+						const ViewerIcon = getViewerIcon(node);
+						if (ViewerIcon) {
+							return <ViewerIcon />;
+						}
+						return node.isBinary ? (
+							<UnknownFileIcon />
+						) : (
+							<FileIcon />
+						);
+					})()}
 				</span>
 
 				{isRenaming ? (

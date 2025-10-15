@@ -1216,6 +1216,45 @@ export const OptionsIcon: React.FC = () => (
 	</svg>
 );
 
+export const ReplaceIcon: React.FC = () => (
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width="16"
+		height="16"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="2"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+	>
+		<path d="M14 4c0-1.1.9-2 2-2" />
+		<path d="M20 2c1.1 0 2 .9 2 2" />
+		<path d="M22 8c0 1.1-.9 2-2 2" />
+		<path d="M16 10c-1.1 0-2-.9-2-2" />
+		<path d="m3 7 3 3 3-3" />
+		<path d="M6 10V5c0-1.7 1.3-3 3-3h7" />
+		<rect width="8" height="8" x="2" y="14" rx="2" />
+	</svg>
+);
+
+export const SearchIcon: React.FC = () => (
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width="16"
+		height="16"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="2"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+	>
+		<circle cx="11" cy="11" r="8" />
+		<path d="m21 21-4.35-4.35" />
+	</svg>
+);
+
 export const ZoomInIcon: React.FC = () => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"

@@ -229,6 +229,14 @@ class FileStorageService {
 			file.isDeleted = false;
 		}
 
+		if (file.type === 'file' && file.content !== undefined) {
+			file.size = typeof file.content === 'string'
+				? new Blob([file.content]).size
+				: file.content instanceof ArrayBuffer
+					? file.content.byteLength
+					: 0;
+		}
+
 		if (!preserveTimestamp) {
 			file.lastModified = Date.now();
 		}
@@ -340,6 +348,14 @@ class FileStorageService {
 		for (let i = 0; i < files.length; i++) {
 			const file = files[i];
 
+			if (file.type === 'file' && file.content !== undefined) {
+				file.size = typeof file.content === 'string'
+					? new Blob([file.content]).size
+					: file.content instanceof ArrayBuffer
+						? file.content.byteLength
+						: 0;
+			}
+
 			if (!preserveTimestamp) {
 				file.lastModified = Date.now();
 			}
@@ -410,7 +426,6 @@ class FileStorageService {
 							break;
 					}
 				} else {
-					// Safe overwrite when showConflictDialog is false or file is deleted
 					file.id = existingFile.id;
 					if (existingFile.isDeleted && !preserveDeletionStatus) {
 						file.isDeleted = false;
@@ -418,7 +433,6 @@ class FileStorageService {
 					filesToStore.push(file);
 				}
 			} else {
-				// New file, no conflicts
 				filesToStore.push(file);
 			}
 		}
@@ -458,7 +472,7 @@ class FileStorageService {
 
 		for (const id of fileIds) {
 			const file = await this.getFile(id);
-			if (!file) continue;
+			if (!file || file.isDeleted) continue;
 
 			if (file.documentId && !allowLinkedFileDelete) {
 				linkedFiles.push(file);
@@ -836,6 +850,10 @@ class FileStorageService {
 		const file = await this.getFile(id);
 		if (file) {
 			file.content = content;
+
+			file.size = typeof content === 'string'
+				? new Blob([content]).size
+				: content.byteLength;
 
 			if (!options.preserveTimestamp) {
 				file.lastModified = Date.now();
