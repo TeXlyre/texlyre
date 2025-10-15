@@ -28,6 +28,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
         wholeWord,
         useRegex,
         showReplace,
+        totalMatches,
         setQuery,
         setReplaceText,
         performSearch,
@@ -101,7 +102,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
             fileId,
             documentId,
             fileName: result.fileName,
-            count: 1,
+            count: result.matchCount || 0,
         });
         setShowReplaceModal(true);
     };
@@ -275,7 +276,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                 {!isSearching && !isReplacing && results.length > 0 && (
                     <>
                         <div className="search-results-header">
-                            {results.length} file{results.length !== 1 ? 's' : ''} found
+                            {totalMatches} match{totalMatches !== 1 ? 'es' : ''} in {results.length} file{results.length !== 1 ? 's' : ''}
                         </div>
                         <div className="search-results-note">
                             Click once to open file or document, twice to navigate to match

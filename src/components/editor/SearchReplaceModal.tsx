@@ -34,9 +34,9 @@ const SearchReplaceModal: React.FC<SearchReplaceModalProps> = ({
     const getMessage = () => {
         switch (replaceType) {
             case 'file':
-                return `Replace all occurrences in "${fileName}"?`;
+                return `Replace ${replaceCount} occurrence${replaceCount !== 1 ? 's' : ''} in "${fileName}"?`;
             case 'document':
-                return `Replace all occurrences in document "${fileName}"?`;
+                return `Replace ${replaceCount} occurrence${replaceCount !== 1 ? 's' : ''} in document "${fileName}"?`;
             case 'all':
                 return `Replace all occurrences in ${replaceCount} file${replaceCount !== 1 ? 's' : ''}?`;
         }

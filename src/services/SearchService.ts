@@ -10,6 +10,7 @@ export interface SearchResult {
     matchType: 'filename' | 'content';
     documentId?: string;
     isLinkedDocument?: boolean;
+    matchCount?: number;
 }
 
 export interface SearchMatch {
@@ -101,7 +102,10 @@ class SearchService {
             results.push(...documentResults);
         }
 
-        return results;
+        return results.map(result => ({
+            ...result,
+            matchCount: result.matches.length
+        }));
     }
 
     private async searchLinkedDocuments(

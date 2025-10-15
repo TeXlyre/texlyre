@@ -13,6 +13,7 @@ export interface SearchContextType {
     wholeWord: boolean;
     useRegex: boolean;
     showReplace: boolean;
+    totalMatches: number;
     setQuery: (query: string) => void;
     setReplaceText: (text: string) => void;
     performSearch: () => Promise<void>;
@@ -38,6 +39,7 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [useRegex, setUseRegex] = useState(false);
     const [showReplace, setShowReplace] = useState(false);
     const [projectId, setProjectId] = useState<string>('');
+    const [totalMatches, setTotalMatches] = useState(0);
 
     useEffect(() => {
         const hash = window.location.hash.substring(1);
@@ -50,6 +52,7 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const performSearch = useCallback(async () => {
         if (!query.trim()) {
             setResults([]);
+            setTotalMatches(0);
             return;
         }
 
@@ -63,9 +66,11 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 includeContent: true,
             });
             setResults(searchResults);
+            setTotalMatches(searchResults.reduce((sum, r) => sum + (r.matchCount || 0), 0));
         } catch (error) {
             console.error('Search error:', error);
             setResults([]);
+            setTotalMatches(0);
         } finally {
             setIsSearching(false);
         }
@@ -154,6 +159,7 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setQuery('');
         setReplaceText('');
         setResults([]);
+        setTotalMatches(0);
         searchService.cancel();
         document.dispatchEvent(new CustomEvent('clear-search-highlights'));
     }, []);
@@ -170,6 +176,7 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 wholeWord,
                 useRegex,
                 showReplace,
+                totalMatches,
                 setQuery,
                 setReplaceText,
                 performSearch,
