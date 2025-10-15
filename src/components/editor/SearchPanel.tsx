@@ -26,12 +26,14 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
         isReplacing,
         caseSensitive,
         wholeWord,
+        useRegex,
         showReplace,
         setQuery,
         setReplaceText,
         performSearch,
         toggleCaseSensitive,
         toggleWholeWord,
+        toggleRegex,
         toggleReplace,
         clearSearch,
         replaceInFile,
@@ -66,7 +68,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                 clearTimeout(searchTimeoutRef.current);
             }
         };
-    }, [query, caseSensitive, wholeWord]);
+    }, [query, caseSensitive, wholeWord, useRegex]);
 
     const handleResultClick = (
         fileId: string,
@@ -215,6 +217,13 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                     title="Match whole word"
                 >
                     |w|
+                </button>
+                <button
+                    className={`search-option-btn ${useRegex ? 'active' : ''}`}
+                    onClick={toggleRegex}
+                    title="Use regular expression"
+                >
+                    .*
                 </button>
             </div>
 

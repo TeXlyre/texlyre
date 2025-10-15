@@ -1,3 +1,4 @@
+// src/services/SearchService.ts
 import { fileStorageService } from './FileStorageService';
 import type { FileNode } from '../types/files';
 
@@ -28,6 +29,7 @@ class SearchService {
         options: {
             caseSensitive?: boolean;
             wholeWord?: boolean;
+            useRegex?: boolean;
             includeFilenames?: boolean;
             includeContent?: boolean;
         } = {}
@@ -41,6 +43,7 @@ class SearchService {
         const {
             caseSensitive = false,
             wholeWord = false,
+            useRegex = false,
             includeFilenames = true,
             includeContent = true,
         } = options;
@@ -48,7 +51,6 @@ class SearchService {
         const results: SearchResult[] = [];
         const allFiles = await fileStorageService.getAllFiles(false);
 
-        // Separate linked files from unlinked files
         const linkedFileIds = new Set<string>();
         const linkedDocumentIds = new Set<string>();
 
@@ -59,7 +61,6 @@ class SearchService {
             }
         });
 
-        // Only search unlinked files
         const unlinkedFiles = allFiles.filter(file => !file.documentId);
         const textFiles = unlinkedFiles.filter(
             (file) => file.type === 'file' && !file.isBinary
@@ -81,12 +82,12 @@ class SearchService {
                 query,
                 caseSensitive,
                 wholeWord,
+                useRegex,
                 signal
             );
             results.push(...contentResults);
         }
 
-        // Search linked documents instead of linked files
         if (includeContent && linkedDocumentIds.size > 0) {
             const documentResults = await this.searchLinkedDocuments(
                 Array.from(linkedDocumentIds),
@@ -94,6 +95,7 @@ class SearchService {
                 query,
                 caseSensitive,
                 wholeWord,
+                useRegex,
                 signal
             );
             results.push(...documentResults);
@@ -108,13 +110,12 @@ class SearchService {
         query: string,
         caseSensitive: boolean,
         wholeWord: boolean,
+        useRegex: boolean,
         signal: AbortSignal
     ): Promise<SearchResult[]> {
         const results: SearchResult[] = [];
-        const searchRegex = this.buildSearchRegex(query, caseSensitive, wholeWord);
+        const searchRegex = this.buildSearchRegex(query, caseSensitive, wholeWord, useRegex);
 
-        // We need to get the document content from Yjs
-        // For now, we'll search the linked files but mark them as documents
         const linkedFiles = allFiles.filter(file =>
             file.documentId && documentIds.includes(file.documentId)
         );
@@ -125,10 +126,8 @@ class SearchService {
             const result = await this.searchFileContent(file, searchRegex, signal);
 
             if (result.matches.length > 0) {
-                // Mark this as a linked document result
                 result.isLinkedDocument = true;
                 result.documentId = file.documentId;
-                // Keep the file name but indicate it's a document
                 result.fileName = `${file.name} (Document)`;
                 results.push(result);
             }
@@ -179,10 +178,11 @@ class SearchService {
         query: string,
         caseSensitive: boolean,
         wholeWord: boolean,
+        useRegex: boolean,
         signal: AbortSignal
     ): Promise<SearchResult[]> {
         const results: SearchResult[] = [];
-        const searchRegex = this.buildSearchRegex(query, caseSensitive, wholeWord);
+        const searchRegex = this.buildSearchRegex(query, caseSensitive, wholeWord, useRegex);
 
         for (let i = 0; i < files.length; i += this.CHUNK_SIZE) {
             if (signal.aborted) break;
@@ -258,10 +258,18 @@ class SearchService {
     private buildSearchRegex(
         query: string,
         caseSensitive: boolean,
-        wholeWord: boolean
+        wholeWord: boolean,
+        useRegex: boolean
     ): RegExp {
-        const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const pattern = wholeWord ? `\\b${escapedQuery}\\b` : escapedQuery;
+        let pattern: string;
+
+        if (useRegex) {
+            pattern = query;
+        } else {
+            const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            pattern = wholeWord ? `\\b${escapedQuery}\\b` : escapedQuery;
+        }
+
         const flags = caseSensitive ? 'g' : 'gi';
         return new RegExp(pattern, flags);
     }
@@ -273,9 +281,10 @@ class SearchService {
         options: {
             caseSensitive?: boolean;
             wholeWord?: boolean;
+            useRegex?: boolean;
         } = {}
     ): Promise<boolean> {
-        const { caseSensitive = false, wholeWord = false } = options;
+        const { caseSensitive = false, wholeWord = false, useRegex = false } = options;
 
         try {
             const fileData = await fileStorageService.getFile(fileId);
@@ -290,7 +299,7 @@ class SearchService {
                 return false;
             }
 
-            const searchRegex = this.buildSearchRegex(searchQuery, caseSensitive, wholeWord);
+            const searchRegex = this.buildSearchRegex(searchQuery, caseSensitive, wholeWord, useRegex);
             const newContent = content.replace(searchRegex, replaceText);
 
             if (newContent !== content) {
@@ -313,9 +322,10 @@ class SearchService {
         options: {
             caseSensitive?: boolean;
             wholeWord?: boolean;
+            useRegex?: boolean;
         } = {}
     ): Promise<boolean> {
-        const { caseSensitive = false, wholeWord = false } = options;
+        const { caseSensitive = false, wholeWord = false, useRegex = false } = options;
 
         try {
             const { IndexeddbPersistence } = await import('y-indexeddb');
@@ -338,7 +348,7 @@ class SearchService {
             const ytext = docYDoc.getText('codemirror');
             const content = ytext.toString();
 
-            const searchRegex = this.buildSearchRegex(searchQuery, caseSensitive, wholeWord);
+            const searchRegex = this.buildSearchRegex(searchQuery, caseSensitive, wholeWord, useRegex);
             const matches: Array<{ start: number; end: number; text: string }> = [];
 
             let match: RegExpExecArray | null;
@@ -353,11 +363,11 @@ class SearchService {
 
             if (matches.length > 0) {
                 docYDoc.transact(() => {
-                    // Process matches in reverse order to maintain correct positions
                     for (let i = matches.length - 1; i >= 0; i--) {
-                        const { start, end } = matches[i];
+                        const { start, end, text } = matches[i];
                         ytext.delete(start, end - start);
-                        ytext.insert(start, replaceText);
+                        const replacement = useRegex ? text.replace(searchRegex, replaceText) : replaceText;
+                        ytext.insert(start, replacement);
                     }
                 });
 
@@ -387,6 +397,7 @@ class SearchService {
         options: {
             caseSensitive?: boolean;
             wholeWord?: boolean;
+            useRegex?: boolean;
         } = {}
     ): Promise<number> {
         let replacedCount = 0;

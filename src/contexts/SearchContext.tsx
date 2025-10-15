@@ -1,3 +1,4 @@
+// src/contexts/SearchContext.tsx
 import type React from 'react';
 import { createContext, useCallback, useState, useEffect } from 'react';
 import { searchService, type SearchResult } from '../services/SearchService';
@@ -10,12 +11,14 @@ export interface SearchContextType {
     isReplacing: boolean;
     caseSensitive: boolean;
     wholeWord: boolean;
+    useRegex: boolean;
     showReplace: boolean;
     setQuery: (query: string) => void;
     setReplaceText: (text: string) => void;
     performSearch: () => Promise<void>;
     toggleCaseSensitive: () => void;
     toggleWholeWord: () => void;
+    toggleRegex: () => void;
     toggleReplace: () => void;
     clearSearch: () => void;
     replaceInFile: (fileId: string, documentId?: string) => Promise<boolean>;
@@ -32,6 +35,7 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [isReplacing, setIsReplacing] = useState(false);
     const [caseSensitive, setCaseSensitive] = useState(false);
     const [wholeWord, setWholeWord] = useState(false);
+    const [useRegex, setUseRegex] = useState(false);
     const [showReplace, setShowReplace] = useState(false);
     const [projectId, setProjectId] = useState<string>('');
 
@@ -54,6 +58,7 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             const searchResults = await searchService.search(query, {
                 caseSensitive,
                 wholeWord,
+                useRegex,
                 includeFilenames: true,
                 includeContent: true,
             });
@@ -64,7 +69,7 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         } finally {
             setIsSearching(false);
         }
-    }, [query, caseSensitive, wholeWord]);
+    }, [query, caseSensitive, wholeWord, useRegex]);
 
     const replaceInFile = useCallback(async (fileId: string, documentId?: string): Promise<boolean> => {
         if (!query.trim() || !replaceText) return false;
@@ -79,14 +84,14 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                     projectId,
                     query,
                     replaceText,
-                    { caseSensitive, wholeWord }
+                    { caseSensitive, wholeWord, useRegex }
                 );
             } else {
                 success = await searchService.replaceInFile(
                     fileId,
                     query,
                     replaceText,
-                    { caseSensitive, wholeWord }
+                    { caseSensitive, wholeWord, useRegex }
                 );
             }
 
@@ -101,7 +106,7 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         } finally {
             setIsReplacing(false);
         }
-    }, [query, replaceText, caseSensitive, wholeWord, projectId, performSearch]);
+    }, [query, replaceText, caseSensitive, wholeWord, useRegex, projectId, performSearch]);
 
     const replaceAll = useCallback(async (): Promise<number> => {
         if (!query.trim() || !replaceText) return 0;
@@ -113,7 +118,7 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 query,
                 replaceText,
                 projectId,
-                { caseSensitive, wholeWord }
+                { caseSensitive, wholeWord, useRegex }
             );
 
             if (count > 0) {
@@ -127,7 +132,7 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         } finally {
             setIsReplacing(false);
         }
-    }, [query, replaceText, results, caseSensitive, wholeWord, projectId, performSearch]);
+    }, [query, replaceText, results, caseSensitive, wholeWord, useRegex, projectId, performSearch]);
 
     const toggleCaseSensitive = useCallback(() => {
         setCaseSensitive((prev) => !prev);
@@ -135,6 +140,10 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const toggleWholeWord = useCallback(() => {
         setWholeWord((prev) => !prev);
+    }, []);
+
+    const toggleRegex = useCallback(() => {
+        setUseRegex((prev) => !prev);
     }, []);
 
     const toggleReplace = useCallback(() => {
@@ -159,12 +168,14 @@ export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 isReplacing,
                 caseSensitive,
                 wholeWord,
+                useRegex,
                 showReplace,
                 setQuery,
                 setReplaceText,
                 performSearch,
                 toggleCaseSensitive,
                 toggleWholeWord,
+                toggleRegex,
                 toggleReplace,
                 clearSearch,
                 replaceInFile,
