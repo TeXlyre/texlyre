@@ -458,7 +458,7 @@ class FileStorageService {
 
 		for (const id of fileIds) {
 			const file = await this.getFile(id);
-			if (!file) continue;
+			if (!file || file.isDeleted) continue;
 
 			if (file.documentId && !allowLinkedFileDelete) {
 				linkedFiles.push(file);
