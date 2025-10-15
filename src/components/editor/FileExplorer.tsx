@@ -926,7 +926,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
 				<div className="file-tree">
 					{creatingNewItem && creatingNewItem.parentPath === '/' && (
-						<div className="file-node creating-new-item">
+						<div className="file-node creating-new-item" draggable={false}>
 							<span className="file-icon">
 								{creatingNewItem.type === 'directory' ? (
 									<FolderPlusIcon />
