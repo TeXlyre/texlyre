@@ -103,7 +103,6 @@ export const EditorLoader = (
 			const contentBuffer = encoder.encode(content).buffer;
 			await fileStorageService.updateFileContent(currentFileId, contentBuffer);
 
-			// Refresh bibliography cache if this is a .bib file
 			if (fileName?.endsWith('.bib') && viewRef.current) {
 				refreshBibliographyCache(viewRef.current);
 			}
@@ -125,7 +124,6 @@ export const EditorLoader = (
 			if (linkedFile) {
 				await fileStorageService.updateFileContent(linkedFile.id, content);
 
-				// Refresh bibliography cache if this is a .bib file
 				if (linkedFile.name.endsWith('.bib') && viewRef.current) {
 					refreshBibliographyCache(viewRef.current);
 				}
