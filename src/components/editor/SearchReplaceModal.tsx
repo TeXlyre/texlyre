@@ -1,6 +1,7 @@
 // src/components/editor/SearchReplaceModal.tsx
 import type React from 'react';
 import Modal from '../common/Modal';
+import { ReplaceIcon } from '../common/Icons';
 
 interface SearchReplaceModalProps {
     isOpen: boolean;
@@ -47,6 +48,7 @@ const SearchReplaceModal: React.FC<SearchReplaceModalProps> = ({
             onClose={onClose}
             title={getTitle()}
             size="medium"
+            icon={ReplaceIcon}
         >
             <div className="search-replace-modal-content">
                 <p>{getMessage()}</p>
