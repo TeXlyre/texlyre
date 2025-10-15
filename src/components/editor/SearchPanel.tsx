@@ -52,6 +52,48 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
     } | null>(null);
 
     useEffect(() => {
+        const handleOpenSearchPanel = (event: Event) => {
+            const customEvent = event as CustomEvent;
+            const mode = customEvent.detail?.mode;
+            const selectedText = customEvent.detail?.selectedText;
+
+            if (selectedText) {
+                setQuery(selectedText);
+            }
+
+            if (mode === 'replace') {
+                if (!showReplace) {
+                    toggleReplace();
+                }
+                setTimeout(() => {
+                    const replaceInput = document.querySelectorAll('.search-input')[1] as HTMLInputElement;
+                    if (replaceInput) {
+                        replaceInput.focus();
+                        replaceInput.select();
+                    }
+                }, 50);
+            } else {
+                if (showReplace) {
+                    toggleReplace();
+                }
+                setTimeout(() => {
+                    const searchInput = document.querySelector('.search-input') as HTMLInputElement;
+                    if (searchInput) {
+                        searchInput.focus();
+                        searchInput.select();
+                    }
+                }, 50);
+            }
+        };
+
+        document.addEventListener('open-search-panel', handleOpenSearchPanel);
+
+        return () => {
+            document.removeEventListener('open-search-panel', handleOpenSearchPanel);
+        };
+    }, [showReplace, toggleReplace, setQuery]);
+
+    useEffect(() => {
         if (searchTimeoutRef.current) {
             clearTimeout(searchTimeoutRef.current);
         }
@@ -187,14 +229,14 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                     <button
                         className={`mode-toggle-btn ${!showReplace ? 'active' : ''}`}
                         onClick={() => showReplace && toggleReplace()}
-                        title="Search only"
+                        title="Search only (Ctrl+Shift+f)"
                     >
                         <SearchIcon />
                     </button>
                     <button
                         className={`mode-toggle-btn ${showReplace ? 'active' : ''}`}
                         onClick={toggleReplace}
-                        title="Search and Replace"
+                        title="Search and Replace (Ctrl+Shift+h)"
                     >
                         <ReplaceIcon />
                     </button>

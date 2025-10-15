@@ -645,6 +645,18 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		}
 	}, [isEditingFile, content, fileContent]);
 
+	useEffect(() => {
+		const handleOpenSearchPanel = () => {
+			setActiveView('search');
+		};
+
+		document.addEventListener('open-search-panel', handleOpenSearchPanel);
+
+		return () => {
+			document.removeEventListener('open-search-panel', handleOpenSearchPanel);
+		};
+	}, []);
+
 	const updateProjectLastOpened = async (docId?: string, filePath?: string) => {
 		const projectId = sessionStorage.getItem('currentProjectId');
 		if (!projectId) return;

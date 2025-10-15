@@ -1,6 +1,11 @@
 // src/hooks/useGlobalKeyboard.ts
 import { useEffect } from 'react';
 
+const getSelectedText = (): string => {
+  const selection = window.getSelection();
+  return selection?.toString().trim() || '';
+};
+
 export const useGlobalKeyboard = () => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -20,9 +25,29 @@ export const useGlobalKeyboard = () => {
 
       // F8 - Stop compilation
       if (event.key === 'F8' && !event.shiftKey && !event.ctrlKey) {
-          event.preventDefault();
-          document.dispatchEvent(new CustomEvent('trigger-stop-compilation'));
-          return;
+        event.preventDefault();
+        document.dispatchEvent(new CustomEvent('trigger-stop-compilation'));
+        return;
+      }
+
+      // Ctrl+Shift+F - Open search panel (search mode)
+      if (event.key === 'F' && event.shiftKey && event.ctrlKey) {
+        event.preventDefault();
+        const selectedText = getSelectedText();
+        document.dispatchEvent(new CustomEvent('open-search-panel', {
+          detail: { mode: 'search', selectedText }
+        }));
+        return;
+      }
+
+      // Ctrl+Shift+H - Open search panel (replace mode)
+      if (event.key === 'H' && event.shiftKey && event.ctrlKey) {
+        event.preventDefault();
+        const selectedText = getSelectedText();
+        document.dispatchEvent(new CustomEvent('open-search-panel', {
+          detail: { mode: 'replace', selectedText }
+        }));
+        return;
       }
     };
 
