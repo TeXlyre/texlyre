@@ -1,7 +1,10 @@
+// src/components/editor/SearchPanel.tsx
 import type React from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearch } from '../../hooks/useSearch';
 import { SearchIcon, ReplaceIcon, CloseIcon, FileTextIcon } from '../common/Icons';
+import SearchReplaceModal from './SearchReplaceModal';
+import { fileOperationNotificationService } from '../../services/FileOperationNotificationService';
 
 interface SearchPanelProps {
     className?: string;
@@ -36,6 +39,14 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
     } = useSearch();
 
     const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const [showReplaceModal, setShowReplaceModal] = useState(false);
+    const [pendingReplace, setPendingReplace] = useState<{
+        type: 'file' | 'document' | 'all';
+        fileId?: string;
+        documentId?: string;
+        fileName?: string;
+        count: number;
+    } | null>(null);
 
     useEffect(() => {
         if (searchTimeoutRef.current) {
@@ -79,16 +90,78 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
         documentId?: string
     ) => {
         event.stopPropagation();
-        await replaceInFile(fileId, documentId);
+
+        const result = results.find(r => r.fileId === fileId);
+        if (!result) return;
+
+        setPendingReplace({
+            type: documentId ? 'document' : 'file',
+            fileId,
+            documentId,
+            fileName: result.fileName,
+            count: 1,
+        });
+        setShowReplaceModal(true);
     };
 
     const handleReplaceAll = async () => {
-        if (!window.confirm(`Replace all occurrences in ${results.length} files?`)) {
-            return;
-        }
+        setPendingReplace({
+            type: 'all',
+            count: results.length,
+        });
+        setShowReplaceModal(true);
+    };
 
-        const count = await replaceAll();
-        alert(`Replaced in ${count} files`);
+    const handleConfirmReplace = async () => {
+        if (!pendingReplace) return;
+
+        const operationId = `replace-${Date.now()}`;
+        setShowReplaceModal(false);
+
+        try {
+            if (pendingReplace.type === 'all') {
+                fileOperationNotificationService.showLoading(
+                    operationId,
+                    `Replacing in ${pendingReplace.count} files...`
+                );
+
+                const count = await replaceAll();
+
+                fileOperationNotificationService.showSuccess(
+                    operationId,
+                    `Successfully replaced in ${count} file${count !== 1 ? 's' : ''}`
+                );
+            } else {
+                fileOperationNotificationService.showLoading(
+                    operationId,
+                    `Replacing in ${pendingReplace.fileName}...`
+                );
+
+                const success = await replaceInFile(
+                    pendingReplace.fileId!,
+                    pendingReplace.documentId
+                );
+
+                if (success) {
+                    fileOperationNotificationService.showSuccess(
+                        operationId,
+                        `Successfully replaced in ${pendingReplace.fileName}`
+                    );
+                } else {
+                    fileOperationNotificationService.showError(
+                        operationId,
+                        `No matches found in ${pendingReplace.fileName}`
+                    );
+                }
+            }
+        } catch (error) {
+            fileOperationNotificationService.showError(
+                operationId,
+                `Failed to replace: ${error.message}`
+            );
+        } finally {
+            setPendingReplace(null);
+        }
     };
 
     const highlightMatch = (text: string, matchStart: number, matchEnd: number) => {
@@ -284,6 +357,20 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                     </>
                 )}
             </div>
+
+            {showReplaceModal && pendingReplace && (
+                <SearchReplaceModal
+                    isOpen={showReplaceModal}
+                    onClose={() => {
+                        setShowReplaceModal(false);
+                        setPendingReplace(null);
+                    }}
+                    onConfirm={handleConfirmReplace}
+                    replaceCount={pendingReplace.count}
+                    replaceType={pendingReplace.type}
+                    fileName={pendingReplace.fileName}
+                />
+            )}
         </div>
     );
 };

@@ -183,7 +183,7 @@
     border: 1px solid var(--pico-primary);
     border-radius: var(--radius-sm);
     background-color: var(--pico-primary);
-    color: var(--pico-primary-inverse);
+    color: var(--pico-primary-inverse) !important;
     cursor: pointer;
     font-size: 0.75rem;
     font-weight: 500;
