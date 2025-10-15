@@ -242,9 +242,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                     </button>
                 </div>
             </div>
-            <button className="action-btn" onClick={clearSearch} title="Clear search">
-                <CloseIcon />
-            </button>
 
             <div className="search-options">
                 <button
@@ -278,6 +275,11 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                     onChange={(e) => setQuery(e.target.value)}
                     className="search-input"
                 />
+                {query && (
+                    <button className="clear-search-button" onClick={clearSearch}>
+                        ×
+                    </button>
+                )}
             </div>
 
             {showReplace && (

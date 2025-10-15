@@ -21,7 +21,7 @@ import ProjectDeleteModal from '../project/ProjectDeleteModal';
 import ProjectForm from '../project/ProjectForm';
 import ProjectImportModal from '../project/ProjectImportModal';
 import ProjectList from '../project/ProjectList';
-import ProjectToolbar from '../project/ProjectToolbar';
+import ProjectPanel from '../project/ProjectPanel';
 import SettingsButton from '../settings/SettingsButton';
 import PrivacyModal from '../common/PrivacyModal';
 import DeleteAccountModal from '../profile/DeleteAccountModal';
@@ -450,7 +450,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 					onResize={handleSidebarResize}
 					className="sidebar-container"
 				>
-					<ProjectToolbar
+					<ProjectPanel
 						onCreateProject={openCreateModal}
 						onImportProject={openImportModal}
 						onSearch={handleSearch}

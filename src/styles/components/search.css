@@ -25,6 +25,23 @@
     height: 100%;
 }
 
+.search-input-container .clear-search-button {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: var(--pico-secondary);
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .search-options {
     display: flex;
     gap: var(--space-xs);
