@@ -9,7 +9,7 @@ import { ChevronDownIcon, ChevronRightIcon, RefreshIcon, BarChartIcon } from '..
 import OutlineItem from './LaTeXOutlineItem';
 import StatisticsModal from './StatisticsModal';
 import { latexStatisticsService } from '../../services/LaTeXStatisticsService';
-import type { DocumentStatistics } from '../../types/statistics';
+import type { DocumentStatistics, StatisticsOptions } from '../../types/statistics';
 
 interface LaTeXOutlineProps {
 	content: string;
@@ -44,6 +44,14 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 	const [statistics, setStatistics] = useState<DocumentStatistics | null>(null);
 	const [statsLoading, setStatsLoading] = useState(false);
 	const [statsError, setStatsError] = useState<string | null>(null);
+	const [statsOptions, setStatsOptions] = useState<StatisticsOptions>({
+		includeFiles: true,
+		merge: false,
+		brief: false,
+		total: false,
+		sum: true,
+		verbose: 0
+	});
 
 	const targetFilePath = isEditingFile ? currentFilePath : linkedFileInfo?.filePath;
 	const hasValidFilePath = !!targetFilePath;
@@ -104,7 +112,8 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 		try {
 			const stats = await latexStatisticsService.getStatistics(
 				targetFilePath,
-				fileTree
+				fileTree,
+				statsOptions
 			);
 			setStatistics(stats);
 		} catch (error) {
@@ -154,6 +163,9 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 					statistics={statistics}
 					isLoading={statsLoading}
 					error={statsError}
+					options={statsOptions}
+					onOptionsChange={setStatsOptions}
+					onRefresh={handleShowStatistics}
 				/>
 			</div>
 		);
@@ -209,6 +221,9 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 				statistics={statistics}
 				isLoading={statsLoading}
 				error={statsError}
+				options={statsOptions}
+				onOptionsChange={setStatsOptions}
+				onRefresh={handleShowStatistics}
 			/>
 		</div>
 	);

@@ -2,7 +2,7 @@ import { WebPerlRunner, TexCount } from 'wasm-latex-tools';
 import type { FileNode } from '../types/files';
 import { fileStorageService } from './FileStorageService';
 import { fileCommentProcessor } from '../utils/fileCommentProcessor';
-import type { DocumentStatistics } from '../types/statistics';
+import type { DocumentStatistics, StatisticsOptions, FileStatistics } from '../types/statistics';
 
 class LaTeXStatisticsService {
     private runner: WebPerlRunner | null = null;
@@ -32,13 +32,16 @@ class LaTeXStatisticsService {
         this.texCount = new TexCount(this.runner, false);
     }
 
-    async getStatistics(mainFilePath: string, fileTree: FileNode[]): Promise<DocumentStatistics> {
+    async getStatistics(
+        mainFilePath: string,
+        fileTree: FileNode[],
+        options: StatisticsOptions
+    ): Promise<DocumentStatistics> {
         await this.ensureInitialized();
 
         const allFiles = this.collectFiles(fileTree);
         const normalizedPath = mainFilePath.replace(/^\/+/, '');
 
-        // Try multiple matching strategies
         const mainFile = allFiles.find(f =>
             f.path === mainFilePath ||
             f.path === `/${normalizedPath}` ||
@@ -48,8 +51,6 @@ class LaTeXStatisticsService {
         );
 
         if (!mainFile) {
-            console.error('Available files:', allFiles.map(f => ({ path: f.path, name: f.name })));
-            console.error('Looking for:', { mainFilePath, normalizedPath });
             throw new Error(`Main file not found: ${mainFilePath}`);
         }
 
@@ -62,12 +63,18 @@ class LaTeXStatisticsService {
         }
 
         const mainContent = await this.getCleanContent(mainFile);
-        const includedFiles = await this.extractIncludedFiles(mainContent, allFiles);
+        const includedFiles = options.includeFiles
+            ? await this.extractIncludedFiles(mainContent, allFiles)
+            : [];
 
         const result = await this.texCount!.count({
             input: mainContent,
-            sum: true,
-            includeFiles: includedFiles.length > 0,
+            sum: options.sum,
+            brief: options.brief,
+            total: options.total,
+            verbose: options.verbose,
+            includeFiles: options.includeFiles,
+            merge: options.merge,
             additionalFiles: includedFiles
         });
 
@@ -75,7 +82,7 @@ class LaTeXStatisticsService {
             throw new Error(result.error || 'Statistics generation failed');
         }
 
-        return this.parseStatistics(result.output);
+        return this.parseStatistics(result.output, options.merge);
     }
 
     private collectFiles(nodes: FileNode[]): FileNode[] {
@@ -136,30 +143,96 @@ class LaTeXStatisticsService {
         return files;
     }
 
-    private parseStatistics(output: string): DocumentStatistics {
+    private parseStatistics(output: string, merged: boolean): DocumentStatistics {
         const stats: DocumentStatistics = {
             words: 0,
             headers: 0,
             captions: 0,
             mathInline: 0,
-            mathDisplay: 0
+            mathDisplay: 0,
+            rawOutput: output
         };
 
         const lines = output.split('\n');
+        const fileStats: FileStatistics[] = [];
+        let currentFileStat: FileStatistics | null = null;
+
         for (const line of lines) {
-            if (line.includes('Words in text:')) {
-                stats.words = parseInt(line.split(':')[1]?.trim() || '0', 10);
+            if (line.startsWith('File:') || line.startsWith('Included file:')) {
+                if (currentFileStat) {
+                    fileStats.push(currentFileStat);
+                }
+                const filename = line.split(':')[1]?.trim() || '';
+                currentFileStat = {
+                    filename,
+                    words: 0,
+                    headers: 0,
+                    captions: 0,
+                    mathInline: 0,
+                    mathDisplay: 0,
+                    numHeaders: 0,
+                    numFloats: 0
+                };
+            } else if (line.includes('Words in text:')) {
+                const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
+                if (currentFileStat) {
+                    currentFileStat.words = value;
+                } else if (line.includes('File(s) total') || !fileStats.length) {
+                    stats.words = value;
+                }
             } else if (line.includes('Words in headers:')) {
-                stats.headers = parseInt(line.split(':')[1]?.trim() || '0', 10);
-            } else if (line.includes('Words in float captions:')) {
-                stats.captions = parseInt(line.split(':')[1]?.trim() || '0', 10);
+                const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
+                if (currentFileStat) {
+                    currentFileStat.headers = value;
+                } else if (line.includes('File(s) total') || !fileStats.length) {
+                    stats.headers = value;
+                }
+            } else if (line.includes('Words outside text') || line.includes('Words in float captions:')) {
+                const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
+                if (currentFileStat) {
+                    currentFileStat.captions = value;
+                } else if (line.includes('File(s) total') || !fileStats.length) {
+                    stats.captions = value;
+                }
             } else if (line.includes('Number of math inlines:')) {
-                stats.mathInline = parseInt(line.split(':')[1]?.trim() || '0', 10);
+                const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
+                if (currentFileStat) {
+                    currentFileStat.mathInline = value;
+                } else if (line.includes('File(s) total') || !fileStats.length) {
+                    stats.mathInline = value;
+                }
             } else if (line.includes('Number of math displayed:')) {
-                stats.mathDisplay = parseInt(line.split(':')[1]?.trim() || '0', 10);
+                const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
+                if (currentFileStat) {
+                    currentFileStat.mathDisplay = value;
+                } else if (line.includes('File(s) total') || !fileStats.length) {
+                    stats.mathDisplay = value;
+                }
+            } else if (line.includes('Number of headers:')) {
+                const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
+                if (currentFileStat) {
+                    currentFileStat.numHeaders = value;
+                } else {
+                    stats.numHeaders = value;
+                }
+            } else if (line.includes('Number of floats/tables/figures:')) {
+                const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
+                if (currentFileStat) {
+                    currentFileStat.numFloats = value;
+                } else {
+                    stats.numFloats = value;
+                }
             } else if (line.includes('Files:')) {
                 stats.files = parseInt(line.split(':')[1]?.trim() || '0', 10);
             }
+        }
+
+        if (currentFileStat) {
+            fileStats.push(currentFileStat);
+        }
+
+        if (!merged && fileStats.length > 0) {
+            stats.fileStats = fileStats;
         }
 
         return stats;
