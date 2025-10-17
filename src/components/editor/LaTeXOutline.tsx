@@ -181,9 +181,7 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 					{isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
 				</button>
 				<span className="outline-header-title">OUTLINE</span>
-				<span className="outline-section-count">
-					{sections.length}
-				</span>
+
 				<button
 					className="action-btn"
 					title="Refresh Outline"
@@ -191,6 +189,7 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 				>
 					<RefreshIcon />
 				</button>
+
 				{hasValidFilePath && (
 					<button
 						className="action-btn"
@@ -200,6 +199,10 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 						<BarChartIcon />
 					</button>
 				)}
+
+				<span className="outline-section-count">
+					{sections.length}
+				</span>
 			</div>
 
 			{!isCollapsed && (
