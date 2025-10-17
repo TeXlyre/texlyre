@@ -111,6 +111,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	const [currentEditorContent, setCurrentEditorContent] = useState<string>('');
 	const [isEditingFile, setIsEditingFile] = useState(false);
 	const [isBinaryFile, setIsBinaryFile] = useState(false);
+	const [currentFilePath, setCurrentFilePath] = useState<string | undefined>(undefined);
 	const [fileName, setFileName] = useState('');
 	const [mimeType, setMimeType] = useState<string | undefined>(undefined);
 	const [linkedDocumentId, setLinkedDocumentId] = useState<string | null>(null);
@@ -422,7 +423,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 					setFileName(file.name);
 					setMimeType(file.mimeType);
 					setLinkedDocumentId(file.documentId || null);
-
+					setCurrentFilePath(file.path);
 					// Only show one output at a time
 					if (file.name.endsWith('.tex')) {
 						setShowLatexOutput(true);
@@ -744,6 +745,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		selectFile(fileId);
 		const file = await getFile(fileId);
 		if (file) {
+			setCurrentFilePath(file.path);
 			// Handle both file types
 			if (file.name.endsWith('.tex')) {
 				setShowLatexOutput(true);
@@ -1087,6 +1089,9 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 							currentLine={currentLine}
 							onSectionClick={handleOutlineSectionClick}
 							onRefresh={handleOutlineRefresh}
+							linkedFileInfo={linkedFileInfo}
+							currentFilePath={currentFilePath}
+							isEditingFile={isEditingFile}
 						/>
 					);
 				})()}

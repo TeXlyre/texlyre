@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>WebPerl Test</title>
+</head>
+
+<body>
+    <h1>WebPerl Test</h1>
+    <div id="status">Loading Perl...</div>
+    <button id="runtest" onclick="runTest()" disabled>Run Test</button>
+    <button id="runlatex" onclick="runLatexTest()" disabled>Test LaTeX</button>
+    <h2>Output:</h2>
+    <pre id="output"></pre>
+
+    <iframe name="perlrunner" sandbox="allow-scripts" src="perlrunner.html" style="display:none;"></iframe>
+
+    <script>
+        var perlRunner;
+
+        function findPerlRunner() {
+            var pollId = window.setInterval(function () {
+                if (perlRunner) {
+                    window.clearInterval(pollId);
+                } else {
+                    if (window.frames["perlrunner"]) {
+                        window.frames["perlrunner"].postMessage({ perlRunnerDiscovery: 1 }, '*');
+                    }
+                }
+            }, 100);
+        }
+
+        window.addEventListener('message', function (event) {
+            var data = event.data;
+            if (data["perlRunnerState"]) {
+                if (data.perlRunnerState == "Ready") {
+                    perlRunner = event.source;
+                    document.getElementById('status').textContent = 'Perl is ready!';
+                    document.getElementById('runtest').disabled = false;
+                    document.getElementById('runlatex').disabled = false;
+                } else if (data.perlRunnerState == "Ended") {
+                    perlRunner = null;
+                    findPerlRunner();
+                }
+                document.getElementById('status').textContent = 'Perl is ' + data.perlRunnerState;
+            } else if (data["perlOutput"]) {
+                var output = document.getElementById('output');
+                output.textContent += data.perlOutput.data;
+            } else if (data["perlOutputFiles"]) {
+                data.perlOutputFiles.forEach(function (outp) {
+                    var output = document.getElementById('output');
+                    output.textContent += '\n=== File: ' + outp.fn + ' ===\n';
+                    output.textContent += outp.text + '\n';
+                });
+            } else if (data["perlRunnerError"]) {
+                document.getElementById('output').textContent += 'ERROR: ' + data.perlRunnerError + '\n';
+            }
+        });
+
+        function runTest() {
+            document.getElementById('output').textContent = '';
+            if (!perlRunner) {
+                document.getElementById('output').textContent = 'Perl not ready yet';
+                return;
+            }
+
+            var rp_data = {
+                argv: ['-e', 'print "Hello from Perl!\\n"; print STDERR "This is stderr\\n";']
+            };
+
+            perlRunner.postMessage({ runPerl: rp_data }, '*');
+        }
+
+        function runLatexTest() {
+            document.getElementById('output').textContent = '';
+            if (!perlRunner) {
+                document.getElementById('output').textContent = 'Perl not ready yet';
+                return;
+            }
+
+            var latexInput = '\\documentclass{article}\n\\begin{document}\nHello World\n\\end{document}';
+
+            var rp_data = {
+                inputs: [{ fn: 'test.tex', text: latexInput }],
+                outputs: ['test_formatted.tex'],
+                argv: ['/perl/latexindent.pl', 'test.tex', '-o', 'test_formatted.tex', '-s']
+            };
+
+            perlRunner.postMessage({ runPerl: rp_data }, '*');
+        }
+
+        findPerlRunner();
+    </script>
+</body>
+
+</html>

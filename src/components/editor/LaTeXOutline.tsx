@@ -3,28 +3,50 @@ import type React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useProperties } from '../../hooks/useProperties';
+import { useFileTree } from '../../hooks/useFileTree';
 import { LaTeXOutlineParser } from '../../utils/latexOutlineParser';
-import { ChevronDownIcon, ChevronRightIcon, RefreshIcon } from '../common/Icons';
+import { ChevronDownIcon, ChevronRightIcon, RefreshIcon, BarChartIcon } from '../common/Icons';
 import OutlineItem from './LaTeXOutlineItem';
+import StatisticsModal from './StatisticsModal';
+import { latexStatisticsService } from '../../services/LaTeXStatisticsService';
+import type { DocumentStatistics } from '../../types/statistics';
 
 interface LaTeXOutlineProps {
 	content: string;
 	currentLine?: number;
 	onSectionClick: (line: number) => void;
-    onRefresh?: () => Promise<void>;
+	onRefresh?: () => Promise<void>;
+	linkedFileInfo?: {
+		fileName?: string;
+		filePath?: string;
+		fileId?: string;
+	} | null;
+	currentFilePath?: string;
+	isEditingFile?: boolean;
 }
 
-const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({ 
-	content, 
-	currentLine = 1, 
+const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
+	content,
+	currentLine = 1,
 	onSectionClick,
-    onRefresh
+	onRefresh,
+	linkedFileInfo,
+	currentFilePath,
+	isEditingFile = false
 }) => {
 	const { getProperty, setProperty, registerProperty } = useProperties();
+	const { fileTree } = useFileTree();
 	const propertiesRegistered = useRef(false);
 	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 	const [isCollapsed, setIsCollapsed] = useState(true);
 	const [refreshKey, setRefreshKey] = useState(0);
+	const [showStatistics, setShowStatistics] = useState(false);
+	const [statistics, setStatistics] = useState<DocumentStatistics | null>(null);
+	const [statsLoading, setStatsLoading] = useState(false);
+	const [statsError, setStatsError] = useState<string | null>(null);
+
+	const targetFilePath = isEditingFile ? currentFilePath : linkedFileInfo?.filePath;
+	const hasValidFilePath = !!targetFilePath;
 
 	useEffect(() => {
 		if (propertiesRegistered.current) return;
@@ -72,6 +94,26 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 		setProperty('outline-collapsed', newCollapsed);
 	};
 
+	const handleShowStatistics = async () => {
+		if (!targetFilePath) return;
+
+		setShowStatistics(true);
+		setStatsLoading(true);
+		setStatsError(null);
+
+		try {
+			const stats = await latexStatisticsService.getStatistics(
+				targetFilePath,
+				fileTree
+			);
+			setStatistics(stats);
+		} catch (error) {
+			setStatsError(error instanceof Error ? error.message : 'Failed to calculate statistics');
+		} finally {
+			setStatsLoading(false);
+		}
+	};
+
 	if (sections.length === 0) {
 		return (
 			<div className="latex-outline">
@@ -90,13 +132,29 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 					>
 						<RefreshIcon />
 					</button>
+					{hasValidFilePath && (
+						<button
+							className="action-btn"
+							title="Document Statistics"
+							onClick={handleShowStatistics}
+						>
+							<BarChartIcon />
+						</button>
+					)}
 				</div>
 				{!isCollapsed && (
 					<div className="outline-empty-state">
 						<p>No sections found</p>
-						<small>Use \section{}, \subsection{}, etc.</small>
+						<small>Use \section{ }, \subsection{ }, etc.</small>
 					</div>
 				)}
+				<StatisticsModal
+					isOpen={showStatistics}
+					onClose={() => setShowStatistics(false)}
+					statistics={statistics}
+					isLoading={statsLoading}
+					error={statsError}
+				/>
 			</div>
 		);
 	}
@@ -121,8 +179,17 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 				>
 					<RefreshIcon />
 				</button>
+				{hasValidFilePath && (
+					<button
+						className="action-btn"
+						title="Document Statistics"
+						onClick={handleShowStatistics}
+					>
+						<BarChartIcon />
+					</button>
+				)}
 			</div>
-			
+
 			{!isCollapsed && (
 				<div className="outline-content">
 					{sections.map((section) => (
@@ -135,6 +202,14 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 					))}
 				</div>
 			)}
+
+			<StatisticsModal
+				isOpen={showStatistics}
+				onClose={() => setShowStatistics(false)}
+				statistics={statistics}
+				isLoading={statsLoading}
+				error={statsError}
+			/>
 		</div>
 	);
 };
