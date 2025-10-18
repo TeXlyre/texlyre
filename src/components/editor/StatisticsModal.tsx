@@ -1,4 +1,6 @@
+// src/components/editor/StatisticsModal.tsx
 import type React from 'react';
+
 import Modal from '../common/Modal';
 import type { DocumentStatistics, StatisticsOptions } from '../../types/statistics';
 import { WordCountIcon } from '../common/Icons';
