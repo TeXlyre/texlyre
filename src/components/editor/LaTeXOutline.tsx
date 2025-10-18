@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useProperties } from '../../hooks/useProperties';
 import { useFileTree } from '../../hooks/useFileTree';
 import { LaTeXOutlineParser } from '../../utils/latexOutlineParser';
-import { ChevronDownIcon, ChevronRightIcon, RefreshIcon, BarChartIcon } from '../common/Icons';
+import { ChevronDownIcon, ChevronRightIcon, RefreshIcon, WordCountIcon } from '../common/Icons';
 import OutlineItem from './LaTeXOutlineItem';
 import StatisticsModal from './StatisticsModal';
 import { latexStatisticsService } from '../../services/LaTeXStatisticsService';
@@ -144,10 +144,10 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 					{hasValidFilePath && (
 						<button
 							className="action-btn"
-							title="Document Statistics"
+							title="Word Count Statistics"
 							onClick={handleShowStatistics}
 						>
-							<BarChartIcon />
+							<WordCountIcon />
 						</button>
 					)}
 				</div>
@@ -197,10 +197,10 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 				{hasValidFilePath && (
 					<button
 						className="action-btn"
-						title="Document Statistics"
+						title="Word Count Statistics"
 						onClick={handleShowStatistics}
 					>
-						<BarChartIcon />
+						<WordCountIcon />
 					</button>
 				)}
 			</div>

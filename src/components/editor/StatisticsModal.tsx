@@ -1,7 +1,7 @@
 import type React from 'react';
 import Modal from '../common/Modal';
 import type { DocumentStatistics, StatisticsOptions } from '../../types/statistics';
-import { BarChartIcon } from '../common/Icons';
+import { WordCountIcon } from '../common/Icons';
 
 
 interface StatisticsModalProps {
@@ -135,9 +135,9 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title="Document Statistics"
+            title="Word Count Statistics"
             size="large"
-            icon={BarChartIcon}
+            icon={WordCountIcon}
         >
             <div className="statistics-modal-content">
                 <div>
