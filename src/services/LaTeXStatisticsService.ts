@@ -46,6 +46,7 @@ class LaTeXStatisticsService {
         }
 
         const mainContent = await this.getCleanContent(mainFile);
+        const mainFileName = mainFile.name || normalizedPath.split('/').pop() || 'main.tex';
         const includedFiles = options.includeFiles
             ? await this.extractIncludedFiles(mainContent, allFiles)
             : [];
@@ -56,7 +57,7 @@ class LaTeXStatisticsService {
             throw new Error(result.error || 'Statistics generation failed');
         }
 
-        return this.parseStatistics(result.output!, options.merge);
+        return this.parseStatistics(result.output!, options.merge, mainFileName);
     }
 
     private collectFiles(nodes: FileNode[]): FileNode[] {
@@ -117,14 +118,14 @@ class LaTeXStatisticsService {
         return files;
     }
 
-    private parseStatistics(output: string, merged: boolean): DocumentStatistics {
+    private parseStatistics(output: string, merged: boolean, mainFileName: string): DocumentStatistics {
         const stats: DocumentStatistics = {
             words: 0,
             headers: 0,
             captions: 0,
             mathInline: 0,
             mathDisplay: 0,
-            rawOutput: output
+            rawOutput: output.replace(/\bmain\.tex\b/g, mainFileName)
         };
 
         const lines = output.split('\n');
@@ -144,7 +145,10 @@ class LaTeXStatisticsService {
             const briefMatch = line.match(/^(\d+):\s+(?:File|Included file):\s+(.+)$/);
             if (briefMatch) {
                 const wordCount = parseInt(briefMatch[1], 10);
-                const filename = briefMatch[2].trim();
+                let filename = briefMatch[2].trim();
+                if (filename === 'main.tex') {
+                    filename = mainFileName;
+                }
 
                 const fileStat: FileStatistics = {
                     filename,
@@ -169,7 +173,10 @@ class LaTeXStatisticsService {
                 }
 
                 const fileMatch = line.match(/^(?:File|Included file):\s+(.+)$/);
-                const filename = fileMatch ? fileMatch[1].trim() : '';
+                let filename = fileMatch ? fileMatch[1].trim() : '';
+                if (filename === 'main.tex') {
+                    filename = mainFileName;
+                }
 
                 currentFileStat = {
                     filename,
