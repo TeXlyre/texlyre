@@ -7,6 +7,9 @@ module.exports = {
     globals: {
         __BASE_PATH__: '/texlyre',
     },
+    transformIgnorePatterns: [
+        'node_modules/(?!(wasm-latex-tools)/)',
+    ],
     moduleNameMapper: {
         '^@src/(.*)$': '<rootDir>/src/$1',
         '^@tests/(.*)$': '<rootDir>/tests/$1',
@@ -22,6 +25,7 @@ module.exports = {
         '^react-pdf$': '<rootDir>/tests/mocks/react-pdf.js',
         '^react-pdf/dist/esm/entry.webpack5$': '<rootDir>/tests/mocks/react-pdf.js',
         '^filepizza-client$': '<rootDir>/tests/mocks/filepizza-client.js',
+        '^wasm-latex-tools$': '<rootDir>/tests/mocks/wasm-latex-tools.js',
     },
     collectCoverageFrom: [
         'src/**/*.{ts,tsx}',
@@ -59,3 +63,4 @@ module.exports = {
     moduleDirectories: ['node_modules', '<rootDir>'],
     testTimeout: 10000,
 };
+

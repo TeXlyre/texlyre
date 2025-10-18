@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>WebPerl Runner</title>
+</head>
+
+<body>
+    <p>Perl Runner Loading...</p>
+
+    <script src="webperl.js"></script>
+    <script>
+        "use strict";
+
+        var knownClients = [];
+        var currentClient;
+        var curOutputFiles;
+        var stdbuf = [null, '', ''];
+
+        function reportErr(err) {
+            if (currentClient) {
+                currentClient.postMessage({ perlRunnerError: err }, '*');
+            } else {
+                console.error(err);
+            }
+        }
+
+        Perl.noMountIdbfs = true;
+        Perl.endAfterMain = true;
+
+        Perl.addStateChangeListener(function (from, to) {
+            if (to === "Ended" && currentClient) {
+                for (var chan = 1; chan <= 2; chan++) {
+                    if (stdbuf[chan].length) {
+                        currentClient.postMessage({
+                            perlOutput: { chan: chan, data: stdbuf[chan] }
+                        }, '*');
+                        stdbuf[chan] = '';
+                    }
+                }
+                currentClient.postMessage({
+                    perlRunnerState: Perl.state,
+                    exitStatus: Perl.exitStatus
+                }, '*');
+                for (var i = 0; i < knownClients.length; i++) {
+                    if (knownClients[i] != currentClient) {
+                        knownClients[i].postMessage({ perlRunnerState: Perl.state }, '*');
+                    }
+                }
+                if (curOutputFiles) {
+                    var ofs = curOutputFiles.map(function (file) {
+                        var of = { fn: file };
+                        if (!file) return of;
+                        try {
+                            of.text = FS.readFile(file, { encoding: "utf8" });
+                        } catch (e) {
+                            reportErr("couldn't read " + file + " because " + e);
+                        }
+                        return of;
+                    });
+                    currentClient.postMessage({ perlOutputFiles: ofs }, '*');
+                }
+            } else {
+                for (var i = 0; i < knownClients.length; i++) {
+                    knownClients[i].postMessage({ perlRunnerState: Perl.state }, '*');
+                }
+            }
+            if (to === "Ended") {
+                if (!currentClient) {
+                    console.error("Internal Error: Perl state change to Ended with no client");
+                }
+                window.location.reload(false);
+            }
+        });
+
+        Perl.output = function (str, chan) {
+            stdbuf[chan] += str;
+            var pos = stdbuf[chan].lastIndexOf("\n");
+            if (pos < 0) return;
+            var lines = stdbuf[chan].slice(0, pos + 1);
+            if (currentClient) {
+                currentClient.postMessage({ perlOutput: { chan: chan, data: lines } }, '*');
+            } else {
+                console.error("Output on", chan == 1 ? "STDOUT" : "STDERR", "with no client:", lines);
+            }
+            stdbuf[chan] = stdbuf[chan].slice(pos + 1);
+        };
+
+        function ensureDirectory(filepath) {
+            var dir = filepath.substring(0, filepath.lastIndexOf('/'));
+            if (!dir) return;
+
+            var parts = dir.split('/').filter(function (p) { return p; });
+            var path = '';
+            for (var i = 0; i < parts.length; i++) {
+                path += '/' + parts[i];
+                try {
+                    FS.mkdir(path);
+                } catch (e) {
+                    if (e.code !== 'EEXIST') {
+                        console.warn('mkdir failed for', path, e);
+                    }
+                }
+            }
+        }
+
+        function saveFile(fn, data) {
+            if (fn.substring(0, 1) != '/') {
+                fn = FS.joinPath([FS.cwd(), fn]);
+            }
+            try {
+                ensureDirectory(fn);
+                FS.writeFile(fn, data);
+            } catch (e) {
+                reportErr("couldn't write " + fn + " because " + e);
+            }
+        }
+
+        window.addEventListener('message', function (event) {
+            if (event.data["perlRunnerDiscovery"]) {
+                if (!knownClients.includes(event.source)) {
+                    knownClients.push(event.source);
+                }
+                event.source.postMessage({ perlRunnerState: Perl.state }, '*');
+            } else if (event.data["runPerl"]) {
+                if (!knownClients.includes(event.source)) {
+                    knownClients.push(event.source);
+                }
+                if (currentClient && currentClient !== event.source) {
+                    console.error("Attempt to run Perl from", event.source,
+                        "but am already running Perl for", currentClient);
+                    reportErr("Attempt to run Perl but am already running for someone else");
+                    return;
+                }
+                currentClient = event.source;
+                if (Perl.state != "Ready") {
+                    reportErr("Attempt to run Perl in state " + Perl.state);
+                    return;
+                }
+                var rp = event.data.runPerl;
+                if (rp["script"]) {
+                    saveFile(rp["script_fn"] ? rp.script_fn : 'script.pl', rp.script);
+                }
+                if (rp["inputs"]) {
+                    rp.inputs.forEach(function (inp) {
+                        if (!inp.fn) return;
+                        saveFile(inp.fn, inp.text);
+                    });
+                }
+                if (rp["cwd"]) {
+                    try {
+                        ensureDirectory(rp.cwd + '/dummy');
+                        FS.chdir(rp.cwd);
+                    } catch (e) {
+                        reportErr("couldn't change directory to " + rp.cwd + " because " + e);
+                    }
+                }
+                curOutputFiles = rp["outputs"];
+                Perl.start(rp["argv"] ? rp.argv : []);
+            } else {
+                console.warn("Perl Runner ignoring unknown message:", event.data);
+            }
+        });
+
+        Perl.init(function () {
+            Module['thisProgram'] = 'perl';
+
+            try {
+                FS.mkdir('/tmp');
+            } catch (e) {
+                if (e.code !== 'EEXIST') console.warn('Could not create /tmp:', e);
+            }
+            try {
+                FS.mkdir('/home');
+            } catch (e) {
+                if (e.code !== 'EEXIST') console.warn('Could not create /home:', e);
+            }
+            try {
+                FS.mkdir('/home/web_user');
+            } catch (e) {
+                if (e.code !== 'EEXIST') console.warn('Could not create /home/web_user:', e);
+            }
+            try {
+                FS.mkdir('/perl');
+            } catch (e) {
+                if (e.code !== 'EEXIST') console.warn('Could not create /perl:', e);
+            }
+
+            FS.currentPath = ENV.HOME;
+        });
+    </script>
+</body>
+
+</html>

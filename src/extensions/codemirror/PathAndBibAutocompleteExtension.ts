@@ -678,9 +678,21 @@ class AutocompleteProcessor {
 					: filePathCacheService.getLatexRelativePath(this.currentFilePath, filePath);
 				const fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
 
-				const displayPath = fileTypes === 'bib' && !isCurrentlyInTypstFile && relativePath.endsWith('.bib')
-					? relativePath.slice(0, -4)
-					: relativePath;
+				const displayPath = (() => {
+					if (isCurrentlyInTypstFile) {
+						return relativePath;
+					}
+
+					if (fileTypes === 'bib' && relativePath.endsWith('.bib')) {
+						return relativePath.slice(0, -4);
+					}
+
+					if (fileTypes === 'tex' && relativePath.endsWith('.tex')) {
+						return relativePath.slice(0, -4);
+					}
+
+					return relativePath;
+				})();
 
 				return {
 					fullPath: filePath,

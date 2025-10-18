@@ -6682,6 +6682,11 @@ warning@^4.0.0:
   dependencies:
     loose-envify "^1.0.0"
 
+wasm-latex-tools@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.npmjs.org/wasm-latex-tools/-/wasm-latex-tools-0.1.0.tgz"
+  integrity sha512-o3C9b67zxW/2syPvFiemE7MWPo8iOUP64c8sbvl7669sI+OKMLmyxm6O2d1aqssRsKsj0lfSFI6TQImxaJnVJw==
+
 web-streams-polyfill@^3.2.1:
   version "3.3.3"
   resolved "https://registry.npmjs.org/web-streams-polyfill/-/web-streams-polyfill-3.3.3.tgz"
