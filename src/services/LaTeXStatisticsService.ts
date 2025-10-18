@@ -1,35 +1,18 @@
-import { WebPerlRunner, TexCount } from 'wasm-latex-tools';
+// src/services/LaTeXStatisticsService.ts
+import { WasmToolsEngine } from '../extensions/wasm-tools/WasmToolsEngine';
 import type { FileNode } from '../types/files';
 import { fileStorageService } from './FileStorageService';
 import { fileCommentProcessor } from '../utils/fileCommentProcessor';
 import type { DocumentStatistics, StatisticsOptions, FileStatistics } from '../types/statistics';
 
 class LaTeXStatisticsService {
-    private runner: WebPerlRunner | null = null;
-    private texCount: TexCount | null = null;
-    private initPromise: Promise<void> | null = null;
+    private engine: WasmToolsEngine | null = null;
 
-    private async ensureInitialized(): Promise<void> {
-        if (this.texCount) return;
-
-        if (!this.initPromise) {
-            this.initPromise = this.initialize();
+    private getEngine(): WasmToolsEngine {
+        if (!this.engine) {
+            this.engine = new WasmToolsEngine();
         }
-
-        return this.initPromise;
-    }
-
-    private async initialize(): Promise<void> {
-        const basePath = window.location.origin + window.location.pathname.replace(/\/$/, '');
-
-        this.runner = new WebPerlRunner({
-            webperlBasePath: `${basePath}/core/webperl`,
-            perlScriptsPath: `${basePath}/core/perl`,
-            verbose: false
-        });
-
-        await this.runner.initialize();
-        this.texCount = new TexCount(this.runner, false);
+        return this.engine;
     }
 
     async getStatistics(
@@ -37,7 +20,7 @@ class LaTeXStatisticsService {
         fileTree: FileNode[],
         options: StatisticsOptions
     ): Promise<DocumentStatistics> {
-        await this.ensureInitialized();
+        const engine = this.getEngine();
 
         const allFiles = this.collectFiles(fileTree);
         const normalizedPath = mainFilePath.replace(/^\/+/, '');
@@ -67,22 +50,13 @@ class LaTeXStatisticsService {
             ? await this.extractIncludedFiles(mainContent, allFiles)
             : [];
 
-        const result = await this.texCount!.count({
-            input: mainContent,
-            sum: options.sum,
-            brief: options.brief,
-            total: options.total,
-            verbose: options.verbose,
-            includeFiles: options.includeFiles,
-            merge: options.merge,
-            additionalFiles: includedFiles
-        });
+        const result = await engine.count(mainContent, options, includedFiles);
 
         if (!result.success) {
             throw new Error(result.error || 'Statistics generation failed');
         }
 
-        return this.parseStatistics(result.output, options.merge);
+        return this.parseStatistics(result.output!, options.merge);
     }
 
     private collectFiles(nodes: FileNode[]): FileNode[] {
@@ -154,15 +128,49 @@ class LaTeXStatisticsService {
         };
 
         const lines = output.split('\n');
-        const fileStats: FileStatistics[] = [];
+        const fileStatsMap = new Map<string, FileStatistics>();
         let currentFileStat: FileStatistics | null = null;
+        let inVerboseOutput = false;
+        let inFileSummary = false;
+        let inTotalSummary = false;
 
-        for (const line of lines) {
-            if (line.startsWith('File:') || line.startsWith('Included file:')) {
-                if (currentFileStat) {
-                    fileStats.push(currentFileStat);
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+
+            if (line.startsWith('Total')) {
+                continue;
+            }
+
+            const briefMatch = line.match(/^(\d+):\s+(?:File|Included file):\s+(.+)$/);
+            if (briefMatch) {
+                const wordCount = parseInt(briefMatch[1], 10);
+                const filename = briefMatch[2].trim();
+
+                const fileStat: FileStatistics = {
+                    filename,
+                    words: wordCount,
+                    headers: 0,
+                    captions: 0,
+                    mathInline: 0,
+                    mathDisplay: 0,
+                    numHeaders: 0,
+                    numFloats: 0
+                };
+
+                fileStatsMap.set(filename, fileStat);
+                continue;
+            }
+
+            if (line.startsWith('File: ') || line.startsWith('Included file: ')) {
+                if (currentFileStat && (inFileSummary || !inVerboseOutput)) {
+                    if (currentFileStat.words > 0 || currentFileStat.headers > 0 || currentFileStat.captions > 0) {
+                        fileStatsMap.set(currentFileStat.filename, currentFileStat);
+                    }
                 }
-                const filename = line.split(':')[1]?.trim() || '';
+
+                const fileMatch = line.match(/^(?:File|Included file):\s+(.+)$/);
+                const filename = fileMatch ? fileMatch[1].trim() : '';
+
                 currentFileStat = {
                     filename,
                     words: 0,
@@ -173,53 +181,89 @@ class LaTeXStatisticsService {
                     numHeaders: 0,
                     numFloats: 0
                 };
-            } else if (line.includes('Words in text:')) {
-                const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
+
+                if (line.includes('[')) {
+                    inVerboseOutput = true;
+                    inFileSummary = false;
+                } else {
+                    inVerboseOutput = false;
+                    inFileSummary = true;
+                }
+                inTotalSummary = false;
+            } else if (line.includes('Encoding:')) {
+                inVerboseOutput = false;
                 if (currentFileStat) {
+                    inFileSummary = true;
+                }
+            } else if (line.includes('Sum of files:') || line.includes('File(s) total:')) {
+                if (currentFileStat && inFileSummary) {
+                    if (currentFileStat.words > 0 || currentFileStat.headers > 0 || currentFileStat.captions > 0) {
+                        fileStatsMap.set(currentFileStat.filename, currentFileStat);
+                    }
+                }
+                currentFileStat = null;
+                inFileSummary = false;
+                inVerboseOutput = false;
+                inTotalSummary = true;
+            } else if (line.includes('Subcounts:') || line.includes('Format/colour codes')) {
+                if (currentFileStat && inFileSummary) {
+                    if (currentFileStat.words > 0 || currentFileStat.headers > 0 || currentFileStat.captions > 0) {
+                        fileStatsMap.set(currentFileStat.filename, currentFileStat);
+                    }
+                }
+                currentFileStat = null;
+                inFileSummary = false;
+                inVerboseOutput = false;
+                inTotalSummary = false;
+            }
+
+            if (line.includes('Words in text:')) {
+                const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
+                if (inFileSummary && currentFileStat) {
                     currentFileStat.words = value;
-                } else if (line.includes('File(s) total') || !fileStats.length) {
+                } else if (inTotalSummary || (!inVerboseOutput && !inFileSummary)) {
                     stats.words = value;
                 }
             } else if (line.includes('Words in headers:')) {
                 const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
-                if (currentFileStat) {
+                if (inFileSummary && currentFileStat) {
                     currentFileStat.headers = value;
-                } else if (line.includes('File(s) total') || !fileStats.length) {
+                } else if (inTotalSummary || (!inVerboseOutput && !inFileSummary)) {
                     stats.headers = value;
                 }
             } else if (line.includes('Words outside text') || line.includes('Words in float captions:')) {
                 const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
-                if (currentFileStat) {
+                if (inFileSummary && currentFileStat) {
                     currentFileStat.captions = value;
-                } else if (line.includes('File(s) total') || !fileStats.length) {
+                } else if (inTotalSummary || (!inVerboseOutput && !inFileSummary)) {
                     stats.captions = value;
                 }
             } else if (line.includes('Number of math inlines:')) {
                 const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
-                if (currentFileStat) {
+                if (inFileSummary && currentFileStat) {
                     currentFileStat.mathInline = value;
-                } else if (line.includes('File(s) total') || !fileStats.length) {
+                } else if (inTotalSummary || (!inVerboseOutput && !inFileSummary)) {
                     stats.mathInline = value;
                 }
             } else if (line.includes('Number of math displayed:')) {
                 const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
-                if (currentFileStat) {
+                if (inFileSummary && currentFileStat) {
                     currentFileStat.mathDisplay = value;
-                } else if (line.includes('File(s) total') || !fileStats.length) {
+                } else if (inTotalSummary || (!inVerboseOutput && !inFileSummary)) {
                     stats.mathDisplay = value;
                 }
             } else if (line.includes('Number of headers:')) {
                 const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
-                if (currentFileStat) {
+                if (inFileSummary && currentFileStat) {
                     currentFileStat.numHeaders = value;
-                } else {
+                } else if (inTotalSummary || (!inVerboseOutput && !inFileSummary)) {
                     stats.numHeaders = value;
                 }
             } else if (line.includes('Number of floats/tables/figures:')) {
                 const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
-                if (currentFileStat) {
+                if (inFileSummary && currentFileStat) {
                     currentFileStat.numFloats = value;
-                } else {
+                } else if (inTotalSummary || (!inVerboseOutput && !inFileSummary)) {
                     stats.numFloats = value;
                 }
             } else if (line.includes('Files:')) {
@@ -227,8 +271,30 @@ class LaTeXStatisticsService {
             }
         }
 
-        if (currentFileStat) {
-            fileStats.push(currentFileStat);
+        if (currentFileStat && inFileSummary) {
+            if (currentFileStat.words > 0 || currentFileStat.headers > 0 || currentFileStat.captions > 0) {
+                fileStatsMap.set(currentFileStat.filename, currentFileStat);
+            }
+        }
+
+        const fileStats = Array.from(fileStatsMap.values());
+
+        if (fileStats.length > 0) {
+            const totalWords = fileStats.reduce((sum, file) => sum + file.words, 0);
+            const totalHeaders = fileStats.reduce((sum, file) => sum + file.headers, 0);
+            const totalCaptions = fileStats.reduce((sum, file) => sum + file.captions, 0);
+            const totalMathInline = fileStats.reduce((sum, file) => sum + file.mathInline, 0);
+            const totalMathDisplay = fileStats.reduce((sum, file) => sum + file.mathDisplay, 0);
+            const totalNumHeaders = fileStats.reduce((sum, file) => sum + file.numHeaders, 0);
+            const totalNumFloats = fileStats.reduce((sum, file) => sum + file.numFloats, 0);
+
+            if (stats.words === 0) stats.words = totalWords;
+            if (stats.headers === 0) stats.headers = totalHeaders;
+            if (stats.captions === 0) stats.captions = totalCaptions;
+            if (stats.mathInline === 0) stats.mathInline = totalMathInline;
+            if (stats.mathDisplay === 0) stats.mathDisplay = totalMathDisplay;
+            if (!stats.numHeaders) stats.numHeaders = totalNumHeaders;
+            if (!stats.numFloats) stats.numFloats = totalNumFloats;
         }
 
         if (!merged && fileStats.length > 0) {
@@ -236,6 +302,13 @@ class LaTeXStatisticsService {
         }
 
         return stats;
+    }
+
+    terminate(): void {
+        if (this.engine) {
+            this.engine.terminate();
+            this.engine = null;
+        }
     }
 }
 

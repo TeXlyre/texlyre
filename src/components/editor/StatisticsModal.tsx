@@ -140,21 +140,39 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({
             icon={BarChartIcon}
         >
             <div className="statistics-modal-content">
-                <StatisticsOptionsPanel
-                    includeFiles={options.includeFiles}
-                    merge={options.merge}
-                    brief={options.brief}
-                    total={options.total}
-                    sum={options.sum}
-                    verbose={options.verbose}
-                    onIncludeFilesChange={(value) => onOptionsChange({ ...options, includeFiles: value })}
-                    onMergeChange={(value) => onOptionsChange({ ...options, merge: value })}
-                    onBriefChange={(value) => onOptionsChange({ ...options, brief: value })}
-                    onTotalChange={(value) => onOptionsChange({ ...options, total: value })}
-                    onSumChange={(value) => onOptionsChange({ ...options, sum: value })}
-                    onVerboseChange={(value) => onOptionsChange({ ...options, verbose: value })}
-                />
-
+                <div>
+                    <StatisticsOptionsPanel
+                        includeFiles={options.includeFiles}
+                        merge={options.merge}
+                        brief={options.brief}
+                        total={options.total}
+                        sum={options.sum}
+                        verbose={options.verbose}
+                        onIncludeFilesChange={(value) => onOptionsChange({ ...options, includeFiles: value })}
+                        onMergeChange={(value) => onOptionsChange({ ...options, merge: value })}
+                        onBriefChange={(value) => onOptionsChange({ ...options, brief: value })}
+                        onTotalChange={(value) => onOptionsChange({ ...options, total: value })}
+                        onSumChange={(value) => onOptionsChange({ ...options, sum: value })}
+                        onVerboseChange={(value) => onOptionsChange({ ...options, verbose: value })}
+                    />
+                    <div className="modal-actions">
+                        <button
+                            type="button"
+                            className="button primary"
+                            onClick={handleRefresh}
+                            disabled={isLoading}
+                        >
+                            Recalculate
+                        </button>
+                        <button
+                            type="button"
+                            className="button secondary"
+                            onClick={onClose}
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
                 {isLoading && (
                     <div className="statistics-loading">
                         <div className="loading-spinner" />
@@ -263,23 +281,7 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({
                     </div>
                 )}
 
-                <div className="modal-actions">
-                    <button
-                        type="button"
-                        className="button primary"
-                        onClick={handleRefresh}
-                        disabled={isLoading}
-                    >
-                        Recalculate
-                    </button>
-                    <button
-                        type="button"
-                        className="button secondary"
-                        onClick={onClose}
-                    >
-                        Close
-                    </button>
-                </div>
+
             </div>
         </Modal>
     );

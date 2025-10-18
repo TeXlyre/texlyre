@@ -190,6 +190,10 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 					<RefreshIcon />
 				</button>
 
+				<span className="outline-section-count">
+					{sections.length}
+				</span>
+
 				{hasValidFilePath && (
 					<button
 						className="action-btn"
@@ -199,10 +203,6 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 						<BarChartIcon />
 					</button>
 				)}
-
-				<span className="outline-section-count">
-					{sections.length}
-				</span>
 			</div>
 
 			{!isCollapsed && (

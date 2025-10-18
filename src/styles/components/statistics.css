@@ -37,6 +37,10 @@
     overflow-y: auto;
 }
 
+.statistics-modal-content .modal-actions {
+    justify-content: flex-start;
+}
+
 .statistics-options-section {
     display: flex;
     flex-direction: column;
