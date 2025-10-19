@@ -65,6 +65,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const pageHeights = useRef<Map<number, number>>(new Map());
 	const contentElRef = useRef<HTMLDivElement>(null);
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
+	const isPageRenderedRef = useRef<Set<number>>(new Set());
 	const [fitMode, setFitMode] = useState<'fit-width' | 'fit-height'>('fit-width');
 	const BUFFER_PAGES = 2;
 
@@ -153,6 +154,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			if (!isEditingPageInput) setPageInput('1');
 			setIsLoading(false);
 			setError(null);
+			isPageRenderedRef.current.clear();
 		},
 		[isEditingPageInput],
 	);
@@ -162,13 +164,44 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		setIsLoading(false);
 	}, []);
 
+	const onPageLoadSuccess = useCallback((page: any) => {
+		const pageNum = page.pageNumber;
+		const viewport = page.getViewport({ scale: 1.0 });
+
+		pageWidths.current.set(pageNum, viewport.width);
+		pageHeights.current.set(pageNum, viewport.height);
+
+		setPageHeightMap(prev => {
+			const newMap = new Map(prev);
+			const newHeight = viewport.height * scale + 20;
+			if (prev.get(pageNum) !== newHeight) {
+				newMap.set(pageNum, newHeight);
+				return newMap;
+			}
+			return prev;
+		});
+	}, [scale]);
+
+	useEffect(() => {
+		if (pageHeights.current.size === 0) return;
+
+		setPageHeightMap(prev => {
+			const newMap = new Map();
+			pageHeights.current.forEach((height, pageNum) => {
+				newMap.set(pageNum, height * scale + 20);
+			});
+			return newMap.size > 0 ? newMap : prev;
+		});
+	}, [scale]);
+
 	const getPageTop = useCallback((pageNum: number): number => {
 		let height = 0;
 		for (let i = 1; i < pageNum; i++) {
-			height += pageHeightMap.get(i) || 842 * scale + 20;
+			const baseHeight = pageHeights.current.get(i) || 842;
+			height += baseHeight * scale + 20;
 		}
 		return height;
-	}, [pageHeightMap, scale]);
+	}, [scale]);
 
 	const handlePreviousPage = useCallback(() => {
 		if (scrollView) {
@@ -341,7 +374,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		let foundStart = false;
 
 		for (let i = 1; i <= numPages; i++) {
-			const pageHeight = pageHeightMap.get(i) || 842 * scale + 20;
+			const pageHeight = pageHeightMap.get(i) || (pageHeights.current.get(i) || 842) * scale + 20;
 			const pageTop = accumulatedHeight;
 			const pageBottom = accumulatedHeight + pageHeight;
 
@@ -381,7 +414,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		if (scrollView) {
 			calculateVisibleRange();
 		}
-	}, [scrollView, numPages, pageHeightMap, scale, calculateVisibleRange]);
+	}, [scrollView, numPages, scale, calculateVisibleRange]);
 
 	useEffect(() => {
 		if (!scrollView || !scrollContainerRef.current) return;
@@ -626,7 +659,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 								Array.from(new Array(numPages), (_, index) => {
 									const pageNumber = index + 1;
 									const shouldRender = pageNumber >= renderRange.start && pageNumber <= renderRange.end;
-									const estimatedHeight = pageHeightMap.get(pageNumber) || 842 * scale + 20;
+									const estimatedHeight = pageHeightMap.get(pageNumber) || (pageHeights.current.get(pageNumber) || 842) * scale + 20;
 
 									return (
 										<div
@@ -648,6 +681,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 													scale={scale}
 													renderTextLayer={pdfRendererTextSelection}
 													renderAnnotationLayer={true}
+													onLoadSuccess={onPageLoadSuccess}
 													loading={
 														<div className="pdf-page-loading">
 															Loading page {pageNumber}...
@@ -665,6 +699,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 										scale={scale}
 										renderTextLayer={pdfRendererTextSelection}
 										renderAnnotationLayer={true}
+										onLoadSuccess={onPageLoadSuccess}
 										loading={
 											<div className="pdf-page-loading">Loading page...</div>
 										}
