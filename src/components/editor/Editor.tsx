@@ -21,11 +21,13 @@ import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
 import { copyCleanTextToClipboard } from '../../utils/clipboardUtils';
 import { fileCommentProcessor } from '../../utils/fileCommentProcessor';
 import { arrayBufferToString } from '../../utils/fileUtils';
+import { TextDiffUtils } from '../../utils/textDiffUtils';
 import CommentPanel from '../comments/CommentPanel';
 import CommentToggleButton from '../comments/CommentToggleButton';
 import LSPToggleButton from '../lsp/LSPToggleButton';
 import LSPPanel from '../lsp/LSPPanel';
 import CommentModal from '../comments/CommentModal';
+import ContentFormatterButton from './ContentFormatterButton';
 import {
 	CopyIcon,
 	DownloadIcon,
@@ -224,6 +226,37 @@ const EditorContent: React.FC<{
 			};
 		}, [viewRef, isViewOnly, addComment, updateComments]);
 
+		const handleFormattedContent = (formatted: string) => {
+			if (!viewRef.current) return;
+
+			// IMPORTANT: Always get the current content from the editor view
+			const currentContent = viewRef.current.state.doc.toString();
+
+			// Don't apply if content is already formatted
+			if (currentContent === formatted) {
+				return;
+			}
+
+			if (isEditingFile) {
+				// For files, apply changes directly to the editor
+				const changes = TextDiffUtils.computeChanges(currentContent, formatted);
+				if (changes.length > 0) {
+					viewRef.current.dispatch({
+						changes: changes
+					});
+				}
+			} else if (!isEditingFile && documentId && changeDoc) {
+				// For linked documents, only update through the editor view
+				// The Yjs sync will handle propagation automatically
+				const changes = TextDiffUtils.computeChanges(currentContent, formatted);
+				if (changes.length > 0) {
+					viewRef.current.dispatch({
+						changes: changes
+					});
+				}
+			}
+		};
+
 		const tooltipInfo =
 			isEditingFile && fileName
 				? [
@@ -297,6 +330,16 @@ const EditorContent: React.FC<{
 		const headerControls =
 			isEditingFile && fileName ? (
 				<>
+					{(fileName.endsWith('.tex') || fileName.endsWith('.typ') || fileName.endsWith('.typst')) && !isViewOnly && (
+						<PluginControlGroup>
+							<ContentFormatterButton
+								getCurrentContent={() => viewRef.current?.state.doc.toString() || ''}
+								contentType={fileName.endsWith('.tex') ? 'latex' : 'typst'}
+								onFormat={handleFormattedContent}
+							/>
+						</PluginControlGroup>
+					)}
+
 					<PluginControlGroup>
 						{!isViewOnly && onSave && (
 							<button
@@ -331,7 +374,6 @@ const EditorContent: React.FC<{
 						)}
 					</PluginControlGroup>
 
-					{/* LSP Plugin Controls */}
 					{availableLSPPlugins.length > 0 && (
 						<PluginControlGroup>
 							{availableLSPPlugins.map(plugin => (
@@ -346,6 +388,15 @@ const EditorContent: React.FC<{
 				</>
 			) : !isEditingFile && linkedFileInfo && !showUnlinkedNotice ? (
 				<>
+					{(linkedFileInfo.fileName?.endsWith('.tex') || linkedFileInfo.fileName?.endsWith('.typ') || linkedFileInfo.fileName?.endsWith('.typst')) && !isViewOnly && (
+						<PluginControlGroup>
+							<ContentFormatterButton
+								getCurrentContent={() => viewRef.current?.state.doc.toString() || ''}
+								contentType={linkedFileInfo.fileName.endsWith('.tex') ? 'latex' : 'typst'}
+								onFormat={handleFormattedContent}
+							/>
+						</PluginControlGroup>
+					)}
 					<PluginControlGroup>
 						{onSaveDocument && (
 							<button
@@ -377,7 +428,6 @@ const EditorContent: React.FC<{
 							<CommentToggleButton className="header-comment-button" />
 						)}
 					</PluginControlGroup>
-					{/* LSP Plugin Controls for linked files */}
 					{linkedFileInfo?.fileName && (() => {
 						const linkedFileExtension = linkedFileInfo.fileName.split('.').pop()?.toLowerCase();
 						const linkedLSPPlugins = linkedFileExtension ?
@@ -414,7 +464,6 @@ const EditorContent: React.FC<{
 						)}
 					</PluginControlGroup>
 
-					{/* LSP Plugin Controls for documents (detect LaTeX content) */}
 					{textContent?.includes('\\') && (() => {
 						const texLSPPlugins = pluginRegistry.getLSPPluginsForFileType('tex');
 						return texLSPPlugins.length > 0 && (

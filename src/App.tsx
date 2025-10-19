@@ -34,6 +34,7 @@ import './styles/components/project.css';
 import './styles/components/share-project.css';
 import './styles/components/latex-typst-templates.css'
 import './styles/components/statistics.css'
+import './styles/components/formatter.css'
 import './styles/components/url-metadata.css'
 import './styles/components/lsp.css';
 import './styles/components/chat.css';

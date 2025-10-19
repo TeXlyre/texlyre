@@ -9,6 +9,7 @@ import { FileSyncProvider } from '../../contexts/FileSyncContext';
 import { FileTreeProvider } from '../../contexts/FileTreeContext';
 import { LaTeXProvider } from '../../contexts/LaTeXContext';
 import { TypstProvider } from '../../contexts/TypstContext';
+import { ContentFormatterProvider } from '../../contexts/ContentFormatterContext';
 import { useAuth } from '../../hooks/useAuth';
 import { useLaTeX } from '../../hooks/useLaTeX';
 import { useTypst } from '../../hooks/useTypst';
@@ -671,7 +672,9 @@ const EditorApp: React.FC<EditorAppProps> = (props) => {
 					<FileSyncProvider docUrl={props.docUrl}>
 						<LaTeXProvider>
 							<TypstProvider>
-								<EditorAppView {...props} />
+								<ContentFormatterProvider>
+									<EditorAppView {...props} />
+								</ContentFormatterProvider>
 							</TypstProvider>
 						</LaTeXProvider>
 					</FileSyncProvider>
