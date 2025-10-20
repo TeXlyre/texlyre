@@ -345,7 +345,7 @@ export const EditorLoader = (
 
 		if (isLatexFile || isBibFile || isTypstFile) {
 			const fileExtension = fileName?.split('.').pop()?.toLowerCase() ||
-				(isLatexFile ? 'tex' : isBibFile ? 'bib' : 'typ');
+				(isTypstFile ? 'typ' : isBibFile ? 'bib' : 'tex');
 			const allLSPPlugins = pluginRegistry.getLSPPluginsForFileType(fileExtension);
 
 			// Filter to only enabled plugins

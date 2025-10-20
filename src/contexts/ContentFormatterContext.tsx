@@ -25,8 +25,8 @@ export const ContentFormatterProvider: React.FC<ContentFormatterProviderProps> =
     const [latexOptions, setLatexOptions] = useState<LatexFormatOptions>({
         wrap: true,
         wraplen: 80,
-        tabsize: 2,
-        usetabs: false
+        tabsize: 1,
+        usetabs: true
     });
     const [typstOptions, setTypstOptions] = useState<TypstFormatOptions>({});
 

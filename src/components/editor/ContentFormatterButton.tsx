@@ -87,6 +87,10 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
 
             {isDropdownOpen && contentType === 'latex' && (
                 <div className="formatter-dropdown">
+
+                    <div className="format-note warning-message">
+                        <p>⚠️ Tex-Fmt is <b>experimental</b> and may not preserve all LaTeX constructs (e.g., <code>\verb</code> commands).</p>
+                    </div>
                     <div className="format-option">
                         <label>
                             <input

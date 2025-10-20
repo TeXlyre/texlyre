@@ -62,8 +62,20 @@
 
 .format-option input[type="number"] {
     width: 60px;
+    height: var(--space-lg);
     margin-left: auto;
     padding: var(--space-xs);
     border: 1px solid var(--accent-border);
     border-radius: var(--radius-sm);
+}
+
+.format-note {
+    margin-top: var(--space-sm);
+    background-color: color-mix(in srgb, var(--color-warning) 20%, white);
+    padding: var(--space-xs);
+    font-size: 0.85em;
+}
+
+.format-note p {
+    margin: 0;
 }
