@@ -314,6 +314,14 @@ footer {
 	color: var(--text-color);
 }
 
+.info-message a {
+	color: var(--pico-primary);
+}
+
+.info-message kbd {
+	background-color: var(--pico-primary-focus);
+}
+
 .info-message ul {
 	margin: 0;
 	padding-left: var(--space-lg);

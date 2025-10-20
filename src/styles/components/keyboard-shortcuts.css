@@ -1,0 +1,81 @@
+.shortcuts-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+.shortcuts-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.shortcuts-section h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-color);
+    padding-bottom: var(--space-sm);
+    border-bottom: 2px solid var(--pico-primary);
+}
+
+.section-description {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--pico-secondary);
+    font-style: italic;
+}
+
+.shortcuts-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.shortcut-item {
+    display: grid;
+    grid-template-columns: minmax(300px, auto) 1fr;
+    gap: var(--space-lg);
+    align-items: center;
+    padding: var(--space-sm);
+    background-color: var(--pico-secondary-background);
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-normal);
+}
+
+.shortcut-item:hover {
+    background-color: var(--pico-primary-focus);
+}
+
+.shortcut-keys {
+    display: flex;
+    gap: var(--space-xs);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.shortcut-keys kbd {
+    display: inline-block;
+    padding: var(--space-xs) var(--space-sm);
+    font-family: var(--editor-font-family, monospace);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-color);
+    background-color: var(--pico-background);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 2px 0 var(--accent-border);
+    white-space: nowrap;
+}
+
+.shortcut-description {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+    .shortcut-item {
+        grid-template-columns: 1fr;
+        gap: var(--space-sm);
+    }
+}
