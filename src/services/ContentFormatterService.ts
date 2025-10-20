@@ -65,21 +65,8 @@ class ContentFormatterService {
         }
     }
 
-    private areNotificationsEnabled(): boolean {
-        const userId = localStorage.getItem('texlyre-current-user');
-        const storageKey = userId
-            ? `texlyre-user-${userId}-settings`
-            : 'texlyre-settings';
-        try {
-            const settings = JSON.parse(localStorage.getItem(storageKey) || '{}');
-            return settings['formatter-notifications'] !== false;
-        } catch {
-            return true;
-        }
-    }
-
-    showLoadingNotification(message: string, operationId?: string): void {
-        if (this.areNotificationsEnabled()) {
+    showLoadingNotification(message: string, operationId?: string, type?: 'latex' | 'typst'): void {
+        if (this.areNotificationsEnabled(type)) {
             notificationService.showLoading(message, operationId);
         }
     }
@@ -89,9 +76,10 @@ class ContentFormatterService {
         options: {
             operationId?: string;
             duration?: number;
+            type?: 'latex' | 'typst';
         } = {}
     ): void {
-        if (this.areNotificationsEnabled()) {
+        if (this.areNotificationsEnabled(options.type)) {
             notificationService.showSuccess(message, options);
         }
     }
@@ -101,10 +89,31 @@ class ContentFormatterService {
         options: {
             operationId?: string;
             duration?: number;
+            type?: 'latex' | 'typst';
         } = {}
     ): void {
-        if (this.areNotificationsEnabled()) {
+        if (this.areNotificationsEnabled(options.type)) {
             notificationService.showError(message, options);
+        }
+    }
+
+    private areNotificationsEnabled(type?: 'latex' | 'typst'): boolean {
+        const userId = localStorage.getItem('texlyre-current-user');
+        const storageKey = userId
+            ? `texlyre-user-${userId}-settings`
+            : 'texlyre-settings';
+        try {
+            const settings = JSON.parse(localStorage.getItem(storageKey) || '{}');
+            if (type === 'latex') {
+                return settings['formatter-latex-notifications'] !== false;
+            }
+            if (type === 'typst') {
+                return settings['formatter-typst-notifications'] !== false;
+            }
+            return settings['formatter-latex-notifications'] !== false ||
+                settings['formatter-typst-notifications'] !== false;
+        } catch {
+            return true;
         }
     }
 }
