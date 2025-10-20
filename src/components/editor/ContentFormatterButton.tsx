@@ -43,6 +43,29 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    useEffect(() => {
+        const handleRequestFormat = async (event: Event) => {
+            const customEvent = event as CustomEvent;
+            const { content, contentType: requestedType } = customEvent.detail;
+
+            if (requestedType === contentType && content) {
+                const formatted = contentType === 'latex'
+                    ? await formatLatex(content, latexOptions)
+                    : await formatTypst(content, typstOptions);
+
+                if (formatted) {
+                    onFormat(formatted);
+                }
+            }
+        };
+
+        document.addEventListener('request-format', handleRequestFormat);
+
+        return () => {
+            document.removeEventListener('request-format', handleRequestFormat);
+        };
+    }, [contentType, formatLatex, formatTypst, latexOptions, typstOptions, onFormat]);
+
     const handleFormat = async () => {
         if (disabled || isFormatting) return;
 
@@ -70,7 +93,7 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
                     className={`control-button format-button ${isFormatting ? 'formatting' : ''}`}
                     onClick={handleFormat}
                     disabled={disabled || isFormatting}
-                    title="Format Content"
+                    title="Format Content (Ctrl+Shift+I)"
                 >
                     {isFormatting ? <LoaderIcon /> : <TextFormatterIcon />}
                 </button>

@@ -493,6 +493,36 @@ export const EditorLoader = (
 			extensions.push(commentSystemExtension);
 		}
 
+		const formatKeymap = keymap.of([
+			{
+				key: 'Ctrl-Shift-i',
+				run: (view) => {
+					if (isViewOnly) return false;
+
+					const hasFormatter = (isLatexFile || isTypstFile || isBibFile);
+					if (!hasFormatter) return false;
+
+					const content = view.state.doc.toString();
+					const contentType = isTypstFile ? 'typst' : 'latex';
+
+					document.dispatchEvent(
+						new CustomEvent('trigger-format', {
+							detail: {
+								content,
+								contentType,
+								fileId: currentFileId,
+								documentId,
+								view
+							}
+						})
+					);
+
+					return true;
+				},
+			},
+		]);
+		extensions.push(formatKeymap);
+
 		const saveKeymap = keymap.of([
 			{
 				key: 'Ctrl-s',

@@ -226,6 +226,32 @@ const EditorContent: React.FC<{
 			};
 		}, [viewRef, isViewOnly, addComment, updateComments]);
 
+		useEffect(() => {
+			const handleTriggerFormat = async (event: Event) => {
+				const customEvent = event as CustomEvent;
+				const { contentType, fileId: eventFileId, documentId: eventDocId } = customEvent.detail;
+
+				const isTarget = (isEditingFile && eventFileId === fileId) ||
+					(!isEditingFile && eventDocId === documentId);
+
+				if (isTarget && viewRef.current) {
+					const currentContent = viewRef.current.state.doc.toString();
+
+					document.dispatchEvent(
+						new CustomEvent('request-format', {
+							detail: { content: currentContent, contentType }
+						})
+					);
+				}
+			};
+
+			document.addEventListener('trigger-format', handleTriggerFormat);
+
+			return () => {
+				document.removeEventListener('trigger-format', handleTriggerFormat);
+			};
+		}, [isEditingFile, fileId, documentId, viewRef]);
+
 		const handleFormattedContent = (formatted: string) => {
 			if (!viewRef.current) return;
 
