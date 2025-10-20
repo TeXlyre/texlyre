@@ -1,8 +1,9 @@
 // src/contexts/ContentFormatterContext.tsx
 import type React from 'react';
 import { createContext, ReactNode, useCallback, useState } from 'react';
-import { contentFormatterService, LatexFormatOptions, TypstFormatOptions } from '../services/ContentFormatterService';
 import { nanoid } from 'nanoid';
+
+import { contentFormatterService, LatexFormatOptions, TypstFormatOptions } from '../services/ContentFormatterService';
 
 interface ContentFormatterContextType {
     isFormatting: boolean;
@@ -28,7 +29,12 @@ export const ContentFormatterProvider: React.FC<ContentFormatterProviderProps> =
         tabsize: 1,
         usetabs: true
     });
-    const [typstOptions, setTypstOptions] = useState<TypstFormatOptions>({});
+    const [typstOptions, setTypstOptions] = useState<TypstFormatOptions>({
+        lineWidth: 80,
+        indentWidth: 2,
+        reorderImportItems: true,
+        wrapText: false
+    });
 
     const formatLatex = useCallback(async (
         content: string,

@@ -1,21 +1,24 @@
 // src/extensions/wasm-tools/WasmToolsEngine.ts
 import { WebPerlRunner, TexCount, TexFmt } from 'wasm-latex-tools';
+import { TypstyleEngine, TypstyleOptions } from './TypstyleEngine';
 
 const BASE_PATH = __BASE_PATH__;
 
-type WasmEngine = 'webperl' | 'texfmt' | 'all';
+type WasmEngine = 'webperl' | 'texfmt' | 'typstyle' | 'all';
 
 export class WasmToolsEngine {
     private runner: WebPerlRunner | null = null;
     private texCount: TexCount | null = null;
     private texFmt: TexFmt | null = null;
+    private typstyle: TypstyleEngine | null = null;
     private initPromise: Promise<void> | null = null;
     private enabledEngines: Set<WasmEngine> = new Set();
 
     private async ensureInitialized(engine: WasmEngine = 'webperl'): Promise<void> {
         if (engine === 'webperl' && this.texCount) return;
         if (engine === 'texfmt' && this.texFmt) return;
-        if (engine === 'all' && this.texCount && this.texFmt) return;
+        if (engine === 'typstyle' && this.typstyle) return;
+        if (engine === 'all' && this.texCount && this.texFmt && this.typstyle) return;
 
         if (!this.initPromise) {
             this.initPromise = this.initialize(engine);
@@ -46,6 +49,13 @@ export class WasmToolsEngine {
             if (!this.texFmt) {
                 this.texFmt = new TexFmt(false, `${BASE_PATH}/core/texfmt`);
                 this.enabledEngines.add('texfmt');
+            }
+        }
+
+        if (engine === 'typstyle' || engine === 'all') {
+            if (!this.typstyle) {
+                this.typstyle = new TypstyleEngine();
+                this.enabledEngines.add('typstyle');
             }
         }
     }
@@ -96,10 +106,23 @@ export class WasmToolsEngine {
         });
     }
 
+    async formatTypst(
+        input: string,
+        options: TypstyleOptions
+    ): Promise<{ success: boolean; output?: string; error?: string }> {
+        await this.ensureInitialized('typstyle');
+
+        return await this.typstyle!.format(input, options);
+    }
+
     terminate(): void {
         this.runner = null;
         this.texCount = null;
         this.texFmt = null;
+        if (this.typstyle) {
+            this.typstyle.terminate();
+            this.typstyle = null;
+        }
         this.initPromise = null;
         this.enabledEngines.clear();
     }

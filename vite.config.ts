@@ -110,6 +110,7 @@ export default defineConfig({
 		],
 		exclude: [
 			"@myriaddreamin/typst.ts",
+			"@typstyle/typstyle-wasm-bundler",
 		],
 	},
 });

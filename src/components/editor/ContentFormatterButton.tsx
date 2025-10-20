@@ -1,6 +1,7 @@
 // src/components/editor/ContentFormatterButton.tsx
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
+
 import { ChevronDownIcon, LoaderIcon, TextFormatterIcon } from '../common/Icons';
 import { useContentFormatter } from '../../hooks/useContentFormatter';
 
@@ -45,7 +46,6 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
     const handleFormat = async () => {
         if (disabled || isFormatting) return;
 
-        // Get fresh content right before formatting
         const currentContent = getCurrentContent();
         if (!currentContent.trim()) return;
 
@@ -87,7 +87,6 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
 
             {isDropdownOpen && contentType === 'latex' && (
                 <div className="formatter-dropdown">
-
                     <div className="format-note warning-message">
                         <p>⚠️ Tex-Fmt is <b>experimental</b> and may not preserve all LaTeX constructs (e.g., <code>\verb</code> commands).</p>
                     </div>
@@ -158,7 +157,63 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
             {isDropdownOpen && contentType === 'typst' && (
                 <div className="formatter-dropdown">
                     <div className="format-option">
-                        <p>Typst formatting options coming soon</p>
+                        <label>
+                            Line width:
+                            <input
+                                type="number"
+                                min="40"
+                                max="120"
+                                value={typstOptions.lineWidth}
+                                onChange={(e) => setTypstOptions({
+                                    ...typstOptions,
+                                    lineWidth: parseInt(e.target.value, 10)
+                                })}
+                            />
+                        </label>
+                    </div>
+
+                    <div className="format-option">
+                        <label>
+                            Indent width:
+                            <input
+                                type="number"
+                                min="1"
+                                max="8"
+                                value={typstOptions.indentWidth}
+                                onChange={(e) => setTypstOptions({
+                                    ...typstOptions,
+                                    indentWidth: parseInt(e.target.value, 10)
+                                })}
+                            />
+                        </label>
+                    </div>
+
+                    <div className="format-option">
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked={typstOptions.reorderImportItems}
+                                onChange={(e) => setTypstOptions({
+                                    ...typstOptions,
+                                    reorderImportItems: e.target.checked
+                                })}
+                            />
+                            Reorder import items alphabetically
+                        </label>
+                    </div>
+
+                    <div className="format-option">
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked={typstOptions.wrapText}
+                                onChange={(e) => setTypstOptions({
+                                    ...typstOptions,
+                                    wrapText: e.target.checked
+                                })}
+                            />
+                            Wrap text in markup
+                        </label>
                     </div>
                 </div>
             )}

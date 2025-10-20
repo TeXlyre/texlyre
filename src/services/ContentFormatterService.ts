@@ -1,5 +1,6 @@
 // src/services/ContentFormatterService.ts
 import { WasmToolsEngine } from '../extensions/wasm-tools/WasmToolsEngine';
+import { TypstyleOptions } from '../extensions/wasm-tools/TypstyleEngine';
 import { notificationService } from './NotificationService';
 
 export interface LatexFormatOptions {
@@ -9,9 +10,7 @@ export interface LatexFormatOptions {
     usetabs: boolean;
 }
 
-export interface TypstFormatOptions {
-    // Future options for typststyle
-}
+export interface TypstFormatOptions extends TypstyleOptions { }
 
 class ContentFormatterService {
     private engine: WasmToolsEngine | null = null;
@@ -45,11 +44,18 @@ class ContentFormatterService {
         input: string,
         options: TypstFormatOptions
     ): Promise<{ success: boolean; output?: string; error?: string }> {
-        // Future implementation for typststyle
-        return {
-            success: false,
-            error: 'Typst formatting not yet implemented'
-        };
+        const engine = this.getEngine();
+
+        try {
+            const result = await engine.formatTypst(input, options);
+            return result;
+        } catch (error) {
+            console.error('[ContentFormatterService] Typst format failed:', error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            };
+        }
     }
 
     terminate(): void {
