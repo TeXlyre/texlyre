@@ -44,11 +44,9 @@ class FileCommentProcessor {
 			return text;
 		}
 
-		// Use the same manual parsing approach as CommentService to handle nested comments
 		let cleanedText = text;
 		let foundComments = true;
 
-		// Keep processing until no more comments are found (handles nested comments)
 		while (foundComments) {
 			foundComments = false;
 			let searchStart = 0;
@@ -60,15 +58,20 @@ class FileCommentProcessor {
 				);
 				if (openTagStart === -1) break;
 
+				const backtickBefore = openTagStart > 0 &&
+					cleanedText[openTagStart - 1] === '`';
+
 				const openTagEnd = cleanedText.indexOf('###>', openTagStart);
 				if (openTagEnd === -1) break;
+
+				const backtickAfter = openTagEnd + 4 < cleanedText.length &&
+					cleanedText[openTagEnd + 4] === '`';
 
 				const openTagContent = cleanedText.substring(
 					openTagStart,
 					openTagEnd + 4,
 				);
 
-				// Extract comment ID from the opening tag
 				const idMatch = openTagContent.match(/id:\s*([\w-]+)/);
 				if (!idMatch) {
 					searchStart = openTagEnd + 4;
@@ -93,20 +96,24 @@ class FileCommentProcessor {
 					continue;
 				}
 
-				// Extract the commented text (content between tags)
+				const commentedTextStart = openTagEnd + 4 + (backtickAfter ? 1 : 0);
+				const commentedTextEnd = closeTagStart - (backtickBefore &&
+					cleanedText[closeTagStart - 1] === '`' ? 1 : 0);
 				const commentedText = cleanedText.substring(
-					openTagEnd + 4,
-					closeTagStart,
+					commentedTextStart,
+					commentedTextEnd,
 				);
 
-				// Replace the entire comment structure with just the commented text
+				const actualOpenTagStart = backtickBefore ? openTagStart - 1 : openTagStart;
+				const actualCloseTagEnd = (backtickAfter && closeTagEnd < cleanedText.length &&
+					cleanedText[closeTagEnd] === '`') ? closeTagEnd + 1 : closeTagEnd;
+
 				cleanedText =
-					cleanedText.substring(0, openTagStart) +
+					cleanedText.substring(0, actualOpenTagStart) +
 					commentedText +
-					cleanedText.substring(closeTagEnd);
+					cleanedText.substring(actualCloseTagEnd);
 
 				foundComments = true;
-				// Start the next search from the beginning since positions have changed
 				break;
 			}
 		}

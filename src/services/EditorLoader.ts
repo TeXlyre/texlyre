@@ -726,22 +726,49 @@ export const EditorLoader = (
 
 				const currentContent = viewRef.current.state.doc.toString();
 
-				const openTagStart = currentContent.indexOf(
+				let openTagStart = currentContent.indexOf(
 					`<### comment id: ${commentId}`,
 				);
 				if (openTagStart === -1) return;
 
-				const openTagEnd = currentContent.indexOf('###>', openTagStart) + 4;
+				const backtickBefore = openTagStart > 0 &&
+					currentContent[openTagStart - 1] === '`';
 
-				const closeTagStart = currentContent.indexOf(
+				if (backtickBefore) {
+					openTagStart = openTagStart - 1;
+				}
+
+				const openTagCoreEnd = currentContent.indexOf('###>', openTagStart) + 4;
+				const backtickAfter = openTagCoreEnd < currentContent.length &&
+					currentContent[openTagCoreEnd] === '`';
+
+				const openTagEnd = backtickAfter ? openTagCoreEnd + 1 : openTagCoreEnd;
+
+				let closeTagStart = currentContent.indexOf(
 					`</### comment id: ${commentId}`,
 					openTagEnd,
 				);
 				if (closeTagStart === -1) return;
 
-				const closeTagEnd = currentContent.indexOf('###>', closeTagStart) + 4;
+				const closeTagBeforeBacktick = closeTagStart > 0 &&
+					currentContent[closeTagStart - 1] === '`';
 
-				const commentedText = currentContent.slice(openTagEnd, closeTagStart);
+				if (closeTagBeforeBacktick) {
+					closeTagStart = closeTagStart - 1;
+				}
+
+				const closeTagCoreEnd = currentContent.indexOf('###>', closeTagStart) + 4;
+				const closeTagAfterBacktick = closeTagCoreEnd < currentContent.length &&
+					currentContent[closeTagCoreEnd] === '`';
+
+				const closeTagEnd = closeTagAfterBacktick ? closeTagCoreEnd + 1 : closeTagCoreEnd;
+
+				const commentedTextStart = backtickAfter ? openTagCoreEnd + 1 : openTagCoreEnd;
+				const commentedTextEnd = closeTagBeforeBacktick ? closeTagStart : (
+					currentContent.indexOf(`</### comment id: ${commentId}`, openTagEnd)
+				);
+
+				const commentedText = currentContent.slice(commentedTextStart, commentedTextEnd);
 
 				const newContent = `${rawComment.openTag}${commentedText}${rawComment.closeTag}`;
 
