@@ -13,68 +13,75 @@ class CommentService {
 		const parsedComments: Comment[] = [];
 		let searchStart = 0;
 
+		const openTagRegex = /<###(?:\s|%)*comment(?:\s|%)*id:(?:\s|%)*(\w[\w-]*)/g;
+
 		while (searchStart < editorContent.length) {
-			const openTagStart = editorContent.indexOf(
-				'<### comment id:',
-				searchStart,
-			);
-			if (openTagStart === -1) break;
+			openTagRegex.lastIndex = searchStart;
+			const openMatch = openTagRegex.exec(editorContent);
+
+			if (!openMatch) break;
+
+			const openTagStart = openMatch.index;
+			const id = openMatch[1];
+
+			const backtickBefore = openTagStart > 0 &&
+				editorContent[openTagStart - 1] === '`';
 
 			const openTagEnd = editorContent.indexOf('###>', openTagStart);
-			if (openTagEnd === -1) break;
+			if (openTagEnd === -1) {
+				searchStart = openMatch.index + 1;
+				continue;
+			}
 
-			const openTagContent = editorContent.substring(
+			const backtickAfter = openTagEnd + 4 < editorContent.length &&
+				editorContent[openTagEnd + 4] === '`';
+
+			let openTagContent = editorContent.substring(
 				openTagStart,
 				openTagEnd + 4,
 			);
 
-			const idMatch = openTagContent.match(/id:\s*([\w-]+)/);
-			if (!idMatch) {
+			openTagContent = openTagContent.replace(/\n\s*%\s*/g, ' ');
+
+			const closeTagRegex = new RegExp(`<\\/###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${id}(?:\\s|%)*###>`, 'g');
+			closeTagRegex.lastIndex = openTagEnd + 4;
+			const closeMatch = closeTagRegex.exec(editorContent);
+
+			if (!closeMatch) {
 				searchStart = openTagEnd + 4;
 				continue;
 			}
 
-			const id = idMatch[1];
-			const closeTagPattern = `</### comment id: ${id}`;
-			const closeTagStart = editorContent.indexOf(
-				closeTagPattern,
-				openTagEnd + 4,
-			);
+			const closeTagStart = closeMatch.index;
+			const closeTagEnd = closeTagStart + closeMatch[0].length;
 
-			if (closeTagStart === -1) {
-				searchStart = openTagEnd + 4;
-				continue;
-			}
-
-			const closeTagEnd = editorContent.indexOf('###>', closeTagStart) + 4;
-			if (closeTagEnd < closeTagStart) {
-				searchStart = openTagEnd + 4;
-				continue;
-			}
-
-			const userMatch = openTagContent.match(/user:\s*([^,]+)/);
+			const userMatch = openTagContent.match(/user:\s*([^,]+?)(?=\s*,)/);
 			const timeMatch = openTagContent.match(/time:\s*(\d+)/);
-			const contentMatch = openTagContent.match(/content:\s*'([^']*)'/);
-			const responsesMatch = openTagContent.match(/responses:\s*\[(.*?)\]/);
+			const contentMatch = openTagContent.match(/content:\s*'([^']*)'/s);
+			const responsesMatch = openTagContent.match(/responses:\s*\[(.*?)\]/s);
 			const resolvedMatch = openTagContent.match(/resolved:\s*(true|false)/);
 
 			const user = userMatch ? userMatch[1].trim() : 'Anonymous';
 			const timestamp = timeMatch ? Number.parseInt(timeMatch[1]) : Date.now();
-			const commentContent = contentMatch ? contentMatch[1] : '';
+			const commentContent = contentMatch ? contentMatch[1].replace(/\s+/g, ' ').trim() : '';
 			const responsesString = responsesMatch ? responsesMatch[1] : '';
 			const resolved = resolvedMatch ? resolvedMatch[1] === 'true' : false;
 
+			const commentedTextStart = openTagEnd + 4 + (backtickAfter ? 1 : 0);
+			const commentedTextEnd = closeTagStart - (backtickBefore &&
+				editorContent[closeTagStart - 1] === '`' ? 1 : 0);
 			const commentedText = editorContent.substring(
-				openTagEnd + 4,
-				closeTagStart,
+				commentedTextStart,
+				commentedTextEnd,
 			);
 
 			const responses: CommentResponse[] = [];
 			if (responsesString?.trim()) {
+				const cleanedResponsesString = responsesString.replace(/\n\s*%\s*/g, ' ');
 				const responseRegex =
-					/<#### response id: '([\w-]+)', user: ([^,]+), time: (\d+), content: '([^']*)' ####\/>/g;
+					/<####(?:\s|%)*response(?:\s|%)*id:(?:\s|%)*'([\w-]+)',(?:\s|%)*user:(?:\s|%)*([^,]+?),(?:\s|%)*time:(?:\s|%)*(\d+),(?:\s|%)*content:(?:\s|%)*'([^']*)'(?:\s|%)*####\/>/g;
 				let responseMatch;
-				while ((responseMatch = responseRegex.exec(responsesString)) !== null) {
+				while ((responseMatch = responseRegex.exec(cleanedResponsesString)) !== null) {
 					const [
 						_,
 						responseId,
@@ -86,10 +93,18 @@ class CommentService {
 						id: responseId,
 						user: responseUser.trim(),
 						timestamp: Number.parseInt(responseTimestamp),
-						content: responseContent,
+						content: responseContent.replace(/\s+/g, ' ').trim(),
 					});
 				}
 			}
+
+			const actualOpenTagStart = backtickBefore ? openTagStart - 1 : openTagStart;
+			const actualOpenTagEnd = backtickAfter ? openTagEnd + 5 : openTagEnd + 4;
+			const actualCloseTagStart = (backtickBefore && editorContent[closeTagStart - 1] === '`')
+				? closeTagStart - 1
+				: closeTagStart;
+			const actualCloseTagEnd = (backtickAfter && closeTagEnd < editorContent.length &&
+				editorContent[closeTagEnd] === '`') ? closeTagEnd + 1 : closeTagEnd;
 
 			parsedComments.push({
 				id,
@@ -97,14 +112,14 @@ class CommentService {
 				timestamp,
 				content: commentContent,
 				responses,
-				startPosition: openTagStart,
-				endPosition: closeTagEnd,
-				openTagStart,
-				openTagEnd: openTagEnd + 4,
-				closeTagStart,
-				closeTagEnd,
+				startPosition: actualOpenTagStart,
+				endPosition: actualCloseTagEnd,
+				openTagStart: actualOpenTagStart,
+				openTagEnd: actualOpenTagEnd,
+				closeTagStart: actualCloseTagStart,
+				closeTagEnd: actualCloseTagEnd,
 				commentedText,
-				line: calculateLineNumber(editorContent, openTagStart),
+				line: calculateLineNumber(editorContent, actualOpenTagStart),
 				resolved,
 			});
 
@@ -118,8 +133,8 @@ class CommentService {
 		const id = nanoid();
 		const timestamp = Date.now();
 
-		const commentPrefix = `<### comment id: ${id}, user: ${username}, time: ${timestamp}, content: '${content}', responses: [], resolved: false ###>`;
-		const commentSuffix = `</### comment id: ${id} ###>`;
+		const commentPrefix = `\`<### comment id: ${id}, user: ${username}, time: ${timestamp}, content: '${content}', responses: [], resolved: false ###>\``;
+		const commentSuffix = `\`</### comment id: ${id} ###>\``;
 
 		return {
 			openTag: commentPrefix,
@@ -135,8 +150,8 @@ class CommentService {
 			})
 			.join(', ');
 
-		const updatedCommentPrefix = `<### comment id: ${comment.id}, user: ${comment.user}, time: ${comment.timestamp}, content: '${comment.content}', responses: [${responsesString}], resolved: ${comment.resolved} ###>`;
-		const updatedCommentSuffix = `</### comment id: ${comment.id} ###>`;
+		const updatedCommentPrefix = `\`<### comment id: ${comment.id}, user: ${comment.user}, time: ${comment.timestamp}, content: '${comment.content}', responses: [${responsesString}], resolved: ${comment.resolved} ###>\``;
+		const updatedCommentSuffix = `\`</### comment id: ${comment.id} ###>\``;
 
 		return {
 			openTag: updatedCommentPrefix,
@@ -152,8 +167,8 @@ class CommentService {
 			})
 			.join(', ');
 
-		const updatedCommentPrefix = `<### comment id: ${comment.id}, user: ${comment.user}, time: ${comment.timestamp}, content: '${comment.content}', responses: [${responsesString}], resolved: ${comment.resolved} ###>`;
-		const updatedCommentSuffix = `</### comment id: ${comment.id} ###>`;
+		const updatedCommentPrefix = `\`<### comment id: ${comment.id}, user: ${comment.user}, time: ${comment.timestamp}, content: '${comment.content}', responses: [${responsesString}], resolved: ${comment.resolved} ###>\``;
+		const updatedCommentSuffix = `\`</### comment id: ${comment.id} ###>\``;
 
 		return {
 			openTag: updatedCommentPrefix,

@@ -1,0 +1,81 @@
+.formatter-button-container {
+    display: flex;
+    gap: var(--space-xs);
+    position: relative;
+}
+
+.formatter-button-group {
+    display: flex;
+    align-items: center;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.formatter-button-group .format-button {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    flex: 2;
+    width: 20px;
+}
+
+.formatter-button-group .dropdown-toggle {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    flex: 1;
+    min-width: 0 !important;
+}
+
+.format-button.formatting {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.formatter-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 2px;
+    min-width: 260px;
+    padding: var(--space-sm);
+    background-color: var(--pico-background);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    z-index: var(--z-dropdown);
+}
+
+.format-option {
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--accent-border);
+}
+
+.format-option:last-child {
+    border-bottom: none;
+}
+
+.format-option label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 0.8rem;
+}
+
+.format-option input[type="number"] {
+    width: 60px;
+    height: var(--space-lg);
+    margin-left: auto;
+    padding: var(--space-xs);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-sm);
+}
+
+.format-note {
+    margin-top: var(--space-sm);
+    background-color: color-mix(in srgb, var(--color-warning) 20%, white);
+    padding: var(--space-xs);
+    font-size: 0.85em;
+}
+
+.format-note p {
+    margin: 0;
+}

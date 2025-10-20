@@ -345,7 +345,7 @@ export const EditorLoader = (
 
 		if (isLatexFile || isBibFile || isTypstFile) {
 			const fileExtension = fileName?.split('.').pop()?.toLowerCase() ||
-				(isLatexFile ? 'tex' : isBibFile ? 'bib' : 'typ');
+				(isTypstFile ? 'typ' : isBibFile ? 'bib' : 'tex');
 			const allLSPPlugins = pluginRegistry.getLSPPluginsForFileType(fileExtension);
 
 			// Filter to only enabled plugins
@@ -492,6 +492,36 @@ export const EditorLoader = (
 			extensions.push(commentKeymap);
 			extensions.push(commentSystemExtension);
 		}
+
+		const formatKeymap = keymap.of([
+			{
+				key: 'Ctrl-Shift-i',
+				run: (view) => {
+					if (isViewOnly) return false;
+
+					const hasFormatter = (isLatexFile || isTypstFile || isBibFile);
+					if (!hasFormatter) return false;
+
+					const content = view.state.doc.toString();
+					const contentType = isTypstFile ? 'typst' : 'latex';
+
+					document.dispatchEvent(
+						new CustomEvent('trigger-format', {
+							detail: {
+								content,
+								contentType,
+								fileId: currentFileId,
+								documentId,
+								view
+							}
+						})
+					);
+
+					return true;
+				},
+			},
+		]);
+		extensions.push(formatKeymap);
 
 		const saveKeymap = keymap.of([
 			{
@@ -696,22 +726,49 @@ export const EditorLoader = (
 
 				const currentContent = viewRef.current.state.doc.toString();
 
-				const openTagStart = currentContent.indexOf(
-					`<### comment id: ${commentId}`,
-				);
-				if (openTagStart === -1) return;
+				const openTagRegex = new RegExp(`<###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${commentId}`, 'g');
+				const openMatch = openTagRegex.exec(currentContent);
 
-				const openTagEnd = currentContent.indexOf('###>', openTagStart) + 4;
+				if (!openMatch) return;
 
-				const closeTagStart = currentContent.indexOf(
-					`</### comment id: ${commentId}`,
-					openTagEnd,
-				);
-				if (closeTagStart === -1) return;
+				let openTagStart = openMatch.index;
+				const backtickBefore = openTagStart > 0 &&
+					currentContent[openTagStart - 1] === '`';
 
-				const closeTagEnd = currentContent.indexOf('###>', closeTagStart) + 4;
+				if (backtickBefore) {
+					openTagStart = openTagStart - 1;
+				}
 
-				const commentedText = currentContent.slice(openTagEnd, closeTagStart);
+				const openTagCoreEnd = currentContent.indexOf('###>', openMatch.index) + 4;
+				const backtickAfter = openTagCoreEnd < currentContent.length &&
+					currentContent[openTagCoreEnd] === '`';
+
+				const openTagEnd = backtickAfter ? openTagCoreEnd + 1 : openTagCoreEnd;
+
+				const closeTagRegex = new RegExp(`<\\/###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${commentId}(?:\\s|%)*###>`, 'g');
+				closeTagRegex.lastIndex = openTagEnd;
+				const closeMatch = closeTagRegex.exec(currentContent);
+
+				if (!closeMatch) return;
+
+				let closeTagStart = closeMatch.index;
+				const closeTagBeforeBacktick = closeTagStart > 0 &&
+					currentContent[closeTagStart - 1] === '`';
+
+				if (closeTagBeforeBacktick) {
+					closeTagStart = closeTagStart - 1;
+				}
+
+				const closeTagCoreEnd = closeTagStart + closeMatch[0].length;
+				const closeTagAfterBacktick = closeTagCoreEnd < currentContent.length &&
+					currentContent[closeTagCoreEnd] === '`';
+
+				const closeTagEnd = closeTagAfterBacktick ? closeTagCoreEnd + 1 : closeTagCoreEnd;
+
+				const commentedTextStart = backtickAfter ? openTagCoreEnd + 1 : openTagCoreEnd;
+				const commentedTextEnd = closeTagBeforeBacktick ? closeTagStart : closeMatch.index;
+
+				const commentedText = currentContent.slice(commentedTextStart, commentedTextEnd);
 
 				const newContent = `${rawComment.openTag}${commentedText}${rawComment.closeTag}`;
 

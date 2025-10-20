@@ -283,11 +283,15 @@ footer {
 .warning-message {
 	background-color: color-mix(in srgb, var(--color-warning) 20%, white);
 	border: 1px solid var(--color-warning);
-	color: var(--pico-secondary);
+	color: color-mix(in srgb, var(--pico-secondary) 80%, black);
 }
 
 .warning-message * {
-	color: var(--pico-secondary);
+	color: color-mix(in srgb, var(--pico-secondary) 80%, black);
+}
+
+.warning-message code {
+	background-color: var(--color-warning);
 }
 
 .success-message {
@@ -308,6 +312,14 @@ footer {
 
 .info-message * {
 	color: var(--text-color);
+}
+
+.info-message a {
+	color: var(--pico-primary);
+}
+
+.info-message kbd {
+	background-color: var(--pico-primary-focus);
 }
 
 .info-message ul {

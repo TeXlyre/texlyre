@@ -9,6 +9,7 @@ import { FileSyncProvider } from '../../contexts/FileSyncContext';
 import { FileTreeProvider } from '../../contexts/FileTreeContext';
 import { LaTeXProvider } from '../../contexts/LaTeXContext';
 import { TypstProvider } from '../../contexts/TypstContext';
+import { ContentFormatterProvider } from '../../contexts/ContentFormatterContext';
 import { useAuth } from '../../hooks/useAuth';
 import { useLaTeX } from '../../hooks/useLaTeX';
 import { useTypst } from '../../hooks/useTypst';
@@ -40,6 +41,7 @@ import ProjectForm from '../project/ProjectForm';
 import ShareProjectButton from '../project/ShareProjectButton';
 import ShareProjectModal from '../project/ShareProjectModal';
 import SettingsButton from '../settings/SettingsButton';
+import KeyboardShortcutsModal from '../common/KeyboardShortcutsModal';
 import PrivacyModal from '../common/PrivacyModal';
 import GuestUpgradeBanner from '../auth/GuestUpgradeBanner';
 import GuestUpgradeModal from '../auth/GuestUpgradeModal';
@@ -105,6 +107,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const { isCompiling, triggerAutoCompile } = useLaTeX();
 	const { isCompiling: isTypstCompiling, triggerAutoCompile: triggerTypstAutoCompile } = useTypst();
 	const { isOfflineMode } = useOffline();
+	const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
 	const [showPrivacy, setShowPrivacy] = useState(false);
 	useGlobalKeyboard();
 
@@ -565,7 +568,14 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						<img src={texlyreLogo} className="logo" alt="TeXlyre logo" />
 					</a>
 					<span className="legal-links">
-						<br /> <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">
+
+						<br /> <a href="#" onClick={(event) => {
+							event.preventDefault();
+							setShowKeyboardShortcuts(true);
+						}} className="shortcuts-link">
+							Keyboard Map
+						</a>
+						{' '} • <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">
 							Documentation
 						</a>
 						{' '} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">
@@ -579,6 +589,11 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 				</p>
 				<ChatPanel className="footer-chat" />
 			</footer>
+
+			<KeyboardShortcutsModal
+				isOpen={showKeyboardShortcuts}
+				onClose={() => setShowKeyboardShortcuts(false)}
+			/>
 
 			<PrivacyModal
 				isOpen={showPrivacy}
@@ -671,7 +686,9 @@ const EditorApp: React.FC<EditorAppProps> = (props) => {
 					<FileSyncProvider docUrl={props.docUrl}>
 						<LaTeXProvider>
 							<TypstProvider>
-								<EditorAppView {...props} />
+								<ContentFormatterProvider>
+									<EditorAppView {...props} />
+								</ContentFormatterProvider>
 							</TypstProvider>
 						</LaTeXProvider>
 					</FileSyncProvider>

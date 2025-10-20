@@ -13,7 +13,7 @@ interface ProcessorOptions {
 }
 
 class FileCommentProcessor {
-	private readonly COMMENT_DETECTION_REGEX = /<### comment id:/;
+	private readonly COMMENT_DETECTION_REGEX = /<###(?:\s|%)*comment(?:\s|%)*id:/;
 
 	hasComments(content: string | ArrayBuffer): boolean {
 		if (content instanceof ArrayBuffer) {
@@ -24,18 +24,61 @@ class FileCommentProcessor {
 
 	private hasBinaryComments(buffer: ArrayBuffer): boolean {
 		const view = new Uint8Array(buffer);
-		const marker = new TextEncoder().encode('<### comment id:');
+		const backtick = 0x60;
+		const openMarker = new TextEncoder().encode('<###');
+		const commentMarker = new TextEncoder().encode('comment');
+		const idMarker = new TextEncoder().encode('id:');
+		const whitespaceChars = [0x20, 0x09, 0x0A, 0x0D];
 
-		for (let i = 0; i <= view.length - marker.length; i++) {
-			let found = true;
-			for (let j = 0; j < marker.length; j++) {
-				if (view[i + j] !== marker[j]) {
-					found = false;
+		for (let i = 0; i <= view.length - openMarker.length; i++) {
+			let pos = i;
+
+			if (view[pos] === backtick) {
+				pos++;
+			}
+
+			let match = true;
+			for (let j = 0; j < openMarker.length; j++) {
+				if (pos + j >= view.length || view[pos + j] !== openMarker[j]) {
+					match = false;
 					break;
 				}
 			}
-			if (found) return true;
+
+			if (!match) continue;
+
+			pos += openMarker.length;
+
+			while (pos < view.length && whitespaceChars.includes(view[pos])) {
+				pos++;
+			}
+
+			match = true;
+			for (let j = 0; j < commentMarker.length; j++) {
+				if (pos + j >= view.length || view[pos + j] !== commentMarker[j]) {
+					match = false;
+					break;
+				}
+			}
+
+			if (!match) continue;
+			pos += commentMarker.length;
+
+			while (pos < view.length && whitespaceChars.includes(view[pos])) {
+				pos++;
+			}
+
+			match = true;
+			for (let j = 0; j < idMarker.length; j++) {
+				if (pos + j >= view.length || view[pos + j] !== idMarker[j]) {
+					match = false;
+					break;
+				}
+			}
+
+			if (match) return true;
 		}
+
 		return false;
 	}
 
@@ -44,71 +87,60 @@ class FileCommentProcessor {
 			return text;
 		}
 
-		// Use the same manual parsing approach as CommentService to handle nested comments
 		let cleanedText = text;
 		let foundComments = true;
 
-		// Keep processing until no more comments are found (handles nested comments)
+		const openTagRegex = /<###(?:\s|%)*comment(?:\s|%)*id:(?:\s|%)*(\w[\w-]*)/g;
+
 		while (foundComments) {
 			foundComments = false;
-			let searchStart = 0;
 
-			while (searchStart < cleanedText.length) {
-				const openTagStart = cleanedText.indexOf(
-					'<### comment id:',
-					searchStart,
-				);
-				if (openTagStart === -1) break;
+			openTagRegex.lastIndex = 0;
+			const openMatch = openTagRegex.exec(cleanedText);
 
-				const openTagEnd = cleanedText.indexOf('###>', openTagStart);
-				if (openTagEnd === -1) break;
+			if (!openMatch) break;
 
-				const openTagContent = cleanedText.substring(
-					openTagStart,
-					openTagEnd + 4,
-				);
+			const openTagStart = openMatch.index;
+			const id = openMatch[1];
 
-				// Extract comment ID from the opening tag
-				const idMatch = openTagContent.match(/id:\s*([\w-]+)/);
-				if (!idMatch) {
-					searchStart = openTagEnd + 4;
-					continue;
-				}
+			const backtickBefore = openTagStart > 0 &&
+				cleanedText[openTagStart - 1] === '`';
 
-				const id = idMatch[1];
-				const closeTagPattern = `</### comment id: ${id}`;
-				const closeTagStart = cleanedText.indexOf(
-					closeTagPattern,
-					openTagEnd + 4,
-				);
+			const openTagEnd = cleanedText.indexOf('###>', openTagStart);
+			if (openTagEnd === -1) break;
 
-				if (closeTagStart === -1) {
-					searchStart = openTagEnd + 4;
-					continue;
-				}
+			const backtickAfter = openTagEnd + 4 < cleanedText.length &&
+				cleanedText[openTagEnd + 4] === '`';
 
-				const closeTagEnd = cleanedText.indexOf('###>', closeTagStart) + 4;
-				if (closeTagEnd < closeTagStart) {
-					searchStart = openTagEnd + 4;
-					continue;
-				}
+			const closeTagRegex = new RegExp(`<\\/###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${id}(?:\\s|%)*###>`, 'g');
+			closeTagRegex.lastIndex = openTagEnd + 4;
+			const closeMatch = closeTagRegex.exec(cleanedText);
 
-				// Extract the commented text (content between tags)
-				const commentedText = cleanedText.substring(
-					openTagEnd + 4,
-					closeTagStart,
-				);
-
-				// Replace the entire comment structure with just the commented text
-				cleanedText =
-					cleanedText.substring(0, openTagStart) +
-					commentedText +
-					cleanedText.substring(closeTagEnd);
-
-				foundComments = true;
-				// Start the next search from the beginning since positions have changed
+			if (!closeMatch) {
 				break;
 			}
+
+			const closeTagStart = closeMatch.index;
+			const closeTagEnd = closeTagStart + closeMatch[0].length;
+
+			const commentedTextStart = openTagEnd + 4 + (backtickAfter ? 1 : 0);
+			const commentedTextEnd = closeTagStart - (backtickBefore &&
+				cleanedText[closeTagStart - 1] === '`' ? 1 : 0);
+			const commentedText = cleanedText.substring(
+				commentedTextStart,
+				commentedTextEnd,
+			);
+
+			const actualOpenTagStart = backtickBefore ? openTagStart - 1 : openTagStart;
+			const actualCloseTagEnd = (backtickAfter && closeTagEnd < cleanedText.length &&
+				cleanedText[closeTagEnd] === '`') ? closeTagEnd + 1 : closeTagEnd;
+
+			cleanedText =
+				cleanedText.substring(0, actualOpenTagStart) +
+				commentedText +
+				cleanedText.substring(actualCloseTagEnd);
+
+			foundComments = true;
 		}
 
 		return cleanedText;

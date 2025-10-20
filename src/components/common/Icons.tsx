@@ -558,6 +558,25 @@ export const NewProjectIcon: React.FC = () => (
 	</svg>
 );
 
+export const TextFormatterIcon: React.FC = () => (
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width="16"
+		height="16"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="2"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+	>
+		<path d="M3 6h18" />
+		<path d="M7 12h10" />
+		<path d="M10 18h4" />
+		<line x1="3" y1="6" x2="3" y2="18" />
+	</svg>
+);
+
 export const BarChartIcon: React.FC = () => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
@@ -792,6 +811,30 @@ export const InfoIcon: React.FC = () => (
 		<circle cx="12" cy="12" r="10" />
 		<line x1="12" y1="16" x2="12" y2="12" />
 		<line x1="12" y1="8" x2="12.01" y2="8" />
+	</svg>
+);
+
+export const KeyboardIcon: React.FC = () => (
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width="16"
+		height="16"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="2"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+	>
+		<rect x="2" y="4" width="20" height="16" rx="2" />
+		<path d="M6 8h.01" />
+		<path d="M10 8h.01" />
+		<path d="M14 8h.01" />
+		<path d="M18 8h.01" />
+		<path d="M8 12h.01" />
+		<path d="M12 12h.01" />
+		<path d="M16 12h.01" />
+		<path d="M7 16h10" />
 	</svg>
 );
 
