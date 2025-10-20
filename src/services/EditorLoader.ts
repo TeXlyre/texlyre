@@ -726,11 +726,12 @@ export const EditorLoader = (
 
 				const currentContent = viewRef.current.state.doc.toString();
 
-				let openTagStart = currentContent.indexOf(
-					`<### comment id: ${commentId}`,
-				);
-				if (openTagStart === -1) return;
+				const openTagRegex = new RegExp(`<###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${commentId}`, 'g');
+				const openMatch = openTagRegex.exec(currentContent);
 
+				if (!openMatch) return;
+
+				let openTagStart = openMatch.index;
 				const backtickBefore = openTagStart > 0 &&
 					currentContent[openTagStart - 1] === '`';
 
@@ -738,18 +739,19 @@ export const EditorLoader = (
 					openTagStart = openTagStart - 1;
 				}
 
-				const openTagCoreEnd = currentContent.indexOf('###>', openTagStart) + 4;
+				const openTagCoreEnd = currentContent.indexOf('###>', openMatch.index) + 4;
 				const backtickAfter = openTagCoreEnd < currentContent.length &&
 					currentContent[openTagCoreEnd] === '`';
 
 				const openTagEnd = backtickAfter ? openTagCoreEnd + 1 : openTagCoreEnd;
 
-				let closeTagStart = currentContent.indexOf(
-					`</### comment id: ${commentId}`,
-					openTagEnd,
-				);
-				if (closeTagStart === -1) return;
+				const closeTagRegex = new RegExp(`<\\/###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${commentId}(?:\\s|%)*###>`, 'g');
+				closeTagRegex.lastIndex = openTagEnd;
+				const closeMatch = closeTagRegex.exec(currentContent);
 
+				if (!closeMatch) return;
+
+				let closeTagStart = closeMatch.index;
 				const closeTagBeforeBacktick = closeTagStart > 0 &&
 					currentContent[closeTagStart - 1] === '`';
 
@@ -757,16 +759,14 @@ export const EditorLoader = (
 					closeTagStart = closeTagStart - 1;
 				}
 
-				const closeTagCoreEnd = currentContent.indexOf('###>', closeTagStart) + 4;
+				const closeTagCoreEnd = closeTagStart + closeMatch[0].length;
 				const closeTagAfterBacktick = closeTagCoreEnd < currentContent.length &&
 					currentContent[closeTagCoreEnd] === '`';
 
 				const closeTagEnd = closeTagAfterBacktick ? closeTagCoreEnd + 1 : closeTagCoreEnd;
 
 				const commentedTextStart = backtickAfter ? openTagCoreEnd + 1 : openTagCoreEnd;
-				const commentedTextEnd = closeTagBeforeBacktick ? closeTagStart : (
-					currentContent.indexOf(`</### comment id: ${commentId}`, openTagEnd)
-				);
+				const commentedTextEnd = closeTagBeforeBacktick ? closeTagStart : closeMatch.index;
 
 				const commentedText = currentContent.slice(commentedTextStart, commentedTextEnd);
 

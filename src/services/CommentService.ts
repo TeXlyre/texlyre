@@ -13,60 +13,57 @@ class CommentService {
 		const parsedComments: Comment[] = [];
 		let searchStart = 0;
 
+		const openTagRegex = /<###(?:\s|%)*comment(?:\s|%)*id:(?:\s|%)*(\w[\w-]*)/g;
+
 		while (searchStart < editorContent.length) {
-			const openTagStart = editorContent.indexOf(
-				'<### comment id:',
-				searchStart,
-			);
-			if (openTagStart === -1) break;
+			openTagRegex.lastIndex = searchStart;
+			const openMatch = openTagRegex.exec(editorContent);
+
+			if (!openMatch) break;
+
+			const openTagStart = openMatch.index;
+			const id = openMatch[1];
 
 			const backtickBefore = openTagStart > 0 &&
 				editorContent[openTagStart - 1] === '`';
 
 			const openTagEnd = editorContent.indexOf('###>', openTagStart);
-			if (openTagEnd === -1) break;
+			if (openTagEnd === -1) {
+				searchStart = openMatch.index + 1;
+				continue;
+			}
 
 			const backtickAfter = openTagEnd + 4 < editorContent.length &&
 				editorContent[openTagEnd + 4] === '`';
 
-			const openTagContent = editorContent.substring(
+			let openTagContent = editorContent.substring(
 				openTagStart,
 				openTagEnd + 4,
 			);
 
-			const idMatch = openTagContent.match(/id:\s*([\w-]+)/);
-			if (!idMatch) {
+			openTagContent = openTagContent.replace(/\n\s*%\s*/g, ' ');
+
+			const closeTagRegex = new RegExp(`<\\/###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${id}(?:\\s|%)*###>`, 'g');
+			closeTagRegex.lastIndex = openTagEnd + 4;
+			const closeMatch = closeTagRegex.exec(editorContent);
+
+			if (!closeMatch) {
 				searchStart = openTagEnd + 4;
 				continue;
 			}
 
-			const id = idMatch[1];
-			const closeTagPattern = `</### comment id: ${id}`;
-			const closeTagStart = editorContent.indexOf(
-				closeTagPattern,
-				openTagEnd + 4,
-			);
+			const closeTagStart = closeMatch.index;
+			const closeTagEnd = closeTagStart + closeMatch[0].length;
 
-			if (closeTagStart === -1) {
-				searchStart = openTagEnd + 4;
-				continue;
-			}
-
-			const closeTagEnd = editorContent.indexOf('###>', closeTagStart) + 4;
-			if (closeTagEnd < closeTagStart) {
-				searchStart = openTagEnd + 4;
-				continue;
-			}
-
-			const userMatch = openTagContent.match(/user:\s*([^,]+)/);
+			const userMatch = openTagContent.match(/user:\s*([^,]+?)(?=\s*,)/);
 			const timeMatch = openTagContent.match(/time:\s*(\d+)/);
-			const contentMatch = openTagContent.match(/content:\s*'([^']*)'/);
-			const responsesMatch = openTagContent.match(/responses:\s*\[(.*?)\]/);
+			const contentMatch = openTagContent.match(/content:\s*'([^']*)'/s);
+			const responsesMatch = openTagContent.match(/responses:\s*\[(.*?)\]/s);
 			const resolvedMatch = openTagContent.match(/resolved:\s*(true|false)/);
 
 			const user = userMatch ? userMatch[1].trim() : 'Anonymous';
 			const timestamp = timeMatch ? Number.parseInt(timeMatch[1]) : Date.now();
-			const commentContent = contentMatch ? contentMatch[1] : '';
+			const commentContent = contentMatch ? contentMatch[1].replace(/\s+/g, ' ').trim() : '';
 			const responsesString = responsesMatch ? responsesMatch[1] : '';
 			const resolved = resolvedMatch ? resolvedMatch[1] === 'true' : false;
 
@@ -80,10 +77,11 @@ class CommentService {
 
 			const responses: CommentResponse[] = [];
 			if (responsesString?.trim()) {
+				const cleanedResponsesString = responsesString.replace(/\n\s*%\s*/g, ' ');
 				const responseRegex =
-					/<#### response id: '([\w-]+)', user: ([^,]+), time: (\d+), content: '([^']*)' ####\/>/g;
+					/<####(?:\s|%)*response(?:\s|%)*id:(?:\s|%)*'([\w-]+)',(?:\s|%)*user:(?:\s|%)*([^,]+?),(?:\s|%)*time:(?:\s|%)*(\d+),(?:\s|%)*content:(?:\s|%)*'([^']*)'(?:\s|%)*####\/>/g;
 				let responseMatch;
-				while ((responseMatch = responseRegex.exec(responsesString)) !== null) {
+				while ((responseMatch = responseRegex.exec(cleanedResponsesString)) !== null) {
 					const [
 						_,
 						responseId,
@@ -95,7 +93,7 @@ class CommentService {
 						id: responseId,
 						user: responseUser.trim(),
 						timestamp: Number.parseInt(responseTimestamp),
-						content: responseContent,
+						content: responseContent.replace(/\s+/g, ' ').trim(),
 					});
 				}
 			}
