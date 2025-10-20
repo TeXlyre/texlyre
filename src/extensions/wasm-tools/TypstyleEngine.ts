@@ -36,8 +36,8 @@ export class TypstyleEngine {
 
         try {
             const config = {
-                line_width: options.lineWidth ?? 80,
-                indent_width: options.indentWidth ?? 2,
+                max_width: options.lineWidth ?? 80,
+                tab_spaces: options.indentWidth ?? 2,
                 reorder_import_items: options.reorderImportItems ?? true,
                 wrap_text: options.wrapText ?? false
             };
