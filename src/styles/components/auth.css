@@ -645,6 +645,20 @@
 	height: 16px;
 }
 
+.storage-action-buttons .upload-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	padding: 0;
+}
+
+.storage-action-buttons .upload-button:disabled,
+.storage-action-buttons .upload-button[aria-disabled="true"] {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
 /* Clear storage modal styling */
 .clear-storage-modal {
 	padding: var(--space-sm) 0;

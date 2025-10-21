@@ -2,10 +2,11 @@
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
+import { userDataService, type UserDataType } from '../../services/UserDataService';
 import { useAuth } from '../../hooks/useAuth';
 import type { User } from '../../types/auth';
 import Modal from '../common/Modal';
-import { UserIcon, TrashIcon, DownloadIcon } from '../common/Icons';
+import { UserIcon, TrashIcon, DownloadIcon, ImportIcon } from '../common/Icons';
 
 interface ProfileSettingsModalProps {
 	isOpen: boolean;
@@ -32,6 +33,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
 	const [deleteType, setDeleteType] = useState<ClearType | null>(null);
+	const [fileInputRef, setFileInputRef] = useState<HTMLInputElement | null>(null);
 
 	const generateRandomColor = (isLight: boolean): string => {
 		const hue = Math.floor(Math.random() * 360);
@@ -159,61 +161,11 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 		}
 	};
 
-	const handleDownloadData = (type: ClearType) => {
+	const handleDownloadData = async (type: UserDataType) => {
 		if (!user) return;
 
-		const userId = user.id;
-		const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-		let dataToDownload: any = {};
-		let filename = '';
-
 		try {
-			switch (type) {
-				case 'settings': {
-					const settingsData = localStorage.getItem(`texlyre-user-${userId}-settings`);
-					dataToDownload = settingsData ? JSON.parse(settingsData) : {};
-					filename = `userdata-settings-${timestamp}.json`;
-					break;
-				}
-				case 'properties': {
-					const propertiesData = localStorage.getItem(`texlyre-user-${userId}-properties`);
-					dataToDownload = propertiesData ? JSON.parse(propertiesData) : {};
-					filename = `userdata-properties-${timestamp}.json`;
-					break;
-				}
-				case 'secrets': {
-					const secretsData = localStorage.getItem(`texlyre-user-${userId}-secrets`);
-					dataToDownload = secretsData ? JSON.parse(secretsData) : {};
-					filename = `userdata-secrets-${timestamp}.json`;
-					break;
-				}
-				case 'all': {
-					const settingsData = localStorage.getItem(`texlyre-user-${userId}-settings`);
-					const propertiesData = localStorage.getItem(`texlyre-user-${userId}-properties`);
-					const secretsData = localStorage.getItem(`texlyre-user-${userId}-secrets`);
-
-					dataToDownload = {
-						settings: settingsData ? JSON.parse(settingsData) : {},
-						properties: propertiesData ? JSON.parse(propertiesData) : {},
-						secrets: secretsData ? JSON.parse(secretsData) : {}
-					};
-					filename = `userdata-all-${timestamp}.json`;
-					break;
-				}
-			}
-
-			const blob = new Blob([JSON.stringify(dataToDownload, null, 2)], {
-				type: 'application/json'
-			});
-			const url = URL.createObjectURL(blob);
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = filename;
-			document.body.appendChild(a);
-			a.click();
-			document.body.removeChild(a);
-			URL.revokeObjectURL(url);
-
+			await userDataService.downloadUserData(user.id, type);
 			setSuccessMessage(`Downloaded ${type === 'all' ? 'all data' : type}`);
 			setTimeout(() => setSuccessMessage(null), 2000);
 		} catch (err) {
@@ -238,24 +190,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 			setIsSubmitting(true);
 			setError(null);
 
-			const userId = user.id;
-
-			switch (deleteType) {
-				case 'settings':
-					localStorage.removeItem(`texlyre-user-${userId}-settings`);
-					break;
-				case 'properties':
-					localStorage.removeItem(`texlyre-user-${userId}-properties`);
-					break;
-				case 'secrets':
-					localStorage.removeItem(`texlyre-user-${userId}-secrets`);
-					break;
-				case 'all':
-					localStorage.removeItem(`texlyre-user-${userId}-settings`);
-					localStorage.removeItem(`texlyre-user-${userId}-properties`);
-					localStorage.removeItem(`texlyre-user-${userId}-secrets`);
-					break;
-			}
+			await userDataService.clearUserData(user.id, deleteType);
 
 			setSuccessMessage(`Successfully cleared ${deleteType === 'all' ? 'all data' : deleteType}`);
 			handleCloseDeleteModal();
@@ -270,6 +205,33 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 		}
 	};
 
+	const handleImportData = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		if (!user || !e.target.files?.[0]) return;
+
+		const file = e.target.files[0];
+		if (!file.name.endsWith('.json')) {
+			setError('Please select a valid JSON file');
+			return;
+		}
+
+		try {
+			setIsSubmitting(true);
+			setError(null);
+
+			await userDataService.importFromFile(user.id, file);
+
+			setSuccessMessage('Successfully imported user data');
+			setTimeout(() => {
+				window.location.reload();
+			}, 1500);
+		} catch (err) {
+			setError(err instanceof Error ? err.message : 'Failed to import data');
+		} finally {
+			setIsSubmitting(false);
+			e.target.value = '';
+		}
+	};
+
 	const getDeleteModalContent = () => {
 		if (!deleteType) return { title: '', message: '', items: [] };
 
@@ -279,9 +241,9 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 				message: 'Are you sure you want to clear all your settings? This will reset all preferences to defaults.',
 				items: [
 					'All application preferences',
-					'Editor configurations',
-					'UI customizations',
-					'Theme preferences'
+					'Editor configurations (font, saving interval, etc.)',
+					'UI customizations and theme preferences (layout, variant, etc.)',
+					'endpoints and server settings (links, connection configuration, etc.)'
 				]
 			},
 			properties: {
@@ -289,8 +251,8 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 				message: 'Are you sure you want to clear all your properties? This will remove all stored property values.',
 				items: [
 					'All stored property values',
-					'Application state data',
-					'User-specific configurations'
+					'Application state data (last opened file, current line in editor, etc.)',
+					'User-specific configurations (panel width, collapse, etc.)'
 				]
 			},
 			secrets: {
@@ -299,8 +261,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 				items: [
 					'All API keys',
 					'Encrypted credentials',
-					'Authentication tokens',
-					'Service passwords'
+					'Authentication tokens (GitHub API key)'
 				]
 			},
 			all: {
@@ -424,7 +385,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 					<div className="warning-message">
 						<h3>⚠️ Warning: This action cannot be undone</h3>
 						<p>
-							Clearing local storage data is permanent and cannot be undone.
+							Clearing or uploading local storage data is permanent and cannot be undone.
 							Make sure to export your data before clearing if you want to keep it.
 							This does <b>NOT</b> delete your projects, files, and account data.
 						</p>
@@ -437,6 +398,23 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 								<p>All your application settings and preferences</p>
 							</div>
 							<div className="storage-action-buttons">
+								<button
+									type="button"
+									className="button primary smaller icon-only"
+									onClick={() => fileInputRef?.click()}
+									disabled={isSubmitting}
+									title="Import settings data"
+								>
+									<ImportIcon />
+								</button>
+								<input
+									ref={setFileInputRef}
+									type="file"
+									accept=".json"
+									onChange={handleImportData}
+									style={{ display: 'none' }}
+									disabled={isSubmitting}
+								/>
 								<button
 									type="button"
 									className="button secondary smaller icon-only"
@@ -466,6 +444,23 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 							<div className="storage-action-buttons">
 								<button
 									type="button"
+									className="button primary smaller icon-only"
+									onClick={() => fileInputRef?.click()}
+									disabled={isSubmitting}
+									title="Import properties data"
+								>
+									<ImportIcon />
+								</button>
+								<input
+									ref={setFileInputRef}
+									type="file"
+									accept=".json"
+									onChange={handleImportData}
+									style={{ display: 'none' }}
+									disabled={isSubmitting}
+								/>
+								<button
+									type="button"
 									className="button secondary smaller icon-only"
 									onClick={() => handleDownloadData('properties')}
 									disabled={isSubmitting}
@@ -493,6 +488,23 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 							<div className="storage-action-buttons">
 								<button
 									type="button"
+									className="button primary smaller icon-only"
+									onClick={() => fileInputRef?.click()}
+									disabled={isSubmitting}
+									title="Import secrets data"
+								>
+									<ImportIcon />
+								</button>
+								<input
+									ref={setFileInputRef}
+									type="file"
+									accept=".json"
+									onChange={handleImportData}
+									style={{ display: 'none' }}
+									disabled={isSubmitting}
+								/>
+								<button
+									type="button"
 									className="button secondary smaller icon-only"
 									onClick={() => handleDownloadData('secrets')}
 									disabled={isSubmitting}
@@ -518,6 +530,23 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 								<p>All settings, properties, and secrets at once</p>
 							</div>
 							<div className="storage-action-buttons">
+								<button
+									type="button"
+									className="button primary smaller icon-only"
+									onClick={() => fileInputRef?.click()}
+									disabled={isSubmitting}
+									title="Import all data"
+								>
+									<ImportIcon />
+								</button>
+								<input
+									ref={setFileInputRef}
+									type="file"
+									accept=".json"
+									onChange={handleImportData}
+									style={{ display: 'none' }}
+									disabled={isSubmitting}
+								/>
 								<button
 									type="button"
 									className="button secondary smaller icon-only"
