@@ -26,8 +26,8 @@ export const ThemeContext = createContext<ThemeContextType>({
 	currentThemePlugin: null,
 	currentVariant: 'dark',
 	currentLayout: null,
-	setTheme: () => {},
-	setVariant: () => {},
+	setTheme: () => { },
+	setVariant: () => { },
 	availableThemes: [],
 });
 
@@ -129,8 +129,8 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 			category: 'Appearance',
 			subcategory: 'Theme',
 			type: 'select',
-			label: 'Theme',
-			description: 'Select the theme to use for TeXlyre',
+			label: 'Layout',
+			description: 'Select the theme layout to use for TeXlyre',
 			defaultValue: initialThemePlugin?.id || defaultThemeId,
 			options: availableThemes.map((theme) => ({
 				label: theme.name,
@@ -194,7 +194,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 			subcategory: 'Theme',
 			type: 'select',
 			label: 'Variant',
-			description: 'Select the theme variant',
+			description: 'Select the theme variant (color palette)',
 			// Ensure the default value is one of the new options
 			defaultValue: defaultVariantForCurrentTheme,
 			options: variantOptions,

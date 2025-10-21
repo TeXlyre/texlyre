@@ -4,6 +4,7 @@ import { saveAs } from 'file-saver';
 import { fileCommentProcessor } from '../utils/fileCommentProcessor';
 import { authService } from './AuthService';
 import { UnifiedDataStructureService } from './DataStructureService';
+import { userDataService } from './UserDataService';
 import { ProjectDataService } from './ProjectDataService';
 import { StorageAdapterService, ZipAdapter } from './StorageAdapterService';
 
@@ -205,45 +206,7 @@ class AccountExportService {
 	}
 
 	private async exportUserLocalStorageData(userId: string): Promise<any> {
-		const userData: any = {
-			settings: {},
-			properties: {},
-			secrets: {},
-		};
-
-		try {
-			const settingsKey = `texlyre-user-${userId}-settings`;
-			const globalSettingsKey = 'texlyre-settings';
-			const settingsData = localStorage.getItem(settingsKey) || localStorage.getItem(globalSettingsKey);
-			if (settingsData) {
-				userData.settings = JSON.parse(settingsData);
-			}
-		} catch (error) {
-			console.warn('Failed to export user settings:', error);
-		}
-
-		try {
-			const propertiesKey = `texlyre-user-${userId}-properties`;
-			const globalPropertiesKey = 'texlyre-properties';
-			const propertiesData = localStorage.getItem(propertiesKey) || localStorage.getItem(globalPropertiesKey);
-			if (propertiesData) {
-				userData.properties = JSON.parse(propertiesData);
-			}
-		} catch (error) {
-			console.warn('Failed to export user properties:', error);
-		}
-
-		try {
-			const secretsKey = `texlyre-user-${userId}-secrets`;
-			const secretsData = localStorage.getItem(secretsKey);
-			if (secretsData) {
-				userData.secrets = JSON.parse(secretsData);
-			}
-		} catch (error) {
-			console.warn('Failed to export user secrets:', error);
-		}
-
-		return userData;
+		return await userDataService.exportUserData(userId, 'all');
 	}
 
 	private async writeFilesOnlyStructure(
@@ -443,26 +406,7 @@ class AccountExportService {
 	}
 
 	private async importUserLocalStorageData(userId: string, userData: any): Promise<void> {
-		try {
-			if (userData.settings && Object.keys(userData.settings).length > 0) {
-				const settingsKey = `texlyre-user-${userId}-settings`;
-				localStorage.setItem(settingsKey, JSON.stringify(userData.settings));
-			}
-
-			if (userData.properties && Object.keys(userData.properties).length > 0) {
-				const propertiesKey = `texlyre-user-${userId}-properties`;
-				localStorage.setItem(propertiesKey, JSON.stringify(userData.properties));
-			}
-
-			if (userData.secrets && Object.keys(userData.secrets).length > 0) {
-				const secretsKey = `texlyre-user-${userId}-secrets`;
-				localStorage.setItem(secretsKey, JSON.stringify(userData.secrets));
-			}
-
-			console.log(`[AccountExportService] Successfully imported user data for: ${userId}`);
-		} catch (error) {
-			console.error('Error importing user local storage data:', error);
-		}
+		await userDataService.importUserData(userId, userData);
 	}
 
 	private async importUserData(userData: any): Promise<any> {
