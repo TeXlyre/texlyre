@@ -2,7 +2,7 @@
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
-import { userDataService, type UserDataType } from '../../services/UserDataService';
+import { type UserDataType, downloadUserData, clearUserData, importFromFile } from '../../utils/userDataUtils';
 import { useAuth } from '../../hooks/useAuth';
 import type { User } from '../../types/auth';
 import Modal from '../common/Modal';
@@ -165,7 +165,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 		if (!user) return;
 
 		try {
-			await userDataService.downloadUserData(user.id, type);
+			await downloadUserData(user.id, type);
 			setSuccessMessage(`Downloaded ${type === 'all' ? 'all data' : type}`);
 			setTimeout(() => setSuccessMessage(null), 2000);
 		} catch (err) {
@@ -190,7 +190,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 			setIsSubmitting(true);
 			setError(null);
 
-			await userDataService.clearUserData(user.id, deleteType);
+			await clearUserData(user.id, deleteType);
 
 			setSuccessMessage(`Successfully cleared ${deleteType === 'all' ? 'all data' : deleteType}`);
 			handleCloseDeleteModal();
@@ -218,7 +218,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 			setIsSubmitting(true);
 			setError(null);
 
-			await userDataService.importFromFile(user.id, file);
+			await importFromFile(user.id, file);
 
 			setSuccessMessage('Successfully imported user data');
 			setTimeout(() => {
@@ -400,23 +400,6 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 							<div className="storage-action-buttons">
 								<button
 									type="button"
-									className="button primary smaller icon-only"
-									onClick={() => fileInputRef?.click()}
-									disabled={isSubmitting}
-									title="Import settings data"
-								>
-									<ImportIcon />
-								</button>
-								<input
-									ref={setFileInputRef}
-									type="file"
-									accept=".json"
-									onChange={handleImportData}
-									style={{ display: 'none' }}
-									disabled={isSubmitting}
-								/>
-								<button
-									type="button"
 									className="button secondary smaller icon-only"
 									onClick={() => handleDownloadData('settings')}
 									disabled={isSubmitting}
@@ -444,23 +427,6 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 							<div className="storage-action-buttons">
 								<button
 									type="button"
-									className="button primary smaller icon-only"
-									onClick={() => fileInputRef?.click()}
-									disabled={isSubmitting}
-									title="Import properties data"
-								>
-									<ImportIcon />
-								</button>
-								<input
-									ref={setFileInputRef}
-									type="file"
-									accept=".json"
-									onChange={handleImportData}
-									style={{ display: 'none' }}
-									disabled={isSubmitting}
-								/>
-								<button
-									type="button"
 									className="button secondary smaller icon-only"
 									onClick={() => handleDownloadData('properties')}
 									disabled={isSubmitting}
@@ -486,23 +452,6 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 								<p>All saved API keys and encrypted credentials</p>
 							</div>
 							<div className="storage-action-buttons">
-								<button
-									type="button"
-									className="button primary smaller icon-only"
-									onClick={() => fileInputRef?.click()}
-									disabled={isSubmitting}
-									title="Import secrets data"
-								>
-									<ImportIcon />
-								</button>
-								<input
-									ref={setFileInputRef}
-									type="file"
-									accept=".json"
-									onChange={handleImportData}
-									style={{ display: 'none' }}
-									disabled={isSubmitting}
-								/>
 								<button
 									type="button"
 									className="button secondary smaller icon-only"

@@ -1,16 +1,16 @@
 // src/utils/clipboardUtils.ts
-import { fileCommentProcessor } from './fileCommentProcessor.ts';
+import { processTextSelection } from './fileCommentUtils.ts';
 
 export const copyCleanTextToClipboard = async (text: string): Promise<void> => {
 	try {
-		const cleanedText = fileCommentProcessor.processTextSelection(text);
+		const cleanedText = processTextSelection(text);
 		await navigator.clipboard.writeText(cleanedText);
 	} catch (error) {
 		console.error('Failed to copy to clipboard:', error);
 
 		// Fallback for older browsers
 		const textArea = document.createElement('textarea');
-		textArea.value = fileCommentProcessor.processTextSelection(text);
+		textArea.value = processTextSelection(text);
 		document.body.appendChild(textArea);
 		textArea.select();
 		try {

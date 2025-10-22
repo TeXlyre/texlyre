@@ -1,12 +1,12 @@
 // src/services/AccountExportService.ts
 import { saveAs } from 'file-saver';
 
-import { fileCommentProcessor } from '../utils/fileCommentProcessor';
+import { cleanContent, processFile } from '../utils/fileCommentUtils';
 import { authService } from './AuthService';
 import { UnifiedDataStructureService } from './DataStructureService';
-import { userDataService } from './UserDataService';
 import { ProjectDataService } from './ProjectDataService';
 import { StorageAdapterService, ZipAdapter } from './StorageAdapterService';
+import { importUserData, exportUserData } from '../utils/userDataUtils';
 
 export interface ExportOptions {
 	includeAccount?: boolean;
@@ -206,7 +206,7 @@ class AccountExportService {
 	}
 
 	private async exportUserLocalStorageData(userId: string): Promise<any> {
-		return await userDataService.exportUserData(userId, 'all');
+		return await exportUserData(userId, 'all');
 	}
 
 	private async writeFilesOnlyStructure(
@@ -274,7 +274,7 @@ class AccountExportService {
 
 					for (const file of fileFiles) {
 						if (file.content) {
-							const processedFile = fileCommentProcessor.processFile(file);
+							const processedFile = processFile(file);
 
 							const cleanPath = file.path.startsWith('/')
 								? file.path.slice(1)
@@ -323,9 +323,8 @@ class AccountExportService {
 						if (file.type === 'file') {
 							const content = projectData.fileContents.get(file.path);
 							if (content) {
-								// Clean the content using FileCommentProcessor
 								const cleanedContent =
-									fileCommentProcessor.cleanContent(content);
+									cleanContent(content);
 
 								const cleanPath = file.path.startsWith('/')
 									? file.path.slice(1)
@@ -406,7 +405,7 @@ class AccountExportService {
 	}
 
 	private async importUserLocalStorageData(userId: string, userData: any): Promise<void> {
-		await userDataService.importUserData(userId, userData);
+		await importUserData(userId, userData);
 	}
 
 	private async importUserData(userData: any): Promise<any> {

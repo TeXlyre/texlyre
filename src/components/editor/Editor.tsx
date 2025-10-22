@@ -19,7 +19,7 @@ import { fileStorageService } from '../../services/FileStorageService';
 import type { DocumentList } from '../../types/documents.ts';
 import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
 import { copyCleanTextToClipboard } from '../../utils/clipboardUtils';
-import { fileCommentProcessor } from '../../utils/fileCommentProcessor';
+import { processTextSelection } from '../../utils/fileCommentUtils.ts';
 import { arrayBufferToString } from '../../utils/fileUtils';
 import { TextDiffUtils } from '../../utils/textDiffUtils';
 import CommentPanel from '../comments/CommentPanel';
@@ -331,8 +331,7 @@ const EditorContent: React.FC<{
 						typeof file.content === 'string'
 							? file.content
 							: new TextDecoder().decode(file.content);
-					const cleanedContent =
-						fileCommentProcessor.processTextSelection(content);
+					const cleanedContent = processTextSelection(content);
 					const blob = new Blob([cleanedContent], {
 						type: 'text/plain;charset=utf-8',
 					});
@@ -783,8 +782,7 @@ const Editor: React.FC<EditorComponentProps> = ({
 		if (!fileName) return;
 
 		try {
-			const cleanedText =
-				fileCommentProcessor.processTextSelection(textContent);
+			const cleanedText = processTextSelection(textContent);
 			const blob = new Blob([cleanedText], {
 				type: 'text/plain;charset=utf-8',
 			});

@@ -12,7 +12,7 @@ import type { FileNode } from '../types/files';
 import { getMimeType, isBinaryFile, toArrayBuffer } from '../utils/fileUtils';
 import { fileStorageService } from './FileStorageService';
 import { notificationService } from './NotificationService';
-import { fileCommentProcessor } from '../utils/fileCommentProcessor';
+import { cleanContent } from '../utils/fileCommentUtils';
 
 type EngineType = 'pdftex' | 'xetex' | 'luatex';
 
@@ -537,13 +537,13 @@ class LaTeXService {
 			try {
 				const fileContent = await this.getFileContent(node);
 				if (fileContent) {
-					const cleanedFileContent = fileCommentProcessor.cleanContent(fileContent);
-					if (typeof cleanedFileContent === 'string') {
-						engine.writeMemFSFile(`/work/${node.path}`, cleanedFileContent);
+					const cleanedContent = cleanContent(fileContent);
+					if (typeof cleanedContent === 'string') {
+						engine.writeMemFSFile(`/work/${node.path}`, cleanedContent);
 					} else {
 						engine.writeMemFSFile(
 							`/work/${node.path}`,
-							new Uint8Array(cleanedFileContent),
+							new Uint8Array(cleanedContent),
 						);
 					}
 				}
