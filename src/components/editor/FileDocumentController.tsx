@@ -1082,6 +1082,9 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 							currentLine={currentLine}
 							onSectionClick={handleOutlineSectionClick}
 							onRefresh={handleOutlineRefresh}
+							linkedFileInfo={linkedFileInfo}
+							currentFilePath={currentFilePath}
+							isEditingFile={isEditingFile}
 						/>
 					) : (
 						<LaTeXOutline

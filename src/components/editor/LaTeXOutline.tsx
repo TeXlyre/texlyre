@@ -5,11 +5,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useProperties } from '../../hooks/useProperties';
 import { useFileTree } from '../../hooks/useFileTree';
 import { LaTeXOutlineParser } from '../../utils/latexOutlineParser';
-import { ChevronDownIcon, ChevronRightIcon, RefreshIcon, WordCountIcon } from '../common/Icons';
 import OutlineItem from './LaTeXOutlineItem';
 import StatisticsModal from './StatisticsModal';
 import { latexStatisticsService } from '../../services/LaTeXStatisticsService';
 import type { DocumentStatistics, StatisticsOptions } from '../../types/statistics';
+import { ChevronDownIcon, ChevronRightIcon, RefreshIcon, WordCountIcon } from '../common/Icons';
 
 interface LaTeXOutlineProps {
 	content: string;
