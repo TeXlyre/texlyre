@@ -20,8 +20,6 @@ class TypstStatisticsService {
         fileTree: FileNode[],
         options: StatisticsOptions
     ): Promise<DocumentStatistics> {
-        const engine = this.getCompilerEngine();
-
         const allFiles = this.collectFiles(fileTree);
         const normalizedPath = mainFilePath.replace(/^\/+/, '');
 
@@ -45,16 +43,62 @@ class TypstStatisticsService {
             mainFile.content = storedFile.content;
         }
 
-        const sources = await this.prepareSources(mainFile, allFiles, options.includeFiles);
-        const counterDocument = this.buildCounterDocument(mainFile.name, options.includeFiles);
+        let mainContent = await this.getCleanContent(mainFile);
 
-        sources['/wordometer-counter.typ'] = counterDocument;
+        if (!mainContent || mainContent.trim().length === 0) {
+            throw new Error('Main file content is empty');
+        }
+
+        let allContent = mainContent;
+
+        if (options.includeFiles) {
+            const includedFiles = await this.extractIncludedFiles(mainContent, allFiles);
+            for (const file of includedFiles) {
+                allContent += '\n' + file.content;
+            }
+        }
+
+        const usesTemplateFramework = this.detectTemplateFramework(mainContent);
+
+        if (usesTemplateFramework) {
+            console.log('[TypstStatisticsService] Template framework detected, using manual word counting');
+            return this.manualWordCount(allContent, mainFile.name, options.verbose);
+        } else {
+            console.log('[TypstStatisticsService] No template framework detected, using wordometer');
+            return await this.wordmeterCount(mainFile, allFiles, options, mainContent);
+        }
+    }
+
+    private detectTemplateFramework(content: string): boolean {
+        const templatePatterns = [
+            /@preview\/touying/,
+            /@preview\/polylux/,
+            /@preview\/charged-ieee/,
+            /themes\.metropolis/,
+            /themes\.university/,
+        ];
+
+        return templatePatterns.some(pattern => pattern.test(content));
+    }
+
+    private async wordmeterCount(
+        mainFile: FileNode,
+        allFiles: FileNode[],
+        options: StatisticsOptions,
+        mainContent: string
+    ): Promise<DocumentStatistics> {
+        const engine = this.getCompilerEngine();
+        const sources = await this.prepareSources(mainFile, allFiles, options.includeFiles, mainContent);
+
+        const modifiedMainContent = this.injectWordometer(mainContent);
+        const normalizedMainPath = mainFile.path.replace(/^\/+/, '');
+        sources[`/${normalizedMainPath}`] = modifiedMainContent;
 
         try {
             const result = await engine.compile(
-                '/wordometer-counter.typ',
+                `/${normalizedMainPath}`,
                 sources,
-                'canvas'
+                'svg'
             );
 
             if (!result.output) {
@@ -65,46 +109,243 @@ class TypstStatisticsService {
                 ? result.output
                 : new TextDecoder().decode(result.output as Uint8Array);
 
-            return this.parseStatistics(rawOutput, options.merge, mainFile.name);
+            return this.parseWordmeterOutput(rawOutput, mainFile.name, mainContent, options.verbose);
         } catch (error) {
-            throw new Error(`Statistics calculation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            console.warn('[TypstStatisticsService] Wordometer failed, falling back to manual count:', error);
+            return this.manualWordCount(mainContent, mainFile.name, options.verbose);
         }
     }
 
-    private buildCounterDocument(mainFileName: string, includeFiles: boolean): string {
-        const normalizedPath = mainFileName.startsWith('/') ? mainFileName : `/${mainFileName}`;
+    private manualWordCount(content: string, fileName: string, verbose?: number): DocumentStatistics {
+        const contentBlocks = this.extractContentBlocks(content);
+        const allText = contentBlocks.join(' ');
 
-        return `
-#import "@preview/wordometer:0.1.3": word-count, total-words
+        const headingMatches = content.match(/^=+\s+.+$/gm) || [];
+        const mathInlineMatches = content.match(/\$[^$\n]+\$/g) || [];
+        const mathDisplayMatches = content.match(/\$\$[\s\S]+?\$\$/g) || [];
 
-${includeFiles ? '#show: word-count.with(exclude: none)' : '#show: word-count'}
+        let cleanedText = allText
+            .replace(/\$[^$]+\$/g, ' ')
+            .replace(/\$\$[\s\S]+?\$\$/g, ' ')
+            .replace(/#[\w-]+\([^)]*\)/g, ' ')
+            .replace(/image\([^)]+\)/g, ' ')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/[{}()]/g, ' ')
+            .replace(/[*_`~^]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
 
-#include "${normalizedPath}"
+        const words = cleanedText.split(/\s+/).filter(word =>
+            word.length > 0 && /[a-zA-Z0-9\u4e00-\u9fff]/.test(word)
+        );
+
+        const stats: DocumentStatistics = {
+            words: words.length,
+            headers: headingMatches.length,
+            captions: 0,
+            mathInline: mathInlineMatches.length,
+            mathDisplay: mathDisplayMatches.length,
+        };
+
+        let rawOutputText = `File: ${fileName}\n`;
+        rawOutputText += `Words in text: ${stats.words}\n`;
+        rawOutputText += `Headers: ${stats.headers}\n`;
+        rawOutputText += `Math inline: ${stats.mathInline}\n`;
+        rawOutputText += `Math display: ${stats.mathDisplay}\n`;
+        rawOutputText += `\nTotal: ${stats.words}\n`;
+        rawOutputText += `\n(Note: Counted manually due to template framework usage)`;
+
+        if (verbose && verbose > 0) {
+            rawOutputText += '\n\n=== Content Being Analyzed ===\n';
+            rawOutputText += content;
+            rawOutputText += '\n\n=== Extracted Text ===\n';
+            rawOutputText += cleanedText;
+            rawOutputText += '\n=== End of Content ===';
+        }
+
+        stats.rawOutput = rawOutputText;
+
+        return stats;
+    }
+
+    private extractContentBlocks(text: string): string[] {
+        const blocks: string[] = [];
+        let depth = 0;
+        let currentBlock = '';
+
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+
+            if (char === '[') {
+                if (depth === 0) {
+                    currentBlock = '';
+                }
+                depth++;
+                if (depth > 1) {
+                    currentBlock += char;
+                }
+            } else if (char === ']') {
+                depth--;
+                if (depth === 0) {
+                    blocks.push(currentBlock);
+                    currentBlock = '';
+                } else if (depth > 0) {
+                    currentBlock += char;
+                }
+            } else if (depth > 0) {
+                currentBlock += char;
+            }
+        }
+
+        const headingMatches = text.matchAll(/^(=+)\s+(.+)$/gm);
+        for (const match of headingMatches) {
+            blocks.push(match[2]);
+        }
+
+        return blocks;
+    }
+
+    private injectWordometer(content: string): string {
+        const hasWordometer = content.includes('@preview/wordometer');
+
+        let modified = content;
+
+        const lines = modified.split('\n');
+        let lastImportIndex = -1;
+        let firstShowIndex = -1;
+
+        for (let i = 0; i < lines.length; i++) {
+            const trimmed = lines[i].trim();
+            if (trimmed.startsWith('#import')) {
+                lastImportIndex = i;
+            } else if (trimmed.startsWith('#show:') && firstShowIndex === -1) {
+                firstShowIndex = i;
+            }
+        }
+
+        if (!hasWordometer) {
+            const insertIndex = lastImportIndex + 1;
+            lines.splice(insertIndex, 0, '#import "@preview/wordometer:0.1.5": word-count, total-words');
+            if (firstShowIndex >= insertIndex) {
+                firstShowIndex++;
+            }
+        }
+
+        const hasShowWordCount = modified.includes('#show: word-count');
+        if (!hasShowWordCount) {
+            if (firstShowIndex === -1) {
+                const insertIndex = lastImportIndex + 1;
+                if (hasWordometer) {
+                    lines.splice(insertIndex, 0, '', '#show: word-count');
+                } else {
+                    lines.splice(insertIndex + 1, 0, '', '#show: word-count');
+                }
+            } else {
+                lines.splice(firstShowIndex, 0, '#show: word-count', '');
+            }
+        }
+
+        modified = lines.join('\n');
+
+        const hasOutputBlock = modified.includes('WORDOMETER_OUTPUT_START');
+        if (!hasOutputBlock) {
+            modified += `\n\n#pagebreak()
 
 #context [
   WORDOMETER_OUTPUT_START
+  
   Total words: #total-words
+  
   WORDOMETER_OUTPUT_END
-]
-`.trim();
+]`;
+        }
+
+        return modified;
+    }
+
+    private parseWordmeterOutput(
+        output: string,
+        mainFileName: string,
+        cleanedContent?: string,
+        verbose?: number
+    ): DocumentStatistics {
+        const stats: DocumentStatistics = {
+            words: 0,
+            headers: 0,
+            captions: 0,
+            mathInline: 0,
+            mathDisplay: 0,
+            rawOutput: output
+        };
+
+        const startMarker = 'WORDOMETER_OUTPUT_START';
+        const endMarker = 'WORDOMETER_OUTPUT_END';
+
+        const startIdx = output.indexOf(startMarker);
+        const endIdx = output.indexOf(endMarker);
+
+        if (startIdx === -1 || endIdx === -1) {
+            throw new Error('Could not find wordometer output markers');
+        }
+
+        const relevantOutput = output.substring(startIdx + startMarker.length, endIdx).trim();
+        const totalWordsMatch = relevantOutput.match(/Total words:\s*(\d+)/);
+
+        if (totalWordsMatch) {
+            stats.words = parseInt(totalWordsMatch[1], 10);
+        }
+
+        let rawOutputText = `File: ${mainFileName}\nWords in text: ${stats.words}\n\nTotal: ${stats.words}`;
+
+        if (verbose && verbose > 0 && cleanedContent) {
+            rawOutputText += '\n\n=== Content Being Analyzed ===\n';
+            rawOutputText += cleanedContent;
+            rawOutputText += '\n=== End of Content ===';
+        }
+
+        stats.rawOutput = rawOutputText;
+
+        return stats;
     }
 
     private async prepareSources(
         mainFile: FileNode,
         allFiles: FileNode[],
-        includeFiles: boolean
+        includeFiles: boolean,
+        mainContent: string
     ): Promise<Record<string, string | Uint8Array>> {
         const sources: Record<string, string | Uint8Array> = {};
 
-        const mainContent = await this.getCleanContent(mainFile);
-        const normalizedMainPath = mainFile.path.replace(/^\/+/, '');
-        sources[`/${normalizedMainPath}`] = mainContent;
-
         if (includeFiles) {
             const includedFiles = await this.extractIncludedFiles(mainContent, allFiles);
+
             for (const file of includedFiles) {
                 const normalizedPath = file.path.replace(/^\/+/, '');
                 sources[`/${normalizedPath}`] = file.content;
+            }
+        }
+
+        const resourceFiles = allFiles.filter(f =>
+            f.type === 'file' &&
+            !f.isDeleted &&
+            !f.path.startsWith('/.texlyre_') &&
+            f.path !== mainFile.path &&
+            f.path.match(/\.(png|jpg|jpeg|gif|svg|pdf|bib|cls|sty|toml|yaml|yml|typ)$/i)
+        );
+
+        for (const file of resourceFiles) {
+            try {
+                const content = await this.getFileContent(file);
+                if (content) {
+                    const normalizedPath = file.path.replace(/^\/+/, '');
+                    if (typeof content === 'string') {
+                        sources[`/${normalizedPath}`] = content;
+                    } else {
+                        sources[`/${normalizedPath}`] = new Uint8Array(content);
+                    }
+                }
+            } catch (error) {
+                console.warn(`Failed to load resource file ${file.path}:`, error);
             }
         }
 
@@ -165,7 +406,7 @@ ${includeFiles ? '#show: word-count.with(exclude: none)' : '#show: word-count'}
         return files;
     }
 
-    private async getCleanContent(file: FileNode): Promise<string> {
+    private async getRawContent(file: FileNode): Promise<string> {
         let content: string;
 
         if (file.content) {
@@ -181,39 +422,26 @@ ${includeFiles ? '#show: word-count.with(exclude: none)' : '#show: word-count'}
                 : new TextDecoder().decode(storedFile.content);
         }
 
-        return cleanContent(content) as string;
+        return content;
     }
 
-    private parseStatistics(output: string, _merged: boolean, mainFileName: string): DocumentStatistics {
-        const stats: DocumentStatistics = {
-            words: 0,
-            headers: 0,
-            captions: 0,
-            mathInline: 0,
-            mathDisplay: 0,
-            rawOutput: output
-        };
+    private async getCleanContent(file: FileNode): Promise<string> {
+        const content = await this.getRawContent(file);
+        const cleaned = cleanContent(content);
+        return typeof cleaned === 'string' ? cleaned : new TextDecoder().decode(cleaned);
+    }
 
-        const startMarker = 'WORDOMETER_OUTPUT_START';
-        const endMarker = 'WORDOMETER_OUTPUT_END';
-
-        const startIdx = output.indexOf(startMarker);
-        const endIdx = output.indexOf(endMarker);
-
-        if (startIdx === -1 || endIdx === -1) {
-            throw new Error('Could not parse wordometer output');
+    private async getFileContent(file: FileNode): Promise<ArrayBuffer | string | null> {
+        if (file.content !== undefined) {
+            return file.content;
         }
-
-        const relevantOutput = output.substring(startIdx + startMarker.length, endIdx).trim();
-        const totalWordsMatch = relevantOutput.match(/Total words:\s*(\d+)/);
-
-        if (totalWordsMatch) {
-            stats.words = parseInt(totalWordsMatch[1], 10);
+        try {
+            const storedFile = await fileStorageService.getFile(file.id);
+            return storedFile?.content || null;
+        } catch (error) {
+            console.warn(`Failed to retrieve content for ${file.path}:`, error);
+            return null;
         }
-
-        stats.rawOutput = `File: ${mainFileName}\nWords in text: ${stats.words}\n\nTotal: ${stats.words}`;
-
-        return stats;
     }
 
     terminate(): void {
