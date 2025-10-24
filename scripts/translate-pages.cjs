@@ -1,12 +1,20 @@
 const { extractTranslations } = require("./i18n/extract-translations.cjs");
 const { processDirectory } = require("./i18n/apply-translations.cjs");
 const { normalizeTranslations } = require("./i18n/normalize-translations.cjs");
+const { detectDynamicContent } = require("./i18n/detect-dynamic-content.cjs");
 
 function main() {
     const args = process.argv.slice(2);
     const command = args[0];
 
-    if (command === "extract") {
+    if (command === "detect") {
+        const sourceDir = args[1] || "./src";
+        const outputFile = args[2] || "./translations/dynamic-patterns.json";
+
+        console.log("=== Detecting dynamic content ===\n");
+        detectDynamicContent(sourceDir, outputFile);
+
+    } else if (command === "extract") {
         const sourceDir = args[1] || "./src";
         const outputFile = args[2] || "./translations/en.json";
 
@@ -57,6 +65,9 @@ function main() {
 TeXlyre Translation Tool
 
 Usage:
+  node scripts/translate-pages.cjs detect [sourceDir] [outputFile]
+    Detect dynamic content (counts, variables) that should be converted to i18n
+    
   node scripts/translate-pages.cjs extract [sourceDir] [outputFile]
     Extract all translatable strings to a JSON file and normalize them
     
@@ -71,11 +82,12 @@ Options:
   --no-backup  Don't create .bak backup files
 
 Examples:
+  node scripts/translate-pages.cjs detect ./src ./translations/dynamic-patterns.json
   node scripts/translate-pages.cjs extract ./src ./translations/en.json
   node scripts/translate-pages.cjs normalize ./translations/en.json
   node scripts/translate-pages.cjs apply ./src --dry-run
   node scripts/translate-pages.cjs apply ./src
-		`);
+        `);
     }
 }
 

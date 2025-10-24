@@ -1,3 +1,4 @@
+// src/i18n.ts
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
@@ -18,8 +19,8 @@ i18next
         },
     });
 
-export const t = (key: string): string => {
-    return i18next.t(key);
+export const t = (key: string, options?: { count?: number;[key: string]: any }): string => {
+    return i18next.t(key, options) as string;
 };
 
 export default i18next;

@@ -43,9 +43,19 @@ function loadExistingTranslations(outputFile) {
     return {};
 }
 
+function detectPluralPattern(text) {
+    const patterns = [
+        /\{count\}\s*(?:item|file|document|page|chat|message|user|project|folder|task|element|entry)s?/i,
+        /(?:item|file|document|page|chat|message|user|project|folder|task|element|entry)s?\s*\{count\}/i,
+    ];
+
+    return patterns.some(pattern => pattern.test(text));
+}
+
 function extractTranslations(sourceDir, outputFile) {
     const existingTranslations = loadExistingTranslations(outputFile);
     const translations = new Map(Object.entries(existingTranslations));
+    const pluralKeys = new Set();
 
     let fileCount = 0;
     let newCount = 0;
@@ -76,6 +86,9 @@ function extractTranslations(sourceDir, outputFile) {
                 JSXText(path) {
                     const text = path.node.value.trim();
                     if (shouldTranslate(text)) {
+                        if (detectPluralPattern(text)) {
+                            pluralKeys.add(text);
+                        }
                         if (translations.has(text)) {
                             existingCount++;
                         } else {
@@ -92,6 +105,9 @@ function extractTranslations(sourceDir, outputFile) {
                     ) {
                         const text = path.node.value.value;
                         if (shouldTranslate(text)) {
+                            if (detectPluralPattern(text)) {
+                                pluralKeys.add(text);
+                            }
                             if (translations.has(text)) {
                                 existingCount++;
                             } else {
@@ -139,6 +155,27 @@ function extractTranslations(sourceDir, outputFile) {
     }
 
     fs.writeFileSync(outputFile, JSON.stringify(translationObj, null, 2));
+
+    if (pluralKeys.size > 0) {
+        const pluralFile = outputFile.replace('.json', '.plural-hints.json');
+        fs.writeFileSync(
+            pluralFile,
+            JSON.stringify(
+                {
+                    _meta: {
+                        description: "Keys that may need plural forms in translations",
+                        note: "Use format: 'key_one', 'key_few', 'key_many', 'key_other'",
+                        example: "For 'Delete {count} Item', create: 'Delete {count} Item_one', 'Delete {count} Item_other'"
+                    },
+                    keys: Array.from(pluralKeys).sort()
+                },
+                null,
+                2
+            )
+        );
+        console.log(`\n📋 Detected ${pluralKeys.size} keys with potential plural forms`);
+        console.log(`💾 Plural hints saved to: ${pluralFile}`);
+    }
 
     console.log(`\n✅ Extraction complete!`);
     console.log(`📁 Files processed: ${fileCount}`);

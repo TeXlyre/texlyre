@@ -1,0 +1,780 @@
+{
+  "_meta": {
+    "description": "Detected dynamic content that should be converted to i18n",
+    "filesAnalyzed": 129,
+    "patternsFound": 91,
+    "highConfidence": 52,
+    "mediumConfidence": 39
+  },
+  "highConfidence": [
+    {
+      "file": "src/components/chat/ChatPanel.tsx",
+      "line": 55,
+      "type": "count",
+      "confidence": "high",
+      "original": "{expression}",
+      "suggested": "{count}"
+    },
+    {
+      "file": "src/components/comments/CommentItem.tsx",
+      "line": 115,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Go to line ...`",
+      "suggested": "Go to line {var}"
+    },
+    {
+      "file": "src/components/comments/CommentToggleButton.tsx",
+      "line": 20,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`...`",
+      "suggested": "{var} comments{var}"
+    },
+    {
+      "file": "src/components/comments/CommentToggleButton.tsx",
+      "line": 25,
+      "type": "count",
+      "confidence": "high",
+      "original": "{expression}",
+      "suggested": "{count}"
+    },
+    {
+      "file": "src/components/common/PluginHeader.tsx",
+      "line": 73,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Navigate to linked file: ...`",
+      "suggested": "Navigate to linked file: {var}"
+    },
+    {
+      "file": "src/components/editor/Editor.tsx",
+      "line": 437,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Copy text from linked file: ...`",
+      "suggested": "Copy text from linked file: {var}"
+    },
+    {
+      "file": "src/components/editor/Editor.tsx",
+      "line": 444,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Download linked file: ...`",
+      "suggested": "Download linked file: {var}"
+    },
+    {
+      "file": "src/components/editor/EditorTabs.tsx",
+      "line": 330,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`...`",
+      "suggested": "{var}{var}"
+    },
+    {
+      "file": "src/components/editor/FileConflictModal.tsx",
+      "line": 191,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`File Conflicts (...`",
+      "suggested": "File Conflicts ({currentIndex} of {conflictCount})"
+    },
+    {
+      "file": "src/components/editor/FileConflictModal.tsx",
+      "line": 311,
+      "type": "count",
+      "confidence": "high",
+      "original": "{expression} {expression} {expression} {expression} ?",
+      "suggested": "{expression} {count} {expression} {expression} ?"
+    },
+    {
+      "file": "src/components/editor/FileConflictModal.tsx",
+      "line": 352,
+      "type": "count",
+      "confidence": "high",
+      "original": "{expression} {expression} {expression} {expression} ?",
+      "suggested": "{expression} {count} {expression} {expression} ?"
+    },
+    {
+      "file": "src/components/editor/FileConflictModal.tsx",
+      "line": 376,
+      "type": "count",
+      "confidence": "high",
+      "original": "{expression} {expression} {expression}",
+      "suggested": "{expression} {count} {expression}"
+    },
+    {
+      "file": "src/components/editor/FileConflictModal.tsx",
+      "line": 420,
+      "type": "count",
+      "confidence": "high",
+      "original": "{expression} {expression} {expression}",
+      "suggested": "{expression} {count} {expression}"
+    },
+    {
+      "file": "src/components/editor/FileConflictModal.tsx",
+      "line": 644,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`...`",
+      "suggested": "{actionCapitalized} Linked File"
+    },
+    {
+      "file": "src/components/editor/FileOperationsModal.tsx",
+      "line": 151,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Move ...`",
+      "suggested": "Move {var}"
+    },
+    {
+      "file": "src/components/editor/LaTeXOutline.tsx",
+      "line": 194,
+      "type": "count",
+      "confidence": "high",
+      "original": "{expression}",
+      "suggested": "{count}"
+    },
+    {
+      "file": "src/components/editor/SearchPanel.tsx",
+      "line": 322,
+      "type": "count",
+      "confidence": "high",
+      "original": "{expression} {expression} {expression} {expression} {expression} {expression} {expression}",
+      "suggested": "{totalMatches} {expression} {expression} {expression} {count} {expression} {expression}"
+    },
+    {
+      "file": "src/components/editor/TypstOutline.tsx",
+      "line": 194,
+      "type": "count",
+      "confidence": "high",
+      "original": "{expression}",
+      "suggested": "{count}"
+    },
+    {
+      "file": "src/components/lsp/LSPPanel.tsx",
+      "line": 308,
+      "type": "plural-ternary",
+      "confidence": "high",
+      "original": "{condition ? \"No entries found matching the search criteria across all providers\" : \"No entries available from any connected provider\"}",
+      "suggested": "No entries found matching the search criteria across all provider",
+      "singular": "No entries found matching the search criteria across all providers",
+      "plural": "No entries available from any connected provider"
+    },
+    {
+      "file": "src/components/lsp/LSPPanel.tsx",
+      "line": 328,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`From ...`",
+      "suggested": "From {var}"
+    },
+    {
+      "file": "src/components/lsp/LSPPanel.tsx",
+      "line": 383,
+      "type": "plural-ternary",
+      "confidence": "high",
+      "original": "{condition ? \"No local entries found matching the search criteria\" : \"No local bibliography entries available\"}",
+      "suggested": "No local entries found matching the search criteria",
+      "singular": "No local entries found matching the search criteria",
+      "plural": "No local bibliography entries available"
+    },
+    {
+      "file": "src/components/lsp/LSPPanel.tsx",
+      "line": 415,
+      "type": "plural-ternary",
+      "confidence": "high",
+      "original": "{condition ? \"No entries found matching the search criteria\" : \"No bibliography entries available\"}",
+      "suggested": "No entries found matching the search criteria",
+      "singular": "No entries found matching the search criteria",
+      "plural": "No bibliography entries available"
+    },
+    {
+      "file": "src/components/lsp/LSPPanel.tsx",
+      "line": 556,
+      "type": "count",
+      "confidence": "high",
+      "original": "{expression} {expression} {expression}",
+      "suggested": "{expression} {count} {expression}"
+    },
+    {
+      "file": "src/components/lsp/LSPToggleButton.tsx",
+      "line": 50,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`...`",
+      "suggested": "{var} {var} panel"
+    },
+    {
+      "file": "src/components/output/LaTeXCompileButton.tsx",
+      "line": 457,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Clear cache and compile...`",
+      "suggested": "Clear cache and compile{var}"
+    },
+    {
+      "file": "src/components/output/TypstCompileButton.tsx",
+      "line": 405,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Clear cache and compile...`",
+      "suggested": "Clear cache and compile{var}"
+    },
+    {
+      "file": "src/components/output/TypstOutput.tsx",
+      "line": 258,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "srcDoc",
+      "original": "`<!DOCTYPE html>\n                                <html>\n                                  <head>\n                                    <style>\n                                      body, html { \n                                        margin: 0; \n                                        padding: 0; \n                                        height: 100%; \n                                        width: 100%; \n                                        overflow: hidden; \n                                        display: flex;\n                                        justify-content: center;\n                                        align-items: center;\n                                      }\n                                      svg { \n                                        max-width: 100%; \n                                        max-height: 100%; \n                                      }\n                                    </style>\n                                  </head>\n                                  <body>...`",
+      "suggested": "<!DOCTYPE html>\n                                <html>\n                                  <head>\n                                    <style>\n                                      body, html { \n                                        margin: 0; \n                                        padding: 0; \n                                        height: 100%; \n                                        width: 100%; \n                                        overflow: hidden; \n                                        display: flex;\n                                        justify-content: center;\n                                        align-items: center;\n                                      }\n                                      svg { \n                                        max-width: 100%; \n                                        max-height: 100%; \n                                      }\n                                    </style>\n                                  </head>\n                                  <body>{compiledSvg}</body>\n                                </html>"
+    },
+    {
+      "file": "src/components/project/ProjectImportModal.tsx",
+      "line": 302,
+      "type": "count",
+      "confidence": "high",
+      "original": "{expression} {expression} )",
+      "suggested": "{expression} {count} )"
+    },
+    {
+      "file": "src/components/project/ProjectList.tsx",
+      "line": 179,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Switch to ...`",
+      "suggested": "Switch to {var} view"
+    },
+    {
+      "file": "src/components/project/ProjectList.tsx",
+      "line": 221,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Delete ...`",
+      "suggested": "Delete {var} selected project{var}"
+    },
+    {
+      "file": "src/components/project/TemplateImportModal.tsx",
+      "line": 265,
+      "type": "count",
+      "confidence": "high",
+      "original": "{expression} {expression} - {expression} {expression} {expression} {expression}",
+      "suggested": "{expression} {startItem} - {endItem} {expression} {count} {expression}"
+    },
+    {
+      "file": "src/components/project/TemplateImportModal.tsx",
+      "line": 420,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "alt",
+      "original": "`...`",
+      "suggested": "{var} preview"
+    },
+    {
+      "file": "src/components/project/TemplateImportModal.tsx",
+      "line": 503,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "alt",
+      "original": "`...`",
+      "suggested": "{var} preview"
+    },
+    {
+      "file": "src/components/settings/ThemeToggleButton.tsx",
+      "line": 29,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Switch to ...`",
+      "suggested": "Switch to {var} theme"
+    },
+    {
+      "file": "src/plugins/backup/github/GitHubBackupModal.tsx",
+      "line": 536,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "placeholder",
+      "original": "`TeXlyre backup: ...`",
+      "suggested": "TeXlyre backup: {var}"
+    },
+    {
+      "file": "src/plugins/collaborative_viewers/bibtex/BibtexCollaborativeViewer.tsx",
+      "line": 376,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Switch to ...`",
+      "suggested": "Switch to {var} View"
+    },
+    {
+      "file": "src/plugins/loggers/latex_visualizer/LaTeXVisualizer.tsx",
+      "line": 402,
+      "type": "count",
+      "confidence": "high",
+      "original": "{expression} {expression} {expression}",
+      "suggested": "{expression} {expression} {count}"
+    },
+    {
+      "file": "src/plugins/loggers/latex_visualizer/LaTeXVisualizer.tsx",
+      "line": 410,
+      "type": "count",
+      "confidence": "high",
+      "original": "{expression} {expression} {expression}",
+      "suggested": "{expression} {expression} {count}"
+    },
+    {
+      "file": "src/plugins/loggers/latex_visualizer/LaTeXVisualizer.tsx",
+      "line": 469,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`File: ...`",
+      "suggested": "File: {var}"
+    },
+    {
+      "file": "src/plugins/loggers/typst_visualizer/TypstVisualizer.tsx",
+      "line": 167,
+      "type": "count",
+      "confidence": "high",
+      "original": "{expression} {expression} {expression}",
+      "suggested": "{expression} {expression} {count}"
+    },
+    {
+      "file": "src/plugins/loggers/typst_visualizer/TypstVisualizer.tsx",
+      "line": 175,
+      "type": "count",
+      "confidence": "high",
+      "original": "{expression} {expression} {expression}",
+      "suggested": "{expression} {expression} {count}"
+    },
+    {
+      "file": "src/plugins/loggers/typst_visualizer/TypstVisualizer.tsx",
+      "line": 234,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`File: ...`",
+      "suggested": "File: {var}"
+    },
+    {
+      "file": "src/plugins/viewers/bibtex/BibtexTableView.tsx",
+      "line": 169,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Sort ...`",
+      "suggested": "Sort {field} ascending"
+    },
+    {
+      "file": "src/plugins/viewers/bibtex/BibtexTableView.tsx",
+      "line": 176,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Sort ...`",
+      "suggested": "Sort {field} descending"
+    },
+    {
+      "file": "src/plugins/viewers/bibtex/BibtexViewer.tsx",
+      "line": 451,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Switch to ...`",
+      "suggested": "Switch to {var} View"
+    },
+    {
+      "file": "src/plugins/viewers/image/CombinedImageViewer.tsx",
+      "line": 289,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "srcDoc",
+      "original": "`<!DOCTYPE html>\n          <html>\n            <head>\n              <style>\n                body, html { \n                  margin: 0; \n                  padding: 0; \n                  height: 100%; \n                  width: 100%; \n                  overflow: auto; \n\t\t\t\t  align-items: center;\n\t\t\t\t  justify-content: left;\n\t\t\t\t  background: transparent;\n                  ...`",
+      "suggested": "<!DOCTYPE html>\n          <html>\n            <head>\n              <style>\n                body, html { \n                  margin: 0; \n                  padding: 0; \n                  height: 100%; \n                  width: 100%; \n                  overflow: auto; \n\t\t\t\t  align-items: center;\n\t\t\t\t  justify-content: left;\n\t\t\t\t  background: transparent;\n                  {centerCss}\n                }\n                svg { \n                  max-width: 100%; \n                  max-height: 100%; \n                  transform: {transformValue};\n                  transform-origin: top left;\n                  filter: {filterValue};\n                }\n              </style>\n            </head>\n            <body>{svgContent}</body>\n          </html>"
+    },
+    {
+      "file": "src/plugins/viewers/image/CombinedImageViewer.tsx",
+      "line": 358,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Rotate 90° (...`",
+      "suggested": "Rotate 90° ({var}°)"
+    },
+    {
+      "file": "src/plugins/viewers/image/CombinedImageViewer.tsx",
+      "line": 381,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Panning ...`",
+      "suggested": "Panning {var}"
+    },
+    {
+      "file": "src/plugins/viewers/image/CombinedImageViewer.tsx",
+      "line": 393,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Decrease Brightness (...`",
+      "suggested": "Decrease Brightness ({var}%)"
+    },
+    {
+      "file": "src/plugins/viewers/image/CombinedImageViewer.tsx",
+      "line": 399,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Increase Brightness (...`",
+      "suggested": "Increase Brightness ({var}%)"
+    },
+    {
+      "file": "src/plugins/viewers/image/CombinedImageViewer.tsx",
+      "line": 405,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Decrease Contrast (...`",
+      "suggested": "Decrease Contrast ({var}%)"
+    },
+    {
+      "file": "src/plugins/viewers/image/CombinedImageViewer.tsx",
+      "line": 411,
+      "type": "template-literal",
+      "confidence": "high",
+      "attribute": "title",
+      "original": "`Increase Contrast (...`",
+      "suggested": "Increase Contrast ({var}%)"
+    }
+  ],
+  "mediumConfidence": [
+    {
+      "file": "src/components/app/AuthApp.tsx",
+      "line": 67,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} .",
+      "suggested": "{expression} ."
+    },
+    {
+      "file": "src/components/app/AuthApp.tsx",
+      "line": 76,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} • {expression} •",
+      "suggested": "{expression} • {expression} •"
+    },
+    {
+      "file": "src/components/app/ProjectApp.tsx",
+      "line": 520,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} • {expression} •",
+      "suggested": "{expression} • {expression} •"
+    },
+    {
+      "file": "src/components/backup/BackupModal.tsx",
+      "line": 354,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} {expression} )",
+      "suggested": "{expression} {currentProjectName} )"
+    },
+    {
+      "file": "src/components/common/KeyboardShortcutsModal.tsx",
+      "line": 139,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} + {expression}",
+      "suggested": "{expression} + {expression}"
+    },
+    {
+      "file": "src/components/common/PrivacyModal.tsx",
+      "line": 39,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} {expression} .",
+      "suggested": "{expression} {expression} ."
+    },
+    {
+      "file": "src/components/common/PrivacyModal.tsx",
+      "line": 57,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} )",
+      "suggested": "{expression} )"
+    },
+    {
+      "file": "src/components/common/PrivacyModal.tsx",
+      "line": 58,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} )",
+      "suggested": "{expression} )"
+    },
+    {
+      "file": "src/components/editor/EditorTabs.tsx",
+      "line": 347,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": ": {expression}",
+      "suggested": ": {expression}"
+    },
+    {
+      "file": "src/components/editor/FileConflictModal.tsx",
+      "line": 323,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} • {expression}",
+      "suggested": "{expression} • {expression}"
+    },
+    {
+      "file": "src/components/editor/FileConflictModal.tsx",
+      "line": 388,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} • {expression}",
+      "suggested": "{expression} • {expression}"
+    },
+    {
+      "file": "src/components/editor/SearchPanel.tsx",
+      "line": 403,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "+ {expression} {expression}",
+      "suggested": "+ {expression} {expression}"
+    },
+    {
+      "file": "src/components/lsp/LSPPanel.tsx",
+      "line": 158,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} :",
+      "suggested": "{expression} :"
+    },
+    {
+      "file": "src/components/lsp/LSPPanel.tsx",
+      "line": 162,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} :",
+      "suggested": "{subKey} :"
+    },
+    {
+      "file": "src/components/lsp/LSPPanel.tsx",
+      "line": 176,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} :",
+      "suggested": "{displayKey} :"
+    },
+    {
+      "file": "src/components/lsp/LSPPanel.tsx",
+      "line": 186,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} :",
+      "suggested": "{displayKey} :"
+    },
+    {
+      "file": "src/components/lsp/LSPPanel.tsx",
+      "line": 328,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "[ {expression} ]",
+      "suggested": "[ {expression} ]"
+    },
+    {
+      "file": "src/components/lsp/LSPPanel.tsx",
+      "line": 403,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} {expression} )",
+      "suggested": "{expression} {expression} )"
+    },
+    {
+      "file": "src/components/project/ProjectList.tsx",
+      "line": 209,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} {expression} )",
+      "suggested": "{expression} {expression} )"
+    },
+    {
+      "file": "src/components/project/ProjectList.tsx",
+      "line": 217,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} {expression} )",
+      "suggested": "{expression} {expression} )"
+    },
+    {
+      "file": "src/components/project/ShareProjectModal.tsx",
+      "line": 86,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} {expression} \"",
+      "suggested": "{expression} {projectName} \""
+    },
+    {
+      "file": "src/components/project/TemplateImportModal.tsx",
+      "line": 447,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "v {expression}",
+      "suggested": "v {expression}"
+    },
+    {
+      "file": "src/components/project/TemplateImportModal.tsx",
+      "line": 543,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "+ {expression}",
+      "suggested": "+ {expression}"
+    },
+    {
+      "file": "src/components/settings/SettingsModal.tsx",
+      "line": 202,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} {expression} \"",
+      "suggested": "{expression} {searchQuery} \""
+    },
+    {
+      "file": "src/plugins/backup/github/GitHubBackupModal.tsx",
+      "line": 494,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "Current Project ( {expression} )",
+      "suggested": "Current Project ( {currentProjectName} )"
+    },
+    {
+      "file": "src/plugins/backup/github/GitHubBackupModal.tsx",
+      "line": 606,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} ( {expression} )",
+      "suggested": "{expression} ( {displayBranch} )"
+    },
+    {
+      "file": "src/plugins/loggers/latex_visualizer/LaTeXVisualizer.tsx",
+      "line": 467,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "📄 {expression}",
+      "suggested": "📄 {expression}"
+    },
+    {
+      "file": "src/plugins/loggers/latex_visualizer/LaTeXVisualizer.tsx",
+      "line": 475,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "Line {expression}",
+      "suggested": "Line {expression}"
+    },
+    {
+      "file": "src/plugins/loggers/typst_visualizer/TypstVisualizer.tsx",
+      "line": 232,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "📄 {expression}",
+      "suggested": "📄 {expression}"
+    },
+    {
+      "file": "src/plugins/loggers/typst_visualizer/TypstVisualizer.tsx",
+      "line": 240,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "Line {expression}",
+      "suggested": "Line {expression}"
+    },
+    {
+      "file": "src/plugins/loggers/typst_visualizer/TypstVisualizer.tsx",
+      "line": 250,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "💡 {expression}",
+      "suggested": "💡 {hint}"
+    },
+    {
+      "file": "src/plugins/renderers/canvas/CanvasRenderer.tsx",
+      "line": 589,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} %",
+      "suggested": "{expression} %"
+    },
+    {
+      "file": "src/plugins/renderers/pdf/PdfRenderer.tsx",
+      "line": 588,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} %",
+      "suggested": "{expression} %"
+    },
+    {
+      "file": "src/plugins/renderers/pdf/PdfRenderer.tsx",
+      "line": 686,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "Loading page {expression} ...",
+      "suggested": "Loading page {pageNumber} ..."
+    },
+    {
+      "file": "src/plugins/renderers/svg/SvgRenderer.tsx",
+      "line": 286,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "Loading page {expression} ...",
+      "suggested": "Loading page {pageNumber} ..."
+    },
+    {
+      "file": "src/plugins/renderers/svg/SvgRenderer.tsx",
+      "line": 486,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} %",
+      "suggested": "{expression} %"
+    },
+    {
+      "file": "src/plugins/viewers/image/CombinedImageViewer.tsx",
+      "line": 344,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} %",
+      "suggested": "{expression} %"
+    },
+    {
+      "file": "src/plugins/viewers/pdf/PdfViewer.tsx",
+      "line": 414,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "/ {expression}",
+      "suggested": "/ {totalPages}"
+    },
+    {
+      "file": "src/plugins/viewers/pdf/PdfViewer.tsx",
+      "line": 452,
+      "type": "interpolation",
+      "confidence": "medium",
+      "original": "{expression} %",
+      "suggested": "{expression} %"
+    }
+  ]
+}

@@ -1,5 +1,4 @@
 const fs = require("node:fs");
-const path = require("node:path");
 
 const PROPER_NOUNS = [
     "TeXlyre",
@@ -53,7 +52,6 @@ const PROPER_NOUNS = [
     "OpenAI",
     "OpenAPI",
     "SVG",
-    "EPS",
     "TXT",
     "PDF",
     "ZIP",
@@ -106,34 +104,35 @@ const PROPER_NOUNS = [
     "Atom",
     "Eclipse",
     "PyCharm",
-
 ];
 
-function isProperNoun(word) {
-    return PROPER_NOUNS.some(
-        noun => noun.toLowerCase() === word.toLowerCase()
-    );
+function preserveInterpolation(text) {
+    const placeholders = new Map();
+    let index = 0;
+
+    let processed = text.replace(/\{[^}]+\}/g, (match) => {
+        const placeholder = `__VAR${index}__`;
+        placeholders.set(placeholder, match);
+        index++;
+        return placeholder;
+    });
+
+    return { processed, placeholders };
 }
 
-function isLikelyAcronym(word) {
-    // All caps with 2-5 letters (PDF, API, URL, etc.)
-    return /^[A-Z]{2,5}$/.test(word);
-}
-
-function isKnownCamelCase(word) {
-    // Check if it matches known patterns like iPhone, eBay, etc.
-    const knownPatterns = [
-        /^[a-z][A-Z]/, // iPhone, eBay
-        /[a-z][A-Z][a-z]/, // JavaScript, TypeScript
-    ];
-
-    return knownPatterns.some(pattern => pattern.test(word));
+function restoreInterpolation(text, placeholders) {
+    let result = text;
+    for (const [placeholder, original] of placeholders.entries()) {
+        result = result.replace(placeholder, original);
+    }
+    return result;
 }
 
 function smartSplitCamelCase(text) {
-    // First, protect proper nouns by replacing them with placeholders
+    const { processed, placeholders } = preserveInterpolation(text);
+
     const properNounMap = new Map();
-    let protectedWord = text;
+    let protectedWord = processed;
     let placeholderIndex = 0;
 
     for (const noun of PROPER_NOUNS) {
@@ -148,29 +147,22 @@ function smartSplitCamelCase(text) {
         }
     }
 
-    // Now split camelCase, but be smart about it
     let result = protectedWord
-        // Add space before uppercase letters that follow lowercase
-        .replace(/([a-z])([A-Z])/g, (match, p1, p2) => {
-            // Don't split if next letter is also uppercase (acronym)
-            return `${p1} ${p2}`;
-        })
-        // Add space before numbers if not already present
+        .replace(/([a-z])([A-Z])/g, (match, p1, p2) => `${p1} ${p2}`)
         .replace(/([a-z])(\d)/gi, "$1 $2")
-        // Add space after numbers if not already present
         .replace(/(\d)([a-z])/gi, "$1 $2");
 
-    // Restore proper nouns
     for (const [placeholder, original] of properNounMap.entries()) {
         result = result.replace(placeholder, original);
     }
+
+    result = restoreInterpolation(result, placeholders);
 
     return result;
 }
 
 function normalizeTranslationKey(key) {
     return smartSplitCamelCase(key)
-        // Clean up multiple spaces
         .replace(/\s+/g, " ")
         .trim();
 }
@@ -195,7 +187,6 @@ function normalizeTranslations(inputFile, outputFile = null) {
                 changedCount++;
             }
 
-            // Use the normalized key, but keep the translated value if it was manually edited
             normalized[normalizedKey] = normalizedValue;
         }
 
