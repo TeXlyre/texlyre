@@ -1527,7 +1527,7 @@
   resolved "https://registry.npmjs.org/@myriaddreamin/typst-ts-web-compiler/-/typst-ts-web-compiler-0.6.1-rc3.tgz"
   integrity sha512-6KD2QKUI1KVcBpKxh/LQX02224NnjMWlRQy/IqtROekDKUdoCoSlf5PV7aETYyI4bA1mtNrzMkBGdCeum/4frA==
 
-"@myriaddreamin/typst.ts@^0.6.1-rc2":
+"@myriaddreamin/typst.ts@^0.6.1-rc3":
   version "0.6.1-rc3"
   resolved "https://registry.npmjs.org/@myriaddreamin/typst.ts/-/typst.ts-0.6.1-rc3.tgz"
   integrity sha512-pGzaJ5SV0JjrNWn14Bicy0nPTtfD5+4kHwGUDYSebSMbfAtNHfi+Et7k4PiXqunwRm7Obkk5iZufiRM2jOlfbg==

@@ -1,3 +1,4 @@
+// src/services/TypstStatisticsService.ts
 import type { FileNode } from '../types/files';
 import { fileStorageService } from './FileStorageService';
 import { cleanContent } from '../utils/fileCommentUtils';

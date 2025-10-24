@@ -166,6 +166,7 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
                     options={statsOptions}
                     onOptionsChange={setStatsOptions}
                     onRefresh={handleShowStatistics}
+                    contentType="typst"
                 />
             </div>
         );
@@ -228,6 +229,7 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
                 options={statsOptions}
                 onOptionsChange={setStatsOptions}
                 onRefresh={handleShowStatistics}
+                contentType="typst"
             />
         </div>
     );

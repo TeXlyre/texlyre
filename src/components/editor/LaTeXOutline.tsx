@@ -166,6 +166,7 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 					options={statsOptions}
 					onOptionsChange={setStatsOptions}
 					onRefresh={handleShowStatistics}
+					contentType="latex"
 				/>
 			</div>
 		);
@@ -227,6 +228,7 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
 				options={statsOptions}
 				onOptionsChange={setStatsOptions}
 				onRefresh={handleShowStatistics}
+				contentType="latex"
 			/>
 		</div>
 	);

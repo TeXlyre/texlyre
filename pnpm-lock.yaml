@@ -72,7 +72,7 @@ importers:
         specifier: ^0.6.1-rc3
         version: 0.6.1-rc3
       '@myriaddreamin/typst.ts':
-        specifier: ^0.6.1-rc2
+        specifier: ^0.6.1-rc3
         version: 0.6.1-rc3(@myriaddreamin/typst-ts-renderer@0.6.1-rc3)(@myriaddreamin/typst-ts-web-compiler@0.6.1-rc3)
       '@picocss/pico':
         specifier: ^2.0.6
