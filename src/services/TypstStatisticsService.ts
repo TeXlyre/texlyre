@@ -34,21 +34,22 @@ class TypstStatisticsService {
             throw new Error(`Main file not found: ${mainFilePath}`);
         }
 
-        if (!mainFile.content) {
-            const storedFile = await fileStorageService.getFile(mainFile.id);
-            if (!storedFile?.content) {
-                throw new Error('Main file content not found');
-            }
-            mainFile.content = storedFile.content;
+        const storedFile = await fileStorageService.getFile(mainFile.id);
+        if (!storedFile?.content) {
+            throw new Error('Main file content not found');
         }
 
-        const mainContent = await this.getCleanContent(mainFile);
+        const mainContent = await this.getCleanContentFromStorage(storedFile);
 
         if (!mainContent || mainContent.trim().length === 0) {
             throw new Error('Main file content is empty');
         }
 
-        return await this.wordmeterCount(mainFile, allFiles, options, mainContent);
+        try {
+            return await this.wordmeterCount(mainFile, allFiles, options, mainContent);
+        } finally {
+            this.terminate();
+        }
     }
 
     private async wordmeterCount(
@@ -273,14 +274,22 @@ class TypstStatisticsService {
             );
 
             if (file) {
-                const cleanFileContent = await this.getCleanContent(file);
-                files.push({ path: filename, content: cleanFileContent });
+                const storedFile = await fileStorageService.getFile(file.id);
+                if (storedFile?.content) {
+                    const content = typeof storedFile.content === 'string'
+                        ? storedFile.content
+                        : new TextDecoder().decode(storedFile.content);
+                    const cleaned = cleanContent(content);
+                    const cleanFileContent = typeof cleaned === 'string' ? cleaned : new TextDecoder().decode(cleaned);
 
-                const nestedFiles = await this.extractIncludedFiles(cleanFileContent, allFiles);
-                for (const nested of nestedFiles) {
-                    if (!processedPaths.has(nested.path)) {
-                        processedPaths.add(nested.path);
-                        files.push(nested);
+                    files.push({ path: filename, content: cleanFileContent });
+
+                    const nestedFiles = await this.extractIncludedFiles(cleanFileContent, allFiles);
+                    for (const nested of nestedFiles) {
+                        if (!processedPaths.has(nested.path)) {
+                            processedPaths.add(nested.path);
+                            files.push(nested);
+                        }
                     }
                 }
             }
@@ -301,35 +310,16 @@ class TypstStatisticsService {
         return files;
     }
 
-    private async getRawContent(file: FileNode): Promise<string> {
-        let content: string;
+    private async getCleanContentFromStorage(file: FileNode): Promise<string> {
+        const content = typeof file.content === 'string'
+            ? file.content
+            : new TextDecoder().decode(file.content);
 
-        if (file.content) {
-            content = typeof file.content === 'string'
-                ? file.content
-                : new TextDecoder().decode(file.content);
-        } else {
-            const storedFile = await fileStorageService.getFile(file.id);
-            if (!storedFile?.content) throw new Error('File content not found');
-
-            content = typeof storedFile.content === 'string'
-                ? storedFile.content
-                : new TextDecoder().decode(storedFile.content);
-        }
-
-        return content;
-    }
-
-    private async getCleanContent(file: FileNode): Promise<string> {
-        const content = await this.getRawContent(file);
         const cleaned = cleanContent(content);
         return typeof cleaned === 'string' ? cleaned : new TextDecoder().decode(cleaned);
     }
 
     private async getFileContent(file: FileNode): Promise<ArrayBuffer | string | null> {
-        if (file.content !== undefined) {
-            return file.content;
-        }
         try {
             const storedFile = await fileStorageService.getFile(file.id);
             return storedFile?.content || null;
