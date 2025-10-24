@@ -5,7 +5,7 @@ import { type DragEvent, useEffect, useRef, useState } from 'react';
 import { useFileTree } from '../../hooks/useFileTree';
 import type { FileNode } from '../../types/files';
 import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
-import { fileCommentProcessor } from '../../utils/fileCommentProcessor';
+import { cleanContent } from '../../utils/fileCommentUtils.ts';
 import { createZipFromFolder, downloadZipFile } from '../../utils/zipUtils';
 import {
 	ExportIcon,
@@ -478,8 +478,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		if (node.type === 'file') {
 			const content = await getFileContent(node.id);
 			if (content) {
-				const cleanContent = fileCommentProcessor.cleanContent(content);
-				const blob = new Blob([cleanContent], {
+				const cleanedContent = cleanContent(content);
+				const blob = new Blob([cleanedContent], {
 					type: node.mimeType || 'text/plain',
 				});
 				const url = URL.createObjectURL(blob);

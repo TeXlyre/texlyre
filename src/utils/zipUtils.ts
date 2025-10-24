@@ -3,7 +3,7 @@ import JSZip from 'jszip';
 import { nanoid } from 'nanoid';
 
 import type { FileNode } from '../types/files';
-import { fileCommentProcessor } from './fileCommentProcessor';
+import { cleanContent } from './fileCommentUtils';
 import {
 	getMimeType,
 	getParentPath,
@@ -95,16 +95,16 @@ export const createZipFromFolder = async (
 		if (node.type === 'file') {
 			const content = await getFileContent(node.id);
 			if (content !== null) {
-				const cleanContent = fileCommentProcessor.cleanContent(content);
+				const cleanedContent = cleanContent(content);
 				const relativePath = basePath ? `${basePath}/${node.name}` : node.name;
 
-				if (node.isBinary && cleanContent instanceof ArrayBuffer) {
-					zip.file(relativePath, cleanContent);
+				if (node.isBinary && cleanedContent instanceof ArrayBuffer) {
+					zip.file(relativePath, cleanedContent);
 				} else {
 					const textContent =
-						typeof cleanContent === 'string'
-							? cleanContent
-							: new TextDecoder().decode(cleanContent);
+						typeof cleanedContent === 'string'
+							? cleanedContent
+							: new TextDecoder().decode(cleanedContent);
 					zip.file(relativePath, textContent);
 				}
 			}

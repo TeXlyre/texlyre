@@ -5,7 +5,7 @@ import type { TypstCompileResult, TypstOutputFormat } from '../types/typst';
 import type { FileNode } from '../types/files';
 import { fileStorageService } from './FileStorageService';
 import { notificationService } from './NotificationService';
-import { fileCommentProcessor } from '../utils/fileCommentProcessor';
+import { cleanContent } from '../utils/fileCommentUtils';
 import { TypstCompilerEngine } from '../extensions/typst.ts/TypstCompilerEngine';
 import { toArrayBuffer } from '../utils/fileUtils';
 
@@ -245,7 +245,7 @@ class TypstService {
                 const content = await this.getFileContent(fileNode);
                 if (!content) continue;
 
-                const cleanedContent = fileCommentProcessor.cleanContent(content);
+                const cleanedContent = cleanContent(content);
                 const normalizedPath = this.normalizePath(fileNode.path);
 
                 if (this.isMainFile(fileNode, mainFileName)) {

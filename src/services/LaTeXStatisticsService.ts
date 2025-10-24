@@ -2,7 +2,7 @@
 import { WasmToolsEngine } from '../extensions/wasm-tools/WasmToolsEngine';
 import type { FileNode } from '../types/files';
 import { fileStorageService } from './FileStorageService';
-import { fileCommentProcessor } from '../utils/fileCommentProcessor';
+import { cleanContent } from '../utils/fileCommentUtils';
 import type { DocumentStatistics, StatisticsOptions, FileStatistics } from '../types/statistics';
 
 class LaTeXStatisticsService {
@@ -88,7 +88,7 @@ class LaTeXStatisticsService {
                 : new TextDecoder().decode(storedFile.content);
         }
 
-        return fileCommentProcessor.cleanContent(content) as string;
+        return cleanContent(content) as string;
     }
 
     private async extractIncludedFiles(

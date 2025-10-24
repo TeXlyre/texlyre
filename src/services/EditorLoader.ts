@@ -42,7 +42,7 @@ import { createLSPExtension, updateLSPPluginsInView, setCurrentFilePathInLSP } f
 import { useAuth } from '../hooks/useAuth';
 import { useEditor } from '../hooks/useEditor';
 import { autoSaveManager } from '../utils/autoSaveUtils';
-import { fileCommentProcessor } from '../utils/fileCommentProcessor.ts';
+import { processTextSelection } from '../utils/fileCommentUtils.ts';
 import { collabService } from './CollabService';
 import { fileStorageService } from './FileStorageService';
 import { filePathCacheService } from './FilePathCacheService';
@@ -625,7 +625,7 @@ export const EditorLoader = (
 					primaryRange.to,
 				);
 				const cleanedText =
-					fileCommentProcessor.processTextSelection(selectedText);
+					processTextSelection(selectedText);
 
 				event.clipboardData?.setData('text/plain', cleanedText);
 				event.preventDefault();

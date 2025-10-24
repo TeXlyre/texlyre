@@ -5,7 +5,6 @@ import Modal from '../common/Modal';
 import type { DocumentStatistics, StatisticsOptions } from '../../types/statistics';
 import { WordCountIcon } from '../common/Icons';
 
-
 interface StatisticsModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -15,9 +14,11 @@ interface StatisticsModalProps {
     options: StatisticsOptions;
     onOptionsChange: (options: StatisticsOptions) => void;
     onRefresh: () => Promise<void>;
+    contentType: 'latex' | 'typst';
 }
 
 interface StatisticsOptionsPanelProps {
+    contentType: 'latex' | 'typst';
     includeFiles: boolean;
     merge: boolean;
     brief: boolean;
@@ -33,6 +34,7 @@ interface StatisticsOptionsPanelProps {
 }
 
 const StatisticsOptionsPanel: React.FC<StatisticsOptionsPanelProps> = ({
+    contentType,
     includeFiles,
     merge,
     brief,
@@ -46,6 +48,29 @@ const StatisticsOptionsPanel: React.FC<StatisticsOptionsPanelProps> = ({
     onSumChange,
     onVerboseChange
 }) => {
+    if (contentType === 'typst') {
+        return (
+            <div className="statistics-options-panel">
+                <div className="format-note warning-message">
+                    <p>⚠️ Wordometer is <b>experimental</b> and may not count all Typst elements (e.g., CV templates, Touying presentation elements).</p>
+                </div>
+                <div className="options-group">
+                    <h4>Detail Level</h4>
+                    <label>
+                        Verbosity:
+                        <input
+                            type="number"
+                            min="0"
+                            max="4"
+                            value={verbose}
+                            onChange={(e) => onVerboseChange(parseInt(e.target.value, 10))}
+                        />
+                    </label>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="statistics-options-panel">
             <div className="options-group">
@@ -123,7 +148,8 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({
     error,
     options,
     onOptionsChange,
-    onRefresh
+    onRefresh,
+    contentType
 }) => {
     const totalWords = statistics
         ? statistics.words + statistics.headers + statistics.captions
@@ -144,6 +170,7 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({
             <div className="statistics-modal-content">
                 <div>
                     <StatisticsOptionsPanel
+                        contentType={contentType}
                         includeFiles={options.includeFiles}
                         merge={options.merge}
                         brief={options.brief}
@@ -282,8 +309,6 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({
                         )}
                     </div>
                 )}
-
-
             </div>
         </Modal>
     );

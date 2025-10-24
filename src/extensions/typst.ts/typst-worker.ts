@@ -179,6 +179,14 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
                 format: 'vector',
             });
             diagnostics = compileResult.diagnostics || [];
+
+            if (!compileResult.result || compileResult.result.byteLength === 0) {
+                const errorMsg = diagnostics.length > 0
+                    ? diagnostics.map(d => d.message).join('; ')
+                    : 'Compilation produced no artifact';
+                throw new Error(errorMsg);
+            }
+
             output = await renderer.renderSvg({
                 artifactContent: compileResult.result,
             });

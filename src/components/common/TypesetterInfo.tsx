@@ -95,7 +95,7 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
             <>
                 <h4 className="typesetter-tooltip-title">Typst</h4>
                 <div className="typesetter-tooltip-section">
-                    <strong>Engine:</strong> @myriaddreamin/typst.ts v0.6.1-rc2
+                    <strong>Engine:</strong> @myriaddreamin/typst.ts v0.6.1-rc3
                 </div>
                 <div className="typesetter-tooltip-section">
                     <strong>Renderer:</strong> @myriaddreamin/typst-ts-renderer v0.6.1-rc3
