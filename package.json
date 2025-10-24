@@ -32,7 +32,13 @@
 		"test:integration": "node scripts/pm.cjs jest tests/integration",
 		"test:components": "node scripts/pm.cjs jest tests/components",
 		"test:services": "node scripts/pm.cjs jest tests/services",
-		"test:ci": "node scripts/pm.cjs jest --ci --coverage --maxWorkers=2"
+		"test:ci": "node scripts/pm.cjs jest --ci --coverage --maxWorkers=2",
+		"i18n:extract": "node scripts/translate-pages.cjs extract ./src ./translations/en.json",
+		"i18n:normalize": "node scripts/translate-pages.cjs normalize ./translations/en.json",
+		"i18n:preview": "node scripts/translate-pages.cjs apply ./src --dry-run",
+		"i18n:apply": "node scripts/translate-pages.cjs apply ./src",
+		"i18n:apply-no-backup": "node scripts/translate-pages.cjs apply ./src --no-backup",
+		"i18n:full": "node scripts/pm.cjs run i18n:extract && node scripts/pm.cjs run i18n:preview"
 	},
 	"dependencies": {
 		"@biomejs/biome": "^1.8.3",
@@ -67,6 +73,7 @@
 		"codemirror-lang-typst": "^0.4.0",
 		"file-saver": "^2.0.5",
 		"filepizza-client": "^2.0.0-alpha.2",
+		"i18next": "^25.6.0",
 		"idb": "^8.0.2",
 		"jszip": "^3.10.1",
 		"lib0": "^0.2.42",
@@ -80,6 +87,7 @@
 		"react": "^18.2.0",
 		"react-ace": "^10.1.0",
 		"react-dom": "^18.2.0",
+		"react-i18next": "^16.2.0",
 		"react-pdf": "10.0.1",
 		"vite-plugin-wasm": "^3.3.0",
 		"wasm-latex-tools": "^0.1.0",
@@ -95,6 +103,11 @@
 		"rimraf": "^4.0.0"
 	},
 	"devDependencies": {
+		"@babel/core": "^7.28.5",
+		"@babel/generator": "^7.28.5",
+		"@babel/parser": "^7.28.5",
+		"@babel/traverse": "^7.28.5",
+		"@babel/types": "^7.28.5",
 		"@testing-library/jest-dom": "^6.1.5",
 		"@testing-library/react": "^14.1.2",
 		"@testing-library/user-event": "^14.5.1",
