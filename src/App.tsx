@@ -41,6 +41,7 @@ import './styles/components/chat.css';
 import './styles/components/latex-typst.css';
 import './styles/components/plugin-header.css';
 import './styles/components/settings.css';
+import './styles/components/language.css';
 import './styles/components/offline.css';
 import './styles/components/typsetter.css';
 import './styles/components/splash-screen.css'
@@ -52,15 +53,16 @@ import AppRouter from './components/app/AppRouter';
 import PasswordModal from './components/auth/PasswordModal';
 import SplashScreen from './components/common/SplashScreen';
 import FileConflictModal from './components/editor/FileConflictModal';
-import FileOperationToast from './components/editor/FileOperationToast.tsx';
+import FileOperationToast from './components/editor/FileOperationToast';
 import { AuthProvider } from './contexts/AuthContext';
 import { EditorProvider } from './contexts/EditorContext';
 import { FileSystemBackupProvider } from './contexts/FileSystemBackupContext';
 import { OfflineProvider } from './contexts/OfflineContext';
-import { PropertiesProvider } from './contexts/PropertiesContext.tsx';
+import { PropertiesProvider } from './contexts/PropertiesContext';
 import { SecretsContext, SecretsProvider } from './contexts/SecretsContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 function App() {
 	const [isInitializing, setIsInitializing] = useState(true);
@@ -77,25 +79,29 @@ function App() {
 		<>
 			<SplashScreen isVisible={isInitializing} />
 			<SettingsProvider>
-				<OfflineProvider>
-					<AuthProvider>
-						<PropertiesProvider>
-							<ThemeProvider
-								defaultThemeId="texlyre-theme"
-								defaultVariant="system"
-							>
-								<SecretsProvider>
-									<FileSystemBackupProvider>
-										<EditorProvider>
-											<AppContent />
-										</EditorProvider>
-									</FileSystemBackupProvider>
-								</SecretsProvider>
-							</ThemeProvider>
-						</PropertiesProvider>
-					</AuthProvider>
-				</OfflineProvider>
+				<LanguageProvider>
+					<OfflineProvider>
+						<AuthProvider>
+							<PropertiesProvider>
+								<ThemeProvider
+									defaultThemeId="texlyre-theme"
+									defaultVariant="system"
+								>
+									<SecretsProvider>
+										<FileSystemBackupProvider>
+											<EditorProvider>
+												<AppContent />
+											</EditorProvider>
+										</FileSystemBackupProvider>
+
+									</SecretsProvider>
+								</ThemeProvider>
+							</PropertiesProvider>
+						</AuthProvider>
+					</OfflineProvider>
+				</LanguageProvider>
 			</SettingsProvider>
+
 		</>
 	);
 }

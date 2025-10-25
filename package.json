@@ -16,7 +16,7 @@
 		"dev": "node scripts/pm.cjs run generate-plugins && node scripts/pm.cjs vite",
 		"dev:https": "node scripts/pm.cjs run generate-plugins && node scripts/pm.cjs cross-env VITE_USE_HTTPS=true vite --host",
 		"build": "node scripts/pm.cjs tsc && node scripts/pm.cjs vite build",
-		"build:prod": "node scripts/pm.cjs run generate-configs && node scripts/pm.cjs tsx scripts/update-sw-version.js && node scripts/pm.cjs run generate-plugins && node scripts/pm.cjs run generate-fonts && node scripts/pm.cjs tsc && node scripts/pm.cjs vite build",
+		"build:prod": "node scripts/pm.cjs run generate-configs && node scripts/pm.cjs run i18n:coverage && node scripts/pm.cjs tsx scripts/update-sw-version.js && node scripts/pm.cjs run generate-plugins && node scripts/pm.cjs run generate-fonts && node scripts/pm.cjs tsc && node scripts/pm.cjs vite build",
 		"build:local": "node scripts/pm.cjs tsx scripts/update-sw-version.js && node scripts/pm.cjs run generate-plugins && node scripts/pm.cjs run generate-fonts && node scripts/pm.cjs tsc && node scripts/pm.cjs vite build",
 		"clean:cache": "node scripts/clean-cache.cjs",
 		"generate-configs": "node scripts/pm.cjs tsx scripts/generate-configs.ts",
@@ -33,13 +33,14 @@
 		"test:components": "node scripts/pm.cjs jest tests/components",
 		"test:services": "node scripts/pm.cjs jest tests/services",
 		"test:ci": "node scripts/pm.cjs jest --ci --coverage --maxWorkers=2",
+		"i18n:coverage": "node scripts/i18n/calculate-coverage.cjs",
 		"i18n:detect": "node scripts/translate-pages.cjs detect ./src ./translations/dynamic-patterns.json",
 		"i18n:extract": "node scripts/translate-pages.cjs extract ./src ./translations/en.json",
 		"i18n:normalize": "node scripts/translate-pages.cjs normalize ./translations/en.json",
 		"i18n:preview": "node scripts/translate-pages.cjs apply ./src --dry-run",
 		"i18n:apply": "node scripts/translate-pages.cjs apply ./src",
 		"i18n:apply-no-backup": "node scripts/translate-pages.cjs apply ./src --no-backup",
-		"i18n:full": "node scripts/pm.cjs run i18n:extract && node scripts/pm.cjs run i18n:preview"
+		"i18n:full": "node scripts/pm.cjs run i18n:extract && node scripts/pm.cjs run i18n:coverage && node scripts/pm.cjs run i18n:preview"
 	},
 	"dependencies": {
 		"@biomejs/biome": "^1.8.3",

@@ -1,0 +1,28 @@
+{
+    "_meta": {
+        "lastUpdated": "2025-10-25T15:45:50.980Z",
+        "totalKeys": 817
+    },
+    "languages": [
+        {
+            "code": "ar",
+            "name": "Arabic",
+            "nativeName": "العربية",
+            "direction": "rtl",
+            "coverage": 120,
+            "totalKeys": 817,
+            "translatedKeys": 982,
+            "filePath": "ar.json"
+        },
+        {
+            "code": "en",
+            "name": "English",
+            "nativeName": "English",
+            "direction": "ltr",
+            "coverage": 100,
+            "totalKeys": 817,
+            "translatedKeys": 817,
+            "filePath": "en.json"
+        }
+    ]
+}

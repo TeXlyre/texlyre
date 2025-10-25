@@ -11,7 +11,7 @@ import {
 
 import { pluginSettings } from '../plugins/PluginRegistry';
 
-export type SettingType = 'checkbox' | 'select' | 'text' | 'codemirror' | 'number' | 'color';
+export type SettingType = 'checkbox' | 'select' | 'text' | 'codemirror' | 'number' | 'color' | 'language-select';
 
 export interface SettingOption {
 	label: string;
@@ -19,13 +19,13 @@ export interface SettingOption {
 }
 
 export interface SettingCodeMirrorOptions {
-  	language?: string;
-  	height?: number;
-  	lineNumbers?: boolean;
-  	resizable?: boolean;
-  	theme?: 'auto' | 'dark' | 'light';
- 	readOnly?: boolean;
-  	wordWrap?: boolean;
+	language?: string;
+	height?: number;
+	lineNumbers?: boolean;
+	resizable?: boolean;
+	theme?: 'auto' | 'dark' | 'light';
+	readOnly?: boolean;
+	wordWrap?: boolean;
 }
 
 export interface Setting {
@@ -67,12 +67,12 @@ export interface SettingsContextType {
 export const SettingsContext = createContext<SettingsContextType>({
 	getSettings: () => [],
 	getSetting: () => undefined,
-	updateSetting: () => {},
-	registerSetting: () => {},
-	unregisterSetting: () => {},
+	updateSetting: () => { },
+	registerSetting: () => { },
+	unregisterSetting: () => { },
 	getSettingsByCategory: () => [],
 	getCategories: () => [],
-	commitSetting: () => {},
+	commitSetting: () => { },
 	searchSettings: () => ({ categories: [], allSettings: [] }),
 	hasUnsavedChanges: false,
 	needsRefresh: false,

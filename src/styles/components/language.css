@@ -1,0 +1,78 @@
+.settings-language {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.language-selector-wrapper,
+.direction-selector-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.language-select,
+.direction-select {
+    padding: var(--space-sm);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--pico-background);
+    color: var(--text-color);
+}
+
+.language-coverage h4 {
+    margin-bottom: var(--space-md);
+    color: var(--text-color);
+}
+
+.coverage-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.coverage-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.coverage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.language-name {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.current-badge {
+    font-size: 0.8rem;
+    color: var(--pico-primary);
+    font-weight: 600;
+}
+
+.coverage-percentage {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.coverage-bar {
+    height: 8px;
+    background-color: var(--pico-secondary-background);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.coverage-fill {
+    height: 100%;
+    transition: width var(--transition-normal);
+    border-radius: 4px;
+}
+
+.coverage-details {
+    font-size: 0.75rem;
+    color: var(--pico-secondary);
+}
