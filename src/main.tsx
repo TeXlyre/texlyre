@@ -174,6 +174,11 @@ async function initDatabases() {
 	}
 }
 
+function setupDirection() {
+	const savedDir = localStorage.getItem('text-direction') || 'ltr';
+	document.documentElement.setAttribute('dir', savedDir);
+}
+
 async function startApp() {
 	try {
 		await Promise.all([initDatabases(), authService.initialize(), initUserData()]);
@@ -188,5 +193,6 @@ async function startApp() {
 	);
 }
 
+setupDirection();
 setupGuestCleanup();
 startApp();

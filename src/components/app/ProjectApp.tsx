@@ -438,6 +438,17 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						onOpenUpgrade={() => setShowGuestUpgradeModal(true)}
 						isGuest={isGuestUser(user)}
 					/>
+					{/* TODO (fabawi): Add RTL/LTR toggle styles  */}
+					<button
+						onClick={() => {
+							const current = document.documentElement.getAttribute('dir') || 'ltr';
+							const newDir = current === 'ltr' ? 'rtl' : 'ltr';
+							document.documentElement.setAttribute('dir', newDir);
+							localStorage.setItem('text-direction', newDir);
+						}}
+					>
+						{document.documentElement.getAttribute('dir') === 'rtl' ? 'LTR' : 'RTL'}
+					</button>
 				</div>
 			</header>
 
