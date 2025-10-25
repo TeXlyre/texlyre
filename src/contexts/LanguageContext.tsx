@@ -81,7 +81,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
             category: 'Appearance',
             subcategory: 'Language',
             type: 'language-select',
-            label: 'Interface Language',
+            label: 'Interface language',
             description: 'Select the interface language and view translation coverage',
             defaultValue: 'en',
             options: availableLanguages.map(lang => ({
@@ -98,7 +98,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
             category: 'Appearance',
             subcategory: 'Language',
             type: 'select',
-            label: 'Text Direction',
+            label: 'Text direction',
             description: 'Control text direction (Auto follows language)',
             defaultValue: 'auto',
             options: [

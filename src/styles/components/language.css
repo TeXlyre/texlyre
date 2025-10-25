@@ -4,75 +4,170 @@
     gap: var(--space-lg);
 }
 
-.language-selector-wrapper,
-.direction-selector-wrapper {
+.language-selector-wrapper {
     display: flex;
     flex-direction: column;
     gap: var(--space-sm);
 }
 
-.language-select,
-.direction-select {
+.searchable-language-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.dropdown-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     padding: var(--space-sm);
     border: 1px solid var(--accent-border);
     border-radius: var(--radius-sm);
     background-color: var(--pico-background);
     color: var(--text-color);
+    cursor: pointer;
+    transition: border-color var(--transition-normal);
 }
 
-.language-coverage h4 {
-    margin-bottom: var(--space-md);
-    color: var(--text-color);
+.dropdown-trigger:hover {
+    border-color: var(--pico-primary);
 }
 
-.coverage-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-md);
-}
-
-.coverage-item {
+.selected-language {
     display: flex;
     flex-direction: column;
     gap: var(--space-xs);
+    flex: 1;
 }
 
-.coverage-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.language-name {
-    font-weight: 500;
-    color: var(--text-color);
-}
-
-.current-badge {
-    font-size: 0.8rem;
-    color: var(--pico-primary);
-    font-weight: 600;
-}
-
-.coverage-percentage {
-    font-weight: 600;
+.language-text {
     font-size: 0.9rem;
 }
 
-.coverage-bar {
-    height: 8px;
+.coverage-inline {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.coverage-bar-small {
+    flex: 1;
+    height: 6px;
     background-color: var(--pico-secondary-background);
-    border-radius: 4px;
+    border-radius: 3px;
     overflow: hidden;
 }
 
-.coverage-fill {
+.coverage-fill-small {
     height: 100%;
+    border-radius: 3px;
     transition: width var(--transition-normal);
-    border-radius: 4px;
 }
 
-.coverage-details {
+.coverage-percentage-small {
     font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 35px;
+    text-align: right;
+}
+
+.dropdown-arrow {
     color: var(--pico-secondary);
+    margin-left: var(--space-sm);
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background-color: var(--pico-background);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    z-index: 1000;
+    max-height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.dropdown-search {
+    padding: var(--space-sm);
+    border-bottom: 1px solid var(--accent-border);
+}
+
+.dropdown-search-input {
+    width: 100%;
+    padding: var(--space-sm);
+    border: 1px solid var(--accent-border) !important;
+    border-radius: var(--radius-sm) !important;
+    background-color: var(--pico-secondary-background) !important;
+    color: var(--text-color) !important;
+    font-size: 0.85rem !important;
+}
+
+.dropdown-options {
+    overflow-y: auto;
+    max-height: 340px;
+}
+
+.dropdown-option {
+    padding: var(--space-sm);
+    cursor: pointer;
+    border-bottom: 1px solid var(--accent-border);
+    transition: background-color var(--transition-normal);
+}
+
+.dropdown-option:last-child {
+    border-bottom: none;
+}
+
+.dropdown-option:hover {
+    background-color: var(--pico-primary-focus);
+}
+
+.dropdown-option.selected {
+    background-color: var(--pico-primary-focus);
+}
+
+.option-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-xs);
+}
+
+.option-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.option-coverage {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.coverage-bar-option {
+    height: 6px;
+    background-color: var(--pico-secondary-background);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: var(--space-xs);
+}
+
+.coverage-fill-option {
+    height: 100%;
+    border-radius: 3px;
+    transition: width var(--transition-normal);
+}
+
+.option-details {
+    font-size: 0.7rem;
+    color: var(--pico-secondary);
+}
+
+.no-options {
+    padding: var(--space-md);
+    text-align: center;
+    color: var(--pico-secondary);
+    font-size: 0.85rem;
 }
