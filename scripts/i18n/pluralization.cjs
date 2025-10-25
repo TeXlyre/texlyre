@@ -31,8 +31,8 @@ function getPluralForm(language, count) {
 
 function detectPluralPattern(text) {
     const patterns = [
-        /\{count\}\s*(?:item|file|document|page)s?/i,
-        /(?:item|file|document|page)s?\s*\{count\}/i,
+        /\{count\}\s*(?:item|file|document|page|project|match)s?/i,
+        /(?:item|file|document|page|project|match)s?\s*\{count\}/i,
     ];
 
     return patterns.some(pattern => pattern.test(text));

@@ -1,16 +1,19 @@
+// scripts/i18n/calculate-coverage.cjs
 const fs = require('node:fs');
 const path = require('node:path');
 
 const translationsDir = path.join(__dirname, '../../translations');
-const outputFile = path.join(translationsDir, 'languages.config.json');
+const configFile = path.join(translationsDir, 'languages.config.json');
 
-const languageMetadata = {
-    en: { name: 'English', nativeName: 'English', direction: 'ltr' },
-    ar: { name: 'Arabic', nativeName: 'العربية', direction: 'rtl' }
-};
+function loadExistingConfig() {
+    if (fs.existsSync(configFile)) {
+        return JSON.parse(fs.readFileSync(configFile, 'utf8'));
+    }
+    return { languages: [] };
+}
 
 function calculateCoverage() {
-    const englishPath = path.join(translationsDir, 'en.json');
+    const englishPath = path.join(translationsDir, 'locales/en.json');
 
     if (!fs.existsSync(englishPath)) {
         console.error('English translation file not found');
@@ -20,31 +23,34 @@ function calculateCoverage() {
     const englishData = JSON.parse(fs.readFileSync(englishPath, 'utf8'));
     const totalKeys = Object.keys(englishData).length;
 
+    const existingConfig = loadExistingConfig();
     const languages = [];
 
-    for (const [code, metadata] of Object.entries(languageMetadata)) {
-        const filePath = path.join(translationsDir, `${code}.json`);
+    for (const lang of existingConfig.languages) {
+        const filePath = path.join(translationsDir, lang.filePath);
 
         if (!fs.existsSync(filePath)) {
+            console.warn(`Warning: ${lang.filePath} not found, skipping ${lang.name}`);
             continue;
         }
 
         const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        const translatedKeys = Object.keys(data).filter(
-            key => data[key] && data[key].trim() !== ''
-        ).length;
 
-        const coverage = code === 'en' ? 100 : Math.round((translatedKeys / totalKeys) * 100);
+        const translatedKeys = Object.keys(englishData).filter(key => {
+            return data[key] && data[key] !== englishData[key];
+        }).length;
+
+        const coverage = lang.code === 'en' ? 100 : Math.round((translatedKeys / totalKeys) * 100);
 
         languages.push({
-            code,
-            name: metadata.name,
-            nativeName: metadata.nativeName,
-            direction: metadata.direction,
+            code: lang.code,
+            name: lang.name,
+            nativeName: lang.nativeName,
+            direction: lang.direction,
             coverage,
             totalKeys,
             translatedKeys,
-            filePath: `${code}.json`
+            filePath: lang.filePath
         });
     }
 
@@ -56,7 +62,7 @@ function calculateCoverage() {
         languages: languages.sort((a, b) => b.coverage - a.coverage)
     };
 
-    fs.writeFileSync(outputFile, JSON.stringify(config, null, 2));
+    fs.writeFileSync(configFile, JSON.stringify(config, null, 2));
     console.log(`✅ Language coverage calculated for ${languages.length} languages`);
     languages.forEach(lang => {
         console.log(`   ${lang.name} (${lang.code}): ${lang.coverage}%`);

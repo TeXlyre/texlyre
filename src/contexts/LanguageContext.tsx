@@ -56,10 +56,12 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         setCurrentLanguage(language);
 
         const directionSetting = getSetting('text-direction');
-        const directionValue = directionSetting?.value as string;
+        const directionValue = (directionSetting?.value as string) || 'auto';
 
         if (directionValue === 'auto') {
-            applyDirection(language.direction);
+            requestAnimationFrame(() => {
+                applyDirection(language.direction);
+            });
         }
     }, [availableLanguages, applyDirection, getSetting]);
 
@@ -72,15 +74,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         if (initialLanguage) {
             setCurrentLanguage(initialLanguage);
             i18next.changeLanguage(initialLanguage.code);
-
-            const directionSetting = getSetting('text-direction');
-            const directionValue = directionSetting?.value as string || 'auto';
-
-            if (directionValue === 'auto') {
-                applyDirection(initialLanguage.direction);
-            } else {
-                applyDirection(directionValue as 'ltr' | 'rtl');
-            }
         }
 
         registerSetting({
@@ -114,17 +107,36 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
                 { label: 'Right-to-Left (RTL)', value: 'rtl' }
             ],
             onChange: (value) => {
-                const lang = availableLanguages.find(l => l.code === getSetting('language')?.value);
-                if (value === 'auto' && lang) {
-                    applyDirection(lang.direction);
-                } else {
-                    applyDirection(value as 'ltr' | 'rtl');
-                }
+                const currentLangCode = getSetting('language')?.value as string || 'en';
+                const lang = availableLanguages.find(l => l.code === currentLangCode);
+
+                requestAnimationFrame(() => {
+                    if (value === 'auto' && lang) {
+                        applyDirection(lang.direction);
+                    } else {
+                        applyDirection(value as 'ltr' | 'rtl');
+                    }
+                });
             }
         });
 
         settingsRegistered.current = true;
     }, [availableLanguages, registerSetting, changeLanguage, applyDirection, getSetting]);
+
+    useEffect(() => {
+        if (!currentLanguage) return;
+
+        const directionSetting = getSetting('text-direction');
+        const directionValue = (directionSetting?.value as string) || 'auto';
+
+        requestAnimationFrame(() => {
+            if (directionValue === 'auto') {
+                applyDirection(currentLanguage.direction);
+            } else {
+                applyDirection(directionValue as 'ltr' | 'rtl');
+            }
+        });
+    }, [currentLanguage, applyDirection, getSetting]);
 
     return (
         <LanguageContext.Provider value={{ currentLanguage, availableLanguages, changeLanguage, isRTL }}>

@@ -175,8 +175,28 @@ async function initDatabases() {
 }
 
 function setupDirection() {
-	const savedDir = localStorage.getItem('text-direction') || 'ltr';
-	document.documentElement.setAttribute('dir', savedDir);
+	const settingsKey = 'texlyre-settings';
+	const existingSettings = localStorage.getItem(settingsKey);
+
+	let direction = 'ltr';
+
+	if (existingSettings) {
+		try {
+			const settings = JSON.parse(existingSettings);
+			const directionSetting = settings['text-direction'];
+
+			if (directionSetting === 'auto') {
+				const languageSetting = settings['language'] || 'en';
+				direction = localStorage.getItem('text-direction') || 'ltr';
+			} else if (directionSetting) {
+				direction = directionSetting;
+			}
+		} catch (error) {
+			console.warn('Failed to parse settings for direction:', error);
+		}
+	}
+
+	document.documentElement.setAttribute('dir', direction);
 }
 
 async function startApp() {
