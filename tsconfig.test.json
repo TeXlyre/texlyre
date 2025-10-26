@@ -9,6 +9,9 @@
         "allowSyntheticDefaultImports": true,
         "baseUrl": ".",
         "paths": {
+            "@/*": [
+                "src/*"
+            ],
             "@src/*": [
                 "src/*"
             ],
