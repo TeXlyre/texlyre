@@ -12,7 +12,6 @@ i18next
             en: {
                 translation: enTranslations,
             },
-
             ar: {
                 translation: arTranslations,
             },
