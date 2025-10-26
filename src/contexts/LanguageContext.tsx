@@ -88,6 +88,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
                 label: `${lang.nativeName} (${lang.name})`,
                 value: lang.code
             })),
+            liveUpdate: false,
             onChange: (value) => {
                 changeLanguage(value as string);
             }
