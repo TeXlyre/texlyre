@@ -4,6 +4,7 @@ const parser = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
 const generate = require("@babel/generator").default;
 const t = require("@babel/types");
+const { hasTranslationImport, injectImportIntoCode } = require("./import-manager.cjs");
 
 const CONFIG = {
     extensions: [".tsx", ".ts"],
@@ -11,46 +12,6 @@ const CONFIG = {
     createBackups: true,
     dryRun: false,
 };
-
-function hasI18nImport(ast) {
-    let hasImport = false;
-
-    traverse(ast, {
-        ImportDeclaration(path) {
-            const source = path.node.source.value;
-            if (source === '@/i18n' || source === '../i18n' || source === '../../i18n') {
-                const specifiers = path.node.specifiers;
-                if (specifiers.some(spec =>
-                    t.isImportSpecifier(spec) && spec.imported.name === 't'
-                )) {
-                    hasImport = true;
-                }
-            }
-        },
-    });
-
-    return hasImport;
-}
-
-function addI18nImport(ast) {
-    const importDeclaration = t.importDeclaration(
-        [t.importSpecifier(t.identifier("t"), t.identifier("t"))],
-        t.stringLiteral("@/i18n"),
-    );
-
-    const lastImportIndex = ast.program.body.findIndex(
-        (node, idx, arr) => {
-            if (!t.isImportDeclaration(node)) return false;
-            return idx === arr.length - 1 || !t.isImportDeclaration(arr[idx + 1]);
-        }
-    );
-
-    if (lastImportIndex >= 0) {
-        ast.program.body.splice(lastImportIndex + 1, 0, importDeclaration);
-    } else {
-        ast.program.body.unshift(importDeclaration);
-    }
-}
 
 function wrapWithT(node) {
     if (t.isStringLiteral(node)) {
@@ -85,6 +46,7 @@ function applySettingsTranslations(filePath, options = {}) {
             plugins: ["jsx", "typescript", "decorators-legacy", "classProperties"],
         });
 
+        const hadImport = hasTranslationImport(ast);
         let modified = false;
         let transformCount = 0;
 
@@ -183,10 +145,6 @@ function applySettingsTranslations(filePath, options = {}) {
         });
 
         if (modified) {
-            if (!hasI18nImport(ast)) {
-                addI18nImport(ast);
-            }
-
             const output = generate(
                 ast,
                 {
@@ -195,6 +153,12 @@ function applySettingsTranslations(filePath, options = {}) {
                 },
                 code,
             );
+
+            let finalCode = output.code;
+
+            if (!hadImport) {
+                finalCode = injectImportIntoCode(finalCode);
+            }
 
             if (config.dryRun) {
                 console.log(
@@ -207,7 +171,7 @@ function applySettingsTranslations(filePath, options = {}) {
                 fs.writeFileSync(`${filePath}.bak`, code);
             }
 
-            fs.writeFileSync(filePath, output.code);
+            fs.writeFileSync(filePath, finalCode);
             console.log(`✅ Transformed ${transformCount} settings strings in ${filePath}`);
             return { success: true, modified: true, transformCount };
         }

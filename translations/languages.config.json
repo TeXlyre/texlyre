@@ -1,7 +1,7 @@
 {
   "_meta": {
-    "lastUpdated": "2025-10-26T09:36:56.152Z",
-    "totalKeys": 822
+    "lastUpdated": "2025-10-26T10:45:27.046Z",
+    "totalKeys": 937
   },
   "languages": [
     {
@@ -10,7 +10,7 @@
       "nativeName": "English",
       "direction": "ltr",
       "coverage": 100,
-      "totalKeys": 822,
+      "totalKeys": 937,
       "translatedKeys": 0,
       "filePath": "locales/en.json"
     },
@@ -19,9 +19,9 @@
       "name": "Arabic",
       "nativeName": "العربية",
       "direction": "rtl",
-      "coverage": 40,
-      "totalKeys": 822,
-      "translatedKeys": 329,
+      "coverage": 36,
+      "totalKeys": 937,
+      "translatedKeys": 335,
       "filePath": "locales/ar.json"
     }
   ]

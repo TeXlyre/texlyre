@@ -5,7 +5,7 @@ const traverse = require("@babel/traverse").default;
 const t = require("@babel/types");
 
 const CONFIG = {
-    extensions: [".tsx", ".jsx"],
+    extensions: [".tsx", ".jsx", ".ts"],
     excludeDirs: ["node_modules", "dist", "build", ".git"],
     excludeFiles: ["i18n.ts", "i18n.js"],
     minTextLength: 2,
@@ -52,6 +52,69 @@ function detectPluralPattern(text) {
     return patterns.some(pattern => pattern.test(text));
 }
 
+function extractOptionsLabels(optionsNode, translations, pluralKeys) {
+    if (t.isArrayExpression(optionsNode)) {
+        optionsNode.elements.forEach((option) => {
+            if (t.isObjectExpression(option)) {
+                option.properties.forEach((optProp) => {
+                    if (t.isObjectProperty(optProp) &&
+                        optProp.key.name === 'label' &&
+                        t.isStringLiteral(optProp.value)) {
+
+                        const text = optProp.value.value;
+                        if (shouldTranslate(text)) {
+                            if (detectPluralPattern(text)) {
+                                pluralKeys.add(text);
+                            }
+                            if (!translations.has(text)) {
+                                translations.set(text, text);
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    }
+}
+
+function extractFromRegisterSetting(path, translations, pluralKeys) {
+    if (
+        t.isIdentifier(path.node.callee) &&
+        path.node.callee.name === "registerSetting" &&
+        path.node.arguments.length > 0
+    ) {
+        const arg = path.node.arguments[0];
+
+        if (t.isObjectExpression(arg)) {
+            arg.properties.forEach((prop) => {
+                if (!t.isObjectProperty(prop)) return;
+
+                const key = prop.key.name;
+
+                if (key === 'category' || key === 'subcategory' ||
+                    key === 'label' || key === 'description') {
+
+                    if (t.isStringLiteral(prop.value)) {
+                        const text = prop.value.value;
+                        if (shouldTranslate(text)) {
+                            if (detectPluralPattern(text)) {
+                                pluralKeys.add(text);
+                            }
+                            if (!translations.has(text)) {
+                                translations.set(text, text);
+                            }
+                        }
+                    }
+                }
+
+                if (key === 'options') {
+                    extractOptionsLabels(prop.value, translations, pluralKeys);
+                }
+            });
+        }
+    }
+}
+
 function extractTranslations(sourceDir, outputFile) {
     const existingTranslations = loadExistingTranslations(outputFile);
     const translations = new Map(Object.entries(existingTranslations));
@@ -81,6 +144,8 @@ function extractTranslations(sourceDir, outputFile) {
                 sourceType: "module",
                 plugins: ["jsx", "typescript", "decorators-legacy", "classProperties"],
             });
+
+            const hasRegisterSetting = code.includes('registerSetting');
 
             traverse(ast, {
                 JSXText(path) {
@@ -117,6 +182,12 @@ function extractTranslations(sourceDir, outputFile) {
                         }
                     }
                 },
+
+                CallExpression(path) {
+                    if (hasRegisterSetting) {
+                        extractFromRegisterSetting(path, translations, pluralKeys);
+                    }
+                },
             });
         } catch (error) {
             console.error(`Error processing ${filePath}:`, error.message);
@@ -145,8 +216,15 @@ function extractTranslations(sourceDir, outputFile) {
 
     processDirectory(sourceDir);
 
+    const existingKeys = Object.keys(existingTranslations);
+    const mergedTranslations = { ...existingTranslations };
+
+    for (const [key, value] of translations.entries()) {
+        mergedTranslations[key] = value;
+    }
+
     const translationObj = Object.fromEntries(
-        Array.from(translations.entries()).sort(),
+        Object.entries(mergedTranslations).sort(([a], [b]) => a.localeCompare(b)),
     );
 
     const outputDir = path.dirname(outputFile);
@@ -179,9 +257,9 @@ function extractTranslations(sourceDir, outputFile) {
 
     console.log(`\n✅ Extraction complete!`);
     console.log(`📁 Files processed: ${fileCount}`);
-    console.log(`📝 Total translations: ${translations.size}`);
+    console.log(`📝 Total translations: ${Object.keys(translationObj).length}`);
     console.log(`🆕 New translations: ${newCount}`);
-    console.log(`♻️  Existing translations preserved: ${existingCount}`);
+    console.log(`♻️  Existing translations preserved: ${existingKeys.length}`);
     console.log(`💾 Output written to: ${outputFile}`);
 }
 

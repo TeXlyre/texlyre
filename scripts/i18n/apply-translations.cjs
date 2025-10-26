@@ -5,6 +5,7 @@ const traverse = require("@babel/traverse").default;
 const generate = require("@babel/generator").default;
 const t = require("@babel/types");
 const { validateTransformedCode } = require("./validate-transforms.cjs");
+const { hasTranslationImport, injectImportIntoCode } = require("./import-manager.cjs");
 
 const CONFIG = {
     extensions: [".tsx", ".jsx"],
@@ -33,34 +34,6 @@ function shouldTranslate(text) {
     return true;
 }
 
-function hasTranslationImport(ast) {
-    let hasImport = false;
-
-    traverse(ast, {
-        ImportDeclaration(path) {
-            const source = path.node.source.value;
-            if (source.includes("i18n") || source === "@/i18n") {
-                hasImport = true;
-            }
-        },
-    });
-
-    return hasImport;
-}
-
-function addTranslationImport(ast) {
-    const importDeclaration = t.importDeclaration(
-        [t.importSpecifier(t.identifier("t"), t.identifier("t"))],
-        t.stringLiteral("@/i18n"),
-    );
-
-    if (ast.program.body.length > 0) {
-        ast.program.body.splice(1, 0, importDeclaration);
-    } else {
-        ast.program.body.unshift(importDeclaration);
-    }
-}
-
 function createTranslationCall(text) {
     const cleanText = text.trim().replace(/\s+/g, " ");
     return t.callExpression(t.identifier("t"), [t.stringLiteral(cleanText)]);
@@ -69,11 +42,9 @@ function createTranslationCall(text) {
 function isAlreadyWrappedInTranslation(path) {
     let parent = path.parent;
 
-    // Check if parent is a JSXExpressionContainer
     if (t.isJSXExpressionContainer(parent)) {
         const expression = parent.expression;
 
-        // Check if expression is a t() call
         if (t.isCallExpression(expression)) {
             if (t.isIdentifier(expression.callee) && expression.callee.name === "t") {
                 return true;
@@ -81,7 +52,6 @@ function isAlreadyWrappedInTranslation(path) {
         }
     }
 
-    // Check if parent is already a t() call
     if (t.isCallExpression(parent)) {
         if (t.isIdentifier(parent.callee) && parent.callee.name === "t") {
             return true;
@@ -105,6 +75,7 @@ function applyTranslations(filePath, options = {}) {
             tokens: true,
         });
 
+        const hadImport = hasTranslationImport(ast);
         let modified = false;
         let transformCount = 0;
 
@@ -144,7 +115,6 @@ function applyTranslations(filePath, options = {}) {
                 }
             },
 
-            // Skip content already inside t() calls
             CallExpression(path) {
                 if (t.isIdentifier(path.node.callee) &&
                     (path.node.callee.name === "t" || path.node.callee.name === "i")) {
@@ -154,10 +124,6 @@ function applyTranslations(filePath, options = {}) {
         });
 
         if (modified) {
-            if (!hasTranslationImport(ast)) {
-                addTranslationImport(ast);
-            }
-
             const output = generate(
                 ast,
                 {
@@ -168,7 +134,13 @@ function applyTranslations(filePath, options = {}) {
                 code,
             );
 
-            const validation = validateTransformedCode(code, output.code, filePath);
+            let finalCode = output.code;
+
+            if (!hadImport) {
+                finalCode = injectImportIntoCode(finalCode);
+            }
+
+            const validation = validateTransformedCode(code, finalCode, filePath);
 
             if (!validation.valid) {
                 console.error(`❌ Validation failed for ${filePath}:`);
@@ -187,7 +159,7 @@ function applyTranslations(filePath, options = {}) {
                 fs.writeFileSync(`${filePath}.bak`, code);
             }
 
-            fs.writeFileSync(filePath, output.code);
+            fs.writeFileSync(filePath, finalCode);
             console.log(`✅ Transformed ${transformCount} items in ${filePath}`);
             return { success: true, modified: true, transformCount };
         }
