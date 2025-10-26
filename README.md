@@ -5,6 +5,7 @@ A **[local-first](https://www.inkandswitch.com/essay/local-first/)** real-time [
 [![GitHub Pages](https://img.shields.io/badge/🟢%20Live-GitHub%20Pages-181717.svg?logo=github)](https://texlyre.github.io/texlyre)
 [![Tests](https://img.shields.io/github/actions/workflow/status/texlyre/texlyre/test.yml?label=tests)](https://github.com/texlyre/texlyre/actions)
 [![Deploy](https://img.shields.io/github/actions/workflow/status/texlyre/texlyre/deploy.yml?label=deploy)](https://github.com/texlyre/texlyre/actions)
+[![Crowdin](https://badges.crowdin.net/texlyre/localized.svg)](https://crowdin.com/project/texlyre)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://reactjs.org/)
@@ -42,8 +43,6 @@ The platform integrates **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)
 <p align="center">
 <img src="showcase/error_parser_zoomed_typst.png" alt="Typst compilation in progress" width="600">
 </p>
-
-**Coming soon: Real-time compilation as you type**
 
 ### Local-first Architecture
 
