@@ -1,5 +1,3 @@
-import postcss from 'postcss';
-import postcssRtlcss from 'postcss-rtlcss';
 import path from "node:path";
 import basicSsl from "@vitejs/plugin-basic-ssl";
 import react from "@vitejs/plugin-react";
