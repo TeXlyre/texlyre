@@ -180,7 +180,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
 			<div className="project-meta">
 				<span>Created: {formatDate(project.createdAt)}</span>
-				<span>Updated: {formatDate(project.updatedAt)}</span>
+				<span>Last Modified: {formatDate(project.updatedAt)}</span>
 			</div>
 
 			{!isSelectionMode && (
