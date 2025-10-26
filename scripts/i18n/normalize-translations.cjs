@@ -205,7 +205,7 @@ function normalizeTranslations(inputFile, outputFile = null) {
 }
 
 if (require.main === module) {
-    const inputFile = process.argv[2] || "./translations/en.json";
+    const inputFile = process.argv[2] || "./translations/locales/en.json";
     const outputFile = process.argv[3];
 
     normalizeTranslations(inputFile, outputFile);

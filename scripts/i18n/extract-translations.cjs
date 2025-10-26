@@ -187,7 +187,7 @@ function extractTranslations(sourceDir, outputFile) {
 
 if (require.main === module) {
     const sourceDir = process.argv[2] || "./src";
-    const outputFile = process.argv[3] || "./translations/en.json";
+    const outputFile = process.argv[3] || "./translations/locales/en.json";
 
     extractTranslations(sourceDir, outputFile);
 }

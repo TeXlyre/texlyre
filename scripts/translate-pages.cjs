@@ -16,7 +16,7 @@ function main() {
 
     } else if (command === "extract") {
         const sourceDir = args[1] || "./src";
-        const outputFile = args[2] || "./translations/en.json";
+        const outputFile = args[2] || "./translations/locales/en.json";
 
         console.log("=== Extracting translations ===\n");
         extractTranslations(sourceDir, outputFile);
@@ -25,7 +25,7 @@ function main() {
         normalizeTranslations(outputFile);
 
     } else if (command === "normalize") {
-        const inputFile = args[1] || "./translations/en.json";
+        const inputFile = args[1] || "./translations/locales/en.json";
         const outputFile = args[2];
 
         console.log("=== Normalizing translations ===\n");
@@ -83,8 +83,8 @@ Options:
 
 Examples:
   node scripts/translate-pages.cjs detect ./src ./translations/dynamic-patterns.json
-  node scripts/translate-pages.cjs extract ./src ./translations/en.json
-  node scripts/translate-pages.cjs normalize ./translations/en.json
+  node scripts/translate-pages.cjs extract ./src ./translations/locales/en.json
+  node scripts/translate-pages.cjs normalize ./translations/locales/en.json
   node scripts/translate-pages.cjs apply ./src --dry-run
   node scripts/translate-pages.cjs apply ./src
         `);

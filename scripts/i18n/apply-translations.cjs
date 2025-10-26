@@ -54,7 +54,11 @@ function addTranslationImport(ast) {
         t.stringLiteral("@/i18n"),
     );
 
-    ast.program.body.unshift(importDeclaration);
+    if (ast.program.body.length > 0) {
+        ast.program.body.splice(1, 0, importDeclaration);
+    } else {
+        ast.program.body.unshift(importDeclaration);
+    }
 }
 
 function createTranslationCall(text) {
@@ -85,11 +89,6 @@ function isAlreadyWrappedInTranslation(path) {
     }
 
     return false;
-}
-
-function isInsideJSXExpressionContainer(path) {
-    let parent = path.parent;
-    return t.isJSXExpressionContainer(parent);
 }
 
 function applyTranslations(filePath, options = {}) {
