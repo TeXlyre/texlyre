@@ -1,6 +1,5 @@
 const { extractTranslations } = require("./i18n/extract-translations.cjs");
 const { processDirectory } = require("./i18n/apply-translations.cjs");
-const { normalizeTranslations } = require("./i18n/normalize-translations.cjs");
 const { detectDynamicContent } = require("./i18n/detect-dynamic-content.cjs");
 const { processDirectory: processSettingsDirectory } = require("./i18n/apply-settings-translations.cjs");
 
@@ -21,18 +20,6 @@ function main() {
 
         console.log("=== Extracting translations ===\n");
         extractTranslations(sourceDir, outputFile);
-
-        // TODO (fabawi): Normalization might not be necessary
-        // console.log("\n=== Normalizing translations ===\n");
-        // normalizeTranslations(outputFile);
-
-    } else if (command === "normalize") {
-        const inputFile = args[1] || "./translations/locales/en.json";
-        const outputFile = args[2];
-
-        // TODO (fabawi): Normalization might not be necessary
-        // console.log("=== Normalizing translations ===\n");
-        // normalizeTranslations(inputFile, outputFile);
 
     } else if (command === "apply") {
         const sourceDir = args[1] || "./src";
@@ -101,13 +88,10 @@ TeXlyre Translation Tool
 Usage:
   node scripts/translate-pages.cjs detect [sourceDir] [outputFile]
     Detect dynamic content (counts, variables) that should be converted to i18n
+    This will generate translations/dynamic-patterns.json which can be viewed for hints of possible modifications
     
   node scripts/translate-pages.cjs extract [sourceDir] [outputFile]
-    Extract all translatable strings to a JSON file and normalize them
-    Also extracts settings-specific strings to a separate file
-    
-  node scripts/translate-pages.cjs normalize [inputFile] [outputFile]
-    Normalize spacing in existing translation file
+    Extract all translatable strings to a JSON file
     
   node scripts/translate-pages.cjs apply [sourceDir] [--dry-run] [--no-backup]
     Apply t() function calls to all translatable strings
@@ -122,7 +106,6 @@ Options:
 Examples:
   node scripts/translate-pages.cjs detect ./src ./translations/dynamic-patterns.json
   node scripts/translate-pages.cjs extract ./src ./translations/locales/en.json
-  node scripts/translate-pages.cjs normalize ./translations/locales/en.json
   node scripts/translate-pages.cjs apply ./src --dry-run
   node scripts/translate-pages.cjs apply ./src
   node scripts/translate-pages.cjs apply-settings ./src --dry-run
