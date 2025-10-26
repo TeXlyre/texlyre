@@ -43,12 +43,8 @@ const ProjectList: React.FC<ProjectListProps> = ({
 		new Set(),
 	);
 	const [isSelectionMode, setIsSelectionMode] = useState(false);
-	const [showDeleteModal, setShowDeleteModal] = useState(false);
-
-	// Total number of pages
 	const totalPages = Math.ceil(projects.length / itemsPerPage);
 
-	// Sort and paginate projects whenever dependencies change
 	useEffect(() => {
 		// Sort projects
 		const sortedProjects = [...projects].sort((a, b) => {
@@ -62,7 +58,6 @@ const ProjectList: React.FC<ProjectListProps> = ({
 				: b[sortBy] - a[sortBy];
 		});
 
-		// Paginate projects
 		const startIndex = (currentPage - 1) * itemsPerPage;
 		const paginatedProjects = sortedProjects.slice(
 			startIndex,
@@ -72,18 +67,13 @@ const ProjectList: React.FC<ProjectListProps> = ({
 		setDisplayedProjects(paginatedProjects);
 	}, [projects, currentPage, sortBy, sortDirection, itemsPerPage]);
 
-	// Handle sort change
 	const handleSortChange = (newSortBy: 'name' | 'createdAt' | 'updatedAt') => {
 		if (sortBy === newSortBy) {
-			// Toggle direction if clicking the same sort option
 			setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
 		} else {
-			// Set new sort field and reset to default direction
 			setSortBy(newSortBy);
 			setSortDirection('desc');
 		}
-
-		// Reset to first page when changing sort
 		setCurrentPage(1);
 	};
 
@@ -140,17 +130,8 @@ const ProjectList: React.FC<ProjectListProps> = ({
 	};
 
 	return (
-		<div
-			className="project-list-container"
-			style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-		>
-			<div
-				className="project-list-header"
-				style={{
-					padding: '0.5rem',
-					borderBottom: '1px solid var(--accent-border, #333)',
-				}}
-			>
+		<div className="project-list-container">
+			<div className="project-list-header">
 				<div className="project-sort-controls">
 					<span>Sort by:</span>
 					<button

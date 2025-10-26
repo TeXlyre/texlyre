@@ -22,15 +22,17 @@ function main() {
         console.log("=== Extracting translations ===\n");
         extractTranslations(sourceDir, outputFile);
 
-        console.log("\n=== Normalizing translations ===\n");
-        normalizeTranslations(outputFile);
+        // TODO (fabawi): Normalization might not be necessary
+        // console.log("\n=== Normalizing translations ===\n");
+        // normalizeTranslations(outputFile);
 
     } else if (command === "normalize") {
         const inputFile = args[1] || "./translations/locales/en.json";
         const outputFile = args[2];
 
-        console.log("=== Normalizing translations ===\n");
-        normalizeTranslations(inputFile, outputFile);
+        // TODO (fabawi): Normalization might not be necessary
+        // console.log("=== Normalizing translations ===\n");
+        // normalizeTranslations(inputFile, outputFile);
 
     } else if (command === "apply") {
         const sourceDir = args[1] || "./src";

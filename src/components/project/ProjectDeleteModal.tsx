@@ -1,4 +1,5 @@
 // src/components/project/ProjectDeleteModal.tsx
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
@@ -33,7 +34,7 @@ const ProjectDeleteModal: React.FC<ProjectDeleteModalProps> = ({
 			await onDeleteProjects(projectIds);
 			handleClose();
 		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Delete failed');
+			setError(err instanceof Error ? err.message : t('Delete failed'));
 		} finally {
 			setIsDeleting(false);
 		}
@@ -52,7 +53,7 @@ const ProjectDeleteModal: React.FC<ProjectDeleteModalProps> = ({
 		<Modal
 			isOpen={isOpen}
 			onClose={handleClose}
-			title="Delete Projects"
+			title={t('Delete Projects')}
 			size="medium"
 		>
 			<div className="project-delete-modal">
@@ -60,8 +61,7 @@ const ProjectDeleteModal: React.FC<ProjectDeleteModalProps> = ({
 
 				<div className="delete-info">
 					<p>
-						Are you sure you want to delete {selectedProjects.length} project
-						{selectedProjects.length === 1 ? '' : 's'}?
+						{t('Are you sure you want to delete {count} project?', { count: selectedProjects.length })}
 					</p>
 				</div>
 
@@ -70,22 +70,20 @@ const ProjectDeleteModal: React.FC<ProjectDeleteModalProps> = ({
 						<div key={project.id} className="delete-project-item">
 							<strong>{project.name}</strong>
 							<div className="delete-project-details">
-								{project.description || 'No description'}
+								{project.description || t('No description')}
 							</div>
 							<div className="delete-project-details">
-								Last modified:{' '}
-								{formatDate(project.updatedAt)}
+								{t('Last modified')}: {formatDate(project.updatedAt)}
 							</div>
 						</div>
 					))}
 				</div>
 
 				<div className="warning-message">
-					All documents, files, and collaboration data
-					for these projects will be permanently deleted.
+					{t('All documents, files, and collaboration data for these projects will be permanently deleted.')}
 				</div>
 				<div className="warning-message">
-					This action cannot be undone.
+					{t('This action cannot be undone.')}
 				</div>
 
 				<div className="modal-actions">
@@ -95,7 +93,7 @@ const ProjectDeleteModal: React.FC<ProjectDeleteModalProps> = ({
 						onClick={handleClose}
 						disabled={isDeleting}
 					>
-						Cancel
+						{t('Cancel')}
 					</button>
 					<button
 						type="button"
@@ -104,8 +102,8 @@ const ProjectDeleteModal: React.FC<ProjectDeleteModalProps> = ({
 						disabled={isDeleting}
 					>
 						{isDeleting
-							? 'Deleting...'
-							: `Delete ${selectedProjects.length} Project${selectedProjects.length === 1 ? '' : 's'}`}
+							? t('Deleting...')
+							: t('Delete {count} Project', { count: selectedProjects.length })}
 					</button>
 				</div>
 			</div>

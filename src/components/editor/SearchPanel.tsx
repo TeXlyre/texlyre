@@ -1,6 +1,8 @@
 // src/components/editor/SearchPanel.tsx
+import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
+
 import { useSearch } from '../../hooks/useSearch';
 import { SearchIcon, ReplaceIcon, CloseIcon, FileTextIcon } from '../common/Icons';
 import SearchReplaceModal from './SearchReplaceModal';
@@ -167,19 +169,19 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
             if (pendingReplace.type === 'all') {
                 fileOperationNotificationService.showLoading(
                     operationId,
-                    `Replacing in ${pendingReplace.count} files...`
+                    t('Replacing in {count} file...', { count: pendingReplace.count })
                 );
 
                 const count = await replaceAll();
 
                 fileOperationNotificationService.showSuccess(
                     operationId,
-                    `Successfully replaced in ${count} file${count !== 1 ? 's' : ''}`
+                    t('Successfully replaced in {count} file', { count })
                 );
             } else {
                 fileOperationNotificationService.showLoading(
                     operationId,
-                    `Replacing in ${pendingReplace.fileName}...`
+                    t('Replacing in {fileName}...', { fileName: pendingReplace.fileName })
                 );
 
                 const success = await replaceInFile(
@@ -190,19 +192,19 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                 if (success) {
                     fileOperationNotificationService.showSuccess(
                         operationId,
-                        `Successfully replaced in ${pendingReplace.fileName}`
+                        t('Successfully replaced in {fileName}', { fileName: pendingReplace.fileName })
                     );
                 } else {
                     fileOperationNotificationService.showError(
                         operationId,
-                        `No matches found in ${pendingReplace.fileName}`
+                        t('No matches found in {fileName}', { fileName: pendingReplace.fileName })
                     );
                 }
             }
         } catch (error) {
             fileOperationNotificationService.showError(
                 operationId,
-                `Failed to replace: ${error.message}`
+                t('Failed to replace: {message}', { message: error.message })
             );
         } finally {
             setPendingReplace(null);
@@ -224,19 +226,19 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
     return (
         <div className={`search-panel ${className}`}>
             <div className="file-explorer-header">
-                <h3>Search</h3>
+                <h3>{t('Search')}</h3>
                 <div className="search-mode-toggle file-explorer-actions">
                     <button
                         className={`mode-toggle-btn ${!showReplace ? 'active' : ''}`}
                         onClick={() => showReplace && toggleReplace()}
-                        title="Search only (Ctrl+Shift+f)"
+                        title={t('Search only (Ctrl+Shift+f)')}
                     >
                         <SearchIcon />
                     </button>
                     <button
                         className={`mode-toggle-btn ${showReplace ? 'active' : ''}`}
                         onClick={toggleReplace}
-                        title="Search and Replace (Ctrl+Shift+h)"
+                        title={t('Search and Replace (Ctrl+Shift+h)')}
                     >
                         <ReplaceIcon />
                     </button>
@@ -247,21 +249,21 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                 <button
                     className={`search-option-btn ${caseSensitive ? 'active' : ''}`}
                     onClick={toggleCaseSensitive}
-                    title="Match case"
+                    title={t('Match case')}
                 >
                     Aa
                 </button>
                 <button
                     className={`search-option-btn ${wholeWord ? 'active' : ''}`}
                     onClick={toggleWholeWord}
-                    title="Match whole word"
+                    title={t('Match whole word')}
                 >
                     |w|
                 </button>
                 <button
                     className={`search-option-btn ${useRegex ? 'active' : ''}`}
                     onClick={toggleRegex}
-                    title="Use regular expression"
+                    title={t('Use regular expression')}
                 >
                     .*
                 </button>
@@ -270,7 +272,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
             <div className="search-input-container">
                 <input
                     type="text"
-                    placeholder="Search in files..."
+                    placeholder={t('Search in files...')}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     className="search-input"
@@ -286,7 +288,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                 <div className="search-input-container">
                     <input
                         type="text"
-                        placeholder="Replace with..."
+                        placeholder={t('Replace with...')}
                         value={replaceText}
                         onChange={(e) => setReplaceText(e.target.value)}
                         className="search-input"
@@ -295,9 +297,9 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                         className="replace-all-btn"
                         onClick={handleReplaceAll}
                         disabled={!query.trim() || !replaceText || results.length === 0 || isReplacing}
-                        title="Replace all"
+                        title={t('Replace all')}
                     >
-                        Replace All
+                        {t('Replace All')}
                     </button>
                 </div>
             )}
@@ -305,25 +307,25 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
             <div className="search-results">
                 {(isSearching || isReplacing) && (
                     <div className="search-loading">
-                        {isSearching ? 'Searching...' : 'Replacing...'}
+                        {isSearching ? t('Searching...') : t('Replacing...')}
                     </div>
                 )}
 
                 {!isSearching && !isReplacing && results.length === 0 && query.trim() && (
-                    <div className="search-empty">No results found</div>
+                    <div className="search-empty">{t('No results found')}</div>
                 )}
 
                 {!isSearching && !isReplacing && query.trim() === '' && (
-                    <div className="search-empty">Enter a search query to find files</div>
+                    <div className="search-empty">{t('Enter a search query to find files')}</div>
                 )}
 
                 {!isSearching && !isReplacing && results.length > 0 && (
                     <>
                         <div className="search-results-header">
-                            {totalMatches} match{totalMatches !== 1 ? 'es' : ''} in {results.length} file{results.length !== 1 ? 's' : ''}
+                            {t('{totalMatches} match in {resultCount} file', { totalMatches, resultCount: results.length })}
                         </div>
                         <div className="search-results-note">
-                            Click once to open file or document, twice to navigate to match
+                            {t('Click once to open file or document, twice to navigate to match')}
                         </div>
                         {results.map((result, resultIdx) => (
                             <div
@@ -333,7 +335,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                                 <div className="search-result-file-header">
                                     <FileTextIcon />
                                     <span className="search-result-filename">
-                                        {result.fileName || 'Untitled'}
+                                        {result.fileName || t('Untitled')}
                                     </span>
                                     <span className="search-result-filepath">
                                         {result.filePath || ''}
@@ -347,9 +349,9 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                                                 result.isLinkedDocument ? result.documentId : undefined
                                             )}
                                             disabled={!replaceText || isReplacing}
-                                            title={result.isLinkedDocument ? "Replace in this document" : "Replace in this file"}
+                                            title={result.isLinkedDocument ? t('Replace in this document') : t('Replace in this file')}
                                         >
-                                            Replace
+                                            {t('Replace')}
                                         </button>
                                     )}
                                 </div>
@@ -401,7 +403,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                                         ))}
                                         {result.matches.length > 50 && (
                                             <div className="search-result-more">
-                                                +{result.matches.length - 50} more matches
+                                                {t('+{count} more matches', { count: result.matches.length - 50 })}
                                             </div>
                                         )}
                                     </div>

@@ -383,29 +383,6 @@
   color: #ffaa00;
 }
 
-.pagination-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--space-md);
-  margin-top: var(--space-md);
-  padding: var(--space-sm);
-}
-
-.pagination-button {
-  padding: var(--space-ss) 0.75rem;
-  background-color: var(--pico-secondary-background);
-  border: 1px solid var(--accent-border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: background-color var(--transition-normal);
-}
-
-.pagination-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .no-projects p {
   padding: var(--space-md);
   text-align: center;
@@ -842,15 +819,6 @@
 
 .export-option-label:last-child {
   margin-bottom: 0;
-}
-
-.format-note {
-  padding: 0.75rem;
-  background-color: rgba(var(--accent-color-rgb), 0.1);
-  border-radius: 4px;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  margin-top: 1rem;
 }
 
 .project-open-buttons {
