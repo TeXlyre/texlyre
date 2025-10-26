@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "lastUpdated": "2025-10-26T17:12:21.295Z",
+    "lastUpdated": "2025-10-26T18:19:15.830Z",
     "totalKeys": 1015
   },
   "languages": [
@@ -19,9 +19,9 @@
       "name": "Arabic",
       "nativeName": "العربية",
       "direction": "rtl",
-      "coverage": 26,
+      "coverage": 96,
       "totalKeys": 1015,
-      "translatedKeys": 268,
+      "translatedKeys": 970,
       "filePath": "locales/ar.json"
     }
   ]
