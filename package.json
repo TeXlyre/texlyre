@@ -40,7 +40,10 @@
 		"i18n:preview": "node scripts/translate-pages.cjs apply ./src --dry-run",
 		"i18n:apply": "node scripts/translate-pages.cjs apply ./src",
 		"i18n:apply-no-backup": "node scripts/translate-pages.cjs apply ./src --no-backup",
-		"i18n:full": "node scripts/pm.cjs run i18n:extract && node scripts/pm.cjs run i18n:coverage && node scripts/pm.cjs run i18n:preview"
+		"i18n:settings-preview": "node scripts/translate-pages.cjs apply-settings ./src --dry-run",
+		"i18n:settings-apply": "node scripts/translate-pages.cjs apply-settings ./src",
+		"i18n:settings-apply-no-backup": "node scripts/translate-pages.cjs apply-settings ./src --no-backup",
+		"i18n:full": "node scripts/pm.cjs run i18n:settings-preview && node scripts/pm.cjs run i18n:extract && node scripts/pm.cjs run i18n:coverage && node scripts/pm.cjs run i18n:preview"
 	},
 	"dependencies": {
 		"@biomejs/biome": "^1.8.3",
