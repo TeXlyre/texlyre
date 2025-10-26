@@ -61,7 +61,7 @@ const ProjectDeleteModal: React.FC<ProjectDeleteModalProps> = ({
 				<div className="delete-info">
 					<p>
 						Are you sure you want to delete {selectedProjects.length} project
-						{selectedProjects.length === 1 ? '' : 's'}? This action cannot be undone.
+						{selectedProjects.length === 1 ? '' : 's'}?
 					</p>
 				</div>
 
@@ -70,7 +70,10 @@ const ProjectDeleteModal: React.FC<ProjectDeleteModalProps> = ({
 						<div key={project.id} className="delete-project-item">
 							<strong>{project.name}</strong>
 							<div className="delete-project-details">
-								{project.description || 'No description'} • Last modified:{' '}
+								{project.description || 'No description'}
+							</div>
+							<div className="delete-project-details">
+								Last modified:{' '}
 								{formatDate(project.updatedAt)}
 							</div>
 						</div>
@@ -78,8 +81,11 @@ const ProjectDeleteModal: React.FC<ProjectDeleteModalProps> = ({
 				</div>
 
 				<div className="warning-message">
-					<strong>Warning:</strong> All documents, files, and collaboration data
+					All documents, files, and collaboration data
 					for these projects will be permanently deleted.
+				</div>
+				<div className="warning-message">
+					This action cannot be undone.
 				</div>
 
 				<div className="modal-actions">

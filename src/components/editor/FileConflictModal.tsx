@@ -1,4 +1,5 @@
-// src/components/editor/FileConflictModal.tsx
+// src/components/editor/FileConflictModal.tsx (latest)
+import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
@@ -11,8 +12,9 @@ import {
 	type LinkConfirmation,
 	type LinkedFileConfirmation,
 	type UnlinkConfirmation,
-	fileConflictService,
-} from '../../services/FileConflictService';
+	fileConflictService
+} from
+	'../../services/FileConflictService';
 import type { FileNode } from '../../types/files';
 import { formatDate } from '../../utils/dateUtils';
 import { isTemporaryFile } from '../../utils/fileUtils';
@@ -22,39 +24,39 @@ import Modal from '../common/Modal';
 const FileConflictModal: React.FC = () => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [conflictType, setConflictType] = useState<
-		| 'conflict'
-		| 'delete'
-		| 'link'
-		| 'unlink'
-		| 'linked-file-action'
-		| 'batch-conflict'
-		| 'batch-delete'
-		| 'batch-unlink'
-	>('conflict');
+		'conflict' |
+		'delete' |
+		'link' |
+		'unlink' |
+		'linked-file-action' |
+		'batch-conflict' |
+		'batch-delete' |
+		'batch-unlink'>(
+			'conflict');
 	const [existingFile, setExistingFile] = useState<FileNode | null>(null);
 	const [newFile, setNewFile] = useState<FileNode | null>(null);
 	const [files, setFiles] = useState<FileNode[] | null>(null);
 	const [action, setAction] = useState<
-		'rename' | 'delete' | 'overwrite' | undefined
-	>(undefined);
+		'rename' | 'delete' | 'overwrite' | undefined>(
+			undefined);
 	const [conflictCount, setConflictCount] = useState<number>(0);
 	const [currentIndex, setCurrentIndex] = useState<number>(0);
 	const [resolveCallback, setResolveCallback] = useState<
-		| ((
+		((
 			resolution:
-				| ConflictResolution
-				| DeleteConfirmation
-				| LinkConfirmation
-				| UnlinkConfirmation
-				| LinkedFileConfirmation
-				| BatchConflictResolution
-				| BatchDeleteConfirmation
-				| BatchUnlinkConfirmation,
-		) => void)
-		| null
-	>(null);
+				ConflictResolution |
+				DeleteConfirmation |
+				LinkConfirmation |
+				UnlinkConfirmation |
+				LinkedFileConfirmation |
+				BatchConflictResolution |
+				BatchDeleteConfirmation |
+				BatchUnlinkConfirmation)
+			=> void) |
+		null>(
+			null);
 	const [rejectCallback, setRejectCallback] = useState<(() => void) | null>(
-		null,
+		null
 	);
 
 	useEffect(() => {
@@ -84,15 +86,14 @@ const FileConflictModal: React.FC = () => {
 
 	const handleResolution = (
 		resolution:
-			| ConflictResolution
-			| DeleteConfirmation
-			| LinkConfirmation
-			| UnlinkConfirmation
-			| LinkedFileConfirmation
-			| BatchConflictResolution
-			| BatchDeleteConfirmation
-			| BatchUnlinkConfirmation,
-	) => {
+			ConflictResolution |
+			DeleteConfirmation |
+			LinkConfirmation |
+			UnlinkConfirmation |
+			LinkedFileConfirmation |
+			BatchConflictResolution |
+			BatchDeleteConfirmation |
+			BatchUnlinkConfirmation) => {
 		if (resolveCallback) {
 			resolveCallback(resolution);
 		}
@@ -117,7 +118,7 @@ const FileConflictModal: React.FC = () => {
 			existingFile &&
 			isTemporaryFile(existingFile.path)
 		) {
-			return 'Deleting temporary files may break caching or cause system issues.';
+			return t('Deleting temporary files may break caching or cause system issues.');
 		}
 
 		if (
@@ -125,7 +126,7 @@ const FileConflictModal: React.FC = () => {
 			existingFile &&
 			isTemporaryFile(existingFile.path)
 		) {
-			return "Linking temporary files is not recommended as they won't sync with collaborators.";
+			return t("Linking temporary files is not recommended as they won't sync with collaborators.");
 		}
 
 		if (
@@ -133,7 +134,7 @@ const FileConflictModal: React.FC = () => {
 			existingFile &&
 			isTemporaryFile(existingFile.path)
 		) {
-			return 'Unlinking temporary files may affect system functionality.';
+			return t('Unlinking temporary files may affect system functionality.');
 		}
 
 		if (conflictType === 'batch-delete' && files) {
@@ -141,7 +142,7 @@ const FileConflictModal: React.FC = () => {
 				isTemporaryFile(file.path),
 			);
 			if (hasTemporaryFiles) {
-				return 'Some files are temporary - deleting them may break caching or cause system issues.';
+				return t('Some files are temporary - deleting them may break caching or cause system issues.');
 			}
 		}
 
@@ -150,7 +151,7 @@ const FileConflictModal: React.FC = () => {
 				isTemporaryFile(file.path),
 			);
 			if (hasTemporaryFiles) {
-				return 'Some temporary files are included - unlinking them may affect system functionality.';
+				return t('Some temporary files are included - unlinking them may affect system functionality.');
 			}
 		}
 
@@ -159,7 +160,7 @@ const FileConflictModal: React.FC = () => {
 				existingFile && isTemporaryFile(existingFile.path);
 			const isNewTemporary = newFile && isTemporaryFile(newFile.path);
 			if (isExistingTemporary || isNewTemporary) {
-				return 'Temporary files are involved - operations may affect system stability.';
+				return t('Temporary files are involved - operations may affect system stability.');
 			}
 		}
 
@@ -168,17 +169,17 @@ const FileConflictModal: React.FC = () => {
 			existingFile &&
 			isTemporaryFile(existingFile.path)
 		) {
-			return 'This operation involves temporary files which may affect system functionality.';
+			return t('This operation involves temporary files which may affect system functionality.');
 		}
 
 		return null;
 	};
 
 	const formatFileSize = (size?: number): string => {
-		if (!size) return 'Unknown size';
-		if (size < 1024) return `${size} bytes`;
-		if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
-		return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+		if (!size) return t('Unknown size');
+		if (size < 1024) return t('{count} bytes', { count: size });
+		if (size < 1024 * 1024) return t('{size} KB', { size: (size / 1024).toFixed(1) });
+		return t('{size} MB', { size: (size / (1024 * 1024)).toFixed(1) });
 	};
 
 	const operationWarning = getOperationWarning();
@@ -188,39 +189,38 @@ const FileConflictModal: React.FC = () => {
 			<Modal
 				isOpen={isOpen}
 				onClose={handleClose}
-				title={`File Conflicts (${currentIndex} of ${conflictCount})`}
+				title={t('File Conflicts ({current} of {total})', { current: currentIndex, total: conflictCount })}
 				size="medium"
 			>
 				<div className="file-conflict-content">
 					<p>
-						Multiple files already exist at their target locations. Choose how
-						to handle conflicts:
+						{t('Multiple files already exist at their target locations. Choose how to handle conflicts:')}
 					</p>
 
 					<div className="file-comparison">
 						<div className="file-info existing">
-							<h4>Existing File</h4>
+							<h4>{t('Existing File')}</h4>
 							<div className="file-details">
 								<strong>{existingFile.name}</strong>
-								<span>Size: {formatFileSize(existingFile.size)}</span>
-								<span>Modified: {formatDate(existingFile.lastModified)}</span>
+								<span>{t('Size')}: {formatFileSize(existingFile.size)}</span>
+								<span>{t('Modified')}: {formatDate(existingFile.lastModified)}</span>
 								{isTemporaryFile(existingFile.path) && (
 									<span className="temp-file-indicator">
-										<TempFileIcon /> Temporary file
+										<TempFileIcon /> {t('Temporary file')}
 									</span>
 								)}
 							</div>
 						</div>
 
 						<div className="file-info new">
-							<h4>New File</h4>
+							<h4>{t('New File')}</h4>
 							<div className="file-details">
 								<strong>{newFile.name}</strong>
-								<span>Size: {formatFileSize(newFile.size)}</span>
-								<span>Modified: {formatDate(newFile.lastModified)}</span>
+								<span>{t('Size')}: {formatFileSize(newFile.size)}</span>
+								<span>{t('Modified')}: {formatDate(newFile.lastModified)}</span>
 								{isTemporaryFile(newFile.path) && (
 									<span className="temp-file-indicator">
-										<TempFileIcon /> Temporary file
+										<TempFileIcon /> {t('Temporary file')}
 									</span>
 								)}
 							</div>
@@ -238,36 +238,36 @@ const FileConflictModal: React.FC = () => {
 								className="button secondary"
 								onClick={handleClose}
 							>
-								Cancel
+								{t('Cancel')}
 							</button>
 							<button
 								type="button"
 								className="button secondary"
 								onClick={() => handleResolution('keep-both')}
 							>
-								Keep Both
+								{t('Keep Both')}
 							</button>
 							<button
 								type="button"
 								className="button primary"
 								onClick={() => handleResolution('overwrite')}
 							>
-								Replace This
+								{t('Replace This')}
 							</button>
 						</div>
 					</div>
 					<div className="batch-conflict-info">
 						<p>
-							<strong>Current conflict:</strong> {existingFile.name}
+							<strong>{t('Current conflict')}:</strong> {existingFile.name}
 						</p>
 						<p>
-							<strong>Remaining conflicts:</strong>{' '}
+							<strong>{t('Remaining conflicts')}:</strong>{' '}
 							{conflictCount - currentIndex}
 						</p>
 					</div>
 
 					<div className="modal-actions">
-						<p> Apply to all {conflictCount} conflicts: </p>
+						<p> {t('Apply to all {count} conflicts', { count: conflictCount })}: </p>
 						<div className="batch-actions">
 							<div style={{ display: 'flex', gap: '0.5rem' }}>
 								<button
@@ -275,21 +275,21 @@ const FileConflictModal: React.FC = () => {
 									className="button secondary small"
 									onClick={() => handleResolution('cancel-all')}
 								>
-									Cancel All
+									{t('Cancel All')}
 								</button>
 								<button
 									type="button"
 									className="button secondary small"
 									onClick={() => handleResolution('keep-both-all')}
 								>
-									Keep Both (All)
+									{t('Keep Both (All)')}
 								</button>
 								<button
 									type="button"
 									className="button primary small"
 									onClick={() => handleResolution('overwrite-all')}
 								>
-									Replace All
+									{t('Replace All')}
 								</button>
 							</div>
 						</div>
@@ -304,13 +304,12 @@ const FileConflictModal: React.FC = () => {
 			<Modal
 				isOpen={isOpen}
 				onClose={handleClose}
-				title="Confirm Deletion"
+				title={t('Confirm Deletion')}
 				size="medium"
 			>
 				<div className="file-conflict-content">
 					<p>
-						Are you sure you want to delete {files.length} item
-						{files.length > 1 ? 's' : ''}?
+						{t('Are you sure you want to delete {count} file?', { count: files.length })}
 					</p>
 
 					<div className="batch-files-list">
@@ -322,7 +321,7 @@ const FileConflictModal: React.FC = () => {
 									{isTemporaryFile(file.path) && (
 										<span className="temp-file-indicator">
 											{' '}
-											• <TempFileIcon /> Temporary
+											• <TempFileIcon /> {t('Temporary')}
 										</span>
 									)}
 								</div>
@@ -330,7 +329,7 @@ const FileConflictModal: React.FC = () => {
 						))}
 						{files.length > 10 && (
 							<div className="batch-files-overflow">
-								... and {files.length - 10} more files
+								{t('... and {count} more files', { count: files.length - 10 })}
 							</div>
 						)}
 					</div>
@@ -339,7 +338,9 @@ const FileConflictModal: React.FC = () => {
 						<div className="warning-message">{operationWarning}</div>
 					)}
 
-					<div className="warning-message">This action cannot be undone.</div>
+					<div className="warning-message">
+						{t('This action cannot be undone.')}
+					</div>
 
 					<div className="modal-actions">
 						<button
@@ -347,14 +348,14 @@ const FileConflictModal: React.FC = () => {
 							className="button secondary"
 							onClick={handleClose}
 						>
-							Cancel
+							{t('Cancel')}
 						</button>
 						<button
 							type="button"
 							className="button danger"
 							onClick={() => handleResolution('confirm')}
 						>
-							Delete {files.length} Item{files.length > 1 ? 's' : ''}?
+							{t('Delete {count} File', { count: files.length })}
 						</button>
 					</div>
 				</div>
@@ -369,13 +370,12 @@ const FileConflictModal: React.FC = () => {
 			<Modal
 				isOpen={isOpen}
 				onClose={handleClose}
-				title="Confirm Batch Unlink"
+				title={t('Confirm Batch Unlink')}
 				size="medium"
 			>
 				<div className="file-conflict-content">
 					<p>
-						Are you sure you want to unlink {linkedFiles.length} files from
-						their documents?
+						{t('Are you sure you want to unlink {count} files from their documents?', { count: linkedFiles.length })}
 					</p>
 
 					<div className="batch-files-list">
@@ -383,11 +383,11 @@ const FileConflictModal: React.FC = () => {
 							<div key={file.id} className="batch-file-item">
 								<strong>{file.name}</strong>
 								<div className="batch-file-meta">
-									{file.path} • Linked to: {file.documentId}
+									{file.path} • {t('Linked to')}: {file.documentId}
 									{isTemporaryFile(file.path) && (
 										<span className="temp-file-indicator">
 											{' '}
-											• <TempFileIcon /> Temporary
+											• <TempFileIcon /> {t('Temporary')}
 										</span>
 									)}
 								</div>
@@ -395,7 +395,7 @@ const FileConflictModal: React.FC = () => {
 						))}
 						{linkedFiles.length > 10 && (
 							<div className="batch-files-overflow">
-								... and {linkedFiles.length - 10} more files
+								{t('... and {count} more files', { count: linkedFiles.length - 10 })}
 							</div>
 						)}
 					</div>
@@ -405,8 +405,7 @@ const FileConflictModal: React.FC = () => {
 					)}
 
 					<div className="warning-message">
-						Note: The page will refresh after unlinking and any unsaved changes
-						may be lost.
+						{t('Note: The page will refresh after unlinking and any unsaved changes may be lost.')}
 					</div>
 
 					<div className="modal-actions">
@@ -415,14 +414,14 @@ const FileConflictModal: React.FC = () => {
 							className="button secondary"
 							onClick={handleClose}
 						>
-							Cancel
+							{t('Cancel')}
 						</button>
 						<button
 							type="button"
 							className="button primary"
 							onClick={() => handleResolution('confirm')}
 						>
-							Unlink {linkedFiles.length} Files
+							{t('Unlink {count} Files', { count: linkedFiles.length })}
 						</button>
 					</div>
 				</div>
@@ -435,22 +434,24 @@ const FileConflictModal: React.FC = () => {
 			<Modal
 				isOpen={isOpen}
 				onClose={handleClose}
-				title="Confirm File Deletion"
-				size="small"
+				title={t('Delete File')}
+				size="medium"
 			>
 				<div className="file-conflict-content">
-					<p>Are you sure you want to delete this file?</p>
+					<p>
+						{t('Are you sure you want to delete "{name}"?', { name: existingFile.name })}
+					</p>
 
 					<div className="file-info">
 						<div className="file-details">
 							<strong>{existingFile.name}</strong>
 							<div className="file-meta">
-								<span>Path: {existingFile.path}</span>
-								<span>Size: {formatFileSize(existingFile.size)}</span>
-								<span>Modified: {formatDate(existingFile.lastModified)}</span>
+								<span>{t('Path')}: {existingFile.path}</span>
+								<span>{t('Size')}: {formatFileSize(existingFile.size)}</span>
+								<span>{t('Modified')}: {formatDate(existingFile.lastModified)}</span>
 								{isTemporaryFile(existingFile.path) && (
 									<span className="temp-file-indicator">
-										<TempFileIcon /> Temporary file
+										<TempFileIcon /> {t('Temporary file')}
 									</span>
 								)}
 							</div>
@@ -461,7 +462,9 @@ const FileConflictModal: React.FC = () => {
 						<div className="warning-message">{operationWarning}</div>
 					)}
 
-					<div className="warning-message">This action cannot be undone.</div>
+					<div className="warning-message">
+						{t('This action cannot be undone.')}
+					</div>
 
 					<div className="modal-actions">
 						<button
@@ -469,14 +472,14 @@ const FileConflictModal: React.FC = () => {
 							className="button secondary"
 							onClick={handleClose}
 						>
-							Cancel
+							{t('Cancel')}
 						</button>
 						<button
 							type="button"
 							className="button danger"
 							onClick={() => handleResolution('confirm')}
 						>
-							Delete File
+							{t('Delete File')}
 						</button>
 					</div>
 				</div>
@@ -489,25 +492,24 @@ const FileConflictModal: React.FC = () => {
 			<Modal
 				isOpen={isOpen}
 				onClose={handleClose}
-				title="Link File to Document"
+				title={t('Link File to Document')}
 				size="medium"
 			>
 				<div className="file-conflict-content">
 					<p>
-						Linking "{existingFile.name}" will create a collaborative document
-						that syncs with this file.
+						{t('Linking "{name}" will create a collaborative document that syncs with this file.', { name: existingFile.name })}
 					</p>
 
 					<div className="file-info">
 						<div className="file-details">
 							<strong>{existingFile.name}</strong>
 							<div className="file-meta">
-								<span>Path: {existingFile.path}</span>
-								<span>Size: {formatFileSize(existingFile.size)}</span>
-								<span>Modified: {formatDate(existingFile.lastModified)}</span>
+								<span>{t('Path')}: {existingFile.path}</span>
+								<span>{t('Size')}: {formatFileSize(existingFile.size)}</span>
+								<span>{t('Modified')}: {formatDate(existingFile.lastModified)}</span>
 								{isTemporaryFile(existingFile.path) && (
 									<span className="temp-file-indicator">
-										<TempFileIcon /> Temporary file
+										<TempFileIcon /> {t('Temporary file')}
 									</span>
 								)}
 							</div>
@@ -519,11 +521,9 @@ const FileConflictModal: React.FC = () => {
 					)}
 
 					<div className="warning-message">
-						Note: The page will refresh after linking and any unsaved changes
-						may be lost.
+						{t('Note: The page will refresh after linking and any unsaved changes may be lost.')}
 						<p className="footnote">
-							* Selecting "Link Only" will discard any existing content in the
-							document.
+							{t('* Selecting "Link Only" will discard any existing content in the document.')}
 						</p>
 					</div>
 
@@ -533,21 +533,21 @@ const FileConflictModal: React.FC = () => {
 							className="button secondary"
 							onClick={handleClose}
 						>
-							Cancel
+							{t('Cancel')}
 						</button>
 						<button
 							type="button"
 							className="button secondary"
 							onClick={() => handleResolution('link-without-copy')}
 						>
-							Link Only
+							{t('Link Only')}
 						</button>
 						<button
 							type="button"
 							className="button primary"
 							onClick={() => handleResolution('link-with-copy')}
 						>
-							Link & Copy Content
+							{t('Link & Copy Content')}
 						</button>
 					</div>
 				</div>
@@ -560,25 +560,24 @@ const FileConflictModal: React.FC = () => {
 			<Modal
 				isOpen={isOpen}
 				onClose={handleClose}
-				title="Unlink File from Document"
+				title={t('Unlink File from Document')}
 				size="medium"
 			>
 				<div className="file-conflict-content">
 					<p>
-						Unlinking "{existingFile.name}" will remove the connection between
-						this file and its collaborative document.
+						{t('Unlinking "{name}" will remove the connection between this file and its collaborative document.', { name: existingFile.name })}
 					</p>
 
 					<div className="file-info">
 						<div className="file-details">
 							<strong>{existingFile.name}</strong>
 							<div className="file-meta">
-								<span>Path: {existingFile.path}</span>
-								<span>Size: {formatFileSize(existingFile.size)}</span>
-								<span>Modified: {formatDate(existingFile.lastModified)}</span>
+								<span>{t('Path')}: {existingFile.path}</span>
+								<span>{t('Size')}: {formatFileSize(existingFile.size)}</span>
+								<span>{t('Modified')}: {formatDate(existingFile.lastModified)}</span>
 								{isTemporaryFile(existingFile.path) && (
 									<span className="temp-file-indicator">
-										<TempFileIcon /> Temporary file
+										<TempFileIcon /> {t('Temporary file')}
 									</span>
 								)}
 							</div>
@@ -590,8 +589,7 @@ const FileConflictModal: React.FC = () => {
 					)}
 
 					<div className="warning-message">
-						Note: The page will refresh after unlinking and any unsaved changes
-						may be lost.
+						{t('Note: The page will refresh after unlinking and any unsaved changes may be lost.')}
 					</div>
 
 					<div className="modal-actions">
@@ -600,14 +598,14 @@ const FileConflictModal: React.FC = () => {
 							className="button secondary"
 							onClick={handleClose}
 						>
-							Cancel
+							{t('Cancel')}
 						</button>
 						<button
 							type="button"
 							className="button primary"
 							onClick={() => handleResolution('confirm')}
 						>
-							Unlink File
+							{t('Unlink File')}
 						</button>
 					</div>
 				</div>
@@ -632,35 +630,34 @@ const FileConflictModal: React.FC = () => {
 					: 'rename';
 		const actionMessage =
 			actionText === 'delete'
-				? 'Cannot delete'
+				? t('Cannot delete')
 				: actionText === 'overwrite'
-					? 'Cannot overwrite'
-					: 'Cannot rename';
+					? t('Cannot overwrite')
+					: t('Cannot rename');
 
 		return (
 			<Modal
 				isOpen={isOpen}
 				onClose={handleClose}
-				title={`${actionCapitalized} Linked File`}
+				title={t('{action} Linked File', { action: actionCapitalized })}
 				size="medium"
 			>
 				<div className="file-conflict-content">
 					<p>
-						{actionMessage} "{existingFile.name}" because it is linked to a
-						collaborative document.
+						{actionMessage} "{existingFile.name}" {t('because it is linked to a collaborative document.')}
 					</p>
 
 					<div className="file-info">
 						<div className="file-details">
 							<strong>{existingFile.name}</strong>
 							<div className="file-meta">
-								<span>Path: {existingFile.path}</span>
-								<span>Size: {formatFileSize(existingFile.size)}</span>
-								<span>Modified: {formatDate(existingFile.lastModified)}</span>
-								<span>Linked to document: Yes</span>
+								<span>{t('Path')}: {existingFile.path}</span>
+								<span>{t('Size')}: {formatFileSize(existingFile.size)}</span>
+								<span>{t('Modified')}: {formatDate(existingFile.lastModified)}</span>
+								<span>{t('Linked to document')}: {t('Yes')}</span>
 								{isTemporaryFile(existingFile.path) && (
 									<span className="temp-file-indicator">
-										<TempFileIcon /> Temporary file
+										<TempFileIcon /> {t('Temporary file')}
 									</span>
 								)}
 							</div>
@@ -672,9 +669,7 @@ const FileConflictModal: React.FC = () => {
 					)}
 
 					<div className="warning-message">
-						To {actionVerb} this file, you must first unlink it from its
-						document. After unlinking, you can try the {actionVerb} operation
-						again.
+						{t('To {action} this file, you must first unlink it from its document. After unlinking, you can try the {action} operation again.', { action: actionVerb })}
 					</div>
 
 					<div className="modal-actions">
@@ -683,14 +678,14 @@ const FileConflictModal: React.FC = () => {
 							className="button secondary"
 							onClick={handleClose}
 						>
-							Cancel
+							{t('Cancel')}
 						</button>
 						<button
 							type="button"
 							className="button primary"
 							onClick={() => handleResolution('show-unlink-dialog')}
 						>
-							Unlink File
+							{t('Unlink File')}
 						</button>
 					</div>
 				</div>
@@ -703,37 +698,36 @@ const FileConflictModal: React.FC = () => {
 			<Modal
 				isOpen={isOpen}
 				onClose={handleClose}
-				title="File Already Exists"
+				title={t('File Already Exists')}
 				size="medium"
 			>
 				<div className="file-conflict-content">
 					<p>
-						A file with the name "{existingFile.name}" already exists at this
-						location.
+						{t('A file with the name "{name}" already exists at this location.', { name: existingFile.name })}
 					</p>
 
 					<div className="file-comparison">
 						<div className="file-info existing">
-							<h4>Existing File</h4>
+							<h4>{t('Existing File')}</h4>
 							<div className="file-details">
-								<span>Size: {formatFileSize(existingFile.size)}</span>
-								<span>Modified: {formatDate(existingFile.lastModified)}</span>
+								<span>{t('Size')}: {formatFileSize(existingFile.size)}</span>
+								<span>{t('Modified')}: {formatDate(existingFile.lastModified)}</span>
 								{isTemporaryFile(existingFile.path) && (
 									<span className="temp-file-indicator">
-										<TempFileIcon /> Temporary file
+										<TempFileIcon /> {t('Temporary file')}
 									</span>
 								)}
 							</div>
 						</div>
 
 						<div className="file-info new">
-							<h4>New File</h4>
+							<h4>{t('New File')}</h4>
 							<div className="file-details">
-								<span>Size: {formatFileSize(newFile.size)}</span>
-								<span>Modified: {formatDate(newFile.lastModified)}</span>
+								<span>{t('Size')}: {formatFileSize(newFile.size)}</span>
+								<span>{t('Modified')}: {formatDate(newFile.lastModified)}</span>
 								{isTemporaryFile(newFile.path) && (
 									<span className="temp-file-indicator">
-										<TempFileIcon /> Temporary file
+										<TempFileIcon /> {t('Temporary file')}
 									</span>
 								)}
 							</div>
@@ -750,21 +744,21 @@ const FileConflictModal: React.FC = () => {
 							className="button secondary"
 							onClick={handleClose}
 						>
-							Cancel
+							{t('Cancel')}
 						</button>
 						<button
 							type="button"
 							className="button secondary"
 							onClick={() => handleResolution('keep-both')}
 						>
-							Keep Both
+							{t('Keep Both')}
 						</button>
 						<button
 							type="button"
 							className="button primary"
 							onClick={() => handleResolution('overwrite')}
 						>
-							Replace
+							{t('Replace')}
 						</button>
 					</div>
 				</div>

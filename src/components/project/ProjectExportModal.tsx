@@ -88,7 +88,10 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 						<div key={project.id} className="export-project-item">
 							<strong>{project.name}</strong>
 							<div className="export-project-details">
-								{project.description || 'No description'} • Last modified:{' '}
+								{project.description || 'No description'}
+							</div>
+							<div className="export-project-details">
+								Last modified:{' '}
 								{formatDate(project.updatedAt)}
 							</div>
 						</div>
