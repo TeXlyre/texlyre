@@ -176,5 +176,10 @@
     "Import {count} Project_other": "Import {{count}} Projects",
     "Import completed with errors: {errors}": "Import completed with errors: {{errors}}",
     "Import failed": "Import failed",
-    "Linked to": "Linked to"
+    "Linked to": "Linked to",
+    "Connecting...": "Connecting...",
+    "Connect Folder": "Connect Folder",
+    "Backup directory changed successfully": "Backup directory changed successfully",
+    "Changing backup directory...": "Changing backup directory...",
+    "Backup folder connected successfully": "Backup folder connected successfully"
 }

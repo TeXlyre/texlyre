@@ -1,4 +1,5 @@
 // src/components/output/LaTeXCompileButton.tsx
+import { t } from "@/i18n";
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -13,457 +14,457 @@ import { isTemporaryFile } from '../../utils/fileUtils';
 import { ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon } from '../common/Icons';
 
 interface LaTeXCompileButtonProps {
-	className?: string;
-	selectedDocId?: string | null;
-	documents?: Array<{ id: string; name: string }>;
-	onNavigateToLinkedFile?: () => void;
-	onExpandLatexOutput?: () => void;
-	linkedFileInfo?: {
-		fileName?: string;
-		filePath?: string;
-		fileId?: string;
-	} | null;
-	shouldNavigateOnCompile?: boolean;
-	useSharedSettings?: boolean;
-	docUrl?: string;
+  className?: string;
+  selectedDocId?: string | null;
+  documents?: Array<{id: string;name: string;}>;
+  onNavigateToLinkedFile?: () => void;
+  onExpandLatexOutput?: () => void;
+  linkedFileInfo?: {
+    fileName?: string;
+    filePath?: string;
+    fileId?: string;
+  } | null;
+  shouldNavigateOnCompile?: boolean;
+  useSharedSettings?: boolean;
+  docUrl?: string;
 }
 
 const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
-	className = '',
-	selectedDocId,
-	documents,
-	onNavigateToLinkedFile,
-	onExpandLatexOutput,
-	linkedFileInfo,
-	shouldNavigateOnCompile = false,
-	useSharedSettings = false,
-	docUrl,
+  className = '',
+  selectedDocId,
+  documents,
+  onNavigateToLinkedFile,
+  onExpandLatexOutput,
+  linkedFileInfo,
+  shouldNavigateOnCompile = false,
+  useSharedSettings = false,
+  docUrl
 }) => {
-	const {
-		isCompiling,
-		compileDocument,
-		stopCompilation,
-		latexEngine,
-		setLatexEngine,
-		clearCache,
-		compileWithClearCache,
-	} = useLaTeX();
-	const { selectedFileId, getFile, fileTree } = useFileTree();
-	const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
-	const { getSetting } = useSettings();
-	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-	const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
-	const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
-	const [availableTexFiles, setAvailableTexFiles] = useState<string[]>([]);
-	const [isChangingEngine, setIsChangingEngine] = useState(false);
-	const compileButtonRef = useRef<{ clearAndCompile: () => void }>();
-	const dropdownRef = useRef<HTMLDivElement>(null);
+  const {
+    isCompiling,
+    compileDocument,
+    stopCompilation,
+    latexEngine,
+    setLatexEngine,
+    clearCache,
+    compileWithClearCache
+  } = useLaTeX();
+  const { selectedFileId, getFile, fileTree } = useFileTree();
+  const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
+  const { getSetting } = useSettings();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
+  const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
+  const [availableTexFiles, setAvailableTexFiles] = useState<string[]>([]);
+  const [isChangingEngine, setIsChangingEngine] = useState(false);
+  const compileButtonRef = useRef<{clearAndCompile: () => void;}>();
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-	const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
-	const projectEngine = useSharedSettings ? doc?.projectMetadata?.latexEngine : undefined;
-	const effectiveEngine = projectEngine || latexEngine;
-	const effectiveMainFile = projectMainFile || userSelectedMainFile || autoMainFile;
+  const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
+  const projectEngine = useSharedSettings ? doc?.projectMetadata?.latexEngine : undefined;
+  const effectiveEngine = projectEngine || latexEngine;
+  const effectiveMainFile = projectMainFile || userSelectedMainFile || autoMainFile;
 
-	useEffect(() => {
-		const findTexFiles = (nodes: FileNode[]): string[] => {
-			const texFiles: string[] = [];
-			for (const node of nodes) {
-				if (node.type === 'file' && node.path.endsWith('.tex') && !isTemporaryFile(node.path)) {
-					texFiles.push(node.path);
-				}
-				if (node.children) {
-					texFiles.push(...findTexFiles(node.children));
-				}
-			}
-			return texFiles;
-		};
+  useEffect(() => {
+    const findTexFiles = (nodes: FileNode[]): string[] => {
+      const texFiles: string[] = [];
+      for (const node of nodes) {
+        if (node.type === 'file' && node.path.endsWith('.tex') && !isTemporaryFile(node.path)) {
+          texFiles.push(node.path);
+        }
+        if (node.children) {
+          texFiles.push(...findTexFiles(node.children));
+        }
+      }
+      return texFiles;
+    };
 
-		const allTexFiles = findTexFiles(fileTree);
-		setAvailableTexFiles(allTexFiles);
+    const allTexFiles = findTexFiles(fileTree);
+    setAvailableTexFiles(allTexFiles);
 
-		const findMainFile = async () => {
-			if (
-				selectedDocId &&
-				linkedFileInfo?.filePath &&
-				linkedFileInfo.filePath.endsWith('.tex')
-			) {
-				setAutoMainFile(linkedFileInfo.filePath);
-				return;
-			}
+    const findMainFile = async () => {
+      if (
+      selectedDocId &&
+      linkedFileInfo?.filePath &&
+      linkedFileInfo.filePath.endsWith('.tex'))
+      {
+        setAutoMainFile(linkedFileInfo.filePath);
+        return;
+      }
 
-			if (selectedFileId) {
-				const file = await getFile(selectedFileId);
-				if (file?.path.endsWith('.tex')) {
-					setAutoMainFile(file.path);
-					return;
-				}
-			}
+      if (selectedFileId) {
+        const file = await getFile(selectedFileId);
+        if (file?.path.endsWith('.tex')) {
+          setAutoMainFile(file.path);
+          return;
+        }
+      }
 
-			const texFile = allTexFiles[0];
-			setAutoMainFile(texFile);
-		};
+      const texFile = allTexFiles[0];
+      setAutoMainFile(texFile);
+    };
 
-		findMainFile();
-	}, [selectedFileId, getFile, fileTree, selectedDocId, linkedFileInfo]);
+    findMainFile();
+  }, [selectedFileId, getFile, fileTree, selectedDocId, linkedFileInfo]);
 
-	useEffect(() => {
-		if (useSharedSettings && projectEngine && projectEngine !== latexEngine) {
-			setLatexEngine(projectEngine);
-		}
-	}, [projectEngine, latexEngine, setLatexEngine, useSharedSettings]);
+  useEffect(() => {
+    if (useSharedSettings && projectEngine && projectEngine !== latexEngine) {
+      setLatexEngine(projectEngine);
+    }
+  }, [projectEngine, latexEngine, setLatexEngine, useSharedSettings]);
 
-	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
-			if (
-				dropdownRef.current &&
-				!dropdownRef.current.contains(event.target as Node)
-			) {
-				setIsDropdownOpen(false);
-			}
-		};
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+      dropdownRef.current &&
+      !dropdownRef.current.contains(event.target as Node))
+      {
+        setIsDropdownOpen(false);
+      }
+    };
 
-		document.addEventListener('mousedown', handleClickOutside);
-		return () => {
-			document.removeEventListener('mousedown', handleClickOutside);
-		};
-	}, []);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
-	const shouldNavigateToMain = async (mainFilePath: string): Promise<boolean> => {
-		const navigationSetting = getSetting('latex-auto-navigate-to-main')?.value as string ?? 'conditional';
+  const shouldNavigateToMain = async (mainFilePath: string): Promise<boolean> => {
+    const navigationSetting = getSetting('latex-auto-navigate-to-main')?.value as string ?? 'conditional';
 
-		console.log(`[Navigation] Setting: ${navigationSetting}, selectedFileId: ${selectedFileId}, selectedDocId: ${selectedDocId}`);
+    console.log(`[Navigation] Setting: ${navigationSetting}, selectedFileId: ${selectedFileId}, selectedDocId: ${selectedDocId}`);
 
-		if (navigationSetting === 'never') {
-			console.log("[Navigation] Never navigate - setting is 'never'");
-			return false;
-		}
+    if (navigationSetting === 'never') {
+      console.log("[Navigation] Never navigate - setting is 'never'");
+      return false;
+    }
 
-		if (navigationSetting === 'always') {
-			console.log("[Navigation] Always navigate - setting is 'always'");
-			return true;
-		}
+    if (navigationSetting === 'always') {
+      console.log("[Navigation] Always navigate - setting is 'always'");
+      return true;
+    }
 
-		// Conditional navigation logic
-		if (navigationSetting === 'conditional') {
-			// Check if we're currently editing a LaTeX file directly
-			if (selectedFileId) {
-				try {
-					const currentFile = await getFile(selectedFileId);
-					console.log(`[Navigation] Current file: ${currentFile?.path}, isTeX: ${currentFile?.path.endsWith('.tex')}`);
-					if (currentFile?.path.endsWith('.tex')) {
-						console.log(`[Navigation] Not navigating - already editing LaTeX file: ${currentFile.path}`);
-						return false; // Don't navigate if already editing a .tex file
-					}
-				} catch (error) {
-					console.warn('Error getting current file:', error);
-				}
-			}
+    // Conditional navigation logic
+    if (navigationSetting === 'conditional') {
+      // Check if we're currently editing a LaTeX file directly
+      if (selectedFileId) {
+        try {
+          const currentFile = await getFile(selectedFileId);
+          console.log(`[Navigation] Current file: ${currentFile?.path}, isTeX: ${currentFile?.path.endsWith('.tex')}`);
+          if (currentFile?.path.endsWith('.tex')) {
+            console.log(`[Navigation] Not navigating - already editing LaTeX file: ${currentFile.path}`);
+            return false; // Don't navigate if already editing a .tex file
+          }
+        } catch (error) {
+          console.warn('Error getting current file:', error);
+        }
+      }
 
-			// Check if we're currently editing a document linked to a LaTeX file
-			if (selectedDocId && linkedFileInfo?.fileName?.endsWith('.tex')) {
-				console.log(`[Navigation] Not navigating - already editing LaTeX-linked document: ${linkedFileInfo.fileName}`);
-				return false; // Don't navigate if already editing a LaTeX-linked document
-			}
+      // Check if we're currently editing a document linked to a LaTeX file
+      if (selectedDocId && linkedFileInfo?.fileName?.endsWith('.tex')) {
+        console.log(`[Navigation] Not navigating - already editing LaTeX-linked document: ${linkedFileInfo.fileName}`);
+        return false; // Don't navigate if already editing a LaTeX-linked document
+      }
 
-			console.log(`[Navigation] Will navigate to main file: ${mainFilePath}`);
-			return true; // Navigate if no LaTeX file is currently open
-		}
+      console.log(`[Navigation] Will navigate to main file: ${mainFilePath}`);
+      return true; // Navigate if no LaTeX file is currently open
+    }
 
-		return false;
-	};
+    return false;
+  };
 
-	const handleCompileOrStop = async () => {
-		if (isCompiling) {
-			stopCompilation();
-		} else if (effectiveMainFile) {
-			if (onExpandLatexOutput) {
-				onExpandLatexOutput();
-			}
+  const handleCompileOrStop = async () => {
+    if (isCompiling) {
+      stopCompilation();
+    } else if (effectiveMainFile) {
+      if (onExpandLatexOutput) {
+        onExpandLatexOutput();
+      }
 
-			const shouldNavigate = await shouldNavigateToMain(effectiveMainFile);
-			console.log(`[Navigation] Should navigate: ${shouldNavigate}, shouldNavigateOnCompile: ${shouldNavigateOnCompile}`);
+      const shouldNavigate = await shouldNavigateToMain(effectiveMainFile);
+      console.log(`[Navigation] Should navigate: ${shouldNavigate}, shouldNavigateOnCompile: ${shouldNavigateOnCompile}`);
 
-			if (shouldNavigateOnCompile && shouldNavigate) {
-				if (linkedFileInfo?.filePath === effectiveMainFile && onNavigateToLinkedFile) {
-					console.log('[Navigation] Navigating to linked file');
-					onNavigateToLinkedFile();
-				} else {
-					console.log(`[Navigation] Dispatching navigate-to-compiled-file event for: ${effectiveMainFile}`);
-					document.dispatchEvent(
-						new CustomEvent('navigate-to-compiled-file', {
-							detail: {
-								filePath: effectiveMainFile,
-							},
-						}),
-					);
-				}
-			}
+      if (shouldNavigateOnCompile && shouldNavigate) {
+        if (linkedFileInfo?.filePath === effectiveMainFile && onNavigateToLinkedFile) {
+          console.log('[Navigation] Navigating to linked file');
+          onNavigateToLinkedFile();
+        } else {
+          console.log(`[Navigation] Dispatching navigate-to-compiled-file event for: ${effectiveMainFile}`);
+          document.dispatchEvent(
+            new CustomEvent('navigate-to-compiled-file', {
+              detail: {
+                filePath: effectiveMainFile
+              }
+            })
+          );
+        }
+      }
 
-			await compileDocument(effectiveMainFile);
-		}
-	};
+      await compileDocument(effectiveMainFile);
+    }
+  };
 
-	const handleClearCache = async () => {
-		try {
-			await clearCache();
-		} catch (error) {
-			console.error('Failed to clear cache:', error);
-		}
-	};
+  const handleClearCache = async () => {
+    try {
+      await clearCache();
+    } catch (error) {
+      console.error('Failed to clear cache:', error);
+    }
+  };
 
-	const handleClearCacheAndCompile = async () => {
-		if (!effectiveMainFile) return;
+  const handleClearCacheAndCompile = async () => {
+    if (!effectiveMainFile) return;
 
-		if (onExpandLatexOutput) {
-			onExpandLatexOutput();
-		}
+    if (onExpandLatexOutput) {
+      onExpandLatexOutput();
+    }
 
-		const shouldNavigate = await shouldNavigateToMain(effectiveMainFile);
+    const shouldNavigate = await shouldNavigateToMain(effectiveMainFile);
 
-		if (shouldNavigateOnCompile && shouldNavigate) {
-			if (linkedFileInfo?.filePath === effectiveMainFile && onNavigateToLinkedFile) {
-				onNavigateToLinkedFile();
-			} else {
-				document.dispatchEvent(
-					new CustomEvent('navigate-to-compiled-file', {
-						detail: {
-							filePath: effectiveMainFile,
-						},
-					}),
-				);
-			}
-		}
+    if (shouldNavigateOnCompile && shouldNavigate) {
+      if (linkedFileInfo?.filePath === effectiveMainFile && onNavigateToLinkedFile) {
+        onNavigateToLinkedFile();
+      } else {
+        document.dispatchEvent(
+          new CustomEvent('navigate-to-compiled-file', {
+            detail: {
+              filePath: effectiveMainFile
+            }
+          })
+        );
+      }
+    }
 
-		try {
-			await compileWithClearCache(effectiveMainFile);
-		} catch (error) {
-			console.error('Failed to compile with cache clear:', error);
-		}
-	};
+    try {
+      await compileWithClearCache(effectiveMainFile);
+    } catch (error) {
+      console.error('Failed to compile with cache clear:', error);
+    }
+  };
 
-	useEffect(() => {
-		const buttonElement = document.querySelector('.header-compile-button');
-		if (buttonElement) {
-			(buttonElement as any).clearAndCompile = handleClearCacheAndCompile;
-		}
-	}, [handleClearCacheAndCompile]);
+  useEffect(() => {
+    const buttonElement = document.querySelector('.header-compile-button');
+    if (buttonElement) {
+      (buttonElement as any).clearAndCompile = handleClearCacheAndCompile;
+    }
+  }, [handleClearCacheAndCompile]);
 
-	const toggleDropdown = (e: React.MouseEvent) => {
-		e.stopPropagation();
-		setIsDropdownOpen(!isDropdownOpen);
-	};
+  const toggleDropdown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDropdownOpen(!isDropdownOpen);
+  };
 
-	const handleEngineChange = async (engine: string) => {
-		setIsChangingEngine(true);
-		try {
-			if (useSharedSettings && projectEngine) {
-				if (changeDoc) {
-					changeDoc((d) => {
-						if (!d.projectMetadata) {
-							d.projectMetadata = { name: '', description: '' };
-						}
-						d.projectMetadata.latexEngine = engine as 'pdftex' | 'xetex' | 'luatex';
-					});
-				}
-			} else {
-				await setLatexEngine(engine as 'pdftex' | 'xetex' | 'luatex');
-			}
-			setIsDropdownOpen(false);
-		} catch (error) {
-			console.error('Failed to change engine:', error);
-		} finally {
-			setIsChangingEngine(false);
-		}
-	};
+  const handleEngineChange = async (engine: string) => {
+    setIsChangingEngine(true);
+    try {
+      if (useSharedSettings && projectEngine) {
+        if (changeDoc) {
+          changeDoc((d) => {
+            if (!d.projectMetadata) {
+              d.projectMetadata = { name: '', description: '' };
+            }
+            d.projectMetadata.latexEngine = engine as 'pdftex' | 'xetex' | 'luatex';
+          });
+        }
+      } else {
+        await setLatexEngine(engine as 'pdftex' | 'xetex' | 'luatex');
+      }
+      setIsDropdownOpen(false);
+    } catch (error) {
+      console.error('Failed to change engine:', error);
+    } finally {
+      setIsChangingEngine(false);
+    }
+  };
 
-	const handleMainFileChange = (filePath: string) => {
-		if (useSharedSettings && projectMainFile) {
-			if (!changeDoc) return;
-			changeDoc((d) => {
-				if (!d.projectMetadata) {
-					d.projectMetadata = { name: '', description: '' };
-				}
-				d.projectMetadata.mainFile = filePath === 'auto' ? undefined : filePath;
-			});
-		} else {
-			setUserSelectedMainFile(filePath === 'auto' ? undefined : filePath);
-		}
-	};
+  const handleMainFileChange = (filePath: string) => {
+    if (useSharedSettings && projectMainFile) {
+      if (!changeDoc) return;
+      changeDoc((d) => {
+        if (!d.projectMetadata) {
+          d.projectMetadata = { name: '', description: '' };
+        }
+        d.projectMetadata.mainFile = filePath === 'auto' ? undefined : filePath;
+      });
+    } else {
+      setUserSelectedMainFile(filePath === 'auto' ? undefined : filePath);
+    }
+  };
 
-	const handleShareMainFile = (checked: boolean) => {
-		if (!useSharedSettings || !changeDoc) return;
+  const handleShareMainFile = (checked: boolean) => {
+    if (!useSharedSettings || !changeDoc) return;
 
-		changeDoc((d) => {
-			if (!d.projectMetadata) {
-				d.projectMetadata = { name: '', description: '' };
-			}
-			if (checked) {
-				d.projectMetadata.mainFile = userSelectedMainFile || autoMainFile;
-			} else {
-				delete d.projectMetadata.mainFile;
-			}
-		});
-	};
+    changeDoc((d) => {
+      if (!d.projectMetadata) {
+        d.projectMetadata = { name: '', description: '' };
+      }
+      if (checked) {
+        d.projectMetadata.mainFile = userSelectedMainFile || autoMainFile;
+      } else {
+        delete d.projectMetadata.mainFile;
+      }
+    });
+  };
 
-	const handleShareEngine = (checked: boolean) => {
-		if (!useSharedSettings || !changeDoc) return;
+  const handleShareEngine = (checked: boolean) => {
+    if (!useSharedSettings || !changeDoc) return;
 
-		changeDoc((d) => {
-			if (!d.projectMetadata) {
-				d.projectMetadata = { name: '', description: '' };
-			}
-			if (checked) {
-				d.projectMetadata.latexEngine = latexEngine;
-			} else {
-				delete d.projectMetadata.latexEngine;
-			}
-		});
-	};
+    changeDoc((d) => {
+      if (!d.projectMetadata) {
+        d.projectMetadata = { name: '', description: '' };
+      }
+      if (checked) {
+        d.projectMetadata.latexEngine = latexEngine;
+      } else {
+        delete d.projectMetadata.latexEngine;
+      }
+    });
+  };
 
-	const getFileName = (path?: string) => {
-		if (!path) return 'No .tex file';
-		return path.split('/').pop() || path;
-	};
+  const getFileName = (path?: string) => {
+    if (!path) return 'No .tex file';
+    return path.split('/').pop() || path;
+  };
 
-	const getDisplayName = (path?: string) => {
-		if (!path) return 'No .tex file';
+  const getDisplayName = (path?: string) => {
+    if (!path) return 'No .tex file';
 
-		if (selectedDocId && linkedFileInfo?.filePath === path && documents) {
-			const doc = documents.find((d) => d.id === selectedDocId);
-			if (doc) {
-				return `${doc.name} (linked)`;
-			}
-		}
+    if (selectedDocId && linkedFileInfo?.filePath === path && documents) {
+      const doc = documents.find((d) => d.id === selectedDocId);
+      if (doc) {
+        return `${doc.name} (linked)`;
+      }
+    }
 
-		return getFileName(path);
-	};
+    return getFileName(path);
+  };
 
-	const isDisabled = !isCompiling && (!effectiveMainFile || isChangingEngine);
+  const isDisabled = !isCompiling && (!effectiveMainFile || isChangingEngine);
 
-	return (
-		<div className={`latex-compile-buttons ${className}`} ref={dropdownRef}>
+  return (
+    <div className={`latex-compile-buttons ${className}`} ref={dropdownRef}>
 			<div className="compile-button-group">
 				<button
-					className={`latex-button compile-button ${isCompiling ? 'compiling' : ''
-						} ${isChangingEngine ? 'loading' : ''}`}
-					onClick={handleCompileOrStop}
-					disabled={isDisabled}
-					title={
-						isCompiling
-							? `Stop Compilation${useSharedSettings ? ' (F8)' : ''}`
-							: isChangingEngine
-								? 'Switching Engine...'
-								: `Compile LaTeX Document${useSharedSettings ? ' (F9)' : ''}`
-					}
-				>
+          className={`latex-button compile-button ${isCompiling ? 'compiling' : ''} ${
+          isChangingEngine ? 'loading' : ''}`}
+          onClick={handleCompileOrStop}
+          disabled={isDisabled}
+          title={
+          isCompiling ?
+          `Stop Compilation${useSharedSettings ? ' (F8)' : ''}` :
+          isChangingEngine ?
+          'Switching Engine...' :
+          `Compile LaTeX Document${useSharedSettings ? ' (F9)' : ''}`
+          }>
+
 					{isCompiling ? <StopIcon /> : <PlayIcon />}
 				</button>
 
 				<PdfWindowToggleButton
-					className="pdf-window-button"
-					projectId={docUrl?.startsWith('yjs:') ? docUrl.slice(4) : docUrl || 'unknown'}
-					title="Open PDF in new window"
-				/>
+          className="pdf-window-button"
+          projectId={docUrl?.startsWith('yjs:') ? docUrl.slice(4) : docUrl || 'unknown'}
+          title={t('Open PDF in new window')} />
+
 
 				<button
-					className="latex-button dropdown-toggle"
-					onClick={toggleDropdown}
-					disabled={isChangingEngine}
-					title="Compilation Options"
-				>
+          className="latex-button dropdown-toggle"
+          onClick={toggleDropdown}
+          disabled={isChangingEngine}
+          title={t('Compilation Options')}>
+
 					<ChevronDownIcon />
 				</button>
 			</div>
-			{isDropdownOpen && (
-				<div className="latex-dropdown">
+			{isDropdownOpen &&
+      <div className="latex-dropdown">
 					<div className="main-file-display">
-						<div className="main-file-label">Main file:</div>
+						<div className="main-file-label">{t('Main file:')}</div>
 						<div className="main-file-path" title={effectiveMainFile}>
 							{getDisplayName(effectiveMainFile)}
-							{projectMainFile && <span className="shared-indicator"> (shared)</span>}
+							{projectMainFile && <span className="shared-indicator">{t('(shared)')}</span>}
 						</div>
 					</div>
 
-					{useSharedSettings && (
-						<>
+					{useSharedSettings &&
+        <>
 							<div className="main-file-selector">
-								<div className="main-file-selector-label">Select main file:</div>
+								<div className="main-file-selector-label">{t('Select main file:')}</div>
 								<select
-									value={projectMainFile || userSelectedMainFile || 'auto'}
-									onChange={(e) => handleMainFileChange(e.target.value)}
-									className="main-file-select"
-									disabled={isChangingEngine || isCompiling}
-								>
-									<option value="auto">Auto-detect</option>
-									{availableTexFiles.map((filePath) => (
-										<option key={filePath} value={filePath}>
+              value={projectMainFile || userSelectedMainFile || 'auto'}
+              onChange={(e) => handleMainFileChange(e.target.value)}
+              className="main-file-select"
+              disabled={isChangingEngine || isCompiling}>
+
+									<option value="auto">{t('Auto-detect')}</option>
+									{availableTexFiles.map((filePath) =>
+              <option key={filePath} value={filePath}>
 											{getFileName(filePath)}
 										</option>
-									))}
+              )}
 								</select>
 								<label className="share-checkbox">
 									<input
-										type="checkbox"
-										checked={!!projectMainFile}
-										onChange={(e) => handleShareMainFile(e.target.checked)}
-										disabled={isChangingEngine || isCompiling || !effectiveMainFile}
-									/>
-									Save and share with collaborators
-								</label>
+                type="checkbox"
+                checked={!!projectMainFile}
+                onChange={(e) => handleShareMainFile(e.target.checked)}
+                disabled={isChangingEngine || isCompiling || !effectiveMainFile} />{t('Save and share with collaborators')}
+
+
+            </label>
 							</div>
 						</>
-					)}
+        }
 
 					<div className="engine-selector">
-						<div className="engine-label">LaTeX Engine:</div>
+						<div className="engine-label">{t('LaTeX Engine:')}</div>
 						<select
-							value={effectiveEngine}
-							onChange={(e) => handleEngineChange(e.target.value)}
-							className="engine-select"
-							disabled={isChangingEngine || isCompiling}
-						>
-							<option value="pdftex">pdfTeX</option>
-							<option value="xetex">XeTeX</option>
+            value={effectiveEngine}
+            onChange={(e) => handleEngineChange(e.target.value)}
+            className="engine-select"
+            disabled={isChangingEngine || isCompiling}>
+
+							<option value="pdftex">{t('pdfTeX')}</option>
+							<option value="xetex">{t('XeTeX')}</option>
 							{/*<option value="luatex">LuaTeX</option>*/}
 						</select>
-						{useSharedSettings && (
-							<label className="share-checkbox">
+						{useSharedSettings &&
+          <label className="share-checkbox">
 								<input
-									type="checkbox"
-									checked={!!projectEngine}
-									onChange={(e) => handleShareEngine(e.target.checked)}
-									disabled={isChangingEngine || isCompiling}
-								/>
-								Save and share with collaborators
-							</label>
-						)}
-						{isChangingEngine && (
-							<div className="engine-status">Switching engine...</div>
-						)}
+              type="checkbox"
+              checked={!!projectEngine}
+              onChange={(e) => handleShareEngine(e.target.checked)}
+              disabled={isChangingEngine || isCompiling} />{t('Save and share with collaborators')}
+
+
+          </label>
+          }
+						{isChangingEngine &&
+          <div className="engine-status">{t('Switching engine...')}</div>
+          }
 					</div>
 
 					<div className="cache-controls">
 						<div
-							className="cache-item clear-cache"
-							onClick={handleClearCache}
-							title="Clear compilation cache and source files"
-						>
-							<TrashIcon />
-							Clear Cache
-						</div>
+            className="cache-item clear-cache"
+            onClick={handleClearCache}
+            title={t('Clear compilation cache and source files')}>
+
+							<TrashIcon />{t('Clear Cache')}
+
+          </div>
 						<div
-							className="cache-item clear-and-compile clear-and-compile-button"
-							onClick={handleClearCacheAndCompile}
-							title={`Clear cache and compile${useSharedSettings ? ' (Shift+F9)' : ''}`}
-						>
-							<ClearCompileIcon />
-							Clear & Compile
-						</div>
+            className="cache-item clear-and-compile clear-and-compile-button"
+            onClick={handleClearCacheAndCompile}
+            title={`Clear cache and compile${useSharedSettings ? ' (Shift+F9)' : ''}`}>
+
+							<ClearCompileIcon />{t('Clear & Compile')}
+
+          </div>
 					</div>
 				</div>
-			)}
-		</div>
-	);
+      }
+		</div>);
+
 };
 
 export default LaTeXCompileButton;

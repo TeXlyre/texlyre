@@ -1,240 +1,241 @@
 // src/components/projects/ProjectForm.tsx
+import { t } from "@/i18n";
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
 import type { Project } from '../../types/projects.ts';
 
 interface ProjectFormProps {
-	project?: Project;
-	onSubmit: (projectData: {
-		name: string;
-		description: string;
-		type: 'latex' | 'typst';
-		tags: string[];
-		docUrl?: string;
-		isFavorite: boolean;
-	}) => void;
-	onCancel: () => void;
-	isSubmitting?: boolean;
-	simpleMode?: boolean; // Added for use in editor
-	disableNameAndDescription?: boolean; // New prop to disable name and description editing
+  project?: Project;
+  onSubmit: (projectData: {
+    name: string;
+    description: string;
+    type: 'latex' | 'typst';
+    tags: string[];
+    docUrl?: string;
+    isFavorite: boolean;
+  }) => void;
+  onCancel: () => void;
+  isSubmitting?: boolean;
+  simpleMode?: boolean; // Added for use in editor
+  disableNameAndDescription?: boolean; // New prop to disable name and description editing
 }
 
 const ProjectForm: React.FC<ProjectFormProps> = ({
-	project,
-	onSubmit,
-	onCancel,
-	isSubmitting = false,
-	simpleMode = false, // Default to full form
-	disableNameAndDescription = false,
+  project,
+  onSubmit,
+  onCancel,
+  isSubmitting = false,
+  simpleMode = false, // Default to full form
+  disableNameAndDescription = false
 }) => {
-	const [name, setName] = useState('');
-	const [description, setDescription] = useState('');
-	const [type, setType] = useState<'latex' | 'typst'>('latex');
-	const [tagInput, setTagInput] = useState('');
-	const [tags, setTags] = useState<string[]>([]);
-	const [docUrl, setDocUrl] = useState('');
-	const [isFavorite, setIsFavorite] = useState(false);
-	const [error, setError] = useState<string | null>(null);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [type, setType] = useState<'latex' | 'typst'>('latex');
+  const [tagInput, setTagInput] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [docUrl, setDocUrl] = useState('');
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-	// Initialize form with project data if editing
-	useEffect(() => {
-		if (project) {
-			setName(project.name);
-			setDescription(project.description || '');
-			setType(project.type);
-			setTags(project.tags || []);
-			setDocUrl(project.docUrl || '');
-			setIsFavorite(project.isFavorite);
-		}
-	}, [project]);
+  // Initialize form with project data if editing
+  useEffect(() => {
+    if (project) {
+      setName(project.name);
+      setDescription(project.description || '');
+      setType(project.type);
+      setTags(project.tags || []);
+      setDocUrl(project.docUrl || '');
+      setIsFavorite(project.isFavorite);
+    }
+  }, [project]);
 
-	const handleSubmit = (e: React.FormEvent) => {
-		e.preventDefault();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
-		if (!name.trim()) {
-			setError('Project name is required');
-			return;
-		}
+    if (!name.trim()) {
+      setError('Project name is required');
+      return;
+    }
 
-		onSubmit({
-			name: name.trim(),
-			description: description.trim(),
-			type,
-			tags,
-			docUrl: docUrl || undefined,
-			isFavorite,
-		});
-	};
+    onSubmit({
+      name: name.trim(),
+      description: description.trim(),
+      type,
+      tags,
+      docUrl: docUrl || undefined,
+      isFavorite
+    });
+  };
 
-	const handleAddTag = () => {
-		const trimmedTag = tagInput.trim();
-		if (trimmedTag && !tags.includes(trimmedTag)) {
-			setTags([...tags, trimmedTag]);
-			setTagInput('');
-		}
-	};
+  const handleAddTag = () => {
+    const trimmedTag = tagInput.trim();
+    if (trimmedTag && !tags.includes(trimmedTag)) {
+      setTags([...tags, trimmedTag]);
+      setTagInput('');
+    }
+  };
 
-	const handleTagKeyPress = (e: React.KeyboardEvent) => {
-		if (e.key === 'Enter' || e.key === ',') {
-			e.preventDefault();
-			handleAddTag();
-		}
-	};
+  const handleTagKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      handleAddTag();
+    }
+  };
 
-	const handleRemoveTag = (tagToRemove: string) => {
-		setTags(tags.filter((tag) => tag !== tagToRemove));
-	};
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter((tag) => tag !== tagToRemove));
+  };
 
-	return (
-		<form className="project-form" onSubmit={handleSubmit}>
+  return (
+    <form className="project-form" onSubmit={handleSubmit}>
 			{error && <div className="form-error">{error}</div>}
 
 			<div className="form-group">
-				<label htmlFor="project-name">
-					Project Name <span className="required">*</span>
+				<label htmlFor="project-name">{t('Project Name')}
+          <span className="required">*</span>
 				</label>
-				{disableNameAndDescription ? (
-					<div className="disabled-field">
+				{disableNameAndDescription ?
+        <div className="disabled-field">
 						<span>{name}</span>
-						<div className="field-note">Open the project to edit its name</div>
-					</div>
-				) : (
-					<input
-						type="text"
-						id="project-name"
-						value={name}
-						onChange={(e) => setName(e.target.value)}
-						disabled={isSubmitting || disableNameAndDescription}
-						required
-					/>
-				)}
+						<div className="field-note">{t('Open the project to edit its name')}</div>
+					</div> :
+
+        <input
+          type="text"
+          id="project-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          disabled={isSubmitting || disableNameAndDescription}
+          required />
+
+        }
 			</div>
 
 			<div className="form-group">
-				<label htmlFor="project-description">Description</label>
-				{disableNameAndDescription ? (
-					<div className="disabled-field">
+				<label htmlFor="project-description">{t('Description')}</label>
+				{disableNameAndDescription ?
+        <div className="disabled-field">
 						<span>{description || 'No description'}</span>
-						<div className="field-note">
-							Open the project to edit its description
-						</div>
-					</div>
-				) : (
-					<textarea
-						id="project-description"
-						value={description}
-						onChange={(e) => setDescription(e.target.value)}
-						disabled={isSubmitting || disableNameAndDescription}
-						rows={3}
-					/>
-				)}
+						<div className="field-note">{t('Open the project to edit its description')}
+
+          </div>
+					</div> :
+
+        <textarea
+          id="project-description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          disabled={isSubmitting || disableNameAndDescription}
+          rows={3} />
+
+        }
 			</div>
 
 			<div className="form-group">
-				<label htmlFor="project-type">Typesetter Type</label>
-				{disableNameAndDescription ? (
-					<div className="disabled-field">
+				<label htmlFor="project-type">{t('Typesetter Type')}</label>
+				{disableNameAndDescription ?
+        <div className="disabled-field">
 						<span>{type === 'latex' ? 'LaTeX' : 'Typst'}</span>
-						<div className="field-note">Open the project to edit its typesetter type</div>
-					</div>
-				) : (
-					<select
-						id="project-type"
-						value={type}
-						onChange={(e) => setType(e.target.value as 'latex' | 'typst')}
-						disabled={isSubmitting}
-					>
-						<option value="latex">LaTeX</option>
-						<option value="typst">Typst</option>
+						<div className="field-note">{t('Open the project to edit its typesetter type')}</div>
+					</div> :
+
+        <select
+          id="project-type"
+          value={type}
+          onChange={(e) => setType(e.target.value as 'latex' | 'typst')}
+          disabled={isSubmitting}>
+
+						<option value="latex">{t('LaTeX')}</option>
+						<option value="typst">{t('Typst')}</option>
 					</select>
-				)}
+        }
 			</div>
 
 			{/* Only show these fields in full mode (not in simple mode) */}
-			{!simpleMode && (
-				<>
+			{!simpleMode &&
+      <>
 					<div className="form-group">
-						<label htmlFor="project-tags">Tags</label>
+						<label htmlFor="project-tags">{t('Tags')}</label>
 						<div className="tag-input-container">
 							<input
-								type="text"
-								id="project-tags"
-								value={tagInput}
-								onChange={(e) => setTagInput(e.target.value)}
-								onKeyDown={handleTagKeyPress}
-								disabled={isSubmitting}
-								placeholder="Add tags (press Enter or comma to add)"
-							/>
+              type="text"
+              id="project-tags"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={handleTagKeyPress}
+              disabled={isSubmitting}
+              placeholder={t('Add tags (press Enter or comma to add)')} />
+
 							<button
-								type="button"
-								className="button primary"
-								onClick={handleAddTag}
-								disabled={!tagInput.trim() || isSubmitting}
-							>
-								Add
-							</button>
+              type="button"
+              className="button primary"
+              onClick={handleAddTag}
+              disabled={!tagInput.trim() || isSubmitting}>{t('Add')}
+
+
+            </button>
 						</div>
 
-						{tags.length > 0 && (
-							<div className="tags-container">
-								{tags.map((tag, index) => (
-									<div key={index} className="tag">
+						{tags.length > 0 &&
+          <div className="tags-container">
+								{tags.map((tag, index) =>
+            <div key={index} className="tag">
 										<span>{tag}</span>
 										<button
-											type="button"
-											onClick={() => handleRemoveTag(tag)}
-											disabled={isSubmitting}
-										>
+                type="button"
+                onClick={() => handleRemoveTag(tag)}
+                disabled={isSubmitting}>
+
 											×
 										</button>
 									</div>
-								))}
+            )}
 							</div>
-						)}
+          }
 					</div>
 
-					{!project && (
-						<div className="form-group checkbox-group">
+					{!project &&
+        <div className="form-group checkbox-group">
 							<label>
 								<input
-									type="checkbox"
-									checked={isFavorite}
-									onChange={(e) => setIsFavorite(e.target.checked)}
-									disabled={isSubmitting}
-								/>
-								<span>Add to favorites</span>
+              type="checkbox"
+              checked={isFavorite}
+              onChange={(e) => setIsFavorite(e.target.checked)}
+              disabled={isSubmitting} />
+
+								<span>{t('Add to favorites')}</span>
 							</label>
 						</div>
-					)}
+        }
 				</>
-			)}
+      }
 
 			<div className="form-actions">
 				<button
-					type="button"
-					className="button secondary"
-					onClick={onCancel}
-					disabled={isSubmitting}
-				>
-					Cancel
-				</button>
+          type="button"
+          className="button secondary"
+          onClick={onCancel}
+          disabled={isSubmitting}>{t('Cancel')}
+
+
+        </button>
 				<button
-					type="submit"
-					className="button primary"
-					disabled={isSubmitting}
-				>
-					{isSubmitting
-						? project
-							? 'Updating...'
-							: 'Creating...'
-						: project
-							? 'Update Project'
-							: 'Create Project'}
+          type="submit"
+          className="button primary"
+          disabled={isSubmitting}>
+
+					{isSubmitting ?
+          project ?
+          'Updating...' :
+          'Creating...' :
+          project ?
+          'Update Project' :
+          'Create Project'}
 				</button>
 			</div>
-		</form>
-	);
+		</form>);
+
 };
 
 export default ProjectForm;

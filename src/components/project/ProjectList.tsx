@@ -1,4 +1,5 @@
 // src/components/project/ProjectList.tsx
+import { t } from "@/i18n";
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
@@ -31,16 +32,16 @@ const ProjectList: React.FC<ProjectListProps> = ({
 	onDeleteSelected,
 	onToggleViewMode,
 	viewMode = 'grid',
-	itemsPerPage = 8,
+	itemsPerPage = 8
 }) => {
 	const [currentPage, setCurrentPage] = useState(1);
 	const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'updatedAt'>(
-		'updatedAt',
+		'updatedAt'
 	);
 	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 	const [displayedProjects, setDisplayedProjects] = useState<Project[]>([]);
 	const [selectedProjects, setSelectedProjects] = useState<Set<string>>(
-		new Set(),
+		new Set()
 	);
 	const [isSelectionMode, setIsSelectionMode] = useState(false);
 	const totalPages = Math.ceil(projects.length / itemsPerPage);
@@ -49,19 +50,19 @@ const ProjectList: React.FC<ProjectListProps> = ({
 		// Sort projects
 		const sortedProjects = [...projects].sort((a, b) => {
 			if (sortBy === 'name') {
-				return sortDirection === 'asc'
-					? a.name.localeCompare(b.name)
-					: b.name.localeCompare(a.name);
+				return sortDirection === 'asc' ?
+					a.name.localeCompare(b.name) :
+					b.name.localeCompare(a.name);
 			}
-			return sortDirection === 'asc'
-				? a[sortBy] - b[sortBy]
-				: b[sortBy] - a[sortBy];
+			return sortDirection === 'asc' ?
+				a[sortBy] - b[sortBy] :
+				b[sortBy] - a[sortBy];
 		});
 
 		const startIndex = (currentPage - 1) * itemsPerPage;
 		const paginatedProjects = sortedProjects.slice(
 			startIndex,
-			startIndex + itemsPerPage,
+			startIndex + itemsPerPage
 		);
 
 		setDisplayedProjects(paginatedProjects);
@@ -133,103 +134,103 @@ const ProjectList: React.FC<ProjectListProps> = ({
 		<div className="project-list-container">
 			<div className="project-list-header">
 				<div className="project-sort-controls">
-					<span>Sort by:</span>
+					<span>{t('Sort by:')}</span>
 					<button
 						className={`sort-button ${sortBy === 'name' ? 'active' : ''}`}
-						onClick={() => handleSortChange('name')}
-					>
-						Name {sortBy === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
+						onClick={() => handleSortChange('name')}>{t('Name')}
+
+						{sortBy === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
 					</button>
 					<button
 						className={`sort-button ${sortBy === 'createdAt' ? 'active' : ''}`}
-						onClick={() => handleSortChange('createdAt')}
-					>
-						Created{' '}
+						onClick={() => handleSortChange('createdAt')}>{t('Created')}
+
+						{' '}
 						{sortBy === 'createdAt' && (sortDirection === 'asc' ? '↑' : '↓')}
 					</button>
 					<button
 						className={`sort-button ${sortBy === 'updatedAt' ? 'active' : ''}`}
-						onClick={() => handleSortChange('updatedAt')}
-					>
-						Updated{' '}
+						onClick={() => handleSortChange('updatedAt')}>{t('Updated')}
+
+						{' '}
 						{sortBy === 'updatedAt' && (sortDirection === 'asc' ? '↑' : '↓')}
 					</button>
 					<button
 						className="sort-button"
 						onClick={onToggleViewMode}
-						title={`Switch to ${viewMode === 'grid' ? 'list' : 'grid'} view`}
-					>
+						title={`Switch to ${viewMode === 'grid' ? 'list' : 'grid'} view`}>
+
 						{viewMode === 'grid' ? <ListIcon /> : <GridIcon />}
 					</button>
 				</div>
 
 				<div
 					className="project-selection-controls"
-					style={{ marginTop: '0.5rem' }}
-				>
-					{!isSelectionMode ? (
+					style={{ marginTop: '0.5rem' }}>
+
+					{!isSelectionMode ?
 						<button
 							className="button secondary smaller"
 							onClick={handleEnterSelectionMode}
-							disabled={projects.length === 0}
-						>
-							Select Projects
-						</button>
-					) : (
+							disabled={projects.length === 0}>{t('Select Projects')}
+
+
+						</button> :
+
 						<div
-							style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
-						>
+							style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+
 							<button
 								className="button secondary smaller"
-								onClick={handleSelectAll}
-							>
+								onClick={handleSelectAll}>
+
 								{selectedProjects.size === projects.length
-									? 'Deselect All'
-									: 'Select All'}
+									? t('Deselect All')
+									: t('Select All')}
 							</button>
 							<button
 								className="button primary smaller"
 								onClick={handleExportSelected}
-								disabled={selectedProjects.size === 0}
-							>
-								<ExportIcon />
-								Export ({selectedProjects.size})
+								disabled={selectedProjects.size === 0}>
+
+								<ExportIcon />{t('Export (')}
+								{selectedProjects.size})
 							</button>
 							<button
 								className="button danger smaller"
 								onClick={handleShowDeleteModal}
 								disabled={selectedProjects.size === 0 || !onDeleteSelected}
-								title={`Delete ${selectedProjects.size} selected project${selectedProjects.size === 1 ? '' : 's'}`}
-							>
-								<TrashIcon />
-								Delete ({selectedProjects.size})
+								title={`Delete ${selectedProjects.size} selected project${selectedProjects.size === 1 ? '' : 's'}`}>
+
+								<TrashIcon />{t('Delete (')}
+								{selectedProjects.size})
 							</button>
 							<button
 								className="button secondary smaller"
-								onClick={handleExitSelectionMode}
-							>
-								Cancel
+								onClick={handleExitSelectionMode}>{t('Cancel')}
+
+
 							</button>
 						</div>
-					)}
+					}
 				</div>
 			</div>
 
 			<div style={{ flex: 1, overflow: 'auto', padding: '1rem' }}>
-				{displayedProjects.length === 0 ? (
+				{displayedProjects.length === 0 ?
 					<div className="no-projects">
-						<p>No projects found matching the current criteria</p>
-						{!isSelectionMode && (
-							<p>
-								To create a new project, click the{" ''+'' "}
-								<strong>New Project</strong> button or <ImportIcon />{' '}
-								<strong>Import</strong> an existing one.
+						<p>{t('No projects found matching the current criteria')}</p>
+						{!isSelectionMode &&
+							<p>{t('To create a new project, click the')}
+								{" ''+'' "}
+								<strong>{t('New Project')}</strong>{t('button or')}<ImportIcon />{' '}
+								<strong>{t('Import')}</strong>{t('an existing one.')}
 							</p>
-						)}
-					</div>
-				) : (
+						}
+					</div> :
+
 					<div className={`projects-${viewMode}`}>
-						{displayedProjects.map((project) => (
+						{displayedProjects.map((project) =>
 							<ProjectCard
 								key={project.id}
 								project={project}
@@ -240,42 +241,42 @@ const ProjectList: React.FC<ProjectListProps> = ({
 								onToggleFavorite={onToggleFavorite}
 								isSelectionMode={isSelectionMode}
 								isSelected={selectedProjects.has(project.id)}
-								onSelectionChange={handleProjectSelection}
-							/>
-						))}
+								onSelectionChange={handleProjectSelection} />
+
+						)}
 					</div>
-				)}
+				}
 			</div>
 
-			{totalPages > 1 && (
+			{totalPages > 1 &&
 				<div
 					className="pagination-controls"
 					style={{
 						padding: '0.5rem',
-						borderTop: '1px solid var(--accent-border, #333)',
-					}}
-				>
+						borderTop: '1px solid var(--accent-border, #333)'
+					}}>
+
 					<button
 						className="pagination-button"
 						onClick={handlePrevPage}
-						disabled={currentPage === 1}
-					>
-						Previous
+						disabled={currentPage === 1}>{t('Previous')}
+
+
 					</button>
-					<span className="pagination-info">
-						Page {currentPage} of {totalPages}
+					<span className="pagination-info">{t('Page')}
+						{currentPage}{t('of')}{totalPages}
 					</span>
 					<button
 						className="pagination-button"
 						onClick={handleNextPage}
-						disabled={currentPage === totalPages}
-					>
-						Next
+						disabled={currentPage === totalPages}>{t('Next')}
+
+
 					</button>
 				</div>
-			)}
-		</div>
-	);
+			}
+		</div>);
+
 };
 
 export default ProjectList;
