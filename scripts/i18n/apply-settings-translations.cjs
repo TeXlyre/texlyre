@@ -13,11 +13,16 @@ const CONFIG = {
     dryRun: false,
 };
 
+function normalizeText(text) {
+    return text.replace(/\t/g, '').replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 function wrapWithT(node) {
     if (t.isStringLiteral(node)) {
+        const normalizedText = normalizeText(node.value);
         return t.callExpression(
             t.identifier('t'),
-            [t.stringLiteral(node.value)]
+            [t.stringLiteral(normalizedText)]
         );
     }
     return node;

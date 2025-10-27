@@ -24,18 +24,26 @@ const CONFIG = {
     dryRun: false,
 };
 
+function normalizeText(text) {
+    return text.replace(/\t/g, '').replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 function shouldTranslate(text) {
     if (!text || text.trim().length < CONFIG.minTextLength) return false;
 
+    const normalizedText = normalizeText(text);
+
+    if (normalizedText.length < CONFIG.minTextLength) return false;
+
     for (const pattern of CONFIG.ignorePatterns) {
-        if (new RegExp(pattern).test(text.trim())) return false;
+        if (new RegExp(pattern).test(normalizedText)) return false;
     }
 
     return true;
 }
 
 function createTranslationCall(text) {
-    const cleanText = text.trim().replace(/\s+/g, " ");
+    const cleanText = normalizeText(text);
     return t.callExpression(t.identifier("t"), [t.stringLiteral(cleanText)]);
 }
 

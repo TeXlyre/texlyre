@@ -21,11 +21,19 @@ const CONFIG = {
     excludeVariableNames: ["className", "style", "key", "ref"],
 };
 
+function normalizeText(text) {
+    return text.replace(/\t/g, '').replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 function shouldTranslate(text) {
     if (!text || text.trim().length < CONFIG.minTextLength) return false;
 
+    const normalizedText = normalizeText(text);
+
+    if (normalizedText.length < CONFIG.minTextLength) return false;
+
     for (const pattern of CONFIG.ignorePatterns) {
-        if (new RegExp(pattern).test(text.trim())) return false;
+        if (new RegExp(pattern).test(normalizedText)) return false;
     }
 
     return true;
@@ -63,11 +71,12 @@ function extractOptionsLabels(optionsNode, translations, pluralKeys) {
 
                         const text = optProp.value.value;
                         if (shouldTranslate(text)) {
-                            if (detectPluralPattern(text)) {
-                                pluralKeys.add(text);
+                            const normalizedText = normalizeText(text);
+                            if (detectPluralPattern(normalizedText)) {
+                                pluralKeys.add(normalizedText);
                             }
-                            if (!translations.has(text)) {
-                                translations.set(text, text);
+                            if (!translations.has(normalizedText)) {
+                                translations.set(normalizedText, normalizedText);
                             }
                         }
                     }
@@ -97,11 +106,12 @@ function extractFromRegisterSetting(path, translations, pluralKeys) {
                     if (t.isStringLiteral(prop.value)) {
                         const text = prop.value.value;
                         if (shouldTranslate(text)) {
-                            if (detectPluralPattern(text)) {
-                                pluralKeys.add(text);
+                            const normalizedText = normalizeText(text);
+                            if (detectPluralPattern(normalizedText)) {
+                                pluralKeys.add(normalizedText);
                             }
-                            if (!translations.has(text)) {
-                                translations.set(text, text);
+                            if (!translations.has(normalizedText)) {
+                                translations.set(normalizedText, normalizedText);
                             }
                         }
                     }
@@ -151,13 +161,11 @@ function extractTranslations(sourceDir, outputFile) {
                 JSXText(path) {
                     const text = path.node.value.trim();
                     if (shouldTranslate(text)) {
-                        if (detectPluralPattern(text)) {
-                            pluralKeys.add(text);
-                        }
-                        if (translations.has(text)) {
+                        const normalizedText = normalizeText(text);
+                        if (translations.has(normalizedText)) {
                             existingCount++;
                         } else {
-                            translations.set(text, text);
+                            translations.set(normalizedText, normalizedText);
                             newCount++;
                         }
                     }
@@ -170,13 +178,11 @@ function extractTranslations(sourceDir, outputFile) {
                     ) {
                         const text = path.node.value.value;
                         if (shouldTranslate(text)) {
-                            if (detectPluralPattern(text)) {
-                                pluralKeys.add(text);
-                            }
-                            if (translations.has(text)) {
+                            const normalizedText = normalizeText(text);
+                            if (translations.has(normalizedText)) {
                                 existingCount++;
                             } else {
-                                translations.set(text, text);
+                                translations.set(normalizedText, normalizedText);
                                 newCount++;
                             }
                         }
