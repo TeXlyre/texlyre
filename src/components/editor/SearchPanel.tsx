@@ -231,14 +231,14 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
                     <button
                         className={`mode-toggle-btn ${!showReplace ? 'active' : ''}`}
                         onClick={() => showReplace && toggleReplace()}
-                        title={t('Search only (Ctrl+Shift+f)')}
+                        title={t('Search only (Ctrl+Shift+F)')}
                     >
                         <SearchIcon />
                     </button>
                     <button
                         className={`mode-toggle-btn ${showReplace ? 'active' : ''}`}
                         onClick={toggleReplace}
-                        title={t('Search and Replace (Ctrl+Shift+h)')}
+                        title={t('Search and Replace (Ctrl+Shift+H)')}
                     >
                         <ReplaceIcon />
                     </button>
