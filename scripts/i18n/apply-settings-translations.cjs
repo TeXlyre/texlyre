@@ -40,7 +40,7 @@ function applySettingsTranslations(filePath, options = {}) {
     try {
         const code = fs.readFileSync(filePath, "utf8");
 
-        if (!code.includes('registerSetting')) {
+        if (!code.includes('registerSetting') && !code.includes(': Setting[]')) {
             return { success: true, modified: false, transformCount: 0 };
         }
 
@@ -55,6 +55,94 @@ function applySettingsTranslations(filePath, options = {}) {
         let modified = false;
         let transformCount = 0;
 
+        const processOptionsArray = (optionsNode, parentPath) => {
+            if (t.isArrayExpression(optionsNode)) {
+                optionsNode.elements.forEach((option) => {
+                    if (t.isObjectExpression(option)) {
+                        option.properties.forEach((optProp) => {
+                            if (t.isObjectProperty(optProp) &&
+                                optProp.key.name === 'label' &&
+                                !isAlreadyWrapped(optProp.value)) {
+
+                                optProp.value = wrapWithT(optProp.value);
+                                modified = true;
+                                transformCount++;
+                            }
+                        });
+                    }
+                });
+            } else if (t.isCallExpression(optionsNode)) {
+                const callExpr = optionsNode;
+                if (
+                    t.isMemberExpression(callExpr.callee) &&
+                    t.isIdentifier(callExpr.callee.property) &&
+                    callExpr.callee.property.name === 'map'
+                ) {
+                    const mapCallback = callExpr.arguments[0];
+                    if (
+                        t.isArrowFunctionExpression(mapCallback) ||
+                        t.isFunctionExpression(mapCallback)
+                    ) {
+                        traverse(
+                            mapCallback,
+                            {
+                                ObjectExpression(nestedPath) {
+                                    nestedPath.node.properties.forEach((innerProp) => {
+                                        if (
+                                            t.isObjectProperty(innerProp) &&
+                                            t.isIdentifier(innerProp.key) &&
+                                            innerProp.key.name === 'label'
+                                        ) {
+                                            if (t.isMemberExpression(innerProp.value)) {
+                                                if (!isAlreadyWrapped(nestedPath.parent)) {
+                                                    innerProp.value = t.callExpression(
+                                                        t.identifier('t'),
+                                                        [innerProp.value]
+                                                    );
+                                                    modified = true;
+                                                    transformCount++;
+                                                }
+                                            } else if (!isAlreadyWrapped(innerProp.value)) {
+                                                innerProp.value = wrapWithT(innerProp.value);
+                                                modified = true;
+                                                transformCount++;
+                                            }
+                                        }
+                                    });
+                                }
+                            },
+                            parentPath.scope,
+                            parentPath
+                        );
+                    }
+                }
+            }
+        };
+
+        const processSettingObject = (settingObj, parentPath) => {
+            if (!t.isObjectExpression(settingObj)) return;
+
+            settingObj.properties.forEach((prop) => {
+                if (!t.isObjectProperty(prop)) return;
+
+                const key = prop.key.name;
+
+                if (key === 'category' || key === 'subcategory' ||
+                    key === 'label' || key === 'description') {
+
+                    if (t.isStringLiteral(prop.value) && !isAlreadyWrapped(prop.value)) {
+                        prop.value = wrapWithT(prop.value);
+                        modified = true;
+                        transformCount++;
+                    }
+                }
+
+                if (key === 'options') {
+                    processOptionsArray(prop.value, parentPath);
+                }
+            });
+        };
+
         traverse(ast, {
             CallExpression(path) {
                 if (
@@ -63,88 +151,21 @@ function applySettingsTranslations(filePath, options = {}) {
                     path.node.arguments.length > 0
                 ) {
                     const arg = path.node.arguments[0];
+                    processSettingObject(arg, path);
+                }
+            },
 
-                    if (t.isObjectExpression(arg)) {
-                        arg.properties.forEach((prop) => {
-                            if (!t.isObjectProperty(prop)) return;
-
-                            const key = prop.key.name;
-
-                            if (key === 'category' || key === 'subcategory' ||
-                                key === 'label' || key === 'description') {
-
-                                if (t.isStringLiteral(prop.value) && !isAlreadyWrapped(prop.value)) {
-                                    prop.value = wrapWithT(prop.value);
-                                    modified = true;
-                                    transformCount++;
-                                }
-                            }
-
-                            if (key === 'options') {
-                                if (t.isArrayExpression(prop.value)) {
-                                    prop.value.elements.forEach((option) => {
-                                        if (t.isObjectExpression(option)) {
-                                            option.properties.forEach((optProp) => {
-                                                if (t.isObjectProperty(optProp) &&
-                                                    optProp.key.name === 'label' &&
-                                                    !isAlreadyWrapped(optProp.value)) {
-
-                                                    optProp.value = wrapWithT(optProp.value);
-                                                    modified = true;
-                                                    transformCount++;
-                                                }
-                                            });
-                                        }
-                                    });
-                                } else if (t.isCallExpression(prop.value)) {
-                                    const callExpr = prop.value;
-                                    if (
-                                        t.isMemberExpression(callExpr.callee) &&
-                                        t.isIdentifier(callExpr.callee.property) &&
-                                        callExpr.callee.property.name === 'map'
-                                    ) {
-                                        const mapCallback = callExpr.arguments[0];
-                                        if (
-                                            t.isArrowFunctionExpression(mapCallback) ||
-                                            t.isFunctionExpression(mapCallback)
-                                        ) {
-                                            traverse(
-                                                mapCallback,
-                                                {
-                                                    ObjectExpression(innerPath) {
-                                                        innerPath.node.properties.forEach((innerProp) => {
-                                                            if (
-                                                                t.isObjectProperty(innerProp) &&
-                                                                t.isIdentifier(innerProp.key) &&
-                                                                innerProp.key.name === 'label'
-                                                            ) {
-                                                                if (t.isMemberExpression(innerProp.value)) {
-                                                                    if (!isAlreadyWrapped(innerPath.parent)) {
-                                                                        innerProp.value = t.callExpression(
-                                                                            t.identifier('t'),
-                                                                            [innerProp.value]
-                                                                        );
-                                                                        modified = true;
-                                                                        transformCount++;
-                                                                    }
-                                                                } else if (!isAlreadyWrapped(innerProp.value)) {
-                                                                    innerProp.value = wrapWithT(innerProp.value);
-                                                                    modified = true;
-                                                                    transformCount++;
-                                                                }
-                                                            }
-                                                        });
-                                                    }
-                                                },
-                                                path.scope,
-                                                path
-                                            );
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    }
+            VariableDeclarator(path) {
+                if (
+                    t.isIdentifier(path.node.id) &&
+                    path.node.id.name.toLowerCase().includes('setting') &&
+                    t.isArrayExpression(path.node.init)
+                ) {
+                    path.node.init.elements.forEach((element) => {
+                        if (t.isObjectExpression(element)) {
+                            processSettingObject(element, path);
+                        }
+                    });
                 }
             },
         });

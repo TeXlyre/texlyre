@@ -42,12 +42,41 @@ function injectImportIntoCode(code) {
     const importStatement = 'import { t } from "@/i18n";';
 
     let insertIndex = 0;
+    let foundFirstNonComment = false;
 
-    if (lines.length > 0 && lines[0].trim().startsWith('//') && lines[0].includes('src/')) {
-        insertIndex = 1;
+    for (let i = 0; i < lines.length; i++) {
+        const trimmedLine = lines[i].trim();
+
+        if (trimmedLine === '') {
+            if (!foundFirstNonComment) {
+                insertIndex = i + 1;
+            }
+            continue;
+        }
+
+        if (trimmedLine.startsWith('//') || trimmedLine.startsWith('/*') || trimmedLine.startsWith('*')) {
+            if (!foundFirstNonComment) {
+                insertIndex = i + 1;
+            }
+            continue;
+        }
+
+        if (trimmedLine.endsWith('*/')) {
+            if (!foundFirstNonComment) {
+                insertIndex = i + 1;
+            }
+            continue;
+        }
+
+        foundFirstNonComment = true;
+        break;
+    }
+
+    if (!foundFirstNonComment && insertIndex < lines.length) {
     }
 
     lines.splice(insertIndex, 0, importStatement);
+
     return lines.join('\n');
 }
 

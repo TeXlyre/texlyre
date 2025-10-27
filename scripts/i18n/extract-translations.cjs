@@ -125,6 +125,39 @@ function extractFromRegisterSetting(path, translations, pluralKeys) {
     }
 }
 
+function extractFromSettingsArray(arrayNode, translations, pluralKeys) {
+    arrayNode.elements.forEach((element) => {
+        if (t.isObjectExpression(element)) {
+            element.properties.forEach((prop) => {
+                if (!t.isObjectProperty(prop)) return;
+
+                const key = prop.key.name;
+
+                if (key === 'category' || key === 'subcategory' ||
+                    key === 'label' || key === 'description') {
+
+                    if (t.isStringLiteral(prop.value)) {
+                        const text = prop.value.value;
+                        if (shouldTranslate(text)) {
+                            const normalizedText = normalizeText(text);
+                            if (detectPluralPattern(normalizedText)) {
+                                pluralKeys.add(normalizedText);
+                            }
+                            if (!translations.has(normalizedText)) {
+                                translations.set(normalizedText, normalizedText);
+                            }
+                        }
+                    }
+                }
+
+                if (key === 'options') {
+                    extractOptionsLabels(prop.value, translations, pluralKeys);
+                }
+            });
+        }
+    });
+}
+
 function extractTranslations(sourceDir, outputFile) {
     const existingTranslations = loadExistingTranslations(outputFile);
     const translations = new Map(Object.entries(existingTranslations));
@@ -156,6 +189,7 @@ function extractTranslations(sourceDir, outputFile) {
             });
 
             const hasRegisterSetting = code.includes('registerSetting');
+            const hasSettingArray = code.includes(': Setting[]');
 
             traverse(ast, {
                 JSXText(path) {
@@ -192,6 +226,16 @@ function extractTranslations(sourceDir, outputFile) {
                 CallExpression(path) {
                     if (hasRegisterSetting) {
                         extractFromRegisterSetting(path, translations, pluralKeys);
+                    }
+                },
+
+                VariableDeclarator(path) {
+                    if (hasSettingArray &&
+                        t.isIdentifier(path.node.id) &&
+                        path.node.id.name.toLowerCase().includes('setting') &&
+                        t.isArrayExpression(path.node.init)
+                    ) {
+                        extractFromSettingsArray(path.node.init, translations, pluralKeys);
                     }
                 },
             });
