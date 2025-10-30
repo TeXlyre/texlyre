@@ -53,7 +53,6 @@ import AppRouter from './components/app/AppRouter';
 import PasswordModal from './components/auth/PasswordModal';
 import SplashScreen from './components/common/SplashScreen';
 import FileConflictModal from './components/editor/FileConflictModal';
-import FileOperationToast from './components/editor/FileOperationToast';
 import { AuthProvider } from './contexts/AuthContext';
 import { EditorProvider } from './contexts/EditorContext';
 import { FileSystemBackupProvider } from './contexts/FileSystemBackupContext';
@@ -118,7 +117,6 @@ function AppContent() {
 		<>
 			<AppRouter />
 			<FileConflictModal />
-			<FileOperationToast />
 			<PasswordModal
 				isOpen={isPasswordModalOpen}
 				onClose={hidePasswordModal}
