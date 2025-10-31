@@ -6,7 +6,7 @@
 	--toast-padding: var(--texlyre-spacing-md) var(--texlyre-spacing-lg);
 	--toast-border-radius: var(--texlyre-radius-lg);
 	--toast-shadow: var(--texlyre-shadow-lg);
-	--toast-backdrop-blur: blur(10px);
+	--toast-background-color: var(--pico-background);
 	--toast-animation: toastSlideInWide 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
@@ -22,58 +22,9 @@
 	padding: var(--toast-padding);
 	border-radius: var(--toast-border-radius);
 	box-shadow: var(--toast-shadow);
-	backdrop-filter: var(--toast-backdrop-blur);
-	border: 1px solid rgba(255, 255, 255, 0.1);
+	background-color: var(--toast-background-color);
 	align-items: flex-start;
 	animation: var(--toast-animation);
-}
-
-/* Toast type-specific styles */
-[data-layout="texlyre-wide"] .toast-loading {
-	background: linear-gradient(135deg,
-			rgba(255, 193, 7, 0.95),
-			rgba(255, 193, 7, 0.9));
-	border-color: rgba(255, 193, 7, 0.3);
-	border-left-color: rgba(255, 193, 7, 0.8);
-}
-
-[data-layout="texlyre-wide"] .toast-success {
-	background: linear-gradient(135deg,
-			rgba(40, 167, 69, 0.95),
-			rgba(40, 167, 69, 0.9));
-	border-color: rgba(40, 167, 69, 0.3);
-	border-left-color: rgba(40, 167, 69, 0.8);
-}
-
-[data-layout="texlyre-wide"] .toast-error {
-	background: linear-gradient(135deg,
-			rgba(220, 53, 69, 0.95),
-			rgba(220, 53, 69, 0.9));
-	border-color: rgba(220, 53, 69, 0.3);
-	border-left-color: rgba(220, 53, 69, 0.8);
-}
-
-[data-layout="texlyre-wide"] .toast-sync {
-	background: linear-gradient(135deg,
-			rgba(0, 123, 255, 0.95),
-			rgba(0, 123, 255, 0.9));
-	border-color: rgba(0, 123, 255, 0.3);
-	border-left-color: rgba(0, 123, 255, 0.8);
-}
-
-[data-layout="texlyre-wide"] .toast-info {
-	background: linear-gradient(135deg,
-			rgba(108, 117, 125, 0.95),
-			rgba(108, 117, 125, 0.9));
-	border-color: rgba(108, 117, 125, 0.3);
-	border-left-color: rgba(108, 117, 125, 0.8);
-}
-
-/* Toast content styling */
-[data-layout="texlyre-wide"] .toast-message {
-	font-weight: 500;
-	color: white;
-	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 [data-layout="texlyre-wide"] .toast-icon {
