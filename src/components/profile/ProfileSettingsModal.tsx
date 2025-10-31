@@ -113,15 +113,15 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
     try {
       if (newPassword) {
         if (newPassword.length < 6) {
-          throw new Error('New password must be at least 6 characters long');
+          throw new Error(t('New password must be at least 6 characters long'));
         }
 
         if (newPassword !== confirmPassword) {
-          throw new Error('New passwords do not match');
+          throw new Error(t('New passwords do not match'));
         }
 
         if (!currentPassword) {
-          throw new Error('Current password is required to set a new password');
+          throw new Error(t('Current password is required to set a new password'));
         }
 
         const isCurrentPasswordValid = await verifyPassword(
@@ -129,14 +129,14 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
           currentPassword
         );
         if (!isCurrentPasswordValid) {
-          throw new Error('Current password is incorrect');
+          throw new Error(t('Current password is incorrect'));
         }
 
         await updatePassword(user.id, newPassword);
       }
 
       if (email && !/\S+@\S+\.\S+/.test(email)) {
-        throw new Error('Please enter a valid email address');
+        throw new Error(t('Please enter a valid email address'));
       }
 
       const updatedUser: User = {
@@ -151,12 +151,12 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
         await updateUser(updatedUser);
       }
 
-      setSuccessMessage('Profile updated successfully');
+      setSuccessMessage(t('Profile updated successfully'));
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : t('An error occurred'));
     } finally {
       setIsSubmitting(false);
     }
@@ -167,10 +167,11 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
     try {
       await downloadUserData(user.id, type);
-      setSuccessMessage(`Downloaded ${type === 'all' ? 'all data' : type}`);
+      const message = type === 'all' ? t('Downloaded all data') : t('Downloaded {type}', { type });
+      setSuccessMessage(message);
       setTimeout(() => setSuccessMessage(null), 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to download data');
+      setError(err instanceof Error ? err.message : t('Failed to download data'));
     }
   };
 
@@ -193,14 +194,15 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
       await clearUserData(user.id, deleteType);
 
-      setSuccessMessage(`Successfully cleared ${deleteType === 'all' ? 'all data' : deleteType}`);
+      const message = deleteType === 'all' ? t('Successfully cleared all data') : t('Successfully cleared {type}', { type: deleteType });
+      setSuccessMessage(message);
       handleCloseDeleteModal();
 
       setTimeout(() => {
         window.location.reload();
       }, 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to clear data');
+      setError(err instanceof Error ? err.message : t('Failed to clear data'));
     } finally {
       setIsSubmitting(false);
     }
@@ -211,7 +213,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
     const file = e.target.files[0];
     if (!file.name.endsWith('.json')) {
-      setError('Please select a valid JSON file');
+      setError(t('Please select a valid JSON file'));
       return;
     }
 
@@ -221,12 +223,12 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
       await importFromFile(user.id, file);
 
-      setSuccessMessage('Successfully imported user data');
+      setSuccessMessage(t('Successfully imported user data'));
       setTimeout(() => {
         window.location.reload();
       }, 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to import data');
+      setError(err instanceof Error ? err.message : t('Failed to import data'));
     } finally {
       setIsSubmitting(false);
       e.target.value = '';
@@ -238,42 +240,42 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
     const content = {
       settings: {
-        title: 'Clear Settings',
-        message: 'Are you sure you want to clear all your settings? This will reset all preferences to defaults.',
+        title: t('Clear Settings'),
+        message: t('Are you sure you want to clear all your settings? This will reset all preferences to defaults.'),
         items: [
-          'All application preferences',
-          'Editor configurations (font, saving interval, etc.)',
-          'UI customizations and theme preferences (layout, variant, etc.)',
-          'endpoints and server settings (links, connection configuration, etc.)']
-
+          t('All application preferences'),
+          t('Editor configurations (font, saving interval, etc.)'),
+          t('UI customizations and theme preferences (layout, variant, etc.)'),
+          t('endpoints and server settings (links, connection configuration, etc.)')
+        ]
       },
       properties: {
-        title: 'Clear Properties',
-        message: 'Are you sure you want to clear all your properties? This will remove all stored property values.',
+        title: t('Clear Properties'),
+        message: t('Are you sure you want to clear all your properties? This will remove all stored property values.'),
         items: [
-          'All stored property values',
-          'Application state data (last opened file, current line in editor, etc.)',
-          'User-specific configurations (panel width, collapse, etc.)']
-
+          t('All stored property values'),
+          t('Application state data (last opened file, current line in editor, etc.)'),
+          t('User-specific configurations (panel width, collapse, etc.)')
+        ]
       },
       secrets: {
-        title: 'Clear Encrypted Secrets',
-        message: 'Are you sure you want to clear all your encrypted secrets? This will permanently delete all saved API keys and credentials.',
+        title: t('Clear Encrypted Secrets'),
+        message: t('Are you sure you want to clear all your encrypted secrets? This will permanently delete all saved API keys and credentials.'),
         items: [
-          'All API keys',
-          'Encrypted credentials',
-          'Authentication tokens (GitHub API key)']
-
+          t('All API keys'),
+          t('Encrypted credentials'),
+          t('Authentication tokens (GitHub API key)')
+        ]
       },
       all: {
-        title: 'Clear All Local Storage',
-        message: 'Are you sure you want to clear ALL local storage data? This will remove settings, properties, and secrets permanently.',
+        title: t('Clear All Local Storage'),
+        message: t('Are you sure you want to clear ALL local storage data? This will remove settings, properties, and secrets permanently.'),
         items: [
-          'All application settings',
-          'All stored properties',
-          'All encrypted secrets',
-          'All cached data']
-
+          t('All application settings'),
+          t('All stored properties'),
+          t('All encrypted secrets'),
+          t('All cached data')
+        ]
       }
     };
 

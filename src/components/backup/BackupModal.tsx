@@ -98,13 +98,13 @@ const BackupModal: React.FC<BackupModalProps> = ({
   }, [currentProjectId, getProjectById, isInEditor]);
 
   const getStatusText = () => {
-    if (!status.isConnected) return 'No backup folder';
-    if (status.status === 'error') return 'Backup error';
-    if (status.status === 'syncing') return 'Syncing...';
+    if (!status.isConnected) return t('No backup folder');
+    if (status.status === 'error') return t('Backup error');
+    if (status.status === 'syncing') return t('Syncing...');
     if (status.lastSync) {
-      return `Last sync: ${formatDate(status.lastSync)}`;
+      return t('Last sync: {date}', { date: formatDate(status.lastSync) });
     }
-    return 'Ready to sync';
+    return t('Ready to sync');
   };
 
   const getActivityIcon = (type: string) => {
@@ -150,24 +150,21 @@ const BackupModal: React.FC<BackupModalProps> = ({
     const operationId = `backup-export-${Date.now()}`;
 
     try {
-      notificationService.showLoading(
-        projectId ?
-          `Exporting ${currentProjectName}...` :
-          'Exporting all projects...',
-        operationId
-      );
+      const loadingMessage = projectId ?
+        t('Exporting {projectName}...', { projectName: currentProjectName }) :
+        t('Exporting all projects...');
+      notificationService.showLoading(loadingMessage, operationId);
 
       await onExportToFileSystem(projectId || undefined);
 
-      notificationService.showSuccess(
-        projectId ?
-          `${currentProjectName} exported successfully` :
-          'All projects exported successfully',
-        { operationId }
-      );
+      const successMessage = projectId ?
+        t('{projectName} exported successfully', { projectName: currentProjectName }) :
+        t('All projects exported successfully');
+      notificationService.showSuccess(successMessage, { operationId });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : t('Unknown error');
       notificationService.showError(
-        `Backup export failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        t('Backup export failed: {error}', { error: errorMessage }),
         { operationId }
       );
     } finally {
@@ -184,24 +181,21 @@ const BackupModal: React.FC<BackupModalProps> = ({
     const operationId = `backup-import-${Date.now()}`;
 
     try {
-      notificationService.showLoading(
-        projectId ?
-          `Importing changes for ${currentProjectName}...` :
-          'Importing all changes...',
-        operationId
-      );
+      const loadingMessage = projectId ?
+        t('Importing changes for {projectName}...', { projectName: currentProjectName }) :
+        t('Importing all changes...');
+      notificationService.showLoading(loadingMessage, operationId);
 
       await onImportChanges(projectId || undefined);
 
-      notificationService.showSuccess(
-        projectId ?
-          `Changes imported for ${currentProjectName}` :
-          'All changes imported successfully',
-        { operationId }
-      );
+      const successMessage = projectId ?
+        t('Changes imported for {projectName}', { projectName: currentProjectName }) :
+        t('All changes imported successfully');
+      notificationService.showSuccess(successMessage, { operationId });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : t('Unknown error');
       notificationService.showError(
-        `Backup import failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        t('Backup import failed: {error}', { error: errorMessage }),
         { operationId }
       );
     } finally {
@@ -217,17 +211,17 @@ const BackupModal: React.FC<BackupModalProps> = ({
 
     try {
       notificationService.showLoading(
-        'Connecting to backup folder...',
+        t('Connecting to backup folder...'),
         operationId
       );
       await onRequestAccess();
       notificationService.showSuccess(t('Backup folder connected successfully'), {
         operationId
       });
-      // onClose();
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : t('Unknown error');
       notificationService.showError(
-        `Failed to connect backup folder: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        t('Failed to connect backup folder: {error}', { error: errorMessage }),
         { operationId }
       );
     } finally {
@@ -250,10 +244,10 @@ const BackupModal: React.FC<BackupModalProps> = ({
       notificationService.showSuccess(t('Backup directory changed successfully'), {
         operationId
       });
-      // onClose();
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : t('Unknown error');
       notificationService.showError(
-        `Failed to change backup directory: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        t('Failed to change backup directory: {error}', { error: errorMessage }),
         { operationId }
       );
     } finally {
@@ -268,15 +262,15 @@ const BackupModal: React.FC<BackupModalProps> = ({
     const operationId = `backup-disconnect-${Date.now()}`;
 
     try {
-      notificationService.showLoading('Disconnecting backup...', operationId);
+      notificationService.showLoading(t('Disconnecting backup...'), operationId);
       await onDisconnect();
-      notificationService.showSuccess('Backup disconnected successfully', {
+      notificationService.showSuccess(t('Backup disconnected successfully'), {
         operationId
       });
-      // onClose();
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : t('Unknown error');
       notificationService.showError(
-        `Failed to disconnect backup: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        t('Failed to disconnect backup: {error}', { error: errorMessage }),
         { operationId }
       );
     } finally {
