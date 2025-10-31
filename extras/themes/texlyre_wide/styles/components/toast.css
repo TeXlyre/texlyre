@@ -7,6 +7,7 @@
 	--toast-border-radius: var(--texlyre-radius-lg);
 	--toast-shadow: var(--texlyre-shadow-lg);
 	--toast-background-color: var(--pico-background);
+	--toast-text-color: var(--pico-background-inverse);
 	--toast-animation: toastSlideInWide 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
@@ -28,7 +29,7 @@
 }
 
 [data-layout="texlyre-wide"] .toast-icon {
-	color: white;
+	color: var(--toast-text-color);
 	filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
@@ -45,13 +46,13 @@
 	width: 24px;
 	height: 24px;
 	flex-shrink: 0;
-	color: rgba(255, 255, 255, 0.8);
+	color: var(--toast-text-color);
 }
 
 [data-layout="texlyre-wide"] .toast-dismiss:hover {
 	background-color: rgba(255, 255, 255, 0.2);
 	transform: scale(1.1);
-	color: white;
+	color: var(--toast-text-color);
 }
 
 /* Toast visibility states */
