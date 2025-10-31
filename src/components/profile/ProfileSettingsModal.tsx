@@ -39,11 +39,11 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
   const generateRandomColor = (isLight: boolean): string => {
     const hue = Math.floor(Math.random() * 360);
     const saturation = isLight ?
-    60 + Math.floor(Math.random() * 20) :
-    70 + Math.floor(Math.random() * 30);
+      60 + Math.floor(Math.random() * 20) :
+      70 + Math.floor(Math.random() * 30);
     const lightness = isLight ?
-    65 + Math.floor(Math.random() * 20) :
-    45 + Math.floor(Math.random() * 25);
+      65 + Math.floor(Math.random() * 20) :
+      45 + Math.floor(Math.random() * 25);
 
     const hslToHex = (h: number, s: number, l: number): string => {
       const sNorm = s / 100;
@@ -241,38 +241,38 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
         title: 'Clear Settings',
         message: 'Are you sure you want to clear all your settings? This will reset all preferences to defaults.',
         items: [
-        'All application preferences',
-        'Editor configurations (font, saving interval, etc.)',
-        'UI customizations and theme preferences (layout, variant, etc.)',
-        'endpoints and server settings (links, connection configuration, etc.)']
+          'All application preferences',
+          'Editor configurations (font, saving interval, etc.)',
+          'UI customizations and theme preferences (layout, variant, etc.)',
+          'endpoints and server settings (links, connection configuration, etc.)']
 
       },
       properties: {
         title: 'Clear Properties',
         message: 'Are you sure you want to clear all your properties? This will remove all stored property values.',
         items: [
-        'All stored property values',
-        'Application state data (last opened file, current line in editor, etc.)',
-        'User-specific configurations (panel width, collapse, etc.)']
+          'All stored property values',
+          'Application state data (last opened file, current line in editor, etc.)',
+          'User-specific configurations (panel width, collapse, etc.)']
 
       },
       secrets: {
         title: 'Clear Encrypted Secrets',
         message: 'Are you sure you want to clear all your encrypted secrets? This will permanently delete all saved API keys and credentials.',
         items: [
-        'All API keys',
-        'Encrypted credentials',
-        'Authentication tokens (GitHub API key)']
+          'All API keys',
+          'Encrypted credentials',
+          'Authentication tokens (GitHub API key)']
 
       },
       all: {
         title: 'Clear All Local Storage',
         message: 'Are you sure you want to clear ALL local storage data? This will remove settings, properties, and secrets permanently.',
         items: [
-        'All application settings',
-        'All stored properties',
-        'All encrypted secrets',
-        'All cached data']
+          'All application settings',
+          'All stored properties',
+          'All encrypted secrets',
+          'All cached data']
 
       }
     };
@@ -284,212 +284,211 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
   return (
     <>
-			<Modal
+      <Modal
         isOpen={isOpen}
         onClose={onClose}
         title={t('Profile Settings')}
         size="medium"
         icon={UserIcon}>
 
-				<form onSubmit={handleSubmit} className="profile-form">
-					{error && <div className="error-message">{error}</div>}
+        <form onSubmit={handleSubmit} className="profile-form">
+          {error && <div className="error-message">{error}</div>}
 
-					{successMessage &&
-          <div className="success-message">{successMessage}</div>
+          {successMessage &&
+            <div className="success-message">{successMessage}</div>
           }
 
-					<div className="form-group">
-						<label htmlFor="username">{t('Username')}</label>
-						<input
+          <div className="form-group">
+            <label htmlFor="username">{t('Username')}</label>
+            <input
               type="text"
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               disabled={isSubmitting} />
 
-					</div>
+          </div>
 
-					<div className="form-group">
-						<label htmlFor="email">{t('Email')}</label>
-						<input
+          <div className="form-group">
+            <label htmlFor="email">{t('Email')}</label>
+            <input
               type="email"
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isSubmitting} />
 
-					</div>
+          </div>
 
-					<div className="color-picker-group">
-						<label>{t('Cursor Colors')}</label>
-						<div className="color-picker-row">
-							<div className="form-group color-picker-item">
-								<label htmlFor="color">{t('Dark Theme')}</label>
-								<input
+          <div className="color-picker-group">
+            <label>{t('Cursor Colors')}</label>
+            <div className="color-picker-row">
+              <div className="form-group color-picker-item">
+                <label htmlFor="color">{t('Dark Theme')}</label>
+                <input
                   type="color"
                   id="color"
                   value={color}
                   onChange={(e) => setColor(e.target.value)}
                   disabled={isSubmitting} />
 
-							</div>
-							<div className="form-group color-picker-item">
-								<label htmlFor="colorLight">{t('Light Theme')}</label>
-								<input
+              </div>
+              <div className="form-group color-picker-item">
+                <label htmlFor="colorLight">{t('Light Theme')}</label>
+                <input
                   type="color"
                   id="colorLight"
                   value={colorLight}
                   onChange={(e) => setColorLight(e.target.value)}
                   disabled={isSubmitting} />
 
-							</div>
-						</div>
-					</div>
+              </div>
+            </div>
+          </div>
 
-					<h3>{t('Change Password')}</h3>
+          <h3>{t('Change Password')}</h3>
 
-					<div className="form-group">
-						<label htmlFor="currentPassword">{t('Current Password')}</label>
-						<input
+          <div className="form-group">
+            <label htmlFor="currentPassword">{t('Current Password')}</label>
+            <input
               type="password"
               id="currentPassword"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               disabled={isSubmitting} />
 
-					</div>
+          </div>
 
-					<div className="form-group">
-						<label htmlFor="newPassword">{t('New Password')}</label>
-						<input
+          <div className="form-group">
+            <label htmlFor="newPassword">{t('New Password')}</label>
+            <input
               type="password"
               id="newPassword"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               disabled={isSubmitting} />
 
-					</div>
+          </div>
 
-					<div className="form-group">
-						<label htmlFor="confirmPassword">{t('Confirm New Password')}</label>
-						<input
+          <div className="form-group">
+            <label htmlFor="confirmPassword">{t('Confirm New Password')}</label>
+            <input
               type="password"
               id="confirmPassword"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               disabled={isSubmitting} />
 
-					</div>
+          </div>
 
-					<h3>{t('Local Storage Data')}</h3>
+          <h3>{t('Local Storage Data')}</h3>
 
-					<div className="warning-message">
-						<h3>{t('\u26A0\uFE0F Warning: This action cannot be undone')}</h3>
-						<p>{t('Clearing or uploading local storage data is permanent and cannot be undone. Make sure to export your data before clearing if you want to keep it. This does')}
-
-
-              <b>NOT</b>{t('delete your projects, files, and account data.')}
+          <div className="warning-message">
+            <h3>{t('\u26A0\uFE0F Warning: This action cannot be undone')}</h3>
+            <p>{t('Clearing or uploading local storage data is permanent and cannot be undone. Make sure to export your data before clearing if you want to keep it.')}
             </p>
-					</div>
+            <p>{t('This does NOT delete your projects, files, and account data.')}
+            </p>
+          </div>
 
-					<div className="local-storage-actions">
-						<div className="storage-action-group">
-							<div className="storage-action-info">
-								<strong>{t('Settings')}</strong>
-								<p>{t('All your application settings and preferences')}</p>
-							</div>
-							<div className="storage-action-buttons">
-								<button
+          <div className="local-storage-actions">
+            <div className="storage-action-group">
+              <div className="storage-action-info">
+                <strong>{t('Settings')}</strong>
+                <p>{t('All your application settings and preferences')}</p>
+              </div>
+              <div className="storage-action-buttons">
+                <button
                   type="button"
                   className="button secondary smaller icon-only"
                   onClick={() => handleDownloadData('settings')}
                   disabled={isSubmitting}
                   title={t('Download settings data')}>
 
-									<DownloadIcon />
-								</button>
-								<button
+                  <DownloadIcon />
+                </button>
+                <button
                   type="button"
                   className="button danger smaller icon-only"
                   onClick={() => handleOpenDeleteModal('settings')}
                   disabled={isSubmitting}
                   title={t('Clear settings')}>
 
-									<TrashIcon />
-								</button>
-							</div>
-						</div>
+                  <TrashIcon />
+                </button>
+              </div>
+            </div>
 
-						<div className="storage-action-group">
-							<div className="storage-action-info">
-								<strong>{t('Properties')}</strong>
-								<p>{t('All stored property values')}</p>
-							</div>
-							<div className="storage-action-buttons">
-								<button
+            <div className="storage-action-group">
+              <div className="storage-action-info">
+                <strong>{t('Properties')}</strong>
+                <p>{t('All stored property values')}</p>
+              </div>
+              <div className="storage-action-buttons">
+                <button
                   type="button"
                   className="button secondary smaller icon-only"
                   onClick={() => handleDownloadData('properties')}
                   disabled={isSubmitting}
                   title={t('Download properties data')}>
 
-									<DownloadIcon />
-								</button>
-								<button
+                  <DownloadIcon />
+                </button>
+                <button
                   type="button"
                   className="button danger smaller icon-only"
                   onClick={() => handleOpenDeleteModal('properties')}
                   disabled={isSubmitting}
                   title={t('Clear properties')}>
 
-									<TrashIcon />
-								</button>
-							</div>
-						</div>
+                  <TrashIcon />
+                </button>
+              </div>
+            </div>
 
-						<div className="storage-action-group">
-							<div className="storage-action-info">
-								<strong>{t('Encrypted Secrets')}</strong>
-								<p>{t('All saved API keys and encrypted credentials')}</p>
-							</div>
-							<div className="storage-action-buttons">
-								<button
+            <div className="storage-action-group">
+              <div className="storage-action-info">
+                <strong>{t('Encrypted Secrets')}</strong>
+                <p>{t('All saved API keys and encrypted credentials')}</p>
+              </div>
+              <div className="storage-action-buttons">
+                <button
                   type="button"
                   className="button secondary smaller icon-only"
                   onClick={() => handleDownloadData('secrets')}
                   disabled={isSubmitting}
                   title={t('Download secrets data')}>
 
-									<DownloadIcon />
-								</button>
-								<button
+                  <DownloadIcon />
+                </button>
+                <button
                   type="button"
                   className="button danger smaller icon-only"
                   onClick={() => handleOpenDeleteModal('secrets')}
                   disabled={isSubmitting}
                   title={t('Clear secrets')}>
 
-									<TrashIcon />
-								</button>
-							</div>
-						</div>
+                  <TrashIcon />
+                </button>
+              </div>
+            </div>
 
-						<div className="storage-action-group danger-zone">
-							<div className="storage-action-info">
-								<strong>{t('All Local Storage Data')}</strong>
-								<p>{t('All settings, properties, and secrets at once')}</p>
-							</div>
-							<div className="storage-action-buttons">
-								<button
+            <div className="storage-action-group danger-zone">
+              <div className="storage-action-info">
+                <strong>{t('All Local Storage Data')}</strong>
+                <p>{t('All settings, properties, and secrets at once')}</p>
+              </div>
+              <div className="storage-action-buttons">
+                <button
                   type="button"
                   className="button primary smaller icon-only"
                   onClick={() => fileInputRef?.click()}
                   disabled={isSubmitting}
                   title={t('Import all data')}>
 
-									<ImportIcon />
-								</button>
-								<input
+                  <ImportIcon />
+                </button>
+                <input
                   ref={setFileInputRef}
                   type="file"
                   accept=".json"
@@ -497,30 +496,30 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                   style={{ display: 'none' }}
                   disabled={isSubmitting} />
 
-								<button
+                <button
                   type="button"
                   className="button secondary smaller icon-only"
                   onClick={() => handleDownloadData('all')}
                   disabled={isSubmitting}
                   title={t('Download all data')}>
 
-									<DownloadIcon />
-								</button>
-								<button
+                  <DownloadIcon />
+                </button>
+                <button
                   type="button"
                   className="button danger icon-only"
                   onClick={() => handleOpenDeleteModal('all')}
                   disabled={isSubmitting}
                   title={t('Clear all data')}>
 
-									<TrashIcon />
-								</button>
-							</div>
-						</div>
-					</div>
+                  <TrashIcon />
+                </button>
+              </div>
+            </div>
+          </div>
 
-					<div className="modal-actions">
-						<button
+          <div className="modal-actions">
+            <button
               type="button"
               className="button secondary"
               onClick={onClose}
@@ -528,41 +527,41 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
 
             </button>
-						<button
+            <button
               type="submit"
               className="button primary"
               disabled={isSubmitting}>
 
-							{isSubmitting ? 'Saving...' : 'Save Changes'}
-						</button>
-					</div>
-				</form>
-			</Modal>
+              {isSubmitting ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </Modal >
 
-			<Modal
+      <Modal
         isOpen={showDeleteModal}
         onClose={handleCloseDeleteModal}
         title={modalContent.title}
         icon={TrashIcon}
         size="medium">
 
-				<div className="clear-storage-modal">
+        <div className="clear-storage-modal">
 
-					<div className="items-to-clear">
-						<h4>{t('The following will be permanently removed:')}</h4>
-						<ul>
-							{modalContent.items.map((item, index) =>
-              <li key={index}>{item}</li>
+          <div className="items-to-clear">
+            <h4>{t('The following will be permanently removed:')}</h4>
+            <ul>
+              {modalContent.items.map((item, index) =>
+                <li key={index}>{item}</li>
               )}
-						</ul>
-					</div>
-					<div className="warning-message">
-						<p>{t('This action cannot be undone.')}</p>
-						<p>{modalContent.message}</p>
-					</div>
+            </ul>
+          </div>
+          <div className="warning-message">
+            <p>{t('This action cannot be undone.')}</p>
+            <p>{modalContent.message}</p>
+          </div>
 
-					<div className="modal-actions">
-						<button
+          <div className="modal-actions">
+            <button
               type="button"
               className="button secondary"
               onClick={handleCloseDeleteModal}
@@ -570,18 +569,18 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
 
             </button>
-						<button
+            <button
               type="button"
               className="button danger"
               onClick={handleConfirmDelete}
               disabled={isSubmitting}>
 
-							{isSubmitting ? 'Clearing...' : `Clear ${deleteType === 'all' ? 'All Data' : deleteType}`}
-						</button>
-					</div>
-				</div>
-			</Modal>
-		</>);
+              {isSubmitting ? 'Clearing...' : `Clear ${deleteType === 'all' ? 'All Data' : deleteType}`}
+            </button>
+          </div>
+        </div>
+      </Modal>
+    </>);
 
 };
 
