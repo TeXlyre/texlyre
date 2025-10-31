@@ -1557,20 +1557,20 @@
   resolved "https://registry.npmjs.org/@msgpack/msgpack/-/msgpack-2.8.0.tgz"
   integrity sha512-h9u4u/jiIRKbq25PM+zymTyW6bhTzELvOoUd+AvYriWOAKpLGnIamaET3pnHYoI5iYphAHBI4ayx0MehR+VVPQ==
 
-"@myriaddreamin/typst-ts-renderer@^0.6.1-rc3":
-  version "0.6.1-rc3"
-  resolved "https://registry.npmjs.org/@myriaddreamin/typst-ts-renderer/-/typst-ts-renderer-0.6.1-rc3.tgz"
-  integrity sha512-m4OHUXYvxDcE6yEvTIl+s7Y721RMWpVTUDXRN2o08P2ckkgxmtloVwHkdCAbrV5w19b5f/fcSaCW2xbxaw+XnA==
+"@myriaddreamin/typst-ts-renderer@^0.7.0-rc1":
+  version "0.7.0-rc1"
+  resolved "https://registry.npmjs.org/@myriaddreamin/typst-ts-renderer/-/typst-ts-renderer-0.7.0-rc1.tgz"
+  integrity sha512-Dd0xP0THKiUwYVTX+2FW4gzBl4i3BNWLAO/ZAReSCkbaPiFb6py5heSvXX0vtH8sXsFQOB3qhxz68sEcq9oRKg==
 
-"@myriaddreamin/typst-ts-web-compiler@^0.6.1-rc3":
-  version "0.6.1-rc3"
-  resolved "https://registry.npmjs.org/@myriaddreamin/typst-ts-web-compiler/-/typst-ts-web-compiler-0.6.1-rc3.tgz"
-  integrity sha512-6KD2QKUI1KVcBpKxh/LQX02224NnjMWlRQy/IqtROekDKUdoCoSlf5PV7aETYyI4bA1mtNrzMkBGdCeum/4frA==
+"@myriaddreamin/typst-ts-web-compiler@^0.7.0-rc1":
+  version "0.7.0-rc1"
+  resolved "https://registry.npmjs.org/@myriaddreamin/typst-ts-web-compiler/-/typst-ts-web-compiler-0.7.0-rc1.tgz"
+  integrity sha512-ICSdiR6U0GH1wqDKRYpvVWV9TBmA0kD0IPQwl0f2BhlHj4qrOPtC5GfSXGxzRiGNUou/Mhr9V8f2wgzBIp4P4Q==
 
-"@myriaddreamin/typst.ts@^0.6.1-rc3":
-  version "0.6.1-rc3"
-  resolved "https://registry.npmjs.org/@myriaddreamin/typst.ts/-/typst.ts-0.6.1-rc3.tgz"
-  integrity sha512-pGzaJ5SV0JjrNWn14Bicy0nPTtfD5+4kHwGUDYSebSMbfAtNHfi+Et7k4PiXqunwRm7Obkk5iZufiRM2jOlfbg==
+"@myriaddreamin/typst.ts@^0.7.0-rc1":
+  version "0.7.0-rc1"
+  resolved "https://registry.npmjs.org/@myriaddreamin/typst.ts/-/typst.ts-0.7.0-rc1.tgz"
+  integrity sha512-IZ78l1iLTMM61pf1SmqtojkgM2aloQVSzlNvStKtYu+qleOEzh/ph7zTNmfM8j5vlflCkos85E+UKQvLdC9C7Q==
   dependencies:
     idb "^7.1.1"
 

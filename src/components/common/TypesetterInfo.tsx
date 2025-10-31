@@ -74,51 +74,54 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
     if (type === 'latex') {
       return (
         <>
-                    <h4 className="typesetter-tooltip-title">{t('LaTeX')}</h4>
-                    <div className="typesetter-tooltip-section">
-                        <strong>{t('Engine:')}</strong>{t('SwiftLaTeX v20/02/2022')}
+          <h4 className="typesetter-tooltip-title">{t('LaTeX')}</h4>
+          <div className="typesetter-tooltip-section">
+            <strong>{t('Engine:')}</strong>{t('SwiftLaTeX v20/02/2022')}
           </div>
-                    <div className="typesetter-tooltip-section">
-                        <strong>{t('Compilers:')}</strong>
-                        <ul>
-                            <li>{t('pdfTeX (2020)')}</li>
-                            <li>{t('XeTeX (2020)')}</li>
-                        </ul>
-                    </div>
-                    <div className="typesetter-tooltip-section">
-                        <strong>{t('Output:')}</strong> PDF
-                    </div>
-                </>);
+          <div className="typesetter-tooltip-section">
+            <strong>{t('Compilers:')}</strong>
+            <ul>
+              <li>{t('pdfTeX (2020)')}</li>
+              <li>{t('XeTeX (2020)')}</li>
+            </ul>
+          </div>
+          <div className="typesetter-tooltip-section">
+            <strong>{t('Output:')}</strong> PDF
+          </div>
+        </>);
 
     }
 
     return (
       <>
-                <h4 className="typesetter-tooltip-title">{t('Typst')}</h4>
-                <div className="typesetter-tooltip-section">
-                    <strong>{t('Engine:')}</strong>{t('@myriaddreamin/typst.ts v0.6.1-rc3')}
+        <h4 className="typesetter-tooltip-title">{t('Typst')}</h4>
+        <div className="typesetter-tooltip-section">
+          <strong>{t('Engine:')}</strong>{t('@myriaddreamin/typst.ts v0.7.0-rc1')}
         </div>
-                <div className="typesetter-tooltip-section">
-                    <strong>{t('Renderer:')}</strong>{t('@myriaddreamin/typst-ts-renderer v0.6.1-rc3')}
+        <div className="typesetter-tooltip-section">
+          <strong>{t('Renderer:')}</strong>{t('@myriaddreamin/typst-ts-renderer v0.7.0-rc1')}
         </div>
-                <div className="typesetter-tooltip-section">
-                    <strong>{t('Typst Version:')}</strong>{t('0.13.1 (2025)')}
+        <div className="typesetter-tooltip-section">
+          <strong>{t('Compiler:')}</strong>{t('@myriaddreamin/typst-ts-compiler v0.7.0-rc1')}
         </div>
-                <div className="typesetter-tooltip-section">
-                    <strong>{t('Output Formats:')}</strong>
-                    <ul>
-                        <li>PDF</li>
-                        <li>SVG</li>
-                        <li>{t('Canvas (HTML)')}</li>
-                    </ul>
-                </div>
-            </>);
+        <div className="typesetter-tooltip-section">
+          <strong>{t('Typst Version:')}</strong>{t('0.14.0 (25/10/2025)')}
+        </div>
+        <div className="typesetter-tooltip-section">
+          <strong>{t('Output Formats:')}</strong>
+          <ul>
+            <li>PDF</li>
+            <li>SVG</li>
+            <li>{t('Canvas (HTML)')}</li>
+          </ul>
+        </div>
+      </>);
 
   };
 
   return (
     <>
-            <button
+      <button
         ref={buttonRef}
         type="button"
         className="type-info-help"
@@ -126,25 +129,25 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
         onMouseLeave={() => setShowTooltip(false)}
         onClick={() => setShowTooltip(!showTooltip)}>
 
-                {type === 'latex' ? 'LaTeX' : 'Typst'}
-            </button>
-            {showTooltip &&
-      createPortal(
-        <div
-          className="typesetter-tooltip"
-          ref={tooltipRef}
-          style={{
-            top: `${position.top}px`,
-            left: `${position.left}px`
-          }}
-          onMouseEnter={() => setShowTooltip(true)}
-          onMouseLeave={() => setShowTooltip(false)}>
+        {type === 'latex' ? 'LaTeX' : 'Typst'}
+      </button>
+      {showTooltip &&
+        createPortal(
+          <div
+            className="typesetter-tooltip"
+            ref={tooltipRef}
+            style={{
+              top: `${position.top}px`,
+              left: `${position.left}px`
+            }}
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}>
 
-                        {getTooltipContent()}
-                    </div>,
-        document.body
-      )}
-        </>);
+            {getTooltipContent()}
+          </div>,
+          document.body
+        )}
+    </>);
 
 };
 
