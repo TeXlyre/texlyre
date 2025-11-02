@@ -51,8 +51,8 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
 
       if (requestedType === contentType && content) {
         const formatted = contentType === 'latex' ?
-        await formatLatex(content, latexOptions) :
-        await formatTypst(content, typstOptions);
+          await formatLatex(content, latexOptions) :
+          await formatTypst(content, typstOptions);
 
         if (formatted) {
           onFormat(formatted);
@@ -74,8 +74,8 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
     if (!currentContent.trim()) return;
 
     const formatted = contentType === 'latex' ?
-    await formatLatex(currentContent, latexOptions) :
-    await formatTypst(currentContent, typstOptions);
+      await formatLatex(currentContent, latexOptions) :
+      await formatTypst(currentContent, typstOptions);
 
     if (formatted) {
       onFormat(formatted);
@@ -89,159 +89,156 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
 
   return (
     <div className={`formatter-button-container ${className}`} ref={dropdownRef}>
-            <div className="formatter-button-group">
-                <button
+      <div className="formatter-button-group">
+        <button
           className={`control-button format-button ${isFormatting ? 'formatting' : ''}`}
           onClick={handleFormat}
           disabled={disabled || isFormatting}
           title={t('Format Content (Ctrl+Shift+I)')}>
 
-                    {isFormatting ? <LoaderIcon /> : <TextFormatterIcon />}
-                </button>
+          {isFormatting ? <LoaderIcon /> : <TextFormatterIcon />}
+        </button>
 
-                <button
+        <button
           className="control-button dropdown-toggle"
           onClick={toggleDropdown}
           disabled={disabled || isFormatting}
           title={t('Format Options')}>
 
-                    <ChevronDownIcon />
-                </button>
+          <ChevronDownIcon />
+        </button>
+      </div>
+
+      {isDropdownOpen && contentType === 'latex' &&
+        <div className="formatter-dropdown">
+          <div className="format-option">
+            <label>
+              <input
+                type="checkbox"
+                checked={latexOptions.wrap}
+                onChange={(e) => setLatexOptions({
+                  ...latexOptions,
+                  wrap: e.target.checked
+                })} />{t('Wrap lines')}
+
+
+            </label>
+          </div>
+
+          {latexOptions.wrap &&
+            <div className="format-option">
+              <label>{t('Wrap length:')}
+
+                <input
+                  type="number"
+                  min="40"
+                  max="120"
+                  value={latexOptions.wraplen}
+                  onChange={(e) => setLatexOptions({
+                    ...latexOptions,
+                    wraplen: parseInt(e.target.value, 10)
+                  })} />
+
+              </label>
             </div>
+          }
 
-            {isDropdownOpen && contentType === 'latex' &&
-      <div className="formatter-dropdown">
-                    <div className="format-note warning-message">
-                        <p>{t('\u26A0\uFE0F Tex-Fmt is')}<b>{t('experimental')}</b>{t('and may not preserve all LaTeX constructs (e.g.,')}<code>{t('\\verb')}</code>{t('commands).')}</p>
-                    </div>
-                    <div className="format-option">
-                        <label>
-                            <input
-              type="checkbox"
-              checked={latexOptions.wrap}
-              onChange={(e) => setLatexOptions({
-                ...latexOptions,
-                wrap: e.target.checked
-              })} />{t('Wrap lines')}
+          <div className="format-option">
+            <label>{t('Tab size:')}
 
+              <input
+                type="number"
+                min="1"
+                max="8"
+                value={latexOptions.tabsize}
+                onChange={(e) => setLatexOptions({
+                  ...latexOptions,
+                  tabsize: parseInt(e.target.value, 10)
+                })} />
 
-          </label>
-                    </div>
+            </label>
+          </div>
 
-                    {latexOptions.wrap &&
-        <div className="format-option">
-                            <label>{t('Wrap length:')}
-
-            <input
-              type="number"
-              min="40"
-              max="120"
-              value={latexOptions.wraplen}
-              onChange={(e) => setLatexOptions({
-                ...latexOptions,
-                wraplen: parseInt(e.target.value, 10)
-              })} />
-
-                            </label>
-                        </div>
-        }
-
-                    <div className="format-option">
-                        <label>{t('Tab size:')}
-
-            <input
-              type="number"
-              min="1"
-              max="8"
-              value={latexOptions.tabsize}
-              onChange={(e) => setLatexOptions({
-                ...latexOptions,
-                tabsize: parseInt(e.target.value, 10)
-              })} />
-
-                        </label>
-                    </div>
-
-                    <div className="format-option">
-                        <label>
-                            <input
-              type="checkbox"
-              checked={latexOptions.usetabs}
-              onChange={(e) => setLatexOptions({
-                ...latexOptions,
-                usetabs: e.target.checked
-              })} />{t('Use tabs instead of spaces')}
+          <div className="format-option">
+            <label>
+              <input
+                type="checkbox"
+                checked={latexOptions.usetabs}
+                onChange={(e) => setLatexOptions({
+                  ...latexOptions,
+                  usetabs: e.target.checked
+                })} />{t('Use tabs instead of spaces')}
 
 
-          </label>
-                    </div>
-                </div>
+            </label>
+          </div>
+        </div>
       }
 
-            {isDropdownOpen && contentType === 'typst' &&
-      <div className="formatter-dropdown">
-                    <div className="format-option">
-                        <label>{t('Line width:')}
+      {isDropdownOpen && contentType === 'typst' &&
+        <div className="formatter-dropdown">
+          <div className="format-option">
+            <label>{t('Line width:')}
 
-            <input
-              type="number"
-              min="40"
-              max="120"
-              value={typstOptions.lineWidth}
-              onChange={(e) => setTypstOptions({
-                ...typstOptions,
-                lineWidth: parseInt(e.target.value, 10)
-              })} />
+              <input
+                type="number"
+                min="40"
+                max="120"
+                value={typstOptions.lineWidth}
+                onChange={(e) => setTypstOptions({
+                  ...typstOptions,
+                  lineWidth: parseInt(e.target.value, 10)
+                })} />
 
-                        </label>
-                    </div>
+            </label>
+          </div>
 
-                    <div className="format-option">
-                        <label>{t('Indent width:')}
+          <div className="format-option">
+            <label>{t('Indent width:')}
 
-            <input
-              type="number"
-              min="1"
-              max="8"
-              value={typstOptions.indentWidth}
-              onChange={(e) => setTypstOptions({
-                ...typstOptions,
-                indentWidth: parseInt(e.target.value, 10)
-              })} />
+              <input
+                type="number"
+                min="1"
+                max="8"
+                value={typstOptions.indentWidth}
+                onChange={(e) => setTypstOptions({
+                  ...typstOptions,
+                  indentWidth: parseInt(e.target.value, 10)
+                })} />
 
-                        </label>
-                    </div>
+            </label>
+          </div>
 
-                    <div className="format-option">
-                        <label>
-                            <input
-              type="checkbox"
-              checked={typstOptions.reorderImportItems}
-              onChange={(e) => setTypstOptions({
-                ...typstOptions,
-                reorderImportItems: e.target.checked
-              })} />{t('Reorder import items alphabetically')}
-
-
-          </label>
-                    </div>
-
-                    <div className="format-option">
-                        <label>
-                            <input
-              type="checkbox"
-              checked={typstOptions.wrapText}
-              onChange={(e) => setTypstOptions({
-                ...typstOptions,
-                wrapText: e.target.checked
-              })} />{t('Wrap text in markup')}
+          <div className="format-option">
+            <label>
+              <input
+                type="checkbox"
+                checked={typstOptions.reorderImportItems}
+                onChange={(e) => setTypstOptions({
+                  ...typstOptions,
+                  reorderImportItems: e.target.checked
+                })} />{t('Reorder import items alphabetically')}
 
 
-          </label>
-                    </div>
-                </div>
+            </label>
+          </div>
+
+          <div className="format-option">
+            <label>
+              <input
+                type="checkbox"
+                checked={typstOptions.wrapText}
+                onChange={(e) => setTypstOptions({
+                  ...typstOptions,
+                  wrapText: e.target.checked
+                })} />{t('Wrap text in markup')}
+
+
+            </label>
+          </div>
+        </div>
       }
-        </div>);
+    </div>);
 
 };
 

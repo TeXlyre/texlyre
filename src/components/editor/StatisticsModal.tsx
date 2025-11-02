@@ -7,133 +7,133 @@ import type { DocumentStatistics, StatisticsOptions } from '../../types/statisti
 import { WordCountIcon } from '../common/Icons';
 
 interface StatisticsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  statistics: DocumentStatistics | null;
-  isLoading: boolean;
-  error: string | null;
-  options: StatisticsOptions;
-  onOptionsChange: (options: StatisticsOptions) => void;
-  onRefresh: () => Promise<void>;
-  contentType: 'latex' | 'typst';
+    isOpen: boolean;
+    onClose: () => void;
+    statistics: DocumentStatistics | null;
+    isLoading: boolean;
+    error: string | null;
+    options: StatisticsOptions;
+    onOptionsChange: (options: StatisticsOptions) => void;
+    onRefresh: () => Promise<void>;
+    contentType: 'latex' | 'typst';
 }
 
 interface StatisticsOptionsPanelProps {
-  contentType: 'latex' | 'typst';
-  includeFiles: boolean;
-  merge: boolean;
-  brief: boolean;
-  total: boolean;
-  sum: boolean;
-  verbose: number;
-  onIncludeFilesChange: (value: boolean) => void;
-  onMergeChange: (value: boolean) => void;
-  onBriefChange: (value: boolean) => void;
-  onTotalChange: (value: boolean) => void;
-  onSumChange: (value: boolean) => void;
-  onVerboseChange: (value: number) => void;
+    contentType: 'latex' | 'typst';
+    includeFiles: boolean;
+    merge: boolean;
+    brief: boolean;
+    total: boolean;
+    sum: boolean;
+    verbose: number;
+    onIncludeFilesChange: (value: boolean) => void;
+    onMergeChange: (value: boolean) => void;
+    onBriefChange: (value: boolean) => void;
+    onTotalChange: (value: boolean) => void;
+    onSumChange: (value: boolean) => void;
+    onVerboseChange: (value: number) => void;
 }
 
 const StatisticsOptionsPanel: React.FC<StatisticsOptionsPanelProps> = ({
-  contentType,
-  includeFiles,
-  merge,
-  brief,
-  total,
-  sum,
-  verbose,
-  onIncludeFilesChange,
-  onMergeChange,
-  onBriefChange,
-  onTotalChange,
-  onSumChange,
-  onVerboseChange
+    contentType,
+    includeFiles,
+    merge,
+    brief,
+    total,
+    sum,
+    verbose,
+    onIncludeFilesChange,
+    onMergeChange,
+    onBriefChange,
+    onTotalChange,
+    onSumChange,
+    onVerboseChange
 }) => {
-  if (contentType === 'typst') {
-    return (
-      <div className="statistics-options-panel">
+    if (contentType === 'typst') {
+        return (
+            <div className="statistics-options-panel">
                 <div className="format-note warning-message">
-                    <p>{t('\u26A0\uFE0F Wordometer is')}<b>{t('experimental')}</b>{t('and may not count all Typst elements (e.g., CV templates, Touying presentation elements).')}</p>
+                    <p>{t('\u26A0\uFE0F Wordometer is experimental and may not count all Typst elements (e.g., CV templates, Touying presentation elements).')}</p>
                 </div>
                 <div className="options-group">
                     <h4>{t('Detail Level')}</h4>
                     <label>{t('Verbosity:')}
 
-            <input
-              type="number"
-              min="0"
-              max="4"
-              value={verbose}
-              onChange={(e) => onVerboseChange(parseInt(e.target.value, 10))} />
+                        <input
+                            type="number"
+                            min="0"
+                            max="4"
+                            value={verbose}
+                            onChange={(e) => onVerboseChange(parseInt(e.target.value, 10))} />
 
                     </label>
                 </div>
             </div>);
 
-  }
+    }
 
-  return (
-    <div className="statistics-options-panel">
+    return (
+        <div className="statistics-options-panel">
             <div className="options-group">
                 <h4>{t('File Processing')}</h4>
                 <label>
                     <input
-            type="checkbox"
-            checked={includeFiles}
-            onChange={(e) => onIncludeFilesChange(e.target.checked)} />{t('Include referenced files')}
+                        type="checkbox"
+                        checked={includeFiles}
+                        onChange={(e) => onIncludeFilesChange(e.target.checked)} />{t('Include referenced files')}
 
 
-        </label>
+                </label>
                 {includeFiles &&
-        <label>
+                    <label>
                         <input
-            type="checkbox"
-            checked={merge}
-            onChange={(e) => onMergeChange(e.target.checked)} />{t('Merge counts (hide individual files)')}
+                            type="checkbox"
+                            checked={merge}
+                            onChange={(e) => onMergeChange(e.target.checked)} />{t('Merge counts (hide individual files)')}
 
 
-        </label>
-        }
+                    </label>
+                }
             </div>
 
             <div className="options-group">
                 <h4>{t('Display Options')}</h4>
                 <label>
                     <input
-            type="checkbox"
-            checked={brief}
-            onChange={(e) => onBriefChange(e.target.checked)} />{t('Brief output')}
+                        type="checkbox"
+                        checked={brief}
+                        onChange={(e) => onBriefChange(e.target.checked)} />{t('Brief output')}
 
 
-        </label>
+                </label>
                 <label>
                     <input
-            type="checkbox"
-            checked={total}
-            onChange={(e) => onTotalChange(e.target.checked)} />{t('Show total only')}
+                        type="checkbox"
+                        checked={total}
+                        onChange={(e) => onTotalChange(e.target.checked)} />{t('Show total only')}
 
 
-        </label>
+                </label>
                 <label>
                     <input
-            type="checkbox"
-            checked={sum}
-            onChange={(e) => onSumChange(e.target.checked)} />{t('Sum subcounts')}
+                        type="checkbox"
+                        checked={sum}
+                        onChange={(e) => onSumChange(e.target.checked)} />{t('Sum subcounts')}
 
 
-        </label>
+                </label>
             </div>
 
             <div className="options-group">
                 <h4>{t('Detail Level')}</h4>
                 <label>{t('Verbosity:')}
 
-          <input
-            type="number"
-            min="0"
-            max="4"
-            value={verbose}
-            onChange={(e) => onVerboseChange(parseInt(e.target.value, 10))} />
+                    <input
+                        type="number"
+                        min="0"
+                        max="4"
+                        value={verbose}
+                        onChange={(e) => onVerboseChange(parseInt(e.target.value, 10))} />
 
                 </label>
             </div>
@@ -142,82 +142,82 @@ const StatisticsOptionsPanel: React.FC<StatisticsOptionsPanelProps> = ({
 };
 
 const StatisticsModal: React.FC<StatisticsModalProps> = ({
-  isOpen,
-  onClose,
-  statistics,
-  isLoading,
-  error,
-  options,
-  onOptionsChange,
-  onRefresh,
-  contentType
+    isOpen,
+    onClose,
+    statistics,
+    isLoading,
+    error,
+    options,
+    onOptionsChange,
+    onRefresh,
+    contentType
 }) => {
-  const totalWords = statistics ?
-  statistics.words + statistics.headers + statistics.captions :
-  0;
+    const totalWords = statistics ?
+        statistics.words + statistics.headers + statistics.captions :
+        0;
 
-  const handleRefresh = async () => {
-    await onRefresh();
-  };
+    const handleRefresh = async () => {
+        await onRefresh();
+    };
 
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={t('Word Count Statistics')}
-      size="large"
-      icon={WordCountIcon}>
+    return (
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={t('Word Count Statistics')}
+            size="large"
+            icon={WordCountIcon}>
 
             <div className="statistics-modal-content">
                 <div>
                     <StatisticsOptionsPanel
-            contentType={contentType}
-            includeFiles={options.includeFiles}
-            merge={options.merge}
-            brief={options.brief}
-            total={options.total}
-            sum={options.sum}
-            verbose={options.verbose}
-            onIncludeFilesChange={(value) => onOptionsChange({ ...options, includeFiles: value })}
-            onMergeChange={(value) => onOptionsChange({ ...options, merge: value })}
-            onBriefChange={(value) => onOptionsChange({ ...options, brief: value })}
-            onTotalChange={(value) => onOptionsChange({ ...options, total: value })}
-            onSumChange={(value) => onOptionsChange({ ...options, sum: value })}
-            onVerboseChange={(value) => onOptionsChange({ ...options, verbose: value })} />
+                        contentType={contentType}
+                        includeFiles={options.includeFiles}
+                        merge={options.merge}
+                        brief={options.brief}
+                        total={options.total}
+                        sum={options.sum}
+                        verbose={options.verbose}
+                        onIncludeFilesChange={(value) => onOptionsChange({ ...options, includeFiles: value })}
+                        onMergeChange={(value) => onOptionsChange({ ...options, merge: value })}
+                        onBriefChange={(value) => onOptionsChange({ ...options, brief: value })}
+                        onTotalChange={(value) => onOptionsChange({ ...options, total: value })}
+                        onSumChange={(value) => onOptionsChange({ ...options, sum: value })}
+                        onVerboseChange={(value) => onOptionsChange({ ...options, verbose: value })} />
 
                     <div className="modal-actions">
                         <button
-              type="button"
-              className="button primary"
-              onClick={handleRefresh}
-              disabled={isLoading}>{t('Recalculate')}
+                            type="button"
+                            className="button primary"
+                            onClick={handleRefresh}
+                            disabled={isLoading}>{t('Recalculate')}
 
 
-            </button>
+                        </button>
                         <button
-              type="button"
-              className="button secondary"
-              onClick={onClose}>{t('Close')}
+                            type="button"
+                            className="button secondary"
+                            onClick={onClose}>{t('Close')}
 
 
-            </button>
+                        </button>
                     </div>
                 </div>
                 {isLoading &&
-        <div className="statistics-loading">
+                    <div className="statistics-loading">
                         <div className="loading-spinner" />
                         <p>{t('Calculating statistics...')}</p>
                     </div>
-        }
+                }
 
                 {error &&
-        <div className="statistics-error">
+                    <div className="statistics-error">
                         <p>{error}</p>
                     </div>
-        }
+                }
 
                 {statistics && !isLoading && !error &&
-        <div className="statistics-data">
+                    <div className="statistics-data">
                         <div className="stat-item stat-total">
                             <span className="stat-label">{t('Total Words')}</span>
                             <span className="stat-value">{totalWords.toLocaleString()}</span>
@@ -249,31 +249,31 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({
                         </div>
 
                         {statistics.numHeaders !== undefined &&
-          <div className="stat-item">
+                            <div className="stat-item">
                                 <span className="stat-label">{t('Number of Headers')}</span>
                                 <span className="stat-value">{statistics.numHeaders.toLocaleString()}</span>
                             </div>
-          }
+                        }
 
                         {statistics.numFloats !== undefined &&
-          <div className="stat-item">
+                            <div className="stat-item">
                                 <span className="stat-label">{t('Number of Floats')}</span>
                                 <span className="stat-value">{statistics.numFloats.toLocaleString()}</span>
                             </div>
-          }
+                        }
 
                         {statistics.files !== undefined && statistics.files > 1 &&
-          <div className="stat-item">
+                            <div className="stat-item">
                                 <span className="stat-label">{t('Files Processed')}</span>
                                 <span className="stat-value">{statistics.files}</span>
                             </div>
-          }
+                        }
 
                         {statistics.fileStats && statistics.fileStats.length > 0 &&
-          <div className="file-statistics">
+                            <div className="file-statistics">
                                 <h4>{t('Individual Files')}</h4>
                                 {statistics.fileStats.map((fileStat, index) =>
-            <details key={index} className="file-stat-details">
+                                    <details key={index} className="file-stat-details">
                                         <summary>{fileStat.filename}</summary>
                                         <div className="file-stat-content">
                                             <div className="stat-item">
@@ -298,18 +298,18 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({
                                             </div>
                                         </div>
                                     </details>
-            )}
+                                )}
                             </div>
-          }
+                        }
 
                         {statistics.rawOutput &&
-          <details className="raw-output">
+                            <details className="raw-output">
                                 <summary>{t('Raw Output')}</summary>
                                 <pre>{statistics.rawOutput}</pre>
                             </details>
-          }
+                        }
                     </div>
-        }
+                }
             </div>
         </Modal>);
 
