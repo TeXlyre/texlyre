@@ -52,7 +52,7 @@ const StatisticsOptionsPanel: React.FC<StatisticsOptionsPanelProps> = ({
     if (contentType === 'typst') {
         return (
             <div className="statistics-options-panel">
-                <div className="format-note warning-message">
+                <div className="warning-note warning-message">
                     <p>{t('\u26A0\uFE0F Wordometer is experimental and may not count all Typst elements (e.g., CV templates, Touying presentation elements).')}</p>
                 </div>
                 <div className="options-group">

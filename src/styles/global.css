@@ -354,6 +354,17 @@ footer {
 	background-color: var(--color-warning);
 }
 
+.warning-note {
+	margin-top: var(--space-sm);
+	background-color: color-mix(in srgb, var(--color-warning) 20%, white);
+	padding: var(--space-xs);
+	font-size: 0.85em;
+}
+
+.warning-note p {
+	margin: 0;
+}
+
 .success-message {
 	background-color: rgba(40, 167, 69, 0.1);
 	border: 1px solid rgba(40, 167, 69, 0.3);

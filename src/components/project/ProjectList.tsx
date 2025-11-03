@@ -263,8 +263,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
 
 
 					</button>
-					<span className="pagination-info">{t('Page')}
-						{currentPage}{t('of')}{totalPages}
+					<span className="pagination-info">{t('Page {currentPage} of {totalPages}', { currentPage, totalPages })}
 					</span>
 					<button
 						className="pagination-button"

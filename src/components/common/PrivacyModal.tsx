@@ -22,11 +22,11 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) => {
       <div className="privacy-content">
         <h3>{t('How TeXlyre Works')}</h3>
         <ul>
-          <li><strong>{t('Local Storage:')}</strong>{t('Your projects and account data stay in your browser')}</li>
-          <li><strong>{t('Collaboration:')}</strong>{t('Direct peer-to-peer connections via signaling servers')}</li>
-          <li><strong>{t('No Tracking:')}</strong>{t('We don\'t collect analytics or personal information')}</li>
-          <li><strong>{t('GitHub Integration:')}</strong>{t('Only used when you explicitly enable it')}</li>
-          <li><strong>{t('DOI Lookup:')}</strong>{t('When you enable the BibTeX DOI finder, paper titles and authors are sent to the')}<a href="https://www.crossref.org/" target="_blank" rel="noreferrer">{t('Crossref API')}</a>{t('to find matching DOIs')}</li>
+          <li><strong>{t('Local Storage:')}</strong>&nbsp;{t('Your projects and account data stay in your browser')}</li>
+          <li><strong>{t('Collaboration:')}</strong>&nbsp;{t('Direct peer-to-peer connections via signaling servers')}</li>
+          <li><strong>{t('No Tracking:')}</strong>&nbsp;{t('We don\'t collect analytics or personal information')}</li>
+          <li><strong>{t('GitHub Integration:')}</strong>&nbsp;{t('Only used when you explicitly enable it')}</li>
+          <li><strong>{t('DOI Lookup:')}</strong>&nbsp;{t('When you enable the BibTeX DOI finder, paper titles and authors are sent to the')}&nbsp;<a href="https://www.crossref.org/" target="_blank" rel="noreferrer">{t('Crossref API')}</a>&nbsp;{t('to find matching DOIs')}</li>
         </ul>
 
         <h3>{t('Data Processing')}</h3>
@@ -55,15 +55,15 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) => {
 
         </p>
         <ul>
-          <li><strong>{t('Crossref API:')}</strong>{t('Paper titles and authors when using the BibTeX DOI lookup feature (')}<a href="https://www.crossref.org/privacy/" target="_blank" rel="noreferrer">{t('Privacy Policy')}</a>)</li>
-          <li><strong>{t('GitHub API:')}</strong>{t('When you enable GitHub integration with your own token (')}<a href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement" target="_blank" rel="noreferrer">{t('Privacy Policy')}</a>)</li>
+          <li><strong>{t('Crossref API:')}</strong>&nbsp;{t('Paper titles and authors when using the BibTeX DOI lookup feature (')}<a href="https://www.crossref.org/privacy/" target="_blank" rel="noreferrer">{t('Privacy Policy')}</a>)</li>
+          <li><strong>{t('GitHub API:')}</strong>&nbsp;{t('When you enable GitHub integration with your own token (')}<a href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement" target="_blank" rel="noreferrer">{t('Privacy Policy')}</a>)</li>
         </ul>
         <p>{t('TeXlyre is hosted on')}
-          <a href="https://pages.github.com/" target="_blank" rel="noreferrer">{t('GitHub Pages')}</a>{t('and uses')}<a href="https://workers.cloudflare.com/" target="_blank" rel="noreferrer">{t('Cloudflare Workers')}</a>{t('for signaling and download servers. These services may set their own cookies for security and performance purposes.')}
+          &nbsp;<a href="https://pages.github.com/" target="_blank" rel="noreferrer">{t('GitHub Pages')}</a>&nbsp;{t('and uses')}&nbsp;<a href="https://workers.cloudflare.com/" target="_blank" rel="noreferrer">{t('Cloudflare Workers')}</a>&nbsp;{t('for signaling and download servers. These services may set their own cookies for security and performance purposes.')}
 
         </p>
         <p>
-          <strong>{t('TeXlyre itself doesn\'t use any cookies')}</strong>{t('- we only use local browser storage to save your projects on your device.')}
+          <strong>{t('TeXlyre itself doesn\'t use any cookies')}</strong>&nbsp;{t('- we only use local browser storage to save your projects on your device.')}
 
         </p>
 
@@ -72,7 +72,7 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) => {
         </p>
         <div className="contact-info">
           <p><strong>{t('Questions?')}</strong>
-            <a href="https://github.com/texlyre/texlyre/issues" target="_blank" rel="noreferrer">{t('Open an issue on our GitHub repository')}
+            <a href="https://github.com/texlyre/texlyre/issues" target="_blank" rel="noreferrer">&nbsp;{t('Open an issue on our GitHub repository')}
 
             </a>.
           </p>

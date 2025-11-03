@@ -31,12 +31,12 @@ const ImportAccount: React.FC<ImportAccountProps> = ({
     e.preventDefault();
 
     if (!file) {
-      setError('Please select a file to import');
+      setError(t('Please select a file to import'));
       return;
     }
 
     if (!file.name.endsWith('.zip')) {
-      setError('Please select a valid TeXlyre export file (.zip)');
+      setError(t('Please select a valid TeXlyre export file (.zip)'));
       return;
     }
 
@@ -46,9 +46,9 @@ const ImportAccount: React.FC<ImportAccountProps> = ({
 
     try {
       await accountExportService.importAccount(file);
-      setSuccess('Account imported successfully!');
+      setSuccess(t('Account imported successfully!'));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error importing account');
+      setError(err instanceof Error ? err.message : t('Error importing account'));
     } finally {
       setIsImporting(false);
     }
@@ -61,59 +61,59 @@ const ImportAccount: React.FC<ImportAccountProps> = ({
 
   return (
     <div className="import-account-container">
-			<h3>{t('Import Account')}</h3>
+      <h3>{t('Import Account')}</h3>
 
-			{error && <div className="error-message">{error}</div>}
+      {error && <div className="error-message">{error}</div>}
 
-			{success &&
-      <div className="success-message">
-					{success}{' '}
-					<button
-          type="button"
-          className="refresh-import-button secondary"
-          onClick={handleRefresh}>{t('Refresh page to access dashboard')}
-
-
-        </button>
-				</div>
-      }
-
-			{!success &&
-      <>
-					<form onSubmit={handleImport}>
-						<div className="form-group">
-							<label htmlFor="importFile">{t('Select account export file (.zip)')}</label>
-							<input
-              type="file"
-              id="importFile"
-              accept=".zip"
-              onChange={handleFileChange}
-              disabled={isImporting} />
-
-						</div>
-
-						<button
-            type="submit"
-            className="auth-button"
-            disabled={!file || isImporting}>
-
-							{isImporting ? 'Importing...' : 'Import Account'}
-						</button>
-					</form>
-
-					<div className="auth-alt-action">
-						<span>{t('Back to login?')}</span>
-						<button
-            className="text-button"
-            onClick={onSwitchToLogin}
-            disabled={isImporting}>{t('Login')}
+      {success &&
+        <div className="success-message">
+          {success}{' '}
+          <button
+            type="button"
+            className="refresh-import-button secondary"
+            onClick={handleRefresh}>{t('Refresh page to access dashboard')}
 
 
           </button>
-					</div>
-				</>
+        </div>
       }
-		</div>);
+
+      {!success &&
+        <>
+          <form onSubmit={handleImport}>
+            <div className="form-group">
+              <label htmlFor="importFile">{t('Select account export file (.zip)')}</label>
+              <input
+                type="file"
+                id="importFile"
+                accept=".zip"
+                onChange={handleFileChange}
+                disabled={isImporting} />
+
+            </div>
+
+            <button
+              type="submit"
+              className="auth-button"
+              disabled={!file || isImporting}>
+
+              {isImporting ? t('Importing...') : t('Import Account')}
+            </button>
+          </form>
+
+          <div className="auth-alt-action">
+            <span>{t('Back to login?')}</span>
+            <button
+              className="text-button"
+              onClick={onSwitchToLogin}
+              disabled={isImporting}>{t('Login')}
+
+
+            </button>
+          </div>
+        </>
+      }
+    </div>);
 
 };
 

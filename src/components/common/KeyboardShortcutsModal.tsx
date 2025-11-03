@@ -8,21 +8,21 @@ import Modal from './Modal';
 import SettingsModal from '../settings/SettingsModal';
 
 interface KeyboardShortcutsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+    isOpen: boolean;
+    onClose: () => void;
 }
 
 const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ isOpen, onClose }) => {
-  const [showSettings, setShowSettings] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
 
-  return (
-    <>
+    return (
+        <>
             <Modal
-        isOpen={isOpen}
-        onClose={onClose}
-        title={t('Keyboard Shortcuts')}
-        icon={KeyboardIcon}
-        size="medium">
+                isOpen={isOpen}
+                onClose={onClose}
+                title={t('Keyboard Shortcuts')}
+                icon={KeyboardIcon}
+                size="medium">
 
                 <div className="shortcuts-content">
                     <section className="shortcuts-section">
@@ -139,24 +139,24 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ isOpen,
                         <p><strong>{t('Note:')}</strong>{t('Some shortcuts may vary depending on your operating system and browser.')}</p>
                         <p>
                             <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowSettings(true);
-                }}>{t('Enable Vim keybindings')}
+                                href="#"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setShowSettings(true);
+                                }}>{t('Enable Vim keybindings')}&nbsp;
 
 
-              </a>{t('to use Vim-style shortcuts. Vim mode uses')}<kbd>{t('Ctrl')}</kbd> + <kbd>C</kbd>{t('to switch between insert and normal mode.')}
-            </p>
+                            </a>{t('to use Vim-style shortcuts. Vim mode uses')}<kbd>{t('Ctrl')}</kbd> + <kbd>C</kbd>{t('to switch between insert and normal mode.')}
+                        </p>
                     </div>
                 </div>
             </Modal>
 
             <SettingsModal
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
-        initialCategory="Viewers"
-        initialSubcategory="Text Editor" />
+                isOpen={showSettings}
+                onClose={() => setShowSettings(false)}
+                initialCategory="Viewers"
+                initialSubcategory="Text Editor" />
 
         </>);
 

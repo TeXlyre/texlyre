@@ -252,5 +252,7 @@
     "Detecting duplicate files...": "Detecting duplicate files...",
     "Fixed {count} duplicate file automatically": "Fixed {{count}} duplicate file automatically",
     "Fixed {count} duplicate files automatically": "Fixed {{count}} duplicate files automatically",
-    "Failed to fix duplicate files automatically": "Failed to fix duplicate files automatically"
+    "Failed to fix duplicate files automatically": "Failed to fix duplicate files automatically",
+    "Showing {startItem}-{endItem} of {count} template_one": "Showing {{startItem}}-{{endItem}} of {{count}} template",
+    "Showing {startItem}-{endItem} of {count} templates_other": "Showing {{startItem}}-{{endItem}} of {{count}} templates"
 }

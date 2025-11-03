@@ -727,6 +727,7 @@
     "Overwrite fields": "Overwrite fields",
     "Page": "Page",
     "Page refresh required": "Page refresh required",
+    "Page {currentPage} of {totalPages}": "Page {{currentPage}} of {{totalPages}}",
     "Paper titles and authors when using the BibTeX DOI lookup feature (": "Paper titles and authors when using the BibTeX DOI lookup feature (",
     "Password": "Password",
     "Passwords protect API keys and separate account spaces, not your projects.": "Passwords protect API keys and separate account spaces, not your projects.",
@@ -1126,7 +1127,9 @@
     "Successfully cleared all data": "Successfully cleared all data",
     "Successfully cleared {type}": "Successfully cleared {{type}}",
     "Failed to clear data": "Failed to clear data",
+    "Please select a file to import": "Please select a file to import",
     "Please select a valid JSON file": "Please select a valid JSON file",
+    "Please select a valid TeXlyre export file (.zip)": "Please select a valid TeXlyre export file (.zip)",
     "Successfully imported user data": "Successfully imported user data",
     "Failed to import data": "Failed to import data",
     "New password must be at least 6 characters long": "New password must be at least 6 characters long",
@@ -1170,5 +1173,7 @@
     "Detecting duplicate files...": "Detecting duplicate files...",
     "Fixed {count} duplicate file automatically": "Fixed {{count}} duplicate file automatically",
     "Fixed {count} duplicate files automatically": "Fixed {{count}} duplicate files automatically",
-    "Failed to fix duplicate files automatically": "Failed to fix duplicate files automatically"
+    "Failed to fix duplicate files automatically": "Failed to fix duplicate files automatically",
+    "Showing {startItem}-{endItem} of {count} template_one": "Showing {{startItem}}-{{endItem}} of {{count}} template",
+    "Showing {startItem}-{endItem} of {count} template_other": "Showing {{startItem}}-{{endItem}} of {{count}} templates"
 }
