@@ -17,7 +17,7 @@ import { ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon } from
 interface TypstCompileButtonProps {
   className?: string;
   selectedDocId?: string | null;
-  documents?: Array<{id: string;name: string;}>;
+  documents?: Array<{ id: string; name: string; }>;
   onNavigateToLinkedFile?: () => void;
   onExpandTypstOutput?: () => void;
   linkedFileInfo?: {
@@ -77,10 +77,9 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 
     const findMainFile = async () => {
       if (
-      selectedDocId &&
-      linkedFileInfo?.filePath &&
-      linkedFileInfo.filePath.endsWith('.typ'))
-      {
+        selectedDocId &&
+        linkedFileInfo?.filePath &&
+        linkedFileInfo.filePath.endsWith('.typ')) {
         setAutoMainFile(linkedFileInfo.filePath);
         return;
       }
@@ -103,9 +102,8 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-      dropdownRef.current &&
-      !dropdownRef.current.contains(event.target as Node))
-      {
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
     };
@@ -266,17 +264,17 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
   };
 
   const getFileName = (path?: string) => {
-    if (!path) return 'No .typ file';
+    if (!path) return t('No .typ file');
     return path.split('/').pop() || path;
   };
 
   const getDisplayName = (path?: string) => {
-    if (!path) return 'No .typ file';
+    if (!path) return t('No .typ file');
 
     if (selectedDocId && linkedFileInfo?.filePath === path && documents) {
       const doc = documents.find((d) => d.id === selectedDocId);
       if (doc) {
-        return `${doc.name} (linked)`;
+        return `${doc.name}` + t(' (linked)');
       }
     }
 
@@ -287,131 +285,131 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 
   return (
     <div className={`typst-compile-buttons ${className}`} ref={dropdownRef}>
-            <div className="compile-button-group">
-                <button
+      <div className="compile-button-group">
+        <button
           className={`typst-button compile-button ${isCompiling ? 'compiling' : ''}`}
           onClick={handleCompileOrStop}
           disabled={isDisabled}
           title={
-          isCompiling ?
-          `Stop Compilation${useSharedSettings ? ' (F8)' : ''}` :
-          `Compile Typst Document${useSharedSettings ? ' (F9)' : ''}`
+            isCompiling ?
+              `Stop Compilation${useSharedSettings ? ' (F8)' : ''}` :
+              `Compile Typst Document${useSharedSettings ? ' (F9)' : ''}`
           }>
 
-                    {isCompiling ? <StopIcon /> : <PlayIcon />}
-                </button>
+          {isCompiling ? <StopIcon /> : <PlayIcon />}
+        </button>
 
-                <PdfWindowToggleButton
+        <PdfWindowToggleButton
           className="pdf-window-button"
           projectId={docUrl?.startsWith('yjs:') ? docUrl.slice(4) : docUrl || 'unknown'}
           title={t('Open PDF in new window')} />
 
 
-                <button
+        <button
           className="typst-button dropdown-toggle"
           onClick={toggleDropdown}
           title={t('Compilation Options')}>
 
-                    <ChevronDownIcon />
-                </button>
+          <ChevronDownIcon />
+        </button>
+      </div>
+
+      {isDropdownOpen &&
+        <div className="typst-dropdown">
+          <div className="main-file-display">
+            <div className="main-file-label">{t('Main file:')}</div>
+            <div className="main-file-path" title={effectiveMainFile}>
+              {getDisplayName(effectiveMainFile)}
+              {projectMainFile && <span className="shared-indicator">{t('(shared)')}</span>}
             </div>
+          </div>
+          {useSharedSettings &&
+            <div className="main-file-selector">
+              <div className="main-file-selector-label">{t('Select main file:')}</div>
+              <select
+                value={projectMainFile || userSelectedMainFile || 'auto'}
+                onChange={(e) => handleMainFileChange(e.target.value)}
+                className="main-file-select"
+                disabled={isCompiling}>
 
-            {isDropdownOpen &&
-      <div className="typst-dropdown">
-                    <div className="main-file-display">
-                        <div className="main-file-label">{t('Main file:')}</div>
-                        <div className="main-file-path" title={effectiveMainFile}>
-                            {getDisplayName(effectiveMainFile)}
-                            {projectMainFile && <span className="shared-indicator">{t('(shared)')}</span>}
-                        </div>
-                    </div>
-                    {useSharedSettings &&
-        <div className="main-file-selector">
-                            <div className="main-file-selector-label">{t('Select main file:')}</div>
-                            <select
-            value={projectMainFile || userSelectedMainFile || 'auto'}
-            onChange={(e) => handleMainFileChange(e.target.value)}
-            className="main-file-select"
-            disabled={isCompiling}>
-
-                                <option value="auto">{t('Auto-detect')}</option>
-                                {availableTypstFiles.map((filePath) =>
-            <option key={filePath} value={filePath}>
-                                        {getFileName(filePath)}
-                                    </option>
-            )}
-                            </select>
-                            <label className="share-checkbox">
-                                <input
-              type="checkbox"
-              checked={!!projectMainFile}
-              onChange={(e) => handleShareMainFile(e.target.checked)}
-              disabled={isCompiling || !effectiveMainFile} />{t('Save and share with collaborators')}
+                <option value="auto">{t('Auto-detect')}</option>
+                {availableTypstFiles.map((filePath) =>
+                  <option key={filePath} value={filePath}>
+                    {getFileName(filePath)}
+                  </option>
+                )}
+              </select>
+              <label className="share-checkbox">
+                <input
+                  type="checkbox"
+                  checked={!!projectMainFile}
+                  onChange={(e) => handleShareMainFile(e.target.checked)}
+                  disabled={isCompiling || !effectiveMainFile} />{t('Save and share with collaborators')}
 
 
-          </label>
-                        </div>
-        }
-
-                    <div className="format-selector">
-                        <div className="format-label">{t('Output Format:')}</div>
-                        <select
-            value={effectiveFormat}
-            onChange={(e) => {
-              const format = e.target.value as TypstOutputFormat;
-              if (useSharedSettings && projectFormat) {
-                if (!changeDoc) return;
-                changeDoc((d) => {
-                  if (!d.projectMetadata) {
-                    d.projectMetadata = { name: '', description: '' };
-                  }
-                  d.projectMetadata.typstOutputFormat = format;
-                });
-              } else {
-                setLocalFormat(format);
-              }
-            }}
-            className="format-select"
-            disabled={isCompiling}>
-
-                            <option value="pdf">PDF</option>
-                            <option value="svg">SVG</option>
-                            <option value="canvas">{t('Canvas')}</option>
-                        </select>
-                        {useSharedSettings &&
-          <label className="share-checkbox">
-                                <input
-              type="checkbox"
-              checked={!!projectFormat}
-              onChange={(e) => handleShareFormat(e.target.checked)}
-              disabled={isCompiling} />{t('Save and share with collaborators')}
-
-
-          </label>
+              </label>
+            </div>
           }
-                    </div>
 
-                    <div className="cache-controls">
-                        <div
-            className="cache-item clear-cache"
-            onClick={handleClearCache}
-            title={t('Clear compilation cache')}>
+          <div className="format-selector">
+            <div className="format-label">{t('Output Format:')}</div>
+            <select
+              value={effectiveFormat}
+              onChange={(e) => {
+                const format = e.target.value as TypstOutputFormat;
+                if (useSharedSettings && projectFormat) {
+                  if (!changeDoc) return;
+                  changeDoc((d) => {
+                    if (!d.projectMetadata) {
+                      d.projectMetadata = { name: '', description: '' };
+                    }
+                    d.projectMetadata.typstOutputFormat = format;
+                  });
+                } else {
+                  setLocalFormat(format);
+                }
+              }}
+              className="format-select"
+              disabled={isCompiling}>
 
-                            <TrashIcon />{t('Clear Cache')}
+              <option value="pdf">PDF</option>
+              <option value="svg">SVG</option>
+              <option value="canvas">{t('Canvas')}</option>
+            </select>
+            {useSharedSettings &&
+              <label className="share-checkbox">
+                <input
+                  type="checkbox"
+                  checked={!!projectFormat}
+                  onChange={(e) => handleShareFormat(e.target.checked)}
+                  disabled={isCompiling} />{t('Save and share with collaborators')}
 
+
+              </label>
+            }
           </div>
-                        <div
-            className="cache-item clear-and-compile"
-            onClick={handleClearCacheAndCompile}
-            title={`Clear cache and compile${useSharedSettings ? ' (Shift+F9)' : ''}`}>
 
-                            <ClearCompileIcon />{t('Clear & Compile')}
+          <div className="cache-controls">
+            <div
+              className="cache-item clear-cache"
+              onClick={handleClearCache}
+              title={t('Clear compilation cache')}>
 
+              <TrashIcon />{t('Clear Cache')}
+
+            </div>
+            <div
+              className="cache-item clear-and-compile"
+              onClick={handleClearCacheAndCompile}
+              title={t('Clear cache and compile') + `${useSharedSettings ? t(' (Shift+F9)') : ''}`}>
+
+              <ClearCompileIcon />{t('Clear & Compile')}
+
+            </div>
           </div>
-                    </div>
-                </div>
+        </div>
       }
-        </div>);
+    </div>);
 
 };
 

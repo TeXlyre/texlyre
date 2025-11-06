@@ -14,8 +14,9 @@ import {
   InfoIcon,
   MoreIcon,
   PlusIcon,
-  SyncIcon } from
-'../common/Icons.tsx';
+  SyncIcon
+} from
+  '../common/Icons.tsx';
 import Modal from '../common/Modal.tsx';
 import DropdownMenu from './DropdownMenu';
 
@@ -54,7 +55,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
   const menuRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [showPropertiesModal, setShowPropertiesModal] = useState(false);
   const [propertiesInfo, setPropertiesInfo] =
-  useState<DocumentPropertiesInfo | null>(null);
+    useState<DocumentPropertiesInfo | null>(null);
 
   // Sync state
   const [syncSession, setSyncSession] = useState<string | null>(null);
@@ -164,174 +165,174 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
   };
 
   const getSyncButtonText = () => {
-    if (!syncSession) return 'Sync All';
-    if (syncProgress.total === 0) return 'Connecting...';
+    if (!syncSession) return t('Sync All');
+    if (syncProgress.total === 0) return t('Connecting...');
     return `Sync Active (${syncProgress.current}/${syncProgress.total})`;
   };
 
   return (
     <>
-			<div className="file-explorer">
-				<div className="file-explorer-header">
-					<h3>{t('Documents')}</h3>
-					<div className="file-explorer-actions">
-						{syncSession ?
-            <button
-              className="action-btn"
-              title={t('Stop Sync')}
-              onClick={handleStopSync}
-              style={{ backgroundColor: 'var(--accent-color)' }}>
+      <div className="file-explorer">
+        <div className="file-explorer-header">
+          <h3>{t('Documents')}</h3>
+          <div className="file-explorer-actions">
+            {syncSession ?
+              <button
+                className="action-btn"
+                title={t('Stop Sync')}
+                onClick={handleStopSync}
+                style={{ backgroundColor: 'var(--accent-color)' }}>
 
-								<SyncIcon />
-							</button> :
+                <SyncIcon />
+              </button> :
 
-            <button
-              className="action-btn"
-              title={t('Sync All Documents')}
-              onClick={handleSyncAll}
-              disabled={documents.length === 0}>
+              <button
+                className="action-btn"
+                title={t('Sync All Documents')}
+                onClick={handleSyncAll}
+                disabled={documents.length === 0}>
 
-								<SyncIcon />
-							</button>
+                <SyncIcon />
+              </button>
             }
-						<button
+            <button
               className="action-btn"
               title={t('New Document')}
               onClick={onCreateDocument}>
 
-							<PlusIcon />
-						</button>
-					</div>
-				</div>
-
-				{syncSession && syncProgress.total > 0 &&
-        <div
-          className="sync-progress"
-          style={{
-            padding: '0.5rem',
-            fontSize: '0.8rem',
-            color: 'var(--accent-color)',
-            borderBottom: '1px solid var(--border-color)',
-            backgroundColor: 'var(--accent-color)'
-          }}>{t('\uD83D\uDD04')}
-
-          {getSyncButtonText()}{t('- Real-time sync active')}
+              <PlusIcon />
+            </button>
+          </div>
         </div>
+
+        {syncSession && syncProgress.total > 0 &&
+          <div
+            className="sync-progress"
+            style={{
+              padding: '0.5rem',
+              fontSize: '0.8rem',
+              color: 'var(--accent-color)',
+              borderBottom: '1px solid var(--border-color)',
+              backgroundColor: 'var(--accent-color)'
+            }}>{t('\uD83D\uDD04')}
+
+            {getSyncButtonText()}{t('- Real-time sync active')}
+          </div>
         }
 
-				<div className="file-tree">
-					{documents.map((doc) =>
-          <div
-            key={doc.id}
-            className={`file-node ${selectedDocId === doc.id ? 'selected' : ''}`}
-            onClick={() => handleDocumentSelect(doc.id)}>
+        <div className="file-tree">
+          {documents.map((doc) =>
+            <div
+              key={doc.id}
+              className={`file-node ${selectedDocId === doc.id ? 'selected' : ''}`}
+              onClick={() => handleDocumentSelect(doc.id)}>
 
-							<span className="file-icon">
-								<FileTextIcon />
-							</span>
-							{editingDocId === doc.id ?
-            <input
-              type="text"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              onBlur={handleSaveRename}
-              onKeyDown={handleKeyDown}
-              onClick={(e) => e.stopPropagation()}
-              className="file-name-input" /> :
+              <span className="file-icon">
+                <FileTextIcon />
+              </span>
+              {editingDocId === doc.id ?
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  onBlur={handleSaveRename}
+                  onKeyDown={handleKeyDown}
+                  onClick={(e) => e.stopPropagation()}
+                  className="file-name-input" /> :
 
 
-            <span className="file-name">{doc.name}</span>
-            }
+                <span className="file-name">{doc.name}</span>
+              }
 
-							<div className="file-actions">
-								<div
-                className="action-menu"
-                ref={(el) => {
-                  if (el) {
-                    menuRefs.current.set(doc.id, el);
-                  } else {
-                    menuRefs.current.delete(doc.id);
-                  }
-                }}>
-
-									<button
-                  className="action-btn menu-trigger"
-                  title={t('Options')}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActiveMenu(activeMenu === doc.id ? null : doc.id);
+              <div className="file-actions">
+                <div
+                  className="action-menu"
+                  ref={(el) => {
+                    if (el) {
+                      menuRefs.current.set(doc.id, el);
+                    } else {
+                      menuRefs.current.delete(doc.id);
+                    }
                   }}>
 
-										<MoreIcon />
-									</button>
-									<DropdownMenu
-                  targetRef={
-                  menuRefs.current.get(doc.id) ?
-                  { current: menuRefs.current.get(doc.id)! } :
-                  { current: null }
-                  }
-                  isOpen={activeMenu === doc.id}
-                  onClose={() => setActiveMenu(null)}>
-
-										<button
-                    className="dropdown-item"
-                    onClick={() => {
-                      handleStartRename(doc.id);
-                      setActiveMenu(null);
+                  <button
+                    className="action-btn menu-trigger"
+                    title={t('Options')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveMenu(activeMenu === doc.id ? null : doc.id);
                     }}>
 
-											<EditIcon />
-											<span>{t('Rename')}</span>
-										</button>
+                    <MoreIcon />
+                  </button>
+                  <DropdownMenu
+                    targetRef={
+                      menuRefs.current.get(doc.id) ?
+                        { current: menuRefs.current.get(doc.id)! } :
+                        { current: null }
+                    }
+                    isOpen={activeMenu === doc.id}
+                    onClose={() => setActiveMenu(null)}>
 
-										<button
-                    className="dropdown-item"
-                    onClick={() => {
-                      handleExportDocument(doc.id);
-                      setActiveMenu(null);
-                    }}>
+                    <button
+                      className="dropdown-item"
+                      onClick={() => {
+                        handleStartRename(doc.id);
+                        setActiveMenu(null);
+                      }}>
 
-											<DownloadIcon />
-											<span>{t('Download')}</span>
-										</button>
+                      <EditIcon />
+                      <span>{t('Rename')}</span>
+                    </button>
 
-										<button
-                    className="dropdown-item"
-                    onClick={() => {
-                      handleShowProperties(doc.id);
-                      setActiveMenu(null);
-                    }}>
+                    <button
+                      className="dropdown-item"
+                      onClick={() => {
+                        handleExportDocument(doc.id);
+                        setActiveMenu(null);
+                      }}>
 
-											<InfoIcon />
-											<span>{t('Properties')}</span>
-										</button>
-									</DropdownMenu>
-								</div>
-							</div>
-						</div>
+                      <DownloadIcon />
+                      <span>{t('Download')}</span>
+                    </button>
+
+                    <button
+                      className="dropdown-item"
+                      onClick={() => {
+                        handleShowProperties(doc.id);
+                        setActiveMenu(null);
+                      }}>
+
+                      <InfoIcon />
+                      <span>{t('Properties')}</span>
+                    </button>
+                  </DropdownMenu>
+                </div>
+              </div>
+            </div>
           )}
-				</div>
-			</div>
+        </div>
+      </div>
 
-			{showPropertiesModal && propertiesInfo &&
-      <Modal
-        isOpen={showPropertiesModal}
-        onClose={() => setShowPropertiesModal(false)}
-        title={t('Document Properties')}
-        size="medium">
+      {showPropertiesModal && propertiesInfo &&
+        <Modal
+          isOpen={showPropertiesModal}
+          onClose={() => setShowPropertiesModal(false)}
+          title={t('Document Properties')}
+          size="medium">
 
-					<div className="document-properties">
-						<div className="property-item">
-							<strong>{t('Name:')}</strong> {propertiesInfo.name}
-						</div>
-						<div className="property-item">
-							<strong>{t('Content Length:')}</strong> {propertiesInfo.contentLength}{' '}{t('characters')}
+          <div className="document-properties">
+            <div className="property-item">
+              <strong>{t('Name:')}</strong> {propertiesInfo.name}
+            </div>
+            <div className="property-item">
+              <strong>{t('Content Length:')}</strong> {propertiesInfo.contentLength}{' '}{t('characters')}
 
+            </div>
           </div>
-					</div>
-				</Modal>
+        </Modal>
       }
-		</>);
+    </>);
 
 };
 
