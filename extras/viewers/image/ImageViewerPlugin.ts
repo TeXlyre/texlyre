@@ -1,5 +1,5 @@
 // extras/viewers/image/ImageViewerPlugin.ts
-import type { ViewerPlugin } from '../../../src/plugins/PluginInterface';
+import type { ViewerPlugin } from '@/plugins/PluginInterface';
 import CombinedImageViewer from './CombinedImageViewer';
 import { imageViewerSettings } from './settings';
 import { ImageIcon } from './Icon'

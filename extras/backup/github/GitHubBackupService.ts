@@ -1,10 +1,10 @@
 // extras/backup/github/GitHubBackupService.ts
-import type { SecretsContextType } from '../../../src/contexts/SecretsContext';
-import { authService } from '../../../src/services/AuthService';
-import { UnifiedDataStructureService } from '../../../src/services/DataStructureService';
-import { fileStorageService, fileStorageEventEmitter } from '../../../src/services/FileStorageService';
-import { ProjectDataService } from '../../../src/services/ProjectDataService';
-import { getMimeType, isBinaryFile } from '../../../src/utils/fileUtils.ts';
+import type { SecretsContextType } from '@/contexts/SecretsContext';
+import { authService } from '@/services/AuthService';
+import { UnifiedDataStructureService } from '@/services/DataStructureService';
+import { fileStorageService, fileStorageEventEmitter } from '@/services/FileStorageService';
+import { ProjectDataService } from '@/services/ProjectDataService';
+import { getMimeType, isBinaryFile } from '@/utils/fileUtils.ts';
 import { gitHubApiService } from './GitHubApiService';
 
 interface BackupStatus {

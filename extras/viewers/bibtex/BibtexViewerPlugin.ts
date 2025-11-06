@@ -1,8 +1,8 @@
 // extra/viewers/bibtex/BibtexViewerPlugin.ts
-import type { ViewerPlugin } from '../../../src/plugins/PluginInterface';
+import type { ViewerPlugin } from '@/plugins/PluginInterface';
 import BibtexViewer from './BibtexViewer';
 import { bibtexViewerSettings } from './settings';
-import { BibIcon} from './Icon';
+import { BibIcon } from './Icon';
 
 const BIBTEX_EXTENSIONS = ['bib', 'bibtex'];
 const BIBTEX_MIMETYPES = ['text/x-bibtex', 'application/x-bibtex'];

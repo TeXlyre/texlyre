@@ -1,5 +1,5 @@
 // extras/renderers/pdf/settings.ts
-import type { Setting } from '../../../src/contexts/SettingsContext';
+import type { Setting } from '@/contexts/SettingsContext';
 
 export const pdfRendererSettings: Setting[] = [
 	{

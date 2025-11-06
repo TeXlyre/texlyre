@@ -1,6 +1,6 @@
 // extras/lsp/jabref/JabRefPanel.tsx
 import type React from 'react';
-import type { LSPPanelProps } from '../../../src/plugins/PluginInterface';
+import type { LSPPanelProps } from '@/plugins/PluginInterface';
 
 const JabRefPanel: React.FC<LSPPanelProps> = ({
 	className = '',

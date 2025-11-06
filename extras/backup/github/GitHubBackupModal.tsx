@@ -9,11 +9,11 @@ import {
 	SettingsIcon,
 	SyncIcon,
 	TrashIcon,
-} from '../../../src/components/common/Icons';
-import Modal from '../../../src/components/common/Modal';
-import { useAuth } from '../../../src/hooks/useAuth';
-import { useSecrets } from '../../../src/hooks/useSecrets';
-import { formatDate } from '../../../src/utils/dateUtils';
+} from '@/components/common/Icons';
+import Modal from '@/components/common/Modal';
+import { useAuth } from '@/hooks/useAuth';
+import { useSecrets } from '@/hooks/useSecrets';
+import { formatDate } from '@/utils/dateUtils';
 import { gitHubApiService } from './GitHubApiService';
 import { gitHubBackupService } from './GitHubBackupService';
 import { GitHubIcon } from './Icon';
@@ -293,7 +293,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
 			headerActions={
 				<button
 					className="modal-close-button"
-					onClick={() => {}}
+					onClick={() => { }}
 					title="GitHub Backup Settings"
 				>
 					<SettingsIcon />

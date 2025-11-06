@@ -1,5 +1,5 @@
 // extras/collaborative_viewers/bibtex/BibtexCollaborativeViewerPlugin.ts
-import type { CollaborativeViewerPlugin } from '../../../src/plugins/PluginInterface';
+import type { CollaborativeViewerPlugin } from '@/plugins/PluginInterface';
 import { bibtexViewerSettings } from '../../viewers/bibtex/settings';
 import BibtexCollaborativeViewer from './BibtexCollaborativeViewer';
 

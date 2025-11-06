@@ -1,39 +1,39 @@
 // extras/renderers/pdf_html_experimental/PdfHtmlRenderer.tsx
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useSettings } from '../../../src/hooks/useSettings';
-import type { RendererProps } from '../../../src/plugins/PluginInterface';
+import { useSettings } from '@/hooks/useSettings';
+import type { RendererProps } from '@/plugins/PluginInterface';
 import './styles.css';
 
 const PdfHtmlRenderer: React.FC<RendererProps> = ({
-	content,
-	fileName,
-	onDownload,
+  content,
+  fileName,
+  onDownload,
 }) => {
-	const { getSetting } = useSettings();
-	const pdfHtmlRendererEnable =
-		(getSetting('pdfhtml-renderer-enable')?.value as boolean) ?? true;
+  const { getSetting } = useSettings();
+  const pdfHtmlRendererEnable =
+    (getSetting('pdfhtml-renderer-enable')?.value as boolean) ?? true;
 
-	const [isLoading, setIsLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
-	const iframeRef = useRef<HTMLIFrameElement>(null);
-	const contentBlobRef = useRef<string | null>(null);
-	const viewerBlobRef = useRef<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const contentBlobRef = useRef<string | null>(null);
+  const viewerBlobRef = useRef<string | null>(null);
 
-	const cleanup = useCallback(() => {
-		if (contentBlobRef.current) {
-			URL.revokeObjectURL(contentBlobRef.current);
-			contentBlobRef.current = null;
-		}
-		if (viewerBlobRef.current) {
-			URL.revokeObjectURL(viewerBlobRef.current);
-			viewerBlobRef.current = null;
-		}
-	}, []);
+  const cleanup = useCallback(() => {
+    if (contentBlobRef.current) {
+      URL.revokeObjectURL(contentBlobRef.current);
+      contentBlobRef.current = null;
+    }
+    if (viewerBlobRef.current) {
+      URL.revokeObjectURL(viewerBlobRef.current);
+      viewerBlobRef.current = null;
+    }
+  }, []);
 
-	const createViewerHTML = useCallback(
-		(pdfBlobUrl: string) => {
-			return `<!DOCTYPE html>
+  const createViewerHTML = useCallback(
+    (pdfBlobUrl: string) => {
+      return `<!DOCTYPE html>
 <html dir="ltr" mozdisallowselectionprint>
 <head>
   <meta charset="utf-8">
@@ -440,120 +440,120 @@ const PdfHtmlRenderer: React.FC<RendererProps> = ({
   </script>
 </body>
 </html>`;
-		},
-		[fileName, onDownload],
-	);
+    },
+    [fileName, onDownload],
+  );
 
-	useEffect(() => {
-		if (!pdfHtmlRendererEnable) {
-			setError('Enhanced PDF renderer is disabled');
-			setIsLoading(false);
-			return;
-		}
+  useEffect(() => {
+    if (!pdfHtmlRendererEnable) {
+      setError('Enhanced PDF renderer is disabled');
+      setIsLoading(false);
+      return;
+    }
 
-		if (
-			!content ||
-			!(content instanceof ArrayBuffer) ||
-			content.byteLength === 0
-		) {
-			setError('Invalid or empty PDF content');
-			setIsLoading(false);
-			return;
-		}
+    if (
+      !content ||
+      !(content instanceof ArrayBuffer) ||
+      content.byteLength === 0
+    ) {
+      setError('Invalid or empty PDF content');
+      setIsLoading(false);
+      return;
+    }
 
-		let isMounted = true;
+    let isMounted = true;
 
-		const initViewer = async () => {
-			cleanup();
+    const initViewer = async () => {
+      cleanup();
 
-			try {
-				console.log('Creating PDF blob...', { size: content.byteLength });
+      try {
+        console.log('Creating PDF blob...', { size: content.byteLength });
 
-				const pdfBlob = new Blob([content], { type: 'application/pdf' });
-				const pdfBlobUrl = URL.createObjectURL(pdfBlob);
-				contentBlobRef.current = pdfBlobUrl;
+        const pdfBlob = new Blob([content], { type: 'application/pdf' });
+        const pdfBlobUrl = URL.createObjectURL(pdfBlob);
+        contentBlobRef.current = pdfBlobUrl;
 
-				console.log('Creating viewer HTML...');
-				const viewerHTML = createViewerHTML(pdfBlobUrl);
-				const viewerBlob = new Blob([viewerHTML], { type: 'text/html' });
-				const viewerUrl = URL.createObjectURL(viewerBlob);
-				viewerBlobRef.current = viewerUrl;
+        console.log('Creating viewer HTML...');
+        const viewerHTML = createViewerHTML(pdfBlobUrl);
+        const viewerBlob = new Blob([viewerHTML], { type: 'text/html' });
+        const viewerUrl = URL.createObjectURL(viewerBlob);
+        viewerBlobRef.current = viewerUrl;
 
-				if (isMounted && iframeRef.current) {
-					console.log('Loading viewer iframe...');
-					iframeRef.current.src = viewerUrl;
-				}
-			} catch (err) {
-				console.error('PdfHtmlRenderer: Error creating viewer:', err);
-				if (isMounted) {
-					setError(`Failed to load PDF: ${err.message || err}`);
-					setIsLoading(false);
-				}
-			}
-		};
+        if (isMounted && iframeRef.current) {
+          console.log('Loading viewer iframe...');
+          iframeRef.current.src = viewerUrl;
+        }
+      } catch (err) {
+        console.error('PdfHtmlRenderer: Error creating viewer:', err);
+        if (isMounted) {
+          setError(`Failed to load PDF: ${err.message || err}`);
+          setIsLoading(false);
+        }
+      }
+    };
 
-		initViewer();
+    initViewer();
 
-		return () => {
-			isMounted = false;
-			cleanup();
-		};
-	}, [content, pdfHtmlRendererEnable, cleanup, createViewerHTML]);
+    return () => {
+      isMounted = false;
+      cleanup();
+    };
+  }, [content, pdfHtmlRendererEnable, cleanup, createViewerHTML]);
 
-	const handleIframeLoad = useCallback(() => {
-		console.log('Iframe loaded');
-		setIsLoading(false);
-	}, []);
+  const handleIframeLoad = useCallback(() => {
+    console.log('Iframe loaded');
+    setIsLoading(false);
+  }, []);
 
-	const handleIframeError = useCallback(() => {
-		console.error('Iframe failed to load');
-		setError('Failed to load PDF viewer');
-		setIsLoading(false);
-	}, []);
+  const handleIframeError = useCallback(() => {
+    console.error('Iframe failed to load');
+    setError('Failed to load PDF viewer');
+    setIsLoading(false);
+  }, []);
 
-	useEffect(() => {
-		const handleMessage = (event: MessageEvent) => {
-			if (event.data?.type === 'DOWNLOAD_REQUEST' && onDownload && fileName) {
-				onDownload(fileName);
-			} else if (event.data?.type === 'PDF_LOADED') {
-				setIsLoading(false);
-				setError(null);
-			} else if (event.data?.type === 'PDF_ERROR') {
-				setError(event.data.message || 'Failed to load PDF');
-				setIsLoading(false);
-			}
-		};
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'DOWNLOAD_REQUEST' && onDownload && fileName) {
+        onDownload(fileName);
+      } else if (event.data?.type === 'PDF_LOADED') {
+        setIsLoading(false);
+        setError(null);
+      } else if (event.data?.type === 'PDF_ERROR') {
+        setError(event.data.message || 'Failed to load PDF');
+        setIsLoading(false);
+      }
+    };
 
-		window.addEventListener('message', handleMessage);
-		return () => window.removeEventListener('message', handleMessage);
-	}, [onDownload, fileName]);
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [onDownload, fileName]);
 
-	if (!pdfHtmlRendererEnable) {
-		return (
-			<div className="pdf-renderer-container">
-				<div className="pdf-renderer-error">
-					Enhanced PDF renderer is disabled. Please enable it in settings to use
-					this renderer.
-				</div>
-			</div>
-		);
-	}
+  if (!pdfHtmlRendererEnable) {
+    return (
+      <div className="pdf-renderer-container">
+        <div className="pdf-renderer-error">
+          Enhanced PDF renderer is disabled. Please enable it in settings to use
+          this renderer.
+        </div>
+      </div>
+    );
+  }
 
-	return (
-		<div className="pdf-renderer-container">
-			<iframe
-				ref={iframeRef}
-				className="pdf-renderer-iframe"
-				title="PDF Viewer"
-				onLoad={handleIframeLoad}
-				onError={handleIframeError}
-			/>
-			{isLoading && (
-				<div className="pdf-renderer-loading">Loading PDF document...</div>
-			)}
-			{error && <div className="pdf-renderer-error">{error}</div>}
-		</div>
-	);
+  return (
+    <div className="pdf-renderer-container">
+      <iframe
+        ref={iframeRef}
+        className="pdf-renderer-iframe"
+        title="PDF Viewer"
+        onLoad={handleIframeLoad}
+        onError={handleIframeError}
+      />
+      {isLoading && (
+        <div className="pdf-renderer-loading">Loading PDF document...</div>
+      )}
+      {error && <div className="pdf-renderer-error">{error}</div>}
+    </div>
+  );
 };
 
 export default PdfHtmlRenderer;

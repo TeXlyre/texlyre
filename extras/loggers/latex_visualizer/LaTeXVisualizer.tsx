@@ -2,8 +2,8 @@
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
-import { PluginHeader } from '../../../src/components/common/PluginHeader';
-import type { LoggerProps } from '../../../src/plugins/PluginInterface';
+import { PluginHeader } from '@/components/common/PluginHeader';
+import type { LoggerProps } from '@/plugins/PluginInterface';
 import './styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './LaTeXVisualizerPlugin';
 

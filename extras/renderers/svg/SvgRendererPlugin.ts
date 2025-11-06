@@ -1,5 +1,5 @@
 // extras/renderers/svg/SvgRendererPlugin.ts
-import type { RendererPlugin } from '../../../src/plugins/PluginInterface';
+import type { RendererPlugin } from '@/plugins/PluginInterface';
 import SvgRenderer from './SvgRenderer';
 import { svgRendererSettings } from './settings';
 

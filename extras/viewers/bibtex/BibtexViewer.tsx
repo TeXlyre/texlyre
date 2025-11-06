@@ -8,16 +8,16 @@ import {
 	OptionsIcon,
 	SaveIcon,
 	ViewIcon,
-} from '../../../src/components/common/Icons';
+} from '@/components/common/Icons';
 import {
 	PluginControlGroup,
 	PluginHeader,
-} from '../../../src/components/common/PluginHeader';
-import { usePluginFileInfo } from '../../../src/hooks/usePluginFileInfo';
-import { useSettings } from '../../../src/hooks/useSettings';
-import type { ViewerProps } from '../../../src/plugins/PluginInterface';
-import { EditorLoader } from '../../../src/services/EditorLoader';
-import { fileStorageService } from '../../../src/services/FileStorageService';
+} from '@/components/common/PluginHeader';
+import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
+import { useSettings } from '@/hooks/useSettings';
+import type { ViewerProps } from '@/plugins/PluginInterface';
+import { EditorLoader } from '@/services/EditorLoader';
+import { fileStorageService } from '@/services/FileStorageService';
 import { TidyOptionsPanel } from './TidyOptionsPanel';
 import { type TidyOptions, getPresetOptions } from './tidyOptions';
 import { BibtexTableView } from './BibtexTableView';

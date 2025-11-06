@@ -1,5 +1,5 @@
 // extras/renderers/pdf_html_experimental/PdfRendererPlugin.ts
-import type { RendererPlugin } from '../../../src/plugins/PluginInterface';
+import type { RendererPlugin } from '@/plugins/PluginInterface';
 import PdfHtmlRenderer from './PdfHtmlRenderer.tsx';
 import { pdfHtmlRendererSettings } from './settings';
 

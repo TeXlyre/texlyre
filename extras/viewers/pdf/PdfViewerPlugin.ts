@@ -1,5 +1,5 @@
 // extras/viewers/pdf/PdfViewerPlugin.ts
-import type { ViewerPlugin } from '../../../src/plugins/PluginInterface';
+import type { ViewerPlugin } from '@/plugins/PluginInterface';
 import PdfViewer from './PdfViewer';
 import { pdfViewerSettings } from './settings';
 import { PdfIcon } from './Icon'

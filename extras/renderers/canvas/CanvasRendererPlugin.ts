@@ -1,4 +1,4 @@
-import type { RendererPlugin } from '../../../src/plugins/PluginInterface';
+import type { RendererPlugin } from '@/plugins/PluginInterface';
 import CanvasRenderer from './CanvasRenderer';
 import { canvasRendererSettings } from './settings';
 

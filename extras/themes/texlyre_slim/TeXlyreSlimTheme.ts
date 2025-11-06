@@ -3,7 +3,7 @@ import type {
 	ThemeLayout,
 	ThemePlugin,
 	ThemeVariant,
-} from '../../../src/plugins/PluginInterface';
+} from '@/plugins/PluginInterface';
 import { themes } from './colors';
 import './styles/index.css';
 

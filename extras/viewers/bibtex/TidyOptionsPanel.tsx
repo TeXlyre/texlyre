@@ -1,7 +1,7 @@
 // extras/viewers/bibtex/TidyOptionsPanel.tsx
 import type React from 'react';
 
-import { CleanIcon, ResetIcon } from '../../../src/components/common/Icons';
+import { CleanIcon, ResetIcon } from '@/components/common/Icons';
 import type { TidyOptions } from './tidyOptions';
 
 interface TidyOptionsPanelProps {

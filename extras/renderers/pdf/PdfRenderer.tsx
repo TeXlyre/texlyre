@@ -16,11 +16,11 @@ import {
 	ZoomOutIcon,
 	ExpandIcon,
 	MinimizeIcon,
-} from '../../../src/components/common/Icons';
+} from '@/components/common/Icons';
 import { pdfRendererSettings } from './settings';
-import { useSettings } from '../../../src/hooks/useSettings';
-import { useProperties } from '../../../src/hooks/useProperties';
-import type { RendererProps } from '../../../src/plugins/PluginInterface';
+import { useSettings } from '@/hooks/useSettings';
+import { useProperties } from '@/hooks/useProperties';
+import type { RendererProps } from '@/plugins/PluginInterface';
 import './styles.css';
 
 const BASE_PATH = __BASE_PATH__

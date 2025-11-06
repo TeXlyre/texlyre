@@ -1,5 +1,5 @@
 // extras/backup/GitHubBackupPlugin.ts
-import type { BackupPlugin } from '../../../src/plugins/PluginInterface';
+import type { BackupPlugin } from '@/plugins/PluginInterface';
 import GitHubBackupModal from './GitHubBackupModal';
 import { gitHubBackupService } from './GitHubBackupService';
 import GitHubBackupStatusIndicator from './GitHubBackupStatusIndicator';

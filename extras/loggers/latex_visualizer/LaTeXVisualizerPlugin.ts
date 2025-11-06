@@ -1,5 +1,5 @@
 // extras/loggers/latex_visualizer/LaTeXVisualizerPlugin.ts
-import type { LoggerPlugin } from '../../../src/plugins/PluginInterface';
+import type { LoggerPlugin } from '@/plugins/PluginInterface';
 import LaTeXVisualizer from './LaTeXVisualizer';
 
 export const PLUGIN_NAME = 'LaTeX Log Parser';

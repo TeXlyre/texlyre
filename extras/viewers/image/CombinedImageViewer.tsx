@@ -16,15 +16,15 @@ import {
 	SaveIcon,
 	ZoomInIcon,
 	ZoomOutIcon,
-} from '../../../src/components/common/Icons';
+} from '@/components/common/Icons';
 import {
 	PluginControlGroup,
 	PluginHeader,
-} from '../../../src/components/common/PluginHeader';
-import { usePluginFileInfo } from '../../../src/hooks/usePluginFileInfo';
-import { useSettings } from '../../../src/hooks/useSettings';
-import type { ViewerProps } from '../../../src/plugins/PluginInterface';
-import { fileStorageService } from '../../../src/services/FileStorageService';
+} from '@/components/common/PluginHeader';
+import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
+import { useSettings } from '@/hooks/useSettings';
+import type { ViewerProps } from '@/plugins/PluginInterface';
+import { fileStorageService } from '@/services/FileStorageService';
 import './styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './ImageViewerPlugin';
 

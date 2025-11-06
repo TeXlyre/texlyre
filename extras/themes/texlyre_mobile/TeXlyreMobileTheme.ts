@@ -3,7 +3,7 @@ import type {
 	ThemeLayout,
 	ThemePlugin,
 	ThemeVariant,
-} from '../../../src/plugins/PluginInterface';
+} from '@/plugins/PluginInterface';
 import { themes } from './colors';
 import './styles/index.css';
 
@@ -47,14 +47,14 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 		if (existingNav) {
 			existingNav.remove();
 		}
-		
+
 		document.body.className = document.body.className.replace(/mobile-view-\w+/g, '');
-		
+
 		if (mobileClickHandler) {
 			document.removeEventListener('click', mobileClickHandler);
 			mobileClickHandler = null;
 		}
-		
+
 		if (hashChangeHandler) {
 			window.removeEventListener('hashchange', hashChangeHandler);
 			hashChangeHandler = null;
@@ -86,7 +86,7 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 				existingNav.remove();
 			}
 			createMobileNavigation();
-			
+
 			if (isProjectsView()) {
 				currentView = 'editor';
 				updateMobileView('editor');
@@ -104,7 +104,7 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 		const handleViewChange = (view: string) => {
 			currentView = view as typeof currentView;
 			updateMobileView(view);
-			
+
 			setTimeout(() => {
 				if (view === 'output') {
 					const embed = document.querySelector('.pdf-viewer embed');
@@ -141,7 +141,7 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 
 		const nav = document.createElement('div');
 		nav.className = 'mobile-bottom-nav';
-		
+
 		if (isProjectsView()) {
 			nav.innerHTML = `
 				<button class="mobile-nav-button ${currentView === 'explorer' ? 'active' : ''}" data-view="explorer">
@@ -240,9 +240,9 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 
 			document.documentElement.setAttribute('data-theme', variantId);
 			document.documentElement.setAttribute('data-theme-plugin', 'texlyre-mobile');
-			
+
 			handleMobileNavigation();
-			
+
 			const savedView = localStorage.getItem('texlyre-mobile-view');
 			if (savedView) {
 				currentView = savedView as typeof currentView;

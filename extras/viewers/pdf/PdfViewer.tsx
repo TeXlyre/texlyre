@@ -10,14 +10,14 @@ import {
 	DownloadIcon,
 	ZoomInIcon,
 	ZoomOutIcon,
-} from '../../../src/components/common/Icons';
+} from '@/components/common/Icons';
 import {
 	PluginControlGroup,
 	PluginHeader,
-} from '../../../src/components/common/PluginHeader';
-import { usePluginFileInfo } from '../../../src/hooks/usePluginFileInfo';
-import { useSettings } from '../../../src/hooks/useSettings';
-import type { ViewerProps } from '../../../src/plugins/PluginInterface';
+} from '@/components/common/PluginHeader';
+import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
+import { useSettings } from '@/hooks/useSettings';
+import type { ViewerProps } from '@/plugins/PluginInterface';
 import './styles.css';
 import { pdfViewerSettings } from './settings';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './PdfViewerPlugin';

@@ -1,5 +1,5 @@
 // extras/renderers/pdf/PdfRendererPlugin.ts
-import type { RendererPlugin } from '../../../src/plugins/PluginInterface';
+import type { RendererPlugin } from '@/plugins/PluginInterface';
 import PdfRenderer from './PdfRenderer';
 import { pdfRendererSettings } from './settings';
 
