@@ -1,46 +1,46 @@
 // extras/viewers/image/settings.ts
+import { t } from "@/i18n";
 import type { Setting } from '@/contexts/SettingsContext';
 
 export const imageViewerSettings: Setting[] = [
-	{
-		id: 'image-viewer-auto-center',
-		category: 'Viewers',
-		subcategory: 'Image Viewer',
-		type: 'checkbox',
-		label: 'Auto-center images',
-		description: 'Automatically center images when they are loaded',
-		defaultValue: true,
-	},
-	{
-		id: 'image-viewer-quality',
-		category: 'Viewers',
-		subcategory: 'Image Viewer',
-		type: 'select',
-		label: 'Image quality',
-		description: 'Set the quality of image rendering',
-		defaultValue: 'high',
-		options: [
-			{ label: 'Low (Pixelated)', value: 'low' },
-			{ label: 'Medium (Crisp Edges)', value: 'medium' },
-			{ label: 'High (Auto)', value: 'high' },
-		],
-	},
-	{
-		id: 'image-viewer-enable-panning',
-		category: 'Viewers',
-		subcategory: 'Image Viewer',
-		type: 'checkbox',
-		label: 'Enable panning',
-		description: 'Allow dragging images to pan around when zoomed',
-		defaultValue: true,
-	},
-	{
-		id: 'image-viewer-enable-filters',
-		category: 'Viewers',
-		subcategory: 'Image Viewer',
-		type: 'checkbox',
-		label: 'Enable filters',
-		description: 'Allow brightness and contrast adjustments',
-		defaultValue: true,
-	},
-];
+{
+  id: 'image-viewer-auto-center',
+  category: t("Viewers"),
+  subcategory: t("Image Viewer"),
+  type: 'checkbox',
+  label: t("Auto-center images"),
+  description: t("Automatically center images when they are loaded"),
+  defaultValue: true
+},
+{
+  id: 'image-viewer-quality',
+  category: t("Viewers"),
+  subcategory: t("Image Viewer"),
+  type: 'select',
+  label: t("Image quality"),
+  description: t("Set the quality of image rendering"),
+  defaultValue: 'high',
+  options: [
+  { label: t("Low (Pixelated)"), value: 'low' },
+  { label: t("Medium (Crisp Edges)"), value: 'medium' },
+  { label: t("High (Auto)"), value: 'high' }]
+
+},
+{
+  id: 'image-viewer-enable-panning',
+  category: t("Viewers"),
+  subcategory: t("Image Viewer"),
+  type: 'checkbox',
+  label: t("Enable panning"),
+  description: t("Allow dragging images to pan around when zoomed"),
+  defaultValue: true
+},
+{
+  id: 'image-viewer-enable-filters',
+  category: t("Viewers"),
+  subcategory: t("Image Viewer"),
+  type: 'checkbox',
+  label: t("Enable filters"),
+  description: t("Allow brightness and contrast adjustments"),
+  defaultValue: true
+}];

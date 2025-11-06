@@ -1,20 +1,21 @@
 // extras/viewers/pdf/PdfViewer.tsx
+import { t } from "@/i18n";
 import * as pdfjs from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
 import {
-	ChevronLeftIcon,
-	ChevronRightIcon,
-	DownloadIcon,
-	ZoomInIcon,
-	ZoomOutIcon,
-} from '@/components/common/Icons';
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  DownloadIcon,
+  ZoomInIcon,
+  ZoomOutIcon } from
+'@/components/common/Icons';
 import {
-	PluginControlGroup,
-	PluginHeader,
-} from '@/components/common/PluginHeader';
+  PluginControlGroup,
+  PluginHeader } from
+'@/components/common/PluginHeader';
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
 import type { ViewerProps } from '@/plugins/PluginInterface';
@@ -22,489 +23,489 @@ import './styles.css';
 import { pdfViewerSettings } from './settings';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './PdfViewerPlugin';
 
-const BASE_PATH = __BASE_PATH__
+const BASE_PATH = __BASE_PATH__;
 
 if (!pdfjs.GlobalWorkerOptions.workerSrc) {
-	pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker;
+  pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker;
 }
 
 const PdfViewer: React.FC<ViewerProps> = ({
-	content,
-	mimeType,
-	fileName,
-	fileId,
+  content,
+  mimeType,
+  fileName,
+  fileId
 }) => {
-	const { getSetting } = useSettings();
-	const fileInfo = usePluginFileInfo(fileId, fileName);
+  const { getSetting } = useSettings();
+  const fileInfo = usePluginFileInfo(fileId, fileName);
 
-	const autoScale =
-		(getSetting('pdf-viewer-auto-scale')?.value as boolean) ?? true;
-	const renderingQuality =
-		(getSetting('pdf-viewer-rendering-quality')?.value as
-			| 'low'
-			| 'medium'
-			| 'high') ?? 'high';
+  const autoScale =
+  getSetting('pdf-viewer-auto-scale')?.value as boolean ?? true;
+  const renderingQuality =
+  getSetting('pdf-viewer-rendering-quality')?.value as
+  'low' |
+  'medium' |
+  'high' ?? 'high';
 
-	const _qualityScaleMap = {
-		low: 0.75,
-		medium: 1.0,
-		high: 1.5,
-	};
+  const _qualityScaleMap = {
+    low: 0.75,
+    medium: 1.0,
+    high: 1.5
+  };
 
-	const [isLoading, setIsLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
-	const [pdfDocument, setPdfDocument] = useState<pdfjs.PDFDocumentProxy | null>(
-		null,
-	);
-	const [currentPage, setCurrentPage] = useState(1);
-	const [totalPages, setTotalPages] = useState(0);
-	const [scale, setScale] = useState(1.0);
-	const canvasRef = useRef<HTMLCanvasElement>(null);
-	const pdfContainerRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pdfDocument, setPdfDocument] = useState<pdfjs.PDFDocumentProxy | null>(
+    null
+  );
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [scale, setScale] = useState(1.0);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const pdfContainerRef = useRef<HTMLDivElement>(null);
 
-	const originalContentRef = useRef<ArrayBuffer | null>(null);
-	const contentRef = useRef<ArrayBuffer | null>(null);
+  const originalContentRef = useRef<ArrayBuffer | null>(null);
+  const contentRef = useRef<ArrayBuffer | null>(null);
 
-	useEffect(() => {
-		if (content instanceof ArrayBuffer && content.byteLength > 0) {
-			originalContentRef.current = content.slice(0);
-			console.log('PdfViewer: Original content stored', {
-				size: content.byteLength,
-				type: content.constructor.name,
-			});
-		}
-	}, [content]);
+  useEffect(() => {
+    if (content instanceof ArrayBuffer && content.byteLength > 0) {
+      originalContentRef.current = content.slice(0);
+      console.log('PdfViewer: Original content stored', {
+        size: content.byteLength,
+        type: content.constructor.name
+      });
+    }
+  }, [content]);
 
-	useEffect(() => {
-		const isMounted = { current: true };
-		const loadingTaskRef = { current: null };
+  useEffect(() => {
+    const isMounted = { current: true };
+    const loadingTaskRef = { current: null };
 
-		const initializePdf = async () => {
-			if (loadingTaskRef.current) {
-				try {
-					loadingTaskRef.current.destroy();
-				} catch (_e) {
-					// Ignore errors during cancellation
-				}
-				loadingTaskRef.current = null;
-			}
+    const initializePdf = async () => {
+      if (loadingTaskRef.current) {
+        try {
+          loadingTaskRef.current.destroy();
+        } catch (_e) {
 
-			setPdfDocument((prevDoc) => {
-				if (prevDoc) {
-					try {
-						prevDoc.destroy();
-					} catch (e) {
-						console.error('Error destroying previous PDF document:', e);
-					}
-				}
-				return null;
-			});
+          // Ignore errors during cancellation
+        }loadingTaskRef.current = null;
+      }
 
-			setCurrentPage(1);
-			setTotalPages(0);
-			setError(null);
+      setPdfDocument((prevDoc) => {
+        if (prevDoc) {
+          try {
+            prevDoc.destroy();
+          } catch (e) {
+            console.error('Error destroying previous PDF document:', e);
+          }
+        }
+        return null;
+      });
 
-			if (content instanceof ArrayBuffer) {
-				try {
-					setIsLoading(true);
+      setCurrentPage(1);
+      setTotalPages(0);
+      setError(null);
 
-					const contentCopy = content.slice(0);
-					contentRef.current = contentCopy;
+      if (content instanceof ArrayBuffer) {
+        try {
+          setIsLoading(true);
 
-					await loadPdf(loadingTaskRef, isMounted);
-				} catch (err) {
-					if (isMounted.current) {
-						console.error('Error initializing PDF:', err);
-						setError('Failed to initialize PDF document.');
-						setIsLoading(false);
-					}
-				}
-			} else {
-				if (isMounted.current) {
-					setError('Invalid PDF content.');
-					setIsLoading(false);
-				}
-			}
-		};
+          const contentCopy = content.slice(0);
+          contentRef.current = contentCopy;
 
-		initializePdf();
+          await loadPdf(loadingTaskRef, isMounted);
+        } catch (err) {
+          if (isMounted.current) {
+            console.error('Error initializing PDF:', err);
+            setError('Failed to initialize PDF document.');
+            setIsLoading(false);
+          }
+        }
+      } else {
+        if (isMounted.current) {
+          setError('Invalid PDF content.');
+          setIsLoading(false);
+        }
+      }
+    };
 
-		return () => {
-			isMounted.current = false;
+    initializePdf();
 
-			if (loadingTaskRef.current) {
-				try {
-					loadingTaskRef.current.destroy();
-				} catch (_e) {
-					// Ignore errors during cancellation
-				}
-				loadingTaskRef.current = null;
-			}
+    return () => {
+      isMounted.current = false;
 
-			setPdfDocument((prevDoc) => {
-				if (prevDoc) {
-					try {
-						prevDoc.destroy();
-					} catch (e) {
-						console.error('Error destroying PDF document:', e);
-					}
-				}
-				return null;
-			});
+      if (loadingTaskRef.current) {
+        try {
+          loadingTaskRef.current.destroy();
+        } catch (_e) {
 
-			contentRef.current = null;
-		};
-	}, [content]);
+          // Ignore errors during cancellation
+        }loadingTaskRef.current = null;
+      }
 
-	const loadPdf = async (
-		loadingTaskRef: { current: unknown },
-		isMounted: { current: boolean },
-	) => {
-		if (!contentRef.current || !isMounted.current) {
-			return;
-		}
+      setPdfDocument((prevDoc) => {
+        if (prevDoc) {
+          try {
+            prevDoc.destroy();
+          } catch (e) {
+            console.error('Error destroying PDF document:', e);
+          }
+        }
+        return null;
+      });
 
-		try {
-			const loadingTask = pdfjs.getDocument({
-				data: new Uint8Array(contentRef.current),
-				cMapUrl: `${BASE_PATH}/assets/cmaps/`,  //  import.meta.env.PROD ? "/texlyre/assets/cmaps/" : "/texlyre/assets/cmaps/", for now, use the same path in dev and prod
-				cMapPacked: true,
-			});
+      contentRef.current = null;
+    };
+  }, [content]);
 
-			loadingTaskRef.current = loadingTask;
+  const loadPdf = async (
+  loadingTaskRef: {current: unknown;},
+  isMounted: {current: boolean;}) =>
+  {
+    if (!contentRef.current || !isMounted.current) {
+      return;
+    }
 
-			const pdf = await loadingTask.promise;
+    try {
+      const loadingTask = pdfjs.getDocument({
+        data: new Uint8Array(contentRef.current),
+        cMapUrl: `${BASE_PATH}/assets/cmaps/`, //  import.meta.env.PROD ? "/texlyre/assets/cmaps/" : "/texlyre/assets/cmaps/", for now, use the same path in dev and prod
+        cMapPacked: true
+      });
 
-			if (!isMounted.current) {
-				if (pdf) {
-					try {
-						pdf.destroy();
-					} catch (_e) {
-						// Ignore cleanup errors
-					}
-				}
-				return;
-			}
+      loadingTaskRef.current = loadingTask;
 
-			loadingTaskRef.current = null;
+      const pdf = await loadingTask.promise;
 
-			setPdfDocument(pdf);
-			setTotalPages(pdf.numPages);
-			setCurrentPage(1);
-			setError(null);
-		} catch (err) {
-			if (isMounted.current) {
-				if (
-					err instanceof Error &&
-					!err.message.includes('Loading task cancelled') &&
-					!err.message.includes('Worker was destroyed')
-				) {
-					console.error('Error loading PDF:', err);
-					setError('Failed to load PDF document.');
-				}
-			}
-		} finally {
-			if (isMounted.current) {
-				setIsLoading(false);
-			}
-		}
-	};
+      if (!isMounted.current) {
+        if (pdf) {
+          try {
+            pdf.destroy();
+          } catch (_e) {
 
-	useEffect(() => {
-		const isMounted = { current: true };
-		const renderTaskRef = { current: null };
+            // Ignore cleanup errors
+          }}
+        return;
+      }
 
-		const renderPage = async () => {
-			if (!pdfDocument || !canvasRef.current || !isMounted.current) return;
+      loadingTaskRef.current = null;
 
-			if (renderTaskRef.current) {
-				try {
-					await renderTaskRef.current.cancel();
-				} catch (_e) {
-					// Ignore cancellation errors
-				}
-				renderTaskRef.current = null;
-			}
+      setPdfDocument(pdf);
+      setTotalPages(pdf.numPages);
+      setCurrentPage(1);
+      setError(null);
+    } catch (err) {
+      if (isMounted.current) {
+        if (
+        err instanceof Error &&
+        !err.message.includes('Loading task cancelled') &&
+        !err.message.includes('Worker was destroyed'))
+        {
+          console.error('Error loading PDF:', err);
+          setError('Failed to load PDF document.');
+        }
+      }
+    } finally {
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
+    }
+  };
 
-			try {
-				const page = await pdfDocument.getPage(currentPage);
+  useEffect(() => {
+    const isMounted = { current: true };
+    const renderTaskRef = { current: null };
 
-				if (!isMounted.current) {
-					try {
-						page.cleanup();
-					} catch (_e) {
-						// Ignore cleanup errors
-					}
-					return;
-				}
+    const renderPage = async () => {
+      if (!pdfDocument || !canvasRef.current || !isMounted.current) return;
 
-				let renderScale = scale;
+      if (renderTaskRef.current) {
+        try {
+          await renderTaskRef.current.cancel();
+        } catch (_e) {
 
-				if (autoScale && pdfContainerRef.current) {
-					const container = pdfContainerRef.current;
-					const containerRect = container.getBoundingClientRect();
+          // Ignore cancellation errors
+        }renderTaskRef.current = null;
+      }
 
-					if (containerRect.width > 100 && containerRect.height > 100) {
-						const baseViewport = page.getViewport({ scale: 1.0 });
-						const availableWidth = containerRect.width * 0.9;
-						const availableHeight = containerRect.height * 0.9;
+      try {
+        const page = await pdfDocument.getPage(currentPage);
 
-						const scaleX = availableWidth / baseViewport.width;
-						const scaleY = availableHeight / baseViewport.height;
-						const fitScale = Math.min(scaleX, scaleY);
+        if (!isMounted.current) {
+          try {
+            page.cleanup();
+          } catch (_e) {
 
-						renderScale = Math.max(fitScale, 0.5) * scale;
-					}
-				}
+            // Ignore cleanup errors
+          }return;
+        }
 
-				const viewport = page.getViewport({ scale: renderScale });
+        let renderScale = scale;
 
-				const canvas = canvasRef.current;
-				if (!canvas) return;
+        if (autoScale && pdfContainerRef.current) {
+          const container = pdfContainerRef.current;
+          const containerRect = container.getBoundingClientRect();
 
-				const context = canvas.getContext('2d');
+          if (containerRect.width > 100 && containerRect.height > 100) {
+            const baseViewport = page.getViewport({ scale: 1.0 });
+            const availableWidth = containerRect.width * 0.9;
+            const availableHeight = containerRect.height * 0.9;
 
-				if (!context) {
-					throw new Error('Could not get canvas context');
-				}
+            const scaleX = availableWidth / baseViewport.width;
+            const scaleY = availableHeight / baseViewport.height;
+            const fitScale = Math.min(scaleX, scaleY);
 
-				context.clearRect(0, 0, canvas.width, canvas.height);
+            renderScale = Math.max(fitScale, 0.5) * scale;
+          }
+        }
 
-				canvas.height = viewport.height;
-				canvas.width = viewport.width;
+        const viewport = page.getViewport({ scale: renderScale });
 
-				const renderContext = {
-					canvasContext: context,
-					viewport: viewport,
-				};
+        const canvas = canvasRef.current;
+        if (!canvas) return;
 
-				renderTaskRef.current = page.render(renderContext);
-				await renderTaskRef.current.promise;
+        const context = canvas.getContext('2d');
 
-				renderTaskRef.current = null;
-			} catch (err) {
-				if (
-					isMounted.current &&
-					err instanceof Error &&
-					!err.message.includes('Rendering cancelled') &&
-					!err.message.includes('Worker was destroyed')
-				) {
-					console.error('Error rendering PDF page:', err);
-					setError(`Failed to render page ${currentPage}.`);
-				}
-			}
-		};
+        if (!context) {
+          throw new Error('Could not get canvas context');
+        }
 
-		const timerId = setTimeout(() => {
-			renderPage();
-		}, 200);
+        context.clearRect(0, 0, canvas.width, canvas.height);
 
-		return () => {
-			clearTimeout(timerId);
-			isMounted.current = false;
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
 
-			if (renderTaskRef.current) {
-				try {
-					renderTaskRef.current.cancel();
-				} catch (_e) {
-					// Ignore cancellation errors
-				}
-				renderTaskRef.current = null;
-			}
-		};
-	}, [pdfDocument, currentPage, scale, autoScale, renderingQuality]);
+        const renderContext = {
+          canvasContext: context,
+          viewport: viewport
+        };
 
-	const handlePreviousPage = () => {
-		if (currentPage > 1) {
-			setCurrentPage(currentPage - 1);
-		}
-	};
+        renderTaskRef.current = page.render(renderContext);
+        await renderTaskRef.current.promise;
 
-	const handleNextPage = () => {
-		if (currentPage < totalPages) {
-			setCurrentPage(currentPage + 1);
-		}
-	};
+        renderTaskRef.current = null;
+      } catch (err) {
+        if (
+        isMounted.current &&
+        err instanceof Error &&
+        !err.message.includes('Rendering cancelled') &&
+        !err.message.includes('Worker was destroyed'))
+        {
+          console.error('Error rendering PDF page:', err);
+          setError(`Failed to render page ${currentPage}.`);
+        }
+      }
+    };
 
-	const handleZoomIn = () => {
-		setScale((prevScale) => Math.min(prevScale + 0.25, 3));
-	};
+    const timerId = setTimeout(() => {
+      renderPage();
+    }, 200);
 
-	const handleZoomOut = () => {
-		setScale((prevScale) => Math.max(prevScale - 0.25, 0.25));
-	};
+    return () => {
+      clearTimeout(timerId);
+      isMounted.current = false;
 
-	const handleZoomChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-		const value = event.target.value;
-		if (value === 'custom') return;
-		setScale(parseFloat(value) / 100);
-	};
+      if (renderTaskRef.current) {
+        try {
+          renderTaskRef.current.cancel();
+        } catch (_e) {
 
-	const handlePageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		const pageNumber = Number.parseInt(event.target.value);
-		if (
-			!Number.isNaN(pageNumber) &&
-			pageNumber >= 1 &&
-			pageNumber <= totalPages
-		) {
-			setCurrentPage(pageNumber);
-		}
-	};
+          // Ignore cancellation errors
+        }renderTaskRef.current = null;
+      }
+    };
+  }, [pdfDocument, currentPage, scale, autoScale, renderingQuality]);
 
-	const handleExport = () => {
-		const contentToExport = originalContentRef.current || contentRef.current;
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
-		if (contentToExport) {
-			console.log('PdfViewer: Exporting PDF', {
-				size: contentToExport.byteLength,
-				fileName: fileName,
-				source: originalContentRef.current ? 'original' : 'processed',
-			});
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
-			const blob = new Blob([contentToExport], { type: 'application/pdf' });
-			const url = URL.createObjectURL(blob);
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = fileName;
-			document.body.appendChild(a);
-			a.click();
-			document.body.removeChild(a);
-			URL.revokeObjectURL(url);
-		} else {
-			console.error('PdfViewer: No valid PDF content available for export');
-			setError('Cannot export: PDF content is not available');
-		}
-	};
+  const handleZoomIn = () => {
+    setScale((prevScale) => Math.min(prevScale + 0.25, 3));
+  };
 
-	const tooltipInfo = [
-		`Rendering quality: ${renderingQuality}`,
-		`Auto-scale: ${autoScale ? 'enabled' : 'disabled'}`,
-		`Pages: ${totalPages}`,
-		`Current page: ${currentPage}`,
-		`MIME Type: ${mimeType || 'application/pdf'}`,
-		`Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : 'Unknown'}`,
-	];
+  const handleZoomOut = () => {
+    setScale((prevScale) => Math.max(prevScale - 0.25, 0.25));
+  };
 
-	const headerControls = (
-		<>
+  const handleZoomChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = event.target.value;
+    if (value === 'custom') return;
+    setScale(parseFloat(value) / 100);
+  };
+
+  const handlePageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const pageNumber = Number.parseInt(event.target.value);
+    if (
+    !Number.isNaN(pageNumber) &&
+    pageNumber >= 1 &&
+    pageNumber <= totalPages)
+    {
+      setCurrentPage(pageNumber);
+    }
+  };
+
+  const handleExport = () => {
+    const contentToExport = originalContentRef.current || contentRef.current;
+
+    if (contentToExport) {
+      console.log('PdfViewer: Exporting PDF', {
+        size: contentToExport.byteLength,
+        fileName: fileName,
+        source: originalContentRef.current ? 'original' : 'processed'
+      });
+
+      const blob = new Blob([contentToExport], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } else {
+      console.error('PdfViewer: No valid PDF content available for export');
+      setError('Cannot export: PDF content is not available');
+    }
+  };
+
+  const tooltipInfo = [
+  `Rendering quality: ${renderingQuality}`,
+  `Auto-scale: ${autoScale ? 'enabled' : 'disabled'}`,
+  `Pages: ${totalPages}`,
+  `Current page: ${currentPage}`,
+  `MIME Type: ${mimeType || 'application/pdf'}`,
+  `Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : 'Unknown'}`];
+
+
+  const headerControls =
+  <>
 			<PluginControlGroup>
 				<button
-					onClick={handlePreviousPage}
-					disabled={currentPage <= 1 || isLoading}
-					title="Previous Page"
-				>
+        onClick={handlePreviousPage}
+        disabled={currentPage <= 1 || isLoading}
+        title={t('Previous Page')}>
+
 					<ChevronLeftIcon />
 				</button>
 				<button
-					onClick={handleNextPage}
-					disabled={currentPage >= totalPages || isLoading}
-					title="Next Page"
-				>
+        onClick={handleNextPage}
+        disabled={currentPage >= totalPages || isLoading}
+        title={t('Next Page')}>
+
 					<ChevronRightIcon />
 				</button>
 			</PluginControlGroup>
 
 			<PluginControlGroup className="page-input-group">
 				<input
-					type="text"
-					value={currentPage}
-					onChange={handlePageChange}
-					disabled={isLoading}
-				/>
+        type="text"
+        value={currentPage}
+        onChange={handlePageChange}
+        disabled={isLoading} />
+
 				<span>/ {totalPages}</span>
 			</PluginControlGroup>
 
 			<PluginControlGroup>
 				{(() => {
-					const zoomOptions = pdfViewerSettings.find(s => s.id === 'pdf-renderer-initial-zoom')?.options || [
-						{ label: '25%', value: '25' },
-						{ label: '50%', value: '50' },
-						{ label: '75%', value: '75' },
-						{ label: '100%', value: '100' },
-						{ label: '125%', value: '125' },
-						{ label: '150%', value: '150' },
-						{ label: '200%', value: '200' },
-						{ label: '300%', value: '300' },
-						{ label: '400%', value: '400' },
-						{ label: '500%', value: '500' },
-					];
-					const currentZoom = Math.round(scale * 100).toString();
-					const hasCustomZoom = !zoomOptions.some(opt => String(opt.value) === currentZoom);
+        const zoomOptions = pdfViewerSettings.find((s) => s.id === 'pdf-renderer-initial-zoom')?.options || [
+        { label: '25%', value: '25' },
+        { label: '50%', value: '50' },
+        { label: '75%', value: '75' },
+        { label: '100%', value: '100' },
+        { label: '125%', value: '125' },
+        { label: '150%', value: '150' },
+        { label: '200%', value: '200' },
+        { label: '300%', value: '300' },
+        { label: '400%', value: '400' },
+        { label: '500%', value: '500' }];
 
-					return (
-						<>
-							<button onClick={handleZoomOut} title="Zoom Out" disabled={isLoading}>
+        const currentZoom = Math.round(scale * 100).toString();
+        const hasCustomZoom = !zoomOptions.some((opt) => String(opt.value) === currentZoom);
+
+        return (
+          <>
+							<button onClick={handleZoomOut} title={t('Zoom Out')} disabled={isLoading}>
 								<ZoomOutIcon />
 							</button>
 							<select
-								value={hasCustomZoom ? 'custom' : currentZoom}
-								onChange={handleZoomChange}
-								disabled={isLoading}
-								className="zoom-dropdown"
-								title="Zoom Level"
-							>
-								{zoomOptions.map(option => (
-									<option key={String(option.value)} value={String(option.value)}>
+              value={hasCustomZoom ? 'custom' : currentZoom}
+              onChange={handleZoomChange}
+              disabled={isLoading}
+              className="zoom-dropdown"
+              title={t('Zoom Level')}>
+
+								{zoomOptions.map((option) =>
+              <option key={String(option.value)} value={String(option.value)}>
 										{option.label}
 									</option>
-								))}
-								{hasCustomZoom && (
-									<option value="custom" className="custom-zoom-option">
+              )}
+								{hasCustomZoom &&
+              <option value="custom" className="custom-zoom-option">
 										{Math.round(scale * 100)}%
 									</option>
-								)}
+              }
 							</select>
-							<button onClick={handleZoomIn} title="Zoom In" disabled={isLoading}>
+							<button onClick={handleZoomIn} title={t('Zoom In')} disabled={isLoading}>
 								<ZoomInIcon />
 							</button>
-						</>
-					);
-				})()}
+						</>);
+
+      })()}
 			</PluginControlGroup>
 
 			<PluginControlGroup>
 				<button
-					onClick={handleExport}
-					title="Download PDF"
-					disabled={isLoading}
-				>
+        onClick={handleExport}
+        title={t('Download PDF')}
+        disabled={isLoading}>
+
 					<DownloadIcon />
 				</button>
 			</PluginControlGroup>
-		</>
-	);
+		</>;
 
-	return (
-		<div className="pdf-viewer-container">
+
+  return (
+    <div className="pdf-viewer-container">
 			<PluginHeader
-				fileName={fileInfo.fileName}
-				filePath={fileInfo.filePath}
-				pluginName={PLUGIN_NAME}
-				pluginVersion={PLUGIN_VERSION}
-				tooltipInfo={tooltipInfo}
-				controls={headerControls}
-			/>
+        fileName={fileInfo.fileName}
+        filePath={fileInfo.filePath}
+        pluginName={PLUGIN_NAME}
+        pluginVersion={PLUGIN_VERSION}
+        tooltipInfo={tooltipInfo}
+        controls={headerControls} />
+
 
 			<div className="pdf-viewer-content">
-				{isLoading && (
-					<div className="loading-indicator">Loading PDF document...</div>
-				)}
+				{isLoading &&
+        <div className="loading-indicator">{t('Loading PDF document...')}</div>
+        }
 
 				{error && <div className="pdf-error-message">{error}</div>}
 
-				{!isLoading && !error && pdfDocument && (
-					<div className="pdf-container" ref={pdfContainerRef}>
+				{!isLoading && !error && pdfDocument &&
+        <div className="pdf-container" ref={pdfContainerRef}>
 						<div className="pdf-page-container">
 							<canvas
-								ref={canvasRef}
-								className="pdf-page-canvas"
-							/>
+              ref={canvasRef}
+              className="pdf-page-canvas" />
+
 						</div>
 					</div>
-				)}
+        }
 			</div>
-		</div>
-	);
+		</div>);
+
 };
 
 export default PdfViewer;

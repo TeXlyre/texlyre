@@ -1,4 +1,5 @@
 // extras/backup/github/GitHubBackupService.ts
+import { t } from "@/i18n";
 import type { SecretsContextType } from '@/contexts/SecretsContext';
 import { authService } from '@/services/AuthService';
 import { UnifiedDataStructureService } from '@/services/DataStructureService';
@@ -86,7 +87,7 @@ export class GitHubBackupService {
 
 	async requestAccess(): Promise<{ success: boolean; error?: string }> {
 		if (!authService.getCurrentUser()) {
-			return { success: false, error: 'No authenticated user' };
+			return { success: false, error: t('No authenticated user') };
 		}
 		return { success: true };
 	}
@@ -96,7 +97,7 @@ export class GitHubBackupService {
 	): Promise<{ success: boolean; repositories?: any[]; error?: string }> {
 		try {
 			if (!(await gitHubApiService.testConnection(token)))
-				return { success: false, error: 'Invalid GitHub token' };
+				return { success: false, error: t('Invalid GitHub token') };
 			const repositories = await gitHubApiService.getRepositories(token);
 			return { success: true, repositories };
 		} catch (error) {
@@ -105,7 +106,7 @@ export class GitHubBackupService {
 				error:
 					error instanceof Error
 						? error.message
-						: 'Failed to connect to GitHub',
+						: t('Failed to connect to GitHub'),
 			};
 		}
 	}
@@ -118,9 +119,9 @@ export class GitHubBackupService {
 	): Promise<boolean> {
 		try {
 			if (!this.secretsContext)
-				throw new Error('Secrets context not initialized');
+				throw new Error(t('Secrets context not initialized'));
 			if (!repoName || !repoName.includes('/'))
-				throw new Error('Invalid repository format. Use owner/repo');
+				throw new Error(t('Invalid repository format. Use owner/repo'));
 
 			const [owner, repo] = repoName.split('/');
 			this.currentRepo = { owner, repo };
@@ -161,7 +162,7 @@ export class GitHubBackupService {
 			this.notifyListeners();
 			this.addActivity({
 				type: 'backup_complete',
-				message: `Connected to GitHub repository: ${repoName} (${branch})`,
+				message: t(`Connected to GitHub repository: {repoName} ({branch})`, { repoName, branch }),
 			});
 			return true;
 		} catch (error) {
@@ -171,7 +172,7 @@ export class GitHubBackupService {
 				error:
 					error instanceof Error
 						? error.message
-						: 'Failed to connect to GitHub',
+						: t('Failed to connect to GitHub'),
 			};
 			this.notifyListeners();
 			return false;
@@ -220,7 +221,7 @@ export class GitHubBackupService {
 			if (!tokenSecret?.value || !repoSecret?.value) return null;
 			return { token: tokenSecret.value, repository: repoSecret.value };
 		} catch (error) {
-			console.error('Error retrieving GitHub credentials:', error);
+			console.error(t('Error retrieving GitHub credentials:'), error);
 			return null;
 		}
 	}
@@ -267,9 +268,9 @@ export class GitHubBackupService {
 		const credentials = await this.getGitHubCredentials(projectId);
 		const branch = await this.getStoredBranch(projectId);
 		if (!credentials)
-			throw new Error('GitHub credentials not available. Please reconnect.');
+			throw new Error(t('GitHub credentials not available. Please reconnect.'));
 		if (!(await gitHubApiService.testConnection(credentials.token)))
-			throw new Error('GitHub token is invalid or expired. Please reconnect.');
+			throw new Error(t('GitHub token is invalid or expired. Please reconnect.'));
 
 		const [owner, repo] = credentials.repository.split('/');
 		this.currentRepo = { owner, repo };
@@ -303,7 +304,7 @@ export class GitHubBackupService {
 					await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
 					this.addActivity({
 						type: 'backup_start',
-						message: `Retrying commit (attempt ${attempt}/${maxRetries})...`,
+						message: t(`Retrying commit (attempt {attempt}/{maxRetries})...`, { attempt, maxRetries }),
 					});
 				}
 				await gitHubApiService.createCommitFromFiles(
@@ -340,7 +341,7 @@ export class GitHubBackupService {
 
 		try {
 			const user = await authService.getCurrentUser();
-			if (!user) throw new Error('No authenticated user');
+			if (!user) throw new Error(t('No authenticated user'));
 
 			const credentials = await this.ensureValidCredentials(projectId);
 			const finalBranch = branch || credentials.branch;
@@ -348,7 +349,7 @@ export class GitHubBackupService {
 				? [await authService.getProjectById(projectId)]
 				: await authService.getProjectsByUser(user.id);
 			if (!localProjects || localProjects.some((p) => !p))
-				throw new Error('Could not load projects.');
+				throw new Error(t('Could not load projects.'));
 
 			const filesToCommit: {
 				path: string;
@@ -451,7 +452,7 @@ export class GitHubBackupService {
 
 			this.addActivity({
 				type: 'backup_complete',
-				message: 'GitHub sync completed successfully',
+				message: t('GitHub sync completed successfully'),
 			});
 			this.status = {
 				...this.status,
@@ -460,7 +461,7 @@ export class GitHubBackupService {
 				error: undefined,
 			};
 		} catch (error) {
-			this._handleError(error, 'backup_error', 'GitHub sync failed');
+			this._handleError(error, 'backup_error', t('GitHub sync failed'));
 		}
 		this.notifyListeners();
 	}
@@ -479,8 +480,8 @@ export class GitHubBackupService {
 		this.addActivity({
 			type: 'import_start',
 			message: projectId
-				? `Importing project: ${projectId}`
-				: 'Importing from GitHub...',
+				? t(`Importing project: {projectId}`, { projectId })
+				: t('Importing from GitHub...'),
 		});
 		this.notifyListeners();
 
@@ -554,7 +555,7 @@ export class GitHubBackupService {
 			}
 
 			const user = await authService.getCurrentUser();
-			if (!user) throw new Error('No authenticated user');
+			if (!user) throw new Error(t('No authenticated user'));
 
 			const existingProjects = await authService.getProjectsByUser(user.id);
 			const existingProjectIds = new Set(existingProjects.map((p) => p.id));
@@ -605,7 +606,7 @@ export class GitHubBackupService {
 					);
 					this.addActivity({
 						type: 'import_error',
-						message: `Failed to import missing project: ${missingProjId}`,
+						message: t(`Failed to import missing project: {missingProjId}`, { missingProjId }),
 					});
 				}
 			}
@@ -627,7 +628,7 @@ export class GitHubBackupService {
 				);
 			}
 
-			let successMessage = 'GitHub import completed successfully';
+			let successMessage = t('GitHub import completed successfully');
 			if (importedMissingCount > 0) {
 				successMessage += ` (${importedMissingCount} missing project${importedMissingCount === 1 ? '' : 's'} auto-imported)`;
 			}
@@ -641,7 +642,7 @@ export class GitHubBackupService {
 			};
 			fileStorageEventEmitter.emitChange();
 		} catch (error) {
-			this._handleError(error, 'import_error', 'GitHub import failed');
+			this._handleError(error, 'import_error', t('GitHub import failed'));
 		}
 		this.notifyListeners();
 	}
@@ -653,7 +654,7 @@ export class GitHubBackupService {
 		const authDb =
 			(await authService.db) ||
 			(await authService.initialize().then(() => authService.db));
-		if (!authDb) throw new Error('Could not access auth database');
+		if (!authDb) throw new Error(t('Could not access auth database'));
 
 		const now = Date.now();
 		const newProject = {
@@ -931,7 +932,7 @@ export class GitHubBackupService {
 				console.error(`Failed to import file ${filePath}:`, error);
 				this.addActivity({
 					type: 'import_error',
-					message: `Failed to import file: ${filePath}`,
+					message: t(`Failed to import file: {filePath}`, { filePath }),
 				});
 			}
 		}
@@ -939,7 +940,7 @@ export class GitHubBackupService {
 		if (importedFilesCount > 0) {
 			this.addActivity({
 				type: 'import_complete',
-				message: `Imported ${importedFilesCount} files for project: ${projectMetadata.name}`,
+				message: t(`Imported {count} file for project: {projectName}`, { count: importedFilesCount, projectName: projectMetadata.name }),
 			});
 			fileStorageEventEmitter.emitChange();
 		}
@@ -971,7 +972,7 @@ export class GitHubBackupService {
 
 			this.addActivity({
 				type: 'import_complete',
-				message: `Imported ${documents.length} documents for project: ${projectMetadata.name}`,
+				message: t(`Imported {count} document for project: {projectName}`, { count: documents.length, projectName: projectMetadata.name }),
 			});
 			fileStorageEventEmitter.emitChange();
 		}

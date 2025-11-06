@@ -1,4 +1,5 @@
 // src/services/TypstService.ts
+import { t } from '@/i18n';
 import { nanoid } from 'nanoid';
 
 import type { TypstCompileResult, TypstOutputFormat } from '../types/typst';
@@ -65,7 +66,7 @@ class TypstService {
         const normalizedMainFileName = this.normalizePath(mainFileName);
 
         try {
-            this.showNotification('info', 'Preparing files for Typst compilation...', operationId);
+            this.showNotification('info', t('Preparing files for Typst compilation...'), operationId);
 
             const { mainContent, sources } = await this.prepareSources(
                 normalizedMainFileName,
@@ -83,7 +84,7 @@ class TypstService {
                 return result;
             }
 
-            this.showNotification('info', `Compiling Typst to ${format.toUpperCase()}...`, operationId);
+            this.showNotification('info', t(`Compiling Typst to {format}...`, { format: format.toUpperCase() }), operationId);
 
             const { output, diagnostics } = await this.performCompilationInWorker(
                 normalizedMainFileName,
@@ -109,7 +110,7 @@ class TypstService {
             const result = this.createSuccessResult(output, format, formattedLog);
             await this.saveCompilationOutput(normalizedMainFileName, result);
 
-            this.showNotification('success', `Typst ${format.toUpperCase()} compilation completed`, operationId, 3000);
+            this.showNotification('success', t(`Typst {format} compilation completed`, { format: format.toUpperCase() }), operationId, 3000);
 
             return result;
         } catch (error) {
@@ -122,7 +123,7 @@ class TypstService {
                 return result;
             }
 
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            const errorMessage = error instanceof Error ? error.message : t('Unknown error');
             const result: TypstCompileResult = {
                 status: 1,
                 log: `Compilation failed: ${errorMessage}`,
@@ -239,7 +240,7 @@ class TypstService {
         let mainContent = '';
 
         for (const fileNode of relevantFiles) {
-            if (signal.aborted) throw new Error('Compilation cancelled');
+            if (signal.aborted) throw new Error(t('Compilation cancelled'));
 
             try {
                 const content = await this.getFileContent(fileNode);
@@ -470,7 +471,7 @@ class TypstService {
 
     private handleCompilationError(operationId: string, message: string): void {
         this.setStatus('ready');
-        this.showNotification('error', `Typst compilation failed: ${message}`, operationId, 5000);
+        this.showNotification('error', t(`Typst compilation failed: {message}`, { message }), operationId, 5000);
     }
 
     private showNotification(
@@ -503,7 +504,7 @@ class TypstService {
 
         for (const diag of diagnostics) {
             const severity = diag.severity || 'error';
-            const message = diag.message || 'Unknown error';
+            const message = diag.message || t('Unknown error');
             const path = diag.path || '';
             const range = diag.range || '';
 

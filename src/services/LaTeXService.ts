@@ -1,4 +1,5 @@
 // src/services/LaTeXService.ts
+import { t } from '@/i18n';
 import { nanoid } from 'nanoid';
 
 import type {
@@ -54,7 +55,7 @@ class LaTeXService {
 		this.currentEngineType = engineType;
 		const engine = this.engines.get(engineType);
 		if (!engine) {
-			throw new Error(`Unsupported engine type: ${engineType}`);
+			throw new Error(t(`Unsupported engine type: {engineType}`, { engineType }));
 		}
 
 		try {
@@ -150,7 +151,7 @@ class LaTeXService {
 	): Promise<CompileResult> {
 		const dvipdfmxEngine = this.engines.get('dvipdfmx');
 		if (!dvipdfmxEngine) {
-			throw new Error('DvipdfmxEngine not available');
+			throw new Error(t('DvipdfmxEngine not available'));
 		}
 
 		if (!dvipdfmxEngine.isReady()) {
@@ -220,16 +221,16 @@ class LaTeXService {
 
 		if (!engine.isReady()) {
 			console.log('[LaTeXService] Engine not ready, initializing...');
-			this.showLoadingNotification('Initializing LaTeX engine...', operationId);
+			this.showLoadingNotification(t('Initializing LaTeX engine...'), operationId);
 			await engine.initialize();
 		}
 		engine.setTexliveEndpoint(this.texliveEndpoint);
 
 		try {
-			this.showLoadingNotification('Preparing files for compilation...', operationId);
+			this.showLoadingNotification(t('Preparing files for compilation...'), operationId);
 			await this.prepareFileNodes(mainFileName, fileTree);
 
-			this.showLoadingNotification('Compiling LaTeX document...', operationId);
+			this.showLoadingNotification(t('Compiling LaTeX document...'), operationId);
 			await this.writeNodesToMemFS(engine, mainFileName);
 			let result = await engine.compile(mainFileName, this.processedNodes);
 
@@ -242,7 +243,7 @@ class LaTeXService {
 
 			if (result.status === 0 && !result.pdf && (result as any).xdv) {
 				console.log('[LaTeXService] XDV file detected, converting to PDF with Dvipdfmx...');
-				this.showLoadingNotification('Converting XDV to PDF...', operationId);
+				this.showLoadingNotification(t('Converting XDV to PDF...'), operationId);
 				result = await this.processDviToPdf(
 					(result as any).xdv,
 					mainFileName,
@@ -257,14 +258,14 @@ class LaTeXService {
 
 			if (result.status === 0 && result.pdf && result.pdf.length > 0) {
 				console.log('[LaTeXService] Compilation successful!');
-				this.showLoadingNotification('Saving compilation output...', operationId);
+				this.showLoadingNotification(t('Saving compilation output...'), operationId);
 				await this.cleanupStaleFiles();
 				await this.saveCompilationOutput(
 					mainFileName.replace(/^\/+/, ''),
 					result,
 				);
 				await this.storeOutputDirectories(engine);
-				this.showSuccessNotification('LaTeX compilation completed successfully', {
+				this.showSuccessNotification(t('LaTeX compilation completed successfully'), {
 					operationId,
 					duration: 3000,
 				});
@@ -275,7 +276,7 @@ class LaTeXService {
 					mainFileName.replace(/^\/+/, ''),
 					result.log,
 				);
-				this.showErrorNotification('LaTeX compilation failed', {
+				this.showErrorNotification(t('LaTeX compilation failed'), {
 					operationId,
 					duration: 5000,
 				});
@@ -289,7 +290,7 @@ class LaTeXService {
 				console.log(
 					'[LaTeXService] LaTeX Engine failed or was stopped by user, no further action needed.',
 				);
-				this.showInfoNotification('Compilation stopped by user', {
+				this.showInfoNotification(t('Compilation stopped by user'), {
 					operationId,
 					duration: 2000,
 				});
@@ -311,7 +312,7 @@ class LaTeXService {
 		const operationId = `latex-clear-cache-${nanoid()}`;
 
 		try {
-			this.showLoadingNotification('Clearing LaTeX cache...', operationId);
+			this.showLoadingNotification(t('Clearing LaTeX cache...'), operationId);
 
 			const existingFiles = await fileStorageService.getAllFiles();
 			const cacheFiles = existingFiles.filter(
@@ -337,13 +338,13 @@ class LaTeXService {
 				console.warn('Error flushing engine cache:', error);
 			}
 
-			this.showSuccessNotification('LaTeX cache cleared successfully', {
+			this.showSuccessNotification(t('LaTeX cache cleared successfully'), {
 				operationId,
 				duration: 2000,
 			});
 		} catch (error) {
 			console.error('Error clearing cache directories:', error);
-			this.showErrorNotification('Failed to clear LaTeX cache', {
+			this.showErrorNotification(t('Failed to clear LaTeX cache'), {
 				operationId,
 				duration: 3000,
 			});

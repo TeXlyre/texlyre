@@ -32,12 +32,12 @@ import { NewProjectIcon } from '../common/Icons';
 
 interface ProjectManagerProps {
   onOpenProject: (
-  docUrl: string,
-  projectName?: string,
-  projectDescription?: string,
-  projectType?: 'latex' | 'typst',
-  projectId?: string)
-  => void;
+    docUrl: string,
+    projectName?: string,
+    projectDescription?: string,
+    projectType?: 'latex' | 'typst',
+    projectId?: string)
+    => void;
   onLogout: () => void;
 }
 
@@ -293,7 +293,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
   const handleExportSelected = async (selectedIds: string[]) => {
     try {
       const selectedProjects = projects.filter((p) =>
-      selectedIds.includes(p.id)
+        selectedIds.includes(p.id)
       );
       setSelectedProjectsForExport(selectedProjects);
       setShowExportModal(true);
@@ -306,7 +306,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
   const handleDeleteSelected = async (selectedIds: string[]) => {
     try {
       const selectedProjects = projects.filter((p) =>
-      selectedIds.includes(p.id)
+        selectedIds.includes(p.id)
       );
       setSelectedProjectsForDelete(selectedProjects);
       setShowMultiDeleteModal(true);
@@ -405,32 +405,32 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 
   return (
     <div className={`app-container ${currentThemePlugin?.id || 'default'}`}>
-			{isGuestUser(user) &&
-      <GuestUpgradeBanner
-        onOpenUpgradeModal={() => setShowGuestUpgradeModal(true)} />
+      {isGuestUser(user) &&
+        <GuestUpgradeBanner
+          onOpenUpgradeModal={() => setShowGuestUpgradeModal(true)} />
 
       }
-			<header>
-				<div className="header-left">
-					<h1>{t('All Projects')}</h1>
-				</div>
+      <header>
+        <div className="header-left">
+          <h1>{t('All Projects')}</h1>
+        </div>
 
-				<div className="header-center">
-					<a
+        <div className="header-center">
+          <a
             href="https://texlyre.github.io"
             target="_blank"
             rel="noreferrer">
 
-						<img src={texlyreLogo} className="logo" alt={t('TeXlyre logo')} />
-					</a>
-				</div>
+            <img src={texlyreLogo} className="logo" alt={t('TeXlyre logo')} />
+          </a>
+        </div>
 
-				<div className="header-right">
-					{!isGuestUser(user) &&
-          <BackupStatusIndicator className="header-backup-indicator" />
+        <div className="header-right">
+          {!isGuestUser(user) &&
+            <BackupStatusIndicator className="header-backup-indicator" />
           }
-					<SettingsButton className="header-settings-button" />
-					<UserDropdown
+          <SettingsButton className="header-settings-button" />
+          <UserDropdown
             username={user?.username || ''}
             onLogout={onLogout}
             onOpenProfile={() => setShowProfileModal(true)}
@@ -439,11 +439,11 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
             onOpenUpgrade={() => setShowGuestUpgradeModal(true)}
             isGuest={isGuestUser(user)} />
 
-				</div>
-			</header>
+        </div>
+      </header>
 
-			<div className="main-content">
-				<ResizablePanel
+      <div className="main-content">
+        <ResizablePanel
           direction="horizontal"
           width={sidebarWidth}
           minWidth={currentLayout?.minFileExplorerWidth || 200}
@@ -451,7 +451,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
           onResize={handleSidebarResize}
           className="sidebar-container">
 
-					<ProjectPanel
+          <ProjectPanel
             onCreateProject={openCreateModal}
             onImportProject={openImportModal}
             onSearch={handleSearch}
@@ -461,218 +461,218 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
             projects={projects}
             availableTags={availableTags} />
 
-				</ResizablePanel>
+        </ResizablePanel>
 
-				<div className="editor-container">
-					{error &&
-          <div
-            className="error-message"
-            style={{
-              padding: '1rem',
-              color: 'red',
-              backgroundColor: 'rgba(255,0,0,0.1)',
-              margin: '1rem',
-              borderRadius: '4px'
-            }}>
+        <div className="editor-container">
+          {error &&
+            <div
+              className="error-message"
+              style={{
+                padding: '1rem',
+                color: 'red',
+                backgroundColor: 'rgba(255,0,0,0.1)',
+                margin: '1rem',
+                borderRadius: '4px'
+              }}>
 
-							{error}
-						</div>
+              {error}
+            </div>
           }
 
-					{isLoading ?
-          <div className="loading-container">
-							<div className="loading-spinner" />
-							<p>{t('Loading projects...')}</p>
-						</div> :
+          {isLoading ?
+            <div className="loading-container">
+              <div className="loading-spinner" />
+              <p>{t('Loading projects...')}</p>
+            </div> :
 
-          <ProjectList
-            projects={filteredProjects}
-            onOpenProject={openProject}
-            onOpenProjectDefault={handleOpenDefault}
-            onEditProject={openEditModal}
-            onDeleteProject={openDeleteModal}
-            onToggleFavorite={handleToggleFavorite}
-            onToggleViewMode={handleToggleViewMode}
-            onExportSelected={handleExportSelected}
-            onDeleteSelected={handleDeleteSelected}
-            viewMode={viewMode} />
+            <ProjectList
+              projects={filteredProjects}
+              onOpenProject={openProject}
+              onOpenProjectDefault={handleOpenDefault}
+              onEditProject={openEditModal}
+              onDeleteProject={openDeleteModal}
+              onToggleFavorite={handleToggleFavorite}
+              onToggleViewMode={handleToggleViewMode}
+              onExportSelected={handleExportSelected}
+              onDeleteSelected={handleDeleteSelected}
+              viewMode={viewMode} />
 
           }
-				</div>
-				<ProjectExportModal
+        </div>
+        <ProjectExportModal
           isOpen={showExportModal}
           onClose={() => setShowExportModal(false)}
           selectedProjects={selectedProjectsForExport} />
 
-				<ProjectDeleteModal
+        <ProjectDeleteModal
           isOpen={showMultiDeleteModal}
           onClose={() => setShowMultiDeleteModal(false)}
           selectedProjects={selectedProjectsForDelete}
           onDeleteProjects={handleMultiDeleteProjects} />
 
-			</div>
+      </div>
 
-			<footer>
-				<p className="read-the-docs">{t('Built with TeXlyre')}
+      <footer>
+        <p className="read-the-docs">{t('Built with TeXlyre')}
 
           <a href="https://texlyre.github.io" target="_blank" rel="noreferrer">
-						<img src={texlyreLogo} className="logo" alt={t('TeXlyre logo')} />
-					</a>
-					<span className="legal-links">
-						<br /> <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">{t('Documentation')}
+            <img src={texlyreLogo} className="logo" alt={t('TeXlyre logo')} />
+          </a>
+          <span className="legal-links">
+            <br /> <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">{t('Documentation')}
 
             </a>
-						{' '} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">{t('Source Code')}
+            {' '} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">{t('Source Code')}
 
             </a>
-						{' '} • <a href="#" onClick={(event) => {
+            {' '} • <a href="#" onClick={(event) => {
               event.preventDefault();
               setShowPrivacy(true);
             }} className="privacy-link">{t('Privacy')}</a>
-					</span>
-				</p>
-			</footer>
+          </span>
+        </p>
+      </footer>
 
-			<PrivacyModal
+      <PrivacyModal
         isOpen={showPrivacy}
         onClose={() => setShowPrivacy(false)} />
 
 
-			<Modal
+      <Modal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         title={t('Create New Project')}
         icon={NewProjectIcon}>
 
-				{error &&
-        <div className="form-error" style={{ marginBottom: '1rem' }}>
-						{error}
-					</div>
+        {error &&
+          <div className="form-error" style={{ marginBottom: '1rem' }}>
+            {error}
+          </div>
         }
-				<ProjectForm
+        <ProjectForm
           onSubmit={handleCreateProject}
           onCancel={() => setShowCreateModal(false)}
           isSubmitting={isSubmitting} />
 
-			</Modal>
+      </Modal>
 
-			<Modal
+      <Modal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         title={t('Edit Project')}>
 
-				{error &&
-        <div className="form-error" style={{ marginBottom: '1rem' }}>
-						{error}
-					</div>
+        {error &&
+          <div className="form-error" style={{ marginBottom: '1rem' }}>
+            {error}
+          </div>
         }
-				{currentProject &&
-        <ProjectForm
-          project={currentProject}
-          onSubmit={handleUpdateProject}
-          onCancel={() => setShowEditModal(false)}
-          isSubmitting={isSubmitting}
-          disableNameAndDescription={true} />
+        {currentProject &&
+          <ProjectForm
+            project={currentProject}
+            onSubmit={handleUpdateProject}
+            onCancel={() => setShowEditModal(false)}
+            isSubmitting={isSubmitting}
+            disableNameAndDescription={true} />
 
         }
-			</Modal>
+      </Modal>
 
-			<Modal
+      <Modal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         title={t('Delete Project')}
         size="small">
 
-				<div className="delete-confirmation">
-					<p>{t('Are you sure you want to delete the project "')}
+        <div className="delete-confirmation">
+          <p>{t('Are you sure you want to delete the project "')}
             {currentProject?.name}{t('"?')}
 
           </p>
-					<p className="warning">{t('This action cannot be undone.')}</p>
+          <p className="warning-message">{t('This action cannot be undone.')}</p>
 
-					<div className="modal-actions">
-						<button
+          <div className="modal-actions">
+            <button
               className="button secondary"
               onClick={() => setShowDeleteModal(false)}
               disabled={isSubmitting}>{t('Cancel')}
 
 
             </button>
-						<button
+            <button
               className="button danger"
               onClick={handleDeleteProject}
               disabled={isSubmitting}>
 
-							{isSubmitting ? 'Deleting...' : 'Delete Project'}
-						</button>
-					</div>
-				</div>
-			</Modal>
+              {isSubmitting ? t('Deleting...') : t('Delete Project')}
+            </button>
+          </div>
+        </div>
+      </Modal>
 
-			{/* Guest users cannot access profile/account features */}
-			{!isGuestUser(user) &&
-      <>
-					<ProfileSettingsModal
-          isOpen={showProfileModal}
-          onClose={() => setShowProfileModal(false)} />
+      {/* Guest users cannot access profile/account features */}
+      {!isGuestUser(user) &&
+        <>
+          <ProfileSettingsModal
+            isOpen={showProfileModal}
+            onClose={() => setShowProfileModal(false)} />
 
-					<ExportAccountModal
-          isOpen={showAccountExportModal}
-          onClose={() => setShowAccountExportModal(false)}
-          showProjectSelection={false} />
+          <ExportAccountModal
+            isOpen={showAccountExportModal}
+            onClose={() => setShowAccountExportModal(false)}
+            showProjectSelection={false} />
 
-					<DeleteAccountModal
-          isOpen={isDeleteAccountModalOpen}
-          onClose={() => setIsDeleteAccountModalOpen(false)}
-          onAccountDeleted={handleAccountDeleted}
-          onOpenExport={() => setShowAccountExportModal(true)} />
+          <DeleteAccountModal
+            isOpen={isDeleteAccountModalOpen}
+            onClose={() => setIsDeleteAccountModalOpen(false)}
+            onAccountDeleted={handleAccountDeleted}
+            onOpenExport={() => setShowAccountExportModal(true)} />
 
-				</>
+        </>
       }
 
-			{isGuestUser(user) &&
-      <GuestUpgradeModal
-        isOpen={showGuestUpgradeModal}
-        onClose={() => setShowGuestUpgradeModal(false)}
-        onUpgradeSuccess={handleGuestUpgradeSuccess} />
+      {isGuestUser(user) &&
+        <GuestUpgradeModal
+          isOpen={showGuestUpgradeModal}
+          onClose={() => setShowGuestUpgradeModal(false)}
+          onUpgradeSuccess={handleGuestUpgradeSuccess} />
 
       }
 
-			<ProjectImportModal
+      <ProjectImportModal
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
         onProjectsImported={handleProjectsImported} />
 
 
-			{/* Guest users cannot access backup features */}
-			{!isGuestUser(user) &&
-      <>
-					<BackupDiscoveryModal
-          isOpen={showDiscoveryModal}
-          onClose={dismissDiscovery}
-          rootHandle={getRootHandle()}
-          discoveredProjects={discoveredProjects}
-          onProjectsImported={handleDiscoveryImport} />
+      {/* Guest users cannot access backup features */}
+      {!isGuestUser(user) &&
+        <>
+          <BackupDiscoveryModal
+            isOpen={showDiscoveryModal}
+            onClose={dismissDiscovery}
+            rootHandle={getRootHandle()}
+            discoveredProjects={discoveredProjects}
+            onProjectsImported={handleDiscoveryImport} />
 
-					<BackupModal
-          isOpen={showAutoBackupModal}
-          onClose={() => setShowAutoBackupModal(false)}
-          status={status}
-          activities={activities}
-          onRequestAccess={requestAccess}
-          onSynchronize={synchronize}
-          onExportToFileSystem={synchronize}
-          onImportChanges={importChanges}
-          onDisconnect={disconnect}
-          onClearActivity={clearActivity}
-          onClearAllActivities={clearAllActivities}
-          onChangeDirectory={changeDirectory}
-          currentProjectId={sessionStorage.getItem('currentProjectId')}
-          isInEditor={true} />
+          <BackupModal
+            isOpen={showAutoBackupModal}
+            onClose={() => setShowAutoBackupModal(false)}
+            status={status}
+            activities={activities}
+            onRequestAccess={requestAccess}
+            onSynchronize={synchronize}
+            onExportToFileSystem={synchronize}
+            onImportChanges={importChanges}
+            onDisconnect={disconnect}
+            onClearActivity={clearActivity}
+            onClearAllActivities={clearAllActivities}
+            onChangeDirectory={changeDirectory}
+            currentProjectId={sessionStorage.getItem('currentProjectId')}
+            isInEditor={true} />
 
-				</>
+        </>
       }
-		</div>);
+    </div>);
 
 };
 
