@@ -127,7 +127,7 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
     return result;
   };
 
-  const parseLocation = (location: string): {file?: string;line?: number;} => {
+  const parseLocation = (location: string): { file?: string; line?: number; } => {
     const match = location.match(/^([^:]+)(?::(\d+))?/);
     if (!match) return {};
 
@@ -157,36 +157,36 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
   };
 
   const tooltipInfo = [
-  `Total errors: ${parsedDiagnostics.filter((d) => d.type === 'error').length}`,
-  `Total warnings: ${parsedDiagnostics.filter((d) => d.type === 'warning').length}`,
-  `Log size: ${log ? `${Math.round(log.length / 1024)} KB` : '0 KB'}`,
-  'Click diagnostic items to navigate to line'];
+    `Total errors: ${parsedDiagnostics.filter((d) => d.type === 'error').length}`,
+    `Total warnings: ${parsedDiagnostics.filter((d) => d.type === 'warning').length}`,
+    `Log size: ${log ? `${Math.round(log.length / 1024)} KB` : '0 KB'}`,
+    t('Click error items to navigate to line')];
 
 
   const headerControls =
-  <div className="error-stats">
-            <span
-      className={`error-count ${filter === 'error' ? 'active' : ''}`}
-      onClick={() => handleFilterClick('error')}
-      title={t('Click to filter errors')}>
+    <div className="error-stats">
+      <span
+        className={`error-count ${filter === 'error' ? 'active' : ''}`}
+        onClick={() => handleFilterClick('error')}
+        title={t('Click to filter errors')}>
 
-                {getTypeIcon('error')}{' '}
-                {parsedDiagnostics.filter((d) => d.type === 'error').length}
-            </span>
-            <span
-      className={`warning-count ${filter === 'warning' ? 'active' : ''}`}
-      onClick={() => handleFilterClick('warning')}
-      title={t('Click to filter warnings')}>
+        {getTypeIcon('error')}{' '}
+        {parsedDiagnostics.filter((d) => d.type === 'error').length}
+      </span>
+      <span
+        className={`warning-count ${filter === 'warning' ? 'active' : ''}`}
+        onClick={() => handleFilterClick('warning')}
+        title={t('Click to filter warnings')}>
 
-                {getTypeIcon('warning')}{' '}
-                {parsedDiagnostics.filter((d) => d.type === 'warning').length}
-            </span>
-        </div>;
+        {getTypeIcon('warning')}{' '}
+        {parsedDiagnostics.filter((d) => d.type === 'warning').length}
+      </span>
+    </div>;
 
 
   return (
     <div className="typst-visualizer">
-            <PluginHeader
+      <PluginHeader
         fileName="Typst Log"
         filePath="Typst Compilation Output"
         pluginName={PLUGIN_NAME}
@@ -195,71 +195,71 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
         controls={headerControls} />
 
 
-            <div className="typst-visualizer-content">
-                {filteredDiagnostics.length === 0 ?
-        <div className="no-errors">
-                        <div className="success-icon">✅</div>
-                        <div>
-                            {parsedDiagnostics.length === 0 ?
-            'No errors or warnings found.' :
-            `No ${filter}s found.`}
-                        </div>
-                        <div className="success-subtitle">
-                            {parsedDiagnostics.length === 0 ?
-            'Compilation appears successful!' :
-            `Showing ${filter} items only.`}
-                        </div>
-                    </div> :
-
-        <ul className="diagnostic-list">
-                        {filteredDiagnostics.map((diagnostic, index) =>
-          <li
-            key={index}
-            className={`diagnostic-item ${diagnostic.type} ${diagnostic.line ? 'clickable' : ''}`}
-            onClick={() => handleDiagnosticClick(diagnostic)}
-            title={
-            diagnostic.line ? `Click to go to line ${diagnostic.line}` : undefined
-            }>
-
-                                <div className="diagnostic-header">
-                                    <span className="diagnostic-type-badge">
-                                        <span className="diagnostic-icon">
-                                            {getTypeIcon(diagnostic.type)}
-                                        </span>
-                                        <span className="diagnostic-type-text">{diagnostic.type}</span>
-                                    </span>
-                                    <div className="diagnostic-location">
-                                        {diagnostic.file &&
-                <span
-                  className="diagnostic-file"
-                  title={`File: ${diagnostic.file}`}>{t('\uD83D\uDCC4')}
-
-                  {diagnostic.file}
-                                            </span>
-                }
-                                        {diagnostic.line &&
-                <span className="diagnostic-line">{t('Line')}{diagnostic.line}</span>
-                }
-                                    </div>
-                                </div>
-                                <div className="typst-diagnostic-message">
-                                    {diagnostic.fullMessage || diagnostic.message}
-                                </div>
-                                {diagnostic.hints && diagnostic.hints.length > 0 &&
-            <div className="diagnostic-hints">
-                                        {diagnostic.hints.map((hint, hintIndex) =>
-              <div key={hintIndex} className="diagnostic-hint">{t('\uD83D\uDCA1')}
-                {hint}
-                                            </div>
-              )}
-                                    </div>
-            }
-                            </li>
-          )}
-                    </ul>
-        }
+      <div className="typst-visualizer-content">
+        {filteredDiagnostics.length === 0 ?
+          <div className="no-errors">
+            <div className="success-icon">✅</div>
+            <div>
+              {parsedDiagnostics.length === 0 ?
+                t('No errors or warnings found.') :
+                t(`No {filter} found.`, { filter })}
             </div>
-        </div>);
+            <div className="success-subtitle">
+              {parsedDiagnostics.length === 0 ?
+                t('Compilation appears successful!') :
+                t(`Showing {filter} items only.`, { filter })}
+            </div>
+          </div> :
+
+          <ul className="diagnostic-list">
+            {filteredDiagnostics.map((diagnostic, index) =>
+              <li
+                key={index}
+                className={`diagnostic-item ${diagnostic.type} ${diagnostic.line ? 'clickable' : ''}`}
+                onClick={() => handleDiagnosticClick(diagnostic)}
+                title={
+                  diagnostic.line ? t(`Click to go to line {errorLine}`, { errorLine: diagnostic.line }) : undefined
+                }>
+
+                <div className="diagnostic-header">
+                  <span className="diagnostic-type-badge">
+                    <span className="diagnostic-icon">
+                      {getTypeIcon(diagnostic.type)}
+                    </span>
+                    <span className="diagnostic-type-text">{diagnostic.type}</span>
+                  </span>
+                  <div className="diagnostic-location">
+                    {diagnostic.file &&
+                      <span
+                        className="diagnostic-file"
+                        title={t(`File: {errorFile}`, { errorFile: diagnostic.file })}>{t('\uD83D\uDCC4')}
+
+                        {diagnostic.file}
+                      </span>
+                    }
+                    {diagnostic.line &&
+                      <span className="diagnostic-line">{t('Line')}{diagnostic.line}</span>
+                    }
+                  </div>
+                </div>
+                <div className="typst-diagnostic-message">
+                  {diagnostic.fullMessage || diagnostic.message}
+                </div>
+                {diagnostic.hints && diagnostic.hints.length > 0 &&
+                  <div className="diagnostic-hints">
+                    {diagnostic.hints.map((hint, hintIndex) =>
+                      <div key={hintIndex} className="diagnostic-hint">{t('\uD83D\uDCA1')}
+                        {hint}
+                      </div>
+                    )}
+                  </div>
+                }
+              </li>
+            )}
+          </ul>
+        }
+      </div>
+    </div>);
 
 };
 

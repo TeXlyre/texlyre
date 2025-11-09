@@ -243,6 +243,7 @@
   "Clear Settings": "Clear Settings",
   "Clearing LaTeX cache...": "Clearing LaTeX cache...",
   "Clearing or uploading local storage data is permanent and cannot be undone. Make sure to export your data before clearing if you want to keep it.": "Clearing or uploading local storage data is permanent and cannot be undone. Make sure to export your data before clearing if you want to keep it.",
+  "Click error items to navigate to line": "Click error items to navigate to line",
   "Click once to open file or document, twice to navigate to match": "Click once to open file or document, twice to navigate to match",
   "Click the branch icon to switch repository/branch": "Click the branch icon to switch repository/branch",
   "Click to filter errors": "Click to filter errors",
