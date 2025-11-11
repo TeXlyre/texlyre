@@ -1,5 +1,5 @@
 // extras/renderers/pdf/PdfRenderer.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
@@ -16,8 +16,9 @@ import {
   ZoomInIcon,
   ZoomOutIcon,
   ExpandIcon,
-  MinimizeIcon } from
-'@/components/common/Icons';
+  MinimizeIcon
+} from
+  '@/components/common/Icons';
 import { pdfRendererSettings } from './settings';
 import { useSettings } from '@/hooks/useSettings';
 import { useProperties } from '@/hooks/useProperties';
@@ -41,9 +42,9 @@ const PdfRenderer: React.FC<RendererProps> = ({
   const propertiesRegistered = useRef(false);
 
   const pdfRendererEnable =
-  getSetting('pdf-renderer-enable')?.value as boolean ?? true;
+    getSetting('pdf-renderer-enable')?.value as boolean ?? true;
   const pdfRendererTextSelection =
-  getSetting('pdf-renderer-text-selection')?.value as boolean ?? true;
+    getSetting('pdf-renderer-text-selection')?.value as boolean ?? true;
 
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -56,7 +57,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
   const [scrollView, setScrollView] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [pageHeightMap, setPageHeightMap] = useState<Map<number, number>>(new Map());
-  const [renderRange, setRenderRange] = useState<{start: number;end: number;}>({ start: 1, end: 1 });
+  const [renderRange, setRenderRange] = useState<{ start: number; end: number; }>({ start: 1, end: 1 });
   const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const contentRef = useRef<ArrayBuffer | null>(null);
   const originalContentRef = useRef<ArrayBuffer | null>(null);
@@ -149,7 +150,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
   }, [pdfData]);
 
   const onDocumentLoadSuccess = useCallback(
-    ({ numPages }: {numPages: number;}) => {
+    ({ numPages }: { numPages: number; }) => {
       setNumPages(numPages);
       setCurrentPage(1);
       if (!isEditingPageInput) setPageInput('1');
@@ -272,13 +273,13 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
   const computeFitScale = useCallback((mode: 'fit-width' | 'fit-height') => {
     const containerWidth =
-    contentElRef.current?.clientWidth ||
-    document.querySelector('.pdf-renderer-content')?.clientWidth ||
-    3840;
+      contentElRef.current?.clientWidth ||
+      document.querySelector('.pdf-renderer-content')?.clientWidth ||
+      3840;
     const containerHeight =
-    contentElRef.current?.clientHeight ||
-    (document.querySelector('.pdf-renderer-content') as HTMLElement | null)?.clientHeight ||
-    2160;
+      contentElRef.current?.clientHeight ||
+      (document.querySelector('.pdf-renderer-content') as HTMLElement | null)?.clientHeight ||
+      2160;
     let pageWidth = 595;
     let pageHeight = 842;
     const currentW = pageWidths.current.get(currentPage);
@@ -449,9 +450,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
     if (onDownload && fileName) {
       onDownload(fileName);
     } else if (
-    originalContentRef.current &&
-    originalContentRef.current.byteLength > 0)
-    {
+      originalContentRef.current &&
+      originalContentRef.current.byteLength > 0) {
       try {
         const blob = new Blob([originalContentRef.current], {
           type: 'application/pdf'
@@ -476,9 +476,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
-      !document.fullscreenElement &&
-      !containerRef.current?.contains(document.activeElement))
-      {
+        !document.fullscreenElement &&
+        !containerRef.current?.contains(document.activeElement)) {
         return;
       }
 
@@ -506,40 +505,40 @@ const PdfRenderer: React.FC<RendererProps> = ({
   if (!pdfRendererEnable) {
     return (
       <div className="pdf-renderer-container">
-				<div className="pdf-renderer-error">{t('Enhanced PDF renderer is disabled. Please enable it in settings to use this renderer.')}
+        <div className="pdf-renderer-error">{t('Enhanced PDF renderer is disabled. Please enable it in settings to use this renderer.')}
 
 
         </div>
-			</div>);
+      </div>);
 
   }
 
   return (
     <div className="pdf-renderer-container" ref={containerRef}>
-			<div className={`pdf-toolbar ${isFullscreen ? 'fullscreen-toolbar' : ''}`}>
-				<div className="toolbar">
-					<div id="toolbarLeft">
-						<div className="toolbarButtonGroup">
-							<button
+      <div className={`pdf-toolbar ${isFullscreen ? 'fullscreen-toolbar' : ''}`}>
+        <div className="toolbar">
+          <div id="toolbarLeft">
+            <div className="toolbarButtonGroup">
+              <button
                 onClick={handlePreviousPage}
                 className="toolbarButton"
                 title={t('Previous Page')}
                 disabled={currentPage <= 1 || isLoading}>
 
-								<ChevronLeftIcon />
-							</button>
-							<button
+                <ChevronLeftIcon />
+              </button>
+              <button
                 onClick={handleNextPage}
                 className="toolbarButton"
                 title={t('Next Page')}
                 disabled={currentPage >= numPages || isLoading}>
 
-								<ChevronRightIcon />
-							</button>
-						</div>
-						<div className="toolbarButtonGroup">
-							<div className="pageNumber">
-								<input
+                <ChevronRightIcon />
+              </button>
+            </div>
+            <div className="toolbarButtonGroup">
+              <div className="pageNumber">
+                <input
                   type="number"
                   value={pageInput}
                   onChange={handlePageInputChange}
@@ -554,20 +553,20 @@ const PdfRenderer: React.FC<RendererProps> = ({
                   max={numPages}
                   disabled={isLoading} />
 
-								<span>/</span>
-								<span>{numPages}</span>
-							</div>
-						</div>
-						<div className="toolbarButtonGroup">
-							<button
+                <span>/</span>
+                <span>{numPages}</span>
+              </div>
+            </div>
+            <div className="toolbarButtonGroup">
+              <button
                 onClick={handleZoomOut}
                 className="toolbarButton"
                 title={t('Zoom Out')}
                 disabled={isLoading}>
 
-								<ZoomOutIcon />
-							</button>
-							{(() => {
+                <ZoomOutIcon />
+              </button>
+              {(() => {
                 const zoomOptions = pdfRendererSettings.find((s) => s.id === 'pdf-renderer-initial-zoom')?.options || [];
                 const currentZoom = Math.round(scale * 100).toString();
                 const hasCustomZoom = !zoomOptions.some((opt) => String(opt.value) === currentZoom);
@@ -580,139 +579,139 @@ const PdfRenderer: React.FC<RendererProps> = ({
                     className="toolbarZoomSelect"
                     title={t('Zoom Level')}>
 
-										{zoomOptions.map((option) =>
-                    <option key={String(option.value)} value={String(option.value)}>
-												{option.label}
-											</option>
+                    {zoomOptions.map((option) =>
+                      <option key={String(option.value)} value={String(option.value)}>
+                        {option.label}
+                      </option>
                     )}
-										{hasCustomZoom &&
-                    <option value="custom">
-												{Math.round(scale * 100)}%
-											</option>
+                    {hasCustomZoom &&
+                      <option value="custom">
+                        {Math.round(scale * 100)}%
+                      </option>
                     }
-									</select>);
+                  </select>);
 
               })()}
-							<button
+              <button
                 onClick={handleZoomIn}
                 className="toolbarButton"
                 title={t('Zoom In')}
                 disabled={isLoading}>
 
-								<ZoomInIcon />
-							</button>
-						</div>
-						<div className="toolbarButtonGroup">
-							<button
+                <ZoomInIcon />
+              </button>
+            </div>
+            <div className="toolbarButtonGroup">
+              <button
                 onClick={handleFitToggle}
                 className="toolbarButton"
                 title={fitMode === 'fit-width' ? 'Fit to Width' : 'Fit to Height'}
                 disabled={isLoading}>
 
-								<FitToWidthIcon />
-							</button>
-							<button
+                <FitToWidthIcon />
+              </button>
+              <button
                 onClick={handleToggleView}
                 className="toolbarButton"
                 title={scrollView ? 'Single Page View' : 'Scroll View'}
                 disabled={isLoading}>
 
-								{scrollView ? <PageIcon /> : <ScrollIcon />}
-							</button>
-							<button
+                {scrollView ? <PageIcon /> : <ScrollIcon />}
+              </button>
+              <button
                 onClick={handleToggleFullscreen}
                 className="toolbarButton"
                 title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
                 disabled={isLoading}>
 
-								{isFullscreen ? <MinimizeIcon /> : <ExpandIcon />}
-							</button>
-						</div>
-						<div className="toolbarButtonGroup">
-							<button
+                {isFullscreen ? <MinimizeIcon /> : <ExpandIcon />}
+              </button>
+            </div>
+            <div className="toolbarButtonGroup">
+              <button
                 onClick={handleExport}
                 className="toolbarButton"
                 title={t('Download')}
                 disabled={isLoading}>
 
-								<DownloadIcon />
-							</button>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<div className={`pdf-renderer-content ${isFullscreen ? 'fullscreen' : ''}`} ref={scrollView ? scrollContainerRef : contentElRef}>
-				{fileData &&
-        <Document
-          file={fileData}
-          onLoadSuccess={onDocumentLoadSuccess}
-          onLoadError={onDocumentLoadError}
-          loading={
-          <div className="pdf-renderer-loading">{t('Loading PDF document...')}
-
+                <DownloadIcon />
+              </button>
+            </div>
           </div>
-          }>
+        </div>
+      </div>
 
-						{!isLoading &&
-          !error && (
-          scrollView ?
-          Array.from(new Array(numPages), (_, index) => {
-            const pageNumber = index + 1;
-            const shouldRender = pageNumber >= renderRange.start && pageNumber <= renderRange.end;
-            const estimatedHeight = pageHeightMap.get(pageNumber) || (pageHeights.current.get(pageNumber) || 842) * scale + 20;
+      <div className={`pdf-renderer-content ${isFullscreen ? 'fullscreen' : ''}`} ref={scrollView ? scrollContainerRef : contentElRef}>
+        {fileData &&
+          <Document
+            file={fileData}
+            onLoadSuccess={onDocumentLoadSuccess}
+            onLoadError={onDocumentLoadError}
+            loading={
+              <div className="pdf-renderer-loading">{t('Loading PDF document...')}
 
-            return (
-              <div
-                key={`page_${pageNumber}`}
-                data-page-number={pageNumber}
-                ref={(el) => {
-                  if (el && shouldRender) {
-                    pageRefs.current.set(pageNumber, el);
-                  } else if (!shouldRender) {
-                    pageRefs.current.delete(pageNumber);
-                  }
-                }}
-                className="pdf-page-scroll"
-                style={{ minHeight: shouldRender ? undefined : `${estimatedHeight}px` }}>
+              </div>
+            }>
 
-											{shouldRender ?
-                <Page
-                  pageNumber={pageNumber}
-                  scale={scale}
-                  renderTextLayer={pdfRendererTextSelection}
-                  renderAnnotationLayer={true}
-                  onLoadSuccess={onPageLoadSuccess}
-                  loading={
-                  <div className="pdf-page-loading">{t('Loading page')}
-                    {pageNumber}{t('...')}
-                  </div>
-                  } /> :
+            {!isLoading &&
+              !error && (
+                scrollView ?
+                  Array.from(new Array(numPages), (_, index) => {
+                    const pageNumber = index + 1;
+                    const shouldRender = pageNumber >= renderRange.start && pageNumber <= renderRange.end;
+                    const estimatedHeight = pageHeightMap.get(pageNumber) || (pageHeights.current.get(pageNumber) || 842) * scale + 20;
 
-                null}
-										</div>);
+                    return (
+                      <div
+                        key={`page_${pageNumber}`}
+                        data-page-number={pageNumber}
+                        ref={(el) => {
+                          if (el && shouldRender) {
+                            pageRefs.current.set(pageNumber, el);
+                          } else if (!shouldRender) {
+                            pageRefs.current.delete(pageNumber);
+                          }
+                        }}
+                        className="pdf-page-scroll"
+                        style={{ minHeight: shouldRender ? undefined : `${estimatedHeight}px` }}>
 
-          }) :
+                        {shouldRender ?
+                          <Page
+                            pageNumber={pageNumber}
+                            scale={scale}
+                            renderTextLayer={pdfRendererTextSelection}
+                            renderAnnotationLayer={true}
+                            onLoadSuccess={onPageLoadSuccess}
+                            loading={
+                              <div className="pdf-page-loading">{t('Loading page')}
+                                {pageNumber}{t('...')}
+                              </div>
+                            } /> :
 
-          <div className="pdf-page-scroll">
-									<Page
-              pageNumber={currentPage}
-              scale={scale}
-              renderTextLayer={pdfRendererTextSelection}
-              renderAnnotationLayer={true}
-              onLoadSuccess={onPageLoadSuccess}
-              loading={
-              <div className="pdf-page-loading">{t('Loading page...')}</div>
-              } />
+                          null}
+                      </div>);
 
-								</div>)
-          }
-					</Document>
+                  }) :
+
+                  <div className="pdf-page-scroll">
+                    <Page
+                      pageNumber={currentPage}
+                      scale={scale}
+                      renderTextLayer={pdfRendererTextSelection}
+                      renderAnnotationLayer={true}
+                      onLoadSuccess={onPageLoadSuccess}
+                      loading={
+                        <div className="pdf-page-loading">{t('Loading page...')}</div>
+                      } />
+
+                  </div>)
+            }
+          </Document>
         }
-			</div>
+      </div>
 
-			{error && <div className="pdf-renderer-error">{error}</div>}
-		</div>);
+      {error && <div className="pdf-renderer-error">{error}</div>}
+    </div>);
 
 };
 

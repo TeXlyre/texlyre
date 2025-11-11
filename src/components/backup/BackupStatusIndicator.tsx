@@ -1,5 +1,5 @@
 // src/components/backup/BackupStatusIndicator.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
@@ -80,14 +80,14 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
   const getMainStatus = () => {
     const { status } = fileSystemBackup;
     const pluginStatuses = backupPlugins.map((plugin) =>
-    plugin.getService().getStatus()
+      plugin.getService().getStatus()
     );
 
     const hasConnectedService =
-    status.isConnected || pluginStatuses.some((s) => s.isConnected);
+      status.isConnected || pluginStatuses.some((s) => s.isConnected);
     const isSyncing =
-    status.status === 'syncing' ||
-    pluginStatuses.some((s) => s.status === 'syncing');
+      status.status === 'syncing' ||
+      pluginStatuses.some((s) => s.status === 'syncing');
 
     return { connected: hasConnectedService, syncing: isSyncing };
   };
@@ -101,9 +101,8 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
   };
 
   const getServiceStatusIndicator = (
-  serviceType: string,
-  serviceId?: string) =>
-  {
+    serviceType: string,
+    serviceId?: string) => {
     if (serviceType === 'filesystem') {
       return fileSystemBackup.status.isConnected ? '🟢' : '';
     }
@@ -119,70 +118,68 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 
   return (
     <>
-			<div className="backup-status-dropdown-container">
-				<div className="backup-button-group">
-					<div
-            className={`backup-status-indicator main-button ${className} ${
-            backupPlugins.length === 0 ? 'single-service' : ''} ${
-            mainStatus.connected ? 'connected' : 'disconnected'}`}
+      <div className="backup-status-dropdown-container">
+        <div className="backup-button-group">
+          <div
+            className={`backup-status-indicator main-button ${className} ${backupPlugins.length === 0 ? 'single-service' : ''} ${mainStatus.connected ? 'connected' : 'disconnected'}`}
             onClick={handleMainButtonClick}
             title={
-            enabledServices.length === 1 ?
-            `Open ${enabledServices[0].name}` :
-            'Backup Options'
+              enabledServices.length === 1 ?
+                `Open ${enabledServices[0].name}` :
+                'Backup Options'
             }>
 
-						<div
+            <div
               className="status-dot"
               style={{ backgroundColor: getStatusColor() }} />
 
-						<BackupIcon />
-						<span className="backup-label">{t('Backup')}</span>
-					</div>
-
-					{backupPlugins.length > 0 &&
-          <button
-            className={`backup-dropdown-toggle ${mainStatus.connected ? 'connected' : 'disconnected'}`}
-            onClick={handleDropdownToggle}
-            title={t('Backup Options')}>
-
-							<ChevronDownIcon />
-						</button>
-          }
-				</div>
-
-				{showDropdown &&
-        <div className="backup-dropdown">
-						<div
-            className="backup-dropdown-item"
-            onClick={handleFileSystemClick}>
-
-							<span className="service-indicator">
-								{getServiceStatusIndicator('filesystem')}
-							</span>
-							<FileSystemIcon />{t('File System')}
+            <BackupIcon />
+            <span className="backup-label">{t('Backup')}</span>
           </div>
 
-						{backupPlugins.map((plugin) => {
-            const IconComponent = plugin.icon;
-            return (
-              <div
-                key={plugin.id}
-                className="backup-dropdown-item"
-                onClick={() => handlePluginClick(plugin.id)}>
+          {backupPlugins.length > 0 &&
+            <button
+              className={`backup-dropdown-toggle ${mainStatus.connected ? 'connected' : 'disconnected'}`}
+              onClick={handleDropdownToggle}
+              title={t('Backup Options')}>
 
-									<span className="service-indicator">
-										{getServiceStatusIndicator('plugin', plugin.id)}
-									</span>
-									<IconComponent /> {plugin.name}
-								</div>);
+              <ChevronDownIcon />
+            </button>
+          }
+        </div>
 
-          })}
-					</div>
+        {showDropdown &&
+          <div className="backup-dropdown">
+            <div
+              className="backup-dropdown-item"
+              onClick={handleFileSystemClick}>
+
+              <span className="service-indicator">
+                {getServiceStatusIndicator('filesystem')}
+              </span>
+              <FileSystemIcon />{t('File System')}
+            </div>
+
+            {backupPlugins.map((plugin) => {
+              const IconComponent = plugin.icon;
+              return (
+                <div
+                  key={plugin.id}
+                  className="backup-dropdown-item"
+                  onClick={() => handlePluginClick(plugin.id)}>
+
+                  <span className="service-indicator">
+                    {getServiceStatusIndicator('plugin', plugin.id)}
+                  </span>
+                  <IconComponent /> {plugin.name}
+                </div>);
+
+            })}
+          </div>
         }
-			</div>
+      </div>
 
-			<BackupModal
+      <BackupModal
         isOpen={showFileSystemModal}
         onClose={() => setShowFileSystemModal(false)}
         status={fileSystemBackup.status}
@@ -199,7 +196,7 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
         isInEditor={isInEditor} />
 
 
-			{backupPlugins.map((plugin) => {
+      {backupPlugins.map((plugin) => {
         const PluginModal = plugin.renderModal;
         return (
           <PluginModal
@@ -212,13 +209,13 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 
       })}
 
-			{showDropdown &&
-      <div
-        className="dropdown-overlay"
-        onClick={() => setShowDropdown(false)} />
+      {showDropdown &&
+        <div
+          className="dropdown-overlay"
+          onClick={() => setShowDropdown(false)} />
 
       }
-		</>);
+    </>);
 
 };
 

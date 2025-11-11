@@ -1,5 +1,5 @@
 // src/components/output/PdfViewerWindow.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { pluginRegistry } from '../../plugins/PluginRegistry';
@@ -111,7 +111,7 @@ const PdfViewerWindow: React.FC<PdfViewerWindowProps> = ({ projectId }) => {
       backgroundColor: 'var(--pico-background, #fff)',
       color: 'var(--pico-color, #000)'
     }}>
-			<header style={{
+      <header style={{
         padding: '0.5rem 1rem',
         width: '100%',
         borderBottom: '1px solid var(--pico-border-color, #ddd)',
@@ -120,81 +120,81 @@ const PdfViewerWindow: React.FC<PdfViewerWindowProps> = ({ projectId }) => {
         alignItems: 'center',
         justifyContent: 'space-between'
       }}>
-				<div>
-					<h1 style={{ margin: 0, fontSize: '1.2rem' }}>{projectName}</h1>
-					<p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.7 }}>{t('PDF Output')}</p>
-				</div>
-				{pdfData &&
-        <button
-          onClick={() => handleSavePdf(fileName)}
-          style={{
-            padding: '0.5rem 1rem',
-            backgroundColor: 'var(--pico-primary, #007bff)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}>{t('Download PDF')}
+        <div>
+          <h1 style={{ margin: 0, fontSize: '1.2rem' }}>{projectName}</h1>
+          <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.7 }}>{t('PDF Output')}</p>
+        </div>
+        {pdfData &&
+          <button
+            onClick={() => handleSavePdf(fileName)}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: 'var(--pico-primary, #007bff)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}>{t('Download PDF')}
 
 
-        </button>
+          </button>
         }
-			</header>
+      </header>
 
-			<div style={{ flex: 1, overflow: 'hidden' }}>
-				{isLoading ?
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%',
-          flexDirection: 'column',
-          gap: '1rem'
-        }}>
-						<div>{t('Loading PDF viewer...')}</div>
-						<div style={{ fontSize: '0.9rem', opacity: 0.7 }}>{t('Waiting for compilation results from main window')}
+      <div style={{ flex: 1, overflow: 'hidden' }}>
+        {isLoading ?
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            flexDirection: 'column',
+            gap: '1rem'
+          }}>
+            <div>{t('Loading PDF viewer...')}</div>
+            <div style={{ fontSize: '0.9rem', opacity: 0.7 }}>{t('Waiting for compilation results from main window')}
 
-          </div>
-					</div> :
-        !pdfData ?
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%',
-          flexDirection: 'column',
-          gap: '1rem'
-        }}>
-						<div>{t('No PDF available')}</div>
-						{compileStatus !== 0 &&
-          <div style={{ fontSize: '0.9rem', color: 'var(--pico-del-color, #dc3545)' }}>{t('Compilation failed. Check the log in the main window.')}
+            </div>
+          </div> :
+          !pdfData ?
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+              flexDirection: 'column',
+              gap: '1rem'
+            }}>
+              <div>{t('No PDF available')}</div>
+              {compileStatus !== 0 &&
+                <div style={{ fontSize: '0.9rem', color: 'var(--pico-del-color, #dc3545)' }}>{t('Compilation failed. Check the log in the main window.')}
 
-          </div>
-          }
-						<div style={{ fontSize: '0.9rem', opacity: 0.7 }}>{t('Compile a LaTeX document in the main window to see the PDF here')}
+                </div>
+              }
+              <div style={{ fontSize: '0.9rem', opacity: 0.7 }}>{t('Compile a LaTeX document in the main window to see the PDF here')}
 
-          </div>
-					</div> :
+              </div>
+            </div> :
 
-        <div style={{ height: '100%', width: '100%' }}>
-						{pdfRendererPlugin && useEnhancedRenderer ?
-          React.createElement(pdfRendererPlugin.renderOutput, {
-            content: toArrayBuffer(pdfData.buffer),
-            mimeType: 'application/pdf',
-            fileName: fileName,
-            onSave: handleSavePdf
-          }) :
+            <div style={{ height: '100%', width: '100%' }}>
+              {pdfRendererPlugin && useEnhancedRenderer ?
+                React.createElement(pdfRendererPlugin.renderOutput, {
+                  content: toArrayBuffer(pdfData.buffer),
+                  mimeType: 'application/pdf',
+                  fileName: fileName,
+                  onSave: handleSavePdf
+                }) :
 
-          <embed
-            src={URL.createObjectURL(new Blob([toArrayBuffer(pdfData)], { type: 'application/pdf' }))}
-            type="application/pdf"
-            style={{ width: '100%', height: '100%' }} />
+                <embed
+                  src={URL.createObjectURL(new Blob([toArrayBuffer(pdfData)], { type: 'application/pdf' }))}
+                  type="application/pdf"
+                  style={{ width: '100%', height: '100%' }} />
 
-          }
-					</div>
+              }
+            </div>
         }
-			</div>
-		</div>);
+      </div>
+    </div>);
 
 };
 

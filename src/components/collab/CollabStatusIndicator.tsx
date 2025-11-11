@@ -1,5 +1,5 @@
 // src/components/collab/CollabStatusIndicator.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
@@ -12,8 +12,9 @@ import {
   FileIcon,
   SyncIcon,
   UsersIcon,
-  OfflineIcon } from
-'../common/Icons';
+  OfflineIcon
+} from
+  '../common/Icons';
 import CollabModal from './CollabModal';
 import FileSyncModal from './FileSyncModal';
 
@@ -29,7 +30,7 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
   const { isConnected: isCollabConnected } = useCollab();
   const { isOfflineMode } = useOffline();
   const { isEnabled: isFileSyncEnabled, isSyncing: isFileSyncing } =
-  useFileSync();
+    useFileSync();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCollabModal, setShowCollabModal] = useState(false);
   const [showFileSyncModal, setShowFileSyncModal] = useState(false);
@@ -68,7 +69,8 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
       await collabService.syncAllDocuments(projectId, (_current, _total) => {
 
         // Progress updates could be shown in modal if needed
-      });} catch (error) {
+      });
+    } catch (error) {
       console.error('Error syncing documents:', error);
     } finally {
       setIsSyncing(false);
@@ -117,68 +119,66 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 
   return (
     <>
-			<div className="collab-status-dropdown-container">
-				<div className="collab-button-group">
-					<div
-            className={`collab-status-indicator main-button ${className} ${
-            showOffline ? 'offline' : mainStatus.connected ? 'connected' : 'disconnected'}`
+      <div className="collab-status-dropdown-container">
+        <div className="collab-button-group">
+          <div
+            className={`collab-status-indicator main-button ${className} ${showOffline ? 'offline' : mainStatus.connected ? 'connected' : 'disconnected'}`
             }
             onClick={handleMainButtonClick}
             title={
-            isFileSyncEnabled && isCollabConnected && !isOfflineMode ?
-            'Collaboration Options' :
-            getStatusText()
+              isFileSyncEnabled && isCollabConnected && !isOfflineMode ?
+                'Collaboration Options' :
+                getStatusText()
             }>
 
-						<div
+            <div
               className="status-dot"
               style={{
                 backgroundColor: getStatusColor(),
                 animation: mainStatus.syncing ? 'pulse 1.5s infinite' : 'none'
               }} />
 
-						{showOffline ? <OfflineIcon /> : <UsersIcon />}
-						<span className="collab-label">
-							{showOffline ? 'Offline' : 'Collab'}
-						</span>
-					</div>
+            {showOffline ? <OfflineIcon /> : <UsersIcon />}
+            <span className="collab-label">
+              {showOffline ? 'Offline' : 'Collab'}
+            </span>
+          </div>
 
-					<button
-            className={`collab-dropdown-toggle ${
-            showOffline ? 'offline' : mainStatus.connected ? 'connected' : 'disconnected'}`
+          <button
+            className={`collab-dropdown-toggle ${showOffline ? 'offline' : mainStatus.connected ? 'connected' : 'disconnected'}`
             }
             onClick={handleDropdownToggle}
             title={t('Collaboration Options')}
             disabled={showOffline}>
 
-						<ChevronDownIcon />
-					</button>
-				</div>
+            <ChevronDownIcon />
+          </button>
+        </div>
 
-				{showDropdown && !showOffline &&
-        <div className="collab-dropdown">
-						<div className="collab-dropdown-item" onClick={handleCollabClick}>
-							<span className="service-indicator">
-								{getServiceStatusIndicator('collab')}
-							</span>
-							<SyncIcon />{t('Real-time')}
+        {showDropdown && !showOffline &&
+          <div className="collab-dropdown">
+            <div className="collab-dropdown-item" onClick={handleCollabClick}>
+              <span className="service-indicator">
+                {getServiceStatusIndicator('collab')}
+              </span>
+              <SyncIcon />{t('Real-time')}
+            </div>
+
+            <div
+              className="collab-dropdown-item"
+              onClick={handleFileSyncClick}
+              aria-disabled={!isCollabConnected || isOfflineMode}>
+
+              <span className="service-indicator">
+                {getServiceStatusIndicator('filesync')}
+              </span>
+              <FileIcon />{t('Files')}
+            </div>
           </div>
-
-						<div
-            className="collab-dropdown-item"
-            onClick={handleFileSyncClick}
-            aria-disabled={!isCollabConnected || isOfflineMode}>
-
-							<span className="service-indicator">
-								{getServiceStatusIndicator('filesync')}
-							</span>
-							<FileIcon />{t('Files')}
-          </div>
-					</div>
         }
-			</div>
+      </div>
 
-			<CollabModal
+      <CollabModal
         isOpen={showCollabModal}
         onClose={() => setShowCollabModal(false)}
         isConnected={isCollabConnected && !isOfflineMode}
@@ -187,18 +187,18 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
         docUrl={docUrl} />
 
 
-			<FileSyncModal
+      <FileSyncModal
         isOpen={showFileSyncModal}
         onClose={() => setShowFileSyncModal(false)} />
 
 
-			{showDropdown &&
-      <div
-        className="dropdown-overlay"
-        onClick={() => setShowDropdown(false)} />
+      {showDropdown &&
+        <div
+          className="dropdown-overlay"
+          onClick={() => setShowDropdown(false)} />
 
       }
-		</>);
+    </>);
 
 };
 

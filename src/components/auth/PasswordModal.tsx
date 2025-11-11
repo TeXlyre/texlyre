@@ -1,5 +1,5 @@
 // src/components/auth/PasswordModal.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
@@ -72,15 +72,15 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
       icon={LockIcon}
       size="small">
 
-			<div className="password-modal">
-				<p>{message}</p>
+      <div className="password-modal">
+        <p>{message}</p>
 
-				{error && <div className="error-message">{error}</div>}
+        {error && <div className="error-message">{error}</div>}
 
-				<form onSubmit={handleSubmit} className="password-form">
-					<div className="form-group">
-						<label htmlFor="password">{t('Password')}</label>
-						<input
+        <form onSubmit={handleSubmit} className="password-form">
+          <div className="form-group">
+            <label htmlFor="password">{t('Password')}</label>
+            <input
               type="password"
               id="password"
               value={password}
@@ -88,10 +88,10 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
               disabled={isSubmitting}
               autoComplete="current-password" />
 
-					</div>
+          </div>
 
-					<div className="modal-actions">
-						<button
+          <div className="modal-actions">
+            <button
               type="button"
               className="button secondary"
               onClick={handleClose}
@@ -99,17 +99,17 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
 
 
             </button>
-						<button
+            <button
               type="submit"
               className="button primary"
               disabled={isSubmitting || !password.trim()}>
 
-							{isSubmitting ? 'Verifying...' : 'Unlock'}
-						</button>
-					</div>
-				</form>
-			</div>
-		</Modal>);
+              {isSubmitting ? 'Verifying...' : 'Unlock'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </Modal>);
 
 };
 

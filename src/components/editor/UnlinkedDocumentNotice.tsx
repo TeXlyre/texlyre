@@ -1,5 +1,5 @@
 // src/components/editor/UnlinkedDocumentNotice.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
@@ -32,82 +32,82 @@ const UnlinkedDocumentNotice: React.FC<UnlinkedDocumentNoticeProps> = ({
 
   return (
     <>
-			<div className="unlinked-document-notice">
-				<span>{t('This document is not linked to any file. You can link it to a new file or delete it.')}
+      <div className="unlinked-document-notice">
+        <span>{t('This document is not linked to any file. You can link it to a new file or delete it.')}
 
 
         </span>
-				<div className="unlinked-document-actions">
-					<button
+        <div className="unlinked-document-actions">
+          <button
             className="link-button"
             onClick={() => setShowLinkModal(true)}
             title={t('Link to new file')}>
 
-						<LinkIcon />{t('Link to file')}
+            <LinkIcon />{t('Link to file')}
 
           </button>
-					<button
+          <button
             className="link-button delete-action"
             onClick={() => setShowDeleteDialog(true)}
             title={t('Delete document')}>
 
-						<TrashIcon />{t('Delete')}
+            <TrashIcon />{t('Delete')}
 
           </button>
-				</div>
-			</div>
+        </div>
+      </div>
 
-			{showLinkModal &&
-      <LinkFileModal
-        isOpen={showLinkModal}
-        onClose={() => setShowLinkModal(false)}
-        documentId={documentId}
-        documentName={documentName}
-        projectType={projectType}
-        onLinked={() => {
-          setShowLinkModal(false);
-          onDocumentLinked();
-        }} />
+      {showLinkModal &&
+        <LinkFileModal
+          isOpen={showLinkModal}
+          onClose={() => setShowLinkModal(false)}
+          documentId={documentId}
+          documentName={documentName}
+          projectType={projectType}
+          onLinked={() => {
+            setShowLinkModal(false);
+            onDocumentLinked();
+          }} />
 
       }
 
-			{showDeleteDialog &&
-      <Modal
-        isOpen={showDeleteDialog}
-        onClose={() => setShowDeleteDialog(false)}
-        title={t('Delete Document')}
-        size="medium">
+      {showDeleteDialog &&
+        <Modal
+          isOpen={showDeleteDialog}
+          onClose={() => setShowDeleteDialog(false)}
+          title={t('Delete Document')}
+          size="medium">
 
-					<div className="delete-document-content">
-						<p>{t('Are you sure you want to delete the document "')}
-            {documentName}{t('"?')}
-          </p>
+          <div className="delete-document-content">
+            <p>{t('Are you sure you want to delete the document "')}
+              {documentName}{t('"?')}
+            </p>
 
-						<div className="warning-message">{t('This action cannot be undone. The document will be permanently removed.')}
+            <div className="warning-message">{t('This action cannot be undone. The document will be permanently removed.')}
 
 
+            </div>
+
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="button secondary"
+                onClick={() => setShowDeleteDialog(false)}>{t('Cancel')}
+
+
+              </button>
+              <button
+                type="button"
+                className="button danger"
+                onClick={handleDeleteDocument}>{t('Delete Document')}
+
+
+              </button>
+            </div>
           </div>
-
-						<div className="modal-actions">
-							<button
-              type="button"
-              className="button secondary"
-              onClick={() => setShowDeleteDialog(false)}>{t('Cancel')}
-
-
-            </button>
-							<button
-              type="button"
-              className="button danger"
-              onClick={handleDeleteDocument}>{t('Delete Document')}
-
-
-            </button>
-						</div>
-					</div>
-				</Modal>
+        </Modal>
       }
-		</>);
+    </>);
 
 };
 

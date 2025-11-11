@@ -1,5 +1,5 @@
 // src/components/project/ShareProjectButton.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDownIcon, ShareIcon } from '../common/Icons';
@@ -23,9 +23,8 @@ const ShareProjectButton: React.FC<ShareProjectButtonProps> = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-      dropdownRef.current &&
-      !dropdownRef.current.contains(event.target as Node))
-      {
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
     };
@@ -48,39 +47,39 @@ const ShareProjectButton: React.FC<ShareProjectButtonProps> = ({
 
   return (
     <div className={`share-project-buttons ${className}`} ref={dropdownRef}>
-			<div className="share-button-group">
-				<button
+      <div className="share-button-group">
+        <button
           className="share-button main-button"
           onClick={handleShareClick}
           title={t('Share Project')}>
 
-					<ShareIcon />
-				</button>
-				<button
+          <ShareIcon />
+        </button>
+        <button
           className="share-button dropdown-toggle"
           onClick={toggleDropdown}
           title={t('Share Options')}>
 
-					<ChevronDownIcon />
-				</button>
-			</div>
-			{isDropdownOpen &&
-      <div className="share-dropdown">
-					<div className="share-dropdown-item" onClick={handleShareClick}>
-						<ShareIcon />
-						<span>{t('Share with Link')}</span>
-					</div>
-					<div className="share-dropdown-item disabled">
-						<span>{t('Publish to Journal')}</span>
-						<span className="coming-soon">{t('(Coming Soon)')}</span>
-					</div>
-					<div className="share-dropdown-item disabled">
-						<span>{t('Share Template')}</span>
-						<span className="coming-soon">{t('(Coming Soon)')}</span>
-					</div>
-				</div>
+          <ChevronDownIcon />
+        </button>
+      </div>
+      {isDropdownOpen &&
+        <div className="share-dropdown">
+          <div className="share-dropdown-item" onClick={handleShareClick}>
+            <ShareIcon />
+            <span>{t('Share with Link')}</span>
+          </div>
+          <div className="share-dropdown-item disabled">
+            <span>{t('Publish to Journal')}</span>
+            <span className="coming-soon">{t('(Coming Soon)')}</span>
+          </div>
+          <div className="share-dropdown-item disabled">
+            <span>{t('Share Template')}</span>
+            <span className="coming-soon">{t('(Coming Soon)')}</span>
+          </div>
+        </div>
       }
-		</div>);
+    </div>);
 
 };
 

@@ -1,5 +1,5 @@
 // src/components/editor/StatisticsModal.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 
 import Modal from '../common/Modal';

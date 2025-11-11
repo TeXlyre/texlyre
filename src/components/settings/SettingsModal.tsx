@@ -1,5 +1,5 @@
 // src/components/settings/SettingsModal.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
@@ -22,10 +22,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   initialSubcategory
 }) => {
   const { getCategories, getSettingsByCategory, searchSettings, hasUnsavedChanges, needsRefresh } =
-  useSettings();
+    useSettings();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredData, setFilteredData] = useState<{
-    categories: {category: string;subcategories: string[];}[];
+    categories: { category: string; subcategories: string[]; }[];
     allSettings: any[];
   }>({ categories: [], allSettings: [] });
 
@@ -42,18 +42,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       setFilteredData({ categories: allCategories, allSettings: [] });
 
       if (
-      initialCategory &&
-      allCategories.some((c) => c.category === initialCategory))
-      {
+        initialCategory &&
+        allCategories.some((c) => c.category === initialCategory)) {
         setActiveCategory(initialCategory);
         const targetCategory = allCategories.find(
           (c) => c.category === initialCategory
         );
         if (targetCategory) {
           if (
-          initialSubcategory &&
-          targetCategory.subcategories.includes(initialSubcategory))
-          {
+            initialSubcategory &&
+            targetCategory.subcategories.includes(initialSubcategory)) {
             setActiveSubcategory(initialSubcategory);
           } else {
             setActiveSubcategory(targetCategory.subcategories[0]);
@@ -73,23 +71,22 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             (c) => c.category === activeCategory
           );
           if (
-          currentCategory &&
-          !currentCategory.subcategories.includes(activeSubcategory))
-          {
+            currentCategory &&
+            !currentCategory.subcategories.includes(activeSubcategory)) {
             setActiveSubcategory(currentCategory.subcategories[0]);
           }
         }
       }
     }
   }, [
-  searchQuery,
-  initialCategory,
-  initialSubcategory,
-  activeCategory,
-  activeSubcategory,
-  hasInitialValues,
-  getCategories,
-  searchSettings]
+    searchQuery,
+    initialCategory,
+    initialSubcategory,
+    activeCategory,
+    activeSubcategory,
+    hasInitialValues,
+    getCategories,
+    searchSettings]
   );
 
   const highlightText = (text: string, query: string) => {
@@ -102,12 +99,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     const parts = text.split(regex);
 
     return parts.map((part, index) =>
-    regex.test(part) ?
-    <mark key={index} className="search-highlight">
-					{part}
-				</mark> :
+      regex.test(part) ?
+        <mark key={index} className="search-highlight">
+          {part}
+        </mark> :
 
-    part
+        part
 
     );
   };
@@ -119,14 +116,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
     return (
       <>
-				{highlightText(activeCategory, searchQuery)}
-				{activeSubcategory &&
-        <>
-						{' - '}
-						{highlightText(activeSubcategory, searchQuery)}
-					</>
+        {highlightText(activeCategory, searchQuery)}
+        {activeSubcategory &&
+          <>
+            {' - '}
+            {highlightText(activeSubcategory, searchQuery)}
+          </>
         }
-			</>);
+      </>);
 
   };
 
@@ -135,10 +132,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   if (filteredData.categories.length === 0 && !searchQuery) {
     return (
       <Modal isOpen={isOpen} onClose={onClose} title={t('Settings')} size="large">
-				<div className="settings-empty-state">
-					<p>{t('No settings are currently available.')}</p>
-				</div>
-			</Modal>);
+        <div className="settings-empty-state">
+          <p>{t('No settings are currently available.')}</p>
+        </div>
+      </Modal>);
 
   }
 
@@ -150,102 +147,102 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       icon={SettingsIcon}
       size="large">
 
-			<div className="settings-container">
-				<div className="settings-sidebar">
-					{!hasInitialValues &&
-          <div className="settings-search">
-							<input
-              type="text"
-              placeholder={t('Search settings...')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input" />
+      <div className="settings-container">
+        <div className="settings-sidebar">
+          {!hasInitialValues &&
+            <div className="settings-search">
+              <input
+                type="text"
+                placeholder={t('Search settings...')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input" />
 
-							{searchQuery &&
-            <button
-              className="clear-search-button"
-              onClick={() => setSearchQuery('')}>
+              {searchQuery &&
+                <button
+                  className="clear-search-button"
+                  onClick={() => setSearchQuery('')}>
 
-									×
-								</button>
-            }
-						</div>
+                  ×
+                </button>
+              }
+            </div>
           }
 
-					{filteredData.categories.map(({ category, subcategories }) =>
-          <div key={category} className="settings-category">
-							<div
-              className={`category-item ${activeCategory === category ? 'active' : ''}`}
-              onClick={() => {
-                setActiveCategory(category);
-                setActiveSubcategory(subcategories[0]);
-              }}>
-
-								{highlightText(category, searchQuery)}
-							</div>
-							{activeCategory === category && subcategories.length > 0 &&
-            <div className="subcategories">
-									{subcategories.map((subcategory) =>
+          {filteredData.categories.map(({ category, subcategories }) =>
+            <div key={category} className="settings-category">
               <div
-                key={subcategory}
-                className={`subcategory-item ${activeSubcategory === subcategory ? 'active' : ''}`}
-                onClick={() => setActiveSubcategory(subcategory)}>
+                className={`category-item ${activeCategory === category ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveCategory(category);
+                  setActiveSubcategory(subcategories[0]);
+                }}>
 
-											{highlightText(subcategory, searchQuery)}
-										</div>
-              )}
-								</div>
-            }
-						</div>
+                {highlightText(category, searchQuery)}
+              </div>
+              {activeCategory === category && subcategories.length > 0 &&
+                <div className="subcategories">
+                  {subcategories.map((subcategory) =>
+                    <div
+                      key={subcategory}
+                      className={`subcategory-item ${activeSubcategory === subcategory ? 'active' : ''}`}
+                      onClick={() => setActiveSubcategory(subcategory)}>
+
+                      {highlightText(subcategory, searchQuery)}
+                    </div>
+                  )}
+                </div>
+              }
+            </div>
           )}
 
-					{filteredData.categories.length === 0 && searchQuery &&
-          <div className="no-results">{t('No settings found matching "')}
-            {searchQuery}"
-						</div>
-          }
-				</div>
-
-				<div className="settings-content">
-					<h3>{renderTitle()}</h3>
-					<div className="settings-group">
-						{settings.map((setting) =>
-            <div key={setting.id} className="setting-with-highlight">
-								<SettingControl
-                setting={{
-                  ...setting,
-                  label: searchQuery ?
-                  highlightText(setting.label, searchQuery) as string :
-                  setting.label,
-                  description: (setting.description && searchQuery ?
-                  highlightText(
-                    setting.description,
-                    searchQuery
-                  ) as string :
-                  setting.description) as string
-                }} />
-
-							</div>
-            )}
-						{settings.length === 0 &&
-            <div className="no-settings">{t('No settings available in this category.')}
-
+          {filteredData.categories.length === 0 && searchQuery &&
+            <div className="no-results">{t('No settings found matching "')}
+              {searchQuery}"
             </div>
+          }
+        </div>
+
+        <div className="settings-content">
+          <h3>{renderTitle()}</h3>
+          <div className="settings-group">
+            {settings.map((setting) =>
+              <div key={setting.id} className="setting-with-highlight">
+                <SettingControl
+                  setting={{
+                    ...setting,
+                    label: searchQuery ?
+                      highlightText(setting.label, searchQuery) as string :
+                      setting.label,
+                    description: (setting.description && searchQuery ?
+                      highlightText(
+                        setting.description,
+                        searchQuery
+                      ) as string :
+                      setting.description) as string
+                  }} />
+
+              </div>
+            )}
+            {settings.length === 0 &&
+              <div className="no-settings">{t('No settings available in this category.')}
+
+              </div>
             }
-					</div>
-				</div>
-				{hasUnsavedChanges &&
-        <div className="save-indicator">{t('Settings Saved')}
-
+          </div>
         </div>
-        }
-				{needsRefresh &&
-        <div className="refresh-indicator">{t('Page refresh required')}
+        {hasUnsavedChanges &&
+          <div className="save-indicator">{t('Settings Saved')}
 
-        </div>
+          </div>
         }
-			</div>
-		</Modal>);
+        {needsRefresh &&
+          <div className="refresh-indicator">{t('Page refresh required')}
+
+          </div>
+        }
+      </div>
+    </Modal>);
 
 };
 

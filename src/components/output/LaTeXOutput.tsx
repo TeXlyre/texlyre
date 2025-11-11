@@ -1,5 +1,5 @@
 // src/components/output/LaTeXOutput.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import React from 'react';
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 
@@ -16,7 +16,7 @@ interface LaTeXOutputProps {
   className?: string;
   selectedDocId?: string | null;
   docUrl?: string;
-  documents?: Array<{id: string;name: string;}>;
+  documents?: Array<{ id: string; name: string; }>;
   onNavigateToLinkedFile?: () => void;
   onExpandLatexOutput?: () => void;
   linkedFileInfo?: {
@@ -132,45 +132,45 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 
     return (
       <div className="pdf-viewer">
-				{pdfRendererPlugin && useEnhancedRenderer ?
-        React.createElement(pdfRendererPlugin.renderOutput, {
-          content: toArrayBuffer(compiledPdf.buffer),
-          mimeType: 'application/pdf',
-          fileName: 'output.pdf',
-          onSave: handleSavePdf
-        }) :
+        {pdfRendererPlugin && useEnhancedRenderer ?
+          React.createElement(pdfRendererPlugin.renderOutput, {
+            content: toArrayBuffer(compiledPdf.buffer),
+            mimeType: 'application/pdf',
+            fileName: 'output.pdf',
+            onSave: handleSavePdf
+          }) :
 
-        <embed
-          src={URL.createObjectURL(
-            new Blob([toArrayBuffer(compiledPdf)], { type: 'application/pdf' })
-          )}
-          type="application/pdf"
-          style={{ width: '100%', height: '100%' }} />
+          <embed
+            src={URL.createObjectURL(
+              new Blob([toArrayBuffer(compiledPdf)], { type: 'application/pdf' })
+            )}
+            type="application/pdf"
+            style={{ width: '100%', height: '100%' }} />
 
         }
-			</div>);
+      </div>);
 
   }, [currentView, compiledPdf, pdfRendererPlugin, useEnhancedRenderer, handleSavePdf]);
 
   return (
     <div className={`latex-output ${className}`}>
-			<div className="output-header">
-				<div className="view-tabs">
-					<button
+      <div className="output-header">
+        <div className="view-tabs">
+          <button
             className={`tab-button ${currentView === 'log' ? 'active' : ''}`}
             onClick={() => currentView !== 'log' && toggleOutputView()}>{t('Log')}
 
 
           </button>
-					<button
+          <button
             className={`tab-button ${currentView === 'pdf' ? 'active' : ''}`}
             onClick={() => currentView !== 'pdf' && toggleOutputView()}
             disabled={!compiledPdf}>
 
-						PDF
-					</button>
-				</div>
-				<LaTeXCompileButton
+            PDF
+          </button>
+        </div>
+        <LaTeXCompileButton
           className="output-compile-button"
           selectedDocId={selectedDocId}
           documents={documents}
@@ -180,52 +180,52 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
           shouldNavigateOnCompile={false}
           docUrl={docUrl} />
 
-			</div>
+      </div>
 
-			{!compileLog && !compiledPdf ?
-      <div className="empty-state">
-					<p>{t('No output available. Compile a LaTeX document to see results.')}</p>
-				</div> :
+      {!compileLog && !compiledPdf ?
+        <div className="empty-state">
+          <p>{t('No output available. Compile a LaTeX document to see results.')}</p>
+        </div> :
 
-      <>
-					{currentView === 'log' &&
-        <div className="log-view-container">
-							{loggerPlugin ?
-          <div className="split-log-view">
-									<ResizablePanel
-              direction="vertical"
-              alignment="end"
-              height={visualizerHeight}
-              minHeight={150}
-              maxHeight={600}
-              className="visualizer-panel-wrapper"
-              onResize={handleVisualizerResize}
-              collapsed={visualizerCollapsed}
-              onCollapse={handleVisualizerCollapse}>
+        <>
+          {currentView === 'log' &&
+            <div className="log-view-container">
+              {loggerPlugin ?
+                <div className="split-log-view">
+                  <ResizablePanel
+                    direction="vertical"
+                    alignment="end"
+                    height={visualizerHeight}
+                    minHeight={150}
+                    maxHeight={600}
+                    className="visualizer-panel-wrapper"
+                    onResize={handleVisualizerResize}
+                    collapsed={visualizerCollapsed}
+                    onCollapse={handleVisualizerCollapse}>
 
-										<div className="visualizer-panel">
-											{React.createElement(loggerPlugin.renderVisualizer, {
-                  log: compileLog,
-                  onLineClick: handleLineClick
-                })}
-										</div>
-									</ResizablePanel>
-									<div className="raw-log-panel">
-										<pre className="log-viewer">{compileLog}</pre>
-									</div>
-								</div> :
+                    <div className="visualizer-panel">
+                      {React.createElement(loggerPlugin.renderVisualizer, {
+                        log: compileLog,
+                        onLineClick: handleLineClick
+                      })}
+                    </div>
+                  </ResizablePanel>
+                  <div className="raw-log-panel">
+                    <pre className="log-viewer">{compileLog}</pre>
+                  </div>
+                </div> :
 
-          <div className="log-viewer">
-									<pre>{compileLog}</pre>
-								</div>
+                <div className="log-viewer">
+                  <pre>{compileLog}</pre>
+                </div>
+              }
+            </div>
           }
-						</div>
-        }
 
-					{pdfViewerContent}
-				</>
+          {pdfViewerContent}
+        </>
       }
-		</div>);
+    </div>);
 
 };
 

@@ -1,5 +1,5 @@
 // src/components/comments/CommentItem.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
@@ -22,7 +22,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
   const [newResponse, setNewResponse] = useState('');
   const [isAddingResponse, setIsAddingResponse] = useState(false);
   const { addResponse, deleteComment, deleteResponse, resolveComment } =
-  useComments();
+    useComments();
 
   const handleAddResponse = () => {
     if (newResponse.trim()) {
@@ -74,8 +74,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
   const truncateUsername = (username: string, maxLength = 15) => {
     return username.length > maxLength ?
-    `${username.substring(0, maxLength)}...` :
-    username;
+      `${username.substring(0, maxLength)}...` :
+      username;
   };
 
   return (
@@ -83,110 +83,110 @@ const CommentItem: React.FC<CommentItemProps> = ({
       className={`comment-item ${comment.resolved ? 'resolved' : ''}`}
       data-comment-id={comment.id}>
 
-			<div className="comment-header">
-				<div className="comment-author-container">
-					<div className="comment-author" title={comment.user}>
-						{truncateUsername(comment.user)}
-					</div>
-					<div className="comment-time">{formatDate(comment.timestamp)}</div>
-				</div>
-				<div className="comment-header-actions">
-					<button
+      <div className="comment-header">
+        <div className="comment-author-container">
+          <div className="comment-author" title={comment.user}>
+            {truncateUsername(comment.user)}
+          </div>
+          <div className="comment-time">{formatDate(comment.timestamp)}</div>
+        </div>
+        <div className="comment-header-actions">
+          <button
             className="resolve-button"
             onClick={handleResolveComment}
             title={comment.resolved ? 'Mark as unresolved' : 'Mark as resolved'}>
 
-						<CheckIcon />
-					</button>
-					<button
+            <CheckIcon />
+          </button>
+          <button
             className="delete-button"
             onClick={() => deleteComment(comment.id)}
             title={t('Delete comment')}>
 
-						<TrashIcon />
-					</button>
-				</div>
-			</div>
-
-			{comment.line &&
-      <div className="comment-line-section">
-					<button
-          className="comment-line-button"
-          onClick={handleLineClick}
-          title={`Go to line ${comment.line}`}>{t('Line')}
-
-          {comment.line}
-					</button>
-				</div>
-      }
-
-			<div className="comment-content">{comment.content}</div>
-
-			{comment.responses.length > 0 &&
-      <div className="comment-responses">
-					{comment.responses.map((response) =>
-        <div key={response.id} className="response-item">
-							<div className="response-header">
-								<div className="response-author-container">
-									<div className="response-author" title={response.user}>
-										{truncateUsername(response.user)}
-									</div>
-									<div className="response-time">
-										{formatDate(response.timestamp)}
-									</div>
-								</div>
-								<button
-              className="delete-button small"
-              onClick={() => handleDeleteResponse(response.id)}
-              title={t('Delete response')}>
-
-									<TrashIcon />
-								</button>
-							</div>
-							<div className="response-content">{response.content}</div>
-						</div>
-        )}
-				</div>
-      }
-
-			{!comment.resolved && (
-      isAddingResponse ?
-      <div className="add-response-form">
-						<textarea
-          value={newResponse}
-          onChange={(e) => setNewResponse(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={t('Type your response...')}
-          rows={2} />
-
-						<div className="form-actions">
-							<button
-            className="cancel-button"
-            onClick={() => {
-              setIsAddingResponse(false);
-              setNewResponse('');
-            }}>{t('Cancel')}
-
-
+            <TrashIcon />
           </button>
-							<button
-            className="submit-button"
-            onClick={handleAddResponse}
-            disabled={!newResponse.trim()}>{t('Submit')}
+        </div>
+      </div>
 
+      {comment.line &&
+        <div className="comment-line-section">
+          <button
+            className="comment-line-button"
+            onClick={handleLineClick}
+            title={`Go to line ${comment.line}`}>{t('Line')}
 
+            {comment.line}
           </button>
-						</div>
-					</div> :
-
-      <button
-        className="add-response-button"
-        onClick={() => setIsAddingResponse(true)}>{t('Add response')}
-
-
-      </button>)
+        </div>
       }
-		</div>);
+
+      <div className="comment-content">{comment.content}</div>
+
+      {comment.responses.length > 0 &&
+        <div className="comment-responses">
+          {comment.responses.map((response) =>
+            <div key={response.id} className="response-item">
+              <div className="response-header">
+                <div className="response-author-container">
+                  <div className="response-author" title={response.user}>
+                    {truncateUsername(response.user)}
+                  </div>
+                  <div className="response-time">
+                    {formatDate(response.timestamp)}
+                  </div>
+                </div>
+                <button
+                  className="delete-button small"
+                  onClick={() => handleDeleteResponse(response.id)}
+                  title={t('Delete response')}>
+
+                  <TrashIcon />
+                </button>
+              </div>
+              <div className="response-content">{response.content}</div>
+            </div>
+          )}
+        </div>
+      }
+
+      {!comment.resolved && (
+        isAddingResponse ?
+          <div className="add-response-form">
+            <textarea
+              value={newResponse}
+              onChange={(e) => setNewResponse(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={t('Type your response...')}
+              rows={2} />
+
+            <div className="form-actions">
+              <button
+                className="cancel-button"
+                onClick={() => {
+                  setIsAddingResponse(false);
+                  setNewResponse('');
+                }}>{t('Cancel')}
+
+
+              </button>
+              <button
+                className="submit-button"
+                onClick={handleAddResponse}
+                disabled={!newResponse.trim()}>{t('Submit')}
+
+
+              </button>
+            </div>
+          </div> :
+
+          <button
+            className="add-response-button"
+            onClick={() => setIsAddingResponse(true)}>{t('Add response')}
+
+
+          </button>)
+      }
+    </div>);
 
 };
 

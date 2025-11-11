@@ -1,5 +1,5 @@
 // src/components/backup/ProjectBackupControls.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
@@ -16,7 +16,7 @@ const ProjectBackupControls: React.FC<ProjectBackupControlsProps> = ({
   className = ''
 }) => {
   const { status, synchronize, exportToFileSystem, importChanges } =
-  useFileSystemBackup();
+    useFileSystemBackup();
   const [isProjectSyncing, setIsProjectSyncing] = useState(false);
 
   const handleExport = async () => {
@@ -45,25 +45,25 @@ const ProjectBackupControls: React.FC<ProjectBackupControlsProps> = ({
 
   return (
     <div className={`project-backup-controls ${className}`}>
-			<button
+      <button
         className="action-button"
         onClick={handleExport}
         disabled={isSyncing}
         title={t('Export project to file system (write to PC)')}>
 
-				<ExportIcon />{t('Export')}
+        <ExportIcon />{t('Export')}
 
       </button>
-			<button
+      <button
         className="action-button"
         onClick={handleImport}
         disabled={isSyncing}
         title={t('Import changes from file system (read from PC)')}>
 
-				<ImportIcon />{t('Import')}
+        <ImportIcon />{t('Import')}
 
       </button>
-		</div>);
+    </div>);
 
 };
 

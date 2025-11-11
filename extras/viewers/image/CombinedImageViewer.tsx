@@ -1,5 +1,5 @@
 // extras/viewers/image/CombinedImageViewer.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -16,12 +16,14 @@ import {
   RotateIcon,
   SaveIcon,
   ZoomInIcon,
-  ZoomOutIcon } from
-'@/components/common/Icons';
+  ZoomOutIcon
+} from
+  '@/components/common/Icons';
 import {
   PluginControlGroup,
-  PluginHeader } from
-'@/components/common/PluginHeader';
+  PluginHeader
+} from
+  '@/components/common/PluginHeader';
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
 import type { ViewerProps } from '@/plugins/PluginInterface';
@@ -50,14 +52,14 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
   const fileInfo = usePluginFileInfo(fileId, fileName);
 
   const autoCenter =
-  getSetting('image-viewer-auto-center')?.value as boolean ?? true;
+    getSetting('image-viewer-auto-center')?.value as boolean ?? true;
   const quality =
-  getSetting('image-viewer-quality')?.value as 'low' | 'medium' | 'high' ??
-  'high';
+    getSetting('image-viewer-quality')?.value as 'low' | 'medium' | 'high' ??
+    'high';
   const enablePanning =
-  getSetting('image-viewer-enable-panning')?.value as boolean ?? true;
+    getSetting('image-viewer-enable-panning')?.value as boolean ?? true;
   const enableFilters =
-  getSetting('image-viewer-enable-filters')?.value as boolean ?? true;
+    getSetting('image-viewer-enable-filters')?.value as boolean ?? true;
 
   const imageRenderingStyle = {
     low: 'pixelated',
@@ -96,7 +98,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 
     setIsLoading(true);
     const isSvgFile =
-    mimeType === 'image/svg+xml' || fileName.toLowerCase().endsWith('.svg');
+      mimeType === 'image/svg+xml' || fileName.toLowerCase().endsWith('.svg');
     setIsSvg(isSvgFile);
 
     try {
@@ -124,11 +126,11 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
   };
 
   const handleZoomIn = () =>
-  updateTransform({ scale: Math.min(transform.scale + 0.25, 5) });
+    updateTransform({ scale: Math.min(transform.scale + 0.25, 5) });
   const handleZoomOut = () =>
-  updateTransform({ scale: Math.max(transform.scale - 0.25, 0.1) });
+    updateTransform({ scale: Math.max(transform.scale - 0.25, 0.1) });
   const handleRotate = () =>
-  updateTransform({ rotation: (transform.rotation + 90) % 360 });
+    updateTransform({ rotation: (transform.rotation + 90) % 360 });
   const handleFlipH = () => updateTransform({ flipH: !transform.flipH });
   const handleFlipV = () => updateTransform({ flipV: !transform.flipV });
 
@@ -255,14 +257,14 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
     const transformValue = `translate(${transform.translateX}px, ${transform.translateY}px) rotate(${transform.rotation}deg) scale(${scaleX}, ${scaleY})`;
 
     const filterValue = enableFilters ?
-    `brightness(${transform.brightness}%) contrast(${transform.contrast}%)` :
-    'none';
+      `brightness(${transform.brightness}%) contrast(${transform.contrast}%)` :
+      'none';
 
     return {
       transform: transformValue,
       transformOrigin: 'center',
       imageRendering:
-      imageRenderingStyle as React.CSSProperties['imageRendering'],
+        imageRenderingStyle as React.CSSProperties['imageRendering'],
       filter: filterValue,
       cursor: enablePanning ? isPanning ? 'grabbing' : 'grab' : 'default',
       transition: isPanning ? 'none' : 'transform 0.2s ease'
@@ -272,17 +274,17 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
   const renderSvgIframe = () => {
     if (!svgContent) return null;
     const centerCss =
-    autoCenter && transform.translateX === 0 && transform.translateY === 0 ?
-    'display:flex;justify-content:center;align-items:center;' :
-    '';
+      autoCenter && transform.translateX === 0 && transform.translateY === 0 ?
+        'display:flex;justify-content:center;align-items:center;' :
+        '';
 
     const scaleX = transform.flipH ? -transform.scale : transform.scale;
     const scaleY = transform.flipV ? -transform.scale : transform.scale;
     const transformValue = `translate(${transform.translateX}px, ${transform.translateY}px) rotate(${transform.rotation}deg) scale(${scaleX}, ${scaleY})`;
 
     const filterValue = enableFilters ?
-    `brightness(${transform.brightness}%) contrast(${transform.contrast}%)` :
-    'none';
+      `brightness(${transform.brightness}%) contrast(${transform.contrast}%)` :
+      'none';
 
     return (
       <iframe
@@ -328,120 +330,120 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
   };
 
   const tooltipInfo = [
-  `Quality: ${quality}`,
-  `Auto center: ${autoCenter ? 'enabled' : 'disabled'}`,
-  `Panning: ${enablePanning ? 'enabled' : 'disabled'}`,
-  `Filters: ${enableFilters ? 'enabled' : 'disabled'}`,
-  `MIME Type: ${mimeType || 'Unknown'}`,
-  `Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : 'Unknown'}`];
-
+    t('Quality: {quality}', { quality }),
+    t('Auto center: {status}', { status: autoCenter ? t('enabled') : t('disabled') }),
+    t('Panning: {status}', { status: enablePanning ? t('enabled') : t('disabled') }),
+    t('Filters: {status}', { status: enableFilters ? t('enabled') : t('disabled') }),
+    t('MIME Type: {mimeType}', { mimeType: mimeType || t('Unknown') }),
+    t('Size: {size}', { size: fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : t('Unknown') })
+  ];
 
   const headerControls =
-  <>
-			<PluginControlGroup>
-				<button onClick={handleZoomOut} title={t('Zoom Out')}>
-					<ZoomOutIcon />
-				</button>
-				<button
-        onClick={() => updateTransform({ scale: 1 })}
-        title={t('Reset Zoom')}>
+    <>
+      <PluginControlGroup>
+        <button onClick={handleZoomOut} title={t('Zoom Out')}>
+          <ZoomOutIcon />
+        </button>
+        <button
+          onClick={() => updateTransform({ scale: 1 })}
+          title={t('Reset Zoom')}>
 
-					{Math.round(transform.scale * 100)}%
-				</button>
-				<button onClick={handleZoomIn} title={t('Zoom In')}>
-					<ZoomInIcon />
-				</button>
-			</PluginControlGroup>
+          {Math.round(transform.scale * 100)}%
+        </button>
+        <button onClick={handleZoomIn} title={t('Zoom In')}>
+          <ZoomInIcon />
+        </button>
+      </PluginControlGroup>
 
-			<PluginControlGroup>
-				<button
-        onClick={handleRotate}
-        title={`Rotate 90° (${transform.rotation}°)`}>
+      <PluginControlGroup>
+        <button
+          onClick={handleRotate}
+          title={`Rotate 90° (${transform.rotation}°)`}>
 
-					<RotateIcon />
-				</button>
-				<button
-        onClick={handleFlipH}
-        title={t('Flip Horizontal')}
-        className={transform.flipH ? 'active' : ''}>
+          <RotateIcon />
+        </button>
+        <button
+          onClick={handleFlipH}
+          title={t('Flip Horizontal')}
+          className={transform.flipH ? 'active' : ''}>
 
-					<FlipHorizontalIcon />
-				</button>
-				<button
-        onClick={handleFlipV}
-        title={t('Flip Vertical')}
-        className={transform.flipV ? 'active' : ''}>
+          <FlipHorizontalIcon />
+        </button>
+        <button
+          onClick={handleFlipV}
+          title={t('Flip Vertical')}
+          className={transform.flipV ? 'active' : ''}>
 
-					<FlipVerticalIcon />
-				</button>
-			</PluginControlGroup>
+          <FlipVerticalIcon />
+        </button>
+      </PluginControlGroup>
 
-			{enablePanning &&
-    <PluginControlGroup>
-					<button
-        title={`Panning ${enablePanning ? 'enabled' : 'disabled'}`}
-        className={enablePanning ? 'active' : ''}>
+      {enablePanning &&
+        <PluginControlGroup>
+          <button
+            title={`Panning ${enablePanning ? 'enabled' : 'disabled'}`}
+            className={enablePanning ? 'active' : ''}>
 
-						<MoveIcon />
-					</button>
-				</PluginControlGroup>
-    }
-
-			{enableFilters &&
-    <PluginControlGroup>
-					<button
-        onClick={() => handleBrightnessChange(-10)}
-        title={`Decrease Brightness (${transform.brightness}%)`}>
-
-						<BrightnessDownIcon />
-					</button>
-					<button
-        onClick={() => handleBrightnessChange(10)}
-        title={`Increase Brightness (${transform.brightness}%)`}>
-
-						<BrightnessIcon />
-					</button>
-					<button
-        onClick={() => handleContrastChange(-10)}
-        title={`Decrease Contrast (${transform.contrast}%)`}>
-
-						<ContrastDownIcon />
-					</button>
-					<button
-        onClick={() => handleContrastChange(10)}
-        title={`Increase Contrast (${transform.contrast}%)`}>
-
-						<ContrastIcon />
-					</button>
-				</PluginControlGroup>
-    }
-
-			<PluginControlGroup>
-				<button onClick={handleReset} title={t('Reset All Transforms')}>
-					<ResetIcon />
-				</button>
-				{!isSvg && fileId &&
-      <button
-        onClick={handleSave}
-        title={t('Save Changes to File')}
-        disabled={!hasChanges || isSaving}
-        className={hasChanges ? 'active' : ''}>
-
-						<SaveIcon />
-					</button>
+            <MoveIcon />
+          </button>
+        </PluginControlGroup>
       }
-				<button onClick={handleExport} title={t('Download Image')}>
-					<DownloadIcon />
-				</button>
-			</PluginControlGroup>
-		</>;
+
+      {enableFilters &&
+        <PluginControlGroup>
+          <button
+            onClick={() => handleBrightnessChange(-10)}
+            title={`Decrease Brightness (${transform.brightness}%)`}>
+
+            <BrightnessDownIcon />
+          </button>
+          <button
+            onClick={() => handleBrightnessChange(10)}
+            title={`Increase Brightness (${transform.brightness}%)`}>
+
+            <BrightnessIcon />
+          </button>
+          <button
+            onClick={() => handleContrastChange(-10)}
+            title={`Decrease Contrast (${transform.contrast}%)`}>
+
+            <ContrastDownIcon />
+          </button>
+          <button
+            onClick={() => handleContrastChange(10)}
+            title={`Increase Contrast (${transform.contrast}%)`}>
+
+            <ContrastIcon />
+          </button>
+        </PluginControlGroup>
+      }
+
+      <PluginControlGroup>
+        <button onClick={handleReset} title={t('Reset All Transforms')}>
+          <ResetIcon />
+        </button>
+        {!isSvg && fileId &&
+          <button
+            onClick={handleSave}
+            title={t('Save Changes to File')}
+            disabled={!hasChanges || isSaving}
+            className={hasChanges ? 'active' : ''}>
+
+            <SaveIcon />
+          </button>
+        }
+        <button onClick={handleExport} title={t('Download Image')}>
+          <DownloadIcon />
+        </button>
+      </PluginControlGroup>
+    </>;
 
 
   return (
     <div className="image-viewer-container">
-			<canvas ref={canvasRef} style={{ display: 'none' }} />
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-			<PluginHeader
+      <PluginHeader
         fileName={fileInfo.fileName}
         filePath={fileInfo.filePath}
         pluginName={PLUGIN_NAME}
@@ -450,7 +452,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
         controls={headerControls} />
 
 
-			<div
+      <div
         className="image-viewer-content"
         ref={imageContainerRef}
         onMouseDown={handleMouseDown}
@@ -458,35 +460,35 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}>
 
-				{isLoading && <div className="loading-indicator">{t('Loading image...')}</div>}
+        {isLoading && <div className="loading-indicator">{t('Loading image...')}</div>}
 
-				{!isLoading && imageSrc && !isSvg &&
-        <div
-          className={`image-container${autoCenter && transform.translateX === 0 && transform.translateY === 0 ? '' : ' no-center'}`}>
+        {!isLoading && imageSrc && !isSvg &&
+          <div
+            className={`image-container${autoCenter && transform.translateX === 0 && transform.translateY === 0 ? '' : ' no-center'}`}>
 
-						<img
-            src={imageSrc}
-            alt={fileName}
-            style={getTransformStyle()}
-            draggable={false} />
+            <img
+              src={imageSrc}
+              alt={fileName}
+              style={getTransformStyle()}
+              draggable={false} />
 
-					</div>
+          </div>
         }
 
-				{!isLoading && isSvg &&
-        <div
-          className={`svg-container${autoCenter && transform.translateX === 0 && transform.translateY === 0 ? '' : ' no-center'}`}
-          style={{ width: '100%', height: '100%' }}>
+        {!isLoading && isSvg &&
+          <div
+            className={`svg-container${autoCenter && transform.translateX === 0 && transform.translateY === 0 ? '' : ' no-center'}`}
+            style={{ width: '100%', height: '100%' }}>
 
-						{renderSvgIframe()}
-					</div>
+            {renderSvgIframe()}
+          </div>
         }
 
-				{!isLoading && !imageSrc && !svgContent &&
-        <div className="image-error-message">{t('Cannot display this image.')}</div>
+        {!isLoading && !imageSrc && !svgContent &&
+          <div className="image-error-message">{t('Cannot display this image.')}</div>
         }
-			</div>
-		</div>);
+      </div>
+    </div>);
 
 };
 

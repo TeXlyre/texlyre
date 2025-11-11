@@ -1,5 +1,5 @@
 // src/components/app/EditorApp.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -129,8 +129,8 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
       const projectType = doc?.projectMetadata?.type || 'latex';
       const buttonSelectors = projectType === 'typst' ?
-      ['.header-typst-compile-button .compile-button', '.header-compile-button .compile-button'] :
-      ['.header-compile-button .compile-button', '.header-typst-compile-button .compile-button'];
+        ['.header-typst-compile-button .compile-button', '.header-compile-button .compile-button'] :
+        ['.header-compile-button .compile-button', '.header-typst-compile-button .compile-button'];
 
       for (const selector of buttonSelectors) {
         const button = document.querySelector(selector) as HTMLButtonElement;
@@ -146,8 +146,8 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
       const projectType = doc?.projectMetadata?.type || 'latex';
       const containerSelectors = projectType === 'typst' ?
-      ['.header-typst-compile-button', '.header-compile-button'] :
-      ['.header-compile-button', '.header-typst-compile-button'];
+        ['.header-typst-compile-button', '.header-compile-button'] :
+        ['.header-compile-button', '.header-typst-compile-button'];
 
       for (const selector of containerSelectors) {
         const container = document.querySelector(selector) as any;
@@ -234,20 +234,18 @@ const EditorAppView: React.FC<EditorAppProps> = ({
       const projectId = sessionStorage.getItem('currentProjectId');
 
       if (
-      name &&
-      name !== 'Untitled Project' &&
-      name !== 'Shared Project' &&
-      projectId)
-      {
+        name &&
+        name !== 'Untitled Project' &&
+        name !== 'Shared Project' &&
+        projectId) {
         if (
-        lastSyncedMetadata.current.name !== name ||
-        lastSyncedMetadata.current.description !== description ||
-        lastSyncedMetadata.current.type !== type ||
-        lastSyncedMetadata.current.mainFile !== mainFile ||
-        lastSyncedMetadata.current.latexEngine !== latexEngine ||
-        lastSyncedMetadata.current.typstEngine !== typstEngine ||
-        lastSyncedMetadata.current.typstOutputFormat !== typstOutputFormat)
-        {
+          lastSyncedMetadata.current.name !== name ||
+          lastSyncedMetadata.current.description !== description ||
+          lastSyncedMetadata.current.type !== type ||
+          lastSyncedMetadata.current.mainFile !== mainFile ||
+          lastSyncedMetadata.current.latexEngine !== latexEngine ||
+          lastSyncedMetadata.current.typstEngine !== typstEngine ||
+          lastSyncedMetadata.current.typstOutputFormat !== typstOutputFormat) {
           lastSyncedMetadata.current = {
             name,
             description: description || '',
@@ -421,29 +419,29 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
   const CompileButtons = () => {
     const buttons = [
-    <LaTeXCompileButton
-      key="latex"
-      className="header-compile-button"
-      selectedDocId={localDocId}
-      documents={doc?.documents}
-      onNavigateToLinkedFile={handleNavigateToLinkedFile}
-      onExpandLatexOutput={handleExpandLatexOutput}
-      linkedFileInfo={linkedFileInfo}
-      shouldNavigateOnCompile={true}
-      useSharedSettings={true}
-      docUrl={docUrl} />,
+      <LaTeXCompileButton
+        key="latex"
+        className="header-compile-button"
+        selectedDocId={localDocId}
+        documents={doc?.documents}
+        onNavigateToLinkedFile={handleNavigateToLinkedFile}
+        onExpandLatexOutput={handleExpandLatexOutput}
+        linkedFileInfo={linkedFileInfo}
+        shouldNavigateOnCompile={true}
+        useSharedSettings={true}
+        docUrl={docUrl} />,
 
-    <TypstCompileButton
-      key="typst"
-      className="header-typst-compile-button"
-      selectedDocId={localDocId}
-      documents={doc?.documents}
-      onNavigateToLinkedFile={handleNavigateToLinkedFile}
-      onExpandTypstOutput={handleExpandTypstOutput}
-      linkedFileInfo={linkedFileInfo}
-      shouldNavigateOnCompile={true}
-      useSharedSettings={true}
-      docUrl={docUrl} />];
+      <TypstCompileButton
+        key="typst"
+        className="header-typst-compile-button"
+        selectedDocId={localDocId}
+        documents={doc?.documents}
+        onNavigateToLinkedFile={handleNavigateToLinkedFile}
+        onExpandTypstOutput={handleExpandTypstOutput}
+        linkedFileInfo={linkedFileInfo}
+        shouldNavigateOnCompile={true}
+        useSharedSettings={true}
+        docUrl={docUrl} />];
 
 
 
@@ -459,37 +457,37 @@ const EditorAppView: React.FC<EditorAppProps> = ({
   if (!isConnected && !doc) {
     return (
       <div className="app-container">
-				<div className="loading-container">
-					<div className="loading-spinner" />
-					<p>{t('Connecting to project...')}</p>
-				</div>
-			</div>);
+        <div className="loading-container">
+          <div className="loading-spinner" />
+          <p>{t('Connecting to project...')}</p>
+        </div>
+      </div>);
 
   }
 
   return (
     <div className="app-container">
-			{isOfflineMode && <OfflineBanner />}
-			{isGuestUser(user) &&
-      <GuestUpgradeBanner
-        onOpenUpgradeModal={() => setShowGuestUpgradeModal(true)} />
+      {isOfflineMode && <OfflineBanner />}
+      {isGuestUser(user) &&
+        <GuestUpgradeBanner
+          onOpenUpgradeModal={() => setShowGuestUpgradeModal(true)} />
 
       }
-			<header>
-				<div className="header-left">
-					<button className="back-button" onClick={onBackToProjects}>
-						<ChevronLeftIcon />{t('Projects')}
+      <header>
+        <div className="header-left">
+          <button className="back-button" onClick={onBackToProjects}>
+            <ChevronLeftIcon />{t('Projects')}
 
           </button>
-				</div>
-				<div className="header-center">
-					<div
+        </div>
+        <div className="header-center">
+          <div
             className="project-title-container"
             onClick={() => setIsEditingMetadata(true)}>
 
-						<div className="project-title-header">
-							<h3 className="project-title">{projectName}</h3>
-							<button
+            <div className="project-title-header">
+              <h3 className="project-title">{projectName}</h3>
+              <button
                 className="edit-title-button"
                 title={t('Edit Project Details')}
                 onClick={(e) => {
@@ -497,40 +495,40 @@ const EditorAppView: React.FC<EditorAppProps> = ({
                   setIsEditingMetadata(true);
                 }}>
 
-								<EditIcon />
-							</button>
-						</div>
-					</div>
-					{projectDescription &&
-          <div className="project-description">
-							<p>{projectDescription}</p>
-						</div>
+                <EditIcon />
+              </button>
+            </div>
+          </div>
+          {projectDescription &&
+            <div className="project-description">
+              <p>{projectDescription}</p>
+            </div>
           }
-				</div>
-				<div className="header-right">
-					<CompileButtons />
+        </div>
+        <div className="header-right">
+          <CompileButtons />
 
-					<ShareProjectButton
+          <ShareProjectButton
             className="header-share-button"
             projectName={projectName}
             shareUrl={shareUrl}
             onOpenShareModal={() => setShowShareModal(true)} />
 
-					{!isGuestUser(user) &&
-          <BackupStatusIndicator
-            className="header-backup-indicator"
-            currentProjectId={sessionStorage.getItem('currentProjectId')}
-            isInEditor={true} />
+          {!isGuestUser(user) &&
+            <BackupStatusIndicator
+              className="header-backup-indicator"
+              currentProjectId={sessionStorage.getItem('currentProjectId')}
+              isInEditor={true} />
 
           }
-					{!isOfflineMode &&
-          <CollabStatusIndicator
-            className="header-collab-status"
-            docUrl={docUrl} />
+          {!isOfflineMode &&
+            <CollabStatusIndicator
+              className="header-collab-status"
+              docUrl={docUrl} />
 
           }
-					<SettingsButton className="header-settings-button" />
-					<UserDropdown
+          <SettingsButton className="header-settings-button" />
+          <UserDropdown
             username={user?.username || ''}
             onLogout={onLogout}
             onOpenProfile={() => setShowProfileModal(true)}
@@ -539,74 +537,74 @@ const EditorAppView: React.FC<EditorAppProps> = ({
             onOpenUpgrade={() => setShowGuestUpgradeModal(true)}
             isGuest={isGuestUser(user)} />
 
-				</div>
-			</header>
+        </div>
+      </header>
 
-			{doc?.documents &&
-      <FileDocumentController
-        documents={doc?.documents || []}
-        selectedDocId={localDocId}
-        onSelectDocument={handleSelectDocument}
-        onCreateDocument={handleCreateDocument}
-        onRenameDocument={handleRenameDocument}
-        onUpdateContent={handleUpdateContent}
-        content={selectedDocument?.content || ''}
-        docUrl={docUrl}
-        targetDocId={targetDocId}
-        targetFilePath={targetFilePath} />
+      {doc?.documents &&
+        <FileDocumentController
+          documents={doc?.documents || []}
+          selectedDocId={localDocId}
+          onSelectDocument={handleSelectDocument}
+          onCreateDocument={handleCreateDocument}
+          onRenameDocument={handleRenameDocument}
+          onUpdateContent={handleUpdateContent}
+          content={selectedDocument?.content || ''}
+          docUrl={docUrl}
+          targetDocId={targetDocId}
+          targetFilePath={targetFilePath} />
 
       }
 
-			<footer>
+      <footer>
 
-				<div className="project-type-badge">{t('Typesetter:')}
+        <div className="project-type-badge">{t('Typesetter:')}
           <TypesetterInfo type={projectType} />
-				</div>
+        </div>
 
-				<p className="read-the-docs">{t('Built with TeXlyre')}
+        <p className="read-the-docs">{t('Built with TeXlyre')}
 
           <a href="https://texlyre.github.io" target="_blank" rel="noreferrer">
-						<img src={texlyreLogo} className="logo" alt={t('TeXlyre logo')} />
-					</a>
-					<span className="legal-links">
+            <img src={texlyreLogo} className="logo" alt={t('TeXlyre logo')} />
+          </a>
+          <span className="legal-links">
 
-						<br /> <a href="#" onClick={(event) => {
+            <br /> <a href="#" onClick={(event) => {
               event.preventDefault();
               setShowKeyboardShortcuts(true);
             }} className="shortcuts-link">{t('Keyboard Map')}
 
             </a>
-						{' '} • <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">{t('Documentation')}
+            {' '} • <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">{t('Documentation')}
 
             </a>
-						{' '} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">{t('Source Code')}
+            {' '} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">{t('Source Code')}
 
             </a>
-						{' '} • <a href="#" onClick={(event) => {
+            {' '} • <a href="#" onClick={(event) => {
               event.preventDefault();
               setShowPrivacy(true);
             }} className="privacy-link">{t('Privacy')}</a>
-					</span>
-				</p>
-				<ChatPanel className="footer-chat" />
-			</footer>
+          </span>
+        </p>
+        <ChatPanel className="footer-chat" />
+      </footer>
 
-			<KeyboardShortcutsModal
+      <KeyboardShortcutsModal
         isOpen={showKeyboardShortcuts}
         onClose={() => setShowKeyboardShortcuts(false)} />
 
 
-			<PrivacyModal
+      <PrivacyModal
         isOpen={showPrivacy}
         onClose={() => setShowPrivacy(false)} />
 
 
-			<Modal
+      <Modal
         isOpen={isEditingMetadata}
         onClose={() => setIsEditingMetadata(false)}
         title={t('Edit Project Details')}>
 
-				<ProjectForm
+        <ProjectForm
           project={{
             id: docUrl,
             name: projectName,
@@ -624,78 +622,78 @@ const EditorAppView: React.FC<EditorAppProps> = ({
           isSubmitting={isSubmitting}
           simpleMode={true} />
 
-			</Modal>
-			<ShareProjectModal
+      </Modal>
+      <ShareProjectModal
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         projectName={projectName}
         shareUrl={shareUrl} />
 
-			{!isGuestUser(user) &&
-      <>
-					<ProfileSettingsModal
-          isOpen={showProfileModal}
-          onClose={() => setShowProfileModal(false)} />
+      {!isGuestUser(user) &&
+        <>
+          <ProfileSettingsModal
+            isOpen={showProfileModal}
+            onClose={() => setShowProfileModal(false)} />
 
-					<ExportAccountModal
-          isOpen={showAccountExportModal}
-          onClose={() => setShowAccountExportModal(false)} />
+          <ExportAccountModal
+            isOpen={showAccountExportModal}
+            onClose={() => setShowAccountExportModal(false)} />
 
-					<DeleteAccountModal
-          isOpen={isDeleteAccountModalOpen}
-          onClose={() => setIsDeleteAccountModalOpen(false)}
-          onAccountDeleted={handleAccountDeleted}
-          onOpenExport={() => setShowAccountExportModal(true)} />
+          <DeleteAccountModal
+            isOpen={isDeleteAccountModalOpen}
+            onClose={() => setIsDeleteAccountModalOpen(false)}
+            onAccountDeleted={handleAccountDeleted}
+            onOpenExport={() => setShowAccountExportModal(true)} />
 
-				</>
+        </>
       }
-			{isGuestUser(user) &&
-      <GuestUpgradeModal
-        isOpen={showGuestUpgradeModal}
-        onClose={() => setShowGuestUpgradeModal(false)}
-        onUpgradeSuccess={handleGuestUpgradeSuccess} />
-
-      }
-			{!isGuestUser(user) &&
-      <BackupModal
-        isOpen={showAutoBackupModal}
-        onClose={() => setShowAutoBackupModal(false)}
-        status={status}
-        activities={activities}
-        onRequestAccess={requestAccess}
-        onSynchronize={synchronize}
-        onExportToFileSystem={synchronize}
-        onImportChanges={importChanges}
-        onDisconnect={disconnect}
-        onClearActivity={clearActivity}
-        onClearAllActivities={clearAllActivities}
-        onChangeDirectory={changeDirectory}
-        currentProjectId={sessionStorage.getItem('currentProjectId')}
-        isInEditor={true} />
+      {isGuestUser(user) &&
+        <GuestUpgradeModal
+          isOpen={showGuestUpgradeModal}
+          onClose={() => setShowGuestUpgradeModal(false)}
+          onUpgradeSuccess={handleGuestUpgradeSuccess} />
 
       }
-			<ToastContainer />
-		</div>);
+      {!isGuestUser(user) &&
+        <BackupModal
+          isOpen={showAutoBackupModal}
+          onClose={() => setShowAutoBackupModal(false)}
+          status={status}
+          activities={activities}
+          onRequestAccess={requestAccess}
+          onSynchronize={synchronize}
+          onExportToFileSystem={synchronize}
+          onImportChanges={importChanges}
+          onDisconnect={disconnect}
+          onClearActivity={clearActivity}
+          onClearAllActivities={clearAllActivities}
+          onChangeDirectory={changeDirectory}
+          currentProjectId={sessionStorage.getItem('currentProjectId')}
+          isInEditor={true} />
+
+      }
+      <ToastContainer />
+    </div>);
 
 };
 
 const EditorApp: React.FC<EditorAppProps> = (props) => {
   return (
     <CollabProvider docUrl={props.docUrl} collectionName="yjs_metadata">
-			<ChatProvider docUrl={props.docUrl}>
-				<FileTreeProvider docUrl={props.docUrl}>
-					<FileSyncProvider docUrl={props.docUrl}>
-						<LaTeXProvider>
-							<TypstProvider>
-								<ContentFormatterProvider>
-									<EditorAppView {...props} />
-								</ContentFormatterProvider>
-							</TypstProvider>
-						</LaTeXProvider>
-					</FileSyncProvider>
-				</FileTreeProvider>
-			</ChatProvider>
-		</CollabProvider>);
+      <ChatProvider docUrl={props.docUrl}>
+        <FileTreeProvider docUrl={props.docUrl}>
+          <FileSyncProvider docUrl={props.docUrl}>
+            <LaTeXProvider>
+              <TypstProvider>
+                <ContentFormatterProvider>
+                  <EditorAppView {...props} />
+                </ContentFormatterProvider>
+              </TypstProvider>
+            </LaTeXProvider>
+          </FileSyncProvider>
+        </FileTreeProvider>
+      </ChatProvider>
+    </CollabProvider>);
 
 };
 

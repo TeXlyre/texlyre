@@ -1,5 +1,5 @@
 // src/contexts/LaTeXContext.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import {
   type ReactNode,
@@ -7,8 +7,9 @@ import {
   useEffect,
   useCallback,
   useRef,
-  useState } from
-'react';
+  useState
+} from
+  'react';
 
 import { useFileTree } from '../hooks/useFileTree';
 import { useSettings } from '../hooks/useSettings';
@@ -54,19 +55,19 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     settingsRegistered.current = true;
 
     const initialEngine =
-    getSetting('latex-engine')?.value as 'pdftex' | 'xetex' | 'luatex' ??
-    'pdftex';
+      getSetting('latex-engine')?.value as 'pdftex' | 'xetex' | 'luatex' ??
+      'pdftex';
     const initialTexliveEndpoint =
-    getSetting('latex-texlive-endpoint')?.value as string ??
-    'http://texlive.localhost:8082';
+      getSetting('latex-texlive-endpoint')?.value as string ??
+      'http://texlive.localhost:8082';
     const initialStoreCache =
-    getSetting('latex-store-cache')?.value as boolean ?? true;
+      getSetting('latex-store-cache')?.value as boolean ?? true;
     const initialStoreWorkingDirectory =
-    getSetting('latex-store-working-directory')?.value as boolean ?? false;
+      getSetting('latex-store-working-directory')?.value as boolean ?? false;
     const initialAutoCompile =
-    getSetting('latex-auto-compile-on-open')?.value as boolean ?? false;
+      getSetting('latex-auto-compile-on-open')?.value as boolean ?? false;
     const initialAutoNavigate =
-    getSetting('latex-auto-navigate-to-main')?.value as string ?? 'conditional';
+      getSetting('latex-auto-navigate-to-main')?.value as string ?? 'conditional';
 
     setLatexEngine(initialEngine);
 
@@ -79,9 +80,9 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       description: t("Choose the LaTeX engine for compilation"),
       defaultValue: initialEngine,
       options: [
-      { label: t("pdfTeX"), value: 'pdftex' },
-      { label: t("XeTeX"), value: 'xetex' }
-      // { label: "LuaTeX", value: "luatex" },
+        { label: t("pdfTeX"), value: 'pdftex' },
+        { label: t("XeTeX"), value: 'xetex' }
+        // { label: "LuaTeX", value: "luatex" },
       ],
       onChange: (value) => {
         handleSetLatexEngine(value as 'pdftex' | 'xetex' | 'luatex');
@@ -120,9 +121,9 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       description: t("Control when to automatically navigate to the main LaTeX file during compilation"),
       defaultValue: initialAutoNavigate,
       options: [
-      { label: t("Only when no LaTeX file is open"), value: 'conditional' },
-      { label: t("Always navigate to main file"), value: 'always' },
-      { label: t("Never navigate to main file"), value: 'never' }]
+        { label: t("Only when no LaTeX file is open"), value: 'conditional' },
+        { label: t("Always navigate to main file"), value: 'always' },
+        { label: t("Never navigate to main file"), value: 'never' }]
 
     });
 
@@ -163,7 +164,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       onChange: () => {
 
         // Notification setting changes are handled by the service
-      } });
+      }
+    });
 
     latexService.setTexliveEndpoint(initialTexliveEndpoint);
     latexService.setStoreCache(initialStoreCache);
@@ -179,8 +181,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
   }, [latexEngine]);
 
   const handleSetLatexEngine = async (
-  engine: 'pdftex' | 'xetex' | 'luatex') =>
-  {
+    engine: 'pdftex' | 'xetex' | 'luatex') => {
     if (engine === latexEngine) return;
 
     setLatexEngine(engine);
@@ -366,7 +367,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
         activeCompiler
       }}>
 
-			{children}
-		</LaTeXContext.Provider>);
+      {children}
+    </LaTeXContext.Provider>);
 
 };

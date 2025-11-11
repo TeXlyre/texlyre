@@ -1,5 +1,5 @@
 // src/components/chat/ChatPanel.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -46,62 +46,62 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
     <div
       className={`chat-panel ${isCollapsed ? 'collapsed' : 'expanded'} ${className}`}>
 
-			<div className="chat-panel-header" onClick={toggleCollapsed}>
-				<span className="chat-panel-title">{t('Project Chat')}</span>
-				<div className="chat-panel-status">
-					{isConnected &&
-          <div className="connection-indicator connected" title={t('Connected')} />
+      <div className="chat-panel-header" onClick={toggleCollapsed}>
+        <span className="chat-panel-title">{t('Project Chat')}</span>
+        <div className="chat-panel-status">
+          {isConnected &&
+            <div className="connection-indicator connected" title={t('Connected')} />
           }
-					{messages.length > 0 &&
-          <span className="message-count">{messages.length}</span>
+          {messages.length > 0 &&
+            <span className="message-count">{messages.length}</span>
           }
-					<button className="collapse-toggle">
-						{isCollapsed ? <ChevronUpIcon /> : <ChevronDownIcon />}
-					</button>
-				</div>
-			</div>
-
-			{!isCollapsed &&
-      <div className="chat-panel-content">
-					<div className="chat-panel-messages">
-						{messages.length === 0 ?
-          <div className="empty-chat">
-								<p>{t('Welcome to the project chat!')}</p>
-								<p>{t('Start a conversation with your collaborators.')}</p>
-							</div> :
-
-          messages.map((message) =>
-          <ChatMessage
-            key={message.id}
-            message={message}
-            isOwnMessage={message.user === user?.username} />
-
-          )
-          }
-						<div ref={messagesEndRef} />
-					</div>
-
-					<div className="chat-panel-input-container">
-						<textarea
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={t('Type a message...')}
-            className="chat-panel-input"
-            disabled={!isConnected}
-            rows={1} />
-
-						<button
-            onClick={handleSendMessage}
-            disabled={!inputValue.trim() || !isConnected}
-            className="chat-panel-send-button">{t('Send')}
-
-
+          <button className="collapse-toggle">
+            {isCollapsed ? <ChevronUpIcon /> : <ChevronDownIcon />}
           </button>
-					</div>
-				</div>
+        </div>
+      </div>
+
+      {!isCollapsed &&
+        <div className="chat-panel-content">
+          <div className="chat-panel-messages">
+            {messages.length === 0 ?
+              <div className="empty-chat">
+                <p>{t('Welcome to the project chat!')}</p>
+                <p>{t('Start a conversation with your collaborators.')}</p>
+              </div> :
+
+              messages.map((message) =>
+                <ChatMessage
+                  key={message.id}
+                  message={message}
+                  isOwnMessage={message.user === user?.username} />
+
+              )
+            }
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="chat-panel-input-container">
+            <textarea
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={t('Type a message...')}
+              className="chat-panel-input"
+              disabled={!isConnected}
+              rows={1} />
+
+            <button
+              onClick={handleSendMessage}
+              disabled={!inputValue.trim() || !isConnected}
+              className="chat-panel-send-button">{t('Send')}
+
+
+            </button>
+          </div>
+        </div>
       }
-		</div>);
+    </div>);
 
 };
 

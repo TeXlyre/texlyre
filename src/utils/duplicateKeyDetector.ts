@@ -1,5 +1,5 @@
 // src/utils/duplicateKeyDetector.ts
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import { fileStorageService } from '../services/FileStorageService';
 import { notificationService } from '../services/NotificationService';
 

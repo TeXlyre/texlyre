@@ -1,5 +1,5 @@
 // src/components/editor/FileDocumentController.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { IndexeddbPersistence } from 'y-indexeddb';
@@ -13,8 +13,9 @@ import { useTheme } from '../../hooks/useTheme';
 import { useEditorTabs } from '../../hooks/useEditorTabs';
 import {
   fileStorageEventEmitter,
-  fileStorageService } from
-'../../services/FileStorageService';
+  fileStorageService
+} from
+  '../../services/FileStorageService';
 import { pdfWindowService } from '../../services/PdfWindowService';
 import type { Document } from '../../types/documents';
 import type { FileNode } from '../../types/files';
@@ -49,12 +50,12 @@ interface FileDocumentControllerProps {
 }
 
 const getDocumentContent = async (
-projectUrl: string,
-docId: string)
-: Promise<string> => {
+  projectUrl: string,
+  docId: string)
+  : Promise<string> => {
   const projectId = projectUrl.startsWith('yjs:') ?
-  projectUrl.slice(4) :
-  projectUrl;
+    projectUrl.slice(4) :
+    projectUrl;
   const dbName = `texlyre-project-${projectId}`;
   const docCollection = `${dbName}-yjs_${docId}`;
 
@@ -98,7 +99,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   targetFilePath
 }) => {
   const { selectedFileId, getFile, fileTree, selectFile, getFileContent } =
-  useFileTree();
+    useFileTree();
   const { currentLayout } = useTheme();
   const { getProjectById, updateProject } = useAuth();
   const { getProperty, setProperty, registerProperty } = useProperties();
@@ -149,12 +150,12 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   );
   const [lastUserSelectedFileId, setLastUserSelectedFileId] = useState<
     string | null>(
-    null);
+      null);
 
   const [showCurrentProjectExportModal, setShowCurrentProjectExportModal] =
-  useState(false);
+    useState(false);
   const [currentProjectForExport, setCurrentProjectForExport] =
-  useState<Project | null>(null);
+    useState<Project | null>(null);
 
   const handleExportCurrentProject = async (projectId: string) => {
     try {
@@ -307,9 +308,9 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
         for (let i = 0; i < pathSegments.length - 1; i++) {
           currentPath =
-          currentPath === '' ?
-          `/${pathSegments[i]}` :
-          `${currentPath}/${pathSegments[i]}`;
+            currentPath === '' ?
+              `/${pathSegments[i]}` :
+              `${currentPath}/${pathSegments[i]}`;
           expandPaths.push(currentPath);
         }
 
@@ -325,9 +326,9 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
       if (filePath) {
         const findFileByPath = (
-        nodes: FileNode[],
-        path: string)
-        : FileNode | null => {
+          nodes: FileNode[],
+          path: string)
+          : FileNode | null => {
           for (const node of nodes) {
             if (node.path === path && node.type === 'file') {
               return node;
@@ -350,9 +351,9 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
           for (let i = 0; i < pathSegments.length - 1; i++) {
             currentPath =
-            currentPath === '' ?
-            `/${pathSegments[i]}` :
-            `${currentPath}/${pathSegments[i]}`;
+              currentPath === '' ?
+                `/${pathSegments[i]}` :
+                `${currentPath}/${pathSegments[i]}`;
             expandPaths.push(currentPath);
           }
 
@@ -408,12 +409,12 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
       );
     };
   }, [
-  showLatexOutput,
-  showTypstOutput,
-  fileTree,
-  isEditingFile,
-  selectedFileId,
-  getFileContent]
+    showLatexOutput,
+    showTypstOutput,
+    fileTree,
+    isEditingFile,
+    selectedFileId,
+    getFileContent]
   );
 
   useEffect(() => {
@@ -496,15 +497,14 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
   useEffect(() => {
     if (
-    !hasNavigatedToFile &&
-    targetFilePath &&
-    fileTree.length > 0 &&
-    !targetDocId)
-    {
+      !hasNavigatedToFile &&
+      targetFilePath &&
+      fileTree.length > 0 &&
+      !targetDocId) {
       const findFileByPath = (
-      nodes: FileNode[],
-      path: string)
-      : FileNode | null => {
+        nodes: FileNode[],
+        path: string)
+        : FileNode | null => {
         for (const node of nodes) {
           if (node.path === path) {
             return node;
@@ -524,14 +524,14 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
         const expandPaths: string[] = [];
         let currentPath = '';
         const pathSegments = targetFilePath.
-        split('/').
-        filter((segment) => segment);
+          split('/').
+          filter((segment) => segment);
 
         for (let i = 0; i < pathSegments.length - 1; i++) {
           currentPath =
-          currentPath === '' ?
-          `/${pathSegments[i]}` :
-          `${currentPath}/${pathSegments[i]}`;
+            currentPath === '' ?
+              `/${pathSegments[i]}` :
+              `${currentPath}/${pathSegments[i]}`;
           expandPaths.push(currentPath);
         }
 
@@ -544,13 +544,12 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
   useEffect(() => {
     if (
-    selectedFileId &&
-    activeView === 'files' &&
-    !isEditingFile &&
-    !lastUserSelectedFileId)
-    {
+      selectedFileId &&
+      activeView === 'files' &&
+      !isEditingFile &&
+      !lastUserSelectedFileId) {
       const isInitialNavigation =
-      hasNavigatedToFile || initialSelectedFile === selectedFileId;
+        hasNavigatedToFile || initialSelectedFile === selectedFileId;
 
       if (isInitialNavigation) {
         const loadSelectedFile = async () => {
@@ -576,12 +575,12 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
       }
     }
   }, [
-  selectedFileId,
-  activeView,
-  isEditingFile,
-  hasNavigatedToFile,
-  initialSelectedFile,
-  lastUserSelectedFileId]
+    selectedFileId,
+    activeView,
+    isEditingFile,
+    hasNavigatedToFile,
+    initialSelectedFile,
+    lastUserSelectedFileId]
   );
 
   useEffect(() => {
@@ -616,15 +615,15 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
     const isDocumentLinkedToTyp = !isEditingFile && linkedFileInfo?.fileName?.endsWith('.typ');
 
     const hasLatexContent = !isEditingFile && !linkedFileInfo?.fileName &&
-    content && (content.includes('\\section') || content.includes('\\chapter') ||
-    content.includes('\\subsection') || content.includes('\\begin{document}'));
+      content && (content.includes('\\section') || content.includes('\\chapter') ||
+        content.includes('\\subsection') || content.includes('\\begin{document}'));
 
     // For Typst, look for heading markers
     const hasTypstContent = !isEditingFile && !linkedFileInfo?.fileName &&
-    content && (content.includes('= ') || content.includes('== ') || content.includes('=== '));
+      content && (content.includes('= ') || content.includes('== ') || content.includes('=== '));
 
     const shouldShowOutline = isTexFile || isTypFile || isDocumentLinkedToTex ||
-    isDocumentLinkedToTyp || hasLatexContent || hasTypstContent;
+      isDocumentLinkedToTyp || hasLatexContent || hasTypstContent;
     setShowOutline(shouldShowOutline);
   }, [isEditingFile, fileName, linkedFileInfo?.fileName, content]);
 
@@ -724,10 +723,9 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   };
 
   const handleFileSelect = async (
-  fileId: string,
-  content: string | ArrayBuffer,
-  isBinary = false) =>
-  {
+    fileId: string,
+    content: string | ArrayBuffer,
+    isBinary = false) => {
     setFileContent(content);
     setIsEditingFile(true);
     setIsBinaryFile(isBinary);
@@ -775,10 +773,9 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   };
 
   const handleUserFileSelect = async (
-  fileId: string,
-  content: string | ArrayBuffer,
-  isBinary = false) =>
-  {
+    fileId: string,
+    content: string | ArrayBuffer,
+    isBinary = false) => {
     const file = await getFile(fileId);
     setLastUserSelectedFileId(fileId);
     if (typeof content === 'string') {
@@ -962,7 +959,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
   return (
     <div className="main-content">
-			<ResizablePanel
+      <ResizablePanel
         direction="horizontal"
         width={sidebarWidth}
         minWidth={currentLayout?.minFileExplorerWidth || 200}
@@ -972,7 +969,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
         onCollapse={handleSidebarCollapse}
         className="sidebar-container">
 
-				<ResizablePanel
+        <ResizablePanel
           direction="vertical"
           height={explorerHeight}
           minHeight={350}
@@ -983,133 +980,133 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
           maintainAlignment={true}
           className="explorer-container">
 
-					<div className="view-toggle">
-						<button
+          <div className="view-toggle">
+            <button
               className={activeView === 'files' ? 'active' : ''}
               onClick={handleSwitchToFiles}>{t('Files')}
 
 
             </button>
-						<button
+            <button
               className={activeView === 'documents' ? 'active' : ''}
               onClick={handleSwitchToDocuments}>{t('Docs')}
 
 
             </button>
-						<button
+            <button
               className={activeView === 'search' ? 'active' : ''}
               onClick={() => setActiveView('search')}>{t('Search')}
 
 
             </button>
-					</div>
+          </div>
 
-					{activeView === 'search' ?
-          <SearchPanel
-            onNavigateToResult={async (fileId, line, column, documentId, isLinkedDocument) => {
-              if (isLinkedDocument && documentId) {
-                // Navigate to the linked document instead
-                handleDocumentSelect(documentId);
+          {activeView === 'search' ?
+            <SearchPanel
+              onNavigateToResult={async (fileId, line, column, documentId, isLinkedDocument) => {
+                if (isLinkedDocument && documentId) {
+                  // Navigate to the linked document instead
+                  handleDocumentSelect(documentId);
 
-                setTimeout(() => {
-                  if (line !== undefined) {
-                    document.dispatchEvent(
-                      new CustomEvent('codemirror-goto-line', {
-                        detail: { line, documentId }
-                      })
-                    );
-                  }
-                }, 100);
-              } else {
-                // Navigate to the file
-                const file = await getFile(fileId);
-                if (file) {
-                  const content = await getFileContent(fileId);
-                  if (content) {
-                    handleUserFileSelect(fileId, content, file.isBinary || false);
+                  setTimeout(() => {
+                    if (line !== undefined) {
+                      document.dispatchEvent(
+                        new CustomEvent('codemirror-goto-line', {
+                          detail: { line, documentId }
+                        })
+                      );
+                    }
+                  }, 100);
+                } else {
+                  // Navigate to the file
+                  const file = await getFile(fileId);
+                  if (file) {
+                    const content = await getFileContent(fileId);
+                    if (content) {
+                      handleUserFileSelect(fileId, content, file.isBinary || false);
 
-                    setTimeout(() => {
-                      if (line !== undefined) {
-                        document.dispatchEvent(
-                          new CustomEvent('codemirror-goto-line', {
-                            detail: { line, fileId }
-                          })
-                        );
-                      }
-                    }, 100);
+                      setTimeout(() => {
+                        if (line !== undefined) {
+                          document.dispatchEvent(
+                            new CustomEvent('codemirror-goto-line', {
+                              detail: { line, fileId }
+                            })
+                          );
+                        }
+                      }, 100);
+                    }
                   }
                 }
-              }
-            }} /> :
+              }} /> :
 
-          activeView === 'documents' ?
-          <DocumentExplorer
-            documents={documents}
-            selectedDocId={selectedDocId}
-            onSelectDocument={handleDocumentSelect}
-            onCreateDocument={onCreateDocument}
-            onRenameDocument={onRenameDocument}
-            onUpdateContent={onUpdateContent}
-            content={content}
-            docUrl={docUrl}
-            getDocumentContent={getDocumentContent} /> :
+            activeView === 'documents' ?
+              <DocumentExplorer
+                documents={documents}
+                selectedDocId={selectedDocId}
+                onSelectDocument={handleDocumentSelect}
+                onCreateDocument={onCreateDocument}
+                onRenameDocument={onRenameDocument}
+                onUpdateContent={onUpdateContent}
+                content={content}
+                docUrl={docUrl}
+                getDocumentContent={getDocumentContent} /> :
 
 
-          <FileExplorer
-            onFileSelect={handleUserFileSelect}
-            onCreateDocument={handleCreateDocument}
-            documents={documents.map((doc) => ({
-              id: Number.parseInt(doc.id, 36),
-              name: doc.name
-            }))}
-            initialSelectedFile={initialSelectedFile}
-            initialExpandedPaths={initialExpandedPaths}
-            currentProjectId={sessionStorage.getItem('currentProjectId')}
-            onExportCurrentProject={handleExportCurrentProject}
-            projectType={projectType} />
+              <FileExplorer
+                onFileSelect={handleUserFileSelect}
+                onCreateDocument={handleCreateDocument}
+                documents={documents.map((doc) => ({
+                  id: Number.parseInt(doc.id, 36),
+                  name: doc.name
+                }))}
+                initialSelectedFile={initialSelectedFile}
+                initialExpandedPaths={initialExpandedPaths}
+                currentProjectId={sessionStorage.getItem('currentProjectId')}
+                onExportCurrentProject={handleExportCurrentProject}
+                projectType={projectType} />
 
           }
-				</ResizablePanel>
+        </ResizablePanel>
 
-				{showOutline && (() => {
+        {showOutline && (() => {
           const isTypstFile = isEditingFile && fileName?.endsWith('.typ') ||
-          !isEditingFile && linkedFileInfo?.fileName?.endsWith('.typ') ||
-          !isEditingFile && !linkedFileInfo?.fileName &&
-          currentEditorContent?.includes('= ');
+            !isEditingFile && linkedFileInfo?.fileName?.endsWith('.typ') ||
+            !isEditingFile && !linkedFileInfo?.fileName &&
+            currentEditorContent?.includes('= ');
 
           return isTypstFile ?
-          <TypstOutline
-            content={currentEditorContent}
-            currentLine={currentLine}
-            onSectionClick={handleOutlineSectionClick}
-            onRefresh={handleOutlineRefresh}
-            linkedFileInfo={linkedFileInfo}
-            currentFilePath={currentFilePath}
-            isEditingFile={isEditingFile} /> :
+            <TypstOutline
+              content={currentEditorContent}
+              currentLine={currentLine}
+              onSectionClick={handleOutlineSectionClick}
+              onRefresh={handleOutlineRefresh}
+              linkedFileInfo={linkedFileInfo}
+              currentFilePath={currentFilePath}
+              isEditingFile={isEditingFile} /> :
 
 
-          <LaTeXOutline
-            content={currentEditorContent}
-            currentLine={currentLine}
-            onSectionClick={handleOutlineSectionClick}
-            onRefresh={handleOutlineRefresh}
-            linkedFileInfo={linkedFileInfo}
-            currentFilePath={currentFilePath}
-            isEditingFile={isEditingFile} />;
+            <LaTeXOutline
+              content={currentEditorContent}
+              currentLine={currentLine}
+              onSectionClick={handleOutlineSectionClick}
+              onRefresh={handleOutlineRefresh}
+              linkedFileInfo={linkedFileInfo}
+              currentFilePath={currentFilePath}
+              isEditingFile={isEditingFile} />;
 
 
         })()}
 
-			</ResizablePanel>
+      </ResizablePanel>
 
-			<div
+      <div
         className="editor-container-outer"
         style={{ flex: 1, display: 'flex', minHeight: 0 }}>
 
-				<div className="editor-container" style={{ flex: 1, minWidth: 0 }}>
-					<EditorTabs onTabSwitch={handleTabSwitch} />
+        <div className="editor-container" style={{ flex: 1, minWidth: 0 }}>
+          <EditorTabs onTabSwitch={handleTabSwitch} />
 
-					<Editor
+          <Editor
             content={isEditingFile ? fileContent : content}
             documentId={selectedDocId || ''}
             onUpdateContent={handleUpdateContent}
@@ -1118,91 +1115,91 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
             fileName={isEditingFile ? fileName : linkedFileInfo.fileName}
             mimeType={isEditingFile ? mimeType : linkedFileInfo.mimeType}
             fileId={
-            isEditingFile ? selectedFileId || '' : linkedFileInfo.fileId || ''
+              isEditingFile ? selectedFileId || '' : linkedFileInfo.fileId || ''
             }
             docUrl={docUrl}
             documentSelectionChange={
-            isEditingFile ? fileSelectionChange : documentSelectionChange
+              isEditingFile ? fileSelectionChange : documentSelectionChange
             }
             isEditingFile={isEditingFile}
             onSelectDocument={handleDocumentSelect}
             onSwitchToDocuments={handleSwitchToDocuments}
             linkedDocumentId={
-            isEditingFile ?
-            linkedDocumentId :
-            linkedFileInfo.fileName ?
-            selectedDocId :
-            null
+              isEditingFile ?
+                linkedDocumentId :
+                linkedFileInfo.fileName ?
+                  selectedDocId :
+                  null
             }
             documents={documents}
             linkedFileInfo={linkedFileInfo} />
 
-				</div>
+        </div>
 
-				{showLatexOutput &&
-        <ResizablePanel
-          direction="horizontal"
-          width={latexOutputWidth}
-          minWidth={400}
-          maxWidth={1200}
-          alignment="start"
-          onResize={handleLatexOutputWidthResize}
-          collapsed={latexOutputCollapsed && !temporaryLatexExpand}
-          onCollapse={handleLatexOutputCollapse}
-          className="latex-output-container">
+        {showLatexOutput &&
+          <ResizablePanel
+            direction="horizontal"
+            width={latexOutputWidth}
+            minWidth={400}
+            maxWidth={1200}
+            alignment="start"
+            onResize={handleLatexOutputWidthResize}
+            collapsed={latexOutputCollapsed && !temporaryLatexExpand}
+            onCollapse={handleLatexOutputCollapse}
+            className="latex-output-container">
 
-						<LaTeXOutput
-            selectedDocId={selectedDocId}
-            documents={documents}
-            onNavigateToLinkedFile={handleNavigateToLinkedFile}
-            onExpandLatexOutput={pdfWindowService.isWindowOpen() ? undefined : handleLatexOutputExpand}
-            linkedFileInfo={linkedFileInfo}
-            docUrl={docUrl} />
+            <LaTeXOutput
+              selectedDocId={selectedDocId}
+              documents={documents}
+              onNavigateToLinkedFile={handleNavigateToLinkedFile}
+              onExpandLatexOutput={pdfWindowService.isWindowOpen() ? undefined : handleLatexOutputExpand}
+              linkedFileInfo={linkedFileInfo}
+              docUrl={docUrl} />
 
-					</ResizablePanel>
+          </ResizablePanel>
         }
 
-				{showTypstOutput &&
-        <ResizablePanel
-          direction="horizontal"
-          width={typstOutputWidth}
-          minWidth={400}
-          maxWidth={1200}
-          alignment="start"
-          onResize={handleTypstOutputWidthResize}
-          collapsed={typstOutputCollapsed && !temporaryTypstExpand}
-          onCollapse={handleTypstOutputCollapse}
-          className="typst-output-container">
+        {showTypstOutput &&
+          <ResizablePanel
+            direction="horizontal"
+            width={typstOutputWidth}
+            minWidth={400}
+            maxWidth={1200}
+            alignment="start"
+            onResize={handleTypstOutputWidthResize}
+            collapsed={typstOutputCollapsed && !temporaryTypstExpand}
+            onCollapse={handleTypstOutputCollapse}
+            className="typst-output-container">
 
-						<TypstOutput
-            selectedDocId={selectedDocId}
-            documents={documents}
-            onNavigateToLinkedFile={handleNavigateToLinkedFile}
-            onExpandTypstOutput={handleTypstOutputExpand}
-            linkedFileInfo={linkedFileInfo} />
+            <TypstOutput
+              selectedDocId={selectedDocId}
+              documents={documents}
+              onNavigateToLinkedFile={handleNavigateToLinkedFile}
+              onExpandTypstOutput={handleTypstOutputExpand}
+              linkedFileInfo={linkedFileInfo} />
 
-					</ResizablePanel>
+          </ResizablePanel>
         }
-			</div>
+      </div>
 
-			{showCurrentProjectExportModal && currentProjectForExport &&
-      <ProjectExportModal
-        isOpen={showCurrentProjectExportModal}
-        onClose={() => setShowCurrentProjectExportModal(false)}
-        selectedProjects={[currentProjectForExport]} />
+      {showCurrentProjectExportModal && currentProjectForExport &&
+        <ProjectExportModal
+          isOpen={showCurrentProjectExportModal}
+          onClose={() => setShowCurrentProjectExportModal(false)}
+          selectedProjects={[currentProjectForExport]} />
 
       }
-		</div>);
+    </div>);
 
 };
 
 const FileDocumentController: React.FC<FileDocumentControllerProps> = (props) => {
   return (
     <SearchProvider>
-			<EditorTabsProvider>
-				<FileDocumentControllerContent {...props} />
-			</EditorTabsProvider>
-		</SearchProvider>);
+      <EditorTabsProvider>
+        <FileDocumentControllerContent {...props} />
+      </EditorTabsProvider>
+    </SearchProvider>);
 
 };
 

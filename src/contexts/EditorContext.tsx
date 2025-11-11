@@ -1,5 +1,5 @@
 // src/contexts/EditorContext.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import {
   type ReactNode,
@@ -7,29 +7,32 @@ import {
   useCallback,
   useEffect,
   useRef,
-  useState } from
-'react';
+  useState
+} from
+  'react';
 
 import { pluginRegistry } from '../plugins/PluginRegistry';
 import { useSettings } from '../hooks/useSettings';
 import type {
   EditorSettings,
   FontFamily,
-  FontSize } from
-'../types/editorSettings';
+  FontSize
+} from
+  '../types/editorSettings';
 import {
   defaultEditorSettings,
   fontFamilyMap,
-  fontSizeMap } from
-'../types/editorSettings';
+  fontSizeMap
+} from
+  '../types/editorSettings';
 import type { CollabConnectOptions } from '../types/collab';
 
 interface EditorContextType {
   editorSettings: EditorSettings;
   updateEditorSetting: <K extends keyof EditorSettings>(
-  key: K,
-  value: EditorSettings[K])
-  => void;
+    key: K,
+    value: EditorSettings[K])
+    => void;
   getFontSize: () => string;
   getFontFamily: () => string;
   getLineNumbersEnabled: () => boolean;
@@ -45,7 +48,7 @@ interface EditorContextType {
 
 export const EditorContext = createContext<EditorContextType>({
   editorSettings: defaultEditorSettings,
-  updateEditorSetting: () => {},
+  updateEditorSetting: () => { },
   getFontSize: () => '14px',
   getFontFamily: () => fontFamilyMap.monospace,
   getLineNumbersEnabled: () => true,
@@ -56,7 +59,7 @@ export const EditorContext = createContext<EditorContextType>({
   getSpellCheckEnabled: () => true,
   getCollabOptions: () => ({}),
   getEnabledLSPPlugins: () =>
-  pluginRegistry.getLSPPlugins().map((plugin) => plugin.id),
+    pluginRegistry.getLSPPlugins().map((plugin) => plugin.id),
   editorSettingsVersion: 0
 });
 
@@ -96,34 +99,34 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
     settingsRegisteredOnce.current = true;
 
     const initialFontSize =
-    getSetting('editor-font-size')?.value as FontSize ??
-    defaultEditorSettings.fontSize;
+      getSetting('editor-font-size')?.value as FontSize ??
+      defaultEditorSettings.fontSize;
     const initialFontFamily =
-    getSetting('editor-font-family')?.value as FontFamily ??
-    defaultEditorSettings.fontFamily;
+      getSetting('editor-font-family')?.value as FontFamily ??
+      defaultEditorSettings.fontFamily;
     const initialShowLineNumbers =
-    getSetting('editor-show-line-numbers')?.value as boolean ??
-    defaultEditorSettings.showLineNumbers;
+      getSetting('editor-show-line-numbers')?.value as boolean ??
+      defaultEditorSettings.showLineNumbers;
     const initialSyntaxHighlighting =
-    getSetting('editor-syntax-highlighting')?.value as boolean ??
-    defaultEditorSettings.syntaxHighlighting;
+      getSetting('editor-syntax-highlighting')?.value as boolean ??
+      defaultEditorSettings.syntaxHighlighting;
     const initialAutoSaveEnabled =
-    getSetting('editor-auto-save-enable')?.value as boolean ??
-    defaultEditorSettings.autoSaveEnabled;
+      getSetting('editor-auto-save-enable')?.value as boolean ??
+      defaultEditorSettings.autoSaveEnabled;
     const initialAutoSaveDelay =
-    getSetting('editor-auto-save-delay')?.value as number ??
-    defaultEditorSettings.autoSaveDelay;
+      getSetting('editor-auto-save-delay')?.value as number ??
+      defaultEditorSettings.autoSaveDelay;
     const initialHighlightTheme =
-    getSetting('editor-theme-highlights')?.value as
-    'auto' |
-    'light' |
-    'dark' ?? defaultEditorSettings.highlightTheme;
+      getSetting('editor-theme-highlights')?.value as
+      'auto' |
+      'light' |
+      'dark' ?? defaultEditorSettings.highlightTheme;
     const initialVimMode =
-    getSetting('editor-vim-mode')?.value as boolean ??
-    defaultEditorSettings.vimMode;
+      getSetting('editor-vim-mode')?.value as boolean ??
+      defaultEditorSettings.vimMode;
     const initialSpellCheck =
-    getSetting('editor-spell-check')?.value as boolean ??
-    defaultEditorSettings.spellCheck;
+      getSetting('editor-spell-check')?.value as boolean ??
+      defaultEditorSettings.spellCheck;
 
 
     const loadedSettings = {
@@ -151,13 +154,13 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       description: t("Select the font size for the editor"),
       defaultValue: defaultEditorSettings.fontSize,
       options: [
-      { label: t("Extra Small (10px)"), value: 'xs' },
-      { label: t("Small (12px)"), value: 'sm' },
-      { label: t("Base (14px)"), value: 'base' },
-      { label: t("Large (16px)"), value: 'lg' },
-      { label: t("Extra Large (18px)"), value: 'xl' },
-      { label: t("2X Large (20px)"), value: '2xl' },
-      { label: t("3X Large (24px)"), value: '3xl' }],
+        { label: t("Extra Small (10px)"), value: 'xs' },
+        { label: t("Small (12px)"), value: 'sm' },
+        { label: t("Base (14px)"), value: 'base' },
+        { label: t("Large (16px)"), value: 'lg' },
+        { label: t("Extra Large (18px)"), value: 'xl' },
+        { label: t("2X Large (20px)"), value: '2xl' },
+        { label: t("3X Large (24px)"), value: '3xl' }],
 
       onChange: (value) => {
         const fontSize = value as FontSize;
@@ -178,13 +181,13 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       description: t("Select the font family for the editor"),
       defaultValue: defaultEditorSettings.fontFamily,
       options: [
-      { label: t("Monospace (System)"), value: 'monospace' },
-      { label: t("JetBrains Mono"), value: 'jetbrains-mono' },
-      { label: t("Fira Code"), value: 'fira-code' },
-      { label: t("Source Code Pro"), value: 'source-code-pro' },
-      { label: t("Inconsolata"), value: 'inconsolata' },
-      { label: t("Serif"), value: 'serif' },
-      { label: t("Sans Serif"), value: 'sans-serif' }],
+        { label: t("Monospace (System)"), value: 'monospace' },
+        { label: t("JetBrains Mono"), value: 'jetbrains-mono' },
+        { label: t("Fira Code"), value: 'fira-code' },
+        { label: t("Source Code Pro"), value: 'source-code-pro' },
+        { label: t("Inconsolata"), value: 'inconsolata' },
+        { label: t("Serif"), value: 'serif' },
+        { label: t("Sans Serif"), value: 'sans-serif' }],
 
       onChange: (value) => {
         const fontFamily = value as FontFamily;
@@ -232,9 +235,9 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       description: t("Choose the color theme for syntax highlighting"),
       defaultValue: defaultEditorSettings.highlightTheme,
       options: [
-      { label: t("Auto (follows app theme)"), value: 'auto' },
-      { label: t("Light theme"), value: 'light' },
-      { label: t("Dark theme (OneDark)"), value: 'dark' }],
+        { label: t("Auto (follows app theme)"), value: 'auto' },
+        { label: t("Light theme"), value: 'light' },
+        { label: t("Dark theme (OneDark)"), value: 'dark' }],
 
       onChange: (value) => {
         updateEditorSetting(
@@ -386,7 +389,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 
   return (
     <EditorContext.Provider value={contextValue}>
-			{children}
-		</EditorContext.Provider>);
+      {children}
+    </EditorContext.Provider>);
 
 };

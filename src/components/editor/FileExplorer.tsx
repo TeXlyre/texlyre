@@ -1,5 +1,5 @@
 // src/components/editor/FileExplorer.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { type DragEvent, useEffect, useRef, useState } from 'react';
 
@@ -13,20 +13,21 @@ import {
   FilePlusIcon,
   FolderPlusIcon,
   RefreshIcon,
-  UploadIcon } from
-'../common/Icons.tsx';
+  UploadIcon
+} from
+  '../common/Icons.tsx';
 import FileOperationsModal from './FileOperationsModal';
 import FileTreeItem from './FileTreeItem';
 import ZipHandlingModal from './ZipHandlingModal';
 
 interface FileExplorerProps {
   onFileSelect: (
-  fileId: string,
-  content: string | ArrayBuffer,
-  isBinary?: boolean)
-  => void;
+    fileId: string,
+    content: string | ArrayBuffer,
+    isBinary?: boolean)
+    => void;
   onCreateDocument: (name: string) => string;
-  documents: Array<{id: number;name: string;}>;
+  documents: Array<{ id: number; name: string; }>;
   initialSelectedFile?: string;
   initialExpandedPaths?: string[];
   currentProjectId?: string | null;
@@ -86,7 +87,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   const [dragDropTargetPath, setDragDropTargetPath] = useState<string>('');
   const [pendingDragDropOperation, setPendingDragDropOperation] = useState<
     (() => Promise<void>) | null>(
-    null);
+      null);
 
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const menuRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -95,7 +96,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   const [renameValue, setRenameValue] = useState('');
   const [showPropertiesModal, setShowPropertiesModal] = useState(false);
   const [propertiesInfo, setPropertiesInfo] =
-  useState<FilePropertiesInfo | null>(null);
+    useState<FilePropertiesInfo | null>(null);
 
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [fileToMove, setFileToMove] = useState<FileNode | null>(null);
@@ -115,10 +116,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
   useEffect(() => {
     if (
-    initialSelectedFile &&
-    initialExpandedPaths &&
-    !hasProcessedInitialFile)
-    {
+      initialSelectedFile &&
+      initialExpandedPaths &&
+      !hasProcessedInitialFile) {
       const newExpandedFolders = new Set(expandedFolders);
       initialExpandedPaths.forEach((path) => newExpandedFolders.add(path));
       setExpandedFolders(newExpandedFolders);
@@ -130,7 +130,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
   const processFiles = async (files: File[], targetPath: string) => {
     const zipFiles = files.filter((file) =>
-    file.name.toLowerCase().endsWith('.zip')
+      file.name.toLowerCase().endsWith('.zip')
     );
     const regularFiles = files.filter(
       (file) => !file.name.toLowerCase().endsWith('.zip')
@@ -146,9 +146,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   };
 
   const handleZipFile = async (
-  zipFile: File,
-  targetPath: string)
-  : Promise<void> => {
+    zipFile: File,
+    targetPath: string)
+    : Promise<void> => {
     return new Promise<void>((resolve) => {
       setPendingZipFile(zipFile);
       setZipTargetPath(targetPath);
@@ -191,8 +191,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   };
 
   const handleFileUpload = async (
-  event: React.ChangeEvent<HTMLInputElement>) =>
-  {
+    event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
       await processFiles(Array.from(files), currentPath);
@@ -228,7 +227,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
     for (const segment of pathSegments) {
       currentPath =
-      currentPath === '' ? `/${segment}` : `${currentPath}/${segment}`;
+        currentPath === '' ? `/${segment}` : `${currentPath}/${segment}`;
       newExpandedFolders.add(currentPath);
     }
 
@@ -247,9 +246,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
         // Expand all parent directories including the newly created one
         const newDirPath =
-        creatingNewItem.parentPath === '/' ?
-        `/${newItemName.trim()}` :
-        `${creatingNewItem.parentPath}/${newItemName.trim()}`;
+          creatingNewItem.parentPath === '/' ?
+            `/${newItemName.trim()}` :
+            `${creatingNewItem.parentPath}/${newItemName.trim()}`;
 
         expandAllParentDirectories(newDirPath);
       } else {
@@ -260,18 +259,18 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
         expandAllParentDirectories(creatingNewItem.parentPath);
 
         const newFilePath =
-        creatingNewItem.parentPath === '/' ?
-        `/${newItemName.trim()}` :
-        `${creatingNewItem.parentPath}/${newItemName.trim()}`;
+          creatingNewItem.parentPath === '/' ?
+            `/${newItemName.trim()}` :
+            `${creatingNewItem.parentPath}/${newItemName.trim()}`;
 
         // Use refreshFileTree to ensure we have the latest state
         const updatedFileTree = await refreshFileTree();
 
         // Find the file in the refreshed file tree
         const findFileByPath = (
-        nodes: FileNode[],
-        path: string)
-        : FileNode | null => {
+          nodes: FileNode[],
+          path: string)
+          : FileNode | null => {
           for (const node of nodes) {
             if (node.path === path && node.type === 'file') {
               return node;
@@ -369,9 +368,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
       try {
         const parentPath = node.path.substring(0, node.path.lastIndexOf('/'));
         const newFullPath =
-        parentPath === '' ?
-        `/${renameValue.trim()}` :
-        `${parentPath}/${renameValue.trim()}`;
+          parentPath === '' ?
+            `/${renameValue.trim()}` :
+            `${parentPath}/${renameValue.trim()}`;
 
         if (node.path === newFullPath) {
           setRenamingFileId(null);
@@ -384,8 +383,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
         if (error instanceof Error) {
           if (error.message === 'File operation cancelled by user') {
           } else if (
-          error.message === 'File unlinked. Please try rename again.')
-          {
+            error.message === 'File unlinked. Please try rename again.') {
             return;
           } else {
             console.error('Error renaming file:', error);
@@ -421,9 +419,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     if (fileToMove && selectedTargetPath !== fileToMove.path) {
       try {
         const newFullPath =
-        selectedTargetPath === '/' ?
-        `/${fileToMove.name}` :
-        `${selectedTargetPath}/${fileToMove.name}`;
+          selectedTargetPath === '/' ?
+            `/${fileToMove.name}` :
+            `${selectedTargetPath}/${fileToMove.name}`;
 
         if (fileToMove.path === newFullPath) {
           setShowMoveDialog(false);
@@ -446,8 +444,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
       if (content) {
         const nameWithoutExt = node.name.replace(/\.[^/.]+$/, '');
         const extension = node.name.includes('.') ?
-        `.${node.name.split('.').pop()}` :
-        '';
+          `.${node.name.split('.').pop()}` :
+          '';
         const duplicateName = `${nameWithoutExt}_copy${extension}`;
 
         const parentPath = node.path.substring(0, node.path.lastIndexOf('/'));
@@ -615,9 +613,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   };
 
   const handleDropOnDirectory = async (
-  e: React.DragEvent,
-  targetNode: FileNode) =>
-  {
+    e: React.DragEvent,
+    targetNode: FileNode) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -655,9 +652,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
       const { nodeId, nodePath, nodeType } = dragData;
 
       if (
-      nodeType === 'directory' &&
-      targetNode.path.startsWith(`${nodePath}/`))
-      {
+        nodeType === 'directory' &&
+        targetNode.path.startsWith(`${nodePath}/`)) {
         setDragOverTarget(null);
         return;
       }
@@ -681,9 +677,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
       setShowDragDropDialog(true);
       setPendingDragDropOperation(() => async () => {
         const newFullPath =
-        targetNode.path === '/' ?
-        `/${sourceFile.name}` :
-        `${targetNode.path}/${sourceFile.name}`;
+          targetNode.path === '/' ?
+            `/${sourceFile.name}` :
+            `${targetNode.path}/${sourceFile.name}`;
         await renameFile(nodeId, newFullPath);
       });
     } catch (error) {
@@ -709,27 +705,24 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     event.stopPropagation();
 
     if (
-    dropRef.current &&
-    !dropRef.current.contains(event.relatedTarget as Node))
-    {
+      dropRef.current &&
+      !dropRef.current.contains(event.relatedTarget as Node)) {
       setIsDragging(false);
       setDragOverTarget(null);
     }
   };
 
   const handleDragOver = (
-  event: DragEvent<HTMLDivElement>,
-  nodeId?: string) =>
-  {
+    event: DragEvent<HTMLDivElement>,
+    nodeId?: string) => {
     const isFileDrop = Array.from(event.dataTransfer.items).some(
       (item) => item.kind === 'file'
     );
     const isInternalDrop = event.dataTransfer.getData('text/plain');
 
     if (
-    isFileDrop && !enableFileSystemDragDrop ||
-    isInternalDrop && !enableInternalDragDrop)
-    {
+      isFileDrop && !enableFileSystemDragDrop ||
+      isInternalDrop && !enableInternalDragDrop) {
       return;
     }
 
@@ -831,17 +824,16 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   };
 
   const getDirectoryOptions = (
-  currentNode: FileNode | null = null)
-  : FileNode[] => {
+    currentNode: FileNode | null = null)
+    : FileNode[] => {
     const collectDirectories = (nodes: FileNode[]): FileNode[] => {
       let directories: FileNode[] = [];
 
       for (const node of nodes) {
         if (
-        node.type === 'directory' &&
-        node.path !== currentNode?.path &&
-        !node.path.startsWith(`${currentNode?.path}/`))
-        {
+          node.type === 'directory' &&
+          node.path !== currentNode?.path &&
+          !node.path.startsWith(`${currentNode?.path}/`)) {
           directories.push(node);
           if (node.children) {
             directories = directories.concat(collectDirectories(node.children));
@@ -861,7 +853,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
   return (
     <>
-			<div
+      <div
         className={`file-explorer ${isDragging ? 'dragging' : ''} ${dragOverTarget === 'root' ? 'root-drag-over' : ''}`}
         ref={dropRef}
         onDragEnter={handleDragEnter}
@@ -869,37 +861,37 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
         onDragLeave={handleDragLeave}
         onDrop={(e) => handleDropOnRoot(e)}>
 
-				<div className="file-explorer-header">
-					<h3>{t('Files')}</h3>
-					<div className="file-explorer-actions">
-						<button
+        <div className="file-explorer-header">
+          <h3>{t('Files')}</h3>
+          <div className="file-explorer-actions">
+            <button
               className="action-btn"
               title={t('Refresh File Tree')}
               onClick={() => refreshFileTree()}>
 
-							<RefreshIcon />
-						</button>
+              <RefreshIcon />
+            </button>
 
-						<div className="action-separator"></div>
+            <div className="action-separator"></div>
 
-						<button
+            <button
               className="action-btn"
               title={t('Export Current Project')}
               onClick={handleExportCurrentProject}
               disabled={!currentProjectId}>
 
-							<ExportIcon />
-						</button>
+              <ExportIcon />
+            </button>
 
-						<button
+            <button
               className="action-btn"
               title={t('Upload Files')}
               onClick={() => document.getElementById('file-input').click()}>
 
-							<UploadIcon />
-						</button>
+              <UploadIcon />
+            </button>
 
-						<input
+            <input
               id="file-input"
               type="file"
               multiple
@@ -907,120 +899,120 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
               style={{ display: 'none' }} />
 
 
-						<button
+            <button
               className="action-btn"
               title={t('New File')}
               onClick={() => handleStartCreateFile('/')}>
 
-							<FilePlusIcon />
-						</button>
+              <FilePlusIcon />
+            </button>
 
-						<button
+            <button
               className="action-btn"
               title={t('New Folder')}
               onClick={() => handleStartCreateDirectory('/')}>
 
-							<FolderPlusIcon />
-						</button>
-					</div>
-				</div>
+              <FolderPlusIcon />
+            </button>
+          </div>
+        </div>
 
-				<div className="file-tree">
-					{creatingNewItem && creatingNewItem.parentPath === '/' &&
-          <div className="file-node creating-new-item" draggable={false}>
-							<span className="file-icon">
-								{creatingNewItem.type === 'directory' ?
-              <FolderPlusIcon /> :
+        <div className="file-tree">
+          {creatingNewItem && creatingNewItem.parentPath === '/' &&
+            <div className="file-node creating-new-item" draggable={false}>
+              <span className="file-icon">
+                {creatingNewItem.type === 'directory' ?
+                  <FolderPlusIcon /> :
 
-              <FilePlusIcon />
-              }
-							</span>
-							<div className="file-name-input-container">
-								<input
-                type="text"
-                value={newItemName}
-                onChange={(e) => setNewItemName(e.target.value)}
-                onBlur={handleConfirmNewItem}
-                onKeyDown={handleNewItemKeyDown}
-                className="file-name-input" />
+                  <FilePlusIcon />
+                }
+              </span>
+              <div className="file-name-input-container">
+                <input
+                  type="text"
+                  value={newItemName}
+                  onChange={(e) => setNewItemName(e.target.value)}
+                  onBlur={handleConfirmNewItem}
+                  onKeyDown={handleNewItemKeyDown}
+                  className="file-name-input" />
 
-								<button
-                className="cancel-input-button"
-                onClick={handleCancelNewItem}
-                title={t('Cancel')}>
+                <button
+                  className="cancel-input-button"
+                  onClick={handleCancelNewItem}
+                  title={t('Cancel')}>
 
-									×
-								</button>
-							</div>
-						</div>
+                  ×
+                </button>
+              </div>
+            </div>
           }
 
-					{fileTree.length > 0 ?
-          <div className="file-tree-content">
-							{fileTree.map((node) =>
-            <FileTreeItem
-              key={node.path}
-              node={node}
-              level={0}
-              selectedFileId={selectedFileId}
-              expandedFolders={expandedFolders}
-              renamingFileId={renamingFileId}
-              renameValue={renameValue}
-              activeMenu={activeMenu}
-              dragOverTarget={dragOverTarget}
-              enableFileSystemDragDrop={enableFileSystemDragDrop}
-              enableInternalDragDrop={enableInternalDragDrop}
-              creatingNewItem={creatingNewItem}
-              newItemName={newItemName}
-              onFileSelect={handleFileSelect}
-              onToggleFolder={toggleFolder}
-              onStartRename={handleStartRename}
-              onSaveRename={handleSaveRename}
-              onCancelRename={handleCancelRename}
-              onRenameKeyDown={handleRenameKeyDown}
-              onSetRenameValue={setRenameValue}
-              onSetActiveMenu={setActiveMenu}
-              onLinkToDocument={linkFileToDocument}
-              onUnlinkFromDocument={unlinkFileFromDocument}
-              onMoveFile={handleMoveFile}
-              onDuplicateFile={handleDuplicateFile}
-              onCopyPath={handleCopyPath}
-              onExportFile={handleExportFile}
-              onShowProperties={handleShowProperties}
-              onExportFolder={handleExportFolder}
-              onCreateFileInFolder={handleCreateFileInFolder}
-              onCreateSubfolder={handleCreateSubfolder}
-              onUploadToFolder={handleUploadToFolder}
-              onExpandAllSubfolders={expandAllSubfolders}
-              onCollapseAllSubfolders={collapseAllSubfolders}
-              onDeleteFileOrDirectory={deleteFileOrDirectory}
-              onDragStart={handleDragStart}
-              onDropOnDirectory={handleDropOnDirectory}
-              onSetDragOverTarget={setDragOverTarget}
-              onSetNewItemName={setNewItemName}
-              onConfirmNewItem={handleConfirmNewItem}
-              onCancelNewItem={handleCancelNewItem}
-              onNewItemKeyDown={handleNewItemKeyDown}
-              menuRefs={menuRefs} />
+          {fileTree.length > 0 ?
+            <div className="file-tree-content">
+              {fileTree.map((node) =>
+                <FileTreeItem
+                  key={node.path}
+                  node={node}
+                  level={0}
+                  selectedFileId={selectedFileId}
+                  expandedFolders={expandedFolders}
+                  renamingFileId={renamingFileId}
+                  renameValue={renameValue}
+                  activeMenu={activeMenu}
+                  dragOverTarget={dragOverTarget}
+                  enableFileSystemDragDrop={enableFileSystemDragDrop}
+                  enableInternalDragDrop={enableInternalDragDrop}
+                  creatingNewItem={creatingNewItem}
+                  newItemName={newItemName}
+                  onFileSelect={handleFileSelect}
+                  onToggleFolder={toggleFolder}
+                  onStartRename={handleStartRename}
+                  onSaveRename={handleSaveRename}
+                  onCancelRename={handleCancelRename}
+                  onRenameKeyDown={handleRenameKeyDown}
+                  onSetRenameValue={setRenameValue}
+                  onSetActiveMenu={setActiveMenu}
+                  onLinkToDocument={linkFileToDocument}
+                  onUnlinkFromDocument={unlinkFileFromDocument}
+                  onMoveFile={handleMoveFile}
+                  onDuplicateFile={handleDuplicateFile}
+                  onCopyPath={handleCopyPath}
+                  onExportFile={handleExportFile}
+                  onShowProperties={handleShowProperties}
+                  onExportFolder={handleExportFolder}
+                  onCreateFileInFolder={handleCreateFileInFolder}
+                  onCreateSubfolder={handleCreateSubfolder}
+                  onUploadToFolder={handleUploadToFolder}
+                  onExpandAllSubfolders={expandAllSubfolders}
+                  onCollapseAllSubfolders={collapseAllSubfolders}
+                  onDeleteFileOrDirectory={deleteFileOrDirectory}
+                  onDragStart={handleDragStart}
+                  onDropOnDirectory={handleDropOnDirectory}
+                  onSetDragOverTarget={setDragOverTarget}
+                  onSetNewItemName={setNewItemName}
+                  onConfirmNewItem={handleConfirmNewItem}
+                  onCancelNewItem={handleCancelNewItem}
+                  onNewItemKeyDown={handleNewItemKeyDown}
+                  menuRefs={menuRefs} />
 
-            )}
+              )}
 
-							{dragOverTarget === 'root' &&
-            <div className="root-drop-indicator-note">{t('Drop here to move to root directory')}
+              {dragOverTarget === 'root' &&
+                <div className="root-drop-indicator-note">{t('Drop here to move to root directory')}
+
+                </div>
+              }
+            </div> :
+
+            <div className="empty-state">{t('No files. Upload or create files to get started. Drag any files here to upload them.')}
+
 
             </div>
-            }
-						</div> :
-
-          <div className="empty-state">{t('No files. Upload or create files to get started. Drag any files here to upload them.')}
-
-
-          </div>
           }
-				</div>
-			</div>
+        </div>
+      </div>
 
-			<FileOperationsModal
+      <FileOperationsModal
         showPropertiesModal={showPropertiesModal}
         onClosePropertiesModal={() => setShowPropertiesModal(false)}
         propertiesInfo={propertiesInfo}
@@ -1038,7 +1030,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
         onConfirmDragDrop={handleConfirmDragDrop} />
 
 
-			<ZipHandlingModal
+      <ZipHandlingModal
         isOpen={showZipModal}
         onClose={handleZipModalClose}
         zipFile={pendingZipFile!}
@@ -1046,7 +1038,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
         onExtract={handleExtractZip}
         onKeepAsZip={handleKeepZip} />
 
-		</>);
+    </>);
 
 };
 

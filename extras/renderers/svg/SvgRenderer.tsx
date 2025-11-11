@@ -1,4 +1,4 @@
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -12,8 +12,9 @@ import {
   ZoomInIcon,
   ZoomOutIcon,
   ExpandIcon,
-  MinimizeIcon } from
-'@/components/common/Icons';
+  MinimizeIcon
+} from
+  '@/components/common/Icons';
 import { svgRendererSettings } from './settings';
 import { useSettings } from '@/hooks/useSettings';
 import { useProperties } from '@/hooks/useProperties';
@@ -31,7 +32,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
   const propertiesRegistered = useRef(false);
 
   const svgRendererEnable =
-  getSetting('svg-renderer-enable')?.value as boolean ?? true;
+    getSetting('svg-renderer-enable')?.value as boolean ?? true;
 
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -194,13 +195,13 @@ const SvgRenderer: React.FC<RendererProps> = ({
 
   const computeFitScale = useCallback((mode: 'fit-width' | 'fit-height') => {
     const containerWidth =
-    contentElRef.current?.clientWidth ||
-    document.querySelector('.svg-renderer-content')?.clientWidth ||
-    3840;
+      contentElRef.current?.clientWidth ||
+      document.querySelector('.svg-renderer-content')?.clientWidth ||
+      3840;
     const containerHeight =
-    contentElRef.current?.clientHeight ||
-    (document.querySelector('.svg-renderer-content') as HTMLElement | null)?.clientHeight ||
-    2160;
+      contentElRef.current?.clientHeight ||
+      (document.querySelector('.svg-renderer-content') as HTMLElement | null)?.clientHeight ||
+      2160;
 
     const pageWidth = 595;
     const pageHeight = 842;
@@ -368,9 +369,8 @@ const SvgRenderer: React.FC<RendererProps> = ({
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
-      !document.fullscreenElement &&
-      !containerRef.current?.contains(document.activeElement))
-      {
+        !document.fullscreenElement &&
+        !containerRef.current?.contains(document.activeElement)) {
         return;
       }
 
@@ -404,40 +404,40 @@ const SvgRenderer: React.FC<RendererProps> = ({
   if (!svgRendererEnable) {
     return (
       <div className="svg-renderer-container">
-                <div className="svg-renderer-error">{t('SVG renderer is disabled. Please enable it in settings to use this renderer.')}
+        <div className="svg-renderer-error">{t('SVG renderer is disabled. Please enable it in settings to use this renderer.')}
 
 
         </div>
-            </div>);
+      </div>);
 
   }
 
   return (
     <div className="svg-renderer-container" ref={containerRef}>
-            <div className={`svg-toolbar ${isFullscreen ? 'fullscreen-toolbar' : ''}`}>
-                <div className="toolbar">
-                    <div id="toolbarLeft">
-                        <div className="toolbarButtonGroup">
-                            <button
+      <div className={`svg-toolbar ${isFullscreen ? 'fullscreen-toolbar' : ''}`}>
+        <div className="toolbar">
+          <div id="toolbarLeft">
+            <div className="toolbarButtonGroup">
+              <button
                 onClick={handlePreviousPage}
                 className="toolbarButton"
                 title={t('Previous Page')}
                 disabled={currentPage <= 1 || isLoading}>
 
-                                <ChevronLeftIcon />
-                            </button>
-                            <button
+                <ChevronLeftIcon />
+              </button>
+              <button
                 onClick={handleNextPage}
                 className="toolbarButton"
                 title={t('Next Page')}
                 disabled={currentPage >= numPages || isLoading}>
 
-                                <ChevronRightIcon />
-                            </button>
-                        </div>
-                        <div className="toolbarButtonGroup">
-                            <div className="pageNumber">
-                                <input
+                <ChevronRightIcon />
+              </button>
+            </div>
+            <div className="toolbarButtonGroup">
+              <div className="pageNumber">
+                <input
                   type="number"
                   value={pageInput}
                   onChange={handlePageInputChange}
@@ -452,20 +452,20 @@ const SvgRenderer: React.FC<RendererProps> = ({
                   max={numPages}
                   disabled={isLoading} />
 
-                                <span>/</span>
-                                <span>{numPages}</span>
-                            </div>
-                        </div>
-                        <div className="toolbarButtonGroup">
-                            <button
+                <span>/</span>
+                <span>{numPages}</span>
+              </div>
+            </div>
+            <div className="toolbarButtonGroup">
+              <button
                 onClick={handleZoomOut}
                 className="toolbarButton"
                 title={t('Zoom Out')}
                 disabled={isLoading}>
 
-                                <ZoomOutIcon />
-                            </button>
-                            {(() => {
+                <ZoomOutIcon />
+              </button>
+              {(() => {
                 const zoomOptions = svgRendererSettings.find((s) => s.id === 'svg-renderer-initial-zoom')?.options || [];
                 const currentZoom = Math.round(scale * 100).toString();
                 const hasCustomZoom = !zoomOptions.some((opt) => String(opt.value) === currentZoom);
@@ -478,106 +478,106 @@ const SvgRenderer: React.FC<RendererProps> = ({
                     className="toolbarZoomSelect"
                     title={t('Zoom Level')}>
 
-                                        {zoomOptions.map((option) =>
-                    <option key={String(option.value)} value={String(option.value)}>
-                                                {option.label}
-                                            </option>
+                    {zoomOptions.map((option) =>
+                      <option key={String(option.value)} value={String(option.value)}>
+                        {option.label}
+                      </option>
                     )}
-                                        {hasCustomZoom &&
-                    <option value="custom">
-                                                {Math.round(scale * 100)}%
-                                            </option>
+                    {hasCustomZoom &&
+                      <option value="custom">
+                        {Math.round(scale * 100)}%
+                      </option>
                     }
-                                    </select>);
+                  </select>);
 
               })()}
-                            <button
+              <button
                 onClick={handleZoomIn}
                 className="toolbarButton"
                 title={t('Zoom In')}
                 disabled={isLoading}>
 
-                                <ZoomInIcon />
-                            </button>
-                        </div>
-                        <div className="toolbarButtonGroup">
-                            <button
+                <ZoomInIcon />
+              </button>
+            </div>
+            <div className="toolbarButtonGroup">
+              <button
                 onClick={handleFitToggle}
                 className="toolbarButton"
                 title={fitMode === 'fit-width' ? 'Fit to Width' : 'Fit to Height'}
                 disabled={isLoading}>
 
-                                <FitToWidthIcon />
-                            </button>
-                            <button
+                <FitToWidthIcon />
+              </button>
+              <button
                 onClick={handleToggleView}
                 className="toolbarButton"
                 title={scrollView ? 'Single Page View' : 'Scroll View'}
                 disabled={isLoading}>
 
-                                {scrollView ? <PageIcon /> : <ScrollIcon />}
-                            </button>
-                            <button
+                {scrollView ? <PageIcon /> : <ScrollIcon />}
+              </button>
+              <button
                 onClick={handleToggleFullscreen}
                 className="toolbarButton"
                 title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
                 disabled={isLoading}>
 
-                                {isFullscreen ? <MinimizeIcon /> : <ExpandIcon />}
-                            </button>
-                        </div>
-                        <div className="toolbarButtonGroup">
-                            <button
+                {isFullscreen ? <MinimizeIcon /> : <ExpandIcon />}
+              </button>
+            </div>
+            <div className="toolbarButtonGroup">
+              <button
                 onClick={handleExport}
                 className="toolbarButton"
                 title={t('Download')}
                 disabled={isLoading}>
 
-                                <DownloadIcon />
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <DownloadIcon />
+              </button>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <div className={`svg-renderer-content ${isFullscreen ? 'fullscreen' : ''}`} ref={contentElRef}>
-                <div className="svg-renderer-viewer" style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
-                    {!isLoading && !error && numPages > 0 && (
-          scrollView ?
-          Array.from(new Array(numPages), (_, index) => {
-            const pageNumber = index + 1;
-            return (
-              <div
-                key={`page_${pageNumber}`}
-                data-page-number={pageNumber}
-                ref={(el) => {
-                  if (el) {
-                    pageRefs.current.set(pageNumber, el);
-                  } else {
-                    pageRefs.current.delete(pageNumber);
-                  }
-                }}
-                className="svg-page-scroll">
+      <div className={`svg-renderer-content ${isFullscreen ? 'fullscreen' : ''}`} ref={contentElRef}>
+        <div className="svg-renderer-viewer" style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+          {!isLoading && !error && numPages > 0 && (
+            scrollView ?
+              Array.from(new Array(numPages), (_, index) => {
+                const pageNumber = index + 1;
+                return (
+                  <div
+                    key={`page_${pageNumber}`}
+                    data-page-number={pageNumber}
+                    ref={(el) => {
+                      if (el) {
+                        pageRefs.current.set(pageNumber, el);
+                      } else {
+                        pageRefs.current.delete(pageNumber);
+                      }
+                    }}
+                    className="svg-page-scroll">
 
-                                        {renderSvgPage(pageNumber)}
-                                    </div>);
+                    {renderSvgPage(pageNumber)}
+                  </div>);
 
-          }) :
+              }) :
 
-          renderSvgPage(currentPage))
+              renderSvgPage(currentPage))
 
           }
-                </div>
-
-                {isLoading &&
-        <div className="svg-renderer-loading">{t('Loading SVG document...')}
-
         </div>
-        }
-            </div>
 
-            {error && <div className="svg-renderer-error">{error}</div>}
-        </div>);
+        {isLoading &&
+          <div className="svg-renderer-loading">{t('Loading SVG document...')}
+
+          </div>
+        }
+      </div>
+
+      {error && <div className="svg-renderer-error">{error}</div>}
+    </div>);
 
 };
 

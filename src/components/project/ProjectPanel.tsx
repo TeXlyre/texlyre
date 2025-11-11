@@ -1,5 +1,5 @@
 // src/components/projects/ProjectPanel.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
@@ -56,8 +56,8 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
 
   const favoriteProjects = projects.filter((p) => p.isFavorite).slice(0, 5);
   const recentProjects = [...projects].
-  sort((a, b) => b.updatedAt - a.updatedAt).
-  slice(0, 5);
+    sort((a, b) => b.updatedAt - a.updatedAt).
+    slice(0, 5);
 
   const handleProjectClick = (project: Project) => {
     if (onOpenProject) {
@@ -79,101 +79,101 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
 
   return (
     <div className="file-explorer">
-			<div className="file-explorer-header">
-				<h3>{t('Projects')}</h3>
-				<div className="file-explorer-actions">
-					<button
+      <div className="file-explorer-header">
+        <h3>{t('Projects')}</h3>
+        <div className="file-explorer-actions">
+          <button
             className="action-btn"
             title={t('New Project')}
             onClick={onCreateProject}>
 
-						<NewProjectIcon />
-					</button>
-					<button
+            <NewProjectIcon />
+          </button>
+          <button
             className="action-btn"
             title={t('Import Projects')}
             onClick={onImportProject}>
 
-						<ImportIcon />
-					</button>
-				</div>
-			</div>
+            <ImportIcon />
+          </button>
+        </div>
+      </div>
 
-			<div className="project-search-container">
-				<input
+      <div className="project-search-container">
+        <input
           type="text"
           placeholder={t('Search projects...')}
           value={searchQuery}
           onChange={handleSearchChange}
           className="search-input" />
 
-				{searchQuery &&
-        <button className="clear-search-button" onClick={handleClearSearch}>
-						×
-					</button>
+        {searchQuery &&
+          <button className="clear-search-button" onClick={handleClearSearch}>
+            ×
+          </button>
         }
 
-				<select
+        <select
           value={selectedTag}
           onChange={handleTagChange}
           className="tag-filter">
 
-					<option value="">{t('All tags')}</option>
-					{availableTags.map((tag, index) =>
-          <option key={index} value={tag}>
-							{tag}
-						</option>
+          <option value="">{t('All tags')}</option>
+          {availableTags.map((tag, index) =>
+            <option key={index} value={tag}>
+              {tag}
+            </option>
           )}
-				</select>
+        </select>
 
-				<select
+        <select
           value={selectedType}
           onChange={handleTypeChange}
           className="type-filter">
 
-					<option value="">{t('All types')}</option>
-					<option value="latex">{t('LaTeX')}</option>
-					<option value="typst">{t('Typst')}</option>
-				</select>
+          <option value="">{t('All types')}</option>
+          <option value="latex">{t('LaTeX')}</option>
+          <option value="typst">{t('Typst')}</option>
+        </select>
 
-				{favoriteProjects.length > 0 &&
-        <div className="project-quick-list">
-						<h4>{t('Favorites')}</h4>
-						<div className="quick-list-container">
-							{favoriteProjects.map((project) =>
-            <div
-              key={project.id}
-              className="quick-project-item"
-              onClick={() => handleProjectClick(project)}
-              title={project.description}>
+        {favoriteProjects.length > 0 &&
+          <div className="project-quick-list">
+            <h4>{t('Favorites')}</h4>
+            <div className="quick-list-container">
+              {favoriteProjects.map((project) =>
+                <div
+                  key={project.id}
+                  className="quick-project-item"
+                  onClick={() => handleProjectClick(project)}
+                  title={project.description}>
 
-									<StarIcon /> {project.name}
-								</div>
-            )}
-						</div>
-					</div>
+                  <StarIcon /> {project.name}
+                </div>
+              )}
+            </div>
+          </div>
         }
 
-				<div className="project-quick-list">
-					<h4>{t('Recent')}</h4>
-					<div className="quick-list-container">
-						{recentProjects.map((project) =>
-            <div
-              key={project.id}
-              className="quick-project-item quick-project-item-recent"
-              onClick={() => handleProjectClick(project)}
-              title={project.description}>
+        <div className="project-quick-list">
+          <h4>{t('Recent')}</h4>
+          <div className="quick-list-container">
+            {recentProjects.map((project) =>
+              <div
+                key={project.id}
+                className="quick-project-item quick-project-item-recent"
+                onClick={() => handleProjectClick(project)}
+                title={project.description}>
 
-								<span className="quick-project-name">{project.name}</span>
-								<span className="quick-project-time">
-									{formatLastModified(project.updatedAt)}
-								</span>
-							</div>
+                <span className="quick-project-name">{project.name}</span>
+                <span className="quick-project-time">
+                  {formatLastModified(project.updatedAt)}
+                </span>
+              </div>
             )}
-					</div>
-				</div>
-			</div>
-		</div>);
+          </div>
+        </div>
+      </div>
+    </div>);
 
 };
 

@@ -1,5 +1,5 @@
 // src/components/auth/GuestUpgradeBanner.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState, useEffect } from 'react';
 
@@ -53,37 +53,37 @@ const GuestUpgradeBanner: React.FC<GuestUpgradeBannerProps> = ({
 
   return (
     <div className="guest-upgrade-banner">
-			<div className="banner-content">
-				<div className="banner-icon">
-					<UserIcon />
-				</div>
-				<div className="banner-text">
-					<div className="banner-main">
-						<strong>{t('Guest Session Active')}</strong>
-						<span className="time-remaining">{timeRemaining}</span>
-					</div>
-					<div className="banner-sub">{t('Create an account to keep your projects permanently')}
+      <div className="banner-content">
+        <div className="banner-icon">
+          <UserIcon />
+        </div>
+        <div className="banner-text">
+          <div className="banner-main">
+            <strong>{t('Guest Session Active')}</strong>
+            <span className="time-remaining">{timeRemaining}</span>
+          </div>
+          <div className="banner-sub">{t('Create an account to keep your projects permanently')}
 
           </div>
-				</div>
-				<div className="banner-actions">
-					<button
+        </div>
+        <div className="banner-actions">
+          <button
             className="button primary small"
             onClick={onOpenUpgradeModal}>
 
-						<UpgradeAccountIcon />{t('Upgrade Account')}
+            <UpgradeAccountIcon />{t('Upgrade Account')}
 
           </button>
-					<button
+          <button
             className="button icon-only small"
             onClick={() => setIsVisible(false)}
             title={t('Dismiss')}>
 
-						<CloseIcon />
-					</button>
-				</div>
-			</div>
-		</div>);
+            <CloseIcon />
+          </button>
+        </div>
+      </div>
+    </div>);
 
 };
 

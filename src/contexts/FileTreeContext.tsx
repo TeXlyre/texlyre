@@ -1,5 +1,5 @@
 // src/contexts/FileTreeContext.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import { nanoid } from 'nanoid';
 import type React from 'react';
 import {
@@ -8,8 +8,9 @@ import {
   useCallback,
   useEffect,
   useRef,
-  useState } from
-'react';
+  useState
+} from
+  'react';
 
 import { useCollab } from '../hooks/useCollab';
 import { useSettings } from '../hooks/useSettings';
@@ -25,8 +26,9 @@ import {
   getMimeType,
   isBinaryFile,
   isTemporaryFile,
-  stringToArrayBuffer } from
-'../utils/fileUtils';
+  stringToArrayBuffer
+} from
+  '../utils/fileUtils';
 import { batchExtractZip } from '../utils/zipUtils';
 
 export const FileTreeContext = createContext<FileTreeContextType | null>(null);
@@ -46,7 +48,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [enableFileSystemDragDrop, setEnableFileSystemDragDrop] =
-  useState(true);
+    useState(true);
   const [enableInternalDragDrop, setEnableInternalDragDrop] = useState(true);
   const storageInitialized = useRef(false);
   const settingsRegistered = useRef(false);
@@ -67,9 +69,9 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
     settingsRegistered.current = true;
 
     const initialFileSystemDragDrop =
-    getSetting('file-tree-filesystem-drag-drop')?.value as boolean ?? true;
+      getSetting('file-tree-filesystem-drag-drop')?.value as boolean ?? true;
     const initialInternalDragDrop =
-    getSetting('file-tree-internal-drag-drop')?.value as boolean ?? true;
+      getSetting('file-tree-internal-drag-drop')?.value as boolean ?? true;
 
     setEnableFileSystemDragDrop(initialFileSystemDragDrop);
     setEnableInternalDragDrop(initialInternalDragDrop);
@@ -138,10 +140,9 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
   const uploadFiles = useCallback(
     async (
-    files: FileList | File[],
-    currentPath: string,
-    targetDirectoryId?: string) =>
-    {
+      files: FileList | File[],
+      currentPath: string,
+      targetDirectoryId?: string) => {
       setIsLoading(true);
       let targetPath = currentPath;
       try {
@@ -157,7 +158,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
           const filePath =
-          targetPath === '/' ? `/${file.name}` : `${targetPath}/${file.name}`;
+            targetPath === '/' ? `/${file.name}` : `${targetPath}/${file.name}`;
           const fileContent = await file.arrayBuffer();
           const mimeType = getMimeType(file.name);
           const binary = isBinaryFile(file.name);
@@ -179,9 +180,8 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
           await fileStorageService.batchStoreFiles(filesToProcess);
         } catch (error) {
           if (
-          error instanceof Error &&
-          error.message === 'File operation cancelled by user')
-          {
+            error instanceof Error &&
+            error.message === 'File operation cancelled by user') {
             return;
           }
           throw error;
@@ -241,9 +241,9 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
     async (zipFile: File, targetPath: string) => {
       try {
         const filePath =
-        targetPath === '/' ?
-        `/${zipFile.name}` :
-        `${targetPath}/${zipFile.name}`;
+          targetPath === '/' ?
+            `/${zipFile.name}` :
+            `${targetPath}/${zipFile.name}`;
         const fileContent = await zipFile.arrayBuffer();
         const mimeType = 'application/zip';
 
@@ -263,9 +263,8 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
         await refreshFileTree();
       } catch (error) {
         if (
-        error instanceof Error &&
-        error.message !== 'File operation cancelled by user')
-        {
+          error instanceof Error &&
+          error.message !== 'File operation cancelled by user') {
           console.error('Failed to store ZIP file:', error);
           throw error;
         }
@@ -311,7 +310,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
           changeDoc((d) => {
             const docIndex =
-            d.documents?.findIndex((doc) => doc.name === file.path) ?? -1;
+              d.documents?.findIndex((doc) => doc.name === file.path) ?? -1;
             if (docIndex >= 0) {
               d.currentDocId = d.documents[docIndex].id;
               createdDocId = d.documents[docIndex].id;
@@ -335,8 +334,8 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
           if (createdDocId && shouldCopyContent && textContent) {
             const projectId = docUrl.startsWith('yjs:') ?
-            docUrl.slice(4) :
-            docUrl;
+              docUrl.slice(4) :
+              docUrl;
             const collectionName = `yjs_${createdDocId}`;
 
             const signalingServersSetting = getSetting('collab-signaling-servers');
@@ -385,9 +384,8 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
         }
       } catch (error) {
         if (
-        error instanceof Error &&
-        error.message === 'Link operation cancelled by user')
-        {
+          error instanceof Error &&
+          error.message === 'Link operation cancelled by user') {
           return;
         }
         console.error('Error linking file to document:', error);
@@ -403,7 +401,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
         const file = await fileStorageService.getFile(fileId);
         if (file?.documentId && changeDoc && doc) {
           const unlinkConfirmation =
-          await fileConflictService.confirmUnlink(file);
+            await fileConflictService.confirmUnlink(file);
 
           if (unlinkConfirmation === 'cancel') {
             return;
@@ -427,9 +425,8 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
         window.location.reload();
       } catch (error) {
         if (
-        error instanceof Error &&
-        error.message === 'Unlink operation cancelled by user')
-        {
+          error instanceof Error &&
+          error.message === 'Unlink operation cancelled by user') {
           return;
         }
         console.error('Error unlinking file from document:', error);
@@ -454,9 +451,8 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
         await refreshFileTree();
       } catch (error) {
         if (
-        error instanceof Error &&
-        error.message !== 'File operation cancelled by user')
-        {
+          error instanceof Error &&
+          error.message !== 'File operation cancelled by user') {
           console.error('Error creating directory:', error);
         }
       }
@@ -469,11 +465,11 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
       try {
         const allFiles = await fileStorageService.getAllFiles(false);
         const filesToDelete = fileIds.
-        map((id) => allFiles.find((f) => f.id === id)).
-        filter(Boolean) as FileNode[];
+          map((id) => allFiles.find((f) => f.id === id)).
+          filter(Boolean) as FileNode[];
 
         const hasTemporaryFiles = filesToDelete.some((file) =>
-        isTemporaryFile(file.path)
+          isTemporaryFile(file.path)
         );
 
         const allFilesToDelete: string[] = [];
@@ -482,9 +478,9 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
           if (file.type === 'directory') {
             const linkedFilesInDirectory = allFiles.filter(
               (f) =>
-              f.path.startsWith(file.path) &&
-              f.path !== file.path &&
-              f.documentId
+                f.path.startsWith(file.path) &&
+                f.path !== file.path &&
+                f.documentId
             );
 
             if (linkedFilesInDirectory.length > 0) {
@@ -521,7 +517,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
   );
 
   const batchMoveFiles = useCallback(
-    async (moveOperations: Array<{fileId: string;targetPath: string;}>) => {
+    async (moveOperations: Array<{ fileId: string; targetPath: string; }>) => {
       try {
         const operationId = `batch-move-${Date.now()}`;
 
@@ -531,7 +527,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
         );
 
         const movedIds =
-        await fileStorageService.batchMoveFiles(moveOperations);
+          await fileStorageService.batchMoveFiles(moveOperations);
 
         fileOperationNotificationService.showSuccess(
           operationId,
@@ -548,9 +544,8 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
         );
 
         if (
-        error instanceof Error &&
-        error.message !== 'File operation cancelled by user')
-        {
+          error instanceof Error &&
+          error.message !== 'File operation cancelled by user') {
           console.error('Error in batch move:', error);
         }
         throw error;
@@ -607,9 +602,8 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
         );
 
         if (
-        error instanceof Error &&
-        error.message !== 'Unlink operation cancelled by user')
-        {
+          error instanceof Error &&
+          error.message !== 'Unlink operation cancelled by user') {
           console.error('Error in batch unlink:', error);
         }
         throw error;
@@ -660,10 +654,10 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
         // For move operations, we pass the target directory path
         // The service will construct the full new path
         const movedIds = await fileStorageService.batchMoveFiles([
-        {
-          fileId: sourceId,
-          targetPath: targetPath
-        }]
+          {
+            fileId: sourceId,
+            targetPath: targetPath
+          }]
         );
 
         console.log('[FileTreeContext] Move completed, new IDs:', movedIds);
@@ -671,9 +665,8 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
       } catch (error) {
         console.error('Error in moveFileOrDirectory:', error);
         if (
-        error instanceof Error &&
-        error.message !== 'File operation cancelled by user')
-        {
+          error instanceof Error &&
+          error.message !== 'File operation cancelled by user') {
           console.error('Error moving file or directory:', error);
         }
       }
@@ -702,10 +695,10 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
         // For rename operations, we pass the full new path
         const movedIds = await fileStorageService.batchMoveFiles(
           [
-          {
-            fileId,
-            targetPath: newFullPath.trim()
-          }],
+            {
+              fileId,
+              targetPath: newFullPath.trim()
+            }],
 
           { showConflictDialog: true }
         );
@@ -728,9 +721,8 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
       } catch (error) {
         console.error('Error in renameFile:', error);
         if (
-        error instanceof Error &&
-        error.message === 'File operation cancelled by user')
-        {
+          error instanceof Error &&
+          error.message === 'File operation cancelled by user') {
           throw error;
         }
         console.error('Error renaming/moving file:', error);
@@ -780,7 +772,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
   return (
     <FileTreeContext.Provider value={contextValue}>
-			{children}
-		</FileTreeContext.Provider>);
+      {children}
+    </FileTreeContext.Provider>);
 
 };

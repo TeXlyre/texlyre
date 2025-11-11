@@ -1,12 +1,12 @@
 // src/components/comments/CommentButton.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 
 import { useComments } from '../../hooks/useComments';
 
 interface CommentButtonProps {
-  position: {x: number;y: number;};
-  selection: {start: number;end: number;};
+  position: { x: number; y: number; };
+  selection: { start: number; end: number; };
   onCommentAdded: () => void;
 }
 

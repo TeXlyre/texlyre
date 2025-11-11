@@ -1,5 +1,5 @@
 // src/components/editor/LaTeXOutline.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -127,38 +127,38 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
   if (sections.length === 0) {
     return (
       <div className="latex-outline">
-				<div className="latex-outline-header">
-					<button
+        <div className="latex-outline-header">
+          <button
             className="outline-toggle-btn"
             onClick={handleToggleCollapse}>
 
-						{isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
-					</button>
-					<span className="outline-header-title">OUTLINE</span>
-					<button
+            {isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
+          </button>
+          <span className="outline-header-title">OUTLINE</span>
+          <button
             className="action-btn"
             title={t('Refresh Outline')}
             onClick={handleRefresh}>
 
-						<RefreshIcon />
-					</button>
-					{hasValidFilePath &&
-          <button
-            className="action-btn"
-            title={t('Word Count Statistics')}
-            onClick={handleShowStatistics}>
+            <RefreshIcon />
+          </button>
+          {hasValidFilePath &&
+            <button
+              className="action-btn"
+              title={t('Word Count Statistics')}
+              onClick={handleShowStatistics}>
 
-							<WordCountIcon />
-						</button>
+              <WordCountIcon />
+            </button>
           }
-				</div>
-				{!isCollapsed &&
-        <div className="outline-empty-state">
-						<p>{t('No sections found')}</p>
-						<small>{t('Use \\section')}{}{t(', \\subsection')}{}{t(', etc.')}</small>
-					</div>
+        </div>
+        {!isCollapsed &&
+          <div className="outline-empty-state">
+            <p>{t('No sections found')}</p>
+            <small>{t('Use \\section')}{ }{t(', \\subsection')}{ }{t(', etc.')}</small>
+          </div>
         }
-				<StatisticsModal
+        <StatisticsModal
           isOpen={showStatistics}
           onClose={() => setShowStatistics(false)}
           statistics={statistics}
@@ -169,58 +169,58 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
           onRefresh={handleShowStatistics}
           contentType="latex" />
 
-			</div>);
+      </div>);
 
   }
 
   return (
     <div className="latex-outline">
-			<div className="latex-outline-header">
-				<button
+      <div className="latex-outline-header">
+        <button
           className="outline-toggle-btn"
           onClick={handleToggleCollapse}>
 
-					{isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
-				</button>
-				<span className="outline-header-title">OUTLINE</span>
+          {isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
+        </button>
+        <span className="outline-header-title">OUTLINE</span>
 
-				<button
+        <button
           className="action-btn"
           title={t('Refresh Outline')}
           onClick={handleRefresh}>
 
-					<RefreshIcon />
-				</button>
+          <RefreshIcon />
+        </button>
 
-				<span className="outline-section-count">
-					{sections.length}
-				</span>
+        <span className="outline-section-count">
+          {sections.length}
+        </span>
 
-				{hasValidFilePath &&
-        <button
-          className="action-btn"
-          title={t('Word Count Statistics')}
-          onClick={handleShowStatistics}>
+        {hasValidFilePath &&
+          <button
+            className="action-btn"
+            title={t('Word Count Statistics')}
+            onClick={handleShowStatistics}>
 
-						<WordCountIcon />
-					</button>
+            <WordCountIcon />
+          </button>
         }
-			</div>
+      </div>
 
-			{!isCollapsed &&
-      <div className="outline-content">
-					{sections.map((section) =>
-        <OutlineItem
-          key={section.id}
-          section={section}
-          currentSection={currentSection}
-          onSectionClick={onSectionClick} />
+      {!isCollapsed &&
+        <div className="outline-content">
+          {sections.map((section) =>
+            <OutlineItem
+              key={section.id}
+              section={section}
+              currentSection={currentSection}
+              onSectionClick={onSectionClick} />
 
-        )}
-				</div>
+          )}
+        </div>
       }
 
-			<StatisticsModal
+      <StatisticsModal
         isOpen={showStatistics}
         onClose={() => setShowStatistics(false)}
         statistics={statistics}
@@ -231,7 +231,7 @@ const LaTeXOutline: React.FC<LaTeXOutlineProps> = ({
         onRefresh={handleShowStatistics}
         contentType="latex" />
 
-		</div>);
+    </div>);
 
 };
 

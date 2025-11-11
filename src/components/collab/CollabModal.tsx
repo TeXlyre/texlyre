@@ -1,5 +1,5 @@
 // src/components/collab/CollabModal.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 

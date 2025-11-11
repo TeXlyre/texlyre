@@ -1,5 +1,5 @@
 // src/components/settings/SettingControl.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 
 import type { Setting } from '../../contexts/SettingsContext';
@@ -17,7 +17,7 @@ interface SettingControlProps {
 const SettingControl: React.FC<SettingControlProps> = ({ setting }) => {
   const { updateSetting } = useSettings();
   const value =
-  setting.value !== undefined ? setting.value : setting.defaultValue;
+    setting.value !== undefined ? setting.value : setting.defaultValue;
 
   const handleChange = (newValue: unknown) => {
     updateSetting(setting.id, newValue);
@@ -28,42 +28,42 @@ const SettingControl: React.FC<SettingControlProps> = ({ setting }) => {
       case 'checkbox':
         return (
           <label className="checkbox-control">
-						<input
+            <input
               type="checkbox"
               checked={Boolean(value)}
               onChange={(e) => handleChange(e.target.checked)} />
 
-						<span>{setting.label}</span>
-					</label>);
+            <span>{setting.label}</span>
+          </label>);
 
 
       case 'select':
         return (
           <div className="select-control">
-						<label>{setting.label}</label>
-						<select
+            <label>{setting.label}</label>
+            <select
               value={String(value)}
               onChange={(e) => handleChange(e.target.value)}>
 
-							{setting.options?.map((option) =>
-              <option key={String(option.value)} value={String(option.value)}>
-									{option.label}
-								</option>
+              {setting.options?.map((option) =>
+                <option key={String(option.value)} value={String(option.value)}>
+                  {option.label}
+                </option>
               )}
-						</select>
-					</div>);
+            </select>
+          </div>);
 
 
       case 'text':
         return (
           <div className="text-control">
-						<label>{setting.label}</label>
-						<input
+            <label>{setting.label}</label>
+            <input
               type="text"
               value={String(value)}
               onChange={(e) => handleChange(e.target.value)} />
 
-					</div>);
+          </div>);
 
 
       case 'codemirror':
@@ -83,27 +83,27 @@ const SettingControl: React.FC<SettingControlProps> = ({ setting }) => {
       case 'number':
         return (
           <div className="number-control">
-						<label>{setting.label}</label>
-						<input
+            <label>{setting.label}</label>
+            <input
               type="number"
               value={Number(value)}
               min={setting.min}
               max={setting.max}
               onChange={(e) => handleChange(Number(e.target.value))} />
 
-					</div>);
+          </div>);
 
 
       case 'color':
         return (
           <div className="color-control">
-						<label>{setting.label}</label>
-						<input
+            <label>{setting.label}</label>
+            <input
               type="color"
               value={String(value)}
               onChange={(e) => handleChange(e.target.value)} />
 
-					</div>);
+          </div>);
 
 
       default:
@@ -113,11 +113,11 @@ const SettingControl: React.FC<SettingControlProps> = ({ setting }) => {
 
   return (
     <div className="setting-control">
-			{renderControl()}
-			{setting.description && setting.type !== 'language-select' &&
-      <div className="setting-description">{setting.description}</div>
+      {renderControl()}
+      {setting.description && setting.type !== 'language-select' &&
+        <div className="setting-description">{setting.description}</div>
       }
-		</div>);
+    </div>);
 
 };
 

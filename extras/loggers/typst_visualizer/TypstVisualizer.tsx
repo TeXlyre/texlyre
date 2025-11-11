@@ -1,5 +1,5 @@
 // extras/loggers/typst_visualizer/TypstVisualizer.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
@@ -157,11 +157,11 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
   };
 
   const tooltipInfo = [
-    `Total errors: ${parsedDiagnostics.filter((d) => d.type === 'error').length}`,
-    `Total warnings: ${parsedDiagnostics.filter((d) => d.type === 'warning').length}`,
-    `Log size: ${log ? `${Math.round(log.length / 1024)} KB` : '0 KB'}`,
-    t('Click error items to navigate to line')];
-
+    t('Total errors: {count}', { count: parsedDiagnostics.filter((d) => d.type === 'error').length }),
+    t('Total warnings: {count}', { count: parsedDiagnostics.filter((d) => d.type === 'warning').length }),
+    t('Log size: {size}', { size: log ? `${Math.round(log.length / 1024)} KB` : '0 KB' }),
+    t('Click error items to navigate to line')
+  ];
 
   const headerControls =
     <div className="error-stats">

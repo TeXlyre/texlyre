@@ -1,5 +1,5 @@
 // src/components/auth/Register.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
@@ -72,8 +72,8 @@ const Register: React.FC<RegisterProps> = ({
     } catch (err) {
       setError(
         err instanceof Error ?
-        err.message :
-        `An error occurred during ${isUpgrade ? 'upgrade' : 'registration'}`
+          err.message :
+          `An error occurred during ${isUpgrade ? 'upgrade' : 'registration'}`
       );
     } finally {
       setIsLoading(false);
@@ -82,16 +82,16 @@ const Register: React.FC<RegisterProps> = ({
 
   return (
     <div className="auth-form-container">
-			<h2>{isUpgrade ? 'Upgrade to Full Account' : 'Create an Account'}</h2>
+      <h2>{isUpgrade ? 'Upgrade to Full Account' : 'Create an Account'}</h2>
 
-			{error && <div className="auth-error">{error}</div>}
+      {error && <div className="auth-error">{error}</div>}
 
-			<form onSubmit={handleSubmit} className="auth-form">
-				<div className="form-group">
-					<label htmlFor="username">{t('Username')}
+      <form onSubmit={handleSubmit} className="auth-form">
+        <div className="form-group">
+          <label htmlFor="username">{t('Username')}
             <span className="required">*</span>
-					</label>
-					<input
+          </label>
+          <input
             type="text"
             id="username"
             value={username}
@@ -100,11 +100,11 @@ const Register: React.FC<RegisterProps> = ({
             autoComplete="username"
             required />
 
-				</div>
+        </div>
 
-				<div className="form-group">
-					<label htmlFor="email">{t('Email')}</label>
-					<input
+        <div className="form-group">
+          <label htmlFor="email">{t('Email')}</label>
+          <input
             type="email"
             id="email"
             value={email}
@@ -112,14 +112,14 @@ const Register: React.FC<RegisterProps> = ({
             disabled={isLoading}
             autoComplete="email" />
 
-				</div>
+        </div>
 
-				<div className="form-group">
-					<PasswordInfo />
-					<label htmlFor="password">{t('Password')}
+        <div className="form-group">
+          <PasswordInfo />
+          <label htmlFor="password">{t('Password')}
             <span className="required">*</span>
-					</label>
-					<input
+          </label>
+          <input
             type="password"
             id="password"
             value={password}
@@ -128,13 +128,13 @@ const Register: React.FC<RegisterProps> = ({
             autoComplete="new-password"
             required />
 
-				</div>
+        </div>
 
-				<div className="form-group">
-					<label htmlFor="confirmPassword">{t('Confirm Password')}
+        <div className="form-group">
+          <label htmlFor="confirmPassword">{t('Confirm Password')}
             <span className="required">*</span>
-					</label>
-					<input
+          </label>
+          <input
             type="password"
             id="confirmPassword"
             value={confirmPassword}
@@ -143,59 +143,59 @@ const Register: React.FC<RegisterProps> = ({
             autoComplete="new-password"
             required />
 
-				</div>
+        </div>
 
-				<button
+        <button
           type="submit"
           className={`auth-button ${isLoading ? 'loading' : ''}`}
           disabled={!ageConfirmed || !privacyAccepted || isLoading}>
 
-					{isLoading ? isUpgrade ? 'Upgrading...' : 'Creating Account...' : isUpgrade ? 'Upgrade Account' : 'Sign Up'}
-				</button>
-			</form>
+          {isLoading ? isUpgrade ? 'Upgrading...' : 'Creating Account...' : isUpgrade ? 'Upgrade Account' : 'Sign Up'}
+        </button>
+      </form>
 
-				<div className="form-group">
-				  <label className="checkbox-control">
-					<input
+      <div className="form-group">
+        <label className="checkbox-control">
+          <input
             type="checkbox"
             checked={ageConfirmed}
             onChange={(e) => setAgeConfirmed(e.target.checked)}
             required />
 
-					<span>{t('I confirm I am at least 16 years old')}</span>
-				  </label>
-				</div>
+          <span>{t('I confirm I am at least 16 years old')}</span>
+        </label>
+      </div>
 
-				<div className="form-group">
-				  <label className="checkbox-control">
-					<input
+      <div className="form-group">
+        <label className="checkbox-control">
+          <input
             type="checkbox"
             checked={privacyAccepted}
             onChange={(e) => setPrivacyAccepted(e.target.checked)}
             required />
 
-					<span>{t('I understand how my data is handled as described in the')}
+          <span>{t('I understand how my data is handled as described in the')}
             {' '}
-					  <a href="#" onClick={(e) => {e.preventDefault();onShowPrivacy();}}>{t('privacy information')}
+            <a href="#" onClick={(e) => { e.preventDefault(); onShowPrivacy(); }}>{t('privacy information')}
 
             </a>
-					</span>
-				  </label>
-				</div>
+          </span>
+        </label>
+      </div>
 
-			{!isUpgrade &&
-      <div className="auth-alt-action">
-					<span>{t('Already have an account?')}</span>
-					<button
-          className="text-button"
-          onClick={onSwitchToLogin}
-          disabled={isLoading}>{t('Login')}
+      {!isUpgrade &&
+        <div className="auth-alt-action">
+          <span>{t('Already have an account?')}</span>
+          <button
+            className="text-button"
+            onClick={onSwitchToLogin}
+            disabled={isLoading}>{t('Login')}
 
 
-        </button>
-				</div>
+          </button>
+        </div>
       }
-		</div>);
+    </div>);
 
 };
 

@@ -1,5 +1,5 @@
 // src/components/app/ProjectApp.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 

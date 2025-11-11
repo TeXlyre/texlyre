@@ -1,5 +1,5 @@
 // extras/backup/github/GitHubBackupService.ts
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type { SecretsContextType } from '@/contexts/SecretsContext';
 import { authService } from '@/services/AuthService';
 import { UnifiedDataStructureService } from '@/services/DataStructureService';

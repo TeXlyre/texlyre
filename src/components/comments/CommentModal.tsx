@@ -1,5 +1,5 @@
 // src/components/comments/CommentModal.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
@@ -53,11 +53,11 @@ const CommentModal: React.FC<CommentModalProps> = ({
       icon={CommentIcon}
       size="small">
 
-			<div className="comment-modal">
-				<form onSubmit={handleSubmit} className="comment-form">
-					<div className="form-group">
-						<label htmlFor="comment-content">{t('Comment')}</label>
-						<textarea
+      <div className="comment-modal">
+        <form onSubmit={handleSubmit} className="comment-form">
+          <div className="form-group">
+            <label htmlFor="comment-content">{t('Comment')}</label>
+            <textarea
               id="comment-content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -66,27 +66,27 @@ const CommentModal: React.FC<CommentModalProps> = ({
               rows={4}
               autoFocus />
 
-					</div>
+          </div>
 
-					<div className="modal-actions">
-						<button
+          <div className="modal-actions">
+            <button
               type="button"
               className="button secondary"
               onClick={onClose}>{t('Cancel')}
 
 
             </button>
-						<button
+            <button
               type="submit"
               className="button primary"
               disabled={!content.trim()}>{t('Add Comment')}
 
 
             </button>
-					</div>
-				</form>
-			</div>
-		</Modal>);
+          </div>
+        </form>
+      </div>
+    </Modal>);
 
 };
 

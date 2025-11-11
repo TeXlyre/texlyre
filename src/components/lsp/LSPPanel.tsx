@@ -1,5 +1,5 @@
 // src/components/lsp/LSPPanel.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useLSP } from '../../hooks/useLSP';
 import { SyncIcon, ChevronDownIcon, BibliographyIcon } from '../common/Icons';
@@ -46,19 +46,19 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
 
   const getEntryTypeIcon = (entryType: string) => {
     switch (entryType.toLowerCase()) {
-      case 'article':return '📄';
-      case 'book':return '📚';
+      case 'article': return '📄';
+      case 'book': return '📚';
       case 'inproceedings':
-      case 'conference':return '📋';
+      case 'conference': return '📋';
       case 'phdthesis':
       case 'mastersthesis':
-      case 'thesis':return '🎓';
-      case 'techreport':return '📊';
+      case 'thesis': return '🎓';
+      case 'techreport': return '📊';
       case 'misc':
-      case 'online':return '🌐';
+      case 'online': return '🌐';
       case 'inbook':
-      case 'incollection':return '📖';
-      default:return '📄';
+      case 'incollection': return '📖';
+      default: return '📄';
     }
   };
 
@@ -82,10 +82,10 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
 
   const getDisplayVenue = (entry: any): string => {
     return entry.fields.journal ||
-    entry.fields.booktitle ||
-    entry.fields.publisher ||
-    entry.fields.school ||
-    entry.fields.institution || '';
+      entry.fields.booktitle ||
+      entry.fields.publisher ||
+      entry.fields.school ||
+      entry.fields.institution || '';
   };
 
   const getCitationPreview = (entry: any): string => {
@@ -135,163 +135,163 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
 
     return (
       <div className="reference-detail">
-				<h4>{selectedItem.title || selectedItem.label || selectedItem.key}</h4>
-				{Object.entries(selectedItem).
-        filter(([key]) => key !== 'title' && key !== 'label').
-        sort(([keyA], [keyB]) => {
-          const isObjectA = typeof selectedItem[keyA] === 'object' && !Array.isArray(selectedItem[keyA]);
-          const isObjectB = typeof selectedItem[keyB] === 'object' && !Array.isArray(selectedItem[keyB]);
-          const isRawA = keyA === 'rawEntry';
-          const isRawB = keyB === 'rawEntry';
+        <h4>{selectedItem.title || selectedItem.label || selectedItem.key}</h4>
+        {Object.entries(selectedItem).
+          filter(([key]) => key !== 'title' && key !== 'label').
+          sort(([keyA], [keyB]) => {
+            const isObjectA = typeof selectedItem[keyA] === 'object' && !Array.isArray(selectedItem[keyA]);
+            const isObjectB = typeof selectedItem[keyB] === 'object' && !Array.isArray(selectedItem[keyB]);
+            const isRawA = keyA === 'rawEntry';
+            const isRawB = keyB === 'rawEntry';
 
-          if ((isObjectA || isRawA) && !(isObjectB || isRawB)) return 1;
-          if (!(isObjectA || isRawA) && (isObjectB || isRawB)) return -1;
-          if (isRawA && !isRawB) return 1;
-          if (!isRawA && isRawB) return -1;
-          return 0;
-        }).
-        map(([key, value]) => {
-          if (!value || Array.isArray(value) && value.length === 0) return null;
+            if ((isObjectA || isRawA) && !(isObjectB || isRawB)) return 1;
+            if (!(isObjectA || isRawA) && (isObjectB || isRawB)) return -1;
+            if (isRawA && !isRawB) return 1;
+            if (!isRawA && isRawB) return -1;
+            return 0;
+          }).
+          map(([key, value]) => {
+            if (!value || Array.isArray(value) && value.length === 0) return null;
 
-          if (typeof value === 'object' && !Array.isArray(value)) {
+            if (typeof value === 'object' && !Array.isArray(value)) {
+              return (
+                <div key={key}>
+                  <p><strong>{key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}:</strong></p>
+                  <div className="detail-nested">
+                    {Object.entries(value).map(([subKey, subValue]) =>
+                      <p key={subKey}>
+                        <strong>{subKey}:</strong> {String(subValue)}
+                      </p>
+                    )}
+                  </div>
+                </div>);
+
+            }
+
+            const displayValue = Array.isArray(value) ? value.join(', ') : String(value);
+            const displayKey = key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
+
+            if (key === 'rawEntry') {
+              return (
+                <div key={key}>
+                  <p><strong>{displayKey}:</strong></p>
+                  <pre className="raw-entry">
+                    {displayValue}
+                  </pre>
+                </div>);
+
+            }
+
             return (
-              <div key={key}>
-									<p><strong>{key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}:</strong></p>
-									<div className="detail-nested">
-										{Object.entries(value).map(([subKey, subValue]) =>
-                  <p key={subKey}>
-												<strong>{subKey}:</strong> {String(subValue)}
-											</p>
-                  )}
-									</div>
-								</div>);
+              <p key={key}>
+                <strong>{displayKey}:</strong> {displayValue}
+              </p>);
 
-          }
-
-          const displayValue = Array.isArray(value) ? value.join(', ') : String(value);
-          const displayKey = key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
-
-          if (key === 'rawEntry') {
-            return (
-              <div key={key}>
-									<p><strong>{displayKey}:</strong></p>
-									<pre className="raw-entry">
-										{displayValue}
-									</pre>
-								</div>);
-
-          }
-
-          return (
-            <p key={key}>
-								<strong>{displayKey}:</strong> {displayValue}
-							</p>);
-
-        })
+          })
         }
-			</div>);
+      </div>);
 
   };
 
   const renderBibliographyList = () => {
     const targetFileOptions = [
-    { label: 'Create new bibliography.bib', value: 'CREATE_NEW' },
-    ...availableBibFiles.map((file) => ({
-      label: file.name,
-      value: file.path
-    }))];
+      { label: 'Create new bibliography.bib', value: 'CREATE_NEW' },
+      ...availableBibFiles.map((file) => ({
+        label: file.name,
+        value: file.path
+      }))];
 
 
     return (
       <div className="lsp-provider-panel">
-				<div className="lsp-panel-search">
-					<input
+        <div className="lsp-panel-search">
+          <input
             type="text"
             placeholder={
-            selectedProvider === 'all' ? 'Search all bibliography sources...' :
-            selectedProvider === 'local' ? 'Search local bibliography...' :
-            'Search bibliography...'
+              selectedProvider === 'all' ? 'Search all bibliography sources...' :
+                selectedProvider === 'local' ? 'Search local bibliography...' :
+                  'Search bibliography...'
             }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="lsp-search-input" />
 
-					{searchQuery &&
-          <button
-            className="lsp-clear-search-button"
-            onClick={() => setSearchQuery('')}>
+          {searchQuery &&
+            <button
+              className="lsp-clear-search-button"
+              onClick={() => setSearchQuery('')}>
 
-							×
-						</button>
+              ×
+            </button>
           }
-				</div>
+        </div>
 
-				{selectedProvider !== 'all' && selectedProvider !== 'local' &&
-        <div className="target-file-selector">
-						<label className="target-file-label">{t('Bib File:')}
+        {selectedProvider !== 'all' && selectedProvider !== 'local' &&
+          <div className="target-file-selector">
+            <label className="target-file-label">{t('Bib File:')}
 
-          </label>
-						<select
-            value={targetBibFile}
-            onChange={(e) => handleTargetFileChange(e.target.value)}
-            className="target-file-select">
+            </label>
+            <select
+              value={targetBibFile}
+              onChange={(e) => handleTargetFileChange(e.target.value)}
+              className="target-file-select">
 
-							<option value="">{t('Select target file...')}</option>
-							{targetFileOptions.map((option) =>
-            <option key={option.value} value={option.value}>
-									{option.label}
-								</option>
-            )}
-						</select>
-						{availableBibFiles.length === 0 &&
-          <div className="target-file-hint">{t('No .bib files found. Create one to start importing entries.')}
+              <option value="">{t('Select target file...')}</option>
+              {targetFileOptions.map((option) =>
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              )}
+            </select>
+            {availableBibFiles.length === 0 &&
+              <div className="target-file-hint">{t('No .bib files found. Create one to start importing entries.')}
 
+              </div>
+            }
+            {currentProvider && targetBibFile &&
+              <div className="target-file-hint">{t('Target set for')}
+                {currentProvider.name}: {availableBibFiles.find((f) => f.path === targetBibFile)?.name || 'Unknown file'}
+              </div>
+            }
           </div>
-          }
-						{currentProvider && targetBibFile &&
-          <div className="target-file-hint">{t('Target set for')}
-            {currentProvider.name}: {availableBibFiles.find((f) => f.path === targetBibFile)?.name || 'Unknown file'}
-							</div>
-          }
-					</div>
         }
 
-				<div className="lsp-panel-content">
-					{selectedProvider === 'all' ? renderAggregatedContent() : renderSingleProviderContent()}
-				</div>
+        <div className="lsp-panel-content">
+          {selectedProvider === 'all' ? renderAggregatedContent() : renderSingleProviderContent()}
+        </div>
 
-				<div className="lsp-panel-footer">
-					<div className="lsp-footer-stats">
-						{entries.length > 0 &&
-            <div>
-								<span className="lsp-entry-count">
-									{selectedProvider === 'all' ?
-                `${entries.length} entries from ${availableProviders.filter((p) => p.getConnectionStatus() === 'connected').length} providers` :
-                selectedProvider === 'local' ?
-                `${localEntries.length} local entries` :
-                `${localEntries.length} local, ${externalEntries.filter((e) => !e.isImported).length} external`
+        <div className="lsp-panel-footer">
+          <div className="lsp-footer-stats">
+            {entries.length > 0 &&
+              <div>
+                <span className="lsp-entry-count">
+                  {selectedProvider === 'all' ?
+                    `${entries.length} entries from ${availableProviders.filter((p) => p.getConnectionStatus() === 'connected').length} providers` :
+                    selectedProvider === 'local' ?
+                      `${localEntries.length} local entries` :
+                      `${localEntries.length} local, ${externalEntries.filter((e) => !e.isImported).length} external`
+                  }
+                  {citationStyle !== 'numeric' && ` (${citationStyle} style)`}
+                </span>
+                {targetBibFile && selectedProvider !== 'all' && selectedProvider !== 'local' &&
+                  <div className="lsp-footer-target">{t('Target:')}
+                    {availableBibFiles.find((f) => f.path === targetBibFile)?.name || 'Unknown file'}
+                  </div>
                 }
-									{citationStyle !== 'numeric' && ` (${citationStyle} style)`}
-								</span>
-								{targetBibFile && selectedProvider !== 'all' && selectedProvider !== 'local' &&
-              <div className="lsp-footer-target">{t('Target:')}
-                {availableBibFiles.find((f) => f.path === targetBibFile)?.name || 'Unknown file'}
-									</div>
-              }
-							</div>
+              </div>
             }
-					</div>
-					<div className="lsp-footer-actions">
-						<button
+          </div>
+          <div className="lsp-footer-actions">
+            <button
               className="lsp-refresh-button"
               onClick={handleRefresh}
               disabled={isLoading}>
 
-							{isLoading ? 'Refreshing...' : 'Refresh'}
-						</button>
-					</div>
-				</div>
-			</div>);
+              {isLoading ? 'Refreshing...' : 'Refresh'}
+            </button>
+          </div>
+        </div>
+      </div>);
 
   };
 
@@ -307,69 +307,69 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
     if (filteredEntries.length === 0) {
       return (
         <div className="lsp-no-entries">
-					{searchQuery ?
-          'No entries found matching the search criteria across all providers' :
-          'No entries available from any connected provider'
+          {searchQuery ?
+            'No entries found matching the search criteria across all providers' :
+            'No entries available from any connected provider'
           }
-				</div>);
+        </div>);
 
     }
 
     return (
       <div className="lsp-entries-list">
-				{filteredEntries.map((entry, index) =>
-        <div
-          key={getUniqueKey(entry, index)}
-          className={`lsp-entry-item ${entry.source === 'external' && !entry.isImported ? 'external-entry' : ''}`}
-          onClick={() => handleEntryClick(entry)}>
+        {filteredEntries.map((entry, index) =>
+          <div
+            key={getUniqueKey(entry, index)}
+            className={`lsp-entry-item ${entry.source === 'external' && !entry.isImported ? 'external-entry' : ''}`}
+            onClick={() => handleEntryClick(entry)}>
 
-						<div className="lsp-entry-header">
-							<span className="lsp-entry-key">{entry.key}</span>
-							{entry.providerName &&
-            <span className="lsp-entry-provider" title={`From ${entry.providerName}`}>
-									[{entry.providerName}]
-								</span>
+            <div className="lsp-entry-header">
+              <span className="lsp-entry-key">{entry.key}</span>
+              {entry.providerName &&
+                <span className="lsp-entry-provider" title={`From ${entry.providerName}`}>
+                  [{entry.providerName}]
+                </span>
+              }
+              {getSourceIndicator(entry)}
+              {/*<span className="lsp-citation-preview">{getCitationPreview(entry)}</span>*/}
+            </div>
+            <div className="lsp-entry-type-badge">
+              <div className="lsp-entry-type-content">
+                <span className="lsp-entry-type-icon">
+                  {getEntryTypeIcon(entry.entryType)}
+                </span>
+                <span className="lsp-entry-type-text">
+                  {entry.entryType.toUpperCase()}
+                </span>
+              </div>
+              {getDisplayYear(entry) &&
+                <span className="lsp-entry-year">{getDisplayYear(entry)}</span>
+              }
+            </div>
+            <div className="lsp-entry-title">
+              {getDisplayTitle(entry)}
+            </div>
+            <div className="lsp-entry-authors">{getDisplayAuthors(entry)}</div>
+            {getDisplayVenue(entry) &&
+              <div className="lsp-entry-venue">
+                <em>{getDisplayVenue(entry)}</em>
+              </div>
             }
-							{getSourceIndicator(entry)}
-							{/*<span className="lsp-citation-preview">{getCitationPreview(entry)}</span>*/}
-						</div>
-						<div className="lsp-entry-type-badge">
-							<div className="lsp-entry-type-content">
-								<span className="lsp-entry-type-icon">
-									{getEntryTypeIcon(entry.entryType)}
-								</span>
-								<span className="lsp-entry-type-text">
-									{entry.entryType.toUpperCase()}
-								</span>
-							</div>
-							{getDisplayYear(entry) &&
-            <span className="lsp-entry-year">{getDisplayYear(entry)}</span>
+            {entry.fields.volume && entry.fields.pages &&
+              <div className="lsp-entry-details">{t('Vol.')}
+                {entry.fields.volume}
+                {entry.fields.number && `, No. ${entry.fields.number}`}{t(', pp.')}
+                {entry.fields.pages}
+              </div>
             }
-						</div>
-						<div className="lsp-entry-title">
-							{getDisplayTitle(entry)}
-						</div>
-						<div className="lsp-entry-authors">{getDisplayAuthors(entry)}</div>
-						{getDisplayVenue(entry) &&
-          <div className="lsp-entry-venue">
-								<em>{getDisplayVenue(entry)}</em>
-							</div>
-          }
-						{entry.fields.volume && entry.fields.pages &&
-          <div className="lsp-entry-details">{t('Vol.')}
-            {entry.fields.volume}
-								{entry.fields.number && `, No. ${entry.fields.number}`}{t(', pp.')}
-            {entry.fields.pages}
-							</div>
-          }
-						{entry.fields.doi &&
-          <div className="lsp-entry-identifier">{t('DOI:')}
-            {entry.fields.doi}
-							</div>
-          }
-					</div>
+            {entry.fields.doi &&
+              <div className="lsp-entry-identifier">{t('DOI:')}
+                {entry.fields.doi}
+              </div>
+            }
+          </div>
         )}
-			</div>);
+      </div>);
 
   };
 
@@ -382,16 +382,16 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
       if (filteredEntries.length === 0) {
         return (
           <div className="lsp-no-entries">
-						{searchQuery ?
-            'No local entries found matching the search criteria' :
-            'No local bibliography entries available'
+            {searchQuery ?
+              'No local entries found matching the search criteria' :
+              'No local bibliography entries available'
             }
-						{localEntries.length === 0 &&
-            <div className="lsp-no-entries-hint">{t('Add .bib files to your project to see local bibliography entries.')}
+            {localEntries.length === 0 &&
+              <div className="lsp-no-entries-hint">{t('Add .bib files to your project to see local bibliography entries.')}
 
-            </div>
+              </div>
             }
-					</div>);
+          </div>);
 
       }
     } else {
@@ -403,7 +403,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
         return (
           <div className="lsp-loading-indicator">{t('Connecting to LSP server... (')}
             {currentProvider.getConnectionStatus()})
-					</div>);
+          </div>);
 
       }
 
@@ -414,157 +414,157 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
       if (filteredEntries.length === 0) {
         return (
           <div className="lsp-no-entries">
-						{searchQuery ?
-            'No entries found matching the search criteria' :
-            'No bibliography entries available'
+            {searchQuery ?
+              'No entries found matching the search criteria' :
+              'No bibliography entries available'
             }
-						{localEntries.length === 0 &&
-            <div className="lsp-no-entries-hint">{t('Add .bib files to your project or connect to an external bibliography source.')}
+            {localEntries.length === 0 &&
+              <div className="lsp-no-entries-hint">{t('Add .bib files to your project or connect to an external bibliography source.')}
 
-            </div>
+              </div>
             }
-					</div>);
+          </div>);
 
       }
     }
 
     return (
       <div className="lsp-entries-list">
-				{filteredEntries.map((entry, index) =>
-        <div
-          key={getUniqueKey(entry, index)}
-          className={`lsp-entry-item ${entry.source === 'external' && !entry.isImported ? 'external-entry' : ''}`}
-          onClick={() => handleEntryClick(entry)}>
+        {filteredEntries.map((entry, index) =>
+          <div
+            key={getUniqueKey(entry, index)}
+            className={`lsp-entry-item ${entry.source === 'external' && !entry.isImported ? 'external-entry' : ''}`}
+            onClick={() => handleEntryClick(entry)}>
 
-						<div className="lsp-entry-header">
-							<span className="lsp-entry-key">{entry.key}</span>
-							{getSourceIndicator(entry)}
-							{/*<span className="lsp-citation-preview">{getCitationPreview(entry)}</span>*/}
+            <div className="lsp-entry-header">
+              <span className="lsp-entry-key">{entry.key}</span>
+              {getSourceIndicator(entry)}
+              {/*<span className="lsp-citation-preview">{getCitationPreview(entry)}</span>*/}
 
-						</div>
-						<div className="lsp-entry-type-badge">
-							<div className="lsp-entry-type-content">
-								<span className="lsp-entry-type-icon">
-									{getEntryTypeIcon(entry.entryType)}
-								</span>
-								<span className="lsp-entry-type-text">
-									{entry.entryType.toUpperCase()}
-								</span>
-							</div>
-							{getDisplayYear(entry) &&
-            <span className="lsp-entry-year">{getDisplayYear(entry)}</span>
+            </div>
+            <div className="lsp-entry-type-badge">
+              <div className="lsp-entry-type-content">
+                <span className="lsp-entry-type-icon">
+                  {getEntryTypeIcon(entry.entryType)}
+                </span>
+                <span className="lsp-entry-type-text">
+                  {entry.entryType.toUpperCase()}
+                </span>
+              </div>
+              {getDisplayYear(entry) &&
+                <span className="lsp-entry-year">{getDisplayYear(entry)}</span>
+              }
+            </div>
+            <div className="lsp-entry-title">
+              {getDisplayTitle(entry)}
+            </div>
+            <div className="lsp-entry-authors">{getDisplayAuthors(entry)}</div>
+            {getDisplayVenue(entry) &&
+              <div className="lsp-entry-venue">
+                <em>{getDisplayVenue(entry)}</em>
+              </div>
             }
-						</div>
-						<div className="lsp-entry-title">
-							{getDisplayTitle(entry)}
-						</div>
-						<div className="lsp-entry-authors">{getDisplayAuthors(entry)}</div>
-						{getDisplayVenue(entry) &&
-          <div className="lsp-entry-venue">
-								<em>{getDisplayVenue(entry)}</em>
-							</div>
-          }
-						{entry.fields.volume && entry.fields.pages &&
-          <div className="lsp-entry-details">{t('Vol.')}
-            {entry.fields.volume}
-								{entry.fields.number && `, No. ${entry.fields.number}`}{t(', pp.')}
-            {entry.fields.pages}
-							</div>
-          }
-						{entry.fields.doi &&
-          <div className="lsp-entry-identifier">{t('DOI:')}
-            {entry.fields.doi}
-							</div>
-          }
-						{entry.source === 'external' && !entry.isImported && !autoImport &&
-          <div className="lsp-entry-actions">
-								<button
-              className="import-button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleImportEntry(entry);
-              }}
-              disabled={importingEntries.has(entry.key)}>
+            {entry.fields.volume && entry.fields.pages &&
+              <div className="lsp-entry-details">{t('Vol.')}
+                {entry.fields.volume}
+                {entry.fields.number && `, No. ${entry.fields.number}`}{t(', pp.')}
+                {entry.fields.pages}
+              </div>
+            }
+            {entry.fields.doi &&
+              <div className="lsp-entry-identifier">{t('DOI:')}
+                {entry.fields.doi}
+              </div>
+            }
+            {entry.source === 'external' && !entry.isImported && !autoImport &&
+              <div className="lsp-entry-actions">
+                <button
+                  className="import-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleImportEntry(entry);
+                  }}
+                  disabled={importingEntries.has(entry.key)}>
 
-									{importingEntries.has(entry.key) ? 'Importing...' : 'Import'}
-								</button>
-							</div>
-          }
-					</div>
+                  {importingEntries.has(entry.key) ? 'Importing...' : 'Import'}
+                </button>
+              </div>
+            }
+          </div>
         )}
-			</div>);
+      </div>);
 
   };
 
   const renderGenericList = () => {
     if (selectedProvider === 'all') {
       const allProviders = availableProviders.filter((provider) =>
-      provider.getConnectionStatus() === 'connected' && !('getBibliographyEntries' in provider)
+        provider.getConnectionStatus() === 'connected' && !('getBibliographyEntries' in provider)
       );
 
       if (allProviders.length === 0) {
         return (
           <div className="lsp-provider-panel">
-						<div className="lsp-panel-search">
-							<input
+            <div className="lsp-panel-search">
+              <input
                 type="text"
                 placeholder={t('Search all LSP providers...')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="lsp-search-input" />
 
-							{searchQuery &&
-              <button
-                className="lsp-clear-search-button"
-                onClick={() => setSearchQuery('')}>
+              {searchQuery &&
+                <button
+                  className="lsp-clear-search-button"
+                  onClick={() => setSearchQuery('')}>
 
-									×
-								</button>
+                  ×
+                </button>
               }
-						</div>
-						<div className="no-provider">{t('No LSP providers are currently connected.')}
+            </div>
+            <div className="no-provider">{t('No LSP providers are currently connected.')}
 
               {availableProviders.length > 0 &&
-              <div>{t('Available providers:')}
-                {availableProviders.map((p) => p.name).join(', ')}
-								</div>
+                <div>{t('Available providers:')}
+                  {availableProviders.map((p) => p.name).join(', ')}
+                </div>
               }
-						</div>
-					</div>);
+            </div>
+          </div>);
 
       }
 
       return (
         <div className="lsp-provider-panel">
-					<div className="lsp-panel-search">
-						<input
+          <div className="lsp-panel-search">
+            <input
               type="text"
               placeholder={t('Search all LSP providers...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="lsp-search-input" />
 
-						{searchQuery &&
-            <button
-              className="lsp-clear-search-button"
-              onClick={() => setSearchQuery('')}>
+            {searchQuery &&
+              <button
+                className="lsp-clear-search-button"
+                onClick={() => setSearchQuery('')}>
 
-								×
-							</button>
+                ×
+              </button>
             }
-					</div>
-					<div className="lsp-panel-content">
-						<div className="lsp-loading-indicator">{t('All LSP aggregation view -')}
+          </div>
+          <div className="lsp-panel-content">
+            <div className="lsp-loading-indicator">{t('All LSP aggregation view -')}
               {allProviders.length}{t('provider(s) connected')}
               <div>{t('Connected:')}
                 {allProviders.map((p) => p.name).join(', ')}
-							</div>
-							<div className="lsp-no-entries-hint">{t('Individual provider panels can be accessed by selecting a specific provider from the dropdown.')}
+              </div>
+              <div className="lsp-no-entries-hint">{t('Individual provider panels can be accessed by selecting a specific provider from the dropdown.')}
 
               </div>
-						</div>
-					</div>
-				</div>);
+            </div>
+          </div>
+        </div>);
 
     }
 
@@ -595,138 +595,138 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
 
   return (
     <div className={`lsp-panel ${className}`}>
-			<div className="lsp-panel-header">
-				<h3>{t('Bibliography')}</h3>
+      <div className="lsp-panel-header">
+        <h3>{t('Bibliography')}</h3>
 
-				<div className="view-tabs">
-					<button
+        <div className="view-tabs">
+          <button
             className={`tab-button ${activeTab === 'list' ? 'active' : ''}`}
             onClick={() => setActiveTab('list')}
             disabled={!selectedItem}>{t('Items')}
 
 
           </button>
-					<button
+          <button
             className={`tab-button ${activeTab === 'detail' ? 'active' : ''}`}
             onClick={() => setActiveTab('detail')}
             disabled={!selectedItem}>{t('Detail')}
 
 
           </button>
-				</div>
-			</div>
-			<div className="lsp-panel-content">
-				<div className="lsp-controls">
-					<div className="lsp-indicator-group">
-						<div
+        </div>
+      </div>
+      <div className="lsp-panel-content">
+        <div className="lsp-controls">
+          <div className="lsp-indicator-group">
+            <div
               className={`lsp-status-indicator main-button ${getConnectionStatus()}`}
               onClick={() => setShowDropdown(!showDropdown)}>
 
-							<div
+              <div
                 className="status-dot"
                 style={{ backgroundColor: getStatusColor() }} />
 
-							{selectedProvider === 'all' ?
-              <span className="lsp-label">{t('All LSP')}</span> :
-              selectedProvider === 'local' ?
-              <span className="lsp-label"><BibliographyIcon />{t('Local Bibliography')}</span> :
-              currentProvider ?
-              <>
-									<currentProvider.icon />
-									<span className="lsp-label">{currentProvider.name}</span>
-								</> :
+              {selectedProvider === 'all' ?
+                <span className="lsp-label">{t('All LSP')}</span> :
+                selectedProvider === 'local' ?
+                  <span className="lsp-label"><BibliographyIcon />{t('Local Bibliography')}</span> :
+                  currentProvider ?
+                    <>
+                      <currentProvider.icon />
+                      <span className="lsp-label">{currentProvider.name}</span>
+                    </> :
 
-              <span className="lsp-label">{t('No LSP')}</span>
+                    <span className="lsp-label">{t('No LSP')}</span>
               }
-						</div>
+            </div>
 
-						<button
+            <button
               className={`lsp-dropdown-toggle ${getConnectionStatus()}`}
               onClick={() => setShowDropdown(!showDropdown)}>
 
-							<ChevronDownIcon />
-						</button>
+              <ChevronDownIcon />
+            </button>
 
-						{showDropdown &&
-            <div className="lsp-dropdown">
-								{availableProviders.length > 1 &&
-              <div
-                className="lsp-dropdown-item"
-                onClick={() => handleProviderSelect('all')}>{t('All LSP')}
-
-
-              </div>
-              }
-
-								<div
-                className="lsp-dropdown-item"
-                onClick={() => handleProviderSelect('local')}>
-
-									<BibliographyIcon />{t('Local Bibliography')}
-              </div>
-
-								{availableProviders.map((provider) => {
-                const IconComponent = provider.icon;
-                const status = provider.getConnectionStatus();
-                return (
+            {showDropdown &&
+              <div className="lsp-dropdown">
+                {availableProviders.length > 1 &&
                   <div
-                    key={provider.id}
                     className="lsp-dropdown-item"
-                    onClick={() => handleProviderSelect(provider.id)}>
+                    onClick={() => handleProviderSelect('all')}>{t('All LSP')}
 
-											<span className="service-indicator">
-												{status === 'connected' ? '🟢' : ''}
-											</span>
-											<IconComponent /> {provider.name}
-										</div>);
 
-              })}
-							</div>
+                  </div>
+                }
+
+                <div
+                  className="lsp-dropdown-item"
+                  onClick={() => handleProviderSelect('local')}>
+
+                  <BibliographyIcon />{t('Local Bibliography')}
+                </div>
+
+                {availableProviders.map((provider) => {
+                  const IconComponent = provider.icon;
+                  const status = provider.getConnectionStatus();
+                  return (
+                    <div
+                      key={provider.id}
+                      className="lsp-dropdown-item"
+                      onClick={() => handleProviderSelect(provider.id)}>
+
+                      <span className="service-indicator">
+                        {status === 'connected' ? '🟢' : ''}
+                      </span>
+                      <IconComponent /> {provider.name}
+                    </div>);
+
+                })}
+              </div>
             }
-					</div>
+          </div>
 
-					<button
+          <button
             className="lsp-refresh-button"
             onClick={handleRefresh}
             disabled={isRefreshing}
             title={
-            selectedProvider === 'all' ? 'Refresh all LSP providers' :
-            selectedProvider === 'local' ? 'Refresh local bibliography' :
-            `Refresh ${currentProvider?.name || 'LSP'}`
+              selectedProvider === 'all' ? 'Refresh all LSP providers' :
+                selectedProvider === 'local' ? 'Refresh local bibliography' :
+                  `Refresh ${currentProvider?.name || 'LSP'}`
             }>
 
-						<SyncIcon />
-					</button>
-				</div>
+            <SyncIcon />
+          </button>
+        </div>
 
-				{activeTab === 'list' ?
-        isBibliographyProvider || entries.length > 0 ?
-        renderBibliographyList() : renderGenericList() :
+        {activeTab === 'list' ?
+          isBibliographyProvider || entries.length > 0 ?
+            renderBibliographyList() : renderGenericList() :
 
-        <div className="lsp-detail-view">
-						<div className="detail-header">
-							<button
-              className="back-button"
-              onClick={handleBackToList}>{t('\u2190 Back to Items')}
+          <div className="lsp-detail-view">
+            <div className="detail-header">
+              <button
+                className="back-button"
+                onClick={handleBackToList}>{t('\u2190 Back to Items')}
 
 
-            </button>
-						</div>
+              </button>
+            </div>
 
-						<div className="detail-content">
-							{renderDetailView()}
-						</div>
-					</div>
+            <div className="detail-content">
+              {renderDetailView()}
+            </div>
+          </div>
         }
-			</div>
+      </div>
 
-			{showDropdown &&
-      <div
-        className="dropdown-overlay"
-        onClick={() => setShowDropdown(false)} />
+      {showDropdown &&
+        <div
+          className="dropdown-overlay"
+          onClick={() => setShowDropdown(false)} />
 
       }
-		</div>);
+    </div>);
 
 };
 

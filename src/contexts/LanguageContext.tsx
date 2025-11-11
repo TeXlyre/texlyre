@@ -1,5 +1,5 @@
 // src/contexts/LanguageContext.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { type ReactNode, createContext, useCallback, useEffect, useRef, useState } from 'react';
 import i18next from 'i18next';
@@ -28,7 +28,7 @@ interface LanguageContextType {
 export const LanguageContext = createContext<LanguageContextType>({
   currentLanguage: null,
   availableLanguages: [],
-  changeLanguage: async () => {},
+  changeLanguage: async () => { },
   isRTL: false
 });
 
@@ -104,9 +104,9 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       description: t("Control text direction (Auto follows language)"),
       defaultValue: 'auto',
       options: [
-      { label: t("Auto (Follow Language)"), value: 'auto' },
-      { label: t("Left-to-Right (LTR)"), value: 'ltr' },
-      { label: t("Right-to-Left (RTL)"), value: 'rtl' }],
+        { label: t("Auto (follows app language)"), value: 'auto' },
+        { label: t("Left-to-Right (LTR)"), value: 'ltr' },
+        { label: t("Right-to-Left (RTL)"), value: 'rtl' }],
 
       onChange: (value) => {
         const currentLangCode = getSetting('language')?.value as string || 'en';
@@ -142,7 +142,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 
   return (
     <LanguageContext.Provider value={{ currentLanguage, availableLanguages, changeLanguage, isRTL }}>
-            {children}
-        </LanguageContext.Provider>);
+      {children}
+    </LanguageContext.Provider>);
 
 };

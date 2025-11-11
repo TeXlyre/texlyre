@@ -1,5 +1,5 @@
 // extras/viewers/bibtex/BibtexViewer.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import { tidy } from 'bib-editor';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
@@ -8,12 +8,14 @@ import {
   DownloadIcon,
   OptionsIcon,
   SaveIcon,
-  ViewIcon } from
-'@/components/common/Icons';
+  ViewIcon
+} from
+  '@/components/common/Icons';
 import {
   PluginControlGroup,
-  PluginHeader } from
-'@/components/common/PluginHeader';
+  PluginHeader
+} from
+  '@/components/common/PluginHeader';
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
 import type { ViewerProps } from '@/plugins/PluginInterface';
@@ -32,12 +34,12 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
   const fileInfo = usePluginFileInfo(fileId, fileName);
 
   const autoTidy =
-  getSetting('bibtex-viewer-auto-tidy')?.value as boolean ?? true;
+    getSetting('bibtex-viewer-auto-tidy')?.value as boolean ?? true;
   const tidyPreset =
-  getSetting('bibtex-viewer-tidy-options')?.value as
-  'minimal' |
-  'standard' |
-  'strict' ?? 'standard';
+    getSetting('bibtex-viewer-tidy-options')?.value as
+    'minimal' |
+    'standard' |
+    'strict' ?? 'standard';
 
   const [bibtexContent, setBibtexContent] = useState<string>('');
   const [processedContent, setProcessedContent] = useState<string>('');
@@ -60,7 +62,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
   const processedEditorRef = useRef<HTMLDivElement>(null);
 
   const [options, setOptions] = useState<TidyOptions>(() =>
-  getPresetOptions(tidyPreset)
+    getPresetOptions(tidyPreset)
   );
 
   const parseContent = (content: string) => {
@@ -99,7 +101,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
       setBibtexContent(newContent);
 
       const updatedParsedEntries = parsedEntries.map((entry) =>
-      entry.originalIndex === updatedEntry.originalIndex ? updatedEntry : entry
+        entry.originalIndex === updatedEntry.originalIndex ? updatedEntry : entry
       );
       setParsedEntries(updatedParsedEntries);
 
@@ -121,7 +123,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
       setProcessedContent(newContent);
 
       const updatedParsedEntries = processedParsedEntries.map((entry) =>
-      entry.originalIndex === updatedEntry.originalIndex ? updatedEntry : entry
+        entry.originalIndex === updatedEntry.originalIndex ? updatedEntry : entry
       );
       setProcessedParsedEntries(updatedParsedEntries);
 
@@ -174,7 +176,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
     handleOriginalContentUpdate,
     () => [],
     () => ({}),
-    () => {},
+    () => { },
     true,
     false,
     fileName,
@@ -190,7 +192,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
     handleProcessedContentUpdate,
     () => [],
     () => ({}),
-    () => {},
+    () => { },
     true,
     false,
     fileName,
@@ -279,9 +281,8 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
   }, [tidyPreset]);
 
   const processBibtexWithOptions = async (
-  content: string,
-  tidyOptions: TidyOptions) =>
-  {
+    content: string,
+    tidyOptions: TidyOptions) => {
     if (!content) return;
 
     setIsProcessing(true);
@@ -362,8 +363,8 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
   const handleExport = (content: string, suffix = '') => {
     try {
       const currentEditorContent = (currentView === 'original' ?
-      originalViewRef.current?.state?.doc?.toString() :
-      processedViewRef.current?.state?.doc?.toString()) || '';
+        originalViewRef.current?.state?.doc?.toString() :
+        processedViewRef.current?.state?.doc?.toString()) || '';
       const contentToExport = currentEditorContent || content;
 
       const blob = new Blob([contentToExport], {
@@ -386,7 +387,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
   };
 
   const displayContent =
-  currentView === 'original' ? bibtexContent : processedContent;
+    currentView === 'original' ? bibtexContent : processedContent;
 
   const currentEntries = currentView === 'original' ? parsedEntries : processedParsedEntries;
 
@@ -429,72 +430,72 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
   }, [currentEntries, viewMode, currentView, updateCounter]);
 
   const tooltipInfo = [
-  `Auto-tidy: ${autoTidy ? 'enabled' : 'disabled'}`,
-  `Preset: ${tidyPreset}`,
-  `Entries: ${bibtexContent.split('@').length - 1}`,
-  `MIME Type: ${fileInfo.mimeType || 'text/x-bibtex'}`,
-  `Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : 'Unknown'}`];
-
+    t('Auto-tidy: {status}', { status: autoTidy ? t('enabled') : t('disabled') }),
+    t('Preset: {preset}', { preset: tidyPreset }),
+    t('Entries: {count}', { count: bibtexContent.split('@').length - 1 }),
+    t('MIME Type: {mimeType}', { mimeType: fileInfo.mimeType || 'text/x-bibtex' }),
+    t('Size: {size}', { size: fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : t('Unknown') })
+  ];
 
   const headerControls =
-  <>
-			<PluginControlGroup>
-				<button
-        className={`${showSidebar ? 'active' : ''}`}
-        onClick={() => setShowSidebar(!showSidebar)}
-        title={t('Toggle Options Panel')}>
+    <>
+      <PluginControlGroup>
+        <button
+          className={`${showSidebar ? 'active' : ''}`}
+          onClick={() => setShowSidebar(!showSidebar)}
+          title={t('Toggle Options Panel')}>
 
-					<OptionsIcon />
-				</button>
-				<button
-        className={`${viewMode === 'table' ? 'active' : ''}`}
-        onClick={() => setViewMode(viewMode === 'editor' ? 'table' : 'editor')}
-        title={`Switch to ${viewMode === 'editor' ? 'Table' : 'Editor'} View`}>
+          <OptionsIcon />
+        </button>
+        <button
+          className={`${viewMode === 'table' ? 'active' : ''}`}
+          onClick={() => setViewMode(viewMode === 'editor' ? 'table' : 'editor')}
+          title={`Switch to ${viewMode === 'editor' ? 'Table' : 'Editor'} View`}>
 
-					<ViewIcon />
-				</button>
-			</PluginControlGroup>
+          <ViewIcon />
+        </button>
+      </PluginControlGroup>
 
-			<PluginControlGroup>
-				{fileId &&
-      <button
-        onClick={() => {
-          if (currentView === 'original') {
-            document.dispatchEvent(
-              new CustomEvent('trigger-save', {
-                detail: { fileId, isFile: true }
-              })
-            );
-          } else {
-            handleSaveProcessed();
-          }
-        }}
-        title={currentView === 'original' ? 'Save File (Ctrl+S)' : 'Save Current View to File'}
-        disabled={
-        isSaving || !bibtexContent.trim() && !processedContent.trim()
-        }>
+      <PluginControlGroup>
+        {fileId &&
+          <button
+            onClick={() => {
+              if (currentView === 'original') {
+                document.dispatchEvent(
+                  new CustomEvent('trigger-save', {
+                    detail: { fileId, isFile: true }
+                  })
+                );
+              } else {
+                handleSaveProcessed();
+              }
+            }}
+            title={currentView === 'original' ? 'Save File (Ctrl+S)' : 'Save Current View to File'}
+            disabled={
+              isSaving || !bibtexContent.trim() && !processedContent.trim()
+            }>
 
-						<SaveIcon />
-					</button>
-      }
-				<button
-        onClick={() =>
-        handleExport(
-          displayContent,
-          currentView === 'original' ? '_original' : '_tidied'
-        )
+            <SaveIcon />
+          </button>
         }
-        title={t('Download Current View')}>
+        <button
+          onClick={() =>
+            handleExport(
+              displayContent,
+              currentView === 'original' ? '_original' : '_tidied'
+            )
+          }
+          title={t('Download Current View')}>
 
-					<DownloadIcon />
-				</button>
-			</PluginControlGroup>
-		</>;
+          <DownloadIcon />
+        </button>
+      </PluginControlGroup>
+    </>;
 
 
   return (
     <div className="bibtex-viewer-container">
-			<PluginHeader
+      <PluginHeader
         fileName={fileInfo.fileName}
         filePath={fileInfo.filePath}
         pluginName={PLUGIN_NAME}
@@ -503,97 +504,97 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
         controls={headerControls} />
 
 
-			<div className="bibtex-viewer-main">
-				{showSidebar &&
-        <TidyOptionsPanel
-          options={options}
-          onOptionsChange={setOptions}
-          onResetToDefaults={() => setOptions(getPresetOptions('standard'))}
-          onProcessBibtex={processBibtex}
-          isProcessing={isProcessing} />
+      <div className="bibtex-viewer-main">
+        {showSidebar &&
+          <TidyOptionsPanel
+            options={options}
+            onOptionsChange={setOptions}
+            onResetToDefaults={() => setOptions(getPresetOptions('standard'))}
+            onProcessBibtex={processBibtex}
+            isProcessing={isProcessing} />
 
         }
 
-				<div className="bibtex-content-area">
-					{error && <div className="bib-error-message">{error}</div>}
+        <div className="bibtex-content-area">
+          {error && <div className="bib-error-message">{error}</div>}
 
-					{warnings.length > 0 &&
-          <div className="warnings-container">
-							<h5>{t('Warnings:')}</h5>
-							{warnings.map((warning, index) =>
-            <div key={index} className="warning-item">
-									{(warning as {message: string;}).message}
-								</div>
-            )}
-						</div>
+          {warnings.length > 0 &&
+            <div className="warnings-container">
+              <h5>{t('Warnings:')}</h5>
+              {warnings.map((warning, index) =>
+                <div key={index} className="warning-item">
+                  {(warning as { message: string; }).message}
+                </div>
+              )}
+            </div>
           }
 
-					<div className="editor-containers">
-						<div className="editor-container" style={{ position: 'relative' }}>
-							<div className="editor-header">
-								<div className="view-tabs">
-									<button
+          <div className="editor-containers">
+            <div className="editor-container" style={{ position: 'relative' }}>
+              <div className="editor-header">
+                <div className="view-tabs">
+                  <button
                     className={`tab-button ${currentView === 'original' ? 'active' : ''}`}
                     onClick={() => setCurrentView('original')}>{t('Original')}
 
 
                   </button>
-									<button
+                  <button
                     className={`tab-button ${currentView === 'processed' ? 'active' : ''}`}
                     onClick={() => setCurrentView('processed')}
                     disabled={!processedContent.trim()}>{t('Processed')}
 
 
                   </button>
-								</div>
-								{currentView === 'processed' && processedContent.trim() &&
-                <div className="processed-save-notice">
-										<span>{t('Not saved automatically. Click the')}<SaveIcon /> <strong>{t('Save')}</strong>{t('button or')}<strong>{t('Ctrl+S')}</strong></span>
-									</div>
+                </div>
+                {currentView === 'processed' && processedContent.trim() &&
+                  <div className="processed-save-notice">
+                    <span>{t('Not saved automatically. Click the')}<SaveIcon /> <strong>{t('Save')}</strong>{t('button or')}<strong>{t('Ctrl+S')}</strong></span>
+                  </div>
                 }
-								{isProcessing &&
-                <span className="processing-indicator">{t('(Processing...)')}</span>
+                {isProcessing &&
+                  <span className="processing-indicator">{t('(Processing...)')}</span>
                 }
-								{isSaving &&
-                <span className="processing-indicator">{t('(Saving...)')}</span>
+                {isSaving &&
+                  <span className="processing-indicator">{t('(Saving...)')}</span>
                 }
-							</div>
+              </div>
 
-							<>
-								<div
+              <>
+                <div
                   ref={originalEditorRef}
                   className="codemirror-editor-container"
                   style={{
                     display: currentView === 'original' && viewMode === 'editor' ? 'block' : 'none'
                   }} />
 
-								<div
+                <div
                   ref={processedEditorRef}
                   className="codemirror-editor-container"
                   style={{
                     display: currentView === 'processed' && viewMode === 'editor' ? 'block' : 'none'
                   }} />
 
-								{viewMode === 'table' &&
-                <BibtexTableView
-                  key={`${currentView}-${updateCounter}`}
-                  entries={currentEntries}
-                  onEntriesChange={handleTableEntryUpdate}
-                  onSingleEntryChange={handleSingleTableEntryUpdate} />
+                {viewMode === 'table' &&
+                  <BibtexTableView
+                    key={`${currentView}-${updateCounter}`}
+                    entries={currentEntries}
+                    onEntriesChange={handleTableEntryUpdate}
+                    onSingleEntryChange={handleSingleTableEntryUpdate} />
 
                 }
-							</>
+              </>
 
-							{originalShowSaveIndicator && currentView === 'original' && viewMode === 'editor' &&
-              <div className="save-indicator">
-									<span>{t('Saved')}</span>
-								</div>
+              {originalShowSaveIndicator && currentView === 'original' && viewMode === 'editor' &&
+                <div className="save-indicator">
+                  <span>{t('Saved')}</span>
+                </div>
               }
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>);
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>);
 
 };
 

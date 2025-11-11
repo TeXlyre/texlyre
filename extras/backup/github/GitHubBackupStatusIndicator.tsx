@@ -1,5 +1,5 @@
 // extras/backup/github/GitHubBackupStatusIndicator.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import React, { useState } from 'react';
 import GitHubBackupModal from './GitHubBackupModal';
 import { gitHubBackupService } from './GitHubBackupService';
@@ -43,9 +43,9 @@ const GitHubBackupStatusIndicator: React.FC<
       if (status.status === 'syncing') return t('Syncing...');
       if (status.lastSync) {
         const lastSync = new Date(status.lastSync);
-        return `Last sync: ${lastSync.toLocaleTimeString()}`;
+        return t('Last sync: {time}', { time: lastSync.toLocaleTimeString() });
       }
-      return `Connected to ${status.repository}`;
+      return t('Connected to {repository}', { repository: status.repository });
     };
 
     const hasUnreadActivities = activities.length > 0;

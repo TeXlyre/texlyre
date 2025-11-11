@@ -1,5 +1,5 @@
 // src/components/output/TypstOutput.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import React from 'react';
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 
@@ -15,7 +15,7 @@ import { toArrayBuffer } from '../../utils/fileUtils';
 interface TypstOutputProps {
   className?: string;
   selectedDocId?: string | null;
-  documents?: Array<{id: string;name: string;}>;
+  documents?: Array<{ id: string; name: string; }>;
   onNavigateToLinkedFile?: () => void;
   onExpandTypstOutput?: () => void;
   linkedFileInfo?: {
@@ -212,21 +212,21 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
       const pdfRenderer = pluginRegistry.getRendererForOutput('pdf', 'pdf-renderer');
       return (
         <div className="pdf-viewer">
-                    {pdfRenderer && useEnhancedRenderer ?
-          React.createElement(pdfRenderer.renderOutput, {
-            content: toArrayBuffer(compiledPdf.buffer),
-            mimeType: 'application/pdf',
-            fileName: 'output.pdf',
-            onSave: handleSavePdf
-          }) :
+          {pdfRenderer && useEnhancedRenderer ?
+            React.createElement(pdfRenderer.renderOutput, {
+              content: toArrayBuffer(compiledPdf.buffer),
+              mimeType: 'application/pdf',
+              fileName: 'output.pdf',
+              onSave: handleSavePdf
+            }) :
 
-          <embed
-            src={URL.createObjectURL(new Blob([toArrayBuffer(compiledPdf)], { type: 'application/pdf' }))}
-            type="application/pdf"
-            style={{ width: '100%', height: '100%' }} />
+            <embed
+              src={URL.createObjectURL(new Blob([toArrayBuffer(compiledPdf)], { type: 'application/pdf' }))}
+              type="application/pdf"
+              style={{ width: '100%', height: '100%' }} />
 
           }
-                </div>);
+        </div>);
 
     }
 
@@ -234,29 +234,29 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
       const svgRenderer = pluginRegistry.getRendererForOutput('svg', 'svg-renderer');
       return (
         <div className="svg-viewer">
-                    {svgRenderer ?
-          React.createElement(svgRenderer.renderOutput, {
-            content: new TextEncoder().encode(compiledSvg).buffer,
-            mimeType: 'image/svg+xml',
-            fileName: 'output.svg',
-            onSave: (fileName) => handleSaveOutput('svg', fileName)
-          }) :
+          {svgRenderer ?
+            React.createElement(svgRenderer.renderOutput, {
+              content: new TextEncoder().encode(compiledSvg).buffer,
+              mimeType: 'image/svg+xml',
+              fileName: 'output.svg',
+              onSave: (fileName) => handleSaveOutput('svg', fileName)
+            }) :
 
-          <div className="svg-canvas-container" style={{
-            width: '100%',
-            flex: 1,
-            overflow: 'hidden',
-            padding: '1rem',
-            backgroundColor: 'white',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '400px'
-          }}>
-                            <iframe
-              ref={iframeRef}
-              title={t('SVG Output')}
-              srcDoc={`<!DOCTYPE html>
+            <div className="svg-canvas-container" style={{
+              width: '100%',
+              flex: 1,
+              overflow: 'hidden',
+              padding: '1rem',
+              backgroundColor: 'white',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              minHeight: '400px'
+            }}>
+              <iframe
+                ref={iframeRef}
+                title={t('SVG Output')}
+                srcDoc={`<!DOCTYPE html>
                                 <html>
                                   <head>
                                     <style>
@@ -278,16 +278,16 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
                                   </head>
                                   <body>${compiledSvg}</body>
                                 </html>`}
-              style={{
-                width: '100%',
-                height: '100%',
-                border: '1px solid #ddd',
-                backgroundColor: 'white'
-              }} />
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: '1px solid #ddd',
+                  backgroundColor: 'white'
+                }} />
 
-                        </div>
+            </div>
           }
-                </div>);
+        </div>);
 
     }
 
@@ -308,19 +308,19 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 
       return (
         <div className="canvas-viewer">
-                    {canvasRenderer ?
-          React.createElement(canvasRenderer.renderOutput, {
-            content: toArrayBuffer(compiledCanvas.buffer),
-            mimeType: 'image/svg+xml',
-            fileName: 'output.svg',
-            onSave: (fileName) => handleSaveOutput('canvas', fileName)
-          }) :
+          {canvasRenderer ?
+            React.createElement(canvasRenderer.renderOutput, {
+              content: toArrayBuffer(compiledCanvas.buffer),
+              mimeType: 'image/svg+xml',
+              fileName: 'output.svg',
+              onSave: (fileName) => handleSaveOutput('canvas', fileName)
+            }) :
 
-          <div className="canvas-fallback">{t('Canvas renderer not available')}
+            <div className="canvas-fallback">{t('Canvas renderer not available')}
 
-          </div>
+            </div>
           }
-                </div>);
+        </div>);
 
     }
 
@@ -331,47 +331,47 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 
   return (
     <div className={`typst-output ${className}`}>
-            <div className="output-header">
-                <div className="view-tabs">
-                    <button
+      <div className="output-header">
+        <div className="view-tabs">
+          <button
             className={`tab-button ${currentView === 'log' ? 'active' : ''}`}
             onClick={() => currentView !== 'log' && toggleOutputView()}>{t('Log')}
 
 
           </button>
-                    {currentView === 'output' &&
-          <>
-                            <button
-              className={`tab-button ${currentView === 'output' && currentFormat === 'pdf' ? 'active' : ''}`}
-              onClick={() => handleTabSwitch('pdf')}>
+          {currentView === 'output' &&
+            <>
+              <button
+                className={`tab-button ${currentView === 'output' && currentFormat === 'pdf' ? 'active' : ''}`}
+                onClick={() => handleTabSwitch('pdf')}>
 
-                                PDF
-                            </button>
-                            <button
-              className={`tab-button ${currentView === 'output' && currentFormat === 'svg' ? 'active' : ''}`}
-              onClick={() => handleTabSwitch('svg')}>
+                PDF
+              </button>
+              <button
+                className={`tab-button ${currentView === 'output' && currentFormat === 'svg' ? 'active' : ''}`}
+                onClick={() => handleTabSwitch('svg')}>
 
-                                SVG
-                            </button>
-                            <button
-              className={`tab-button ${currentView === 'output' && currentFormat === 'canvas' ? 'active' : ''}`}
-              onClick={() => handleTabSwitch('canvas')}>{t('Canvas')}
+                SVG
+              </button>
+              <button
+                className={`tab-button ${currentView === 'output' && currentFormat === 'canvas' ? 'active' : ''}`}
+                onClick={() => handleTabSwitch('canvas')}>{t('Canvas')}
+
+
+              </button>
+            </>
+          }
+          {currentView === 'log' &&
+            <button
+              className={'tab-button'}
+              onClick={() => toggleOutputView()}
+              disabled={!hasAnyOutput}>{t('Output')}
 
 
             </button>
-                        </>
           }
-                    {currentView === 'log' &&
-          <button
-            className={'tab-button'}
-            onClick={() => toggleOutputView()}
-            disabled={!hasAnyOutput}>{t('Output')}
-
-
-          </button>
-          }
-                </div>
-                <TypstCompileButton
+        </div>
+        <TypstCompileButton
           className="output-compile-button"
           selectedDocId={selectedDocId}
           documents={documents}
@@ -380,52 +380,52 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
           linkedFileInfo={linkedFileInfo}
           shouldNavigateOnCompile={false} />
 
-            </div>
+      </div>
 
-            {!compileLog && !hasAnyOutput ?
-      <div className="empty-state">
-                    <p>{t('No output available. Compile a Typst document to see results.')}</p>
+      {!compileLog && !hasAnyOutput ?
+        <div className="empty-state">
+          <p>{t('No output available. Compile a Typst document to see results.')}</p>
+        </div> :
+
+        <>
+          {currentView === 'log' &&
+            <div className="log-view-container">
+              {loggerPlugin ?
+                <div className="split-log-view">
+                  <ResizablePanel
+                    direction="vertical"
+                    alignment="end"
+                    height={visualizerHeight}
+                    minHeight={150}
+                    maxHeight={600}
+                    className="visualizer-panel-wrapper"
+                    onResize={handleVisualizerResize}
+                    collapsed={visualizerCollapsed}
+                    onCollapse={handleVisualizerCollapse}>
+
+                    <div className="visualizer-panel">
+                      {React.createElement(loggerPlugin.renderVisualizer, {
+                        log: compileLog,
+                        onLineClick: handleLineClick
+                      })}
+                    </div>
+                  </ResizablePanel>
+                  <div className="raw-log-panel">
+                    <pre className="log-viewer">{compileLog}</pre>
+                  </div>
                 </div> :
 
-      <>
-                    {currentView === 'log' &&
-        <div className="log-view-container">
-                            {loggerPlugin ?
-          <div className="split-log-view">
-                                    <ResizablePanel
-              direction="vertical"
-              alignment="end"
-              height={visualizerHeight}
-              minHeight={150}
-              maxHeight={600}
-              className="visualizer-panel-wrapper"
-              onResize={handleVisualizerResize}
-              collapsed={visualizerCollapsed}
-              onCollapse={handleVisualizerCollapse}>
-
-                                        <div className="visualizer-panel">
-                                            {React.createElement(loggerPlugin.renderVisualizer, {
-                  log: compileLog,
-                  onLineClick: handleLineClick
-                })}
-                                        </div>
-                                    </ResizablePanel>
-                                    <div className="raw-log-panel">
-                                        <pre className="log-viewer">{compileLog}</pre>
-                                    </div>
-                                </div> :
-
-          <div className="log-viewer">
-                                    <pre>{compileLog}</pre>
-                                </div>
+                <div className="log-viewer">
+                  <pre>{compileLog}</pre>
+                </div>
+              }
+            </div>
           }
-                        </div>
-        }
 
-                    {outputViewerContent}
-                </>
+          {outputViewerContent}
+        </>
       }
-        </div>);
+    </div>);
 
 };
 

@@ -1,5 +1,5 @@
 // extras/renderers/pdf_html_experimental/PdfHtmlRenderer.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSettings } from '@/hooks/useSettings';
@@ -13,7 +13,7 @@ const PdfHtmlRenderer: React.FC<RendererProps> = ({
 }) => {
   const { getSetting } = useSettings();
   const pdfHtmlRendererEnable =
-  getSetting('pdfhtml-renderer-enable')?.value as boolean ?? true;
+    getSetting('pdfhtml-renderer-enable')?.value as boolean ?? true;
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -453,10 +453,9 @@ const PdfHtmlRenderer: React.FC<RendererProps> = ({
     }
 
     if (
-    !content ||
-    !(content instanceof ArrayBuffer) ||
-    content.byteLength === 0)
-    {
+      !content ||
+      !(content instanceof ArrayBuffer) ||
+      content.byteLength === 0) {
       setError('Invalid or empty PDF content');
       setIsLoading(false);
       return;
@@ -550,7 +549,7 @@ const PdfHtmlRenderer: React.FC<RendererProps> = ({
         onError={handleIframeError} />
 
       {isLoading &&
-      <div className="pdf-renderer-loading">{t('Loading PDF document...')}</div>
+        <div className="pdf-renderer-loading">{t('Loading PDF document...')}</div>
       }
       {error && <div className="pdf-renderer-error">{error}</div>}
     </div>);

@@ -39,7 +39,7 @@ function addTranslationImport(ast) {
 
 function injectImportIntoCode(code) {
     const lines = code.split('\n');
-    const importStatement = 'import { t } from "@/i18n";';
+    const importStatement = 'import { t } from \'@/i18n\';';
 
     let insertIndex = 0;
     let foundFirstNonComment = false;

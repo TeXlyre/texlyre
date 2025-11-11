@@ -1,5 +1,5 @@
 // src/contexts/CollabContext.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import {
   type ReactNode,
@@ -8,8 +8,9 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState } from
-'react';
+  useState
+} from
+  'react';
 import type { WebrtcProvider } from 'y-webrtc';
 import type * as Y from 'yjs';
 
@@ -45,8 +46,8 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 
   const projectId = useMemo(() => {
     return docUrl.startsWith('yjs:') ?
-    docUrl.slice(4) :
-    docUrl.replace(/[^a-zA-Z0-9]/g, '-');
+      docUrl.slice(4) :
+      docUrl.replace(/[^a-zA-Z0-9]/g, '-');
   }, [docUrl]);
 
   useEffect(() => {
@@ -101,8 +102,8 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
     if (!projectId || !collectionName) return;
 
     const serversToUse = signalingServers.length > 0 ?
-    signalingServers.split(',').map((s) => s.trim()) :
-    JSON.parse(localStorage.getItem('texlyre-settings') || '{}')['collab-signaling-servers'];
+      signalingServers.split(',').map((s) => s.trim()) :
+      JSON.parse(localStorage.getItem('texlyre-settings') || '{}')['collab-signaling-servers'];
 
     try {
       const { doc: ydoc, provider: yprovider } = collabService.connect(
@@ -141,14 +142,14 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
       setIsConnected(false);
       setDoc(undefined);
       setProvider(undefined);
-      return () => {};
+      return () => { };
     }
   }, [
-  projectId,
-  collectionName,
-  signalingServers,
-  autoReconnect,
-  awarenessTimeout]
+    projectId,
+    collectionName,
+    signalingServers,
+    autoReconnect,
+    awarenessTimeout]
   );
 
   const changeData = useCallback(

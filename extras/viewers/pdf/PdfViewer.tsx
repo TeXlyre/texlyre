@@ -1,5 +1,5 @@
 // extras/viewers/pdf/PdfViewer.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import * as pdfjs from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
 import type React from 'react';
@@ -10,12 +10,14 @@ import {
   ChevronRightIcon,
   DownloadIcon,
   ZoomInIcon,
-  ZoomOutIcon } from
-'@/components/common/Icons';
+  ZoomOutIcon
+} from
+  '@/components/common/Icons';
 import {
   PluginControlGroup,
-  PluginHeader } from
-'@/components/common/PluginHeader';
+  PluginHeader
+} from
+  '@/components/common/PluginHeader';
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
 import type { ViewerProps } from '@/plugins/PluginInterface';
@@ -39,12 +41,12 @@ const PdfViewer: React.FC<ViewerProps> = ({
   const fileInfo = usePluginFileInfo(fileId, fileName);
 
   const autoScale =
-  getSetting('pdf-viewer-auto-scale')?.value as boolean ?? true;
+    getSetting('pdf-viewer-auto-scale')?.value as boolean ?? true;
   const renderingQuality =
-  getSetting('pdf-viewer-rendering-quality')?.value as
-  'low' |
-  'medium' |
-  'high' ?? 'high';
+    getSetting('pdf-viewer-rendering-quality')?.value as
+    'low' |
+    'medium' |
+    'high' ?? 'high';
 
   const _qualityScaleMap = {
     low: 0.75,
@@ -87,7 +89,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
         } catch (_e) {
 
           // Ignore errors during cancellation
-        }loadingTaskRef.current = null;
+        } loadingTaskRef.current = null;
       }
 
       setPdfDocument((prevDoc) => {
@@ -139,7 +141,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
         } catch (_e) {
 
           // Ignore errors during cancellation
-        }loadingTaskRef.current = null;
+        } loadingTaskRef.current = null;
       }
 
       setPdfDocument((prevDoc) => {
@@ -158,9 +160,8 @@ const PdfViewer: React.FC<ViewerProps> = ({
   }, [content]);
 
   const loadPdf = async (
-  loadingTaskRef: {current: unknown;},
-  isMounted: {current: boolean;}) =>
-  {
+    loadingTaskRef: { current: unknown; },
+    isMounted: { current: boolean; }) => {
     if (!contentRef.current || !isMounted.current) {
       return;
     }
@@ -183,7 +184,8 @@ const PdfViewer: React.FC<ViewerProps> = ({
           } catch (_e) {
 
             // Ignore cleanup errors
-          }}
+          }
+        }
         return;
       }
 
@@ -196,10 +198,9 @@ const PdfViewer: React.FC<ViewerProps> = ({
     } catch (err) {
       if (isMounted.current) {
         if (
-        err instanceof Error &&
-        !err.message.includes('Loading task cancelled') &&
-        !err.message.includes('Worker was destroyed'))
-        {
+          err instanceof Error &&
+          !err.message.includes('Loading task cancelled') &&
+          !err.message.includes('Worker was destroyed')) {
           console.error('Error loading PDF:', err);
           setError('Failed to load PDF document.');
         }
@@ -224,7 +225,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
         } catch (_e) {
 
           // Ignore cancellation errors
-        }renderTaskRef.current = null;
+        } renderTaskRef.current = null;
       }
 
       try {
@@ -236,7 +237,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
           } catch (_e) {
 
             // Ignore cleanup errors
-          }return;
+          } return;
         }
 
         let renderScale = scale;
@@ -285,11 +286,10 @@ const PdfViewer: React.FC<ViewerProps> = ({
         renderTaskRef.current = null;
       } catch (err) {
         if (
-        isMounted.current &&
-        err instanceof Error &&
-        !err.message.includes('Rendering cancelled') &&
-        !err.message.includes('Worker was destroyed'))
-        {
+          isMounted.current &&
+          err instanceof Error &&
+          !err.message.includes('Rendering cancelled') &&
+          !err.message.includes('Worker was destroyed')) {
           console.error('Error rendering PDF page:', err);
           setError(`Failed to render page ${currentPage}.`);
         }
@@ -310,7 +310,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
         } catch (_e) {
 
           // Ignore cancellation errors
-        }renderTaskRef.current = null;
+        } renderTaskRef.current = null;
       }
     };
   }, [pdfDocument, currentPage, scale, autoScale, renderingQuality]);
@@ -344,10 +344,9 @@ const PdfViewer: React.FC<ViewerProps> = ({
   const handlePageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const pageNumber = Number.parseInt(event.target.value);
     if (
-    !Number.isNaN(pageNumber) &&
-    pageNumber >= 1 &&
-    pageNumber <= totalPages)
-    {
+      !Number.isNaN(pageNumber) &&
+      pageNumber >= 1 &&
+      pageNumber <= totalPages) {
       setCurrentPage(pageNumber);
     }
   };
@@ -378,106 +377,106 @@ const PdfViewer: React.FC<ViewerProps> = ({
   };
 
   const tooltipInfo = [
-  `Rendering quality: ${renderingQuality}`,
-  `Auto-scale: ${autoScale ? 'enabled' : 'disabled'}`,
-  `Pages: ${totalPages}`,
-  `Current page: ${currentPage}`,
-  `MIME Type: ${mimeType || 'application/pdf'}`,
-  `Size: ${fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : 'Unknown'}`];
-
+    t('Rendering quality: {quality}', { quality: renderingQuality }),
+    t('Auto-scale: {status}', { status: autoScale ? t('enabled') : t('disabled') }),
+    t('Pages: {count}', { count: totalPages }),
+    t('Current page: {page}', { page: currentPage }),
+    t('MIME Type: {mimeType}', { mimeType: mimeType || 'application/pdf' }),
+    t('Size: {size}', { size: fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : t('Unknown') })
+  ];
 
   const headerControls =
-  <>
-			<PluginControlGroup>
-				<button
-        onClick={handlePreviousPage}
-        disabled={currentPage <= 1 || isLoading}
-        title={t('Previous Page')}>
+    <>
+      <PluginControlGroup>
+        <button
+          onClick={handlePreviousPage}
+          disabled={currentPage <= 1 || isLoading}
+          title={t('Previous Page')}>
 
-					<ChevronLeftIcon />
-				</button>
-				<button
-        onClick={handleNextPage}
-        disabled={currentPage >= totalPages || isLoading}
-        title={t('Next Page')}>
+          <ChevronLeftIcon />
+        </button>
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage >= totalPages || isLoading}
+          title={t('Next Page')}>
 
-					<ChevronRightIcon />
-				</button>
-			</PluginControlGroup>
+          <ChevronRightIcon />
+        </button>
+      </PluginControlGroup>
 
-			<PluginControlGroup className="page-input-group">
-				<input
-        type="text"
-        value={currentPage}
-        onChange={handlePageChange}
-        disabled={isLoading} />
+      <PluginControlGroup className="page-input-group">
+        <input
+          type="text"
+          value={currentPage}
+          onChange={handlePageChange}
+          disabled={isLoading} />
 
-				<span>/ {totalPages}</span>
-			</PluginControlGroup>
+        <span>/ {totalPages}</span>
+      </PluginControlGroup>
 
-			<PluginControlGroup>
-				{(() => {
-        const zoomOptions = pdfViewerSettings.find((s) => s.id === 'pdf-renderer-initial-zoom')?.options || [
-        { label: '25%', value: '25' },
-        { label: '50%', value: '50' },
-        { label: '75%', value: '75' },
-        { label: '100%', value: '100' },
-        { label: '125%', value: '125' },
-        { label: '150%', value: '150' },
-        { label: '200%', value: '200' },
-        { label: '300%', value: '300' },
-        { label: '400%', value: '400' },
-        { label: '500%', value: '500' }];
+      <PluginControlGroup>
+        {(() => {
+          const zoomOptions = pdfViewerSettings.find((s) => s.id === 'pdf-renderer-initial-zoom')?.options || [
+            { label: '25%', value: '25' },
+            { label: '50%', value: '50' },
+            { label: '75%', value: '75' },
+            { label: '100%', value: '100' },
+            { label: '125%', value: '125' },
+            { label: '150%', value: '150' },
+            { label: '200%', value: '200' },
+            { label: '300%', value: '300' },
+            { label: '400%', value: '400' },
+            { label: '500%', value: '500' }];
 
-        const currentZoom = Math.round(scale * 100).toString();
-        const hasCustomZoom = !zoomOptions.some((opt) => String(opt.value) === currentZoom);
+          const currentZoom = Math.round(scale * 100).toString();
+          const hasCustomZoom = !zoomOptions.some((opt) => String(opt.value) === currentZoom);
 
-        return (
-          <>
-							<button onClick={handleZoomOut} title={t('Zoom Out')} disabled={isLoading}>
-								<ZoomOutIcon />
-							</button>
-							<select
-              value={hasCustomZoom ? 'custom' : currentZoom}
-              onChange={handleZoomChange}
-              disabled={isLoading}
-              className="zoom-dropdown"
-              title={t('Zoom Level')}>
+          return (
+            <>
+              <button onClick={handleZoomOut} title={t('Zoom Out')} disabled={isLoading}>
+                <ZoomOutIcon />
+              </button>
+              <select
+                value={hasCustomZoom ? 'custom' : currentZoom}
+                onChange={handleZoomChange}
+                disabled={isLoading}
+                className="zoom-dropdown"
+                title={t('Zoom Level')}>
 
-								{zoomOptions.map((option) =>
-              <option key={String(option.value)} value={String(option.value)}>
-										{option.label}
-									</option>
-              )}
-								{hasCustomZoom &&
-              <option value="custom" className="custom-zoom-option">
-										{Math.round(scale * 100)}%
-									</option>
-              }
-							</select>
-							<button onClick={handleZoomIn} title={t('Zoom In')} disabled={isLoading}>
-								<ZoomInIcon />
-							</button>
-						</>);
+                {zoomOptions.map((option) =>
+                  <option key={String(option.value)} value={String(option.value)}>
+                    {option.label}
+                  </option>
+                )}
+                {hasCustomZoom &&
+                  <option value="custom" className="custom-zoom-option">
+                    {Math.round(scale * 100)}%
+                  </option>
+                }
+              </select>
+              <button onClick={handleZoomIn} title={t('Zoom In')} disabled={isLoading}>
+                <ZoomInIcon />
+              </button>
+            </>);
 
-      })()}
-			</PluginControlGroup>
+        })()}
+      </PluginControlGroup>
 
-			<PluginControlGroup>
-				<button
-        onClick={handleExport}
-        title={t('Download PDF')}
-        disabled={isLoading}>
+      <PluginControlGroup>
+        <button
+          onClick={handleExport}
+          title={t('Download PDF')}
+          disabled={isLoading}>
 
-					<DownloadIcon />
-				</button>
-			</PluginControlGroup>
-		</>;
+          <DownloadIcon />
+        </button>
+      </PluginControlGroup>
+    </>;
 
 
   return (
     <div className="pdf-viewer-container">
-			<PluginHeader
+      <PluginHeader
         fileName={fileInfo.fileName}
         filePath={fileInfo.filePath}
         pluginName={PLUGIN_NAME}
@@ -486,25 +485,25 @@ const PdfViewer: React.FC<ViewerProps> = ({
         controls={headerControls} />
 
 
-			<div className="pdf-viewer-content">
-				{isLoading &&
-        <div className="loading-indicator">{t('Loading PDF document...')}</div>
+      <div className="pdf-viewer-content">
+        {isLoading &&
+          <div className="loading-indicator">{t('Loading PDF document...')}</div>
         }
 
-				{error && <div className="pdf-error-message">{error}</div>}
+        {error && <div className="pdf-error-message">{error}</div>}
 
-				{!isLoading && !error && pdfDocument &&
-        <div className="pdf-container" ref={pdfContainerRef}>
-						<div className="pdf-page-container">
-							<canvas
-              ref={canvasRef}
-              className="pdf-page-canvas" />
+        {!isLoading && !error && pdfDocument &&
+          <div className="pdf-container" ref={pdfContainerRef}>
+            <div className="pdf-page-container">
+              <canvas
+                ref={canvasRef}
+                className="pdf-page-canvas" />
 
-						</div>
-					</div>
+            </div>
+          </div>
         }
-			</div>
-		</div>);
+      </div>
+    </div>);
 
 };
 

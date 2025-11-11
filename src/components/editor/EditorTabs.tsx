@@ -1,5 +1,5 @@
 // src/components/editor/EditorTabs.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useCallback, useEffect, useState, useRef } from 'react';
 
@@ -259,8 +259,8 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
       if (typeof line !== 'number' || typeof position !== 'number') return;
 
       const targetTab = tabs.find((tab) =>
-      isEditingFile && tab.fileId === fileId ||
-      !isEditingFile && tab.documentId === documentId
+        isEditingFile && tab.fileId === fileId ||
+        !isEditingFile && tab.documentId === documentId
       );
 
       if (targetTab && targetTab.id === activeTabId) {
@@ -312,31 +312,31 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 
           <ChevronLeftIcon />
         </button>
-        
+
         <div ref={tabsRef} className="editor-tabs">
           {tabs.map((tab, index) =>
-          <div
-            key={tab.id}
-            className={getTabClasses(index, tab.id)}
-            onClick={(e) => handleTabClick(e, tab.id)}
-            onMouseDown={(e) => handleMiddleClick(e, tab.id)}
-            onContextMenu={(e) => handleRightClick(e, tab.id)}
-            draggable={!isDragging || draggedTabIndex === index}
-            onDragStart={(e) => handleDragStart(e, index, tab.id)}
-            onDragEnter={handleDragEnter}
-            onDragOver={(e) => handleDragOver(e, index)}
-            onDragLeave={handleDragLeave}
-            onDrop={(e) => handleDrop(e, index)}
-            onDragEnd={handleDragEnd}
-            title={`${tab.filePath || tab.title}${tab.editorState.currentLine ? ` (Line ${tab.editorState.currentLine})` : ''}`}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleTabClick(e as any, tab.id);
-              }
-            }}>
+            <div
+              key={tab.id}
+              className={getTabClasses(index, tab.id)}
+              onClick={(e) => handleTabClick(e, tab.id)}
+              onMouseDown={(e) => handleMiddleClick(e, tab.id)}
+              onContextMenu={(e) => handleRightClick(e, tab.id)}
+              draggable={!isDragging || draggedTabIndex === index}
+              onDragStart={(e) => handleDragStart(e, index, tab.id)}
+              onDragEnter={handleDragEnter}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, index)}
+              onDragEnd={handleDragEnd}
+              title={`${tab.filePath || tab.title}${tab.editorState.currentLine ? ` (Line ${tab.editorState.currentLine})` : ''}`}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleTabClick(e as any, tab.id);
+                }
+              }}>
 
               <span className="tab-icon">
                 {tab.type === 'document' ? <FileTextIcon /> : <FileIcon />}
@@ -345,14 +345,14 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
                 {tab.title}
                 {tab.isDirty && <span className="dirty-indicator">•</span>}
                 {tab.editorState.currentLine &&
-              <span className="line-indicator">:{tab.editorState.currentLine}</span>
-              }
+                  <span className="line-indicator">:{tab.editorState.currentLine}</span>
+                }
               </span>
               <button
-              className="tab-close"
-              onClick={(e) => handleCloseClick(e, tab.id)}
-              title={t('Close tab')}
-              aria-label={`Close ${tab.title}`}>
+                className="tab-close"
+                onClick={(e) => handleCloseClick(e, tab.id)}
+                title={t('Close tab')}
+                aria-label={`Close ${tab.title}`}>
 
                 <CloseIcon />
               </button>
@@ -371,35 +371,35 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
       </div>
 
       {contextMenu.isVisible &&
-      <div
-        ref={contextMenuRef}
-        className="editor-tab-context-menu"
-        style={{
-          left: contextMenu.x,
-          top: contextMenu.y
-        }}>
+        <div
+          ref={contextMenuRef}
+          className="editor-tab-context-menu"
+          style={{
+            left: contextMenu.x,
+            top: contextMenu.y
+          }}>
 
           <button
-          className="context-menu-item"
-          onClick={() => handleContextMenuAction('closeOthers')}
-          disabled={!hasOtherTabs}>{t('Close Others')}
+            className="context-menu-item"
+            onClick={() => handleContextMenuAction('closeOthers')}
+            disabled={!hasOtherTabs}>{t('Close Others')}
 
 
-        </button>
+          </button>
           <button
-          className="context-menu-item"
-          onClick={() => handleContextMenuAction('closeLeft')}
-          disabled={!hasTabsToLeft}>{t('Close Tabs to the Left')}
+            className="context-menu-item"
+            onClick={() => handleContextMenuAction('closeLeft')}
+            disabled={!hasTabsToLeft}>{t('Close Tabs to the Left')}
 
 
-        </button>
+          </button>
           <button
-          className="context-menu-item"
-          onClick={() => handleContextMenuAction('closeRight')}
-          disabled={!hasTabsToRight}>{t('Close Tabs to the Right')}
+            className="context-menu-item"
+            onClick={() => handleContextMenuAction('closeRight')}
+            disabled={!hasTabsToRight}>{t('Close Tabs to the Right')}
 
 
-        </button>
+          </button>
         </div>
       }
     </>);

@@ -1,5 +1,5 @@
 // src/components/profile/ExportAccountModal.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
@@ -59,93 +59,93 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
       icon={ZipFileIcon}
       size="medium">
 
-			<div className="export-account-modal">
-				{error && <div className="export-error-message">{error}</div>}
+      <div className="export-account-modal">
+        {error && <div className="export-error-message">{error}</div>}
 
-				<div className="export-info">
-					<p>{t('Export your TeXlyre account data including projects, settings, and collaboration history.')}
+        <div className="export-info">
+          <p>{t('Export your TeXlyre account data including projects, settings, and collaboration history.')}
 
 
           </p>
-				</div>
+        </div>
 
-				{showProjectSelection &&
-        <div className="export-scope-selection">
-						<h3>{t('Export Scope')}</h3>
-						<div className="scope-options">
-							<label className="scope-option">
-								<input
-                type="radio"
-                name="exportScope"
-                value="current"
-                checked={exportScope === 'current'}
-                onChange={() => setExportScope('current')}
-                disabled={isExporting} />
+        {showProjectSelection &&
+          <div className="export-scope-selection">
+            <h3>{t('Export Scope')}</h3>
+            <div className="scope-options">
+              <label className="scope-option">
+                <input
+                  type="radio"
+                  name="exportScope"
+                  value="current"
+                  checked={exportScope === 'current'}
+                  onChange={() => setExportScope('current')}
+                  disabled={isExporting} />
 
-								<span>{t('Current project only')}</span>
-							</label>
-							<label className="scope-option">
-								<input
-                type="radio"
-                name="exportScope"
-                value="all"
-                checked={exportScope === 'all'}
-                onChange={() => setExportScope('all')}
-                disabled={isExporting} />
+                <span>{t('Current project only')}</span>
+              </label>
+              <label className="scope-option">
+                <input
+                  type="radio"
+                  name="exportScope"
+                  value="all"
+                  checked={exportScope === 'all'}
+                  onChange={() => setExportScope('all')}
+                  disabled={isExporting} />
 
-								<span>{t('All projects')}</span>
-							</label>
-						</div>
-					</div>
+                <span>{t('All projects')}</span>
+              </label>
+            </div>
+          </div>
         }
 
-				<div className="export-option-group">
-					<label className="export-option-label">
-						<input
+        <div className="export-option-group">
+          <label className="export-option-label">
+            <input
               type="checkbox"
               checked={includeDocuments}
               onChange={(e) => setIncludeDocuments(e.target.checked)}
               disabled={isExporting} />
 
-						<span>{t('Include documents and collaboration data')}</span>
-					</label>
-					<label className="export-option-label">
-						<input
+            <span>{t('Include documents and collaboration data')}</span>
+          </label>
+          <label className="export-option-label">
+            <input
               type="checkbox"
               checked={includeFiles}
               onChange={(e) => setIncludeFiles(e.target.checked)}
               disabled={isExporting} />
 
-						<span>{t('Include project files')}</span>
-					</label>
-					<label className="export-option-label">
-						<input
+            <span>{t('Include project files')}</span>
+          </label>
+          <label className="export-option-label">
+            <input
               type="checkbox"
               checked={includeTemporaryFiles}
               onChange={(e) => setIncludeTemporaryFiles(e.target.checked)}
               disabled={isExporting} />
 
-						<span>{t('Include cache and temporary files')}</span>
-					</label>
-					<label className="export-option-label">
-						<input
+            <span>{t('Include cache and temporary files')}</span>
+          </label>
+          <label className="export-option-label">
+            <input
               type="checkbox"
               checked={includeUserData}
               onChange={(e) => setIncludeUserData(e.target.checked)}
               disabled={isExporting} />
 
-						<span>{t('Include settings, properties, and encrypted secrets')}</span>
-					</label>
-				</div>
+            <span>{t('Include settings, properties, and encrypted secrets')}</span>
+          </label>
+        </div>
 
-				<div className="export-note info-message">{t('Exported data can be imported into any TeXlyre installation to restore your complete workspace.')}
+        <div className="export-note info-message">{t('Exported data can be imported into any TeXlyre installation to restore your complete workspace.')}
 
 
         </div>
-			</div>
+      </div>
 
-			<div className="modal-actions">
-				<button
+      <div className="modal-actions">
+        <button
           type="button"
           className="button secondary"
           onClick={handleClose}
@@ -153,23 +153,23 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
 
 
         </button>
-				<button
+        <button
           type="button"
           className="button primary"
           onClick={handleExport}
           disabled={isExporting || !includeDocuments && !includeFiles}>
 
-					{isExporting ?
-          'Exporting...' :
+          {isExporting ?
+            'Exporting...' :
 
-          <>
-							<ExportIcon />{t('Export Account')}
+            <>
+              <ExportIcon />{t('Export Account')}
 
-          </>
+            </>
           }
-				</button>
-			</div>
-		</Modal>);
+        </button>
+      </div>
+    </Modal>);
 
 };
 

@@ -1,5 +1,5 @@
 // src/components/comments/CommentPanel.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
@@ -22,9 +22,9 @@ const CommentPanel: React.FC<CommentPanelProps> = ({
 
   useEffect(() => {
     const commentsToFilter =
-    activeTab === 'resolved' ?
-    comments.filter((comment) => comment.resolved) :
-    comments.filter((comment) => !comment.resolved);
+      activeTab === 'resolved' ?
+        comments.filter((comment) => comment.resolved) :
+        comments.filter((comment) => !comment.resolved);
 
     if (searchQuery.trim() === '') {
       setFilteredComments(commentsToFilter);
@@ -33,13 +33,13 @@ const CommentPanel: React.FC<CommentPanelProps> = ({
       setFilteredComments(
         commentsToFilter.filter(
           (comment) =>
-          comment.content.toLowerCase().includes(query) ||
-          comment.user.toLowerCase().includes(query) ||
-          comment.responses.some(
-            (response) =>
-            response.content.toLowerCase().includes(query) ||
-            response.user.toLowerCase().includes(query)
-          )
+            comment.content.toLowerCase().includes(query) ||
+            comment.user.toLowerCase().includes(query) ||
+            comment.responses.some(
+              (response) =>
+                response.content.toLowerCase().includes(query) ||
+                response.user.toLowerCase().includes(query)
+            )
         )
       );
     }
@@ -51,65 +51,65 @@ const CommentPanel: React.FC<CommentPanelProps> = ({
 
   return (
     <div className={`comment-panel ${className}`}>
-			<div className="comment-panel-header">
-				<h3>{t('Comments')}</h3>
-				<div className="view-tabs">
-					<button
+      <div className="comment-panel-header">
+        <h3>{t('Comments')}</h3>
+        <div className="view-tabs">
+          <button
             className={`tab-button ${activeTab === 'list' ? 'active' : ''}`}
             onClick={() => setActiveTab('list')}>{t('Active')}
 
 
           </button>
-					<button
+          <button
             className={`tab-button ${activeTab === 'resolved' ? 'active' : ''}`}
             onClick={() => setActiveTab('resolved')}>{t('Resolved')}
 
 
           </button>
-				</div>
-			</div>
+        </div>
+      </div>
 
-			<div className="comment-search">
-				<input
+      <div className="comment-search">
+        <input
           type="text"
           className={'comment-search-input'}
           placeholder={t('Search comments...')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)} />
 
-				{searchQuery &&
-        <button
-          className="clear-search-button"
-          onClick={() => setSearchQuery('')}>
+        {searchQuery &&
+          <button
+            className="clear-search-button"
+            onClick={() => setSearchQuery('')}>
 
-						×
-					</button>
+            ×
+          </button>
         }
-			</div>
+      </div>
 
-			<div className="comment-panel-content">
-				{filteredComments.length === 0 ?
-        <div className="no-comments">
-						{searchQuery ?
-          'No comments found matching the search criteria' :
-          activeTab === 'resolved' ?
-          'No resolved comments yet.' :
-          'No active comments.'}
-					</div> :
+      <div className="comment-panel-content">
+        {filteredComments.length === 0 ?
+          <div className="no-comments">
+            {searchQuery ?
+              'No comments found matching the search criteria' :
+              activeTab === 'resolved' ?
+                'No resolved comments yet.' :
+                'No active comments.'}
+          </div> :
 
-        <div className={`comments-${activeTab}`}>
-						{filteredComments.map((comment) =>
-          <CommentItem
-            key={comment.id}
-            comment={comment}
-            view="list"
-            onLineClick={onLineClick} />
+          <div className={`comments-${activeTab}`}>
+            {filteredComments.map((comment) =>
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                view="list"
+                onLineClick={onLineClick} />
 
-          )}
-					</div>
+            )}
+          </div>
         }
-			</div>
-		</div>);
+      </div>
+    </div>);
 
 };
 

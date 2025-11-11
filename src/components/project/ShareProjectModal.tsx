@@ -1,5 +1,5 @@
 // src/components/project/ShareProjectModal.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import QRCode from 'qrcode';
 import type React from 'react';
 import { useEffect, useState } from 'react';
@@ -35,8 +35,8 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
           light: '#ffffff'
         }
       }).
-      then(setQrCodeUrl).
-      catch(console.error);
+        then(setQrCodeUrl).
+        catch(console.error);
     }
   }, [isOpen, shareUrl]);
 
@@ -82,55 +82,55 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
       icon={ShareIcon}
       size="medium">
 
-			<div className="share-project-content">
-				<div className="share-info">
-					<h4>{t('Share "')}{projectName}"</h4>
-					<p>{t('Anyone with this link can view and collaborate on this project.')}</p>
-				</div>
+      <div className="share-project-content">
+        <div className="share-info">
+          <h4>{t('Share "')}{projectName}"</h4>
+          <p>{t('Anyone with this link can view and collaborate on this project.')}</p>
+        </div>
 
-				<div className="share-url-section">
-					<label htmlFor="share-url">{t('Project Link')}</label>
-					<div className="share-url-input-group">
-						<input
+        <div className="share-url-section">
+          <label htmlFor="share-url">{t('Project Link')}</label>
+          <div className="share-url-input-group">
+            <input
               id="share-url"
               type="text"
               value={shareUrl}
               readOnly
               className="share-url-input" />
 
-						<button
+            <button
               onClick={handleCopyLink}
               className={getCopyButtonClass()}
               disabled={copyStatus === 'copied'}>
 
-							<CopyUrlIcon />
-							{getCopyButtonText()}
-						</button>
-					</div>
-				</div>
+              <CopyUrlIcon />
+              {getCopyButtonText()}
+            </button>
+          </div>
+        </div>
 
-				{qrCodeUrl &&
-        <div className="qr-code-section">
-						<label>{t('QR Code')}</label>
-						<div className="qr-code-container">
-							<img src={qrCodeUrl} alt={t('QR Code for project link')} />
-							<p>{t('Scan to open project on mobile')}</p>
-						</div>
-					</div>
+        {qrCodeUrl &&
+          <div className="qr-code-section">
+            <label>{t('QR Code')}</label>
+            <div className="qr-code-container">
+              <img src={qrCodeUrl} alt={t('QR Code for project link')} />
+              <p>{t('Scan to open project on mobile')}</p>
+            </div>
+          </div>
         }
 
-				<div className="info-message">
-					<h5>{t('Sharing Tips')}</h5>
-					<ul>
-						<li>{t('All collaborators can edit documents and files in real-time')}</li>
-						<li>{t('Changes are automatically saved and synchronized')}</li>
-						<li>{t('The project remains accessible as long as someone has the link')}
+        <div className="info-message">
+          <h5>{t('Sharing Tips')}</h5>
+          <ul>
+            <li>{t('All collaborators can edit documents and files in real-time')}</li>
+            <li>{t('Changes are automatically saved and synchronized')}</li>
+            <li>{t('The project remains accessible as long as someone has the link')}
 
             </li>
-					</ul>
-				</div>
-			</div>
-		</Modal>);
+          </ul>
+        </div>
+      </div>
+    </Modal>);
 
 };
 

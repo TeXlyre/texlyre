@@ -1,5 +1,5 @@
 // src/contexts/TypstContext.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import {
   type ReactNode,
@@ -7,8 +7,9 @@ import {
   useEffect,
   useCallback,
   useRef,
-  useState } from
-'react';
+  useState
+} from
+  'react';
 
 import { useFileTree } from '../hooks/useFileTree';
 import { useSettings } from '../hooks/useSettings';
@@ -43,11 +44,11 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     settingsRegistered.current = true;
 
     const initialAutoCompile =
-    getSetting('typst-auto-compile-on-open')?.value as boolean ?? false;
+      getSetting('typst-auto-compile-on-open')?.value as boolean ?? false;
     const initialDefaultFormat =
-    getSetting('typst-default-format')?.value as TypstOutputFormat ?? 'pdf';
+      getSetting('typst-default-format')?.value as TypstOutputFormat ?? 'pdf';
     const initialAutoNavigate =
-    getSetting('typst-auto-navigate-to-main')?.value as string ?? 'conditional';
+      getSetting('typst-auto-navigate-to-main')?.value as string ?? 'conditional';
 
     setCurrentFormat(initialDefaultFormat);
 
@@ -70,9 +71,9 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
       description: t("Control when to automatically navigate to the main Typst file during compilation"),
       defaultValue: initialAutoNavigate,
       options: [
-      { label: t("Only when no Typst file is open"), value: 'conditional' },
-      { label: t("Always navigate to main file"), value: 'always' },
-      { label: t("Never navigate to main file"), value: 'never' }]
+        { label: t("Only when no Typst file is open"), value: 'conditional' },
+        { label: t("Always navigate to main file"), value: 'always' },
+        { label: t("Never navigate to main file"), value: 'never' }]
 
     });
 
@@ -85,9 +86,9 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
       description: t("Default format for Typst compilation"),
       defaultValue: initialDefaultFormat,
       options: [
-      { label: t("PDF"), value: 'pdf' },
-      { label: t("SVG"), value: 'svg' },
-      { label: t("Canvas"), value: 'canvas' }],
+        { label: t("PDF"), value: 'pdf' },
+        { label: t("SVG"), value: 'svg' },
+        { label: t("Canvas"), value: 'canvas' }],
 
       onChange: (value) => {
         setCurrentFormat(value as TypstOutputFormat);
@@ -263,7 +264,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         activeCompiler
       }}>
 
-            {children}
-        </TypstContext.Provider>);
+      {children}
+    </TypstContext.Provider>);
 
 };

@@ -1,5 +1,5 @@
 // extras/loggers/latex_visualizer/LaTeXVisualizer.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
@@ -386,11 +386,11 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 	};
 
 	const tooltipInfo = [
-		`Total errors: ${parsedErrors.filter((e) => e.type === 'error').length}`,
-		`Total warnings: ${parsedErrors.filter((e) => e.type === 'warning').length}`,
-		`Log size: ${log ? `${Math.round(log.length / 1024)} KB` : '0 KB'}`,
-		t('Click error items to navigate to line')];
-
+		t('Total errors: {count}', { count: parsedErrors.filter((e) => e.type === 'error').length }),
+		t('Total warnings: {count}', { count: parsedErrors.filter((e) => e.type === 'warning').length }),
+		t('Log size: {size}', { size: log ? `${Math.round(log.length / 1024)} KB` : '0 KB' }),
+		t('Click error items to navigate to line')
+	];
 
 	const headerControls =
 		<div className="error-stats">

@@ -1,5 +1,5 @@
 // src/components/editor/TypstOutline.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -127,38 +127,38 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
   if (sections.length === 0) {
     return (
       <div className="typst-outline">
-                <div className="typst-outline-header">
-                    <button
+        <div className="typst-outline-header">
+          <button
             className="outline-toggle-btn"
             onClick={handleToggleCollapse}>
 
-                        {isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
-                    </button>
-                    <span className="outline-header-title">OUTLINE</span>
-                    <button
+            {isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
+          </button>
+          <span className="outline-header-title">OUTLINE</span>
+          <button
             className="action-btn"
             title={t('Refresh Outline')}
             onClick={handleRefresh}>
 
-                        <RefreshIcon />
-                    </button>
-                    {hasValidFilePath &&
-          <button
-            className="action-btn"
-            title={t('Word Count Statistics')}
-            onClick={handleShowStatistics}>
+            <RefreshIcon />
+          </button>
+          {hasValidFilePath &&
+            <button
+              className="action-btn"
+              title={t('Word Count Statistics')}
+              onClick={handleShowStatistics}>
 
-                            <WordCountIcon />
-                        </button>
+              <WordCountIcon />
+            </button>
           }
-                </div>
-                {!isCollapsed &&
-        <div className="outline-empty-state">
-                        <p>{t('No headings found')}</p>
-                        <small>{t('Use = for headings')}</small>
-                    </div>
+        </div>
+        {!isCollapsed &&
+          <div className="outline-empty-state">
+            <p>{t('No headings found')}</p>
+            <small>{t('Use = for headings')}</small>
+          </div>
         }
-                <StatisticsModal
+        <StatisticsModal
           isOpen={showStatistics}
           onClose={() => setShowStatistics(false)}
           statistics={statistics}
@@ -169,59 +169,59 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
           onRefresh={handleShowStatistics}
           contentType="typst" />
 
-            </div>);
+      </div>);
 
   }
 
   return (
     <div className="typst-outline">
-            <div className="typst-outline-header">
-                <button
+      <div className="typst-outline-header">
+        <button
           className="outline-toggle-btn"
           onClick={handleToggleCollapse}>
 
-                    {isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
-                </button>
-                <span className="outline-header-title">OUTLINE</span>
+          {isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
+        </button>
+        <span className="outline-header-title">OUTLINE</span>
 
-                <button
+        <button
           className="action-btn"
           title={t('Refresh Outline')}
           onClick={handleRefresh}>
 
-                    <RefreshIcon />
-                </button>
+          <RefreshIcon />
+        </button>
 
-                <span className="outline-section-count">
-                    {sections.length}
-                </span>
+        <span className="outline-section-count">
+          {sections.length}
+        </span>
 
-                {hasValidFilePath &&
-        <button
-          className="action-btn"
-          title={t('Word Count Statistics')}
-          onClick={handleShowStatistics}>
+        {hasValidFilePath &&
+          <button
+            className="action-btn"
+            title={t('Word Count Statistics')}
+            onClick={handleShowStatistics}>
 
-                        <WordCountIcon />
-                    </button>
+            <WordCountIcon />
+          </button>
         }
 
-            </div>
+      </div>
 
-            {!isCollapsed &&
-      <div className="outline-content">
-                    {sections.map((section) =>
-        <TypstOutlineItem
-          key={section.id}
-          section={section}
-          currentSection={currentSection}
-          onSectionClick={onSectionClick} />
+      {!isCollapsed &&
+        <div className="outline-content">
+          {sections.map((section) =>
+            <TypstOutlineItem
+              key={section.id}
+              section={section}
+              currentSection={currentSection}
+              onSectionClick={onSectionClick} />
 
-        )}
-                </div>
+          )}
+        </div>
       }
 
-            <StatisticsModal
+      <StatisticsModal
         isOpen={showStatistics}
         onClose={() => setShowStatistics(false)}
         statistics={statistics}
@@ -232,7 +232,7 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
         onRefresh={handleShowStatistics}
         contentType="typst" />
 
-        </div>);
+    </div>);
 
 };
 

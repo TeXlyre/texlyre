@@ -1,5 +1,5 @@
 // src/components/settings/SettingsButton.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 import { SettingsIcon } from '../common/Icons';
@@ -14,18 +14,18 @@ const SettingsButton: React.FC<SettingsButtonProps> = ({ className = '' }) => {
 
   return (
     <>
-			<button
+      <button
         className={`settings-button ${className}`}
         onClick={() => setIsSettingsOpen(true)}
         title={t('Settings')}>
 
-				<SettingsIcon />
-			</button>
-			<SettingsModal
+        <SettingsIcon />
+      </button>
+      <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)} />
 
-		</>);
+    </>);
 
 };
 

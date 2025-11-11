@@ -115,7 +115,7 @@
     "Are you sure you want to unlink {count} file from their documents?": "هل أنت متأكد من أنك تريد إلغاء ربط {{count}} ملف من مستنداتها؟",
     "Are you sure you want to unlink {count} file from their documents?_one": "هل أنت متأكد من أنك تريد إلغاء ربط {{count}} ملف من مستنده؟",
     "Are you sure you want to unlink {count} file from their documents?_other": "هل أنت متأكد من أنك تريد إلغاء ربط {{count}} ملفات من مستنداتها؟",
-    "Auto (Follow Language)": "تلقائي (اتبع اللغة)",
+    "Auto (follow app language)": "تلقائي (اتبع اللغة)",
     "Auto (follows app theme)": "تلقائي (يتبع نمط التطبيق)",
     "Auto-backup connection on startup": "اتصال النسخ الاحتياطي التلقائي عند بدء التشغيل",
     "Auto-compile on project open": "التجميع التلقائي عند فتح المشروع",

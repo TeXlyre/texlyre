@@ -1,5 +1,5 @@
 // src/components/project/UrlImportModal.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { useSettings } from '../../hooks/useSettings';
@@ -137,248 +137,248 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
 
   return (
     <>
-            <Modal
+      <Modal
         isOpen={isOpen}
         onClose={handleClose}
         title={t('Import from URL')}
         icon={GlobeIcon}
         size="large"
         headerActions={
-        <button
-          className="modal-close-button"
-          onClick={() => setShowSettings(true)}
-          title={t('Import Settings')}>
+          <button
+            className="modal-close-button"
+            onClick={() => setShowSettings(true)}
+            title={t('Import Settings')}>
 
-                        <SettingsIcon />
-                    </button>
+            <SettingsIcon />
+          </button>
         }>
 
-                <div className="url-import-modal">
-                    {!hasAttemptedFetch ?
-          <div className="url-input-section">
-                            <div className="form-group">
-                                <label htmlFor="repository-url">{t('Repository or ZIP URL')}</label>
-                                <p className="field-description">{t('Enter a GitHub, GitLab, Codeberg, or Gitea repository URL, or a direct link to a ZIP file')}
+        <div className="url-import-modal">
+          {!hasAttemptedFetch ?
+            <div className="url-input-section">
+              <div className="form-group">
+                <label htmlFor="repository-url">{t('Repository or ZIP URL')}</label>
+                <p className="field-description">{t('Enter a GitHub, GitLab, Codeberg, or Gitea repository URL, or a direct link to a ZIP file')}
 
-              </p>
-                                <input
-                type="text"
-                id="repository-url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://github.com/user/repo or https://example.com/project.zip"
-                onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()} />
+                </p>
+                <input
+                  type="text"
+                  id="repository-url"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="https://github.com/user/repo or https://example.com/project.zip"
+                  onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()} />
 
-                            </div>
+              </div>
 
-                            <div className="modal-actions">
-                                <button
-                type="button"
-                className="button secondary"
-                onClick={handleClose}>{t('Cancel')}
-
-
-              </button>
-                                <button
-                type="button"
-                className="button primary"
-                onClick={handleUrlSubmit}
-                disabled={!url.trim()}>
-
-                                    <GlobeIcon />{t('Fetch Metadata')}
-
-              </button>
-                            </div>
-                        </div> :
-
-          <>
-                            {loading &&
-            <div className="url-loading">
-                                    <div className="loading-spinner" />
-                                    <p>{t('Fetching repository metadata...')}</p>
-                                </div>
-            }
-
-                            {error &&
-            <div className="error-message">
-                                    <p>{error}</p>
-                                    <button
-                type="button"
-                className="button secondary smaller"
-                onClick={() => {
-                  setHasAttemptedFetch(false);
-                  setUrl('');
-                }}>{t('Try Different URL')}
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="button secondary"
+                  onClick={handleClose}>{t('Cancel')}
 
 
-              </button>
-                                </div>
-            }
+                </button>
+                <button
+                  type="button"
+                  className="button primary"
+                  onClick={handleUrlSubmit}
+                  disabled={!url.trim()}>
 
-                            {metadata && !loading &&
-            <div className="url-import-content">
-                                    <div className="url-import-form">
-                                        <div className="form-group">
-                                            <label htmlFor="project-name">{t('Project Name')}
-                    <span className="required">*</span>
-                                            </label>
-                                            <input
-                    type="text"
-                    id="project-name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder={metadata.title || 'Enter project name'}
-                    required />
+                  <GlobeIcon />{t('Fetch Metadata')}
 
-                                        </div>
+                </button>
+              </div>
+            </div> :
 
-                                        <div className="form-group">
-                                            <label htmlFor="project-description">{t('Description')}</label>
-                                            <textarea
-                    id="project-description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder={metadata.description || 'Enter project description'}
-                    rows={3} />
-
-                                        </div>
-
-                                        <div className="form-group">
-                                            <label htmlFor="project-type">{t('Typesetter Type')}</label>
-                                            <select
-                    id="project-type"
-                    value={type}
-                    onChange={(e) => setType(e.target.value as 'latex' | 'typst')}>
-
-                                                <option value="latex">{t('LaTeX')}</option>
-                                                <option value="typst">{t('Typst')}</option>
-                                            </select>
-                                        </div>
-
-                                        <div className="form-group">
-                                            <label htmlFor="project-tags">{t('Tags')}</label>
-                                            <div className="tag-input-container">
-                                                <input
-                      type="text"
-                      id="project-tags"
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      onKeyDown={handleTagKeyPress}
-                      placeholder={t('Add tags (press Enter or comma)')} />
-
-                                                <button
-                      type="button"
-                      className="button primary"
-                      onClick={handleAddTag}
-                      disabled={!tagInput.trim()}>{t('Add')}
-
-
-                    </button>
-                                            </div>
-
-                                            {tags.length > 0 &&
-                  <div className="tags-container">
-                                                    {tags.map((tag, index) =>
-                    <div key={index} className="tag">
-                                                            <span>{tag}</span>
-                                                            <button
-                        type="button"
-                        onClick={() => handleRemoveTag(tag)}>
-
-                                                                ×
-                                                            </button>
-                                                        </div>
-                    )}
-                                                </div>
-                  }
-                                        </div>
-
-                                        <div className="form-group">
-                                            <label htmlFor="zip-url">{t('ZIP Download URL')}
-                    <span className="required">*</span>
-                                            </label>
-                                            <input
-                    type="text"
-                    id="zip-url"
-                    value={customZipUrl || metadata.zipUrl}
-                    onChange={(e) => setCustomZipUrl(e.target.value)}
-                    placeholder={t('ZIP file URL')}
-                    required />
-
-                                        </div>
-                                    </div>
-
-                                    <div className="url-import-preview">
-                                        {metadata.image ?
-                <div className="preview-image-container">
-                                                <img
-                    src={metadata.image}
-                    alt={t('Repository preview')}
-                    className="preview-image" />
-
-                                                <div className="preview-type-badge">
-                                                    <TypesetterInfo type={type} />
-                                                </div>
-                                            </div> :
-
-                <div className="preview-placeholder">
-                                                <FolderIcon />
-                                                <span>{t('No preview available')}</span>
-                                            </div>
-                }
-
-                                        <div className="preview-details">
-                                            <div className="preview-detail-item">
-                                                <strong>{t('Source:')}</strong>
-                                                <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="preview-link">
-
-                                                    {url}
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-            }
-
-                            {metadata && !loading &&
-            <div className="modal-actions">
-                                    <button
-                type="button"
-                className="button secondary"
-                onClick={() => {
-                  setHasAttemptedFetch(false);
-                  setUrl('');
-                }}>{t('Back')}
-
-
-              </button>
-                                    <button
-                type="button"
-                className="button primary"
-                onClick={handleImport}
-                disabled={!name.trim() || !(customZipUrl || metadata.zipUrl)}>
-
-                                        <ImportIcon />{t('Import Project')}
-
-              </button>
-                                </div>
-            }
-                        </>
-          }
+            <>
+              {loading &&
+                <div className="url-loading">
+                  <div className="loading-spinner" />
+                  <p>{t('Fetching repository metadata...')}</p>
                 </div>
-            </Modal>
+              }
 
-            <SettingsModal
+              {error &&
+                <div className="error-message">
+                  <p>{error}</p>
+                  <button
+                    type="button"
+                    className="button secondary smaller"
+                    onClick={() => {
+                      setHasAttemptedFetch(false);
+                      setUrl('');
+                    }}>{t('Try Different URL')}
+
+
+                  </button>
+                </div>
+              }
+
+              {metadata && !loading &&
+                <div className="url-import-content">
+                  <div className="url-import-form">
+                    <div className="form-group">
+                      <label htmlFor="project-name">{t('Project Name')}
+                        <span className="required">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="project-name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder={metadata.title || 'Enter project name'}
+                        required />
+
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="project-description">{t('Description')}</label>
+                      <textarea
+                        id="project-description"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder={metadata.description || 'Enter project description'}
+                        rows={3} />
+
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="project-type">{t('Typesetter Type')}</label>
+                      <select
+                        id="project-type"
+                        value={type}
+                        onChange={(e) => setType(e.target.value as 'latex' | 'typst')}>
+
+                        <option value="latex">{t('LaTeX')}</option>
+                        <option value="typst">{t('Typst')}</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="project-tags">{t('Tags')}</label>
+                      <div className="tag-input-container">
+                        <input
+                          type="text"
+                          id="project-tags"
+                          value={tagInput}
+                          onChange={(e) => setTagInput(e.target.value)}
+                          onKeyDown={handleTagKeyPress}
+                          placeholder={t('Add tags (press Enter or comma)')} />
+
+                        <button
+                          type="button"
+                          className="button primary"
+                          onClick={handleAddTag}
+                          disabled={!tagInput.trim()}>{t('Add')}
+
+
+                        </button>
+                      </div>
+
+                      {tags.length > 0 &&
+                        <div className="tags-container">
+                          {tags.map((tag, index) =>
+                            <div key={index} className="tag">
+                              <span>{tag}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveTag(tag)}>
+
+                                ×
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      }
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="zip-url">{t('ZIP Download URL')}
+                        <span className="required">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="zip-url"
+                        value={customZipUrl || metadata.zipUrl}
+                        onChange={(e) => setCustomZipUrl(e.target.value)}
+                        placeholder={t('ZIP file URL')}
+                        required />
+
+                    </div>
+                  </div>
+
+                  <div className="url-import-preview">
+                    {metadata.image ?
+                      <div className="preview-image-container">
+                        <img
+                          src={metadata.image}
+                          alt={t('Repository preview')}
+                          className="preview-image" />
+
+                        <div className="preview-type-badge">
+                          <TypesetterInfo type={type} />
+                        </div>
+                      </div> :
+
+                      <div className="preview-placeholder">
+                        <FolderIcon />
+                        <span>{t('No preview available')}</span>
+                      </div>
+                    }
+
+                    <div className="preview-details">
+                      <div className="preview-detail-item">
+                        <strong>{t('Source:')}</strong>
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="preview-link">
+
+                          {url}
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              {metadata && !loading &&
+                <div className="modal-actions">
+                  <button
+                    type="button"
+                    className="button secondary"
+                    onClick={() => {
+                      setHasAttemptedFetch(false);
+                      setUrl('');
+                    }}>{t('Back')}
+
+
+                  </button>
+                  <button
+                    type="button"
+                    className="button primary"
+                    onClick={handleImport}
+                    disabled={!name.trim() || !(customZipUrl || metadata.zipUrl)}>
+
+                    <ImportIcon />{t('Import Project')}
+
+                  </button>
+                </div>
+              }
+            </>
+          }
+        </div>
+      </Modal>
+
+      <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         initialCategory="Templates"
         initialSubcategory="URL Repository Import" />
 
-        </>);
+    </>);
 
 };
 

@@ -1,5 +1,5 @@
 // src/components/editor/LinkFileModal.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
@@ -61,9 +61,9 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
     setIsCreating(true);
     try {
       const filePath =
-      selectedDirectory === '/' ?
-      `/${fileName.trim()}` :
-      `${selectedDirectory}/${fileName.trim()}`;
+        selectedDirectory === '/' ?
+          `/${fileName.trim()}` :
+          `${selectedDirectory}/${fileName.trim()}`;
 
       const _file = new File([''], fileName.trim(), { type: 'text/plain' });
       await fileStorageService.createDirectoryPath(filePath);
@@ -86,9 +86,8 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
       onLinked();
     } catch (error) {
       if (
-      error instanceof Error &&
-      error.message === 'File operation cancelled by user')
-      {
+        error instanceof Error &&
+        error.message === 'File operation cancelled by user') {
         // User cancelled due to conflict
         return;
       }
@@ -105,12 +104,12 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
       title={t('Link Document to New File')}
       size="medium">
 
-			<div className="link-file-modal-content">
-				<p>{t('Create a new file and link it to the document "')}{documentName}{t('".')}</p>
+      <div className="link-file-modal-content">
+        <p>{t('Create a new file and link it to the document "')}{documentName}{t('".')}</p>
 
-				<div className="form-group">
-					<label htmlFor="fileName">{t('File name')}</label>
-					<input
+        <div className="form-group">
+          <label htmlFor="fileName">{t('File name')}</label>
+          <input
             type="text"
             id="fileName"
             value={fileName}
@@ -118,34 +117,34 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
             disabled={isCreating}
             placeholder={t('Enter file name')} />
 
-				</div>
+        </div>
 
-				<div className="form-group">
-					<label>{t('Select destination folder')}</label>
-					<div className="directory-tree">
-						<div
+        <div className="form-group">
+          <label>{t('Select destination folder')}</label>
+          <div className="directory-tree">
+            <div
               className={`directory-option ${selectedDirectory === '/' ? 'selected' : ''}`}
               onClick={() => setSelectedDirectory('/')}>
 
-							<FolderIcon />
-							<span>/</span>
-						</div>
+              <FolderIcon />
+              <span>/</span>
+            </div>
 
-						{getDirectoryOptions().map((dir) =>
-            <div
-              key={dir.path}
-              className={`directory-option ${selectedDirectory === dir.path ? 'selected' : ''}`}
-              onClick={() => setSelectedDirectory(dir.path)}>
+            {getDirectoryOptions().map((dir) =>
+              <div
+                key={dir.path}
+                className={`directory-option ${selectedDirectory === dir.path ? 'selected' : ''}`}
+                onClick={() => setSelectedDirectory(dir.path)}>
 
-								<FolderIcon />
-								<span>{dir.path}</span>
-							</div>
+                <FolderIcon />
+                <span>{dir.path}</span>
+              </div>
             )}
-					</div>
-				</div>
+          </div>
+        </div>
 
-				<div className="modal-actions">
-					<button
+        <div className="modal-actions">
+          <button
             type="button"
             className="button secondary"
             onClick={onClose}
@@ -153,17 +152,17 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 
 
           </button>
-					<button
+          <button
             type="button"
             className="button primary"
             onClick={handleCreate}
             disabled={isCreating || !fileName.trim()}>
 
-						{isCreating ? 'Creating...' : 'Create & Link'}
-					</button>
-				</div>
-			</div>
-		</Modal>);
+            {isCreating ? 'Creating...' : 'Create & Link'}
+          </button>
+        </div>
+      </div>
+    </Modal>);
 
 };
 

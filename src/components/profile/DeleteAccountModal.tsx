@@ -1,5 +1,5 @@
 // src/components/profile/DeleteAccountModal.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
@@ -127,31 +127,31 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
       icon={TrashIcon}
       size="medium">
 
-			<div className="delete-account-container">
-				{error && <div className="error-message">{error}</div>}
+      <div className="delete-account-container">
+        {error && <div className="error-message">{error}</div>}
 
-				<div className="warning-message">
-					<h3>{t('\u26A0\uFE0F Warning: This action cannot be undone')}</h3>
-					<p>{t('Deleting your account will permanently remove:')}
+        <div className="warning-message">
+          <h3>{t('\u26A0\uFE0F Warning: This action cannot be undone')}</h3>
+          <p>{t('Deleting your account will permanently remove:')}
 
           </p>
-					<ul>
-						<li><strong>{t('All your projects')}</strong>{t('and their documents')}</li>
-						<li><strong>{t('All project files')}</strong>{t('and folders')}</li>
-						<li><strong>{t('All settings')}</strong>{t('and preferences')}</li>
-						<li><strong>{t('All encrypted secrets')}</strong>{t('and API keys')}</li>
-						<li><strong>{t('Your user profile')}</strong>{t('and login credentials')}</li>
-					</ul>
-					<p>
-						<strong>{t('This data cannot be recovered after deletion.')}</strong>
-					</p>
-				</div>
+          <ul>
+            <li><strong>{t('All your projects')}</strong>{t('and their documents')}</li>
+            <li><strong>{t('All project files')}</strong>{t('and folders')}</li>
+            <li><strong>{t('All settings')}</strong>{t('and preferences')}</li>
+            <li><strong>{t('All encrypted secrets')}</strong>{t('and API keys')}</li>
+            <li><strong>{t('Your user profile')}</strong>{t('and login credentials')}</li>
+          </ul>
+          <p>
+            <strong>{t('This data cannot be recovered after deletion.')}</strong>
+          </p>
+        </div>
 
-				<div className="form-group">
-					<label htmlFor="current-password">{t('Enter your password to confirm')}
+        <div className="form-group">
+          <label htmlFor="current-password">{t('Enter your password to confirm')}
 
           </label>
-					<input
+          <input
             type="password"
             id="current-password"
             value={currentPassword}
@@ -159,13 +159,13 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
             disabled={isDeleting}
             placeholder={t('Enter your password')} />
 
-				</div>
+        </div>
 
-				<div className="form-group">
-					<label htmlFor="confirmation-text">{t('Type')}
+        <div className="form-group">
+          <label htmlFor="confirmation-text">{t('Type')}
             <strong>{expectedConfirmationText}</strong>{t('to confirm')}
           </label>
-					<input
+          <input
             type="text"
             id="confirmation-text"
             value={confirmationText}
@@ -173,30 +173,30 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
             disabled={isDeleting}
             placeholder={expectedConfirmationText} />
 
-				</div>
+        </div>
 
-				<div className="export-reminder">
-					<p>
-						<strong>{t('Reminder:')}</strong>{t('If you want to keep your data, use the')}{' '}
-						{onOpenExport ?
-            <button
-              type="button"
-              className="export-link-button"
-              onClick={handleOpenExport}
-              disabled={isDeleting}>
+        <div className="export-reminder">
+          <p>
+            <strong>{t('Reminder:')}</strong>{t('If you want to keep your data, use the')}{' '}
+            {onOpenExport ?
+              <button
+                type="button"
+                className="export-link-button"
+                onClick={handleOpenExport}
+                disabled={isDeleting}>
 
-								<ExportIcon />{t('Export Account')}
+                <ExportIcon />{t('Export Account')}
 
-            </button> :
+              </button> :
 
-            <strong>{t('Export Account')}</strong>
+              <strong>{t('Export Account')}</strong>
             }{' '}{t('option before deleting your account.')}
 
           </p>
-				</div>
+        </div>
 
-				<div className="modal-actions">
-					<button
+        <div className="modal-actions">
+          <button
             type="button"
             className="button secondary"
             onClick={handleClose}
@@ -204,21 +204,21 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 
 
           </button>
-					<button
+          <button
             type="button"
             className="button danger"
             onClick={handleDelete}
             disabled={
-            isDeleting ||
-            !currentPassword ||
-            confirmationText !== expectedConfirmationText
+              isDeleting ||
+              !currentPassword ||
+              confirmationText !== expectedConfirmationText
             }>
 
-						{isDeleting ? 'Deleting Account...' : 'Delete Account'}
-					</button>
-				</div>
-			</div>
-		</Modal>);
+            {isDeleting ? 'Deleting Account...' : 'Delete Account'}
+          </button>
+        </div>
+      </div>
+    </Modal>);
 
 };
 

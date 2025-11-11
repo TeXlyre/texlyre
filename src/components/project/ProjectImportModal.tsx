@@ -1,5 +1,5 @@
 // src/components/project/ProjectImportModal.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useRef, useState } from 'react';
 

@@ -1,5 +1,5 @@
 // src/components/auth/Login.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
@@ -84,15 +84,15 @@ const Login: React.FC<LoginProps> = ({
 
   return (
     <>
-			<div className="auth-form-container">
-				<h2>{t('Login')}</h2>
+      <div className="auth-form-container">
+        <h2>{t('Login')}</h2>
 
-				{error && <div className="auth-error">{error}</div>}
+        {error && <div className="auth-error">{error}</div>}
 
-				<form onSubmit={handleSubmit} className="auth-form">
-					<div className="form-group">
-						<label htmlFor="username">{t('Username')}</label>
-						<input
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="username">{t('Username')}</label>
+            <input
               type="text"
               id="username"
               value={username}
@@ -100,11 +100,11 @@ const Login: React.FC<LoginProps> = ({
               disabled={isLoading}
               autoComplete="username" />
 
-					</div>
+          </div>
 
-					<div className="form-group">
-						<label htmlFor="password">{t('Password')}</label>
-						<input
+          <div className="form-group">
+            <label htmlFor="password">{t('Password')}</label>
+            <input
               type="password"
               id="password"
               value={password}
@@ -112,22 +112,22 @@ const Login: React.FC<LoginProps> = ({
               disabled={isLoading}
               autoComplete="current-password" />
 
-					</div>
+          </div>
 
-					<button
+          <button
             type="submit"
             className={`auth-button ${isLoading ? 'loading' : ''}`}
             disabled={isLoading}>
 
-						{isLoading ? 'Logging in...' : 'Login'}
-					</button>
-				</form>
+            {isLoading ? 'Logging in...' : 'Login'}
+          </button>
+        </form>
 
-				<div className="guest-section">
-					<div className="guest-divider">
-						<span>{t('or')}</span>
-					</div>
-					<button
+        <div className="guest-section">
+          <div className="guest-divider">
+            <span>{t('or')}</span>
+          </div>
+          <button
             type="button"
             className="auth-button guest-button"
             onClick={() => setShowGuestModal(true)}
@@ -135,29 +135,29 @@ const Login: React.FC<LoginProps> = ({
 
 
           </button>
-				</div>
+        </div>
 
-				<div className="auth-alt-action">
-					<span>{t('Don\'t have an account?')}</span>
-					<button
+        <div className="auth-alt-action">
+          <span>{t('Don\'t have an account?')}</span>
+          <button
             className="text-button"
             onClick={onSwitchToRegister}
             disabled={isLoading}>{t('Sign up')}
 
 
           </button>
-					<span className="auth-separator">{t('or')}</span>
-					<button
+          <span className="auth-separator">{t('or')}</span>
+          <button
             className="text-button"
             onClick={onSwitchToImport}
             disabled={isLoading}>{t('Import Account')}
 
 
           </button>
-				</div>
-			</div>
+        </div>
+      </div>
 
-			<GuestConsentModal
+      <GuestConsentModal
         isOpen={showGuestModal}
         onClose={() => setShowGuestModal(false)}
         onStartGuestSession={handleGuestSession}
@@ -169,11 +169,11 @@ const Login: React.FC<LoginProps> = ({
         isPrivacyOpen={showPrivacy} />
 
 
-			<PrivacyModal
+      <PrivacyModal
         isOpen={showPrivacy}
         onClose={handleClosePrivacy} />
 
-		</>);
+    </>);
 
 };
 

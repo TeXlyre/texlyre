@@ -1,5 +1,5 @@
 // src/hooks/useDynamicBibSettings.ts
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import { useEffect, useCallback } from 'react';
 import { useSettings } from './useSettings';
 import { fileStorageService } from '../services/FileStorageService';
@@ -11,8 +11,8 @@ export const useDynamicBibSettings = () => {
     try {
       const allFiles = await fileStorageService.getAllFiles();
       const bibFiles = allFiles.filter((file) =>
-      (file.name.endsWith('.bib') || file.name.endsWith('.bibtex')) &&
-      !file.isDeleted
+        (file.name.endsWith('.bib') || file.name.endsWith('.bibtex')) &&
+        !file.isDeleted
       );
 
       const options = bibFiles.map((file) => ({

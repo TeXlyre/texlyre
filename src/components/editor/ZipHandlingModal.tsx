@@ -1,5 +1,5 @@
 // src/components/editor/ZipHandlingModal.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
@@ -48,14 +48,14 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
       title={t('ZIP File Detected')}
       size="medium">
 
-			<div className="zip-handling-modal">
-				<p>{t('You\'re adding "')}
+      <div className="zip-handling-modal">
+        <p>{t('You\'re adding "')}
           {zipFile.name}{t('" to')}{getTargetDisplayPath()}{t('. How would you like to handle this ZIP file?')}
 
         </p>
 
-				<div className="zip-handling-options" style={{ margin: '1.5rem 0' }}>
-					<div
+        <div className="zip-handling-options" style={{ margin: '1.5rem 0' }}>
+          <div
             className={`zip-option ${selectedAction === 'extract' ? 'selected' : ''}`}
             onClick={() => setSelectedAction('extract')}
             style={{
@@ -65,16 +65,16 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
               marginBottom: '0.75rem',
               cursor: 'pointer',
               backgroundColor:
-              selectedAction === 'extract' ?
-              'rgba(var(--accent-color-rgb), 0.1)' :
-              'transparent',
+                selectedAction === 'extract' ?
+                  'rgba(var(--accent-color-rgb), 0.1)' :
+                  'transparent',
               borderColor:
-              selectedAction === 'extract' ?
-              'var(--accent-color)' :
-              'var(--border-color)'
+                selectedAction === 'extract' ?
+                  'var(--accent-color)' :
+                  'var(--border-color)'
             }}>
 
-						<label
+            <label
               style={{
                 display: 'flex',
                 alignItems: 'flex-start',
@@ -82,7 +82,7 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
                 cursor: 'pointer'
               }}>
 
-							<input
+              <input
                 type="radio"
                 name="zipAction"
                 value="extract"
@@ -90,8 +90,8 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
                 onChange={() => setSelectedAction('extract')}
                 style={{ marginTop: '0.125rem' }} />
 
-							<div className="option-content">
-								<div
+              <div className="option-content">
+                <div
                   className="option-header"
                   style={{
                     display: 'flex',
@@ -100,18 +100,18 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
                     marginBottom: '0.5rem'
                   }}>
 
-									<FolderIcon />
-									<strong>{t('Extract contents')}</strong>
-								</div>
-								<p style={{ margin: '0', color: 'var(--text-secondary)' }}>{t('Extract all files from the ZIP archive into')}
+                  <FolderIcon />
+                  <strong>{t('Extract contents')}</strong>
+                </div>
+                <p style={{ margin: '0', color: 'var(--text-secondary)' }}>{t('Extract all files from the ZIP archive into')}
                   {' '}
-									{getTargetDisplayPath()}
-								</p>
-							</div>
-						</label>
-					</div>
+                  {getTargetDisplayPath()}
+                </p>
+              </div>
+            </label>
+          </div>
 
-					<div
+          <div
             className={`zip-option ${selectedAction === 'keep' ? 'selected' : ''}`}
             onClick={() => setSelectedAction('keep')}
             style={{
@@ -120,16 +120,16 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
               padding: '1rem',
               cursor: 'pointer',
               backgroundColor:
-              selectedAction === 'keep' ?
-              'rgba(var(--accent-color-rgb), 0.1)' :
-              'transparent',
+                selectedAction === 'keep' ?
+                  'rgba(var(--accent-color-rgb), 0.1)' :
+                  'transparent',
               borderColor:
-              selectedAction === 'keep' ?
-              'var(--accent-color)' :
-              'var(--border-color)'
+                selectedAction === 'keep' ?
+                  'var(--accent-color)' :
+                  'var(--border-color)'
             }}>
 
-						<label
+            <label
               style={{
                 display: 'flex',
                 alignItems: 'flex-start',
@@ -137,7 +137,7 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
                 cursor: 'pointer'
               }}>
 
-							<input
+              <input
                 type="radio"
                 name="zipAction"
                 value="keep"
@@ -145,8 +145,8 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
                 onChange={() => setSelectedAction('keep')}
                 style={{ marginTop: '0.125rem' }} />
 
-							<div className="option-content">
-								<div
+              <div className="option-content">
+                <div
                   className="option-header"
                   style={{
                     display: 'flex',
@@ -155,31 +155,31 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
                     marginBottom: '0.5rem'
                   }}>
 
-									<FileIcon />
-									<strong>{t('Keep as ZIP file')}</strong>
-								</div>
-								<p style={{ margin: '0', color: 'var(--text-secondary)' }}>{t('Add the ZIP file as-is to')}
+                  <FileIcon />
+                  <strong>{t('Keep as ZIP file')}</strong>
+                </div>
+                <p style={{ margin: '0', color: 'var(--text-secondary)' }}>{t('Add the ZIP file as-is to')}
                   {getTargetDisplayPath()}
-								</p>
-							</div>
-						</label>
-					</div>
-				</div>
+                </p>
+              </div>
+            </label>
+          </div>
+        </div>
 
-				<div className="modal-actions">
-					<button type="button" className="button secondary" onClick={onClose}>{t('Cancel')}
+        <div className="modal-actions">
+          <button type="button" className="button secondary" onClick={onClose}>{t('Cancel')}
 
           </button>
-					<button
+          <button
             type="button"
             className="button primary"
             onClick={handleConfirm}>
 
-						{selectedAction === 'extract' ? 'Extract ZIP' : 'Keep as ZIP'}
-					</button>
-				</div>
-			</div>
-		</Modal>);
+            {selectedAction === 'extract' ? 'Extract ZIP' : 'Keep as ZIP'}
+          </button>
+        </div>
+      </div>
+    </Modal>);
 
 };
 

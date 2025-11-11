@@ -1,5 +1,5 @@
 // src/contexts/ContentFormatterContext.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { createContext, ReactNode, useCallback, useState, useEffect, useRef } from 'react';
 import { nanoid } from 'nanoid';
@@ -48,9 +48,9 @@ export const ContentFormatterProvider: React.FC<ContentFormatterProviderProps> =
     settingsRegistered.current = true;
 
     const initialLatexNotifications =
-    getSetting('formatter-latex-notifications')?.value as boolean ?? true;
+      getSetting('formatter-latex-notifications')?.value as boolean ?? true;
     const initialTypstNotifications =
-    getSetting('formatter-typst-notifications')?.value as boolean ?? true;
+      getSetting('formatter-typst-notifications')?.value as boolean ?? true;
 
     registerSetting({
       id: 'formatter-latex-notifications',
@@ -145,7 +145,7 @@ export const ContentFormatterProvider: React.FC<ContentFormatterProviderProps> =
     const storedTypstWrapText = getProperty('formatter-typst-wraptext');
 
     if (storedLatexWrap !== undefined || storedLatexWraplen !== undefined ||
-    storedLatexTabsize !== undefined || storedLatexUsetabs !== undefined) {
+      storedLatexTabsize !== undefined || storedLatexUsetabs !== undefined) {
       setLatexOptions({
         wrap: storedLatexWrap !== undefined ? Boolean(storedLatexWrap) : true,
         wraplen: storedLatexWraplen !== undefined ? Number(storedLatexWraplen) : 80,
@@ -155,7 +155,7 @@ export const ContentFormatterProvider: React.FC<ContentFormatterProviderProps> =
     }
 
     if (storedTypstLineWidth !== undefined || storedTypstIndentWidth !== undefined ||
-    storedTypstReorderImportItems !== undefined || storedTypstWrapText !== undefined) {
+      storedTypstReorderImportItems !== undefined || storedTypstWrapText !== undefined) {
       setTypstOptions({
         lineWidth: storedTypstLineWidth !== undefined ? Number(storedTypstLineWidth) : 80,
         indentWidth: storedTypstIndentWidth !== undefined ? Number(storedTypstIndentWidth) : 2,
@@ -182,9 +182,9 @@ export const ContentFormatterProvider: React.FC<ContentFormatterProviderProps> =
   }, [setProperty]);
 
   const formatLatex = useCallback(async (
-  content: string,
-  formatOptions: LatexFormatOptions)
-  : Promise<string | null> => {
+    content: string,
+    formatOptions: LatexFormatOptions)
+    : Promise<string | null> => {
     if (isFormatting) return null;
 
     setIsFormatting(true);
@@ -221,9 +221,9 @@ export const ContentFormatterProvider: React.FC<ContentFormatterProviderProps> =
   }, [isFormatting]);
 
   const formatTypst = useCallback(async (
-  content: string,
-  formatOptions: TypstFormatOptions)
-  : Promise<string | null> => {
+    content: string,
+    formatOptions: TypstFormatOptions)
+    : Promise<string | null> => {
     if (isFormatting) return null;
 
     setIsFormatting(true);
@@ -271,7 +271,7 @@ export const ContentFormatterProvider: React.FC<ContentFormatterProviderProps> =
         setTypstOptions: handleSetTypstOptions
       }}>
 
-            {children}
-        </ContentFormatterContext.Provider>);
+      {children}
+    </ContentFormatterContext.Provider>);
 
 };

@@ -1,5 +1,5 @@
 // src/components/profile/UserDropdown.tsx
-import { t } from "@/i18n";
+import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -30,9 +30,8 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-      dropdownRef.current &&
-      !dropdownRef.current.contains(event.target as Node))
-      {
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -47,90 +46,90 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 
   return (
     <div className="user-dropdown-container" ref={dropdownRef}>
-			<button
+      <button
         className={`user-dropdown-button ${isGuest ? 'guest' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-haspopup="true">
 
-				<UserIcon />
-				<span>{displayUsername}</span>
-			</button>
+        <UserIcon />
+        <span>{displayUsername}</span>
+      </button>
 
-			{isOpen &&
-      <div className="user-dropdown-menu">
-					{!isGuest &&
-        <>
-							<button
-            className="dropdown-item"
-            onClick={() => {
-              setIsOpen(false);
-              onOpenProfile();
-            }}>
+      {isOpen &&
+        <div className="user-dropdown-menu">
+          {!isGuest &&
+            <>
+              <button
+                className="dropdown-item"
+                onClick={() => {
+                  setIsOpen(false);
+                  onOpenProfile();
+                }}>
 
-								<EditIcon />{t('Profile Settings')}
+                <EditIcon />{t('Profile Settings')}
 
-          </button>
-							<button
-            className="dropdown-item"
-            onClick={() => {
-              setIsOpen(false);
-              onOpenExport();
-            }}>
+              </button>
+              <button
+                className="dropdown-item"
+                onClick={() => {
+                  setIsOpen(false);
+                  onOpenExport();
+                }}>
 
-								<ExportIcon />{t('Export Account')}
+                <ExportIcon />{t('Export Account')}
 
-          </button>
-							<div className="dropdown-separator" />
-							<button
-            className="dropdown-item danger"
-            onClick={() => {
-              setIsOpen(false);
-              onOpenDeleteAccount();
-            }}>
+              </button>
+              <div className="dropdown-separator" />
+              <button
+                className="dropdown-item danger"
+                onClick={() => {
+                  setIsOpen(false);
+                  onOpenDeleteAccount();
+                }}>
 
-								<TrashIcon />{t('Delete Account')}
+                <TrashIcon />{t('Delete Account')}
 
-          </button>
-						</>
-        }
-					{isGuest && onOpenUpgrade &&
-        <>
-							<button
-            className="dropdown-item"
-            onClick={() => {
-              setIsOpen(false);
-              onOpenUpgrade();
-            }}>
-
-								<UpgradeAccountIcon />{t('Upgrade Account')}
-
-          </button>
-							<div className="dropdown-separator" />
-						</>
-        }
-					<button
-          className="dropdown-item"
-          onClick={() => {
-            setIsOpen(false);
-            onLogout();
-          }}>
-
-						{isGuest ?
-          <>
-								<TrashIcon />
-								<span>{t('End Session')}</span>
-							</> :
-
-          <>
-								<LogoutIcon />
-								<span>{t('Logout')}</span>
-							</>
+              </button>
+            </>
           }
-					</button>
-				</div>
+          {isGuest && onOpenUpgrade &&
+            <>
+              <button
+                className="dropdown-item"
+                onClick={() => {
+                  setIsOpen(false);
+                  onOpenUpgrade();
+                }}>
+
+                <UpgradeAccountIcon />{t('Upgrade Account')}
+
+              </button>
+              <div className="dropdown-separator" />
+            </>
+          }
+          <button
+            className="dropdown-item"
+            onClick={() => {
+              setIsOpen(false);
+              onLogout();
+            }}>
+
+            {isGuest ?
+              <>
+                <TrashIcon />
+                <span>{t('End Session')}</span>
+              </> :
+
+              <>
+                <LogoutIcon />
+                <span>{t('Logout')}</span>
+              </>
+            }
+          </button>
+        </div>
       }
-		</div>);
+    </div>);
 
 };
 
