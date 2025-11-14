@@ -142,12 +142,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
 			try {
 				const customEvent = event as CustomEvent;
-				const detail = customEvent.detail as {
-					fileId?: string;
-					documentId?: string;
-					isFile?: boolean;
-					filePath?: string;
-				};
+				const detail = customEvent.detail;
 
 				if (!detail) return;
 
