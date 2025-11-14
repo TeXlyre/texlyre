@@ -138,60 +138,37 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		if (!useSharedSettings || !effectiveAutoCompileOnSave || !effectiveMainFile) return;
 
 		const handleFileSaved = async (event: Event) => {
-			const customEvent = event as CustomEvent;
-			const detail = customEvent.detail;
-
-			if (!detail) return;
-
-			const {
-				fileId: eventFileId,
-				documentId: eventDocumentId,
-				isFile,
-				filePath: savedFilePath,
-			} = detail as {
-				fileId?: string;
-				documentId?: string;
-				isFile?: boolean;
-				filePath?: string;
-			};
-
-			// Skip if already compiling
 			if (isCompiling) return;
 
 			try {
-				let shouldCompile = false;
-				let mainFileToCompile = effectiveMainFile;
+				const customEvent = event as CustomEvent;
+				const detail = customEvent.detail as {
+					fileId?: string;
+					documentId?: string;
+					isFile?: boolean;
+					filePath?: string;
+				};
 
-				if (isFile && eventFileId) {
-					let candidatePath = savedFilePath;
+				if (!detail) return;
 
-					if (!candidatePath) {
-						const file = await fileStorageService.getFile(eventFileId);
-						candidatePath = file?.path;
+				const candidatePath = detail.isFile
+					? detail.fileId
+						? detail.filePath ||
+							(await fileStorageService.getFile(detail.fileId))?.path
+						: undefined
+					: linkedFileInfo?.filePath ?? detail.filePath;
+
+				if (!candidatePath?.endsWith('.tex')) return;
+
+				const mainFileToCompile =
+					detail.isFile ? effectiveMainFile : candidatePath;
+
+				setTimeout(async () => {
+					if (onExpandLatexOutput) {
+						onExpandLatexOutput();
 					}
-
-					if (candidatePath?.endsWith('.tex')) {
-						shouldCompile = true;
-					}
-				} else if (!isFile && eventDocumentId) {
-					const candidatePath = linkedFileInfo?.filePath ?? savedFilePath;
-
-					if (candidatePath?.endsWith('.tex')) {
-						shouldCompile = true;
-						mainFileToCompile = candidatePath;
-					}
-				}
-
-				if (shouldCompile && mainFileToCompile) {
-					const targetFile = mainFileToCompile;
-					// Small delay to ensure save completes
-					setTimeout(async () => {
-						if (onExpandLatexOutput) {
-							onExpandLatexOutput();
-						}
-						await compileDocument(targetFile);
-					}, 120);
-				}
+					await compileDocument(mainFileToCompile);
+				}, 120);
 			} catch (error) {
 				console.error('Error in auto-compile on save:', error);
 			}

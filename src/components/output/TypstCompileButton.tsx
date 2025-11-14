@@ -123,48 +123,37 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
         if (!useSharedSettings || !effectiveAutoCompileOnSave || !effectiveMainFile) return;
 
         const handleFileSaved = async (event: Event) => {
-            const customEvent = event as CustomEvent;
-            const detail = customEvent.detail as {
-                fileId?: string;
-                documentId?: string;
-                isFile?: boolean;
-                filePath?: string;
-            };
-
-            if (!detail || isCompiling) return;
+            if (isCompiling) return;
 
             try {
-                let shouldCompile = false;
-                let mainFileToCompile = effectiveMainFile;
+                const customEvent = event as CustomEvent;
+                const detail = customEvent.detail as {
+                    fileId?: string;
+                    documentId?: string;
+                    isFile?: boolean;
+                    filePath?: string;
+                };
 
-                if (detail.isFile && detail.fileId) {
-                    let candidatePath = detail.filePath;
-                    if (!candidatePath) {
-                        const file = await fileStorageService.getFile(detail.fileId);
-                        candidatePath = file?.path;
-                    }
+                if (!detail) return;
 
-                    if (candidatePath?.endsWith('.typ')) {
-                        shouldCompile = true;
-                    }
-                } else if (!detail.isFile && detail.documentId) {
-                    const candidatePath = linkedFileInfo?.filePath ?? detail.filePath;
-                    if (candidatePath?.endsWith('.typ')) {
-                        shouldCompile = true;
-                        mainFileToCompile = candidatePath;
-                    }
-                }
+                const candidatePath = detail.isFile
+                    ? detail.fileId
+                        ? detail.filePath ||
+                          (await fileStorageService.getFile(detail.fileId))?.path
+                        : undefined
+                    : linkedFileInfo?.filePath ?? detail.filePath;
 
-                if (shouldCompile && mainFileToCompile) {
-                    const targetMainFile = mainFileToCompile;
-                    const targetFormat = effectiveFormat;
-                    setTimeout(async () => {
-                        if (onExpandTypstOutput) {
-                            onExpandTypstOutput();
-                        }
-                        await compileDocument(targetMainFile, targetFormat);
-                    }, 120);
-                }
+                if (!candidatePath?.endsWith('.typ')) return;
+
+                const mainFileToCompile =
+                    detail.isFile ? effectiveMainFile : candidatePath;
+                const targetFormat = effectiveFormat;
+                setTimeout(async () => {
+                    if (onExpandTypstOutput) {
+                        onExpandTypstOutput();
+                    }
+                    await compileDocument(mainFileToCompile, targetFormat);
+                }, 120);
             } catch (error) {
                 console.error('Error in Typst auto-compile on save:', error);
             }
