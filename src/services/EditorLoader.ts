@@ -967,20 +967,13 @@ export const EditorLoader = (
 		};
 
 		const handleFileSaved = (event: Event) => {
-			const detail = (event as CustomEvent).detail;
+			const customEvent = event as CustomEvent;
+			const { fileId: eventFileId } = customEvent.detail;
 
-			// Ignore file-saved events for other files
-			if (
-				!detail ||
-				!(
-					(detail.isFile && detail.fileId === currentFileId && isEditingFile) ||
-					(!detail.isFile && detail.documentId === documentId && !isEditingFile)
-				)
-			)
-				return;
-
-			setShowSaveIndicator(true);
-			setTimeout(() => setShowSaveIndicator(false), 1500);
+			if (eventFileId === currentFileId && isEditingFile) {
+				setShowSaveIndicator(true);
+				setTimeout(() => setShowSaveIndicator(false), 1500);
+			}
 		};
 
 		const handleTriggerSave = (event: Event) => {
