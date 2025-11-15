@@ -339,7 +339,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     if (selectedDocId && linkedFileInfo?.filePath === path && documents) {
       const doc = documents.find((d) => d.id === selectedDocId);
       if (doc) {
-        return `${doc.name}` + t(' (linked)');
+        return `${doc.name}` + ' ' + t('(linked)');
       }
     }
 
@@ -357,8 +357,8 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
           disabled={isDisabled}
           title={
             isCompiling ?
-              t('Stop Compilation') + `${useSharedSettings ? ' (F8)' : ''}` :
-              t('Compile Typst Document') + `${useSharedSettings ? ' (F9)' : ''}`
+              t('Stop Compilation') + ' ' + `${useSharedSettings ? t('(F8)') : ''}` :
+              t('Compile Typst Document') + ' ' + `${useSharedSettings ? t('(F9)') : ''}`
           }>
 
           {isCompiling ? <StopIcon /> : <PlayIcon />}
@@ -459,7 +459,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                     onChange={(e) => handleAutoCompileOnSaveChange(e.target.checked)}
                     disabled={isCompiling}
                   />
-                  Auto-compile
+                  {t('Auto-compile on save')}
                 </label>
               )
             }
@@ -478,7 +478,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
             <div
               className="cache-item clear-and-compile"
               onClick={handleClearCacheAndCompile}
-              title={t('Clear cache and compile') + `${useSharedSettings ? t(' (Shift+F9)') : ''}`}>
+              title={t('Clear cache and compile') + ' ' + `${useSharedSettings ? t('(Shift+F9)') : ''}`}>
 
               <ClearCompileIcon />{t('Clear & Compile')}
 
