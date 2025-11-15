@@ -303,7 +303,8 @@ embed {
 	cursor: not-allowed;
 }
 
-.share-checkbox {
+.share-checkbox,
+.auto-compile-checkbox {
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
@@ -312,11 +313,13 @@ embed {
 	cursor: pointer;
 }
 
-.share-checkbox input[type="checkbox"] {
+.share-checkbox input[type="checkbox"],
+.auto-compile-checkbox input[type="checkbox"] {
 	margin: 0;
 }
 
-.share-checkbox:has(input:disabled) {
+.share-checkbox:has(input:disabled),
+.auto-compile-checkbox:has(input:disabled) {
 	opacity: 0.6;
 	cursor: not-allowed;
 }

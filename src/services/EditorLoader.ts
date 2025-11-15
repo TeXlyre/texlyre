@@ -116,6 +116,15 @@ export const EditorLoader = (
 
 			setShowSaveIndicator(true);
 			setTimeout(() => setShowSaveIndicator(false), 1500);
+
+			document.dispatchEvent(
+				new CustomEvent('file-saved', {
+					detail: {
+						isFile: true,
+						fileId: currentFileId,
+					},
+				}),
+			);
 		} catch (error) {
 			console.error('Error saving file:', error);
 		}
@@ -137,6 +146,17 @@ export const EditorLoader = (
 
 				setShowSaveIndicator(true);
 				setTimeout(() => setShowSaveIndicator(false), 1500);
+
+				document.dispatchEvent(
+					new CustomEvent('file-saved', {
+						detail: {
+							isFile: false,
+							documentId,
+							fileId: linkedFile.id,
+							filePath: linkedFile.path,
+						},
+					}),
+				);
 			}
 		} catch (error) {
 			console.error('Error saving document to linked file:', error);
@@ -697,19 +717,12 @@ export const EditorLoader = (
 				{
 					enabled: true,
 					delay: autoSaveDelay,
-					onSave: async (saveKey, content) => {
+					onSave: async (_saveKey, content) => {
 						if (isEditingFile && currentFileId) {
-							const encoder = new TextEncoder();
-							const contentBuffer = encoder.encode(content).buffer;
-							await fileStorageService.updateFileContent(
-								currentFileId,
-								contentBuffer,
-							);
+							await saveFileToStorage(content);
 						} else if (!isEditingFile && documentId) {
 							await saveDocumentToLinkedFile(content);
 						}
-						setShowSaveIndicator(true);
-						setTimeout(() => setShowSaveIndicator(false), 1500);
 					},
 					onError: (error) => {
 						console.error('Auto-save failed:', error);
