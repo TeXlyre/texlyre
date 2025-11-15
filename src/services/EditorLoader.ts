@@ -81,12 +81,19 @@ export const EditorLoader = (
 	const viewRef = useRef<EditorView | null>(null);
 	const isUpdatingRef = useRef<boolean>(false);
 	const autoSaveRef = useRef<(() => void) | null>(null);
+	const currentContentRef = useRef<string>(textContent);
 	const [showSaveIndicator, setShowSaveIndicator] = useState(false);
 	const [yDoc, setYDoc] = useState<Y.Doc | null>(null);
 	const [provider, setProvider] = useState<WebrtcProvider | null>(null);
 	const hasEmittedReadyRef = useRef<boolean>(false);
 
 	const projectId = docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl;
+
+	useEffect(() => {
+		if (isEditingFile && !viewRef.current) {
+			currentContentRef.current = textContent;
+		}
+	}, [textContent, isEditingFile]);
 
 	useEffect(() => {
 		filePathCacheService.initialize();
@@ -254,8 +261,13 @@ export const EditorLoader = (
 		let cursorUpdateTimeout: NodeJS.Timeout | null = null;
 
 		return EditorView.updateListener.of((update: ViewUpdate) => {
-			if (update.docChanged && autoSaveRef.current) {
-				autoSaveRef.current();
+			if (update.docChanged) {
+				if (isEditingFile && viewRef.current) {
+					currentContentRef.current = viewRef.current.state.doc.toString();
+				}
+				if (autoSaveRef.current) {
+					autoSaveRef.current();
+				}
 			}
 
 			if (update.selectionSet) {
@@ -326,22 +338,32 @@ export const EditorLoader = (
 			return;
 		}
 
+		// Preserve content before destroying view
+		if (viewRef.current && isEditingFile) {
+			const currentContent = viewRef.current.state.doc.toString();
+			currentContentRef.current = currentContent;
+		}
+
 		if (viewRef.current) {
 			viewRef.current.destroy();
 			viewRef.current = null;
 		}
 
+		const contentToUse = isEditingFile 
+			? currentContentRef.current
+			: (ytextRef.current?.toString() || '');
+
 		const extensions = [
 			...getBasicSetupExtensions(),
-			...getLanguageExtension(fileName, textContent),
+			...getLanguageExtension(fileName, contentToUse),
 		];
 
 		// Determine file types for enhanced completion
-		const isLatexFile = fileName?.endsWith('.tex') || (!fileName && textContent?.includes('\\'));
+		const isLatexFile = fileName?.endsWith('.tex') || (!fileName && contentToUse?.includes('\\'));
 		const isBibFile = fileName?.endsWith('.bib') || fileName?.endsWith('.bibtex') ||
-			(!fileName && (textContent?.includes('@article') || textContent?.includes('@book') || textContent?.includes('@inproceedings')));
+			(!fileName && (contentToUse?.includes('@article') || contentToUse?.includes('@book') || contentToUse?.includes('@inproceedings')));
 		const isTypstFile = fileName?.endsWith('.typ') || fileName?.endsWith('.typst') ||
-			(!fileName && (textContent?.includes('= ') || textContent?.includes('== ') || textContent?.includes('#import')));
+			(!fileName && (contentToUse?.includes('= ') || contentToUse?.includes('== ') || contentToUse?.includes('#import')));
 
 		if (isLatexFile || isBibFile || isTypstFile) {
 			const fileExtension = fileName?.split('.').pop()?.toLowerCase() ||
@@ -546,7 +568,7 @@ export const EditorLoader = (
 		extensions.push(saveKeymap);
 
 		const state = EditorState.create({
-			doc: isEditingFile ? textContent : ytextRef.current?.toString(),
+			doc: contentToUse,
 			extensions,
 		});
 
