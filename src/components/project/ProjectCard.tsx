@@ -89,10 +89,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
   const getDropdownDisplayText = () => {
     if (project.lastOpenedFilePath) {
-      const fileName = project.lastOpenedFilePath.split('/').pop() || 'Unknown file';
-      return `Last: ${fileName}`;
+      const fileName = project.lastOpenedFilePath.split('/').pop() || t('Unknown file');
+      return t(`Last: {fileName}`, { fileName });
     } else if (project.lastOpenedDocId) {
-      return `Last: Document ${project.lastOpenedDocId.slice(0, 8)}...`;
+      return t(`Last: Document {docId}`, { docId: project.lastOpenedDocId.slice(0, 8) + '...' });
     }
     return 'Open Project';
   };
@@ -165,7 +165,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                 onToggleFavorite(project.id);
               }}
               title={
-                project.isFavorite ? 'Remove from favorites' : 'Add to favorites'
+                project.isFavorite ? t('Remove from favorites') : t('Add to favorites')
               }>
 
               <StarIcon filled={project.isFavorite} />
@@ -175,7 +175,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       </div>
 
       <p className="project-description">
-        {project.description || 'No description provided'}
+        {project.description || t('No description provided')}
       </p>
 
       <div className="project-meta">

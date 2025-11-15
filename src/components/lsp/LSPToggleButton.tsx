@@ -1,6 +1,8 @@
 // src/components/lsp/LSPToggleButton.tsx
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
+
 import { useSettings } from '../../hooks/useSettings';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 
@@ -47,7 +49,10 @@ const LSPToggleButton: React.FC<LSPToggleButtonProps> = ({
 		<button
 			className={`control-button lsp-toggle-button ${showPanel ? 'active' : ''} ${className}`}
 			onClick={handleTogglePanel}
-			title={`${showPanel ? 'Hide' : 'Show'} ${lspPlugin.name} panel`}
+			title={t('{action} {pluginName} panel', {
+				action: showPanel ? t('Hide') : t('Show'),
+				pluginName: lspPlugin.name
+			})}
 		>
 			<div className="lsp-button-content">
 				{IconComponent && <IconComponent />}

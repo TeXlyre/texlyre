@@ -1,4 +1,5 @@
 // src/components/comments/CommentToggleButton.tsx
+import { t } from '@/i18n';
 import type React from 'react';
 
 import { useComments } from '../../hooks/useComments';
@@ -17,7 +18,10 @@ const CommentToggleButton: React.FC<CommentToggleButtonProps> = ({
 		<button
 			className={`control-button ${className} ${showComments ? 'active' : ''}`}
 			onClick={toggleComments}
-			title={`${showComments ? 'Hide' : 'Show'} comments${comments.length > 0 ? ` (${comments.length})` : ''}`}
+			title={t('{action} comments{numComments}', {
+				action: showComments ? t('Hide') : t('Show'),
+				numComments: comments.length > 0 ? ` (${comments.length})` : ''
+			})}
 		>
 			<div className="comment-button-container">
 				<CommentIcon />

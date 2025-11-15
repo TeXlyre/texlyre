@@ -504,7 +504,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
               <button
                 onClick={handleFitToggle}
                 className="toolbarButton"
-                title={fitMode === 'fit-width' ? 'Fit to Width' : 'Fit to Height'}
+                title={fitMode === 'fit-width' ? t('Fit to Width') : t('Fit to Height')}
                 disabled={isLoading}>
 
                 <FitToWidthIcon />
@@ -512,7 +512,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
               <button
                 onClick={handleToggleView}
                 className="toolbarButton"
-                title={scrollView ? 'Single Page View' : 'Scroll View'}
+                title={scrollView ? t('Single Page View') : t('Scroll View')}
                 disabled={isLoading}>
 
                 {scrollView ? <PageIcon /> : <ScrollIcon />}
@@ -520,7 +520,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
               <button
                 onClick={handleToggleFullscreen}
                 className="toolbarButton"
-                title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+                title={isFullscreen ? t('Exit Fullscreen') : t('Fullscreen')}
                 disabled={isLoading}>
 
                 {isFullscreen ? <MinimizeIcon /> : <ExpandIcon />}

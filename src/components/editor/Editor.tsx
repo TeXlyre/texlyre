@@ -438,14 +438,14 @@ const EditorContent: React.FC<{
               }
               <button
                 onClick={handleCopyLinkedFile}
-                title={`Copy text from linked file: ${linkedFileInfo.fileName}`}
+                title={t(`Copy text from linked file: {fileName}`, { fileName: linkedFileInfo.fileName })}
                 className="control-button">
 
                 <CopyIcon />
               </button>
               <button
                 onClick={handleDownloadLinkedFile}
-                title={`Download linked file: ${linkedFileInfo.fileName}`}
+                title={t(`Download linked file: {fileName}`, { fileName: linkedFileInfo.fileName })}
                 className="control-button">
 
                 <DownloadIcon />
