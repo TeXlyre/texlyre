@@ -11,6 +11,7 @@ import { useSettings } from '../../hooks/useSettings';
 import type { DocumentList } from '../../types/documents';
 import type { FileNode } from '../../types/files';
 import { isTemporaryFile } from '../../utils/fileUtils';
+import { fileStorageService } from '../../services/FileStorageService';
 import { ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon } from '../common/Icons';
 
 interface LaTeXCompileButtonProps {
@@ -59,11 +60,15 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
   const [isChangingEngine, setIsChangingEngine] = useState(false);
   const compileButtonRef = useRef<{ clearAndCompile: () => void; }>();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const effectiveAutoCompileOnSave = useSharedSettings
+    ? doc?.projectMetadata?.autoCompileOnSave ?? false
+    : false;
 
   const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
   const projectEngine = useSharedSettings ? doc?.projectMetadata?.latexEngine : undefined;
   const effectiveEngine = projectEngine || latexEngine;
   const effectiveMainFile = projectMainFile || userSelectedMainFile || autoMainFile;
+
 
   useEffect(() => {
     const findTexFiles = (nodes: FileNode[]): string[] => {
@@ -126,6 +131,56 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Listen for save events and auto-compile if enabled
+  useEffect(() => {
+    if (!useSharedSettings || !effectiveAutoCompileOnSave || !effectiveMainFile) return;
+
+    const handleFileSaved = async (event: Event) => {
+      if (isCompiling) return;
+
+      try {
+        const customEvent = event as CustomEvent;
+        const detail = customEvent.detail;
+
+        if (!detail) return;
+
+        const candidatePath = detail.isFile
+          ? detail.fileId
+            ? detail.filePath ||
+            (await fileStorageService.getFile(detail.fileId))?.path
+            : undefined
+          : linkedFileInfo?.filePath ?? detail.filePath;
+
+        if (!candidatePath?.endsWith('.tex')) return;
+
+        const mainFileToCompile =
+          detail.isFile ? effectiveMainFile : candidatePath;
+
+        setTimeout(async () => {
+          if (onExpandLatexOutput) {
+            onExpandLatexOutput();
+          }
+          await compileDocument(mainFileToCompile);
+        }, 120);
+      } catch (error) {
+        console.error('Error in auto-compile on save:', error);
+      }
+    };
+
+    document.addEventListener('file-saved', handleFileSaved);
+    return () => {
+      document.removeEventListener('file-saved', handleFileSaved);
+    };
+  }, [
+    useSharedSettings,
+    effectiveAutoCompileOnSave,
+    effectiveMainFile,
+    isCompiling,
+    compileDocument,
+    onExpandLatexOutput,
+    linkedFileInfo,
+  ]);
 
   const shouldNavigateToMain = async (mainFilePath: string): Promise<boolean> => {
     const navigationSetting = getSetting('latex-auto-navigate-to-main')?.value as string ?? 'conditional';
@@ -319,6 +374,18 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     });
   };
 
+
+  const handleAutoCompileOnSaveChange = (checked: boolean) => {
+    if (!useSharedSettings || !changeDoc) return;
+
+    changeDoc((d) => {
+      if (!d.projectMetadata) {
+        d.projectMetadata = { name: '', description: '' };
+      }
+      d.projectMetadata.autoCompileOnSave = checked;
+    });
+  };
+
   const getFileName = (path?: string) => {
     if (!path) return t('No .tex file');
     return path.split('/').pop() || path;
@@ -330,7 +397,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     if (selectedDocId && linkedFileInfo?.filePath === path && documents) {
       const doc = documents.find((d) => d.id === selectedDocId);
       if (doc) {
-        return `${doc.name}` + t(' (linked)');
+        return `${doc.name}` + ' ' + t('(linked)');
       }
     }
 
@@ -348,10 +415,10 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
           disabled={isDisabled}
           title={
             isCompiling ?
-              t('Stop Compilation') + `${useSharedSettings ? ' (F8)' : ''}` :
+              t('Stop Compilation') + ' ' + `${useSharedSettings ? t('(F8)') : ''}` :
               isChangingEngine ?
                 t('Switching Engine...') :
-                t('Compile LaTeX Document') + `${useSharedSettings ? ' (F9)' : ''}`
+                t('Compile LaTeX Document') + ' ' + `${useSharedSettings ? t('(F9)') : ''}`
           }>
 
           {isCompiling ? <StopIcon /> : <PlayIcon />}
@@ -440,6 +507,20 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
             }
           </div>
 
+          {useSharedSettings && (
+            <div className="auto-compile-controls">
+              <label className="auto-compile-checkbox">
+                <input
+                  type="checkbox"
+                  checked={effectiveAutoCompileOnSave}
+                  onChange={(e) => handleAutoCompileOnSaveChange(e.target.checked)}
+                  disabled={isCompiling}
+                />
+                {t('Auto-compile on save')}
+              </label>
+            </div>
+          )}
+
           <div className="cache-controls">
             <div
               className="cache-item clear-cache"
@@ -452,7 +533,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
             <div
               className="cache-item clear-and-compile clear-and-compile-button"
               onClick={handleClearCacheAndCompile}
-              title={t('Clear cache and compile') + `${useSharedSettings ? t(' (Shift+F9)') : ''}`}>
+              title={t('Clear cache and compile') + ' ' + `${useSharedSettings ? t('(Shift+F9)') : ''}`}>
               <ClearCompileIcon />{t('Clear & Compile')}
 
             </div>

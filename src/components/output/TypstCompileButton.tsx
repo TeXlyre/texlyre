@@ -12,6 +12,7 @@ import type { DocumentList } from '../../types/documents';
 import type { FileNode } from '../../types/files';
 import type { TypstOutputFormat } from '../../types/typst';
 import { isTemporaryFile } from '../../utils/fileUtils';
+import { fileStorageService } from '../../services/FileStorageService';
 import { ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon } from '../common/Icons';
 
 interface TypstCompileButtonProps {
@@ -57,6 +58,9 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
   const projectFormat = useSharedSettings ? doc?.projectMetadata?.typstOutputFormat : undefined;
   const [localFormat, setLocalFormat] = useState<TypstOutputFormat>('pdf');
   const effectiveFormat = projectFormat || localFormat;
+  const effectiveAutoCompileOnSave = useSharedSettings
+    ? doc?.projectMetadata?.typstAutoCompileOnSave ?? false
+    : false;
 
   useEffect(() => {
     const findTypstFiles = (nodes: FileNode[]): string[] => {
@@ -113,6 +117,56 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if (!useSharedSettings || !effectiveAutoCompileOnSave || !effectiveMainFile) return;
+
+    const handleFileSaved = async (event: Event) => {
+      if (isCompiling) return;
+
+      try {
+        const customEvent = event as CustomEvent;
+        const detail = customEvent.detail;
+
+        if (!detail) return;
+
+        const candidatePath = detail.isFile
+          ? detail.fileId
+            ? detail.filePath ||
+            (await fileStorageService.getFile(detail.fileId))?.path
+            : undefined
+          : linkedFileInfo?.filePath ?? detail.filePath;
+
+        if (!candidatePath?.endsWith('.typ')) return;
+
+        const mainFileToCompile =
+          detail.isFile ? effectiveMainFile : candidatePath;
+        const targetFormat = effectiveFormat;
+        setTimeout(async () => {
+          if (onExpandTypstOutput) {
+            onExpandTypstOutput();
+          }
+          await compileDocument(mainFileToCompile, targetFormat);
+        }, 120);
+      } catch (error) {
+        console.error('Error in Typst auto-compile on save:', error);
+      }
+    };
+
+    document.addEventListener('file-saved', handleFileSaved);
+    return () => {
+      document.removeEventListener('file-saved', handleFileSaved);
+    };
+  }, [
+    useSharedSettings,
+    effectiveAutoCompileOnSave,
+    effectiveMainFile,
+    effectiveFormat,
+    isCompiling,
+    compileDocument,
+    onExpandTypstOutput,
+    linkedFileInfo,
+  ]);
 
   const shouldNavigateToMain = async (mainFilePath: string): Promise<boolean> => {
     const navigationSetting = getSetting('typst-auto-navigate-to-main')?.value as string ?? 'conditional';
@@ -263,6 +317,17 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     });
   };
 
+  const handleAutoCompileOnSaveChange = (checked: boolean) => {
+    if (!useSharedSettings || !changeDoc) return;
+
+    changeDoc((d) => {
+      if (!d.projectMetadata) {
+        d.projectMetadata = { name: '', description: '' };
+      }
+      d.projectMetadata.typstAutoCompileOnSave = checked;
+    });
+  };
+
   const getFileName = (path?: string) => {
     if (!path) return t('No .typ file');
     return path.split('/').pop() || path;
@@ -292,8 +357,8 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
           disabled={isDisabled}
           title={
             isCompiling ?
-              `Stop Compilation${useSharedSettings ? ' (F8)' : ''}` :
-              `Compile Typst Document${useSharedSettings ? ' (F9)' : ''}`
+              t('Stop Compilation') + `${useSharedSettings ? ' (F8)' : ''}` :
+              t('Compile Typst Document') + `${useSharedSettings ? ' (F9)' : ''}`
           }>
 
           {isCompiling ? <StopIcon /> : <PlayIcon />}
@@ -345,10 +410,8 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                   checked={!!projectMainFile}
                   onChange={(e) => handleShareMainFile(e.target.checked)}
                   disabled={isCompiling || !effectiveMainFile} />{t('Save and share with collaborators')}
-
-
-              </label>
-            </div>
+              </label >
+            </div >
           }
 
           <div className="format-selector">
@@ -387,7 +450,21 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 
               </label>
             }
+            {
+              useSharedSettings && (
+                <label className="auto-compile-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={effectiveAutoCompileOnSave}
+                    onChange={(e) => handleAutoCompileOnSaveChange(e.target.checked)}
+                    disabled={isCompiling}
+                  />
+                  Auto-compile
+                </label>
+              )
+            }
           </div>
+
 
           <div className="cache-controls">
             <div
@@ -407,9 +484,10 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 
             </div>
           </div>
-        </div>
+
+        </div >
       }
-    </div>);
+    </div >);
 
 };
 
