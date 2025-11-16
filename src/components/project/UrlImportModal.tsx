@@ -166,7 +166,7 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
                   id="repository-url"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://github.com/user/repo or https://example.com/project.zip"
+                  placeholder={"https://github.com/user/repo " + t('or') + " https://example.com/project.zip"}
                   onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()} />
 
               </div>
@@ -375,8 +375,8 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
-        initialCategory="Templates"
-        initialSubcategory="URL Repository Import" />
+        initialCategory={t("Templates")}
+        initialSubcategory={t("URL Repository Import")} />
 
     </>);
 

@@ -42,7 +42,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
     };
   }, []);
 
-  const displayUsername = isGuest ? 'Guest User' : username;
+  const displayUsername = isGuest ? t('Guest User') : username;
 
   return (
     <div className="user-dropdown-container" ref={dropdownRef}>

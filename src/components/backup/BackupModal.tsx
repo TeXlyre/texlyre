@@ -519,8 +519,8 @@ const BackupModal: React.FC<BackupModalProps> = ({
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
-        initialCategory="Backup"
-        initialSubcategory="File System" />
+        initialCategory={t("Backup")}
+        initialSubcategory={t("File System")} />
 
     </>);
 

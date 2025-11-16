@@ -10,6 +10,7 @@ import Login from '../auth/Login';
 import Register from '../auth/Register';
 import PrivacyModal from '../common/PrivacyModal';
 import ThemeToggleButton from '../settings/ThemeToggleButton';
+import LanguageToggleButton from '../settings/LanguageToggleButton';
 
 interface AuthContainerProps {
   onAuthSuccess: () => void;
@@ -42,7 +43,10 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
             <img src={texlyreLogo} className="auth-logo" alt={t('TeXlyre logo')} />
           </div>
           <h1>{t('TeXlyre')}</h1>
-          <ThemeToggleButton className="auth-theme-toggle" />
+          <div className="auth-header-controls">
+            <LanguageToggleButton className="auth-language-toggle" />
+            <ThemeToggleButton className="auth-theme-toggle" />
+          </div>
         </div>
 
         {activeView === 'login' ?
@@ -65,7 +69,7 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
         }
 
         <div className="auth-privacy-note">
-          <p>{t('Your account and projects stay private in this browser. TeXlyre is')}<a href="https://www.inkandswitch.com/essay/local-first/" target="_blank" rel="noreferrer">{t('local-first')}</a>.</p>
+          <p>{t('Your account and projects stay private in this browser. TeXlyre is')}&nbsp;<a href="https://www.inkandswitch.com/essay/local-first/" target="_blank" rel="noreferrer">{t('local-first')}</a>.</p>
         </div>
       </div>
       <footer className="auth-footer">

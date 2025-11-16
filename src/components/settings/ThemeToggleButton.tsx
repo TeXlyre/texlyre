@@ -1,4 +1,5 @@
 // src/components/settings/ThemeToggleButton.tsx
+import { t } from '@/i18n';
 import type React from 'react';
 
 import { useSettings } from '../../hooks/useSettings';
@@ -24,9 +25,11 @@ const ThemeToggleButton: React.FC<ThemeToggleButtonProps> = ({ className = '' })
 
 	return (
 		<button
-			className={`theme-toggle-button ${className}`}
+			className={`${className}`}
 			onClick={toggleTheme}
-			title={`Switch to ${isDark ? 'light' : 'dark'} theme`}
+			title={t('Switch to {theme} theme', {
+				theme: isDark ? t('light') : t('dark')
+			})}
 		>
 			{isDark ? <SunIcon /> : <MoonIcon />}
 		</button>

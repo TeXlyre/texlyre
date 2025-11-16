@@ -1,5 +1,6 @@
 // extras/collaborative_viewers/bibtex/BibtexCollaborativeViewer.tsx
 import { t } from '@/i18n';
+import { Trans } from 'react-i18next';
 import { tidy } from 'bib-editor';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
@@ -496,7 +497,13 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
                 </div>
                 {currentView === 'processed' && processedContent.trim() &&
                   <div className="processed-save-notice">
-                    <span>{t('Not saved automatically. Click the')}<SaveIcon /> <strong>{t('Save')}</strong>{t('button or')}<strong>{t('Ctrl+S')}</strong></span>
+                    <Trans
+                      i18nKey="Not saved automatically. Click the <icon /> <strong>Save</strong> button or <strong>Ctrl+S</strong>"
+                      components={{
+                        strong: <strong />,
+                        icon: <SaveIcon />
+                      }}
+                    />
                   </div>
                 }
                 {isProcessing &&

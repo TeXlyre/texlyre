@@ -1,5 +1,6 @@
 // src/components/project/ProjectList.tsx
 import { t } from '@/i18n';
+import { Trans } from 'react-i18next';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
@@ -221,10 +222,14 @@ const ProjectList: React.FC<ProjectListProps> = ({
 					<div className="no-projects">
 						<p>{t('No projects found matching the current criteria')}</p>
 						{!isSelectionMode &&
-							<p>{t('To create a new project, click the')}
-								{" ''+'' "}
-								<strong>{t('New Project')}</strong>{t('button or')}<ImportIcon />{' '}
-								<strong>{t('Import')}</strong>{t('an existing one.')}
+							<p>
+								<Trans
+									i18nKey="To create a new project, click the '+' <strong>New Project</strong> button or <icon /> <strong>Import</strong> an existing one."
+									components={{
+										strong: <strong />,
+										icon: <ImportIcon />
+									}}
+								/>
 							</p>
 						}
 					</div> :

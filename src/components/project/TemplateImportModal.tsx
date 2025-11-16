@@ -579,8 +579,8 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
-        initialCategory="Templates"
-        initialSubcategory="Template Gallery" />
+        initialCategory={t("Templates")}
+        initialSubcategory={t("Template Gallery")} />
 
     </>);
 

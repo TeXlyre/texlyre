@@ -1,5 +1,6 @@
 // extras/viewers/bibtex/BibtexViewer.tsx
 import { t } from '@/i18n';
+import { Trans } from 'react-i18next';
 import { tidy } from 'bib-editor';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
@@ -450,7 +451,9 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
         <button
           className={`${viewMode === 'table' ? 'active' : ''}`}
           onClick={() => setViewMode(viewMode === 'editor' ? 'table' : 'editor')}
-          title={`Switch to ${viewMode === 'editor' ? 'Table' : 'Editor'} View`}>
+          title={t('Switch to {viewMode} View', {
+            viewMode: viewMode === 'editor' ? t('Table') : t('Editor')
+          })}>
 
           <ViewIcon />
         </button>
@@ -549,8 +552,13 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
                 </div>
                 {currentView === 'processed' && processedContent.trim() &&
                   <div className="processed-save-notice">
-                    <span>{t('Not saved automatically. Click the')}<SaveIcon /> <strong>{t('Save')}</strong>{t('button or')}<strong>{t('Ctrl+S')}</strong></span>
-                  </div>
+                    <Trans
+                      i18nKey="Not saved automatically. Click the <icon /> <strong>Save</strong> button or <strong>Ctrl+S</strong>"
+                      components={{
+                        strong: <strong />,
+                        icon: <SaveIcon />
+                      }}
+                    />                  </div>
                 }
                 {isProcessing &&
                   <span className="processing-indicator">{t('(Processing...)')}</span>

@@ -64,7 +64,7 @@ const GuestConsentModal: React.FC<GuestConsentModalProps> = ({
           <div className="guest-features">
             <h4>{t('What you can do:')}</h4>
             <ul>
-              <li>{t('Create and edit LaTeX projects')}</li>
+              <li>{t('Create and edit LaTeX/Typst projects')}</li>
               <li>{t('Compile documents to PDF')}</li>
               <li>{t('Upload and manage files')}</li>
               <li>{t('Collaborate in real-time')}</li>
@@ -79,15 +79,15 @@ const GuestConsentModal: React.FC<GuestConsentModalProps> = ({
 
               </li>
               <li>
-                <strong>{t('No backup sync:')}</strong>{t('File system backup features are disabled')}
+                <strong>{t('No backup sync:')}</strong>&nbsp;{t('File system backup features are disabled')}
 
               </li>
               <li>
-                <strong>{t('Anonymous collaboration:')}</strong>{t('You appear as "Guest User" to others')}
+                <strong>{t('Anonymous collaboration:')}</strong>&nbsp;{t('You appear as "Guest User" to others')}
 
               </li>
               <li>
-                <strong>{t('No account features:')}</strong>{t('Profile settings and password management unavailable')}
+                <strong>{t('No account features:')}</strong>&nbsp;{t('Profile settings and password management unavailable')}
 
               </li>
             </ul>
