@@ -90,9 +90,9 @@ function App() {
 										<FileSystemBackupProvider>
 											<EditorProvider>
 												<AppContent />
+
 											</EditorProvider>
 										</FileSystemBackupProvider>
-
 									</SecretsProvider>
 								</ThemeProvider>
 							</PropertiesProvider>
@@ -100,7 +100,6 @@ function App() {
 					</OfflineProvider>
 				</LanguageProvider>
 			</SettingsProvider>
-
 		</>
 	);
 }

@@ -73,8 +73,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
     registerSetting({
       id: 'latex-engine',
-      category: t("LaTeX"),
-      subcategory: t("Compilation"),
+      category: t("Compilation"),
+      subcategory: t("LaTeX"),
       type: 'select',
       label: t("LaTeX Engine"),
       description: t("Choose the LaTeX engine for compilation"),
@@ -91,8 +91,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
     registerSetting({
       id: 'latex-texlive-endpoint',
-      category: t("LaTeX"),
-      subcategory: t("Compilation"),
+      category: t("Compilation"),
+      subcategory: t("LaTeX"),
       type: 'text',
       label: t("TexLive server endpoint"),
       description: t("URL endpoint for TexLive package downloads"),
@@ -104,8 +104,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
     registerSetting({
       id: 'latex-auto-compile-on-open',
-      category: t("LaTeX"),
-      subcategory: t("Compilation"),
+      category: t("Compilation"),
+      subcategory: t("LaTeX"),
       type: 'checkbox',
       label: t("Auto-compile on project open"),
       description: t("Automatically compile LaTeX when opening a project"),
@@ -114,8 +114,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
     registerSetting({
       id: 'latex-auto-navigate-to-main',
-      category: t("LaTeX"),
-      subcategory: t("Compilation"),
+      category: t("Compilation"),
+      subcategory: t("LaTeX"),
       type: 'select',
       label: t("Auto-navigate to main file on compile"),
       description: t("Control when to automatically navigate to the main LaTeX file during compilation"),
@@ -129,8 +129,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
     registerSetting({
       id: 'latex-store-cache',
-      category: t("LaTeX"),
-      subcategory: t("Compilation"),
+      category: t("Compilation"),
+      subcategory: t("LaTeX"),
       type: 'checkbox',
       label: t("Store compilation cache"),
       description: t("Save TeX cache files for faster subsequent compilations"),
@@ -142,8 +142,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
     registerSetting({
       id: 'latex-store-working-directory',
-      category: t("LaTeX"),
-      subcategory: t("Compilation"),
+      category: t("Compilation"),
+      subcategory: t("LaTeX"),
       type: 'checkbox',
       label: t("Store working directory"),
       description: t("Save all working directory files after compilation"),
@@ -155,8 +155,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
     registerSetting({
       id: 'latex-notifications',
-      category: t("LaTeX"),
-      subcategory: t("Compilation"),
+      category: t("Compilation"),
+      subcategory: t("LaTeX"),
       type: 'checkbox',
       label: t("Show compilation notifications"),
       description: t("Display notifications for LaTeX compilation activities"),

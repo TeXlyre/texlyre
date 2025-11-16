@@ -1,5 +1,6 @@
 // src/components/editor/Editor.tsx
 import { t } from '@/i18n';
+import { Trans } from 'react-i18next';
 import type React from 'react';
 import { useCallback, useEffect, useRef, useMemo, useState } from 'react';
 
@@ -913,11 +914,14 @@ const Editor: React.FC<EditorComponentProps> = ({
         <br />
         <br />
 
-        <p style={{ fontStyle: 'italic' }}>{t('Linking files allows you to view the cursor positions and text changes by your collaborators in real-time. To link a text file to a document, select or hover over the file and click the')}
-
-
-          <LinkIcon />
-          <strong>{t('Link')}</strong>{t('button that appears next to it.')}
+        <p style={{ fontStyle: 'italic' }}>
+          <Trans
+            i18nKey="Linking files allows you to view the cursor positions and text changes by your collaborators in real-time. To link a text file to a document, select or hover over the file and click the <icon /> <strong>Link</strong> button that appears next to it."
+            components={{
+              strong: <strong />,
+              icon: <LinkIcon />
+            }}
+          />
         </p>
       </div>);
 

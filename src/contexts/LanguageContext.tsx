@@ -1,8 +1,8 @@
 // src/contexts/LanguageContext.tsx
 import { t } from '@/i18n';
+import i18next from 'i18next';
 import type React from 'react';
 import { type ReactNode, createContext, useCallback, useEffect, useRef, useState } from 'react';
-import i18next from 'i18next';
 
 import { useSettings } from '../hooks/useSettings';
 import languagesConfig from '../../translations/languages.config.json';
@@ -84,7 +84,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       type: 'language-select',
       label: t("Interface language"),
       description: t("Select the interface language and view translation coverage"),
-      defaultValue: 'en',
+      defaultValue: initialLanguageCode,
       options: availableLanguages.map((lang) => ({
         label: `${lang.nativeName} (${lang.name})`,
         value: lang.code

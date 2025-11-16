@@ -54,8 +54,8 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 
     registerSetting({
       id: 'typst-auto-compile-on-open',
-      category: t("Typst"),
-      subcategory: t("Compilation"),
+      category: t("Compilation"),
+      subcategory: t("Typst"),
       type: 'checkbox',
       label: t("Auto-compile on project open"),
       description: t("Automatically compile Typst when opening a project"),
@@ -64,8 +64,8 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 
     registerSetting({
       id: 'typst-auto-navigate-to-main',
-      category: t("Typst"),
-      subcategory: t("Compilation"),
+      category: t("Compilation"),
+      subcategory: t("Typst"),
       type: 'select',
       label: t("Auto-navigate to main file on compile"),
       description: t("Control when to automatically navigate to the main Typst file during compilation"),
@@ -79,8 +79,8 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 
     registerSetting({
       id: 'typst-default-format',
-      category: t("Typst"),
-      subcategory: t("Compilation"),
+      category: t("Compilation"),
+      subcategory: t("Typst"),
       type: 'select',
       label: t("Default output format"),
       description: t("Default format for Typst compilation"),
@@ -98,8 +98,8 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 
     registerSetting({
       id: 'typst-notifications',
-      category: t("Typst"),
-      subcategory: t("Compilation"),
+      category: t("Compilation"),
+      subcategory: t("Typst"),
       type: 'checkbox',
       label: t("Show compilation notifications"),
       description: t("Display notifications for Typst compilation activities"),
