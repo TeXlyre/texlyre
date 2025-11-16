@@ -128,7 +128,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
         }
       } catch (error) {
         console.error('Error creating PDF data:', error);
-        setError('Failed to process PDF content');
+        setError(t('Failed to process PDF content'));
         setIsLoading(false);
       }
     } else {
@@ -136,7 +136,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
       contentRef.current = null;
       originalContentRef.current = null;
       contentHashRef.current = '';
-      setError('No PDF content available');
+      setError(t('No PDF content available'));
       setIsLoading(false);
     }
   }, [content, getContentHash]);
@@ -466,10 +466,10 @@ const PdfRenderer: React.FC<RendererProps> = ({
         URL.revokeObjectURL(url);
       } catch (error) {
         console.error('Export error:', error);
-        setError('Failed to export PDF');
+        setError(t('Failed to export PDF'));
       }
     } else {
-      setError('Cannot export: PDF content is not available');
+      setError(t('Cannot export: PDF content is not available'));
     }
   }, [fileName, onDownload]);
 

@@ -86,7 +86,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
       window.location.reload();
     } catch (error) {
       setError(
-        error instanceof Error ? error.message : 'Failed to import from URL'
+        error instanceof Error ? error.message : t('Failed to import from URL')
       );
     } finally {
       setIsImporting(false);
@@ -105,7 +105,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 
     } catch (error) {
       setError(
-        error instanceof Error ? error.message : 'Failed to import template'
+        error instanceof Error ? error.message : t('Failed to import template')
       );
     } finally {
       setIsImporting(false);
@@ -129,7 +129,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
       setSelectedProjects(new Set());
     } catch (error) {
       setError(
-        error instanceof Error ? error.message : 'Error scanning zip file'
+        error instanceof Error ? error.message : t('Error scanning zip file')
       );
     } finally {
       setIsScanning(false);
@@ -169,7 +169,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
       let result;
       if (importSource === 'zip') {
         if (!selectedZipFile) {
-          throw new Error('No ZIP file available for import');
+          throw new Error(t('No ZIP file available for import'));
         }
         result = await projectImportService.importFromZip(
           selectedZipFile,
@@ -177,7 +177,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
           options
         );
       } else {
-        throw new Error('Invalid import source');
+        throw new Error(t('Invalid import source'));
       }
 
       if (result.errors.length > 0) {
@@ -192,7 +192,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
         onClose();
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Import failed');
+      setError(error instanceof Error ? error.message : t('Import failed'));
     } finally {
       setIsImporting(false);
     }

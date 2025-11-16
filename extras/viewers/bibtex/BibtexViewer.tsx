@@ -301,7 +301,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
       }
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Failed to process BibTeX file'
+        err instanceof Error ? err.message : t('Failed to process BibTeX file')
       );
     } finally {
       setIsProcessing(false);

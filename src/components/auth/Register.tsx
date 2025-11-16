@@ -40,22 +40,22 @@ const Register: React.FC<RegisterProps> = ({
     e.preventDefault();
 
     if (!username || !password) {
-      setError('Please fill out all required fields');
+      setError(t('Please fill out all required fields'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('Passwords do not match'));
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setError(t('Password must be at least 6 characters long'));
       return;
     }
 
     if (email && !validateEmail(email)) {
-      setError('Please enter a valid email address');
+      setError(t('Please enter a valid email address'));
       return;
     }
 
@@ -82,7 +82,7 @@ const Register: React.FC<RegisterProps> = ({
 
   return (
     <div className="auth-form-container">
-      <h2>{isUpgrade ? 'Upgrade to Full Account' : 'Create an Account'}</h2>
+      <h2>{isUpgrade ? t('Upgrade to Full Account') : t('Create an Account')}</h2>
 
       {error && <div className="auth-error">{error}</div>}
 
@@ -150,7 +150,7 @@ const Register: React.FC<RegisterProps> = ({
           className={`auth-button ${isLoading ? 'loading' : ''}`}
           disabled={!ageConfirmed || !privacyAccepted || isLoading}>
 
-          {isLoading ? isUpgrade ? 'Upgrading...' : 'Creating Account...' : isUpgrade ? 'Upgrade Account' : 'Sign Up'}
+          {isLoading ? isUpgrade ? t('Upgrading...') : t('Creating Account...') : isUpgrade ? t('Upgrade Account') : t('Sign Up')}
         </button>
       </form>
 

@@ -194,7 +194,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
         text = new TextDecoder('utf-8').decode(content);
       } catch (e) {
         console.error('BibtexCollaborativeViewer: Error decoding content:', e);
-        setError('Failed to decode file content');
+        setError(t('Failed to decode file content'));
         return;
       }
     } else if (typeof content === 'string') {
@@ -247,7 +247,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
       if (autoTidy) setCurrentView('processed');
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Failed to process BibTeX file'
+        err instanceof Error ? err.message : t('Failed to process BibTeX file')
       );
     } finally {
       setIsProcessing(false);

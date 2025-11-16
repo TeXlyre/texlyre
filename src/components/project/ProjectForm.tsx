@@ -54,7 +54,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
     e.preventDefault();
 
     if (!name.trim()) {
-      setError('Project name is required');
+      setError(t('Project name is required'));
       return;
     }
 

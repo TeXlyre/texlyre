@@ -48,6 +48,7 @@ import './styles/components/splash-screen.css'
 import './styles/components/keyboard-shortcuts.css'
 import './styles/components/legal.css'
 
+import i18next from 'i18next';
 import { useContext, useEffect, useState } from 'react';
 import AppRouter from './components/app/AppRouter';
 import PasswordModal from './components/auth/PasswordModal';
@@ -65,6 +66,7 @@ import { LanguageProvider } from './contexts/LanguageContext';
 
 function App() {
 	const [isInitializing, setIsInitializing] = useState(true);
+	const [isI18nReady, setIsI18nReady] = useState(false);
 
 	useEffect(() => {
 		const initTimer = setTimeout(() => {
@@ -73,6 +75,38 @@ function App() {
 
 		return () => clearTimeout(initTimer);
 	}, []);
+
+	useEffect(() => {
+		const getCurrentUserId = (): string | null => {
+			return localStorage.getItem('texlyre-current-user');
+		};
+
+		const getStorageKey = (): string => {
+			const userId = getCurrentUserId();
+			return userId ? `texlyre-user-${userId}-settings` : 'texlyre-settings';
+		};
+
+		const storageKey = getStorageKey();
+		const storedSettings = localStorage.getItem(storageKey);
+		let targetLanguage = 'en';
+
+		if (storedSettings) {
+			try {
+				const settings = JSON.parse(storedSettings);
+				targetLanguage = settings.language || 'en';
+			} catch (e) {
+				console.warn('Failed to parse stored settings');
+			}
+		}
+
+		i18next.changeLanguage(targetLanguage).then(() => {
+			setIsI18nReady(true);
+		});
+	}, []);
+
+	if (!isI18nReady) {
+		return <SplashScreen isVisible={true} />;
+	}
 
 	return (
 		<>
@@ -90,7 +124,6 @@ function App() {
 										<FileSystemBackupProvider>
 											<EditorProvider>
 												<AppContent />
-
 											</EditorProvider>
 										</FileSystemBackupProvider>
 									</SecretsProvider>

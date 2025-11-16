@@ -1,4 +1,5 @@
 // src/hooks/useUrlMetadata.ts
+import { t } from '@/i18n'
 import { useState, useEffect } from 'react';
 import { fetchPageMetadata } from '../utils/urlMetadataExtractor';
 
@@ -22,7 +23,7 @@ export const usePageMetadata = (url: string | null, proxyUrl: string | null = nu
                 const data = await fetchPageMetadata(url, proxyUrl);
                 setMetadata(data);
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to fetch metadata');
+                setError(err instanceof Error ? err.message : t('Failed to fetch metadata'));
                 setMetadata(null);
             } finally {
                 setLoading(false);

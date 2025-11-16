@@ -33,7 +33,7 @@ const Login: React.FC<LoginProps> = ({
     e.preventDefault();
 
     if (!username || !password) {
-      setError('Please enter both username and password');
+      setError(t('Please enter both username and password'));
       return;
     }
 
@@ -46,7 +46,7 @@ const Login: React.FC<LoginProps> = ({
       window.location.reload();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'An error occurred during login'
+        err instanceof Error ? err.message : t('An error occurred during login')
       );
     } finally {
       setIsLoading(false);
@@ -75,7 +75,7 @@ const Login: React.FC<LoginProps> = ({
     } catch (err) {
       console.error('[Login] Guest session creation failed:', err);
       setError(
-        err instanceof Error ? err.message : 'Failed to create guest session'
+        err instanceof Error ? err.message : t('Failed to create guest session')
       );
     } finally {
       setIsLoading(false);
@@ -119,7 +119,7 @@ const Login: React.FC<LoginProps> = ({
             className={`auth-button ${isLoading ? 'loading' : ''}`}
             disabled={isLoading}>
 
-            {isLoading ? 'Logging in...' : 'Login'}
+            {isLoading ? t('Logging in...') : t('Login')}
           </button>
         </form>
 

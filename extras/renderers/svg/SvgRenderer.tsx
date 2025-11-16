@@ -86,7 +86,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
   useEffect(() => {
     const loadSvgContent = async () => {
       if (!content) {
-        setError('No SVG content available');
+        setError(t('No SVG content available'));
         setIsLoading(false);
         return;
       }
@@ -361,7 +361,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
         URL.revokeObjectURL(url);
       } catch (error) {
         console.error('Export error:', error);
-        setError('Failed to export SVG');
+        setError(t('Failed to export SVG'));
       }
     }
   }, [svgContent, fileName, onDownload]);

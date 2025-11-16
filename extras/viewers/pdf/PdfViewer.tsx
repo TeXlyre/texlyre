@@ -118,13 +118,13 @@ const PdfViewer: React.FC<ViewerProps> = ({
         } catch (err) {
           if (isMounted.current) {
             console.error('Error initializing PDF:', err);
-            setError('Failed to initialize PDF document.');
+            setError(t('Failed to initialize PDF document'));
             setIsLoading(false);
           }
         }
       } else {
         if (isMounted.current) {
-          setError('Invalid PDF content.');
+          setError(t('Invalid PDF content'));
           setIsLoading(false);
         }
       }
@@ -202,7 +202,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
           !err.message.includes('Loading task cancelled') &&
           !err.message.includes('Worker was destroyed')) {
           console.error('Error loading PDF:', err);
-          setError('Failed to load PDF document.');
+          setError(t('Failed to load PDF document'));
         }
       }
     } finally {
@@ -372,7 +372,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
       URL.revokeObjectURL(url);
     } else {
       console.error('PdfViewer: No valid PDF content available for export');
-      setError('Cannot export: PDF content is not available');
+      setError(t('Cannot export: PDF content is not available'));
     }
   };
 

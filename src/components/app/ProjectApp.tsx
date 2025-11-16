@@ -149,7 +149,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
     } catch (error) {
       console.error('Failed to delete projects:', error);
       setError(
-        error instanceof Error ? error.message : 'Failed to delete projects'
+        error instanceof Error ? error.message : t('Failed to delete projects')
       );
     } finally {
       setIsSubmitting(false);
@@ -222,7 +222,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
     } catch (error) {
       console.error('Failed to create project:', error);
       setError(
-        error instanceof Error ? error.message : 'Failed to create project'
+        error instanceof Error ? error.message : t('Failed to create project')
       );
     } finally {
       setIsSubmitting(false);
@@ -252,7 +252,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
     } catch (error) {
       console.error('Failed to update project:', error);
       setError(
-        error instanceof Error ? error.message : 'Failed to update project'
+        error instanceof Error ? error.message : t('Failed to update project')
       );
     } finally {
       setIsSubmitting(false);
@@ -270,7 +270,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
     } catch (error) {
       console.error('Failed to delete project:', error);
       setError(
-        error instanceof Error ? error.message : 'Failed to delete project'
+        error instanceof Error ? error.message : t('Failed to delete project')
       );
     } finally {
       setIsSubmitting(false);
@@ -299,7 +299,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
       setShowExportModal(true);
     } catch (error) {
       console.error('Error preparing export:', error);
-      setError('Failed to prepare projects for export');
+      setError(t('Failed to prepare projects for export'));
     }
   };
 
@@ -312,7 +312,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
       setShowMultiDeleteModal(true);
     } catch (error) {
       console.error('Error preparing delete:', error);
-      setError('Failed to prepare projects for deletion');
+      setError(t('Failed to prepare projects for deletion'));
     }
   };
 
@@ -350,7 +350,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
   const handleOpenDefault = (project: Project) => {
     if (!project.docUrl) {
       console.error('Project has no document URL:', project);
-      setError('This project has no associated document. Please try creating a new project.');
+      setError(t('This project has no associated document. Please try creating a new project'));
       return;
     }
 
@@ -379,7 +379,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
     if (!project.docUrl) {
       console.error('Project has no document URL:', project);
       setError(
-        'This project has no associated document. Please try creating a new project.'
+        t('This project has no associated document. Please try creating a new project')
       );
       return;
     }

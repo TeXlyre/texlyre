@@ -18,8 +18,8 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
   isOpen,
   onClose,
   onPasswordSubmit,
-  message = 'Enter your TeXlyre password to access encrypted secrets:',
-  title = 'Password Required'
+  message = t('Enter your TeXlyre password to access encrypted secrets:'),
+  title = t('Password Required')
 }) => {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,7 +37,7 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
     e.preventDefault();
 
     if (!password.trim()) {
-      setError('Password is required');
+      setError(t('Password is required'));
       return;
     }
 
@@ -49,10 +49,10 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
       if (success) {
         onClose();
       } else {
-        setError('Incorrect password');
+        setError(t('Incorrect password'));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed');
+      setError(err instanceof Error ? err.message : t('Authentication failed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -104,7 +104,7 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
               className="button primary"
               disabled={isSubmitting || !password.trim()}>
 
-              {isSubmitting ? 'Verifying...' : 'Unlock'}
+              {isSubmitting ? t('Verifying...') : t('Unlock')}
             </button>
           </div>
         </form>

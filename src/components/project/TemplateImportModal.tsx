@@ -142,7 +142,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
       setAllTemplates(allTemplatesFlat);
     } catch (error) {
       console.error('Error loading templates:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load templates');
+      setError(error instanceof Error ? error.message : t('Failed to load templates'));
     } finally {
       setIsLoading(false);
     }

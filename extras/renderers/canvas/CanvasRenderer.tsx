@@ -101,7 +101,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
             console.log('[CanvasRenderer] loadContent called', { hasContent: !!content });
 
             if (!content) {
-                setError('No content available');
+                setError(t('No content available'));
                 setIsLoading(false);
                 return;
             }
@@ -441,7 +441,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                 URL.revokeObjectURL(url);
             } catch (err) {
                 console.error('Export error:', err);
-                setError('Failed to export SVG');
+                setError(t('Failed to export SVG'));
             }
         }
     }, [svgContent, fileName, onDownload]);

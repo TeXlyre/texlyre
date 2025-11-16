@@ -74,7 +74,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 
     if (initialLanguage) {
       setCurrentLanguage(initialLanguage);
-      i18next.changeLanguage(initialLanguage.code);
     }
 
     registerSetting({
@@ -106,8 +105,8 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       options: [
         { label: t("Auto (follows app language)"), value: 'auto' },
         { label: t("Left-to-Right (LTR)"), value: 'ltr' },
-        { label: t("Right-to-Left (RTL)"), value: 'rtl' }],
-
+        { label: t("Right-to-Left (RTL)"), value: 'rtl' }
+      ],
       onChange: (value) => {
         const currentLangCode = getSetting('language')?.value as string || 'en';
         const lang = availableLanguages.find((l) => l.code === currentLangCode);
@@ -143,6 +142,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   return (
     <LanguageContext.Provider value={{ currentLanguage, availableLanguages, changeLanguage, isRTL }}>
       {children}
-    </LanguageContext.Provider>);
-
+    </LanguageContext.Provider>
+  );
 };

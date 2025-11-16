@@ -37,22 +37,22 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 
     try {
       if (!currentPassword) {
-        throw new Error('Password is required to delete your account');
+        throw new Error(t('Password is required to delete your account'));
       }
 
       if (confirmationText !== expectedConfirmationText) {
-        throw new Error(`Please type "${expectedConfirmationText}" to confirm`);
+        throw new Error(t(`Please type \"{expectedConfirmationText}\" to confirm`, { expectedConfirmationText }));
       }
 
       const isPasswordValid = await verifyPassword(user.id, currentPassword);
       if (!isPasswordValid) {
-        throw new Error('Incorrect password');
+        throw new Error(t('Incorrect password'));
       }
 
       await deleteUserAccount(user.id);
       onAccountDeleted();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete account');
+      setError(err instanceof Error ? err.message : t('Failed to delete account'));
     } finally {
       setIsDeleting(false);
     }
@@ -73,7 +73,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 
     const authDb = authService.db;
     if (!authDb) {
-      throw new Error('Database not available');
+      throw new Error(t('Database not available'));
     }
 
     // Delete all user data in a single transaction
@@ -101,7 +101,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
     localStorage.removeItem(userSecretsKey);
     localStorage.removeItem('texlyre-current-user');
 
-    console.log(`Successfully deleted account for user: ${userId}`);
+    console.log(t(`Successfully deleted account for user: {userId}`, { userId }));
   };
 
   const handleOpenExport = () => {
@@ -162,8 +162,8 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
         </div>
 
         <div className="form-group">
-          <label htmlFor="confirmation-text">{t('Type')}
-            <strong>{expectedConfirmationText}</strong>{t('to confirm')}
+          <label htmlFor="confirmation-text">{t('Type the following text to confirm:')}
+            &nbsp;<strong>{expectedConfirmationText}</strong>
           </label>
           <input
             type="text"
@@ -214,7 +214,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
               confirmationText !== expectedConfirmationText
             }>
 
-            {isDeleting ? 'Deleting Account...' : 'Delete Account'}
+            {isDeleting ? t('Deleting Account...') : t('Delete Account')}
           </button>
         </div>
       </div>
