@@ -884,7 +884,7 @@ const Editor: React.FC<EditorComponentProps> = ({
     return (
       <div className="editor-container viewer-container">
         <div className="viewer-plugin-info">
-          <span>{t('Viewing with')}
+          <span>{t('Viewing with')}&nbsp;
             {viewerPlugin.name} v{viewerPlugin.version}
           </span>
         </div>

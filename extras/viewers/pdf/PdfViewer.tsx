@@ -377,7 +377,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
   };
 
   const tooltipInfo = [
-    t('Rendering quality: {quality}', { quality: renderingQuality }),
+    t('Rendering quality: {quality}', { quality: t(renderingQuality) }),
     t('Auto-scale: {status}', { status: autoScale ? t('enabled') : t('disabled') }),
     t('Pages: {count}', { count: totalPages }),
     t('Current page: {page}', { page: currentPage }),

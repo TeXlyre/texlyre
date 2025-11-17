@@ -127,7 +127,7 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
             onClick={handleMainButtonClick}
             title={
               isFileSyncEnabled && isCollabConnected && !isOfflineMode ?
-                'Collaboration Options' :
+                t('Collaboration Options') :
                 getStatusText()
             }>
 
@@ -140,7 +140,7 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 
             {showOffline ? <OfflineIcon /> : <UsersIcon />}
             <span className="collab-label">
-              {showOffline ? 'Offline' : 'Collab'}
+              {showOffline ? t('Offline') : t('Collab')}
             </span>
           </div>
 

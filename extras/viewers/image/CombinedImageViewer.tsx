@@ -358,7 +358,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
       <PluginControlGroup>
         <button
           onClick={handleRotate}
-          title={`Rotate 90° (${transform.rotation}°)`}>
+          title={t(`Rotate 90° ({degree}°)`, { degree: transform.rotation })}>
 
           <RotateIcon />
         </button>
@@ -381,7 +381,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
       {enablePanning &&
         <PluginControlGroup>
           <button
-            title={`Panning ${enablePanning ? 'enabled' : 'disabled'}`}
+            title={t(`Panning: {status}`, { status: enablePanning ? 'enabled' : 'disabled' })}
             className={enablePanning ? 'active' : ''}>
 
             <MoveIcon />
@@ -393,25 +393,25 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
         <PluginControlGroup>
           <button
             onClick={() => handleBrightnessChange(-10)}
-            title={`Decrease Brightness (${transform.brightness}%)`}>
+            title={t(`Decrease Brightness({ percent } %)`, { percent: transform.brightness })}>
 
             <BrightnessDownIcon />
           </button>
           <button
             onClick={() => handleBrightnessChange(10)}
-            title={`Increase Brightness (${transform.brightness}%)`}>
+            title={t(`Increase Brightness({ percent } %)`, { percent: transform.brightness })}>
 
             <BrightnessIcon />
           </button>
           <button
             onClick={() => handleContrastChange(-10)}
-            title={`Decrease Contrast (${transform.contrast}%)`}>
+            title={t(`Decrease Contrast({ percent } %)`, { percent: transform.contrast })}>
 
             <ContrastDownIcon />
           </button>
           <button
             onClick={() => handleContrastChange(10)}
-            title={`Increase Contrast (${transform.contrast}%)`}>
+            title={t(`Increase Contrast({ percent } %)`, { percent: transform.contrast })}>
 
             <ContrastIcon />
           </button>
@@ -464,7 +464,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 
         {!isLoading && imageSrc && !isSvg &&
           <div
-            className={`image-container${autoCenter && transform.translateX === 0 && transform.translateY === 0 ? '' : ' no-center'}`}>
+            className={`image - container${autoCenter && transform.translateX === 0 && transform.translateY === 0 ? '' : ' no-center'}`}>
 
             <img
               src={imageSrc}
@@ -488,7 +488,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
           <div className="image-error-message">{t('Cannot display this image.')}</div>
         }
       </div>
-    </div>);
+    </div >);
 
 };
 
