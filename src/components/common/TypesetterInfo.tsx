@@ -76,17 +76,17 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
         <>
           <h4 className="typesetter-tooltip-title">{t('LaTeX')}</h4>
           <div className="typesetter-tooltip-section">
-            <strong>{t('Engine:')}</strong>{t('SwiftLaTeX v20/02/2022')}
+            <strong>{t('LaTeX Engine:')}</strong> {t('SwiftLaTeX v20/02/2022')}
           </div>
           <div className="typesetter-tooltip-section">
-            <strong>{t('Compilers:')}</strong>
+            <strong>{t('LaTeX Compilers:')}</strong>
             <ul>
               <li>{t('pdfTeX (2020)')}</li>
               <li>{t('XeTeX (2020)')}</li>
             </ul>
           </div>
           <div className="typesetter-tooltip-section">
-            <strong>{t('Output:')}</strong> PDF
+            <strong>{t('Output Format:')}</strong> {t('PDF')}
           </div>
         </>);
 
@@ -96,16 +96,16 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
       <>
         <h4 className="typesetter-tooltip-title">{t('Typst')}</h4>
         <div className="typesetter-tooltip-section">
-          <strong>{t('Engine:')}</strong>{t('@myriaddreamin/typst.ts v0.7.0-rc1')}
+          <strong>{t('Typst Engine:')}</strong> {t('@myriaddreamin/typst.ts v0.7.0-rc1')}
         </div>
         <div className="typesetter-tooltip-section">
-          <strong>{t('Renderer:')}</strong>{t('@myriaddreamin/typst-ts-renderer v0.7.0-rc1')}
+          <strong>{t('Typst Renderer:')}</strong> {t('@myriaddreamin/typst-ts-renderer v0.7.0-rc1')}
         </div>
         <div className="typesetter-tooltip-section">
-          <strong>{t('Compiler:')}</strong>{t('@myriaddreamin/typst-ts-compiler v0.7.0-rc1')}
+          <strong>{t('Typst Compiler:')}</strong> {t('@myriaddreamin/typst-ts-compiler v0.7.0-rc1')}
         </div>
         <div className="typesetter-tooltip-section">
-          <strong>{t('Typst Version:')}</strong>{t('0.14.0 (25/10/2025)')}
+          <strong>{t('Typst Version:')}</strong> {t('0.14.0 (25/10/2025)')}
         </div>
         <div className="typesetter-tooltip-section">
           <strong>{t('Output Formats:')}</strong>

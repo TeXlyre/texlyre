@@ -1,9 +1,10 @@
 // src/utils/dateUtils.ts
 import { t } from '@/i18n';
+import i18next from 'i18next';
 
 export const formatDate = (timestamp: number | string): string => {
 	const date = new Date(typeof timestamp === 'string' ? parseInt(timestamp, 10) : timestamp);
-	return date.toLocaleString();
+	return date.toLocaleString(i18next.language);
 };
 
 export const formatLastModified = (timestamp: number | string) => {
@@ -15,7 +16,7 @@ export const formatLastModified = (timestamp: number | string) => {
 	if (diffDays === 0) return t('Today');
 	if (diffDays === 1) return t('Yesterday');
 	if (diffDays < 7) return t(`{count} day ago`, { count: diffDays });
-	return date.toLocaleDateString();
+	return date.toLocaleDateString(i18next.language);
 };
 
 export const formatTimestamp = (timestamp: number | string): string => {
@@ -35,5 +36,5 @@ export const formatTimestamp = (timestamp: number | string): string => {
 		return t(`{count}h ago`, { count: hours });
 	}
 
-	return new Date(ts).toLocaleDateString();
+	return new Date(ts).toLocaleDateString(i18next.language);
 };
