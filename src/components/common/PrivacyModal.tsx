@@ -23,7 +23,7 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) => {
         <h3>{t('How TeXlyre Works')}</h3>
         <ul>
           <li><strong>{t('Local Storage:')}</strong>&nbsp;{t('Your projects and account data stay in your browser')}</li>
-          <li><strong>{t('Collaboration:')}</strong>&nbsp;{t('Direct peer-to-peer connections via signaling servers')}</li>
+          <li><strong>{t('Real-time Collaboration:')}</strong>&nbsp;{t('Direct peer-to-peer connections via signaling servers')}</li>
           <li><strong>{t('No Tracking:')}</strong>&nbsp;{t('We don\'t collect analytics or personal information')}</li>
           <li><strong>{t('GitHub Integration:')}</strong>&nbsp;{t('Only used when you explicitly enable it')}</li>
           <li><strong>{t('DOI Lookup:')}</strong>&nbsp;{t('When you enable the BibTeX DOI finder, paper titles and authors are sent to the')}&nbsp;<a href="https://www.crossref.org/" target="_blank" rel="noreferrer">{t('Crossref API')}</a>&nbsp;{t('to find matching DOIs')}</li>

@@ -86,12 +86,6 @@
 	outline: 2px solid var(--border-color);
 }
 
-.option-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-}
-
 .option-name {
 	font-size: 0.875rem;
 	font-weight: 500;

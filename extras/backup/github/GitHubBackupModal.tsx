@@ -604,7 +604,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                 </div>
                 {status.isConnected && status.repository &&
                   <div className="status-item">
-                    <strong>{t('Repository:')}</strong>
+                    <strong>{t('Repository: ')}</strong>
                     <span style={{ marginLeft: '0.5rem' }}>
                       {status.repository} ({displayBranch})
                     </span>
@@ -683,11 +683,11 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                 </p>
                 <ul>
                   <li>
-                    <strong>{t('Push:')}</strong>&nbsp;{t('Pushes local changes to the repository')}
+                    <strong>{t('Push: ')}</strong>&nbsp;{t('Pushes local changes to the repository')}
 
                   </li>
                   <li>
-                    <strong>{t('Import:')}</strong>&nbsp;{t('Imports changes from the repository to your local workspace')}
+                    <strong>{t('Import: ')}</strong>&nbsp;{t('Imports changes from the repository to your local workspace')}
 
                   </li>
                   <li>

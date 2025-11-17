@@ -329,7 +329,7 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
 
                     <div className="preview-details">
                       <div className="preview-detail-item">
-                        <strong>{t('Source:')}</strong>
+                        <strong>{t('Source: ')}</strong>
                         <a
                           href={url}
                           target="_blank"

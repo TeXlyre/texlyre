@@ -419,11 +419,11 @@ const BackupModal: React.FC<BackupModalProps> = ({
             <div className="status-info">
               <div className="status-item">
                 <strong>{t('File System Backup:')}</strong>{' '}
-                {status.isConnected ? 'Connected' : 'Disconnected'}
+                {status.isConnected ? t('Connected') : t('Disconnected')}
               </div>
               {status.isConnected &&
                 <div className="status-item">
-                  <strong>{t('Status:')}</strong> {getStatusText()}
+                  <strong>{t('Status: ')}</strong> {getStatusText()}
                 </div>
               }
               {status.error &&
@@ -495,11 +495,11 @@ const BackupModal: React.FC<BackupModalProps> = ({
               </p>
               <ul>
                 <li>
-                  <strong>{t('Export:')}</strong>{t('Forces all local data to be written to the file system')}
+                  <strong>{t('Export: ')}</strong>&nbsp;{t('Forces all local data to be written to the file system')}
 
                 </li>
                 <li>
-                  <strong>{t('Import:')}</strong>{t('Loads changes from the file system into your local workspace')}
+                  <strong>{t('Import: ')}</strong>&nbsp;{t('Loads changes from the file system into your local workspace')}
 
                 </li>
                 <li>{t('Sync the backup folder with cloud services like Dropbox, Google Drive, or OneDrive for cross-device access')}

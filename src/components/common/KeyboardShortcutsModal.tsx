@@ -136,7 +136,7 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ isOpen,
                     </section>
 
                     <div className="info-message">
-                        <p><strong>{t('Note:')}</strong>{t('Some shortcuts may vary depending on your operating system and browser.')}</p>
+                        <p><strong>{t('Note: ')}</strong>{t('Some shortcuts may vary depending on your operating system and browser.')}</p>
                         <p>
                             <a
                                 href="#"
@@ -155,8 +155,8 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ isOpen,
             <SettingsModal
                 isOpen={showSettings}
                 onClose={() => setShowSettings(false)}
-                initialCategory="Viewers"
-                initialSubcategory="Text Editor" />
+                initialCategory={t("Viewers")}
+                initialSubcategory={t("Text Editor")} />
 
         </>);
 

@@ -48,11 +48,11 @@ const CollabModal: React.FC<CollabModalProps> = ({
 					<div className="collab-status">
 						<div className="status-info">
 							<div className="status-item">
-								<strong>{t('Status:')}</strong>{' '}
+								<strong>{t('Sync Status:')}</strong>{' '}
 								{isConnected ? t('Connected') : t('Disconnected')}
 							</div>
 							<div className="status-item">
-								<strong>{t('Project:')}</strong>{' '}
+								<strong>{t('Project ID:')}</strong>{' '}
 								{docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl}
 							</div>
 						</div>
@@ -108,8 +108,8 @@ const CollabModal: React.FC<CollabModalProps> = ({
 			<SettingsModal
 				isOpen={showSettings}
 				onClose={() => setShowSettings(false)}
-				initialCategory="Collaboration"
-				initialSubcategory="Real-time Synchronization" />
+				initialCategory={t("Collaboration")}
+				initialSubcategory={t("Real-time Synchronization")} />
 
 		</>);
 

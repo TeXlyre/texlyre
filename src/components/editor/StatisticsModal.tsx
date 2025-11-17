@@ -57,7 +57,7 @@ const StatisticsOptionsPanel: React.FC<StatisticsOptionsPanelProps> = ({
                 </div>
                 <div className="options-group">
                     <h4>{t('Detail Level')}</h4>
-                    <label>{t('Verbosity:')}
+                    <label>{t('Verbosity: ')}
 
                         <input
                             type="number"
@@ -126,7 +126,7 @@ const StatisticsOptionsPanel: React.FC<StatisticsOptionsPanelProps> = ({
 
             <div className="options-group">
                 <h4>{t('Detail Level')}</h4>
-                <label>{t('Verbosity:')}
+                <label>{t('Verbosity: ')}
 
                     <input
                         type="number"

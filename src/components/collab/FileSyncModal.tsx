@@ -139,7 +139,7 @@ const FileSyncModal: React.FC<FileSyncModalProps> = ({ isOpen, onClose }) => {
               {isEnabled &&
                 <>
                   <div className="status-item">
-                    <strong>{t('Status:')}</strong>{' '}
+                    <strong>{t('Sync Status:')}</strong>{' '}
                     {isSyncing ? t('Syncing...') : t('Ready')}
                   </div>
                   {lastSync &&

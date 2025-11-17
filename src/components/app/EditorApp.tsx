@@ -557,7 +557,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
       <footer>
 
-        <div className="project-type-badge">{t('Typesetter:')}
+        <div className="project-type-badge">{t('Typesetter: ')}
           <TypesetterInfo type={projectType} />
         </div>
 

@@ -274,7 +274,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
                   {citationStyle !== 'numeric' && ` (${citationStyle} style)`}
                 </span>
                 {targetBibFile && selectedProvider !== 'all' && selectedProvider !== 'local' &&
-                  <div className="lsp-footer-target">{t('Target:')}
+                  <div className="lsp-footer-target">{t('Target File:')}
                     {availableBibFiles.find((f) => f.path === targetBibFile)?.name || 'Unknown file'}
                   </div>
                 }
@@ -363,7 +363,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
               </div>
             }
             {entry.fields.doi &&
-              <div className="lsp-entry-identifier">{t('DOI:')}
+              <div className="lsp-entry-identifier">{t('DOI: ')}
                 {entry.fields.doi}
               </div>
             }
@@ -472,7 +472,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
               </div>
             }
             {entry.fields.doi &&
-              <div className="lsp-entry-identifier">{t('DOI:')}
+              <div className="lsp-entry-identifier">{t('DOI: ')}
                 {entry.fields.doi}
               </div>
             }
@@ -554,13 +554,13 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
             }
           </div>
           <div className="lsp-panel-content">
-            <div className="lsp-loading-indicator">{t('All LSP aggregation view -')}
-              {allProviders.length}{t('provider(s) connected')}
-              <div>{t('Connected:')}
+            <div className="lsp-loading-indicator">
+              {t('All LSP aggregation view - {count} provider connected', { count: allProviders.length })}
+              <div>{t('LSP Connected:')}
                 {allProviders.map((p) => p.name).join(', ')}
               </div>
-              <div className="lsp-no-entries-hint">{t('Individual provider panels can be accessed by selecting a specific provider from the dropdown.')}
-
+              <div className="lsp-no-entries-hint">
+                {t('Individual provider panels can be accessed by selecting a specific provider from the dropdown.')}
               </div>
             </div>
           </div>

@@ -323,7 +323,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 
           <div className="document-properties">
             <div className="property-item">
-              <strong>{t('Name:')}</strong> {propertiesInfo.name}
+              <strong>{t('Name: ')}</strong> {propertiesInfo.name}
             </div>
             <div className="property-item">
               <strong>{t('Content Length:')}</strong> {propertiesInfo.contentLength}{' '}{t('characters')}

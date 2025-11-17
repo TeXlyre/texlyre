@@ -523,7 +523,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
           {warnings.length > 0 &&
             <div className="warnings-container">
-              <h5>{t('Warnings:')}</h5>
+              <h5>{t('Warnings: ')}</h5>
               {warnings.map((warning, index) =>
                 <div key={index} className="warning-item">
                   {(warning as { message: string; }).message}

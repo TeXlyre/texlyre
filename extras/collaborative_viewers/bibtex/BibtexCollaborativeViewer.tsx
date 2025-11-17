@@ -468,7 +468,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
           {warnings.length > 0 &&
             <div className="warnings-container">
-              <h5>{t('Warnings:')}</h5>
+              <h5>{t('Warnings: ')}</h5>
               {warnings.map((w, i) =>
                 <div key={i} className="warning-item">
                   {(w as { message: string; }).message}

@@ -177,7 +177,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 
         <div className="export-reminder">
           <p>
-            <strong>{t('Reminder:')}</strong>{t('If you want to keep your data, use the')}{' '}
+            <strong>{t('Reminder: ')}</strong>{t('If you want to keep your data, use the')}{' '}
             {onOpenExport ?
               <button
                 type="button"

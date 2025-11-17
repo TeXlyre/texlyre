@@ -69,7 +69,7 @@ const GuestUpgradeModal: React.FC<GuestUpgradeModalProps> = ({
             </p>
             <div className="storage-notice">
               <p>
-                <strong>{t('Important:')}</strong>{t('TeXlyre stores all data locally in your browser. Your projects will persist until you clear browser data, uninstall the browser, or use a different device. For long-term storage, regularly export your projects.')}
+                <strong>{t('Important: ')}</strong>{t('TeXlyre stores all data locally in your browser. Your projects will persist until you clear browser data, uninstall the browser, or use a different device. For long-term storage, regularly export your projects.')}
 
 
               </p>
