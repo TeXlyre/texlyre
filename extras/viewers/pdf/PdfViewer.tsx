@@ -22,7 +22,7 @@ import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
 import type { ViewerProps } from '@/plugins/PluginInterface';
 import './styles.css';
-import { pdfViewerSettings } from './settings';
+import { getPdfViewerSettings } from './settings';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './PdfViewerPlugin';
 
 const BASE_PATH = __BASE_PATH__;
@@ -416,7 +416,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 
       <PluginControlGroup>
         {(() => {
-          const zoomOptions = pdfViewerSettings.find((s) => s.id === 'pdf-renderer-initial-zoom')?.options || [
+          const zoomOptions = getPdfViewerSettings().find((s) => s.id === 'pdf-renderer-initial-zoom')?.options || [
             { label: '25%', value: '25' },
             { label: '50%', value: '50' },
             { label: '75%', value: '75' },

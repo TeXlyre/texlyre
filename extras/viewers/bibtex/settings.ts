@@ -1,7 +1,7 @@
 import { t } from '@/i18n';
 import type { Setting } from '@/contexts/SettingsContext';
 
-export const bibtexViewerSettings: Setting[] = [
+export const getBibtexViewerSettings = (): Setting[] => [
   {
     id: 'bibtex-viewer-auto-tidy',
     category: t("Viewers"),

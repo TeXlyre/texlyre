@@ -1,7 +1,7 @@
 import { t } from '@/i18n';
 import type { Setting } from '@/contexts/SettingsContext';
 
-export const canvasRendererSettings: Setting[] = [
+export const getCanvasRendererSettings = (): Setting[] => [
   {
     id: 'canvas-renderer-enable',
     category: t("Renderers"),

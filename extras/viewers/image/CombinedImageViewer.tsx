@@ -378,7 +378,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
         </button>
       </PluginControlGroup>
 
-      {enablePanning &&
+      {enablePanning && (
         <PluginControlGroup>
           <button
             title={t(`Panning: {status}`, { status: enablePanning ? 'enabled' : 'disabled' })}
@@ -387,31 +387,31 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
             <MoveIcon />
           </button>
         </PluginControlGroup>
-      }
+      )}
 
       {enableFilters &&
         <PluginControlGroup>
           <button
             onClick={() => handleBrightnessChange(-10)}
-            title={t(`Decrease Brightness({ percent } %)`, { percent: transform.brightness })}>
+            title={t(`Decrease Brightness ({percent}%)`, { percent: transform.brightness })}>
 
             <BrightnessDownIcon />
           </button>
           <button
             onClick={() => handleBrightnessChange(10)}
-            title={t(`Increase Brightness({ percent } %)`, { percent: transform.brightness })}>
+            title={t(`Increase Brightness ({percent}%)`, { percent: transform.brightness })}>
 
             <BrightnessIcon />
           </button>
           <button
             onClick={() => handleContrastChange(-10)}
-            title={t(`Decrease Contrast({ percent } %)`, { percent: transform.contrast })}>
+            title={t(`Decrease Contrast ({percent}%)`, { percent: transform.contrast })}>
 
             <ContrastDownIcon />
           </button>
           <button
             onClick={() => handleContrastChange(10)}
-            title={t(`Increase Contrast({ percent } %)`, { percent: transform.contrast })}>
+            title={t(`Increase Contrast ({percent}%)`, { percent: transform.contrast })}>
 
             <ContrastIcon />
           </button>

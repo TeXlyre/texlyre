@@ -2,7 +2,7 @@
 import { t } from '@/i18n';
 import type { Setting } from '@/contexts/SettingsContext';
 
-export const imageViewerSettings: Setting[] = [
+export const getImageViewerSettings = (): Setting[] => [
   {
     id: 'image-viewer-auto-center',
     category: t("Viewers"),

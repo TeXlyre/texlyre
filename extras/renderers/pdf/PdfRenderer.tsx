@@ -19,7 +19,7 @@ import {
   MinimizeIcon
 } from
   '@/components/common/Icons';
-import { pdfRendererSettings } from './settings';
+import { getPdfRendererSettings } from './settings';
 import { useSettings } from '@/hooks/useSettings';
 import { useProperties } from '@/hooks/useProperties';
 import type { RendererProps } from '@/plugins/PluginInterface';
@@ -567,7 +567,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
                 <ZoomOutIcon />
               </button>
               {(() => {
-                const zoomOptions = pdfRendererSettings.find((s) => s.id === 'pdf-renderer-initial-zoom')?.options || [];
+                const zoomOptions = getPdfRendererSettings().find((s) => s.id === 'pdf-renderer-initial-zoom')?.options || [];
                 const currentZoom = Math.round(scale * 100).toString();
                 const hasCustomZoom = !zoomOptions.some((opt) => String(opt.value) === currentZoom);
 

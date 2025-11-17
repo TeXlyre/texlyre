@@ -2,7 +2,7 @@
 import { t } from '@/i18n';
 import type { Setting } from '@/contexts/SettingsContext';
 
-export const jabrefLSPSettings: Setting[] = [
+export const getJabrefLSPSettings = (): Setting[] => [
   {
     id: 'jabref-lsp-enabled',
     category: t("LSP"),

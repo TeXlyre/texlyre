@@ -1,7 +1,7 @@
 // extras/viewers/pdf/PdfViewerPlugin.ts
 import type { ViewerPlugin } from '@/plugins/PluginInterface';
 import PdfViewer from './PdfViewer';
-import { pdfViewerSettings } from './settings';
+import { getPdfViewerSettings } from './settings';
 import { PdfIcon } from './Icon'
 
 const PDF_EXTENSIONS = ['pdf'];
@@ -16,7 +16,9 @@ const pdfViewerPlugin: ViewerPlugin = {
 	version: PLUGIN_VERSION,
 	type: 'viewer',
 	icon: PdfIcon,
-	settings: pdfViewerSettings,
+	get settings() {
+		return getPdfViewerSettings();
+	},
 
 	canHandle: (fileName: string, mimeType?: string): boolean => {
 		if (mimeType && PDF_MIMETYPES.includes(mimeType)) {

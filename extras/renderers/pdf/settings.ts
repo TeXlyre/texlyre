@@ -2,7 +2,7 @@
 import { t } from '@/i18n';
 import type { Setting } from '@/contexts/SettingsContext';
 
-export const pdfRendererSettings: Setting[] = [
+export const getPdfRendererSettings = (): Setting[] => [
   {
     id: 'pdf-renderer-enable',
     category: t("Renderers"),

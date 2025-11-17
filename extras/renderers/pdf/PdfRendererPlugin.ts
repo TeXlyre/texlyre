@@ -1,7 +1,7 @@
 // extras/renderers/pdf/PdfRendererPlugin.ts
 import type { RendererPlugin } from '@/plugins/PluginInterface';
 import PdfRenderer from './PdfRenderer';
-import { pdfRendererSettings } from './settings';
+import { getPdfRendererSettings } from './settings';
 
 export const PLUGIN_NAME = 'Enhanced PDF.js Viewer (pdfjs-dist 5.3.31)';
 export const PLUGIN_VERSION = '0.1.0';
@@ -11,7 +11,9 @@ const pdfRendererPlugin: RendererPlugin = {
 	name: PLUGIN_NAME,
 	version: PLUGIN_VERSION,
 	type: 'renderer',
-	settings: pdfRendererSettings,
+	get settings() {
+		return getPdfRendererSettings();
+	},
 
 	canHandle: (outputType: string): boolean => {
 		return outputType === 'pdf';

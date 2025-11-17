@@ -1,6 +1,6 @@
 // extras/collaborative_viewers/bibtex/BibtexCollaborativeViewerPlugin.ts
 import type { CollaborativeViewerPlugin } from '@/plugins/PluginInterface';
-import { bibtexViewerSettings } from '../../viewers/bibtex/settings';
+import { getBibtexViewerSettings } from '../../viewers/bibtex/settings';
 import BibtexCollaborativeViewer from './BibtexCollaborativeViewer';
 
 const BIBTEX_EXTENSIONS = ['bib', 'bibtex'];
@@ -14,7 +14,9 @@ const bibtexCollaborativeViewerPlugin: CollaborativeViewerPlugin = {
 	name: PLUGIN_NAME,
 	version: PLUGIN_VERSION,
 	type: 'collaborative-viewer',
-	settings: bibtexViewerSettings,
+	get settings() {
+		return getBibtexViewerSettings();
+	},
 
 	canHandle: (fileName: string, mimeType?: string): boolean => {
 		if (mimeType && BIBTEX_MIMETYPES.includes(mimeType)) {

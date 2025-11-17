@@ -2,7 +2,7 @@
 import { t } from '@/i18n';
 import type { Setting } from '@/contexts/SettingsContext';
 
-export const pdfViewerSettings: Setting[] = [
+export const getPdfViewerSettings = (): Setting[] => [
   {
     id: 'pdf-viewer-auto-scale',
     category: t("Viewers"),

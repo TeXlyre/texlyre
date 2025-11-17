@@ -56,6 +56,11 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     await i18next.changeLanguage(languageCode);
     setCurrentLanguage(language);
 
+    // Dispatch custom event for settings to refresh plugin settings
+    window.dispatchEvent(new CustomEvent('language-changed', {
+      detail: { languageCode }
+    }));
+
     const directionSetting = getSetting('text-direction');
     const directionValue = directionSetting?.value as string || 'auto';
 

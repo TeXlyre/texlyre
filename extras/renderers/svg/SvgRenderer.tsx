@@ -15,7 +15,7 @@ import {
   MinimizeIcon
 } from
   '@/components/common/Icons';
-import { svgRendererSettings } from './settings';
+import { getSvgRendererSettings } from './settings';
 import { useSettings } from '@/hooks/useSettings';
 import { useProperties } from '@/hooks/useProperties';
 import type { RendererProps } from '@/plugins/PluginInterface';
@@ -466,7 +466,7 @@ const SvgRenderer: React.FC<RendererProps> = ({
                 <ZoomOutIcon />
               </button>
               {(() => {
-                const zoomOptions = svgRendererSettings.find((s) => s.id === 'svg-renderer-initial-zoom')?.options || [];
+                const zoomOptions = getSvgRendererSettings().find((s) => s.id === 'svg-renderer-initial-zoom')?.options || [];
                 const currentZoom = Math.round(scale * 100).toString();
                 const hasCustomZoom = !zoomOptions.some((opt) => String(opt.value) === currentZoom);
 

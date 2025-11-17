@@ -1,7 +1,7 @@
 // extras/viewers/image/ImageViewerPlugin.ts
 import type { ViewerPlugin } from '@/plugins/PluginInterface';
 import CombinedImageViewer from './CombinedImageViewer';
-import { imageViewerSettings } from './settings';
+import { getImageViewerSettings } from './settings';
 import { ImageIcon } from './Icon'
 
 const IMAGE_EXTENSIONS = [
@@ -34,7 +34,9 @@ const imageViewerPlugin: ViewerPlugin = {
 	version: PLUGIN_VERSION,
 	type: 'viewer',
 	icon: ImageIcon,
-	settings: imageViewerSettings,
+	get settings() {
+		return getImageViewerSettings();
+	},
 
 	canHandle: (fileName: string, mimeType?: string): boolean => {
 		if (mimeType && IMAGE_MIMETYPES.includes(mimeType)) {

@@ -15,7 +15,7 @@ import {
     MinimizeIcon
 } from
     '@/components/common/Icons';
-import { canvasRendererSettings } from './settings';
+import { getCanvasRendererSettings } from './settings';
 import { useSettings } from '@/hooks/useSettings';
 import { useProperties } from '@/hooks/useProperties';
 import type { RendererProps } from '@/plugins/PluginInterface';
@@ -518,7 +518,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 
     }
 
-    const zoomOptions = canvasRendererSettings.find((s) => s.id === 'canvas-renderer-initial-zoom')?.options || [];
+    const zoomOptions = getCanvasRendererSettings().find((s) => s.id === 'canvas-renderer-initial-zoom')?.options || [];
     const currentZoom = Math.round(scale * 100).toString();
     const hasCustomZoom = !zoomOptions.some((opt) => String(opt.value) === currentZoom);
 

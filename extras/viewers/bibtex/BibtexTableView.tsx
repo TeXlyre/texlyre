@@ -22,7 +22,7 @@ export const BibtexTableView: React.FC<BibtexTableViewProps> = ({
 	const [editValue, setEditValue] = useState('');
 	const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
 	const tableRef = useRef<HTMLTableElement>(null);
-
+	// TODO (fabawi): implement proper column resizing
 	const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
 	const [isResizing, setIsResizing] = useState(false);
 	const [resizingField, setResizingField] = useState<string | null>(null);

@@ -109,6 +109,54 @@ class PluginRegistryManager {
 		}
 	}
 
+	refreshPluginSettings(): Setting[] {
+		const freshSettings: Setting[] = [];
+
+		this.registry.viewers.forEach(plugin => {
+			if (plugin.settings) {
+				freshSettings.push(...plugin.settings);
+			}
+		});
+
+		this.registry.collaborativeViewers.forEach(plugin => {
+			if (plugin.settings) {
+				freshSettings.push(...plugin.settings);
+			}
+		});
+
+		this.registry.renderers.forEach(plugin => {
+			if (plugin.settings) {
+				freshSettings.push(...plugin.settings);
+			}
+		});
+
+		this.registry.loggers.forEach(plugin => {
+			if (plugin.settings) {
+				freshSettings.push(...plugin.settings);
+			}
+		});
+
+		this.registry.lsp.forEach(plugin => {
+			if (plugin.settings) {
+				freshSettings.push(...plugin.settings);
+			}
+		});
+
+		this.registry.backup.forEach(plugin => {
+			if (plugin.settings) {
+				freshSettings.push(...plugin.settings);
+			}
+		});
+
+		this.registry.themes.forEach(plugin => {
+			if (plugin.settings) {
+				freshSettings.push(...plugin.settings);
+			}
+		});
+
+		return freshSettings;
+	}
+
 	registerPlugin(plugin: Plugin) {
 		console.log('[PluginRegistry] Registering plugin:', plugin.name, 'of type:', plugin.type);
 

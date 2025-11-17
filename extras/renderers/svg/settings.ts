@@ -2,7 +2,7 @@
 import { t } from '@/i18n';
 import type { Setting } from '@/contexts/SettingsContext';
 
-export const svgRendererSettings: Setting[] = [
+export const getSvgRendererSettings = (): Setting[] => [
   {
     id: 'svg-renderer-enable',
     category: t("Renderers"),

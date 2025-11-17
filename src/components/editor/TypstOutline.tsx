@@ -134,7 +134,7 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
 
             {isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
           </button>
-          <span className="outline-header-title">OUTLINE</span>
+          <span className="outline-header-title">{t('OUTLINE')}</span>
           <button
             className="action-btn"
             title={t('Refresh Outline')}
@@ -182,7 +182,7 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
 
           {isCollapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
         </button>
-        <span className="outline-header-title">OUTLINE</span>
+        <span className="outline-header-title">{t('OUTLINE')}</span>
 
         <button
           className="action-btn"

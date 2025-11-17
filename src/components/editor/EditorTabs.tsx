@@ -328,7 +328,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
-              title={`${tab.filePath || tab.title}${tab.editorState.currentLine ? ` (Line ${tab.editorState.currentLine})` : ''}`}
+              title={`${tab.filePath || tab.title}${tab.editorState.currentLine ? ' (' + t(`Line {line}`, { line: tab.editorState.currentLine }) + ')' : ''}`}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {

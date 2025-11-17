@@ -149,7 +149,7 @@
     "Are you sure you want to unlink {count} file from their documents?_other": "Sind Sie sicher, dass Sie die Verknüpfung von {{count}} Dateien aus ihren Dokumenten aufheben möchten?",
     "Authentication tokens (GitHub API key)": "Authentifizierungs-Tokens (GitHub API-Schlüssel)",
     "Author-Year (Smith, 2023)": "Autor-Jahr (Smith, 2023)",
-    "Auto (follow app language)": "Automatisch (Sprache folgen)",
+    "Auto (follows app language)": "Automatisch (Sprache folgen)",
     "Auto (follows app theme)": "Automatisch (folgt App-Theme)",
     "Auto center: {status}": "Auto-Center: {{status}}",
     "Auto-backup connection on startup": "Verbindung beim Start automatisch Backup",
@@ -1396,5 +1396,13 @@
     "Invalid password": "Ungültiges Passwort",
     "You do not have permission to delete this project": "Sie haben keine Berechtigung, dieses Projekt zu löschen",
     "You do not have permission to modify this project": "Sie haben keine Berechtigung, dieses Projekt zu ändern",
-    "Are you sure you want to delete the project \"{projectName}\"?": "Sind Sie sicher, dass Sie das Projekt \"{{projectName}}\" löschen möchten?"
+    "Are you sure you want to delete the project \"{projectName}\"?": "Sind Sie sicher, dass Sie das Projekt \"{{projectName}}\" löschen möchten?",
+    "Light": "Hell",
+    "Dark": "Dunkel",
+    "System": "System",
+    "Monokai": "Monokai",
+    "Tomorrow Night Blue": "Tomorrow Night Blue",
+    "GitHub Light": "GitHub Hell",
+    "Solarized Light": "Solarized Hell",
+    "Atom Light": "Atom Hell"
 }
