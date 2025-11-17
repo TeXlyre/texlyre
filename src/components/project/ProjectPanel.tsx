@@ -4,6 +4,7 @@ import type React from 'react';
 import { useState } from 'react';
 
 import type { Project } from '../../types/projects';
+import { formatLastModified } from '../../utils/dateUtils';
 import { ImportIcon, NewProjectIcon, StarIcon } from '../common/Icons';
 
 interface ProjectPanelProps {
@@ -63,18 +64,6 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
     if (onOpenProject) {
       onOpenProject(project);
     }
-  };
-
-  const formatLastModified = (timestamp: number) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    return date.toLocaleDateString();
   };
 
   return (

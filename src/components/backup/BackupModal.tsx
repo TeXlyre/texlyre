@@ -102,7 +102,7 @@ const BackupModal: React.FC<BackupModalProps> = ({
     if (status.status === 'error') return t('Backup error');
     if (status.status === 'syncing') return t('Syncing...');
     if (status.lastSync) {
-      return t('Last sync: {date}', { date: formatDate(status.lastSync) });
+      return t('Last Sync: {date}', { date: formatDate(status.lastSync) });
     }
     return t('Ready to sync');
   };

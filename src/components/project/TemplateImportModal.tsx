@@ -4,10 +4,11 @@ import type React from 'react';
 import { useEffect, useState, useRef } from 'react';
 
 import { useSettings } from '../../hooks/useSettings';
-import { FolderIcon, ImportIcon, TemplatesIcon, SettingsIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 import SettingsModal from '../settings/SettingsModal';
 import TypesetterInfo from '../common/TypesetterInfo';
+import { formatLastModified } from '../../utils/dateUtils';
+import { FolderIcon, ImportIcon, TemplatesIcon, SettingsIcon } from '../common/Icons';
 
 interface TemplateProject {
   id: string;
@@ -465,10 +466,10 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 
                         <div className="template-detail-footer">
                           {selectedTemplate.author &&
-                            <span className="template-author">{t('by')}{selectedTemplate.author}</span>
+                            <span className="template-author">{t('by {author}', { author: selectedTemplate.author })}</span>
                           }
-                          <span className="template-updated">{t('Updated')}
-                            {new Date(selectedTemplate.lastUpdated).toLocaleDateString()}
+                          <span className="template-updated">{t('Last Updated: {lastUpdated}',
+                            { lastUpdated: formatLastModified(selectedTemplate.lastUpdated) })}
                           </span>
                         </div>
 
@@ -554,9 +555,9 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
                               {template.author &&
                                 <span className="template-author">{t('by')}{template.author}</span>
                               }
-                              <span className="template-updated">{t('Updated')}
-                                {new Date(template.lastUpdated).toLocaleDateString()}
-                              </span>
+                              <span className="template-updated">{t('Last Updated: {lastUpdated}', {
+                                lastUpdated: formatLastModified(template.lastUpdated)
+                              })}</span>
                             </div>
                           </div>
 

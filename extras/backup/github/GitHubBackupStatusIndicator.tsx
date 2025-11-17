@@ -43,7 +43,7 @@ const GitHubBackupStatusIndicator: React.FC<
       if (status.status === 'syncing') return t('Syncing...');
       if (status.lastSync) {
         const lastSync = new Date(status.lastSync);
-        return t('Last sync: {time}', { time: lastSync.toLocaleTimeString() });
+        return t('Last Sync: {time}', { time: lastSync.toLocaleTimeString() });
       }
       return t('Connected to {repository}', { repository: status.repository });
     };

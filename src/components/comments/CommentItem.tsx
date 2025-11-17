@@ -94,7 +94,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
           <button
             className="resolve-button"
             onClick={handleResolveComment}
-            title={comment.resolved ? 'Mark as unresolved' : 'Mark as resolved'}>
+            title={comment.resolved ? t('Mark as unresolved') : t('Mark as resolved')}>
 
             <CheckIcon />
           </button>
@@ -113,9 +113,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
           <button
             className="comment-line-button"
             onClick={handleLineClick}
-            title={`Go to line ${comment.line}`}>{t('Line')}
-
-            {comment.line}
+            title={t(`Go to line {line}`, { line: comment.line })}>
+            {t('Line {line}', { line: comment.line })}
           </button>
         </div>
       }

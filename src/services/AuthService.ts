@@ -1,4 +1,5 @@
 // src/services/AuthService.ts
+import { t } from '@/i18n';
 import { type IDBPDatabase, openDB } from 'idb';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
@@ -113,7 +114,7 @@ class AuthService {
 
 		const guestUser: User = {
 			id: userId,
-			username: 'Guest User',
+			username: t('Guest User'),
 			passwordHash: await this.hashPassword(sessionId),
 			isGuest: true,
 			sessionId,
@@ -131,7 +132,7 @@ class AuthService {
 			// Verify the user was created
 			const verifyUser = await this.db?.get(this.USER_STORE, userId);
 			if (!verifyUser) {
-				throw new Error('Failed to verify guest user creation');
+				throw new Error(t('Failed to verify guest user creation'));
 			}
 
 			this.currentUser = guestUser;
@@ -141,7 +142,7 @@ class AuthService {
 			return guestUser;
 		} catch (error) {
 			console.error('Failed to create guest account:', error);
-			throw new Error('Failed to create guest session. Please refresh the page and try again.');
+			throw new Error(t('Failed to create guest session. Please refresh the page and try again'));
 		}
 	}
 
@@ -152,7 +153,7 @@ class AuthService {
 	): Promise<User> {
 		if (!this.db) await this.initialize();
 		if (!this.currentUser || !this.isGuestUser(this.currentUser)) {
-			throw new Error('No guest account to upgrade');
+			throw new Error(t('No guest account to upgrade'));
 		}
 
 		// Check for existing non-guest users only
@@ -162,7 +163,7 @@ class AuthService {
 			username,
 		);
 		if (existingUser && !this.isGuestUser(existingUser)) {
-			throw new Error('Username already exists');
+			throw new Error(t('Username already exists'));
 		}
 
 		if (email) {
@@ -172,7 +173,7 @@ class AuthService {
 				email,
 			);
 			if (existingEmail && !this.isGuestUser(existingEmail)) {
-				throw new Error('Email already exists');
+				throw new Error(t('Email already exists'));
 			}
 		}
 
@@ -369,7 +370,7 @@ class AuthService {
 			username,
 		);
 		if (existingUser && !this.isGuestUser(existingUser)) {
-			throw new Error('Username already exists');
+			throw new Error(t('Username already exists'));
 		}
 
 		if (email) {
@@ -379,7 +380,7 @@ class AuthService {
 				email,
 			);
 			if (existingEmail && !this.isGuestUser(existingEmail)) {
-				throw new Error('Email already exists');
+				throw new Error(t('Email already exists'));
 			}
 		}
 
@@ -412,12 +413,12 @@ class AuthService {
 			username,
 		);
 		if (!user || this.isGuestUser(user)) {
-			throw new Error('User not found');
+			throw new Error(t('User not found'));
 		}
 
 		const passwordHash = await this.hashPassword(password);
 		if (user.passwordHash !== passwordHash) {
-			throw new Error('Invalid password');
+			throw new Error(t('Invalid password'));
 		}
 
 		user.lastLogin = Date.now();
@@ -459,7 +460,7 @@ class AuthService {
 
 		const user = await this.getUserById(userId);
 		if (!user) {
-			throw new Error('User not found');
+			throw new Error(t('User not found'));
 		}
 
 		const updatedUser: User = {
@@ -508,7 +509,7 @@ class AuthService {
 		if (!this.db) await this.initialize();
 
 		const user = await this.getUserById(userId);
-		if (!user) throw new Error('User not found');
+		if (!user) throw new Error(t('User not found'));
 
 		const passwordHash = await this.hashPassword(newPassword);
 
@@ -598,11 +599,11 @@ class AuthService {
 
 		const existingProject = await this.db?.get(this.PROJECT_STORE, project.id);
 		if (!existingProject) {
-			throw new Error('Project not found');
+			throw new Error(t('Project not found'));
 		}
 
 		if (existingProject.ownerId !== this.currentUser?.id) {
-			throw new Error('You do not have permission to update this project');
+			throw new Error(t('You do not have permission to update this project'));
 		}
 
 		const updatedProject: Project = {
@@ -626,7 +627,7 @@ class AuthService {
 		if (!this.db) await this.initialize();
 
 		if (requireAuth && !this.currentUser) {
-			throw new Error('User not authenticated');
+			throw new Error(t('User not authenticated'));
 		}
 
 		if (project.id) {
@@ -647,11 +648,11 @@ class AuthService {
 
 		const project = await this.db?.get(this.PROJECT_STORE, id);
 		if (!project) {
-			throw new Error('Project not found');
+			throw new Error(t('Project not found'));
 		}
 
 		if (project.ownerId !== this.currentUser?.id) {
-			throw new Error('You do not have permission to delete this project');
+			throw new Error(t('You do not have permission to delete this project'));
 		}
 
 		await this.db?.delete(this.PROJECT_STORE, id);
@@ -740,11 +741,11 @@ class AuthService {
 
 		const project = await this.db?.get(this.PROJECT_STORE, projectId);
 		if (!project) {
-			throw new Error('Project not found');
+			throw new Error(t('Project not found'));
 		}
 
 		if (project.ownerId !== this.currentUser?.id) {
-			throw new Error('You do not have permission to modify this project');
+			throw new Error(t('You do not have permission to modify this project'));
 		}
 
 		const updatedProject: Project = {

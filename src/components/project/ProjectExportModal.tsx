@@ -92,7 +92,7 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 								{project.description || t('No description')}
 							</div>
 							<div className="export-project-details">
-								{t('Last modified')}: {formatDate(project.updatedAt)}
+								{t(`Last Modified: {lastModified}`, { lastModified: formatDate(project.updatedAt) })}
 							</div>
 						</div>
 					))}

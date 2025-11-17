@@ -7,6 +7,7 @@ import type { Project } from '../../types/projects.ts';
 import ProjectBackupControls from '../backup/ProjectBackupControls';
 import { EditIcon, FolderIcon, StarIcon, TrashIcon, ChevronDownIcon, FileTextIcon, FileIcon } from '../common/Icons.tsx';
 import TypesetterInfo from '../common/TypesetterInfo';
+import { formatDate, formatLastModified } from '@/utils/dateUtils.ts';
 
 interface ProjectCardProps {
   project: Project;
@@ -33,10 +34,6 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 }) => {
   const [isOpenDropdownOpen, setIsOpenDropdownOpen] = useState(false);
   const openDropdownRef = useRef<HTMLDivElement>(null);
-
-  const formatDate = (timestamp: number): string => {
-    return new Date(timestamp).toLocaleDateString();
-  };
 
   const handleSelectionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
@@ -94,7 +91,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     } else if (project.lastOpenedDocId) {
       return t(`Last: Document {docId}`, { docId: project.lastOpenedDocId.slice(0, 8) + '...' });
     }
-    return 'Open Project';
+    return t('Open Project');
   };
 
   const getDropdownContent = () => {
@@ -179,8 +176,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       </p>
 
       <div className="project-meta">
-        <span>{t('Created:')}{formatDate(project.createdAt)}</span>
-        <span>{t('Last Modified:')}{formatDate(project.updatedAt)}</span>
+        <span>{t(`Created: {createdAt}`, { createdAt: formatDate(project.createdAt) })}</span>
+        <span>{t(`Last Modified: {lastModified}`, { lastModified: formatLastModified(project.updatedAt) })}</span>
       </div>
 
       {!isSelectionMode &&

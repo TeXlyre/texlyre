@@ -17,7 +17,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
   isOpen,
   onClose,
   onCommentSubmit,
-  title = 'Add Comment'
+  title = t('Add Comment')
 }) => {
   const [content, setContent] = useState('');
 

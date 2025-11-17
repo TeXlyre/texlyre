@@ -26,7 +26,7 @@ const GuestUpgradeBanner: React.FC<GuestUpgradeBannerProps> = ({
         const remaining = user.expiresAt - now;
 
         if (remaining <= 0) {
-          setTimeRemaining('Expired');
+          setTimeRemaining(t('Expired'));
           return;
         }
 
@@ -34,9 +34,9 @@ const GuestUpgradeBanner: React.FC<GuestUpgradeBannerProps> = ({
         const minutes = Math.floor(remaining % (1000 * 60 * 60) / (1000 * 60));
 
         if (hours > 0) {
-          setTimeRemaining(`${hours}h ${minutes}m remaining`);
+          setTimeRemaining(t(`{hours}h {minutes}m remaining`, { hours, minutes }));
         } else {
-          setTimeRemaining(`${minutes}m remaining`);
+          setTimeRemaining(t(`{minutes}m remaining`, { minutes }));
         }
       }
     };

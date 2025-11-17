@@ -365,11 +365,10 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
                     <div className="project-details">
                       <div className="project-name">{project.name}</div>
                       <div className="project-description">
-                        {project.description || 'No description'}
+                        {project.description || t('No description')}
                       </div>
                       <div className="project-meta">
-                        <span>{t('Last modified:')}
-                          {formatDate(project.lastModified)}
+                        <span>{t(`Last Modified: {lastModified}`, { lastModified: formatDate(project.lastModified) })}
                         </span>
                         <span>{getOwnershipText(project)}</span>
                       </div>

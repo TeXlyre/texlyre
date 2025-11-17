@@ -23,6 +23,7 @@ import type { DocumentList } from '../../types/documents.ts';
 import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
 import { copyCleanTextToClipboard } from '../../utils/clipboardUtils';
 import { processTextSelection } from '../../utils/fileCommentUtils.ts';
+import { formatDate } from '../../utils/dateUtils';
 import { arrayBufferToString } from '../../utils/fileUtils';
 import { TextDiffUtils } from '../../utils/textDiffUtils';
 import CommentPanel from '../comments/CommentPanel';
@@ -289,24 +290,24 @@ const EditorContent: React.FC<{
     const tooltipInfo =
       isEditingFile && fileName ?
         [
-          t('File: {fileName}', { fileName }),
-          t('Path: {path}', { path: filePath || fileInfo.filePath }),
-          t('Mode: {mode}', { mode: isViewOnly ? t('Read-only') : t('Editing') }),
-          linkedDocumentId ? t('Linked to document: {documentId}', { documentId: linkedDocumentId }) : '',
-          t('MIME Type: {mimeType}', { mimeType: fileInfo.mimeType || 'text/plain' }),
-          t('Size: {size}', { size: fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : t('Unknown') }),
-          t('Last Modified: {lastModified}', { lastModified: fileInfo.lastModified ? new Date(fileInfo.lastModified).toLocaleString() : t('Unknown') })
+          t(`File: {fileName}`, { fileName }),
+          t(`Path: {path}`, { path: filePath || fileInfo.filePath }),
+          t(`Mode: {mode}`, { mode: isViewOnly ? t('Read-only') : t('Editing') }),
+          linkedDocumentId ? t(`Linked to document: {documentId}`, { documentId: linkedDocumentId }) : '',
+          t(`MIME Type: {mimeType}`, { mimeType: fileInfo.mimeType || 'text/plain' }),
+          t(`Size: {size}`, { size: fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : t('Unknown') }),
+          t(`Last Modified: {lastModified}`, { lastModified: fileInfo.lastModified ? formatDate(fileInfo.lastModified) : t('Unknown') })
         ] :
 
         !isEditingFile && documentId && documents ?
           [
-            t('Document: {documentName}', { documentName: documents.find((d) => d.id === documentId)?.name || t('Untitled') }),
-            linkedFileInfo ? t('Linked File: {fileName}', { fileName: linkedFileInfo.fileName }) : '',
+            t(`Document: {documentName}`, { documentName: documents.find((d) => d.id === documentId)?.name || t('Untitled') }),
+            linkedFileInfo ? t(`Linked File: {fileName}`, { fileName: linkedFileInfo.fileName }) : '',
             linkedFileInfo ?
-              t('Path: {path}', { path: linkedFileInfo.filePath }) :
+              t(`Path: {path}`, { path: linkedFileInfo.filePath }) :
               t('No linked file'),
-            t('Mode: Collaborative editing'),
-            t('Type: Text document')
+            t(`Mode: Collaborative editing`),
+            t(`Type: Text document`)
           ] :
 
           '';

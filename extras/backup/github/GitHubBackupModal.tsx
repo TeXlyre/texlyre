@@ -535,7 +535,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                           type="text"
                           value={commitMessage}
                           onChange={(e) => setCommitMessage(e.target.value)}
-                          placeholder={`TeXlyre backup: ${new Date().toLocaleDateString()}`}
+                          placeholder={t(`TeXlyre Backup: {date}`, { date: new Date().toLocaleDateString() })}
                           style={{
                             width: '100%',
                             padding: '0.5rem',
@@ -558,8 +558,8 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
 
                             <GitPushIcon />
                             {status.status === 'syncing' || isOperating ?
-                              'Pushing...' :
-                              'Push To GH'}
+                              t('Pushing...') :
+                              t('Push To GH')}
                           </button>
                           <button
                             className="button secondary"
@@ -570,8 +570,8 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
 
                             <ImportIcon />
                             {status.status === 'syncing' || isOperating ?
-                              'Importing...' :
-                              'Import From GH'}
+                              t('Importing...') :
+                              t('Import From GH')}
                           </button>
                         </div>
                         <div className="secondary-actions">

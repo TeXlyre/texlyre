@@ -73,7 +73,7 @@ const ProjectDeleteModal: React.FC<ProjectDeleteModalProps> = ({
 								{project.description || t('No description')}
 							</div>
 							<div className="delete-project-details">
-								{t('Last modified')}: {formatDate(project.updatedAt)}
+								{t(`Last Modified: {lastModified}`, { lastModified: formatDate(project.updatedAt) })}
 							</div>
 						</div>
 					))}

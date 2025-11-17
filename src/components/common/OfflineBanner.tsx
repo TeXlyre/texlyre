@@ -3,6 +3,7 @@ import { t } from '@/i18n';
 import type React from 'react';
 
 import { useOffline } from '../../hooks/useOffline';
+import { formatDate } from '../../utils/dateUtils';
 import { OfflineIcon } from './Icons';
 
 const OfflineBanner: React.FC = () => {
@@ -11,8 +12,8 @@ const OfflineBanner: React.FC = () => {
 	if (!isOfflineMode) return null;
 
 	const lastOnlineText = lastOnline ?
-		new Date(lastOnline).toLocaleString() :
-		'Unknown';
+		formatDate(lastOnline) :
+		t('Unknown');
 
 	return (
 		<div className="offline-banner">

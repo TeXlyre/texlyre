@@ -143,7 +143,7 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 									{project.description || t('No description')}
 								</div>
 								<div className="project-meta">
-									<span>{t('Last modified')}: {formatDate(project.lastModified)}</span>
+									<span>{t(`Last Modified: {lastModified}`, { lastModified: formatDate(project.lastModified) })}</span>
 								</div>
 							</div>
 						</div>

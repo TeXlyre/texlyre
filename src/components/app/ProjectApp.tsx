@@ -469,8 +469,6 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
               className="error-message"
               style={{
                 padding: '1rem',
-                color: 'red',
-                backgroundColor: 'rgba(255,0,0,0.1)',
                 margin: '1rem',
                 borderRadius: '4px'
               }}>
@@ -584,9 +582,8 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
         size="small">
 
         <div className="delete-confirmation">
-          <p>{t('Are you sure you want to delete the project "')}
-            {currentProject?.name}{t('"?')}
-
+          <p>{t('Are you sure you want to delete the project \"{projectName}\"?',
+            { projectName: currentProject?.name || '' })}
           </p>
           <p className="warning-message">{t('This action cannot be undone.')}</p>
 

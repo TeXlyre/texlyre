@@ -15,7 +15,7 @@ const CommentPanel: React.FC<CommentPanelProps> = ({
   className = '',
   onLineClick
 }) => {
-  const { comments, showComments, toggleComments } = useComments();
+  const { comments, showComments } = useComments();
   const [activeTab, setActiveTab] = useState<'list' | 'resolved'>('list');
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredComments, setFilteredComments] = useState(comments);
@@ -91,10 +91,10 @@ const CommentPanel: React.FC<CommentPanelProps> = ({
         {filteredComments.length === 0 ?
           <div className="no-comments">
             {searchQuery ?
-              'No comments found matching the search criteria' :
+              t('No comments found matching the search criteria') :
               activeTab === 'resolved' ?
-                'No resolved comments yet.' :
-                'No active comments.'}
+                t('No resolved comments yet.') :
+                t('No active comments.')}
           </div> :
 
           <div className={`comments-${activeTab}`}>
