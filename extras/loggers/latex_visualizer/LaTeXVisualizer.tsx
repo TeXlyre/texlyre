@@ -456,7 +456,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 										<span className="error-icon">
 											{getErrorTypeIcon(error.type)}
 										</span>
-										<span className="error-type-text">{error.type}</span>
+										<span className="error-type-text">{t(error.type)}</span>
 									</span>
 									<div className="error-location">
 										{error.file &&

@@ -191,12 +191,12 @@ export const ContentFormatterProvider: React.FC<ContentFormatterProviderProps> =
     const operationId = `format-latex-${nanoid()}`;
 
     try {
-      contentFormatterService.showLoadingNotification('Formatting LaTeX content...', operationId, 'latex');
+      contentFormatterService.showLoadingNotification(t('Formatting LaTeX content...'), operationId, 'latex');
 
       const result = await contentFormatterService.formatLatex(content, formatOptions);
 
       if (result.success && result.output) {
-        contentFormatterService.showSuccessNotification('Content formatted successfully', {
+        contentFormatterService.showSuccessNotification(t('Content formatted successfully'), {
           operationId,
           duration: 2000,
           type: 'latex'
@@ -230,12 +230,12 @@ export const ContentFormatterProvider: React.FC<ContentFormatterProviderProps> =
     const operationId = `format-typst-${nanoid()}`;
 
     try {
-      contentFormatterService.showLoadingNotification('Formatting Typst content...', operationId, 'typst');
+      contentFormatterService.showLoadingNotification(t('Formatting Typst content...'), operationId, 'typst');
 
       const result = await contentFormatterService.formatTypst(content, formatOptions);
 
       if (result.success && result.output) {
-        contentFormatterService.showSuccessNotification('Content formatted successfully', {
+        contentFormatterService.showSuccessNotification(t('Content formatted successfully'), {
           operationId,
           duration: 2000,
           type: 'typst'

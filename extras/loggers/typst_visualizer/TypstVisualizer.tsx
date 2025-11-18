@@ -227,7 +227,7 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
                     <span className="diagnostic-icon">
                       {getTypeIcon(diagnostic.type)}
                     </span>
-                    <span className="diagnostic-type-text">{diagnostic.type}</span>
+                    <span className="diagnostic-type-text">{t(diagnostic.type)}</span>
                   </span>
                   <div className="diagnostic-location">
                     {diagnostic.file &&
