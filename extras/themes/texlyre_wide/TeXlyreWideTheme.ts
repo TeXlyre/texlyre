@@ -1,9 +1,10 @@
 // extras/themes/texlyre_wide/TeXlyreWideTheme.ts
+import { t } from '@/i18n';
 import type {
 	ThemeLayout,
 	ThemePlugin,
 	ThemeVariant,
-} from '../../../src/plugins/PluginInterface';
+} from '@/plugins/PluginInterface';
 import { themes } from './colors';
 import './styles/index.css';
 
@@ -40,14 +41,14 @@ const createTeXlyreWideTheme = (): ThemePlugin => {
 		version: '2.0.0',
 		type: 'theme',
 		themes: [
-			{ id: 'light', name: 'Light', isDark: false },
-			{ id: 'dark', name: 'Dark', isDark: true },
-			{ id: 'system', name: 'System', isDark: false },
-			{ id: 'monokai', name: 'Monokai', isDark: true },
-			{ id: 'tomorrow_night_blue', name: 'Tomorrow Night Blue', isDark: true },
-			{ id: 'github_light', name: 'GitHub Light', isDark: false },
-			{ id: 'solarized_light', name: 'Solarized Light', isDark: false },
-			{ id: 'atom_light', name: 'Atom Light', isDark: false },
+			{ id: 'light', name: t('Light'), isDark: false },
+			{ id: 'dark', name: t('Dark'), isDark: true },
+			{ id: 'system', name: t('System'), isDark: false },
+			{ id: 'monokai', name: t('Monokai'), isDark: true },
+			{ id: 'tomorrow_night_blue', name: t('Tomorrow Night Blue'), isDark: true },
+			{ id: 'github_light', name: t('GitHub Light'), isDark: false },
+			{ id: 'solarized_light', name: t('Solarized Light'), isDark: false },
+			{ id: 'atom_light', name: t('Atom Light'), isDark: false },
 		],
 
 		applyTheme(variantId: string): boolean {

@@ -1,9 +1,9 @@
 // extras/lsp/jabref/JabRefLSPPlugin.ts
-import type { LSPPlugin, LSPPanelProps } from '../../../src/plugins/PluginInterface';
-import type { LSPRequest, LSPResponse, LSPNotification } from '../../../src/types/lsp';
+import type { LSPPlugin, LSPPanelProps } from '@/plugins/PluginInterface';
+import type { LSPRequest, LSPResponse, LSPNotification } from '@/types/lsp';
 import { JabRefIcon } from './Icon';
-import { jabrefLSPSettings } from './settings';
-import { bibliographyImportService } from '../../../src/services/BibliographyImportService';
+import { getJabrefLSPSettings } from './settings';
+import { bibliographyImportService } from '@/services/BibliographyImportService';
 
 export const PLUGIN_NAME = 'JabRef LSP';
 export const PLUGIN_VERSION = '0.1.0';
@@ -21,7 +21,9 @@ class JabRefLSPPlugin implements LSPPlugin {
 	version = PLUGIN_VERSION;
 	type = 'lsp' as const;
 	icon = JabRefIcon;
-	settings = jabrefLSPSettings;
+	get settings() {
+		return getJabrefLSPSettings();
+	};
 
 	private connectionStatus: 'connected' | 'connecting' | 'disconnected' | 'error' = 'disconnected';
 	private statusMessage = '';

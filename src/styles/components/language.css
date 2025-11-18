@@ -1,0 +1,173 @@
+.settings-language {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.settings-language .language-selector-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.settings-language .searchable-language-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.settings-language .searchable-language-dropdown .dropdown-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-sm);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--pico-background);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: border-color var(--transition-normal);
+}
+
+.settings-language .searchable-language-dropdown .dropdown-trigger:hover {
+    border-color: var(--pico-primary);
+}
+
+.settings-language .searchable-language-dropdown .selected-language {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    flex: 1;
+}
+
+.settings-language .searchable-language-dropdown .language-text {
+    font-size: 0.9rem;
+}
+
+.settings-language .searchable-language-dropdown .coverage-inline {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.settings-language .searchable-language-dropdown .coverage-bar-small {
+    flex: 1;
+    height: 6px;
+    background-color: var(--pico-secondary-background);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.settings-language .searchable-language-dropdown .coverage-fill-small {
+    height: 100%;
+    border-radius: 3px;
+    transition: width var(--transition-normal);
+}
+
+.settings-language .searchable-language-dropdown .coverage-percentage-small {
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 35px;
+    text-align: right;
+}
+
+.settings-language .searchable-language-dropdown .dropdown-arrow {
+    color: var(--pico-secondary);
+    margin-left: var(--space-sm);
+}
+
+.settings-language .searchable-language-dropdown .dropdown-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background-color: var(--pico-background);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    z-index: 1000;
+    max-height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.settings-language .searchable-language-dropdown .dropdown-search {
+    padding: var(--space-sm);
+    border-bottom: 1px solid var(--accent-border);
+}
+
+.settings-language .searchable-language-dropdown .dropdown-search-input {
+    width: 100%;
+    padding: var(--space-sm);
+    border: 1px solid var(--accent-border) !important;
+    border-radius: var(--radius-sm) !important;
+    background-color: var(--pico-secondary-background) !important;
+    color: var(--text-color) !important;
+    font-size: 0.85rem !important;
+}
+
+.settings-language .searchable-language-dropdown .dropdown-options {
+    overflow-y: auto;
+    max-height: 340px;
+}
+
+.settings-language .searchable-language-dropdown .dropdown-option {
+    padding: var(--space-sm);
+    cursor: pointer;
+    border-bottom: 1px solid var(--accent-border);
+    transition: background-color var(--transition-normal);
+}
+
+.settings-language .searchable-language-dropdown .dropdown-option:last-child {
+    border-bottom: none;
+}
+
+.settings-language .searchable-language-dropdown .dropdown-option:hover {
+    background-color: var(--pico-primary-focus);
+}
+
+.settings-language .searchable-language-dropdown .dropdown-option.selected {
+    background-color: var(--pico-primary-focus);
+}
+
+.settings-language .searchable-language-dropdown .option-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-xs);
+}
+
+.settings-language .searchable-language-dropdown .option-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.settings-language .searchable-language-dropdown .option-coverage {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.settings-language .searchable-language-dropdown .coverage-bar-option {
+    height: 6px;
+    background-color: var(--pico-secondary-background);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: var(--space-xs);
+}
+
+.settings-language .searchable-language-dropdown .coverage-fill-option {
+    height: 100%;
+    border-radius: 3px;
+    transition: width var(--transition-normal);
+}
+
+.settings-language .searchable-language-dropdown .option-details {
+    font-size: 0.7rem;
+    color: var(--pico-secondary);
+}
+
+.settings-language .searchable-language-dropdown .no-options {
+    padding: var(--space-md);
+    text-align: center;
+    color: var(--pico-secondary);
+    font-size: 0.85rem;
+}

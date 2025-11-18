@@ -119,6 +119,16 @@
 	color: var(--pico-primary);
 }
 
+.auth-header-controls {
+	position: absolute;
+	right: 0;
+	top: 0;
+	display: flex;
+	flex-direction: row;
+	gap: 0.5rem;
+	align-items: center;
+}
+
 .auth-form-container {
 	width: 100%;
 }
@@ -130,12 +140,11 @@
 	color: var(--text-color);
 }
 
-.auth-theme-toggle {
-	position: absolute;
-	top: 0;
-	right: 0;
+.auth-theme-toggle,
+.auth-language-toggle {
 	background: none;
 	border: none;
+	margin: 0;
 	padding: var(--space-xs);
 	cursor: pointer;
 	color: var(--pico-secondary);
@@ -143,9 +152,26 @@
 	transition: opacity var(--transition-normal);
 }
 
-.auth-theme-toggle:hover {
+.auth-theme-toggle:hover,
+.auth-language-toggle:hover {
 	opacity: 1;
 	background-color: var(--pico-primary-focus);
+}
+
+
+.language-dropdown-menu {
+	position: absolute;
+	top: calc(100% + 0.5rem);
+	right: 0;
+	background-color: var(--pico-secondary-background);
+	border: 1px solid var(--border-color);
+	border-radius: 0.5rem;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	min-width: 250px;
+	max-width: 300px;
+	max-height: 400px;
+	overflow: hidden;
+	z-index: 1000;
 }
 
 .auth-form {

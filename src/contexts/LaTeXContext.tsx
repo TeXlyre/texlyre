@@ -1,13 +1,15 @@
 // src/contexts/LaTeXContext.tsx
+import { t } from '@/i18n';
 import type React from 'react';
 import {
-	type ReactNode,
-	createContext,
-	useEffect,
-	useCallback,
-	useRef,
-	useState,
-} from 'react';
+  type ReactNode,
+  createContext,
+  useEffect,
+  useCallback,
+  useRef,
+  useState
+} from
+  'react';
 
 import { useFileTree } from '../hooks/useFileTree';
 import { useSettings } from '../hooks/useSettings';
@@ -19,353 +21,353 @@ import { pdfWindowService } from '../services/PdfWindowService';
 export const LaTeXContext = createContext<LaTeXContextType | null>(null);
 
 interface LaTeXProviderProps {
-	children: ReactNode;
+  children: ReactNode;
 }
 
 export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
-	const { fileTree, refreshFileTree } = useFileTree();
-	const { registerSetting, getSetting } = useSettings();
-	const [isCompiling, setIsCompiling] = useState<boolean>(false);
-	const [hasAutoCompiled, setHasAutoCompiled] = useState(false);
-	const [compileError, setCompileError] = useState<string | null>(null);
-	const [compiledPdf, setCompiledPdf] = useState<Uint8Array | null>(null);
-	const [compileLog, setCompileLog] = useState<string>('');
-	const [currentView, setCurrentView] = useState<'log' | 'pdf'>('log');
-	const [latexEngine, setLatexEngine] = useState<'pdftex' | 'xetex' | 'luatex'>(
-		'pdftex',
-	);
-	const [activeCompiler, setActiveCompiler] = useState<string | null>(null);
-	const settingsRegistered = useRef(false);
+  const { fileTree, refreshFileTree } = useFileTree();
+  const { registerSetting, getSetting } = useSettings();
+  const [isCompiling, setIsCompiling] = useState<boolean>(false);
+  const [hasAutoCompiled, setHasAutoCompiled] = useState(false);
+  const [compileError, setCompileError] = useState<string | null>(null);
+  const [compiledPdf, setCompiledPdf] = useState<Uint8Array | null>(null);
+  const [compileLog, setCompileLog] = useState<string>('');
+  const [currentView, setCurrentView] = useState<'log' | 'pdf'>('log');
+  const [latexEngine, setLatexEngine] = useState<'pdftex' | 'xetex' | 'luatex'>(
+    'pdftex'
+  );
+  const [activeCompiler, setActiveCompiler] = useState<string | null>(null);
+  const settingsRegistered = useRef(false);
 
-	useEffect(() => {
-		const handleCompilerActive = (event: CustomEvent) => {
-			setActiveCompiler(event.detail.type);
-		};
+  useEffect(() => {
+    const handleCompilerActive = (event: CustomEvent) => {
+      setActiveCompiler(event.detail.type);
+    };
 
-		document.addEventListener('compiler-active', handleCompilerActive as EventListener);
-		return () => {
-			document.removeEventListener('compiler-active', handleCompilerActive as EventListener);
-		};
-	}, []);
+    document.addEventListener('compiler-active', handleCompilerActive as EventListener);
+    return () => {
+      document.removeEventListener('compiler-active', handleCompilerActive as EventListener);
+    };
+  }, []);
 
-	useEffect(() => {
-		if (settingsRegistered.current) return;
-		settingsRegistered.current = true;
+  useEffect(() => {
+    if (settingsRegistered.current) return;
+    settingsRegistered.current = true;
 
-		const initialEngine =
-			(getSetting('latex-engine')?.value as 'pdftex' | 'xetex' | 'luatex') ??
-			'pdftex';
-		const initialTexliveEndpoint =
-			(getSetting('latex-texlive-endpoint')?.value as string) ??
-			'http://texlive.localhost:8082';
-		const initialStoreCache =
-			(getSetting('latex-store-cache')?.value as boolean) ?? true;
-		const initialStoreWorkingDirectory =
-			(getSetting('latex-store-working-directory')?.value as boolean) ?? false;
-		const initialAutoCompile =
-			(getSetting('latex-auto-compile-on-open')?.value as boolean) ?? false;
-		const initialAutoNavigate =
-			(getSetting('latex-auto-navigate-to-main')?.value as string) ?? 'conditional';
+    const initialEngine =
+      getSetting('latex-engine')?.value as 'pdftex' | 'xetex' | 'luatex' ??
+      'pdftex';
+    const initialTexliveEndpoint =
+      getSetting('latex-texlive-endpoint')?.value as string ??
+      'http://texlive.localhost:8082';
+    const initialStoreCache =
+      getSetting('latex-store-cache')?.value as boolean ?? true;
+    const initialStoreWorkingDirectory =
+      getSetting('latex-store-working-directory')?.value as boolean ?? false;
+    const initialAutoCompile =
+      getSetting('latex-auto-compile-on-open')?.value as boolean ?? false;
+    const initialAutoNavigate =
+      getSetting('latex-auto-navigate-to-main')?.value as string ?? 'conditional';
 
-		setLatexEngine(initialEngine);
+    setLatexEngine(initialEngine);
 
-		registerSetting({
-			id: 'latex-engine',
-			category: 'LaTeX',
-			subcategory: 'Compilation',
-			type: 'select',
-			label: 'LaTeX Engine',
-			description: 'Choose the LaTeX engine for compilation',
-			defaultValue: initialEngine,
-			options: [
-				{ label: 'pdfTeX', value: 'pdftex' },
-				{ label: 'XeTeX', value: 'xetex' },
-				// { label: "LuaTeX", value: "luatex" },
-			],
-			onChange: (value) => {
-				handleSetLatexEngine(value as 'pdftex' | 'xetex' | 'luatex');
-			},
-		});
+    registerSetting({
+      id: 'latex-engine',
+      category: t("Compilation"),
+      subcategory: t("LaTeX"),
+      type: 'select',
+      label: t("LaTeX Engine"),
+      description: t("Choose the LaTeX engine for compilation"),
+      defaultValue: initialEngine,
+      options: [
+        { label: t("pdfTeX"), value: 'pdftex' },
+        { label: t("XeTeX"), value: 'xetex' }
+        // { label: "LuaTeX", value: "luatex" },
+      ],
+      onChange: (value) => {
+        handleSetLatexEngine(value as 'pdftex' | 'xetex' | 'luatex');
+      }
+    });
 
-		registerSetting({
-			id: 'latex-texlive-endpoint',
-			category: 'LaTeX',
-			subcategory: 'Compilation',
-			type: 'text',
-			label: 'TexLive server endpoint',
-			description: 'URL endpoint for TexLive package downloads',
-			defaultValue: initialTexliveEndpoint,
-			onChange: (value) => {
-				latexService.setTexliveEndpoint(value as string);
-			},
-		});
+    registerSetting({
+      id: 'latex-texlive-endpoint',
+      category: t("Compilation"),
+      subcategory: t("LaTeX"),
+      type: 'text',
+      label: t("TexLive server endpoint"),
+      description: t("URL endpoint for TexLive package downloads"),
+      defaultValue: initialTexliveEndpoint,
+      onChange: (value) => {
+        latexService.setTexliveEndpoint(value as string);
+      }
+    });
 
-		registerSetting({
-			id: 'latex-auto-compile-on-open',
-			category: 'LaTeX',
-			subcategory: 'Compilation',
-			type: 'checkbox',
-			label: 'Auto-compile on project open',
-			description: 'Automatically compile LaTeX when opening a project',
-			defaultValue: initialAutoCompile,
-		});
+    registerSetting({
+      id: 'latex-auto-compile-on-open',
+      category: t("Compilation"),
+      subcategory: t("LaTeX"),
+      type: 'checkbox',
+      label: t("Auto-compile on project open"),
+      description: t("Automatically compile LaTeX when opening a project"),
+      defaultValue: initialAutoCompile
+    });
 
-		registerSetting({
-			id: 'latex-auto-navigate-to-main',
-			category: 'LaTeX',
-			subcategory: 'Compilation',
-			type: 'select',
-			label: 'Auto-navigate to main file on compile',
-			description: 'Control when to automatically navigate to the main LaTeX file during compilation',
-			defaultValue: initialAutoNavigate,
-			options: [
-				{ label: 'Only when no LaTeX file is open', value: 'conditional' },
-				{ label: 'Always navigate to main file', value: 'always' },
-				{ label: 'Never navigate to main file', value: 'never' },
-			],
-		});
+    registerSetting({
+      id: 'latex-auto-navigate-to-main',
+      category: t("Compilation"),
+      subcategory: t("LaTeX"),
+      type: 'select',
+      label: t("Auto-navigate to main file on compile"),
+      description: t("Control when to automatically navigate to the main LaTeX file during compilation"),
+      defaultValue: initialAutoNavigate,
+      options: [
+        { label: t("Only when no LaTeX file is open"), value: 'conditional' },
+        { label: t("Always navigate to main file"), value: 'always' },
+        { label: t("Never navigate to main file"), value: 'never' }]
 
-		registerSetting({
-			id: 'latex-store-cache',
-			category: 'LaTeX',
-			subcategory: 'Compilation',
-			type: 'checkbox',
-			label: 'Store compilation cache',
-			description: 'Save TeX cache files for faster subsequent compilations',
-			defaultValue: initialStoreCache,
-			onChange: (value) => {
-				latexService.setStoreCache(value as boolean);
-			},
-		});
+    });
 
-		registerSetting({
-			id: 'latex-store-working-directory',
-			category: 'LaTeX',
-			subcategory: 'Compilation',
-			type: 'checkbox',
-			label: 'Store working directory',
-			description: 'Save all working directory files after compilation',
-			defaultValue: initialStoreWorkingDirectory,
-			onChange: (value) => {
-				latexService.setStoreWorkingDirectory(value as boolean);
-			},
-		});
+    registerSetting({
+      id: 'latex-store-cache',
+      category: t("Compilation"),
+      subcategory: t("LaTeX"),
+      type: 'checkbox',
+      label: t("Store compilation cache"),
+      description: t("Save TeX cache files for faster subsequent compilations"),
+      defaultValue: initialStoreCache,
+      onChange: (value) => {
+        latexService.setStoreCache(value as boolean);
+      }
+    });
 
-		registerSetting({
-			id: 'latex-notifications',
-			category: 'LaTeX',
-			subcategory: 'Compilation',
-			type: 'checkbox',
-			label: 'Show compilation notifications',
-			description: 'Display notifications for LaTeX compilation activities',
-			defaultValue: true,
-			onChange: () => {
-				// Notification setting changes are handled by the service
-			},
-		});
+    registerSetting({
+      id: 'latex-store-working-directory',
+      category: t("Compilation"),
+      subcategory: t("LaTeX"),
+      type: 'checkbox',
+      label: t("Store working directory"),
+      description: t("Save all working directory files after compilation"),
+      defaultValue: initialStoreWorkingDirectory,
+      onChange: (value) => {
+        latexService.setStoreWorkingDirectory(value as boolean);
+      }
+    });
 
-		latexService.setTexliveEndpoint(initialTexliveEndpoint);
-		latexService.setStoreCache(initialStoreCache);
-		latexService.setStoreWorkingDirectory(initialStoreWorkingDirectory);
-	}, [registerSetting, getSetting]);
+    registerSetting({
+      id: 'latex-notifications',
+      category: t("Compilation"),
+      subcategory: t("LaTeX"),
+      type: 'checkbox',
+      label: t("Show compilation notifications"),
+      description: t("Display notifications for LaTeX compilation activities"),
+      defaultValue: true,
+      onChange: () => {
 
-	useEffect(() => {
-		latexService.initialize(latexEngine).catch(console.error);
+        // Notification setting changes are handled by the service
+      }
+    });
 
-		return latexService.addStatusListener(() => {
-			setIsCompiling(latexService.getStatus() === 'compiling');
-		});
-	}, [latexEngine]);
+    latexService.setTexliveEndpoint(initialTexliveEndpoint);
+    latexService.setStoreCache(initialStoreCache);
+    latexService.setStoreWorkingDirectory(initialStoreWorkingDirectory);
+  }, [registerSetting, getSetting]);
 
-	const handleSetLatexEngine = async (
-		engine: 'pdftex' | 'xetex' | 'luatex',
-	) => {
-		if (engine === latexEngine) return;
+  useEffect(() => {
+    latexService.initialize(latexEngine).catch(console.error);
 
-		setLatexEngine(engine);
-		try {
-			await latexService.setEngine(engine);
-		} catch (error) {
-			console.error(`Failed to switch to ${engine} engine:`, error);
-			setCompileError(`Failed to switch to ${engine} engine`);
-		}
-	};
+    return latexService.addStatusListener(() => {
+      setIsCompiling(latexService.getStatus() === 'compiling');
+    });
+  }, [latexEngine]);
 
-	const getProjectName = (): string => {
-		// Try to get project name from document title or URL
-		if (document.title && document.title !== 'TeXlyre') {
-			return document.title;
-		}
+  const handleSetLatexEngine = async (
+    engine: 'pdftex' | 'xetex' | 'luatex') => {
+    if (engine === latexEngine) return;
 
-		// Fallback to extracting from URL hash
-		const hash = window.location.hash;
-		if (hash.includes('yjs:')) {
-			const projectId = hash.split('yjs:')[1].split('&')[0];
-			return `Project ${projectId.substring(0, 8)}`;
-		}
+    setLatexEngine(engine);
+    try {
+      await latexService.setEngine(engine);
+    } catch (error) {
+      console.error(`Failed to switch to ${engine} engine:`, error);
+      setCompileError(`Failed to switch to ${engine} engine`);
+    }
+  };
 
-		return 'LaTeX Project';
-	};
+  const getProjectName = (): string => {
+    // Try to get project name from document title or URL
+    if (document.title && document.title !== 'TeXlyre') {
+      return document.title;
+    }
 
-	const compileDocument = async (mainFileName: string): Promise<void> => {
-		if (!latexService.isReady()) {
-			await latexService.initialize(latexEngine);
-		}
+    // Fallback to extracting from URL hash
+    const hash = window.location.hash;
+    if (hash.includes('yjs:')) {
+      const projectId = hash.split('yjs:')[1].split('&')[0];
+      return `Project ${projectId.substring(0, 8)}`;
+    }
 
-		setIsCompiling(true);
-		setCompileError(null);
-		setActiveCompiler('latex');
+    return 'LaTeX Project';
+  };
 
-		try {
-			const result = await latexService.compileLaTeX(mainFileName, fileTree);
+  const compileDocument = async (mainFileName: string): Promise<void> => {
+    if (!latexService.isReady()) {
+      await latexService.initialize(latexEngine);
+    }
 
-			setCompileLog(result.log);
-			if (result.status === 0 && result.pdf) {
-				setCompiledPdf(result.pdf);
-				setCurrentView('pdf');
+    setIsCompiling(true);
+    setCompileError(null);
+    setActiveCompiler('latex');
 
-				// Send PDF to window if open
-				const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx)$/i, '.pdf') || 'output.pdf';
-				const projectName = getProjectName();
+    try {
+      const result = await latexService.compileLaTeX(mainFileName, fileTree);
 
-				pdfWindowService.sendPdfUpdate(
-					result.pdf,
-					fileName,
-					projectName
-				);
-			} else {
-				setCompileError('Compilation failed');
-				setCurrentView('log');
+      setCompileLog(result.log);
+      if (result.status === 0 && result.pdf) {
+        setCompiledPdf(result.pdf);
+        setCurrentView('pdf');
 
-				// Send compile status to window
-				pdfWindowService.sendCompileResult(result.status, result.log);
-			}
+        // Send PDF to window if open
+        const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx)$/i, '.pdf') || 'output.pdf';
+        const projectName = getProjectName();
 
-			await refreshFileTree();
-		} catch (error) {
-			setCompileError(error instanceof Error ? error.message : 'Unknown error');
-			setCurrentView('log');
+        pdfWindowService.sendPdfUpdate(
+          result.pdf,
+          fileName,
+          projectName
+        );
+      } else {
+        setCompileError('Compilation failed');
+        setCurrentView('log');
 
-			// Send error to window
-			pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : 'Unknown error');
-		} finally {
-			setIsCompiling(false);
-		}
-	};
+        // Send compile status to window
+        pdfWindowService.sendCompileResult(result.status, result.log);
+      }
 
-	const triggerAutoCompile = useCallback(() => {
-		const hashUrl = window.location.hash.substring(1);
-		const fragments = parseUrlFragments(hashUrl);
+      await refreshFileTree();
+    } catch (error) {
+      setCompileError(error instanceof Error ? error.message : 'Unknown error');
+      setCurrentView('log');
 
-		if (fragments.compile) {
-			const cleanUrl = hashUrl.replace(/&compile:[^&]*/, '');
-			window.location.hash = cleanUrl;
+      // Send error to window
+      pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : 'Unknown error');
+    } finally {
+      setIsCompiling(false);
+    }
+  };
 
-			const engine = fragments.compile as 'pdftex' | 'xetex' | 'luatex';
-			if (['pdftex', 'xetex', 'luatex'].includes(engine)) {
-				handleSetLatexEngine(engine).then(() => {
-					document.dispatchEvent(new CustomEvent('trigger-compile'));
-				});
-				setHasAutoCompiled(true);
-				return;
-			}
-		}
+  const triggerAutoCompile = useCallback(() => {
+    const hashUrl = window.location.hash.substring(1);
+    const fragments = parseUrlFragments(hashUrl);
 
-		const autoCompileEnabled = getSetting('latex-auto-compile-on-open')?.value as boolean ?? false;
-		if (autoCompileEnabled && !hasAutoCompiled) {
-			document.dispatchEvent(new CustomEvent('trigger-compile'));
-			setHasAutoCompiled(true);
-		}
-	}, [getSetting, handleSetLatexEngine, hasAutoCompiled]);
+    if (fragments.compile) {
+      const cleanUrl = hashUrl.replace(/&compile:[^&]*/, '');
+      window.location.hash = cleanUrl;
 
-	const clearCache = async (): Promise<void> => {
-		try {
-			await latexService.clearCacheDirectories();
-			await refreshFileTree();
-		} catch (error) {
-			console.error('Failed to clear cache:', error);
-			setCompileError('Failed to clear cache');
-		}
-	};
+      const engine = fragments.compile as 'pdftex' | 'xetex' | 'luatex';
+      if (['pdftex', 'xetex', 'luatex'].includes(engine)) {
+        handleSetLatexEngine(engine).then(() => {
+          document.dispatchEvent(new CustomEvent('trigger-compile'));
+        });
+        setHasAutoCompiled(true);
+        return;
+      }
+    }
 
-	const compileWithClearCache = async (mainFileName: string): Promise<void> => {
-		if (!latexService.isReady()) {
-			await latexService.initialize(latexEngine);
-		}
+    const autoCompileEnabled = getSetting('latex-auto-compile-on-open')?.value as boolean ?? false;
+    if (autoCompileEnabled && !hasAutoCompiled) {
+      document.dispatchEvent(new CustomEvent('trigger-compile'));
+      setHasAutoCompiled(true);
+    }
+  }, [getSetting, handleSetLatexEngine, hasAutoCompiled]);
 
-		setIsCompiling(true);
-		setCompileError(null);
-		setActiveCompiler('latex');
+  const clearCache = async (): Promise<void> => {
+    try {
+      await latexService.clearCacheDirectories();
+      await refreshFileTree();
+    } catch (error) {
+      console.error('Failed to clear cache:', error);
+      setCompileError('Failed to clear cache');
+    }
+  };
 
-		try {
-			const result = await latexService.clearCacheAndCompile(mainFileName, fileTree);
+  const compileWithClearCache = async (mainFileName: string): Promise<void> => {
+    if (!latexService.isReady()) {
+      await latexService.initialize(latexEngine);
+    }
 
-			setCompileLog(result.log);
-			if (result.status === 0 && result.pdf) {
-				setCompiledPdf(result.pdf);
-				setCurrentView('pdf');
+    setIsCompiling(true);
+    setCompileError(null);
+    setActiveCompiler('latex');
 
-				// Send PDF to window if open
-				const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx)$/i, '.pdf') || 'output.pdf';
-				const projectName = getProjectName();
+    try {
+      const result = await latexService.clearCacheAndCompile(mainFileName, fileTree);
 
-				pdfWindowService.sendPdfUpdate(
-					result.pdf,
-					fileName,
-					projectName
-				);
-			} else {
-				setCompileError('Compilation failed');
-				setCurrentView('log');
+      setCompileLog(result.log);
+      if (result.status === 0 && result.pdf) {
+        setCompiledPdf(result.pdf);
+        setCurrentView('pdf');
 
-				// Send compile status to window
-				pdfWindowService.sendCompileResult(result.status, result.log);
-			}
+        // Send PDF to window if open
+        const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx)$/i, '.pdf') || 'output.pdf';
+        const projectName = getProjectName();
 
-			await refreshFileTree();
-		} catch (error) {
-			setCompileError(error instanceof Error ? error.message : 'Unknown error');
-			setCurrentView('log');
+        pdfWindowService.sendPdfUpdate(
+          result.pdf,
+          fileName,
+          projectName
+        );
+      } else {
+        setCompileError('Compilation failed');
+        setCurrentView('log');
 
-			// Send error to window
-			pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : 'Unknown error');
-		} finally {
-			setIsCompiling(false);
-		}
-	};
+        // Send compile status to window
+        pdfWindowService.sendCompileResult(result.status, result.log);
+      }
 
-	const stopCompilation = () => {
-		if (isCompiling && latexService.isCompiling()) {
-			latexService.stopCompilation();
-			setIsCompiling(false);
-			setCompileError('Compilation stopped by user');
-		}
-	};
+      await refreshFileTree();
+    } catch (error) {
+      setCompileError(error instanceof Error ? error.message : 'Unknown error');
+      setCurrentView('log');
 
-	const toggleOutputView = () => {
-		setCurrentView(currentView === 'log' ? 'pdf' : 'log');
-	};
+      // Send error to window
+      pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : 'Unknown error');
+    } finally {
+      setIsCompiling(false);
+    }
+  };
 
-	return (
-		<LaTeXContext.Provider
-			value={{
-				isCompiling,
-				compileError,
-				compiledPdf,
-				compileLog,
-				compileDocument,
-				stopCompilation,
-				toggleOutputView,
-				currentView,
-				latexEngine,
-				setLatexEngine: handleSetLatexEngine,
-				clearCache,
-				compileWithClearCache,
-				triggerAutoCompile,
-				activeCompiler,
-			}}
-		>
-			{children}
-		</LaTeXContext.Provider>
-	);
+  const stopCompilation = () => {
+    if (isCompiling && latexService.isCompiling()) {
+      latexService.stopCompilation();
+      setIsCompiling(false);
+      setCompileError('Compilation stopped by user');
+    }
+  };
+
+  const toggleOutputView = () => {
+    setCurrentView(currentView === 'log' ? 'pdf' : 'log');
+  };
+
+  return (
+    <LaTeXContext.Provider
+      value={{
+        isCompiling,
+        compileError,
+        compiledPdf,
+        compileLog,
+        compileDocument,
+        stopCompilation,
+        toggleOutputView,
+        currentView,
+        latexEngine,
+        setLatexEngine: handleSetLatexEngine,
+        clearCache,
+        compileWithClearCache,
+        triggerAutoCompile,
+        activeCompiler
+      }}>
+
+      {children}
+    </LaTeXContext.Provider>);
+
 };

@@ -139,6 +139,17 @@ async function ensureInit() {
     initialized = true;
 }
 
+function getFormatArg(format: string): number {
+    switch (format) {
+        case 'vector':
+            return 0;
+        case 'pdf':
+            return 1;
+        default:
+            throw new Error(`Unsupported format: ${format}`);
+    }
+}
+
 self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
     const data = e.data;
     const { id, type } = data;
@@ -169,7 +180,7 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
         if (format === 'pdf') {
             const compileResult = await compiler.compile({
                 mainFilePath: absoluteMainPath,
-                format: 'pdf',
+                format: getFormatArg('pdf'),
             });
             output = compileResult.result as Uint8Array;
             diagnostics = compileResult.diagnostics || [];

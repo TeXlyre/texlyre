@@ -18,8 +18,8 @@
 // src/main.tsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import './i18n';
 import App from './App';
-
 import { openDB } from 'idb';
 import { authService } from './services/AuthService';
 
@@ -174,6 +174,31 @@ async function initDatabases() {
 	}
 }
 
+function setupDirection() {
+	const settingsKey = 'texlyre-settings';
+	const existingSettings = localStorage.getItem(settingsKey);
+
+	let direction = 'ltr';
+
+	if (existingSettings) {
+		try {
+			const settings = JSON.parse(existingSettings);
+			const directionSetting = settings['text-direction'];
+
+			if (directionSetting === 'auto') {
+				const languageSetting = settings['language'] || 'en';
+				direction = localStorage.getItem('text-direction') || 'ltr';
+			} else if (directionSetting) {
+				direction = directionSetting;
+			}
+		} catch (error) {
+			console.warn('Failed to parse settings for direction:', error);
+		}
+	}
+
+	document.documentElement.setAttribute('dir', direction);
+}
+
 async function startApp() {
 	try {
 		await Promise.all([initDatabases(), authService.initialize(), initUserData()]);
@@ -188,5 +213,6 @@ async function startApp() {
 	);
 }
 
+setupDirection();
 setupGuestCleanup();
 startApp();

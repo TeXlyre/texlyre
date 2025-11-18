@@ -1,4 +1,5 @@
 // src/utils/duplicateKeyDetector.ts
+import { t } from '@/i18n';
 import { fileStorageService } from '../services/FileStorageService';
 import { notificationService } from '../services/NotificationService';
 
@@ -58,15 +59,19 @@ class DuplicateKeyDetector {
 
 		try {
 			notificationService.showLoading(
-				'Detecting duplicate files...',
+				t('Detecting duplicate files...'),
 				operationId,
 			);
 
 			const result = await fileStorageService.autoSanitizeDuplicates();
 
 			if (result && result.removed > 0) {
+				const message = result.removed === 1
+					? t('Fixed {count} duplicate file automatically', { count: result.removed })
+					: t('Fixed {count} duplicate files automatically', { count: result.removed });
+
 				notificationService.showSuccess(
-					`Fixed ${result.removed} duplicate file${result.removed === 1 ? '' : 's'} automatically`,
+					message,
 					{ operationId, duration: 4000 },
 				);
 
@@ -77,7 +82,7 @@ class DuplicateKeyDetector {
 		} catch (error) {
 			console.error('Error auto-sanitizing duplicates:', error);
 			notificationService.showError(
-				'Failed to fix duplicate files automatically',
+				t('Failed to fix duplicate files automatically'),
 				{ operationId },
 			);
 		} finally {

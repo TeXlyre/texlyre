@@ -11,6 +11,7 @@ module.exports = {
         'node_modules/(?!(wasm-latex-tools)/)',
     ],
     moduleNameMapper: {
+        '^@/(.*)$': '<rootDir>/src/$1',
         '^@src/(.*)$': '<rootDir>/src/$1',
         '^@tests/(.*)$': '<rootDir>/tests/$1',
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',

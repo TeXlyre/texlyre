@@ -1,4 +1,5 @@
 // src/components/collab/CollabModal.tsx
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
@@ -21,7 +22,7 @@ const CollabModal: React.FC<CollabModalProps> = ({
 	isConnected,
 	isSyncing,
 	onSyncAll,
-	docUrl,
+	docUrl
 }) => {
 	const [showSettings, setShowSettings] = useState(false);
 
@@ -30,28 +31,28 @@ const CollabModal: React.FC<CollabModalProps> = ({
 			<Modal
 				isOpen={isOpen}
 				onClose={onClose}
-				title="Real-time Document Synchronization"
+				title={t('Real-time Document Synchronization')}
 				icon={SyncIcon}
 				size="medium"
 				headerActions={
 					<button
 						className="modal-close-button"
 						onClick={() => setShowSettings(true)}
-						title="Real-time Document Synchronization Settings"
-					>
+						title={t('Real-time Document Synchronization Settings')}>
+
 						<SettingsIcon />
 					</button>
-				}
-			>
+				}>
+
 				<div className="collab-modal">
 					<div className="collab-status">
 						<div className="status-info">
 							<div className="status-item">
-								<strong>Status:</strong>{' '}
-								{isConnected ? 'Connected' : 'Disconnected'}
+								<strong>{t('Sync Status:')}</strong>{' '}
+								{isConnected ? t('Connected') : t('Disconnected')}
 							</div>
 							<div className="status-item">
-								<strong>Project:</strong>{' '}
+								<strong>{t('Project ID:')}</strong>{' '}
 								{docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl}
 							</div>
 						</div>
@@ -62,10 +63,10 @@ const CollabModal: React.FC<CollabModalProps> = ({
 									<button
 										className="button primary"
 										onClick={onSyncAll}
-										disabled={!isConnected || isSyncing}
-									>
+										disabled={!isConnected || isSyncing}>
+
 										<SyncIcon />
-										{isSyncing ? 'Syncing All...' : 'Sync All Documents'}
+										{isSyncing ? t('Syncing All...') : t('Sync All Documents')}
 									</button>
 								</div>
 							</div>
@@ -73,30 +74,30 @@ const CollabModal: React.FC<CollabModalProps> = ({
 					</div>
 
 					<div className="collab-info">
-						<h3>How Document Collaboration Works</h3>
+						<h3>{t('How Document Collaboration Works')}</h3>
 						<div className="info-content">
-							<p>
-								Real-time document collaboration allows multiple users to edit
-								documents simultaneously:
+							<p>{t('Real-time document collaboration allows multiple users to edit documents simultaneously:')}
+
+
 							</p>
 							<ul>
-								<li>
-									Changes are synchronized in real-time across all connected
-									users
+								<li>{t('Changes are synchronized in real-time across all connected users')}
+
+
 								</li>
-								<li>
-									Each user's cursor position and selections are visible to
-									others
+								<li>{t('Each user\'s cursor position and selections are visible to others')}
+
+
 								</li>
-								<li>
-									Conflict resolution is handled automatically using CRDT (Yjs)
+								<li>{t('Conflict resolution is handled automatically using CRDT (Yjs)')}
+
 								</li>
-								<li>
-									Comments and responses are shared across all collaborators
+								<li>{t('Comments and responses are shared across all collaborators')}
+
 								</li>
-								<li>
-									Chat messages are synchronized for communication with all
-									collaborators
+								<li>{t('Chat messages are synchronized for communication with all collaborators')}
+
+
 								</li>
 							</ul>
 						</div>
@@ -107,11 +108,11 @@ const CollabModal: React.FC<CollabModalProps> = ({
 			<SettingsModal
 				isOpen={showSettings}
 				onClose={() => setShowSettings(false)}
-				initialCategory="Collaboration"
-				initialSubcategory="Real-time Synchronization"
-			/>
-		</>
-	);
+				initialCategory={t("Collaboration")}
+				initialSubcategory={t("Real-time Synchronization")} />
+
+		</>);
+
 };
 
 export default CollabModal;

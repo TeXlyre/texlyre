@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -11,19 +12,20 @@ import {
     ZoomInIcon,
     ZoomOutIcon,
     ExpandIcon,
-    MinimizeIcon,
-} from '../../../src/components/common/Icons';
-import { canvasRendererSettings } from './settings';
-import { useSettings } from '../../../src/hooks/useSettings';
-import { useProperties } from '../../../src/hooks/useProperties';
-import type { RendererProps } from '../../../src/plugins/PluginInterface';
+    MinimizeIcon
+} from
+    '@/components/common/Icons';
+import { getCanvasRendererSettings } from './settings';
+import { useSettings } from '@/hooks/useSettings';
+import { useProperties } from '@/hooks/useProperties';
+import type { RendererProps } from '@/plugins/PluginInterface';
 import { CanvasPageManager } from './CanvasPageManager';
 import './styles.css';
 
 const CanvasRenderer: React.FC<RendererProps> = ({
     content,
     fileName,
-    onDownload,
+    onDownload
 }) => {
     const { getSetting } = useSettings();
     const { getProperty, setProperty, registerProperty } = useProperties();
@@ -50,7 +52,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [fitMode, setFitMode] = useState<'fit-width' | 'fit-height'>('fit-width');
 
-    const canvasRendererEnable = (getSetting('canvas-renderer-enable')?.value as boolean) ?? true;
+    const canvasRendererEnable = getSetting('canvas-renderer-enable')?.value as boolean ?? true;
 
     useEffect(() => {
         console.log('[CanvasRenderer] Component mounted/updated', {
@@ -71,14 +73,14 @@ const CanvasRenderer: React.FC<RendererProps> = ({
             id: 'canvas-renderer-zoom',
             category: 'UI',
             subcategory: 'Canvas Viewer',
-            defaultValue: 1.0,
+            defaultValue: 1.0
         });
 
         registerProperty({
             id: 'canvas-renderer-scroll-view',
             category: 'UI',
             subcategory: 'Canvas Viewer',
-            defaultValue: false,
+            defaultValue: false
         });
     }, [registerProperty]);
 
@@ -99,7 +101,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
             console.log('[CanvasRenderer] loadContent called', { hasContent: !!content });
 
             if (!content) {
-                setError('No content available');
+                setError(t('No content available'));
                 setIsLoading(false);
                 return;
             }
@@ -205,7 +207,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                     ctx.drawImage(img, 0, 0, metadata.width, metadata.height);
 
                     const imageData = ctx.getImageData(0, 0, 10, 10);
-                    const hasNonBlackPixels = Array.from(imageData.data).some(v => v > 0);
+                    const hasNonBlackPixels = Array.from(imageData.data).some((v) => v > 0);
                     console.log('[CanvasRenderer] Canvas pixel check', {
                         pageNumber,
                         hasNonBlackPixels,
@@ -235,9 +237,9 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         if (isRendering.current) return;
         isRendering.current = true;
 
-        const pagesToRender = scrollView
-            ? Array.from(visiblePages)
-            : [currentPage];
+        const pagesToRender = scrollView ?
+            Array.from(visiblePages) :
+            [currentPage];
 
         for (const pageNum of pagesToRender) {
             await renderPageToCanvas(pageNum);
@@ -255,7 +257,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         if (isLoading || numPages === 0) return;
 
         if (scrollView) {
-            visiblePages.forEach(pageNum => renderPageToCanvas(pageNum));
+            visiblePages.forEach((pageNum) => renderPageToCanvas(pageNum));
         } else {
             renderPageToCanvas(currentPage);
         }
@@ -296,7 +298,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
             {
                 threshold: [0.5],
                 rootMargin: '-20% 0px -20% 0px',
-                root: contentElRef.current,
+                root: contentElRef.current
             }
         );
 
@@ -313,7 +315,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                 pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         } else {
-            setCurrentPage(prev => {
+            setCurrentPage((prev) => {
                 const p = Math.max(prev - 1, 1);
                 if (!isEditingPageInput) setPageInput(String(p));
                 return p;
@@ -329,7 +331,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                 pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         } else {
-            setCurrentPage(prev => {
+            setCurrentPage((prev) => {
                 const p = Math.min(prev + 1, numPages);
                 if (!isEditingPageInput) setPageInput(String(p));
                 return p;
@@ -382,7 +384,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     }, [fitMode, computeFitScale, setProperty]);
 
     const handleZoomIn = useCallback(() => {
-        setScale(prev => {
+        setScale((prev) => {
             const newScale = Math.min(prev + 0.25, 5);
             setProperty('canvas-renderer-zoom', newScale);
             return newScale;
@@ -390,7 +392,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     }, [setProperty]);
 
     const handleZoomOut = useCallback(() => {
-        setScale(prev => {
+        setScale((prev) => {
             const newScale = Math.max(prev - 0.25, 0.25);
             setProperty('canvas-renderer-zoom', newScale);
             return newScale;
@@ -406,7 +408,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     }, [setProperty]);
 
     const handleToggleView = useCallback(() => {
-        setScrollView(prev => {
+        setScrollView((prev) => {
             const newScrollView = !prev;
             setProperty('canvas-renderer-scroll-view', newScrollView);
             pageRefs.current.clear();
@@ -439,7 +441,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                 URL.revokeObjectURL(url);
             } catch (err) {
                 console.error('Export error:', err);
-                setError('Failed to export SVG');
+                setError(t('Failed to export SVG'));
             }
         }
     }, [svgContent, fileName, onDownload]);
@@ -500,25 +502,25 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                 style={{
                     width: `${width}px`,
                     height: `${height}px`,
-                    imageRendering: scale > 1.5 ? 'crisp-edges' : 'auto',
-                }}
-            />
-        );
+                    imageRendering: scale > 1.5 ? 'crisp-edges' : 'auto'
+                }} />);
+
+
     }, [pageManager, scale]);
 
     if (!canvasRendererEnable) {
         return (
             <div className="canvas-renderer-container">
-                <div className="canvas-renderer-error">
-                    Canvas renderer is disabled. Please enable it in settings.
+                <div className="canvas-renderer-error">{t('Canvas renderer is disabled. Please enable it in settings.')}
+
                 </div>
-            </div>
-        );
+            </div>);
+
     }
 
-    const zoomOptions = canvasRendererSettings.find(s => s.id === 'canvas-renderer-initial-zoom')?.options || [];
+    const zoomOptions = getCanvasRendererSettings().find((s) => s.id === 'canvas-renderer-initial-zoom')?.options || [];
     const currentZoom = Math.round(scale * 100).toString();
-    const hasCustomZoom = !zoomOptions.some(opt => String(opt.value) === currentZoom);
+    const hasCustomZoom = !zoomOptions.some((opt) => String(opt.value) === currentZoom);
 
     return (
         <div className="canvas-renderer-container" ref={containerRef}>
@@ -529,17 +531,17 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                             <button
                                 onClick={handlePreviousPage}
                                 className="toolbarButton"
-                                title="Previous Page"
-                                disabled={currentPage <= 1 || isLoading}
-                            >
+                                title={t('Previous Page')}
+                                disabled={currentPage <= 1 || isLoading}>
+
                                 <ChevronLeftIcon />
                             </button>
                             <button
                                 onClick={handleNextPage}
                                 className="toolbarButton"
-                                title="Next Page"
-                                disabled={currentPage >= numPages || isLoading}
-                            >
+                                title={t('Next Page')}
+                                disabled={currentPage >= numPages || isLoading}>
+
                                 <ChevronRightIcon />
                             </button>
                         </div>
@@ -558,8 +560,8 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                                     className="toolbarField"
                                     min={1}
                                     max={numPages}
-                                    disabled={isLoading}
-                                />
+                                    disabled={isLoading} />
+
                                 <span>/</span>
                                 <span>{numPages}</span>
                             </div>
@@ -568,9 +570,9 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                             <button
                                 onClick={handleZoomOut}
                                 className="toolbarButton"
-                                title="Zoom Out"
-                                disabled={isLoading}
-                            >
+                                title={t('Zoom Out')}
+                                disabled={isLoading}>
+
                                 <ZoomOutIcon />
                             </button>
                             <select
@@ -578,25 +580,25 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                                 onChange={handleZoomChange}
                                 disabled={isLoading}
                                 className="toolbarZoomSelect"
-                                title="Zoom Level"
-                            >
-                                {zoomOptions.map(option => (
+                                title={t('Zoom Level')}>
+
+                                {zoomOptions.map((option) =>
                                     <option key={String(option.value)} value={String(option.value)}>
                                         {option.label}
                                     </option>
-                                ))}
-                                {hasCustomZoom && (
+                                )}
+                                {hasCustomZoom &&
                                     <option value="custom">
                                         {Math.round(scale * 100)}%
                                     </option>
-                                )}
+                                }
                             </select>
                             <button
                                 onClick={handleZoomIn}
                                 className="toolbarButton"
-                                title="Zoom In"
-                                disabled={isLoading}
-                            >
+                                title={t('Zoom In')}
+                                disabled={isLoading}>
+
                                 <ZoomInIcon />
                             </button>
                         </div>
@@ -604,25 +606,25 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                             <button
                                 onClick={handleFitToggle}
                                 className="toolbarButton"
-                                title={fitMode === 'fit-width' ? 'Fit to Width' : 'Fit to Height'}
-                                disabled={isLoading}
-                            >
+                                title={fitMode === 'fit-width' ? t('Fit to Width') : t('Fit to Height')}
+                                disabled={isLoading}>
+
                                 <FitToWidthIcon />
                             </button>
                             <button
                                 onClick={handleToggleView}
                                 className="toolbarButton"
-                                title={scrollView ? 'Single Page View' : 'Scroll View'}
-                                disabled={isLoading}
-                            >
+                                title={scrollView ? t('Single Page View') : t('Scroll View')}
+                                disabled={isLoading}>
+
                                 {scrollView ? <PageIcon /> : <ScrollIcon />}
                             </button>
                             <button
                                 onClick={handleToggleFullscreen}
                                 className="toolbarButton"
-                                title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
-                                disabled={isLoading}
-                            >
+                                title={isFullscreen ? t('Exit Fullscreen') : t('Fullscreen')}
+                                disabled={isLoading}>
+
                                 {isFullscreen ? <MinimizeIcon /> : <ExpandIcon />}
                             </button>
                         </div>
@@ -630,9 +632,9 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                             <button
                                 onClick={handleExport}
                                 className="toolbarButton"
-                                title="Download"
-                                disabled={isLoading}
-                            >
+                                title={t('Download')}
+                                disabled={isLoading}>
+
                                 <DownloadIcon />
                             </button>
                         </div>
@@ -643,7 +645,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
             <div className={`canvas-renderer-content ${isFullscreen ? 'fullscreen' : ''}`} ref={contentElRef}>
                 <div className="canvas-renderer-viewer" style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
                     {!isLoading && !error && numPages > 0 && (
-                        scrollView ? (
+                        scrollView ?
                             Array.from({ length: numPages }, (_, i) => {
                                 const pageNumber = i + 1;
                                 return (
@@ -657,32 +659,32 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                                                 pageRefs.current.delete(pageNumber);
                                             }
                                         }}
-                                        className="canvas-page-scroll"
-                                    >
+                                        className="canvas-page-scroll">
+
                                         <div className="canvas-page">
                                             {renderCanvasPage(pageNumber)}
                                         </div>
-                                    </div>
-                                );
-                            })
-                        ) : (
+                                    </div>);
+
+                            }) :
+
                             <div className="canvas-page">
                                 {renderCanvasPage(currentPage)}
-                            </div>
-                        )
-                    )}
+                            </div>)
+
+                    }
                 </div>
 
-                {isLoading && (
-                    <div className="canvas-renderer-loading">
-                        Loading document...
+                {isLoading &&
+                    <div className="canvas-renderer-loading">{t('Loading document...')}
+
                     </div>
-                )}
+                }
             </div>
 
             {error && <div className="canvas-renderer-error">{error}</div>}
-        </div>
-    );
+        </div>);
+
 };
 
 export default CanvasRenderer;

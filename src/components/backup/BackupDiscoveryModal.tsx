@@ -1,4 +1,5 @@
 // src/components/backup/BackupDiscoveryModal.tsx
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
@@ -67,7 +68,9 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 
 			if (result.errors.length > 0) {
 				setError(
-					`Import completed with errors: ${result.errors.map((e) => e.error).join(', ')}`,
+					t('Import completed with errors: {errors}', {
+						errors: result.errors.map((e) => e.error).join(', ')
+					}),
 				);
 			}
 
@@ -76,7 +79,7 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 				onClose();
 			}
 		} catch (error) {
-			setError(error instanceof Error ? error.message : 'Import failed');
+			setError(error instanceof Error ? error.message : t('Import failed'));
 		} finally {
 			setIsImporting(false);
 		}
@@ -93,7 +96,7 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 		<Modal
 			isOpen={isOpen}
 			onClose={handleClose}
-			title="Projects Found in Backup"
+			title={t('Projects Found in Backup')}
 			size="medium"
 		>
 			<div className="backup-discovery-modal">
@@ -105,11 +108,7 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 
 				<div className="discovery-info">
 					<p>
-						We found {discoveredProjects.length} project
-						{discoveredProjects.length === 1 ? '' : 's'} in your backup that{' '}
-						{discoveredProjects.length === 1 ? "isn't" : "aren't"} on TeXlyre.
-						Would you like to import{' '}
-						{discoveredProjects.length === 1 ? 'it' : 'them'}?
+						{t('We found {count} project in your backup that are not on TeXlyre. Would you like to import them?', { count: discoveredProjects.length })}
 					</p>
 				</div>
 
@@ -120,8 +119,8 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 						disabled={isImporting}
 					>
 						{selectedProjects.size === discoveredProjects.length
-							? 'Deselect All'
-							: 'Select All'}
+							? t('Deselect All')
+							: t('Select All')}
 					</button>
 				</div>
 
@@ -141,10 +140,10 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 							<div className="project-details">
 								<div className="project-name">{project.name}</div>
 								<div className="project-description">
-									{project.description || 'No description'}
+									{project.description || t('No description')}
 								</div>
 								<div className="project-meta">
-									<span>Last modified: {formatDate(project.lastModified)}</span>
+									<span>{t(`Last Modified: {lastModified}`, { lastModified: formatDate(project.lastModified) })}</span>
 								</div>
 							</div>
 						</div>
@@ -154,8 +153,7 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 				<div className="import-note">
 					<ImportIcon />
 					<span>
-						Projects will be imported as collaborations, preserving original
-						ownership.
+						{t('Projects will be imported as collaborations, preserving original ownership.')}
 					</span>
 				</div>
 
@@ -166,7 +164,7 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 						onClick={handleClose}
 						disabled={isImporting}
 					>
-						Not Now
+						{t('Not Now')}
 					</button>
 					<button
 						type="button"
@@ -175,8 +173,8 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 						disabled={selectedProjects.size === 0 || isImporting}
 					>
 						{isImporting
-							? 'Importing...'
-							: `Import ${selectedProjects.size} Project${selectedProjects.size === 1 ? '' : 's'}`}
+							? t('Importing...')
+							: t('Import {count} Project', { count: selectedProjects.size })}
 					</button>
 				</div>
 			</div>

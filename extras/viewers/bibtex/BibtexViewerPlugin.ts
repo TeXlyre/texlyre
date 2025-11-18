@@ -1,8 +1,8 @@
 // extra/viewers/bibtex/BibtexViewerPlugin.ts
-import type { ViewerPlugin } from '../../../src/plugins/PluginInterface';
+import type { ViewerPlugin } from '@/plugins/PluginInterface';
 import BibtexViewer from './BibtexViewer';
-import { bibtexViewerSettings } from './settings';
-import { BibIcon} from './Icon';
+import { getBibtexViewerSettings } from './settings';
+import { BibIcon } from './Icon';
 
 const BIBTEX_EXTENSIONS = ['bib', 'bibtex'];
 const BIBTEX_MIMETYPES = ['text/x-bibtex', 'application/x-bibtex'];
@@ -16,7 +16,9 @@ const bibtexViewerPlugin: ViewerPlugin = {
 	version: PLUGIN_VERSION,
 	type: 'viewer',
 	icon: BibIcon,
-	settings: bibtexViewerSettings,
+	get settings() {
+		return getBibtexViewerSettings();
+	},
 
 	canHandle: (fileName: string, mimeType?: string): boolean => {
 		if (mimeType && BIBTEX_MIMETYPES.includes(mimeType)) {

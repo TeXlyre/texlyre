@@ -1,4 +1,5 @@
 // src/components/KeyboardShortcutsModal.tsx
+import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
@@ -19,133 +20,133 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ isOpen,
             <Modal
                 isOpen={isOpen}
                 onClose={onClose}
-                title="Keyboard Shortcuts"
+                title={t('Keyboard Shortcuts')}
                 icon={KeyboardIcon}
-                size="medium"
-            >
+                size="medium">
+
                 <div className="shortcuts-content">
                     <section className="shortcuts-section">
-                        <h3>Global Shortcuts</h3>
-                        <p className="section-description">These shortcuts work anywhere in the application</p>
+                        <h3>{t('Global Shortcuts')}</h3>
+                        <p className="section-description">{t('These shortcuts work anywhere in the application')}</p>
 
                         <div className="shortcuts-list">
                             <div className="shortcut-item">
                                 <div className="shortcut-keys">
-                                    <kbd>F9</kbd>
+                                    <kbd>{t('F9')}</kbd>
                                 </div>
-                                <div className="shortcut-description">Compile document</div>
+                                <div className="shortcut-description">{t('Compile document')}</div>
                             </div>
 
                             <div className="shortcut-item">
                                 <div className="shortcut-keys">
-                                    <kbd>Shift</kbd> + <kbd>F9</kbd>
+                                    <kbd>{t('Shift')}</kbd> + <kbd>{t('F9')}</kbd>
                                 </div>
-                                <div className="shortcut-description">Compile with cleared cache</div>
+                                <div className="shortcut-description">{t('Compile with cleared cache')}</div>
                             </div>
 
                             <div className="shortcut-item">
                                 <div className="shortcut-keys">
-                                    <kbd>F8</kbd>
+                                    <kbd>{t('F8')}</kbd>
                                 </div>
-                                <div className="shortcut-description">Stop compilation</div>
+                                <div className="shortcut-description">{t('Stop compilation')}</div>
                             </div>
 
                             <div className="shortcut-item">
                                 <div className="shortcut-keys">
-                                    <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd>
+                                    <kbd>{t('Ctrl')}</kbd> + <kbd>{t('Shift')}</kbd> + <kbd>F</kbd>
                                 </div>
-                                <div className="shortcut-description">Open search panel</div>
+                                <div className="shortcut-description">{t('Open search panel')}</div>
                             </div>
 
                             <div className="shortcut-item">
                                 <div className="shortcut-keys">
-                                    <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>H</kbd>
+                                    <kbd>{t('Ctrl')}</kbd> + <kbd>{t('Shift')}</kbd> + <kbd>H</kbd>
                                 </div>
-                                <div className="shortcut-description">Open search and replace panel</div>
+                                <div className="shortcut-description">{t('Open search and replace panel')}</div>
                             </div>
                         </div>
                     </section>
 
                     <section className="shortcuts-section">
-                        <h3>Editor Shortcuts</h3>
-                        <p className="section-description">These shortcuts work when the editor is focused</p>
+                        <h3>{t('Editor Shortcuts')}</h3>
+                        <p className="section-description">{t('These shortcuts work when the editor is focused')}</p>
 
                         <div className="shortcuts-list">
                             <div className="shortcut-item">
                                 <div className="shortcut-keys">
-                                    <kbd>Ctrl</kbd> + <kbd>S</kbd>
+                                    <kbd>{t('Ctrl')}</kbd> + <kbd>S</kbd>
                                 </div>
-                                <div className="shortcut-description">Save current file</div>
+                                <div className="shortcut-description">{t('Save current file')}</div>
                             </div>
 
                             <div className="shortcut-item">
                                 <div className="shortcut-keys">
-                                    <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>I</kbd>
+                                    <kbd>{t('Ctrl')}</kbd> + <kbd>{t('Shift')}</kbd> + <kbd>I</kbd>
                                 </div>
-                                <div className="shortcut-description">Format document</div>
+                                <div className="shortcut-description">{t('Format document')}</div>
                             </div>
                             <div className="shortcut-item">
                                 <div className="shortcut-keys">
-                                    <kbd>Ctrl</kbd> + <kbd>I</kbd>
+                                    <kbd>{t('Ctrl')}</kbd> + <kbd>I</kbd>
                                 </div>
-                                <div className="shortcut-description">Expand selection</div>
+                                <div className="shortcut-description">{t('Expand selection')}</div>
                             </div>
                             <div className="shortcut-item">
                                 <div className="shortcut-keys">
-                                    <kbd>Alt</kbd> + <kbd>C</kbd>
+                                    <kbd>{t('Alt')}</kbd> + <kbd>C</kbd>
                                 </div>
-                                <div className="shortcut-description">Add comment to selection</div>
-                            </div>
-
-                            <div className="shortcut-item">
-                                <div className="shortcut-keys">
-                                    <kbd>Tab</kbd>
-                                </div>
-                                <div className="shortcut-description">Indent selection</div>
+                                <div className="shortcut-description">{t('Add comment to selection')}</div>
                             </div>
 
                             <div className="shortcut-item">
                                 <div className="shortcut-keys">
-                                    <kbd>Ctrl</kbd> + <kbd>F</kbd>
+                                    <kbd>{t('Tab')}</kbd>
                                 </div>
-                                <div className="shortcut-description">Find in document</div>
+                                <div className="shortcut-description">{t('Indent selection')}</div>
                             </div>
 
                             <div className="shortcut-item">
                                 <div className="shortcut-keys">
-                                    <kbd>Ctrl</kbd> + <kbd>H</kbd>
+                                    <kbd>{t('Ctrl')}</kbd> + <kbd>F</kbd>
                                 </div>
-                                <div className="shortcut-description">Find and replace in document</div>
+                                <div className="shortcut-description">{t('Find in document')}</div>
                             </div>
 
                             <div className="shortcut-item">
                                 <div className="shortcut-keys">
-                                    <kbd>Ctrl</kbd> + <kbd>Z</kbd>
+                                    <kbd>{t('Ctrl')}</kbd> + <kbd>H</kbd>
                                 </div>
-                                <div className="shortcut-description">Undo</div>
+                                <div className="shortcut-description">{t('Find and replace in document')}</div>
                             </div>
 
                             <div className="shortcut-item">
                                 <div className="shortcut-keys">
-                                    <kbd>Ctrl</kbd> + <kbd>Y</kbd>
+                                    <kbd>{t('Ctrl')}</kbd> + <kbd>Z</kbd>
                                 </div>
-                                <div className="shortcut-description">Redo</div>
+                                <div className="shortcut-description">{t('Undo')}</div>
+                            </div>
+
+                            <div className="shortcut-item">
+                                <div className="shortcut-keys">
+                                    <kbd>{t('Ctrl')}</kbd> + <kbd>Y</kbd>
+                                </div>
+                                <div className="shortcut-description">{t('Redo')}</div>
                             </div>
                         </div>
                     </section>
 
                     <div className="info-message">
-                        <p><strong>Note:</strong> Some shortcuts may vary depending on your operating system and browser.</p>
+                        <p><strong>{t('Note: ')}</strong>{t('Some shortcuts may vary depending on your operating system and browser.')}</p>
                         <p>
                             <a
                                 href="#"
                                 onClick={(e) => {
                                     e.preventDefault();
                                     setShowSettings(true);
-                                }}
-                            >
-                                Enable Vim keybindings
-                            </a> to use Vim-style shortcuts. Vim mode uses <kbd>Ctrl</kbd> + <kbd>C</kbd> to switch between insert and normal mode.
+                                }}>{t('Enable Vim keybindings')}&nbsp;
+
+
+                            </a>{t('to use Vim-style shortcuts. Vim mode uses')}<kbd>{t('Ctrl')}</kbd> + <kbd>C</kbd>{t('to switch between insert and normal mode.')}
                         </p>
                     </div>
                 </div>
@@ -154,11 +155,11 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ isOpen,
             <SettingsModal
                 isOpen={showSettings}
                 onClose={() => setShowSettings(false)}
-                initialCategory="Viewers"
-                initialSubcategory="Text Editor"
-            />
-        </>
-    );
+                initialCategory={t("Viewers")}
+                initialSubcategory={t("Text Editor")} />
+
+        </>);
+
 };
 
 export default KeyboardShortcutsModal;

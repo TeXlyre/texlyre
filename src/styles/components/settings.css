@@ -198,8 +198,8 @@
 	position: absolute !important;
 	bottom: var(--space-lg, 12px) !important;
 	right: var(--space-lg, 12px) !important;
-	background-color: var(--color-warning, #ffc107) !important;
-	color: var(--pico-secondary-inverse, #000) !important;
+	background-color: var(--color-error) !important;
+	color: #fff !important;
 	padding: var(--space-sm, 8px) var(--space-lg, 12px) !important;
 	border-radius: var(--radius-lg, 15px) !important;
 	font-size: 0.65rem !important;
@@ -211,10 +211,13 @@
 }
 
 @keyframes refreshIndicatorPulse {
-	0%, 100% {
+
+	0%,
+	100% {
 		opacity: 1;
 		transform: scale(1);
 	}
+
 	50% {
 		opacity: 0.8;
 		transform: scale(1.05);

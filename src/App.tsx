@@ -41,29 +41,32 @@ import './styles/components/chat.css';
 import './styles/components/latex-typst.css';
 import './styles/components/plugin-header.css';
 import './styles/components/settings.css';
+import './styles/components/language.css';
 import './styles/components/offline.css';
 import './styles/components/typsetter.css';
 import './styles/components/splash-screen.css'
 import './styles/components/keyboard-shortcuts.css'
 import './styles/components/legal.css'
 
+import i18next from 'i18next';
 import { useContext, useEffect, useState } from 'react';
 import AppRouter from './components/app/AppRouter';
 import PasswordModal from './components/auth/PasswordModal';
 import SplashScreen from './components/common/SplashScreen';
 import FileConflictModal from './components/editor/FileConflictModal';
-import FileOperationToast from './components/editor/FileOperationToast.tsx';
 import { AuthProvider } from './contexts/AuthContext';
 import { EditorProvider } from './contexts/EditorContext';
 import { FileSystemBackupProvider } from './contexts/FileSystemBackupContext';
 import { OfflineProvider } from './contexts/OfflineContext';
-import { PropertiesProvider } from './contexts/PropertiesContext.tsx';
+import { PropertiesProvider } from './contexts/PropertiesContext';
 import { SecretsContext, SecretsProvider } from './contexts/SecretsContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 function App() {
 	const [isInitializing, setIsInitializing] = useState(true);
+	const [isI18nReady, setIsI18nReady] = useState(false);
 
 	useEffect(() => {
 		const initTimer = setTimeout(() => {
@@ -73,28 +76,62 @@ function App() {
 		return () => clearTimeout(initTimer);
 	}, []);
 
+	useEffect(() => {
+		const getCurrentUserId = (): string | null => {
+			return localStorage.getItem('texlyre-current-user');
+		};
+
+		const getStorageKey = (): string => {
+			const userId = getCurrentUserId();
+			return userId ? `texlyre-user-${userId}-settings` : 'texlyre-settings';
+		};
+
+		const storageKey = getStorageKey();
+		const storedSettings = localStorage.getItem(storageKey);
+		let targetLanguage = 'en';
+
+		if (storedSettings) {
+			try {
+				const settings = JSON.parse(storedSettings);
+				targetLanguage = settings.language || 'en';
+			} catch (e) {
+				console.warn('Failed to parse stored settings');
+			}
+		}
+
+		i18next.changeLanguage(targetLanguage).then(() => {
+			setIsI18nReady(true);
+		});
+	}, []);
+
+	if (!isI18nReady) {
+		return <SplashScreen isVisible={true} />;
+	}
+
 	return (
 		<>
 			<SplashScreen isVisible={isInitializing} />
 			<SettingsProvider>
-				<OfflineProvider>
-					<AuthProvider>
-						<PropertiesProvider>
-							<ThemeProvider
-								defaultThemeId="texlyre-theme"
-								defaultVariant="system"
-							>
-								<SecretsProvider>
-									<FileSystemBackupProvider>
-										<EditorProvider>
-											<AppContent />
-										</EditorProvider>
-									</FileSystemBackupProvider>
-								</SecretsProvider>
-							</ThemeProvider>
-						</PropertiesProvider>
-					</AuthProvider>
-				</OfflineProvider>
+				<LanguageProvider>
+					<OfflineProvider>
+						<AuthProvider>
+							<PropertiesProvider>
+								<ThemeProvider
+									defaultThemeId="texlyre-theme"
+									defaultVariant="system"
+								>
+									<SecretsProvider>
+										<FileSystemBackupProvider>
+											<EditorProvider>
+												<AppContent />
+											</EditorProvider>
+										</FileSystemBackupProvider>
+									</SecretsProvider>
+								</ThemeProvider>
+							</PropertiesProvider>
+						</AuthProvider>
+					</OfflineProvider>
+				</LanguageProvider>
 			</SettingsProvider>
 		</>
 	);
@@ -112,7 +149,6 @@ function AppContent() {
 		<>
 			<AppRouter />
 			<FileConflictModal />
-			<FileOperationToast />
 			<PasswordModal
 				isOpen={isPasswordModalOpen}
 				onClose={hidePasswordModal}

@@ -1,4 +1,5 @@
 // src/components/editor/EditorTabs.tsx
+import { t } from '@/i18n';
 import type React from 'react';
 import { useCallback, useEffect, useState, useRef } from 'react';
 
@@ -17,11 +18,11 @@ interface ContextMenuState {
 }
 
 const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
-  const { 
-    tabs, 
-    activeTabId, 
-    closeTab, 
-    switchToTab, 
+  const {
+    tabs,
+    activeTabId,
+    closeTab,
+    switchToTab,
     updateTabEditorState,
     reorderTabs,
     closeOtherTabs,
@@ -37,7 +38,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
     isVisible: false,
     x: 0,
     y: 0,
-    tabId: null,
+    tabId: null
   });
 
   const contextMenuRef = useRef<HTMLDivElement>(null);
@@ -47,12 +48,12 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
   const updateScrollState = useCallback(() => {
     const container = tabsContainerRef.current;
     const tabs = tabsRef.current;
-    
+
     if (!container || !tabs) return;
 
     const hasOverflow = tabs.scrollWidth > tabs.clientWidth;
     const isAtStart = tabs.scrollLeft <= 0;
-    const isAtEnd = tabs.scrollLeft >= (tabs.scrollWidth - tabs.clientWidth);
+    const isAtEnd = tabs.scrollLeft >= tabs.scrollWidth - tabs.clientWidth;
 
     container.classList.toggle('has-overflow', hasOverflow);
     container.classList.toggle('at-start', isAtStart);
@@ -62,14 +63,14 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
   const scrollLeft = useCallback(() => {
     const tabs = tabsRef.current;
     if (!tabs) return;
-    
+
     tabs.scrollBy({ left: -120, behavior: 'smooth' });
   }, []);
 
   const scrollRight = useCallback(() => {
     const tabs = tabsRef.current;
     if (!tabs) return;
-    
+
     tabs.scrollBy({ left: 120, behavior: 'smooth' });
   }, []);
 
@@ -139,12 +140,12 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
   const handleRightClick = useCallback((e: React.MouseEvent, tabId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     setContextMenu({
       isVisible: true,
       x: e.clientX,
       y: e.clientY,
-      tabId,
+      tabId
     });
   }, []);
 
@@ -172,7 +173,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
       tabId: tabId
     }));
     e.dataTransfer.effectAllowed = 'move';
-    
+
     setIsDragging(true);
     setDraggedTabIndex(index);
   }, []);
@@ -186,7 +187,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
-    
+
     if (draggedTabIndex !== index) {
       setDragOverIndex(index);
     }
@@ -195,11 +196,11 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const x = e.clientX;
     const y = e.clientY;
-    
+
     if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
       setDragOverIndex(-1);
     }
@@ -214,7 +215,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
       if (!dragData) return;
 
       const { tabIndex: sourceIndex } = JSON.parse(dragData);
-      
+
       if (sourceIndex !== dropIndex && sourceIndex >= 0 && dropIndex >= 0) {
         reorderTabs(sourceIndex, dropIndex);
       }
@@ -254,14 +255,14 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
     const handleCursorUpdate = (event: Event) => {
       const customEvent = event as CustomEvent;
       const { line, position, fileId, documentId, isEditingFile } = customEvent.detail;
-      
+
       if (typeof line !== 'number' || typeof position !== 'number') return;
-      
-      const targetTab = tabs.find(tab => 
-        (isEditingFile && tab.fileId === fileId) ||
-        (!isEditingFile && tab.documentId === documentId)
+
+      const targetTab = tabs.find((tab) =>
+        isEditingFile && tab.fileId === fileId ||
+        !isEditingFile && tab.documentId === documentId
       );
-      
+
       if (targetTab && targetTab.id === activeTabId) {
         updateTabEditorState(targetTab.id, {
           currentLine: line,
@@ -278,24 +279,24 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 
   const getTabClasses = (index: number, tabId: string) => {
     let classes = `editor-tab ${tabId === activeTabId ? 'active' : ''}`;
-    
+
     const tab = tabs[index];
     if (tab?.isDirty) {
       classes += ' dirty';
     }
-    
+
     if (draggedTabIndex === index) {
       classes += ' dragging';
     }
-    
+
     if (dragOverIndex === index && draggedTabIndex !== index && draggedTabIndex !== -1) {
       classes += ' drag-over';
     }
-    
+
     return classes;
   };
 
-  const currentTabIndex = contextMenu.tabId ? tabs.findIndex(tab => tab.id === contextMenu.tabId) : -1;
+  const currentTabIndex = contextMenu.tabId ? tabs.findIndex((tab) => tab.id === contextMenu.tabId) : -1;
   const hasTabsToLeft = currentTabIndex > 0;
   const hasTabsToRight = currentTabIndex < tabs.length - 1 && currentTabIndex !== -1;
   const hasOtherTabs = tabs.length > 1;
@@ -303,17 +304,17 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
   return (
     <>
       <div ref={tabsContainerRef} className="editor-tabs-container">
-        <button 
+        <button
           className="scroll-button scroll-left"
           onClick={scrollLeft}
-          title="Scroll left"
-          aria-label="Scroll tabs left"
-        >
+          title={t('Scroll left')}
+          aria-label={t('Scroll tabs left')}>
+
           <ChevronLeftIcon />
         </button>
-        
+
         <div ref={tabsRef} className="editor-tabs">
-          {tabs.map((tab, index) => (
+          {tabs.map((tab, index) =>
             <div
               key={tab.id}
               className={getTabClasses(index, tab.id)}
@@ -327,7 +328,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
-              title={`${tab.filePath || tab.title}${tab.editorState.currentLine ? ` (Line ${tab.editorState.currentLine})` : ''}`}
+              title={`${tab.filePath || tab.title}${tab.editorState.currentLine ? ' (' + t(`Line {line}`, { line: tab.editorState.currentLine }) + ')' : ''}`}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
@@ -335,74 +336,74 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
                   e.preventDefault();
                   handleTabClick(e as any, tab.id);
                 }
-              }}
-            >
+              }}>
+
               <span className="tab-icon">
                 {tab.type === 'document' ? <FileTextIcon /> : <FileIcon />}
               </span>
               <span className="tab-title">
                 {tab.title}
                 {tab.isDirty && <span className="dirty-indicator">•</span>}
-                {tab.editorState.currentLine && (
+                {tab.editorState.currentLine &&
                   <span className="line-indicator">:{tab.editorState.currentLine}</span>
-                )}
+                }
               </span>
               <button
                 className="tab-close"
                 onClick={(e) => handleCloseClick(e, tab.id)}
-                title="Close tab"
-                aria-label={`Close ${tab.title}`}
-              >
+                title={t('Close tab')}
+                aria-label={`Close ${tab.title}`}>
+
                 <CloseIcon />
               </button>
             </div>
-          ))}
+          )}
         </div>
 
-        <button 
+        <button
           className="scroll-button scroll-right"
           onClick={scrollRight}
-          title="Scroll right"
-          aria-label="Scroll tabs right"
-        >
+          title={t('Scroll right')}
+          aria-label={t('Scroll tabs right')}>
+
           <ChevronRightIcon />
         </button>
       </div>
 
-      {contextMenu.isVisible && (
+      {contextMenu.isVisible &&
         <div
           ref={contextMenuRef}
           className="editor-tab-context-menu"
           style={{
             left: contextMenu.x,
-            top: contextMenu.y,
-          }}
-        >
+            top: contextMenu.y
+          }}>
+
           <button
             className="context-menu-item"
             onClick={() => handleContextMenuAction('closeOthers')}
-            disabled={!hasOtherTabs}
-          >
-            Close Others
+            disabled={!hasOtherTabs}>{t('Close Others')}
+
+
           </button>
           <button
             className="context-menu-item"
             onClick={() => handleContextMenuAction('closeLeft')}
-            disabled={!hasTabsToLeft}
-          >
-            Close Tabs to the Left
+            disabled={!hasTabsToLeft}>{t('Close Tabs to the Left')}
+
+
           </button>
           <button
             className="context-menu-item"
             onClick={() => handleContextMenuAction('closeRight')}
-            disabled={!hasTabsToRight}
-          >
-            Close Tabs to the Right
+            disabled={!hasTabsToRight}>{t('Close Tabs to the Right')}
+
+
           </button>
         </div>
-      )}
-    </>
-  );
+      }
+    </>);
+
 };
 
 export default EditorTabs;

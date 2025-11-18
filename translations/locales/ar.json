@@ -1,0 +1,1547 @@
+{
+  "- Real-time sync active": "- المزامنة الفورية نشطة",
+  "- we only use local browser storage to save your projects on your device.": "- نحن نستخدم فقط التخزين المحلي للمتصفح لحفظ مشاريعك على جهازك.",
+  ", \\subsection": ", \\subsection",
+  ", etc.": ", إلخ.",
+  ", pp.": ", ص.",
+  ". How would you like to handle this ZIP file?": ". كيف تريد معالجة ملف ZIP هذا؟",
+  "...": "...",
+  ".*": ".*",
+  "\" to": "\" إلى",
+  "\"?": "\"؟",
+  "\".": "\".",
+  "\"„": "\"„",
+  "(Coming Soon)": "(قريباً)",
+  "(F8)": "(F8)",
+  "(F9)": "(F9)",
+  "(linked)": "(مرتبط)",
+  "(Processing...)": "(جارٍ المعالجة...)",
+  "(Saving...)": "(جارٍ الحفظ...)",
+  "(shared)": "(مشترك)",
+  "(Shift+F9)": "(Shift+F9)",
+  "{action} {pluginName} panel": "لوحة {{action}} {{pluginName}}",
+  "{action} comments{numComments}": "{{action}} تعليقات{{numComments}}",
+  "{action} Linked File": "{{action}} ملف مرتبط",
+  "{count} bytes": "{{count}} بايت",
+  "{count} bytes_few": "{{count}} بايت",
+  "{count} bytes_many": "{{count}} بايت",
+  "{count} bytes_one": "{{count}} بايت",
+  "{count} bytes_other": "{{count}} بايت",
+  "{count} bytes_two": "{{count}} بايت",
+  "{count} bytes_zero": "{{count}} بايت",
+  "{count} day ago": "مرت {{count}} أيام",
+  "{count} day ago_few": " مرت {{count}} أيام",
+  "{count} day ago_many": " مر {{count}} يوم",
+  "{count} day ago_one": "مر يوم",
+  "{count} day ago_other": "{{count}} أيام مرت",
+  "{count} day ago_two": "مر يومان",
+  "{count} day ago_zero": "لم يمر يوم",
+  "{count}h ago": "قبل {{count}} ساعات",
+  "{count}h ago_few": "قبل {{count}} ساعات",
+  "{count}h ago_many": "قبل {{count}} ساعة",
+  "{count}h ago_one": "قبل ساعة",
+  "{count}h ago_other": "قبل {{count}} ساعات",
+  "{count}h ago_two": "قبل ساعتان",
+  "{count}h ago_zero": "لم تمر ساعة",
+  "{count}m ago": "قبل {{count}} دقائق",
+  "{count}m ago_few": "قبل {{count}} دقائق",
+  "{count}m ago_many": "قبل {{count}} دقيقة",
+  "{count}m ago_one": "قبل دقيقة",
+  "{count}m ago_other": "قبل {{count}} دقائق",
+  "{count}m ago_two": "قبل دقيقتان",
+  "{count}m ago_zero": "لم تمر دقيقة",
+  "{hours}h {minutes}m remaining": "{{hours}} س {{minutes}} د متبقية",
+  "{minutes}m remaining": "{{minutes}}د متبقية",
+  "{projectName} exported successfully": "تم تصدير {{projectName}} بنجاح",
+  "{size} KB": "{{size}} كيلوبايت",
+  "{size} MB": "{{size}} ميجابايت",
+  "{totalMatches} match in {count} file": "{{totalMatches}} تطابق في {{count}} ملفات",
+  "{totalMatches} match in {count} file_few": "{{totalMatches}} تطابق في {{count}} ملفات",
+  "{totalMatches} match in {count} file_many": "{{totalMatches}} تطابق في {{count}} ملف",
+  "{totalMatches} match in {count} file_one": "{{totalMatches}} تطابق في {{count}} ملف",
+  "{totalMatches} match in {count} file_other": "{{totalMatches}} تطابق في {{count}} ملفات",
+  "{totalMatches} match in {count} file_two": "{{totalMatches}} تطابق في ملفان",
+  "{totalMatches} match in {count} file_zero": "لا يوجد تطابق",
+  "@myriaddreamin/typst-ts-compiler v0.7.0-rc1": "@myriaddreamin/typst-ts-compiler v0.7.0-rc1",
+  "@myriaddreamin/typst-ts-renderer v0.6.1-rc3": "@myriaddreamin/typst-ts-renderer v0.6.1-rc3",
+  "@myriaddreamin/typst-ts-renderer v0.7.0-rc1": "@myriaddreamin/typst-ts-renderer v0.7.0-rc1",
+  "@myriaddreamin/typst.ts v0.6.1-rc3": "@myriaddreamin/typst.ts v0.6.1-rc3",
+  "@myriaddreamin/typst.ts v0.7.0-rc1": "@myriaddreamin/typst.ts v0.7.0-rc1",
+  "* Selecting \"Link Only\" will discard any existing content in the document.": "* اختيار \"الربط فقط\" سيتجاهل أي محتوى موجود في المستند.",
+  "← Back to Items": "← العودة إلى العناصر",
+  "← Back to Templates": "← العودة إلى القوالب",
+  "+{count} more matches": "+{{count}} تطابقات أخرى",
+  "|w|": "<unk>",
+  "⚠️": "⚠️",
+  "⚠️ Session limitations:": "⚠️ قيود الجلسة:",
+  "⚠️ Tex-Fmt is": "⚠️ Tex-Fmt",
+  "⚠️ Warning: This action cannot be undone": "⚠️ تحذير: لا يمكن التراجع عن هذا الإجراء",
+  "⚠️ Wordometer is experimental and may not count all Typst elements (e.g., CV templates, Touying presentation elements).": "⚠️ Wordometer وقد لا يحسب جميع عناصر Typst (مثل قوالب السيرة الذاتية، عناصر عرض Touying).",
+  "💡": "💡",
+  "📄": "📄",
+  "🔄": "🔄",
+  "0.13.1 (2025)": "0.13.1 (2025)",
+  "0.14.0 (25/10/2025)": "0.14.0 (25/10/2025)",
+  "100%": "100%",
+  "125%": "125%",
+  "150%": "150%",
+  "200%": "200%",
+  "25%": "25%",
+  "2X Large (20px)": "كبير جداً 2× (20 بكسل)",
+  "300%": "300%",
+  "3X Large (24px)": "كبير جداً 3× (24 بكسل)",
+  "400%": "400%",
+  "50%": "50%",
+  "500%": "500%",
+  "75%": "75%",
+  "A file with the name \"{name}\" already exists at this location.": "يوجد ملف باسم \"{{name}}\" في هذا الموقع.",
+  "Aa": "أأ",
+  "Abbreviate months": "اختصار الأشهر",
+  "Abstract": "ملخص",
+  "Account security features": "ميزات أمان الحساب",
+  "Active": "نشط",
+  "Add": "إضافة",
+  "Add .bib files to your project or connect to an external bibliography source.": "أضف ملفات .bib إلى مشروعك أو اتصل بمصدر مراجع خارجي.",
+  "Add .bib files to your project to see local bibliography entries.": "أضف ملفات .bib إلى مشروعك لرؤية إدخالات المراجع المحلية.",
+  "Add comment": "إضافة تعليق",
+  "Add Comment": "إضافة تعليق",
+  "Add comment (Alt+C)": "إضافة تعليق (Alt+C)",
+  "Add comment to selection": "إضافة تعليق للتحديد",
+  "Add response": "إضافة رد",
+  "Add tags (press Enter or comma to add)": "إضافة وسوم (اضغط Enter أو الفاصلة للإضافة)",
+  "Add tags (press Enter or comma)": "إضافة وسوم (اضغط Enter أو الفاصلة)",
+  "Add the ZIP file as-is to": "إضافة ملف ZIP كما هو إلى",
+  "Add to favorites": "إضافة إلى المشاريع المفضلة",
+  "Advanced": "متقدم",
+  "Align values:": "محاذاة القيم:",
+  "All API keys": "جميع مفاتيح API",
+  "All application preferences": "جميع تفضيلات التطبيق",
+  "All application settings": "جميع إعدادات التطبيق",
+  "All cached data": "جميع البيانات المخزنة مؤقتاً",
+  "All Categories": "جميع الفئات",
+  "All changes imported successfully": "تم استيراد جميع التغييرات بنجاح",
+  "All collaborators can edit documents and files in real-time": "يمكن لجميع المتعاونين تحرير المستندات والملفات في الوقت الفعلي",
+  "All documents, files, and collaboration data for these projects will be permanently deleted.": "سيتم حذف جميع المستندات والملفات وبيانات التعاون لهذه المشاريع نهائياً.",
+  "All encrypted secrets": "جميع الأسرار المشفرة",
+  "All Local Storage Data": "جميع بيانات التخزين المحلي",
+  "All LSP": "جميع LSP",
+  "All LSP aggregation view -": "عرض تجميع جميع LSP -",
+  "All LSP aggregation view - {count} provider connected": "عرض تجميع LSP - {{count}} موفرين متصلين",
+  "All LSP aggregation view - {count} provider connected_few": "عرض تجميع LSP - {{count}} موفرين متصلين",
+  "All LSP aggregation view - {count} provider connected_many": "عرض تجميع LSP - {{count}} موفر متصل",
+  "All LSP aggregation view - {count} provider connected_one": "عرض تجميع LSP - موفر {{count}} متصل",
+  "All LSP aggregation view - {count} provider connected_other": "عرض تجميع LSP - {{count}} موفرين متصلين",
+  "All LSP aggregation view - {count} provider connected_two": "عرض تجميع LSP - موفران متصلان",
+  "All LSP aggregation view - {count} provider connected_zero": "عرض تجميع LSP - لا يوجد موفرين متصلين",
+  "All project data is organized in a structured folder hierarchy with documents and files": "يتم تنظيم جميع بيانات المشروع في تسلسل هرمي منظم للمجلدات مع المستندات والملفات",
+  "All project files": "جميع ملفات المشروع",
+  "All projects": "جميع المشاريع",
+  "All Projects": "جميع المشاريع",
+  "All projects exported successfully": "تم تصدير جميع المشاريع بنجاح",
+  "All saved API keys and encrypted credentials": "جميع مفاتيح API المحفوظة وبيانات الاعتماد المشفرة",
+  "All settings": "جميع الإعدادات",
+  "All settings, properties, and secrets at once": "جميع الإعدادات والخصائص والأسرار دفعة واحدة",
+  "All stored properties": "جميع الخصائص المخزنة",
+  "All stored property values": "جميع قيم الخصائص المخزنة",
+  "All tags": "جميع الوسوم",
+  "All types": "جميع الأنواع",
+  "All Types": "جميع الأنواع",
+  "All your application settings and preferences": "جميع إعدادات التطبيق وتفضيلاتك",
+  "All your current projects will be preserved in this browser session!": "سيتم الحفاظ على جميع مشاريعك الحالية في جلسة المتصفح هذه!",
+  "All your projects": "جميع مشاريعك",
+  "Allow brightness and contrast adjustments": "السماح بتعديلات السطوع والتباين",
+  "Allow dragging files and folders within the TeXlyre file explorer to move them": "السماح بسحب الملفات والمجلدات داخل مستكشف ملفات TeXlyre لنقلها",
+  "Allow dragging files from your file system into the file explorer": "السماح بسحب الملفات من نظام الملفات الخاص بك إلى مستكشف الملفات",
+  "Allow dragging images to pan around when zoomed": "السماح بسحب الصور إلى التدوين عند التكبير",
+  "Allow text selection and copying from PDF documents": "السماح باختيار النص والنسخ من وثائق PDF",
+  "Alphabetic [Smi23]": "الأبجدية [Smi23]",
+  "Already have an account?": "هل لديك حساب؟",
+  "Already imported": "تم الاستيراد مسبقًا",
+  "Alt": "Alt",
+  "Always ask": "اسأل دائماً",
+  "Always navigate to main file": "الانتقال دائماً إلى الملف الرئيسي",
+  "An error occurred": "حدث خطأ",
+  "An error occurred during login": "حدث خطأ أثناء تسجيل الدخول",
+  "and API keys": "ومفاتيح API",
+  "and folders": "والمجلدات",
+  "and login credentials": "وبيانات اعتماد تسجيل الدخول",
+  "and preferences": "والتفضيلات",
+  "and their documents": "ومستنداتهم",
+  "and uses": "ويستخدم",
+  "Anonymous collaboration:": "التعاون المجهول:",
+  "Anyone with this link can view and collaborate on this project.": "يمكن لأي شخص لديه هذا الرابط عرض هذا المشروع والتعاون عليه.",
+  "Appearance": "المظهر",
+  "Application state data (last opened file, current line in editor, etc.)": "بيانات حالة التطبيق (آخر ملف مفتوح، الخط الحالي في المحرر، إلخ)",
+  "Apply to all {count} conflicts": "تطبيق على جميع ال{{count}} تعارضات",
+  "Apply to all {count} conflicts_few": "تطبيق على جميع ال{{count}} تعارضات",
+  "Apply to all {count} conflicts_many": "تطبيق على جميع ال{{count}} تعارض",
+  "Apply to all {count} conflicts_one": "تطبيق على التعارض",
+  "Apply to all {count} conflicts_other": "تطبيق على جميع ال{{count}} تعارضات",
+  "Apply to all {count} conflicts_two": "تطبيق على التعارضان",
+  "Apply to all {count} conflicts_zero": "لا يوجد تعارض",
+  "Are you sure you want to clear ALL local storage data? This will remove settings, properties, and secrets permanently.": "هل أنت متأكد من أنك تريد مسح جميع بيانات التخزين المحلية؟ سيؤدي هذا إلى إزالة الإعدادات والخصائص والأسرار بشكل دائم.",
+  "Are you sure you want to clear all your encrypted secrets? This will permanently delete all saved API keys and credentials.": "هل أنت متأكد من أنك تريد مسح جميع الأسرار المشفرة الخاصة بك؟ سيؤدي هذا إلى حذف جميع مفاتيح API المحفوظة ووثائق التفويض.",
+  "Are you sure you want to clear all your properties? This will remove all stored property values.": "هل أنت متأكد من أنك تريد مسح جميع الخصائص الخاصة بك؟ سيؤدي هذا إلى إزالة جميع قيم الخصائص المخزنة.",
+  "Are you sure you want to clear all your settings? This will reset all preferences to defaults.": "هل أنت متأكد من أنك تريد مسح كافة الإعدادات الخاصة بك؟ سيؤدي هذا إلى إعادة تعيين كافة الإعدادات إلى الإعدادات الافتراضية.",
+  "Are you sure you want to delete \"{name}\"?": "هل أنت متأكد من أنك تريد حذف \"{{name}}\"؟",
+  "Are you sure you want to delete {count} file?": "هل أنت متأكد من أنك تريد حذف {{count}} ملفات؟",
+  "Are you sure you want to delete {count} file?_few": "هل أنت متأكد من أنك تريد حذف {{count}} ملفات؟",
+  "Are you sure you want to delete {count} file?_many": "هل أنت متأكد من أنك تريد حذف {{count}} ملف؟",
+  "Are you sure you want to delete {count} file?_one": "هل أنت متأكد من أنك تريد حذف الملف؟",
+  "Are you sure you want to delete {count} file?_other": "هل أنت متأكد من أنك تريد حذف {{count}} ملفات؟",
+  "Are you sure you want to delete {count} file?_two": "هل أنت متأكد من أنك تريد حذف ملفان؟",
+  "Are you sure you want to delete {count} file?_zero": "لا بوجد ملفات",
+  "Are you sure you want to delete {count} project?": "هل أنت متأكد من أنك تريد حذف {{count}} مشاريع؟",
+  "Are you sure you want to delete {count} project?_few": "هل أنت متأكد من أنك تريد حذف {{count}} مشاريع؟",
+  "Are you sure you want to delete {count} project?_many": "هل أنت متأكد من أنك تريد حذف {{count}} مشروع؟",
+  "Are you sure you want to delete {count} project?_one": "هل أنت متأكد من أنك تريد حذف المشروع؟",
+  "Are you sure you want to delete {count} project?_other": "هل أنت متأكد من أنك تريد حذف {{count}} مشاريع؟",
+  "Are you sure you want to delete {count} project?_two": "هل أنت متأكد من أنك تريد حذف مشروعان؟",
+  "Are you sure you want to delete {count} project?_zero": "لا بوجد مشاريع",
+  "Are you sure you want to delete the document \"": "هل أنت متأكد من أنك تريد حذف المستند \"",
+  "Are you sure you want to delete the project \"": "هل أنت متأكد من أنك تريد حذف المشروع \"",
+  "Are you sure you want to delete the project \"{projectName}\"?": "هل أنت متأكد من حذف المشروع \"{{projectName}}\"؟",
+  "Are you sure you want to unlink {count} file from their documents?": "هل أنت متأكد من أنك تريد إلغاء ربط {{count}} ملفات من مستنداتهم؟",
+  "Are you sure you want to unlink {count} file from their documents?_few": "هل أنت متأكد من أنك تريد إلغاء ربط {{count}} ملفات من مستنداتهم؟",
+  "Are you sure you want to unlink {count} file from their documents?_many": "هل أنت متأكد من أنك تريد إلغاء ربط {{count}} ملف من مستنداتهم؟",
+  "Are you sure you want to unlink {count} file from their documents?_one": "هل أنت متأكد من أنك تريد إلغاء ربط الملف من مستنده؟",
+  "Are you sure you want to unlink {count} file from their documents?_other": "هل أنت متأكد من أنك تريد إلغاء ربط {{count}} ملفات من مستنداتهم؟",
+  "Are you sure you want to unlink {count} file from their documents?_two": "هل أنت متأكد من أنك تريد إلغاء ربط ملفان من مستنداتهما؟",
+  "Are you sure you want to unlink {count} file from their documents?_zero": "لا توجد ملفات مربوطة",
+  "Atom Light": "Atom فاتح",
+  "Authentication failed": "فشلت المصادقة",
+  "Authentication tokens (GitHub API key)": "رمز المصادقة (GitHub API)",
+  "Author-Year (Smith, 2023)": "المؤلف (سميث، 2023)",
+  "Auto (follows app language)": "تلقائي (يتبع اللغة)",
+  "Auto (follows app theme)": "تلقائي (يتبع نمط التطبيق)",
+  "Auto center: {status}": "المركز التلقائي: {{status}}",
+  "Auto-backup connection on startup": "اتصال النسخ الاحتياطي التلقائي عند بدء التشغيل",
+  "Auto-center images": "صور المركز التلقائي",
+  "Auto-compile on project open": "التجميع التلقائي عند فتح المشروع",
+  "Auto-compile on save": "التجميع التلقائي عند الحفظ",
+  "Auto-detect": "اكتشاف تلقائي",
+  "Auto-import external citations": "استيراد تلقائي للاقتباسات الخارجية",
+  "Auto-navigate to main file on compile": "الانتقال التلقائي إلى الملف الرئيسي عند التجميع",
+  "Auto-reconnect on disconnect": "إعادة الاتصال التلقائي عند انقطاع الاتصال",
+  "Auto-save delay (milliseconds)": "تأخير الحفظ التلقائي (بالميلي ثانية)",
+  "Auto-save on changes": "الحفظ التلقائي عند التغييرات",
+  "Auto-scale documents": "مستندات الحجم التلقائي",
+  "Auto-scale: {status}": "الحجم التلقائي: {{status}}",
+  "Auto-sync interval (seconds)": "فترة المزامنة التلقائية (بالثواني)",
+  "Auto-tidy on open": "تلقائي عند الفتح",
+  "Auto-tidy: {status}": "تلقائي: {{status}}",
+  "Automatically attempt to reconnect when the connection is lost": "محاولة إعادة الاتصال تلقائياً عند فقدان الاتصال",
+  "Automatically center images when they are loaded": "المركز التلقائي للصور عند تحميلها",
+  "Automatically compile LaTeX when opening a project": "تجميع LaTeX تلقائياً عند فتح مشروع",
+  "Automatically compile Typst when opening a project": "تجميع Typst تلقائياً عند فتح مشروع",
+  "Automatically import external bibliography entries when selected": "استيراد إدخالات ثبت المراجع الخارجية تلقائياً عند تحديدها",
+  "Automatically save file changes while editing": "حفظ تغييرات الملف تلقائياً أثناء التحرير",
+  "Automatically scale PDF documents to fit the viewer": "قياس مستندات PDF تلقائياً لتلائم عارِض",
+  "Automatically start connection to file system when the application loads (requires folder authorization)": "بدء الاتصال بنظام الملفات تلقائياً عند تحميل التطبيق (يتطلب تفويض المجلد)",
+  "Automatically tidy BibTeX files when they are opened": "ترتيب ملفات BibTeX تلقائياً عند فتحها",
+  "Available Projects (": "المشاريع المتاحة (",
+  "Available providers:": "المزودون المتاحون:",
+  "Awareness timeout (seconds)": "مهلة الوعي (بالثواني)",
+  "Back": "رجوع",
+  "Back to login?": "العودة إلى تسجيل الدخول؟",
+  "Backup": "نسخ احتياطي",
+  "Backup directory changed successfully": "تم تغيير دليل النسخ الاحتياطي بنجاح",
+  "Backup disconnected successfully": "تم قطع اتصال النسخ الاحتياطي بنجاح",
+  "Backup error": "خطأ في النسخ الاحتياطي",
+  "Backup export failed: {error}": "فشل تصدير النسخ الاحتياطي: {{error}}",
+  "Backup folder connected successfully": "تم توصيل مجلد النسخ الاحتياطي بنجاح",
+  "Backup import failed: {error}": "فشل استيراد النسخ الاحتياطي: {{error}}",
+  "Backup Options": "خيارات النسخ الاحتياطي",
+  "Backup Scope:": "نطاق النسخ الاحتياطي:",
+  "Base (14px)": "أساسي (14 بكسل)",
+  "because it is linked to a collaborative document.": "لأنه مرتبط بمستند تعاوني.",
+  "Bib File:": "ملف Bib:",
+  "Bibliography": "قائمة المراجع",
+  "BibTeX Editor": "محرر BibTeX",
+  "Binary": "ثنائي",
+  "Binary File": "ملف ثنائي",
+  "Braces": "أقواس معقوفة",
+  "Brief output": "مخرجات مختصرة",
+  "Browse and import project templates from the community": "تصفح واستيراد قوالب المشاريع من المجتمع",
+  "Built with TeXlyre": "مبني بواسطة TeXlyre",
+  "by": "بواسطة",
+  "by {author}": "بواسطة {{author}}",
+  "Calculating statistics...": "جارٍ حساب الإحصائيات...",
+  "Cancel": "إلغاء",
+  "Cancel All": "إلغاء الكل",
+  "Cannot delete": "لا يمكن الحذف",
+  "Cannot display this image.": "لا يمكن عرض هذه الصورة.",
+  "Cannot export: PDF content is not available": "لا يمكن التصدير: محتوى PDF غير متاح",
+  "Cannot overwrite": "لا يمكن الكتابة فوق",
+  "Cannot rename": "لا يمكن إعادة التسمية",
+  "Canvas": "Canvas",
+  "Canvas (HTML)": "Canvas (HTML)",
+  "Canvas Output": "إخراج Canvas",
+  "Canvas renderer is disabled. Please enable it in settings.": "مُصَيِّر Canvas معطل. يرجى تفعيله في الإعدادات.",
+  "Canvas renderer not available": "مُصَيِّر Canvas غير متاح",
+  "Change backup folder": "تغيير مجلد النسخ الاحتياطي",
+  "Change Password": "تغيير كلمة المرور",
+  "Change repo/branch:": "تغيير المستودع/الفرع:",
+  "Change repository/branch": "تغيير المستودع/الفرع",
+  "Changes are automatically saved and synchronized": "يتم حفظ التغييرات ومزامنتها تلقائياً",
+  "Changes are synchronized in real-time across all connected users": "يتم مزامنة التغييرات في الوقت الفعلي عبر جميع المستخدمين المتصلين",
+  "Changes imported for {projectName}": "التغييرات المستوردة ل {{projectName}}",
+  "Changing backup directory...": "تغيير دليل النسخ الاحتياطي...",
+  "characters": "أحرف",
+  "Chat": "الدردشة",
+  "Chat messages are synchronized for communication with all collaborators": "يتم مزامنة رسائل الدردشة للتواصل مع جميع المتعاونين",
+  "Check by:": "فحص بواسطة:",
+  "Check for duplicates": "التحقق من التكرارات",
+  "Choose a preset for tidying BibTeX files": "اختر الإعداد المسبق لترتيب ملفات BibTeX",
+  "Choose a repository...": "اختر مستودعاً...",
+  "Choose Different Source": "اختر مصدراً مختلفاً",
+  "Choose Import Source": "اختر مصدر الاستيراد",
+  "Choose the color theme for syntax highlighting": "اختر نمط الألوان لتمييز بناء الجملة",
+  "Choose the LaTeX engine for compilation": "اختر محرك LaTeX للتجميع",
+  "Citation": "اقتباس",
+  "Clear & Compile": "مسح وتجميع",
+  "Clear All": "مسح الكل",
+  "Clear all activities": "مسح جميع الأنشطة",
+  "Clear all data": "مسح جميع البيانات",
+  "Clear All Local Storage": "مسح جميع التخزين المحلي",
+  "Clear all notifications": "مسح جميع الإشعارات",
+  "Clear Cache": "مسح ذاكرة التخزين المؤقت",
+  "Clear cache and compile": "مسح ذاكرة التخزين المؤقت والتجميع",
+  "Clear compilation cache": "مسح ذاكرة التخزين المؤقت للتجميع",
+  "Clear compilation cache and source files": "مسح ذاكرة التخزين المؤقت للتجميع والملفات المصدرية",
+  "Clear Encrypted Secrets": "مسح الأسرار المشفرة",
+  "Clear properties": "مسح الخصائص",
+  "Clear Properties": "مسح الخصائص",
+  "Clear secrets": "مسح الأسرار",
+  "Clear settings": "مسح الإعدادات",
+  "Clear Settings": "مسح الإعدادات",
+  "Clearing LaTeX cache...": "مسح ذاكرة التخزين المؤقت LaTeX...",
+  "Clearing or uploading local storage data is permanent and cannot be undone. Make sure to export your data before clearing if you want to keep it.": "مسح أو رفع بيانات التخزين المحلي نهائي ولا يمكن التراجع عنه. تأكد من تصدير بياناتك قبل المسح إذا كنت تريد الاحتفاظ بها.",
+  "Click error items to navigate to line": "انقر على عناصر خطأ للتنقل إلى سطر",
+  "Click once to open file or document, twice to navigate to match": "انقر مرة واحدة لفتح الملف أو المستند، مرتين للانتقال إلى المطابقة",
+  "Click the branch icon to switch repository/branch": "انقر على أيقونة الفرع للتبديل بين المستودع/الفرع",
+  "Click to filter errors": "انقر لتصفية الأخطاء",
+  "Click to filter warnings": "انقر لتصفية التحذيرات",
+  "Click to go to line {errorLine}": "انقر للذهاب إلى السطر {{errorLine}}",
+  "Click to import": "انقر للاستيراد",
+  "Close": "إغلاق",
+  "Close Others": "إغلاق الأخرى",
+  "Close tab": "إغلاق التبويب",
+  "Close Tabs to the Left": "إغلاق التبويبات إلى اليسار",
+  "Close Tabs to the Right": "إغلاق التبويبات إلى اليمين",
+  "Cloudflare": "كلاودفلاري",
+  "Cloudflare Workers": "عمال السحابة",
+  "Collab": "تعاون",
+  "Collaborate in real-time": "التعاون في الوقت الفعلي",
+  "Collaboration": "التعاون",
+  "Collaboration features are disabled. Last online:": "ميزات التعاون معطلة. آخر اتصال:",
+  "Collaboration Options": "خيارات التعاون",
+  "Collaborative Mode: Active": "الوضع التعاوني: نشط",
+  "Collaborative viewing with": "العرض التعاوني مع",
+  "Collapse All": "طي الكل",
+  "Combine fields": "دمج الحقول",
+  "Comma-separated list of Yjs WebRTC signaling server URLs": "قائمة مفصولة بفواصل لعناوين URL لخوادم إشارات Yjs WebRTC",
+  "commands).": "أوامر).",
+  "Comment": "تعليق",
+  "Comments": "التعليقات",
+  "Comments and responses are shared across all collaborators": "يتم مشاركة التعليقات والردود عبر جميع المتعاونين",
+  "Commit Message:": "رسالة الالتزام:",
+  "Compilation": "التجميع",
+  "Compilation appears successful!": "يبدو التجميع ناجح!",
+  "Compilation cancelled": "تم إلغاء التجميع",
+  "Compilation failed. Check the log in the main window.": "فشل التجميع. تحقق من السجل في النافذة الرئيسية.",
+  "Compilation Options": "خيارات التجميع",
+  "Compilation stopped by user": "تم إيقاف التجميع من قبل المستخدم",
+  "Compile a LaTeX document in the main window to see the PDF here": "اجمع مستند LaTeX في النافذة الرئيسية لرؤية PDF هنا",
+  "Compile document": "تجميع المستند",
+  "Compile documents to PDF": "تجميع المستندات إلى PDF",
+  "Compile LaTeX Document": "تجميع LaTeX",
+  "Compile Typst Document": "تجميع Typst",
+  "Compile with cleared cache": "تجميع مع ذاكرة تخزين مؤقت ممسوحة",
+  "Compiling LaTeX document...": "جاري تجميع وثيقة LaTeX...",
+  "Compiling Typst to {format}...": "تجميع الطباعة إلى {{format}}...",
+  "Complete project export including documents, collaboration data, and files. Can be imported back into TeXlyre.": "تصدير كامل للمشروع بما في ذلك المستندات وبيانات التعاون والملفات. يمكن استيراده مرة أخرى إلى TeXlyre.",
+  "Confirm Move": "تأكيد النقل",
+  "Confirm New Password": "تأكيد كلمة المرور الجديدة",
+  "Confirm Password": "تأكيد كلمة المرور",
+  "Conflict resolution is handled automatically using CRDT (Yjs)": "يتم التعامل مع حل التعارضات تلقائياً باستخدام CRDT (Yjs)",
+  "Conflict resolution strategy": "استراتيجية حل التعارضات",
+  "Conflict resolution strategy:": "استراتيجية حل التعارضات:",
+  "Connect Folder": "توصيل المجلد",
+  "Connect to GitHub": "الاتصال بـ GitHub",
+  "Connected": "متصل",
+  "Connected to {repository}": "متصل بـ {{repository}}",
+  "Connected to GitHub repository: {repoName} ({branch})": "متصل بمستودع GitHub : {{repoName}} ({{branch}})",
+  "Connecting to backup folder...": "جار الاتصال بمجلد النسخ الاحتياطي...",
+  "Connecting to LSP server... (": "جارٍ الاتصال بخادم LSP... (",
+  "Connecting to project...": "جارٍ الاتصال بالمشروع...",
+  "Connecting...": "جاري الاتصال...",
+  "Content formatted successfully": "تم تنسيق المحتوى بنجاح",
+  "Content Length:": "طول المحتوى:",
+  "Control text direction (Auto follows language)": "التحكم في اتجاه النص (تلقائي يتبع اللغة)",
+  "Control when to automatically navigate to the main LaTeX file during compilation": "التحكم في وقت الانتقال تلقائياً إلى ملف LaTeX الرئيسي أثناء التجميع",
+  "Control when to automatically navigate to the main Typst file during compilation": "التحكم في وقت الانتقال تلقائياً إلى ملف Typst الرئيسي أثناء التجميع",
+  "Convert ALL CAPS to Title Case": "تحويل الأحرف الكبيرة الكاملة إلى حالة العنوان",
+  "Converting XDV to PDF...": "تحويل XDV إلى PDF...",
+  "Copy Path": "نسخ المسار",
+  "Copy text": "نسخ النص",
+  "Copy text from linked file: {fileName}": "نسخ النص من الملف المرتبط: {{fileName}}",
+  "Could not access auth database": "تعذر الوصول إلى قاعدة بيانات المصادقة",
+  "Could not load projects.": "تعذر تحميل المشاريع.",
+  "Create & Link": "إنشاء وربط",
+  "Create a full account to save all your current projects in this browser and unlock additional features:": "أنشئ حساباً كاملاً لحفظ جميع مشاريعك الحالية في هذا المتصفح وفتح ميزات إضافية:",
+  "Create a new file and link it to the document \"": "إنشاء ملف جديد وربطه بالمستند \"",
+  "Create an Account": "إنشاء حساب",
+  "Create an account to keep your projects permanently": "أنشئ حساباً للاحتفاظ بمشاريعك بشكل دائم",
+  "Create and edit LaTeX/Typst projects": "إنشاء وتحرير مشاريع LaTeX/Typst",
+  "Create Full Account": "إنشاء حساب كامل",
+  "Create New Project": "إنشاء مشروع جديد",
+  "Create new projects (create new URLs on conflict)": "إنشاء مشاريع جديدة (إنشاء عناوين URL جديدة عند التعارض)",
+  "Create Project": "إنشاء مشروع",
+  "Created": "تم الإنشاء",
+  "Created: {createdAt}": "تم الإنشاء: {{createdAt}}",
+  "Creating Account...": "إنشاء الحساب...",
+  "Creating...": "إنشاء...",
+  "Crossref API": "API Crossref",
+  "Crossref API:": "عبر API:",
+  "Ctrl": "Ctrl",
+  "Ctrl+S": "Ctrl+S",
+  "Current conflict": "التعارض الحالي",
+  "Current page: {page}": "الصفحة الحالية: {{page}}",
+  "Current Password": "كلمة المرور الحالية",
+  "Current password is incorrect": "كلمة المرور الحالية غير صحيحة",
+  "Current password is required to set a new password": "كلمة المرور الحالية مطلوبة لتعيين كلمة مرور جديدة",
+  "Current project (": "المشروع الحالي (",
+  "Current Project (": "المشروع الحالي (",
+  "Current project only": "المشروع الحالي فقط",
+  "Cursor Colors": "ألوان المؤشر",
+  "Customize themes and settings": "تخصيص الأنماط والإعدادات",
+  "dark": "داكن",
+  "Dark": "داكن",
+  "Dark Theme": "نمط داكن",
+  "Dark theme (OneDark)": "نمط داكن (OneDark)",
+  "Data Processing": "معالجة البيانات",
+  "Database not available": "قاعدة البيانات غير متاحة",
+  "Decrease Brightness ({percent}%)": "تقليل السطوع ({{percent}}%)",
+  "Decrease Contrast ({percent}%)": "تقليل التباين ({{percent}}%)",
+  "Default citation style": "نمط الاقتباس الافتراضي",
+  "Default citation style for auto-completion": "نمط الاستشهاد الافتراضي للإنجاز التلقائي",
+  "Default format for Typst compilation": "التنسيق الافتراضي لتجميع Typst",
+  "Default output format": "تنسيق الإخراج الافتراضي",
+  "Delay in milliseconds before saving changes": "التأخير بالميلي ثانية قبل حفظ التغييرات",
+  "Delete": "حذف",
+  "Delete (": "حذف (",
+  "Delete {count} File": "حذف {{count}} ملفات",
+  "Delete {count} File_few": "حذف {{count}} ملفات",
+  "Delete {count} File_many": "حذف {{count}} ملف",
+  "Delete {count} File_one": "حذف ملف",
+  "Delete {count} File_other": "حذف {{count}} ملفات",
+  "Delete {count} File_two": "حذف {{count}} ملفان",
+  "Delete {count} File_zero": "لا يوجد ملفات",
+  "Delete {count} Project": "حذف {{count}} مشاريع",
+  "Delete {count} Project_few": "حذف {{count}} مشاريع",
+  "Delete {count} Project_many": "حذف {{count}} مشروع",
+  "Delete {count} Project_one": "حذف مشروع",
+  "Delete {count} Project_other": "حذف {{count}} مشاريع",
+  "Delete {count} Project_two": "حذف مشروعان",
+  "Delete {count} Project_zero": "لا يوجد مشاريع",
+  "Delete Account": "حذف الحساب",
+  "Delete comment": "حذف التعليق",
+  "Delete document": "حذف المستند",
+  "Delete Document": "حذف المستند",
+  "Delete failed": "فشل الحذف",
+  "Delete File": "حذف الملف",
+  "Delete Project": "حذف المشروع",
+  "Delete Projects": "حذف المشاريع",
+  "Delete response": "حذف الرد",
+  "Deleting Account...": "جاري حذف الحساب...",
+  "Deleting temporary files may break caching or cause system issues.": "حذف الملفات المؤقتة قد يعطل التخزين المؤقت أو يسبب مشاكل في النظام.",
+  "Deleting your account will permanently remove:": "حذف حسابك سيزيل نهائياً:",
+  "Deleting...": "جارٍ الحذف...",
+  "Description": "الوصف",
+  "Deselect All": "إلغاء تحديد الكل",
+  "Detail": "التفاصيل",
+  "Detail Level": "مستوى التفاصيل",
+  "Detecting duplicate files...": "الكشف عن الملفات المكررة...",
+  "Direct peer-to-peer connections via signaling servers": "اتصالات مباشرة من نظير إلى نظير عبر خوادم الإشارة",
+  "Disable Sync": "تعطيل المزامنة",
+  "disabled": "معطل",
+  "Disabled": "معطل",
+  "Disconnect": "قطع الاتصال",
+  "Disconnect (deletes API key)": "قطع الاتصال (يحذف مفتاح API)",
+  "Disconnected": "غير متصل",
+  "Disconnecting backup...": "قطع الإتصال بالنسخ الاحتياطي...",
+  "Dismiss": "تجاهل",
+  "Display interactive forms and annotations in PDF documents": "عرض النماذج التفاعلية وشروحها في وثائق PDF",
+  "Display notifications for file sync activities": "عرض إشعارات لأنشطة مزامنة الملفات",
+  "Display notifications for LaTeX compilation activities": "عرض إشعارات لأنشطة تجميع LaTeX",
+  "Display notifications for LaTeX content formatting activities": "عرض إشعارات لأنشطة تنسيق محتوى LaTeX",
+  "Display notifications for Typst compilation activities": "عرض إشعارات لأنشطة تجميع Typst",
+  "Display notifications for Typst content formatting activities": "عرض إشعارات لأنشطة تنسيق محتوى Typst",
+  "Display Options": "خيارات العرض",
+  "Display the JabRef bibliography panel in the editor": "عرض لوحة ببليوغرافيا جابريف في المحرر",
+  "Docs": "المستندات",
+  "Document Properties": "خصائص المستند",
+  "Document: {documentName}": "الوثيقة: {{documentName}}",
+  "Documentation": "التوثيق",
+  "Documents": "المستندات",
+  "DOI Lookup:": "بحث DOI:",
+  "DOI: ": "تحديد:",
+  "Don't have an account?": "ليس لديك حساب؟",
+  "Don't merge": "عدم الدمج",
+  "Download": "تنزيل",
+  "Download all data": "تنزيل جميع البيانات",
+  "Download as ZIP": "تنزيل كملف ZIP",
+  "Download Current View": "تنزيل العرض الحالي",
+  "Download File": "تنزيل الملف",
+  "Download Image": "تنزيل الصورة",
+  "Download linked file: {fileName}": "تحميل الملف المرتبط: {{fileName}}",
+  "Download PDF": "تنزيل PDF",
+  "Download properties data": "تنزيل بيانات الخصائص",
+  "Download secrets data": "تنزيل بيانات الأسرار",
+  "Download settings data": "تنزيل بيانات الإعدادات",
+  "Download timeout after 60 seconds": "انتهت مهلة التحميل بعد 60 ثانية",
+  "Downloaded {type}": "تم تنزيل {{type}}",
+  "Downloaded all data": "تحميل جميع البيانات",
+  "Drop here to move to root directory": "أفلت هنا للانتقال إلى الدليل الجذر",
+  "Duplicate": "نسخ",
+  "Duplicate handling": "معالجة التكرارات",
+  "Duplicates": "التكرارات",
+  "DvipdfmxEngine not available": "DvipdfmxEngine غير متوفر",
+  "e.g., id,name": "مثل، id,name",
+  "e.g., key or -year,name": "مثل، key أو -year,name",
+  "e.g., title,journal": "مثل، title,journal",
+  "Each project is stored in a separate folder with documents and files organized": "يتم تخزين كل مشروع في مجلد منفصل مع المستندات والملفات المنظمة",
+  "Each user's cursor position and selections are visible to others": "موضع المؤشر والتحديدات لكل مستخدم مرئية للآخرين",
+  "Edit Project": "تحرير المشروع",
+  "Edit Project Details": "تحرير تفاصيل المشروع",
+  "Editing": "تحرير",
+  "Editor": "محرر",
+  "Editor configurations (font, saving interval, etc.)": "تكوينات المحرر (تشغيل، حفظ الفاصل الزمني، إلخ.)",
+  "Editor Shortcuts": "اختصارات المحرر",
+  "Email": "البريد الإلكتروني",
+  "Email already exists": "البريد الإلكتروني موجود",
+  "Empty": "فارغ",
+  "Enable browser spell checking in the editor (note: not compatible with typesetter syntax)": "تفعيل التدقيق الإملائي للمتصفح في المحرر (ملاحظة: غير متوافق مع بناء جملة نظام الصف)",
+  "Enable file synchronization with peers": "تفعيل مزامنة الملفات مع الأقران",
+  "Enable file system backup": "تفعيل النسخ الاحتياطي لنظام الملفات",
+  "Enable file system drag and drop": "تفعيل السحب والإفلات لنظام الملفات",
+  "Enable filters": "تمكين الفلاتر",
+  "Enable internal (local) drag and drop": "تفعيل السحب والإفلات الداخلي (المحلي)",
+  "Enable JabRef Language Server Protocol integration for bibliography management": "تمكين دمج بروتوكول خوادم لغة JabRef لإدارة الببليوغرافيا",
+  "Enable JabRef LSP": "تمكين JabRef LSP",
+  "Enable panning": "تمكين الإرتباط",
+  "Enable spell checking": "تفعيل التدقيق الإملائي",
+  "Enable Sync": "تفعيل المزامنة",
+  "Enable text selection": "تمكين اختيار النص",
+  "Enable Vim keybindings": "تفعيل اختصارات Vim",
+  "Enable Vim-style keybindings in the editor": "تفعيل اختصارات بنمط Vim في المحرر",
+  "enabled": "مفعّل",
+  "Enabled": "تمكين",
+  "Enclose in double braces": "الإحاطة بأقواس مزدوجة",
+  "Enclose values in braces": "إحاطة القيم بأقواس",
+  "Encode URLs": "ترميز عناوين URL",
+  "Encrypted credentials": "بيانات الاعتماد المشفرة",
+  "Encrypted Secrets": "الأسرار المشفرة",
+  "End Session": "إنهاء الجلسة",
+  "endpoints and server settings (links, connection configuration, etc.)": "نقاط النهاية وإعدادات الخادم (الروابط، تكوين الاتصال، إلخ.)",
+  "Enhanced PDF renderer is disabled. Please enable it in settings to use this renderer.": "مُصَيِّر PDF المحسّن معطل. يرجى تفعيله في الإعدادات لاستخدام هذا العارض.",
+  "Enter a GitHub, GitLab, Codeberg, or Gitea repository URL, or a direct link to a ZIP file": "أدخل عنوان URL لمستودع GitHub أو GitLab أو Codeberg أو Gitea، أو رابط مباشر لملف ZIP",
+  "Enter a search query to find files": "أدخل استعلام بحث للعثور على الملفات",
+  "Enter file name": "أدخل اسم الملف",
+  "Enter your comment...": "أدخل تعليقك...",
+  "Enter your password": "أدخل كلمة المرور الخاصة بك",
+  "Enter your password to confirm": "أدخل كلمة المرور الخاصة بك للتأكيد",
+  "Enter your TeXlyre password to access encrypted secrets:": "أدخل كلمة مرور TeXlyre للوصول إلى الأسرار المشفرة:",
+  "Entries: {count}": "إدخالات: {{count}}",
+  "error": "خطأ",
+  "Error retrieving GitHub credentials:": "خطأ في استرداد بيانات اعتماد GitHub :",
+  "Error scanning zip file": "خطأ في فحص ملف ZIP",
+  "Escape special characters": "الهروب من الأحرف الخاصة",
+  "Existing File": "ملف موجود",
+  "Exit Fullscreen": "الخروج من ملء الشاشة",
+  "Expand All": "توسيع الكل",
+  "Expand selection": "توسيع التحديد",
+  "experimental": "تجريبي",
+  "Expired": "منتهي الصلاحية",
+  "Explorer": "المستكشف",
+  "Export": "تصدير",
+  "Export (": "تصدير (",
+  "Export {count} Project": "تصدير {{count}} مشاريع",
+  "Export {count} project in your preferred format.": "تصدير {{count}} مشاريع بالتنسيق المفضل لديك.",
+  "Export {count} project in your preferred format._few": "تصدير {{count}} مشاريع بالتنسيق المفضل لديك.",
+  "Export {count} project in your preferred format._many": "تصدير {{count}} مشروع بالتنسيق المفضل لديك.",
+  "Export {count} project in your preferred format._one": "تصدير المشروع بالتنسيق المفضل لديك.",
+  "Export {count} project in your preferred format._other": "تصدير {{count}} مشاريع بالتنسيق المفضل لديك.",
+  "Export {count} project in your preferred format._two": "تصديرمشروعان بالتنسيق المفضل لديك.",
+  "Export {count} project in your preferred format._zero": "لا يوجد مشاريع",
+  "Export {count} Project_few": "تصدير {{count}} مشاريع",
+  "Export {count} Project_many": "تصدير {{count}} مشروع",
+  "Export {count} Project_one": "تصدير المشروع",
+  "Export {count} Project_other": "تصدير {{count}} مشاريع",
+  "Export {count} Project_two": "تصدير مشروعان",
+  "Export {count} Project_zero": "لا يوجد مشاريع",
+  "Export Account": "تصدير الحساب",
+  "Export Current Project": "تصدير المشروع الحالي",
+  "Export failed": "فشل التصدير",
+  "Export Format": "تنسيق التصدير",
+  "Export only the files from your projects in a simple folder structure. Compatible with any application.": "تصدير الملفات فقط من مشاريعك في بنية مجلدات بسيطة. متوافق مع أي تطبيق.",
+  "Export project to file system (write to PC)": "تصدير المشروع إلى نظام الملفات (الكتابة إلى الكمبيوتر)",
+  "Export Projects": "تصدير المشاريع",
+  "Export Scope": "نطاق التصدير",
+  "Export To PC": "تصدير إلى الكمبيوتر",
+  "Export your TeXlyre account data including projects, settings, and collaboration history.": "تصدير بيانات حساب TeXlyre الخاص بك بما في ذلك المشاريع والإعدادات وسجل التعاون.",
+  "Export your work at any time": "تصدير عملك في أي وقت",
+  "Export: ": "التصدير:",
+  "Exported data can be imported into any TeXlyre installation to restore your complete workspace.": "يمكن استيراد البيانات المصدرة إلى أي تثبيت TeXlyre لاستعادة مساحة العمل الكاملة.",
+  "Exporting {projectName}...": "تصدير {{projectName}}...",
+  "Exporting all projects...": "تصدير جميع المشاريع...",
+  "Exporting...": "جارٍ التصدير...",
+  "Extra Large (18px)": "كبير جداً (18 بكسل)",
+  "Extra Small (10px)": "صغير جداً (10 بكسل)",
+  "Extract all files from the ZIP archive into": "استخراج جميع الملفات من أرشيف ZIP إلى",
+  "Extract contents": "استخراج المحتويات",
+  "F8": "F8",
+  "F9": "F9",
+  "Failed to change backup directory: {error}": "فشل تغيير دليل النسخ الاحتياطي: {{error}}",
+  "Failed to clear data": "فشل مسح البيانات",
+  "Failed to clear LaTeX cache": "فشل في مسح ذاكرة التخزين المؤقت LaTeX",
+  "Failed to connect backup folder: {error}": "فشل في توصيل مجلد النسخ الاحتياطي: {{error}}",
+  "Failed to connect to FilePizza link": "فشل الاتصال بربط FilePizza",
+  "Failed to connect to GitHub": "فشل الاتصال بـ GitHub",
+  "Failed to create guest session": "فشل في إنشاء جلسة ضيف",
+  "Failed to create guest session. Please refresh the page and try again": "فشل في إنشاء جلسة ضيف. يرجى تحديث الصفحة والمحاولة مرة أخرى",
+  "Failed to create project": "فشل في إنشاء المشروع",
+  "Failed to decode file content": "فشل في فك تشفير محتوى الملف",
+  "Failed to delete account": "فشل في حذف الحساب",
+  "Failed to delete project": "فشل في حذف المشروع",
+  "Failed to delete projects": "فشل في حذف المشاريع",
+  "Failed to disconnect backup: {error}": "فشل قطع الإحتياطي: {{error}}",
+  "Failed to download data": "فشل تنزيل البيانات",
+  "Failed to export PDF": "فشل في تصدير PDF",
+  "Failed to export SVG": "فشل في تصدير SVG",
+  "Failed to fetch metadata": "فشل في جلب البيانات الوصفية",
+  "Failed to fix duplicate files automatically": "فشل إصلاح الملفات المكررة تلقائياً",
+  "Failed to generate shareable links": "فشل في إنشاء روابط قابلة للمشاركة",
+  "Failed to import data": "فشل استيراد البيانات",
+  "Failed to import file: {filePath}": "فشل استيراد الملف: {{filePath}}",
+  "Failed to import from URL": "فشل في الاستيراد من URL",
+  "Failed to import missing project: {missingProjId}": "فشل استيراد المشروع المفقود: {{missingProjId}}",
+  "Failed to import template": "فشل في استيراد القالب",
+  "Failed to initialize file sync": "فشل في تهيئة مزامنة الملف",
+  "Failed to initialize PDF document": "فشل في تهيئة مستند PDF",
+  "Failed to load PDF document": "فشل في تحميل مستند PDF",
+  "Failed to load templates": "فشل في تحميل القوالب",
+  "Failed to prepare projects for deletion": "فشل في تجهيز المشاريع للحذف",
+  "Failed to prepare projects for export": "فشل في تجهيز المشاريع للتصدير",
+  "Failed to process BibTeX file": "فشل في معالجة ملف BibTeX",
+  "Failed to process PDF content": "فشل في معالجة محتوى PDF",
+  "Failed to replace: {message}": "فشل الاستبدال: {{message}}",
+  "Failed to update project": "فشل في تحديث المشروع",
+  "Failed to verify guest user creation": "فشل في التحقق من إنشاء مستخدم ضيف",
+  "Fatal compilation error - no output produced": "خطأ مميت في التجميع - لا يوجد ناتج",
+  "Favorites": "المشاريع المفضلة",
+  "Fetch Metadata": "جلب البيانات الوصفية",
+  "Fetching repository metadata...": "جارٍ جلب البيانات الوصفية للمستودع...",
+  "Fields": "الحقول",
+  "Fields to enclose:": "الحقول المراد إحاطتها:",
+  "Fields to remove braces from:": "الحقول المراد إزالة الأقواس منها:",
+  "File Already Exists": "الملف موجود",
+  "File Conflicts ({current} of {total})": "تعارضات الملفات ({{current}} من {{total}})",
+  "File Explorer": "مستكشف الملفات",
+  "File name": "اسم الملف",
+  "File not found: {missingFile}": "لم يتم العثور على الملف: {{missingFile}}",
+  "File Processing": "معالجة الملف",
+  "File sync disabled": "تم تعطيل مزامنة الملف",
+  "File sync enabled": "مزامنة الملفات مفعلة",
+  "File Sync:": "مزامنة الملفات:",
+  "File Synchronization": "مزامنة الملفات",
+  "File synchronization automatically keeps non-linked files in sync between all collaborators:": "مزامنة الملفات تحافظ تلقائياً على الملفات غير المرتبطة متزامنة بين جميع المتعاونين:",
+  "File Synchronization Settings": "إعدادات مزامنة الملفات",
+  "File System": "نظام الملفات",
+  "File System Backup": "نسخ احتياطي لنظام الملفات",
+  "File system backup and sync capabilities": "إمكانيات النسخ الاحتياطي والمزامنة لنظام الملفات",
+  "File system backup creates a copy of your local TeXlyre data on your PC that you can sync with cloud storage:": "النسخ الاحتياطي لنظام الملفات ينشئ نسخة من بيانات TeXlyre المحلية على الكمبيوتر يمكنك مزامنتها مع التخزين السحابي:",
+  "File system backup features are disabled": "ميزات النسخ الاحتياطي لنظام الملفات معطلة",
+  "File System Backup:": "النسخ الاحتياطي لنظام الملفات:",
+  "File System Settings": "إعدادات نظام الملفات",
+  "File: {errorFile}": "الملف: {{errorFile}}",
+  "File: {fileName}": "الملف: {{fileName}}",
+  "FilePizza server URL": "عنوان URL لخادم FilePizza",
+  "Files": "الملفات",
+  "Files are compared based on modification time and content checksums": "تتم مقارنة الملفات بناءً على وقت التعديل ومجموع التحقق من المحتوى",
+  "Files Only": "الملفات فقط",
+  "Files Processed": "الملفات المعالجة",
+  "Files will be organized by project name in separate folders. Documents are not included in files-only export.": "سيتم تنظيم الملفات حسب اسم المشروع في مجلدات منفصلة. المستندات غير مضمنة في التصدير بالملفات فقط.",
+  "Filters: {status}": "المرشحات: {{status}}",
+  "Find and replace in document": "البحث والاستبدال في المستند",
+  "Find in document": "البحث في المستند",
+  "Fira Code": "رمز الفورا",
+  "Fit to Height": "مناسب للارتفاع",
+  "Fit to Width": "تناسب العرض",
+  "Fixed {count} duplicate file automatically": "إصلاح الملف {{count}} المكرر تلقائياً",
+  "Fixed {count} duplicate files automatically": "إصلاح الملفات المكررة {{count}} تلقائياً",
+  "Flip Horizontal": "قلب أفقي",
+  "Flip Vertical": "قلب عمودي",
+  "Font family": "عائلة الخط",
+  "Font size": "حجم الخط",
+  "for signaling and download servers. These services may set their own cookies for security and performance purposes.": "لخوادم الإشارة والتنزيل. قد تضع هذه الخدمات ملفات تعريف الارتباط الخاصة بها لأغراض الأمان والأداء.",
+  "Forces all local data to be written to the file system": "يفرض كتابة جميع البيانات المحلية إلى نظام الملفات",
+  "Format Content (Ctrl+Shift+I)": "تنسيق المحتوى (Ctrl+Shift+I)",
+  "Format document": "تنسيق المستند",
+  "Format Options": "خيارات التنسيق",
+  "Formatting": "التنسيق",
+  "Formatting LaTeX content...": "جاري تنسيق محتوى LaTeX...",
+  "Formatting Typst content...": "جاري تنسيق محتوى Typst...",
+  "From": "من",
+  "From Template Gallery": "من معرض القوالب",
+  "From URL": "من عنوان URL",
+  "From ZIP File": "من ملف ZIP",
+  "Fullscreen": "ملء الشاشة",
+  "Generate citation keys": "إنشاء مفاتيح الاقتباس",
+  "ghp_...": "ghp_...",
+  "GitHub": "GitHub",
+  "GitHub API:": "GitHub API:",
+  "GitHub Backup": "النسخ الاحتياطي لـ GitHub",
+  "GitHub Backup Settings": "إعدادات النسخ الاحتياطي لـ GitHub",
+  "GitHub backup stores your TeXlyre data in a GitHub repository:": "النسخ الاحتياطي لـ GitHub يخزن بيانات TeXlyre في مستودع GitHub:",
+  "GitHub Backup:": "النسخ الاحتياطي لـ GitHub:",
+  "GitHub credentials not available. Please reconnect.": "بيانات اعتماد GitHub غير متوفرة. الرجاء إعادة الاتصال.",
+  "GitHub import completed successfully": "اكتمل استيراد GitHub بنجاح",
+  "GitHub import failed": "فشل استيراد GitHub",
+  "GitHub Integration:": "تكامل GitHub:",
+  "GitHub Light": "GitHub فاتح",
+  "GitHub Pages": "صفحات GitHub",
+  "GitHub Personal Access Token:": "رمز الوصول الشخصي لـ GitHub:",
+  "GitHub sync completed successfully": "تمت مزامنة GitHub بنجاح",
+  "GitHub sync failed": "فشل مزامنة GitHub",
+  "GitHub token is invalid or expired. Please reconnect.": "رمز GitHub غير صالح أو انتهت صلاحيته. الرجاء إعادة الاتصال.",
+  "Global Shortcuts": "الاختصارات العامة",
+  "Go to line {line}": "الانتقال إلى السطر {{line}}",
+  "Guest Session Active": "جلسة ضيف نشطة",
+  "Guest Session Information": "معلومات جلسة الضيف",
+  "Guest sessions allow you to try TeXlyre's full LaTeX editing capabilities without creating an account. Here's what you need to know:": "تتيح لك جلسات الضيف تجربة إمكانيات تحرير LaTeX الكاملة في TeXlyre بدون إنشاء حساب. إليك ما تحتاج معرفته:",
+  "Guest sessions collect no personal data. Your projects are stored locally in your browser only. No tracking occurs across sessions.": "جلسات الضيف لا تجمع أي بيانات شخصية. يتم تخزين مشاريعك محلياً في متصفحك فقط. لا يحدث تتبع عبر الجلسات.",
+  "Guest User": "مستخدم ضيف",
+  "Has viewer plugin": "يحتوي على مكون إضافي للعارِض",
+  "Hide": "إخفاء",
+  "high": "عالي",
+  "High": "مرتفع",
+  "High (Auto)": "عالية (تلقائي)",
+  "Hold signal timeout (seconds)": "مهلة إشارة الاحتفاظ (بالثواني)",
+  "How Document Collaboration Works": "كيف يعمل التعاون على المستندات",
+  "How File Sync Works": "كيف تعمل مزامنة الملفات",
+  "How File System Backup Works": "كيف يعمل النسخ الاحتياطي لنظام الملفات",
+  "How GitHub Backup Works": "كيف يعمل النسخ الاحتياطي لـ GitHub",
+  "How long to hold a peer before timeout": "المدة المطلوبة للاحتفاظ بنظير قبل انتهاء المهلة",
+  "How long to wait before considering other users inactive": "المدة المطلوبة للانتظار قبل اعتبار المستخدمين الآخرين غير نشطين",
+  "How long to wait for file transfer completion": "المدة المطلوبة للانتظار لإكمال نقل الملف",
+  "How often to check for file changes and sync": "عدد مرات التحقق من تغييرات الملف والمزامنة",
+  "How TeXlyre Works": "كيف يعمل TeXlyre",
+  "How to handle entries that already exist locally": "كيفية التعامل مع المواد الموجودة بالفعل محليا",
+  "How to handle file conflicts when both local and remote files have changed": "كيفية التعامل مع تعارضات الملفات عندما تتغير الملفات المحلية والبعيدة",
+  "I confirm I am at least 16 years old": "أؤكد أنني لا يقل عمري عن 16 عاماً",
+  "I understand how my data is handled as described in the": "أفهم كيفية التعامل مع بياناتي كما هو موضح في",
+  "I understand this is a temporary session and how my data is handled as described in the": "أفهم أن هذه جلسة مؤقتة وكيفية التعامل مع بياناتي كما هو موضح في",
+  "ID": "المعرف",
+  "If you want to keep your data, use the": "إذا كنت تريد الاحتفاظببياناتك، استخدم",
+  "Image quality": "جودة الصورة",
+  "Image Viewer": "عارِض الصور",
+  "Import": "استيراد",
+  "Import {count} Project": "استيراد {{count}} مشاريع",
+  "Import {count} Project_few": "استيراد {{count}} مشاريع",
+  "Import {count} Project_many": "استيراد {{count}} مشروع",
+  "Import {count} Project_one": "استيراد المشروع",
+  "Import {count} Project_other": "استيراد {{count}} مشاريع",
+  "Import {count} Project_two": "استيراد مشروعان",
+  "Import {count} Project_zero": "لا يوجد مشاريع",
+  "Import Account": "استيراد الحساب",
+  "Import all data": "استيراد جميع البيانات",
+  "Import as collaborator (preserve original ownership)": "استيراد كمتعاون (الحفاظ على الملكية الأصلية)",
+  "Import changes from file system (read from PC)": "استيراد التغييرات من نظام الملفات (القراءة من الكمبيوتر)",
+  "Import completed with errors: {errors}": "اكتمل الاستيراد مع أخطاء: {{errors}}",
+  "Import failed": "فشل الاستيراد",
+  "Import From GH": "استيراد من GH",
+  "Import From PC": "استيراد من الكمبيوتر",
+  "Import from URL": "استيراد من عنوان URL",
+  "Import from URL: GitHub, GitLab, Codeberg repositories or ZIP link": "استيراد من عنوان URL: مستودعات GitHub أو GitLab أو Codeberg أو رابط ZIP",
+  "Import Project": "استيراد مشروع",
+  "Import Projects": "استيراد المشاريع",
+  "Import projects from a TeXlyre export file: Supports LaTeX and Typst": "استيراد المشاريع من ملف تصدير TeXlyre: يدعم LaTeX و Typst",
+  "Import Settings": "إعدادات الاستيراد",
+  "Import Template": "استيراد قالب",
+  "Import: ": "الاستيراد:",
+  "Important: ": "مهم:",
+  "Imported {count} document for project: {projectName}": "تم استيراد {{count}} مستندات للمشروع: {{projectName}}",
+  "Imported {count} document for project: {projectName}_few": "تم استيراد {{count}} مستندات للمشروع: {{projectName}}",
+  "Imported {count} document for project: {projectName}_many": "تم استيراد {{count}} مستند للمشروع: {{projectName}}",
+  "Imported {count} document for project: {projectName}_one": "تم استيراد مستند للمشروع: {{projectName}}",
+  "Imported {count} document for project: {projectName}_other": "تم استيراد {{count}} مستندات للمشروع: {{projectName}}",
+  "Imported {count} document for project: {projectName}_two": "تم استيراد مستندان للمشروع: {{projectName}}",
+  "Imported {count} document for project: {projectName}_zero": "لا يوجد مستندات",
+  "Imported {count} file for project: {projectName}": "تم استيراد {{count}} ملفات للمشروع: {{projectName}}",
+  "Imported {count} file for project: {projectName}_few": "تم استيراد {{count}} ملفات للمشروع: {{projectName}}",
+  "Imported {count} file for project: {projectName}_many": "تم استيراد {{count}} ملف للمشروع: {{projectName}}",
+  "Imported {count} file for project: {projectName}_one": "تم استيراد ملف للمشروع: {{projectName}}",
+  "Imported {count} file for project: {projectName}_other": "تم استيراد {{count}} ملفات للمشروع: {{projectName}}",
+  "Imported {count} file for project: {projectName}_two": "تم استيراد ملفان للمشروع: {{projectName}}",
+  "Imported {count} file for project: {projectName}_zero": "لا يوجد ملفات",
+  "Importing all changes...": "استيراد جميع التغييرات...",
+  "Importing changes for {projectName}...": "استيراد التغييرات ل {{projectName}}...",
+  "Importing from GitHub...": "استيراد من GitHub...",
+  "Importing project: {projectId}": "استيراد المشروع: {{projectId}}",
+  "Importing...": "جارٍ الاستيراد...",
+  "Imports changes from the repository to your local workspace": "استيراد التغييرات من المستودع إلى مساحة العمل المحلية",
+  "Include cache and temporary files": "تضمين ملفات ذاكرة التخزين المؤقت والملفات المؤقتة",
+  "Include documents and collaboration data": "تضمين المستندات وبيانات التعاون",
+  "Include project files": "تضمين ملفات المشروع",
+  "Include referenced files": "تضمين الملفات المشار إليها",
+  "Include settings, properties, and encrypted secrets": "تضمين الإعدادات والخصائص والأسرار المشفرة",
+  "Inconsolata": "Inconsolata",
+  "Incorrect password": "كلمة مرور غير صحيحة",
+  "Increase Brightness ({percent}%)": "زيادة السطوع ({{percent}}%)",
+  "Increase Contrast ({percent}%)": "زيادة التباين ({{percent}}%)",
+  "Indent selection": "مسافة بادئة للتحديد",
+  "Indent width:": "عرض المسافة البادئة:",
+  "Individual Files": "الملفات الفردية",
+  "Individual provider panels can be accessed by selecting a specific provider from the dropdown.": "يمكن الوصول إلى لوحات المزودين الفردية عن طريق تحديد مزود معين من القائمة المنسدلة.",
+  "info": "معلومات",
+  "Initial zoom level": "مستوى التكبير الأولي",
+  "Initializing LaTeX engine...": "تهيئة محرك لاتكس...",
+  "Initializing LSP...": "جارٍ تهيئة LSP...",
+  "Insert blank lines between entries": "إدراج سطور فارغة بين الإدخالات",
+  "Interface language": "لغة الواجهة",
+  "Invalid GitHub token": "رمز GitHub غير صالح",
+  "Invalid import source": "مصدر استيراد غير صالح",
+  "Invalid password": "كلمة مرور غير صالحة",
+  "Invalid password: {message}": "كلمة المرور غير صالحة: {{message}}",
+  "Invalid PDF content": "محتوى PDF غير صالح",
+  "Invalid repository format. Use owner/repo": "تنسيق المستودع غير صالح. استخدم المالك/repo",
+  "IP addresses are temporarily processed through our signaling servers to establish direct connections between collaborators. No project content passes through our servers.": "تتم معالجة عناوين IP مؤقتاً من خلال خوادم الإشارة الخاصة بنا لإنشاء اتصالات مباشرة بين المتعاونين. لا يمر محتوى المشروع عبر خوادمنا.",
+  "Items": "العناصر",
+  "JabRef": "جبريف",
+  "JabRef pattern": "نمط JabRef",
+  "JetBrains Mono": "JetBrains Mono",
+  "Just now": "الآن",
+  "Keep as ZIP file": "الاحتفاظ كملف ZIP",
+  "Keep Both": "الاحتفاظ بكليهما",
+  "Keep Both (All)": "الاحتفاظ بكليهما (الكل)",
+  "Keep first": "الاحتفاظ بالأول",
+  "Keep last": "الاحتفاظ بالأخير",
+  "Keep local version": "الحفاظ على الإصدار المحلي",
+  "Keep Your Projects in This Browser": "احتفظ بمشاريعك في هذا المتصفح",
+  "Key": "المفتاح",
+  "Key template:": "قالب المفتاح:",
+  "Keyboard Map": "خريطة لوحة المفاتيح",
+  "Keyboard Shortcuts": "اختصارات لوحة المفاتيح",
+  "keys": "مفاتيح",
+  "Language": "اللغة",
+  "Large (16px)": "كبير (16 بكسل)",
+  "Last Modified: {lastModified}": "آخر تعديل: {{lastModified}}",
+  "Last Sync:": "آخر مزامنة:",
+  "Last Sync: {date}": "آخر مزامنة: {{date}}",
+  "Last Sync: {time}": "آخر مزامنة: {{time}}",
+  "Last Updated: {lastUpdated}": "آخر تحديث: {{lastUpdated}}",
+  "Last: {fileName}": "الأخير: {{fileName}}",
+  "Last: Document {docId}": "الأخير: المستند {{docId}}",
+  "LaTeX": "LaTeX",
+  "LaTeX cache cleared successfully": "تم مسح ذاكرة التخزين المؤقت لاتكس بنجاح",
+  "LaTeX compilation completed successfully": "اكتمل تجميع LaTeX بنجاح",
+  "LaTeX compilation failed": "فشل تجميع LaTeX",
+  "LaTeX Compilation Output": "إخراج تجميع LaTeX",
+  "LaTeX Compilers:": "مجمعات LaTeX:",
+  "LaTeX Engine": "محرك LaTeX",
+  "LaTeX Engine:": "محرك LaTeX:",
+  "LaTeX Log": "سجل LaTeX",
+  "Layout": "التخطيط",
+  "Left-to-Right (LTR)": "من اليسار إلى اليمين (LTR)",
+  "light": "فاتح",
+  "Light": "فاتح",
+  "Light theme": "نمط فاتح",
+  "Light Theme": "نمط فاتح",
+  "Line": "سطر",
+  "Line {line}": "السطر {{line}}",
+  "Line width:": "عرض السطر:",
+  "Link": "ربط",
+  "Link & Copy Content": "ربط ونسخ المحتوى",
+  "Link Document to New File": "ربط المستند بملف جديد",
+  "Link File to Document": "ربط الملف بالمستند",
+  "Link Only": "الربط فقط",
+  "Link to file": "ربط بالملف",
+  "Link to new file": "ربط بملف جديد",
+  "Linked Document": "مستند مرتبط",
+  "Linked File: {fileName}": "الملف المرتبط: {{fileName}}",
+  "Linked to": "مرتبط بـ",
+  "Linked to document": "مرتبط بمستند",
+  "Linked to document: {documentId}": "مرتبط بالوثيقة: {{documentId}}",
+  "Linking \"{name}\" will create a collaborative document that syncs with this file.": "ربط \"{{name}}\" سينشئ مستنداً تعاونياً يتزامن مع هذا الملف.",
+  "Linking files allows you to view the cursor positions and text changes by your collaborators in real-time. To link a text file to a document, select or hover over the file and click the <icon /> <strong>Link</strong> button that appears next to it.": "يتيح لك ربط الملفات عرض مواضع المؤشر وتغييرات النص التي يجريها المتعاونون معك في الوقت الفعلي. لربط ملف نصي بمستند، حدد الملف أو مرر الماوس فوقه وانقر على زر <icon /> <strong>الربط</strong> الذي يظهر بجانبه.",
+  "Linking temporary files is not recommended as they won't sync with collaborators.": "ربط الملفات المؤقتة غير موصى به لأنها لن تتزامن مع المتعاونين.",
+  "Loading bibliography...": "جارٍ تحميل قائمة المراجع...",
+  "Loading document...": "جارٍ تحميل المستند...",
+  "Loading files...": "جارٍ تحميل الملفات...",
+  "Loading from all providers...": "جارٍ التحميل من جميع المزودين...",
+  "Loading image...": "جارٍ تحميل الصورة...",
+  "Loading local bibliography...": "جارٍ تحميل قائمة المراجع المحلية...",
+  "Loading page": "جارٍ تحميل الصفحة",
+  "Loading page...": "جارٍ تحميل الصفحة...",
+  "Loading PDF document...": "جارٍ تحميل مستند PDF...",
+  "Loading PDF viewer...": "جارٍ تحميل عارِض PDF...",
+  "Loading preview...": "جارٍ تحميل المعاينة...",
+  "Loading projects...": "جارٍ تحميل المشاريع...",
+  "Loading SVG document...": "جارٍ تحميل مستند SVG...",
+  "Loading templates...": "جارٍ تحميل القوالب...",
+  "Loading TeXlyre...": "جارٍ تحميل TeXlyre...",
+  "Loads changes from the file system into your local workspace": "تحميل التغييرات من نظام الملفات إلى مساحة العمل المحلية",
+  "Local": "محلي",
+  "Local Bibliography": "قائمة المراجع المحلية",
+  "Local Storage Data": "بيانات التخزين المحلي",
+  "Local Storage:": "التخزين المحلي:",
+  "local-first": "يتبع نظام local-first",
+  "Log": "السجل",
+  "Log size: {size}": "حجم السجل: {{size}}",
+  "Logging in...": "جاري تسجيل الدخول...",
+  "Login": "تسجيل الدخول",
+  "Logout": "تسجيل الخروج",
+  "Lookup missing DOIs": "البحث عن DOIs المفقودة",
+  "low": "متدني",
+  "Low": "منخفض",
+  "Low (Pixelated)": "منخفض (مكسل)",
+  "Lowercase field names": "أسماء الحقول بأحرف صغيرة",
+  "LSP Connected:": "متصل:",
+  "LSP Server URL": "رابط خادم LSP",
+  "Main file:": "الملف الرئيسي:",
+  "Maintain aspect ratio when scaling SVG content": "الحفاظ على نسبة العرض عند قياس محتوى SVG",
+  "Manual sync completed": "اكتمل المزامنة اليدوية",
+  "Manual sync failed: ": "فشلت المزامنة اليدوية: ",
+  "Manual sync initiated...": "تم بدء المزامنة اليدوية...",
+  "Mark as resolved": "وضع علامة كمحلول",
+  "Mark as unresolved": "وضع علامة كغير محلول",
+  "Match case": "مطابقة حالة الأحرف",
+  "Match whole word": "مطابقة الكلمة كاملة",
+  "Math Displayed": "رياضيات معروضة",
+  "Math Inline": "رياضيات مضمنة",
+  "Max authors:": "الحد الأقصى للمؤلفين:",
+  "Maximum completion items": "الحد الأقصى لبنود الإكمال",
+  "Maximum number of citation suggestions to show": "الحد الأقصى لعدد اقتراحات الاقتباس لإظهار",
+  "medium": "متوسط",
+  "Medium": "متوسط",
+  "Medium (Crisp Edges)": "متوسط (حواشي الكريدة)",
+  "Merge and overwrite existing projects": "دمج والكتابة فوق المشاريع الموجودة",
+  "Merge counts (hide individual files)": "دمج العدادات (إخفاء الملفات الفردية)",
+  "Merge strategy:": "استراتيجية الدمج:",
+  "MIME Type": "نوع MIME",
+  "MIME Type: {mimeType}": "نوع MIME : {{mimeType}}",
+  "Minimal": "الحد الأدنى",
+  "Missing character: {missingChar}": "حرف مفقود: {{missingChar}}",
+  "Mode: {mode}": "الوضع: {{mode}}",
+  "Mode: Collaborative editing": "الوضع: التحرير التعاوني",
+  "Modified": "معدّل",
+  "Monokai": "Monokai",
+  "Monospace (System)": "أحادي المسافة (النظام)",
+  "Move": "نقل",
+  "Move \"{name}\" to {target}?": "نقل \"{{name}}\" إلى {{target}}؟",
+  "Move {name}": "نقل {{name}}",
+  "Move Here": "نقل هنا",
+  "Moving between temporary locations may cause system instability.": "النقل بين المواقع المؤقتة قد يسبب عدم استقرار النظام.",
+  "Moving files to temporary locations means they won't be synced with collaborators. Additionally, temporary locations may be cleared automatically.": "نقل الملفات إلى المواقع المؤقتة يعني أنها لن تتزامن مع المتعاونين. بالإضافة إلى ذلك، قد يتم مسح المواقع المؤقتة تلقائياً.",
+  "Moving temporary files may break caching or cause system issues.": "نقل الملفات المؤقتة قد يعطل التخزين المؤقت أو يسبب مشاكل في النظام.",
+  "Multiple files already exist at their target locations. Choose how to handle conflicts:": "توجد ملفات متعددة في مواقعها المستهدفة. اختر كيفية التعامل مع التعارضات:",
+  "Name": "الاسم",
+  "Name: ": "الاسم:",
+  "Navigate to linked document": "الانتقال إلى المستند المرتبط",
+  "Never navigate to main file": "عدم الانتقال إلى الملف الرئيسي مطلقاً",
+  "New Document": "مستند جديد",
+  "New File": "ملف جديد",
+  "New Folder": "مجلد جديد",
+  "New Password": "كلمة مرور جديدة",
+  "New password must be at least 6 characters long": "كلمة المرور الجديدة يجب أن تكون على الأقل 6 أحرف",
+  "New passwords do not match": "كلمات المرور الجديدة غير متطابقة",
+  "New Project": "مشروع جديد",
+  "Next": "التالي",
+  "Next Page": "الصفحة التالية",
+  "No": "لا",
+  "No .bib files found. Create one to start importing entries.": "لم يتم العثور على ملفات .bib. أنشئ واحداً لبدء استيراد الإدخالات.",
+  "No .tex file": "لا يوجد ملف .tex",
+  "No .typ file": "لا ملف .typ",
+  "No {filter} found.": "لا يوجد {{filter}}.",
+  "No account features:": "لا توجد ميزات للحساب:",
+  "No active comments.": "لا توجد تعليقات نشطة.",
+  "No authenticated user": "لا يوجد مستخدم مصادق عليه",
+  "No backup folder": "لا يوجد مجلد نسخة احتياطية",
+  "No backup sync:": "لا توجد مزامنة للنسخ الاحتياطي:",
+  "No comments found matching the search criteria": "لم يتم العثور على تعليقات تطابق معايير البحث",
+  "No content available": "لا يوجد محتوى متاح",
+  "No description": "لا يوجد وصف",
+  "No errors or warnings found.": "لم يتم العثور على أي أخطاء أو تحذيرات.",
+  "No files available for download": "لا توجد ملفات متاحة للتحميل",
+  "No files. Upload or create files to get started. Drag any files here to upload them.": "لا توجد ملفات. قم بتحميل أو إنشاء الملفات للبدء. اسحب أي ملفات هنا لتحميلها.",
+  "No guest account to upgrade": "لا يوجد حساب ضيف للترقية",
+  "No headings found": "لم يتم العثور على عناوين",
+  "No importable projects found in the selected ZIP file.": "لم يتم العثور على مشاريع قابلة للاستيراد في ملف ZIP المحدد.",
+  "No languages found": "لم يتم العثور على لغات",
+  "No limit": "لا يوجد حد",
+  "No linked file": "لا يوجد ملف مرتبط",
+  "No LSP": "لا يوجد LSP",
+  "No LSP provider available": "لا يوجد مزود LSP متاح",
+  "No LSP providers are currently connected.": "لا يوجد مزودو LSP متصلون حالياً.",
+  "No matches found in {fileName}": "لم يتم العثور على تطابقات في {{fileName}}",
+  "No output available. Compile a LaTeX document to see results.": "لا يوجد إخراج متاح. اجمع مستند LaTeX لرؤية النتائج.",
+  "No output available. Compile a Typst document to see results.": "لا يوجد إخراج متاح. اجمع مستند Typst لرؤية النتائج.",
+  "No PDF available": "لا يوجد PDF متاح",
+  "No PDF content available": "لا يوجد محتوى PDF متاح",
+  "No preview available": "لا توجد معاينة متاحة",
+  "No projects found matching the current criteria": "لم يتم العثور على مشاريع تطابق المعايير الحالية",
+  "No resolved comments yet.": "لا توجد تعليقات محلولة بعد.",
+  "No results found": "لم يتم العثور على نتائج",
+  "No sections found": "لم يتم العثور على أقسام",
+  "No settings are currently available.": "لا توجد إعدادات متاحة حالياً.",
+  "No settings available in this category.": "لا توجد إعدادات متاحة في هذه الفئة.",
+  "No settings found matching \"": "لم يتم العثور على إعدادات تطابق \"",
+  "No SVG content available": "لا يوجد محتوى SVG متاح",
+  "No templates found matching your criteria.": "لم يتم العثور على قوالب تطابق معاييرك.",
+  "No Tracking:": "لا تتبع:",
+  "No valid files to upload": "لا توجد ملفات صالحة للتحميل",
+  "No ZIP file available for import": "لا يوجد ملف ZIP متاح للاستيراد",
+  "Not Now": "ليس الآن",
+  "Not saved automatically. Click the <icon /> <strong>Save</strong> button or <strong>Ctrl+S</strong>": "لا يتم الحفظ تلقائيًا. انقر على زر <icon /> <strong>حفظ</strong> أو اضغط <strong>Ctrl+S</strong>",
+  "Note: ": "ملاحظة:",
+  "Note: The page will refresh after linking and any unsaved changes may be lost.": "ملاحظة: سيتم تحديث الصفحة بعد الربط وقد تفقد أي تغييرات غير محفوظة.",
+  "Note: The page will refresh after unlinking and any unsaved changes may be lost.": "ملاحظة: سيتم تحديث الصفحة بعد إلغاء الربط وقد تفقد أي تغييرات غير محفوظة.",
+  "Notify of Conflicts": "إشعار بالتعارضات",
+  "Number of Floats": "عدد العناصر العائمة",
+  "Number of Headers": "عدد الرؤوس",
+  "Number of templates to display per page": "عدد القوالب المعروضة في كل صفحة",
+  "Numeric [1]": "Numeric [1]",
+  "of": "من",
+  "Offline": "غير متصل",
+  "Only non-linked files (files not connected to documents) are synchronized": "فقط الملفات غير المرتبطة (الملفات غير المتصلة بالمستندات) يتم مزامنتها",
+  "Only used when you explicitly enable it": "يُستخدم فقط عندما تفعّله صراحةً",
+  "Only when no LaTeX file is open": "فقط عندما لا يكون ملف LaTeX مفتوحاً",
+  "Only when no Typst file is open": "فقط عندما لا يكون ملف Typst مفتوحاً",
+  "Open": "فتح",
+  "Open an issue on our GitHub repository": "افتح مشكلة في مستودع GitHub الخاص بنا",
+  "Open Infrastructure": "البنية التحتية المفتوحة",
+  "Open Options": "فتح الخيارات",
+  "Open PDF in new window": "فتح PDF في نافذة جديدة",
+  "Open Project": "فتح المشروع",
+  "Open search and replace panel": "فتح لوحة البحث والاستبدال",
+  "Open search panel": "فتح لوحة البحث",
+  "Open the project to edit its description": "افتح المشروع لتحرير وصفه",
+  "Open the project to edit its name": "افتح المشروع لتحرير اسمه",
+  "Open the project to edit its typesetter type": "افتح المشروع لتحرير نوع نظام الصف الخاص به",
+  "option before deleting your account.": "قبل حذف حسابك.",
+  "Options": "الخيارات",
+  "or": "أو",
+  "Original": "الأصلي",
+  "OUTLINE": "العناوين",
+  "Output": "الإخراج",
+  "Output Format:": "تنسيق الإخراج:",
+  "Output Formats:": "تنسيقات الإخراج:",
+  "Overwrite fields": "الكتابة فوق الحقول",
+  "Page": "صفحة",
+  "Page {currentPage} of {totalPages}": "الصفحة {{currentPage}} من {{totalPages}}",
+  "Page refresh required": "مطلوب تحديث الصفحة",
+  "Pages: {count}": "الصفحات: {{count}}",
+  "Panning: {status}": "صانق: {{status}}",
+  "Paper titles and authors when using the BibTeX DOI lookup feature (": "عناوين الأوراق والمؤلفين عند استخدام ميزة البحث عن DOI في BibTeX (",
+  "Password": "كلمة المرور",
+  "Password is required": "كلمة المرور مطلوبة",
+  "Password is required to delete your account": "كلمة المرور مطلوبة لحذف حسابك",
+  "Password must be at least 6 characters long": "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
+  "Password Required": "كلمة المرور مطلوبة",
+  "Password required for download": "كلمة المرور مطلوبة للتحميل",
+  "Passwords do not match": "كلمات المرور غير متطابقة",
+  "Passwords protect API keys and separate account spaces, not your projects.": "كلمات المرور تحمي مفاتيح API وتفصل مساحات الحساب، وليس مشاريعك.",
+  "Path": "المسار",
+  "Path: {path}": "المسار: {{path}}",
+  "PDF HTML Output": "PDF HTML إخراج",
+  "PDF Output": "إخراج PDF",
+  "PDF Viewer": "عارِض PDF",
+  "pdfTeX": "pdfTeX",
+  "pdfTeX (2020)": "pdfTeX (2020)",
+  "Persistent collaboration identity": "هوية تعاون دائمة",
+  "Persistent project storage (until browser data is cleared)": "تخزين مشروع دائم (حتى يتم مسح بيانات المتصفح)",
+  "Please download the file to view or edit its contents.": "يرجى تنزيل الملف لعرض محتوياته أو تحريرها.",
+  "Please enter a valid email address": "يرجى إدخال عنوان بريد إلكتروني صالح",
+  "Please enter both username and password": "الرجاء إدخال اسم المستخدم وكلمة المرور",
+  "Please fill out all required fields": "يرجى ملء جميع الحقول المطلوبة",
+  "Please select a file to import": "الرجاء تحديد ملف لاستيراده",
+  "Please select a valid JSON file": "الرجاء تحديد ملف JSON صالح",
+  "Please select a valid TeXlyre export file (.zip)": "الرجاء تحديد ملف تصدير TeXlyre صالح (.zip)",
+  "Please type \"{expectedConfirmationText}\" to confirm": "يرجى كتابة \"{{expectedConfirmationText}}\" للتأكيد",
+  "Prefer Latest (Default)": "تفضيل الأحدث (افتراضي)",
+  "Prefer Local (Do nothing)": "تفضيل المحلي (عدم فعل شيء)",
+  "Preparing files for compilation...": "جارٍ إعداد الملفات للتجميع...",
+  "Preparing files for Typst compilation...": "جارٍ إعداد الملفات لتجميع الطباعة...",
+  "Preserve aspect ratio": "الحفاظ على نسبة العرض",
+  "Preset: {preset}": "الإعداد المسبق {{preset}}",
+  "Previous": "السابق",
+  "Previous Page": "الصفحة السابقة",
+  "Privacy": "الخصوصية",
+  "privacy information": "معلومات الخصوصية",
+  "Privacy Information": "معلومات الخصوصية",
+  "Privacy Policy": "سياسة الخصوصية",
+  "Privacy: ": "الخصوصية:",
+  "Process BibTeX with Current Settings": "معالجة BibTeX بالإعدادات الحالية",
+  "Processed": "معالج",
+  "Profile customization and settings": "تخصيص الملف الشخصي والإعدادات",
+  "Profile Settings": "إعدادات الملف الشخصي",
+  "Profile settings and password management unavailable": "إعدادات الملف الشخصي وإدارة كلمة المرور غير متاحة",
+  "Profile updated successfully": "تم تحديث الملف الشخصي بنجاح",
+  "Project Chat": "دردشة المشروع",
+  "Project ID:": "المشروع:",
+  "Project Link": "رابط المشروع",
+  "Project Name": "اسم المشروع",
+  "Project name is required": "اسم المشروع مطلوب",
+  "Project not found": "المشروع غير موجود",
+  "Projects": "المشاريع",
+  "Projects Found in Backup": "المشاريع الموجودة في النسخ الاحتياطي",
+  "Projects will be imported as collaborations, preserving original ownership.": "سيتم استيراد المشاريع كتعاونات، مع الحفاظ على الملكية الأصلية.",
+  "Properties": "الخصائص",
+  "provider(s) connected": "مزود (مزودون) متصلون",
+  "Proxy URL to prepend ONLY to repository ZIP downloads to circumvent CORS policy (optional)": "عنوان URL للوكيل لإضافته فقط لتنزيلات ZIP للمستودع للتغلب على سياسة CORS (اختياري)",
+  "Publish to Journal": "النشر في مجلة",
+  "Push To GH": "رفع إلى GH",
+  "Push: ": "الدفع:",
+  "Pushes local changes to the repository": "دفع التغييرات المحلية إلى المستودع",
+  "Pushing...": "جاري الرفع...",
+  "QR Code": "رمز QR",
+  "QR Code for project link": "رمز QR لرابط المشروع",
+  "Quality: {quality}": "الجودة: {{quality}}",
+  "Questions?": "أسئلة؟",
+  "Raw Output": "الإخراج الخام",
+  "Read-only": "قراءة فقط",
+  "Read-only: This file is linked to a collaborative document": "للقراءة فقط: هذا الملف مرتبط بمستند تعاوني",
+  "Ready": "مستعد",
+  "Ready to sync": "جاهز للمزامنة",
+  "Real-time": "الوقت الفعلي",
+  "Real-time Collaboration:": "التعاون:",
+  "Real-time document collaboration allows multiple users to edit documents simultaneously:": "التعاون على المستندات في الوقت الفعلي يسمح لعدة مستخدمين بتحرير المستندات في نفس الوقت:",
+  "Real-time Document Synchronization": "مزامنة المستندات في الوقت الفعلي",
+  "Real-time Document Synchronization Settings": "إعدادات مزامنة المستندات في الوقت الفعلي",
+  "Real-time Synchronization": "المزامنة في الوقت الفعلي",
+  "Recalculate": "إعادة الحساب",
+  "Recent": "المشاريع التي تم فتحها مؤخرا",
+  "Recent Activity": "النشاط الأخير",
+  "Redo": "إعادة",
+  "Refresh File Tree": "تحديث شجرة الملفات",
+  "Refresh Outline": "تحديث العناوين",
+  "Refresh page to access dashboard": "قم بتحديث الصفحة للوصول إلى لوحة التحكم",
+  "Remaining conflicts": "التعارضات المتبقية",
+  "Reminder: ": "تذكير:",
+  "Remove braces": "إزالة الأقواس",
+  "Remove comments": "إزالة التعليقات",
+  "Remove duplicate fields": "إزالة الحقول المكررة",
+  "Remove empty fields": "إزالة الحقول الفارغة",
+  "Remove fields (comma-separated):": "إزالة الحقول (مفصولة بفواصل):",
+  "Remove from favorites": "إزالة من المشاريع المفضلة",
+  "Rename": "إعادة التسمية",
+  "Rename imported entry": "إعادة تسمية المادة المستوردة",
+  "Renderers": "المُصَيِّرات",
+  "Rendering quality": "جودة العرض",
+  "Rendering quality: {quality}": "جودة العرض: {{quality}}",
+  "Reorder import items alphabetically": "إعادة ترتيب عناصر الاستيراد أبجدياً",
+  "Replace": "استبدال",
+  "Replace {count} occurrence in \"{fileName}\"?": "استبدال {{count}} تطابقات في \"{{fileName}}\"؟",
+  "Replace {count} occurrence in \"{fileName}\"?_few": "استبدال {{count}} تطابقات في \"{{fileName}}\"؟",
+  "Replace {count} occurrence in \"{fileName}\"?_many": "استبدال {{count}} تطابق في \"{{fileName}}\"؟",
+  "Replace {count} occurrence in \"{fileName}\"?_one": "استبدال التطابق في \"{{fileName}}\"؟",
+  "Replace {count} occurrence in \"{fileName}\"?_other": "استبدال {{count}} تطابقات في \"{{fileName}}\"؟",
+  "Replace {count} occurrence in \"{fileName}\"?_two": "استبدال تطابقان في \"{{fileName}}\"؟",
+  "Replace {count} occurrence in \"{fileName}\"?_zero": "لا يوجد تطابقات",
+  "Replace {count} occurrence in document \"{fileName}\"?": "استبدال {{count}} تطابقات في المستند \"{{fileName}}\"؟",
+  "Replace {count} occurrence in document \"{fileName}\"?_few": "استبدال {{count}} تطابقات في المستند \"{{fileName}}\"؟",
+  "Replace {count} occurrence in document \"{fileName}\"?_many": "استبدال {{count}} تطابق في المستند \"{{fileName}}\"؟",
+  "Replace {count} occurrence in document \"{fileName}\"?_one": "استبدال التطابق في المستند \"{{fileName}}\"؟",
+  "Replace {count} occurrence in document \"{fileName}\"?_other": "استبدال {{count}} تطابقات في المستند \"{{fileName}}\"؟",
+  "Replace {count} occurrence in document \"{fileName}\"?_two": "استبدال تطابقان في المستند \"{{fileName}}\"؟",
+  "Replace {count} occurrence in document \"{fileName}\"?_zero": "لا يوجد تطابقات",
+  "Replace all": "استبدال الكل",
+  "Replace All": "استبدال الكل",
+  "Replace all occurrences in {count} file?": "استبدال جميع التطابقات في {{count}} ملفات؟",
+  "Replace all occurrences in {count} file?_few": "استبدال جميع التطابقات في {{count}} ملفات؟",
+  "Replace all occurrences in {count} file?_many": "استبدال جميع التطابقات في {{count}} ملف؟",
+  "Replace all occurrences in {count} file?_one": "استبدال جميع التطابقات في الملف؟",
+  "Replace all occurrences in {count} file?_other": "استبدال جميع التطابقات في {{count}} ملفات؟",
+  "Replace all occurrences in {count} file?_two": "استبدال جميع التطابقات في ملفان؟",
+  "Replace all occurrences in {count} file?_zero": "لا يوجد تطابقات",
+  "Replace in Document": "الاستبدال في المستند",
+  "Replace in File": "الاستبدال في الملف",
+  "Replace in this document": "الاستبدال في هذا المستند",
+  "Replace in this file": "الاستبدال في هذا الملف",
+  "Replace This": "استبدال هذا",
+  "Replace with external": "استبدال بالخارج",
+  "Replace with...": "استبدال بـ...",
+  "Replacing in {count} file...": "جارٍ الاستبدال في {{count}} ملفات...",
+  "Replacing in {count} file..._few": "جارٍ الاستبدال في {{count}} ملفات...",
+  "Replacing in {count} file..._many": "جارٍ الاستبدال في {{count}} ملف...",
+  "Replacing in {count} file..._one": "جارٍ الاستبدال في الملف...",
+  "Replacing in {count} file..._other": "جارٍ الاستبدال في {{count}} ملفات...",
+  "Replacing in {count} file..._two": "جارٍ الاستبدال في ملفان...",
+  "Replacing in {count} file..._zero": "لا يوجد استبدالات",
+  "Replacing in {fileName}...": "جارٍ الاستبدال في {{fileName}}...",
+  "Replacing...": "جارٍ الاستبدال...",
+  "Repository and branch selection is remembered per project scope for convenience": "يتم تذكر اختيار المستودع والفرع لكل مشروع لتسهيل الاستخدام",
+  "Repository or ZIP URL": "مستودع أو عنوان URL لملف ZIP",
+  "Repository preview": "معاينة المستودع",
+  "Repository proxy URL": "عنوان URL لوكيل المستودع",
+  "Repository: ": "المستودع:",
+  "Request timeout (seconds)": "مهلة الطلب (بالثواني)",
+  "Reset All Transforms": "إعادة تعيين جميع التحويلات",
+  "Reset to Standard Preset": "إعادة التعيين إلى الإعداد المسبق القياسي",
+  "Reset Zoom": "إعادة تعيين التكبير",
+  "Resolved": "محلول",
+  "Retrying commit (attempt {attempt}/{maxRetries})...": "إعادة محاولة الالتزام (محاولة {{attempt}}/{{maxRetries}})...",
+  "Right-to-Left (RTL)": "من اليمين إلى اليسار (RTL)",
+  "root folder": "المجلد الجذر",
+  "Rotate 90° ({degree}°)": "تدوير 90° ({{degree}}°)",
+  "Sans Serif": "دون سيرف",
+  "Save": "حفظ",
+  "Save all working directory files after compilation": "حفظ جميع ملفات دليل العمل بعد التجميع",
+  "Save and share with collaborators": "حفظ ومشاركة مع المتعاونين",
+  "Save Changes to File": "حفظ التغييرات في الملف",
+  "Save current file": "حفظ الملف الحالي",
+  "Save Document (Ctrl+S)": "حفظ المستند (Ctrl+S)",
+  "Save document to linked file (Ctrl+S)": "حفظ المستند في الملف المرتبط (Ctrl+S)",
+  "Save File (Ctrl+S)": "حفظ الملف (Ctrl+S)",
+  "Save Processed to Original": "حفظ المعالج إلى الأصلي",
+  "Save TeX cache files for faster subsequent compilations": "حفظ ملفات ذاكرة التخزين المؤقت لـ TeX لتجميعات أسرع لاحقاً",
+  "Saved": "محفوظ",
+  "Saving compilation output...": "حفظ مخرجات التجميع...",
+  "Scan to open project on mobile": "امسح ضوئياً لفتح المشروع على الجوال",
+  "Scanning for projects...": "جارٍ البحث عن المشاريع...",
+  "Scroll left": "التمرير لليسار",
+  "Scroll right": "التمرير لليمين",
+  "Scroll tabs left": "تمرير التبويبات لليسار",
+  "Scroll tabs right": "تمرير التبويبات لليمين",
+  "Scroll View": "عرض التمرير",
+  "Search": "بحث",
+  "Search all LSP providers...": "البحث في جميع مزودي LSP...",
+  "Search and Replace (Ctrl+Shift+H)": "البحث والاستبدال (Ctrl+Shift+H)",
+  "Search comments...": "البحث في التعليقات...",
+  "Search in files...": "البحث في الملفات...",
+  "Search languages...": "البحث في اللغات...",
+  "Search only (Ctrl+Shift+F)": "البحث فقط (Ctrl+Shift+F)",
+  "Search projects...": "البحث في المشاريع...",
+  "Search settings...": "البحث في الإعدادات...",
+  "Search templates...": "البحث في القوالب...",
+  "Searching...": "جارٍ البحث...",
+  "Secrets context not initialized": "سياق الأسرار غير مهيأ",
+  "Select a file or create a new one to start editing.": "حدد ملفاً أو أنشئ ملفاً جديداً لبدء التحرير.",
+  "Select account export file (.zip)": "حدد ملف تصدير الحساب (.zip)",
+  "Select All": "تحديد الكل",
+  "Select an item from the Items tab to view details": "حدد عنصراً من علامة تبويب العناصر لعرض التفاصيل",
+  "Select Branch:": "حدد الفرع:",
+  "Select destination folder": "حدد مجلد الوجهة",
+  "Select main file:": "حدد الملف الرئيسي:",
+  "Select Projects": "حدد المشاريع",
+  "Select Repository:": "حدد المستودع:",
+  "Select target file...": "حدد الملف المستهدف...",
+  "Select the font family for the editor": "حدد عائلة الخط للمحرر",
+  "Select the font size for the editor": "حدد حجم الخط للمحرر",
+  "Select the interface language and view translation coverage": "حدد لغة الواجهة وعرض تغطية الترجمة",
+  "Select the theme layout to use for TeXlyre": "حدد تخطيط النمط لاستخدامه في TeXlyre",
+  "Select the theme variant (color palette)": "حدد متغير النمط (لوحة الألوان)",
+  "Send": "إرسال",
+  "Serif": "Serif",
+  "Server URL for peer-to-peer file transfers": "عنوان URL للخادم لنقل الملفات من نظير إلى نظير",
+  "Set the initial zoom level for canvas documents": "تعيين مستوى التكبير الأولي لمستندات Canvas",
+  "Set the initial zoom level for PDF documents": "تعيين مستوى التكبير الأولي لمستندات PDF",
+  "Set the initial zoom level for SVG documents": "تعيين مستوى التكبير الأولي لمستندات SVG",
+  "Set the quality of image rendering": "تعيين جودة عرض الصورة",
+  "Set the quality of PDF rendering": "تعيين جودة عرض PDF",
+  "Settings": "الإعدادات",
+  "Settings Saved": "تم حفظ الإعدادات",
+  "Share \"": "مشاركة \"",
+  "Share Options": "خيارات المشاركة",
+  "Share Project": "مشاركة المشروع",
+  "Share Template": "مشاركة القالب",
+  "Share with Link": "المشاركة بالرابط",
+  "Sharing Tips": "نصائح المشاركة",
+  "Shift": "تبديل",
+  "Show": "إظهار",
+  "Show annotations": "إظهار الشروح",
+  "Show compilation notifications": "عرض إشعارات التجميع",
+  "Show JabRef panel": "إظهار لوحة JabRef",
+  "Show LaTeX formatting notifications": "عرض إشعارات تنسيق LaTeX",
+  "Show line numbers": "عرض أرقام الأسطر",
+  "Show line numbers in the editor": "عرض أرقام الأسطر في المحرر",
+  "Show sync notifications": "عرض إشعارات المزامنة",
+  "Show syntax highlighting": "عرض تمييز بناء الجملة",
+  "Show syntax highlighting in the editor including tooltip and linting (LaTeX, Typst, BibTeX, and markdown)": "عرض تمييز بناء الجملة في المحرر بما في ذلك تلميح الأداة والتدقيق (LaTeX و Typst و BibTeX و markdown)",
+  "Show total only": "عرض الإجمالي فقط",
+  "Show Typst formatting notifications": "عرض إشعارات تنسيق Typst",
+  "Showing": "عرض",
+  "Showing {filter} items only.": "عرض العناصر {{filter}} فقط.",
+  "Showing {startItem}-{endItem} of {count} template": "عرض {{startItem}}-{{endItem}} من {{count}} قوالب",
+  "Showing {startItem}-{endItem} of {count} template_few": "عرض {{startItem}}-{{endItem}} من {{count}} قوالب",
+  "Showing {startItem}-{endItem} of {count} template_many": "عرض {{startItem}}-{{endItem}} من {{count}} قالب",
+  "Showing {startItem}-{endItem} of {count} template_one": "عرض {{startItem}}-{{endItem}} من قالب",
+  "Showing {startItem}-{endItem} of {count} template_other": "عرض {{startItem}}-{{endItem}} من {{count}} قوالب",
+  "Showing {startItem}-{endItem} of {count} template_two": "عرض {{startItem}}-{{endItem}} من قالبان",
+  "Showing {startItem}-{endItem} of {count} template_zero": "لا يوجد قوالب",
+  "Sign up": "التسجيل",
+  "Sign Up": "تسجيل الدخول",
+  "Signaling servers": "خوادم الإشارة",
+  "Single Page View": "عرض صفحة واحدة",
+  "Size": "الحجم",
+  "Size: {size}": "الحجم: {{size}}",
+  "Skip existing projects": "تخطي المشاريع الموجودة",
+  "Small (12px)": "صغير (12 بكسل)",
+  "Solarized Light": "Solarized فاتح",
+  "Some files are temporary - deleting them may break caching or cause system issues.": "بعض الملفات مؤقتة - حذفها قد يعطل التخزين المؤقت أو يسبب مشاكل في النظام.",
+  "Some shortcuts may vary depending on your operating system and browser.": "قد تختلف بعض الاختصارات حسب نظام التشغيل والمتصفح.",
+  "Some temporary files are included - unlinking them may affect system functionality.": "تتضمن بعض الملفات المؤقتة - إلغاء ربطها قد يؤثر على وظائف النظام.",
+  "Sort by fields:": "الترتيب حسب الحقول:",
+  "Sort by:": "الترتيب حسب:",
+  "Sort entries": "ترتيب الإدخالات",
+  "Sort fields within entries": "ترتيب الحقول داخل الإدخالات",
+  "Sorting": "الترتيب",
+  "Source Code": "الكود المصدري",
+  "Source Code Pro": "Source Code Pro",
+  "Source: ": "المصدر:",
+  "Space indentation:": "مسافة بادئة المسافة:",
+  "Standard": "قياسي",
+  "Start a conversation with your collaborators.": "ابدأ محادثة مع متعاونيك.",
+  "Start Guest Session": "بدء جلسة ضيف",
+  "Status: ": "الحالة:",
+  "Stop compilation": "إيقاف التجميع",
+  "Stop Sync": "إيقاف المزامنة",
+  "Store compilation cache": "تخزين ذاكرة التخزين المؤقت للتجميع",
+  "Store working directory": "تخزين دليل العمل",
+  "Strict": "صارم",
+  "Strip double braces": "إزالة الأقواس المزدوجة",
+  "Submit": "إرسال",
+  "Successfully cleared {type}": "تم مسح {{type}} بنجاح",
+  "Successfully cleared all data": "تم مسح جميع البيانات بنجاح",
+  "Successfully deleted account for user: {userId}": "تم حذف الحساب بنجاح للمستخدم: {{userId}}",
+  "Successfully imported user data": "تم استيراد بيانات المستخدم بنجاح",
+  "Successfully processed {count} file ({stored} stored, {deleted} deleted)": "تمت معالجة {{count}} ملفات بنجاح (تم تخزين{{stored}} ، تم حذف {{deleted}})",
+  "Successfully processed {count} file ({stored} stored, {deleted} deleted)_few": "تمت معالجة {{count}} ملفات بنجاح (تم تخزين{{stored}} ، تم حذف {{deleted}})",
+  "Successfully processed {count} file ({stored} stored, {deleted} deleted)_many": "تمت معالجة {{count}} ملف بنجاح (تم تخزين{{stored}} ، تم حذف {{deleted}})",
+  "Successfully processed {count} file ({stored} stored, {deleted} deleted)_one": "تمت معالجة ملف بنجاح (تم تخزين{{stored}} ، تم حذف {{deleted}})",
+  "Successfully processed {count} file ({stored} stored, {deleted} deleted)_other": "تمت معالجة {{count}} ملفات بنجاح (تم تخزين{{stored}} ، تم حذف {{deleted}})",
+  "Successfully processed {count} file ({stored} stored, {deleted} deleted)_two": "تمت معالجة ملفان بنجاح (تم تخزين{{stored}} ، تم حذف {{deleted}})",
+  "Successfully processed {count} file ({stored} stored, {deleted} deleted)_zero": "لا يوجد ملفات للمعالجة",
+  "Successfully replaced in {count} file": "تم الاستبدال بنجاح في {{count}} ملفات",
+  "Successfully replaced in {count} file_few": "تم الاستبدال بنجاح في {{count}} ملفات",
+  "Successfully replaced in {count} file_many": "تم الاستبدال بنجاح في {{count}} ملف",
+  "Successfully replaced in {count} file_one": "تم الاستبدال بنجاح في الملف",
+  "Successfully replaced in {count} file_other": "تم الاستبدال بنجاح في {{count}} ملفات",
+  "Successfully replaced in {count} file_two": "تم الاستبدال بنجاح في ملفان",
+  "Successfully replaced in {count} file_zero": "لا يوجد ملفات للاستبدال",
+  "Successfully replaced in {fileName}": "تم الاستبدال بنجاح في {{fileName}}",
+  "Sum subcounts": "جمع العدادات الفرعية",
+  "SVG Output": "إخراج SVG",
+  "SVG renderer is disabled. Please enable it in settings to use this renderer.": "مُصَيِّر SVG معطل. يرجى تفعيله في الإعدادات لاستخدام هذا العارض.",
+  "SwiftLaTeX v20/02/2022": "SwiftLaTeX v20/02/2022",
+  "Switch to {theme} theme": "التبديل إلى السمة {{theme}}",
+  "Switch to {viewMode} View": "التبديل إلى عرض {{viewMode}}",
+  "Switching engine...": "جارٍ التبديل بين المحركات...",
+  "Switching Engine...": "تبديل العرب...",
+  "Sync All Documents": "مزامنة جميع المستندات",
+  "Sync Now": "المزامنة الآن",
+  "Sync Status:": "حالة الاتصال:",
+  "Sync the backup folder with cloud services like Dropbox, Google Drive, or OneDrive for cross-device access": "مزامنة مجلد النسخ الاحتياطي مع خدمات سحابية مثل Dropbox أو Google Drive أو OneDrive للوصول عبر الأجهزة",
+  "Sync your data to a local folder for backup and sharing via cloud storage": "مزامنة بياناتك إلى مجلد محلي للنسخ الاحتياطي والمشاركة عبر التخزين السحابي",
+  "Synced": "مزامنة",
+  "Syncing...": "مزامنة...",
+  "Syntax highlighting theme": "نمط تمييز بناء الجملة",
+  "System": "النظام",
+  "System files and temporary files are excluded from synchronization": "يتم استبعاد ملفات النظام والملفات المؤقتة من المزامنة",
+  "System/Cache file": "ملف النظام/ذاكرة التخزين المؤقت",
+  "Tab": "Tab",
+  "Tab size:": "حجم Tab:",
+  "Table": "الجدول",
+  "Tags": "الوسوم",
+  "Target bibliography file": "ملف قائمة المراجع المستهدف",
+  "Target File:": "الهدف:",
+  "Target set for": "تم تعيين الهدف لـ",
+  "Template Gallery": "معرض القوالب",
+  "Template gallery API URL": "عنوان URL لواجهة برمجة تطبيقات معرض القوالب",
+  "templates": "قوالب",
+  "Templates": "القوالب",
+  "Templates per page": "القوالب في كل صفحة",
+  "Temporary": "مؤقت",
+  "Temporary file": "ملف مؤقت",
+  "Temporary files are involved - operations may affect system stability.": "الملفات المؤقتة متضمنة - قد تؤثر العمليات على استقرار النظام.",
+  "Temporary folder": "مجلد مؤقت",
+  "Temporary: ": "مؤقت:",
+  "TexLive server endpoint": "نقطة نهاية خادم TexLive",
+  "TeXlyre": "TeXlyre",
+  "TeXlyre Backup: {date}": "نسخة احتياطية TeXlyre: {{date}}",
+  "TeXlyre Format": "تنسيق TeXlyre",
+  "TeXlyre is hosted on": "يستضاف TeXlyre على",
+  "TeXlyre itself doesn't use any cookies": "TeXlyre نفسه لا يستخدم أي ملفات تعريف ارتباط",
+  "TeXlyre logo": "شعار TeXlyre",
+  "TeXlyre stores all data locally in your browser. Your projects will persist until you clear browser data, uninstall the browser, or use a different device. For long-term storage, regularly export your projects.": "يخزن TeXlyre جميع البيانات محلياً في متصفحك. ستبقى مشاريعك حتى تمسح بيانات المتصفح، أو تلغي تثبيت المتصفح، أو تستخدم جهازاً مختلفاً. للتخزين طويل الأجل، قم بتصدير مشاريعك بانتظام.",
+  "TeXlyre uses open source signaling servers. The server code is available on": "يستخدم TeXlyre خوادم إشارة مفتوحة المصدر. كود الخادم متاح على",
+  "Text direction": "اتجاه النص",
+  "Text Editor": "محرر النصوص",
+  "The following will be permanently removed:": "سيتم إزالة ما يلي نهائياً:",
+  "The project remains accessible as long as someone has the link": "يبقى المشروع متاحاً طالما أن شخصاً ما لديه الرابط",
+  "Theme": "النمط",
+  "These shortcuts work anywhere in the application": "تعمل هذه الاختصارات في أي مكان في التطبيق",
+  "These shortcuts work when the editor is focused": "تعمل هذه الاختصارات عندما يكون المحرر في التركيز",
+  "Third-Party Services": "خدمات الطرف الثالث",
+  "This action cannot be undone.": "لا يمكن التراجع عن هذا الإجراء.",
+  "This action cannot be undone. The document will be permanently removed.": "لا يمكن التراجع عن هذا الإجراء. سيتم إزالة المستند نهائياً .",
+  "This data cannot be recovered after deletion.": "لا يمكن استرداد هذه البيانات بعد الحذف.",
+  "This document is not linked to any file. You can link it to a new file or delete it.": "هذا المستند غير مرتبط بأي ملف. يمكنك ربطه بملف جديد أو حذفه.",
+  "This does NOT delete your projects, files, and account data.": "لن يتم حذف مشاريعك وملفاتك وبيانات حسابك.",
+  "This file cannot be edited in the text editor.": "لا يمكن تحرير هذا الملف في محرر النصوص.",
+  "This is handled by the main LSP panel for bibliography providers.": "يتم التعامل مع هذا بواسطة لوحة LSP الرئيسية لمزودي قوائم المراجع.",
+  "This operation involves temporary files which may affect system functionality.": "تتضمن هذه العملية ملفات مؤقتة قد تؤثر على وظائف النظام.",
+  "This project has no associated document. Please try creating a new project": "لا يحتوي هذا المشروع على مستند مرتبط. يرجى محاولة إنشاء مشروع جديد",
+  "Tidy": "ترتيب",
+  "Tidy comments": "ترتيب التعليقات",
+  "Tidy Options": "خيارات الترتيب",
+  "Tidy preset": "Tidy preset",
+  "To": "إلى",
+  "To {action} this file, you must first unlink it from its document. After unlinking, you can try the {action} operation again.": "لـ {{action}} هذا الملف، يجب أولاً إلغاء ربطه من مستنده. بعد إلغاء الربط، يمكنك تجربة عملية {{action}} مرة أخرى.",
+  "to confirm": "للتأكيد",
+  "To create a new project, click the '+' <strong>New Project</strong> button or <icon /> <strong>Import</strong> an existing one.": "لإنشاء مشروع جديد، انقر على زر '+' <strong>مشروع جديد</strong> أو <icon /> <strong>استيراد</strong> مشروع موجود.",
+  "to find matching DOIs": "للعثور على DOIs المطابقة",
+  "to switch between insert and normal mode.": "للتبديل بين وضع الإدراج والوضع العادي.",
+  "to use Vim-style shortcuts. Vim mode uses": "لاستخدام اختصارات بنمط Vim. يستخدم وضع Vim",
+  "Today": "اليوم",
+  "Toggle Options Panel": "تبديل لوحة الخيارات",
+  "Tomorrow Night Blue": "Tomorrow Night Blue",
+  "Total errors: {count}": "إجمالي الأخطاء: {{count}}",
+  "Total warnings: {count}": "مجموع التحذيرات: {{count}}",
+  "Total Words": "إجمالي الكلمات",
+  "Trailing commas": "الفواصل اللاحقة",
+  "Try as Guest": "جرب كضيف",
+  "Try Different URL": "جرب عنوان URL مختلف",
+  "Try TeXlyre as Guest": "جرب TeXlyre كضيف",
+  "Type": "النوع",
+  "Type a message...": "اكتب رسالة...",
+  "Type the following text to confirm:": "اكتب النص التالي للتأكيد:",
+  "Type your response...": "اكتب ردك...",
+  "Type: Text document": "النوع: مستند نصي",
+  "Typesetter Type": "نوع نظام الصف",
+  "Typesetter: ": "نظام الصف:",
+  "Typst": "Typst",
+  "Typst {format} compilation completed": "اكتمل تجميع Typst {{format}}",
+  "Typst compilation failed: {message}": "فشل تجميع Typst: {{message}}",
+  "Typst Compiler:": "مجمع Typst:",
+  "Typst Renderer:": "مُصَيِّر Typst:",
+  "Typst Version:": "إصدار Typst:",
+  "UI customizations and theme preferences (layout, variant, etc.)": "تخصيصات واجهة المستخدم وتفضيلات السمة (تخطيط، متغير، إلخ.)",
+  "Undefined references detected": "تم اكتشاف مراجع غير محددة",
+  "Undo": "تراجع",
+  "Unknown": "غير معروف",
+  "Unknown error": "خطأ غير معروف",
+  "Unknown size": "حجم غير معروف",
+  "Unlink {count} File": "إلغاء ربط {{count}} ملفات",
+  "Unlink {count} File_few": "إلغاء ربط {{count}} ملفات",
+  "Unlink {count} File_many": "إلغاء ربط {{count}} ملف",
+  "Unlink {count} File_one": "إلغاء ربط الملف",
+  "Unlink {count} File_other": "إلغاء ربط {{count}} ملفات",
+  "Unlink {count} File_two": "إلغاء ربط ملفان",
+  "Unlink {count} File_zero": "لا يوجد ملفات مربوطة",
+  "Unlink Document": "إلغاء ربط المستند",
+  "Unlink File": "إلغاء ربط الملف",
+  "Unlink File from Document": "إلغاء ربط الملف من المستند",
+  "Unlinking \"{name}\" will remove the connection between this file and its collaborative document.": "إلغاء ربط \"{{name}}\" سيزيل الاتصال بين هذا الملف ومستنده التعاوني.",
+  "Unlinking temporary files may affect system functionality.": "إلغاء ربط الملفات المؤقتة قد يؤثر على وظائف النظام.",
+  "Unlock": "فتح القفل",
+  "Unsupported engine type: {engineType}": "نوع المحرك غير مدعوم: {{engineType}}",
+  "Unsupported setting type:": "نوع إعداد غير مدعوم:",
+  "Untitled": "بدون عنوان",
+  "Update Project": "تحديث المشروع",
+  "Updated": "محدّث",
+  "Updating...": "تحديث...",
+  "Upgrade Account": "ترقية الحساب",
+  "Upgrade anytime:": "الترقية في أي وقت:",
+  "Upgrade Guest Account": "ترقية حساب الضيف",
+  "Upgrade to Full Account": "الترقية إلى حساب كامل",
+  "Upgrading...": "ترقية...",
+  "Upload and manage files": "رفع وإدارة الملفات",
+  "Upload Files": "رفع الملفات",
+  "URL endpoint for fetching project templates": "نقطة نهاية URL لجلب قوالب المشروع",
+  "URL endpoint for TexLive package downloads": "نقطة نهاية URL لتنزيلات حزمة TexLive",
+  "URL Repository Import": "استيراد مستودع URL",
+  "Use \\section": "استخدم \\section",
+  "Use = for headings": "استخدم = للعناوين",
+  "Use Canvas Renderer": "استخدام مُصَيِّر Canvas",
+  "Use Enhanced PDF HTML Renderer (pdf.js)": "استخدام PDF المحسن HTML Renderer (pdf.js)",
+  "Use Enhanced PDF Renderer (pdf.js)": "استخدام معارض PDF المحسنة (pdf.js)",
+  "Use Enhanced SVG Renderer": "استخدام عارض SVG المحسن",
+  "Use numeric values": "استخدام قيم رقمية",
+  "Use private repositories to keep your data secure": "استخدم المستودعات الخاصة للحفاظ على أمان بياناتك",
+  "Use regular expression": "استخدام التعبير النمطي",
+  "Use tabs for indentation": "استخدام Tab للمسافة البادئة",
+  "Use tabs instead of spaces": "استخدام Tab بدلاً من المسافات",
+  "Use the canvas renderer for high-performance rendering of large documents": "استخدام مُصَيِّر Canvas لعرض الوثائق الكبيرة ذات الأداء العالي",
+  "Use the enhanced PDF HTML renderer instead of the browser default": "استخدام PDF HTML المُصَيِّر بدلاً من المتصفح الافتراضي",
+  "Use the enhanced PDF renderer instead of the browser default": "استخدام PDF المُصَيِّر المحسن بدلاً من المتصفح الافتراضي",
+  "Use the enhanced SVG renderer for vector graphics": "استخدام مُصَيِّر SVG المحسن للرسومات",
+  "User not authenticated": "المستخدم غير مصادق عليه",
+  "User not found": "المستخدم غير موجود",
+  "User-specific configurations (panel width, collapse, etc.)": "تكوينات مخصصة للمستخدم (عرض اللوحة، الانهيار، إلخ.)",
+  "Username": "اسم المستخدم",
+  "Username already exists": "اسم المستخدم موجود",
+  "Values": "القيم",
+  "Variant": "المتغير",
+  "Verbosity: ": "التفصيل:",
+  "Verifying...": "جاري التحقق...",
+  "View Details": "عرض التفاصيل",
+  "View linked doc": "عرض المستند المرتبط",
+  "Viewers": "عارِضات",
+  "Viewing with": "العرض خلال",
+  "Vol.": "المجلد",
+  "Waiting for compilation results from main window": "في انتظار نتائج التجميع من النافذة الرئيسية",
+  "warning": "تحذير",
+  "Warnings: ": "التحذيرات:",
+  "We don't collect analytics or personal information": "نحن لا نجمع التحليلات أو المعلومات الشخصية",
+  "We found {count} project in your backup that are not on TeXlyre. Would you like to import them?": "وجدنا {{count}} مشاريع في النسخ الاحتياطي غير موجودة على TeXlyre. هل تريد استيرادهم؟",
+  "We found {count} project in your backup that are not on TeXlyre. Would you like to import them?_few": "وجدنا {{count}} مشاريع في النسخ الاحتياطي غير موجودة على TeXlyre. هل تريد استيرادهم؟",
+  "We found {count} project in your backup that are not on TeXlyre. Would you like to import them?_many": "وجدنا {{count}} مشروع في النسخ الاحتياطي غير موجودة على TeXlyre. هل تريد استيرادهم؟",
+  "We found {count} project in your backup that are not on TeXlyre. Would you like to import them?_one": "وجدنا مشروع في النسخ الاحتياطي غير موجود على TeXlyre. هل تريد استيراده؟",
+  "We found {count} project in your backup that are not on TeXlyre. Would you like to import them?_other": "وجدنا {{count}} مشاريع في النسخ الاحتياطي غير موجودة على TeXlyre. هل تريد استيرادهم؟",
+  "We found {count} project in your backup that are not on TeXlyre. Would you like to import them?_two": "وجدنا مشروعان في النسخ الاحتياطي غير موجودة على TeXlyre. هل تريد استيرادهما؟",
+  "We found {count} project in your backup that are not on TeXlyre. Would you like to import them?_zero": "لا يوجد مشاريع للاستيراد",
+  "WebSocket URL for the JabRef LSP server": "رابط WebSocket لخادم JabRef LSP",
+  "Welcome to the project chat!": "مرحباً بك في دردشة المشروع!",
+  "What you can do:": "ما يمكنك فعله:",
+  "When differences are detected, files are shared via secure peer-to-peer transfer": "عند اكتشاف الاختلافات، تتم مشاركة الملفات عبر نقل آمن من نظير إلى نظير",
+  "When you enable GitHub integration with your own token (": "عند تفعيل تكامل GitHub برمزك الخاص (",
+  "When you enable the BibTeX DOI finder, paper titles and authors are sent to the": "عند تفعيل أداة البحث عن DOI في BibTeX، يتم إرسال عناوين الأوراق والمؤلفين إلى",
+  "When you use optional features, data may be sent to external APIs:": "عند استخدام الميزات الاختيارية، قد يتم إرسال البيانات إلى واجهات برمجة تطبيقات خارجية:",
+  "Word Count Statistics": "إحصائيات عدد الكلمات",
+  "Words in Captions": "الكلمات في التسميات التوضيحية",
+  "Words in Headers": "الكلمات في الرؤوس",
+  "Words in Text": "الكلمات في النص",
+  "Wrap at column:": "الالتفاف عند العمود:",
+  "Wrap length:": "طول الالتفاف:",
+  "Wrap lines": "التفاف الأسطر",
+  "Wrap long values": "التفاف القيم الطويلة",
+  "Wrap text in markup": "التفاف النص في الترميز",
+  "XeTeX": "XeTeX",
+  "XeTeX (2020)": "XeTeX (2020)",
+  "Yes": "نعم",
+  "Yesterday": "أمس",
+  "You appear as \"Guest User\" to others": "تظهر كـ \"مستخدم ضيف\" للآخرين",
+  "You can convert your guest session to a full account at any time to keep all your projects and unlock additional features.": "يمكنك تحويل جلسة الضيف إلى حساب كامل في أي وقت للاحتفاظ بجميع مشاريعك وفتح ميزات إضافية.",
+  "You can export or delete all your data using the account menu. Everything is stored locally in your browser.": "يمكنك تصدير أو حذف جميع بياناتك باستخدام قائمة الحساب. يتم تخزين كل شيء محلياً في متصفحك.",
+  "You do not have permission to delete this project": "ليس لديك إذن لحذف هذا المشروع",
+  "You do not have permission to modify this project": "ليس لديك إذن لتعديل هذا المشروع",
+  "You do not have permission to update this project": "ليس لديك إذن لتحديث هذا المشروع",
+  "You're adding \"": "أنت تضيف \"",
+  "You're currently offline": "أنت غير متصل حالياً",
+  "Your account and projects stay private in this browser. TeXlyre is": "يبقى حسابك ومشاريعك خاصة في هذا المتصفح. TeXlyre",
+  "Your Control": "تحكمك",
+  "Your GitHub token is encrypted and stored securely with your TeXlyre password": "رمز GitHub الخاص بك مشفر ومخزن بأمان مع كلمة مرور TeXlyre الخاصة بك",
+  "Your password separates different user accounts on the same device and browser, and encrypts sensitive information like GitHub tokens and API keys if provided. The password itself is securely hashed and never stored in plain text. However, your project files and documents remain unencrypted in browser storage - anyone with physical access to this browser can view them. When using public or shared computers, export your account as a ZIP file and clear TeXlyre's browser data before leaving.": "كلمة المرور الخاصة بك تفصل حسابات المستخدمين المختلفة على نفس الجهاز والمتصفح، وتشفر المعلومات الحساسة مثل رموز GitHub ومفاتيح API إذا تم توفيرها. كلمة المرور نفسها مُجزأة بأمان ولا يتم تخزينها أبداً كنص عادي. ومع ذلك، تبقى ملفات مشروعك والمستندات غير مشفرة في تخزين المتصفح - يمكن لأي شخص لديه وصول مادي إلى هذا المتصفح عرضها. عند استخدام أجهزة الكمبيوتر العامة أو المشتركة، قم بتصدير حسابك كملف ZIP وامسح بيانات متصفح TeXlyre قبل المغادرة.",
+  "Your projects and account data stay in your browser": "تبقى مشاريعك وبيانات حسابك في متصفحك",
+  "Your session expires when you close the browser or after 24 hours": "تنتهي جلستك عند إغلاق المتصفح أو بعد 24 ساعة",
+  "Your user profile": "ملفك الشخصي",
+  "ZIP Download URL": "عنوان URL لتنزيل ZIP",
+  "ZIP File Detected": "تم اكتشاف ملف ZIP",
+  "ZIP file URL": "عنوان URL لملف ZIP",
+  "Zoom In": "تكبير",
+  "Zoom Level": "مستوى التكبير",
+  "Zoom Out": "تصغير"
+}

@@ -1,106 +1,107 @@
 // extras/lsp/jabref/settings.ts
-import type { Setting } from '../../../src/contexts/SettingsContext';
+import { t } from '@/i18n';
+import type { Setting } from '@/contexts/SettingsContext';
 
-export const jabrefLSPSettings: Setting[] = [
-	{
-		id: 'jabref-lsp-enabled',
-		category: 'LSP',
-		subcategory: 'JabRef',
-		type: 'checkbox',
-		label: 'Enable JabRef LSP',
-		description: 'Enable JabRef Language Server Protocol integration for bibliography management',
-		defaultValue: true,
-	},
-	{
-		id: 'jabref-lsp-server-url',
-		category: 'LSP',
-		subcategory: 'JabRef',
-		type: 'text',
-		label: 'LSP Server URL',
-		description: 'WebSocket URL for the JabRef LSP server',
-		defaultValue: 'ws://localhost:2087/',
-	},
-	{
-		id: 'jabref-lsp-show-panel',
-		category: 'LSP',
-		subcategory: 'JabRef',
-		type: 'checkbox',
-		label: 'Show JabRef panel',
-		description: 'Display the JabRef bibliography panel in the editor',
-		defaultValue: true,
-	},
-	{
-		id: 'jabref-lsp-citation-style',
-		category: 'LSP',
-		subcategory: 'JabRef',
-		type: 'select',
-		label: 'Default citation style',
-		description: 'Default citation style for auto-completion',
-		defaultValue: 'numeric',
-		options: [
-			{ label: 'Numeric [1]', value: 'numeric' },
-			{ label: 'Author-Year (Smith, 2023)', value: 'author-year' },
-			{ label: 'Alphabetic [Smi23]', value: 'alphabetic' },
-		],
-	},
-	{
-		id: 'jabref-lsp-max-completions',
-		category: 'LSP',
-		subcategory: 'JabRef',
-		type: 'number',
-		label: 'Maximum completion items',
-		description: 'Maximum number of citation suggestions to show',
-		defaultValue: 20,
-		min: 5,
-		max: 100,
-	},
-	{
-		id: 'jabref-lsp-auto-import',
-		category: 'LSP',
-		subcategory: 'JabRef',
-		type: 'checkbox',
-		label: 'Auto-import external citations',
-		description: 'Automatically import external bibliography entries when selected',
-		defaultValue: true,
-	},
-	// {
-	// 	id: "jabref-lsp-show-import-preview",
-	// 	category: "LSP",
-	// 	subcategory: "JabRef",
-	// 	type: "checkbox",
-	// 	label: "Show import preview",
-	// 	description: "Preview BibTeX entry before importing",
-	// 	defaultValue: false,
-	// },
-	{
-		id: 'jabref-lsp-merge-duplicates',
-		category: 'LSP',
-		subcategory: 'JabRef',
-		type: 'select',
-		label: 'Duplicate handling',
-		description: 'How to handle entries that already exist locally',
-		defaultValue: 'keep-local',
-		options: [
-			{ label: 'Keep local version', value: 'keep-local' },
-			{ label: 'Replace with external', value: 'replace' },
-			{ label: 'Rename imported entry', value: 'rename' },
-			{ label: 'Always ask', value: 'ask' },
-		],
-	},
-	// {
-	// 	id: 'jabref-lsp-custom-script',
-	// 	category: 'LSP',
-	//	subcategory: 'JabRef',
-	//	type: 'codemirror',
-	//	label: 'Custom JavaScript',
-	//	description: 'Enter custom JavaScript code',
-	//	defaultValue: '// Your code here\nconsole.log("Hello World");',
-	//	codeMirrorOptions: {
-	//		language: 'javascript',
-	//		height: 15,
-	//		lineNumbers: true,
-	//		resizable: true,
-	//		theme: 'auto',
-	//	}
-	// },
+export const getJabrefLSPSettings = (): Setting[] => [
+  {
+    id: 'jabref-lsp-enabled',
+    category: t("LSP"),
+    subcategory: t("JabRef"),
+    type: 'checkbox',
+    label: t("Enable JabRef LSP"),
+    description: t("Enable JabRef Language Server Protocol integration for bibliography management"),
+    defaultValue: true
+  },
+  {
+    id: 'jabref-lsp-server-url',
+    category: t("LSP"),
+    subcategory: t("JabRef"),
+    type: 'text',
+    label: t("LSP Server URL"),
+    description: t("WebSocket URL for the JabRef LSP server"),
+    defaultValue: 'ws://localhost:2087/'
+  },
+  {
+    id: 'jabref-lsp-show-panel',
+    category: t("LSP"),
+    subcategory: t("JabRef"),
+    type: 'checkbox',
+    label: t("Show JabRef panel"),
+    description: t("Display the JabRef bibliography panel in the editor"),
+    defaultValue: true
+  },
+  {
+    id: 'jabref-lsp-citation-style',
+    category: t("LSP"),
+    subcategory: t("JabRef"),
+    type: 'select',
+    label: t("Default citation style"),
+    description: t("Default citation style for auto-completion"),
+    defaultValue: 'numeric',
+    options: [
+      { label: t("Numeric [1]"), value: 'numeric' },
+      { label: t("Author-Year (Smith, 2023)"), value: 'author-year' },
+      { label: t("Alphabetic [Smi23]"), value: 'alphabetic' }]
+
+  },
+  {
+    id: 'jabref-lsp-max-completions',
+    category: t("LSP"),
+    subcategory: t("JabRef"),
+    type: 'number',
+    label: t("Maximum completion items"),
+    description: t("Maximum number of citation suggestions to show"),
+    defaultValue: 20,
+    min: 5,
+    max: 100
+  },
+  {
+    id: 'jabref-lsp-auto-import',
+    category: t("LSP"),
+    subcategory: t("JabRef"),
+    type: 'checkbox',
+    label: t("Auto-import external citations"),
+    description: t("Automatically import external bibliography entries when selected"),
+    defaultValue: true
+  },
+  // {
+  // 	id: "jabref-lsp-show-import-preview",
+  // 	category: "LSP",
+  // 	subcategory: "JabRef",
+  // 	type: "checkbox",
+  // 	label: "Show import preview",
+  // 	description: "Preview BibTeX entry before importing",
+  // 	defaultValue: false,
+  // },
+  {
+    id: 'jabref-lsp-merge-duplicates',
+    category: t("LSP"),
+    subcategory: t("JabRef"),
+    type: 'select',
+    label: t("Duplicate handling"),
+    description: t("How to handle entries that already exist locally"),
+    defaultValue: 'keep-local',
+    options: [
+      { label: t("Keep local version"), value: 'keep-local' },
+      { label: t("Replace with external"), value: 'replace' },
+      { label: t("Rename imported entry"), value: 'rename' },
+      { label: t("Always ask"), value: 'ask' }]
+
+  }
+  // {
+  // 	id: 'jabref-lsp-custom-script',
+  // 	category: 'LSP',
+  //	subcategory: 'JabRef',
+  //	type: 'codemirror',
+  //	label: 'Custom JavaScript',
+  //	description: 'Enter custom JavaScript code',
+  //	defaultValue: '// Your code here\nconsole.log("Hello World");',
+  //	codeMirrorOptions: {
+  //		language: 'javascript',
+  //		height: 15,
+  //		lineNumbers: true,
+  //		resizable: true,
+  //		theme: 'auto',
+  //	}
+  // },
 ];

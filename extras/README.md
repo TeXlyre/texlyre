@@ -35,7 +35,7 @@ To create a new viewer plugin:
 
 ```typescript
 // MyViewerPlugin.ts
-import { ViewerPlugin } from '../../../src/plugins/PluginInterface';
+import { ViewerPlugin } from '@/plugins/PluginInterface';
 import MyViewer from './MyViewer';
 
 const myViewerPlugin: ViewerPlugin = {
@@ -60,7 +60,7 @@ export default myViewerPlugin;
 ```typescript
 // MyViewer.tsx
 import React from 'react';
-import { ViewerProps } from '../../../src/plugins/PluginInterface';
+import { ViewerProps } from '@/plugins/PluginInterface';
 
 const MyViewer: React.FC<ViewerProps> = ({ content, mimeType, fileName }) => {
   // Component implementation

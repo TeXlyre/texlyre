@@ -1,4 +1,5 @@
 // src/extensions/codemirror/CommentBubbleExtension.ts
+import { t } from '@/i18n';
 import { ViewPlugin } from '@codemirror/view';
 import type { EditorView } from 'codemirror';
 
@@ -116,8 +117,8 @@ const commentBubblePlugin = ViewPlugin.fromClass(
 		createFloatingButton() {
 			this.floatingButton = document.createElement('button');
 			this.floatingButton.className = 'floating-comment-button';
-			this.floatingButton.title = 'Add comment (Alt+C)';
-			this.floatingButton.innerText = 'Add comment';
+			this.floatingButton.title = t('Add comment (Alt+C)');
+			this.floatingButton.innerText = t('Add comment');
 			this.floatingButton.addEventListener('click', (e) => {
 				e.preventDefault();
 				e.stopPropagation();

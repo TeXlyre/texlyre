@@ -25,6 +25,7 @@ npm run dev
 - **Plugin development** - See `extras/` directory for examples
 - **Documentation** - Improve README, add code comments
 - **Testing** - Help test on different browsers and devices
+- **Translations** - Add translations for existing languages (locales), add new languages, and suggest fixes for incorrect wording
 
 ## Code Guidelines
 
@@ -35,6 +36,46 @@ npm run dev
 ## Plugin Development
 
 Plugins go in the `extras/` directory. Add your plugin path to `plugins.config.js` to enable it.
+
+## Translation & Localization
+
+TeXlyre uses [Crowdin](https://crowdin.com/project/texlyre) for community translations.
+
+### Contributing Translations
+
+1. Visit our [Crowdin project](https://crowdin.com/project/texlyre)
+2. Select your language and start translating
+3. All translations are manually synced to the repository on release
+
+### Adding a New Language
+
+To add a new language to TeXlyre:
+
+1. Add the language JSON file to `translations/locales/`
+2. Import and register it in `src/i18n.ts`:
+
+```typescript
+import newLangTranslations from '../translations/locales/xx.json';
+
+// In resources:
+xx: {
+    translation: newLangTranslations,
+}
+```
+
+3. Add configuration to `translations/languages.config.json`:
+
+```json
+{
+  "code": "xx",
+  "name": "Language Name",
+  "nativeName": "Native Name",
+  "direction": "ltr",
+  "filePath": "locales/xx.json"
+}
+```
+
+The source of truth is `en.json`, but Crowdin uses the auto-generated `base-en.json` which includes pluralization forms (`_one`, `_two`, `_few`, `_many`, `_other`, and base phrases).
 
 ## Questions?
 

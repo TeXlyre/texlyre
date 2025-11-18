@@ -101,12 +101,12 @@
 	from {
 		transform: rotate(0deg);
 	}
+
 	to {
 		transform: rotate(360deg);
 	}
 }
 
-.notification-toast-container,
-.file-operation-toast-container {
+.notification-toast-container {
 	display: none;
 }

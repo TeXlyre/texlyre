@@ -9,9 +9,9 @@ import {
 	useState,
 } from 'react';
 
-import { pluginSettings } from '../plugins/PluginRegistry';
+import { pluginRegistry } from '../plugins/PluginRegistry';
 
-export type SettingType = 'checkbox' | 'select' | 'text' | 'codemirror' | 'number' | 'color';
+export type SettingType = 'checkbox' | 'select' | 'text' | 'codemirror' | 'number' | 'color' | 'language-select';
 
 export interface SettingOption {
 	label: string;
@@ -19,13 +19,13 @@ export interface SettingOption {
 }
 
 export interface SettingCodeMirrorOptions {
-  	language?: string;
-  	height?: number;
-  	lineNumbers?: boolean;
-  	resizable?: boolean;
-  	theme?: 'auto' | 'dark' | 'light';
- 	readOnly?: boolean;
-  	wordWrap?: boolean;
+	language?: string;
+	height?: number;
+	lineNumbers?: boolean;
+	resizable?: boolean;
+	theme?: 'auto' | 'dark' | 'light';
+	readOnly?: boolean;
+	wordWrap?: boolean;
 }
 
 export interface Setting {
@@ -67,12 +67,12 @@ export interface SettingsContextType {
 export const SettingsContext = createContext<SettingsContextType>({
 	getSettings: () => [],
 	getSetting: () => undefined,
-	updateSetting: () => {},
-	registerSetting: () => {},
-	unregisterSetting: () => {},
+	updateSetting: () => { },
+	registerSetting: () => { },
+	unregisterSetting: () => { },
 	getSettingsByCategory: () => [],
 	getCategories: () => [],
-	commitSetting: () => {},
+	commitSetting: () => { },
 	searchSettings: () => ({ categories: [], allSettings: [] }),
 	hasUnsavedChanges: false,
 	needsRefresh: false,
@@ -99,6 +99,48 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 		const userId = getCurrentUserId();
 		return userId ? `texlyre-user-${userId}-settings` : 'texlyre-settings';
 	}, [getCurrentUserId]);
+
+	const loadStoredValue = useCallback((setting: Setting): unknown => {
+		if (setting.strictDefaultValue) {
+			return setting.defaultValue;
+		}
+		if (
+			localStorageSettingsRef.current &&
+			localStorageSettingsRef.current[setting.id] !== undefined
+		) {
+			return localStorageSettingsRef.current[setting.id];
+		}
+		return setting.defaultValue;
+	}, []);
+
+	const registerSetting = useCallback((setting: Setting) => {
+		setSettings((prev) => {
+			const idx = prev.findIndex((s) => s.id === setting.id);
+			let valueToUse: unknown;
+
+			if (idx >= 0) {
+				valueToUse = prev[idx].value;
+			} else {
+				valueToUse =
+					setting.value !== undefined
+						? setting.value
+						: loadStoredValue(setting);
+			}
+
+			if (setting.onChange) {
+				setTimeout(() => setting.onChange?.(valueToUse), 0);
+			}
+
+			const settingWithValue = { ...setting, value: valueToUse };
+
+			if (idx >= 0) {
+				const updated = [...prev];
+				updated[idx] = settingWithValue;
+				return updated;
+			}
+			return [...prev, settingWithValue];
+		});
+	}, [loadStoredValue]);
 
 	useEffect(() => {
 		const userId = getCurrentUserId();
@@ -132,22 +174,10 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 			localStorageSettingsRef.current = {};
 		} finally {
 			isLocalStorageLoaded.current = true;
-			pluginSettings.forEach((setting) => registerSetting(setting));
+			const freshPluginSettings = pluginRegistry.refreshPluginSettings();
+			freshPluginSettings.forEach((setting) => registerSetting(setting));
 		}
-	}, [getCurrentUserId]);
-
-	const loadStoredValue = (setting: Setting): unknown => {
-		if (setting.strictDefaultValue) {
-			return setting.defaultValue;
-		}
-		if (
-			localStorageSettingsRef.current &&
-			localStorageSettingsRef.current[setting.id] !== undefined
-		) {
-			return localStorageSettingsRef.current[setting.id];
-		}
-		return setting.defaultValue;
-	};
+	}, [getCurrentUserId, registerSetting]);
 
 	useEffect(() => {
 		if (settings.length === 0 || !isLocalStorageLoaded.current) return;
@@ -170,6 +200,19 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 			console.error('Error saving settings to localStorage:', error);
 		}
 	}, [settings, getStorageKey]);
+
+	useEffect(() => {
+		const handleLanguageChange = () => {
+			const freshPluginSettings = pluginRegistry.refreshPluginSettings();
+
+			freshPluginSettings.forEach(setting => {
+				registerSetting(setting);
+			});
+		};
+
+		window.addEventListener('language-changed', handleLanguageChange);
+		return () => window.removeEventListener('language-changed', handleLanguageChange);
+	}, [registerSetting]);
 
 	const getSettings = () => settings;
 
@@ -198,35 +241,6 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 		);
 		setHasUnsavedChanges(true);
 		setTimeout(() => setHasUnsavedChanges(false), 2000);
-	};
-
-	const registerSetting = (setting: Setting) => {
-		setSettings((prev) => {
-			const idx = prev.findIndex((s) => s.id === setting.id);
-			let valueToUse: unknown;
-
-			if (idx >= 0) {
-				valueToUse = prev[idx].value;
-			} else {
-				valueToUse =
-					setting.value !== undefined
-						? setting.value
-						: loadStoredValue(setting);
-			}
-
-			if (setting.onChange) {
-				setTimeout(() => setting.onChange?.(valueToUse), 0);
-			}
-
-			const settingWithValue = { ...setting, value: valueToUse };
-
-			if (idx >= 0) {
-				const updated = [...prev];
-				updated[idx] = settingWithValue;
-				return updated;
-			}
-			return [...prev, settingWithValue];
-		});
 	};
 
 	const unregisterSetting = (id: string) => {

@@ -1,4 +1,5 @@
 // src/components/common/SplashScreen.tsx
+import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
@@ -25,16 +26,16 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ isVisible }) => {
     <div className={`splash-screen ${themeLoaded ? 'theme-loaded' : ''}`}>
       <div className="splash-content">
         <div className="splash-logo">
-          <img src={texlyreLogo} alt="TeXlyre" />
+          <img src={texlyreLogo} alt={t('TeXlyre')} />
         </div>
-        <h1 className="splash-title">TeXlyre</h1>
+        <h1 className="splash-title">{t('TeXlyre')}</h1>
         <div className="splash-loading">
           <div className="loading-spinner" />
-          <p>Loading TeXlyre...</p>
+          <p>{t('Loading TeXlyre...')}</p>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default SplashScreen;

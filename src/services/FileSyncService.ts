@@ -1,4 +1,5 @@
 // src/services/FileSyncService.ts
+import { t } from "@/i18n"
 import { FilePizzaDownloader, FilePizzaUploader } from 'filepizza-client';
 
 import { nanoid } from 'nanoid';
@@ -351,14 +352,14 @@ class FileSyncService {
 			}
 
 			if (filesToUpload.length === 0) {
-				throw new Error('No valid files to upload');
+				throw new Error(t('No valid files to upload'));
 			}
 
 			uploader.setFiles(filesToUpload);
 			const shareableLinks = uploader.getShareableLinks();
 
 			if (!shareableLinks) {
-				throw new Error('Failed to generate shareable links');
+				throw new Error(t('Failed to generate shareable links'));
 			}
 
 			console.log(
@@ -604,7 +605,11 @@ class FileSyncService {
 						this.notifyListeners({
 							id: nanoid(),
 							type: 'sync_complete',
-							message: `Successfully processed ${totalProcessed} file(s) (${filesToStore.length} stored, ${filesToDelete.length} deleted)`,
+							message: t('Successfully processed {count} file ({stored} stored, {deleted} deleted)', {
+								count: totalProcessed,
+								stored: filesToStore.length,
+								deleted: filesToDelete.length
+							}),
 							timestamp: Date.now(),
 							data: {
 								fileCount: totalProcessed,
@@ -621,7 +626,7 @@ class FileSyncService {
 			};
 
 			const timeout = setTimeout(() => {
-				rejectOnce(new Error('Download timeout after 60 seconds'));
+				rejectOnce(new Error(t('Download timeout after 60 seconds')));
 			}, 60000);
 
 			downloader
@@ -640,13 +645,13 @@ class FileSyncService {
 					downloader.on('passwordRequired', () => {
 						console.log('[FileSyncService] Password required for download');
 						clearTimeout(timeout);
-						rejectOnce(new Error('Password required for download'));
+						rejectOnce(new Error(t('Password required for download')));
 					});
 
 					downloader.on('passwordInvalid', (message) => {
 						console.log('[FileSyncService] Invalid password:', message);
 						clearTimeout(timeout);
-						rejectOnce(new Error(`Invalid password: ${message}`));
+						rejectOnce(new Error(t('Invalid password: {message}', { message })));
 					});
 
 					downloader.on('info', (filesInfo) => {
@@ -655,7 +660,7 @@ class FileSyncService {
 						);
 						if (filesInfo.length === 0) {
 							clearTimeout(timeout);
-							rejectOnce(new Error('No files available for download'));
+							rejectOnce(new Error(t('No files available for download')));
 							return;
 						}
 
@@ -709,7 +714,7 @@ class FileSyncService {
 				.then((connected) => {
 					if (!connected) {
 						clearTimeout(timeout);
-						rejectOnce(new Error('Failed to connect to FilePizza link'));
+						rejectOnce(new Error(t('Failed to connect to FilePizza link')));
 					}
 					console.log(
 						'[FileSyncService] Connected successfully, waiting for file info...',

@@ -1,9 +1,11 @@
 // extras/loggers/latex_visualizer/LaTeXVisualizer.tsx
+import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
-import { PluginHeader } from '../../../src/components/common/PluginHeader';
-import type { LoggerProps } from '../../../src/plugins/PluginInterface';
+import { PluginHeader } from '@/components/common/PluginHeader';
+import type { LoggerProps } from '@/plugins/PluginInterface';
+import { formatFileSize } from '@/utils/fileUtils';
 import './styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './LaTeXVisualizerPlugin';
 
@@ -36,7 +38,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 	});
 
 	const handleFilterClick = (type: 'error' | 'warning') => {
-		setFilter((current) => (current === type ? 'all' : type));
+		setFilter((current) => current === type ? 'all' : type);
 	};
 
 	const preprocessLogLines = (log: string): string => {
@@ -75,8 +77,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 			!trimmedNext.includes(':') &&
 			!trimmedNext.startsWith('!') &&
 			!trimmedNext.startsWith('Package') &&
-			!trimmedNext.startsWith('LaTeX')
-		) {
+			!trimmedNext.startsWith('LaTeX')) {
 			return true;
 		}
 
@@ -88,8 +89,8 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 
 		if (currentLine.includes('bef') && trimmedNext.startsWith('ore ')) {
 			return (
-				currentLine.replace(/bef\s*$/, 'before ') + trimmedNext.substring(4)
-			);
+				currentLine.replace(/bef\s*$/, 'before ') + trimmedNext.substring(4));
+
 		}
 
 		if (currentLine.endsWith('-')) {
@@ -118,7 +119,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 					if (char === '(') {
 						const remaining = line.substring(j + 1);
 						const fileMatch = remaining.match(
-							/^([^()]*\.(?:tex|sty|cls|def|fd|cfg))/,
+							/^([^()]*\.(?:tex|sty|cls|def|fd|cfg))/
 						);
 						if (fileMatch) {
 							const filePath = fileMatch[1];
@@ -133,9 +134,9 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 				}
 			}
 
-			return fileStack.length > 0
-				? fileStack[fileStack.length - 1]
-				: currentFile;
+			return fileStack.length > 0 ?
+				fileStack[fileStack.length - 1] :
+				currentFile;
 		};
 
 		for (let i = 0; i < lines.length; i++) {
@@ -145,11 +146,10 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 			if (
 				line.startsWith('! LaTeX Error:') ||
 				line.startsWith('! Fatal Package') ||
-				line.startsWith('! Critical Package')
-			) {
-				const errorMessage = line.startsWith('! LaTeX Error:')
-					? line.substring(14).trim()
-					: line.substring(2).trim();
+				line.startsWith('! Critical Package')) {
+				const errorMessage = line.startsWith('! LaTeX Error:') ?
+					line.substring(14).trim() :
+					line.substring(2).trim();
 				let lineNumber: number | undefined;
 				let lineContent: string | undefined;
 				let fullMessage = errorMessage;
@@ -202,7 +202,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 					line: lineNumber,
 					file: contextFile,
 					lineContent: lineContent,
-					fullMessage: fullMessage.replace(/\s+/g, ' ').trim(),
+					fullMessage: fullMessage.replace(/\s+/g, ' ').trim()
 				});
 			} else if (line.startsWith('! ') && !line.startsWith('! LaTeX Error:')) {
 				const errorMessage = line.substring(2).trim();
@@ -224,7 +224,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 					message: errorMessage,
 					line: lineNumber,
 					file: contextFile,
-					lineContent: lineContent,
+					lineContent: lineContent
 				});
 			} else if (line.includes('LaTeX Warning:')) {
 				const warningMatch = line.match(/LaTeX Warning:\s*(.+)/);
@@ -234,7 +234,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 					const warningFile = contextFile;
 
 					const fileLineMatch = fullMessage.match(
-						/(.+?)\s+on input line (\d+)/,
+						/(.+?)\s+on input line (\d+)/
 					);
 					if (fileLineMatch) {
 						fullMessage = fileLineMatch[1];
@@ -242,7 +242,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 					}
 
 					const explicitFileMatch = fullMessage.match(
-						/(.+?)\s+on page \d+ undefined on input line (\d+)/,
+						/(.+?)\s+on page \d+ undefined on input line (\d+)/
 					);
 					if (explicitFileMatch) {
 						fullMessage = explicitFileMatch[1];
@@ -255,8 +255,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 							nextLine &&
 							!nextLine.match(/^[A-Z]/) &&
 							!nextLine.includes('Warning:') &&
-							!nextLine.includes('Error:')
-						) {
+							!nextLine.includes('Error:')) {
 							fullMessage += ` ${nextLine}`;
 						} else {
 							break;
@@ -267,12 +266,12 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 						type: 'warning',
 						message: fullMessage.replace(/\s+/g, ' ').trim(),
 						line: lineNumber,
-						file: warningFile,
+						file: warningFile
 					});
 				}
 			} else if (line.includes('Package') && line.includes('Warning:')) {
 				const packageWarningMatch = line.match(
-					/Package\s+(\w+)\s+Warning:\s*(.+)/,
+					/Package\s+(\w+)\s+Warning:\s*(.+)/
 				);
 				if (packageWarningMatch) {
 					let fullMessage = `${packageWarningMatch[1]}: ${packageWarningMatch[2]}`;
@@ -291,8 +290,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 							!nextLine.match(/^[A-Z]/) &&
 							!nextLine.includes('Warning:') &&
 							!nextLine.includes('Error:') &&
-							!nextLine.startsWith('(')
-						) {
+							!nextLine.startsWith('(')) {
 							fullMessage += ` ${nextLine}`;
 						} else {
 							break;
@@ -303,66 +301,64 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 						type: 'warning',
 						message: fullMessage.replace(/\s+/g, ' ').trim(),
 						line: lineNumber,
-						file: contextFile,
+						file: contextFile
 					});
 				}
 			} else if (line.match(/(Over|Under)full\s+\\(h|v)box/)) {
 				const boxMatch = line.match(
-					/(Over|Under)full\s+\\(h|v)box.*?(?:at lines?\s+(\d+)(?:--(\d+))?)/,
+					/(Over|Under)full\s+\\(h|v)box.*?(?:at lines?\s+(\d+)(?:--(\d+))?)/
 				);
 				if (boxMatch) {
 					const startLine = Number.parseInt(boxMatch[3], 10);
-					const _endLine = boxMatch[4]
-						? Number.parseInt(boxMatch[4], 10)
-						: startLine;
+					const _endLine = boxMatch[4] ?
+						Number.parseInt(boxMatch[4], 10) :
+						startLine;
 
 					result.push({
 						type: 'warning',
 						message: `${boxMatch[1]}full ${boxMatch[2]}box`,
 						line: startLine,
-						file: contextFile,
+						file: contextFile
 					});
 				}
 			} else if (
 				line.includes('There were undefined references') ||
-				(line.includes('Citation') && line.includes('undefined'))
-			) {
+				line.includes('Citation') && line.includes('undefined')) {
 				result.push({
 					type: 'warning',
-					message: 'Undefined references detected',
+					message: t('Undefined references detected'),
 					line: undefined,
-					file: contextFile,
+					file: contextFile
 				});
 			} else if (line.includes('Missing character:')) {
 				const charMatch = line.match(
-					/Missing character:\s*(.+?)(?:\s+in font|\s+on input line (\d+))?/,
+					/Missing character:\s*(.+?)(?:\s+in font|\s+on input line (\d+))?/
 				);
 				if (charMatch) {
 					result.push({
 						type: 'warning',
-						message: `Missing character: ${charMatch[1]}`,
+						message: t(`Missing character: {missingChar}`, { missingChar: charMatch[1] }),
 						line: charMatch[2] ? Number.parseInt(charMatch[2], 10) : undefined,
-						file: contextFile,
+						file: contextFile
 					});
 				}
 			} else if (
 				line.includes('Fatal error occurred') ||
-				line.includes('Emergency stop')
-			) {
+				line.includes('Emergency stop')) {
 				result.push({
 					type: 'error',
-					message: 'Fatal compilation error - no output produced',
+					message: t('Fatal compilation error - no output produced'),
 					line: undefined,
-					file: contextFile,
+					file: contextFile
 				});
 			} else if (line.includes('File') && line.includes('not found')) {
 				const fileMatch = line.match(/File\s+['`"]([^'"]+)[''"]\s+not found/);
 				if (fileMatch) {
 					result.push({
 						type: 'error',
-						message: `File not found: ${fileMatch[1]}`,
+						message: t(`File not found: {missingFile}`, { missingFile: fileMatch[1] }),
 						line: undefined,
-						file: contextFile,
+						file: contextFile
 					});
 				}
 			}
@@ -391,104 +387,104 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 	};
 
 	const tooltipInfo = [
-		`Total errors: ${parsedErrors.filter((e) => e.type === 'error').length}`,
-		`Total warnings: ${parsedErrors.filter((e) => e.type === 'warning').length}`,
-		`Log size: ${log ? `${Math.round(log.length / 1024)} KB` : '0 KB'}`,
-		'Click error items to navigate to line',
+		t('Total errors: {count}', { count: parsedErrors.filter((e) => e.type === 'error').length }),
+		t('Total warnings: {count}', { count: parsedErrors.filter((e) => e.type === 'warning').length }),
+		t('Log size: {size}', { size: log ? formatFileSize(log.length) : 'Empty' }),
+		t('Click error items to navigate to line')
 	];
 
-	const headerControls = (
+	const headerControls =
 		<div className="error-stats">
 			<span
 				className={`error-count ${filter === 'error' ? 'active' : ''}`}
 				onClick={() => handleFilterClick('error')}
-				title="Click to filter errors"
-			>
+				title={t('Click to filter errors')}>
+
 				{getErrorTypeIcon('error')}{' '}
 				{parsedErrors.filter((e) => e.type === 'error').length}
 			</span>
 			<span
 				className={`warning-count ${filter === 'warning' ? 'active' : ''}`}
 				onClick={() => handleFilterClick('warning')}
-				title="Click to filter warnings"
-			>
+				title={t('Click to filter warnings')}>
+
 				{getErrorTypeIcon('warning')}{' '}
 				{parsedErrors.filter((e) => e.type === 'warning').length}
 			</span>
-		</div>
-	);
+		</div>;
+
 
 	return (
 		<div className="latex-visualizer">
 			<PluginHeader
-				fileName="LaTeX Log"
-				filePath="LaTeX Compilation Output"
+				fileName={t("LaTeX Log")}
+				filePath={t("LaTeX Compilation Output")}
 				pluginName={PLUGIN_NAME}
 				pluginVersion={PLUGIN_VERSION}
 				tooltipInfo={tooltipInfo}
-				controls={headerControls}
-			/>
+				controls={headerControls} />
+
 
 			<div className="latex-visualizer-content">
-				{filteredErrors.length === 0 ? (
+				{filteredErrors.length === 0 ?
 					<div className="no-errors">
 						<div className="success-icon">✅</div>
 						<div>
-							{parsedErrors.length === 0
-								? 'No errors or warnings found.'
-								: `No ${filter}s found.`}
+							{parsedErrors.length === 0 ?
+								t('No errors or warnings found.') :
+								t(`No {filter} found.`, { filter })}
 						</div>
 						<div className="success-subtitle">
-							{parsedErrors.length === 0
-								? 'Compilation appears successful!'
-								: `Showing ${filter} items only.`}
+							{parsedErrors.length === 0 ?
+								t('Compilation appears successful!') :
+								t(`Showing {filter} items only.`, { filter })}
 						</div>
-					</div>
-				) : (
+					</div> :
+
 					<ul className="error-list">
-						{filteredErrors.map((error, index) => (
+						{filteredErrors.map((error, index) =>
 							<li
 								key={index}
 								className={`error-item ${error.type} ${error.line ? 'clickable' : ''}`}
 								onClick={() => handleErrorClick(error)}
 								title={
-									error.line ? `Click to go to line ${error.line}` : undefined
-								}
-							>
+									error.line ? t(`Click to go to line {errorLine}`, { errorLine: error.line }) : undefined
+								}>
+
 								<div className="error-header">
 									<span className="error-type-badge">
 										<span className="error-icon">
 											{getErrorTypeIcon(error.type)}
 										</span>
-										<span className="error-type-text">{error.type}</span>
+										<span className="error-type-text">{t(error.type)}</span>
 									</span>
 									<div className="error-location">
-										{error.file && (
+										{error.file &&
 											<span
 												className="error-file"
-												title={`File: ${error.file}`}
-											>
-												📄 {error.file}
+												title={t(`File: {errorFile}`, { errorFile: error.file })}>{t('\uD83D\uDCC4')}
+
+												{error.file}
 											</span>
-										)}
-										{error.line && (
-											<span className="error-line">Line {error.line}</span>
-										)}
+										}
+										{error.line &&
+											<span className="error-line">{t('Line')}{error.line}</span>
+										}
 									</div>
 								</div>
 								<div className="latex-error-message">
 									{error.fullMessage || error.message}
 								</div>
-								{error.lineContent && (
+								{error.lineContent &&
 									<pre className="error-context">{error.lineContent}</pre>
-								)}
+								}
 							</li>
-						))}
+						)}
 					</ul>
-				)}
+				}
 			</div>
-		</div>
-	);
+		</div>);
+
 };
 
 export default LaTeXVisualizer;

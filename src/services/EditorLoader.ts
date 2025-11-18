@@ -369,7 +369,7 @@ export const EditorLoader = (
 			viewRef.current = null;
 		}
 
-		const contentToUse = isEditingFile 
+		const contentToUse = isEditingFile
 			? currentContentRef.current
 			: (ytextRef.current?.toString() || '');
 
@@ -794,7 +794,7 @@ export const EditorLoader = (
 					closeTagStart = closeTagStart - 1;
 				}
 
-				const closeTagCoreEnd = closeTagStart + closeMatch[0].length;
+				const closeTagCoreEnd = closeMatch.index + closeMatch[0].length;
 				const closeTagAfterBacktick = closeTagCoreEnd < currentContent.length &&
 					currentContent[closeTagCoreEnd] === '`';
 

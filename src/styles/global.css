@@ -139,6 +139,66 @@ button:focus-visible {
 	overflow: visible;
 }
 
+.pagination-controls {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: var(--space-md);
+	margin-top: var(--space-md);
+	padding: var(--space-sm);
+}
+
+@media (max-width: 768px) {
+	.pagination-controls {
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+}
+
+.pagination-button {
+	padding: var(--space-xs) var(--space-sm);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	background-color: var(--pico-secondary-background);
+	color: var(--text-color);
+	cursor: pointer;
+	font-size: 0.8rem;
+	transition: all var(--transition-normal);
+	min-width: 32px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.pagination-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.pagination-info {
+	font-size: 0.8rem;
+	color: var(--pico-secondary);
+}
+
+
+.pagination-button:hover:not(:disabled) {
+	background-color: var(--pico-primary-focus);
+	border-color: var(--pico-primary);
+}
+
+.pagination-button.active {
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+	border-color: var(--pico-primary);
+}
+
+.pagination-ellipsis {
+	padding: var(--space-xs);
+	color: var(--pico-secondary);
+	font-size: 0.8rem;
+}
+
 header {
 	display: flex;
 	justify-content: space-between;
@@ -292,6 +352,17 @@ footer {
 
 .warning-message code {
 	background-color: var(--color-warning);
+}
+
+.warning-note {
+	margin-top: var(--space-sm);
+	background-color: color-mix(in srgb, var(--color-warning) 20%, white);
+	padding: var(--space-xs);
+	font-size: 0.85em;
+}
+
+.warning-note p {
+	margin: 0;
 }
 
 .success-message {

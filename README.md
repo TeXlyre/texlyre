@@ -5,6 +5,7 @@ A **[local-first](https://www.inkandswitch.com/essay/local-first/)** real-time [
 [![GitHub Pages](https://img.shields.io/badge/🟢%20Live-GitHub%20Pages-181717.svg?logo=github)](https://texlyre.github.io/texlyre)
 [![Tests](https://img.shields.io/github/actions/workflow/status/texlyre/texlyre/test.yml?label=tests)](https://github.com/texlyre/texlyre/actions)
 [![Deploy](https://img.shields.io/github/actions/workflow/status/texlyre/texlyre/deploy.yml?label=deploy)](https://github.com/texlyre/texlyre/actions)
+[![Crowdin](https://badges.crowdin.net/texlyre/localized.svg)](https://crowdin.com/project/texlyre)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://reactjs.org/)
@@ -42,8 +43,6 @@ The platform integrates **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)
 <p align="center">
 <img src="showcase/error_parser_zoomed_typst.png" alt="Typst compilation in progress" width="600">
 </p>
-
-**Coming soon: Real-time compilation as you type**
 
 ### Local-first Architecture
 
@@ -157,7 +156,7 @@ TeXlyre uses open source signaling servers for WebRTC connections:
 - **Y-WebRTC Signaling**: Based on [y-webrtc](https://github.com/yjs/y-webrtc)
 - **PeerJS Signaling**: Based on [PeerJS Server](https://github.com/peers/peerjs-server)
 - **TeX Live Download Server**: Based on [SwiftLaTeX Texlive On-Demand Server](https://github.com/SwiftLaTeX/Texlive-Ondemand)
-- **FilePizza Server**: Based on [FilePizza](https://github.com/kern/filepizza) which relies on PeerJS (built-in TURN servers are not deployed on TeXlyre servers)
+- **FilePizza Server**: Based on [FilePizza](https://github.com/kern/filepizza) which relies on PeerJS (built-in TURN containers are not deployed on TeXlyre servers)
 
 All servers are hosted locally and made publicly available with [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/).
 
@@ -167,10 +166,37 @@ You can run your own signaling servers by following the setup instructions in ou
 
 ## Acknowledgments
 
-TeXlyre builds upon several key technologies: **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX)** provides WASM-based LaTeX compilation, **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)** provides WASM-based Typst compilation, **[Yjs](https://github.com/yjs/yjs)** enables conflict-free collaborative editing, **[CodeMirror](https://codemirror.net/)** powers the text editing interface, and **[FilePizza](https://github.com/kern/filepizza)** facilitates secure peer-to-peer file transfers.
+TeXlyre builds upon several key technologies:
 
-Development of TeXlyre was assisted by **Anthropic Claude** for code generation, debugging, and architectural guidance.
+### Core Technologies
+- **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX)** - WASM-based LaTeX compilation engine
+- **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)** - WASM-based Typst compilation engine
+- **[Yjs](https://github.com/yjs/yjs)** - Conflict-free collaborative editing with CRDTs
+- **[CodeMirror](https://codemirror.net/)** - Extensible code editor
+- **[FilePizza](https://github.com/kern/filepizza)** - Secure peer-to-peer file transfers
+
+### Editor Extensions
+- **[codemirror-vim](https://github.com/replit/codemirror-vim)** - Vim keybindings for CodeMirror
+- **[codemirror-lang-typst](https://github.com/kxxt/codemirror-lang-typst)** - Typst language support for CodeMirror
+
+### LaTeX Tools
+- **[tex-fmt](https://github.com/WGUNDERWOOD/tex-fmt)** - LaTeX code formatter
+- **[TeXcount](https://app.uio.no/ifi/texcount/)** - Word counter for LaTeX documents
+- **[BibTeX-Tidy](https://github.com/FlamingTempura/bibtex-tidy)** - BibTeX file cleaner and formatter
+
+### Typst Tools
+- **[typstyle](https://github.com/typstyle-rs/typstyle)** - Typst code formatter
+- **[typst-wordometer](https://github.com/Jollywatt/typst-wordometer)** - Word counter for Typst documents
+
+### Runtime
+- **[WebPerl](https://github.com/haukex/webperl)** - Perl interpreter compiled to WebAssembly
+- **[wasm-bindgen](https://github.com/wasm-bindgen/wasm-bindgen)** - Rust/Wasm interoperability
+
+Development of TeXlyre was assisted by **Anthropic Claude** for debugging and architectural guidance.
 
 ---
 
-**Ready to start collaborating?** [Get started with TeXlyre](https://texlyre.github.io/texlyre/) or [contribute to the project](CONTRIBUTING.md).
+**Ready to start collaborating?** 
+[Get started with TeXlyre](https://texlyre.github.io/texlyre/) 
+**or** 
+[contribute to the project with bug fixes, new features, plugins, and translations](CONTRIBUTING.md).

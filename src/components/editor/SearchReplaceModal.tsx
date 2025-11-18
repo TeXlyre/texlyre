@@ -1,5 +1,7 @@
 // src/components/editor/SearchReplaceModal.tsx
+import { t } from '@/i18n';
 import type React from 'react';
+
 import Modal from '../common/Modal';
 import { ReplaceIcon } from '../common/Icons';
 
@@ -23,22 +25,22 @@ const SearchReplaceModal: React.FC<SearchReplaceModalProps> = ({
     const getTitle = () => {
         switch (replaceType) {
             case 'file':
-                return 'Replace in File';
+                return t('Replace in File');
             case 'document':
-                return 'Replace in Document';
+                return t('Replace in Document');
             case 'all':
-                return 'Replace All';
+                return t('Replace All');
         }
     };
 
     const getMessage = () => {
         switch (replaceType) {
             case 'file':
-                return `Replace ${replaceCount} occurrence${replaceCount !== 1 ? 's' : ''} in "${fileName}"?`;
+                return t('Replace {count} occurrence in "{fileName}"?', { count: replaceCount, fileName });
             case 'document':
-                return `Replace ${replaceCount} occurrence${replaceCount !== 1 ? 's' : ''} in document "${fileName}"?`;
+                return t('Replace {count} occurrence in document "{fileName}"?', { count: replaceCount, fileName });
             case 'all':
-                return `Replace all occurrences in ${replaceCount} file${replaceCount !== 1 ? 's' : ''}?`;
+                return t('Replace all occurrences in {count} file?', { count: replaceCount });
         }
     };
 
@@ -54,7 +56,7 @@ const SearchReplaceModal: React.FC<SearchReplaceModalProps> = ({
                 <p>{getMessage()}</p>
 
                 <div className="warning-message">
-                    This action cannot be undone.
+                    {t('This action cannot be undone.')}
                 </div>
 
                 <div className="modal-actions">
@@ -63,14 +65,14 @@ const SearchReplaceModal: React.FC<SearchReplaceModalProps> = ({
                         className="button secondary"
                         onClick={onClose}
                     >
-                        Cancel
+                        {t('Cancel')}
                     </button>
                     <button
                         type="button"
                         className="button primary"
                         onClick={onConfirm}
                     >
-                        Replace
+                        {t('Replace')}
                     </button>
                 </div>
             </div>

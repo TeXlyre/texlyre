@@ -7,6 +7,7 @@
 export function renderer_build_info(): any;
 export class CreateSessionOptions {
   free(): void;
+  [Symbol.dispose](): void;
   constructor();
   set format(value: string);
   set artifact_content(value: Uint8Array);
@@ -17,6 +18,7 @@ export class CreateSessionOptions {
 export class IncrDomDocClient {
   private constructor();
   free(): void;
+  [Symbol.dispose](): void;
   bind_functions(functions: any): void;
   /**
    * Relayout the document in the given window.
@@ -28,6 +30,7 @@ export class IncrDomDocClient {
 export class PageInfo {
   private constructor();
   free(): void;
+  [Symbol.dispose](): void;
   readonly page_off: number;
   readonly width_pt: number;
   readonly height_pt: number;
@@ -35,6 +38,7 @@ export class PageInfo {
 export class PagesInfo {
   private constructor();
   free(): void;
+  [Symbol.dispose](): void;
   page_by_number(num: number): PageInfo | undefined;
   page(i: number): PageInfo;
   width(): number;
@@ -43,6 +47,7 @@ export class PagesInfo {
 }
 export class RenderPageImageOptions {
   free(): void;
+  [Symbol.dispose](): void;
   constructor();
   get pixel_per_pt(): number | undefined;
   set pixel_per_pt(value: number | null | undefined);
@@ -57,8 +62,9 @@ export class RenderPageImageOptions {
 export class RenderSession {
   private constructor();
   free(): void;
-  source_span(path: Uint32Array): string | undefined;
+  [Symbol.dispose](): void;
   render_in_window(rect_lo_x: number, rect_lo_y: number, rect_hi_x: number, rect_hi_y: number): string;
+  source_span(path: Uint32Array): string | undefined;
   get pixel_per_pt(): number | undefined;
   set pixel_per_pt(value: number | null | undefined);
   get background_color(): string | undefined;
@@ -69,6 +75,7 @@ export class RenderSession {
 }
 export class RenderSessionOptions {
   free(): void;
+  [Symbol.dispose](): void;
   constructor();
   get pixel_per_pt(): number | undefined;
   set pixel_per_pt(value: number | null | undefined);
@@ -79,32 +86,35 @@ export class RenderSessionOptions {
 }
 export class TypstRenderer {
   free(): void;
-  create_worker(_w: any): Promise<TypstWorker>;
-  create_worker_bridge(): WorkerBridge;
-  mount_dom(ses: RenderSession, elem: HTMLElement): Promise<IncrDomDocClient>;
-  load_glyph_pack(_v: any): void;
-  render_page_to_canvas(ses: RenderSession, canvas: any, options?: RenderPageImageOptions | null): Promise<any>;
+  [Symbol.dispose](): void;
   render_svg_diff(session: RenderSession, rect_lo_x: number, rect_lo_y: number, rect_hi_x: number, rect_hi_y: number): string;
   svg_data(session: RenderSession, parts?: number | null): string;
   get_customs(session: RenderSession): Array<any> | undefined;
   render_svg(session: RenderSession, root: HTMLElement): boolean;
+  create_worker(_w: any): Promise<TypstWorker>;
+  create_worker_bridge(): WorkerBridge;
+  load_glyph_pack(_v: any): void;
   constructor();
   create_session(options?: CreateSessionOptions | null): RenderSession;
   reset(session: RenderSession): void;
   manipulate_data(session: RenderSession, action: string, data: Uint8Array): void;
   session_from_artifact(artifact_content: Uint8Array, decoder: string): RenderSession;
+  render_page_to_canvas(ses: RenderSession, canvas: any, options?: RenderPageImageOptions | null): Promise<any>;
+  mount_dom(ses: RenderSession, elem: HTMLElement): Promise<IncrDomDocClient>;
 }
 export class TypstRendererBuilder {
   free(): void;
+  [Symbol.dispose](): void;
   constructor();
   build(): Promise<TypstRenderer>;
   add_glyph_pack(_pack: any): Promise<void>;
   add_raw_font(_font_buffer: Uint8Array): Promise<void>;
-  add_web_fonts(_fonts: Array<any>): Promise<void>;
+  add_lazy_font(_font: any, _blob: any): Promise<void>;
 }
 export class TypstWorker {
   private constructor();
   free(): void;
+  [Symbol.dispose](): void;
   manipulate_data(_action: string, _data: Uint8Array): Promise<any>;
   get_pages_info(): Promise<any>;
   render_canvas(_actions: Uint8Array, _canvas_list: HTMLCanvasElement[], _data: RenderPageImageOptions[]): Promise<any>;
@@ -112,12 +122,51 @@ export class TypstWorker {
 export class WorkerBridge {
   private constructor();
   free(): void;
+  [Symbol.dispose](): void;
 }
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
+  readonly __wbg_typstrendererbuilder_free: (a: number, b: number) => void;
+  readonly typstrendererbuilder_new: (a: number) => void;
+  readonly typstrendererbuilder_build: (a: number) => number;
+  readonly rendersession_render_in_window: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+  readonly typstrenderer_render_svg_diff: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+  readonly typstrenderer_svg_data: (a: number, b: number, c: number, d: number) => void;
+  readonly typstrenderer_get_customs: (a: number, b: number) => number;
+  readonly typstrenderer_render_svg: (a: number, b: number, c: number, d: number) => void;
+  readonly typstrenderer_create_worker: (a: number, b: number) => number;
+  readonly typstrenderer_create_worker_bridge: (a: number, b: number) => void;
+  readonly __wbg_workerbridge_free: (a: number, b: number) => void;
+  readonly __wbg_typstworker_free: (a: number, b: number) => void;
+  readonly typstworker_manipulate_data: (a: number, b: number, c: number, d: number, e: number) => void;
+  readonly typstworker_get_pages_info: (a: number) => number;
+  readonly typstworker_render_canvas: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+  readonly typstrendererbuilder_add_glyph_pack: (a: number, b: number) => number;
+  readonly typstrenderer_load_glyph_pack: (a: number, b: number, c: number) => void;
+  readonly typstrendererbuilder_add_raw_font: (a: number, b: number) => number;
+  readonly typstrendererbuilder_add_lazy_font: (a: number, b: number, c: number) => number;
+  readonly renderer_build_info: () => number;
+  readonly __wbg_renderpageimageoptions_free: (a: number, b: number) => void;
+  readonly renderpageimageoptions_new: () => number;
+  readonly renderpageimageoptions_pixel_per_pt: (a: number) => number;
+  readonly renderpageimageoptions_set_pixel_per_pt: (a: number, b: number) => void;
+  readonly renderpageimageoptions_background_color: (a: number, b: number) => void;
+  readonly renderpageimageoptions_set_background_color: (a: number, b: number, c: number) => void;
+  readonly renderpageimageoptions_page_off: (a: number) => number;
+  readonly renderpageimageoptions_set_page_off: (a: number, b: number) => void;
+  readonly renderpageimageoptions_cache_key: (a: number, b: number) => void;
+  readonly renderpageimageoptions_set_cache_key: (a: number, b: number, c: number) => void;
+  readonly renderpageimageoptions_data_selection: (a: number) => number;
+  readonly renderpageimageoptions_set_data_selection: (a: number, b: number) => void;
+  readonly __wbg_typstrenderer_free: (a: number, b: number) => void;
+  readonly typstrenderer_new: () => number;
+  readonly typstrenderer_create_session: (a: number, b: number, c: number) => void;
+  readonly typstrenderer_reset: (a: number, b: number, c: number) => void;
+  readonly typstrenderer_manipulate_data: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+  readonly typstrenderer_session_from_artifact: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
   readonly __wbg_rendersessionoptions_free: (a: number, b: number) => void;
   readonly rendersessionoptions_new: () => number;
   readonly rendersessionoptions_background_color: (a: number, b: number) => void;
@@ -149,46 +198,8 @@ export interface InitOutput {
   readonly rendersession_source_span: (a: number, b: number, c: number, d: number) => void;
   readonly rendersessionoptions_pixel_per_pt: (a: number) => number;
   readonly rendersessionoptions_set_pixel_per_pt: (a: number, b: number) => void;
-  readonly __wbg_typstrendererbuilder_free: (a: number, b: number) => void;
-  readonly typstrendererbuilder_new: (a: number) => void;
-  readonly typstrendererbuilder_build: (a: number) => number;
-  readonly typstrenderer_create_worker: (a: number, b: number) => number;
-  readonly typstrenderer_create_worker_bridge: (a: number, b: number) => void;
-  readonly __wbg_workerbridge_free: (a: number, b: number) => void;
-  readonly __wbg_typstworker_free: (a: number, b: number) => void;
-  readonly typstworker_manipulate_data: (a: number, b: number, c: number, d: number, e: number) => void;
-  readonly typstworker_get_pages_info: (a: number) => number;
-  readonly typstworker_render_canvas: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
-  readonly typstrenderer_mount_dom: (a: number, b: number, c: number) => number;
-  readonly typstrendererbuilder_add_glyph_pack: (a: number, b: number) => number;
-  readonly typstrenderer_load_glyph_pack: (a: number, b: number, c: number) => void;
-  readonly typstrendererbuilder_add_raw_font: (a: number, b: number) => number;
-  readonly typstrendererbuilder_add_web_fonts: (a: number, b: number) => number;
   readonly typstrenderer_render_page_to_canvas: (a: number, b: number, c: number, d: number) => number;
-  readonly rendersession_render_in_window: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
-  readonly typstrenderer_render_svg_diff: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
-  readonly typstrenderer_svg_data: (a: number, b: number, c: number, d: number) => void;
-  readonly typstrenderer_get_customs: (a: number, b: number) => number;
-  readonly typstrenderer_render_svg: (a: number, b: number, c: number, d: number) => void;
-  readonly renderer_build_info: () => number;
-  readonly __wbg_renderpageimageoptions_free: (a: number, b: number) => void;
-  readonly renderpageimageoptions_new: () => number;
-  readonly renderpageimageoptions_pixel_per_pt: (a: number) => number;
-  readonly renderpageimageoptions_set_pixel_per_pt: (a: number, b: number) => void;
-  readonly renderpageimageoptions_background_color: (a: number, b: number) => void;
-  readonly renderpageimageoptions_set_background_color: (a: number, b: number, c: number) => void;
-  readonly renderpageimageoptions_page_off: (a: number) => number;
-  readonly renderpageimageoptions_set_page_off: (a: number, b: number) => void;
-  readonly renderpageimageoptions_cache_key: (a: number, b: number) => void;
-  readonly renderpageimageoptions_set_cache_key: (a: number, b: number, c: number) => void;
-  readonly renderpageimageoptions_data_selection: (a: number) => number;
-  readonly renderpageimageoptions_set_data_selection: (a: number, b: number) => void;
-  readonly __wbg_typstrenderer_free: (a: number, b: number) => void;
-  readonly typstrenderer_new: () => number;
-  readonly typstrenderer_create_session: (a: number, b: number, c: number) => void;
-  readonly typstrenderer_reset: (a: number, b: number, c: number) => void;
-  readonly typstrenderer_manipulate_data: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
-  readonly typstrenderer_session_from_artifact: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+  readonly typstrenderer_mount_dom: (a: number, b: number, c: number) => number;
   readonly __wbg_incrdomdocclient_free: (a: number, b: number) => void;
   readonly incrdomdocclient_bind_functions: (a: number, b: number) => void;
   readonly incrdomdocclient_relayout: (a: number, b: number, c: number, d: number, e: number) => number;
@@ -213,8 +224,8 @@ export interface InitOutput {
   readonly __wbindgen_export_3: (a: number, b: number, c: number) => void;
   readonly __wbindgen_export_4: WebAssembly.Table;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
-  readonly __wbindgen_export_5: (a: number, b: number, c: number) => void;
-  readonly __wbindgen_export_6: (a: number, b: number) => void;
+  readonly __wbindgen_export_5: (a: number, b: number) => void;
+  readonly __wbindgen_export_6: (a: number, b: number, c: number) => void;
   readonly __wbindgen_export_7: (a: number, b: number, c: number) => void;
   readonly __wbindgen_export_8: (a: number, b: number, c: number, d: number) => void;
 }
