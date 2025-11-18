@@ -11,12 +11,12 @@ import { fileOperationNotificationService } from '../../services/FileOperationNo
 interface SearchPanelProps {
   className?: string;
   onNavigateToResult: (
-  fileId: string,
-  line?: number,
-  column?: number,
-  documentId?: string,
-  isLinkedDocument?: boolean)
-  => void;
+    fileId: string,
+    line?: number,
+    column?: number,
+    documentId?: string,
+    isLinkedDocument?: boolean)
+    => void;
 }
 
 const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToResult }) => {
@@ -116,12 +116,11 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
   }, [query, caseSensitive, wholeWord, useRegex]);
 
   const handleResultClick = (
-  fileId: string,
-  line?: number,
-  column?: number,
-  documentId?: string,
-  isLinkedDocument?: boolean) =>
-  {
+    fileId: string,
+    line?: number,
+    column?: number,
+    documentId?: string,
+    isLinkedDocument?: boolean) => {
     onNavigateToResult(fileId, line, column, documentId, isLinkedDocument);
 
     document.dispatchEvent(
@@ -132,10 +131,9 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
   };
 
   const handleReplaceInFile = async (
-  fileId: string,
-  event: React.MouseEvent,
-  documentId?: string) =>
-  {
+    fileId: string,
+    event: React.MouseEvent,
+    documentId?: string) => {
     event.stopPropagation();
 
     const result = results.find((r) => r.fileId === fileId);
@@ -216,218 +214,218 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
 
     return (
       <>
-                {text.substring(0, matchStart)}
-                <mark className="search-highlight">{text.substring(matchStart, matchEnd)}</mark>
-                {text.substring(matchEnd)}
-            </>);
+        {text.substring(0, matchStart)}
+        <mark className="search-highlight">{text.substring(matchStart, matchEnd)}</mark>
+        {text.substring(matchEnd)}
+      </>);
 
   };
 
   return (
     <div className={`search-panel ${className}`}>
-            <div className="file-explorer-header">
-                <h3>{t('Search')}</h3>
-                <div className="search-mode-toggle file-explorer-actions">
-                    <button
+      <div className="file-explorer-header">
+        <h3>{t('Search')}</h3>
+        <div className="search-mode-toggle file-explorer-actions">
+          <button
             className={`mode-toggle-btn ${!showReplace ? 'active' : ''}`}
             onClick={() => showReplace && toggleReplace()}
             title={t('Search only (Ctrl+Shift+F)')}>
 
-                        <SearchIcon />
-                    </button>
-                    <button
+            <SearchIcon />
+          </button>
+          <button
             className={`mode-toggle-btn ${showReplace ? 'active' : ''}`}
             onClick={toggleReplace}
             title={t('Search and Replace (Ctrl+Shift+H)')}>
 
-                        <ReplaceIcon />
-                    </button>
-                </div>
-            </div>
+            <ReplaceIcon />
+          </button>
+        </div>
+      </div>
 
-            <div className="search-options">
-                <button
+      <div className="search-options">
+        <button
           className={`search-option-btn ${caseSensitive ? 'active' : ''}`}
           onClick={toggleCaseSensitive}
           title={t('Match case')}>{t('Aa')}
 
 
         </button>
-                <button
+        <button
           className={`search-option-btn ${wholeWord ? 'active' : ''}`}
           onClick={toggleWholeWord}
           title={t('Match whole word')}>{t('|w|')}
 
 
         </button>
-                <button
+        <button
           className={`search-option-btn ${useRegex ? 'active' : ''}`}
           onClick={toggleRegex}
           title={t('Use regular expression')}>{t('.*')}
 
 
         </button>
-            </div>
+      </div>
 
-            <div className="search-input-container">
-                <input
+      <div className="search-input-container">
+        <input
           type="text"
           placeholder={t('Search in files...')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="search-input" />
 
-                {query &&
-        <button className="clear-search-button" onClick={clearSearch}>
-                        ×
-                    </button>
+        {query &&
+          <button className="clear-search-button" onClick={clearSearch}>
+            ×
+          </button>
         }
-            </div>
+      </div>
 
-            {showReplace &&
-      <div className="search-input-container">
-                    <input
-          type="text"
-          placeholder={t('Replace with...')}
-          value={replaceText}
-          onChange={(e) => setReplaceText(e.target.value)}
-          className="search-input" />
+      {showReplace &&
+        <div className="search-input-container">
+          <input
+            type="text"
+            placeholder={t('Replace with...')}
+            value={replaceText}
+            onChange={(e) => setReplaceText(e.target.value)}
+            className="search-input" />
 
-                    <button
-          className="replace-all-btn"
-          onClick={handleReplaceAll}
-          disabled={!query.trim() || !replaceText || results.length === 0 || isReplacing}
-          title={t('Replace all')}>
+          <button
+            className="replace-all-btn"
+            onClick={handleReplaceAll}
+            disabled={!query.trim() || !replaceText || results.length === 0 || isReplacing}
+            title={t('Replace all')}>
 
-                        {t('Replace All')}
-                    </button>
-                </div>
+            {t('Replace All')}
+          </button>
+        </div>
       }
 
-            <div className="search-results">
-                {(isSearching || isReplacing) &&
-        <div className="search-loading">
-                        {isSearching ? t('Searching...') : t('Replacing...')}
-                    </div>
+      <div className="search-results">
+        {(isSearching || isReplacing) &&
+          <div className="search-loading">
+            {isSearching ? t('Searching...') : t('Replacing...')}
+          </div>
         }
 
-                {!isSearching && !isReplacing && results.length === 0 && query.trim() &&
-        <div className="search-empty">{t('No results found')}</div>
+        {!isSearching && !isReplacing && results.length === 0 && query.trim() &&
+          <div className="search-empty">{t('No results found')}</div>
         }
 
-                {!isSearching && !isReplacing && query.trim() === '' &&
-        <div className="search-empty">{t('Enter a search query to find files')}</div>
+        {!isSearching && !isReplacing && query.trim() === '' &&
+          <div className="search-empty">{t('Enter a search query to find files')}</div>
         }
 
-                {!isSearching && !isReplacing && results.length > 0 &&
-        <>
-                        <div className="search-results-header">
-                            {t('{totalMatches} match in {resultCount} file', { totalMatches, resultCount: results.length })}
-                        </div>
-                        <div className="search-results-note">
-                            {t('Click once to open file or document, twice to navigate to match')}
-                        </div>
-                        {results.map((result, resultIdx) =>
-          <div
-            key={`${result.fileId}-${result.matchType}-${resultIdx}`}
-            className="search-result-file">
-
-                                <div className="search-result-file-header">
-                                    <FileTextIcon />
-                                    <span className="search-result-filename">
-                                        {result.fileName || t('Untitled')}
-                                    </span>
-                                    <span className="search-result-filepath">
-                                        {result.filePath || ''}
-                                    </span>
-                                    {showReplace && result.matchType === 'content' &&
-              <button
-                className="replace-file-btn"
-                onClick={(e) => handleReplaceInFile(
-                  result.fileId,
-                  e,
-                  result.isLinkedDocument ? result.documentId : undefined
-                )}
-                disabled={!replaceText || isReplacing}
-                title={result.isLinkedDocument ? t('Replace in this document') : t('Replace in this file')}>
-
-                                            {t('Replace')}
-                                        </button>
-              }
-                                </div>
-
-                                {result.matchType === 'filename' && result.matches.length > 0 ?
-            <div
-              className="search-result-match"
-              onClick={() => handleResultClick(
-                result.fileId,
-                undefined,
-                undefined,
-                result.documentId,
-                result.isLinkedDocument
-              )}>
-
-                                        <span className="search-result-match-text">
-                                            {highlightMatch(
-                  result.matches[0].text || result.fileName,
-                  result.matches[0].matchStart,
-                  result.matches[0].matchEnd
-                )}
-                                        </span>
-                                    </div> :
-            result.matchType === 'content' && result.matches.length > 0 ?
-            <div className="search-result-matches">
-                                        {result.matches.slice(0, 50).map((match, idx) =>
+        {!isSearching && !isReplacing && results.length > 0 &&
+          <>
+            <div className="search-results-header">
+              {t('{totalMatches} match in {count} file', { totalMatches, count: results.length })}
+            </div>
+            <div className="search-results-note">
+              {t('Click once to open file or document, twice to navigate to match')}
+            </div>
+            {results.map((result, resultIdx) =>
               <div
-                key={`${result.fileId}-${match.line}-${idx}`}
-                className="search-result-match"
-                onClick={() =>
-                handleResultClick(
-                  result.fileId,
-                  match.line,
-                  match.column,
-                  result.documentId,
-                  result.isLinkedDocument
-                )
-                }>
+                key={`${result.fileId}-${result.matchType}-${resultIdx}`}
+                className="search-result-file">
 
-                                                <span className="search-result-line">{match.line}</span>
-                                                <span className="search-result-match-text">
-                                                    {highlightMatch(
-                    match.text || '',
-                    match.matchStart,
-                    match.matchEnd
-                  )}
-                                                </span>
-                                            </div>
-              )}
-                                        {result.matches.length > 50 &&
-              <div className="search-result-more">
-                                                {t('+{count} more matches', { count: result.matches.length - 50 })}
-                                            </div>
-              }
-                                    </div> :
-            null}
-                            </div>
-          )}
-                    </>
+                <div className="search-result-file-header">
+                  <FileTextIcon />
+                  <span className="search-result-filename">
+                    {result.fileName || t('Untitled')}
+                  </span>
+                  <span className="search-result-filepath">
+                    {result.filePath || ''}
+                  </span>
+                  {showReplace && result.matchType === 'content' &&
+                    <button
+                      className="replace-file-btn"
+                      onClick={(e) => handleReplaceInFile(
+                        result.fileId,
+                        e,
+                        result.isLinkedDocument ? result.documentId : undefined
+                      )}
+                      disabled={!replaceText || isReplacing}
+                      title={result.isLinkedDocument ? t('Replace in this document') : t('Replace in this file')}>
+
+                      {t('Replace')}
+                    </button>
+                  }
+                </div>
+
+                {result.matchType === 'filename' && result.matches.length > 0 ?
+                  <div
+                    className="search-result-match"
+                    onClick={() => handleResultClick(
+                      result.fileId,
+                      undefined,
+                      undefined,
+                      result.documentId,
+                      result.isLinkedDocument
+                    )}>
+
+                    <span className="search-result-match-text">
+                      {highlightMatch(
+                        result.matches[0].text || result.fileName,
+                        result.matches[0].matchStart,
+                        result.matches[0].matchEnd
+                      )}
+                    </span>
+                  </div> :
+                  result.matchType === 'content' && result.matches.length > 0 ?
+                    <div className="search-result-matches">
+                      {result.matches.slice(0, 50).map((match, idx) =>
+                        <div
+                          key={`${result.fileId}-${match.line}-${idx}`}
+                          className="search-result-match"
+                          onClick={() =>
+                            handleResultClick(
+                              result.fileId,
+                              match.line,
+                              match.column,
+                              result.documentId,
+                              result.isLinkedDocument
+                            )
+                          }>
+
+                          <span className="search-result-line">{match.line}</span>
+                          <span className="search-result-match-text">
+                            {highlightMatch(
+                              match.text || '',
+                              match.matchStart,
+                              match.matchEnd
+                            )}
+                          </span>
+                        </div>
+                      )}
+                      {result.matches.length > 50 &&
+                        <div className="search-result-more">
+                          {t('+{count} more matches', { count: result.matches.length - 50 })}
+                        </div>
+                      }
+                    </div> :
+                    null}
+              </div>
+            )}
+          </>
         }
-            </div>
+      </div>
 
-            {showReplaceModal && pendingReplace &&
-      <SearchReplaceModal
-        isOpen={showReplaceModal}
-        onClose={() => {
-          setShowReplaceModal(false);
-          setPendingReplace(null);
-        }}
-        onConfirm={handleConfirmReplace}
-        replaceCount={pendingReplace.count}
-        replaceType={pendingReplace.type}
-        fileName={pendingReplace.fileName} />
+      {showReplaceModal && pendingReplace &&
+        <SearchReplaceModal
+          isOpen={showReplaceModal}
+          onClose={() => {
+            setShowReplaceModal(false);
+            setPendingReplace(null);
+          }}
+          onConfirm={handleConfirmReplace}
+          replaceCount={pendingReplace.count}
+          replaceType={pendingReplace.type}
+          fileName={pendingReplace.fileName} />
 
       }
-        </div>);
+    </div>);
 
 };
 
