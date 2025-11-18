@@ -331,7 +331,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
   };
 
   const tooltipInfo = [
-    t('Quality: {quality}', { quality }),
+    t('Quality: {quality}', { quality: t(quality) }),
     t('Auto center: {status}', { status: autoCenter ? t('enabled') : t('disabled') }),
     t('Panning: {status}', { status: enablePanning ? t('enabled') : t('disabled') }),
     t('Filters: {status}', { status: enableFilters ? t('enabled') : t('disabled') }),
@@ -382,7 +382,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
       {enablePanning && (
         <PluginControlGroup>
           <button
-            title={t(`Panning: {status}`, { status: enablePanning ? 'enabled' : 'disabled' })}
+            title={t(`Panning: {status}`, { status: enablePanning ? t('enabled') : t('disabled') })}
             className={enablePanning ? 'active' : ''}>
 
             <MoveIcon />
