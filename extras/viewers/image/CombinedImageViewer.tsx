@@ -28,6 +28,7 @@ import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
 import type { ViewerProps } from '@/plugins/PluginInterface';
 import { fileStorageService } from '@/services/FileStorageService';
+import { formatFileSize } from '@/utils/fileUtils';
 import './styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './ImageViewerPlugin';
 
@@ -335,7 +336,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
     t('Panning: {status}', { status: enablePanning ? t('enabled') : t('disabled') }),
     t('Filters: {status}', { status: enableFilters ? t('enabled') : t('disabled') }),
     t('MIME Type: {mimeType}', { mimeType: mimeType || t('Unknown') }),
-    t('Size: {size}', { size: fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : t('Unknown') })
+    t('Size: {size}', { size: formatFileSize(fileInfo.fileSize) })
   ];
 
   const headerControls =

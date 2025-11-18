@@ -21,6 +21,7 @@ import {
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
 import type { ViewerProps } from '@/plugins/PluginInterface';
+import { formatFileSize } from '@/utils/fileUtils';
 import './styles.css';
 import { getPdfViewerSettings } from './settings';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './PdfViewerPlugin';
@@ -382,7 +383,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
     t('Pages: {count}', { count: totalPages }),
     t('Current page: {page}', { page: currentPage }),
     t('MIME Type: {mimeType}', { mimeType: mimeType || 'application/pdf' }),
-    t('Size: {size}', { size: fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : t('Unknown') })
+    t('Size: {size}', { size: formatFileSize(fileInfo.fileSize) })
   ];
 
   const headerControls =

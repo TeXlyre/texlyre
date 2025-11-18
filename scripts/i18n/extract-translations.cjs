@@ -3,6 +3,8 @@ const path = require("node:path");
 const parser = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
 const t = require("@babel/types");
+const { sortLocales } = require("./sort-locales.cjs");
+const { generateBasePlurals } = require("./generate-base-plurals.cjs");
 
 const CONFIG = {
     extensions: [".tsx", ".jsx", ".ts"],
@@ -273,16 +275,12 @@ function extractTranslations(sourceDir, outputFile) {
         mergedTranslations[key] = value;
     }
 
-    const translationObj = Object.fromEntries(
-        Object.entries(mergedTranslations).sort(([a], [b]) => a.localeCompare(b)),
-    );
-
     const outputDir = path.dirname(outputFile);
     if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    fs.writeFileSync(outputFile, JSON.stringify(translationObj, null, 2));
+    fs.writeFileSync(outputFile, JSON.stringify(mergedTranslations, null, 2));
 
     if (pluralKeys.size > 0) {
         const pluralFile = outputFile.replace('.json', '.plural-hints.json');
@@ -307,10 +305,16 @@ function extractTranslations(sourceDir, outputFile) {
 
     console.log(`\n✅ Extraction complete!`);
     console.log(`📁 Files processed: ${fileCount}`);
-    console.log(`📝 Total translations: ${Object.keys(translationObj).length}`);
+    console.log(`📝 Total translations: ${Object.keys(mergedTranslations).length}`);
     console.log(`🆕 New translations: ${newCount}`);
     console.log(`♻️  Existing translations preserved: ${existingKeys.length}`);
     console.log(`💾 Output written to: ${outputFile}`);
+
+    console.log('\n=== Sorting all locale files ===');
+    sortLocales();
+
+    console.log('\n=== Generating base-en.json ===');
+    generateBasePlurals();
 }
 
 if (require.main === module) {

@@ -22,6 +22,7 @@ import { useSettings } from '@/hooks/useSettings';
 import type { CollaborativeViewerProps } from '@/plugins/PluginInterface';
 import { EditorLoader } from '@/services/EditorLoader';
 import { fileStorageService } from '@/services/FileStorageService';
+import { formatFileSize } from '@/utils/fileUtils';
 import { TidyOptionsPanel } from '../../viewers/bibtex/TidyOptionsPanel';
 import {
   type TidyOptions,
@@ -359,7 +360,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
     t('Entries: {count}', { count: bibtexContent.split('@').length - 1 }),
     t('Collaborative Mode: Active'),
     t('MIME Type: {mimeType}', { mimeType: fileInfo.mimeType || 'text/x-bibtex' }),
-    t('Size: {size}', { size: fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : t('Unknown') })
+    t('Size: {size}', { size: formatFileSize(fileInfo.fileSize) })
   ];
 
   const headerControls =

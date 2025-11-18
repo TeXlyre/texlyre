@@ -24,7 +24,7 @@ import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
 import { copyCleanTextToClipboard } from '../../utils/clipboardUtils';
 import { processTextSelection } from '../../utils/fileCommentUtils.ts';
 import { formatDate } from '../../utils/dateUtils';
-import { arrayBufferToString } from '../../utils/fileUtils';
+import { arrayBufferToString, formatFileSize } from '../../utils/fileUtils';
 import { TextDiffUtils } from '../../utils/textDiffUtils';
 import CommentPanel from '../comments/CommentPanel';
 import CommentToggleButton from '../comments/CommentToggleButton';
@@ -295,7 +295,7 @@ const EditorContent: React.FC<{
           t(`Mode: {mode}`, { mode: isViewOnly ? t('Read-only') : t('Editing') }),
           linkedDocumentId ? t(`Linked to document: {documentId}`, { documentId: linkedDocumentId }) : '',
           t(`MIME Type: {mimeType}`, { mimeType: fileInfo.mimeType || 'text/plain' }),
-          t(`Size: {size}`, { size: fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : t('Unknown') }),
+          t(`Size: {size}`, { size: formatFileSize(fileInfo.fileSize) }),
           t(`Last Modified: {lastModified}`, { lastModified: fileInfo.lastModified ? formatDate(fileInfo.lastModified) : t('Unknown') })
         ] :
 

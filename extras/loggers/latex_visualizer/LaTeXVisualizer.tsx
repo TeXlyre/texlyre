@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 
 import { PluginHeader } from '@/components/common/PluginHeader';
 import type { LoggerProps } from '@/plugins/PluginInterface';
+import { formatFileSize } from '@/utils/fileUtils';
 import './styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './LaTeXVisualizerPlugin';
 
@@ -388,7 +389,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 	const tooltipInfo = [
 		t('Total errors: {count}', { count: parsedErrors.filter((e) => e.type === 'error').length }),
 		t('Total warnings: {count}', { count: parsedErrors.filter((e) => e.type === 'warning').length }),
-		t('Log size: {size}', { size: log ? `${Math.round(log.length / 1024)} KB` : '0 KB' }),
+		t('Log size: {size}', { size: log ? formatFileSize(log.length) : 'Empty' }),
 		t('Click error items to navigate to line')
 	];
 

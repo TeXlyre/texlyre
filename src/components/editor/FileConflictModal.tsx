@@ -17,9 +17,9 @@ import {
 	'../../services/FileConflictService';
 import type { FileNode } from '../../types/files';
 import { formatDate } from '../../utils/dateUtils';
-import { isTemporaryFile } from '../../utils/fileUtils';
-import { TempFileIcon } from '../common/Icons.tsx';
+import { isTemporaryFile, formatFileSize } from '../../utils/fileUtils';
 import Modal from '../common/Modal';
+import { TempFileIcon } from '../common/Icons.tsx';
 
 const FileConflictModal: React.FC = () => {
 	const [isOpen, setIsOpen] = useState(false);
@@ -173,13 +173,6 @@ const FileConflictModal: React.FC = () => {
 		}
 
 		return null;
-	};
-
-	const formatFileSize = (size?: number): string => {
-		if (!size) return t('Unknown size');
-		if (size < 1024) return t('{count} bytes', { count: size });
-		if (size < 1024 * 1024) return t('{size} KB', { size: (size / 1024).toFixed(1) });
-		return t('{size} MB', { size: (size / (1024 * 1024)).toFixed(1) });
 	};
 
 	const operationWarning = getOperationWarning();

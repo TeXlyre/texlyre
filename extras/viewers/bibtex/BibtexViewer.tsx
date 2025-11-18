@@ -22,6 +22,7 @@ import { useSettings } from '@/hooks/useSettings';
 import type { ViewerProps } from '@/plugins/PluginInterface';
 import { EditorLoader } from '@/services/EditorLoader';
 import { fileStorageService } from '@/services/FileStorageService';
+import { formatFileSize } from '@/utils/fileUtils';
 import { TidyOptionsPanel } from './TidyOptionsPanel';
 import { type TidyOptions, getPresetOptions } from './tidyOptions';
 import { BibtexTableView } from './BibtexTableView';
@@ -435,7 +436,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
     t('Preset: {preset}', { preset: tidyPreset }),
     t('Entries: {count}', { count: bibtexContent.split('@').length - 1 }),
     t('MIME Type: {mimeType}', { mimeType: fileInfo.mimeType || 'text/x-bibtex' }),
-    t('Size: {size}', { size: fileInfo.fileSize ? `${Math.round(fileInfo.fileSize / 1024)} KB` : t('Unknown') })
+    t('Size: {size}', { size: formatFileSize(fileInfo.fileSize) })
   ];
 
   const headerControls =

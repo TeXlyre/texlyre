@@ -1,4 +1,5 @@
 // src/utils/fileUtils.ts
+import { t } from '@/i18n';
 import mime from 'mime';
 
 export const arrayBufferToString = (buffer: ArrayBuffer | Uint8Array): string => {
@@ -26,6 +27,13 @@ export const toArrayBuffer = (data: string | ArrayBuffer | SharedArrayBuffer | A
 		return out.buffer;
 	}
 	throw new Error('Unsupported binary content type');
+};
+
+export const formatFileSize = (size?: number): string => {
+	if (!size) return t('Unknown size');
+	if (size < 1024) return t('{count} bytes', { count: size });
+	if (size < 1024 * 1024) return t('{size} KB', { size: (size / 1024).toFixed(1) });
+	return t('{size} MB', { size: (size / (1024 * 1024)).toFixed(1) });
 };
 
 export const getFilenameFromPath = (path: string): string => {

@@ -3,7 +3,7 @@ import { t } from '@/i18n';
 import type React from 'react';
 
 import type { FileNode } from '../../types/files';
-import { isTemporaryFile } from '../../utils/fileUtils';
+import { formatFileSize, isTemporaryFile } from '../../utils/fileUtils';
 import { FolderIcon, TempFileIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 
@@ -119,7 +119,7 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 						</div>
 						{propertiesInfo.size !== undefined && (
 							<div className="property-item">
-								<strong>{t('Size')}:</strong> {t('{count} bytes', { count: propertiesInfo.size })}
+								<strong>{t('Size')}:</strong> {formatFileSize(propertiesInfo.size)}
 							</div>
 						)}
 						{propertiesInfo.mimeType && (
