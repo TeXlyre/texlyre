@@ -136,11 +136,11 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 
           </p>
           <ul>
-            <li><strong>{t('All your projects')}</strong>{t('and their documents')}</li>
-            <li><strong>{t('All project files')}</strong>{t('and folders')}</li>
-            <li><strong>{t('All settings')}</strong>{t('and preferences')}</li>
-            <li><strong>{t('All encrypted secrets')}</strong>{t('and API keys')}</li>
-            <li><strong>{t('Your user profile')}</strong>{t('and login credentials')}</li>
+            <li><strong>{t('All your projects')}</strong>&nbsp;{t('and their documents')}</li>
+            <li><strong>{t('All project files')}</strong>&nbsp;{t('and folders')}</li>
+            <li><strong>{t('All settings')}</strong>&nbsp;{t('and preferences')}</li>
+            <li><strong>{t('All encrypted secrets')}</strong>&nbsp;{t('and API keys')}</li>
+            <li><strong>{t('Your user profile')}</strong>&nbsp;{t('and login credentials')}</li>
           </ul>
           <p>
             <strong>{t('This data cannot be recovered after deletion.')}</strong>
