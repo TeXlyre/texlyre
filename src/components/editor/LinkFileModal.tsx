@@ -158,7 +158,7 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
             onClick={handleCreate}
             disabled={isCreating || !fileName.trim()}>
 
-            {isCreating ? 'Creating...' : 'Create & Link'}
+            {isCreating ? t('Creating...') : t('Create & Link')}
           </button>
         </div>
       </div>
