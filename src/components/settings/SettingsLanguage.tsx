@@ -133,7 +133,7 @@ const SettingsLanguage: React.FC<SettingsLanguageProps> = ({ setting }) => {
 
                     </div>
                     <div className="option-details">
-                      {lang.translatedKeys} / {lang.totalKeys}{t('keys')}
+                      {lang.translatedKeys} / {lang.totalKeys} {t(`{count}phrase translated`, { count: lang.totalKeys })}
                     </div>
                   </div>
                 )}
