@@ -1,3 +1,4 @@
+// extras/backup/gitlab/GitLabBackupPlugin.ts
 import type { BackupPlugin } from '@/plugins/PluginInterface';
 import GitLabBackupModal from './GitLabBackupModal';
 import { gitLabBackupService } from './GitLabBackupService';

@@ -1,7 +1,9 @@
+// extras/backup/gitlab/GitLabBackupStatusIndicator.tsx
 import { t } from '@/i18n';
 import React, { useState } from 'react';
 import GitLabBackupModal from './GitLabBackupModal';
 import { gitLabBackupService } from './GitLabBackupService';
+import './styles.css';
 
 interface GitLabBackupStatusIndicatorProps {
     className?: string;

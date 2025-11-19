@@ -3,6 +3,7 @@ import { t } from '@/i18n';
 import React, { useState } from 'react';
 import GitHubBackupModal from './GitHubBackupModal';
 import { gitHubBackupService } from './GitHubBackupService';
+import './styles.css';
 
 interface GitHubBackupStatusIndicatorProps {
   className?: string;
@@ -10,8 +11,7 @@ interface GitHubBackupStatusIndicatorProps {
   isInEditor?: boolean;
 }
 
-const GitHubBackupStatusIndicator: React.FC<
-  GitHubBackupStatusIndicatorProps> =
+const GitHubBackupStatusIndicator: React.FC<GitHubBackupStatusIndicatorProps> =
   ({ className = '', currentProjectId, isInEditor = false }) => {
     const [status, setStatus] = useState(gitHubBackupService.getStatus());
     const [activities, setActivities] = useState(
@@ -53,17 +53,13 @@ const GitHubBackupStatusIndicator: React.FC<
     return (
       <>
         <div
-          className={`backup-status-indicator main-button single-service ${className} ${status.isConnected ? t('connected') : t('disconnected')}`
-          }
+          className={`backup-status-indicator main-button single-service ${className} ${status.isConnected ? t('connected') : t('disconnected')}`}
           onClick={() => setShowModal(true)}
           title={getStatusText()}>
-
           <div
             className="status-dot"
             style={{ backgroundColor: getStatusColor() }} />
-
           <span className="backup-label">{t('GitHub')}</span>
-
           {hasUnreadActivities && <div className="activity-notification" />}
         </div>
 
@@ -72,9 +68,8 @@ const GitHubBackupStatusIndicator: React.FC<
           onClose={() => setShowModal(false)}
           currentProjectId={currentProjectId}
           isInEditor={isInEditor} />
-
-      </>);
-
+      </>
+    );
   };
 
 export default GitHubBackupStatusIndicator;

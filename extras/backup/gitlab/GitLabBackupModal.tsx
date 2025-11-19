@@ -1,3 +1,4 @@
+// extras/backup/gitlab/GitLabBackupModal.tsx
 import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState } from 'react';
@@ -16,6 +17,7 @@ import { formatDate } from '@/utils/dateUtils';
 import { gitLabApiService } from './GitLabApiService';
 import { gitLabBackupService } from './GitLabBackupService';
 import { GitLabIcon } from './Icon';
+import './styles.css';
 
 interface GitLabBackupModalProps {
     isOpen: boolean;
@@ -45,9 +47,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
     const [selectedProject, setSelectedProject] = useState('');
     const [selectedBranch, setSelectedBranch] = useState('main');
     const [displayBranch, setDisplayBranch] = useState<string>('main');
-    const [connectionStep, setConnectionStep] = useState<
-        'token' | 'project' | 'branch'
-    >('token');
+    const [connectionStep, setConnectionStep] = useState<'token' | 'project' | 'branch'>('token');
 
     const { getProjectById } = useAuth();
     const secrets = useSecrets();
@@ -307,40 +307,17 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
         >
             <div className="backup-modal">
                 {showConnectionFlow && (
-                    <div
-                        className="connection-flow"
-                        style={{
-                            marginBottom: '2rem',
-                            padding: '1rem',
-                            border: '1px solid var(--accent-border)',
-                            borderRadius: '8px',
-                            backgroundColor: 'var(--accent-background)',
-                        }}
-                    >
+                    <div className="connection-flow">
                         <h3>{t('Connect to GitLab')}</h3>
                         {connectionStep === 'token' && (
                             <div>
-                                <label
-                                    style={{
-                                        display: 'block',
-                                        marginBottom: '0.5rem',
-                                        fontWeight: 'bold',
-                                    }}
-                                >
-                                    {t('GitLab Personal Access Token:')}
-                                </label>
+                                <label>{t('GitLab Personal Access Token:')}</label>
                                 <input
                                     type="password"
                                     value={gitLabToken}
                                     onChange={(e) => setGitLabToken(e.target.value)}
-                                    placeholder={t('glpat-...')}
-                                    style={{
-                                        width: '100%',
-                                        padding: '0.5rem',
-                                        marginBottom: '1rem',
-                                    }}
-                                />
-                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                    placeholder={t('glpat-...')} />
+                                <div className="button-group">
                                     <button
                                         className="button primary"
                                         onClick={handleTokenSubmit}
@@ -359,24 +336,10 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                         )}
                         {connectionStep === 'project' && (
                             <div>
-                                <label
-                                    style={{
-                                        display: 'block',
-                                        marginBottom: '0.5rem',
-                                        fontWeight: 'bold',
-                                    }}
-                                >
-                                    {t('Select Project:')}
-                                </label>
+                                <label>{t('Select Project:')}</label>
                                 <select
                                     value={selectedProject}
-                                    onChange={(e) => handleProjectChange(e.target.value)}
-                                    style={{
-                                        width: '100%',
-                                        padding: '0.5rem',
-                                        marginBottom: '1rem',
-                                    }}
-                                >
+                                    onChange={(e) => handleProjectChange(e.target.value)}>
                                     <option value="">{t('Choose a project...')}</option>
                                     {availableProjects.map((project) => (
                                         <option key={project.id} value={project.id.toString()}>
@@ -385,7 +348,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                         </option>
                                     ))}
                                 </select>
-                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                <div className="button-group">
                                     <button
                                         className="button primary"
                                         onClick={handleProjectSubmit}
@@ -404,31 +367,17 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                         )}
                         {connectionStep === 'branch' && (
                             <div>
-                                <label
-                                    style={{
-                                        display: 'block',
-                                        marginBottom: '0.5rem',
-                                        fontWeight: 'bold',
-                                    }}
-                                >
-                                    {t('Select Branch:')}
-                                </label>
+                                <label>{t('Select Branch:')}</label>
                                 <select
                                     value={selectedBranch}
-                                    onChange={(e) => setSelectedBranch(e.target.value)}
-                                    style={{
-                                        width: '100%',
-                                        padding: '0.5rem',
-                                        marginBottom: '1rem',
-                                    }}
-                                >
+                                    onChange={(e) => setSelectedBranch(e.target.value)}>
                                     {availableBranches.map((branch) => (
                                         <option key={branch.name} value={branch.name}>
                                             {branch.name} {branch.protected ? '(Protected)' : ''}
                                         </option>
                                     ))}
                                 </select>
-                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                <div className="button-group">
                                     <button
                                         className="button primary"
                                         onClick={handleBranchSubmit}
@@ -464,27 +413,10 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                     ) : (
                                         <>
                                             {isInEditor && (
-                                                <div
-                                                    className="sync-scope-selector"
-                                                    style={{ marginBottom: '1rem' }}
-                                                >
-                                                    <label
-                                                        style={{
-                                                            display: 'block',
-                                                            marginBottom: '0.5rem',
-                                                            fontWeight: 'bold',
-                                                        }}
-                                                    >
-                                                        {t('Backup Scope:')}
-                                                    </label>
-                                                    <div style={{ display: 'flex', gap: '1rem' }}>
-                                                        <label
-                                                            style={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: '0.5rem',
-                                                            }}
-                                                        >
+                                                <div className="sync-scope-selector">
+                                                    <label>{t('Backup Scope:')}</label>
+                                                    <div>
+                                                        <label>
                                                             <input
                                                                 type="radio"
                                                                 name="syncScope"
@@ -502,13 +434,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                                                 {currentProjectName})
                                                             </span>
                                                         </label>
-                                                        <label
-                                                            style={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: '0.5rem',
-                                                            }}
-                                                        >
+                                                        <label>
                                                             <input
                                                                 type="radio"
                                                                 name="syncScope"
@@ -526,16 +452,8 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                                     </div>
                                                 </div>
                                             )}
-                                            <div style={{ marginBottom: '1rem' }}>
-                                                <label
-                                                    style={{
-                                                        display: 'block',
-                                                        marginBottom: '0.5rem',
-                                                        fontWeight: 'bold',
-                                                    }}
-                                                >
-                                                    {t('Commit Message:')}
-                                                </label>
+                                            <div>
+                                                <label>{t('Commit Message:')}</label>
                                                 <input
                                                     type="text"
                                                     value={commitMessage}
@@ -543,12 +461,6 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                                     placeholder={t(`TeXlyre Backup: {date}`, {
                                                         date: new Date().toLocaleDateString(),
                                                     })}
-                                                    style={{
-                                                        width: '100%',
-                                                        padding: '0.5rem',
-                                                        borderRadius: '4px',
-                                                        border: '1px solid var(--accent-border)',
-                                                    }}
                                                     disabled={isOperating}
                                                 />
                                             </div>
@@ -610,7 +522,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                 {status.isConnected && status.project && (
                                     <div className="status-item">
                                         <strong>{t('Project: ')}</strong>
-                                        <span style={{ marginLeft: '0.5rem' }}>
+                                        <span>
                                             {status.project} ({displayBranch})
                                         </span>
                                     </div>
@@ -649,7 +561,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                                 key={activity.id}
                                                 className="activity-item"
                                                 style={{
-                                                    borderLeft: `3px solid ${getActivityColor(activity.type)}`,
+                                                    borderLeftColor: getActivityColor(activity.type),
                                                 }}
                                             >
                                                 <div className="activity-content">

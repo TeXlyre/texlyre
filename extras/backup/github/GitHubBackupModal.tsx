@@ -8,10 +8,8 @@ import {
   GitPushIcon,
   ImportIcon,
   SettingsIcon,
-  SyncIcon,
   TrashIcon
-} from
-  '@/components/common/Icons';
+} from '@/components/common/Icons';
 import Modal from '@/components/common/Modal';
 import { useAuth } from '@/hooks/useAuth';
 import { useSecrets } from '@/hooks/useSecrets';
@@ -19,6 +17,7 @@ import { formatDate } from '@/utils/dateUtils';
 import { gitHubApiService } from './GitHubApiService';
 import { gitHubBackupService } from './GitHubBackupService';
 import { GitHubIcon } from './Icon';
+import './styles.css';
 
 interface GitHubBackupModalProps {
   isOpen: boolean;
@@ -48,9 +47,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
   const [selectedRepo, setSelectedRepo] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('main');
   const [displayBranch, setDisplayBranch] = useState<string>('main');
-  const [connectionStep, setConnectionStep] = useState<
-    'token' | 'repo' | 'branch'>(
-      'token');
+  const [connectionStep, setConnectionStep] = useState<'token' | 'repo' | 'branch'>('token');
 
   const { getProjectById } = useAuth();
   const secrets = useSecrets();
@@ -297,190 +294,113 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
           className="modal-close-button"
           onClick={() => { }}
           title={t('GitHub Backup Settings')}>
-
           <SettingsIcon />
         </button>
       }>
-
       <div className="backup-modal">
-        {showConnectionFlow &&
-          <div
-            className="connection-flow"
-            style={{
-              marginBottom: '2rem',
-              padding: '1rem',
-              border: '1px solid var(--accent-border)',
-              borderRadius: '8px',
-              backgroundColor: 'var(--accent-background)'
-            }}>
-
+        {showConnectionFlow && (
+          <div className="connection-flow">
             <h3>{t('Connect to GitHub')}</h3>
-            {connectionStep === 'token' &&
+            {connectionStep === 'token' && (
               <div>
-                <label
-                  style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    fontWeight: 'bold'
-                  }}>{t('GitHub Personal Access Token:')}
-
-
-                </label>
+                <label>{t('GitHub Personal Access Token:')}</label>
                 <input
                   type="password"
                   value={gitHubToken}
                   onChange={(e) => setGitHubToken(e.target.value)}
-                  placeholder={t('ghp_...')}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem',
-                    marginBottom: '1rem'
-                  }} />
-
-                <div style={{ display: 'flex', gap: '1rem' }}>
+                  placeholder={t('ghp_...')} />
+                <div className="button-group">
                   <button
                     className="button primary"
                     onClick={handleTokenSubmit}
                     disabled={!gitHubToken.trim() || isOperating}>
-
                     {isOperating ? 'Connecting...' : 'Connect'}
                   </button>
                   <button
                     className="button secondary"
-                    onClick={() => setShowConnectionFlow(false)}>{t('Cancel')}
-
-
+                    onClick={() => setShowConnectionFlow(false)}>
+                    {t('Cancel')}
                   </button>
                 </div>
               </div>
-            }
-            {connectionStep === 'repo' &&
+            )}
+            {connectionStep === 'repo' && (
               <div>
-                <label
-                  style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    fontWeight: 'bold'
-                  }}>{t('Select Repository:')}
-
-
-                </label>
+                <label>{t('Select Repository:')}</label>
                 <select
                   value={selectedRepo}
-                  onChange={(e) => handleRepoChange(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem',
-                    marginBottom: '1rem'
-                  }}>
-
+                  onChange={(e) => handleRepoChange(e.target.value)}>
                   <option value="">{t('Choose a repository...')}</option>
-                  {availableRepos.map((repo) =>
+                  {availableRepos.map((repo) => (
                     <option key={repo.full_name} value={repo.full_name}>
                       {repo.full_name} {repo.private ? '(Private)' : '(Public)'}
                     </option>
-                  )}
+                  ))}
                 </select>
-                <div style={{ display: 'flex', gap: '1rem' }}>
+                <div className="button-group">
                   <button
                     className="button primary"
                     onClick={handleRepoSubmit}
                     disabled={!selectedRepo || isOperating}>
-
                     {isOperating ? 'Loading...' : 'Next'}
                   </button>
                   <button
                     className="button secondary"
-                    onClick={() => setConnectionStep('token')}>{t('Back')}
-
-
+                    onClick={() => setConnectionStep('token')}>
+                    {t('Back')}
                   </button>
                 </div>
               </div>
-            }
-            {connectionStep === 'branch' &&
+            )}
+            {connectionStep === 'branch' && (
               <div>
-                <label
-                  style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    fontWeight: 'bold'
-                  }}>{t('Select Branch:')}
-
-
-                </label>
+                <label>{t('Select Branch:')}</label>
                 <select
                   value={selectedBranch}
-                  onChange={(e) => setSelectedBranch(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem',
-                    marginBottom: '1rem'
-                  }}>
-
-                  {availableBranches.map((branch) =>
+                  onChange={(e) => setSelectedBranch(e.target.value)}>
+                  {availableBranches.map((branch) => (
                     <option key={branch.name} value={branch.name}>
                       {branch.name} {branch.protected ? '(Protected)' : ''}
                     </option>
-                  )}
+                  ))}
                 </select>
-                <div style={{ display: 'flex', gap: '1rem' }}>
+                <div className="button-group">
                   <button
                     className="button primary"
                     onClick={handleBranchSubmit}
                     disabled={!selectedBranch || isOperating}>
-
                     {isOperating ? 'Connecting...' : 'Connect'}
                   </button>
                   <button
                     className="button secondary"
-                    onClick={() => setConnectionStep('repo')}>{t('Back')}
-
-
+                    onClick={() => setConnectionStep('repo')}>
+                    {t('Back')}
                   </button>
                 </div>
               </div>
-            }
+            )}
           </div>
-        }
+        )}
 
-        {!showConnectionFlow &&
+        {!showConnectionFlow && (
           <>
             <div className="backup-status">
               <div className="status-header">
                 <div className="backup-controls">
-                  {!status.isConnected ?
+                  {!status.isConnected ? (
                     <button
                       className="button primary"
                       onClick={handleConnect}
-                      disabled={isOperating}>{t('Connect to GitHub')}
-
-
-                    </button> :
-
+                      disabled={isOperating}>
+                      {t('Connect to GitHub')}
+                    </button>
+                  ) : (
                     <>
-                      {isInEditor &&
-                        <div
-                          className="sync-scope-selector"
-                          style={{ marginBottom: '1rem' }}>
-
-                          <label
-                            style={{
-                              display: 'block',
-                              marginBottom: '0.5rem',
-                              fontWeight: 'bold'
-                            }}>{t('Backup Scope:')}
-
-
-                          </label>
-                          <div style={{ display: 'flex', gap: '1rem' }}>
-                            <label
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem'
-                              }}>
-
+                      {isInEditor && (
+                        <div className="sync-scope-selector">
+                          <label>{t('Backup Scope:')}</label>
+                          <div>
+                            <label>
                               <input
                                 type="radio"
                                 name="syncScope"
@@ -492,18 +412,12 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                                   )
                                 }
                                 disabled={isOperating} />
-
-                              <span>{t('Current Project (')}
+                              <span>
+                                {t('Current Project (')}
                                 {currentProjectName})
                               </span>
                             </label>
-                            <label
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem'
-                              }}>
-
+                            <label>
                               <input
                                 type="radio"
                                 name="syncScope"
@@ -515,35 +429,19 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                                   )
                                 }
                                 disabled={isOperating} />
-
                               <span>{t('All projects')}</span>
                             </label>
                           </div>
                         </div>
-                      }
-                      <div style={{ marginBottom: '1rem' }}>
-                        <label
-                          style={{
-                            display: 'block',
-                            marginBottom: '0.5rem',
-                            fontWeight: 'bold'
-                          }}>{t('Commit Message:')}
-
-
-                        </label>
+                      )}
+                      <div>
+                        <label>{t('Commit Message:')}</label>
                         <input
                           type="text"
                           value={commitMessage}
                           onChange={(e) => setCommitMessage(e.target.value)}
                           placeholder={t(`TeXlyre Backup: {date}`, { date: new Date().toLocaleDateString() })}
-                          style={{
-                            width: '100%',
-                            padding: '0.5rem',
-                            borderRadius: '4px',
-                            border: '1px solid var(--accent-border)'
-                          }}
                           disabled={isOperating} />
-
                       </div>
                       <div className="backup-toolbar">
                         <div className="primary-actions">
@@ -555,11 +453,10 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                               isOperating ||
                               !commitMessage.trim()
                             }>
-
                             <GitPushIcon />
-                            {status.status === 'syncing' || isOperating ?
-                              t('Pushing...') :
-                              t('Push To GH')}
+                            {status.status === 'syncing' || isOperating
+                              ? t('Pushing...')
+                              : t('Push To GH')}
                           </button>
                           <button
                             className="button secondary"
@@ -567,11 +464,10 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                             disabled={
                               status.status === 'syncing' || isOperating
                             }>
-
                             <ImportIcon />
-                            {status.status === 'syncing' || isOperating ?
-                              t('Importing...') :
-                              t('Import From GH')}
+                            {status.status === 'syncing' || isOperating
+                              ? t('Importing...')
+                              : t('Import From GH')}
                           </button>
                         </div>
                         <div className="secondary-actions">
@@ -580,7 +476,6 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                             onClick={handleChangeConnection}
                             disabled={isOperating}
                             title={t('Change repository/branch')}>
-
                             <GitBranchIcon />
                           </button>
                           <button
@@ -588,13 +483,12 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                             onClick={handleDisconnect}
                             disabled={isOperating}
                             title={t('Disconnect (deletes API key)')}>
-
                             <DisconnectIcon />
                           </button>
                         </div>
                       </div>
                     </>
-                  }
+                  )}
                 </div>
               </div>
               <div className="status-info">
@@ -602,25 +496,25 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                   <strong>{t('GitHub Backup:')}</strong>{' '}
                   {status.isConnected ? t('Connected') : t('Disconnected')}
                 </div>
-                {status.isConnected && status.repository &&
+                {status.isConnected && status.repository && (
                   <div className="status-item">
                     <strong>{t('Repository: ')}</strong>
-                    <span style={{ marginLeft: '0.5rem' }}>
+                    <span>
                       {status.repository} ({displayBranch})
                     </span>
                   </div>
-                }
-                {status.lastSync &&
+                )}
+                {status.lastSync && (
                   <div className="status-item">
                     <strong>{t('Last Sync:')}</strong> {formatDate(status.lastSync)}
                   </div>
-                }
-                {status.error &&
+                )}
+                {status.error && (
                   <div className="error-message">{status.error}</div>
-                }
+                )}
               </div>
             </div>
-            {activities.length > 0 &&
+            {activities.length > 0 && (
               <div className="backup-activities">
                 <div className="activities-header">
                   <h3>{t('Recent Activity')}</h3>
@@ -629,92 +523,71 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                     onClick={() => gitHubBackupService.clearAllActivities()}
                     title={t('Clear all activities')}
                     disabled={isOperating}>
-
                     <TrashIcon />{t('Clear All')}
-
                   </button>
                 </div>
                 <div className="activities-list">
-                  {activities.
-                    slice(-10).
-                    reverse().
-                    map((activity) =>
-                      <div
-                        key={activity.id}
-                        className="activity-item"
-                        style={{
-                          borderLeft: `3px solid ${getActivityColor(activity.type)}`
-                        }}>
-
-                        <div className="activity-content">
-                          <div className="activity-header">
-                            <span className="activity-icon">
-                              {getActivityIcon(activity.type)}
-                            </span>
-                            <span className="activity-message">
-                              {activity.message}
-                            </span>
-                            <button
-                              className="activity-close"
-                              onClick={() =>
-                                gitHubBackupService.clearActivity(activity.id)
-                              }
-                              title={t('Dismiss')}
-                              disabled={isOperating}>
-
-                              ×
-                            </button>
-                          </div>
-                          <div className="activity-time">
-                            {formatDate(activity.timestamp)}
-                          </div>
+                  {activities.slice(-10).reverse().map((activity) => (
+                    <div
+                      key={activity.id}
+                      className="activity-item"
+                      style={{
+                        borderLeftColor: getActivityColor(activity.type)
+                      }}>
+                      <div className="activity-content">
+                        <div className="activity-header">
+                          <span className="activity-icon">
+                            {getActivityIcon(activity.type)}
+                          </span>
+                          <span className="activity-message">
+                            {activity.message}
+                          </span>
+                          <button
+                            className="activity-close"
+                            onClick={() =>
+                              gitHubBackupService.clearActivity(activity.id)
+                            }
+                            title={t('Dismiss')}
+                            disabled={isOperating}>
+                            ×
+                          </button>
+                        </div>
+                        <div className="activity-time">
+                          {formatDate(activity.timestamp)}
                         </div>
                       </div>
-                    )}
+                    </div>
+                  ))}
                 </div>
               </div>
-            }
+            )}
 
             <div className="backup-info">
               <h3>{t('How GitHub Backup Works')}</h3>
               <div className="info-content">
-                <p>{t('GitHub backup stores your TeXlyre data in a GitHub repository:')}
-
-                </p>
+                <p>{t('GitHub backup stores your TeXlyre data in a GitHub repository:')}</p>
                 <ul>
                   <li>
                     <strong>{t('Push: ')}</strong>&nbsp;{t('Pushes local changes to the repository')}
-
                   </li>
                   <li>
                     <strong>{t('Import: ')}</strong>&nbsp;{t('Imports changes from the repository to your local workspace')}
-
                   </li>
                   <li>
                     <strong>{t('Change repo/branch:')}</strong>&nbsp;{t('Click the branch icon to switch repository/branch')}
-
                   </li>
-                  <li>{t('Each project is stored in a separate folder with documents and files organized')}
-
-
-                  </li>
-                  <li>{t('Your GitHub token is encrypted and stored securely with your TeXlyre password')}
-
-
-                  </li>
-                  <li>{t('Repository and branch selection is remembered per project scope for convenience')}
-
-
-                  </li>
+                  <li>{t('Each project is stored in a separate folder with documents and files organized')}</li>
+                  <li>{t('Your GitHub token is encrypted and stored securely with your TeXlyre password')}</li>
+                  <li>{t('Repository and branch selection is remembered per project scope for convenience')}</li>
                   <li>{t('Use private repositories to keep your data secure')}</li>
                 </ul>
               </div>
             </div>
           </>
-        }
+        )}
       </div>
-    </Modal>);
-
+    </Modal>
+  );
 };
 
 export default GitHubBackupModal;
