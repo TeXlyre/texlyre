@@ -57,6 +57,91 @@ export class GitLabBackupService {
         PROJECT: 'selected-project',
     } as const;
 
+    private settingsCache: {
+        apiEndpoint?: string;
+        defaultBranch?: string;
+        defaultCommitMessage?: string;
+        ignorePatterns?: string[];
+        maxFileSize?: number;
+        requestTimeout?: number;
+        maxRetryAttempts?: number;
+        activityHistoryLimit?: number;
+    } = {};
+
+    setSettings(settings: {
+        apiEndpoint?: string;
+        defaultBranch?: string;
+        defaultCommitMessage?: string;
+        ignorePatterns?: string[];
+        maxFileSize?: number;
+        requestTimeout?: number;
+        maxRetryAttempts?: number;
+        activityHistoryLimit?: number;
+    }): void {
+        this.settingsCache = { ...settings };
+
+        if (settings.apiEndpoint) {
+            gitLabApiService.setBaseUrl(settings.apiEndpoint);
+        }
+
+        if (settings.requestTimeout) {
+            gitLabApiService.setRequestTimeout(settings.requestTimeout);
+        }
+    }
+
+    private getDefaultBranch(): string {
+        return this.settingsCache.defaultBranch || 'main';
+    }
+
+    private getDefaultCommitMessage(): string {
+        const template =
+            this.settingsCache.defaultCommitMessage || 'TeXlyre Backup: {date}';
+        const now = new Date();
+        return template
+            .replace('{date}', now.toLocaleDateString())
+            .replace('{time}', now.toLocaleTimeString());
+    }
+
+    private getIgnorePatterns(): string[] {
+        return this.settingsCache.ignorePatterns || [];
+    }
+
+    private getMaxFileSize(): number {
+        return (this.settingsCache.maxFileSize || 100) * 1024 * 1024;
+    }
+
+    private getMaxRetryAttempts(): number {
+        return this.settingsCache.maxRetryAttempts || 3;
+    }
+
+    private getActivityHistoryLimit(): number {
+        return this.settingsCache.activityHistoryLimit || 50;
+    }
+
+    private shouldIgnoreFile(filePath: string): boolean {
+        const patterns = this.getIgnorePatterns();
+        if (patterns.length === 0) return false;
+
+        for (const pattern of patterns) {
+            const trimmedPattern = pattern.trim();
+            if (!trimmedPattern) continue;
+
+            const regexPattern = trimmedPattern
+                .replace(/\./g, '\\.')
+                .replace(/\*/g, '.*')
+                .replace(/\?/g, '.');
+
+            const regex = new RegExp(`^${regexPattern}$`);
+            const fileName = filePath.split('/').pop() || '';
+
+            if (regex.test(fileName) || regex.test(filePath)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private _getScopeOptions(projectId?: string) {
         return {
             scope: projectId ? 'project' : ('global' as 'project' | 'global'),
@@ -133,16 +218,20 @@ export class GitLabBackupService {
         projectId: string,
         projectPathWithNamespace: string,
         localProjectId?: string,
-        branch = 'main',
+        branch?: string,
     ): Promise<boolean> {
         try {
             if (!this.secretsContext)
                 throw new Error(t('Secrets context not initialized'));
-            if (!projectId)
-                throw new Error(t('Invalid project format'));
+            if (!projectId) throw new Error(t('Invalid project format'));
 
-            this.currentProject = { id: projectId, pathWithNamespace: projectPathWithNamespace };
+            this.currentProject = {
+                id: projectId,
+                pathWithNamespace: projectPathWithNamespace,
+            };
             const scopeOptions = this._getScopeOptions(localProjectId);
+
+            const finalBranch = branch || this.getDefaultBranch();
 
             await this.secretsContext.setSecret(
                 this.PLUGIN_ID,
@@ -163,7 +252,7 @@ export class GitLabBackupService {
                         projectId,
                         pathWithNamespace: projectPathWithNamespace,
                         connectedAt: Date.now(),
-                        branch,
+                        branch: finalBranch,
                     },
                 },
             );
@@ -180,7 +269,7 @@ export class GitLabBackupService {
                 type: 'backup_complete',
                 message: t('Connected to GitLab project: {project} ({branch})', {
                     project: projectPathWithNamespace,
-                    branch,
+                    branch: finalBranch,
                 }),
             });
             return true;
@@ -240,7 +329,7 @@ export class GitLabBackupService {
             if (!tokenSecret?.value || !projectSecret?.value) return null;
             return { token: tokenSecret.value, projectId: projectSecret.value };
         } catch (error) {
-            console.error(t('Error retrieving GitLab credentials:'), error);
+            console.error('Error retrieving GitLab credentials:', error);
             return null;
         }
     }
@@ -256,13 +345,13 @@ export class GitLabBackupService {
     }
 
     async getStoredBranch(localProjectId?: string): Promise<string> {
-        if (!this.secretsContext) return 'main';
+        if (!this.secretsContext) return this.getDefaultBranch();
         const projectMetadata = await this.secretsContext.getSecretMetadata(
             this.PLUGIN_ID,
             this.SECRET_KEYS.PROJECT,
             this._getScopeOptions(localProjectId),
         );
-        return projectMetadata?.branch || 'main';
+        return projectMetadata?.branch || this.getDefaultBranch();
     }
 
     async hasStoredCredentials(localProjectId?: string): Promise<boolean> {
@@ -287,9 +376,13 @@ export class GitLabBackupService {
         const credentials = await this.getGitLabCredentials(localProjectId);
         const branch = await this.getStoredBranch(localProjectId);
         if (!credentials)
-            throw new Error(t('GitLab credentials not available. Please reconnect.'));
+            throw new Error(
+                t('GitLab credentials not available. Please reconnect.'),
+            );
         if (!(await gitLabApiService.testConnection(credentials.token)))
-            throw new Error(t('GitLab token is invalid or expired. Please reconnect.'));
+            throw new Error(
+                t('GitLab token is invalid or expired. Please reconnect.'),
+            );
 
         const projectMetadata = await this.secretsContext?.getSecretMetadata(
             this.PLUGIN_ID,
@@ -299,7 +392,8 @@ export class GitLabBackupService {
 
         this.currentProject = {
             id: credentials.projectId,
-            pathWithNamespace: projectMetadata?.pathWithNamespace || credentials.projectId,
+            pathWithNamespace:
+                projectMetadata?.pathWithNamespace || credentials.projectId,
         };
         this.status = {
             ...this.status,
@@ -318,8 +412,9 @@ export class GitLabBackupService {
         branch: string,
         commitMessage: string,
         actions: any[],
-        maxRetries = 3,
     ): Promise<void> {
+        const maxRetries = this.getMaxRetryAttempts();
+
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
                 if (attempt > 1) {
@@ -384,6 +479,7 @@ export class GitLabBackupService {
             );
 
             const actions: any[] = [];
+            const maxFileSize = this.getMaxFileSize();
 
             for (const project of localProjects) {
                 if (!project) continue;
@@ -474,6 +570,28 @@ export class GitLabBackupService {
                 files.files.forEach((file) => {
                     const content = files.fileContents.get(file.path);
                     if (file.type === 'file' && content !== undefined) {
+                        if (this.shouldIgnoreFile(file.path)) {
+                            return;
+                        }
+
+                        const fileSize =
+                            content instanceof ArrayBuffer
+                                ? content.byteLength
+                                : content.length;
+                        if (fileSize > maxFileSize) {
+                            this.addActivity({
+                                type: 'backup_error',
+                                message: t(
+                                    'Skipped file {path}: exceeds max size of {size}MB',
+                                    {
+                                        path: file.path,
+                                        size: Math.round(maxFileSize / 1024 / 1024),
+                                    },
+                                ),
+                            });
+                            return;
+                        }
+
                         const filePath = `${projectPath}/files${file.path}`;
                         actions.push({
                             action: existingFiles.has(filePath) ? 'update' : 'create',
@@ -499,11 +617,14 @@ export class GitLabBackupService {
 
             if (actions.length === 0) return;
 
+            const finalCommitMessage =
+                commitMessage || this.getDefaultCommitMessage();
+
             await this.createCommitWithRetry(
                 credentials.token,
                 this.currentProject?.id!,
                 finalBranch,
-                commitMessage || `TeXlyre backup: ${new Date().toISOString()}`,
+                finalCommitMessage,
                 actions,
             );
 
@@ -1083,7 +1204,8 @@ export class GitLabBackupService {
             timestamp: Date.now(),
             ...activity,
         };
-        this.activities = [...this.activities.slice(-50), fullActivity];
+        const limit = this.getActivityHistoryLimit();
+        this.activities = [...this.activities.slice(-limit + 1), fullActivity];
         this.notifyActivityListeners();
     }
 }

@@ -29,7 +29,20 @@ interface GitLabCommitAction {
 }
 
 export class GitLabApiService {
-    private readonly baseUrl = 'https://gitlab.com/api/v4';
+    private baseUrl: string = 'https://gitlab.com/api/v4';
+    private requestTimeout: number = 30000;
+
+    setBaseUrl(url: string): void {
+        this.baseUrl = url.replace(/\/$/, '');
+    }
+
+    getBaseUrl(): string {
+        return this.baseUrl;
+    }
+
+    setRequestTimeout(timeoutSeconds: number): void {
+        this.requestTimeout = timeoutSeconds * 1000;
+    }
 
     private async _request<T>(
         token: string,
@@ -43,16 +56,33 @@ export class GitLabApiService {
             ...options.headers,
         });
 
-        const response = await fetch(url, { ...options, headers });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(
-                `GitLab API request to '${endpoint}' failed: ${response.statusText}. ${errorData.message || ''}`,
-            );
+        try {
+            const response = await fetch(url, {
+                ...options,
+                headers,
+                signal: controller.signal,
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(
+                    `GitLab API request to '${endpoint}' failed: ${response.statusText}. ${errorData.message || ''}`,
+                );
+            }
+
+            return response.status === 204 ? (null as T) : response.json();
+        } catch (error) {
+            clearTimeout(timeoutId);
+            if (error instanceof Error && error.name === 'AbortError') {
+                throw new Error(`Request timeout after ${this.requestTimeout / 1000} seconds`);
+            }
+            throw error;
         }
-
-        return response.status === 204 ? (null as T) : response.json();
     }
 
     private _encodeContent(content: string | Uint8Array | ArrayBuffer): string {
@@ -70,9 +100,18 @@ export class GitLabApiService {
 
     async testConnection(token: string): Promise<boolean> {
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(
+                () => controller.abort(),
+                this.requestTimeout,
+            );
+
             const response = await fetch(`${this.baseUrl}/user`, {
                 headers: { 'PRIVATE-TOKEN': token },
+                signal: controller.signal,
             });
+
+            clearTimeout(timeoutId);
             return response.ok;
         } catch {
             return false;

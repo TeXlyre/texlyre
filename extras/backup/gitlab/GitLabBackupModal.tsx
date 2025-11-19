@@ -11,8 +11,10 @@ import {
     TrashIcon,
 } from '@/components/common/Icons';
 import Modal from '@/components/common/Modal';
+import SettingsModal from '@/components/settings/SettingsModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useSecrets } from '@/hooks/useSecrets';
+import { useSettings } from '@/hooks/useSettings';
 import { formatDate } from '@/utils/dateUtils';
 import { gitLabApiService } from './GitLabApiService';
 import { gitLabBackupService } from './GitLabBackupService';
@@ -32,6 +34,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
     currentProjectId,
     isInEditor = false,
 }) => {
+    const [showSettings, setShowSettings] = useState(false);
     const [status, setStatus] = useState(gitLabBackupService.getStatus());
     const [activities, setActivities] = useState(
         gitLabBackupService.getActivities(),
@@ -51,6 +54,49 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
 
     const { getProjectById } = useAuth();
     const secrets = useSecrets();
+    const { getSetting } = useSettings();
+
+    useEffect(() => {
+        const apiEndpoint =
+            (getSetting('gitlab-backup-api-endpoint')?.value as string) ||
+            'https://gitlab.com/api/v4';
+        const defaultBranch =
+            (getSetting('gitlab-backup-default-branch')?.value as string) || 'main';
+        const defaultCommitMessage =
+            (getSetting('gitlab-backup-default-commit-message')?.value as string) ||
+            '';
+        const ignorePatterns =
+            (getSetting('gitlab-backup-ignore-patterns')?.value as string) || '';
+        const maxFileSize =
+            (getSetting('gitlab-backup-max-file-size')?.value as number) || 100;
+        const requestTimeout =
+            (getSetting('gitlab-backup-request-timeout')?.value as number) || 30;
+        const maxRetryAttempts =
+            (getSetting('gitlab-backup-max-retry-attempts')?.value as number) || 3;
+        const activityHistoryLimit =
+            (getSetting('gitlab-backup-activity-history-limit')?.value as number) ||
+            50;
+
+        gitLabBackupService.setSettings({
+            apiEndpoint,
+            defaultBranch,
+            defaultCommitMessage,
+            ignorePatterns: ignorePatterns
+                .split(',')
+                .map((s) => s.trim())
+                .filter(Boolean),
+            maxFileSize,
+            requestTimeout,
+            maxRetryAttempts,
+            activityHistoryLimit,
+        });
+
+        setSelectedBranch(defaultBranch);
+
+        if (!commitMessage) {
+            setCommitMessage(defaultCommitMessage);
+        }
+    }, [getSetting]);
 
     useEffect(() => {
         gitLabBackupService.setSecretsContext(secrets);
@@ -192,7 +238,10 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                 setShowConnectionFlow(false);
                 setGitLabToken('');
                 setSelectedProject('');
-                setSelectedBranch('main');
+                const defaultBranch =
+                    (getSetting('gitlab-backup-default-branch')?.value as string) ||
+                    'main';
+                setSelectedBranch(defaultBranch);
                 setConnectionStep('token');
             }
         });
@@ -248,12 +297,20 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
     const getScopedProjectId = () =>
         isInEditor && syncScope === 'current' ? currentProjectId : undefined;
 
+    const replaceCommitMessageVariables = (template: string): string => {
+        const now = new Date();
+        return template
+            .replace(/{date}/g, now.toLocaleDateString())
+            .replace(/{time}/g, now.toLocaleTimeString());
+    };
+
     const handleExport = () =>
         handleAsyncOperation(async () => {
             if (!commitMessage.trim()) return;
+            const finalCommitMessage = replaceCommitMessageVariables(commitMessage);
             await gitLabBackupService.exportData(
                 getScopedProjectId(),
-                commitMessage,
+                finalCommitMessage,
                 selectedBranch,
             );
         });
@@ -288,359 +345,353 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
             import_start: '#6f42c1',
         })[type] || '#6c757d';
 
-    return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            title={t('GitLab Backup')}
-            icon={GitLabIcon}
-            size="medium"
-            headerActions={
-                <button
-                    className="modal-close-button"
-                    onClick={() => { }}
-                    title={t('GitLab Backup Settings')}
-                >
-                    <SettingsIcon />
-                </button>
-            }
-        >
-            <div className="backup-modal">
-                {showConnectionFlow && (
-                    <div className="connection-flow">
-                        <h3>{t('Connect to GitLab')}</h3>
-                        {connectionStep === 'token' && (
-                            <div>
-                                <label>{t('GitLab Personal Access Token:')}</label>
-                                <input
-                                    type="password"
-                                    value={gitLabToken}
-                                    onChange={(e) => setGitLabToken(e.target.value)}
-                                    placeholder={t('glpat-...')} />
-                                <div className="button-group">
-                                    <button
-                                        className="button primary"
-                                        onClick={handleTokenSubmit}
-                                        disabled={!gitLabToken.trim() || isOperating}
-                                    >
-                                        {isOperating ? 'Connecting...' : 'Connect'}
-                                    </button>
-                                    <button
-                                        className="button secondary"
-                                        onClick={() => setShowConnectionFlow(false)}
-                                    >
-                                        {t('Cancel')}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                        {connectionStep === 'project' && (
-                            <div>
-                                <label>{t('Select Project:')}</label>
-                                <select
-                                    value={selectedProject}
-                                    onChange={(e) => handleProjectChange(e.target.value)}>
-                                    <option value="">{t('Choose a project...')}</option>
-                                    {availableProjects.map((project) => (
-                                        <option key={project.id} value={project.id.toString()}>
-                                            {project.path_with_namespace} (
-                                            {project.visibility === 'private' ? 'Private' : 'Public'})
-                                        </option>
-                                    ))}
-                                </select>
-                                <div className="button-group">
-                                    <button
-                                        className="button primary"
-                                        onClick={handleProjectSubmit}
-                                        disabled={!selectedProject || isOperating}
-                                    >
-                                        {isOperating ? 'Loading...' : 'Next'}
-                                    </button>
-                                    <button
-                                        className="button secondary"
-                                        onClick={() => setConnectionStep('token')}
-                                    >
-                                        {t('Back')}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                        {connectionStep === 'branch' && (
-                            <div>
-                                <label>{t('Select Branch:')}</label>
-                                <select
-                                    value={selectedBranch}
-                                    onChange={(e) => setSelectedBranch(e.target.value)}>
-                                    {availableBranches.map((branch) => (
-                                        <option key={branch.name} value={branch.name}>
-                                            {branch.name} {branch.protected ? '(Protected)' : ''}
-                                        </option>
-                                    ))}
-                                </select>
-                                <div className="button-group">
-                                    <button
-                                        className="button primary"
-                                        onClick={handleBranchSubmit}
-                                        disabled={!selectedBranch || isOperating}
-                                    >
-                                        {isOperating ? 'Connecting...' : 'Connect'}
-                                    </button>
-                                    <button
-                                        className="button secondary"
-                                        onClick={() => setConnectionStep('project')}
-                                    >
-                                        {t('Back')}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
+    const getDefaultCommitMessagePlaceholder = (): string => {
+        const template =
+            (getSetting('gitlab-backup-default-commit-message')?.value as string) ||
+            'TeXlyre Backup: {date}';
+        return replaceCommitMessageVariables(template);
+    };
 
-                {!showConnectionFlow && (
-                    <>
-                        <div className="backup-status">
-                            <div className="status-header">
-                                <div className="backup-controls">
-                                    {!status.isConnected ? (
+    return (
+        <>
+            <Modal
+                isOpen={isOpen}
+                onClose={onClose}
+                title={t('GitLab Backup')}
+                icon={GitLabIcon}
+                size="medium"
+                headerActions={
+                    <button
+                        className="modal-close-button"
+                        onClick={() => setShowSettings(true)}
+                        title={t('GitLab Backup Settings')}
+                    >
+                        <SettingsIcon />
+                    </button>
+                }
+            >
+                <div className="backup-modal">
+                    {showConnectionFlow && (
+                        <div className="connection-flow">
+                            <h3>{t('Connect to GitLab')}</h3>
+                            {connectionStep === 'token' && (
+                                <div>
+                                    <label>{t('GitLab Personal Access Token:')}</label>
+                                    <input
+                                        type="password"
+                                        value={gitLabToken}
+                                        onChange={(e) => setGitLabToken(e.target.value)}
+                                        placeholder={t('glpat-...')}
+                                    />
+                                    <div className="button-group">
                                         <button
                                             className="button primary"
-                                            onClick={handleConnect}
-                                            disabled={isOperating}
+                                            onClick={handleTokenSubmit}
+                                            disabled={!gitLabToken.trim() || isOperating}
                                         >
-                                            {t('Connect to GitLab')}
+                                            {isOperating ? 'Connecting...' : 'Connect'}
                                         </button>
-                                    ) : (
-                                        <>
-                                            {isInEditor && (
-                                                <div className="sync-scope-selector">
-                                                    <label>{t('Backup Scope:')}</label>
-                                                    <div>
-                                                        <label>
-                                                            <input
-                                                                type="radio"
-                                                                name="syncScope"
-                                                                value="current"
-                                                                checked={syncScope === 'current'}
-                                                                onChange={(e) =>
-                                                                    setSyncScope(
-                                                                        e.target.value as 'current' | 'all',
-                                                                    )
-                                                                }
-                                                                disabled={isOperating}
-                                                            />
-                                                            <span>
-                                                                {t('Current Project (')}
-                                                                {currentProjectName})
-                                                            </span>
-                                                        </label>
-                                                        <label>
-                                                            <input
-                                                                type="radio"
-                                                                name="syncScope"
-                                                                value="all"
-                                                                checked={syncScope === 'all'}
-                                                                onChange={(e) =>
-                                                                    setSyncScope(
-                                                                        e.target.value as 'current' | 'all',
-                                                                    )
-                                                                }
-                                                                disabled={isOperating}
-                                                            />
-                                                            <span>{t('All projects')}</span>
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                            )}
-                                            <div>
-                                                <label>{t('Commit Message:')}</label>
-                                                <input
-                                                    type="text"
-                                                    value={commitMessage}
-                                                    onChange={(e) => setCommitMessage(e.target.value)}
-                                                    placeholder={t(`TeXlyre Backup: {date}`, {
-                                                        date: new Date().toLocaleDateString(),
-                                                    })}
-                                                    disabled={isOperating}
-                                                />
-                                            </div>
-                                            <div className="backup-toolbar">
-                                                <div className="primary-actions">
-                                                    <button
-                                                        className="button secondary"
-                                                        onClick={handleExport}
-                                                        disabled={
-                                                            status.status === 'syncing' ||
-                                                            isOperating ||
-                                                            !commitMessage.trim()
-                                                        }
-                                                    >
-                                                        <GitPushIcon />
-                                                        {status.status === 'syncing' || isOperating
-                                                            ? t('Pushing...')
-                                                            : t('Push To GL')}
-                                                    </button>
-                                                    <button
-                                                        className="button secondary"
-                                                        onClick={handleImport}
-                                                        disabled={status.status === 'syncing' || isOperating}
-                                                    >
-                                                        <ImportIcon />
-                                                        {status.status === 'syncing' || isOperating
-                                                            ? t('Importing...')
-                                                            : t('Import From GL')}
-                                                    </button>
-                                                </div>
-                                                <div className="secondary-actions">
-                                                    <button
-                                                        className="button secondary icon-only"
-                                                        onClick={handleChangeConnection}
-                                                        disabled={isOperating}
-                                                        title={t('Change project/branch')}
-                                                    >
-                                                        <GitBranchIcon />
-                                                    </button>
-                                                    <button
-                                                        className="button secondary icon-only"
-                                                        onClick={handleDisconnect}
-                                                        disabled={isOperating}
-                                                        title={t('Disconnect (deletes API key)')}
-                                                    >
-                                                        <DisconnectIcon />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="status-info">
-                                <div className="status-item">
-                                    <strong>{t('GitLab Backup:')}</strong>{' '}
-                                    {status.isConnected ? t('Connected') : t('Disconnected')}
-                                </div>
-                                {status.isConnected && status.project && (
-                                    <div className="status-item">
-                                        <strong>{t('Project: ')}</strong>
-                                        <span>
-                                            {status.project} ({displayBranch})
-                                        </span>
+                                        <button
+                                            className="button secondary"
+                                            onClick={() => setShowConnectionFlow(false)}
+                                        >
+                                            {t('Cancel')}
+                                        </button>
                                     </div>
-                                )}
-                                {status.lastSync && (
-                                    <div className="status-item">
-                                        <strong>{t('Last Sync:')}</strong>{' '}
-                                        {formatDate(status.lastSync)}
-                                    </div>
-                                )}
-                                {status.error && (
-                                    <div className="error-message">{status.error}</div>
-                                )}
-                            </div>
-                        </div>
-                        {activities.length > 0 && (
-                            <div className="backup-activities">
-                                <div className="activities-header">
-                                    <h3>{t('Recent Activity')}</h3>
-                                    <button
-                                        className="button small secondary"
-                                        onClick={() => gitLabBackupService.clearAllActivities()}
-                                        title={t('Clear all activities')}
-                                        disabled={isOperating}
+                                </div>
+                            )}
+                            {connectionStep === 'project' && (
+                                <div>
+                                    <label>{t('Select Project:')}</label>
+                                    <select
+                                        value={selectedProject}
+                                        onChange={(e) => handleProjectChange(e.target.value)}
                                     >
-                                        <TrashIcon />
-                                        {t('Clear All')}
-                                    </button>
+                                        <option value="">{t('Choose a project...')}</option>
+                                        {availableProjects.map((project) => (
+                                            <option key={project.id} value={project.id.toString()}>
+                                                {project.path_with_namespace} (
+                                                {project.visibility === 'private' ? 'Private' : 'Public'})
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div className="button-group">
+                                        <button
+                                            className="button primary"
+                                            onClick={handleProjectSubmit}
+                                            disabled={!selectedProject || isOperating}
+                                        >
+                                            {isOperating ? 'Loading...' : 'Next'}
+                                        </button>
+                                        <button
+                                            className="button secondary"
+                                            onClick={() => setConnectionStep('token')}
+                                        >
+                                            {t('Back')}
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="activities-list">
-                                    {activities
-                                        .slice(-10)
-                                        .reverse()
-                                        .map((activity) => (
-                                            <div
-                                                key={activity.id}
-                                                className="activity-item"
-                                                style={{
-                                                    borderLeftColor: getActivityColor(activity.type),
-                                                }}
+                            )}
+                            {connectionStep === 'branch' && (
+                                <div>
+                                    <label>{t('Select Branch:')}</label>
+                                    <select
+                                        value={selectedBranch}
+                                        onChange={(e) => setSelectedBranch(e.target.value)}
+                                    >
+                                        {availableBranches.map((branch) => (
+                                            <option key={branch.name} value={branch.name}>
+                                                {branch.name} {branch.protected ? '(Protected)' : ''}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div className="button-group">
+                                        <button
+                                            className="button primary"
+                                            onClick={handleBranchSubmit}
+                                            disabled={!selectedBranch || isOperating}
+                                        >
+                                            {isOperating ? 'Connecting...' : 'Connect'}
+                                        </button>
+                                        <button
+                                            className="button secondary"
+                                            onClick={() => setConnectionStep('project')}
+                                        >
+                                            {t('Back')}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {!showConnectionFlow && (
+                        <>
+                            <div className="backup-status">
+                                <div className="status-header">
+                                    <div className="backup-controls">
+                                        {!status.isConnected ? (
+                                            <button
+                                                className="button primary"
+                                                onClick={handleConnect}
+                                                disabled={isOperating}
                                             >
-                                                <div className="activity-content">
-                                                    <div className="activity-header">
-                                                        <span className="activity-icon">
-                                                            {getActivityIcon(activity.type)}
-                                                        </span>
-                                                        <span className="activity-message">
-                                                            {activity.message}
-                                                        </span>
+                                                {t('Connect to GitLab')}
+                                            </button>
+                                        ) : (
+                                            <>
+                                                {isInEditor && (
+                                                    <div className="sync-scope-selector">
+                                                        <label>{t('Backup Scope:')}</label>
+                                                        <div>
+                                                            <label>
+                                                                <input
+                                                                    type="radio"
+                                                                    name="syncScope"
+                                                                    value="current"
+                                                                    checked={syncScope === 'current'}
+                                                                    onChange={(e) =>
+                                                                        setSyncScope(
+                                                                            e.target.value as 'current' | 'all',
+                                                                        )
+                                                                    }
+                                                                    disabled={isOperating}
+                                                                />
+                                                                <span>
+                                                                    {t('Current Project (')}
+                                                                    {currentProjectName})
+                                                                </span>
+                                                            </label>
+                                                            <label>
+                                                                <input
+                                                                    type="radio"
+                                                                    name="syncScope"
+                                                                    value="all"
+                                                                    checked={syncScope === 'all'}
+                                                                    onChange={(e) =>
+                                                                        setSyncScope(
+                                                                            e.target.value as 'current' | 'all',
+                                                                        )
+                                                                    }
+                                                                    disabled={isOperating}
+                                                                />
+                                                                <span>{t('All projects')}</span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <label>{t('Commit Message:')}</label>
+                                                    <input
+                                                        type="text"
+                                                        value={commitMessage}
+                                                        onChange={(e) => setCommitMessage(e.target.value)}
+                                                        placeholder={getDefaultCommitMessagePlaceholder()}
+                                                        disabled={isOperating}
+                                                    />
+                                                </div>
+                                                <div className="backup-toolbar">
+                                                    <div className="primary-actions">
                                                         <button
-                                                            className="activity-close"
-                                                            onClick={() =>
-                                                                gitLabBackupService.clearActivity(activity.id)
+                                                            className="button secondary"
+                                                            onClick={handleExport}
+                                                            disabled={
+                                                                status.status === 'syncing' ||
+                                                                isOperating ||
+                                                                !commitMessage.trim()
                                                             }
-                                                            title={t('Dismiss')}
-                                                            disabled={isOperating}
                                                         >
-                                                            ×
+                                                            <GitPushIcon />
+                                                            {status.status === 'syncing' || isOperating
+                                                                ? t('Pushing...')
+                                                                : t('Push To GL')}
+                                                        </button>
+                                                        <button
+                                                            className="button secondary"
+                                                            onClick={handleImport}
+                                                            disabled={status.status === 'syncing' || isOperating}
+                                                        >
+                                                            <ImportIcon />
+                                                            {status.status === 'syncing' || isOperating
+                                                                ? t('Importing...')
+                                                                : t('Import From GL')}
                                                         </button>
                                                     </div>
-                                                    <div className="activity-time">
-                                                        {formatDate(activity.timestamp)}
+                                                    <div className="secondary-actions">
+                                                        <button
+                                                            className="button secondary icon-only"
+                                                            onClick={handleChangeConnection}
+                                                            disabled={isOperating}
+                                                            title={t('Change repository/branch')}
+                                                        >
+                                                            <GitBranchIcon />
+                                                        </button>
+                                                        <button
+                                                            className="button secondary icon-only"
+                                                            onClick={handleDisconnect}
+                                                            disabled={isOperating}
+                                                            title={t('Disconnect (deletes API key)')}
+                                                        >
+                                                            <DisconnectIcon />
+                                                        </button>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="status-info">
+                                    <div className="status-item">
+                                        <strong>{t('GitLab Backup:')}</strong>{' '}
+                                        {status.isConnected ? t('Connected') : t('Disconnected')}
+                                    </div>
+                                    {status.isConnected && status.project && (
+                                        <div className="status-item">
+                                            <strong>{t('Project: ')}</strong>
+                                            <span>
+                                                {status.project} ({displayBranch})
+                                            </span>
+                                        </div>
+                                    )}
+                                    {status.lastSync && (
+                                        <div className="status-item">
+                                            <strong>{t('Last Sync:')}</strong>{' '}
+                                            {formatDate(status.lastSync)}
+                                        </div>
+                                    )}
+                                    {status.error && (
+                                        <div className="error-message">{status.error}</div>
+                                    )}
                                 </div>
                             </div>
-                        )}
+                            {activities.length > 0 && (
+                                <div className="backup-activities">
+                                    <div className="activities-header">
+                                        <h3>{t('Recent Activity')}</h3>
+                                        <button
+                                            className="button small secondary"
+                                            onClick={() => gitLabBackupService.clearAllActivities()}
+                                            title={t('Clear all activities')}
+                                            disabled={isOperating}
+                                        >
+                                            <TrashIcon />
+                                            {t('Clear All')}
+                                        </button>
+                                    </div>
+                                    <div className="activities-list">
+                                        {activities
+                                            .slice(-10)
+                                            .reverse()
+                                            .map((activity) => (
+                                                <div
+                                                    key={activity.id}
+                                                    className="activity-item"
+                                                    style={{
+                                                        borderLeftColor: getActivityColor(activity.type),
+                                                    }}
+                                                >
+                                                    <div className="activity-content">
+                                                        <div className="activity-header">
+                                                            <span className="activity-icon">
+                                                                {getActivityIcon(activity.type)}
+                                                            </span>
+                                                            <span className="activity-message">
+                                                                {activity.message}
+                                                            </span>
+                                                            <button
+                                                                className="activity-close"
+                                                                onClick={() =>
+                                                                    gitLabBackupService.clearActivity(activity.id)
+                                                                }
+                                                                title={t('Dismiss')}
+                                                                disabled={isOperating}
+                                                            >
+                                                                ×
+                                                            </button>
+                                                        </div>
+                                                        <div className="activity-time">
+                                                            {formatDate(activity.timestamp)}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                    </div>
+                                </div>
+                            )}
 
-                        <div className="backup-info">
-                            <h3>{t('How GitLab Backup Works')}</h3>
-                            <div className="info-content">
-                                <p>
-                                    {t(
-                                        'GitLab backup stores your TeXlyre data in a GitLab project:',
-                                    )}
-                                </p>
-                                <ul>
-                                    <li>
-                                        <strong>{t('Push: ')}</strong>&nbsp;
-                                        {t('Pushes local changes to the project')}
-                                    </li>
-                                    <li>
-                                        <strong>{t('Import: ')}</strong>&nbsp;
-                                        {t(
-                                            'Imports changes from the project to your local workspace',
-                                        )}
-                                    </li>
-                                    <li>
-                                        <strong>{t('Change project/branch:')}</strong>&nbsp;
-                                        {t('Click the branch icon to switch project/branch')}
-                                    </li>
-                                    <li>
-                                        {t(
-                                            'Each project is stored in a separate folder with documents and files organized',
-                                        )}
-                                    </li>
-                                    <li>
-                                        {t(
-                                            'Your GitLab token is encrypted and stored securely with your TeXlyre password',
-                                        )}
-                                    </li>
-                                    <li>
-                                        {t(
-                                            'Project and branch selection is remembered per project scope for convenience',
-                                        )}
-                                    </li>
-                                    <li>
-                                        {t('Use private projects to keep your data secure')}
-                                    </li>
-                                </ul>
+                            <div className="backup-info">
+                                <h3>{t('How GitLab Backup Works')}</h3>
+                                <div className="info-content">
+                                    <p>{t('GitLab backup stores your TeXlyre data in a GitLab repository:')}</p>
+                                    <ul>
+                                        <li>
+                                            <strong>{t('Push: ')}</strong>&nbsp;{t('Pushes local changes to the repository')}
+                                        </li>
+                                        <li>
+                                            <strong>{t('Import: ')}</strong>&nbsp;{t('Imports changes from the repository to your local workspace')}
+                                        </li>
+                                        <li>
+                                            <strong>{t('Change repo/branch:')}</strong>&nbsp;{t('Click the branch icon to switch repository/branch')}
+                                        </li>
+                                        <li>{t('Each project is stored in a separate folder with documents and files organized')}</li>
+                                        <li>{t('Your GitLab token is encrypted and stored securely with your TeXlyre password')}</li>
+                                        <li>{t('Repository and branch selection is remembered per project scope for convenience')}</li>
+                                        <li>{t('Use private repositories to keep your data secure')}</li>
+                                    </ul>
+                                </div>
                             </div>
-                        </div>
-                    </>
-                )}
-            </div>
-        </Modal>
+                        </>
+                    )}
+                </div>
+            </Modal>
+
+            <SettingsModal
+                isOpen={showSettings}
+                onClose={() => setShowSettings(false)}
+                initialCategory={t("Backup")}
+                initialSubcategory={t("GitLab")} />
+
+        </>
     );
 };
 
