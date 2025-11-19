@@ -152,7 +152,7 @@ const config: TexlyreConfig = {
         renderers: ['pdf', 'svg', 'canvas'],
         loggers: ['latex_visualizer', 'typst_visualizer'],
         lsp: [],
-        backup: ['github'],
+        backup: ['github', 'gitlab'],
         themes: ['texlyre_slim', 'texlyre_wide', 'texlyre_mobile'],
     },
 

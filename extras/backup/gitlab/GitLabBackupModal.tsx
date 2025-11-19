@@ -1,0 +1,735 @@
+import { t } from '@/i18n';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import {
+    DisconnectIcon,
+    GitBranchIcon,
+    GitPushIcon,
+    ImportIcon,
+    SettingsIcon,
+    TrashIcon,
+} from '@/components/common/Icons';
+import Modal from '@/components/common/Modal';
+import { useAuth } from '@/hooks/useAuth';
+import { useSecrets } from '@/hooks/useSecrets';
+import { formatDate } from '@/utils/dateUtils';
+import { gitLabApiService } from './GitLabApiService';
+import { gitLabBackupService } from './GitLabBackupService';
+import { GitLabIcon } from './Icon';
+
+interface GitLabBackupModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    currentProjectId?: string | null;
+    isInEditor?: boolean;
+}
+
+const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
+    isOpen,
+    onClose,
+    currentProjectId,
+    isInEditor = false,
+}) => {
+    const [status, setStatus] = useState(gitLabBackupService.getStatus());
+    const [activities, setActivities] = useState(
+        gitLabBackupService.getActivities(),
+    );
+    const [syncScope, setSyncScope] = useState<'current' | 'all'>('current');
+    const [isOperating, setIsOperating] = useState(false);
+    const [currentProjectName, setCurrentProjectName] = useState<string>('');
+    const [commitMessage, setCommitMessage] = useState('');
+    const [showConnectionFlow, setShowConnectionFlow] = useState(false);
+    const [gitLabToken, setGitLabToken] = useState('');
+    const [availableProjects, setAvailableProjects] = useState<any[]>([]);
+    const [availableBranches, setAvailableBranches] = useState<any[]>([]);
+    const [selectedProject, setSelectedProject] = useState('');
+    const [selectedBranch, setSelectedBranch] = useState('main');
+    const [displayBranch, setDisplayBranch] = useState<string>('main');
+    const [connectionStep, setConnectionStep] = useState<
+        'token' | 'project' | 'branch'
+    >('token');
+
+    const { getProjectById } = useAuth();
+    const secrets = useSecrets();
+
+    useEffect(() => {
+        gitLabBackupService.setSecretsContext(secrets);
+    }, [secrets]);
+
+    useEffect(() => {
+        const unsubscribeStatus =
+            gitLabBackupService.addStatusListener(setStatus);
+        const unsubscribeActivities =
+            gitLabBackupService.addActivityListener(setActivities);
+        return () => {
+            unsubscribeStatus();
+            unsubscribeActivities();
+        };
+    }, []);
+
+    useEffect(() => {
+        const loadProjectName = async () => {
+            if (isInEditor && currentProjectId) {
+                try {
+                    const project = await getProjectById(currentProjectId);
+                    setCurrentProjectName(project?.name || 'Current project');
+                } catch {
+                    setCurrentProjectName('Current project');
+                }
+            }
+        };
+        loadProjectName();
+    }, [currentProjectId, getProjectById, isInEditor]);
+
+    useEffect(() => {
+        if (isOpen) {
+            const checkExistingCredentials = async () => {
+                const projectId =
+                    isInEditor && syncScope === 'current' ? currentProjectId : undefined;
+                if (await gitLabBackupService.hasStoredCredentials(projectId)) {
+                    try {
+                        const storedProject =
+                            await gitLabBackupService.getStoredProject(projectId);
+                        const storedBranch =
+                            await gitLabBackupService.getStoredBranch(projectId);
+                        if (storedProject) {
+                            setStatus((prev) => ({
+                                ...prev,
+                                isConnected: true,
+                                isEnabled: true,
+                                project: storedProject,
+                            }));
+                            setSelectedProject(storedProject);
+                            setSelectedBranch(storedBranch);
+                            setDisplayBranch(storedBranch);
+                        }
+                    } catch (error) {
+                        console.log('Could not load stored credentials.', error);
+                    }
+                }
+            };
+            checkExistingCredentials();
+        }
+    }, [isOpen, isInEditor, syncScope, currentProjectId]);
+
+    const handleAsyncOperation = async (operation: () => Promise<void>) => {
+        if (isOperating) return;
+        setIsOperating(true);
+        try {
+            await operation();
+        } catch (error) {
+            console.error('Operation failed:', error);
+            alert(
+                `Operation failed: ${error instanceof Error ? error.message : String(error)}`,
+            );
+        } finally {
+            setIsOperating(false);
+        }
+    };
+
+    const handleConnect = () =>
+        handleAsyncOperation(async () => {
+            const result = await gitLabBackupService.requestAccess();
+            if (result.success) {
+                setShowConnectionFlow(true);
+                setConnectionStep('token');
+                const projectId =
+                    isInEditor && syncScope === 'current' ? currentProjectId : undefined;
+                const storedProject =
+                    await gitLabBackupService.getStoredProject(projectId);
+                const storedBranch =
+                    await gitLabBackupService.getStoredBranch(projectId);
+                if (storedProject) setSelectedProject(storedProject);
+                if (storedBranch) setSelectedBranch(storedBranch);
+            }
+        });
+
+    const handleTokenSubmit = () =>
+        handleAsyncOperation(async () => {
+            if (!gitLabToken.trim()) return;
+            const result = await gitLabBackupService.connectWithToken(gitLabToken);
+            if (result.success && result.projects) {
+                setAvailableProjects(result.projects);
+                setConnectionStep('project');
+            } else {
+                alert(result.error || 'Failed to connect with token.');
+            }
+        });
+
+    const handleProjectSubmit = () =>
+        handleAsyncOperation(async () => {
+            if (!selectedProject) return;
+            const selectedProjectData = availableProjects.find(
+                (p) => p.id.toString() === selectedProject,
+            );
+            if (!selectedProjectData) return;
+            const branches = await gitLabApiService.getBranches(
+                gitLabToken,
+                selectedProject,
+            );
+            setAvailableBranches(branches);
+            setConnectionStep('branch');
+        });
+
+    const handleBranchSubmit = () =>
+        handleAsyncOperation(async () => {
+            if (!selectedBranch) return;
+            const projectId =
+                isInEditor && syncScope === 'current' ? currentProjectId : undefined;
+            const selectedProjectData = availableProjects.find(
+                (p) => p.id.toString() === selectedProject,
+            );
+            if (!selectedProjectData) return;
+            const success = await gitLabBackupService.connectToProject(
+                gitLabToken,
+                selectedProject,
+                selectedProjectData.path_with_namespace,
+                projectId,
+                selectedBranch,
+            );
+            if (success) {
+                setDisplayBranch(selectedBranch);
+                setShowConnectionFlow(false);
+                setGitLabToken('');
+                setSelectedProject('');
+                setSelectedBranch('main');
+                setConnectionStep('token');
+            }
+        });
+
+    const handleChangeConnection = () =>
+        handleAsyncOperation(async () => {
+            const projectId =
+                isInEditor && syncScope === 'current' ? currentProjectId : undefined;
+            const credentials = await (gitLabBackupService as any).getGitLabCredentials(
+                projectId,
+            );
+            if (!credentials) {
+                alert('Could not retrieve GitLab credentials. Please reconnect.');
+                return;
+            }
+
+            setGitLabToken(credentials.token);
+            const result = await gitLabBackupService.connectWithToken(
+                credentials.token,
+            );
+            if (result.success && result.projects) {
+                setAvailableProjects(result.projects);
+                const currentBranch =
+                    await gitLabBackupService.getStoredBranch(projectId);
+                setSelectedBranch(currentBranch);
+                setShowConnectionFlow(true);
+                setConnectionStep('project');
+            }
+        });
+
+    const handleProjectChange = async (newProjectId: string) => {
+        setSelectedProject(newProjectId);
+        if (newProjectId && gitLabToken) {
+            try {
+                const branches = await gitLabApiService.getBranches(
+                    gitLabToken,
+                    newProjectId,
+                );
+                setAvailableBranches(branches);
+                const defaultBranch =
+                    branches.find((b) => b.name === 'main') ||
+                    branches.find((b) => b.name === 'master') ||
+                    branches[0];
+                if (defaultBranch) {
+                    setSelectedBranch(defaultBranch.name);
+                }
+            } catch (error) {
+                console.error('Failed to load branches:', error);
+            }
+        }
+    };
+
+    const getScopedProjectId = () =>
+        isInEditor && syncScope === 'current' ? currentProjectId : undefined;
+
+    const handleExport = () =>
+        handleAsyncOperation(async () => {
+            if (!commitMessage.trim()) return;
+            await gitLabBackupService.exportData(
+                getScopedProjectId(),
+                commitMessage,
+                selectedBranch,
+            );
+        });
+
+    const handleImport = () =>
+        handleAsyncOperation(() =>
+            gitLabBackupService.importChanges(getScopedProjectId(), selectedBranch),
+        );
+
+    const handleDisconnect = () =>
+        handleAsyncOperation(async () => {
+            await gitLabBackupService.disconnect(getScopedProjectId());
+            await handleConnect();
+        });
+
+    const getActivityIcon = (type: string) =>
+        ({
+            backup_error: '❌',
+            import_error: '❌',
+            backup_complete: '✅',
+            import_complete: '✅',
+            backup_start: '📤',
+            import_start: '📥',
+        })[type] || 'ℹ️';
+    const getActivityColor = (type: string) =>
+        ({
+            backup_error: '#dc3545',
+            import_error: '#dc3545',
+            backup_complete: '#28a745',
+            import_complete: '#28a745',
+            backup_start: '#007bff',
+            import_start: '#6f42c1',
+        })[type] || '#6c757d';
+
+    return (
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={t('GitLab Backup')}
+            icon={GitLabIcon}
+            size="medium"
+            headerActions={
+                <button
+                    className="modal-close-button"
+                    onClick={() => { }}
+                    title={t('GitLab Backup Settings')}
+                >
+                    <SettingsIcon />
+                </button>
+            }
+        >
+            <div className="backup-modal">
+                {showConnectionFlow && (
+                    <div
+                        className="connection-flow"
+                        style={{
+                            marginBottom: '2rem',
+                            padding: '1rem',
+                            border: '1px solid var(--accent-border)',
+                            borderRadius: '8px',
+                            backgroundColor: 'var(--accent-background)',
+                        }}
+                    >
+                        <h3>{t('Connect to GitLab')}</h3>
+                        {connectionStep === 'token' && (
+                            <div>
+                                <label
+                                    style={{
+                                        display: 'block',
+                                        marginBottom: '0.5rem',
+                                        fontWeight: 'bold',
+                                    }}
+                                >
+                                    {t('GitLab Personal Access Token:')}
+                                </label>
+                                <input
+                                    type="password"
+                                    value={gitLabToken}
+                                    onChange={(e) => setGitLabToken(e.target.value)}
+                                    placeholder={t('glpat-...')}
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.5rem',
+                                        marginBottom: '1rem',
+                                    }}
+                                />
+                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                    <button
+                                        className="button primary"
+                                        onClick={handleTokenSubmit}
+                                        disabled={!gitLabToken.trim() || isOperating}
+                                    >
+                                        {isOperating ? 'Connecting...' : 'Connect'}
+                                    </button>
+                                    <button
+                                        className="button secondary"
+                                        onClick={() => setShowConnectionFlow(false)}
+                                    >
+                                        {t('Cancel')}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        {connectionStep === 'project' && (
+                            <div>
+                                <label
+                                    style={{
+                                        display: 'block',
+                                        marginBottom: '0.5rem',
+                                        fontWeight: 'bold',
+                                    }}
+                                >
+                                    {t('Select Project:')}
+                                </label>
+                                <select
+                                    value={selectedProject}
+                                    onChange={(e) => handleProjectChange(e.target.value)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.5rem',
+                                        marginBottom: '1rem',
+                                    }}
+                                >
+                                    <option value="">{t('Choose a project...')}</option>
+                                    {availableProjects.map((project) => (
+                                        <option key={project.id} value={project.id.toString()}>
+                                            {project.path_with_namespace} (
+                                            {project.visibility === 'private' ? 'Private' : 'Public'})
+                                        </option>
+                                    ))}
+                                </select>
+                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                    <button
+                                        className="button primary"
+                                        onClick={handleProjectSubmit}
+                                        disabled={!selectedProject || isOperating}
+                                    >
+                                        {isOperating ? 'Loading...' : 'Next'}
+                                    </button>
+                                    <button
+                                        className="button secondary"
+                                        onClick={() => setConnectionStep('token')}
+                                    >
+                                        {t('Back')}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        {connectionStep === 'branch' && (
+                            <div>
+                                <label
+                                    style={{
+                                        display: 'block',
+                                        marginBottom: '0.5rem',
+                                        fontWeight: 'bold',
+                                    }}
+                                >
+                                    {t('Select Branch:')}
+                                </label>
+                                <select
+                                    value={selectedBranch}
+                                    onChange={(e) => setSelectedBranch(e.target.value)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.5rem',
+                                        marginBottom: '1rem',
+                                    }}
+                                >
+                                    {availableBranches.map((branch) => (
+                                        <option key={branch.name} value={branch.name}>
+                                            {branch.name} {branch.protected ? '(Protected)' : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                    <button
+                                        className="button primary"
+                                        onClick={handleBranchSubmit}
+                                        disabled={!selectedBranch || isOperating}
+                                    >
+                                        {isOperating ? 'Connecting...' : 'Connect'}
+                                    </button>
+                                    <button
+                                        className="button secondary"
+                                        onClick={() => setConnectionStep('project')}
+                                    >
+                                        {t('Back')}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {!showConnectionFlow && (
+                    <>
+                        <div className="backup-status">
+                            <div className="status-header">
+                                <div className="backup-controls">
+                                    {!status.isConnected ? (
+                                        <button
+                                            className="button primary"
+                                            onClick={handleConnect}
+                                            disabled={isOperating}
+                                        >
+                                            {t('Connect to GitLab')}
+                                        </button>
+                                    ) : (
+                                        <>
+                                            {isInEditor && (
+                                                <div
+                                                    className="sync-scope-selector"
+                                                    style={{ marginBottom: '1rem' }}
+                                                >
+                                                    <label
+                                                        style={{
+                                                            display: 'block',
+                                                            marginBottom: '0.5rem',
+                                                            fontWeight: 'bold',
+                                                        }}
+                                                    >
+                                                        {t('Backup Scope:')}
+                                                    </label>
+                                                    <div style={{ display: 'flex', gap: '1rem' }}>
+                                                        <label
+                                                            style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '0.5rem',
+                                                            }}
+                                                        >
+                                                            <input
+                                                                type="radio"
+                                                                name="syncScope"
+                                                                value="current"
+                                                                checked={syncScope === 'current'}
+                                                                onChange={(e) =>
+                                                                    setSyncScope(
+                                                                        e.target.value as 'current' | 'all',
+                                                                    )
+                                                                }
+                                                                disabled={isOperating}
+                                                            />
+                                                            <span>
+                                                                {t('Current Project (')}
+                                                                {currentProjectName})
+                                                            </span>
+                                                        </label>
+                                                        <label
+                                                            style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '0.5rem',
+                                                            }}
+                                                        >
+                                                            <input
+                                                                type="radio"
+                                                                name="syncScope"
+                                                                value="all"
+                                                                checked={syncScope === 'all'}
+                                                                onChange={(e) =>
+                                                                    setSyncScope(
+                                                                        e.target.value as 'current' | 'all',
+                                                                    )
+                                                                }
+                                                                disabled={isOperating}
+                                                            />
+                                                            <span>{t('All projects')}</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            <div style={{ marginBottom: '1rem' }}>
+                                                <label
+                                                    style={{
+                                                        display: 'block',
+                                                        marginBottom: '0.5rem',
+                                                        fontWeight: 'bold',
+                                                    }}
+                                                >
+                                                    {t('Commit Message:')}
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={commitMessage}
+                                                    onChange={(e) => setCommitMessage(e.target.value)}
+                                                    placeholder={t(`TeXlyre Backup: {date}`, {
+                                                        date: new Date().toLocaleDateString(),
+                                                    })}
+                                                    style={{
+                                                        width: '100%',
+                                                        padding: '0.5rem',
+                                                        borderRadius: '4px',
+                                                        border: '1px solid var(--accent-border)',
+                                                    }}
+                                                    disabled={isOperating}
+                                                />
+                                            </div>
+                                            <div className="backup-toolbar">
+                                                <div className="primary-actions">
+                                                    <button
+                                                        className="button secondary"
+                                                        onClick={handleExport}
+                                                        disabled={
+                                                            status.status === 'syncing' ||
+                                                            isOperating ||
+                                                            !commitMessage.trim()
+                                                        }
+                                                    >
+                                                        <GitPushIcon />
+                                                        {status.status === 'syncing' || isOperating
+                                                            ? t('Pushing...')
+                                                            : t('Push To GL')}
+                                                    </button>
+                                                    <button
+                                                        className="button secondary"
+                                                        onClick={handleImport}
+                                                        disabled={status.status === 'syncing' || isOperating}
+                                                    >
+                                                        <ImportIcon />
+                                                        {status.status === 'syncing' || isOperating
+                                                            ? t('Importing...')
+                                                            : t('Import From GL')}
+                                                    </button>
+                                                </div>
+                                                <div className="secondary-actions">
+                                                    <button
+                                                        className="button secondary icon-only"
+                                                        onClick={handleChangeConnection}
+                                                        disabled={isOperating}
+                                                        title={t('Change project/branch')}
+                                                    >
+                                                        <GitBranchIcon />
+                                                    </button>
+                                                    <button
+                                                        className="button secondary icon-only"
+                                                        onClick={handleDisconnect}
+                                                        disabled={isOperating}
+                                                        title={t('Disconnect (deletes API key)')}
+                                                    >
+                                                        <DisconnectIcon />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="status-info">
+                                <div className="status-item">
+                                    <strong>{t('GitLab Backup:')}</strong>{' '}
+                                    {status.isConnected ? t('Connected') : t('Disconnected')}
+                                </div>
+                                {status.isConnected && status.project && (
+                                    <div className="status-item">
+                                        <strong>{t('Project: ')}</strong>
+                                        <span style={{ marginLeft: '0.5rem' }}>
+                                            {status.project} ({displayBranch})
+                                        </span>
+                                    </div>
+                                )}
+                                {status.lastSync && (
+                                    <div className="status-item">
+                                        <strong>{t('Last Sync:')}</strong>{' '}
+                                        {formatDate(status.lastSync)}
+                                    </div>
+                                )}
+                                {status.error && (
+                                    <div className="error-message">{status.error}</div>
+                                )}
+                            </div>
+                        </div>
+                        {activities.length > 0 && (
+                            <div className="backup-activities">
+                                <div className="activities-header">
+                                    <h3>{t('Recent Activity')}</h3>
+                                    <button
+                                        className="button small secondary"
+                                        onClick={() => gitLabBackupService.clearAllActivities()}
+                                        title={t('Clear all activities')}
+                                        disabled={isOperating}
+                                    >
+                                        <TrashIcon />
+                                        {t('Clear All')}
+                                    </button>
+                                </div>
+                                <div className="activities-list">
+                                    {activities
+                                        .slice(-10)
+                                        .reverse()
+                                        .map((activity) => (
+                                            <div
+                                                key={activity.id}
+                                                className="activity-item"
+                                                style={{
+                                                    borderLeft: `3px solid ${getActivityColor(activity.type)}`,
+                                                }}
+                                            >
+                                                <div className="activity-content">
+                                                    <div className="activity-header">
+                                                        <span className="activity-icon">
+                                                            {getActivityIcon(activity.type)}
+                                                        </span>
+                                                        <span className="activity-message">
+                                                            {activity.message}
+                                                        </span>
+                                                        <button
+                                                            className="activity-close"
+                                                            onClick={() =>
+                                                                gitLabBackupService.clearActivity(activity.id)
+                                                            }
+                                                            title={t('Dismiss')}
+                                                            disabled={isOperating}
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </div>
+                                                    <div className="activity-time">
+                                                        {formatDate(activity.timestamp)}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="backup-info">
+                            <h3>{t('How GitLab Backup Works')}</h3>
+                            <div className="info-content">
+                                <p>
+                                    {t(
+                                        'GitLab backup stores your TeXlyre data in a GitLab project:',
+                                    )}
+                                </p>
+                                <ul>
+                                    <li>
+                                        <strong>{t('Push: ')}</strong>&nbsp;
+                                        {t('Pushes local changes to the project')}
+                                    </li>
+                                    <li>
+                                        <strong>{t('Import: ')}</strong>&nbsp;
+                                        {t(
+                                            'Imports changes from the project to your local workspace',
+                                        )}
+                                    </li>
+                                    <li>
+                                        <strong>{t('Change project/branch:')}</strong>&nbsp;
+                                        {t('Click the branch icon to switch project/branch')}
+                                    </li>
+                                    <li>
+                                        {t(
+                                            'Each project is stored in a separate folder with documents and files organized',
+                                        )}
+                                    </li>
+                                    <li>
+                                        {t(
+                                            'Your GitLab token is encrypted and stored securely with your TeXlyre password',
+                                        )}
+                                    </li>
+                                    <li>
+                                        {t(
+                                            'Project and branch selection is remembered per project scope for convenience',
+                                        )}
+                                    </li>
+                                    <li>
+                                        {t('Use private projects to keep your data secure')}
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </>
+                )}
+            </div>
+        </Modal>
+    );
+};
+
+export default GitLabBackupModal;
