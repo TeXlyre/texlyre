@@ -387,9 +387,8 @@
 
 [data-layout="texlyre-mobile"] body.mobile-view-chat .chat-panel {
 	display: flex !important;
-	position: static !important;
-	width: 100% !important;
-	height: 100% !important;
+	width: 97% !important;
+	height: 78% !important;
 	border: none !important;
 	border-radius: 0 !important;
 	transform: none !important;

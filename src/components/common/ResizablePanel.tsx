@@ -65,14 +65,14 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 
 	const getContainerSize = (): number => {
 		if (!panelRef.current?.parentElement) return direction === 'horizontal' ? 800 : 600;
-		
+
 		const parent = panelRef.current.parentElement;
 		return direction === 'horizontal' ? parent.clientWidth : parent.clientHeight;
 	};
 
 	const getLimits = () => {
 		const containerSize = getContainerSize();
-		
+
 		if (direction === 'horizontal') {
 			return {
 				min: parseLimit(minWidth, containerSize),
@@ -100,7 +100,7 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 			direction === 'horizontal' ? 'horizontal-resize' : 'vertical-resize',
 		);
 	};
-	
+
 	useEffect(() => {
 		const newSize = direction === 'horizontal' ? width : height;
 		setSize(newSize);
@@ -112,7 +112,7 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 
 			const { min, max } = getLimits();
 			const constrainedSize = Math.max(min, Math.min(max, size));
-			
+
 			if (constrainedSize !== size) {
 				setSize(constrainedSize);
 				if (onResize) {
@@ -198,7 +198,12 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 			setPreviousSize(size);
 			setSize(0);
 		} else {
-			setSize(previousSize);
+			const restoredSize = previousSize;
+			setSize(restoredSize);
+
+			if (onResize) {
+				onResize(restoredSize);
+			}
 		}
 
 		if (onCollapse) {
@@ -221,15 +226,14 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 
 	const getHandleClassName = () => {
 		const baseClass = `resize-handle ${direction}`;
-		const alignmentClass = `${
-			direction === 'horizontal'
-				? alignment === 'start'
-					? 'left'
-					: 'right'
-				: alignment === 'start'
-					? 'bottom'
-					: 'top'
-		}`;
+		const alignmentClass = `${direction === 'horizontal'
+			? alignment === 'start'
+				? 'left'
+				: 'right'
+			: alignment === 'start'
+				? 'bottom'
+				: 'top'
+			}`;
 
 		return `${baseClass} ${alignmentClass} ${handleClassName}`;
 	};
@@ -271,17 +275,17 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 		height: '100%',
 		...(direction === 'horizontal'
 			? {
-					width: `${size}px`,
-					minWidth: collapsed ? '0' : `${minLimit}px`,
-					maxWidth: collapsed ? '0' : `${maxLimit}px`,
-					transition: resizing ? 'none' : 'width 0.2s ease-in-out',
-				}
+				width: `${size}px`,
+				minWidth: collapsed ? '0' : `${minLimit}px`,
+				maxWidth: collapsed ? '0' : `${maxLimit}px`,
+				transition: resizing ? 'none' : 'width 0.2s ease-in-out',
+			}
 			: {
-					height: `${size}px`,
-					minHeight: collapsed ? '0' : `${minLimit}px`,
-					maxHeight: collapsed ? '0' : `${maxLimit}px`,
-					transition: resizing ? 'none' : 'height 0.2s ease-in-out',
-				}),
+				height: `${size}px`,
+				minHeight: collapsed ? '0' : `${minLimit}px`,
+				maxHeight: collapsed ? '0' : `${maxLimit}px`,
+				transition: resizing ? 'none' : 'height 0.2s ease-in-out',
+			}),
 	};
 
 	return (
