@@ -1,9 +1,10 @@
-// extras/backup/GitHubBackupPlugin.ts
+// extras/backup/github/GitHubBackupPlugin.ts
 import type { BackupPlugin } from '@/plugins/PluginInterface';
 import GitHubBackupModal from './GitHubBackupModal';
 import { gitHubBackupService } from './GitHubBackupService';
 import GitHubBackupStatusIndicator from './GitHubBackupStatusIndicator';
 import { GitHubIcon } from './Icon';
+import { getGitHubBackupSettings } from './settings';
 
 const gitHubBackupPlugin: BackupPlugin = {
 	id: 'github-backup',
@@ -11,6 +12,9 @@ const gitHubBackupPlugin: BackupPlugin = {
 	version: '1.0.0',
 	type: 'backup',
 	icon: GitHubIcon,
+	get settings() {
+		return getGitHubBackupSettings();
+	},
 
 	canHandle: (backupType: string): boolean => {
 		return backupType === 'github';

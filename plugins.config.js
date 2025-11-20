@@ -11,6 +11,9 @@ export default {
 	  "loggers/latex_visualizer",
 	  "loggers/typst_visualizer",
 	  "backup/github",
+	  "backup/gitlab",
+	  "backup/forgejo",
+	  "backup/gitea",
 	  "themes/texlyre_slim",
 	  "themes/texlyre_wide",
 	  "themes/texlyre_mobile"

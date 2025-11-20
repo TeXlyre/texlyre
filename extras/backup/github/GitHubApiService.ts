@@ -23,7 +23,20 @@ interface GitHubTreeItem {
 }
 
 export class GitHubApiService {
-	private readonly baseUrl = 'https://api.github.com';
+	private baseUrl: string = 'https://api.github.com';
+	private requestTimeout: number = 30000;
+
+	setBaseUrl(url: string): void {
+		this.baseUrl = url.replace(/\/$/, '');
+	}
+
+	getBaseUrl(): string {
+		return this.baseUrl;
+	}
+
+	setRequestTimeout(timeoutSeconds: number): void {
+		this.requestTimeout = timeoutSeconds * 1000;
+	}
 
 	private async _request<T>(
 		token: string,
@@ -38,16 +51,33 @@ export class GitHubApiService {
 		});
 		if (options.body) headers.set('Content-Type', 'application/json');
 
-		const response = await fetch(url, { ...options, headers });
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
 
-		if (!response.ok) {
-			const errorData = await response.json().catch(() => ({}));
-			throw new Error(
-				`GitHub API request to '${endpoint}' failed: ${response.statusText}. ${errorData.message || ''}`,
-			);
+		try {
+			const response = await fetch(url, {
+				...options,
+				headers,
+				signal: controller.signal,
+			});
+
+			clearTimeout(timeoutId);
+
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({}));
+				throw new Error(
+					`GitHub API request to '${endpoint}' failed: ${response.statusText}. ${errorData.message || ''}`,
+				);
+			}
+
+			return response.status === 204 ? (null as T) : response.json();
+		} catch (error) {
+			clearTimeout(timeoutId);
+			if (error instanceof Error && error.name === 'AbortError') {
+				throw new Error(`Request timeout after ${this.requestTimeout / 1000} seconds`);
+			}
+			throw error;
 		}
-
-		return response.status === 204 ? (null as T) : response.json();
 	}
 
 	private _encodeContent(content: string | Uint8Array | ArrayBuffer): string {
@@ -65,9 +95,18 @@ export class GitHubApiService {
 
 	async testConnection(token: string): Promise<boolean> {
 		try {
+			const controller = new AbortController();
+			const timeoutId = setTimeout(
+				() => controller.abort(),
+				this.requestTimeout,
+			);
+
 			const response = await fetch(`${this.baseUrl}/user`, {
 				headers: { Authorization: `token ${token}` },
+				signal: controller.signal,
 			});
+
+			clearTimeout(timeoutId);
 			return response.ok;
 		} catch {
 			return false;
