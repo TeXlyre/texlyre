@@ -146,8 +146,8 @@ TeXlyre is privacy-focused by design:
 
 When you collaborate, IP addresses are temporarily processed through signaling servers to establish direct connections. No project content is transmitted through our servers.
 
-### GitHub Integration
-The optional GitHub integration only activates when you explicitly enable it and provide your own GitHub token.
+### Repository Backup Integration
+The optional GitHub, GitLab, Gitea, and Forgejo (Codeberg) integration only activates when you explicitly enable them and provide your own token.
 
 ## Infrastructure
 
