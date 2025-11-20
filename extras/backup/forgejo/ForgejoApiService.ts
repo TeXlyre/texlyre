@@ -160,15 +160,21 @@ export class ForgejoApiService {
         commitMessage: string,
         actions: ForgejoCommitAction[],
     ): Promise<void> {
-        const files: Record<string, string> = {};
+        const fileOperations = actions.map((action) => {
+            const operation: any = {
+                operation: action.operation,
+                path: action.path,
+            };
 
-        for (const action of actions) {
-            if (action.operation === 'delete') {
-                files[action.path] = '';
-            } else if (action.content !== undefined) {
-                files[action.path] = action.content;
+            if (action.operation !== 'delete') {
+                operation.content = action.content;
+                if (action.encoding) {
+                    operation.encoding = action.encoding;
+                }
             }
-        }
+
+            return operation;
+        });
 
         await this._request<void>(
             token,
@@ -178,7 +184,7 @@ export class ForgejoApiService {
                 body: JSON.stringify({
                     branch,
                     message: commitMessage,
-                    files,
+                    files: fileOperations,
                 }),
             },
         );
