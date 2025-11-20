@@ -53,6 +53,91 @@ export class GitHubBackupService {
 		REPOSITORY: 'selected-repository',
 	} as const;
 
+	private settingsCache: {
+		apiEndpoint?: string;
+		defaultBranch?: string;
+		defaultCommitMessage?: string;
+		ignorePatterns?: string[];
+		maxFileSize?: number;
+		requestTimeout?: number;
+		maxRetryAttempts?: number;
+		activityHistoryLimit?: number;
+	} = {};
+
+	setSettings(settings: {
+		apiEndpoint?: string;
+		defaultBranch?: string;
+		defaultCommitMessage?: string;
+		ignorePatterns?: string[];
+		maxFileSize?: number;
+		requestTimeout?: number;
+		maxRetryAttempts?: number;
+		activityHistoryLimit?: number;
+	}): void {
+		this.settingsCache = { ...settings };
+
+		if (settings.apiEndpoint) {
+			gitHubApiService.setBaseUrl(settings.apiEndpoint);
+		}
+
+		if (settings.requestTimeout) {
+			gitHubApiService.setRequestTimeout(settings.requestTimeout);
+		}
+	}
+
+	private getDefaultBranch(): string {
+		return this.settingsCache.defaultBranch || 'main';
+	}
+
+	private getDefaultCommitMessage(): string {
+		const template =
+			this.settingsCache.defaultCommitMessage || 'TeXlyre Backup: {date}';
+		const now = new Date();
+		return template
+			.replace('{date}', now.toLocaleDateString())
+			.replace('{time}', now.toLocaleTimeString());
+	}
+
+	private getIgnorePatterns(): string[] {
+		return this.settingsCache.ignorePatterns || [];
+	}
+
+	private getMaxFileSize(): number {
+		return (this.settingsCache.maxFileSize || 100) * 1024 * 1024;
+	}
+
+	private getMaxRetryAttempts(): number {
+		return this.settingsCache.maxRetryAttempts || 3;
+	}
+
+	private getActivityHistoryLimit(): number {
+		return this.settingsCache.activityHistoryLimit || 50;
+	}
+
+	private shouldIgnoreFile(filePath: string): boolean {
+		const patterns = this.getIgnorePatterns();
+		if (patterns.length === 0) return false;
+
+		for (const pattern of patterns) {
+			const trimmedPattern = pattern.trim();
+			if (!trimmedPattern) continue;
+
+			const regexPattern = trimmedPattern
+				.replace(/\./g, '\\.')
+				.replace(/\*/g, '.*')
+				.replace(/\?/g, '.');
+
+			const regex = new RegExp(`^${regexPattern}$`);
+			const fileName = filePath.split('/').pop() || '';
+
+			if (regex.test(fileName) || regex.test(filePath)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	private _getScopeOptions(projectId?: string) {
 		return {
 			scope: projectId ? 'project' : ('global' as 'project' | 'global'),
@@ -79,6 +164,25 @@ export class GitHubBackupService {
 			await new Promise((resolve) => setTimeout(resolve, waitTime));
 		}
 		this.lastOperationTime = Date.now();
+	}
+
+	private notifyListeners(): void {
+		this.listeners.forEach((listener) => listener(this.status));
+	}
+
+	private notifyActivityListeners(): void {
+		this.activityListeners.forEach((listener) => listener(this.activities));
+	}
+
+	private addActivity(activity: Omit<BackupActivity, 'id' | 'timestamp'>) {
+		const fullActivity: BackupActivity = {
+			id: Math.random().toString(36).substring(2),
+			timestamp: Date.now(),
+			...activity,
+		};
+		const limit = this.getActivityHistoryLimit();
+		this.activities = [...this.activities.slice(-limit + 1), fullActivity];
+		this.notifyActivityListeners();
 	}
 
 	setSecretsContext(secretsContext: SecretsContextType): void {
@@ -115,7 +219,7 @@ export class GitHubBackupService {
 		token: string,
 		repoName: string,
 		projectId?: string,
-		branch = 'main',
+		branch?: string,
 	): Promise<boolean> {
 		try {
 			if (!this.secretsContext)
@@ -126,6 +230,8 @@ export class GitHubBackupService {
 			const [owner, repo] = repoName.split('/');
 			this.currentRepo = { owner, repo };
 			const scopeOptions = this._getScopeOptions(projectId);
+
+			const finalBranch = branch || this.getDefaultBranch();
 
 			await this.secretsContext.setSecret(
 				this.PLUGIN_ID,
@@ -147,7 +253,7 @@ export class GitHubBackupService {
 						repo,
 						fullName: repoName,
 						connectedAt: Date.now(),
-						branch,
+						branch: finalBranch,
 					},
 				},
 			);
@@ -162,7 +268,7 @@ export class GitHubBackupService {
 			this.notifyListeners();
 			this.addActivity({
 				type: 'backup_complete',
-				message: t(`Connected to GitHub repository: {repoName} ({branch})`, { repoName, branch }),
+				message: t(`Connected to GitHub repository: {repoName} ({branch})`, { repoName, branch: finalBranch }),
 			});
 			return true;
 		} catch (error) {
@@ -237,13 +343,13 @@ export class GitHubBackupService {
 	}
 
 	async getStoredBranch(projectId?: string): Promise<string> {
-		if (!this.secretsContext) return 'main';
+		if (!this.secretsContext) return this.getDefaultBranch();
 		const repoMetadata = await this.secretsContext.getSecretMetadata(
 			this.PLUGIN_ID,
 			this.SECRET_KEYS.REPOSITORY,
 			this._getScopeOptions(projectId),
 		);
-		return repoMetadata?.branch || 'main';
+		return repoMetadata?.branch || this.getDefaultBranch();
 	}
 
 	async hasStoredCredentials(projectId?: string): Promise<boolean> {
@@ -296,8 +402,9 @@ export class GitHubBackupService {
 		}[],
 		branch = 'main',
 		filesToDelete: { path: string }[] = [],
-		maxRetries = 3,
 	): Promise<void> {
+		const maxRetries = this.getMaxRetryAttempts();
+
 		for (let attempt = 1; attempt <= maxRetries; attempt++) {
 			try {
 				if (attempt > 1) {
@@ -356,6 +463,7 @@ export class GitHubBackupService {
 				content: string | Uint8Array | ArrayBuffer;
 			}[] = [];
 			const filesToDelete: { path: string }[] = [];
+			const maxFileSize = this.getMaxFileSize();
 
 			for (const project of localProjects) {
 				if (!project) continue;
@@ -425,6 +533,28 @@ export class GitHubBackupService {
 				files.files.forEach((file) => {
 					const content = files.fileContents.get(file.path);
 					if (file.type === 'file' && content !== undefined) {
+						if (this.shouldIgnoreFile(file.path)) {
+							return;
+						}
+
+						const fileSize =
+							content instanceof ArrayBuffer
+								? content.byteLength
+								: content.length;
+						if (fileSize > maxFileSize) {
+							this.addActivity({
+								type: 'backup_error',
+								message: t(
+									'Skipped file {path}: exceeds max size of {size}MB',
+									{
+										path: file.path,
+										size: Math.round(maxFileSize / 1024 / 1024),
+									},
+								),
+							});
+							return;
+						}
+
 						filesToCommit.push({
 							path: `${projectPath}/files${file.path}`,
 							content,
@@ -440,11 +570,14 @@ export class GitHubBackupService {
 				}
 			}
 
+			const finalCommitMessage =
+				commitMessage || this.getDefaultCommitMessage();
+
 			await this.createCommitWithRetry(
 				credentials.token,
 				this.currentRepo?.owner,
 				this.currentRepo?.repo,
-				commitMessage || `TeXlyre backup: ${new Date().toISOString()}`,
+				finalCommitMessage,
 				filesToCommit,
 				finalBranch,
 				filesToDelete,
@@ -987,6 +1120,7 @@ export class GitHubBackupService {
 			this.listeners = this.listeners.filter((l) => l !== cb);
 		};
 	};
+
 	addActivityListener = (
 		cb: (activities: BackupActivity[]) => void,
 	): (() => void) => {
@@ -1000,27 +1134,11 @@ export class GitHubBackupService {
 		this.activities = this.activities.filter((a) => a.id !== id);
 		this.notifyActivityListeners();
 	};
+
 	clearAllActivities = (): void => {
 		this.activities = [];
 		this.notifyActivityListeners();
 	};
-
-	private notifyListeners = (): void => {
-		this.listeners.forEach((listener) => listener(this.status));
-	};
-	private notifyActivityListeners = (): void => {
-		this.activityListeners.forEach((listener) => listener(this.activities));
-	};
-
-	private addActivity(activity: Omit<BackupActivity, 'id' | 'timestamp'>) {
-		const fullActivity: BackupActivity = {
-			id: Math.random().toString(36).substring(2),
-			timestamp: Date.now(),
-			...activity,
-		};
-		this.activities = [...this.activities.slice(-50), fullActivity];
-		this.notifyActivityListeners();
-	}
 }
 
 export const gitHubBackupService = new GitHubBackupService();
