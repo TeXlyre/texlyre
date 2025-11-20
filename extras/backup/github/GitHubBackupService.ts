@@ -729,7 +729,7 @@ export class GitHubBackupService {
 
 					this.addActivity({
 						type: 'import_complete',
-						message: `Auto-imported missing project: ${projectMetadata.name}`,
+						message: t(`Auto-imported missing project: {projectName}`, { projectName: projectMetadata.name }),
 					});
 					fileStorageEventEmitter.emitChange();
 				} catch (error) {

@@ -1,4 +1,4 @@
-// extras/backup/gitlab/GitLabBackupService.ts
+// extras/backup/forgejo/ForgejoBackupService.ts
 import { t } from '@/i18n';
 import type { SecretsContextType } from '@/contexts/SecretsContext';
 import { authService } from '@/services/AuthService';
@@ -9,7 +9,7 @@ import {
 } from '@/services/FileStorageService';
 import { ProjectDataService } from '@/services/ProjectDataService';
 import { getMimeType, isBinaryFile } from '@/utils/fileUtils.ts';
-import { gitLabApiService } from './GitLabApiService';
+import { forgejoApiService } from './ForgejoApiService';
 
 interface BackupStatus {
     isConnected: boolean;
@@ -17,7 +17,7 @@ interface BackupStatus {
     lastSync: number | null;
     status: 'idle' | 'syncing' | 'error';
     error?: string;
-    project?: string;
+    repository?: string;
 }
 
 interface BackupActivity {
@@ -34,7 +34,7 @@ interface BackupActivity {
     data?: any;
 }
 
-export class GitLabBackupService {
+export class ForgejoBackupService {
     private status: BackupStatus = {
         isConnected: false,
         isEnabled: false,
@@ -46,15 +46,14 @@ export class GitLabBackupService {
     private activityListeners: Array<(activities: BackupActivity[]) => void> = [];
     private dataSerializer = new ProjectDataService();
     private unifiedService = new UnifiedDataStructureService();
-    private currentProject: { id: string; pathWithNamespace: string } | null =
-        null;
+    private currentRepo: { owner: string; repo: string } | null = null;
     private secretsContext: SecretsContextType | null = null;
     private lastOperationTime = 0;
     private readonly MIN_OPERATION_INTERVAL = 2000;
-    private readonly PLUGIN_ID = 'texlyre-gitlab-backup';
+    private readonly PLUGIN_ID = 'texlyre-forgejo-backup';
     private readonly SECRET_KEYS = {
-        TOKEN: 'gitlab-token',
-        PROJECT: 'selected-project',
+        TOKEN: 'forgejo-token',
+        REPOSITORY: 'selected-repository',
     } as const;
 
     private settingsCache: {
@@ -81,11 +80,11 @@ export class GitLabBackupService {
         this.settingsCache = { ...settings };
 
         if (settings.apiEndpoint) {
-            gitLabApiService.setBaseUrl(settings.apiEndpoint);
+            forgejoApiService.setBaseUrl(settings.apiEndpoint);
         }
 
         if (settings.requestTimeout) {
-            gitLabApiService.setRequestTimeout(settings.requestTimeout);
+            forgejoApiService.setRequestTimeout(settings.requestTimeout);
         }
     }
 
@@ -196,40 +195,38 @@ export class GitLabBackupService {
 
     async connectWithToken(
         token: string,
-    ): Promise<{ success: boolean; projects?: any[]; error?: string }> {
+    ): Promise<{ success: boolean; repositories?: any[]; error?: string }> {
         try {
-            if (!(await gitLabApiService.testConnection(token)))
-                return { success: false, error: t('Invalid GitLab token') };
-            const projects = await gitLabApiService.getProjects(token);
-            return { success: true, projects };
+            if (!(await forgejoApiService.testConnection(token)))
+                return { success: false, error: t('Invalid Forgejo token') };
+            const repositories = await forgejoApiService.getRepositories(token);
+            return { success: true, repositories };
         } catch (error) {
             return {
                 success: false,
                 error:
                     error instanceof Error
                         ? error.message
-                        : t('Failed to connect to GitLab'),
+                        : t('Failed to connect to Forgejo'),
             };
         }
     }
 
-    async connectToProject(
+    async connectToRepository(
         token: string,
-        projectId: string,
-        projectPathWithNamespace: string,
-        localProjectId?: string,
+        repoName: string,
+        projectId?: string,
         branch?: string,
     ): Promise<boolean> {
         try {
             if (!this.secretsContext)
                 throw new Error(t('Secrets context not initialized'));
-            if (!projectId) throw new Error(t('Invalid project format'));
+            if (!repoName || !repoName.includes('/'))
+                throw new Error(t('Invalid repository format. Use owner/repo'));
 
-            this.currentProject = {
-                id: projectId,
-                pathWithNamespace: projectPathWithNamespace,
-            };
-            const scopeOptions = this._getScopeOptions(localProjectId);
+            const [owner, repo] = repoName.split('/');
+            this.currentRepo = { owner, repo };
+            const scopeOptions = this._getScopeOptions(projectId);
 
             const finalBranch = branch || this.getDefaultBranch();
 
@@ -239,18 +236,19 @@ export class GitLabBackupService {
                 token,
                 {
                     ...scopeOptions,
-                    metadata: { tokenType: 'gitlab-personal-access-token' },
+                    metadata: { tokenType: 'forgejo-access-token' },
                 },
             );
             await this.secretsContext.setSecret(
                 this.PLUGIN_ID,
-                this.SECRET_KEYS.PROJECT,
-                projectId,
+                this.SECRET_KEYS.REPOSITORY,
+                repoName,
                 {
                     ...scopeOptions,
                     metadata: {
-                        projectId,
-                        pathWithNamespace: projectPathWithNamespace,
+                        owner,
+                        repo,
+                        fullName: repoName,
                         connectedAt: Date.now(),
                         branch: finalBranch,
                     },
@@ -261,14 +259,14 @@ export class GitLabBackupService {
                 ...this.status,
                 isConnected: true,
                 isEnabled: true,
-                project: projectPathWithNamespace,
+                repository: repoName,
                 error: undefined,
             };
             this.notifyListeners();
             this.addActivity({
                 type: 'backup_complete',
-                message: t('Connected to GitLab project: {project} ({branch})', {
-                    project: projectPathWithNamespace,
+                message: t('Connected to Forgejo repository: {repoName} ({branch})', {
+                    repoName,
                     branch: finalBranch,
                 }),
             });
@@ -280,16 +278,16 @@ export class GitLabBackupService {
                 error:
                     error instanceof Error
                         ? error.message
-                        : t('Failed to connect to GitLab'),
+                        : t('Failed to connect to Forgejo'),
             };
             this.notifyListeners();
             return false;
         }
     }
 
-    async disconnect(localProjectId?: string): Promise<void> {
+    async disconnect(projectId?: string): Promise<void> {
         if (!this.secretsContext) return;
-        const scopeOptions = this._getScopeOptions(localProjectId);
+        const scopeOptions = this._getScopeOptions(projectId);
         await this.secretsContext.removeSecret(
             this.PLUGIN_ID,
             this.SECRET_KEYS.TOKEN,
@@ -297,109 +295,100 @@ export class GitLabBackupService {
         );
         await this.secretsContext.removeSecret(
             this.PLUGIN_ID,
-            this.SECRET_KEYS.PROJECT,
+            this.SECRET_KEYS.REPOSITORY,
             scopeOptions,
         );
-        this.currentProject = null;
+        this.currentRepo = null;
         this.status = {
             ...this.status,
             isConnected: false,
             isEnabled: false,
-            project: undefined,
+            repository: undefined,
         };
         this.notifyListeners();
     }
 
-    private async getGitLabCredentials(
-        localProjectId?: string,
-    ): Promise<{ token: string; projectId: string } | null> {
+    private async getForgejoCredentials(
+        projectId?: string,
+    ): Promise<{ token: string; repository: string } | null> {
         if (!this.secretsContext) return null;
-        const scopeOptions = this._getScopeOptions(localProjectId);
+        const scopeOptions = this._getScopeOptions(projectId);
         try {
             const tokenSecret = await this.secretsContext.getSecret(
                 this.PLUGIN_ID,
                 this.SECRET_KEYS.TOKEN,
                 scopeOptions,
             );
-            const projectSecret = await this.secretsContext.getSecret(
+            const repoSecret = await this.secretsContext.getSecret(
                 this.PLUGIN_ID,
-                this.SECRET_KEYS.PROJECT,
+                this.SECRET_KEYS.REPOSITORY,
                 scopeOptions,
             );
-            if (!tokenSecret?.value || !projectSecret?.value) return null;
-            return { token: tokenSecret.value, projectId: projectSecret.value };
+            if (!tokenSecret?.value || !repoSecret?.value) return null;
+            return { token: tokenSecret.value, repository: repoSecret.value };
         } catch (error) {
-            console.error('Error retrieving GitLab credentials:', error);
+            console.error(t('Error retrieving Forgejo credentials:'), error);
             return null;
         }
     }
 
-    async getStoredProject(localProjectId?: string): Promise<string | null> {
+    async getStoredRepository(projectId?: string): Promise<string | null> {
         if (!this.secretsContext) return null;
-        const projectMetadata = await this.secretsContext.getSecretMetadata(
+        const repoMetadata = await this.secretsContext.getSecretMetadata(
             this.PLUGIN_ID,
-            this.SECRET_KEYS.PROJECT,
-            this._getScopeOptions(localProjectId),
+            this.SECRET_KEYS.REPOSITORY,
+            this._getScopeOptions(projectId),
         );
-        return projectMetadata?.pathWithNamespace || null;
+        return repoMetadata?.fullName || null;
     }
 
-    async getStoredBranch(localProjectId?: string): Promise<string> {
+    async getStoredBranch(projectId?: string): Promise<string> {
         if (!this.secretsContext) return this.getDefaultBranch();
-        const projectMetadata = await this.secretsContext.getSecretMetadata(
+        const repoMetadata = await this.secretsContext.getSecretMetadata(
             this.PLUGIN_ID,
-            this.SECRET_KEYS.PROJECT,
-            this._getScopeOptions(localProjectId),
+            this.SECRET_KEYS.REPOSITORY,
+            this._getScopeOptions(projectId),
         );
-        return projectMetadata?.branch || this.getDefaultBranch();
+        return repoMetadata?.branch || this.getDefaultBranch();
     }
 
-    async hasStoredCredentials(localProjectId?: string): Promise<boolean> {
+    async hasStoredCredentials(projectId?: string): Promise<boolean> {
         if (!this.secretsContext) return false;
-        const scopeOptions = this._getScopeOptions(localProjectId);
+        const scopeOptions = this._getScopeOptions(projectId);
         const hasToken = await this.secretsContext.hasSecret(
             this.PLUGIN_ID,
             this.SECRET_KEYS.TOKEN,
             scopeOptions,
         );
-        const hasProject = await this.secretsContext.hasSecret(
+        const hasRepo = await this.secretsContext.hasSecret(
             this.PLUGIN_ID,
-            this.SECRET_KEYS.PROJECT,
+            this.SECRET_KEYS.REPOSITORY,
             scopeOptions,
         );
-        return hasToken && hasProject;
+        return hasToken && hasRepo;
     }
 
     private async ensureValidCredentials(
-        localProjectId?: string,
-    ): Promise<{ token: string; projectId: string; branch: string }> {
-        const credentials = await this.getGitLabCredentials(localProjectId);
-        const branch = await this.getStoredBranch(localProjectId);
+        projectId?: string,
+    ): Promise<{ token: string; repository: string; branch: string }> {
+        const credentials = await this.getForgejoCredentials(projectId);
+        const branch = await this.getStoredBranch(projectId);
         if (!credentials)
             throw new Error(
-                t('GitLab credentials not available. Please reconnect.'),
+                t('Forgejo credentials not available. Please reconnect.'),
             );
-        if (!(await gitLabApiService.testConnection(credentials.token)))
+        if (!(await forgejoApiService.testConnection(credentials.token)))
             throw new Error(
-                t('GitLab token is invalid or expired. Please reconnect.'),
+                t('Forgejo token is invalid or expired. Please reconnect.'),
             );
 
-        const projectMetadata = await this.secretsContext?.getSecretMetadata(
-            this.PLUGIN_ID,
-            this.SECRET_KEYS.PROJECT,
-            this._getScopeOptions(localProjectId),
-        );
-
-        this.currentProject = {
-            id: credentials.projectId,
-            pathWithNamespace:
-                projectMetadata?.pathWithNamespace || credentials.projectId,
-        };
+        const [owner, repo] = credentials.repository.split('/');
+        this.currentRepo = { owner, repo };
         this.status = {
             ...this.status,
             isConnected: true,
             isEnabled: true,
-            project: this.currentProject.pathWithNamespace,
+            repository: credentials.repository,
             error: undefined,
         };
         this.notifyListeners();
@@ -408,7 +397,8 @@ export class GitLabBackupService {
 
     private async createCommitWithRetry(
         token: string,
-        projectId: string,
+        owner: string,
+        repo: string,
         branch: string,
         commitMessage: string,
         actions: any[],
@@ -427,9 +417,10 @@ export class GitLabBackupService {
                         }),
                     });
                 }
-                await gitLabApiService.createCommit(
+                await forgejoApiService.createOrUpdateFiles(
                     token,
-                    projectId,
+                    owner,
+                    repo,
                     branch,
                     commitMessage,
                     actions,
@@ -443,7 +434,7 @@ export class GitLabBackupService {
     }
 
     async synchronize(
-        localProjectId?: string,
+        projectId?: string,
         commitMessage?: string,
         branch?: string,
     ): Promise<void> {
@@ -451,8 +442,8 @@ export class GitLabBackupService {
         this.status = { ...this.status, status: 'syncing' };
         this.addActivity({
             type: 'backup_start',
-            message: localProjectId
-                ? t(`Syncing project: {projectId}`, { projectId: localProjectId })
+            message: projectId
+                ? t('Syncing project: {projectId}', { projectId })
                 : t('Syncing all projects...'),
         });
         this.notifyListeners();
@@ -461,17 +452,18 @@ export class GitLabBackupService {
             const user = await authService.getCurrentUser();
             if (!user) throw new Error(t('No authenticated user'));
 
-            const credentials = await this.ensureValidCredentials(localProjectId);
+            const credentials = await this.ensureValidCredentials(projectId);
             const finalBranch = branch || credentials.branch;
-            const localProjects = localProjectId
-                ? [await authService.getProjectById(localProjectId)]
+            const localProjects = projectId
+                ? [await authService.getProjectById(projectId)]
                 : await authService.getProjectsByUser(user.id);
             if (!localProjects || localProjects.some((p) => !p))
                 throw new Error(t('Could not load projects.'));
 
-            const tree = await gitLabApiService.getRecursiveTree(
+            const tree = await forgejoApiService.getRecursiveTree(
                 credentials.token,
-                this.currentProject?.id!,
+                this.currentRepo?.owner!,
+                this.currentRepo?.repo!,
                 finalBranch,
             );
             const existingFiles = new Set(
@@ -493,9 +485,9 @@ export class GitLabBackupService {
 
                 const metadataPath = `${projectPath}/metadata.json`;
                 actions.push({
-                    action: existingFiles.has(metadataPath) ? 'update' : 'create',
-                    file_path: metadataPath,
-                    content: this._encodeBase64(
+                    operation: existingFiles.has(metadataPath) ? 'update' : 'create',
+                    path: metadataPath,
+                    content: this._encodeContent(
                         JSON.stringify(
                             this.unifiedService.convertProjectToMetadata(project, 'backup'),
                             null,
@@ -515,9 +507,9 @@ export class GitLabBackupService {
                     }));
                     const docMetadataPath = `${projectPath}/documents/metadata.json`;
                     actions.push({
-                        action: existingFiles.has(docMetadataPath) ? 'update' : 'create',
-                        file_path: docMetadataPath,
-                        content: this._encodeBase64(
+                        operation: existingFiles.has(docMetadataPath) ? 'update' : 'create',
+                        path: docMetadataPath,
+                        content: this._encodeContent(
                             JSON.stringify(documentsMetadata, null, 2),
                         ),
                         encoding: 'base64',
@@ -529,17 +521,17 @@ export class GitLabBackupService {
                     if (content?.readableContent) {
                         const txtPath = `${projectPath}/documents/${doc.id}.txt`;
                         actions.push({
-                            action: existingFiles.has(txtPath) ? 'update' : 'create',
-                            file_path: txtPath,
-                            content: this._encodeBase64(content.readableContent),
+                            operation: existingFiles.has(txtPath) ? 'update' : 'create',
+                            path: txtPath,
+                            content: this._encodeContent(content.readableContent),
                             encoding: 'base64',
                         });
                     }
                     if (content?.yjsState) {
                         const yjsPath = `${projectPath}/documents/${doc.id}.yjs`;
                         actions.push({
-                            action: existingFiles.has(yjsPath) ? 'update' : 'create',
-                            file_path: yjsPath,
+                            operation: existingFiles.has(yjsPath) ? 'update' : 'create',
+                            path: yjsPath,
                             content: this._encodeContent(content.yjsState),
                             encoding: 'base64',
                         });
@@ -558,9 +550,9 @@ export class GitLabBackupService {
                     ];
                     const filesMetadataPath = `${projectPath}/files/metadata.json`;
                     actions.push({
-                        action: existingFiles.has(filesMetadataPath) ? 'update' : 'create',
-                        file_path: filesMetadataPath,
-                        content: this._encodeBase64(
+                        operation: existingFiles.has(filesMetadataPath) ? 'update' : 'create',
+                        path: filesMetadataPath,
+                        content: this._encodeContent(
                             JSON.stringify(allFilesMetadata, null, 2),
                         ),
                         encoding: 'base64',
@@ -594,8 +586,8 @@ export class GitLabBackupService {
 
                         const filePath = `${projectPath}/files${file.path}`;
                         actions.push({
-                            action: existingFiles.has(filePath) ? 'update' : 'create',
-                            file_path: filePath,
+                            operation: existingFiles.has(filePath) ? 'update' : 'create',
+                            path: filePath,
                             content: this._encodeContent(content),
                             encoding: 'base64',
                         });
@@ -607,8 +599,8 @@ export class GitLabBackupService {
                         const filePath = `${projectPath}/files${deletedFile.path}`;
                         if (existingFiles.has(filePath)) {
                             actions.push({
-                                action: 'delete',
-                                file_path: filePath,
+                                operation: 'delete',
+                                path: filePath,
                             });
                         }
                     }
@@ -622,7 +614,8 @@ export class GitLabBackupService {
 
             await this.createCommitWithRetry(
                 credentials.token,
-                this.currentProject?.id!,
+                this.currentRepo?.owner!,
+                this.currentRepo?.repo!,
                 finalBranch,
                 finalCommitMessage,
                 actions,
@@ -630,7 +623,7 @@ export class GitLabBackupService {
 
             this.addActivity({
                 type: 'backup_complete',
-                message: t('GitLab sync completed successfully'),
+                message: t('Forgejo sync completed successfully'),
             });
             this.status = {
                 ...this.status,
@@ -639,51 +632,48 @@ export class GitLabBackupService {
                 error: undefined,
             };
         } catch (error) {
-            this._handleError(error, 'backup_error', t('GitLab sync failed'));
+            this._handleError(error, 'backup_error', t('Forgejo sync failed'));
         }
         this.notifyListeners();
     }
 
-    private _encodeBase64(content: string): string {
-        return btoa(unescape(encodeURIComponent(content)));
-    }
-
     async exportData(
-        localProjectId?: string,
+        projectId?: string,
         commitMessage?: string,
         branch?: string,
     ): Promise<void> {
-        await this.synchronize(localProjectId, commitMessage, branch);
+        await this.synchronize(projectId, commitMessage, branch);
     }
 
-    async importChanges(localProjectId?: string, branch?: string): Promise<void> {
+    async importChanges(projectId?: string, branch?: string): Promise<void> {
         await this._throttleOperation();
         this.status = { ...this.status, status: 'syncing' };
         this.addActivity({
             type: 'import_start',
-            message: localProjectId
-                ? t('Importing project: {projectId}', { projectId: localProjectId })
-                : t('Importing from GitLab...'),
+            message: projectId
+                ? t('Importing project: {projectId}', { projectId })
+                : t('Importing from Forgejo...'),
         });
         this.notifyListeners();
 
         try {
-            const credentials = await this.ensureValidCredentials(localProjectId);
+            const credentials = await this.ensureValidCredentials(projectId);
             const finalBranch = branch || credentials.branch;
-            const tree = await gitLabApiService.getRecursiveTree(
+            const tree = await forgejoApiService.getRecursiveTree(
                 credentials.token,
-                this.currentProject?.id!,
+                this.currentRepo?.owner!,
+                this.currentRepo?.repo!,
                 finalBranch,
             );
 
             const projectFiles = new Map<
                 string,
                 {
-                    metadataId?: string;
-                    documents: Map<string, { txtId: string | null; yjsId: string | null }>;
+                    metadataSha?: string;
+                    documents: Map<string, { txtSha: string | null; yjsSha: string | null }>;
                     files: Map<string, string>;
-                    filesMetadataId?: string;
-                    documentsMetadataId?: string;
+                    filesMetadataSha?: string;
+                    documentsMetadataSha?: string;
                 }
             >();
 
@@ -692,7 +682,7 @@ export class GitLabBackupService {
                     continue;
                 const pathParts = item.path.split('/');
                 const currentProjectId = pathParts[1];
-                if (localProjectId && currentProjectId !== localProjectId) continue;
+                if (projectId && currentProjectId !== projectId) continue;
 
                 if (!projectFiles.has(currentProjectId)) {
                     projectFiles.set(currentProjectId, {
@@ -703,28 +693,31 @@ export class GitLabBackupService {
                 const projectData = projectFiles.get(currentProjectId)!;
 
                 if (pathParts[2] === 'metadata.json') {
-                    projectData.metadataId = item.id;
+                    projectData.metadataSha = item.sha;
                 } else if (pathParts[2] === 'documents') {
                     if (pathParts[3] === 'metadata.json') {
-                        projectData.documentsMetadataId = item.id;
+                        projectData.documentsMetadataSha = item.sha;
                     } else if (pathParts[3]) {
                         const fileName = pathParts[3];
                         const docId = fileName.replace(/\.(txt|yjs)$/, '');
                         if (!projectData.documents.has(docId)) {
-                            projectData.documents.set(docId, { txtId: null, yjsId: null });
+                            projectData.documents.set(docId, { txtSha: null, yjsSha: null });
                         }
                         const docData = projectData.documents.get(docId)!;
                         if (fileName.endsWith('.txt')) {
-                            docData.txtId = item.id;
+                            docData.txtSha = item.sha;
                         } else if (fileName.endsWith('.yjs')) {
-                            docData.yjsId = item.id;
+                            docData.yjsSha = item.sha;
                         }
                     }
                 } else if (pathParts[2] === 'files') {
                     if (pathParts[3] === 'metadata.json') {
-                        projectData.filesMetadataId = item.id;
+                        projectData.filesMetadataSha = item.sha;
                     } else if (pathParts[3]) {
-                        projectData.files.set(`/${pathParts.slice(3).join('/')}`, item.id);
+                        projectData.files.set(
+                            `/${pathParts.slice(3).join('/')}`,
+                            item.sha,
+                        );
                     }
                 }
             }
@@ -739,7 +732,7 @@ export class GitLabBackupService {
             const processableProjects: string[] = [];
 
             for (const [projId, data] of projectFiles.entries()) {
-                if (!data.metadataId) continue;
+                if (!data.metadataSha) continue;
 
                 if (existingProjectIds.has(projId)) {
                     processableProjects.push(projId);
@@ -752,9 +745,10 @@ export class GitLabBackupService {
             for (const missingProjId of missingProjects) {
                 const data = projectFiles.get(missingProjId)!;
                 try {
-                    const metadataContent = await gitLabApiService.getFileContent(
+                    const metadataContent = await forgejoApiService.getFileContent(
                         credentials.token,
-                        this.currentProject?.id!,
+                        this.currentRepo?.owner!,
+                        this.currentRepo?.repo!,
                         `projects/${missingProjId}/metadata.json`,
                         finalBranch,
                     );
@@ -791,9 +785,10 @@ export class GitLabBackupService {
 
             for (const projId of processableProjects) {
                 const data = projectFiles.get(projId)!;
-                const metadataContent = await gitLabApiService.getFileContent(
+                const metadataContent = await forgejoApiService.getFileContent(
                     credentials.token,
-                    this.currentProject?.id!,
+                    this.currentRepo?.owner!,
+                    this.currentRepo?.repo!,
                     `projects/${projId}/metadata.json`,
                     finalBranch,
                 );
@@ -807,7 +802,7 @@ export class GitLabBackupService {
                 );
             }
 
-            let successMessage = t('GitLab import completed successfully');
+            let successMessage = t('Forgejo import completed successfully');
             if (importedMissingCount > 0) {
                 successMessage += ` (${importedMissingCount} missing project${importedMissingCount === 1 ? '' : 's'} auto-imported)`;
             }
@@ -821,7 +816,7 @@ export class GitLabBackupService {
             };
             fileStorageEventEmitter.emitChange();
         } catch (error) {
-            this._handleError(error, 'import_error', t('GitLab import failed'));
+            this._handleError(error, 'import_error', t('Forgejo import failed'));
         }
         this.notifyListeners();
     }
@@ -860,12 +855,12 @@ export class GitLabBackupService {
         projectId: string,
         projectMetadata: any,
         data: {
-            documents: Map<string, { txtId: string | null; yjsId: string | null }>;
+            documents: Map<string, { txtSha: string | null; yjsSha: string | null }>;
             files: Map<string, string>;
-            filesMetadataId?: string;
-            documentsMetadataId?: string;
+            filesMetadataSha?: string;
+            documentsMetadataSha?: string;
         },
-        credentials: { token: string; projectId: string },
+        credentials: { token: string; repository: string },
         branch: string,
     ): Promise<void> {
         await authService.createOrUpdateProject(
@@ -873,23 +868,24 @@ export class GitLabBackupService {
             false,
         );
 
-        let gitlabDocumentsMetadata: any[] = [];
-        if (data.documentsMetadataId) {
+        let forgejoDocumentsMetadata: any[] = [];
+        if (data.documentsMetadataSha) {
             try {
-                const metadataContent = await gitLabApiService.getFileContent(
+                const metadataContent = await forgejoApiService.getFileContent(
                     credentials.token,
-                    this.currentProject?.id!,
+                    this.currentRepo?.owner!,
+                    this.currentRepo?.repo!,
                     `projects/${projectId}/documents/metadata.json`,
                     branch,
                 );
-                gitlabDocumentsMetadata = JSON.parse(metadataContent);
+                forgejoDocumentsMetadata = JSON.parse(metadataContent);
             } catch (error) {
-                console.error('Failed to load documents metadata from GitLab:', error);
+                console.error('Failed to load documents metadata from Forgejo:', error);
             }
         }
 
         const docMetadataById = new Map<string, any>();
-        gitlabDocumentsMetadata.forEach((docMetadata) => {
+        forgejoDocumentsMetadata.forEach((docMetadata) => {
             docMetadataById.set(docMetadata.id, docMetadata);
         });
 
@@ -897,14 +893,14 @@ export class GitLabBackupService {
         const documentContents = new Map();
 
         for (const [docId, docData] of data.documents.entries()) {
-            const gitlabDocMetadata = docMetadataById.get(docId);
+            const forgejoDocMetadata = docMetadataById.get(docId);
 
-            const docInfo = gitlabDocMetadata || {
+            const docInfo = forgejoDocMetadata || {
                 id: docId,
                 name: `Document ${docId}`,
                 lastModified: Date.now(),
-                hasYjsState: !!docData.yjsId,
-                hasReadableContent: !!docData.txtId,
+                hasYjsState: !!docData.yjsSha,
+                hasReadableContent: !!docData.txtSha,
             };
 
             documents.push(docInfo);
@@ -912,19 +908,21 @@ export class GitLabBackupService {
             const contentData: { readableContent?: string; yjsState?: Uint8Array } =
                 {};
 
-            if (docData.txtId) {
-                contentData.readableContent = await gitLabApiService.getFileContent(
+            if (docData.txtSha) {
+                contentData.readableContent = await forgejoApiService.getFileContent(
                     credentials.token,
-                    this.currentProject?.id!,
+                    this.currentRepo?.owner!,
+                    this.currentRepo?.repo!,
                     `projects/${projectId}/documents/${docId}.txt`,
                     branch,
                 );
             }
 
-            if (docData.yjsId) {
-                const yjsContent = await gitLabApiService.getFileContent(
+            if (docData.yjsSha) {
+                const yjsContent = await forgejoApiService.getFileContent(
                     credentials.token,
-                    this.currentProject?.id!,
+                    this.currentRepo?.owner!,
+                    this.currentRepo?.repo!,
                     `projects/${projectId}/documents/${docId}.yjs`,
                     branch,
                 );
@@ -944,7 +942,7 @@ export class GitLabBackupService {
         }
 
         for (const [docId, docData] of data.documents.entries()) {
-            if (docData.txtId && !docData.yjsId && !docMetadataById.has(docId)) {
+            if (docData.txtSha && !docData.yjsSha && !docMetadataById.has(docId)) {
                 const txtFileName = `${docId}.txt`;
                 const newDocInfo = {
                     id: docId,
@@ -962,24 +960,25 @@ export class GitLabBackupService {
 
         await fileStorageService.switchToProject(projectMetadata.docUrl);
 
-        let gitlabFilesMetadata: any[] = [];
-        if (data.filesMetadataId) {
+        let forgejoFilesMetadata: any[] = [];
+        if (data.filesMetadataSha) {
             try {
-                const metadataContent = await gitLabApiService.getFileContent(
+                const metadataContent = await forgejoApiService.getFileContent(
                     credentials.token,
-                    this.currentProject?.id!,
+                    this.currentRepo?.owner!,
+                    this.currentRepo?.repo!,
                     `projects/${projectId}/files/metadata.json`,
                     branch,
                 );
-                gitlabFilesMetadata = JSON.parse(metadataContent);
+                forgejoFilesMetadata = JSON.parse(metadataContent);
             } catch (error) {
-                console.error('Failed to load files metadata from GitLab:', error);
+                console.error('Failed to load files metadata from Forgejo:', error);
             }
         }
 
         const metadataByPath = new Map<string, any>();
         const deletedFilesMetadata = new Map<string, any>();
-        gitlabFilesMetadata.forEach((fileMetadata) => {
+        forgejoFilesMetadata.forEach((fileMetadata) => {
             if (fileMetadata.isDeleted) {
                 deletedFilesMetadata.set(fileMetadata.path, fileMetadata);
             } else {
@@ -1026,13 +1025,14 @@ export class GitLabBackupService {
         }
 
         let importedFilesCount = 0;
-        for (const [filePath, fileId] of data.files.entries()) {
+        for (const [filePath, fileSha] of data.files.entries()) {
             try {
                 await fileStorageService.createDirectoryPath(filePath);
 
-                const rawContentString = await gitLabApiService.getFileContent(
+                const rawContentString = await forgejoApiService.getFileContent(
                     credentials.token,
-                    this.currentProject?.id!,
+                    this.currentRepo?.owner!,
+                    this.currentRepo?.repo!,
                     `projects/${projectId}/files${filePath}`,
                     branch,
                 );
@@ -1040,10 +1040,10 @@ export class GitLabBackupService {
                     filePath,
                     true,
                 );
-                const gitlabMetadata = metadataByPath.get(filePath);
+                const forgejoMetadata = metadataByPath.get(filePath);
 
-                const isBinary = gitlabMetadata
-                    ? gitlabMetadata.isBinary
+                const isBinary = forgejoMetadata
+                    ? forgejoMetadata.isBinary
                     : isBinaryFile(filePath);
 
                 let finalContent;
@@ -1058,24 +1058,24 @@ export class GitLabBackupService {
                 }
 
                 let fileToStore;
-                if (gitlabMetadata) {
+                if (forgejoMetadata) {
                     fileToStore = {
                         id:
                             existingFile?.id ||
-                            gitlabMetadata.id ||
-                            `gitlab-import-${Math.random().toString(36).substring(2, 15)}`,
-                        name: gitlabMetadata.name,
-                        path: gitlabMetadata.path,
-                        type: gitlabMetadata.type as 'file' | 'directory',
-                        lastModified: gitlabMetadata.lastModified || Date.now(),
+                            forgejoMetadata.id ||
+                            `forgejo-import-${Math.random().toString(36).substring(2, 15)}`,
+                        name: forgejoMetadata.name,
+                        path: forgejoMetadata.path,
+                        type: forgejoMetadata.type as 'file' | 'directory',
+                        lastModified: forgejoMetadata.lastModified || Date.now(),
                         size:
-                            gitlabMetadata.size ||
+                            forgejoMetadata.size ||
                             (finalContent instanceof ArrayBuffer
                                 ? finalContent.byteLength
                                 : finalContent.length),
-                        mimeType: gitlabMetadata.mimeType,
-                        isBinary: gitlabMetadata.isBinary,
-                        documentId: gitlabMetadata.documentId,
+                        mimeType: forgejoMetadata.mimeType,
+                        isBinary: forgejoMetadata.isBinary,
+                        documentId: forgejoMetadata.documentId,
                         content: finalContent,
                         isDeleted: false,
                     };
@@ -1089,7 +1089,7 @@ export class GitLabBackupService {
                     fileToStore = {
                         id:
                             existingFile?.id ||
-                            `gitlab-import-${Math.random().toString(36).substring(2, 15)}`,
+                            `forgejo-import-${Math.random().toString(36).substring(2, 15)}`,
                         name: fileName,
                         path: filePath,
                         type: 'file' as const,
@@ -1104,7 +1104,7 @@ export class GitLabBackupService {
 
                 await fileStorageService.storeFile(fileToStore, {
                     showConflictDialog: false,
-                    preserveTimestamp: !!gitlabMetadata,
+                    preserveTimestamp: !!forgejoMetadata,
                 });
 
                 importedFilesCount++;
@@ -1210,4 +1210,4 @@ export class GitLabBackupService {
     }
 }
 
-export const gitLabBackupService = new GitLabBackupService();
+export const forgejoBackupService = new ForgejoBackupService();

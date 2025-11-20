@@ -12,6 +12,7 @@ export default {
 	  "loggers/typst_visualizer",
 	  "backup/github",
 	  "backup/gitlab",
+	  "backup/forgejo",
 	  "themes/texlyre_slim",
 	  "themes/texlyre_wide",
 	  "themes/texlyre_mobile"
