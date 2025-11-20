@@ -230,10 +230,6 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
         setShowConnectionFlow(false);
         setGitHubToken('');
         setSelectedRepo('');
-        const defaultBranch =
-          (getSetting('github-backup-default-branch')?.value as string) ||
-          'main';
-        setSelectedBranch(defaultBranch);
         setConnectionStep('token');
       }
     });

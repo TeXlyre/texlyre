@@ -223,7 +223,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
             const projectId =
                 isInEditor && syncScope === 'current' ? currentProjectId : undefined;
             const selectedProjectData = availableProjects.find(
-                (p) => p.id.toString() === selectedProject,
+                (p) => p.id.toString() === selectedProject
             );
             if (!selectedProjectData) return;
             const success = await gitLabBackupService.connectToProject(
@@ -231,17 +231,13 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                 selectedProject,
                 selectedProjectData.path_with_namespace,
                 projectId,
-                selectedBranch,
+                selectedBranch
             );
             if (success) {
                 setDisplayBranch(selectedBranch);
                 setShowConnectionFlow(false);
                 setGitLabToken('');
                 setSelectedProject('');
-                const defaultBranch =
-                    (getSetting('gitlab-backup-default-branch')?.value as string) ||
-                    'main';
-                setSelectedBranch(defaultBranch);
                 setConnectionStep('token');
             }
         });
