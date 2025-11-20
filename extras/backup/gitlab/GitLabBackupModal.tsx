@@ -385,7 +385,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                             onClick={handleTokenSubmit}
                                             disabled={!gitLabToken.trim() || isOperating}
                                         >
-                                            {isOperating ? 'Connecting...' : 'Connect'}
+                                            {isOperating ? t('Connecting...') : t('Connect')}
                                         </button>
                                         <button
                                             className="button secondary"
@@ -407,7 +407,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                         {availableProjects.map((project) => (
                                             <option key={project.id} value={project.id.toString()}>
                                                 {project.path_with_namespace} (
-                                                {project.visibility === 'private' ? 'Private' : 'Public'})
+                                                {project.visibility === 'private' ? t('(Private)') : t('(Public)')})
                                             </option>
                                         ))}
                                     </select>
@@ -417,7 +417,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                             onClick={handleProjectSubmit}
                                             disabled={!selectedProject || isOperating}
                                         >
-                                            {isOperating ? 'Loading...' : 'Next'}
+                                            {isOperating ? t('Loading...') : t('Next')}
                                         </button>
                                         <button
                                             className="button secondary"
@@ -437,7 +437,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                     >
                                         {availableBranches.map((branch) => (
                                             <option key={branch.name} value={branch.name}>
-                                                {branch.name} {branch.protected ? '(Protected)' : ''}
+                                                {branch.name} {branch.protected ? t('(Protected)') : ''}
                                             </option>
                                         ))}
                                     </select>
@@ -447,7 +447,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                             onClick={handleBranchSubmit}
                                             disabled={!selectedBranch || isOperating}
                                         >
-                                            {isOperating ? 'Connecting...' : 'Connect'}
+                                            {isOperating ? t('Connecting...') : t('Connect')}
                                         </button>
                                         <button
                                             className="button secondary"

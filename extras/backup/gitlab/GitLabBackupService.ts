@@ -452,8 +452,8 @@ export class GitLabBackupService {
         this.addActivity({
             type: 'backup_start',
             message: localProjectId
-                ? `Syncing project: ${localProjectId}`
-                : 'Syncing all projects...',
+                ? t(`Syncing project: {projectId}`, { projectId: localProjectId })
+                : t('Syncing all projects...'),
         });
         this.notifyListeners();
 

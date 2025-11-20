@@ -1,4 +1,5 @@
 // src/contexts/SecretsContext.tsx
+import { t } from '@/i18n';
 import type React from 'react';
 import {
 	type ReactNode,
@@ -355,7 +356,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 			return new Promise((resolve) => {
 				setPasswordModalMessage(
-					message || 'Enter your TeXlyre password to access encrypted secrets:',
+					message || t('Enter your TeXlyre password to access encrypted secrets:'),
 				);
 				setPasswordResolve(() => resolve);
 				setIsPasswordModalOpen(true);

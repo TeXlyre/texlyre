@@ -441,8 +441,8 @@ export class GitHubBackupService {
 		this.addActivity({
 			type: 'backup_start',
 			message: projectId
-				? `Syncing project: ${projectId}`
-				: 'Syncing all projects...',
+				? t(`Syncing project: {projectId}`, { projectId })
+				: t('Syncing all projects...'),
 		});
 		this.notifyListeners();
 

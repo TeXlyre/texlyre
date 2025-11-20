@@ -375,7 +375,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                       className="button primary"
                       onClick={handleTokenSubmit}
                       disabled={!gitHubToken.trim() || isOperating}>
-                      {isOperating ? 'Connecting...' : 'Connect'}
+                      {isOperating ? t('Connecting...') : t('Connect')}
                     </button>
                     <button
                       className="button secondary"
@@ -394,7 +394,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                     <option value="">{t('Choose a repository...')}</option>
                     {availableRepos.map((repo) => (
                       <option key={repo.full_name} value={repo.full_name}>
-                        {repo.full_name} {repo.private ? '(Private)' : '(Public)'}
+                        {repo.full_name} {repo.private ? t('(Private)') : t('(Public)')}
                       </option>
                     ))}
                   </select>
@@ -403,7 +403,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                       className="button primary"
                       onClick={handleRepoSubmit}
                       disabled={!selectedRepo || isOperating}>
-                      {isOperating ? 'Loading...' : 'Next'}
+                      {isOperating ? t('Loading...') : t('Next')}
                     </button>
                     <button
                       className="button secondary"
@@ -421,7 +421,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                     onChange={(e) => setSelectedBranch(e.target.value)}>
                     {availableBranches.map((branch) => (
                       <option key={branch.name} value={branch.name}>
-                        {branch.name} {branch.protected ? '(Protected)' : ''}
+                        {branch.name} {branch.protected ? t('(Protected)') : ''}
                       </option>
                     ))}
                   </select>
@@ -430,7 +430,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                       className="button primary"
                       onClick={handleBranchSubmit}
                       disabled={!selectedBranch || isOperating}>
-                      {isOperating ? 'Connecting...' : 'Connect'}
+                      {isOperating ? t('Connecting...') : t('Connect')}
                     </button>
                     <button
                       className="button secondary"
