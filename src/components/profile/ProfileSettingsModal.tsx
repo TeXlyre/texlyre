@@ -534,7 +534,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               className="button primary"
               disabled={isSubmitting}>
 
-              {isSubmitting ? 'Saving...' : 'Save Changes'}
+              {isSubmitting ? t('Saving...') : t('Save Changes')}
             </button>
           </div>
         </form>
@@ -577,7 +577,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               onClick={handleConfirmDelete}
               disabled={isSubmitting}>
 
-              {isSubmitting ? 'Clearing...' : `Clear ${deleteType === 'all' ? 'All Data' : deleteType}`}
+              {isSubmitting ? t('Clearing...') : t(`Clear {data}`, { data: deleteType === 'all' ? t('All Data') : t(deleteType) })}
             </button>
           </div>
         </div>
