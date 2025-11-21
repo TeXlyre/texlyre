@@ -29,8 +29,6 @@ interface EditorContextType {
     key: K,
     value: EditorSettings[K]
   ) => void;
-  getFontSize: () => string;
-  getFontFamily: () => string;
   getLineNumbersEnabled: () => boolean;
   getSyntaxHighlightingEnabled: () => boolean;
   getAutoSaveEnabled: () => boolean;
@@ -45,8 +43,6 @@ interface EditorContextType {
 export const EditorContext = createContext<EditorContextType>({
   editorSettings: defaultEditorSettings,
   updateEditorSetting: () => { },
-  getFontSize: () => fontSizeMap.base,
-  getFontFamily: () => fontFamilyMap.monospace,
   getLineNumbersEnabled: () => true,
   getSyntaxHighlightingEnabled: () => true,
   getAutoSaveEnabled: () => false,
@@ -133,6 +129,8 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       onChange: (value) => {
         const fontFamily = value as FontFamily;
         updateEditorSetting('fontFamily', fontFamily);
+        // fabawi: The font family is set in the EditorLoader directly now, but
+        // keeping this for backward compatibility with CSS variables. 
         document.documentElement.style.setProperty(
           '--editor-font-family',
           fontFamilyMap[fontFamily]
@@ -269,14 +267,6 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
     });
   }, [registerSetting, getSetting]);
 
-  const getFontSize = useCallback(() => {
-    return fontSizeMap[editorSettings.fontSize];
-  }, [editorSettings.fontSize]);
-
-  const getFontFamily = useCallback(() => {
-    return fontFamilyMap[editorSettings.fontFamily];
-  }, [editorSettings.fontFamily]);
-
   const getLineNumbersEnabled = useCallback(
     () => editorSettings.showLineNumbers,
     [editorSettings.showLineNumbers]
@@ -341,8 +331,6 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
   const contextValue = {
     editorSettings,
     updateEditorSetting,
-    getFontSize,
-    getFontFamily,
     getLineNumbersEnabled,
     getSyntaxHighlightingEnabled,
     getAutoSaveEnabled,
