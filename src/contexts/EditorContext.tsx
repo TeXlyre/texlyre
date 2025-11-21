@@ -60,7 +60,7 @@ interface EditorProviderProps {
 }
 
 export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
-  const { getSetting, registerSetting } = useSettings();
+  const { getSetting, batchGetSettings, registerSetting } = useSettings();
   const [editorSettings, setEditorSettings] = useState<EditorSettings>(
     defaultEditorSettings
   );
@@ -79,34 +79,44 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
     if (settingsRegisteredOnce.current) return;
     settingsRegisteredOnce.current = true;
 
+    const batchedSettings = batchGetSettings([
+      'editor-font-size',
+      'editor-font-family',
+      'editor-show-line-numbers',
+      'editor-syntax-highlighting',
+      'editor-auto-save-enable',
+      'editor-auto-save-delay',
+      'editor-theme-highlights',
+      'editor-vim-mode',
+      'editor-spell-check'
+    ]);
+
     const initialFontSize =
-      getSetting('editor-font-size')?.value as FontSize ??
+      (batchedSettings['editor-font-size'] as FontSize) ??
       defaultEditorSettings.fontSize;
     const initialFontFamily =
-      getSetting('editor-font-family')?.value as FontFamily ??
+      (batchedSettings['editor-font-family'] as FontFamily) ??
       defaultEditorSettings.fontFamily;
     const initialShowLineNumbers =
-      getSetting('editor-show-line-numbers')?.value as boolean ??
+      (batchedSettings['editor-show-line-numbers'] as boolean) ??
       defaultEditorSettings.showLineNumbers;
     const initialSyntaxHighlighting =
-      getSetting('editor-syntax-highlighting')?.value as boolean ??
+      (batchedSettings['editor-syntax-highlighting'] as boolean) ??
       defaultEditorSettings.syntaxHighlighting;
     const initialAutoSaveEnabled =
-      getSetting('editor-auto-save-enable')?.value as boolean ??
+      (batchedSettings['editor-auto-save-enable'] as boolean) ??
       defaultEditorSettings.autoSaveEnabled;
     const initialAutoSaveDelay =
-      getSetting('editor-auto-save-delay')?.value as number ??
+      (batchedSettings['editor-auto-save-delay'] as number) ??
       defaultEditorSettings.autoSaveDelay;
     const initialHighlightTheme =
-      getSetting('editor-theme-highlights')?.value as
-      'auto' |
-      'light' |
-      'dark' ?? defaultEditorSettings.highlightTheme;
+      (batchedSettings['editor-theme-highlights'] as 'auto' | 'light' | 'dark') ??
+      defaultEditorSettings.highlightTheme;
     const initialVimMode =
-      getSetting('editor-vim-mode')?.value as boolean ??
+      (batchedSettings['editor-vim-mode'] as boolean) ??
       defaultEditorSettings.vimMode;
     const initialSpellCheck =
-      getSetting('editor-spell-check')?.value as boolean ??
+      (batchedSettings['editor-spell-check'] as boolean) ??
       defaultEditorSettings.spellCheck;
 
     registerSetting({
@@ -265,7 +275,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
         updateEditorSetting('spellCheck', value as boolean);
       }
     });
-  }, [registerSetting, getSetting]);
+  }, [registerSetting, batchGetSettings]);
 
   const getLineNumbersEnabled = useCallback(
     () => editorSettings.showLineNumbers,

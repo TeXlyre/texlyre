@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "lastUpdated": "2025-11-20T22:48:59.172Z",
+    "lastUpdated": "2025-11-21T21:59:43.356Z",
     "totalKeys": 1569
   },
   "languages": [
@@ -21,7 +21,7 @@
       "direction": "rtl",
       "coverage": 96,
       "totalKeys": 1569,
-      "translatedKeys": 1502,
+      "translatedKeys": 1500,
       "filePath": "locales/ar.json"
     },
     {
