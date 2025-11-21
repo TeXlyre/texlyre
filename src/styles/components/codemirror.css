@@ -5,7 +5,7 @@
 }
 
 .codemirror-editor-container .cm-editor {
-	font-size: var(--editor-font-size, 18px) !important;
+	/* font-size: var(--editor-font-size, 18px) !important; */
 	height: 100%;
 }
 
@@ -489,7 +489,7 @@
 	font-weight: 600;
 }
 
-.codemirror-editor-container .cm-tooltip.cm-tooltip-autocomplete > ul {
+.codemirror-editor-container .cm-tooltip.cm-tooltip-autocomplete>ul {
 	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 	font-size: 12px;
 	background-color: var(--pico-background);
@@ -607,9 +607,11 @@
 	0% {
 		background-color: rgba(255, 220, 100, 0.2);
 	}
+
 	50% {
 		background-color: rgba(255, 220, 100, 0.4);
 	}
+
 	100% {
 		background-color: rgba(255, 220, 100, 0.2);
 	}
@@ -666,11 +668,11 @@
 }
 
 @media (max-width: 768px) {
-	.codemirror-editor-container .cm-editor {
+	/* .codemirror-editor-container .cm-editor {
 		font-size: max(20px, var(--editor-font-size, 18px)) !important;
-	}
+	} */
 
-	.codemirror-editor-container .cm-scroller {
+	/* .codemirror-editor-container .cm-scroller {
 		font-size: max(20px, var(--editor-font-size, 18px)) !important;
-	}
+	} */
 }

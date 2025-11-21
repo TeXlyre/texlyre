@@ -50,6 +50,7 @@ export interface Setting {
 export interface SettingsContextType {
 	getSettings: () => Setting[];
 	getSetting: (id: string) => Setting | undefined;
+	batchGetSettings: (ids: string[]) => Record<string, unknown>;
 	updateSetting: (id: string, value: unknown) => void;
 	registerSetting: (setting: Setting) => void;
 	unregisterSetting: (id: string) => void;
@@ -67,6 +68,7 @@ export interface SettingsContextType {
 export const SettingsContext = createContext<SettingsContextType>({
 	getSettings: () => [],
 	getSetting: () => undefined,
+	batchGetSettings: () => ({}),
 	updateSetting: () => { },
 	registerSetting: () => { },
 	unregisterSetting: () => { },
@@ -218,6 +220,29 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 
 	const getSetting = (id: string) => settings.find((s) => s.id === id);
 
+	const batchGetSettings = useCallback((ids: string[]): Record<string, unknown> => {
+		const userId = getCurrentUserId();
+		const storageKey = userId ? `texlyre-user-${userId}-settings` : 'texlyre-settings';
+
+		try {
+			const stored = localStorage.getItem(storageKey);
+			const storedSettings = stored ? JSON.parse(stored) : {};
+
+			const result: Record<string, unknown> = {};
+			for (const id of ids) {
+				const existingSetting = settings.find(s => s.id === id);
+				if (existingSetting?.value !== undefined) {
+					result[id] = existingSetting.value;
+				} else if (storedSettings[id] !== undefined) {
+					result[id] = storedSettings[id];
+				}
+			}
+			return result;
+		} catch {
+			return {};
+		}
+	}, [getCurrentUserId, settings]);
+
 	const updateSetting = (id: string, value: unknown) => {
 		setSettings((prev) =>
 			prev.map((s) => {
@@ -316,6 +341,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 			value={{
 				getSettings,
 				getSetting,
+				batchGetSettings,
 				updateSetting,
 				registerSetting,
 				unregisterSetting,

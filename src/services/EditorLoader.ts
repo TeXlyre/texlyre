@@ -176,14 +176,15 @@ export const EditorLoader = (
 	const getBasicSetupExtensions = (): Extension[] => {
 		const extensions = [
 			EditorView.theme({
-				'&': {
-					fontSize: 'var(--editor-font-size, 14px)',
-				},
-				'.cm-scroller': {
-					fontSize: 'var(--editor-font-size, 14px)',
-				},
+				// '&': {
+				// 	fontSize: 'var(--editor-font-size, 18px)',
+				// },
+				// '.cm-scroller': {
+				// 	fontSize: 'var(--editor-font-size, 18px)',
+				// },
 				'.cm-content': {
-					fontFamily: 'var(--editor-font-family, monospace)',
+					fontFamily: editorSettings.fontFamily,
+					fontSize: editorSettings.fontSize,
 				},
 			}),
 			EditorView.lineWrapping,
