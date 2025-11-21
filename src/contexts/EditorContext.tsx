@@ -1,4 +1,3 @@
-// src/contexts/EditorContext.tsx
 import { t } from '@/i18n';
 import type React from 'react';
 import {
@@ -8,8 +7,7 @@ import {
   useEffect,
   useRef,
   useState
-} from
-  'react';
+} from 'react';
 
 import { pluginRegistry } from '../plugins/PluginRegistry';
 import { useSettings } from '../hooks/useSettings';
@@ -17,22 +15,20 @@ import type {
   EditorSettings,
   FontFamily,
   FontSize
-} from
-  '../types/editorSettings';
+} from '../types/editorSettings';
 import {
   defaultEditorSettings,
   fontFamilyMap,
   fontSizeMap
-} from
-  '../types/editorSettings';
+} from '../types/editorSettings';
 import type { CollabConnectOptions } from '../types/collab';
 
 interface EditorContextType {
   editorSettings: EditorSettings;
   updateEditorSetting: <K extends keyof EditorSettings>(
     key: K,
-    value: EditorSettings[K])
-    => void;
+    value: EditorSettings[K]
+  ) => void;
   getFontSize: () => string;
   getFontFamily: () => string;
   getLineNumbersEnabled: () => boolean;
@@ -49,7 +45,7 @@ interface EditorContextType {
 export const EditorContext = createContext<EditorContextType>({
   editorSettings: defaultEditorSettings,
   updateEditorSetting: () => { },
-  getFontSize: () => '14px',
+  getFontSize: () => fontSizeMap.base,
   getFontFamily: () => fontFamilyMap.monospace,
   getLineNumbersEnabled: () => true,
   getSyntaxHighlightingEnabled: () => true,
@@ -82,17 +78,6 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
     },
     []
   );
-
-  const applyCSSProperties = useCallback((settings: EditorSettings) => {
-    document.documentElement.style.setProperty(
-      '--editor-font-size',
-      fontSizeMap[settings.fontSize]
-    );
-    document.documentElement.style.setProperty(
-      '--editor-font-family',
-      fontFamilyMap[settings.fontFamily]
-    );
-  }, []);
 
   useEffect(() => {
     if (settingsRegisteredOnce.current) return;
@@ -128,50 +113,6 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       getSetting('editor-spell-check')?.value as boolean ??
       defaultEditorSettings.spellCheck;
 
-
-    const loadedSettings = {
-      fontSize: initialFontSize,
-      fontFamily: initialFontFamily,
-      showLineNumbers: initialShowLineNumbers,
-      syntaxHighlighting: initialSyntaxHighlighting,
-      autoSaveEnabled: initialAutoSaveEnabled,
-      autoSaveDelay: initialAutoSaveDelay,
-      highlightTheme: initialHighlightTheme,
-      vimMode: initialVimMode,
-      spellCheck: initialSpellCheck
-    };
-
-    setEditorSettings(loadedSettings);
-    setEditorSettingsVersion((prev) => prev + 1);
-    applyCSSProperties(loadedSettings);
-
-    registerSetting({
-      id: 'editor-font-size',
-      category: t("Appearance"),
-      subcategory: t("Text Editor"),
-      type: 'select',
-      label: t("Font size"),
-      description: t("Select the font size for the editor"),
-      defaultValue: defaultEditorSettings.fontSize,
-      options: [
-        { label: t("Extra Small (10px)"), value: 'xs' },
-        { label: t("Small (12px)"), value: 'sm' },
-        { label: t("Base (14px)"), value: 'base' },
-        { label: t("Large (16px)"), value: 'lg' },
-        { label: t("Extra Large (18px)"), value: 'xl' },
-        { label: t("2X Large (20px)"), value: '2xl' },
-        { label: t("3X Large (24px)"), value: '3xl' }],
-
-      onChange: (value) => {
-        const fontSize = value as FontSize;
-        updateEditorSetting('fontSize', fontSize);
-        document.documentElement.style.setProperty(
-          '--editor-font-size',
-          fontSizeMap[fontSize]
-        );
-      }
-    });
-
     registerSetting({
       id: 'editor-font-family',
       category: t("Appearance"),
@@ -179,7 +120,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       type: 'select',
       label: t("Font family"),
       description: t("Select the font family for the editor"),
-      defaultValue: defaultEditorSettings.fontFamily,
+      defaultValue: initialFontFamily,
       options: [
         { label: t("Monospace (System)"), value: 'monospace' },
         { label: t("JetBrains Mono"), value: 'jetbrains-mono' },
@@ -187,8 +128,8 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
         { label: t("Source Code Pro"), value: 'source-code-pro' },
         { label: t("Inconsolata"), value: 'inconsolata' },
         { label: t("Serif"), value: 'serif' },
-        { label: t("Sans Serif"), value: 'sans-serif' }],
-
+        { label: t("Sans Serif"), value: 'sans-serif' }
+      ],
       onChange: (value) => {
         const fontFamily = value as FontFamily;
         updateEditorSetting('fontFamily', fontFamily);
@@ -200,13 +141,40 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
     });
 
     registerSetting({
+      id: 'editor-font-size',
+      category: t("Appearance"),
+      subcategory: t("Text Editor"),
+      type: 'select',
+      label: t("Font size"),
+      description: t("Select the font size for the editor"),
+      defaultValue: initialFontSize,
+      options: [
+        { label: t("Extra Small (10px)"), value: 'xs' },
+        { label: t("Small (12px)"), value: 'sm' },
+        { label: t("Base (14px)"), value: 'base' },
+        { label: t("Large (16px)"), value: 'lg' },
+        { label: t("Extra Large (18px)"), value: 'xl' },
+        { label: t("2X Large (20px)"), value: '2xl' },
+        { label: t("3X Large (24px)"), value: '3xl' }
+      ],
+      onChange: (value) => {
+        const fontSize = value as FontSize;
+        updateEditorSetting('fontSize', fontSize);
+        document.documentElement.style.setProperty(
+          '--editor-font-size',
+          fontSizeMap[fontSize]
+        );
+      }
+    });
+
+    registerSetting({
       id: 'editor-show-line-numbers',
       category: t("Appearance"),
       subcategory: t("Text Editor"),
       type: 'checkbox',
       label: t("Show line numbers"),
       description: t("Show line numbers in the editor"),
-      defaultValue: defaultEditorSettings.showLineNumbers,
+      defaultValue: initialShowLineNumbers,
       onChange: (value) => {
         updateEditorSetting('showLineNumbers', value as boolean);
       }
@@ -219,8 +187,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       type: 'checkbox',
       label: t("Show syntax highlighting"),
       description: t("Show syntax highlighting in the editor including tooltip and linting (LaTeX, Typst, BibTeX, and markdown)"),
-
-      defaultValue: defaultEditorSettings.syntaxHighlighting,
+      defaultValue: initialSyntaxHighlighting,
       onChange: (value) => {
         updateEditorSetting('syntaxHighlighting', value as boolean);
       }
@@ -233,12 +200,12 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       type: 'select',
       label: t("Syntax highlighting theme"),
       description: t("Choose the color theme for syntax highlighting"),
-      defaultValue: defaultEditorSettings.highlightTheme,
+      defaultValue: initialHighlightTheme,
       options: [
         { label: t("Auto (follows app theme)"), value: 'auto' },
         { label: t("Light theme"), value: 'light' },
-        { label: t("Dark theme (OneDark)"), value: 'dark' }],
-
+        { label: t("Dark theme (OneDark)"), value: 'dark' }
+      ],
       onChange: (value) => {
         updateEditorSetting(
           'highlightTheme',
@@ -254,7 +221,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       type: 'checkbox',
       label: t("Auto-save on changes"),
       description: t("Automatically save file changes while editing"),
-      defaultValue: defaultEditorSettings.autoSaveEnabled,
+      defaultValue: initialAutoSaveEnabled,
       onChange: (value) => {
         updateEditorSetting('autoSaveEnabled', value as boolean);
       }
@@ -267,7 +234,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       type: 'number',
       label: t("Auto-save delay (milliseconds)"),
       description: t("Delay in milliseconds before saving changes"),
-      defaultValue: defaultEditorSettings.autoSaveDelay,
+      defaultValue: initialAutoSaveDelay,
       min: 500,
       max: 10000,
       onChange: (value) => {
@@ -282,7 +249,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       type: 'checkbox',
       label: t("Enable Vim keybindings"),
       description: t("Enable Vim-style keybindings in the editor"),
-      defaultValue: defaultEditorSettings.vimMode,
+      defaultValue: initialVimMode,
       onChange: (value) => {
         updateEditorSetting('vimMode', value as boolean);
       }
@@ -295,12 +262,12 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       type: 'checkbox',
       label: t("Enable spell checking"),
       description: t("Enable browser spell checking in the editor (note: not compatible with typesetter syntax)"),
-      defaultValue: defaultEditorSettings.spellCheck,
+      defaultValue: initialSpellCheck,
       onChange: (value) => {
         updateEditorSetting('spellCheck', value as boolean);
       }
     });
-  }, [registerSetting, getSetting, updateEditorSetting, applyCSSProperties]);
+  }, [registerSetting, getSetting]);
 
   const getFontSize = useCallback(() => {
     return fontSizeMap[editorSettings.fontSize];
@@ -390,6 +357,6 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
   return (
     <EditorContext.Provider value={contextValue}>
       {children}
-    </EditorContext.Provider>);
-
+    </EditorContext.Provider>
+  );
 };
