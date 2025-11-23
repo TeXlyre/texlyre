@@ -1,90 +1,53 @@
 // src/extensions/codemirror/toolbar/typstItems.ts
 import type { EditorView } from '@codemirror/view';
 import type { ToolbarItem } from 'codemirror-toolbar';
+import { wrapSelection, insertText } from './helpers';
+import { createTableCommand } from './tableItems';
 
-/**
- * Helper function to wrap selected text with Typst commands
- */
-const wrapSelection = (view: EditorView, before: string, after: string): boolean => {
-	const selection = view.state.selection.main;
-	const selectedText = view.state.doc.sliceString(selection.from, selection.to);
-
-	view.dispatch({
-		changes: {
-			from: selection.from,
-			to: selection.to,
-			insert: `${before}${selectedText}${after}`,
-		},
-		selection: {
-			anchor: selection.from + before.length,
-			head: selection.from + before.length + selectedText.length,
-		},
-	});
-
-	view.focus();
-	return true;
-};
-
-/**
- * Helper function to insert text at cursor or replace selection
- */
-const insertText = (view: EditorView, text: string, cursorOffset: number = 0): boolean => {
-	const selection = view.state.selection.main;
-
-	view.dispatch({
-		changes: {
-			from: selection.from,
-			to: selection.to,
-			insert: text,
-		},
-		selection: {
-			anchor: selection.from + text.length + cursorOffset,
-		},
-	});
-
-	view.focus();
-	return true;
-};
-
-// Text formatting items
-export const bold: ToolbarItem = {
+export const createBold = (): ToolbarItem => ({
+	key: 'typst-bold',
 	label: 'Bold',
 	icon: '<b>B</b>',
 	command: (view: EditorView) => wrapSelection(view, '*', '*'),
-};
+});
 
-export const italic: ToolbarItem = {
+export const createItalic = (): ToolbarItem => ({
+	key: 'typst-italic',
 	label: 'Italic',
 	icon: '<i>I</i>',
 	command: (view: EditorView) => wrapSelection(view, '_', '_'),
-};
+});
 
-export const strike: ToolbarItem = {
+export const createStrike = (): ToolbarItem => ({
+	key: 'typst-strike',
 	label: 'Strikethrough',
 	icon: '<s>S</s>',
 	command: (view: EditorView) => wrapSelection(view, '#strike[', ']'),
-};
+});
 
-export const underline: ToolbarItem = {
+export const createUnderline = (): ToolbarItem => ({
+	key: 'typst-underline',
 	label: 'Underline',
 	icon: '<u>U</u>',
 	command: (view: EditorView) => wrapSelection(view, '#underline[', ']'),
-};
+});
 
-export const emph: ToolbarItem = {
+export const createEmph = (): ToolbarItem => ({
+	key: 'typst-emph',
 	label: 'Emphasize',
 	icon: '<em>E</em>',
 	command: (view: EditorView) => wrapSelection(view, '#emph[', ']'),
-};
+});
 
-export const monospace: ToolbarItem = {
+export const createMonospace = (): ToolbarItem => ({
+	key: 'typst-monospace',
 	label: 'Monospace',
 	icon: '<tt>T</tt>',
 	command: (view: EditorView) => wrapSelection(view, '`', '`'),
-};
+});
 
-// Section headings
-export const heading1: ToolbarItem = {
+export const createHeading1 = (): ToolbarItem => ({
+	key: 'typst-heading1',
 	label: 'Heading 1',
 	icon: 'H1',
 	command: (view: EditorView) => {
@@ -93,9 +56,10 @@ export const heading1: ToolbarItem = {
 		const text = selectedText || 'Heading';
 		return insertText(view, `= ${text}\n`, -(text.length + 1));
 	},
-};
+});
 
-export const heading2: ToolbarItem = {
+export const createHeading2 = (): ToolbarItem => ({
+	key: 'typst-heading2',
 	label: 'Heading 2',
 	icon: 'H2',
 	command: (view: EditorView) => {
@@ -104,9 +68,10 @@ export const heading2: ToolbarItem = {
 		const text = selectedText || 'Heading';
 		return insertText(view, `== ${text}\n`, -(text.length + 1));
 	},
-};
+});
 
-export const heading3: ToolbarItem = {
+export const createHeading3 = (): ToolbarItem => ({
+	key: 'typst-heading3',
 	label: 'Heading 3',
 	icon: 'H3',
 	command: (view: EditorView) => {
@@ -115,9 +80,10 @@ export const heading3: ToolbarItem = {
 		const text = selectedText || 'Heading';
 		return insertText(view, `=== ${text}\n`, -(text.length + 1));
 	},
-};
+});
 
-export const heading4: ToolbarItem = {
+export const createHeading4 = (): ToolbarItem => ({
+	key: 'typst-heading4',
 	label: 'Heading 4',
 	icon: 'H4',
 	command: (view: EditorView) => {
@@ -126,44 +92,47 @@ export const heading4: ToolbarItem = {
 		const text = selectedText || 'Heading';
 		return insertText(view, `==== ${text}\n`, -(text.length + 1));
 	},
-};
+});
 
-// Lists
-export const bulletList: ToolbarItem = {
+export const createBulletList = (): ToolbarItem => ({
+	key: 'typst-bullet-list',
 	label: 'Bullet List',
 	icon: '•',
 	command: (view: EditorView) => {
 		const text = '- ';
 		return insertText(view, text, 0);
 	},
-};
+});
 
-export const numberedList: ToolbarItem = {
+export const createNumberedList = (): ToolbarItem => ({
+	key: 'typst-numbered-list',
 	label: 'Numbered List',
 	icon: '1.',
 	command: (view: EditorView) => {
 		const text = '+ ';
 		return insertText(view, text, 0);
 	},
-};
+});
 
-export const termList: ToolbarItem = {
+export const createTermList = (): ToolbarItem => ({
+	key: 'typst-term-list',
 	label: 'Term List',
 	icon: '/',
 	command: (view: EditorView) => {
 		const text = '/ Term: Definition';
 		return insertText(view, text, -11);
 	},
-};
+});
 
-// Math
-export const inlineMath: ToolbarItem = {
+export const createInlineMath = (): ToolbarItem => ({
+	key: 'typst-inline-math',
 	label: 'Inline Math',
 	icon: '$',
 	command: (view: EditorView) => wrapSelection(view, '$', '$'),
-};
+});
 
-export const displayMath: ToolbarItem = {
+export const createDisplayMath = (): ToolbarItem => ({
+	key: 'typst-display-math',
 	label: 'Display Math',
 	icon: '$$',
 	command: (view: EditorView) => {
@@ -172,44 +141,44 @@ export const displayMath: ToolbarItem = {
 		const text = `$ ${selectedText} $`;
 		return insertText(view, text, selectedText ? -(selectedText.length + 2) : -2);
 	},
-};
+});
 
-export const equation: ToolbarItem = {
+export const createEquation = (): ToolbarItem => ({
+	key: 'typst-equation',
 	label: 'Equation',
 	icon: '=',
 	command: (view: EditorView) => {
 		const text = '#math.equation[\n\t\n]';
 		return insertText(view, text, -2);
 	},
-};
+});
 
-// Figure and table
-export const figure: ToolbarItem = {
+export const createFigure = (): ToolbarItem => ({
+	key: 'typst-figure',
 	label: 'Figure',
 	icon: '🖼',
 	command: (view: EditorView) => {
 		const text = '#figure(\n\timage(""),\n\tcaption: []\n)';
 		return insertText(view, text, -22);
 	},
-};
+});
 
-export const table: ToolbarItem = {
+export const createTable = (): ToolbarItem => ({
+	key: 'typst-table',
 	label: 'Table',
 	icon: '⊞',
-	command: (view: EditorView) => {
-		const text = '#table(\n\tcolumns: 2,\n\t[Header 1], [Header 2],\n\t[], []\n)';
-		return insertText(view, text, -8);
-	},
-};
+	command: createTableCommand('typst'),
+});
 
-// Code
-export const inlineCode: ToolbarItem = {
+export const createInlineCode = (): ToolbarItem => ({
+	key: 'typst-inline-code',
 	label: 'Inline Code',
 	icon: '&lt;/&gt;',
 	command: (view: EditorView) => wrapSelection(view, '`', '`'),
-};
+});
 
-export const codeBlock: ToolbarItem = {
+export const createCodeBlock = (): ToolbarItem => ({
+	key: 'typst-code-block',
 	label: 'Code Block',
 	icon: '{}',
 	command: (view: EditorView) => {
@@ -218,19 +187,20 @@ export const codeBlock: ToolbarItem = {
 		const text = `\`\`\`\n${selectedText}\n\`\`\``;
 		return insertText(view, text, selectedText ? -(selectedText.length + 4) : -4);
 	},
-};
+});
 
-export const rawBlock: ToolbarItem = {
+export const createRawBlock = (): ToolbarItem => ({
+	key: 'typst-raw-block',
 	label: 'Raw Block',
 	icon: '`',
 	command: (view: EditorView) => {
 		const text = '#raw(block: true, ```\n\n```)';
 		return insertText(view, text, -5);
 	},
-};
+});
 
-// Link
-export const link: ToolbarItem = {
+export const createLink = (): ToolbarItem => ({
+	key: 'typst-link',
 	label: 'Link',
 	icon: '🔗',
 	command: (view: EditorView) => {
@@ -243,10 +213,10 @@ export const link: ToolbarItem = {
 		const text = '#link("")[]';
 		return insertText(view, text, -4);
 	},
-};
+});
 
-// Quote
-export const quote: ToolbarItem = {
+export const createQuote = (): ToolbarItem => ({
+	key: 'typst-quote',
 	label: 'Quote',
 	icon: '"',
 	command: (view: EditorView) => {
@@ -255,4 +225,4 @@ export const quote: ToolbarItem = {
 		const text = `#quote[\n${selectedText}\n]`;
 		return insertText(view, text, selectedText ? -(selectedText.length + 2) : -2);
 	},
-};
+});
