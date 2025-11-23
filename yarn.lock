@@ -2632,6 +2632,14 @@ codemirror-lang-typst@^0.4.0:
     "@lezer/common" "^1.2.3"
     "@lezer/highlight" "^1.2.1"
 
+codemirror-toolbar@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.npmjs.org/codemirror-toolbar/-/codemirror-toolbar-0.1.0.tgz"
+  integrity sha512-6rkeLrAw4kIgOhnT4YAitzAdxq36VsTJp5fUUxONu9UROlRcNpzAoUKaLGyKsdTXaKwE6CNaLYt/Geij4EkffA==
+  dependencies:
+    "@codemirror/state" "^6.0.0"
+    "@codemirror/view" "^6.0.0"
+
 codemirror@^6.0.0:
   version "6.0.1"
   resolved "https://registry.npmjs.org/codemirror/-/codemirror-6.0.1.tgz"

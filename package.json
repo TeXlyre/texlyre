@@ -75,6 +75,7 @@
 		"codemirror-lang-bib": "^0.1.1",
 		"codemirror-lang-latex": "^0.2.0",
 		"codemirror-lang-typst": "^0.4.0",
+		"codemirror-toolbar": "^0.1.0",
 		"file-saver": "^2.0.5",
 		"filepizza-client": "^2.0.0-alpha.2",
 		"i18next": "^25.6.0",
