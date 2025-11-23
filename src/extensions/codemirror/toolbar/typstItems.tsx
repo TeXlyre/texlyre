@@ -2,6 +2,9 @@
 import type { EditorView } from '@codemirror/view';
 import type { ToolbarItem } from 'codemirror-toolbar';
 import { renderToString } from 'react-dom/server';
+
+import { wrapSelection, insertText } from './helpers';
+import { createTableCommand } from './tableItems';
 import {
 	ToolbarBoldIcon,
 	ToolbarItalicIcon,
@@ -24,9 +27,7 @@ import {
 	ToolbarCodeBlockIcon,
 	ToolbarHyperlinkIcon,
 	ToolbarQuoteIcon,
-} from '@/components/common/Icons';
-import { wrapSelection, insertText } from './helpers';
-import { createTableCommand } from './tableItems';
+} from '../../../components/common/Icons';
 
 export const createBold = (): ToolbarItem => ({
 	key: 'typst-bold',

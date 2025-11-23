@@ -1,5 +1,6 @@
 // src/extensions/codemirror/toolbar/tableItems.ts
 import type { EditorView } from '@codemirror/view';
+
 import { TableGridSelector } from './tableGrid';
 import { insertText } from './helpers';
 

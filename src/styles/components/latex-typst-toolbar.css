@@ -2,23 +2,35 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    align-content: flex-start;
     gap: 2px;
     padding: var(--space-xs);
     background-color: var(--pico-background);
     border-bottom: 1px solid var(--accent-border);
-    min-height: 48px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.codemirror-toolbar::after {
+    content: '';
+    display: table;
+    clear: both;
 }
 
 [data-theme="dark"] .codemirror-toolbar {
     background-color: var(--pico-secondary-background);
 }
 
+.ͼ1 .codemirror-toolbar__item {
+    height: 28px !important;
+    padding-top: var(--space-xs);
+    padding-bottom: auto;
+}
+
 .codemirror-toolbar-button {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 28px;
-    height: 28px;
     padding: var(--space-xs);
     background-color: transparent;
     border: 1px solid transparent;
@@ -41,8 +53,8 @@
 }
 
 .codemirror-toolbar-button svg {
-    width: 14px;
-    height: 14px;
+    width: 24px;
+    height: 24px;
 }
 
 .codemirror-toolbar-split {
@@ -106,6 +118,7 @@
     font-size: 0.75rem;
     color: var(--pico-secondary);
 }
+
 
 @media (max-width: 768px) {
     .codemirror-toolbar {
