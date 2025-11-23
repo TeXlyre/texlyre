@@ -5,7 +5,7 @@
     align-content: flex-start;
     gap: 2px;
     padding: var(--space-xs);
-    background-color: var(--pico-background);
+    background-color: var(--pico-background) !important;
     border-bottom: 1px solid var(--accent-border);
     position: relative;
     flex-shrink: 0;
@@ -15,10 +15,6 @@
     content: '';
     display: table;
     clear: both;
-}
-
-[data-theme="dark"] .codemirror-toolbar {
-    background-color: var(--pico-secondary-background);
 }
 
 .ͼ1 .codemirror-toolbar__item {
@@ -82,10 +78,6 @@
     z-index: var(--z-dropdown);
 }
 
-[data-theme="dark"] .cm-table-grid-container {
-    background-color: var(--pico-secondary-background);
-}
-
 .cm-table-grid {
     display: grid;
     grid-template-columns: repeat(8, 16px);
@@ -97,14 +89,10 @@
     width: 16px;
     height: 16px;
     border: 1px solid var(--accent-border);
-    background-color: var(--pico-background);
+    background-color: var(--pico-secondary-background);
     cursor: pointer;
     transition: background-color var(--transition-normal), border-color var(--transition-normal);
     border-radius: 2px;
-}
-
-[data-theme="dark"] .cm-table-grid-cell {
-    background-color: var(--pico-secondary-background);
 }
 
 .cm-table-grid-cell:hover,
