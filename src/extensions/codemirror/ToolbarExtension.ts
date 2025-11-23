@@ -2,7 +2,7 @@
 import { type Extension, Compartment } from '@codemirror/state';
 import type { ToolbarSplit, ToolbarSpace, ToolbarItem } from 'codemirror-toolbar';
 import toolbar from 'codemirror-toolbar';
-import { type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { type EditorView, ViewPlugin } from '@codemirror/view';
 import * as CodeMirrorItems from './toolbar/codemirrorItems';
 import * as LaTeXItems from './toolbar/latexItems';
 import * as TypstItems from './toolbar/typstItems';
@@ -14,7 +14,31 @@ const space: ToolbarSpace = { type: 'space' };
 
 export type FileType = 'latex' | 'typst';
 
-const getBaseItems = (fileType: FileType) => {
+type ToolbarEntry = ToolbarItem | ToolbarSplit | ToolbarSpace;
+
+const getTableScopeItems = (fileType: FileType): ToolbarEntry[] => [
+	split,
+	TableScopeItems.createRowAddBefore(fileType),
+	TableScopeItems.createRowAddAfter(fileType),
+	TableScopeItems.createRowRemove(fileType),
+	split,
+	TableScopeItems.createColAddBefore(fileType),
+	TableScopeItems.createColAddAfter(fileType),
+	TableScopeItems.createColRemove(fileType),
+];
+
+const getCommonEndItems = (isFullScreen: boolean): ToolbarEntry[] => [
+	space,
+	CodeMirrorItems.createUndo(),
+	CodeMirrorItems.createRedo(),
+	split,
+	CodeMirrorItems.createFullScreen(isFullScreen),
+];
+
+const getItems = (fileType: FileType, isFullScreen: boolean, inTable: boolean): ToolbarEntry[] => {
+	const tableItems = inTable ? getTableScopeItems(fileType) : [];
+	const endItems = getCommonEndItems(isFullScreen);
+
 	if (fileType === 'latex') {
 		return [
 			LaTeXItems.createBold(),
@@ -39,8 +63,8 @@ const getBaseItems = (fileType: FileType) => {
 			split,
 			LaTeXItems.createVerbatim(),
 			LaTeXItems.createLstlisting(),
-			space,
-			CodeMirrorItems.ToolbarfullScreen
+			...tableItems,
+			...endItems,
 		];
 	}
 
@@ -72,53 +96,51 @@ const getBaseItems = (fileType: FileType) => {
 		split,
 		TypstItems.createLink(),
 		TypstItems.createQuote(),
-		space,
-		CodeMirrorItems.ToolbarfullScreen
+		...tableItems,
+		...endItems,
 	];
 };
 
-const getTableScopeItems = (fileType: FileType) => [
-	space,
-	split,
-	TableScopeItems.createRowAddBefore(fileType),
-	TableScopeItems.createRowAddAfter(fileType),
-	TableScopeItems.createRowRemove(fileType),
-	split,
-	TableScopeItems.createColAddBefore(fileType),
-	TableScopeItems.createColAddAfter(fileType),
-	TableScopeItems.createColRemove(fileType),
-];
-
-function createTableScopePlugin(fileType: FileType, toolbarCompartment: Compartment) {
+function createToolbarPlugin(fileType: FileType, toolbarCompartment: Compartment) {
 	return ViewPlugin.fromClass(
 		class {
 			private inTable = false;
+			private isFullScreen = false;
+			private boundFullScreenHandler: () => void;
 
-			update(update: ViewUpdate) {
-				if (!update.selectionSet && !update.docChanged) return;
+			constructor(private view: EditorView) {
+				this.boundFullScreenHandler = this.handleFullScreenChange.bind(this);
+				view.dom.ownerDocument.addEventListener('fullscreenchange', this.boundFullScreenHandler);
+			}
 
-				const nowInTable = detectTableScope(update.view, fileType) !== null;
+			update() {
+				const nowInTable = detectTableScope(this.view, fileType) !== null;
 				if (nowInTable !== this.inTable) {
 					this.inTable = nowInTable;
-					this.reconfigureToolbar(update.view, nowInTable, fileType, toolbarCompartment);
+					this.reconfigureToolbar();
 				}
 			}
 
-			private reconfigureToolbar(
-				view: EditorView,
-				inTable: boolean,
-				type: FileType,
-				compartment: Compartment
-			) {
-				const items = inTable
-					? [...getBaseItems(type), ...getTableScopeItems(type)]
-					: getBaseItems(type);
+			private handleFullScreenChange() {
+				const nowFullScreen = !!this.view.dom.ownerDocument.fullscreenElement;
+				if (nowFullScreen !== this.isFullScreen) {
+					this.isFullScreen = nowFullScreen;
+					this.reconfigureToolbar();
+				}
+			}
+
+			private reconfigureToolbar() {
+				const items = getItems(fileType, this.isFullScreen, this.inTable);
 
 				requestAnimationFrame(() => {
-					view.dispatch({
-						effects: compartment.reconfigure(toolbar({ items })),
+					this.view.dispatch({
+						effects: toolbarCompartment.reconfigure(toolbar({ items })),
 					});
 				});
+			}
+
+			destroy() {
+				this.view.dom.ownerDocument.removeEventListener('fullscreenchange', this.boundFullScreenHandler);
 			}
 		}
 	);
@@ -128,7 +150,7 @@ export const createToolbarExtension = (fileType: FileType): Extension => {
 	const toolbarCompartment = new Compartment();
 
 	return [
-		toolbarCompartment.of(toolbar({ items: getBaseItems(fileType) })),
-		createTableScopePlugin(fileType, toolbarCompartment),
+		toolbarCompartment.of(toolbar({ items: getItems(fileType, false, false) })),
+		createToolbarPlugin(fileType, toolbarCompartment),
 	];
 };
