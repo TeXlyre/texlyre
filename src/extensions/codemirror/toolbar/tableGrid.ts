@@ -13,12 +13,14 @@ export class TableGridSelector {
     private label: HTMLDivElement;
     private cells: HTMLDivElement[][] = [];
     private isOpen = false;
+    private boundHandleDocumentClick: (e: MouseEvent) => void;
 
     constructor(
         private readonly view: EditorView,
         private readonly button: HTMLElement,
         private readonly options: TableGridOptions
     ) {
+        this.boundHandleDocumentClick = this.handleDocumentClick.bind(this);
         this.container = this.createContainer();
         this.grid = this.createGrid();
         this.label = this.createLabel();
@@ -32,30 +34,12 @@ export class TableGridSelector {
     private createContainer(): HTMLDivElement {
         const container = document.createElement('div');
         container.className = 'cm-table-grid-container';
-        container.style.cssText = `
-			position: absolute;
-			display: none;
-			flex-direction: column;
-			align-items: center;
-			background: #fff;
-			border: 1px solid #ddd;
-			border-radius: 4px;
-			padding: 8px;
-			box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-			z-index: 1000;
-		`;
         return container;
     }
 
     private createGrid(): HTMLDivElement {
         const grid = document.createElement('div');
         grid.className = 'cm-table-grid';
-        grid.style.cssText = `
-			display: grid;
-			grid-template-columns: repeat(${this.options.maxCols}, 16px);
-			grid-template-rows: repeat(${this.options.maxRows}, 16px);
-			gap: 2px;
-		`;
 
         for (let row = 0; row < this.options.maxRows; row++) {
             this.cells[row] = [];
@@ -64,14 +48,6 @@ export class TableGridSelector {
                 cell.className = 'cm-table-grid-cell';
                 cell.dataset.row = String(row);
                 cell.dataset.col = String(col);
-                cell.style.cssText = `
-					width: 16px;
-					height: 16px;
-					border: 1px solid #ddd;
-					background: #fff;
-					cursor: pointer;
-					transition: background-color 0.1s;
-				`;
                 this.cells[row][col] = cell;
                 grid.appendChild(cell);
             }
@@ -83,11 +59,6 @@ export class TableGridSelector {
     private createLabel(): HTMLDivElement {
         const label = document.createElement('div');
         label.className = 'cm-table-grid-label';
-        label.style.cssText = `
-			margin-top: 6px;
-			font-size: 12px;
-			color: #666;
-		`;
         label.textContent = 'Select size';
         return label;
     }
@@ -97,7 +68,7 @@ export class TableGridSelector {
         this.grid.addEventListener('mouseleave', this.handleMouseLeave.bind(this));
         this.grid.addEventListener('click', this.handleClick.bind(this));
 
-        document.addEventListener('click', this.handleDocumentClick.bind(this));
+        document.addEventListener('click', this.boundHandleDocumentClick);
     }
 
     private handleMouseOver(e: MouseEvent): void {
@@ -139,11 +110,9 @@ export class TableGridSelector {
             for (let col = 0; col < this.options.maxCols; col++) {
                 const cell = this.cells[row][col];
                 if (row < rows && col < cols) {
-                    cell.style.background = '#1EA7FD';
-                    cell.style.borderColor = '#1EA7FD';
+                    cell.classList.add('highlighted');
                 } else {
-                    cell.style.background = '#fff';
-                    cell.style.borderColor = '#ddd';
+                    cell.classList.remove('highlighted');
                 }
             }
         }
@@ -180,7 +149,6 @@ export class TableGridSelector {
             this.container.style.left = `${buttonRect.left}px`;
         }
 
-        this.container.style.display = 'flex';
         this.isOpen = true;
         this.highlightCells(0, 0);
     }
@@ -188,12 +156,12 @@ export class TableGridSelector {
     close(): void {
         if (!this.isOpen) return;
 
-        this.container.style.display = 'none';
+        this.container.remove();
         this.isOpen = false;
     }
 
     destroy(): void {
-        document.removeEventListener('click', this.handleDocumentClick.bind(this));
+        document.removeEventListener('click', this.boundHandleDocumentClick);
         this.container.remove();
     }
 }
