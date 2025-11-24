@@ -1,4 +1,3 @@
-
 import type { EditorView } from '@codemirror/view';
 import type { ToolbarItem } from 'codemirror-toolbar';
 import { renderToString } from 'react-dom/server';
@@ -12,132 +11,6 @@ import {
     ToolbarColAddAfterIcon,
     ToolbarColRemoveIcon,
 } from '../../../components/common/Icons';
-
-function addLatexRow(view: EditorView, info: TableInfo, before: boolean): boolean {
-    const row = info.rows[info.rowIndex];
-    if (!row) return false;
-
-    const newRow = '\t\t' + new Array(info.totalCols).fill('').join(' & ') + ' \\\\\n\t\t\\hline\n';
-
-    let insertPos: number;
-    if (before) {
-        const doc = view.state.doc.toString();
-        const lineStart = doc.lastIndexOf('\n', row.start - 1);
-        insertPos = lineStart === -1 ? row.start : lineStart + 1;
-    } else {
-        insertPos = row.end + 2;
-        const doc = view.state.doc.toString();
-        const hlineMatch = doc.substring(insertPos).match(/^\s*\\hline\s*\n/);
-        if (hlineMatch) {
-            insertPos += hlineMatch[0].length;
-        }
-    }
-
-    view.dispatch({
-        changes: { from: insertPos, to: insertPos, insert: newRow },
-    });
-    view.focus();
-    return true;
-}
-
-function removeLatexRow(view: EditorView, info: TableInfo): boolean {
-    if (info.totalRows <= 1) return false;
-    const row = info.rows[info.rowIndex];
-    if (!row) return false;
-
-    const doc = view.state.doc.toString();
-    let start = row.start;
-    let end = row.end + 2;
-
-    const beforeHline = doc.lastIndexOf('\\hline', start);
-    if (beforeHline !== -1 && doc.substring(beforeHline, start).trim() === '\\hline') {
-        start = beforeHline;
-    }
-
-    const afterHline = doc.indexOf('\\hline', end);
-    if (afterHline !== -1 && afterHline < end + 10) {
-        end = afterHline + 6;
-    }
-
-    view.dispatch({
-        changes: { from: start, to: end, insert: '' },
-    });
-    view.focus();
-    return true;
-}
-
-function addLatexColumn(view: EditorView, info: TableInfo, before: boolean): boolean {
-    const doc = view.state.doc.toString();
-    const changes: { from: number; to: number; insert: string }[] = [];
-
-    const colSpecMatch = doc.substring(info.start, info.end).match(/\\begin\{tabular\}\{([^}]*)\}/);
-    if (colSpecMatch) {
-        const colSpec = colSpecMatch[1];
-        const colSpecStart = info.start + doc.substring(info.start).indexOf(colSpec);
-        const cols = colSpec.split('').filter(c => /[lcr]/.test(c));
-        const insertIdx = before ? info.colIndex : info.colIndex + 1;
-        cols.splice(insertIdx, 0, 'c');
-        const newColSpec = colSpec.replace(/[lcr]+/, cols.join('|'));
-        changes.push({ from: colSpecStart, to: colSpecStart + colSpec.length, insert: newColSpec });
-    }
-
-    for (const row of info.rows) {
-        const insertIdx = before ? info.colIndex : info.colIndex + 1;
-        if (insertIdx === 0) {
-            changes.push({ from: row.cells[0].start, to: row.cells[0].start, insert: ' & ' });
-        } else if (insertIdx >= row.cells.length) {
-            changes.push({ from: row.cells[row.cells.length - 1].end, to: row.cells[row.cells.length - 1].end, insert: ' & ' });
-        } else {
-            const cell = row.cells[insertIdx];
-            changes.push({ from: cell.start, to: cell.start, insert: ' & ' });
-        }
-    }
-
-    changes.sort((a, b) => b.from - a.from);
-    view.dispatch({ changes });
-    view.focus();
-    return true;
-}
-
-function removeLatexColumn(view: EditorView, info: TableInfo): boolean {
-    if (info.totalCols <= 1) return false;
-
-    const doc = view.state.doc.toString();
-    const changes: { from: number; to: number; insert: string }[] = [];
-
-    const colSpecMatch = doc.substring(info.start, info.end).match(/\\begin\{tabular\}\{([^}]*)\}/);
-    if (colSpecMatch) {
-        const colSpec = colSpecMatch[1];
-        const colSpecStart = info.start + doc.substring(info.start).indexOf(colSpec);
-        const cols = colSpec.split('').filter(c => /[lcr]/.test(c));
-        cols.splice(info.colIndex, 1);
-        const newColSpec = colSpec.replace(/[lcr]+/, cols.join('|'));
-        changes.push({ from: colSpecStart, to: colSpecStart + colSpec.length, insert: newColSpec });
-    }
-
-    for (const row of info.rows) {
-        const cell = row.cells[info.colIndex];
-        if (!cell) continue;
-
-        let start = cell.start;
-        let end = cell.end;
-
-        if (info.colIndex > 0) {
-            const prevCell = row.cells[info.colIndex - 1];
-            start = prevCell.end;
-        } else if (info.colIndex < row.cells.length - 1) {
-            const nextCell = row.cells[info.colIndex + 1];
-            end = nextCell.start;
-        }
-
-        changes.push({ from: start, to: end, insert: '' });
-    }
-
-    changes.sort((a, b) => b.from - a.from);
-    view.dispatch({ changes });
-    view.focus();
-    return true;
-}
 
 function addTypstRow(view: EditorView, info: TableInfo, before: boolean): boolean {
     const row = info.rows[info.rowIndex];
@@ -264,6 +137,217 @@ function removeTypstColumn(view: EditorView, info: TableInfo): boolean {
     view.dispatch({ changes });
     view.focus();
     return true;
+}
+
+function addLatexRow(view: EditorView, info: TableInfo, before: boolean): boolean {
+    const row = info.rows[info.rowIndex];
+    if (!row) return false;
+    const newCells = new Array(info.totalCols).fill('').join(' & ');
+    const newRow = `${newCells} \\\\`;
+    const doc = view.state.doc.toString();
+    let insertPos: number;
+    if (before) {
+        insertPos = row.start;
+        while (insertPos > 0 && /[ \t]/.test(doc[insertPos - 1])) insertPos--;
+    } else {
+        insertPos = row.end;
+        while (insertPos < doc.length && /[ \t]/.test(doc[insertPos])) insertPos++;
+        if (insertPos < doc.length && doc.substring(insertPos, insertPos + 2) === '\\\\') {
+            insertPos += 2;
+        }
+        while (insertPos < doc.length && /[ \t]/.test(doc[insertPos])) insertPos++;
+        if (insertPos < doc.length && doc[insertPos] === '\n') {
+            insertPos++;
+        }
+    }
+
+    const insertText = before ? `\n${newRow}` : `${newRow}\n`;
+
+    view.dispatch({
+        changes: { from: insertPos, to: insertPos, insert: insertText },
+    });
+    view.focus();
+    return true;
+}
+
+function removeLatexRow(view: EditorView, info: TableInfo): boolean {
+    if (info.totalRows <= 1) return false;
+    const row = info.rows[info.rowIndex];
+    if (!row) return false;
+
+    const doc = view.state.doc.toString();
+    let start = row.start;
+    while (start > 0 && /[ \t]/.test(doc[start - 1])) start--;
+
+    let end = row.end;
+    while (end < doc.length && /[ \t]/.test(doc[end])) end++;
+    if (end < doc.length && doc.substring(end, end + 2) === '\\\\') {
+        end += 2;
+    }
+    while (end < doc.length && /[ \t]/.test(doc[end])) end++;
+    if (end < doc.length && doc[end] === '\n') {
+        end++;
+    }
+
+    view.dispatch({
+        changes: { from: start, to: end, insert: '' },
+    });
+    view.focus();
+    return true;
+}
+
+function addLatexColumn(view: EditorView, info: TableInfo, before: boolean): boolean {
+    const doc = view.state.doc.toString();
+    const changes: { from: number; to: number; insert: string }[] = [];
+
+    const colSpecMatch = doc.substring(info.start, info.end).match(/\\begin\{(?:tabular|array|longtable|tabularx)\}(?:\[[^\]]*\])?\{([^}]+)\}/);
+    if (colSpecMatch) {
+        const colSpec = colSpecMatch[1];
+        const newColSpec = insertColumnInSpec(colSpec, info.colIndex, before);
+        const specStart = info.start + doc.substring(info.start).indexOf(colSpec);
+        changes.push({ from: specStart, to: specStart + colSpec.length, insert: newColSpec });
+    }
+
+    for (const row of info.rows) {
+        const insertIdx = before ? info.colIndex : info.colIndex + 1;
+
+        if (insertIdx === 0) {
+            const firstCell = row.cells[0];
+            changes.push({ from: firstCell.start, to: firstCell.start, insert: ' & ' });
+        } else if (insertIdx >= row.cells.length) {
+            const lastCell = row.cells[row.cells.length - 1];
+            changes.push({ from: lastCell.end, to: lastCell.end, insert: ' & ' });
+        } else {
+            const cell = row.cells[insertIdx];
+            changes.push({ from: cell.start, to: cell.start, insert: ' & ' });
+        }
+    }
+
+    changes.sort((a, b) => b.from - a.from);
+    view.dispatch({ changes });
+    view.focus();
+    return true;
+}
+
+function removeLatexColumn(view: EditorView, info: TableInfo): boolean {
+    if (info.totalCols <= 1) return false;
+
+    const doc = view.state.doc.toString();
+    const changes: { from: number; to: number; insert: string }[] = [];
+
+    const colSpecMatch = doc.substring(info.start, info.end).match(/\\begin\{(?:tabular|array|longtable|tabularx)\}(?:\[[^\]]*\])?\{([^}]+)\}/);
+    if (colSpecMatch) {
+        const colSpec = colSpecMatch[1];
+        const newColSpec = removeColumnFromSpec(colSpec, info.colIndex);
+        const specStart = info.start + doc.substring(info.start).indexOf(colSpec);
+        changes.push({ from: specStart, to: specStart + colSpec.length, insert: newColSpec });
+    }
+
+    for (const row of info.rows) {
+        const cell = row.cells[info.colIndex];
+        if (!cell) continue;
+
+        let start = cell.start;
+        let end = cell.end;
+
+        if (info.colIndex === 0) {
+            while (end < doc.length && /[ \t]/.test(doc[end])) end++;
+            if (end < doc.length && doc[end] === '&') {
+                end++;
+                while (end < doc.length && /[ \t]/.test(doc[end])) end++;
+            }
+        } else {
+            while (start > 0 && /[ \t]/.test(doc[start - 1])) start--;
+            if (start > 0 && doc[start - 1] === '&') {
+                start--;
+                while (start > 0 && /[ \t]/.test(doc[start - 1])) start--;
+            }
+        }
+
+        changes.push({ from: start, to: end, insert: '' });
+    }
+
+    changes.sort((a, b) => b.from - a.from);
+    view.dispatch({ changes });
+    view.focus();
+    return true;
+}
+
+function insertColumnInSpec(colSpec: string, index: number, before: boolean): string {
+    const positions = findColumnPositions(colSpec);
+    const insertIdx = before ? index : index + 1;
+
+    if (insertIdx >= positions.length) {
+        return colSpec + 'c';
+    }
+
+    const insertPos = positions[insertIdx];
+    return colSpec.slice(0, insertPos) + 'c' + colSpec.slice(insertPos);
+}
+
+function removeColumnFromSpec(colSpec: string, index: number): string {
+    const positions = findColumnPositions(colSpec);
+
+    if (index >= positions.length) return colSpec;
+
+    const start = positions[index];
+    const end = index + 1 < positions.length ? positions[index + 1] : colSpec.length;
+
+    return colSpec.slice(0, start) + colSpec.slice(end);
+}
+
+function findColumnPositions(colSpec: string): number[] {
+    const positions: number[] = [];
+    let i = 0;
+
+    while (i < colSpec.length) {
+        const char = colSpec[i];
+        if (/[lcrp]/.test(char)) {
+            positions.push(i);
+        } else if (char === 'p' || char === 'm' || char === 'b') {
+            positions.push(i);
+            if (i + 1 < colSpec.length && colSpec[i + 1] === '{') {
+                let braceDepth = 1;
+                i += 2;
+                while (i < colSpec.length && braceDepth > 0) {
+                    if (colSpec[i] === '{') braceDepth++;
+                    else if (colSpec[i] === '}') braceDepth--;
+                    i++;
+                }
+                continue;
+            }
+        } else if (char === '*') {
+            if (i + 1 < colSpec.length && colSpec[i + 1] === '{') {
+                let braceDepth = 1;
+                let j = i + 2;
+                let repeatCount = '';
+                while (j < colSpec.length && braceDepth > 0) {
+                    if (colSpec[j] === '{') braceDepth++;
+                    else if (colSpec[j] === '}') braceDepth--;
+                    else if (braceDepth === 1) repeatCount += colSpec[j];
+                    j++;
+                }
+                const num = parseInt(repeatCount, 10);
+                if (!isNaN(num) && j < colSpec.length && colSpec[j] === '{') {
+                    for (let k = 0; k < num; k++) {
+                        positions.push(i);
+                    }
+                    braceDepth = 1;
+                    j++;
+                    while (j < colSpec.length && braceDepth > 0) {
+                        if (colSpec[j] === '{') braceDepth++;
+                        else if (colSpec[j] === '}') braceDepth--;
+                        j++;
+                    }
+                    i = j;
+                    continue;
+                }
+            }
+        }
+        i++;
+    }
+
+    return positions;
 }
 
 function createTableCommand(
