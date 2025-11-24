@@ -25,6 +25,15 @@ export interface TableCell {
     content: string;
 }
 
+interface TableBoundary {
+    start: number;
+    end: number;
+    contentStart: number;
+    contentEnd: number;
+    colSpec?: string;
+    totalCols?: number;
+}
+
 export function detectTableScope(view: EditorView, fileType: TableType): TableInfo | null {
     const pos = view.state.selection.main.head;
     const doc = view.state.doc.toString();
@@ -36,77 +45,179 @@ export function detectTableScope(view: EditorView, fileType: TableType): TableIn
 }
 
 function detectLatexTable(doc: string, pos: number): TableInfo | null {
-    const tabularRegex = /\\begin\{tabular\}(\{[^}]*\})([\s\S]*?)\\end\{tabular\}/g;
-    let match: RegExpExecArray | null;
+    const tables = findLatexTableBoundaries(doc);
 
-    while ((match = tabularRegex.exec(doc)) !== null) {
-        const start = match.index;
-        const end = start + match[0].length;
+    let deepestTable: TableBoundary | null = null;
+    let smallestRange = Infinity;
 
-        if (pos >= start && pos <= end) {
-            const colSpec = match[1];
-            const content = match[2];
-            const totalCols = (colSpec.match(/[lcr|p]/gi) || []).filter(c => c !== '|').length;
-
-            const rows = parseLatexRows(content, start + match[0].indexOf(match[2]));
-            const { rowIndex, colIndex } = findLatexPosition(rows, pos);
-
-            return {
-                type: 'latex',
-                start,
-                end,
-                rowIndex,
-                colIndex,
-                totalRows: rows.length,
-                totalCols,
-                rows,
-            };
+    for (const table of tables) {
+        if (pos >= table.start && pos <= table.end) {
+            const range = table.end - table.start;
+            if (range < smallestRange) {
+                deepestTable = table;
+                smallestRange = range;
+            }
         }
     }
 
-    return null;
+    if (!deepestTable || !deepestTable.colSpec) return null;
+
+    const totalCols = (deepestTable.colSpec.match(/[lcr|p]/gi) || []).filter(c => c !== '|').length;
+    const rows = parseLatexRowsAtDepth(doc, deepestTable);
+    const { rowIndex, colIndex } = findLatexPosition(rows, pos);
+
+    return {
+        type: 'latex',
+        start: deepestTable.start,
+        end: deepestTable.end,
+        rowIndex,
+        colIndex,
+        totalRows: rows.length,
+        totalCols,
+        rows,
+    };
 }
 
-function parseLatexRows(content: string, offset: number): TableRow[] {
-    const rows: TableRow[] = [];
-    const lines = content.split('\\\\');
-    let currentPos = offset;
+function findLatexTableBoundaries(doc: string): TableBoundary[] {
+    const tables: TableBoundary[] = [];
+    const stack: Array<{ start: number; contentStart: number }> = [];
 
-    for (const line of lines) {
-        const trimmed = line.replace(/\\hline/g, '').trim();
-        if (!trimmed) {
-            currentPos += line.length + 2;
-            continue;
+    let i = 0;
+    while (i < doc.length) {
+        if (doc.substring(i).startsWith('\\begin{tabular}')) {
+            const start = i;
+            i += 15;
+
+            while (i < doc.length && /\s/.test(doc[i])) i++;
+
+            const colSpecMatch = doc.substring(i).match(/^(\{[^}]*\})/);
+            if (colSpecMatch) {
+                const colSpec = colSpecMatch[1];
+                i += colSpecMatch[0].length;
+                stack.push({ start, contentStart: i });
+            }
+        } else if (doc.substring(i).startsWith('\\end{tabular}')) {
+            if (stack.length > 0) {
+                const tableStart = stack.pop()!;
+                const contentEnd = i;
+                const end = i + 13;
+
+                const fullText = doc.substring(tableStart.start, end);
+                const colSpecMatch = fullText.match(/\\begin\{tabular\}\s*(\{[^}]*\})/);
+
+                tables.push({
+                    start: tableStart.start,
+                    end,
+                    contentStart: tableStart.contentStart,
+                    contentEnd,
+                    colSpec: colSpecMatch ? colSpecMatch[1] : undefined,
+                });
+            }
+            i += 13;
+        } else {
+            i++;
         }
+    }
 
-        const cells = parseLatexCells(trimmed, currentPos + line.indexOf(trimmed));
+    return tables;
+}
+
+function parseLatexRowsAtDepth(doc: string, table: TableBoundary): TableRow[] {
+    const rows: TableRow[] = [];
+    const content = doc.substring(table.contentStart, table.contentEnd);
+
+    let depth = 0;
+    let rowStart = table.contentStart;
+    let currentContent = '';
+
+    for (let i = 0; i < content.length; i++) {
+        const absPos = table.contentStart + i;
+
+        if (content.substring(i).startsWith('\\begin{tabular}')) {
+            depth++;
+            currentContent += content.substring(i, i + 15);
+            i += 14;
+        } else if (content.substring(i).startsWith('\\end{tabular}')) {
+            depth--;
+            currentContent += content.substring(i, i + 13);
+            i += 12;
+        } else if (content.substring(i).startsWith('\\\\') && depth === 0) {
+            const trimmed = currentContent.replace(/\\hline/g, '').trim();
+            if (trimmed) {
+                const cells = parseLatexCellsAtDepth(trimmed, rowStart, doc, table);
+                if (cells.length > 0) {
+                    rows.push({
+                        start: rowStart,
+                        end: absPos,
+                        cells,
+                    });
+                }
+            }
+            currentContent = '';
+            rowStart = absPos + 2;
+            i += 1;
+        } else {
+            currentContent += content[i];
+        }
+    }
+
+    const trimmed = currentContent.replace(/\\hline/g, '').trim();
+    if (trimmed && depth === 0) {
+        const cells = parseLatexCellsAtDepth(trimmed, rowStart, doc, table);
         if (cells.length > 0) {
             rows.push({
-                start: currentPos,
-                end: currentPos + line.length,
+                start: rowStart,
+                end: table.contentEnd,
                 cells,
             });
         }
-        currentPos += line.length + 2;
     }
 
     return rows;
 }
 
-function parseLatexCells(row: string, offset: number): TableCell[] {
+function parseLatexCellsAtDepth(rowContent: string, rowStart: number, doc: string, table: TableBoundary): TableCell[] {
     const cells: TableCell[] = [];
-    const parts = row.split('&');
-    let currentPos = offset;
+    let depth = 0;
+    let cellContent = '';
+    let cellStart = rowStart;
 
-    for (const part of parts) {
-        const content = part.trim();
-        const cellStart = currentPos + part.indexOf(content);
+    for (let i = 0; i < rowContent.length; i++) {
+        const absPos = rowStart + i;
+
+        if (doc.substring(absPos).startsWith('\\begin{tabular}')) {
+            depth++;
+            cellContent += rowContent.substring(i, i + 15);
+            i += 14;
+        } else if (doc.substring(absPos).startsWith('\\end{tabular}')) {
+            depth--;
+            cellContent += rowContent.substring(i, i + 13);
+            i += 12;
+        } else if (rowContent[i] === '&' && depth === 0) {
+            const trimmed = cellContent.trim();
+            if (trimmed || cells.length > 0) {
+                const contentStart = cellStart + cellContent.indexOf(trimmed);
+                cells.push({
+                    start: contentStart,
+                    end: contentStart + trimmed.length,
+                    content: trimmed,
+                });
+            }
+            cellContent = '';
+            cellStart = absPos + 1;
+        } else {
+            cellContent += rowContent[i];
+        }
+    }
+
+    const trimmed = cellContent.trim();
+    if (trimmed || cells.length > 0) {
+        const contentStart = cellStart + cellContent.indexOf(trimmed);
         cells.push({
-            start: cellStart,
-            end: cellStart + content.length,
-            content,
+            start: contentStart,
+            end: contentStart + trimmed.length,
+            content: trimmed,
         });
-        currentPos += part.length + 1;
     }
 
     return cells;
@@ -129,51 +240,127 @@ function findLatexPosition(rows: TableRow[], pos: number): { rowIndex: number; c
 }
 
 function detectTypstTable(doc: string, pos: number): TableInfo | null {
-    const tableRegex = /#table\s*\(([\s\S]*?)\n\)/g;
-    let match: RegExpExecArray | null;
+    const tables = findTypstTableBoundaries(doc);
 
-    while ((match = tableRegex.exec(doc)) !== null) {
-        const start = match.index;
-        const end = start + match[0].length;
+    let deepestTable: TableBoundary | null = null;
+    let smallestRange = Infinity;
 
-        if (pos >= start && pos <= end) {
-            const content = match[1];
-            const colsMatch = content.match(/columns\s*:\s*(\d+)/);
-            const totalCols = colsMatch ? parseInt(colsMatch[1], 10) : 1;
-
-            const rows = parseTypstRows(content, start + match[0].indexOf(match[1]), totalCols);
-            const { rowIndex, colIndex } = findTypstPosition(rows, pos);
-
-            return {
-                type: 'typst',
-                start,
-                end,
-                rowIndex,
-                colIndex,
-                totalRows: rows.length,
-                totalCols,
-                rows,
-            };
+    for (const table of tables) {
+        if (pos >= table.start && pos <= table.end) {
+            const range = table.end - table.start;
+            if (range < smallestRange) {
+                deepestTable = table;
+                smallestRange = range;
+            }
         }
     }
 
-    return null;
+    if (!deepestTable) return null;
+
+    const content = doc.substring(deepestTable.contentStart, deepestTable.contentEnd);
+    const colsMatch = content.match(/columns\s*:\s*(\d+)/);
+    const totalCols = colsMatch ? parseInt(colsMatch[1], 10) : 1;
+
+    const rows = parseTypstRowsAtDepth(doc, deepestTable, totalCols);
+    const { rowIndex, colIndex } = findTypstPosition(rows, pos);
+
+    return {
+        type: 'typst',
+        start: deepestTable.start,
+        end: deepestTable.end,
+        rowIndex,
+        colIndex,
+        totalRows: rows.length,
+        totalCols,
+        rows,
+    };
 }
 
-function parseTypstRows(content: string, offset: number, totalCols: number): TableRow[] {
-    const rows: TableRow[] = [];
-    const cellRegex = /\[([^\]]*)\]/g;
-    const cells: TableCell[] = [];
-    let match: RegExpExecArray | null;
+function findTypstTableBoundaries(doc: string): TableBoundary[] {
+    const tables: TableBoundary[] = [];
+    const stack: Array<{ start: number; contentStart: number }> = [];
 
-    while ((match = cellRegex.exec(content)) !== null) {
-        cells.push({
-            start: offset + match.index,
-            end: offset + match.index + match[0].length,
-            content: match[1],
-        });
+    let i = 0;
+    while (i < doc.length) {
+        if (doc.substring(i).startsWith('#table')) {
+            const start = i;
+            i += 6;
+
+            while (i < doc.length && /\s/.test(doc[i])) i++;
+
+            if (i < doc.length && doc[i] === '(') {
+                i++;
+                stack.push({ start, contentStart: i });
+            }
+        } else if (doc[i] === '(' && i > 0 && !stack.some(s => s.contentStart === i)) {
+            if (stack.length > 0) {
+                const lastInStack = stack[stack.length - 1];
+                if (i > lastInStack.contentStart) {
+                    stack.push({ start: i, contentStart: i + 1 });
+                }
+            }
+        } else if (doc[i] === ')') {
+            if (stack.length > 0) {
+                const tableStart = stack.pop()!;
+
+                const isTableStart = doc.substring(tableStart.start).startsWith('#table');
+                if (isTableStart) {
+                    tables.push({
+                        start: tableStart.start,
+                        end: i + 1,
+                        contentStart: tableStart.contentStart,
+                        contentEnd: i,
+                    });
+                }
+            }
+            i++;
+            continue;
+        }
+        i++;
     }
 
+    return tables;
+}
+
+function parseTypstRowsAtDepth(doc: string, table: TableBoundary, totalCols: number): TableRow[] {
+    const content = doc.substring(table.contentStart, table.contentEnd);
+    const cells: TableCell[] = [];
+
+    let depth = 0;
+    let i = 0;
+
+    while (i < content.length) {
+        if (content[i] === '[' && depth === 0) {
+            const cellStart = table.contentStart + i;
+            let j = i + 1;
+            let bracketDepth = 1;
+
+            while (j < content.length && bracketDepth > 0) {
+                if (content[j] === '[') bracketDepth++;
+                else if (content[j] === ']') bracketDepth--;
+                j++;
+            }
+
+            if (bracketDepth === 0) {
+                const cellEnd = table.contentStart + j;
+                const cellContent = content.substring(i + 1, j - 1);
+                cells.push({
+                    start: cellStart,
+                    end: cellEnd,
+                    content: cellContent,
+                });
+                i = j;
+                continue;
+            }
+        } else if (content[i] === '(') {
+            depth++;
+        } else if (content[i] === ')') {
+            depth--;
+        }
+        i++;
+    }
+
+    const rows: TableRow[] = [];
     for (let i = 0; i < cells.length; i += totalCols) {
         const rowCells = cells.slice(i, i + totalCols);
         if (rowCells.length > 0) {
@@ -191,15 +378,27 @@ function parseTypstRows(content: string, offset: number, totalCols: number): Tab
 function findTypstPosition(rows: TableRow[], pos: number): { rowIndex: number; colIndex: number } {
     for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
         const row = rows[rowIndex];
-        if (pos >= row.start && pos <= row.end) {
+        const rowStart = row.start;
+        const rowEnd = rowIndex < rows.length - 1 ? rows[rowIndex + 1].start : row.end;
+
+        if (pos >= rowStart && pos < rowEnd) {
             for (let colIndex = 0; colIndex < row.cells.length; colIndex++) {
                 const cell = row.cells[colIndex];
                 if (pos >= cell.start && pos <= cell.end) {
                     return { rowIndex, colIndex };
                 }
             }
-            return { rowIndex, colIndex: 0 };
+
+            for (let colIndex = 0; colIndex < row.cells.length - 1; colIndex++) {
+                const currentCell = row.cells[colIndex];
+                const nextCell = row.cells[colIndex + 1];
+                if (pos > currentCell.end && pos < nextCell.start) {
+                    return { rowIndex, colIndex: colIndex + 1 };
+                }
+            }
+
+            return { rowIndex, colIndex: row.cells.length - 1 };
         }
     }
-    return { rowIndex: 0, colIndex: 0 };
+    return { rowIndex: rows.length > 0 ? rows.length - 1 : 0, colIndex: 0 };
 }

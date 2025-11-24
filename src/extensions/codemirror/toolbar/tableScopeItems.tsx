@@ -18,7 +18,20 @@ function addLatexRow(view: EditorView, info: TableInfo, before: boolean): boolea
     if (!row) return false;
 
     const newRow = '\t\t' + new Array(info.totalCols).fill('').join(' & ') + ' \\\\\n\t\t\\hline\n';
-    const insertPos = before ? row.start : row.end + 2;
+
+    let insertPos: number;
+    if (before) {
+        const doc = view.state.doc.toString();
+        const lineStart = doc.lastIndexOf('\n', row.start - 1);
+        insertPos = lineStart === -1 ? row.start : lineStart + 1;
+    } else {
+        insertPos = row.end + 2;
+        const doc = view.state.doc.toString();
+        const hlineMatch = doc.substring(insertPos).match(/^\s*\\hline\s*\n/);
+        if (hlineMatch) {
+            insertPos += hlineMatch[0].length;
+        }
+    }
 
     view.dispatch({
         changes: { from: insertPos, to: insertPos, insert: newRow },
@@ -132,7 +145,22 @@ function addTypstRow(view: EditorView, info: TableInfo, before: boolean): boolea
 
     const newCells = new Array(info.totalCols).fill('[]').join(', ');
     const newRow = `\t${newCells},\n`;
-    const insertPos = before ? row.start : row.end + 1;
+
+    let insertPos: number;
+    if (before) {
+        const doc = view.state.doc.toString();
+        const lineStart = doc.lastIndexOf('\n', row.start - 1);
+        insertPos = lineStart === -1 ? row.start : lineStart + 1;
+    } else {
+        const doc = view.state.doc.toString();
+        let pos = row.end;
+        const commaIdx = doc.indexOf(',', pos);
+        if (commaIdx !== -1 && commaIdx < pos + 3) {
+            pos = commaIdx + 1;
+        }
+        const newlineIdx = doc.indexOf('\n', pos);
+        insertPos = newlineIdx !== -1 && newlineIdx < pos + 3 ? newlineIdx + 1 : pos;
+    }
 
     view.dispatch({
         changes: { from: insertPos, to: insertPos, insert: newRow },
@@ -215,14 +243,18 @@ function removeTypstColumn(view: EditorView, info: TableInfo): boolean {
         let start = cell.start;
         let end = cell.end;
 
-        const textBefore = doc.substring(start - 2, start);
-        const textAfter = doc.substring(end, end + 2);
-
-        if (textAfter.includes(',')) {
-            end = doc.indexOf(',', end) + 1;
-            if (doc[end] === ' ') end++;
-        } else if (textBefore.includes(',')) {
-            start = doc.lastIndexOf(',', start - 1);
+        if (info.colIndex === 0) {
+            const commaAfter = doc.indexOf(',', end);
+            if (commaAfter !== -1 && commaAfter < end + 5) {
+                end = commaAfter + 1;
+                if (doc[end] === ' ') end++;
+            }
+        } else {
+            const commaBefore = doc.lastIndexOf(',', start - 1);
+            if (commaBefore !== -1 && commaBefore > start - 5) {
+                start = commaBefore;
+                if (doc[start - 1] === ' ') start--;
+            }
         }
 
         changes.push({ from: start, to: end, insert: '' });
