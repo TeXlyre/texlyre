@@ -139,6 +139,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   const [showTypstOutput, setShowTypstOutput] = useState(false);
   const [temporaryLatexExpand, setTemporaryLatexExpand] = useState(false);
   const [temporaryTypstExpand, setTemporaryTypstExpand] = useState(false);
+  const [toolbarVisible, setToolbarVisible] = useState(true);
   const [documentSelectionChange, setDocumentSelectionChange] = useState(0);
   const [fileSelectionChange, setFileSelectionChange] = useState(0);
   const [hasNavigatedToFile, setHasNavigatedToFile] = useState(false);
@@ -222,6 +223,13 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
       defaultValue: explorerHeight
     });
 
+    registerProperty({
+      id: 'toolbar-visible',
+      category: 'UI',
+      subcategory: 'Editor',
+      defaultValue: true
+    });
+
     console.log('Properties registered');
   }, [registerProperty]);
 
@@ -235,6 +243,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
     const storedLatexCollapsed = getProperty('latex-output-collapsed');
     const storedTypstCollapsed = getProperty('typst-output-collapsed');
     const storedOutlineHeight = getProperty('explorer-height');
+    const storedToolbarVisible = getProperty('toolbar-visible');
 
     if (storedSidebarWidth !== undefined) {
       setSidebarWidth(Number(storedSidebarWidth));
@@ -262,6 +271,10 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
     if (storedOutlineHeight !== undefined) {
       setOutlineHeight(Number(storedOutlineHeight));
+    }
+
+    if (storedToolbarVisible !== undefined) {
+      setToolbarVisible(Boolean(storedToolbarVisible));
     }
 
     setPropertiesLoaded(true);
@@ -944,6 +957,11 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
     setTemporaryTypstExpand(true);
   };
 
+  const handleToolbarToggle = (visible: boolean) => {
+    setToolbarVisible(visible);
+    setProperty('toolbar-visible', visible);
+  };
+
   const handleNavigateToLinkedFile = () => {
     if (linkedFileInfo?.filePath) {
       document.dispatchEvent(
@@ -1132,7 +1150,9 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
                   null
             }
             documents={documents}
-            linkedFileInfo={linkedFileInfo} />
+            linkedFileInfo={linkedFileInfo}
+            toolbarVisible={toolbarVisible}
+            onToolbarToggle={handleToolbarToggle} />
 
         </div>
 

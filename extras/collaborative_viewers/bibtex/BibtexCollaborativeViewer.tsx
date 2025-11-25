@@ -378,7 +378,9 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
           <button
             className={`${viewMode === 'table' ? 'active' : ''}`}
             onClick={() => setViewMode(viewMode === 'editor' ? 'table' : 'editor')}
-            title={`Switch to ${viewMode === 'editor' ? 'Table' : 'Editor'} View`}>
+            title={t(`Switch to {viewMode} View`, {
+              viewMode: viewMode === 'editor' ? t('Table') : t('Editor')
+            })}>
 
             <ViewIcon />
           </button>
@@ -502,7 +504,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
                       i18nKey="Not saved automatically. Click the <icon /> <strong>Save</strong> button or <strong>Ctrl+S</strong>"
                       components={{
                         strong: <strong />,
-                        icon: <SaveIcon />
+                        icon: <> <SaveIcon /> {' '} </>
                       }}
                     />
                   </div>
