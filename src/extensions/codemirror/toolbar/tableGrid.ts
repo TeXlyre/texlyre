@@ -1,4 +1,4 @@
-// src/extensions/codemirror/toolbar/tableGird.ts
+// src/extensions/codemirror/toolbar/tableGrid.ts
 import type { EditorView } from '@codemirror/view';
 
 export interface TableGridOptions {
@@ -8,7 +8,7 @@ export interface TableGridOptions {
 }
 
 export class TableGridSelector {
-    private container: HTMLDivElement;
+    public readonly container: HTMLDivElement;
     private grid: HTMLDivElement;
     private label: HTMLDivElement;
     private cells: HTMLDivElement[][] = [];
@@ -124,7 +124,7 @@ export class TableGridSelector {
         if (this.isOpen) {
             this.close();
         } else {
-            this.open();
+            setTimeout(() => this.open(), 0);
         }
     }
 

@@ -55,6 +55,12 @@ export const createTableCommand = (type: TableType) => {
 
         let selector = gridSelectors.get(view);
 
+        if (selector && !document.body.contains(selector.container) && !toolbar.contains(selector.container)) {
+            selector.destroy();
+            gridSelectors.delete(view);
+            selector = null;
+        }
+
         if (!selector) {
             selector = new TableGridSelector(view, button, {
                 maxRows: 8,
