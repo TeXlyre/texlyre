@@ -1,4 +1,5 @@
 // src/extensions/codemirror/toolbar/latexItems.tsx
+import { t } from '@/i18n';
 import type { EditorView } from '@codemirror/view';
 import type { ToolbarItem } from 'codemirror-toolbar';
 import { renderToString } from 'react-dom/server';
@@ -27,42 +28,42 @@ import {
 
 export const createBold = (): ToolbarItem => ({
 	key: 'latex-bold',
-	label: 'Bold',
+	label: t('Bold'),
 	icon: renderToString(<ToolbarBoldIcon />),
 	command: (view: EditorView) => wrapSelection(view, '\\textbf{', '}'),
 });
 
 export const createItalic = (): ToolbarItem => ({
 	key: 'latex-italic',
-	label: 'Italic',
+	label: t('Italic'),
 	icon: renderToString(<ToolbarItalicIcon />),
 	command: (view: EditorView) => wrapSelection(view, '\\textit{', '}'),
 });
 
 export const createUnderline = (): ToolbarItem => ({
 	key: 'latex-underline',
-	label: 'Underline',
+	label: t('Underline'),
 	icon: renderToString(<ToolbarUnderlineIcon />),
 	command: (view: EditorView) => wrapSelection(view, '\\underline{', '}'),
 });
 
 export const createEmph = (): ToolbarItem => ({
 	key: 'latex-emph',
-	label: 'Emphasize',
+	label: t('Emphasize'),
 	icon: renderToString(<ToolbarEmphIcon />),
 	command: (view: EditorView) => wrapSelection(view, '\\emph{', '}'),
 });
 
 export const createTypewriter = (): ToolbarItem => ({
 	key: 'latex-typewriter',
-	label: 'Typewriter',
+	label: t('Typewriter'),
 	icon: renderToString(<ToolbarMonospaceIcon />),
 	command: (view: EditorView) => wrapSelection(view, '\\texttt{', '}'),
 });
 
 export const createSection = (): ToolbarItem => ({
 	key: 'latex-section',
-	label: 'Section',
+	label: t('Section'),
 	icon: renderToString(<ToolbarHeading1Icon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
@@ -74,7 +75,7 @@ export const createSection = (): ToolbarItem => ({
 
 export const createSubsection = (): ToolbarItem => ({
 	key: 'latex-subsection',
-	label: 'Subsection',
+	label: t('Subsection'),
 	icon: renderToString(<ToolbarHeading2Icon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
@@ -86,7 +87,7 @@ export const createSubsection = (): ToolbarItem => ({
 
 export const createSubsubsection = (): ToolbarItem => ({
 	key: 'latex-subsubsection',
-	label: 'Subsubsection',
+	label: t('Subsubsection'),
 	icon: renderToString(<ToolbarHeading3Icon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
@@ -98,7 +99,7 @@ export const createSubsubsection = (): ToolbarItem => ({
 
 export const createItemize = (): ToolbarItem => ({
 	key: 'latex-itemize',
-	label: 'Itemize List',
+	label: t('Itemize List'),
 	icon: renderToString(<ToolbarBulletListIcon />),
 	command: (view: EditorView) => {
 		const text = '\\begin{itemize}\n\t\\item \n\\end{itemize}';
@@ -108,7 +109,7 @@ export const createItemize = (): ToolbarItem => ({
 
 export const createEnumerate = (): ToolbarItem => ({
 	key: 'latex-enumerate',
-	label: 'Enumerate List',
+	label: t('Enumerate List'),
 	icon: renderToString(<ToolbarNumberListIcon />),
 	command: (view: EditorView) => {
 		const text = '\\begin{enumerate}\n\t\\item \n\\end{enumerate}';
@@ -118,14 +119,14 @@ export const createEnumerate = (): ToolbarItem => ({
 
 export const createInlineMath = (): ToolbarItem => ({
 	key: 'latex-inline-math',
-	label: 'Inline Math',
+	label: t('Inline Math'),
 	icon: renderToString(<ToolbarMathInlineIcon />),
 	command: (view: EditorView) => wrapSelection(view, '$', '$'),
 });
 
 export const createDisplayMath = (): ToolbarItem => ({
 	key: 'latex-display-math',
-	label: 'Display Math',
+	label: t('Display Math'),
 	icon: renderToString(<ToolbarMathBlockIcon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
@@ -137,7 +138,7 @@ export const createDisplayMath = (): ToolbarItem => ({
 
 export const createEquation = (): ToolbarItem => ({
 	key: 'latex-equation',
-	label: 'Equation',
+	label: t('Equation'),
 	icon: renderToString(<ToolbarEquationIcon />),
 	command: (view: EditorView) => {
 		const text = '\\begin{equation}\n\t\n\\end{equation}';
@@ -147,7 +148,7 @@ export const createEquation = (): ToolbarItem => ({
 
 export const createFigure = (): ToolbarItem => ({
 	key: 'latex-figure',
-	label: 'Figure',
+	label: t('Figure'),
 	icon: renderToString(<ToolbarImageIcon />),
 	command: (view: EditorView) => {
 		const text = '\\begin{figure}[h]\n\t\\centering\n\t\\includegraphics[width=0.8\\textwidth]{}\n\t\\caption{}\n\t\\label{fig:}\n\\end{figure}';
@@ -157,14 +158,14 @@ export const createFigure = (): ToolbarItem => ({
 
 export const createTable = (): ToolbarItem => ({
 	key: 'latex-table',
-	label: 'Table',
+	label: t('Table'),
 	icon: renderToString(<ToolbarTableIcon />),
 	command: createTableCommand('latex'),
 });
 
 export const createVerbatim = (): ToolbarItem => ({
 	key: 'latex-verbatim',
-	label: 'Verbatim',
+	label: t('Verbatim'),
 	icon: renderToString(<ToolbarCodeInlineIcon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
@@ -176,7 +177,7 @@ export const createVerbatim = (): ToolbarItem => ({
 
 export const createLstlisting = (): ToolbarItem => ({
 	key: 'latex-lstlisting',
-	label: 'Code Listing',
+	label: t('Code Listing'),
 	icon: renderToString(<ToolbarCodeBlockIcon />),
 	command: (view: EditorView) => {
 		const text = '\\begin{lstlisting}\n\t\n\\end{lstlisting}';

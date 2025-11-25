@@ -1,4 +1,5 @@
 // src/extensions/codemirror/toolbar/typstItems.tsx
+import { t } from '@/i18n';
 import type { EditorView } from '@codemirror/view';
 import type { ToolbarItem } from 'codemirror-toolbar';
 import { renderToString } from 'react-dom/server';
@@ -31,49 +32,49 @@ import {
 
 export const createBold = (): ToolbarItem => ({
 	key: 'typst-bold',
-	label: 'Bold',
+	label: t('Bold'),
 	icon: renderToString(<ToolbarBoldIcon />),
 	command: (view: EditorView) => wrapSelection(view, '*', '*'),
 });
 
 export const createItalic = (): ToolbarItem => ({
 	key: 'typst-italic',
-	label: 'Italic',
+	label: t('Italic'),
 	icon: renderToString(<ToolbarItalicIcon />),
 	command: (view: EditorView) => wrapSelection(view, '_', '_'),
 });
 
 export const createStrike = (): ToolbarItem => ({
 	key: 'typst-strike',
-	label: 'Strikethrough',
+	label: t('Strikethrough'),
 	icon: renderToString(<ToolbarStrikeIcon />),
 	command: (view: EditorView) => wrapSelection(view, '#strike[', ']'),
 });
 
 export const createUnderline = (): ToolbarItem => ({
 	key: 'typst-underline',
-	label: 'Underline',
+	label: t('Underline'),
 	icon: renderToString(<ToolbarUnderlineIcon />),
 	command: (view: EditorView) => wrapSelection(view, '#underline[', ']'),
 });
 
 export const createEmph = (): ToolbarItem => ({
 	key: 'typst-emph',
-	label: 'Emphasize',
+	label: t('Emphasize'),
 	icon: renderToString(<ToolbarItalicIcon />),
 	command: (view: EditorView) => wrapSelection(view, '#emph[', ']'),
 });
 
 export const createMonospace = (): ToolbarItem => ({
 	key: 'typst-monospace',
-	label: 'Monospace',
+	label: t('Monospace'),
 	icon: renderToString(<ToolbarMonospaceIcon />),
 	command: (view: EditorView) => wrapSelection(view, '`', '`'),
 });
 
 export const createHeading1 = (): ToolbarItem => ({
 	key: 'typst-heading1',
-	label: 'Heading 1',
+	label: t('Heading 1'),
 	icon: renderToString(<ToolbarHeading1Icon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
@@ -85,7 +86,7 @@ export const createHeading1 = (): ToolbarItem => ({
 
 export const createHeading2 = (): ToolbarItem => ({
 	key: 'typst-heading2',
-	label: 'Heading 2',
+	label: t('Heading 2'),
 	icon: renderToString(<ToolbarHeading2Icon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
@@ -97,7 +98,7 @@ export const createHeading2 = (): ToolbarItem => ({
 
 export const createHeading3 = (): ToolbarItem => ({
 	key: 'typst-heading3',
-	label: 'Heading 3',
+	label: t('Heading 3'),
 	icon: renderToString(<ToolbarHeading3Icon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
@@ -109,7 +110,7 @@ export const createHeading3 = (): ToolbarItem => ({
 
 export const createHeading4 = (): ToolbarItem => ({
 	key: 'typst-heading4',
-	label: 'Heading 4',
+	label: t('Heading 4'),
 	icon: renderToString(<ToolbarHeading4Icon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
@@ -121,7 +122,7 @@ export const createHeading4 = (): ToolbarItem => ({
 
 export const createBulletList = (): ToolbarItem => ({
 	key: 'typst-bullet-list',
-	label: 'Bullet List',
+	label: t('Bullet List'),
 	icon: renderToString(<ToolbarBulletListIcon />),
 	command: (view: EditorView) => {
 		const text = '- ';
@@ -131,7 +132,7 @@ export const createBulletList = (): ToolbarItem => ({
 
 export const createNumberedList = (): ToolbarItem => ({
 	key: 'typst-numbered-list',
-	label: 'Numbered List',
+	label: t('Numbered List'),
 	icon: renderToString(<ToolbarNumberListIcon />),
 	command: (view: EditorView) => {
 		const text = '+ ';
@@ -141,7 +142,7 @@ export const createNumberedList = (): ToolbarItem => ({
 
 export const createTermList = (): ToolbarItem => ({
 	key: 'typst-term-list',
-	label: 'Term List',
+	label: t('Term List'),
 	icon: renderToString(<ToolbarTermListIcon />),
 	command: (view: EditorView) => {
 		const text = '/ Term: Definition';
@@ -151,14 +152,14 @@ export const createTermList = (): ToolbarItem => ({
 
 export const createInlineMath = (): ToolbarItem => ({
 	key: 'typst-inline-math',
-	label: 'Inline Math',
+	label: t('Inline Math'),
 	icon: renderToString(<ToolbarMathInlineIcon />),
 	command: (view: EditorView) => wrapSelection(view, '$', '$'),
 });
 
 export const createDisplayMath = (): ToolbarItem => ({
 	key: 'typst-display-math',
-	label: 'Display Math',
+	label: t('Display Math'),
 	icon: renderToString(<ToolbarMathBlockIcon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
@@ -170,7 +171,7 @@ export const createDisplayMath = (): ToolbarItem => ({
 
 export const createEquation = (): ToolbarItem => ({
 	key: 'typst-equation',
-	label: 'Equation',
+	label: t('Equation'),
 	icon: renderToString(<ToolbarEquationIcon />),
 	command: (view: EditorView) => {
 		const text = '#math.equation[\n\t\n]';
@@ -180,31 +181,31 @@ export const createEquation = (): ToolbarItem => ({
 
 export const createFigure = (): ToolbarItem => ({
 	key: 'typst-figure',
-	label: 'Figure',
+	label: t('Figure'),
 	icon: renderToString(<ToolbarImageIcon />),
 	command: (view: EditorView) => {
 		const text = '#figure(\n\timage(""),\n\tcaption: []\n)';
-		return insertText(view, text, -22);
+		return insertText(view, text, -18);
 	},
 });
 
 export const createTable = (): ToolbarItem => ({
 	key: 'typst-table',
-	label: 'Table',
+	label: t('Table'),
 	icon: renderToString(<ToolbarTableIcon />),
 	command: createTableCommand('typst'),
 });
 
 export const createInlineCode = (): ToolbarItem => ({
 	key: 'typst-inline-code',
-	label: 'Inline Code',
+	label: t('Inline Code'),
 	icon: renderToString(<ToolbarCodeInlineIcon />),
 	command: (view: EditorView) => wrapSelection(view, '`', '`'),
 });
 
 export const createCodeBlock = (): ToolbarItem => ({
 	key: 'typst-code-block',
-	label: 'Code Block',
+	label: t('Code Block'),
 	icon: renderToString(<ToolbarCodeBlockIcon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
@@ -216,7 +217,7 @@ export const createCodeBlock = (): ToolbarItem => ({
 
 export const createRawBlock = (): ToolbarItem => ({
 	key: 'typst-raw-block',
-	label: 'Raw Block',
+	label: t('Raw Block'),
 	icon: renderToString(<ToolbarCodeBlockIcon />),
 	command: (view: EditorView) => {
 		const text = '#raw(block: true, ```\n\n```)';
@@ -226,7 +227,7 @@ export const createRawBlock = (): ToolbarItem => ({
 
 export const createLink = (): ToolbarItem => ({
 	key: 'typst-link',
-	label: 'Link',
+	label: t('Link'),
 	icon: renderToString(<ToolbarHyperlinkIcon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
@@ -242,7 +243,7 @@ export const createLink = (): ToolbarItem => ({
 
 export const createQuote = (): ToolbarItem => ({
 	key: 'typst-quote',
-	label: 'Quote',
+	label: t('Quote'),
 	icon: renderToString(<ToolbarQuoteIcon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
