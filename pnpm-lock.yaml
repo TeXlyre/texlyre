@@ -98,6 +98,12 @@ importers:
       codemirror-lang-typst:
         specifier: ^0.4.0
         version: 0.4.0
+      codemirror-markdown-commands:
+        specifier: ^0.1.0
+        version: 0.1.0
+      codemirror-toolbar:
+        specifier: ^0.1.0
+        version: 0.1.0(codemirror-markdown-commands@0.1.0)
       file-saver:
         specifier: ^2.0.5
         version: 2.0.5
@@ -2172,6 +2178,17 @@ packages:
 
   codemirror-lang-typst@0.4.0:
     resolution: {integrity: sha512-jpHz5qQRC3LE48JH+C24qZJAEAhjqRzWA4MFodPaxriz7UwLVuTLCQ672rdDx9ziObBQ2BvHaRIm5/Upz4KoBQ==}
+
+  codemirror-markdown-commands@0.1.0:
+    resolution: {integrity: sha512-be/h9E0ZOezWvTSP14rZ2ZTtLYUadyL8hbziVn6p62pCCo0GTecrymo35wQzs+44ubigcKNnyo0giiOW9gIsKw==}
+
+  codemirror-toolbar@0.1.0:
+    resolution: {integrity: sha512-6rkeLrAw4kIgOhnT4YAitzAdxq36VsTJp5fUUxONu9UROlRcNpzAoUKaLGyKsdTXaKwE6CNaLYt/Geij4EkffA==}
+    peerDependencies:
+      codemirror-markdown-commands: ^0.1.0
+    peerDependenciesMeta:
+      codemirror-markdown-commands:
+        optional: true
 
   codemirror@6.0.2:
     resolution: {integrity: sha512-VhydHotNW5w1UGK0Qj96BwSk/Zqbp9WbnyK2W/eVMv4QyF41INRGpjUhFJY7/uDNuudSc33a/PKr4iDqRduvHw==}
@@ -6718,6 +6735,18 @@ snapshots:
       '@codemirror/view': 6.38.5
       '@lezer/common': 1.2.3
       '@lezer/highlight': 1.2.1
+
+  codemirror-markdown-commands@0.1.0:
+    dependencies:
+      '@codemirror/state': 6.5.2
+      '@codemirror/view': 6.38.5
+
+  codemirror-toolbar@0.1.0(codemirror-markdown-commands@0.1.0):
+    dependencies:
+      '@codemirror/state': 6.5.2
+      '@codemirror/view': 6.38.5
+    optionalDependencies:
+      codemirror-markdown-commands: 0.1.0
 
   codemirror@6.0.2:
     dependencies:

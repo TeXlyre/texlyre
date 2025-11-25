@@ -50,7 +50,8 @@
     "log-visualizer-height:global": 600,
     "log-visualizer-collapsed:global": false,
     "pdf-renderer-zoom:global": 1,
-    "pdf-renderer-scroll-view:global": false
+    "pdf-renderer-scroll-view:global": false,
+    "tool-bar-visible:global": true
   },
   "secrets": {}
 }

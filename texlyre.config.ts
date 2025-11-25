@@ -81,6 +81,7 @@ export interface UserDataProperties {
         logVisualizerCollapsed: boolean;
         pdfRendererZoom: number;
         pdfRendererScrollView: boolean;
+        toolBarVisible: boolean;
     };
 }
 
@@ -239,6 +240,7 @@ const config: TexlyreConfig = {
                     logVisualizerCollapsed: false,
                     pdfRendererZoom: 1,
                     pdfRendererScrollView: true,
+                    toolBarVisible: true,
                 },
             },
             secrets: {},

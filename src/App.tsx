@@ -32,7 +32,8 @@ import './styles/components/comments.css';
 import './styles/components/auth.css';
 import './styles/components/project.css';
 import './styles/components/share-project.css';
-import './styles/components/latex-typst-templates.css'
+import './styles/components/latex-typst-templates.css';
+import './styles/components/latex-typst-toolbar.css';
 import './styles/components/statistics.css'
 import './styles/components/formatter.css'
 import './styles/components/url-metadata.css'
@@ -44,9 +45,9 @@ import './styles/components/settings.css';
 import './styles/components/language.css';
 import './styles/components/offline.css';
 import './styles/components/typsetter.css';
-import './styles/components/splash-screen.css'
-import './styles/components/keyboard-shortcuts.css'
-import './styles/components/legal.css'
+import './styles/components/splash-screen.css';
+import './styles/components/keyboard-shortcuts.css';
+import './styles/components/legal.css';
 
 import i18next from 'i18next';
 import { useContext, useEffect, useState } from 'react';

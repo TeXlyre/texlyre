@@ -37,7 +37,8 @@ import {
   DownloadIcon,
   FileTextIcon,
   LinkIcon,
-  SaveIcon
+  SaveIcon,
+  ToolbarShowIcon
 } from
   '../common/Icons';
 import { PluginControlGroup, PluginHeader } from '../common/PluginHeader';
@@ -65,6 +66,8 @@ interface EditorComponentProps {
     fileId?: string;
     filePath?: string;
   };
+  toolbarVisible?: boolean;
+  onToolbarToggle?: (visible: boolean) => void;
 }
 
 const EditorContent: React.FC<{
@@ -93,6 +96,8 @@ const EditorContent: React.FC<{
   shouldShowLatexOutput?: boolean;
   onSaveDocument?: () => void;
   onSelectDocument?: (docId: string) => void;
+  toolbarVisible?: boolean;
+  onToolbarToggle?: (visible: boolean) => void;
 }> = ({
   editorRef,
   textContent,
@@ -114,7 +119,9 @@ const EditorContent: React.FC<{
   documents,
   shouldShowLatexOutput,
   onSaveDocument,
-  onSelectDocument
+  onSelectDocument,
+  toolbarVisible = true,
+  onToolbarToggle,
 }) => {
     const [showUnlinkedNotice, setShowUnlinkedNotice] = useState(false);
     const { parseComments, getCommentAtPosition, addComment, updateComments } =
@@ -135,7 +142,8 @@ const EditorContent: React.FC<{
       isViewOnly,
       fileName,
       fileId,
-      true
+      true,
+      toolbarVisible
     );
 
     useEffect(() => {
@@ -363,6 +371,13 @@ const EditorContent: React.FC<{
         <>
           {(fileName.endsWith('.tex') || fileName.endsWith('.typ') || fileName.endsWith('.typst')) && !isViewOnly &&
             <PluginControlGroup>
+              <button
+                onClick={() => onToolbarToggle?.(!toolbarVisible)}
+                title={toolbarVisible ? t('Hide Toolbar') : t('Show Toolbar')}
+                className={`control-button ${toolbarVisible ? 'active' : ''}`}>
+                <ToolbarShowIcon />
+              </button>
+
               <ContentFormatterButton
                 getCurrentContent={() => viewRef.current?.state.doc.toString() || ''}
                 contentType={fileName.endsWith('.tex') ? 'latex' : 'typst'}
@@ -421,6 +436,13 @@ const EditorContent: React.FC<{
           <>
             {(linkedFileInfo.fileName?.endsWith('.tex') || linkedFileInfo.fileName?.endsWith('.typ') || linkedFileInfo.fileName?.endsWith('.typst')) && !isViewOnly &&
               <PluginControlGroup>
+                <button
+                  onClick={() => onToolbarToggle?.(!toolbarVisible)}
+                  title={toolbarVisible ? t('Hide Toolbar') : t('Show Toolbar')}
+                  className={`control-button ${toolbarVisible ? 'active' : ''}`}>
+                  <ToolbarShowIcon />
+                </button>
+
                 <ContentFormatterButton
                   getCurrentContent={() => viewRef.current?.state.doc.toString() || ''}
                   contentType={linkedFileInfo.fileName.endsWith('.tex') ? 'latex' : 'typst'}
@@ -655,7 +677,9 @@ const Editor: React.FC<EditorComponentProps> = ({
   onSwitchToDocuments,
   linkedDocumentId,
   documents,
-  linkedFileInfo
+  linkedFileInfo,
+  toolbarVisible = true,
+  onToolbarToggle,
 }) => {
   const [textContent, setTextContent] = useState<string>('');
   const [filePath, setFilePath] = useState<string>('');
@@ -920,7 +944,7 @@ const Editor: React.FC<EditorComponentProps> = ({
             i18nKey="Linking files allows you to view the cursor positions and text changes by your collaborators in real-time. To link a text file to a document, select or hover over the file and click the <icon /> <strong>Link</strong> button that appears next to it."
             components={{
               strong: <strong />,
-              icon: <LinkIcon />
+              icon: <> <LinkIcon /> {' '}</>
             }}
           />
         </p>
@@ -969,7 +993,9 @@ const Editor: React.FC<EditorComponentProps> = ({
               onNavigateToLinkedFile={handleNavigateToLinkedFile}
               documents={documents}
               shouldShowLatexOutput={shouldShowLatexOutput}
-              onSelectDocument={onSelectDocument} />
+              onSelectDocument={onSelectDocument}
+              toolbarVisible={toolbarVisible && !isViewOnly}
+              onToolbarToggle={onToolbarToggle} />
 
           </div>
           <CommentModal

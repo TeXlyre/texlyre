@@ -557,9 +557,10 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
                       i18nKey="Not saved automatically. Click the <icon /> <strong>Save</strong> button or <strong>Ctrl+S</strong>"
                       components={{
                         strong: <strong />,
-                        icon: <SaveIcon />
+                        icon: <> <SaveIcon /> {' '} </>
                       }}
-                    />                  </div>
+                    />
+                  </div>
                 }
                 {isProcessing &&
                   <span className="processing-indicator">{t('(Processing...)')}</span>

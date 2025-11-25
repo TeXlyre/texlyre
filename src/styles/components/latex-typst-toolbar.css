@@ -1,0 +1,131 @@
+.codemirror-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    align-content: flex-start;
+    gap: 2px;
+    padding: var(--space-xs);
+    background-color: var(--pico-background) !important;
+    border-bottom: 1px solid var(--accent-border);
+    position: relative;
+    flex-shrink: 0;
+}
+
+.codemirror-toolbar::after {
+    content: '';
+    display: table;
+    clear: both;
+}
+
+.ͼ1 .codemirror-toolbar__item {
+    height: 32px !important;
+    padding-top: var(--space-xs);
+    padding-bottom: auto;
+}
+
+.ͼ1 .codemirror-toolbar__item:hover {
+    color: var(--pico-primary);
+    /* background-color: var(--pico-primary-inverse); */
+}
+
+.codemirror-toolbar-space {
+    flex: 1;
+}
+
+.cm-table-grid-container {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--pico-background);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm);
+    box-shadow: var(--shadow-md);
+    z-index: var(--z-dropdown);
+}
+
+.cm-table-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 16px);
+    grid-template-rows: repeat(8, 16px);
+    gap: 2px;
+}
+
+.cm-table-grid-cell {
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--accent-border);
+    background-color: var(--pico-secondary-background);
+    cursor: pointer;
+    transition: background-color var(--transition-normal), border-color var(--transition-normal);
+    border-radius: 2px;
+}
+
+.cm-table-grid-cell:hover,
+.cm-table-grid-cell.highlighted {
+    background-color: var(--pico-primary);
+    border-color: var(--pico-primary);
+}
+
+.cm-table-grid-label {
+    margin-top: var(--space-xs);
+    font-size: 0.75rem;
+    color: var(--pico-secondary);
+}
+
+
+@media (max-width: 768px) {
+    .codemirror-toolbar {
+        padding: var(--space-xs);
+        gap: 1px;
+    }
+
+    .codemirror-toolbar-button {
+        min-width: 24px;
+        height: 24px;
+        padding: 2px;
+        font-size: 0.75rem;
+    }
+
+    .codemirror-toolbar-button svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .codemirror-toolbar-split {
+        height: 16px;
+        margin: 0 2px;
+    }
+}
+
+.codemirror-toolbar [data-item="undo"],
+.codemirror-toolbar [data-item="redo"],
+.codemirror-toolbar [data-item="fullScreen"] {
+    /* background-color: var(--pico-primary); */
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--pico-primary);
+    color: var(--pico-primary);
+}
+
+.codemirror-toolbar [data-item="undo"]:hover,
+.codemirror-toolbar [data-item="redo"]:hover,
+.codemirror-toolbar [data-item="fullScreen"]:hover {
+    background-color: var(--pico-primary);
+    color: var(--pico-primary-inverse);
+}
+
+.codemirror-toolbar [data-item="typst-row-add-before"],
+.codemirror-toolbar [data-item="latex-row-add-before"],
+.codemirror-toolbar [data-item="typst-col-add-before"],
+.codemirror-toolbar [data-item="latex-col-add-before"],
+.codemirror-toolbar [data-item="typst-row-add-after"],
+.codemirror-toolbar [data-item="latex-row-add-after"],
+.codemirror-toolbar [data-item="typst-col-add-after"],
+.codemirror-toolbar [data-item="latex-col-add-after"],
+.codemirror-toolbar [data-item="typst-row-remove"],
+.codemirror-toolbar [data-item="latex-row-remove"],
+.codemirror-toolbar [data-item="typst-col-remove"],
+.codemirror-toolbar [data-item="latex-col-remove"] {
+    color: var(--pico-primary);
+}

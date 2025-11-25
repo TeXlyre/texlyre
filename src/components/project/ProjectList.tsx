@@ -227,7 +227,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
 									i18nKey="To create a new project, click the '+' <strong>New Project</strong> button or <icon /> <strong>Import</strong> an existing one."
 									components={{
 										strong: <strong />,
-										icon: <ImportIcon />
+										icon: <> <ImportIcon /> {' '} </>
 									}}
 								/>
 							</p>

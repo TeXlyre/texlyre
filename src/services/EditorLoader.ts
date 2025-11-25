@@ -39,6 +39,7 @@ import { commentSystemExtension } from '../extensions/codemirror/CommentExtensio
 import { searchHighlightExtension, setSearchHighlights, clearSearchHighlights } from '../extensions/codemirror/SearchHighlightExtension';
 import { createFilePathAutocompleteExtension, setCurrentFilePath, refreshBibliographyCache } from '../extensions/codemirror/PathAndBibAutocompleteExtension.ts';
 import { createLSPExtension, updateLSPPluginsInView, setCurrentFilePathInLSP } from '../extensions/codemirror/LSPExtension';
+import { createToolbarExtension } from '../extensions/codemirror/ToolbarExtension';
 import { useAuth } from '../hooks/useAuth';
 import { useEditor } from '../hooks/useEditor';
 import { autoSaveManager } from '../utils/autoSaveUtils';
@@ -62,6 +63,7 @@ export const EditorLoader = (
 	fileName?: string,
 	currentFileId?: string,
 	enableComments = false,
+	toolbarVisible = true,
 ) => {
 	const {
 		getAutoSaveEnabled,
@@ -447,6 +449,15 @@ export const EditorLoader = (
 				const [stateExtensions, filePathPlugin, enhancedCompletionSource] = createFilePathAutocompleteExtension(currentFilePath);
 				extensions.push(stateExtensions, filePathPlugin);
 
+				// Add toolbar extension
+				if (toolbarVisible) {
+					if (isLatexFile) {
+						extensions.push(createToolbarExtension('latex'));
+					} else if (isTypstFile) {
+						extensions.push(createToolbarExtension('typst'));
+					}
+				}
+
 				// Add both enhanced completion and language-specific completion
 				completionSources.push(enhancedCompletionSource);
 
@@ -635,6 +646,7 @@ export const EditorLoader = (
 		editorSettingsVersion,
 		getEnabledLSPPlugins,
 		enableComments,
+		toolbarVisible,
 	]);
 
 	// Event listener for bibliography cache updates
