@@ -1,5 +1,5 @@
 // *** WARNING: THESE VALUES ARE CHANGED AUTOMATICALLY ON BUILD **
-const CACHE_NAME = `texlyre-v0.4.3`; //`texlyre-v${process.env.npm_package_version || '1'}`;
+const CACHE_NAME = `texlyre-v0.4.4`; //`texlyre-v${process.env.npm_package_version || '1'}`;
 const BASE_PATH = '/texlyre/';
 // *** END AUTOMATIC CHANGE ***
 
