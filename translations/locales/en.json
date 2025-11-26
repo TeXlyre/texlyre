@@ -1599,5 +1599,22 @@
   "ZIP file URL": "ZIP file URL",
   "Zoom In": "Zoom In",
   "Zoom Level": "Zoom Level",
-  "Zoom Out": "Zoom Out"
+  "Zoom Out": "Zoom Out",
+  "Select size": "Select size",
+  "Edit Color": "Edit Color",
+  "Remove Color": "Remove Color",
+  "Add Row Before": "Add Row Before",
+  "Add Row After": "Add Row After",
+  "Remove Row": "Remove Row",
+  "Add Column Before": "Add Column Before",
+  "Add Column After": "Add Column After",
+  "Remove Column": "Remove Column",
+  "Superscript": "Superscript",
+  "Subscript": "Subscript",
+  "Footnote": "Footnote",
+  "Reference": "Reference",
+  "Hyperlink": "Hyperlink",
+  "Label": "Label",
+  "Text Color": "Text Color",
+  "Highlight": "Highlight"
 }

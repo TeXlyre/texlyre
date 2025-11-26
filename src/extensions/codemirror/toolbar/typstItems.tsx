@@ -31,6 +31,7 @@ import {
 	ToolbarSubscriptIcon,
 	ToolbarFootnoteIcon,
 	ToolbarReferenceIcon,
+	ToolbarCitationIcon,
 	ToolbarLabelIcon,
 	ToolbarColorIcon,
 	ToolbarHyperlinkIcon,
@@ -243,7 +244,7 @@ export const createLink = (): ToolbarItem => ({
 		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
 		if (selectedText) {
 			const text = `#link("")[${selectedText}]`;
-			return insertText(view, text, -(selectedText.length + 3));
+			return insertText(view, text, -(selectedText.length + 4));
 		}
 		const text = '#link("")[]';
 		return insertText(view, text, -4);
@@ -302,7 +303,7 @@ export const createReference = (): ToolbarItem => ({
 export const createCitation = (): ToolbarItem => ({
 	key: 'typst-citation',
 	label: t('Citation'),
-	icon: renderToString(<ToolbarReferenceIcon />),
+	icon: renderToString(<ToolbarCitationIcon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
 		const selectedText = view.state.doc.sliceString(selection.from, selection.to);

@@ -1,3 +1,5 @@
+// src/extensions/codemirror/toolbar/tableScopeItems.tsx
+import { t } from '@/i18n';
 import type { EditorView } from '@codemirror/view';
 import type { ToolbarItem } from 'codemirror-toolbar';
 import { renderToString } from 'react-dom/server';
@@ -404,42 +406,42 @@ function createTableCommand(
 
 export const createRowAddBefore = (fileType: TableType): ToolbarItem => ({
     key: `${fileType}-row-add-before`,
-    label: 'Add Row Before',
+    label: t('Add Row Before'),
     icon: renderToString(<ToolbarRowAddBeforeIcon />),
     command: createTableCommand(fileType, 'addRowBefore'),
 });
 
 export const createRowAddAfter = (fileType: TableType): ToolbarItem => ({
     key: `${fileType}-row-add-after`,
-    label: 'Add Row After',
+    label: t('Add Row After'),
     icon: renderToString(<ToolbarRowAddAfterIcon />),
     command: createTableCommand(fileType, 'addRowAfter'),
 });
 
 export const createRowRemove = (fileType: TableType): ToolbarItem => ({
     key: `${fileType}-row-remove`,
-    label: 'Remove Row',
+    label: t('Remove Row'),
     icon: renderToString(<ToolbarRowRemoveIcon />),
     command: createTableCommand(fileType, 'removeRow'),
 });
 
 export const createColAddBefore = (fileType: TableType): ToolbarItem => ({
     key: `${fileType}-col-add-before`,
-    label: 'Add Column Before',
+    label: t('Add Column Before'),
     icon: renderToString(<ToolbarColAddBeforeIcon />),
     command: createTableCommand(fileType, 'addColBefore'),
 });
 
 export const createColAddAfter = (fileType: TableType): ToolbarItem => ({
     key: `${fileType}-col-add-after`,
-    label: 'Add Column After',
+    label: t('Add Column After'),
     icon: renderToString(<ToolbarColAddAfterIcon />),
     command: createTableCommand(fileType, 'addColAfter'),
 });
 
 export const createColRemove = (fileType: TableType): ToolbarItem => ({
     key: `${fileType}-col-remove`,
-    label: 'Remove Column',
+    label: t('Remove Column'),
     icon: renderToString(<ToolbarColRemoveIcon />),
     command: createTableCommand(fileType, 'removeCol'),
 });

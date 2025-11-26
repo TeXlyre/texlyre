@@ -1,3 +1,4 @@
+// src/extensions/codemirror/toolbar/colorScope.ts
 import type { EditorView } from '@codemirror/view';
 
 export type ColorType = 'text' | 'highlight';

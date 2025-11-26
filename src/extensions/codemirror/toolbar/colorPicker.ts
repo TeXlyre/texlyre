@@ -1,3 +1,4 @@
+// src/extensions/codemirror/toolbar/colorPicker.ts
 import type { EditorView } from '@codemirror/view';
 
 export interface ColorPickerOptions {

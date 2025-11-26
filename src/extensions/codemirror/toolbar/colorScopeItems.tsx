@@ -1,4 +1,5 @@
 
+// src/extensions/codemirror/toolbar/colorScopeItems.tsx
 import { t } from '@/i18n';
 import type { EditorView } from '@codemirror/view';
 import type { ToolbarItem } from 'codemirror-toolbar';
