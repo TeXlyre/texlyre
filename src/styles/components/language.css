@@ -73,6 +73,12 @@
 .settings-language .searchable-language-dropdown .dropdown-arrow {
     color: var(--pico-secondary);
     margin-left: var(--space-sm);
+    margin-right: var(--space-xs);
+}
+
+.settings-language .searchable-language-dropdown .dropdown-arrow svg {
+    height: var(--space-lg);
+    width: var(--space-md);
 }
 
 .settings-language .searchable-language-dropdown .dropdown-menu {

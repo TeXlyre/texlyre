@@ -1615,5 +1615,7 @@
   "ZIP file URL": "ZIP-Datei-URL",
   "Zoom In": "Vergrößern",
   "Zoom Level": "Zoomstufe",
-  "Zoom Out": "Verkleinern"
+  "Zoom Out": "Verkleinern",
+  "Copied!": "Kopiert!",
+  "Failed to copy": "Kopieren fehlgeschlagen"
 }

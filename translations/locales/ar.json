@@ -1723,5 +1723,7 @@
   "ZIP file URL": "عنوان URL لملف ZIP",
   "Zoom In": "تكبير",
   "Zoom Level": "مستوى التكبير",
-  "Zoom Out": "تصغير"
+  "Zoom Out": "تصغير",
+  "Copied!": "تم النسخ!",
+  "Failed to copy": "فشل النسخ"
 }
