@@ -290,11 +290,22 @@ export const createTextColor = (): ToolbarItem => ({
 	key: 'latex-textcolor',
 	label: t('Text Color'),
 	icon: renderToString(<ToolbarColorIcon />),
-	command: (view: EditorView): boolean => {
+	command: createColorCommand('latex', 'text'),
+});
+
+export const createHighlight = (): ToolbarItem => ({
+	key: 'latex-highlight',
+	label: t('Highlight'),
+	icon: renderToString(<ToolbarColorIcon />),
+	command: createColorCommand('latex', 'highlight'),
+});
+
+function createColorCommand(fileType: 'latex', type: 'text' | 'highlight') {
+	return (view: EditorView): boolean => {
 		const toolbar = view.dom.querySelector('.codemirror-toolbar');
 		if (!toolbar) return false;
 
-		const button = toolbar.querySelector('[data-item="latex-textcolor"]') as HTMLElement;
+		const button = toolbar.querySelector(`[data-item="${fileType}-${type === 'text' ? 'textcolor' : 'highlight'}"]`) as HTMLElement;
 		if (!button) return false;
 
 		let picker = colorPickers.get(view);
@@ -310,7 +321,9 @@ export const createTextColor = (): ToolbarItem => ({
 				onSelect: (v, color) => {
 					const selection = v.state.selection.main;
 					const selectedText = v.state.doc.sliceString(selection.from, selection.to);
-					const text = `\\textcolor[HTML]{${color.substring(1)}}{${selectedText}}`;
+					const text = type === 'text'
+						? `\\textcolor[HTML]{${color.substring(1)}}{${selectedText}}`
+						: `\\colorbox{${color}}{${selectedText}}`;
 					insertText(v, text, selectedText ? -(selectedText.length + 1) : -1);
 				},
 			});
@@ -319,5 +332,5 @@ export const createTextColor = (): ToolbarItem => ({
 
 		picker.toggle();
 		return true;
-	},
-});
+	};
+}

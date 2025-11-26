@@ -335,11 +335,22 @@ export const createTextColor = (): ToolbarItem => ({
 	key: 'typst-textcolor',
 	label: t('Text Color'),
 	icon: renderToString(<ToolbarColorIcon />),
-	command: (view: EditorView): boolean => {
+	command: createColorCommand('typst', 'text'),
+});
+
+export const createHighlight = (): ToolbarItem => ({
+	key: 'typst-highlight',
+	label: t('Highlight'),
+	icon: renderToString(<ToolbarColorIcon />),
+	command: createColorCommand('typst', 'highlight'),
+});
+
+function createColorCommand(fileType: 'typst', type: 'text' | 'highlight') {
+	return (view: EditorView): boolean => {
 		const toolbar = view.dom.querySelector('.codemirror-toolbar');
 		if (!toolbar) return false;
 
-		const button = toolbar.querySelector('[data-item="typst-textcolor"]') as HTMLElement;
+		const button = toolbar.querySelector(`[data-item="${fileType}-${type === 'text' ? 'textcolor' : 'highlight'}"]`) as HTMLElement;
 		if (!button) return false;
 
 		let picker = colorPickers.get(view);
@@ -355,7 +366,8 @@ export const createTextColor = (): ToolbarItem => ({
 				onSelect: (v, color) => {
 					const selection = v.state.selection.main;
 					const selectedText = v.state.doc.sliceString(selection.from, selection.to);
-					const text = `#text(fill: rgb("${color}"))[${selectedText}]`;
+					const func = type === 'text' ? 'text' : 'highlight';
+					const text = `#${func}(fill: rgb("${color}"))[${selectedText}]`;
 					insertText(v, text, selectedText ? -(selectedText.length + 1) : -1);
 				},
 			});
@@ -364,5 +376,5 @@ export const createTextColor = (): ToolbarItem => ({
 
 		picker.toggle();
 		return true;
-	},
-});
+	};
+}

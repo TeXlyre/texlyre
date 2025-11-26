@@ -23,6 +23,10 @@
     padding-bottom: auto;
 }
 
+.ͼ1 .codemirror-toolbar__item svg {
+    height: 16px;
+}
+
 .ͼ1 .codemirror-toolbar__item:hover {
     color: var(--pico-primary);
     /* background-color: var(--pico-primary-inverse); */
@@ -186,4 +190,21 @@
 .codemirror-toolbar [data-item="typst-col-remove"],
 .codemirror-toolbar [data-item="latex-col-remove"] {
     color: var(--pico-primary);
+}
+
+.codemirror-toolbar [data-item="typst-color-edit"],
+.codemirror-toolbar [data-item="latex-color-edit"],
+.codemirror-toolbar [data-item="typst-color-remove"],
+.codemirror-toolbar [data-item="latex-color-remove"] {
+    color: var(--pico-primary);
+}
+
+.codemirror-toolbar [data-item="typst-highlight"],
+.codemirror-toolbar [data-item="latex-highlight"] {
+    background-color: rgba(255, 255, 0, 0.3);
+}
+
+.codemirror-toolbar [data-item="typst-highlight"]:hover,
+.codemirror-toolbar [data-item="latex-highlight"]:hover {
+    background-color: rgba(255, 255, 0, 0.5);
 }

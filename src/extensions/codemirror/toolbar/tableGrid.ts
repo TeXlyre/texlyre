@@ -1,4 +1,5 @@
 // src/extensions/codemirror/toolbar/tableGrid.ts
+import { t } from '@/i18n';
 import type { EditorView } from '@codemirror/view';
 
 export interface TableGridOptions {
@@ -59,7 +60,7 @@ export class TableGridSelector {
     private createLabel(): HTMLDivElement {
         const label = document.createElement('div');
         label.className = 'cm-table-grid-label';
-        label.textContent = 'Select size';
+        label.textContent = t('Select size');
         return label;
     }
 
