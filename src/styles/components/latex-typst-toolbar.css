@@ -76,8 +76,8 @@
 
 .cm-color-picker-container {
     position: absolute;
-    background: var(--background-secondary);
-    border: 1px solid var(--border-color);
+    background-color: var(--pico-background);
+    border: 1px solid var(--accent-border);
     border-radius: 4px;
     padding: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
@@ -113,6 +113,7 @@
     height: 32px;
     border: 1px solid var(--border-color);
     border-radius: 3px;
+    background-color: var(--pico-secondary);
     cursor: pointer;
     padding: 2px;
 }
