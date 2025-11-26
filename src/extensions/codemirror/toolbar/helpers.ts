@@ -1,3 +1,4 @@
+// src/extensions/codemirror/toolbar/helpers.ts
 import type { EditorView } from '@codemirror/view';
 
 export const wrapSelection = (view: EditorView, before: string, after: string): boolean => {

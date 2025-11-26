@@ -8,6 +8,8 @@ import * as LaTeXItems from './toolbar/latexItems';
 import * as TypstItems from './toolbar/typstItems';
 import * as TableScopeItems from './toolbar/tableScopeItems';
 import { detectTableScope } from './toolbar/tableScope';
+import * as ColorScopeItems from './toolbar/colorScopeItems';
+import { detectColorScope } from './toolbar/colorScope';
 
 const split: ToolbarSplit = { type: 'split' };
 const space: ToolbarSpace = { type: 'space' };
@@ -27,6 +29,12 @@ const getTableScopeItems = (fileType: FileType): ToolbarEntry[] => [
 	TableScopeItems.createColRemove(fileType),
 ];
 
+const getColorScopeItems = (fileType: FileType): ToolbarEntry[] => [
+	split,
+	ColorScopeItems.createColorEdit(fileType),
+	ColorScopeItems.createColorRemove(fileType),
+];
+
 const getCommonEndItems = (isFullScreen: boolean): ToolbarEntry[] => [
 	space,
 	CodeMirrorItems.createUndo(),
@@ -35,8 +43,9 @@ const getCommonEndItems = (isFullScreen: boolean): ToolbarEntry[] => [
 	CodeMirrorItems.createFullScreen(isFullScreen),
 ];
 
-const getItems = (fileType: FileType, isFullScreen: boolean, inTable: boolean): ToolbarEntry[] => {
+const getItems = (fileType: FileType, isFullScreen: boolean, inTable: boolean, inColor: boolean): ToolbarEntry[] => {
 	const tableItems = inTable ? getTableScopeItems(fileType) : [];
+	const colorItems = inColor ? getColorScopeItems(fileType) : [];
 	const endItems = getCommonEndItems(isFullScreen);
 
 	if (fileType === 'latex') {
@@ -44,8 +53,12 @@ const getItems = (fileType: FileType, isFullScreen: boolean, inTable: boolean): 
 			LaTeXItems.createBold(),
 			LaTeXItems.createItalic(),
 			LaTeXItems.createUnderline(),
+			LaTeXItems.createStrikethrough(),
 			LaTeXItems.createEmph(),
 			LaTeXItems.createTypewriter(),
+			split,
+			LaTeXItems.createSuperscript(),
+			LaTeXItems.createSubscript(),
 			split,
 			LaTeXItems.createSection(),
 			LaTeXItems.createSubsection(),
@@ -53,17 +66,30 @@ const getItems = (fileType: FileType, isFullScreen: boolean, inTable: boolean): 
 			split,
 			LaTeXItems.createItemize(),
 			LaTeXItems.createEnumerate(),
+			LaTeXItems.createDescription(),
 			split,
 			LaTeXItems.createInlineMath(),
 			LaTeXItems.createDisplayMath(),
 			LaTeXItems.createEquation(),
 			split,
+			LaTeXItems.createVerbatim(),
+			LaTeXItems.createLstlisting(),
+			split,
+			LaTeXItems.createHyperlink(),
+			LaTeXItems.createQuote(),
+			split,
+			LaTeXItems.createCitation(),
+			LaTeXItems.createReference(),
+			LaTeXItems.createLabel(),
+			LaTeXItems.createFootnote(),
+			split,
 			LaTeXItems.createFigure(),
 			LaTeXItems.createTable(),
 			split,
-			LaTeXItems.createVerbatim(),
-			LaTeXItems.createLstlisting(),
+			LaTeXItems.createTextColor(),
+			LaTeXItems.createHighlight(),
 			...tableItems,
+			...colorItems,
 			...endItems,
 		];
 	}
@@ -74,6 +100,9 @@ const getItems = (fileType: FileType, isFullScreen: boolean, inTable: boolean): 
 		TypstItems.createUnderline(),
 		TypstItems.createStrike(),
 		TypstItems.createMonospace(),
+		split,
+		TypstItems.createSuperscript(),
+		TypstItems.createSubscript(),
 		split,
 		TypstItems.createHeading1(),
 		TypstItems.createHeading2(),
@@ -88,15 +117,24 @@ const getItems = (fileType: FileType, isFullScreen: boolean, inTable: boolean): 
 		TypstItems.createDisplayMath(),
 		TypstItems.createEquation(),
 		split,
-		TypstItems.createFigure(),
-		TypstItems.createTable(),
-		split,
 		TypstItems.createInlineCode(),
 		TypstItems.createCodeBlock(),
 		split,
 		TypstItems.createLink(),
 		TypstItems.createQuote(),
+		split,
+		TypstItems.createCitation(),
+		TypstItems.createReference(),
+		TypstItems.createLabel(),
+		TypstItems.createFootnote(),
+		split,
+		TypstItems.createFigure(),
+		TypstItems.createTable(),
+		split,
+		TypstItems.createTextColor(),
+		TypstItems.createHighlight(),
 		...tableItems,
+		...colorItems,
 		...endItems,
 	];
 };
@@ -105,6 +143,7 @@ function createToolbarPlugin(fileType: FileType, toolbarCompartment: Compartment
 	return ViewPlugin.fromClass(
 		class {
 			private inTable = false;
+			private inColor = false;
 			private isFullScreen = false;
 			private boundFullScreenHandler: () => void;
 
@@ -115,8 +154,11 @@ function createToolbarPlugin(fileType: FileType, toolbarCompartment: Compartment
 
 			update() {
 				const nowInTable = detectTableScope(this.view, fileType) !== null;
-				if (nowInTable !== this.inTable) {
+				const nowInColor = detectColorScope(this.view, fileType) !== null;
+
+				if (nowInTable !== this.inTable || nowInColor !== this.inColor) {
 					this.inTable = nowInTable;
+					this.inColor = nowInColor;
 					this.reconfigureToolbar();
 				}
 			}
@@ -130,7 +172,7 @@ function createToolbarPlugin(fileType: FileType, toolbarCompartment: Compartment
 			}
 
 			private reconfigureToolbar() {
-				const items = getItems(fileType, this.isFullScreen, this.inTable);
+				const items = getItems(fileType, this.isFullScreen, this.inTable, this.inColor);
 
 				requestAnimationFrame(() => {
 					this.view.dispatch({
@@ -150,7 +192,7 @@ export const createToolbarExtension = (fileType: FileType): Extension => {
 	const toolbarCompartment = new Compartment();
 
 	return [
-		toolbarCompartment.of(toolbar({ items: getItems(fileType, false, false) })),
+		toolbarCompartment.of(toolbar({ items: getItems(fileType, false, false, false) })),
 		createToolbarPlugin(fileType, toolbarCompartment),
 	];
 };

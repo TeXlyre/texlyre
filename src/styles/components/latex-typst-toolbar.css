@@ -23,6 +23,10 @@
     padding-bottom: auto;
 }
 
+.ͼ1 .codemirror-toolbar__item svg {
+    height: 16px;
+}
+
 .ͼ1 .codemirror-toolbar__item:hover {
     color: var(--pico-primary);
     /* background-color: var(--pico-primary-inverse); */
@@ -74,6 +78,64 @@
     color: var(--pico-secondary);
 }
 
+.cm-color-picker-container {
+    position: absolute;
+    background-color: var(--pico-background);
+    border: 1px solid var(--accent-border);
+    border-radius: 4px;
+    padding: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cm-color-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    padding: 4px;
+}
+
+.cm-color-picker-cell {
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+.cm-color-picker-cell:hover {
+    transform: scale(1.1);
+    border-color: var(--primary-color);
+}
+
+.cm-color-picker-custom {
+    width: 100%;
+    height: 32px;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    background-color: var(--pico-secondary);
+    cursor: pointer;
+    padding: 2px;
+}
+
+.cm-color-picker-custom::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.cm-color-picker-custom::-webkit-color-swatch {
+    border: none;
+    border-radius: 2px;
+}
+
+.cm-color-picker-custom::-moz-color-swatch {
+    border: none;
+    border-radius: 2px;
+}
+
 
 @media (max-width: 768px) {
     .codemirror-toolbar {
@@ -106,6 +168,7 @@
     border-radius: var(--radius-lg);
     border: 1px solid var(--pico-primary);
     color: var(--pico-primary);
+    padding-top: 0;
 }
 
 .codemirror-toolbar [data-item="undo"]:hover,
@@ -128,4 +191,21 @@
 .codemirror-toolbar [data-item="typst-col-remove"],
 .codemirror-toolbar [data-item="latex-col-remove"] {
     color: var(--pico-primary);
+}
+
+.codemirror-toolbar [data-item="typst-color-edit"],
+.codemirror-toolbar [data-item="latex-color-edit"],
+.codemirror-toolbar [data-item="typst-color-remove"],
+.codemirror-toolbar [data-item="latex-color-remove"] {
+    color: var(--pico-primary);
+}
+
+.codemirror-toolbar [data-item="typst-highlight"],
+.codemirror-toolbar [data-item="latex-highlight"] {
+    background-color: rgba(255, 255, 0, 0.3);
+}
+
+.codemirror-toolbar [data-item="typst-highlight"]:hover,
+.codemirror-toolbar [data-item="latex-highlight"]:hover {
+    background-color: rgba(255, 255, 0, 0.5);
 }

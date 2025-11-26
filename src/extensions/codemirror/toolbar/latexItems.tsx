@@ -6,6 +6,7 @@ import { renderToString } from 'react-dom/server';
 
 import { wrapSelection, insertText } from './helpers';
 import { createTableCommand } from './tableItems';
+import { ColorPicker } from './colorPicker';
 import {
 	ToolbarBoldIcon,
 	ToolbarItalicIcon,
@@ -24,7 +25,20 @@ import {
 	ToolbarTableIcon,
 	ToolbarCodeInlineIcon,
 	ToolbarCodeBlockIcon,
+	ToolbarSuperscriptIcon,
+	ToolbarSubscriptIcon,
+	ToolbarFootnoteIcon,
+	ToolbarReferenceIcon,
+	ToolbarCitationIcon,
+	ToolbarLabelIcon,
+	ToolbarColorIcon,
+	ToolbarDescriptionIcon,
+	ToolbarStrikeIcon,
+	ToolbarQuoteIcon,
+	ToolbarHyperlinkIcon
 } from '../../../components/common/Icons';
+
+const colorPickers = new WeakMap<EditorView, ColorPicker>();
 
 export const createBold = (): ToolbarItem => ({
 	key: 'latex-bold',
@@ -184,3 +198,139 @@ export const createLstlisting = (): ToolbarItem => ({
 		return insertText(view, text, -18);
 	},
 });
+
+export const createSuperscript = (): ToolbarItem => ({
+	key: 'latex-superscript',
+	label: t('Superscript'),
+	icon: renderToString(<ToolbarSuperscriptIcon />),
+	command: (view: EditorView) => wrapSelection(view, '\\textsuperscript{', '}'),
+});
+
+export const createSubscript = (): ToolbarItem => ({
+	key: 'latex-subscript',
+	label: t('Subscript'),
+	icon: renderToString(<ToolbarSubscriptIcon />),
+	command: (view: EditorView) => wrapSelection(view, '\\textsubscript{', '}'),
+});
+
+export const createStrikethrough = (): ToolbarItem => ({
+	key: 'latex-strikethrough',
+	label: t('Strikethrough'),
+	icon: renderToString(<ToolbarStrikeIcon />),
+	command: (view: EditorView) => wrapSelection(view, '\\sout{', '}'),
+});
+
+export const createQuote = (): ToolbarItem => ({
+	key: 'latex-quote',
+	label: t('Quote'),
+	icon: renderToString(<ToolbarQuoteIcon />),
+	command: (view: EditorView) => {
+		const selection = view.state.selection.main;
+		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		const text = `\\begin{quote}\n${selectedText}\n\\end{quote}`;
+		return insertText(view, text, selectedText ? -(selectedText.length + 11) : -11);
+	},
+});
+
+export const createHyperlink = (): ToolbarItem => ({
+	key: 'latex-hyperlink',
+	label: t('Hyperlink'),
+	icon: renderToString(<ToolbarHyperlinkIcon />),
+	command: (view: EditorView) => {
+		const selection = view.state.selection.main;
+		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		if (selectedText) {
+			const text = `\\href{}{${selectedText}}`;
+			return insertText(view, text, -(selectedText.length + 2));
+		}
+		const text = '\\href{}{}';
+		return insertText(view, text, -3);
+	},
+});
+
+export const createCitation = (): ToolbarItem => ({
+	key: 'latex-citation',
+	label: t('Citation'),
+	icon: renderToString(<ToolbarCitationIcon />),
+	command: (view: EditorView) => wrapSelection(view, '\\cite{', '}'),
+});
+
+export const createReference = (): ToolbarItem => ({
+	key: 'latex-reference',
+	label: t('Reference'),
+	icon: renderToString(<ToolbarReferenceIcon />),
+	command: (view: EditorView) => wrapSelection(view, '\\ref{', '}'),
+});
+
+export const createLabel = (): ToolbarItem => ({
+	key: 'latex-label',
+	label: t('Label'),
+	icon: renderToString(<ToolbarLabelIcon />),
+	command: (view: EditorView) => wrapSelection(view, '\\label{', '}'),
+});
+
+export const createFootnote = (): ToolbarItem => ({
+	key: 'latex-footnote',
+	label: t('Footnote'),
+	icon: renderToString(<ToolbarFootnoteIcon />),
+	command: (view: EditorView) => wrapSelection(view, '\\footnote{', '}'),
+});
+
+export const createDescription = (): ToolbarItem => ({
+	key: 'latex-description',
+	label: t('Description List'),
+	icon: renderToString(<ToolbarDescriptionIcon />),
+	command: (view: EditorView) => {
+		const text = '\\begin{description}\n\t\\item[Term] Description\n\\end{description}';
+		return insertText(view, text, -18);
+	},
+});
+
+export const createTextColor = (): ToolbarItem => ({
+	key: 'latex-textcolor',
+	label: t('Text Color'),
+	icon: renderToString(<ToolbarColorIcon />),
+	command: createColorCommand('latex', 'text'),
+});
+
+export const createHighlight = (): ToolbarItem => ({
+	key: 'latex-highlight',
+	label: t('Highlight'),
+	icon: renderToString(<ToolbarColorIcon />),
+	command: createColorCommand('latex', 'highlight'),
+});
+
+function createColorCommand(fileType: 'latex', type: 'text' | 'highlight') {
+	return (view: EditorView): boolean => {
+		const toolbar = view.dom.querySelector('.codemirror-toolbar');
+		if (!toolbar) return false;
+
+		const button = toolbar.querySelector(`[data-item="${fileType}-${type === 'text' ? 'textcolor' : 'highlight'}"]`) as HTMLElement;
+		if (!button) return false;
+
+		let picker = colorPickers.get(view);
+
+		if (picker && !document.body.contains(picker.container) && !toolbar.contains(picker.container)) {
+			picker.destroy();
+			colorPickers.delete(view);
+			picker = null;
+		}
+
+		if (!picker) {
+			picker = new ColorPicker(view, button, {
+				onSelect: (v, color) => {
+					const selection = v.state.selection.main;
+					const selectedText = v.state.doc.sliceString(selection.from, selection.to);
+					const text = type === 'text'
+						? `\\textcolor[HTML]{${color.substring(1)}}{${selectedText}}`
+						: `\\colorbox{${color}}{${selectedText}}`;
+					insertText(v, text, selectedText ? -(selectedText.length + 1) : -1);
+				},
+			});
+			colorPickers.set(view, picker);
+		}
+
+		picker.toggle();
+		return true;
+	};
+}

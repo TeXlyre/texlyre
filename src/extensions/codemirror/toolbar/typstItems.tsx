@@ -6,6 +6,7 @@ import { renderToString } from 'react-dom/server';
 
 import { wrapSelection, insertText } from './helpers';
 import { createTableCommand } from './tableItems';
+import { ColorPicker } from './colorPicker';
 import {
 	ToolbarBoldIcon,
 	ToolbarItalicIcon,
@@ -26,9 +27,18 @@ import {
 	ToolbarTableIcon,
 	ToolbarCodeInlineIcon,
 	ToolbarCodeBlockIcon,
+	ToolbarSuperscriptIcon,
+	ToolbarSubscriptIcon,
+	ToolbarFootnoteIcon,
+	ToolbarReferenceIcon,
+	ToolbarCitationIcon,
+	ToolbarLabelIcon,
+	ToolbarColorIcon,
 	ToolbarHyperlinkIcon,
 	ToolbarQuoteIcon,
 } from '../../../components/common/Icons';
+
+const colorPickers = new WeakMap<EditorView, ColorPicker>();
 
 export const createBold = (): ToolbarItem => ({
 	key: 'typst-bold',
@@ -234,7 +244,7 @@ export const createLink = (): ToolbarItem => ({
 		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
 		if (selectedText) {
 			const text = `#link("")[${selectedText}]`;
-			return insertText(view, text, -(selectedText.length + 3));
+			return insertText(view, text, -(selectedText.length + 4));
 		}
 		const text = '#link("")[]';
 		return insertText(view, text, -4);
@@ -252,3 +262,120 @@ export const createQuote = (): ToolbarItem => ({
 		return insertText(view, text, selectedText ? -(selectedText.length + 2) : -2);
 	},
 });
+
+export const createSuperscript = (): ToolbarItem => ({
+	key: 'typst-superscript',
+	label: t('Superscript'),
+	icon: renderToString(<ToolbarSuperscriptIcon />),
+	command: (view: EditorView) => wrapSelection(view, '#super[', ']'),
+});
+
+export const createSubscript = (): ToolbarItem => ({
+	key: 'typst-subscript',
+	label: t('Subscript'),
+	icon: renderToString(<ToolbarSubscriptIcon />),
+	command: (view: EditorView) => wrapSelection(view, '#sub[', ']'),
+});
+
+export const createFootnote = (): ToolbarItem => ({
+	key: 'typst-footnote',
+	label: t('Footnote'),
+	icon: renderToString(<ToolbarFootnoteIcon />),
+	command: (view: EditorView) => wrapSelection(view, '#footnote[', ']'),
+});
+
+export const createReference = (): ToolbarItem => ({
+	key: 'typst-reference',
+	label: t('Reference'),
+	icon: renderToString(<ToolbarReferenceIcon />),
+	command: (view: EditorView) => {
+		const selection = view.state.selection.main;
+		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		if (selectedText) {
+			const text = `@${selectedText}`;
+			return insertText(view, text, 0);
+		}
+		const text = '#ref()';
+		return insertText(view, text, -1);
+	},
+});
+
+export const createCitation = (): ToolbarItem => ({
+	key: 'typst-citation',
+	label: t('Citation'),
+	icon: renderToString(<ToolbarCitationIcon />),
+	command: (view: EditorView) => {
+		const selection = view.state.selection.main;
+		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		if (selectedText) {
+			const text = `@${selectedText}`;
+			return insertText(view, text, 0);
+		}
+		const text = '#cite(<>)';
+		return insertText(view, text, -2);
+	},
+});
+
+export const createLabel = (): ToolbarItem => ({
+	key: 'typst-label',
+	label: t('Label'),
+	icon: renderToString(<ToolbarLabelIcon />),
+	command: (view: EditorView) => {
+		const selection = view.state.selection.main;
+		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		if (selectedText) {
+			const text = `<${selectedText}>`;
+			return insertText(view, text, 0);
+		}
+		const text = '#label()';
+		return insertText(view, text, -1);
+	},
+});
+
+export const createTextColor = (): ToolbarItem => ({
+	key: 'typst-textcolor',
+	label: t('Text Color'),
+	icon: renderToString(<ToolbarColorIcon />),
+	command: createColorCommand('typst', 'text'),
+});
+
+export const createHighlight = (): ToolbarItem => ({
+	key: 'typst-highlight',
+	label: t('Highlight'),
+	icon: renderToString(<ToolbarColorIcon />),
+	command: createColorCommand('typst', 'highlight'),
+});
+
+function createColorCommand(fileType: 'typst', type: 'text' | 'highlight') {
+	return (view: EditorView): boolean => {
+		const toolbar = view.dom.querySelector('.codemirror-toolbar');
+		if (!toolbar) return false;
+
+		const button = toolbar.querySelector(`[data-item="${fileType}-${type === 'text' ? 'textcolor' : 'highlight'}"]`) as HTMLElement;
+		if (!button) return false;
+
+		let picker = colorPickers.get(view);
+
+		if (picker && !document.body.contains(picker.container) && !toolbar.contains(picker.container)) {
+			picker.destroy();
+			colorPickers.delete(view);
+			picker = null;
+		}
+
+		if (!picker) {
+			picker = new ColorPicker(view, button, {
+				onSelect: (v, color) => {
+					const selection = v.state.selection.main;
+					const selectedText = v.state.doc.sliceString(selection.from, selection.to);
+					const func = type === 'text' ? 'text' : 'highlight';
+					const text = `#${func}(fill: rgb("${color}"))[${selectedText}]`;
+					insertText(v, text, selectedText ? -(selectedText.length + 1) : -1);
+				},
+			});
+			colorPickers.set(view, picker);
+		}
+
+		picker.toggle();
+		return true;
+	};
+}

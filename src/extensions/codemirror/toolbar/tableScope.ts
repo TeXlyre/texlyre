@@ -1,3 +1,4 @@
+// src/extensions/codemirror/toolbar/tableScope.ts
 import type { EditorView } from '@codemirror/view';
 
 export type TableType = 'latex' | 'typst';
