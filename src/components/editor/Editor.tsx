@@ -85,7 +85,7 @@ const EditorContent: React.FC<{
   fileId?: string;
   filePath?: string;
   onSave?: () => void;
-  onExport?: () => void;
+  onExport?: (getCurrentContent?: () => string) => void;
   linkedFileInfo?: {
     fileName?: string;
     filePath?: string;
@@ -397,7 +397,10 @@ const EditorContent: React.FC<{
               </button>
             }
             <button
-              onClick={() => copyCleanTextToClipboard(textContent)}
+              onClick={() => {
+                const content = viewRef.current?.state.doc.toString() || textContent;
+                copyCleanTextToClipboard(content);
+              }}
               title={t('Copy text')}
               className="control-button">
 
@@ -405,7 +408,7 @@ const EditorContent: React.FC<{
             </button>
             {onExport &&
               <button
-                onClick={onExport}
+                onClick={() => onExport?.(() => viewRef.current?.state.doc.toString() || '')}
                 title={t('Download File')}
                 className="control-button">
 
@@ -503,7 +506,10 @@ const EditorContent: React.FC<{
             <>
               <PluginControlGroup>
                 <button
-                  onClick={() => copyCleanTextToClipboard(textContent)}
+                  onClick={() => {
+                    const content = viewRef.current?.state.doc.toString() || textContent;
+                    copyCleanTextToClipboard(content);
+                  }}
                   title={t('Copy text')}
                   className="control-button">
 
@@ -718,17 +724,6 @@ const Editor: React.FC<EditorComponentProps> = ({
     setPendingSelection(null);
   };
 
-  const handleShowCommentModal = (event: Event) => {
-    const customEvent = event as CustomEvent;
-    const { selection } = customEvent.detail;
-    if (selection && selection.from !== selection.to) {
-      setPendingSelection(selection);
-      setShowCommentModal(true);
-
-      document.dispatchEvent(new CustomEvent('hide-floating-comment-button'));
-    }
-  };
-
   const handleCommentModalClose = () => {
     setShowCommentModal(false);
     setPendingSelection(null);
@@ -808,11 +803,12 @@ const Editor: React.FC<EditorComponentProps> = ({
     }
   };
 
-  const handleExport = () => {
+  const handleExport = (getCurrentContent?: () => string) => {
     if (!fileName) return;
 
     try {
-      const cleanedText = processTextSelection(textContent);
+      const currentContent = getCurrentContent ? getCurrentContent() : textContent;
+      const cleanedText = processTextSelection(currentContent);
       const blob = new Blob([cleanedText], {
         type: 'text/plain;charset=utf-8'
       });
