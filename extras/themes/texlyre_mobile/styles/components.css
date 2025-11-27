@@ -15,11 +15,11 @@
 
 [data-layout="texlyre-mobile"] .codemirror-editor-container .cm-editor,
 [data-layout="texlyre-mobile"] .codemirror-editor-container .cm-scroller {
-	font-size: var(--mobile-font-md) !important;
+	font-size: var(--mobile-font-lg) !important;
 }
 
 [data-layout="texlyre-mobile"] .codemirror-editor-container .cm-scroller {
-	line-height: 1.6;
+	line-height: 1.7;
 }
 
 [data-layout="texlyre-mobile"] .codemirror-editor-container .cm-content {
@@ -81,6 +81,17 @@
 	min-height: 100px;
 }
 
+[data-theme-plugin="texlyre-mobile"] .ͼ1 .codemirror-toolbar__item {
+	min-height: var(--mobile-min-touch-target);
+	min-width: var(--mobile-min-touch-target);
+	padding-top: var(--space-xs);
+	padding-bottom: auto;
+}
+
+[data-theme-plugin="texlyre-mobile"] .ͼ1 .codemirror-toolbar__item svg {
+	width: var(--mobile-icon-size-md);
+	height: var(--mobile-icon-size-md);
+}
 
 [data-layout="texlyre-mobile"] .open-button-group .open-button {
 	border-top-right-radius: 0 !important;

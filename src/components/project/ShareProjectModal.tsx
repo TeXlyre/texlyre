@@ -40,6 +40,10 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
     }
   }, [isOpen, shareUrl]);
 
+  const handleSelectAll = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.select();
+  };
+
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
@@ -55,9 +59,9 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
   const getCopyButtonText = () => {
     switch (copyStatus) {
       case 'copied':
-        return 'Copied!';
+        return t('Copied!');
       case 'error':
-        return 'Failed to copy';
+        return t('Failed to copy');
       default:
         return '';
     }
@@ -96,7 +100,8 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
               type="text"
               value={shareUrl}
               readOnly
-              className="share-url-input" />
+              className="share-url-input"
+              onFocus={handleSelectAll} />
 
             <button
               onClick={handleCopyLink}
