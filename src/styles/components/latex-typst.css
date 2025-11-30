@@ -45,6 +45,13 @@
 	z-index: 10;
 }
 
+.latex-export-buttons,
+.typst-export-buttons {
+	display: flex;
+	gap: var(--space-xs);
+	position: relative;
+}
+
 .latex-output,
 .typst-output {
 	display: flex;

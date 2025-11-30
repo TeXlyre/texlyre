@@ -140,6 +140,92 @@ class TypstService {
         }
     }
 
+    async exportDocument(
+        mainFileName: string,
+        fileTree: FileNode[],
+        options: { format?: TypstOutputFormat; includeLog?: boolean } = {}
+    ): Promise<void> {
+        const { format = this.defaultFormat, includeLog = false } = options;
+        const operationId = `typst-export-${nanoid()}`;
+
+        if (!this.isReady()) {
+            await this.initialize();
+        }
+
+        this.setStatus('compiling');
+        this.compilationAbortController = new AbortController();
+
+        const normalizedMainFileName = this.normalizePath(mainFileName);
+
+        try {
+            this.showNotification('info', t('Preparing files for export...'), operationId);
+
+            const { sources } = await this.prepareSources(
+                normalizedMainFileName,
+                fileTree,
+                this.compilationAbortController.signal
+            );
+
+            this.showNotification('info', t(`Compiling for export to {format}...`, { format: format.toUpperCase() }), operationId);
+
+            const { output, diagnostics } = await this.performCompilationInWorker(
+                normalizedMainFileName,
+                sources,
+                format,
+                this.compilationAbortController.signal
+            );
+
+            const hasErrors = diagnostics?.some((d: any) => d.severity === 'error');
+
+            if (hasErrors) {
+                this.showNotification('error', t('Export failed'), operationId, 3000);
+                return;
+            }
+
+            const baseName = this.getBaseName(normalizedMainFileName);
+
+            if (format === 'pdf' && output instanceof Uint8Array) {
+                this.downloadFile(output, `${baseName}.pdf`, 'application/pdf');
+            } else if (format === 'svg' && typeof output === 'string') {
+                const svgContent = new TextEncoder().encode(output);
+                this.downloadFile(svgContent, `${baseName}.svg`, 'image/svg+xml');
+            } else if (format === 'canvas' && typeof output === 'string') {
+                const canvasContent = new TextEncoder().encode(output);
+                this.downloadFile(canvasContent, `${baseName}.svg`, 'image/svg+xml');
+            }
+
+            if (includeLog) {
+                const formattedLog = this.formatDiagnostics(diagnostics);
+                const logContent = new TextEncoder().encode(formattedLog);
+                this.downloadFile(logContent, `${baseName}.log`, 'text/plain');
+            }
+
+            this.showNotification('success', t('Export completed successfully'), operationId, 2000);
+        } catch (error) {
+            if (error instanceof Error && /cancel/i.test(error.message)) {
+                return;
+            }
+
+            const errorMessage = error instanceof Error ? error.message : t('Unknown error');
+            this.showNotification('error', `Export error: ${errorMessage}`, operationId, 5000);
+        } finally {
+            this.setStatus('ready');
+            this.compilationAbortController = null;
+        }
+    }
+
+    private downloadFile(content: Uint8Array, fileName: string, mimeType: string): void {
+        const blob = new Blob([toArrayBuffer(content)], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
     getSupportedFormats(): TypstOutputFormat[] {
         return ['pdf', 'svg', 'canvas'];
     }

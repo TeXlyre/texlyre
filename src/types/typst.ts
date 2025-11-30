@@ -27,4 +27,8 @@ export interface TypstContextType {
     clearCache: () => void;
     triggerAutoCompile: () => void;
     activeCompiler: string | null;
+    exportDocument: (
+        mainFileName: string,
+        options?: { format?: TypstOutputFormat; includeLog?: boolean }
+    ) => Promise<void>;
 }

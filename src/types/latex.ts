@@ -23,4 +23,8 @@ export interface LaTeXContextType {
 	activeCompiler: string | null;
 	setLatexEngine: (engine: 'pdftex' | 'xetex' | 'luatex') => Promise<void>;
 	triggerAutoCompile: () => void;
+	exportDocument: (
+		mainFileName: string,
+		options?: { format?: 'pdf' | 'dvi'; includeLog?: boolean }
+	) => Promise<void>;
 }

@@ -344,6 +344,13 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     }
   };
 
+  const exportDocument = async (
+    mainFileName: string,
+    options: { format?: 'pdf' | 'dvi'; includeLog?: boolean } = {}
+  ): Promise<void> => {
+    await latexService.exportDocument(mainFileName, fileTree, options);
+  };
+
   const toggleOutputView = () => {
     setCurrentView(currentView === 'log' ? 'pdf' : 'log');
   };
@@ -364,7 +371,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
         clearCache,
         compileWithClearCache,
         triggerAutoCompile,
-        activeCompiler
+        activeCompiler,
+        exportDocument
       }}>
 
       {children}

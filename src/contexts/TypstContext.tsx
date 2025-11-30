@@ -236,6 +236,13 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     }
   };
 
+  const exportDocument = async (
+    mainFileName: string,
+    options: { format?: TypstOutputFormat; includeLog?: boolean } = {}
+  ): Promise<void> => {
+    await typstService.exportDocument(mainFileName, fileTree, options);
+  };
+
   const toggleOutputView = () => {
     setCurrentView(currentView === 'log' ? 'output' : 'log');
   };
@@ -261,7 +268,8 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         currentView,
         clearCache,
         triggerAutoCompile,
-        activeCompiler
+        activeCompiler,
+        exportDocument
       }}>
 
       {children}

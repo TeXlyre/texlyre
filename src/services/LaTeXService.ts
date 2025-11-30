@@ -308,6 +308,85 @@ class LaTeXService {
 		}
 	}
 
+	async exportDocument(
+		mainFileName: string,
+		fileTree: FileNode[],
+		options: { format?: 'pdf' | 'dvi'; includeLog?: boolean } = {}
+	): Promise<void> {
+		const { format = 'pdf', includeLog = false } = options;
+		const engine = this.getCurrentEngine();
+		const operationId = `latex-export-${nanoid()}`;
+
+		if (!engine.isReady()) {
+			this.showLoadingNotification(t('Initializing LaTeX engine...'), operationId);
+			await engine.initialize();
+		}
+		engine.setTexliveEndpoint(this.texliveEndpoint);
+
+		try {
+			this.showLoadingNotification(t('Preparing files for export...'), operationId);
+			await this.prepareFileNodes(mainFileName, fileTree);
+			await this.writeNodesToMemFS(engine, mainFileName);
+
+			this.showLoadingNotification(t('Compiling for export...'), operationId);
+			let result = await engine.compile(mainFileName, this.processedNodes);
+
+			if (result.status === 0 && !result.pdf && (result as any).xdv) {
+				result = await this.processDviToPdf((result as any).xdv, mainFileName, result.log);
+			}
+
+			if (result.status === 0) {
+				const baseName = this.getBaseName(mainFileName);
+
+				if (format === 'pdf' && result.pdf) {
+					this.downloadFile(result.pdf, `${baseName}.pdf`, 'application/pdf');
+				} else if (format === 'dvi' && (result as any).xdv) {
+					this.downloadFile((result as any).xdv, `${baseName}.xdv`, 'application/x-dvi');
+				}
+
+				if (includeLog) {
+					const logContent = new TextEncoder().encode(result.log);
+					this.downloadFile(logContent, `${baseName}.log`, 'text/plain');
+				}
+
+				this.showSuccessNotification(t('Export completed successfully'), {
+					operationId,
+					duration: 2000
+				});
+			} else {
+				this.showErrorNotification(t('Export failed'), {
+					operationId,
+					duration: 3000
+				});
+			}
+
+			engine.flushCache();
+		} catch (error) {
+			this.showErrorNotification(
+				`Export error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+				{ operationId, duration: 5000 }
+			);
+			throw error;
+		}
+	}
+
+	private getBaseName(filePath: string): string {
+		const fileName = filePath.split('/').pop() || filePath;
+		return fileName.includes('.') ? fileName.split('.').slice(0, -1).join('.') : fileName;
+	}
+
+	private downloadFile(content: Uint8Array, fileName: string, mimeType: string): void {
+		const blob = new Blob([toArrayBuffer(content)], { type: mimeType });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = fileName;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	}
+
 	async clearCacheDirectories(): Promise<void> {
 		const operationId = `latex-clear-cache-${nanoid()}`;
 
