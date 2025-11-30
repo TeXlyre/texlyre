@@ -71,6 +71,7 @@ export class TypstCompilerBuilder {
   set_dummy_access_model(): void;
   set_access_model(context: any, mtime_fn: Function, is_file_fn: Function, real_path_fn: Function, read_all_fn: Function): Promise<void>;
   set_package_registry(context: any, real_resolve_fn: Function): Promise<void>;
+  set_pdf_opts(opts: any): void;
   add_raw_font(data: Uint8Array): Promise<void>;
   add_lazy_font(font: any, blob: Function): Promise<void>;
   build(): Promise<TypstCompiler>;
@@ -106,6 +107,7 @@ export interface InitOutput {
   readonly typstcompilerbuilder_set_dummy_access_model: (a: number, b: number) => void;
   readonly typstcompilerbuilder_set_access_model: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
   readonly typstcompilerbuilder_set_package_registry: (a: number, b: number, c: number) => number;
+  readonly typstcompilerbuilder_set_pdf_opts: (a: number, b: number, c: number) => void;
   readonly typstcompilerbuilder_add_raw_font: (a: number, b: number) => number;
   readonly typstcompilerbuilder_add_lazy_font: (a: number, b: number, c: number) => number;
   readonly typstcompilerbuilder_build: (a: number) => number;

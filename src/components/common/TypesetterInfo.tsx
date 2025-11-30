@@ -99,10 +99,10 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
           <strong>{t('Typst Engine:')}</strong> {t('@myriaddreamin/typst.ts v0.7.0-rc1')}
         </div>
         <div className="typesetter-tooltip-section">
-          <strong>{t('Typst Renderer:')}</strong> {t('@myriaddreamin/typst-ts-renderer v0.7.0-rc1')}
+          <strong>{t('Typst Renderer:')}</strong> {t('@texlyre/typst-ts-renderer v0.7.0-rc1')}
         </div>
         <div className="typesetter-tooltip-section">
-          <strong>{t('Typst Compiler:')}</strong> {t('@myriaddreamin/typst-ts-compiler v0.7.0-rc1')}
+          <strong>{t('Typst Compiler:')}</strong> {t('@texlyre/typst-ts-compiler v0.7.0-rc1')}
         </div>
         <div className="typesetter-tooltip-section">
           <strong>{t('Typst Version:')}</strong> {t('0.14.0 (25/10/2025)')}

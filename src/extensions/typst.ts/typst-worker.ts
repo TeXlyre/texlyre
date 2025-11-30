@@ -73,7 +73,6 @@ const defaultFonts = [
 ];
 
 async function loadFonts(baseUrl: string = `${BASE_PATH}/assets/fonts`) {
-    const fontExtensions = ['.ttf', '.otf'];
     const fontPaths: string[] = [];
 
     try {
@@ -112,6 +111,15 @@ async function ensureInit() {
     const packageRegistry = TypstSnippet.fetchPackageRegistry();
 
     compiler = createTypstCompiler();
+
+    // TODO (fabawi): this is hard-coded for now. 
+    // Need to add mechanism for re-initializing when pdf options change
+    compiler.setPdfOpts({
+        pdf_standard: '"2.0"',
+        pdf_tags: false,
+        creation_timestamp: Math.floor(Date.now() / 1000)
+    });
+
     await compiler.init({
         getModule: () => `${BASE_PATH}/core/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm`,
         beforeBuild: [
@@ -163,6 +171,7 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
 
         const { payload } = data as CompileMessage;
         const { mainFilePath, sources, format } = payload;
+
         compiler.resetShadow();
         for (const [path, content] of Object.entries(sources)) {
             const absolutePath = path.startsWith('/') ? path : `/${path}`;

@@ -66,14 +66,14 @@ importers:
         specifier: ^1.0.0
         version: 1.4.3
       '@myriaddreamin/typst-ts-renderer':
-        specifier: ^0.7.0-rc1
-        version: 0.7.0-rc1
+        specifier: npm:@texlyre/typst-ts-renderer@^0.7.0-rc1
+        version: '@texlyre/typst-ts-renderer@0.7.0-rc1'
       '@myriaddreamin/typst-ts-web-compiler':
-        specifier: ^0.7.0-rc1
-        version: 0.7.0-rc1
+        specifier: npm:@texlyre/typst-ts-web-compiler@^0.7.0-rc1
+        version: '@texlyre/typst-ts-web-compiler@0.7.0-rc1'
       '@myriaddreamin/typst.ts':
-        specifier: ^0.7.0-rc1
-        version: 0.7.0-rc1(@myriaddreamin/typst-ts-renderer@0.7.0-rc1)(@myriaddreamin/typst-ts-web-compiler@0.7.0-rc1)
+        specifier: npm:@texlyre/typst.ts@^0.7.0-rc1
+        version: '@texlyre/typst.ts@0.7.0-rc1(@texlyre/typst-ts-renderer@0.7.0-rc1)(@texlyre/typst-ts-web-compiler@0.7.0-rc1)'
       '@picocss/pico':
         specifier: ^2.0.6
         version: 2.1.1
@@ -1366,23 +1366,6 @@ packages:
     resolution: {integrity: sha512-h9u4u/jiIRKbq25PM+zymTyW6bhTzELvOoUd+AvYriWOAKpLGnIamaET3pnHYoI5iYphAHBI4ayx0MehR+VVPQ==}
     engines: {node: '>= 10'}
 
-  '@myriaddreamin/typst-ts-renderer@0.7.0-rc1':
-    resolution: {integrity: sha512-Dd0xP0THKiUwYVTX+2FW4gzBl4i3BNWLAO/ZAReSCkbaPiFb6py5heSvXX0vtH8sXsFQOB3qhxz68sEcq9oRKg==}
-
-  '@myriaddreamin/typst-ts-web-compiler@0.7.0-rc1':
-    resolution: {integrity: sha512-ICSdiR6U0GH1wqDKRYpvVWV9TBmA0kD0IPQwl0f2BhlHj4qrOPtC5GfSXGxzRiGNUou/Mhr9V8f2wgzBIp4P4Q==}
-
-  '@myriaddreamin/typst.ts@0.7.0-rc1':
-    resolution: {integrity: sha512-IZ78l1iLTMM61pf1SmqtojkgM2aloQVSzlNvStKtYu+qleOEzh/ph7zTNmfM8j5vlflCkos85E+UKQvLdC9C7Q==}
-    peerDependencies:
-      '@myriaddreamin/typst-ts-renderer': ^0.7.0-rc1
-      '@myriaddreamin/typst-ts-web-compiler': ^0.7.0-rc1
-    peerDependenciesMeta:
-      '@myriaddreamin/typst-ts-renderer':
-        optional: true
-      '@myriaddreamin/typst-ts-web-compiler':
-        optional: true
-
   '@napi-rs/canvas-android-arm64@0.1.83':
     resolution: {integrity: sha512-TbKM2fh9zXjqFIU8bgMfzG7rkrIYdLKMafgPhFoPwKrpWk1glGbWP7LEu8Y/WrMDqTGFdRqUmuX89yQEzZbkiw==}
     engines: {node: '>= 10'}
@@ -1716,6 +1699,23 @@ packages:
     engines: {node: '>=12', npm: '>=6'}
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
+
+  '@texlyre/typst-ts-renderer@0.7.0-rc1':
+    resolution: {integrity: sha512-uQ8Cs5oU6aTwPj6OaUfcS9fbNFF3gVRq7Bq2AuKtRqibVBZa1KdSpffo0HLIwwum5awuq5SbwalP1K277xfayw==}
+
+  '@texlyre/typst-ts-web-compiler@0.7.0-rc1':
+    resolution: {integrity: sha512-u0/w3Zd+W3qiWn6ZysprDMwWKhQwK5BgiWvVX+u0X90GJnBfHqGTVNxClQCfeg+xccStytfWxyaiNNFLB82arw==}
+
+  '@texlyre/typst.ts@0.7.0-rc1':
+    resolution: {integrity: sha512-mh33ftmS0CZkuj4oTO+spWwoJjvDDK7iChjhHAYaZU9pRs/eRQWWdxLWXg5Pqg+5xxW/ezpIZmLNf2PFhIE0BQ==}
+    peerDependencies:
+      '@myriaddreamin/typst-ts-renderer': npm:@texlyre/typst-ts-renderer@^0.7.0-rc1
+      '@myriaddreamin/typst-ts-web-compiler': npm:@texlyre/typst-ts-web-compiler@^0.7.0-rc1
+    peerDependenciesMeta:
+      '@myriaddreamin/typst-ts-renderer':
+        optional: true
+      '@myriaddreamin/typst-ts-web-compiler':
+        optional: true
 
   '@tootallnate/once@2.0.0':
     resolution: {integrity: sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==}
@@ -5957,17 +5957,6 @@ snapshots:
 
   '@msgpack/msgpack@2.8.0': {}
 
-  '@myriaddreamin/typst-ts-renderer@0.7.0-rc1': {}
-
-  '@myriaddreamin/typst-ts-web-compiler@0.7.0-rc1': {}
-
-  '@myriaddreamin/typst.ts@0.7.0-rc1(@myriaddreamin/typst-ts-renderer@0.7.0-rc1)(@myriaddreamin/typst-ts-web-compiler@0.7.0-rc1)':
-    dependencies:
-      idb: 7.1.1
-    optionalDependencies:
-      '@myriaddreamin/typst-ts-renderer': 0.7.0-rc1
-      '@myriaddreamin/typst-ts-web-compiler': 0.7.0-rc1
-
   '@napi-rs/canvas-android-arm64@0.1.83':
     optional: true
 
@@ -6226,6 +6215,17 @@ snapshots:
   '@testing-library/user-event@14.6.1(@testing-library/dom@9.3.4)':
     dependencies:
       '@testing-library/dom': 9.3.4
+
+  '@texlyre/typst-ts-renderer@0.7.0-rc1': {}
+
+  '@texlyre/typst-ts-web-compiler@0.7.0-rc1': {}
+
+  '@texlyre/typst.ts@0.7.0-rc1(@texlyre/typst-ts-renderer@0.7.0-rc1)(@texlyre/typst-ts-web-compiler@0.7.0-rc1)':
+    dependencies:
+      idb: 7.1.1
+    optionalDependencies:
+      '@myriaddreamin/typst-ts-renderer': '@texlyre/typst-ts-renderer@0.7.0-rc1'
+      '@myriaddreamin/typst-ts-web-compiler': '@texlyre/typst-ts-web-compiler@0.7.0-rc1'
 
   '@tootallnate/once@2.0.0': {}
 
