@@ -114,11 +114,11 @@ async function ensureInit() {
 
     // TODO (fabawi): this is hard-coded for now. 
     // Need to add mechanism for re-initializing when pdf options change
-    compiler.setPdfOpts({
-        pdf_standard: '"2.0"',
-        pdf_tags: false,
-        creation_timestamp: Math.floor(Date.now() / 1000)
-    });
+    // compiler.setPdfOpts({
+    //     pdf_standard: '"2.0"',
+    //     pdf_tags: false,
+    //     creation_timestamp: Math.floor(Date.now() / 1000)
+    // });
 
     await compiler.init({
         getModule: () => `${BASE_PATH}/core/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm`,
@@ -187,6 +187,14 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
         let diagnostics: any[] = [];
 
         if (format === 'pdf') {
+            // TODO (fabawi): this is hard-coded for now. 
+            // Need to add mechanism for re-initializing when pdf options change
+            compiler.setPdfOptsForNextCompile({
+                pdf_standard: '"ua-1"',
+                pdf_tags: true,
+                creation_timestamp: Math.floor(Date.now() / 1000)
+            });
+
             const compileResult = await compiler.compile({
                 mainFilePath: absoluteMainPath,
                 format: getFormatArg('pdf'),

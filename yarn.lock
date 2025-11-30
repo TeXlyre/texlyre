@@ -1593,15 +1593,15 @@
   resolved "https://registry.npmjs.org/@texlyre/typst-ts-renderer/-/typst-ts-renderer-0.7.0-rc1.tgz"
   integrity sha512-uQ8Cs5oU6aTwPj6OaUfcS9fbNFF3gVRq7Bq2AuKtRqibVBZa1KdSpffo0HLIwwum5awuq5SbwalP1K277xfayw==
 
-"@myriaddreamin/typst-ts-web-compiler@npm:@texlyre/typst-ts-web-compiler@^0.7.0-rc1":
-  version "0.7.0-rc1"
-  resolved "https://registry.npmjs.org/@texlyre/typst-ts-web-compiler/-/typst-ts-web-compiler-0.7.0-rc1.tgz"
-  integrity sha512-u0/w3Zd+W3qiWn6ZysprDMwWKhQwK5BgiWvVX+u0X90GJnBfHqGTVNxClQCfeg+xccStytfWxyaiNNFLB82arw==
+"@myriaddreamin/typst-ts-web-compiler@npm:@texlyre/typst-ts-web-compiler@^0.7.0-rc1-1":
+  version "0.7.0-rc1-1"
+  resolved "https://registry.npmjs.org/@texlyre/typst-ts-web-compiler/-/typst-ts-web-compiler-0.7.0-rc1-1.tgz"
+  integrity sha512-LF0YyAYisdu4vMp4m3L5xaFLWt7voLNHTOyTIOP+jvtVbKkPgs3C3also4+C2SBplEQXmuL4AXuEqEfzqk0ZEA==
 
-"@myriaddreamin/typst.ts@npm:@texlyre/typst.ts@^0.7.0-rc1":
-  version "0.7.0-rc1"
-  resolved "https://registry.npmjs.org/@myriaddreamin/typst.ts/-/typst.ts-0.7.0-rc1.tgz"
-  integrity sha512-IZ78l1iLTMM61pf1SmqtojkgM2aloQVSzlNvStKtYu+qleOEzh/ph7zTNmfM8j5vlflCkos85E+UKQvLdC9C7Q==
+"@myriaddreamin/typst.ts@npm:@texlyre/typst.ts@^0.7.0-rc1-1":
+  version "0.7.0-rc1-1"
+  resolved "https://registry.npmjs.org/@texlyre/typst.ts/-/typst.ts-0.7.0-rc1-1.tgz"
+  integrity sha512-IWGJ8POZQFeIblk9odTw9Kq4AgTMQk6jNpPSyEk6Uf3F9l+82kTK263HNzEynDNiZ3uNRXtZFD6qeNWHYOWl2g==
   dependencies:
     idb "^7.1.1"
 
