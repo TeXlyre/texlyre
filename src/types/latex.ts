@@ -25,6 +25,12 @@ export interface LaTeXContextType {
 	triggerAutoCompile: () => void;
 	exportDocument: (
 		mainFileName: string,
-		options?: { format?: 'pdf' | 'dvi'; includeLog?: boolean }
+		options?: {
+			engine?: 'pdftex' | 'xetex' | 'luatex';
+			format?: 'pdf' | 'dvi';
+			includeLog?: boolean;
+			includeDvi?: boolean;
+			includeBbl?: boolean;
+		}
 	) => Promise<void>;
 }

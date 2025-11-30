@@ -9,6 +9,7 @@ import { notificationService } from './NotificationService';
 import { cleanContent } from '../utils/fileCommentUtils';
 import { TypstCompilerEngine } from '../extensions/typst.ts/TypstCompilerEngine';
 import { toArrayBuffer } from '../utils/fileUtils';
+import { downloadFiles } from '../utils/zipUtils';
 
 type CompilationStatus = 'unloaded' | 'loading' | 'ready' | 'compiling' | 'error';
 
@@ -143,7 +144,10 @@ class TypstService {
     async exportDocument(
         mainFileName: string,
         fileTree: FileNode[],
-        options: { format?: TypstOutputFormat; includeLog?: boolean } = {}
+        options: {
+            format?: TypstOutputFormat;
+            includeLog?: boolean;
+        } = {}
     ): Promise<void> {
         const { format = this.defaultFormat, includeLog = false } = options;
         const operationId = `typst-export-${nanoid()}`;
@@ -166,7 +170,11 @@ class TypstService {
                 this.compilationAbortController.signal
             );
 
-            this.showNotification('info', t(`Compiling for export to {format}...`, { format: format.toUpperCase() }), operationId);
+            this.showNotification(
+                'info',
+                t('Compiling for export to {format}...', { format: format.toUpperCase() }),
+                operationId
+            );
 
             const { output, diagnostics } = await this.performCompilationInWorker(
                 normalizedMainFileName,
@@ -183,21 +191,35 @@ class TypstService {
             }
 
             const baseName = this.getBaseName(normalizedMainFileName);
+            const files: Array<{ content: Uint8Array; name: string; mimeType: string }> = [];
 
             if (format === 'pdf' && output instanceof Uint8Array) {
-                this.downloadFile(output, `${baseName}.pdf`, 'application/pdf');
-            } else if (format === 'svg' && typeof output === 'string') {
-                const svgContent = new TextEncoder().encode(output);
-                this.downloadFile(svgContent, `${baseName}.svg`, 'image/svg+xml');
-            } else if (format === 'canvas' && typeof output === 'string') {
-                const canvasContent = new TextEncoder().encode(output);
-                this.downloadFile(canvasContent, `${baseName}.svg`, 'image/svg+xml');
+                files.push({
+                    content: output,
+                    name: `${baseName}.pdf`,
+                    mimeType: 'application/pdf'
+                });
+            } else if ((format === 'svg' || format === 'canvas') && typeof output === 'string') {
+                const content = new TextEncoder().encode(output);
+                files.push({
+                    content,
+                    name: `${baseName}.svg`,
+                    mimeType: 'image/svg+xml'
+                });
             }
 
             if (includeLog) {
                 const formattedLog = this.formatDiagnostics(diagnostics);
                 const logContent = new TextEncoder().encode(formattedLog);
-                this.downloadFile(logContent, `${baseName}.log`, 'text/plain');
+                files.push({
+                    content: logContent,
+                    name: `${baseName}.log`,
+                    mimeType: 'text/plain'
+                });
+            }
+
+            if (files.length > 0) {
+                await downloadFiles(files, baseName);
             }
 
             this.showNotification('success', t('Export completed successfully'), operationId, 2000);
@@ -212,18 +234,6 @@ class TypstService {
             this.setStatus('ready');
             this.compilationAbortController = null;
         }
-    }
-
-    private downloadFile(content: Uint8Array, fileName: string, mimeType: string): void {
-        const blob = new Blob([toArrayBuffer(content)], { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
     }
 
     getSupportedFormats(): TypstOutputFormat[] {

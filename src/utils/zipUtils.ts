@@ -9,6 +9,7 @@ import {
 	getParentPath,
 	isBinaryFile,
 	joinPaths,
+	toArrayBuffer
 } from './fileUtils';
 
 export const extractZip = async (
@@ -135,4 +136,48 @@ export const downloadZipFile = (blob: Blob, filename: string): void => {
 	a.click();
 	document.body.removeChild(a);
 	URL.revokeObjectURL(url);
+};
+
+export interface DownloadableFile {
+	content: Uint8Array;
+	name: string;
+	mimeType: string;
+}
+
+export const downloadFile = (content: Uint8Array, fileName: string, mimeType: string): void => {
+	const blob = new Blob([toArrayBuffer(content)], { type: mimeType });
+	const url = URL.createObjectURL(blob);
+	const a = document.createElement('a');
+	a.href = url;
+	a.download = fileName;
+	document.body.appendChild(a);
+	a.click();
+	document.body.removeChild(a);
+	URL.revokeObjectURL(url);
+};
+
+export const createZipFromFiles = async (
+	files: DownloadableFile[]
+): Promise<Blob> => {
+	const zip = new JSZip();
+
+	for (const file of files) {
+		zip.file(file.name, file.content);
+	}
+
+	return await zip.generateAsync({ type: 'blob' });
+};
+
+export const downloadFiles = async (
+	files: DownloadableFile[],
+	baseName: string
+): Promise<void> => {
+	if (files.length === 0) return;
+
+	if (files.length === 1) {
+		downloadFile(files[0].content, files[0].name, files[0].mimeType);
+	} else {
+		const zipBlob = await createZipFromFiles(files);
+		downloadZipFile(zipBlob, `${baseName}_export.zip`);
+	}
 };

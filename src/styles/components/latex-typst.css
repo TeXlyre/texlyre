@@ -221,7 +221,8 @@ embed {
 }
 
 .latex-button,
-.typst-button {
+.typst-button,
+.export-button {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -256,7 +257,8 @@ embed {
 	height: var(--button-height-md);
 }
 
-.compile-button-group .compile-button {
+.compile-button-group .compile-button,
+.compile-button-group .export-button {
 	border-top-left-radius: var(--radius-sm);
 	border-bottom-left-radius: var(--radius-sm);
 }
@@ -311,22 +313,25 @@ embed {
 }
 
 .share-checkbox,
-.auto-compile-checkbox {
+.auto-compile-checkbox,
+.export-checkbox {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
-	font-size: 0.75rem;
-	color: var(--text-secondary);
+	gap: var(--space-sm);
+	font-size: 0.8rem;
+	color: var(--text-color);
 	cursor: pointer;
 }
 
 .share-checkbox input[type="checkbox"],
-.auto-compile-checkbox input[type="checkbox"] {
+.auto-compile-checkbox input[type="checkbox"],
+.export-checkbox input[type="checkbox"] {
 	margin: 0;
 }
 
 .share-checkbox:has(input:disabled),
-.auto-compile-checkbox:has(input:disabled) {
+.auto-compile-checkbox:has(input:disabled),
+.export-checkbox:has(input:disabled) {
 	opacity: 0.6;
 	cursor: not-allowed;
 }
@@ -365,5 +370,46 @@ embed {
 
 .cache-item.disabled {
 	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.export-options {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	margin-top: var(--space-sm);
+	padding-top: var(--space-sm);
+	border-top: 1px solid var(--accent-border);
+}
+
+.export-actions {
+	margin-top: var(--space-sm);
+	padding-top: var(--space-sm);
+	border-top: 1px solid var(--accent-border);
+}
+
+.export-action-button {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-sm);
+	padding: var(--space-sm);
+	background-color: var(--pico-primary) !important;
+	color: var(--pico-primary-inverse) !important;
+	border: none;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	transition: background-color var(--transition-normal);
+	font-size: 0.85rem;
+	font-weight: 500;
+}
+
+.export-action-button:hover:not(:disabled) {
+	background-color: var(--pico-primary-hover);
+}
+
+.export-action-button:disabled {
+	opacity: 0.6;
 	cursor: not-allowed;
 }

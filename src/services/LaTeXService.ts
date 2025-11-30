@@ -11,6 +11,7 @@ import { PdfTeXEngine } from '../extensions/switftlatex/PdfTeXEngine';
 import { XeTeXEngine } from '../extensions/switftlatex/XeTeXEngine';
 import type { FileNode } from '../types/files';
 import { getMimeType, isBinaryFile, toArrayBuffer } from '../utils/fileUtils';
+import { downloadFiles } from '../utils/zipUtils';
 import { fileStorageService } from './FileStorageService';
 import { notificationService } from './NotificationService';
 import { cleanContent } from '../utils/fileCommentUtils';
@@ -311,11 +312,37 @@ class LaTeXService {
 	async exportDocument(
 		mainFileName: string,
 		fileTree: FileNode[],
-		options: { format?: 'pdf' | 'dvi'; includeLog?: boolean } = {}
+		options: {
+			engine?: 'pdftex' | 'xetex' | 'luatex';
+			format?: 'pdf' | 'dvi';
+			includeLog?: boolean;
+			includeDvi?: boolean;
+			includeBbl?: boolean;
+		} = {}
 	): Promise<void> {
-		const { format = 'pdf', includeLog = false } = options;
-		const engine = this.getCurrentEngine();
+		const {
+			engine: exportEngine,
+			format = 'pdf',
+			includeLog = false,
+			includeDvi = false,
+			includeBbl = false
+		} = options;
+
 		const operationId = `latex-export-${nanoid()}`;
+
+		const originalEngine = this.currentEngineType;
+		const targetEngine = exportEngine || this.currentEngineType;
+
+		const originalStoreWorkingDirectory = this.storeWorkingDirectory;
+		if (includeBbl) {
+			this.storeWorkingDirectory = true;
+		}
+
+		if (targetEngine !== this.currentEngineType) {
+			await this.setEngine(targetEngine);
+		}
+
+		const engine = this.getCurrentEngine();
 
 		if (!engine.isReady()) {
 			this.showLoadingNotification(t('Initializing LaTeX engine...'), operationId);
@@ -331,22 +358,57 @@ class LaTeXService {
 			this.showLoadingNotification(t('Compiling for export...'), operationId);
 			let result = await engine.compile(mainFileName, this.processedNodes);
 
+			let xdvData: Uint8Array | undefined;
 			if (result.status === 0 && !result.pdf && (result as any).xdv) {
-				result = await this.processDviToPdf((result as any).xdv, mainFileName, result.log);
+				xdvData = (result as any).xdv;
+				result = await this.processDviToPdf(xdvData, mainFileName, result.log);
 			}
 
 			if (result.status === 0) {
 				const baseName = this.getBaseName(mainFileName);
+				const files: Array<{ content: Uint8Array; name: string; mimeType: string }> = [];
 
 				if (format === 'pdf' && result.pdf) {
-					this.downloadFile(result.pdf, `${baseName}.pdf`, 'application/pdf');
-				} else if (format === 'dvi' && (result as any).xdv) {
-					this.downloadFile((result as any).xdv, `${baseName}.xdv`, 'application/x-dvi');
+					files.push({
+						content: result.pdf,
+						name: `${baseName}.pdf`,
+						mimeType: 'application/pdf'
+					});
+
+					if (includeDvi && xdvData) {
+						files.push({
+							content: xdvData,
+							name: `${baseName}.xdv`,
+							mimeType: 'application/x-dvi'
+						});
+					}
+				} else if (format === 'dvi' && xdvData) {
+					files.push({
+						content: xdvData,
+						name: `${baseName}.xdv`,
+						mimeType: 'application/x-dvi'
+					});
 				}
 
 				if (includeLog) {
 					const logContent = new TextEncoder().encode(result.log);
-					this.downloadFile(logContent, `${baseName}.log`, 'text/plain');
+					files.push({
+						content: logContent,
+						name: `${baseName}.log`,
+						mimeType: 'text/plain'
+					});
+				}
+
+				if (includeBbl) {
+					await this.storeOutputDirectories(engine);
+					const bblFile = await this.extractBblFile(baseName);
+					if (bblFile) {
+						files.push(bblFile);
+					}
+				}
+
+				if (files.length > 0) {
+					await downloadFiles(files, baseName);
 				}
 
 				this.showSuccessNotification(t('Export completed successfully'), {
@@ -367,24 +429,81 @@ class LaTeXService {
 				{ operationId, duration: 5000 }
 			);
 			throw error;
+		} finally {
+			this.storeWorkingDirectory = originalStoreWorkingDirectory;
+
+			if (targetEngine !== originalEngine) {
+				await this.setEngine(originalEngine);
+			}
 		}
+	}
+
+	private async extractBblFile(baseName: string): Promise<{ content: Uint8Array; name: string; mimeType: string } | null> {
+		const workDirectory = '/.texlyre_src/__work';
+
+		const tryPaths = [
+			`${workDirectory}/${baseName}.bbl`,
+			`${workDirectory}/_${baseName}.bbl`
+		];
+
+		for (const bblPath of tryPaths) {
+			try {
+				const bblFile = await fileStorageService.getFileByPath(bblPath, true);
+
+				if (bblFile?.content) {
+					const content = typeof bblFile.content === 'string'
+						? new TextEncoder().encode(bblFile.content)
+						: new Uint8Array(bblFile.content);
+
+					return {
+						content,
+						name: bblPath.split('/').pop() || `${baseName}.bbl`,
+						mimeType: 'text/plain'
+					};
+				}
+			} catch (error) {
+				continue;
+			}
+		}
+
+		try {
+			const bblFiles = await fileStorageService.getFilesByPath(
+				`${workDirectory}/`,
+				true,
+				{
+					fileExtension: '.bbl',
+					excludeDirectories: true
+				}
+			);
+
+			if (bblFiles.length > 0) {
+				console.log(`Found ${bblFiles.length} BBL file(s) in __work directory, using first one`);
+				const firstBblFile = bblFiles[0];
+
+				if (firstBblFile.content) {
+					const content = typeof firstBblFile.content === 'string'
+						? new TextEncoder().encode(firstBblFile.content)
+						: new Uint8Array(firstBblFile.content);
+
+					const fileName = firstBblFile.path.split('/').pop() || `${baseName}.bbl`;
+
+					return {
+						content,
+						name: fileName,
+						mimeType: 'text/plain'
+					};
+				}
+			}
+		} catch (error) {
+			console.warn('Error searching for BBL files in __work directory:', error);
+		}
+
+		return null;
 	}
 
 	private getBaseName(filePath: string): string {
 		const fileName = filePath.split('/').pop() || filePath;
 		return fileName.includes('.') ? fileName.split('.').slice(0, -1).join('.') : fileName;
-	}
-
-	private downloadFile(content: Uint8Array, fileName: string, mimeType: string): void {
-		const blob = new Blob([toArrayBuffer(content)], { type: mimeType });
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement('a');
-		a.href = url;
-		a.download = fileName;
-		document.body.appendChild(a);
-		a.click();
-		document.body.removeChild(a);
-		URL.revokeObjectURL(url);
 	}
 
 	async clearCacheDirectories(): Promise<void> {
