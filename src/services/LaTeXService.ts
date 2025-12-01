@@ -301,7 +301,7 @@ class LaTeXService {
 					log: 'Compilation failed or was stopped by user.',
 				};
 			}
-			this.showErrorNotification(`Compilation error: ${error instanceof Error ? error.message : 'Unknown error'}`, {
+			this.showErrorNotification(`Compilation error: ${error instanceof Error ? error.message : t('Unknown error')}`, {
 				operationId,
 				duration: 5000,
 			});
@@ -425,7 +425,7 @@ class LaTeXService {
 			engine.flushCache();
 		} catch (error) {
 			this.showErrorNotification(
-				`Export error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+				`Export error: ${error instanceof Error ? error.message : t('Unknown error')}`,
 				{ operationId, duration: 5000 }
 			);
 			throw error;

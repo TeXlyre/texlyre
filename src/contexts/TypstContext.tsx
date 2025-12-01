@@ -196,7 +196,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
             break;
         }
       } else {
-        setCompileError('Compilation failed');
+        setCompileError(t('Compilation failed. Check the log in the main window.'));
         setCurrentView('log');
 
         pdfWindowService.sendCompileResult(result.status, result.log);
@@ -204,10 +204,10 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 
       await refreshFileTree();
     } catch (error) {
-      setCompileError(error instanceof Error ? error.message : 'Unknown error');
+      setCompileError(error instanceof Error ? error.message : t('Unknown error'));
       setCurrentView('log');
 
-      pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : 'Unknown error');
+      pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
     } finally {
       setIsCompiling(false);
     }

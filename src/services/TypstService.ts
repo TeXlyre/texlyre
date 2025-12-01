@@ -97,9 +97,12 @@ class TypstService {
             );
 
             const formattedLog = this.formatDiagnostics(diagnostics);
-            const hasErrors = diagnostics?.some((d: any) => d.severity === 'error');
+            const hasErrors = diagnostics?.some((d: any) => {
+                const sev = d.severity;
+                return sev === 'error' || sev === 'Error' || (typeof sev === 'object' && sev.Error !== undefined);
+            });
 
-            if (hasErrors) {
+            if (hasErrors || (output instanceof Uint8Array && output.length === 0)) {
                 const result: TypstCompileResult = {
                     status: 1,
                     log: formattedLog || 'Compilation failed with errors',
@@ -126,14 +129,18 @@ class TypstService {
                 return result;
             }
 
-            const errorMessage = error instanceof Error ? error.message : t('Unknown error');
+            const diagnostics = this.parseDiagnosticsFromError(error);
+            const formattedLog = diagnostics.length > 0
+                ? this.formatDiagnostics(diagnostics)
+                : (error instanceof Error ? error.message : t('Unknown error'));
+
             const result: TypstCompileResult = {
                 status: 1,
-                log: `Compilation failed: ${errorMessage}`,
+                log: formattedLog,
                 format,
             };
 
-            this.handleCompilationError(operationId, errorMessage);
+            this.handleCompilationError(operationId, 'Compilation failed');
             await this.saveCompilationLog(normalizedMainFileName, result.log);
 
             return result;
@@ -597,6 +604,34 @@ class TypstService {
         }
     }
 
+    private parseDiagnosticsFromError(error: any): any[] {
+        const errorStr = String(error.message || error);
+
+        const diagnostics: any[] = [];
+        const diagPattern = /SourceDiagnostic\s*\{\s*severity:\s*(\w+),\s*span:\s*([^,]+),\s*message:\s*"([^"]+)"(?:[^}]*?)hints:\s*\[([^\]]*)\]/g;
+
+        let match;
+        while ((match = diagPattern.exec(errorStr)) !== null) {
+            const hintsStr = match[4];
+            const hints: string[] = [];
+
+            const hintPattern = /"([^"]+)"/g;
+            let hintMatch;
+            while ((hintMatch = hintPattern.exec(hintsStr)) !== null) {
+                hints.push(hintMatch[1]);
+            }
+
+            diagnostics.push({
+                severity: match[1],
+                span: match[2].trim(),
+                message: match[3],
+                hints: hints
+            });
+        }
+
+        return diagnostics;
+    }
+
     private formatDiagnostics(diagnostics?: any[]): string {
         if (!diagnostics || diagnostics.length === 0) {
             return 'Compilation successful';
@@ -607,19 +642,23 @@ class TypstService {
         for (const diag of diagnostics) {
             const severity = diag.severity || 'error';
             const message = diag.message || t('Unknown error');
-            const path = diag.path || '';
-            const range = diag.range || '';
 
             let location = '';
-            if (path) {
-                location = path.replace(/^\//, '');
-                if (range) {
-                    const startPos = range.split('-')[0];
+            if (diag.path) {
+                location = diag.path.replace(/^\//, '');
+                if (diag.range) {
+                    const startPos = diag.range.split('-')[0];
                     location += `:${startPos}`;
                 }
+            } else if (diag.span) {
+                location = String(diag.span).replace(/^Span\(|\)$/g, '');
             }
 
-            const prefix = severity === 'error' ? 'error' : severity === 'warning' ? 'warning' : 'info';
+            const severityStr = typeof severity === 'string'
+                ? severity.toLowerCase()
+                : 'error';
+
+            const prefix = severityStr === 'error' ? 'error' : severityStr === 'warning' ? 'warning' : 'info';
             lines.push(location ? `${prefix}[${location}]: ${message}` : `${prefix}: ${message}`);
 
             if (diag.hints && Array.isArray(diag.hints) && diag.hints.length > 0) {

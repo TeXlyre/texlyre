@@ -245,11 +245,11 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
       await refreshFileTree();
     } catch (error) {
-      setCompileError(error instanceof Error ? error.message : 'Unknown error');
+      setCompileError(error instanceof Error ? error.message : t('Unknown error'));
       setCurrentView('log');
 
       // Send error to window
-      pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : 'Unknown error');
+      pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
     } finally {
       setIsCompiling(false);
     }
@@ -326,11 +326,11 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
       await refreshFileTree();
     } catch (error) {
-      setCompileError(error instanceof Error ? error.message : 'Unknown error');
+      setCompileError(error instanceof Error ? error.message : t('Unknown error'));
       setCurrentView('log');
 
       // Send error to window
-      pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : 'Unknown error');
+      pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
     } finally {
       setIsCompiling(false);
     }

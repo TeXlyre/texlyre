@@ -1,4 +1,5 @@
 // src/extensions/wasm-tools/TypstyleEngine.ts
+import { t } from '@/i18n';
 export interface TypstyleOptions {
     lineWidth?: number;
     indentWidth?: number;
@@ -47,7 +48,7 @@ export class TypstyleEngine {
         } catch (error) {
             return {
                 success: false,
-                error: error instanceof Error ? error.message : 'Unknown error'
+                error: error instanceof Error ? error.message : t('Unknown error')
             };
         }
     }

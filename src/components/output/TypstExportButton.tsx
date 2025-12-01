@@ -330,14 +330,14 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                                         className="pdf-option-select"
                                         disabled={isExporting}>
                                         <>
-                                            <optgroup label="PDF Versions">
+                                            <optgroup label={t('PDF Versions')}>
                                                 <option value='"1.4"'>PDF 1.4</option>
                                                 <option value='"1.5"'>PDF 1.5</option>
                                                 <option value='"1.6"'>PDF 1.6</option>
                                                 <option value='"1.7"'>PDF 1.7</option>
                                                 <option value='"2.0"'>PDF 2.0</option>
                                             </optgroup>
-                                            <optgroup label="PDF/A Standards">
+                                            <optgroup label={t('PDF/A Standards')}>
                                                 <option value='"a-1b"'>PDF/A-1b</option>
                                                 <option value='"a-1a"'>PDF/A-1a</option>
                                                 <option value='"a-2b"'>PDF/A-2b</option>
@@ -350,8 +350,8 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                                                 <option value='"a-4f"'>PDF/A-4f</option>
                                                 <option value='"a-4e"'>PDF/A-4e</option>
                                             </optgroup>
-                                            <optgroup label="PDF/UA">
-                                                <option value='"ua-1"'>PDF/UA-1</option>
+                                            <optgroup label={t('Accessibility Standards')}>
+                                                <option value='"ua-1"'>PDF/UA-1 ♿</option>
                                             </optgroup>
                                         </>
                                     </select>

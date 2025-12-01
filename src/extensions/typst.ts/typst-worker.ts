@@ -216,10 +216,14 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
             diagnostics = compileResult.diagnostics || [];
 
             if (!compileResult.result || compileResult.result.byteLength === 0) {
-                const errorMsg = diagnostics.length > 0
-                    ? diagnostics.map(d => d.message).join('; ')
-                    : 'Compilation produced no artifact';
-                throw new Error(errorMsg);
+                const transferList: Transferable[] = [];
+                const resp: DoneResponse = {
+                    id,
+                    type: 'done',
+                    result: { format, output: new Uint8Array(0), diagnostics },
+                };
+                self.postMessage(resp, transferList);
+                return;
             }
 
             output = await renderer.renderSvg({
