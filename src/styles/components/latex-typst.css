@@ -18,7 +18,8 @@
 
 .main-file-label,
 .engine-label,
-.format-label {
+.format-label,
+.pdf-option-label {
 	font-size: 0.8rem;
 	color: var(--text-secondary-color);
 	margin-bottom: var(--space-xs);
@@ -34,6 +35,42 @@
 .engine-selector,
 .format-selector {
 	padding: var(--space-sm) 0;
+}
+
+.format-selector-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-sm);
+}
+
+.pdf-options-toggle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: var(--pico-secondary-background);
+	color: var(--text-color);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	transition: background-color var(--transition-normal);
+	padding: var(--space-xs);
+	width: 28px;
+	height: 28px;
+}
+
+.pdf-options-toggle:hover:not(:disabled) {
+	background-color: var(--pico-primary-focus);
+}
+
+.pdf-options-toggle.active {
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+}
+
+.pdf-options-toggle:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
 }
 
 .latex-header-buttons,
@@ -314,7 +351,8 @@ embed {
 
 .share-checkbox,
 .auto-compile-checkbox,
-.export-checkbox {
+.export-checkbox,
+.pdf-option-checkbox {
 	display: flex;
 	align-items: center;
 	gap: var(--space-sm);
@@ -325,13 +363,15 @@ embed {
 
 .share-checkbox input[type="checkbox"],
 .auto-compile-checkbox input[type="checkbox"],
-.export-checkbox input[type="checkbox"] {
+.export-checkbox input[type="checkbox"],
+.pdf-option-checkbox input[type="checkbox"] {
 	margin: 0;
 }
 
 .share-checkbox:has(input:disabled),
 .auto-compile-checkbox:has(input:disabled),
-.export-checkbox:has(input:disabled) {
+.export-checkbox:has(input:disabled),
+.pdf-option-checkbox:has(input:disabled) {
 	opacity: 0.6;
 	cursor: not-allowed;
 }
@@ -412,4 +452,25 @@ embed {
 .export-action-button:disabled {
 	opacity: 0.6;
 	cursor: not-allowed;
+}
+
+.pdf-options-section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	margin-top: var(--space-sm);
+	padding: var(--space-sm);
+	background-color: var(--pico-secondary-background);
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--accent-border);
+}
+
+.pdf-option {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+}
+
+.pdf-option-select {
+	width: 100%;
 }
