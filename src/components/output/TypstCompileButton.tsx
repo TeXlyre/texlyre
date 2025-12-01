@@ -61,7 +61,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
   const projectFormat = useSharedSettings ? doc?.projectMetadata?.typstOutputFormat : undefined;
   const [localFormat, setLocalFormat] = useState<TypstOutputFormat>('pdf');
   const [localPdfOptions, setLocalPdfOptions] = useState<TypstPdfOptions>({
-    pdfStandard: '"ua-1"',
+    pdfStandard: '"1.7"',
     pdfTags: true
   });
   const effectiveFormat = projectFormat || localFormat;

@@ -42,7 +42,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
     const [availableTypstFiles, setAvailableTypstFiles] = useState<string[]>([]);
     const [selectedFormat, setSelectedFormat] = useState<TypstOutputFormat>('pdf');
     const [localPdfOptions, setLocalPdfOptions] = useState<TypstPdfOptions>({
-        pdfStandard: '"ua-1"',
+        pdfStandard: '"1.7"',
         pdfTags: true
     });
     const [isPdfOptionsOpen, setIsPdfOptionsOpen] = useState(false);
@@ -244,7 +244,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                                 <div className="pdf-option">
                                     <label className="pdf-option-label">{t('PDF Standard:')}</label>
                                     <select
-                                        value={localPdfOptions.pdfStandard || '"ua-1"'}
+                                        value={localPdfOptions.pdfStandard || '"1.7"'}
                                         onChange={(e) => setLocalPdfOptions({ ...localPdfOptions, pdfStandard: e.target.value })}
                                         className="pdf-option-select"
                                         disabled={isExporting}>
