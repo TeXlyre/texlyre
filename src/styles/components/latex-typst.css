@@ -25,6 +25,12 @@
 	margin-bottom: var(--space-xs);
 }
 
+
+.pdf-standards-link {
+	font-size: 0.8rem;
+	margin-top: 0;
+}
+
 .main-file-path {
 	font-size: 0.9rem;
 	overflow: hidden;
@@ -474,6 +480,7 @@ embed {
 	flex-direction: column;
 	gap: var(--space-sm);
 	margin-top: var(--space-sm);
+	margin-bottom: var(--space-xs);
 	padding: var(--space-sm);
 	background-color: var(--pico-secondary-background);
 	border-radius: var(--radius-sm);

@@ -465,8 +465,8 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                 }}
                 className="format-select"
                 disabled={isCompiling}>
-                <option value="pdf">PDF</option>
-                <option value="svg">SVG</option>
+                <option value="pdf">{t('PDF')}</option>
+                <option value="svg">{t('SVG')}</option>
                 <option value="canvas">{t('Canvas')}</option>
               </select>
               {effectiveFormat === 'pdf' && (
@@ -506,10 +506,39 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                     }}
                     className="pdf-option-select"
                     disabled={isCompiling}>
-                    <option value='"1.7"'>{t('PDF/A-1')}</option>
-                    <option value='"ua-1"'>{t('PDF/UA-1')}</option>
-                    <option value='"2.0"'>{t('PDF 2.0')}</option>
+                    <>
+                      <optgroup label="PDF Versions">
+                        <option value='"1.4"'>PDF 1.4</option>
+                        <option value='"1.5"'>PDF 1.5</option>
+                        <option value='"1.6"'>PDF 1.6</option>
+                        <option value='"1.7"'>PDF 1.7</option>
+                        <option value='"2.0"'>PDF 2.0</option>
+                      </optgroup>
+                      <optgroup label="PDF/A Standards">
+                        <option value='"a-1b"'>PDF/A-1b</option>
+                        <option value='"a-1a"'>PDF/A-1a</option>
+                        <option value='"a-2b"'>PDF/A-2b</option>
+                        <option value='"a-2u"'>PDF/A-2u</option>
+                        <option value='"a-2a"'>PDF/A-2a</option>
+                        <option value='"a-3b"'>PDF/A-3b</option>
+                        <option value='"a-3u"'>PDF/A-3u</option>
+                        <option value='"a-3a"'>PDF/A-3a</option>
+                        <option value='"a-4"'>PDF/A-4</option>
+                        <option value='"a-4f"'>PDF/A-4f</option>
+                        <option value='"a-4e"'>PDF/A-4e</option>
+                      </optgroup>
+                      <optgroup label="PDF/UA">
+                        <option value='"ua-1"'>PDF/UA-1</option>
+                      </optgroup>
+                    </>
                   </select>
+                  <a
+                    href="https://typst.app/docs/reference/pdf/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="pdf-standards-link">
+                    {t('Learn more about PDF standards')}
+                  </a>
                 </div>
 
                 <label className="pdf-option-checkbox">

@@ -1,7 +1,7 @@
 :root {
 	/* Component Dimensions */
 	--sidebar-width: 250px;
-	--dropdown-width: 300px;
+	--dropdown-width: 330px;
 	--chat-panel-width: 320px;
 	--latex-output-width: 350px;
 	--comment-panel-width: 300px;
