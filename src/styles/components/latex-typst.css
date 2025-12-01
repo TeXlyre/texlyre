@@ -18,10 +18,17 @@
 
 .main-file-label,
 .engine-label,
-.format-label {
+.format-label,
+.pdf-option-label {
 	font-size: 0.8rem;
 	color: var(--text-secondary-color);
 	margin-bottom: var(--space-xs);
+}
+
+
+.pdf-standards-link {
+	font-size: 0.8rem;
+	margin-top: 0;
 }
 
 .main-file-path {
@@ -36,6 +43,57 @@
 	padding: var(--space-sm) 0;
 }
 
+.format-selector-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-sm);
+}
+
+.format-selector-group {
+	display: flex;
+	align-items: stretch;
+	gap: var(--space-sm);
+	flex-wrap: nowrap;
+}
+
+.format-select {
+	flex: 1;
+	box-sizing: border-box;
+}
+
+.pdf-options-toggle {
+	display: flex;
+	align-items: calc(center - var(--space-md));
+	justify-content: center;
+	background-color: var(--pico-secondary-background);
+	color: var(--text-color);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	transition: background-color var(--transition-normal);
+	flex-shrink: 0;
+	box-sizing: border-box;
+	width: auto;
+	padding-top: var(--space-sd);
+	padding-bottom: var(--space-sd);
+	height: 100%;
+}
+
+.pdf-options-toggle:hover:not(:disabled) {
+	background-color: var(--pico-primary-focus);
+}
+
+.pdf-options-toggle.active {
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+}
+
+.pdf-options-toggle:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
 .latex-header-buttons,
 .typst-header-buttons {
 	position: absolute;
@@ -43,6 +101,13 @@
 	right: 250px;
 	padding: var(--space-md);
 	z-index: 10;
+}
+
+.latex-export-buttons,
+.typst-export-buttons {
+	display: flex;
+	gap: var(--space-xs);
+	position: relative;
 }
 
 .latex-output,
@@ -214,7 +279,8 @@ embed {
 }
 
 .latex-button,
-.typst-button {
+.typst-button,
+.export-button {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -249,7 +315,8 @@ embed {
 	height: var(--button-height-md);
 }
 
-.compile-button-group .compile-button {
+.compile-button-group .compile-button,
+.compile-button-group .export-button {
 	border-top-left-radius: var(--radius-sm);
 	border-bottom-left-radius: var(--radius-sm);
 }
@@ -287,8 +354,8 @@ embed {
 }
 
 .main-file-selector {
-	margin-top: 0.75rem;
-	padding-top: 0.75rem;
+	margin-top: var(--space-sd);
+	padding-top: var(--space-sd);
 	border-top: 1px solid var(--border-color);
 }
 
@@ -304,28 +371,34 @@ embed {
 }
 
 .share-checkbox,
-.auto-compile-checkbox {
+.auto-compile-checkbox,
+.export-checkbox,
+.pdf-option-checkbox {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
-	font-size: 0.75rem;
-	color: var(--text-secondary);
+	gap: var(--space-sm);
+	font-size: 0.8rem;
+	color: var(--text-color);
 	cursor: pointer;
 }
 
 .share-checkbox input[type="checkbox"],
-.auto-compile-checkbox input[type="checkbox"] {
+.auto-compile-checkbox input[type="checkbox"],
+.export-checkbox input[type="checkbox"],
+.pdf-option-checkbox input[type="checkbox"] {
 	margin: 0;
 }
 
 .share-checkbox:has(input:disabled),
-.auto-compile-checkbox:has(input:disabled) {
+.auto-compile-checkbox:has(input:disabled),
+.export-checkbox:has(input:disabled),
+.pdf-option-checkbox:has(input:disabled) {
 	opacity: 0.6;
 	cursor: not-allowed;
 }
 
 .shared-indicator {
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	color: var(--accent-color);
 	font-weight: 500;
 }
@@ -359,4 +432,68 @@ embed {
 .cache-item.disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
+}
+
+.export-options {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	margin-top: var(--space-sm);
+	padding-top: var(--space-sm);
+	border-top: 1px solid var(--accent-border);
+}
+
+.export-actions {
+	margin-top: var(--space-sm);
+	padding-top: var(--space-sm);
+	border-top: 1px solid var(--accent-border);
+}
+
+.export-action-button {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-sm);
+	padding: var(--space-sm);
+	background-color: var(--pico-primary) !important;
+	color: var(--pico-primary-inverse) !important;
+	border: none;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	transition: background-color var(--transition-normal);
+	font-size: 0.85rem;
+	font-weight: 500;
+}
+
+.export-action-button:hover:not(:disabled) {
+	background-color: var(--pico-primary-hover);
+}
+
+.export-action-button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.pdf-options-section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	margin-top: var(--space-sm);
+	margin-bottom: var(--space-xs);
+	padding: var(--space-sm);
+	background-color: var(--pico-secondary-background);
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--accent-border);
+}
+
+.pdf-option {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+}
+
+.pdf-option-select {
+	width: 100%;
+	border: 1px solid var(--accent-border);
 }

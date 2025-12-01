@@ -1,4 +1,5 @@
 // src/services/BibliographyImportService.ts
+import { t } from '@/i18n';
 import { fileStorageService } from './FileStorageService';
 
 export interface ImportResult {
@@ -158,8 +159,8 @@ class DefaultBibTexParser implements BibTexParser {
 					// Unquoted value (until comma or end)
 					const valueStart = fieldPos;
 					while (fieldPos < fieldsContent.length &&
-						   fieldsContent[fieldPos] !== ',' &&
-						   fieldsContent[fieldPos] !== '}') {
+						fieldsContent[fieldPos] !== ',' &&
+						fieldsContent[fieldPos] !== '}') {
 						fieldPos++;
 					}
 					fieldValue = fieldsContent.slice(valueStart, fieldPos).trim();
@@ -217,8 +218,8 @@ class DefaultBibTexParser implements BibTexParser {
 
 		const newEntryContent = this.serializeEntry(entry);
 		return content.substring(0, position.start) +
-			   newEntryContent +
-			   content.substring(position.end);
+			newEntryContent +
+			content.substring(position.end);
 	}
 }
 
@@ -462,7 +463,7 @@ export class BibliographyImportService {
 				return {
 					success: false,
 					entryKey,
-					error: error instanceof Error ? error.message : 'Unknown error'
+					error: error instanceof Error ? error.message : t('Unknown error')
 				};
 			}
 		}

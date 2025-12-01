@@ -2,13 +2,14 @@
 import { t } from '@/i18n';
 import { nanoid } from 'nanoid';
 
-import type { TypstCompileResult, TypstOutputFormat } from '../types/typst';
+import type { TypstCompileResult, TypstOutputFormat, TypstPdfOptions } from '../types/typst';
 import type { FileNode } from '../types/files';
 import { fileStorageService } from './FileStorageService';
 import { notificationService } from './NotificationService';
 import { cleanContent } from '../utils/fileCommentUtils';
 import { TypstCompilerEngine } from '../extensions/typst.ts/TypstCompilerEngine';
 import { toArrayBuffer } from '../utils/fileUtils';
+import { downloadFiles } from '../utils/zipUtils';
 
 type CompilationStatus = 'unloaded' | 'loading' | 'ready' | 'compiling' | 'error';
 
@@ -53,7 +54,8 @@ class TypstService {
     async compileTypst(
         mainFileName: string,
         fileTree: FileNode[],
-        format: TypstOutputFormat = this.defaultFormat
+        format: TypstOutputFormat = this.defaultFormat,
+        pdfOptions?: TypstPdfOptions
     ): Promise<TypstCompileResult> {
         if (!this.isReady()) {
             await this.initialize();
@@ -90,13 +92,17 @@ class TypstService {
                 normalizedMainFileName,
                 sources,
                 format,
+                pdfOptions,
                 this.compilationAbortController.signal
             );
 
             const formattedLog = this.formatDiagnostics(diagnostics);
-            const hasErrors = diagnostics?.some((d: any) => d.severity === 'error');
+            const hasErrors = diagnostics?.some((d: any) => {
+                const sev = d.severity;
+                return sev === 'error' || sev === 'Error' || (typeof sev === 'object' && sev.Error !== undefined);
+            });
 
-            if (hasErrors) {
+            if (hasErrors || (output instanceof Uint8Array && output.length === 0)) {
                 const result: TypstCompileResult = {
                     status: 1,
                     log: formattedLog || 'Compilation failed with errors',
@@ -123,17 +129,118 @@ class TypstService {
                 return result;
             }
 
-            const errorMessage = error instanceof Error ? error.message : t('Unknown error');
+            const diagnostics = this.parseDiagnosticsFromError(error);
+            const formattedLog = diagnostics.length > 0
+                ? this.formatDiagnostics(diagnostics)
+                : (error instanceof Error ? error.message : t('Unknown error'));
+
             const result: TypstCompileResult = {
                 status: 1,
-                log: `Compilation failed: ${errorMessage}`,
+                log: formattedLog,
                 format,
             };
 
-            this.handleCompilationError(operationId, errorMessage);
+            this.handleCompilationError(operationId, 'Compilation failed');
             await this.saveCompilationLog(normalizedMainFileName, result.log);
 
             return result;
+        } finally {
+            this.setStatus('ready');
+            this.compilationAbortController = null;
+        }
+    }
+
+    async exportDocument(
+        mainFileName: string,
+        fileTree: FileNode[],
+        options: {
+            format?: TypstOutputFormat;
+            includeLog?: boolean;
+            pdfOptions?: TypstPdfOptions;
+        } = {}
+    ): Promise<void> {
+        const { format = this.defaultFormat, includeLog = false, pdfOptions } = options;
+        const operationId = `typst-export-${nanoid()}`;
+
+        if (!this.isReady()) {
+            await this.initialize();
+        }
+
+        this.setStatus('compiling');
+        this.compilationAbortController = new AbortController();
+
+        const normalizedMainFileName = this.normalizePath(mainFileName);
+
+        try {
+            this.showNotification('info', t('Preparing files for export...'), operationId);
+
+            const { sources } = await this.prepareSources(
+                normalizedMainFileName,
+                fileTree,
+                this.compilationAbortController.signal
+            );
+
+            this.showNotification(
+                'info',
+                t('Compiling for export to {format}...', { format: format.toUpperCase() }),
+                operationId
+            );
+
+            const { output, diagnostics } = await this.performCompilationInWorker(
+                normalizedMainFileName,
+                sources,
+                format,
+                pdfOptions,
+                this.compilationAbortController.signal
+            );
+
+            const hasErrors = diagnostics?.some((d: any) => d.severity === 'error');
+
+            if (hasErrors) {
+                this.showNotification('error', t('Export failed'), operationId, 3000);
+                return;
+            }
+
+            const baseName = this.getBaseName(normalizedMainFileName);
+            const files: Array<{ content: Uint8Array; name: string; mimeType: string }> = [];
+
+            if (format === 'pdf' && output instanceof Uint8Array) {
+                files.push({
+                    content: output,
+                    name: `${baseName}.pdf`,
+                    mimeType: 'application/pdf'
+                });
+            } else if ((format === 'svg' || format === 'canvas') && typeof output === 'string') {
+                const content = new TextEncoder().encode(output);
+                files.push({
+                    content,
+                    name: `${baseName}.svg`,
+                    mimeType: 'image/svg+xml'
+                });
+            }
+
+            if (includeLog) {
+                const formattedLog = this.formatDiagnostics(diagnostics);
+                const logContent = new TextEncoder().encode(formattedLog);
+                files.push({
+                    content: logContent,
+                    name: `${baseName}.log`,
+                    mimeType: 'text/plain'
+                });
+            }
+
+            if (files.length > 0) {
+                await downloadFiles(files, baseName);
+            }
+
+            this.showNotification('success', t('Export completed successfully'), operationId, 2000);
+        } catch (error) {
+            if (error instanceof Error && /cancel/i.test(error.message)) {
+                return;
+            }
+
+            const errorMessage = error instanceof Error ? error.message : t('Unknown error');
+            this.showNotification('error', `Export error: ${errorMessage}`, operationId, 5000);
         } finally {
             this.setStatus('ready');
             this.compilationAbortController = null;
@@ -186,12 +293,14 @@ class TypstService {
         mainFilePath: string,
         sources: Record<string, string | Uint8Array>,
         format: TypstOutputFormat,
+        pdfOptions: TypstPdfOptions | undefined,
         signal: AbortSignal
     ): Promise<{ output: Uint8Array | string; diagnostics?: any[] }> {
         const result = await this.compilerEngine.compile(
             mainFilePath,
             sources,
             format,
+            pdfOptions,
             signal
         );
 
@@ -495,6 +604,34 @@ class TypstService {
         }
     }
 
+    private parseDiagnosticsFromError(error: any): any[] {
+        const errorStr = String(error.message || error);
+
+        const diagnostics: any[] = [];
+        const diagPattern = /SourceDiagnostic\s*\{\s*severity:\s*(\w+),\s*span:\s*([^,]+),\s*message:\s*"([^"]+)"(?:[^}]*?)hints:\s*\[([^\]]*)\]/g;
+
+        let match;
+        while ((match = diagPattern.exec(errorStr)) !== null) {
+            const hintsStr = match[4];
+            const hints: string[] = [];
+
+            const hintPattern = /"([^"]+)"/g;
+            let hintMatch;
+            while ((hintMatch = hintPattern.exec(hintsStr)) !== null) {
+                hints.push(hintMatch[1]);
+            }
+
+            diagnostics.push({
+                severity: match[1],
+                span: match[2].trim(),
+                message: match[3],
+                hints: hints
+            });
+        }
+
+        return diagnostics;
+    }
+
     private formatDiagnostics(diagnostics?: any[]): string {
         if (!diagnostics || diagnostics.length === 0) {
             return 'Compilation successful';
@@ -505,19 +642,23 @@ class TypstService {
         for (const diag of diagnostics) {
             const severity = diag.severity || 'error';
             const message = diag.message || t('Unknown error');
-            const path = diag.path || '';
-            const range = diag.range || '';
 
             let location = '';
-            if (path) {
-                location = path.replace(/^\//, '');
-                if (range) {
-                    const startPos = range.split('-')[0];
+            if (diag.path) {
+                location = diag.path.replace(/^\//, '');
+                if (diag.range) {
+                    const startPos = diag.range.split('-')[0];
                     location += `:${startPos}`;
                 }
+            } else if (diag.span) {
+                location = String(diag.span).replace(/^Span\(|\)$/g, '');
             }
 
-            const prefix = severity === 'error' ? 'error' : severity === 'warning' ? 'warning' : 'info';
+            const severityStr = typeof severity === 'string'
+                ? severity.toLowerCase()
+                : 'error';
+
+            const prefix = severityStr === 'error' ? 'error' : severityStr === 'warning' ? 'warning' : 'info';
             lines.push(location ? `${prefix}[${location}]: ${message}` : `${prefix}: ${message}`);
 
             if (diag.hints && Array.isArray(diag.hints) && diag.hints.length > 0) {

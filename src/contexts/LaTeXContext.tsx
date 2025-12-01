@@ -245,11 +245,11 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
       await refreshFileTree();
     } catch (error) {
-      setCompileError(error instanceof Error ? error.message : 'Unknown error');
+      setCompileError(error instanceof Error ? error.message : t('Unknown error'));
       setCurrentView('log');
 
       // Send error to window
-      pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : 'Unknown error');
+      pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
     } finally {
       setIsCompiling(false);
     }
@@ -326,11 +326,11 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
       await refreshFileTree();
     } catch (error) {
-      setCompileError(error instanceof Error ? error.message : 'Unknown error');
+      setCompileError(error instanceof Error ? error.message : t('Unknown error'));
       setCurrentView('log');
 
       // Send error to window
-      pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : 'Unknown error');
+      pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
     } finally {
       setIsCompiling(false);
     }
@@ -342,6 +342,13 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       setIsCompiling(false);
       setCompileError('Compilation stopped by user');
     }
+  };
+
+  const exportDocument = async (
+    mainFileName: string,
+    options: { format?: 'pdf' | 'dvi'; includeLog?: boolean } = {}
+  ): Promise<void> => {
+    await latexService.exportDocument(mainFileName, fileTree, options);
   };
 
   const toggleOutputView = () => {
@@ -364,7 +371,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
         clearCache,
         compileWithClearCache,
         triggerAutoCompile,
-        activeCompiler
+        activeCompiler,
+        exportDocument
       }}>
 
       {children}

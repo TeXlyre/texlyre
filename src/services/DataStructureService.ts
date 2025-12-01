@@ -2,6 +2,7 @@
 import type { User } from '../types/auth';
 import type { FileNode } from '../types/files';
 import type { Project } from '../types/projects';
+import type { TypstPdfOptions } from '../types/typst';
 
 export interface UnifiedManifest {
 	version: string;
@@ -18,6 +19,7 @@ export interface ProjectMetadata {
 	latexEngine?: 'pdftex' | 'xetex' | 'luatex';
 	typstEngine?: string;
 	typstOutputFormat?: 'pdf' | 'svg' | 'canvas';
+	typstPdfOptions?: TypstPdfOptions;
 	docUrl: string;
 	createdAt: number;
 	updatedAt: number;

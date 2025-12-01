@@ -1173,8 +1173,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
               documents={documents}
               onNavigateToLinkedFile={handleNavigateToLinkedFile}
               onExpandLatexOutput={pdfWindowService.isWindowOpen() ? undefined : handleLatexOutputExpand}
-              linkedFileInfo={linkedFileInfo}
-              docUrl={docUrl} />
+              linkedFileInfo={linkedFileInfo} />
 
           </ResizablePanel>
         }

@@ -62,7 +62,7 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
               border: '1px solid var(--border-color)',
               borderRadius: '8px',
               padding: '1rem',
-              marginBottom: '0.75rem',
+              marginBottom: 'var(--space-sd)',
               cursor: 'pointer',
               backgroundColor:
                 selectedAction === 'extract' ?
@@ -78,7 +78,7 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
               style={{
                 display: 'flex',
                 alignItems: 'flex-start',
-                gap: '0.75rem',
+                gap: 'var(--space-sd)',
                 cursor: 'pointer'
               }}>
 
@@ -133,7 +133,7 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
               style={{
                 display: 'flex',
                 alignItems: 'flex-start',
-                gap: '0.75rem',
+                gap: 'var(--space-sd)',
                 cursor: 'pointer'
               }}>
 

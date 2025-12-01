@@ -33,7 +33,9 @@ import ToastContainer from '../common/ToastContainer';
 import TypesetterInfo from '../common/TypesetterInfo';
 import FileDocumentController from '../editor/FileDocumentController';
 import LaTeXCompileButton from '../output/LaTeXCompileButton';
+import LaTeXExportButton from '../output/LaTeXExportButton';
 import TypstCompileButton from '../output/TypstCompileButton';
+import TypstExportButton from '../output/TypstExportButton';
 import ExportAccountModal from '../profile/ExportAccountModal';
 import DeleteAccountModal from '../profile/DeleteAccountModal';
 import ProfileSettingsModal from '../profile/ProfileSettingsModal';
@@ -418,9 +420,10 @@ const EditorAppView: React.FC<EditorAppProps> = ({
   };
 
   const CompileButtons = () => {
-    const buttons = [
+    const latex_buttons = [
       <LaTeXCompileButton
         key="latex"
+        dropdownKey={'latex-header-dropdown'}
         className="header-compile-button"
         selectedDocId={localDocId}
         documents={doc?.documents}
@@ -428,11 +431,20 @@ const EditorAppView: React.FC<EditorAppProps> = ({
         onExpandLatexOutput={handleExpandLatexOutput}
         linkedFileInfo={linkedFileInfo}
         shouldNavigateOnCompile={true}
-        useSharedSettings={true}
-        docUrl={docUrl} />,
+        useSharedSettings={true} />,
 
+      <LaTeXExportButton
+        className="output-export-button"
+        selectedDocId={localDocId}
+        documents={doc?.documents}
+        linkedFileInfo={linkedFileInfo}
+        useSharedSettings={true}
+      />];
+
+    const typst_buttons = [
       <TypstCompileButton
         key="typst"
+        dropdownKey={'typst-header-dropdown'}
         className="header-typst-compile-button"
         selectedDocId={localDocId}
         documents={doc?.documents}
@@ -440,12 +452,18 @@ const EditorAppView: React.FC<EditorAppProps> = ({
         onExpandTypstOutput={handleExpandTypstOutput}
         linkedFileInfo={linkedFileInfo}
         shouldNavigateOnCompile={true}
+        useSharedSettings={true} />,
+
+      <TypstExportButton
+        className="output-export-button"
+        selectedDocId={localDocId}
+        documents={doc?.documents}
+        linkedFileInfo={linkedFileInfo}
         useSharedSettings={true}
-        docUrl={docUrl} />];
+      />];
 
-
-
-    return projectType === 'typst' ? <>{buttons[1]}</> : <>{buttons[0]}</>;
+    return projectType === 'typst' ? <>{typst_buttons[0]}{typst_buttons[1]}</>
+      : <>{latex_buttons[0]}{latex_buttons[1]}</>;
   };
 
   const shareUrl = `${window.location.origin}${window.location.pathname}#${docUrl}`;

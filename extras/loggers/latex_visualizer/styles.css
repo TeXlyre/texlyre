@@ -12,7 +12,7 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 0.75rem 1rem;
+	padding: var(--space-sd) 1rem;
 	border-bottom: 1px solid var(--accent-border);
 	background-color: var(--accent-background);
 	border-radius: 8px 8px 0 0;
@@ -168,7 +168,7 @@
 	gap: 0.5rem;
 	padding: 0.25rem 0.5rem;
 	border-radius: 4px;
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.025em;
@@ -200,7 +200,7 @@
 	padding: 0.25rem 0.5rem;
 	border-radius: 4px;
 	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	transition: background-color 0.2s ease;
 }
 
@@ -220,7 +220,7 @@
 .error-context {
 	background-color: var(--pico-secondary-background);
 	border-radius: 4px;
-	padding: 0.75rem;
+	padding: var(--space-sd);
 	font-family: var(--code-font-family, "Fira Code", monospace);
 	font-size: 0.8rem;
 	margin: 0;
@@ -256,7 +256,7 @@
 .error-file {
 	color: var(--pico-secondary);
 	font-weight: 500;
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	padding: 0.25rem 0.5rem;
 	border-radius: 4px;
 	background-color: rgba(var(--pico-secondary-rgb, 108, 117, 125), 0.1);
@@ -310,7 +310,7 @@
 	}
 
 	.error-item {
-		padding: 0.75rem;
+		padding: var(--space-sd);
 	}
 }
 
@@ -334,6 +334,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
 	.error-item,
 	.error-line,
 	.error-count,

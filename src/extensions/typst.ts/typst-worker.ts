@@ -17,6 +17,11 @@ type CompileMessage = {
         mainFilePath: string;
         sources: Record<string, string | Uint8Array>;
         format: OutputFormat;
+        pdfOptions?: {
+            pdfStandard?: string;
+            pdfTags?: boolean;
+            creationTimestamp?: number;
+        };
     };
 };
 
@@ -73,7 +78,6 @@ const defaultFonts = [
 ];
 
 async function loadFonts(baseUrl: string = `${BASE_PATH}/assets/fonts`) {
-    const fontExtensions = ['.ttf', '.otf'];
     const fontPaths: string[] = [];
 
     try {
@@ -112,6 +116,15 @@ async function ensureInit() {
     const packageRegistry = TypstSnippet.fetchPackageRegistry();
 
     compiler = createTypstCompiler();
+
+    // TODO (fabawi): this is hard-coded for now. **NOT NEEDED ANYMORE**
+    // Need to add mechanism for re-initializing when pdf options change
+    // compiler.setPdfOpts({
+    //     pdf_standard: '"2.0"',
+    //     pdf_tags: false,
+    //     creation_timestamp: Math.floor(Date.now() / 1000)
+    // });
+
     await compiler.init({
         getModule: () => `${BASE_PATH}/core/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm`,
         beforeBuild: [
@@ -162,7 +175,8 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
         await ensureInit();
 
         const { payload } = data as CompileMessage;
-        const { mainFilePath, sources, format } = payload;
+        const { mainFilePath, sources, format, pdfOptions } = payload;
+
         compiler.resetShadow();
         for (const [path, content] of Object.entries(sources)) {
             const absolutePath = path.startsWith('/') ? path : `/${path}`;
@@ -178,6 +192,16 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
         let diagnostics: any[] = [];
 
         if (format === 'pdf') {
+            const pdfStandard = pdfOptions?.pdfStandard || '"1.7"';
+            const pdfTags = pdfOptions?.pdfTags !== undefined ? pdfOptions.pdfTags : true;
+            const creationTimestamp = pdfOptions?.creationTimestamp || Math.floor(Date.now() / 1000);
+
+            compiler.setPdfOptsForNextCompile({
+                pdf_standard: pdfStandard,
+                pdf_tags: pdfTags,
+                creation_timestamp: creationTimestamp
+            });
+
             const compileResult = await compiler.compile({
                 mainFilePath: absoluteMainPath,
                 format: getFormatArg('pdf'),
@@ -192,10 +216,14 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
             diagnostics = compileResult.diagnostics || [];
 
             if (!compileResult.result || compileResult.result.byteLength === 0) {
-                const errorMsg = diagnostics.length > 0
-                    ? diagnostics.map(d => d.message).join('; ')
-                    : 'Compilation produced no artifact';
-                throw new Error(errorMsg);
+                const transferList: Transferable[] = [];
+                const resp: DoneResponse = {
+                    id,
+                    type: 'done',
+                    result: { format, output: new Uint8Array(0), diagnostics },
+                };
+                self.postMessage(resp, transferList);
+                return;
             }
 
             output = await renderer.renderSvg({

@@ -14,7 +14,7 @@
 [data-layout="texlyre-wide"] .cursor-indicator {
 	border-radius: var(--texlyre-radius-sm);
 	padding: var(--texlyre-spacing-xs) var(--texlyre-spacing-sm);
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	font-weight: 500;
 	color: var(--pico-background);
 }

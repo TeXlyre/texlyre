@@ -211,7 +211,7 @@ export const ContentFormatterProvider: React.FC<ContentFormatterProviderProps> =
       return null;
     } catch (error) {
       contentFormatterService.showErrorNotification(
-        `Formatting error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Formatting error: ${error instanceof Error ? error.message : t('Unknown error')}`,
         { operationId, duration: 3000, type: 'latex' }
       );
       return null;

@@ -71,7 +71,7 @@
 
 .backup-status-indicator .backup-label,
 .collab-status-indicator .collab-label {
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	color: var(--text-color);
 }
 
@@ -236,7 +236,7 @@
 }
 
 .sync-scope-selector {
-	padding: 0.75rem;
+	padding: var(--space-sd);
 	border: 1px solid var(--accent-border);
 	border-radius: var(--radius-sm);
 	background: var(--background-tertiary);
@@ -309,7 +309,7 @@
 
 .activity-item,
 .notification-item {
-	padding: 0.75rem;
+	padding: var(--space-sd);
 	background: var(--background-secondary);
 	border-radius: var(--radius-sm);
 	border-left: 3px solid var(--accent-color);
@@ -364,7 +364,7 @@
 
 .activity-time,
 .notification-time {
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	color: var(--text-color-secondary);
 	margin-left: 1.375rem;
 }
@@ -434,9 +434,11 @@
 	0% {
 		opacity: 1;
 	}
+
 	50% {
 		opacity: 0.5;
 	}
+
 	100% {
 		opacity: 1;
 	}
@@ -447,6 +449,7 @@
 }
 
 @media (max-width: 768px) {
+
 	.backup-toolbar,
 	.sync-toolbar,
 	.collab-toolbar {

@@ -20,7 +20,7 @@
 
 .image-controls {
 	display: flex;
-	gap: 0.75rem;
+	gap: var(--space-sd);
 	align-items: center;
 	flex-wrap: wrap;
 }
@@ -28,7 +28,7 @@
 /* Special styling for zoom percentage button */
 .control-group button:nth-child(2) {
 	min-width: 50px;
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	font-weight: 600;
 }
 
@@ -105,7 +105,7 @@
 	.image-viewer-header {
 		flex-direction: column;
 		align-items: stretch;
-		gap: 0.75rem;
+		gap: var(--space-sd);
 	}
 
 	.image-controls {
@@ -132,6 +132,7 @@
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
+
 	.control-group button,
 	.image-container img {
 		transition: none;

@@ -1,4 +1,5 @@
 // src/services/ContentFormatterService.ts
+import { t } from '@/i18n';
 import { WasmToolsEngine } from '../extensions/wasm-tools/WasmToolsEngine';
 import { TypstyleOptions } from '../extensions/wasm-tools/TypstyleEngine';
 import { notificationService } from './NotificationService';
@@ -35,7 +36,7 @@ class ContentFormatterService {
             console.error('[ContentFormatterService] LaTeX format failed:', error);
             return {
                 success: false,
-                error: error instanceof Error ? error.message : 'Unknown error'
+                error: error instanceof Error ? error.message : t('Unknown error')
             };
         }
     }
@@ -53,7 +54,7 @@ class ContentFormatterService {
             console.error('[ContentFormatterService] Typst format failed:', error);
             return {
                 success: false,
-                error: error instanceof Error ? error.message : 'Unknown error'
+                error: error instanceof Error ? error.message : t('Unknown error')
             };
         }
     }

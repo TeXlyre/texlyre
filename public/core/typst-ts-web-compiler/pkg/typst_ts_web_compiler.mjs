@@ -294,11 +294,11 @@ function passArrayJsValueToWasm0(array, malloc) {
     WASM_VECTOR_LEN = array.length;
     return ptr;
 }
-function __wbg_adapter_4(arg0, arg1, arg2) {
+function __wbg_adapter_10(arg0, arg1, arg2) {
     wasm.__wbindgen_export_5(arg0, arg1, addHeapObject(arg2));
 }
 
-function __wbg_adapter_130(arg0, arg1, arg2, arg3) {
+function __wbg_adapter_131(arg0, arg1, arg2, arg3) {
     wasm.__wbindgen_export_6(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
 }
 
@@ -1009,6 +1009,22 @@ export class TypstCompilerBuilder {
         return takeObject(ret);
     }
     /**
+     * @param {any} opts
+     */
+    set_pdf_opts(opts) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.typstcompilerbuilder_set_pdf_opts(retptr, this.__wbg_ptr, addHeapObject(opts));
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            if (r1) {
+                throw takeObject(r0);
+            }
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
      * @param {Uint8Array} data
      * @returns {Promise<void>}
      */
@@ -1328,7 +1344,7 @@ function __wbg_get_imports() {
                 const a = state0.a;
                 state0.a = 0;
                 try {
-                    return __wbg_adapter_130(a, state0.b, arg0, arg1);
+                    return __wbg_adapter_131(a, state0.b, arg0, arg1);
                 } finally {
                     state0.a = a;
                 }
@@ -1541,9 +1557,9 @@ function __wbg_get_imports() {
         const ret = BigInt.asUintN(64, arg0);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_cast_87a9b1519f173414 = function(arg0, arg1) {
-        // Cast intrinsic for `Closure(Closure { dtor_idx: 247, function: Function { arguments: [Externref], shim_idx: 248, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-        const ret = makeMutClosure(arg0, arg1, 247, __wbg_adapter_4);
+    imports.wbg.__wbindgen_cast_5627e5ed27b93694 = function(arg0, arg1) {
+        // Cast intrinsic for `Closure(Closure { dtor_idx: 249, function: Function { arguments: [Externref], shim_idx: 250, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+        const ret = makeMutClosure(arg0, arg1, 249, __wbg_adapter_10);
         return addHeapObject(ret);
     };
     imports.wbg.__wbindgen_cast_9ae0607507abb057 = function(arg0) {

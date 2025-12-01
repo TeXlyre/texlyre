@@ -372,13 +372,15 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
           }
         </div>
         <TypstCompileButton
+          dropdownKey={'typst-output-dropdown'}
           className="output-compile-button"
           selectedDocId={selectedDocId}
           documents={documents}
           onNavigateToLinkedFile={onNavigateToLinkedFile}
           onExpandTypstOutput={onExpandTypstOutput}
           linkedFileInfo={linkedFileInfo}
-          shouldNavigateOnCompile={false} />
+          shouldNavigateOnCompile={false}
+          useSharedSettings={false} />
 
       </div>
 

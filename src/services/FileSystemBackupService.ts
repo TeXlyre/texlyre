@@ -1,4 +1,5 @@
 // src/services/FileSystemBackupService.ts
+import { t } from '@/i18n';
 import type {
 	BackupActivity,
 	BackupDiscoveryResult,
@@ -86,7 +87,7 @@ class FileSystemBackupService {
 	async requestAccess(isAutoStart = false): Promise<boolean> {
 		try {
 			if (!('showDirectoryPicker' in window)) {
-				throw new Error('File System Access API not supported');
+				throw new Error(t('File System Access API not supported'));
 			}
 
 			this.rootHandle = await (window as any).showDirectoryPicker({
@@ -121,7 +122,7 @@ class FileSystemBackupService {
 			});
 			this.addActivity({
 				type: 'backup_complete',
-				message: 'Backup directory changed successfully',
+				message: t('Backup directory changed successfully'),
 			});
 			this.performDiscoveryScan();
 			return true;
@@ -129,7 +130,7 @@ class FileSystemBackupService {
 			this.updateStatus({
 				status: 'error',
 				error:
-					error instanceof Error ? error.message : 'Failed to change directory',
+					error instanceof Error ? error.message : t('Failed to change directory'),
 			});
 			return false;
 		}
@@ -150,7 +151,7 @@ class FileSystemBackupService {
 		if (!this.canSync()) {
 			this.addActivity({
 				type: 'backup_error',
-				message: 'Backup not enabled or folder not connected.',
+				message: t('Backup not enabled or folder not connected'),
 			});
 			return;
 		}
@@ -159,8 +160,8 @@ class FileSystemBackupService {
 		this.addActivity({
 			type: 'backup_start',
 			message: projectId
-				? `Starting export for project: ${projectId}`
-				: 'Starting full export...',
+				? t(`Starting export for project: {projectId}`, { projectId })
+				: t('Starting full export...'),
 		});
 
 		try {
@@ -171,7 +172,7 @@ class FileSystemBackupService {
 
 			this.addActivity({
 				type: 'backup_complete',
-				message: 'Export completed successfully',
+				message: t('Export completed successfully'),
 			});
 			this.updateStatus({
 				status: 'idle',
@@ -191,7 +192,7 @@ class FileSystemBackupService {
 		if (!this.canSync()) {
 			this.addActivity({
 				type: 'import_error',
-				message: 'Backup not enabled or folder not connected.',
+				message: t('Backup not enabled or folder not connected.'),
 			});
 			return;
 		}
@@ -200,22 +201,22 @@ class FileSystemBackupService {
 		this.addActivity({
 			type: 'import_start',
 			message: projectId
-				? `Starting import for project: ${projectId}`
-				: 'Starting import from filesystem...',
+				? t(`Starting import for project: {projectId}`, { projectId })
+				: t('Starting import from filesystem...'),
 		});
 
 		try {
 			const adapter = new DirectoryAdapter(this.rootHandle!);
 
 			if (!(await adapter.exists(this.unifiedService.getPaths().MANIFEST))) {
-				throw new Error('No backup data found in filesystem');
+				throw new Error(t('No backup data found in filesystem'));
 			}
 
 			const filesystemData =
 				await this.fileSystemManager.readUnifiedStructure(adapter);
 
 			if (!this.unifiedService.validateStructure(filesystemData)) {
-				throw new Error('Invalid backup structure');
+				throw new Error(t('Invalid backup structure'));
 			}
 
 			await this.processImport(filesystemData, projectId);
@@ -223,8 +224,8 @@ class FileSystemBackupService {
 			this.addActivity({
 				type: 'import_complete',
 				message: projectId
-					? `Successfully imported project: ${projectId}`
-					: 'Successfully imported projects from filesystem',
+					? t(`Successfully imported project: {projectId}`, { projectId })
+					: t('Successfully imported projects from filesystem'),
 			});
 			this.updateStatus({
 				status: 'idle',
@@ -248,14 +249,14 @@ class FileSystemBackupService {
 	}
 
 	private handleAccessError(error: any, isAutoStart: boolean): void {
-		let errorMessage = 'Failed to access file system';
+		let errorMessage = t('Failed to access file system');
 
 		if (error instanceof DOMException) {
 			if (error.name === 'SecurityError' && isAutoStart) {
 				errorMessage =
-					'Auto-backup requires manual folder selection. Click to select backup folder.';
+					t('Auto-backup requires manual folder selection. Click to select backup folder.');
 			} else if (error.name === 'AbortError') {
-				errorMessage = 'Folder selection was cancelled';
+				errorMessage = t('Folder selection was cancelled');
 			}
 		} else if (error instanceof Error) {
 			errorMessage = error.message;
@@ -266,7 +267,7 @@ class FileSystemBackupService {
 
 	private async prepareExportData(projectId?: string) {
 		const user = authService.getCurrentUser();
-		if (!user) throw new Error('No authenticated user');
+		if (!user) throw new Error(t('No authenticated user'));
 
 		const localProjects = projectId
 			? [await authService.getProjectById(projectId)].filter(
@@ -276,7 +277,7 @@ class FileSystemBackupService {
 
 		if (localProjects.length === 0) {
 			throw new Error(
-				projectId ? `Project ${projectId} not found` : 'No projects found',
+				projectId ? t(`Project {projectId} not found`, { projectId }) : t('No projects found'),
 			);
 		}
 
@@ -395,7 +396,7 @@ class FileSystemBackupService {
 			: filesystemData.projects;
 
 		if (projectId && projectsToProcess.length === 0) {
-			throw new Error(`Project ${projectId} not found in backup data`);
+			throw new Error(t(`Project {projectId} not found in backup data`, { projectId }));
 		}
 
 		for (const projectMetadata of projectsToProcess) {
@@ -426,7 +427,7 @@ class FileSystemBackupService {
 		const authDb =
 			(await authService.db) ||
 			(await authService.initialize().then(() => authService.db));
-		if (!authDb) throw new Error('Could not access auth database');
+		if (!authDb) throw new Error(t('Could not access auth database'));
 
 		const newProject = {
 			id: projectMetadata.id,
@@ -455,7 +456,7 @@ class FileSystemBackupService {
 				if (projects.length > 0) {
 					this.addActivity({
 						type: 'backup_complete',
-						message: `Found ${projects.length} importable project${projects.length === 1 ? '' : 's'} in backup directory`,
+						message: t(`Found {count} importable project in backup directory`, { count: projects.length }),
 					});
 					this.notifyDiscoveryListeners({
 						hasImportableProjects: true,
@@ -465,7 +466,7 @@ class FileSystemBackupService {
 			} catch (_error) {
 				this.addActivity({
 					type: 'backup_error',
-					message: 'Error scanning for importable projects',
+					message: t('Error scanning for importable projects'),
 				});
 			}
 		}, 1000);
@@ -477,7 +478,7 @@ class FileSystemBackupService {
 	}
 
 	private handleError(type: string, message: string, error: any): void {
-		const errorMessage = `${message}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+		const errorMessage = `${message}: ${error instanceof Error ? error.message : t('Unknown error')}`;
 		this.addActivity({ type: type as any, message: errorMessage });
 		this.updateStatus({
 			status: 'error',

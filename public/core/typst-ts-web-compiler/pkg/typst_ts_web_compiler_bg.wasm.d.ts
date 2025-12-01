@@ -6,6 +6,7 @@ export const typstcompilerbuilder_new: (a: number) => void;
 export const typstcompilerbuilder_set_dummy_access_model: (a: number, b: number) => void;
 export const typstcompilerbuilder_set_access_model: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
 export const typstcompilerbuilder_set_package_registry: (a: number, b: number, c: number) => number;
+export const typstcompilerbuilder_set_pdf_opts: (a: number, b: number, c: number) => void;
 export const typstcompilerbuilder_add_raw_font: (a: number, b: number) => number;
 export const typstcompilerbuilder_add_lazy_font: (a: number, b: number, c: number) => number;
 export const typstcompilerbuilder_build: (a: number) => number;

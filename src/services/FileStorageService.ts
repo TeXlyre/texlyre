@@ -787,6 +787,44 @@ class FileStorageService {
 		return undefined;
 	}
 
+	async getFilesByPath(
+		pathPrefix: string,
+		includeDeleted = false,
+		options?: {
+			fileExtension?: string;
+			excludeDirectories?: boolean;
+		}
+	): Promise<FileNode[]> {
+		if (!this.db) await this.initialize();
+
+		const tx = this.db?.transaction(this.FILES_STORE);
+		const index = tx.store.index('path');
+		const files: FileNode[] = [];
+
+		let cursor = await index.openCursor();
+		while (cursor) {
+			const file = cursor.value as FileNode;
+
+			if (file.path.startsWith(pathPrefix) && (includeDeleted || !file.isDeleted)) {
+				if (options?.excludeDirectories && file.type === 'directory') {
+					cursor = await cursor.continue();
+					continue;
+				}
+
+				if (options?.fileExtension && !file.path.endsWith(options.fileExtension)) {
+					cursor = await cursor.continue();
+					continue;
+				}
+
+				files.push(file);
+			}
+
+			cursor = await cursor.continue();
+		}
+
+		return files;
+	}
+
 	async getChildrenByPath(path: string): Promise<FileNode[]> {
 		if (!this.db) await this.initialize();
 

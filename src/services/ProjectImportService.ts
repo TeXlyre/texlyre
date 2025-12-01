@@ -1,4 +1,5 @@
 // src/services/ProjectImportService.ts
+import { t } from '@/i18n';
 import type { Project } from '../types/projects';
 import { authService } from './AuthService';
 import { UnifiedDataStructureService } from './DataStructureService';
@@ -157,7 +158,7 @@ class ProjectImportService {
 			projectIds.forEach((id) => {
 				result.errors.push({
 					projectId: id,
-					error: error instanceof Error ? error.message : 'Unknown error',
+					error: error instanceof Error ? error.message : t('Unknown error'),
 				});
 			});
 		}
@@ -184,7 +185,7 @@ class ProjectImportService {
 			projectIds.forEach((id) => {
 				result.errors.push({
 					projectId: id,
-					error: error instanceof Error ? error.message : 'Unknown error',
+					error: error instanceof Error ? error.message : t('Unknown error'),
 				});
 			});
 		}
@@ -285,7 +286,7 @@ class ProjectImportService {
 			} catch (error) {
 				result.errors.push({
 					projectId,
-					error: error instanceof Error ? error.message : 'Unknown error',
+					error: error instanceof Error ? error.message : t('Unknown error'),
 				});
 			}
 		}

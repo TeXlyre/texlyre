@@ -13,7 +13,7 @@ import {
 
 import { useFileTree } from '../hooks/useFileTree';
 import { useSettings } from '../hooks/useSettings';
-import type { TypstContextType, TypstOutputFormat } from '../types/typst';
+import type { TypstContextType, TypstOutputFormat, TypstPdfOptions } from '../types/typst';
 import { typstService } from '../services/TypstService';
 import { pdfWindowService } from '../services/PdfWindowService';
 import { parseUrlFragments } from '../utils/urlUtils';
@@ -131,8 +131,12 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     return 'Typst Project';
   };
 
-  const compileDocument = async (mainFileName: string, format: TypstOutputFormat = currentFormat): Promise<void> => {
-    console.log('[TypstContext] compileDocument called', { mainFileName, format });
+  const compileDocument = async (
+    mainFileName: string,
+    format: TypstOutputFormat = currentFormat,
+    pdfOptions?: TypstPdfOptions
+  ): Promise<void> => {
+    console.log('[TypstContext] compileDocument called', { mainFileName, format, pdfOptions });
     setCurrentFormat(format);
     if (!typstService.isReady()) {
       await typstService.initialize();
@@ -147,7 +151,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     setCompiledCanvas(null);
 
     try {
-      const result = await typstService.compileTypst(mainFileName, fileTree, format);
+      const result = await typstService.compileTypst(mainFileName, fileTree, format, pdfOptions);
       console.log('[TypstContext] Compilation result', {
         status: result.status,
         format: result.format,
@@ -192,7 +196,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
             break;
         }
       } else {
-        setCompileError('Compilation failed');
+        setCompileError(t('Compilation failed. Check the log in the main window.'));
         setCurrentView('log');
 
         pdfWindowService.sendCompileResult(result.status, result.log);
@@ -200,10 +204,10 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 
       await refreshFileTree();
     } catch (error) {
-      setCompileError(error instanceof Error ? error.message : 'Unknown error');
+      setCompileError(error instanceof Error ? error.message : t('Unknown error'));
       setCurrentView('log');
 
-      pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : 'Unknown error');
+      pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
     } finally {
       setIsCompiling(false);
     }
@@ -236,6 +240,13 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     }
   };
 
+  const exportDocument = async (
+    mainFileName: string,
+    options: { format?: TypstOutputFormat; includeLog?: boolean } = {}
+  ): Promise<void> => {
+    await typstService.exportDocument(mainFileName, fileTree, options);
+  };
+
   const toggleOutputView = () => {
     setCurrentView(currentView === 'log' ? 'output' : 'log');
   };
@@ -261,7 +272,8 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         currentView,
         clearCache,
         triggerAutoCompile,
-        activeCompiler
+        activeCompiler,
+        exportDocument
       }}>
 
       {children}

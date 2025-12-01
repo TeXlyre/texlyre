@@ -89,7 +89,7 @@
 }
 
 .button.small {
-	padding: 0.375rem 0.75rem;
+	padding: 0.375rem var(--space-sd);
 	font-size: 0.875rem;
 }
 
@@ -104,7 +104,7 @@
 }
 
 .tab-button {
-	padding: var(--space-xs) 0.75rem;
+	padding: var(--space-xs) var(--space-sd);
 	border-radius: var(--radius-sm);
 	background: none;
 	border: none;
