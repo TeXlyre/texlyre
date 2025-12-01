@@ -3,6 +3,7 @@ import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
+import { usePersistentState } from '../../hooks/usePersistentState';
 import PdfWindowToggleButton from './PopoutViewerToggleButton';
 import { useCollab } from '../../hooks/useCollab';
 import { useFileTree } from '../../hooks/useFileTree';
@@ -46,12 +47,14 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
   const { selectedFileId, getFile, fileTree } = useFileTree();
   const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
   const { getSetting } = useSettings();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isPdfOptionsOpen, setIsPdfOptionsOpen] = useState(false);
   const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
   const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
   const [availableTypstFiles, setAvailableTypstFiles] = useState<string[]>([]);
+
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownKey = `typst-dropdown-${docUrl || 'default'}`;
+  const [isDropdownOpen, setIsDropdownOpen] = usePersistentState(dropdownKey, false);
+  const [isPdfOptionsOpen, setIsPdfOptionsOpen] = usePersistentState(`${dropdownKey}-pdf`, false);
 
   const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
   const effectiveMainFile = projectMainFile || userSelectedMainFile || autoMainFile;
@@ -116,7 +119,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [isDropdownOpen]);
 
   useEffect(() => {
     if (!useSharedSettings || !effectiveAutoCompileOnSave || !effectiveMainFile) return;

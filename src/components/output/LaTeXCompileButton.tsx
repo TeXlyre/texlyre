@@ -3,6 +3,7 @@ import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
+import { usePersistentState } from '../../hooks/usePersistentState';
 import PdfWindowToggleButton from './PopoutViewerToggleButton';
 import { useCollab } from '../../hooks/useCollab';
 import { useFileTree } from '../../hooks/useFileTree';
@@ -53,22 +54,22 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
   const { selectedFileId, getFile, fileTree } = useFileTree();
   const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
   const { getSetting } = useSettings();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
   const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
   const [availableTexFiles, setAvailableTexFiles] = useState<string[]>([]);
-  const [isChangingEngine, setIsChangingEngine] = useState(false);
-  const compileButtonRef = useRef<{ clearAndCompile: () => void; }>();
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const effectiveAutoCompileOnSave = useSharedSettings
     ? doc?.projectMetadata?.latexAutoCompileOnSave ?? false
     : false;
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownKey = `latex-dropdown-${docUrl || 'default'}`;
+  const [isDropdownOpen, setIsDropdownOpen] = usePersistentState(dropdownKey, false);
+  const [isChangingEngine, setIsChangingEngine] = usePersistentState(`${dropdownKey}-engine`, false);
 
   const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
   const projectEngine = useSharedSettings ? doc?.projectMetadata?.latexEngine : undefined;
   const effectiveEngine = projectEngine || latexEngine;
   const effectiveMainFile = projectMainFile || userSelectedMainFile || autoMainFile;
-
 
   useEffect(() => {
     const findTexFiles = (nodes: FileNode[]): string[] => {
@@ -111,11 +112,11 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     findMainFile();
   }, [selectedFileId, getFile, fileTree, selectedDocId, linkedFileInfo]);
 
-  useEffect(() => {
-    if (useSharedSettings && projectEngine && projectEngine !== latexEngine) {
-      setLatexEngine(projectEngine);
-    }
-  }, [projectEngine, latexEngine, setLatexEngine, useSharedSettings]);
+  // useEffect(() => {
+  //   if (useSharedSettings && projectEngine && projectEngine !== latexEngine) {
+  //     setLatexEngine(projectEngine);
+  //   }
+  // }, [projectEngine, latexEngine, setLatexEngine, useSharedSettings]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -130,7 +131,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [isDropdownOpen]);
 
   // Listen for save events and auto-compile if enabled
   useEffect(() => {
@@ -322,7 +323,6 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
       } else {
         await setLatexEngine(engine as 'pdftex' | 'xetex' | 'luatex');
       }
-      setIsDropdownOpen(false);
     } catch (error) {
       console.error('Failed to change engine:', error);
     } finally {
