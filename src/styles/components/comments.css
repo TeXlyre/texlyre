@@ -19,6 +19,7 @@
 		opacity: 0;
 		transform: translateY(5px) scale(0.95);
 	}
+
 	to {
 		opacity: 1;
 		transform: translateY(0) scale(1);
@@ -144,8 +145,7 @@
 	height: 32px;
 	box-shadow: var(--shadow-sm);
 	cursor: pointer;
-	transition: background-color var(--transition-normal), opacity
-		var(--transition-normal);
+	transition: background-color var(--transition-normal), opacity var(--transition-normal);
 	font-size: 0.6rem;
 	opacity: 0.4;
 	border: none;
@@ -194,7 +194,7 @@
 
 .comment-item {
 	margin-bottom: var(--space-md);
-	padding: 0.75rem;
+	padding: var(--space-sd);
 	font-size: 0.8rem;
 	border-radius: var(--radius-lg);
 	background-color: var(--pico-background);
@@ -269,7 +269,7 @@
 
 .comment-content,
 .response-content {
-	margin-bottom: 0.75rem;
+	margin-bottom: var(--space-sd);
 	word-break: break-word;
 }
 
@@ -454,19 +454,19 @@
 }
 
 .floating-comment-button {
-    display: inline-block;
-    padding: 4px 6px;
-    background-color: var(--pico-primary);
-    color: var(--pico-primary-inverse) !important;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-size: 10px;
-    cursor: pointer;
-    box-shadow: var(--shadow-sm);
-    transition: all var(--transition-normal);
-    white-space: nowrap;
-    width: auto;
-    max-width: fit-content;
+	display: inline-block;
+	padding: 4px 6px;
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse) !important;
+	border: none;
+	border-radius: var(--radius-sm);
+	font-size: 10px;
+	cursor: pointer;
+	box-shadow: var(--shadow-sm);
+	transition: all var(--transition-normal);
+	white-space: nowrap;
+	width: auto;
+	max-width: fit-content;
 }
 
 @keyframes fadeIn {
@@ -474,6 +474,7 @@
 		opacity: 0;
 		transform: scale(0.8);
 	}
+
 	to {
 		opacity: 1;
 		transform: scale(1);

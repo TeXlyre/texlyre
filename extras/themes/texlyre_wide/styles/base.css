@@ -37,7 +37,7 @@
 	display: inline-block;
 	padding: var(--texlyre-spacing-xs) var(--texlyre-spacing-sm);
 	border-radius: var(--texlyre-radius-md);
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	background-color: var(--accent-background);
 	transition: all var(--texlyre-transition-normal);
 	color: var(--text-color);

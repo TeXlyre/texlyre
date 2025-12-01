@@ -64,7 +64,7 @@
 }
 
 .settings-language .searchable-language-dropdown .coverage-percentage-small {
-    font-size: 0.75rem;
+    font-size: var(--space-sd);
     font-weight: 600;
     min-width: 35px;
     text-align: right;

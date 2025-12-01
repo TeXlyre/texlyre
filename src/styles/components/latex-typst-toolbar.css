@@ -74,7 +74,7 @@
 
 .cm-table-grid-label {
     margin-top: var(--space-xs);
-    font-size: 0.75rem;
+    font-size: var(--space-sd);
     color: var(--pico-secondary);
 }
 
@@ -147,7 +147,7 @@
         min-width: 24px;
         height: 24px;
         padding: 2px;
-        font-size: 0.75rem;
+        font-size: var(--space-sd);
     }
 
     .codemirror-toolbar-button svg {

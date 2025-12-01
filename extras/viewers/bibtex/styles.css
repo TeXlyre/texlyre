@@ -22,7 +22,7 @@
 
 .bibtex-controls {
 	display: flex;
-	gap: 0.75rem;
+	gap: var(--space-sd);
 	align-items: center;
 	flex-wrap: wrap;
 }
@@ -45,7 +45,7 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 0.75rem;
+	padding: var(--space-sd);
 	border-bottom: 1px solid var(--accent-border, #333);
 }
 
@@ -64,7 +64,7 @@
 
 .reset-button {
 	padding: 0.3rem;
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	background-color: var(--pico-background);
 	border: 1px solid var(--accent-border, #444);
 	border-radius: 4px;
@@ -85,7 +85,7 @@
 
 .tidy-button {
 	padding: 0.3rem;
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	background-color: var(--color-success) !important;
 	border: 1px solid var(--accent-border, #444);
 	border-radius: 4px;
@@ -109,7 +109,7 @@
 }
 
 .options-container {
-	padding: 0.75rem;
+	padding: var(--space-sd);
 }
 
 .option-group {
@@ -119,7 +119,7 @@
 .option-group h5 {
 	margin: 0 0 0.5rem 0;
 	color: var(--text-color);
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.3px;
@@ -133,7 +133,7 @@
 	align-items: flex-start;
 	gap: var(--space-xs);
 	margin-bottom: var(--space-ss);
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	color: var(--text-color);
 	cursor: pointer;
 	text-align: left;
@@ -144,7 +144,7 @@
 	align-items: center;
 }
 
-.option-item > span {
+.option-item>span {
 	margin-left: 0;
 	color: var(--text-color);
 	cursor: pointer;
@@ -160,7 +160,7 @@
 	max-width: 240px;
 	margin-left: 0;
 	padding: 0.25rem 0.35rem;
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	background-color: var(--pico-background);
 	border: 1px solid var(--accent-border, #444);
 	border-radius: 3px;
@@ -178,14 +178,14 @@
 .option-item.sub-option::before {
 	content: "";
 	position: absolute;
-	left: -0.75rem;
+	left: -var(--space-sd);
 	top: 0.1rem;
 	width: 0.5rem;
 	height: 1px;
 	background-color: var(--accent-border, #444);
 }
 
-.option-item.sub-option > span {
+.option-item.sub-option>span {
 	color: var(--pico-secondary);
 	font-weight: 400;
 }
@@ -224,7 +224,7 @@
 
 .option-item select[multiple] option {
 	padding: 0.2rem 0.35rem;
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 }
 
 .bibtex-content-area {
@@ -299,7 +299,7 @@
 }
 
 .tab-button {
-	padding: 0.3rem 0.75rem;
+	padding: 0.3rem var(--space-sd);
 	font-size: 0.8rem;
 	background-color: var(--pico-background);
 	border: none;
@@ -344,11 +344,11 @@
 .processed-save-notice {
 	display: flex;
 	align-items: center;
-	padding: 0.3rem 0.75rem;
+	padding: 0.3rem var(--space-sd);
 	background-color: color-mix(in srgb, var(--color-warning) 20%, white);
 	border: 1px solid var(--color-warning);
 	border-radius: var(--radius-sm);
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	color: var(--pico-secondary);
 	margin-left: auto;
 }
@@ -390,7 +390,7 @@
 	white-space: nowrap;
 	position: relative;
 	cursor: auto;
-	padding: 0.5rem 0.75rem;
+	padding: 0.5rem var(--space-sd);
 }
 
 .header-content {
@@ -451,7 +451,7 @@
 
 .bibtex-table th {
 	background-color: var(--accent-background);
-	padding: 0.75rem;
+	padding: var(--space-sd);
 	text-align: left;
 	font-weight: 600;
 	font-size: 0.85rem;
@@ -475,7 +475,7 @@
 }
 
 .bibtex-table td {
-	padding: 0.5rem 0.75rem;
+	padding: 0.5rem var(--space-sd);
 	border-bottom: 1px solid var(--accent-border, #333);
 	border-right: 1px solid var(--accent-border, #333);
 	font-size: 0.8rem;
@@ -525,7 +525,7 @@
 
 .cell-input {
 	width: 100%;
-	padding: 0.5rem 0.75rem;
+	padding: 0.5rem var(--space-sd);
 	border: none;
 	outline: 2px solid var(--pico-primary);
 	background-color: var(--pico-background);
@@ -550,7 +550,7 @@
 	.bibtex-viewer-header {
 		flex-direction: column;
 		align-items: stretch;
-		gap: 0.75rem;
+		gap: var(--space-sd);
 	}
 
 	.bibtex-controls {
@@ -573,7 +573,7 @@
 	}
 
 	.bibtex-table {
-		font-size: 0.75rem;
+		font-size: var(--space-sd);
 	}
 
 	.bibtex-table th,
@@ -596,6 +596,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
 	.control-group button,
 	.tidy-button,
 	.reset-button,

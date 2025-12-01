@@ -7,10 +7,11 @@ import { useCollab } from '../../hooks/useCollab';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useTypst } from '../../hooks/useTypst';
 import type { DocumentList } from '../../types/documents';
+import type { TypstPdfOptions } from '../../types/typst';
 import type { FileNode } from '../../types/files';
 import type { TypstOutputFormat } from '../../types/typst';
 import { isTemporaryFile } from '../../utils/fileUtils';
-import { ChevronDownIcon, ExportIcon } from '../common/Icons';
+import { ChevronDownIcon, OptionsIcon, ExportIcon } from '../common/Icons';
 
 interface TypstExportButtonProps {
     className?: string;
@@ -40,6 +41,11 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
     const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
     const [availableTypstFiles, setAvailableTypstFiles] = useState<string[]>([]);
     const [selectedFormat, setSelectedFormat] = useState<TypstOutputFormat>('pdf');
+    const [localPdfOptions, setLocalPdfOptions] = useState<TypstPdfOptions>({
+        pdfStandard: '"ua-1"',
+        pdfTags: true
+    });
+    const [isPdfOptionsOpen, setIsPdfOptionsOpen] = useState(false);
     const [includeLog, setIncludeLog] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -102,9 +108,11 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 
         setIsExporting(true);
         try {
+            const exportPdfOptions = selectedFormat === 'pdf' ? localPdfOptions : undefined;
             await exportDocument(effectiveMainFile, {
                 format: selectedFormat,
-                includeLog
+                includeLog,
+                pdfOptions: exportPdfOptions
             });
         } finally {
             setIsExporting(false);
@@ -200,16 +208,63 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                     )}
 
                     <div className="format-selector">
-                        <div className="format-label">{t('Export Format:')}</div>
-                        <select
-                            value={selectedFormat}
-                            onChange={(e) => setSelectedFormat(e.target.value as TypstOutputFormat)}
-                            className="format-select"
-                            disabled={isExporting}>
-                            <option value="pdf">PDF</option>
-                            <option value="svg">SVG</option>
-                            <option value="canvas">{t('Canvas')}</option>
-                        </select>
+                        <div className="format-selector-header">
+                            <div className="format-label">{t('Export Format:')}</div>
+
+                        </div>
+
+                        <div className="format-selector-group">
+                            <select
+                                value={selectedFormat}
+                                onChange={(e) => {
+                                    const format = e.target.value as TypstOutputFormat;
+                                    setSelectedFormat(format);
+                                    if (format !== 'pdf') {
+                                        setIsPdfOptionsOpen(false);
+                                    }
+                                }}
+                                className="format-select"
+                                disabled={isExporting}>
+                                <option value="pdf">PDF</option>
+                                <option value="svg">SVG</option>
+                                <option value="canvas">{t('Canvas')}</option>
+                            </select>
+                            {selectedFormat === 'pdf' && (
+                                <button
+                                    className={`pdf-options-toggle ${isPdfOptionsOpen ? 'active' : ''}`}
+                                    onClick={() => setIsPdfOptionsOpen(!isPdfOptionsOpen)}
+                                    title={t('PDF Options')}
+                                    disabled={isExporting}>
+                                    <OptionsIcon />
+                                </button>
+                            )}
+                        </div>
+                        {selectedFormat === 'pdf' && isPdfOptionsOpen && (
+                            <div className="pdf-options-section">
+                                <div className="pdf-option">
+                                    <label className="pdf-option-label">{t('PDF Standard:')}</label>
+                                    <select
+                                        value={localPdfOptions.pdfStandard || '"ua-1"'}
+                                        onChange={(e) => setLocalPdfOptions({ ...localPdfOptions, pdfStandard: e.target.value })}
+                                        className="pdf-option-select"
+                                        disabled={isExporting}>
+                                        <option value='"1.7"'>{t('PDF/A-1')}</option>
+                                        <option value='"ua-1"'>{t('PDF/UA-1')}</option>
+                                        <option value='"2.0"'>{t('PDF 2.0')}</option>
+                                    </select>
+                                </div>
+
+                                <label className="pdf-option-checkbox">
+                                    <input
+                                        type="checkbox"
+                                        checked={localPdfOptions.pdfTags !== false}
+                                        onChange={(e) => setLocalPdfOptions({ ...localPdfOptions, pdfTags: e.target.checked })}
+                                        disabled={isExporting}
+                                    />
+                                    {t('Enable PDF tags (accessibility)')}
+                                </label>
+                            </div>
+                        )}
                     </div>
 
                     <div className="export-options">
@@ -234,8 +289,9 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                         </button>
                     </div>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 };
 

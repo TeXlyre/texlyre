@@ -20,7 +20,7 @@
 	padding: var(--space-sm);
 	background-color: var(--pico-background);
 	border-bottom: 1px solid var(--accent-border);
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	font-weight: 600;
 	color: var(--text-color);
 	text-transform: uppercase;
@@ -122,7 +122,7 @@
 	cursor: pointer;
 	color: var(--pico-primary);
 	transition: color var(--transition-normal);
-	font-size: 0.75rem !important;
+	font-size: var(--space-sd) !important;
 	border-radius: 2px;
 	flex-shrink: 0;
 }

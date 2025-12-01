@@ -4,7 +4,7 @@
 	--mobile-code-font-family: "Fira Code", "Courier New", monospace;
 
 	--mobile-spacing-xs: 0.5rem;
-	--mobile-spacing-sm: 0.75rem;
+	--mobile-spacing-sm: var(--space-sd);
 	--mobile-spacing-md: 1rem;
 	--mobile-spacing-lg: 1.5rem;
 	--mobile-spacing-xl: 2rem;
@@ -119,7 +119,7 @@
 
 @media (max-width: 480px) {
 	[data-theme-plugin="texlyre-mobile"] {
-		--mobile-font-xs: 0.75rem;
+		--mobile-font-xs: var(--space-sd);
 		--mobile-font-sm: 0.875rem;
 		--mobile-font-md: 1rem;
 		--mobile-font-lg: 1.125rem;

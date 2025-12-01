@@ -58,8 +58,15 @@
 }
 
 @keyframes pulse {
-	0%, 100% { opacity: 1; }
-	50% { opacity: 0.5; }
+
+	0%,
+	100% {
+		opacity: 1;
+	}
+
+	50% {
+		opacity: 0.5;
+	}
 }
 
 .lsp-panel {
@@ -96,13 +103,13 @@
 }
 
 .tab-button {
-	padding: 0.375rem 0.75rem;
+	padding: 0.375rem var(--space-sd);
 	border: 1px solid var(--accent-border);
 	background: var(--pico-background);
 	color: var(--text-color);
 	border-radius: 3px;
 	cursor: pointer;
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	transition: all 0.2s ease;
 }
 
@@ -185,7 +192,7 @@
 }
 
 .lsp-label {
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	color: var(--text-color);
 }
 
@@ -348,13 +355,13 @@
 	display: block;
 	margin-bottom: 0.5rem;
 	font-weight: bold;
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 }
 
 .target-file-select {
 	width: 100%;
 	padding: var(--space-ss);
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	border: 1px solid var(--accent-border);
 	border-radius: 3px;
 	background: var(--pico-background);
@@ -396,7 +403,7 @@
 
 .lsp-entry-item {
 	margin: var(--space-sm);
-	padding: 0.75rem;
+	padding: var(--space-sd);
 	font-size: 0.8rem;
 	border-radius: var(--radius-lg);
 	background-color: var(--pico-background);
@@ -428,7 +435,7 @@
 	font-family: var(--editor-font-family, monospace);
 	font-weight: 600;
 	color: var(--pico-primary);
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
 	padding: 0.2rem var(--space-ss);
 	border-radius: 4px;
@@ -480,7 +487,7 @@
 
 .lsp-entry-year {
 	color: var(--pico-secondary);
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	font-weight: 600;
 	background-color: var(--accent-background);
 	padding: 0.2rem var(--space-ss);
@@ -489,22 +496,22 @@
 }
 
 .lsp-entry-type-badge {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-sm);
-    color: var(--pico-primary);
-    font-weight: 500;
-    border-radius: 4px;
-    background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
-    font-size: 0.55rem;
-    padding: 0.25rem 0.5rem;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: var(--space-sm);
+	color: var(--pico-primary);
+	font-weight: 500;
+	border-radius: 4px;
+	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
+	font-size: 0.55rem;
+	padding: 0.25rem 0.5rem;
 }
 
 .lsp-entry-type-content {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
 }
 
 .lsp-entry-type-icon {
@@ -529,14 +536,14 @@
 
 .lsp-entry-authors {
 	color: var(--pico-secondary);
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	margin-bottom: var(--space-ss);
 	font-weight: 500;
 }
 
 .lsp-entry-venue {
 	color: var(--text-color);
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	margin-bottom: var(--space-ss);
 	opacity: 0.8;
 	font-style: italic;
@@ -568,8 +575,8 @@
 }
 
 .import-button {
-	padding: 0.25rem 0.75rem;
-	font-size: 0.75rem;
+	padding: 0.25rem var(--space-sd);
+	font-size: var(--space-sd);
 	background-color: var(--color-primary);
 	color: white;
 	border: none;
@@ -593,7 +600,7 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 0.75rem;
+	padding: var(--space-sd);
 	border-top: 1px solid var(--accent-border);
 	background-color: var(--accent-background);
 	flex-wrap: wrap;
@@ -601,7 +608,7 @@
 }
 
 .lsp-footer-stats {
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	color: var(--pico-secondary);
 	display: flex;
 	flex-direction: column;
@@ -636,13 +643,13 @@
 }
 
 .back-button {
-	padding: 0.375rem 0.75rem;
+	padding: 0.375rem var(--space-sd);
 	border: 1px solid var(--accent-border);
 	border-radius: 3px;
 	background: var(--pico-background);
 	color: var(--text-color);
 	cursor: pointer;
-	font-size: 0.75rem;
+	font-size: var(--space-sd);
 	transition: all 0.2s ease;
 }
 
@@ -712,6 +719,7 @@
 	from {
 		transform: rotate(0deg);
 	}
+
 	to {
 		transform: rotate(360deg);
 	}

@@ -10,6 +10,7 @@ import { useFileTree } from '../../hooks/useFileTree';
 import { useTypst } from '../../hooks/useTypst';
 import { useSettings } from '../../hooks/useSettings';
 import type { DocumentList } from '../../types/documents';
+import type { TypstPdfOptions } from '../../types/typst';
 import type { FileNode } from '../../types/files';
 import type { TypstOutputFormat } from '../../types/typst';
 import { isTemporaryFile } from '../../utils/fileUtils';
@@ -59,6 +60,10 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
   const effectiveMainFile = projectMainFile || userSelectedMainFile || autoMainFile;
   const projectFormat = useSharedSettings ? doc?.projectMetadata?.typstOutputFormat : undefined;
   const [localFormat, setLocalFormat] = useState<TypstOutputFormat>('pdf');
+  const [localPdfOptions, setLocalPdfOptions] = useState<TypstPdfOptions>({
+    pdfStandard: '"ua-1"',
+    pdfTags: true
+  });
   const effectiveFormat = projectFormat || localFormat;
   const effectiveAutoCompileOnSave = useSharedSettings
     ? doc?.projectMetadata?.typstAutoCompileOnSave ?? false
@@ -144,7 +149,8 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
         const mainFileToCompile =
           detail.isFile ? effectiveMainFile : candidatePath;
         const targetFormat = effectiveFormat;
-        const pdfOptions = targetFormat === 'pdf' && doc?.projectMetadata?.typstPdfOptions
+        const shouldShareFormat = !!projectFormat;
+        const pdfOptions = targetFormat === 'pdf' && shouldShareFormat && doc?.projectMetadata?.typstPdfOptions
           ? doc.projectMetadata.typstPdfOptions
           : undefined;
 
@@ -168,6 +174,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     effectiveAutoCompileOnSave,
     effectiveMainFile,
     effectiveFormat,
+    projectFormat,
     isCompiling,
     compileDocument,
     onExpandTypstOutput,
@@ -217,14 +224,11 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
       }
 
       const shouldNavigate = await shouldNavigateToMain(effectiveMainFile);
-      console.log(`[Navigation] Should navigate: ${shouldNavigate}, shouldNavigateOnCompile: ${shouldNavigateOnCompile}`);
 
       if (shouldNavigateOnCompile && shouldNavigate) {
         if (linkedFileInfo?.filePath === effectiveMainFile && onNavigateToLinkedFile) {
-          console.log('[Navigation] Navigating to linked file');
           onNavigateToLinkedFile();
         } else {
-          console.log(`[Navigation] Dispatching navigate-to-compiled-file event for: ${effectiveMainFile}`);
           document.dispatchEvent(
             new CustomEvent('navigate-to-compiled-file', {
               detail: {
@@ -235,8 +239,11 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
         }
       }
 
-      const pdfOptions = effectiveFormat === 'pdf' && doc?.projectMetadata?.typstPdfOptions
-        ? doc.projectMetadata.typstPdfOptions
+      const shouldShareFormat = !!projectFormat;
+      const pdfOptions = effectiveFormat === 'pdf'
+        ? (shouldShareFormat && doc?.projectMetadata?.typstPdfOptions
+          ? doc.projectMetadata.typstPdfOptions
+          : (!shouldShareFormat ? localPdfOptions : undefined))
         : undefined;
 
       await compileDocument(effectiveMainFile, effectiveFormat, pdfOptions);
@@ -274,8 +281,11 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
       }
     }
 
-    const pdfOptions = effectiveFormat === 'pdf' && doc?.projectMetadata?.typstPdfOptions
-      ? doc.projectMetadata.typstPdfOptions
+    const shouldShareFormat = !!projectFormat;
+    const pdfOptions = effectiveFormat === 'pdf'
+      ? (shouldShareFormat && doc?.projectMetadata?.typstPdfOptions
+        ? doc.projectMetadata.typstPdfOptions
+        : (!shouldShareFormat ? localPdfOptions : undefined))
       : undefined;
 
     try {
@@ -432,7 +442,34 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
           <div className="format-selector">
             <div className="format-selector-header">
               <div className="format-label">{t('Output Format:')}</div>
-              {useSharedSettings && effectiveFormat === 'pdf' && (
+            </div>
+            <div className="format-selector-group">
+              <select
+                value={effectiveFormat}
+                onChange={(e) => {
+                  const format = e.target.value as TypstOutputFormat;
+                  if (useSharedSettings && projectFormat) {
+                    if (!changeDoc) return;
+                    changeDoc((d) => {
+                      if (!d.projectMetadata) {
+                        d.projectMetadata = { name: '', description: '' };
+                      }
+                      d.projectMetadata.typstOutputFormat = format;
+                    });
+                  } else {
+                    setLocalFormat(format);
+                  }
+                  if (format !== 'pdf') {
+                    setIsPdfOptionsOpen(false);
+                  }
+                }}
+                className="format-select"
+                disabled={isCompiling}>
+                <option value="pdf">PDF</option>
+                <option value="svg">SVG</option>
+                <option value="canvas">{t('Canvas')}</option>
+              </select>
+              {effectiveFormat === 'pdf' && (
                 <button
                   className={`pdf-options-toggle ${isPdfOptionsOpen ? 'active' : ''}`}
                   onClick={() => setIsPdfOptionsOpen(!isPdfOptionsOpen)}
@@ -442,58 +479,30 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                 </button>
               )}
             </div>
-            <select
-              value={effectiveFormat}
-              onChange={(e) => {
-                const format = e.target.value as TypstOutputFormat;
-                if (useSharedSettings && projectFormat) {
-                  if (!changeDoc) return;
-                  changeDoc((d) => {
-                    if (!d.projectMetadata) {
-                      d.projectMetadata = { name: '', description: '' };
-                    }
-                    d.projectMetadata.typstOutputFormat = format;
-                  });
-                } else {
-                  setLocalFormat(format);
-                }
-                if (format !== 'pdf') {
-                  setIsPdfOptionsOpen(false);
-                }
-              }}
-              className="format-select"
-              disabled={isCompiling}>
-              <option value="pdf">PDF</option>
-              <option value="svg">SVG</option>
-              <option value="canvas">{t('Canvas')}</option>
-            </select>
-            {useSharedSettings &&
-              <label className="share-checkbox">
-                <input
-                  type="checkbox"
-                  checked={!!projectFormat}
-                  onChange={(e) => handleShareFormat(e.target.checked)}
-                  disabled={isCompiling} />
-                {t('Save and share with collaborators')}
-              </label>
-            }
-            {useSharedSettings && effectiveFormat === 'pdf' && isPdfOptionsOpen && (
+            {effectiveFormat === 'pdf' && isPdfOptionsOpen && (
               <div className="pdf-options-section">
                 <div className="pdf-option">
                   <label className="pdf-option-label">{t('PDF Standard:')}</label>
                   <select
-                    value={doc?.projectMetadata?.typstPdfOptions?.pdfStandard || '"ua-1"'}
+                    value={useSharedSettings
+                      ? (doc?.projectMetadata?.typstPdfOptions?.pdfStandard || '"ua-1"')
+                      : localPdfOptions.pdfStandard
+                    }
                     onChange={(e) => {
-                      if (!changeDoc) return;
-                      changeDoc((d) => {
-                        if (!d.projectMetadata) {
-                          d.projectMetadata = { name: '', description: '' };
-                        }
-                        if (!d.projectMetadata.typstPdfOptions) {
-                          d.projectMetadata.typstPdfOptions = {};
-                        }
-                        d.projectMetadata.typstPdfOptions.pdfStandard = e.target.value;
-                      });
+                      if (useSharedSettings) {
+                        if (!changeDoc) return;
+                        changeDoc((d) => {
+                          if (!d.projectMetadata) {
+                            d.projectMetadata = { name: '', description: '' };
+                          }
+                          if (!d.projectMetadata.typstPdfOptions) {
+                            d.projectMetadata.typstPdfOptions = {};
+                          }
+                          d.projectMetadata.typstPdfOptions.pdfStandard = e.target.value;
+                        });
+                      } else {
+                        setLocalPdfOptions({ ...localPdfOptions, pdfStandard: e.target.value });
+                      }
                     }}
                     className="pdf-option-select"
                     disabled={isCompiling}>
@@ -506,18 +515,25 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                 <label className="pdf-option-checkbox">
                   <input
                     type="checkbox"
-                    checked={doc?.projectMetadata?.typstPdfOptions?.pdfTags !== false}
+                    checked={useSharedSettings
+                      ? (doc?.projectMetadata?.typstPdfOptions?.pdfTags !== false)
+                      : localPdfOptions.pdfTags
+                    }
                     onChange={(e) => {
-                      if (!changeDoc) return;
-                      changeDoc((d) => {
-                        if (!d.projectMetadata) {
-                          d.projectMetadata = { name: '', description: '' };
-                        }
-                        if (!d.projectMetadata.typstPdfOptions) {
-                          d.projectMetadata.typstPdfOptions = {};
-                        }
-                        d.projectMetadata.typstPdfOptions.pdfTags = e.target.checked;
-                      });
+                      if (useSharedSettings) {
+                        if (!changeDoc) return;
+                        changeDoc((d) => {
+                          if (!d.projectMetadata) {
+                            d.projectMetadata = { name: '', description: '' };
+                          }
+                          if (!d.projectMetadata.typstPdfOptions) {
+                            d.projectMetadata.typstPdfOptions = {};
+                          }
+                          d.projectMetadata.typstPdfOptions.pdfTags = e.target.checked;
+                        });
+                      } else {
+                        setLocalPdfOptions({ ...localPdfOptions, pdfTags: e.target.checked });
+                      }
                     }}
                     disabled={isCompiling}
                   />
@@ -525,6 +541,17 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                 </label>
               </div>
             )}
+
+            {useSharedSettings &&
+              <label className="share-checkbox">
+                <input
+                  type="checkbox"
+                  checked={!!projectFormat}
+                  onChange={(e) => handleShareFormat(e.target.checked)}
+                  disabled={isCompiling} />
+                {t('Save and share with collaborators')}
+              </label>
+            }
 
             {useSharedSettings && (
               <label className="auto-compile-checkbox">

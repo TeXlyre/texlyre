@@ -88,7 +88,7 @@
 }
 
 .category-item {
-	padding: 0.75rem var(--space-md);
+	padding: var(--space-sd) var(--space-md);
 	cursor: pointer;
 	font-weight: 500;
 	transition: background-color var(--transition-normal);

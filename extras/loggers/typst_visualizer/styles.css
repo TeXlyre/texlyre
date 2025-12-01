@@ -84,7 +84,7 @@
     gap: 0.5rem;
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
-    font-size: 0.75rem;
+    font-size: var(--space-sd);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.025em;
@@ -116,7 +116,7 @@
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
     background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
-    font-size: 0.75rem;
+    font-size: var(--space-sd);
     transition: background-color 0.2s ease;
 }
 
@@ -143,7 +143,7 @@
 .diagnostic-hint {
     background-color: var(--pico-secondary-background);
     border-radius: 4px;
-    padding: 0.5rem 0.75rem;
+    padding: 0.5rem var(--space-sd);
     font-size: 0.85rem;
     line-height: 1.4;
     border-left: 3px solid var(--pico-primary);
@@ -175,7 +175,7 @@
 .diagnostic-file {
     color: var(--pico-secondary);
     font-weight: 500;
-    font-size: 0.75rem;
+    font-size: var(--space-sd);
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
     background-color: rgba(var(--pico-secondary-rgb, 108, 117, 125), 0.1);
@@ -219,7 +219,7 @@
     }
 
     .diagnostic-item {
-        padding: 0.75rem;
+        padding: var(--space-sd);
     }
 }
 

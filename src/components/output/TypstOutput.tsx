@@ -379,7 +379,8 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
           onNavigateToLinkedFile={onNavigateToLinkedFile}
           onExpandTypstOutput={onExpandTypstOutput}
           linkedFileInfo={linkedFileInfo}
-          shouldNavigateOnCompile={false} />
+          shouldNavigateOnCompile={false}
+          useSharedSettings={false} />
 
       </div>
 
