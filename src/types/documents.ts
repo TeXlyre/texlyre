@@ -20,7 +20,7 @@ export interface DocumentList {
 		latexEngine?: 'pdftex' | 'xetex' | 'luatex';
 		typstEngine?: string;
 		typstOutputFormat?: 'pdf' | 'svg' | 'canvas';
-		autoCompileOnSave?: boolean;
+		latexAutoCompileOnSave?: boolean;
 		typstAutoCompileOnSave?: boolean;
 	};
 }

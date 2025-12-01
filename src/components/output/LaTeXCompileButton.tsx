@@ -61,7 +61,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
   const compileButtonRef = useRef<{ clearAndCompile: () => void; }>();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const effectiveAutoCompileOnSave = useSharedSettings
-    ? doc?.projectMetadata?.autoCompileOnSave ?? false
+    ? doc?.projectMetadata?.latexAutoCompileOnSave ?? false
     : false;
 
   const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
@@ -382,7 +382,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
       if (!d.projectMetadata) {
         d.projectMetadata = { name: '', description: '' };
       }
-      d.projectMetadata.autoCompileOnSave = checked;
+      d.projectMetadata.latexAutoCompileOnSave = checked;
     });
   };
 

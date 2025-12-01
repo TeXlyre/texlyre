@@ -112,7 +112,7 @@ async function ensureInit() {
 
     compiler = createTypstCompiler();
 
-    // TODO (fabawi): this is hard-coded for now. 
+    // TODO (fabawi): this is hard-coded for now. **NOT NEEDED ANYMORE**
     // Need to add mechanism for re-initializing when pdf options change
     // compiler.setPdfOpts({
     //     pdf_standard: '"2.0"',
