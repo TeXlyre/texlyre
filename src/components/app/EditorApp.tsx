@@ -423,6 +423,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
     const latex_buttons = [
       <LaTeXCompileButton
         key="latex"
+        dropdownKey={'latex-header-dropdown'}
         className="header-compile-button"
         selectedDocId={localDocId}
         documents={doc?.documents}
@@ -430,8 +431,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
         onExpandLatexOutput={handleExpandLatexOutput}
         linkedFileInfo={linkedFileInfo}
         shouldNavigateOnCompile={true}
-        useSharedSettings={true}
-        docUrl={docUrl} />,
+        useSharedSettings={true} />,
 
       <LaTeXExportButton
         className="output-export-button"
@@ -444,6 +444,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
     const typst_buttons = [
       <TypstCompileButton
         key="typst"
+        dropdownKey={'typst-header-dropdown'}
         className="header-typst-compile-button"
         selectedDocId={localDocId}
         documents={doc?.documents}
@@ -451,8 +452,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
         onExpandTypstOutput={handleExpandTypstOutput}
         linkedFileInfo={linkedFileInfo}
         shouldNavigateOnCompile={true}
-        useSharedSettings={true}
-        docUrl={docUrl} />,
+        useSharedSettings={true} />,
 
       <TypstExportButton
         className="output-export-button"

@@ -15,7 +15,6 @@ import { toArrayBuffer } from '../../utils/fileUtils';
 interface LaTeXOutputProps {
   className?: string;
   selectedDocId?: string | null;
-  docUrl?: string;
   documents?: Array<{ id: string; name: string; }>;
   onNavigateToLinkedFile?: () => void;
   onExpandLatexOutput?: () => void;
@@ -29,7 +28,6 @@ interface LaTeXOutputProps {
 const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
   className = '',
   selectedDocId,
-  docUrl,
   documents,
   onNavigateToLinkedFile,
   onExpandLatexOutput,
@@ -171,14 +169,14 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
           </button>
         </div>
         <LaTeXCompileButton
+          dropdownKey={'latex-output-dropdown'}
           className="output-compile-button"
           selectedDocId={selectedDocId}
           documents={documents}
           onNavigateToLinkedFile={onNavigateToLinkedFile}
           onExpandLatexOutput={onExpandLatexOutput}
           linkedFileInfo={linkedFileInfo}
-          shouldNavigateOnCompile={false}
-          docUrl={docUrl} />
+          shouldNavigateOnCompile={false} />
 
       </div>
 

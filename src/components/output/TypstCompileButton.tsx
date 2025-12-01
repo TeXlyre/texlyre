@@ -17,6 +17,7 @@ import { fileStorageService } from '../../services/FileStorageService';
 import { OptionsIcon, ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon } from '../common/Icons';
 
 interface TypstCompileButtonProps {
+  dropdownKey: string;
   className?: string;
   selectedDocId?: string | null;
   documents?: Array<{ id: string; name: string; }>;
@@ -29,10 +30,10 @@ interface TypstCompileButtonProps {
   } | null;
   shouldNavigateOnCompile?: boolean;
   useSharedSettings?: boolean;
-  docUrl?: string;
 }
 
 const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
+  dropdownKey,
   className = '',
   selectedDocId,
   documents,
@@ -40,8 +41,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
   onExpandTypstOutput,
   linkedFileInfo,
   shouldNavigateOnCompile = false,
-  useSharedSettings = false,
-  docUrl
+  useSharedSettings = false
 }) => {
   const { isCompiling, compileDocument, stopCompilation, clearCache } = useTypst();
   const { selectedFileId, getFile, fileTree } = useFileTree();
@@ -52,7 +52,6 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
   const [availableTypstFiles, setAvailableTypstFiles] = useState<string[]>([]);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const dropdownKey = `typst-dropdown-${docUrl || 'default'}`;
   const [isDropdownOpen, setIsDropdownOpen] = usePersistentState(dropdownKey, false);
   const [isPdfOptionsOpen, setIsPdfOptionsOpen] = usePersistentState(`${dropdownKey}-pdf`, false);
 
@@ -384,7 +383,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 
         <PdfWindowToggleButton
           className="pdf-window-button"
-          projectId={docUrl?.startsWith('yjs:') ? docUrl.slice(4) : docUrl || 'unknown'}
+          projectId={fileStorageService.getCurrentProjectId() || 'default'}
           title={t('Open PDF in new window')} />
 
         <button

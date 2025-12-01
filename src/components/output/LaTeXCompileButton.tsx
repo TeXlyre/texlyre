@@ -16,6 +16,7 @@ import { fileStorageService } from '../../services/FileStorageService';
 import { ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon } from '../common/Icons';
 
 interface LaTeXCompileButtonProps {
+  dropdownKey?: string;
   className?: string;
   selectedDocId?: string | null;
   documents?: Array<{ id: string; name: string; }>;
@@ -28,10 +29,10 @@ interface LaTeXCompileButtonProps {
   } | null;
   shouldNavigateOnCompile?: boolean;
   useSharedSettings?: boolean;
-  docUrl?: string;
 }
 
 const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
+  dropdownKey,
   className = '',
   selectedDocId,
   documents,
@@ -39,8 +40,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
   onExpandLatexOutput,
   linkedFileInfo,
   shouldNavigateOnCompile = false,
-  useSharedSettings = false,
-  docUrl
+  useSharedSettings = false
 }) => {
   const {
     isCompiling,
@@ -60,7 +60,6 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
   const [isChangingEngine, setIsChangingEngine] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const dropdownKey = `latex-dropdown-${docUrl || 'default'}`;
   const [isDropdownOpen, setIsDropdownOpen] = usePersistentState(dropdownKey, false);
 
   const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
@@ -428,7 +427,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
         <PdfWindowToggleButton
           className="pdf-window-button"
-          projectId={docUrl?.startsWith('yjs:') ? docUrl.slice(4) : docUrl || 'unknown'}
+          projectId={fileStorageService.getCurrentProjectId() || 'default'}
           title={t('Open PDF in new window')} />
 
 

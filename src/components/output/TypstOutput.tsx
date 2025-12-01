@@ -372,6 +372,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
           }
         </div>
         <TypstCompileButton
+          dropdownKey={'typst-output-dropdown'}
           className="output-compile-button"
           selectedDocId={selectedDocId}
           documents={documents}
