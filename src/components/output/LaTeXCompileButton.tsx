@@ -9,6 +9,7 @@ import { useCollab } from '../../hooks/useCollab';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useLaTeX } from '../../hooks/useLaTeX';
 import { useSettings } from '../../hooks/useSettings';
+import { useProperties } from '../../hooks/useProperties';
 import type { DocumentList } from '../../types/documents';
 import type { FileNode } from '../../types/files';
 import { isTemporaryFile } from '../../utils/fileUtils';
@@ -54,6 +55,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
   const { selectedFileId, getFile, fileTree } = useFileTree();
   const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
   const { getSetting } = useSettings();
+  const { getProperty, setProperty, registerProperty } = useProperties();
   const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
   const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
   const [availableTexFiles, setAvailableTexFiles] = useState<string[]>([]);
@@ -61,6 +63,8 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [isDropdownOpen, setIsDropdownOpen] = usePersistentState(dropdownKey, false);
+  const propertiesRegistered = useRef(false);
+  const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 
   const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
   const effectiveAutoCompileOnSave = useSharedSettings
@@ -70,6 +74,41 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
   const effectiveEngine = projectEngine || latexEngine;
   const effectiveMainFile = projectMainFile || userSelectedMainFile || autoMainFile;
 
+  useEffect(() => {
+    if (propertiesRegistered.current) return;
+    propertiesRegistered.current = true;
+
+    registerProperty({
+      id: 'latex-main-file',
+      category: 'Compilation',
+      subcategory: 'LaTeX',
+      defaultValue: undefined
+    });
+
+    registerProperty({
+      id: 'latex-engine',
+      category: 'Compilation',
+      subcategory: 'LaTeX',
+      defaultValue: 'pdftex'
+    });
+  }, [registerProperty]);
+
+  useEffect(() => {
+    if (propertiesLoaded) return;
+
+    const storedMainFile = getProperty('latex-main-file');
+    const storedEngine = getProperty('latex-engine');
+
+    if (storedMainFile !== undefined) {
+      setUserSelectedMainFile(storedMainFile as string | undefined);
+    }
+
+    if (storedEngine !== undefined) {
+      setLatexEngine(storedEngine as 'pdftex' | 'xetex' | 'luatex');
+    }
+
+    setPropertiesLoaded(true);
+  }, [getProperty, propertiesLoaded, setLatexEngine]);
 
   useEffect(() => {
     const findTexFiles = (nodes: FileNode[]): string[] => {
@@ -133,7 +172,6 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     };
   }, [isDropdownOpen]);
 
-  // Listen for save events and auto-compile if enabled
   useEffect(() => {
     if (!useSharedSettings || !effectiveAutoCompileOnSave || !effectiveMainFile) return;
 
@@ -198,30 +236,27 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
       return true;
     }
 
-    // Conditional navigation logic
     if (navigationSetting === 'conditional') {
-      // Check if we're currently editing a LaTeX file directly
       if (selectedFileId) {
         try {
           const currentFile = await getFile(selectedFileId);
           console.log(`[Navigation] Current file: ${currentFile?.path}, isTeX: ${currentFile?.path.endsWith('.tex')}`);
           if (currentFile?.path.endsWith('.tex')) {
             console.log(`[Navigation] Not navigating - already editing LaTeX file: ${currentFile.path}`);
-            return false; // Don't navigate if already editing a .tex file
+            return false;
           }
         } catch (error) {
           console.warn('Error getting current file:', error);
         }
       }
 
-      // Check if we're currently editing a document linked to a LaTeX file
       if (selectedDocId && linkedFileInfo?.fileName?.endsWith('.tex')) {
         console.log(`[Navigation] Not navigating - already editing LaTeX-linked document: ${linkedFileInfo.fileName}`);
-        return false; // Don't navigate if already editing a LaTeX-linked document
+        return false;
       }
 
       console.log(`[Navigation] Will navigate to main file: ${mainFilePath}`);
-      return true; // Navigate if no LaTeX file is currently open
+      return true;
     }
 
     return false;
@@ -322,6 +357,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
         }
       } else {
         await setLatexEngine(engine as 'pdftex' | 'xetex' | 'luatex');
+        setProperty('latex-engine', engine);
       }
       setIsDropdownOpen(false);
     } catch (error) {
@@ -341,7 +377,9 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
         d.projectMetadata.mainFile = filePath === 'auto' ? undefined : filePath;
       });
     } else {
-      setUserSelectedMainFile(filePath === 'auto' ? undefined : filePath);
+      const newMainFile = filePath === 'auto' ? undefined : filePath;
+      setUserSelectedMainFile(newMainFile);
+      setProperty('latex-main-file', newMainFile);
     }
   };
 
@@ -374,7 +412,6 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
       }
     });
   };
-
 
   const handleAutoCompileOnSaveChange = (checked: boolean) => {
     if (!useSharedSettings || !changeDoc) return;
@@ -430,7 +467,6 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
           projectId={fileStorageService.getCurrentProjectId() || 'default'}
           title={t('Open PDF in new window')} />
 
-
         <button
           className="latex-button dropdown-toggle"
           onClick={toggleDropdown}
@@ -472,9 +508,8 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
                     type="checkbox"
                     checked={!!projectMainFile}
                     onChange={(e) => handleShareMainFile(e.target.checked)}
-                    disabled={isChangingEngine || isCompiling || !effectiveMainFile} />{t('Save and share with collaborators')}
-
-
+                    disabled={isChangingEngine || isCompiling || !effectiveMainFile} />
+                  {t('Share with collaborators')}
                 </label>
               </div>
             </>
@@ -490,7 +525,6 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
               <option value="pdftex">{t('pdfTeX')}</option>
               <option value="xetex">{t('XeTeX')}</option>
-              {/*<option value="luatex">LuaTeX</option>*/}
             </select>
             {useSharedSettings &&
               <label className="share-checkbox">
@@ -498,9 +532,8 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
                   type="checkbox"
                   checked={!!projectEngine}
                   onChange={(e) => handleShareEngine(e.target.checked)}
-                  disabled={isChangingEngine || isCompiling} />{t('Save and share with collaborators')}
-
-
+                  disabled={isChangingEngine || isCompiling} />
+                {t('Share with collaborators')}
               </label>
             }
             {isChangingEngine &&
@@ -529,20 +562,18 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
               title={t('Clear compilation cache and source files')}>
 
               <TrashIcon />{t('Clear Cache')}
-
             </div>
             <div
               className="cache-item clear-and-compile clear-and-compile-button"
               onClick={handleClearCacheAndCompile}
               title={t('Clear cache and compile') + ' ' + `${useSharedSettings ? t('(Shift+F9)') : ''}`}>
               <ClearCompileIcon />{t('Clear & Compile')}
-
             </div>
           </div>
         </div>
       }
-    </div>);
-
+    </div>
+  );
 };
 
 export default LaTeXCompileButton;

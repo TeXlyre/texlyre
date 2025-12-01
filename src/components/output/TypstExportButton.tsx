@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useCollab } from '../../hooks/useCollab';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useTypst } from '../../hooks/useTypst';
+import { useProperties } from '../../hooks/useProperties';
 import type { DocumentList } from '../../types/documents';
 import type { TypstPdfOptions } from '../../types/typst';
 import type { FileNode } from '../../types/files';
@@ -35,6 +36,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
     const { exportDocument } = useTypst();
     const { selectedFileId, getFile, fileTree } = useFileTree();
     const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
+    const { getProperty, setProperty, registerProperty } = useProperties();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
@@ -48,9 +50,82 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
     const [isPdfOptionsOpen, setIsPdfOptionsOpen] = useState(false);
     const [includeLog, setIncludeLog] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const propertiesRegistered = useRef(false);
+    const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 
     const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
     const effectiveMainFile = projectMainFile || userSelectedMainFile || autoMainFile;
+
+    useEffect(() => {
+        if (propertiesRegistered.current) return;
+        propertiesRegistered.current = true;
+
+        registerProperty({
+            id: 'typst-export-main-file',
+            category: 'Export',
+            subcategory: 'Typst',
+            defaultValue: undefined
+        });
+
+        registerProperty({
+            id: 'typst-export-format',
+            category: 'Export',
+            subcategory: 'Typst',
+            defaultValue: 'pdf'
+        });
+
+        registerProperty({
+            id: 'typst-export-pdf-standard',
+            category: 'Export',
+            subcategory: 'Typst',
+            defaultValue: '"1.7"'
+        });
+
+        registerProperty({
+            id: 'typst-export-pdf-tags',
+            category: 'Export',
+            subcategory: 'Typst',
+            defaultValue: true
+        });
+
+        registerProperty({
+            id: 'typst-export-include-log',
+            category: 'Export',
+            subcategory: 'Typst',
+            defaultValue: false
+        });
+    }, [registerProperty]);
+
+    useEffect(() => {
+        if (propertiesLoaded) return;
+
+        const storedMainFile = getProperty('typst-export-main-file');
+        const storedFormat = getProperty('typst-export-format');
+        const storedPdfStandard = getProperty('typst-export-pdf-standard');
+        const storedPdfTags = getProperty('typst-export-pdf-tags');
+        const storedIncludeLog = getProperty('typst-export-include-log');
+
+        if (storedMainFile !== undefined) {
+            setUserSelectedMainFile(storedMainFile as string | undefined);
+        }
+
+        if (storedFormat !== undefined) {
+            setSelectedFormat(storedFormat as TypstOutputFormat);
+        }
+
+        if (storedPdfStandard !== undefined || storedPdfTags !== undefined) {
+            setLocalPdfOptions({
+                pdfStandard: (storedPdfStandard as string) || '"1.7"',
+                pdfTags: storedPdfTags !== undefined ? Boolean(storedPdfTags) : true
+            });
+        }
+
+        if (storedIncludeLog !== undefined) {
+            setIncludeLog(Boolean(storedIncludeLog));
+        }
+
+        setPropertiesLoaded(true);
+    }, [getProperty, propertiesLoaded]);
 
     useEffect(() => {
         const findTypstFiles = (nodes: FileNode[]): string[] => {
@@ -135,7 +210,9 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                 d.projectMetadata.mainFile = filePath === 'auto' ? undefined : filePath;
             });
         } else {
-            setUserSelectedMainFile(filePath === 'auto' ? undefined : filePath);
+            const newMainFile = filePath === 'auto' ? undefined : filePath;
+            setUserSelectedMainFile(newMainFile);
+            setProperty('typst-export-main-file', newMainFile);
         }
     };
 
@@ -210,7 +287,6 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                     <div className="format-selector">
                         <div className="format-selector-header">
                             <div className="format-label">{t('Export Format:')}</div>
-
                         </div>
 
                         <div className="format-selector-group">
@@ -219,6 +295,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                                 onChange={(e) => {
                                     const format = e.target.value as TypstOutputFormat;
                                     setSelectedFormat(format);
+                                    setProperty('typst-export-format', format);
                                     if (format !== 'pdf') {
                                         setIsPdfOptionsOpen(false);
                                     }
@@ -245,7 +322,11 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                                     <label className="pdf-option-label">{t('PDF Standard:')}</label>
                                     <select
                                         value={localPdfOptions.pdfStandard || '"1.7"'}
-                                        onChange={(e) => setLocalPdfOptions({ ...localPdfOptions, pdfStandard: e.target.value })}
+                                        onChange={(e) => {
+                                            const newOptions = { ...localPdfOptions, pdfStandard: e.target.value };
+                                            setLocalPdfOptions(newOptions);
+                                            setProperty('typst-export-pdf-standard', e.target.value);
+                                        }}
                                         className="pdf-option-select"
                                         disabled={isExporting}>
                                         <>
@@ -286,7 +367,11 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                                     <input
                                         type="checkbox"
                                         checked={localPdfOptions.pdfTags !== false}
-                                        onChange={(e) => setLocalPdfOptions({ ...localPdfOptions, pdfTags: e.target.checked })}
+                                        onChange={(e) => {
+                                            const newOptions = { ...localPdfOptions, pdfTags: e.target.checked };
+                                            setLocalPdfOptions(newOptions);
+                                            setProperty('typst-export-pdf-tags', e.target.checked);
+                                        }}
                                         disabled={isExporting}
                                     />
                                     {t('Enable PDF tags (accessibility)')}
@@ -300,7 +385,10 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                             <input
                                 type="checkbox"
                                 checked={includeLog}
-                                onChange={(e) => setIncludeLog(e.target.checked)}
+                                onChange={(e) => {
+                                    setIncludeLog(e.target.checked);
+                                    setProperty('typst-export-include-log', e.target.checked);
+                                }}
                                 disabled={isExporting}
                             />
                             {t('Include log file')}
@@ -317,9 +405,8 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                         </button>
                     </div>
                 </div>
-            )
-            }
-        </div >
+            )}
+        </div>
     );
 };
 
