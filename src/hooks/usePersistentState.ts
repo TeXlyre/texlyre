@@ -1,5 +1,5 @@
 // src/hooks/usePersistentState.ts
-import { useCallback, useState } from 'react';
+import { useCallback, useReducer } from 'react';
 
 const persistentStates = new Map<string, any>();
 
@@ -11,7 +11,7 @@ export function usePersistentState<T>(
         persistentStates.set(key, initialValue);
     }
 
-    const [, forceUpdate] = useState({});
+    const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
     const setValue = useCallback(
         (newValue: T | ((prev: T) => T)) => {
@@ -20,7 +20,7 @@ export function usePersistentState<T>(
                 ? (newValue as (prev: T) => T)(currentValue)
                 : newValue;
             persistentStates.set(key, valueToSet);
-            forceUpdate({});
+            forceUpdate();
         },
         [key]
     );
