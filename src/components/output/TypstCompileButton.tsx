@@ -150,8 +150,8 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
           detail.isFile ? effectiveMainFile : candidatePath;
         const targetFormat = effectiveFormat;
         const shouldShareFormat = !!projectFormat;
-        const pdfOptions = targetFormat === 'pdf' && shouldShareFormat && doc?.projectMetadata?.typstPdfOptions
-          ? doc.projectMetadata.typstPdfOptions
+        const pdfOptions = targetFormat === 'pdf'
+          ? (shouldShareFormat ? doc?.projectMetadata?.typstPdfOptions : localPdfOptions)
           : undefined;
 
         setTimeout(async () => {
@@ -180,6 +180,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     onExpandTypstOutput,
     linkedFileInfo,
     doc?.projectMetadata?.typstPdfOptions,
+    localPdfOptions,
   ]);
 
   const shouldNavigateToMain = async (mainFilePath: string): Promise<boolean> => {
@@ -241,9 +242,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 
       const shouldShareFormat = !!projectFormat;
       const pdfOptions = effectiveFormat === 'pdf'
-        ? (shouldShareFormat && doc?.projectMetadata?.typstPdfOptions
-          ? doc.projectMetadata.typstPdfOptions
-          : (!shouldShareFormat ? localPdfOptions : undefined))
+        ? (shouldShareFormat ? doc?.projectMetadata?.typstPdfOptions : localPdfOptions)
         : undefined;
 
       await compileDocument(effectiveMainFile, effectiveFormat, pdfOptions);
@@ -283,9 +282,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 
     const shouldShareFormat = !!projectFormat;
     const pdfOptions = effectiveFormat === 'pdf'
-      ? (shouldShareFormat && doc?.projectMetadata?.typstPdfOptions
-        ? doc.projectMetadata.typstPdfOptions
-        : (!shouldShareFormat ? localPdfOptions : undefined))
+      ? (shouldShareFormat ? doc?.projectMetadata?.typstPdfOptions : localPdfOptions)
       : undefined;
 
     try {
@@ -484,12 +481,12 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                 <div className="pdf-option">
                   <label className="pdf-option-label">{t('PDF Standard:')}</label>
                   <select
-                    value={useSharedSettings
+                    value={useSharedSettings && projectFormat
                       ? (doc?.projectMetadata?.typstPdfOptions?.pdfStandard || '"ua-1"')
                       : localPdfOptions.pdfStandard
                     }
                     onChange={(e) => {
-                      if (useSharedSettings) {
+                      if (useSharedSettings && projectFormat) {
                         if (!changeDoc) return;
                         changeDoc((d) => {
                           if (!d.projectMetadata) {
@@ -544,12 +541,12 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                 <label className="pdf-option-checkbox">
                   <input
                     type="checkbox"
-                    checked={useSharedSettings
+                    checked={useSharedSettings && projectFormat
                       ? (doc?.projectMetadata?.typstPdfOptions?.pdfTags !== false)
                       : localPdfOptions.pdfTags
                     }
                     onChange={(e) => {
-                      if (useSharedSettings) {
+                      if (useSharedSettings && projectFormat) {
                         if (!changeDoc) return;
                         changeDoc((d) => {
                           if (!d.projectMetadata) {
