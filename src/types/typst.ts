@@ -2,6 +2,12 @@
 
 export type TypstOutputFormat = 'pdf' | 'svg' | 'canvas';
 
+export interface TypstPdfOptions {
+    pdfStandard?: string;
+    pdfTags?: boolean;
+    creationTimestamp?: number;
+}
+
 export interface TypstCompileResult {
     status: number;
     log: string;
@@ -20,7 +26,7 @@ export interface TypstContextType {
     compileLog: string;
     currentFormat: TypstOutputFormat;
     setCurrentFormat: (format: TypstOutputFormat) => void;
-    compileDocument: (mainFileName: string, format?: TypstOutputFormat) => Promise<void>;
+    compileDocument: (mainFileName: string, format?: TypstOutputFormat, pdfOptions?: TypstPdfOptions) => Promise<void>;
     stopCompilation: () => void;
     toggleOutputView: () => void;
     currentView: 'log' | 'output';
@@ -29,6 +35,6 @@ export interface TypstContextType {
     activeCompiler: string | null;
     exportDocument: (
         mainFileName: string,
-        options?: { format?: TypstOutputFormat; includeLog?: boolean }
+        options?: { format?: TypstOutputFormat; includeLog?: boolean; pdfOptions?: TypstPdfOptions }
     ) => Promise<void>;
 }

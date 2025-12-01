@@ -1,5 +1,6 @@
 // src/types/documents.ts
 import type { ChatMessage } from './chat';
+import type { TypstPdfOptions } from './typst';
 
 export interface Document {
 	id: string;
@@ -22,5 +23,6 @@ export interface DocumentList {
 		typstOutputFormat?: 'pdf' | 'svg' | 'canvas';
 		latexAutoCompileOnSave?: boolean;
 		typstAutoCompileOnSave?: boolean;
+		typstPdfOptions?: TypstPdfOptions;
 	};
 }

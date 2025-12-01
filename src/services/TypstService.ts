@@ -2,7 +2,7 @@
 import { t } from '@/i18n';
 import { nanoid } from 'nanoid';
 
-import type { TypstCompileResult, TypstOutputFormat } from '../types/typst';
+import type { TypstCompileResult, TypstOutputFormat, TypstPdfOptions } from '../types/typst';
 import type { FileNode } from '../types/files';
 import { fileStorageService } from './FileStorageService';
 import { notificationService } from './NotificationService';
@@ -54,7 +54,8 @@ class TypstService {
     async compileTypst(
         mainFileName: string,
         fileTree: FileNode[],
-        format: TypstOutputFormat = this.defaultFormat
+        format: TypstOutputFormat = this.defaultFormat,
+        pdfOptions?: TypstPdfOptions
     ): Promise<TypstCompileResult> {
         if (!this.isReady()) {
             await this.initialize();
@@ -91,6 +92,7 @@ class TypstService {
                 normalizedMainFileName,
                 sources,
                 format,
+                pdfOptions,
                 this.compilationAbortController.signal
             );
 
@@ -147,9 +149,10 @@ class TypstService {
         options: {
             format?: TypstOutputFormat;
             includeLog?: boolean;
+            pdfOptions?: TypstPdfOptions;
         } = {}
     ): Promise<void> {
-        const { format = this.defaultFormat, includeLog = false } = options;
+        const { format = this.defaultFormat, includeLog = false, pdfOptions } = options;
         const operationId = `typst-export-${nanoid()}`;
 
         if (!this.isReady()) {
@@ -180,6 +183,7 @@ class TypstService {
                 normalizedMainFileName,
                 sources,
                 format,
+                pdfOptions,
                 this.compilationAbortController.signal
             );
 
@@ -282,12 +286,14 @@ class TypstService {
         mainFilePath: string,
         sources: Record<string, string | Uint8Array>,
         format: TypstOutputFormat,
+        pdfOptions: TypstPdfOptions | undefined,
         signal: AbortSignal
     ): Promise<{ output: Uint8Array | string; diagnostics?: any[] }> {
         const result = await this.compilerEngine.compile(
             mainFilePath,
             sources,
             format,
+            pdfOptions,
             signal
         );
 

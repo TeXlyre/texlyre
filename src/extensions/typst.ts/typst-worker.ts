@@ -17,6 +17,11 @@ type CompileMessage = {
         mainFilePath: string;
         sources: Record<string, string | Uint8Array>;
         format: OutputFormat;
+        pdfOptions?: {
+            pdfStandard?: string;
+            pdfTags?: boolean;
+            creationTimestamp?: number;
+        };
     };
 };
 
@@ -170,7 +175,7 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
         await ensureInit();
 
         const { payload } = data as CompileMessage;
-        const { mainFilePath, sources, format } = payload;
+        const { mainFilePath, sources, format, pdfOptions } = payload;
 
         compiler.resetShadow();
         for (const [path, content] of Object.entries(sources)) {
@@ -187,12 +192,14 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
         let diagnostics: any[] = [];
 
         if (format === 'pdf') {
-            // TODO (fabawi): this is hard-coded for now. 
-            // Need to add mechanism for re-initializing when pdf options change
+            const pdfStandard = pdfOptions?.pdfStandard || '"1.7"';
+            const pdfTags = pdfOptions?.pdfTags !== undefined ? pdfOptions.pdfTags : true;
+            const creationTimestamp = pdfOptions?.creationTimestamp || Math.floor(Date.now() / 1000);
+
             compiler.setPdfOptsForNextCompile({
-                pdf_standard: '"ua-1"',
-                pdf_tags: true,
-                creation_timestamp: Math.floor(Date.now() / 1000)
+                pdf_standard: pdfStandard,
+                pdf_tags: pdfTags,
+                creation_timestamp: creationTimestamp
             });
 
             const compileResult = await compiler.compile({

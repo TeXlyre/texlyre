@@ -142,11 +142,15 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
         const mainFileToCompile =
           detail.isFile ? effectiveMainFile : candidatePath;
         const targetFormat = effectiveFormat;
+        const pdfOptions = targetFormat === 'pdf' && doc?.projectMetadata?.typstPdfOptions
+          ? doc.projectMetadata.typstPdfOptions
+          : undefined;
+
         setTimeout(async () => {
           if (onExpandTypstOutput) {
             onExpandTypstOutput();
           }
-          await compileDocument(mainFileToCompile, targetFormat);
+          await compileDocument(mainFileToCompile, targetFormat, pdfOptions);
         }, 120);
       } catch (error) {
         console.error('Error in Typst auto-compile on save:', error);
@@ -166,6 +170,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     compileDocument,
     onExpandTypstOutput,
     linkedFileInfo,
+    doc?.projectMetadata?.typstPdfOptions,
   ]);
 
   const shouldNavigateToMain = async (mainFilePath: string): Promise<boolean> => {
@@ -210,11 +215,14 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
       }
 
       const shouldNavigate = await shouldNavigateToMain(effectiveMainFile);
+      console.log(`[Navigation] Should navigate: ${shouldNavigate}, shouldNavigateOnCompile: ${shouldNavigateOnCompile}`);
 
       if (shouldNavigateOnCompile && shouldNavigate) {
         if (linkedFileInfo?.filePath === effectiveMainFile && onNavigateToLinkedFile) {
+          console.log('[Navigation] Navigating to linked file');
           onNavigateToLinkedFile();
         } else {
+          console.log(`[Navigation] Dispatching navigate-to-compiled-file event for: ${effectiveMainFile}`);
           document.dispatchEvent(
             new CustomEvent('navigate-to-compiled-file', {
               detail: {
@@ -225,7 +233,11 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
         }
       }
 
-      await compileDocument(effectiveMainFile, effectiveFormat);
+      const pdfOptions = effectiveFormat === 'pdf' && doc?.projectMetadata?.typstPdfOptions
+        ? doc.projectMetadata.typstPdfOptions
+        : undefined;
+
+      await compileDocument(effectiveMainFile, effectiveFormat, pdfOptions);
     }
   };
 
@@ -260,9 +272,13 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
       }
     }
 
+    const pdfOptions = effectiveFormat === 'pdf' && doc?.projectMetadata?.typstPdfOptions
+      ? doc.projectMetadata.typstPdfOptions
+      : undefined;
+
     try {
       clearCache();
-      await compileDocument(effectiveMainFile, effectiveFormat);
+      await compileDocument(effectiveMainFile, effectiveFormat, pdfOptions);
     } catch (error) {
       console.error('Failed to compile with cache clear:', error);
     }
@@ -450,6 +466,57 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 
               </label>
             }
+            {useSharedSettings && effectiveFormat === 'pdf' && (
+              <div className="pdf-options-section">
+                <div className="pdf-options-label">{t('PDF Options:')}</div>
+
+                <div className="pdf-option">
+                  <label className="pdf-option-label">{t('PDF Standard:')}</label>
+                  <select
+                    value={doc?.projectMetadata?.typstPdfOptions?.pdfStandard || '"ua-1"'}
+                    onChange={(e) => {
+                      if (!changeDoc) return;
+                      changeDoc((d) => {
+                        if (!d.projectMetadata) {
+                          d.projectMetadata = { name: '', description: '' };
+                        }
+                        if (!d.projectMetadata.typstPdfOptions) {
+                          d.projectMetadata.typstPdfOptions = {};
+                        }
+                        d.projectMetadata.typstPdfOptions.pdfStandard = e.target.value;
+                      });
+                    }}
+                    className="pdf-option-select"
+                    disabled={isCompiling}>
+                    <option value='"1.7"'>{t('PDF/A-1')}</option>
+                    <option value='"ua-1"'>{t('PDF/UA-1')}</option>
+                    <option value='"2.0"'>{t('PDF 2.0')}</option>
+                  </select>
+                </div>
+
+                <label className="pdf-option-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={doc?.projectMetadata?.typstPdfOptions?.pdfTags !== false}
+                    onChange={(e) => {
+                      if (!changeDoc) return;
+                      changeDoc((d) => {
+                        if (!d.projectMetadata) {
+                          d.projectMetadata = { name: '', description: '' };
+                        }
+                        if (!d.projectMetadata.typstPdfOptions) {
+                          d.projectMetadata.typstPdfOptions = {};
+                        }
+                        d.projectMetadata.typstPdfOptions.pdfTags = e.target.checked;
+                      });
+                    }}
+                    disabled={isCompiling}
+                  />
+                  {t('Enable PDF tags (accessibility)')}
+                </label>
+              </div>
+            )}
+
             {
               useSharedSettings && (
                 <label className="auto-compile-checkbox">
