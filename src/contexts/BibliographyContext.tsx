@@ -1,3 +1,4 @@
+// src/contexts/BibliographyContext.tsx
 import type React from 'react';
 import {
 	type ReactNode,

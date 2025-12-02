@@ -1,3 +1,4 @@
+// src/services/FilePathCacheService.ts
 import type { FileNode, FilePathCache } from '../types/files';
 import { fileStorageEventEmitter } from './FileStorageService';
 
