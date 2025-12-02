@@ -205,6 +205,27 @@
 	overflow-y: auto !important;
 }
 
+[data-layout="texlyre-mobile"] .user-dropdown-button {
+	position: fixed !important;
+	inset-block-start: 0 !important;
+	inset-inline-start: auto !important;
+	inset-inline-end: 0 !important;
+	inset-block-end: auto !important;
+	margin: 0 !important;
+	padding: var(--mobile-spacing-xs) var(--mobile-spacing-md);
+	transform: translate(0, 0) !important;
+}
+
+[data-layout="texlyre-mobile"] .user-dropdown-menu {
+	position: fixed !important;
+	inset-block-start: calc(var(--mobile-spacing-lg) * 2) !important;
+	inset-inline-start: auto !important;
+	inset-inline-end: 0 !important;
+	inset-block-end: auto !important;
+	margin: 0 !important;
+	transform: translate(0, 0) !important;
+}
+
 [data-layout="texlyre-mobile"] .pdf-viewer embed {
 	width: 100% !important;
 	height: 100% !important;
