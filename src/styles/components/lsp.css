@@ -642,21 +642,6 @@
 	border-bottom: 1px solid var(--accent-border);
 }
 
-.back-button {
-	padding: 0.375rem var(--space-sd);
-	border: 1px solid var(--accent-border);
-	border-radius: 3px;
-	background: var(--pico-background);
-	color: var(--text-color);
-	cursor: pointer;
-	font-size: var(--space-sd);
-	transition: all 0.2s ease;
-}
-
-.back-button:hover {
-	background-color: var(--pico-primary-focus);
-}
-
 .detail-content {
 	flex: 1;
 	overflow-y: auto;

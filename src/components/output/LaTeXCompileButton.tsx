@@ -3,8 +3,9 @@ import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
-import { usePersistentState } from '../../hooks/usePersistentState';
 import PdfWindowToggleButton from './PopoutViewerToggleButton';
+import PositionedDropdown from '../common/PositionedDropdown';
+import { usePersistentState } from '../../hooks/usePersistentState';
 import { useCollab } from '../../hooks/useCollab';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useLaTeX } from '../../hooks/useLaTeX';
@@ -159,9 +160,13 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
+        const portaledDropdown = document.querySelector('.latex-dropdown');
+        if (portaledDropdown && portaledDropdown.contains(target)) {
+          return;
+        }
         setIsDropdownOpen(false);
       }
     };
@@ -476,102 +481,103 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
           <ChevronDownIcon />
         </button>
       </div>
-      {isDropdownOpen &&
-        <div className="latex-dropdown">
-          <div className="main-file-display">
-            <div className="main-file-label">{t('Main file:')}</div>
-            <div className="main-file-path" title={effectiveMainFile}>
-              {getDisplayName(effectiveMainFile)}
-              {projectMainFile && <span className="shared-indicator">{t('(shared)')}</span>}
-            </div>
+      <PositionedDropdown
+        isOpen={isDropdownOpen}
+        triggerElement={dropdownRef.current?.querySelector('.compile-button-group') as HTMLElement}
+        className="latex-dropdown">
+        <div className="main-file-display">
+          <div className="main-file-label">{t('Main file:')}</div>
+          <div className="main-file-path" title={effectiveMainFile}>
+            {getDisplayName(effectiveMainFile)}
+            {projectMainFile && <span className="shared-indicator">{t('(shared)')}</span>}
           </div>
+        </div>
 
-          {useSharedSettings &&
-            <>
-              <div className="main-file-selector">
-                <div className="main-file-selector-label">{t('Select main file:')}</div>
-                <select
-                  value={projectMainFile || userSelectedMainFile || 'auto'}
-                  onChange={(e) => handleMainFileChange(e.target.value)}
-                  className="main-file-select"
-                  disabled={isChangingEngine || isCompiling}>
+        {useSharedSettings &&
+          <>
+            <div className="main-file-selector">
+              <div className="main-file-selector-label">{t('Select main file:')}</div>
+              <select
+                value={projectMainFile || userSelectedMainFile || 'auto'}
+                onChange={(e) => handleMainFileChange(e.target.value)}
+                className="main-file-select"
+                disabled={isChangingEngine || isCompiling}>
 
-                  <option value="auto">{t('Auto-detect')}</option>
-                  {availableTexFiles.map((filePath) =>
-                    <option key={filePath} value={filePath}>
-                      {getFileName(filePath)}
-                    </option>
-                  )}
-                </select>
-                <label className="share-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={!!projectMainFile}
-                    onChange={(e) => handleShareMainFile(e.target.checked)}
-                    disabled={isChangingEngine || isCompiling || !effectiveMainFile} />
-                  {t('Share with collaborators')}
-                </label>
-              </div>
-            </>
-          }
-
-          <div className="engine-selector">
-            <div className="engine-label">{t('LaTeX Engine:')}</div>
-            <select
-              value={effectiveEngine}
-              onChange={(e) => handleEngineChange(e.target.value)}
-              className="engine-select"
-              disabled={isChangingEngine || isCompiling}>
-
-              <option value="pdftex">{t('pdfTeX')}</option>
-              <option value="xetex">{t('XeTeX')}</option>
-            </select>
-            {useSharedSettings &&
+                <option value="auto">{t('Auto-detect')}</option>
+                {availableTexFiles.map((filePath) =>
+                  <option key={filePath} value={filePath}>
+                    {getFileName(filePath)}
+                  </option>
+                )}
+              </select>
               <label className="share-checkbox">
                 <input
                   type="checkbox"
-                  checked={!!projectEngine}
-                  onChange={(e) => handleShareEngine(e.target.checked)}
-                  disabled={isChangingEngine || isCompiling} />
+                  checked={!!projectMainFile}
+                  onChange={(e) => handleShareMainFile(e.target.checked)}
+                  disabled={isChangingEngine || isCompiling || !effectiveMainFile} />
                 {t('Share with collaborators')}
               </label>
-            }
-            {isChangingEngine &&
-              <div className="engine-status">{t('Switching engine...')}</div>
-            }
+            </div>
+          </>
+        }
+
+        <div className="engine-selector">
+          <div className="engine-label">{t('LaTeX Engine:')}</div>
+          <select
+            value={effectiveEngine}
+            onChange={(e) => handleEngineChange(e.target.value)}
+            className="engine-select"
+            disabled={isChangingEngine || isCompiling}>
+
+            <option value="pdftex">{t('pdfTeX')}</option>
+            <option value="xetex">{t('XeTeX')}</option>
+          </select>
+          {useSharedSettings &&
+            <label className="share-checkbox">
+              <input
+                type="checkbox"
+                checked={!!projectEngine}
+                onChange={(e) => handleShareEngine(e.target.checked)}
+                disabled={isChangingEngine || isCompiling} />
+              {t('Share with collaborators')}
+            </label>
+          }
+          {isChangingEngine &&
+            <div className="engine-status">{t('Switching engine...')}</div>
+          }
+        </div>
+
+        {useSharedSettings && (
+          <div className="auto-compile-controls">
+            <label className="auto-compile-checkbox">
+              <input
+                type="checkbox"
+                checked={effectiveAutoCompileOnSave}
+                onChange={(e) => handleAutoCompileOnSaveChange(e.target.checked)}
+                disabled={isCompiling}
+              />
+              {t('Auto-compile on save')}
+            </label>
           </div>
+        )}
 
-          {useSharedSettings && (
-            <div className="auto-compile-controls">
-              <label className="auto-compile-checkbox">
-                <input
-                  type="checkbox"
-                  checked={effectiveAutoCompileOnSave}
-                  onChange={(e) => handleAutoCompileOnSaveChange(e.target.checked)}
-                  disabled={isCompiling}
-                />
-                {t('Auto-compile on save')}
-              </label>
-            </div>
-          )}
+        <div className="cache-controls">
+          <div
+            className="cache-item clear-cache"
+            onClick={handleClearCache}
+            title={t('Clear compilation cache and source files')}>
 
-          <div className="cache-controls">
-            <div
-              className="cache-item clear-cache"
-              onClick={handleClearCache}
-              title={t('Clear compilation cache and source files')}>
-
-              <TrashIcon />{t('Clear Cache')}
-            </div>
-            <div
-              className="cache-item clear-and-compile clear-and-compile-button"
-              onClick={handleClearCacheAndCompile}
-              title={t('Clear cache and compile') + ' ' + `${useSharedSettings ? t('(Shift+F9)') : ''}`}>
-              <ClearCompileIcon />{t('Clear & Compile')}
-            </div>
+            <TrashIcon />{t('Clear Cache')}
+          </div>
+          <div
+            className="cache-item clear-and-compile clear-and-compile-button"
+            onClick={handleClearCacheAndCompile}
+            title={t('Clear cache and compile') + ' ' + `${useSharedSettings ? t('(Shift+F9)') : ''}`}>
+            <ClearCompileIcon />{t('Clear & Compile')}
           </div>
         </div>
-      }
+      </PositionedDropdown>
     </div>
   );
 };
