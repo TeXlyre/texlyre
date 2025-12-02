@@ -40,6 +40,7 @@ import { searchHighlightExtension, setSearchHighlights, clearSearchHighlights } 
 import { createFilePathAutocompleteExtension, setCurrentFilePath, refreshBibliographyCache } from '../extensions/codemirror/PathAndBibAutocompleteExtension.ts';
 import { createLSPExtension, updateLSPPluginsInView, setCurrentFilePathInLSP } from '../extensions/codemirror/LSPExtension';
 import { createToolbarExtension } from '../extensions/codemirror/ToolbarExtension';
+import { createPasteExtension } from '../extensions/codemirror/PasteExtension';
 import { useAuth } from '../hooks/useAuth';
 import { useEditor } from '../hooks/useEditor';
 import { autoSaveManager } from '../utils/autoSaveUtils';
@@ -448,6 +449,9 @@ export const EditorLoader = (
 				// Create enhanced file path and bibliography autocompletion
 				const [stateExtensions, filePathPlugin, enhancedCompletionSource] = createFilePathAutocompleteExtension(currentFilePath);
 				extensions.push(stateExtensions, filePathPlugin);
+
+				// Add paste extension
+				extensions.push(createPasteExtension(currentFileId, fileName));
 
 				// Add toolbar extension
 				if (toolbarVisible) {

@@ -115,6 +115,18 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   const [newItemName, setNewItemName] = useState('');
 
   useEffect(() => {
+    const handleRefreshEvent = () => {
+      refreshFileTree();
+    };
+
+    document.addEventListener('refresh-file-tree', handleRefreshEvent);
+
+    return () => {
+      document.removeEventListener('refresh-file-tree', handleRefreshEvent);
+    };
+  }, [refreshFileTree]);
+
+  useEffect(() => {
     if (
       initialSelectedFile &&
       initialExpandedPaths &&

@@ -1,5 +1,63 @@
 // src/utils/clipboardUtils.ts
+import { nanoid } from 'nanoid';
+
+import type { FileNode } from '../types/files';
+import { fileStorageService } from '../services/FileStorageService';
+import { getFileExtension, getRelativePath } from './fileUtils.ts';
 import { processTextSelection } from './fileCommentUtils.ts';
+
+
+export const uploadPastedFile = async (
+	blob: Blob,
+	currentFileId?: string
+): Promise<string> => {
+	const timestamp = Date.now();
+	const ext = getFileExtension(blob.type);
+	const filename = `pasted_${timestamp}.${ext}`;
+	const uploadPath = `/images/${filename}`;
+
+	try {
+		await fileStorageService.createDirectoryPath('/images/placeholder.txt');
+
+		const fileNode: FileNode = {
+			id: nanoid(),
+			name: filename,
+			path: uploadPath,
+			type: 'file',
+			content: await blob.arrayBuffer(),
+			lastModified: Date.now(),
+			size: blob.size,
+			mimeType: blob.type,
+			isBinary: true
+		};
+
+		await fileStorageService.storeFile(fileNode, { showConflictDialog: false });
+		if (currentFileId) {
+			const currentFile = await fileStorageService.getFile(currentFileId);
+
+			if (currentFile) {
+				const relativePath = getRelativePath(currentFile.path, uploadPath);
+				const isLatex = (currentFile.path.endsWith('.tex') || currentFile.path.endsWith('.latex'))
+
+				if (isLatex) {
+					if (relativePath.startsWith('../')) {
+						return uploadPath.startsWith('/') ? uploadPath.slice(1) : uploadPath;
+					} else {
+						return relativePath;
+					}
+				} else {
+					return relativePath;
+				}
+
+			}
+		}
+
+		return uploadPath;
+	} catch (error) {
+		console.error('Error uploading pasted file:', error);
+		throw error;
+	}
+}
 
 export const copyCleanTextToClipboard = async (text: string): Promise<void> => {
 	try {
