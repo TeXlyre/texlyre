@@ -46,6 +46,25 @@ export const getParentPath = (path: string): string => {
 	return lastSlashIndex === 0 ? '/' : path.substring(0, lastSlashIndex);
 };
 
+export const getRelativePath = (fromPath: string, toPath: string): string => {
+	const fromParts = fromPath.split('/').filter(p => p);
+	const toParts = toPath.split('/').filter(p => p);
+
+	fromParts.pop();
+
+	let commonLength = 0;
+	while (commonLength < fromParts.length &&
+		commonLength < toParts.length &&
+		fromParts[commonLength] === toParts[commonLength]) {
+		commonLength++;
+	}
+
+	const upLevels = fromParts.length - commonLength;
+	const downPath = toParts.slice(commonLength);
+
+	return '../'.repeat(upLevels) + downPath.join('/');
+}
+
 export const joinPaths = (base: string, path: string): string => {
 	if (base === '/') {
 		return `/${path}`;
@@ -56,6 +75,19 @@ export const joinPaths = (base: string, path: string): string => {
 export const getMimeType = (fileName: string): string => {
 	return mime.getType(fileName) || 'application/octet-stream';
 };
+
+export const getFileExtension = (mimeType: string): string => {
+	const typeMap: Record<string, string> = {
+		'image/jpeg': 'jpg',
+		'image/png': 'png',
+		'image/gif': 'gif',
+		'image/webp': 'webp',
+		'image/svg+xml': 'svg',
+		'application/pdf': 'pdf'
+	};
+
+	return typeMap[mimeType] || mimeType.split('/')[1] || 'png';
+}
 
 export const isBinaryFile = (fileName: string): boolean => {
 	const extension = fileName.split('.').pop()?.toLowerCase() || '';

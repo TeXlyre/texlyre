@@ -4,6 +4,7 @@ import type { EditorView } from '@codemirror/view';
 import type { ToolbarItem } from 'codemirror-toolbar';
 import { renderToString } from 'react-dom/server';
 
+import { getPendingImagePath } from '../PasteExtension';
 import { wrapSelection, insertText } from './helpers';
 import { createTableCommand } from './tableItems';
 import { ColorPicker } from './colorPicker';
@@ -194,8 +195,11 @@ export const createFigure = (): ToolbarItem => ({
 	label: t('Figure'),
 	icon: renderToString(<ToolbarImageIcon />),
 	command: (view: EditorView) => {
-		const text = '#figure(\n\timage(""),\n\tcaption: []\n)';
-		return insertText(view, text, -18);
+		const pastedPath = getPendingImagePath();
+		const hasPath = !!pastedPath;
+
+		const text = `#figure(\n\timage("${pastedPath || ''}", width: 80%),\n\tcaption: []\n)`;
+		return insertText(view, text, hasPath ? -3 : -30);
 	},
 });
 
