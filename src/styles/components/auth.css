@@ -315,6 +315,14 @@
 	background-color: var(--pico-primary-focus);
 }
 
+.user-dropdown-button span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	display: block;
+	max-width: 150px;
+}
+
 .password-info {
 	margin-top: var(--space-xs);
 	margin-bottom: var(--space-sm);

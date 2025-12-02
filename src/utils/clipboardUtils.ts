@@ -32,6 +32,8 @@ export const uploadPastedFile = async (
 		};
 
 		await fileStorageService.storeFile(fileNode, { showConflictDialog: false });
+		document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+
 		if (currentFileId) {
 			const currentFile = await fileStorageService.getFile(currentFileId);
 

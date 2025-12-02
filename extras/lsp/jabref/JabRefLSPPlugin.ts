@@ -68,7 +68,7 @@ class JabRefLSPPlugin implements LSPPlugin {
 				});
 				document.dispatchEvent(event);
 
-				document.addEventListener('jabref-entry-imported', (e) => {
+				document.addEventListener('bib-entry-imported', (e) => {
 					const customEvent = e as CustomEvent;
 					console.log(`[JabRefLSP] Entry imported: ${customEvent.detail.entryKey} to ${customEvent.detail.targetFile}`);
 				});

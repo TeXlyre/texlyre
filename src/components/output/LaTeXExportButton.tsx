@@ -3,6 +3,7 @@ import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
+import PositionedDropdown from '../common/PositionedDropdown';
 import { useCollab } from '../../hooks/useCollab';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useLaTeX } from '../../hooks/useLaTeX';
@@ -186,7 +187,13 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+            const target = event.target as Node;
+
+            if (dropdownRef.current && !dropdownRef.current.contains(target)) {
+                const portaledDropdown = document.querySelector('.latex-dropdown');
+                if (portaledDropdown && portaledDropdown.contains(target)) {
+                    return;
+                }
                 setIsDropdownOpen(false);
             }
         };
@@ -195,7 +202,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, []);
+    }, [isDropdownOpen]);
 
     const handleExport = async () => {
         if (!effectiveMainFile || isExporting) return;
@@ -276,120 +283,121 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                 </button>
             </div>
 
-            {isDropdownOpen && (
-                <div className="latex-dropdown">
-                    <div className="main-file-display">
-                        <div className="main-file-label">{t('Main file:')}</div>
-                        <div className="main-file-path" title={effectiveMainFile}>
-                            {getDisplayName(effectiveMainFile)}
-                            {projectMainFile && <span className="shared-indicator">{t('(shared)')}</span>}
-                        </div>
-                    </div>
-
-                    {useSharedSettings && (
-                        <div className="main-file-selector">
-                            <div className="main-file-selector-label">{t('Select main file:')}</div>
-                            <select
-                                value={projectMainFile || userSelectedMainFile || 'auto'}
-                                onChange={(e) => handleMainFileChange(e.target.value)}
-                                className="main-file-select"
-                                disabled={isExporting}>
-                                <option value="auto">{t('Auto-detect')}</option>
-                                {availableTexFiles.map((filePath) => (
-                                    <option key={filePath} value={filePath}>
-                                        {getFileName(filePath)}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
-
-                    <div className="engine-selector">
-                        <div className="engine-label">{t('LaTeX Engine:')}</div>
-                        <select
-                            value={selectedEngine}
-                            onChange={(e) => {
-                                const engine = e.target.value as 'pdftex' | 'xetex' | 'luatex';
-                                setSelectedEngine(engine);
-                                setProperty('latex-export-engine', engine);
-                            }}
-                            className="engine-select"
-                            disabled={isExporting}>
-                            <option value="pdftex">{t('pdfTeX')}</option>
-                            <option value="xetex">{t('XeTeX')}</option>
-                        </select>
-                    </div>
-
-                    <div className="format-selector">
-                        <div className="format-label">{t('Export Format:')}</div>
-                        <select
-                            value={selectedFormat}
-                            onChange={(e) => {
-                                const format = e.target.value as 'pdf' | 'dvi';
-                                setSelectedFormat(format);
-                                setProperty('latex-export-format', format);
-                            }}
-                            className="format-select"
-                            disabled={isExporting}>
-                            <option value="pdf">PDF</option>
-                            {selectedEngine === 'xetex' && <option value="dvi">DVI</option>}
-                        </select>
-                    </div>
-
-                    <div className="export-options">
-                        <label className="export-checkbox">
-                            <input
-                                type="checkbox"
-                                checked={includeLog}
-                                onChange={(e) => {
-                                    setIncludeLog(e.target.checked);
-                                    setProperty('latex-export-include-log', e.target.checked);
-                                }}
-                                disabled={isExporting}
-                            />
-                            {t('Include log file')}
-                        </label>
-
-                        {selectedFormat === 'pdf' && selectedEngine === 'xetex' && (
-                            <label className="export-checkbox">
-                                <input
-                                    type="checkbox"
-                                    checked={includeDvi}
-                                    onChange={(e) => {
-                                        setIncludeDvi(e.target.checked);
-                                        setProperty('latex-export-include-dvi', e.target.checked);
-                                    }}
-                                    disabled={isExporting}
-                                />
-                                {t('Include DVI/XDV file')}
-                            </label>
-                        )}
-
-                        <label className="export-checkbox">
-                            <input
-                                type="checkbox"
-                                checked={includeBbl}
-                                onChange={(e) => {
-                                    setIncludeBbl(e.target.checked);
-                                    setProperty('latex-export-include-bbl', e.target.checked);
-                                }}
-                                disabled={isExporting}
-                            />
-                            {t('Include BBL file')}
-                        </label>
-                    </div>
-
-                    <div className="export-actions">
-                        <button
-                            className="export-action-button"
-                            onClick={handleExport}
-                            disabled={isDisabled}>
-                            <ExportIcon />
-                            {t('Export')}
-                        </button>
+            <PositionedDropdown
+                isOpen={isDropdownOpen}
+                triggerElement={dropdownRef.current?.querySelector('.compile-button-group') as HTMLElement}
+                className="latex-dropdown">
+                <div className="main-file-display">
+                    <div className="main-file-label">{t('Main file:')}</div>
+                    <div className="main-file-path" title={effectiveMainFile}>
+                        {getDisplayName(effectiveMainFile)}
+                        {projectMainFile && <span className="shared-indicator">{t('(shared)')}</span>}
                     </div>
                 </div>
-            )}
+
+                {useSharedSettings && (
+                    <div className="main-file-selector">
+                        <div className="main-file-selector-label">{t('Select main file:')}</div>
+                        <select
+                            value={projectMainFile || userSelectedMainFile || 'auto'}
+                            onChange={(e) => handleMainFileChange(e.target.value)}
+                            className="main-file-select"
+                            disabled={isExporting}>
+                            <option value="auto">{t('Auto-detect')}</option>
+                            {availableTexFiles.map((filePath) => (
+                                <option key={filePath} value={filePath}>
+                                    {getFileName(filePath)}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+
+                <div className="engine-selector">
+                    <div className="engine-label">{t('LaTeX Engine:')}</div>
+                    <select
+                        value={selectedEngine}
+                        onChange={(e) => {
+                            const engine = e.target.value as 'pdftex' | 'xetex' | 'luatex';
+                            setSelectedEngine(engine);
+                            setProperty('latex-export-engine', engine);
+                        }}
+                        className="engine-select"
+                        disabled={isExporting}>
+                        <option value="pdftex">{t('pdfTeX')}</option>
+                        <option value="xetex">{t('XeTeX')}</option>
+                    </select>
+                </div>
+
+                <div className="format-selector">
+                    <div className="format-label">{t('Export Format:')}</div>
+                    <select
+                        value={selectedFormat}
+                        onChange={(e) => {
+                            const format = e.target.value as 'pdf' | 'dvi';
+                            setSelectedFormat(format);
+                            setProperty('latex-export-format', format);
+                        }}
+                        className="format-select"
+                        disabled={isExporting}>
+                        <option value="pdf">PDF</option>
+                        {selectedEngine === 'xetex' && <option value="dvi">DVI</option>}
+                    </select>
+                </div>
+
+                <div className="export-options">
+                    <label className="export-checkbox">
+                        <input
+                            type="checkbox"
+                            checked={includeLog}
+                            onChange={(e) => {
+                                setIncludeLog(e.target.checked);
+                                setProperty('latex-export-include-log', e.target.checked);
+                            }}
+                            disabled={isExporting}
+                        />
+                        {t('Include log file')}
+                    </label>
+
+                    {selectedFormat === 'pdf' && selectedEngine === 'xetex' && (
+                        <label className="export-checkbox">
+                            <input
+                                type="checkbox"
+                                checked={includeDvi}
+                                onChange={(e) => {
+                                    setIncludeDvi(e.target.checked);
+                                    setProperty('latex-export-include-dvi', e.target.checked);
+                                }}
+                                disabled={isExporting}
+                            />
+                            {t('Include DVI/XDV file')}
+                        </label>
+                    )}
+
+                    <label className="export-checkbox">
+                        <input
+                            type="checkbox"
+                            checked={includeBbl}
+                            onChange={(e) => {
+                                setIncludeBbl(e.target.checked);
+                                setProperty('latex-export-include-bbl', e.target.checked);
+                            }}
+                            disabled={isExporting}
+                        />
+                        {t('Include BBL file')}
+                    </label>
+                </div>
+
+                <div className="export-actions">
+                    <button
+                        className="export-action-button"
+                        onClick={handleExport}
+                        disabled={isDisabled}>
+                        <ExportIcon />
+                        {t('Export')}
+                    </button>
+                </div>
+            </PositionedDropdown>
         </div>
     );
 };

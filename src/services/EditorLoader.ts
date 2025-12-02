@@ -653,21 +653,6 @@ export const EditorLoader = (
 		toolbarVisible,
 	]);
 
-	// Event listener for bibliography cache updates
-	useEffect(() => {
-		const handleFileTreeRefresh = () => {
-			if (viewRef.current) {
-				refreshBibliographyCache(viewRef.current);
-			}
-		};
-
-		document.addEventListener('refresh-file-tree', handleFileTreeRefresh);
-
-		return () => {
-			document.removeEventListener('refresh-file-tree', handleFileTreeRefresh);
-		};
-	}, []);
-
 	useEffect(() => {
 		if (!viewRef.current || !editorRef.current) return;
 

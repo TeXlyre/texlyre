@@ -4,6 +4,7 @@ import { fileStorageEventEmitter } from './FileStorageService';
 
 type CacheUpdateCallback = (files: FileNode[]) => void;
 type FilePathUpdateCallback = (filePath: string) => void;
+type BibliographyFilesCallback = (files: FileNode[]) => void;
 
 class FilePathCacheService {
 	private cachedFiles: FileNode[] = [];
@@ -12,6 +13,7 @@ class FilePathCacheService {
 	private cacheUpdateTimeout: NodeJS.Timeout | null = null;
 	private cacheUpdateCallbacks = new Set<CacheUpdateCallback>();
 	private filePathUpdateCallbacks = new Set<FilePathUpdateCallback>();
+	private bibliographyFileCallbacks = new Set<BibliographyFilesCallback>();
 
 	initialize() {
 		fileStorageEventEmitter.onChange(() => {
@@ -40,6 +42,26 @@ class FilePathCacheService {
 
 	offFilePathUpdate(callback: FilePathUpdateCallback) {
 		this.filePathUpdateCallbacks.delete(callback);
+	}
+
+	onBibliographyFilesUpdate(callback: BibliographyFilesCallback) {
+		this.bibliographyFileCallbacks.add(callback);
+		const bibFiles = this.getBibliographyFiles();
+		if (bibFiles.length > 0) {
+			callback(bibFiles);
+		}
+	}
+
+	offBibliographyFilesUpdate(callback: BibliographyFilesCallback) {
+		this.bibliographyFileCallbacks.delete(callback);
+	}
+
+	getBibliographyFiles(): FileNode[] {
+		return this.cachedFiles.filter(file =>
+			file.type === 'file' &&
+			(file.name.endsWith('.bib') || file.name.endsWith('.bibtex')) &&
+			!file.isDeleted
+		);
 	}
 
 	async getLinkedFilePath(documentId: string): Promise<string> {
@@ -153,7 +175,9 @@ class FilePathCacheService {
 	}
 
 	private invalidateCache() {
-		clearTimeout(this.cacheUpdateTimeout);
+		if (this.cacheUpdateTimeout) {
+			clearTimeout(this.cacheUpdateTimeout);
+		}
 		this.cacheUpdateTimeout = setTimeout(() => {
 			this.updateCache();
 		}, 500);
@@ -162,6 +186,11 @@ class FilePathCacheService {
 	private notifyCacheUpdate() {
 		this.cacheUpdateCallbacks.forEach(callback => {
 			callback(this.cachedFiles);
+		});
+
+		const bibFiles = this.getBibliographyFiles();
+		this.bibliographyFileCallbacks.forEach(callback => {
+			callback(bibFiles);
 		});
 	}
 
@@ -194,6 +223,7 @@ class FilePathCacheService {
 		this.cachedFiles = [];
 		this.cacheUpdateCallbacks.clear();
 		this.filePathUpdateCallbacks.clear();
+		this.bibliographyFileCallbacks.clear();
 		if (this.cacheUpdateTimeout) {
 			clearTimeout(this.cacheUpdateTimeout);
 			this.cacheUpdateTimeout = null;
