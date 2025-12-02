@@ -1,4 +1,3 @@
-// src/contexts/BibliographyContext.tsx
 import type React from 'react';
 import {
 	type ReactNode,
@@ -11,6 +10,8 @@ import {
 import { useProperties } from '../hooks/useProperties';
 import { fileStorageService } from '../services/FileStorageService';
 import { BibtexParser } from '../../extras/viewers/bibtex/BibtexParser';
+import { filePathCacheService } from '../services/FilePathCacheService';
+import type { FileNode } from '../types/files';
 
 export interface BibliographyFile {
 	path: string;
@@ -42,11 +43,11 @@ export interface BibliographyContextType {
 
 export const BibliographyContext = createContext<BibliographyContextType>({
 	getTargetFile: () => null,
-	setTargetFile: () => {},
+	setTargetFile: () => { },
 	getAvailableFiles: () => [],
 	createBibFile: async () => null,
-	refreshAvailableFiles: async () => {},
-	registerPluginTargetFile: () => () => {},
+	refreshAvailableFiles: async () => { },
+	registerPluginTargetFile: () => () => { },
 	getLocalEntries: async () => [],
 	importEntry: async () => false,
 	isImporting: () => false,
@@ -254,7 +255,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			await fileStorageService.updateFileContent(bibFile.id, newContent);
 
 			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
-			document.dispatchEvent(new CustomEvent('jabref-entry-imported', {
+			document.dispatchEvent(new CustomEvent('bib-entry-imported', {
 				detail: { entryKey: entry.key, targetFile }
 			}));
 
@@ -318,27 +319,20 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 	const getAvailableFiles = useCallback(() => availableFiles, [availableFiles]);
 
 	useEffect(() => {
-		refreshAvailableFiles();
-
-		let timeoutId: NodeJS.Timeout;
-
-		const handleFileTreeChange = () => {
-			clearTimeout(timeoutId);
-			timeoutId = setTimeout(() => {
-				refreshAvailableFiles();
-			}, 500);
+		const handleBibFilesUpdate = (bibFiles: FileNode[]) => {
+			setAvailableFiles(bibFiles.map(file => ({
+				path: file.path,
+				name: file.name,
+				id: file.id
+			})));
 		};
 
-		document.addEventListener('refresh-file-tree', handleFileTreeChange);
-
-		const interval = setInterval(refreshAvailableFiles, 30000);
+		filePathCacheService.onBibliographyFilesUpdate(handleBibFilesUpdate);
 
 		return () => {
-			document.removeEventListener('refresh-file-tree', handleFileTreeChange);
-			clearInterval(interval);
-			clearTimeout(timeoutId);
+			filePathCacheService.offBibliographyFilesUpdate(handleBibFilesUpdate);
 		};
-	}, [refreshAvailableFiles]);
+	}, []);
 
 	const contextValue = {
 		getTargetFile,

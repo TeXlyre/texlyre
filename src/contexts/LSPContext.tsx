@@ -1,4 +1,3 @@
-// src/contexts/LSPContext.tsx
 import type React from 'react';
 import {
 	type ReactNode,
@@ -16,6 +15,8 @@ import { useBibliography } from '../hooks/useBibliography';
 import { fileStorageService } from '../services/FileStorageService';
 import { bibliographyImportService } from '../services/BibliographyImportService';
 import { parseUrlFragments } from '../utils/urlUtils';
+import { filePathCacheService } from '../services/FilePathCacheService';
+import type { FileNode } from '../types/files';
 
 interface BibEntry {
 	key: string;
@@ -172,27 +173,6 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 			(currentProvider as any).updateServerUrl(serverUrl);
 		}
 	}, [currentProvider, serverUrl]);
-
-	const refreshAvailableFiles = useCallback(async () => {
-		try {
-			const allFiles = await fileStorageService.getAllFiles();
-			const bibFiles = allFiles
-				.filter(file =>
-					(file.name.endsWith('.bib') || file.name.endsWith('.bibtex')) &&
-					!file.isDeleted
-				)
-				.map(file => ({
-					path: file.path,
-					name: file.name,
-					id: file.id
-				}));
-
-			setAvailableBibFiles(bibFiles);
-		} catch (error) {
-			console.error('[LSPContext] Error refreshing available files:', error);
-			setAvailableBibFiles([]);
-		}
-	}, []);
 
 	const fetchLocalEntries = useCallback(async () => {
 		try {
@@ -363,22 +343,20 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	}, [mergeEntries]);
 
 	useEffect(() => {
-		const syncAvailableFiles = () => {
-			const biblioFiles = getAvailableFiles();
-			if (biblioFiles.length > 0) {
-				setAvailableBibFiles(biblioFiles);
-			}
+		const handleBibFilesUpdate = (bibFiles: FileNode[]) => {
+			setAvailableBibFiles(bibFiles.map(file => ({
+				path: file.path,
+				name: file.name,
+				id: file.id
+			})));
 		};
 
-		refreshAvailableFiles();
-		syncAvailableFiles();
+		filePathCacheService.onBibliographyFilesUpdate(handleBibFilesUpdate);
 
-		const interval = setInterval(() => {
-			syncAvailableFiles();
-		}, 2000);
-
-		return () => clearInterval(interval);
-	}, [getAvailableFiles, refreshAvailableFiles]);
+		return () => {
+			filePathCacheService.offBibliographyFilesUpdate(handleBibFilesUpdate);
+		};
+	}, []);
 
 	useEffect(() => {
 		if (!currentProvider || availableBibFiles.length === 0) {
@@ -394,14 +372,12 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 
 	useEffect(() => {
 		if (selectedProvider === 'local') {
-			refreshAvailableFiles();
 			fetchLocalEntries();
 			setExternalEntries([]);
 			return;
 		}
 
 		if (selectedProvider === 'all') {
-			refreshAvailableFiles();
 			fetchLocalEntries();
 
 			const initializeAllProviders = async () => {
@@ -437,7 +413,6 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		};
 
 		initializeProvider();
-		refreshAvailableFiles();
 		fetchLocalEntries();
 
 		setTimeout(() => {
@@ -465,34 +440,13 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		}, 1000);
 
 		return () => clearInterval(retryInterval);
-	}, [currentProvider, isBibliographyProvider, selectedProvider, availableProviders, fetchLocalEntries, fetchExternalEntries, fetchAllBibliographyEntries, refreshAvailableFiles]);
-
-	useEffect(() => {
-		let timeoutId: NodeJS.Timeout;
-
-		const handleFileTreeRefresh = () => {
-			clearTimeout(timeoutId);
-			timeoutId = setTimeout(() => {
-				if (isBibliographyProvider || selectedProvider === 'all' || selectedProvider === 'local') {
-					refreshAvailableFiles();
-					fetchLocalEntries();
-				}
-			}, 300);
-		};
-
-		document.addEventListener('refresh-file-tree', handleFileTreeRefresh);
-		return () => {
-			document.removeEventListener('refresh-file-tree', handleFileTreeRefresh);
-			clearTimeout(timeoutId);
-		};
-	}, [isBibliographyProvider, selectedProvider, refreshAvailableFiles, fetchLocalEntries]);
+	}, [currentProvider, isBibliographyProvider, selectedProvider, availableProviders, fetchLocalEntries, fetchExternalEntries, fetchAllBibliographyEntries]);
 
 	const handleRefresh = async () => {
 		setIsRefreshing(true);
 
 		try {
 			if (selectedProvider === 'local') {
-				await refreshAvailableFiles();
 				await fetchLocalEntries();
 			} else if (selectedProvider === 'all') {
 				const refreshPromises = availableProviders.map(async (provider) => {
@@ -504,12 +458,10 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 				});
 
 				await Promise.allSettled(refreshPromises);
-				await refreshAvailableFiles();
 				await fetchLocalEntries();
 				await fetchAllBibliographyEntries();
 			} else if (currentProvider) {
 				await currentProvider.initialize?.();
-				await refreshAvailableFiles();
 				await fetchLocalEntries();
 				await fetchExternalEntries();
 			}

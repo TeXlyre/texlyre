@@ -124,7 +124,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     return () => {
       document.removeEventListener('refresh-file-tree', handleRefreshEvent);
     };
-  }, [refreshFileTree]);
+  }, []);
 
   useEffect(() => {
     if (

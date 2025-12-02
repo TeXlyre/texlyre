@@ -22,6 +22,7 @@ export const fileStorageEventEmitter = {
 		for (const listener of listeners) {
 			listener();
 		}
+		document.dispatchEvent(new CustomEvent('refresh-file-tree'));
 	},
 };
 
