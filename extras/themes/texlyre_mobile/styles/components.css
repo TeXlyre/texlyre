@@ -308,6 +308,12 @@
 	border: none;
 }
 
+[data-layout="texlyre-mobile"] .pdf-options-toggle {
+	height: 4rem;
+	align-items: center;
+	padding: var(--space-md);
+}
+
 .mobile-nav-button {
 	flex: 1;
 	display: flex;
