@@ -528,7 +528,7 @@
 	padding: var(--space-sm) var(--space-md);
 	margin-bottom: var(--space-lg);
 	animation: slideDown 0.3s ease-out;
-	z-index: var(--z-banner);
+	z-index: var(--z-banner-above-user);
 }
 
 @keyframes slideDown {

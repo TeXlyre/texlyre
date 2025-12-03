@@ -255,7 +255,7 @@ embed {
 	font-weight: 400;
 	display: flex;
 	align-items: center;
-	gap: var(--space-sm);
+	gap: var(--space-md);
 	padding: var(--space-sm) 0;
 	cursor: pointer;
 	background-color: var(--pico-background);

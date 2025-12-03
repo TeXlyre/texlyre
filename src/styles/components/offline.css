@@ -4,7 +4,7 @@
 		var(--pico-background);
 	padding: var(--space-sd) 1rem;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-	z-index: var(--z-banner);
+	z-index: var(--z-banner-below-user);
 	position: sticky;
 	top: 0;
 }
