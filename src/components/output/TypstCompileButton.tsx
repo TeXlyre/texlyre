@@ -475,20 +475,20 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
         isOpen={isDropdownOpen}
         triggerElement={dropdownRef.current?.querySelector('.compile-button-group') as HTMLElement}
         className="typst-dropdown">
-        <div className="main-file-display">
-          <div className="main-file-label">{t('Main file:')}</div>
-          <div className="main-file-path" title={effectiveMainFile}>
+        <div className="dropdown-section">
+          <div className="dropdown-title">{t('Main File:')}</div>
+          <div className="dropdown-value" title={effectiveMainFile}>
             {getDisplayName(effectiveMainFile)}
             {projectMainFile && <span className="shared-indicator">{t('(shared)')}</span>}
           </div>
         </div>
         {useSharedSettings &&
-          <div className="main-file-selector">
-            <div className="main-file-selector-label">{t('Select main file:')}</div>
+          <div className="dropdown-section">
+            <div className="dropdown-label">{t('Select main file:')}</div>
             <select
               value={projectMainFile || userSelectedMainFile || 'auto'}
               onChange={(e) => handleMainFileChange(e.target.value)}
-              className="main-file-select"
+              className="dropdown-select"
               disabled={isCompiling}>
               <option value="auto">{t('Auto-detect')}</option>
               {availableTypstFiles.map((filePath) =>
@@ -497,7 +497,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                 </option>
               )}
             </select>
-            <label className="share-checkbox">
+            <label className="dropdown-checkbox">
               <input
                 type="checkbox"
                 checked={!!projectMainFile}
@@ -508,9 +508,9 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
           </div>
         }
 
-        <div className="format-selector">
+        <div className="dropdown-section">
           <div className="format-selector-header">
-            <div className="format-label">{t('Output Format:')}</div>
+            <div className="dropdown-title">{t('Output Format:')}</div>
           </div>
           <div className="format-selector-group">
             <select
@@ -533,7 +533,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                   setIsPdfOptionsOpen(false);
                 }
               }}
-              className="format-select"
+              className="dropdown-select"
               disabled={isCompiling}>
               <option value="pdf">{t('PDF')}</option>
               <option value="svg">{t('SVG')}</option>
@@ -552,7 +552,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
           {effectiveFormat === 'pdf' && isPdfOptionsOpen &&
             <div className="pdf-options-section">
               <div className="pdf-option">
-                <label className="pdf-option-label">{t('PDF Standard:')}</label>
+                <label className="dropdown-title">{t('PDF Standard:')}</label>
                 <select
                   value={useSharedSettings && projectFormat ?
                     doc?.projectMetadata?.typstPdfOptions?.pdfStandard || '"1.7"' :
@@ -576,7 +576,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                       setProperty('typst-pdf-standard', e.target.value);
                     }
                   }}
-                  className="pdf-option-select"
+                  className="dropdown-select"
                   disabled={isCompiling}>
                   <>
                     <optgroup label={t('PDF Versions')}>
@@ -608,12 +608,12 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                   href="https://typst.app/docs/reference/pdf/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="pdf-standards-link">
+                  className="dropdown-link">
                   {t('Learn more about PDF standards')}
                 </a>
               </div>
 
-              <label className="pdf-option-checkbox">
+              <label className="dropdown-checkbox">
                 <input
                   type="checkbox"
                   checked={useSharedSettings && projectFormat ?
@@ -646,7 +646,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
           }
 
           {useSharedSettings &&
-            <label className="share-checkbox">
+            <label className="dropdown-checkbox">
               <input
                 type="checkbox"
                 checked={!!projectFormat}
@@ -655,9 +655,11 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
               {t('Share with collaborators')}
             </label>
           }
+        </div>
 
+        <div className="dropdown-section">
           {useSharedSettings &&
-            <label className="auto-compile-checkbox">
+            <label className="dropdown-checkbox">
               <input
                 type="checkbox"
                 checked={effectiveAutoCompileOnSave}
@@ -667,24 +669,23 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
               {t('Auto-compile on save')}
             </label>
           }
-        </div>
 
-        <div className="cache-controls">
           <div
-            className="cache-item clear-cache"
+            className="cache-item"
             onClick={handleClearCache}
             title={t('Clear compilation cache')}>
             <TrashIcon />{t('Clear Cache')}
           </div>
           <div
-            className="cache-item clear-and-compile"
+            className="cache-item"
             onClick={handleClearCacheAndCompile}
             title={t('Clear cache and compile') + ' ' + `${useSharedSettings ? t('(Shift+F9)') : ''}`}>
             <ClearCompileIcon />{t('Clear & Compile')}
           </div>
         </div>
       </PositionedDropdown>
-    </div>);
+    </div>
+  );
 
 };
 

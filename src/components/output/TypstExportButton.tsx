@@ -267,21 +267,21 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                 isOpen={isDropdownOpen}
                 triggerElement={dropdownRef.current?.querySelector('.compile-button-group') as HTMLElement}
                 className="typst-dropdown">
-                <div className="main-file-display">
-                    <div className="main-file-label">{t('Main file:')}</div>
-                    <div className="main-file-path" title={effectiveMainFile}>
+                <div className="dropdown-section">
+                    <div className="dropdown-title">{t('Main File:')}</div>
+                    <div className="dropdown-value" title={effectiveMainFile}>
                         {getDisplayName(effectiveMainFile)}
                         {projectMainFile && <span className="shared-indicator">{t('(shared)')}</span>}
                     </div>
                 </div>
 
                 {useSharedSettings &&
-                    <div className="main-file-selector">
-                        <div className="main-file-selector-label">{t('Select main file:')}</div>
+                    <div className="dropdown-section">
+                        <div className="dropdown-label">{t('Select main file:')}</div>
                         <select
                             value={projectMainFile || userSelectedMainFile || 'auto'}
                             onChange={(e) => handleMainFileChange(e.target.value)}
-                            className="main-file-select"
+                            className="dropdown-select"
                             disabled={isExporting}>
                             <option value="auto">{t('Auto-detect')}</option>
                             {availableTypstFiles.map((filePath) =>
@@ -293,9 +293,9 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                     </div>
                 }
 
-                <div className="format-selector">
+                <div className="dropdown-section">
                     <div className="format-selector-header">
-                        <div className="format-label">{t('Export Format:')}</div>
+                        <div className="dropdown-title">{t('Export Format:')}</div>
                     </div>
 
                     <div className="format-selector-group">
@@ -309,7 +309,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                                     setIsPdfOptionsOpen(false);
                                 }
                             }}
-                            className="format-select"
+                            className="dropdown-select"
                             disabled={isExporting}>
                             <option value="pdf">{t('PDF')}</option>
                             <option value="svg">{t('SVG')}</option>
@@ -328,7 +328,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                     {selectedFormat === 'pdf' && isPdfOptionsOpen &&
                         <div className="pdf-options-section">
                             <div className="pdf-option">
-                                <label className="pdf-option-label">{t('PDF Standard:')}</label>
+                                <label className="dropdown-title">{t('PDF Standard:')}</label>
                                 <select
                                     value={localPdfOptions.pdfStandard || '"1.7"'}
                                     onChange={(e) => {
@@ -336,7 +336,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                                         setLocalPdfOptions(newOptions);
                                         setProperty('typst-export-pdf-standard', e.target.value);
                                     }}
-                                    className="pdf-option-select"
+                                    className="dropdown-select"
                                     disabled={isExporting}>
                                     <>
                                         <optgroup label={t('PDF Versions')}>
@@ -368,11 +368,11 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                                     href="https://typst.app/docs/reference/pdf/"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="pdf-standards-link">
+                                    className="dropdown-link">
                                     {t('Learn more about PDF standards')}
                                 </a>
                             </div>
-                            <label className="pdf-option-checkbox">
+                            <label className="dropdown-checkbox">
                                 <input
                                     type="checkbox"
                                     checked={localPdfOptions.pdfTags !== false}
@@ -389,8 +389,8 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                     }
                 </div>
 
-                <div className="export-options">
-                    <label className="export-checkbox">
+                <div className="dropdown-section">
+                    <label className="dropdown-checkbox">
                         <input
                             type="checkbox"
                             checked={includeLog}
@@ -404,9 +404,9 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                     </label>
                 </div>
 
-                <div className="export-actions">
+                <div className="dropdown-section">
                     <button
-                        className="export-action-button"
+                        className="dropdown-button"
                         onClick={handleExport}
                         disabled={isDisabled}>
                         <ExportIcon />
@@ -414,7 +414,8 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                     </button>
                 </div>
             </PositionedDropdown>
-        </div>);
+        </div>
+    );
 
 };
 

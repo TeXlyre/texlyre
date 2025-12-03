@@ -23,9 +23,10 @@
 .chat-panel-input,
 .main-file-select,
 .engine-select,
+.dropdown-select,
 .format-select {
 	width: 100%;
-	padding: 0.5rem;
+	padding: var(--space-sm);
 	border: 1px solid var(--accent-border, #ddd);
 	border-radius: var(--radius-sm);
 	background-color: var(--pico-background);
