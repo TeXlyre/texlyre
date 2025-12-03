@@ -520,12 +520,15 @@
 /* Guest upgrade banner styling */
 .guest-upgrade-banner {
 	width: 100%;
-	background: linear-gradient(135deg, rgba(64, 185, 255, 0.1), rgba(120, 64, 255, 0.1));
+	background:
+		linear-gradient(135deg, rgba(64, 185, 255, 0.1), rgba(120, 64, 255, 0.1)),
+		var(--pico-background);
 	border: 1px solid rgba(64, 185, 255, 0.3);
 	border-radius: var(--radius-sm);
 	padding: var(--space-sm) var(--space-md);
 	margin-bottom: var(--space-lg);
 	animation: slideDown 0.3s ease-out;
+	z-index: var(--z-banner);
 }
 
 @keyframes slideDown {

@@ -1,18 +1,18 @@
 .offline-banner {
-	background: linear-gradient(135deg, #ff6b6b, #ffa500);
-	color: white;
+	background:
+		linear-gradient(135deg, #ff6b6b44, #ffa60056),
+		var(--pico-background);
 	padding: var(--space-sd) 1rem;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-	z-index: 1000;
+	z-index: var(--z-banner);
 	position: sticky;
 	top: 0;
 }
 
 .offline-content {
 	display: flex;
-	align-items: center;
-	gap: var(--space-sd);
-	max-width: 1200px;
+	align-items: left;
+	gap: var(--space-md);
 	margin: 0 auto;
 }
 
