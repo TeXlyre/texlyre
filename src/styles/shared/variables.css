@@ -42,6 +42,8 @@
 	--shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
 
 	/* Z-Index Scale */
+	--z-banner-above-user: 200;
+	--z-banner-below-user: 100;
 	--z-dropdown: 1000;
 	--z-sticky: 1010;
 	--z-fixed: 1020;

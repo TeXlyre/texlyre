@@ -10,90 +10,6 @@
 	overflow: hidden;
 }
 
-.main-file-display {
-	padding: var(--space-sm) 0;
-	border-bottom: 1px solid var(--accent-border);
-	margin-bottom: var(--space-sm);
-}
-
-.main-file-label,
-.engine-label,
-.format-label,
-.pdf-option-label {
-	font-size: 0.8rem;
-	color: var(--text-secondary-color);
-	margin-bottom: var(--space-xs);
-}
-
-
-.pdf-standards-link {
-	font-size: 0.8rem;
-	margin-top: 0;
-}
-
-.main-file-path {
-	font-size: 0.9rem;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.engine-selector,
-.format-selector {
-	padding: var(--space-sm) 0;
-}
-
-.format-selector-header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: var(--space-sm);
-}
-
-.format-selector-group {
-	display: flex;
-	align-items: stretch;
-	gap: var(--space-sm);
-	flex-wrap: nowrap;
-}
-
-.format-select {
-	flex: 1;
-	box-sizing: border-box;
-}
-
-.pdf-options-toggle {
-	display: flex;
-	align-items: calc(center - var(--space-md));
-	justify-content: center;
-	background-color: var(--pico-secondary-background);
-	color: var(--text-color);
-	border: 1px solid var(--accent-border);
-	border-radius: var(--radius-sm);
-	cursor: pointer;
-	transition: background-color var(--transition-normal);
-	flex-shrink: 0;
-	box-sizing: border-box;
-	width: auto;
-	padding-top: var(--space-sd);
-	padding-bottom: var(--space-sd);
-	height: 100%;
-}
-
-.pdf-options-toggle:hover:not(:disabled) {
-	background-color: var(--pico-primary-focus);
-}
-
-.pdf-options-toggle.active {
-	background-color: var(--pico-primary);
-	color: var(--pico-primary-inverse);
-}
-
-.pdf-options-toggle:disabled {
-	opacity: 0.6;
-	cursor: not-allowed;
-}
-
 .latex-header-buttons,
 .typst-header-buttons {
 	position: absolute;
@@ -151,22 +67,8 @@
 	margin: var(--space-sm);
 }
 
-.pdf-viewer {
-	flex: 1;
-	display: flex;
-	flex-direction: column;
-	overflow: hidden;
-	height: 100%;
-}
-
-.svg-viewer {
-	flex: 1;
-	display: flex;
-	flex-direction: column;
-	overflow: hidden;
-	height: 100%;
-}
-
+.pdf-viewer,
+.svg-viewer,
 .canvas-viewer {
 	flex: 1;
 	display: flex;
@@ -190,17 +92,6 @@ embed {
 	border-radius: var(--radius-sm);
 	color: var(--color-error);
 	font-size: 0.9rem;
-}
-
-.empty-state {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	height: 100%;
-	color: var(--pico-secondary);
-	font-size: 0.9rem;
-	text-align: center;
-	padding: var(--space-md);
 }
 
 .editor-container-outer {
@@ -353,72 +244,19 @@ embed {
 	cursor: wait;
 }
 
-.main-file-selector {
-	margin-top: var(--space-sd);
-	padding-top: var(--space-sd);
-	border-top: 1px solid var(--border-color);
-}
-
-.main-file-selector-label {
-	font-size: 0.8rem;
-	color: var(--text-secondary);
-	margin-bottom: 0.5rem;
-}
-
-.main-file-select:disabled {
-	opacity: 0.6;
-	cursor: not-allowed;
-}
-
-.share-checkbox,
-.auto-compile-checkbox,
-.export-checkbox,
-.pdf-option-checkbox {
-	display: flex;
-	align-items: center;
-	gap: var(--space-sm);
-	font-size: 0.8rem;
-	color: var(--text-color);
-	cursor: pointer;
-}
-
-.share-checkbox input[type="checkbox"],
-.auto-compile-checkbox input[type="checkbox"],
-.export-checkbox input[type="checkbox"],
-.pdf-option-checkbox input[type="checkbox"] {
-	margin: 0;
-}
-
-.share-checkbox:has(input:disabled),
-.auto-compile-checkbox:has(input:disabled),
-.export-checkbox:has(input:disabled),
-.pdf-option-checkbox:has(input:disabled) {
-	opacity: 0.6;
-	cursor: not-allowed;
-}
-
 .shared-indicator {
 	font-size: var(--space-sd);
 	color: var(--accent-color);
 	font-weight: 500;
 }
 
-.cache-controls {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-sm);
-	margin-top: var(--space-sm);
-	padding-top: var(--space-sm);
-	border-top: 1px solid var(--accent-border);
-}
-
 .cache-item {
-	font-weight: 400;
 	font-size: 0.8rem;
+	font-weight: 400;
 	display: flex;
 	align-items: center;
-	gap: var(--space-sm);
-	padding: var(--space-sm);
+	gap: var(--space-md);
+	padding: var(--space-sm) 0;
 	cursor: pointer;
 	background-color: var(--pico-background);
 	border-radius: var(--radius-sm);
@@ -434,43 +272,47 @@ embed {
 	cursor: not-allowed;
 }
 
-.export-options {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-sm);
-	margin-top: var(--space-sm);
-	padding-top: var(--space-sm);
-	border-top: 1px solid var(--accent-border);
-}
-
-.export-actions {
-	margin-top: var(--space-sm);
-	padding-top: var(--space-sm);
-	border-top: 1px solid var(--accent-border);
-}
-
-.export-action-button {
-	width: 100%;
+.format-selector-header {
 	display: flex;
 	align-items: center;
-	justify-content: center;
+	justify-content: space-between;
 	gap: var(--space-sm);
-	padding: var(--space-sm);
-	background-color: var(--pico-primary) !important;
-	color: var(--pico-primary-inverse) !important;
-	border: none;
+}
+
+.format-selector-group {
+	display: flex;
+	align-items: stretch;
+	gap: var(--space-sm);
+	flex-wrap: nowrap;
+}
+
+.format-selector-group .dropdown-select {
+	flex: 1;
+}
+
+.pdf-options-toggle {
+	display: flex;
+	background-color: var(--pico-secondary-background);
+	color: var(--text-color);
+	border: 1px solid var(--accent-border);
 	border-radius: var(--radius-sm);
 	cursor: pointer;
 	transition: background-color var(--transition-normal);
-	font-size: 0.85rem;
-	font-weight: 500;
+	padding: var(--space-sd);
+	margin: 0.05em;
+	height: 100%;
 }
 
-.export-action-button:hover:not(:disabled) {
-	background-color: var(--pico-primary-hover);
+.pdf-options-toggle:hover:not(:disabled) {
+	background-color: var(--pico-primary-focus);
 }
 
-.export-action-button:disabled {
+.pdf-options-toggle.active {
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+}
+
+.pdf-options-toggle:disabled {
 	opacity: 0.6;
 	cursor: not-allowed;
 }
@@ -480,7 +322,7 @@ embed {
 	flex-direction: column;
 	gap: var(--space-sm);
 	margin-top: var(--space-sm);
-	margin-bottom: var(--space-xs);
+	margin-bottom: var(--space-sm);
 	padding: var(--space-sm);
 	background-color: var(--pico-secondary-background);
 	border-radius: var(--radius-sm);
@@ -493,7 +335,8 @@ embed {
 	gap: var(--space-xs);
 }
 
-.pdf-option-select {
-	width: 100%;
-	border: 1px solid var(--accent-border);
+.dropdown-section+.dropdown-section {
+	border-top: 1px solid var(--accent-border);
+	margin-top: var(--space-sm);
+	padding-top: var(--space-sm);
 }

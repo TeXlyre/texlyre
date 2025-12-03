@@ -485,9 +485,9 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
         isOpen={isDropdownOpen}
         triggerElement={dropdownRef.current?.querySelector('.compile-button-group') as HTMLElement}
         className="latex-dropdown">
-        <div className="main-file-display">
-          <div className="main-file-label">{t('Main file:')}</div>
-          <div className="main-file-path" title={effectiveMainFile}>
+        <div className="dropdown-section">
+          <div className="dropdown-title">{t('Main File:')}</div>
+          <div className="dropdown-value" title={effectiveMainFile}>
             {getDisplayName(effectiveMainFile)}
             {projectMainFile && <span className="shared-indicator">{t('(shared)')}</span>}
           </div>
@@ -495,12 +495,12 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
         {useSharedSettings &&
           <>
-            <div className="main-file-selector">
-              <div className="main-file-selector-label">{t('Select main file:')}</div>
+            <div className="dropdown-section">
+              <div className="dropdown-label">{t('Select main file:')}</div>
               <select
                 value={projectMainFile || userSelectedMainFile || 'auto'}
                 onChange={(e) => handleMainFileChange(e.target.value)}
-                className="main-file-select"
+                className="dropdown-select"
                 disabled={isChangingEngine || isCompiling}>
 
                 <option value="auto">{t('Auto-detect')}</option>
@@ -510,7 +510,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
                   </option>
                 )}
               </select>
-              <label className="share-checkbox">
+              <label className="dropdown-checkbox">
                 <input
                   type="checkbox"
                   checked={!!projectMainFile}
@@ -522,19 +522,19 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
           </>
         }
 
-        <div className="engine-selector">
-          <div className="engine-label">{t('LaTeX Engine:')}</div>
+        <div className="dropdown-section">
+          <div className="dropdown-title">{t('LaTeX Engine:')}</div>
           <select
             value={effectiveEngine}
             onChange={(e) => handleEngineChange(e.target.value)}
-            className="engine-select"
+            className="dropdown-select"
             disabled={isChangingEngine || isCompiling}>
 
             <option value="pdftex">{t('pdfTeX')}</option>
             <option value="xetex">{t('XeTeX')}</option>
           </select>
           {useSharedSettings &&
-            <label className="share-checkbox">
+            <label className="dropdown-checkbox">
               <input
                 type="checkbox"
                 checked={!!projectEngine}
@@ -548,9 +548,9 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
           }
         </div>
 
-        {useSharedSettings && (
-          <div className="auto-compile-controls">
-            <label className="auto-compile-checkbox">
+        <div className="dropdown-section">
+          {useSharedSettings && (
+            <label className="dropdown-checkbox">
               <input
                 type="checkbox"
                 checked={effectiveAutoCompileOnSave}
@@ -559,19 +559,17 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
               />
               {t('Auto-compile on save')}
             </label>
-          </div>
-        )}
+          )}
 
-        <div className="cache-controls">
           <div
-            className="cache-item clear-cache"
+            className="cache-item"
             onClick={handleClearCache}
             title={t('Clear compilation cache and source files')}>
 
             <TrashIcon />{t('Clear Cache')}
           </div>
           <div
-            className="cache-item clear-and-compile clear-and-compile-button"
+            className="cache-item"
             onClick={handleClearCacheAndCompile}
             title={t('Clear cache and compile') + ' ' + `${useSharedSettings ? t('(Shift+F9)') : ''}`}>
             <ClearCompileIcon />{t('Clear & Compile')}

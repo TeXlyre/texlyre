@@ -287,21 +287,21 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                 isOpen={isDropdownOpen}
                 triggerElement={dropdownRef.current?.querySelector('.compile-button-group') as HTMLElement}
                 className="latex-dropdown">
-                <div className="main-file-display">
-                    <div className="main-file-label">{t('Main file:')}</div>
-                    <div className="main-file-path" title={effectiveMainFile}>
+                <div className="dropdown-section">
+                    <div className="dropdown-title">{t('Main File:')}</div>
+                    <div className="dropdown-value" title={effectiveMainFile}>
                         {getDisplayName(effectiveMainFile)}
                         {projectMainFile && <span className="shared-indicator">{t('(shared)')}</span>}
                     </div>
                 </div>
 
                 {useSharedSettings && (
-                    <div className="main-file-selector">
-                        <div className="main-file-selector-label">{t('Select main file:')}</div>
+                    <div className="dropdown-section">
+                        <div className="dropdown-label">{t('Select main file:')}</div>
                         <select
                             value={projectMainFile || userSelectedMainFile || 'auto'}
                             onChange={(e) => handleMainFileChange(e.target.value)}
-                            className="main-file-select"
+                            className="dropdown-select"
                             disabled={isExporting}>
                             <option value="auto">{t('Auto-detect')}</option>
                             {availableTexFiles.map((filePath) => (
@@ -313,8 +313,8 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                     </div>
                 )}
 
-                <div className="engine-selector">
-                    <div className="engine-label">{t('LaTeX Engine:')}</div>
+                <div className="dropdown-section">
+                    <div className="dropdown-title">{t('LaTeX Engine:')}</div>
                     <select
                         value={selectedEngine}
                         onChange={(e) => {
@@ -322,15 +322,15 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                             setSelectedEngine(engine);
                             setProperty('latex-export-engine', engine);
                         }}
-                        className="engine-select"
+                        className="dropdown-select"
                         disabled={isExporting}>
                         <option value="pdftex">{t('pdfTeX')}</option>
                         <option value="xetex">{t('XeTeX')}</option>
                     </select>
                 </div>
 
-                <div className="format-selector">
-                    <div className="format-label">{t('Export Format:')}</div>
+                <div className="dropdown-section">
+                    <div className="dropdown-title">{t('Export Format:')}</div>
                     <select
                         value={selectedFormat}
                         onChange={(e) => {
@@ -338,15 +338,15 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                             setSelectedFormat(format);
                             setProperty('latex-export-format', format);
                         }}
-                        className="format-select"
+                        className="dropdown-select"
                         disabled={isExporting}>
                         <option value="pdf">PDF</option>
                         {selectedEngine === 'xetex' && <option value="dvi">DVI</option>}
                     </select>
                 </div>
 
-                <div className="export-options">
-                    <label className="export-checkbox">
+                <div className="dropdown-section">
+                    <label className="dropdown-checkbox">
                         <input
                             type="checkbox"
                             checked={includeLog}
@@ -360,7 +360,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                     </label>
 
                     {selectedFormat === 'pdf' && selectedEngine === 'xetex' && (
-                        <label className="export-checkbox">
+                        <label className="dropdown-checkbox">
                             <input
                                 type="checkbox"
                                 checked={includeDvi}
@@ -374,7 +374,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                         </label>
                     )}
 
-                    <label className="export-checkbox">
+                    <label className="dropdown-checkbox">
                         <input
                             type="checkbox"
                             checked={includeBbl}
@@ -388,9 +388,9 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                     </label>
                 </div>
 
-                <div className="export-actions">
+                <div className="dropdown-section">
                     <button
-                        className="export-action-button"
+                        className="dropdown-button"
                         onClick={handleExport}
                         disabled={isDisabled}>
                         <ExportIcon />
