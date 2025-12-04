@@ -5,6 +5,13 @@ import { fileStorageEventEmitter } from './FileStorageService';
 type CacheUpdateCallback = (files: FileNode[]) => void;
 type FilePathUpdateCallback = (filePath: string) => void;
 type BibliographyFilesCallback = (files: FileNode[]) => void;
+type LabelsUpdateCallback = (labels: Map<string, string[]>) => void;
+
+interface LabelCache {
+	texLabels: Map<string, string[]>;
+	typstLabels: Map<string, string[]>;
+	lastUpdate: number;
+}
 
 class FilePathCacheService {
 	private cachedFiles: FileNode[] = [];
@@ -14,6 +21,12 @@ class FilePathCacheService {
 	private cacheUpdateCallbacks = new Set<CacheUpdateCallback>();
 	private filePathUpdateCallbacks = new Set<FilePathUpdateCallback>();
 	private bibliographyFileCallbacks = new Set<BibliographyFilesCallback>();
+	private labelsUpdateCallbacks = new Set<LabelsUpdateCallback>();
+	private labelCache: LabelCache = {
+		texLabels: new Map(),
+		typstLabels: new Map(),
+		lastUpdate: 0,
+	};
 
 	initialize() {
 		fileStorageEventEmitter.onChange(() => {
@@ -54,6 +67,26 @@ class FilePathCacheService {
 
 	offBibliographyFilesUpdate(callback: BibliographyFilesCallback) {
 		this.bibliographyFileCallbacks.delete(callback);
+	}
+
+	onLabelsUpdate(callback: LabelsUpdateCallback) {
+		this.labelsUpdateCallbacks.add(callback);
+		if (this.labelCache.texLabels.size > 0 || this.labelCache.typstLabels.size > 0) {
+			callback(this.labelCache.texLabels);
+			callback(this.labelCache.typstLabels);
+		}
+	}
+
+	offLabelsUpdate(callback: LabelsUpdateCallback) {
+		this.labelsUpdateCallbacks.delete(callback);
+	}
+
+	getTexLabels(): Map<string, string[]> {
+		return this.labelCache.texLabels;
+	}
+
+	getTypstLabels(): Map<string, string[]> {
+		return this.labelCache.typstLabels;
 	}
 
 	getBibliographyFiles(): FileNode[] {
@@ -169,11 +202,6 @@ class FilePathCacheService {
 		return '/' + (toPath.startsWith('/') ? toPath.slice(1) : toPath);
 	}
 
-	private isImageFile(filename: string): boolean {
-		const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.svg', '.pdf', '.eps', '.ps'];
-		return imageExtensions.some(ext => filename.toLowerCase().endsWith(ext));
-	}
-
 	private invalidateCache() {
 		if (this.cacheUpdateTimeout) {
 			clearTimeout(this.cacheUpdateTimeout);
@@ -194,6 +222,82 @@ class FilePathCacheService {
 		});
 	}
 
+	private extractTexLabels(content: string): string[] {
+		const labels = new Set<string>();
+		const patterns = [
+			/\\label\{([^}]+)\}/g,
+			/\\hypertarget\{([^}]+)\}/g,
+		];
+
+		for (const pattern of patterns) {
+			let match;
+			while ((match = pattern.exec(content)) !== null) {
+				const label = match[1].trim();
+				if (label) {
+					labels.add(label);
+				}
+			}
+		}
+
+		return Array.from(labels);
+	}
+
+	private extractTypstLabels(content: string): string[] {
+		const labels = new Set<string>();
+		const pattern = /<([^>]+)>/g;
+		let match;
+
+		while ((match = pattern.exec(content)) !== null) {
+			const label = match[1].trim();
+			if (label && !label.includes(' ') && !label.includes('\n')) {
+				labels.add(label);
+			}
+		}
+
+		return Array.from(labels);
+	}
+
+	private async updateLabelsCache() {
+		const texLabels = new Map<string, string[]>();
+		const typstLabels = new Map<string, string[]>();
+
+		for (const file of this.cachedFiles) {
+			if (file.type !== 'file' || file.isDeleted || !file.content) {
+				continue;
+			}
+
+			const ext = file.name.split('.').pop()?.toLowerCase();
+			if (!ext) continue;
+
+			const content = typeof file.content === 'string'
+				? file.content
+				: new TextDecoder().decode(file.content);
+
+			if (ext === 'tex' || ext === 'latex') {
+				const labels = this.extractTexLabels(content);
+				if (labels.length > 0) {
+					texLabels.set(file.path, labels);
+				}
+			} else if (ext === 'typ' || ext === 'typst') {
+				const labels = this.extractTypstLabels(content);
+				if (labels.length > 0) {
+					typstLabels.set(file.path, labels);
+				}
+			}
+		}
+
+		this.labelCache = {
+			texLabels,
+			typstLabels,
+			lastUpdate: Date.now(),
+		};
+
+		this.labelsUpdateCallbacks.forEach(callback => {
+			callback(texLabels);
+			callback(typstLabels);
+		});
+	}
+
 	async updateCache(files?: FileNode[]) {
 		if (files) {
 			this.cachedFiles = files;
@@ -209,6 +313,7 @@ class FilePathCacheService {
 
 		this.lastCacheUpdate = Date.now();
 		this.notifyCacheUpdate();
+		await this.updateLabelsCache();
 	}
 
 	async getCachedFiles(): Promise<FileNode[]> {
@@ -224,6 +329,12 @@ class FilePathCacheService {
 		this.cacheUpdateCallbacks.clear();
 		this.filePathUpdateCallbacks.clear();
 		this.bibliographyFileCallbacks.clear();
+		this.labelsUpdateCallbacks.clear();
+		this.labelCache = {
+			texLabels: new Map(),
+			typstLabels: new Map(),
+			lastUpdate: 0,
+		};
 		if (this.cacheUpdateTimeout) {
 			clearTimeout(this.cacheUpdateTimeout);
 			this.cacheUpdateTimeout = null;

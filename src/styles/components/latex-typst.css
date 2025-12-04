@@ -292,15 +292,16 @@ embed {
 
 .pdf-options-toggle {
 	display: flex;
+	align-items: center;
 	background-color: var(--pico-secondary-background);
 	color: var(--text-color);
 	border: 1px solid var(--accent-border);
 	border-radius: var(--radius-sm);
 	cursor: pointer;
 	transition: background-color var(--transition-normal);
-	padding: var(--space-sd);
-	margin: 0.05em;
-	height: 100%;
+	padding: var(--space-sm);
+	height: 2.5rem;
+	width: auto;
 }
 
 .pdf-options-toggle:hover:not(:disabled) {
