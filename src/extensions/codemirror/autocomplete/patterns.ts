@@ -94,7 +94,7 @@ export const typstReferencePatterns = [
     },
     {
         commands: ['ref-function'],
-        pattern: /#ref\(<([^>]*)/,
+        pattern: /#ref\s*\(\s*<([^>]*)/,
         type: 'reference' as const,
     },
 ];
