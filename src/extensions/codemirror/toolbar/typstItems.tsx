@@ -328,11 +328,11 @@ export const createLabel = (): ToolbarItem => ({
 		const selection = view.state.selection.main;
 		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
 		if (selectedText) {
-			const text = `<${selectedText}>`;
+			const text = `#label("${selectedText}")`;
 			return insertText(view, text, 0);
 		}
-		const text = '#label()';
-		return insertText(view, text, -1);
+		const text = '#label("")';
+		return insertText(view, text, -2);
 	},
 });
 

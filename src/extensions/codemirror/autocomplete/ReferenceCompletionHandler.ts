@@ -56,14 +56,32 @@ export class ReferenceCompletionHandler {
         const line = context.state.doc.lineAt(context.pos);
         const lineText = line.text;
         const posInLine = context.pos - line.from;
-        const textBeforeCursor = lineText.substring(0, posInLine);
 
         for (const { pattern, type } of typstReferencePatterns) {
-            const match = textBeforeCursor.match(pattern);
+            const isRefFunction = pattern.source.includes('#ref');
 
-            if (match) {
-                const partial = match[1] || '';
-                return { command: 'ref', partial, type };
+            if (isRefFunction) {
+                const textBeforeCursor = lineText.substring(0, posInLine);
+                const match = textBeforeCursor.match(pattern);
+
+                if (match) {
+                    const partial = match[1] || '';
+                    return { command: 'ref', partial, type };
+                }
+            } else {
+                const matches = Array.from(lineText.matchAll(new RegExp(pattern.source, 'g')));
+
+                for (const match of matches) {
+                    if (match.index === undefined) continue;
+
+                    const matchStart = match.index;
+                    const matchEnd = matchStart + match[0].length;
+
+                    if (posInLine > matchStart && posInLine <= matchEnd) {
+                        const partial = match[1] || '';
+                        return { command: 'ref', partial, type };
+                    }
+                }
             }
         }
 

@@ -86,13 +86,20 @@ export class BibliographyCompletionHandler {
             const isTypstCitation = pattern.source.includes('#cite');
 
             if (isTypstCitation) {
-                const match = textBeforeCursor.match(pattern);
+                const matches = Array.from(lineText.matchAll(new RegExp(pattern.source, 'g')));
 
-                if (match) {
+                for (const match of matches) {
+                    if (match.index === undefined) continue;
+
                     const delimiter = match[0].endsWith('<') ? '<' : '"';
-                    const delimiterPos = match.index! + match[0].length - 1;
-                    const partial = textBeforeCursor.substring(delimiterPos + 1).trim();
-                    return { command: 'cite', partial, type };
+                    const delimiterPos = match.index + match[0].length - 1;
+                    const closeDelimiter = delimiter === '<' ? '>' : '"';
+                    const closePos = lineText.indexOf(closeDelimiter, delimiterPos + 1);
+
+                    if (posInLine > delimiterPos && (closePos === -1 || posInLine <= closePos)) {
+                        const partial = lineText.substring(delimiterPos + 1, posInLine).trim();
+                        return { command: 'cite', partial, type };
+                    }
                 }
             } else {
                 const matches = Array.from(lineText.matchAll(new RegExp(pattern.source, 'g')));
