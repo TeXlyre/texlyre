@@ -56,14 +56,32 @@ export class ReferenceCompletionHandler {
         const line = context.state.doc.lineAt(context.pos);
         const lineText = line.text;
         const posInLine = context.pos - line.from;
-        const textBeforeCursor = lineText.substring(0, posInLine);
 
         for (const { pattern, type } of typstReferencePatterns) {
-            const match = textBeforeCursor.match(pattern);
+            const isRefFunction = pattern.source.includes('#ref');
 
-            if (match) {
-                const partial = match[1] || '';
-                return { command: 'ref', partial, type };
+            if (isRefFunction) {
+                const textBeforeCursor = lineText.substring(0, posInLine);
+                const match = textBeforeCursor.match(pattern);
+
+                if (match) {
+                    const partial = match[1] || '';
+                    return { command: 'ref', partial, type };
+                }
+            } else {
+                const matches = Array.from(lineText.matchAll(new RegExp(pattern.source, 'g')));
+
+                for (const match of matches) {
+                    if (match.index === undefined) continue;
+
+                    const matchStart = match.index;
+                    const matchEnd = matchStart + match[0].length;
+
+                    if (posInLine > matchStart && posInLine <= matchEnd) {
+                        const partial = match[1] || '';
+                        return { command: 'ref', partial, type };
+                    }
+                }
             }
         }
 
@@ -164,19 +182,35 @@ export class ReferenceCompletionHandler {
         const posInLine = context.pos - line.from;
 
         for (const { pattern } of patterns) {
-            const match = lineText.match(pattern);
-            if (match && match.index !== undefined) {
-                const isTypstReference = pattern.source.includes('@');
+            const matches = Array.from(lineText.matchAll(new RegExp(pattern.source, 'g')));
 
-                if (isTypstReference) {
-                    const atPos = lineText.indexOf('@', match.index);
-                    if (atPos !== -1 && posInLine > atPos) {
+            for (const match of matches) {
+                if (match.index === undefined) continue;
+
+                const isTypstReference = pattern.source.includes('@');
+                const isRefFunction = pattern.source.includes('#ref');
+
+                if (isTypstReference && !isRefFunction) {
+                    const atPos = match.index;
+                    const matchEnd = match.index + match[0].length;
+                    if (posInLine > atPos && posInLine <= matchEnd) {
                         return line.from + atPos + 1;
+                    }
+                } else if (isRefFunction) {
+                    const anglePos = match.index + match[0].lastIndexOf('<');
+                    if (anglePos !== -1 && posInLine > anglePos) {
+                        const closePos = lineText.indexOf('>', anglePos);
+                        if (closePos === -1 || posInLine <= closePos) {
+                            return line.from + anglePos + 1;
+                        }
                     }
                 } else {
                     const bracePos = lineText.indexOf('{', match.index);
                     if (bracePos !== -1 && posInLine > bracePos) {
-                        return line.from + bracePos + 1;
+                        const braceEnd = lineText.indexOf('}', bracePos);
+                        if (braceEnd === -1 || posInLine <= braceEnd) {
+                            return line.from + bracePos + 1;
+                        }
                     }
                 }
             }

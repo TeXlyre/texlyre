@@ -19,8 +19,8 @@ import {
   '@/components/common/PluginHeader';
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
+import { useEditorView } from '@/hooks/editor/useEditorView';
 import type { ViewerProps } from '@/plugins/PluginInterface';
-import { EditorLoader } from '@/services/EditorLoader';
 import { fileStorageService } from '@/services/FileStorageService';
 import { formatFileSize } from '@/utils/fileUtils';
 import { TidyOptionsPanel } from './TidyOptionsPanel';
@@ -169,7 +169,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
     setHasChanges(true);
   };
 
-  const { viewRef: originalViewRef, showSaveIndicator: originalShowSaveIndicator } = EditorLoader(
+  const { viewRef: originalViewRef, showSaveIndicator: originalShowSaveIndicator } = useEditorView(
     originalEditorRef,
     'bibtex-viewer',
     `${fileName}-original-editor`,
@@ -185,7 +185,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
     fileId
   );
 
-  const { viewRef: processedViewRef, showSaveIndicator: processedShowSaveIndicator } = EditorLoader(
+  const { viewRef: processedViewRef, showSaveIndicator: processedShowSaveIndicator } = useEditorView(
     processedEditorRef,
     'bibtex-viewer',
     `${fileName}-processed-editor`,

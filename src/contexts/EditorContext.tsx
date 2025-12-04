@@ -139,7 +139,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       onChange: (value) => {
         const fontFamily = value as FontFamily;
         updateEditorSetting('fontFamily', fontFamily);
-        // fabawi: The font family is set in the EditorLoader directly now, but
+        // fabawi: The font family is set in the useEditorView directly now, but
         // keeping this for backward compatibility with CSS variables. 
         document.documentElement.style.setProperty(
           '--editor-font-family',

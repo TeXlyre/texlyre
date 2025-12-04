@@ -353,7 +353,14 @@
 	margin-left: auto;
 }
 
+.processed-save-notice strong {
+	margin-left: var(--space-us);
+	margin-right: var(--space-us);
+}
+
 .processed-save-notice svg {
+	margin-left: var(--space-us);
+	margin-right: var(--space-us);
 	padding-bottom: var(--space-us);
 }
 

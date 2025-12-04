@@ -156,15 +156,23 @@ export class FilePathCompletionHandler {
         const patterns = isCurrentlyInTypstFile ? typstCommandPatterns : latexCommandPatterns;
 
         for (const { pattern } of patterns) {
-            const match = lineText.match(pattern);
-            if (match && match.index !== undefined) {
+            const matches = Array.from(lineText.matchAll(new RegExp(pattern.source, 'g')));
+
+            for (const match of matches) {
+                if (match.index === undefined) continue;
+
                 const openChar = isCurrentlyInTypstFile ? '"' : '{';
                 const openPos = lineText.indexOf(openChar, match.index);
                 if (openPos !== -1 && posInLine > openPos) {
-                    partialStart = line.from + openPos + 1;
-                    break;
+                    const closeChar = isCurrentlyInTypstFile ? '"' : '}';
+                    const closePos = lineText.indexOf(closeChar, openPos + 1);
+                    if (closePos === -1 || posInLine <= closePos) {
+                        partialStart = line.from + openPos + 1;
+                        break;
+                    }
                 }
             }
+            if (partialStart !== posInLine) break;
         }
 
         return {
