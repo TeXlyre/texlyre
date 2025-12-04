@@ -41,6 +41,7 @@ import { createFilePathAutocompleteExtension, setCurrentFilePath, refreshBibliog
 import { createLSPExtension, updateLSPPluginsInView, setCurrentFilePathInLSP } from '../extensions/codemirror/LSPExtension';
 import { createToolbarExtension } from '../extensions/codemirror/ToolbarExtension';
 import { createPasteExtension } from '../extensions/codemirror/PasteExtension';
+import { createListingsExtension } from '../extensions/codemirror/ListingsExtension';
 import { useAuth } from '../hooks/useAuth';
 import { useEditor } from '../hooks/useEditor';
 import { autoSaveManager } from '../utils/autoSaveUtils';
@@ -377,10 +378,7 @@ export const EditorLoader = (
 			? currentContentRef.current
 			: (ytextRef.current?.toString() || '');
 
-		const extensions = [
-			...getBasicSetupExtensions(),
-			...getLanguageExtension(fileName, contentToUse),
-		];
+		const extensions: Extension[] = [];
 
 		// Determine file types for enhanced completion
 		const isLatexFile = fileName?.endsWith('.tex') || (!fileName && contentToUse?.includes('\\'));
@@ -388,6 +386,17 @@ export const EditorLoader = (
 			(!fileName && (contentToUse?.includes('@article') || contentToUse?.includes('@book') || contentToUse?.includes('@inproceedings')));
 		const isTypstFile = fileName?.endsWith('.typ') || fileName?.endsWith('.typst') ||
 			(!fileName && (contentToUse?.includes('= ') || contentToUse?.includes('== ') || contentToUse?.includes('#import')));
+
+		if (isLatexFile && !isBibFile) {
+			extensions.push(createListingsExtension('latex'));
+		}
+
+		if (isTypstFile) {
+			extensions.push(createListingsExtension('typst'));
+		}
+
+		extensions.push(...getBasicSetupExtensions());
+		extensions.push(...getLanguageExtension(fileName, contentToUse));
 
 		if (isLatexFile || isBibFile || isTypstFile) {
 			const fileExtension = fileName?.split('.').pop()?.toLowerCase() ||
@@ -612,7 +621,6 @@ export const EditorLoader = (
 			const view = new EditorView({ state, parent: editorRef.current });
 			viewRef.current = view;
 
-			// Emit editor ready event
 			setTimeout(() => {
 				document.dispatchEvent(new CustomEvent('editor-ready', {
 					detail: {
