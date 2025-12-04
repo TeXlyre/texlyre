@@ -7,7 +7,8 @@ import { useCallback, useEffect, useRef, useMemo, useState } from 'react';
 import { BibliographyProvider } from '../../contexts/BibliographyContext';
 import { LSPProvider } from '../../contexts/LSPContext';
 import { CommentProvider } from '../../contexts/CommentContext';
-import { processComments } from '../../extensions/codemirror/CommentExtension.ts';
+import { processComments } from '../../extensions/codemirror/CommentExtension';
+import { useEditorView } from '@/hooks/editor/useEditorView';
 import { useCollab } from '../../hooks/useCollab';
 import { useComments } from '../../hooks/useComments';
 import { usePluginFileInfo } from '../../hooks/usePluginFileInfo';
@@ -17,12 +18,11 @@ import type {
 } from
   '../../plugins/PluginInterface';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
-import { EditorLoader } from '../../services/EditorLoader.ts';
 import { fileStorageService } from '../../services/FileStorageService';
-import type { DocumentList } from '../../types/documents.ts';
+import type { DocumentList } from '../../types/documents';
 import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
 import { copyCleanTextToClipboard } from '../../utils/clipboardUtils';
-import { processTextSelection } from '../../utils/fileCommentUtils.ts';
+import { processTextSelection } from '../../utils/fileCommentUtils';
 import { formatDate } from '../../utils/dateUtils';
 import { arrayBufferToString, formatFileSize } from '../../utils/fileUtils';
 import { TextDiffUtils } from '../../utils/textDiffUtils';
@@ -128,7 +128,7 @@ const EditorContent: React.FC<{
       useComments();
     const fileInfo = usePluginFileInfo(fileId, fileName);
     const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
-    const { viewRef, isUpdatingRef, showSaveIndicator } = EditorLoader(
+    const { viewRef, isUpdatingRef, showSaveIndicator } = useEditorView(
       editorRef,
       docUrl,
       documentId,

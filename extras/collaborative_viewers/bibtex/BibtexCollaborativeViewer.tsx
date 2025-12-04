@@ -19,8 +19,8 @@ import {
   '@/components/common/PluginHeader';
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
+import { useEditorView } from '@/hooks/editor/useEditorView';
 import type { CollaborativeViewerProps } from '@/plugins/PluginInterface';
-import { EditorLoader } from '@/services/EditorLoader';
 import { fileStorageService } from '@/services/FileStorageService';
 import { formatFileSize } from '@/utils/fileUtils';
 import { TidyOptionsPanel } from '../../viewers/bibtex/TidyOptionsPanel';
@@ -155,7 +155,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
   const { viewRef, showSaveIndicator } =
     currentView === 'original' ?
-      EditorLoader(
+      useEditorView(
         editorRef,
         docUrl,
         documentId,
@@ -171,7 +171,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
         undefined,
         false
       ) :
-      EditorLoader(
+      useEditorView(
         editorRef,
         'bibtex-viewer',
         `${documentId}-processed`,
