@@ -220,6 +220,36 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 		localStorage.setItem('texlyre-mobile-view', view);
 	};
 
+	const setMobileViewport = () => {
+		let viewportMeta = document.querySelector('meta[name="viewport"]');
+		if (!viewportMeta) {
+			viewportMeta = document.createElement('meta');
+			viewportMeta.setAttribute('name', 'viewport');
+			document.head.appendChild(viewportMeta);
+		}
+
+		const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+		if (isMobile) {
+			viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=yes');
+		} else {
+			const screenWidth = window.screen.width;
+			const targetWidth = 1200;
+			const scale = screenWidth / targetWidth;
+			viewportMeta.setAttribute('content', `width=${targetWidth}, initial-scale=${scale}, user-scalable=yes`);
+		}
+	};
+
+	const resetViewport = () => {
+		const viewportMeta = document.querySelector('meta[name="viewport"]');
+		if (viewportMeta) {
+			const screenWidth = window.screen.width;
+			const targetWidth = 1200;
+			const scale = screenWidth / targetWidth;
+			viewportMeta.setAttribute('content', `width=${targetWidth}, initial-scale=${scale}, user-scalable=yes`);
+		}
+	};
+
 	return {
 		id: 'texlyre-mobile-theme',
 		name: 'TeXlyre Mobile Theme',
@@ -255,6 +285,7 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 			document.documentElement.setAttribute('data-theme-plugin', 'texlyre-mobile');
 
 			handleMobileNavigation();
+			setMobileViewport();
 
 			const savedView = localStorage.getItem('texlyre-mobile-view');
 			if (savedView) {
@@ -284,6 +315,7 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 
 		cleanup(): void {
 			cleanupMobileNavigation();
+			resetViewport();
 		},
 	};
 };

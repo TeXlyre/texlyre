@@ -27,24 +27,29 @@
 	--mobile-z-modal: 300;
 	--mobile-z-toast: 400;
 
-	--mobile-nav-height: 80px;
+	--sidebar-width: 150px;
+	--mobile-nav-height: 60px;
 	--mobile-header-height: 20px;
-	--mobile-min-touch-target: 56px;
+	--mobile-min-touch-target: 44px;
 
-	--mobile-icon-size-sm: 24px;
-	--mobile-icon-size-md: 28px;
-	--mobile-icon-size-lg: 32px;
+	--mobile-icon-size-sm: 20px;
+	--mobile-icon-size-md: 24px;
+	--mobile-icon-size-lg: 28px;
 
-	--mobile-font-xs: 0.8rem;
-	--mobile-font-sm: 1rem;
-	--mobile-font-md: 1.125rem;
-	--mobile-font-lg: 1.25rem;
-	--mobile-font-xl: 1.5rem;
-	--mobile-font-xxl: 1.875rem;
+	--mobile-font-xs: 0.75rem;
+	--mobile-font-sm: 0.875rem;
+	--mobile-font-md: 1rem;
+	--mobile-font-lg: 1.125rem;
+	--mobile-font-xl: 1.25rem;
+	--mobile-font-xxl: 1.5rem;
 
 	font-family: var(--mobile-font-family);
 	font-size: var(--mobile-font-md);
 	line-height: 1.6;
+}
+
+[data-theme-plugin="texlyre-mobile"] .logo {
+	display: none;
 }
 
 [data-theme-plugin="texlyre-mobile"] button {
@@ -119,22 +124,70 @@
 
 @media (max-width: 480px) {
 	[data-theme-plugin="texlyre-mobile"] {
-		--mobile-font-xs: var(--space-sd);
-		--mobile-font-sm: 0.875rem;
-		--mobile-font-md: 1rem;
-		--mobile-font-lg: 1.125rem;
-		--mobile-font-xl: 1.25rem;
-		--mobile-font-xxl: 1.5rem;
+		--mobile-spacing-xs: 0.15rem;
+		--mobile-spacing-sm: 0.25rem;
+		--mobile-spacing-md: 0.35rem;
+		--mobile-spacing-lg: 0.5rem;
+		--mobile-spacing-xl: 0.65rem;
+
+		--mobile-radius-sm: 2px;
+		--mobile-radius-md: 3px;
+		--mobile-radius-lg: 4px;
+		--mobile-radius-xl: 6px;
+
+		--mobile-nav-height: 50px;
+		--mobile-min-touch-target: 32px;
+
+		--mobile-icon-size-sm: 14px;
+		--mobile-icon-size-md: 16px;
+		--mobile-icon-size-lg: 18px;
+
+		--mobile-font-xs: 0.6rem;
+		--mobile-font-sm: 0.7rem;
+		--mobile-font-md: 0.8rem;
+		--mobile-font-lg: 0.9rem;
+		--mobile-font-xl: 1rem;
+		--mobile-font-xxl: 1.1rem;
+
+		font-size: var(--mobile-font-md);
+		line-height: 1.6;
 	}
 }
 
-@media (min-width: 768px) {
+@media (min-width: 481px) and (max-width: 768px) {
 	[data-theme-plugin="texlyre-mobile"] {
-		--mobile-font-xs: 0.875rem;
-		--mobile-font-sm: 1.125rem;
-		--mobile-font-md: 1.25rem;
-		--mobile-font-lg: 1.375rem;
-		--mobile-font-xl: 1.625rem;
-		--mobile-font-xxl: 2rem;
+		--mobile-spacing-xs: 0.25rem;
+		--mobile-spacing-sm: 0.35rem;
+		--mobile-spacing-md: 0.5rem;
+		--mobile-spacing-lg: 0.7rem;
+		--mobile-spacing-xl: 1rem;
+
+		--mobile-radius-sm: 3px;
+		--mobile-radius-md: 6px;
+		--mobile-radius-lg: 10px;
+		--mobile-radius-xl: 14px;
+
+		--mobile-nav-height: 55px;
+		--mobile-min-touch-target: 38px;
+
+		--mobile-icon-size-sm: 18px;
+		--mobile-icon-size-md: 22px;
+		--mobile-icon-size-lg: 26px;
+
+		--mobile-font-xs: 0.7rem;
+		--mobile-font-sm: 0.8rem;
+		--mobile-font-md: 0.9rem;
+		--mobile-font-lg: 1rem;
+		--mobile-font-xl: 1.15rem;
+		--mobile-font-xxl: 1.35rem;
+
+		font-size: var(--mobile-font-md);
+		line-height: 1.6;
+	}
+}
+
+@media (min-width: 769px) {
+	[data-theme-plugin="texlyre-mobile"] {
+		--mobile-nav-height: 60px;
 	}
 }

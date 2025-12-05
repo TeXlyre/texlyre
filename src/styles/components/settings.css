@@ -7,7 +7,7 @@
 }
 
 .settings-sidebar {
-	width: 250px;
+	width: var(--sidebar-width);
 	border-right: 1px solid var(--accent-border);
 	overflow-y: auto;
 	background-color: var(--pico-secondary-background);

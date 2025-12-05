@@ -1,7 +1,7 @@
 /* extras/themes/texlyre_mobile/styles/layout.css */
 
 [data-layout="texlyre-mobile"] {
-	--mobile-nav-height: 80px;
+	--mobile-nav-height: 60px;
 }
 
 [data-layout="texlyre-mobile"] html,
@@ -30,11 +30,10 @@
 	display: none;
 }
 
-
 [data-layout="texlyre-mobile"] footer .project-type-badge {
 	position: absolute;
-	top: 10px;
-	right: 10px;
+	top: var(--mobile-spacing-sm);
+	right: var(--mobile-spacing-sm);
 	bottom: auto;
 	left: auto;
 	z-index: var(--mobile-z-navigation);
@@ -80,7 +79,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	min-height: 60px;
+	min-height: var(--mobile-min-touch-target);
 	width: 100%;
 	padding: var(--mobile-spacing-sm) 0;
 }
@@ -91,13 +90,36 @@
 
 [data-layout="texlyre-mobile"] .header-row:last-child {
 	flex: 1;
-	min-height: 50px;
+	min-height: calc(var(--mobile-min-touch-target) - 8px);
 }
 
 [data-layout="texlyre-mobile"] .header-left {
 	align-self: flex-start;
-	position: fixed;
+	position: absolute;
 	left: max(var(--mobile-spacing-md), env(safe-area-inset-left));
+	top: 0 !important;
+	margin: 0 !important;
+	padding: 0 !important;
+}
+
+[data-layout="texlyre-mobile"] .header-right .user-dropdown-button {
+	position: fixed !important;
+	inset-block-start: 0 !important;
+	inset-inline-start: auto !important;
+	inset-inline-end: 0 !important;
+	inset-block-end: auto !important;
+	margin: 0 !important;
+	transform: translate(0, 0) !important;
+}
+
+[data-layout="texlyre-mobile"] .header-right .user-dropdown-menu {
+	position: fixed !important;
+	inset-block-start: calc(var(--mobile-spacing-lg) * 5) !important;
+	inset-inline-start: auto !important;
+	inset-inline-end: 0 !important;
+	inset-block-end: auto !important;
+	margin: 0 !important;
+	transform: translate(0, 0) !important;
 }
 
 [data-layout="texlyre-mobile"] .main-content {
@@ -214,27 +236,6 @@
 	flex: 1 !important;
 	height: 100% !important;
 	overflow-y: auto !important;
-}
-
-[data-layout="texlyre-mobile"] .user-dropdown-button {
-	position: fixed !important;
-	inset-block-start: 0 !important;
-	inset-inline-start: auto !important;
-	inset-inline-end: 0 !important;
-	inset-block-end: auto !important;
-	margin: 0 !important;
-	padding: var(--mobile-spacing-xs) var(--mobile-spacing-md);
-	transform: translate(0, 0) !important;
-}
-
-[data-layout="texlyre-mobile"] .user-dropdown-menu {
-	position: fixed !important;
-	inset-block-start: calc(var(--mobile-spacing-lg) * 2) !important;
-	inset-inline-start: auto !important;
-	inset-inline-end: 0 !important;
-	inset-block-end: auto !important;
-	margin: 0 !important;
-	transform: translate(0, 0) !important;
 }
 
 [data-layout="texlyre-mobile"] .pdf-viewer embed {
@@ -419,12 +420,17 @@
 
 [data-layout="texlyre-mobile"] body.mobile-view-chat .chat-panel {
 	display: flex !important;
-	width: 97% !important;
+	align-items: center;
+	width: 90% !important;
 	height: 78% !important;
 	border: none !important;
 	border-radius: 0 !important;
 	transform: none !important;
 	flex-direction: column !important;
+}
+
+[data-layout="texlyre-mobile"] body.mobile-view-chat .chat-panel .chat-panel-content {
+	width: 98% !important;
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-chat footer {
