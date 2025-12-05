@@ -1,3 +1,4 @@
+// src/extensions/codemirror/linkNavigation/patterns.ts
 export interface LinkPattern {
     pattern: RegExp;
     type: 'url' | 'file' | 'doi' | 'bibentry' | 'reference';

@@ -1,5 +1,7 @@
+// src/extensions/codemirror/linkNavigation/LinkNavigator.ts
 import type { EditorView } from '@codemirror/view';
 import { EditorView as CMEditorView } from '@codemirror/view';
+
 import type { DetectedLink } from './LinkDetector';
 import { fileStorageService } from '../../../services/FileStorageService';
 

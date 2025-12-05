@@ -1,6 +1,8 @@
+// src/extensions/codemirror/linkNavigationExtention.ts
 import { StateEffect, StateField } from '@codemirror/state';
 import { Decoration, DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 import type { Extension } from '@codemirror/state';
+
 import { LinkDetector, type DetectedLink } from './linkNavigation/LinkDetector';
 import { LinkNavigator } from './linkNavigation/LinkNavigator';
 
