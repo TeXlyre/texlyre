@@ -63,6 +63,13 @@ export class LinkDetector {
                 const matchEnd = matchStart + match[0].length;
 
                 if (posInLine >= matchStart && posInLine <= matchEnd) {
+                    if (type === 'bibentry' && fileType === 'latex') {
+                        const individualLink = this.detectIndividualCitation(lineText, match, posInLine, line.from);
+                        if (individualLink) {
+                            return individualLink;
+                        }
+                    }
+
                     const rawValue = extractValue ? extractValue(match) : (match[1] || match[0]);
 
                     const { valueStart, valueEnd } = this.findValueBounds(
@@ -83,6 +90,56 @@ export class LinkDetector {
                         fileType: fileType || this.currentFileType
                     };
                 }
+            }
+        }
+
+        return null;
+    }
+
+    private detectIndividualCitation(
+        lineText: string,
+        match: RegExpExecArray,
+        posInLine: number,
+        lineFrom: number
+    ): DetectedLink | null {
+        const braceStart = lineText.indexOf('{', match.index);
+        if (braceStart === -1 || posInLine <= braceStart) {
+            return null;
+        }
+
+        const braceEnd = lineText.indexOf('}', braceStart);
+        if (braceEnd === -1 || posInLine > braceEnd) {
+            return null;
+        }
+
+        const content = lineText.substring(braceStart + 1, braceEnd);
+        const citations = content.split(',').map(c => c.trim()).filter(c => c.length > 0);
+
+        let currentPos = braceStart + 1;
+        for (const citation of citations) {
+            while (currentPos < braceEnd && lineText[currentPos] === ' ') {
+                currentPos++;
+            }
+
+            const citationStart = currentPos;
+            const citationEnd = citationStart + citation.length;
+
+            if (posInLine >= citationStart && posInLine <= citationEnd) {
+                return {
+                    from: lineFrom + citationStart,
+                    to: lineFrom + citationEnd,
+                    type: 'bibentry',
+                    value: citation,
+                    fileType: 'latex'
+                };
+            }
+
+            currentPos = citationEnd;
+            const nextComma = lineText.indexOf(',', currentPos);
+            if (nextComma !== -1 && nextComma < braceEnd) {
+                currentPos = nextComma + 1;
+            } else {
+                break;
             }
         }
 
