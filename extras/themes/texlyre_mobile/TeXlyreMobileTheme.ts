@@ -205,6 +205,18 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 		document.body.className = document.body.className.replace(/mobile-view-\w+/g, '');
 		document.body.classList.add(`mobile-view-${view}`);
 
+		if (view === 'chat') {
+			setTimeout(() => {
+				const chatHeader = document.querySelector('.chat-panel-header') as HTMLElement;
+				if (chatHeader) {
+					const chatPanel = chatHeader.closest('.chat-panel');
+					if (chatPanel?.classList.contains('collapsed')) {
+						chatHeader.click();
+					}
+				}
+			}, 50);
+		}
+
 		localStorage.setItem('texlyre-mobile-view', view);
 	};
 
