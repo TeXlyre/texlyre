@@ -14,7 +14,11 @@
 }
 
 [data-layout="texlyre-mobile"] .codemirror-editor-container .cm-editor,
-[data-layout="texlyre-mobile"] .codemirror-editor-container .cm-scroller {
+[data-layout="texlyre-mobile"] .codemirror-editor-container .cm-scroller,
+[data-layout="texlyre-mobile"] .codemirror-editor-container .cm-content,
+[data-layout="texlyre-mobile"] .codemirror-editor-container .cm-line,
+[data-layout="texlyre-mobile"] .codemirror-editor-container .cm-lineWrapping,
+[data-layout="texlyre-mobile"] .codemirror-editor-container .cm-contentEditable {
 	font-size: var(--mobile-font-lg) !important;
 }
 
