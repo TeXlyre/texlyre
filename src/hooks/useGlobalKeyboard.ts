@@ -31,7 +31,7 @@ export const useGlobalKeyboard = () => {
       }
 
       // Ctrl+Shift+F - Open search panel (search mode)
-      if (event.key === 'F' && event.shiftKey && event.ctrlKey) {
+      if (event.code === 'KeyF' && event.shiftKey && event.ctrlKey) {
         event.preventDefault();
         const selectedText = getSelectedText();
         document.dispatchEvent(new CustomEvent('open-search-panel', {
@@ -41,7 +41,7 @@ export const useGlobalKeyboard = () => {
       }
 
       // Ctrl+Shift+H - Open search panel (replace mode)
-      if (event.key === 'H' && event.shiftKey && event.ctrlKey) {
+      if (event.code === 'KeyH' && event.shiftKey && event.ctrlKey) {
         event.preventDefault();
         const selectedText = getSelectedText();
         document.dispatchEvent(new CustomEvent('open-search-panel', {
