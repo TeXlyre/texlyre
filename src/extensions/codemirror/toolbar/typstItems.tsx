@@ -7,7 +7,7 @@ import { renderToString } from 'react-dom/server';
 import { getPendingImagePath } from '../PasteExtension';
 import { wrapSelection, insertText } from './helpers';
 import { createTableCommand } from './tableItems';
-import { ColorPicker } from './colorPicker';
+import { ColorPicker } from './ColorPicker';
 import {
 	ToolbarBoldIcon,
 	ToolbarItalicIcon,

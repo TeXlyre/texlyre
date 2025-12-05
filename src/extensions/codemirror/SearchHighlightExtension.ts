@@ -1,4 +1,4 @@
-import { Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate } from '@codemirror/view';
+import { Decoration, DecorationSet, EditorView } from '@codemirror/view';
 import { StateEffect, StateField } from '@codemirror/state';
 
 const highlightMark = Decoration.mark({ class: 'cm-search-highlight' });

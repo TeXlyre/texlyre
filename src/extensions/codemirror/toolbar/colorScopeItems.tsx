@@ -6,7 +6,7 @@ import type { ToolbarItem } from 'codemirror-toolbar';
 import { renderToString } from 'react-dom/server';
 
 import { detectColorScope, type ColorInfo, type FileType } from './colorScope';
-import { ColorPicker } from './colorPicker';
+import { ColorPicker } from './ColorPicker';
 import { EditIcon, TrashIcon } from '../../../components/common/Icons';
 
 const colorPickers = new WeakMap<EditorView, ColorPicker>();
