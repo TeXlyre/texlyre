@@ -119,22 +119,62 @@
 
 @media (max-width: 480px) {
 	[data-theme-plugin="texlyre-mobile"] {
-		--mobile-font-xs: var(--space-sd);
-		--mobile-font-sm: 0.875rem;
-		--mobile-font-md: 1rem;
-		--mobile-font-lg: 1.125rem;
-		--mobile-font-xl: 1.25rem;
-		--mobile-font-xxl: 1.5rem;
+		--mobile-spacing-xs: 0.75rem;
+		--mobile-spacing-sm: 1rem;
+		--mobile-spacing-md: 1.5rem;
+		--mobile-spacing-lg: 2rem;
+		--mobile-spacing-xl: 2.5rem;
+
+		--mobile-radius-sm: 8px;
+		--mobile-radius-md: 14px;
+		--mobile-radius-lg: 20px;
+		--mobile-radius-xl: 26px;
+
+		--mobile-min-touch-target: 64px;
+
+		--mobile-icon-size-sm: 28px;
+		--mobile-icon-size-md: 34px;
+		--mobile-icon-size-lg: 40px;
+
+		--mobile-font-xs: 1rem;
+		--mobile-font-sm: 1.25rem;
+		--mobile-font-md: 1.5rem;
+		--mobile-font-lg: 1.75rem;
+		--mobile-font-xl: 2rem;
+		--mobile-font-xxl: 2.5rem;
+
+		font-size: var(--mobile-font-md);
+		line-height: 1.6;
 	}
 }
 
 @media (min-width: 768px) {
 	[data-theme-plugin="texlyre-mobile"] {
+		--mobile-spacing-xs: 0.5rem;
+		--mobile-spacing-sm: var(--space-sd);
+		--mobile-spacing-md: 1rem;
+		--mobile-spacing-lg: 1.5rem;
+		--mobile-spacing-xl: 2rem;
+
+		--mobile-radius-sm: 6px;
+		--mobile-radius-md: 12px;
+		--mobile-radius-lg: 16px;
+		--mobile-radius-xl: 20px;
+
+		--mobile-min-touch-target: 56px;
+
+		--mobile-icon-size-sm: 24px;
+		--mobile-icon-size-md: 28px;
+		--mobile-icon-size-lg: 32px;
+
 		--mobile-font-xs: 0.875rem;
 		--mobile-font-sm: 1.125rem;
 		--mobile-font-md: 1.25rem;
 		--mobile-font-lg: 1.375rem;
 		--mobile-font-xl: 1.625rem;
 		--mobile-font-xxl: 2rem;
+
+		font-size: var(--mobile-font-md);
+		line-height: 1.6;
 	}
 }
