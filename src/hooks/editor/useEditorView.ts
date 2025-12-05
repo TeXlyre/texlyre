@@ -50,6 +50,11 @@ import {
 import { createToolbarExtension } from '../../extensions/codemirror/ToolbarExtension';
 import { createPasteExtension } from '../../extensions/codemirror/PasteExtension';
 import { createListingsExtension } from '../../extensions/codemirror/ListingsExtension';
+import {
+    createLinkNavigationExtension,
+    updateLinkNavigationFilePath,
+    updateLinkNavigationFileName
+} from '../../extensions/codemirror/LinkNavigationExtension';
 
 import { useAuth } from '../useAuth';
 import { useEditor } from '../useEditor';
@@ -451,6 +456,9 @@ export const useEditorView = (
         extensions.push(...getLanguageExtension(fileName, contentToUse));
 
         if (isLatexFile || isBibFile || isTypstFile) {
+            // Add link navigation for all file types
+            extensions.push(createLinkNavigationExtension(fileName, contentToUse));
+
             const fileExtension =
                 fileName?.split('.').pop()?.toLowerCase() ||
                 (isTypstFile ? 'typ' : isBibFile ? 'bib' : 'tex');
@@ -537,7 +545,8 @@ export const useEditorView = (
                     if (file && viewRef.current) {
                         setCurrentFilePath(viewRef.current, file.path);
                         filePathCacheService.updateCurrentFilePath(file.path);
-
+                        updateLinkNavigationFilePath(viewRef.current, file.path);
+                        updateLinkNavigationFileName(viewRef.current, fileName || '');
                         availableLSPPlugins.forEach((plugin) => {
                             if ('setCurrentFilePath' in plugin) {
                                 (plugin as any).setCurrentFilePath(file.path);
@@ -546,9 +555,16 @@ export const useEditorView = (
                     }
                 }, 100);
             } else if (!isEditingFile && documentId) {
-                setTimeout(() => {
+                setTimeout(async () => {
                     if (viewRef.current) {
                         filePathCacheService.updateCurrentFilePath('', documentId);
+                        updateLinkNavigationFileName(viewRef.current, fileName || '');
+
+                        const allFiles = await fileStorageService.getAllFiles(false);
+                        const linkedFile = allFiles.find((file) => file.documentId === documentId);
+                        if (linkedFile) {
+                            updateLinkNavigationFilePath(viewRef.current, linkedFile.path);
+                        }
                     }
                 }, 100);
             }
@@ -676,6 +692,8 @@ export const useEditorView = (
 
             if (isLatexFile || isTypstFile) {
                 filePathCacheService.updateCache();
+                updateLinkNavigationFileName(viewRef.current, fileName);
+
             }
         } catch (error) {
             console.error('Error creating editor view:', error);

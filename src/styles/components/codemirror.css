@@ -341,6 +341,20 @@
 	color: #58a6ff;
 }
 
+.codemirror-editor-container .cm-link-hover {
+	cursor: pointer;
+	text-decoration: underline;
+	text-decoration-style: dotted;
+	text-decoration-color: var(--primary-color);
+	transition: all 0.2s ease;
+}
+
+.codemirror-editor-container .cm-link-hover:hover {
+	text-decoration-style: solid;
+	background-color: rgba(0, 102, 204, 0.1);
+}
+
+
 .codemirror-editor-container .cm-bibtex-tooltip,
 .codemirror-editor-container .cm-latex-tooltip {
 	background-color: var(--pico-background);
