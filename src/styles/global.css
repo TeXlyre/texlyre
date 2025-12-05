@@ -18,7 +18,6 @@
 
 #root {
 	max-width: 65%;
-	min-width: 800px;
 	height: 100%;
 	margin: 0 auto;
 	padding: var(--space-md);
@@ -39,7 +38,6 @@ body {
 	display: flex;
 	place-items: center;
 	min-height: 100vh;
-	min-width: 1200px;
 	width: 100%;
 	color: var(--text-color);
 	background-color: var(--pico-background);

@@ -230,19 +230,14 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 
 		const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-		let screenWidth;
-		let targetWidth;
-
 		if (isMobile) {
-			screenWidth = window.screen.width;
-			targetWidth = 1000;
+			viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=yes');
 		} else {
-			screenWidth = window.screen.width;
-			targetWidth = 1200;
+			const screenWidth = window.screen.width;
+			const targetWidth = 1200;
+			const scale = screenWidth / targetWidth;
+			viewportMeta.setAttribute('content', `width=${targetWidth}, initial-scale=${scale}, user-scalable=yes`);
 		}
-
-		const scale = screenWidth / targetWidth;
-		viewportMeta.setAttribute('content', `width=${targetWidth}, initial-scale=${scale}, user-scalable=yes`);
 	};
 
 	const resetViewport = () => {

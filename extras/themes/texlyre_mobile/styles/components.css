@@ -1,14 +1,14 @@
 /* extras/themes/texlyre_mobile/styles/components.css */
 
 [data-layout="texlyre-mobile"] .editor-tabs-container {
-	min-height: 50px;
-	max-height: 50px;
+	min-height: var(--mobile-min-touch-target);
+	max-height: var(--mobile-min-touch-target);
 }
 
 [data-layout="texlyre-mobile"] .editor-tab {
-	min-width: 140px;
-	max-width: 200px;
-	height: 40px;
+	min-width: 120px;
+	max-width: 180px;
+	height: calc(var(--mobile-min-touch-target) - 8px);
 	font-size: var(--mobile-font-sm);
 	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
 }
@@ -42,13 +42,13 @@
 [data-layout="texlyre-mobile"] .view-toggle button {
 	padding: var(--mobile-spacing-md);
 	font-size: var(--mobile-font-sm);
-	min-height: 50px;
+	min-height: var(--mobile-min-touch-target);
 	font-weight: 600;
 }
 
 [data-layout="texlyre-mobile"] .file-explorer-header {
 	padding: var(--mobile-spacing-md);
-	min-height: 60px;
+	min-height: calc(var(--mobile-min-touch-target) + 8px);
 	margin-top: 0 !important;
 	flex-shrink: 0 !important;
 }
@@ -82,13 +82,13 @@
 
 [data-layout="texlyre-mobile"] .output-header {
 	padding: var(--mobile-spacing-md);
-	min-height: 100px;
+	min-height: calc(var(--mobile-min-touch-target) * 1.5);
 }
 
 [data-theme-plugin="texlyre-mobile"] .ͼ1 .codemirror-toolbar__item {
 	min-height: var(--mobile-min-touch-target);
 	min-width: var(--mobile-min-touch-target);
-	padding-top: var(--space-xs);
+	padding-top: var(--mobile-spacing-xs);
 	padding-bottom: auto;
 }
 
@@ -104,7 +104,7 @@
 
 [data-layout="texlyre-mobile"] .compile-button-group .compile-button {
 	min-height: var(--mobile-min-touch-target);
-	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-sm);
 	font-size: var(--mobile-font-sm);
 }
 
@@ -114,24 +114,19 @@
 
 [data-layout="texlyre-mobile"] .share-button-group .main-button {
 	min-height: var(--mobile-min-touch-target);
-	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-sm);
 	font-size: var(--mobile-font-sm);
 }
 
 [data-layout="texlyre-mobile"] .backup-button-group .main-button,
 [data-layout="texlyre-mobile"] .collab-button-group .main-button {
 	min-height: var(--mobile-min-touch-target);
-	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
-}
-
-[data-layout="texlyre-mobile"] .backup-button-group .main-button .backup-label,
-[data-layout="texlyre-mobile"] .collab-button-group .main-button .collab-label {
-	font-size: var(--mobile-font-sm);
+	padding: var(--mobile-spacing-sm) var(--mobile-spacing-sm);
 }
 
 [data-layout="texlyre-mobile"] .dropdown-toggle,
-[data-layout="texlyre-mobile"] .collab-dropdown-toggle,
-[data-layout="texlyre-mobile"] .backup-dropdown-toggle {
+[data-layout="texlyre-mobile"] .collab-button-group .collab-dropdown-toggle,
+[data-layout="texlyre-mobile"] .backup-button-group .backup-dropdown-toggle {
 	min-height: var(--mobile-min-touch-target);
 	padding: var(--mobile-spacing-md);
 	border-top-left-radius: 0 !important;
@@ -142,18 +137,34 @@
 	justify-content: center;
 }
 
+[data-layout="texlyre-mobile"] .backup-button-group .main-button svg,
+[data-layout="texlyre-mobile"] .collab-button-group .main-button svg,
+[data-layout="texlyre-mobile"] .compile-button-group .compile-button svg,
+[data-layout="texlyre-mobile"] .open-button-group .open-button svg,
+[data-layout="texlyre-mobile"] .share-button-group .main-button svg,
+
 [data-layout="texlyre-mobile"] .dropdown-toggle svg,
-[data-layout="texlyre-mobile"] .collab-dropdown-toggle svg,
-[data-layout="texlyre-mobile"] .backup-dropdown-toggle svg {
-	width: var(--mobile-icon-size-md);
-	height: var(--mobile-icon-size-md);
+[data-layout="texlyre-mobile"] .collab-button-group .collab-dropdown-toggle svg,
+[data-layout="texlyre-mobile"] .backup-button-group .backup-dropdown-toggle svg {
+	width: var(--mobile-icon-size-sm);
+	height: var(--mobile-icon-size-sm);
 	flex-shrink: 0;
+}
+
+
+/* TODO (fabawi): Hidden for now, but might consider restoring them in the future */
+[data-layout="texlyre-mobile"] .backup-button-group .main-button .backup-label,
+[data-layout="texlyre-mobile"] .collab-button-group .main-button .collab-label,
+[data-layout="texlyre-mobile"] .backup-button-group .backup-dropdown-toggle,
+[data-layout="texlyre-mobile"] .collab-button-group .collab-dropdown-toggle {
+	/* font-size: var(--mobile-font-sm); */
+	display: none;
 }
 
 [data-layout="texlyre-mobile"] .tab-button {
 	padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
 	font-size: var(--mobile-font-sm);
-	min-height: 40px;
+	min-height: calc(var(--mobile-min-touch-target) - 8px);
 }
 
 [data-layout="texlyre-mobile"] .latex-outline-header,
@@ -172,7 +183,7 @@
 
 [data-layout="texlyre-mobile"] .chat-panel-header {
 	padding: var(--mobile-spacing-md);
-	min-height: 60px;
+	min-height: calc(var(--mobile-min-touch-target) + 8px);
 }
 
 [data-layout="texlyre-mobile"] .chat-panel-title {
@@ -191,7 +202,7 @@
 [data-layout="texlyre-mobile"] .chat-panel-input {
 	font-size: var(--mobile-font-md);
 	padding: var(--mobile-spacing-md);
-	min-height: 120px;
+	min-height: calc(var(--mobile-min-touch-target) * 2);
 }
 
 [data-layout="texlyre-mobile"] .chat-panel-send-button {
@@ -258,11 +269,11 @@
 [data-layout="texlyre-mobile"] .button.small {
 	font-size: var(--mobile-font-xs);
 	padding: var(--mobile-spacing-xs) var(--mobile-spacing-sm);
-	min-height: 36px;
+	min-height: calc(var(--mobile-min-touch-target) - 12px);
 }
 
 [data-layout="texlyre-mobile"] .dropdown-menu {
-	min-width: 200px;
+	min-width: 180px;
 	border-radius: var(--mobile-radius-lg);
 	box-shadow: var(--mobile-shadow-lg);
 }
@@ -289,23 +300,25 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	max-width: 200px;
+	max-width: 180px;
 }
 
 [data-layout="texlyre-mobile"] .project-description {
 	font-size: var(--mobile-font-xs);
-	max-width: 200px;
+	max-width: 180px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
+[data-layout="texlyre-mobile"] .user-dropdown-button,
 [data-layout="texlyre-mobile"] .back-button {
-	min-height: calc(var(--mobile-min-touch-target) - 10px);
+	padding: var(--mobile-spacing-xs) var(--mobile-spacing-md) !important;
 	font-size: var(--mobile-font-sm);
-	padding: var(--mobile-spacing-xs) var(--mobile-spacing-md);
-	background: none;
-	border: none;
+	height: var(--mobile-min-touch-target);
+	border: 1px solid var(--accent-border, #ddd);
+	border-radius: var(--radius-sm);
+	background-color: var(--pico-primary-inverse) !important;
 }
 
 [data-layout="texlyre-mobile"] .linked-file-icon {
@@ -313,9 +326,9 @@
 }
 
 [data-layout="texlyre-mobile"] .pdf-options-toggle {
-	height: 4rem;
+	height: calc(var(--mobile-min-touch-target) + 8px);
 	align-items: center;
-	padding: var(--space-md);
+	padding: var(--mobile-spacing-md);
 }
 
 .mobile-nav-button {
@@ -362,12 +375,12 @@
 }
 
 [data-layout="texlyre-mobile"] ::-webkit-scrollbar {
-	width: 8px;
+	width: 6px;
 }
 
 [data-layout="texlyre-mobile"] ::-webkit-scrollbar-thumb {
 	background-color: var(--accent-border);
-	border-radius: 4px;
+	border-radius: var(--mobile-radius-sm);
 }
 
 [data-layout="texlyre-mobile"] ::-webkit-scrollbar-thumb:hover {
