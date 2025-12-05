@@ -160,7 +160,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
             <div className="form-actions">
               <button
-                className="cancel-button"
+                className="cancel-response-button"
                 onClick={() => {
                   setIsAddingResponse(false);
                   setNewResponse('');
@@ -169,7 +169,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
               </button>
               <button
-                className="submit-button"
+                className="submit-response-button"
                 onClick={handleAddResponse}
                 disabled={!newResponse.trim()}>{t('Submit')}
 

@@ -1,12 +1,15 @@
 // src/components/collab/CollabStatusIndicator.tsx
 import { t } from '@/i18n';
 import type React from 'react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useCollab } from '../../hooks/useCollab';
 import { useFileSync } from '../../hooks/useFileSync';
 import { useOffline } from '../../hooks/useOffline';
 import { collabService } from '../../services/CollabService';
+import PositionedDropdown from '../common/PositionedDropdown';
+import CollabModal from './CollabModal';
+import FileSyncModal from './FileSyncModal';
 import {
   ChevronDownIcon,
   FileIcon,
@@ -15,8 +18,6 @@ import {
   OfflineIcon
 } from
   '../common/Icons';
-import CollabModal from './CollabModal';
-import FileSyncModal from './FileSyncModal';
 
 interface CollabStatusIndicatorProps {
   className?: string;
@@ -31,13 +32,33 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
   const { isOfflineMode } = useOffline();
   const { isEnabled: isFileSyncEnabled, isSyncing: isFileSyncing } =
     useFileSync();
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showCollabModal, setShowCollabModal] = useState(false);
   const [showFileSyncModal, setShowFileSyncModal] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Show offline mode if either network is offline OR collab connection failed
   const showOffline = isOfflineMode || !isCollabConnected;
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
+        const portaledDropdown = document.querySelector('.collab-dropdown');
+        if (portaledDropdown && portaledDropdown.contains(target)) {
+          return;
+        }
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
 
   const getMainStatus = () => {
     const hasConnectedService = isCollabConnected && !isOfflineMode;
@@ -86,25 +107,25 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
       setShowCollabModal(true);
     } else {
       // Both enabled, show dropdown
-      setShowDropdown(!showDropdown);
+      setIsDropdownOpen(!isDropdownOpen);
     }
   };
 
-  const handleDropdownToggle = (e: React.MouseEvent) => {
+  const toggleDropdown = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setShowDropdown(!showDropdown);
+    setIsDropdownOpen(!isDropdownOpen);
   };
 
   const handleCollabClick = () => {
     setShowCollabModal(true);
-    setShowDropdown(false);
+    setIsDropdownOpen(false);
   };
 
   const handleFileSyncClick = () => {
     if (isCollabConnected && !isOfflineMode) {
       setShowFileSyncModal(true);
     }
-    setShowDropdown(false);
+    setIsDropdownOpen(false);
   };
 
   const getServiceStatusIndicator = (serviceType: string) => {
@@ -119,7 +140,7 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 
   return (
     <>
-      <div className="collab-status-dropdown-container">
+      <div className="collab-status-dropdown-container" ref={dropdownRef}>
         <div className="collab-button-group">
           <div
             className={`collab-status-indicator main-button ${className} ${showOffline ? 'offline' : mainStatus.connected ? 'connected' : 'disconnected'}`
@@ -147,7 +168,7 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
           <button
             className={`collab-dropdown-toggle ${showOffline ? 'offline' : mainStatus.connected ? 'connected' : 'disconnected'}`
             }
-            onClick={handleDropdownToggle}
+            onClick={toggleDropdown}
             title={t('Collaboration Options')}
             disabled={showOffline}>
 
@@ -155,27 +176,28 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
           </button>
         </div>
 
-        {showDropdown && !showOffline &&
-          <div className="collab-dropdown">
-            <div className="collab-dropdown-item" onClick={handleCollabClick}>
-              <span className="service-indicator">
-                {getServiceStatusIndicator('collab')}
-              </span>
-              <SyncIcon />{t('Real-time')}
-            </div>
-
-            <div
-              className="collab-dropdown-item"
-              onClick={handleFileSyncClick}
-              aria-disabled={!isCollabConnected || isOfflineMode}>
-
-              <span className="service-indicator">
-                {getServiceStatusIndicator('filesync')}
-              </span>
-              <FileIcon />{t('Files')}
-            </div>
+        <PositionedDropdown
+          isOpen={isDropdownOpen && !showOffline}
+          triggerElement={dropdownRef.current?.querySelector('.collab-button-group') as HTMLElement}
+          className="collab-dropdown">
+          <div className="collab-dropdown-item" onClick={handleCollabClick}>
+            <span className="service-indicator">
+              {getServiceStatusIndicator('collab')}
+            </span>
+            <SyncIcon />{t('Real-time')}
           </div>
-        }
+
+          <div
+            className="collab-dropdown-item"
+            onClick={handleFileSyncClick}
+            aria-disabled={!isCollabConnected || isOfflineMode}>
+
+            <span className="service-indicator">
+              {getServiceStatusIndicator('filesync')}
+            </span>
+            <FileIcon />{t('Files')}
+          </div>
+        </PositionedDropdown>
       </div>
 
       <CollabModal
@@ -191,13 +213,6 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
         isOpen={showFileSyncModal}
         onClose={() => setShowFileSyncModal(false)} />
 
-
-      {showDropdown &&
-        <div
-          className="dropdown-overlay"
-          onClick={() => setShowDropdown(false)} />
-
-      }
     </>);
 
 };

@@ -412,26 +412,26 @@
 	font-size: 0.8rem;
 }
 
-.cancel-button,
-.submit-button {
+.cancel-response-button,
+.submit-response-button {
 	padding: var(--space-xs) var(--space-sm);
 	border-radius: var(--radius-sm);
 	font-size: 0.8rem;
 	cursor: pointer;
 }
 
-.cancel-button {
+.cancel-response-button {
 	background-color: transparent;
 	border: 1px solid var(--accent-border);
 }
 
-.submit-button {
+.submit-response-button {
 	background-color: var(--pico-primary);
-	color: var(--pico-primary-inverse, #fff);
+	color: var(--pico-primary-inverse) !important;
 	border: none;
 }
 
-.submit-button:disabled {
+.submit-response-button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }

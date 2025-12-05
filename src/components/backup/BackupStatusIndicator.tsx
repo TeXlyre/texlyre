@@ -1,12 +1,14 @@
 // src/components/backup/BackupStatusIndicator.tsx
 import { t } from '@/i18n';
 import type React from 'react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
-import { BackupIcon, ChevronDownIcon, FileSystemIcon } from '../common/Icons';
+import PositionedDropdown from '../common/PositionedDropdown';
 import BackupModal from './BackupModal';
+import { BackupIcon, ChevronDownIcon, FileSystemIcon } from '../common/Icons';
+
 
 interface BackupStatusIndicatorProps {
   className?: string;
@@ -20,9 +22,10 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
   isInEditor = false
 }) => {
   const fileSystemBackup = useFileSystemBackup();
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showFileSystemModal, setShowFileSystemModal] = useState(false);
   const [activePlugin, setActivePlugin] = useState<string | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const backupPlugins = pluginRegistry.getBackup();
 
@@ -45,11 +48,29 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 
   const enabledServices = getEnabledServices();
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
+        const portaledDropdown = document.querySelector('.backup-dropdown');
+        if (portaledDropdown && portaledDropdown.contains(target)) {
+          return;
+        }
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
   const handleMainButtonClick = () => {
     if (enabledServices.length === 0) {
-      setShowDropdown(!showDropdown);
+      setIsDropdownOpen(!isDropdownOpen);
     } else if (enabledServices.length === 1) {
-      // Open the single enabled service directly
       const service = enabledServices[0];
       if (service.type === 'filesystem') {
         setShowFileSystemModal(true);
@@ -57,24 +78,23 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
         setActivePlugin(service.id);
       }
     } else {
-      // Multiple services enabled, show dropdown
-      setShowDropdown(!showDropdown);
+      setIsDropdownOpen(!isDropdownOpen);
     }
   };
 
-  const handleDropdownToggle = (e: React.MouseEvent) => {
+  const toggleDropdown = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setShowDropdown(!showDropdown);
+    setIsDropdownOpen(!isDropdownOpen);
   };
 
   const handleFileSystemClick = () => {
     setShowFileSystemModal(true);
-    setShowDropdown(false);
+    setIsDropdownOpen(false);
   };
 
   const handlePluginClick = (pluginId: string) => {
     setActivePlugin(pluginId);
-    setShowDropdown(false);
+    setIsDropdownOpen(false);
   };
 
   const getMainStatus = () => {
@@ -118,7 +138,7 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 
   return (
     <>
-      <div className="backup-status-dropdown-container">
+      <div className="backup-status-dropdown-container" ref={dropdownRef}>
         <div className="backup-button-group">
           <div
             className={`backup-status-indicator main-button ${className} ${backupPlugins.length === 0 ? 'single-service' : ''} ${mainStatus.connected ? 'connected' : 'disconnected'}`}
@@ -140,7 +160,7 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
           {backupPlugins.length > 0 &&
             <button
               className={`backup-dropdown-toggle ${mainStatus.connected ? 'connected' : 'disconnected'}`}
-              onClick={handleDropdownToggle}
+              onClick={toggleDropdown}
               title={t('Backup Options')}>
 
               <ChevronDownIcon />
@@ -148,35 +168,36 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
           }
         </div>
 
-        {showDropdown &&
-          <div className="backup-dropdown">
-            <div
-              className="backup-dropdown-item"
-              onClick={handleFileSystemClick}>
+        <PositionedDropdown
+          isOpen={isDropdownOpen}
+          triggerElement={dropdownRef.current?.querySelector('.backup-button-group') as HTMLElement}
+          className="backup-dropdown">
+          <div
+            className="backup-dropdown-item"
+            onClick={handleFileSystemClick}>
 
-              <span className="service-indicator">
-                {getServiceStatusIndicator('filesystem')}
-              </span>
-              <FileSystemIcon />{t('File System')}
-            </div>
-
-            {backupPlugins.map((plugin) => {
-              const IconComponent = plugin.icon;
-              return (
-                <div
-                  key={plugin.id}
-                  className="backup-dropdown-item"
-                  onClick={() => handlePluginClick(plugin.id)}>
-
-                  <span className="service-indicator">
-                    {getServiceStatusIndicator('plugin', plugin.id)}
-                  </span>
-                  <IconComponent /> {plugin.name}
-                </div>);
-
-            })}
+            <span className="service-indicator">
+              {getServiceStatusIndicator('filesystem')}
+            </span>
+            <FileSystemIcon />{t('File System')}
           </div>
-        }
+
+          {backupPlugins.map((plugin) => {
+            const IconComponent = plugin.icon;
+            return (
+              <div
+                key={plugin.id}
+                className="backup-dropdown-item"
+                onClick={() => handlePluginClick(plugin.id)}>
+
+                <span className="service-indicator">
+                  {getServiceStatusIndicator('plugin', plugin.id)}
+                </span>
+                <IconComponent /> {plugin.name}
+              </div>);
+
+          })}
+        </PositionedDropdown>
       </div>
 
       <BackupModal
@@ -208,13 +229,6 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 
 
       })}
-
-      {showDropdown &&
-        <div
-          className="dropdown-overlay"
-          onClick={() => setShowDropdown(false)} />
-
-      }
     </>);
 
 };
