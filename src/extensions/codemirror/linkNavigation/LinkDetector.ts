@@ -1,3 +1,4 @@
+// src/extensions/codemirror/linkNavigation/LinkDetector.ts
 import type { EditorView } from '@codemirror/view';
 import { latexLinkPatterns, typstLinkPatterns, bibLinkPatterns, type LinkPattern } from './patterns';
 

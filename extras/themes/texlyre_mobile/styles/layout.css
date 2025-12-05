@@ -158,13 +158,22 @@
 	flex: 1 !important;
 	display: flex !important;
 	flex-direction: column !important;
+	height: auto !important;
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-explorer .sidebar-container .file-explorer {
 	margin-top: 0 !important;
 }
 
-[data-layout="texlyre-mobile"] .file-tree,
+[data-layout="texlyre-mobile"] .file-tree {
+	width: 100% !important;
+	max-width: 100% !important;
+	flex: 1 !important;
+	display: block !important;
+	overflow-y: auto !important;
+	min-height: 100% !important;
+}
+
 [data-layout="texlyre-mobile"] .latex-outline,
 [data-layout="texlyre-mobile"] .typst-outline {
 	width: 100% !important;
@@ -172,6 +181,8 @@
 	flex: 1 !important;
 	display: block !important;
 	overflow-y: auto !important;
+	min-height: 0 !important;
+	max-height: 50% !important;
 }
 
 [data-layout="texlyre-mobile"] .view-toggle {
