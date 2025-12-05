@@ -103,8 +103,10 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 
 	useEffect(() => {
 		const newSize = direction === 'horizontal' ? width : height;
-		setSize(newSize);
-	}, [width, height, direction]);
+		if (!collapsed && !resizing) {
+			setSize(newSize);
+		}
+	}, [width, height, direction, collapsed, resizing]);
 
 	useEffect(() => {
 		const handleWindowResize = () => {
@@ -201,9 +203,12 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 			const restoredSize = previousSize;
 			setSize(restoredSize);
 
-			if (onResize) {
-				onResize(restoredSize);
-			}
+			// Force a re-render after restoration to apply styles correctly
+			requestAnimationFrame(() => {
+				if (onResize) {
+					onResize(restoredSize);
+				}
+			});
 		}
 
 		if (onCollapse) {
