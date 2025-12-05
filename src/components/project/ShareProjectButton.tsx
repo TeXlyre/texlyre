@@ -2,6 +2,8 @@
 import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
+
+import PositionedDropdown from '../common/PositionedDropdown';
 import { ChevronDownIcon, ShareIcon } from '../common/Icons';
 
 interface ShareProjectButtonProps {
@@ -22,9 +24,13 @@ const ShareProjectButton: React.FC<ShareProjectButtonProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
+        const portaledDropdown = document.querySelector('.share-dropdown');
+        if (portaledDropdown && portaledDropdown.contains(target)) {
+          return;
+        }
         setIsDropdownOpen(false);
       }
     };
@@ -33,7 +39,7 @@ const ShareProjectButton: React.FC<ShareProjectButtonProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [isDropdownOpen]);
 
   const handleShareClick = () => {
     onOpenShareModal();
@@ -63,22 +69,23 @@ const ShareProjectButton: React.FC<ShareProjectButtonProps> = ({
           <ChevronDownIcon />
         </button>
       </div>
-      {isDropdownOpen &&
-        <div className="share-dropdown">
-          <div className="share-dropdown-item" onClick={handleShareClick}>
-            <ShareIcon />
-            <span>{t('Share with Link')}</span>
-          </div>
-          <div className="share-dropdown-item disabled">
-            <span>{t('Publish to Journal')}</span>
-            <span className="coming-soon">{t('(Coming Soon)')}</span>
-          </div>
-          <div className="share-dropdown-item disabled">
-            <span>{t('Share Template')}</span>
-            <span className="coming-soon">{t('(Coming Soon)')}</span>
-          </div>
+      <PositionedDropdown
+        isOpen={isDropdownOpen}
+        triggerElement={dropdownRef.current?.querySelector('.share-button-group') as HTMLElement}
+        className="share-dropdown">
+        <div className="share-dropdown-item" onClick={handleShareClick}>
+          <ShareIcon />
+          <span>{t('Share with Link')}</span>
         </div>
-      }
+        <div className="share-dropdown-item disabled">
+          <span>{t('Publish to Journal')}</span>
+          <span className="coming-soon">{t('(Coming Soon)')}</span>
+        </div>
+        <div className="share-dropdown-item disabled">
+          <span>{t('Share Template')}</span>
+          <span className="coming-soon">{t('(Coming Soon)')}</span>
+        </div>
+      </PositionedDropdown>
     </div>);
 
 };

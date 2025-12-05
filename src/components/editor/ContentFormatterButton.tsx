@@ -3,8 +3,9 @@ import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
-import { ChevronDownIcon, LoaderIcon, TextFormatterIcon } from '../common/Icons';
+import PositionedDropdown from '../common/PositionedDropdown';
 import { useContentFormatter } from '../../hooks/useContentFormatter';
+import { ChevronDownIcon, LoaderIcon, TextFormatterIcon } from '../common/Icons';
 
 interface ContentFormatterButtonProps {
   className?: string;
@@ -35,14 +36,22 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
+        const portaledDropdown = document.querySelector('.formatter-dropdown');
+        if (portaledDropdown && portaledDropdown.contains(target)) {
+          return;
+        }
         setIsDropdownOpen(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
 
   useEffect(() => {
     const handleRequestFormat = async (event: Event) => {
@@ -109,8 +118,11 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
         </button>
       </div>
 
-      {isDropdownOpen && contentType === 'latex' &&
-        <div className="formatter-dropdown">
+      {contentType === 'latex' &&
+        <PositionedDropdown
+          isOpen={isDropdownOpen}
+          triggerElement={dropdownRef.current?.querySelector('.formatter-button-group') as HTMLElement}
+          className="formatter-dropdown">
           <div className="format-option">
             <label>
               <input
@@ -172,11 +184,14 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
 
             </label>
           </div>
-        </div>
+        </PositionedDropdown>
       }
 
-      {isDropdownOpen && contentType === 'typst' &&
-        <div className="formatter-dropdown">
+      {contentType === 'typst' &&
+        <PositionedDropdown
+          isOpen={isDropdownOpen}
+          triggerElement={dropdownRef.current?.querySelector('.formatter-button-group') as HTMLElement}
+          className="formatter-dropdown">
           <div className="format-option">
             <label>{t('Line width:')}
 
@@ -236,7 +251,7 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
 
             </label>
           </div>
-        </div>
+        </PositionedDropdown>
       }
     </div>);
 
