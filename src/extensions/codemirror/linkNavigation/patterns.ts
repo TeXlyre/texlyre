@@ -1,6 +1,6 @@
 export interface LinkPattern {
     pattern: RegExp;
-    type: 'url' | 'file' | 'doi' | 'bibentry';
+    type: 'url' | 'file' | 'doi' | 'bibentry' | 'reference';
     fileType?: 'latex' | 'typst' | 'bib';
     extractValue?: (match: RegExpExecArray) => string;
 }
@@ -45,6 +45,12 @@ export const latexLinkPatterns: LinkPattern[] = [
         pattern: /\\cite(?:\w*)\{([^}]+)\}/g,
         type: 'bibentry',
         fileType: 'latex'
+    },
+    {
+        pattern: /\\(?:ref|eqref|pageref|autoref|nameref|cref|Cref|vref)\{([^}]+)\}/g,
+        type: 'reference',
+        fileType: 'latex',
+        extractValue: (match) => match[1]
     }
 ];
 
@@ -81,7 +87,13 @@ export const typstLinkPatterns: LinkPattern[] = [
     },
     {
         pattern: /@([a-zA-Z0-9_:-]+)/g,
-        type: 'bibentry',
+        type: 'reference',
+        fileType: 'typst',
+        extractValue: (match) => match[1]
+    },
+    {
+        pattern: /#ref\s*\(\s*<([^>]+)>/g,
+        type: 'reference',
         fileType: 'typst',
         extractValue: (match) => match[1]
     }

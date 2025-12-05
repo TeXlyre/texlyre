@@ -4,7 +4,7 @@ import { latexLinkPatterns, typstLinkPatterns, bibLinkPatterns, type LinkPattern
 export interface DetectedLink {
     from: number;
     to: number;
-    type: 'url' | 'file' | 'doi' | 'bibentry';
+    type: 'url' | 'file' | 'doi' | 'bibentry' | 'reference';
     value: string;
     fileType: 'latex' | 'typst' | 'bib';
 }
@@ -68,6 +68,17 @@ export class LinkDetector {
                         if (individualLink) {
                             return individualLink;
                         }
+                    }
+
+                    if (type === 'reference' && fileType === 'typst' && match[0].startsWith('@')) {
+                        const label = match[1];
+                        return {
+                            from: line.from + matchStart,
+                            to: line.from + matchEnd,
+                            type: 'reference',
+                            value: label,
+                            fileType: 'typst'
+                        };
                     }
 
                     const rawValue = extractValue ? extractValue(match) : (match[1] || match[0]);
@@ -164,7 +175,7 @@ export class LinkDetector {
         fileType: string,
         rawValue: string
     ): { valueStart: number; valueEnd: number } {
-        if (fileType === 'typst' && type === 'bibentry' && match[0].startsWith('@')) {
+        if (fileType === 'typst' && type === 'reference' && match[0].startsWith('@')) {
             return {
                 valueStart: match.index + 1,
                 valueEnd: match.index + match[0].length

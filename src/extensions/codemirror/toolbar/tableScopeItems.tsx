@@ -400,7 +400,6 @@ function createTableCommand(
                 case 'removeCol': return removeTypstColumn(view, info);
             }
         }
-        return false;
     };
 }
 
