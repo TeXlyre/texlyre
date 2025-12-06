@@ -523,9 +523,9 @@ export const useEditorView = (
 
                 if (toolbarVisible) {
                     if (isLatexFile) {
-                        extensions.push(createToolbarExtension('latex'));
+                        extensions.push(createToolbarExtension('latex', undoManagerRef.current || undefined));
                     } else if (isTypstFile) {
-                        extensions.push(createToolbarExtension('typst'));
+                        extensions.push(createToolbarExtension('typst', undoManagerRef.current || undefined));
                     }
                 }
 
