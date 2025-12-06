@@ -236,7 +236,7 @@
   flex-shrink: 0;
 }
 
-.project-card {
+.projects-grid .project-card {
   position: relative;
   border: 1px solid var(--accent-border);
   border-radius: var(--radius-lg);
@@ -362,6 +362,69 @@
   border-radius: var(--radius-lg);
   text-overflow: ellipsis;
   font-size: clamp(var(--space-sd), 2vw, 0.7rem);
+}
+
+.projects-list .project-card {
+  position: relative;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  background-color: var(--pico-background);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  color: var(--text-color);
+  cursor: default;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  grid-template-areas:
+    "title description header-actions actions"
+    "meta meta meta meta"
+    "tags tags tags tags";
+  gap: var(--space-xs);
+  align-items: center;
+}
+
+.projects-list .project-card * {
+  margin: 0 !important;
+}
+
+.projects-list .project-card-header {
+  display: contents;
+}
+
+.projects-list .project-card .project-title {
+  grid-area: title;
+  font-size: 1rem;
+}
+
+.projects-list .project-card-header-actions {
+  grid-area: header-actions;
+}
+
+.projects-list .project-card .project-description {
+  grid-area: description;
+  font-size: 0.85rem;
+}
+
+.projects-list .project-meta {
+  grid-area: meta;
+  font-size: 0.75rem;
+}
+
+.projects-list .project-actions {
+  grid-area: actions;
+  gap: var(--space-xs);
+  margin-top: 0;
+}
+
+.projects-list .project-tags {
+  grid-area: tags;
+  gap: var(--space-xs);
+  margin: 0;
+}
+
+.projects-list .project-tag {
+  padding: 2px var(--space-xs);
+  font-size: 0.75rem;
 }
 
 .selection-checkbox {
@@ -832,7 +895,8 @@
 
 .open-button-group .open-button {
   flex: 1;
-  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
   border-right: none;
   padding-left: var(--space-lg);
   padding-right: var(--space-md);
@@ -845,7 +909,8 @@
 }
 
 .open-button-group .dropdown-toggle {
-  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
   justify-content: center;
   border-left: 1px solid rgba(255, 255, 255, 0.2);
 }

@@ -196,7 +196,6 @@
 
 .replace-all-btn,
 .replace-file-btn {
-    padding: var(--space-xs) var(--space-sm);
     border: 1px solid var(--pico-primary);
     border-radius: var(--radius-sm);
     background-color: var(--pico-primary);

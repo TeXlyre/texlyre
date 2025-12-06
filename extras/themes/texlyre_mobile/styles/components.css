@@ -97,10 +97,6 @@
 	height: var(--mobile-icon-size-md);
 }
 
-[data-layout="texlyre-mobile"] .open-button-group .open-button {
-	border-top-right-radius: 0 !important;
-	border-bottom-right-radius: 0 !important;
-}
 
 [data-layout="texlyre-mobile"] .compile-button-group .compile-button {
 	min-height: var(--mobile-min-touch-target);
@@ -142,7 +138,6 @@
 [data-layout="texlyre-mobile"] .compile-button-group .compile-button svg,
 [data-layout="texlyre-mobile"] .open-button-group .open-button svg,
 [data-layout="texlyre-mobile"] .share-button-group .main-button svg,
-
 [data-layout="texlyre-mobile"] .dropdown-toggle svg,
 [data-layout="texlyre-mobile"] .collab-button-group .collab-dropdown-toggle svg,
 [data-layout="texlyre-mobile"] .backup-button-group .backup-dropdown-toggle svg {
@@ -300,25 +295,29 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	max-width: 180px;
+	max-width: var(--project-title-width);
 }
 
 [data-layout="texlyre-mobile"] .project-description {
-	font-size: var(--mobile-font-xs);
-	max-width: 180px;
+	/* font-size: var(--mobile-font-xs);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	max-width: var(--project-title-width); */
+	display: none;
 }
 
 [data-layout="texlyre-mobile"] .user-dropdown-button,
 [data-layout="texlyre-mobile"] .back-button {
-	padding: var(--mobile-spacing-xs) var(--mobile-spacing-md) !important;
 	font-size: var(--mobile-font-sm);
 	height: var(--mobile-min-touch-target);
 	border: 1px solid var(--accent-border, #ddd);
-	border-radius: var(--radius-sm);
+	border-radius: 0 0 var(--radius-sm) var(--radius-sm);
 	background-color: var(--pico-primary-inverse) !important;
+}
+
+[data-layout="texlyre-mobile"] .user-dropdown-button span {
+	max-width: var(--mobile-min-touch-target);
 }
 
 [data-layout="texlyre-mobile"] .linked-file-icon {
@@ -326,9 +325,7 @@
 }
 
 [data-layout="texlyre-mobile"] .pdf-options-toggle {
-	height: calc(var(--mobile-min-touch-target) + 8px);
-	align-items: center;
-	padding: var(--mobile-spacing-md);
+	height: var(--mobile-min-touch-target);
 }
 
 .mobile-nav-button {
