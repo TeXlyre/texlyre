@@ -40,7 +40,8 @@
 		"extras/**/*",
 		"scripts/**/*",
 		"build.ts",
-		"plugins.config.js"
+		"plugins.config.js",
+		"texlyre.config.ts"
 	],
 	"references": [
 		{
