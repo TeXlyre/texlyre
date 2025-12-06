@@ -3,6 +3,7 @@ import { type Extension, Compartment } from '@codemirror/state';
 import type { ToolbarSplit, ToolbarSpace, ToolbarItem } from 'codemirror-toolbar';
 import toolbar from 'codemirror-toolbar';
 import { type EditorView, ViewPlugin } from '@codemirror/view';
+import type { UndoManager } from 'yjs';
 import * as CodeMirrorItems from './toolbar/codemirrorItems';
 import * as LaTeXItems from './toolbar/latexItems';
 import * as TypstItems from './toolbar/typstItems';
@@ -35,18 +36,18 @@ const getColorScopeItems = (fileType: FileType): ToolbarEntry[] => [
 	ColorScopeItems.createColorRemove(fileType),
 ];
 
-const getCommonEndItems = (isFullScreen: boolean): ToolbarEntry[] => [
+const getCommonEndItems = (isFullScreen: boolean, undoManager?: UndoManager): ToolbarEntry[] => [
 	space,
-	CodeMirrorItems.createUndo(),
-	CodeMirrorItems.createRedo(),
+	CodeMirrorItems.createUndo(undoManager),
+	CodeMirrorItems.createRedo(undoManager),
 	split,
 	CodeMirrorItems.createFullScreen(isFullScreen),
 ];
 
-const getItems = (fileType: FileType, isFullScreen: boolean, inTable: boolean, inColor: boolean): ToolbarEntry[] => {
+const getItems = (fileType: FileType, isFullScreen: boolean, inTable: boolean, inColor: boolean, undoManager?: UndoManager): ToolbarEntry[] => {
 	const tableItems = inTable ? getTableScopeItems(fileType) : [];
 	const colorItems = inColor ? getColorScopeItems(fileType) : [];
-	const endItems = getCommonEndItems(isFullScreen);
+	const endItems = getCommonEndItems(isFullScreen, undoManager);
 
 	if (fileType === 'latex') {
 		return [
@@ -139,7 +140,7 @@ const getItems = (fileType: FileType, isFullScreen: boolean, inTable: boolean, i
 	];
 };
 
-function createToolbarPlugin(fileType: FileType, toolbarCompartment: Compartment) {
+function createToolbarPlugin(fileType: FileType, toolbarCompartment: Compartment, undoManager?: UndoManager) {
 	return ViewPlugin.fromClass(
 		class {
 			private inTable = false;
@@ -172,7 +173,7 @@ function createToolbarPlugin(fileType: FileType, toolbarCompartment: Compartment
 			}
 
 			private reconfigureToolbar() {
-				const items = getItems(fileType, this.isFullScreen, this.inTable, this.inColor);
+				const items = getItems(fileType, this.isFullScreen, this.inTable, this.inColor, undoManager);
 
 				requestAnimationFrame(() => {
 					this.view.dispatch({
@@ -188,11 +189,11 @@ function createToolbarPlugin(fileType: FileType, toolbarCompartment: Compartment
 	);
 }
 
-export const createToolbarExtension = (fileType: FileType): Extension => {
+export const createToolbarExtension = (fileType: FileType, undoManager?: UndoManager): Extension => {
 	const toolbarCompartment = new Compartment();
 
 	return [
-		toolbarCompartment.of(toolbar({ items: getItems(fileType, false, false, false) })),
-		createToolbarPlugin(fileType, toolbarCompartment),
+		toolbarCompartment.of(toolbar({ items: getItems(fileType, false, false, false, undoManager) })),
+		createToolbarPlugin(fileType, toolbarCompartment, undoManager),
 	];
 };
