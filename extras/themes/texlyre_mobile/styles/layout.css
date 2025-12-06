@@ -106,10 +106,10 @@
 	position: fixed !important;
 	inset-block-start: 0 !important;
 	inset-inline-start: auto !important;
-	inset-inline-end: 0 !important;
+	inset-inline-end: var(--mobile-spacing-md) !important;
 	inset-block-end: auto !important;
 	margin: 0 !important;
-	transform: translate(0, 0) !important;
+	padding: 0 !important;
 }
 
 [data-layout="texlyre-mobile"] .header-right .user-dropdown-menu {
