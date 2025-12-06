@@ -1,7 +1,7 @@
-// *** WARNING: THESE VALUES ARE CHANGED AUTOMATICALLY ON BUILD **
-const CACHE_NAME = `texlyre-v0.4.17`; //`texlyre-v${process.env.npm_package_version || '1'}`;
+// These constants are automatically generated. Do not edit directly. **
+const CACHE_NAME = `texlyre-v0.4.18`; //`texlyre-v${process.env.npm_package_version || '1'}`;
 const BASE_PATH = '/texlyre/';
-// *** END AUTOMATIC CHANGE ***
+// *** End automatic generation ***
 
 console.log('[ServiceWorker] Service Worker loading with base path:', BASE_PATH);
 

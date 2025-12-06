@@ -40,7 +40,7 @@
     "pdf-viewer-rendering-quality": "high",
     "repository-proxy-url": "https://proxy.emaily.re/?url=",
     "templates-api-url": "https://texlyre.github.io/texlyre-templates/api/templates.json",
-    "theme-plugin": "texlyre-wide-theme",
+    "theme-plugin": "texlyre-mobile-theme",
     "theme-variant": "atom_light",
     "typst-auto-compile-on-open": false
   },

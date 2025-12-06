@@ -1,135 +1,5 @@
 // texlyre.config.ts
-export interface UserDataSettings {
-    editor: {
-        fontSize: string;
-        fontFamily: string;
-        showLineNumbers: boolean;
-        syntaxHighlighting: boolean;
-        themeHighlights: string;
-        spellCheck: boolean;
-        autoSave: {
-            enable: boolean;
-            delay: number;
-        };
-    };
-    fileSystem: {
-        backup: {
-            enable: boolean;
-            autoBackup: boolean;
-        };
-    };
-    bibtexViewer: {
-        autoTidy: boolean;
-        tidyOptions: string;
-    };
-    imageViewer: {
-        autoCenter: boolean;
-        quality: string;
-        enablePanning: boolean;
-        enableFilters: boolean;
-    };
-    pdfViewer: {
-        autoScale: boolean;
-        renderingQuality: string;
-    };
-    pdfRenderer: {
-        enable: boolean;
-        initialZoom: string;
-        textSelection: boolean;
-        annotations: boolean;
-    };
-    theme: {
-        plugin: string;
-        variant: string;
-    };
-    typst: {
-        autoCompileOnOpen: boolean;
-    };
-    latex: {
-        engine: string;
-        texliveEndpoint: string;
-        storeCache: boolean;
-        storeWorkingDirectory: boolean;
-    };
-    fileSync: {
-        enable: boolean;
-        autoInterval: number;
-        holdTimeout: number;
-        requestTimeout: number;
-        conflictResolution: string;
-        serverUrl: string;
-        notifications: boolean;
-    };
-    fileTree: {
-        filesystemDragDrop: boolean;
-        internalDragDrop: boolean;
-    };
-    collab: {
-        signalingServers: string;
-        awarenessTimeout: number;
-        autoReconnect: boolean;
-    };
-}
-
-export interface UserDataProperties {
-    global: {
-        sidebarWidth: number;
-        latexOutputWidth: number;
-        sidebarCollapsed: boolean;
-        latexOutputCollapsed: boolean;
-        logVisualizerHeight: number;
-        logVisualizerCollapsed: boolean;
-        pdfRendererZoom: number;
-        pdfRendererScrollView: boolean;
-        toolBarVisible: boolean;
-    };
-}
-
-export interface UserData {
-    settings: UserDataSettings;
-    properties: UserDataProperties;
-    secrets: Record<string, unknown>;
-}
-
-type DeepPartial<T> = {
-    [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
-};
-
-export interface TexlyreConfig {
-    title: string;
-    tagline: string;
-    url: string;
-    baseUrl: string;
-    organizationName: string;
-    projectName: string;
-
-    favicon: string;
-
-    pwa?: {
-        enabled: boolean;
-        themeColor: string;
-        manifest: string;
-    };
-
-    plugins: {
-        collaborative_viewers: string[];
-        viewers: string[];
-        renderers: string[];
-        loggers: string[];
-        lsp: string[];
-        backup: string[];
-        themes: string[];
-    };
-
-    userdata: {
-        default: UserData;
-        local?: {
-            settings?: DeepPartial<UserDataSettings>;
-            properties?: DeepPartial<UserDataProperties>;
-            secrets?: Record<string, unknown>;
-        };
-    };
-}
+import type { TexlyreConfig } from '@/types/texlyre';
 
 const config: TexlyreConfig = {
     title: 'TeXlyre',
@@ -160,105 +30,78 @@ const config: TexlyreConfig = {
     userdata: {
         default: {
             settings: {
-                editor: {
-                    fontSize: 'base',
-                    fontFamily: 'monospace',
-                    showLineNumbers: true,
-                    syntaxHighlighting: true,
-                    themeHighlights: 'auto',
-                    spellCheck: false,
-                    autoSave: {
-                        enable: true,
-                        delay: 1000,
-                    },
-                },
-                fileSystem: {
-                    backup: {
-                        enable: false,
-                        autoBackup: false,
-                    },
-                },
-                bibtexViewer: {
-                    autoTidy: false,
-                    tidyOptions: 'standard',
-                },
-                imageViewer: {
-                    autoCenter: true,
-                    quality: 'high',
-                    enablePanning: true,
-                    enableFilters: true,
-                },
-                pdfViewer: {
-                    autoScale: true,
-                    renderingQuality: 'high',
-                },
-                pdfRenderer: {
-                    enable: true,
-                    initialZoom: '200',
-                    textSelection: true,
-                    annotations: true,
-                },
-                theme: {
-                    plugin: 'texlyre-wide-theme',
-                    variant: 'atom_light',
-                },
-                typst: {
-                    autoCompileOnOpen: false,
-                },
-                latex: {
-                    engine: 'pdftex',
-                    texliveEndpoint: 'https://texlive.emaily.re',
-                    storeCache: true,
-                    storeWorkingDirectory: false,
-                },
-                fileSync: {
-                    enable: true,
-                    autoInterval: 10,
-                    holdTimeout: 30,
-                    requestTimeout: 60,
-                    conflictResolution: 'prefer-latest',
-                    serverUrl: 'https://filepizza.emaily.re',
-                    notifications: true,
-                },
-                fileTree: {
-                    filesystemDragDrop: true,
-                    internalDragDrop: true,
-                },
-                collab: {
-                    signalingServers: 'wss://ywebrtc.emaily.re',
-                    awarenessTimeout: 30,
-                    autoReconnect: false,
-                },
+                bibtexViewerAutoTidy: false,
+                bibtexViewerTidyOptions: 'standard',
+                collabAutoReconnect: false,
+                collabAwarenessTimeout: 30,
+                collabSignalingServers: 'wss://ywebrtc.emaily.re',
+                editorAutoSaveDelay: 1000,
+                editorAutoSaveEnable: true,
+                editorFontFamily: 'monospace',
+                editorFontSize: 'base',
+                editorShowLineNumbers: true,
+                editorSpellCheck: false,
+                editorSyntaxHighlighting: true,
+                editorThemeHighlights: 'auto',
+                fileSyncAutoInterval: 10,
+                fileSyncConflictResolution: 'prefer-latest',
+                fileSyncEnable: true,
+                fileSyncHoldTimeout: 30,
+                fileSyncNotifications: true,
+                fileSyncRequestTimeout: 60,
+                fileSyncServerUrl: 'https://filepizza.emaily.re',
+                fileSystemBackupAutoBackup: false,
+                fileSystemBackupEnable: false,
+                fileTreeFilesystemDragDrop: true,
+                fileTreeInternalDragDrop: true,
+                imageViewerAutoCenter: true,
+                imageViewerEnableFilters: true,
+                imageViewerEnablePanning: true,
+                imageViewerQuality: 'high',
+                latexEngine: 'pdftex',
+                latexStoreCache: true,
+                latexStoreWorkingDirectory: false,
+                latexTexliveEndpoint: 'https://texlive.emaily.re',
+                pdfRendererAnnotations: true,
+                pdfRendererEnable: true,
+                pdfRendererInitialZoom: '200',
+                pdfRendererTextSelection: true,
+                pdfViewerAutoScale: true,
+                pdfViewerRenderingQuality: 'high',
+                repositoryProxyUrl: 'https://proxy.emaily.re/?url=',
+                templatesApiUrl: 'https://texlyre.github.io/texlyre-templates/api/templates.json',
+                themePlugin: 'texlyre-wide-theme',
+                themeVariant: 'atom_light',
+                typstAutoCompileOnOpen: false,
             },
             properties: {
                 global: {
-                    sidebarWidth: 502,
-                    latexOutputWidth: 700,
-                    sidebarCollapsed: false,
                     latexOutputCollapsed: true,
+                    latexOutputWidth: 700,
                     logVisualizerHeight: 600,
                     logVisualizerCollapsed: false,
                     pdfRendererZoom: 1,
                     pdfRendererScrollView: true,
-                    toolBarVisible: true,
+                    sidebarCollapsed: false,
+                    sidebarWidth: 502,
+                    toolbarVisible: true,
                 },
             },
             secrets: {},
         },
+        mobile: {
+            settings: {
+                themePlugin: 'texlyre-mobile-theme',
+                themeVariant: 'atom_light',
+            },
+        },
         local: {
             settings: {
-                theme: {
-                    variant: 'dark',
-                },
-                latex: {
-                    texliveEndpoint: 'http://localhost:5004',
-                },
-                fileSync: {
-                    serverUrl: 'http://localhost:8080',
-                },
-                collab: {
-                    signalingServers: 'ws://localhost:4444/',
-                },
+                collabSignalingServers: 'ws://localhost:4444/',
+                fileSyncServerUrl: 'http://localhost:8080',
+                latexTexliveEndpoint: 'http://localhost:5004',
+                themeVariant: 'dark',
+
             },
             properties: {
                 global: {
