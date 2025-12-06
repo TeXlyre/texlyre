@@ -123,6 +123,31 @@ function generateUserdataFiles(config: any) {
         JSON.stringify(defaultUserdata, null, 2)
     );
 
+    if (config.userdata.mobile) {
+        const mergedSettings = deepMerge(
+            config.userdata.default.settings,
+            config.userdata.mobile.settings || {}
+        );
+        const mergedProperties = deepMerge(
+            config.userdata.default.properties,
+            config.userdata.mobile.properties || {}
+        );
+        const mergedSecrets = deepMerge(
+            config.userdata.default.secrets,
+            config.userdata.mobile.secrets || {}
+        );
+
+        const mobileUserdata = {
+            settings: flattenSettings(mergedSettings),
+            properties: flattenProperties(mergedProperties),
+            secrets: mergedSecrets,
+        };
+
+        fs.writeFileSync(
+            path.join(rootDir, 'userdata.mobile.json'),
+            JSON.stringify(mobileUserdata, null, 2)
+        );
+    }
     if (config.userdata.local) {
         const mergedSettings = deepMerge(
             config.userdata.default.settings,

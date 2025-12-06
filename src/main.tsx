@@ -25,6 +25,12 @@ import { authService } from './services/AuthService';
 
 const BASE_PATH = __BASE_PATH__
 
+const isMobileDevice = (): boolean => {
+	return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+		navigator.userAgent
+	) || window.innerWidth <= 768;
+};
+
 // Guest account cleanup - runs every hour when app is active
 const setupGuestCleanup = () => {
 	let cleanupInterval: NodeJS.Timeout;
@@ -125,7 +131,10 @@ async function initUserData(): Promise<void> {
 
 	if (!existingSettings || !existingProperties) {
 		try {
-			const response = await fetch(`${BASE_PATH}/userdata.json`);
+			const isMobile = isMobileDevice();
+			const userdataFile = isMobile ? 'userdata.mobile.json' : 'userdata.json';
+
+			const response = await fetch(`${BASE_PATH}/${userdataFile}`);
 			const userData = await response.json();
 
 			if (!existingSettings && userData.settings) {

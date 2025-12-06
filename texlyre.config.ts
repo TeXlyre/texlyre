@@ -123,6 +123,11 @@ export interface TexlyreConfig {
 
     userdata: {
         default: UserData;
+        mobile?: {
+            settings?: DeepPartial<UserDataSettings>;
+            properties?: DeepPartial<UserDataProperties>;
+            secrets?: Record<string, unknown>;
+        };
         local?: {
             settings?: DeepPartial<UserDataSettings>;
             properties?: DeepPartial<UserDataProperties>;
@@ -244,6 +249,14 @@ const config: TexlyreConfig = {
                 },
             },
             secrets: {},
+        },
+        mobile: {
+            settings: {
+                theme: {
+                    plugin: 'texlyre-mobile-theme',
+                    variant: 'atom_light',
+                },
+            },
         },
         local: {
             settings: {
