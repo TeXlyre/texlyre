@@ -1,7 +1,7 @@
 {
   "name": "TeXlyre",
   "short_name": "TeXlyre",
-  "description": "Local-first LaTeX collaboration platform",
+  "description": "A local-first LaTeX & Typst collaborative web editor",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",

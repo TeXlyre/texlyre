@@ -27,6 +27,10 @@
 }
 
 [data-layout="texlyre-mobile"] footer .read-the-docs {
+	display: block;
+}
+
+[data-layout="texlyre-mobile"] body:has(.mobile-bottom-nav) footer .read-the-docs {
 	display: none;
 }
 
@@ -110,6 +114,8 @@
 	inset-block-end: auto !important;
 	margin: 0 !important;
 	padding: 0 !important;
+	padding-left: var(--mobile-spacing-sm);
+	padding-right: var(--mobile-spacing-sm);
 }
 
 [data-layout="texlyre-mobile"] .header-right .user-dropdown-menu {

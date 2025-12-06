@@ -1,18 +1,27 @@
 // extras/themes/texlyre_mobile/TeXlyreMobileTheme.ts
 import { t } from '@/i18n';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { createElement } from 'react';
+
 import type {
 	ThemeLayout,
 	ThemePlugin,
 	ThemeVariant,
 } from '@/plugins/PluginInterface';
+import { ProjectsIcon, ProjectsPlusIcon, FolderIcon, EditFileIcon, OutputIcon, ChatIcon } from '@/components/common/Icons';
 import { themes } from './colors';
 import './styles/index.css';
+
+const renderIcon = (IconComponent: React.FC<any>, props = {}) => {
+	return renderToStaticMarkup(createElement(IconComponent, props));
+};
 
 const createTeXlyreMobileTheme = (): ThemePlugin => {
 	let currentThemeId = 'dark';
 	let currentView: 'explorer' | 'editor' | 'output' | 'chat' = 'editor';
 	let mobileClickHandler: ((e: Event) => void) | null = null;
 	let hashChangeHandler: (() => void) | null = null;
+	let loginCheckInterval: NodeJS.Timeout | null = null;
 
 	const layout: ThemeLayout = {
 		id: 'texlyre-mobile',
@@ -146,44 +155,30 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 		if (isProjectsView()) {
 			nav.innerHTML = `
 			<button class="mobile-nav-button ${currentView === 'explorer' ? 'active' : ''}" data-view="explorer">
-				<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-					<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-					<line x1="12" y1="11" x2="12" y2="17"/>
-					<line x1="9" y1="14" x2="15" y2="14"/>
-				</svg>
+				${renderIcon(ProjectsPlusIcon)}
 				<span>${t('Create Project')}</span>
 			</button>
 			<button class="mobile-nav-button ${currentView === 'editor' ? 'active' : ''}" data-view="editor">
-				<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-					<path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
-				</svg>
+				${renderIcon(ProjectsIcon)}
 				<span>${t('Projects')}</span>
 			</button>
 		`;
 		} else {
 			nav.innerHTML = `
 			<button class="mobile-nav-button ${currentView === 'explorer' ? 'active' : ''}" data-view="explorer">
-				<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-					<path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
-				</svg>
+				${renderIcon(FolderIcon)}
 				<span>${t('Explorer')}</span>
 			</button>
 			<button class="mobile-nav-button ${currentView === 'editor' ? 'active' : ''}" data-view="editor">
-				<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-					<path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
-				</svg>
+				${renderIcon(EditFileIcon)}
 				<span>${t('Editor')}</span>
 			</button>
 			<button class="mobile-nav-button ${currentView === 'output' ? 'active' : ''}" data-view="output">
-				<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-					<path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-				</svg>
+				${renderIcon(OutputIcon)}
 				<span>${t('Output')}</span>
 			</button>
 			<button class="mobile-nav-button ${currentView === 'chat' ? 'active' : ''}" data-view="chat">
-				<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-					<path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4C22,2.89 21.1,2 20,2Z"/>
-				</svg>
+				${renderIcon(ChatIcon)}
 				<span>${t('Chat')}</span>
 			</button>
 		`;
@@ -284,14 +279,32 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 			document.documentElement.setAttribute('data-theme', variantId);
 			document.documentElement.setAttribute('data-theme-plugin', 'texlyre-mobile');
 
-			handleMobileNavigation();
-			setMobileViewport();
+			const isLoggedIn = localStorage.getItem('texlyre-current-user') !== null;
 
-			const savedView = localStorage.getItem('texlyre-mobile-view');
-			if (savedView) {
-				currentView = savedView as typeof currentView;
-				updateMobileView(savedView);
+			if (isLoggedIn) {
+				handleMobileNavigation();
+
+				const savedView = localStorage.getItem('texlyre-mobile-view');
+				if (savedView) {
+					currentView = savedView as typeof currentView;
+					updateMobileView(savedView);
+				}
+			} else {
+				if (loginCheckInterval) {
+					clearInterval(loginCheckInterval);
+				}
+				loginCheckInterval = setInterval(() => {
+					if (localStorage.getItem('texlyre-current-user') !== null) {
+						if (loginCheckInterval) {
+							clearInterval(loginCheckInterval);
+							loginCheckInterval = null;
+						}
+						handleMobileNavigation();
+					}
+				}, 500);
 			}
+
+			setMobileViewport();
 
 			return true;
 		},
@@ -316,6 +329,10 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 		cleanup(): void {
 			cleanupMobileNavigation();
 			resetViewport();
+			if (loginCheckInterval) {
+				clearInterval(loginCheckInterval);
+				loginCheckInterval = null;
+			}
 		},
 	};
 };
