@@ -30,9 +30,10 @@ import { bibtex, bibtexCompletionSource } from 'codemirror-lang-bib';
 import { latex, latexCompletionSource } from 'codemirror-lang-latex';
 import { typst } from 'codemirror-lang-typst';
 import { useEffect, useRef, useState } from 'react';
-import { yCollab, yUndoManagerKeymap } from 'y-codemirror.next';
+import { yCollab } from 'y-codemirror.next';
 import type { WebrtcProvider } from 'y-webrtc';
 import type * as Y from 'yjs';
+import { UndoManager } from 'yjs';
 
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import { commentSystemExtension } from '../../extensions/codemirror/CommentExtension';
@@ -110,6 +111,7 @@ export const useEditorView = (
     const [yDoc, setYDoc] = useState<Y.Doc | null>(null);
     const [provider, setProvider] = useState<WebrtcProvider | null>(null);
     const hasEmittedReadyRef = useRef<boolean>(false);
+    const undoManagerRef = useRef<UndoManager | null>(null);
 
     const projectId = docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl;
 
@@ -246,7 +248,6 @@ export const useEditorView = (
                 },
             }),
             EditorView.lineWrapping,
-            history(),
             foldGutter(),
             indentOnInput(),
             bracketMatching(),
@@ -258,7 +259,6 @@ export const useEditorView = (
                 indentWithTab,
                 ...defaultKeymap,
                 ...searchKeymap,
-                ...historyKeymap,
                 ...foldKeymap,
                 ...completionKeymap,
             ]),
@@ -372,6 +372,9 @@ export const useEditorView = (
         const ytext = doc.getText('codemirror');
         ytextRef.current = ytext;
 
+        const undoManager = new UndoManager(ytext);
+        undoManagerRef.current = undoManager;
+
         if (user) {
             collabService.setUserInfo(projectId, collectionName, {
                 id: user.id,
@@ -385,6 +388,7 @@ export const useEditorView = (
         }
 
         return () => {
+            undoManagerRef.current = null;
             collabService.disconnect(projectId, collectionName);
             setYDoc(null);
             setProvider(null);
@@ -583,9 +587,11 @@ export const useEditorView = (
         if (isViewOnly) extensions.push(EditorState.readOnly.of(true));
 
         // Collaborative undo / awareness (only for documents)
-        if (!isEditingFile && provider && ytextRef.current) {
-            extensions.push(keymap.of(yUndoManagerKeymap));
-            extensions.push(yCollab(ytextRef.current, provider.awareness));
+        if (!isEditingFile && provider && ytextRef.current && undoManagerRef.current) {
+            extensions.push(yCollab(ytextRef.current, provider.awareness, { undoManager: undoManagerRef.current }));
+        } else if (isEditingFile) {
+            extensions.push(history());
+            extensions.push(keymap.of(historyKeymap));
         }
 
         if (enableComments && !isViewOnly) {
