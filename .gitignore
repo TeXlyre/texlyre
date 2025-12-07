@@ -13,6 +13,9 @@ dist-ssr
 coverage
 *.local
 src/plugins/
+**/deps/
+**/target/
+**/gen/
 !src/plugins/PluginRegistry.ts
 !src/plugins/PluginInterface.ts
 

@@ -1,0 +1,45 @@
+{
+    "$schema": "https://schema.tauri.app/config/2.0",
+    "productName": "TeXlyre",
+    "version": "0.4.21",
+    "identifier": "io.github.texlyre",
+    "build": {
+        "beforeDevCommand": "npm run dev",
+        "beforeBuildCommand": "npm run build",
+        "devUrl": "http://localhost:5173",
+        "frontendDist": "../dist"
+    },
+    "bundle": {
+        "active": true,
+        "icon": [
+            "icons/32x32.png",
+            "icons/128x128.png",
+            "icons/128x128@2x.png",
+            "icons/icon.icns",
+            "icons/icon.ico"
+        ],
+        "targets": [
+            "deb"
+        ]
+    },
+    "app": {
+        "windows": [
+            {
+                "fullscreen": false,
+                "resizable": true,
+                "title": "TeXlyre",
+                "width": 1200,
+                "height": 800
+            }
+        ],
+        "security": {
+            "assetProtocol": {
+                "enable": true,
+                "scope": [
+                    "**"
+                ]
+            }
+        },
+        "withGlobalTauri": true
+    }
+}

@@ -6,10 +6,10 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 import wasm from "vite-plugin-wasm";
 
 const useHttps = process.env.VITE_USE_HTTPS === "true";
+const isTauri = process.env.TAURI_PLATFORM !== undefined || process.env.TAURI_ENV_PLATFORM !== undefined;
 
-const basePath = "/texlyre/";
+const basePath = isTauri ? "/" : "/texlyre/";
 
-// @ts-ignore
 export default defineConfig({
 	base: basePath,
 
@@ -17,7 +17,7 @@ export default defineConfig({
 		"process.env.npm_package_version": JSON.stringify(
 			process.env.npm_package_version || "1.0.0",
 		),
-		__BASE_PATH__: JSON.stringify(basePath.slice(0, -1)),
+		__BASE_PATH__: JSON.stringify(isTauri ? '' : basePath.slice(0, -1)),
 	},
 
 	build: {
@@ -82,11 +82,20 @@ export default defineConfig({
 	server: {
 		host: true,
 		https: useHttps,
-		hmr: {
+		...(isTauri ? {
 			port: 5173,
-			clientPort: 5173,
-		},
+			strictPort: true,
+		} : {
+			hmr: {
+				port: 5173,
+				clientPort: 5173,
+			},
+		}),
 	},
+
+	clearScreen: isTauri ? false : undefined,
+
+	envPrefix: isTauri ? ['VITE_', 'TAURI_'] : ['VITE_'],
 
 	worker: {
 		format: "es",

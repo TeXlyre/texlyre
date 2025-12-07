@@ -24,6 +24,7 @@ import { openDB } from 'idb';
 import { authService } from './services/AuthService';
 
 const BASE_PATH = __BASE_PATH__
+const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
 
 const isMobileDevice = (): boolean => {
 	return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -84,6 +85,7 @@ const enableServiceWorkerForHttp = false; // Set to false to disable SW in HTTP 
 const clearServiceWorkerOnLoad = false; // Set to true to clear existing SWs on load
 
 if (
+	!isTauri &&
 	'serviceWorker' in navigator &&
 	((isHttpsMode && enableServiceWorkerForHttps) || (!isHttpsMode && enableServiceWorkerForHttp))
 ) {
@@ -132,8 +134,9 @@ async function initUserData(): Promise<void> {
 	try {
 		const isMobile = isMobileDevice();
 		const userdataFile = isMobile ? 'userdata.mobile.json' : 'userdata.json';
+		const basePathForFetch = isTauri ? '' : BASE_PATH;
 
-		const response = await fetch(`${BASE_PATH}/${userdataFile}`);
+		const response = await fetch(`${basePathForFetch}/${userdataFile}`);
 		const userData = await response.json();
 		const newVersion = userData.version || '1.0.0';
 
@@ -210,7 +213,6 @@ function setupDirection() {
 			const directionSetting = settings['text-direction'];
 
 			if (directionSetting === 'auto') {
-				const languageSetting = settings['language'] || 'en';
 				direction = localStorage.getItem('text-direction') || 'ltr';
 			} else if (directionSetting) {
 				direction = directionSetting;
