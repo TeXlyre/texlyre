@@ -1,6 +1,6 @@
 {
   "name": "TeXlyre",
-  "short_name": "TeXlyre",
+  "short_name": "texlyre",
   "description": "A local-first LaTeX & Typst collaborative web editor",
   "start_url": "./",
   "display": "standalone",

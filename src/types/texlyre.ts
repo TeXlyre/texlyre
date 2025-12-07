@@ -1,5 +1,5 @@
+// src/types/texlyre.ts
 import type { UserDataSettings, UserDataProperties } from './userdata';
-
 
 export interface UserData {
     settings: UserDataSettings;
@@ -21,10 +21,26 @@ export interface TexlyreConfig {
 
     favicon: string;
 
+
     pwa?: {
         enabled: boolean;
         themeColor: string;
         manifest: string;
+
+        // All optional – if omitted, your generator can fall back
+        // to title/tagline/baseUrl/etc.
+        startUrl?: string;
+        name?: string;
+        shortName?: string;
+        description?: string;
+        display?: 'fullscreen' | 'standalone' | 'minimal-ui' | 'browser';
+        backgroundColor?: string;
+        icons?: Array<{
+            src: string;
+            sizes: string;
+            type: string;
+            purpose?: string;
+        }>;
     };
 
     plugins: {

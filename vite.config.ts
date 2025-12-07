@@ -63,6 +63,18 @@ export default defineConfig({
 					src: "userdata.json",
 					dest: "",
 				},
+				{
+					src: "userdata.mobile.json",
+					dest: "",
+				},
+				{
+					src: "userdata.local.json",
+					dest: "",
+				},
+				{
+					src: "userdata.local.mobile.json",
+					dest: "",
+				},
 			],
 		}),
 	],

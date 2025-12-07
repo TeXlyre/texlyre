@@ -15,6 +15,22 @@ const config: TexlyreConfig = {
         enabled: true,
         themeColor: '#000000',
         manifest: './manifest.json',
+        startUrl: './',
+        backgroundColor: '#ffffff',
+        icons: [
+            {
+                src: './assets/images/TeXlyre_notext_192.png',
+                sizes: '192x192',
+                type: 'image/png',
+                purpose: 'any maskable',
+            },
+        ],
+        display: 'standalone',
+        // All of these are OPTIONAL; if omitted, the script will fall back
+        // to title & tagline.
+        // name: 'TeXlyre',
+        // shortName: 'TeXlyre',
+        // description: 'A local-first LaTeX & Typst collaborative web editor',
     },
 
     plugins: {
@@ -27,6 +43,7 @@ const config: TexlyreConfig = {
         themes: ['texlyre_slim', 'texlyre_wide', 'texlyre_mobile'],
     },
 
+    // overwrite priority is default < local < mobile for corresponding configs
     userdata: {
         default: {
             settings: {
@@ -92,7 +109,6 @@ const config: TexlyreConfig = {
         mobile: {
             settings: {
                 themePlugin: 'texlyre-mobile-theme',
-                themeVariant: 'atom_light',
             },
         },
         local: {
