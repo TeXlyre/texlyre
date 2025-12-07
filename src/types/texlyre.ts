@@ -54,6 +54,7 @@ export interface TexlyreConfig {
     };
 
     userdata: {
+        version: string;
         default: UserData;
         mobile?: {
             settings?: DeepPartial<UserDataSettings>;
