@@ -152,18 +152,24 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 		const globalStorageKey = 'texlyre-settings';
 
 		try {
-			let stored = localStorage.getItem(userStorageKey);
+			const globalSettings = localStorage.getItem(globalStorageKey);
+			const globalSettingsParsed = globalSettings ? JSON.parse(globalSettings) : {};
+			const globalVersion = globalSettingsParsed._version;
 
-			if (userId && !stored) {
-				const globalSettings = localStorage.getItem(globalStorageKey);
+			let stored = localStorage.getItem(userStorageKey);
+			let storedParsed = stored ? JSON.parse(stored) : null;
+
+			if (userId && (!storedParsed || storedParsed._version !== globalVersion)) {
 				if (globalSettings) {
 					localStorage.setItem(userStorageKey, globalSettings);
 					stored = globalSettings;
+					storedParsed = globalSettingsParsed;
 				}
 			}
 
-			if (stored) {
-				localStorageSettingsRef.current = JSON.parse(stored);
+			if (storedParsed) {
+				const { _version, ...settingsWithoutVersion } = storedParsed;
+				localStorageSettingsRef.current = settingsWithoutVersion;
 			} else {
 				localStorageSettingsRef.current = {};
 			}
@@ -197,7 +203,10 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 
 		try {
 			const storageKey = getStorageKey();
-			localStorage.setItem(storageKey, JSON.stringify(toSave));
+			const currentStored = localStorage.getItem(storageKey);
+			const currentVersion = currentStored ? JSON.parse(currentStored)._version : undefined;
+
+			localStorage.setItem(storageKey, JSON.stringify({ ...toSave, _version: currentVersion }));
 		} catch (error) {
 			console.error('Error saving settings to localStorage:', error);
 		}

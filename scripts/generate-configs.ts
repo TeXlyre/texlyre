@@ -189,6 +189,7 @@ function generateManifest(config: any) {
 function generateUserdataFiles(config: any) {
     const writeUserdataFile = (filename: string, settings: any, properties: any, secrets: any) => {
         const userdata = {
+            version: config.userdata.version || '1.0.0',
             settings: flattenSettings(settings),
             properties: flattenProperties(properties),
             secrets,
@@ -215,22 +216,18 @@ function generateUserdataFiles(config: any) {
     const local = config.userdata.local;
     const mobile = config.userdata.mobile;
 
-    // Base (default)
     writeUserdataFile('userdata.json', base.settings, base.properties, base.secrets);
 
-    // Mobile (default + mobile)
     if (mobile) {
         const merged = mergeUserdata(base, mobile);
         writeUserdataFile('userdata.mobile.json', merged.settings, merged.properties, merged.secrets);
     }
 
-    // Local (default + local)
     if (local) {
         const merged = mergeUserdata(base, local);
         writeUserdataFile('userdata.local.json', merged.settings, merged.properties, merged.secrets);
     }
 
-    // Local + Mobile (default + local + mobile)
     if (local && mobile) {
         const merged = mergeUserdata(base, local, mobile);
         writeUserdataFile('userdata.local.mobile.json', merged.settings, merged.properties, merged.secrets);

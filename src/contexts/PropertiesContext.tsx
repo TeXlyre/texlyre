@@ -47,13 +47,13 @@ export interface PropertiesContextType {
 
 export const PropertiesContext = createContext<PropertiesContextType>({
 	getProperty: () => undefined,
-	setProperty: () => {},
-	registerProperty: () => {},
-	unregisterProperty: () => {},
+	setProperty: () => { },
+	registerProperty: () => { },
+	unregisterProperty: () => { },
 	getPropertiesByCategory: () => [],
 	hasProperty: () => false,
 	getPropertyMetadata: () => null,
-	clearAllProperties: () => {},
+	clearAllProperties: () => { },
 });
 
 interface PropertiesProviderProps {
@@ -97,18 +97,24 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 		const globalStorageKey = 'texlyre-properties';
 
 		try {
-			let stored = localStorage.getItem(userStorageKey);
+			const globalProperties = localStorage.getItem(globalStorageKey);
+			const globalPropertiesParsed = globalProperties ? JSON.parse(globalProperties) : {};
+			const globalVersion = globalPropertiesParsed._version;
 
-			if (userId && !stored) {
-				const globalProperties = localStorage.getItem(globalStorageKey);
+			let stored = localStorage.getItem(userStorageKey);
+			let storedParsed = stored ? JSON.parse(stored) : null;
+
+			if (userId && (!storedParsed || storedParsed._version !== globalVersion)) {
 				if (globalProperties) {
 					localStorage.setItem(userStorageKey, globalProperties);
 					stored = globalProperties;
+					storedParsed = globalPropertiesParsed;
 				}
 			}
 
-			if (stored) {
-				localStoragePropertiesRef.current = JSON.parse(stored);
+			if (storedParsed) {
+				const { _version, ...propertiesWithoutVersion } = storedParsed;
+				localStoragePropertiesRef.current = propertiesWithoutVersion;
 			} else {
 				localStoragePropertiesRef.current = {};
 			}
@@ -145,7 +151,10 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 
 		try {
 			const storageKey = getStorageKey();
-			localStorage.setItem(storageKey, JSON.stringify(toSave));
+			const currentStored = localStorage.getItem(storageKey);
+			const currentVersion = currentStored ? JSON.parse(currentStored)._version : undefined;
+
+			localStorage.setItem(storageKey, JSON.stringify({ ...toSave, _version: currentVersion }));
 			localStoragePropertiesRef.current = toSave;
 		} catch (error) {
 			console.error('Error saving properties to localStorage:', error);
@@ -200,7 +209,13 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 
 		try {
 			const storageKey = getStorageKey();
-			localStorage.setItem(storageKey, JSON.stringify(localStoragePropertiesRef.current || {}));
+			const currentStored = localStorage.getItem(storageKey);
+			const currentVersion = currentStored ? JSON.parse(currentStored)._version : undefined;
+
+			localStorage.setItem(storageKey, JSON.stringify({
+				...localStoragePropertiesRef.current,
+				_version: currentVersion
+			}));
 		} catch (error) {
 			console.error('Error saving property to localStorage:', error);
 		}

@@ -1,4 +1,5 @@
 {
+  "version": "1.0.0",
   "settings": {
     "bibtex-viewer-auto-tidy": false,
     "bibtex-viewer-tidy-options": "standard",

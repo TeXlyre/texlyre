@@ -129,30 +129,45 @@ async function initUserData(): Promise<void> {
 	const existingSettings = localStorage.getItem(settingsKey);
 	const existingProperties = localStorage.getItem(propertiesKey);
 
-	if (!existingSettings || !existingProperties) {
-		try {
-			const isMobile = isMobileDevice();
-			const userdataFile = isMobile ? 'userdata.mobile.json' : 'userdata.json';
+	try {
+		const isMobile = isMobileDevice();
+		const userdataFile = isMobile ? 'userdata.mobile.json' : 'userdata.json';
 
-			const response = await fetch(`${BASE_PATH}/${userdataFile}`);
-			const userData = await response.json();
+		const response = await fetch(`${BASE_PATH}/${userdataFile}`);
+		const userData = await response.json();
+		const newVersion = userData.version || '1.0.0';
 
-			if (!existingSettings && userData.settings) {
-				const mergedSettings = existingSettings
-					? { ...JSON.parse(existingSettings), ...userData.settings }
-					: userData.settings;
-				localStorage.setItem(settingsKey, JSON.stringify(mergedSettings));
-			}
+		const existingSettingsParsed = existingSettings ? JSON.parse(existingSettings) : {};
+		const existingPropertiesParsed = existingProperties ? JSON.parse(existingProperties) : {};
 
-			if (!existingProperties && userData.properties) {
-				const mergedProperties = existingProperties
-					? { ...JSON.parse(existingProperties), ...userData.properties }
-					: userData.properties;
-				localStorage.setItem(propertiesKey, JSON.stringify(mergedProperties));
-			}
-		} catch (error) {
-			console.warn('Failed to load default user data:', error);
+		const existingSettingsVersion = existingSettingsParsed._version;
+		const existingPropertiesVersion = existingPropertiesParsed._version;
+
+		if (existingSettingsVersion !== newVersion) {
+			const mergedSettings = {
+				...existingSettingsParsed,
+				...userData.settings,
+				_version: newVersion
+			};
+			localStorage.setItem(settingsKey, JSON.stringify(mergedSettings));
+			console.log(`Settings updated from version ${existingSettingsVersion || 'none'} to ${newVersion}`);
+		} else if (!existingSettings) {
+			localStorage.setItem(settingsKey, JSON.stringify({ ...userData.settings, _version: newVersion }));
 		}
+
+		if (existingPropertiesVersion !== newVersion) {
+			const mergedProperties = {
+				...existingPropertiesParsed,
+				...userData.properties,
+				_version: newVersion
+			};
+			localStorage.setItem(propertiesKey, JSON.stringify(mergedProperties));
+			console.log(`Properties updated from version ${existingPropertiesVersion || 'none'} to ${newVersion}`);
+		} else if (!existingProperties) {
+			localStorage.setItem(propertiesKey, JSON.stringify({ ...userData.properties, _version: newVersion }));
+		}
+	} catch (error) {
+		console.warn('Failed to load default user data:', error);
 	}
 }
 
