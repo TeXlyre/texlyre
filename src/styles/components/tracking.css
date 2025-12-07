@@ -1,0 +1,12 @@
+.tracked-insertion {
+    background-color: rgba(0, 200, 0, 0.2);
+    text-decoration: underline;
+    text-decoration-color: green;
+}
+
+.tracked-deletion {
+    background-color: rgba(200, 0, 0, 0.2);
+    text-decoration: line-through;
+    text-decoration-color: red;
+    cursor: pointer;
+}

@@ -29,6 +29,7 @@ import './styles/components/backup-collab.css';
 import './styles/components/resizable-panel.css';
 import './styles/components/toast.css';
 import './styles/components/comments.css';
+import './styles/components/tracking.css';
 import './styles/components/auth.css';
 import './styles/components/project.css';
 import './styles/components/share-project.css';

@@ -37,6 +37,7 @@ interface EditorContextType {
   getSpellCheckEnabled: () => boolean;
   getCollabOptions: () => CollabConnectOptions;
   getEnabledLSPPlugins: () => string[];
+  getTrackChangesEnabled: () => boolean;
   editorSettingsVersion: number;
 }
 
@@ -52,6 +53,7 @@ export const EditorContext = createContext<EditorContextType>({
   getCollabOptions: () => ({}),
   getEnabledLSPPlugins: () =>
     pluginRegistry.getLSPPlugins().map((plugin) => plugin.id),
+  getTrackChangesEnabled: () => true,
   editorSettingsVersion: 0
 });
 
@@ -275,6 +277,20 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
         updateEditorSetting('spellCheck', value as boolean);
       }
     });
+
+    registerSetting({
+      id: 'editor-track-changes',
+      category: t("Viewers"),
+      subcategory: t("Text Editor"),
+      type: 'checkbox',
+      label: t("Enable track changes"),
+      description: t("Track document changes for review"),
+      defaultValue: true,
+      onChange: (value) => {
+        updateEditorSetting('trackChanges', value as boolean);
+      }
+    });
+
   }, [registerSetting, batchGetSettings]);
 
   const getLineNumbersEnabled = useCallback(
@@ -338,6 +354,12 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
     }).map((plugin) => plugin.id);
   }, [getSetting]);
 
+
+  const getTrackChangesEnabled = useCallback(
+    () => editorSettings.trackChanges,
+    [editorSettings.trackChanges]
+  );
+
   const contextValue = {
     editorSettings,
     updateEditorSetting,
@@ -349,6 +371,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
     getSpellCheckEnabled,
     getCollabOptions,
     getEnabledLSPPlugins,
+    getTrackChangesEnabled,
     editorSettingsVersion
   };
 

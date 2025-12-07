@@ -19,6 +19,7 @@ export interface EditorSettings {
 	highlightTheme: 'auto' | 'light' | 'dark';
 	vimMode: boolean;
 	spellCheck: boolean;
+	trackChanges: boolean;
 }
 
 export const defaultEditorSettings: EditorSettings = {
@@ -31,6 +32,7 @@ export const defaultEditorSettings: EditorSettings = {
 	highlightTheme: 'auto',
 	vimMode: false,
 	spellCheck: true,
+	trackChanges: true,
 };
 
 export const fontSizeMap: Record<FontSize, string> = {

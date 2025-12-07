@@ -56,6 +56,7 @@ import {
     updateLinkNavigationFilePath,
     updateLinkNavigationFileName
 } from '../../extensions/codemirror/LinkNavigationExtension';
+import { createTrackChangesExtension, updateTrackChangesEnabled } from '../../extensions/codemirror/TrackChangesExtension';
 
 import { useAuth } from '../useAuth';
 import { useEditor } from '../useEditor';
@@ -96,6 +97,7 @@ export const useEditorView = (
         getSpellCheckEnabled,
         getCollabOptions,
         getEnabledLSPPlugins,
+        getTrackChangesEnabled,
         editorSettingsVersion,
         editorSettings,
     } = useEditor();
@@ -589,6 +591,10 @@ export const useEditorView = (
         // Collaborative undo / awareness (only for documents)
         if (!isEditingFile && provider && ytextRef.current && undoManagerRef.current) {
             extensions.push(yCollab(ytextRef.current, provider.awareness, { undoManager: undoManagerRef.current }));
+
+            if (yDoc && user) {
+                extensions.push(createTrackChangesExtension(yDoc, ytextRef.current, user.id));
+            }
         } else if (isEditingFile) {
             extensions.push(history());
             extensions.push(keymap.of(historyKeymap));
@@ -683,6 +689,20 @@ export const useEditorView = (
         try {
             const view = new EditorView({ state, parent: editorRef.current });
             viewRef.current = view;
+
+            if (!isEditingFile && yDoc && user) {
+                const trackChangesEnabled = getTrackChangesEnabled();
+                console.log('[Editor] Setting track changes enabled:', trackChangesEnabled);
+                if (trackChangesEnabled) {
+                    setTimeout(() => {
+                        if (viewRef.current) {
+                            viewRef.current.dispatch({
+                                effects: updateTrackChangesEnabled.of(true)
+                            });
+                        }
+                    }, 100);
+                }
+            }
 
             setTimeout(() => {
                 document.dispatchEvent(
