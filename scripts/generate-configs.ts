@@ -111,67 +111,129 @@ function generateIndexHtml(config: any) {
     fs.writeFileSync(indexPath, indexContent);
 }
 
+function generateManifest(config: any) {
+    if (!config.pwa?.enabled || !config.pwa?.manifest) {
+        return;
+    }
+
+    // Resolve manifest path relative to public/
+    const manifestRel = config.pwa.manifest.startsWith('./')
+        ? config.pwa.manifest.slice(2)
+        : config.pwa.manifest;
+
+    const manifestPath = path.join(rootDir, 'public', manifestRel);
+
+    if (!fs.existsSync(manifestPath)) {
+        console.warn(`Manifest file not found at ${manifestPath}, skipping manifest generation.`);
+        return;
+    }
+
+    const raw = fs.readFileSync(manifestPath, 'utf8');
+    let manifest: any;
+    try {
+        manifest = JSON.parse(raw);
+    } catch (e) {
+        console.error('Failed to parse manifest.json:', e);
+        return;
+    }
+
+    // Non-redundant mapping:
+    // - use pwa.* if defined
+    // - otherwise fall back to top-level config (title/tagline/baseUrl)
+    manifest.name =
+        config.pwa.name ??
+        config.title ??
+        manifest.name;
+
+    manifest.short_name =
+        config.pwa.shortName ??
+        config.projectName ??
+        config.title ??
+        manifest.short_name;
+
+    manifest.description =
+        config.pwa.description ??
+        config.tagline ??
+        manifest.description;
+
+    manifest.start_url =
+        config.pwa.startUrl ??
+        './';
+
+    manifest.display =
+        config.pwa.display ??
+        manifest.display ??
+        'standalone';
+
+    manifest.background_color =
+        config.pwa.backgroundColor ??
+        manifest.background_color ??
+        '#ffffff';
+
+    // Keep themeColor in sync with config & index.html
+    manifest.theme_color =
+        config.pwa.themeColor ??
+        manifest.theme_color ??
+        '#000000';
+
+    // Icons:
+    // - If pwa.icons is provided, override
+    // - Otherwise, keep whatever is already in manifest.json
+    if (Array.isArray(config.pwa.icons) && config.pwa.icons.length > 0) {
+        manifest.icons = config.pwa.icons;
+    }
+
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+}
+
 function generateUserdataFiles(config: any) {
-    const defaultUserdata = {
-        settings: flattenSettings(config.userdata.default.settings),
-        properties: flattenProperties(config.userdata.default.properties),
-        secrets: config.userdata.default.secrets,
+    const writeUserdataFile = (filename: string, settings: any, properties: any, secrets: any) => {
+        const userdata = {
+            settings: flattenSettings(settings),
+            properties: flattenProperties(properties),
+            secrets,
+        };
+
+        fs.writeFileSync(
+            path.join(rootDir, filename),
+            JSON.stringify(userdata, null, 2)
+        );
     };
 
-    fs.writeFileSync(
-        path.join(rootDir, 'userdata.json'),
-        JSON.stringify(defaultUserdata, null, 2)
-    );
+    const mergeUserdata = (...parts: any[]) => {
+        return parts.reduce(
+            (acc, part) => ({
+                settings: deepMerge(acc.settings, part?.settings || {}),
+                properties: deepMerge(acc.properties, part?.properties || {}),
+                secrets: deepMerge(acc.secrets, part?.secrets || {}),
+            }),
+            { settings: {}, properties: {}, secrets: {} }
+        );
+    };
 
-    if (config.userdata.mobile) {
-        const mergedSettings = deepMerge(
-            config.userdata.default.settings,
-            config.userdata.mobile.settings || {}
-        );
-        const mergedProperties = deepMerge(
-            config.userdata.default.properties,
-            config.userdata.mobile.properties || {}
-        );
-        const mergedSecrets = deepMerge(
-            config.userdata.default.secrets,
-            config.userdata.mobile.secrets || {}
-        );
+    const base = config.userdata.default;
+    const local = config.userdata.local;
+    const mobile = config.userdata.mobile;
 
-        const mobileUserdata = {
-            settings: flattenSettings(mergedSettings),
-            properties: flattenProperties(mergedProperties),
-            secrets: mergedSecrets,
-        };
+    // Base (default)
+    writeUserdataFile('userdata.json', base.settings, base.properties, base.secrets);
 
-        fs.writeFileSync(
-            path.join(rootDir, 'userdata.mobile.json'),
-            JSON.stringify(mobileUserdata, null, 2)
-        );
+    // Mobile (default + mobile)
+    if (mobile) {
+        const merged = mergeUserdata(base, mobile);
+        writeUserdataFile('userdata.mobile.json', merged.settings, merged.properties, merged.secrets);
     }
-    if (config.userdata.local) {
-        const mergedSettings = deepMerge(
-            config.userdata.default.settings,
-            config.userdata.local.settings || {}
-        );
-        const mergedProperties = deepMerge(
-            config.userdata.default.properties,
-            config.userdata.local.properties || {}
-        );
-        const mergedSecrets = deepMerge(
-            config.userdata.default.secrets,
-            config.userdata.local.secrets || {}
-        );
 
-        const localUserdata = {
-            settings: flattenSettings(mergedSettings),
-            properties: flattenProperties(mergedProperties),
-            secrets: mergedSecrets,
-        };
+    // Local (default + local)
+    if (local) {
+        const merged = mergeUserdata(base, local);
+        writeUserdataFile('userdata.local.json', merged.settings, merged.properties, merged.secrets);
+    }
 
-        fs.writeFileSync(
-            path.join(rootDir, 'userdata.local.json'),
-            JSON.stringify(localUserdata, null, 2)
-        );
+    // Local + Mobile (default + local + mobile)
+    if (local && mobile) {
+        const merged = mergeUserdata(base, local, mobile);
+        writeUserdataFile('userdata.local.mobile.json', merged.settings, merged.properties, merged.secrets);
     }
 }
 
@@ -187,6 +249,9 @@ async function main() {
 
     console.log('Updating index.html...');
     generateIndexHtml(config);
+
+    console.log('Updating manifest.json...');
+    generateManifest(config);
 
     console.log('Generating userdata files...');
     generateUserdataFiles(config);
