@@ -46,7 +46,17 @@ export function buildDecorations(view: EditorView, changes: TrackedChange[]) {
         const aSide = a.decoration.spec?.side ?? 0;
         const bSide = b.decoration.spec?.side ?? 0;
         if (aSide !== bSide) return aSide - bSide;
-        return b.timestamp - a.timestamp;
+
+        const aWidget = a.decoration.spec?.widget;
+        const bWidget = b.decoration.spec?.widget;
+        const aIsBackward = aWidget?.change?.isBackwardDelete ?? false;
+        const bIsBackward = bWidget?.change?.isBackwardDelete ?? false;
+
+        if (aIsBackward || bIsBackward) {
+            return b.timestamp - a.timestamp;
+        }
+
+        return 0;
     });
 
     return Decoration.set(decorations.map(d => d.decoration.range(d.from, d.to)));

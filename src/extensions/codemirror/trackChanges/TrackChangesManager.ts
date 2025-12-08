@@ -5,11 +5,12 @@ import { PositionTracker } from './PositionTracker';
 export interface TrackedChange {
     id: string;
     type: 'insertion' | 'deletion';
-    content: string;
-    start: number;
+    start?: number;
     end?: number;
-    userId: string;
+    content?: string;
     timestamp: number;
+    userId: string;
+    isBackwardDelete?: boolean;
 }
 
 export class TrackChangesManager {
@@ -73,7 +74,7 @@ export class TrackChangesManager {
         this.processingChange = false;
     }
 
-    trackDeletion(from: number, content: string): void {
+    trackDeletion(from: number, content: string, isBackwardDelete: boolean = false): void {
         if (!this.enabled) return;
 
         this.processingChange = true;
@@ -85,7 +86,8 @@ export class TrackChangesManager {
             content: content,
             start: from,
             userId: this.currentUserId,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            isBackwardDelete
         });
 
         this.processingChange = false;

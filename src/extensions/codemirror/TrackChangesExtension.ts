@@ -1,13 +1,17 @@
 // src/extensions/codemirror/TrackChangesExtension.ts
 import { StateEffect, StateField } from '@codemirror/state';
 import { Decoration, DecorationSet, EditorView, ViewPlugin } from '@codemirror/view';
-import type { Extension } from '@codemirror/state';
+import { Transaction, type Extension } from '@codemirror/state';
 import * as Y from 'yjs';
 import { TrackChangesManager } from './trackChanges/TrackChangesManager';
 import { buildDecorations } from './trackChanges/decorations';
 
 export const updateTrackChangesEnabled = StateEffect.define<boolean>();
 export const updateTrackChangesDecorations = StateEffect.define<DecorationSet>();
+
+function isBackwardDelete(tr: Transaction): boolean {
+    return tr.isUserEvent('delete.backward');
+}
 
 const trackChangesEnabledField = StateField.define<boolean>({
     create() {
@@ -87,10 +91,12 @@ class TrackChangesProcessor {
             );
 
             if (!isYjsSync) {
+                const isBackward = update.transactions.some((tr: any) => isBackwardDelete(tr));
+
                 update.changes.iterChanges((fromA: number, toA: number, fromB: number, toB: number, inserted: any) => {
                     if (toA > fromA) {
                         const deletedText = update.startState.doc.sliceString(fromA, toA);
-                        this.manager.trackDeletion(fromB, deletedText);
+                        this.manager.trackDeletion(fromB, deletedText, isBackward);
                     }
                     if (inserted.length > 0) {
                         this.manager.trackInsertion(fromB, inserted.toString());
@@ -119,6 +125,7 @@ class TrackChangesProcessor {
             effects: updateTrackChangesDecorations.of(decorations)
         });
     }
+
 
     getManager(): TrackChangesManager {
         return this.manager;
