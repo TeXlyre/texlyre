@@ -29,13 +29,11 @@ const trackChangesDecorations = StateField.define<DecorationSet>({
     },
     update(decorations, tr) {
         decorations = decorations.map(tr.changes);
-
         for (const effect of tr.effects) {
             if (effect.is(updateTrackChangesDecorations)) {
                 return effect.value;
             }
         }
-
         return decorations;
     },
     provide: field => EditorView.decorations.from(field)
@@ -46,24 +44,27 @@ class TrackChangesProcessor {
     private yDoc: Y.Doc;
     private yText: Y.Text;
     private view: EditorView;
-    private yObserver: (() => void) | null = null;
+    private yObserver: ((event: Y.YTextEvent) => void) | null = null;
+    private pendingUpdate: boolean = false;
 
-    constructor(view: EditorView, yDoc: Y.Doc, yText: Y.Text, userId: string) {
+    constructor(view: EditorView, yDoc: Y.Doc, yText: Y.Text, userId: string, undoManager?: Y.UndoManager) {
         this.view = view;
         this.yDoc = yDoc;
         this.yText = yText;
         this.manager = new TrackChangesManager(yDoc, yText, userId);
 
-        this.yObserver = () => {
-            setTimeout(() => this.updateDecorations(), 0);
-        };
+        if (undoManager) {
+            this.manager.setUndoManager(undoManager);
+        }
 
+        this.yObserver = () => {
+            this.scheduleUpdate();
+        };
         this.yText.observe(this.yObserver);
     }
 
     update(update: any) {
         const enabled = update.state.field(trackChangesEnabledField, false);
-
         if (enabled !== this.manager.isEnabled()) {
             if (enabled) {
                 this.manager.enable();
@@ -77,41 +78,43 @@ class TrackChangesProcessor {
                 tr.effects.some((e: any) => e.is(updateTrackChangesDecorations))
             );
 
-            // Skip if it's from our own decoration updates
             if (isFromTrackChanges) {
                 return;
             }
 
-            // Check if it's NOT from yjs sync (undo/redo uses yjs sync)
-            const isYjsSync = update.transactions.some((tr: any) => {
-                const yjsSync = tr.annotation('y-sync$');
-                return yjsSync !== undefined;
-            });
+            const isYjsSync = update.transactions.some((tr: any) =>
+                tr.annotation('y-sync$') !== undefined
+            );
 
             if (!isYjsSync) {
-                let insertionOffset = 0;
-
                 update.changes.iterChanges((fromA: number, toA: number, fromB: number, toB: number, inserted: any) => {
                     if (toA > fromA) {
                         const deletedText = update.startState.doc.sliceString(fromA, toA);
-                        this.manager.trackDeletion(fromB + insertionOffset, fromB + insertionOffset, deletedText);
+                        this.manager.trackDeletion(fromB, deletedText);
                     }
-
                     if (inserted.length > 0) {
-                        this.manager.trackInsertion(fromB + insertionOffset, inserted.toString());
-                        insertionOffset += inserted.length;
+                        this.manager.trackInsertion(fromB, inserted.toString());
                     }
                 });
 
-                setTimeout(() => this.updateDecorations(), 0);
+                this.scheduleUpdate();
             }
         }
+    }
+
+    private scheduleUpdate() {
+        if (this.pendingUpdate) return;
+
+        this.pendingUpdate = true;
+        requestAnimationFrame(() => {
+            this.pendingUpdate = false;
+            this.updateDecorations();
+        });
     }
 
     private updateDecorations() {
         const changes = this.manager.getChanges();
         const decorations = buildDecorations(this.view, changes);
-
         this.view.dispatch({
             effects: updateTrackChangesDecorations.of(decorations)
         });
@@ -132,20 +135,17 @@ class TrackChangesProcessor {
 
 let globalProcessor: TrackChangesProcessor | null = null;
 
-export function createTrackChangesExtension(yDoc: Y.Doc, yText: Y.Text, userId: string): Extension {
+export function createTrackChangesExtension(yDoc: Y.Doc, yText: Y.Text, userId: string, undoManager?: Y.UndoManager): Extension {
     const plugin = ViewPlugin.fromClass(
         class {
             processor: TrackChangesProcessor;
-
             constructor(view: EditorView) {
-                this.processor = new TrackChangesProcessor(view, yDoc, yText, userId);
+                this.processor = new TrackChangesProcessor(view, yDoc, yText, userId, undoManager);
                 globalProcessor = this.processor;
             }
-
             update(update: any) {
                 this.processor?.update(update);
             }
-
             destroy() {
                 this.processor?.destroy();
                 if (globalProcessor === this.processor) {
@@ -154,7 +154,6 @@ export function createTrackChangesExtension(yDoc: Y.Doc, yText: Y.Text, userId: 
             }
         }
     );
-
     return [
         trackChangesEnabledField,
         trackChangesDecorations,

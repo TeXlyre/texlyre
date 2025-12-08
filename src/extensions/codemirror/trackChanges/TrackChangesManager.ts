@@ -1,5 +1,6 @@
 // extensions/codemirror/trackingChanges/TrackChangesManager.ts
 import * as Y from 'yjs';
+import { PositionTracker } from './PositionTracker';
 
 export interface TrackedChange {
     id: string;
@@ -17,25 +18,28 @@ export class TrackChangesManager {
     private changes: Map<string, TrackedChange> = new Map();
     private enabled: boolean = false;
     private currentUserId: string;
-    private yObserver: ((event: Y.YTextEvent) => void) | null = null;
+    private yObserver: ((event: Y.YTextEvent, transaction: Y.Transaction) => void) | null = null;
+    private positionTracker: PositionTracker;
+    private processingChange: boolean = false;
 
     constructor(yDoc: Y.Doc, yText: Y.Text, userId: string) {
         this.yDoc = yDoc;
         this.yText = yText;
         this.currentUserId = userId;
+        this.positionTracker = new PositionTracker(yDoc, yText);
 
-        this.yObserver = (event: Y.YTextEvent) => {
-            if (!this.enabled) return;
+        this.yObserver = (event: Y.YTextEvent, transaction: Y.Transaction) => {
+            if (this.processingChange || !this.enabled) return;
+            if (this.positionTracker.isUndoRedoOperation()) return;
 
-            event.delta.forEach((change: any) => {
-                if (change.retain !== undefined) {
-                    const retained = change.retain;
-                    this.adjustPositions(retained, 0, true);
-                }
-            });
+            this.positionTracker.adjustChangesForDelta(this.changes, event.delta);
         };
 
         this.yText.observe(this.yObserver);
+    }
+
+    setUndoManager(undoManager: Y.UndoManager): void {
+        this.positionTracker.setUndoManager(undoManager);
     }
 
     enable(): void {
@@ -53,9 +57,8 @@ export class TrackChangesManager {
     trackInsertion(pos: number, text: string): void {
         if (!this.enabled) return;
 
+        this.processingChange = true;
         const changeId = this.generateId();
-
-        this.adjustPositions(pos, text.length, false);
 
         this.changes.set(changeId, {
             id: changeId,
@@ -66,53 +69,26 @@ export class TrackChangesManager {
             userId: this.currentUserId,
             timestamp: Date.now()
         });
+
+        this.processingChange = false;
     }
 
-    trackDeletion(from: number, to: number, content?: string): void {
+    trackDeletion(from: number, content: string): void {
         if (!this.enabled) return;
 
-        const deletedContent = content || this.yText.toString().slice(from, to);
+        this.processingChange = true;
         const changeId = this.generateId();
-
-        const length = deletedContent.length;
-        this.adjustPositions(from, -length, false);
 
         this.changes.set(changeId, {
             id: changeId,
             type: 'deletion',
-            content: deletedContent,
+            content: content,
             start: from,
             userId: this.currentUserId,
             timestamp: Date.now()
         });
-    }
 
-    private adjustPositions(threshold: number, delta: number, onlyAfter: boolean): void {
-        this.changes.forEach((change) => {
-            if (change.type === 'insertion' && change.end !== undefined) {
-                if (onlyAfter) {
-                    if (change.start >= threshold) {
-                        change.start += delta;
-                        change.end += delta;
-                    }
-                } else {
-                    if (change.start >= threshold) {
-                        change.start += delta;
-                        change.end += delta;
-                    }
-                }
-            } else if (change.type === 'deletion') {
-                if (onlyAfter) {
-                    if (change.start >= threshold) {
-                        change.start += delta;
-                    }
-                } else {
-                    if (change.start >= threshold) {
-                        change.start += delta;
-                    }
-                }
-            }
-        });
+        this.processingChange = false;
     }
 
     getChanges(): TrackedChange[] {

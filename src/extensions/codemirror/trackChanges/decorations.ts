@@ -5,36 +5,46 @@ import type { TrackedChange } from './TrackChangesManager';
 import { DeletionWidget } from './widgets';
 
 export function buildDecorations(view: EditorView, changes: TrackedChange[]) {
-    const decorations: any[] = [];
+    const decorations: Array<{ from: number; to: number; decoration: any }> = [];
     const docLength = view.state.doc.length;
 
     for (const change of changes) {
         if (change.type === 'insertion' && change.start !== undefined && change.end !== undefined) {
-            const start = Math.min(change.start, docLength);
-            const end = Math.min(change.end, docLength);
+            const start = Math.max(0, Math.min(change.start, docLength));
+            const end = Math.max(start, Math.min(change.end, docLength));
 
-            if (start < end && start >= 0 && end <= docLength) {
-                decorations.push(
-                    Decoration.mark({
+            if (start < end) {
+                decorations.push({
+                    from: start,
+                    to: end,
+                    decoration: Decoration.mark({
                         class: 'tracked-insertion',
                         attributes: { 'data-change-id': change.id }
-                    }).range(start, end)
-                );
+                    })
+                });
             }
         } else if (change.type === 'deletion' && change.start !== undefined) {
-            const pos = Math.min(change.start, docLength);
+            const pos = Math.max(0, Math.min(change.start, docLength));
 
-            if (pos >= 0 && pos <= docLength) {
-                decorations.push(
-                    Decoration.widget({
-                        widget: new DeletionWidget(change),
-                        side: 1,
-                        block: false
-                    }).range(pos)
-                );
-            }
+            decorations.push({
+                from: pos,
+                to: pos,
+                decoration: Decoration.widget({
+                    widget: new DeletionWidget(change),
+                    side: 1,
+                    block: false
+                })
+            });
         }
     }
 
-    return Decoration.set(decorations.sort((a, b) => a.from - b.from));
+    decorations.sort((a, b) => {
+        if (a.from !== b.from) return a.from - b.from;
+        if (a.to !== b.to) return a.to - b.to;
+        const aSide = a.decoration.spec?.side ?? 0;
+        const bSide = b.decoration.spec?.side ?? 0;
+        return aSide - bSide;
+    });
+
+    return Decoration.set(decorations.map(d => d.decoration.range(d.from, d.to)));
 }
