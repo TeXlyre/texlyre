@@ -10,7 +10,7 @@ import { useLaTeX } from '../../hooks/useLaTeX';
 import { useProperties } from '../../hooks/useProperties';
 import type { DocumentList } from '../../types/documents';
 import type { FileNode } from '../../types/files';
-import { isTemporaryFile } from '../../utils/fileUtils';
+import { isLatexFile, isTemporaryFile } from '../../utils/fileUtils';
 import { ChevronDownIcon, ExportIcon } from '../common/Icons';
 
 interface LaTeXExportButtonProps {
@@ -145,7 +145,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
         const findTexFiles = (nodes: FileNode[]): string[] => {
             const texFiles: string[] = [];
             for (const node of nodes) {
-                if (node.type === 'file' && node.path.endsWith('.tex') && !isTemporaryFile(node.path)) {
+                if (node.type === 'file' && isLatexFile(node.path) && !isTemporaryFile(node.path)) {
                     texFiles.push(node.path);
                 }
                 if (node.children) {
@@ -159,14 +159,14 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
         setAvailableTexFiles(allTexFiles);
 
         const findMainFile = async () => {
-            if (selectedDocId && linkedFileInfo?.filePath && linkedFileInfo.filePath.endsWith('.tex')) {
+            if (selectedDocId && linkedFileInfo?.filePath && isLatexFile(linkedFileInfo.filePath)) {
                 setAutoMainFile(linkedFileInfo.filePath);
                 return;
             }
 
             if (selectedFileId) {
                 const file = await getFile(selectedFileId);
-                if (file?.path.endsWith('.tex')) {
+                if (file && isLatexFile(file.path)) {
                     setAutoMainFile(file.path);
                     return;
                 }

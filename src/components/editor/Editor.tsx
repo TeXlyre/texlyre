@@ -24,7 +24,7 @@ import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
 import { copyCleanTextToClipboard } from '../../utils/clipboardUtils';
 import { processTextSelection } from '../../utils/fileCommentUtils';
 import { formatDate } from '../../utils/dateUtils';
-import { arrayBufferToString, formatFileSize } from '../../utils/fileUtils';
+import { arrayBufferToString, detectFileType, formatFileSize, isLatexFile, isTypstFile } from '../../utils/fileUtils';
 import { TextDiffUtils } from '../../utils/textDiffUtils';
 import CommentPanel from '../comments/CommentPanel';
 import CommentToggleButton from '../comments/CommentToggleButton';
@@ -362,14 +362,15 @@ const EditorContent: React.FC<{
         console.error('Error downloading linked file:', error);
       }
     };
-    const fileExtension = fileName?.split('.').pop()?.toLowerCase();
-    const availableLSPPlugins = fileExtension ?
-      pluginRegistry.getLSPPluginsForFileType(fileExtension) : [];
+
+    const fileType = detectFileType(filePath || '');
+    const availableLSPPlugins = fileType ?
+      pluginRegistry.getLSPPluginsForFileType(fileType) : [];
 
     const headerControls =
       isEditingFile && fileName ?
         <>
-          {(fileName.endsWith('.tex') || fileName.endsWith('.typ') || fileName.endsWith('.typst')) && !isViewOnly &&
+          {(isLatexFile(filePath) || isTypstFile(filePath)) && !isViewOnly &&
             <PluginControlGroup>
               <button
                 onClick={() => onToolbarToggle?.(!toolbarVisible)}
@@ -380,7 +381,7 @@ const EditorContent: React.FC<{
 
               <ContentFormatterButton
                 getCurrentContent={() => viewRef.current?.state.doc.toString() || ''}
-                contentType={fileName.endsWith('.tex') ? 'latex' : 'typst'}
+                contentType={fileType}
                 onFormat={handleFormattedContent} />
 
             </PluginControlGroup>
@@ -437,7 +438,7 @@ const EditorContent: React.FC<{
         </> :
         !isEditingFile && linkedFileInfo && !showUnlinkedNotice ?
           <>
-            {(linkedFileInfo.fileName?.endsWith('.tex') || linkedFileInfo.fileName?.endsWith('.typ') || linkedFileInfo.fileName?.endsWith('.typst')) && !isViewOnly &&
+            {(isLatexFile(linkedFileInfo.filePath) || isTypstFile(linkedFileInfo.filePath)) && !isViewOnly &&
               <PluginControlGroup>
                 <button
                   onClick={() => onToolbarToggle?.(!toolbarVisible)}
@@ -448,7 +449,7 @@ const EditorContent: React.FC<{
 
                 <ContentFormatterButton
                   getCurrentContent={() => viewRef.current?.state.doc.toString() || ''}
-                  contentType={linkedFileInfo.fileName.endsWith('.tex') ? 'latex' : 'typst'}
+                  contentType={detectFileType(linkedFileInfo.filePath)}
                   onFormat={handleFormattedContent} />
 
               </PluginControlGroup>
@@ -958,7 +959,7 @@ const Editor: React.FC<EditorComponentProps> = ({
   };
 
   const shouldShowLatexOutput =
-    !isEditingFile && linkedFileInfo?.fileName?.endsWith('.tex');
+    !isEditingFile && isLatexFile(linkedFileInfo?.filePath);
 
   return (
     <BibliographyProvider>

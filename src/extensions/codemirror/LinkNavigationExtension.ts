@@ -208,9 +208,6 @@ export function createLinkNavigationExtension(fileName?: string, content?: strin
         EditorView.baseTheme({
             '.cm-link-hover': {
                 cursor: 'pointer',
-                textDecoration: 'underline',
-                textDecorationStyle: 'solid',
-                textDecorationColor: 'var(--primary-color, #0066cc)'
             }
         })
     ];

@@ -7,12 +7,10 @@ import * as Y from 'yjs';
 
 import { useAuth } from '../../hooks/useAuth';
 import { useFileTree } from '../../hooks/useFileTree';
-import { useSearch } from '../../hooks/useSearch';
 import { useProperties } from '../../hooks/useProperties';
 import { useTheme } from '../../hooks/useTheme';
 import { useEditorTabs } from '../../hooks/useEditorTabs';
 import {
-  fileStorageEventEmitter,
   fileStorageService
 } from
   '../../services/FileStorageService';
@@ -20,6 +18,7 @@ import { pdfWindowService } from '../../services/PdfWindowService';
 import type { Document } from '../../types/documents';
 import type { FileNode } from '../../types/files';
 import type { Project } from '../../types/projects';
+import { isLatexFile, isTypstFile, isLatexContent, isTypstContent } from '../../utils/fileUtils';
 import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
 import type { YjsDocUrl } from '../../types/yjs';
 import { EditorTabsProvider } from '../../contexts/EditorTabsContext';
@@ -440,10 +439,10 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
           setLinkedDocumentId(file.documentId || null);
           setCurrentFilePath(file.path);
           // Only show one output at a time
-          if (file.name.endsWith('.tex')) {
+          if (file.name && isLatexFile(file.name)) {
             setShowLatexOutput(true);
             setShowTypstOutput(false);
-          } else if (file.name.endsWith('.typ')) {
+          } else if (file.name && isTypstFile(file.name)) {
             setShowTypstOutput(true);
             setShowLatexOutput(false);
           } else {
@@ -476,10 +475,10 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
             setLinkedDocumentId(selectedDocId);
 
             // Only show one output at a time
-            if (linkedFile.name.endsWith('.tex')) {
+            if (linkedFile.name && isLatexFile(linkedFile.name)) {
               setShowLatexOutput(true);
               setShowTypstOutput(false);
-            } else if (linkedFile.name.endsWith('.typ')) {
+            } else if (linkedFile.name && isTypstFile(linkedFile.name)) {
               setShowTypstOutput(true);
               setShowLatexOutput(false);
             } else {
@@ -622,22 +621,17 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   }, [targetDocId]);
 
   useEffect(() => {
-    const isTexFile = isEditingFile && fileName && fileName.endsWith('.tex');
-    const isTypFile = isEditingFile && fileName && fileName.endsWith('.typ');
-    const isDocumentLinkedToTex = !isEditingFile && linkedFileInfo?.fileName?.endsWith('.tex');
-    const isDocumentLinkedToTyp = !isEditingFile && linkedFileInfo?.fileName?.endsWith('.typ');
-
-    const hasLatexContent = !isEditingFile && !linkedFileInfo?.fileName &&
-      content && (content.includes('\\section') || content.includes('\\chapter') ||
-        content.includes('\\subsection') || content.includes('\\begin{document}'));
-
-    // For Typst, look for heading markers
-    const hasTypstContent = !isEditingFile && !linkedFileInfo?.fileName &&
-      content && (content.includes('= ') || content.includes('== ') || content.includes('=== '));
+    const isTexFile = isEditingFile && fileName && isLatexFile(fileName);
+    const isTypFile = isEditingFile && fileName && isTypstFile(fileName);
+    const isDocumentLinkedToTex = !isEditingFile && linkedFileInfo?.fileName && isLatexFile(linkedFileInfo.fileName);
+    const isDocumentLinkedToTyp = !isEditingFile && linkedFileInfo?.fileName && isTypstFile(linkedFileInfo.fileName);
+    const hasLatexContent = !isEditingFile && !linkedFileInfo?.fileName && content && isLatexContent(content);
+    const hasTypstContent = !isEditingFile && !linkedFileInfo?.fileName && content && isTypstContent(content);
 
     const shouldShowOutline = isTexFile || isTypFile || isDocumentLinkedToTex ||
       isDocumentLinkedToTyp || hasLatexContent || hasTypstContent;
     setShowOutline(shouldShowOutline);
+
   }, [isEditingFile, fileName, linkedFileInfo?.fileName, content]);
 
   useEffect(() => {
@@ -758,11 +752,10 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
     const file = await getFile(fileId);
     if (file) {
       setCurrentFilePath(file.path);
-      // Handle both file types
-      if (file.name.endsWith('.tex')) {
+      if (file.name && isLatexFile(file.name)) {
         setShowLatexOutput(true);
         setShowTypstOutput(false);
-      } else if (file.name.endsWith('.typ')) {
+      } else if (file.name && isTypstFile(file.name)) {
         setShowTypstOutput(true);
         setShowLatexOutput(false);
       } else {
@@ -1087,23 +1080,18 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
         </ResizablePanel>
 
         {showOutline && (() => {
-          const isTypstFile = isEditingFile && fileName?.endsWith('.typ') ||
-            !isEditingFile && linkedFileInfo?.fileName?.endsWith('.typ') ||
-            !isEditingFile && !linkedFileInfo?.fileName &&
-            currentEditorContent?.includes('= ');
+          const isTypFile = isEditingFile && isTypstFile(fileName) ||
+            !isEditingFile && isTypstFile(linkedFileInfo?.filePath) ||
+            !isEditingFile && !linkedFileInfo?.filePath &&
+            isTypstContent(currentEditorContent);
 
-          return isTypstFile ?
-            <TypstOutline
-              content={currentEditorContent}
-              currentLine={currentLine}
-              onSectionClick={handleOutlineSectionClick}
-              onRefresh={handleOutlineRefresh}
-              linkedFileInfo={linkedFileInfo}
-              currentFilePath={currentFilePath}
-              isEditingFile={isEditingFile} /> :
+          const isTexFile = isEditingFile && isLatexFile(fileName) ||
+            !isEditingFile && isLatexFile(linkedFileInfo?.filePath) ||
+            !isEditingFile && !linkedFileInfo?.filePath &&
+            isLatexContent(currentEditorContent);
 
-
-            <LaTeXOutline
+          if (isTexFile) {
+            return <LaTeXOutline
               content={currentEditorContent}
               currentLine={currentLine}
               onSectionClick={handleOutlineSectionClick}
@@ -1111,8 +1099,18 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
               linkedFileInfo={linkedFileInfo}
               currentFilePath={currentFilePath}
               isEditingFile={isEditingFile} />;
-
-
+          } else if (isTypFile) {
+            return <TypstOutline
+              content={currentEditorContent}
+              currentLine={currentLine}
+              onSectionClick={handleOutlineSectionClick}
+              onRefresh={handleOutlineRefresh}
+              linkedFileInfo={linkedFileInfo}
+              currentFilePath={currentFilePath}
+              isEditingFile={isEditingFile} />;
+          } else {
+            return null;
+          }
         })()}
 
       </ResizablePanel>

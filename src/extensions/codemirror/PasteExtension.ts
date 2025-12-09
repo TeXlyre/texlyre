@@ -1,4 +1,5 @@
 import { EditorView } from '@codemirror/view';
+import { detectFileType } from '../../utils/fileUtils';
 import { uploadPastedFile } from '../../utils/clipboardUtils';
 
 let pendingImagePath: string | null = null;
@@ -28,7 +29,7 @@ export const createPasteExtension = (currentFileId?: string, fileName?: string) 
                     pendingImagePath = uploadedPath;
 
                     const toolbar = view.dom.querySelector('.codemirror-toolbar');
-                    const fileType = fileName?.endsWith('.typ') || fileName?.endsWith('.typst') ? 'typst' : 'latex';
+                    const fileType = detectFileType(fileName);
                     const figureButton = toolbar?.querySelector(`[data-item="${fileType}-figure"]`) as HTMLElement;
 
                     if (figureButton) {

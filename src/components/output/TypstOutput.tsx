@@ -10,7 +10,7 @@ import { useSettings } from '../../hooks/useSettings';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import ResizablePanel from '../common/ResizablePanel';
 import TypstCompileButton from './TypstCompileButton';
-import { toArrayBuffer } from '../../utils/fileUtils';
+import { isTypstFile, toArrayBuffer } from '../../utils/fileUtils';
 
 interface TypstOutputProps {
   className?: string;
@@ -105,7 +105,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 
     try {
       const file = await getFile(selectedFileId);
-      if (!file || !file.path.endsWith('.typ')) {
+      if (!file || !isTypstFile(file.path)) {
         console.log('[TypstOutput] Selected file is not a .typ file');
         return;
       }
@@ -186,11 +186,11 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     if (currentFormat !== format) {
       setCurrentFormat(format);
 
-      if (selectedDocId && linkedFileInfo?.filePath?.endsWith('.typ')) {
+      if (selectedDocId && linkedFileInfo && isTypstFile(linkedFileInfo.filePath)) {
         compileDocument(linkedFileInfo.filePath, format);
       } else if (selectedFileId) {
         getFile(selectedFileId).then((file) => {
-          if (file?.path.endsWith('.typ')) {
+          if (file && isTypstFile(file.path)) {
             compileDocument(file.path, format);
           }
         });

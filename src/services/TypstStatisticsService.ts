@@ -1,6 +1,7 @@
 // src/services/TypstStatisticsService.ts
 import type { FileNode } from '../types/files';
 import { fileStorageService } from './FileStorageService';
+import { isTypstFile } from '../utils/fileUtils';
 import { cleanContent } from '../utils/fileCommentUtils';
 import type { DocumentStatistics, StatisticsOptions } from '../types/statistics';
 import { TypstCompilerEngine } from '../extensions/typst.ts/TypstCompilerEngine';
@@ -261,7 +262,7 @@ class TypstStatisticsService {
         while ((match = includePattern.exec(content)) !== null) {
             let filename = match[1];
 
-            if (!filename.endsWith('.typ')) {
+            if (!isTypstFile(filename)) {
                 filename += '.typ';
             }
 

@@ -12,7 +12,7 @@ import type { DocumentList } from '../../types/documents';
 import type { TypstPdfOptions } from '../../types/typst';
 import type { FileNode } from '../../types/files';
 import type { TypstOutputFormat } from '../../types/typst';
-import { isTemporaryFile } from '../../utils/fileUtils';
+import { isTypstFile, isTemporaryFile } from '../../utils/fileUtils';
 import { ChevronDownIcon, OptionsIcon, ExportIcon } from '../common/Icons';
 
 interface TypstExportButtonProps {
@@ -132,7 +132,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
         const findTypstFiles = (nodes: FileNode[]): string[] => {
             const typstFiles: string[] = [];
             for (const node of nodes) {
-                if (node.type === 'file' && node.path.endsWith('.typ') && !isTemporaryFile(node.path)) {
+                if (node.type === 'file' && isTypstFile(node.path) && !isTemporaryFile(node.path)) {
                     typstFiles.push(node.path);
                 }
                 if (node.children) {
@@ -146,14 +146,14 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
         setAvailableTypstFiles(allTypstFiles);
 
         const findMainFile = async () => {
-            if (selectedDocId && linkedFileInfo?.filePath && linkedFileInfo.filePath.endsWith('.typ')) {
+            if (selectedDocId && linkedFileInfo?.filePath && isTypstFile(linkedFileInfo.filePath)) {
                 setAutoMainFile(linkedFileInfo.filePath);
                 return;
             }
 
             if (selectedFileId) {
                 const file = await getFile(selectedFileId);
-                if (file?.path.endsWith('.typ')) {
+                if (file && isTypstFile(file.path)) {
                     setAutoMainFile(file.path);
                     return;
                 }
