@@ -2,6 +2,7 @@
 import { WasmToolsEngine } from '../extensions/wasm-tools/WasmToolsEngine';
 import type { FileNode } from '../types/files';
 import { fileStorageService } from './FileStorageService';
+import { isLatexFile } from '../utils/fileUtils';
 import { cleanContent } from '../utils/fileCommentUtils';
 import type { DocumentStatistics, StatisticsOptions, FileStatistics } from '../types/statistics';
 
@@ -101,7 +102,9 @@ class LaTeXStatisticsService {
 
         while ((match = includePattern.exec(content)) !== null) {
             let filename = match[1];
-            if (!filename.endsWith('.tex')) filename += '.tex';
+            if (!isLatexFile(filename)) {
+                filename += '.tex';
+            }
 
             const file = allFiles.find(f =>
                 f.path === filename ||

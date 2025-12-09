@@ -245,7 +245,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
       if (selectedFileId) {
         try {
           const currentFile = await getFile(selectedFileId);
-          console.log(`[Navigation] Current file: ${currentFile?.path}, isTeX: ${currentFile?.path.endsWith('.tex')}`);
+          console.log(`[Navigation] Current file: ${currentFile?.path}, isTeX: ${isLatexFile(currentFile.path)}`);
           if (currentFile && isLatexFile(currentFile.path)) {
             console.log(`[Navigation] Not navigating - already editing LaTeX file: ${currentFile.path}`);
             return false;

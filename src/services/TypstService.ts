@@ -8,7 +8,7 @@ import { fileStorageService } from './FileStorageService';
 import { notificationService } from './NotificationService';
 import { cleanContent } from '../utils/fileCommentUtils';
 import { TypstCompilerEngine } from '../extensions/typst.ts/TypstCompilerEngine';
-import { isTemporaryFile, isTypstFile, toArrayBuffer } from '../utils/fileUtils';
+import { isTypstFile, isTemporaryFile, toArrayBuffer } from '../utils/fileUtils';
 import { downloadFiles } from '../utils/zipUtils';
 
 type CompilationStatus = 'unloaded' | 'loading' | 'ready' | 'compiling' | 'error';
@@ -377,7 +377,7 @@ class TypstService {
 
         if (!mainContent) {
             for (const [path, content] of Object.entries(sources)) {
-                if (path.endsWith('.typ') && typeof content === 'string' && content.trim()) {
+                if (isTypstFile(path) && typeof content === 'string' && content.trim()) {
                     mainContent = content;
                     break;
                 }

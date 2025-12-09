@@ -186,11 +186,11 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     if (currentFormat !== format) {
       setCurrentFormat(format);
 
-      if (selectedDocId && linkedFileInfo?.filePath?.endsWith('.typ')) {
+      if (selectedDocId && linkedFileInfo && isTypstFile(linkedFileInfo.filePath)) {
         compileDocument(linkedFileInfo.filePath, format);
       } else if (selectedFileId) {
         getFile(selectedFileId).then((file) => {
-          if (file?.path.endsWith('.typ')) {
+          if (file && isTypstFile(file.path)) {
             compileDocument(file.path, format);
           }
         });
