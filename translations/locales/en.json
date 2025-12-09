@@ -1671,5 +1671,14 @@
   "ZIP file URL": "ZIP file URL",
   "Zoom In": "Zoom In",
   "Zoom Level": "Zoom Level",
-  "Zoom Out": "Zoom Out"
+  "Zoom Out": "Zoom Out",
+  "From TeXlyre Link": "From TeXlyre Link",
+  "Open a shared project using its TeXlyre link": "Open a shared project using its TeXlyre link",
+  "Open TeXlyre Link": "Open TeXlyre Link",
+  "TeXlyre Link": "TeXlyre Link",
+  "Enter the full TeXlyre link, partial link, or just the YJS ID": "Enter the full TeXlyre link, partial link, or just the TeXlyre ID",
+  "Examples: TeXlyre:abc123, #TeXlyre:abc123, or just abc123": "Examples: TeXlyre:abc123, #TeXlyre:abc123, or just abc123",
+  "This will open the shared project associated with this TeXlyre link. The project owner must be online to sync data via peer-to-peer connection.": "This will open the shared project associated with this TeXlyre link. The project owner must be online to sync data via peer-to-peer connection.",
+  "Please enter a TeXlyre link": "Please enter a TeXlyre link",
+  "Invalid TeXlyre link format": "Invalid TeXlyre link format"
 }

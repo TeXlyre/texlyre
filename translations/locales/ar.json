@@ -1,9 +1,9 @@
 {
   "- Real-time sync active": "- المزامنة الفورية نشطة",
   "- we only use local browser storage to save your projects on your device.": "- نحن نستخدم فقط التخزين المحلي للمتصفح لحفظ مشاريعك على جهازك.",
-  ", \\subsection": ", \\subsection",
-  ", etc.": ", إلخ.",
-  ", pp.": ", ص.",
+  ", \\subsection": "، \\subsection",
+  ", etc.": "، إلخ.",
+  ", pp.": "، ص.",
   ". How would you like to handle this ZIP file?": ". كيف تريد معالجة ملف ZIP هذا؟",
   "...": "...",
   ".*": ".*",
@@ -371,7 +371,7 @@
   "Collaborative viewing with": "العرض التعاوني مع",
   "Collapse All": "طي الكل",
   "Combine fields": "دمج الحقول",
-  "Comma-separated list of file patterns to exclude from backup (e.g., *.log,*.tmp)": "قائمة مفصولة بفواصل من أنماط الملفات لاستبعادها من النسخ الاحتياطي (مثل *.log,*.tmp)",
+  "Comma-separated list of file patterns to exclude from backup (e.g., *.log,*.tmp)": "قائمة مفصولة بفواصل من أنماط الملفات لاستبعادها من النسخ الاحتياطي (مثل *.log ، *.tmp)",
   "Comma-separated list of Yjs WebRTC signaling server URLs": "قائمة مفصولة بفواصل لعناوين URL لخوادم إشارات Yjs WebRTC",
   "commands).": "أوامر).",
   "Comment": "تعليق",
@@ -1783,5 +1783,14 @@
   "ZIP file URL": "عنوان URL لملف ZIP",
   "Zoom In": "تكبير",
   "Zoom Level": "مستوى التكبير",
-  "Zoom Out": "تصغير"
+  "Zoom Out": "تصغير",
+  "From TeXlyre Link": "من رابط TeXlyre",
+  "Open a shared project using its TeXlyre link": "افتح مشروعًا مشتركًا باستخدام رابط TeXlyre الخاص به",
+  "Open TeXlyre Link": "فتح رابط TeXlyre",
+  "TeXlyre Link": "رابط TeXlyre",
+  "Enter the full TeXlyre link, partial link, or just the YJS ID": "أدخل رابط TeXlyre الكامل أو الرابط الجزئي أو معرف YJS فقط",
+  "Examples: TeXlyre:abc123, #TeXlyre:abc123, or just abc123": "أمثلة: TeXlyre:abc123، #TeXlyre:abc123، أو abc123 فقط",
+  "This will open the shared project associated with this TeXlyre link. The project owner must be online to sync data via peer-to-peer connection.": "سيؤدي هذا إلى فتح المشروع المشترك المرتبط برابط TeXlyre هذا. يجب أن يكون مالك المشروع متصلاً بالإنترنت لمزامنة البيانات عبر اتصال نظير إلى نظير.",
+  "Please enter a TeXlyre link": "يرجى إدخال رابط TeXlyre",
+  "Invalid TeXlyre link format": "تنسيق رابط TeXlyre غير صالح"
 }

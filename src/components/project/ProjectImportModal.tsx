@@ -10,10 +10,11 @@ import {
 } from
   '../../services/ProjectImportService';
 import { formatDate } from '../../utils/dateUtils';
-import { GlobeIcon, ImportIcon, TemplatesIcon, ZipFileIcon } from '../common/Icons';
+import { GlobeIcon, ShareIcon, ImportIcon, TemplatesIcon, ZipFileIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 import TemplateImportModal from './TemplateImportModal';
 import UrlImportModal from './UrlImportModal';
+import YjsLinkImportModal from './YjsLinkImportModal';
 
 interface TemplateProject {
   id: string;
@@ -60,6 +61,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
   const [selectedZipFile, setSelectedZipFile] = useState<File | null>(null);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showUrlModal, setShowUrlModal] = useState(false);
+  const [showYjsLinkModal, setShowYjsLinkModal] = useState(false);
 
   const handleTemplateImport = () => {
     setShowTemplateModal(true);
@@ -69,6 +71,14 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
     setShowUrlModal(true);
   };
 
+  const handleYjsLinkImport = () => {
+    setShowYjsLinkModal(true);
+  };
+
+  const handleYjsLinkSelect = (yjsUrl: string) => {
+    window.location.hash = yjsUrl;
+    window.location.reload();
+  };
   const handleUrlImportSelect = async (data: {
     name: string;
     description: string;
@@ -249,11 +259,24 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
                     pointerEvents: isScanning || isImporting ? 'none' : 'auto',
                     opacity: isScanning || isImporting ? 0.5 : 1
                   }}>
-
                   <TemplatesIcon />
                   <div>
                     <strong>{t('From Template Gallery')}</strong>
                     <p>{t('Browse and import project templates from the community')}</p>
+                  </div>
+                </label>
+
+                <label
+                  className="import-option-button"
+                  onClick={handleYjsLinkImport}
+                  style={{
+                    pointerEvents: isScanning || isImporting ? 'none' : 'auto',
+                    opacity: isScanning || isImporting ? 0.5 : 1
+                  }}>
+                  <ShareIcon />
+                  <div>
+                    <strong>{t('From TeXlyre Link')}</strong>
+                    <p>{t('Open a shared project using its TeXlyre link')}</p>
                   </div>
                 </label>
 
@@ -264,13 +287,13 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
                     pointerEvents: isScanning || isImporting ? 'none' : 'auto',
                     opacity: isScanning || isImporting ? 0.5 : 1
                   }}>
-
                   <GlobeIcon />
                   <div>
                     <strong>{t('From URL')}</strong>
                     <p>{t('Import from URL: GitHub, GitLab, Codeberg repositories or ZIP link')}</p>
                   </div>
                 </label>
+
                 <label className="import-option-button">
                   <ZipFileIcon />
                   <div>
@@ -284,7 +307,6 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
                     onChange={handleZipFileSelect}
                     style={{ display: 'none' }}
                     disabled={isScanning || isImporting} />
-
                 </label>
               </div>
 
@@ -426,6 +448,11 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
         isOpen={showUrlModal}
         onClose={() => setShowUrlModal(false)}
         onUrlImport={handleUrlImportSelect} />
+
+      <YjsLinkImportModal
+        isOpen={showYjsLinkModal}
+        onClose={() => setShowYjsLinkModal(false)}
+        onYjsLinkOpen={handleYjsLinkSelect} />
 
     </>);
 
