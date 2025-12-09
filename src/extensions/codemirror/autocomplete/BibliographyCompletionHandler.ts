@@ -84,6 +84,11 @@ export class BibliographyCompletionHandler {
 
         for (const { pattern, type } of citationCommandPatterns) {
             const isTypstCitation = pattern.source.includes('#cite');
+            const isTypstAtSign = pattern.source.includes('@') && !pattern.source.includes('#');
+
+            if (isTypstAtSign) {
+                continue;
+            }
 
             if (isTypstCitation) {
                 const matches = Array.from(lineText.matchAll(new RegExp(pattern.source, 'g')));

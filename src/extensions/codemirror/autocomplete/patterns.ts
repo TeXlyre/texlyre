@@ -90,7 +90,7 @@ export const typstReferencePatterns = [
     {
         commands: ['ref'],
         pattern: /@([a-zA-Z0-9_-]*)/,
-        type: 'reference' as const,
+        type: 'reference-or-citation' as const,
     },
     {
         commands: ['ref-function'],

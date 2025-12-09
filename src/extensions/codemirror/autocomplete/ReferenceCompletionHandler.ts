@@ -52,7 +52,7 @@ export class ReferenceCompletionHandler {
         return null;
     }
 
-    private findTypstReferenceCommand(context: CompletionContext): { command: string; partial: string; type: 'reference' } | null {
+    private findTypstReferenceCommand(context: CompletionContext): { command: string; partial: string; type: 'reference' | 'reference-or-citation' } | null {
         const line = context.state.doc.lineAt(context.pos);
         const lineText = line.text;
         const posInLine = context.pos - line.from;
@@ -79,7 +79,7 @@ export class ReferenceCompletionHandler {
 
                     if (posInLine > matchStart && posInLine <= matchEnd) {
                         const partial = match[1] || '';
-                        return { command: 'ref', partial, type };
+                        return { command: 'ref', partial, type: 'reference-or-citation' };
                     }
                 }
             }
@@ -223,6 +223,9 @@ export class ReferenceCompletionHandler {
 
         if (isCurrentlyInTypstFile) {
             const referenceInfo = this.findTypstReferenceCommand(context);
+            if (referenceInfo && referenceInfo.type === 'reference-or-citation') {
+                return null;
+            }
             if (referenceInfo) {
                 return this.handleTypstReferenceCompletion(context, referenceInfo);
             }
