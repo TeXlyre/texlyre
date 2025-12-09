@@ -13,7 +13,7 @@ import { useSettings } from '../../hooks/useSettings';
 import { useProperties } from '../../hooks/useProperties';
 import type { DocumentList } from '../../types/documents';
 import type { FileNode } from '../../types/files';
-import { isTemporaryFile } from '../../utils/fileUtils';
+import { isLatexFile, isTemporaryFile } from '../../utils/fileUtils';
 import { fileStorageService } from '../../services/FileStorageService';
 import { ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon } from '../common/Icons';
 
@@ -115,7 +115,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     const findTexFiles = (nodes: FileNode[]): string[] => {
       const texFiles: string[] = [];
       for (const node of nodes) {
-        if (node.type === 'file' && node.path.endsWith('.tex') && !isTemporaryFile(node.path)) {
+        if (node.type === 'file' && isLatexFile(node.path) && !isTemporaryFile(node.path)) {
           texFiles.push(node.path);
         }
         if (node.children) {
@@ -132,14 +132,14 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
       if (
         selectedDocId &&
         linkedFileInfo?.filePath &&
-        linkedFileInfo.filePath.endsWith('.tex')) {
+        isLatexFile(linkedFileInfo.filePath)) {
         setAutoMainFile(linkedFileInfo.filePath);
         return;
       }
 
       if (selectedFileId) {
         const file = await getFile(selectedFileId);
-        if (file?.path.endsWith('.tex')) {
+        if (file && isLatexFile(file.path)) {
           setAutoMainFile(file.path);
           return;
         }
@@ -196,7 +196,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
             : undefined
           : linkedFileInfo?.filePath ?? detail.filePath;
 
-        if (!candidatePath?.endsWith('.tex')) return;
+        if (!candidatePath || !isLatexFile(candidatePath)) return;
 
         const mainFileToCompile =
           detail.isFile ? effectiveMainFile : candidatePath;
@@ -246,7 +246,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
         try {
           const currentFile = await getFile(selectedFileId);
           console.log(`[Navigation] Current file: ${currentFile?.path}, isTeX: ${currentFile?.path.endsWith('.tex')}`);
-          if (currentFile?.path.endsWith('.tex')) {
+          if (currentFile && isLatexFile(currentFile.path)) {
             console.log(`[Navigation] Not navigating - already editing LaTeX file: ${currentFile.path}`);
             return false;
           }
@@ -255,7 +255,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
         }
       }
 
-      if (selectedDocId && linkedFileInfo?.fileName?.endsWith('.tex')) {
+      if (selectedDocId && linkedFileInfo?.fileName && isLatexFile(linkedFileInfo.fileName)) {
         console.log(`[Navigation] Not navigating - already editing LaTeX-linked document: ${linkedFileInfo.fileName}`);
         return false;
       }

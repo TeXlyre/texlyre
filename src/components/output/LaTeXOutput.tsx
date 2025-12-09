@@ -10,7 +10,7 @@ import { useSettings } from '../../hooks/useSettings';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import ResizablePanel from '../common/ResizablePanel';
 import LaTeXCompileButton from './LaTeXCompileButton';
-import { toArrayBuffer } from '../../utils/fileUtils';
+import { isLatexFile, toArrayBuffer } from '../../utils/fileUtils';
 
 interface LaTeXOutputProps {
   className?: string;
@@ -93,7 +93,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 
     try {
       const file = await getFile(selectedFileId);
-      if (!file || !file.path.endsWith('.tex')) {
+      if (!file || !isLatexFile(file.path)) {
         console.log('[LaTeXOutput] Selected file is not a .tex file');
         return;
       }

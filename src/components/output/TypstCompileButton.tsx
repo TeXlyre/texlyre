@@ -15,7 +15,7 @@ import type { DocumentList } from '../../types/documents';
 import type { TypstPdfOptions } from '../../types/typst';
 import type { FileNode } from '../../types/files';
 import type { TypstOutputFormat } from '../../types/typst';
-import { isTemporaryFile } from '../../utils/fileUtils';
+import { isTypstFile, isTemporaryFile } from '../../utils/fileUtils';
 import { fileStorageService } from '../../services/FileStorageService';
 import { OptionsIcon, ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon, InfoIcon } from '../common/Icons';
 
@@ -137,7 +137,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     const findTypstFiles = (nodes: FileNode[]): string[] => {
       const typstFiles: string[] = [];
       for (const node of nodes) {
-        if (node.type === 'file' && node.path.endsWith('.typ') && !isTemporaryFile(node.path)) {
+        if (node.type === 'file' && isTypstFile(node.path) && !isTemporaryFile(node.path)) {
           typstFiles.push(node.path);
         }
         if (node.children) {
@@ -154,14 +154,14 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
       if (
         selectedDocId &&
         linkedFileInfo?.filePath &&
-        linkedFileInfo.filePath.endsWith('.typ')) {
+        isTypstFile(linkedFileInfo.filePath)) {
         setAutoMainFile(linkedFileInfo.filePath);
         return;
       }
 
       if (selectedFileId) {
         const file = await getFile(selectedFileId);
-        if (file?.path.endsWith('.typ')) {
+        if (file && isTypstFile(file.path)) {
           setAutoMainFile(file.path);
           return;
         }
@@ -212,7 +212,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
             undefined :
           linkedFileInfo?.filePath ?? detail.filePath;
 
-        if (!candidatePath?.endsWith('.typ')) return;
+        if (!candidatePath || !isTypstFile(candidatePath)) return;
 
         const mainFileToCompile =
           detail.isFile ? effectiveMainFile : candidatePath;
@@ -266,7 +266,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
       if (selectedFileId) {
         try {
           const currentFile = await getFile(selectedFileId);
-          if (currentFile?.path.endsWith('.typ')) {
+          if (currentFile && isTypstFile(currentFile.path)) {
             return false;
           }
         } catch (error) {
@@ -274,7 +274,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
         }
       }
 
-      if (selectedDocId && linkedFileInfo?.fileName?.endsWith('.typ')) {
+      if (selectedDocId && linkedFileInfo?.filePath && isTypstFile(linkedFileInfo.filePath)) {
         return false;
       }
 
