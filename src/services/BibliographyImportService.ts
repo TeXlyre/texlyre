@@ -1,5 +1,6 @@
 // src/services/BibliographyImportService.ts
 import { t } from '@/i18n';
+import { isBibFile } from '../utils/fileUtils';
 import { fileStorageService } from './FileStorageService';
 
 export interface ImportResult {
@@ -355,7 +356,7 @@ export class BibliographyImportService {
 			return {
 				success: false,
 				entryKey,
-				error: error instanceof Error ? error.message : 'Import failed'
+				error: error instanceof Error ? error.message : t('Import failed')
 			};
 		}
 	}
@@ -371,7 +372,7 @@ export class BibliographyImportService {
 
 			const allFiles = await fileStorageService.getAllFiles();
 			const bibFile = allFiles.find(file =>
-				(file.name.endsWith('.bib') || file.name.endsWith('.bibtex')) &&
+				isBibFile(file.name) &&
 				!file.isDeleted
 			);
 
@@ -415,8 +416,7 @@ export class BibliographyImportService {
 			const allKeys = new Set<string>();
 
 			for (const file of allFiles) {
-				if ((file.name.endsWith('.bib') || file.name.endsWith('.bibtex')) &&
-					!file.isDeleted && file.content) {
+				if (isBibFile(file.name) && !file.isDeleted && file.content) {
 					const content = typeof file.content === 'string'
 						? file.content
 						: new TextDecoder().decode(file.content);

@@ -233,7 +233,7 @@ class FileSystemBackupService {
 				error: undefined,
 			});
 		} catch (error) {
-			this.handleError('import_error', 'Import failed', error);
+			this.handleError('import_error', t('Import failed'), error);
 		}
 	}
 

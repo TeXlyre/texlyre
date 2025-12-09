@@ -16,6 +16,7 @@ import { useBibliography } from '../hooks/useBibliography';
 import { fileStorageService } from '../services/FileStorageService';
 import { bibliographyImportService } from '../services/BibliographyImportService';
 import { parseUrlFragments } from '../utils/urlUtils';
+import { isBibFile } from '../utils/fileUtils';
 import { filePathCacheService } from '../services/FilePathCacheService';
 import type { FileNode } from '../types/files';
 
@@ -179,7 +180,7 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		try {
 			const allFiles = await fileStorageService.getAllFiles();
 			const bibFiles = allFiles.filter(file =>
-				file.name.endsWith('.bib') &&
+				isBibFile(file.name) &&
 				!file.isDeleted &&
 				file.content
 			);

@@ -4,6 +4,7 @@ import type { EditorView } from '@codemirror/view';
 
 import { fileStorageService } from '../../../services/FileStorageService';
 import { BibtexParser } from '../../../../extras/viewers/bibtex/BibtexParser';
+import { isLatexFile, isTypstFile, isBibFile } from '../../../utils/fileUtils';
 import { citationCommandPatterns, bibtexEntryPatterns } from './patterns';
 
 interface BibliographyEntry {
@@ -41,7 +42,7 @@ export class BibliographyCompletionHandler {
         try {
             const allFiles = await fileStorageService.getAllFiles();
             const bibFiles = allFiles.filter(file =>
-                file.name.endsWith('.bib') &&
+                isBibFile(file.name) &&
                 !file.isDeleted &&
                 file.content
             );
@@ -80,7 +81,6 @@ export class BibliographyCompletionHandler {
         const line = context.state.doc.lineAt(context.pos);
         const lineText = line.text;
         const posInLine = context.pos - line.from;
-        const textBeforeCursor = lineText.substring(0, posInLine);
 
         for (const { pattern, type } of citationCommandPatterns) {
             const isTypstCitation = pattern.source.includes('#cite');
@@ -149,18 +149,6 @@ export class BibliographyCompletionHandler {
         }
 
         return null;
-    }
-
-    private isInLatexFile(currentFilePath: string): boolean {
-        return currentFilePath.endsWith('.tex') || currentFilePath.endsWith('.latex');
-    }
-
-    private isInTypstFile(currentFilePath: string): boolean {
-        return currentFilePath?.endsWith('.typ') || currentFilePath?.endsWith('.typst') || false;
-    }
-
-    private isInBibFile(currentFilePath: string): boolean {
-        return currentFilePath.endsWith('.bib') || currentFilePath.endsWith('.bibtex');
     }
 
     private async getExternalBibliographyEntries(): Promise<BibliographyEntry[]> {
@@ -439,9 +427,9 @@ export class BibliographyCompletionHandler {
         const citationInfo = this.findCitationCommand(context);
         const bibtexInfo = this.findBibtexEntry(context);
 
-        const isCurrentlyInBibFile = this.isInBibFile(currentFilePath);
-        const isCurrentlyInLatexFile = this.isInLatexFile(currentFilePath);
-        const isCurrentlyInTypstFile = this.isInTypstFile(currentFilePath);
+        const isCurrentlyInBibFile = isBibFile(currentFilePath);
+        const isCurrentlyInLatexFile = isLatexFile(currentFilePath);
+        const isCurrentlyInTypstFile = isTypstFile(currentFilePath);
 
         if (isCurrentlyInLatexFile && citationInfo) {
             return this.handleLatexCitationCompletion(context, citationInfo, cache);

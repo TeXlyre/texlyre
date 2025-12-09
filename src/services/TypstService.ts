@@ -8,7 +8,7 @@ import { fileStorageService } from './FileStorageService';
 import { notificationService } from './NotificationService';
 import { cleanContent } from '../utils/fileCommentUtils';
 import { TypstCompilerEngine } from '../extensions/typst.ts/TypstCompilerEngine';
-import { toArrayBuffer } from '../utils/fileUtils';
+import { isTemporaryFile, isTypstFile, toArrayBuffer } from '../utils/fileUtils';
 import { downloadFiles } from '../utils/zipUtils';
 
 type CompilationStatus = 'unloaded' | 'loading' | 'ready' | 'compiling' | 'error';
@@ -393,13 +393,13 @@ class TypstService {
         const mainDir = this.getDirectoryPath(normalizedMainPath);
 
         return allFiles.filter((file) => {
-            if (file.type !== 'file' || file.isDeleted || file.path.startsWith('/.texlyre_')) {
+            if (file.type !== 'file' || file.isDeleted || isTemporaryFile(file.path)) {
                 return false;
             }
 
             const normalizedPath = this.normalizePath(file.path);
 
-            if (this.isMainFile(file, mainFileName) || normalizedPath.endsWith('.typ')) {
+            if (this.isMainFile(file, mainFileName) || isTypstFile(normalizedPath)) {
                 return true;
             }
 

@@ -11,7 +11,7 @@ interface ContentFormatterButtonProps {
   className?: string;
   onFormat: (formattedContent: string) => void;
   getCurrentContent: () => string;
-  contentType: 'latex' | 'typst';
+  contentType: 'latex' | 'typst' | string;
   disabled?: boolean;
 }
 

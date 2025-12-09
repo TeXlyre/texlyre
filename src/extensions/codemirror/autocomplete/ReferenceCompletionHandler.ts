@@ -3,6 +3,7 @@ import type { CompletionContext, CompletionResult } from '@codemirror/autocomple
 import type { EditorView } from '@codemirror/view';
 
 import { filePathCacheService } from '../../../services/FilePathCacheService';
+import { isLatexFile, isTypstFile } from '../../../utils/fileUtils';
 import { latexReferencePatterns, typstReferencePatterns } from './patterns';
 
 export class ReferenceCompletionHandler {
@@ -18,13 +19,12 @@ export class ReferenceCompletionHandler {
     }
 
     updateLabels(labels: Map<string, string[]>) {
-        const isTexLabels = Array.from(labels.keys()).some(path =>
-            path.endsWith('.tex') || path.endsWith('.latex')
-        );
+        const isTexLabels = Array.from(labels.keys()).some(path => isLatexFile(path));
+        const isTypstLabels = Array.from(labels.keys()).some(path => isTypstFile(path));
 
         if (isTexLabels) {
             this.texLabels = labels;
-        } else {
+        } else if (isTypstLabels) {
             this.typstLabels = labels;
         }
     }
@@ -86,14 +86,6 @@ export class ReferenceCompletionHandler {
         }
 
         return null;
-    }
-
-    private isInLatexFile(currentFilePath: string): boolean {
-        return currentFilePath.endsWith('.tex') || currentFilePath.endsWith('.latex');
-    }
-
-    private isInTypstFile(currentFilePath: string): boolean {
-        return currentFilePath?.endsWith('.typ') || currentFilePath?.endsWith('.typst') || false;
     }
 
     private handleLatexReferenceCompletion(context: CompletionContext, referenceInfo: any): CompletionResult | null {
@@ -219,8 +211,8 @@ export class ReferenceCompletionHandler {
     }
 
     getCompletions(context: CompletionContext, currentFilePath: string): CompletionResult | null {
-        const isCurrentlyInLatexFile = this.isInLatexFile(currentFilePath);
-        const isCurrentlyInTypstFile = this.isInTypstFile(currentFilePath);
+        const isCurrentlyInLatexFile = isLatexFile(currentFilePath);
+        const isCurrentlyInTypstFile = isTypstFile(currentFilePath);
 
         if (isCurrentlyInLatexFile) {
             const referenceInfo = this.findLatexReferenceCommand(context);

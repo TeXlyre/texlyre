@@ -221,3 +221,54 @@ export const isTemporaryFile = (fileName: string): boolean => {
 
 	return temporaryPaths.some((tempPath) => fileName.startsWith(tempPath));
 };
+
+export const isLatexFile = (pathOrName: string): boolean => {
+	if (!pathOrName) return false;
+	const lower = pathOrName.toLowerCase();
+	return lower.endsWith('.tex') || lower.endsWith('.latex') || lower.endsWith('.ltx');
+};
+
+export const isTypstFile = (pathOrName: string): boolean => {
+	if (!pathOrName) return false;
+	const lower = pathOrName.toLowerCase();
+	return lower.endsWith('.typ') || lower.endsWith('.typst');
+};
+
+export const isBibFile = (pathOrName: string): boolean => {
+	if (!pathOrName) return false;
+	const lower = pathOrName.toLowerCase();
+	return lower.endsWith('.bib') || lower.endsWith('.bibtex');
+};
+
+export const isMarkdownFile = (pathOrName: string): boolean => {
+	if (!pathOrName) return false;
+	const lower = pathOrName.toLowerCase();
+	return lower.endsWith('.md') || lower.endsWith('.markdown');
+};
+
+export const isLatexContent = (content: string): boolean => {
+	return /\\(?:documentclass|usepackage|begin|end|section|chapter|part|maketitle)/i.test(content);
+};
+
+export const isTypstContent = (content: string): boolean => {
+	return /(?:#import|#include|#let|#set|^=+\s|\*\*|\/\/)/m.test(content);
+};
+
+export const isBibContent = (content: string): boolean => {
+	return /@(?:article|book|inproceedings|incollection|phdthesis|mastersthesis|techreport|misc|manual|conference)\s*\{/i.test(content);
+};
+
+export const detectFileType = (fileName: string | undefined, content?: string): 'latex' | 'typst' | 'bib' | 'markdown' | 'unknown' => {
+	if (fileName) {
+		if (isLatexFile(fileName)) return 'latex';
+		if (isTypstFile(fileName)) return 'typst';
+		if (isBibFile(fileName)) return 'bib';
+		if (isMarkdownFile(fileName)) return 'markdown';
+	}
+	if (content) {
+		if (isBibContent(content)) return 'bib';
+		if (isTypstContent(content)) return 'typst';
+		if (isLatexContent(content)) return 'latex';
+	}
+	return 'unknown';
+};

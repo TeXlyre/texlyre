@@ -1,5 +1,6 @@
 // src/services/FilePathCacheService.ts
 import type { FileNode, FilePathCache } from '../types/files';
+import { isLatexFile, isTypstFile, isBibFile } from '../utils/fileUtils';
 import { fileStorageEventEmitter } from './FileStorageService';
 
 type CacheUpdateCallback = (files: FileNode[]) => void;
@@ -92,7 +93,7 @@ class FilePathCacheService {
 	getBibliographyFiles(): FileNode[] {
 		return this.cachedFiles.filter(file =>
 			file.type === 'file' &&
-			(file.name.endsWith('.bib') || file.name.endsWith('.bibtex')) &&
+			isBibFile(file.name) &&
 			!file.isDeleted
 		);
 	}
@@ -121,9 +122,6 @@ class FilePathCacheService {
 
 	buildCacheFromFiles(files: FileNode[]): FilePathCache {
 		const imageExtensions = new Set(['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp', 'ico']);
-		const bibExtensions = new Set(['bib', 'bibtex']);
-		const texExtensions = new Set(['tex', 'latex']);
-		const typstExtensions = new Set(['typ', 'typst']);
 
 		const cache: FilePathCache = {
 			files: [],
@@ -144,11 +142,11 @@ class FilePathCacheService {
 
 				if (ext && imageExtensions.has(ext)) {
 					cache.imageFiles.push(node.path);
-				} else if (ext && bibExtensions.has(ext)) {
+				} else if (isBibFile(node.name)) {
 					cache.bibFiles.push(node.path);
-				} else if (ext && texExtensions.has(ext)) {
+				} else if (isLatexFile(node.name)) {
 					cache.texFiles.push(node.path);
-				} else if (ext && typstExtensions.has(ext)) {
+				} else if (isTypstFile(node.name)) {
 					cache.typstFiles.push(node.path);
 				}
 			}
@@ -266,19 +264,16 @@ class FilePathCacheService {
 				continue;
 			}
 
-			const ext = file.name.split('.').pop()?.toLowerCase();
-			if (!ext) continue;
-
 			const content = typeof file.content === 'string'
 				? file.content
 				: new TextDecoder().decode(file.content);
 
-			if (ext === 'tex' || ext === 'latex') {
+			if (isLatexFile(file.name)) {
 				const labels = this.extractTexLabels(content);
 				if (labels.length > 0) {
 					texLabels.set(file.path, labels);
 				}
-			} else if (ext === 'typ' || ext === 'typst') {
+			} else if (isTypstFile(file.name)) {
 				const labels = this.extractTypstLabels(content);
 				if (labels.length > 0) {
 					typstLabels.set(file.path, labels);

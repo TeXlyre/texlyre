@@ -10,7 +10,7 @@ import { DvipdfmxEngine } from '../extensions/switftlatex/DvipdfmxEngine';
 import { PdfTeXEngine } from '../extensions/switftlatex/PdfTeXEngine';
 import { XeTeXEngine } from '../extensions/switftlatex/XeTeXEngine';
 import type { FileNode } from '../types/files';
-import { getMimeType, isBinaryFile, toArrayBuffer } from '../utils/fileUtils';
+import { getMimeType, isBinaryFile, isTemporaryFile, toArrayBuffer } from '../utils/fileUtils';
 import { downloadFiles } from '../utils/zipUtils';
 import { fileStorageService } from './FileStorageService';
 import { notificationService } from './NotificationService';
@@ -515,8 +515,7 @@ class LaTeXService {
 			const existingFiles = await fileStorageService.getAllFiles();
 			const cacheFiles = existingFiles.filter(
 				(file) =>
-					(file.path.startsWith('/.texlyre_cache/') ||
-						file.path.startsWith('/.texlyre_src/')) &&
+					(isTemporaryFile(file.path)) &&
 					!file.isDeleted,
 			);
 
@@ -574,11 +573,7 @@ class LaTeXService {
 		this.sourceFileTimestamps.clear();
 
 		for (const node of nodes) {
-			if (
-				node.type === 'file' &&
-				!node.path.startsWith('/.texlyre_cache/') &&
-				!node.path.startsWith('/.texlyre_src/')
-			) {
+			if (node.type === 'file' && !isTemporaryFile(node.path)) {
 				this.sourceFileTimestamps.set(node.path, node.lastModified || 0);
 			}
 		}
@@ -660,10 +655,7 @@ class LaTeXService {
 			} else {
 				const normalizedPath = node.path.replace(/^\/+/, '');
 
-				if (
-					normalizedPath.startsWith('.texlyre_src/') ||
-					normalizedPath.startsWith('.texlyre_cache/')
-				) {
+				if (isTemporaryFile(normalizedPath)) {
 					processedNode.path = normalizedPath;
 				} else if (this.flattenMainDirectory && mainFileDirectory) {
 					const mainDirWithSlash = `${mainFileDirectory}/`;
@@ -701,9 +693,7 @@ class LaTeXService {
 			node.path.startsWith(`${cacheDirectory.substring(1)}/`),
 		);
 		const workNodes = this.processedNodes.filter(
-			(node) =>
-				!node.path.startsWith('.texlyre_cache/') &&
-				!node.path.startsWith('.texlyre_src/'),
+			(node) => !isTemporaryFile(node.path),
 		);
 
 		const workDirectories = new Set<string>();
@@ -862,7 +852,7 @@ class LaTeXService {
 		try {
 			const existingFiles = await fileStorageService.getAllFiles();
 			const staleFiles = existingFiles.filter(
-				(file) => file.path.startsWith('/.texlyre_src/') && !file.isDeleted,
+				(file) => isTemporaryFile(file.path) && !file.isDeleted,
 			);
 
 			if (staleFiles.length > 0) {

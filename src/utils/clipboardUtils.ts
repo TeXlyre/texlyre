@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid';
 
 import type { FileNode } from '../types/files';
 import { fileStorageService } from '../services/FileStorageService';
-import { getFileExtension, getRelativePath } from './fileUtils.ts';
+import { isLatexFile, getFileExtension, getRelativePath } from './fileUtils.ts';
 import { processTextSelection } from './fileCommentUtils.ts';
 
 
@@ -39,8 +39,8 @@ export const uploadPastedFile = async (
 
 			if (currentFile) {
 				const relativePath = getRelativePath(currentFile.path, uploadPath);
-				const isLatex = (currentFile.path.endsWith('.tex') || currentFile.path.endsWith('.latex'))
-
+				// We only need this special check for LaTeX due to the flattening of dir structure
+				const isLatex = isLatexFile(currentFile.path);
 				if (isLatex) {
 					if (relativePath.startsWith('../')) {
 						return uploadPath.startsWith('/') ? uploadPath.slice(1) : uploadPath;

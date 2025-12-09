@@ -1,11 +1,8 @@
 // src/services/StorageAdapterService.ts
 import JSZip from 'jszip';
 
-import {
-	type DataStructureService,
-	UnifiedDataStructureService,
-} from './DataStructureService';
-import { toArrayBuffer } from '../utils/fileUtils';
+import { UnifiedDataStructureService } from './DataStructureService';
+import { isBinaryFile, toArrayBuffer } from '../utils/fileUtils';
 
 export interface FileSystemAdapter {
 	writeFile(
@@ -41,7 +38,7 @@ export class DirectoryAdapter implements FileSystemAdapter {
 		const fileHandle = await dirHandle.getFileHandle(fileName);
 		const file = await fileHandle.getFile();
 
-		return this.isTextFile(path) ? file.text() : file.arrayBuffer();
+		return !isBinaryFile(path) ? file.text() : file.arrayBuffer();
 	}
 
 	async createDirectory(path: string): Promise<void> {
@@ -66,10 +63,6 @@ export class DirectoryAdapter implements FileSystemAdapter {
 			entries.push(name);
 		}
 		return entries;
-	}
-
-	private isTextFile(path: string): boolean {
-		return ['.json', '.txt', '.tex', '.bib'].some((ext) => path.endsWith(ext));
 	}
 
 	private parsePath(path: string): { dir: string; fileName?: string } {
@@ -134,7 +127,7 @@ export class ZipAdapter implements FileSystemAdapter {
 		const file = this.zip.file(normalizedPath);
 		if (!file) throw new Error(`File not found: ${normalizedPath}`);
 
-		return this.isTextFile(normalizedPath)
+		return !isBinaryFile(normalizedPath)
 			? file.async('string')
 			: file.async('arraybuffer');
 	}
@@ -194,10 +187,6 @@ export class ZipAdapter implements FileSystemAdapter {
 
 	async loadFromBlob(blob: Blob): Promise<void> {
 		this.zip = await JSZip.loadAsync(blob);
-	}
-
-	private isTextFile(path: string): boolean {
-		return ['.json', '.txt', '.tex', '.bib'].some((ext) => path.endsWith(ext));
 	}
 
 	private normalizePath(path: string): string {
