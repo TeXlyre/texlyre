@@ -82,21 +82,86 @@ export class TrackChangesManager {
 
     trackDeletion(from: number, content: string, isBackwardDelete: boolean = false): void {
         if (!this.enabled) return;
-        if (this.isWithinInsertion(from, content.length)) return;
+
+        const isSelection = content.length > 1;
+        let combinedContent = content;
+
+        if (isSelection) {
+            const overlappingDeletions = this.getDeletionsInRange(from, from + content.length);
+
+            if (overlappingDeletions.length > 0) {
+                const groupedByPosition = new Map<number, TrackedChange[]>();
+
+                for (const deletion of overlappingDeletions) {
+                    const pos = deletion.start ?? 0;
+                    if (!groupedByPosition.has(pos)) {
+                        groupedByPosition.set(pos, []);
+                    }
+                    groupedByPosition.get(pos)!.push(deletion);
+                }
+
+                const sortedPositions = Array.from(groupedByPosition.keys()).sort((a, b) => a - b);
+
+                let insertOffset = 0;
+                for (const pos of sortedPositions) {
+                    const deletionsAtPos = groupedByPosition.get(pos)!;
+
+                    const groupedBySequence = new Map<number, TrackedChange[]>();
+                    for (const deletion of deletionsAtPos) {
+                        const seqId = deletion.sequenceId ?? 0;
+                        if (!groupedBySequence.has(seqId)) {
+                            groupedBySequence.set(seqId, []);
+                        }
+                        groupedBySequence.get(seqId)!.push(deletion);
+                    }
+
+                    const sequenceIds = Array.from(groupedBySequence.keys()).sort((a, b) => a - b);
+
+                    for (const seqId of sequenceIds) {
+                        const deletions = groupedBySequence.get(seqId)!;
+                        const isBackward = deletions[0]?.isBackwardDelete ?? false;
+
+                        if (isBackward) {
+                            deletions.sort((a, b) => b.timestamp - a.timestamp);
+                        } else {
+                            deletions.sort((a, b) => a.timestamp - b.timestamp);
+                        }
+
+                        const reconstructedContent = deletions.map(d => d.content).join('');
+                        const relativePos = pos - from + insertOffset;
+
+                        combinedContent = combinedContent.slice(0, relativePos) + reconstructedContent + combinedContent.slice(relativePos);
+                        insertOffset += reconstructedContent.length;
+
+                        for (const deletion of deletions) {
+                            this.changes.delete(deletion.id);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!isSelection && this.isWithinInsertion(from, content.length)) {
+            return;
+        }
 
         this.processingChange = true;
 
         let sequenceId: number;
-        const isSelection = content.length > 1;
+        let finalIsBackwardDelete = isBackwardDelete;
 
-        if (isBackwardDelete) {
-            const isContinuation = !isSelection &&
-                this.lastBackspacePosition !== null &&
+        if (isSelection) {
+            this.currentSequenceId++;
+            sequenceId = this.currentSequenceId;
+            this.lastBackspacePosition = null;
+            this.lastForwardDeletePosition = null;
+            this.forwardDeleteSequenceStart = null;
+            finalIsBackwardDelete = false;
+        } else if (isBackwardDelete) {
+            const isContinuation = this.lastBackspacePosition !== null &&
                 from === this.lastBackspacePosition - content.length;
 
-            const existingDeletion = isSelection
-                ? this.getAnyDeletionInRange(from, from + content.length)
-                : this.getDeletionAt(from + content.length);
+            const existingDeletion = this.getDeletionAt(from + content.length);
 
             if (!isContinuation || existingDeletion) {
                 if (existingDeletion && existingDeletion.sequenceId !== undefined) {
@@ -110,18 +175,17 @@ export class TrackChangesManager {
             }
             this.lastBackspacePosition = from;
             this.lastForwardDeletePosition = null;
+            this.forwardDeleteSequenceStart = null;
         } else {
-            const isContinuation = !isSelection &&
-                this.lastForwardDeletePosition !== null &&
+            const isContinuation = this.lastForwardDeletePosition !== null &&
                 from === this.lastForwardDeletePosition;
 
             if (!isContinuation) {
                 this.currentSequenceId++;
+                this.forwardDeleteSequenceStart = this.currentSequenceId;
             }
 
-            const existingDeletion = isSelection
-                ? this.getAnyDeletionInRange(from, from + content.length)
-                : this.getDeletionAt(from + content.length);
+            const existingDeletion = this.getDeletionAt(from + content.length);
 
             if (existingDeletion && existingDeletion.sequenceId !== undefined) {
                 const beforeSeqId = existingDeletion.sequenceId - 0.001;
@@ -142,27 +206,27 @@ export class TrackChangesManager {
         this.changes.set(changeId, {
             id: changeId,
             type: 'deletion',
-            content: content,
+            content: combinedContent,
             start: from,
             userId: this.currentUserId,
             timestamp: Date.now(),
-            isBackwardDelete,
+            isBackwardDelete: finalIsBackwardDelete,
             sequenceId
         });
 
         this.processingChange = false;
     }
 
-    private getAnyDeletionInRange(from: number, to: number): TrackedChange | null {
+    private getDeletionsInRange(from: number, to: number): TrackedChange[] {
+        const result: TrackedChange[] = [];
         for (const change of this.changes.values()) {
-            if (change.type === 'deletion' &&
-                change.start !== undefined &&
-                change.start >= from &&
-                change.start < to) {
-                return change;
+            if (change.type === 'deletion' && change.start !== undefined) {
+                if (change.start >= from && change.start < to) {
+                    result.push(change);
+                }
             }
         }
-        return null;
+        return result;
     }
 
     private getDeletionAt(pos: number): TrackedChange | null {

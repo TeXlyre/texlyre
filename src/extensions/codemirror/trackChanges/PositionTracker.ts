@@ -52,33 +52,33 @@ export class PositionTracker {
 
     private handleDeletion(changes: Map<string, TrackedChange>, position: number, length: number): void {
         const toRemove: string[] = [];
+        const deleteEnd = position + length;
 
         for (const [id, change] of changes.entries()) {
             if (change.type === 'insertion' && change.end !== undefined) {
-                const changeStart = change.start;
+                const changeStart = change.start!;
                 const changeEnd = change.end;
-                const deleteEnd = position + length;
 
                 if (changeEnd <= position) {
                     continue;
                 } else if (changeStart >= deleteEnd) {
-                    change.start -= length;
-                    change.end -= length;
+                    change.start = changeStart - length;
+                    change.end = changeEnd - length;
                 } else if (changeStart >= position && changeEnd <= deleteEnd) {
                     toRemove.push(id);
                 } else if (changeStart < position && changeEnd > deleteEnd) {
-                    change.end -= length;
+                    change.end = changeEnd - length;
                 } else if (changeStart < position && changeEnd > position) {
                     change.end = position;
                 } else if (changeStart >= position && changeStart < deleteEnd && changeEnd > deleteEnd) {
                     const overlap = deleteEnd - changeStart;
                     change.start = position;
-                    change.end -= overlap;
+                    change.end = changeEnd - overlap;
                 }
-            } else if (change.type === 'deletion') {
-                if (change.start >= position + length) {
+            } else if (change.type === 'deletion' && change.start !== undefined) {
+                if (change.start >= deleteEnd) {
                     change.start -= length;
-                } else if (change.start >= position) {
+                } else if (change.start > position) {
                     change.start = position;
                 }
             }
