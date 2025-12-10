@@ -96,9 +96,11 @@ class TrackChangesProcessor {
                 update.changes.iterChanges((fromA: number, toA: number, fromB: number, toB: number, inserted: any) => {
                     if (toA > fromA) {
                         const deletedText = update.startState.doc.sliceString(fromA, toA);
-                        this.manager.trackDeletion(fromB, deletedText, isBackward);
+                        this.manager.trackDeletion(fromA, deletedText, isBackward);
+                        this.manager.adjustForLocalDeletion(fromA, toA - fromA);
                     }
                     if (inserted.length > 0) {
+                        this.manager.adjustForLocalInsertion(fromB, inserted.length);
                         this.manager.trackInsertion(fromB, inserted.toString());
                     }
                 });
@@ -164,20 +166,7 @@ export function createTrackChangesExtension(yDoc: Y.Doc, yText: Y.Text, userId: 
     return [
         trackChangesEnabledField,
         trackChangesDecorations,
-        plugin,
-        EditorView.baseTheme({
-            '.tracked-insertion': {
-                backgroundColor: 'rgba(0, 200, 0, 0.2)',
-                textDecoration: 'underline',
-                textDecorationColor: 'green'
-            },
-            '.tracked-deletion': {
-                backgroundColor: 'rgba(200, 0, 0, 0.2)',
-                textDecoration: 'line-through',
-                textDecorationColor: 'red',
-                cursor: 'pointer'
-            }
-        })
+        plugin
     ];
 }
 

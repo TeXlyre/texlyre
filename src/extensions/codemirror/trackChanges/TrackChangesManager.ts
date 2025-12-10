@@ -32,6 +32,7 @@ export class TrackChangesManager {
         this.yObserver = (event: Y.YTextEvent, transaction: Y.Transaction) => {
             if (this.processingChange || !this.enabled) return;
             if (this.positionTracker.isUndoRedoOperation()) return;
+            if (transaction.local) return;
 
             this.positionTracker.adjustChangesForDelta(this.changes, event.delta);
         };
@@ -76,6 +77,7 @@ export class TrackChangesManager {
 
     trackDeletion(from: number, content: string, isBackwardDelete: boolean = false): void {
         if (!this.enabled) return;
+        if (this.isWithinInsertion(from, content.length)) return;
 
         this.processingChange = true;
         const changeId = this.generateId();
@@ -91,6 +93,32 @@ export class TrackChangesManager {
         });
 
         this.processingChange = false;
+    }
+
+    private isWithinInsertion(pos: number, length: number): boolean {
+        const deleteEnd = pos + length;
+        for (const change of this.changes.values()) {
+            if (change.type === 'insertion' && change.start !== undefined && change.end !== undefined) {
+                if (pos >= change.start && deleteEnd <= change.end) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    adjustForLocalDeletion(pos: number, length: number): void {
+        this.positionTracker.adjustChangesForDelta(this.changes, [
+            { retain: pos },
+            { delete: length }
+        ]);
+    }
+
+    adjustForLocalInsertion(pos: number, length: number): void {
+        this.positionTracker.adjustChangesForDelta(this.changes, [
+            { retain: pos },
+            { insert: 'x'.repeat(length) }
+        ]);
     }
 
     getChanges(): TrackedChange[] {
