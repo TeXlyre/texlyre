@@ -26,6 +26,7 @@ export class TrackChangesManager {
     private currentSequenceId: number = 0;
     private lastBackspacePosition: number | null = null;
     private lastForwardDeletePosition: number | null = null;
+    private forwardDeleteSequenceStart: number | null = null;
 
     constructor(yDoc: Y.Doc, yText: Y.Text, userId: string) {
         this.yDoc = yDoc;
@@ -109,14 +110,21 @@ export class TrackChangesManager {
 
             const existingDeletion = this.getDeletionAt(from + content.length);
 
-            if (!isContinuation || existingDeletion) {
-                if (existingDeletion && existingDeletion.sequenceId !== undefined) {
-                    this.currentSequenceId = existingDeletion.sequenceId - 0.001;
-                } else {
-                    this.currentSequenceId++;
-                }
+            if (!isContinuation) {
+                this.currentSequenceId++;
+                this.forwardDeleteSequenceStart = this.currentSequenceId;
             }
-            sequenceId = this.currentSequenceId;
+
+            if (existingDeletion && existingDeletion.sequenceId !== undefined) {
+                const beforeSeqId = existingDeletion.sequenceId - 0.001;
+                this.reassignSequence(this.forwardDeleteSequenceStart!, beforeSeqId);
+                sequenceId = beforeSeqId;
+                this.currentSequenceId = existingDeletion.sequenceId + 0.001;
+                this.forwardDeleteSequenceStart = this.currentSequenceId;
+            } else {
+                sequenceId = this.currentSequenceId;
+            }
+
             this.lastForwardDeletePosition = from;
             this.lastBackspacePosition = null;
         }
@@ -158,6 +166,15 @@ export class TrackChangesManager {
             }
         }
         return false;
+    }
+
+    private reassignSequence(oldSeqId: number | null, newSeqId: number): void {
+        if (oldSeqId === null) return;
+        for (const change of this.changes.values()) {
+            if (change.type === 'deletion' && change.sequenceId === oldSeqId) {
+                change.sequenceId = newSeqId;
+            }
+        }
     }
 
     adjustForLocalDeletion(pos: number, length: number): void {

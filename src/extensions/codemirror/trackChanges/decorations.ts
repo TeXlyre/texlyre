@@ -49,15 +49,16 @@ export function buildDecorations(view: EditorView, changes: TrackedChange[]) {
         const bSide = b.decoration.spec?.side ?? 0;
         if (aSide !== bSide) return aSide - bSide;
 
+        if (a.sequenceId !== b.sequenceId) {
+            return a.sequenceId - b.sequenceId;
+        }
+
         const aWidget = a.decoration.spec?.widget;
         const bWidget = b.decoration.spec?.widget;
         const aIsBackward = aWidget?.change?.isBackwardDelete ?? false;
         const bIsBackward = bWidget?.change?.isBackwardDelete ?? false;
 
         if (aIsBackward || bIsBackward) {
-            if (a.sequenceId !== b.sequenceId) {
-                return a.sequenceId - b.sequenceId;
-            }
             return b.timestamp - a.timestamp;
         }
 
