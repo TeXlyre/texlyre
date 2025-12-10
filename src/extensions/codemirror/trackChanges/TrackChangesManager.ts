@@ -87,33 +87,41 @@ export class TrackChangesManager {
         this.processingChange = true;
 
         let sequenceId: number;
+        const isSelection = content.length > 1;
 
         if (isBackwardDelete) {
-            const isContinuation = this.lastBackspacePosition !== null &&
+            const isContinuation = !isSelection &&
+                this.lastBackspacePosition !== null &&
                 from === this.lastBackspacePosition - content.length;
 
-            const existingDeletion = this.getDeletionAt(from + content.length);
+            const existingDeletion = isSelection
+                ? this.getAnyDeletionInRange(from, from + content.length)
+                : this.getDeletionAt(from + content.length);
 
             if (!isContinuation || existingDeletion) {
                 if (existingDeletion && existingDeletion.sequenceId !== undefined) {
-                    this.currentSequenceId = existingDeletion.sequenceId - 0.001;
+                    sequenceId = existingDeletion.sequenceId - 0.001;
                 } else {
                     this.currentSequenceId++;
+                    sequenceId = this.currentSequenceId;
                 }
+            } else {
+                sequenceId = this.currentSequenceId;
             }
-            sequenceId = this.currentSequenceId;
             this.lastBackspacePosition = from;
             this.lastForwardDeletePosition = null;
         } else {
-            const isContinuation = this.lastForwardDeletePosition !== null &&
+            const isContinuation = !isSelection &&
+                this.lastForwardDeletePosition !== null &&
                 from === this.lastForwardDeletePosition;
-
-            const existingDeletion = this.getDeletionAt(from + content.length);
 
             if (!isContinuation) {
                 this.currentSequenceId++;
-                this.forwardDeleteSequenceStart = this.currentSequenceId;
             }
+
+            const existingDeletion = isSelection
+                ? this.getAnyDeletionInRange(from, from + content.length)
+                : this.getDeletionAt(from + content.length);
 
             if (existingDeletion && existingDeletion.sequenceId !== undefined) {
                 const beforeSeqId = existingDeletion.sequenceId - 0.001;
@@ -143,6 +151,18 @@ export class TrackChangesManager {
         });
 
         this.processingChange = false;
+    }
+
+    private getAnyDeletionInRange(from: number, to: number): TrackedChange | null {
+        for (const change of this.changes.values()) {
+            if (change.type === 'deletion' &&
+                change.start !== undefined &&
+                change.start >= from &&
+                change.start < to) {
+                return change;
+            }
+        }
+        return null;
     }
 
     private getDeletionAt(pos: number): TrackedChange | null {
