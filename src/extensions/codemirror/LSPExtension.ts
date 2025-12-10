@@ -6,6 +6,7 @@ import { ViewPlugin, type EditorView } from '@codemirror/view';
 import { type LSPRequest, type LSPResponse } from '../../types/lsp';
 import type { LSPPlugin } from '../../plugins/PluginInterface';
 import { fileStorageService } from '../../services/FileStorageService';
+import { isBibFile, isLatexFile } from '../../utils/fileUtils';
 
 export const updateLSPPlugins = StateEffect.define<LSPPlugin[]>();
 
@@ -60,7 +61,6 @@ class LSPProcessor {
 			this.getLocalBibKeys()
 		]);
 
-		// Filter out entries that already exist locally
 		return allEntries.filter(entry => !localKeys.has(entry.key));
 	}
 
@@ -87,7 +87,7 @@ class LSPProcessor {
 		try {
 			const allFiles = await fileStorageService.getAllFiles();
 			const bibFiles = allFiles.filter(file =>
-				file.name.endsWith('.bib') &&
+				isBibFile(file.name) &&
 				!file.isDeleted &&
 				file.content
 			);
@@ -99,7 +99,6 @@ class LSPProcessor {
 					? bibFile.content
 					: new TextDecoder().decode(bibFile.content);
 
-				// Simple regex to extract BibTeX keys
 				const keyMatches = content.match(/@\w+\{([^,\s}]+)/g);
 				if (keyMatches) {
 					keyMatches.forEach(match => {
@@ -119,7 +118,7 @@ class LSPProcessor {
 	}
 
 	private shouldTriggerCitationCompletion(context: CompletionContext): boolean {
-		if (!this.isLatexFile()) {
+		if (!isLatexFile(this.currentFilePath)) {
 			return false;
 		}
 
@@ -137,10 +136,6 @@ class LSPProcessor {
 		];
 
 		return citationPatterns.some(pattern => pattern.test(beforeCursor));
-	}
-
-	private isLatexFile(): boolean {
-		return this.currentFilePath?.endsWith('.tex') || this.currentFilePath?.endsWith('.latex') || false;
 	}
 
 	private async getEntriesFromPlugin(plugin: LSPPlugin, context: CompletionContext): Promise<ExternalBibEntry[]> {
@@ -188,7 +183,7 @@ class LSPProcessor {
 	private async findTargetBibFile() {
 		const allFiles = await fileStorageService.getAllFiles();
 		return allFiles.find(file =>
-			file.name.endsWith('.bib') &&
+			isBibFile(file.name) &&
 			!file.isDeleted
 		);
 	}
@@ -236,7 +231,6 @@ class LSPProcessor {
 	}
 
 	destroy() {
-		// Clean shutdown handled by individual plugins
 	}
 }
 
@@ -300,13 +294,11 @@ export function createLSPExtension(): [Extension, Extension, CompletionSource] {
 			};
 		});
 
-		// Calculate the correct start position for citation completions
 		const line = context.state.doc.lineAt(context.pos);
 		const lineText = line.text;
 		const posInLine = context.pos - line.from;
 		const beforeCursor = lineText.substring(0, posInLine);
 
-		// Find the opening brace of the citation command
 		const citationMatch = beforeCursor.match(/\\(?:cite|autocite|textcite|parencite|footcite)\w*(?:\[[^\]]*\])?(?:\[[^\]]*\])?\{([^}]*)$/);
 		if (citationMatch) {
 			const bracePos = beforeCursor.lastIndexOf('{');

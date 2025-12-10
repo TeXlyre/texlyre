@@ -227,7 +227,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
         setCurrentView('pdf');
 
         // Send PDF to window if open
-        const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx)$/i, '.pdf') || 'output.pdf';
+        const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx|latex)$/i, '.pdf') || 'output.pdf';
         const projectName = getProjectName();
 
         pdfWindowService.sendPdfUpdate(
@@ -308,7 +308,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
         setCurrentView('pdf');
 
         // Send PDF to window if open
-        const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx)$/i, '.pdf') || 'output.pdf';
+        const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx|latex)$/i, '.pdf') || 'output.pdf';
         const projectName = getProjectName();
 
         pdfWindowService.sendPdfUpdate(

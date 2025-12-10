@@ -1,17 +1,18 @@
 // src/extensions/codemirror/linkNavigation/LinkDetector.ts
 import type { EditorView } from '@codemirror/view';
-import { latexLinkPatterns, typstLinkPatterns, bibLinkPatterns, type LinkPattern } from './patterns';
+import { isLatexFile, isTypstFile, isBibFile, isMarkdownFile, isLatexContent, isTypstContent, isBibContent } from '../../../utils/fileUtils';
+import { latexLinkPatterns, typstLinkPatterns, bibLinkPatterns, markdownLinkPatterns, type LinkPattern } from './patterns';
 
 export interface DetectedLink {
     from: number;
     to: number;
     type: 'url' | 'file' | 'doi' | 'bibentry' | 'reference';
     value: string;
-    fileType: 'latex' | 'typst' | 'bib';
+    fileType: 'latex' | 'typst' | 'bib' | 'markdown';
 }
 
 export class LinkDetector {
-    private currentFileType: 'latex' | 'typst' | 'bib' = 'latex';
+    private currentFileType: 'latex' | 'typst' | 'bib' | 'markdown' = 'latex';
 
     setFileType(fileName?: string, content?: string): void {
         if (!fileName && !content) {
@@ -20,26 +21,31 @@ export class LinkDetector {
         }
 
         if (fileName) {
-            const ext = fileName.split('.').pop()?.toLowerCase();
-            if (ext === 'typ' || ext === 'typst') {
+            if (isTypstFile(fileName)) {
                 this.currentFileType = 'typst';
                 return;
             }
-            if (ext === 'bib' || ext === 'bibtex') {
+            if (isBibFile(fileName)) {
                 this.currentFileType = 'bib';
                 return;
             }
-            if (ext === 'tex' || ext === 'latex') {
+            if (isMarkdownFile(fileName)) {
+                this.currentFileType = 'markdown';
+                return;
+            }
+            if (isLatexFile(fileName)) {
                 this.currentFileType = 'latex';
                 return;
             }
         }
 
         if (content) {
-            if (content.includes('= ') || content.includes('#import')) {
+            if (isTypstContent(content)) {
                 this.currentFileType = 'typst';
-            } else if (content.includes('@article') || content.includes('@book')) {
+            } else if (isBibContent(content)) {
                 this.currentFileType = 'bib';
+            } else if (isLatexContent(content)) {
+                this.currentFileType = 'latex';
             } else {
                 this.currentFileType = 'latex';
             }
@@ -164,6 +170,8 @@ export class LinkDetector {
                 return typstLinkPatterns;
             case 'bib':
                 return bibLinkPatterns;
+            case 'markdown':
+                return markdownLinkPatterns;
             default:
                 return latexLinkPatterns;
         }
@@ -176,6 +184,25 @@ export class LinkDetector {
         fileType: string,
         rawValue: string
     ): { valueStart: number; valueEnd: number } {
+        if (fileType === 'markdown' && type === 'url') {
+            if (match[0].startsWith('[')) {
+                const openParen = lineText.indexOf('(', match.index);
+                const closeParen = lineText.indexOf(')', openParen);
+                if (openParen !== -1 && closeParen !== -1) {
+                    return {
+                        valueStart: openParen + 1,
+                        valueEnd: closeParen
+                    };
+                }
+            }
+            if (match[0].startsWith('http')) {
+                return {
+                    valueStart: match.index,
+                    valueEnd: match.index + match[0].length
+                };
+            }
+        }
+
         if (fileType === 'typst' && type === 'reference' && match[0].startsWith('@')) {
             return {
                 valueStart: match.index + 1,

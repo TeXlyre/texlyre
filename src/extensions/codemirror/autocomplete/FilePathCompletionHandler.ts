@@ -3,6 +3,7 @@ import type { CompletionContext, CompletionResult } from '@codemirror/autocomple
 
 import { filePathCacheService } from '../../../services/FilePathCacheService';
 import { filePathCacheField } from '../PathAndBibAutocompleteExtension';
+import { isTypstFile, isLatexFile, isBibFile } from '../../../utils/fileUtils';
 import { latexCommandPatterns, typstCommandPatterns } from './patterns';
 
 export class FilePathCompletionHandler {
@@ -52,15 +53,16 @@ export class FilePathCompletionHandler {
         return null;
     }
 
-    private isInTypstFile(currentFilePath: string): boolean {
-        return currentFilePath?.endsWith('.typ') || currentFilePath?.endsWith('.typst') || false;
-    }
-
     getCompletions(context: CompletionContext, currentFilePath: string): CompletionResult | null {
-        const isCurrentlyInTypstFile = this.isInTypstFile(currentFilePath);
-        const commandInfo = isCurrentlyInTypstFile
-            ? this.findTypstCommand(context)
-            : this.findLatexCommand(context);
+        const isCurrentlyInTypstFile = isTypstFile(currentFilePath);
+        const isCurrentlyInLatexFile = isLatexFile(currentFilePath);
+
+        let commandInfo;
+        if (isCurrentlyInTypstFile) {
+            commandInfo = this.findTypstCommand(context);
+        } else if (isCurrentlyInLatexFile) {
+            commandInfo = this.findLatexCommand(context);
+        }
 
         if (!commandInfo) return null;
 
@@ -74,7 +76,7 @@ export class FilePathCompletionHandler {
             case 'images':
                 candidates = cache.imageFiles;
                 break;
-            case 'tex':
+            case 'latex':
                 candidates = cache.texFiles;
                 break;
             case 'typst':
@@ -106,11 +108,11 @@ export class FilePathCompletionHandler {
                         return relativePath;
                     }
 
-                    if (fileTypes === 'bib' && relativePath.endsWith('.bib')) {
+                    if (fileTypes === 'bib' && isBibFile(relativePath)) {
                         return relativePath.slice(0, -4);
                     }
 
-                    if (fileTypes === 'tex' && relativePath.endsWith('.tex')) {
+                    if (fileTypes === 'latex' && isLatexFile(relativePath)) {
                         return relativePath.slice(0, -4);
                     }
 

@@ -12,6 +12,7 @@ import { useProperties } from '../hooks/useProperties';
 import { fileStorageService } from '../services/FileStorageService';
 import { BibtexParser } from '../../extras/viewers/bibtex/BibtexParser';
 import { filePathCacheService } from '../services/FilePathCacheService';
+import { isBibFile } from '../utils/fileUtils';
 import type { FileNode } from '../types/files';
 
 export interface BibliographyFile {
@@ -96,7 +97,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		try {
 			const allFiles = await fileStorageService.getAllFiles();
 			const bibFiles = allFiles.filter(file =>
-				(file.name.endsWith('.bib') || file.name.endsWith('.bibtex')) &&
+				isBibFile(file.name) &&
 				!file.isDeleted
 			);
 
@@ -149,7 +150,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		try {
 			const allFiles = await fileStorageService.getAllFiles();
 			const bibFiles = allFiles.filter(file =>
-				file.name.endsWith('.bib') &&
+				isBibFile(file.name) &&
 				!file.isDeleted &&
 				file.content
 			);

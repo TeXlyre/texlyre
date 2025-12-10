@@ -6,7 +6,9 @@ import {
     historyKeymap,
     indentWithTab,
 } from '@codemirror/commands';
-import { markdown } from '@codemirror/lang-markdown';
+import { languages } from '@codemirror/language-data';
+import { html } from '@codemirror/lang-html';
+import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import {
     bracketMatching,
     defaultHighlightStyle,
@@ -62,6 +64,7 @@ import { useAuth } from '../useAuth';
 import { useEditor } from '../useEditor';
 
 import { autoSaveManager } from '../../utils/autoSaveUtils';
+import { detectFileType, isBibFile } from '../../utils/fileUtils.ts';
 import { collabService } from '../../services/CollabService';
 import { fileStorageService } from '../../services/FileStorageService';
 import { filePathCacheService } from '../../services/FilePathCacheService';
@@ -140,7 +143,7 @@ export const useEditorView = (
             const contentBuffer = encoder.encode(content).buffer;
             await fileStorageService.updateFileContent(currentFileId, contentBuffer);
 
-            if (fileName?.endsWith('.bib') && viewRef.current) {
+            if (fileName && isBibFile(fileName) && viewRef.current) {
                 refreshBibliographyCache(viewRef.current);
             }
 
@@ -168,7 +171,7 @@ export const useEditorView = (
             if (linkedFile) {
                 await fileStorageService.updateFileContent(linkedFile.id, content);
 
-                if (linkedFile.name.endsWith('.bib') && viewRef.current) {
+                if (isBibFile(linkedFile.name) && viewRef.current) {
                     refreshBibliographyCache(viewRef.current);
                 }
 
@@ -301,56 +304,22 @@ export const useEditorView = (
             return [];
         }
 
-        if (!fn) {
-            if (
-                content?.includes('@article') ||
-                content?.includes('@book') ||
-                content?.includes('@inproceedings')
-            ) {
-                return [bibtex({ autoCloseBrackets: false, enableAutocomplete: false })];
-            }
-            if (
-                content?.includes('= ') ||
-                content?.includes('== ') ||
-                content?.includes('#import') ||
-                content?.includes('#let')
-            ) {
-                return [typst()];
-            }
-            return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
-        }
+        const fileType = detectFileType(fn, content || '');
 
-        const ext = fn.split('.').pop()?.toLowerCase();
-
-        switch (ext) {
-            case 'tex':
+        switch (fileType) {
             case 'latex':
                 return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
-            case 'typ':
             case 'typst':
                 return [typst()];
             case 'bib':
-            case 'bibtex':
                 return [bibtex({ autoCloseBrackets: false, enableAutocomplete: false })];
-            case 'md':
             case 'markdown':
-                return [markdown()];
+                return [markdown({
+                    base: markdownLanguage,
+                    codeLanguages: languages,
+                    htmlTagLanguage: html()
+                })];
             default:
-                if (
-                    content?.includes('@article') ||
-                    content?.includes('@book') ||
-                    content?.includes('@inproceedings')
-                ) {
-                    return [bibtex({ autoCloseBrackets: false, enableAutocomplete: false })];
-                }
-                if (
-                    content?.includes('= ') ||
-                    content?.includes('== ') ||
-                    content?.includes('#import') ||
-                    content?.includes('#let')
-                ) {
-                    return [typst()];
-                }
                 return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
         }
     };
@@ -432,44 +401,25 @@ export const useEditorView = (
 
         const extensions: Extension[] = [];
 
-        const isLatexFile =
-            fileName?.endsWith('.tex') ||
-            (!fileName && contentToUse?.includes('\\'));
-        const isBibFile =
-            fileName?.endsWith('.bib') ||
-            fileName?.endsWith('.bibtex') ||
-            (!fileName &&
-                (contentToUse?.includes('@article') ||
-                    contentToUse?.includes('@book') ||
-                    contentToUse?.includes('@inproceedings')));
-        const isTypstFile =
-            fileName?.endsWith('.typ') ||
-            fileName?.endsWith('.typst') ||
-            (!fileName &&
-                (contentToUse?.includes('= ') ||
-                    contentToUse?.includes('== ') ||
-                    contentToUse?.includes('#import')));
+        const fileType = detectFileType(fileName, contentToUse);
+        const isLatexFileType = fileType === 'latex';
+        const isTypstFileType = fileType === 'typst';
+        const isBibFileType = fileType === 'bib';
+        const isMarkdownFileType = fileType === 'markdown';
 
-        if (isLatexFile && !isBibFile) {
-            extensions.push(createListingsExtension('latex'));
-        }
-
-        if (isTypstFile) {
-            extensions.push(createListingsExtension('typst'));
+        if (isLatexFileType || isTypstFileType) {
+            extensions.push(createListingsExtension(fileType));
         }
 
         extensions.push(...getBasicSetupExtensions());
         extensions.push(...getLanguageExtension(fileName, contentToUse));
 
-        if (isLatexFile || isBibFile || isTypstFile) {
+        if (isLatexFileType || isBibFileType || isTypstFileType || isMarkdownFileType) {
             // Add link navigation for all file types
             extensions.push(createLinkNavigationExtension(fileName, contentToUse));
 
-            const fileExtension =
-                fileName?.split('.').pop()?.toLowerCase() ||
-                (isTypstFile ? 'typ' : isBibFile ? 'bib' : 'tex');
             const allLSPPlugins =
-                pluginRegistry.getLSPPluginsForFileType(fileExtension);
+                pluginRegistry.getLSPPluginsForFileType(fileType);
 
             const enabledPluginIds = getEnabledLSPPlugins();
             const availableLSPPlugins = allLSPPlugins.filter((plugin) =>
@@ -504,7 +454,7 @@ export const useEditorView = (
                 }, 100);
             }
 
-            if (isLatexFile || isTypstFile) {
+            if (isLatexFileType || isTypstFileType) {
                 let currentFilePath = '';
                 if (isEditingFile && currentFileId) {
                     const getCurrentFilePath = async () => {
@@ -524,19 +474,15 @@ export const useEditorView = (
                 extensions.push(createPasteExtension(currentFileId, fileName));
 
                 if (toolbarVisible) {
-                    if (isLatexFile) {
-                        extensions.push(createToolbarExtension('latex', undoManagerRef.current || undefined));
-                    } else if (isTypstFile) {
-                        extensions.push(createToolbarExtension('typst', undoManagerRef.current || undefined));
-                    }
+                    extensions.push(createToolbarExtension(fileType, undoManagerRef.current || undefined));
                 }
 
                 completionSources.push(enhancedCompletionSource);
 
-                if (isLatexFile) {
+                if (isLatexFileType) {
                     completionSources.push(latexCompletionSource(true));
                 }
-            } else if (isBibFile) {
+            } else if (isBibFileType) {
                 const [stateExtensions, filePathPlugin, enhancedCompletionSource] =
                     createFilePathAutocompleteExtension('');
                 extensions.push(stateExtensions, filePathPlugin);
@@ -635,17 +581,16 @@ export const useEditorView = (
                 run: (view) => {
                     if (isViewOnly) return false;
 
-                    const hasFormatter = isLatexFile || isTypstFile || isBibFile;
+                    const hasFormatter = isLatexFileType || isTypstFileType || isBibFileType;
                     if (!hasFormatter) return false;
 
                     const content = view.state.doc.toString();
-                    const contentType = isTypstFile ? 'typst' : 'latex';
 
                     document.dispatchEvent(
                         new CustomEvent('trigger-format', {
                             detail: {
                                 content,
-                                contentType,
+                                fileType,
                                 fileId: currentFileId,
                                 documentId,
                                 view,
@@ -716,7 +661,7 @@ export const useEditorView = (
                 );
             }, 50);
 
-            if (isLatexFile || isTypstFile) {
+            if (isLatexFileType || isTypstFileType) {
                 filePathCacheService.updateCache();
                 updateLinkNavigationFileName(viewRef.current, fileName);
 

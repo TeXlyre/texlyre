@@ -21,9 +21,9 @@ export const getImageViewerSettings = (): Setting[] => [
     description: t("Set the quality of image rendering"),
     defaultValue: 'high',
     options: [
-      { label: t("Low (Pixelated)"), value: 'low' },
-      { label: t("Medium (Crisp Edges)"), value: 'medium' },
-      { label: t("High (Auto)"), value: 'high' }]
+      { label: t("Low"), value: 'low' },
+      { label: t("Medium"), value: 'medium' },
+      { label: t("High"), value: 'high' }]
 
   },
   {

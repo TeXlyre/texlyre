@@ -2,7 +2,7 @@
 export interface LinkPattern {
     pattern: RegExp;
     type: 'url' | 'file' | 'doi' | 'bibentry' | 'reference';
-    fileType?: 'latex' | 'typst' | 'bib';
+    fileType?: 'latex' | 'typst' | 'bib' | 'markdown';
     extractValue?: (match: RegExpExecArray) => string;
 }
 
@@ -129,6 +129,21 @@ export const bibLinkPatterns: LinkPattern[] = [
         pattern: /https?:\/\/[^\s,}\]]+/g,
         type: 'url',
         fileType: 'bib',
+        extractValue: (match) => match[0]
+    }
+];
+
+export const markdownLinkPatterns: LinkPattern[] = [
+    {
+        pattern: /\[([^\]]+)\]\(([^)]+)\)/g,
+        type: 'url',
+        fileType: 'markdown',
+        extractValue: (match) => match[2]
+    },
+    {
+        pattern: /https?:\/\/[^\s\)>\]]+/g,
+        type: 'url',
+        fileType: 'markdown',
         extractValue: (match) => match[0]
     }
 ];

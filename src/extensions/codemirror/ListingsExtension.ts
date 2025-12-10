@@ -1,4 +1,5 @@
 // src/extensions/codemirror/ListingsExtension.ts
+import { booleanLiteral } from '@babel/types';
 import { type Extension } from '@codemirror/state';
 import { keymap, type KeyBinding } from '@codemirror/view';
 import type { EditorView } from 'codemirror';
@@ -54,9 +55,6 @@ function detectLatexListContext(view: EditorView, pos: number): ListContext | nu
 
     const leadingWhitespace = lineText.match(/^(\s*)/)?.[1] || '';
     const indentLevel = leadingWhitespace.length;
-
-    const itemMatch = trimmedText.match(/^\\item(\[.*?\])?/);
-    const itemPrefix = itemMatch ? itemMatch[0] : '\\item';
 
     return {
         type: `latex-${currentEnv}`,
@@ -120,7 +118,7 @@ function findParentListContext(view: EditorView, fileType: FileType, startPos: n
             if (currentText.startsWith('\\item')) {
                 return detectLatexListContext(view, currentLine.from + 1);
             }
-        } else {
+        } else if (fileType === 'typst') {
             if (currentText.match(/^[-+](\s|$)/) || currentText.match(/^\/\s+\w+:/)) {
                 return detectTypstListContext(view, currentLine.from + 1);
             }
@@ -140,7 +138,11 @@ function handleEnterInList(view: EditorView, fileType: FileType): boolean {
     const lineText = line.text;
     const trimmedText = lineText.trim();
 
-    let listContext = detectLatexListContext(view, pos);
+    let listContext = null;
+
+    if (fileType === 'latex') {
+        listContext = detectLatexListContext(view, pos);
+    }
     if (fileType === 'typst') {
         listContext = detectTypstListContext(view, pos);
     }
@@ -193,7 +195,7 @@ function handleEnterInList(view: EditorView, fileType: FileType): boolean {
             selection: { anchor: pos + newLine.length },
         });
         return true;
-    } else {
+    } else if (fileType === 'typst') {
         const isOnItemLine = trimmedText.match(/^[-+](\s|$)/) || trimmedText.match(/^\/\s+\w+:/);
 
         if (isOnItemLine) {
@@ -233,7 +235,11 @@ function handleEnterInList(view: EditorView, fileType: FileType): boolean {
 function handleShiftEnterInList(view: EditorView, fileType: FileType): boolean {
     const pos = view.state.selection.main.head;
 
-    let listContext = detectLatexListContext(view, pos);
+    let listContext = null;
+
+    if (fileType === 'latex') {
+        listContext = detectLatexListContext(view, pos);
+    }
     if (fileType === 'typst') {
         listContext = detectTypstListContext(view, pos);
     }
