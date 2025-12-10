@@ -5,7 +5,7 @@ import type { TrackedChange } from './TrackChangesManager';
 import { DeletionWidget } from './widgets';
 
 export function buildDecorations(view: EditorView, changes: TrackedChange[]) {
-    const decorations: Array<{ from: number; to: number; decoration: any; timestamp: number }> = [];
+    const decorations: Array<{ from: number; to: number; decoration: any; timestamp: number; sequenceId: number }> = [];
     const docLength = view.state.doc.length;
 
     for (const change of changes) {
@@ -21,7 +21,8 @@ export function buildDecorations(view: EditorView, changes: TrackedChange[]) {
                         class: 'tracked-insertion',
                         attributes: { 'data-change-id': change.id }
                     }),
-                    timestamp: change.timestamp
+                    timestamp: change.timestamp,
+                    sequenceId: change.sequenceId ?? 0
                 });
             }
         } else if (change.type === 'deletion' && change.start !== undefined) {
@@ -35,7 +36,8 @@ export function buildDecorations(view: EditorView, changes: TrackedChange[]) {
                     side: change.isBackwardDelete ? -1 : 1,
                     block: false
                 }),
-                timestamp: change.timestamp
+                timestamp: change.timestamp,
+                sequenceId: change.sequenceId ?? 0
             });
         }
     }
@@ -53,6 +55,9 @@ export function buildDecorations(view: EditorView, changes: TrackedChange[]) {
         const bIsBackward = bWidget?.change?.isBackwardDelete ?? false;
 
         if (aIsBackward || bIsBackward) {
+            if (a.sequenceId !== b.sequenceId) {
+                return a.sequenceId - b.sequenceId;
+            }
             return b.timestamp - a.timestamp;
         }
 

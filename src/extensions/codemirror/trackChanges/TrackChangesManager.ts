@@ -11,6 +11,7 @@ export interface TrackedChange {
     timestamp: number;
     userId: string;
     isBackwardDelete?: boolean;
+    sequenceId?: number;
 }
 
 export class TrackChangesManager {
@@ -22,6 +23,9 @@ export class TrackChangesManager {
     private yObserver: ((event: Y.YTextEvent, transaction: Y.Transaction) => void) | null = null;
     private positionTracker: PositionTracker;
     private processingChange: boolean = false;
+    private currentSequenceId: number = 0;
+    private lastBackspacePosition: number | null = null;
+    private lastForwardDeletePosition: number | null = null;
 
     constructor(yDoc: Y.Doc, yText: Y.Text, userId: string) {
         this.yDoc = yDoc;
@@ -80,6 +84,43 @@ export class TrackChangesManager {
         if (this.isWithinInsertion(from, content.length)) return;
 
         this.processingChange = true;
+
+        let sequenceId: number;
+
+        if (isBackwardDelete) {
+            const isContinuation = this.lastBackspacePosition !== null &&
+                from === this.lastBackspacePosition - content.length;
+
+            const existingDeletion = this.getDeletionAt(from + content.length);
+
+            if (!isContinuation || existingDeletion) {
+                if (existingDeletion && existingDeletion.sequenceId !== undefined) {
+                    this.currentSequenceId = existingDeletion.sequenceId - 0.001;
+                } else {
+                    this.currentSequenceId++;
+                }
+            }
+            sequenceId = this.currentSequenceId;
+            this.lastBackspacePosition = from;
+            this.lastForwardDeletePosition = null;
+        } else {
+            const isContinuation = this.lastForwardDeletePosition !== null &&
+                from === this.lastForwardDeletePosition;
+
+            const existingDeletion = this.getDeletionAt(from + content.length);
+
+            if (!isContinuation || existingDeletion) {
+                if (existingDeletion && existingDeletion.sequenceId !== undefined) {
+                    this.currentSequenceId = existingDeletion.sequenceId - 0.001;
+                } else {
+                    this.currentSequenceId++;
+                }
+            }
+            sequenceId = this.currentSequenceId;
+            this.lastForwardDeletePosition = from;
+            this.lastBackspacePosition = null;
+        }
+
         const changeId = this.generateId();
 
         this.changes.set(changeId, {
@@ -89,10 +130,22 @@ export class TrackChangesManager {
             start: from,
             userId: this.currentUserId,
             timestamp: Date.now(),
-            isBackwardDelete
+            isBackwardDelete,
+            sequenceId
         });
 
         this.processingChange = false;
+    }
+
+    private getDeletionAt(pos: number): TrackedChange | null {
+        for (const change of this.changes.values()) {
+            if (change.type === 'deletion' &&
+                change.start === pos &&
+                change.sequenceId !== this.currentSequenceId) {
+                return change;
+            }
+        }
+        return null;
     }
 
     private isWithinInsertion(pos: number, length: number): boolean {
