@@ -32,7 +32,7 @@ export function buildDecorations(view: EditorView, changes: TrackedChange[]) {
                 to: pos,
                 decoration: Decoration.widget({
                     widget: new DeletionWidget(change),
-                    side: 1,
+                    side: change.isBackwardDelete ? -1 : 1,
                     block: false
                 }),
                 timestamp: change.timestamp
