@@ -95,6 +95,13 @@ const SvgRenderer: React.FC<RendererProps> = ({
         setIsLoading(true);
         setError(null);
 
+        if (!(content instanceof Uint8Array)) {
+          content = new Uint8Array(
+            typeof content === 'string'
+              ? new TextEncoder().encode(content)
+              : content
+          );
+        }
         const textDecoder = new TextDecoder();
         const svgText = textDecoder.decode(content);
         setSvgContent(svgText);

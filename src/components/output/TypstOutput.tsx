@@ -63,9 +63,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 
   useEffect(() => {
     if (compiledCanvas && currentFormat === 'canvas' && canvasControllerRef.current?.updateContent) {
-      const decoder = new TextDecoder();
-      const svgString = decoder.decode(compiledCanvas);
-      canvasControllerRef.current.updateContent(svgString);
+      canvasControllerRef.current.updateContent(compiledCanvas);
     }
   }, [compiledCanvas, currentFormat]);
 
@@ -309,7 +307,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
         <div className="canvas-viewer">
           {canvasRenderer ?
             React.createElement(canvasRenderer.renderOutput, {
-              content: compiledCanvas ? toArrayBuffer(compiledCanvas.buffer) : new ArrayBuffer(0),
+              content: compiledCanvas || new ArrayBuffer(0),
               mimeType: 'image/svg+xml',
               fileName: 'output.svg',
               onDownload: (fileName) => handleSaveOutput('canvas', fileName),

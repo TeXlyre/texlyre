@@ -51,11 +51,11 @@ export interface RendererPlugin extends Plugin {
 }
 
 export interface RendererController {
-	updateContent?: (content: ArrayBuffer | string) => void;
+	updateContent?: (content: ArrayBuffer | Uint8Array | string) => void;
 }
 
 export interface RendererProps {
-	content: ArrayBuffer;
+	content: ArrayBuffer | Uint8Array | string;
 	mimeType?: string;
 	fileName?: string;
 	onSave?: (fileName: string) => void;

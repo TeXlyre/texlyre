@@ -1,6 +1,6 @@
 import { t } from '@/i18n';
 import type React from 'react';
-import { useCallback, useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
     ChevronLeftIcon,
@@ -21,7 +21,16 @@ import type { RendererProps } from '@/plugins/PluginInterface';
 import './styles.css';
 
 export interface CanvasRendererHandle {
-    updateSvgContent: (svgString: string) => void;
+    updateSvgContent: (svgBuffer: ArrayBuffer) => void;
+}
+
+let workerInstance: Worker | null = null;
+
+function getWorker(): Worker {
+    if (!workerInstance) {
+        workerInstance = new Worker(new URL('./worker.ts?worker', import.meta.url), { type: 'module' });
+    }
+    return workerInstance;
 }
 
 const CanvasRenderer: React.FC<RendererProps> = ({
@@ -39,7 +48,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map());
     const propertiesRegistered = useRef(false);
     const svgPagesRef = useRef<Map<number, string>>(new Map());
-    const fullSvgRef = useRef<string>('');
+    const fullSvgBufferRef = useRef<ArrayBuffer | null>(null);
     const pendingRenderRef = useRef<Set<number>>(new Set());
     const renderingRef = useRef<Set<number>>(new Set());
 
@@ -58,80 +67,28 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 
     const canvasRendererEnable = getSetting('canvas-renderer-enable')?.value as boolean ?? true;
 
-    const parseSvgPages = useCallback((svgString: string) => {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(svgString, 'image/svg+xml');
-        const svgElement = doc.querySelector('svg');
+    const parseSvgPages = useCallback((svgBuffer: ArrayBuffer): Promise<{
+        pages: Map<number, string>;
+        metadata: Map<number, { width: number; height: number }>;
+    }> => {
+        return new Promise((resolve, reject) => {
+            const worker = getWorker();
 
-        if (!svgElement) {
-            throw new Error('No SVG element found');
-        }
-
-        const pageGroups = svgElement.querySelectorAll('g.typst-page');
-        const pages = new Map<number, string>();
-        const metadata = new Map<number, { width: number; height: number }>();
-
-        const svgWidth = parseFloat(svgElement.getAttribute('width') || '595');
-        const svgHeight = parseFloat(svgElement.getAttribute('height') || '842');
-
-        const defs = svgElement.querySelector('defs');
-        const styles = svgElement.querySelectorAll('style');
-        const defsString = defs ? new XMLSerializer().serializeToString(defs) : '';
-        let stylesString = '';
-        styles.forEach(style => {
-            stylesString += new XMLSerializer().serializeToString(style);
-        });
-
-        const svgAttrs: string[] = [];
-        Array.from(svgElement.attributes).forEach(attr => {
-            if (attr.name !== 'width' && attr.name !== 'height' && attr.name !== 'viewBox') {
-                svgAttrs.push(`${attr.name}="${attr.value}"`);
-            }
-        });
-        const attrsString = svgAttrs.join(' ');
-
-        if (pageGroups.length === 0) {
-            pages.set(1, svgString);
-            metadata.set(1, { width: svgWidth, height: svgHeight });
-        } else {
-            pageGroups.forEach((pageGroup, index) => {
-                const pageNumber = index + 1;
-                const transform = pageGroup.getAttribute('transform') || '';
-
-                let yOffset = 0;
-                if (transform) {
-                    const match = transform.match(/translate\([^,]*,\s*([^)]*)\)/);
-                    if (match) {
-                        yOffset = parseFloat(match[1]) || 0;
-                    }
+            const handleMessage = (e: MessageEvent) => {
+                if (e.data.type === 'parsed') {
+                    worker.removeEventListener('message', handleMessage);
+                    const pages = new Map<number, string>(e.data.pages);
+                    const metadata = new Map<number, { width: number; height: number }>(e.data.metadata);
+                    resolve({ pages, metadata });
+                } else if (e.data.type === 'error') {
+                    worker.removeEventListener('message', handleMessage);
+                    reject(new Error(e.data.error));
                 }
+            };
 
-                let pageHeight = svgHeight;
-                if (index < pageGroups.length - 1) {
-                    const nextTransform = pageGroups[index + 1].getAttribute('transform');
-                    if (nextTransform) {
-                        const nextMatch = nextTransform.match(/translate\([^,]*,\s*([^)]*)\)/);
-                        if (nextMatch) {
-                            pageHeight = Math.abs((parseFloat(nextMatch[1]) || 0) - yOffset);
-                        }
-                    }
-                }
-
-                const pageContent = new XMLSerializer().serializeToString(pageGroup);
-                const pageSvg = `<svg ${attrsString} width="${svgWidth}" height="${pageHeight}" viewBox="0 0 ${svgWidth} ${pageHeight}">
-                    ${stylesString}
-                    ${defsString}
-                    <g transform="translate(0, ${-yOffset})">
-                        ${pageContent}
-                    </g>
-                </svg>`;
-
-                pages.set(pageNumber, pageSvg);
-                metadata.set(pageNumber, { width: svgWidth, height: pageHeight });
-            });
-        }
-
-        return { pages, metadata };
+            worker.addEventListener('message', handleMessage);
+            worker.postMessage({ type: 'parse', svgBuffer });
+        });
     }, []);
 
     const renderPageToCanvas = useCallback((pageNumber: number) => {
@@ -180,7 +137,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
             ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.scale(pixelRatio, pixelRatio);
 
-            // Clear + fill only when we're ready to draw:
             ctx.fillStyle = 'white';
             ctx.fillRect(0, 0, scaledWidth, scaledHeight);
 
@@ -216,13 +172,13 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         }
     }, [scrollView, visiblePages, currentPage, numPages, renderPageToCanvas]);
 
-    const updateSvgContent = useCallback((svgString: string) => {
-        if (!svgString) return;
+    const updateSvgContent = useCallback(async (svgBuffer: ArrayBuffer) => {
+        if (!svgBuffer || svgBuffer.byteLength === 0) return;
 
-        fullSvgRef.current = svgString;
+        fullSvgBufferRef.current = svgBuffer;
 
         try {
-            const { pages, metadata } = parseSvgPages(svgString);
+            const { pages, metadata } = await parseSvgPages(svgBuffer);
 
             svgPagesRef.current = pages;
             setPageMetadata(metadata);
@@ -253,10 +209,10 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         if (controllerRef) {
             controllerRef({
                 updateContent: (newContent: ArrayBuffer | string) => {
-                    const svgString = typeof newContent === 'string'
-                        ? newContent
-                        : new TextDecoder().decode(newContent);
-                    updateSvgContent(svgString);
+                    const buffer = typeof newContent === 'string'
+                        ? new TextEncoder().encode(newContent).buffer
+                        : newContent;
+                    updateSvgContent(buffer);
                 }
             });
         }
@@ -299,10 +255,8 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     }, [getProperty]);
 
     useEffect(() => {
-        if (content && content.byteLength > 0) {
-            const decoder = new TextDecoder();
-            const svgString = decoder.decode(content);
-            updateSvgContent(svgString);
+        if (content && (content instanceof ArrayBuffer) && content.byteLength > 0) {
+            updateSvgContent(content);
         }
     }, []);
 
@@ -482,8 +436,8 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     const handleExport = useCallback(() => {
         if (onDownload && fileName) {
             onDownload(fileName);
-        } else if (fullSvgRef.current) {
-            const blob = new Blob([fullSvgRef.current], { type: 'image/svg+xml' });
+        } else if (fullSvgBufferRef.current) {
+            const blob = new Blob([fullSvgBufferRef.current], { type: 'image/svg+xml' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;

@@ -37,7 +37,6 @@
 	},
 	"include": [
 		"src/**/*",
-		"extras/**/*",
 		"scripts/**/*",
 		"build.ts",
 		"plugins.config.js",
