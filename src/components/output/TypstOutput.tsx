@@ -8,6 +8,7 @@ import { useTypst } from '../../hooks/useTypst';
 import { useProperties } from '../../hooks/useProperties';
 import { useSettings } from '../../hooks/useSettings';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
+import type { RendererController } from '../../plugins/PluginInterface'
 import ResizablePanel from '../common/ResizablePanel';
 import TypstCompileButton from './TypstCompileButton';
 import { isTypstFile, toArrayBuffer } from '../../utils/fileUtils';
@@ -45,6 +46,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     compileDocument,
     activeCompiler
   } = useTypst();
+
   const { selectedFileId, getFile } = useFileTree();
   const { getSetting } = useSettings();
   const { getProperty, setProperty, registerProperty } = useProperties();
@@ -54,9 +56,18 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
   const [visualizerCollapsed, setVisualizerCollapsed] = useState(false);
 
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const canvasControllerRef = useRef<RendererController | null>(null);
 
   const useEnhancedRenderer = getSetting('pdf-renderer-enable')?.value ?? true;
   const loggerPlugin = pluginRegistry.getLoggerForType('typst');
+
+  useEffect(() => {
+    if (compiledCanvas && currentFormat === 'canvas' && canvasControllerRef.current?.updateContent) {
+      const decoder = new TextDecoder();
+      const svgString = decoder.decode(compiledCanvas);
+      canvasControllerRef.current.updateContent(svgString);
+    }
+  }, [compiledCanvas, currentFormat]);
 
   useEffect(() => {
     if (propertiesRegistered.current) return;
@@ -291,41 +302,27 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 
     }
 
-    if (currentFormat === 'canvas' && compiledCanvas) {
-      console.log('[TypstOutput] Rendering canvas', {
-        hasCompiledCanvas: !!compiledCanvas,
-        compiledCanvasLength: compiledCanvas?.length,
-        compiledCanvasBuffer: compiledCanvas?.buffer
-      });
-
+    if (currentFormat === 'canvas') {
       const canvasRenderer = pluginRegistry.getRendererForOutput('canvas', 'canvas-renderer');
-
-      console.log('[TypstOutput] Canvas renderer found:', !!canvasRenderer);
-
-      if (!canvasRenderer) {
-        console.error('[TypstOutput] No canvas renderer available!');
-      }
 
       return (
         <div className="canvas-viewer">
           {canvasRenderer ?
             React.createElement(canvasRenderer.renderOutput, {
-              content: toArrayBuffer(compiledCanvas.buffer),
+              content: compiledCanvas ? toArrayBuffer(compiledCanvas.buffer) : new ArrayBuffer(0),
               mimeType: 'image/svg+xml',
               fileName: 'output.svg',
-              onSave: (fileName) => handleSaveOutput('canvas', fileName)
+              onDownload: (fileName) => handleSaveOutput('canvas', fileName),
+              controllerRef: (controller) => { canvasControllerRef.current = controller; }
             }) :
-
-            <div className="canvas-fallback">{t('Canvas renderer not available')}
-
-            </div>
+            <div className="canvas-fallback">{t('Canvas renderer not available')}</div>
           }
-        </div>);
-
+        </div>
+      );
     }
 
     return null;
-  }, [currentView, currentFormat, compiledPdf, compiledSvg, compiledCanvas, useEnhancedRenderer, handleSavePdf, handleSaveOutput]);
+  }, [currentView, currentFormat, !!compiledPdf, !!compiledSvg, !!compiledCanvas, useEnhancedRenderer, handleSavePdf, handleSaveOutput]);
 
   const hasAnyOutput = compiledPdf || compiledSvg || compiledCanvas;
 

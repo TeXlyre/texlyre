@@ -50,12 +50,17 @@ export interface RendererPlugin extends Plugin {
 	renderOutput: React.ComponentType<RendererProps>;
 }
 
+export interface RendererController {
+	updateContent?: (content: ArrayBuffer | string) => void;
+}
+
 export interface RendererProps {
 	content: ArrayBuffer;
 	mimeType?: string;
 	fileName?: string;
 	onSave?: (fileName: string) => void;
 	onDownload?: (fileName: string) => void;
+	controllerRef?: (controller: RendererController | null) => void;
 }
 
 // Loggers
@@ -72,31 +77,31 @@ export interface LoggerProps {
 
 // Language Server Protocol (LSP) Support
 export interface LSPPlugin extends Plugin {
-    type: 'lsp';
-    icon?: React.ComponentType;
+	type: 'lsp';
+	icon?: React.ComponentType;
 
-    // Core LSP functionality
-    initialize(): Promise<void>;
-    shutdown(): Promise<void>;
-    isEnabled(): boolean;
-    sendRequest(request: LSPRequest): Promise<LSPResponse>;
-    onNotification(notification: LSPNotification): void;
+	// Core LSP functionality
+	initialize(): Promise<void>;
+	shutdown(): Promise<void>;
+	isEnabled(): boolean;
+	sendRequest(request: LSPRequest): Promise<LSPResponse>;
+	onNotification(notification: LSPNotification): void;
 
-    // Server configuration
-    getServerConfig?(): LSPServerConfig | Promise<LSPServerConfig>;
+	// Server configuration
+	getServerConfig?(): LSPServerConfig | Promise<LSPServerConfig>;
 
-    // UI Components
-    renderPanel?: React.ComponentType<LSPPanelProps>;
+	// UI Components
+	renderPanel?: React.ComponentType<LSPPanelProps>;
 
-    // Plugin-specific configuration
-    getConnectionStatus(): 'connected' | 'connecting' | 'disconnected' | 'error';
-    getStatusMessage(): string;
+	// Plugin-specific configuration
+	getConnectionStatus(): 'connected' | 'connecting' | 'disconnected' | 'error';
+	getStatusMessage(): string;
 
-    // File type support
-    getSupportedFileTypes(): string[];
-    getSupportedLanguages(): string[];
+	// File type support
+	getSupportedFileTypes(): string[];
+	getSupportedLanguages(): string[];
 
-    setLSPRequestHandler?(handler: (request: LSPRequest) => Promise<LSPResponse>): void;
+	setLSPRequestHandler?(handler: (request: LSPRequest) => Promise<LSPResponse>): void;
 }
 
 export interface LSPPanelProps {
