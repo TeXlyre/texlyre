@@ -1,9 +1,9 @@
 // src/extensions/typst.ts/TypstCompilerEngine.ts
 import { nanoid } from 'nanoid';
-import type { TypstPdfOptions } from '../../types/typst';
+import type { TypstOutputFormat, TypstPdfOptions } from '../../types/typst';
 
 export type TypstWorkerMessage =
-    | { id: string; type: 'compile'; payload: { mainFilePath: string; sources: Record<string, string | Uint8Array>; format: 'pdf' | 'svg' | 'canvas'; pdfOptions?: TypstPdfOptions } }
+    | { id: string; type: 'compile'; payload: { mainFilePath: string; sources: Record<string, string | Uint8Array>; format: TypstOutputFormat; pdfOptions?: TypstPdfOptions } }
     | { id: string; type: 'ping' };
 
 export type TypstWorkerResponse =
@@ -58,7 +58,7 @@ export class TypstCompilerEngine {
     async compile(
         mainFilePath: string,
         sources: Record<string, string | Uint8Array>,
-        format: 'pdf' | 'svg' | 'canvas',
+        format: TypstOutputFormat,
         pdfOptions?: TypstPdfOptions,
         signal?: AbortSignal
     ): Promise<{ format: string; output: Uint8Array | string; diagnostics?: any[] }> {
@@ -77,7 +77,7 @@ export class TypstCompilerEngine {
     private callWorker<TType extends 'compile' | 'ping'>(
         type: TType,
         payload: TType extends 'compile'
-            ? { mainFilePath: string; sources: Record<string, string | Uint8Array>; format: 'pdf' | 'svg' | 'canvas'; pdfOptions?: TypstPdfOptions }
+            ? { mainFilePath: string; sources: Record<string, string | Uint8Array>; format: TypstOutputFormat; pdfOptions?: TypstPdfOptions }
             : undefined,
         signal?: AbortSignal
     ): Promise<any> {

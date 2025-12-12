@@ -8,7 +8,7 @@ export const getCanvasRendererSettings = (): Setting[] => [
     subcategory: t("Canvas Output"),
     type: 'checkbox',
     label: t("Use Canvas Renderer"),
-    description: t("Use the canvas renderer for high-performance rendering of large documents"),
+    description: t("Use canvas renderer for live document rendering"),
     defaultValue: true
   },
   {

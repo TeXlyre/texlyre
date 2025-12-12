@@ -2,7 +2,7 @@
 import type { User } from '../types/auth';
 import type { FileNode } from '../types/files';
 import type { Project } from '../types/projects';
-import type { TypstPdfOptions } from '../types/typst';
+import type { TypstPdfOptions, TypstOutputFormat } from '../types/typst';
 
 export interface UnifiedManifest {
 	version: string;
@@ -18,7 +18,7 @@ export interface ProjectMetadata {
 	mainFile?: string;
 	latexEngine?: 'pdftex' | 'xetex' | 'luatex';
 	typstEngine?: string;
-	typstOutputFormat?: 'pdf' | 'svg' | 'canvas';
+	typstOutputFormat?: TypstOutputFormat;
 	typstPdfOptions?: TypstPdfOptions;
 	docUrl: string;
 	createdAt: number;

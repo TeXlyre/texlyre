@@ -1,6 +1,8 @@
+// extras/renderers/canvas/CanvasRenderer.tsx
 import { t } from '@/i18n';
 import type React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useImperativeHandle } from 'react';
+import * as pdfjsLib from 'pdfjs-dist';
 
 import {
     ChevronLeftIcon,
@@ -13,57 +15,445 @@ import {
     ZoomOutIcon,
     ExpandIcon,
     MinimizeIcon
-} from
-    '@/components/common/Icons';
-import { getCanvasRendererSettings } from './settings';
+} from '@/components/common/Icons';
 import { useSettings } from '@/hooks/useSettings';
 import { useProperties } from '@/hooks/useProperties';
 import type { RendererProps } from '@/plugins/PluginInterface';
-import { CanvasPageManager } from './CanvasPageManager';
 import './styles.css';
+import { getCanvasRendererSettings } from './settings';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.mjs',
+    import.meta.url
+).toString();
+
+export interface CanvasRendererHandle {
+    updateSvgContent: (svgBuffer: ArrayBuffer) => void;
+}
+
+let workerInstance: Worker | null = null;
+
+function getWorker(): Worker {
+    if (!workerInstance) {
+        workerInstance = new Worker(new URL('./worker.ts?worker', import.meta.url), { type: 'module' });
+    }
+    return workerInstance;
+}
 
 const CanvasRenderer: React.FC<RendererProps> = ({
     content,
     fileName,
-    onDownload
+    onDownload,
+    controllerRef
 }) => {
     const { getSetting } = useSettings();
     const { getProperty, setProperty, registerProperty } = useProperties();
 
-    const containerRef = useRef<HTMLDivElement>(null);
-    const contentElRef = useRef<HTMLDivElement>(null);
-    const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-    const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map());
-    const [pageManager] = useState(() => new CanvasPageManager(10, 2));
-    const propertiesRegistered = useRef(false);
-    const renderQueue = useRef<Set<number>>(new Set());
-    const isRendering = useRef(false);
-
     const [numPages, setNumPages] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageInput, setPageInput] = useState('1');
+    const [pageOffsets, setPageOffsets] = useState<number[]>([]);
+    const [totalHeight, setTotalHeight] = useState(0);
     const [isEditingPageInput, setIsEditingPageInput] = useState(false);
     const [scale, setScale] = useState(1.0);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [svgContent, setSvgContent] = useState<string | null>(null);
     const [scrollView, setScrollView] = useState(false);
-    const [visiblePages, setVisiblePages] = useState<Set<number>>(new Set());
+    const [renderRange, setRenderRange] = useState<{ start: number; end: number }>({ start: 1, end: 1 });
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [fitMode, setFitMode] = useState<'fit-width' | 'fit-height'>('fit-width');
+    const [pageMetadata, setPageMetadata] = useState<Map<number, { width: number; height: number }>>(new Map());
+
+    const containerRef = useRef<HTMLDivElement>(null);
+    const contentElRef = useRef<HTMLDivElement>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map());
+    const propertiesRegistered = useRef(false);
+    const svgPagesRef = useRef<Map<number, string>>(new Map());
+    const pdfDocRef = useRef<any>(null);
+    const contentTypeRef = useRef<'svg' | 'pdf'>('svg');
+    const fullSvgBufferRef = useRef<ArrayBuffer | null>(null);
+    const pendingRenderRef = useRef<Set<number>>(new Set());
+    const renderingRef = useRef<Set<number>>(new Set());
+    const lastStablePageRef = useRef<number>(1);
+    const isTrackingEnabledRef = useRef<boolean>(true);
+
+    const BUFFER_PAGES = 2;
+    const UPDATE_THROTTLE = 100;
+    const HYSTERESIS_THRESHOLD = 0.2;
 
     const canvasRendererEnable = getSetting('canvas-renderer-enable')?.value as boolean ?? true;
 
-    useEffect(() => {
-        console.log('[CanvasRenderer] Component mounted/updated', {
-            hasContent: !!content,
-            contentByteLength: content?.byteLength,
-            fileName,
-            canvasRendererEnable,
-            isLoading,
-            error
+    const parseSvgPages = useCallback((svgBuffer: ArrayBuffer): Promise<{
+        pages: Map<number, string>;
+        metadata: Map<number, { width: number; height: number }>;
+    }> => {
+        return new Promise((resolve, reject) => {
+            const worker = getWorker();
+
+            const handleMessage = (e: MessageEvent) => {
+                if (e.data.type === 'parsed') {
+                    worker.removeEventListener('message', handleMessage);
+                    const pages = new Map<number, string>(e.data.pages);
+                    const metadata = new Map<number, { width: number; height: number }>(e.data.metadata);
+                    resolve({ pages, metadata });
+                } else if (e.data.type === 'error') {
+                    worker.removeEventListener('message', handleMessage);
+                    reject(new Error(e.data.error));
+                }
+            };
+
+            worker.addEventListener('message', handleMessage);
+            worker.postMessage({ type: 'parse', svgBuffer });
         });
-    }, [content, fileName, canvasRendererEnable, isLoading, error]);
+    }, []);
+
+    const parsePdfPages = useCallback(async (pdfBuffer: ArrayBuffer): Promise<void> => {
+        const loadingTask = pdfjsLib.getDocument({ data: pdfBuffer });
+        const pdfDoc = await loadingTask.promise;
+        pdfDocRef.current = pdfDoc;
+
+        const metadata = new Map<number, { width: number; height: number }>();
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+            const page = await pdfDoc.getPage(i);
+            const viewport = page.getViewport({ scale: 1.0 });
+            metadata.set(i, { width: viewport.width, height: viewport.height });
+        }
+
+        setPageMetadata(metadata);
+        setNumPages(pdfDoc.numPages);
+    }, []);
+
+    const renderPageToCanvas = useCallback((pageNumber: number) => {
+        if (renderingRef.current.has(pageNumber)) {
+            pendingRenderRef.current.add(pageNumber);
+            return;
+        }
+
+        const canvas = canvasRefs.current.get(pageNumber);
+        if (!canvas) return;
+
+        const svgString = svgPagesRef.current.get(pageNumber);
+        if (!svgString) return;
+
+        const meta = pageMetadata.get(pageNumber);
+        const width = meta?.width || 595;
+        const height = meta?.height || 842;
+
+        renderingRef.current.add(pageNumber);
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            renderingRef.current.delete(pageNumber);
+            return;
+        }
+
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        const scaledWidth = width * scale;
+        const scaledHeight = height * scale;
+
+        const newCanvasWidth = Math.floor(scaledWidth * pixelRatio);
+        const newCanvasHeight = Math.floor(scaledHeight * pixelRatio);
+
+        if (canvas.width !== newCanvasWidth || canvas.height !== newCanvasHeight) {
+            canvas.width = newCanvasWidth;
+            canvas.height = newCanvasHeight;
+            canvas.style.width = `${scaledWidth}px`;
+            canvas.style.height = `${scaledHeight}px`;
+        }
+
+        const img = new Image();
+        const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+
+        img.onload = () => {
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.scale(pixelRatio, pixelRatio);
+
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, scaledWidth, scaledHeight);
+
+            ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
+
+            URL.revokeObjectURL(url);
+            renderingRef.current.delete(pageNumber);
+
+            if (pendingRenderRef.current.has(pageNumber)) {
+                pendingRenderRef.current.delete(pageNumber);
+                requestAnimationFrame(() => renderPageToCanvas(pageNumber));
+            }
+        };
+
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            renderingRef.current.delete(pageNumber);
+            pendingRenderRef.current.delete(pageNumber);
+        };
+
+        img.src = url;
+    }, [pageMetadata, scale]);
+
+    const renderPdfPageToCanvas = useCallback(async (pageNumber: number) => {
+        if (!pdfDocRef.current || renderingRef.current.has(pageNumber)) {
+            if (renderingRef.current.has(pageNumber)) {
+                pendingRenderRef.current.add(pageNumber);
+            }
+            return;
+        }
+
+        const canvas = canvasRefs.current.get(pageNumber);
+        if (!canvas) return;
+
+        renderingRef.current.add(pageNumber);
+
+        try {
+            const page = await pdfDocRef.current.getPage(pageNumber);
+            const viewport = page.getViewport({ scale });
+            const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+            const scaledViewport = page.getViewport({ scale: scale * pixelRatio });
+
+            const off = document.createElement("canvas");
+            off.width = scaledViewport.width;
+            off.height = scaledViewport.height;
+            const offCtx = off.getContext("2d");
+            if (!offCtx) return;
+
+            await page.render({
+                canvasContext: offCtx,
+                viewport: scaledViewport
+            }).promise;
+
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+                canvas.width = scaledViewport.width;
+                canvas.height = scaledViewport.height;
+                canvas.style.width = `${viewport.width}px`;
+                canvas.style.height = `${viewport.height}px`;
+
+                ctx.drawImage(off, 0, 0);
+            }
+
+        } finally {
+            renderingRef.current.delete(pageNumber);
+
+            if (pendingRenderRef.current.has(pageNumber)) {
+                pendingRenderRef.current.delete(pageNumber);
+                requestAnimationFrame(() => renderPdfPageToCanvas(pageNumber));
+            }
+        }
+    }, [scale]);
+
+    useEffect(() => {
+        if (!scrollView) return;
+        renderVisiblePages();
+    }, [renderRange, scrollView]);
+
+    const getPageHeight = useCallback((pageNum: number): number => {
+        const meta = pageMetadata.get(pageNum);
+        const baseHeight = meta?.height || 842;
+        return baseHeight * scale + 20;
+    }, [scale, pageMetadata]);
+
+    const getPageTop = useCallback((pageNum: number): number => {
+        let height = 0;
+        for (let i = 1; i < pageNum; i++) {
+            height += getPageHeight(i);
+        }
+        return height;
+    }, [getPageHeight]);
+
+    const scrollToPage = useCallback((pageNum: number) => {
+        if (!scrollView || !scrollContainerRef.current) return;
+
+        const targetTop = getPageTop(pageNum);
+        scrollContainerRef.current.scrollTo({ top: targetTop, behavior: 'smooth' });
+    }, [scrollView, getPageTop]);
+
+    const updateCurrentPageFromScroll = useCallback(() => {
+        if (!scrollView || !scrollContainerRef.current || isEditingPageInput || !isTrackingEnabledRef.current) {
+            return;
+        }
+
+        const container = scrollContainerRef.current;
+        const scrollTop = container.scrollTop;
+        const containerHeight = container.clientHeight;
+        const viewportCenter = scrollTop + containerHeight / 2;
+
+        let accumulatedHeight = 0;
+        let closestPage = 1;
+        let minDistance = Infinity;
+
+        for (let i = 1; i <= numPages; i++) {
+            const pageHeight = getPageHeight(i);
+            const pageTop = accumulatedHeight;
+            const pageCenter = pageTop + pageHeight / 2;
+            const distance = Math.abs(viewportCenter - pageCenter);
+
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestPage = i;
+            }
+
+            accumulatedHeight += pageHeight;
+            if (pageTop > viewportCenter + containerHeight) break;
+        }
+
+        if (closestPage !== lastStablePageRef.current) {
+            const currentPageHeight = getPageHeight(lastStablePageRef.current);
+            const hysteresisThreshold = currentPageHeight * HYSTERESIS_THRESHOLD;
+
+            if (minDistance < hysteresisThreshold || Math.abs(closestPage - lastStablePageRef.current) > 1) {
+                lastStablePageRef.current = closestPage;
+                setCurrentPage(closestPage);
+                setPageInput(String(closestPage));
+            }
+        }
+    }, [scrollView, numPages, isEditingPageInput, getPageHeight]);
+
+    const calculateVisibleRange = useCallback(() => {
+        if (!scrollView || !scrollContainerRef.current) return;
+
+        const container = scrollContainerRef.current;
+        const scrollTop = container.scrollTop;
+        const containerHeight = container.clientHeight;
+        const scrollBottom = scrollTop + containerHeight;
+
+        let accumulatedHeight = 0;
+        let startPage = 1;
+        let endPage = 1;
+        let foundStart = false;
+
+        for (let i = 1; i <= numPages; i++) {
+            const pageHeight = getPageHeight(i);
+            const pageTop = accumulatedHeight;
+            const pageBottom = accumulatedHeight + pageHeight;
+
+            if (!foundStart && pageBottom > scrollTop) {
+                startPage = Math.max(1, i - BUFFER_PAGES);
+                foundStart = true;
+            }
+
+            if (pageTop < scrollBottom) {
+                endPage = Math.min(numPages, i + BUFFER_PAGES);
+            }
+
+            accumulatedHeight += pageHeight;
+
+            if (foundStart && pageTop > scrollBottom) break;
+        }
+
+        setRenderRange({ start: startPage, end: endPage });
+    }, [scrollView, numPages, getPageHeight]);
+
+    const renderVisiblePages = useCallback(() => {
+        if (scrollView) {
+            for (let i = renderRange.start; i <= renderRange.end; i++) {
+                if (i <= numPages) {
+                    if (contentTypeRef.current === 'svg' && svgPagesRef.current.has(i)) {
+                        renderPageToCanvas(i);
+                    } else if (contentTypeRef.current === 'pdf' && pdfDocRef.current) {
+                        renderPdfPageToCanvas(i);
+                    }
+                }
+            }
+        } else {
+            if (contentTypeRef.current === 'svg' && svgPagesRef.current.has(currentPage)) {
+                renderPageToCanvas(currentPage);
+            } else if (contentTypeRef.current === 'pdf' && pdfDocRef.current) {
+                renderPdfPageToCanvas(currentPage);
+            }
+        }
+    }, [scrollView, renderRange, currentPage, numPages, renderPageToCanvas, renderPdfPageToCanvas]);
+
+    useEffect(() => {
+        if (!scrollView || !scrollContainerRef.current) return;
+
+        let rafId: number | null = null;
+        let lastUpdateTime = 0;
+
+        const handleScroll = () => {
+            if (rafId !== null) {
+                cancelAnimationFrame(rafId);
+            }
+
+            rafId = requestAnimationFrame(() => {
+                const now = Date.now();
+                if (now - lastUpdateTime >= UPDATE_THROTTLE) {
+                    lastUpdateTime = now;
+                    calculateVisibleRange();
+                    updateCurrentPageFromScroll();
+                }
+            });
+        };
+
+        const container = scrollContainerRef.current;
+        container.addEventListener('scroll', handleScroll, { passive: true });
+
+        calculateVisibleRange();
+        updateCurrentPageFromScroll();
+
+        return () => {
+            container.removeEventListener('scroll', handleScroll);
+            if (rafId !== null) {
+                cancelAnimationFrame(rafId);
+            }
+        };
+    }, [scrollView, calculateVisibleRange, updateCurrentPageFromScroll]);
+
+    useEffect(() => {
+        if (!scrollView) return;
+
+        isTrackingEnabledRef.current = false;
+
+        const timer = setTimeout(() => {
+            isTrackingEnabledRef.current = true;
+            updateCurrentPageFromScroll();
+        }, 200);
+
+        return () => clearTimeout(timer);
+    }, [scale, scrollView, updateCurrentPageFromScroll]);
+
+    const updateContent = useCallback(async (buffer: ArrayBuffer) => {
+        if (!buffer || buffer.byteLength === 0) return;
+
+        fullSvgBufferRef.current = buffer;
+
+        const arr = new Uint8Array(buffer);
+        const isPdf = arr.length > 4 && arr[0] === 0x25 && arr[1] === 0x50 && arr[2] === 0x44 && arr[3] === 0x46;
+        contentTypeRef.current = isPdf ? 'pdf' : 'svg';
+
+        try {
+            if (isPdf) {
+                await parsePdfPages(buffer);
+            } else {
+                const { pages, metadata } = await parseSvgPages(buffer);
+                svgPagesRef.current = pages;
+                setPageMetadata(metadata);
+                setNumPages(pages.size);
+            }
+
+            setIsLoading(false);
+            setError(null);
+
+            requestAnimationFrame(() => {
+                renderVisiblePages();
+            });
+
+        } catch (err) {
+            console.error('[CanvasRenderer] Failed to parse content:', err);
+            setError(`Failed to parse content: ${err}`);
+            setIsLoading(false);
+        }
+    }, [parseSvgPages, parsePdfPages, renderVisiblePages]);
+
+    useImperativeHandle(controllerRef, () => ({
+        updateContent: (newContent: ArrayBuffer | string) => {
+            const buffer = typeof newContent === 'string'
+                ? new TextEncoder().encode(newContent).buffer
+                : newContent;
+            updateContent(buffer);
+        }
+    }), [updateContent]);
 
     useEffect(() => {
         if (propertiesRegistered.current) return;
@@ -97,247 +487,47 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     }, [getProperty]);
 
     useEffect(() => {
-        const loadContent = async () => {
-            console.log('[CanvasRenderer] loadContent called', { hasContent: !!content });
-
-            if (!content) {
-                setError(t('No content available'));
-                setIsLoading(false);
-                return;
-            }
-
-            try {
-                setIsLoading(true);
-                setError(null);
-
-                const textDecoder = new TextDecoder();
-                const svgText = textDecoder.decode(content);
-
-                console.log('[CanvasRenderer] Decoded SVG', {
-                    svgTextLength: svgText.length,
-                    svgTextPreview: svgText.substring(0, 100)
-                });
-
-                setSvgContent(svgText);
-
-                const pageCount = pageManager.parseSvgDocument(svgText);
-                console.log('[CanvasRenderer] Parsed document', { pageCount });
-
-                setNumPages(pageCount);
-                setCurrentPage(1);
-                setPageInput('1');
-
-                setIsLoading(false);
-            } catch (err) {
-                console.error('[CanvasRenderer] Error loading content:', err);
-                setError(`Failed to load content: ${err}`);
-                setIsLoading(false);
-            }
-        };
-
-        loadContent();
-    }, [content, pageManager]);
-
-    const renderPageToCanvas = useCallback(async (pageNumber: number) => {
-        if (renderQueue.current.has(pageNumber)) return;
-        renderQueue.current.add(pageNumber);
-
-        try {
-            const svgString = await pageManager.getPage(pageNumber);
-            console.log('[CanvasRenderer] renderPageToCanvas', {
-                pageNumber,
-                hasSvgString: !!svgString,
-                svgLength: svgString?.length
-            });
-
-            if (!svgString) return;
-
-            const canvas = canvasRefs.current.get(pageNumber);
-            if (!canvas) {
-                console.error('[CanvasRenderer] No canvas element for page', pageNumber);
-                return;
-            }
-
-            const metadata = pageManager.getPageMetadata(pageNumber);
-            if (!metadata) {
-                console.error('[CanvasRenderer] No metadata for page', pageNumber);
-                return;
-            }
-
-            const dpr = Math.max(1, Math.min(scale, 3));
-            const canvasWidth = Math.floor(metadata.width * dpr);
-            const canvasHeight = Math.floor(metadata.height * dpr);
-
-            console.log('[CanvasRenderer] Canvas dimensions', {
-                canvasWidth,
-                canvasHeight,
-                dpr,
-                metadataWidth: metadata.width,
-                metadataHeight: metadata.height
-            });
-
-            canvas.width = canvasWidth;
-            canvas.height = canvasHeight;
-
-            const ctx = canvas.getContext('2d', { alpha: false });
-            if (!ctx) {
-                console.error('[CanvasRenderer] Failed to get 2d context');
-                return;
-            }
-
-            ctx.scale(dpr, dpr);
-
-            const img = new Image();
-            const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-            const url = URL.createObjectURL(svgBlob);
-
-            console.log('[CanvasRenderer] Created blob URL:', url);
-
-            await new Promise<void>((resolve, reject) => {
-                img.onload = () => {
-                    console.log('[CanvasRenderer] Image loaded successfully', {
-                        pageNumber,
-                        imgWidth: img.width,
-                        imgHeight: img.height
-                    });
-
-                    ctx.fillStyle = 'white';
-                    ctx.fillRect(0, 0, metadata.width, metadata.height);
-
-                    ctx.drawImage(img, 0, 0, metadata.width, metadata.height);
-
-                    const imageData = ctx.getImageData(0, 0, 10, 10);
-                    const hasNonBlackPixels = Array.from(imageData.data).some((v) => v > 0);
-                    console.log('[CanvasRenderer] Canvas pixel check', {
-                        pageNumber,
-                        hasNonBlackPixels,
-                        firstPixels: Array.from(imageData.data.slice(0, 12))
-                    });
-
-                    URL.revokeObjectURL(url);
-                    resolve();
-                };
-                img.onerror = (e) => {
-                    console.error('[CanvasRenderer] Image failed to load', { pageNumber, error: e });
-                    URL.revokeObjectURL(url);
-                    reject(new Error('Failed to load SVG'));
-                };
-                img.src = url;
-            });
-
-            console.log('[CanvasRenderer] Successfully rendered page', pageNumber);
-        } catch (err) {
-            console.error(`[CanvasRenderer] Failed to render page ${pageNumber}:`, err);
-        } finally {
-            renderQueue.current.delete(pageNumber);
+        if (content && (content instanceof ArrayBuffer) && content.byteLength > 0) {
+            updateContent(content);
         }
-    }, [pageManager, scale]);
-
-    const processRenderQueue = useCallback(async () => {
-        if (isRendering.current) return;
-        isRendering.current = true;
-
-        const pagesToRender = scrollView ?
-            Array.from(visiblePages) :
-            [currentPage];
-
-        for (const pageNum of pagesToRender) {
-            await renderPageToCanvas(pageNum);
-        }
-
-        isRendering.current = false;
-    }, [scrollView, visiblePages, currentPage, renderPageToCanvas]);
+    }, []);
 
     useEffect(() => {
-        if (isLoading || numPages === 0) return;
-        processRenderQueue();
-    }, [isLoading, numPages, processRenderQueue]);
+        if (numPages === 0) return;
+
+        const offs: number[] = [];
+        let acc = 0;
+
+        for (let i = 1; i <= numPages; i++) {
+            offs.push(acc);
+            acc += getPageHeight(i);
+        }
+
+        setPageOffsets(offs);
+        setTotalHeight(acc);
+    }, [numPages, scale, pageMetadata]);
 
     useEffect(() => {
-        if (isLoading || numPages === 0) return;
-
         if (scrollView) {
-            visiblePages.forEach((pageNum) => renderPageToCanvas(pageNum));
-        } else {
-            renderPageToCanvas(currentPage);
+            calculateVisibleRange();
         }
-
-        pageManager.preloadPages(currentPage, scrollView);
-    }, [currentPage, scale, scrollView, visiblePages, isLoading, numPages, pageManager, renderPageToCanvas]);
-
-    useEffect(() => {
-        if (!scrollView || isLoading) return;
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                const newVisiblePages = new Set(visiblePages);
-
-                entries.forEach((entry) => {
-                    const pageNum = Number.parseInt(
-                        entry.target.getAttribute('data-page-number') || '0',
-                        10
-                    );
-
-                    if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
-                        newVisiblePages.add(pageNum);
-                    } else {
-                        newVisiblePages.delete(pageNum);
-                    }
-                });
-
-                setVisiblePages(newVisiblePages);
-
-                if (newVisiblePages.size > 0) {
-                    const lowestVisiblePage = Math.min(...Array.from(newVisiblePages));
-                    setCurrentPage(lowestVisiblePage);
-                    if (!isEditingPageInput) {
-                        setPageInput(String(lowestVisiblePage));
-                    }
-                }
-            },
-            {
-                threshold: [0.5],
-                rootMargin: '-20% 0px -20% 0px',
-                root: contentElRef.current
-            }
-        );
-
-        pageRefs.current.forEach((element) => observer.observe(element));
-
-        return () => observer.disconnect();
-    }, [scrollView, isLoading, visiblePages, isEditingPageInput]);
+    }, [scrollView, numPages, scale, calculateVisibleRange]);
 
     const handlePreviousPage = useCallback(() => {
-        if (scrollView) {
-            const targetPage = Math.max(currentPage - 1, 1);
-            const pageElement = pageRefs.current.get(targetPage);
-            if (pageElement) {
-                pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        } else {
-            setCurrentPage((prev) => {
-                const p = Math.max(prev - 1, 1);
-                if (!isEditingPageInput) setPageInput(String(p));
-                return p;
-            });
-        }
-    }, [scrollView, currentPage, isEditingPageInput]);
+        const targetPage = Math.max(currentPage - 1, 1);
+        lastStablePageRef.current = targetPage;
+        setCurrentPage(targetPage);
+        setPageInput(String(targetPage));
+        scrollToPage(targetPage);
+    }, [currentPage, scrollToPage]);
 
     const handleNextPage = useCallback(() => {
-        if (scrollView) {
-            const targetPage = Math.min(currentPage + 1, numPages);
-            const pageElement = pageRefs.current.get(targetPage);
-            if (pageElement) {
-                pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        } else {
-            setCurrentPage((prev) => {
-                const p = Math.min(prev + 1, numPages);
-                if (!isEditingPageInput) setPageInput(String(p));
-                return p;
-            });
-        }
-    }, [scrollView, currentPage, numPages, isEditingPageInput]);
+        const targetPage = Math.min(currentPage + 1, numPages);
+        lastStablePageRef.current = targetPage;
+        setCurrentPage(targetPage);
+        setPageInput(String(targetPage));
+        scrollToPage(targetPage);
+    }, [currentPage, numPages, scrollToPage]);
 
     const handlePageInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         setPageInput(event.target.value);
@@ -347,33 +537,31 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         if (event.key === 'Enter') {
             const pageNum = Number.parseInt(pageInput, 10);
             if (!Number.isNaN(pageNum) && pageNum >= 1 && pageNum <= numPages) {
-                if (scrollView) {
-                    const pageElement = pageRefs.current.get(pageNum);
-                    if (pageElement) {
-                        pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                }
+                lastStablePageRef.current = pageNum;
                 setCurrentPage(pageNum);
-                setPageInput(String(pageNum));
+                setIsEditingPageInput(false);
+                (event.target as HTMLInputElement).blur();
+                scrollToPage(pageNum);
             } else {
                 setPageInput(String(currentPage));
+                setIsEditingPageInput(false);
+                (event.target as HTMLInputElement).blur();
             }
-            setIsEditingPageInput(false);
-            (event.target as HTMLInputElement).blur();
         }
-    }, [numPages, currentPage, scrollView, pageInput]);
+    }, [numPages, currentPage, pageInput, scrollToPage]);
 
     const computeFitScale = useCallback((mode: 'fit-width' | 'fit-height') => {
-        const containerWidth = contentElRef.current?.clientWidth || 3840;
-        const containerHeight = contentElRef.current?.clientHeight || 2160;
-        const pageWidth = 595;
-        const pageHeight = 842;
+        const containerWidth = contentElRef.current?.clientWidth || 800;
+        const containerHeight = contentElRef.current?.clientHeight || 600;
+        const meta = pageMetadata.get(currentPage);
+        const pageWidth = meta?.width || 595;
+        const pageHeight = meta?.height || 842;
 
         if (mode === 'fit-width') {
-            return Math.max(0.5, Math.min(10, (containerWidth - 40) / pageWidth));
+            return Math.max(0.25, Math.min(5, (containerWidth - 40) / pageWidth));
         }
-        return Math.max(0.5, Math.min(10, (containerHeight - 40) / pageHeight));
-    }, []);
+        return Math.max(0.25, Math.min(5, (containerHeight - 40) / pageHeight));
+    }, [currentPage, pageMetadata]);
 
     const handleFitToggle = useCallback(() => {
         const nextMode = fitMode === 'fit-width' ? 'fit-height' : 'fit-width';
@@ -411,8 +599,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         setScrollView((prev) => {
             const newScrollView = !prev;
             setProperty('canvas-renderer-scroll-view', newScrollView);
-            pageRefs.current.clear();
-            canvasRefs.current.clear();
             return newScrollView;
         });
     }, [setProperty]);
@@ -428,23 +614,20 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     const handleExport = useCallback(() => {
         if (onDownload && fileName) {
             onDownload(fileName);
-        } else if (svgContent) {
-            try {
-                const blob = new Blob([svgContent], { type: 'image/svg+xml' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = fileName?.replace(/\.typ$/, '.svg') || 'output.svg';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            } catch (err) {
-                console.error('Export error:', err);
-                setError(t('Failed to export SVG'));
-            }
+        } else if (fullSvgBufferRef.current) {
+            const mimeType = contentTypeRef.current === 'pdf' ? 'application/pdf' : 'image/svg+xml';
+            const extension = contentTypeRef.current === 'pdf' ? '.pdf' : '.svg';
+            const blob = new Blob([fullSvgBufferRef.current], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName?.replace(/\.(typ|svg|pdf)$/i, extension) || `output${extension}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
-    }, [svgContent, fileName, onDownload]);
+    }, [fileName, onDownload]);
 
     useEffect(() => {
         const handleFullscreenChange = () => {
@@ -480,47 +663,28 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [handlePreviousPage, handleNextPage]);
 
-    useEffect(() => {
-        return () => pageManager.clear();
-    }, [pageManager]);
-
-    const renderCanvasPage = useCallback((pageNumber: number) => {
-        const metadata = pageManager.getPageMetadata(pageNumber);
-        const width = metadata?.width || 595;
-        const height = metadata?.height || 842;
-
-        return (
-            <canvas
-                ref={(el) => {
-                    if (el) {
-                        canvasRefs.current.set(pageNumber, el);
-                    } else {
-                        canvasRefs.current.delete(pageNumber);
-                    }
-                }}
-                className="canvas-page-canvas"
-                style={{
-                    width: `${width}px`,
-                    height: `${height}px`,
-                    imageRendering: scale > 1.5 ? 'crisp-edges' : 'auto'
-                }} />);
-
-
-    }, [pageManager, scale]);
+    const setCanvasRef = useCallback((pageNumber: number) => (el: HTMLCanvasElement | null) => {
+        if (el) {
+            canvasRefs.current.set(pageNumber, el);
+        } else {
+            canvasRefs.current.delete(pageNumber);
+        }
+    }, []);
 
     if (!canvasRendererEnable) {
         return (
             <div className="canvas-renderer-container">
-                <div className="canvas-renderer-error">{t('Canvas renderer is disabled. Please enable it in settings.')}
-
+                <div className="canvas-renderer-error">
+                    {t('Canvas renderer is disabled. Please enable it in settings.')}
                 </div>
-            </div>);
-
+            </div>
+        );
     }
 
     const zoomOptions = getCanvasRendererSettings().find((s) => s.id === 'canvas-renderer-initial-zoom')?.options || [];
     const currentZoom = Math.round(scale * 100).toString();
     const hasCustomZoom = !zoomOptions.some((opt) => String(opt.value) === currentZoom);
+    const topOffset = scrollView ? (pageOffsets[renderRange.start - 1] || 0) : 0;
 
     return (
         <div className="canvas-renderer-container" ref={containerRef}>
@@ -533,7 +697,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                                 className="toolbarButton"
                                 title={t('Previous Page')}
                                 disabled={currentPage <= 1 || isLoading}>
-
                                 <ChevronLeftIcon />
                             </button>
                             <button
@@ -541,10 +704,10 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                                 className="toolbarButton"
                                 title={t('Next Page')}
                                 disabled={currentPage >= numPages || isLoading}>
-
                                 <ChevronRightIcon />
                             </button>
                         </div>
+
                         <div className="toolbarButtonGroup">
                             <div className="pageNumber">
                                 <input
@@ -560,81 +723,81 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                                     className="toolbarField"
                                     min={1}
                                     max={numPages}
-                                    disabled={isLoading} />
-
+                                    disabled={isLoading}
+                                />
                                 <span>/</span>
                                 <span>{numPages}</span>
                             </div>
                         </div>
+
                         <div className="toolbarButtonGroup">
                             <button
                                 onClick={handleZoomOut}
                                 className="toolbarButton"
                                 title={t('Zoom Out')}
                                 disabled={isLoading}>
-
                                 <ZoomOutIcon />
                             </button>
+
                             <select
                                 value={hasCustomZoom ? 'custom' : currentZoom}
                                 onChange={handleZoomChange}
                                 disabled={isLoading}
                                 className="toolbarZoomSelect"
                                 title={t('Zoom Level')}>
-
-                                {zoomOptions.map((option) =>
+                                {zoomOptions.map((option) => (
                                     <option key={String(option.value)} value={String(option.value)}>
                                         {option.label}
                                     </option>
-                                )}
-                                {hasCustomZoom &&
+                                ))}
+                                {hasCustomZoom && (
                                     <option value="custom">
                                         {Math.round(scale * 100)}%
                                     </option>
-                                }
+                                )}
                             </select>
+
                             <button
                                 onClick={handleZoomIn}
                                 className="toolbarButton"
                                 title={t('Zoom In')}
                                 disabled={isLoading}>
-
                                 <ZoomInIcon />
                             </button>
                         </div>
+
                         <div className="toolbarButtonGroup">
                             <button
                                 onClick={handleFitToggle}
                                 className="toolbarButton"
                                 title={fitMode === 'fit-width' ? t('Fit to Width') : t('Fit to Height')}
                                 disabled={isLoading}>
-
                                 <FitToWidthIcon />
                             </button>
+
                             <button
                                 onClick={handleToggleView}
                                 className="toolbarButton"
                                 title={scrollView ? t('Single Page View') : t('Scroll View')}
                                 disabled={isLoading}>
-
                                 {scrollView ? <PageIcon /> : <ScrollIcon />}
                             </button>
+
                             <button
                                 onClick={handleToggleFullscreen}
                                 className="toolbarButton"
                                 title={isFullscreen ? t('Exit Fullscreen') : t('Fullscreen')}
                                 disabled={isLoading}>
-
                                 {isFullscreen ? <MinimizeIcon /> : <ExpandIcon />}
                             </button>
                         </div>
+
                         <div className="toolbarButtonGroup">
                             <button
                                 onClick={handleExport}
                                 className="toolbarButton"
                                 title={t('Download')}
                                 disabled={isLoading}>
-
                                 <DownloadIcon />
                             </button>
                         </div>
@@ -642,49 +805,84 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                 </div>
             </div>
 
-            <div className={`canvas-renderer-content ${isFullscreen ? 'fullscreen' : ''}`} ref={contentElRef}>
-                <div className="canvas-renderer-viewer" style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
-                    {!isLoading && !error && numPages > 0 && (
-                        scrollView ?
-                            Array.from({ length: numPages }, (_, i) => {
-                                const pageNumber = i + 1;
-                                return (
-                                    <div
-                                        key={`page_${pageNumber}`}
-                                        data-page-number={pageNumber}
-                                        ref={(el) => {
-                                            if (el) {
-                                                pageRefs.current.set(pageNumber, el);
-                                            } else {
-                                                pageRefs.current.delete(pageNumber);
-                                            }
-                                        }}
-                                        className="canvas-page-scroll">
+            <div
+                className={`canvas-renderer-content ${isFullscreen ? 'fullscreen' : ''}`}
+                ref={scrollView ? scrollContainerRef : contentElRef}
+            >
+                <div className="canvas-renderer-viewer">
 
-                                        <div className="canvas-page">
-                                            {renderCanvasPage(pageNumber)}
-                                        </div>
-                                    </div>);
+                    {!isLoading && !error && numPages > 0 && scrollView && (
+                        <div
+                            className="canvas-virtual-wrapper"
+                            style={{
+                                position: "relative",
+                                height: totalHeight,
+                                width: "100%",
+                            }}
+                        >
+                            <div
+                                className="canvas-virtual-inner"
+                                style={{
+                                    position: "absolute",
+                                    top: 0,
+                                    left: 0,
+                                    width: "100%",
+                                    transform: `translateY(${topOffset}px)`,
+                                }}
+                            >
+                                {Array.from(
+                                    { length: renderRange.end - renderRange.start + 1 },
+                                    (_, idx) => {
+                                        const pageNumber = renderRange.start + idx;
+                                        const meta = pageMetadata.get(pageNumber);
+                                        const width = meta?.width || 595;
+                                        const height = meta?.height || 842;
 
-                            }) :
+                                        return (
+                                            <div key={pageNumber} className="canvas-page">
+                                                <canvas
+                                                    ref={setCanvasRef(pageNumber)}
+                                                    className="canvas-page-canvas"
+                                                    style={{
+                                                        width: `${width * scale}px`,
+                                                        height: `${height * scale}px`,
+                                                    }}
+                                                />
+                                            </div>
+                                        );
+                                    }
+                                )}
+                            </div>
+                        </div>
+                    )}
 
-                            <div className="canvas-page">
-                                {renderCanvasPage(currentPage)}
-                            </div>)
+                    {!isLoading && !error && numPages > 0 && !scrollView && (
+                        <div className="canvas-page">
+                            <canvas
+                                ref={setCanvasRef(currentPage)}
+                                className="canvas-page-canvas"
+                                style={{
+                                    width: `${(pageMetadata.get(currentPage)?.width || 595) * scale}px`,
+                                    height: `${(pageMetadata.get(currentPage)?.height || 842) * scale}px`,
+                                }}
+                            />
+                        </div>
+                    )}
 
-                    }
+                    {/* LOADING */}
+                    {isLoading && (
+                        <div className="canvas-renderer-loading">
+                            {t('Loading document...')}
+                        </div>
+                    )}
                 </div>
 
-                {isLoading &&
-                    <div className="canvas-renderer-loading">{t('Loading document...')}
-
-                    </div>
-                }
+                {error && <div className="canvas-renderer-error">{error}</div>}
             </div>
-
-            {error && <div className="canvas-renderer-error">{error}</div>}
-        </div>);
-
+        </div>
+    );
 };
+
+CanvasRenderer.displayName = 'CanvasRenderer';
 
 export default CanvasRenderer;

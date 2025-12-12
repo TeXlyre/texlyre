@@ -1,4 +1,3 @@
-// src/components/output/TypstOutput.tsx
 import { t } from '@/i18n';
 import React from 'react';
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
@@ -8,9 +7,11 @@ import { useTypst } from '../../hooks/useTypst';
 import { useProperties } from '../../hooks/useProperties';
 import { useSettings } from '../../hooks/useSettings';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
+import type { RendererController } from '../../plugins/PluginInterface'
 import ResizablePanel from '../common/ResizablePanel';
 import TypstCompileButton from './TypstCompileButton';
 import { isTypstFile, toArrayBuffer } from '../../utils/fileUtils';
+import { TypstOutputFormat } from '../../types/typst';
 
 interface TypstOutputProps {
   className?: string;
@@ -39,12 +40,14 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     compiledSvg,
     compiledCanvas,
     currentView,
+    logIndicator,
     toggleOutputView,
     currentFormat,
     setCurrentFormat,
     compileDocument,
     activeCompiler
   } = useTypst();
+
   const { selectedFileId, getFile } = useFileTree();
   const { getSetting } = useSettings();
   const { getProperty, setProperty, registerProperty } = useProperties();
@@ -53,10 +56,22 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
   const [visualizerHeight, setVisualizerHeight] = useState(300);
   const [visualizerCollapsed, setVisualizerCollapsed] = useState(false);
 
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
-
+  const canvasControllerRef = useRef<RendererController | null>(null);
   const useEnhancedRenderer = getSetting('pdf-renderer-enable')?.value ?? true;
   const loggerPlugin = pluginRegistry.getLoggerForType('typst');
+
+  const indicatorColor = {
+    idle: '#777',
+    success: '#28a745',
+    warn: '#ffc107',
+    error: '#dc3545',
+  }[logIndicator ?? 'idle'];
+
+  useEffect(() => {
+    if (compiledCanvas && (currentFormat === 'canvas' || currentFormat === 'canvas-pdf') && canvasControllerRef.current?.updateContent) {
+      canvasControllerRef.current.updateContent(compiledCanvas);
+    }
+  }, [compiledCanvas, currentFormat]);
 
   useEffect(() => {
     if (propertiesRegistered.current) return;
@@ -130,6 +145,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
       case 'svg':
         return compiledSvg;
       case 'canvas':
+      case 'canvas-pdf':
         return compiledCanvas;
       default:
         return null;
@@ -182,7 +198,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     URL.revokeObjectURL(url);
   }, [compiledPdf, compiledSvg, compiledCanvas]);
 
-  const handleTabSwitch = useCallback((format: 'pdf' | 'svg' | 'canvas') => {
+  const handleTabSwitch = useCallback((format: TypstOutputFormat) => {
     if (currentFormat !== format) {
       setCurrentFormat(format);
 
@@ -230,104 +246,29 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 
     }
 
-    if (currentFormat === 'svg' && compiledSvg) {
-      const svgRenderer = pluginRegistry.getRendererForOutput('svg', 'svg-renderer');
-      return (
-        <div className="svg-viewer">
-          {svgRenderer ?
-            React.createElement(svgRenderer.renderOutput, {
-              content: new TextEncoder().encode(compiledSvg).buffer,
-              mimeType: 'image/svg+xml',
-              fileName: 'output.svg',
-              onSave: (fileName) => handleSaveOutput('svg', fileName)
-            }) :
-
-            <div className="svg-canvas-container" style={{
-              width: '100%',
-              flex: 1,
-              overflow: 'hidden',
-              padding: '1rem',
-              backgroundColor: 'white',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              minHeight: '400px'
-            }}>
-              <iframe
-                ref={iframeRef}
-                title={t('SVG Output')}
-                srcDoc={`<!DOCTYPE html>
-                                <html>
-                                  <head>
-                                    <style>
-                                      body, html { 
-                                        margin: 0; 
-                                        padding: 0; 
-                                        height: 100%; 
-                                        width: 100%; 
-                                        overflow: hidden; 
-                                        display: flex;
-                                        justify-content: center;
-                                        align-items: center;
-                                      }
-                                      svg { 
-                                        max-width: 100%; 
-                                        max-height: 100%; 
-                                      }
-                                    </style>
-                                  </head>
-                                  <body>${compiledSvg}</body>
-                                </html>`}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  border: '1px solid #ddd',
-                  backgroundColor: 'white'
-                }} />
-
-            </div>
-          }
-        </div>);
-
-    }
-
-    if (currentFormat === 'canvas' && compiledCanvas) {
-      console.log('[TypstOutput] Rendering canvas', {
-        hasCompiledCanvas: !!compiledCanvas,
-        compiledCanvasLength: compiledCanvas?.length,
-        compiledCanvasBuffer: compiledCanvas?.buffer
-      });
-
+    if (currentFormat === 'canvas' || currentFormat === 'canvas-pdf') {
       const canvasRenderer = pluginRegistry.getRendererForOutput('canvas', 'canvas-renderer');
-
-      console.log('[TypstOutput] Canvas renderer found:', !!canvasRenderer);
-
-      if (!canvasRenderer) {
-        console.error('[TypstOutput] No canvas renderer available!');
-      }
 
       return (
         <div className="canvas-viewer">
           {canvasRenderer ?
             React.createElement(canvasRenderer.renderOutput, {
-              content: toArrayBuffer(compiledCanvas.buffer),
-              mimeType: 'image/svg+xml',
-              fileName: 'output.svg',
-              onSave: (fileName) => handleSaveOutput('canvas', fileName)
+              content: compiledCanvas || new ArrayBuffer(0),
+              mimeType: currentFormat === 'canvas-pdf' ? 'application/pdf' : 'image/svg+xml',
+              fileName: currentFormat === 'canvas-pdf' ? 'output.pdf' : 'output.svg',
+              onDownload: (fileName) => handleSaveOutput('canvas', fileName),
+              controllerRef: (controller) => { canvasControllerRef.current = controller; }
             }) :
-
-            <div className="canvas-fallback">{t('Canvas renderer not available')}
-
-            </div>
+            <div className="canvas-fallback">{t('Canvas renderer not available')}</div>
           }
-        </div>);
-
+        </div>
+      );
     }
 
     return null;
-  }, [currentView, currentFormat, compiledPdf, compiledSvg, compiledCanvas, useEnhancedRenderer, handleSavePdf, handleSaveOutput]);
+  }, [currentView, currentFormat, !!compiledPdf, !!compiledCanvas, useEnhancedRenderer, handleSavePdf, handleSaveOutput]);
 
-  const hasAnyOutput = compiledPdf || compiledSvg || compiledCanvas;
+  const hasAnyOutput = compiledPdf || compiledCanvas;
 
   return (
     <div className={`typst-output ${className}`}>
@@ -335,29 +276,28 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
         <div className="view-tabs">
           <button
             className={`tab-button ${currentView === 'log' ? 'active' : ''}`}
-            onClick={() => currentView !== 'log' && toggleOutputView()}>{t('Log')}
-
-
+            onClick={() => currentView !== 'log' && toggleOutputView()}
+          >
+            <div
+              className="status-dot"
+              style={{ backgroundColor: indicatorColor }}
+            />
+            {t('Log')}
           </button>
           {currentView === 'output' &&
             <>
               <button
                 className={`tab-button ${currentView === 'output' && currentFormat === 'pdf' ? 'active' : ''}`}
-                onClick={() => handleTabSwitch('pdf')}>
-
-                PDF
+                onClick={() => handleTabSwitch('pdf')}>{t('PDF')}
               </button>
-              <button
-                className={`tab-button ${currentView === 'output' && currentFormat === 'svg' ? 'active' : ''}`}
-                onClick={() => handleTabSwitch('svg')}>
 
-                SVG
+              <button
+                className={`tab-button ${currentView === 'output' && currentFormat === 'canvas-pdf' ? 'active' : ''}`}
+                onClick={() => handleTabSwitch('canvas-pdf')}>{t('Canvas (PDF)')}
               </button>
               <button
                 className={`tab-button ${currentView === 'output' && currentFormat === 'canvas' ? 'active' : ''}`}
-                onClick={() => handleTabSwitch('canvas')}>{t('Canvas')}
-
-
+                onClick={() => handleTabSwitch('canvas')}>{t('Canvas (SVG)')}
               </button>
             </>
           }
@@ -366,8 +306,6 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
               className={'tab-button'}
               onClick={() => toggleOutputView()}
               disabled={!hasAnyOutput}>{t('Output')}
-
-
             </button>
           }
         </div>

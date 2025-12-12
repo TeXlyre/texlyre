@@ -33,7 +33,12 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
   onExpandLatexOutput,
   linkedFileInfo
 }) => {
-  const { compileLog, compiledPdf, currentView, toggleOutputView, activeCompiler } = useLaTeX();
+  const { compileLog,
+    compiledPdf,
+    currentView,
+    toggleOutputView,
+    logIndicator,
+    activeCompiler } = useLaTeX();
   const { selectedFileId, getFile } = useFileTree();
   const { getSetting } = useSettings();
   const { getProperty, setProperty, registerProperty } = useProperties();
@@ -45,6 +50,13 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
   const useEnhancedRenderer = getSetting('pdf-renderer-enable')?.value ?? true;
   const loggerPlugin = pluginRegistry.getLoggerForType('latex');
   const pdfRendererPlugin = pluginRegistry.getRendererForOutput('pdf');
+
+  const indicatorColor = {
+    idle: '#777',
+    success: '#28a745',
+    warn: '#ffc107',
+    error: '#dc3545',
+  }[logIndicator ?? 'idle'];
 
   useEffect(() => {
     if (propertiesRegistered.current) return;
@@ -156,16 +168,18 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
         <div className="view-tabs">
           <button
             className={`tab-button ${currentView === 'log' ? 'active' : ''}`}
-            onClick={() => currentView !== 'log' && toggleOutputView()}>{t('Log')}
-
-
+            onClick={() => currentView !== 'log' && toggleOutputView()}
+          >
+            <div
+              className="status-dot"
+              style={{ backgroundColor: indicatorColor }}
+            />
+            {t('Log')}
           </button>
           <button
             className={`tab-button ${currentView === 'pdf' ? 'active' : ''}`}
             onClick={() => currentView !== 'pdf' && toggleOutputView()}
-            disabled={!compiledPdf}>
-
-            PDF
+            disabled={!compiledPdf}>{t('PDF')}
           </button>
         </div>
         <LaTeXCompileButton

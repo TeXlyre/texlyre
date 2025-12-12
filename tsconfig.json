@@ -37,8 +37,8 @@
 	},
 	"include": [
 		"src/**/*",
-		"extras/**/*",
 		"scripts/**/*",
+		"extras/**/*",
 		"build.ts",
 		"plugins.config.js",
 		"texlyre.config.ts"

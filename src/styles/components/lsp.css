@@ -185,12 +185,6 @@
 	background-color: var(--pico-primary-focus);
 }
 
-.status-dot {
-	width: 8px;
-	height: 8px;
-	border-radius: 50%;
-}
-
 .lsp-label {
 	font-size: var(--space-sd);
 	color: var(--text-color);

@@ -312,8 +312,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                             className="dropdown-select"
                             disabled={isExporting}>
                             <option value="pdf">{t('PDF')}</option>
-                            <option value="svg">{t('SVG')}</option>
-                            <option value="canvas">{t('Canvas')}</option>
+                            <option value="canvas">{t('SVG')}</option>
                         </select>
                         {selectedFormat === 'pdf' &&
                             <button

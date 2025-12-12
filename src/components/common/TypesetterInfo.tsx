@@ -110,9 +110,8 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
         <div className="typesetter-tooltip-section">
           <strong>{t('Output Formats:')}</strong>
           <ul>
-            <li>PDF</li>
-            <li>SVG</li>
-            <li>{t('Canvas (HTML)')}</li>
+            <li>{t('PDF')}</li>
+            <li>{t('SVG')}</li>
           </ul>
         </div>
       </>);

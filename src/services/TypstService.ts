@@ -68,7 +68,7 @@ class TypstService {
         const normalizedMainFileName = this.normalizePath(mainFileName);
 
         try {
-            this.showNotification('info', t('Preparing files for Typst compilation...'), operationId);
+            this.showNotification('info', t('Preparing files for Typst compilation...'), operationId, format);
 
             const { mainContent, sources } = await this.prepareSources(
                 normalizedMainFileName,
@@ -82,11 +82,11 @@ class TypstService {
                     log: `Main file '${normalizedMainFileName}' is empty or not found`,
                     format,
                 };
-                this.handleCompilationError(operationId, result.log);
+                this.handleCompilationError(operationId, format, result.log);
                 return result;
             }
 
-            this.showNotification('info', t(`Compiling Typst to {format}...`, { format: format.toUpperCase() }), operationId);
+            this.showNotification('info', t(`Compiling Typst to {format}...`, { format: format.toUpperCase() }), operationId, format);
 
             const { output, diagnostics } = await this.performCompilationInWorker(
                 normalizedMainFileName,
@@ -108,7 +108,7 @@ class TypstService {
                     log: formattedLog || 'Compilation failed with errors',
                     format,
                 };
-                this.handleCompilationError(operationId, 'Compilation failed');
+                this.handleCompilationError(operationId, format, 'Compilation failed');
                 await this.saveCompilationLog(normalizedMainFileName, result.log);
                 return result;
             }
@@ -116,7 +116,7 @@ class TypstService {
             const result = this.createSuccessResult(output, format, formattedLog);
             await this.saveCompilationOutput(normalizedMainFileName, result);
 
-            this.showNotification('success', t(`Typst {format} compilation completed`, { format: format.toUpperCase() }), operationId, 3000);
+            this.showNotification('success', t(`Typst {format} compilation completed`, { format: format.toUpperCase() }), operationId, format, 3000);
 
             return result;
         } catch (error) {
@@ -140,7 +140,7 @@ class TypstService {
                 format,
             };
 
-            this.handleCompilationError(operationId, 'Compilation failed');
+            this.handleCompilationError(operationId, format, 'Compilation failed');
             await this.saveCompilationLog(normalizedMainFileName, result.log);
 
             return result;
@@ -172,7 +172,7 @@ class TypstService {
         const normalizedMainFileName = this.normalizePath(mainFileName);
 
         try {
-            this.showNotification('info', t('Preparing files for export...'), operationId);
+            this.showNotification('info', t('Preparing files for export...'), operationId, format);
 
             const { sources } = await this.prepareSources(
                 normalizedMainFileName,
@@ -183,7 +183,8 @@ class TypstService {
             this.showNotification(
                 'info',
                 t('Compiling for export to {format}...', { format: format.toUpperCase() }),
-                operationId
+                operationId,
+                format
             );
 
             const { output, diagnostics } = await this.performCompilationInWorker(
@@ -197,14 +198,14 @@ class TypstService {
             const hasErrors = diagnostics?.some((d: any) => d.severity === 'error');
 
             if (hasErrors) {
-                this.showNotification('error', t('Export failed'), operationId, 3000);
+                this.showNotification('error', t('Export failed'), operationId, format, 3000);
                 return;
             }
 
             const baseName = this.getBaseName(normalizedMainFileName);
             const files: Array<{ content: Uint8Array; name: string; mimeType: string }> = [];
 
-            if (format === 'pdf' && output instanceof Uint8Array) {
+            if ((format === 'pdf' || format === 'canvas-pdf') && output instanceof Uint8Array) {
                 files.push({
                     content: output,
                     name: `${baseName}.pdf`,
@@ -233,22 +234,18 @@ class TypstService {
                 await downloadFiles(files, baseName);
             }
 
-            this.showNotification('success', t('Export completed successfully'), operationId, 2000);
+            this.showNotification('success', t('Export completed successfully'), operationId, format, 2000);
         } catch (error) {
             if (error instanceof Error && /cancel/i.test(error.message)) {
                 return;
             }
 
             const errorMessage = error instanceof Error ? error.message : t('Unknown error');
-            this.showNotification('error', `Export error: ${errorMessage}`, operationId, 5000);
+            this.showNotification('error', `Export error: ${errorMessage}`, operationId, format, 5000);
         } finally {
             this.setStatus('ready');
             this.compilationAbortController = null;
         }
-    }
-
-    getSupportedFormats(): TypstOutputFormat[] {
-        return ['pdf', 'svg', 'canvas'];
     }
 
     setDefaultFormat(format: TypstOutputFormat): void {
@@ -332,7 +329,9 @@ class TypstService {
             case 'canvas':
                 console.log('[TypstService] Creating canvas result, encoding string to Uint8Array');
                 result.canvas = new TextEncoder().encode(output as string);
-                console.log('[TypstService] Canvas result created', { canvasLength: result.canvas.length });
+                break;
+            case 'canvas-pdf':
+                result.canvas = output as Uint8Array;
                 break;
         }
 
@@ -578,18 +577,20 @@ class TypstService {
         return fileName.includes('.') ? fileName.split('.').slice(0, -1).join('.') : fileName;
     }
 
-    private handleCompilationError(operationId: string, message: string): void {
+    private handleCompilationError(operationId: string, format: TypstOutputFormat, message: string): void {
         this.setStatus('ready');
-        this.showNotification('error', t(`Typst compilation failed: {message}`, { message }), operationId, 5000);
+        this.showNotification('error', t(`Typst compilation failed: {message}`, { message }), operationId, format, 5000);
     }
 
     private showNotification(
         type: 'info' | 'success' | 'error',
         message: string,
         operationId?: string,
-        duration?: number
+        format?: TypstOutputFormat,
+        duration?: number,
     ): void {
-        if (!this.areNotificationsEnabled()) return;
+        if (!this.areNotificationsEnabled() ||
+            format.toLowerCase().includes("canvas")) return;
 
         switch (type) {
             case 'info':

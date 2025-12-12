@@ -35,6 +35,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
   const [compiledCanvas, setCompiledCanvas] = useState<Uint8Array | null>(null);
   const [compileLog, setCompileLog] = useState<string>('');
   const [currentView, setCurrentView] = useState<'log' | 'output'>('log');
+  const [logIndicator, setLogIndicator] = useState<'idle' | 'success' | 'error'>('idle');
   const [currentFormat, setCurrentFormat] = useState<TypstOutputFormat>('pdf');
   const [activeCompiler, setActiveCompiler] = useState<string | null>(null);
   const settingsRegistered = useRef(false);
@@ -87,9 +88,9 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
       defaultValue: initialDefaultFormat,
       options: [
         { label: t("PDF"), value: 'pdf' },
-        { label: t("SVG"), value: 'svg' },
-        { label: t("Canvas"), value: 'canvas' }],
-
+        { label: t("Canvas (PDF)"), value: 'canvas-pdf' },
+        { label: t("Canvas (SVG)"), value: 'canvas' }
+      ],
       onChange: (value) => {
         setCurrentFormat(value as TypstOutputFormat);
         typstService.setDefaultFormat(value as TypstOutputFormat);
@@ -147,7 +148,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     setActiveCompiler('typst');
 
     setCompiledPdf(null);
-    setCompiledSvg(null);
+    // setCompiledSvg(null);
     setCompiledCanvas(null);
 
     try {
@@ -167,7 +168,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
             if (result.pdf) {
               setCompiledPdf(result.pdf);
               setCurrentView('output');
-
+              setLogIndicator('success');
               const fileName = mainFileName.split('/').pop()?.replace(/\.typ$/i, '.pdf') || 'output.pdf';
               const projectName = getProjectName();
 
@@ -179,25 +180,40 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
             }
             break;
           case 'svg':
-            if (result.svg) {
-              setCompiledSvg(result.svg);
-              setCurrentView('output');
-            }
-            break;
+          // if (result.svg) {
+          //   setCompiledSvg(result.svg);
+          //   setCurrentView('output');
+          //   setLogIndicator('success');
+          // }
+          // break;
           case 'canvas':
             console.log('[TypstContext] Setting Canvas', { hasCanvas: !!result.canvas });
             if (result.canvas) {
               console.log('[TypstContext] Canvas content length:', result.canvas.length);
               setCompiledCanvas(result.canvas);
               setCurrentView('output');
+              setLogIndicator('success');
             } else {
               console.error('[TypstContext] result.canvas is null/undefined!');
+            }
+            break;
+          case 'canvas-pdf':
+            if (result.canvas) {
+              setCompiledCanvas(result.canvas);
+              setCurrentView('output');
+              setLogIndicator('success');
             }
             break;
         }
       } else {
         setCompileError(t('Compilation failed. Check the log in the main window.'));
-        setCurrentView('log');
+        switch (result.format) {
+          case 'svg':
+          case 'pdf':
+            setCurrentView('log');
+            break;
+        }
+        setLogIndicator('error');
 
         pdfWindowService.sendCompileResult(result.status, result.log);
       }
@@ -206,6 +222,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     } catch (error) {
       setCompileError(error instanceof Error ? error.message : t('Unknown error'));
       setCurrentView('log');
+      setLogIndicator('error');
 
       pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
     } finally {
@@ -270,6 +287,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         stopCompilation,
         toggleOutputView,
         currentView,
+        logIndicator,
         clearCache,
         triggerAutoCompile,
         activeCompiler,
