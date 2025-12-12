@@ -30,6 +30,7 @@ export interface TypstContextType {
     stopCompilation: () => void;
     toggleOutputView: () => void;
     currentView: 'log' | 'output';
+    logIndicator: 'idle' | 'warn' | 'error' | 'success';
     clearCache: () => void;
     triggerAutoCompile: () => void;
     activeCompiler: string | null;

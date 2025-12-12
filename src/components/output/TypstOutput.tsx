@@ -40,6 +40,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     compiledSvg,
     compiledCanvas,
     currentView,
+    logIndicator,
     toggleOutputView,
     currentFormat,
     setCurrentFormat,
@@ -55,11 +56,16 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
   const [visualizerHeight, setVisualizerHeight] = useState(300);
   const [visualizerCollapsed, setVisualizerCollapsed] = useState(false);
 
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const canvasControllerRef = useRef<RendererController | null>(null);
-
   const useEnhancedRenderer = getSetting('pdf-renderer-enable')?.value ?? true;
   const loggerPlugin = pluginRegistry.getLoggerForType('typst');
+
+  const indicatorColor = {
+    idle: '#777',
+    success: '#28a745',
+    warn: '#ffc107',
+    error: '#dc3545',
+  }[logIndicator ?? 'idle'];
 
   useEffect(() => {
     if (compiledCanvas && (currentFormat === 'canvas' || currentFormat === 'canvas-pdf') && canvasControllerRef.current?.updateContent) {
@@ -270,9 +276,13 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
         <div className="view-tabs">
           <button
             className={`tab-button ${currentView === 'log' ? 'active' : ''}`}
-            onClick={() => currentView !== 'log' && toggleOutputView()}>{t('Log')}
-
-
+            onClick={() => currentView !== 'log' && toggleOutputView()}
+          >
+            <div
+              className="status-dot"
+              style={{ backgroundColor: indicatorColor }}
+            />
+            {t('Log')}
           </button>
           {currentView === 'output' &&
             <>
@@ -296,8 +306,6 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
               className={'tab-button'}
               onClick={() => toggleOutputView()}
               disabled={!hasAnyOutput}>{t('Output')}
-
-
             </button>
           }
         </div>

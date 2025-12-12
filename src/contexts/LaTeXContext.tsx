@@ -33,6 +33,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
   const [compiledPdf, setCompiledPdf] = useState<Uint8Array | null>(null);
   const [compileLog, setCompileLog] = useState<string>('');
   const [currentView, setCurrentView] = useState<'log' | 'pdf'>('log');
+  const [logIndicator, setLogIndicator] = useState<'idle' | 'success' | 'error'>('idle');
   const [latexEngine, setLatexEngine] = useState<'pdftex' | 'xetex' | 'luatex'>(
     'pdftex'
   );
@@ -225,6 +226,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       if (result.status === 0 && result.pdf) {
         setCompiledPdf(result.pdf);
         setCurrentView('pdf');
+        setLogIndicator('success');
 
         // Send PDF to window if open
         const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx|latex)$/i, '.pdf') || 'output.pdf';
@@ -238,6 +240,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       } else {
         setCompileError('Compilation failed');
         setCurrentView('log');
+        setLogIndicator('error');
 
         // Send compile status to window
         pdfWindowService.sendCompileResult(result.status, result.log);
@@ -247,6 +250,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     } catch (error) {
       setCompileError(error instanceof Error ? error.message : t('Unknown error'));
       setCurrentView('log');
+      setLogIndicator('error');
 
       // Send error to window
       pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
@@ -306,6 +310,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       if (result.status === 0 && result.pdf) {
         setCompiledPdf(result.pdf);
         setCurrentView('pdf');
+        setLogIndicator('success');
 
         // Send PDF to window if open
         const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx|latex)$/i, '.pdf') || 'output.pdf';
@@ -319,8 +324,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       } else {
         setCompileError('Compilation failed');
         setCurrentView('log');
+        setLogIndicator('error');
 
-        // Send compile status to window
         pdfWindowService.sendCompileResult(result.status, result.log);
       }
 
@@ -328,8 +333,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     } catch (error) {
       setCompileError(error instanceof Error ? error.message : t('Unknown error'));
       setCurrentView('log');
+      setLogIndicator('error');
 
-      // Send error to window
       pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
     } finally {
       setIsCompiling(false);
@@ -366,6 +371,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
         stopCompilation,
         toggleOutputView,
         currentView,
+        logIndicator,
         latexEngine,
         setLatexEngine: handleSetLatexEngine,
         clearCache,

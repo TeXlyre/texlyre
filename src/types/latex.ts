@@ -19,6 +19,7 @@ export interface LaTeXContextType {
 	stopCompilation: () => void;
 	toggleOutputView: () => void;
 	currentView: 'log' | 'pdf';
+	logIndicator: 'idle' | 'warn' | 'error' | 'success';
 	latexEngine: 'pdftex' | 'xetex' | 'luatex';
 	activeCompiler: string | null;
 	setLatexEngine: (engine: 'pdftex' | 'xetex' | 'luatex') => Promise<void>;

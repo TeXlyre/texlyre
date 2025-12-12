@@ -405,3 +405,11 @@ footer {
 .info-message li:last-child {
 	margin-bottom: 0;
 }
+
+.status-dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	display: inline-block;
+	margin-right: 6px;
+}

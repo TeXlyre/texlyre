@@ -35,6 +35,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
   const [compiledCanvas, setCompiledCanvas] = useState<Uint8Array | null>(null);
   const [compileLog, setCompileLog] = useState<string>('');
   const [currentView, setCurrentView] = useState<'log' | 'output'>('log');
+  const [logIndicator, setLogIndicator] = useState<'idle' | 'success' | 'error'>('idle');
   const [currentFormat, setCurrentFormat] = useState<TypstOutputFormat>('pdf');
   const [activeCompiler, setActiveCompiler] = useState<string | null>(null);
   const settingsRegistered = useRef(false);
@@ -167,7 +168,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
             if (result.pdf) {
               setCompiledPdf(result.pdf);
               setCurrentView('output');
-
+              setLogIndicator('success');
               const fileName = mainFileName.split('/').pop()?.replace(/\.typ$/i, '.pdf') || 'output.pdf';
               const projectName = getProjectName();
 
@@ -182,6 +183,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
           // if (result.svg) {
           //   setCompiledSvg(result.svg);
           //   setCurrentView('output');
+          //   setLogIndicator('success');
           // }
           // break;
           case 'canvas':
@@ -190,6 +192,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
               console.log('[TypstContext] Canvas content length:', result.canvas.length);
               setCompiledCanvas(result.canvas);
               setCurrentView('output');
+              setLogIndicator('success');
             } else {
               console.error('[TypstContext] result.canvas is null/undefined!');
             }
@@ -198,12 +201,19 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
             if (result.canvas) {
               setCompiledCanvas(result.canvas);
               setCurrentView('output');
+              setLogIndicator('success');
             }
             break;
         }
       } else {
         setCompileError(t('Compilation failed. Check the log in the main window.'));
-        setCurrentView('log');
+        switch (result.format) {
+          case 'svg':
+          case 'pdf':
+            setCurrentView('log');
+            break;
+        }
+        setLogIndicator('error');
 
         pdfWindowService.sendCompileResult(result.status, result.log);
       }
@@ -212,6 +222,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     } catch (error) {
       setCompileError(error instanceof Error ? error.message : t('Unknown error'));
       setCurrentView('log');
+      setLogIndicator('error');
 
       pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
     } finally {
@@ -276,6 +287,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         stopCompilation,
         toggleOutputView,
         currentView,
+        logIndicator,
         clearCache,
         triggerAutoCompile,
         activeCompiler,
