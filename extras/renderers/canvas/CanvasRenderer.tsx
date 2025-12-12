@@ -614,19 +614,38 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     const handleExport = useCallback(() => {
         if (onDownload && fileName) {
             onDownload(fileName);
-        } else if (fullSvgBufferRef.current) {
-            const mimeType = contentTypeRef.current === 'pdf' ? 'application/pdf' : 'image/svg+xml';
-            const extension = contentTypeRef.current === 'pdf' ? '.pdf' : '.svg';
-            const blob = new Blob([fullSvgBufferRef.current], { type: mimeType });
+            return;
+        }
+
+        const exportConfig = {
+            pdf: {
+                data: pdfDocRef.current,
+                mimeType: 'application/pdf',
+                extension: '.pdf',
+                getData: (doc: any) => doc.getData()
+            },
+            svg: {
+                data: fullSvgBufferRef.current,
+                mimeType: 'image/svg+xml',
+                extension: '.svg',
+                getData: (buffer: any) => Promise.resolve(buffer)
+            }
+        };
+
+        const config = exportConfig[contentTypeRef.current as keyof typeof exportConfig];
+        if (!config?.data) return;
+
+        config.getData(config.data).then((data: ArrayBuffer | string) => {
+            const blob = new Blob([data], { type: config.mimeType });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = fileName?.replace(/\.(typ|svg|pdf)$/i, extension) || `output${extension}`;
+            a.download = fileName?.replace(/\.(typ|pdf|svg)$/i, config.extension) || `output${config.extension}`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-        }
+        });
     }, [fileName, onDownload]);
 
     useEffect(() => {
