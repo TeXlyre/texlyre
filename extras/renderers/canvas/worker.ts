@@ -1,3 +1,6 @@
+/// <reference lib="webworker" />
+export { };
+
 interface ParseMessage {
     type: 'parse';
     svgBuffer: ArrayBuffer;

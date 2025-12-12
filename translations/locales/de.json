@@ -258,6 +258,7 @@
   "Cannot rename": "Kann nicht umbenennen",
   "Canvas": "Canvas",
   "Canvas (SVG)": "Canvas (SVG)",
+  "Canvas (PDF)": "Canvas (PDF)",
   "Canvas Output": "Canvas-Ausgabe",
   "Canvas renderer is disabled. Please enable it in settings.": "Leinenrenderer ist deaktiviert. Bitte aktivieren Sie ihn in den Einstellungen.",
   "Canvas renderer not available": "Canvas Renderer nicht verfügbar",

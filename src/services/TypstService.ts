@@ -204,7 +204,7 @@ class TypstService {
             const baseName = this.getBaseName(normalizedMainFileName);
             const files: Array<{ content: Uint8Array; name: string; mimeType: string }> = [];
 
-            if (format === 'pdf' && output instanceof Uint8Array) {
+            if ((format === 'pdf' || format === 'canvas-pdf') && output instanceof Uint8Array) {
                 files.push({
                     content: output,
                     name: `${baseName}.pdf`,
@@ -248,8 +248,9 @@ class TypstService {
     }
 
     getSupportedFormats(): TypstOutputFormat[] {
-        return ['pdf', 'svg', 'canvas'];
+        return ['pdf', 'svg', 'canvas', 'canvas-pdf'];
     }
+
 
     setDefaultFormat(format: TypstOutputFormat): void {
         this.defaultFormat = format;
@@ -332,7 +333,9 @@ class TypstService {
             case 'canvas':
                 console.log('[TypstService] Creating canvas result, encoding string to Uint8Array');
                 result.canvas = new TextEncoder().encode(output as string);
-                console.log('[TypstService] Canvas result created', { canvasLength: result.canvas.length });
+                break;
+            case 'canvas-pdf':
+                result.canvas = output as Uint8Array;
                 break;
         }
 

@@ -1,4 +1,3 @@
-// src/components/output/TypstOutput.tsx
 import { t } from '@/i18n';
 import React from 'react';
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
@@ -12,6 +11,7 @@ import type { RendererController } from '../../plugins/PluginInterface'
 import ResizablePanel from '../common/ResizablePanel';
 import TypstCompileButton from './TypstCompileButton';
 import { isTypstFile, toArrayBuffer } from '../../utils/fileUtils';
+import { TypstOutputFormat } from '../../types/typst';
 
 interface TypstOutputProps {
   className?: string;
@@ -55,13 +55,14 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
   const [visualizerHeight, setVisualizerHeight] = useState(300);
   const [visualizerCollapsed, setVisualizerCollapsed] = useState(false);
 
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const canvasControllerRef = useRef<RendererController | null>(null);
 
   const useEnhancedRenderer = getSetting('pdf-renderer-enable')?.value ?? true;
   const loggerPlugin = pluginRegistry.getLoggerForType('typst');
 
   useEffect(() => {
-    if (compiledCanvas && currentFormat === 'canvas' && canvasControllerRef.current?.updateContent) {
+    if (compiledCanvas && (currentFormat === 'canvas' || currentFormat === 'canvas-pdf') && canvasControllerRef.current?.updateContent) {
       canvasControllerRef.current.updateContent(compiledCanvas);
     }
   }, [compiledCanvas, currentFormat]);
@@ -136,7 +137,9 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
       case 'pdf':
         return compiledPdf;
       case 'svg':
+        return compiledSvg;
       case 'canvas':
+      case 'canvas-pdf':
         return compiledCanvas;
       default:
         return null;
@@ -163,11 +166,14 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 
     let blob: Blob;
     switch (format) {
+      case 'svg':
+        if (!compiledSvg) return;
+        blob = new Blob([compiledSvg], { type: 'image/svg+xml' });
+        break;
       case 'pdf':
         if (!compiledPdf) return;
         blob = new Blob([toArrayBuffer(compiledPdf)], { type: 'application/pdf' });
         break;
-      case 'svg':
       case 'canvas':
         if (!compiledCanvas) return;
         blob = new Blob([toArrayBuffer(compiledCanvas)], { type: 'text/plain' });
@@ -186,7 +192,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     URL.revokeObjectURL(url);
   }, [compiledPdf, compiledSvg, compiledCanvas]);
 
-  const handleTabSwitch = useCallback((format: 'pdf' | 'svg' | 'canvas') => {
+  const handleTabSwitch = useCallback((format: TypstOutputFormat) => {
     if (currentFormat !== format) {
       setCurrentFormat(format);
 
@@ -234,7 +240,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 
     }
 
-    if (currentFormat === 'canvas') {
+    if (currentFormat === 'canvas' || currentFormat === 'canvas-pdf') {
       const canvasRenderer = pluginRegistry.getRendererForOutput('canvas', 'canvas-renderer');
 
       return (
@@ -242,8 +248,8 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
           {canvasRenderer ?
             React.createElement(canvasRenderer.renderOutput, {
               content: compiledCanvas || new ArrayBuffer(0),
-              mimeType: 'image/svg+xml',
-              fileName: 'output.svg',
+              mimeType: currentFormat === 'canvas-pdf' ? 'application/pdf' : 'image/svg+xml',
+              fileName: currentFormat === 'canvas-pdf' ? 'output.pdf' : 'output.svg',
               onDownload: (fileName) => handleSaveOutput('canvas', fileName),
               controllerRef: (controller) => { canvasControllerRef.current = controller; }
             }) :
@@ -274,11 +280,14 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
                 className={`tab-button ${currentView === 'output' && currentFormat === 'pdf' ? 'active' : ''}`}
                 onClick={() => handleTabSwitch('pdf')}>{t('PDF')}
               </button>
+
+              <button
+                className={`tab-button ${currentView === 'output' && currentFormat === 'canvas-pdf' ? 'active' : ''}`}
+                onClick={() => handleTabSwitch('canvas-pdf')}>{t('Canvas (PDF)')}
+              </button>
               <button
                 className={`tab-button ${currentView === 'output' && currentFormat === 'canvas' ? 'active' : ''}`}
-                onClick={() => handleTabSwitch('canvas')}>{t('Canvas')}
-
-
+                onClick={() => handleTabSwitch('canvas')}>{t('Canvas (SVG)')}
               </button>
             </>
           }

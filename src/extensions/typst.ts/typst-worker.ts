@@ -3,12 +3,13 @@ export { };
 import { createTypstCompiler } from '@myriaddreamin/typst.ts/compiler';
 import { createTypstRenderer } from '@myriaddreamin/typst.ts/renderer';
 import { TypstSnippet } from '@myriaddreamin/typst.ts/dist/esm/contrib/snippet.mjs';
+import { TypstOutputFormat } from '@/types/typst';
 
 const BASE_PATH = __BASE_PATH__;
 
 declare const self: DedicatedWorkerGlobalScope;
 
-type OutputFormat = 'pdf' | 'svg' | 'canvas';
+type OutputFormat = TypstOutputFormat;
 
 type CompileMessage = {
     id: string;
@@ -191,7 +192,7 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
         let output: Uint8Array | string;
         let diagnostics: any[] = [];
 
-        if (format === 'pdf') {
+        if (format === 'pdf' || format === 'canvas-pdf') {
             const pdfStandard = pdfOptions?.pdfStandard || '"1.7"';
             const pdfTags = pdfOptions?.pdfTags !== undefined ? pdfOptions.pdfTags : true;
             const creationTimestamp = pdfOptions?.creationTimestamp || Math.floor(Date.now() / 1000);

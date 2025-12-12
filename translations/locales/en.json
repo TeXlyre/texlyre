@@ -259,6 +259,7 @@
   "Cannot rename": "Cannot rename",
   "Canvas": "Canvas",
   "Canvas (SVG)": "Canvas (SVG)",
+  "Canvas (PDF)": "Canvas (PDF)",
   "Canvas Output": "Canvas Output",
   "Canvas renderer is disabled. Please enable it in settings.": "Canvas renderer is disabled. Please enable it in settings.",
   "Canvas renderer not available": "Canvas renderer not available",

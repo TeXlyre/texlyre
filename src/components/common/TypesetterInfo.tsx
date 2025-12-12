@@ -111,7 +111,7 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
           <strong>{t('Output Formats:')}</strong>
           <ul>
             <li>{t('PDF')}</li>
-            <li>{t('Canvas (SVG)')}</li>
+            <li>{t('SVG')}</li>
           </ul>
         </div>
       </>);

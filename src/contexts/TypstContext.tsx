@@ -87,8 +87,9 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
       defaultValue: initialDefaultFormat,
       options: [
         { label: t("PDF"), value: 'pdf' },
-        { label: t("Canvas (SVG)"), value: 'canvas' }],
-
+        { label: t("Canvas (PDF)"), value: 'canvas-pdf' },
+        { label: t("Canvas (SVG)"), value: 'canvas' }
+      ],
       onChange: (value) => {
         setCurrentFormat(value as TypstOutputFormat);
         typstService.setDefaultFormat(value as TypstOutputFormat);
@@ -191,6 +192,12 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
               setCurrentView('output');
             } else {
               console.error('[TypstContext] result.canvas is null/undefined!');
+            }
+            break;
+          case 'canvas-pdf':
+            if (result.canvas) {
+              setCompiledCanvas(result.canvas);
+              setCurrentView('output');
             }
             break;
         }

@@ -1,6 +1,6 @@
 // src/types/typst.ts
 
-export type TypstOutputFormat = 'pdf' | 'svg' | 'canvas';
+export type TypstOutputFormat = 'pdf' | 'svg' | 'canvas' | 'canvas-pdf';
 
 export interface TypstPdfOptions {
     pdfStandard?: string;

@@ -536,6 +536,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
               className="dropdown-select"
               disabled={isCompiling}>
               <option value="pdf">{t('PDF')}</option>
+              <option value="canvas-pdf">{t('Canvas (PDF)')}</option>
               <option value="canvas">{t('Canvas (SVG)')}</option>
             </select>
             {effectiveFormat === 'pdf' &&

@@ -1,6 +1,8 @@
+// extras/renderers/canvas/CanvasRenderer.tsx
 import { t } from '@/i18n';
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import * as pdfjsLib from 'pdfjs-dist';
 
 import {
     ChevronLeftIcon,
@@ -14,11 +16,16 @@ import {
     ExpandIcon,
     MinimizeIcon
 } from '@/components/common/Icons';
-import { getCanvasRendererSettings } from './settings';
 import { useSettings } from '@/hooks/useSettings';
 import { useProperties } from '@/hooks/useProperties';
 import type { RendererProps } from '@/plugins/PluginInterface';
 import './styles.css';
+import { getCanvasRendererSettings } from './settings';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.mjs',
+    import.meta.url
+).toString();
 
 export interface CanvasRendererHandle {
     updateSvgContent: (svgBuffer: ArrayBuffer) => void;
@@ -61,6 +68,8 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map());
     const propertiesRegistered = useRef(false);
     const svgPagesRef = useRef<Map<number, string>>(new Map());
+    const pdfDocRef = useRef<any>(null);
+    const contentTypeRef = useRef<'svg' | 'pdf'>('svg');
     const fullSvgBufferRef = useRef<ArrayBuffer | null>(null);
     const pendingRenderRef = useRef<Set<number>>(new Set());
     const renderingRef = useRef<Set<number>>(new Set());
@@ -95,6 +104,22 @@ const CanvasRenderer: React.FC<RendererProps> = ({
             worker.addEventListener('message', handleMessage);
             worker.postMessage({ type: 'parse', svgBuffer });
         });
+    }, []);
+
+    const parsePdfPages = useCallback(async (pdfBuffer: ArrayBuffer): Promise<void> => {
+        const loadingTask = pdfjsLib.getDocument({ data: pdfBuffer });
+        const pdfDoc = await loadingTask.promise;
+        pdfDocRef.current = pdfDoc;
+
+        const metadata = new Map<number, { width: number; height: number }>();
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+            const page = await pdfDoc.getPage(i);
+            const viewport = page.getViewport({ scale: 1.0 });
+            metadata.set(i, { width: viewport.width, height: viewport.height });
+        }
+
+        setPageMetadata(metadata);
+        setNumPages(pdfDoc.numPages);
     }, []);
 
     const renderPageToCanvas = useCallback((pageNumber: number) => {
@@ -165,6 +190,57 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 
         img.src = url;
     }, [pageMetadata, scale]);
+
+    const renderPdfPageToCanvas = useCallback(async (pageNumber: number) => {
+        if (!pdfDocRef.current || renderingRef.current.has(pageNumber)) {
+            if (renderingRef.current.has(pageNumber)) {
+                pendingRenderRef.current.add(pageNumber);
+            }
+            return;
+        }
+
+        const canvas = canvasRefs.current.get(pageNumber);
+        if (!canvas) return;
+
+        renderingRef.current.add(pageNumber);
+
+        try {
+            const page = await pdfDocRef.current.getPage(pageNumber);
+            const viewport = page.getViewport({ scale });
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                renderingRef.current.delete(pageNumber);
+                return;
+            }
+
+            const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+            const scaledViewport = page.getViewport({ scale: scale * pixelRatio });
+
+            canvas.width = scaledViewport.width;
+            canvas.height = scaledViewport.height;
+            canvas.style.width = `${viewport.width}px`;
+            canvas.style.height = `${viewport.height}px`;
+
+            const renderContext = {
+                canvasContext: ctx,
+                viewport: scaledViewport
+            };
+
+            await page.render(renderContext).promise;
+
+            renderingRef.current.delete(pageNumber);
+
+            if (pendingRenderRef.current.has(pageNumber)) {
+                pendingRenderRef.current.delete(pageNumber);
+                requestAnimationFrame(() => renderPdfPageToCanvas(pageNumber));
+            }
+        } catch (error) {
+            console.error(`Failed to render PDF page ${pageNumber}:`, error);
+            renderingRef.current.delete(pageNumber);
+            pendingRenderRef.current.delete(pageNumber);
+        }
+    }, [scale]);
 
     const getPageHeight = useCallback((pageNum: number): number => {
         const meta = pageMetadata.get(pageNum);
@@ -266,14 +342,22 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     const renderVisiblePages = useCallback(() => {
         if (scrollView) {
             for (let i = renderRange.start; i <= renderRange.end; i++) {
-                if (i <= numPages && svgPagesRef.current.has(i)) {
-                    renderPageToCanvas(i);
+                if (i <= numPages) {
+                    if (contentTypeRef.current === 'svg' && svgPagesRef.current.has(i)) {
+                        renderPageToCanvas(i);
+                    } else if (contentTypeRef.current === 'pdf' && pdfDocRef.current) {
+                        renderPdfPageToCanvas(i);
+                    }
                 }
             }
-        } else if (svgPagesRef.current.has(currentPage)) {
-            renderPageToCanvas(currentPage);
+        } else {
+            if (contentTypeRef.current === 'svg' && svgPagesRef.current.has(currentPage)) {
+                renderPageToCanvas(currentPage);
+            } else if (contentTypeRef.current === 'pdf' && pdfDocRef.current) {
+                renderPdfPageToCanvas(currentPage);
+            }
         }
-    }, [scrollView, renderRange, currentPage, numPages, renderPageToCanvas]);
+    }, [scrollView, renderRange, currentPage, numPages, renderPageToCanvas, renderPdfPageToCanvas]);
 
     useEffect(() => {
         if (!scrollView || !scrollContainerRef.current) return;
@@ -323,17 +407,25 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         return () => clearTimeout(timer);
     }, [scale, scrollView, updateCurrentPageFromScroll]);
 
-    const updateSvgContent = useCallback(async (svgBuffer: ArrayBuffer) => {
-        if (!svgBuffer || svgBuffer.byteLength === 0) return;
+    const updateContent = useCallback(async (buffer: ArrayBuffer) => {
+        if (!buffer || buffer.byteLength === 0) return;
 
-        fullSvgBufferRef.current = svgBuffer;
+        fullSvgBufferRef.current = buffer;
+
+        const arr = new Uint8Array(buffer);
+        const isPdf = arr.length > 4 && arr[0] === 0x25 && arr[1] === 0x50 && arr[2] === 0x44 && arr[3] === 0x46;
+        contentTypeRef.current = isPdf ? 'pdf' : 'svg';
 
         try {
-            const { pages, metadata } = await parseSvgPages(svgBuffer);
+            if (isPdf) {
+                await parsePdfPages(buffer);
+            } else {
+                const { pages, metadata } = await parseSvgPages(buffer);
+                svgPagesRef.current = pages;
+                setPageMetadata(metadata);
+                setNumPages(pages.size);
+            }
 
-            svgPagesRef.current = pages;
-            setPageMetadata(metadata);
-            setNumPages(pages.size);
             setIsLoading(false);
             setError(null);
 
@@ -342,11 +434,11 @@ const CanvasRenderer: React.FC<RendererProps> = ({
             });
 
         } catch (err) {
-            console.error('[CanvasRenderer] Failed to parse SVG:', err);
-            setError(`Failed to parse SVG: ${err}`);
+            console.error('[CanvasRenderer] Failed to parse content:', err);
+            setError(`Failed to parse content: ${err}`);
             setIsLoading(false);
         }
-    }, [parseSvgPages, renderVisiblePages]);
+    }, [parseSvgPages, parsePdfPages, renderVisiblePages]);
 
     useEffect(() => {
         if (controllerRef) {
@@ -355,7 +447,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                     const buffer = typeof newContent === 'string'
                         ? new TextEncoder().encode(newContent).buffer
                         : newContent;
-                    updateSvgContent(buffer);
+                    updateContent(buffer);
                 }
             });
         }
@@ -364,7 +456,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                 controllerRef(null);
             }
         };
-    }, [controllerRef, updateSvgContent]);
+    }, [controllerRef, updateContent]);
 
     useEffect(() => {
         if (propertiesRegistered.current) return;
@@ -399,12 +491,12 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 
     useEffect(() => {
         if (content && (content instanceof ArrayBuffer) && content.byteLength > 0) {
-            updateSvgContent(content);
+            updateContent(content);
         }
     }, []);
 
     useEffect(() => {
-        if (numPages === 0 || svgPagesRef.current.size === 0) return;
+        if (numPages === 0) return;
         renderVisiblePages();
     }, [scale, renderVisiblePages, numPages]);
 
@@ -516,11 +608,13 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         if (onDownload && fileName) {
             onDownload(fileName);
         } else if (fullSvgBufferRef.current) {
-            const blob = new Blob([fullSvgBufferRef.current], { type: 'image/svg+xml' });
+            const mimeType = contentTypeRef.current === 'pdf' ? 'application/pdf' : 'image/svg+xml';
+            const extension = contentTypeRef.current === 'pdf' ? '.pdf' : '.svg';
+            const blob = new Blob([fullSvgBufferRef.current], { type: mimeType });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = fileName?.replace(/\.typ$/, '.svg') || 'output.svg';
+            a.download = fileName?.replace(/\.(typ|svg|pdf)$/i, extension) || `output${extension}`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

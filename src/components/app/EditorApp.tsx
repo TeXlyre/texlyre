@@ -48,6 +48,7 @@ import KeyboardShortcutsModal from '../common/KeyboardShortcutsModal';
 import PrivacyModal from '../common/PrivacyModal';
 import GuestUpgradeBanner from '../auth/GuestUpgradeBanner';
 import GuestUpgradeModal from '../auth/GuestUpgradeModal';
+import { TypstOutputFormat } from '../../types/typst';
 
 interface EditorAppProps {
   docUrl: YjsDocUrl;
@@ -105,7 +106,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
     mainFile: undefined as string | undefined,
     latexEngine: undefined as ('pdftex' | 'xetex' | 'luatex') | undefined,
     typstEngine: undefined as string | undefined,
-    typstOutputFormat: undefined as ('pdf' | 'svg' | 'canvas') | undefined
+    typstOutputFormat: undefined as (TypstOutputFormat) | undefined
   });
   const { isCompiling, triggerAutoCompile } = useLaTeX();
   const { isCompiling: isTypstCompiling, triggerAutoCompile: triggerTypstAutoCompile } = useTypst();

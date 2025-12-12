@@ -302,6 +302,7 @@
   "Cannot rename": "لا يمكن إعادة التسمية",
   "Canvas": "Canvas",
   "Canvas (SVG)": "Canvas (SVG)",
+  "Canvas (PDF)": "Canvas (PDF)",
   "Canvas Output": "إخراج Canvas",
   "Canvas renderer is disabled. Please enable it in settings.": "مُصَيِّر Canvas معطل. يرجى تفعيله في الإعدادات.",
   "Canvas renderer not available": "مُصَيِّر Canvas غير متاح",
