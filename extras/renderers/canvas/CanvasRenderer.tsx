@@ -52,6 +52,8 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     const [numPages, setNumPages] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageInput, setPageInput] = useState('1');
+    const [pageOffsets, setPageOffsets] = useState<number[]>([]);
+    const [totalHeight, setTotalHeight] = useState(0);
     const [isEditingPageInput, setIsEditingPageInput] = useState(false);
     const [scale, setScale] = useState(1.0);
     const [isLoading, setIsLoading] = useState(true);
@@ -240,6 +242,11 @@ const CanvasRenderer: React.FC<RendererProps> = ({
             }
         }
     }, [scale]);
+
+    useEffect(() => {
+        if (!scrollView) return;
+        renderVisiblePages();
+    }, [renderRange, scrollView]);
 
     const getPageHeight = useCallback((pageNum: number): number => {
         const meta = pageMetadata.get(pageNum);
@@ -487,8 +494,18 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 
     useEffect(() => {
         if (numPages === 0) return;
-        renderVisiblePages();
-    }, [scale, renderVisiblePages, numPages]);
+
+        const offs: number[] = [];
+        let acc = 0;
+
+        for (let i = 1; i <= numPages; i++) {
+            offs.push(acc);
+            acc += getPageHeight(i);
+        }
+
+        setPageOffsets(offs);
+        setTotalHeight(acc);
+    }, [numPages, scale, pageMetadata]);
 
     useEffect(() => {
         if (scrollView) {
@@ -667,6 +684,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     const zoomOptions = getCanvasRendererSettings().find((s) => s.id === 'canvas-renderer-initial-zoom')?.options || [];
     const currentZoom = Math.round(scale * 100).toString();
     const hasCustomZoom = !zoomOptions.some((opt) => String(opt.value) === currentZoom);
+    const topOffset = scrollView ? (pageOffsets[renderRange.start - 1] || 0) : 0;
 
     return (
         <div className="canvas-renderer-container" ref={containerRef}>
@@ -689,6 +707,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                                 <ChevronRightIcon />
                             </button>
                         </div>
+
                         <div className="toolbarButtonGroup">
                             <div className="pageNumber">
                                 <input
@@ -710,6 +729,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                                 <span>{numPages}</span>
                             </div>
                         </div>
+
                         <div className="toolbarButtonGroup">
                             <button
                                 onClick={handleZoomOut}
@@ -718,6 +738,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                                 disabled={isLoading}>
                                 <ZoomOutIcon />
                             </button>
+
                             <select
                                 value={hasCustomZoom ? 'custom' : currentZoom}
                                 onChange={handleZoomChange}
@@ -735,6 +756,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                                     </option>
                                 )}
                             </select>
+
                             <button
                                 onClick={handleZoomIn}
                                 className="toolbarButton"
@@ -743,6 +765,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                                 <ZoomInIcon />
                             </button>
                         </div>
+
                         <div className="toolbarButtonGroup">
                             <button
                                 onClick={handleFitToggle}
@@ -751,6 +774,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                                 disabled={isLoading}>
                                 <FitToWidthIcon />
                             </button>
+
                             <button
                                 onClick={handleToggleView}
                                 className="toolbarButton"
@@ -758,6 +782,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                                 disabled={isLoading}>
                                 {scrollView ? <PageIcon /> : <ScrollIcon />}
                             </button>
+
                             <button
                                 onClick={handleToggleFullscreen}
                                 className="toolbarButton"
@@ -766,6 +791,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                                 {isFullscreen ? <MinimizeIcon /> : <ExpandIcon />}
                             </button>
                         </div>
+
                         <div className="toolbarButtonGroup">
                             <button
                                 onClick={handleExport}
@@ -779,26 +805,41 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                 </div>
             </div>
 
-            <div className={`canvas-renderer-content ${isFullscreen ? 'fullscreen' : ''}`} ref={scrollView ? scrollContainerRef : contentElRef}>
+            <div
+                className={`canvas-renderer-content ${isFullscreen ? 'fullscreen' : ''}`}
+                ref={scrollView ? scrollContainerRef : contentElRef}
+            >
                 <div className="canvas-renderer-viewer">
-                    {!isLoading && !error && numPages > 0 && (
-                        scrollView ? (
-                            Array.from({ length: numPages }, (_, i) => {
-                                const pageNumber = i + 1;
-                                const shouldRender = pageNumber >= renderRange.start && pageNumber <= renderRange.end;
-                                const meta = pageMetadata.get(pageNumber);
-                                const width = meta?.width || 595;
-                                const height = meta?.height || 842;
-                                const estimatedHeight = getPageHeight(pageNumber);
 
-                                return (
-                                    <div
-                                        key={`page_${pageNumber}`}
-                                        data-page-number={pageNumber}
-                                        className="canvas-page-scroll"
-                                        style={{ minHeight: shouldRender ? undefined : `${estimatedHeight}px` }}>
-                                        {shouldRender ? (
-                                            <div className="canvas-page">
+                    {!isLoading && !error && numPages > 0 && scrollView && (
+                        <div
+                            className="canvas-virtual-wrapper"
+                            style={{
+                                position: "relative",
+                                height: totalHeight,
+                                width: "100%",
+                            }}
+                        >
+                            <div
+                                className="canvas-virtual-inner"
+                                style={{
+                                    position: "absolute",
+                                    top: 0,
+                                    left: 0,
+                                    width: "100%",
+                                    transform: `translateY(${topOffset}px)`,
+                                }}
+                            >
+                                {Array.from(
+                                    { length: renderRange.end - renderRange.start + 1 },
+                                    (_, idx) => {
+                                        const pageNumber = renderRange.start + idx;
+                                        const meta = pageMetadata.get(pageNumber);
+                                        const width = meta?.width || 595;
+                                        const height = meta?.height || 842;
+
+                                        return (
+                                            <div key={pageNumber} className="canvas-page">
                                                 <canvas
                                                     ref={setCanvasRef(pageNumber)}
                                                     className="canvas-page-canvas"
@@ -808,33 +849,36 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                                                     }}
                                                 />
                                             </div>
-                                        ) : null}
-                                    </div>
-                                );
-                            })
-                        ) : (
-                            <div className="canvas-page">
-                                <canvas
-                                    ref={setCanvasRef(currentPage)}
-                                    className="canvas-page-canvas"
-                                    style={{
-                                        width: `${(pageMetadata.get(currentPage)?.width || 595) * scale}px`,
-                                        height: `${(pageMetadata.get(currentPage)?.height || 842) * scale}px`,
-                                    }}
-                                />
+                                        );
+                                    }
+                                )}
                             </div>
-                        )
+                        </div>
+                    )}
+
+                    {!isLoading && !error && numPages > 0 && !scrollView && (
+                        <div className="canvas-page">
+                            <canvas
+                                ref={setCanvasRef(currentPage)}
+                                className="canvas-page-canvas"
+                                style={{
+                                    width: `${(pageMetadata.get(currentPage)?.width || 595) * scale}px`,
+                                    height: `${(pageMetadata.get(currentPage)?.height || 842) * scale}px`,
+                                }}
+                            />
+                        </div>
+                    )}
+
+                    {/* LOADING */}
+                    {isLoading && (
+                        <div className="canvas-renderer-loading">
+                            {t('Loading document...')}
+                        </div>
                     )}
                 </div>
 
-                {isLoading && (
-                    <div className="canvas-renderer-loading">
-                        {t('Loading document...')}
-                    </div>
-                )}
+                {error && <div className="canvas-renderer-error">{error}</div>}
             </div>
-
-            {error && <div className="canvas-renderer-error">{error}</div>}
         </div>
     );
 };
