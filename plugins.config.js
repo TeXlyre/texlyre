@@ -6,7 +6,6 @@ export default {
 	  "viewers/image",
 	  "viewers/pdf",
 	  "renderers/pdf",
-	  "renderers/svg",
 	  "renderers/canvas",
 	  "loggers/latex_visualizer",
 	  "loggers/typst_visualizer",

@@ -42,16 +42,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     const { getSetting } = useSettings();
     const { getProperty, setProperty, registerProperty } = useProperties();
 
-    const containerRef = useRef<HTMLDivElement>(null);
-    const contentElRef = useRef<HTMLDivElement>(null);
-    const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-    const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map());
-    const propertiesRegistered = useRef(false);
-    const svgPagesRef = useRef<Map<number, string>>(new Map());
-    const fullSvgBufferRef = useRef<ArrayBuffer | null>(null);
-    const pendingRenderRef = useRef<Set<number>>(new Set());
-    const renderingRef = useRef<Set<number>>(new Set());
-
     const [numPages, setNumPages] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageInput, setPageInput] = useState('1');
@@ -60,10 +50,26 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [scrollView, setScrollView] = useState(false);
-    const [visiblePages, setVisiblePages] = useState<Set<number>>(new Set([1]));
+    const [renderRange, setRenderRange] = useState<{ start: number; end: number }>({ start: 1, end: 1 });
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [fitMode, setFitMode] = useState<'fit-width' | 'fit-height'>('fit-width');
     const [pageMetadata, setPageMetadata] = useState<Map<number, { width: number; height: number }>>(new Map());
+
+    const containerRef = useRef<HTMLDivElement>(null);
+    const contentElRef = useRef<HTMLDivElement>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map());
+    const propertiesRegistered = useRef(false);
+    const svgPagesRef = useRef<Map<number, string>>(new Map());
+    const fullSvgBufferRef = useRef<ArrayBuffer | null>(null);
+    const pendingRenderRef = useRef<Set<number>>(new Set());
+    const renderingRef = useRef<Set<number>>(new Set());
+    const lastStablePageRef = useRef<number>(1);
+    const isTrackingEnabledRef = useRef<boolean>(true);
+
+    const BUFFER_PAGES = 2;
+    const UPDATE_THROTTLE = 100;
+    const HYSTERESIS_THRESHOLD = 0.2;
 
     const canvasRendererEnable = getSetting('canvas-renderer-enable')?.value as boolean ?? true;
 
@@ -160,17 +166,162 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         img.src = url;
     }, [pageMetadata, scale]);
 
+    const getPageHeight = useCallback((pageNum: number): number => {
+        const meta = pageMetadata.get(pageNum);
+        const baseHeight = meta?.height || 842;
+        return baseHeight * scale + 20;
+    }, [scale, pageMetadata]);
+
+    const getPageTop = useCallback((pageNum: number): number => {
+        let height = 0;
+        for (let i = 1; i < pageNum; i++) {
+            height += getPageHeight(i);
+        }
+        return height;
+    }, [getPageHeight]);
+
+    const scrollToPage = useCallback((pageNum: number) => {
+        if (!scrollView || !scrollContainerRef.current) return;
+
+        const targetTop = getPageTop(pageNum);
+        scrollContainerRef.current.scrollTo({ top: targetTop, behavior: 'smooth' });
+    }, [scrollView, getPageTop]);
+
+    const updateCurrentPageFromScroll = useCallback(() => {
+        if (!scrollView || !scrollContainerRef.current || isEditingPageInput || !isTrackingEnabledRef.current) {
+            return;
+        }
+
+        const container = scrollContainerRef.current;
+        const scrollTop = container.scrollTop;
+        const containerHeight = container.clientHeight;
+        const viewportCenter = scrollTop + containerHeight / 2;
+
+        let accumulatedHeight = 0;
+        let closestPage = 1;
+        let minDistance = Infinity;
+
+        for (let i = 1; i <= numPages; i++) {
+            const pageHeight = getPageHeight(i);
+            const pageTop = accumulatedHeight;
+            const pageCenter = pageTop + pageHeight / 2;
+            const distance = Math.abs(viewportCenter - pageCenter);
+
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestPage = i;
+            }
+
+            accumulatedHeight += pageHeight;
+            if (pageTop > viewportCenter + containerHeight) break;
+        }
+
+        if (closestPage !== lastStablePageRef.current) {
+            const currentPageHeight = getPageHeight(lastStablePageRef.current);
+            const hysteresisThreshold = currentPageHeight * HYSTERESIS_THRESHOLD;
+
+            if (minDistance < hysteresisThreshold || Math.abs(closestPage - lastStablePageRef.current) > 1) {
+                lastStablePageRef.current = closestPage;
+                setCurrentPage(closestPage);
+                setPageInput(String(closestPage));
+            }
+        }
+    }, [scrollView, numPages, isEditingPageInput, getPageHeight]);
+
+    const calculateVisibleRange = useCallback(() => {
+        if (!scrollView || !scrollContainerRef.current) return;
+
+        const container = scrollContainerRef.current;
+        const scrollTop = container.scrollTop;
+        const containerHeight = container.clientHeight;
+        const scrollBottom = scrollTop + containerHeight;
+
+        let accumulatedHeight = 0;
+        let startPage = 1;
+        let endPage = 1;
+        let foundStart = false;
+
+        for (let i = 1; i <= numPages; i++) {
+            const pageHeight = getPageHeight(i);
+            const pageTop = accumulatedHeight;
+            const pageBottom = accumulatedHeight + pageHeight;
+
+            if (!foundStart && pageBottom > scrollTop) {
+                startPage = Math.max(1, i - BUFFER_PAGES);
+                foundStart = true;
+            }
+
+            if (pageTop < scrollBottom) {
+                endPage = Math.min(numPages, i + BUFFER_PAGES);
+            }
+
+            accumulatedHeight += pageHeight;
+
+            if (foundStart && pageTop > scrollBottom) break;
+        }
+
+        setRenderRange({ start: startPage, end: endPage });
+    }, [scrollView, numPages, getPageHeight]);
+
     const renderVisiblePages = useCallback(() => {
         if (scrollView) {
-            visiblePages.forEach(pageNum => {
-                if (pageNum <= numPages && svgPagesRef.current.has(pageNum)) {
-                    renderPageToCanvas(pageNum);
+            for (let i = renderRange.start; i <= renderRange.end; i++) {
+                if (i <= numPages && svgPagesRef.current.has(i)) {
+                    renderPageToCanvas(i);
                 }
-            });
+            }
         } else if (svgPagesRef.current.has(currentPage)) {
             renderPageToCanvas(currentPage);
         }
-    }, [scrollView, visiblePages, currentPage, numPages, renderPageToCanvas]);
+    }, [scrollView, renderRange, currentPage, numPages, renderPageToCanvas]);
+
+    useEffect(() => {
+        if (!scrollView || !scrollContainerRef.current) return;
+
+        let rafId: number | null = null;
+        let lastUpdateTime = 0;
+
+        const handleScroll = () => {
+            if (rafId !== null) {
+                cancelAnimationFrame(rafId);
+            }
+
+            rafId = requestAnimationFrame(() => {
+                const now = Date.now();
+                if (now - lastUpdateTime >= UPDATE_THROTTLE) {
+                    lastUpdateTime = now;
+                    calculateVisibleRange();
+                    updateCurrentPageFromScroll();
+                }
+            });
+        };
+
+        const container = scrollContainerRef.current;
+        container.addEventListener('scroll', handleScroll, { passive: true });
+
+        calculateVisibleRange();
+        updateCurrentPageFromScroll();
+
+        return () => {
+            container.removeEventListener('scroll', handleScroll);
+            if (rafId !== null) {
+                cancelAnimationFrame(rafId);
+            }
+        };
+    }, [scrollView, calculateVisibleRange, updateCurrentPageFromScroll]);
+
+    useEffect(() => {
+        if (!scrollView) return;
+
+        isTrackingEnabledRef.current = false;
+
+        const timer = setTimeout(() => {
+            isTrackingEnabledRef.current = true;
+            updateCurrentPageFromScroll();
+        }, 200);
+
+        return () => clearTimeout(timer);
+    }, [scale, scrollView, updateCurrentPageFromScroll]);
 
     const updateSvgContent = useCallback(async (svgBuffer: ArrayBuffer) => {
         if (!svgBuffer || svgBuffer.byteLength === 0) return;
@@ -187,15 +338,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
             setError(null);
 
             requestAnimationFrame(() => {
-                if (scrollView) {
-                    visiblePages.forEach(pageNum => {
-                        if (pageNum <= pages.size) {
-                            renderPageToCanvas(pageNum);
-                        }
-                    });
-                } else {
-                    renderPageToCanvas(currentPage);
-                }
+                renderVisiblePages();
             });
 
         } catch (err) {
@@ -203,7 +346,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
             setError(`Failed to parse SVG: ${err}`);
             setIsLoading(false);
         }
-    }, [parseSvgPages, scrollView, visiblePages, currentPage, renderPageToCanvas]);
+    }, [parseSvgPages, renderVisiblePages]);
 
     useEffect(() => {
         if (controllerRef) {
@@ -266,87 +409,26 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     }, [scale, renderVisiblePages, numPages]);
 
     useEffect(() => {
-        if (!scrollView || isLoading || numPages === 0) return;
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                const newVisiblePages = new Set(visiblePages);
-                let changed = false;
-
-                entries.forEach((entry) => {
-                    const pageNum = Number.parseInt(
-                        entry.target.getAttribute('data-page-number') || '0',
-                        10
-                    );
-
-                    if (entry.isIntersecting && entry.intersectionRatio > 0.1) {
-                        if (!newVisiblePages.has(pageNum)) {
-                            newVisiblePages.add(pageNum);
-                            changed = true;
-                        }
-                    } else if (!entry.isIntersecting) {
-                        if (newVisiblePages.has(pageNum)) {
-                            newVisiblePages.delete(pageNum);
-                            changed = true;
-                        }
-                    }
-                });
-
-                if (changed) {
-                    setVisiblePages(newVisiblePages);
-
-                    if (newVisiblePages.size > 0) {
-                        const lowestVisiblePage = Math.min(...Array.from(newVisiblePages));
-                        setCurrentPage(lowestVisiblePage);
-                        if (!isEditingPageInput) {
-                            setPageInput(String(lowestVisiblePage));
-                        }
-                    }
-                }
-            },
-            {
-                threshold: [0.1],
-                rootMargin: '100px 0px',
-                root: contentElRef.current
-            }
-        );
-
-        pageRefs.current.forEach((element) => observer.observe(element));
-
-        return () => observer.disconnect();
-    }, [scrollView, isLoading, numPages, isEditingPageInput]);
+        if (scrollView) {
+            calculateVisibleRange();
+        }
+    }, [scrollView, numPages, scale, calculateVisibleRange]);
 
     const handlePreviousPage = useCallback(() => {
-        if (scrollView) {
-            const targetPage = Math.max(currentPage - 1, 1);
-            const pageElement = pageRefs.current.get(targetPage);
-            if (pageElement) {
-                pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        } else {
-            setCurrentPage((prev) => {
-                const p = Math.max(prev - 1, 1);
-                if (!isEditingPageInput) setPageInput(String(p));
-                return p;
-            });
-        }
-    }, [scrollView, currentPage, isEditingPageInput]);
+        const targetPage = Math.max(currentPage - 1, 1);
+        lastStablePageRef.current = targetPage;
+        setCurrentPage(targetPage);
+        setPageInput(String(targetPage));
+        scrollToPage(targetPage);
+    }, [currentPage, scrollToPage]);
 
     const handleNextPage = useCallback(() => {
-        if (scrollView) {
-            const targetPage = Math.min(currentPage + 1, numPages);
-            const pageElement = pageRefs.current.get(targetPage);
-            if (pageElement) {
-                pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        } else {
-            setCurrentPage((prev) => {
-                const p = Math.min(prev + 1, numPages);
-                if (!isEditingPageInput) setPageInput(String(p));
-                return p;
-            });
-        }
-    }, [scrollView, currentPage, numPages, isEditingPageInput]);
+        const targetPage = Math.min(currentPage + 1, numPages);
+        lastStablePageRef.current = targetPage;
+        setCurrentPage(targetPage);
+        setPageInput(String(targetPage));
+        scrollToPage(targetPage);
+    }, [currentPage, numPages, scrollToPage]);
 
     const handlePageInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         setPageInput(event.target.value);
@@ -356,21 +438,18 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         if (event.key === 'Enter') {
             const pageNum = Number.parseInt(pageInput, 10);
             if (!Number.isNaN(pageNum) && pageNum >= 1 && pageNum <= numPages) {
-                if (scrollView) {
-                    const pageElement = pageRefs.current.get(pageNum);
-                    if (pageElement) {
-                        pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                }
+                lastStablePageRef.current = pageNum;
                 setCurrentPage(pageNum);
-                setPageInput(String(pageNum));
+                setIsEditingPageInput(false);
+                (event.target as HTMLInputElement).blur();
+                scrollToPage(pageNum);
             } else {
                 setPageInput(String(currentPage));
+                setIsEditingPageInput(false);
+                (event.target as HTMLInputElement).blur();
             }
-            setIsEditingPageInput(false);
-            (event.target as HTMLInputElement).blur();
         }
-    }, [numPages, currentPage, scrollView, pageInput]);
+    }, [numPages, currentPage, pageInput, scrollToPage]);
 
     const computeFitScale = useCallback((mode: 'fit-width' | 'fit-height') => {
         const containerWidth = contentElRef.current?.clientWidth || 800;
@@ -616,38 +695,36 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                 </div>
             </div>
 
-            <div className={`canvas-renderer-content ${isFullscreen ? 'fullscreen' : ''}`} ref={contentElRef}>
+            <div className={`canvas-renderer-content ${isFullscreen ? 'fullscreen' : ''}`} ref={scrollView ? scrollContainerRef : contentElRef}>
                 <div className="canvas-renderer-viewer">
                     {!isLoading && !error && numPages > 0 && (
                         scrollView ? (
                             Array.from({ length: numPages }, (_, i) => {
                                 const pageNumber = i + 1;
+                                const shouldRender = pageNumber >= renderRange.start && pageNumber <= renderRange.end;
                                 const meta = pageMetadata.get(pageNumber);
                                 const width = meta?.width || 595;
                                 const height = meta?.height || 842;
+                                const estimatedHeight = getPageHeight(pageNumber);
 
                                 return (
                                     <div
                                         key={`page_${pageNumber}`}
                                         data-page-number={pageNumber}
-                                        ref={(el) => {
-                                            if (el) {
-                                                pageRefs.current.set(pageNumber, el);
-                                            } else {
-                                                pageRefs.current.delete(pageNumber);
-                                            }
-                                        }}
-                                        className="canvas-page-scroll">
-                                        <div className="canvas-page">
-                                            <canvas
-                                                ref={setCanvasRef(pageNumber)}
-                                                className="canvas-page-canvas"
-                                                style={{
-                                                    width: `${width * scale}px`,
-                                                    height: `${height * scale}px`,
-                                                }}
-                                            />
-                                        </div>
+                                        className="canvas-page-scroll"
+                                        style={{ minHeight: shouldRender ? undefined : `${estimatedHeight}px` }}>
+                                        {shouldRender ? (
+                                            <div className="canvas-page">
+                                                <canvas
+                                                    ref={setCanvasRef(pageNumber)}
+                                                    className="canvas-page-canvas"
+                                                    style={{
+                                                        width: `${width * scale}px`,
+                                                        height: `${height * scale}px`,
+                                                    }}
+                                                />
+                                            </div>
+                                        ) : null}
                                     </div>
                                 );
                             })

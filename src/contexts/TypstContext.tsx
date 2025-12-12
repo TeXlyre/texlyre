@@ -87,8 +87,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
       defaultValue: initialDefaultFormat,
       options: [
         { label: t("PDF"), value: 'pdf' },
-        { label: t("SVG"), value: 'svg' },
-        { label: t("Canvas"), value: 'canvas' }],
+        { label: t("Canvas (SVG)"), value: 'canvas' }],
 
       onChange: (value) => {
         setCurrentFormat(value as TypstOutputFormat);
@@ -147,7 +146,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     setActiveCompiler('typst');
 
     setCompiledPdf(null);
-    setCompiledSvg(null);
+    // setCompiledSvg(null);
     setCompiledCanvas(null);
 
     try {
@@ -179,11 +178,11 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
             }
             break;
           case 'svg':
-            if (result.svg) {
-              setCompiledSvg(result.svg);
-              setCurrentView('output');
-            }
-            break;
+          // if (result.svg) {
+          //   setCompiledSvg(result.svg);
+          //   setCurrentView('output');
+          // }
+          // break;
           case 'canvas':
             console.log('[TypstContext] Setting Canvas', { hasCanvas: !!result.canvas });
             if (result.canvas) {
