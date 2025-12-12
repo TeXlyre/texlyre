@@ -1,7 +1,7 @@
 // extras/renderers/canvas/CanvasRenderer.tsx
 import { t } from '@/i18n';
 import type React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useImperativeHandle } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 
 import {
@@ -207,38 +207,37 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         try {
             const page = await pdfDocRef.current.getPage(pageNumber);
             const viewport = page.getViewport({ scale });
-
-            const ctx = canvas.getContext('2d');
-            if (!ctx) {
-                renderingRef.current.delete(pageNumber);
-                return;
-            }
-
             const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
             const scaledViewport = page.getViewport({ scale: scale * pixelRatio });
 
-            canvas.width = scaledViewport.width;
-            canvas.height = scaledViewport.height;
-            canvas.style.width = `${viewport.width}px`;
-            canvas.style.height = `${viewport.height}px`;
+            const off = document.createElement("canvas");
+            off.width = scaledViewport.width;
+            off.height = scaledViewport.height;
+            const offCtx = off.getContext("2d");
+            if (!offCtx) return;
 
-            const renderContext = {
-                canvasContext: ctx,
+            await page.render({
+                canvasContext: offCtx,
                 viewport: scaledViewport
-            };
+            }).promise;
 
-            await page.render(renderContext).promise;
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+                canvas.width = scaledViewport.width;
+                canvas.height = scaledViewport.height;
+                canvas.style.width = `${viewport.width}px`;
+                canvas.style.height = `${viewport.height}px`;
 
+                ctx.drawImage(off, 0, 0);
+            }
+
+        } finally {
             renderingRef.current.delete(pageNumber);
 
             if (pendingRenderRef.current.has(pageNumber)) {
                 pendingRenderRef.current.delete(pageNumber);
                 requestAnimationFrame(() => renderPdfPageToCanvas(pageNumber));
             }
-        } catch (error) {
-            console.error(`Failed to render PDF page ${pageNumber}:`, error);
-            renderingRef.current.delete(pageNumber);
-            pendingRenderRef.current.delete(pageNumber);
         }
     }, [scale]);
 
@@ -440,23 +439,14 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         }
     }, [parseSvgPages, parsePdfPages, renderVisiblePages]);
 
-    useEffect(() => {
-        if (controllerRef) {
-            controllerRef({
-                updateContent: (newContent: ArrayBuffer | string) => {
-                    const buffer = typeof newContent === 'string'
-                        ? new TextEncoder().encode(newContent).buffer
-                        : newContent;
-                    updateContent(buffer);
-                }
-            });
+    useImperativeHandle(controllerRef, () => ({
+        updateContent: (newContent: ArrayBuffer | string) => {
+            const buffer = typeof newContent === 'string'
+                ? new TextEncoder().encode(newContent).buffer
+                : newContent;
+            updateContent(buffer);
         }
-        return () => {
-            if (controllerRef) {
-                controllerRef(null);
-            }
-        };
-    }, [controllerRef, updateContent]);
+    }), [updateContent]);
 
     useEffect(() => {
         if (propertiesRegistered.current) return;
