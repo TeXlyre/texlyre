@@ -1,3 +1,4 @@
+// src/components/output/TypstOutput.tsx
 import { t } from '@/i18n';
 import React from 'react';
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
@@ -166,38 +167,6 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     URL.revokeObjectURL(url);
   }, [compiledPdf]);
 
-  const handleSaveOutput = useCallback((format: string, defaultName: string) => {
-    const currentOutput = getCurrentOutput();
-    if (!currentOutput) return;
-
-    let blob: Blob;
-    switch (format) {
-      case 'svg':
-        if (!compiledSvg) return;
-        blob = new Blob([compiledSvg], { type: 'image/svg+xml' });
-        break;
-      case 'pdf':
-        if (!compiledPdf) return;
-        blob = new Blob([toArrayBuffer(compiledPdf)], { type: 'application/pdf' });
-        break;
-      case 'canvas':
-        if (!compiledCanvas) return;
-        blob = new Blob([toArrayBuffer(compiledCanvas)], { type: 'text/plain' });
-        break;
-      default:
-        return;
-    }
-
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = defaultName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, [compiledPdf, compiledSvg, compiledCanvas]);
-
   const handleTabSwitch = useCallback((format: TypstOutputFormat) => {
     if (currentFormat !== format) {
       setCurrentFormat(format);
@@ -256,7 +225,6 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
               content: compiledCanvas || new ArrayBuffer(0),
               mimeType: currentFormat === 'canvas-pdf' ? 'application/pdf' : 'image/svg+xml',
               fileName: currentFormat === 'canvas-pdf' ? 'output.pdf' : 'output.svg',
-              onDownload: (fileName) => handleSaveOutput('canvas', fileName),
               controllerRef: (controller) => { canvasControllerRef.current = controller; }
             }) :
             <div className="canvas-fallback">{t('Canvas renderer not available')}</div>
@@ -266,7 +234,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     }
 
     return null;
-  }, [currentView, currentFormat, !!compiledPdf, !!compiledCanvas, useEnhancedRenderer, handleSavePdf, handleSaveOutput]);
+  }, [currentView, currentFormat, !!compiledPdf, !!compiledCanvas, useEnhancedRenderer, handleSavePdf]);
 
   const hasAnyOutput = compiledPdf || compiledCanvas;
 
