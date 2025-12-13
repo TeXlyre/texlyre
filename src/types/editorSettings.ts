@@ -22,12 +22,12 @@ export interface EditorSettings {
 }
 
 export const defaultEditorSettings: EditorSettings = {
-	fontSize: 'base',
+	fontSize: 'lg',
 	fontFamily: 'monospace',
 	showLineNumbers: true,
 	syntaxHighlighting: true,
 	autoSaveEnabled: false,
-	autoSaveDelay: 2000,
+	autoSaveDelay: 150,
 	highlightTheme: 'auto',
 	vimMode: false,
 	spellCheck: true,
