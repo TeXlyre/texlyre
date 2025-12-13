@@ -27,8 +27,8 @@ const ThemeToggleButton: React.FC<ThemeToggleButtonProps> = ({ className = '' })
 		<button
 			className={`${className}`}
 			onClick={toggleTheme}
-			title={t('Switch to {theme} theme', {
-				theme: isDark ? t('light') : t('dark')
+			title={t('Switch to {theme}', {
+				theme: isDark ? t('Light Theme') : t('Dark Theme')
 			})}
 		>
 			{isDark ? <SunIcon /> : <MoonIcon />}
