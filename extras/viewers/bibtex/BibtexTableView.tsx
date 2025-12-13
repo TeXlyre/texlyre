@@ -36,7 +36,7 @@ export const BibtexTableView: React.FC<BibtexTableViewProps> = ({
 			Object.keys(entry.fields).forEach(field => fieldSet.add(field));
 		});
 		const otherFields = Array.from(fieldSet).sort();
-		return ['id', ...otherFields]; // id first, then others
+		return ['id', ...otherFields];
 	}, [entries]);
 
 	// Set initial column widths after first render
@@ -45,11 +45,9 @@ export const BibtexTableView: React.FC<BibtexTableViewProps> = ({
 			const headers = tableRef.current.querySelectorAll('th');
 			headers.forEach((th, index) => {
 				const field = allFields[index];
-				// Calculate width based on header text + some padding
 				const minWidth = Math.max(120, field.length * 12 + 60);
 				(th as HTMLElement).style.width = `${minWidth}px`;
 			});
-			// Switch to fixed layout after setting widths
 			tableRef.current.style.tableLayout = 'fixed';
 		}
 	}, [allFields]);

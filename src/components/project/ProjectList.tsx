@@ -2,9 +2,10 @@
 import { t } from '@/i18n';
 import { Trans } from 'react-i18next';
 import type React from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 import type { Project } from '../../types/projects';
+import { useProperties } from '../../hooks/useProperties';
 import { ExportIcon, GridIcon, ImportIcon, ListIcon, TrashIcon } from '../common/Icons';
 import ProjectCard from './ProjectCard';
 
@@ -32,23 +33,71 @@ const ProjectList: React.FC<ProjectListProps> = ({
 	onExportSelected,
 	onDeleteSelected,
 	onToggleViewMode,
-	viewMode = 'grid',
+	viewMode: externalViewMode = 'grid',
 	itemsPerPage = 8
 }) => {
+	const { getProperty, setProperty, registerProperty } = useProperties();
+	const propertiesRegistered = useRef(false);
+	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
+
 	const [currentPage, setCurrentPage] = useState(1);
-	const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'updatedAt'>(
-		'updatedAt'
-	);
+	const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'updatedAt'>('updatedAt');
 	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+	const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 	const [displayedProjects, setDisplayedProjects] = useState<Project[]>([]);
-	const [selectedProjects, setSelectedProjects] = useState<Set<string>>(
-		new Set()
-	);
+	const [selectedProjects, setSelectedProjects] = useState<Set<string>>(new Set());
 	const [isSelectionMode, setIsSelectionMode] = useState(false);
 	const totalPages = Math.ceil(projects.length / itemsPerPage);
 
 	useEffect(() => {
-		// Sort projects
+		if (propertiesRegistered.current) return;
+		propertiesRegistered.current = true;
+
+		registerProperty({
+			id: 'project-list-sort-by',
+			category: 'UI',
+			subcategory: 'Projects',
+			defaultValue: 'updatedAt'
+		});
+
+		registerProperty({
+			id: 'project-list-sort-direction',
+			category: 'UI',
+			subcategory: 'Projects',
+			defaultValue: 'desc'
+		});
+
+		registerProperty({
+			id: 'project-list-view-mode',
+			category: 'UI',
+			subcategory: 'Projects',
+			defaultValue: 'grid'
+		});
+	}, [registerProperty]);
+
+	useEffect(() => {
+		if (propertiesLoaded) return;
+
+		const storedSortBy = getProperty('project-list-sort-by');
+		const storedSortDirection = getProperty('project-list-sort-direction');
+		const storedViewMode = getProperty('project-list-view-mode');
+
+		if (storedSortBy !== undefined) {
+			setSortBy(storedSortBy as 'name' | 'createdAt' | 'updatedAt');
+		}
+
+		if (storedSortDirection !== undefined) {
+			setSortDirection(storedSortDirection as 'asc' | 'desc');
+		}
+
+		if (storedViewMode !== undefined) {
+			setViewMode(storedViewMode as 'grid' | 'list');
+		}
+
+		setPropertiesLoaded(true);
+	}, [getProperty, propertiesLoaded]);
+
+	useEffect(() => {
 		const sortedProjects = [...projects].sort((a, b) => {
 			if (sortBy === 'name') {
 				return sortDirection === 'asc' ?
@@ -71,10 +120,14 @@ const ProjectList: React.FC<ProjectListProps> = ({
 
 	const handleSortChange = (newSortBy: 'name' | 'createdAt' | 'updatedAt') => {
 		if (sortBy === newSortBy) {
-			setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+			const newDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+			setSortDirection(newDirection);
+			setProperty('project-list-sort-direction', newDirection);
 		} else {
 			setSortBy(newSortBy);
 			setSortDirection('desc');
+			setProperty('project-list-sort-by', newSortBy);
+			setProperty('project-list-sort-direction', 'desc');
 		}
 		setCurrentPage(1);
 	};
@@ -131,6 +184,15 @@ const ProjectList: React.FC<ProjectListProps> = ({
 		setSelectedProjects(new Set());
 	};
 
+	const handleToggleViewMode = () => {
+		const newViewMode = viewMode === 'grid' ? 'list' : 'grid';
+		setViewMode(newViewMode);
+		setProperty('project-list-view-mode', newViewMode);
+		if (onToggleViewMode) {
+			onToggleViewMode();
+		}
+	};
+
 	return (
 		<div className="project-list-container">
 			<div className="project-list-header">
@@ -158,8 +220,10 @@ const ProjectList: React.FC<ProjectListProps> = ({
 					</button>
 					<button
 						className="sort-button"
-						onClick={onToggleViewMode}
-						title={`Switch to ${viewMode === 'grid' ? 'list' : 'grid'} view`}>
+						onClick={handleToggleViewMode}
+						title={t('Switch to {viewMode}', {
+							viewMode: viewMode === 'grid' ? t('List View') : t('Grid View')
+						})}>
 
 						{viewMode === 'grid' ? <ListIcon /> : <GridIcon />}
 					</button>
