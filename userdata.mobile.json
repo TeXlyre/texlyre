@@ -9,7 +9,7 @@
     "editor-auto-save-delay": 1000,
     "editor-auto-save-enable": true,
     "editor-font-family": "monospace",
-    "editor-font-size": "base",
+    "editor-font-size": "lg",
     "editor-show-line-numbers": true,
     "editor-spell-check": false,
     "editor-syntax-highlighting": true,

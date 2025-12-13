@@ -256,16 +256,29 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 		setSettings((prev) =>
 			prev.map((s) => {
 				if (s.id !== id) return s;
-				if (s.validate && !s.validate(value)) {
-					console.warn(`Invalid value for ${id}:`, value);
+
+				let validatedValue = value;
+
+				if (s.type === 'number' && typeof value === 'number') {
+					if (s.min !== undefined && value < s.min) {
+						validatedValue = s.min;
+					}
+					if (s.max !== undefined && value > s.max) {
+						validatedValue = s.max;
+					}
+				}
+
+				if (s.validate && !s.validate(validatedValue)) {
+					console.warn(`Invalid value for ${id}:`, validatedValue);
 					return s;
 				}
-				const updated = { ...s, value };
+
+				const updated = { ...s, value: validatedValue };
 				if (
 					s.onChange &&
 					(s.liveUpdate === undefined || s.liveUpdate === true)
 				) {
-					s.onChange(value);
+					s.onChange(validatedValue);
 				}
 				if (s.liveUpdate === false) {
 					setNeedsRefresh(true);

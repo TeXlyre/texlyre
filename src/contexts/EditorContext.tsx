@@ -243,7 +243,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       label: t("Auto-save delay (milliseconds)"),
       description: t("Delay in milliseconds before saving changes"),
       defaultValue: initialAutoSaveDelay,
-      min: 500,
+      min: 50,
       max: 10000,
       onChange: (value) => {
         updateEditorSetting('autoSaveDelay', value as number);

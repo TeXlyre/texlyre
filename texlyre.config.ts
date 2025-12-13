@@ -56,7 +56,7 @@ const config: TexlyreConfig = {
                 editorAutoSaveDelay: 1000,
                 editorAutoSaveEnable: true,
                 editorFontFamily: 'monospace',
-                editorFontSize: 'base',
+                editorFontSize: 'lg',
                 editorShowLineNumbers: true,
                 editorSpellCheck: false,
                 editorSyntaxHighlighting: true,
