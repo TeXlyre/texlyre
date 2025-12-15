@@ -307,28 +307,67 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   }, []);
 
   useEffect(() => {
-    const handleNavigateToLinkedFile = (event: Event) => {
+    const handleNavigateToLinkedFile = async (event: Event) => {
       const customEvent = event as CustomEvent;
       const { filePath, fileId } = customEvent.detail;
 
-      if (filePath && fileId) {
-        setActiveView('files');
+      if (!filePath || !fileId) return;
 
-        const expandPaths: string[] = [];
-        let currentPath = '';
-        const pathSegments = filePath.split('/').filter((segment) => segment);
+      setActiveView('files');
+      const expandPaths: string[] = [];
+      let currentPath = '';
+      const pathSegments = filePath.split('/').filter(Boolean);
 
-        for (let i = 0; i < pathSegments.length - 1; i++) {
-          currentPath =
-            currentPath === '' ?
-              `/${pathSegments[i]}` :
-              `${currentPath}/${pathSegments[i]}`;
-          expandPaths.push(currentPath);
+      for (let i = 0; i < pathSegments.length - 1; i++) {
+        currentPath =
+          currentPath === ''
+            ? `/${pathSegments[i]}`
+            : `${currentPath}/${pathSegments[i]}`;
+        expandPaths.push(currentPath);
+      }
+      setInitialSelectedFile(fileId);
+      setInitialExpandedPaths(expandPaths);
+      setHasNavigatedToFile(false);
+      selectFile(fileId);
+
+      try {
+        const file = await getFile(fileId);
+        if (!file) return;
+
+        const content = await getFileContent(fileId);
+        if (!content) return;
+
+        setIsEditingFile(true);
+        setIsBinaryFile(file.isBinary || false);
+        setFileContent(content);
+
+        if (typeof content === 'string') {
+          setCurrentEditorContent(content);
+        } else {
+          try {
+            setCurrentEditorContent(new TextDecoder().decode(content));
+          } catch {
+            setCurrentEditorContent('');
+          }
         }
 
-        setInitialSelectedFile(fileId);
-        setInitialExpandedPaths(expandPaths);
-        setHasNavigatedToFile(false);
+        setFileName(file.name);
+        setMimeType(file.mimeType);
+        setLinkedDocumentId(file.documentId || null);
+        setCurrentFilePath(file.path);
+
+        const currentFragment = parseUrlFragments(
+          window.location.hash.substring(1)
+        );
+        const newUrl = buildUrlWithFragments(
+          currentFragment.yjsUrl,
+          undefined,
+          file.path
+        );
+        window.location.hash = newUrl;
+
+      } catch (error) {
+        console.error('Error navigating to linked file:', error);
       }
     };
 
@@ -809,7 +848,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
     const currentFragment = parseUrlFragments(
       window.location.hash.substring(1)
     );
-    const newUrl = buildUrlWithFragments(currentFragment.yjsUrl, id);
+    const newUrl = buildUrlWithFragments(currentFragment.yjsUrl, id, undefined);
     window.location.hash = newUrl;
     updateProjectLastOpened(id, undefined);
   };
@@ -820,16 +859,20 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   };
 
   const handleSwitchToFiles = async () => {
-    console.log(
-      'handleSwitchToFiles called, lastUserSelectedFileId:',
-      lastUserSelectedFileId
-    );
     setActiveView('files');
 
-    if (lastUserSelectedFileId && !isEditingFile) {
+    if (linkedFileInfo?.fileId) {
+      selectFile(linkedFileInfo.fileId);
+    }
+
+    else if (
+      lastUserSelectedFileId &&
+      activeView === 'files' &&
+      !isEditingFile &&
+      !selectedDocId
+    ) {
       try {
         const file = await getFile(lastUserSelectedFileId);
-        console.log('Retrieved file for restoration:', file?.path);
         if (file) {
           const content = await getFileContent(lastUserSelectedFileId);
           if (content) {
@@ -1065,6 +1108,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
               <FileExplorer
                 onFileSelect={handleUserFileSelect}
+                onOpenDocument={handleDocumentSelect}
                 onCreateDocument={handleCreateDocument}
                 documents={documents.map((doc) => ({
                   id: Number.parseInt(doc.id, 36),

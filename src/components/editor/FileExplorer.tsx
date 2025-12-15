@@ -26,6 +26,7 @@ interface FileExplorerProps {
     content: string | ArrayBuffer,
     isBinary?: boolean)
     => void;
+  onOpenDocument?: (documentId: string) => void;
   onCreateDocument: (name: string) => string;
   documents: Array<{ id: number; name: string; }>;
   initialSelectedFile?: string;
@@ -47,6 +48,7 @@ interface FilePropertiesInfo {
 
 const FileExplorer: React.FC<FileExplorerProps> = ({
   onFileSelect,
+  onOpenDocument,
   onCreateDocument,
   documents,
   initialSelectedFile,
@@ -340,22 +342,28 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   };
 
   const handleFileSelect = async (node: FileNode) => {
-    if (node.type === 'file') {
-      selectFile(node.id);
-      const content = await getFileContent(node.id);
-      if (content) {
-        onFileSelect(node.id, content, node.isBinary);
+    if (node.type !== 'file') return;
 
-        const currentFragment = parseUrlFragments(
-          window.location.hash.substring(1)
-        );
-        const newUrl = buildUrlWithFragments(
-          currentFragment.yjsUrl,
-          undefined,
-          node.path
-        );
-        window.location.hash = newUrl;
-      }
+    if (node.documentId && onOpenDocument) {
+      selectFile(node.id);
+      onOpenDocument(node.documentId);
+      return;
+    }
+
+    selectFile(node.id);
+    const content = await getFileContent(node.id);
+    if (content) {
+      onFileSelect(node.id, content, node.isBinary);
+
+      const currentFragment = parseUrlFragments(
+        window.location.hash.substring(1)
+      );
+      const newUrl = buildUrlWithFragments(
+        currentFragment.yjsUrl,
+        undefined,
+        node.path
+      );
+      window.location.hash = newUrl;
     }
   };
 
