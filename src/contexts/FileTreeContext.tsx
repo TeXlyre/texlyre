@@ -745,6 +745,10 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
     [refreshFileTree]
   );
 
+  const clearSelectedFile = useCallback(() => {
+    setSelectedFileId(null);
+  }, []);
+
   const contextValue = {
     fileTree,
     selectedFileId,
@@ -767,7 +771,8 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
     enableInternalDragDrop,
     batchDeleteFiles,
     batchMoveFiles,
-    batchUnlinkFiles
+    batchUnlinkFiles,
+    clearSelectedFile
   };
 
   return (

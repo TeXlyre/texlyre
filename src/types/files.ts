@@ -54,4 +54,5 @@ export interface FileTreeContextType {
 		moveOperations: Array<{ fileId: string; targetPath: string }>,
 	) => Promise<string[]>;
 	batchUnlinkFiles: (fileIds: string[]) => Promise<void>;
+	clearSelectedFile: () => void;
 }
