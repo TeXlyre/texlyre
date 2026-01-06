@@ -13,7 +13,7 @@ const config: TexlyreConfig = {
 
     pwa: {
         enabled: true,
-        themeColor: '#000000',
+        themeColor: '#ffffff',
         manifest: './manifest.json',
         startUrl: './',
         backgroundColor: '#ffffff',
@@ -45,14 +45,14 @@ const config: TexlyreConfig = {
 
     // overwrite priority is default < local < mobile for corresponding configs
     userdata: {
-        version: '1.0.0',
+        version: '1.0.1',
         default: {
             settings: {
                 bibtexViewerAutoTidy: false,
                 bibtexViewerTidyOptions: 'standard',
                 collabAutoReconnect: false,
                 collabAwarenessTimeout: 30,
-                collabSignalingServers: 'wss://ywebrtc.emaily.re',
+                collabSignalingServers: 'wss://ywebrtc.texlyre.org',
                 editorAutoSaveDelay: 1000,
                 editorAutoSaveEnable: true,
                 editorFontFamily: 'monospace',
@@ -67,7 +67,7 @@ const config: TexlyreConfig = {
                 fileSyncHoldTimeout: 30,
                 fileSyncNotifications: true,
                 fileSyncRequestTimeout: 60,
-                fileSyncServerUrl: 'https://filepizza.emaily.re',
+                fileSyncServerUrl: 'https://filepizza.texlyre.org',
                 fileSystemBackupAutoBackup: false,
                 fileSystemBackupEnable: false,
                 fileTreeFilesystemDragDrop: true,
@@ -79,14 +79,14 @@ const config: TexlyreConfig = {
                 latexEngine: 'pdftex',
                 latexStoreCache: true,
                 latexStoreWorkingDirectory: false,
-                latexTexliveEndpoint: 'https://texlive.emaily.re',
+                latexTexliveEndpoint: 'https://texlive.texlyre.org',
                 pdfRendererAnnotations: true,
                 pdfRendererEnable: true,
                 pdfRendererInitialZoom: '200',
                 pdfRendererTextSelection: true,
                 pdfViewerAutoScale: true,
                 pdfViewerRenderingQuality: 'high',
-                repositoryProxyUrl: 'https://proxy.emaily.re/?url=',
+                repositoryProxyUrl: 'https://proxy.texlyre.org/?url=',
                 templatesApiUrl: 'https://texlyre.github.io/texlyre-templates/api/templates.json',
                 themePlugin: 'texlyre-wide-theme',
                 themeVariant: 'atom_light',
