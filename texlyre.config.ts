@@ -9,7 +9,7 @@ const config: TexlyreConfig = {
     organizationName: 'texlyre',
     projectName: 'texlyre',
 
-    favicon: '/src/assets/images/TeXlyre_notext.png',
+    favicon: '/favicon.ico',
 
     pwa: {
         enabled: true,

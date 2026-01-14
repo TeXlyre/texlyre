@@ -98,7 +98,7 @@ function generateIndexHtml(config: any) {
 
     indexContent = indexContent.replace(
         /rel="icon"[^>]*>/,
-        `rel="icon" type="image/png" href="${config.favicon}" />`
+        `rel="icon" type="image/x-icon" href="${config.favicon}" />`
     );
 
     if (config.pwa?.enabled) {
