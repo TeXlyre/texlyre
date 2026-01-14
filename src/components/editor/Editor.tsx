@@ -8,7 +8,7 @@ import { BibliographyProvider } from '../../contexts/BibliographyContext';
 import { LSPProvider } from '../../contexts/LSPContext';
 import { CommentProvider } from '../../contexts/CommentContext';
 import { processComments } from '../../extensions/codemirror/CommentExtension';
-import { useEditorView } from '@/hooks/editor/useEditorView';
+import { useEditorView } from '../../hooks/editor/useEditorView';
 import { useCollab } from '../../hooks/useCollab';
 import { useComments } from '../../hooks/useComments';
 import { usePluginFileInfo } from '../../hooks/usePluginFileInfo';
