@@ -1860,20 +1860,20 @@
   resolved "https://registry.npmjs.org/@msgpack/msgpack/-/msgpack-2.8.0.tgz"
   integrity sha512-h9u4u/jiIRKbq25PM+zymTyW6bhTzELvOoUd+AvYriWOAKpLGnIamaET3pnHYoI5iYphAHBI4ayx0MehR+VVPQ==
 
-"@myriaddreamin/typst-ts-renderer@npm:@texlyre/typst-ts-renderer@^0.7.0-rc1":
-  version "0.7.0-rc1"
-  resolved "https://registry.npmjs.org/@texlyre/typst-ts-renderer/-/typst-ts-renderer-0.7.0-rc1.tgz"
-  integrity sha512-uQ8Cs5oU6aTwPj6OaUfcS9fbNFF3gVRq7Bq2AuKtRqibVBZa1KdSpffo0HLIwwum5awuq5SbwalP1K277xfayw==
+"@myriaddreamin/typst-ts-renderer@npm:@texlyre/typst-ts-renderer@^0.7.0-rc2":
+  version "0.7.0-rc2"
+  resolved "https://registry.npmjs.org/@texlyre/typst-ts-renderer/-/typst-ts-renderer-0.7.0-rc2.tgz"
+  integrity sha512-vzHDLup+5+T24fh3pPwr2BZSKvd3puzgrLCumebz2XU8C9ki8lAJeMzEJQecu0pTYEvfmbfZhR8/HyBU+FxTsQ==
 
-"@myriaddreamin/typst-ts-web-compiler@npm:@texlyre/typst-ts-web-compiler@^0.7.0-rc1-1":
-  version "0.7.0-rc1-1"
-  resolved "https://registry.npmjs.org/@texlyre/typst-ts-web-compiler/-/typst-ts-web-compiler-0.7.0-rc1-1.tgz"
-  integrity sha512-LF0YyAYisdu4vMp4m3L5xaFLWt7voLNHTOyTIOP+jvtVbKkPgs3C3also4+C2SBplEQXmuL4AXuEqEfzqk0ZEA==
+"@myriaddreamin/typst-ts-web-compiler@npm:@texlyre/typst-ts-web-compiler@^0.7.0-rc2":
+  version "0.7.0-rc2"
+  resolved "https://registry.npmjs.org/@texlyre/typst-ts-web-compiler/-/typst-ts-web-compiler-0.7.0-rc2.tgz"
+  integrity sha512-N8dyN1vispjyYCQnD7IEi1jSrREx3rDKXpBc++fkBTpMBqmECqaSEXa2tVGW0zWoRIznJr+rbodngnWHKfSzbg==
 
-"@myriaddreamin/typst.ts@npm:@texlyre/typst.ts@^0.7.0-rc1-1":
-  version "0.7.0-rc1-1"
-  resolved "https://registry.npmjs.org/@texlyre/typst.ts/-/typst.ts-0.7.0-rc1-1.tgz"
-  integrity sha512-IWGJ8POZQFeIblk9odTw9Kq4AgTMQk6jNpPSyEk6Uf3F9l+82kTK263HNzEynDNiZ3uNRXtZFD6qeNWHYOWl2g==
+"@myriaddreamin/typst.ts@npm:@texlyre/typst.ts@^0.7.0-rc2":
+  version "0.7.0-rc2"
+  resolved "https://registry.npmjs.org/@texlyre/typst.ts/-/typst.ts-0.7.0-rc2.tgz"
+  integrity sha512-wdOH0T0VgVxZ2O+/+5aPhe3ZdsrXOt9mrjcUnc4BHMU/vTj5whweL4gkXdiyIyTFVCSlJEVbUiyii23+Kc2KMw==
   dependencies:
     idb "^7.1.1"
 
@@ -1903,10 +1903,10 @@
     "@napi-rs/canvas-linux-x64-musl" "0.1.83"
     "@napi-rs/canvas-win32-x64-msvc" "0.1.83"
 
-"@next/env@14.2.33":
-  version "14.2.33"
-  resolved "https://registry.npmjs.org/@next/env/-/env-14.2.33.tgz"
-  integrity sha512-CgVHNZ1fRIlxkLhIX22flAZI/HmpDaZ8vwyJ/B0SDPTBuLZ1PJ+DWMjCHhqnExfmSQzA/PbZi8OAc7PAq2w9IA==
+"@next/env@14.2.35":
+  version "14.2.35"
+  resolved "https://registry.npmjs.org/@next/env/-/env-14.2.35.tgz"
+  integrity sha512-DuhvCtj4t9Gwrx80dmz2F4t/zKQ4ktN8WrMwOuVzkJfBilwAwGr6v16M5eI8yCuZ63H9TTuEU09Iu2HqkzFPVQ==
 
 "@next/swc-linux-x64-gnu@14.2.33":
   version "14.2.33"
@@ -5397,12 +5397,12 @@ neo-async@^2.6.2:
   resolved "https://registry.npmjs.org/neo-async/-/neo-async-2.6.2.tgz"
   integrity sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==
 
-next@^14.2.28:
-  version "14.2.33"
-  resolved "https://registry.npmjs.org/next/-/next-14.2.33.tgz"
-  integrity sha512-GiKHLsD00t4ACm1p00VgrI0rUFAC9cRDGReKyERlM57aeEZkOQGcZTpIbsGn0b562FTPJWmYfKwplfO9EaT6ng==
+next@^14.2.28, next@^14.2.35:
+  version "14.2.35"
+  resolved "https://registry.npmjs.org/next/-/next-14.2.35.tgz"
+  integrity sha512-KhYd2Hjt/O1/1aZVX3dCwGXM1QmOV4eNM2UTacK5gipDdPN/oHHK/4oVGy7X8GMfPMsUTUEmGlsy0EY1YGAkig==
   dependencies:
-    "@next/env" "14.2.33"
+    "@next/env" "14.2.35"
     "@swc/helpers" "0.5.5"
     busboy "1.6.0"
     caniuse-lite "^1.0.30001579"

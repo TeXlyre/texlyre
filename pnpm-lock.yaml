@@ -69,14 +69,14 @@ importers:
         specifier: ^1.0.0
         version: 1.4.3
       '@myriaddreamin/typst-ts-renderer':
-        specifier: npm:@texlyre/typst-ts-renderer@^0.7.0-rc1
-        version: '@texlyre/typst-ts-renderer@0.7.0-rc1'
+        specifier: npm:@texlyre/typst-ts-renderer@^0.7.0-rc2
+        version: '@texlyre/typst-ts-renderer@0.7.0-rc2'
       '@myriaddreamin/typst-ts-web-compiler':
-        specifier: npm:@texlyre/typst-ts-web-compiler@^0.7.0-rc1-1
-        version: '@texlyre/typst-ts-web-compiler@0.7.0-rc1-1'
+        specifier: npm:@texlyre/typst-ts-web-compiler@^0.7.0-rc2
+        version: '@texlyre/typst-ts-web-compiler@0.7.0-rc2'
       '@myriaddreamin/typst.ts':
-        specifier: npm:@texlyre/typst.ts@^0.7.0-rc1-1
-        version: '@texlyre/typst.ts@0.7.0-rc1-1(@texlyre/typst-ts-renderer@0.7.0-rc1)(@texlyre/typst-ts-web-compiler@0.7.0-rc1-1)'
+        specifier: npm:@texlyre/typst.ts@^0.7.0-rc2
+        version: '@texlyre/typst.ts@0.7.0-rc2(@texlyre/typst-ts-renderer@0.7.0-rc2)(@texlyre/typst-ts-web-compiler@0.7.0-rc2)'
       '@picocss/pico':
         specifier: ^2.0.6
         version: 2.1.1
@@ -112,7 +112,7 @@ importers:
         version: 2.0.5
       filepizza-client:
         specifier: ^2.0.0-alpha.2
-        version: 2.0.0-alpha.2(next@14.2.33(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(peerjs@1.5.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 2.0.0-alpha.2(next@14.2.35(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(peerjs@1.5.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       i18next:
         specifier: ^25.6.0
         version: 25.6.3(typescript@5.9.3)
@@ -135,8 +135,8 @@ importers:
         specifier: ^5.0.5
         version: 5.1.6
       next:
-        specifier: ^14.2.28
-        version: 14.2.33(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^14.2.35
+        version: 14.2.35(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       pdfjs-dist:
         specifier: 5.3.31
         version: 5.3.31
@@ -1508,8 +1508,8 @@ packages:
     resolution: {integrity: sha512-f9GVB9VNc9vn/nroc9epXRNkVpvNPZh69+qzLJIm9DfruxFqX0/jsXG46OGWAJgkO4mN0HvFHjRROMXKVmPszg==}
     engines: {node: '>= 10'}
 
-  '@next/env@14.2.33':
-    resolution: {integrity: sha512-CgVHNZ1fRIlxkLhIX22flAZI/HmpDaZ8vwyJ/B0SDPTBuLZ1PJ+DWMjCHhqnExfmSQzA/PbZi8OAc7PAq2w9IA==}
+  '@next/env@14.2.35':
+    resolution: {integrity: sha512-DuhvCtj4t9Gwrx80dmz2F4t/zKQ4ktN8WrMwOuVzkJfBilwAwGr6v16M5eI8yCuZ63H9TTuEU09Iu2HqkzFPVQ==}
 
   '@next/swc-darwin-arm64@14.2.33':
     resolution: {integrity: sha512-HqYnb6pxlsshoSTubdXKu15g3iivcbsMXg4bYpjL2iS/V6aQot+iyF4BUc2qA/J/n55YtvE4PHMKWBKGCF/+wA==}
@@ -1778,17 +1778,17 @@ packages:
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
 
-  '@texlyre/typst-ts-renderer@0.7.0-rc1':
-    resolution: {integrity: sha512-uQ8Cs5oU6aTwPj6OaUfcS9fbNFF3gVRq7Bq2AuKtRqibVBZa1KdSpffo0HLIwwum5awuq5SbwalP1K277xfayw==}
+  '@texlyre/typst-ts-renderer@0.7.0-rc2':
+    resolution: {integrity: sha512-vzHDLup+5+T24fh3pPwr2BZSKvd3puzgrLCumebz2XU8C9ki8lAJeMzEJQecu0pTYEvfmbfZhR8/HyBU+FxTsQ==}
 
-  '@texlyre/typst-ts-web-compiler@0.7.0-rc1-1':
-    resolution: {integrity: sha512-LF0YyAYisdu4vMp4m3L5xaFLWt7voLNHTOyTIOP+jvtVbKkPgs3C3also4+C2SBplEQXmuL4AXuEqEfzqk0ZEA==}
+  '@texlyre/typst-ts-web-compiler@0.7.0-rc2':
+    resolution: {integrity: sha512-N8dyN1vispjyYCQnD7IEi1jSrREx3rDKXpBc++fkBTpMBqmECqaSEXa2tVGW0zWoRIznJr+rbodngnWHKfSzbg==}
 
-  '@texlyre/typst.ts@0.7.0-rc1-1':
-    resolution: {integrity: sha512-IWGJ8POZQFeIblk9odTw9Kq4AgTMQk6jNpPSyEk6Uf3F9l+82kTK263HNzEynDNiZ3uNRXtZFD6qeNWHYOWl2g==}
+  '@texlyre/typst.ts@0.7.0-rc2':
+    resolution: {integrity: sha512-wdOH0T0VgVxZ2O+/+5aPhe3ZdsrXOt9mrjcUnc4BHMU/vTj5whweL4gkXdiyIyTFVCSlJEVbUiyii23+Kc2KMw==}
     peerDependencies:
-      '@myriaddreamin/typst-ts-renderer': npm:@texlyre/typst-ts-renderer@^0.7.0-rc1
-      '@myriaddreamin/typst-ts-web-compiler': npm:@texlyre/typst-ts-web-compiler@^0.7.0-rc1-1
+      '@myriaddreamin/typst-ts-renderer': npm:@texlyre/typst-ts-renderer@^0.7.0-rc2
+      '@myriaddreamin/typst-ts-web-compiler': npm:@texlyre/typst-ts-web-compiler@^0.7.0-rc2
     peerDependenciesMeta:
       '@myriaddreamin/typst-ts-renderer':
         optional: true
@@ -3536,8 +3536,8 @@ packages:
   neo-async@2.6.2:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
 
-  next@14.2.33:
-    resolution: {integrity: sha512-GiKHLsD00t4ACm1p00VgrI0rUFAC9cRDGReKyERlM57aeEZkOQGcZTpIbsGn0b562FTPJWmYfKwplfO9EaT6ng==}
+  next@14.2.35:
+    resolution: {integrity: sha512-KhYd2Hjt/O1/1aZVX3dCwGXM1QmOV4eNM2UTacK5gipDdPN/oHHK/4oVGy7X8GMfPMsUTUEmGlsy0EY1YGAkig==}
     engines: {node: '>=18.17.0'}
     hasBin: true
     peerDependencies:
@@ -6276,7 +6276,7 @@ snapshots:
       '@napi-rs/canvas-win32-x64-msvc': 0.1.83
     optional: true
 
-  '@next/env@14.2.33': {}
+  '@next/env@14.2.35': {}
 
   '@next/swc-darwin-arm64@14.2.33':
     optional: true
@@ -6491,16 +6491,16 @@ snapshots:
     dependencies:
       '@testing-library/dom': 9.3.4
 
-  '@texlyre/typst-ts-renderer@0.7.0-rc1': {}
+  '@texlyre/typst-ts-renderer@0.7.0-rc2': {}
 
-  '@texlyre/typst-ts-web-compiler@0.7.0-rc1-1': {}
+  '@texlyre/typst-ts-web-compiler@0.7.0-rc2': {}
 
-  '@texlyre/typst.ts@0.7.0-rc1-1(@texlyre/typst-ts-renderer@0.7.0-rc1)(@texlyre/typst-ts-web-compiler@0.7.0-rc1-1)':
+  '@texlyre/typst.ts@0.7.0-rc2(@texlyre/typst-ts-renderer@0.7.0-rc2)(@texlyre/typst-ts-web-compiler@0.7.0-rc2)':
     dependencies:
       idb: 7.1.1
     optionalDependencies:
-      '@myriaddreamin/typst-ts-renderer': '@texlyre/typst-ts-renderer@0.7.0-rc1'
-      '@myriaddreamin/typst-ts-web-compiler': '@texlyre/typst-ts-web-compiler@0.7.0-rc1-1'
+      '@myriaddreamin/typst-ts-renderer': '@texlyre/typst-ts-renderer@0.7.0-rc2'
+      '@myriaddreamin/typst-ts-web-compiler': '@texlyre/typst-ts-web-compiler@0.7.0-rc2'
 
   '@tootallnate/once@2.0.0': {}
 
@@ -7566,9 +7566,9 @@ snapshots:
     dependencies:
       minimatch: 5.1.6
 
-  filepizza-client@2.0.0-alpha.2(next@14.2.33(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(peerjs@1.5.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  filepizza-client@2.0.0-alpha.2(next@14.2.35(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(peerjs@1.5.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
-      next: 14.2.33(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 14.2.35(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       peerjs: 1.5.5
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -8636,9 +8636,9 @@ snapshots:
 
   neo-async@2.6.2: {}
 
-  next@14.2.33(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  next@14.2.35(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
-      '@next/env': 14.2.33
+      '@next/env': 14.2.35
       '@swc/helpers': 0.5.5
       busboy: 1.6.0
       caniuse-lite: 1.0.30001757
