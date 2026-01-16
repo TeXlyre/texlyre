@@ -13,5 +13,4 @@ export interface Project {
 	collaboratorIds?: string[];
 	lastOpenedDocId?: string;
 	lastOpenedFilePath?: string;
-	skipPeerCheck?: boolean;
 }

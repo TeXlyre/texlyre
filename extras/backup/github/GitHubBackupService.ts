@@ -805,7 +805,6 @@ export class GitHubBackupService {
 			ownerId: ownerId,
 			tags: projectMetadata.tags,
 			isFavorite: projectMetadata.isFavorite,
-			skipPeerCheck: true,
 		};
 
 		await authDb.put('projects', newProject);
