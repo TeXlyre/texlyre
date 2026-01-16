@@ -568,7 +568,7 @@ class AuthService {
 	): Promise<Project> {
 		if (!this.db) await this.initialize();
 		if (requireAuth && !this.currentUser) {
-			throw new Error('User not authenticated');
+			throw new Error(t('User not authenticated'));
 		}
 
 		const docUrl =
@@ -583,6 +583,7 @@ class AuthService {
 			createdAt: now,
 			updatedAt: now,
 			ownerId: this.currentUser.id,
+			skipPeerCheck: true,
 		};
 
 		await this.db?.put(this.PROJECT_STORE, newProject);

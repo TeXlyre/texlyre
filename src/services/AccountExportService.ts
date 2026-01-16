@@ -1,4 +1,5 @@
 // src/services/AccountExportService.ts
+import { t } from '@/i18n';
 import { saveAs } from 'file-saver';
 
 import { cleanContent, processFile } from '../utils/fileCommentUtils';
@@ -55,7 +56,7 @@ class AccountExportService {
 	): Promise<void> {
 		const user = authService.getCurrentUser();
 		if (!user) {
-			throw new Error('User not authenticated');
+			throw new Error(t('User not authenticated'));
 		}
 
 		const exportOptions: ExportOptions = {
@@ -536,6 +537,7 @@ class AccountExportService {
 			ownerId: ownerId,
 			tags: projectData.tags,
 			isFavorite: projectData.isFavorite,
+			skipPeerCheck: true,
 		};
 
 		await authDb.put('projects', newProject);

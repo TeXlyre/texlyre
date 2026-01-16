@@ -200,7 +200,7 @@ class ProjectImportService {
 		result: ImportResult,
 	): Promise<void> {
 		const currentUser = authService.getCurrentUser();
-		if (!currentUser) throw new Error('No authenticated user');
+		if (!currentUser) throw new Error(t('No authenticated user'));
 
 		const existingProjects = await authService.getProjectsByUser(
 			currentUser.id,
@@ -326,7 +326,7 @@ class ProjectImportService {
 			(await authService.initialize().then(() => authService.db));
 
 		if (!authDb) {
-			throw new Error('Could not access auth database');
+			throw new Error(t('Could not access auth database'));
 		}
 
 		const now = Date.now();
@@ -341,6 +341,7 @@ class ProjectImportService {
 			ownerId: ownerId,
 			tags: projectData.tags,
 			isFavorite: projectData.isFavorite,
+			skipPeerCheck: true,
 		};
 
 		await authDb.put('projects', newProject);
