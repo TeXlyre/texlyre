@@ -29,7 +29,6 @@ const AppRouter: React.FC = () => {
 		logout,
 		createProject,
 		getProjects,
-		updateProject
 	} = useAuth();
 
 	const [currentView, setCurrentView] = useState<
@@ -206,12 +205,6 @@ const AppRouter: React.FC = () => {
 					if (existingProject) {
 						setCurrentProjectId(existingProject.id);
 						sessionStorage.setItem('currentProjectId', existingProject.id);
-
-						if (existingProject.skipPeerCheck) {
-							const updatedProject = { ...existingProject };
-							delete updatedProject.skipPeerCheck;
-							await updateProject(updatedProject);
-						}
 					} else {
 						const metadata = await collabService.getDocumentMetadata(docUrl);
 
@@ -241,7 +234,7 @@ const AppRouter: React.FC = () => {
 		};
 
 		checkAndCreateProject();
-	}, [isAuthenticated, isInitializing, docUrl, createProject, getProjects, updateProject]);
+	}, [isAuthenticated, isInitializing, docUrl, createProject, getProjects]);
 
 	const createProjectForDocument = async (
 		docUrl: string,

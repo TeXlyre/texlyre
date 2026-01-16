@@ -583,7 +583,6 @@ class AuthService {
 			createdAt: now,
 			updatedAt: now,
 			ownerId: this.currentUser.id,
-			skipPeerCheck: true,
 		};
 
 		await this.db?.put(this.PROJECT_STORE, newProject);

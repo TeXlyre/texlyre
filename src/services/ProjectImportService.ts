@@ -341,7 +341,6 @@ class ProjectImportService {
 			ownerId: ownerId,
 			tags: projectData.tags,
 			isFavorite: projectData.isFavorite,
-			skipPeerCheck: true,
 		};
 
 		await authDb.put('projects', newProject);
