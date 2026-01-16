@@ -1129,31 +1129,31 @@ export class GiteaBackupService {
             fileStorageEventEmitter.emitChange();
         }
 
+        const unifiedData = {
+            manifest: this.unifiedService.createManifest('import'),
+            account: null,
+            projects: [projectMetadata],
+            projectData: new Map([
+                [
+                    projectId,
+                    {
+                        metadata: projectMetadata,
+                        documents,
+                        documentContents,
+                        files: [],
+                        fileContents: new Map(),
+                    },
+                ],
+            ]),
+        };
+
+        await this.dataSerializer.deserializeToIndexedDB(
+            unifiedData,
+            projectId,
+            projectMetadata.docUrl,
+        );
+
         if (documents.length > 0) {
-            const unifiedData = {
-                manifest: this.unifiedService.createManifest('import'),
-                account: null,
-                projects: [projectMetadata],
-                projectData: new Map([
-                    [
-                        projectId,
-                        {
-                            metadata: projectMetadata,
-                            documents,
-                            documentContents,
-                            files: [],
-                            fileContents: new Map(),
-                        },
-                    ],
-                ]),
-            };
-
-            await this.dataSerializer.deserializeToIndexedDB(
-                unifiedData,
-                projectId,
-                projectMetadata.docUrl,
-            );
-
             this.addActivity({
                 type: 'import_complete',
                 message: t('Imported {count} document for project: {projectName}', {
@@ -1161,8 +1161,9 @@ export class GiteaBackupService {
                     projectName: projectMetadata.name,
                 }),
             });
-            fileStorageEventEmitter.emitChange();
         }
+
+        fileStorageEventEmitter.emitChange();
     }
 
     getStatus = (): BackupStatus => ({ ...this.status });

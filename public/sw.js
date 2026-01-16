@@ -1,5 +1,5 @@
 // These constants are automatically generated. Do not edit directly. **
-const CACHE_NAME = `texlyre-v0.5.1`; //`texlyre-v${process.env.npm_package_version || '1'}`;
+const CACHE_NAME = `texlyre-v0.5.2`; //`texlyre-v${process.env.npm_package_version || '1'}`;
 const BASE_PATH = '/texlyre/';
 // *** End automatic generation ***
 
