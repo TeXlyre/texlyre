@@ -1,7 +1,7 @@
 // extras/renderers/canvas/CanvasRenderer.tsx
 import { t } from '@/i18n';
 import type React from 'react';
-import { useCallback, useEffect, useRef, useState, useImperativeHandle } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useImperativeHandle } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 
 import {
@@ -563,6 +563,19 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         return Math.max(0.25, Math.min(5, (containerHeight - 40) / pageHeight));
     }, [currentPage, pageMetadata]);
 
+    const maxPageWidth = useMemo(() => {
+        let maxW = 595;
+        for (let i = renderRange.start; i <= renderRange.end; i++) {
+            const meta = pageMetadata.get(i);
+            if (meta && meta.width > maxW) {
+                maxW = meta.width;
+            }
+        }
+        return maxW;
+    }, [renderRange, pageMetadata]);
+
+    const virtualWrapperWidth = maxPageWidth * scale + 80;
+
     const handleFitToggle = useCallback(() => {
         const nextMode = fitMode === 'fit-width' ? 'fit-height' : 'fit-width';
         setFitMode(nextMode);
@@ -836,7 +849,8 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                             style={{
                                 position: "relative",
                                 height: totalHeight,
-                                width: "100%",
+                                width: virtualWrapperWidth,
+                                margin: "0 auto",
                             }}
                         >
                             <div
@@ -845,7 +859,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                                     position: "absolute",
                                     top: 0,
                                     left: 0,
-                                    width: "100%",
                                     transform: `translateY(${topOffset}px)`,
                                 }}
                             >
