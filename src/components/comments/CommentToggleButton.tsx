@@ -18,7 +18,7 @@ const CommentToggleButton: React.FC<CommentToggleButtonProps> = ({
 		<button
 			className={`control-button ${className} ${showComments ? 'active' : ''}`}
 			onClick={toggleComments}
-			title={t('{action} comments{numComments}', {
+			title={t('{action} Comments{numComments}', {
 				action: showComments ? t('Hide') : t('Show'),
 				numComments: comments.length > 0 ? ` (${comments.length})` : ''
 			})}

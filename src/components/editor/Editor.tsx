@@ -402,7 +402,7 @@ const EditorContent: React.FC<{
                 const content = viewRef.current?.state.doc.toString() || textContent;
                 copyCleanTextToClipboard(content);
               }}
-              title={t('Copy text')}
+              title={t('Copy Text')}
               className="control-button">
 
               <CopyIcon />
@@ -511,7 +511,7 @@ const EditorContent: React.FC<{
                     const content = viewRef.current?.state.doc.toString() || textContent;
                     copyCleanTextToClipboard(content);
                   }}
-                  title={t('Copy text')}
+                  title={t('Copy Text')}
                   className="control-button">
 
                   <CopyIcon />
