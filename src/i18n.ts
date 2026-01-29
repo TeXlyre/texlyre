@@ -5,6 +5,7 @@ import { initReactI18next } from 'react-i18next';
 import enTranslations from '../translations/locales/en.json';
 import deTranslations from '../translations/locales/de.json';
 import arTranslations from '../translations/locales/ar.json';
+import zhCNTranslations from '../translations/locales/zh-CN.json';
 
 i18next
     .use(initReactI18next)
@@ -18,6 +19,9 @@ i18next
             },
             ar: {
                 translation: arTranslations,
+            },
+            'zh-CN': {
+                translation: zhCNTranslations,
             }
         },
         lng: 'en',
