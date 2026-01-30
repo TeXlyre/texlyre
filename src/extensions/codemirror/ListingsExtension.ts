@@ -14,6 +14,42 @@ interface ListContext {
     lineEnd: number;
 }
 
+function getEnclosingLatexListEnv(
+    view: EditorView,
+    pos: number,
+    maxLinesToSearch = 200, // (100–300 is usually plenty)
+): 'itemize' | 'enumerate' | 'description' | null {
+    let searchPos = pos;
+    let depth = 0;
+    let lines = 0;
+
+    while (searchPos > 0 && lines < maxLinesToSearch) {
+        const line = view.state.doc.lineAt(searchPos);
+        const text = line.text;
+
+        if (text.indexOf('\\begin{') !== -1 || text.indexOf('\\end{') !== -1) {
+            const trimmed = text.trim();
+
+            const m = trimmed.match(/\\(begin|end)\{(itemize|enumerate|description)\}/);
+            if (m) {
+                const kind = m[1];      // "begin" | "end"
+                const env = m[2] as 'itemize' | 'enumerate' | 'description';
+
+                if (kind === 'end') depth++;
+                else {
+                    if (depth === 0) return env;
+                    depth--;
+                }
+            }
+        }
+
+        searchPos = line.from - 1;
+        lines++;
+    }
+
+    return null;
+}
+
 function detectLatexListContext(view: EditorView, pos: number): ListContext | null {
     const line = view.state.doc.lineAt(pos);
     const lineText = line.text;
@@ -99,9 +135,16 @@ function detectTypstListContext(view: EditorView, pos: number): ListContext | nu
 }
 
 function findParentListContext(view: EditorView, fileType: FileType, startPos: number): ListContext | null {
+
     let searchPos = startPos;
     let linesSearched = 0;
     const maxLinesToSearch = 20;
+
+    if (fileType === 'latex') {
+        if (!getEnclosingLatexListEnv(view, startPos)) {
+            return null;
+        }
+    }
 
     while (searchPos > 0 && linesSearched < maxLinesToSearch) {
         const currentLine = view.state.doc.lineAt(searchPos);
@@ -157,7 +200,7 @@ function handleEnterInList(view: EditorView, fileType: FileType): boolean {
             return false;
         }
 
-        listContext = findParentListContext(view, fileType, line.from - 1);
+        listContext = findParentListContext(view, fileType, pos);
     }
 
     if (!listContext) {
@@ -246,7 +289,7 @@ function handleShiftEnterInList(view: EditorView, fileType: FileType): boolean {
 
     if (!listContext) {
         const line = view.state.doc.lineAt(pos);
-        listContext = findParentListContext(view, fileType, line.from - 1);
+        listContext = findParentListContext(view, fileType, pos);
     }
 
     if (!listContext) {

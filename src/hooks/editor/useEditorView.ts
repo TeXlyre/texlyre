@@ -16,6 +16,7 @@ import {
     foldKeymap,
     indentOnInput,
     syntaxHighlighting,
+    bidiIsolates
 } from '@codemirror/language';
 import {
     highlightSelectionMatches,
@@ -39,6 +40,7 @@ import { UndoManager } from 'yjs';
 
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import { commentSystemExtension } from '../../extensions/codemirror/CommentExtension';
+import { latexTypstBidiIsolates } from "../../extensions/codemirror/BidiExtension";
 import { searchHighlightExtension } from '../../extensions/codemirror/SearchHighlightExtension';
 import {
     createFilePathAutocompleteExtension,
@@ -253,6 +255,8 @@ export const useEditorView = (
             EditorView.lineWrapping,
             foldGutter(),
             indentOnInput(),
+            bidiIsolates(),
+
             bracketMatching(),
             autocompletion(),
             highlightSelectionMatches(),
@@ -411,6 +415,10 @@ export const useEditorView = (
 
         extensions.push(...getBasicSetupExtensions());
         extensions.push(...getLanguageExtension(fileName, contentToUse));
+
+        if (isLatexFileType || isTypstFileType) {
+            extensions.push(latexTypstBidiIsolates());
+        }
 
         if (isLatexFileType || isBibFileType || isTypstFileType || isMarkdownFileType) {
             // Add link navigation for all file types
