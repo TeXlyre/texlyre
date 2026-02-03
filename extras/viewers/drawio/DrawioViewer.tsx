@@ -44,6 +44,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({
     const originalContentRef = useRef<string>('');
     const messageQueueRef = useRef<any[]>([]);
     const pendingExportRef = useRef<{ format: string; resolve: (data: string) => void } | null>(null);
+    const pendingSaveRef = useRef<boolean>(false);
 
     useEffect(() => {
         const handleOnline = () => setIsOnline(true);
@@ -130,7 +131,10 @@ const DrawioViewer: React.FC<ViewerProps> = ({
                 setDrawioContent(message.xml);
                 setHasChanges(true);
 
-                if (autoSave && fileId) {
+                if (pendingSaveRef.current && fileId) {
+                    pendingSaveRef.current = false;
+                    handleSave(message.xml);
+                } else if (autoSave && fileId) {
                     handleSave(message.xml);
                 }
 
@@ -360,19 +364,15 @@ const DrawioViewer: React.FC<ViewerProps> = ({
             if ((event.ctrlKey || event.metaKey) && event.key === 's') {
                 event.preventDefault();
                 if (fileId && iframeLoaded) {
+                    pendingSaveRef.current = true;
                     triggerSaveInDrawio();
-                    setTimeout(() => {
-                        if (drawioContent) {
-                            handleSave(drawioContent);
-                        }
-                    }, 100);
                 }
             }
         };
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [drawioContent, fileId, iframeLoaded]);
+    }, [fileId, iframeLoaded]);
 
     const getThemeParam = () => {
         if (theme === 'auto') {
@@ -397,8 +397,8 @@ const DrawioViewer: React.FC<ViewerProps> = ({
                 {fileId && (
                     <button
                         onClick={() => {
+                            pendingSaveRef.current = true;
                             triggerSaveInDrawio();
-                            setTimeout(() => handleSave(), 100);
                         }}
                         title={t('Save File (Ctrl+S)')}
                         disabled={isSaving || !iframeLoaded}
