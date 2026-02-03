@@ -23,18 +23,53 @@
     flex: 1;
 }
 
-.loading-indicator {
+.drawio-export-button-container {
+    display: flex;
+    gap: var(--space-xs);
+    position: relative;
+}
+
+.drawio-export-button-group {
+    display: flex;
+    align-items: center;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.drawio-export-button-group .export-button {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    flex: 2;
+    width: 20px;
+}
+
+.drawio-export-button-group .dropdown-toggle {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+    flex: 1;
+    min-width: 0 !important;
+}
+
+.export-button.exporting {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.drawio-png-dropdown,
+.drawio-svg-dropdown {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 2rem;
-    text-align: center;
-    color: var(--pico-secondary);
-    background-color: var(--accent-background);
-    border-radius: 8px;
+    top: 100%;
+    right: 0;
+    margin-top: 2px;
+    min-width: 260px;
+    padding: var(--space-sm);
+    background-color: var(--pico-background);
     border: 1px solid var(--accent-border);
-    z-index: 1000;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    z-index: var(--z-dropdown);
 }
 
 .drawio-error-message {
@@ -57,19 +92,6 @@
     flex-shrink: 0;
 }
 
-.save-indicator {
-    position: absolute;
-    bottom: 1rem;
-    right: 1rem;
-    padding: 0.5rem 1rem;
-    background-color: var(--pico-primary);
-    color: var(--pico-primary-inverse);
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    animation: fadeIn 0.3s ease;
-    z-index: 1000;
-}
-
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -85,11 +107,5 @@
 @media (max-width: 768px) {
     .drawio-viewer-content {
         padding: 0;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .save-indicator {
-        animation: none;
     }
 }

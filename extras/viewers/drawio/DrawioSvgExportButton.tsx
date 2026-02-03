@@ -274,7 +274,7 @@ const DrawioSvgExportButton: React.FC<DrawioSvgExportButtonProps> = ({
                 isOpen={isDropdownOpen}
                 triggerElement={dropdownRef.current?.querySelector('.drawio-export-button-group') as HTMLElement}
                 className="drawio-svg-dropdown">
-                <div className="format-option">
+                <div className="dropdown-option">
                     <label>
                         {t('Margin (px):')}
                         <input
@@ -291,9 +291,9 @@ const DrawioSvgExportButton: React.FC<DrawioSvgExportButtonProps> = ({
                     </label>
                 </div>
 
-                <div className="format-option">
+                <div className="dropdown-option">
                     <label>
-                        {t('Scale:')}
+                        {t('Image scale:')}
                         <input
                             type="number"
                             min="0.1"
@@ -309,7 +309,7 @@ const DrawioSvgExportButton: React.FC<DrawioSvgExportButtonProps> = ({
                     </label>
                 </div>
 
-                <div className="format-option">
+                <div className="dropdown-option">
                     <label>
                         <input
                             type="checkbox"
@@ -324,7 +324,7 @@ const DrawioSvgExportButton: React.FC<DrawioSvgExportButtonProps> = ({
                 </div>
 
                 {!transparentBackground && (
-                    <div className="format-option">
+                    <div className="dropdown-option">
                         <label>
                             {t('Background color:')}
                             <input
@@ -339,7 +339,7 @@ const DrawioSvgExportButton: React.FC<DrawioSvgExportButtonProps> = ({
                     </div>
                 )}
 
-                <div className="format-option">
+                <div className="dropdown-option">
                     <button
                         className="dropdown-button"
                         onClick={handleDownloadAsSvg}

@@ -129,19 +129,6 @@
 	height: auto;
 }
 
-.loading-indicator {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	padding: 2rem;
-	text-align: center;
-	color: var(--pico-secondary);
-	background-color: var(--accent-background);
-	border-radius: 8px;
-	border: 1px solid var(--accent-border);
-}
-
 .pdf-error-message {
 	position: absolute;
 	top: 50%;

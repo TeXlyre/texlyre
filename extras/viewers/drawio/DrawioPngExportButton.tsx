@@ -279,7 +279,7 @@ const DrawioPngExportButton: React.FC<DrawioPngExportButtonProps> = ({
                 isOpen={isDropdownOpen}
                 triggerElement={dropdownRef.current?.querySelector('.drawio-export-button-group') as HTMLElement}
                 className="drawio-png-dropdown">
-                <div className="format-option">
+                <div className="dropdown-option">
                     <label>
                         {t('Margin (px):')}
                         <input
@@ -296,9 +296,9 @@ const DrawioPngExportButton: React.FC<DrawioPngExportButtonProps> = ({
                     </label>
                 </div>
 
-                <div className="format-option">
+                <div className="dropdown-option">
                     <label>
-                        {t('Scale:')}
+                        {t('Image scale:')}
                         <input
                             type="number"
                             min="0.1"
@@ -314,7 +314,7 @@ const DrawioPngExportButton: React.FC<DrawioPngExportButtonProps> = ({
                     </label>
                 </div>
 
-                <div className="format-option">
+                <div className="dropdown-option">
                     <label>
                         <input
                             type="checkbox"
@@ -329,7 +329,7 @@ const DrawioPngExportButton: React.FC<DrawioPngExportButtonProps> = ({
                 </div>
 
                 {!transparentBackground && (
-                    <div className="format-option">
+                    <div className="dropdown-option">
                         <label>
                             {t('Background color:')}
                             <input
@@ -344,7 +344,7 @@ const DrawioPngExportButton: React.FC<DrawioPngExportButtonProps> = ({
                     </div>
                 )}
 
-                <div className="format-option">
+                <div className="dropdown-option">
                     <button
                         className="dropdown-button"
                         onClick={handleDownloadAsPng}
