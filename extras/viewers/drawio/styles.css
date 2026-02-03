@@ -1,0 +1,95 @@
+.drawio-viewer-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    background-color: var(--pico-secondary-background);
+    overflow: hidden;
+}
+
+.drawio-viewer-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    background-color: var(--pico-background);
+}
+
+.drawio-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    flex: 1;
+}
+
+.loading-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 2rem;
+    text-align: center;
+    color: var(--pico-secondary);
+    background-color: var(--accent-background);
+    border-radius: 8px;
+    border: 1px solid var(--accent-border);
+    z-index: 1000;
+}
+
+.drawio-error-message {
+    padding: 1rem;
+    background-color: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    border-radius: 8px;
+    color: #dc3545;
+    margin: 1rem;
+    flex-shrink: 0;
+}
+
+.drawio-warning-message {
+    padding: 1rem;
+    background-color: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 8px;
+    color: #856404;
+    margin: 1rem;
+    flex-shrink: 0;
+}
+
+.save-indicator {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--pico-primary);
+    color: var(--pico-primary-inverse);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.3s ease;
+    z-index: 1000;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .drawio-viewer-content {
+        padding: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .save-indicator {
+        animation: none;
+    }
+}

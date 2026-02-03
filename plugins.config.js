@@ -5,6 +5,7 @@ export default {
 	  "viewers/bibtex",
 	  "viewers/image",
 	  "viewers/pdf",
+	  "viewers/drawio",
 	  "renderers/pdf",
 	  "renderers/canvas",
 	  "loggers/latex_visualizer",

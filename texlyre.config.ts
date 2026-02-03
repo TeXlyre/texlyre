@@ -35,7 +35,7 @@ const config: TexlyreConfig = {
 
     plugins: {
         collaborative_viewers: ['bibtex'],
-        viewers: ['bibtex', 'image', 'pdf'],
+        viewers: ['bibtex', 'image', 'pdf', 'drawio'],
         renderers: ['pdf', 'canvas'],
         loggers: ['latex_visualizer', 'typst_visualizer'],
         lsp: [],

@@ -1,6 +1,8 @@
 // These constants are automatically generated. Do not edit directly. **
-const CACHE_NAME = `texlyre-v0.5.7`; //`texlyre-v${process.env.npm_package_version || '1'}`;
+const CACHE_NAME = `texlyre-v0.5.7`;
 const BASE_PATH = '/texlyre/';
+const DRAWIO_CACHE_NAME = 'drawio-embed-cache-v1';
+const FONTS_CACHE_NAME = 'fonts-cache-v1';
 // *** End automatic generation ***
 
 console.log('[ServiceWorker] Service Worker loading with base path:', BASE_PATH);
@@ -8,6 +10,11 @@ console.log('[ServiceWorker] Service Worker loading with base path:', BASE_PATH)
 const STATIC_ASSETS = [
   BASE_PATH + 'index.html'
 ];
+
+const CACHE_MAX_AGE = {
+  [DRAWIO_CACHE_NAME]: 60 * 60 * 24 * 90 * 1000, // 90 days in milliseconds
+  [FONTS_CACHE_NAME]: 60 * 60 * 24 * 365 * 1000, // 1 year in milliseconds
+};
 
 self.addEventListener('install', (event) => {
   console.log('[ServiceWorker] Installing service worker');
@@ -47,7 +54,9 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== CACHE_NAME &&
+            cacheName !== DRAWIO_CACHE_NAME &&
+            cacheName !== FONTS_CACHE_NAME) {
             console.log('[ServiceWorker] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
@@ -60,9 +69,103 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+async function getCachedWithExpiry(cacheName, request, maxAge) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
+
+  if (!cached) {
+    return null;
+  }
+
+  const cachedTime = cached.headers.get('sw-cached-time');
+  if (cachedTime) {
+    const age = Date.now() - parseInt(cachedTime, 10);
+    if (navigator.onLine && age > maxAge) {
+      console.log('[ServiceWorker] Cache expired and online, fetching fresh:', request.url);
+      return null;
+    }
+  }
+
+  console.log('[ServiceWorker] Serving from cache:', request.url);
+  return cached;
+}
+
+async function cacheWithExpiry(cacheName, request, response) {
+  const cache = await caches.open(cacheName);
+  const headers = new Headers(response.headers);
+  headers.set('sw-cached-time', Date.now().toString());
+
+  const modifiedResponse = new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: headers
+  });
+
+  await cache.put(request, modifiedResponse);
+  console.log('[ServiceWorker] Cached with timestamp:', request.url);
+}
+
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
+  // Handle draw.io embed
+  if (url.origin === 'https://embed.diagrams.net') {
+    event.respondWith(
+      getCachedWithExpiry(DRAWIO_CACHE_NAME, event.request, CACHE_MAX_AGE[DRAWIO_CACHE_NAME])
+        .then(async (cached) => {
+          if (cached) {
+            return cached;
+          }
+
+          try {
+            const response = await fetch(event.request);
+            if (response.ok) {
+              await cacheWithExpiry(DRAWIO_CACHE_NAME, event.request, response.clone());
+            }
+            return response;
+          } catch (error) {
+            console.error('[ServiceWorker] Fetch failed for draw.io:', error);
+            const fallbackCached = await caches.match(event.request);
+            if (fallbackCached) {
+              console.log('[ServiceWorker] Serving expired cache as fallback');
+              return fallbackCached;
+            }
+            throw error;
+          }
+        })
+    );
+    return;
+  }
+
+  // Handle Google Fonts
+  if (url.origin === 'https://fonts.googleapis.com' || url.origin === 'https://fonts.gstatic.com') {
+    event.respondWith(
+      getCachedWithExpiry(FONTS_CACHE_NAME, event.request, CACHE_MAX_AGE[FONTS_CACHE_NAME])
+        .then(async (cached) => {
+          if (cached) {
+            return cached;
+          }
+
+          try {
+            const response = await fetch(event.request);
+            if (response.ok) {
+              await cacheWithExpiry(FONTS_CACHE_NAME, event.request, response.clone());
+            }
+            return response;
+          } catch (error) {
+            console.error('[ServiceWorker] Fetch failed for fonts:', error);
+            const fallbackCached = await caches.match(event.request);
+            if (fallbackCached) {
+              return fallbackCached;
+            }
+            throw error;
+          }
+        })
+    );
+    return;
+  }
+
+  // Handle app assets
   if (url.origin !== self.location.origin || event.request.method !== 'GET') {
     return;
   }
