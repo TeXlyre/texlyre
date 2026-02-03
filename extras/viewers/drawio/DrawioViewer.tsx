@@ -17,6 +17,8 @@ import { fileStorageService } from '@/services/FileStorageService';
 import { formatFileSize } from '@/utils/fileUtils';
 import './styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './DrawioViewerPlugin';
+import DrawioPngExportButton from './DrawioPngExportButton';
+import DrawioSvgExportButton from './DrawioSvgExportButton';
 
 const DRAWIO_CDN = 'https://embed.diagrams.net/';
 
@@ -34,7 +36,6 @@ const DrawioViewer: React.FC<ViewerProps> = ({
 
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
-    const [isExporting, setIsExporting] = useState(false);
     const [hasChanges, setHasChanges] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [drawioContent, setDrawioContent] = useState<string>('');
@@ -299,138 +300,54 @@ const DrawioViewer: React.FC<ViewerProps> = ({
         return () => window.removeEventListener('message', handleMessage);
     }, [handleMessage]);
 
-    const handleExportPNG = async () => {
+    const handleExport = useCallback(async (options: any): Promise<string> => {
         if (!iframeLoaded) {
-            setError(t('Draw.io editor not loaded yet'));
-            return;
+            throw new Error(t('Draw.io editor not loaded yet'));
         }
 
-        setIsExporting(true);
-        setError(null);
+        return new Promise<string>((resolve, reject) => {
+            pendingExportRef.current = { format: options.format, resolve };
 
-        try {
-            const exportPromise = new Promise<string>((resolve, reject) => {
-                pendingExportRef.current = { format: 'png', resolve };
+            setTimeout(() => {
+                if (pendingExportRef.current) {
+                    pendingExportRef.current = null;
+                    reject(new Error('Export timeout'));
+                }
+            }, 30000);
 
-                setTimeout(() => {
-                    if (pendingExportRef.current) {
-                        pendingExportRef.current = null;
-                        reject(new Error('Export timeout'));
-                    }
-                }, 30000);
-            });
-
-            sendMessageToDrawio({
+            const exportMessage: Record<string, any> = {
                 action: 'export',
-                format: 'png'
-            });
+                format: options.format
+            };
 
-            const data = await exportPromise;
-            handleExportData(data, 'png');
-        } catch (err) {
-            console.error('Error exporting PNG:', err);
-            setError(t('Failed to export PNG'));
-        } finally {
-            setIsExporting(false);
-        }
-    };
-
-    const handleExportSVG = async () => {
-        if (!iframeLoaded) {
-            setError(t('Draw.io editor not loaded yet'));
-            return;
-        }
-
-        setIsExporting(true);
-        setError(null);
-
-        try {
-            const exportPromise = new Promise<string>((resolve, reject) => {
-                pendingExportRef.current = { format: 'svg', resolve };
-
-                setTimeout(() => {
-                    if (pendingExportRef.current) {
-                        pendingExportRef.current = null;
-                        reject(new Error('Export timeout'));
-                    }
-                }, 30000);
-            });
-
-            sendMessageToDrawio({
-                action: 'export',
-                format: 'svg'
-            });
-
-            const data = await exportPromise;
-            handleExportData(data, 'svg');
-        } catch (err) {
-            console.error('Error exporting SVG:', err);
-            setError(t('Failed to export SVG'));
-        } finally {
-            setIsExporting(false);
-        }
-    };
-
-    const handleExportData = (data: string, format: string) => {
-        try {
-            console.log('Processing export data for format:', format);
-
-            const mimeType = format === 'png' ? 'image/png' : 'image/svg+xml';
-
-            let blob: Blob;
-
-            if (format === 'svg') {
-                if (data.startsWith('data:image/svg+xml;base64,')) {
-                    const base64Data = data.substring('data:image/svg+xml;base64,'.length);
-                    const byteCharacters = atob(base64Data);
-                    const byteNumbers = new Array(byteCharacters.length);
-                    for (let i = 0; i < byteCharacters.length; i++) {
-                        byteNumbers[i] = byteCharacters.charCodeAt(i);
-                    }
-                    const byteArray = new Uint8Array(byteNumbers);
-                    blob = new Blob([byteArray], { type: mimeType });
-                } else if (data.startsWith('<svg') || data.startsWith('<?xml')) {
-                    blob = new Blob([data], { type: mimeType });
-                } else {
-                    const svgContent = atob(data);
-                    blob = new Blob([svgContent], { type: mimeType });
-                }
-            } else {
-                let base64Data = data;
-
-                if (data.startsWith('data:')) {
-                    const parts = data.split(',');
-                    if (parts.length > 1) {
-                        base64Data = parts[1];
-                    }
-                }
-
-                const byteCharacters = atob(base64Data);
-                const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
-                const binaryData = new Uint8Array(byteNumbers);
-                blob = new Blob([binaryData], { type: mimeType });
+            if (options.border !== undefined) {
+                exportMessage.border = options.border;
             }
 
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName.replace(/\.(drawio|dio|xml)$/i, `.${format}`);
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            if (options.scale !== undefined) {
+                exportMessage.scale = options.scale;
+            }
 
-            console.log('Export successful:', format);
-        } catch (err) {
-            console.error('Error processing export data:', err);
-            setError(
-                `Failed to export file: ${err instanceof Error ? err.message : 'Unknown error'}`
-            );
-        }
-    };
+            if (options.transparent !== undefined) {
+                exportMessage.transparent = options.transparent;
+            }
+
+            if (options.background !== undefined) {
+                exportMessage.background = options.background;
+            }
+
+            if (options.shadow !== undefined) {
+                exportMessage.shadow = options.shadow;
+            }
+
+            if (options.grid !== undefined) {
+                exportMessage.grid = options.grid;
+            }
+
+            console.log('Sending export message to draw.io:', exportMessage);
+            sendMessageToDrawio(exportMessage);
+        });
+    }, [iframeLoaded, sendMessageToDrawio, t]);
 
     const handleDownload = () => {
         try {
@@ -493,18 +410,16 @@ const DrawioViewer: React.FC<ViewerProps> = ({
             </PluginControlGroup>
 
             <PluginControlGroup>
-                <button
-                    onClick={handleExportPNG}
-                    title={t('Export as PNG')}
-                    disabled={!iframeLoaded || isExporting}>
-                    PNG
-                </button>
-                <button
-                    onClick={handleExportSVG}
-                    title={t('Export as SVG')}
-                    disabled={!iframeLoaded || isExporting}>
-                    SVG
-                </button>
+                <DrawioPngExportButton
+                    disabled={!iframeLoaded}
+                    fileName={fileName}
+                    onExport={handleExport}
+                />
+                <DrawioSvgExportButton
+                    disabled={!iframeLoaded}
+                    fileName={fileName}
+                    onExport={handleExport}
+                />
             </PluginControlGroup>
         </>
     );
@@ -541,12 +456,6 @@ const DrawioViewer: React.FC<ViewerProps> = ({
                         title={fileName}
                         sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-popups-to-escape-sandbox"
                     />
-                )}
-
-                {isExporting && (
-                    <div className="save-indicator">
-                        <span>{t('Exporting...')}</span>
-                    </div>
                 )}
 
                 {showSaveIndicator && (
