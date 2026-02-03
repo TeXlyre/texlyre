@@ -39,6 +39,8 @@
 .drawio-export-button-group .export-button {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
     flex: 2;
     width: 20px;
 }
@@ -46,8 +48,6 @@
 .drawio-export-button-group .dropdown-toggle {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
-    padding-left: var(--space-md);
-    padding-right: var(--space-md);
     flex: 1;
     min-width: 0 !important;
 }
