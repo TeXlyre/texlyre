@@ -7,9 +7,18 @@ export const getDrawioViewerSettings = (): Setting[] => [
         category: t("Viewers"),
         subcategory: t("Draw.io Editor"),
         type: 'checkbox',
-        label: t("Auto-save"),
-        description: t("Automatically save changes to the diagram"),
-        defaultValue: false
+        label: t("Auto-save in editor"),
+        description: t("Automatically save changes in the Draw.io editor"),
+        defaultValue: true
+    },
+    {
+        id: 'drawio-viewer-auto-save-file',
+        category: t("Viewers"),
+        subcategory: t("Draw.io Editor"),
+        type: 'checkbox',
+        label: t("Auto-save to file"),
+        description: t("Automatically save changes to the file system"),
+        defaultValue: true
     },
     {
         id: 'drawio-viewer-theme',

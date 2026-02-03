@@ -29,6 +29,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({
     const fileInfo = usePluginFileInfo(fileId, fileName);
 
     const autoSave = getSetting('drawio-viewer-auto-save')?.value as boolean ?? false;
+    const autoSaveFile = getSetting('drawio-viewer-auto-save-file')?.value as boolean ?? false;
     const theme = getSetting('drawio-viewer-theme')?.value as 'auto' | 'light' | 'dark' ?? 'auto';
 
     const [isLoading, setIsLoading] = useState(true);
@@ -39,12 +40,14 @@ const DrawioViewer: React.FC<ViewerProps> = ({
     const [drawioContent, setDrawioContent] = useState<string>('');
     const [isOnline, setIsOnline] = useState(navigator.onLine);
     const [iframeLoaded, setIframeLoaded] = useState(false);
+    const [showSaveIndicator, setShowSaveIndicator] = useState(false);
 
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const originalContentRef = useRef<string>('');
     const messageQueueRef = useRef<any[]>([]);
     const pendingExportRef = useRef<{ format: string; resolve: (data: string) => void } | null>(null);
     const pendingSaveRef = useRef<boolean>(false);
+    const saveIndicatorTimerRef = useRef<number | null>(null);
 
     useEffect(() => {
         const handleOnline = () => setIsOnline(true);
@@ -56,6 +59,15 @@ const DrawioViewer: React.FC<ViewerProps> = ({
         return () => {
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
+        };
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            if (saveIndicatorTimerRef.current) {
+                window.clearTimeout(saveIndicatorTimerRef.current);
+                saveIndicatorTimerRef.current = null;
+            }
         };
     }, []);
 
@@ -95,6 +107,19 @@ const DrawioViewer: React.FC<ViewerProps> = ({
         }
     }, [content]);
 
+    const flashSavedIndicator = useCallback(() => {
+        setShowSaveIndicator(true);
+
+        if (saveIndicatorTimerRef.current) {
+            window.clearTimeout(saveIndicatorTimerRef.current);
+        }
+
+        saveIndicatorTimerRef.current = window.setTimeout(() => {
+            setShowSaveIndicator(false);
+            saveIndicatorTimerRef.current = null;
+        }, 1000);
+    }, []);
+
     const sendMessageToDrawio = useCallback((message: any) => {
         if (iframeLoaded && iframeRef.current?.contentWindow) {
             console.log('Sending message to draw.io:', message);
@@ -104,69 +129,16 @@ const DrawioViewer: React.FC<ViewerProps> = ({
         }
     }, [iframeLoaded]);
 
-    const handleMessage = useCallback((event: MessageEvent) => {
-        if (typeof event.data !== 'string') return;
+    const triggerSaveInDrawio = () => {
+        if (!fileId || !iframeLoaded) return;
 
-        try {
-            const message = JSON.parse(event.data);
-            console.log('Received message from draw.io:', message.event);
+        pendingSaveRef.current = true;
 
-            if (message.event === 'init') {
-                setIframeLoaded(true);
-
-                sendMessageToDrawio({
-                    action: 'load',
-                    xml: drawioContent,
-                    autosave: autoSave ? 1 : 0
-                });
-
-                while (messageQueueRef.current.length > 0) {
-                    const queuedMessage = messageQueueRef.current.shift();
-                    if (iframeRef.current?.contentWindow) {
-                        iframeRef.current.contentWindow.postMessage(JSON.stringify(queuedMessage), '*');
-                    }
-                }
-            } else if (message.event === 'save') {
-                console.log('Save event received, XML length:', message.xml?.length);
-                setDrawioContent(message.xml);
-                setHasChanges(true);
-
-                if (pendingSaveRef.current && fileId) {
-                    pendingSaveRef.current = false;
-                    handleSave(message.xml);
-                } else if (autoSave && fileId) {
-                    handleSave(message.xml);
-                }
-
-                sendMessageToDrawio({ action: 'status', modified: false });
-            } else if (message.event === 'autosave') {
-                console.log('Autosave event received, XML length:', message.xml?.length);
-                setDrawioContent(message.xml);
-                setHasChanges(true);
-            } else if (message.event === 'export') {
-                console.log('Export event received, format:', message.format, 'data length:', message.data?.length);
-
-                if (pendingExportRef.current) {
-                    pendingExportRef.current.resolve(message.data);
-                    pendingExportRef.current = null;
-                }
-            } else if (message.event === 'configure') {
-                sendMessageToDrawio({
-                    action: 'configure',
-                    config: {
-                        defaultFonts: ['Helvetica', 'Verdana', 'Times New Roman', 'Garamond', 'Comic Sans MS', 'Courier New', 'Georgia', 'Lucida Console', 'Tahoma'],
-                    }
-                });
-            }
-        } catch (err) {
-            console.error('Error handling message from draw.io:', err);
-        }
-    }, [drawioContent, autoSave, fileId, sendMessageToDrawio]);
-
-    useEffect(() => {
-        window.addEventListener('message', handleMessage);
-        return () => window.removeEventListener('message', handleMessage);
-    }, [handleMessage]);
+        sendMessageToDrawio({
+            action: 'export',
+            format: 'xml',
+        });
+    };
 
     const handleSave = async (contentToSave?: string) => {
         if (!fileId) return;
@@ -190,6 +162,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({
             setHasChanges(false);
 
             sendMessageToDrawio({ action: 'status', modified: false });
+            flashSavedIndicator();
         } catch (err) {
             console.error('Error saving Draw.io file:', err);
             setError(
@@ -199,6 +172,132 @@ const DrawioViewer: React.FC<ViewerProps> = ({
             setIsSaving(false);
         }
     };
+
+    const handleMessage = useCallback((event: MessageEvent) => {
+        if (typeof event.data !== 'string') return;
+
+        try {
+            const message = JSON.parse(event.data);
+
+            if (message.error) {
+                console.warn('Draw.io embed error:', message.error, message);
+                return;
+            }
+
+            console.log('Received message from draw.io:', message.event);
+
+            if (message.event === 'init') {
+                setIframeLoaded(true);
+
+                sendMessageToDrawio({
+                    action: 'load',
+                    xml: drawioContent,
+                    autosave: autoSave ? 1 : 0,
+                });
+
+                while (messageQueueRef.current.length > 0) {
+                    const queuedMessage = messageQueueRef.current.shift();
+                    if (iframeRef.current?.contentWindow) {
+                        iframeRef.current.contentWindow.postMessage(
+                            JSON.stringify(queuedMessage),
+                            '*'
+                        );
+                    }
+                }
+                return;
+            }
+
+            if (message.event === 'save') {
+                console.log('Save event received, XML length:', message.xml?.length);
+
+                setDrawioContent(message.xml);
+                setHasChanges(true);
+
+                if (pendingSaveRef.current && fileId) {
+                    pendingSaveRef.current = false;
+                    handleSave(message.xml);
+                } else if (autoSaveFile && fileId) {
+                    handleSave(message.xml);
+                }
+
+                sendMessageToDrawio({ action: 'status', modified: false });
+                return;
+            }
+
+            if (message.event === 'autosave') {
+                console.log('Autosave event received, XML length:', message.xml?.length);
+
+                setDrawioContent(message.xml);
+                setHasChanges(true);
+
+                if (autoSaveFile && fileId) {
+                    handleSave(message.xml);
+                }
+                return;
+            }
+
+            if (message.event === 'export') {
+                console.log(
+                    'Export event received, format:',
+                    message.format,
+                    'data length:',
+                    message.data?.length,
+                    'xml length:',
+                    message.xml?.length
+                );
+
+                if (pendingSaveRef.current && fileId) {
+                    pendingSaveRef.current = false;
+
+                    const xml = typeof message.xml === 'string' ? message.xml : '';
+                    if (xml.trim()) {
+                        setDrawioContent(xml);
+                        setHasChanges(true);
+                        handleSave(xml);
+                        sendMessageToDrawio({ action: 'status', modified: false });
+                    } else {
+                        console.warn('Export did not include XML; cannot save to file.', message);
+                        setError(t('Export did not include XML'));
+                    }
+
+                    return;
+                }
+
+                if (pendingExportRef.current) {
+                    pendingExportRef.current.resolve(message.data);
+                    pendingExportRef.current = null;
+                }
+                return;
+            }
+
+            if (message.event === 'configure') {
+                sendMessageToDrawio({
+                    action: 'configure',
+                    config: {
+                        defaultFonts: [
+                            'Helvetica',
+                            'Verdana',
+                            'Times New Roman',
+                            'Garamond',
+                            'Comic Sans MS',
+                            'Courier New',
+                            'Georgia',
+                            'Lucida Console',
+                            'Tahoma',
+                        ],
+                    },
+                });
+                return;
+            }
+        } catch (err) {
+            console.error('Error handling message from draw.io:', err);
+        }
+    }, [drawioContent, autoSave, autoSaveFile, fileId, sendMessageToDrawio, handleSave, t]);
+
+    useEffect(() => {
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, [handleMessage]);
 
     const handleExportPNG = async () => {
         if (!iframeLoaded) {
@@ -352,28 +451,6 @@ const DrawioViewer: React.FC<ViewerProps> = ({
         }
     };
 
-    const triggerSaveInDrawio = () => {
-        sendMessageToDrawio({
-            action: 'export',
-            format: 'xml'
-        });
-    };
-
-    useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if ((event.ctrlKey || event.metaKey) && event.key === 's') {
-                event.preventDefault();
-                if (fileId && iframeLoaded) {
-                    pendingSaveRef.current = true;
-                    triggerSaveInDrawio();
-                }
-            }
-        };
-
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [fileId, iframeLoaded]);
-
     const getThemeParam = () => {
         if (theme === 'auto') {
             return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -385,7 +462,8 @@ const DrawioViewer: React.FC<ViewerProps> = ({
 
     const tooltipInfo = [
         t('Status: {status}', { status: isOnline ? t('Online') : t('Offline - cached') }),
-        t('Auto-save: {status}', { status: autoSave ? t('enabled') : t('disabled') }),
+        t('Auto-save editor: {status}', { status: autoSave ? t('enabled') : t('disabled') }),
+        t('Auto-save file: {status}', { status: autoSaveFile ? t('enabled') : t('disabled') }),
         t('Theme: {theme}', { theme: t(theme) }),
         t('MIME Type: {mimeType}', { mimeType: fileInfo.mimeType || 'application/vnd.jgraph.mxfile' }),
         t('Size: {size}', { size: formatFileSize(fileInfo.fileSize) })
@@ -465,9 +543,15 @@ const DrawioViewer: React.FC<ViewerProps> = ({
                     />
                 )}
 
-                {(isSaving || isExporting) && (
+                {isExporting && (
                     <div className="save-indicator">
-                        <span>{isSaving ? t('Saving...') : t('Exporting...')}</span>
+                        <span>{t('Exporting...')}</span>
+                    </div>
+                )}
+
+                {showSaveIndicator && (
+                    <div className="save-indicator">
+                        <span>{t('Saved')}</span>
                     </div>
                 )}
             </div>
