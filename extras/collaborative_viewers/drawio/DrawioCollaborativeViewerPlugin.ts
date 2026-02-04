@@ -1,6 +1,6 @@
 // extras/collaborative_viewers/drawio/DrawioCollaborativeViewerPlugin.ts
 import type { CollaborativeViewerPlugin } from '@/plugins/PluginInterface';
-import { getDrawioViewerSettings } from '../../viewers/drawio/settings';
+import { getDrawioViewerSettings } from '../../../src/plugins/viewers/drawio/settings';
 import DrawioCollaborativeViewer from './DrawioCollaborativeViewer';
 
 const DRAWIO_EXTENSIONS = ['drawio', 'dio', 'xml'];

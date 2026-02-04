@@ -8,15 +8,17 @@ import { DownloadIcon, SaveIcon } from '@/components/common/Icons';
 import { PluginControlGroup, PluginHeader } from '@/components/common/PluginHeader';
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
+import { useAuth } from '@/hooks/useAuth';
 import type { CollaborativeViewerProps } from '@/plugins/PluginInterface';
 import { fileStorageService } from '@/services/FileStorageService';
 import { formatFileSize } from '@/utils/fileUtils';
 import { collabService } from '@/services/CollabService';
 import '../../viewers/drawio/styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './DrawioCollaborativeViewerPlugin';
-import DrawioPngExportButton from '../../viewers/drawio/DrawioPngExportButton';
-import DrawioSvgExportButton from '../../viewers/drawio/DrawioSvgExportButton';
+import DrawioPngExportButton from '../../../src/plugins/viewers/drawio/DrawioPngExportButton';
+import DrawioSvgExportButton from '../../../src/plugins/viewers/drawio/DrawioSvgExportButton';
 import { DrawioYjsAdapter } from './yjs-integration/DrawioYjsAdapter';
+import CollaboratorOverlay from './yjs-integration/CollaboratorOverlay';
 
 type DrawioSource = 'cdn' | 'github';
 
@@ -30,6 +32,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
     onUpdateContent
 }) => {
     const { getSetting } = useSettings();
+    const { user } = useAuth();
     const fileInfo = usePluginFileInfo(fileId, fileName);
 
     const autoSave = (getSetting('drawio-viewer-auto-save')?.value as boolean) ?? false;
@@ -246,10 +249,21 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
         adapter.initialize(drawioContent);
         adapterRef.current = adapter;
 
+        if (yjsProvider?.awareness && user) {
+            yjsProvider.awareness.setLocalStateField('user', {
+                id: user.id,
+                username: user.username,
+                name: user.name || user.username,
+                color: user.color || '#4A90E2',
+                colorLight: user.colorLight || '#85B8F0',
+            });
+            console.log('[DrawioCollaborativeViewer] Set local user in awareness:', user.username);
+        }
+
         return () => {
             console.log('[DrawioCollaborativeViewer] Effect cleanup - NOT destroying adapter');
         };
-    }, [iframeLoaded, drawioContent, yjsDoc, yjsProvider, drawioOrigin, autoSaveFile, fileId, handleSave]);
+    }, [iframeLoaded, drawioContent, yjsDoc, yjsProvider, drawioOrigin, autoSaveFile, fileId, handleSave, user]);
 
     useEffect(() => {
         return () => {
@@ -363,14 +377,17 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
                 )}
 
                 {!error && (
-                    <iframe
-                        ref={iframeRef}
-                        src={embedUrl}
-                        className="drawio-iframe"
-                        title={fileName}
-                        onLoad={handleIframeLoad}
-                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-popups-to-escape-sandbox"
-                    />
+                    <>
+                        <iframe
+                            ref={iframeRef}
+                            src={embedUrl}
+                            className="drawio-iframe"
+                            title={fileName}
+                            onLoad={handleIframeLoad}
+                            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-popups-to-escape-sandbox"
+                        />
+                        <CollaboratorOverlay awareness={yjsProvider?.awareness} iframeRef={iframeRef} />
+                    </>
                 )}
 
                 {showSaveIndicator && (
