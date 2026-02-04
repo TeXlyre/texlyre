@@ -20,8 +20,7 @@ export class DrawioYjsAdapter {
     private isInitialized = false;
     private pendingXml: string | null = null;
     private messageHandler: ((event: MessageEvent) => void) | null = null;
-    private ymapObserver: ((event: Y.YMapEvent<any>) => void) | null = null;
-    private isLocalUpdate = false;
+    private ymapObserver: ((event: Y.YMapEvent<any>, transaction: Y.Transaction) => void) | null = null; private isLocalUpdate = false;
     private updateCounter = 0;
     private ignoreNextObserverCall = false;
 
@@ -37,17 +36,13 @@ export class DrawioYjsAdapter {
     initialize(initialXml: string): void {
         if (this.isInitialized) return;
 
-        console.log('[DrawioYjsAdapter] Initializing with XML length:', initialXml.length);
-
         this.pendingXml = initialXml;
 
         this.messageHandler = this.handleDrawioMessage.bind(this);
         window.addEventListener('message', this.messageHandler);
 
-        this.ymapObserver = this.handleYmapChange.bind(this);
+        this.ymapObserver = (event, transaction) => this.handleYmapChange(event, transaction);
         this.ymap.observe(this.ymapObserver);
-
-        console.log('[DrawioYjsAdapter] Y.Map observer attached');
 
         this.isInitialized = true;
     }
@@ -151,49 +146,24 @@ export class DrawioYjsAdapter {
         }
     }
 
-    private handleYmapChange(event: Y.YMapEvent<any>): void {
+    private handleYmapChange(event: Y.YMapEvent<any>, transaction: Y.Transaction): void {
+        // Skip local changes (they originate from this tab, e.g. draw.io save/autosave)
+        if (transaction.local) {
+            console.log('[DrawioYjsAdapter] Skipping local transaction (prevents echo-load)');
+            return;
+        }
+
         if (this.ignoreNextObserverCall) {
-            console.log('[DrawioYjsAdapter] Ignoring initial observer call after loadInitialContent');
             this.ignoreNextObserverCall = false;
             return;
         }
 
-        console.log('[DrawioYjsAdapter] Y.Map change event fired, isLocalUpdate:', this.isLocalUpdate);
-        console.log('[DrawioYjsAdapter] Changed keys:', Array.from(event.changes.keys.entries()));
+        const xml = this.ymap.get('xml') as string;
+        if (!xml) return;
 
-        if (this.isLocalUpdate) {
-            console.log('[DrawioYjsAdapter] Skipping map change (local update)');
-            return;
-        }
+        this.sendToDrawio({ action: 'load', xml, autosave: 1 });
 
-        try {
-            const xml = this.ymap.get('xml') as string;
-            const timestamp = this.ymap.get('timestamp');
-            const updateCounter = this.ymap.get('updateCounter');
-
-            console.log('[DrawioYjsAdapter] REMOTE UPDATE RECEIVED #' + updateCounter + ' at', timestamp);
-
-            if (!xml) {
-                console.warn('[DrawioYjsAdapter] No XML in Y.Map after remote change');
-                return;
-            }
-
-            console.log('[DrawioYjsAdapter] Sending remote XML to Draw.io, length:', xml.length);
-
-            this.sendToDrawio({
-                action: 'load',
-                xml,
-                autosave: 1
-            });
-
-            if (this.onContentChange) {
-                this.onContentChange(xml);
-            }
-
-            console.log('[DrawioYjsAdapter] Draw.io should now display remote changes');
-        } catch (error) {
-            console.error('[DrawioYjsAdapter] Error handling map change:', error);
-        }
+        this.onContentChange?.(xml);
     }
 
     private sendToDrawio(message: any): void {
