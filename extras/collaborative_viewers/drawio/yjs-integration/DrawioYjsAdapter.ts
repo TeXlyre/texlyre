@@ -86,7 +86,7 @@ export class DrawioYjsAdapter {
                 }
             } else if (message.event === 'cursorPosition') {
                 this.handleCursorPosition(message.position);
-            } else if (message.event !== 'load' && message.event !== 'configure') {
+            } else if (message.event && message.event !== 'load' && message.event !== 'configure') {
                 console.log('[DrawioYjsAdapter] Received other event:', message.event);
             }
         } catch (error) {
