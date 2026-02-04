@@ -1,3 +1,4 @@
+// extras/viewers/drawio/Icon.tsx
 import type React from 'react';
 
 export const DrawioIcon: React.FC = () => (

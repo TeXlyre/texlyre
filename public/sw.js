@@ -1,5 +1,5 @@
 // These constants are automatically generated. Do not edit directly. **
-const CACHE_NAME = `texlyre-v0.5.8`;
+const CACHE_NAME = `texlyre-v0.5.9`;
 const BASE_PATH = '/texlyre/';
 const DRAWIO_CACHE_NAME = 'drawio-embed-cache-v1';
 const FONTS_CACHE_NAME = 'fonts-cache-v1';

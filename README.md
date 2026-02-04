@@ -172,7 +172,9 @@ TeXlyre builds upon several key technologies:
 - **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX)** - WASM-based LaTeX compilation engine
 - **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)** - WASM-based Typst compilation engine
 - **[Yjs](https://github.com/yjs/yjs)** - Conflict-free collaborative editing with CRDTs
+- **[y-mxgraph](https://github.com/mizuka-wu/y-mxgraph)** - Yjs bindings for Draw.io diagrams
 - **[CodeMirror](https://codemirror.net/)** - Extensible code editor
+- **[PDF.js](https://github.com/mozilla/pdf.js)** - PDF rendering in JavaScript
 - **[FilePizza](https://github.com/kern/filepizza)** - Secure peer-to-peer file transfers
 
 ### Editor Extensions
@@ -187,6 +189,9 @@ TeXlyre builds upon several key technologies:
 ### Typst Tools
 - **[typstyle](https://github.com/typstyle-rs/typstyle)** - Typst code formatter
 - **[typst-wordometer](https://github.com/Jollywatt/typst-wordometer)** - Word counter for Typst documents
+
+### Diagram & Visualization
+- **[Draw.io](https://github.com/jgraph/drawio)** - Diagramming tool for collaborative editing
 
 ### Runtime
 - **[WebPerl](https://github.com/haukex/webperl)** - Perl interpreter compiled to WebAssembly
