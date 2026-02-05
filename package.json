@@ -105,7 +105,6 @@
 		"workbox-build": "^7.3.0",
 		"y-codemirror.next": "=0.3.5",
 		"y-indexeddb": "^9.0.11",
-		"y-mxgraph": "github:TeXlyre/y-mxgraph",
 		"y-protocols": "^1.0.6",
 		"y-webrtc": "^10.2.0",
 		"y-websocket": "^1.5.0",

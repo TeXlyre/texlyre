@@ -15,8 +15,8 @@ import { formatFileSize } from '@/utils/fileUtils';
 import { collabService } from '@/services/CollabService';
 import '../../viewers/drawio/styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './DrawioCollaborativeViewerPlugin';
-import DrawioPngExportButton from '../../../src/plugins/viewers/drawio/DrawioPngExportButton';
-import DrawioSvgExportButton from '../../../src/plugins/viewers/drawio/DrawioSvgExportButton';
+import DrawioPngExportButton from '../../viewers/drawio/DrawioPngExportButton';
+import DrawioSvgExportButton from '../../viewers/drawio/DrawioSvgExportButton';
 import { DrawioYjsAdapter } from './yjs-integration/DrawioYjsAdapter';
 import CollaboratorOverlay from './yjs-integration/CollaboratorOverlay';
 
