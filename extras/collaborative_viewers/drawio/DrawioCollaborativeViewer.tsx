@@ -17,8 +17,7 @@ import '../../viewers/drawio/styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './DrawioCollaborativeViewerPlugin';
 import DrawioPngExportButton from '../../viewers/drawio/DrawioPngExportButton';
 import DrawioSvgExportButton from '../../viewers/drawio/DrawioSvgExportButton';
-import { DrawioYjsAdapter } from './yjs-integration/DrawioYjsAdapter';
-import CollaboratorOverlay from './yjs-integration/CollaboratorOverlay';
+import { DrawioYjsAdapter } from './DrawioYjsAdapter';
 
 type DrawioSource = 'cdn' | 'github';
 
@@ -391,6 +390,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
                 pluginVersion={PLUGIN_VERSION}
                 tooltipInfo={tooltipInfo}
                 controls={headerControls}
+                awareness={yjsProvider?.awareness}
             />
 
             <div className="drawio-viewer-content">
@@ -413,7 +413,6 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
                             onLoad={handleIframeLoad}
                             sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-popups-to-escape-sandbox"
                         />
-                        <CollaboratorOverlay awareness={yjsProvider?.awareness} iframeRef={iframeRef} />
                     </>
                 )}
 

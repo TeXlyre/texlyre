@@ -19,6 +19,7 @@ import type {
   '../../plugins/PluginInterface';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import { fileStorageService } from '../../services/FileStorageService';
+import { collabService } from '../../services/CollabService';
 import type { DocumentList } from '../../types/documents';
 import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
 import { copyCleanTextToClipboard } from '../../utils/clipboardUtils';
@@ -145,6 +146,18 @@ const EditorContent: React.FC<{
       true,
       toolbarVisible
     );
+
+    const projectId = useMemo(() => {
+      const hash = docUrl.split(':').pop() || '';
+      return hash;
+    }, [docUrl]);
+
+    const editorCollectionName = useMemo(() => `yjs_${documentId}`, [documentId]);
+
+    const awareness = useMemo(() => {
+      if (!isDocumentSelected || isEditingFile) return null;
+      return collabService.getAwareness(projectId, editorCollectionName);
+    }, [isDocumentSelected, isEditingFile, projectId, editorCollectionName]);
 
     useEffect(() => {
       if (isDocumentSelected && textContent) {
@@ -565,7 +578,9 @@ const EditorContent: React.FC<{
                 onNavigateToLinkedFile :
                 undefined
             }
-            linkedFileInfo={!isEditingFile ? linkedFileInfo : null} />
+            linkedFileInfo={!isEditingFile ? linkedFileInfo : null}
+            awareness={awareness}
+          />
 
         }
 
