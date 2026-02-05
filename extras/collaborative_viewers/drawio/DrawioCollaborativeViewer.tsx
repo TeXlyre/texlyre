@@ -135,29 +135,49 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
         setIframeLoaded(false);
 
         if (adapterRef.current) {
-            console.log('[DrawioCollaborativeViewer] embedUrl changed, destroying old adapter');
             adapterRef.current.destroy();
             adapterRef.current = null;
         }
     }, [embedUrl]);
 
     useEffect(() => {
-        try {
-            let text = '';
+        let cancelled = false;
 
-            if (content instanceof ArrayBuffer) {
-                const decoder = new TextDecoder('utf-8');
-                text = decoder.decode(content);
-            } else if (typeof content === 'string') {
-                text = content;
-            } else {
-                setIsLoading(false);
-                setError(t('Invalid content format'));
-                return;
-            }
+        const run = async () => {
+            try {
+                let text = '';
 
-            if (!text.trim()) {
-                text = `<?xml version="1.0" encoding="UTF-8"?>
+                if (content instanceof ArrayBuffer) {
+                    text = new TextDecoder('utf-8').decode(content);
+                } else if (typeof content === 'string') {
+                    text = content;
+                } else {
+                    setIsLoading(false);
+                    setError(t('Invalid content format'));
+                    return;
+                }
+
+                const isTrulyEmptyFile = (fileInfo.fileSize ?? 0) === 0;
+
+                if (!text.trim() && !isTrulyEmptyFile && fileId) {
+                    const file = await fileStorageService.getFile(fileId);
+                    if (cancelled) return;
+
+                    const stored = file?.content;
+
+                    if (stored instanceof ArrayBuffer) {
+                        text = new TextDecoder('utf-8').decode(stored);
+                    } else if (typeof stored === 'string') {
+                        text = stored;
+                    }
+                }
+
+                if (!text.trim()) {
+                    if (!isTrulyEmptyFile) {
+                        return;
+                    }
+
+                    text = `<?xml version="1.0" encoding="UTF-8"?>
 <mxfile host="app.diagrams.net" modified="${new Date().toISOString()}" agent="TeXlyre" version="1.0.0" type="device">
   <diagram name="Page-1" id="page-1">
     <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
@@ -168,18 +188,24 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
     </mxGraphModel>
   </diagram>
 </mxfile>`;
-            }
+                }
 
-            console.log('[DrawioCollaborativeViewer] Setting initial content, length:', text.length);
-            setDrawioContent(text);
-            setIsLoading(false);
-            setError(null);
-        } catch (err) {
-            console.error('Error decoding Draw.io content:', err);
-            setError(t('Failed to decode file content'));
-            setIsLoading(false);
-        }
-    }, [content, t]);
+                setDrawioContent(text);
+                setIsLoading(false);
+                setError(null);
+            } catch (err) {
+                console.error('Error decoding Draw.io content:', err);
+                setError(t('Failed to decode file content'));
+                setIsLoading(false);
+            }
+        };
+
+        run();
+        return () => {
+            cancelled = true;
+        };
+    }, [content, t, fileId, fileInfo.fileSize]);
+
 
     const flashSavedIndicator = useCallback(() => {
         setShowSaveIndicator(true);

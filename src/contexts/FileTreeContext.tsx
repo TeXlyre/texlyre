@@ -305,6 +305,11 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
               textContent = fileContent.content;
             }
           }
+          else {
+            file.content = stringToArrayBuffer('');
+            await fileStorageService.storeFile(file, { showConflictDialog: false }
+            );
+          }
 
           let createdDocId: string | null = null;
 
