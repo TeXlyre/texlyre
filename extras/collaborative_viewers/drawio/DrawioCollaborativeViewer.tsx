@@ -138,7 +138,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
             adapterRef.current.destroy();
             adapterRef.current = null;
         }
-    }, [embedUrl]);
+    }, [fileId, fileName, embedUrl]);
 
     useEffect(() => {
         let cancelled = false;
@@ -405,6 +405,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
                 {!error && (
                     <>
                         <iframe
+                            key={fileId ?? fileName}
                             ref={iframeRef}
                             src={embedUrl}
                             className="drawio-iframe"

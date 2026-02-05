@@ -99,7 +99,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
         messageQueueRef.current = [];
         pendingExportRef.current = null;
         pendingSaveRef.current = false;
-    }, [embedUrl]);
+    }, [fileId, fileName, embedUrl]);
 
     useEffect(() => {
         if (!(content instanceof ArrayBuffer)) {
@@ -444,6 +444,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
                 {!isLoading && !error && (
                     <iframe
+                        key={fileId ?? fileName}
                         ref={iframeRef}
                         src={embedUrl}
                         className="drawio-iframe"
