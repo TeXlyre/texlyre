@@ -420,7 +420,7 @@ export class DrawioYjsAdapter {
         }
         const xml = this.ymap.get('xml') as string;
         if (!xml) return;
-        this.sendToDrawio({ action: 'load', xml, autosave: 1 });
+        this.sendToDrawio({ action: 'merge', xml });
         this.onContentChange?.(xml);
     }
 
