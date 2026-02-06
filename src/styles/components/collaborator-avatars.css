@@ -1,0 +1,119 @@
+.collab-avatars {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.collab-avatars-row {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: var(--space-xs);
+    border-radius: var(--radius-md);
+    transition: background-color var(--transition-normal);
+}
+
+.collab-avatars-row:hover {
+    background-color: var(--pico-primary-focus);
+}
+
+.collab-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    flex-shrink: 0;
+    border: 2px solid var(--pico-background);
+    transition: transform var(--transition-fast);
+}
+
+.collab-avatars-row .collab-avatar+.collab-avatar {
+    margin-left: -8px;
+}
+
+.collab-avatars-row .collab-avatar:hover {
+    transform: scale(1.15);
+    z-index: 2;
+}
+
+.collab-avatar.local {
+    box-shadow: 0 0 0 2px var(--pico-primary);
+}
+
+.collab-avatar-overflow {
+    background-color: var(--pico-secondary-background);
+    color: var(--text-color);
+    font-size: 10px;
+    border: 2px solid var(--accent-border);
+}
+
+.collab-avatars-panel {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 200px;
+    max-height: 280px;
+    overflow-y: auto;
+    background-color: var(--pico-background);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: var(--z-dropdown);
+    padding: var(--space-xs) 0;
+}
+
+.collab-avatars-panel-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-sd);
+    transition: background-color var(--transition-fast);
+}
+
+.collab-avatars-panel-item:hover {
+    background-color: var(--pico-primary-focus);
+}
+
+.collab-avatars-panel-item .collab-avatar {
+    border-color: transparent;
+}
+
+.collab-avatar-tooltip {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.collab-avatar-tooltip-name {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.collab-avatar-you {
+    font-weight: 400;
+    font-size: 0.7rem;
+    color: var(--pico-secondary);
+    margin-left: var(--space-xs);
+}
+
+.collab-avatar-tooltip-email {
+    font-size: 0.7rem;
+    color: var(--pico-primary);
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.collab-avatar-tooltip-email:hover {
+    text-decoration: underline;
+}

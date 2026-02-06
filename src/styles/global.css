@@ -413,3 +413,69 @@ footer {
 	display: inline-block;
 	margin-right: 6px;
 }
+
+.loading-indicator {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	padding: 2rem;
+	text-align: center;
+	color: var(--pico-secondary);
+	background-color: var(--accent-background);
+	border-radius: 8px;
+	border: 1px solid var(--accent-border);
+	z-index: 100 !important;
+}
+
+.save-indicator {
+	position: absolute !important;
+	bottom: var(--mobile-spacing-lg, 12px) !important;
+	right: var(--mobile-spacing-lg, 12px) !important;
+	background-color: var(--color-success);
+	color: var(--pico-secondary-inverse);
+	padding: var(--mobile-spacing-md, 8px) var(--mobile-spacing-lg, 12px) !important;
+	border-radius: var(--mobile-radius-lg, 15px) !important;
+	font-size: 0.65rem !important;
+	font-weight: 700 !important;
+	box-shadow: var(--mobile-shadow-md, 0 2px 8px rgba(0, 0, 0, 0.2)) !important;
+	z-index: 100 !important;
+	animation: saveIndicatorFadeIn var(--mobile-transition-normal, 0.25s) ease-out,
+		saveIndicatorFadeOut var(--mobile-transition-normal, 0.25s) ease-out 1.2s forwards !important;
+	pointer-events: none !important;
+}
+
+.save-indicator.read-only {
+	background-color: var(--color-error, #dc3545) !important;
+	color: var(--pico-secondary-inverse, #fff);
+}
+
+@keyframes saveIndicatorFadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(10px) scale(0.9);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+@keyframes saveIndicatorFadeOut {
+	from {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+
+	to {
+		opacity: 0;
+		transform: translateY(-10px) scale(0.9);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.save-indicator {
+		animation: none;
+	}
+}

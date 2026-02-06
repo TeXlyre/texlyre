@@ -1,9 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-/**
- * @deprecated use TypstFontResolverBuilder instead
- */
-export function get_font_info(buffer: Uint8Array): any;
+
 export class IncrServer {
   private constructor();
   free(): void;
@@ -12,9 +9,7 @@ export class IncrServer {
   current(): Uint8Array | undefined;
   reset(): void;
 }
-/**
- * The `ProxyContext` struct is a wrapper around a JavaScript this.
- */
+
 export class ProxyContext {
   free(): void;
   [Symbol.dispose](): void;
@@ -32,6 +27,7 @@ export class ProxyContext {
    */
   readonly context: any;
 }
+
 export class TypstCompileWorld {
   private constructor();
   free(): void;
@@ -41,7 +37,9 @@ export class TypstCompileWorld {
   get_artifact(fmt: number, diagnostics_format: number): any;
   query(kind: number, selector: string, field?: string | null): string;
   incr_compile(state: IncrServer, diagnostics_format: number): any;
+  set_pdf_opts(opts: any): void;
 }
+
 export class TypstCompiler {
   private constructor();
   free(): void;
@@ -64,6 +62,7 @@ export class TypstCompiler {
   create_incr_server(): IncrServer;
   incr_compile(main_file_path: string, inputs: (Array<any>)[] | null | undefined, state: IncrServer, diagnostics_format: number): any;
 }
+
 export class TypstCompilerBuilder {
   free(): void;
   [Symbol.dispose](): void;
@@ -76,11 +75,13 @@ export class TypstCompilerBuilder {
   add_lazy_font(font: any, blob: Function): Promise<void>;
   build(): Promise<TypstCompiler>;
 }
+
 export class TypstFontResolver {
   private constructor();
   free(): void;
   [Symbol.dispose](): void;
 }
+
 export class TypstFontResolverBuilder {
   free(): void;
   [Symbol.dispose](): void;
@@ -97,6 +98,11 @@ export class TypstFontResolverBuilder {
   add_lazy_font(font: any, blob: Function): void;
   build(): Promise<TypstFontResolver>;
 }
+
+/**
+ * @deprecated use TypstFontResolverBuilder instead
+ */
+export function get_font_info(buffer: Uint8Array): any;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
@@ -118,10 +124,6 @@ export interface InitOutput {
   readonly typstfontresolverbuilder_add_lazy_font: (a: number, b: number, c: number, d: number) => void;
   readonly typstfontresolverbuilder_build: (a: number) => number;
   readonly __wbg_typstfontresolver_free: (a: number, b: number) => void;
-  readonly __wbg_incrserver_free: (a: number, b: number) => void;
-  readonly incrserver_set_attach_debug_info: (a: number, b: number) => void;
-  readonly incrserver_current: (a: number, b: number) => void;
-  readonly incrserver_reset: (a: number) => void;
   readonly __wbg_typstcompiler_free: (a: number, b: number) => void;
   readonly get_font_info: (a: number) => number;
   readonly typstcompiler_reset: (a: number, b: number) => void;
@@ -147,10 +149,15 @@ export interface InitOutput {
   readonly typstcompileworld_get_artifact: (a: number, b: number, c: number, d: number) => void;
   readonly typstcompileworld_query: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
   readonly typstcompileworld_incr_compile: (a: number, b: number, c: number, d: number) => void;
+  readonly typstcompileworld_set_pdf_opts: (a: number, b: number, c: number) => void;
+  readonly __wbg_incrserver_free: (a: number, b: number) => void;
+  readonly incrserver_set_attach_debug_info: (a: number, b: number) => void;
+  readonly incrserver_current: (a: number, b: number) => void;
+  readonly incrserver_reset: (a: number) => void;
   readonly __wbg_proxycontext_free: (a: number, b: number) => void;
-  readonly proxycontext_new: (a: number) => number;
   readonly proxycontext_context: (a: number) => number;
   readonly proxycontext_untar: (a: number, b: number, c: number, d: number, e: number) => void;
+  readonly proxycontext_new: (a: number) => number;
   readonly qcms_transform_data_rgb_out_lut_precache: (a: number, b: number, c: number, d: number) => void;
   readonly qcms_transform_data_rgba_out_lut_precache: (a: number, b: number, c: number, d: number) => void;
   readonly qcms_transform_data_bgra_out_lut_precache: (a: number, b: number, c: number, d: number) => void;
@@ -164,17 +171,18 @@ export interface InitOutput {
   readonly qcms_white_point_sRGB: (a: number) => void;
   readonly lut_interp_linear16: (a: number, b: number, c: number) => number;
   readonly lut_inverse_interp16: (a: number, b: number, c: number) => number;
-  readonly __wbindgen_export_0: (a: number) => void;
-  readonly __wbindgen_export_1: (a: number, b: number, c: number) => void;
-  readonly __wbindgen_export_2: (a: number, b: number) => number;
-  readonly __wbindgen_export_3: (a: number, b: number, c: number, d: number) => number;
-  readonly __wbindgen_export_4: WebAssembly.Table;
+  readonly __wasm_bindgen_func_elem_977: (a: number, b: number, c: number) => void;
+  readonly __wasm_bindgen_func_elem_990: (a: number, b: number) => void;
+  readonly __wasm_bindgen_func_elem_37401: (a: number, b: number, c: number, d: number) => void;
+  readonly __wbindgen_export: (a: number, b: number) => number;
+  readonly __wbindgen_export2: (a: number, b: number, c: number, d: number) => number;
+  readonly __wbindgen_export3: (a: number) => void;
+  readonly __wbindgen_export4: (a: number, b: number, c: number) => void;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
-  readonly __wbindgen_export_5: (a: number, b: number, c: number) => void;
-  readonly __wbindgen_export_6: (a: number, b: number, c: number, d: number) => void;
 }
 
 export type SyncInitInput = BufferSource | WebAssembly.Module;
+
 /**
 * Instantiates the given `module`, which can either be bytes or
 * a precompiled `WebAssembly.Module`.

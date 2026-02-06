@@ -1,6 +1,8 @@
 // src/components/common/PluginHeader.tsx
 import type React from 'react';
 
+import type { Awareness } from 'y-protocols/awareness';
+import CollaboratorAvatars from './CollaboratorAvatars';
 import { InfoIcon, LinkIcon } from './Icons';
 
 interface PluginHeaderProps {
@@ -16,6 +18,7 @@ interface PluginHeaderProps {
 		filePath?: string;
 		fileId?: string;
 	} | null;
+	awareness?: Awareness | null;
 }
 interface PluginControlGroupProps {
 	children: React.ReactNode;
@@ -55,6 +58,7 @@ export const PluginHeader: React.FC<PluginHeaderProps> = ({
 	controls,
 	onNavigateToLinkedFile,
 	linkedFileInfo,
+	awareness,
 }) => {
 	const formattedTooltip = formatTooltipInfo(
 		tooltipInfo,
@@ -98,8 +102,10 @@ export const PluginHeader: React.FC<PluginHeaderProps> = ({
 					</abbr>
 				</div>
 			</div>
-
-			<div className="plugin-controls">{controls}</div>
+			<div className="plugin-controls">
+				{awareness && <CollaboratorAvatars awareness={awareness} />}
+				{controls}
+			</div>
 		</div>
 	);
 };

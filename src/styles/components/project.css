@@ -812,42 +812,6 @@
   margin: 1.5rem 0;
 }
 
-.format-options {
-  margin: 1rem 0;
-}
-
-.format-option {
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: var(--space-sd);
-  cursor: pointer;
-  background-color: transparent;
-  transition: all var(--transition-normal);
-}
-
-.format-option:last-child {
-  margin-bottom: 0;
-}
-
-.format-option.selected {
-  background-color: rgba(var(--accent-color-rgb), 0.1);
-  border-color: var(--accent-color);
-}
-
-.format-option-label {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-sd);
-  cursor: pointer;
-  margin: 0;
-}
-
-.format-option-label input[type="radio"] {
-  margin-top: 0.125rem;
-  flex-shrink: 0;
-}
-
 .option-content {
   flex: 1;
 }

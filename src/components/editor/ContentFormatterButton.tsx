@@ -123,7 +123,7 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
           isOpen={isDropdownOpen}
           triggerElement={dropdownRef.current?.querySelector('.formatter-button-group') as HTMLElement}
           className="formatter-dropdown">
-          <div className="format-option">
+          <div className="dropdown-option">
             <label>
               <input
                 type="checkbox"
@@ -138,7 +138,7 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
           </div>
 
           {latexOptions.wrap &&
-            <div className="format-option">
+            <div className="dropdown-option">
               <label>{t('Wrap length:')}
 
                 <input
@@ -155,7 +155,7 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
             </div>
           }
 
-          <div className="format-option">
+          <div className="dropdown-option">
             <label>{t('Tab size:')}
 
               <input
@@ -171,7 +171,7 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
             </label>
           </div>
 
-          <div className="format-option">
+          <div className="dropdown-option">
             <label>
               <input
                 type="checkbox"
@@ -192,7 +192,7 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
           isOpen={isDropdownOpen}
           triggerElement={dropdownRef.current?.querySelector('.formatter-button-group') as HTMLElement}
           className="formatter-dropdown">
-          <div className="format-option">
+          <div className="dropdown-option">
             <label>{t('Line width:')}
 
               <input
@@ -208,7 +208,7 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
             </label>
           </div>
 
-          <div className="format-option">
+          <div className="dropdown-option">
             <label>{t('Indent width:')}
 
               <input
@@ -224,7 +224,7 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
             </label>
           </div>
 
-          <div className="format-option">
+          <div className="dropdown-option">
             <label>
               <input
                 type="checkbox"
@@ -238,7 +238,7 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
             </label>
           </div>
 
-          <div className="format-option">
+          <div className="dropdown-option">
             <label>
               <input
                 type="checkbox"

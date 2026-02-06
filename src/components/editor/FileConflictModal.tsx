@@ -530,7 +530,7 @@ const FileConflictModal: React.FC = () => {
 						</button>
 						<button
 							type="button"
-							className="button secondary"
+							className="button danger"
 							onClick={() => handleResolution('link-without-copy')}
 						>
 							{t('Link Only')}

@@ -31,7 +31,7 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
   const propertiesRegistered = useRef(false);
   const pendingGotoRef = useRef<{ tabId: string; position: number } | null>(null);
   const lastActiveTabIdRef = useRef<string | null>(null);
-  
+
   const getCurrentProjectId = useCallback(() => {
     return sessionStorage.getItem('currentProjectId');
   }, []);
@@ -49,7 +49,7 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
 
     registerProperty({
       id: 'editor-active-tab',
-      category: 'UI', 
+      category: 'UI',
       subcategory: 'Editor',
       defaultValue: null,
     });
@@ -66,7 +66,7 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
         scope: 'project',
         projectId: currentProjectId
       }) as EditorTab[] | undefined;
-      
+
       const savedActiveTab = getProperty('editor-active-tab', {
         scope: 'project',
         projectId: currentProjectId
@@ -81,7 +81,7 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
       if (savedActiveTab && typeof savedActiveTab === 'string') {
         setActiveTabId(savedActiveTab);
       }
-      
+
       setPropertiesLoaded(true);
     };
 
@@ -92,7 +92,7 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
   // Only save to properties after initial load is complete
   useEffect(() => {
     if (!propertiesLoaded) return;
-    
+
     const currentProjectId = getCurrentProjectId();
     if (!currentProjectId) return;
 
@@ -104,7 +104,7 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
 
   useEffect(() => {
     if (!propertiesLoaded) return;
-    
+
     const currentProjectId = getCurrentProjectId();
     if (!currentProjectId) return;
 
@@ -117,7 +117,7 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
   // Reset tabs when project changes
   useEffect(() => {
     const currentProjectId = getCurrentProjectId();
-    
+
     const handleStorageChange = () => {
       const newProjectId = getCurrentProjectId();
       if (newProjectId !== currentProjectId) {
@@ -125,14 +125,14 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
         setTabs([]);
         setActiveTabId(null);
         setPropertiesLoaded(false);
-        
+
         // Reload properties for new project
         setTimeout(() => {
           const savedTabs = getProperty('editor-tabs', {
             scope: 'project',
             projectId: newProjectId || undefined
           }) as EditorTab[] | undefined;
-          
+
           const savedActiveTab = getProperty('editor-active-tab', {
             scope: 'project',
             projectId: newProjectId || undefined
@@ -144,14 +144,14 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
           if (savedActiveTab && typeof savedActiveTab === 'string') {
             setActiveTabId(savedActiveTab);
           }
-          
+
           setPropertiesLoaded(true);
         }, 100);
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
-    
+
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
@@ -159,88 +159,88 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
 
   const openTab = useCallback((tabData: Omit<EditorTab, 'id' | 'lastAccessed' | 'editorState'>) => {
     setTabs(prevTabs => {
-        // Check for existing tab by fileId or documentId
-        const existingTab = prevTabs.find(tab => 
+      // Check for existing tab by fileId or documentId
+      const existingTab = prevTabs.find(tab =>
         (tabData.fileId && tab.fileId === tabData.fileId) ||
         (tabData.documentId && tab.documentId === tabData.documentId)
-        );
+      );
 
-        if (existingTab) {
+      if (existingTab) {
         // Update existing tab's last accessed time and switch to it
-        const updatedTabs = prevTabs.map(tab => 
-            tab.id === existingTab.id 
+        const updatedTabs = prevTabs.map(tab =>
+          tab.id === existingTab.id
             ? { ...tab, lastAccessed: Date.now(), ...tabData }
             : tab
         );
-        
+
         setActiveTabId(existingTab.id);
         return updatedTabs;
-        }
+      }
 
-        // Create new tab
-        const newTabId = `${tabData.type}-${tabData.fileId || tabData.documentId}-${Date.now()}`;
-        
-        let updatedTabs = [...prevTabs, {
+      // Create new tab
+      const newTabId = `${tabData.type}-${tabData.fileId || tabData.documentId}-${Date.now()}`;
+
+      let updatedTabs = [...prevTabs, {
         ...tabData,
         id: newTabId,
         lastAccessed: Date.now(),
         editorState: {},
-        }];
+      }];
 
-        // Enforce max tabs limit
-        if (updatedTabs.length > MAX_TABS) {
+      // Enforce max tabs limit
+      if (updatedTabs.length > MAX_TABS) {
         updatedTabs = updatedTabs
-            .sort((a, b) => b.lastAccessed - a.lastAccessed)
-            .slice(0, MAX_TABS);
-        }
+          .sort((a, b) => b.lastAccessed - a.lastAccessed)
+          .slice(0, MAX_TABS);
+      }
 
-        setActiveTabId(newTabId);
-        return updatedTabs;
+      setActiveTabId(newTabId);
+      return updatedTabs;
     });
 
     // Return the tab ID (either existing or new)
-    const existingTab = tabs.find(tab => 
-        (tabData.fileId && tab.fileId === tabData.fileId) ||
-        (tabData.documentId && tab.documentId === tabData.documentId)
+    const existingTab = tabs.find(tab =>
+      (tabData.fileId && tab.fileId === tabData.fileId) ||
+      (tabData.documentId && tab.documentId === tabData.documentId)
     );
-    
+
     return existingTab?.id || `${tabData.type}-${tabData.fileId || tabData.documentId}-${Date.now()}`;
-    }, [tabs]);
+  }, [tabs]);
 
   const reorderTabs = useCallback((sourceIndex: number, destinationIndex: number) => {
     setTabs(prevTabs => {
-        const result = [...prevTabs];
-        const [removed] = result.splice(sourceIndex, 1);
-        result.splice(destinationIndex, 0, removed);
-        return result;
+      const result = [...prevTabs];
+      const [removed] = result.splice(sourceIndex, 1);
+      result.splice(destinationIndex, 0, removed);
+      return result;
     });
   }, []);
 
   const closeOtherTabs = useCallback((currentTabId: string) => {
     setTabs(prevTabs => {
-        const tabToKeep = prevTabs.find(tab => tab.id === currentTabId);
-        if (!tabToKeep) return prevTabs;
-        
-        setActiveTabId(currentTabId);
-        return [tabToKeep];
+      const tabToKeep = prevTabs.find(tab => tab.id === currentTabId);
+      if (!tabToKeep) return prevTabs;
+
+      setActiveTabId(currentTabId);
+      return [tabToKeep];
     });
   }, []);
 
   const closeTabsToLeft = useCallback((currentTabId: string) => {
     setTabs(prevTabs => {
-        const tabIndex = prevTabs.findIndex(tab => tab.id === currentTabId);
-        if (tabIndex <= 0) return prevTabs;
-        
-        return prevTabs.slice(tabIndex);
+      const tabIndex = prevTabs.findIndex(tab => tab.id === currentTabId);
+      if (tabIndex <= 0) return prevTabs;
+
+      return prevTabs.slice(tabIndex);
     });
   }, []);
 
   const closeTabsToRight = useCallback((currentTabId: string) => {
     setTabs(prevTabs => {
-        const tabIndex = prevTabs.findIndex(tab => tab.id === currentTabId);
-        if (tabIndex === -1 || tabIndex === prevTabs.length - 1) return prevTabs;
-        
-        return prevTabs.slice(0, tabIndex + 1);
+      const tabIndex = prevTabs.findIndex(tab => tab.id === currentTabId);
+      if (tabIndex === -1 || tabIndex === prevTabs.length - 1) return prevTabs;
+
+      return prevTabs.slice(0, tabIndex + 1);
     });
   }, []);
 
@@ -250,7 +250,7 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
       if (tabIndex === -1) return prevTabs;
 
       const newTabs = prevTabs.filter(tab => tab.id !== tabId);
-      
+
       if (activeTabId === tabId) {
         if (newTabs.length === 0) {
           setActiveTabId(null);
@@ -267,9 +267,9 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
   const switchToTab = useCallback((tabId: string) => {
     const tab = tabs.find(t => t.id === tabId);
     if (!tab) return;
-    
+
     setActiveTabId(tabId);
-    
+
     // Store the pending goto operation
     if (tab.editorState.cursorPosition) {
       pendingGotoRef.current = {
@@ -285,60 +285,60 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
 
     const tab = tabs.find(t => t.id === pendingGotoRef.current!.tabId);
     if (!tab) {
-        pendingGotoRef.current = null;
-        return;
+      pendingGotoRef.current = null;
+      return;
     }
 
     const handleEditorReady = (event: Event) => {
-        const pendingGoto = pendingGotoRef.current;
-        if (!pendingGoto) return;
+      const pendingGoto = pendingGotoRef.current;
+      if (!pendingGoto) return;
 
-        const customEvent = event as CustomEvent;
-        const { fileId, documentId, isEditingFile } = customEvent.detail;
-        
-        const isTargetFile = isEditingFile && tab.fileId === fileId;
-        const isTargetDoc = !isEditingFile && tab.documentId === documentId;
-        
-        if (isTargetFile || isTargetDoc) {
-            const { position } = pendingGoto;
-            
-            setTimeout(() => {
-                document.dispatchEvent(new CustomEvent('codemirror-goto-char', {
-                detail: { 
-                    position: position,
-                    tabId: tab.id,
-                    fileId: tab.fileId,
-                    documentId: tab.documentId
-                }
-                }));
-            }, 100);
-            
-            pendingGotoRef.current = null;
-        }
+      const customEvent = event as CustomEvent;
+      const { fileId, documentId, isEditingFile } = customEvent.detail;
+
+      const isTargetFile = isEditingFile && tab.fileId === fileId;
+      const isTargetDoc = !isEditingFile && tab.documentId === documentId;
+
+      if (isTargetFile || isTargetDoc) {
+        const { position } = pendingGoto;
+
+        setTimeout(() => {
+          document.dispatchEvent(new CustomEvent('codemirror-goto-char', {
+            detail: {
+              position: position,
+              tabId: tab.id,
+              fileId: tab.fileId,
+              documentId: tab.documentId
+            }
+          }));
+        }, 100);
+
+        pendingGotoRef.current = null;
+      }
     };
 
     const eventType = tab.documentId ? 'editor-ready-yjs' : 'editor-ready';
-    
+
     document.addEventListener(eventType, handleEditorReady);
-    
+
     return () => {
-        document.removeEventListener(eventType, handleEditorReady);
+      document.removeEventListener(eventType, handleEditorReady);
     };
   }, [tabs, pendingGotoRef.current]);
 
   useEffect(() => {
     if (!propertiesLoaded || !activeTabId) return;
-    
+
     // Only set pending goto when switching tabs, not on every update
     if (lastActiveTabIdRef.current === activeTabId) return;
     lastActiveTabIdRef.current = activeTabId;
-    
+
     const activeTab = tabs.find(t => t.id === activeTabId);
     if (!activeTab || !activeTab.editorState.cursorPosition) return;
-    
+
     pendingGotoRef.current = {
-        tabId: activeTabId,
-        position: activeTab.editorState.cursorPosition
+      tabId: activeTabId,
+      position: activeTab.editorState.cursorPosition
     };
   }, [propertiesLoaded, activeTabId]);
 
@@ -378,11 +378,11 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
 
   const getTabByFileId = useCallback((fileId: string) => {
     return tabs.find(tab => tab.fileId === fileId);
-    }, [tabs]);
+  }, [tabs]);
 
   const getTabByDocumentId = useCallback((documentId: string) => {
     return tabs.find(tab => tab.documentId === documentId);
-    }, [tabs]);
+  }, [tabs]);
 
   const contextValue: EditorTabsContextType = {
     tabs,

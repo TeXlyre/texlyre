@@ -3,7 +3,7 @@ import { t } from '@/i18n';
 import { Trans } from 'react-i18next';
 import { tidy } from 'bib-editor';
 import type React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 
 import {
   DownloadIcon,
@@ -22,6 +22,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { useEditorView } from '@/hooks/editor/useEditorView';
 import type { CollaborativeViewerProps } from '@/plugins/PluginInterface';
 import { fileStorageService } from '@/services/FileStorageService';
+import { collabService } from '@/services/CollabService';
 import { formatFileSize } from '@/utils/fileUtils';
 import { TidyOptionsPanel } from '../../viewers/bibtex/TidyOptionsPanel';
 import {
@@ -88,6 +89,17 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
         new TextDecoder('utf-8').decode(content) :
         ''
   );
+  const projectId = useMemo(() => {
+    const hash = docUrl.split(':').pop() || '';
+    return hash;
+  }, [docUrl]);
+
+  const collectionName = useMemo(() => `yjs_${documentId}`, [documentId]);
+
+  const awareness = useMemo(() => {
+    return collabService.getAwareness(projectId, collectionName);
+  }, [projectId, collectionName]);
+
 
   const parseContent = (content: string) => {
     try {
@@ -452,7 +464,9 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
           fileName: fileInfo.fileName,
           filePath: fileInfo.filePath,
           fileId: fileId
-        }} />
+        }}
+        awareness={awareness}
+      />
 
 
       <div className="bibtex-viewer-main">

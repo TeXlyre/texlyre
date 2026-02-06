@@ -12,6 +12,7 @@ dist
 dist-ssr
 coverage
 *.local
+public/core/drawio-embed/*
 src/plugins/
 !src/plugins/PluginRegistry.ts
 !src/plugins/PluginInterface.ts

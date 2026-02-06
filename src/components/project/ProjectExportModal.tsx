@@ -101,12 +101,12 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 				<div className="export-format-selection">
 					<h3>{t('Export Format')}</h3>
 
-					<div className="format-options">
+					<div className="dropdown-options">
 						<div
-							className={`format-option ${exportFormat === 'texlyre' ? 'selected' : ''}`}
+							className={`dropdown-option ${exportFormat === 'texlyre' ? 'selected' : ''}`}
 							onClick={() => setExportFormat('texlyre')}
 						>
-							<label className="format-option-label">
+							<label className="dropdown-option-label">
 								<input
 									type="radio"
 									name="exportFormat"
@@ -127,10 +127,10 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 						</div>
 
 						<div
-							className={`format-option ${exportFormat === 'files-only' ? 'selected' : ''}`}
+							className={`dropdown-option ${exportFormat === 'files-only' ? 'selected' : ''}`}
 							onClick={() => setExportFormat('files-only')}
 						>
-							<label className="format-option-label">
+							<label className="dropdown-option-label">
 								<input
 									type="radio"
 									name="exportFormat"
