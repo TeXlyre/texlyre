@@ -126,8 +126,24 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
   const handleCloseClick = useCallback((e: React.MouseEvent, tabId: string) => {
     e.preventDefault();
     e.stopPropagation();
+
+    const tabToClose = tabs.find(t => t.id === tabId);
+    const isActiveTab = tabId === activeTabId;
+
     closeTab(tabId);
-  }, [closeTab]);
+
+    if (isActiveTab && tabToClose) {
+      const remainingTabs = tabs.filter(t => t.id !== tabId);
+      if (remainingTabs.length > 0) {
+        const currentIndex = tabs.findIndex(t => t.id === tabId);
+        const nextIndex = currentIndex < remainingTabs.length ? currentIndex : remainingTabs.length - 1;
+        const nextTab = remainingTabs[nextIndex];
+        onTabSwitch?.(nextTab.id);
+      } else {
+        onTabSwitch?.('');
+      }
+    }
+  }, [closeTab, tabs, activeTabId, onTabSwitch]);
 
   const handleMiddleClick = useCallback((e: React.MouseEvent, tabId: string) => {
     if (e.button === 1) {
