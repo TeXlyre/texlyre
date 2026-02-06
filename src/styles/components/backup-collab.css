@@ -282,7 +282,7 @@
 	width: 8px;
 	height: 8px;
 	border-radius: 50%;
-	background-color: #dc3545;
+	background-color: var(--color-error);
 	border: 1px solid var(--pico-background);
 }
 
@@ -365,7 +365,7 @@
 .activity-time,
 .notification-time {
 	font-size: var(--space-sd);
-	color: var(--text-color-secondary);
+	color: var(--color-secondary);
 	margin-left: 1.375rem;
 }
 
@@ -385,7 +385,7 @@
 }
 
 .info-content {
-	color: var(--text-color-secondary);
+	color: var(--color-secondary);
 }
 
 .info-content p {

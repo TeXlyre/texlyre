@@ -189,7 +189,7 @@
     background-color: rgba(220, 53, 69, 0.1);
     border: 1px solid rgba(220, 53, 69, 0.3);
     border-radius: 4px;
-    color: #dc3545;
+    color: var(--color-error);
     max-width: 80%;
     text-align: center;
     z-index: 100;
