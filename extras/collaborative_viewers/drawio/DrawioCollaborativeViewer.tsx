@@ -19,7 +19,7 @@ import DrawioPngExportButton from '../../viewers/drawio/DrawioPngExportButton';
 import DrawioSvgExportButton from '../../viewers/drawio/DrawioSvgExportButton';
 import { DrawioYjsAdapter } from './DrawioYjsAdapter';
 
-type DrawioSource = 'cdn' | 'github';
+const BASE_PATH = __BASE_PATH__;
 
 const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
     content,
@@ -36,10 +36,8 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
     const autoSave = (getSetting('drawio-viewer-auto-save')?.value as boolean) ?? false;
     const autoSaveFile = (getSetting('drawio-viewer-auto-save-file')?.value as boolean) ?? false;
-    const theme = (getSetting('drawio-viewer-theme')?.value as 'auto' | 'light' | 'dark') ?? 'auto';
-    const source = (getSetting('drawio-viewer-source')?.value as DrawioSource) ?? 'cdn';
-    const cdnBaseUrl = (getSetting('drawio-viewer-cdn-base-url')?.value as string) ?? 'https://embed.diagrams.net';
-    const githubBaseUrl = (getSetting('drawio-viewer-github-base-url')?.value as string) ?? 'https://texlyre.github.io/drawio-embed-mirror';
+    const theme = (getSetting('drawio-viewer-theme')?.value as string) ?? 'auto-app';
+    const language = (getSetting('drawio-viewer-language')?.value as string) ?? 'auto-app';
 
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -82,31 +80,41 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
     }, [projectId, collectionName]);
 
     const getThemeParam = useCallback(() => {
-        if (theme === 'auto') {
+        if (theme === 'auto-app') {
+            const appTheme = getSetting('theme-variant')?.value as string || 'system';
+            if (appTheme === 'system') {
+                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            return appTheme === 'dark' ? 'dark' : 'light';
+        }
+        if (theme === 'auto-drawio') {
             return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
         return theme;
-    }, [theme]);
+    }, [theme, getSetting]);
+
+    const getLanguageParam = useCallback(() => {
+        if (language === 'auto-app') {
+            const appLanguage = getSetting('language')?.value as string || 'en';
+            return appLanguage;
+        }
+        return undefined;
+    }, [language, getSetting]);
 
     const resolvedTheme = useMemo(() => getThemeParam(), [getThemeParam]);
+    const resolvedLanguage = useMemo(() => getLanguageParam(), [getLanguageParam]);
     const uiParam = useMemo(() => (resolvedTheme === 'dark' ? 'dark' : 'kennedy'), [resolvedTheme]);
 
-    const baseUrl = useMemo(() => (source === 'github' ? githubBaseUrl : cdnBaseUrl), [source, githubBaseUrl, cdnBaseUrl]);
-    const drawioOrigin = useMemo(() => new URL(baseUrl).origin, [baseUrl]);
+    const baseUrl = `${BASE_PATH}/core/drawio-embed`;
+    const drawioOrigin = useMemo(() => new URL(baseUrl, window.location.origin).origin, [baseUrl]);
 
     const embedUrl = useMemo(() => {
-        if (source === 'github') {
-            const params =
-                `embed=1&proto=json&spin=1&libraries=1&saveAndExit=0&noSaveBtn=1&noExitBtn=1` +
-                `&db=0&od=0&gapi=0&tr=0&gh=0&gl=0&stealth=1&offline=1&ui=${encodeURIComponent(uiParam)}`;
-            return `${baseUrl}/${resolvedTheme}/app.html?${params}`;
-        }
-
-        return (
-            `${baseUrl}/?embed=1&proto=json&spin=1&libraries=1&saveAndExit=0&noSaveBtn=1&noExitBtn=1` +
-            `&db=0&od=0&gapi=0&tr=0&gh=0&gl=0&stealth=1&ui=${encodeURIComponent(uiParam)}`
-        );
-    }, [source, baseUrl, resolvedTheme, uiParam]);
+        const params =
+            `embed=1&proto=json&spin=1&libraries=1&saveAndExit=0&noSaveBtn=1&noExitBtn=1` +
+            `&db=0&od=0&gapi=0&tr=0&gh=0&gl=0&stealth=1&ui=${encodeURIComponent(uiParam)}` +
+            (resolvedLanguage ? `&lang=${encodeURIComponent(resolvedLanguage)}` : '');
+        return `${baseUrl}/${resolvedTheme}/app.html?${params}`;
+    }, [baseUrl, resolvedTheme, uiParam, resolvedLanguage]);
 
     useEffect(() => {
         const handleOnline = () => setIsOnline(true);
@@ -337,17 +345,28 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
         handleSave(drawioContent);
     }, [drawioContent, handleSave]);
 
+    const getThemeDisplayText = () => {
+        if (theme === 'auto-app') return t('Auto (Follows App Theme)');
+        if (theme === 'auto-drawio') return t('Auto (Follows Draw.io Theme)');
+        return t(theme);
+    };
+
+    const getLanguageDisplayText = () => {
+        if (language === 'auto-app') return t('Auto (Follows App Language)');
+        if (language === 'auto-drawio') return t('Auto (Follows Draw.io Language)');
+        return language;
+    };
+
     const tooltipInfo = useMemo(() => [
-        t('Source: {source}', { source: t(source) }),
-        t('Status: {status}', { status: isOnline ? t('Online') : t('Offline - cached') }),
         t('Auto-save editor: {status}', { status: autoSave ? t('enabled') : t('disabled') }),
         t('Auto-save file: {status}', { status: autoSaveFile ? t('enabled') : t('disabled') }),
-        t('Theme: {theme}', { theme: t(theme) }),
+        t('Theme: {theme}', { theme: getThemeDisplayText() }),
+        t('Language: {language}', { language: getLanguageDisplayText() }),
         t('Collaborative Mode: Active'),
         t('Document ID: {documentId}', { documentId }),
         t('MIME Type: {mimeType}', { mimeType: fileInfo.mimeType || 'application/vnd.jgraph.mxfile' }),
         t('Size: {size}', { size: formatFileSize(fileInfo.fileSize) })
-    ], [source, isOnline, autoSave, autoSaveFile, theme, documentId, fileInfo.mimeType, fileInfo.fileSize, t]);
+    ], [autoSave, autoSaveFile, theme, language, documentId, fileInfo.mimeType, fileInfo.fileSize, t]);
 
     const headerControls = useMemo(() => (
         <>

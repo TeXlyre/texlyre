@@ -28,42 +28,25 @@ export const getDrawioViewerSettings = (): Setting[] => [
         type: 'select',
         label: t('Theme'),
         description: t('Theme for the Draw.io editor'),
-        defaultValue: 'auto',
+        defaultValue: 'auto-app',
         options: [
-            { label: t('Auto'), value: 'auto' },
+            { label: t('Auto (follows app theme)'), value: 'auto-app' },
+            { label: t('Auto (follows Draw.io theme)'), value: 'auto-drawio' },
             { label: t('Light'), value: 'light' },
             { label: t('Dark'), value: 'dark' }
         ]
     },
     {
-        id: 'drawio-viewer-source',
+        id: 'drawio-viewer-language',
         category: t('Viewers'),
         subcategory: t('Draw.io Editor'),
         type: 'select',
-        label: t('Source'),
-        description: t('Where to load the Draw.io editor from'),
-        defaultValue: 'cdn',
+        label: t('Language'),
+        description: t('Language for the Draw.io editor'),
+        defaultValue: 'auto-app',
         options: [
-            { label: t('CDN (embed.diagrams.net)'), value: 'cdn' },
-            { label: t('GitHub Pages mirror'), value: 'github' }
+            { label: t('Auto (follows app language)'), value: 'auto-app' },
+            { label: t('Auto (follows Draw.io language)'), value: 'auto-drawio' }
         ]
-    },
-    {
-        id: 'drawio-viewer-cdn-base-url',
-        category: t('Viewers'),
-        subcategory: t('Draw.io Editor'),
-        type: 'text',
-        label: t('CDN base URL'),
-        description: t('Base URL for the Draw.io CDN editor'),
-        defaultValue: 'https://embed.diagrams.net'
-    },
-    {
-        id: 'drawio-viewer-github-base-url',
-        category: t('Viewers'),
-        subcategory: t('Draw.io Editor'),
-        type: 'text',
-        label: t('GitHub base URL'),
-        description: t('Base URL for the Draw.io GitHub Pages mirror'),
-        defaultValue: 'https://texlyre.github.io/drawio-embed-mirror'
     }
 ];

@@ -10,6 +10,7 @@ lerna-debug.log*
 node_modules
 dist
 public/drawio-embed/*
+public/core/drawio-embed/*
 dist-ssr
 coverage
 *.local

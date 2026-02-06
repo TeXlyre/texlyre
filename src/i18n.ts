@@ -20,7 +20,10 @@ i18next
             ar: {
                 translation: arTranslations,
             },
-            'zh-CN': {
+            // 'zh-CN': {
+            //     translation: zhCNTranslations,
+            // },
+            zh: {
                 translation: zhCNTranslations,
             }
         },
