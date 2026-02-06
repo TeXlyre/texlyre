@@ -145,7 +145,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
             adapterRef.current.destroy();
             adapterRef.current = null;
         }
-    }, [fileId, fileName, embedUrl]);
+    }, [fileId, fileName]);
 
     useEffect(() => {
         let cancelled = false;
@@ -310,7 +310,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
     const handleIframeLoad = useCallback(() => {
         console.log('[DrawioCollaborativeViewer] Iframe loaded');
-        setIframeLoaded(true);
+        setTimeout(() => setIframeLoaded(true), 50);
     }, []);
 
     const handleExport = useCallback(
@@ -433,7 +433,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
                 {!error && (
                     <>
-                        <DrawioSplashScreen iframeLoaded={iframeLoaded} />
+                        <DrawioSplashScreen iframeLoaded={iframeLoaded} fileKey={fileId ?? fileName} />
                         <iframe
                             key={fileId ?? fileName}
                             ref={iframeRef}

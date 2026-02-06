@@ -6,14 +6,21 @@ import { useEffect, useState } from 'react';
 interface DrawioSplashScreenProps {
     iframeLoaded: boolean;
     minDisplayTime?: number;
+    fileKey?: string;
 }
 
 const DrawioSplashScreen: React.FC<DrawioSplashScreenProps> = ({
     iframeLoaded,
-    minDisplayTime = 500
+    minDisplayTime = 500,
+    fileKey
 }) => {
     const [isVisible, setIsVisible] = useState(true);
-    const [startTime] = useState(Date.now());
+    const [startTime, setStartTime] = useState(Date.now());
+
+    useEffect(() => {
+        setIsVisible(true);
+        setStartTime(Date.now());
+    }, [fileKey]);
 
     useEffect(() => {
         if (!iframeLoaded) return;

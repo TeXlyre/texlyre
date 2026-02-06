@@ -106,7 +106,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
         messageQueueRef.current = [];
         pendingExportRef.current = null;
         pendingSaveRef.current = false;
-    }, [fileId, fileName, embedUrl]);
+    }, [fileId, fileName]);
 
     useEffect(() => {
         if (!(content instanceof ArrayBuffer)) {
@@ -338,6 +338,10 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
         return () => window.removeEventListener('message', handleMessage);
     }, [handleMessage]);
 
+    const handleIframeLoad = useCallback(() => {
+        setTimeout(() => setIframeLoaded(true), 50);
+    }, []);
+
     const handleExport = useCallback(
         async (options: any): Promise<string> => {
             if (!iframeLoaded) {
@@ -470,13 +474,14 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
                 {!isLoading && !error && (
                     <>
-                        <DrawioSplashScreen iframeLoaded={iframeLoaded} />
+                        <DrawioSplashScreen iframeLoaded={iframeLoaded} fileKey={fileId ?? fileName} />
                         <iframe
                             key={fileId ?? fileName}
                             ref={iframeRef}
                             src={embedUrl}
                             className="drawio-iframe"
                             title={fileName}
+                            onLoad={handleIframeLoad}
                             sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-popups-to-escape-sandbox"
                         />
                     </>
