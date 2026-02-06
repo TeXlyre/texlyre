@@ -28,6 +28,13 @@ TeXlyre provides comment and chat features for real-time exchanges, reviews, and
 <img src="showcase/chat_zoomed.png" alt="Collaborators using the chat panel to discuss progress">
 </p>
 
+TeXlyre also includes an embedded diagram editor powered by [Draw.io](https://www.drawio.com/), enabling collaborators to create and edit diagrams directly within a project.
+
+<p align="center">
+<img src="showcase/collab_cursor_drawio.png" alt="Collaborators editing a draw.io diagram simultaneously within a TeXlyre project">
+</p>
+
+
 ### LaTeX Compilation
 
 The platform integrates **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX) WASM engines** to provide in-browser LaTeX compilation without server dependencies. Currently supports **pdfTeX** and **XeTeX** engines for document processing. TeXlyre supports real-time syntax highlighting and error detection, with an integrated PDF viewer that offers zoom, navigation, and side-by-side editing capabilities.
@@ -82,7 +89,7 @@ Moreover, you can start your project from a template and share the link with you
 
 TeXlyre's architecture emphasizes **local-first principles** while enabling real-time collaboration. The React frontend communicates with Yjs documents stored in IndexedDB, providing offline-first functionality. WebRTC establishes direct peer connections for real-time synchronization, while **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX) WASM engines** and **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)** handle LaTeX and Typst compilation entirely in the browser.
 
-The **plugin system** allows extensibility through custom viewers, renderers, and backup providers. Core plugins handle PDF rendering, LaTeX and Typst log visualization, and file system backup operations. Theme plugins provide customizable layouts and visual styles.
+The **plugin system** allows extensibility through custom viewers, renderers, and backup providers. Core plugins handle PDF rendering, Bibliography cleaning, LaTeX and Typst log visualization, an embedded Draw.io diagram editor with collaborative support, file system backups, and repository backups (GitHub, GitLab, Gitea, and Codeberg). Theme plugins also provide customizable layouts and visual styles.
 
 ![Bib Editor plugin integrated into the TeXlyre app](showcase/bib_editor_zoomed.png)
 
@@ -190,7 +197,7 @@ TeXlyre builds upon several key technologies:
 - **[typst-wordometer](https://github.com/Jollywatt/typst-wordometer)** - Word counter for Typst documents
 
 ### Diagram & Visualization
-- **[Draw.io](https://github.com/jgraph/drawio)** - Diagramming tool for collaborative editing
+- **[Draw.io](https://github.com/jgraph/drawio)** - Diagramming tool for collaborative diagram editing
 
 ### Runtime
 - **[WebPerl](https://github.com/haukex/webperl)** - Perl interpreter compiled to WebAssembly
