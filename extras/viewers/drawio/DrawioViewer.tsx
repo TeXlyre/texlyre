@@ -7,6 +7,7 @@ import { DownloadIcon, SaveIcon, CloseIcon } from '@/components/common/Icons';
 import { PluginControlGroup, PluginHeader } from '@/components/common/PluginHeader';
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
+import { useTheme } from '@/hooks/useTheme';
 import type { ViewerProps } from '@/plugins/PluginInterface';
 import { fileStorageService } from '@/services/FileStorageService';
 import { formatFileSize } from '@/utils/fileUtils';
@@ -21,6 +22,7 @@ const BASE_PATH = __BASE_PATH__;
 const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
     const { getSetting } = useSettings();
     const fileInfo = usePluginFileInfo(fileId, fileName);
+    const { isCurrentVariantDark } = useTheme();
 
     const autoSave = (getSetting('drawio-viewer-auto-save')?.value as boolean) ?? false;
     const autoSaveFile = (getSetting('drawio-viewer-auto-save-file')?.value as boolean) ?? false;
@@ -46,17 +48,13 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
     const getThemeParam = useCallback(() => {
         if (theme === 'auto-app') {
-            const appTheme = getSetting('theme-variant')?.value as string || 'system';
-            if (appTheme === 'system') {
-                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-            }
-            return appTheme === 'dark' ? 'dark' : 'light';
+            return isCurrentVariantDark ? 'dark' : 'light';
         }
         if (theme === 'auto-drawio') {
             return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
         return theme;
-    }, [theme, getSetting]);
+    }, [theme, isCurrentVariantDark, getSetting]);
 
     const getLanguageParam = useCallback(() => {
         if (language === 'auto-app') {

@@ -7,7 +7,8 @@ import {
   useCallback,
   useEffect,
   useRef,
-  useState
+  useState,
+  useMemo
 } from
   'react';
 
@@ -22,6 +23,7 @@ interface ThemeContextType {
   setTheme: (pluginId: string) => void;
   setVariant: (variantId: string) => void;
   availableThemes: ThemePlugin[];
+  isCurrentVariantDark: boolean;
 }
 
 export const ThemeContext = createContext<ThemeContextType>({
@@ -30,7 +32,8 @@ export const ThemeContext = createContext<ThemeContextType>({
   currentLayout: null,
   setTheme: () => { },
   setVariant: () => { },
-  availableThemes: []
+  availableThemes: [],
+  isCurrentVariantDark: true
 });
 
 interface ThemeProviderProps {
@@ -210,6 +213,17 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     };
   }, [currentThemePlugin, currentVariant]);
 
+  const isCurrentVariantDark = useMemo(() => {
+    if (!currentThemePlugin) return false;
+
+    if (currentVariant === 'system') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+
+    const variant = currentThemePlugin.getThemeVariants().find(v => v.id === currentVariant);
+    return variant?.isDark ?? false;
+  }, [currentThemePlugin, currentVariant]);
+
   return (
     <ThemeContext.Provider
       value={{
@@ -218,7 +232,8 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
         currentLayout,
         setTheme,
         setVariant,
-        availableThemes
+        availableThemes,
+        isCurrentVariantDark
       }}>
 
       {children}

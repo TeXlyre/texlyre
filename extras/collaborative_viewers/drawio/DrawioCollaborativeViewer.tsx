@@ -9,6 +9,7 @@ import { PluginControlGroup, PluginHeader } from '@/components/common/PluginHead
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/hooks/useTheme';
 import type { CollaborativeViewerProps } from '@/plugins/PluginInterface';
 import { fileStorageService } from '@/services/FileStorageService';
 import { formatFileSize } from '@/utils/fileUtils';
@@ -34,6 +35,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
     const { getSetting } = useSettings();
     const { user } = useAuth();
     const fileInfo = usePluginFileInfo(fileId, fileName);
+    const { isCurrentVariantDark } = useTheme();
 
     const autoSave = (getSetting('drawio-viewer-auto-save')?.value as boolean) ?? false;
     const autoSaveFile = (getSetting('drawio-viewer-auto-save-file')?.value as boolean) ?? false;
@@ -83,17 +85,13 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
     const getThemeParam = useCallback(() => {
         if (theme === 'auto-app') {
-            const appTheme = getSetting('theme-variant')?.value as string || 'system';
-            if (appTheme === 'system') {
-                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-            }
-            return appTheme === 'dark' ? 'dark' : 'light';
+            return isCurrentVariantDark ? 'dark' : 'light';
         }
         if (theme === 'auto-drawio') {
             return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
         return theme;
-    }, [theme, getSetting]);
+    }, [theme, isCurrentVariantDark, getSetting]);
 
     const getLanguageParam = useCallback(() => {
         if (language === 'auto-app') {

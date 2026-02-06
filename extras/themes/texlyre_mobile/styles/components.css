@@ -317,7 +317,8 @@
 }
 
 [data-layout="texlyre-mobile"] .user-dropdown-button span {
-	max-width: var(--mobile-min-touch-target);
+	min-width: var(--mobile-min-touch-target);
+	padding: var(--mobile-spacing-xs);
 }
 
 [data-layout="texlyre-mobile"] .linked-file-icon {
