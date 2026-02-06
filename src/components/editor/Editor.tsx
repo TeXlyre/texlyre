@@ -671,7 +671,7 @@ const EditorContent: React.FC<{
 
             {showSaveIndicator &&
               <div className={`save-indicator ${isViewOnly ? 'read-only' : ''}`}>
-                <span>{isViewOnly ? 'Cannot Save Read-Only' : 'Saved'}</span>
+                <span>{isViewOnly ? t('Cannot Save Read-Only') : t('Saved')}</span>
               </div>
             }
           </div>

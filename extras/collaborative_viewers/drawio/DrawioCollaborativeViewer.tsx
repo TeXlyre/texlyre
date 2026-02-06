@@ -267,7 +267,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
             iframeRef,
             drawioOrigin,
             onContentChange: (xml: string) => {
-                console.log('[DrawioCollaborativeViewer] Content changed from adapter, length:', xml.length);
+                // console.log('[DrawioCollaborativeViewer] Content changed from adapter, length:', xml.length);
                 setDrawioContent(xml);
                 setHasChanges(true);
 
