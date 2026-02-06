@@ -116,6 +116,7 @@
 	padding: 0 !important;
 	padding-left: var(--mobile-spacing-sm);
 	padding-right: var(--mobile-spacing-sm);
+	max-width: 150px;
 }
 
 [data-layout="texlyre-mobile"] .header-right .user-dropdown-menu {
