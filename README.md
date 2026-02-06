@@ -28,7 +28,7 @@ TeXlyre provides comment and chat features for real-time exchanges, reviews, and
 <img src="showcase/chat_zoomed.png" alt="Collaborators using the chat panel to discuss progress">
 </p>
 
-TeXlyre also includes an embedded diagram editor powered by [Draw.io](https://www.drawio.com/), enabling collaborators to create and edit diagrams directly within a project.
+TeXlyre also includes an embedded diagram editor powered by [Draw.io](https://www.drawio.com/), enabling collaborators to create and edit diagrams in real-time directly within a project.
 
 <p align="center">
 <img src="showcase/collab_cursor_drawio.png" alt="Collaborators editing a draw.io diagram simultaneously within a TeXlyre project">
