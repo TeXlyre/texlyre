@@ -15,6 +15,7 @@ import { formatFileSize } from '@/utils/fileUtils';
 import { collabService } from '@/services/CollabService';
 import '../../viewers/drawio/styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './DrawioCollaborativeViewerPlugin';
+import DrawioSplashScreen from '../../viewers/drawio/DrawioSplashScreen';
 import DrawioPngExportButton from '../../viewers/drawio/DrawioPngExportButton';
 import DrawioSvgExportButton from '../../viewers/drawio/DrawioSvgExportButton';
 import { DrawioYjsAdapter } from './DrawioYjsAdapter';
@@ -423,6 +424,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
                 {!error && (
                     <>
+                        <DrawioSplashScreen iframeLoaded={iframeLoaded} />
                         <iframe
                             key={fileId ?? fileName}
                             ref={iframeRef}

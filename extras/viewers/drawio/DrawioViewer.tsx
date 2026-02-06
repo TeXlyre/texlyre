@@ -12,6 +12,7 @@ import { fileStorageService } from '@/services/FileStorageService';
 import { formatFileSize } from '@/utils/fileUtils';
 import './styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './DrawioViewerPlugin';
+import DrawioSplashScreen from './DrawioSplashScreen';
 import DrawioPngExportButton from './DrawioPngExportButton';
 import DrawioSvgExportButton from './DrawioSvgExportButton';
 
@@ -461,14 +462,17 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
                 {isLoading && <div className="loading-indicator">{t('Loading diagram...')}</div>}
 
                 {!isLoading && !error && (
-                    <iframe
-                        key={fileId ?? fileName}
-                        ref={iframeRef}
-                        src={embedUrl}
-                        className="drawio-iframe"
-                        title={fileName}
-                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-popups-to-escape-sandbox"
-                    />
+                    <>
+                        <DrawioSplashScreen iframeLoaded={iframeLoaded} />
+                        <iframe
+                            key={fileId ?? fileName}
+                            ref={iframeRef}
+                            src={embedUrl}
+                            className="drawio-iframe"
+                            title={fileName}
+                            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-popups-to-escape-sandbox"
+                        />
+                    </>
                 )}
 
                 {showSaveIndicator && (
