@@ -347,14 +347,14 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
     }, [drawioContent, handleSave]);
 
     const getThemeDisplayText = () => {
-        if (theme === 'auto-app') return t('Auto (Follows App Theme)');
-        if (theme === 'auto-drawio') return t('Auto (Follows Draw.io Theme)');
+        if (theme === 'auto-app') return t('Auto (follows app theme)');
+        if (theme === 'auto-drawio') return t('Auto (follows Draw.io theme)');
         return t(theme);
     };
 
     const getLanguageDisplayText = () => {
-        if (language === 'auto-app') return t('Auto (Follows App Language)');
-        if (language === 'auto-drawio') return t('Auto (Follows Draw.io Language)');
+        if (language === 'auto-app') return t('Auto (follows app language)');
+        if (language === 'auto-drawio') return t('Auto (follows Draw.io language)');
         return language;
     };
 
