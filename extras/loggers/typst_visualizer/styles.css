@@ -44,7 +44,7 @@
 }
 
 .diagnostic-item.error {
-    border-left-color: #dc3545;
+    border-left-color: var(--color-error);
     background-color: rgba(220, 53, 69, 0.05);
 }
 
@@ -93,7 +93,7 @@
 
 .diagnostic-item.error .diagnostic-type-badge {
     background-color: rgba(220, 53, 69, 0.15);
-    color: #dc3545;
+    color: var(--color-error);
 }
 
 .diagnostic-item.warning .diagnostic-type-badge {
@@ -231,7 +231,7 @@
     }
 
     .diagnostic-item.error {
-        border-color: #dc3545;
+        border-color: var(--color-error);
     }
 
     .diagnostic-item.warning {

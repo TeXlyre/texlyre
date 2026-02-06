@@ -4,7 +4,7 @@ import type React from 'react';
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import * as Y from 'yjs';
 
-import { DownloadIcon, SaveIcon } from '@/components/common/Icons';
+import { DownloadIcon, SaveIcon, CloseIcon } from '@/components/common/Icons';
 import { PluginControlGroup, PluginHeader } from '@/components/common/PluginHeader';
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
@@ -50,6 +50,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
     const [showSaveIndicator, setShowSaveIndicator] = useState(false);
     const [yjsDoc, setYjsDoc] = useState<Y.Doc | null>(null);
     const [yjsProvider, setYjsProvider] = useState<any>(null);
+    const [showOfflineBanner, setShowOfflineBanner] = useState(true);
 
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const adapterRef = useRef<DrawioYjsAdapter | null>(null);
@@ -373,13 +374,15 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
         <>
             <PluginControlGroup>
                 {fileId && (
-                    <button
-                        onClick={handleManualSave}
-                        title={t('Save File (Ctrl+S)')}
-                        disabled={isSaving || !iframeLoaded}
-                        className={hasChanges ? 'active' : ''}>
-                        <SaveIcon />
-                    </button>
+                    <>
+                        <button
+                            onClick={handleManualSave}
+                            title={t('Save File (Ctrl+S)')}
+                            disabled={isSaving || !iframeLoaded}
+                            className={hasChanges ? 'active' : ''}>
+                            <SaveIcon />
+                        </button>
+                    </>
                 )}
                 <button onClick={handleDownload} title={t('Download as Draw.io XML')} disabled={!iframeLoaded}>
                     <DownloadIcon />
@@ -414,11 +417,19 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
             />
 
             <div className="drawio-viewer-content">
-                {error && <div className="drawio-error-message">{error}</div>}
+                {error && <div className="drawio-error-message error-message">{error}</div>}
 
-                {!isOnline && (
-                    <div className="drawio-warning-message">
-                        {t('You are currently offline. Draw.io is cached and will work, but some features may be limited.')}
+                {!isOnline && showOfflineBanner && (
+                    <div className="drawio-warning-message warning-message">
+                        <span>
+                            {t('You are currently offline. Draw.io is cached and will work, but some features may be limited.')}
+                        </span>
+                        <button
+                            className="button icon-only small"
+                            onClick={() => setShowOfflineBanner(false)}
+                            title={t('Dismiss')}>
+                            <CloseIcon />
+                        </button>
                     </div>
                 )}
 

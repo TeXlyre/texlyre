@@ -3,7 +3,7 @@ import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 
-import { DownloadIcon, SaveIcon } from '@/components/common/Icons';
+import { DownloadIcon, SaveIcon, CloseIcon } from '@/components/common/Icons';
 import { PluginControlGroup, PluginHeader } from '@/components/common/PluginHeader';
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
@@ -35,6 +35,7 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
     const [isOnline, setIsOnline] = useState(navigator.onLine);
     const [iframeLoaded, setIframeLoaded] = useState(false);
     const [showSaveIndicator, setShowSaveIndicator] = useState(false);
+    const [showOfflineBanner, setShowOfflineBanner] = useState(true);
 
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const originalContentRef = useRef<string>('');
@@ -451,11 +452,19 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
             />
 
             <div className="drawio-viewer-content">
-                {error && <div className="drawio-error-message">{error}</div>}
+                {error && <div className="drawio-error-message error-message">{error}</div>}
 
-                {!isOnline && (
-                    <div className="drawio-warning-message">
-                        {t('You are currently offline. Draw.io is cached and will work, but some features may be limited.')}
+                {!isOnline && showOfflineBanner && (
+                    <div className="drawio-warning-message warning-message">
+                        <span>
+                            {t('You are currently offline. Draw.io is cached and will work, but some features may be limited.')}
+                        </span>
+                        <button
+                            className="button icon-only small"
+                            onClick={() => setShowOfflineBanner(false)}
+                            title={t('Dismiss')}>
+                            <CloseIcon />
+                        </button>
                     </div>
                 )}
 

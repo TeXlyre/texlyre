@@ -446,7 +446,7 @@ footer {
 }
 
 .save-indicator.read-only {
-	background-color: var(--color-error, #dc3545) !important;
+	background-color: var(--color-error) !important;
 	color: var(--pico-secondary-inverse, #fff);
 }
 

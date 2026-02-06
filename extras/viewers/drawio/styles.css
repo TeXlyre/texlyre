@@ -103,21 +103,25 @@
 
 .drawio-error-message {
     padding: 1rem;
-    background-color: rgba(220, 53, 69, 0.1);
-    border: 1px solid rgba(220, 53, 69, 0.3);
-    border-radius: 8px;
-    color: #dc3545;
     margin: 1rem;
     flex-shrink: 0;
 }
 
 .drawio-warning-message {
-    padding: 1rem;
-    background-color: rgba(255, 193, 7, 0.1);
-    border: 1px solid rgba(255, 193, 7, 0.3);
-    border-radius: 8px;
-    color: #856404;
-    margin: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    margin-bottom: var(--space-sm);
+    animation: slideDown 0.3s ease-out;
+}
+
+.drawio-warning-message span {
+    flex: 1;
+}
+
+.drawio-warning-message button {
     flex-shrink: 0;
 }
 

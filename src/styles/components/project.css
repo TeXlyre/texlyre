@@ -775,10 +775,10 @@
 .export-error-message {
   margin-bottom: 1rem;
   padding: var(--space-sd);
-  background: var(--error-background);
-  border: 1px solid var(--error-border);
+  background-color: rgba(220, 53, 69, 0.05);
+  border: 1px solid var(--color-error);
   border-radius: var(--radius-sm);
-  color: var(--error-color);
+  color: var(--color-error);
 }
 
 .export-info {

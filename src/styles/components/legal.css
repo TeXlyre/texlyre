@@ -48,7 +48,7 @@
 }
 
 .dropdown-item.danger {
-  color: #dc3545;
+  color: var(--color-error);
 }
 
 .dropdown-item.danger:hover {
