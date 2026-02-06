@@ -10,16 +10,44 @@ const rendererDestination = path.resolve(__dirname, "../public/core/typst-ts-ren
 
 async function copyTypstAssets() {
     try {
-        await fs.ensureDir(compilerDestination);
-        await fs.copy(compilerSource, compilerDestination);
-        console.log("Typst compiler assets copied to public/core/typst-ts-web-compiler/pkg");
+        let compilerExists = false;
+        let rendererExists = false;
 
-        await fs.ensureDir(rendererDestination);
-        await fs.copy(rendererSource, rendererDestination);
-        console.log("Typst renderer assets copied to public/core/typst-ts-renderer/pkg");
+        if (await fs.pathExists(compilerDestination)) {
+            const files = await fs.readdir(compilerDestination);
+            if (files.length > 0) {
+                console.log("✓ Typst compiler assets already exist, skipping copy");
+                compilerExists = true;
+            }
+        }
+
+        if (await fs.pathExists(rendererDestination)) {
+            const files = await fs.readdir(rendererDestination);
+            if (files.length > 0) {
+                console.log("✓ Typst renderer assets already exist, skipping copy");
+                rendererExists = true;
+            }
+        }
+
+        if (!compilerExists) {
+            await fs.ensureDir(compilerDestination);
+            await fs.copy(compilerSource, compilerDestination);
+            console.log("✓ Typst compiler assets copied to public/core/typst-ts-web-compiler/pkg");
+        }
+
+        if (!rendererExists) {
+            await fs.ensureDir(rendererDestination);
+            await fs.copy(rendererSource, rendererDestination);
+            console.log("✓ Typst renderer assets copied to public/core/typst-ts-renderer/pkg");
+        }
     } catch (err) {
-        console.error("Error copying Typst assets:", err);
+        console.error("❌ Error copying Typst assets:", err);
+        throw err;
     }
 }
 
-copyTypstAssets();
+if (require.main === module) {
+    copyTypstAssets();
+}
+
+module.exports = { copyTypstAssets };

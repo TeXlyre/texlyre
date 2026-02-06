@@ -1,7 +1,6 @@
 // These constants are automatically generated. Do not edit directly. **
 const CACHE_NAME = `texlyre-v0.5.9`;
 const BASE_PATH = '/texlyre/';
-const DRAWIO_CACHE_NAME = 'drawio-embed-cache-v1';
 const FONTS_CACHE_NAME = 'fonts-cache-v1';
 // *** End automatic generation ***
 
@@ -12,7 +11,6 @@ const STATIC_ASSETS = [
 ];
 
 const CACHE_MAX_AGE = {
-  [DRAWIO_CACHE_NAME]: 60 * 60 * 24 * 90 * 1000, // 90 days in milliseconds
   [FONTS_CACHE_NAME]: 60 * 60 * 24 * 365 * 1000, // 1 year in milliseconds
 };
 
@@ -54,9 +52,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME &&
-            cacheName !== DRAWIO_CACHE_NAME &&
-            cacheName !== FONTS_CACHE_NAME) {
+          if (cacheName !== CACHE_NAME && cacheName !== FONTS_CACHE_NAME) {
             console.log('[ServiceWorker] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
@@ -107,35 +103,6 @@ async function cacheWithExpiry(cacheName, request, response) {
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-
-  // Handle draw.io embed
-  if (url.origin === 'https://embed.diagrams.net') {
-    event.respondWith(
-      getCachedWithExpiry(DRAWIO_CACHE_NAME, event.request, CACHE_MAX_AGE[DRAWIO_CACHE_NAME])
-        .then(async (cached) => {
-          if (cached) {
-            return cached;
-          }
-
-          try {
-            const response = await fetch(event.request);
-            if (response.ok) {
-              await cacheWithExpiry(DRAWIO_CACHE_NAME, event.request, response.clone());
-            }
-            return response;
-          } catch (error) {
-            console.error('[ServiceWorker] Fetch failed for draw.io:', error);
-            const fallbackCached = await caches.match(event.request);
-            if (fallbackCached) {
-              console.log('[ServiceWorker] Serving expired cache as fallback');
-              return fallbackCached;
-            }
-            throw error;
-          }
-        })
-    );
-    return;
-  }
 
   // Handle Google Fonts
   if (url.origin === 'https://fonts.googleapis.com' || url.origin === 'https://fonts.gstatic.com') {

@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "lastUpdated": "2026-02-06T15:18:27.215Z",
+    "lastUpdated": "2026-02-06T16:23:57.162Z",
     "totalKeys": 1719
   },
   "languages": [
@@ -21,7 +21,7 @@
       "direction": "rtl",
       "coverage": 95,
       "totalKeys": 1719,
-      "translatedKeys": 1628,
+      "translatedKeys": 1629,
       "filePath": "locales/ar.json"
     },
     {
@@ -29,9 +29,9 @@
       "name": "Chinese (Simplified)",
       "nativeName": "简体中文",
       "direction": "ltr",
-      "coverage": 94,
+      "coverage": 95,
       "totalKeys": 1719,
-      "translatedKeys": 1624,
+      "translatedKeys": 1625,
       "filePath": "locales/zh-CN.json"
     },
     {
@@ -41,7 +41,7 @@
       "direction": "ltr",
       "coverage": 92,
       "totalKeys": 1719,
-      "translatedKeys": 1575,
+      "translatedKeys": 1576,
       "filePath": "locales/de.json"
     }
   ]
