@@ -19,6 +19,7 @@ interface CursorPosition {
 export class DrawioYjsAdapter {
     private doc: Y.Doc;
     private ymap: Y.Map<any>;
+    private ytext: Y.Text;
     private awareness?: Awareness;
     private iframeRef: React.RefObject<HTMLIFrameElement>;
     private drawioOrigin: string;
@@ -26,16 +27,18 @@ export class DrawioYjsAdapter {
     private isInitialized = false;
     private pendingXml: string | null = null;
     private messageHandler: ((event: MessageEvent) => void) | null = null;
-    private ymapObserver: ((event: Y.YMapEvent<any>, transaction: Y.Transaction) => void) | null = null;
+    private ytextObserver: ((event: Y.YTextEvent, transaction: Y.Transaction) => void) | null = null;
     private isLocalUpdate = false;
     private updateCounter = 0;
     private ignoreNextObserverCall = false;
     private cursorTrackingEnabled = false;
     private cursorUpdateInterval: number | null = null;
+    private lastValidXml: string | null = null;
 
     constructor(options: DrawioYjsAdapterOptions) {
         this.doc = options.doc;
         this.ymap = this.doc.getMap('drawio');
+        this.ytext = this.doc.getText('drawioXml');
         this.awareness = options.awareness;
         this.iframeRef = options.iframeRef;
         this.drawioOrigin = options.drawioOrigin;
@@ -52,14 +55,19 @@ export class DrawioYjsAdapter {
         this.messageHandler = this.handleDrawioMessage.bind(this);
         window.addEventListener('message', this.messageHandler);
 
-        this.ymapObserver = (event, transaction) => this.handleYmapChange(event, transaction);
-        this.ymap.observe(this.ymapObserver);
+        this.ytextObserver = (event, transaction) => this.handleYtextChange(event, transaction);
+        this.ytext.observe(this.ytextObserver);
 
-        console.log('[DrawioYjsAdapter] Y.Map observer attached');
+        console.log('[DrawioYjsAdapter] Y.Text observer attached');
 
         this.setupAwarenessHandlers();
 
         this.isInitialized = true;
+    }
+
+    private isValidXml(xml: string): boolean {
+        const doc = new DOMParser().parseFromString(xml, 'application/xml');
+        return !doc.querySelector('parsererror');
     }
 
     private handleDrawioMessage(event: MessageEvent): void {
@@ -342,21 +350,21 @@ export class DrawioYjsAdapter {
         if (!this.pendingXml) return;
 
         try {
-            const hasContent = this.ymap.has('xml');
-            console.log('[DrawioYjsAdapter] Y.Map has existing content:', hasContent);
+            const hasContent = this.ytext.length > 0;
+            console.log('[DrawioYjsAdapter] Y.Text has existing content:', hasContent);
 
             if (!hasContent) {
                 console.log('[DrawioYjsAdapter] Y.Doc is empty, initializing from XML');
                 this.ignoreNextObserverCall = true;
                 this.doc.transact(() => {
                     this.isLocalUpdate = true;
-                    this.ymap.set('xml', this.pendingXml!);
+                    this.ytext.insert(0, this.pendingXml!);
                     this.ymap.set('timestamp', Date.now());
                     this.isLocalUpdate = false;
                 });
             }
 
-            const xmlToSend = (this.ymap.get('xml') as string) || this.pendingXml;
+            const xmlToSend = this.ytext.length > 0 ? this.ytext.toString() : this.pendingXml;
             console.log('[DrawioYjsAdapter] Sending initial XML to Draw.io, length:', xmlToSend.length);
 
             this.sendToDrawio({
@@ -371,6 +379,38 @@ export class DrawioYjsAdapter {
         }
     }
 
+    private applyStringPatch(next: string): boolean {
+        const prev = this.ytext.toString();
+        if (prev === next) return false;
+
+        let start = 0;
+        const prevLen = prev.length;
+        const nextLen = next.length;
+        const minLen = Math.min(prevLen, nextLen);
+
+        while (start < minLen && prev.charCodeAt(start) === next.charCodeAt(start)) start++;
+
+        let endPrev = prevLen;
+        let endNext = nextLen;
+
+        while (
+            endPrev > start &&
+            endNext > start &&
+            prev.charCodeAt(endPrev - 1) === next.charCodeAt(endNext - 1)
+        ) {
+            endPrev--;
+            endNext--;
+        }
+
+        const deleteCount = endPrev - start;
+        const insertText = next.slice(start, endNext);
+
+        if (deleteCount > 0) this.ytext.delete(start, deleteCount);
+        if (insertText) this.ytext.insert(start, insertText);
+
+        return true;
+    }
+
     private handleDrawioSave(xml: string): void {
         if (!xml) {
             console.warn('[DrawioYjsAdapter] Received empty XML from Draw.io');
@@ -378,10 +418,17 @@ export class DrawioYjsAdapter {
         }
 
         try {
-            const currentXml = this.ymap.get('xml') as string;
+            const currentXml = this.ytext.toString();
             const xmlChanged = currentXml !== xml;
 
-            console.log('[DrawioYjsAdapter] Draw.io save - XML changed:', xmlChanged, 'Current length:', currentXml?.length, 'New length:', xml.length);
+            console.log(
+                '[DrawioYjsAdapter] Draw.io save - XML changed:',
+                xmlChanged,
+                'Current length:',
+                currentXml?.length,
+                'New length:',
+                xml.length
+            );
 
             if (xmlChanged) {
                 this.updateCounter++;
@@ -389,7 +436,12 @@ export class DrawioYjsAdapter {
 
                 this.doc.transact(() => {
                     this.isLocalUpdate = true;
-                    this.ymap.set('xml', xml);
+                    if (this.isValidXml(xml)) {
+                        this.lastValidXml = xml;
+                        this.applyStringPatch(xml);
+                    } else if (this.lastValidXml) {
+                        this.sendToDrawio({ action: 'load', xml: this.lastValidXml });
+                    }
                     this.ymap.set('timestamp', Date.now());
                     this.ymap.set('updateCounter', this.updateCounter);
                     this.isLocalUpdate = false;
@@ -408,7 +460,7 @@ export class DrawioYjsAdapter {
         }
     }
 
-    private handleYmapChange(event: Y.YMapEvent<any>, transaction: Y.Transaction): void {
+    private handleYtextChange(_event: Y.YTextEvent, transaction: Y.Transaction): void {
         // Skip local changes (they originate from this tab, e.g. draw.io save/autosave)
         if (transaction.local) {
             console.log('[DrawioYjsAdapter] Skipping local transaction (prevents echo-load)');
@@ -418,7 +470,7 @@ export class DrawioYjsAdapter {
             this.ignoreNextObserverCall = false;
             return;
         }
-        const xml = this.ymap.get('xml') as string;
+        const xml = this.ytext.toString();
         if (!xml) return;
         this.sendToDrawio({ action: 'merge', xml });
         this.onContentChange?.(xml);
@@ -442,7 +494,12 @@ export class DrawioYjsAdapter {
                 }
             });
 
-            console.log('[DrawioYjsAdapter] Awareness update - local client:', this.awareness!.clientID, 'remote collaborators:', remoteCount);
+            console.log(
+                '[DrawioYjsAdapter] Awareness update - local client:',
+                this.awareness!.clientID,
+                'remote collaborators:',
+                remoteCount
+            );
         });
     }
 
@@ -494,9 +551,9 @@ export class DrawioYjsAdapter {
             this.messageHandler = null;
         }
 
-        if (this.ymapObserver) {
-            this.ymap.unobserve(this.ymapObserver);
-            this.ymapObserver = null;
+        if (this.ytextObserver) {
+            this.ytext.unobserve(this.ytextObserver);
+            this.ytextObserver = null;
         }
 
         if (this.cursorUpdateInterval) {
