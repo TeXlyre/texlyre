@@ -11,6 +11,7 @@ import {
     PageIcon,
     ScrollIcon,
     FitToWidthIcon,
+    FitToHeightIcon,
     ZoomInIcon,
     ZoomOutIcon,
     ExpandIcon,
@@ -808,9 +809,9 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                             <button
                                 onClick={handleFitToggle}
                                 className="toolbarButton"
-                                title={fitMode === 'fit-width' ? t('Fit to Width') : t('Fit to Height')}
+                                title={fitMode === 'fit-width' ? t('Fit to Height') : t('Fit to Width')}
                                 disabled={isLoading}>
-                                <FitToWidthIcon />
+                                {fitMode === 'fit-width' ? <FitToWidthIcon /> : <FitToHeightIcon />}
                             </button>
 
                             <button

@@ -482,9 +482,29 @@ export const FitToWidthIcon: React.FC = () => (
 		strokeLinecap="round"
 		strokeLinejoin="round"
 	>
-		<rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-		<path d="M9 9h6v6H9z" />
-		<path d="M16 3v4M21 8h-4M16 21v-4M21 16h-4M8 3v4M3 8h4M8 21v-4M3 16h4" />
+		<polyline points="4 9 2 12 4 15" />
+		<polyline points="20 9 22 12 20 15" />
+		<line x1="2" y1="12" x2="22" y2="12" />
+		<rect x="6" y="4" width="12" height="16" rx="2" ry="2" />
+	</svg>
+);
+
+export const FitToHeightIcon: React.FC = () => (
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width="16"
+		height="16"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="2"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+	>
+		<polyline points="9 4 12 2 15 4" />
+		<polyline points="9 20 12 22 15 20" />
+		<line x1="12" y1="2" x2="12" y2="22" />
+		<rect x="4" y="6" width="16" height="12" rx="2" ry="2" />
 	</svg>
 );
 
