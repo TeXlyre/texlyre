@@ -244,6 +244,11 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     }, [scale]);
 
     useEffect(() => {
+        if (scrollView) return;
+        renderVisiblePages();
+    }, [currentPage, scale, scrollView]);
+
+    useEffect(() => {
         if (!scrollView) return;
         renderVisiblePages();
     }, [renderRange, scrollView]);
