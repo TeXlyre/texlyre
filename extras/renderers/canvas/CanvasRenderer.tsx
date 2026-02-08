@@ -11,6 +11,7 @@ import {
     PageIcon,
     ScrollIcon,
     FitToWidthIcon,
+    FitToHeightIcon,
     ZoomInIcon,
     ZoomOutIcon,
     ExpandIcon,
@@ -242,6 +243,11 @@ const CanvasRenderer: React.FC<RendererProps> = ({
             }
         }
     }, [scale]);
+
+    useEffect(() => {
+        if (scrollView) return;
+        renderVisiblePages();
+    }, [currentPage, scale, scrollView]);
 
     useEffect(() => {
         if (!scrollView) return;
@@ -551,8 +557,9 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     }, [numPages, currentPage, pageInput, scrollToPage]);
 
     const computeFitScale = useCallback((mode: 'fit-width' | 'fit-height') => {
-        const containerWidth = contentElRef.current?.clientWidth || 800;
-        const containerHeight = contentElRef.current?.clientHeight || 600;
+        const container = scrollContainerRef.current || contentElRef.current;
+        const containerWidth = container?.clientWidth || 800;
+        const containerHeight = container?.clientHeight || 600;
         const meta = pageMetadata.get(currentPage);
         const pageWidth = meta?.width || 595;
         const pageHeight = meta?.height || 842;
@@ -802,9 +809,9 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                             <button
                                 onClick={handleFitToggle}
                                 className="toolbarButton"
-                                title={fitMode === 'fit-width' ? t('Fit to Width') : t('Fit to Height')}
+                                title={fitMode === 'fit-width' ? t('Fit to Height') : t('Fit to Width')}
                                 disabled={isLoading}>
-                                <FitToWidthIcon />
+                                {fitMode === 'fit-width' ? <FitToWidthIcon /> : <FitToHeightIcon />}
                             </button>
 
                             <button
