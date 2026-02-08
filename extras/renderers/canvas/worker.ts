@@ -137,10 +137,12 @@ self.onmessage = (e: MessageEvent<ParseMessage>) => {
                     const pageNumber = index + 1;
                     const yOffset = extractYOffset(pageGroup.transform);
 
-                    let pageHeight = svgHeight;
+                    let pageHeight: number;
                     if (index < pageGroups.length - 1) {
                         const nextYOffset = extractYOffset(pageGroups[index + 1].transform);
                         pageHeight = Math.abs(nextYOffset - yOffset);
+                    } else {
+                        pageHeight = svgHeight - yOffset;
                     }
 
                     const pageSvg = `<svg ${attrsString} width="${svgWidth}" height="${pageHeight}" viewBox="0 0 ${svgWidth} ${pageHeight}">
