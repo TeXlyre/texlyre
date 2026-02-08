@@ -67,6 +67,9 @@ const PdfRenderer: React.FC<RendererProps> = ({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isTrackingEnabledRef = useRef<boolean>(true);
 
+  const pendingRestorePageRef = useRef<number | null>(null);
+  const loadedPagesRef = useRef<Set<number>>(new Set());
+
   const BUFFER_PAGES = 2;
   const UPDATE_THROTTLE = 100;
   const HYSTERESIS_THRESHOLD = 0.2;
@@ -88,11 +91,19 @@ const PdfRenderer: React.FC<RendererProps> = ({
       subcategory: 'PDF Viewer',
       defaultValue: false
     });
+
+    registerProperty({
+      id: 'pdf-renderer-current-page',
+      category: 'UI',
+      subcategory: 'PDF Viewer',
+      defaultValue: 1
+    });
   }, [registerProperty]);
 
   useEffect(() => {
     const storedZoom = getProperty('pdf-renderer-zoom');
     const storedScrollView = getProperty('pdf-renderer-scroll-view');
+    const storedPage = getProperty('pdf-renderer-current-page');
 
     if (storedZoom !== undefined) {
       setScale(Number(storedZoom));
@@ -100,6 +111,10 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
     if (storedScrollView !== undefined) {
       setScrollView(Boolean(storedScrollView));
+    }
+
+    if (storedPage !== undefined && Number(storedPage) >= 1) {
+      pendingRestorePageRef.current = Number(storedPage);
     }
   }, [getProperty]);
 
@@ -204,9 +219,10 @@ const PdfRenderer: React.FC<RendererProps> = ({
         lastStablePageRef.current = closestPage;
         setCurrentPage(closestPage);
         setPageInput(String(closestPage));
+        setProperty('pdf-renderer-current-page', closestPage);
       }
     }
-  }, [scrollView, numPages, isEditingPageInput, getPageHeight]);
+  }, [scrollView, numPages, isEditingPageInput, getPageHeight, setProperty]);
 
   const calculateVisibleRange = useCallback(() => {
     if (!scrollView || !scrollContainerRef.current) return;
@@ -291,14 +307,31 @@ const PdfRenderer: React.FC<RendererProps> = ({
     return () => clearTimeout(timer);
   }, [scale, scrollView, updateCurrentPageFromScroll]);
 
-  const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
-    setNumPages(numPages);
-    setCurrentPage(1);
-    lastStablePageRef.current = 1;
-    if (!isEditingPageInput) setPageInput('1');
+  const onDocumentLoadSuccess = useCallback(({ numPages: loadedNumPages }: { numPages: number }) => {
+    setNumPages(loadedNumPages);
+    loadedPagesRef.current.clear();
+
+    const pendingPage = pendingRestorePageRef.current;
+    const restorePage = (pendingPage && pendingPage >= 1 && pendingPage <= loadedNumPages)
+      ? pendingPage
+      : 1;
+
+    pendingRestorePageRef.current = null;
+
+    lastStablePageRef.current = restorePage;
+    setCurrentPage(restorePage);
+    if (!isEditingPageInput) setPageInput(String(restorePage));
     setIsLoading(false);
     setError(null);
-  }, [isEditingPageInput]);
+
+    if (scrollView && restorePage > 1) {
+      pendingRestorePageRef.current = restorePage;
+      setRenderRange({
+        start: Math.max(1, restorePage - BUFFER_PAGES),
+        end: Math.min(loadedNumPages, restorePage + BUFFER_PAGES)
+      });
+    }
+  }, [isEditingPageInput, scrollView]);
 
   const onDocumentLoadError = useCallback((error: Error) => {
     setError(`Failed to load PDF: ${error.message}`);
@@ -311,23 +344,46 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
     pageWidths.current.set(pageNum, viewport.width);
     pageHeights.current.set(pageNum, viewport.height);
-  }, []);
+    loadedPagesRef.current.add(pageNum);
+
+    const pendingPage = pendingRestorePageRef.current;
+    if (pendingPage && pageNum === pendingPage && scrollView) {
+      pendingRestorePageRef.current = null;
+
+      isTrackingEnabledRef.current = false;
+
+      // Use a rAF so the DOM has the rendered page dimensions.
+      requestAnimationFrame(() => {
+        scrollToPage(pendingPage);
+        // Re-enable tracking after the scroll settles.
+        setTimeout(() => {
+          isTrackingEnabledRef.current = true;
+          calculateVisibleRange();
+        }, 300);
+      });
+    }
+  }, [scrollView, scrollToPage, calculateVisibleRange]);
+
+  const persistCurrentPage = useCallback((page: number) => {
+    setCurrentPage(page);
+    setProperty('pdf-renderer-current-page', page);
+  }, [setProperty]);
 
   const handlePreviousPage = useCallback(() => {
     const targetPage = Math.max(currentPage - 1, 1);
     lastStablePageRef.current = targetPage;
-    setCurrentPage(targetPage);
+    persistCurrentPage(targetPage);
     setPageInput(String(targetPage));
     scrollToPage(targetPage);
-  }, [currentPage, scrollToPage]);
+  }, [currentPage, scrollToPage, persistCurrentPage]);
 
   const handleNextPage = useCallback(() => {
     const targetPage = Math.min(currentPage + 1, numPages);
     lastStablePageRef.current = targetPage;
-    setCurrentPage(targetPage);
+    persistCurrentPage(targetPage);
     setPageInput(String(targetPage));
     scrollToPage(targetPage);
-  }, [currentPage, numPages, scrollToPage]);
+  }, [currentPage, numPages, scrollToPage, persistCurrentPage]);
 
   const handlePageInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setPageInput(event.target.value);
@@ -338,7 +394,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
       const pageNum = Number.parseInt(pageInput, 10);
       if (!Number.isNaN(pageNum) && pageNum >= 1 && pageNum <= numPages) {
         lastStablePageRef.current = pageNum;
-        setCurrentPage(pageNum);
+        persistCurrentPage(pageNum);
         setIsEditingPageInput(false);
         (event.target as HTMLInputElement).blur();
         scrollToPage(pageNum);
@@ -348,7 +404,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
         (event.target as HTMLInputElement).blur();
       }
     }
-  }, [numPages, currentPage, pageInput, scrollToPage]);
+  }, [numPages, currentPage, pageInput, scrollToPage, persistCurrentPage]);
 
   const computeFitScale = useCallback((mode: 'fit-width' | 'fit-height') => {
     const container = scrollContainerRef.current || contentElRef.current;
