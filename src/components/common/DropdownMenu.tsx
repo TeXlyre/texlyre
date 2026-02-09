@@ -1,4 +1,4 @@
-// src/components/editor/DropdownMenu.tsx
+// src/components/common/DropdownMenu.tsx
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -8,6 +8,10 @@ interface DropdownMenuProps {
 	targetRef: React.RefObject<HTMLElement>;
 	isOpen: boolean;
 	onClose: () => void;
+	mode?: 'dropdown' | 'submenu';
+	width?: number;
+	maxHeight?: number;
+	className?: string;
 }
 
 const DropdownMenu: React.FC<DropdownMenuProps> = ({
@@ -15,6 +19,10 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
 	targetRef,
 	isOpen,
 	onClose,
+	mode = 'dropdown',
+	width = 200,
+	maxHeight = 430,
+	className = '',
 }) => {
 	const [position, setPosition] = useState({ top: 0, left: 0 });
 	const dropdownRef = useRef<HTMLDivElement>(null);
@@ -23,32 +31,35 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
 	useEffect(() => {
 		if (!isOpen || !targetRef.current || positionCalculated.current) return;
 
-		const rect = targetRef.current.getBoundingClientRect();
+		const calculatePosition = () => {
+			const rect = targetRef.current!.getBoundingClientRect();
+			const viewportWidth = window.innerWidth;
+			const viewportHeight = window.innerHeight;
+			const dropdownWidth = width;
+			const dropdownHeight = maxHeight;
 
-		let top = rect.bottom + 4;
-		let left = rect.right - 200;
+			let top = rect.bottom + 4;
+			let left = mode === 'submenu' ? rect.right + 4 : rect.right - width;
 
-		const viewportWidth = window.innerWidth;
-		const viewportHeight = window.innerHeight;
-		const dropdownWidth = 200;
-		const dropdownHeight = 250;
-
-		if (left < 4) {
-			left = 4;
-		} else if (left + dropdownWidth > viewportWidth - 4) {
-			left = viewportWidth - dropdownWidth - 4;
-		}
-
-		if (top + dropdownHeight > viewportHeight - 4) {
-			top = rect.top - dropdownHeight - 4;
-			if (top < 4) {
-				top = 4;
+			if (left < 4) {
+				left = 4;
+			} else if (left + dropdownWidth > viewportWidth - 4) {
+				left = mode === 'submenu' ? rect.left - dropdownWidth - 4 : viewportWidth - dropdownWidth - 4;
 			}
-		}
 
-		setPosition({ top, left });
-		positionCalculated.current = true;
-	}, [isOpen, targetRef]);
+			if (top + dropdownHeight > viewportHeight - 4) {
+				top = rect.top - dropdownHeight - 4;
+				if (top < 4) {
+					top = 4;
+				}
+			}
+
+			setPosition({ top, left });
+			positionCalculated.current = true;
+		};
+
+		requestAnimationFrame(calculatePosition);
+	}, [isOpen, targetRef, mode, width, maxHeight]);
 
 	useEffect(() => {
 		if (!isOpen) {
@@ -60,21 +71,17 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
 		if (!isOpen) return;
 
 		const handleClickOutside = (event: MouseEvent) => {
-			// Don't close if clicking inside the dropdown
 			if (dropdownRef.current?.contains(event.target as Node)) {
 				return;
 			}
 
-			// Don't close if clicking the trigger button (let the button handle it)
 			if (targetRef.current?.contains(event.target as Node)) {
 				return;
 			}
 
-			// Close for any other clicks
 			onClose();
 		};
 
-		// Use a slight delay to ensure the dropdown is fully rendered
 		const timeoutId = setTimeout(() => {
 			document.addEventListener('mousedown', handleClickOutside, true);
 		}, 10);
@@ -85,21 +92,21 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
 		};
 	}, [isOpen, onClose, targetRef]);
 
-	if (!isOpen) return null;
+	if (!isOpen || !positionCalculated.current) return null;
 
 	return createPortal(
 		<div
 			ref={dropdownRef}
-			className="dropdown-menu"
+			className={`dropdown-menu ${className}`}
 			style={{
 				position: 'fixed',
 				top: `${position.top}px`,
 				left: `${position.left}px`,
 				zIndex: 1001,
-				minWidth: '200px',
-			}}
-			// Remove onClick stopPropagation to allow clicks to bubble
-		>
+				minWidth: `${width}px`,
+				maxHeight: `${maxHeight}px`,
+				visibility: positionCalculated.current ? 'visible' : 'hidden',
+			}}>
 			{children}
 		</div>,
 		document.body,

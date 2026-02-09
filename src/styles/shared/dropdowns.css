@@ -1,11 +1,11 @@
 .dropdown-menu {
-	position: absolute;
+	position: fixed;
 	background-color: var(--pico-background);
 	border: 1px solid var(--accent-border);
 	border-radius: var(--radius-sm);
 	box-shadow: var(--shadow-md);
 	z-index: var(--z-dropdown);
-	overflow: hidden;
+	overflow-y: auto;
 	min-width: 180px;
 }
 
@@ -50,19 +50,30 @@
 	padding: var(--space-sm) 0;
 }
 
+.dropdown-section:not(:last-child) {
+	border-bottom: 1px solid var(--accent-border);
+}
+
 .dropdown-title {
+	padding: var(--space-sm) var(--space-md);
+	font-size: 0.75rem;
+	font-weight: 600;
 	color: var(--text-secondary-color);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
 	margin-bottom: var(--space-xs);
 }
 
 .dropdown-label {
-	font-size: 0.8rem;
-	color: var(--text-secondary-color);
-	margin-bottom: var(--space-xs);
+	flex: 1;
+	font-size: 0.9rem;
+	text-align: left;
 }
 
 .dropdown-value {
 	font-size: 0.8rem;
+	color: var(--text-secondary-color);
+	font-family: monospace;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;

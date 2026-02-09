@@ -1,4 +1,5 @@
 // extras/viewers/image/ImageViewerPlugin.ts
+import { t } from '@/i18n';
 import type { ViewerPlugin } from '@/plugins/PluginInterface';
 import CombinedImageViewer from './CombinedImageViewer';
 import { getImageViewerSettings } from './settings';
@@ -25,7 +26,7 @@ const IMAGE_MIMETYPES = [
 	'image/x-icon',
 ];
 
-export const PLUGIN_NAME = 'Image Viewer';
+export const PLUGIN_NAME = t('Image Viewer');
 export const PLUGIN_VERSION = '0.1.0';
 
 const imageViewerPlugin: ViewerPlugin = {
@@ -46,6 +47,11 @@ const imageViewerPlugin: ViewerPlugin = {
 		const extension = fileName.split('.').pop()?.toLowerCase();
 		return extension ? IMAGE_EXTENSIONS.includes(extension) : false;
 	},
+
+	getSupportedExtensions: () => IMAGE_EXTENSIONS.map((ext, idx) => ({
+		extension: ext,
+		mimeType: IMAGE_MIMETYPES[idx]
+	})),
 
 	renderViewer: CombinedImageViewer,
 };
