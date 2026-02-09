@@ -15,6 +15,7 @@ const bibtexViewerPlugin: ViewerPlugin = {
 	name: PLUGIN_NAME,
 	version: PLUGIN_VERSION,
 	type: 'viewer',
+	isEditable: true,
 	icon: BibIcon,
 	get settings() {
 		return getBibtexViewerSettings();

@@ -15,6 +15,7 @@ const drawioViewerPlugin: ViewerPlugin = {
     name: PLUGIN_NAME,
     version: PLUGIN_VERSION,
     type: 'viewer',
+    isEditable: true,
     icon: DrawioIcon,
     get settings() {
         return getDrawioViewerSettings();
