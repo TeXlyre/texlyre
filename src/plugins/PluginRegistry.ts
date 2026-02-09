@@ -202,6 +202,12 @@ class PluginRegistryManager {
 		return null;
 	}
 
+	getEditableViewersWithExtensions(): ViewerPlugin[] {
+		return this.registry.viewers.filter(
+			v => v.isEditable && v.getSupportedExtensions
+		);
+	}
+
 	getCollaborativeViewers(): CollaborativeViewerPlugin[] {
 		return this.registry.collaborativeViewers;
 	}

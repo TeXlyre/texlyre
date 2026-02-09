@@ -1,4 +1,5 @@
 // extras/viewers/pdf/PdfViewerPlugin.ts
+import { t } from '@/i18n';
 import type { ViewerPlugin } from '@/plugins/PluginInterface';
 import PdfViewer from './PdfViewer';
 import { getPdfViewerSettings } from './settings';
@@ -7,7 +8,7 @@ import { PdfIcon } from './Icon'
 const PDF_EXTENSIONS = ['pdf'];
 const PDF_MIMETYPES = ['application/pdf'];
 
-export const PLUGIN_NAME = 'PDF.js Viewer (pdfjs-dist 5.3.31)';
+export const PLUGIN_NAME = t('PDF.js Viewer') + ' (pdfjs-dist 5.3.31)';
 export const PLUGIN_VERSION = '0.1.0';
 
 const pdfViewerPlugin: ViewerPlugin = {
@@ -28,6 +29,11 @@ const pdfViewerPlugin: ViewerPlugin = {
 		const extension = fileName.split('.').pop()?.toLowerCase();
 		return extension ? PDF_EXTENSIONS.includes(extension) : false;
 	},
+
+	getSupportedExtensions: () => PDF_EXTENSIONS.map((ext, idx) => ({
+		extension: ext,
+		mimeType: PDF_MIMETYPES[idx]
+	})),
 
 	renderViewer: PdfViewer,
 };

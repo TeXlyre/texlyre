@@ -18,7 +18,7 @@ import {
 } from
   '../common/Icons.tsx';
 import Modal from '../common/Modal.tsx';
-import DropdownMenu from './DropdownMenu';
+import DropdownMenu from '../common/DropdownMenu.tsx';
 
 interface FileViewerProps {
   documents: Document[];

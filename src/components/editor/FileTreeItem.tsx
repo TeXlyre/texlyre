@@ -26,7 +26,7 @@ import {
   UploadIcon
 } from
   '../common/Icons';
-import DropdownMenu from './DropdownMenu';
+import DropdownMenu from '../common/DropdownMenu';
 
 interface FileTreeItemProps {
   node: FileNode;

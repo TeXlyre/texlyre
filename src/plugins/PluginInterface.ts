@@ -12,11 +12,19 @@ export interface Plugin {
 	settings?: Setting[];
 }
 
+export interface SupportedExtension {
+	extension: string;
+	mimeType?: string;
+	fileLabel?: string;
+}
+
 // Viewers
 export interface ViewerPlugin extends Plugin {
 	type: 'viewer';
+	isEditable?: boolean;
 	icon?: React.ComponentType;
 	canHandle: (fileType: string, mimeType?: string) => boolean;
+	getSupportedExtensions?: () => SupportedExtension[];
 	renderViewer: React.ComponentType<ViewerProps>;
 }
 

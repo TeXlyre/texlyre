@@ -16,6 +16,7 @@ import {
   UploadIcon
 } from
   '../common/Icons.tsx';
+import FileCreationMenu from './FileCreationMenu';
 import FileOperationsModal from './FileOperationsModal';
 import FileTreeItem from './FileTreeItem';
 import ZipHandlingModal from './ZipHandlingModal';
@@ -93,6 +94,11 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const menuRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  const [showFileCreationMenu, setShowFileCreationMenu] = useState(false);
+  const [fileCreationTrigger, setFileCreationTrigger] = useState<HTMLElement | null>(null);
+  const [fileCreationParentPath, setFileCreationParentPath] = useState<string>('/');
+  const fileCreationButtonRef = useRef<HTMLButtonElement>(null);
 
   const [renamingFileId, setRenamingFileId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -225,11 +231,17 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     setActiveMenu(null);
   };
 
-  const handleStartCreateFile = (parentPath = '/') => {
-    const extension = projectType === 'typst' ? '.typ' : '.tex';
-    setCreatingNewItem({ type: 'file', parentPath });
-    setNewItemName(`new_file${extension}`);
+  const handleStartCreateFile = (parentPath = '/', triggerElement?: HTMLElement) => {
+    setFileCreationParentPath(parentPath);
+    setFileCreationTrigger(triggerElement || fileCreationButtonRef.current);
+    setShowFileCreationMenu(true);
     setActiveMenu(null);
+  };
+
+  const handleCreateFileWithTemplate = (fileName: string, extension: string) => {
+    setCreatingNewItem({ type: 'file', parentPath: fileCreationParentPath });
+    setNewItemName(fileName);
+    setShowFileCreationMenu(false);
   };
 
   const expandAllParentDirectories = (dirPath: string) => {
@@ -920,10 +932,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
 
             <button
+              ref={fileCreationButtonRef}
               className="action-btn"
               title={t('New File')}
-              onClick={() => handleStartCreateFile('/')}>
-
+              onClick={(e) => handleStartCreateFile('/', e.currentTarget)}>
               <FilePlusIcon />
             </button>
 
@@ -935,6 +947,16 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
               <FolderPlusIcon />
             </button>
           </div>
+
+          <FileCreationMenu
+            isOpen={showFileCreationMenu}
+            onClose={() => setShowFileCreationMenu(false)}
+            onCreate={handleCreateFileWithTemplate}
+            triggerElement={fileCreationTrigger}
+            projectType={projectType}
+            parentPath={fileCreationParentPath}
+            mode="dropdown" />
+
         </div>
 
         <div className="file-tree">
