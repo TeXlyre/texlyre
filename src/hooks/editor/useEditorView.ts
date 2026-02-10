@@ -53,6 +53,7 @@ import {
     setCurrentFilePathInLSP,
 } from '../../extensions/codemirror/LSPExtension';
 import { createToolbarExtension } from '../../extensions/codemirror/ToolbarExtension';
+import { createMathLiveExtension } from '../../extensions/codemirror/MathLiveExtension';
 import { createPasteExtension } from '../../extensions/codemirror/PasteExtension';
 import { createListingsExtension } from '../../extensions/codemirror/ListingsExtension';
 import {
@@ -481,6 +482,15 @@ export const useEditorView = (
 
                 if (toolbarVisible) {
                     extensions.push(createToolbarExtension(fileType, undoManagerRef.current || undefined));
+                }
+
+                if (editorSettings.mathLiveEnabled) {
+                    extensions.push(
+                        createMathLiveExtension(
+                            fileType as 'latex' | 'typst',
+                            editorSettings.mathLivePreviewMode
+                        )
+                    );
                 }
 
                 completionSources.push(enhancedCompletionSource);

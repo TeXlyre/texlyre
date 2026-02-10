@@ -681,6 +681,18 @@
 	visibility: hidden !important;
 }
 
+math-field {
+	font-family: inherit;
+}
+
+.cm-math-preview:hover {
+	background-color: var(--pico-primary-focus);
+}
+
+.cm-math-editor {
+	z-index: 1000;
+}
+
 @media (max-width: 768px) {
 	/* .codemirror-editor-container .cm-editor {
 		font-size: max(20px, var(--editor-font-size, 18px)) !important;

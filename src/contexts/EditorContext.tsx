@@ -88,7 +88,9 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       'editor-auto-save-delay',
       'editor-theme-highlights',
       'editor-vim-mode',
-      'editor-spell-check'
+      'editor-spell-check',
+      'editor-mathlive-enabled',
+      'editor-mathlive-preview-mode'
     ]);
 
     const initialFontSize =
@@ -118,6 +120,12 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
     const initialSpellCheck =
       (batchedSettings['editor-spell-check'] as boolean) ??
       defaultEditorSettings.spellCheck;
+    const initialMathLiveEnabled =
+      (batchedSettings['editor-mathlive-enabled'] as boolean) ??
+      defaultEditorSettings.mathLiveEnabled;
+    const initialMathLivePreviewMode =
+      (batchedSettings['editor-mathlive-preview-mode'] as 'hover' | 'always' | 'never') ??
+      defaultEditorSettings.mathLivePreviewMode;
 
     registerSetting({
       id: 'editor-font-family',
@@ -273,6 +281,37 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       defaultValue: initialSpellCheck,
       onChange: (value) => {
         updateEditorSetting('spellCheck', value as boolean);
+      }
+    });
+
+    registerSetting({
+      id: 'editor-mathlive-enabled',
+      category: t("Viewers"),
+      subcategory: t("Text Editor"),
+      type: 'checkbox',
+      label: t("Enable MathLive"),
+      description: t("Enable interactive math editing with MathLive"),
+      defaultValue: initialMathLiveEnabled,
+      onChange: (value) => {
+        updateEditorSetting('mathLiveEnabled', value as boolean);
+      }
+    });
+
+    registerSetting({
+      id: 'editor-mathlive-preview-mode',
+      category: t("Viewers"),
+      subcategory: t("Text Editor"),
+      type: 'select',
+      label: t("Math preview mode"),
+      description: t("When to show rendered math equations"),
+      defaultValue: initialMathLivePreviewMode,
+      options: [
+        { label: t("On hover"), value: 'hover' },
+        { label: t("Always"), value: 'always' },
+        { label: t("Never"), value: 'never' }
+      ],
+      onChange: (value) => {
+        updateEditorSetting('mathLivePreviewMode', value as 'hover' | 'always' | 'never');
       }
     });
   }, [registerSetting, batchGetSettings]);

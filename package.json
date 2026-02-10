@@ -1,7 +1,7 @@
 {
 	"name": "texlyre",
 	"private": true,
-	"version": "0.5.14",
+	"version": "0.5.15",
 	"description": "A local-first LaTeX & Typst collaborative web editor ",
 	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
 	"license": "AGPL-3.0-or-later",
@@ -89,6 +89,7 @@
 		"jszip": "^3.10.1",
 		"lib0": "^0.2.42",
 		"lodash": "^4.17.21",
+		"mathlive": "^0.108.2",
 		"mime": "^4.0.1",
 		"nanoid": "^5.0.5",
 		"next": "^16.1.6",

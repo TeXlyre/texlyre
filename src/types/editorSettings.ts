@@ -19,6 +19,8 @@ export interface EditorSettings {
 	highlightTheme: 'auto' | 'light' | 'dark';
 	vimMode: boolean;
 	spellCheck: boolean;
+	mathLiveEnabled: boolean;
+	mathLivePreviewMode: 'hover' | 'always' | 'never';
 }
 
 export const defaultEditorSettings: EditorSettings = {
@@ -31,6 +33,8 @@ export const defaultEditorSettings: EditorSettings = {
 	highlightTheme: 'auto',
 	vimMode: false,
 	spellCheck: true,
+	mathLiveEnabled: true,
+	mathLivePreviewMode: 'hover',
 };
 
 export const fontSizeMap: Record<FontSize, string> = {
