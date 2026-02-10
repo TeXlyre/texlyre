@@ -52,6 +52,7 @@ const config: TexlyreConfig = {
                 bibtexViewerTidyOptions: 'standard',
                 collabAutoReconnect: false,
                 collabAwarenessTimeout: 30,
+                collabProviderType: 'webrtc',
                 collabSignalingServers: 'wss://ywebrtc.texlyre.org',
                 editorAutoSaveDelay: 1000,
                 editorAutoSaveEnable: true,

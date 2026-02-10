@@ -21,7 +21,7 @@ import {
   fontFamilyMap,
   fontSizeMap
 } from '../types/editorSettings';
-import type { CollabConnectOptions } from '../types/collab';
+import type { CollabConnectOptions, CollabProviderType } from '../types/collab';
 
 interface EditorContextType {
   editorSettings: EditorSettings;
@@ -308,23 +308,30 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
   );
 
   const getCollabOptions = useCallback((): CollabConnectOptions | null => {
+    const providerTypeSetting = getSetting('collab-provider-type');
     const signalingServersSetting = getSetting('collab-signaling-servers');
+    const websocketServerSetting = getSetting('collab-websocket-server');
     const awarenessTimeoutSetting = getSetting('collab-awareness-timeout');
     const autoReconnectSetting = getSetting('collab-auto-reconnect');
 
-    // Return null if settings are not yet available
-    if (!signalingServersSetting || !awarenessTimeoutSetting || !autoReconnectSetting) {
+    if (!awarenessTimeoutSetting || !autoReconnectSetting) {
       return null;
     }
 
-    const signalingServers = signalingServersSetting.value as string;
+    const providerType = (providerTypeSetting?.value as CollabProviderType) ?? 'webrtc';
+    const signalingServers = (signalingServersSetting?.value as string) ?? '';
+    const websocketServer = (websocketServerSetting?.value as string) ?? '';
     const awarenessTimeout = awarenessTimeoutSetting.value as number;
     const autoReconnect = autoReconnectSetting.value as boolean;
 
-    const serversToUse = signalingServers.split(',').map((s) => s.trim());
+    const serversToUse = signalingServers.length > 0
+      ? signalingServers.split(',').map((s) => s.trim())
+      : undefined;
 
     return {
+      providerType,
       signalingServers: serversToUse,
+      websocketServer,
       autoReconnect,
       awarenessTimeout: awarenessTimeout * 1000
     };

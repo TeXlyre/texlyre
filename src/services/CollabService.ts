@@ -1,13 +1,12 @@
+// src/services/CollabService.ts
 import { IndexeddbPersistence } from 'y-indexeddb';
 import { removeAwarenessStates } from 'y-protocols/awareness';
-// src/services/CollabService.ts
-import type { WebrtcProvider } from 'y-webrtc';
 import * as Y from 'yjs';
 
-import * as random from 'lib0/random';
-import { collabWebrtc } from '../extensions/yjs/CollabWebrtc.ts';
+import { collabWebrtc } from '../extensions/yjs/CollabWebrtc';
+import { collabWebsocket } from '../extensions/yjs/CollabWebsocket';
 import type { User } from '../types/auth';
-import type { CollabConnectOptions, DocContainer } from '../types/collab';
+import type { CollabConnectOptions, CollabProvider, CollabProviderType, DocContainer } from '../types/collab';
 import type { YjsDocUrl } from '../types/yjs';
 import { parseUrlFragments } from '../utils/urlUtils';
 import { offlineService } from './OfflineService';
@@ -20,7 +19,11 @@ interface OfflineDocContainer {
 	isOffline: true;
 }
 
-type AnyDocContainer = DocContainer | OfflineDocContainer;
+interface OnlineDocContainer extends DocContainer {
+	providerType: CollabProviderType;
+}
+
+type AnyDocContainer = OnlineDocContainer | OfflineDocContainer;
 
 class CollabService {
 	private docContainers: Map<string, AnyDocContainer> = new Map();
@@ -69,7 +72,7 @@ class CollabService {
 					validSignalingServers.push(serverUrl);
 				}
 			} catch (_e) {
-				// Invalid URL, skip it
+				// Invalid URL, skip
 			}
 		}
 
@@ -80,7 +83,7 @@ class CollabService {
 		docId: string,
 		collectionName: string,
 		options?: CollabConnectOptions,
-	): { doc: Y.Doc; provider: WebrtcProvider | null } {
+	): { doc: Y.Doc; provider: CollabProvider | null } {
 		const containerId = `${docId}-${collectionName}`;
 
 		if (this.docContainers.has(containerId)) {
@@ -139,7 +142,7 @@ class CollabService {
 		collectionName: string,
 		containerId: string,
 		options?: CollabConnectOptions,
-	): { doc: Y.Doc; provider: WebrtcProvider } {
+	): { doc: Y.Doc; provider: CollabProvider } {
 		const doc = new Y.Doc();
 		const dbName = `texlyre-project-${docId}`;
 		const persistenceName = `${dbName}-${collectionName}`;
@@ -147,18 +150,19 @@ class CollabService {
 
 		const persistence = new IndexeddbPersistence(persistenceName, doc);
 
-		let finalSignalingServers: string[] = [];
-		if (options?.signalingServers) {
-			finalSignalingServers = this.validateSignalingServers(options.signalingServers);
+		const providerType = options?.providerType ?? 'webrtc';
+		let provider: CollabProvider;
+
+		if (providerType === 'websocket') {
+			provider = this.createWebsocketProvider(roomName, doc, options);
+		} else {
+			provider = this.createWebrtcProvider(roomName, doc, options);
 		}
 
-		const provider = collabWebrtc.getProvider(roomName, doc, {
-			signaling: finalSignalingServers.length > 0 ? finalSignalingServers : undefined,
-		});
-
 		if (options?.autoReconnect) {
-			provider.on('status', (event: { connected: boolean }) => {
-				if (!event.connected) {
+			provider.on('status', (event: { connected?: boolean; status?: string }) => {
+				const isDisconnected = event.connected === false || event.status === 'disconnected';
+				if (isDisconnected) {
 					console.log(
 						`[CollabService] Connection lost for ${containerId}, attempting reconnect...`,
 					);
@@ -187,15 +191,44 @@ class CollabService {
 			});
 		}
 
-		const onlineContainer: DocContainer = {
+		const onlineContainer: OnlineDocContainer = {
 			doc,
 			persistence,
 			provider,
+			providerType,
 			refCount: 1,
 		};
 
 		this.docContainers.set(containerId, onlineContainer);
 		return { doc, provider };
+	}
+
+	private createWebrtcProvider(
+		roomName: string,
+		doc: Y.Doc,
+		options?: CollabConnectOptions,
+	): CollabProvider {
+		let finalSignalingServers: string[] = [];
+		if (options?.signalingServers) {
+			finalSignalingServers = this.validateSignalingServers(options.signalingServers);
+		}
+
+		return collabWebrtc.getProvider(roomName, doc, {
+			signaling: finalSignalingServers.length > 0 ? finalSignalingServers : undefined,
+		});
+	}
+
+	private createWebsocketProvider(
+		roomName: string,
+		doc: Y.Doc,
+		options?: CollabConnectOptions,
+	): CollabProvider {
+		const serverUrl = options?.websocketServer || 'ws://localhost:1234';
+
+		return collabWebsocket.getProvider(roomName, doc, {
+			serverUrl,
+			params: options?.websocketParams,
+		});
 	}
 
 	public setUserInfo(docId: string, collectionName: string, user: User): void {
@@ -240,7 +273,16 @@ class CollabService {
 			if ('provider' in container && container.provider) {
 				const roomName = `${docId}-${collectionName}`;
 				container.provider.disconnect();
-				collabWebrtc.releaseProvider(roomName);
+
+				if ('providerType' in container) {
+					if (container.providerType === 'websocket') {
+						collabWebsocket.releaseProvider(roomName);
+					} else {
+						collabWebrtc.releaseProvider(roomName);
+					}
+				} else {
+					collabWebrtc.releaseProvider(roomName);
+				}
 			}
 
 			container.persistence.destroy();
