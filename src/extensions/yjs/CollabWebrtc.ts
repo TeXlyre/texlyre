@@ -1,12 +1,9 @@
 // src/extensions/yjs/CollabWebrtc.ts
-import * as random from 'lib0/random';
 import { WebrtcProvider } from 'y-webrtc';
 import type * as Y from 'yjs';
 
-// Define an interface for the provider options that CollabService will pass
 interface WebrtcProviderOptions {
-	signaling?: string[]; // Array of signaling server URLs
-	// Add other WebrtcProvider options here if needed, e.g., peerCon?: RTCPeerConnectionConfig
+	signaling?: string[];
 }
 
 class WebrtcProviderRegistry {
@@ -14,9 +11,6 @@ class WebrtcProviderRegistry {
 		string,
 		{ provider: WebrtcProvider; refCount: number }
 	> = new Map();
-
-	// Removed getSignalingServers() as it's no longer needed here.
-
 	getProvider(
 		roomName: string,
 		doc: Y.Doc,

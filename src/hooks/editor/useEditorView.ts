@@ -34,7 +34,7 @@ import { latex, latexCompletionSource } from 'codemirror-lang-latex';
 import { typst } from 'codemirror-lang-typst';
 import { useEffect, useRef, useState } from 'react';
 import { yCollab } from 'y-codemirror.next';
-import type { WebrtcProvider } from 'y-webrtc';
+import type { CollabProvider } from '../../types/collab';
 import type * as Y from 'yjs';
 import { UndoManager } from 'yjs';
 
@@ -114,7 +114,7 @@ export const useEditorView = (
     const currentContentRef = useRef<string>(textContent);
     const [showSaveIndicator, setShowSaveIndicator] = useState(false);
     const [yDoc, setYDoc] = useState<Y.Doc | null>(null);
-    const [provider, setProvider] = useState<WebrtcProvider | null>(null);
+    const [provider, setProvider] = useState<CollabProvider | null>(null);
     const hasEmittedReadyRef = useRef<boolean>(false);
     const undoManagerRef = useRef<UndoManager | null>(null);
 
