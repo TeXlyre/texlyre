@@ -330,9 +330,10 @@ class MathLiveProcessor {
             if (region.fileType === 'typst') return true;
 
             if (region.fileType !== 'latex') return false;
-            if (!region.delimiterStart.startsWith('\\begin{')) return true;
 
-            return !(
+            if (!region.delimiterStart.startsWith('\\begin{')) return false;
+
+            return (
                 region.delimiterStart.includes('{align') ||
                 region.delimiterStart.includes('{aligned') ||
                 region.delimiterStart.includes('{array') ||
@@ -382,7 +383,6 @@ class MathLiveProcessor {
             this.view.focus();
         }, 0);
     }
-
 
     private handleCancel(): void {
         setTimeout(() => {

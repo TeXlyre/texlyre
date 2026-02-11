@@ -102,7 +102,19 @@ export class MathDetector {
             type === 'display' &&
             delimiterStart.startsWith('\\begin{') &&
             delimiterEnd.startsWith('\\end{') &&
-            (delimiterStart.includes('{align') || delimiterStart.includes('{gather'))
+            (
+                delimiterStart.includes('{align') ||
+                delimiterStart.includes('{gather') ||
+                delimiterStart.includes('{aligned') ||
+                delimiterStart.includes('{cases') ||
+                delimiterStart.includes('{array') ||
+                delimiterStart.includes('{matrix') ||
+                delimiterStart.includes('{pmatrix') ||
+                delimiterStart.includes('{bmatrix') ||
+                delimiterStart.includes('{Bmatrix') ||
+                delimiterStart.includes('{vmatrix') ||
+                delimiterStart.includes('{Vmatrix')
+            )
         );
     }
 
