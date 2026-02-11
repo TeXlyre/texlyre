@@ -27,6 +27,7 @@ module.exports = {
         '^react-pdf/dist/esm/entry.webpack5$': '<rootDir>/tests/mocks/react-pdf.js',
         '^filepizza-client$': '<rootDir>/tests/mocks/filepizza-client.js',
         '^wasm-latex-tools$': '<rootDir>/tests/mocks/wasm-latex-tools.js',
+        '^mathlive$': '<rootDir>/tests/mocks/mathlive.js',
     },
     collectCoverageFrom: [
         'src/**/*.{ts,tsx}',
