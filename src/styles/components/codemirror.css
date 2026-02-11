@@ -775,12 +775,10 @@ math-field {
 
 /* Editor Buttons */
 .cm-math-editor-buttons {
-	margin-top: 12px;
+	margin-top: var(--space-md);
 	display: flex;
 	justify-content: flex-end;
-	gap: 8px;
-	padding-top: 8px;
-	border-top: 1px solid var(--pico-muted-border-color);
+	gap: var(--space-sm);
 }
 
 .cm-math-editor-btn {
@@ -793,23 +791,12 @@ math-field {
 	transition: all 0.2s ease;
 }
 
-.cm-math-editor-btn-save {
-	background: var(--pico-primary-background);
-	color: var(--pico-primary-focus);
-}
 
 .cm-math-editor-btn-save:hover {
-	background: var(--pico-primary-hover);
 	transform: translateY(-1px);
 }
 
-.cm-math-editor-btn-cancel {
-	background: var(--pico-secondary-background);
-	color: white;
-}
-
 .cm-math-editor-btn-cancel:hover {
-	background: var(--pico-secondary-hover);
 	transform: translateY(-1px);
 }
 
@@ -829,9 +816,9 @@ math-field {
 	--keyboard-toolbar-background: var(--pico-secondary-background);
 	--keyboard-toolbar-border: var(--pico-muted-border-color);
 	--keyboard-toolbar-text: var(--pico-color);
-	--keyboard-toolbar-text-active: var(--pico-background-color);
+	--keyboard-toolbar-text-active: var(--pico-background);
 	--keyboard-toolbar-icon: var(--pico-color);
-	--keyboard-toolbar-icon-active: var(--pico-background-color);
+	--keyboard-toolbar-icon-active: var(--pico-background);
 
 	--keycap-background: var(--pico-background);
 	--keycap-background-hover: var(--pico-secondary-hover-background);

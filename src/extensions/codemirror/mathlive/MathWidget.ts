@@ -94,11 +94,11 @@ export class MathEditWidget extends WidgetType {
 
         const saveBtn = document.createElement('button');
         saveBtn.textContent = 'Save';
-        saveBtn.className = 'cm-math-editor-btn cm-math-editor-btn-save';
+        saveBtn.className = 'cm-math-editor-btn cm-math-editor-btn-save button primary';
 
         const cancelBtn = document.createElement('button');
         cancelBtn.textContent = 'Cancel';
-        cancelBtn.className = 'cm-math-editor-btn cm-math-editor-btn-cancel';
+        cancelBtn.className = 'cm-math-editor-btn cm-math-editor-btn-cancel button';
 
         saveBtn.addEventListener('click', () => {
             this.onSave(mathfield.value);
