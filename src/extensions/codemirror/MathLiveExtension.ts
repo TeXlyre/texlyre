@@ -338,6 +338,11 @@ class MathLiveProcessor {
                 region.delimiterStart.includes('{aligned') ||
                 region.delimiterStart.includes('{array') ||
                 region.delimiterStart.includes('{matrix') ||
+                region.delimiterStart.includes('{pmatrix') ||
+                region.delimiterStart.includes('{bmatrix') ||
+                region.delimiterStart.includes('{Bmatrix') ||
+                region.delimiterStart.includes('{vmatrix') ||
+                region.delimiterStart.includes('{Vmatrix') ||
                 region.delimiterStart.includes('{cases')
             );
         };
