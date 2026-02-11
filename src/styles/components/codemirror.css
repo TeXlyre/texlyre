@@ -791,7 +791,6 @@ math-field {
 	transition: all 0.2s ease;
 }
 
-
 .cm-math-editor-btn-save:hover {
 	transform: translateY(-1px);
 }
@@ -815,17 +814,17 @@ math-field {
 
 	--keyboard-toolbar-background: var(--pico-secondary-background);
 	--keyboard-toolbar-border: var(--pico-muted-border-color);
-	--keyboard-toolbar-text: var(--pico-color);
-	--keyboard-toolbar-text-active: var(--pico-background);
+	--keyboard-toolbar-text: var(--pico-secondary);
+	--keyboard-toolbar-text-active: var(--pico-primary-background);
 	--keyboard-toolbar-icon: var(--pico-color);
-	--keyboard-toolbar-icon-active: var(--pico-background);
+	--keyboard-toolbar-icon-active: var(--pico-primary-background);
 
 	--keycap-background: var(--pico-background);
-	--keycap-background-hover: var(--pico-secondary-hover-background);
+	--keycap-background-hover: var(--pico-secondary-background-hover);
 	--keycap-background-active: var(--pico-secondary-background);
 	--keycap-border: var(--pico-muted-border-color);
 	--keycap-text: var(--pico-color);
-	--keycap-text-hover: var(--pico-color);
+	--keycap-text-hover: var(--pico-secondary);
 	--keycap-text-active: var(--pico-background-color);
 
 	--keycap-secondary-background: var(--pico-secondary-background);

@@ -1,4 +1,5 @@
 // src/extensions/codemirror/mathlive/MathWidget.ts
+import { t } from '@/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement } from 'react';
 import { WidgetType } from '@codemirror/view';
@@ -93,11 +94,11 @@ export class MathEditWidget extends WidgetType {
         buttonContainer.className = 'cm-math-editor-buttons';
 
         const saveBtn = document.createElement('button');
-        saveBtn.textContent = 'Save';
+        saveBtn.textContent = t('Save');
         saveBtn.className = 'cm-math-editor-btn cm-math-editor-btn-save button primary';
 
         const cancelBtn = document.createElement('button');
-        cancelBtn.textContent = 'Cancel';
+        cancelBtn.textContent = t('Cancel');
         cancelBtn.className = 'cm-math-editor-btn cm-math-editor-btn-cancel button';
 
         saveBtn.addEventListener('click', () => {
