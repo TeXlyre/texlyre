@@ -1,3 +1,4 @@
+// src/extensions/codemirror/mathlive/patterns.ts
 export type FileType = 'latex' | 'typst';
 
 export interface MathPattern {

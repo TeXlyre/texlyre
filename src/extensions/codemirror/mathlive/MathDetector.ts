@@ -1,5 +1,7 @@
+// src/extensions/codemirror/mathlive/MathDetector.ts
 import type { EditorView } from '@codemirror/view';
-import { getPatternsForFileType, type FileType, type MathPattern } from './patterns';
+
+import { getPatternsForFileType, type FileType } from './patterns';
 
 export interface MathRegion {
     from: number;

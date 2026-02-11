@@ -1,3 +1,4 @@
+// src/extensions/codemirror/mathlive/MathWidget.ts
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement } from 'react';
 import { WidgetType } from '@codemirror/view';
