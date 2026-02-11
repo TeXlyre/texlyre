@@ -18,6 +18,7 @@ import type {
   FontSize,
 } from '../types/editor';
 import type { CollabConnectOptions, CollabProviderType } from '../types/collab';
+import type { Setting } from '../contexts/SettingsContext';
 
 export const fontSizeMap: Record<FontSize, string> = {
   xs: '10px',
@@ -60,30 +61,22 @@ export const defaultEditorSettings: EditorSettings = {
   language: 'en',
 };
 
-interface SettingDescriptor {
-  id: string;
-  key: keyof EditorSettings;
-  category: string;
-  subcategory: string;
-  type: 'select' | 'checkbox' | 'number';
-  label: string;
-  description: string;
-  options?: { label: string; value: string }[];
-  min?: number;
-  max?: number;
+interface EditorSettingDescriptor extends Setting {
+  ref: keyof EditorSettings;
   onAfterChange?: (value: EditorSettings[keyof EditorSettings]) => void;
 }
 
-function getSettingDescriptors(): SettingDescriptor[] {
+function getSettingDescriptors(): EditorSettingDescriptor[] {
   return [
     {
       id: 'editor-font-family',
-      key: 'fontFamily',
+      ref: 'fontFamily',
       category: t('Appearance'),
       subcategory: t('Text Editor'),
       type: 'select',
       label: t('Font family'),
       description: t('Select the font family for the editor'),
+      defaultValue: defaultEditorSettings.fontFamily,
       options: [
         { label: t('Monospace (System)'), value: 'monospace' },
         { label: t('JetBrains Mono'), value: 'jetbrains-mono' },
@@ -102,12 +95,13 @@ function getSettingDescriptors(): SettingDescriptor[] {
     },
     {
       id: 'editor-font-size',
-      key: 'fontSize',
+      ref: 'fontSize',
       category: t('Appearance'),
       subcategory: t('Text Editor'),
       type: 'select',
       label: t('Font size'),
       description: t('Select the font size for the editor'),
+      defaultValue: defaultEditorSettings.fontSize,
       options: [
         { label: t('Extra Small (10px)'), value: 'xs' },
         { label: t('Small (12px)'), value: 'sm' },
@@ -126,30 +120,33 @@ function getSettingDescriptors(): SettingDescriptor[] {
     },
     {
       id: 'editor-show-line-numbers',
-      key: 'showLineNumbers',
+      ref: 'showLineNumbers',
       category: t('Appearance'),
       subcategory: t('Text Editor'),
       type: 'checkbox',
       label: t('Show line numbers'),
       description: t('Show line numbers in the editor'),
+      defaultValue: defaultEditorSettings.showLineNumbers,
     },
     {
       id: 'editor-syntax-highlighting',
-      key: 'syntaxHighlighting',
+      ref: 'syntaxHighlighting',
       category: t('Appearance'),
       subcategory: t('Text Editor'),
       type: 'checkbox',
       label: t('Show syntax highlighting'),
       description: t('Show syntax highlighting in the editor including tooltip and linting (LaTeX, Typst, BibTeX, and markdown)'),
+      defaultValue: defaultEditorSettings.syntaxHighlighting,
     },
     {
       id: 'editor-theme-highlights',
-      key: 'highlightTheme',
+      ref: 'highlightTheme',
       category: t('Appearance'),
       subcategory: t('Text Editor'),
       type: 'select',
       label: t('Syntax highlighting theme'),
       description: t('Choose the color theme for syntax highlighting'),
+      defaultValue: defaultEditorSettings.highlightTheme,
       options: [
         { label: t('Auto (follows app theme)'), value: 'auto' },
         { label: t('Light theme'), value: 'light' },
@@ -158,64 +155,70 @@ function getSettingDescriptors(): SettingDescriptor[] {
     },
     {
       id: 'editor-auto-save-enable',
-      key: 'autoSaveEnabled',
+      ref: 'autoSaveEnabled',
       category: t('Viewers'),
       subcategory: t('Text Editor'),
       type: 'checkbox',
       label: t('Auto-save on changes'),
       description: t('Automatically save file changes while editing'),
+      defaultValue: defaultEditorSettings.autoSaveEnabled,
     },
     {
       id: 'editor-auto-save-delay',
-      key: 'autoSaveDelay',
+      ref: 'autoSaveDelay',
       category: t('Viewers'),
       subcategory: t('Text Editor'),
       type: 'number',
       label: t('Auto-save delay (milliseconds)'),
       description: t('Delay in milliseconds before saving changes'),
+      defaultValue: defaultEditorSettings.autoSaveDelay,
       min: 50,
       max: 10000,
     },
     {
       id: 'editor-vim-mode',
-      key: 'vimMode',
+      ref: 'vimMode',
       category: t('Viewers'),
       subcategory: t('Text Editor'),
       type: 'checkbox',
       label: t('Enable Vim keybindings'),
       description: t('Enable Vim-style keybindings in the editor'),
+      defaultValue: defaultEditorSettings.vimMode,
     },
     {
       id: 'editor-spell-check',
-      key: 'spellCheck',
+      ref: 'spellCheck',
       category: t('Viewers'),
       subcategory: t('Text Editor'),
       type: 'checkbox',
       label: t('Enable spell checking'),
       description: t('Enable browser spell checking in the editor (note: not compatible with typesetter syntax)'),
+      defaultValue: defaultEditorSettings.spellCheck,
     },
     {
       id: 'editor-mathlive-enabled',
-      key: 'mathLiveEnabled',
+      ref: 'mathLiveEnabled',
       category: t('Viewers'),
       subcategory: t('Text Editor'),
       type: 'checkbox',
       label: t('Enable MathLive'),
       description: t('Enable interactive math editing with MathLive'),
+      defaultValue: defaultEditorSettings.mathLiveEnabled,
     },
     {
       id: 'editor-mathlive-preview-mode',
-      key: 'mathLivePreviewMode',
+      ref: 'mathLivePreviewMode',
       category: t('Viewers'),
       subcategory: t('Text Editor'),
       type: 'select',
-      label: t('Math preview mode'),
+      label: t('MathLive preview mode'),
       description: t('When to show rendered math equations'),
+      defaultValue: defaultEditorSettings.mathLivePreviewMode,
       options: [
-        { label: t('On hover & cursor'), value: 'hover-cursor' },
+        { label: t('On hover and cursor'), value: 'hover-cursor' },
         { label: t('On hover'), value: 'hover' },
         { label: t('On cursor'), value: 'cursor' },
-        { label: t('Never'), value: 'never' },
+        // { label: t('Never'), value: 'never' },
       ],
     },
   ];
@@ -285,25 +288,19 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 
     for (const descriptor of descriptors) {
       const persisted = batchedSettings[descriptor.id];
-      const initialValue = persisted ?? defaultEditorSettings[descriptor.key];
+      const initialValue = persisted ?? descriptor.defaultValue;
+
+      const { ref, onAfterChange, ...baseSetting } = descriptor;
 
       registerSetting({
-        id: descriptor.id,
-        category: descriptor.category,
-        subcategory: descriptor.subcategory,
-        type: descriptor.type,
-        label: descriptor.label,
-        description: descriptor.description,
+        ...baseSetting,
         defaultValue: initialValue,
-        ...(descriptor.options && { options: descriptor.options }),
-        ...(descriptor.min !== undefined && { min: descriptor.min }),
-        ...(descriptor.max !== undefined && { max: descriptor.max }),
         onChange: (value) => {
           updateEditorSetting(
-            descriptor.key,
-            value as EditorSettings[typeof descriptor.key]
+            ref,
+            value as EditorSettings[typeof ref]
           );
-          descriptor.onAfterChange?.(
+          onAfterChange?.(
             value as EditorSettings[keyof EditorSettings]
           );
         },
