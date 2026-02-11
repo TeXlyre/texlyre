@@ -23,8 +23,8 @@ export class MathPreviewWidget extends WidgetType {
 
     eq(other: MathPreviewWidget): boolean {
         return (
-            this.region.from === other.region.from &&
-            this.region.to === other.region.to &&
+            this.region.replaceFrom === other.region.replaceFrom &&
+            this.region.replaceTo === other.region.replaceTo &&
             this.region.content === other.region.content
         );
     }
@@ -40,7 +40,7 @@ export class MathPreviewWidget extends WidgetType {
         wrapper.appendChild(mf);
 
         setTimeout(() => {
-            mf.value = this.region.content;
+            mf.value = this.region.previewLatex ?? this.region.content;
             mf.menuItems = [];
         }, 0);
 

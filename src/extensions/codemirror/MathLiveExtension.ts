@@ -109,8 +109,8 @@ class MathLiveProcessor {
                         const { region, x, y } = result;
 
                         const isSameRegion = this.hoveredRegion &&
-                            region.from === this.hoveredRegion.from &&
-                            region.to === this.hoveredRegion.to;
+                            region.replaceFrom === this.hoveredRegion.replaceFrom &&
+                            region.replaceTo === this.hoveredRegion.replaceTo;
 
                         if (!isSameRegion) {
                             this.hoveredRegion = region;
@@ -326,10 +326,47 @@ class MathLiveProcessor {
     }
 
     private handleSave(region: MathRegion, newContent: string): void {
-        const fullContent = `${region.delimiterStart}${newContent}${region.delimiterEnd}`;
+        const shouldUnescapeAmp = () => {
+            if (region.fileType === 'typst') return true;
+
+            if (region.fileType !== 'latex') return false;
+            if (!region.delimiterStart.startsWith('\\begin{')) return true;
+
+            return !(
+                region.delimiterStart.includes('{align') ||
+                region.delimiterStart.includes('{aligned') ||
+                region.delimiterStart.includes('{array') ||
+                region.delimiterStart.includes('{matrix') ||
+                region.delimiterStart.includes('{cases')
+            );
+        };
+
+        const normalizedContent = shouldUnescapeAmp()
+            ? newContent.replace(/\\&/g, '&')
+            : newContent;
+
+        const isRowEdit = region.replaceFrom !== region.from || region.replaceTo !== region.to;
+
+        const insert = isRowEdit
+            ? `${region.leadingWS || ''}${normalizedContent}${region.trailingWS || ''}`
+            : (() => {
+                const isBeginEndEnv =
+                    region.fileType === 'latex' &&
+                    region.delimiterStart.startsWith('\\begin{') &&
+                    region.delimiterEnd.startsWith('\\end{');
+
+                const leading = isBeginEndEnv ? (region.leadingWS || '\n') : region.leadingWS;
+                const trailing = isBeginEndEnv ? (region.trailingWS || '\n') : region.trailingWS;
+
+                return `${region.delimiterStart}${leading}${normalizedContent}${trailing}${region.delimiterEnd}`;
+            })();
 
         this.view.dispatch({
-            changes: { from: region.from, to: region.to, insert: fullContent },
+            changes: {
+                from: isRowEdit ? region.replaceFrom : region.from,
+                to: isRowEdit ? region.replaceTo : region.to,
+                insert
+            },
         });
 
         setTimeout(() => {
@@ -345,6 +382,7 @@ class MathLiveProcessor {
             this.view.focus();
         }, 0);
     }
+
 
     private handleCancel(): void {
         setTimeout(() => {

@@ -8,11 +8,17 @@ export interface MathRegion {
     to: number;
     type: 'inline' | 'display';
     content: string;
+    rawContent: string;
+    leadingWS: string;
+    trailingWS: string;
     contentStart: number;
     contentEnd: number;
     fileType: FileType;
     delimiterStart: string;
     delimiterEnd: string;
+    replaceFrom: number;
+    replaceTo: number;
+    previewLatex: string;
 }
 
 export class MathDetector {
@@ -41,19 +47,15 @@ export class MathDetector {
 
                     const contentStart = matchStart + delims.start.length;
                     const contentEnd = matchEnd - delims.end.length;
-                    const content = doc.substring(contentStart, contentEnd);
 
-                    return {
-                        from: matchStart,
-                        to: matchEnd,
-                        type,
-                        content: content.trim(),
-                        contentStart,
-                        contentEnd,
-                        fileType,
-                        delimiterStart: delims.start,
-                        delimiterEnd: delims.end,
-                    };
+                    const rawContent = doc.substring(contentStart, contentEnd);
+
+                    if (this.isSplittableEnv(type, fileType, delims.start, delims.end)) {
+                        const rowRegion = this.findRowRegion(doc, rawContent, matchStart, matchEnd, contentStart, contentEnd, type, fileType, delims.start, delims.end, pos);
+                        if (rowRegion) return rowRegion;
+                    }
+
+                    return this.buildWholeRegion(doc, rawContent, matchStart, matchEnd, contentStart, contentEnd, type, fileType, delims.start, delims.end);
                 }
             }
         }
@@ -78,22 +80,147 @@ export class MathDetector {
 
                 const contentStart = matchStart + delims.start.length;
                 const contentEnd = matchEnd - delims.end.length;
-                const content = doc.substring(contentStart, contentEnd);
 
-                regions.push({
-                    from: matchStart,
-                    to: matchEnd,
-                    type,
-                    content: content.trim(),
-                    contentStart,
-                    contentEnd,
-                    fileType,
-                    delimiterStart: delims.start,
-                    delimiterEnd: delims.end,
-                });
+                const rawContent = doc.substring(contentStart, contentEnd);
+
+                const whole = this.buildWholeRegion(doc, rawContent, matchStart, matchEnd, contentStart, contentEnd, type, fileType, delims.start, delims.end);
+                regions.push(whole);
             }
         }
 
         return regions.sort((a, b) => a.from - b.from);
+    }
+
+    private isSplittableEnv(
+        type: 'inline' | 'display',
+        fileType: FileType,
+        delimiterStart: string,
+        delimiterEnd: string
+    ): boolean {
+        return (
+            fileType === 'latex' &&
+            type === 'display' &&
+            delimiterStart.startsWith('\\begin{') &&
+            delimiterEnd.startsWith('\\end{') &&
+            (delimiterStart.includes('{align') || delimiterStart.includes('{gather'))
+        );
+    }
+
+    private getWhitespace(raw: string): { leadingWS: string; trailingWS: string } {
+        const leadingWS = raw.match(/^\s*/)?.[0] ?? '';
+        const trailingWS = raw.match(/\s*$/)?.[0] ?? '';
+        return { leadingWS, trailingWS };
+    }
+
+    private buildWholeRegion(
+        doc: string,
+        rawContent: string,
+        matchStart: number,
+        matchEnd: number,
+        contentStart: number,
+        contentEnd: number,
+        type: 'inline' | 'display',
+        fileType: FileType,
+        delimiterStart: string,
+        delimiterEnd: string
+    ): MathRegion {
+        const { leadingWS, trailingWS } = this.getWhitespace(rawContent);
+
+        const content = rawContent.slice(
+            leadingWS.length,
+            rawContent.length - trailingWS.length
+        );
+
+        return {
+            from: matchStart,
+            to: matchEnd,
+            type,
+            content,
+            rawContent,
+            leadingWS,
+            trailingWS,
+            contentStart,
+            contentEnd,
+            fileType,
+            delimiterStart,
+            delimiterEnd,
+            replaceFrom: matchStart,
+            replaceTo: matchEnd,
+            previewLatex: content,
+        };
+    }
+
+    private getRowSeparators(rawContent: string): { from: number; to: number }[] {
+        const rowSep = /\\\\(\[[^\]]*\])?/g;
+        const seps: { from: number; to: number }[] = [];
+        rowSep.lastIndex = 0;
+
+        let m: RegExpExecArray | null;
+        while ((m = rowSep.exec(rawContent)) !== null) {
+            seps.push({ from: m.index, to: m.index + m[0].length });
+        }
+
+        return seps;
+    }
+
+    private findRowRegion(
+        doc: string,
+        rawContent: string,
+        matchStart: number,
+        matchEnd: number,
+        contentStart: number,
+        contentEnd: number,
+        type: 'inline' | 'display',
+        fileType: FileType,
+        delimiterStart: string,
+        delimiterEnd: string,
+        pos: number
+    ): MathRegion | null {
+        const seps = this.getRowSeparators(rawContent);
+        if (seps.length === 0) return null;
+
+        const relPos = pos - contentStart;
+
+        let rowStart = 0;
+        for (let i = 0; i <= seps.length; i++) {
+            const rowEnd = i < seps.length ? seps[i].from : rawContent.length;
+
+            if (relPos >= rowStart && relPos <= rowEnd) {
+                const rowRaw = rawContent.slice(rowStart, rowEnd);
+
+                const { leadingWS, trailingWS } = this.getWhitespace(rowRaw);
+                const rowContent = rowRaw.slice(
+                    leadingWS.length,
+                    rowRaw.length - trailingWS.length
+                );
+
+                const replaceFrom = contentStart + rowStart;
+                const replaceTo = contentStart + rowEnd;
+
+                const previewLatex = `\\begin{aligned}${leadingWS}${rowContent}${trailingWS}\\end{aligned}`;
+
+                return {
+                    from: matchStart,
+                    to: matchEnd,
+                    type,
+                    content: rowContent,
+                    rawContent: rowRaw,
+                    leadingWS,
+                    trailingWS,
+                    contentStart,
+                    contentEnd,
+                    fileType,
+                    delimiterStart,
+                    delimiterEnd,
+                    replaceFrom,
+                    replaceTo,
+                    previewLatex,
+                };
+            }
+
+            rowStart = i < seps.length ? seps[i].to : rawContent.length;
+        }
+
+        return null;
     }
 }

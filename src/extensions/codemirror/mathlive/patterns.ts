@@ -67,16 +67,10 @@ export const latexMathPatterns: MathPattern[] = [
 
 export const typstMathPatterns: MathPattern[] = [
     {
-        pattern: /\$([^\$\n]+)\$/g,
+        pattern: /\$([\s\S]*?)\$/g,
         type: 'inline',
         fileType: 'typst',
         getDelimiters: () => ({ start: '$', end: '$' }),
-    },
-    {
-        pattern: /\$ ([^\$](?:[^\$]|\$(?!\s))*?) \$/g,
-        type: 'display',
-        fileType: 'typst',
-        getDelimiters: () => ({ start: '$ ', end: ' $' }),
     },
 ];
 
