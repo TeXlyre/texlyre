@@ -21,6 +21,6 @@ export interface EditorSettings {
 	vimMode: boolean;
 	spellCheck: boolean;
 	mathLiveEnabled: boolean;
-	mathLivePreviewMode: 'hover' | 'always' | 'never';
+	mathLivePreviewMode: 'hover-cursor' | 'hover' | 'cursor' | 'never';
 	language: string;
 }

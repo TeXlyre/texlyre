@@ -56,7 +56,7 @@ export const defaultEditorSettings: EditorSettings = {
   vimMode: false,
   spellCheck: true,
   mathLiveEnabled: true,
-  mathLivePreviewMode: 'hover',
+  mathLivePreviewMode: 'hover-cursor',
   language: 'en',
 };
 
@@ -212,8 +212,9 @@ function getSettingDescriptors(): SettingDescriptor[] {
       label: t('Math preview mode'),
       description: t('When to show rendered math equations'),
       options: [
+        { label: t('On hover & cursor'), value: 'hover-cursor' },
         { label: t('On hover'), value: 'hover' },
-        { label: t('Always'), value: 'always' },
+        { label: t('On cursor'), value: 'cursor' },
         { label: t('Never'), value: 'never' },
       ],
     },

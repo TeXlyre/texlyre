@@ -2,16 +2,17 @@
 import { StateEffect, StateField } from '@codemirror/state';
 import { Decoration, DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 import type { Extension } from '@codemirror/state';
+import { MathfieldElement } from 'mathlive';
+
 import { MathDetector, type MathRegion } from './mathlive/MathDetector';
 import { MathPreviewWidget, MathEditWidget } from './mathlive/MathWidget';
-import { MathfieldElement } from 'mathlive';
 import { setMathEditRegion } from './BidiExtension';
 
 const BASE_PATH = __BASE_PATH__;
 
 const setFileType = StateEffect.define<'latex' | 'typst'>();
 const setEditingRegion = StateEffect.define<MathRegion | null>();
-const setPreviewMode = StateEffect.define<'hover' | 'always' | 'never'>();
+const setPreviewMode = StateEffect.define<'hover' | 'cursor' | 'hover-cursor' | 'never'>();
 const setMathDecorations = StateEffect.define<DecorationSet>();
 
 const fileTypeField = StateField.define<'latex' | 'typst'>({
@@ -42,9 +43,9 @@ const editingRegionField = StateField.define<MathRegion | null>({
     },
 });
 
-const previewModeField = StateField.define<'hover' | 'always' | 'never'>({
+const previewModeField = StateField.define<'hover' | 'cursor' | 'hover-cursor' | 'never'>({
     create() {
-        return 'hover';
+        return 'hover-cursor';
     },
     update(value, tr) {
         for (const effect of tr.effects) {
@@ -86,7 +87,6 @@ class MathLiveProcessor {
         this.detector = new MathDetector();
         this.updateFileType();
         this.setupEventListeners();
-        this.refreshDecorations();
         this.startChecking();
     }
 
@@ -97,11 +97,11 @@ class MathLiveProcessor {
             const previewMode = this.view.state.field(previewModeField, false);
             const editingRegion = this.view.state.field(editingRegionField, false);
 
-            if (previewMode === 'hover' && !editingRegion) {
+            if (previewMode !== 'never' && !editingRegion) {
                 this.view.requestMeasure({
                     read: () => {
                         if (this.isDestroyed) return null;
-                        return this.checkForMath();
+                        return this.checkForMath(previewMode);
                     },
                     write: (result) => {
                         if (this.isDestroyed || !result) return;
@@ -126,32 +126,39 @@ class MathLiveProcessor {
         check();
     }
 
-    private checkForMath(): { region: MathRegion; x: number; y: number } | null {
-        const cursorPos = this.view.state.selection.main.from;
-        const cursorMath = this.detector.detectMathAtPosition(this.view, cursorPos);
+    private checkForMath(previewMode: 'hover' | 'cursor' | 'hover-cursor' | 'never'): { region: MathRegion; x: number; y: number } | null {
+        const checkCursor = previewMode === 'cursor' || previewMode === 'hover-cursor';
+        const checkMouse = previewMode === 'hover' || previewMode === 'hover-cursor';
 
-        if (cursorMath) {
-            const coords = this.view.coordsAtPos(cursorPos);
-            if (coords) {
-                return {
-                    region: cursorMath,
-                    x: coords.left,
-                    y: coords.top
-                };
-            }
-        }
+        if (checkCursor) {
+            const cursorPos = this.view.state.selection.main.from;
+            const cursorMath = this.detector.detectMathAtPosition(this.view, cursorPos);
 
-        const mousePos = this.getMousePosition();
-        if (mousePos !== null) {
-            const mouseMath = this.detector.detectMathAtPosition(this.view, mousePos);
-            if (mouseMath) {
-                const coords = this.view.coordsAtPos(mousePos);
+            if (cursorMath) {
+                const coords = this.view.coordsAtPos(cursorPos);
                 if (coords) {
                     return {
-                        region: mouseMath,
+                        region: cursorMath,
                         x: coords.left,
                         y: coords.top
                     };
+                }
+            }
+        }
+
+        if (checkMouse) {
+            const mousePos = this.getMousePosition();
+            if (mousePos !== null) {
+                const mouseMath = this.detector.detectMathAtPosition(this.view, mousePos);
+                if (mouseMath) {
+                    const coords = this.view.coordsAtPos(mousePos);
+                    if (coords) {
+                        return {
+                            region: mouseMath,
+                            x: coords.left,
+                            y: coords.top
+                        };
+                    }
                 }
             }
         }
@@ -204,7 +211,6 @@ class MathLiveProcessor {
         }
 
         const newEditingRegion = update.state.field(editingRegionField, false);
-        const previewMode = update.state.field(previewModeField, false);
 
         if (newEditingRegion && newEditingRegion !== this.editingRegion) {
             this.editingRegion = newEditingRegion;
@@ -212,23 +218,6 @@ class MathLiveProcessor {
         } else if (!newEditingRegion && this.editingRegion) {
             this.editingRegion = null;
             this.pendingEditWidget = null;
-        } else if (!newEditingRegion) {
-            if (previewMode === 'always') {
-                if (update.docChanged || update.viewportChanged) {
-                    this.renderAllPreviews();
-                }
-            } else if (previewMode === 'never') {
-                if (update.state.field(mathDecorations).size > 0) {
-                    this.clearPreviews();
-                }
-            }
-        }
-    }
-
-    private refreshDecorations(): void {
-        const previewMode = this.view.state.field(previewModeField, false);
-        if (previewMode === 'always') {
-            this.renderAllPreviews();
         }
     }
 
@@ -290,24 +279,6 @@ class MathLiveProcessor {
         setTimeout(() => {
             document.addEventListener('mousedown', this.outsideClickHandler!, true);
         }, 100);
-    }
-
-    private renderAllPreviews(): void {
-        const doc = this.view.state.doc.toString();
-        const fileType = this.view.state.field(fileTypeField, false) || 'latex';
-        const regions = this.detector.findAllMathRegions(doc, fileType);
-
-        const decorations = regions.map(region =>
-            Decoration.widget({
-                widget: new MathPreviewWidget(region, () => this.startEdit(region)),
-                side: 1,
-                block: region.type === 'display',
-            }).range(region.to)
-        );
-
-        this.view.dispatch({
-            effects: setMathDecorations.of(Decoration.set(decorations)),
-        });
     }
 
     protected renderEditWidget(region: MathRegion): void {
@@ -372,10 +343,6 @@ class MathLiveProcessor {
 
             this.clearOverlay();
             this.view.focus();
-
-            setTimeout(() => {
-                this.refreshDecorations();
-            }, 10);
         }, 0);
     }
 
@@ -391,10 +358,6 @@ class MathLiveProcessor {
 
             this.clearOverlay();
             this.view.focus();
-
-            setTimeout(() => {
-                this.refreshDecorations();
-            }, 10);
         }, 0);
     }
 
@@ -408,13 +371,6 @@ class MathLiveProcessor {
             this.currentOverlay.remove();
             this.currentOverlay = null;
         }
-    }
-
-    private clearPreviews(): void {
-        this.clearOverlay();
-        this.view.dispatch({
-            effects: setMathDecorations.of(Decoration.none),
-        });
     }
 
     destroy(): void {
@@ -438,7 +394,7 @@ let mathLiveFontsConfigured = false;
 
 export function createMathLiveExtension(
     fileType: 'latex' | 'typst',
-    previewMode: 'hover' | 'always' | 'never' = 'hover',
+    previewMode: 'hover' | 'cursor' | 'hover-cursor' | 'never' = 'hover-cursor',
     locale: string
 ): Extension {
     if (!mathLiveFontsConfigured) {
@@ -507,7 +463,7 @@ export function updateMathLiveFileType(view: EditorView, fileType: 'latex' | 'ty
 
 export function updateMathLivePreviewMode(
     view: EditorView,
-    previewMode: 'hover' | 'always' | 'never',
+    previewMode: 'hover' | 'cursor' | 'hover-cursor' | 'never',
 ): void {
     view.dispatch({
         effects: setPreviewMode.of(previewMode),
