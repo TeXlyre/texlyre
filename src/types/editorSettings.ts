@@ -21,6 +21,7 @@ export interface EditorSettings {
 	spellCheck: boolean;
 	mathLiveEnabled: boolean;
 	mathLivePreviewMode: 'hover' | 'always' | 'never';
+	language: string;
 }
 
 export const defaultEditorSettings: EditorSettings = {
@@ -35,6 +36,7 @@ export const defaultEditorSettings: EditorSettings = {
 	spellCheck: true,
 	mathLiveEnabled: true,
 	mathLivePreviewMode: 'hover',
+	language: 'en',
 };
 
 export const fontSizeMap: Record<FontSize, string> = {

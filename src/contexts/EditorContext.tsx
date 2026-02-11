@@ -90,7 +90,8 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       'editor-vim-mode',
       'editor-spell-check',
       'editor-mathlive-enabled',
-      'editor-mathlive-preview-mode'
+      'editor-mathlive-preview-mode',
+      'language'
     ]);
 
     const initialFontSize =
@@ -126,6 +127,10 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
     const initialMathLivePreviewMode =
       (batchedSettings['editor-mathlive-preview-mode'] as 'hover' | 'always' | 'never') ??
       defaultEditorSettings.mathLivePreviewMode;
+    const initialLanguage =
+      (batchedSettings['language'] as string) ?? 'en';
+
+    updateEditorSetting('language', initialLanguage);
 
     registerSetting({
       id: 'editor-font-family',

@@ -1,7 +1,16 @@
+import { renderToStaticMarkup } from 'react-dom/server';
+import { createElement } from 'react';
 import { WidgetType } from '@codemirror/view';
 import type { EditorView } from '@codemirror/view';
-import type { MathRegion } from './MathDetector';
 import { MathfieldElement } from 'mathlive';
+
+import { EditIcon } from '../../../components/common/Icons';
+import type { MathRegion } from './MathDetector';
+
+
+const renderIcon = (IconComponent: React.FC<any>, props = {}) => {
+    return renderToStaticMarkup(createElement(IconComponent, props));
+};
 
 export class MathPreviewWidget extends WidgetType {
     constructor(
@@ -20,15 +29,12 @@ export class MathPreviewWidget extends WidgetType {
     }
 
     toDOM(): HTMLElement {
-        const wrapper = document.createElement('span');
-        wrapper.className = `cm-math-preview cm-math-${this.region.type}`;
-        wrapper.style.position = 'relative';
-        wrapper.style.display = this.region.type === 'display' ? 'block' : 'inline-block';
+        const wrapper = document.createElement('div');
+        wrapper.className = `cm-math-preview-overlay cm-math-${this.region.type}`;
 
         const mf = new MathfieldElement();
         mf.readOnly = true;
-        mf.style.display = this.region.type === 'display' ? 'block' : 'inline-block';
-        mf.style.fontSize = 'inherit';
+        mf.className = 'cm-math-preview-field';
 
         wrapper.appendChild(mf);
 
@@ -38,19 +44,8 @@ export class MathPreviewWidget extends WidgetType {
         }, 0);
 
         const editBtn = document.createElement('button');
-        editBtn.textContent = '✏️';
+        editBtn.innerHTML = renderIcon(EditIcon, {});;
         editBtn.className = 'cm-math-edit-btn';
-        editBtn.style.position = 'absolute';
-        editBtn.style.top = '2px';
-        editBtn.style.right = '2px';
-        editBtn.style.padding = '2px 6px';
-        editBtn.style.fontSize = '12px';
-        editBtn.style.border = '1px solid var(--pico-muted-border-color)';
-        editBtn.style.borderRadius = '4px';
-        editBtn.style.backgroundColor = 'var(--pico-background-color)';
-        editBtn.style.cursor = 'pointer';
-        editBtn.style.opacity = '0';
-        editBtn.style.transition = 'opacity 0.2s';
         editBtn.title = 'Edit equation';
 
         editBtn.addEventListener('click', (e) => {
@@ -59,21 +54,13 @@ export class MathPreviewWidget extends WidgetType {
             this.onEdit();
         });
 
-        wrapper.addEventListener('mouseenter', () => {
-            editBtn.style.opacity = '1';
-        });
-
-        wrapper.addEventListener('mouseleave', () => {
-            editBtn.style.opacity = '0';
-        });
-
         wrapper.appendChild(editBtn);
 
         return wrapper;
     }
 
     ignoreEvent(event: Event): boolean {
-        return event.type === 'mousedown';
+        return event.type === 'mousedown' || event.type === 'click';
     }
 }
 
@@ -95,41 +82,22 @@ export class MathEditWidget extends WidgetType {
 
     toDOM(): HTMLElement {
         const wrapper = document.createElement('div');
-        wrapper.className = 'cm-math-editor';
-        wrapper.style.display = this.region.type === 'display' ? 'block' : 'inline-block';
-        wrapper.style.margin = this.region.type === 'display' ? '8px 0' : '0';
+        wrapper.className = 'cm-math-editor-overlay';
 
         const mathfield = new MathfieldElement();
-        mathfield.style.display = 'block';
-        mathfield.style.minWidth = this.region.type === 'display' ? '100%' : '200px';
-        mathfield.style.padding = '8px';
-        mathfield.style.border = '2px solid var(--pico-primary)';
-        mathfield.style.borderRadius = '4px';
-        mathfield.style.backgroundColor = 'var(--pico-background-color)';
+        mathfield.readOnly = false;
+        mathfield.className = 'cm-math-editor-field';
 
         const buttonContainer = document.createElement('div');
-        buttonContainer.style.marginTop = '4px';
-        buttonContainer.style.display = 'flex';
-        buttonContainer.style.gap = '8px';
+        buttonContainer.className = 'cm-math-editor-buttons';
 
         const saveBtn = document.createElement('button');
         saveBtn.textContent = 'Save';
-        saveBtn.style.padding = '4px 12px';
-        saveBtn.style.fontSize = '12px';
-        saveBtn.style.border = '1px solid var(--pico-primary)';
-        saveBtn.style.borderRadius = '4px';
-        saveBtn.style.backgroundColor = 'var(--pico-primary)';
-        saveBtn.style.color = 'var(--pico-primary-inverse)';
-        saveBtn.style.cursor = 'pointer';
+        saveBtn.className = 'cm-math-editor-btn cm-math-editor-btn-save';
 
         const cancelBtn = document.createElement('button');
         cancelBtn.textContent = 'Cancel';
-        cancelBtn.style.padding = '4px 12px';
-        cancelBtn.style.fontSize = '12px';
-        cancelBtn.style.border = '1px solid var(--pico-muted-border-color)';
-        cancelBtn.style.borderRadius = '4px';
-        cancelBtn.style.backgroundColor = 'var(--pico-background-color)';
-        cancelBtn.style.cursor = 'pointer';
+        cancelBtn.className = 'cm-math-editor-btn cm-math-editor-btn-cancel';
 
         saveBtn.addEventListener('click', () => {
             this.onSave(mathfield.value);
@@ -147,8 +115,8 @@ export class MathEditWidget extends WidgetType {
             }
         });
 
-        buttonContainer.appendChild(saveBtn);
         buttonContainer.appendChild(cancelBtn);
+        buttonContainer.appendChild(saveBtn);
 
         wrapper.appendChild(mathfield);
         wrapper.appendChild(buttonContainer);

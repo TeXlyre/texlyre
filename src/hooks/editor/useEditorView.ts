@@ -488,7 +488,8 @@ export const useEditorView = (
                     extensions.push(
                         createMathLiveExtension(
                             fileType as 'latex' | 'typst',
-                            editorSettings.mathLivePreviewMode
+                            editorSettings.mathLivePreviewMode,
+                            editorSettings.language
                         )
                     );
                 }

@@ -74,15 +74,126 @@ const mathDecorations = StateField.define<DecorationSet>({
 class MathLiveProcessor {
     private detector: MathDetector;
     private hoveredRegion: MathRegion | null = null;
-    private hoverTimeout: NodeJS.Timeout | null = null;
     private editingRegion: MathRegion | null = null;
     protected pendingEditWidget: MathRegion | null = null;
+    private currentOverlay: HTMLElement | null = null;
+    private checkTimer: number | null = null;
+    private isDestroyed: boolean = false;
+    private outsideClickHandler: ((e: MouseEvent) => void) | null = null;
 
     constructor(private view: EditorView) {
         this.detector = new MathDetector();
         this.updateFileType();
         this.setupEventListeners();
         this.refreshDecorations();
+        this.startChecking();
+    }
+
+    private startChecking(): void {
+        const check = () => {
+            if (this.isDestroyed) return;
+
+            const previewMode = this.view.state.field(previewModeField, false);
+            const editingRegion = this.view.state.field(editingRegionField, false);
+
+            if (previewMode === 'hover' && !editingRegion) {
+                this.view.requestMeasure({
+                    read: () => {
+                        if (this.isDestroyed) return null;
+                        return this.checkForMath();
+                    },
+                    write: (result) => {
+                        if (this.isDestroyed || !result) return;
+
+                        const { region, x, y } = result;
+
+                        const isSameRegion = this.hoveredRegion &&
+                            region.from === this.hoveredRegion.from &&
+                            region.to === this.hoveredRegion.to;
+
+                        if (!isSameRegion) {
+                            this.hoveredRegion = region;
+                            this.renderPreview(region, x, y);
+                        }
+                    }
+                });
+            }
+
+            this.checkTimer = window.setTimeout(check, 200);
+        };
+
+        check();
+    }
+
+    private checkForMath(): { region: MathRegion; x: number; y: number } | null {
+        const cursorPos = this.view.state.selection.main.from;
+        const cursorMath = this.detector.detectMathAtPosition(this.view, cursorPos);
+
+        if (cursorMath) {
+            const coords = this.view.coordsAtPos(cursorPos);
+            if (coords) {
+                return {
+                    region: cursorMath,
+                    x: coords.left,
+                    y: coords.top
+                };
+            }
+        }
+
+        const mousePos = this.getMousePosition();
+        if (mousePos !== null) {
+            const mouseMath = this.detector.detectMathAtPosition(this.view, mousePos);
+            if (mouseMath) {
+                const coords = this.view.coordsAtPos(mousePos);
+                if (coords) {
+                    return {
+                        region: mouseMath,
+                        x: coords.left,
+                        y: coords.top
+                    };
+                }
+            }
+        }
+
+        if (this.hoveredRegion && this.currentOverlay && !this.currentOverlay.matches(':hover')) {
+            this.hoveredRegion = null;
+            this.clearOverlay();
+        }
+
+        return null;
+    }
+
+    private getMousePosition(): number | null {
+        const rect = this.view.dom.getBoundingClientRect();
+        const lastMouseEvent = (window as any).lastMouseEvent;
+
+        if (lastMouseEvent &&
+            lastMouseEvent.clientX >= rect.left &&
+            lastMouseEvent.clientX <= rect.right &&
+            lastMouseEvent.clientY >= rect.top &&
+            lastMouseEvent.clientY <= rect.bottom) {
+
+            return this.view.posAtCoords({
+                x: lastMouseEvent.clientX,
+                y: lastMouseEvent.clientY
+            });
+        }
+
+        return null;
+    }
+
+    private isClickInMathLiveUI(target: Element): boolean {
+        return !!(
+            target.closest('math-field') ||
+            target.closest('.ML__keyboard') ||
+            target.closest('.ML__popover') ||
+            target.closest('.ML__menu') ||
+            target.closest('.ML__tooltip') ||
+            target.closest('.ML__container') ||
+            target.classList.contains('ML__keyboard') ||
+            target.classList.contains('ML__popover') ||
+            target.classList.contains('ML__menu')
+        );
     }
 
     update(update: ViewUpdate): void {
@@ -133,59 +244,11 @@ class MathLiveProcessor {
     }
 
     private handleMouseMove(event: MouseEvent): void {
-        const previewMode = this.view.state.field(previewModeField, false);
-        if (previewMode !== 'hover') return;
-
-        const editingRegion = this.view.state.field(editingRegionField, false);
-        if (editingRegion) return;
-
-        if (this.hoverTimeout) {
-            clearTimeout(this.hoverTimeout);
-        }
-
-        this.hoverTimeout = setTimeout(() => {
-            const pos = this.view.posAtCoords({ x: event.clientX, y: event.clientY });
-            if (pos === null) {
-                const currentEditingRegion = this.view.state.field(editingRegionField, false);
-                if (!currentEditingRegion && this.hoveredRegion) {
-                    this.hoveredRegion = null;
-                    this.clearPreviews();
-                }
-                return;
-            }
-
-            const region = this.detector.detectMathAtPosition(this.view, pos);
-
-            if (region) {
-                const isSameRegion = this.hoveredRegion &&
-                    region.from === this.hoveredRegion.from &&
-                    region.to === this.hoveredRegion.to;
-
-                if (!isSameRegion) {
-                    this.hoveredRegion = region;
-                    this.renderPreview(region);
-                }
-            } else if (this.hoveredRegion) {
-                this.hoveredRegion = null;
-                this.clearPreviews();
-            }
-        }, 150);
+        (window as any).lastMouseEvent = event;
     }
 
     private handleMouseLeave(): void {
-        if (this.hoverTimeout) {
-            clearTimeout(this.hoverTimeout);
-            this.hoverTimeout = null;
-        }
-
-        const editingRegion = this.view.state.field(editingRegionField, false);
-        if (editingRegion) return;
-
-        const previewMode = this.view.state.field(previewModeField, false);
-        if (previewMode === 'hover' && this.hoveredRegion) {
-            this.hoveredRegion = null;
-            this.clearPreviews();
-        }
+        (window as any).lastMouseEvent = null;
     }
 
     private startEdit(region: MathRegion): void {
@@ -194,16 +257,38 @@ class MathLiveProcessor {
         });
     }
 
-    private renderPreview(region: MathRegion): void {
-        const widget = Decoration.widget({
-            widget: new MathPreviewWidget(region, () => this.startEdit(region)),
-            side: 1,
-            block: region.type === 'display',
+    private renderPreview(region: MathRegion, mouseX: number, mouseY: number): void {
+        this.clearOverlay();
+
+        const previewWidget = new MathPreviewWidget(region, () => this.startEdit(region));
+        const dom = previewWidget.toDOM();
+
+        dom.style.left = `${Math.min(mouseX + 20, window.innerWidth - 320)}px`;
+        dom.style.top = `${Math.max(mouseY + 20, 10)}px`;
+
+        dom.addEventListener('click', (e) => {
+            if (!(e.target as Element).closest('.cm-math-edit-btn')) {
+                this.startEdit(region);
+            }
         });
 
-        this.view.dispatch({
-            effects: setMathDecorations.of(Decoration.set([widget.range(region.to)])),
-        });
+        document.body.appendChild(dom);
+        this.currentOverlay = dom;
+
+        this.outsideClickHandler = (e: MouseEvent) => {
+            const target = e.target as Element;
+
+            if (this.currentOverlay && (this.currentOverlay.contains(target) || this.isClickInMathLiveUI(target))) {
+                return;
+            }
+
+            this.clearOverlay();
+            this.hoveredRegion = null;
+        };
+
+        setTimeout(() => {
+            document.addEventListener('mousedown', this.outsideClickHandler!, true);
+        }, 100);
     }
 
     private renderAllPreviews(): void {
@@ -225,23 +310,47 @@ class MathLiveProcessor {
     }
 
     protected renderEditWidget(region: MathRegion): void {
-        const widget = Decoration.replace({
-            widget: new MathEditWidget(
+        this.clearOverlay();
+
+        setTimeout(() => {
+            const editWidget = new MathEditWidget(
                 region,
                 this.view,
                 (content: string) => this.handleSave(region, content),
                 () => this.handleCancel(),
-            ),
-            inclusive: false,
-            block: region.type === 'display',
-        });
+            );
 
-        this.view.dispatch({
-            effects: [
-                setMathEditRegion.of({ from: region.from, to: region.to }),
-                setMathDecorations.of(Decoration.set([widget.range(region.from, region.to)])),
-            ],
-        });
+            const dom = editWidget.toDOM();
+
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const widgetWidth = 400;
+            const widgetHeight = 200;
+
+            dom.style.left = `${Math.max((viewportWidth - widgetWidth) / 2, 10)}px`;
+            dom.style.top = `${Math.max((viewportHeight - widgetHeight) / 2, 50)}px`;
+
+            document.body.appendChild(dom);
+            this.currentOverlay = dom;
+
+            this.view.dispatch({
+                effects: setMathEditRegion.of({ from: region.from, to: region.to }),
+            });
+
+            this.outsideClickHandler = (e: MouseEvent) => {
+                const target = e.target as Element;
+
+                if (this.currentOverlay && (this.currentOverlay.contains(target) || this.isClickInMathLiveUI(target))) {
+                    return;
+                }
+
+                this.handleCancel();
+            };
+
+            setTimeout(() => {
+                document.addEventListener('mousedown', this.outsideClickHandler!, true);
+            }, 100);
+        }, 0);
     }
 
     private handleSave(region: MathRegion, newContent: string): void {
@@ -260,6 +369,7 @@ class MathLiveProcessor {
                 ],
             });
 
+            this.clearOverlay();
             this.view.focus();
 
             setTimeout(() => {
@@ -278,6 +388,7 @@ class MathLiveProcessor {
                 ],
             });
 
+            this.clearOverlay();
             this.view.focus();
 
             setTimeout(() => {
@@ -286,17 +397,40 @@ class MathLiveProcessor {
         }, 0);
     }
 
+    private clearOverlay(): void {
+        if (this.outsideClickHandler) {
+            document.removeEventListener('mousedown', this.outsideClickHandler, true);
+            this.outsideClickHandler = null;
+        }
+
+        if (this.currentOverlay) {
+            this.currentOverlay.remove();
+            this.currentOverlay = null;
+        }
+    }
+
     private clearPreviews(): void {
+        this.clearOverlay();
         this.view.dispatch({
             effects: setMathDecorations.of(Decoration.none),
         });
     }
 
     destroy(): void {
-        if (this.hoverTimeout) {
-            clearTimeout(this.hoverTimeout);
+        this.isDestroyed = true;
+
+        if (this.checkTimer) {
+            clearTimeout(this.checkTimer);
+            this.checkTimer = null;
         }
+        this.clearOverlay();
     }
+}
+
+if (typeof window !== 'undefined') {
+    document.addEventListener('mousemove', (e) => {
+        (window as any).lastMouseEvent = e;
+    });
 }
 
 let mathLiveFontsConfigured = false;
@@ -304,9 +438,11 @@ let mathLiveFontsConfigured = false;
 export function createMathLiveExtension(
     fileType: 'latex' | 'typst',
     previewMode: 'hover' | 'always' | 'never' = 'hover',
+    locale: string
 ): Extension {
     if (!mathLiveFontsConfigured) {
         MathfieldElement.fontsDirectory = `${BASE_PATH}/assets/fonts/`;
+        MathfieldElement.locale = normalizeLocale(locale);
         mathLiveFontsConfigured = true;
     }
 
@@ -348,26 +484,18 @@ export function createMathLiveExtension(
         previewModeField.init(() => previewMode),
         mathDecorations,
         plugin,
-        EditorView.baseTheme({
-            '.cm-math-preview': {
-                padding: '4px 8px',
-                margin: '2px',
-                backgroundColor: 'var(--pico-secondary-background)',
-                borderRadius: '4px',
-                cursor: 'pointer',
-            },
-            '.cm-math-display': {
-                padding: '12px',
-                margin: '12px 0',
-            },
-            '.cm-math-editor': {
-                zIndex: '1000',
-            },
-            '.cm-math-edit-btn:hover': {
-                backgroundColor: 'var(--pico-secondary-background)',
-            },
-        }),
     ];
+}
+
+function normalizeLocale(locale: string): string {
+    const normalized = locale.trim().replace(/_/g, '-').toLowerCase();
+
+    const map: Record<string, string> = {
+        zh: 'zh-cn',
+    };
+
+    const base = normalized.split('-').slice(0, 2).join('-');
+    return map[base] ?? normalized;
 }
 
 export function updateMathLiveFileType(view: EditorView, fileType: 'latex' | 'typst'): void {
