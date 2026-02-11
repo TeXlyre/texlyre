@@ -52,6 +52,10 @@ export default defineConfig({
 					dest: "assets/cmaps/",
 				},
 				{
+					src: "node_modules/mathlive/fonts/*",
+					dest: "assets/fonts/",
+				},
+				{
 					src: "node_modules/@myriaddreamin/typst-ts-web-compiler/pkg/*",
 					dest: "core/typst-ts-web-compiler/pkg/",
 				},

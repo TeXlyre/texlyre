@@ -1,3 +1,4 @@
+// src/contexts/EditorContext.tsx
 import { t } from '@/i18n';
 import type React from 'react';
 import {
@@ -6,7 +7,7 @@ import {
   useCallback,
   useEffect,
   useRef,
-  useState
+  useState,
 } from 'react';
 
 import { pluginRegistry } from '../plugins/PluginRegistry';
@@ -14,14 +15,214 @@ import { useSettings } from '../hooks/useSettings';
 import type {
   EditorSettings,
   FontFamily,
-  FontSize
-} from '../types/editorSettings';
-import {
-  defaultEditorSettings,
-  fontFamilyMap,
-  fontSizeMap
-} from '../types/editorSettings';
+  FontSize,
+} from '../types/editor';
 import type { CollabConnectOptions, CollabProviderType } from '../types/collab';
+import type { Setting } from '../contexts/SettingsContext';
+
+export const fontSizeMap: Record<FontSize, string> = {
+  xs: '10px',
+  sm: '12px',
+  base: '14px',
+  lg: '16px',
+  xl: '18px',
+  '2xl': '20px',
+  '3xl': '24px',
+};
+
+export const fontFamilyMap: Record<FontFamily, string> = {
+  monospace:
+    "ui-monospace, 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Noto Sans Mono', 'Droid Sans Mono', 'Consolas', monospace",
+  serif: "ui-serif, 'Times New Roman', 'Times', serif",
+  'sans-serif':
+    "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif",
+  'jetbrains-mono':
+    "'JetBrains Mono', ui-monospace, 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace",
+  'fira-code':
+    "'Fira Code', ui-monospace, 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace",
+  'source-code-pro':
+    "'Source Code Pro', ui-monospace, 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace",
+  inconsolata:
+    "'Inconsolata', ui-monospace, 'SF Mono', 'Monaco', 'Roboto Mono', monospace",
+};
+
+export const defaultEditorSettings: EditorSettings = {
+  fontSize: 'lg',
+  fontFamily: 'monospace',
+  showLineNumbers: true,
+  syntaxHighlighting: true,
+  autoSaveEnabled: false,
+  autoSaveDelay: 150,
+  highlightTheme: 'auto',
+  vimMode: false,
+  spellCheck: true,
+  mathLiveEnabled: true,
+  mathLivePreviewMode: 'hover-cursor',
+  language: 'en',
+};
+
+interface EditorSettingDescriptor extends Setting {
+  ref: keyof EditorSettings;
+  onAfterChange?: (value: EditorSettings[keyof EditorSettings]) => void;
+}
+
+function getSettingDescriptors(): EditorSettingDescriptor[] {
+  return [
+    {
+      id: 'editor-font-family',
+      ref: 'fontFamily',
+      category: t('Appearance'),
+      subcategory: t('Text Editor'),
+      type: 'select',
+      label: t('Font family'),
+      description: t('Select the font family for the editor'),
+      defaultValue: defaultEditorSettings.fontFamily,
+      options: [
+        { label: t('Monospace (System)'), value: 'monospace' },
+        { label: t('JetBrains Mono'), value: 'jetbrains-mono' },
+        { label: t('Fira Code'), value: 'fira-code' },
+        { label: t('Source Code Pro'), value: 'source-code-pro' },
+        { label: t('Inconsolata'), value: 'inconsolata' },
+        { label: t('Serif'), value: 'serif' },
+        { label: t('Sans Serif'), value: 'sans-serif' },
+      ],
+      onAfterChange: (value) => {
+        document.documentElement.style.setProperty(
+          '--editor-font-family',
+          fontFamilyMap[value as FontFamily]
+        );
+      },
+    },
+    {
+      id: 'editor-font-size',
+      ref: 'fontSize',
+      category: t('Appearance'),
+      subcategory: t('Text Editor'),
+      type: 'select',
+      label: t('Font size'),
+      description: t('Select the font size for the editor'),
+      defaultValue: defaultEditorSettings.fontSize,
+      options: [
+        { label: t('Extra Small (10px)'), value: 'xs' },
+        { label: t('Small (12px)'), value: 'sm' },
+        { label: t('Base (14px)'), value: 'base' },
+        { label: t('Large (16px)'), value: 'lg' },
+        { label: t('Extra Large (18px)'), value: 'xl' },
+        { label: t('2X Large (20px)'), value: '2xl' },
+        { label: t('3X Large (24px)'), value: '3xl' },
+      ],
+      onAfterChange: (value) => {
+        document.documentElement.style.setProperty(
+          '--editor-font-size',
+          fontSizeMap[value as FontSize]
+        );
+      },
+    },
+    {
+      id: 'editor-show-line-numbers',
+      ref: 'showLineNumbers',
+      category: t('Appearance'),
+      subcategory: t('Text Editor'),
+      type: 'checkbox',
+      label: t('Show line numbers'),
+      description: t('Show line numbers in the editor'),
+      defaultValue: defaultEditorSettings.showLineNumbers,
+    },
+    {
+      id: 'editor-syntax-highlighting',
+      ref: 'syntaxHighlighting',
+      category: t('Appearance'),
+      subcategory: t('Text Editor'),
+      type: 'checkbox',
+      label: t('Show syntax highlighting'),
+      description: t('Show syntax highlighting in the editor including tooltip and linting (LaTeX, Typst, BibTeX, and markdown)'),
+      defaultValue: defaultEditorSettings.syntaxHighlighting,
+    },
+    {
+      id: 'editor-theme-highlights',
+      ref: 'highlightTheme',
+      category: t('Appearance'),
+      subcategory: t('Text Editor'),
+      type: 'select',
+      label: t('Syntax highlighting theme'),
+      description: t('Choose the color theme for syntax highlighting'),
+      defaultValue: defaultEditorSettings.highlightTheme,
+      options: [
+        { label: t('Auto (follows app theme)'), value: 'auto' },
+        { label: t('Light theme'), value: 'light' },
+        { label: t('Dark theme (OneDark)'), value: 'dark' },
+      ],
+    },
+    {
+      id: 'editor-auto-save-enable',
+      ref: 'autoSaveEnabled',
+      category: t('Viewers'),
+      subcategory: t('Text Editor'),
+      type: 'checkbox',
+      label: t('Auto-save on changes'),
+      description: t('Automatically save file changes while editing'),
+      defaultValue: defaultEditorSettings.autoSaveEnabled,
+    },
+    {
+      id: 'editor-auto-save-delay',
+      ref: 'autoSaveDelay',
+      category: t('Viewers'),
+      subcategory: t('Text Editor'),
+      type: 'number',
+      label: t('Auto-save delay (milliseconds)'),
+      description: t('Delay in milliseconds before saving changes'),
+      defaultValue: defaultEditorSettings.autoSaveDelay,
+      min: 50,
+      max: 10000,
+    },
+    {
+      id: 'editor-vim-mode',
+      ref: 'vimMode',
+      category: t('Viewers'),
+      subcategory: t('Text Editor'),
+      type: 'checkbox',
+      label: t('Enable Vim keybindings'),
+      description: t('Enable Vim-style keybindings in the editor'),
+      defaultValue: defaultEditorSettings.vimMode,
+    },
+    {
+      id: 'editor-spell-check',
+      ref: 'spellCheck',
+      category: t('Viewers'),
+      subcategory: t('Text Editor'),
+      type: 'checkbox',
+      label: t('Enable spell checking'),
+      description: t('Enable browser spell checking in the editor (note: not compatible with typesetter syntax)'),
+      defaultValue: defaultEditorSettings.spellCheck,
+    },
+    {
+      id: 'editor-mathlive-enabled',
+      ref: 'mathLiveEnabled',
+      category: t('Viewers'),
+      subcategory: t('Text Editor'),
+      type: 'checkbox',
+      label: t('Enable MathLive'),
+      description: t('Enable interactive math editing with MathLive'),
+      defaultValue: defaultEditorSettings.mathLiveEnabled,
+    },
+    {
+      id: 'editor-mathlive-preview-mode',
+      ref: 'mathLivePreviewMode',
+      category: t('Viewers'),
+      subcategory: t('Text Editor'),
+      type: 'select',
+      label: t('MathLive preview mode'),
+      description: t('When to show rendered math equations'),
+      defaultValue: defaultEditorSettings.mathLivePreviewMode,
+      options: [
+        { label: t('On hover and cursor'), value: 'hover-cursor' },
+        { label: t('On hover'), value: 'hover' },
+        { label: t('On cursor'), value: 'cursor' },
+        // { label: t('Never'), value: 'never' },
+      ],
+    },
+  ];
+}
 
 interface EditorContextType {
   editorSettings: EditorSettings;
@@ -52,7 +253,7 @@ export const EditorContext = createContext<EditorContextType>({
   getCollabOptions: () => ({}),
   getEnabledLSPPlugins: () =>
     pluginRegistry.getLSPPlugins().map((plugin) => plugin.id),
-  editorSettingsVersion: 0
+  editorSettingsVersion: 0,
 });
 
 interface EditorProviderProps {
@@ -61,14 +262,13 @@ interface EditorProviderProps {
 
 export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
   const { getSetting, batchGetSettings, registerSetting } = useSettings();
-  const [editorSettings, setEditorSettings] = useState<EditorSettings>(
-    defaultEditorSettings
-  );
+  const [editorSettings, setEditorSettings] =
+    useState<EditorSettings>(defaultEditorSettings);
   const [editorSettingsVersion, setEditorSettingsVersion] = useState(0);
   const settingsRegisteredOnce = useRef(false);
 
   const updateEditorSetting = useCallback(
-    <K extends keyof EditorSettings,>(key: K, value: EditorSettings[K]) => {
+    <K extends keyof EditorSettings>(key: K, value: EditorSettings[K]) => {
       setEditorSettings((prev) => ({ ...prev, [key]: value }));
       setEditorSettingsVersion((prev) => prev + 1);
     },
@@ -79,202 +279,33 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
     if (settingsRegisteredOnce.current) return;
     settingsRegisteredOnce.current = true;
 
-    const batchedSettings = batchGetSettings([
-      'editor-font-size',
-      'editor-font-family',
-      'editor-show-line-numbers',
-      'editor-syntax-highlighting',
-      'editor-auto-save-enable',
-      'editor-auto-save-delay',
-      'editor-theme-highlights',
-      'editor-vim-mode',
-      'editor-spell-check'
-    ]);
+    const descriptors = getSettingDescriptors();
+    const settingIds = descriptors.map((d) => d.id);
+    const batchedSettings = batchGetSettings([...settingIds, 'language']);
 
-    const initialFontSize =
-      (batchedSettings['editor-font-size'] as FontSize) ??
-      defaultEditorSettings.fontSize;
-    const initialFontFamily =
-      (batchedSettings['editor-font-family'] as FontFamily) ??
-      defaultEditorSettings.fontFamily;
-    const initialShowLineNumbers =
-      (batchedSettings['editor-show-line-numbers'] as boolean) ??
-      defaultEditorSettings.showLineNumbers;
-    const initialSyntaxHighlighting =
-      (batchedSettings['editor-syntax-highlighting'] as boolean) ??
-      defaultEditorSettings.syntaxHighlighting;
-    const initialAutoSaveEnabled =
-      (batchedSettings['editor-auto-save-enable'] as boolean) ??
-      defaultEditorSettings.autoSaveEnabled;
-    const initialAutoSaveDelay =
-      (batchedSettings['editor-auto-save-delay'] as number) ??
-      defaultEditorSettings.autoSaveDelay;
-    const initialHighlightTheme =
-      (batchedSettings['editor-theme-highlights'] as 'auto' | 'light' | 'dark') ??
-      defaultEditorSettings.highlightTheme;
-    const initialVimMode =
-      (batchedSettings['editor-vim-mode'] as boolean) ??
-      defaultEditorSettings.vimMode;
-    const initialSpellCheck =
-      (batchedSettings['editor-spell-check'] as boolean) ??
-      defaultEditorSettings.spellCheck;
+    const initialLanguage = (batchedSettings['language'] as string) ?? 'en';
+    updateEditorSetting('language', initialLanguage);
 
-    registerSetting({
-      id: 'editor-font-family',
-      category: t("Appearance"),
-      subcategory: t("Text Editor"),
-      type: 'select',
-      label: t("Font family"),
-      description: t("Select the font family for the editor"),
-      defaultValue: initialFontFamily,
-      options: [
-        { label: t("Monospace (System)"), value: 'monospace' },
-        { label: t("JetBrains Mono"), value: 'jetbrains-mono' },
-        { label: t("Fira Code"), value: 'fira-code' },
-        { label: t("Source Code Pro"), value: 'source-code-pro' },
-        { label: t("Inconsolata"), value: 'inconsolata' },
-        { label: t("Serif"), value: 'serif' },
-        { label: t("Sans Serif"), value: 'sans-serif' }
-      ],
-      onChange: (value) => {
-        const fontFamily = value as FontFamily;
-        updateEditorSetting('fontFamily', fontFamily);
-        // fabawi: The font family is set in the useEditorView directly now, but
-        // keeping this for backward compatibility with CSS variables. 
-        document.documentElement.style.setProperty(
-          '--editor-font-family',
-          fontFamilyMap[fontFamily]
-        );
-      }
-    });
+    for (const descriptor of descriptors) {
+      const persisted = batchedSettings[descriptor.id];
+      const initialValue = persisted ?? descriptor.defaultValue;
 
-    registerSetting({
-      id: 'editor-font-size',
-      category: t("Appearance"),
-      subcategory: t("Text Editor"),
-      type: 'select',
-      label: t("Font size"),
-      description: t("Select the font size for the editor"),
-      defaultValue: initialFontSize,
-      options: [
-        { label: t("Extra Small (10px)"), value: 'xs' },
-        { label: t("Small (12px)"), value: 'sm' },
-        { label: t("Base (14px)"), value: 'base' },
-        { label: t("Large (16px)"), value: 'lg' },
-        { label: t("Extra Large (18px)"), value: 'xl' },
-        { label: t("2X Large (20px)"), value: '2xl' },
-        { label: t("3X Large (24px)"), value: '3xl' }
-      ],
-      onChange: (value) => {
-        const fontSize = value as FontSize;
-        updateEditorSetting('fontSize', fontSize);
-        document.documentElement.style.setProperty(
-          '--editor-font-size',
-          fontSizeMap[fontSize]
-        );
-      }
-    });
+      const { ref, onAfterChange, ...baseSetting } = descriptor;
 
-    registerSetting({
-      id: 'editor-show-line-numbers',
-      category: t("Appearance"),
-      subcategory: t("Text Editor"),
-      type: 'checkbox',
-      label: t("Show line numbers"),
-      description: t("Show line numbers in the editor"),
-      defaultValue: initialShowLineNumbers,
-      onChange: (value) => {
-        updateEditorSetting('showLineNumbers', value as boolean);
-      }
-    });
-
-    registerSetting({
-      id: 'editor-syntax-highlighting',
-      category: t("Appearance"),
-      subcategory: t("Text Editor"),
-      type: 'checkbox',
-      label: t("Show syntax highlighting"),
-      description: t("Show syntax highlighting in the editor including tooltip and linting (LaTeX, Typst, BibTeX, and markdown)"),
-      defaultValue: initialSyntaxHighlighting,
-      onChange: (value) => {
-        updateEditorSetting('syntaxHighlighting', value as boolean);
-      }
-    });
-
-    registerSetting({
-      id: 'editor-theme-highlights',
-      category: t("Appearance"),
-      subcategory: t("Text Editor"),
-      type: 'select',
-      label: t("Syntax highlighting theme"),
-      description: t("Choose the color theme for syntax highlighting"),
-      defaultValue: initialHighlightTheme,
-      options: [
-        { label: t("Auto (follows app theme)"), value: 'auto' },
-        { label: t("Light theme"), value: 'light' },
-        { label: t("Dark theme (OneDark)"), value: 'dark' }
-      ],
-      onChange: (value) => {
-        updateEditorSetting(
-          'highlightTheme',
-          value as 'auto' | 'light' | 'dark'
-        );
-      }
-    });
-
-    registerSetting({
-      id: 'editor-auto-save-enable',
-      category: t("Viewers"),
-      subcategory: t("Text Editor"),
-      type: 'checkbox',
-      label: t("Auto-save on changes"),
-      description: t("Automatically save file changes while editing"),
-      defaultValue: initialAutoSaveEnabled,
-      onChange: (value) => {
-        updateEditorSetting('autoSaveEnabled', value as boolean);
-      }
-    });
-
-    registerSetting({
-      id: 'editor-auto-save-delay',
-      category: t("Viewers"),
-      subcategory: t("Text Editor"),
-      type: 'number',
-      label: t("Auto-save delay (milliseconds)"),
-      description: t("Delay in milliseconds before saving changes"),
-      defaultValue: initialAutoSaveDelay,
-      min: 50,
-      max: 10000,
-      onChange: (value) => {
-        updateEditorSetting('autoSaveDelay', value as number);
-      }
-    });
-
-    registerSetting({
-      id: 'editor-vim-mode',
-      category: t("Viewers"),
-      subcategory: t("Text Editor"),
-      type: 'checkbox',
-      label: t("Enable Vim keybindings"),
-      description: t("Enable Vim-style keybindings in the editor"),
-      defaultValue: initialVimMode,
-      onChange: (value) => {
-        updateEditorSetting('vimMode', value as boolean);
-      }
-    });
-
-    registerSetting({
-      id: 'editor-spell-check',
-      category: t("Viewers"),
-      subcategory: t("Text Editor"),
-      type: 'checkbox',
-      label: t("Enable spell checking"),
-      description: t("Enable browser spell checking in the editor (note: not compatible with typesetter syntax)"),
-      defaultValue: initialSpellCheck,
-      onChange: (value) => {
-        updateEditorSetting('spellCheck', value as boolean);
-      }
-    });
+      registerSetting({
+        ...baseSetting,
+        defaultValue: initialValue,
+        onChange: (value) => {
+          updateEditorSetting(
+            ref,
+            value as EditorSettings[typeof ref]
+          );
+          onAfterChange?.(
+            value as EditorSettings[keyof EditorSettings]
+          );
+        },
+      });
+    }
   }, [registerSetting, batchGetSettings]);
 
   const getLineNumbersEnabled = useCallback(
@@ -318,31 +349,37 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       return null;
     }
 
-    const providerType = (providerTypeSetting?.value as CollabProviderType) ?? 'webrtc';
-    const signalingServers = (signalingServersSetting?.value as string) ?? '';
-    const websocketServer = (websocketServerSetting?.value as string) ?? '';
+    const providerType =
+      (providerTypeSetting?.value as CollabProviderType) ?? 'webrtc';
+    const signalingServers =
+      (signalingServersSetting?.value as string) ?? '';
+    const websocketServer =
+      (websocketServerSetting?.value as string) ?? '';
     const awarenessTimeout = awarenessTimeoutSetting.value as number;
     const autoReconnect = autoReconnectSetting.value as boolean;
 
-    const serversToUse = signalingServers.length > 0
-      ? signalingServers.split(',').map((s) => s.trim())
-      : undefined;
+    const serversToUse =
+      signalingServers.length > 0
+        ? signalingServers.split(',').map((s) => s.trim())
+        : undefined;
 
     return {
       providerType,
       signalingServers: serversToUse,
       websocketServer,
       autoReconnect,
-      awarenessTimeout: awarenessTimeout * 1000
+      awarenessTimeout: awarenessTimeout * 1000,
     };
   }, [getSetting]);
 
   const getEnabledLSPPlugins = useCallback((): string[] => {
     const allLSPPlugins = pluginRegistry.getAllLSPPlugins();
-    return allLSPPlugins.filter((plugin) => {
-      const enabledSetting = getSetting(`${plugin.id}-enabled`);
-      return enabledSetting?.value as boolean ?? false;
-    }).map((plugin) => plugin.id);
+    return allLSPPlugins
+      .filter((plugin) => {
+        const enabledSetting = getSetting(`${plugin.id}-enabled`);
+        return (enabledSetting?.value as boolean) ?? false;
+      })
+      .map((plugin) => plugin.id);
   }, [getSetting]);
 
   const contextValue = {
@@ -356,7 +393,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
     getSpellCheckEnabled,
     getCollabOptions,
     getEnabledLSPPlugins,
-    editorSettingsVersion
+    editorSettingsVersion,
   };
 
   return (

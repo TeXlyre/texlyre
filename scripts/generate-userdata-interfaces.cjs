@@ -74,7 +74,7 @@ function extractSettingsAndProperties(sourceDir) {
                                 t.isTSArrayType(returnType.typeAnnotation) &&
                                 t.isTSTypeReference(returnType.typeAnnotation.elementType) &&
                                 t.isIdentifier(returnType.typeAnnotation.elementType.typeName) &&
-                                returnType.typeAnnotation.elementType.typeName.name === 'Setting';
+                                returnType.typeAnnotation.elementType.typeName.name.includes('Setting');
 
                             if (isSettingsArray && t.isArrayExpression(declarator.init.body)) {
                                 for (const element of declarator.init.body.elements) {
@@ -98,7 +98,7 @@ function extractSettingsAndProperties(sourceDir) {
                         t.isTSArrayType(returnType.typeAnnotation) &&
                         t.isTSTypeReference(returnType.typeAnnotation.elementType) &&
                         t.isIdentifier(returnType.typeAnnotation.elementType.typeName) &&
-                        returnType.typeAnnotation.elementType.typeName.name === 'Setting';
+                        returnType.typeAnnotation.elementType.typeName.name.includes('Setting');
 
                     if (isSettingsArray && t.isBlockStatement(path.node.body)) {
                         path.traverse({

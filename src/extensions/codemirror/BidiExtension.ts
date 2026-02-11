@@ -1,5 +1,4 @@
-// src/extensions/codemirror/BidiExtension.ts
-import { RangeSetBuilder, type Extension } from "@codemirror/state";
+import { RangeSetBuilder, type Extension, StateField, StateEffect } from "@codemirror/state";
 import {
     Decoration,
     Direction,
@@ -10,6 +9,22 @@ import {
 } from "@codemirror/view";
 
 type Range = { from: number; to: number };
+
+export const setMathEditRegion = StateEffect.define<Range | null>();
+
+const mathEditRegionField = StateField.define<Range | null>({
+    create() {
+        return null;
+    },
+    update(value, tr) {
+        for (const effect of tr.effects) {
+            if (effect.is(setMathEditRegion)) {
+                return effect.value;
+            }
+        }
+        return value;
+    },
+});
 
 function findBalancedRange(
     text: string,
@@ -98,6 +113,10 @@ const isolate = Decoration.mark({
     bidiIsolate: Direction.LTR,
 });
 
+function rangesOverlap(r1: Range, r2: Range): boolean {
+    return r1.from < r2.to && r2.from < r1.to;
+}
+
 class LatexTypstBidiIsolatesValue {
     decorations: DecorationSet;
 
@@ -113,6 +132,7 @@ class LatexTypstBidiIsolatesValue {
 
     private build(view: EditorView): DecorationSet {
         const b = new RangeSetBuilder<Decoration>();
+        const skipRegion = view.state.field(mathEditRegionField, false);
 
         for (const { from, to } of view.visibleRanges) {
             let pos = from;
@@ -120,8 +140,19 @@ class LatexTypstBidiIsolatesValue {
                 const line = view.state.doc.lineAt(pos);
                 const latex = findLatexRangesInLine(line.text, line.from);
                 const typst = findTypstRangesInLine(line.text, line.from);
-                for (const r of latex) b.add(r.from, r.to, isolate);
-                for (const r of typst) b.add(r.from, r.to, isolate);
+
+                for (const r of latex) {
+                    if (!skipRegion || !rangesOverlap(r, skipRegion)) {
+                        b.add(r.from, r.to, isolate);
+                    }
+                }
+
+                for (const r of typst) {
+                    if (!skipRegion || !rangesOverlap(r, skipRegion)) {
+                        b.add(r.from, r.to, isolate);
+                    }
+                }
+
                 pos = line.to + 1;
             }
         }
@@ -136,6 +167,7 @@ export function latexTypstBidiIsolates(): Extension {
     });
 
     return [
+        mathEditRegionField,
         plugin,
         EditorView.bidiIsolatedRanges.of((view) => {
             const v = view.plugin(plugin);
