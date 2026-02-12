@@ -685,17 +685,15 @@ math-field {
 	font-family: inherit;
 }
 
-/* MathLive Preview Overlay */
 .cm-math-preview-overlay {
 	position: fixed;
 	background-color: var(--pico-background);
-	border: 2px solid var(--pico-primary);
-	border-radius: 8px;
-	padding: 12px;
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-	max-width: 600px;
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	padding: 0 var(--space-md);
+	box-shadow: var(--shadow-md);
 	min-width: 50px;
-	overflow-x: scroll;
+	overflow-x: auto;
 	overflow-y: hidden;
 	pointer-events: auto;
 	cursor: pointer;
@@ -711,13 +709,14 @@ math-field {
 	background: var(--pico-background);
 	color: var(--text-color);
 	border: none;
-	padding: 4px;
+	padding: var(--space-xs);
 	margin: 0;
 	font-size: inherit;
 	pointer-events: none;
+	max-width: 100%;
+	overflow-x: auto;
 }
 
-/* MathLive Edit Button */
 .cm-math-edit-btn {
 	position: absolute;
 	top: 1px;
@@ -749,31 +748,36 @@ math-field {
 	stroke: var(--pico-secondary);
 }
 
-/* MathLive Editor Overlay */
 .cm-math-editor-overlay {
 	position: fixed;
-	z-index: 10001;
+	z-index: var(--z-above-all);
 	background: var(--pico-secondary-background);
 	border: 2px solid var(--pico-primary-background);
 	border-radius: 8px;
 	padding: 15px;
 	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-	min-width: 400px;
+	min-width: 50px;
+	max-width: calc(100vw - 32px);
 	pointer-events: auto;
 }
 
 .cm-math-editor-field {
 	display: block;
-	min-width: 50px;
-	max-width: 600px;
+	max-width: 100%;
 	padding: 8px;
 	border: 1px solid var(--pico-muted-border-color);
 	border-radius: 4px;
 	background: var(--pico-background);
 	color: var(--text-color);
+	overflow-y: visible;
+	--ui-menu-bg: var(--pico-secondary-background) !important;
+	--ui-menu-text: var(--text-color);
+	--ui-menu-bg-hover: var(--pico-primary-background) !important;
+	--ui-menu-bg-active: var(--pico-primary-background) !important;
+	--ui-menu-bg-active-muted: var(--pico-primary-background) !important;
+	--ui-menu-z-index: var(--z-above-all) !important;
 }
 
-/* Editor Buttons */
 .cm-math-editor-buttons {
 	margin-top: var(--space-md);
 	display: flex;
@@ -825,7 +829,7 @@ math-field {
 	--keycap-border: var(--pico-muted-border-color);
 	--keycap-text: var(--pico-color);
 	--keycap-text-hover: var(--pico-secondary);
-	--keycap-text-active: var(--pico-background-color);
+	--keycap-text-active: var(--pico-background);
 
 	--keycap-secondary-background: var(--pico-secondary-background);
 	--keycap-secondary-text: var(--pico-color);
@@ -839,6 +843,16 @@ math-field {
 	--keyboard-disabled-text: var(--pico-muted-color);
 	--keycap-disabled-background: var(--pico-muted-background);
 	--keycap-disabled-text: var(--pico-muted-color);
+}
+
+.ML__keyboard [data-tooltip]::after {
+	visibility: hidden !important;
+}
+
+.ML__keyboard [data-tooltip]::before {
+	background-color: var(--pico-secondary-background);
+	color: var(--text-color);
+
 }
 
 @media (max-width: 768px) {

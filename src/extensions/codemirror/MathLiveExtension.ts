@@ -253,17 +253,55 @@ class MathLiveProcessor {
         const previewWidget = new MathPreviewWidget(region, () => this.startEdit(region));
         const dom = previewWidget.toDOM();
 
-        dom.style.left = `${Math.min(mouseX + 20, window.innerWidth - 320)}px`;
-        dom.style.top = `${Math.max(mouseY + 20, 10)}px`;
+        dom.style.visibility = 'hidden';
+        dom.style.left = '0px';
+        dom.style.top = '0px';
+
+        document.body.appendChild(dom);
+        this.currentOverlay = dom;
+
+        setTimeout(() => {
+            if (!this.currentOverlay || this.isDestroyed) return;
+
+            this.view.dispatch({
+                effects: setMathEditRegion.of({ from: region.from, to: region.to }),
+            });
+        }, 0);
+
+        setTimeout(() => {
+            if (!this.currentOverlay) return;
+
+            const domRect = dom.getBoundingClientRect();
+            const spacing = 12;
+            const padding = 8;
+
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            let left = mouseX + 20;
+            let top = mouseY + 20;
+
+            if (left + domRect.width + spacing > viewportWidth) {
+                left = Math.max(padding, viewportWidth - domRect.width - padding);
+            }
+
+            if (top + domRect.height + spacing > viewportHeight) {
+                top = Math.max(padding, viewportHeight - domRect.height - padding);
+            }
+
+            left = Math.max(padding, left);
+            top = Math.max(padding, top);
+
+            dom.style.left = `${left}px`;
+            dom.style.top = `${top}px`;
+            dom.style.visibility = 'visible';
+        }, 50);
 
         dom.addEventListener('click', (e) => {
             if (!(e.target as Element).closest('.cm-math-edit-btn')) {
                 this.startEdit(region);
             }
         });
-
-        document.body.appendChild(dom);
-        this.currentOverlay = dom;
 
         this.outsideClickHandler = (e: MouseEvent) => {
             const target = e.target as Element;
@@ -294,16 +332,28 @@ class MathLiveProcessor {
 
             const dom = editWidget.toDOM();
 
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
-            const widgetWidth = 400;
-            const widgetHeight = 200;
-
-            dom.style.left = `${Math.max((viewportWidth - widgetWidth) / 2, 10)}px`;
-            dom.style.top = `${Math.max((viewportHeight - widgetHeight) / 2, 50)}px`;
+            dom.style.visibility = 'hidden';
+            dom.style.left = '0px';
+            dom.style.top = '0px';
 
             document.body.appendChild(dom);
             this.currentOverlay = dom;
+
+            setTimeout(() => {
+                if (!this.currentOverlay) return;
+
+                const domRect = dom.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                const padding = 16;
+
+                const left = Math.max(padding, (viewportWidth - domRect.width) / 2);
+                const top = Math.max(50, (viewportHeight - domRect.height) / 2);
+
+                dom.style.left = `${left}px`;
+                dom.style.top = `${top}px`;
+                dom.style.visibility = 'visible';
+            }, 50);
 
             this.view.dispatch({
                 effects: setMathEditRegion.of({ from: region.from, to: region.to }),
@@ -413,6 +463,13 @@ class MathLiveProcessor {
         if (this.currentOverlay) {
             this.currentOverlay.remove();
             this.currentOverlay = null;
+
+            setTimeout(() => {
+                if (this.isDestroyed) return;
+                this.view.dispatch({
+                    effects: setMathEditRegion.of(null),
+                });
+            }, 0);
         }
     }
 
