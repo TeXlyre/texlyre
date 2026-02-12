@@ -61,6 +61,33 @@ The platform includes a file explorer supporting drag-and-drop operations for va
 
 ![Project dashboard with file explorer and project cards](showcase/project_viewer_zoomed.png)
 
+### Editor Tools
+
+TeXlyre includes editor-level tools designed to improve mathematical authoring and document quality. These tools operate entirely in the browser, work offline, and remain synchronized across collaborators in real time.
+
+TeXlyre provides built-in document statistics to help authors track progress while writing. Word counts are computed using **[TeXcount](https://app.uio.no/ifi/texcount/)** for LaTeX documents and **[typst-wordometer](https://github.com/Jollywatt/typst-wordometer)** for Typst documents, delivering accurate statistics that reflect the structure of each language rather than raw text length.
+
+<p align="center">
+  <img src="showcase/statistics_modal.svg"
+       alt="Statistics modal showing word counts, with arrow pointing to the statistics button">
+</p>
+
+To maintain clean and readable source files, TeXlyre includes formatting tools for both LaTeX and Typst. LaTeX documents are formatted using **[tex-fmt](https://github.com/WGUNDERWOOD/tex-fmt)**, while Typst documents use **[typstyle](https://github.com/typstyle-rs/typstyle)**, applying consistent indentation and line separation without altering document semantics.
+
+<p align="center">
+  <img src="showcase/format_latex_before_after.svg"
+       alt="Source code before and after formatting, with arrow pointing to the formatting button">
+</p>
+
+Mathematical expressions can be edited interactively using inline previews powered by **[MathLive](https://github.com/arnog/mathlive)**. When hovering over or placing the cursor inside a math expression, TeXlyre renders the formula directly and allows it to be edited using the MathLive virtual keyboard, making equations easier to create and modify.
+
+<p align="center">
+  <img src="showcase/mathlive_hover_edit_before_after.svg"
+       alt="Inline math preview on hover, with arrow pointing to the edit button that opens the MathLive editor">
+</p>
+
+
+
 ## Quick Start
 
 
@@ -186,6 +213,7 @@ TeXlyre builds upon several key technologies:
 ### Editor Extensions
 - **[codemirror-vim](https://github.com/replit/codemirror-vim)** - Vim keybindings for CodeMirror
 - **[codemirror-lang-typst](https://github.com/kxxt/codemirror-lang-typst)** - Typst language support for CodeMirror
+- **[codemirror-toolbar](https://github.com/yeliex/codemirror-extensions)** - Extensible toolbar for CodeMirror
 
 ### LaTeX Tools
 - **[tex-fmt](https://github.com/WGUNDERWOOD/tex-fmt)** - LaTeX code formatter
@@ -198,6 +226,7 @@ TeXlyre builds upon several key technologies:
 
 ### Diagram & Visualization
 - **[Draw.io](https://github.com/jgraph/drawio)** - Diagramming tool for collaborative diagram editing
+- **[MathLive](https://github.com/arnog/mathlive)** - Math rendering and full editing with built-in symbol and expression keyboard
 
 ### Runtime
 - **[WebPerl](https://github.com/haukex/webperl)** - Perl interpreter compiled to WebAssembly
