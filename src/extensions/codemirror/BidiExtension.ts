@@ -49,31 +49,40 @@ function findLatexRangesInLine(lineText: string, lineFrom: number): Range[] {
     const ranges: Range[] = [];
 
     for (let i = 0; i < lineText.length; i++) {
+        if (lineText[i] === "$") {
+            let j = i + 1;
+            while (j < lineText.length && lineText[j] !== "$") j++;
+            if (j < lineText.length) {
+                ranges.push({ from: lineFrom + i, to: lineFrom + j + 1 });
+                i = j;
+                continue;
+            }
+        }
+
         if (lineText[i] !== "\\") continue;
 
         let j = i + 1;
         if (j >= lineText.length || !/[A-Za-z@]/.test(lineText[j])) continue;
         while (j < lineText.length && /[A-Za-z@]/.test(lineText[j])) j++;
         if (j < lineText.length && lineText[j] === "*") j++;
+
+        const commandEnd = j;
+
         while (j < lineText.length && /\s/.test(lineText[j])) j++;
 
-        if (j < lineText.length && lineText[j] === "[") {
-            const end = findBalancedRange(lineText, j, "[", "]");
-            if (end == null) continue;
+        while (j < lineText.length && (lineText[j] === "[" || lineText[j] === "{")) {
+            const open = lineText[j];
+            const close = open === "[" ? "]" : "}";
+            const end = findBalancedRange(lineText, j, open, close);
+            if (end == null) break;
             j = end;
             while (j < lineText.length && /\s/.test(lineText[j])) j++;
         }
 
-        if (j < lineText.length && lineText[j] === "{") {
-            const end = findBalancedRange(lineText, j, "{", "}");
-            if (end == null) continue;
-            ranges.push({ from: lineFrom + i, to: lineFrom + end });
-            i = end - 1;
-            continue;
+        if (j > commandEnd) {
+            ranges.push({ from: lineFrom + i, to: lineFrom + j });
+            i = j - 1;
         }
-
-        ranges.push({ from: lineFrom + i, to: lineFrom + j });
-        i = j - 1;
     }
 
     return ranges;
@@ -83,26 +92,39 @@ function findTypstRangesInLine(lineText: string, lineFrom: number): Range[] {
     const ranges: Range[] = [];
 
     for (let i = 0; i < lineText.length; i++) {
+        if (lineText[i] === "$") {
+            let j = i + 1;
+            while (j < lineText.length && lineText[j] !== "$") j++;
+            if (j < lineText.length) {
+                ranges.push({ from: lineFrom + i, to: lineFrom + j + 1 });
+                i = j;
+                continue;
+            }
+        }
+
         if (lineText[i] !== "#") continue;
 
         let j = i + 1;
         if (j >= lineText.length || !/[A-Za-z_]/.test(lineText[j])) continue;
         while (j < lineText.length && /[A-Za-z0-9_\-]/.test(lineText[j])) j++;
+
+        const commandEnd = j;
+
         while (j < lineText.length && /\s/.test(lineText[j])) j++;
 
-        if (j < lineText.length && (lineText[j] === "(" || lineText[j] === "[" || lineText[j] === "{")) {
+        while (j < lineText.length && (lineText[j] === "(" || lineText[j] === "[" || lineText[j] === "{")) {
             const open = lineText[j];
             const close = open === "(" ? ")" : open === "[" ? "]" : "}";
             const end = findBalancedRange(lineText, j, open, close);
-            if (end != null) {
-                ranges.push({ from: lineFrom + i, to: lineFrom + end });
-                i = end - 1;
-                continue;
-            }
+            if (end == null) break;
+            j = end;
+            while (j < lineText.length && /\s/.test(lineText[j])) j++;
         }
 
-        ranges.push({ from: lineFrom + i, to: lineFrom + j });
-        i = j - 1;
+        if (j > commandEnd) {
+            ranges.push({ from: lineFrom + i, to: lineFrom + j });
+            i = j - 1;
+        }
     }
 
     return ranges;
@@ -133,6 +155,7 @@ class LatexTypstBidiIsolatesValue {
     private build(view: EditorView): DecorationSet {
         const b = new RangeSetBuilder<Decoration>();
         const skipRegion = view.state.field(mathEditRegionField, false);
+        const allRanges: Range[] = [];
 
         for (const { from, to } of view.visibleRanges) {
             let pos = from;
@@ -141,19 +164,31 @@ class LatexTypstBidiIsolatesValue {
                 const latex = findLatexRangesInLine(line.text, line.from);
                 const typst = findTypstRangesInLine(line.text, line.from);
 
-                for (const r of latex) {
-                    if (!skipRegion || !rangesOverlap(r, skipRegion)) {
-                        b.add(r.from, r.to, isolate);
-                    }
-                }
-
-                for (const r of typst) {
-                    if (!skipRegion || !rangesOverlap(r, skipRegion)) {
-                        b.add(r.from, r.to, isolate);
-                    }
-                }
+                allRanges.push(...latex, ...typst);
 
                 pos = line.to + 1;
+            }
+        }
+
+        allRanges.sort((a, b) => a.from - b.from || a.to - b.to);
+
+        const merged: Range[] = [];
+        for (const range of allRanges) {
+            if (merged.length === 0) {
+                merged.push(range);
+            } else {
+                const last = merged[merged.length - 1];
+                if (range.from < last.to) {
+                    last.to = Math.max(last.to, range.to);
+                } else {
+                    merged.push(range);
+                }
+            }
+        }
+
+        for (const r of merged) {
+            if (!skipRegion || !rangesOverlap(r, skipRegion)) {
+                b.add(r.from, r.to, isolate);
             }
         }
 

@@ -40,15 +40,18 @@ export class MathPreviewWidget extends WidgetType {
 
         wrapper.appendChild(mf);
 
+        const maxWidth = Math.min(600, window.innerWidth - 32);
+        wrapper.style.maxWidth = `${maxWidth}px`;
+
         setTimeout(() => {
             mf.value = this.region.previewLatex ?? this.region.content;
             mf.menuItems = [];
         }, 0);
 
         const editBtn = document.createElement('button');
-        editBtn.innerHTML = renderIcon(EditIcon, {});;
+        editBtn.innerHTML = renderIcon(EditIcon, {});
         editBtn.className = 'cm-math-edit-btn';
-        editBtn.title = 'Edit equation';
+        editBtn.title = t('Edit equation');
 
         editBtn.addEventListener('click', (e) => {
             e.preventDefault();
