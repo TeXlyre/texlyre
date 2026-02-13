@@ -58,6 +58,7 @@ import SplashScreen from './components/common/SplashScreen';
 import FileConflictModal from './components/editor/FileConflictModal';
 import { AuthProvider } from './contexts/AuthContext';
 import { EditorProvider } from './contexts/EditorContext';
+import { LSPConfigProvider } from './contexts/LSPConfigContext';
 import { FileSystemBackupProvider } from './contexts/FileSystemBackupContext';
 import { OfflineProvider } from './contexts/OfflineContext';
 import { PropertiesProvider } from './contexts/PropertiesContext';
@@ -124,9 +125,11 @@ function App() {
 								>
 									<SecretsProvider>
 										<FileSystemBackupProvider>
-											<EditorProvider>
-												<AppContent />
-											</EditorProvider>
+											<LSPConfigProvider>
+												<EditorProvider>
+													<AppContent />
+												</EditorProvider>
+											</LSPConfigProvider>
 										</FileSystemBackupProvider>
 									</SecretsProvider>
 								</ThemeProvider>

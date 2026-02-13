@@ -52,6 +52,11 @@ import {
     updateLSPPluginsInView,
     setCurrentFilePathInLSP,
 } from '../../extensions/codemirror/LSPExtension';
+import {
+    getGenericLSPExtensionsForFile,
+    getGenericLSPCompletionSources,
+    setCurrentFileNameInGenericLSP,
+} from '../../extensions/codemirror/GenericLSPExtension';
 import { createToolbarExtension } from '../../extensions/codemirror/ToolbarExtension';
 import { createMathLiveExtension } from '../../extensions/codemirror/MathLiveExtension';
 import { createPasteExtension } from '../../extensions/codemirror/PasteExtension';
@@ -403,6 +408,7 @@ export const useEditorView = (
             : ytextRef.current?.toString() || '';
 
         const extensions: Extension[] = [];
+        const completionSources: CompletionSource[] = [];
 
         const fileType = detectFileType(fileName, contentToUse);
         const isLatexFileType = fileType === 'latex';
@@ -416,6 +422,11 @@ export const useEditorView = (
 
         extensions.push(...getBasicSetupExtensions());
         extensions.push(...getLanguageExtension(fileName, contentToUse));
+
+        const genericLSPExts = getGenericLSPExtensionsForFile(fileName);
+        extensions.push(...genericLSPExts);
+        const genericLSPCompletions = getGenericLSPCompletionSources(fileName);
+        completionSources.push(...genericLSPCompletions);
 
         if (isLatexFileType || isTypstFileType) {
             extensions.push(latexTypstBidiIsolates());
@@ -432,8 +443,6 @@ export const useEditorView = (
             const availableLSPPlugins = allLSPPlugins.filter((plugin) =>
                 enabledPluginIds.includes(plugin.id),
             );
-
-            const completionSources: CompletionSource[] = [];
 
             if (availableLSPPlugins.length > 0) {
                 const [lspField, lspPlugin, lspCompletionSource] = createLSPExtension();
@@ -538,9 +547,10 @@ export const useEditorView = (
                 }, 100);
             }
 
+            console.log('[useEditorView] Total completion sources:', completionSources.length);
             extensions.push(
                 autocompletion({
-                    override: completionSources,
+                    override: completionSources.length > 0 ? completionSources : undefined,
                     maxRenderedOptions: 20,
                     closeOnBlur: false,
                 }),
@@ -648,6 +658,9 @@ export const useEditorView = (
             const view = new EditorView({ state, parent: editorRef.current });
             viewRef.current = view;
 
+            if (fileName) {
+                setCurrentFileNameInGenericLSP(fileName);
+            }
             setTimeout(() => {
                 document.dispatchEvent(
                     new CustomEvent('editor-ready', {

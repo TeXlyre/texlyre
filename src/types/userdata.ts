@@ -36,6 +36,7 @@ export interface UserDataSettings {
   fileSystemBackupAutoBackup?: boolean;
   fileTreeFilesystemDragDrop?: boolean;
   fileTreeInternalDragDrop?: boolean;
+  genericLspConfigs?: string;
   latexEngine?: any;
   latexTexliveEndpoint?: any;
   latexAutoCompileOnOpen?: any;
