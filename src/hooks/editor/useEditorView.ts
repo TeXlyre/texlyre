@@ -48,14 +48,10 @@ import {
     refreshBibliographyCache,
 } from '../../extensions/codemirror/PathAndBibAutocompleteExtension.ts';
 import {
-    createLSPExtension,
-    updateLSPPluginsInView,
-    setCurrentFilePathInLSP,
-} from '../../extensions/codemirror/LSPExtension';
-import {
     getGenericLSPExtensionsForFile,
     getGenericLSPCompletionSources,
     setCurrentFileNameInGenericLSP,
+    releaseGenericLSPFile
 } from '../../extensions/codemirror/GenericLSPExtension';
 import { createToolbarExtension } from '../../extensions/codemirror/ToolbarExtension';
 import { createMathLiveExtension } from '../../extensions/codemirror/MathLiveExtension';
@@ -436,40 +432,6 @@ export const useEditorView = (
             // Add link navigation for all file types
             extensions.push(createLinkNavigationExtension(fileName, contentToUse));
 
-            const allLSPPlugins =
-                pluginRegistry.getLSPPluginsForFileType(fileType);
-
-            const enabledPluginIds = getEnabledLSPPlugins();
-            const availableLSPPlugins = allLSPPlugins.filter((plugin) =>
-                enabledPluginIds.includes(plugin.id),
-            );
-
-            if (availableLSPPlugins.length > 0) {
-                const [lspField, lspPlugin, lspCompletionSource] = createLSPExtension();
-                extensions.push(lspField, lspPlugin);
-                completionSources.push(lspCompletionSource);
-
-                setTimeout(() => {
-                    if (viewRef.current) {
-                        updateLSPPluginsInView(viewRef.current, availableLSPPlugins);
-
-                        if (isEditingFile && currentFileId) {
-                            fileStorageService.getFile(currentFileId).then((file) => {
-                                if (file && viewRef.current) {
-                                    setCurrentFilePathInLSP(viewRef.current, file.path);
-
-                                    availableLSPPlugins.forEach((plugin) => {
-                                        if ('setCurrentFilePath' in plugin) {
-                                            (plugin as any).setCurrentFilePath(file.path);
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    }
-                }, 100);
-            }
-
             if (isLatexFileType || isTypstFileType) {
                 let currentFilePath = '';
                 if (isEditingFile && currentFileId) {
@@ -525,11 +487,6 @@ export const useEditorView = (
                         filePathCacheService.updateCurrentFilePath(file.path);
                         updateLinkNavigationFilePath(viewRef.current, file.path);
                         updateLinkNavigationFileName(viewRef.current, fileName || '');
-                        availableLSPPlugins.forEach((plugin) => {
-                            if ('setCurrentFilePath' in plugin) {
-                                (plugin as any).setCurrentFilePath(file.path);
-                            }
-                        });
                     }
                 }, 100);
             } else if (!isEditingFile && documentId) {
@@ -683,6 +640,9 @@ export const useEditorView = (
         }
 
         return () => {
+            if (fileName) {
+                releaseGenericLSPFile(fileName);
+            }
             if (viewRef.current) {
                 filePathCacheService.cleanup();
                 viewRef.current.destroy();

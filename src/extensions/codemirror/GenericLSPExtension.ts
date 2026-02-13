@@ -3,6 +3,7 @@ import { type Extension } from '@codemirror/state';
 import { CompletionContext, CompletionResult } from '@codemirror/autocomplete';
 import { ViewPlugin, type EditorView } from '@codemirror/view';
 import { genericLSPService } from '../../services/GenericLSPService';
+import type { LSPClient } from '@codemirror/lsp-client';
 
 class GenericLSPProcessor {
     private view: EditorView;
@@ -60,29 +61,38 @@ export function setCurrentFileNameInGenericLSP(fileName: string) {
     }
 }
 
+const openedFiles = new Map<LSPClient, Set<string>>();
 export function getGenericLSPExtensionsForFile(fileName: string): Extension[] {
     const clients = genericLSPService.getAllClientsForFile(fileName);
-    console.log(`[GenericLSPExtension] Getting extensions for ${fileName}, found ${clients.length} clients`);
-
     if (clients.length === 0) return [];
 
-    const extensions = clients.map(client => {
-        const plugin = client.plugin(fileName);
-        console.log(`[GenericLSPExtension] Created plugin for ${fileName}:`, plugin);
-        console.log(`[GenericLSPExtension] Client object:`, client);
-        console.log(`[GenericLSPExtension] Server capabilities:`, (client as any).serverCapabilities);
-
-        if (Array.isArray(plugin)) {
-            plugin.forEach((ext, idx) => {
-                console.log(`[GenericLSPExtension] Extension ${idx}:`, ext);
-            });
+    const extensions = clients.flatMap(client => {
+        if (!openedFiles.has(client)) {
+            openedFiles.set(client, new Set());
         }
 
-        return plugin;
+        const opened = openedFiles.get(client)!;
+        if (opened.has(fileName)) {
+            return [];
+        }
+
+        opened.add(fileName);
+        try {
+            return [client.plugin(fileName)];
+        } catch (error) {
+            console.warn(`[GenericLSPExtension] Failed to create plugin for ${fileName}:`, error);
+            opened.delete(fileName);
+            return [];
+        }
     });
 
-    console.log(`[GenericLSPExtension] Returning ${extensions.length} extensions for ${fileName}`);
     return extensions;
+}
+
+export function releaseGenericLSPFile(fileName: string) {
+    for (const [_, opened] of openedFiles) {
+        opened.delete(fileName);
+    }
 }
 
 export function getGenericLSPCompletionSources(fileName: string) {

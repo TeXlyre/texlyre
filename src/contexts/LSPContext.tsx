@@ -14,6 +14,7 @@ import type { LSPPlugin } from '../plugins/PluginInterface';
 import { useSettings } from '../hooks/useSettings';
 import { useBibliography } from '../hooks/useBibliography';
 import { fileStorageService } from '../services/FileStorageService';
+import { genericLSPService } from '../services/GenericLSPService';
 import { bibliographyImportService } from '../services/BibliographyImportService';
 import { parseUrlFragments } from '../utils/urlUtils';
 import { isBibFile } from '../utils/fileUtils';
@@ -118,12 +119,12 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 
 	const isBibliographyProvider = useMemo(() => {
 		if (selectedProvider === 'all') {
-			return availableProviders.some(provider => 'getBibliographyEntries' in provider);
+			return availableProviders.some(provider => provider.getBibliographyEntries !== undefined);
 		}
 		if (selectedProvider === 'local') {
 			return true;
 		}
-		return currentProvider && 'getBibliographyEntries' in currentProvider;
+		return currentProvider?.getBibliographyEntries !== undefined;
 	}, [selectedProvider, currentProvider, availableProviders]);
 
 	const getProviderSetting = (settingName: string) => {
@@ -147,10 +148,6 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	useEffect(() => {
 		const providers = pluginRegistry.getAllLSPPlugins();
 		setAvailableProviders(providers);
-
-		if (providers.length > 0 && selectedProvider === 'local') {
-			setSelectedProvider('local');
-		}
 	}, []);
 
 	useEffect(() => {
@@ -171,10 +168,19 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	}, []);
 
 	useEffect(() => {
-		if (currentProvider && 'updateServerUrl' in currentProvider) {
-			(currentProvider as any).updateServerUrl(serverUrl);
+		if (currentProvider?.updateServerUrl) {
+			currentProvider.updateServerUrl(serverUrl);
 		}
 	}, [currentProvider, serverUrl]);
+
+	useEffect(() => {
+		const unsubscribe = genericLSPService.onStatusChange((configId, status) => {
+			if (configId === selectedProvider || selectedProvider === 'all') {
+				setAvailableProviders([...pluginRegistry.getAllLSPPlugins()]);
+			}
+		});
+		return unsubscribe;
+	}, [selectedProvider]);
 
 	const fetchLocalEntries = useCallback(async () => {
 		try {
@@ -217,7 +223,7 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 	}, [parser]);
 
 	const fetchExternalEntries = useCallback(async () => {
-		if (!currentProvider || !isBibliographyProvider || selectedProvider === 'local') {
+		if (!currentProvider?.getBibliographyEntries || selectedProvider === 'local') {
 			setExternalEntries([]);
 			return;
 		}
@@ -230,7 +236,7 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 
 		setIsLoading(true);
 		try {
-			const bibEntries = await (currentProvider as any).getBibliographyEntries();
+			const bibEntries = await currentProvider.getBibliographyEntries();
 			const externalBibEntries: BibEntry[] = bibEntries.map((entry: any) => ({
 				...entry,
 				source: 'external' as const,
@@ -243,13 +249,13 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		} finally {
 			setIsLoading(false);
 		}
-	}, [currentProvider, isBibliographyProvider, selectedProvider]);
+	}, [currentProvider, selectedProvider]);
 
 	const fetchAllBibliographyEntries = useCallback(async () => {
 		if (selectedProvider !== 'all') return;
 
 		const bibliographyProviders = availableProviders.filter(provider =>
-			'getBibliographyEntries' in provider && provider.getConnectionStatus() === 'connected'
+			provider.getBibliographyEntries !== undefined && provider.getConnectionStatus() === 'connected'
 		);
 
 		if (bibliographyProviders.length === 0) {
@@ -263,7 +269,7 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 
 			for (const provider of bibliographyProviders) {
 				try {
-					const bibEntries = await (provider as any).getBibliographyEntries();
+					const bibEntries = await provider.getBibliographyEntries!();
 					const providerEntries: BibEntry[] = bibEntries.map((entry: any) => ({
 						...entry,
 						source: 'external' as const,
@@ -381,45 +387,16 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 
 		if (selectedProvider === 'all') {
 			fetchLocalEntries();
-
-			const initializeAllProviders = async () => {
-				const initPromises = availableProviders.map(async (provider) => {
-					try {
-						await provider.initialize();
-					} catch (error) {
-						console.error(`[LSPContext] Failed to initialize provider ${provider.name}:`, error);
-					}
-				});
-				await Promise.allSettled(initPromises);
-			};
-
-			initializeAllProviders();
-
-			setTimeout(() => {
-				fetchAllBibliographyEntries();
-			}, 1000);
-
+			fetchAllBibliographyEntries();
 			return;
 		}
 
-		if (!isBibliographyProvider || !currentProvider) {
+		if (!currentProvider?.getBibliographyEntries) {
 			return;
 		}
 
-		const initializeProvider = async () => {
-			try {
-				await currentProvider.initialize();
-			} catch (error) {
-				console.error(`[LSPContext] Failed to initialize provider ${currentProvider.name}:`, error);
-			}
-		};
-
-		initializeProvider();
 		fetchLocalEntries();
-
-		setTimeout(() => {
-			fetchExternalEntries();
-		}, 1000);
+		fetchExternalEntries();
 
 		let retryCount = 0;
 		const maxRetries = 30;
@@ -430,10 +407,7 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 			const connectionStatus = currentProvider.getConnectionStatus();
 
 			if (connectionStatus === 'connected') {
-				setTimeout(() => {
-					fetchExternalEntries();
-				}, 1000);
-
+				fetchExternalEntries();
 				clearInterval(retryInterval);
 			} else if (retryCount >= maxRetries) {
 				clearInterval(retryInterval);
@@ -442,7 +416,7 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		}, 1000);
 
 		return () => clearInterval(retryInterval);
-	}, [currentProvider, isBibliographyProvider, selectedProvider, availableProviders, fetchLocalEntries, fetchExternalEntries, fetchAllBibliographyEntries]);
+	}, [currentProvider, selectedProvider, availableProviders, fetchLocalEntries, fetchExternalEntries, fetchAllBibliographyEntries]);
 
 	const handleRefresh = async () => {
 		setIsRefreshing(true);
@@ -451,19 +425,13 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 			if (selectedProvider === 'local') {
 				await fetchLocalEntries();
 			} else if (selectedProvider === 'all') {
-				const refreshPromises = availableProviders.map(async (provider) => {
-					try {
-						await provider.initialize?.();
-					} catch (error) {
-						console.error(`[LSPContext] Failed to refresh provider ${provider.name}:`, error);
-					}
+				availableProviders.forEach(provider => {
+					genericLSPService.reconnect(provider.id);
 				});
-
-				await Promise.allSettled(refreshPromises);
 				await fetchLocalEntries();
 				await fetchAllBibliographyEntries();
 			} else if (currentProvider) {
-				await currentProvider.initialize?.();
+				genericLSPService.reconnect(currentProvider.id);
 				await fetchLocalEntries();
 				await fetchExternalEntries();
 			}

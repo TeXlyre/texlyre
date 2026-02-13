@@ -1,3 +1,20 @@
+/* Add the following to LSP json config:
+
+[
+  {
+    "id": "mock-lsp",
+    "name": "Mock LSP",
+    "enabled": true,
+    "fileExtensions": ["tex", "latex", "typ"],
+    "transportConfig": {
+      "type": "websocket",
+      "url": "ws://localhost:7000"
+    },
+    "clientConfig": "{\"rootUri\":\"file:///\",\"workspaceFolders\":[]}"
+  }
+]
+
+*/
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({ port: 7000 });
 
@@ -97,7 +114,7 @@ wss.on('connection', (ws) => {
         result: {
           contents: {
             kind: 'markdown',
-            value: '🎉 **Generic LSP Mock Server**\n\nYou are hovering over text!\n\nType `@` to see custom completions.'
+            value: '**Generic LSP Mock Server**\n\nYou are hovering over text!\n\nType `@` to see custom completions.'
           }
         }
       }));

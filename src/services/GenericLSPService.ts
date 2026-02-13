@@ -1,6 +1,9 @@
 // src/services/GenericLSPService.ts
 import { LSPClient, type LSPClientConfig, languageServerExtensions, type Transport } from '@codemirror/lsp-client';
 
+type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'error';
+type StatusListener = (configId: string, status: ConnectionStatus) => void;
+
 interface LSPServerConfig {
     id: string;
     name: string;
@@ -17,9 +20,12 @@ interface LSPServerConfig {
 class GenericLSPService {
     private clients: Map<string, LSPClient> = new Map();
     private configs: Map<string, LSPServerConfig> = new Map();
+    private connectionStatuses: Map<string, ConnectionStatus> = new Map();
+    private statusListeners: Set<StatusListener> = new Set();
 
     registerConfig(config: LSPServerConfig) {
         this.configs.set(config.id, config);
+        this.setConnectionStatus(config.id, 'disconnected');
 
         if (config.enabled && config.clientConfig) {
             console.log(`[GenericLSPService] Registering LSP server: ${config.name} (${config.id})`);
@@ -30,9 +36,32 @@ class GenericLSPService {
     unregisterConfig(configId: string) {
         this.disconnectClient(configId);
         this.configs.delete(configId);
+        this.connectionStatuses.delete(configId);
+    }
+
+    private setConnectionStatus(configId: string, status: ConnectionStatus) {
+        this.connectionStatuses.set(configId, status);
+        this.statusListeners.forEach(listener => {
+            try {
+                listener(configId, status);
+            } catch (error) {
+                console.error('[GenericLSPService] Status listener error:', error);
+            }
+        });
+    }
+
+    getConnectionStatus(configId: string): ConnectionStatus {
+        return this.connectionStatuses.get(configId) ?? 'disconnected';
+    }
+
+    onStatusChange(listener: StatusListener): () => void {
+        this.statusListeners.add(listener);
+        return () => this.statusListeners.delete(listener);
     }
 
     private async initializeClient(config: LSPServerConfig) {
+        this.setConnectionStatus(config.id, 'connecting');
+
         try {
             const baseLspExtensions = languageServerExtensions();
 
@@ -44,25 +73,30 @@ class GenericLSPService {
                 ],
             });
 
-            const transport = this.createTransport(config.transportConfig);
+            const transport = this.createTransport(config);
             if (transport) {
                 client.connect(transport);
                 this.clients.set(config.id, client);
+                this.setConnectionStatus(config.id, 'connected');
                 console.log(`[GenericLSPService] Connected to LSP server: ${config.name}`);
+            } else {
+                this.setConnectionStatus(config.id, 'error');
             }
         } catch (error) {
             console.error(`[GenericLSPService] Failed to connect to ${config.name}:`, error);
+            this.setConnectionStatus(config.id, 'error');
         }
     }
 
-    private createTransport(transportConfig: LSPServerConfig['transportConfig']): Transport | null {
-        if (transportConfig.type === 'websocket' && transportConfig.url) {
-            return this.createWebSocketTransport(transportConfig.url);
+    private createTransport(config: LSPServerConfig): Transport | null {
+        if (config.transportConfig.type === 'websocket' && config.transportConfig.url) {
+            return this.createWebSocketTransport(config);
         }
         return null;
     }
 
-    private createWebSocketTransport(url: string): Transport {
+    private createWebSocketTransport(config: LSPServerConfig): Transport {
+        const url = config.transportConfig.url!;
         const ws = new WebSocket(url);
         const handlers = new Set<(value: string) => void>();
         const messageQueue: string[] = [];
@@ -82,10 +116,12 @@ class GenericLSPService {
 
         ws.onerror = (error) => {
             console.error('[GenericLSPService] WebSocket error:', error);
+            this.setConnectionStatus(config.id, 'error');
         };
 
         ws.onclose = () => {
             isOpen = false;
+            this.setConnectionStatus(config.id, 'disconnected');
             console.log('[GenericLSPService] WebSocket closed');
         };
 
@@ -117,6 +153,21 @@ class GenericLSPService {
             }
             this.clients.delete(configId);
         }
+        this.setConnectionStatus(configId, 'disconnected');
+    }
+
+    reconnect(configId: string) {
+        const config = this.configs.get(configId);
+        if (!config) return;
+
+        this.disconnectClient(configId);
+        if (config.enabled && config.clientConfig) {
+            void this.initializeClient(config);
+        }
+    }
+
+    getClient(configId: string): LSPClient | null {
+        return this.clients.get(configId) ?? null;
     }
 
     getClientForFile(fileName: string): LSPClient | null {
@@ -169,6 +220,8 @@ class GenericLSPService {
         console.log(`[GenericLSPService] Cleaning up ${this.clients.size} LSP connections`);
         this.clients.forEach((_, configId) => this.disconnectClient(configId));
         this.configs.clear();
+        this.connectionStatuses.clear();
+        this.statusListeners.clear();
     }
 }
 
