@@ -1,6 +1,8 @@
 // src/contexts/LSPConfigContext.tsx
+import { t } from '@/i18n';
 import type React from 'react';
 import { createContext, useCallback, useEffect, useState, useRef, type ReactNode } from 'react';
+
 import { useSettings } from '../hooks/useSettings';
 import { genericLSPService } from '../services/GenericLSPService';
 import type { LSPClientConfig } from '@codemirror/lsp-client';
@@ -66,11 +68,11 @@ export const LSPConfigProvider: React.FC<LSPConfigProviderProps> = ({ children }
 
         registerSetting({
             id: 'generic-lsp-configs',
-            category: 'LSP',
-            subcategory: 'Generic LSP',
+            category: t('LSP'),
+            subcategory: t('Generic LSP'),
             type: 'codemirror',
-            label: 'LSP Configurations',
-            description: 'Stored LSP server configurations (JSON array)',
+            label: t('LSP Configurations'),
+            description: t('Stored LSP server configurations (JSON array)'),
             defaultValue: '[]',
             liveUpdate: false,
         });

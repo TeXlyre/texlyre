@@ -4,6 +4,7 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 
 import { useSettings } from '../../hooks/useSettings';
+import type { Setting } from '../../contexts/SettingsContext';
 import { SettingsIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 import SettingControl from './SettingControl';
@@ -21,8 +22,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   initialCategory,
   initialSubcategory
 }) => {
-  const { getCategories, getSettingsByCategory, searchSettings, hasUnsavedChanges, needsRefresh } =
-    useSettings();
+  const {
+    getCategories,
+    getSettingsByCategory,
+    searchSettings,
+    hasUnsavedChanges,
+    needsRefresh,
+    updateSetting,
+    getSettings
+  } = useSettings();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredData, setFilteredData] = useState<{
     categories: { category: string; subcategories: string[]; }[];
@@ -30,11 +39,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   }>({ categories: [], allSettings: [] });
 
   const [activeCategory, setActiveCategory] = useState('');
-  const [activeSubcategory, setActiveSubcategory] = useState<
-    string | undefined>(
-  );
+  const [activeSubcategory, setActiveSubcategory] = useState<string | undefined>();
+
+  // Local state for pending changes (liveUpdate: false settings only)
+  const [pendingValues, setPendingValues] = useState<Record<string, unknown>>({});
 
   const hasInitialValues = Boolean(initialCategory);
+
+  const hasPendingChanges = Object.keys(pendingValues).length > 0;
 
   useEffect(() => {
     if (hasInitialValues && !searchQuery) {
@@ -89,6 +101,31 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     searchSettings]
   );
 
+  const handleLocalUpdate = (settingId: string, value: unknown, setting: Setting) => {
+    if (setting.liveUpdate === false) {
+      // Store locally, don't update context
+      setPendingValues(prev => ({ ...prev, [settingId]: value }));
+    } else {
+      // Update context immediately
+      updateSetting(settingId, value);
+    }
+  };
+
+  const handleSaveChanges = () => {
+    // Commit all pending changes to context
+    Object.entries(pendingValues).forEach(([id, value]) => {
+      updateSetting(id, value);
+    });
+    setPendingValues({});
+  };
+
+  const getDisplayValue = (setting: Setting) => {
+    if (pendingValues[setting.id] !== undefined) {
+      return pendingValues[setting.id];
+    }
+    return setting.value !== undefined ? setting.value : setting.defaultValue;
+  };
+
   const highlightText = (text: string, query: string) => {
     if (!query.trim()) return text;
 
@@ -103,9 +140,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         <mark key={index} className="search-highlight">
           {part}
         </mark> :
-
         part
-
     );
   };
 
@@ -124,7 +159,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           </>
         }
       </>);
-
   };
 
   const settings = getSettingsByCategory(activeCategory, activeSubcategory);
@@ -136,7 +170,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           <p>{t('No settings are currently available.')}</p>
         </div>
       </Modal>);
-
   }
 
   return (
@@ -147,103 +180,111 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       icon={SettingsIcon}
       size="large">
 
-      <div className="settings-container">
-        <div className="settings-sidebar">
-          {!hasInitialValues &&
-            <div className="settings-search">
-              <input
-                type="text"
-                placeholder={t('Search settings...')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="search-input" />
+      <div className="settings-wrapper">
+        <div className="settings-container">
+          <div className="settings-sidebar">
+            {!hasInitialValues &&
+              <div className="settings-search">
+                <input
+                  type="text"
+                  placeholder={t('Search settings...')}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="search-input" />
 
-              {searchQuery &&
-                <button
-                  className="clear-search-button"
-                  onClick={() => setSearchQuery('')}>
-
-                  ×
-                </button>
-              }
-            </div>
-          }
-
-          {filteredData.categories.map(({ category, subcategories }) =>
-            <div key={category} className="settings-category">
-              <div
-                className={`category-item ${activeCategory === category ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveCategory(category);
-                  setActiveSubcategory(subcategories[0]);
-                }}>
-
-                {highlightText(category, searchQuery)}
+                {searchQuery &&
+                  <button
+                    className="clear-search-button"
+                    onClick={() => setSearchQuery('')}>
+                    ×
+                  </button>
+                }
               </div>
-              {activeCategory === category && subcategories.length > 0 &&
-                <div className="subcategories">
-                  {subcategories.map((subcategory) =>
-                    <div
-                      key={subcategory}
-                      className={`subcategory-item ${activeSubcategory === subcategory ? 'active' : ''}`}
-                      onClick={() => setActiveSubcategory(subcategory)}>
+            }
 
-                      {highlightText(subcategory, searchQuery)}
-                    </div>
-                  )}
+            {filteredData.categories.map(({ category, subcategories }) =>
+              <div key={category} className="settings-category">
+                <div
+                  className={`category-item ${activeCategory === category ? 'active' : ''}`}
+                  onClick={() => {
+                    setActiveCategory(category);
+                    setActiveSubcategory(subcategories[0]);
+                  }}>
+                  {highlightText(category, searchQuery)}
                 </div>
-              }
-            </div>
-          )}
-
-          {filteredData.categories.length === 0 && searchQuery &&
-            <div className="no-results">{t('No settings found matching "')}
-              {searchQuery}"
-            </div>
-          }
-        </div>
-
-        <div className="settings-content">
-          <h3>{renderTitle()}</h3>
-          <div className="settings-group">
-            {settings.map((setting) =>
-              <div key={setting.id} className="setting-with-highlight">
-                <SettingControl
-                  setting={{
-                    ...setting,
-                    label: searchQuery ?
-                      highlightText(setting.label, searchQuery) as string :
-                      setting.label,
-                    description: (setting.description && searchQuery ?
-                      highlightText(
-                        setting.description,
-                        searchQuery
-                      ) as string :
-                      setting.description) as string
-                  }} />
-
+                {activeCategory === category && subcategories.length > 0 &&
+                  <div className="subcategories">
+                    {subcategories.map((subcategory) =>
+                      <div
+                        key={subcategory}
+                        className={`subcategory-item ${activeSubcategory === subcategory ? 'active' : ''}`}
+                        onClick={() => setActiveSubcategory(subcategory)}>
+                        {highlightText(subcategory, searchQuery)}
+                      </div>
+                    )}
+                  </div>
+                }
               </div>
             )}
-            {settings.length === 0 &&
-              <div className="no-settings">{t('No settings available in this category.')}
 
+            {filteredData.categories.length === 0 && searchQuery &&
+              <div className="no-results">{t('No settings found matching "')}
+                {searchQuery}"
               </div>
             }
           </div>
-        </div>
-        {hasUnsavedChanges &&
-          <div className="save-indicator">{t('Settings Saved')}
 
+          <div className="settings-content">
+            <h3>{renderTitle()}</h3>
+            <div className="settings-group">
+              {settings.map((setting) =>
+                <div key={setting.id} className="setting-with-highlight">
+                  <SettingControl
+                    setting={{
+                      ...setting,
+                      value: getDisplayValue(setting),
+                      label: searchQuery ?
+                        highlightText(setting.label, searchQuery) as string :
+                        setting.label,
+                      description: (setting.description && searchQuery ?
+                        highlightText(
+                          setting.description,
+                          searchQuery
+                        ) as string :
+                        setting.description) as string
+                    }}
+                    onLocalUpdate={(value) => handleLocalUpdate(setting.id, value, setting)} />
+                </div>
+              )}
+              {settings.length === 0 &&
+                <div className="no-settings">{t('No settings available in this category.')}
+                </div>
+              }
+            </div>
           </div>
-        }
-        {needsRefresh &&
-          <div className="refresh-indicator">{t('Page refresh required')}
 
+          {hasUnsavedChanges &&
+            <div className="save-indicator">{t('Settings Saved')}
+            </div>
+          }
+          {needsRefresh && !hasPendingChanges &&
+            <div className="refresh-indicator">{t('Page refresh required')}
+            </div>
+          }
+        </div>
+
+        {hasPendingChanges &&
+          <div className="pending-changes-bar warning-message">
+            <span>{t('You have unsaved changes that require page refresh')}</span>
+            <button
+              className="button primary"
+              onClick={handleSaveChanges}>
+              {t('Save Changes')}
+            </button>
           </div>
         }
       </div>
     </Modal>);
-
 };
 
 export default SettingsModal;

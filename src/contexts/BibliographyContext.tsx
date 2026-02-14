@@ -1,4 +1,5 @@
 // src/contexts/BibliographyContext.tsx
+import { t } from '@/i18n';
 import type React from 'react';
 import {
 	type ReactNode,
@@ -295,7 +296,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 
 		const updateOptions = () => {
 			const options = [
-				{ label: 'Create new bibliography.bib', value: 'CREATE_NEW' },
+				{ label: t('Create new bibliography.bib'), value: 'CREATE_NEW' },
 				...availableFiles.map(file => ({
 					label: file.name,
 					value: file.path

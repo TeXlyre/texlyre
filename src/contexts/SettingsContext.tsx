@@ -56,7 +56,6 @@ export interface SettingsContextType {
 	unregisterSetting: (id: string) => void;
 	getSettingsByCategory: (category: string, subcategory?: string) => Setting[];
 	getCategories: () => { category: string; subcategories: string[] }[];
-	commitSetting: (id: string) => void;
 	searchSettings: (query: string) => {
 		categories: { category: string; subcategories: string[] }[];
 		allSettings: Setting[];
@@ -74,7 +73,6 @@ export const SettingsContext = createContext<SettingsContextType>({
 	unregisterSetting: () => { },
 	getSettingsByCategory: () => [],
 	getCategories: () => [],
-	commitSetting: () => { },
 	searchSettings: () => ({ categories: [], allSettings: [] }),
 	hasUnsavedChanges: false,
 	needsRefresh: false,
@@ -274,15 +272,15 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 				}
 
 				const updated = { ...s, value: validatedValue };
-				if (
-					s.onChange &&
-					(s.liveUpdate === undefined || s.liveUpdate === true)
-				) {
+
+				if (s.liveUpdate !== false && s.onChange) {
 					s.onChange(validatedValue);
 				}
+
 				if (s.liveUpdate === false) {
 					setNeedsRefresh(true);
 				}
+
 				return updated;
 			}),
 		);
@@ -293,16 +291,6 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 	const unregisterSetting = (id: string) => {
 		setSettings((prev) => prev.filter((s) => s.id !== id));
 	};
-
-	const commitSetting = useCallback(
-		(id: string) => {
-			const settingToCommit = settings.find((s) => s.id === id);
-			if (settingToCommit?.onChange && settingToCommit.liveUpdate === false) {
-				setTimeout(() => settingToCommit.onChange?.(settingToCommit.value), 0);
-			}
-		},
-		[settings],
-	);
 
 	const getSettingsByCategory = (category: string, subcategory?: string) =>
 		settings.filter(
@@ -369,7 +357,6 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 				unregisterSetting,
 				getSettingsByCategory,
 				getCategories,
-				commitSetting,
 				searchSettings,
 				hasUnsavedChanges,
 				needsRefresh,

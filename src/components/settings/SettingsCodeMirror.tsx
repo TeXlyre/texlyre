@@ -92,6 +92,8 @@ export const SettingsCodeMirror: React.FC<SettingsCodeMirrorProps> = ({
         '.cm-scroller': { overflow: 'auto' }
       }) : []),
       lineNumbersCompartmentRef.current.of(options.lineNumbers ? lineNumbers() : []),
+      EditorView.contentAttributes.of({ dir: 'ltr' }),
+      EditorView.editorAttributes.of({ dir: 'ltr' }),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           isInternalUpdateRef.current = true;
@@ -185,11 +187,8 @@ export const SettingsCodeMirror: React.FC<SettingsCodeMirrorProps> = ({
     <div className="settings-codemirror">
       <label className="setting-label">
         {setting.label}
-        {setting.description && (
-          <span className="setting-description">{setting.description}</span>
-        )}
       </label>
-      <div 
+      <div
         ref={containerRef}
         className={`settings-codemirror-container ${options.resizable ? 'resizable' : ''}`}
         style={{
