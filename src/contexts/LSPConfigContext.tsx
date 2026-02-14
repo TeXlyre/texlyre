@@ -72,6 +72,7 @@ export const LSPConfigProvider: React.FC<LSPConfigProviderProps> = ({ children }
             label: 'LSP Configurations',
             description: 'Stored LSP server configurations (JSON array)',
             defaultValue: '[]',
+            liveUpdate: false,
         });
 
         setConfigs(storedConfigs);

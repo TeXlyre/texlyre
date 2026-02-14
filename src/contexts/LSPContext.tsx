@@ -167,14 +167,6 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		};
 	}, []);
 
-	const lspPluginSettingsKey = useMemo(() => {
-		return availableProviders.map(provider => {
-			const enabled = getSetting(`${provider.id}-enabled`)?.value;
-			const url = getSetting(`${provider.id}-server-url`)?.value;
-			return `${provider.id}:${enabled}:${url}`;
-		}).join('|');
-	}, [availableProviders, getSetting]);
-
 	useEffect(() => {
 		if (availableProviders.length === 0) return;
 
