@@ -64,21 +64,44 @@ export function setCurrentFileNameInGenericLSP(fileName: string) {
 
 const openedFiles = new Map<LSPClient, Set<string>>();
 
-function filterOutHoverExtension(extension: Extension): Extension {
+function filterOutHoverExtension(extension: Extension, seen = new WeakSet<object>()): Extension {
+    if (typeof extension !== 'object' || extension === null) return extension;
+    if (seen.has(extension)) return [];
+    seen.add(extension);
+
     if (Array.isArray(extension)) {
-        return extension.map(filterOutHoverExtension).filter(Boolean);
+        return extension.map(e => filterOutHoverExtension(e, seen)).filter(Boolean);
     }
 
     const ext = extension as any;
     if (ext?.extension) {
-        return filterOutHoverExtension(ext.extension);
+        return filterOutHoverExtension(ext.extension, seen);
     }
 
     if (ext?.field?.id === 'hoverTooltip') {
         return [];
     }
 
+    if (ext?.value?.constructor?.name === 'HoverPlugin') {
+        return [];
+    }
+
     return extension;
+}
+
+function renderHoverContent(content: string): HTMLElement {
+    const container = document.createElement('div');
+    container.style.whiteSpace = 'pre-wrap';
+    container.innerHTML = content
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\n/g, '<br>');
+    return container;
 }
 
 function createAggregatedHoverExtension(fileName: string, clients: LSPClient[]): Extension {
@@ -127,12 +150,16 @@ function createAggregatedHoverExtension(fileName: string, clients: LSPClient[]):
         if (validResults.length === 0) return null;
 
         const uniqueResults = Array.from(new Set(validResults));
-        const combined = uniqueResults.join('\n\n---\n\n');
 
         const dom = document.createElement('div');
         dom.className = 'cm-tooltip-hover';
-        dom.style.whiteSpace = 'pre-wrap';
-        dom.textContent = combined;
+
+        uniqueResults.forEach((content, i) => {
+            if (i > 0) {
+                dom.appendChild(document.createElement('hr'));
+            }
+            dom.appendChild(renderHoverContent(content));
+        });
 
         return {
             pos,
@@ -159,14 +186,6 @@ export function getGenericLSPExtensionsForFile(fileName: string): Extension[] {
         }
 
         opened.add(fileName);
-        try {
-            const plugin = client.plugin(fileName);
-            const filteredPlugin = filterOutHoverExtension(plugin);
-            extensions.push(filteredPlugin);
-        } catch (error) {
-            console.warn(`[GenericLSPExtension] Failed to create plugin for ${fileName}:`, error);
-            opened.delete(fileName);
-        }
     });
 
     if (clients.length > 0) {
