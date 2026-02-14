@@ -63,7 +63,6 @@ const jabrefLSPPlugin: LSPPlugin = {
 	},
 };
 
-// TODO (fabawi): This will trigger whether JabRef is enabled or not. Not good
 jabrefLSP.ensureRegistered({
 	id: jabrefLSPPlugin.id,
 	name: jabrefLSPPlugin.name,

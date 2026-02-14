@@ -207,12 +207,33 @@ class GenericLSPService {
         const config = this.configs.get(configId);
         if (!config) return;
 
+        const wasEnabled = config.enabled;
         const updated = { ...config, ...updates };
         this.configs.set(configId, updated);
 
-        this.disconnectClient(configId);
-        if (updated.enabled && updated.clientConfig) {
-            void this.initializeClient(updated);
+        const hasConnectionChanges =
+            updates.transportConfig !== undefined ||
+            updates.clientConfig !== undefined;
+
+        if (!updated.enabled) {
+            if (wasEnabled) {
+                this.disconnectClient(configId);
+            }
+            return;
+        }
+
+        if (!wasEnabled && updated.enabled) {
+            if (updated.clientConfig) {
+                void this.initializeClient(updated);
+            }
+            return;
+        }
+
+        if (hasConnectionChanges) {
+            this.disconnectClient(configId);
+            if (updated.clientConfig) {
+                void this.initializeClient(updated);
+            }
         }
     }
 

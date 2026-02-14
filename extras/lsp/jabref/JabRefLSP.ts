@@ -44,7 +44,7 @@ export const createJabRefLSP = () => {
         genericLSPService.registerConfig({
             id: config.id,
             name: config.name,
-            enabled: true,
+            enabled: false,
             fileExtensions: config.getSupportedFileTypes(),
             transportConfig: getTransportConfig(),
             clientConfig: {

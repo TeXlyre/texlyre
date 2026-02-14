@@ -10,7 +10,8 @@ export const getJabrefLSPSettings = (): Setting[] => [
     type: 'checkbox',
     label: t("Enable JabRef LSP"),
     description: t("Enable JabRef Language Server Protocol integration for bibliography management"),
-    defaultValue: true
+    defaultValue: false,
+    liveUpdate: false
   },
   {
     id: 'jabref-lsp-server-url',
@@ -19,7 +20,8 @@ export const getJabrefLSPSettings = (): Setting[] => [
     type: 'text',
     label: t("LSP Server URL"),
     description: t("WebSocket URL for the JabRef LSP server"),
-    defaultValue: 'ws://localhost:2087/'
+    defaultValue: 'ws://localhost:2087/',
+    liveUpdate: false
   },
   {
     id: 'jabref-lsp-show-panel',

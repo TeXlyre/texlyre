@@ -167,11 +167,36 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 		};
 	}, []);
 
+	const lspPluginSettingsKey = useMemo(() => {
+		return availableProviders.map(provider => {
+			const enabled = getSetting(`${provider.id}-enabled`)?.value;
+			const url = getSetting(`${provider.id}-server-url`)?.value;
+			return `${provider.id}:${enabled}:${url}`;
+		}).join('|');
+	}, [availableProviders, getSetting]);
+
 	useEffect(() => {
-		if (currentProvider?.updateServerUrl) {
-			currentProvider.updateServerUrl(serverUrl);
-		}
-	}, [currentProvider, serverUrl]);
+		if (availableProviders.length === 0) return;
+
+		availableProviders.forEach(provider => {
+			const enabledSetting = getSetting(`${provider.id}-enabled`);
+			const isEnabled = (enabledSetting?.value as boolean) ?? true;
+			const serverUrlSetting = getSetting(`${provider.id}-server-url`);
+			const url = (serverUrlSetting?.value as string) || '';
+
+			if (url && provider.updateServerUrl) {
+				provider.updateServerUrl(url);
+			}
+
+			const currentStatus = genericLSPService.getConnectionStatus(provider.id);
+
+			if (isEnabled && currentStatus === 'disconnected') {
+				genericLSPService.updateConfig(provider.id, { enabled: true });
+			} else if (!isEnabled && currentStatus !== 'disconnected') {
+				genericLSPService.updateConfig(provider.id, { enabled: false });
+			}
+		});
+	}, [availableProviders]);
 
 	useEffect(() => {
 		const unsubscribe = genericLSPService.onStatusChange((configId, status) => {
