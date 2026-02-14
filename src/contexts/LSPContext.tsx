@@ -175,6 +175,9 @@ export const LSPProvider: React.FC<LSPProviderProps> = ({ children }) => {
 			const isEnabled = (enabledSetting?.value as boolean) ?? true;
 			const serverUrlSetting = getSetting(`${provider.id}-server-url`);
 			const url = (serverUrlSetting?.value as string) || '';
+			if (!isEnabled) {
+				genericLSPService.updateConfig(provider.id, { enabled: false });
+			}
 
 			if (url && provider.updateServerUrl) {
 				provider.updateServerUrl(url);
