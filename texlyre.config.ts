@@ -38,7 +38,7 @@ const config: TexlyreConfig = {
         viewers: ['bibtex', 'image', 'pdf', 'drawio'],
         renderers: ['pdf', 'canvas'],
         loggers: ['latex_visualizer', 'typst_visualizer'],
-        lsp: ['jabref'],
+        lsp: ['jabref'], // 'jabref'
         backup: ['github', 'gitlab', 'forgejo', 'gitea'],
         themes: ['texlyre_slim', 'texlyre_wide', 'texlyre_mobile'],
     },

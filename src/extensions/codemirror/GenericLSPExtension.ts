@@ -1,7 +1,8 @@
 // src/extensions/codemirror/GenericLSPExtension.ts
 import { type Extension } from '@codemirror/state';
 import { CompletionContext, CompletionResult } from '@codemirror/autocomplete';
-import { ViewPlugin, type EditorView } from '@codemirror/view';
+import { ViewPlugin, type EditorView, hoverTooltip } from '@codemirror/view';
+import type { Tooltip } from '@codemirror/view';
 import { genericLSPService } from '../../services/GenericLSPService';
 import type { LSPClient } from '@codemirror/lsp-client';
 
@@ -62,29 +63,115 @@ export function setCurrentFileNameInGenericLSP(fileName: string) {
 }
 
 const openedFiles = new Map<LSPClient, Set<string>>();
+
+function filterOutHoverExtension(extension: Extension): Extension {
+    if (Array.isArray(extension)) {
+        return extension.map(filterOutHoverExtension).filter(Boolean);
+    }
+
+    const ext = extension as any;
+    if (ext?.extension) {
+        return filterOutHoverExtension(ext.extension);
+    }
+
+    if (ext?.field?.id === 'hoverTooltip') {
+        return [];
+    }
+
+    return extension;
+}
+
+function createAggregatedHoverExtension(fileName: string, clients: LSPClient[]): Extension {
+    return hoverTooltip(async (view, pos) => {
+        const doc = view.state.doc;
+        const line = doc.lineAt(pos);
+        const character = pos - line.from;
+
+        const hoverPromises = clients.map(async client => {
+            try {
+                const capabilities = (client as any).serverCapabilities;
+                if (!capabilities?.hoverProvider) return null;
+
+                const result = await (client as any).request('textDocument/hover', {
+                    textDocument: { uri: `file:///${fileName}` },
+                    position: { line: line.number - 1, character }
+                });
+
+                if (!result?.contents) return null;
+
+                let content = '';
+                const contents = result.contents;
+
+                if (typeof contents === 'string') {
+                    content = contents;
+                } else if (contents.kind === 'markdown' || contents.kind === 'plaintext') {
+                    content = contents.value;
+                } else if (Array.isArray(contents)) {
+                    content = contents
+                        .map((c: any) => typeof c === 'string' ? c : (c.value || ''))
+                        .filter(Boolean)
+                        .join('\n\n');
+                } else if (contents.value) {
+                    content = contents.value;
+                }
+
+                return content.trim();
+            } catch (error) {
+                return null;
+            }
+        });
+
+        const results = await Promise.all(hoverPromises);
+        const validResults = results.filter((r): r is string => r !== null && r !== '');
+
+        if (validResults.length === 0) return null;
+
+        const uniqueResults = Array.from(new Set(validResults));
+        const combined = uniqueResults.join('\n\n---\n\n');
+
+        const dom = document.createElement('div');
+        dom.className = 'cm-tooltip-hover';
+        dom.style.whiteSpace = 'pre-wrap';
+        dom.textContent = combined;
+
+        return {
+            pos,
+            create: () => ({ dom }),
+            above: true
+        } as Tooltip;
+    });
+}
+
 export function getGenericLSPExtensionsForFile(fileName: string): Extension[] {
     const clients = genericLSPService.getAllClientsForFile(fileName);
     if (clients.length === 0) return [];
 
-    const extensions = clients.flatMap(client => {
+    const extensions: Extension[] = [];
+
+    clients.forEach(client => {
         if (!openedFiles.has(client)) {
             openedFiles.set(client, new Set());
         }
 
         const opened = openedFiles.get(client)!;
         if (opened.has(fileName)) {
-            return [];
+            return;
         }
 
         opened.add(fileName);
         try {
-            return [client.plugin(fileName)];
+            const plugin = client.plugin(fileName);
+            const filteredPlugin = filterOutHoverExtension(plugin);
+            extensions.push(filteredPlugin);
         } catch (error) {
             console.warn(`[GenericLSPExtension] Failed to create plugin for ${fileName}:`, error);
             opened.delete(fileName);
-            return [];
         }
     });
+
+    if (clients.length > 0) {
+        extensions.push(createAggregatedHoverExtension(fileName, clients));
+    }
 
     return extensions;
 }
