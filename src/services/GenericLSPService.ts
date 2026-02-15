@@ -13,6 +13,7 @@ interface LSPServerConfig {
         type: 'websocket' | 'worker';
         url?: string;
         workerPath?: string;
+        contentLength?: boolean;
     };
     clientConfig: LSPClientConfig;
 }
@@ -101,6 +102,37 @@ class GenericLSPService {
         const handlers = new Set<(value: string) => void>();
         const messageQueue: string[] = [];
         let isOpen = false;
+        const useContentLength = config.transportConfig.contentLength ?? false;
+        let buffer = '';
+
+        const dispatchMessage = (message: string) => {
+            handlers.forEach(handler => handler(message));
+        };
+
+        const processBuffer = () => {
+            while (buffer.length > 0) {
+                const headerEnd = buffer.indexOf('\r\n\r\n');
+                if (headerEnd === -1) break;
+
+                const header = buffer.substring(0, headerEnd);
+                const match = header.match(/Content-Length:\s*(\d+)/i);
+                if (!match) break;
+
+                const contentLength = parseInt(match[1], 10);
+                const bodyStart = headerEnd + 4;
+
+                if (buffer.length < bodyStart + contentLength) break;
+
+                const body = buffer.substring(bodyStart, bodyStart + contentLength);
+                buffer = buffer.substring(bodyStart + contentLength);
+                dispatchMessage(body);
+            }
+        };
+
+        const wrapWithContentLength = (message: string): string => {
+            const byteLength = new TextEncoder().encode(message).length;
+            return `Content-Length: ${byteLength}\r\n\r\n${message}`;
+        };
 
         ws.onopen = () => {
             isOpen = true;
@@ -111,7 +143,14 @@ class GenericLSPService {
         };
 
         ws.onmessage = (event) => {
-            handlers.forEach(handler => handler(event.data));
+            const data = typeof event.data === 'string' ? event.data : '';
+
+            if (useContentLength) {
+                buffer += data;
+                processBuffer();
+            } else {
+                dispatchMessage(data);
+            }
         };
 
         ws.onerror = (error) => {
@@ -121,16 +160,17 @@ class GenericLSPService {
 
         ws.onclose = () => {
             isOpen = false;
+            buffer = '';
             this.setConnectionStatus(config.id, 'disconnected');
-            console.log('[GenericLSPService] WebSocket closed');
         };
 
         return {
             send: (message: string) => {
+                const payload = useContentLength ? wrapWithContentLength(message) : message;
                 if (isOpen && ws.readyState === WebSocket.OPEN) {
-                    ws.send(message);
+                    ws.send(payload);
                 } else {
-                    messageQueue.push(message);
+                    messageQueue.push(payload);
                 }
             },
             subscribe: (handler: (value: string) => void) => {

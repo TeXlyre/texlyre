@@ -63,6 +63,109 @@ export function setCurrentFileNameInGenericLSP(fileName: string) {
 }
 
 const openedFiles = new Map<LSPClient, Set<string>>();
+const documentVersions = new Map<string, number>();
+
+function detectLanguageId(fileName: string): string {
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    switch (ext) {
+        case 'tex':
+        case 'latex':
+            return 'latex';
+        case 'typ':
+            return 'typst';
+        case 'bib':
+        case 'bibtex':
+            return 'bibtex';
+        case 'md':
+            return 'markdown';
+        case 'json':
+            return 'json';
+        case 'yaml':
+            return 'yaml';
+        case 'txt':
+            return 'plaintext';
+        default:
+            return 'plaintext';
+    }
+}
+
+function createDocumentSyncExtension(fileName: string, clients: LSPClient[]): Extension {
+    return ViewPlugin.fromClass(
+        class {
+            private version: number;
+
+            constructor(view: EditorView) {
+                this.version = documentVersions.get(fileName) || 1;
+                const text = view.state.doc.toString();
+                clients.forEach(client => {
+                    try {
+                        (client as any).request('textDocument/didOpen', {
+                            textDocument: {
+                                uri: `file:///${fileName}`,
+                                languageId: detectLanguageId(fileName),
+                                version: this.version,
+                                text,
+                            }
+                        }).catch(() => { });
+                    } catch { }
+                });
+            }
+
+            update(update: any) {
+                if (!update.docChanged) return;
+                this.version++;
+                documentVersions.set(fileName, this.version);
+                const text = update.state.doc.toString();
+                clients.forEach(client => {
+                    try {
+                        (client as any).request('textDocument/didChange', {
+                            textDocument: {
+                                uri: `file:///${fileName}`,
+                                version: this.version,
+                            },
+                            contentChanges: [{ text }],
+                        }).catch(() => { });
+                    } catch { }
+                });
+            }
+
+            destroy() {
+                clients.forEach(client => {
+                    try {
+                        (client as any).request('textDocument/didClose', {
+                            textDocument: { uri: `file:///${fileName}` }
+                        }).catch(() => { });
+                    } catch { }
+                });
+            }
+        }
+    );
+}
+
+function filterOutHoverExtension(extension: Extension, seen = new WeakSet<object>()): Extension {
+    if (typeof extension !== 'object' || extension === null) return extension;
+    if (seen.has(extension)) return [];
+    seen.add(extension);
+
+    if (Array.isArray(extension)) {
+        return extension.map(e => filterOutHoverExtension(e, seen)).filter(Boolean);
+    }
+
+    const ext = extension as any;
+    if (ext?.extension) {
+        return filterOutHoverExtension(ext.extension, seen);
+    }
+
+    if (ext?.field?.id === 'hoverTooltip') {
+        return [];
+    }
+
+    if (ext?.value?.constructor?.name === 'HoverPlugin') {
+        return [];
+    }
+
+    return extension;
+}
 
 function renderHoverContent(content: string): HTMLElement {
     const container = document.createElement('div');
@@ -154,26 +257,29 @@ export function getGenericLSPExtensionsForFile(fileName: string): Extension[] {
         if (!openedFiles.has(client)) {
             openedFiles.set(client, new Set());
         }
-
-        const opened = openedFiles.get(client)!;
-        if (opened.has(fileName)) {
-            return;
-        }
-
-        opened.add(fileName);
+        openedFiles.get(client)!.add(fileName);
     });
 
     if (clients.length > 0) {
         extensions.push(createAggregatedHoverExtension(fileName, clients));
+        extensions.push(createDocumentSyncExtension(fileName, clients));
     }
 
     return extensions;
 }
 
 export function releaseGenericLSPFile(fileName: string) {
-    for (const [_, opened] of openedFiles) {
-        opened.delete(fileName);
+    for (const [client, opened] of openedFiles) {
+        if (opened.has(fileName)) {
+            opened.delete(fileName);
+            try {
+                (client as any).request('textDocument/didClose', {
+                    textDocument: { uri: `file:///${fileName}` }
+                }).catch(() => { });
+            } catch { }
+        }
     }
+    documentVersions.delete(fileName);
 }
 
 export function getGenericLSPCompletionSources(fileName: string) {

@@ -16,6 +16,7 @@ interface LSPConfig {
         type: 'websocket' | 'worker';
         url?: string;
         workerPath?: string;
+        contentLength?: boolean;
     };
     clientConfig: string;
 }
