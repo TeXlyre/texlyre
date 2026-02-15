@@ -1,4 +1,4 @@
-// src/extension/codemirror/CodeActionsExtension.ts
+// src/extension/codemirror/CodeActionsLSPExtension.ts
 import { type Extension, StateField, StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin, showTooltip, type Tooltip } from '@codemirror/view';
 import { diagnosticCount, forEachDiagnostic as cmForEachDiagnostic } from '@codemirror/lint';
