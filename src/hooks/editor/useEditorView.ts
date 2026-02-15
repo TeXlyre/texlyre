@@ -38,7 +38,6 @@ import type { CollabProvider } from '../../types/collab';
 import type * as Y from 'yjs';
 import { UndoManager } from 'yjs';
 
-import { pluginRegistry } from '../../plugins/PluginRegistry';
 import { commentSystemExtension } from '../../extensions/codemirror/CommentExtension';
 import { latexTypstBidiIsolates } from "../../extensions/codemirror/BidiExtension";
 import { searchHighlightExtension } from '../../extensions/codemirror/SearchHighlightExtension';
@@ -53,6 +52,7 @@ import {
     setCurrentFileNameInGenericLSP,
     releaseGenericLSPFile
 } from '../../extensions/codemirror/GenericLSPExtension';
+import { createCodeActionsExtension } from '../../extensions/codemirror/CodeActionsLSPExtension.ts';
 import { createToolbarExtension } from '../../extensions/codemirror/ToolbarExtension';
 import { createMathLiveExtension } from '../../extensions/codemirror/MathLiveExtension';
 import { createPasteExtension } from '../../extensions/codemirror/PasteExtension';
@@ -423,6 +423,9 @@ export const useEditorView = (
         extensions.push(...genericLSPExts);
         const genericLSPCompletions = getGenericLSPCompletionSources(fileName);
         completionSources.push(...genericLSPCompletions);
+        if (genericLSPExts.length > 0) {
+            extensions.push(createCodeActionsExtension(fileName));
+        }
 
         if (isLatexFileType || isTypstFileType) {
             extensions.push(latexTypstBidiIsolates());

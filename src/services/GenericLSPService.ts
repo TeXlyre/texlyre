@@ -1,14 +1,16 @@
 // src/services/GenericLSPService.ts
-import { LSPClient, type LSPClientConfig, type Transport, serverDiagnostics } from '@codemirror/lsp-client';
+import { LSPClient, type LSPClientConfig, type Transport } from '@codemirror/lsp-client';
 
 type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'error';
 type StatusListener = (configId: string, status: ConnectionStatus) => void;
+type DiagnosticListener = (configId: string, params: any) => void;
 
 interface LSPServerConfig {
     id: string;
     name: string;
     enabled: boolean;
     fileExtensions: string[];
+    languageIdMap?: Record<string, string>;
     transportConfig: {
         type: 'websocket' | 'worker';
         url?: string;
@@ -23,6 +25,7 @@ class GenericLSPService {
     private configs: Map<string, LSPServerConfig> = new Map();
     private connectionStatuses: Map<string, ConnectionStatus> = new Map();
     private statusListeners: Set<StatusListener> = new Set();
+    private diagnosticListeners: Set<DiagnosticListener> = new Set();
 
     registerConfig(config: LSPServerConfig) {
         this.configs.set(config.id, config);
@@ -60,21 +63,35 @@ class GenericLSPService {
         return () => this.statusListeners.delete(listener);
     }
 
+    onDiagnostics(listener: DiagnosticListener): () => void {
+        this.diagnosticListeners.add(listener);
+        return () => this.diagnosticListeners.delete(listener);
+    }
+
+    getLanguageIdMap(configId: string): Record<string, string> | undefined {
+        return this.configs.get(configId)?.languageIdMap;
+    }
+
+    getConfigId(client: LSPClient): string | undefined {
+        for (const [configId, c] of this.clients.entries()) {
+            if (c === client) return configId;
+        }
+        return undefined;
+    }
+
     private async initializeClient(config: LSPServerConfig) {
         this.setConnectionStatus(config.id, 'connecting');
 
         try {
             const client = new LSPClient({
                 ...config.clientConfig,
-                extensions: [
-                    ...(config.clientConfig.extensions ?? []),
-                    serverDiagnostics(),
-                ],
+                extensions: [],
             });
 
             const transport = this.createTransport(config);
             if (transport) {
-                client.connect(transport);
+                const wrappedTransport = this.wrapTransportForDiagnostics(config.id, transport);
+                client.connect(wrappedTransport);
                 this.clients.set(config.id, client);
                 this.setConnectionStatus(config.id, 'connected');
                 console.log(`[GenericLSPService] Connected to LSP server: ${config.name}`);
@@ -85,6 +102,31 @@ class GenericLSPService {
             console.error(`[GenericLSPService] Failed to connect to ${config.name}:`, error);
             this.setConnectionStatus(config.id, 'error');
         }
+    }
+
+    private wrapTransportForDiagnostics(configId: string, transport: Transport): Transport {
+        const self = this;
+        return {
+            send: transport.send.bind(transport),
+            subscribe(handler: (value: string) => void) {
+                transport.subscribe((message: string) => {
+                    try {
+                        const parsed = JSON.parse(message);
+                        if (parsed.method === 'textDocument/publishDiagnostics' && parsed.params) {
+                            self.diagnosticListeners.forEach(listener => {
+                                try {
+                                    listener(configId, parsed.params);
+                                } catch (error) {
+                                    console.error('[GenericLSPService] Diagnostic listener error:', error);
+                                }
+                            });
+                        }
+                    } catch { }
+                    handler(message);
+                });
+            },
+            unsubscribe: transport.unsubscribe?.bind(transport),
+        };
     }
 
     private createTransport(config: LSPServerConfig): Transport | null {
@@ -281,6 +323,7 @@ class GenericLSPService {
         this.configs.clear();
         this.connectionStatuses.clear();
         this.statusListeners.clear();
+        this.diagnosticListeners.clear();
     }
 }
 

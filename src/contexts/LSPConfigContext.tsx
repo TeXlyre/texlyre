@@ -12,6 +12,7 @@ interface LSPConfig {
     name: string;
     enabled: boolean;
     fileExtensions: string[];
+    languageIdMap?: Record<string, string>;
     transportConfig: {
         type: 'websocket' | 'worker';
         url?: string;
@@ -88,6 +89,7 @@ export const LSPConfigProvider: React.FC<LSPConfigProviderProps> = ({ children }
                     name: config.name,
                     enabled: config.enabled,
                     fileExtensions: config.fileExtensions,
+                    languageIdMap: config.languageIdMap,
                     transportConfig: config.transportConfig,
                     clientConfig,
                 });
@@ -115,6 +117,7 @@ export const LSPConfigProvider: React.FC<LSPConfigProviderProps> = ({ children }
                 name: config.name,
                 enabled: config.enabled,
                 fileExtensions: config.fileExtensions,
+                languageIdMap: config.languageIdMap,
                 transportConfig: config.transportConfig,
                 clientConfig,
             });
