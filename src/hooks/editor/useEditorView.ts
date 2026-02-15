@@ -9,6 +9,8 @@ import {
 import { languages } from '@codemirror/language-data';
 import { html } from '@codemirror/lang-html';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { json } from '@codemirror/lang-json';
+
 import {
     bracketMatching,
     defaultHighlightStyle,
@@ -323,8 +325,12 @@ export const useEditorView = (
                     codeLanguages: languages,
                     htmlTagLanguage: html()
                 })];
+            case 'json':
+                return [json()];
+            case 'html':
+                return [html()];
             default:
-                return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
+                return [];
         }
     };
 

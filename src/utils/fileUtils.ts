@@ -225,7 +225,8 @@ export const isTemporaryFile = (fileName: string): boolean => {
 export const isLatexFile = (pathOrName: string): boolean => {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
-	return lower.endsWith('.tex') || lower.endsWith('.latex') || lower.endsWith('.ltx');
+	return lower.endsWith('.tex') || lower.endsWith('.latex') || lower.endsWith('.ltx')
+		|| lower.endsWith('.cls') || lower.endsWith('.sty');
 };
 
 export const isTypstFile = (pathOrName: string): boolean => {
@@ -246,6 +247,18 @@ export const isMarkdownFile = (pathOrName: string): boolean => {
 	return lower.endsWith('.md') || lower.endsWith('.markdown');
 };
 
+export const isJsonFile = (pathOrName: string): boolean => {
+	if (!pathOrName) return false;
+	const lower = pathOrName.toLowerCase();
+	return lower.endsWith('.json');
+};
+
+export const isHtmlFile = (pathOrName: string): boolean => {
+	if (!pathOrName) return false;
+	const lower = pathOrName.toLowerCase();
+	return lower.endsWith('.html');
+};
+
 export const isLatexContent = (content: string): boolean => {
 	return /\\(?:documentclass|usepackage|begin|end|section|chapter|part|maketitle)/i.test(content);
 };
@@ -258,12 +271,14 @@ export const isBibContent = (content: string): boolean => {
 	return /@(?:article|book|inproceedings|incollection|phdthesis|mastersthesis|techreport|misc|manual|conference)\s*\{/i.test(content);
 };
 
-export const detectFileType = (fileName: string | undefined, content?: string): 'latex' | 'typst' | 'bib' | 'markdown' | 'unknown' => {
+export const detectFileType = (fileName: string | undefined, content?: string): 'latex' | 'typst' | 'bib' | 'markdown' | 'json' | 'html' | 'unknown' => {
 	if (fileName) {
 		if (isLatexFile(fileName)) return 'latex';
 		if (isTypstFile(fileName)) return 'typst';
 		if (isBibFile(fileName)) return 'bib';
 		if (isMarkdownFile(fileName)) return 'markdown';
+		if (isJsonFile(fileName)) return 'json';
+		if (isHtmlFile(fileName)) return 'html';
 	}
 	if (content) {
 		if (isBibContent(content)) return 'bib';
