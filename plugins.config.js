@@ -11,7 +11,6 @@ export default {
 	  "renderers/canvas",
 	  "loggers/latex_visualizer",
 	  "loggers/typst_visualizer",
-	  "lsp/jabref",
 	  "backup/github",
 	  "backup/gitlab",
 	  "backup/forgejo",

@@ -34,7 +34,7 @@ export interface Setting {
 	subcategory?: string;
 	type: SettingType;
 	label: string;
-	description?: string;
+	description?: React.ReactNode;
 	defaultValue: unknown;
 	value?: unknown;
 	options?: SettingOption[];
@@ -324,7 +324,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 				s.category.toLowerCase().includes(lowerQuery) ||
 				s.subcategory?.toLowerCase().includes(lowerQuery) ||
 				s.label.toLowerCase().includes(lowerQuery) ||
-				s.description?.toLowerCase().includes(lowerQuery),
+				(typeof s.description === 'string' && s.description.toLowerCase().includes(lowerQuery)),
 		);
 
 		const categoriesMap = matchingSettings.reduce(

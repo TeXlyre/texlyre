@@ -74,7 +74,19 @@ export const LSPConfigProvider: React.FC<LSPConfigProviderProps> = ({ children }
             subcategory: t('Generic LSP'),
             type: 'codemirror',
             label: t('LSP Configurations'),
-            description: t('Stored LSP server configurations (JSON array)'),
+            description: (
+                <>
+                    {t('Stored LSP server configurations (JSON array)')}{' '}
+                    <br />
+                    <a href="https://texlyre.github.io/docs/lsp-with-texlyre" target="_blank" rel="noopener noreferrer">
+                        {t('Learn more about the LSP configuration format')}
+                    </a>
+                    <br />
+                    <a href="https://texlyre.github.io/docs/category/supported-lsp" target="_blank" rel="noopener noreferrer">
+                        {t('Tested LSP servers and setup guides')}
+                    </a>
+                </>
+            ),
             defaultValue: '[]',
             liveUpdate: false,
         });

@@ -87,7 +87,15 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       subcategory: t("Language"),
       type: 'language-select',
       label: t("Interface language"),
-      description: t("Select the interface language and view translation coverage"),
+      description: (
+        <div>
+          {t('Select the interface language and view translation coverage')}{' '}
+          <br />
+          <a href="https://github.com/TeXlyre/texlyre/blob/main/CONTRIBUTING.md#translation--localization" target="_blank" rel="noopener noreferrer">
+            {t('Help translate or add a language')}
+          </a>
+        </div>
+      ),
       defaultValue: initialLanguageCode,
       options: availableLanguages.map((lang) => ({
         label: `${lang.nativeName} (${lang.name})`,

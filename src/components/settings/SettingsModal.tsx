@@ -246,12 +246,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       label: searchQuery ?
                         highlightText(setting.label, searchQuery) as string :
                         setting.label,
-                      description: (setting.description && searchQuery ?
-                        highlightText(
-                          setting.description,
-                          searchQuery
-                        ) as string :
-                        setting.description) as string
+                      description: (typeof setting.description === 'string' && searchQuery
+                        ? highlightText(setting.description, searchQuery) as string
+                        : setting.description) as string
                     }}
                     onLocalUpdate={(value) => handleLocalUpdate(setting.id, value, setting)} />
                 </div>

@@ -54,12 +54,12 @@ To add a new language to TeXlyre:
 1. Add the language JSON file to `translations/locales/`
 2. Import and register it in `src/i18n.ts`:
 
-```typescript
+```ts
 import newLangTranslations from '../translations/locales/xx.json';
 
 // In resources:
 xx: {
-    translation: newLangTranslations,
+  translation: newLangTranslations,
 }
 ```
 
@@ -75,11 +75,80 @@ xx: {
 }
 ```
 
-The source of truth is `en.json`, but Crowdin uses the auto-generated `base-en.json` which includes pluralization forms (`_one`, `_two`, `_few`, `_many`, `_other`, and base phrases).
+4. Finally, make sure to run the following script to sort and check the language configurations (`npm`, `pnpm`, and `yarn` supported):
+
+```bash
+npm run i18n:full
+```
+
+### Using Translations in Code
+
+Translation keys are the full English phrases.
+
+#### Plain Text
+
+```ts
+import { t } from '@/i18n';
+
+t("Automatically center images when they are loaded");
+```
+
+Variables can be inserted by passing an object as the second argument. Multiple variables are supported and must match the placeholders defined in the translation string.
+
+```ts
+t("{count} bytes", { count: 5 });
+t("{hours}h {minutes}m remaining", { hours: 2, minutes: 30 });
+```
+
+Variables are referenced in translation files using double curly braces, for example `{{count}}`, `{{hours}}`, and `{{minutes}}`.
+
+
+#### Rich Text and Components
+
+```tsx
+import { Trans } from 'react-i18next';
+
+<Trans
+  i18nKey="Not saved automatically. Click the <icon /> <strong>Save</strong> button or <strong>Ctrl+S</strong>"
+  components={{
+    strong: <strong />,
+    icon: <> <SaveIcon />{' '} </>
+  }}
+/>
+```
+
+Tags used in `i18nKey` must exist unchanged in all translations.
+
+#### Plurals
+
+```json
+"{count} bytes": "{{count}} Bytes",
+"{count} bytes_one": "{{count}} Byte",
+"{count} bytes_other": "{{count}} Bytes"
+```
+
+The source of truth is `en.json`, but Crowdin uses the auto-generated `base-en.json` which includes pluralization forms (`_one`, `_two`, `_few`, `_many`, `_other`, and base phrases). Only the `{count}` variable is supported for counting. 
+
+Some languages require a few or all of the pluralization forms. It is not necessary to include all variations for languages that don't require them.
+
+### Translation Dos & Don’ts
+
+#### Do
+
+* Keep the English key exactly the same
+* Preserve all tags (`<strong />`, `<icon />`) and variables (`{{count}}`)
+* Follow existing pluralization patterns
+
+#### Don’t
+
+* Change or rephrase the English key
+* Remove, rename, or reorder tags
+* Translate variable names or placeholders
+
 
 ## Questions?
 
-Open an issue or start a discussion. We're here to help!
+Open an [issue](https://github.com/TeXlyre/texlyre/issues) or start a [discussion](https://github.com/TeXlyre/texlyre/discussions).
 
 ---
 
