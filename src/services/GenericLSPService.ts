@@ -4,6 +4,7 @@ import { LSPClient, type LSPClientConfig, type Transport } from '@codemirror/lsp
 type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'error';
 type StatusListener = (configId: string, status: ConnectionStatus) => void;
 type DiagnosticListener = (configId: string, params: any) => void;
+type ApplyEditListener = (configId: string, edit: any) => void;
 
 interface LSPServerConfig {
     id: string;
@@ -26,6 +27,7 @@ class GenericLSPService {
     private connectionStatuses: Map<string, ConnectionStatus> = new Map();
     private statusListeners: Set<StatusListener> = new Set();
     private diagnosticListeners: Set<DiagnosticListener> = new Set();
+    private applyEditListeners: Set<ApplyEditListener> = new Set();
 
     registerConfig(config: LSPServerConfig) {
         this.configs.set(config.id, config);
@@ -68,6 +70,11 @@ class GenericLSPService {
         return () => this.diagnosticListeners.delete(listener);
     }
 
+    onApplyEdit(listener: ApplyEditListener): () => void {
+        this.applyEditListeners.add(listener);
+        return () => this.applyEditListeners.delete(listener);
+    }
+
     getLanguageIdMap(configId: string): Record<string, string> | undefined {
         return this.configs.get(configId)?.languageIdMap;
     }
@@ -90,7 +97,7 @@ class GenericLSPService {
 
             const transport = this.createTransport(config);
             if (transport) {
-                const wrappedTransport = this.wrapTransportForDiagnostics(config.id, transport);
+                const wrappedTransport = this.wrapTransport(config.id, transport);
                 client.connect(wrappedTransport);
                 this.clients.set(config.id, client);
                 this.setConnectionStatus(config.id, 'connected');
@@ -104,7 +111,7 @@ class GenericLSPService {
         }
     }
 
-    private wrapTransportForDiagnostics(configId: string, transport: Transport): Transport {
+    private wrapTransport(configId: string, transport: Transport): Transport {
         const self = this;
         return {
             send: transport.send.bind(transport),
@@ -121,12 +128,28 @@ class GenericLSPService {
                                 }
                             });
                         }
+                        if (parsed.method === 'workspace/applyEdit' && parsed.id !== undefined) {
+                            self.handleApplyEditRequest(configId, parsed.id, parsed.params, transport);
+                        }
                     } catch { }
                     handler(message);
                 });
             },
             unsubscribe: transport.unsubscribe?.bind(transport),
         };
+    }
+
+    private handleApplyEditRequest(configId: string, requestId: number, params: any, transport: Transport) {
+        this.applyEditListeners.forEach(listener => {
+            try {
+                listener(configId, params?.edit);
+            } catch (error) {
+                console.error('[GenericLSPService] Apply edit listener error:', error);
+            }
+        });
+
+        const response = JSON.stringify({ jsonrpc: '2.0', id: requestId, result: { applied: true } });
+        transport.send(response);
     }
 
     private createTransport(config: LSPServerConfig): Transport | null {
@@ -324,6 +347,7 @@ class GenericLSPService {
         this.connectionStatuses.clear();
         this.statusListeners.clear();
         this.diagnosticListeners.clear();
+        this.applyEditListeners.clear();
     }
 }
 
