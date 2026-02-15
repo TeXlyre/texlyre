@@ -5,22 +5,22 @@ import type React from 'react';
 import type { Setting } from '../../contexts/SettingsContext';
 import { SettingsCodeMirror } from './SettingsCodeMirror';
 import SettingsLanguage from './SettingsLanguage';
-import { useSettings } from '../../hooks/useSettings';
 
 interface SettingControlProps {
   setting: Setting & {
     label: React.ReactNode;
     description?: React.ReactNode;
   };
+  onLocalUpdate?: (value: unknown) => void;
 }
 
-const SettingControl: React.FC<SettingControlProps> = ({ setting }) => {
-  const { updateSetting } = useSettings();
-  const value =
-    setting.value !== undefined ? setting.value : setting.defaultValue;
+const SettingControl: React.FC<SettingControlProps> = ({ setting, onLocalUpdate }) => {
+  const value = setting.value !== undefined ? setting.value : setting.defaultValue;
 
   const handleChange = (newValue: unknown) => {
-    updateSetting(setting.id, newValue);
+    if (onLocalUpdate) {
+      onLocalUpdate(newValue);
+    }
   };
 
   const renderControl = () => {
@@ -32,10 +32,8 @@ const SettingControl: React.FC<SettingControlProps> = ({ setting }) => {
               type="checkbox"
               checked={Boolean(value)}
               onChange={(e) => handleChange(e.target.checked)} />
-
             <span>{setting.label}</span>
           </label>);
-
 
       case 'select':
         return (
@@ -44,7 +42,6 @@ const SettingControl: React.FC<SettingControlProps> = ({ setting }) => {
             <select
               value={String(value)}
               onChange={(e) => handleChange(e.target.value)}>
-
               {setting.options?.map((option) =>
                 <option key={String(option.value)} value={String(option.value)}>
                   {option.label}
@@ -52,7 +49,6 @@ const SettingControl: React.FC<SettingControlProps> = ({ setting }) => {
               )}
             </select>
           </div>);
-
 
       case 'text':
         return (
@@ -62,23 +58,18 @@ const SettingControl: React.FC<SettingControlProps> = ({ setting }) => {
               type="text"
               value={String(value)}
               onChange={(e) => handleChange(e.target.value)} />
-
           </div>);
-
 
       case 'codemirror':
         return (
           <SettingsCodeMirror
             setting={setting}
-            value={setting.value as string}
-            onChange={(value) => updateSetting(setting.id, value)} />);
-
-
+            value={value as string}
+            onChange={(value) => handleChange(value)} />);
 
       case 'language-select':
         return (
-          <SettingsLanguage setting={setting} />);
-
+          <SettingsLanguage setting={setting} onLocalUpdate={onLocalUpdate} />);
 
       case 'number':
         return (
@@ -90,9 +81,7 @@ const SettingControl: React.FC<SettingControlProps> = ({ setting }) => {
               min={setting.min}
               max={setting.max}
               onChange={(e) => handleChange(Number(e.target.value))} />
-
           </div>);
-
 
       case 'color':
         return (
@@ -102,9 +91,7 @@ const SettingControl: React.FC<SettingControlProps> = ({ setting }) => {
               type="color"
               value={String(value)}
               onChange={(e) => handleChange(e.target.value)} />
-
           </div>);
-
 
       default:
         return <div>{t('Unsupported setting type:')}{setting.type}</div>;
@@ -118,7 +105,6 @@ const SettingControl: React.FC<SettingControlProps> = ({ setting }) => {
         <div className="setting-description">{setting.description}</div>
       }
     </div>);
-
 };
 
 export default SettingControl;

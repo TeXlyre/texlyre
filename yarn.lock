@@ -958,7 +958,7 @@
   resolved "https://registry.npmjs.org/@biomejs/cli-linux-x64/-/cli-linux-x64-1.9.4.tgz"
   integrity sha512-lRCJv/Vi3Vlwmbd6K+oQ0KhLHMAysN8lXoCI7XeHlxaajk06u7G+UsFSO01NAs5iYuWKmVZjmiOzJ0OJmGsMwg==
 
-"@codemirror/autocomplete@^6.0.0", "@codemirror/autocomplete@^6.19.1", "@codemirror/autocomplete@^6.3.2", "@codemirror/autocomplete@^6.7.1":
+"@codemirror/autocomplete@^6.0.0", "@codemirror/autocomplete@^6.19.1", "@codemirror/autocomplete@^6.20.0", "@codemirror/autocomplete@^6.3.2", "@codemirror/autocomplete@^6.7.1":
   version "6.20.0"
   resolved "https://registry.npmjs.org/@codemirror/autocomplete/-/autocomplete-6.20.0.tgz"
   integrity sha512-bOwvTOIJcG5FVo5gUUupiwYh8MioPLQ4UcqbcRf7UQ98X90tCa9E1kZ3Z7tqwpZxYyOvh1YTYbmZE9RTfTp5hg==
@@ -1242,7 +1242,7 @@
     "@codemirror/language" "^6.0.0"
     "@codemirror/legacy-modes" "^6.4.0"
 
-"@codemirror/language@^6.0.0", "@codemirror/language@^6.11.2", "@codemirror/language@^6.11.3", "@codemirror/language@^6.3.0", "@codemirror/language@^6.4.0", "@codemirror/language@^6.6.0", "@codemirror/language@^6.8.0", "@codemirror/language@6.x.x":
+"@codemirror/language@^6.0.0", "@codemirror/language@^6.11.0", "@codemirror/language@^6.11.2", "@codemirror/language@^6.11.3", "@codemirror/language@^6.3.0", "@codemirror/language@^6.4.0", "@codemirror/language@^6.6.0", "@codemirror/language@^6.8.0", "@codemirror/language@6.x.x":
   version "6.11.3"
   resolved "https://registry.npmjs.org/@codemirror/language/-/language-6.11.3.tgz"
   integrity sha512-9HBM2XnwDj7fnu0551HkGdrUrrqmYq/WC5iv6nbY2WdicXdGbhR/gfbZOH73Aqj4351alY1+aoG9rCNfiwS1RA==
@@ -1261,7 +1261,7 @@
   dependencies:
     "@codemirror/language" "^6.0.0"
 
-"@codemirror/lint@^6.0.0", "@codemirror/lint@^6.9.1":
+"@codemirror/lint@^6.0.0", "@codemirror/lint@^6.8.5", "@codemirror/lint@^6.9.1":
   version "6.9.2"
   resolved "https://registry.npmjs.org/@codemirror/lint/-/lint-6.9.2.tgz"
   integrity sha512-sv3DylBiIyi+xKwRCJAAsBZZZWo82shJ/RTMymLabAdtbkV5cSKwWDeCgtUq3v8flTaXS2y1kKkICuRYtUswyQ==
@@ -1269,6 +1269,20 @@
     "@codemirror/state" "^6.0.0"
     "@codemirror/view" "^6.35.0"
     crelt "^1.0.5"
+
+"@codemirror/lsp-client@^6.2.1":
+  version "6.2.1"
+  resolved "https://registry.npmjs.org/@codemirror/lsp-client/-/lsp-client-6.2.1.tgz"
+  integrity sha512-fjEkEc+H0kG60thaybj5+UpSnt49yAaTzOLSYZC2wlhwNAtDsWO2uZnE2AXiRGQxBVDQBvVj01MsX3F/0Vivjg==
+  dependencies:
+    "@codemirror/autocomplete" "^6.20.0"
+    "@codemirror/language" "^6.11.0"
+    "@codemirror/lint" "^6.8.5"
+    "@codemirror/state" "^6.5.2"
+    "@codemirror/view" "^6.37.0"
+    "@lezer/highlight" "^1.2.1"
+    marked "^15.0.12"
+    vscode-languageserver-protocol "^3.17.5"
 
 "@codemirror/search@^6.0.0", "@codemirror/search@^6.5.11", "@codemirror/search@6.x.x":
   version "6.5.11"
@@ -1296,7 +1310,7 @@
     "@codemirror/view" "^6.0.0"
     "@lezer/highlight" "^1.0.0"
 
-"@codemirror/view@^6.0.0", "@codemirror/view@^6.17.0", "@codemirror/view@^6.23.0", "@codemirror/view@^6.27.0", "@codemirror/view@^6.35.0", "@codemirror/view@^6.38.1", "@codemirror/view@6.x.x":
+"@codemirror/view@^6.0.0", "@codemirror/view@^6.17.0", "@codemirror/view@^6.23.0", "@codemirror/view@^6.27.0", "@codemirror/view@^6.35.0", "@codemirror/view@^6.37.0", "@codemirror/view@^6.38.1", "@codemirror/view@6.x.x":
   version "6.38.8"
   resolved "https://registry.npmjs.org/@codemirror/view/-/view-6.38.8.tgz"
   integrity sha512-XcE9fcnkHCbWkjeKyi0lllwXmBLtyYb5dt89dJyx23I9+LSh5vZDIuk7OLG4VM1lgrXZQcY6cxyZyk5WVPRv/A==
@@ -5142,6 +5156,11 @@ makeerror@1.0.12:
   dependencies:
     tmpl "1.0.5"
 
+marked@^15.0.12:
+  version "15.0.12"
+  resolved "https://registry.npmjs.org/marked/-/marked-15.0.12.tgz"
+  integrity sha512-8dD6FusOQSrpv9Z1rdNMdlSgQOIP880DHqnohobOmYLElGEqAL/JvxvuxZO16r4HtjTlfPRDC1hbvxC9dPN2nA==
+
 math-intrinsics@^1.1.0:
   version "1.1.0"
   resolved "https://registry.npmjs.org/math-intrinsics/-/math-intrinsics-1.1.0.tgz"
@@ -6846,6 +6865,24 @@ void-elements@3.1.0:
   version "3.1.0"
   resolved "https://registry.npmjs.org/void-elements/-/void-elements-3.1.0.tgz"
   integrity sha512-Dhxzh5HZuiHQhbvTW9AMetFfBHDMYpo23Uo9btPXgdYP+3T5S+p+jgNy7spra+veYhBP2dCSgxR/i2Y02h5/6w==
+
+vscode-jsonrpc@8.2.0:
+  version "8.2.0"
+  resolved "https://registry.npmjs.org/vscode-jsonrpc/-/vscode-jsonrpc-8.2.0.tgz"
+  integrity sha512-C+r0eKJUIfiDIfwJhria30+TYWPtuHJXHtI7J0YlOmKAo7ogxP20T0zxB7HZQIFhIyvoBPwWskjxrvAtfjyZfA==
+
+vscode-languageserver-protocol@^3.17.5:
+  version "3.17.5"
+  resolved "https://registry.npmjs.org/vscode-languageserver-protocol/-/vscode-languageserver-protocol-3.17.5.tgz"
+  integrity sha512-mb1bvRJN8SVznADSGWM9u/b07H7Ecg0I3OgXDuLdn307rl/J3A9YD6/eYOssqhecL27hK1IPZAsaqh00i/Jljg==
+  dependencies:
+    vscode-jsonrpc "8.2.0"
+    vscode-languageserver-types "3.17.5"
+
+vscode-languageserver-types@3.17.5:
+  version "3.17.5"
+  resolved "https://registry.npmjs.org/vscode-languageserver-types/-/vscode-languageserver-types-3.17.5.tgz"
+  integrity sha512-Ld1VelNuX9pdF39h2Hgaeb5hEZM2Z3jUrrMgWQAu82jMtZp7p3vJT3BzToKtZI7NgQssZje5o0zryOrhQvzQAg==
 
 w3c-keyname@^2.2.4:
   version "2.2.8"

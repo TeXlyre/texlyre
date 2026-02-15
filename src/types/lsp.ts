@@ -1,4 +1,4 @@
-// src/plugins/lsp.ts
+// src/types/lsp.ts
 export interface LSPPosition {
 	line: number;
 	character: number;
@@ -40,40 +40,14 @@ export interface LSPCompletionList {
 	items: LSPCompletionItem[];
 }
 
-export interface LSPRequest {
-	id?: string | number;
-	method: string;
-	params?: any;
-}
-
-export interface LSPResponse {
-	id?: string | number;
-	result?: any;
-	error?: {
-		code: number;
-		message: string;
-		data?: any;
-	};
-}
-
-export interface LSPNotification {
-	method: string;
-	params?: any;
-}
-
 export interface LSPServerConfig {
-    transport: 'tcp' | 'websocket' | 'stdio';
-    // For TCP/WebSocket
-    host?: string;
-    port?: number;
-    // For process spawning
-    command?: string;
-    args?: string[];
-    // For WebSocket
-    url?: string;
-    // For stdio
-    cwd?: string;
-    env?: Record<string, string>;
-    // LSP server settings
-    settings?: Record<string, any>;
+	transport: 'tcp' | 'websocket' | 'stdio';
+	host?: string;
+	port?: number;
+	command?: string;
+	args?: string[];
+	url?: string;
+	cwd?: string;
+	env?: Record<string, string>;
+	settings?: Record<string, any>;
 }

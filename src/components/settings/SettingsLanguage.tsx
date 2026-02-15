@@ -5,16 +5,15 @@ import { useState, useRef, useEffect } from 'react';
 
 import type { Setting } from '../../contexts/SettingsContext';
 import { useLanguage } from '../../hooks/useLanguage';
-import { useSettings } from '../../hooks/useSettings';
 import { ChevronUpIcon, ChevronDownIcon } from '../common/Icons';
 
 interface SettingsLanguageProps {
   setting: Setting;
+  onLocalUpdate?: (value: unknown) => void;
 }
 
-const SettingsLanguage: React.FC<SettingsLanguageProps> = ({ setting }) => {
+const SettingsLanguage: React.FC<SettingsLanguageProps> = ({ setting, onLocalUpdate }) => {
   const { currentLanguage, availableLanguages, changeLanguage } = useLanguage();
-  const { updateSetting } = useSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -51,7 +50,9 @@ const SettingsLanguage: React.FC<SettingsLanguageProps> = ({ setting }) => {
   );
 
   const handleSelect = (code: string) => {
-    updateSetting(setting.id, code);
+    if (onLocalUpdate) {
+      onLocalUpdate(code);
+    }
     changeLanguage(code);
     setIsOpen(false);
     setSearchQuery('');

@@ -9,6 +9,8 @@ import {
 import { languages } from '@codemirror/language-data';
 import { html } from '@codemirror/lang-html';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { json } from '@codemirror/lang-json';
+
 import {
     bracketMatching,
     defaultHighlightStyle,
@@ -38,7 +40,6 @@ import type { CollabProvider } from '../../types/collab';
 import type * as Y from 'yjs';
 import { UndoManager } from 'yjs';
 
-import { pluginRegistry } from '../../plugins/PluginRegistry';
 import { commentSystemExtension } from '../../extensions/codemirror/CommentExtension';
 import { latexTypstBidiIsolates } from "../../extensions/codemirror/BidiExtension";
 import { searchHighlightExtension } from '../../extensions/codemirror/SearchHighlightExtension';
@@ -48,10 +49,12 @@ import {
     refreshBibliographyCache,
 } from '../../extensions/codemirror/PathAndBibAutocompleteExtension.ts';
 import {
-    createLSPExtension,
-    updateLSPPluginsInView,
-    setCurrentFilePathInLSP,
-} from '../../extensions/codemirror/LSPExtension';
+    getGenericLSPExtensionsForFile,
+    getGenericLSPCompletionSources,
+    setCurrentFileNameInGenericLSP,
+    releaseGenericLSPFile
+} from '../../extensions/codemirror/GenericLSPExtension';
+import { createCodeActionsExtension } from '../../extensions/codemirror/CodeActionsLSPExtension.ts';
 import { createToolbarExtension } from '../../extensions/codemirror/ToolbarExtension';
 import { createMathLiveExtension } from '../../extensions/codemirror/MathLiveExtension';
 import { createPasteExtension } from '../../extensions/codemirror/PasteExtension';
@@ -322,8 +325,12 @@ export const useEditorView = (
                     codeLanguages: languages,
                     htmlTagLanguage: html()
                 })];
+            case 'json':
+                return [json()];
+            case 'html':
+                return [html()];
             default:
-                return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
+                return [];
         }
     };
 
@@ -403,6 +410,7 @@ export const useEditorView = (
             : ytextRef.current?.toString() || '';
 
         const extensions: Extension[] = [];
+        const completionSources: CompletionSource[] = [];
 
         const fileType = detectFileType(fileName, contentToUse);
         const isLatexFileType = fileType === 'latex';
@@ -417,6 +425,14 @@ export const useEditorView = (
         extensions.push(...getBasicSetupExtensions());
         extensions.push(...getLanguageExtension(fileName, contentToUse));
 
+        const genericLSPExts = getGenericLSPExtensionsForFile(fileName);
+        extensions.push(...genericLSPExts);
+        const genericLSPCompletions = getGenericLSPCompletionSources(fileName);
+        completionSources.push(...genericLSPCompletions);
+        if (genericLSPExts.length > 0) {
+            extensions.push(createCodeActionsExtension(fileName));
+        }
+
         if (isLatexFileType || isTypstFileType) {
             extensions.push(latexTypstBidiIsolates());
         }
@@ -424,42 +440,6 @@ export const useEditorView = (
         if (isLatexFileType || isBibFileType || isTypstFileType || isMarkdownFileType) {
             // Add link navigation for all file types
             extensions.push(createLinkNavigationExtension(fileName, contentToUse));
-
-            const allLSPPlugins =
-                pluginRegistry.getLSPPluginsForFileType(fileType);
-
-            const enabledPluginIds = getEnabledLSPPlugins();
-            const availableLSPPlugins = allLSPPlugins.filter((plugin) =>
-                enabledPluginIds.includes(plugin.id),
-            );
-
-            const completionSources: CompletionSource[] = [];
-
-            if (availableLSPPlugins.length > 0) {
-                const [lspField, lspPlugin, lspCompletionSource] = createLSPExtension();
-                extensions.push(lspField, lspPlugin);
-                completionSources.push(lspCompletionSource);
-
-                setTimeout(() => {
-                    if (viewRef.current) {
-                        updateLSPPluginsInView(viewRef.current, availableLSPPlugins);
-
-                        if (isEditingFile && currentFileId) {
-                            fileStorageService.getFile(currentFileId).then((file) => {
-                                if (file && viewRef.current) {
-                                    setCurrentFilePathInLSP(viewRef.current, file.path);
-
-                                    availableLSPPlugins.forEach((plugin) => {
-                                        if ('setCurrentFilePath' in plugin) {
-                                            (plugin as any).setCurrentFilePath(file.path);
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    }
-                }, 100);
-            }
 
             if (isLatexFileType || isTypstFileType) {
                 let currentFilePath = '';
@@ -516,11 +496,6 @@ export const useEditorView = (
                         filePathCacheService.updateCurrentFilePath(file.path);
                         updateLinkNavigationFilePath(viewRef.current, file.path);
                         updateLinkNavigationFileName(viewRef.current, fileName || '');
-                        availableLSPPlugins.forEach((plugin) => {
-                            if ('setCurrentFilePath' in plugin) {
-                                (plugin as any).setCurrentFilePath(file.path);
-                            }
-                        });
                     }
                 }, 100);
             } else if (!isEditingFile && documentId) {
@@ -538,9 +513,10 @@ export const useEditorView = (
                 }, 100);
             }
 
+            console.log('[useEditorView] Total completion sources:', completionSources.length);
             extensions.push(
                 autocompletion({
-                    override: completionSources,
+                    override: completionSources.length > 0 ? completionSources : undefined,
                     maxRenderedOptions: 20,
                     closeOnBlur: false,
                 }),
@@ -648,6 +624,9 @@ export const useEditorView = (
             const view = new EditorView({ state, parent: editorRef.current });
             viewRef.current = view;
 
+            if (fileName) {
+                setCurrentFileNameInGenericLSP(fileName);
+            }
             setTimeout(() => {
                 document.dispatchEvent(
                     new CustomEvent('editor-ready', {
@@ -670,6 +649,9 @@ export const useEditorView = (
         }
 
         return () => {
+            if (fileName) {
+                releaseGenericLSPFile(fileName);
+            }
             if (viewRef.current) {
                 filePathCacheService.cleanup();
                 viewRef.current.destroy();

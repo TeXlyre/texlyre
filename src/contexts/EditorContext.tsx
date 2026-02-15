@@ -57,7 +57,7 @@ export const defaultEditorSettings: EditorSettings = {
   vimMode: false,
   spellCheck: true,
   mathLiveEnabled: true,
-  mathLivePreviewMode: 'hover-cursor',
+  mathLivePreviewMode: 'cursor', // hover-cursor, hover, cursor, never
   language: 'en',
 };
 

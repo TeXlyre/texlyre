@@ -208,9 +208,9 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
           <input
             type="text"
             placeholder={
-              selectedProvider === 'all' ? 'Search all bibliography sources...' :
-                selectedProvider === 'local' ? 'Search local bibliography...' :
-                  'Search bibliography...'
+              selectedProvider === 'all' ? t('Search all bibliography sources...') :
+                selectedProvider === 'local' ? t('Search local bibliography...') :
+                  t('Search bibliography...')
             }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -287,7 +287,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
               onClick={handleRefresh}
               disabled={isLoading}>
 
-              {isLoading ? 'Refreshing...' : 'Refresh'}
+              {isLoading ? t('Refreshing...') : t('Refresh')}
             </button>
           </div>
         </div>
@@ -690,9 +690,9 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
             onClick={handleRefresh}
             disabled={isRefreshing}
             title={
-              selectedProvider === 'all' ? 'Refresh all LSP providers' :
-                selectedProvider === 'local' ? 'Refresh local bibliography' :
-                  `Refresh ${currentProvider?.name || 'LSP'}`
+              selectedProvider === 'all' ? t('Refresh all LSP providers') :
+                selectedProvider === 'local' ? t('Refresh local bibliography') :
+                  `Refresh ${currentProvider?.name || t('LSP')}`
             }>
 
             <SyncIcon />

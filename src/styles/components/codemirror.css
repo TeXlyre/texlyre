@@ -1,3 +1,61 @@
+/* ============================================================
+   Syntax highlighting token variables
+   ============================================================ */
+
+:root {
+	--cm-color-keyword: #6f42c1;
+	--cm-color-def-keyword: #d73a49;
+	--cm-color-comment: var(--pico-muted-color, #6a737d);
+	--cm-color-atom: #0366d6;
+	--cm-color-atom-bg: rgba(3, 102, 214, 0.1);
+	--cm-color-property: #e36209;
+	--cm-color-string: #032f62;
+	--cm-color-number: #005cc5;
+	--cm-color-variable: #6f42c1;
+	--cm-color-operator: #d73a49;
+	--cm-color-punctuation: var(--pico-muted-color, #586069);
+	--cm-color-brace: var(--pico-color, #24292e);
+	--cm-color-ctrl: #0000cc;
+	--cm-color-env: #008800;
+	--cm-color-env-name: #990000;
+	--cm-color-math: #0086b3;
+	--cm-color-meta: #d73a49;
+	--cm-color-link: #0366d6;
+	--cm-color-argument: #dd1144;
+	--cm-color-editor-text: #24292e;
+	--cm-color-gutter-text: #6a737d;
+	--cm-color-active-line-bg: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] {
+	--cm-color-keyword: #b392f0;
+	--cm-color-def-keyword: #ff7b86;
+	--cm-color-comment: #7d8590;
+	--cm-color-atom: #58a6ff;
+	--cm-color-atom-bg: rgba(88, 166, 255, 0.15);
+	--cm-color-property: #ffa657;
+	--cm-color-string: #79c0ff;
+	--cm-color-number: #79c0ff;
+	--cm-color-variable: #b392f0;
+	--cm-color-operator: #ff7b86;
+	--cm-color-punctuation: #8b949e;
+	--cm-color-brace: #f0f6fc;
+	--cm-color-ctrl: #79c0ff;
+	--cm-color-env: #7ee787;
+	--cm-color-env-name: #ff7b86;
+	--cm-color-math: #79c0ff;
+	--cm-color-meta: #ff7b86;
+	--cm-color-link: #58a6ff;
+	--cm-color-argument: #ffa198;
+	--cm-color-editor-text: #ddd;
+	--cm-color-gutter-text: #999;
+	--cm-color-active-line-bg: rgba(255, 255, 255, 0.04);
+}
+
+/* ============================================================
+   Editor layout
+   ============================================================ */
+
 .codemirror-editor-container {
 	width: 100%;
 	height: 100%;
@@ -5,8 +63,15 @@
 }
 
 .codemirror-editor-container .cm-editor {
-	/* font-size: var(--editor-font-size, 18px) !important; */
 	height: 100%;
+	color: var(--cm-color-editor-text);
+	background-color: var(--pico-secondary-background) !important;
+}
+
+.codemirror-editor-container .cm-editor.cm-focused {
+	outline: 2px solid var(--pico-primary);
+	outline-offset: -2px;
+	background-color: var(--pico-secondary-background) !important;
 }
 
 .codemirror-editor-container .cm-scroller {
@@ -21,6 +86,7 @@
 	min-height: 100%;
 	white-space: pre-wrap;
 	padding: var(--space-sm);
+	background-color: transparent !important;
 }
 
 .codemirror-editor-container .cm-line {
@@ -29,28 +95,7 @@
 
 .codemirror-editor-container .cm-gutters {
 	background-color: var(--pico-background) !important;
-	border-right: 1px solid var(--accent-border);
-}
-
-[data-theme="dark"] .codemirror-editor-container .cm-editor {
-	color: #ddd;
-	background-color: var(--pico-secondary-background);
-}
-
-[data-theme="dark"] .codemirror-editor-container .cm-gutters {
-	background-color: var(--pico-background);
-	color: #999;
-	border-right: 1px solid var(--accent-border);
-}
-
-[data-theme="light"] .codemirror-editor-container .cm-editor {
-	color: #24292e;
-	background-color: var(--pico-secondary-background);
-}
-
-[data-theme="light"] .codemirror-editor-container .cm-gutters {
-	background-color: var(--pico-background);
-	color: #6a737d;
+	color: var(--cm-color-gutter-text);
 	border-right: 1px solid var(--accent-border);
 }
 
@@ -58,6 +103,10 @@
 	color: var(--pico-muted-color, #6a737d);
 	padding: 0 var(--space-xs) 0 var(--space-sm);
 }
+
+/* ============================================================
+   Cursor, selection & active line
+   ============================================================ */
 
 .codemirror-editor-container .cm-cursor {
 	border-left: 2px solid var(--pico-primary);
@@ -68,12 +117,12 @@
 }
 
 .codemirror-editor-container .cm-activeLine {
-	background-color: rgba(0, 0, 0, 0.04);
+	background-color: var(--cm-color-active-line-bg);
 }
 
-[data-theme="dark"] .codemirror-editor-container .cm-activeLine {
-	background-color: rgba(255, 255, 255, 0.04);
-}
+/* ============================================================
+   Bracket matching
+   ============================================================ */
 
 .codemirror-editor-container .cm-matchingBracket {
 	background-color: rgba(40, 167, 69, 0.2);
@@ -85,10 +134,9 @@
 	outline: 1px solid var(--color-error);
 }
 
-.codemirror-editor-container .cm-editor.cm-focused {
-	outline: 2px solid var(--pico-primary);
-	outline-offset: -2px;
-}
+/* ============================================================
+   Code folding
+   ============================================================ */
 
 .codemirror-editor-container .cm-foldPlaceholder {
 	background-color: var(--pico-muted-background, #e1e4e8);
@@ -100,6 +148,10 @@
 	padding: 0 var(--space-xs);
 }
 
+/* ============================================================
+   Search
+   ============================================================ */
+
 .codemirror-editor-container .cm-searchMatch {
 	background-color: rgba(255, 235, 59, 0.5);
 	outline: 1px solid var(--color-warning);
@@ -110,138 +162,91 @@
 	outline: 1px solid var(--color-warning);
 }
 
-.codemirror-editor-container .cm-definitionKeyword {
-	color: #d73a49;
-	font-weight: bold;
-}
+/* ============================================================
+   Syntax tokens
+   ============================================================ */
 
-[data-theme="dark"] .codemirror-editor-container .cm-definitionKeyword {
-	color: #ff7b86;
+.codemirror-editor-container .cm-definitionKeyword {
+	color: var(--cm-color-def-keyword);
+	font-weight: bold;
 }
 
 .codemirror-editor-container .cm-keyword {
-	color: #6f42c1;
+	color: var(--cm-color-keyword);
 	font-weight: bold;
-}
-
-[data-theme="dark"] .codemirror-editor-container .cm-keyword {
-	color: #b392f0;
 }
 
 .codemirror-editor-container .cm-comment {
-	color: var(--pico-muted-color, #6a737d);
+	color: var(--cm-color-comment);
 	font-style: italic;
 }
 
-[data-theme="dark"] .codemirror-editor-container .cm-comment {
-	color: #7d8590;
-}
-
 .codemirror-editor-container .cm-atom {
-	color: #0366d6;
+	color: var(--cm-color-atom);
 	font-weight: bold;
-	background-color: rgba(3, 102, 214, 0.1);
+	background-color: var(--cm-color-atom-bg);
 	padding: 1px var(--space-xs);
 	border-radius: var(--radius-xs);
 }
 
-[data-theme="dark"] .codemirror-editor-container .cm-atom {
-	color: #58a6ff;
-	background-color: rgba(88, 166, 255, 0.15);
-}
-
 .codemirror-editor-container .cm-propertyName,
 .codemirror-editor-container .cm-property {
-	color: #e36209;
+	color: var(--cm-color-property);
 	font-weight: 600;
 }
 
-[data-theme="dark"] .codemirror-editor-container .cm-propertyName,
-[data-theme="dark"] .codemirror-editor-container .cm-property {
-	color: #ffa657;
-}
-
 .codemirror-editor-container .cm-string {
-	color: #032f62;
-}
-
-[data-theme="dark"] .codemirror-editor-container .cm-string {
-	color: #79c0ff;
+	color: var(--cm-color-string);
 }
 
 .codemirror-editor-container .cm-number {
-	color: #005cc5;
-}
-
-[data-theme="dark"] .codemirror-editor-container .cm-number {
-	color: #79c0ff;
+	color: var(--cm-color-number);
 }
 
 .codemirror-editor-container .cm-variableName {
-	color: #6f42c1;
+	color: var(--cm-color-variable);
 }
 
-[data-theme="dark"] .codemirror-editor-container .cm-variableName {
-	color: #b392f0;
-}
-
-.codemirror-editor-container .cm-quote {
-	color: #d73a49;
-	font-weight: bold;
-}
-
-[data-theme="dark"] .codemirror-editor-container .cm-quote {
-	color: #ff7b86;
-}
-
+.codemirror-editor-container .cm-quote,
 .codemirror-editor-container .cm-operator {
-	color: #d73a49;
+	color: var(--cm-color-operator);
 	font-weight: bold;
-}
-
-[data-theme="dark"] .codemirror-editor-container .cm-operator {
-	color: #ff7b86;
 }
 
 .codemirror-editor-container .cm-punctuation,
 .codemirror-editor-container .cm-separator {
-	color: var(--pico-muted-color, #586069);
-}
-
-[data-theme="dark"] .codemirror-editor-container .cm-punctuation,
-[data-theme="dark"] .codemirror-editor-container .cm-separator {
-	color: #8b949e;
+	color: var(--cm-color-punctuation);
 }
 
 .codemirror-editor-container .cm-brace {
-	color: var(--pico-color, #24292e);
+	color: var(--cm-color-brace);
 	font-weight: bold;
 }
 
-[data-theme="dark"] .codemirror-editor-container .cm-brace {
-	color: #f0f6fc;
+.codemirror-editor-container .cm-meta {
+	color: var(--cm-color-meta);
+	font-weight: bold;
 }
+
+.codemirror-editor-container .cm-link {
+	color: var(--cm-color-link);
+	text-decoration: underline;
+}
+
+/* ============================================================
+   LaTeX-specific tokens
+   ============================================================ */
 
 .codemirror-editor-container .cm-ctrlSeq,
 .codemirror-editor-container .cm-ctrlSym {
-	color: #0000cc;
+	color: var(--cm-color-ctrl);
 	font-weight: bold;
-}
-
-[data-theme="dark"] .codemirror-editor-container .cm-ctrlSeq,
-[data-theme="dark"] .codemirror-editor-container .cm-ctrlSym {
-	color: #79c0ff;
 }
 
 .codemirror-editor-container .cm-beginEnv,
 .codemirror-editor-container .cm-endEnv {
-	color: #008800;
+	color: var(--cm-color-env);
 	font-weight: bold;
-}
-
-[data-theme="dark"] .codemirror-editor-container .cm-beginEnv,
-[data-theme="dark"] .codemirror-editor-container .cm-endEnv {
-	color: #7ee787;
 }
 
 .codemirror-editor-container .cm-envName,
@@ -254,51 +259,24 @@
 .codemirror-editor-container .cm-figureEnvName,
 .codemirror-editor-container .cm-listEnvName,
 .codemirror-editor-container .cm-tableEnvName {
-	color: #990000;
+	color: var(--cm-color-env-name);
 	font-weight: bold;
-}
-
-[data-theme="dark"] .codemirror-editor-container .cm-envName,
-[data-theme="dark"] .codemirror-editor-container .cm-documentEnvName,
-[data-theme="dark"] .codemirror-editor-container .cm-tabularEnvName,
-[data-theme="dark"] .codemirror-editor-container .cm-equationEnvName,
-[data-theme="dark"] .codemirror-editor-container .cm-equationArrayEnvName,
-[data-theme="dark"] .codemirror-editor-container .cm-verbatimEnvName,
-[data-theme="dark"] .codemirror-editor-container .cm-tikzPictureEnvName,
-[data-theme="dark"] .codemirror-editor-container .cm-figureEnvName,
-[data-theme="dark"] .codemirror-editor-container .cm-listEnvName,
-[data-theme="dark"] .codemirror-editor-container .cm-tableEnvName {
-	color: #ff7b86;
 }
 
 .codemirror-editor-container .cm-mathChar,
 .codemirror-editor-container .cm-mathSpecialChar,
 .codemirror-editor-container .cm-math {
-	color: #0086b3;
-}
-
-[data-theme="dark"] .codemirror-editor-container .cm-mathChar,
-[data-theme="dark"] .codemirror-editor-container .cm-mathSpecialChar,
-[data-theme="dark"] .codemirror-editor-container .cm-math {
-	color: #79c0ff;
+	color: var(--cm-color-math);
 }
 
 .codemirror-editor-container .cm-string.cm-math {
-	color: #005cc5;
+	color: var(--cm-color-number);
 	font-style: italic;
 }
 
-[data-theme="dark"] .codemirror-editor-container .cm-string.cm-math {
-	color: #79c0ff;
-}
-
 .codemirror-editor-container .cm-dollar {
-	color: #0086b3;
+	color: var(--cm-color-math);
 	font-weight: bold;
-}
-
-[data-theme="dark"] .codemirror-editor-container .cm-dollar {
-	color: #79c0ff;
 }
 
 .codemirror-editor-container .cm-textArgument,
@@ -309,37 +287,12 @@
 .codemirror-editor-container .cm-refArgument,
 .codemirror-editor-container .cm-bibKeyArgument,
 .codemirror-editor-container .cm-packageArgument {
-	color: #dd1144;
+	color: var(--cm-color-argument);
 }
 
-[data-theme="dark"] .codemirror-editor-container .cm-textArgument,
-[data-theme="dark"] .codemirror-editor-container .cm-shortTextArgument,
-[data-theme="dark"] .codemirror-editor-container .cm-longArg,
-[data-theme="dark"] .codemirror-editor-container .cm-shortArg,
-[data-theme="dark"] .codemirror-editor-container .cm-labelArgument,
-[data-theme="dark"] .codemirror-editor-container .cm-refArgument,
-[data-theme="dark"] .codemirror-editor-container .cm-bibKeyArgument,
-[data-theme="dark"] .codemirror-editor-container .cm-packageArgument {
-	color: #ffa198;
-}
-
-.codemirror-editor-container .cm-meta {
-	color: #d73a49;
-	font-weight: bold;
-}
-
-[data-theme="dark"] .codemirror-editor-container .cm-meta {
-	color: #ff7b86;
-}
-
-.codemirror-editor-container .cm-link {
-	color: #0366d6;
-	text-decoration: underline;
-}
-
-[data-theme="dark"] .codemirror-editor-container .cm-link {
-	color: #58a6ff;
-}
+/* ============================================================
+   Link hover
+   ============================================================ */
 
 .codemirror-editor-container .cm-link-hover {
 	cursor: pointer;
@@ -354,6 +307,9 @@
 	background-color: rgba(0, 102, 204, 0.1);
 }
 
+/* ============================================================
+   Tooltips (BibTeX & LaTeX)
+   ============================================================ */
 
 .codemirror-editor-container .cm-bibtex-tooltip,
 .codemirror-editor-container .cm-latex-tooltip {
@@ -371,14 +327,6 @@
 	z-index: var(--z-tooltip);
 }
 
-[data-theme="dark"] .codemirror-editor-container .cm-bibtex-tooltip,
-[data-theme="dark"] .codemirror-editor-container .cm-latex-tooltip {
-	background-color: var(--pico-secondary-background);
-	border-color: var(--pico-muted-border-color);
-	color: var(--pico-color);
-	box-shadow: var(--shadow-lg);
-}
-
 .codemirror-editor-container .cm-bibtex-tooltip-description,
 .codemirror-editor-container .cm-latex-tooltip-description {
 	margin-bottom: var(--space-sm);
@@ -387,7 +335,7 @@
 
 .codemirror-editor-container .cm-bibtex-tooltip-field-name {
 	font-weight: 600;
-	color: #e36209;
+	color: var(--cm-color-property);
 	margin-bottom: var(--space-xs);
 }
 
@@ -397,7 +345,8 @@
 	color: var(--color-error);
 }
 
-.codemirror-editor-container .cm-bibtex-tooltip-required::before {
+.codemirror-editor-container .cm-bibtex-tooltip-required::before,
+.codemirror-editor-container .cm-bibtex-tooltip-optional::before {
 	content: "• ";
 	font-weight: bold;
 }
@@ -406,11 +355,6 @@
 	margin-top: var(--space-xs);
 	font-size: 11px;
 	color: var(--pico-muted-color);
-}
-
-.codemirror-editor-container .cm-bibtex-tooltip-optional::before {
-	content: "• ";
-	font-weight: bold;
 }
 
 .codemirror-editor-container .cm-bibtex-tooltip-example-label {
@@ -436,21 +380,16 @@
 	color: var(--pico-color);
 }
 
-[data-theme="dark"] .codemirror-editor-container .cm-bibtex-tooltip-example,
-[data-theme="dark"] .codemirror-editor-container .cm-latex-tooltip-syntax,
-[data-theme="dark"] .codemirror-editor-container .cm-latex-tooltip-example,
-[data-theme="dark"] .codemirror-editor-container .cm-latex-tooltip-package {
-	background-color: #1a1a1a;
-	border-color: #444;
-	color: #e6e6e6;
-}
-
 .codemirror-editor-container .cm-bibtex-tooltip-note {
 	margin-top: 6px;
 	font-size: 11px;
 	color: var(--pico-muted-color);
 	font-style: italic;
 }
+
+/* ============================================================
+   Diagnostics
+   ============================================================ */
 
 .codemirror-editor-container .cm-diagnostic {
 	background-color: var(--pico-background);
@@ -464,13 +403,6 @@
 	line-height: 1.4;
 	padding: 12px var(--space-md);
 	z-index: var(--z-tooltip);
-}
-
-[data-theme="dark"] .codemirror-editor-container .cm-diagnostic {
-	background-color: var(--pico-secondary-background);
-	border-color: var(--pico-muted-border-color);
-	color: var(--pico-color);
-	box-shadow: var(--shadow-lg);
 }
 
 .codemirror-editor-container .cm-diagnostic-error {
@@ -503,6 +435,10 @@
 	font-weight: 600;
 }
 
+/* ============================================================
+   Autocomplete
+   ============================================================ */
+
 .codemirror-editor-container .cm-tooltip.cm-tooltip-autocomplete>ul {
 	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 	font-size: 12px;
@@ -519,15 +455,19 @@
 
 .codemirror-editor-container .cm-completionIcon-property::after {
 	content: "F";
-	color: #e36209;
+	color: var(--cm-color-property);
 	font-weight: bold;
 }
 
 .codemirror-editor-container .cm-completionIcon-constant::after {
 	content: "C";
-	color: #005cc5;
+	color: var(--cm-color-number);
 	font-weight: bold;
 }
+
+/* ============================================================
+   Yjs collaboration cursors
+   ============================================================ */
 
 .codemirror-editor-container .cm-ySelection {
 	background-color: rgba(250, 129, 0, 0.5);
@@ -570,6 +510,10 @@
 	transform: scale(0);
 }
 
+/* ============================================================
+   Comments
+   ============================================================ */
+
 .codemirror-editor-container .cm-comment-content {
 	background-color: var(--comment-highlight-bg, rgba(255, 220, 100, 0.2));
 	border-radius: var(--radius-xs);
@@ -579,14 +523,6 @@
 
 .codemirror-editor-container .cm-comment-content:hover {
 	background-color: var(--comment-highlight-hover-bg, rgba(255, 220, 100, 0.3));
-}
-
-.codemirror-editor-container .cm-comment-marker {
-	display: none;
-	opacity: 0;
-	width: 0;
-	height: 0;
-	pointer-events: none;
 }
 
 .codemirror-editor-container .cm-comment-content::after {
@@ -604,30 +540,20 @@
 	opacity: 0.7;
 }
 
-[data-theme="dark"] .codemirror-editor-container .cm-comment-content {
-	background-color: rgba(255, 220, 100, 0.15);
-}
-
-[data-theme="dark"] .codemirror-editor-container .cm-comment-content:hover {
-	background-color: rgba(255, 220, 100, 0.25);
-}
-
 .codemirror-editor-container .comment-selection-active {
 	background-color: var(--comment-highlight-active-bg, rgba(100, 200, 255, 0.2));
 	border-radius: var(--radius-xs);
 }
 
 @keyframes comment-pulse {
-	0% {
+
+	0%,
+	100% {
 		background-color: rgba(255, 220, 100, 0.2);
 	}
 
 	50% {
 		background-color: rgba(255, 220, 100, 0.4);
-	}
-
-	100% {
-		background-color: rgba(255, 220, 100, 0.2);
 	}
 }
 
@@ -635,35 +561,18 @@
 	animation: comment-pulse 2s ease-in-out 3;
 }
 
-.loading-state {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	height: 100%;
-	color: var(--pico-secondary);
-}
-
-.codemirror-editor-container .cm-editor.cm-focused {
-	background-color: var(--pico-secondary-background) !important;
-}
-
-.codemirror-editor-container .cm-editor {
-	background-color: var(--pico-secondary-background) !important;
-}
-
-.codemirror-editor-container .cm-content {
-	background-color: transparent !important;
-}
-
+/* Hidden comment markers and tags */
+.codemirror-editor-container .cm-comment-marker,
 .codemirror-editor-container .comment-open-tag,
 .codemirror-editor-container .comment-close-tag {
 	display: none !important;
+	opacity: 0 !important;
 	width: 0 !important;
 	height: 0 !important;
 	overflow: hidden !important;
 	position: absolute !important;
 	visibility: hidden !important;
-	opacity: 0 !important;
+	pointer-events: none !important;
 	font-size: 0 !important;
 	line-height: 0 !important;
 	margin: 0 !important;
@@ -671,15 +580,38 @@
 	border: none !important;
 }
 
-.codemirror-editor-container .cm-comment-marker {
-	display: none !important;
-	opacity: 0 !important;
-	width: 0 !important;
-	height: 0 !important;
-	pointer-events: none !important;
-	position: absolute !important;
-	visibility: hidden !important;
+/* ============================================================
+   Code actions tooltip
+   ============================================================ */
+
+.cm-code-actions-tooltip {
+	padding: 4px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	max-width: 400px;
 }
+
+.cm-code-action-button {
+	padding: 3px 10px;
+	font-size: 12px;
+	border-radius: 4px;
+	border: 1px solid var(--pico-muted-border-color);
+	background-color: var(--pico-background);
+	cursor: pointer;
+	color: var(--pico-color);
+	line-height: 1.4;
+	white-space: nowrap;
+}
+
+.cm-code-action-button:hover {
+	background-color: var(--pico-secondary-background);
+	border-color: var(--pico-muted-color);
+}
+
+/* ============================================================
+   Math preview & editor overlays
+   ============================================================ */
 
 math-field {
 	font-family: inherit;
@@ -707,7 +639,7 @@ math-field {
 
 .cm-math-preview-field {
 	background: var(--pico-background);
-	color: var(--text-color);
+	color: var(--pico-color);
 	border: none;
 	padding: var(--space-xs);
 	margin: 0;
@@ -723,7 +655,7 @@ math-field {
 	left: 1px;
 	width: 16px;
 	height: 16px;
-	padding: calc(var(--space-sm)*1.3);
+	padding: calc(var(--space-sm) * 1.3);
 	border: none;
 	cursor: pointer;
 	display: flex;
@@ -768,10 +700,10 @@ math-field {
 	border: 1px solid var(--pico-muted-border-color);
 	border-radius: 4px;
 	background: var(--pico-background);
-	color: var(--text-color);
+	color: var(--pico-color);
 	overflow-y: visible;
 	--ui-menu-bg: var(--pico-secondary-background) !important;
-	--ui-menu-text: var(--text-color);
+	--ui-menu-text: var(--pico-color);
 	--ui-menu-bg-hover: var(--pico-primary-background) !important;
 	--ui-menu-bg-active: var(--pico-primary-background) !important;
 	--ui-menu-bg-active-muted: var(--pico-primary-background) !important;
@@ -795,10 +727,7 @@ math-field {
 	transition: all 0.2s ease;
 }
 
-.cm-math-editor-btn-save:hover {
-	transform: translateY(-1px);
-}
-
+.cm-math-editor-btn-save:hover,
 .cm-math-editor-btn-cancel:hover {
 	transform: translateY(-1px);
 }
@@ -806,6 +735,10 @@ math-field {
 .cm-math-editor-btn:active {
 	transform: translateY(0);
 }
+
+/* ============================================================
+   MathLive keyboard
+   ============================================================ */
 
 .ML__keyboard {
 	z-index: var(--z-above-all) !important;
@@ -851,16 +784,17 @@ math-field {
 
 .ML__keyboard [data-tooltip]::before {
 	background-color: var(--pico-secondary-background);
-	color: var(--text-color);
-
+	color: var(--pico-color);
 }
 
-@media (max-width: 768px) {
-	/* .codemirror-editor-container .cm-editor {
-		font-size: max(20px, var(--editor-font-size, 18px)) !important;
-	} */
+/* ============================================================
+   Loading state
+   ============================================================ */
 
-	/* .codemirror-editor-container .cm-scroller {
-		font-size: max(20px, var(--editor-font-size, 18px)) !important;
-	} */
+.loading-state {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	color: var(--pico-secondary);
 }

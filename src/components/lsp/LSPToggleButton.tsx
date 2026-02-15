@@ -32,7 +32,6 @@ const LSPToggleButton: React.FC<LSPToggleButtonProps> = ({
 	const handleTogglePanel = () => {
 		setShowPanel(!showPanel);
 
-		// Dispatch event to show LSP panel
 		document.dispatchEvent(
 			new CustomEvent('toggle-lsp-panel', {
 				detail: {

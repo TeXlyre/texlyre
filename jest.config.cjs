@@ -21,6 +21,7 @@ module.exports = {
         '^codemirror-lang-bib$': '<rootDir>/tests/mocks/codemirror.js',
         '^codemirror-lang-latex$': '<rootDir>/tests/mocks/codemirror.js',
         '^codemirror-lang-typst$': '<rootDir>/tests/mocks/codemirror.js',
+        '^@codemirror/lsp-client$': '<rootDir>/tests/mocks/codemirror-lsp-client.js',
         '^pdfjs-dist$': '<rootDir>/tests/mocks/pdfjs.js',
         '^pdfjs-dist/build/pdf.worker.mjs\\?url$': '<rootDir>/tests/mocks/pdfjs.js',
         '^react-pdf$': '<rootDir>/tests/mocks/react-pdf.js',

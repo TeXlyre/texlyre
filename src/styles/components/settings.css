@@ -210,6 +210,32 @@
 	pointer-events: none !important;
 }
 
+.settings-wrapper {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	position: relative;
+}
+
+.settings-container {
+	flex: 1;
+	display: flex;
+	overflow: hidden;
+	min-height: 0;
+}
+
+.pending-changes-bar {
+	flex-shrink: 0;
+	padding: var(--space-md);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.pending-changes-bar .button {
+	white-space: nowrap;
+}
+
 @keyframes refreshIndicatorPulse {
 
 	0%,
