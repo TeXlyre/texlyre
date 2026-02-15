@@ -38,5 +38,5 @@ jobs:
             If you would like to continue this work, please reopen the PR or submit a new one.
           stale-issue-label: 'stale'
           stale-pr-label: 'stale'
-          exempt-issue-labels: 'pinned,security,roadmap,bug'
+          exempt-issue-labels: 'pinned,work-in-progress,security,roadmap,bug'
           exempt-pr-labels: 'pinned,work-in-progress'
