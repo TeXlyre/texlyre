@@ -27,7 +27,7 @@
 	--cm-color-active-line-bg: rgba(0, 0, 0, 0.04);
 }
 
-[data-theme="dark"] {
+[data-theme-mode="dark"] {
 	--cm-color-keyword: #b392f0;
 	--cm-color-def-keyword: #ff7b86;
 	--cm-color-comment: #7d8590;
