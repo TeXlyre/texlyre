@@ -300,11 +300,13 @@ footer {
 	background-color: var(--pico-background);
 }
 
-[data-theme="light"] {
+[data-theme="light"],
+[data-theme-mode="light"] {
 	color-scheme: light;
 }
 
-[data-theme="dark"] {
+[data-theme="dark"],
+[data-theme-mode="dark"] {
 	color-scheme: dark;
 }
 

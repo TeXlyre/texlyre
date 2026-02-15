@@ -58,16 +58,17 @@ const createTeXlyreWideTheme = (): ThemePlugin => {
 			currentThemeId = variantId;
 
 			if (variantId === 'system') {
-				const prefersDark = window.matchMedia(
-					'(prefers-color-scheme: dark)',
-				).matches;
+				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 				applyThemeColors(prefersDark ? 'dark' : 'light');
+				document.documentElement.setAttribute('data-theme-mode', prefersDark ? 'dark' : 'light');
 			} else {
 				applyThemeColors(variantId);
+				document.documentElement.setAttribute('data-theme-mode', theme.isDark ? 'dark' : 'light');
 			}
 
 			document.documentElement.setAttribute('data-theme', variantId);
 			document.documentElement.setAttribute('data-theme-plugin', 'texlyre');
+			document.documentElement.setAttribute('data-theme-mode', theme.isDark ? 'dark' : 'light');
 			return true;
 		},
 
