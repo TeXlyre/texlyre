@@ -64,31 +64,6 @@ export function setCurrentFileNameInGenericLSP(fileName: string) {
 
 const openedFiles = new Map<LSPClient, Set<string>>();
 
-function filterOutHoverExtension(extension: Extension, seen = new WeakSet<object>()): Extension {
-    if (typeof extension !== 'object' || extension === null) return extension;
-    if (seen.has(extension)) return [];
-    seen.add(extension);
-
-    if (Array.isArray(extension)) {
-        return extension.map(e => filterOutHoverExtension(e, seen)).filter(Boolean);
-    }
-
-    const ext = extension as any;
-    if (ext?.extension) {
-        return filterOutHoverExtension(ext.extension, seen);
-    }
-
-    if (ext?.field?.id === 'hoverTooltip') {
-        return [];
-    }
-
-    if (ext?.value?.constructor?.name === 'HoverPlugin') {
-        return [];
-    }
-
-    return extension;
-}
-
 function renderHoverContent(content: string): HTMLElement {
     const container = document.createElement('div');
     container.style.whiteSpace = 'pre-wrap';
