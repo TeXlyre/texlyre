@@ -1,5 +1,5 @@
 // src/services/GenericLSPService.ts
-import { LSPClient, type LSPClientConfig, languageServerExtensions, type Transport } from '@codemirror/lsp-client';
+import { LSPClient, type LSPClientConfig, type Transport, serverDiagnostics } from '@codemirror/lsp-client';
 
 type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'error';
 type StatusListener = (configId: string, status: ConnectionStatus) => void;
@@ -64,13 +64,11 @@ class GenericLSPService {
         this.setConnectionStatus(config.id, 'connecting');
 
         try {
-            const baseLspExtensions = languageServerExtensions();
-
             const client = new LSPClient({
                 ...config.clientConfig,
                 extensions: [
                     ...(config.clientConfig.extensions ?? []),
-                    ...baseLspExtensions,
+                    serverDiagnostics(),
                 ],
             });
 
