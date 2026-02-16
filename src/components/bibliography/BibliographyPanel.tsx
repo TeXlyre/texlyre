@@ -527,11 +527,9 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
             <div
               className={`lsp-status-indicator main-button ${getConnectionStatus()}`}
               onClick={() => setShowDropdown(!showDropdown)}>
-
               <div
                 className="status-dot"
                 style={{ backgroundColor: getStatusColor() }} />
-
               {selectedProvider === 'all' ?
                 <span className="lsp-label">{t('All LSP')}</span> :
                 selectedProvider === 'local' ?
@@ -541,7 +539,6 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
                       <currentProvider.icon />
                       <span className="lsp-label">{currentProvider.name}</span>
                     </> :
-
                     <span className="lsp-label">{t('No LSP')}</span>
               }
             </div>
@@ -549,7 +546,6 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
             <button
               className={`lsp-dropdown-toggle ${getConnectionStatus()}`}
               onClick={() => setShowDropdown(!showDropdown)}>
-
               <ChevronDownIcon />
             </button>
 
@@ -559,15 +555,12 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
                   <div
                     className="lsp-dropdown-item"
                     onClick={() => handleProviderSelect('all')}>{t('All LSP')}
-
-
                   </div>
                 }
 
                 <div
                   className="lsp-dropdown-item"
                   onClick={() => handleProviderSelect('local')}>
-
                   <BibliographyIcon />{t('Local Bibliography')}
                 </div>
 
@@ -579,13 +572,11 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
                       key={provider.id}
                       className="lsp-dropdown-item"
                       onClick={() => handleProviderSelect(provider.id)}>
-
                       <span className="service-indicator">
                         {status === 'connected' ? '🟢' : ''}
                       </span>
                       <IconComponent /> {provider.name}
                     </div>);
-
                 })}
               </div>
             }
@@ -600,10 +591,18 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
                 selectedProvider === 'local' ? t('Refresh local bibliography') :
                   `Refresh ${currentProvider?.name || t('LSP')}`
             }>
-
             <SyncIcon />
           </button>
         </div>
+
+        {selectedProvider !== 'all' && selectedProvider !== 'local' && currentProvider?.renderPanel && (
+          <div className="provider-panel-container">
+            <currentProvider.renderPanel
+              className="provider-panel"
+              pluginInstance={currentProvider}
+            />
+          </div>
+        )}
 
         {activeTab === 'list' ?
           renderBibliographyList() :
