@@ -1,7 +1,7 @@
 // src/components/lsp/LSPPanel.tsx
 import { t } from '@/i18n';
 import type React from 'react';
-import { useLSP } from '../../hooks/useLSP';
+import { useBibliography } from '../../hooks/useBibliography'
 import { SyncIcon, ChevronDownIcon, BibliographyIcon } from '../common/Icons';
 
 interface LSPPanelProps {
@@ -30,7 +30,6 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
     isLoading,
     importingEntries,
     currentProvider,
-    isBibliographyProvider,
     citationStyle,
     autoImport,
     handleRefresh,
@@ -42,7 +41,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
     handleTargetFileChange,
     getConnectionStatus,
     getStatusColor
-  } = useLSP();
+  } = useBibliography();
 
   const getEntryTypeIcon = (entryType: string) => {
     switch (entryType.toLowerCase()) {
@@ -496,99 +495,6 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
 
   };
 
-  const renderGenericList = () => {
-    if (selectedProvider === 'all') {
-      const allProviders = availableProviders.filter((provider) =>
-        provider.getConnectionStatus() === 'connected' && !('getBibliographyEntries' in provider)
-      );
-
-      if (allProviders.length === 0) {
-        return (
-          <div className="lsp-provider-panel">
-            <div className="lsp-panel-search">
-              <input
-                type="text"
-                placeholder={t('Search all LSP providers...')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="lsp-search-input" />
-
-              {searchQuery &&
-                <button
-                  className="lsp-clear-search-button"
-                  onClick={() => setSearchQuery('')}>
-
-                  ×
-                </button>
-              }
-            </div>
-            <div className="no-provider">{t('No LSP providers are currently connected.')}
-
-              {availableProviders.length > 0 &&
-                <div>{t('Available providers:')}
-                  {availableProviders.map((p) => p.name).join(', ')}
-                </div>
-              }
-            </div>
-          </div>);
-
-      }
-
-      return (
-        <div className="lsp-provider-panel">
-          <div className="lsp-panel-search">
-            <input
-              type="text"
-              placeholder={t('Search all LSP providers...')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="lsp-search-input" />
-
-            {searchQuery &&
-              <button
-                className="lsp-clear-search-button"
-                onClick={() => setSearchQuery('')}>
-
-                ×
-              </button>
-            }
-          </div>
-          <div className="lsp-panel-content">
-            <div className="lsp-loading-indicator">
-              {t('All LSP aggregation view - {count} provider connected', { count: allProviders.length })}
-              <div>{t('LSP Connected:')}
-                {allProviders.map((p) => p.name).join(', ')}
-              </div>
-              <div className="lsp-no-entries-hint">
-                {t('Individual provider panels can be accessed by selecting a specific provider from the dropdown.')}
-              </div>
-            </div>
-          </div>
-        </div>);
-
-    }
-
-    const PanelComponent = currentProvider?.renderPanel;
-
-    if (PanelComponent) {
-      return (
-        <PanelComponent
-          className="lsp-provider-panel"
-          onItemSelect={handleItemSelect}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          pluginInstance={currentProvider} />);
-
-
-    }
-
-    return (
-      <div className="no-provider">{t('No LSP provider available')}
-
-      </div>);
-
-  };
-
   if (!showPanel) {
     return null;
   }
@@ -700,8 +606,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
         </div>
 
         {activeTab === 'list' ?
-          isBibliographyProvider || entries.length > 0 ?
-            renderBibliographyList() : renderGenericList() :
+          renderBibliographyList() :
 
           <div className="lsp-detail-view">
             <div className="detail-header">

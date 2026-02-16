@@ -5,6 +5,7 @@ import type {
 	BackupPlugin,
 	CollaborativeViewerPlugin,
 	LoggerPlugin,
+	BibliographyPlugin,
 	LSPPlugin,
 	Plugin,
 	PluginRegistry,
@@ -22,6 +23,7 @@ class PluginRegistryManager {
 		renderers: [],
 		loggers: [],
 		lsp: [],
+		bibliography: [],
 		backup: [],
 		themes: [],
 	};
@@ -68,6 +70,16 @@ class PluginRegistryManager {
 			if (plugins.loggers && Object.keys(plugins.loggers).length > 0) {
 				console.log('[PluginRegistry] Loading loggers:', Object.keys(plugins.loggers));
 				Object.values(plugins.loggers).forEach((plugin: LoggerPlugin) => {
+					this.registerPlugin(plugin);
+					if (plugin.settings && Array.isArray(plugin.settings)) {
+						pluginSettings.push(...plugin.settings);
+					}
+				});
+			}
+
+			if (plugins.bibliography && Object.keys(plugins.bibliography).length > 0) {
+				console.log('[PluginRegistry] Loading bibliography plugins:', Object.keys(plugins.bibliography));
+				Object.values(plugins.bibliography).forEach((plugin: BibliographyPlugin) => {
 					this.registerPlugin(plugin);
 					if (plugin.settings && Array.isArray(plugin.settings)) {
 						pluginSettings.push(...plugin.settings);
@@ -136,6 +148,12 @@ class PluginRegistryManager {
 			}
 		});
 
+		this.registry.bibliography.forEach(plugin => {
+			if (plugin.settings) {
+				freshSettings.push(...plugin.settings);
+			}
+		});
+
 		this.registry.lsp.forEach(plugin => {
 			if (plugin.settings) {
 				freshSettings.push(...plugin.settings);
@@ -174,6 +192,9 @@ class PluginRegistryManager {
 				break;
 			case 'logger':
 				this.registry.loggers.push(plugin as LoggerPlugin);
+				break;
+			case 'bibliography':
+				this.registry.bibliography.push(plugin as BibliographyPlugin);
 				break;
 			case 'lsp':
 				this.registry.lsp.push(plugin as LSPPlugin);
@@ -270,6 +291,18 @@ class PluginRegistryManager {
 			}
 		}
 		return null;
+	}
+
+	getBibliographyPlugins(): BibliographyPlugin[] {
+		return this.registry.bibliography;
+	}
+
+	getBibliographyPlugin(id: string): BibliographyPlugin | null {
+		return this.registry.bibliography.find(plugin => plugin.id === id) || null;
+	}
+
+	getAllBibliographyPlugins(): BibliographyPlugin[] {
+		return [...this.registry.bibliography];
 	}
 
 	getLSPPlugins(): LSPPlugin[] {

@@ -1,11 +1,11 @@
-// extras/lsp/jabref/settings.ts
+// extras/bibliography/jabref/settings.ts
 import { t } from '@/i18n';
 import type { Setting } from '@/contexts/SettingsContext';
 
 export const getJabrefLSPSettings = (): Setting[] => [
   {
     id: 'jabref-lsp-enabled',
-    category: t("LSP"),
+    category: t("Bibliography"),
     subcategory: t("JabRef"),
     type: 'checkbox',
     label: t("Enable JabRef LSP"),
@@ -15,7 +15,7 @@ export const getJabrefLSPSettings = (): Setting[] => [
   },
   {
     id: 'jabref-lsp-server-url',
-    category: t("LSP"),
+    category: t("Bibliography"),
     subcategory: t("JabRef"),
     type: 'text',
     label: t("LSP Server URL"),
@@ -25,7 +25,7 @@ export const getJabrefLSPSettings = (): Setting[] => [
   },
   {
     id: 'jabref-lsp-show-panel',
-    category: t("LSP"),
+    category: t("Bibliography"),
     subcategory: t("JabRef"),
     type: 'checkbox',
     label: t("Show JabRef panel"),
@@ -34,7 +34,7 @@ export const getJabrefLSPSettings = (): Setting[] => [
   },
   {
     id: 'jabref-lsp-citation-style',
-    category: t("LSP"),
+    category: t("Bibliography"),
     subcategory: t("JabRef"),
     type: 'select',
     label: t("Default citation style"),
@@ -48,7 +48,7 @@ export const getJabrefLSPSettings = (): Setting[] => [
   },
   {
     id: 'jabref-lsp-max-completions',
-    category: t("LSP"),
+    category: t("Bibliography"),
     subcategory: t("JabRef"),
     type: 'number',
     label: t("Maximum completion items"),
@@ -59,7 +59,7 @@ export const getJabrefLSPSettings = (): Setting[] => [
   },
   {
     id: 'jabref-lsp-auto-import',
-    category: t("LSP"),
+    category: t("Bibliography"),
     subcategory: t("JabRef"),
     type: 'checkbox',
     label: t("Auto-import external citations"),
@@ -77,7 +77,7 @@ export const getJabrefLSPSettings = (): Setting[] => [
   // },
   {
     id: 'jabref-lsp-merge-duplicates',
-    category: t("LSP"),
+    category: t("Bibliography"),
     subcategory: t("JabRef"),
     type: 'select',
     label: t("Duplicate handling"),

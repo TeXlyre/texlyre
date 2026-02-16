@@ -5,7 +5,6 @@ import type React from 'react';
 import { useCallback, useEffect, useRef, useMemo, useState } from 'react';
 
 import { BibliographyProvider } from '../../contexts/BibliographyContext';
-import { LSPProvider } from '../../contexts/LSPContext';
 import { CommentProvider } from '../../contexts/CommentContext';
 import { processComments } from '../../extensions/codemirror/CommentExtension';
 import { useEditorView } from '../../hooks/editor/useEditorView';
@@ -29,8 +28,8 @@ import { arrayBufferToString, detectFileType, formatFileSize, isLatexFile, isTyp
 import { TextDiffUtils } from '../../utils/textDiffUtils';
 import CommentPanel from '../comments/CommentPanel';
 import CommentToggleButton from '../comments/CommentToggleButton';
-import LSPToggleButton from '../lsp/LSPToggleButton';
-import LSPPanel from '../lsp/LSPPanel';
+import LSPToggleButton from '../bibliography/LSPToggleButton';
+import BibliographyPanel from '../bibliography/BibliographyPanel';
 import CommentModal from '../comments/CommentModal';
 import ContentFormatterButton from './ContentFormatterButton';
 import {
@@ -69,6 +68,16 @@ interface EditorComponentProps {
   };
   toolbarVisible?: boolean;
   onToolbarToggle?: (visible: boolean) => void;
+}
+
+function getPluginToggleButtons(fileTypeOrExt: string | undefined) {
+  if (!fileTypeOrExt) return { lsp: [], bib: [] };
+  return {
+    lsp: pluginRegistry.getLSPPluginsForFileType(fileTypeOrExt),
+    bib: pluginRegistry.getBibliographyPlugins().filter(p =>
+      p.getSupportedFileTypes().includes(fileTypeOrExt)
+    ),
+  };
 }
 
 const EditorContent: React.FC<{
@@ -280,16 +289,13 @@ const EditorContent: React.FC<{
     const handleFormattedContent = (formatted: string) => {
       if (!viewRef.current) return;
 
-      // IMPORTANT: Always get the current content from the editor view
       const currentContent = viewRef.current.state.doc.toString();
 
-      // Don't apply if content is already formatted
       if (currentContent === formatted) {
         return;
       }
 
       if (isEditingFile) {
-        // For files, apply changes directly to the editor
         const changes = TextDiffUtils.computeChanges(currentContent, formatted);
         if (changes.length > 0) {
           viewRef.current.dispatch({
@@ -297,8 +303,6 @@ const EditorContent: React.FC<{
           });
         }
       } else if (!isEditingFile && documentId && changeDoc) {
-        // For linked documents, only update through the editor view
-        // The Yjs sync will handle propagation automatically
         const changes = TextDiffUtils.computeChanges(currentContent, formatted);
         if (changes.length > 0) {
           viewRef.current.dispatch({
@@ -377,8 +381,8 @@ const EditorContent: React.FC<{
     };
 
     const fileType = detectFileType(filePath || '');
-    const availableLSPPlugins = fileType ?
-      pluginRegistry.getLSPPluginsForFileType(fileType) : [];
+    const { lsp: availableLSPPlugins, bib: availableBibPlugins } = getPluginToggleButtons(fileType);
+    const hasPluginToggles = availableLSPPlugins.length > 0 || availableBibPlugins.length > 0;
 
     const headerControls =
       isEditingFile && fileName ?
@@ -437,14 +441,19 @@ const EditorContent: React.FC<{
             }
           </PluginControlGroup>
 
-          {availableLSPPlugins.length > 0 &&
+          {hasPluginToggles &&
             <PluginControlGroup>
               {availableLSPPlugins.map((plugin) =>
                 <LSPToggleButton
                   key={plugin.id}
                   pluginId={plugin.id}
                   className="header-lsp-button" />
-
+              )}
+              {availableBibPlugins.map((plugin) =>
+                <LSPToggleButton
+                  key={plugin.id}
+                  pluginId={plugin.id}
+                  className="header-lsp-button" />
               )}
             </PluginControlGroup>
           }
@@ -500,17 +509,22 @@ const EditorContent: React.FC<{
             </PluginControlGroup>
             {linkedFileInfo?.fileName && (() => {
               const linkedFileExtension = linkedFileInfo.fileName.split('.').pop()?.toLowerCase();
-              const linkedLSPPlugins = linkedFileExtension ?
-                pluginRegistry.getLSPPluginsForFileType(linkedFileExtension) : [];
+              const { lsp: linkedLSPPlugins, bib: linkedBibPlugins } = getPluginToggleButtons(linkedFileExtension);
+              const hasLinkedPlugins = linkedLSPPlugins.length > 0 || linkedBibPlugins.length > 0;
 
-              return linkedLSPPlugins.length > 0 &&
+              return hasLinkedPlugins &&
                 <PluginControlGroup>
                   {linkedLSPPlugins.map((plugin) =>
                     <LSPToggleButton
                       key={plugin.id}
                       pluginId={plugin.id}
                       className="header-lsp-button" />
-
+                  )}
+                  {linkedBibPlugins.map((plugin) =>
+                    <LSPToggleButton
+                      key={plugin.id}
+                      pluginId={plugin.id}
+                      className="header-lsp-button" />
                   )}
                 </PluginControlGroup>;
 
@@ -538,15 +552,22 @@ const EditorContent: React.FC<{
               </PluginControlGroup>
 
               {textContent?.includes('\\') && (() => {
-                const texLSPPlugins = pluginRegistry.getLSPPluginsForFileType('tex');
-                return texLSPPlugins.length > 0 &&
+                const { lsp: texLSPPlugins, bib: texBibPlugins } = getPluginToggleButtons('tex');
+                const hasTexPlugins = texLSPPlugins.length > 0 || texBibPlugins.length > 0;
+
+                return hasTexPlugins &&
                   <PluginControlGroup>
                     {texLSPPlugins.map((plugin) =>
                       <LSPToggleButton
                         key={plugin.id}
                         pluginId={plugin.id}
                         className="header-lsp-button" />
-
+                    )}
+                    {texBibPlugins.map((plugin) =>
+                      <LSPToggleButton
+                        key={plugin.id}
+                        pluginId={plugin.id}
+                        className="header-lsp-button" />
                     )}
                   </PluginControlGroup>;
 
@@ -677,7 +698,7 @@ const EditorContent: React.FC<{
           </div>
 
           {!isViewOnly && <CommentPanel className="editor-comment-panel" />}
-          {!isViewOnly && <LSPPanel className="editor-lsp-panel" />}
+          {!isViewOnly && <BibliographyPanel className="editor-lsp-panel" />}
         </div>
       </>);
 
@@ -862,48 +883,46 @@ const Editor: React.FC<EditorComponentProps> = ({
 
     return (
       <BibliographyProvider>
-        <LSPProvider>
-          <CommentProvider
-            editorContent={textContent}
-            onUpdateContent={onUpdateContent}>
+        <CommentProvider
+          editorContent={textContent}
+          onUpdateContent={onUpdateContent}>
 
-            <div className="editor-container viewer-container collaborative-viewer">
-              <div className="viewer-plugin-info">
-                <span>{t('Collaborative viewing with')}
-                  {collaborativeViewerPlugin.name} v
-                  {collaborativeViewerPlugin.version}
-                </span>
-              </div>
-              <CollaborativeViewerComponent
-                fileId={fileId}
-                content={content as ArrayBuffer}
-                mimeType={mimeType}
-                fileName={fileName}
-                docUrl={docUrl}
-                documentId={documentId}
-                isDocumentSelected={isDocumentSelected}
-                onUpdateContent={onUpdateContent}
-                parseComments={(text: string) => {
-                  const { parseComments } = useComments();
-                  return parseComments(text);
-                }}
-                addComment={(content: string) => {
-                  const { addComment } = useComments();
-                  return addComment(content);
-                }}
-                updateComments={(content: string) => {
-                  const { updateComments } = useComments();
-                  updateComments(content);
-                }} />
-
+          <div className="editor-container viewer-container collaborative-viewer">
+            <div className="viewer-plugin-info">
+              <span>{t('Collaborative viewing with')}
+                {collaborativeViewerPlugin.name} v
+                {collaborativeViewerPlugin.version}
+              </span>
             </div>
-            <CommentModal
-              isOpen={showCommentModal}
-              onClose={handleCommentModalClose}
-              onCommentSubmit={handleCommentSubmit} />
+            <CollaborativeViewerComponent
+              fileId={fileId}
+              content={content as ArrayBuffer}
+              mimeType={mimeType}
+              fileName={fileName}
+              docUrl={docUrl}
+              documentId={documentId}
+              isDocumentSelected={isDocumentSelected}
+              onUpdateContent={onUpdateContent}
+              parseComments={(text: string) => {
+                const { parseComments } = useComments();
+                return parseComments(text);
+              }}
+              addComment={(content: string) => {
+                const { addComment } = useComments();
+                return addComment(content);
+              }}
+              updateComments={(content: string) => {
+                const { updateComments } = useComments();
+                updateComments(content);
+              }} />
 
-          </CommentProvider>
-        </LSPProvider>
+          </div>
+          <CommentModal
+            isOpen={showCommentModal}
+            onClose={handleCommentModalClose}
+            onCommentSubmit={handleCommentSubmit} />
+
+        </CommentProvider>
       </BibliographyProvider>);
 
   }
@@ -978,47 +997,45 @@ const Editor: React.FC<EditorComponentProps> = ({
 
   return (
     <BibliographyProvider>
-      <LSPProvider>
-        <CommentProvider
-          editorContent={textContent}
-          onUpdateContent={handleContentUpdate}>
+      <CommentProvider
+        editorContent={textContent}
+        onUpdateContent={handleContentUpdate}>
 
-          <div className="editor-container">
-            <EditorContent
-              editorRef={editorRef}
-              textContent={textContent}
-              onUpdateContent={onUpdateContent}
-              documentId={documentId}
-              docUrl={docUrl}
-              isDocumentSelected={isDocumentSelected}
-              isEditingFile={isEditingFile}
-              isViewOnly={isViewOnly}
-              linkedDocumentId={linkedDocumentId}
-              onDocumentNavigation={handleDocumentNavigation}
-              fileName={fileName}
-              fileId={fileId}
-              filePath={filePath}
-              onSave={handleSave}
-              onExport={handleExport}
-              onSaveDocument={handleSaveDocument}
-              linkedFileInfo={linkedFileInfo}
-              onNavigateToLinkedFile={handleNavigateToLinkedFile}
-              documents={documents}
-              shouldShowLatexOutput={shouldShowLatexOutput}
-              onSelectDocument={onSelectDocument}
-              toolbarVisible={toolbarVisible && !isViewOnly}
-              onToolbarToggle={onToolbarToggle} />
+        <div className="editor-container">
+          <EditorContent
+            editorRef={editorRef}
+            textContent={textContent}
+            onUpdateContent={onUpdateContent}
+            documentId={documentId}
+            docUrl={docUrl}
+            isDocumentSelected={isDocumentSelected}
+            isEditingFile={isEditingFile}
+            isViewOnly={isViewOnly}
+            linkedDocumentId={linkedDocumentId}
+            onDocumentNavigation={handleDocumentNavigation}
+            fileName={fileName}
+            fileId={fileId}
+            filePath={filePath}
+            onSave={handleSave}
+            onExport={handleExport}
+            onSaveDocument={handleSaveDocument}
+            linkedFileInfo={linkedFileInfo}
+            onNavigateToLinkedFile={handleNavigateToLinkedFile}
+            documents={documents}
+            shouldShowLatexOutput={shouldShowLatexOutput}
+            onSelectDocument={onSelectDocument}
+            toolbarVisible={toolbarVisible && !isViewOnly}
+            onToolbarToggle={onToolbarToggle} />
 
-          </div>
-          <CommentModal
-            isOpen={showCommentModal}
-            onClose={handleCommentModalClose}
-            onCommentSubmit={handleCommentSubmit} />
+        </div>
+        <CommentModal
+          isOpen={showCommentModal}
+          onClose={handleCommentModalClose}
+          onCommentSubmit={handleCommentSubmit} />
 
-        </CommentProvider>
-      </LSPProvider>
+      </CommentProvider>
     </BibliographyProvider>);
 
 };
 
-export default Editor;
+export default Editor

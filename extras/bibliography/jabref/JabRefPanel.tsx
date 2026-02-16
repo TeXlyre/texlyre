@@ -1,4 +1,4 @@
-// extras/lsp/jabref/JabRefPanel.tsx
+// extras/bibliography/jabref/JabRefPanel.tsx
 import { t } from '@/i18n';
 import type React from 'react';
 import type { LSPPanelProps } from '@/plugins/PluginInterface';

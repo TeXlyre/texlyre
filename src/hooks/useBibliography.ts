@@ -1,6 +1,5 @@
 // src/hooks/useBibliography.ts
 import { useContext } from 'react';
-
 import { BibliographyContext } from '../contexts/BibliographyContext';
 
 export const useBibliography = () => {

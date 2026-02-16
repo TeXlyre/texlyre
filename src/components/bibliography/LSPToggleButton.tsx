@@ -19,30 +19,29 @@ const LSPToggleButton: React.FC<LSPToggleButtonProps> = ({
 	const [showPanel, setShowPanel] = useState(false);
 
 	const lspPlugin = pluginRegistry.getLSPPlugin(pluginId);
-	if (!lspPlugin) {
-		console.warn(`LSP plugin with ID "${pluginId}" not found.`);
+	const bibPlugin = pluginRegistry.getBibliographyPlugin(pluginId);
+	const plugin = lspPlugin || bibPlugin;
+	if (!plugin) {
+		console.warn(`Plugin with ID "${pluginId}" not found.`);
 		return null;
 	}
 
-	const isEnabled = getSetting(`${pluginId}-enabled`)?.value as boolean ?? false;
-	const showPanelSetting = getSetting(`${pluginId}-show-panel`)?.value as boolean ?? true;
+	// const isEnabled = getSetting(`${pluginId}-enabled`)?.value as boolean ?? false;
+	// const showPanelSetting = getSetting(`${pluginId}-show-panel`)?.value as boolean ?? true;
 
-	const connectionStatus = lspPlugin.getConnectionStatus();
+	const connectionStatus = plugin.getConnectionStatus();
 
 	const handleTogglePanel = () => {
 		setShowPanel(!showPanel);
 
 		document.dispatchEvent(
-			new CustomEvent('toggle-lsp-panel', {
-				detail: {
-					show: !showPanel,
-					pluginId: pluginId
-				}
+			new CustomEvent('toggle-bibliography-panel', {
+				detail: { show: !showPanel, pluginId }
 			})
 		);
 	};
 
-	const IconComponent = lspPlugin.icon;
+	const IconComponent = plugin.icon;
 
 	return (
 		<button
@@ -50,7 +49,7 @@ const LSPToggleButton: React.FC<LSPToggleButtonProps> = ({
 			onClick={handleTogglePanel}
 			title={t('{action} {pluginName} panel', {
 				action: showPanel ? t('Hide') : t('Show'),
-				pluginName: lspPlugin.name
+				pluginName: plugin.name
 			})}
 		>
 			<div className="lsp-button-content">

@@ -135,13 +135,6 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
     return viewer?.icon || null;
   };
 
-  const _shouldShowTemporaryWarning = (action: string): boolean => {
-    if (action === 'delete' && isTemporaryFile(node.path)) return true;
-    if (action === 'rename' && isTemporaryFile(node.path)) return true;
-    if (action === 'link' && isTemporaryFile(node.path)) return true;
-    return false;
-  };
-
   const shouldShowLinkButton =
     node.type === 'file' && !node.isBinary && !isTemporaryFile(node.name);
 

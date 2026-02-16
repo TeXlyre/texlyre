@@ -1,4 +1,4 @@
-// extras/lsp/jabref/Icon.tsx
+// extras/bibliography/jabref/Icon.tsx
 import type React from 'react';
 
 export const JabRefIcon: React.FC = () => (
