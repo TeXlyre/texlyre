@@ -605,18 +605,20 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 
 	const handleImportEntry = async (entry: BibEntry) => {
 		if (!targetBibFile || !currentProvider || importingEntries.has(entry.key)) return;
-		setImportingEntries(prev => new Set(prev).add(entry.key));
-		try {
-			const targetFile = await fileStorageService.getFileByPath(targetBibFile);
-			if (!targetFile) return;
-			if (duplicateHandling === 'keep-local' && localEntries.some(l => l.key === entry.key && l.filePath === targetBibFile)) return;
 
-			let currentContent = '';
-			if (targetFile.content) {
-				currentContent = typeof targetFile.content === 'string' ? targetFile.content : new TextDecoder().decode(targetFile.content);
-			}
-			const newContent = currentContent.trim() ? `${currentContent.trim()}\n\n${entry.rawEntry}\n` : `${entry.rawEntry}\n`;
-			await fileStorageService.updateFileContent(targetFile.id, newContent);
+		setImportingEntries(prev => new Set(prev).add(entry.key));
+
+		try {
+			await bibliographyImportService.importEntry(
+				entry.key,
+				entry.rawEntry,
+				{
+					targetFile: targetBibFile,
+					duplicateHandling: duplicateHandling as 'keep-local' | 'replace' | 'rename' | 'ask',
+					autoImport
+				}
+			);
+
 			await fetchLocalEntries();
 			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
 		} catch (error) {

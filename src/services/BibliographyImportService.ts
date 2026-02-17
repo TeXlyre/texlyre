@@ -224,6 +224,7 @@ export class BibliographyImportService {
 	private importQueue: Map<string, Promise<ImportResult>> = new Map();
 	private notificationCallbacks: Array<(result: ImportResult) => void> = [];
 	private parser: BibTexParser = new DefaultBibTexParser();
+	private openBibFiles: Set<string> = new Set();
 
 	static getInstance(): BibliographyImportService {
 		if (!BibliographyImportService.instance) {
@@ -332,12 +333,23 @@ export class BibliographyImportService {
 			}
 
 			const entryToAppend = this.formatEntryForAppending(rawEntry);
-			const newContent = currentContent.trim()
-				? `${currentContent.trim()}\n\n${entryToAppend}`
-				: entryToAppend;
+			const isFileOpen = this.openBibFiles.has(targetFile.path);
 
-			await fileStorageService.updateFileContent(targetFile.id, newContent);
-			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+			if (isFileOpen) {
+				document.dispatchEvent(new CustomEvent('bib-entry-imported', {
+					detail: {
+						entry: { key: entryKey, rawEntry: entryToAppend },
+						filePath: targetFile.path
+					}
+				}));
+			} else {
+				const newContent = currentContent.trim()
+					? `${currentContent.trim()}\n\n${entryToAppend}`
+					: entryToAppend;
+
+				await fileStorageService.updateFileContent(targetFile.id, newContent);
+				document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+			}
 
 			return {
 				success: true,
@@ -347,13 +359,21 @@ export class BibliographyImportService {
 			};
 
 		} catch (error) {
-			console.error(`Error importing entry ${entryKey}:`, error);
+			console.error(`[BibliographyImportService] Error importing entry ${entryKey}:`, error);
 			return {
 				success: false,
 				entryKey,
 				error: error instanceof Error ? error.message : t('Import failed')
 			};
 		}
+	}
+
+	registerOpenFile(filePath: string): void {
+		this.openBibFiles.add(filePath);
+	}
+
+	unregisterOpenFile(filePath: string): void {
+		this.openBibFiles.delete(filePath);
 	}
 
 	private async getTargetFile(targetPath?: string) {

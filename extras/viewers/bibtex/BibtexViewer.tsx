@@ -19,10 +19,17 @@ import {
   '@/components/common/PluginHeader';
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
+import { BibliographyProvider } from '@/contexts/BibliographyContext';
 import { useEditorView } from '@/hooks/editor/useEditorView';
+import LSPToggleButton from '@/components/bibliography/LSPToggleButton';
+import BibliographyPanel from '@/components/bibliography/BibliographyPanel';
 import type { ViewerProps } from '@/plugins/PluginInterface';
+import { pluginRegistry } from '@/plugins/PluginRegistry';
 import { fileStorageService } from '@/services/FileStorageService';
+import { bibliographyImportService } from '@/services/BibliographyImportService';
 import { formatFileSize } from '@/utils/fileUtils';
+import { detectFileType } from '@/utils/fileUtils';
+import { TextDiffUtils } from '@/utils/textDiffUtils';
 import { TidyOptionsPanel } from './TidyOptionsPanel';
 import { type TidyOptions, getPresetOptions } from './tidyOptions';
 import { BibtexTableView } from './BibtexTableView';
@@ -66,6 +73,37 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
   const [options, setOptions] = useState<TidyOptions>(() =>
     getPresetOptions(tidyPreset)
   );
+
+  const fileType = detectFileType(fileName);
+  const { lsp: availableLSPPlugins, bib: availableBibPlugins } = getPluginToggleButtons([fileType]);
+  const hasPluginToggles = availableLSPPlugins.length > 0 || availableBibPlugins.length > 0;
+
+  function getPluginToggleButtons(fileTypes: string[] | undefined) {
+    if (!fileTypes?.length) return { lsp: [], bib: [] };
+
+    const types = new Set(fileTypes);
+    const lsp = [...new Set([...types].flatMap(t => pluginRegistry.getLSPPluginsForFileType(t)))];
+    const bib = pluginRegistry.getBibliographyPlugins().filter(p =>
+      p.getSupportedFileTypes().some(t => types.has(t))
+    );
+
+    return { lsp, bib };
+  }
+
+  useEffect(() => {
+    if (fileId && fileInfo.filePath) {
+      document.dispatchEvent(new CustomEvent('bib-file-opened', {
+        detail: { filePath: fileInfo.filePath }
+      }));
+      bibliographyImportService.registerOpenFile(fileInfo.filePath);
+    }
+
+    return () => {
+      if (fileInfo.filePath) {
+        bibliographyImportService.unregisterOpenFile(fileInfo.filePath);
+      }
+    };
+  }, [fileId, fileInfo.filePath]);
 
   const parseContent = (content: string) => {
     try {
@@ -282,6 +320,45 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
     setOptions(getPresetOptions(tidyPreset));
   }, [tidyPreset]);
 
+  useEffect(() => {
+    const handleBibEntryImport = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { entry, filePath } = customEvent.detail;
+
+      if (filePath !== fileInfo.filePath) return;
+
+      const sourceContent = processedContent.trim()
+        ? processedContent
+        : bibtexContent;
+
+      const newContent = sourceContent.trim()
+        ? `${sourceContent.trim()}\n\n${entry.rawEntry.trim()}\n`
+        : `${entry.rawEntry.trim()}\n`;
+
+      setProcessedContent(newContent);
+      setProcessedParsedEntries(parseContent(newContent));
+      setCurrentView('processed');
+
+      if (processedViewRef.current) {
+        const changes = TextDiffUtils.computeChanges(sourceContent, newContent);
+        if (changes.length > 0) {
+          processedViewRef.current.dispatch({
+            changes: changes
+          });
+        }
+      }
+
+      setUpdateCounter((prev) => prev + 1);
+      setHasChanges(true);
+    };
+
+    document.addEventListener('bib-entry-imported', handleBibEntryImport);
+
+    return () => {
+      document.removeEventListener('bib-entry-imported', handleBibEntryImport);
+    };
+  }, [bibtexContent, processedContent, fileInfo.filePath]);
+
   const processBibtexWithOptions = async (
     content: string,
     tidyOptions: TidyOptions) => {
@@ -393,7 +470,6 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
   const currentEntries = currentView === 'original' ? parsedEntries : processedParsedEntries;
 
-  // Sync table with current editor content when switching to table view
   useEffect(() => {
     if (viewMode === 'table') {
       console.log('Switching to table view - syncing with editor content');
@@ -420,7 +496,6 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
     }
   }, [viewMode, currentView, bibtexContent, processedContent]);
 
-  // Debug log to track entry changes
   useEffect(() => {
     console.log('Current entries changed:', {
       viewMode,
@@ -494,118 +569,141 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
           <DownloadIcon />
         </button>
       </PluginControlGroup>
+
+      {hasPluginToggles &&
+        <PluginControlGroup>
+          {availableLSPPlugins.map((plugin) =>
+            <LSPToggleButton
+              key={plugin.id}
+              pluginId={plugin.id}
+              className="header-lsp-button" />
+          )}
+          {availableBibPlugins.map((plugin) =>
+            <LSPToggleButton
+              key={plugin.id}
+              pluginId={plugin.id}
+              className="header-lsp-button" />
+          )}
+        </PluginControlGroup>
+      }
     </>;
 
 
   return (
-    <div className="bibtex-viewer-container">
-      <PluginHeader
-        fileName={fileInfo.fileName}
-        filePath={fileInfo.filePath}
-        pluginName={PLUGIN_NAME}
-        pluginVersion={PLUGIN_VERSION}
-        tooltipInfo={tooltipInfo}
-        controls={headerControls} />
+    <BibliographyProvider>
+      <div className="bibtex-viewer-container">
+        <PluginHeader
+          fileName={fileInfo.fileName}
+          filePath={fileInfo.filePath}
+          pluginName={PLUGIN_NAME}
+          pluginVersion={PLUGIN_VERSION}
+          tooltipInfo={tooltipInfo}
+          controls={headerControls} />
 
 
-      <div className="bibtex-viewer-main">
-        {showSidebar &&
-          <TidyOptionsPanel
-            options={options}
-            onOptionsChange={setOptions}
-            onResetToDefaults={() => setOptions(getPresetOptions('standard'))}
-            onProcessBibtex={processBibtex}
-            isProcessing={isProcessing} />
+        <div className="bibtex-viewer-main">
+          {showSidebar &&
+            <TidyOptionsPanel
+              options={options}
+              onOptionsChange={setOptions}
+              onResetToDefaults={() => setOptions(getPresetOptions('standard'))}
+              onProcessBibtex={processBibtex}
+              isProcessing={isProcessing} />
 
-        }
-
-        <div className="bibtex-content-area">
-          {error && <div className="bib-error-message">{error}</div>}
-
-          {warnings.length > 0 &&
-            <div className="warnings-container">
-              <h5>{t('Warnings: ')}</h5>
-              {warnings.map((warning, index) =>
-                <div key={index} className="warning-item">
-                  {(warning as { message: string; }).message}
-                </div>
-              )}
-            </div>
           }
 
-          <div className="editor-containers">
-            <div className="editor-container" style={{ position: 'relative' }}>
-              <div className="editor-header">
-                <div className="view-tabs">
-                  <button
-                    className={`tab-button ${currentView === 'original' ? 'active' : ''}`}
-                    onClick={() => setCurrentView('original')}>{t('Original')}
+          <div className="bibtex-content-area">
+            {error && <div className="bib-error-message">{error}</div>}
+
+            {warnings.length > 0 &&
+              <div className="warnings-container">
+                <h5>{t('Warnings: ')}</h5>
+                {warnings.map((warning, index) =>
+                  <div key={index} className="warning-item">
+                    {(warning as { message: string; }).message}
+                  </div>
+                )}
+              </div>
+            }
+
+            <div className="editor-containers">
+              <div className="editor-container" style={{ position: 'relative' }}>
+                <div className="editor-header">
+                  <div className="view-tabs">
+                    <button
+                      className={`tab-button ${currentView === 'original' ? 'active' : ''}`}
+                      onClick={() => setCurrentView('original')}>{t('Original')}
 
 
-                  </button>
-                  <button
-                    className={`tab-button ${currentView === 'processed' ? 'active' : ''}`}
-                    onClick={() => setCurrentView('processed')}
-                    disabled={!processedContent.trim()}>{t('Processed')}
+                    </button>
+                    <button
+                      className={`tab-button ${currentView === 'processed' ? 'active' : ''}`}
+                      onClick={() => setCurrentView('processed')}
+                      disabled={!processedContent.trim()}>{t('Processed')}
 
 
-                  </button>
+                    </button>
+                  </div>
+                  {currentView === 'processed' && processedContent.trim() &&
+                    <div className="processed-save-notice">
+                      <Trans
+                        i18nKey="Not saved automatically. Click the <icon /> <strong>Save</strong> button or <strong>Ctrl+S</strong>"
+                        components={{
+                          strong: <strong />,
+                          icon: <> <SaveIcon /> {' '} </>
+                        }}
+                      />
+                    </div>
+                  }
+                  {isProcessing &&
+                    <span className="processing-indicator">{t('(Processing...)')}</span>
+                  }
+                  {isSaving &&
+                    <span className="processing-indicator">{t('(Saving...)')}</span>
+                  }
                 </div>
-                {currentView === 'processed' && processedContent.trim() &&
-                  <div className="processed-save-notice">
-                    <Trans
-                      i18nKey="Not saved automatically. Click the <icon /> <strong>Save</strong> button or <strong>Ctrl+S</strong>"
-                      components={{
-                        strong: <strong />,
-                        icon: <> <SaveIcon /> {' '} </>
-                      }}
-                    />
+
+                <>
+                  <div
+                    ref={originalEditorRef}
+                    className="codemirror-editor-container"
+                    style={{
+                      display: currentView === 'original' && viewMode === 'editor' ? 'block' : 'none'
+                    }} />
+
+                  <div
+                    ref={processedEditorRef}
+                    className="codemirror-editor-container"
+                    style={{
+                      display: currentView === 'processed' && viewMode === 'editor' ? 'block' : 'none'
+                    }} />
+
+                  {viewMode === 'table' &&
+                    <BibtexTableView
+                      key={`${currentView}-${updateCounter}`}
+                      entries={currentEntries}
+                      onEntriesChange={handleTableEntryUpdate}
+                      onSingleEntryChange={handleSingleTableEntryUpdate} />
+
+                  }
+                </>
+
+                {originalShowSaveIndicator && currentView === 'original' && viewMode === 'editor' &&
+                  <div className="save-indicator">
+                    <span>{t('Saved')}</span>
                   </div>
                 }
-                {isProcessing &&
-                  <span className="processing-indicator">{t('(Processing...)')}</span>
-                }
-                {isSaving &&
-                  <span className="processing-indicator">{t('(Saving...)')}</span>
-                }
               </div>
-
-              <>
-                <div
-                  ref={originalEditorRef}
-                  className="codemirror-editor-container"
-                  style={{
-                    display: currentView === 'original' && viewMode === 'editor' ? 'block' : 'none'
-                  }} />
-
-                <div
-                  ref={processedEditorRef}
-                  className="codemirror-editor-container"
-                  style={{
-                    display: currentView === 'processed' && viewMode === 'editor' ? 'block' : 'none'
-                  }} />
-
-                {viewMode === 'table' &&
-                  <BibtexTableView
-                    key={`${currentView}-${updateCounter}`}
-                    entries={currentEntries}
-                    onEntriesChange={handleTableEntryUpdate}
-                    onSingleEntryChange={handleSingleTableEntryUpdate} />
-
-                }
-              </>
-
-              {originalShowSaveIndicator && currentView === 'original' && viewMode === 'editor' &&
-                <div className="save-indicator">
-                  <span>{t('Saved')}</span>
-                </div>
-              }
             </div>
           </div>
-        </div>
-      </div>
-    </div>);
 
+          <BibliographyPanel className="editor-lsp-panel" />
+
+        </div>
+
+      </div>);
+    </BibliographyProvider>
+  );
 };
 
 export default BibtexViewer;
