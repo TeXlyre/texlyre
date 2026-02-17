@@ -1,7 +1,8 @@
 // extras/bibliography/jabref/JabRefLSP.ts
-import type { BibEntry, LSPPluginTransportConfig } from '@/plugins/PluginInterface';
+import type { LSPPluginTransportConfig } from '@/plugins/PluginInterface';
 import { genericLSPService } from '@/services/GenericLSPService';
 import { bibliographyImportService } from '@/services/BibliographyImportService';
+import type { BibEntry } from '@/types/bibliography';
 
 export type JabRefLSPConfig = {
     id: string;

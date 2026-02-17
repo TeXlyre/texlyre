@@ -40,7 +40,9 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
     handleImportEntry,
     handleTargetFileChange,
     getConnectionStatus,
-    getStatusColor
+    getStatusColor,
+    handleDeleteEntry,
+    handleUpdateEntry,
   } = useBibliography();
 
   const getEntryTypeIcon = (entryType: string) => {
@@ -330,7 +332,6 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
                 </span>
               }
               {getSourceIndicator(entry)}
-              {/*<span className="bib-citation-preview">{getCitationPreview(entry)}</span>*/}
             </div>
             <div className="bib-entry-type-badge">
               <div className="bib-entry-type-content">
@@ -432,63 +433,89 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
         {filteredEntries.map((entry, index) =>
           <div
             key={getUniqueKey(entry, index)}
-            className={`bib-entry-item ${entry.source === 'external' && !entry.isImported ? 'external-entry' : ''}`}
-            onClick={() => handleEntryClick(entry)}>
+            className={`bib-entry-item ${entry.source === 'external' && !entry.isImported ? 'external-entry' : ''}`}>
 
-            <div className="bib-entry-header">
+            <div className="bib-entry-header" onClick={() => handleEntryClick(entry)}>
               <span className="bib-entry-key">{entry.key}</span>
               {getSourceIndicator(entry)}
-              {/*<span className="bib-citation-preview">{getCitationPreview(entry)}</span>*/}
-
             </div>
-            <div className="bib-entry-type-badge">
-              <div className="bib-entry-type-content">
-                <span className="bib-entry-type-icon">
-                  {getEntryTypeIcon(entry.entryType)}
-                </span>
-                <span className="bib-entry-type-text">
-                  {entry.entryType.toUpperCase()}
-                </span>
+
+            <div className="bib-entry-content" onClick={() => handleEntryClick(entry)}>
+              <div className="bib-entry-type-badge">
+                <div className="bib-entry-type-content">
+                  <span className="bib-entry-type-icon">
+                    {getEntryTypeIcon(entry.entryType)}
+                  </span>
+                  <span className="bib-entry-type-text">
+                    {entry.entryType.toUpperCase()}
+                  </span>
+                </div>
+                {getDisplayYear(entry) &&
+                  <span className="bib-entry-year">{getDisplayYear(entry)}</span>
+                }
               </div>
-              {getDisplayYear(entry) &&
-                <span className="bib-entry-year">{getDisplayYear(entry)}</span>
+              <div className="bib-entry-title">
+                {getDisplayTitle(entry)}
+              </div>
+              <div className="bib-entry-authors">{getDisplayAuthors(entry)}</div>
+              {getDisplayVenue(entry) &&
+                <div className="bib-entry-venue">
+                  <em>{getDisplayVenue(entry)}</em>
+                </div>
+              }
+              {entry.fields.volume && entry.fields.pages &&
+                <div className="bib-entry-details">{t('Vol.')}
+                  {entry.fields.volume}
+                  {entry.fields.number && `, No. ${entry.fields.number}`}{t(', pp.')}
+                  {entry.fields.pages}
+                </div>
+              }
+              {entry.fields.doi &&
+                <div className="bib-entry-identifier">{t('DOI: ')}
+                  {entry.fields.doi}
+                </div>
               }
             </div>
-            <div className="bib-entry-title">
-              {getDisplayTitle(entry)}
-            </div>
-            <div className="bib-entry-authors">{getDisplayAuthors(entry)}</div>
-            {getDisplayVenue(entry) &&
-              <div className="bib-entry-venue">
-                <em>{getDisplayVenue(entry)}</em>
-              </div>
-            }
-            {entry.fields.volume && entry.fields.pages &&
-              <div className="bib-entry-details">{t('Vol.')}
-                {entry.fields.volume}
-                {entry.fields.number && `, No. ${entry.fields.number}`}{t(', pp.')}
-                {entry.fields.pages}
-              </div>
-            }
-            {entry.fields.doi &&
-              <div className="bib-entry-identifier">{t('DOI: ')}
-                {entry.fields.doi}
-              </div>
-            }
-            {entry.source === 'external' && !entry.isImported && !autoImport &&
+
+            {entry.source === 'local' && (
               <div className="bib-entry-actions">
                 <button
-                  className="import-button"
+                  className="action-button delete"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteEntry(entry);
+                  }}
+                  title={t('Delete local entry')}>
+                  {t('Delete')}
+                </button>
+                {externalEntries.some(ext => ext.key === entry.key && ext.remoteId) && (
+                  <button
+                    className="action-button update"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const remoteEntry = externalEntries.find(ext => ext.key === entry.key);
+                      if (remoteEntry) handleUpdateEntry(entry, remoteEntry);
+                    }}
+                    title={t('Update from remote')}>
+                    {t('Update')}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {entry.source === 'external' && !entry.isImported && !autoImport && (
+              <div className="bib-entry-actions">
+                <button
+                  className="action-button import"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleImportEntry(entry);
                   }}
                   disabled={importingEntries.has(entry.key)}>
-
-                  {importingEntries.has(entry.key) ? 'Importing...' : 'Import'}
+                  {importingEntries.has(entry.key) ? t('Importing...') : t('Import')}
                 </button>
               </div>
-            }
+            )}
           </div>
         )}
       </div>);

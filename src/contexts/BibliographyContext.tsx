@@ -22,24 +22,8 @@ import { filePathCacheService } from '../services/FilePathCacheService';
 import { parseUrlFragments } from '../utils/urlUtils';
 import { isBibFile } from '../utils/fileUtils';
 import type { FileNode } from '../types/files';
+import type { BibEntry, BibliographyFile } from '../types/bibliography';
 
-export interface BibEntry {
-	key: string;
-	entryType: string;
-	fields: Record<string, string>;
-	rawEntry: string;
-	source?: 'local' | 'external';
-	isImported?: boolean;
-	filePath?: string;
-	providerId?: string;
-	providerName?: string;
-}
-
-export interface BibliographyFile {
-	path: string;
-	name: string;
-	id: string;
-}
 
 export interface BibliographyContextType {
 	showPanel: boolean;
@@ -82,6 +66,9 @@ export interface BibliographyContextType {
 	handleImportEntry: (entry: BibEntry) => Promise<void>;
 	handleTargetFileChange: (newValue: string) => Promise<void>;
 	createNewBibFile: (fileName?: string) => Promise<string | null>;
+	setSelectedBibFileFromEditor: (filePath: string) => void;
+	handleDeleteEntry: (entry: BibEntry) => Promise<void>;
+	handleUpdateEntry: (entry: BibEntry, remoteEntry: BibEntry) => Promise<void>;
 
 	getConnectionStatus: () => string;
 	getStatusColor: () => string;
@@ -121,6 +108,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 	const [targetBibFile, setTargetBibFile] = useState<string>('');
 	const [isLoading, setIsLoading] = useState(false);
 	const [importingEntries, setImportingEntries] = useState<Set<string>>(new Set());
+	const [selectedBibFile, setSelectedBibFile] = useState<string>('');
 
 	const currentProvider = availableProviders.find(p => p.id === selectedProvider);
 
@@ -144,6 +132,8 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 	const getPropertyId = (pluginId: string) => `${pluginId}-target-bib-file`;
 
 	const getTargetFile = useCallback((pluginId: string, projectId?: string): string | null => {
+		if (selectedBibFile) return selectedBibFile;
+
 		const propertyId = getPropertyId(pluginId);
 		const scopeOptions = projectId ? { scope: 'project' as const, projectId } : { scope: 'global' as const };
 		const val = getProperty(propertyId, scopeOptions) as string | null;
@@ -153,7 +143,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			return null;
 		}
 		return val;
-	}, [getProperty, setProperty, availableBibFiles]);
+	}, [getProperty, setProperty, availableBibFiles, selectedBibFile]);
 
 	const setTargetFileProperty = useCallback((pluginId: string, filePath: string, projectId?: string) => {
 		const propertyId = getPropertyId(pluginId);
@@ -215,7 +205,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 					const parsed = parser.parse(content);
 					result.push(...parsed.map(entry => ({
 						key: entry.key,
-						entryType: entry.type,
+						entryType: entry.entryType,
 						fields: entry.fields,
 						rawEntry: entry.rawEntry,
 						source: 'local' as const,
@@ -236,6 +226,66 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		return importingEntries.has(entryKey);
 	}, [importingEntries]);
 
+	const setSelectedBibFileFromEditor = useCallback((filePath: string) => {
+		setSelectedBibFile(filePath);
+	}, []);
+
+	const handleDeleteEntry = useCallback(async (entry: BibEntry) => {
+		if (entry.source !== 'local' || !entry.filePath) return;
+
+		try {
+			const targetFile = await fileStorageService.getFileByPath(entry.filePath);
+			if (!targetFile) return;
+
+			let currentContent = '';
+			if (targetFile.content) {
+				currentContent = typeof targetFile.content === 'string'
+					? targetFile.content
+					: new TextDecoder().decode(targetFile.content);
+			}
+
+			const position = parser.findEntryPosition(currentContent, entry);
+			if (!position) return;
+
+			const newContent = currentContent.substring(0, position.start) +
+				currentContent.substring(position.end);
+
+			await fileStorageService.updateFileContent(targetFile.id, newContent);
+			await fetchLocalEntries();
+			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+		} catch (error) {
+			console.error('[BibliographyContext] Error deleting entry:', error);
+		}
+	}, [parser]);
+
+	const handleUpdateEntry = useCallback(async (entry: BibEntry, remoteEntry: BibEntry) => {
+		if (!entry.filePath) return;
+
+		try {
+			const targetFile = await fileStorageService.getFileByPath(entry.filePath);
+			if (!targetFile) return;
+
+			let currentContent = '';
+			if (targetFile.content) {
+				currentContent = typeof targetFile.content === 'string'
+					? targetFile.content
+					: new TextDecoder().decode(targetFile.content);
+			}
+
+			const newContent = parser.updateEntryInContent(currentContent, {
+				...entry,
+				fields: remoteEntry.fields,
+				rawEntry: remoteEntry.rawEntry,
+			});
+
+			await fileStorageService.updateFileContent(targetFile.id, newContent);
+			await fetchLocalEntries();
+			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+		} catch (error) {
+			console.error('[BibliographyContext] Error updating entry:', error);
+		}
+	}, [parser]);
+
 	useEffect(() => {
 		const providers = pluginRegistry.getAllBibliographyPlugins();
 		setAvailableProviders(providers);
@@ -254,6 +304,18 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			document.removeEventListener('toggle-lsp-panel', handleTogglePanel);
 		};
 	}, []);
+
+	useEffect(() => {
+		const handleBibFileOpened = (event: Event) => {
+			const { filePath } = (event as CustomEvent).detail;
+			setSelectedBibFileFromEditor(filePath);
+		};
+
+		document.addEventListener('bib-file-opened', handleBibFileOpened);
+		return () => {
+			document.removeEventListener('bib-file-opened', handleBibFileOpened);
+		};
+	}, [setSelectedBibFileFromEditor]);
 
 	useEffect(() => {
 		if (availableProviders.length === 0) return;
@@ -562,6 +624,9 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		getAvailableFiles, refreshAvailableFiles,
 		getLocalEntries: getLocalEntriesAsync,
 		isImporting: isImportingEntry,
+		setSelectedBibFileFromEditor,
+		handleDeleteEntry,
+		handleUpdateEntry,
 	};
 
 	return (

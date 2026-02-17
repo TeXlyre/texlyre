@@ -2,6 +2,7 @@
 import type React from 'react';
 import type { Setting } from '../contexts/SettingsContext';
 import type { BackupStatus } from '../types/backup';
+import type { BibEntry } from '../types/bibliography';
 
 export interface Plugin {
 	id: string;
@@ -81,14 +82,8 @@ export interface LoggerProps {
 	log: string;
 	onLineClick?: (line: number) => void;
 }
-// Bibliography Support
-export interface BibEntry {
-	key: string;
-	entryType: string;
-	fields: Record<string, string>;
-	rawEntry: string;
-}
 
+// Bibliography Support
 export interface BibliographyPlugin extends Plugin {
 	type: 'bibliography';
 	icon?: React.ComponentType;

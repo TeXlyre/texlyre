@@ -2,6 +2,7 @@
 import { t } from '@/i18n';
 import { isBibFile } from '../utils/fileUtils';
 import { fileStorageService } from './FileStorageService';
+import type { BibEntry } from '../types/bibliography';
 
 export interface ImportResult {
 	success: boolean;
@@ -17,13 +18,6 @@ export interface ImportOptions {
 	duplicateHandling?: 'keep-local' | 'replace' | 'rename' | 'ask';
 	showPreview?: boolean;
 	autoImport?: boolean;
-}
-
-export interface BibEntry {
-	key: string;
-	type: string;
-	fields: Record<string, string>;
-	rawEntry: string;
 }
 
 export interface BibTexParser {
@@ -180,7 +174,7 @@ class DefaultBibTexParser implements BibTexParser {
 
 			entries.push({
 				key: key.trim(),
-				type: type.toLowerCase(),
+				entryType: type.toLowerCase(),
 				fields,
 				rawEntry: fullEntry
 			});
@@ -200,7 +194,7 @@ class DefaultBibTexParser implements BibTexParser {
 			.map(([key, value]) => `  ${key} = {${value}}`)
 			.join(',\n');
 
-		return `@${entry.type}{${entry.key},\n${fieldsString}\n}`;
+		return `@${entry.entryType}{${entry.key},\n${fieldsString}\n}`;
 	}
 
 	findEntryPosition(content: string, entry: BibEntry): { start: number; end: number } | null {
