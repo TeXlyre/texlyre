@@ -176,7 +176,8 @@ class DefaultBibTexParser implements BibTexParser {
 				key: key.trim(),
 				entryType: type.toLowerCase(),
 				fields,
-				rawEntry: fullEntry
+				rawEntry: fullEntry,
+				remoteId: fields['remote-id'] || fields['external-id'] || undefined
 			});
 
 			pos = entryEnd + 1;

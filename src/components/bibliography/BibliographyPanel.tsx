@@ -488,18 +488,24 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
                   title={t('Delete local entry')}>
                   {t('Delete')}
                 </button>
-                {externalEntries.some(ext => ext.key === entry.key && ext.remoteId) && (
-                  <button
-                    className="action-button update"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const remoteEntry = externalEntries.find(ext => ext.key === entry.key);
-                      if (remoteEntry) handleUpdateEntry(entry, remoteEntry);
-                    }}
-                    title={t('Update from remote')}>
-                    {t('Update')}
-                  </button>
-                )}
+                {externalEntries.some(ext =>
+                  (ext.remoteId && ext.remoteId === entry.remoteId) ||
+                  (ext.key === entry.key)
+                ) && (
+                    <button
+                      className="action-button update"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const remoteEntry = externalEntries.find(ext =>
+                          (ext.remoteId && ext.remoteId === entry.remoteId) ||
+                          (ext.key === entry.key)
+                        );
+                        if (remoteEntry) handleUpdateEntry(entry, remoteEntry);
+                      }}
+                      title={t('Update from remote')}>
+                      {t('Update')}
+                    </button>
+                  )}
               </div>
             )}
 

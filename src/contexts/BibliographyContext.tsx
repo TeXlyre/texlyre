@@ -132,16 +132,38 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 	const getPropertyId = (pluginId: string) => `${pluginId}-target-bib-file`;
 
 	const getTargetFile = useCallback((pluginId: string, projectId?: string): string | null => {
-		if (selectedBibFile) return selectedBibFile;
+		console.log('[BibliographyContext] getTargetFile called', {
+			pluginId,
+			projectId,
+			selectedBibFile,
+			availableBibFilesCount: availableBibFiles.length
+		});
+
+		if (selectedBibFile) {
+			console.log('[BibliographyContext] Using selected bib file:', selectedBibFile);
+			return selectedBibFile;
+		}
 
 		const propertyId = getPropertyId(pluginId);
 		const scopeOptions = projectId ? { scope: 'project' as const, projectId } : { scope: 'global' as const };
 		const val = getProperty(propertyId, scopeOptions) as string | null;
-		if (!val) return null;
+
+		console.log('[BibliographyContext] Property value:', val);
+
+		if (!val) {
+			if (availableBibFiles.length > 0) {
+				console.log('[BibliographyContext] No saved target, but files available:', availableBibFiles.map(f => f.path));
+			}
+			return null;
+		}
+
 		if (availableBibFiles.length > 0 && !availableBibFiles.some(f => f.path === val)) {
+			console.log('[BibliographyContext] Saved target not found in available files, clearing');
 			setProperty(propertyId, '', scopeOptions);
 			return null;
 		}
+
+		console.log('[BibliographyContext] Returning saved target:', val);
 		return val;
 	}, [getProperty, setProperty, availableBibFiles, selectedBibFile]);
 
@@ -276,6 +298,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 				...entry,
 				fields: remoteEntry.fields,
 				rawEntry: remoteEntry.rawEntry,
+				remoteId: remoteEntry.remoteId
 			});
 
 			await fileStorageService.updateFileContent(targetFile.id, newContent);
@@ -448,11 +471,24 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 	}, []);
 
 	useEffect(() => {
+		console.log('[BibliographyContext] Target file effect', {
+			currentProvider: currentProvider?.id,
+			availableBibFilesCount: availableBibFiles.length,
+			selectedProvider
+		});
+
 		if (!currentProvider || availableBibFiles.length === 0) return;
+
 		const projectId = getProjectId();
 		const saved = getTargetFile(currentProvider.id, projectId);
+
+		console.log('[BibliographyContext] Target file effect - saved:', saved);
+
 		if (saved && availableBibFiles.some(f => f.path === saved)) {
 			setTargetBibFile(saved);
+			console.log('[BibliographyContext] Set target bib file to:', saved);
+		} else if (availableBibFiles.length > 0) {
+			console.log('[BibliographyContext] No saved target, available files:', availableBibFiles.map(f => f.path));
 		}
 	}, [currentProvider, availableBibFiles, getTargetFile]);
 
@@ -467,8 +503,15 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			fetchAllEntries();
 			return;
 		}
+
 		fetchLocalEntries();
-		fetchExternalEntries();
+
+		if (!currentProvider) return;
+
+		if (currentProvider.getConnectionStatus() === 'connected') {
+			fetchExternalEntries();
+			return;
+		}
 
 		let retryCount = 0;
 		const retryInterval = setInterval(() => {
@@ -483,6 +526,18 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		}, 1000);
 		return () => clearInterval(retryInterval);
 	}, [currentProvider, selectedProvider, availableProviders, fetchLocalEntries, fetchExternalEntries, fetchAllEntries]);
+
+	useEffect(() => {
+		const initializeFiles = async () => {
+			console.log('[BibliographyContext] Initializing - forcing file refresh');
+			await refreshAvailableFiles();
+
+			console.log('[BibliographyContext] Triggering cache update');
+			await filePathCacheService.updateCache();
+		};
+
+		initializeFiles();
+	}, [refreshAvailableFiles]);
 
 	const handleRefresh = async () => {
 		setIsRefreshing(true);

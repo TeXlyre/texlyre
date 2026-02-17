@@ -187,7 +187,7 @@ class ZoteroService {
         if (data.publisher) fields.publisher = data.publisher;
         if (data.url) fields.url = data.url;
 
-        const rawEntry = this.formatBibEntry(key, entryType, fields);
+        const rawEntry = this.formatBibEntry(key, entryType, fields, item.key);
 
         return {
             key,
@@ -226,8 +226,13 @@ class ZoteroService {
         return key;
     }
 
-    private formatBibEntry(key: string, entryType: string, fields: Record<string, string>): string {
-        const fieldsString = Object.entries(fields)
+    private formatBibEntry(key: string, entryType: string, fields: Record<string, string>, remoteId?: string): string {
+        const allFields = { ...fields };
+        if (remoteId) {
+            allFields['remote-id'] = remoteId;
+        }
+
+        const fieldsString = Object.entries(allFields)
             .map(([k, v]) => `  ${k} = {${v}}`)
             .join(',\n');
 

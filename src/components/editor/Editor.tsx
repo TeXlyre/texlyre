@@ -23,6 +23,7 @@ import type { DocumentList } from '../../types/documents';
 import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
 import { copyCleanTextToClipboard } from '../../utils/clipboardUtils';
 import { processTextSelection } from '../../utils/fileCommentUtils';
+import { isBibFile } from '../../utils/fileUtils';
 import { formatDate } from '../../utils/dateUtils';
 import { arrayBufferToString, detectFileType, formatFileSize, isLatexFile, isTypstFile } from '../../utils/fileUtils';
 import { TextDiffUtils } from '../../utils/textDiffUtils';
@@ -799,6 +800,12 @@ const Editor: React.FC<EditorComponentProps> = ({
           const file = await fileStorageService.getFile(fileId);
           if (file) {
             setFilePath(file.path);
+
+            if (isBibFile(file.path)) {
+              document.dispatchEvent(new CustomEvent('bib-file-opened', {
+                detail: { filePath: file.path }
+              }));
+            }
           }
         } catch (error) {
           console.error('Error loading file path:', error);
