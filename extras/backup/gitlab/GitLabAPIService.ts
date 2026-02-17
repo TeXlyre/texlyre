@@ -1,35 +1,35 @@
-// extras/backup/forgejo/ForgejoApiService.ts
-interface ForgejoFile {
+// extras/backup/gitlab/GitLabAPIService.ts
+interface GitLabFile {
     name: string;
     path: string;
     content?: string;
-    type: 'file' | 'dir';
+    type: 'blob' | 'tree';
 }
 
-interface ForgejoRepo {
+interface GitLabProject {
     id: number;
     name: string;
-    full_name: string;
-    private: boolean;
+    path_with_namespace: string;
+    visibility: string;
     default_branch: string;
 }
 
-interface ForgejoTreeItem {
+interface GitLabTreeItem {
     path: string;
     mode: string;
     type: 'blob' | 'tree';
-    sha: string;
+    id: string;
 }
 
-interface ForgejoCommitAction {
-    operation: 'create' | 'update' | 'delete';
-    path: string;
+interface GitLabCommitAction {
+    action: 'create' | 'update' | 'delete';
+    file_path: string;
     content?: string;
     encoding?: 'base64';
 }
 
-export class ForgejoApiService {
-    private baseUrl: string = 'https://codeberg.org/api/v1';
+export class GitLabAPIService {
+    private baseUrl: string = 'https://gitlab.com/api/v4';
     private requestTimeout: number = 30000;
 
     setBaseUrl(url: string): void {
@@ -51,7 +51,7 @@ export class ForgejoApiService {
     ): Promise<T> {
         const url = `${this.baseUrl}/${endpoint}`;
         const headers = new Headers({
-            'Authorization': `token ${token}`,
+            'PRIVATE-TOKEN': token,
             'Content-Type': 'application/json',
             ...options.headers,
         });
@@ -71,7 +71,7 @@ export class ForgejoApiService {
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(
-                    `Forgejo API request to '${endpoint}' failed: ${response.statusText}. ${errorData.message || ''}`,
+                    `GitLab API request to '${endpoint}' failed: ${response.statusText}. ${errorData.message || ''}`,
                 );
             }
 
@@ -107,7 +107,7 @@ export class ForgejoApiService {
             );
 
             const response = await fetch(`${this.baseUrl}/user`, {
-                headers: { 'Authorization': `token ${token}` },
+                headers: { 'PRIVATE-TOKEN': token },
                 signal: controller.signal,
             });
 
@@ -118,73 +118,57 @@ export class ForgejoApiService {
         }
     }
 
-    async getRepositories(token: string): Promise<ForgejoRepo[]> {
-        return this._request<ForgejoRepo[]>(token, 'user/repos?limit=100');
+    async getProjects(token: string): Promise<GitLabProject[]> {
+        return this._request<GitLabProject[]>(
+            token,
+            'projects?membership=true&per_page=100',
+        );
     }
 
     async getRepositoryTree(
         token: string,
-        owner: string,
-        repo: string,
+        projectId: string,
         path = '',
         ref = 'main',
-    ): Promise<ForgejoFile[]> {
-        return this._request<ForgejoFile[]>(
+    ): Promise<GitLabFile[]> {
+        return this._request<GitLabFile[]>(
             token,
-            `repos/${owner}/${repo}/contents/${path}?ref=${ref}`,
+            `projects/${encodeURIComponent(projectId)}/repository/tree?path=${path}&ref=${ref}&recursive=false`,
         );
     }
 
     async getFileContent(
         token: string,
-        owner: string,
-        repo: string,
+        projectId: string,
         filePath: string,
         ref = 'main',
     ): Promise<string> {
         const data = await this._request<{ content: string; encoding: string }>(
             token,
-            `repos/${owner}/${repo}/contents/${filePath}?ref=${ref}`,
+            `projects/${encodeURIComponent(projectId)}/repository/files/${encodeURIComponent(filePath)}?ref=${ref}`,
         );
         if (data.encoding === 'base64') {
-            return atob(data.content.replace(/\n/g, ''));
+            return atob(data.content);
         }
         return data.content;
     }
 
-    async createOrUpdateFiles(
+    async createCommit(
         token: string,
-        owner: string,
-        repo: string,
+        projectId: string,
         branch: string,
         commitMessage: string,
-        actions: ForgejoCommitAction[],
+        actions: GitLabCommitAction[],
     ): Promise<void> {
-        const fileOperations = actions.map((action) => {
-            const operation: any = {
-                operation: action.operation,
-                path: action.path,
-            };
-
-            if (action.operation !== 'delete') {
-                operation.content = action.content;
-                if (action.encoding) {
-                    operation.encoding = action.encoding;
-                }
-            }
-
-            return operation;
-        });
-
         await this._request<void>(
             token,
-            `repos/${owner}/${repo}/contents`,
+            `projects/${encodeURIComponent(projectId)}/repository/commits`,
             {
                 method: 'POST',
                 body: JSON.stringify({
                     branch,
-                    message: commitMessage,
-                    files: fileOperations,
+                    commit_message: commitMessage,
+                    actions,
                 }),
             },
         );
@@ -192,28 +176,25 @@ export class ForgejoApiService {
 
     async getRecursiveTree(
         token: string,
-        owner: string,
-        repo: string,
+        projectId: string,
         ref = 'main',
-    ): Promise<ForgejoTreeItem[]> {
-        const data = await this._request<{ tree: ForgejoTreeItem[] }>(
+    ): Promise<GitLabTreeItem[]> {
+        return this._request<GitLabTreeItem[]>(
             token,
-            `repos/${owner}/${repo}/git/trees/${ref}?recursive=true`,
+            `projects/${encodeURIComponent(projectId)}/repository/tree?recursive=true&ref=${ref}&per_page=100`,
         );
-        return data.tree;
     }
 
     async getBranches(
         token: string,
-        owner: string,
-        repo: string,
+        projectId: string,
     ): Promise<{ name: string; protected: boolean }[]> {
         const data = await this._request<{ name: string; protected: boolean }[]>(
             token,
-            `repos/${owner}/${repo}/branches`,
+            `projects/${encodeURIComponent(projectId)}/repository/branches`,
         );
         return data;
     }
 }
 
-export const forgejoApiService = new ForgejoApiService();
+export const gitLabAPIService = new GitLabAPIService();

@@ -6,7 +6,7 @@ import { UnifiedDataStructureService } from '@/services/DataStructureService';
 import { fileStorageService, fileStorageEventEmitter } from '@/services/FileStorageService';
 import { ProjectDataService } from '@/services/ProjectDataService';
 import { getMimeType, isBinaryFile } from '@/utils/fileUtils.ts';
-import { gitHubApiService } from './GitHubApiService';
+import { gitHubAPIService } from './GitHubAPIService';
 
 interface BackupStatus {
 	isConnected: boolean;
@@ -77,11 +77,11 @@ export class GitHubBackupService {
 		this.settingsCache = { ...settings };
 
 		if (settings.apiEndpoint) {
-			gitHubApiService.setBaseUrl(settings.apiEndpoint);
+			gitHubAPIService.setBaseUrl(settings.apiEndpoint);
 		}
 
 		if (settings.requestTimeout) {
-			gitHubApiService.setRequestTimeout(settings.requestTimeout);
+			gitHubAPIService.setRequestTimeout(settings.requestTimeout);
 		}
 	}
 
@@ -200,9 +200,9 @@ export class GitHubBackupService {
 		token: string,
 	): Promise<{ success: boolean; repositories?: any[]; error?: string }> {
 		try {
-			if (!(await gitHubApiService.testConnection(token)))
+			if (!(await gitHubAPIService.testConnection(token)))
 				return { success: false, error: t('Invalid GitHub token') };
-			const repositories = await gitHubApiService.getRepositories(token);
+			const repositories = await gitHubAPIService.getRepositories(token);
 			return { success: true, repositories };
 		} catch (error) {
 			return {
@@ -375,7 +375,7 @@ export class GitHubBackupService {
 		const branch = await this.getStoredBranch(projectId);
 		if (!credentials)
 			throw new Error(t('GitHub credentials not available. Please reconnect.'));
-		if (!(await gitHubApiService.testConnection(credentials.token)))
+		if (!(await gitHubAPIService.testConnection(credentials.token)))
 			throw new Error(t('GitHub token is invalid or expired. Please reconnect.'));
 
 		const [owner, repo] = credentials.repository.split('/');
@@ -414,7 +414,7 @@ export class GitHubBackupService {
 						message: t(`Retrying commit (attempt {attempt}/{maxRetries})...`, { attempt, maxRetries }),
 					});
 				}
-				await gitHubApiService.createCommitFromFiles(
+				await gitHubAPIService.createCommitFromFiles(
 					token,
 					owner,
 					repo,
@@ -621,7 +621,7 @@ export class GitHubBackupService {
 		try {
 			const credentials = await this.ensureValidCredentials(projectId);
 			const finalBranch = branch || credentials.branch;
-			const tree = await gitHubApiService.getRecursiveTree(
+			const tree = await gitHubAPIService.getRecursiveTree(
 				credentials.token,
 				this.currentRepo?.owner,
 				this.currentRepo?.repo,
@@ -710,7 +710,7 @@ export class GitHubBackupService {
 			for (const missingProjId of missingProjects) {
 				const data = projectFiles.get(missingProjId)!;
 				try {
-					const metadataContent = await gitHubApiService.getBlobContent(
+					const metadataContent = await gitHubAPIService.getBlobContent(
 						credentials.token,
 						this.currentRepo?.owner,
 						this.currentRepo?.repo,
@@ -746,7 +746,7 @@ export class GitHubBackupService {
 
 			for (const projId of processableProjects) {
 				const data = projectFiles.get(projId)!;
-				const metadataContent = await gitHubApiService.getBlobContent(
+				const metadataContent = await gitHubAPIService.getBlobContent(
 					credentials.token,
 					this.currentRepo?.owner,
 					this.currentRepo?.repo,
@@ -829,7 +829,7 @@ export class GitHubBackupService {
 		let githubDocumentsMetadata: any[] = [];
 		if (data.documentsMetadataSha) {
 			try {
-				const metadataContent = await gitHubApiService.getBlobContent(
+				const metadataContent = await gitHubAPIService.getBlobContent(
 					credentials.token,
 					this.currentRepo?.owner,
 					this.currentRepo?.repo,
@@ -866,7 +866,7 @@ export class GitHubBackupService {
 				{};
 
 			if (docData.txtSha) {
-				contentData.readableContent = await gitHubApiService.getBlobContent(
+				contentData.readableContent = await gitHubAPIService.getBlobContent(
 					credentials.token,
 					this.currentRepo?.owner,
 					this.currentRepo?.repo,
@@ -875,7 +875,7 @@ export class GitHubBackupService {
 			}
 
 			if (docData.yjsSha) {
-				const yjsContent = await gitHubApiService.getBlobContent(
+				const yjsContent = await gitHubAPIService.getBlobContent(
 					credentials.token,
 					this.currentRepo?.owner,
 					this.currentRepo?.repo,
@@ -918,7 +918,7 @@ export class GitHubBackupService {
 		let githubFilesMetadata: any[] = [];
 		if (data.filesMetadataSha) {
 			try {
-				const metadataContent = await gitHubApiService.getBlobContent(
+				const metadataContent = await gitHubAPIService.getBlobContent(
 					credentials.token,
 					this.currentRepo?.owner,
 					this.currentRepo?.repo,
@@ -983,7 +983,7 @@ export class GitHubBackupService {
 			try {
 				await fileStorageService.createDirectoryPath(filePath);
 
-				const rawContentString = await gitHubApiService.getBlobContent(
+				const rawContentString = await gitHubAPIService.getBlobContent(
 					credentials.token,
 					this.currentRepo?.owner,
 					this.currentRepo?.repo,

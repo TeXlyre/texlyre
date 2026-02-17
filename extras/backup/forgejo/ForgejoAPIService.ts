@@ -1,12 +1,12 @@
-// extras/backup/gitea/GiteaApiService.ts
-interface GiteaFile {
+// extras/backup/forgejo/ForgejoAPIService.ts
+interface ForgejoFile {
     name: string;
     path: string;
     content?: string;
     type: 'file' | 'dir';
 }
 
-interface GiteaRepo {
+interface ForgejoRepo {
     id: number;
     name: string;
     full_name: string;
@@ -14,22 +14,22 @@ interface GiteaRepo {
     default_branch: string;
 }
 
-interface GiteaTreeItem {
+interface ForgejoTreeItem {
     path: string;
     mode: string;
     type: 'blob' | 'tree';
     sha: string;
 }
 
-interface GiteaCommitAction {
+interface ForgejoCommitAction {
     operation: 'create' | 'update' | 'delete';
     path: string;
     content?: string;
     encoding?: 'base64';
 }
 
-export class GiteaApiService {
-    private baseUrl: string = 'https://gitea.com/api/v1';
+export class ForgejoAPIService {
+    private baseUrl: string = 'https://codeberg.org/api/v1';
     private requestTimeout: number = 30000;
 
     setBaseUrl(url: string): void {
@@ -71,7 +71,7 @@ export class GiteaApiService {
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(
-                    `Gitea API request to '${endpoint}' failed: ${response.statusText}. ${errorData.message || ''}`,
+                    `Forgejo API request to '${endpoint}' failed: ${response.statusText}. ${errorData.message || ''}`,
                 );
             }
 
@@ -118,8 +118,8 @@ export class GiteaApiService {
         }
     }
 
-    async getRepositories(token: string): Promise<GiteaRepo[]> {
-        return this._request<GiteaRepo[]>(token, 'user/repos?limit=100');
+    async getRepositories(token: string): Promise<ForgejoRepo[]> {
+        return this._request<ForgejoRepo[]>(token, 'user/repos?limit=100');
     }
 
     async getRepositoryTree(
@@ -128,8 +128,8 @@ export class GiteaApiService {
         repo: string,
         path = '',
         ref = 'main',
-    ): Promise<GiteaFile[]> {
-        return this._request<GiteaFile[]>(
+    ): Promise<ForgejoFile[]> {
+        return this._request<ForgejoFile[]>(
             token,
             `repos/${owner}/${repo}/contents/${path}?ref=${ref}`,
         );
@@ -158,7 +158,7 @@ export class GiteaApiService {
         repo: string,
         branch: string,
         commitMessage: string,
-        actions: GiteaCommitAction[],
+        actions: ForgejoCommitAction[],
     ): Promise<void> {
         const fileOperations = actions.map((action) => {
             const operation: any = {
@@ -195,8 +195,8 @@ export class GiteaApiService {
         owner: string,
         repo: string,
         ref = 'main',
-    ): Promise<GiteaTreeItem[]> {
-        const data = await this._request<{ tree: GiteaTreeItem[] }>(
+    ): Promise<ForgejoTreeItem[]> {
+        const data = await this._request<{ tree: ForgejoTreeItem[] }>(
             token,
             `repos/${owner}/${repo}/git/trees/${ref}?recursive=true`,
         );
@@ -216,4 +216,4 @@ export class GiteaApiService {
     }
 }
 
-export const giteaApiService = new GiteaApiService();
+export const forgejoAPIService = new ForgejoAPIService();

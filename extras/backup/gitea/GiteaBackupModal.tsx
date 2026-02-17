@@ -16,7 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSecrets } from '@/hooks/useSecrets';
 import { useSettings } from '@/hooks/useSettings';
 import { formatDate } from '@/utils/dateUtils';
-import { giteaApiService } from './GiteaApiService';
+import { giteaAPIService } from './GiteaAPIService';
 import { giteaBackupService } from './GiteaBackupService';
 import { GiteaIcon } from './Icon';
 import './styles.css';
@@ -206,7 +206,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
         handleAsyncOperation(async () => {
             if (!selectedRepo) return;
             const [owner, repo] = selectedRepo.split('/');
-            const branches = await giteaApiService.getBranches(
+            const branches = await giteaAPIService.getBranches(
                 giteaToken,
                 owner,
                 repo,
@@ -266,7 +266,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
         if (newRepo && giteaToken) {
             try {
                 const [owner, repo] = newRepo.split('/');
-                const branches = await giteaApiService.getBranches(
+                const branches = await giteaAPIService.getBranches(
                     giteaToken,
                     owner,
                     repo,

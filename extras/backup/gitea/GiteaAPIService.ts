@@ -1,35 +1,35 @@
-// extras/backup/gitlab/GitLabApiService.ts
-interface GitLabFile {
+// extras/backup/gitea/GiteaAPIService.ts
+interface GiteaFile {
     name: string;
     path: string;
     content?: string;
-    type: 'blob' | 'tree';
+    type: 'file' | 'dir';
 }
 
-interface GitLabProject {
+interface GiteaRepo {
     id: number;
     name: string;
-    path_with_namespace: string;
-    visibility: string;
+    full_name: string;
+    private: boolean;
     default_branch: string;
 }
 
-interface GitLabTreeItem {
+interface GiteaTreeItem {
     path: string;
     mode: string;
     type: 'blob' | 'tree';
-    id: string;
+    sha: string;
 }
 
-interface GitLabCommitAction {
-    action: 'create' | 'update' | 'delete';
-    file_path: string;
+interface GiteaCommitAction {
+    operation: 'create' | 'update' | 'delete';
+    path: string;
     content?: string;
     encoding?: 'base64';
 }
 
-export class GitLabApiService {
-    private baseUrl: string = 'https://gitlab.com/api/v4';
+export class GiteaAPIService {
+    private baseUrl: string = 'https://gitea.com/api/v1';
     private requestTimeout: number = 30000;
 
     setBaseUrl(url: string): void {
@@ -51,7 +51,7 @@ export class GitLabApiService {
     ): Promise<T> {
         const url = `${this.baseUrl}/${endpoint}`;
         const headers = new Headers({
-            'PRIVATE-TOKEN': token,
+            'Authorization': `token ${token}`,
             'Content-Type': 'application/json',
             ...options.headers,
         });
@@ -71,7 +71,7 @@ export class GitLabApiService {
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(
-                    `GitLab API request to '${endpoint}' failed: ${response.statusText}. ${errorData.message || ''}`,
+                    `Gitea API request to '${endpoint}' failed: ${response.statusText}. ${errorData.message || ''}`,
                 );
             }
 
@@ -107,7 +107,7 @@ export class GitLabApiService {
             );
 
             const response = await fetch(`${this.baseUrl}/user`, {
-                headers: { 'PRIVATE-TOKEN': token },
+                headers: { 'Authorization': `token ${token}` },
                 signal: controller.signal,
             });
 
@@ -118,57 +118,73 @@ export class GitLabApiService {
         }
     }
 
-    async getProjects(token: string): Promise<GitLabProject[]> {
-        return this._request<GitLabProject[]>(
-            token,
-            'projects?membership=true&per_page=100',
-        );
+    async getRepositories(token: string): Promise<GiteaRepo[]> {
+        return this._request<GiteaRepo[]>(token, 'user/repos?limit=100');
     }
 
     async getRepositoryTree(
         token: string,
-        projectId: string,
+        owner: string,
+        repo: string,
         path = '',
         ref = 'main',
-    ): Promise<GitLabFile[]> {
-        return this._request<GitLabFile[]>(
+    ): Promise<GiteaFile[]> {
+        return this._request<GiteaFile[]>(
             token,
-            `projects/${encodeURIComponent(projectId)}/repository/tree?path=${path}&ref=${ref}&recursive=false`,
+            `repos/${owner}/${repo}/contents/${path}?ref=${ref}`,
         );
     }
 
     async getFileContent(
         token: string,
-        projectId: string,
+        owner: string,
+        repo: string,
         filePath: string,
         ref = 'main',
     ): Promise<string> {
         const data = await this._request<{ content: string; encoding: string }>(
             token,
-            `projects/${encodeURIComponent(projectId)}/repository/files/${encodeURIComponent(filePath)}?ref=${ref}`,
+            `repos/${owner}/${repo}/contents/${filePath}?ref=${ref}`,
         );
         if (data.encoding === 'base64') {
-            return atob(data.content);
+            return atob(data.content.replace(/\n/g, ''));
         }
         return data.content;
     }
 
-    async createCommit(
+    async createOrUpdateFiles(
         token: string,
-        projectId: string,
+        owner: string,
+        repo: string,
         branch: string,
         commitMessage: string,
-        actions: GitLabCommitAction[],
+        actions: GiteaCommitAction[],
     ): Promise<void> {
+        const fileOperations = actions.map((action) => {
+            const operation: any = {
+                operation: action.operation,
+                path: action.path,
+            };
+
+            if (action.operation !== 'delete') {
+                operation.content = action.content;
+                if (action.encoding) {
+                    operation.encoding = action.encoding;
+                }
+            }
+
+            return operation;
+        });
+
         await this._request<void>(
             token,
-            `projects/${encodeURIComponent(projectId)}/repository/commits`,
+            `repos/${owner}/${repo}/contents`,
             {
                 method: 'POST',
                 body: JSON.stringify({
                     branch,
-                    commit_message: commitMessage,
-                    actions,
+                    message: commitMessage,
+                    files: fileOperations,
                 }),
             },
         );
@@ -176,25 +192,28 @@ export class GitLabApiService {
 
     async getRecursiveTree(
         token: string,
-        projectId: string,
+        owner: string,
+        repo: string,
         ref = 'main',
-    ): Promise<GitLabTreeItem[]> {
-        return this._request<GitLabTreeItem[]>(
+    ): Promise<GiteaTreeItem[]> {
+        const data = await this._request<{ tree: GiteaTreeItem[] }>(
             token,
-            `projects/${encodeURIComponent(projectId)}/repository/tree?recursive=true&ref=${ref}&per_page=100`,
+            `repos/${owner}/${repo}/git/trees/${ref}?recursive=true`,
         );
+        return data.tree;
     }
 
     async getBranches(
         token: string,
-        projectId: string,
+        owner: string,
+        repo: string,
     ): Promise<{ name: string; protected: boolean }[]> {
         const data = await this._request<{ name: string; protected: boolean }[]>(
             token,
-            `projects/${encodeURIComponent(projectId)}/repository/branches`,
+            `repos/${owner}/${repo}/branches`,
         );
         return data;
     }
 }
 
-export const gitLabApiService = new GitLabApiService();
+export const giteaAPIService = new GiteaAPIService();

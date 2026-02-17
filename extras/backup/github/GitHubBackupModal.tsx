@@ -16,7 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSecrets } from '@/hooks/useSecrets';
 import { useSettings } from '@/hooks/useSettings';
 import { formatDate } from '@/utils/dateUtils';
-import { gitHubApiService } from './GitHubApiService';
+import { gitHubAPIService } from './GitHubAPIService';
 import { gitHubBackupService } from './GitHubBackupService';
 import { GitHubIcon } from './Icon';
 import './styles.css';
@@ -205,7 +205,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
     handleAsyncOperation(async () => {
       if (!selectedRepo) return;
       const [owner, repo] = selectedRepo.split('/');
-      const branches = await gitHubApiService.getBranches(
+      const branches = await gitHubAPIService.getBranches(
         gitHubToken,
         owner,
         repo
@@ -265,7 +265,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
     if (newRepo && gitHubToken) {
       try {
         const [owner, repo] = newRepo.split('/');
-        const branches = await gitHubApiService.getBranches(
+        const branches = await gitHubAPIService.getBranches(
           gitHubToken,
           owner,
           repo

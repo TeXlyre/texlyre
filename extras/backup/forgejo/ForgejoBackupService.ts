@@ -9,7 +9,7 @@ import {
 } from '@/services/FileStorageService';
 import { ProjectDataService } from '@/services/ProjectDataService';
 import { getMimeType, isBinaryFile } from '@/utils/fileUtils.ts';
-import { forgejoApiService } from './ForgejoApiService';
+import { forgejoAPIService } from './ForgejoAPIService';
 
 interface BackupStatus {
     isConnected: boolean;
@@ -80,11 +80,11 @@ export class ForgejoBackupService {
         this.settingsCache = { ...settings };
 
         if (settings.apiEndpoint) {
-            forgejoApiService.setBaseUrl(settings.apiEndpoint);
+            forgejoAPIService.setBaseUrl(settings.apiEndpoint);
         }
 
         if (settings.requestTimeout) {
-            forgejoApiService.setRequestTimeout(settings.requestTimeout);
+            forgejoAPIService.setRequestTimeout(settings.requestTimeout);
         }
     }
 
@@ -197,9 +197,9 @@ export class ForgejoBackupService {
         token: string,
     ): Promise<{ success: boolean; repositories?: any[]; error?: string }> {
         try {
-            if (!(await forgejoApiService.testConnection(token)))
+            if (!(await forgejoAPIService.testConnection(token)))
                 return { success: false, error: t('Invalid Forgejo token') };
-            const repositories = await forgejoApiService.getRepositories(token);
+            const repositories = await forgejoAPIService.getRepositories(token);
             return { success: true, repositories };
         } catch (error) {
             return {
@@ -377,7 +377,7 @@ export class ForgejoBackupService {
             throw new Error(
                 t('Forgejo credentials not available. Please reconnect.'),
             );
-        if (!(await forgejoApiService.testConnection(credentials.token)))
+        if (!(await forgejoAPIService.testConnection(credentials.token)))
             throw new Error(
                 t('Forgejo token is invalid or expired. Please reconnect.'),
             );
@@ -417,7 +417,7 @@ export class ForgejoBackupService {
                         }),
                     });
                 }
-                await forgejoApiService.createOrUpdateFiles(
+                await forgejoAPIService.createOrUpdateFiles(
                     token,
                     owner,
                     repo,
@@ -460,7 +460,7 @@ export class ForgejoBackupService {
             if (!localProjects || localProjects.some((p) => !p))
                 throw new Error(t('Could not load projects.'));
 
-            const tree = await forgejoApiService.getRecursiveTree(
+            const tree = await forgejoAPIService.getRecursiveTree(
                 credentials.token,
                 this.currentRepo?.owner!,
                 this.currentRepo?.repo!,
@@ -659,7 +659,7 @@ export class ForgejoBackupService {
         try {
             const credentials = await this.ensureValidCredentials(projectId);
             const finalBranch = branch || credentials.branch;
-            const tree = await forgejoApiService.getRecursiveTree(
+            const tree = await forgejoAPIService.getRecursiveTree(
                 credentials.token,
                 this.currentRepo?.owner!,
                 this.currentRepo?.repo!,
@@ -745,7 +745,7 @@ export class ForgejoBackupService {
             for (const missingProjId of missingProjects) {
                 const data = projectFiles.get(missingProjId)!;
                 try {
-                    const metadataContent = await forgejoApiService.getFileContent(
+                    const metadataContent = await forgejoAPIService.getFileContent(
                         credentials.token,
                         this.currentRepo?.owner!,
                         this.currentRepo?.repo!,
@@ -785,7 +785,7 @@ export class ForgejoBackupService {
 
             for (const projId of processableProjects) {
                 const data = projectFiles.get(projId)!;
-                const metadataContent = await forgejoApiService.getFileContent(
+                const metadataContent = await forgejoAPIService.getFileContent(
                     credentials.token,
                     this.currentRepo?.owner!,
                     this.currentRepo?.repo!,
@@ -871,7 +871,7 @@ export class ForgejoBackupService {
         let forgejoDocumentsMetadata: any[] = [];
         if (data.documentsMetadataSha) {
             try {
-                const metadataContent = await forgejoApiService.getFileContent(
+                const metadataContent = await forgejoAPIService.getFileContent(
                     credentials.token,
                     this.currentRepo?.owner!,
                     this.currentRepo?.repo!,
@@ -909,7 +909,7 @@ export class ForgejoBackupService {
                 {};
 
             if (docData.txtSha) {
-                contentData.readableContent = await forgejoApiService.getFileContent(
+                contentData.readableContent = await forgejoAPIService.getFileContent(
                     credentials.token,
                     this.currentRepo?.owner!,
                     this.currentRepo?.repo!,
@@ -919,7 +919,7 @@ export class ForgejoBackupService {
             }
 
             if (docData.yjsSha) {
-                const yjsContent = await forgejoApiService.getFileContent(
+                const yjsContent = await forgejoAPIService.getFileContent(
                     credentials.token,
                     this.currentRepo?.owner!,
                     this.currentRepo?.repo!,
@@ -963,7 +963,7 @@ export class ForgejoBackupService {
         let forgejoFilesMetadata: any[] = [];
         if (data.filesMetadataSha) {
             try {
-                const metadataContent = await forgejoApiService.getFileContent(
+                const metadataContent = await forgejoAPIService.getFileContent(
                     credentials.token,
                     this.currentRepo?.owner!,
                     this.currentRepo?.repo!,
@@ -1029,7 +1029,7 @@ export class ForgejoBackupService {
             try {
                 await fileStorageService.createDirectoryPath(filePath);
 
-                const rawContentString = await forgejoApiService.getFileContent(
+                const rawContentString = await forgejoAPIService.getFileContent(
                     credentials.token,
                     this.currentRepo?.owner!,
                     this.currentRepo?.repo!,

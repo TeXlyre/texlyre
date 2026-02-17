@@ -3,7 +3,6 @@ import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
-import { useSettings } from '../../hooks/useSettings';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 
 interface LSPToggleButtonProps {
@@ -15,7 +14,6 @@ const LSPToggleButton: React.FC<LSPToggleButtonProps> = ({
 	className = '',
 	pluginId,
 }) => {
-	const { getSetting } = useSettings();
 	const [showPanel, setShowPanel] = useState(false);
 
 	const lspPlugin = pluginRegistry.getLSPPlugin(pluginId);
@@ -45,14 +43,14 @@ const LSPToggleButton: React.FC<LSPToggleButtonProps> = ({
 
 	return (
 		<button
-			className={`control-button lsp-toggle-button ${showPanel ? 'active' : ''} ${className}`}
+			className={`control-button bib-toggle-button ${showPanel ? 'active' : ''} ${className}`}
 			onClick={handleTogglePanel}
 			title={t('{action} {pluginName} panel', {
 				action: showPanel ? t('Hide') : t('Show'),
 				pluginName: plugin.name
 			})}
 		>
-			<div className="lsp-button-content">
+			<div className="bib-button-content">
 				{IconComponent && <IconComponent />}
 				<span className={`connection-indicator ${connectionStatus}`} />
 			</div>

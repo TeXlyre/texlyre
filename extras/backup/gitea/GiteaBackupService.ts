@@ -9,7 +9,7 @@ import {
 } from '@/services/FileStorageService';
 import { ProjectDataService } from '@/services/ProjectDataService';
 import { getMimeType, isBinaryFile } from '@/utils/fileUtils.ts';
-import { giteaApiService } from './GiteaApiService';
+import { giteaAPIService } from './GiteaAPIService';
 
 interface BackupStatus {
     isConnected: boolean;
@@ -80,11 +80,11 @@ export class GiteaBackupService {
         this.settingsCache = { ...settings };
 
         if (settings.apiEndpoint) {
-            giteaApiService.setBaseUrl(settings.apiEndpoint);
+            giteaAPIService.setBaseUrl(settings.apiEndpoint);
         }
 
         if (settings.requestTimeout) {
-            giteaApiService.setRequestTimeout(settings.requestTimeout);
+            giteaAPIService.setRequestTimeout(settings.requestTimeout);
         }
     }
 
@@ -197,9 +197,9 @@ export class GiteaBackupService {
         token: string,
     ): Promise<{ success: boolean; repositories?: any[]; error?: string }> {
         try {
-            if (!(await giteaApiService.testConnection(token)))
+            if (!(await giteaAPIService.testConnection(token)))
                 return { success: false, error: t('Invalid Gitea token') };
-            const repositories = await giteaApiService.getRepositories(token);
+            const repositories = await giteaAPIService.getRepositories(token);
             return { success: true, repositories };
         } catch (error) {
             return {
@@ -377,7 +377,7 @@ export class GiteaBackupService {
             throw new Error(
                 t('Gitea credentials not available. Please reconnect.'),
             );
-        if (!(await giteaApiService.testConnection(credentials.token)))
+        if (!(await giteaAPIService.testConnection(credentials.token)))
             throw new Error(
                 t('Gitea token is invalid or expired. Please reconnect.'),
             );
@@ -417,7 +417,7 @@ export class GiteaBackupService {
                         }),
                     });
                 }
-                await giteaApiService.createOrUpdateFiles(
+                await giteaAPIService.createOrUpdateFiles(
                     token,
                     owner,
                     repo,
@@ -460,7 +460,7 @@ export class GiteaBackupService {
             if (!localProjects || localProjects.some((p) => !p))
                 throw new Error(t('Could not load projects.'));
 
-            const tree = await giteaApiService.getRecursiveTree(
+            const tree = await giteaAPIService.getRecursiveTree(
                 credentials.token,
                 this.currentRepo?.owner!,
                 this.currentRepo?.repo!,
@@ -659,7 +659,7 @@ export class GiteaBackupService {
         try {
             const credentials = await this.ensureValidCredentials(projectId);
             const finalBranch = branch || credentials.branch;
-            const tree = await giteaApiService.getRecursiveTree(
+            const tree = await giteaAPIService.getRecursiveTree(
                 credentials.token,
                 this.currentRepo?.owner!,
                 this.currentRepo?.repo!,
@@ -745,7 +745,7 @@ export class GiteaBackupService {
             for (const missingProjId of missingProjects) {
                 const data = projectFiles.get(missingProjId)!;
                 try {
-                    const metadataContent = await giteaApiService.getFileContent(
+                    const metadataContent = await giteaAPIService.getFileContent(
                         credentials.token,
                         this.currentRepo?.owner!,
                         this.currentRepo?.repo!,
@@ -785,7 +785,7 @@ export class GiteaBackupService {
 
             for (const projId of processableProjects) {
                 const data = projectFiles.get(projId)!;
-                const metadataContent = await giteaApiService.getFileContent(
+                const metadataContent = await giteaAPIService.getFileContent(
                     credentials.token,
                     this.currentRepo?.owner!,
                     this.currentRepo?.repo!,
@@ -871,7 +871,7 @@ export class GiteaBackupService {
         let giteaDocumentsMetadata: any[] = [];
         if (data.documentsMetadataSha) {
             try {
-                const metadataContent = await giteaApiService.getFileContent(
+                const metadataContent = await giteaAPIService.getFileContent(
                     credentials.token,
                     this.currentRepo?.owner!,
                     this.currentRepo?.repo!,
@@ -909,7 +909,7 @@ export class GiteaBackupService {
                 {};
 
             if (docData.txtSha) {
-                contentData.readableContent = await giteaApiService.getFileContent(
+                contentData.readableContent = await giteaAPIService.getFileContent(
                     credentials.token,
                     this.currentRepo?.owner!,
                     this.currentRepo?.repo!,
@@ -919,7 +919,7 @@ export class GiteaBackupService {
             }
 
             if (docData.yjsSha) {
-                const yjsContent = await giteaApiService.getFileContent(
+                const yjsContent = await giteaAPIService.getFileContent(
                     credentials.token,
                     this.currentRepo?.owner!,
                     this.currentRepo?.repo!,
@@ -963,7 +963,7 @@ export class GiteaBackupService {
         let giteaFilesMetadata: any[] = [];
         if (data.filesMetadataSha) {
             try {
-                const metadataContent = await giteaApiService.getFileContent(
+                const metadataContent = await giteaAPIService.getFileContent(
                     credentials.token,
                     this.currentRepo?.owner!,
                     this.currentRepo?.repo!,
@@ -1029,7 +1029,7 @@ export class GiteaBackupService {
             try {
                 await fileStorageService.createDirectoryPath(filePath);
 
-                const rawContentString = await giteaApiService.getFileContent(
+                const rawContentString = await giteaAPIService.getFileContent(
                     credentials.token,
                     this.currentRepo?.owner!,
                     this.currentRepo?.repo!,

@@ -1,7 +1,7 @@
 import type { BibEntry } from '@/plugins/PluginInterface';
 import type { SecretsContextType } from '@/contexts/SecretsContext';
 import type { PropertiesContextType } from '@/contexts/PropertiesContext';
-import { zoteroApiService } from './ZoteroApiService';
+import { zoteroAPIService } from './ZoteroAPIService';
 
 interface ZoteroItemData {
     itemType: string;
@@ -252,7 +252,7 @@ class ZoteroService {
             this.connectionStatus = 'connected';
             this.notifyStatusListeners();
 
-            const items = await zoteroApiService.getLibraryItems(credentials.apiKey, library.libraryType, library.libraryId);
+            const items = await zoteroAPIService.getLibraryItems(credentials.apiKey, library.libraryType, library.libraryId);
             return items.map(item => this.convertZoteroItemToBibEntry(item));
         } catch (error) {
             console.error('[ZoteroService] Error getting bibliography entries:', error);

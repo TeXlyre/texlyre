@@ -3,7 +3,7 @@ import type React from 'react';
 import { useState, useEffect } from 'react';
 import Modal from '@/components/common/Modal';
 import { ZoteroIcon } from './Icon';
-import { zoteroApiService } from './ZoteroApiService';
+import { zoteroAPIService } from './ZoteroAPIService';
 import './styles.css';
 
 interface ZoteroConnectionModalProps {
@@ -52,7 +52,7 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
         setIsLoading(true);
         setError('');
         try {
-            const libs = await zoteroApiService.getUserLibraries(key, uid);
+            const libs = await zoteroAPIService.getUserLibraries(key, uid);
             setLibraries(libs);
             if (libs.length > 0) {
                 setSelectedLibrary(libs[0].id);
@@ -75,7 +75,7 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
         setError('');
 
         try {
-            const isValid = await zoteroApiService.testConnection(apiKey, userId);
+            const isValid = await zoteroAPIService.testConnection(apiKey, userId);
             if (!isValid) {
                 setError('Invalid API key or User ID');
                 return;

@@ -202,8 +202,8 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
 
 
     return (
-      <div className="lsp-provider-panel">
-        <div className="lsp-panel-search">
+      <div className="bib-provider-panel">
+        <div className="bib-panel-search">
           <input
             type="text"
             placeholder={
@@ -213,11 +213,11 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
             }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="lsp-search-input" />
+            className="bib-search-input" />
 
           {searchQuery &&
             <button
-              className="lsp-clear-search-button"
+              className="bib-clear-search-button"
               onClick={() => setSearchQuery('')}>
 
               ×
@@ -255,15 +255,15 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
           </div>
         }
 
-        <div className="lsp-panel-content">
+        <div className="bib-panel-content">
           {selectedProvider === 'all' ? renderAggregatedContent() : renderSingleProviderContent()}
         </div>
 
-        <div className="lsp-panel-footer">
-          <div className="lsp-footer-stats">
+        <div className="bib-panel-footer">
+          <div className="bib-footer-stats">
             {entries.length > 0 &&
               <div>
-                <span className="lsp-entry-count">
+                <span className="bib-entry-count">
                   {selectedProvider === 'all' ?
                     `${entries.length} entries from ${availableProviders.filter((p) => p.getConnectionStatus() === 'connected').length} providers` :
                     selectedProvider === 'local' ?
@@ -273,16 +273,16 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
                   {citationStyle !== 'numeric' && ` (${citationStyle} style)`}
                 </span>
                 {targetBibFile && selectedProvider !== 'all' && selectedProvider !== 'local' &&
-                  <div className="lsp-footer-target">{t('Target File:')}
+                  <div className="bib-footer-target">{t('Target File:')}
                     {availableBibFiles.find((f) => f.path === targetBibFile)?.name || 'Unknown file'}
                   </div>
                 }
               </div>
             }
           </div>
-          <div className="lsp-footer-actions">
+          <div className="bib-footer-actions">
             <button
-              className="lsp-refresh-button"
+              className="bib-refresh-button"
               onClick={handleRefresh}
               disabled={isLoading}>
 
@@ -296,16 +296,16 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
 
   const renderAggregatedContent = () => {
     if (!availableProviders.some((p) => p.getConnectionStatus() === 'connected')) {
-      return <div className="lsp-loading-indicator">{t('No LSP providers are currently connected.')}</div>;
+      return <div className="bib-loading-indicator">{t('No LSP providers are currently connected.')}</div>;
     }
 
     if (isLoading) {
-      return <div className="lsp-loading-indicator">{t('Loading from all providers...')}</div>;
+      return <div className="bib-loading-indicator">{t('Loading from all providers...')}</div>;
     }
 
     if (filteredEntries.length === 0) {
       return (
-        <div className="lsp-no-entries">
+        <div className="bib-no-entries">
           {searchQuery ?
             'No entries found matching the search criteria across all providers' :
             'No entries available from any connected provider'
@@ -315,54 +315,54 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
     }
 
     return (
-      <div className="lsp-entries-list">
+      <div className="bib-entries-list">
         {filteredEntries.map((entry, index) =>
           <div
             key={getUniqueKey(entry, index)}
-            className={`lsp-entry-item ${entry.source === 'external' && !entry.isImported ? 'external-entry' : ''}`}
+            className={`bib-entry-item ${entry.source === 'external' && !entry.isImported ? 'external-entry' : ''}`}
             onClick={() => handleEntryClick(entry)}>
 
-            <div className="lsp-entry-header">
-              <span className="lsp-entry-key">{entry.key}</span>
+            <div className="bib-entry-header">
+              <span className="bib-entry-key">{entry.key}</span>
               {entry.providerName &&
-                <span className="lsp-entry-provider" title={`From ${entry.providerName}`}>
+                <span className="bib-entry-provider" title={`From ${entry.providerName}`}>
                   [{entry.providerName}]
                 </span>
               }
               {getSourceIndicator(entry)}
-              {/*<span className="lsp-citation-preview">{getCitationPreview(entry)}</span>*/}
+              {/*<span className="bib-citation-preview">{getCitationPreview(entry)}</span>*/}
             </div>
-            <div className="lsp-entry-type-badge">
-              <div className="lsp-entry-type-content">
-                <span className="lsp-entry-type-icon">
+            <div className="bib-entry-type-badge">
+              <div className="bib-entry-type-content">
+                <span className="bib-entry-type-icon">
                   {getEntryTypeIcon(entry.entryType)}
                 </span>
-                <span className="lsp-entry-type-text">
+                <span className="bib-entry-type-text">
                   {entry.entryType.toUpperCase()}
                 </span>
               </div>
               {getDisplayYear(entry) &&
-                <span className="lsp-entry-year">{getDisplayYear(entry)}</span>
+                <span className="bib-entry-year">{getDisplayYear(entry)}</span>
               }
             </div>
-            <div className="lsp-entry-title">
+            <div className="bib-entry-title">
               {getDisplayTitle(entry)}
             </div>
-            <div className="lsp-entry-authors">{getDisplayAuthors(entry)}</div>
+            <div className="bib-entry-authors">{getDisplayAuthors(entry)}</div>
             {getDisplayVenue(entry) &&
-              <div className="lsp-entry-venue">
+              <div className="bib-entry-venue">
                 <em>{getDisplayVenue(entry)}</em>
               </div>
             }
             {entry.fields.volume && entry.fields.pages &&
-              <div className="lsp-entry-details">{t('Vol.')}
+              <div className="bib-entry-details">{t('Vol.')}
                 {entry.fields.volume}
                 {entry.fields.number && `, No. ${entry.fields.number}`}{t(', pp.')}
                 {entry.fields.pages}
               </div>
             }
             {entry.fields.doi &&
-              <div className="lsp-entry-identifier">{t('DOI: ')}
+              <div className="bib-entry-identifier">{t('DOI: ')}
                 {entry.fields.doi}
               </div>
             }
@@ -375,18 +375,18 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
   const renderSingleProviderContent = () => {
     if (selectedProvider === 'local') {
       if (isLoading) {
-        return <div className="lsp-loading-indicator">{t('Loading local bibliography...')}</div>;
+        return <div className="bib-loading-indicator">{t('Loading local bibliography...')}</div>;
       }
 
       if (filteredEntries.length === 0) {
         return (
-          <div className="lsp-no-entries">
+          <div className="bib-no-entries">
             {searchQuery ?
               'No local entries found matching the search criteria' :
               'No local bibliography entries available'
             }
             {localEntries.length === 0 &&
-              <div className="lsp-no-entries-hint">{t('Add .bib files to your project to see local bibliography entries.')}
+              <div className="bib-no-entries-hint">{t('Add .bib files to your project to see local bibliography entries.')}
 
               </div>
             }
@@ -395,30 +395,30 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
       }
     } else {
       if (!currentProvider) {
-        return <div className="lsp-loading-indicator">{t('Initializing LSP...')}</div>;
+        return <div className="bib-loading-indicator">{t('Initializing LSP...')}</div>;
       }
 
       if (currentProvider.getConnectionStatus() !== 'connected') {
         return (
-          <div className="lsp-loading-indicator">{t('Connecting to LSP server... (')}
+          <div className="bib-loading-indicator">{t('Connecting to LSP server... (')}
             {currentProvider.getConnectionStatus()})
           </div>);
 
       }
 
       if (isLoading) {
-        return <div className="lsp-loading-indicator">{t('Loading bibliography...')}</div>;
+        return <div className="bib-loading-indicator">{t('Loading bibliography...')}</div>;
       }
 
       if (filteredEntries.length === 0) {
         return (
-          <div className="lsp-no-entries">
+          <div className="bib-no-entries">
             {searchQuery ?
               'No entries found matching the search criteria' :
               'No bibliography entries available'
             }
             {localEntries.length === 0 &&
-              <div className="lsp-no-entries-hint">{t('Add .bib files to your project or connect to an external bibliography source.')}
+              <div className="bib-no-entries-hint">{t('Add .bib files to your project or connect to an external bibliography source.')}
 
               </div>
             }
@@ -428,55 +428,55 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
     }
 
     return (
-      <div className="lsp-entries-list">
+      <div className="bib-entries-list">
         {filteredEntries.map((entry, index) =>
           <div
             key={getUniqueKey(entry, index)}
-            className={`lsp-entry-item ${entry.source === 'external' && !entry.isImported ? 'external-entry' : ''}`}
+            className={`bib-entry-item ${entry.source === 'external' && !entry.isImported ? 'external-entry' : ''}`}
             onClick={() => handleEntryClick(entry)}>
 
-            <div className="lsp-entry-header">
-              <span className="lsp-entry-key">{entry.key}</span>
+            <div className="bib-entry-header">
+              <span className="bib-entry-key">{entry.key}</span>
               {getSourceIndicator(entry)}
-              {/*<span className="lsp-citation-preview">{getCitationPreview(entry)}</span>*/}
+              {/*<span className="bib-citation-preview">{getCitationPreview(entry)}</span>*/}
 
             </div>
-            <div className="lsp-entry-type-badge">
-              <div className="lsp-entry-type-content">
-                <span className="lsp-entry-type-icon">
+            <div className="bib-entry-type-badge">
+              <div className="bib-entry-type-content">
+                <span className="bib-entry-type-icon">
                   {getEntryTypeIcon(entry.entryType)}
                 </span>
-                <span className="lsp-entry-type-text">
+                <span className="bib-entry-type-text">
                   {entry.entryType.toUpperCase()}
                 </span>
               </div>
               {getDisplayYear(entry) &&
-                <span className="lsp-entry-year">{getDisplayYear(entry)}</span>
+                <span className="bib-entry-year">{getDisplayYear(entry)}</span>
               }
             </div>
-            <div className="lsp-entry-title">
+            <div className="bib-entry-title">
               {getDisplayTitle(entry)}
             </div>
-            <div className="lsp-entry-authors">{getDisplayAuthors(entry)}</div>
+            <div className="bib-entry-authors">{getDisplayAuthors(entry)}</div>
             {getDisplayVenue(entry) &&
-              <div className="lsp-entry-venue">
+              <div className="bib-entry-venue">
                 <em>{getDisplayVenue(entry)}</em>
               </div>
             }
             {entry.fields.volume && entry.fields.pages &&
-              <div className="lsp-entry-details">{t('Vol.')}
+              <div className="bib-entry-details">{t('Vol.')}
                 {entry.fields.volume}
                 {entry.fields.number && `, No. ${entry.fields.number}`}{t(', pp.')}
                 {entry.fields.pages}
               </div>
             }
             {entry.fields.doi &&
-              <div className="lsp-entry-identifier">{t('DOI: ')}
+              <div className="bib-entry-identifier">{t('DOI: ')}
                 {entry.fields.doi}
               </div>
             }
             {entry.source === 'external' && !entry.isImported && !autoImport &&
-              <div className="lsp-entry-actions">
+              <div className="bib-entry-actions">
                 <button
                   className="import-button"
                   onClick={(e) => {
@@ -500,8 +500,8 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
   }
 
   return (
-    <div className={`lsp-panel ${className}`}>
-      <div className="lsp-panel-header">
+    <div className={`bib-panel ${className}`}>
+      <div className="bib-panel-header">
         <h3>{t('Bibliography')}</h3>
 
         <div className="view-tabs">
@@ -521,45 +521,45 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
           </button>
         </div>
       </div>
-      <div className="lsp-panel-content">
-        <div className="lsp-controls">
-          <div className="lsp-indicator-group">
+      <div className="bib-panel-content">
+        <div className="bib-controls">
+          <div className="bib-indicator-group">
             <div
-              className={`lsp-status-indicator main-button ${getConnectionStatus()}`}
+              className={`bib-status-indicator main-button ${getConnectionStatus()}`}
               onClick={() => setShowDropdown(!showDropdown)}>
               <div
                 className="status-dot"
                 style={{ backgroundColor: getStatusColor() }} />
               {selectedProvider === 'all' ?
-                <span className="lsp-label">{t('All LSP')}</span> :
+                <span className="bib-label">{t('All LSP')}</span> :
                 selectedProvider === 'local' ?
-                  <span className="lsp-label"><BibliographyIcon />{t('Local Bibliography')}</span> :
+                  <span className="bib-label"><BibliographyIcon />{t('Local Bibliography')}</span> :
                   currentProvider ?
                     <>
                       <currentProvider.icon />
-                      <span className="lsp-label">{currentProvider.name}</span>
+                      <span className="bib-label">{currentProvider.name}</span>
                     </> :
-                    <span className="lsp-label">{t('No LSP')}</span>
+                    <span className="bib-label">{t('No LSP')}</span>
               }
             </div>
 
             <button
-              className={`lsp-dropdown-toggle ${getConnectionStatus()}`}
+              className={`bib-dropdown-toggle ${getConnectionStatus()}`}
               onClick={() => setShowDropdown(!showDropdown)}>
               <ChevronDownIcon />
             </button>
 
             {showDropdown &&
-              <div className="lsp-dropdown">
+              <div className="bib-dropdown">
                 {availableProviders.length > 1 &&
                   <div
-                    className="lsp-dropdown-item"
+                    className="bib-dropdown-item"
                     onClick={() => handleProviderSelect('all')}>{t('All LSP')}
                   </div>
                 }
 
                 <div
-                  className="lsp-dropdown-item"
+                  className="bib-dropdown-item"
                   onClick={() => handleProviderSelect('local')}>
                   <BibliographyIcon />{t('Local Bibliography')}
                 </div>
@@ -570,7 +570,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
                   return (
                     <div
                       key={provider.id}
-                      className="lsp-dropdown-item"
+                      className="bib-dropdown-item"
                       onClick={() => handleProviderSelect(provider.id)}>
                       <span className="service-indicator">
                         {status === 'connected' ? '🟢' : ''}
@@ -583,7 +583,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
           </div>
 
           <button
-            className="lsp-refresh-button"
+            className="bib-refresh-button"
             onClick={handleRefresh}
             disabled={isRefreshing}
             title={
@@ -607,7 +607,7 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
         {activeTab === 'list' ?
           renderBibliographyList() :
 
-          <div className="lsp-detail-view">
+          <div className="bib-detail-view">
             <div className="detail-header">
               <button
                 className="back-button"

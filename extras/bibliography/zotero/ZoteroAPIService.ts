@@ -28,7 +28,7 @@ interface ZoteroGroup {
     type: string;
 }
 
-export class ZoteroApiService {
+export class ZoteroAPIService {
     private baseUrl = 'https://api.zotero.org';
 
     async testConnection(apiKey: string, userId: string): Promise<boolean> {
@@ -63,7 +63,7 @@ export class ZoteroApiService {
                 });
             }
         } catch (error) {
-            console.error('[ZoteroApiService] Error fetching groups:', error);
+            console.error('[ZoteroAPIService] Error fetching groups:', error);
         }
 
         return libraries;
@@ -75,20 +75,35 @@ export class ZoteroApiService {
                 ? `${this.baseUrl}/users/${libraryId}/items`
                 : `${this.baseUrl}/groups/${libraryId}/items`;
 
-            const response = await fetch(`${endpoint}?limit=100&itemType=-attachment&itemType=-note`, {
-                headers: { 'Zotero-API-Key': apiKey }
+            console.log('[ZoteroAPIService] Fetching items from:', endpoint);
+            console.log('[ZoteroAPIService] Library type:', libraryType, 'Library ID:', libraryId);
+
+            const response = await fetch(`${endpoint}?limit=100`, {
+                headers: {
+                    'Zotero-API-Key': apiKey,
+                    'Zotero-API-Version': '3'
+                }
             });
 
             if (!response.ok) {
+                const errorText = await response.text();
+                console.error('[ZoteroAPIService] Response error:', response.status, errorText);
                 throw new Error(`Failed to fetch items: ${response.statusText}`);
             }
 
-            return await response.json();
+            const items = await response.json();
+
+            const filteredItems = items.filter((item: ZoteroItem) => {
+                return item.data.itemType !== 'attachment' && item.data.itemType !== 'note';
+            });
+
+            console.log('[ZoteroAPIService] Fetched items:', filteredItems.length, 'of', items.length);
+            return filteredItems;
         } catch (error) {
-            console.error('[ZoteroApiService] Error fetching library items:', error);
+            console.error('[ZoteroAPIService] Error fetching library items:', error);
             throw error;
         }
     }
 }
 
-export const zoteroApiService = new ZoteroApiService();
+export const zoteroAPIService = new ZoteroAPIService();
