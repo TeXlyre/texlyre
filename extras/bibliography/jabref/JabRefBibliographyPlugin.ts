@@ -29,7 +29,7 @@ const jabrefBibliographyPlugin: BibliographyPlugin = {
 	},
 
 	getSupportedFileTypes(): string[] {
-		return ['tex', 'latex', 'typ', 'bib', 'bibtex'];
+		return ['tex', 'latex', 'typ', 'typst', 'bib', 'bibtex'];
 	},
 
 	isEnabled(): boolean {

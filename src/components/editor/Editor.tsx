@@ -12,7 +12,9 @@ import { useCollab } from '../../hooks/useCollab';
 import { useComments } from '../../hooks/useComments';
 import { usePluginFileInfo } from '../../hooks/usePluginFileInfo';
 import type {
+  BibliographyPlugin,
   CollaborativeViewerProps,
+  LSPPlugin,
   ViewerProps
 } from
   '../../plugins/PluginInterface';
@@ -71,14 +73,30 @@ interface EditorComponentProps {
   onToolbarToggle?: (visible: boolean) => void;
 }
 
-function getPluginToggleButtons(fileTypeOrExt: string | undefined) {
-  if (!fileTypeOrExt) return { lsp: [], bib: [] };
-  return {
-    lsp: pluginRegistry.getLSPPluginsForFileType(fileTypeOrExt),
-    bib: pluginRegistry.getBibliographyPlugins().filter(p =>
-      p.getSupportedFileTypes().includes(fileTypeOrExt)
+const fileTypeCache = new Map<string, { lsp: LSPPlugin[]; bib: BibliographyPlugin[] }>();
+
+function getPluginToggleButtons(fileTypes: string[] | undefined) {
+  if (!fileTypes?.length) return { lsp: [], bib: [] };
+
+  const key = [...new Set(fileTypes)].sort().join("|");
+  const cached = fileTypeCache.get(key);
+  if (cached) return cached;
+
+  const types = new Set(fileTypes);
+
+  const lsp = [
+    ...new Set(
+      [...types].flatMap(t => pluginRegistry.getLSPPluginsForFileType(t))
     ),
-  };
+  ];
+
+  const bib = pluginRegistry
+    .getBibliographyPlugins()
+    .filter(p => p.getSupportedFileTypes().some(t => types.has(t)));
+
+  const result = { lsp, bib };
+  fileTypeCache.set(key, result);
+  return result;
 }
 
 const EditorContent: React.FC<{
@@ -382,7 +400,7 @@ const EditorContent: React.FC<{
     };
 
     const fileType = detectFileType(filePath || '');
-    const { lsp: availableLSPPlugins, bib: availableBibPlugins } = getPluginToggleButtons(fileType);
+    const { lsp: availableLSPPlugins, bib: availableBibPlugins } = getPluginToggleButtons([fileType]);
     const hasPluginToggles = availableLSPPlugins.length > 0 || availableBibPlugins.length > 0;
 
     const headerControls =
@@ -510,7 +528,7 @@ const EditorContent: React.FC<{
             </PluginControlGroup>
             {linkedFileInfo?.fileName && (() => {
               const linkedFileExtension = linkedFileInfo.fileName.split('.').pop()?.toLowerCase();
-              const { lsp: linkedLSPPlugins, bib: linkedBibPlugins } = getPluginToggleButtons(linkedFileExtension);
+              const { lsp: linkedLSPPlugins, bib: linkedBibPlugins } = getPluginToggleButtons([linkedFileExtension]);
               const hasLinkedPlugins = linkedLSPPlugins.length > 0 || linkedBibPlugins.length > 0;
 
               return hasLinkedPlugins &&
@@ -553,18 +571,18 @@ const EditorContent: React.FC<{
               </PluginControlGroup>
 
               {textContent?.includes('\\') && (() => {
-                const { lsp: texLSPPlugins, bib: texBibPlugins } = getPluginToggleButtons('tex');
-                const hasTexPlugins = texLSPPlugins.length > 0 || texBibPlugins.length > 0;
+                const { lsp: supportedLSPPlugins, bib: supportedBibPlugins } = getPluginToggleButtons(['tex', 'latex', 'typ', 'typst', 'bib', 'bibtex']);
+                const hasSupportedPlugins = supportedLSPPlugins.length > 0 || supportedBibPlugins.length > 0;
 
-                return hasTexPlugins &&
+                return hasSupportedPlugins &&
                   <PluginControlGroup>
-                    {texLSPPlugins.map((plugin) =>
+                    {supportedLSPPlugins.map((plugin) =>
                       <LSPToggleButton
                         key={plugin.id}
                         pluginId={plugin.id}
                         className="header-lsp-button" />
                     )}
-                    {texBibPlugins.map((plugin) =>
+                    {supportedBibPlugins.map((plugin) =>
                       <LSPToggleButton
                         key={plugin.id}
                         pluginId={plugin.id}
