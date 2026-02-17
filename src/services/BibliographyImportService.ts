@@ -1,7 +1,9 @@
 // src/services/BibliographyImportService.ts
 import { t } from '@/i18n';
 import { isBibFile } from '../utils/fileUtils';
+import { parseUrlFragments } from '../utils/urlUtils';
 import { fileStorageService } from './FileStorageService';
+import { collabService } from './CollabService';
 import type { BibEntry } from '../types/bibliography';
 
 export interface ImportResult {
@@ -283,6 +285,37 @@ export class BibliographyImportService {
 		}
 	}
 
+	private async updateContent(
+		filePath: string,
+		updater: (currentContent: string) => string
+	): Promise<void> {
+		const file = await fileStorageService.getFileByPath(filePath);
+		if (!file) throw new Error('File not found');
+
+		if (file.documentId) {
+			const currentFragment = parseUrlFragments(window.location.hash.substring(1));
+			const projectId = currentFragment.yjsUrl?.slice(4);
+
+			if (projectId) {
+				await collabService.updateDocumentContent(
+					projectId,
+					file.documentId,
+					updater
+				);
+			}
+		}
+
+		let currentContent = '';
+		if (file.content) {
+			currentContent = typeof file.content === 'string'
+				? file.content
+				: new TextDecoder().decode(file.content);
+		}
+
+		const newContent = updater(currentContent);
+		await fileStorageService.updateFileContent(file.id, newContent);
+	}
+
 	private async performImport(
 		entryKey: string,
 		rawEntry: string,
@@ -343,11 +376,11 @@ export class BibliographyImportService {
 					}
 				}));
 			} else {
-				const newContent = currentContent.trim()
-					? `${currentContent.trim()}\n\n${entryToAppend}`
-					: entryToAppend;
-
-				await fileStorageService.updateFileContent(targetFile.id, newContent);
+				await this.updateContent(targetFile.path, (currentContent) => {
+					return currentContent.trim()
+						? `${currentContent.trim()}\n\n${entryToAppend}`
+						: entryToAppend;
+				});
 				document.dispatchEvent(new CustomEvent('refresh-file-tree'));
 			}
 
