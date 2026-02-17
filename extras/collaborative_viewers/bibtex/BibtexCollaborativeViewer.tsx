@@ -291,9 +291,41 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
         ? processedContent
         : bibtexContent;
 
-      const newContent = sourceContent.trim()
-        ? `${sourceContent.trim()}\n\n${entry.rawEntry.trim()}\n`
-        : `${entry.rawEntry.trim()}\n`;
+      let newContent: string;
+
+      if (entry.action === 'delete') {
+        const escapedKey = entry.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`@\\w+\\s*\\{\\s*${escapedKey}\\s*,[^]*?\\n\\s*\\}\\s*`, 'm');
+        newContent = sourceContent.replace(regex, '').replace(/\n{3,}/g, '\n\n').trim();
+      } else if (entry.action === 'update') {
+        const oldKey = (entry.oldKey || entry.key).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const newKey = entry.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regexOld = new RegExp(`@\\w+\\s*\\{\\s*${oldKey}\\s*,[^]*?\\n\\s*\\}`, 'm');
+        const regexNew = new RegExp(`@\\w+\\s*\\{\\s*${newKey}\\s*,[^]*?\\n\\s*\\}`, 'm');
+        const regex = regexOld.test(sourceContent) ? regexOld : regexNew;
+        if (!regex.test(sourceContent)) return;
+        newContent = sourceContent.replace(regex, entry.rawEntry.trim());
+      } else {
+        newContent = sourceContent.trim()
+          ? `${sourceContent.trim()}\n\n${entry.rawEntry.trim()}\n`
+          : `${entry.rawEntry.trim()}\n`;
+      }
+
+      // If result is empty (e.g. deleted last entry), apply directly to original
+      if (!newContent.trim()) {
+        setBibtexContent('');
+        setProcessedContent('');
+        setProcessedParsedEntries([]);
+        setCurrentView('original');
+        onUpdateContent('');
+        if (viewRef.current) {
+          viewRef.current.dispatch({
+            changes: { from: 0, to: viewRef.current.state.doc.length, insert: '' }
+          });
+        }
+        setHasChanges(true);
+        return;
+      }
 
       setProcessedContent(newContent);
       setProcessedParsedEntries(parseContent(newContent));
@@ -372,10 +404,29 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
         const originalView = viewRef.current;
 
         if (originalView && originalView.state) {
-          originalView.dispatch({
-            changes: changes
-          });
+          try {
+            originalView.dispatch({
+              changes: changes
+            });
+          } catch (e) {
+            console.warn('Range error during diff dispatch, replacing full content:', e);
+            const docLength = originalView.state.doc.length;
+            if (docLength > 0) {
+              originalView.dispatch({
+                changes: { from: 0, to: docLength, insert: contentToSave }
+              });
+            } else {
+              // Doc is empty after view switch — wait for Yjs to sync, then replace
+              await new Promise(resolve => setTimeout(resolve, 200));
+              const syncedLength = originalView.state.doc.length;
+              originalView.dispatch({
+                changes: { from: 0, to: syncedLength, insert: contentToSave }
+              });
+            }
+          }
         }
+      } else {
+        setCurrentView('original');
       }
 
       initialContentRef.current = contentToSave;

@@ -20,6 +20,8 @@ export interface ImportOptions {
 	duplicateHandling?: 'keep-local' | 'replace' | 'rename' | 'ask';
 	showPreview?: boolean;
 	autoImport?: boolean;
+	action?: 'import' | 'delete' | 'update';
+	remoteId?: string;
 }
 
 export interface BibTexParser {
@@ -201,13 +203,28 @@ class DefaultBibTexParser implements BibTexParser {
 	}
 
 	findEntryPosition(content: string, entry: BibEntry): { start: number; end: number } | null {
+		// Try exact rawEntry match first
 		const index = content.indexOf(entry.rawEntry);
-		if (index === -1) return null;
+		if (index !== -1) {
+			return { start: index, end: index + entry.rawEntry.length };
+		}
 
-		return {
-			start: index,
-			end: index + entry.rawEntry.length
-		};
+		// Fallback: find by entry type + key using regex
+		const escapedKey = entry.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+		const entryRegex = new RegExp(`@${entry.entryType}\\s*\\{\\s*${escapedKey}\\s*,`, 'i');
+		const match = entryRegex.exec(content);
+		if (!match) return null;
+
+		// Find matching closing brace
+		let braceCount = 1;
+		let pos = match.index + match[0].length;
+		while (pos < content.length && braceCount > 0) {
+			if (content[pos] === '{') braceCount++;
+			else if (content[pos] === '}') braceCount--;
+			pos++;
+		}
+
+		return { start: match.index, end: pos };
 	}
 
 	updateEntryInContent(content: string, entry: BibEntry): string {
@@ -227,6 +244,10 @@ export class BibliographyImportService {
 	private notificationCallbacks: Array<(result: ImportResult) => void> = [];
 	private parser: BibTexParser = new DefaultBibTexParser();
 	private openBibFiles: Set<string> = new Set();
+
+	isFileOpen(filePath: string): boolean {
+		return this.openBibFiles.has(filePath);
+	}
 
 	static getInstance(): BibliographyImportService {
 		if (!BibliographyImportService.instance) {
@@ -322,6 +343,7 @@ export class BibliographyImportService {
 		options: ImportOptions
 	): Promise<ImportResult> {
 		try {
+			const action = options.action || 'import';
 			const targetFile = await this.getTargetFile(options.targetFile);
 			if (!targetFile) {
 				return {
@@ -339,7 +361,109 @@ export class BibliographyImportService {
 			}
 
 			const existingEntries = this.parser.parse(currentContent);
-			const existingEntry = existingEntries.find(entry => entry.key === entryKey);
+			const remoteId = options.remoteId;
+
+			// Find existing entry by key OR remote-id
+			const existingEntry = existingEntries.find(entry => {
+				if (entry.key === entryKey) return true;
+				if (remoteId) {
+					const localRemoteId = entry.remoteId || entry.fields?.['remote-id'];
+					if (localRemoteId && localRemoteId === remoteId) return true;
+				}
+				return false;
+			});
+
+			const isFileOpen = this.openBibFiles.has(targetFile.path);
+
+			// --- DELETE ---
+			if (action === 'delete') {
+				if (!existingEntry) {
+					return { success: false, entryKey, error: 'Entry not found' };
+				}
+
+				const computeDelete = (content: string): string => {
+					const position = this.parser.findEntryPosition(content, existingEntry);
+					if (!position) return content;
+					let end = position.end;
+					while (end < content.length && /[\r\n\s]/.test(content[end])) {
+						end++;
+					}
+					return content.substring(0, position.start) + content.substring(end);
+				};
+
+				if (isFileOpen) {
+					document.dispatchEvent(new CustomEvent('bib-entry-imported', {
+						detail: {
+							entry: {
+								key: existingEntry.key,
+								action: 'delete'
+							},
+							filePath: targetFile.path
+						}
+					}));
+				} else {
+					await this.updateContent(targetFile.path, computeDelete);
+					document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+				}
+
+				return { success: true, entryKey, filePath: targetFile.path, action: 'replaced' };
+			}
+
+			// --- UPDATE ---
+			if (action === 'update') {
+				if (!existingEntry) {
+					return { success: false, entryKey, error: 'Entry not found' };
+				}
+
+				const incomingParsed = this.parser.parse(rawEntry);
+				const updatedEntry: BibEntry = {
+					key: entryKey,
+					entryType: incomingParsed[0]?.entryType || existingEntry.entryType,
+					fields: { ...incomingParsed[0]?.fields },
+					rawEntry: rawEntry,
+					remoteId: remoteId || existingEntry.remoteId
+				};
+				if (updatedEntry.remoteId) {
+					updatedEntry.fields['remote-id'] = updatedEntry.remoteId;
+				}
+
+				const computeUpdate = (content: string): string => {
+					const position = this.parser.findEntryPosition(content, existingEntry);
+					if (!position) return content;
+					const newEntryContent = this.parser.serializeEntry(updatedEntry);
+					return content.substring(0, position.start) +
+						newEntryContent +
+						content.substring(position.end);
+				};
+
+				if (isFileOpen) {
+					document.dispatchEvent(new CustomEvent('bib-entry-imported', {
+						detail: {
+							entry: {
+								key: entryKey,
+								rawEntry: this.parser.serializeEntry(updatedEntry),
+								action: 'update',
+								oldKey: existingEntry.key
+							},
+							filePath: targetFile.path
+						}
+					}));
+				} else {
+					await this.updateContent(targetFile.path, computeUpdate);
+					document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+				}
+
+				return { success: true, entryKey, filePath: targetFile.path, action: 'replaced' };
+			}
+
+			// --- IMPORT ---
+			// Check for remote key change (same remote-id, different key)
+			if (existingEntry && existingEntry.key !== entryKey && remoteId) {
+				return this.performImport(entryKey, rawEntry, {
+					...options,
+					action: 'update'
+				});
+			}
 
 			if (existingEntry) {
 				const duplicateResult = await this.handleDuplicate(
@@ -366,7 +490,6 @@ export class BibliographyImportService {
 			}
 
 			const entryToAppend = this.formatEntryForAppending(rawEntry);
-			const isFileOpen = this.openBibFiles.has(targetFile.path);
 
 			if (isFileOpen) {
 				document.dispatchEvent(new CustomEvent('bib-entry-imported', {

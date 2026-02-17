@@ -252,63 +252,6 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		setSelectedBibFile(filePath);
 	}, []);
 
-	const handleDeleteEntry = useCallback(async (entry: BibEntry) => {
-		if (entry.source !== 'local' || !entry.filePath) return;
-
-		try {
-			const targetFile = await fileStorageService.getFileByPath(entry.filePath);
-			if (!targetFile) return;
-
-			let currentContent = '';
-			if (targetFile.content) {
-				currentContent = typeof targetFile.content === 'string'
-					? targetFile.content
-					: new TextDecoder().decode(targetFile.content);
-			}
-
-			const position = parser.findEntryPosition(currentContent, entry);
-			if (!position) return;
-
-			const newContent = currentContent.substring(0, position.start) +
-				currentContent.substring(position.end);
-
-			await fileStorageService.updateFileContent(targetFile.id, newContent);
-			await fetchLocalEntries();
-			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
-		} catch (error) {
-			console.error('[BibliographyContext] Error deleting entry:', error);
-		}
-	}, [parser]);
-
-	const handleUpdateEntry = useCallback(async (entry: BibEntry, remoteEntry: BibEntry) => {
-		if (!entry.filePath) return;
-
-		try {
-			const targetFile = await fileStorageService.getFileByPath(entry.filePath);
-			if (!targetFile) return;
-
-			let currentContent = '';
-			if (targetFile.content) {
-				currentContent = typeof targetFile.content === 'string'
-					? targetFile.content
-					: new TextDecoder().decode(targetFile.content);
-			}
-
-			const newContent = parser.updateEntryInContent(currentContent, {
-				...entry,
-				fields: remoteEntry.fields,
-				rawEntry: remoteEntry.rawEntry,
-				remoteId: remoteEntry.remoteId
-			});
-
-			await fileStorageService.updateFileContent(targetFile.id, newContent);
-			await fetchLocalEntries();
-			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
-		} catch (error) {
-			console.error('[BibliographyContext] Error updating entry:', error);
-		}
-	}, [parser]);
-
 	useEffect(() => {
 		const providers = pluginRegistry.getAllBibliographyPlugins();
 		setAvailableProviders(providers);
@@ -438,7 +381,18 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			setEntries(localEntries);
 		} else {
 			const localKeys = new Set(localEntries.map(e => e.key));
-			const updated = externalEntries.map(e => ({ ...e, isImported: localKeys.has(e.key) }));
+			const localRemoteIds = new Set(
+				localEntries
+					.map(e => e.remoteId || e.fields?.['remote-id'])
+					.filter(Boolean)
+			);
+
+			const updated = externalEntries.map(e => ({
+				...e,
+				isImported: localKeys.has(e.key) ||
+					!!(e.remoteId && localRemoteIds.has(e.remoteId))
+			}));
+
 			if (selectedProvider === 'all') {
 				setEntries([...localEntries, ...updated]);
 			} else {
@@ -615,7 +569,8 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 				{
 					targetFile: targetBibFile,
 					duplicateHandling: duplicateHandling as 'keep-local' | 'replace' | 'rename' | 'ask',
-					autoImport
+					autoImport,
+					remoteId: entry.remoteId || entry.fields?.['remote-id']
 				}
 			);
 
@@ -627,6 +582,47 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			setImportingEntries(prev => { const s = new Set(prev); s.delete(entry.key); return s; });
 		}
 	};
+
+	const handleDeleteEntry = useCallback(async (entry: BibEntry) => {
+		if (entry.source !== 'local' || !entry.filePath) return;
+
+		try {
+			await bibliographyImportService.importEntry(
+				entry.key,
+				entry.rawEntry,
+				{
+					targetFile: entry.filePath,
+					action: 'delete',
+					remoteId: entry.remoteId || entry.fields?.['remote-id']
+				}
+			);
+			await fetchLocalEntries();
+			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+		} catch (error) {
+			console.error('[BibliographyContext] Error deleting entry:', error);
+		}
+	}, [fetchLocalEntries]);
+
+	const handleUpdateEntry = useCallback(async (entry: BibEntry, remoteEntry: BibEntry) => {
+		if (!entry.filePath) return;
+
+		try {
+			await bibliographyImportService.importEntry(
+				remoteEntry.key,
+				remoteEntry.rawEntry,
+				{
+					targetFile: entry.filePath,
+					action: 'update',
+					remoteId: remoteEntry.remoteId || remoteEntry.fields?.['remote-id']
+						|| entry.remoteId || entry.fields?.['remote-id']
+				}
+			);
+			await fetchLocalEntries();
+			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+		} catch (error) {
+			console.error('[BibliographyContext] Error updating entry:', error);
+		}
+	}, [fetchLocalEntries]);
 
 	const handleTargetFileChange = async (newValue: string) => {
 		if (newValue === 'CREATE_NEW') {

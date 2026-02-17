@@ -331,9 +331,41 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
         ? processedContent
         : bibtexContent;
 
-      const newContent = sourceContent.trim()
-        ? `${sourceContent.trim()}\n\n${entry.rawEntry.trim()}\n`
-        : `${entry.rawEntry.trim()}\n`;
+      let newContent: string;
+
+      if (entry.action === 'delete') {
+        const escapedKey = entry.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`@\\w+\\s*\\{\\s*${escapedKey}\\s*,[^]*?\\n\\s*\\}\\s*`, 'm');
+        newContent = sourceContent.replace(regex, '').replace(/\n{3,}/g, '\n\n').trim();
+      } else if (entry.action === 'update') {
+        const oldKey = (entry.oldKey || entry.key).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const newKey = entry.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regexOld = new RegExp(`@\\w+\\s*\\{\\s*${oldKey}\\s*,[^]*?\\n\\s*\\}`, 'm');
+        const regexNew = new RegExp(`@\\w+\\s*\\{\\s*${newKey}\\s*,[^]*?\\n\\s*\\}`, 'm');
+        const regex = regexOld.test(sourceContent) ? regexOld : regexNew;
+        if (!regex.test(sourceContent)) return;
+        newContent = sourceContent.replace(regex, entry.rawEntry.trim());
+      } else {
+        newContent = sourceContent.trim()
+          ? `${sourceContent.trim()}\n\n${entry.rawEntry.trim()}\n`
+          : `${entry.rawEntry.trim()}\n`;
+      }
+
+      // If result is empty (e.g. deleted last entry), apply directly to original
+      if (!newContent.trim()) {
+        setBibtexContent('');
+        setParsedEntries([]);
+        setProcessedContent('');
+        setProcessedParsedEntries([]);
+        setCurrentView('original');
+        if (originalViewRef.current) {
+          originalViewRef.current.dispatch({
+            changes: { from: 0, to: originalViewRef.current.state.doc.length, insert: '' }
+          });
+        }
+        setHasChanges(true);
+        return;
+      }
 
       setProcessedContent(newContent);
       setProcessedParsedEntries(parseContent(newContent));
