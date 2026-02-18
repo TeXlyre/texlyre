@@ -28,6 +28,10 @@ const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
         const checkCredentials = async () => {
             const creds = await zoteroService.getStoredCredentials();
             setExistingCredentials(creds);
+            if (creds) {
+                const projectId = getCurrentProjectId();
+                await zoteroService.autoConnect(projectId);
+            }
         };
         checkCredentials();
     }, []);
@@ -49,6 +53,7 @@ const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
     const handleDisconnect = async () => {
         const projectId = getCurrentProjectId();
         await zoteroService.disconnect(projectId);
+        setExistingCredentials(null);
     };
 
     const handleChangeLibrary = () => {

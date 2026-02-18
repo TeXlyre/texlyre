@@ -82,8 +82,32 @@ class ZoteroService {
         }
     }
 
+    async autoConnect(projectId?: string): Promise<void> {
+        const credentials = await this.getStoredCredentials();
+        if (!credentials) return;
+
+        const library = this.getStoredLibrary(projectId);
+        if (!library) return;
+
+        try {
+            this.connectionStatus = 'connecting';
+            this.notifyStatusListeners();
+
+            await zoteroAPIService.testConnection(credentials.apiKey, credentials.userId);
+
+            this.connectionStatus = 'connected';
+            this.notifyStatusListeners();
+        } catch {
+            this.connectionStatus = 'error';
+            this.notifyStatusListeners();
+        }
+    }
+
     async disconnect(projectId?: string): Promise<void> {
-        if (!this.propertiesContext) return;
+        if (!this.secretsContext || !this.propertiesContext) return;
+
+        await this.secretsContext.removeSecret('zotero-bibliography', 'api-key', { scope: 'global' });
+        await this.secretsContext.removeSecret('zotero-bibliography', 'user-id', { scope: 'global' });
 
         this.propertiesContext.setProperty('zotero-library-id', '', { scope: 'project', projectId });
         this.propertiesContext.setProperty('zotero-library-type', '', { scope: 'project', projectId });

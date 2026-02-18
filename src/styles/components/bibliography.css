@@ -575,49 +575,6 @@
 	margin-top: 0.5rem;
 }
 
-.action-button {
-	padding: 0.25rem var(--space-sd);
-	font-size: var(--space-sd);
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;
-	transition: all 0.2s ease;
-	min-width: 70px;
-}
-
-.action-button.import {
-	background-color: var(--color-primary);
-	color: white;
-}
-
-.action-button.import:hover:not(:disabled) {
-	background-color: var(--color-primary-dark);
-}
-
-.action-button.delete {
-	background-color: var(--color-danger);
-	color: white;
-}
-
-.action-button.delete:hover {
-	background-color: var(--color-danger-dark);
-}
-
-.action-button.update {
-	background-color: var(--color-info);
-	color: white;
-}
-
-.action-button.update:hover {
-	background-color: var(--color-info-dark);
-}
-
-.action-button:disabled {
-	background-color: var(--color-secondary);
-	cursor: not-allowed;
-	opacity: 0.6;
-}
-
 .bib-panel-footer {
 	display: flex;
 	justify-content: space-between;
@@ -709,17 +666,6 @@
 	padding: 8px;
 	border-radius: 4px;
 	overflow-x: auto;
-}
-
-.no-provider {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	height: 100px;
-	color: var(--pico-secondary);
-	font-style: italic;
-	text-align: center;
-	padding: 1rem;
 }
 
 @keyframes spin {

@@ -230,6 +230,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 						entryType: entry.entryType,
 						fields: entry.fields,
 						rawEntry: entry.rawEntry,
+						remoteId: entry.remoteId ?? entry.fields['remote-id'] ?? entry.fields['external-id'],
 						source: 'local' as const,
 						filePath: bibFile.path
 					})));
@@ -382,9 +383,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		} else {
 			const localKeys = new Set(localEntries.map(e => e.key));
 			const localRemoteIds = new Set(
-				localEntries
-					.map(e => e.remoteId || e.fields?.['remote-id'])
-					.filter(Boolean)
+				localEntries.map(e => e.remoteId).filter(Boolean)
 			);
 
 			const updated = externalEntries.map(e => ({
@@ -398,6 +397,8 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			} else {
 				setEntries([...localEntries, ...updated.filter(e => !e.isImported)]);
 			}
+			console.log('[merge] localRemoteIds:', [...localRemoteIds]);
+			console.log('[merge] external remoteIds:', externalEntries.map(e => e.remoteId));
 		}
 	}, [selectedProvider, localEntries, externalEntries]);
 
@@ -570,7 +571,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 					targetFile: targetBibFile,
 					duplicateHandling: duplicateHandling as 'keep-local' | 'replace' | 'rename' | 'ask',
 					autoImport,
-					remoteId: entry.remoteId || entry.fields?.['remote-id']
+					remoteId: entry.remoteId
 				}
 			);
 
@@ -593,7 +594,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 				{
 					targetFile: entry.filePath,
 					action: 'delete',
-					remoteId: entry.remoteId || entry.fields?.['remote-id']
+					remoteId: entry.remoteId
 				}
 			);
 			await fetchLocalEntries();
@@ -613,8 +614,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 				{
 					targetFile: entry.filePath,
 					action: 'update',
-					remoteId: remoteEntry.remoteId || remoteEntry.fields?.['remote-id']
-						|| entry.remoteId || entry.fields?.['remote-id']
+					remoteId: remoteEntry.remoteId || entry.remoteId
 				}
 			);
 			await fetchLocalEntries();
