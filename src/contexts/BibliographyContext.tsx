@@ -1,5 +1,4 @@
 // src/contexts/BibliographyContext.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import {
 	type ReactNode,
@@ -110,6 +109,9 @@ export interface BibliographyContextType {
 	refreshAvailableFiles: () => Promise<void>;
 	getLocalEntries: () => Promise<BibEntry[]>;
 	isImporting: (entryKey: string) => boolean;
+
+	importAllExternal: () => Promise<void>;
+	updateAllLocal: () => Promise<void>;
 }
 
 export const BibliographyContext = createContext<BibliographyContextType | null>(null);
@@ -279,98 +281,6 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		setSelectedBibFile(filePath);
 	}, []);
 
-	// Multi-select actions
-	const toggleEntrySelection = useCallback((key: string) => {
-		setSelectedEntryKeys(prev => {
-			const next = new Set(prev);
-			if (next.has(key)) next.delete(key);
-			else next.add(key);
-			return next;
-		});
-	}, []);
-
-	const selectAllVisible = useCallback(() => {
-		setSelectedEntryKeys(new Set(filteredEntries.map(e => e.key)));
-	}, [filteredEntries]);
-
-	const clearSelection = useCallback(() => {
-		setSelectedEntryKeys(new Set());
-	}, []);
-
-	const importSelectedEntries = useCallback(async () => {
-		if (!targetBibFile || isBulkOperating) return;
-		setIsBulkOperating(true);
-		try {
-			const toImport = filteredEntries.filter(
-				e => selectedEntryKeys.has(e.key) && e.source === 'external' && !e.isImported
-			);
-			for (const entry of toImport) {
-				await bibliographyImportService.importEntry(entry.key, entry.rawEntry, {
-					targetFile: targetBibFile,
-					duplicateHandling: duplicateHandling as any,
-					autoImport,
-					remoteId: entry.remoteId
-				});
-			}
-			await fetchLocalEntries();
-			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
-		} finally {
-			setIsBulkOperating(false);
-			clearSelection();
-		}
-	}, [filteredEntries, selectedEntryKeys, targetBibFile, duplicateHandling, autoImport, isBulkOperating]);
-
-	const updateSelectedEntries = useCallback(async () => {
-		if (isBulkOperating) return;
-		setIsBulkOperating(true);
-		try {
-			const localKeys = new Set(localEntries.map(e => e.key));
-			const toUpdate = filteredEntries.filter(
-				e => selectedEntryKeys.has(e.key) && e.source === 'local'
-			);
-			for (const entry of toUpdate) {
-				const remoteEntry = externalEntries.find(ext =>
-					(ext.remoteId && ext.remoteId === entry.remoteId) || ext.key === entry.key
-				);
-				if (remoteEntry && entry.filePath) {
-					await bibliographyImportService.importEntry(remoteEntry.key, remoteEntry.rawEntry, {
-						targetFile: entry.filePath,
-						action: 'update',
-						remoteId: remoteEntry.remoteId || entry.remoteId
-					});
-				}
-			}
-			await fetchLocalEntries();
-			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
-		} finally {
-			setIsBulkOperating(false);
-			clearSelection();
-		}
-	}, [filteredEntries, selectedEntryKeys, localEntries, externalEntries, isBulkOperating]);
-
-	const deleteSelectedEntries = useCallback(async () => {
-		if (isBulkOperating) return;
-		setIsBulkOperating(true);
-		try {
-			const toDelete = filteredEntries.filter(
-				e => selectedEntryKeys.has(e.key) && e.source === 'local'
-			);
-			for (const entry of toDelete) {
-				if (!entry.filePath) continue;
-				await bibliographyImportService.importEntry(entry.key, entry.rawEntry, {
-					targetFile: entry.filePath,
-					action: 'delete',
-					remoteId: entry.remoteId
-				});
-			}
-			await fetchLocalEntries();
-			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
-		} finally {
-			setIsBulkOperating(false);
-			clearSelection();
-		}
-	}, [filteredEntries, selectedEntryKeys, isBulkOperating]);
-
 	useEffect(() => {
 		const collections = new Set<string>();
 		externalEntries.forEach(entry => {
@@ -506,6 +416,69 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			setIsLoading(false);
 		}
 	}, [availableProviders, selectedProvider]);
+
+	const importAllExternal = useCallback(async () => {
+		if (!targetBibFile || isBulkOperating) return;
+		setIsBulkOperating(true);
+		try {
+			const toImport = entries.filter(e => e.source === 'external' && !e.isImported);
+			await bibliographyImportService.batchImport(
+				targetBibFile,
+				toImport.map(e => ({ entryKey: e.key, rawEntry: e.rawEntry, remoteId: e.remoteId })),
+				duplicateHandling as any
+			);
+			await fetchLocalEntries();
+		} finally {
+			setIsBulkOperating(false);
+		}
+	}, [entries, targetBibFile, duplicateHandling, isBulkOperating, fetchLocalEntries]);
+
+	const updateAllLocal = useCallback(async () => {
+		if (isBulkOperating) return;
+		setIsBulkOperating(true);
+		try {
+			const byFile = new Map<string, Array<{ entryKey: string; rawEntry: string; remoteId?: string }>>();
+			for (const entry of localEntries) {
+				const remoteEntry = externalEntries.find(ext =>
+					(ext.remoteId && ext.remoteId === entry.remoteId) || ext.key === entry.key
+				);
+				if (remoteEntry && entry.filePath) {
+					if (!byFile.has(entry.filePath)) byFile.set(entry.filePath, []);
+					byFile.get(entry.filePath)!.push({
+						entryKey: remoteEntry.key,
+						rawEntry: remoteEntry.rawEntry,
+						remoteId: remoteEntry.remoteId || entry.remoteId
+					});
+				}
+			}
+			await Promise.all(
+				Array.from(byFile.entries()).map(([filePath, updates]) =>
+					bibliographyImportService.batchUpdate(filePath, updates)
+				)
+			);
+			await fetchLocalEntries();
+		} finally {
+			setIsBulkOperating(false);
+		}
+	}, [localEntries, externalEntries, isBulkOperating, fetchLocalEntries]);
+
+	// Multi-select actions
+	const toggleEntrySelection = useCallback((key: string) => {
+		setSelectedEntryKeys(prev => {
+			const next = new Set(prev);
+			if (next.has(key)) next.delete(key);
+			else next.add(key);
+			return next;
+		});
+	}, []);
+
+	const selectAllVisible = useCallback(() => {
+		setSelectedEntryKeys(new Set(filteredEntries.map(e => e.key)));
+	}, [filteredEntries]);
+
+	const clearSelection = useCallback(() => {
+		setSelectedEntryKeys(new Set());
+	}, []);
 
 	const mergeEntries = useCallback(() => {
 		if (selectedProvider === 'local') {
@@ -797,6 +770,77 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		}
 	}, [fetchLocalEntries]);
 
+	const deleteSelectedEntries = useCallback(async () => {
+		if (isBulkOperating) return;
+		setIsBulkOperating(true);
+		try {
+			const byFile = new Map<string, Array<{ entryKey: string; remoteId?: string }>>();
+			for (const entry of filteredEntries) {
+				if (!selectedEntryKeys.has(entry.key) || entry.source !== 'local' || !entry.filePath) continue;
+				if (!byFile.has(entry.filePath)) byFile.set(entry.filePath, []);
+				byFile.get(entry.filePath)!.push({ entryKey: entry.key, remoteId: entry.remoteId });
+			}
+			await Promise.all(
+				Array.from(byFile.entries()).map(([filePath, entries]) =>
+					bibliographyImportService.batchDelete(filePath, entries)
+				)
+			);
+			await fetchLocalEntries();
+		} finally {
+			setIsBulkOperating(false);
+			clearSelection();
+		}
+	}, [filteredEntries, selectedEntryKeys, isBulkOperating, fetchLocalEntries, clearSelection]);
+
+	const importSelectedEntries = useCallback(async () => {
+		if (!targetBibFile || isBulkOperating) return;
+		setIsBulkOperating(true);
+		try {
+			const toImport = filteredEntries.filter(
+				e => selectedEntryKeys.has(e.key) && e.source === 'external' && !e.isImported
+			);
+			await bibliographyImportService.batchImport(
+				targetBibFile,
+				toImport.map(e => ({ entryKey: e.key, rawEntry: e.rawEntry, remoteId: e.remoteId })),
+				duplicateHandling as any
+			);
+			await fetchLocalEntries();
+		} finally {
+			setIsBulkOperating(false);
+			clearSelection();
+		}
+	}, [filteredEntries, selectedEntryKeys, targetBibFile, duplicateHandling, isBulkOperating, fetchLocalEntries, clearSelection]);
+
+	const updateSelectedEntries = useCallback(async () => {
+		if (isBulkOperating) return;
+		setIsBulkOperating(true);
+		try {
+			const byFile = new Map<string, Array<{ entryKey: string; rawEntry: string; remoteId?: string }>>();
+			for (const entry of filteredEntries) {
+				if (!selectedEntryKeys.has(entry.key) || entry.source !== 'local' || !entry.filePath) continue;
+				const remoteEntry = externalEntries.find(ext =>
+					(ext.remoteId && ext.remoteId === entry.remoteId) || ext.key === entry.key
+				);
+				if (!remoteEntry) continue;
+				if (!byFile.has(entry.filePath)) byFile.set(entry.filePath, []);
+				byFile.get(entry.filePath)!.push({
+					entryKey: remoteEntry.key,
+					rawEntry: remoteEntry.rawEntry,
+					remoteId: remoteEntry.remoteId || entry.remoteId
+				});
+			}
+			await Promise.all(
+				Array.from(byFile.entries()).map(([filePath, updates]) =>
+					bibliographyImportService.batchUpdate(filePath, updates)
+				)
+			);
+			await fetchLocalEntries();
+		} finally {
+			setIsBulkOperating(false);
+			clearSelection();
+		}
+	}, [filteredEntries, selectedEntryKeys, externalEntries, isBulkOperating, fetchLocalEntries, clearSelection]);
+
 	const handleTargetFileChange = async (newValue: string) => {
 		if (newValue === 'CREATE_NEW') {
 			const created = await createNewBibFile();
@@ -864,6 +908,8 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		setSelectedBibFileFromEditor,
 		handleDeleteEntry,
 		handleUpdateEntry,
+		importAllExternal,
+		updateAllLocal,
 	};
 
 	return (

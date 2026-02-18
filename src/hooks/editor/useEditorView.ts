@@ -828,5 +828,26 @@ export const useEditorView = (
         };
     }, [currentFileId, documentId, isEditingFile]);
 
+    // --- Explicitly refresh files ---
+    useEffect(() => {
+        if (!isEditingFile || !currentFileId) return;
+
+        const handleFileReloaded = async (e: Event) => {
+            const { fileId } = (e as CustomEvent).detail;
+            if (fileId !== currentFileId || !viewRef.current) return;
+            const file = await fileStorageService.getFile(fileId);
+            if (!file?.content) return;
+            const content = typeof file.content === 'string'
+                ? file.content
+                : new TextDecoder().decode(file.content);
+            viewRef.current.dispatch({
+                changes: { from: 0, to: viewRef.current.state.doc.length, insert: content }
+            });
+        };
+
+        document.addEventListener('file-reloaded', handleFileReloaded);
+        return () => document.removeEventListener('file-reloaded', handleFileReloaded);
+    }, [isEditingFile, currentFileId]);
+
     return { viewRef, isUpdatingRef, showSaveIndicator };
 };

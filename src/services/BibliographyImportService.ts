@@ -284,6 +284,104 @@ export class BibliographyImportService {
 		});
 	}
 
+	private async dispatchFileReload(filePath: string): Promise<void> {
+		const file = await fileStorageService.getFileByPath(filePath);
+		if (!file) return;
+		document.dispatchEvent(new CustomEvent('file-reloaded', {
+			detail: { filePath, fileId: file.id }
+		}));
+	}
+
+	async batchImport(
+		filePath: string,
+		entries: Array<{ entryKey: string; rawEntry: string; remoteId?: string }>,
+		duplicateHandling: 'keep-local' | 'replace' | 'rename' | 'ask' = 'keep-local'
+	): Promise<void> {
+		await this.updateContent(filePath, (content) => {
+			let current = content;
+			for (const { entryKey, rawEntry, remoteId } of entries) {
+				const existing = this.parser.parse(current).find(e =>
+					e.key === entryKey ||
+					(remoteId && (e.remoteId || e.fields['remote-id'] || e.fields['external-id']) === remoteId)
+				);
+				if (existing && duplicateHandling === 'keep-local') continue;
+				if (existing && duplicateHandling === 'replace') {
+					const position = this.parser.findEntryPosition(current, existing);
+					if (position) {
+						current = current.substring(0, position.start) +
+							this.formatEntryForAppending(rawEntry).trim() +
+							current.substring(position.end);
+					}
+					continue;
+				}
+				const formatted = this.formatEntryForAppending(rawEntry);
+				current = current.trim() ? `${current.trim()}\n\n${formatted}` : formatted;
+			}
+			return current;
+		});
+		document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+		if (this.openBibFiles.has(filePath)) await this.dispatchFileReload(filePath);
+	}
+
+	async batchUpdate(
+		filePath: string,
+		updates: Array<{ entryKey: string; rawEntry: string; remoteId?: string }>
+	): Promise<void> {
+		await this.updateContent(filePath, (content) => {
+			let current = content;
+			for (const { entryKey, rawEntry, remoteId } of updates) {
+				const existing = this.parser.parse(current).find(e =>
+					e.key === entryKey ||
+					(remoteId && (e.remoteId || e.fields['remote-id'] || e.fields['external-id']) === remoteId)
+				);
+				if (!existing) continue;
+				const remoteFieldKey = existing.fields['external-id'] ? 'external-id' : 'remote-id';
+				const resolvedRemoteId = remoteId || existing.remoteId || existing.fields[remoteFieldKey];
+				const incoming = this.parser.parse(rawEntry)[0];
+				const updatedEntry: BibEntry = {
+					key: existing.key,
+					entryType: incoming?.entryType || existing.entryType,
+					fields: { ...incoming?.fields, ...(resolvedRemoteId ? { [remoteFieldKey]: resolvedRemoteId } : {}) },
+					rawEntry,
+					remoteId: resolvedRemoteId
+				};
+				const position = this.parser.findEntryPosition(current, existing);
+				if (position) {
+					current = current.substring(0, position.start) +
+						this.parser.serializeEntry(updatedEntry) +
+						current.substring(position.end);
+				}
+			}
+			return current;
+		});
+		document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+		if (this.openBibFiles.has(filePath)) await this.dispatchFileReload(filePath);
+	}
+
+	async batchDelete(
+		filePath: string,
+		entries: Array<{ entryKey: string; remoteId?: string }>
+	): Promise<void> {
+		await this.updateContent(filePath, (content) => {
+			let current = content;
+			for (const { entryKey, remoteId } of entries) {
+				const existing = this.parser.parse(current).find(e =>
+					e.key === entryKey ||
+					(remoteId && (e.remoteId || e.fields['remote-id'] || e.fields['external-id']) === remoteId)
+				);
+				if (!existing) continue;
+				const position = this.parser.findEntryPosition(current, existing);
+				if (!position) continue;
+				let end = position.end;
+				while (end < current.length && /[\r\n\s]/.test(current[end])) end++;
+				current = current.substring(0, position.start) + current.substring(end);
+			}
+			return current;
+		});
+		document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+		if (this.openBibFiles.has(filePath)) await this.dispatchFileReload(filePath);
+	}
+
 	async importEntry(
 		entryKey: string,
 		rawEntry: string,

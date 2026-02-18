@@ -5,13 +5,22 @@ import { useEffect, useState } from 'react';
 import type { BibliographyPanelProps } from '@/plugins/PluginInterface';
 import { useSecrets } from '@/hooks/useSecrets';
 import { useProperties } from '@/hooks/useProperties';
-import { GitBranchIcon, DisconnectIcon } from '@/components/common/Icons';
+import { useBibliography } from '@/hooks/useBibliography';
+import { GitBranchIcon, DisconnectIcon, ImportIcon, UpdateIcon } from '@/components/common/Icons';
 import { zoteroService } from './ZoteroService';
 import ZoteroConnectionModal from './ZoteroConnectionModal';
 
 const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
     const secrets = useSecrets();
     const properties = useProperties();
+    const {
+        importAllExternal,
+        updateAllLocal,
+        isBulkOperating,
+        targetBibFile,
+        externalEntries,
+        localEntries,
+    } = useBibliography();
     const [showModal, setShowModal] = useState(false);
     const [existingCredentials, setExistingCredentials] = useState<{ apiKey: string; userId: string } | null>(null);
     const [connectionStatus, setConnectionStatus] = useState(zoteroService.getConnectionStatus());
@@ -58,6 +67,11 @@ const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
         setExistingCredentials(null);
     };
 
+    const hasUpdatable = localEntries.some(e =>
+        externalEntries.some(ext => (ext.remoteId && ext.remoteId === e.remoteId) || ext.key === e.key)
+    );
+    const hasImportable = externalEntries.some(e => !e.isImported);
+
     return (
         <div className={`zotero-panel ${className}`}>
             <div className="zotero-connection-info">
@@ -65,7 +79,7 @@ const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
                     <div className="zotero-not-connected">
                         <p>{t('Connect to your Zotero library to access your bibliography.')}</p>
                         <div className="backup-toolbar">
-                            <div className="primary-actions" >
+                            <div className="primary-actions">
                                 <button className="button primary" onClick={() => setShowModal(true)}>
                                     {t('Connect to Zotero')}
                                 </button>
@@ -85,7 +99,23 @@ const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
                 {connectionStatus === 'connected' && (
                     <div className="zotero-connected">
                         <div className="backup-toolbar">
-                            <div className="primary-actions" />
+                            <div className="primary-actions">
+                                <button
+                                    className="button secondary"
+                                    onClick={updateAllLocal}
+                                    disabled={isBulkOperating || !hasUpdatable}
+                                    title={t('Update all local entries from Zotero')}>
+                                    <UpdateIcon />
+                                    {t('Update')}
+                                </button>
+                                <button
+                                    className="button secondary icon-only"
+                                    onClick={importAllExternal}
+                                    disabled={isBulkOperating || !targetBibFile || !hasImportable}
+                                    title={t('Import all unimported Zotero entries')}>
+                                    <ImportIcon />
+                                </button>
+                            </div>
                             <div className="secondary-actions">
                                 <button
                                     className="button secondary icon-only"
