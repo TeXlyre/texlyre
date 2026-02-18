@@ -7,6 +7,7 @@ import { useBibliography } from '../../hooks/useBibliography';
 import PositionedDropdown from '../common/PositionedDropdown';
 import {
   SyncIcon,
+  UpdateIcon,
   ChevronDownIcon,
   BibliographyIcon,
   OptionsIcon,
@@ -383,7 +384,7 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
                 className="bib-action-button update"
                 onClick={updateSelectedEntries}
                 disabled={isBulkOperating}>
-                <SyncIcon />
+                <UpdateIcon />
                 {t('Update')}
               </button>
             )}
@@ -533,7 +534,7 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
                     const remote = getRemoteEntry(entry);
                     if (remote) handleUpdateEntry(entry, remote);
                   }}>
-                  <SyncIcon />
+                  <UpdateIcon />
                   {t('Update')}
                 </button>
               )}
