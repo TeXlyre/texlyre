@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { BibliographyPanelProps } from '@/plugins/PluginInterface';
 import { useSecrets } from '@/hooks/useSecrets';
 import { useProperties } from '@/hooks/useProperties';
+import { GitBranchIcon, DisconnectIcon } from '@/components/common/Icons';
 import { zoteroService } from './ZoteroService';
 import ZoteroConnectionModal from './ZoteroConnectionModal';
 
@@ -56,20 +57,13 @@ const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
         setExistingCredentials(null);
     };
 
-    const handleChangeLibrary = () => {
-        setShowModal(true);
-    };
-
     return (
         <div className={`zotero-panel ${className}`}>
             <div className="zotero-connection-info">
                 {connectionStatus === 'disconnected' && (
                     <div className="zotero-not-connected">
                         <p>{t('Connect to your Zotero library to access your bibliography.')}</p>
-                        <button
-                            className="button primary"
-                            onClick={() => setShowModal(true)}
-                        >
+                        <button className="button primary" onClick={() => setShowModal(true)}>
                             {t('Connect to Zotero')}
                         </button>
                     </div>
@@ -81,19 +75,22 @@ const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
                             <span className="status-indicator connected">●</span>
                             {t('Connected to Zotero')}
                         </p>
-                        <div className="button-group">
-                            <button
-                                className="button secondary"
-                                onClick={handleChangeLibrary}
-                            >
-                                {t('Change Library')}
-                            </button>
-                            <button
-                                className="button secondary"
-                                onClick={handleDisconnect}
-                            >
-                                {t('Disconnect')}
-                            </button>
+                        <div className="backup-toolbar">
+                            <div className="primary-actions" />
+                            <div className="secondary-actions">
+                                <button
+                                    className="button secondary icon-only"
+                                    onClick={() => setShowModal(true)}
+                                    title={t('Change library')}>
+                                    <GitBranchIcon />
+                                </button>
+                                <button
+                                    className="button secondary icon-only"
+                                    onClick={handleDisconnect}
+                                    title={t('Disconnect')}>
+                                    <DisconnectIcon />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -107,10 +104,7 @@ const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
                 {connectionStatus === 'error' && (
                     <div className="zotero-error">
                         <p className="error-message">{t('Failed to connect to Zotero. Please check your credentials.')}</p>
-                        <button
-                            className="button primary"
-                            onClick={() => setShowModal(true)}
-                        >
+                        <button className="button primary" onClick={() => setShowModal(true)}>
                             {t('Reconnect')}
                         </button>
                     </div>

@@ -212,7 +212,7 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
       <div className="bib-toolbar-content">
         {selectedProvider !== 'local' && (
           <div className="bib-toolbar-section">
-            <div className="bib-toolbar-label">{t('Bib File')}</div>
+            <div className="bib-toolbar-label">{t('Target Bib File')}</div>
             <select
               value={targetBibFile}
               onChange={e => handleTargetFileChange(e.target.value)}
@@ -267,6 +267,8 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
             <option value="all">{t('All Sources')}</option>
             <option value="local">{t('Local Only')}</option>
             <option value="external">{t('External Only')}</option>
+            <option value="synced">{t('Synced (Local)')}</option>
+            <option value="synced-external">{t('Synced (Local + External)')}</option>
           </select>
         </div>
 
@@ -464,7 +466,6 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
             {getEntryTypeLabel(entry.entryType)}
           </span>
           <span className="bib-entry-key">{entry.key}</span>
-          <span className="bib-entry-title-inline">{getDisplayTitle(entry)}</span>
           <div className="bib-entry-meta">
             {year && <span className="bib-entry-year">{year}</span>}
             {isExternal && (
@@ -483,6 +484,9 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
 
         {isExpanded && (
           <div className="bib-entry-expanded" onClick={e => e.stopPropagation()}>
+            <div className="bib-entry-expanded-title">
+              {getDisplayTitle(entry)}
+            </div>
             <div className="bib-entry-expanded-authors">
               {getDisplayAuthors(entry)}
             </div>

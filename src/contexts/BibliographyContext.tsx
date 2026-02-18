@@ -7,8 +7,6 @@ import {
 	useCallback,
 	useEffect,
 	useState,
-	useMemo,
-	useRef,
 } from 'react';
 
 import { pluginRegistry } from '../plugins/PluginRegistry';
@@ -27,7 +25,7 @@ import type { BibEntry, BibliographyFile } from '../types/bibliography';
 export type SortField = 'key' | 'title' | 'author' | 'year';
 export type SortOrder = 'asc' | 'desc';
 export type EntryTypeFilter = 'all' | 'article' | 'book' | 'inproceedings' | 'phdthesis' | 'techreport' | 'misc' | 'online';
-export type SourceFilter = 'all' | 'local' | 'external';
+export type SourceFilter = 'all' | 'local' | 'external' | 'synced' | 'synced-external';
 
 export interface BibliographyContextType {
 	showPanel: boolean;
@@ -516,13 +514,13 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 				isImported: localKeys.has(e.key) || !!(e.remoteId && localRemoteIds.has(e.remoteId))
 			}));
 
-			if (selectedProvider === 'all') {
+			if (selectedProvider === 'all' || sourceFilter === 'synced-external') {
 				setEntries([...localEntries, ...updated]);
 			} else {
 				setEntries([...localEntries, ...updated.filter(e => !e.isImported)]);
 			}
 		}
-	}, [selectedProvider, localEntries, externalEntries]);
+	}, [selectedProvider, localEntries, externalEntries, sourceFilter]);
 
 	useEffect(() => { mergeEntries(); }, [mergeEntries]);
 
@@ -544,7 +542,21 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		}
 
 		// Source filter
-		if (sourceFilter !== 'all') {
+		if (sourceFilter === 'synced') {
+			const externalKeys = new Set(externalEntries.map(e => e.key));
+			const externalRemoteIds = new Set(externalEntries.map(e => e.remoteId).filter(Boolean));
+			result = result.filter(e =>
+				e.source === 'local' &&
+				(externalKeys.has(e.key) || (e.remoteId && externalRemoteIds.has(e.remoteId)))
+			);
+		} else if (sourceFilter === 'synced-external') {
+			const externalKeys = new Set(externalEntries.map(e => e.key));
+			const externalRemoteIds = new Set(externalEntries.map(e => e.remoteId).filter(Boolean));
+			result = result.filter(e =>
+				(e.source === 'local' && (externalKeys.has(e.key) || (e.remoteId && externalRemoteIds.has(e.remoteId)))) ||
+				(e.source === 'external' && !e.isImported)
+			);
+		} else if (sourceFilter !== 'all') {
 			result = result.filter(e => e.source === sourceFilter);
 		}
 
