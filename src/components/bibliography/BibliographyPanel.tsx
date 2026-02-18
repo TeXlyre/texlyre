@@ -1,14 +1,27 @@
-// src/components/lsp/LSPPanel.tsx
+// src/components/bibliography/BibliographyPanel.tsx
 import { t } from '@/i18n';
 import type React from 'react';
-import { useBibliography } from '../../hooks/useBibliography'
-import { SyncIcon, ChevronDownIcon, BibliographyIcon } from '../common/Icons';
+import { useRef, useState } from 'react';
 
-interface LSPPanelProps {
+import { useBibliography } from '../../hooks/useBibliography';
+import PositionedDropdown from '../common/PositionedDropdown';
+import {
+  SyncIcon,
+  ChevronDownIcon,
+  BibliographyIcon,
+  OptionsIcon,
+  ImportIcon,
+  TrashIcon,
+  CheckIcon,
+  CloseIcon,
+} from '../common/Icons';
+import type { BibEntry } from '../../types/bibliography';
+
+interface BibliographyPanelProps {
   className?: string;
 }
 
-const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
+const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
   const {
     showPanel,
     activeTab,
@@ -39,632 +52,663 @@ const LSPPanel: React.FC<LSPPanelProps> = ({ className = '' }) => {
     handleEntryClick,
     handleImportEntry,
     handleTargetFileChange,
-    getConnectionStatus,
-    getStatusColor,
     handleDeleteEntry,
     handleUpdateEntry,
+    getConnectionStatus,
+    getStatusColor,
+    showToolbar,
+    setShowToolbar,
+    sortField,
+    setSortField,
+    sortOrder,
+    setSortOrder,
+    entryTypeFilter,
+    setEntryTypeFilter,
+    sourceFilter,
+    setSourceFilter,
+    selectedCollection,
+    setSelectedCollection,
+    availableCollections,
+    isMultiSelectMode,
+    setIsMultiSelectMode,
+    selectedEntryKeys,
+    toggleEntrySelection,
+    selectAllVisible,
+    clearSelection,
+    importSelectedEntries,
+    updateSelectedEntries,
+    deleteSelectedEntries,
+    isBulkOperating,
   } = useBibliography();
 
-  const getEntryTypeIcon = (entryType: string) => {
+  const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set());
+  const providerGroupRef = useRef<HTMLDivElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+
+  const toggleExpand = (key: string, e: React.MouseEvent) => {
+    if (isMultiSelectMode) return;
+    e.stopPropagation();
+    setExpandedEntries(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const getEntryTypeLabel = (entryType: string) => {
     switch (entryType.toLowerCase()) {
-      case 'article': return '📄';
-      case 'book': return '📚';
+      case 'article': return 'ART';
+      case 'book': return 'BOOK';
       case 'inproceedings':
-      case 'conference': return '📋';
-      case 'phdthesis':
-      case 'mastersthesis':
-      case 'thesis': return '🎓';
-      case 'techreport': return '📊';
-      case 'misc':
-      case 'online': return '🌐';
+      case 'conference': return 'CONF';
+      case 'phdthesis': return 'PHD';
+      case 'mastersthesis': return 'MSC';
+      case 'techreport': return 'REP';
+      case 'misc': return 'MISC';
+      case 'online': return 'WEB';
       case 'inbook':
-      case 'incollection': return '📖';
-      default: return '📄';
+      case 'incollection': return 'CHAP';
+      default: return entryType.slice(0, 4).toUpperCase();
     }
   };
 
-  const getDisplayTitle = (entry: any): string => {
-    return entry.fields.title || entry.fields.booktitle || 'Untitled';
-  };
+  const getDisplayTitle = (entry: BibEntry) =>
+    entry.fields.title || entry.fields.booktitle || t('Untitled');
 
-  const getDisplayAuthors = (entry: any): string => {
+  const getDisplayAuthors = (entry: BibEntry) => {
     const author = entry.fields.author || entry.fields.editor;
-    if (!author) return 'Unknown author';
-
+    if (!author) return t('Unknown author');
     const authors = author.split(' and ').map((a: string) => a.trim());
     if (authors.length === 1) return authors[0];
-    if (authors.length === 2) return `${authors[0]} and ${authors[1]}`;
+    if (authors.length === 2) return `${authors[0]} & ${authors[1]}`;
     return `${authors[0]} et al.`;
   };
 
-  const getDisplayYear = (entry: any): string => {
-    return entry.fields.year || entry.fields.date || '';
+  const getDisplayYear = (entry: BibEntry) =>
+    entry.fields.year || entry.fields.date || '';
+
+  const getDisplayVenue = (entry: BibEntry) =>
+    entry.fields.journal ||
+    entry.fields.booktitle ||
+    entry.fields.publisher ||
+    entry.fields.school ||
+    entry.fields.institution || '';
+
+  const getUniqueKey = (entry: BibEntry, index: number) => {
+    const base = `${entry.source}-${entry.key}`;
+    return entry.source === 'local' && entry.filePath
+      ? `${base}-${entry.filePath.replace(/[^a-zA-Z0-9]/g, '_')}-${index}`
+      : `${base}-${index}`;
   };
 
-  const getDisplayVenue = (entry: any): string => {
-    return entry.fields.journal ||
-      entry.fields.booktitle ||
-      entry.fields.publisher ||
-      entry.fields.school ||
-      entry.fields.institution || '';
-  };
+  const hasUpdateAvailable = (entry: BibEntry) =>
+    entry.source === 'local' &&
+    externalEntries.some(ext =>
+      (ext.remoteId && ext.remoteId === entry.remoteId) || ext.key === entry.key
+    );
 
-  const getCitationPreview = (entry: any): string => {
-    switch (citationStyle) {
-      case 'author-year':
-        const authors = getDisplayAuthors(entry);
-        const year = getDisplayYear(entry);
-        return `(${authors}, ${year})`;
-      case 'alphabetic':
-        return `[${entry.key.substring(0, 6)}]`;
-      case 'numeric':
-      default:
-        const localEntryIndex = localEntries.findIndex((e) => e.key === entry.key);
-        const index = localEntryIndex >= 0 ? localEntryIndex + 1 : entries.indexOf(entry) + 1;
-        return `[${index}]`;
+  const getRemoteEntry = (entry: BibEntry) =>
+    externalEntries.find(ext =>
+      (ext.remoteId && ext.remoteId === entry.remoteId) || ext.key === entry.key
+    );
+
+  const hasActiveFilters =
+    entryTypeFilter !== 'all' || sourceFilter !== 'all' || selectedCollection !== 'all';
+
+  const selectedCount = selectedEntryKeys.size;
+  const canImportSelected = filteredEntries.some(
+    e => selectedEntryKeys.has(e.key) && e.source === 'external' && !e.isImported
+  );
+  const canUpdateSelected = filteredEntries.some(
+    e => selectedEntryKeys.has(e.key) && hasUpdateAvailable(e)
+  );
+  const canDeleteSelected = filteredEntries.some(
+    e => selectedEntryKeys.has(e.key) && e.source === 'local'
+  );
+
+  if (!showPanel) return null;
+
+  const renderProviderDropdown = () => (
+    <PositionedDropdown
+      isOpen={showDropdown}
+      triggerElement={providerGroupRef.current}
+      className="bib-dropdown">
+      {availableProviders.length > 1 && (
+        <div className="bib-dropdown-item" onClick={() => handleProviderSelect('all')}>
+          <span className="service-indicator" />
+          {t('All Sources')}
+        </div>
+      )}
+      <div className="bib-dropdown-item" onClick={() => handleProviderSelect('local')}>
+        <BibliographyIcon />
+        {t('Local Bibliography')}
+      </div>
+      {availableProviders.map(provider => {
+        const IconComponent = provider.icon;
+        return (
+          <div
+            key={provider.id}
+            className="bib-dropdown-item"
+            onClick={() => handleProviderSelect(provider.id)}>
+            <span className="service-indicator" style={{
+              fontSize: '8px',
+              color: provider.getConnectionStatus() === 'connected' ? '#28a745' : '#666'
+            }}>●</span>
+            {IconComponent && <IconComponent />}
+            {provider.name}
+          </div>
+        );
+      })}
+    </PositionedDropdown>
+  );
+
+  const renderToolbar = () => (
+    <PositionedDropdown
+      isOpen={showToolbar}
+      triggerElement={toolbarRef.current}
+      className="bib-toolbar-dropdown"
+      align="right">
+      <div className="bib-toolbar-content">
+        {selectedProvider !== 'local' && (
+          <div className="bib-toolbar-section">
+            <div className="bib-toolbar-label">{t('Bib File')}</div>
+            <select
+              value={targetBibFile}
+              onChange={e => handleTargetFileChange(e.target.value)}
+              className="bib-toolbar-select">
+              <option value="">{t('Select file...')}</option>
+              <option value="CREATE_NEW">{t('+ Create new...')}</option>
+              {availableBibFiles.map(f => (
+                <option key={f.path} value={f.path}>{f.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {availableCollections.length > 0 && (
+          <div className="bib-toolbar-section">
+            <div className="bib-toolbar-label">{t('Collection')}</div>
+            <select
+              value={selectedCollection}
+              onChange={e => setSelectedCollection(e.target.value)}
+              className="bib-toolbar-select">
+              <option value="all">{t('All Collections')}</option>
+              {availableCollections.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <div className="bib-toolbar-section">
+          <div className="bib-toolbar-label">{t('Entry Type')}</div>
+          <select
+            value={entryTypeFilter}
+            onChange={e => setEntryTypeFilter(e.target.value as any)}
+            className="bib-toolbar-select">
+            <option value="all">{t('All Types')}</option>
+            <option value="article">{t('Article')}</option>
+            <option value="book">{t('Book')}</option>
+            <option value="inproceedings">{t('Conference')}</option>
+            <option value="phdthesis">{t('Thesis')}</option>
+            <option value="techreport">{t('Report')}</option>
+            <option value="misc">{t('Misc')}</option>
+            <option value="online">{t('Online')}</option>
+          </select>
+        </div>
+
+        <div className="bib-toolbar-section">
+          <div className="bib-toolbar-label">{t('Source')}</div>
+          <select
+            value={sourceFilter}
+            onChange={e => setSourceFilter(e.target.value as any)}
+            className="bib-toolbar-select">
+            <option value="all">{t('All Sources')}</option>
+            <option value="local">{t('Local Only')}</option>
+            <option value="external">{t('External Only')}</option>
+          </select>
+        </div>
+
+        <div className="bib-toolbar-section bib-toolbar-sort">
+          <div className="bib-toolbar-label">{t('Sort')}</div>
+          <div className="bib-toolbar-sort-row">
+            <select
+              value={sortField}
+              onChange={e => setSortField(e.target.value as any)}
+              className="bib-toolbar-select bib-toolbar-sort-field">
+              <option value="key">{t('Key')}</option>
+              <option value="title">{t('Title')}</option>
+              <option value="author">{t('Author')}</option>
+              <option value="year">{t('Year')}</option>
+            </select>
+            <button
+              className={`bib-sort-order-toggle ${sortOrder === 'desc' ? 'desc' : ''}`}
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              title={sortOrder === 'asc' ? t('Ascending') : t('Descending')}>
+              {sortOrder === 'asc' ? '↑' : '↓'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </PositionedDropdown>
+  );
+
+  const renderControls = () => (
+    <div className="bib-controls">
+      <div className="bib-button-group" ref={providerGroupRef}>
+        <div
+          className={`bib-status-indicator main-button ${getConnectionStatus()}`}
+          onClick={() => setShowDropdown(!showDropdown)}>
+          <div className="status-dot" style={{ backgroundColor: getStatusColor() }} />
+          {selectedProvider === 'all' ? (
+            <span className="bib-label">{t('All Sources')}</span>
+          ) : selectedProvider === 'local' ? (
+            <span className="bib-label"><BibliographyIcon />{t('Local')}</span>
+          ) : currentProvider ? (
+            <>
+              {currentProvider.icon && <currentProvider.icon />}
+              <span className="bib-label">{currentProvider.name}</span>
+            </>
+          ) : (
+            <span className="bib-label">{t('No Source')}</span>
+          )}
+        </div>
+        <button
+          className={`bib-dropdown-toggle ${getConnectionStatus()}`}
+          onClick={() => setShowDropdown(!showDropdown)}>
+          <ChevronDownIcon />
+        </button>
+      </div>
+
+      {renderProviderDropdown()}
+
+      <div className="bib-secondary-actions">
+        <div ref={toolbarRef}>
+          <button
+            className={`bib-icon-button ${showToolbar || hasActiveFilters ? 'active' : ''}`}
+            onClick={() => setShowToolbar(!showToolbar)}
+            title={t('Filters & Options')}>
+            <OptionsIcon />
+            {hasActiveFilters && <span className="bib-filter-badge" />}
+          </button>
+        </div>
+
+        <button
+          className={`bib-icon-button ${isMultiSelectMode ? 'active' : ''}`}
+          onClick={() => {
+            setIsMultiSelectMode(!isMultiSelectMode);
+            clearSelection();
+          }}
+          title={t('Multi-select')}>
+          <CheckIcon />
+        </button>
+
+        <button
+          className="bib-icon-button"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          title={t('Refresh')}>
+          <SyncIcon />
+        </button>
+      </div>
+
+      {renderToolbar()}
+    </div>
+  );
+
+  const renderSearchBar = () => {
+    if (isMultiSelectMode) {
+      return (
+        <div className="bib-multiselect-bar">
+          <span className="bib-select-count">
+            {selectedCount > 0
+              ? `${selectedCount} ${t('selected')}`
+              : t('None selected')}
+          </span>
+          <div className="bib-multiselect-actions">
+            {canImportSelected && (
+              <button
+                className="bib-action-button import"
+                onClick={importSelectedEntries}
+                disabled={isBulkOperating || !targetBibFile}>
+                <ImportIcon />
+                {t('Import')}
+              </button>
+            )}
+            {canUpdateSelected && (
+              <button
+                className="bib-action-button update"
+                onClick={updateSelectedEntries}
+                disabled={isBulkOperating}>
+                <SyncIcon />
+                {t('Update')}
+              </button>
+            )}
+            {canDeleteSelected && (
+              <button
+                className="bib-action-button delete"
+                onClick={deleteSelectedEntries}
+                disabled={isBulkOperating}>
+                <TrashIcon />
+                {t('Delete')}
+              </button>
+            )}
+            <button
+              className="bib-multiselect-select-all"
+              onClick={selectedCount === filteredEntries.length ? clearSelection : selectAllVisible}>
+              {selectedCount === filteredEntries.length ? t('Deselect All') : t('Select All')}
+            </button>
+          </div>
+        </div>
+      );
     }
+
+    return (
+      <div className="bib-panel-search">
+        <input
+          type="text"
+          placeholder={
+            selectedProvider === 'all' ? t('Search all sources...') :
+              selectedProvider === 'local' ? t('Search local bibliography...') :
+                t('Search bibliography...')
+          }
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          className="bib-search-input" />
+        {searchQuery && (
+          <button className="bib-clear-search-button" onClick={() => setSearchQuery('')}>
+            ×
+          </button>
+        )}
+      </div>
+    );
   };
 
-  const getSourceIndicator = (entry: any) => {
-    if (entry.source === 'local') {
-      return <span className="entry-source local" title={t('Local')}>✓</span>;
-    } else if (entry.isImported) {
-      return <span className="entry-source imported" title={t('Already imported')}>✓</span>;
-    } else if (importingEntries.has(entry.key)) {
-      return <span className="entry-source importing" title={t('Importing...')}>⏳</span>;
-    } else {
-      return <span className="entry-source external" title={t('Click to import')}>⬇</span>;
-    }
+  const renderEntryCard = (entry: BibEntry, index: number) => {
+    const isExpanded = expandedEntries.has(entry.key);
+    const isSelected = selectedEntryKeys.has(entry.key);
+    const isExternal = entry.source === 'external' && !entry.isImported;
+    const hasUpdate = hasUpdateAvailable(entry);
+    const year = getDisplayYear(entry);
+    const key = getUniqueKey(entry, index);
+
+    return (
+      <div
+        key={key}
+        className={[
+          'bib-entry-item',
+          isExternal ? 'external-entry' : '',
+          isExpanded ? 'expanded' : '',
+          isSelected ? 'selected' : '',
+          isMultiSelectMode ? 'multiselect' : '',
+        ].filter(Boolean).join(' ')}
+        onClick={e => {
+          if (isMultiSelectMode) {
+            toggleEntrySelection(entry.key);
+          } else {
+            toggleExpand(entry.key, e);
+          }
+        }}>
+
+        {isMultiSelectMode && (
+          <div className="bib-entry-checkbox checkbox-group">
+            <div className={`checkbox ${isSelected ? 'checked' : ''}`}>
+              {isSelected && <CheckIcon />}
+            </div>
+          </div>
+        )}
+
+        <div className="bib-entry-collapsed">
+          <span className={`bib-entry-type-pill ${entry.entryType.toLowerCase()}`}>
+            {getEntryTypeLabel(entry.entryType)}
+          </span>
+          <span className="bib-entry-key">{entry.key}</span>
+          <span className="bib-entry-title-inline">{getDisplayTitle(entry)}</span>
+          <div className="bib-entry-meta">
+            {year && <span className="bib-entry-year">{year}</span>}
+            {isExternal && (
+              <span className="bib-entry-source-badge external" title={t('Not imported')}>↓</span>
+            )}
+            {entry.source === 'local' && (
+              <span className="bib-entry-source-badge local" title={entry.filePath || t('Local')}>
+                {entry.filePath ? entry.filePath.split('/').pop()?.replace('.bib', '') : '✓'}
+              </span>
+            )}
+            {hasUpdate && (
+              <span className="bib-entry-source-badge update" title={t('Update available')}>↻</span>
+            )}
+          </div>
+        </div>
+
+        {isExpanded && (
+          <div className="bib-entry-expanded" onClick={e => e.stopPropagation()}>
+            <div className="bib-entry-expanded-authors">
+              {getDisplayAuthors(entry)}
+            </div>
+            {getDisplayVenue(entry) && (
+              <div className="bib-entry-expanded-venue">
+                <em>{getDisplayVenue(entry)}</em>
+              </div>
+            )}
+            {entry.fields.volume && entry.fields.pages && (
+              <div className="bib-entry-expanded-detail">
+                {t('Vol.')} {entry.fields.volume}
+                {entry.fields.number ? `, No. ${entry.fields.number}` : ''}{t(', pp.')} {entry.fields.pages}
+              </div>
+            )}
+            {entry.fields.doi && (
+              <div className="bib-entry-expanded-doi">
+                DOI: {entry.fields.doi}
+              </div>
+            )}
+
+            <div className="bib-entry-hover-actions">
+              {isExternal && (
+                <button
+                  className="bib-action-button import"
+                  disabled={importingEntries.has(entry.key)}
+                  onClick={e => { e.stopPropagation(); handleImportEntry(entry); }}>
+                  <ImportIcon />
+                  {importingEntries.has(entry.key) ? t('Importing...') : t('Import')}
+                </button>
+              )}
+              {entry.source === 'local' && (
+                <button
+                  className="bib-action-button delete"
+                  onClick={e => { e.stopPropagation(); handleDeleteEntry(entry); }}>
+                  <TrashIcon />
+                  {t('Delete')}
+                </button>
+              )}
+              {hasUpdate && (
+                <button
+                  className="bib-action-button update"
+                  onClick={e => {
+                    e.stopPropagation();
+                    const remote = getRemoteEntry(entry);
+                    if (remote) handleUpdateEntry(entry, remote);
+                  }}>
+                  <SyncIcon />
+                  {t('Update')}
+                </button>
+              )}
+              <button
+                className="bib-action-button detail"
+                onClick={e => {
+                  e.stopPropagation();
+                  handleItemSelect({
+                    key: entry.key,
+                    entryType: entry.entryType,
+                    fields: entry.fields,
+                    rawEntry: entry.rawEntry,
+                    title: entry.fields.title || '',
+                    authors: entry.fields.author ? [entry.fields.author] : [],
+                    year: entry.fields.year || '',
+                    journal: entry.fields.journal || entry.fields.booktitle || '',
+                  });
+                }}>
+                {t('Detail')}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
-  const getUniqueKey = (entry: any, index: number): string => {
-    const baseKey = `${entry.source}-${entry.key}`;
-    if (entry.source === 'local' && entry.filePath) {
-      return `${baseKey}-${entry.filePath.replace(/[^a-zA-Z0-9]/g, '_')}-${index}`;
+  const renderList = () => {
+    if (selectedProvider !== 'local' && selectedProvider !== 'all' && !currentProvider) {
+      return <div className="bib-loading-indicator">{t('Initializing...')}</div>;
     }
-    return `${baseKey}-${index}`;
+    if (selectedProvider !== 'local' && currentProvider?.getConnectionStatus() !== 'connected' && selectedProvider !== 'all') {
+      return (
+        <div className="bib-loading-indicator">
+          {t('Connecting...')} ({currentProvider?.getConnectionStatus()})
+        </div>
+      );
+    }
+    if (isLoading) {
+      return <div className="bib-loading-indicator">{t('Loading...')}</div>;
+    }
+    if (filteredEntries.length === 0) {
+      return (
+        <div className="bib-no-entries">
+          {searchQuery ? t('No entries match your search') : t('No entries available')}
+          {localEntries.length === 0 && !searchQuery && (
+            <div className="bib-no-entries-hint">
+              {t('Add .bib files to your project to see local bibliography entries.')}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="bib-entries-list">
+        {filteredEntries.map((entry, index) => renderEntryCard(entry, index))}
+      </div>
+    );
   };
 
   const renderDetailView = () => {
     if (!selectedItem) {
-      return (
-        <div className="no-selection">{t('Select an item from the Items tab to view details')}
-
-        </div>);
-
+      return <div className="no-selection">{t('Select an entry from the Items tab')}</div>;
     }
+
+    const sortedEntries = Object.entries(selectedItem)
+      .filter(([key]) => key !== 'title' && key !== 'label')
+      .sort(([a], [b]) => {
+        const isObjA = typeof selectedItem[a] === 'object' && !Array.isArray(selectedItem[a]);
+        const isObjB = typeof selectedItem[b] === 'object' && !Array.isArray(selectedItem[b]);
+        if (a === 'rawEntry') return 1;
+        if (b === 'rawEntry') return -1;
+        if (isObjA && !isObjB) return 1;
+        if (!isObjA && isObjB) return -1;
+        return 0;
+      });
 
     return (
       <div className="reference-detail">
-        <h4>{selectedItem.title || selectedItem.label || selectedItem.key}</h4>
-        {Object.entries(selectedItem).
-          filter(([key]) => key !== 'title' && key !== 'label').
-          sort(([keyA], [keyB]) => {
-            const isObjectA = typeof selectedItem[keyA] === 'object' && !Array.isArray(selectedItem[keyA]);
-            const isObjectB = typeof selectedItem[keyB] === 'object' && !Array.isArray(selectedItem[keyB]);
-            const isRawA = keyA === 'rawEntry';
-            const isRawB = keyB === 'rawEntry';
-
-            if ((isObjectA || isRawA) && !(isObjectB || isRawB)) return 1;
-            if (!(isObjectA || isRawA) && (isObjectB || isRawB)) return -1;
-            if (isRawA && !isRawB) return 1;
-            if (!isRawA && isRawB) return -1;
-            return 0;
-          }).
-          map(([key, value]) => {
-            if (!value || Array.isArray(value) && value.length === 0) return null;
-
-            if (typeof value === 'object' && !Array.isArray(value)) {
-              return (
-                <div key={key}>
-                  <p><strong>{key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}:</strong></p>
-                  <div className="detail-nested">
-                    {Object.entries(value).map(([subKey, subValue]) =>
-                      <p key={subKey}>
-                        <strong>{subKey}:</strong> {String(subValue)}
-                      </p>
-                    )}
-                  </div>
-                </div>);
-
-            }
-
-            const displayValue = Array.isArray(value) ? value.join(', ') : String(value);
-            const displayKey = key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
-
-            if (key === 'rawEntry') {
-              return (
-                <div key={key}>
-                  <p><strong>{displayKey}:</strong></p>
-                  <pre className="raw-entry">
-                    {displayValue}
-                  </pre>
-                </div>);
-
-            }
-
+        <h4>{selectedItem.title || selectedItem.key}</h4>
+        {sortedEntries.map(([key, value]) => {
+          if (!value || (Array.isArray(value) && value.length === 0)) return null;
+          const displayKey = key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
+          if (key === 'rawEntry') {
             return (
-              <p key={key}>
-                <strong>{displayKey}:</strong> {displayValue}
-              </p>);
-
-          })
-        }
-      </div>);
-
-  };
-
-  const renderBibliographyList = () => {
-    const targetFileOptions = [
-      { label: 'Create new bibliography.bib', value: 'CREATE_NEW' },
-      ...availableBibFiles.map((file) => ({
-        label: file.name,
-        value: file.path
-      }))];
-
-
-    return (
-      <div className="bib-provider-panel">
-        <div className="bib-panel-search">
-          <input
-            type="text"
-            placeholder={
-              selectedProvider === 'all' ? t('Search all bibliography sources...') :
-                selectedProvider === 'local' ? t('Search local bibliography...') :
-                  t('Search bibliography...')
-            }
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="bib-search-input" />
-
-          {searchQuery &&
-            <button
-              className="bib-clear-search-button"
-              onClick={() => setSearchQuery('')}>
-
-              ×
-            </button>
+              <div key={key}>
+                <p><strong>{displayKey}:</strong></p>
+                <pre className="raw-entry">{String(value)}</pre>
+              </div>
+            );
           }
-        </div>
-
-        {selectedProvider !== 'all' && selectedProvider !== 'local' &&
-          <div className="target-file-selector">
-            <label className="target-file-label">{t('Bib File:')}
-
-            </label>
-            <select
-              value={targetBibFile}
-              onChange={(e) => handleTargetFileChange(e.target.value)}
-              className="target-file-select">
-
-              <option value="">{t('Select target file...')}</option>
-              {targetFileOptions.map((option) =>
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              )}
-            </select>
-            {availableBibFiles.length === 0 &&
-              <div className="target-file-hint">{t('No .bib files found. Create one to start importing entries.')}
-
+          if (typeof value === 'object' && !Array.isArray(value)) {
+            return (
+              <div key={key}>
+                <p><strong>{displayKey}:</strong></p>
+                <div className="detail-nested">
+                  {Object.entries(value as Record<string, unknown>).map(([sk, sv]) => (
+                    <p key={sk}><strong>{sk}:</strong> {String(sv)}</p>
+                  ))}
+                </div>
               </div>
-            }
-            {currentProvider && targetBibFile &&
-              <div className="target-file-hint">{t('Target set for')}
-                {currentProvider.name}: {availableBibFiles.find((f) => f.path === targetBibFile)?.name || 'Unknown file'}
-              </div>
-            }
-          </div>
-        }
-
-        <div className="bib-panel-content">
-          {selectedProvider === 'all' ? renderAggregatedContent() : renderSingleProviderContent()}
-        </div>
-
-        <div className="bib-panel-footer">
-          <div className="bib-footer-stats">
-            {entries.length > 0 &&
-              <div>
-                <span className="bib-entry-count">
-                  {selectedProvider === 'all' ?
-                    `${entries.length} entries from ${availableProviders.filter((p) => p.getConnectionStatus() === 'connected').length} providers` :
-                    selectedProvider === 'local' ?
-                      `${localEntries.length} local entries` :
-                      `${localEntries.length} local, ${externalEntries.filter((e) => !e.isImported).length} external`
-                  }
-                  {citationStyle !== 'numeric' && ` (${citationStyle} style)`}
-                </span>
-                {targetBibFile && selectedProvider !== 'all' && selectedProvider !== 'local' &&
-                  <div className="bib-footer-target">{t('Target File:')}
-                    {availableBibFiles.find((f) => f.path === targetBibFile)?.name || 'Unknown file'}
-                  </div>
-                }
-              </div>
-            }
-          </div>
-          <div className="bib-footer-actions">
-            <button
-              className="bib-refresh-button"
-              onClick={handleRefresh}
-              disabled={isLoading}>
-
-              {isLoading ? t('Refreshing...') : t('Refresh')}
-            </button>
-          </div>
-        </div>
-      </div>);
-
-  };
-
-  const renderAggregatedContent = () => {
-    if (!availableProviders.some((p) => p.getConnectionStatus() === 'connected')) {
-      return <div className="bib-loading-indicator">{t('No LSP providers are currently connected.')}</div>;
-    }
-
-    if (isLoading) {
-      return <div className="bib-loading-indicator">{t('Loading from all providers...')}</div>;
-    }
-
-    if (filteredEntries.length === 0) {
-      return (
-        <div className="bib-no-entries">
-          {searchQuery ?
-            'No entries found matching the search criteria across all providers' :
-            'No entries available from any connected provider'
+            );
           }
-        </div>);
-
-    }
-
-    return (
-      <div className="bib-entries-list">
-        {filteredEntries.map((entry, index) =>
-          <div
-            key={getUniqueKey(entry, index)}
-            className={`bib-entry-item ${entry.source === 'external' && !entry.isImported ? 'external-entry' : ''}`}
-            onClick={() => handleEntryClick(entry)}>
-
-            <div className="bib-entry-header">
-              <span className="bib-entry-key">{entry.key}</span>
-              {entry.providerName &&
-                <span className="bib-entry-provider" title={`From ${entry.providerName}`}>
-                  [{entry.providerName}]
-                </span>
-              }
-              {getSourceIndicator(entry)}
-            </div>
-            <div className="bib-entry-type-badge">
-              <div className="bib-entry-type-content">
-                <span className="bib-entry-type-icon">
-                  {getEntryTypeIcon(entry.entryType)}
-                </span>
-                <span className="bib-entry-type-text">
-                  {entry.entryType.toUpperCase()}
-                </span>
-              </div>
-              {getDisplayYear(entry) &&
-                <span className="bib-entry-year">{getDisplayYear(entry)}</span>
-              }
-            </div>
-            <div className="bib-entry-title">
-              {getDisplayTitle(entry)}
-            </div>
-            <div className="bib-entry-authors">{getDisplayAuthors(entry)}</div>
-            {getDisplayVenue(entry) &&
-              <div className="bib-entry-venue">
-                <em>{getDisplayVenue(entry)}</em>
-              </div>
-            }
-            {entry.fields.volume && entry.fields.pages &&
-              <div className="bib-entry-details">{t('Vol.')}
-                {entry.fields.volume}
-                {entry.fields.number && `, No. ${entry.fields.number}`}{t(', pp.')}
-                {entry.fields.pages}
-              </div>
-            }
-            {entry.fields.doi &&
-              <div className="bib-entry-identifier">{t('DOI: ')}
-                {entry.fields.doi}
-              </div>
-            }
-          </div>
-        )}
-      </div>);
-
+          return (
+            <p key={key}>
+              <strong>{displayKey}:</strong> {Array.isArray(value) ? value.join(', ') : String(value)}
+            </p>
+          );
+        })}
+      </div>
+    );
   };
 
-  const renderSingleProviderContent = () => {
-    if (selectedProvider === 'local') {
-      if (isLoading) {
-        return <div className="bib-loading-indicator">{t('Loading local bibliography...')}</div>;
-      }
-
-      if (filteredEntries.length === 0) {
-        return (
-          <div className="bib-no-entries">
-            {searchQuery ?
-              'No local entries found matching the search criteria' :
-              'No local bibliography entries available'
-            }
-            {localEntries.length === 0 &&
-              <div className="bib-no-entries-hint">{t('Add .bib files to your project to see local bibliography entries.')}
-
-              </div>
-            }
-          </div>);
-
-      }
-    } else {
-      if (!currentProvider) {
-        return <div className="bib-loading-indicator">{t('Initializing LSP...')}</div>;
-      }
-
-      if (currentProvider.getConnectionStatus() !== 'connected') {
-        return (
-          <div className="bib-loading-indicator">{t('Connecting to LSP server... (')}
-            {currentProvider.getConnectionStatus()})
-          </div>);
-
-      }
-
-      if (isLoading) {
-        return <div className="bib-loading-indicator">{t('Loading bibliography...')}</div>;
-      }
-
-      if (filteredEntries.length === 0) {
-        return (
-          <div className="bib-no-entries">
-            {searchQuery ?
-              'No entries found matching the search criteria' :
-              'No bibliography entries available'
-            }
-            {localEntries.length === 0 &&
-              <div className="bib-no-entries-hint">{t('Add .bib files to your project or connect to an external bibliography source.')}
-
-              </div>
-            }
-          </div>);
-
-      }
-    }
-
-    return (
-      <div className="bib-entries-list">
-        {filteredEntries.map((entry, index) =>
-          <div
-            key={getUniqueKey(entry, index)}
-            className={`bib-entry-item ${entry.source === 'external' && !entry.isImported ? 'external-entry' : ''}`}>
-
-            <div className="bib-entry-header" onClick={() => handleEntryClick(entry)}>
-              <span className="bib-entry-key">{entry.key}</span>
-              {getSourceIndicator(entry)}
-            </div>
-
-            <div className="bib-entry-content" onClick={() => handleEntryClick(entry)}>
-              <div className="bib-entry-type-badge">
-                <div className="bib-entry-type-content">
-                  <span className="bib-entry-type-icon">
-                    {getEntryTypeIcon(entry.entryType)}
-                  </span>
-                  <span className="bib-entry-type-text">
-                    {entry.entryType.toUpperCase()}
-                  </span>
-                </div>
-                {getDisplayYear(entry) &&
-                  <span className="bib-entry-year">{getDisplayYear(entry)}</span>
-                }
-              </div>
-              <div className="bib-entry-title">
-                {getDisplayTitle(entry)}
-              </div>
-              <div className="bib-entry-authors">{getDisplayAuthors(entry)}</div>
-              {getDisplayVenue(entry) &&
-                <div className="bib-entry-venue">
-                  <em>{getDisplayVenue(entry)}</em>
-                </div>
-              }
-              {entry.fields.volume && entry.fields.pages &&
-                <div className="bib-entry-details">{t('Vol.')}
-                  {entry.fields.volume}
-                  {entry.fields.number && `, No. ${entry.fields.number}`}{t(', pp.')}
-                  {entry.fields.pages}
-                </div>
-              }
-              {entry.fields.doi &&
-                <div className="bib-entry-identifier">{t('DOI: ')}
-                  {entry.fields.doi}
-                </div>
-              }
-            </div>
-
-            {entry.source === 'local' && (
-              <div className="bib-entry-actions">
-                <button
-                  className="action-button delete"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteEntry(entry);
-                  }}
-                  title={t('Delete local entry')}>
-                  {t('Delete')}
-                </button>
-                {externalEntries.some(ext =>
-                  (ext.remoteId && ext.remoteId === entry.remoteId) ||
-                  (ext.key === entry.key)
-                ) && (
-                    <button
-                      className="action-button update"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const remoteEntry = externalEntries.find(ext =>
-                          (ext.remoteId && ext.remoteId === entry.remoteId) ||
-                          (ext.key === entry.key)
-                        );
-                        if (remoteEntry) handleUpdateEntry(entry, remoteEntry);
-                      }}
-                      title={t('Update from remote')}>
-                      {t('Update')}
-                    </button>
-                  )}
-              </div>
-            )}
-
-            {entry.source === 'external' && !entry.isImported && !autoImport && (
-              <div className="bib-entry-actions">
-                <button
-                  className="action-button import"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleImportEntry(entry);
-                  }}
-                  disabled={importingEntries.has(entry.key)}>
-                  {importingEntries.has(entry.key) ? t('Importing...') : t('Import')}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>);
-
-  };
-
-  if (!showPanel) {
-    return null;
-  }
+  const footerStats = selectedProvider === 'all'
+    ? `${entries.length} ${t('entries')}, ${availableProviders.filter(p => p.getConnectionStatus() === 'connected').length} ${t('sources')}`
+    : selectedProvider === 'local'
+      ? `${localEntries.length} ${t('local entries')}`
+      : `${localEntries.length} ${t('local')}, ${externalEntries.filter(e => !e.isImported).length} ${t('external')}`;
 
   return (
     <div className={`bib-panel ${className}`}>
       <div className="bib-panel-header">
         <h3>{t('Bibliography')}</h3>
-
         <div className="view-tabs">
           <button
             className={`tab-button ${activeTab === 'list' ? 'active' : ''}`}
-            onClick={() => setActiveTab('list')}
-            disabled={!selectedItem}>{t('Items')}
-
-
+            onClick={() => setActiveTab('list')}>
+            {t('Items')}
           </button>
           <button
             className={`tab-button ${activeTab === 'detail' ? 'active' : ''}`}
             onClick={() => setActiveTab('detail')}
-            disabled={!selectedItem}>{t('Detail')}
-
-
+            disabled={!selectedItem}>
+            {t('Detail')}
           </button>
         </div>
       </div>
+
       <div className="bib-panel-content">
-        <div className="bib-controls">
-          <div className="bib-indicator-group">
-            <div
-              className={`bib-status-indicator main-button ${getConnectionStatus()}`}
-              onClick={() => setShowDropdown(!showDropdown)}>
-              <div
-                className="status-dot"
-                style={{ backgroundColor: getStatusColor() }} />
-              {selectedProvider === 'all' ?
-                <span className="bib-label">{t('All LSP')}</span> :
-                selectedProvider === 'local' ?
-                  <span className="bib-label"><BibliographyIcon />{t('Local Bibliography')}</span> :
-                  currentProvider ?
-                    <>
-                      <currentProvider.icon />
-                      <span className="bib-label">{currentProvider.name}</span>
-                    </> :
-                    <span className="bib-label">{t('No LSP')}</span>
-              }
-            </div>
+        {renderControls()}
 
-            <button
-              className={`bib-dropdown-toggle ${getConnectionStatus()}`}
-              onClick={() => setShowDropdown(!showDropdown)}>
-              <ChevronDownIcon />
-            </button>
-
-            {showDropdown &&
-              <div className="bib-dropdown">
-                {availableProviders.length > 1 &&
-                  <div
-                    className="bib-dropdown-item"
-                    onClick={() => handleProviderSelect('all')}>{t('All LSP')}
-                  </div>
-                }
-
-                <div
-                  className="bib-dropdown-item"
-                  onClick={() => handleProviderSelect('local')}>
-                  <BibliographyIcon />{t('Local Bibliography')}
-                </div>
-
-                {availableProviders.map((provider) => {
-                  const IconComponent = provider.icon;
-                  const status = provider.getConnectionStatus();
-                  return (
-                    <div
-                      key={provider.id}
-                      className="bib-dropdown-item"
-                      onClick={() => handleProviderSelect(provider.id)}>
-                      <span className="service-indicator">
-                        {status === 'connected' ? '🟢' : ''}
-                      </span>
-                      <IconComponent /> {provider.name}
-                    </div>);
-                })}
+        {activeTab === 'list' ? (
+          <div className="bib-provider-panel">
+            {selectedProvider !== 'all' && selectedProvider !== 'local' && currentProvider?.renderPanel && (
+              <div className="provider-panel-container">
+                <currentProvider.renderPanel
+                  className="provider-panel"
+                  pluginInstance={currentProvider}
+                />
               </div>
-            }
+            )}
+            {renderSearchBar()}
+            <div className="bib-list-container">
+              {renderList()}
+            </div>
+            <div className="bib-panel-footer">
+              <span className="bib-entry-count">{footerStats}</span>
+            </div>
           </div>
-
-          <button
-            className="bib-refresh-button"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            title={
-              selectedProvider === 'all' ? t('Refresh all LSP providers') :
-                selectedProvider === 'local' ? t('Refresh local bibliography') :
-                  `Refresh ${currentProvider?.name || t('LSP')}`
-            }>
-            <SyncIcon />
-          </button>
-        </div>
-
-        {selectedProvider !== 'all' && selectedProvider !== 'local' && currentProvider?.renderPanel && (
-          <div className="provider-panel-container">
-            <currentProvider.renderPanel
-              className="provider-panel"
-              pluginInstance={currentProvider}
-            />
-          </div>
-        )}
-
-        {activeTab === 'list' ?
-          renderBibliographyList() :
-
+        ) : (
           <div className="bib-detail-view">
             <div className="detail-header">
-              <button
-                className="back-button"
-                onClick={handleBackToList}>{t('\u2190 Back to Items')}
-
-
+              <button className="back-button" onClick={handleBackToList}>
+                ← {t('Back to Items')}
               </button>
             </div>
-
             <div className="detail-content">
               {renderDetailView()}
             </div>
           </div>
-        }
+        )}
       </div>
 
-      {showDropdown &&
-        <div
-          className="dropdown-overlay"
-          onClick={() => setShowDropdown(false)} />
-
-      }
-    </div>);
-
+      {showDropdown && (
+        <div className="dropdown-overlay" onClick={() => setShowDropdown(false)} />
+      )}
+    </div>
+  );
 };
 
-export default LSPPanel;
+export default BibliographyPanel;

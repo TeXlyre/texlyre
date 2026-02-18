@@ -24,6 +24,10 @@ import { isBibFile } from '../utils/fileUtils';
 import type { FileNode } from '../types/files';
 import type { BibEntry, BibliographyFile } from '../types/bibliography';
 
+export type SortField = 'key' | 'title' | 'author' | 'year';
+export type SortOrder = 'asc' | 'desc';
+export type EntryTypeFilter = 'all' | 'article' | 'book' | 'inproceedings' | 'phdthesis' | 'techreport' | 'misc' | 'online';
+export type SourceFilter = 'all' | 'local' | 'external';
 
 export interface BibliographyContextType {
 	showPanel: boolean;
@@ -57,6 +61,35 @@ export interface BibliographyContextType {
 	maxCompletions: number;
 	autoImport: boolean;
 	duplicateHandling: string;
+
+	// Toolbar / filter state
+	showToolbar: boolean;
+	setShowToolbar: (show: boolean) => void;
+	sortField: SortField;
+	setSortField: (field: SortField) => void;
+	sortOrder: SortOrder;
+	setSortOrder: (order: SortOrder) => void;
+	entryTypeFilter: EntryTypeFilter;
+	setEntryTypeFilter: (filter: EntryTypeFilter) => void;
+	sourceFilter: SourceFilter;
+	setSourceFilter: (filter: SourceFilter) => void;
+	selectedCollection: string;
+	setSelectedCollection: (collection: string) => void;
+	availableCollections: string[];
+
+	// Multi-select state
+	isMultiSelectMode: boolean;
+	setIsMultiSelectMode: (active: boolean) => void;
+	selectedEntryKeys: Set<string>;
+	toggleEntrySelection: (key: string) => void;
+	selectAllVisible: () => void;
+	clearSelection: () => void;
+
+	// Bulk actions
+	importSelectedEntries: () => Promise<void>;
+	updateSelectedEntries: () => Promise<void>;
+	deleteSelectedEntries: () => Promise<void>;
+	isBulkOperating: boolean;
 
 	handleRefresh: () => Promise<void>;
 	handleProviderSelect: (providerId: string | 'all' | 'local') => void;
@@ -110,6 +143,20 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 	const [importingEntries, setImportingEntries] = useState<Set<string>>(new Set());
 	const [selectedBibFile, setSelectedBibFile] = useState<string>('');
 
+	// Toolbar / filter state
+	const [showToolbar, setShowToolbar] = useState(false);
+	const [sortField, setSortField] = useState<SortField>('key');
+	const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+	const [entryTypeFilter, setEntryTypeFilter] = useState<EntryTypeFilter>('all');
+	const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
+	const [selectedCollection, setSelectedCollection] = useState<string>('all');
+	const [availableCollections, setAvailableCollections] = useState<string[]>([]);
+
+	// Multi-select state
+	const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+	const [selectedEntryKeys, setSelectedEntryKeys] = useState<Set<string>>(new Set());
+	const [isBulkOperating, setIsBulkOperating] = useState(false);
+
 	const currentProvider = availableProviders.find(p => p.id === selectedProvider);
 
 	const getProviderSetting = (settingName: string) => {
@@ -132,38 +179,19 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 	const getPropertyId = (pluginId: string) => `${pluginId}-target-bib-file`;
 
 	const getTargetFile = useCallback((pluginId: string, projectId?: string): string | null => {
-		console.log('[BibliographyContext] getTargetFile called', {
-			pluginId,
-			projectId,
-			selectedBibFile,
-			availableBibFilesCount: availableBibFiles.length
-		});
-
-		if (selectedBibFile) {
-			console.log('[BibliographyContext] Using selected bib file:', selectedBibFile);
-			return selectedBibFile;
-		}
+		if (selectedBibFile) return selectedBibFile;
 
 		const propertyId = getPropertyId(pluginId);
 		const scopeOptions = projectId ? { scope: 'project' as const, projectId } : { scope: 'global' as const };
 		const val = getProperty(propertyId, scopeOptions) as string | null;
 
-		console.log('[BibliographyContext] Property value:', val);
-
-		if (!val) {
-			if (availableBibFiles.length > 0) {
-				console.log('[BibliographyContext] No saved target, but files available:', availableBibFiles.map(f => f.path));
-			}
-			return null;
-		}
+		if (!val) return null;
 
 		if (availableBibFiles.length > 0 && !availableBibFiles.some(f => f.path === val)) {
-			console.log('[BibliographyContext] Saved target not found in available files, clearing');
 			setProperty(propertyId, '', scopeOptions);
 			return null;
 		}
 
-		console.log('[BibliographyContext] Returning saved target:', val);
 		return val;
 	}, [getProperty, setProperty, availableBibFiles, selectedBibFile]);
 
@@ -252,6 +280,107 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 	const setSelectedBibFileFromEditor = useCallback((filePath: string) => {
 		setSelectedBibFile(filePath);
 	}, []);
+
+	// Multi-select actions
+	const toggleEntrySelection = useCallback((key: string) => {
+		setSelectedEntryKeys(prev => {
+			const next = new Set(prev);
+			if (next.has(key)) next.delete(key);
+			else next.add(key);
+			return next;
+		});
+	}, []);
+
+	const selectAllVisible = useCallback(() => {
+		setSelectedEntryKeys(new Set(filteredEntries.map(e => e.key)));
+	}, [filteredEntries]);
+
+	const clearSelection = useCallback(() => {
+		setSelectedEntryKeys(new Set());
+	}, []);
+
+	const importSelectedEntries = useCallback(async () => {
+		if (!targetBibFile || isBulkOperating) return;
+		setIsBulkOperating(true);
+		try {
+			const toImport = filteredEntries.filter(
+				e => selectedEntryKeys.has(e.key) && e.source === 'external' && !e.isImported
+			);
+			for (const entry of toImport) {
+				await bibliographyImportService.importEntry(entry.key, entry.rawEntry, {
+					targetFile: targetBibFile,
+					duplicateHandling: duplicateHandling as any,
+					autoImport,
+					remoteId: entry.remoteId
+				});
+			}
+			await fetchLocalEntries();
+			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+		} finally {
+			setIsBulkOperating(false);
+			clearSelection();
+		}
+	}, [filteredEntries, selectedEntryKeys, targetBibFile, duplicateHandling, autoImport, isBulkOperating]);
+
+	const updateSelectedEntries = useCallback(async () => {
+		if (isBulkOperating) return;
+		setIsBulkOperating(true);
+		try {
+			const localKeys = new Set(localEntries.map(e => e.key));
+			const toUpdate = filteredEntries.filter(
+				e => selectedEntryKeys.has(e.key) && e.source === 'local'
+			);
+			for (const entry of toUpdate) {
+				const remoteEntry = externalEntries.find(ext =>
+					(ext.remoteId && ext.remoteId === entry.remoteId) || ext.key === entry.key
+				);
+				if (remoteEntry && entry.filePath) {
+					await bibliographyImportService.importEntry(remoteEntry.key, remoteEntry.rawEntry, {
+						targetFile: entry.filePath,
+						action: 'update',
+						remoteId: remoteEntry.remoteId || entry.remoteId
+					});
+				}
+			}
+			await fetchLocalEntries();
+			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+		} finally {
+			setIsBulkOperating(false);
+			clearSelection();
+		}
+	}, [filteredEntries, selectedEntryKeys, localEntries, externalEntries, isBulkOperating]);
+
+	const deleteSelectedEntries = useCallback(async () => {
+		if (isBulkOperating) return;
+		setIsBulkOperating(true);
+		try {
+			const toDelete = filteredEntries.filter(
+				e => selectedEntryKeys.has(e.key) && e.source === 'local'
+			);
+			for (const entry of toDelete) {
+				if (!entry.filePath) continue;
+				await bibliographyImportService.importEntry(entry.key, entry.rawEntry, {
+					targetFile: entry.filePath,
+					action: 'delete',
+					remoteId: entry.remoteId
+				});
+			}
+			await fetchLocalEntries();
+			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+		} finally {
+			setIsBulkOperating(false);
+			clearSelection();
+		}
+	}, [filteredEntries, selectedEntryKeys, isBulkOperating]);
+
+	useEffect(() => {
+		const collections = new Set<string>();
+		externalEntries.forEach(entry => {
+			if (entry.fields?.collection) collections.add(entry.fields.collection);
+			if (entry.fields?.groups) entry.fields.groups.split(',').forEach(g => collections.add(g.trim()));
+		});
+		setAvailableCollections(Array.from(collections).filter(Boolean));
+	}, [externalEntries]);
 
 	useEffect(() => {
 		const providers = pluginRegistry.getAllBibliographyPlugins();
@@ -349,9 +478,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 
 	const fetchAllEntries = useCallback(async () => {
 		if (selectedProvider !== 'all') return;
-		const providers = availableProviders.filter(p =>
-			p.getConnectionStatus() === 'connected'
-		);
+		const providers = availableProviders.filter(p => p.getConnectionStatus() === 'connected');
 		if (providers.length === 0) { setExternalEntries([]); return; }
 
 		setIsLoading(true);
@@ -382,14 +509,11 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			setEntries(localEntries);
 		} else {
 			const localKeys = new Set(localEntries.map(e => e.key));
-			const localRemoteIds = new Set(
-				localEntries.map(e => e.remoteId).filter(Boolean)
-			);
+			const localRemoteIds = new Set(localEntries.map(e => e.remoteId).filter(Boolean));
 
 			const updated = externalEntries.map(e => ({
 				...e,
-				isImported: localKeys.has(e.key) ||
-					!!(e.remoteId && localRemoteIds.has(e.remoteId))
+				isImported: localKeys.has(e.key) || !!(e.remoteId && localRemoteIds.has(e.remoteId))
 			}));
 
 			if (selectedProvider === 'all') {
@@ -397,25 +521,59 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			} else {
 				setEntries([...localEntries, ...updated.filter(e => !e.isImported)]);
 			}
-			console.log('[merge] localRemoteIds:', [...localRemoteIds]);
-			console.log('[merge] external remoteIds:', externalEntries.map(e => e.remoteId));
 		}
 	}, [selectedProvider, localEntries, externalEntries]);
 
 	useEffect(() => { mergeEntries(); }, [mergeEntries]);
 
+	// Apply filters, search, and sort
 	useEffect(() => {
-		if (searchQuery.trim() === '') {
-			setFilteredEntries(entries.slice(0, maxCompletions));
-		} else {
+		let result = [...entries];
+
+		// Collection filter
+		if (selectedCollection !== 'all') {
+			result = result.filter(e =>
+				e.fields?.collection === selectedCollection ||
+				e.fields?.groups?.split(',').map((g: string) => g.trim()).includes(selectedCollection)
+			);
+		}
+
+		// Entry type filter
+		if (entryTypeFilter !== 'all') {
+			result = result.filter(e => e.entryType.toLowerCase() === entryTypeFilter);
+		}
+
+		// Source filter
+		if (sourceFilter !== 'all') {
+			result = result.filter(e => e.source === sourceFilter);
+		}
+
+		// Search
+		if (searchQuery.trim()) {
 			const q = searchQuery.toLowerCase();
-			setFilteredEntries(entries.filter(entry =>
+			result = result.filter(entry =>
 				entry.key.toLowerCase().includes(q) ||
 				entry.entryType.toLowerCase().includes(q) ||
 				Object.values(entry.fields).some(v => v.toLowerCase().includes(q))
-			).slice(0, maxCompletions));
+			);
 		}
-	}, [searchQuery, entries, maxCompletions]);
+
+		// Sort
+		result.sort((a, b) => {
+			let aVal = '';
+			let bVal = '';
+			switch (sortField) {
+				case 'title': aVal = a.fields.title || ''; bVal = b.fields.title || ''; break;
+				case 'author': aVal = a.fields.author || ''; bVal = b.fields.author || ''; break;
+				case 'year': aVal = a.fields.year || '0'; bVal = b.fields.year || '0'; break;
+				default: aVal = a.key; bVal = b.key;
+			}
+			const cmp = aVal.localeCompare(bVal);
+			return sortOrder === 'asc' ? cmp : -cmp;
+		});
+
+		setFilteredEntries(result.slice(0, maxCompletions));
+	}, [searchQuery, entries, maxCompletions, entryTypeFilter, sourceFilter, selectedCollection, sortField, sortOrder]);
 
 	useEffect(() => {
 		const handleBibFilesUpdate = (bibFiles: FileNode[]) => {
@@ -426,24 +584,13 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 	}, []);
 
 	useEffect(() => {
-		console.log('[BibliographyContext] Target file effect', {
-			currentProvider: currentProvider?.id,
-			availableBibFilesCount: availableBibFiles.length,
-			selectedProvider
-		});
-
 		if (!currentProvider || availableBibFiles.length === 0) return;
 
 		const projectId = getProjectId();
 		const saved = getTargetFile(currentProvider.id, projectId);
 
-		console.log('[BibliographyContext] Target file effect - saved:', saved);
-
 		if (saved && availableBibFiles.some(f => f.path === saved)) {
 			setTargetBibFile(saved);
-			console.log('[BibliographyContext] Set target bib file to:', saved);
-		} else if (availableBibFiles.length > 0) {
-			console.log('[BibliographyContext] No saved target, available files:', availableBibFiles.map(f => f.path));
 		}
 	}, [currentProvider, availableBibFiles, getTargetFile]);
 
@@ -484,15 +631,17 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 
 	useEffect(() => {
 		const initializeFiles = async () => {
-			console.log('[BibliographyContext] Initializing - forcing file refresh');
 			await refreshAvailableFiles();
-
-			console.log('[BibliographyContext] Triggering cache update');
 			await filePathCacheService.updateCache();
 		};
-
 		initializeFiles();
 	}, [refreshAvailableFiles]);
+
+	// Reset multi-select when provider changes
+	useEffect(() => {
+		setIsMultiSelectMode(false);
+		clearSelection();
+	}, [selectedProvider]);
 
 	const handleRefresh = async () => {
 		setIsRefreshing(true);
@@ -523,6 +672,9 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		setLocalEntries([]);
 		setExternalEntries([]);
 		setFilteredEntries([]);
+		setSelectedCollection('all');
+		setEntryTypeFilter('all');
+		setSourceFilter('all');
 		if (providerId !== 'local') setTargetBibFile('');
 	};
 
@@ -537,6 +689,10 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 	};
 
 	const handleEntryClick = (entry: BibEntry) => {
+		if (isMultiSelectMode) {
+			toggleEntrySelection(entry.key);
+			return;
+		}
 		if (entry.source === 'external' && !entry.isImported) {
 			if (autoImport) { handleImportEntry(entry); }
 			return;
@@ -669,6 +825,17 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		availableBibFiles, targetBibFile, setTargetBibFile,
 		isLoading, importingEntries, currentProvider,
 		citationStyle, maxCompletions, autoImport, duplicateHandling,
+		showToolbar, setShowToolbar,
+		sortField, setSortField, sortOrder, setSortOrder,
+		entryTypeFilter, setEntryTypeFilter,
+		sourceFilter, setSourceFilter,
+		selectedCollection, setSelectedCollection,
+		availableCollections,
+		isMultiSelectMode, setIsMultiSelectMode,
+		selectedEntryKeys, toggleEntrySelection,
+		selectAllVisible, clearSelection,
+		importSelectedEntries, updateSelectedEntries, deleteSelectedEntries,
+		isBulkOperating,
 		handleRefresh, handleProviderSelect, handleItemSelect,
 		handleBackToList, handleEntryClick, handleImportEntry,
 		handleTargetFileChange, createNewBibFile,

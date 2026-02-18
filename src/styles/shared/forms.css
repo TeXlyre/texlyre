@@ -52,7 +52,7 @@ input[type="radio"],
 	padding: 0 !important;
 	margin: 0 !important;
 	margin-right: var(--space-sm) !important;
-	border: 2px solid var(--accent-border, #ddd) !important;
+	border: 1.5px solid var(--accent-border, #ddd) !important;
 	border-radius: var(--radius-sm) !important;
 	background-color: var(--pico-background) !important;
 	cursor: pointer !important;
@@ -83,6 +83,7 @@ input[type="checkbox"]:checked,
 *[type="checkbox"]:checked {
 	background-color: var(--pico-primary) !important;
 	border-color: var(--pico-primary) !important;
+	color: var(--pico-primary-inverse) !important;
 	appearance: none;
 	-webkit-appearance: none;
 	-moz-appearance: none;
@@ -93,6 +94,7 @@ input[type="checkbox"]:checked::after,
 *[type="checkbox"]:checked::after {
 	background-color: var(--pico-primary) !important;
 	border-color: var(--pico-primary) !important;
+	color: var(--pico-primary-inverse) !important;
 	appearance: none;
 	-webkit-appearance: none;
 	-moz-appearance: none;
@@ -149,6 +151,30 @@ input[type="radio"]:checked::before,
 	justify-content: flex-end;
 	gap: var(--space-sm);
 	margin-top: var(--space-md);
+}
+
+
+.checkbox {
+	width: 16px;
+	height: 16px;
+	border: 1.5px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	background: var(--pico-background);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all var(--transition-normal);
+}
+
+.checkbox.checked {
+	background: var(--pico-primary);
+	border-color: var(--pico-primary);
+	color: var(--pico-secondary-inverse);
+}
+
+.checkbox svg {
+	width: 10px;
+	height: 10px;
 }
 
 .checkbox-group,
