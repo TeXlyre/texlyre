@@ -14,6 +14,7 @@ interface ZoteroItemData {
     pages?: string;
     DOI?: string;
     publisher?: string;
+    collections?: string[];
     [key: string]: any;
 }
 
@@ -158,7 +159,7 @@ class ZoteroService {
         };
     }
 
-    convertZoteroItemToBibEntry(item: any): BibEntry {
+    convertZoteroItemToBibEntry(item: any, collectionMap?: Map<string, string>): BibEntry {
         const data: ZoteroItemData = item.data;
         const entryType = this.itemTypeMap[data.itemType] || 'misc';
         const key = this.generateCiteKey(data);
@@ -210,6 +211,13 @@ class ZoteroService {
         if (data.DOI) fields.doi = data.DOI;
         if (data.publisher) fields.publisher = data.publisher;
         if (data.url) fields.url = data.url;
+
+        if (collectionMap && Array.isArray(data.collections) && data.collections.length > 0) {
+            const names = data.collections
+                .map((k: string) => collectionMap.get(k))
+                .filter((name): name is string => Boolean(name));
+            if (names.length > 0) fields.groups = names.join(', ');
+        }
 
         const rawEntry = this.formatBibEntry(key, entryType, fields, item.key);
 
@@ -282,8 +290,12 @@ class ZoteroService {
             this.connectionStatus = 'connected';
             this.notifyStatusListeners();
 
-            const items = await zoteroAPIService.getLibraryItems(credentials.apiKey, library.libraryType, library.libraryId);
-            return items.map(item => this.convertZoteroItemToBibEntry(item));
+            const [items, collectionMap] = await Promise.all([
+                zoteroAPIService.getLibraryItems(credentials.apiKey, library.libraryType, library.libraryId),
+                zoteroAPIService.getLibraryCollections(credentials.apiKey, library.libraryType, library.libraryId)
+            ]);
+
+            return items.map(item => this.convertZoteroItemToBibEntry(item, collectionMap));
         } catch (error) {
             console.error('[ZoteroService] Error getting bibliography entries:', error);
             this.connectionStatus = 'error';

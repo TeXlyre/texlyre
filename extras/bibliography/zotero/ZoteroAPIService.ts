@@ -17,6 +17,7 @@ interface ZoteroItem {
         place?: string;
         url?: string;
         abstractNote?: string;
+        collections?: string[];
         [key: string]: any;
     };
 }
@@ -26,6 +27,11 @@ interface ZoteroGroup {
     version: number;
     name: string;
     type: string;
+}
+
+interface ZoteroCollection {
+    key: string;
+    data: { name: string; parentCollection: string | false };
 }
 
 export class ZoteroAPIService {
@@ -75,9 +81,6 @@ export class ZoteroAPIService {
                 ? `${this.baseUrl}/users/${libraryId}/items`
                 : `${this.baseUrl}/groups/${libraryId}/items`;
 
-            console.log('[ZoteroAPIService] Fetching items from:', endpoint);
-            console.log('[ZoteroAPIService] Library type:', libraryType, 'Library ID:', libraryId);
-
             const response = await fetch(`${endpoint}?limit=100`, {
                 headers: {
                     'Zotero-API-Key': apiKey,
@@ -97,11 +100,33 @@ export class ZoteroAPIService {
                 return item.data.itemType !== 'attachment' && item.data.itemType !== 'note';
             });
 
-            console.log('[ZoteroAPIService] Fetched items:', filteredItems.length, 'of', items.length);
             return filteredItems;
         } catch (error) {
             console.error('[ZoteroAPIService] Error fetching library items:', error);
             throw error;
+        }
+    }
+
+    async getLibraryCollections(apiKey: string, libraryType: 'user' | 'group', libraryId: string): Promise<Map<string, string>> {
+        try {
+            const endpoint = libraryType === 'user'
+                ? `${this.baseUrl}/users/${libraryId}/collections`
+                : `${this.baseUrl}/groups/${libraryId}/collections`;
+
+            const response = await fetch(`${endpoint}?limit=100`, {
+                headers: {
+                    'Zotero-API-Key': apiKey,
+                    'Zotero-API-Version': '3'
+                }
+            });
+
+            if (!response.ok) return new Map();
+
+            const collections: ZoteroCollection[] = await response.json();
+            return new Map(collections.map(c => [c.key, c.data.name]));
+        } catch (error) {
+            console.error('[ZoteroAPIService] Error fetching collections:', error);
+            return new Map();
         }
     }
 }
