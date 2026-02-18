@@ -382,7 +382,12 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 
 	useEffect(() => {
 		const providers = pluginRegistry.getAllBibliographyPlugins();
-		setAvailableProviders(providers);
+		setAvailableProviders(
+			providers.filter(p => {
+				const enabled = getSetting(`${p.id}-enabled`)?.value as boolean;
+				return enabled ?? true;
+			})
+		);
 	}, []);
 
 	useEffect(() => {

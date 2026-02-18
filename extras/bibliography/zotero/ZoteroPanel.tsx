@@ -1,6 +1,7 @@
 import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState } from 'react';
+
 import type { BibliographyPanelProps } from '@/plugins/PluginInterface';
 import { useSecrets } from '@/hooks/useSecrets';
 import { useProperties } from '@/hooks/useProperties';
@@ -63,18 +64,26 @@ const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
                 {connectionStatus === 'disconnected' && (
                     <div className="zotero-not-connected">
                         <p>{t('Connect to your Zotero library to access your bibliography.')}</p>
-                        <button className="button primary" onClick={() => setShowModal(true)}>
-                            {t('Connect to Zotero')}
-                        </button>
+                        <div className="backup-toolbar">
+                            <div className="primary-actions" >
+                                <button className="button primary" onClick={() => setShowModal(true)}>
+                                    {t('Connect to Zotero')}
+                                </button>
+                            </div>
+                            <div className="secondary-actions">
+                                <button
+                                    className="button secondary icon-only"
+                                    onClick={handleDisconnect}
+                                    title={t('Disconnect (deletes API key)')}>
+                                    <DisconnectIcon />
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 )}
 
                 {connectionStatus === 'connected' && (
                     <div className="zotero-connected">
-                        <p className="connection-status">
-                            <span className="status-indicator connected">●</span>
-                            {t('Connected to Zotero')}
-                        </p>
                         <div className="backup-toolbar">
                             <div className="primary-actions" />
                             <div className="secondary-actions">
@@ -87,7 +96,7 @@ const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
                                 <button
                                     className="button secondary icon-only"
                                     onClick={handleDisconnect}
-                                    title={t('Disconnect')}>
+                                    title={t('Disconnect (deletes API key)')}>
                                     <DisconnectIcon />
                                 </button>
                             </div>

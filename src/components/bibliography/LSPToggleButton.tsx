@@ -4,6 +4,7 @@ import type React from 'react';
 import { useState } from 'react';
 
 import { pluginRegistry } from '../../plugins/PluginRegistry';
+import { useBibliography } from '../../hooks/useBibliography';
 
 interface LSPToggleButtonProps {
 	className?: string;
@@ -15,17 +16,15 @@ const LSPToggleButton: React.FC<LSPToggleButtonProps> = ({
 	pluginId,
 }) => {
 	const [showPanel, setShowPanel] = useState(false);
+	const { availableProviders } = useBibliography();
 
 	const lspPlugin = pluginRegistry.getLSPPlugin(pluginId);
-	const bibPlugin = pluginRegistry.getBibliographyPlugin(pluginId);
+	const bibPlugin = lspPlugin
+		? null
+		: availableProviders.find(p => p.id === pluginId) ?? null;
 	const plugin = lspPlugin || bibPlugin;
-	if (!plugin) {
-		console.warn(`Plugin with ID "${pluginId}" not found.`);
-		return null;
-	}
 
-	// const isEnabled = getSetting(`${pluginId}-enabled`)?.value as boolean ?? false;
-	// const showPanelSetting = getSetting(`${pluginId}-show-panel`)?.value as boolean ?? true;
+	if (!plugin) return null;
 
 	const connectionStatus = plugin.getConnectionStatus();
 
