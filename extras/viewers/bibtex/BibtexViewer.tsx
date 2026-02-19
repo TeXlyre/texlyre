@@ -733,7 +733,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
         </div>
 
-      </div>);
+      </div>
     </BibliographyProvider>
   );
 };
