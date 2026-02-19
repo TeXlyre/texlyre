@@ -1955,5 +1955,8 @@
   "Zoom In": "تكبير",
   "Zoom Level": "مستوى التكبير",
   "Zoom Out": "تصغير",
-  "Zotero": "Zotero"
+  "Zotero": "Zotero",
+  "Zotero Integration:": "تكامل Zotero:",
+  "Zotero API:": "واجهة برمجة تطبيقات Zotero:",
+  "When you enable Zotero integration with your own API key (": "عند تفعيل تكامل Zotero باستخدام مفتاح API الخاص بك ("
 }

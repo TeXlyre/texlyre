@@ -1950,5 +1950,8 @@
   "Zoom In": "放大",
   "Zoom Level": "缩放级别",
   "Zoom Out": "缩小",
-  "Zotero": "Zotero"
+  "Zotero": "Zotero",
+  "Zotero Integration:": "Zotero 集成：",
+  "Zotero API:": "Zotero API：",
+  "When you enable Zotero integration with your own API key (": "当您使用自己的 API 密钥启用 Zotero 集成时（"
 }

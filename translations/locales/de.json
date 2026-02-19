@@ -1839,5 +1839,8 @@
   "Zoom In": "Vergrößern",
   "Zoom Level": "Zoomstufe",
   "Zoom Out": "Verkleinern",
-  "Zotero": "Zotero"
+  "Zotero": "Zotero",
+  "Zotero Integration:": "Zotero-Integration:",
+  "Zotero API:": "Zotero-API:",
+  "When you enable Zotero integration with your own API key (": "Wenn Sie die Zotero-Integration mit Ihrem eigenen API-Schlüssel aktivieren ("
 }
