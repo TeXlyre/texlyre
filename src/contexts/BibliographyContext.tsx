@@ -710,17 +710,11 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		setImportingEntries(prev => new Set(prev).add(entry.key));
 
 		try {
-			await bibliographyImportService.importEntry(
-				entry.key,
-				entry.rawEntry,
-				{
-					targetFile: targetBibFile,
-					duplicateHandling: duplicateHandling as 'keep-local' | 'replace' | 'rename' | 'ask',
-					autoImport,
-					remoteId: entry.remoteId
-				}
+			await bibliographyImportService.batchImport(
+				targetBibFile,
+				[{ entryKey: entry.key, rawEntry: entry.rawEntry, remoteId: entry.remoteId }],
+				duplicateHandling as 'keep-local' | 'replace' | 'rename' | 'ask'
 			);
-
 			await fetchLocalEntries();
 			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
 		} catch (error) {
@@ -734,14 +728,9 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		if (entry.source !== 'local' || !entry.filePath) return;
 
 		try {
-			await bibliographyImportService.importEntry(
-				entry.key,
-				entry.rawEntry,
-				{
-					targetFile: entry.filePath,
-					action: 'delete',
-					remoteId: entry.remoteId
-				}
+			await bibliographyImportService.batchDelete(
+				entry.filePath,
+				[{ entryKey: entry.key, remoteId: entry.remoteId }]
 			);
 			await fetchLocalEntries();
 			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
@@ -754,14 +743,9 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		if (!entry.filePath) return;
 
 		try {
-			await bibliographyImportService.importEntry(
-				remoteEntry.key,
-				remoteEntry.rawEntry,
-				{
-					targetFile: entry.filePath,
-					action: 'update',
-					remoteId: remoteEntry.remoteId || entry.remoteId
-				}
+			await bibliographyImportService.batchUpdate(
+				entry.filePath,
+				[{ entryKey: remoteEntry.key, rawEntry: remoteEntry.rawEntry, remoteId: remoteEntry.remoteId || entry.remoteId }]
 			);
 			await fetchLocalEntries();
 			document.dispatchEvent(new CustomEvent('refresh-file-tree'));

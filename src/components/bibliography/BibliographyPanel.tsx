@@ -470,7 +470,15 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
           <div className="bib-entry-meta">
             {year && <span className="bib-entry-year">{year}</span>}
             {isExternal && (
-              <span className="bib-entry-source-badge external" title={t('Not imported')}>↓</span>
+              <>
+                <span
+                  className="bib-entry-source-badge external"
+                  title={targetBibFile || t('No target file selected')}>
+                  {targetBibFile ? targetBibFile.split('/').pop()?.replace('.bib', '') : '↓'}
+                </span>
+                <span className="bib-entry-source-badge external" title={t('Not imported')}>↓</span>
+              </>
+
             )}
             {entry.source === 'local' && (
               <span className="bib-entry-source-badge local" title={entry.filePath || t('Local')}>
