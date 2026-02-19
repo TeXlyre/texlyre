@@ -59,7 +59,6 @@ export interface BibliographyContextType {
 	autoImport: boolean;
 	duplicateHandling: string;
 
-	// Toolbar / filter state
 	showToolbar: boolean;
 	setShowToolbar: (show: boolean) => void;
 	sortField: SortField;
@@ -74,7 +73,6 @@ export interface BibliographyContextType {
 	setSelectedCollection: (collection: string) => void;
 	availableCollections: string[];
 
-	// Multi-select state
 	isMultiSelectMode: boolean;
 	setIsMultiSelectMode: (active: boolean) => void;
 	selectedEntryKeys: Set<string>;
@@ -82,7 +80,6 @@ export interface BibliographyContextType {
 	selectAllVisible: () => void;
 	clearSelection: () => void;
 
-	// Bulk actions
 	importSelectedEntries: () => Promise<void>;
 	updateSelectedEntries: () => Promise<void>;
 	deleteSelectedEntries: () => Promise<void>;
@@ -143,7 +140,6 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 	const [importingEntries, setImportingEntries] = useState<Set<string>>(new Set());
 	const [selectedBibFile, setSelectedBibFile] = useState<string>('');
 
-	// Toolbar / filter state
 	const [showToolbar, setShowToolbar] = useState(false);
 	const [sortField, setSortField] = useState<SortField>('key');
 	const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
@@ -152,7 +148,6 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 	const [selectedCollection, setSelectedCollection] = useState<string>('all');
 	const [availableCollections, setAvailableCollections] = useState<string[]>([]);
 
-	// Multi-select state
 	const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
 	const [selectedEntryKeys, setSelectedEntryKeys] = useState<Set<string>>(new Set());
 	const [isBulkOperating, setIsBulkOperating] = useState(false);
@@ -177,12 +172,16 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 	};
 
 	const getPropertyId = (pluginId: string) => `${pluginId}-target-bib-file`;
+	const getFilterPropertyId = (pluginId: string, key: string) => `${pluginId}-filter-${key}`;
+
+	const getScopeOptions = (projectId?: string) =>
+		projectId ? { scope: 'project' as const, projectId } : { scope: 'global' as const };
 
 	const getTargetFile = useCallback((pluginId: string, projectId?: string): string | null => {
 		if (selectedBibFile) return selectedBibFile;
 
 		const propertyId = getPropertyId(pluginId);
-		const scopeOptions = projectId ? { scope: 'project' as const, projectId } : { scope: 'global' as const };
+		const scopeOptions = getScopeOptions(projectId);
 		const val = getProperty(propertyId, scopeOptions) as string | null;
 
 		if (!val) return null;
@@ -197,9 +196,54 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 
 	const setTargetFileProperty = useCallback((pluginId: string, filePath: string, projectId?: string) => {
 		const propertyId = getPropertyId(pluginId);
-		const scopeOptions = projectId ? { scope: 'project' as const, projectId } : { scope: 'global' as const };
-		setProperty(propertyId, filePath, scopeOptions);
+		setProperty(propertyId, filePath, getScopeOptions(projectId));
 	}, [setProperty]);
+
+	const loadFilterState = useCallback((pluginId: string) => {
+		const scopeOptions = getScopeOptions(getProjectId());
+		const get = (key: string) => getProperty(getFilterPropertyId(pluginId, key), scopeOptions) as string | null;
+
+		setSortField((get('sortField') as SortField) || 'key');
+		setSortOrder((get('sortOrder') as SortOrder) || 'asc');
+		setEntryTypeFilter((get('entryTypeFilter') as EntryTypeFilter) || 'all');
+		setSourceFilter((get('sourceFilter') as SourceFilter) || 'all');
+		setSelectedCollection(get('selectedCollection') || 'all');
+		setShowToolbar(get('showToolbar') === 'true');
+	}, [getProperty]);
+
+	const saveFilterProperty = useCallback((pluginId: string, key: string, value: string) => {
+		setProperty(getFilterPropertyId(pluginId, key), value, getScopeOptions(getProjectId()));
+	}, [setProperty]);
+
+	const handleSetSortField = useCallback((field: SortField) => {
+		setSortField(field);
+		saveFilterProperty(selectedProvider, 'sortField', field);
+	}, [selectedProvider, saveFilterProperty]);
+
+	const handleSetSortOrder = useCallback((order: SortOrder) => {
+		setSortOrder(order);
+		saveFilterProperty(selectedProvider, 'sortOrder', order);
+	}, [selectedProvider, saveFilterProperty]);
+
+	const handleSetEntryTypeFilter = useCallback((filter: EntryTypeFilter) => {
+		setEntryTypeFilter(filter);
+		saveFilterProperty(selectedProvider, 'entryTypeFilter', filter);
+	}, [selectedProvider, saveFilterProperty]);
+
+	const handleSetSourceFilter = useCallback((filter: SourceFilter) => {
+		setSourceFilter(filter);
+		saveFilterProperty(selectedProvider, 'sourceFilter', filter);
+	}, [selectedProvider, saveFilterProperty]);
+
+	const handleSetSelectedCollection = useCallback((collection: string) => {
+		setSelectedCollection(collection);
+		saveFilterProperty(selectedProvider, 'selectedCollection', collection);
+	}, [selectedProvider, saveFilterProperty]);
+
+	const handleSetShowToolbar = useCallback((show: boolean) => {
+		setShowToolbar(show);
+		saveFilterProperty(selectedProvider, 'showToolbar', String(show));
+	}, [selectedProvider, saveFilterProperty]);
 
 	const getAvailableFiles = useCallback(() => availableBibFiles, [availableBibFiles]);
 
@@ -299,6 +343,10 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			})
 		);
 	}, []);
+
+	useEffect(() => {
+		loadFilterState(selectedProvider);
+	}, [selectedProvider, loadFilterState]);
 
 	useEffect(() => {
 		const handleTogglePanel = (event: Event) => {
@@ -462,7 +510,6 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		}
 	}, [localEntries, externalEntries, isBulkOperating, fetchLocalEntries]);
 
-	// Multi-select actions
 	const toggleEntrySelection = useCallback((key: string) => {
 		setSelectedEntryKeys(prev => {
 			const next = new Set(prev);
@@ -502,11 +549,9 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 
 	useEffect(() => { mergeEntries(); }, [mergeEntries]);
 
-	// Apply filters, search, and sort
 	useEffect(() => {
 		let result = [...entries];
 
-		// Collection filter
 		if (selectedCollection !== 'all') {
 			result = result.filter(e =>
 				e.fields?.collection === selectedCollection ||
@@ -514,12 +559,10 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			);
 		}
 
-		// Entry type filter
 		if (entryTypeFilter !== 'all') {
 			result = result.filter(e => e.entryType.toLowerCase() === entryTypeFilter);
 		}
 
-		// Source filter
 		if (sourceFilter === 'synced') {
 			const externalKeys = new Set(externalEntries.map(e => e.key));
 			const externalRemoteIds = new Set(externalEntries.map(e => e.remoteId).filter(Boolean));
@@ -538,7 +581,6 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			result = result.filter(e => e.source === sourceFilter);
 		}
 
-		// Search
 		if (searchQuery.trim()) {
 			const q = searchQuery.toLowerCase();
 			result = result.filter(entry =>
@@ -548,7 +590,6 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			);
 		}
 
-		// Sort
 		result.sort((a, b) => {
 			let aVal = '';
 			let bVal = '';
@@ -627,7 +668,6 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		initializeFiles();
 	}, [refreshAvailableFiles]);
 
-	// Reset multi-select when provider changes
 	useEffect(() => {
 		setIsMultiSelectMode(false);
 		clearSelection();
@@ -662,10 +702,8 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		setLocalEntries([]);
 		setExternalEntries([]);
 		setFilteredEntries([]);
-		setSelectedCollection('all');
-		setEntryTypeFilter('all');
-		setSourceFilter('all');
 		if (providerId !== 'local') setTargetBibFile('');
+		loadFilterState(providerId);
 	};
 
 	const handleItemSelect = (item: any) => {
@@ -870,11 +908,12 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		availableBibFiles, targetBibFile, setTargetBibFile,
 		isLoading, importingEntries, currentProvider,
 		citationStyle, maxCompletions, autoImport, duplicateHandling,
-		showToolbar, setShowToolbar,
-		sortField, setSortField, sortOrder, setSortOrder,
-		entryTypeFilter, setEntryTypeFilter,
-		sourceFilter, setSourceFilter,
-		selectedCollection, setSelectedCollection,
+		showToolbar, setShowToolbar: handleSetShowToolbar,
+		sortField, setSortField: handleSetSortField,
+		sortOrder, setSortOrder: handleSetSortOrder,
+		entryTypeFilter, setEntryTypeFilter: handleSetEntryTypeFilter,
+		sourceFilter, setSourceFilter: handleSetSourceFilter,
+		selectedCollection, setSelectedCollection: handleSetSelectedCollection,
 		availableCollections,
 		isMultiSelectMode, setIsMultiSelectMode,
 		selectedEntryKeys, toggleEntrySelection,
