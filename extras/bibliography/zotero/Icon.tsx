@@ -1,3 +1,4 @@
+// extras/bibliography/zotero/Icons.tsx
 import type React from 'react';
 
 export const ZoteroIcon: React.FC = () => (
@@ -6,16 +7,8 @@ export const ZoteroIcon: React.FC = () => (
         width="16"
         height="16"
         viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        fill="currentColor"
     >
-        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-        <path d="M8 7h8" />
-        <path d="M8 11h8" />
-        <path d="M8 15h6" />
+        <path d="M21.231 2.462 7.18 20.923h14.564V24H2.256v-2.462L16.308 3.076H2.975V0h18.256v2.462z" />
     </svg>
 );

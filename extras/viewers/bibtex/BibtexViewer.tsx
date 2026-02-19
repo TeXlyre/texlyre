@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import {
   DownloadIcon,
-  OptionsIcon,
+  CleanIcon,
   SaveIcon,
   ViewIcon
 } from
@@ -554,7 +554,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
           onClick={() => setShowSidebar(!showSidebar)}
           title={t('Toggle Options Panel')}>
 
-          <OptionsIcon />
+          <CleanIcon />
         </button>
         <button
           className={`${viewMode === 'table' ? 'active' : ''}`}

@@ -1,3 +1,4 @@
+// extras/bibliography/zotero/ZoteroPanel.tsx
 import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState } from 'react';
@@ -143,13 +144,24 @@ const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
                 {connectionStatus === 'error' && (
                     <div className="zotero-error">
                         <p className="error-message">{t('Failed to connect to Zotero. Please check your credentials.')}</p>
-                        <button className="button primary" onClick={() => setShowModal(true)}>
-                            {t('Reconnect')}
-                        </button>
+                        <div className="backup-toolbar">
+                            <div className="primary-actions">
+                                <button className="button primary" onClick={() => setShowModal(true)}>
+                                    {t('Reconnect')}
+                                </button>
+                            </div>
+                            <div className="secondary-actions">
+                                <button
+                                    className="button secondary icon-only"
+                                    onClick={handleDisconnect}
+                                    title={t('Disconnect (deletes API key)')}>
+                                    <DisconnectIcon />
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>
-
             <ZoteroConnectionModal
                 isOpen={showModal}
                 onClose={() => setShowModal(false)}

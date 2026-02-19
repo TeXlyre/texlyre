@@ -577,7 +577,7 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
     if (selectedProvider !== 'local' && currentProvider?.getConnectionStatus() !== 'connected' && selectedProvider !== 'all') {
       return (
         <div className="bib-loading-indicator">
-          {t('Connecting...')} ({currentProvider?.getConnectionStatus()})
+          {t('Connecting...')} ({t(currentProvider?.getConnectionStatus())})
         </div>
       );
     }
@@ -658,10 +658,16 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
   };
 
   const footerStats = selectedProvider === 'all'
-    ? `${entries.length} ${t('entries')}, ${availableProviders.filter(p => p.getConnectionStatus() === 'connected').length} ${t('sources')}`
+    ? t('{count} entries, {sources} sources', {
+      count: entries.length,
+      sources: availableProviders.filter(p => p.getConnectionStatus() === 'connected').length
+    })
     : selectedProvider === 'local'
-      ? `${localEntries.length} ${t('local entries')}`
-      : `${localEntries.length} ${t('local')}, ${externalEntries.filter(e => !e.isImported).length} ${t('external')}`;
+      ? t('{count} local entry', { count: localEntries.length })
+      : t('{local} local, {external} external', {
+        local: localEntries.length,
+        external: externalEntries.filter(e => !e.isImported).length
+      });
 
   return (
     <div className={`bib-panel ${className}`}>

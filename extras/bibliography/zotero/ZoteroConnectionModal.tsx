@@ -1,6 +1,8 @@
+// extras/bibliography/zotero/ZoteroConnectionModal.tsx
 import { t } from '@/i18n';
 import type React from 'react';
 import { useState, useEffect } from 'react';
+
 import Modal from '@/components/common/Modal';
 import { ZoteroIcon } from './Icon';
 import { zoteroAPIService } from './ZoteroAPIService';
@@ -125,8 +127,8 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
         >
             <div className="zotero-connection-modal">
                 {step === 'credentials' && (
-                    <div className="connection-step">
-                        <p className="step-description">
+                    <div className="zotero-connection-step">
+                        <p className="zotero-step-description">
                             {t('Enter your Zotero API credentials. You can find these in your Zotero account settings.')}
                         </p>
 
@@ -154,7 +156,7 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
 
                         {error && <div className="error-message">{error}</div>}
 
-                        <div className="button-group">
+                        <div className="button-group zotero-button-group">
                             <button
                                 className="button primary"
                                 onClick={handleCredentialsSubmit}
@@ -170,8 +172,8 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
                 )}
 
                 {step === 'library' && (
-                    <div className="connection-step">
-                        <p className="step-description">
+                    <div className="zotero-connection-step">
+                        <p className="zotero-step-description">
                             {t('Select a Zotero library to use for this project.')}
                         </p>
 
@@ -193,7 +195,7 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
 
                         {error && <div className="error-message">{error}</div>}
 
-                        <div className="button-group">
+                        <div className="button-group zotero-button-group">
                             <button
                                 className="button primary"
                                 onClick={handleLibrarySubmit}

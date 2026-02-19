@@ -1,3 +1,4 @@
+// extras/bibliography/zotero/ZoteroService.ts
 import type { BibEntry } from '@/types/bibliography';
 import type { SecretsContextType } from '@/contexts/SecretsContext';
 import type { PropertiesContextType } from '@/contexts/PropertiesContext';

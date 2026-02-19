@@ -1,3 +1,4 @@
+// extras/bibliography/zotero/ZoteroBibliographyPlugin.ts
 import type { BibliographyPlugin } from '@/plugins/PluginInterface';
 import { ZoteroIcon } from './Icon';
 import { getZoteroSettings } from './settings';

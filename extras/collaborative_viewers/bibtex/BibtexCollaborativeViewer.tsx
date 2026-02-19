@@ -7,7 +7,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 
 import {
   DownloadIcon,
-  OptionsIcon,
+  CleanIcon,
   SaveIcon,
   ViewIcon
 } from
@@ -498,7 +498,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
           onClick={() => setShowSidebar(!showSidebar)}
           title={t('Toggle Options Panel')}>
 
-          <OptionsIcon />
+          <CleanIcon />
         </button>
         {currentView === 'processed' &&
           <button

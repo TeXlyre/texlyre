@@ -1,3 +1,4 @@
+// extras/bibliography/zotero/settings.ts
 import { t } from '@/i18n';
 import type { Setting } from '@/contexts/SettingsContext';
 
