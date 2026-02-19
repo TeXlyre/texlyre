@@ -10,7 +10,7 @@ export const getZoteroSettings = (): Setting[] => [
         type: 'checkbox',
         label: t("Enable Zotero"),
         description: t("Enable Zotero integration for bibliography management"),
-        defaultValue: false,
+        defaultValue: true,
         liveUpdate: false
     },
     {
