@@ -1024,8 +1024,13 @@
   "LaTeX Log": "LaTeX Log",
   "LaTeX Style": "LaTeX Style",
   "Layout": "Layout",
+  "Learn more about Codeberg (Forgejo) Integration": "Learn more about Codeberg (Forgejo) Integration",
+  "Learn more about Gitea Integration": "Learn more about Gitea Integration",
+  "Learn more about GitHub Integration": "Learn more about GitHub Integration",
+  "Learn more about GitLab Integration": "Learn more about GitLab Integration",
   "Learn more about PDF standards": "Learn more about PDF standards",
   "Learn more about the LSP configuration format": "Learn more about the LSP configuration format",
+  "Learn more about Zotero Integration": "Learn more about Zotero Integration",
   "Left-to-Right (LTR)": "Left-to-Right (LTR)",
   "Library:": "Library:",
   "light": "light",
@@ -1800,6 +1805,7 @@
   "When you enable GitHub integration with your own token (": "When you enable GitHub integration with your own token (",
   "When you enable GitLab integration with your own token (": "When you enable GitLab integration with your own token (",
   "When you enable the BibTeX DOI finder, paper titles and authors are sent to the": "When you enable the BibTeX DOI finder, paper titles and authors are sent to the",
+  "When you enable Zotero integration with your own API key (": "When you enable Zotero integration with your own API key (",
   "When you use optional features, data may be sent to external APIs:": "When you use optional features, data may be sent to external APIs:",
   "Word Count Statistics": "Word Count Statistics",
   "Words in Captions": "Words in Captions",
@@ -1843,7 +1849,6 @@
   "Zoom Level": "Zoom Level",
   "Zoom Out": "Zoom Out",
   "Zotero": "Zotero",
-  "Zotero Integration:": "Zotero Integration:",
   "Zotero API:": "Zotero API:",
-  "When you enable Zotero integration with your own API key (": "When you enable Zotero integration with your own API key ("
+  "Zotero Integration:": "Zotero Integration:"
 }

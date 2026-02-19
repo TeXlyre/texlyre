@@ -168,6 +168,14 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
                                 {t('Cancel')}
                             </button>
                         </div>
+                        <br />
+                        <a
+                            href="https://texlyre.github.io/docs/integrations/zotero"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="dropdown-link">
+                            {t('Learn more about Zotero Integration')}
+                        </a>
                     </div>
                 )}
 

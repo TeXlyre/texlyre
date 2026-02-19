@@ -1097,8 +1097,13 @@
   "LaTeX Log": "LaTeX 日志",
   "LaTeX Style": "LaTeX 样式",
   "Layout": "布局",
+  "Learn more about Codeberg (Forgejo) Integration": "了解更多关于 Codeberg（Forgejo）集成的信息",
+  "Learn more about Gitea Integration": "了解更多关于 Gitea 集成的信息",
+  "Learn more about GitHub Integration": "了解更多关于 GitHub 集成的信息",
+  "Learn more about GitLab Integration": "了解更多关于 GitLab 集成的信息",
   "Learn more about PDF standards": "了解更多关于 PDF 标准的信息",
   "Learn more about the LSP configuration format": "了解更多关于 LSP 配置格式",
+  "Learn more about Zotero Integration": "了解更多关于 Zotero 集成的信息",
   "Left-to-Right (LTR)": "从左到右 (LTR)",
   "Library:": "库：",
   "light": "浅色",
@@ -1909,6 +1914,7 @@
   "When you enable GitHub integration with your own token (": "当您使用自己的令牌启用 GitHub 集成时（",
   "When you enable GitLab integration with your own token (": "当您使用自己的令牌启用 GitLab 集成时（",
   "When you enable the BibTeX DOI finder, paper titles and authors are sent to the": "当您启用 BibTeX DOI 查找器时，论文标题和作者会发送到",
+  "When you enable Zotero integration with your own API key (": "当您使用自己的 API 密钥启用 Zotero 集成时（",
   "When you use optional features, data may be sent to external APIs:": "当您使用可选功能时，数据可能会发送到外部 API：",
   "Word Count Statistics": "字数统计",
   "Words in Captions": "标题中的字数",
@@ -1951,7 +1957,6 @@
   "Zoom Level": "缩放级别",
   "Zoom Out": "缩小",
   "Zotero": "Zotero",
-  "Zotero Integration:": "Zotero 集成：",
   "Zotero API:": "Zotero API：",
-  "When you enable Zotero integration with your own API key (": "当您使用自己的 API 密钥启用 Zotero 集成时（"
+  "Zotero Integration:": "Zotero 集成："
 }

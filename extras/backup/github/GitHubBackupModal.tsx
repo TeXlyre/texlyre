@@ -383,6 +383,14 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                       {t('Cancel')}
                     </button>
                   </div>
+                  <br />
+                  <a
+                    href="https://texlyre.github.io/docs/integrations/github"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="dropdown-link">
+                    {t('Learn more about GitHub Integration')}
+                  </a>
                 </div>
               )}
               {connectionStep === 'repo' && (

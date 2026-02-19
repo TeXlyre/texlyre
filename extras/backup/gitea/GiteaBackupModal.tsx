@@ -389,6 +389,14 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
                                             {t('Cancel')}
                                         </button>
                                     </div>
+                                    <br />
+                                    <a
+                                        href="https://texlyre.github.io/docs/integrations/gitea"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="dropdown-link">
+                                        {t('Learn more about Gitea Integration')}
+                                    </a>
                                 </div>
                             )}
                             {connectionStep === 'repo' && (

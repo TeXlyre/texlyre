@@ -394,6 +394,14 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                             {t('Cancel')}
                                         </button>
                                     </div>
+                                    <br />
+                                    <a
+                                        href="https://texlyre.github.io/docs/integrations/gitlab"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="dropdown-link">
+                                        {t('Learn more about GitLab Integration')}
+                                    </a>
                                 </div>
                             )}
                             {connectionStep === 'project' && (

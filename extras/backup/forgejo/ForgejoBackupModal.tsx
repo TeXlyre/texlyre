@@ -389,6 +389,14 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
                                             {t('Cancel')}
                                         </button>
                                     </div>
+                                    <br />
+                                    <a
+                                        href="https://texlyre.github.io/docs/integrations/codeberg"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="dropdown-link">
+                                        {t('Learn more about Codeberg (Forgejo) Integration')}
+                                    </a>
                                 </div>
                             )}
                             {connectionStep === 'repo' && (

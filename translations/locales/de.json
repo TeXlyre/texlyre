@@ -1022,8 +1022,13 @@
   "LaTeX Log": "LaTeX-Log",
   "LaTeX Style": "LaTeX-Stil",
   "Layout": "Layout",
+  "Learn more about Codeberg (Forgejo) Integration": "Mehr über die Codeberg-(Forgejo)-Integration erfahren",
+  "Learn more about Gitea Integration": "Mehr über die Gitea-Integration erfahren",
+  "Learn more about GitHub Integration": "Mehr über die GitHub-Integration erfahren",
+  "Learn more about GitLab Integration": "Mehr über die GitLab-Integration erfahren",
   "Learn more about PDF standards": "Mehr über PDF-Standards erfahren",
-  "Learn more about the LSP configuration format": "Erfahren Sie mehr über das LSP-Konfigurationsformat",
+  "Learn more about the LSP configuration format": "Mehr über das LSP-Konfigurationsformat",
+  "Learn more about Zotero Integration": "Mehr über die Zotero-Integration erfahren",
   "Left-to-Right (LTR)": "Links nach rechts (LTR)",
   "Library:": "Bibliothek:",
   "light": "hell",
@@ -1798,6 +1803,7 @@
   "When you enable GitHub integration with your own token (": "Wenn Sie GitHub Integration mit Ihrem eigenen Token aktiviert haben (",
   "When you enable GitLab integration with your own token (": "Wenn Sie GitLab Integration mit Ihrem eigenen Token aktiviert haben (",
   "When you enable the BibTeX DOI finder, paper titles and authors are sent to the": "Wenn Sie den BibTeX DOI Finder aktivieren, werden Papiertitel und Autoren an den",
+  "When you enable Zotero integration with your own API key (": "Wenn Sie die Zotero-Integration mit Ihrem eigenen API-Schlüssel aktivieren (",
   "When you use optional features, data may be sent to external APIs:": "Wenn Sie optionale Funktionen verwenden, können Daten an externe APIs gesendet werden:",
   "Word Count Statistics": "Wortanzahlstatistik",
   "Words in Captions": "Wörter in Bildunterschriften",
@@ -1840,7 +1846,6 @@
   "Zoom Level": "Zoomstufe",
   "Zoom Out": "Verkleinern",
   "Zotero": "Zotero",
-  "Zotero Integration:": "Zotero-Integration:",
   "Zotero API:": "Zotero-API:",
-  "When you enable Zotero integration with your own API key (": "Wenn Sie die Zotero-Integration mit Ihrem eigenen API-Schlüssel aktivieren ("
+  "Zotero Integration:": "Zotero-Integration:"
 }
