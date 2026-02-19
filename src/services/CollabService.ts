@@ -518,6 +518,65 @@ class CollabService {
 		};
 	}
 
+	public async updateDocumentContent(
+		projectId: string,
+		documentId: string,
+		updater: (currentContent: string) => string
+	): Promise<void> {
+		const collectionName = `yjs_${documentId}`;
+		const containerId = `${projectId}-${collectionName}`;
+
+		let wasConnected = this.docContainers.has(containerId);
+		let container: AnyDocContainer | undefined;
+
+		if (!wasConnected) {
+			const { doc, provider } = this.connect(projectId, collectionName);
+			container = this.getDocContainer(projectId, collectionName);
+
+			if (container?.persistence) {
+				await new Promise<void>((resolve) => {
+					const timeout = setTimeout(resolve, 2000);
+
+					const handleSynced = () => {
+						clearTimeout(timeout);
+						container!.persistence.off('synced', handleSynced);
+						resolve();
+					};
+
+					container.persistence.on('synced', handleSynced);
+
+					if (container.persistence.synced) {
+						clearTimeout(timeout);
+						container.persistence.off('synced', handleSynced);
+						resolve();
+					}
+				});
+			}
+
+			if (provider && !this.isOfflineMode()) {
+				await new Promise(resolve => setTimeout(resolve, 500));
+			}
+		} else {
+			container = this.getDocContainer(projectId, collectionName);
+		}
+
+		if (!container) throw new Error('Could not access document');
+
+		const ytext = container.doc.getText('codemirror');
+		const currentContent = ytext.toString();
+		const newContent = updater(currentContent);
+
+		container.doc.transact(() => {
+			ytext.delete(0, ytext.length);
+			ytext.insert(0, newContent);
+		});
+
+		if (!wasConnected) {
+			await new Promise(resolve => setTimeout(resolve, 500));
+			this.disconnect(projectId, collectionName);
+		}
+	}
+
 	private handleNetworkChange(isOnline: boolean): void {
 		console.log(
 			`[CollabService] Network status changed: ${isOnline ? 'online' : 'offline'}`,

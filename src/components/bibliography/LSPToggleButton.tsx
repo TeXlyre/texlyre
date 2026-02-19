@@ -3,8 +3,8 @@ import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
-import { useSettings } from '../../hooks/useSettings';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
+import { useBibliography } from '../../hooks/useBibliography';
 
 interface LSPToggleButtonProps {
 	className?: string;
@@ -15,45 +15,41 @@ const LSPToggleButton: React.FC<LSPToggleButtonProps> = ({
 	className = '',
 	pluginId,
 }) => {
-	const { getSetting } = useSettings();
 	const [showPanel, setShowPanel] = useState(false);
+	const { availableProviders } = useBibliography();
 
 	const lspPlugin = pluginRegistry.getLSPPlugin(pluginId);
-	if (!lspPlugin) {
-		console.warn(`LSP plugin with ID "${pluginId}" not found.`);
-		return null;
-	}
+	const bibPlugin = lspPlugin
+		? null
+		: availableProviders.find(p => p.id === pluginId) ?? null;
+	const plugin = lspPlugin || bibPlugin;
 
-	const isEnabled = getSetting(`${pluginId}-enabled`)?.value as boolean ?? false;
-	const showPanelSetting = getSetting(`${pluginId}-show-panel`)?.value as boolean ?? true;
+	if (!plugin) return null;
 
-	const connectionStatus = lspPlugin.getConnectionStatus();
+	const connectionStatus = plugin.getConnectionStatus();
 
 	const handleTogglePanel = () => {
 		setShowPanel(!showPanel);
 
 		document.dispatchEvent(
-			new CustomEvent('toggle-lsp-panel', {
-				detail: {
-					show: !showPanel,
-					pluginId: pluginId
-				}
+			new CustomEvent('toggle-bibliography-panel', {
+				detail: { show: !showPanel, pluginId }
 			})
 		);
 	};
 
-	const IconComponent = lspPlugin.icon;
+	const IconComponent = plugin.icon;
 
 	return (
 		<button
-			className={`control-button lsp-toggle-button ${showPanel ? 'active' : ''} ${className}`}
+			className={`control-button bib-toggle-button ${showPanel ? 'active' : ''} ${className}`}
 			onClick={handleTogglePanel}
 			title={t('{action} {pluginName} panel', {
 				action: showPanel ? t('Hide') : t('Show'),
-				pluginName: lspPlugin.name
+				pluginName: plugin.name
 			})}
 		>
-			<div className="lsp-button-content">
+			<div className="bib-button-content">
 				{IconComponent && <IconComponent />}
 				<span className={`connection-indicator ${connectionStatus}`} />
 			</div>

@@ -9,7 +9,7 @@ import {
 } from '@/services/FileStorageService';
 import { ProjectDataService } from '@/services/ProjectDataService';
 import { getMimeType, isBinaryFile } from '@/utils/fileUtils.ts';
-import { gitLabApiService } from './GitLabApiService';
+import { gitLabAPIService } from './GitLabAPIService';
 
 interface BackupStatus {
     isConnected: boolean;
@@ -81,11 +81,11 @@ export class GitLabBackupService {
         this.settingsCache = { ...settings };
 
         if (settings.apiEndpoint) {
-            gitLabApiService.setBaseUrl(settings.apiEndpoint);
+            gitLabAPIService.setBaseUrl(settings.apiEndpoint);
         }
 
         if (settings.requestTimeout) {
-            gitLabApiService.setRequestTimeout(settings.requestTimeout);
+            gitLabAPIService.setRequestTimeout(settings.requestTimeout);
         }
     }
 
@@ -198,9 +198,9 @@ export class GitLabBackupService {
         token: string,
     ): Promise<{ success: boolean; projects?: any[]; error?: string }> {
         try {
-            if (!(await gitLabApiService.testConnection(token)))
+            if (!(await gitLabAPIService.testConnection(token)))
                 return { success: false, error: t('Invalid GitLab token') };
-            const projects = await gitLabApiService.getProjects(token);
+            const projects = await gitLabAPIService.getProjects(token);
             return { success: true, projects };
         } catch (error) {
             return {
@@ -379,7 +379,7 @@ export class GitLabBackupService {
             throw new Error(
                 t('GitLab credentials not available. Please reconnect.'),
             );
-        if (!(await gitLabApiService.testConnection(credentials.token)))
+        if (!(await gitLabAPIService.testConnection(credentials.token)))
             throw new Error(
                 t('GitLab token is invalid or expired. Please reconnect.'),
             );
@@ -427,7 +427,7 @@ export class GitLabBackupService {
                         }),
                     });
                 }
-                await gitLabApiService.createCommit(
+                await gitLabAPIService.createCommit(
                     token,
                     projectId,
                     branch,
@@ -469,7 +469,7 @@ export class GitLabBackupService {
             if (!localProjects || localProjects.some((p) => !p))
                 throw new Error(t('Could not load projects.'));
 
-            const tree = await gitLabApiService.getRecursiveTree(
+            const tree = await gitLabAPIService.getRecursiveTree(
                 credentials.token,
                 this.currentProject?.id!,
                 finalBranch,
@@ -670,7 +670,7 @@ export class GitLabBackupService {
         try {
             const credentials = await this.ensureValidCredentials(localProjectId);
             const finalBranch = branch || credentials.branch;
-            const tree = await gitLabApiService.getRecursiveTree(
+            const tree = await gitLabAPIService.getRecursiveTree(
                 credentials.token,
                 this.currentProject?.id!,
                 finalBranch,
@@ -752,7 +752,7 @@ export class GitLabBackupService {
             for (const missingProjId of missingProjects) {
                 const data = projectFiles.get(missingProjId)!;
                 try {
-                    const metadataContent = await gitLabApiService.getFileContent(
+                    const metadataContent = await gitLabAPIService.getFileContent(
                         credentials.token,
                         this.currentProject?.id!,
                         `projects/${missingProjId}/metadata.json`,
@@ -791,7 +791,7 @@ export class GitLabBackupService {
 
             for (const projId of processableProjects) {
                 const data = projectFiles.get(projId)!;
-                const metadataContent = await gitLabApiService.getFileContent(
+                const metadataContent = await gitLabAPIService.getFileContent(
                     credentials.token,
                     this.currentProject?.id!,
                     `projects/${projId}/metadata.json`,
@@ -876,7 +876,7 @@ export class GitLabBackupService {
         let gitlabDocumentsMetadata: any[] = [];
         if (data.documentsMetadataId) {
             try {
-                const metadataContent = await gitLabApiService.getFileContent(
+                const metadataContent = await gitLabAPIService.getFileContent(
                     credentials.token,
                     this.currentProject?.id!,
                     `projects/${projectId}/documents/metadata.json`,
@@ -913,7 +913,7 @@ export class GitLabBackupService {
                 {};
 
             if (docData.txtId) {
-                contentData.readableContent = await gitLabApiService.getFileContent(
+                contentData.readableContent = await gitLabAPIService.getFileContent(
                     credentials.token,
                     this.currentProject?.id!,
                     `projects/${projectId}/documents/${docId}.txt`,
@@ -922,7 +922,7 @@ export class GitLabBackupService {
             }
 
             if (docData.yjsId) {
-                const yjsContent = await gitLabApiService.getFileContent(
+                const yjsContent = await gitLabAPIService.getFileContent(
                     credentials.token,
                     this.currentProject?.id!,
                     `projects/${projectId}/documents/${docId}.yjs`,
@@ -965,7 +965,7 @@ export class GitLabBackupService {
         let gitlabFilesMetadata: any[] = [];
         if (data.filesMetadataId) {
             try {
-                const metadataContent = await gitLabApiService.getFileContent(
+                const metadataContent = await gitLabAPIService.getFileContent(
                     credentials.token,
                     this.currentProject?.id!,
                     `projects/${projectId}/files/metadata.json`,
@@ -1030,7 +1030,7 @@ export class GitLabBackupService {
             try {
                 await fileStorageService.createDirectoryPath(filePath);
 
-                const rawContentString = await gitLabApiService.getFileContent(
+                const rawContentString = await gitLabAPIService.getFileContent(
                     credentials.token,
                     this.currentProject?.id!,
                     `projects/${projectId}/files${filePath}`,

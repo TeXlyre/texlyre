@@ -16,7 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSecrets } from '@/hooks/useSecrets';
 import { useSettings } from '@/hooks/useSettings';
 import { formatDate } from '@/utils/dateUtils';
-import { gitLabApiService } from './GitLabApiService';
+import { gitLabAPIService } from './GitLabAPIService';
 import { gitLabBackupService } from './GitLabBackupService';
 import { GitLabIcon } from './Icon';
 import './styles.css';
@@ -209,7 +209,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                 (p) => p.id.toString() === selectedProject,
             );
             if (!selectedProjectData) return;
-            const branches = await gitLabApiService.getBranches(
+            const branches = await gitLabAPIService.getBranches(
                 gitLabToken,
                 selectedProject,
             );
@@ -272,7 +272,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
         setSelectedProject(newProjectId);
         if (newProjectId && gitLabToken) {
             try {
-                const branches = await gitLabApiService.getBranches(
+                const branches = await gitLabAPIService.getBranches(
                     gitLabToken,
                     newProjectId,
                 );
@@ -394,6 +394,14 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                             {t('Cancel')}
                                         </button>
                                     </div>
+                                    <br />
+                                    <a
+                                        href="https://texlyre.github.io/docs/integrations/gitlab"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="dropdown-link">
+                                        {t('Learn more about GitLab Integration')}
+                                    </a>
                                 </div>
                             )}
                             {connectionStep === 'project' && (

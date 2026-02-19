@@ -48,6 +48,7 @@ export interface TexlyreConfig {
         viewers: string[];
         renderers: string[];
         loggers: string[];
+        bibliography: string[];
         lsp: string[];
         backup: string[];
         themes: string[];

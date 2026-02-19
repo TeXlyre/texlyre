@@ -213,15 +213,11 @@ class LaTeXService {
 		}
 	}
 
-	async compileLaTeX(
-		mainFileName: string,
-		fileTree: FileNode[],
-	): Promise<CompileResult> {
+	async compileLaTeX(mainFileName: string, fileTree: FileNode[]): Promise<CompileResult> {
 		const engine = this.getCurrentEngine();
 		const operationId = `latex-compile-${nanoid()}`;
 
 		if (!engine.isReady()) {
-			console.log('[LaTeXService] Engine not ready, initializing...');
 			this.showLoadingNotification(t('Initializing LaTeX engine...'), operationId);
 			await engine.initialize();
 		}
@@ -235,48 +231,21 @@ class LaTeXService {
 			await this.writeNodesToMemFS(engine, mainFileName);
 			let result = await engine.compile(mainFileName, this.processedNodes);
 
-			console.log('[LaTeXService] Initial compilation result:', {
-				status: result.status,
-				hasPdf: !!result.pdf,
-				hasXdv: !!(result as any).xdv,
-				engineType: this.currentEngineType,
-			});
-
 			if (result.status === 0 && !result.pdf && (result as any).xdv) {
-				console.log('[LaTeXService] XDV file detected, converting to PDF with Dvipdfmx...');
 				this.showLoadingNotification(t('Converting XDV to PDF...'), operationId);
-				result = await this.processDviToPdf(
-					(result as any).xdv,
-					mainFileName,
-					result.log,
-				);
-				console.log('[LaTeXService] Dvipdfmx conversion result:', {
-					status: result.status,
-					hasPdf: !!result.pdf,
-					pdfSize: result.pdf?.length,
-				});
+				result = await this.processDviToPdf((result as any).xdv, mainFileName, result.log);
 			}
 
 			if (result.status === 0 && result.pdf && result.pdf.length > 0) {
-				console.log('[LaTeXService] Compilation successful!');
 				this.showLoadingNotification(t('Saving compilation output...'), operationId);
-				await this.cleanupStaleFiles();
-				await this.saveCompilationOutput(
-					mainFileName.replace(/^\/+/, ''),
-					result,
-				);
+				await this.saveCompilationOutput(mainFileName.replace(/^\/+/, ''), result);
 				await this.storeOutputDirectories(engine);
 				this.showSuccessNotification(t('LaTeX compilation completed successfully'), {
 					operationId,
 					duration: 3000,
 				});
 			} else {
-				console.log('[LaTeXService] Compilation failed with errors');
-				await this.cleanupStaleFiles();
-				await this.saveCompilationLog(
-					mainFileName.replace(/^\/+/, ''),
-					result.log,
-				);
+				await this.saveCompilationLog(mainFileName.replace(/^\/+/, ''), result.log);
 				this.showErrorNotification(t('LaTeX compilation failed'), {
 					operationId,
 					duration: 5000,
@@ -284,22 +253,14 @@ class LaTeXService {
 			}
 
 			engine.flushCache();
-
 			return result;
 		} catch (error) {
 			if (this.getStatus() === 'error') {
-				console.log(
-					'[LaTeXService] LaTeX Engine failed or was stopped by user, no further action needed.',
-				);
 				this.showInfoNotification(t('Compilation stopped by user'), {
 					operationId,
 					duration: 2000,
 				});
-				return {
-					pdf: null,
-					status: -1,
-					log: 'Compilation failed or was stopped by user.',
-				};
+				return { pdf: null, status: -1, log: 'Compilation failed or was stopped by user.' };
 			}
 			this.showErrorNotification(`Compilation error: ${error instanceof Error ? error.message : t('Unknown error')}`, {
 				operationId,
@@ -848,26 +809,6 @@ class LaTeXService {
 		return filtered;
 	}
 
-	private async cleanupStaleFiles(): Promise<void> {
-		try {
-			const existingFiles = await fileStorageService.getAllFiles();
-			const staleFiles = existingFiles.filter(
-				(file) => isTemporaryFile(file.path) && !file.isDeleted,
-			);
-
-			if (staleFiles.length > 0) {
-				const fileIds = staleFiles.map((file) => file.id);
-				await fileStorageService.batchDeleteFiles(fileIds, {
-					showDeleteDialog: false,
-					hardDelete: true,
-				});
-				console.log(`[LaTeXService] Cleaned up ${staleFiles.length} stale LaTeX files`);
-			}
-		} catch (error) {
-			console.error('Error cleaning up stale files:', error);
-		}
-	}
-
 	private async batchStoreDirectoryContents(
 		files: { [key: string]: ArrayBuffer },
 		baseDir: string,
@@ -954,13 +895,8 @@ class LaTeXService {
 		}
 	}
 
-	private async saveCompilationOutput(
-		mainFile: string,
-		result: CompileResult,
-	): Promise<void> {
+	private async saveCompilationOutput(mainFile: string, result: CompileResult): Promise<void> {
 		try {
-			await this.cleanupDirectory('/.texlyre_src/__output');
-
 			const outputFiles: FileNode[] = [];
 
 			if (result.pdf && result.pdf.length > 0) {
@@ -991,26 +927,19 @@ class LaTeXService {
 				await fileStorageService.batchStoreFiles(outputFiles, {
 					showConflictDialog: false,
 				});
-				console.log(`[LaTeXService] Batch stored ${outputFiles.length} output files`);
 			}
 		} catch (error) {
 			console.error('Error saving compilation output:', error);
 		}
 	}
 
-	private async saveCompilationLog(
-		mainFile: string,
-		log: string,
-	): Promise<void> {
+	private async saveCompilationLog(mainFile: string, log: string): Promise<void> {
 		try {
-			await this.cleanupDirectory('/.texlyre_src/__output');
 			await this.ensureOutputDirectoriesExist();
 			const logFile = await this.createCompilationLogFile(mainFile, log);
-
 			await fileStorageService.batchStoreFiles([logFile], {
 				showConflictDialog: false,
 			});
-			console.log('[LaTeXService] Saved compilation log');
 		} catch (error) {
 			console.error('Error saving compilation log:', error);
 		}

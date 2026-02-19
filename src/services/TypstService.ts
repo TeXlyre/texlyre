@@ -465,11 +465,9 @@ class TypstService {
 
     private async saveCompilationOutput(mainFile: string, result: TypstCompileResult): Promise<void> {
         try {
-            await this.cleanupOutputDirectory();
             const outputFiles = this.createOutputFiles(mainFile, result);
-
             if (outputFiles.length > 0) {
-                await this.ensureOutputDirectories();
+                await this.ensureOutputDirectoriesExist();
                 await fileStorageService.batchStoreFiles(outputFiles, {
                     showConflictDialog: false,
                 });
@@ -520,8 +518,7 @@ class TypstService {
 
     private async saveCompilationLog(mainFile: string, log: string): Promise<void> {
         try {
-            await this.cleanupOutputDirectory();
-            await this.ensureOutputDirectories();
+            await this.ensureOutputDirectoriesExist();
             const logFile = this.createLogFile(this.getBaseName(mainFile), log);
             await fileStorageService.batchStoreFiles([logFile], {
                 showConflictDialog: false,
@@ -531,26 +528,7 @@ class TypstService {
         }
     }
 
-    private async cleanupOutputDirectory(): Promise<void> {
-        try {
-            const existingFiles = await fileStorageService.getAllFiles();
-            const outputFiles = existingFiles.filter(
-                (file) => file.path.startsWith('/.texlyre_src/__output/') && !file.isDeleted
-            );
-
-            if (outputFiles.length > 0) {
-                const fileIds = outputFiles.map((file) => file.id);
-                await fileStorageService.batchDeleteFiles(fileIds, {
-                    showDeleteDialog: false,
-                    hardDelete: true,
-                });
-            }
-        } catch (error) {
-            console.error('Failed to cleanup output directory:', error);
-        }
-    }
-
-    private async ensureOutputDirectories(): Promise<void> {
+    private async ensureOutputDirectoriesExist(): Promise<void> {
         const directories = ['/.texlyre_src', '/.texlyre_src/__output'];
         const existingFiles = await fileStorageService.getAllFiles();
         const existingPaths = new Set(existingFiles.map((file) => file.path));

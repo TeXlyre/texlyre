@@ -1,4 +1,4 @@
-// extras/backup/github/GitHubApiService.ts
+// extras/backup/github/GitHubAPIService.ts
 interface GitHubFile {
 	name: string;
 	path: string;
@@ -22,7 +22,7 @@ interface GitHubTreeItem {
 	size?: number;
 }
 
-export class GitHubApiService {
+export class GitHubAPIService {
 	private baseUrl: string = 'https://api.github.com';
 	private requestTimeout: number = 30000;
 
@@ -397,4 +397,4 @@ export class GitHubApiService {
 	}
 }
 
-export const gitHubApiService = new GitHubApiService();
+export const gitHubAPIService = new GitHubAPIService();

@@ -1,7 +1,10 @@
 // src/services/BibliographyImportService.ts
 import { t } from '@/i18n';
 import { isBibFile } from '../utils/fileUtils';
+import { parseUrlFragments } from '../utils/urlUtils';
 import { fileStorageService } from './FileStorageService';
+import { collabService } from './CollabService';
+import type { BibEntry } from '../types/bibliography';
 
 export interface ImportResult {
 	success: boolean;
@@ -17,13 +20,8 @@ export interface ImportOptions {
 	duplicateHandling?: 'keep-local' | 'replace' | 'rename' | 'ask';
 	showPreview?: boolean;
 	autoImport?: boolean;
-}
-
-export interface BibEntry {
-	key: string;
-	type: string;
-	fields: Record<string, string>;
-	rawEntry: string;
+	action?: 'import' | 'delete' | 'update';
+	remoteId?: string;
 }
 
 export interface BibTexParser {
@@ -102,7 +100,7 @@ class DefaultBibTexParser implements BibTexParser {
 				if (fieldPos >= fieldsContent.length) break;
 
 				// Find field name
-				const fieldNameMatch = fieldsContent.slice(fieldPos).match(/^(\w+)\s*=/);
+				const fieldNameMatch = fieldsContent.slice(fieldPos).match(/^([\w-]+)\s*=/);
 				if (!fieldNameMatch) {
 					fieldPos++;
 					continue;
@@ -180,9 +178,10 @@ class DefaultBibTexParser implements BibTexParser {
 
 			entries.push({
 				key: key.trim(),
-				type: type.toLowerCase(),
+				entryType: type.toLowerCase(),
 				fields,
-				rawEntry: fullEntry
+				rawEntry: fullEntry,
+				remoteId: fields['remote-id'] || fields['external-id'] || undefined
 			});
 
 			pos = entryEnd + 1;
@@ -200,17 +199,32 @@ class DefaultBibTexParser implements BibTexParser {
 			.map(([key, value]) => `  ${key} = {${value}}`)
 			.join(',\n');
 
-		return `@${entry.type}{${entry.key},\n${fieldsString}\n}`;
+		return `@${entry.entryType}{${entry.key},\n${fieldsString}\n}`;
 	}
 
 	findEntryPosition(content: string, entry: BibEntry): { start: number; end: number } | null {
+		// Try exact rawEntry match first
 		const index = content.indexOf(entry.rawEntry);
-		if (index === -1) return null;
+		if (index !== -1) {
+			return { start: index, end: index + entry.rawEntry.length };
+		}
 
-		return {
-			start: index,
-			end: index + entry.rawEntry.length
-		};
+		// Fallback: find by entry type + key using regex
+		const escapedKey = entry.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+		const entryRegex = new RegExp(`@${entry.entryType}\\s*\\{\\s*${escapedKey}\\s*,`, 'i');
+		const match = entryRegex.exec(content);
+		if (!match) return null;
+
+		// Find matching closing brace
+		let braceCount = 1;
+		let pos = match.index + match[0].length;
+		while (pos < content.length && braceCount > 0) {
+			if (content[pos] === '{') braceCount++;
+			else if (content[pos] === '}') braceCount--;
+			pos++;
+		}
+
+		return { start: match.index, end: pos };
 	}
 
 	updateEntryInContent(content: string, entry: BibEntry): string {
@@ -229,6 +243,11 @@ export class BibliographyImportService {
 	private importQueue: Map<string, Promise<ImportResult>> = new Map();
 	private notificationCallbacks: Array<(result: ImportResult) => void> = [];
 	private parser: BibTexParser = new DefaultBibTexParser();
+	private openBibFiles: Set<string> = new Set();
+
+	isFileOpen(filePath: string): boolean {
+		return this.openBibFiles.has(filePath);
+	}
 
 	static getInstance(): BibliographyImportService {
 		if (!BibliographyImportService.instance) {
@@ -265,179 +284,157 @@ export class BibliographyImportService {
 		});
 	}
 
-	async importEntry(
-		entryKey: string,
-		rawEntry: string,
-		options: ImportOptions = {}
-	): Promise<ImportResult> {
-		const existingImport = this.importQueue.get(entryKey);
-		if (existingImport) {
-			return existingImport;
-		}
-
-		const importPromise = this.performImport(entryKey, rawEntry, options);
-		this.importQueue.set(entryKey, importPromise);
-
-		try {
-			const result = await importPromise;
-			this.notifyCallbacks(result);
-			return result;
-		} finally {
-			this.importQueue.delete(entryKey);
-		}
+	private async dispatchFileReload(filePath: string): Promise<void> {
+		const file = await fileStorageService.getFileByPath(filePath);
+		if (!file) return;
+		document.dispatchEvent(new CustomEvent('file-reloaded', {
+			detail: { filePath, fileId: file.id }
+		}));
 	}
 
-	private async performImport(
-		entryKey: string,
-		rawEntry: string,
-		options: ImportOptions
-	): Promise<ImportResult> {
-		try {
-			const targetFile = await this.getTargetFile(options.targetFile);
-			if (!targetFile) {
-				return {
-					success: false,
-					entryKey,
-					error: 'No target bibliography file selected. Please select a target file in the JabRef panel.'
-				};
-			}
+	async batchImport(
+		filePath: string,
+		entries: Array<{ entryKey: string; rawEntry: string; remoteId?: string }>,
+		duplicateHandling: 'keep-local' | 'replace' | 'rename' | 'ask' = 'keep-local'
+	): Promise<void> {
+		await this.updateContent(filePath, (content) => {
+			let current = content;
+			const allKeys = new Set(this.parser.parse(current).map(e => e.key));
 
-			let currentContent = '';
-			if (targetFile.content) {
-				currentContent = typeof targetFile.content === 'string'
-					? targetFile.content
-					: new TextDecoder().decode(targetFile.content);
-			}
-
-			const existingEntries = this.parser.parse(currentContent);
-			const existingEntry = existingEntries.find(entry => entry.key === entryKey);
-
-			if (existingEntry) {
-				const duplicateResult = await this.handleDuplicate(
-					entryKey,
-					rawEntry,
-					existingEntry,
-					options
+			for (let { entryKey, rawEntry, remoteId } of entries) {
+				const existing = this.parser.parse(current).find(e =>
+					e.key === entryKey ||
+					(remoteId && (e.remoteId || e.fields['remote-id'] || e.fields['external-id']) === remoteId)
 				);
 
-				if (!duplicateResult.shouldImport) {
-					return {
-						success: true,
-						entryKey,
-						filePath: targetFile.path,
-						isDuplicate: true,
-						action: 'skipped'
-					};
+				if (existing) {
+					if (duplicateHandling === 'keep-local' || duplicateHandling === 'ask') continue;
+
+					if (duplicateHandling === 'replace') {
+						const position = this.parser.findEntryPosition(current, existing);
+						if (position) {
+							current = current.substring(0, position.start) +
+								this.formatEntryForAppending(rawEntry).trim() +
+								current.substring(position.end);
+						}
+						continue;
+					}
+
+					if (duplicateHandling === 'rename') {
+						let counter = 1;
+						let newKey = `${entryKey}_${counter}`;
+						while (allKeys.has(newKey)) { counter++; newKey = `${entryKey}_${counter}`; }
+						rawEntry = rawEntry.replace(entryKey, newKey);
+						entryKey = newKey;
+						allKeys.add(newKey);
+					}
 				}
 
-				if (duplicateResult.newKey && duplicateResult.newKey !== entryKey) {
-					rawEntry = rawEntry.replace(entryKey, duplicateResult.newKey);
-					entryKey = duplicateResult.newKey;
-				}
+				const formatted = this.formatEntryForAppending(rawEntry);
+				current = current.trim() ? `${current.trim()}\n\n${formatted}` : formatted;
 			}
-
-			const entryToAppend = this.formatEntryForAppending(rawEntry);
-			const newContent = currentContent.trim()
-				? `${currentContent.trim()}\n\n${entryToAppend}`
-				: entryToAppend;
-
-			await fileStorageService.updateFileContent(targetFile.id, newContent);
-			document.dispatchEvent(new CustomEvent('refresh-file-tree'));
-
-			return {
-				success: true,
-				entryKey,
-				filePath: targetFile.path,
-				action: existingEntry ? 'replaced' : 'imported'
-			};
-
-		} catch (error) {
-			console.error(`Error importing entry ${entryKey}:`, error);
-			return {
-				success: false,
-				entryKey,
-				error: error instanceof Error ? error.message : t('Import failed')
-			};
-		}
+			return current;
+		});
+		document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+		if (this.openBibFiles.has(filePath)) await this.dispatchFileReload(filePath);
 	}
 
-	private async getTargetFile(targetPath?: string) {
-		try {
-			if (targetPath) {
-				const file = await fileStorageService.getFileByPath(targetPath);
-				if (file && !file.isDeleted) {
-					return file;
+	async batchUpdate(
+		filePath: string,
+		updates: Array<{ entryKey: string; rawEntry: string; remoteId?: string }>
+	): Promise<void> {
+		await this.updateContent(filePath, (content) => {
+			let current = content;
+			for (const { entryKey, rawEntry, remoteId } of updates) {
+				const existing = this.parser.parse(current).find(e =>
+					e.key === entryKey ||
+					(remoteId && (e.remoteId || e.fields['remote-id'] || e.fields['external-id']) === remoteId)
+				);
+				if (!existing) continue;
+				const remoteFieldKey = existing.fields['external-id'] ? 'external-id' : 'remote-id';
+				const resolvedRemoteId = remoteId || existing.remoteId || existing.fields[remoteFieldKey];
+				const incoming = this.parser.parse(rawEntry)[0];
+				const updatedEntry: BibEntry = {
+					key: existing.key,
+					entryType: incoming?.entryType || existing.entryType,
+					fields: { ...incoming?.fields, ...(resolvedRemoteId ? { [remoteFieldKey]: resolvedRemoteId } : {}) },
+					rawEntry,
+					remoteId: resolvedRemoteId
+				};
+				const position = this.parser.findEntryPosition(current, existing);
+				if (position) {
+					current = current.substring(0, position.start) +
+						this.parser.serializeEntry(updatedEntry) +
+						current.substring(position.end);
 				}
 			}
-
-			const allFiles = await fileStorageService.getAllFiles();
-			const bibFile = allFiles.find(file =>
-				isBibFile(file.name) &&
-				!file.isDeleted
-			);
-
-			return bibFile || null;
-		} catch (error) {
-			console.error('Error finding target file:', error);
-			return null;
-		}
+			return current;
+		});
+		document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+		if (this.openBibFiles.has(filePath)) await this.dispatchFileReload(filePath);
 	}
 
-	private async handleDuplicate(
-		entryKey: string,
-		rawEntry: string,
-		existingEntry: BibEntry,
-		options: ImportOptions
-	): Promise<{ shouldImport: boolean; newKey?: string }> {
-		const duplicateHandling = options.duplicateHandling || 'keep-local';
-
-		switch (duplicateHandling) {
-			case 'keep-local':
-				return { shouldImport: false };
-
-			case 'replace':
-				return { shouldImport: true };
-
-			case 'rename':
-				const newKey = await this.generateUniqueKey(entryKey);
-				return { shouldImport: true, newKey };
-
-			case 'ask':
-				return { shouldImport: false };
-
-			default:
-				return { shouldImport: false };
-		}
+	async batchDelete(
+		filePath: string,
+		entries: Array<{ entryKey: string; remoteId?: string }>
+	): Promise<void> {
+		await this.updateContent(filePath, (content) => {
+			let current = content;
+			for (const { entryKey, remoteId } of entries) {
+				const existing = this.parser.parse(current).find(e =>
+					e.key === entryKey ||
+					(remoteId && (e.remoteId || e.fields['remote-id'] || e.fields['external-id']) === remoteId)
+				);
+				if (!existing) continue;
+				const position = this.parser.findEntryPosition(current, existing);
+				if (!position) continue;
+				let end = position.end;
+				while (end < current.length && /[\r\n\s]/.test(current[end])) end++;
+				current = current.substring(0, position.start) + current.substring(end);
+			}
+			return current;
+		});
+		document.dispatchEvent(new CustomEvent('refresh-file-tree'));
+		if (this.openBibFiles.has(filePath)) await this.dispatchFileReload(filePath);
 	}
 
-	private async generateUniqueKey(baseKey: string): Promise<string> {
-		try {
-			const allFiles = await fileStorageService.getAllFiles();
-			const allKeys = new Set<string>();
+	private async updateContent(
+		filePath: string,
+		updater: (currentContent: string) => string
+	): Promise<void> {
+		const file = await fileStorageService.getFileByPath(filePath);
+		if (!file) throw new Error('File not found');
 
-			for (const file of allFiles) {
-				if (isBibFile(file.name) && !file.isDeleted && file.content) {
-					const content = typeof file.content === 'string'
-						? file.content
-						: new TextDecoder().decode(file.content);
+		if (file.documentId) {
+			const currentFragment = parseUrlFragments(window.location.hash.substring(1));
+			const projectId = currentFragment.yjsUrl?.slice(4);
 
-					const entries = this.parser.parse(content);
-					entries.forEach(entry => allKeys.add(entry.key));
-				}
+			if (projectId) {
+				await collabService.updateDocumentContent(
+					projectId,
+					file.documentId,
+					updater
+				);
 			}
-
-			let counter = 1;
-			let newKey = `${baseKey}_${counter}`;
-			while (allKeys.has(newKey)) {
-				counter++;
-				newKey = `${baseKey}_${counter}`;
-			}
-
-			return newKey;
-		} catch (error) {
-			console.error('Error generating unique key:', error);
-			return `${baseKey}_${Date.now()}`;
 		}
+
+		let currentContent = '';
+		if (file.content) {
+			currentContent = typeof file.content === 'string'
+				? file.content
+				: new TextDecoder().decode(file.content);
+		}
+
+		const newContent = updater(currentContent);
+		await fileStorageService.updateFileContent(file.id, newContent);
+	}
+
+	registerOpenFile(filePath: string): void {
+		this.openBibFiles.add(filePath);
+	}
+
+	unregisterOpenFile(filePath: string): void {
+		this.openBibFiles.delete(filePath);
 	}
 
 	private formatEntryForAppending(rawEntry: string): string {

@@ -16,7 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSecrets } from '@/hooks/useSecrets';
 import { useSettings } from '@/hooks/useSettings';
 import { formatDate } from '@/utils/dateUtils';
-import { forgejoApiService } from './ForgejoApiService';
+import { forgejoAPIService } from './ForgejoAPIService';
 import { forgejoBackupService } from './ForgejoBackupService';
 import { ForgejoIcon } from './Icon';
 import './styles.css';
@@ -206,7 +206,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
         handleAsyncOperation(async () => {
             if (!selectedRepo) return;
             const [owner, repo] = selectedRepo.split('/');
-            const branches = await forgejoApiService.getBranches(
+            const branches = await forgejoAPIService.getBranches(
                 forgejoToken,
                 owner,
                 repo,
@@ -266,7 +266,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
         if (newRepo && forgejoToken) {
             try {
                 const [owner, repo] = newRepo.split('/');
-                const branches = await forgejoApiService.getBranches(
+                const branches = await forgejoAPIService.getBranches(
                     forgejoToken,
                     owner,
                     repo,
@@ -389,6 +389,14 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
                                             {t('Cancel')}
                                         </button>
                                     </div>
+                                    <br />
+                                    <a
+                                        href="https://texlyre.github.io/docs/integrations/codeberg"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="dropdown-link">
+                                        {t('Learn more about Codeberg (Forgejo) Integration')}
+                                    </a>
                                 </div>
                             )}
                             {connectionStep === 'repo' && (

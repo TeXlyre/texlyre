@@ -1,0 +1,51 @@
+/* extras/bibliography/zotero/styles.css */
+.zotero-connection-modal {
+    padding: 1rem;
+}
+
+.zotero-connection-step {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.zotero-step-description {
+    margin: 0 0 1rem 0;
+    color: var(--text-secondary);
+}
+
+.zotero-button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.zotero-panel {
+    padding: 1rem;
+}
+
+.zotero-connection-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.zotero-not-connected,
+.zotero-connected,
+.zotero-connecting,
+.zotero-error {
+    padding: 1rem;
+    border-radius: 8px;
+    background-color: var(--accent-background);
+}
+
+.zotero-connected .connection-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.zotero-error .error-message {
+    margin-bottom: 1rem;
+}

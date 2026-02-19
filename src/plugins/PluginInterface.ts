@@ -2,6 +2,7 @@
 import type React from 'react';
 import type { Setting } from '../contexts/SettingsContext';
 import type { BackupStatus } from '../types/backup';
+import type { BibEntry } from '../types/bibliography';
 
 export interface Plugin {
 	id: string;
@@ -82,14 +83,32 @@ export interface LoggerProps {
 	onLineClick?: (line: number) => void;
 }
 
-// Language Server Protocol (LSP) Support
-export interface BibEntry {
-	key: string;
-	entryType: string;
-	fields: Record<string, string>;
-	rawEntry: string;
+// Bibliography Support
+export interface BibliographyPlugin extends Plugin {
+	type: 'bibliography';
+	icon?: React.ComponentType;
+
+	isEnabled(): boolean;
+	getConnectionStatus(): 'connected' | 'connecting' | 'disconnected' | 'error';
+	getStatusMessage(): string;
+
+	getSupportedFileTypes(): string[];
+
+	getBibliographyEntries(): Promise<BibEntry[]>;
+
+	renderPanel?: React.ComponentType<BibliographyPanelProps>;
+	updateServerUrl?(url: string): void;
 }
 
+export interface BibliographyPanelProps {
+	className?: string;
+	onItemSelect?: (item: any) => void;
+	searchQuery?: string;
+	onSearchChange?: (query: string) => void;
+	pluginInstance?: BibliographyPlugin;
+}
+
+// Language Server Protocol (LSP) Support
 export interface LSPPluginTransportConfig {
 	type: 'websocket' | 'worker';
 	url?: string;
@@ -109,8 +128,6 @@ export interface LSPPlugin extends Plugin {
 
 	getTransportConfig(): LSPPluginTransportConfig;
 	updateServerUrl?(url: string): void;
-
-	getBibliographyEntries?(): Promise<BibEntry[]>;
 
 	renderPanel?: React.ComponentType<LSPPanelProps>;
 }
@@ -192,6 +209,7 @@ export type PluginRegistry = {
 	renderers: RendererPlugin[];
 	loggers: LoggerPlugin[];
 	lsp: LSPPlugin[];
+	bibliography: BibliographyPlugin[];
 	backup: BackupPlugin[];
 	themes: ThemePlugin[];
 };

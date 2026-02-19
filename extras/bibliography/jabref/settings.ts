@@ -1,11 +1,11 @@
-// extras/lsp/jabref/settings.ts
+// extras/bibliography/jabref/settings.ts
 import { t } from '@/i18n';
 import type { Setting } from '@/contexts/SettingsContext';
 
 export const getJabrefLSPSettings = (): Setting[] => [
   {
     id: 'jabref-lsp-enabled',
-    category: t("LSP"),
+    category: t("Bibliography"),
     subcategory: t("JabRef"),
     type: 'checkbox',
     label: t("Enable JabRef LSP"),
@@ -15,7 +15,7 @@ export const getJabrefLSPSettings = (): Setting[] => [
   },
   {
     id: 'jabref-lsp-server-url',
-    category: t("LSP"),
+    category: t("Bibliography"),
     subcategory: t("JabRef"),
     type: 'text',
     label: t("LSP Server URL"),
@@ -24,31 +24,8 @@ export const getJabrefLSPSettings = (): Setting[] => [
     liveUpdate: false
   },
   {
-    id: 'jabref-lsp-show-panel',
-    category: t("LSP"),
-    subcategory: t("JabRef"),
-    type: 'checkbox',
-    label: t("Show JabRef panel"),
-    description: t("Display the JabRef bibliography panel in the editor"),
-    defaultValue: true
-  },
-  {
-    id: 'jabref-lsp-citation-style',
-    category: t("LSP"),
-    subcategory: t("JabRef"),
-    type: 'select',
-    label: t("Default citation style"),
-    description: t("Default citation style for auto-completion"),
-    defaultValue: 'numeric',
-    options: [
-      { label: t("Numeric [1]"), value: 'numeric' },
-      { label: t("Author-Year (Smith, 2023)"), value: 'author-year' },
-      { label: t("Alphabetic [Smi23]"), value: 'alphabetic' }]
-
-  },
-  {
     id: 'jabref-lsp-max-completions',
-    category: t("LSP"),
+    category: t("Bibliography"),
     subcategory: t("JabRef"),
     type: 'number',
     label: t("Maximum completion items"),
@@ -59,7 +36,7 @@ export const getJabrefLSPSettings = (): Setting[] => [
   },
   {
     id: 'jabref-lsp-auto-import',
-    category: t("LSP"),
+    category: t("Bibliography"),
     subcategory: t("JabRef"),
     type: 'checkbox',
     label: t("Auto-import external citations"),
@@ -77,7 +54,7 @@ export const getJabrefLSPSettings = (): Setting[] => [
   // },
   {
     id: 'jabref-lsp-merge-duplicates',
-    category: t("LSP"),
+    category: t("Bibliography"),
     subcategory: t("JabRef"),
     type: 'select',
     label: t("Duplicate handling"),
@@ -86,8 +63,8 @@ export const getJabrefLSPSettings = (): Setting[] => [
     options: [
       { label: t("Keep local version"), value: 'keep-local' },
       { label: t("Replace with external"), value: 'replace' },
-      { label: t("Rename imported entry"), value: 'rename' },
-      { label: t("Always ask"), value: 'ask' }]
+      { label: t("Rename imported entry"), value: 'rename' }
+    ]
 
   }
   // {
