@@ -35,6 +35,7 @@ module.exports = {
         '!src/**/*.d.ts',
         '!src/vite-env.d.ts',
     ],
+    coverageProvider: 'v8',
     // NOTE (fabawi): Disabling threshold for now until we have proper coverage
     // coverageThreshold: {
     //     global: {

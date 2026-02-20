@@ -1788,6 +1788,7 @@
   "to confirm": "以确认",
   "To create a new project, click the '+' <strong>New Project</strong> button or <icon /> <strong>Import</strong> an existing one.": "要创建新项目，请单击\"+\" <strong>新建项目</strong> 按钮或 <icon /> <strong>导入</strong> 现有项目。",
   "to find matching DOIs": "以查找匹配的 DOI",
+  "To import entries, select a target .bib file by clicking the <icon /> button above.": "要导入条目，请单击上方的 <icon /> 按钮选择目标 .bib 文件。",
   "to switch between insert and normal mode.": "在插入模式和普通模式之间切换。",
   "to use Vim-style shortcuts. Vim mode uses": "使用 Vim 样式的快捷键。Vim 模式使用",
   "Today": "今天",

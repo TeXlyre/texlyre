@@ -21,6 +21,7 @@ const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
         targetBibFile,
         externalEntries,
         localEntries,
+        handleRefresh,
     } = useBibliography();
     const [showModal, setShowModal] = useState(false);
     const [existingCredentials, setExistingCredentials] = useState<{ apiKey: string; userId: string } | null>(null);
@@ -60,6 +61,7 @@ const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
         await zoteroService.connect(apiKey, userId, libraryId, libraryType, projectId);
         const creds = await zoteroService.getStoredCredentials();
         setExistingCredentials(creds);
+        await handleRefresh();
     };
 
     const handleDisconnect = async () => {
