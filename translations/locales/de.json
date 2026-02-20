@@ -1685,6 +1685,7 @@
   "to confirm": "bestätigen",
   "To create a new project, click the '+' <strong>New Project</strong> button or <icon /> <strong>Import</strong> an existing one.": "Um ein neues Projekt zu erstellen, klicken Sie auf die Schaltfläche '+' <strong>Neues Projekt</strong> oder <icon /> <strong>Importieren</strong> Sie ein vorhandenes.",
   "to find matching DOIs": "um passende DOIs zu finden",
+  "To import entries, select a target .bib file by clicking the <icon /> button above.": "Um Einträge zu importieren, wählen Sie eine Ziel-.bib-Datei aus, indem Sie oben auf die Schaltfläche <icon /> klicken.",
   "to switch between insert and normal mode.": ", um zwischen Einfügen und Normalmodus zu wechseln.",
   "to use Vim-style shortcuts. Vim mode uses": "um Verknüpfungen im Vim-Stil zu verwenden. Vim-Modus verwendet",
   "Today": "Heute",

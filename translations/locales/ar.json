@@ -1793,6 +1793,7 @@
   "to confirm": "للتأكيد",
   "To create a new project, click the '+' <strong>New Project</strong> button or <icon /> <strong>Import</strong> an existing one.": "لإنشاء مشروع جديد، انقر على زر '+' <strong> مشروع جديد </strong> أو <icon /> <strong> استيراد </strong> مشروع موجود.",
   "to find matching DOIs": "للعثور على DOIs المطابقة",
+  "To import entries, select a target .bib file by clicking the <icon /> button above.": "لاستيراد المدخلات، حدد ملف .bib المستهدف بالنقر على زر <icon /> أعلاه.",
   "to switch between insert and normal mode.": "للتبديل بين وضع الإدراج والوضع العادي.",
   "to use Vim-style shortcuts. Vim mode uses": "لاستخدام اختصارات بنمط Vim. يستخدم وضع Vim",
   "Today": "اليوم",

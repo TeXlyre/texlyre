@@ -1687,6 +1687,7 @@
   "to confirm": "to confirm",
   "To create a new project, click the '+' <strong>New Project</strong> button or <icon /> <strong>Import</strong> an existing one.": "To create a new project, click the '+' <strong>New Project</strong> button or <icon /> <strong>Import</strong> an existing one.",
   "to find matching DOIs": "to find matching DOIs",
+  "To import entries, select a target .bib file by clicking the <icon /> button above.": "To import entries, select a target .bib file by clicking the <icon /> button above.",
   "to switch between insert and normal mode.": "to switch between insert and normal mode.",
   "to use Vim-style shortcuts. Vim mode uses": "to use Vim-style shortcuts. Vim mode uses",
   "Today": "Today",

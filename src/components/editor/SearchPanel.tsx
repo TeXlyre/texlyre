@@ -4,7 +4,7 @@ import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
 import { useSearch } from '../../hooks/useSearch';
-import { SearchIcon, ReplaceIcon, CloseIcon, FileTextIcon } from '../common/Icons';
+import { SearchIcon, ReplaceIcon, FileTextIcon } from '../common/Icons';
 import SearchReplaceModal from './SearchReplaceModal';
 import { fileOperationNotificationService } from '../../services/FileOperationNotificationService';
 

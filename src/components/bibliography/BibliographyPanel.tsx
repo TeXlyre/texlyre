@@ -1,5 +1,6 @@
 // src/components/bibliography/BibliographyPanel.tsx
 import { t } from '@/i18n';
+import { Trans } from 'react-i18next';
 import type React from 'react';
 import { useRef, useState } from 'react';
 
@@ -13,8 +14,7 @@ import {
   OptionsIcon,
   ImportIcon,
   TrashIcon,
-  CheckIcon,
-  CloseIcon,
+  CheckIcon
 } from '../common/Icons';
 import type { BibEntry } from '../../types/bibliography';
 
@@ -158,7 +158,7 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
     entryTypeFilter !== 'all' || sourceFilter !== 'all' || selectedCollection !== 'all';
 
   const selectedCount = selectedEntryKeys.size;
-  const canImportSelected = filteredEntries.some(
+  const canImportSelected = !!targetBibFile && filteredEntries.some(
     e => selectedEntryKeys.has(e.key) && e.source === 'external' && !e.isImported
   );
   const canUpdateSelected = filteredEntries.some(
@@ -408,23 +408,33 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
     }
 
     return (
-      <div className="bib-panel-search">
-        <input
-          type="text"
-          placeholder={
-            selectedProvider === 'all' ? t('Search all sources...') :
-              selectedProvider === 'local' ? t('Search local bibliography...') :
-                t('Search bibliography...')
-          }
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          className="bib-search-input" />
-        {searchQuery && (
-          <button className="bib-clear-search-button" onClick={() => setSearchQuery('')}>
-            ×
-          </button>
+      <>
+        <div className="bib-panel-search">
+          <input
+            type="text"
+            placeholder={
+              selectedProvider === 'all' ? t('Search all sources...') :
+                selectedProvider === 'local' ? t('Search local bibliography...') :
+                  t('Search bibliography...')
+            }
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="bib-search-input" />
+          {searchQuery && (
+            <button className="bib-clear-search-button" onClick={() => setSearchQuery('')}>
+              ×
+            </button>
+          )}
+        </div>
+        {selectedProvider !== 'local' && !targetBibFile && (
+          <div className="warning-message">
+            <Trans
+              i18nKey="To import entries, select a target .bib file by clicking the <icon /> button above."
+              components={{ icon: <> <OptionsIcon /> {' '} </> }}
+            />
+          </div>
         )}
-      </div>
+      </>
     );
   };
 
@@ -474,7 +484,7 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
                 <span
                   className="bib-entry-source-badge external"
                   title={targetBibFile || t('No target file selected')}>
-                  {targetBibFile ? targetBibFile.split('/').pop()?.replace('.bib', '') : '↓'}
+                  {targetBibFile ? targetBibFile.split('/').pop()?.replace('.bib', '') : '⚠️'}
                 </span>
                 <span className="bib-entry-source-badge external" title={t('Not imported')}>↓</span>
               </>
@@ -520,7 +530,7 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
               {isExternal && (
                 <button
                   className="bib-action-button import"
-                  disabled={importingEntries.has(entry.key)}
+                  disabled={importingEntries.has(entry.key) || !targetBibFile}
                   onClick={e => { e.stopPropagation(); handleImportEntry(entry); }}>
                   <ImportIcon />
                   {importingEntries.has(entry.key) ? t('Importing...') : t('Import')}
