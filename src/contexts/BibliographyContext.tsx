@@ -603,7 +603,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			return sortOrder === 'asc' ? cmp : -cmp;
 		});
 
-		setFilteredEntries(result.slice(0, maxCompletions));
+		setFilteredEntries(result);
 	}, [searchQuery, entries, maxCompletions, entryTypeFilter, sourceFilter, selectedCollection, sortField, sortOrder]);
 
 	useEffect(() => {
