@@ -106,6 +106,10 @@
 	padding: 0 !important;
 }
 
+[data-layout="texlyre-mobile"] .header-left h1 {
+	margin-top: var(--mobile-spacing-md);
+}
+
 [data-layout="texlyre-mobile"] .header-right .user-dropdown-button {
 	position: fixed !important;
 	inset-block-start: 0 !important;

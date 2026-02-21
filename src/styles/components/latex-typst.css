@@ -286,22 +286,12 @@ embed {
 	flex-wrap: nowrap;
 }
 
-.format-selector-group .dropdown-select {
-	flex: 1;
-}
-
 .pdf-options-toggle {
-	display: flex;
-	align-items: center;
-	background-color: var(--pico-secondary-background);
-	color: var(--text-color);
-	border: 1px solid var(--accent-border);
-	border-radius: var(--radius-sm);
-	cursor: pointer;
-	transition: background-color var(--transition-normal);
-	padding: var(--space-sm);
-	height: 2.5rem;
-	width: auto;
+	line-height: 1;
+	height: auto !important;
+	align-self: stretch;
+	box-sizing: border-box;
+	margin-bottom: 1rem !important;
 }
 
 .pdf-options-toggle:hover:not(:disabled) {

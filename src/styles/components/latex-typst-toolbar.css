@@ -9,12 +9,18 @@
     border-bottom: 1px solid var(--accent-border);
     position: relative;
     flex-shrink: 0;
+    width: auto !important;
 }
 
 .codemirror-toolbar::after {
     content: '';
     display: table;
     clear: both;
+}
+
+.codemirror-toolbar__icon {
+    width: auto !important;
+    padding: auto !important;
 }
 
 .ͼ1 .codemirror-toolbar__item {

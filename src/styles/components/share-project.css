@@ -32,15 +32,7 @@
 	display: flex;
 	gap: var(--space-sm);
 	align-items: stretch;
-}
-
-.share-url-input-group button.secondary.icon-only,
-.share-url-input-group button.primary.smaller,
-.share-url-input-group button.danger.smaller {
-	font-size: 0.85rem;
-	padding: var(--space-md);
-	margin-top: var(--space-us);
-	height: 100%;
+	height: 2.75rem;
 }
 
 .share-url-input {
@@ -52,6 +44,16 @@
 	color: var(--text-color);
 	font-family: monospace;
 	font-size: 0.85rem;
+	box-sizing: border-box;
+	height: auto !important;
+}
+
+.share-url-input,
+.share-url-input-group button.secondary.icon-only,
+.share-url-input-group button.primary.smaller,
+.share-url-input-group button.danger.smaller {
+	height: 100% !important;
+	box-sizing: border-box;
 }
 
 .share-url-input:focus {
