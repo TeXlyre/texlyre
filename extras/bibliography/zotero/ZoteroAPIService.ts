@@ -82,26 +82,30 @@ export class ZoteroAPIService {
                 ? `${this.baseUrl}/users/${libraryId}/items`
                 : `${this.baseUrl}/groups/${libraryId}/items`;
 
-            const response = await fetch(`${endpoint}?limit=100`, {
-                headers: {
-                    'Zotero-API-Key': apiKey,
-                    'Zotero-API-Version': '3'
-                }
-            });
+            const headers = {
+                'Zotero-API-Key': apiKey,
+                'Zotero-API-Version': '3'
+            };
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('[ZoteroAPIService] Response error:', response.status, errorText);
-                throw new Error(`Failed to fetch items: ${response.statusText}`);
+            const countResponse = await fetch(`${endpoint}?limit=1`, { headers });
+            if (!countResponse.ok) {
+                throw new Error(`Failed to fetch items: ${countResponse.statusText}`);
             }
+            const totalItems = parseInt(countResponse.headers.get('Total-Results') || '0', 10);
 
-            const items = await response.json();
+            const pageSize = 100;
+            const pages = Math.ceil(totalItems / pageSize);
+            const requests = Array.from({ length: pages }, (_, i) =>
+                fetch(`${endpoint}?limit=${pageSize}&start=${i * pageSize}`, { headers })
+                    .then(r => r.ok ? r.json() : Promise.reject(new Error(`Failed page ${i}: ${r.statusText}`)))
+            );
 
-            const filteredItems = items.filter((item: ZoteroItem) => {
-                return item.data.itemType !== 'attachment' && item.data.itemType !== 'note';
-            });
+            const results = await Promise.all(requests);
+            const items: ZoteroItem[] = results.flat();
 
-            return filteredItems;
+            return items.filter((item: ZoteroItem) =>
+                item.data.itemType !== 'attachment' && item.data.itemType !== 'note'
+            );
         } catch (error) {
             console.error('[ZoteroAPIService] Error fetching library items:', error);
             throw error;
