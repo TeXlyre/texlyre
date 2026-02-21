@@ -359,21 +359,14 @@
 }
 
 .bib-sort-order-toggle {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	justify-self: center;
-	width: 32px;
-	height: 40px;
-	border: 1px solid var(--accent-border);
-	border-radius: var(--radius-sm);
-	background: var(--pico-secondary-background);
-	color: var(--text-color);
-	cursor: pointer;
-	font-size: 0.85rem;
-	font-weight: 600;
+	line-height: 1;
+	height: auto !important;
+	align-self: stretch;
+	box-sizing: border-box;
+	margin-bottom: 1rem !important;
 	transition: background-color var(--transition-normal);
 	flex-shrink: 0;
+	padding: 0 var(--space-md);
 }
 
 .bib-sort-order-toggle:hover {

@@ -325,10 +325,6 @@
 	border: none;
 }
 
-[data-layout="texlyre-mobile"] .pdf-options-toggle {
-	height: var(--mobile-min-touch-target);
-}
-
 .mobile-nav-button {
 	flex: 1;
 	display: flex;
