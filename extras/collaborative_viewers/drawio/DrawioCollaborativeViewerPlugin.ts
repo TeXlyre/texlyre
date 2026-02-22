@@ -7,7 +7,7 @@ import DrawioCollaborativeViewer from './DrawioCollaborativeViewer';
 const DRAWIO_EXTENSIONS = ['drawio', 'dio', 'xml'];
 const DRAWIO_MIMETYPES = ['application/vnd.jgraph.mxfile', 'application/x-drawio', 'application/xml'];
 
-export const PLUGIN_NAME = t('Draw.io Collaborative Editor') + ' (draw.io 29.3.7)';
+export const PLUGIN_NAME = t('Draw.io Collaborative Editor') + ' (draw.io 29.5.2)';
 export const PLUGIN_VERSION = '0.1.0';
 
 const drawioCollaborativeViewerPlugin: CollaborativeViewerPlugin = {

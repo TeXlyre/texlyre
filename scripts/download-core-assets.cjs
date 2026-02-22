@@ -7,24 +7,30 @@ const JSZip = require("jszip");
 const ASSETS = [
     {
         name: "drawio-embed",
-        version: "v29.3.7",
-        url: "https://github.com/TeXlyre/drawio-embed-mirror/archive/refs/tags/v29.3.7.zip",
+        version: "v29.5.2",
+        url: (version) =>
+            `https://github.com/TeXlyre/drawio-embed-mirror/archive/refs/tags/${version}.zip`,
         dest: path.resolve(__dirname, "../public/core/drawio-embed"),
-        extractPath: (version) => `drawio-embed-mirror-${version.substring(1)}/drawio-embed/`,
+        extractPath: (version) =>
+            `drawio-embed-mirror-${version.substring(1)}/drawio-embed/`,
     },
 ];
 
 async function downloadFile(url) {
     return new Promise((resolve, reject) => {
-        https.get(url, (response) => {
-            if (response.statusCode === 302 || response.statusCode === 301) {
-                return downloadFile(response.headers.location).then(resolve).catch(reject);
-            }
-            const chunks = [];
-            response.on('data', chunk => chunks.push(chunk));
-            response.on('end', () => resolve(Buffer.concat(chunks)));
-            response.on('error', reject);
-        }).on('error', reject);
+        https
+            .get(url, (response) => {
+                if (response.statusCode === 302 || response.statusCode === 301) {
+                    return downloadFile(response.headers.location)
+                        .then(resolve)
+                        .catch(reject);
+                }
+                const chunks = [];
+                response.on("data", (chunk) => chunks.push(chunk));
+                response.on("end", () => resolve(Buffer.concat(chunks)));
+                response.on("error", reject);
+            })
+            .on("error", reject);
     });
 }
 
@@ -38,7 +44,9 @@ async function downloadAndExtract(asset) {
     }
 
     console.log(`Downloading ${asset.name} ${asset.version}...`);
-    const zipBuffer = await downloadFile(asset.url);
+
+    const url = typeof asset.url === "function" ? asset.url(asset.version) : asset.url;
+    const zipBuffer = await downloadFile(url);
 
     console.log(`Extracting ${asset.name}...`);
     const zip = await JSZip.loadAsync(zipBuffer);
@@ -56,7 +64,7 @@ async function downloadAndExtract(asset) {
         const destPath = path.join(asset.dest, relativePath);
 
         await fs.ensureDir(path.dirname(destPath));
-        const content = await file.async('nodebuffer');
+        const content = await file.async("nodebuffer");
         await fs.writeFile(destPath, content);
     }
 

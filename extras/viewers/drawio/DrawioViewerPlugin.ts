@@ -8,7 +8,7 @@ import { DrawioIcon } from './Icon';
 const DRAWIO_EXTENSIONS = ['drawio', 'dio'];
 const DRAWIO_MIMETYPES = ['application/vnd.jgraph.mxfile', 'application/x-drawio'];
 
-export const PLUGIN_NAME = t('Draw.io Diagram Editor') + ' (draw.io 29.3.7)';
+export const PLUGIN_NAME = t('Draw.io Diagram Editor') + ' (draw.io 29.5.2)';
 export const PLUGIN_VERSION = '0.1.0';
 
 const drawioViewerPlugin: ViewerPlugin = {
