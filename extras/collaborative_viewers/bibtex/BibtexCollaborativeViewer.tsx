@@ -109,6 +109,22 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
     if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
       setOptions(saved as TidyOptions);
     }
+
+    registerProperty({
+      id: 'bibtex-tidy-sidebar-open',
+      category: 'Viewers',
+      subcategory: 'BibTeX Editor',
+      defaultValue: true,
+    });
+
+    const savedSidebar = getProperty('bibtex-tidy-sidebar-open', {
+      scope: 'project',
+      projectId: currentProjectId ?? undefined,
+    });
+
+    if (typeof savedSidebar === 'boolean') {
+      setShowSidebar(savedSidebar);
+    }
   }, []);
 
   const handleOptionsChange = (newOptions: TidyOptions) => {
@@ -538,7 +554,15 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
       <PluginControlGroup>
         <button
           className={`${showSidebar ? 'active' : ''}`}
-          onClick={() => setShowSidebar(!showSidebar)}
+          onClick={() => {
+            const next = !showSidebar;
+            setShowSidebar(next);
+            const currentProjectId = sessionStorage.getItem('currentProjectId');
+            setProperty('bibtex-tidy-sidebar-open', next, {
+              scope: 'project',
+              projectId: currentProjectId ?? undefined,
+            });
+          }}
           title={t('Toggle Options Panel')}>
 
           <CleanIcon />
