@@ -72,10 +72,8 @@ describe('ProjectForm Component', () => {
         render(<ProjectForm {...mockHandlers} />);
 
         const tagInput = screen.getByPlaceholderText(/add tags/i);
-        const addButton = screen.getByRole('button', { name: /add/i });
 
-        await user.type(tagInput, 'test-tag');
-        await user.click(addButton);
+        await user.type(tagInput, 'test-tag{Enter}');
 
         await waitFor(() => {
             expect(screen.getByText('test-tag')).toBeInTheDocument();

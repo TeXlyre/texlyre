@@ -19,6 +19,7 @@ import {
   '@/components/common/PluginHeader';
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
+import { useProperties } from '@/hooks/useProperties';
 import { BibliographyProvider } from '@/contexts/BibliographyContext';
 import { useEditorView } from '@/hooks/editor/useEditorView';
 import LSPToggleButton from '@/components/bibliography/LSPToggleButton';
@@ -40,6 +41,7 @@ import { PLUGIN_NAME, PLUGIN_VERSION } from './BibtexViewerPlugin';
 
 const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
   const { getSetting } = useSettings();
+  const { getProperty, setProperty, registerProperty } = useProperties();
   const fileInfo = usePluginFileInfo(fileId, fileName);
 
   const autoTidy =
@@ -69,10 +71,56 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
   const originalEditorRef = useRef<HTMLDivElement>(null);
   const processedEditorRef = useRef<HTMLDivElement>(null);
+  const propertiesRegistered = useRef(false);
 
-  const [options, setOptions] = useState<TidyOptions>(() =>
-    getPresetOptions(tidyPreset)
-  );
+  const [options, setOptions] = useState<TidyOptions>(() => getPresetOptions(tidyPreset));
+
+  useEffect(() => {
+    if (propertiesRegistered.current) return;
+    propertiesRegistered.current = true;
+
+    registerProperty({
+      id: 'bibtex-tidy-options',
+      category: 'Viewers',
+      subcategory: 'BibTeX Editor',
+      defaultValue: getPresetOptions(tidyPreset),
+    });
+
+    const currentProjectId = sessionStorage.getItem('currentProjectId');
+    const saved = getProperty('bibtex-tidy-options', {
+      scope: 'project',
+      projectId: currentProjectId ?? undefined,
+    });
+
+    if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+      setOptions(saved as TidyOptions);
+    }
+
+    registerProperty({
+      id: 'bibtex-tidy-sidebar-open',
+      category: 'Viewers',
+      subcategory: 'BibTeX Editor',
+      defaultValue: true,
+    });
+
+    const savedSidebar = getProperty('bibtex-tidy-sidebar-open', {
+      scope: 'project',
+      projectId: currentProjectId ?? undefined,
+    });
+
+    if (typeof savedSidebar === 'boolean') {
+      setShowSidebar(savedSidebar);
+    }
+  }, []);
+
+  const handleOptionsChange = (newOptions: TidyOptions) => {
+    setOptions(newOptions);
+    const currentProjectId = sessionStorage.getItem('currentProjectId');
+    setProperty('bibtex-tidy-options', newOptions, {
+      scope: 'project',
+      projectId: currentProjectId ?? undefined,
+    });
+  };
 
   const fileType = detectFileType(fileName);
   const { lsp: availableLSPPlugins, bib: availableBibPlugins } = getPluginToggleButtons([fileType]);
@@ -317,7 +365,14 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
   }, [content, autoTidy, tidyPreset]);
 
   useEffect(() => {
-    setOptions(getPresetOptions(tidyPreset));
+    const currentProjectId = sessionStorage.getItem('currentProjectId');
+    const saved = getProperty('bibtex-tidy-options', {
+      scope: 'project',
+      projectId: currentProjectId ?? undefined,
+    });
+    if (!saved) {
+      setOptions(getPresetOptions(tidyPreset));
+    }
   }, [tidyPreset]);
 
   useEffect(() => {
@@ -351,7 +406,6 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
           : `${entry.rawEntry.trim()}\n`;
       }
 
-      // If result is empty (e.g. deleted last entry), apply directly to original
       if (!newContent.trim()) {
         setBibtexContent('');
         setParsedEntries([]);
@@ -540,7 +594,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
   const tooltipInfo = [
     t('Auto-tidy: {status}', { status: autoTidy ? t('enabled') : t('disabled') }),
-    t('Preset: {preset}', { preset: tidyPreset }),
+    t('Preset: {preset}', { preset: t(tidyPreset) }),
     t('Entries: {count}', { count: bibtexContent.split('@').length - 1 }),
     t('MIME Type: {mimeType}', { mimeType: fileInfo.mimeType || 'text/x-bibtex' }),
     t('Size: {size}', { size: formatFileSize(fileInfo.fileSize) })
@@ -551,7 +605,15 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
       <PluginControlGroup>
         <button
           className={`${showSidebar ? 'active' : ''}`}
-          onClick={() => setShowSidebar(!showSidebar)}
+          onClick={() => {
+            const next = !showSidebar;
+            setShowSidebar(next);
+            const currentProjectId = sessionStorage.getItem('currentProjectId');
+            setProperty('bibtex-tidy-sidebar-open', next, {
+              scope: 'project',
+              projectId: currentProjectId ?? undefined,
+            });
+          }}
           title={t('Toggle Options Panel')}>
 
           <CleanIcon />
@@ -637,8 +699,8 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
           {showSidebar &&
             <TidyOptionsPanel
               options={options}
-              onOptionsChange={setOptions}
-              onResetToDefaults={() => setOptions(getPresetOptions('standard'))}
+              onOptionsChange={handleOptionsChange}
+              onResetToDefaults={() => handleOptionsChange(getPresetOptions(tidyPreset))}
               onProcessBibtex={processBibtex}
               isProcessing={isProcessing} />
 

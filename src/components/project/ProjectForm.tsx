@@ -4,6 +4,7 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 
 import type { Project } from '../../types/projects.ts';
+import { TagInput } from '../common/TagInput';
 
 interface ProjectFormProps {
   project?: Project;
@@ -17,8 +18,8 @@ interface ProjectFormProps {
   }) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
-  simpleMode?: boolean; // Added for use in editor
-  disableNameAndDescription?: boolean; // New prop to disable name and description editing
+  simpleMode?: boolean;
+  disableNameAndDescription?: boolean;
 }
 
 const ProjectForm: React.FC<ProjectFormProps> = ({
@@ -26,19 +27,17 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
   onSubmit,
   onCancel,
   isSubmitting = false,
-  simpleMode = false, // Default to full form
+  simpleMode = false,
   disableNameAndDescription = false
 }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<'latex' | 'typst'>('latex');
-  const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [docUrl, setDocUrl] = useState('');
   const [isFavorite, setIsFavorite] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize form with project data if editing
   useEffect(() => {
     if (project) {
       setName(project.name);
@@ -68,25 +67,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
     });
   };
 
-  const handleAddTag = () => {
-    const trimmedTag = tagInput.trim();
-    if (trimmedTag && !tags.includes(trimmedTag)) {
-      setTags([...tags, trimmedTag]);
-      setTagInput('');
-    }
-  };
-
-  const handleTagKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      handleAddTag();
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove));
-  };
-
   return (
     <form className="project-form" onSubmit={handleSubmit}>
       {error && <div className="form-error">{error}</div>}
@@ -100,7 +80,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
             <span>{name}</span>
             <div className="field-note">{t('Open the project to edit its name')}</div>
           </div> :
-
           <input
             type="text"
             id="project-name"
@@ -108,7 +87,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
             onChange={(e) => setName(e.target.value)}
             disabled={isSubmitting || disableNameAndDescription}
             required />
-
         }
       </div>
 
@@ -117,18 +95,14 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
         {disableNameAndDescription ?
           <div className="disabled-field">
             <span>{description || 'No description'}</span>
-            <div className="field-note">{t('Open the project to edit its description')}
-
-            </div>
+            <div className="field-note">{t('Open the project to edit its description')}</div>
           </div> :
-
           <textarea
             id="project-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             disabled={isSubmitting || disableNameAndDescription}
             rows={3} />
-
         }
       </div>
 
@@ -139,60 +113,27 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
             <span>{type === 'latex' ? 'LaTeX' : 'Typst'}</span>
             <div className="field-note">{t('Open the project to edit its typesetter type')}</div>
           </div> :
-
           <select
             id="project-type"
             value={type}
             onChange={(e) => setType(e.target.value as 'latex' | 'typst')}
             disabled={isSubmitting}>
-
             <option value="latex">{t('LaTeX')}</option>
             <option value="typst">{t('Typst')}</option>
           </select>
         }
       </div>
 
-      {/* Only show these fields in full mode (not in simple mode) */}
       {!simpleMode &&
         <>
           <div className="form-group">
             <label htmlFor="project-tags">{t('Tags')}</label>
-            <div className="tag-input-container">
-              <input
-                type="text"
-                id="project-tags"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={handleTagKeyPress}
-                disabled={isSubmitting}
-                placeholder={t('Add tags (press Enter or comma to add)')} />
-
-              <button
-                type="button"
-                className="button primary"
-                onClick={handleAddTag}
-                disabled={!tagInput.trim() || isSubmitting}>{t('Add')}
-
-
-              </button>
-            </div>
-
-            {tags.length > 0 &&
-              <div className="tags-container">
-                {tags.map((tag, index) =>
-                  <div key={index} className="tag">
-                    <span>{tag}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTag(tag)}
-                      disabled={isSubmitting}>
-
-                      ×
-                    </button>
-                  </div>
-                )}
-              </div>
-            }
+            <TagInput
+              values={tags}
+              onChange={setTags}
+              placeholder={t('Add tags (press Enter or comma to add)')}
+              disabled={isSubmitting}
+            />
           </div>
 
           {!project &&
@@ -203,7 +144,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                   checked={isFavorite}
                   onChange={(e) => setIsFavorite(e.target.checked)}
                   disabled={isSubmitting} />
-
                 <span>{t('Add to favorites')}</span>
               </label>
             </div>
@@ -217,25 +157,18 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
           className="button secondary"
           onClick={onCancel}
           disabled={isSubmitting}>{t('Cancel')}
-
-
         </button>
         <button
           type="submit"
           className="button primary"
           disabled={isSubmitting}>
-
           {isSubmitting ?
-            project ?
-              t('Updating...') :
-              t('Creating...') :
-            project ?
-              t('Update Project') :
-              t('Create Project')}
+            project ? t('Updating...') : t('Creating...') :
+            project ? t('Update Project') : t('Create Project')}
         </button>
       </div>
-    </form>);
-
+    </form>
+  );
 };
 
 export default ProjectForm;

@@ -19,6 +19,7 @@ import {
   '@/components/common/PluginHeader';
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
+import { useProperties } from '@/hooks/useProperties';
 import { BibliographyProvider } from '@/contexts/BibliographyContext';
 import { useEditorView } from '@/hooks/editor/useEditorView';
 import LSPToggleButton from '@/components/bibliography/LSPToggleButton';
@@ -56,6 +57,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
   updateComments
 }) => {
   const { getSetting } = useSettings();
+  const { getProperty, setProperty, registerProperty } = useProperties();
   const fileInfo = usePluginFileInfo(fileId, fileName);
 
   const autoTidy =
@@ -83,9 +85,57 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
   const [updateCounter, setUpdateCounter] = useState(0);
 
   const editorRef = useRef<HTMLDivElement>(null);
-  const [options, setOptions] = useState<TidyOptions>(() =>
-    getPresetOptions(tidyPreset)
-  );
+  const propertiesRegistered = useRef(false);
+
+  const [options, setOptions] = useState<TidyOptions>(() => getPresetOptions(tidyPreset));
+
+  useEffect(() => {
+    if (propertiesRegistered.current) return;
+    propertiesRegistered.current = true;
+
+    registerProperty({
+      id: 'bibtex-tidy-options',
+      category: 'Viewers',
+      subcategory: 'BibTeX Editor',
+      defaultValue: getPresetOptions(tidyPreset),
+    });
+
+    const currentProjectId = sessionStorage.getItem('currentProjectId');
+    const saved = getProperty('bibtex-tidy-options', {
+      scope: 'project',
+      projectId: currentProjectId ?? undefined,
+    });
+
+    if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+      setOptions(saved as TidyOptions);
+    }
+
+    registerProperty({
+      id: 'bibtex-tidy-sidebar-open',
+      category: 'Viewers',
+      subcategory: 'BibTeX Editor',
+      defaultValue: true,
+    });
+
+    const savedSidebar = getProperty('bibtex-tidy-sidebar-open', {
+      scope: 'project',
+      projectId: currentProjectId ?? undefined,
+    });
+
+    if (typeof savedSidebar === 'boolean') {
+      setShowSidebar(savedSidebar);
+    }
+  }, []);
+
+  const handleOptionsChange = (newOptions: TidyOptions) => {
+    setOptions(newOptions);
+    const currentProjectId = sessionStorage.getItem('currentProjectId');
+    setProperty('bibtex-tidy-options', newOptions, {
+      scope: 'project',
+      projectId: currentProjectId ?? undefined,
+    });
+  };
+
   const _activeContent =
     currentView === 'original' ? bibtexContent : processedContent;
 
@@ -264,6 +314,17 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
   }, [content, autoTidy, tidyPreset]);
 
   useEffect(() => {
+    const currentProjectId = sessionStorage.getItem('currentProjectId');
+    const saved = getProperty('bibtex-tidy-options', {
+      scope: 'project',
+      projectId: currentProjectId ?? undefined,
+    });
+    if (!saved) {
+      setOptions(getPresetOptions(tidyPreset));
+    }
+  }, [tidyPreset]);
+
+  useEffect(() => {
     if (viewMode === 'table' && currentView === 'processed') {
       console.log('Switching to table view - syncing with processed editor content');
 
@@ -311,7 +372,6 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
           : `${entry.rawEntry.trim()}\n`;
       }
 
-      // If result is empty (e.g. deleted last entry), apply directly to original
       if (!newContent.trim()) {
         setBibtexContent('');
         setProcessedContent('');
@@ -416,7 +476,6 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
                 changes: { from: 0, to: docLength, insert: contentToSave }
               });
             } else {
-              // Doc is empty after view switch — wait for Yjs to sync, then replace
               await new Promise(resolve => setTimeout(resolve, 200));
               const syncedLength = originalView.state.doc.length;
               originalView.dispatch({
@@ -483,7 +542,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
   const tooltipInfo = [
     t('Auto-tidy: {status}', { status: autoTidy ? t('enabled') : t('disabled') }),
-    t('Preset: {preset}', { preset: tidyPreset }),
+    t('Preset: {preset}', { preset: t(tidyPreset) }),
     t('Entries: {count}', { count: bibtexContent.split('@').length - 1 }),
     t('Collaborative Mode: Active'),
     t('MIME Type: {mimeType}', { mimeType: fileInfo.mimeType || 'text/x-bibtex' }),
@@ -495,7 +554,15 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
       <PluginControlGroup>
         <button
           className={`${showSidebar ? 'active' : ''}`}
-          onClick={() => setShowSidebar(!showSidebar)}
+          onClick={() => {
+            const next = !showSidebar;
+            setShowSidebar(next);
+            const currentProjectId = sessionStorage.getItem('currentProjectId');
+            setProperty('bibtex-tidy-sidebar-open', next, {
+              scope: 'project',
+              projectId: currentProjectId ?? undefined,
+            });
+          }}
           title={t('Toggle Options Panel')}>
 
           <CleanIcon />
@@ -605,8 +672,8 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
           {showSidebar &&
             <TidyOptionsPanel
               options={options}
-              onOptionsChange={setOptions}
-              onResetToDefaults={() => setOptions(getPresetOptions('standard'))}
+              onOptionsChange={handleOptionsChange}
+              onResetToDefaults={() => handleOptionsChange(getPresetOptions(tidyPreset))}
               onProcessBibtex={processBibtex}
               isProcessing={isProcessing} />
 

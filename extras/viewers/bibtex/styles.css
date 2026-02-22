@@ -509,6 +509,8 @@
 .bibtex-table td.editable {
 	cursor: pointer;
 	transition: background-color 0.2s ease;
+	color: var(--text-color);
+	background-color: var(--pico-background);
 }
 
 .bibtex-table td.editable:hover {

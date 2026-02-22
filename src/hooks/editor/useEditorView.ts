@@ -500,15 +500,14 @@ export const useEditorView = (
                 }, 100);
             } else if (!isEditingFile && documentId) {
                 setTimeout(async () => {
-                    if (viewRef.current) {
-                        filePathCacheService.updateCurrentFilePath('', documentId);
-                        updateLinkNavigationFileName(viewRef.current, fileName || '');
+                    if (!viewRef.current) return;
+                    filePathCacheService.updateCurrentFilePath('', documentId);
+                    updateLinkNavigationFileName(viewRef.current, fileName || '');
 
-                        const allFiles = await fileStorageService.getAllFiles(false);
-                        const linkedFile = allFiles.find((file) => file.documentId === documentId);
-                        if (linkedFile) {
-                            updateLinkNavigationFilePath(viewRef.current, linkedFile.path);
-                        }
+                    const allFiles = await fileStorageService.getAllFiles(false);
+                    const linkedFile = allFiles.find((file) => file.documentId === documentId);
+                    if (linkedFile && viewRef.current) {
+                        updateLinkNavigationFilePath(viewRef.current, linkedFile.path);
                     }
                 }, 100);
             }

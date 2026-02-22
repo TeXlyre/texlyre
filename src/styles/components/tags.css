@@ -1,0 +1,101 @@
+.tag-input-container {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-top: var(--space-sm);
+}
+
+.tag {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    background-color: var(--pico-primary-focus);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+}
+
+.tag button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-size: 1rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* TagInput component */
+.tag-input-field {
+    width: 100%;
+}
+
+.tag-input-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    padding: 0.25rem 0.35rem;
+    background-color: var(--pico-background);
+    border: 1px solid var(--accent-border, #444);
+    border-radius: 3px;
+    min-height: 2rem;
+    align-items: center;
+    cursor: text;
+}
+
+.tag-input-tags:focus-within {
+    border-color: var(--pico-primary);
+}
+
+.tag-input-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    background-color: var(--pico-primary-focus);
+    color: var(--text-color);
+    padding: 1px var(--space-xs);
+    border-radius: var(--radius-sm, 3px);
+    font-size: var(--space-sd);
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.tag-input-remove {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
+    color: inherit;
+    opacity: 0.7;
+    display: flex;
+    align-items: center;
+}
+
+.tag-input-remove:hover {
+    opacity: 1;
+}
+
+.tag-input-inner {
+    flex: 1;
+    min-width: 80px;
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: var(--space-sd) !important;
+    color: var(--text-color) !important;
+    box-shadow: none !important;
+    width: auto !important;
+    height: auto !important;
+}

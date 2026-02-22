@@ -120,6 +120,11 @@
 	background-color: var(--cm-color-active-line-bg);
 }
 
+.codemirror-editor-container .cm-completionInfo {
+	color: var(--cm-color-editor-text);
+	background-color: var(--pico-secondary-background);
+}
+
 /* ============================================================
    Bracket matching
    ============================================================ */
