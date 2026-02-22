@@ -1529,7 +1529,7 @@
   "Request timeout (seconds)": "مهلة الطلب (بالثواني)",
   "Request Timeout (seconds)": "مهلة الطلب (ثواني)",
   "Reset All Transforms": "إعادة تعيين جميع التحويلات",
-  "Reset to Standard Preset": "إعادة التعيين إلى الإعداد المسبق القياسي",
+  "Reset to Default Preset": "إعادة الضبط إلى الإعدادات الافتراضية",
   "Reset Zoom": "إعادة تعيين التكبير",
   "Resolved": "محلول",
   "Retrying commit (attempt {attempt}/{maxRetries})...": "إعادة محاولة الالتزام (محاولة {{attempt}}/{{maxRetries}})...",

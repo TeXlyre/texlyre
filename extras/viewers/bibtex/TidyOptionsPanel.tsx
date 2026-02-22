@@ -35,7 +35,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
           <button
             className="reset-button"
             onClick={onResetToDefaults}
-            title={t('Reset to Standard Preset')}>
+            title={t('Reset to Default Preset')}>
             <ResetIcon />
           </button>
           <button

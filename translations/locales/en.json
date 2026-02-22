@@ -1435,7 +1435,7 @@
   "Request timeout (seconds)": "Request timeout (seconds)",
   "Request Timeout (seconds)": "Request Timeout (seconds)",
   "Reset All Transforms": "Reset All Transforms",
-  "Reset to Standard Preset": "Reset to Standard Preset",
+  "Reset to Default Preset": "Reset to Default Preset",
   "Reset Zoom": "Reset Zoom",
   "Resolved": "Resolved",
   "Retrying commit (attempt {attempt}/{maxRetries})...": "Retrying commit (attempt {{attempt}}/{{maxRetries}})...",

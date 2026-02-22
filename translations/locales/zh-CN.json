@@ -1524,7 +1524,7 @@
   "Request timeout (seconds)": "请求超时（秒）",
   "Request Timeout (seconds)": "请求超时（秒）",
   "Reset All Transforms": "重置所有变换",
-  "Reset to Standard Preset": "重置为标准预设",
+  "Reset to Default Preset": "重置为默认预设",
   "Reset Zoom": "重置缩放",
   "Resolved": "已解决",
   "Retrying commit (attempt {attempt}/{maxRetries})...": "正在重试提交（尝试 {{attempt}}/{{maxRetries}}）...",
