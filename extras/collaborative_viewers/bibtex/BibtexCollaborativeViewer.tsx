@@ -680,10 +680,10 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
           }
 
           <div className="bibtex-content-area">
-            {error && <div className="bib-error-message">{error}</div>}
+            {error && <div className="bib-error-message error-message">{error}</div>}
 
             {warnings.length > 0 &&
-              <div className="warnings-container">
+              <div className="bib-warnings-container warning-message">
                 <h5>{t('Warnings: ')}</h5>
                 {warnings.map((w, i) =>
                   <div key={i} className="warning-item">

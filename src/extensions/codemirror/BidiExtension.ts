@@ -1,3 +1,4 @@
+// src/extensions/codemirror/BidiExtension.ts
 import { RangeSetBuilder, type Extension, StateField, StateEffect } from "@codemirror/state";
 import {
     Decoration,
@@ -8,11 +9,13 @@ import {
     type DecorationSet,
 } from "@codemirror/view";
 
-type Range = { from: number; to: number };
+import { allBidiPatterns } from "./bidi/patterns";
 
-export const setMathEditRegion = StateEffect.define<Range | null>();
+type TextRange = { from: number; to: number };
 
-const mathEditRegionField = StateField.define<Range | null>({
+export const setMathEditRegion = StateEffect.define<TextRange | null>();
+
+const mathEditRegionField = StateField.define<TextRange | null>({
     create() {
         return null;
     },
@@ -26,116 +29,12 @@ const mathEditRegionField = StateField.define<Range | null>({
     },
 });
 
-function findBalancedRange(
-    text: string,
-    start: number,
-    open: string,
-    close: string
-): number | null {
-    if (text[start] !== open) return null;
-    let depth = 0;
-    for (let i = start; i < text.length; i++) {
-        const ch = text[i];
-        if (ch === open) depth++;
-        else if (ch === close) {
-            depth--;
-            if (depth === 0) return i + 1;
-        }
-    }
-    return null;
-}
-
-function findLatexRangesInLine(lineText: string, lineFrom: number): Range[] {
-    const ranges: Range[] = [];
-
-    for (let i = 0; i < lineText.length; i++) {
-        if (lineText[i] === "$") {
-            let j = i + 1;
-            while (j < lineText.length && lineText[j] !== "$") j++;
-            if (j < lineText.length) {
-                ranges.push({ from: lineFrom + i, to: lineFrom + j + 1 });
-                i = j;
-                continue;
-            }
-        }
-
-        if (lineText[i] !== "\\") continue;
-
-        let j = i + 1;
-        if (j >= lineText.length || !/[A-Za-z@]/.test(lineText[j])) continue;
-        while (j < lineText.length && /[A-Za-z@]/.test(lineText[j])) j++;
-        if (j < lineText.length && lineText[j] === "*") j++;
-
-        const commandEnd = j;
-
-        while (j < lineText.length && /\s/.test(lineText[j])) j++;
-
-        while (j < lineText.length && (lineText[j] === "[" || lineText[j] === "{")) {
-            const open = lineText[j];
-            const close = open === "[" ? "]" : "}";
-            const end = findBalancedRange(lineText, j, open, close);
-            if (end == null) break;
-            j = end;
-            while (j < lineText.length && /\s/.test(lineText[j])) j++;
-        }
-
-        if (j > commandEnd) {
-            ranges.push({ from: lineFrom + i, to: lineFrom + j });
-            i = j - 1;
-        }
-    }
-
-    return ranges;
-}
-
-function findTypstRangesInLine(lineText: string, lineFrom: number): Range[] {
-    const ranges: Range[] = [];
-
-    for (let i = 0; i < lineText.length; i++) {
-        if (lineText[i] === "$") {
-            let j = i + 1;
-            while (j < lineText.length && lineText[j] !== "$") j++;
-            if (j < lineText.length) {
-                ranges.push({ from: lineFrom + i, to: lineFrom + j + 1 });
-                i = j;
-                continue;
-            }
-        }
-
-        if (lineText[i] !== "#") continue;
-
-        let j = i + 1;
-        if (j >= lineText.length || !/[A-Za-z_]/.test(lineText[j])) continue;
-        while (j < lineText.length && /[A-Za-z0-9_\-]/.test(lineText[j])) j++;
-
-        const commandEnd = j;
-
-        while (j < lineText.length && /\s/.test(lineText[j])) j++;
-
-        while (j < lineText.length && (lineText[j] === "(" || lineText[j] === "[" || lineText[j] === "{")) {
-            const open = lineText[j];
-            const close = open === "(" ? ")" : open === "[" ? "]" : "}";
-            const end = findBalancedRange(lineText, j, open, close);
-            if (end == null) break;
-            j = end;
-            while (j < lineText.length && /\s/.test(lineText[j])) j++;
-        }
-
-        if (j > commandEnd) {
-            ranges.push({ from: lineFrom + i, to: lineFrom + j });
-            i = j - 1;
-        }
-    }
-
-    return ranges;
-}
-
 const isolate = Decoration.mark({
     attributes: { style: "unicode-bidi: isolate; direction: ltr;" },
     bidiIsolate: Direction.LTR,
 });
 
-function rangesOverlap(r1: Range, r2: Range): boolean {
+function rangesOverlap(r1: TextRange, r2: TextRange): boolean {
     return r1.from < r2.to && r2.from < r1.to;
 }
 
@@ -155,33 +54,35 @@ class LatexTypstBidiIsolatesValue {
     private build(view: EditorView): DecorationSet {
         const b = new RangeSetBuilder<Decoration>();
         const skipRegion = view.state.field(mathEditRegionField, false);
-        const allRanges: Range[] = [];
+        const doc = view.state.doc.toString();
+        const allRanges: TextRange[] = [];
 
-        for (const { from, to } of view.visibleRanges) {
-            let pos = from;
-            while (pos <= to) {
-                const line = view.state.doc.lineAt(pos);
-                const latex = findLatexRangesInLine(line.text, line.from);
-                const typst = findTypstRangesInLine(line.text, line.from);
-
-                allRanges.push(...latex, ...typst);
-
-                pos = line.to + 1;
+        for (const { from: vpFrom, to: vpTo } of view.visibleRanges) {
+            for (const { pattern } of allBidiPatterns) {
+                pattern.lastIndex = 0;
+                let match: RegExpExecArray | null;
+                while ((match = pattern.exec(doc)) !== null) {
+                    const from = match.index;
+                    const to = from + match[0].length;
+                    if (to < vpFrom) continue;
+                    if (from > vpTo) break;
+                    allRanges.push({ from, to });
+                }
             }
         }
 
         allRanges.sort((a, b) => a.from - b.from || a.to - b.to);
 
-        const merged: Range[] = [];
+        const merged: TextRange[] = [];
         for (const range of allRanges) {
             if (merged.length === 0) {
-                merged.push(range);
+                merged.push({ ...range });
             } else {
                 const last = merged[merged.length - 1];
                 if (range.from < last.to) {
                     last.to = Math.max(last.to, range.to);
                 } else {
-                    merged.push(range);
+                    merged.push({ ...range });
                 }
             }
         }

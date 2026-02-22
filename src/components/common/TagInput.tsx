@@ -3,6 +3,8 @@ import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
+const COMMA_CHARS = /[,،、。，]/;
+
 interface TagInputProps {
     values: string[];
     onChange: (values: string[]) => void;
@@ -29,7 +31,7 @@ export const TagInput: React.FC<TagInputProps> = ({
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter' || e.key === ',') {
+        if (e.key === 'Enter') {
             e.preventDefault();
             addTag(inputValue);
             setInputValue('');
@@ -40,7 +42,8 @@ export const TagInput: React.FC<TagInputProps> = ({
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
-        if (val.endsWith(',')) {
+        const lastChar = val[val.length - 1];
+        if (lastChar && COMMA_CHARS.test(lastChar)) {
             addTag(val.slice(0, -1));
             setInputValue('');
         } else {
@@ -56,7 +59,7 @@ export const TagInput: React.FC<TagInputProps> = ({
         <div className="tag-input-field">
             <div className="tag-input-tags">
                 {values.map((tag) => (
-                    <span key={tag} className="tag-input-tag">
+                    <span key={tag} className="tag-input-tag" onClick={(e) => e.stopPropagation()}>
                         {tag}
                         {!disabled && (
                             <button
