@@ -72,15 +72,6 @@ global.BroadcastChannel = MockBroadcastChannel as any;
 global.URL.createObjectURL = jest.fn(() => 'mock-url');
 global.URL.revokeObjectURL = jest.fn();
 
-delete (window as any).location;
-window.location = {
-    hash: '',
-    href: 'http://localhost/',
-    origin: 'http://localhost',
-    pathname: '/',
-    reload: jest.fn(),
-} as any;
-
 Object.defineProperty(global, 'crypto', {
     value: {
         randomUUID: () => '00000000-0000-0000-0000-000000000000',
