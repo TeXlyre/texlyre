@@ -433,7 +433,7 @@ export const useEditorView = (
             extensions.push(createCodeActionsExtension(fileName));
         }
 
-        if (isLatexFileType || isTypstFileType) {
+        if (isLatexFileType || isTypstFileType || isBibFileType) {
             extensions.push(latexTypstBidiIsolates());
         }
 

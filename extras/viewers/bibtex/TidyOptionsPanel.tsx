@@ -52,14 +52,14 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
         <div className="option-group">
           <h5>{t('Fields')}</h5>
 
-          <label className="option-item">
+          <div className="option-item">
             <span>{t('Remove fields:')}</span>
             <TagInput
               values={options.omit || []}
               onChange={(vals) => updateOption('omit', vals)}
               placeholder={t('Add keys (press Enter or comma to add)')}
             />
-          </label>
+          </div>
 
           <label className="option-item">
             <input
@@ -89,7 +89,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
           </label>
 
           {options.sortFields && (
-            <label className="option-item sub-option">
+            <div className="option-item sub-option">
               <span>{t('Field order:')}</span>
               <TagInput
                 values={Array.isArray(options.sortFields) ? options.sortFields : []}
@@ -99,7 +99,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
               <div className="info-message">
                 {t('Leave empty to use default order: title, author, year, journal, …')}
               </div>
-            </label>
+            </div>
           )}
         </div>
 
@@ -203,7 +203,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
           </label>
 
           {options.enclosingBraces && (
-            <label className="option-item sub-option">
+            <div className="option-item sub-option">
               <span>{t('Fields to enclose:')}</span>
               <TagInput
                 values={Array.isArray(options.enclosingBraces) ? options.enclosingBraces : ['title']}
@@ -212,7 +212,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
                 }
                 placeholder={t('Add keys (press Enter or comma to add)')}
               />
-            </label>
+            </div>
           )}
 
           <label className="option-item">
@@ -227,7 +227,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
           </label>
 
           {options.removeBraces && (
-            <label className="option-item sub-option">
+            <div className="option-item sub-option">
               <span>{t('Fields to remove braces from:')}</span>
               <TagInput
                 values={Array.isArray(options.removeBraces) ? options.removeBraces : ['title']}
@@ -236,7 +236,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
                 }
                 placeholder={t('Add keys (press Enter or comma to add)')}
               />
-            </label>
+            </div>
           )}
         </div>
 
@@ -321,7 +321,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
           </label>
 
           {options.sort && (
-            <label className="option-item sub-option">
+            <div className="option-item sub-option">
               <span>{t('Sort by fields:')}</span>
               <TagInput
                 values={Array.isArray(options.sort) ? options.sort : ['key']}
@@ -331,7 +331,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
               <div className="info-message">
                 {t('Prefix a field with - for descending order (e.g. -year). Use key for citation key or type for entry type.')}
               </div>
-            </label>
+            </div>
           )}
         </div>
 
@@ -354,7 +354,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
 
           {options.duplicates && (
             <>
-              <label className="option-item sub-option">
+              <div className="option-item sub-option">
                 <span>{t('Check by:')}</span>
                 <TagInput
                   values={
@@ -374,7 +374,7 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
                 <div className="info-message">
                   {t('Allowed values: doi, key, abstract, citation')}
                 </div>
-              </label>
+              </div>
 
               <label className="option-item sub-option">
                 <span>{t('Merge strategy:')}</span>
@@ -498,6 +498,6 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </div >
   );
 };

@@ -237,26 +237,18 @@
 
 .bib-error-message {
 	padding: 1rem;
-	background-color: rgba(220, 53, 69, 0.1);
-	border: 1px solid rgba(220, 53, 69, 0.3);
-	border-radius: 8px;
-	color: var(--color-error);
 	margin: 1rem;
 	flex-shrink: 0;
 }
 
-.warnings-container {
+.bib-warnings-container {
 	padding: 1rem;
-	background-color: rgba(255, 193, 7, 0.1);
-	border: 1px solid rgba(255, 193, 7, 0.3);
-	border-radius: 8px;
 	margin: 1rem;
 	flex-shrink: 0;
 }
 
-.warnings-container h5 {
+.bib-warnings-container h5 {
 	margin: 0 0 0.5rem 0;
-	color: #856404;
 	font-size: 0.9rem;
 	font-weight: 600;
 }

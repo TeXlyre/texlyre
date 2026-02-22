@@ -86,7 +86,14 @@ Mathematical expressions can be edited interactively using inline previews power
        alt="Inline math preview on hover, with arrow pointing to the edit button that opens the MathLive editor">
 </p>
 
+### Language Server Protocol (LSP)
 
+TeXlyre offers limited LSP support over WebSocket. The CodeMirror editor acts as a client for LSP servers deployed locally. As an example, TeXlyre integrates with a locally-run Harper LS grammar and spell checker (see the [Harper LS recipe](https://texlyre.github.io/docs/supported-lsp/harper-ls) for instructions on how to deploy and integrate the server with TeXlyre).
+
+<p align="center">
+  <img src="showcase/harper_ls_zoomed.png"
+       alt="TeXlyre LSP client receiving grammar and spell-checking actions over WebSocket from the Harper LS server">
+</p>
 
 ## Quick Start
 
@@ -116,9 +123,11 @@ Moreover, you can start your project from a template and share the link with you
 
 TeXlyre's architecture emphasizes **local-first principles** while enabling real-time collaboration. The React frontend communicates with Yjs documents stored in IndexedDB, providing offline-first functionality. WebRTC establishes direct peer connections for real-time synchronization, while **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX) WASM engines** and **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)** handle LaTeX and Typst compilation entirely in the browser.
 
-The **plugin system** allows extensibility through custom viewers, renderers, and backup providers. Core plugins handle PDF rendering, Bibliography cleaning, LaTeX and Typst log visualization, an embedded Draw.io diagram editor with collaborative support, file system backups, and repository backups (GitHub, GitLab, Gitea, and Codeberg). Theme plugins also provide customizable layouts and visual styles.
+The **plugin system** allows extensibility through custom viewers, renderers, and backup providers. Core plugins handle PDF rendering, Bibliography cleaning, LaTeX and Typst log visualization, an embedded **[Draw.io](https://drawio.com)** diagram editor with collaborative support, **[Zotero](https://www.zotero.org/)** reference import and update panel, file system backups, and repository backups to/from GitHub, GitLab, Gitea, and Codeberg (Forgejo). Theme plugins also provide customizable layouts and visual styles with Mobile view support.
 
-![Bib Editor plugin integrated into the TeXlyre app](showcase/bib_editor_zoomed.png)
+![Bib Editor plugin integrated into the TeXlyre app along with Zotero integration panel](showcase/zotero_bib_panel.png)
+
+
 
 ## File Synchronization
 
