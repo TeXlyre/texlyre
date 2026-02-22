@@ -28,6 +28,7 @@ import './styles/components/latex-typst-outline.css';
 import './styles/components/backup-collab.css';
 import './styles/components/resizable-panel.css';
 import './styles/components/toast.css';
+import './styles/components/tags.css';
 import './styles/components/comments.css';
 import './styles/components/auth.css';
 import './styles/components/project.css';

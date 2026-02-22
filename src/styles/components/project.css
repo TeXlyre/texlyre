@@ -492,40 +492,6 @@
   gap: var(--space-md);
 }
 
-.tag-input-container {
-  display: flex;
-  gap: var(--space-sm);
-}
-
-.tags-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-  margin-top: var(--space-sm);
-}
-
-.tag {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  background-color: var(--pico-primary-focus);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-sm);
-  font-size: 0.8rem;
-}
-
-.tag button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  font-size: 1rem;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .tag-filter {
   padding-right: 2rem;
   margin: var(--space-xs);
