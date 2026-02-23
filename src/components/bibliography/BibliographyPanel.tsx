@@ -428,41 +428,35 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
 
     return (
       <>
-        <div className="bib-panel-search">
-          <input
-            type="text"
-            placeholder={
-              selectedProvider === 'all' ? t('Search all sources...') :
-                selectedProvider === 'local' ? t('Search local bibliography...') :
-                  isOnDemand ? t('Search OpenAlex...') :
-                    t('Search bibliography...')
-            }
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            onKeyDown={e => { if (isOnDemand && e.key === 'Enter') triggerSearch(); }}
-            className="bib-search-input"
-          />
-          {isOnDemand ? (
-            <>
-              <button
-                className="bib-search-submit-button"
-                onClick={triggerSearch}
-                disabled={isLoading || !searchQuery.trim()}
-                title={t('Search')}>
-                {isLoading ? '…' : '↵'}
-              </button>
-              {searchQuery && (
-                <button className="bib-clear-search-button" onClick={() => setSearchQuery('')}>
-                  ×
-                </button>
-              )}
-            </>
-          ) : (
-            searchQuery && (
+        <div className="bib-panel-search search-input-container">
+          <div className="bib-search-input-wrapper">
+            <input
+              type="text"
+              placeholder={
+                selectedProvider === 'all' ? t('Search all sources...') :
+                  selectedProvider === 'local' ? t('Search local bibliography...') :
+                    isOnDemand ? t('Search OpenAlex...') :
+                      t('Search bibliography...')
+              }
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={e => { if (isOnDemand && e.key === 'Enter') triggerSearch(); }}
+              className="bib-search-input"
+            />
+            {searchQuery && (
               <button className="bib-clear-search-button" onClick={() => setSearchQuery('')}>
                 ×
               </button>
-            )
+            )}
+          </div>
+          {isOnDemand && (
+            <button
+              className="bib-search-submit-button"
+              onClick={triggerSearch}
+              disabled={isLoading || !searchQuery.trim()}
+              title={t('Search')}>
+              {isLoading ? '…' : 'Search'}
+            </button>
           )}
         </div>
         {selectedProvider !== 'local' && !targetBibFile && !isOnDemand && (

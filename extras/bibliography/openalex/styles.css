@@ -69,11 +69,12 @@
 }
 
 .openalex-filters {
-    border-top: 1px solid var(--border-color, rgba(0,0,0,0.1));
-    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
+    padding: var(--space-sm);
     display: flex;
+    background-color: var(--pico-background);
     flex-direction: column;
-    gap: 0.4rem;
+    border-radius: 6px;
 }
 
 .openalex-filters-header {
@@ -103,7 +104,6 @@
 
 .openalex-clear-filters:hover {
     background-color: var(--accent-background);
-    color: var(--text-primary);
 }
 
 .openalex-filter-row {
@@ -115,38 +115,35 @@
 
 .openalex-filter-row label {
     font-size: 0.8rem;
-    color: var(--text-secondary);
     white-space: nowrap;
 }
 
 .openalex-filter-select,
 .openalex-filter-input {
     width: 100%;
-    font-size: 0.8rem;
-    padding: 0.2rem 0.4rem;
-    border: 1px solid var(--border-color, rgba(0,0,0,0.15));
+    font-size: 0.7rem;
+    padding: var(--space-xs) var(--space-xs) !important;
+    height: fit-content !important;
     border-radius: 4px;
-    background-color: var(--background-primary, #fff);
     color: var(--text-primary);
 }
 
 .openalex-year-range {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: var(--space-xs);
 }
 
 .openalex-year-input {
     width: 100%;
-    font-size: 0.8rem;
-    padding: 0.2rem 0.4rem;
-    border: 1px solid var(--border-color, rgba(0,0,0,0.15));
+    font-size: 0.7rem;
+    padding: var(--space-xs) var(--space-xs) !important;
+    height: fit-content !important;
+    border: 1px solid var(--border-color, rgba(0, 0, 0, 0.15));
     border-radius: 4px;
-    background-color: var(--background-primary, #fff);
-    color: var(--text-primary);
+    height: 100% !important;
 }
 
 .openalex-year-range span {
-    color: var(--text-secondary);
     flex-shrink: 0;
 }
