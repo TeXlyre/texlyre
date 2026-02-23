@@ -12,6 +12,7 @@ export default {
 	  "loggers/latex_visualizer",
 	  "loggers/typst_visualizer",
 	  "bibliography/zotero",
+	  "bibliography/openalex",
 	  "backup/github",
 	  "backup/gitlab",
 	  "backup/forgejo",

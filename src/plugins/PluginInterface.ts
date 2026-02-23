@@ -87,15 +87,12 @@ export interface LoggerProps {
 export interface BibliographyPlugin extends Plugin {
 	type: 'bibliography';
 	icon?: React.ComponentType;
-
+	searchMode?: 'instant' | 'on-demand';
 	isEnabled(): boolean;
 	getConnectionStatus(): 'connected' | 'connecting' | 'disconnected' | 'error';
 	getStatusMessage(): string;
-
 	getSupportedFileTypes(): string[];
-
-	getBibliographyEntries(): Promise<BibEntry[]>;
-
+	getBibliographyEntries(query?: string, localEntries?: BibEntry[]): Promise<BibEntry[]>;
 	renderPanel?: React.ComponentType<BibliographyPanelProps>;
 	updateServerUrl?(url: string): void;
 }
@@ -106,6 +103,7 @@ export interface BibliographyPanelProps {
 	searchQuery?: string;
 	onSearchChange?: (query: string) => void;
 	pluginInstance?: BibliographyPlugin;
+	onFiltersChange?: (filters: Record<string, any>) => void;
 }
 
 // Language Server Protocol (LSP) Support
@@ -118,14 +116,11 @@ export interface LSPPluginTransportConfig {
 export interface LSPPlugin extends Plugin {
 	type: 'lsp';
 	icon?: React.ComponentType;
-
 	isEnabled(): boolean;
 	getConnectionStatus(): 'connected' | 'connecting' | 'disconnected' | 'error';
 	getStatusMessage(): string;
-
 	getSupportedFileTypes(): string[];
 	getSupportedLanguages(): string[];
-
 	getTransportConfig(): LSPPluginTransportConfig;
 	updateServerUrl?(url: string): void;
 

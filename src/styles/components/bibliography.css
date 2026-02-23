@@ -384,6 +384,32 @@
 	flex-shrink: 0;
 }
 
+.bib-search-submit-button {
+	flex-shrink: 0;
+	padding: 0 0.5rem;
+	height: 100%;
+	background: none;
+	border: none;
+	border-left: 1px solid var(--border-color, rgba(0, 0, 0, 0.12));
+	cursor: pointer;
+	color: var(--text-secondary);
+	font-size: 0.9rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background-color 0.15s, color 0.15s;
+}
+
+.bib-search-submit-button:hover:not(:disabled) {
+	background-color: var(--accent-background);
+	color: var(--text-primary);
+}
+
+.bib-search-submit-button:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
 .bib-search-input {
 	width: 100%;
 	padding: var(--space-ss) var(--space-sm);

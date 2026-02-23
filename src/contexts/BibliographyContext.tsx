@@ -5,6 +5,7 @@ import {
 	createContext,
 	useCallback,
 	useEffect,
+	useRef,
 	useState,
 } from 'react';
 
@@ -85,6 +86,8 @@ export interface BibliographyContextType {
 	deleteSelectedEntries: () => Promise<void>;
 	isBulkOperating: boolean;
 
+	triggerSearch: () => void;
+
 	handleRefresh: () => Promise<void>;
 	handleProviderSelect: (providerId: string | 'all' | 'local') => void;
 	handleItemSelect: (item: any) => void;
@@ -153,6 +156,14 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 	const [isBulkOperating, setIsBulkOperating] = useState(false);
 
 	const currentProvider = availableProviders.find(p => p.id === selectedProvider);
+
+	// Refs allow fetchExternalEntries to read current values without being
+	// listed as dependencies, preventing the connection/retry effect from
+	// re-firing on every keystroke.
+	const searchQueryRef = useRef(searchQuery);
+	const currentProviderRef = useRef(currentProvider);
+	searchQueryRef.current = searchQuery;
+	currentProviderRef.current = currentProvider;
 
 	const getProviderSetting = (settingName: string) => {
 		if (!currentProvider) return undefined;
@@ -395,6 +406,11 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			} else if (!isEnabled && currentStatus !== 'disconnected') {
 				genericLSPService.updateConfig(provider.id, { enabled: false });
 			}
+
+			const searchModeSetting = getSetting(`${provider.id}-search-mode`);
+			if (searchModeSetting?.value) {
+				(provider as any).searchMode = searchModeSetting.value as 'instant' | 'on-demand';
+			}
 		});
 	}, [availableProviders, getSetting]);
 
@@ -412,30 +428,56 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		setLocalEntries(result);
 	}, [getLocalEntriesAsync]);
 
-	const fetchExternalEntries = useCallback(async () => {
-		if (!currentProvider || selectedProvider === 'local') {
+	// searchQuery is intentionally excluded from deps. Callers that need the
+	// current query pass it explicitly (triggerSearch, instant debounce).
+	// The connection/retry effect and refresh handler pass nothing, causing
+	// on-demand providers to receive an empty string and fall through to
+	// their linked-entry sync path rather than firing a search fetch.
+	const fetchExternalEntries = useCallback(async (query?: string) => {
+		const provider = currentProviderRef.current;
+		if (!provider || selectedProvider === 'local') {
 			setExternalEntries([]);
 			return;
 		}
-		if (currentProvider.getConnectionStatus() !== 'connected') {
+		if (provider.getConnectionStatus() !== 'connected') {
 			setExternalEntries([]);
 			return;
 		}
+
 		setIsLoading(true);
 		try {
-			const bibEntries = await currentProvider.getBibliographyEntries();
+			const local = await getLocalEntriesAsync();
+			const bibEntries = await provider.getBibliographyEntries(query ?? '', local);
 			setExternalEntries(bibEntries.map((entry: any) => ({
 				...entry,
 				source: 'external' as const,
-				isImported: false
+				isImported: false,
 			})));
 		} catch (error) {
-			console.error(`[BibliographyContext] Error fetching external entries:`, error);
+			console.error('[BibliographyContext] Error fetching external entries:', error);
 			setExternalEntries([]);
 		} finally {
 			setIsLoading(false);
 		}
-	}, [currentProvider, selectedProvider]);
+	}, [selectedProvider, getLocalEntriesAsync]);
+
+	const triggerSearch = useCallback(() => {
+		fetchExternalEntries(searchQueryRef.current);
+	}, [fetchExternalEntries]);
+
+	// Only fires for providers that explicitly declare searchMode: 'instant'.
+	// On-demand providers are excluded, so typing never triggers a fetch for them.
+	useEffect(() => {
+		const provider = currentProviderRef.current;
+		if (!provider || provider.searchMode !== 'instant') return;
+		if (!searchQuery.trim()) return;
+
+		const timer = setTimeout(() => {
+			fetchExternalEntries(searchQuery);
+		}, 400);
+
+		return () => clearTimeout(timer);
+	}, [searchQuery, fetchExternalEntries]);
 
 	const fetchAllEntries = useCallback(async () => {
 		if (selectedProvider !== 'all') return;
@@ -444,10 +486,11 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 
 		setIsLoading(true);
 		try {
+			const local = await getLocalEntriesAsync();
 			const allExternal: BibEntry[] = [];
 			for (const provider of providers) {
 				try {
-					const bibEntries = await provider.getBibliographyEntries();
+					const bibEntries = await provider.getBibliographyEntries('', local);
 					allExternal.push(...bibEntries.map((entry: any) => ({
 						...entry,
 						source: 'external' as const,
@@ -463,7 +506,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		} finally {
 			setIsLoading(false);
 		}
-	}, [availableProviders, selectedProvider]);
+	}, [availableProviders, selectedProvider, getLocalEntriesAsync]);
 
 	const importAllExternal = useCallback(async () => {
 		if (!targetBibFile || isBulkOperating) return;
@@ -581,7 +624,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			result = result.filter(e => e.source === sourceFilter);
 		}
 
-		if (searchQuery.trim()) {
+		if (searchQuery.trim() && currentProvider?.searchMode !== 'on-demand') {
 			const q = searchQuery.toLowerCase();
 			result = result.filter(entry =>
 				entry.key.toLowerCase().includes(q) ||
@@ -604,7 +647,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		});
 
 		setFilteredEntries(result);
-	}, [searchQuery, entries, maxCompletions, entryTypeFilter, sourceFilter, selectedCollection, sortField, sortOrder]);
+	}, [searchQuery, entries, maxCompletions, entryTypeFilter, sourceFilter, selectedCollection, sortField, sortOrder, currentProvider, externalEntries]);
 
 	useEffect(() => {
 		const handleBibFilesUpdate = (bibFiles: FileNode[]) => {
@@ -648,8 +691,8 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 
 		let retryCount = 0;
 		const retryInterval = setInterval(() => {
-			if (!currentProvider) return;
-			if (currentProvider.getConnectionStatus() === 'connected') {
+			if (!currentProviderRef.current) return;
+			if (currentProviderRef.current.getConnectionStatus() === 'connected') {
 				fetchExternalEntries();
 				clearInterval(retryInterval);
 			} else if (retryCount >= 30) {
@@ -920,6 +963,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		selectAllVisible, clearSelection,
 		importSelectedEntries, updateSelectedEntries, deleteSelectedEntries,
 		isBulkOperating,
+		triggerSearch,
 		handleRefresh, handleProviderSelect, handleItemSelect,
 		handleBackToList, handleEntryClick, handleImportEntry,
 		handleTargetFileChange, createNewBibFile,
