@@ -1359,6 +1359,8 @@
   "Open the project to edit its name": "افتح المشروع لتحرير اسمه",
   "Open the project to edit its typesetter type": "افتح المشروع لتحرير نوع نظام الصف الخاص به",
   "OpenAlex": "OpenAlex",
+  "OpenAlex API:": "واجهة OpenAlex API:",
+  "OpenAlex Integration:": "تكامل OpenAlex:",
   "OpenAlex is free and works without an API key. Providing an email enables the polite pool (higher rate limits). An API key is required for premium access.": "OpenAlex مجاني ويعمل بدون مفتاح API. يتيح إدخال البريد الإلكتروني استخدام «المجموعة المهذّبة» (حدود معدل أعلى). يلزم مفتاح API للوصول المميز.",
   "option before deleting your account.": "قبل حذف حسابك.",
   "optional": "اختياري",
@@ -1614,6 +1616,7 @@
   "Search only (Ctrl+Shift+F)": "البحث فقط (Ctrl+Shift+F)",
   "Search OpenAlex...": "البحث في OpenAlex...",
   "Search projects...": "البحث في المشاريع...",
+  "Search queries and, if provided, your email (mailto) and API key when using the OpenAlex integration (": "استعلامات البحث، وإذا تم تقديمها، بريدك الإلكتروني (mailto) ومفتاح API عند استخدام تكامل OpenAlex (",
   "Search settings...": "البحث في الإعدادات...",
   "Search templates...": "البحث في القوالب...",
   "Searching...": "جارٍ البحث...",
@@ -2020,6 +2023,6 @@
   "Zoom Level": "مستوى التكبير",
   "Zoom Out": "تصغير",
   "Zotero": "Zotero",
-  "Zotero API:": "واجهة برمجة تطبيقات Zotero:",
+  "Zotero API:": "واجهة Zotero API:",
   "Zotero Integration:": "تكامل Zotero:"
 }
