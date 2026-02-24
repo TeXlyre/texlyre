@@ -132,6 +132,7 @@
     display: flex;
     align-items: center;
     gap: var(--space-xs);
+    margin-bottom: var(--space-md);
 }
 
 .openalex-year-input {
@@ -142,6 +143,7 @@
     border: 1px solid var(--border-color, rgba(0, 0, 0, 0.15));
     border-radius: 4px;
     height: 100% !important;
+    margin-bottom: 0 !important;
 }
 
 .openalex-year-range span {

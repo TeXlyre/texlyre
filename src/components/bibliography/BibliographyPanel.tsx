@@ -14,7 +14,8 @@ import {
   OptionsIcon,
   ImportIcon,
   TrashIcon,
-  CheckIcon
+  CheckIcon,
+  SearchIcon
 } from '../common/Icons';
 import type { BibEntry } from '../../types/bibliography';
 
@@ -451,15 +452,15 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
           </div>
           {isOnDemand && (
             <button
-              className="bib-search-submit-button"
+              className="bib-search-submit-button icon-only"
               onClick={triggerSearch}
               disabled={isLoading || !searchQuery.trim()}
               title={t('Search')}>
-              {isLoading ? '…' : 'Search'}
+              {isLoading ? '…' : <SearchIcon />}
             </button>
           )}
         </div>
-        {selectedProvider !== 'local' && !targetBibFile && !isOnDemand && (
+        {selectedProvider !== 'local' && !targetBibFile && (
           <div className="warning-message">
             <Trans
               i18nKey="To import entries, select a target .bib file by clicking the <icon /> button above."
@@ -711,7 +712,7 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
     : selectedProvider === 'local'
       ? t('{count} local entry', { count: localEntries.length })
       : isOnDemand
-        ? t('{count} results', { count: filteredEntries.length })
+        ? t('{count} result', { count: filteredEntries.length })
         : t('{local} local, {external} external', {
           local: localEntries.length,
           external: externalEntries.filter(e => !e.isImported).length

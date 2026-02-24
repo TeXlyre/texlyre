@@ -41,12 +41,13 @@ export interface OpenAlexFilters {
     type?: string;
     hasDoi?: boolean;
     minCitations?: number;
+    authorQuery?: string;
 }
 
 export interface OpenAlexSearchParams {
     query: string;
     filters: OpenAlexFilters;
-    perPage?: number;
+    perPage: number;
     page?: number;
 }
 
@@ -97,7 +98,7 @@ export class OpenAlexAPIService {
         return email ? `&mailto=${encodeURIComponent(email)}` : '';
     }
 
-    private buildFilterString(filters: OpenAlexFilters): string {
+    private buildFilterString(filters: OpenAlexFilters, authorId?: string): string {
         const parts: string[] = [];
         if (filters.yearFrom && filters.yearTo) {
             parts.push(`publication_year:>${filters.yearFrom - 1},publication_year:<${filters.yearTo + 1}`);
@@ -113,6 +114,7 @@ export class OpenAlexAPIService {
         if (filters.minCitations !== undefined && filters.minCitations > 0) {
             parts.push(`cited_by_count:>${filters.minCitations - 1}`);
         }
+        if (authorId) parts.push(`authorships.author.id:${authorId.replace('https://openalex.org/', '')}`);
         return parts.length > 0 ? `&filter=${parts.join(',')}` : '';
     }
 
@@ -129,16 +131,28 @@ export class OpenAlexAPIService {
         }
     }
 
-    async searchWorks(params: OpenAlexSearchParams, apiKey?: string, email?: string): Promise<OpenAlexSearchResult> {
-        const { query, filters, perPage = 25, page = 1 } = params;
+    async searchAuthors(query: string, email?: string): Promise<Array<{ id: string; display_name: string }>> {
         const mailto = this.buildMailtoParam(email);
-        const filterStr = this.buildFilterString(filters);
+        const url = `${this.baseUrl}/authors?search=${encodeURIComponent(query)}&per_page=5${mailto}&select=id,display_name`;
+        try {
+            const response = await fetch(url, { headers: this.buildHeaders(undefined, email) });
+            if (!response.ok) return [];
+            const data = await response.json();
+            return (data.results || []).map((a: any) => ({ id: a.id, display_name: a.display_name }));
+        } catch {
+            return [];
+        }
+    }
+
+    async searchWorks(params: OpenAlexSearchParams, apiKey?: string, email?: string, authorId?: string): Promise<OpenAlexSearchResult> {
+        const { query, filters, perPage, page = 1 } = params;
+        const mailto = this.buildMailtoParam(email);
+        const filterStr = this.buildFilterString(filters, authorId);
         const encodedQuery = encodeURIComponent(query);
 
         const url = `${this.baseUrl}/works?search=${encodedQuery}&per_page=${perPage}&page=${page}${filterStr}${mailto}&select=id,title,display_name,type,publication_year,publication_date,doi,authorships,primary_location,open_access,biblio,cited_by_count,abstract_inverted_index,concepts,keywords`;
 
         const response = await fetch(url, { headers: this.buildHeaders(apiKey, email) });
-
         if (!response.ok) {
             throw new Error(`OpenAlex API error: ${response.status} ${response.statusText}`);
         }

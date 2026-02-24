@@ -447,7 +447,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 		setIsLoading(true);
 		try {
 			const local = await getLocalEntriesAsync();
-			const bibEntries = await provider.getBibliographyEntries(query ?? '', local);
+			const bibEntries = await provider.getBibliographyEntries(query ?? '', local, maxCompletions);
 			setExternalEntries(bibEntries.map((entry: any) => ({
 				...entry,
 				source: 'external' as const,
@@ -490,7 +490,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 			const allExternal: BibEntry[] = [];
 			for (const provider of providers) {
 				try {
-					const bibEntries = await provider.getBibliographyEntries('', local);
+					const bibEntries = await provider.getBibliographyEntries('', local, maxCompletions);
 					allExternal.push(...bibEntries.map((entry: any) => ({
 						...entry,
 						source: 'external' as const,

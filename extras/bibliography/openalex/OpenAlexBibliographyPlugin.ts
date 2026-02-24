@@ -24,8 +24,8 @@ const openAlexBibliographyPlugin: BibliographyPlugin = {
         return getOpenAlexSettings();
     },
 
-    async getBibliographyEntries(query?: string, localEntries?: BibEntry[]) {
-        return openAlexService.getBibliographyEntries(query, localEntries, activeFilters);
+    async getBibliographyEntries(query?: string, localEntries?: BibEntry[], perPage?: number) {
+        return openAlexService.getBibliographyEntries(query, localEntries, activeFilters, perPage ?? 25);
     },
 
     getSupportedFileTypes(): string[] {

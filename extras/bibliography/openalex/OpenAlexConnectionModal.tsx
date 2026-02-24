@@ -50,7 +50,7 @@ const OpenAlexConnectionModal: React.FC<OpenAlexConnectionModalProps> = ({
                 return;
             }
         } catch {
-            setError(t('Connection test failed.'));
+            setError(t('Connection test failed'));
             return;
         } finally {
             setIsTesting(false);
@@ -77,7 +77,7 @@ const OpenAlexConnectionModal: React.FC<OpenAlexConnectionModalProps> = ({
                 return;
             }
         } catch {
-            setError(t('Connection test failed.'));
+            setError(t('Connection test failed'));
             return;
         } finally {
             setIsTesting(false);
@@ -88,7 +88,7 @@ const OpenAlexConnectionModal: React.FC<OpenAlexConnectionModalProps> = ({
             await onConnect(undefined, undefined);
             onClose();
         } catch {
-            setError(t('Connection failed.'));
+            setError(t('Connection failed'));
         } finally {
             setIsLoading(false);
         }

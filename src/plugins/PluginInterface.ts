@@ -92,7 +92,7 @@ export interface BibliographyPlugin extends Plugin {
 	getConnectionStatus(): 'connected' | 'connecting' | 'disconnected' | 'error';
 	getStatusMessage(): string;
 	getSupportedFileTypes(): string[];
-	getBibliographyEntries(query?: string, localEntries?: BibEntry[]): Promise<BibEntry[]>;
+	getBibliographyEntries(query?: string, localEntries?: BibEntry[], perPage?: number): Promise<BibEntry[]>;
 	renderPanel?: React.ComponentType<BibliographyPanelProps>;
 	updateServerUrl?(url: string): void;
 }

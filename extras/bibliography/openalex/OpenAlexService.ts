@@ -217,19 +217,21 @@ class OpenAlexService {
         return `@${entryType}{${key},\n${fieldsString}\n}`;
     }
 
-    async searchWorks(
-        query: string,
-        filters: OpenAlexFilters,
-        perPage = 25
-    ): Promise<BibEntry[]> {
+    async searchWorks(query: string, filters: OpenAlexFilters, perPage: number): Promise<BibEntry[]> {
         const creds = await this.getStoredCredentials();
-
         try {
             this.connectionStatus = 'connected';
             this.notifyStatusListeners();
 
-            const params: OpenAlexSearchParams = { query, filters, perPage };
-            const result = await openAlexAPIService.searchWorks(params, creds?.apiKey, creds?.email);
+            let authorId: string | undefined;
+            if (filters.authorQuery?.trim()) {
+                const authors = await openAlexAPIService.searchAuthors(filters.authorQuery.trim(), creds?.email);
+                authorId = authors[0]?.id;
+            }
+
+            const { authorQuery: _, ...apiFilters } = filters;
+            const params: OpenAlexSearchParams = { query, filters: apiFilters, perPage };
+            const result = await openAlexAPIService.searchWorks(params, creds?.apiKey, creds?.email, authorId);
             return result.works.map(w => this.convertWorkToBibEntry(w));
         } catch (error) {
             console.error('[OpenAlexService] Search error:', error);
@@ -256,14 +258,14 @@ class OpenAlexService {
         }
     }
 
-    async getBibliographyEntries(query?: string, localEntries?: BibEntry[], filters: OpenAlexFilters = {}): Promise<BibEntry[]> {
+    async getBibliographyEntries(query?: string, localEntries?: BibEntry[], filters: OpenAlexFilters = {}, perPage = 25): Promise<BibEntry[]> {
         if (!query || query.trim() === '') {
             if (localEntries && localEntries.length > 0) {
                 return this.fetchLinkedEntries(localEntries);
             }
             return [];
         }
-        return this.searchWorks(query, filters);
+        return this.searchWorks(query, filters, perPage);
     }
 }
 
