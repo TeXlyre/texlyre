@@ -9,7 +9,7 @@ export const getGiteaBackupSettings = (): Setting[] => [
         subcategory: t('Gitea'),
         type: 'text',
         label: t('API Endpoint'),
-        description: t('Gitea API endpoint (for Gitea.com or self-hosted instances)'),
+        description: t('Gitea API endpoint (for self-hosted instances)'),
         defaultValue: 'https://gitea.com/api/v1',
     },
     {

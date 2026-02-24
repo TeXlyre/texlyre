@@ -1,0 +1,151 @@
+/* extras/bibliography/openalex/styles.css */
+
+.openalex-connection-modal {
+    padding: 1rem;
+}
+
+.openalex-step-description {
+    margin: 0 0 1.25rem 0;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.openalex-field-hint {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.openalex-optional-badge,
+.openalex-stored-badge {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.openalex-optional-badge {
+    background-color: var(--accent-background);
+    color: var(--text-secondary);
+}
+
+.openalex-stored-badge {
+    background-color: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+}
+
+.openalex-button-group {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.openalex-panel {
+    padding: 0.75rem;
+}
+
+.openalex-not-connected,
+.openalex-connecting,
+.openalex-error {
+    padding: 0.75rem;
+    border-radius: 6px;
+    background-color: var(--accent-background);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.openalex-connected {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.openalex-filters {
+    border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
+    padding: var(--space-sm);
+    display: flex;
+    background-color: var(--pico-background);
+    flex-direction: column;
+    border-radius: 6px;
+}
+
+.openalex-filters-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+}
+
+.openalex-filters-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+}
+
+.openalex-clear-filters {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+}
+
+.openalex-clear-filters:hover {
+    background-color: var(--accent-background);
+}
+
+.openalex-filter-row {
+    display: grid;
+    grid-template-columns: 6rem 1fr;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.openalex-filter-row label {
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+.openalex-filter-select,
+.openalex-filter-input {
+    width: 100%;
+    font-size: 0.7rem;
+    padding: var(--space-xs) var(--space-xs) !important;
+    height: fit-content !important;
+    border-radius: 4px;
+    color: var(--text-primary);
+}
+
+.openalex-year-range {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-md);
+}
+
+.openalex-year-input {
+    width: 100%;
+    font-size: 0.7rem;
+    padding: var(--space-xs) var(--space-xs) !important;
+    height: fit-content !important;
+    border: 1px solid var(--border-color, rgba(0, 0, 0, 0.15));
+    border-radius: 4px;
+    height: 100% !important;
+    margin-bottom: 0 !important;
+}
+
+.openalex-year-range span {
+    flex-shrink: 0;
+}

@@ -30,6 +30,7 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) => {
           <li><strong>{t('Gitea Integration:')}</strong>&nbsp;{t('Only used when you explicitly enable it')}</li>
           <li><strong>{t('Forgejo Integration:')}</strong>&nbsp;{t('Only used when you explicitly enable it')}</li>
           <li><strong>{t('Zotero Integration:')}</strong>&nbsp;{t('Only used when you explicitly enable it')}</li>
+          <li><strong>{t('OpenAlex Integration:')}</strong>&nbsp;{t('Only used when you explicitly enable it')}</li>
           <li><strong>{t('DOI Lookup:')}</strong>&nbsp;{t('When you enable the BibTeX DOI finder, paper titles and authors are sent to the')}&nbsp;<a href="https://www.crossref.org/" target="_blank" rel="noreferrer">{t('Crossref API')}</a>&nbsp;{t('to find matching DOIs')}</li>
         </ul>
 
@@ -65,6 +66,7 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) => {
           <li><strong>{t('Gitea API:')}</strong>&nbsp;{t('When you enable Gitea integration with your own token (')}<a href="https://docs.gitea.io/en-us/privacy/" target="_blank" rel="noreferrer">{t('Privacy Policy')}</a>)</li>
           <li><strong>{t('Forgejo API:')}</strong>&nbsp;{t('When you enable Forgejo integration with your own token (')}<a href="https://forgejo.org/privacy-policy/" target="_blank" rel="noreferrer">{t('Privacy Policy')}</a>{t(').')}{t('By default, the API endpoint is set to Codeberg (')}<a href="https://codeberg.org/Codeberg/org/src/branch/main/PrivacyPolicy.md" target="_blank" rel="noreferrer">{t('Privacy Policy')}</a>)</li>
           <li><strong>{t('Zotero API:')}</strong>&nbsp;{t('When you enable Zotero integration with your own API key (')}<a href="https://www.zotero.org/support/privacy" target="_blank" rel="noreferrer">{t('Privacy Policy')}</a>)</li>
+          <li><strong>{t('OpenAlex API:')}</strong>&nbsp;{t('Search queries and, if provided, your email (mailto) and API key when using the OpenAlex integration (')}<a href="https://openalex.org/OpenAlex_privacy_policy.pdf" target="_blank" rel="noreferrer">{t('Privacy Policy')}</a>)</li>
         </ul>
         <p>{t('TeXlyre is hosted on')}
           &nbsp;<a href="https://pages.github.com/" target="_blank" rel="noreferrer">{t('GitHub Pages')}</a>&nbsp;{t('and uses')}&nbsp;<a href="https://workers.cloudflare.com/" target="_blank" rel="noreferrer">{t('Cloudflare Workers')}</a>&nbsp;{t('for signaling and download servers. These services may set their own cookies for security and performance purposes.')}

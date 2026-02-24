@@ -14,7 +14,8 @@ import {
   OptionsIcon,
   ImportIcon,
   TrashIcon,
-  CheckIcon
+  CheckIcon,
+  SearchIcon
 } from '../common/Icons';
 import type { BibEntry } from '../../types/bibliography';
 
@@ -80,11 +81,14 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
     updateSelectedEntries,
     deleteSelectedEntries,
     isBulkOperating,
+    triggerSearch,
   } = useBibliography();
 
   const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set());
   const providerGroupRef = useRef<HTMLDivElement>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
+
+  const isOnDemand = currentProvider?.searchMode === 'on-demand';
 
   const toggleExpand = (key: string, e: React.MouseEvent) => {
     if (isMultiSelectMode) return;
@@ -211,7 +215,23 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
       className="bib-toolbar-dropdown"
       align="right">
       <div className="bib-toolbar-content">
-        {selectedProvider !== 'local' && (
+        {selectedProvider !== 'local' && !isOnDemand && (
+          <div className="bib-toolbar-section">
+            <div className="bib-toolbar-label">{t('Target Bib File')}</div>
+            <select
+              value={targetBibFile}
+              onChange={e => handleTargetFileChange(e.target.value)}
+              className="bib-toolbar-select">
+              <option value="">{t('Select file...')}</option>
+              <option value="CREATE_NEW">{t('+ Create new...')}</option>
+              {availableBibFiles.map(f => (
+                <option key={f.path} value={f.path}>{f.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {selectedProvider !== 'local' && isOnDemand && (
           <div className="bib-toolbar-section">
             <div className="bib-toolbar-label">{t('Target Bib File')}</div>
             <select
@@ -409,20 +429,34 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
 
     return (
       <>
-        <div className="bib-panel-search">
-          <input
-            type="text"
-            placeholder={
-              selectedProvider === 'all' ? t('Search all sources...') :
-                selectedProvider === 'local' ? t('Search local bibliography...') :
-                  t('Search bibliography...')
-            }
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="bib-search-input" />
-          {searchQuery && (
-            <button className="bib-clear-search-button" onClick={() => setSearchQuery('')}>
-              ×
+        <div className="bib-panel-search search-input-container">
+          <div className="bib-search-input-wrapper">
+            <input
+              type="text"
+              placeholder={
+                selectedProvider === 'all' ? t('Search all sources...') :
+                  selectedProvider === 'local' ? t('Search local bibliography...') :
+                    isOnDemand ? t('Search OpenAlex...') :
+                      t('Search bibliography...')
+              }
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={e => { if (isOnDemand && e.key === 'Enter') triggerSearch(); }}
+              className="bib-search-input"
+            />
+            {searchQuery && (
+              <button className="bib-clear-search-button" onClick={() => setSearchQuery('')}>
+                ×
+              </button>
+            )}
+          </div>
+          {isOnDemand && (
+            <button
+              className="bib-search-submit-button icon-only"
+              onClick={triggerSearch}
+              disabled={isLoading || !searchQuery.trim()}
+              title={t('Search')}>
+              {isLoading ? '…' : <SearchIcon />}
             </button>
           )}
         </div>
@@ -488,7 +522,6 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
                 </span>
                 <span className="bib-entry-source-badge external" title={t('Not imported')}>↓</span>
               </>
-
             )}
             {entry.source === 'local' && (
               <span className="bib-entry-source-badge local" title={entry.filePath || t('Local')}>
@@ -597,8 +630,12 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
     if (filteredEntries.length === 0) {
       return (
         <div className="bib-no-entries">
-          {searchQuery ? t('No entries match your search') : t('No entries available')}
-          {localEntries.length === 0 && !searchQuery && (
+          {isOnDemand && !searchQuery
+            ? t('Enter a search query above to find works.')
+            : searchQuery
+              ? t('No entries match your search')
+              : t('No entries available')}
+          {localEntries.length === 0 && !searchQuery && !isOnDemand && (
             <div className="bib-no-entries-hint">
               {t('Add .bib files to your project to see local bibliography entries.')}
             </div>
@@ -674,10 +711,12 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
     })
     : selectedProvider === 'local'
       ? t('{count} local entry', { count: localEntries.length })
-      : t('{local} local, {external} external', {
-        local: localEntries.length,
-        external: externalEntries.filter(e => !e.isImported).length
-      });
+      : isOnDemand
+        ? t('{count} result', { count: filteredEntries.length })
+        : t('{local} local, {external} external', {
+          local: localEntries.length,
+          external: externalEntries.filter(e => !e.isImported).length
+        });
 
   return (
     <div className={`bib-panel ${className}`}>

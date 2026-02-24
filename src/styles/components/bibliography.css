@@ -382,16 +382,49 @@
 	padding: var(--space-sm);
 	border-bottom: 1px solid var(--accent-border);
 	flex-shrink: 0;
+	display: flex;
+	gap: var(--space-xs);
+	align-items: stretch;
+}
+
+.bib-search-input-wrapper {
+	position: relative;
+	flex: 1;
+	display: flex;
+}
+
+.bib-search-submit-button {
+	border: 1px solid var(--pico-primary);
+	border-radius: var(--radius-sm);
+	background-color: var(--pico-primary);
+	color: var(--pico-primary-inverse) !important;
+	cursor: pointer;
+	font-size: var(--space-sd);
+	font-weight: 500;
+	white-space: nowrap;
+	transition: opacity var(--transition-normal);
+	height: 100% !important;
+}
+
+.bib-search-submit-button:hover:not(:disabled) {
+	opacity: 0.8;
+}
+
+.bib-search-submit-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
 }
 
 .bib-search-input {
 	width: 100%;
 	padding: var(--space-ss) var(--space-sm);
+	padding-right: 2rem;
 	border: 1px solid var(--accent-border);
 	border-radius: var(--radius-sm);
 	background: var(--pico-background);
 	color: var(--text-color);
 	font-size: 0.85rem;
+	height: 100% !important;
 }
 
 .bib-search-input:focus {
@@ -405,8 +438,8 @@
 
 .bib-clear-search-button {
 	position: absolute;
-	right: 1rem;
-	top: 40%;
+	right: 0.5rem;
+	top: 50%;
 	transform: translateY(-50%);
 	padding: 0.25rem 0.5rem;
 	border: none;
