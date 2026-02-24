@@ -27,7 +27,7 @@ export const getOpenAlexSettings = (): Setting[] => [
         ],
     },
     {
-        id: 'openalex-bibliography-results-per-page',
+        id: 'openalex-bibliography-max-completions',
         category: t('Bibliography'),
         subcategory: t('OpenAlex'),
         type: 'number',
