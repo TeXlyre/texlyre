@@ -1,5 +1,5 @@
 // These constants are automatically generated. Do not edit directly. **
-const CACHE_NAME = `texlyre-v0.5.27`;
+const CACHE_NAME = `texlyre-v0.5.28`;
 const BASE_PATH = '/texlyre/';
 const FONTS_CACHE_NAME = 'fonts-cache-v1';
 // *** End automatic generation ***
@@ -11,8 +11,57 @@ const STATIC_ASSETS = [
 ];
 
 const CACHE_MAX_AGE = {
-  [FONTS_CACHE_NAME]: 60 * 60 * 24 * 365 * 1000, // 1 year in milliseconds
+  [FONTS_CACHE_NAME]: 60 * 60 * 24 * 365 * 1000,
 };
+
+const SHARE_TARGET_DB = 'texlyre-share-target';
+const SHARE_TARGET_STORE = 'pending-shares';
+
+function openShareDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(SHARE_TARGET_DB, 1);
+    req.onupgradeneeded = () => {
+      if (!req.result.objectStoreNames.contains(SHARE_TARGET_STORE)) {
+        req.result.createObjectStore(SHARE_TARGET_STORE, { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function handleShareTarget(request) {
+  const formData = await request.formData();
+  const fileEntries = formData.getAll('files');
+
+  const pendingFiles = await Promise.all(
+    fileEntries
+      .filter((entry) => entry instanceof File)
+      .map(async (file) => ({
+        name: file.name,
+        type: file.type,
+        buffer: await file.arrayBuffer(),
+      }))
+  );
+
+  if (pendingFiles.length > 0) {
+    const share = {
+      id: crypto.randomUUID(),
+      files: pendingFiles,
+      receivedAt: Date.now(),
+    };
+
+    const db = await openShareDb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(SHARE_TARGET_STORE, 'readwrite');
+      const req = tx.objectStore(SHARE_TARGET_STORE).put(share);
+      req.onsuccess = resolve;
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  return Response.redirect(BASE_PATH, 303);
+}
 
 self.addEventListener('install', (event) => {
   console.log('[ServiceWorker] Installing service worker');
@@ -104,7 +153,11 @@ async function cacheWithExpiry(cacheName, request, response) {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Handle Google Fonts
+  if (event.request.method === 'POST' && url.searchParams.has('share-target')) {
+    event.respondWith(handleShareTarget(event.request));
+    return;
+  }
+
   if (url.origin === 'https://fonts.googleapis.com' || url.origin === 'https://fonts.gstatic.com') {
     event.respondWith(
       getCachedWithExpiry(FONTS_CACHE_NAME, event.request, CACHE_MAX_AGE[FONTS_CACHE_NAME])
@@ -132,7 +185,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle app assets
   if (url.origin !== self.location.origin || event.request.method !== 'GET') {
     return;
   }

@@ -1,6 +1,7 @@
 /*
- * TeXlyre - Collaborative LaTeX and Typst Editor
- * Copyright (C) 2025 Fares Abawi
+ * TeXlyre - A local-first LaTeX & Typst collaborative web editor
+ * Copyright (C) 2026 TeXlyre 
+ * Maintainer: Fares Abawi <fares@abawi.me> (https://abawi.me)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
