@@ -169,13 +169,13 @@ The File System API was not thoroughly tested with mobile device browsers; there
 
 WebRTC support is required for real-time collaboration, while the File System Access API enables backup and synchronization features in supported browsers.
 
----
-
 ## PWA Support
 
 TeXlyre can be installed as a Progressive Web App (PWA), allowing it to run like a native app on supported devices. After installing the PWA (for example, on Android phones), you can share files directly to TeXlyre to open them, including regular files, ZIP archives, and TeXlyre project ZIP files.
 
 PWA support on iOS may have platform-specific limitations compared to desktop or Android browsers, including reduced file-sharing capabilities.
+
+---
 
 ## License
 
@@ -188,8 +188,6 @@ This means:
 - ⚖️ If you run a modified version as a network service, you must provide source code to users
 
 See [LICENSE](LICENSE) for the complete license text.
-
-### Why AGPL-3.0?
 
 TeXlyre is licensed under AGPL-3.0 due to our dependency on [SwiftLaTeX's AGPL-licensed LaTeX engine (WASM)](https://github.com/SwiftLaTeX/SwiftLaTeX/) for in-browser LaTeX compilation.
 
