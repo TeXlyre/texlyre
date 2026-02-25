@@ -5,6 +5,7 @@ import { lazy, useEffect, useState, Suspense } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { collabService } from '../../services/CollabService';
 import { fileStorageService } from '../../services/FileStorageService';
+import { shareTargetService, type PendingShare } from '../../services/ShareTargetService';
 import type { YjsDocUrl } from '../../types/yjs';
 import { isValidYjsUrl, parseUrlFragments } from '../../utils/urlUtils';
 import { batchExtractZip } from '../../utils/zipUtils';
@@ -13,6 +14,7 @@ import EditorApp from './EditorApp';
 import LoadingScreen from './LoadingScreen';
 import ProjectApp from './ProjectApp';
 import PrivacyModal from '../common/PrivacyModal';
+import ShareTargetModal from '../project/ShareTargetModal';
 
 interface UrlProjectParams {
 	newProjectName?: string;
@@ -42,6 +44,7 @@ const AppRouter: React.FC = () => {
 	const [targetFilePath, setTargetFilePath] = useState<string | null>(null);
 	const [isCreatingProject, setIsCreatingProject] = useState(false);
 	const [showPrivacy, setShowPrivacy] = useState(false);
+	const [pendingShare, setPendingShare] = useState<PendingShare | null>(null);
 
 	const [isPdfViewerWindow, setIsPdfViewerWindow] = useState(false);
 	const [pdfViewerProjectId, setPdfViewerProjectId] = useState<string | null>(null);
@@ -236,6 +239,20 @@ const AppRouter: React.FC = () => {
 		checkAndCreateProject();
 	}, [isAuthenticated, isInitializing, docUrl, createProject, getProjects]);
 
+	useEffect(() => {
+		if (!isAuthenticated || isInitializing) return;
+
+		const checkPendingShare = async () => {
+			await shareTargetService.clearStaleShares();
+			const share = await shareTargetService.getPendingShare();
+			if (share) {
+				setPendingShare(share);
+			}
+		};
+
+		checkPendingShare();
+	}, [isAuthenticated, isInitializing]);
+
 	const createProjectForDocument = async (
 		docUrl: string,
 		name: string,
@@ -349,6 +366,25 @@ const AppRouter: React.FC = () => {
 		window.location.hash = '';
 	};
 
+	const handleShareTargetOpen = (openDocUrl: string, projectId: string) => {
+		if (pendingShare) {
+			shareTargetService.clearPendingShare(pendingShare.id);
+			setPendingShare(null);
+		}
+		setDocUrl(openDocUrl as YjsDocUrl);
+		setCurrentProjectId(projectId);
+		sessionStorage.setItem('currentProjectId', projectId);
+		window.location.hash = openDocUrl;
+		setCurrentView('editor');
+	};
+
+	const handleShareTargetClose = () => {
+		if (pendingShare) {
+			shareTargetService.clearPendingShare(pendingShare.id);
+			setPendingShare(null);
+		}
+	};
+
 	if (isInitializing || isCreatingProject) {
 		return <LoadingScreen />;
 	}
@@ -383,6 +419,13 @@ const AppRouter: React.FC = () => {
 			<PrivacyModal
 				isOpen={showPrivacy}
 				onClose={handleClosePrivacy}
+			/>
+
+			<ShareTargetModal
+				isOpen={!!pendingShare && isAuthenticated && !isInitializing}
+				onClose={handleShareTargetClose}
+				files={pendingShare?.files ?? []}
+				onOpenProject={handleShareTargetOpen}
 			/>
 		</>
 	);
