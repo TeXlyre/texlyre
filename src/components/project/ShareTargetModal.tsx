@@ -5,9 +5,11 @@ import { useEffect, useState } from 'react';
 
 import { useAuth } from '../../hooks/useAuth';
 import { fileStorageService } from '../../services/FileStorageService';
+import { projectImportService } from '../../services/ProjectImportService';
 import type { PendingShareFile } from '../../services/ShareTargetService';
 import type { Project } from '../../types/projects';
 import { getMimeType, isBinaryFile } from '../../utils/fileUtils';
+import { batchExtractZip } from '../../utils/zipUtils';
 import { ImportIcon, NewProjectIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 
@@ -33,8 +35,19 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [search, setSearch] = useState('');
+    const [isTexlyreStructuredZip, setIsTexlyreStructuredZip] = useState(false);
 
     const isZip = files.length === 1 && files[0].name.toLowerCase().endsWith('.zip');
+
+    const checkIsTexlyreZip = async (file: PendingShareFile): Promise<boolean> => {
+        try {
+            const zipFile = new File([file.buffer], file.name, { type: file.type });
+            const scanned = await projectImportService.scanZipFile(zipFile);
+            return scanned.length > 0;
+        } catch {
+            return false;
+        }
+    };
 
     useEffect(() => {
         if (isOpen) {
@@ -43,6 +56,12 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
             setSearch('');
             const firstName = files[0]?.name ?? 'Shared Project';
             setNewProjectName(firstName.replace(/\.[^/.]+$/, ''));
+
+            if (isZip && files.length === 1) {
+                checkIsTexlyreZip(files[0]).then(setIsTexlyreStructuredZip);
+            } else {
+                setIsTexlyreStructuredZip(false);
+            }
         }
     }, [isOpen]);
 
@@ -52,26 +71,32 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
         }
     }, [mode, getProjects]);
 
-    const storeFilesInProject = async (docUrl: string) => {
+    const storeFilesInProject = async (docUrl: string): Promise<void> => {
         await fileStorageService.initialize(docUrl);
         for (const f of files) {
-            const mimeType = getMimeType(f.name) || f.type || 'application/octet-stream';
-            const binary = isBinaryFile(f.name);
-            await fileStorageService.storeFile({
-                id: crypto.randomUUID(),
-                name: f.name,
-                path: `/${f.name}`,
-                type: 'file',
-                content: f.buffer,
-                lastModified: Date.now(),
-                size: f.buffer.byteLength,
-                mimeType,
-                isBinary: binary,
-            }, { showConflictDialog: false });
+            if (f.name.toLowerCase().endsWith('.zip')) {
+                const zipFile = new File([f.buffer], f.name, { type: f.type || 'application/zip' });
+                const { files: extracted, directories } = await batchExtractZip(zipFile, '/');
+                await fileStorageService.batchStoreFiles([...directories, ...extracted], { showConflictDialog: false });
+            } else {
+                const mimeType = getMimeType(f.name) || f.type || 'application/octet-stream';
+                const binary = isBinaryFile(f.name);
+                await fileStorageService.storeFile({
+                    id: crypto.randomUUID(),
+                    name: f.name,
+                    path: `/${f.name}`,
+                    type: 'file',
+                    content: f.buffer,
+                    lastModified: Date.now(),
+                    size: f.buffer.byteLength,
+                    mimeType,
+                    isBinary: binary,
+                }, { showConflictDialog: false });
+            }
         }
     };
 
-    const handleAddToExisting = async () => {
+    const handleAddToExisting = async (): Promise<void> => {
         if (!selectedProjectId) return;
         setIsSubmitting(true);
         setError(null);
@@ -88,11 +113,35 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
         }
     };
 
-    const handleCreateNew = async () => {
-        if (!newProjectName.trim()) return;
+    const handleCreateNew = async (): Promise<void> => {
+        if (!isTexlyreStructuredZip && !newProjectName.trim()) return;
         setIsSubmitting(true);
         setError(null);
         try {
+            if (isZip && files.length === 1 && isTexlyreStructuredZip) {
+                const zipFile = new File([files[0].buffer], files[0].name, { type: files[0].type });
+                const scanned = await projectImportService.scanZipFile(zipFile);
+                if (scanned.length > 0) {
+                    const result = await projectImportService.importFromZip(
+                        zipFile,
+                        scanned.map((p) => p.id),
+                        { conflictResolution: 'create-new', makeCollaborator: false },
+                    );
+                    if (result.imported.length > 0) {
+                        const importedProjectId = result.imported[0];
+                        const importedProject = await getProjects().then((all) =>
+                            all.find((p) => p.id === importedProjectId) ?? null
+                        );
+                        if (importedProject) {
+                            document.dispatchEvent(new CustomEvent('projects-imported'));
+                            onOpenProject(importedProject.docUrl, importedProject.id);
+                            onClose();
+                            return;
+                        }
+                    }
+                }
+            }
+
             const project = await createProject({
                 name: newProjectName.trim(),
                 description: '',
@@ -210,30 +259,38 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
                     </div>
                 ))}
             </div>
-            <div className="form-group" style={{ marginTop: '0.75rem' }}>
-                <label htmlFor="share-project-name">
-                    {t('Project Name')}<span className="required">*</span>
-                </label>
-                <input
-                    type="text"
-                    id="share-project-name"
-                    value={newProjectName}
-                    onChange={(e) => setNewProjectName(e.target.value)}
-                    disabled={isSubmitting}
-                />
-            </div>
-            <div className="form-group">
-                <label htmlFor="share-project-type">{t('Typesetter Type')}</label>
-                <select
-                    id="share-project-type"
-                    value={newProjectType}
-                    onChange={(e) => setNewProjectType(e.target.value as 'latex' | 'typst')}
-                    disabled={isSubmitting}
-                >
-                    <option value="latex">{t('LaTeX')}</option>
-                    <option value="typst">{t('Typst')}</option>
-                </select>
-            </div>
+            {isTexlyreStructuredZip ? (
+                <div className="info-message" style={{ marginTop: '0.75rem' }}>
+                    <p>{t('TeXlyre project archive detected. Projects will be imported using their original names.')}</p>
+                </div>
+            ) : (
+                <>
+                    <div className="form-group" style={{ marginTop: '0.75rem' }}>
+                        <label htmlFor="share-project-name">
+                            {t('Project Name')}<span className="required">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="share-project-name"
+                            value={newProjectName}
+                            onChange={(e) => setNewProjectName(e.target.value)}
+                            disabled={isSubmitting}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="share-project-type">{t('Typesetter Type')}</label>
+                        <select
+                            id="share-project-type"
+                            value={newProjectType}
+                            onChange={(e) => setNewProjectType(e.target.value as 'latex' | 'typst')}
+                            disabled={isSubmitting}
+                        >
+                            <option value="latex">{t('LaTeX')}</option>
+                            <option value="typst">{t('Typst')}</option>
+                        </select>
+                    </div>
+                </>
+            )}
             <div className="modal-actions">
                 {!isZip && (
                     <button className="button secondary" onClick={() => setMode('choose')} disabled={isSubmitting}>
@@ -243,7 +300,7 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
                 <button
                     className="button primary"
                     onClick={handleCreateNew}
-                    disabled={!newProjectName.trim() || isSubmitting}
+                    disabled={(!isTexlyreStructuredZip && !newProjectName.trim()) || isSubmitting}
                 >
                     {isSubmitting ? t('Creating...') : t('Create Project')}
                 </button>
