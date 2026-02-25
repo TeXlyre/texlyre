@@ -123,7 +123,7 @@ Moreover, you can start your project from a template and share the link with you
 
 TeXlyre's architecture emphasizes **local-first principles** while enabling real-time collaboration. The React frontend communicates with Yjs documents stored in IndexedDB, providing offline-first functionality. WebRTC establishes direct peer connections for real-time synchronization, while **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX) WASM engines** and **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)** handle LaTeX and Typst compilation entirely in the browser.
 
-The **plugin system** allows extensibility through custom viewers, renderers, and backup providers. Core plugins handle PDF rendering, Bibliography cleaning, LaTeX and Typst log visualization, an embedded **[Draw.io](https://drawio.com)** diagram editor with collaborative support, **[Zotero](https://www.zotero.org/)** and **[OpenAlex](https://www.openalex.org/)** reference search, import, and update panel, file system backups, and repository backups to/from GitHub, GitLab, Gitea, and Codeberg (Forgejo). Theme plugins also provide customizable layouts and visual styles with Mobile view support.
+The **plugin system** allows extensibility through custom viewers, renderers, and backup providers. Core plugins handle PDF rendering, Bibliography cleaning, LaTeX and Typst log visualization, an embedded **[Draw.io](https://drawio.com)** diagram editor with collaborative support, **[Zotero](https://www.zotero.org/)** and **[OpenAlex](https://www.openalex.org/)** reference search, import, and update panel, file system backups, and repository backups to/from GitHub, GitLab, Gitea, and Codeberg (Forgejo). Theme plugins also provide customizable layouts and visual styles.
 
 ![Bib Editor plugin integrated into the TeXlyre app along with Zotero integration panel](showcase/zotero_bib_panel.png)
 
@@ -159,9 +159,23 @@ Configuration may be overriden by the `texlyre.config.ts` depending on your inst
 
 ## Browser Compatibility
 
-TeXlyre requires modern browser features for optimal functionality. **Chrome and Edge** provide full feature support including File System Access API and WebRTC. **Firefox** supports core collaboration features but has limited file system integration. **Safari** offers partial compatibility with reduced file system access capabilities. The File System API was not thoroughly tested with mobile device browsers; therefore, use the file system backup feature on TeXlyre with caution.
+TeXlyre requires modern browser features for optimal functionality.
+
+* **Chrome and Edge** provide full feature support, including the File System Access API and WebRTC.
+* **Firefox** supports core collaboration features but has limited file system integration.
+* **Safari** offers partial compatibility with reduced file system access capabilities.
+
+The File System API was not thoroughly tested with mobile device browsers; therefore, use the file system backup feature on TeXlyre with caution.
 
 WebRTC support is required for real-time collaboration, while the File System Access API enables backup and synchronization features in supported browsers.
+
+---
+
+## PWA Support
+
+TeXlyre can be installed as a Progressive Web App (PWA), allowing it to run like a native app on supported devices. After installing the PWA (for example, on Android phones), you can share files directly to TeXlyre to open them, including regular files, ZIP archives, and TeXlyre project ZIP files.
+
+PWA support on iOS may have platform-specific limitations compared to desktop or Android browsers, including reduced file-sharing capabilities.
 
 ## License
 
