@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { updateManifestExtensions } from './update-manifest-extensions.ts';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.join(__dirname, '..');
@@ -249,6 +251,9 @@ async function main() {
 
     console.log('Updating manifest.json...');
     generateManifest(config);
+
+    console.log('Updating manifest.json share_target extensions...');
+    await updateManifestExtensions(config);
 
     console.log('Generating userdata files...');
     generateUserdataFiles(config);
