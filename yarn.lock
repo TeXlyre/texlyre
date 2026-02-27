@@ -2025,31 +2025,32 @@
   dependencies:
     idb "^7.1.1"
 
-"@napi-rs/canvas-linux-x64-gnu@0.1.83":
-  version "0.1.83"
-  resolved "https://registry.npmjs.org/@napi-rs/canvas-linux-x64-gnu/-/canvas-linux-x64-gnu-0.1.83.tgz"
-  integrity sha512-X9YwIjsuy50WwOyYeNhEHjKHO8rrfH9M4U8vNqLuGmqsZdKua/GrUhdQGdjq7lTgdY3g4+Ta5jF8MzAa7UAs/g==
+"@napi-rs/canvas-linux-x64-gnu@0.1.95":
+  version "0.1.95"
+  resolved "https://registry.npmjs.org/@napi-rs/canvas-linux-x64-gnu/-/canvas-linux-x64-gnu-0.1.95.tgz"
+  integrity sha512-OV/ol/OtcUr4qDhQg8G7SdViZX8XyQeKpPsVv/j3+7U178FGoU4M+yIocdVo1ih/A8GQ63+LjF4jDoEjaVU8Pw==
 
-"@napi-rs/canvas-linux-x64-musl@0.1.83":
-  version "0.1.83"
-  resolved "https://registry.npmjs.org/@napi-rs/canvas-linux-x64-musl/-/canvas-linux-x64-musl-0.1.83.tgz"
-  integrity sha512-Vv2pLWQS8EnlSM1bstJ7vVhKA+mL4+my4sKUIn/bgIxB5O90dqiDhQjUDLP+5xn9ZMestRWDt3tdQEkGAmzq/A==
+"@napi-rs/canvas-linux-x64-musl@0.1.95":
+  version "0.1.95"
+  resolved "https://registry.npmjs.org/@napi-rs/canvas-linux-x64-musl/-/canvas-linux-x64-musl-0.1.95.tgz"
+  integrity sha512-Z5KzqBK/XzPz5+SFHKz7yKqClEQ8pOiEDdgk5SlphBLVNb8JFIJkxhtJKSvnJyHh2rjVgiFmvtJzMF0gNwwKyQ==
 
-"@napi-rs/canvas@^0.1.67":
-  version "0.1.83"
-  resolved "https://registry.npmjs.org/@napi-rs/canvas/-/canvas-0.1.83.tgz"
-  integrity sha512-f9GVB9VNc9vn/nroc9epXRNkVpvNPZh69+qzLJIm9DfruxFqX0/jsXG46OGWAJgkO4mN0HvFHjRROMXKVmPszg==
+"@napi-rs/canvas@^0.1.80":
+  version "0.1.95"
+  resolved "https://registry.npmjs.org/@napi-rs/canvas/-/canvas-0.1.95.tgz"
+  integrity sha512-lkg23ge+rgyhgUwXmlbkPEhuhHq/hUi/gXKH+4I7vO+lJrbNfEYcQdJLIGjKyXLQzgFiiyDAwh5vAe/tITAE+w==
   optionalDependencies:
-    "@napi-rs/canvas-android-arm64" "0.1.83"
-    "@napi-rs/canvas-darwin-arm64" "0.1.83"
-    "@napi-rs/canvas-darwin-x64" "0.1.83"
-    "@napi-rs/canvas-linux-arm-gnueabihf" "0.1.83"
-    "@napi-rs/canvas-linux-arm64-gnu" "0.1.83"
-    "@napi-rs/canvas-linux-arm64-musl" "0.1.83"
-    "@napi-rs/canvas-linux-riscv64-gnu" "0.1.83"
-    "@napi-rs/canvas-linux-x64-gnu" "0.1.83"
-    "@napi-rs/canvas-linux-x64-musl" "0.1.83"
-    "@napi-rs/canvas-win32-x64-msvc" "0.1.83"
+    "@napi-rs/canvas-android-arm64" "0.1.95"
+    "@napi-rs/canvas-darwin-arm64" "0.1.95"
+    "@napi-rs/canvas-darwin-x64" "0.1.95"
+    "@napi-rs/canvas-linux-arm-gnueabihf" "0.1.95"
+    "@napi-rs/canvas-linux-arm64-gnu" "0.1.95"
+    "@napi-rs/canvas-linux-arm64-musl" "0.1.95"
+    "@napi-rs/canvas-linux-riscv64-gnu" "0.1.95"
+    "@napi-rs/canvas-linux-x64-gnu" "0.1.95"
+    "@napi-rs/canvas-linux-x64-musl" "0.1.95"
+    "@napi-rs/canvas-win32-arm64-msvc" "0.1.95"
+    "@napi-rs/canvas-win32-x64-msvc" "0.1.95"
 
 "@next/env@16.1.6":
   version "16.1.6"
@@ -5831,12 +5832,12 @@ path-scurry@^2.0.0:
     lru-cache "^11.0.0"
     minipass "^7.1.2"
 
-pdfjs-dist@5.3.31:
-  version "5.3.31"
-  resolved "https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-5.3.31.tgz"
-  integrity sha512-EhPdIjNX0fcdwYQO+e3BAAJPXt+XI29TZWC7COhIXs/K0JHcUt1Gdz1ITpebTwVMFiLsukdUZ3u0oTO7jij+VA==
+pdfjs-dist@5.4.296:
+  version "5.4.296"
+  resolved "https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-5.4.296.tgz"
+  integrity sha512-DlOzet0HO7OEnmUmB6wWGJrrdvbyJKftI1bhMitK7O2N8W2gc757yyYBbINy9IDafXAV9wmKr9t7xsTaNKRG5Q==
   optionalDependencies:
-    "@napi-rs/canvas" "^0.1.67"
+    "@napi-rs/canvas" "^0.1.80"
 
 peerjs-js-binarypack@^2.1.0:
   version "2.1.0"
@@ -6059,17 +6060,17 @@ react-is@^18.3.1:
   resolved "https://registry.npmjs.org/react-is/-/react-is-18.3.1.tgz"
   integrity sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==
 
-react-pdf@10.0.1:
-  version "10.0.1"
-  resolved "https://registry.npmjs.org/react-pdf/-/react-pdf-10.0.1.tgz"
-  integrity sha512-dblLZ5BqubeNFZwTzHkRi7Rexev2+Xb9z7sEvNYT+IOxmih1KgrByeqD4Hm0RnwR9nTWludXbiHQMe9d47DK2w==
+react-pdf@10.4.1:
+  version "10.4.1"
+  resolved "https://registry.npmjs.org/react-pdf/-/react-pdf-10.4.1.tgz"
+  integrity sha512-kS/35staVCBqS29verTQJQZXw7RfsRCPO3fdJoW1KXylcv7A9dw6DZ3vJXC2w+bIBgLw5FN4pOFvKSQtkQhPfA==
   dependencies:
     clsx "^2.0.0"
     dequal "^2.0.3"
     make-cancellable-promise "^2.0.0"
     make-event-props "^2.0.0"
     merge-refs "^2.0.0"
-    pdfjs-dist "5.3.31"
+    pdfjs-dist "5.4.296"
     tiny-invariant "^1.0.0"
     warning "^4.0.0"
 

@@ -278,7 +278,8 @@ const PdfViewer: React.FC<ViewerProps> = ({
 
         const renderContext = {
           canvasContext: context,
-          viewport: viewport
+          viewport: viewport,
+          canvas: canvas
         };
 
         renderTaskRef.current = page.render(renderContext);
