@@ -26,7 +26,6 @@ import {
     searchKeymap,
 } from '@codemirror/search';
 import { EditorState, type Extension } from '@codemirror/state';
-import { oneDark } from '@codemirror/theme-one-dark';
 import { type ViewUpdate, keymap } from '@codemirror/view';
 import { lineNumbers } from '@codemirror/view';
 import { EditorView } from 'codemirror';
@@ -40,6 +39,7 @@ import type { CollabProvider } from '../../types/collab';
 import type * as Y from 'yjs';
 import { UndoManager } from 'yjs';
 
+import { resolveHighlightTheme } from '../../extensions/codemirror/HighlightThemeExtension';
 import { commentSystemExtension } from '../../extensions/codemirror/CommentExtension';
 import { latexTypstBidiIsolates } from "../../extensions/codemirror/BidiExtension";
 import { searchHighlightExtension } from '../../extensions/codemirror/SearchHighlightExtension';
@@ -277,23 +277,7 @@ export const useEditorView = (
 
         if (getLineNumbersEnabled()) extensions.push(lineNumbers());
         if (getSyntaxHighlightingEnabled()) {
-            const highlightTheme = editorSettings.highlightTheme || 'auto';
-
-            let useDarkTheme = false;
-            if (highlightTheme === 'auto') {
-                useDarkTheme =
-                    document.documentElement.getAttribute('data-theme') === 'dark';
-            } else if (highlightTheme === 'dark') {
-                useDarkTheme = true;
-            }
-
-            if (useDarkTheme) {
-                extensions.push(oneDark);
-            } else {
-                extensions.push(
-                    syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-                );
-            }
+            extensions.push(resolveHighlightTheme(editorSettings.highlightTheme || 'auto'));
         }
 
         if (getVimModeEnabled()) {
