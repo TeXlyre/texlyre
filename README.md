@@ -125,8 +125,10 @@ TeXlyre's architecture emphasizes **local-first principles** while enabling real
 
 The **plugin system** allows extensibility through custom viewers, renderers, and backup providers. Core plugins handle PDF rendering, Bibliography cleaning, LaTeX and Typst log visualization, an embedded **[Draw.io](https://drawio.com)** diagram editor with collaborative support, **[Zotero](https://www.zotero.org/)** and **[OpenAlex](https://www.openalex.org/)** reference search, import, and update panel, file system backups, and repository backups to/from GitHub, GitLab, Gitea, and Codeberg (Forgejo). Theme plugins also provide customizable layouts and visual styles.
 
-![Bib Editor plugin integrated into the TeXlyre app along with Zotero integration panel](showcase/zotero_bib_panel.png)
-
+<p align="center">
+  <img src="showcase/zotero_bib_panel.png"
+       alt="Bib Editor plugin integrated into the TeXlyre app along with Zotero integration panel">
+</p>
 
 
 ## File Synchronization
@@ -177,20 +179,6 @@ PWA support on iOS may have platform-specific limitations compared to desktop or
 
 ---
 
-## License
-
-TeXlyre is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
-
-This means:
-- ✅ You can use, modify, and distribute this software
-- ✅ You can run it for any purpose, including commercial use
-- ⚖️ If you distribute modified versions, you must also distribute the source code
-- ⚖️ If you run a modified version as a network service, you must provide source code to users
-
-See [LICENSE](LICENSE) for the complete license text.
-
-TeXlyre is licensed under AGPL-3.0 due to our dependency on [SwiftLaTeX's AGPL-licensed LaTeX engine (WASM)](https://github.com/SwiftLaTeX/SwiftLaTeX/) for in-browser LaTeX compilation.
-
 ## Privacy & Data
 
 TeXlyre is privacy-focused by design:
@@ -204,7 +192,7 @@ When you collaborate, IP addresses are temporarily processed through signaling s
 ### Repository Backup Integration
 The optional GitHub, GitLab, Gitea, and Forgejo (Codeberg) integration only activates when you explicitly enable them and provide your own token.
 
-## Infrastructure
+## Infrastructure & Self-Hosting
 
 TeXlyre uses open source signaling servers for WebRTC connections:
 
@@ -214,8 +202,6 @@ TeXlyre uses open source signaling servers for WebRTC connections:
 - **FilePizza Server**: Based on [FilePizza](https://github.com/kern/filepizza) which relies on PeerJS (built-in TURN containers are not deployed on TeXlyre servers)
 
 All servers are hosted locally and made publicly available with [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/).
-
-### Self-Hosting
 
 You can run your own signaling servers by following the setup instructions in our [infrastructure repository](https://github.com/texlyre/texlyre-infrastructure).
 
@@ -255,6 +241,20 @@ TeXlyre builds upon several key technologies:
 - **[wasm-bindgen](https://github.com/wasm-bindgen/wasm-bindgen)** - Rust/Wasm interoperability
 
 Development of TeXlyre was assisted by **Anthropic Claude** for debugging and architectural guidance.
+
+## License
+
+TeXlyre is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+See [LICENSE](LICENSE) for the complete license text.
+
+## Funding
+
+[TeXlyre is funded by NLnet](nlnet.nl/project/Texlyre/) through the NGI0 Commons Fund, which is supported by the European Commission's Next Generation Internet programme. 
+
+<p align="center">
+  <img src="showcase/sponsors_banner.svg"
+       alt="Funding agencies" width="100%">
+</p>
 
 ---
 
