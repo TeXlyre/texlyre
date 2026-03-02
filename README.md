@@ -249,7 +249,7 @@ See [LICENSE](LICENSE) for the complete license text.
 
 ## Funding
 
-[TeXlyre is funded by NLnet](nlnet.nl/project/Texlyre/) through the NGI0 Commons Fund, which is supported by the European Commission's Next Generation Internet programme. 
+[TeXlyre is funded by NLnet](https://nlnet.nl/project/Texlyre/) through the NGI0 Commons Fund, which is supported by the European Commission's Next Generation Internet programme. 
 
 <p align="center">
   <img src="showcase/sponsors_banner.svg"
