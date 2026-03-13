@@ -2,9 +2,13 @@ name: Bug Report
 description: Report a bug
 labels: ["bug"]
 body:
-  - type: markdown
+  - type: checkboxes
+    id: conduct
     attributes:
-      value: "## Bug Report"
+      label: Code of Conduct
+      options:
+        - label: I have read and agree to the [Code of Conduct](https://github.com/TeXlyre/texlyre/blob/main/CODE_OF_CONDUCT.md)
+          required: true
   - type: input
     id: summary
     attributes:
