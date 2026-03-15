@@ -253,23 +253,22 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
     setIsPanning(false);
   };
 
-  const getTransformStyle = (): React.CSSProperties => {
-    const scaleX = transform.flipH ? -transform.scale : transform.scale;
-    const scaleY = transform.flipV ? -transform.scale : transform.scale;
-    const transformValue = `translate(${transform.translateX}px, ${transform.translateY}px) rotate(${transform.rotation}deg) scale(${scaleX}, ${scaleY})`;
-
-    const filterValue = enableFilters ?
-      `brightness(${transform.brightness}%) contrast(${transform.contrast}%)` :
-      'none';
-
+  const getOuterTransformStyle = (): React.CSSProperties => {
     return {
-      transform: transformValue,
-      transformOrigin: 'center',
-      imageRendering:
-        imageRenderingStyle as React.CSSProperties['imageRendering'],
-      filter: filterValue,
-      cursor: panningActive ? isPanning ? 'grabbing' : 'grab' : 'default',
+      display: 'inline-block',
+      transform: `translate(${transform.translateX}px, ${transform.translateY}px) scale(${transform.scale})`,
+      transformOrigin: 'top left',
+      filter: enableFilters ? `brightness(${transform.brightness}%) contrast(${transform.contrast}%)` : 'none',
       transition: isPanning ? 'none' : 'transform 0.2s ease'
+    };
+  };
+
+  const getInnerTransformStyle = (): React.CSSProperties => {
+    return {
+      display: 'inline-block',
+      transform: `rotate(${transform.rotation}deg) scale(${transform.flipH ? -1 : 1}, ${transform.flipV ? -1 : 1})`,
+      transformOrigin: 'center',
+      imageRendering: imageRenderingStyle as React.CSSProperties['imageRendering'],
     };
   };
 
@@ -280,9 +279,8 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
         'display:flex;justify-content:center;align-items:center;' :
         '';
 
-    const scaleX = transform.flipH ? -transform.scale : transform.scale;
-    const scaleY = transform.flipV ? -transform.scale : transform.scale;
-    const transformValue = `translate(${transform.translateX}px, ${transform.translateY}px) rotate(${transform.rotation}deg) scale(${scaleX}, ${scaleY})`;
+    const outerTransform = `translate(${transform.translateX}px, ${transform.translateY}px) scale(${transform.scale})`;
+    const innerTransform = `rotate(${transform.rotation}deg) scale(${transform.flipH ? -1 : 1}, ${transform.flipV ? -1 : 1})`;
 
     const filterValue = enableFilters ?
       `brightness(${transform.brightness}%) contrast(${transform.contrast}%)` :
@@ -304,21 +302,27 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
                   background: transparent;
                   ${centerCss}
                 }
-                .svg-wrapper {
+                .svg-outer {
                   display: inline-block;
-                  transform: ${transformValue};
+                  transform: ${outerTransform};
                   transform-origin: top left;
                   filter: ${filterValue};
                 }
-                .svg-wrapper svg {
+                .svg-inner {
+                  display: inline-block;
+                  transform: ${innerTransform};
+                  transform-origin: center;
+                }
+                .svg-inner svg {
                   display: block;
                   width: 100%;
                   height: auto;
                 }
               </style>
             </head>
-            <body><div class="svg-wrapper">${svgContent}</div></body>
+            <body><div class="svg-outer"><div class="svg-inner">${svgContent}</div></div></body>
           </html>`}
+
         style={{
           overflow: 'auto',
           width: '100%',
@@ -469,12 +473,14 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
         {!isLoading && imageSrc && !isSvg &&
           <div
             className={`image-container${autoCenter && transform.translateX === 0 && transform.translateY === 0 ? '' : ' no-center'}`}>
-            <img
-              src={imageSrc}
-              alt={fileName}
-              style={getTransformStyle()}
-              draggable={false} />
 
+            <div style={getOuterTransformStyle()}>
+              <img
+                src={imageSrc}
+                alt={fileName}
+                style={getInnerTransformStyle()}
+                draggable={false} />
+            </div>
           </div>
         }
 
