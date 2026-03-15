@@ -1,7 +1,7 @@
 {
 	"name": "texlyre",
 	"private": true,
-	"version": "0.5.31",
+	"version": "0.6.0",
 	"description": "A local-first LaTeX & Typst collaborative web editor ",
 	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
 	"license": "AGPL-3.0-or-later",
@@ -113,7 +113,7 @@
 		"y-codemirror.next": "=0.3.5",
 		"y-indexeddb": "^9.0.11",
 		"y-protocols": "^1.0.6",
-		"y-webrtc": "^10.2.0",
+		"y-webrtc": "^10.3.0",
 		"y-websocket": "^3.0.0",
 		"yjs": "^13.5.51"
 	},
@@ -122,15 +122,21 @@
 		"ajv": "^8.18.0",
 		"minimatch": "^10.2.2",
 		"uri-js": "npm:uri-js-replace@1.0.1",
+		"serialize-javascript": ">=7.0.3",
 		"tr46": "^6.0.0",
-		"whatwg-url": "^16.0.1"
+		"whatwg-url": "^16.0.1",
+		"tough-cookie": "^6.0.1"
 	},
 	"pnpm": {
 		"overrides": {
+			"rimraf": "^6.1.3",
+			"ajv": "^8.18.0",
+			"minimatch": "^10.2.2",
 			"uri-js": "npm:uri-js-replace@1.0.1",
+			"serialize-javascript": ">=7.0.3",
 			"tr46": "^6.0.0",
 			"whatwg-url": "^16.0.1",
-			"tough-cookie": "^6.0.0"
+			"tough-cookie": "^6.0.1"
 		}
 	},
 	"devDependencies": {
