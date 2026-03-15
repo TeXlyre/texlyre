@@ -87,6 +87,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
   });
 
   const [isPanning, setIsPanning] = useState(false);
+  const [panningActive, setPanningActive] = useState(enablePanning);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -232,7 +233,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (!enablePanning) return;
+    if (!panningActive) return;
     setIsPanning(true);
     setPanStart({
       x: e.clientX - transform.translateX,
@@ -241,7 +242,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isPanning || !enablePanning) return;
+    if (!isPanning || !panningActive) return;
     updateTransform({
       translateX: e.clientX - panStart.x,
       translateY: e.clientY - panStart.y
@@ -267,7 +268,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
       imageRendering:
         imageRenderingStyle as React.CSSProperties['imageRendering'],
       filter: filterValue,
-      cursor: enablePanning ? isPanning ? 'grabbing' : 'grab' : 'default',
+      cursor: panningActive ? isPanning ? 'grabbing' : 'grab' : 'default',
       transition: isPanning ? 'none' : 'transform 0.2s ease'
     };
   };
@@ -294,40 +295,38 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
           <html>
             <head>
               <style>
-                body, html { 
-                  margin: 0; 
-                  padding: 0; 
-                  height: 100%; 
-                  width: 100%; 
-                  overflow: auto; 
-				  align-items: center;
-				  justify-content: left;
-				  background: transparent;
+                body, html {
+                  margin: 0;
+                  padding: 0;
+                  height: 100%;
+                  width: 100%;
+                  overflow: auto;
+                  background: transparent;
                   ${centerCss}
                 }
-                svg { 
-                  max-width: 100%; 
-                  max-height: 100%; 
+                .svg-wrapper {
+                  display: inline-block;
                   transform: ${transformValue};
                   transform-origin: top left;
                   filter: ${filterValue};
                 }
+                .svg-wrapper svg {
+                  display: block;
+                  width: 100%;
+                  height: auto;
+                }
               </style>
             </head>
-            <body>${svgContent}</body>
+            <body><div class="svg-wrapper">${svgContent}</div></body>
           </html>`}
         style={{
           overflow: 'auto',
           width: '100%',
           height: '100%',
-          border: 'none'
+          border: 'none',
+          pointerEvents: panningActive ? 'none' : 'auto'
         }}
-        onMouseDown={(e) => enablePanning && handleMouseDown(e)}
-        onMouseMove={(e) => enablePanning && handleMouseMove(e)}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp} />);
-
-
+      />);
   };
 
   const tooltipInfo = [
@@ -382,9 +381,9 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
       {enablePanning && (
         <PluginControlGroup>
           <button
-            title={t(`Panning: {status}`, { status: enablePanning ? t('enabled') : t('disabled') })}
-            className={enablePanning ? 'active' : ''}>
-
+            onClick={() => setPanningActive((prev) => !prev)}
+            title={t(`Panning: {status}`, { status: panningActive ? t('enabled') : t('disabled') })}
+            className={panningActive ? 'active' : ''}>
             <MoveIcon />
           </button>
         </PluginControlGroup>
@@ -456,6 +455,10 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
       <div
         className="image-viewer-content"
         ref={imageContainerRef}
+        style={{
+          cursor: panningActive ? isPanning ? 'grabbing' : 'grab' : 'default',
+          userSelect: panningActive ? 'none' : 'auto'
+        }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -465,8 +468,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 
         {!isLoading && imageSrc && !isSvg &&
           <div
-            className={`image - container${autoCenter && transform.translateX === 0 && transform.translateY === 0 ? '' : ' no-center'}`}>
-
+            className={`image-container${autoCenter && transform.translateX === 0 && transform.translateY === 0 ? '' : ' no-center'}`}>
             <img
               src={imageSrc}
               alt={fileName}
