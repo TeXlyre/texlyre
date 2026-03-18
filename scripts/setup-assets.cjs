@@ -1,6 +1,7 @@
 // scripts/setup-assets.cjs
 const { copyCmaps } = require("./copy-pdf-cmaps.cjs");
 const { copyKTeXFonts } = require("./copy-mathlive-fonts.cjs");
+const { copyDetypifyAssets } = require("./copy-detypify-assets.cjs");
 const { copyTypstAssets } = require("./copy-typst-assets.cjs");
 const { downloadCoreAssets } = require("./download-core-assets.cjs");
 
@@ -10,6 +11,7 @@ async function setupAssets() {
     try {
         await copyCmaps();
         await copyKTeXFonts();
+        await copyDetypifyAssets();
         await copyTypstAssets();
         await downloadCoreAssets();
 

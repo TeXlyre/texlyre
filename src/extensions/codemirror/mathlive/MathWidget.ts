@@ -8,6 +8,7 @@ import { MathfieldElement } from 'mathlive';
 
 import { EditIcon } from '../../../components/common/Icons';
 import type { MathRegion } from './MathDetector';
+import { SymbolSearchPanel } from './SymbolSearchPanel';
 
 
 const renderIcon = (IconComponent: React.FC<any>, props = {}) => {
@@ -96,6 +97,10 @@ export class MathEditWidget extends WidgetType {
         const buttonContainer = document.createElement('div');
         buttonContainer.className = 'cm-math-editor-buttons';
 
+        const symbolBtn = document.createElement('button');
+        symbolBtn.textContent = t('Symbols');
+        symbolBtn.className = 'cm-math-editor-btn cm-math-editor-btn-symbols button';
+
         const saveBtn = document.createElement('button');
         saveBtn.textContent = t('Save');
         saveBtn.className = 'cm-math-editor-btn cm-math-editor-btn-save button primary';
@@ -103,6 +108,27 @@ export class MathEditWidget extends WidgetType {
         const cancelBtn = document.createElement('button');
         cancelBtn.textContent = t('Cancel');
         cancelBtn.className = 'cm-math-editor-btn cm-math-editor-btn-cancel button';
+
+        let symbolPanel: SymbolSearchPanel | null = null;
+
+        symbolBtn.addEventListener('click', () => {
+            if (symbolPanel) {
+                symbolPanel.destroy();
+                symbolPanel = null;
+                symbolBtn.classList.remove('active');
+                return;
+            }
+
+            symbolPanel = new SymbolSearchPanel(
+                this.region.fileType as 'latex' | 'typst',
+                (command: string) => {
+                    mathfield.executeCommand(['insert', command]);
+                    mathfield.focus();
+                },
+            );
+            symbolBtn.classList.add('active');
+            wrapper.appendChild(symbolPanel.getElement());
+        });
 
         saveBtn.addEventListener('click', () => {
             this.onSave(mathfield.value);
@@ -120,6 +146,7 @@ export class MathEditWidget extends WidgetType {
             }
         });
 
+        buttonContainer.appendChild(symbolBtn);
         buttonContainer.appendChild(cancelBtn);
         buttonContainer.appendChild(saveBtn);
 

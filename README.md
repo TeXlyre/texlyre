@@ -235,6 +235,7 @@ TeXlyre builds upon several key technologies:
 ### Diagram & Visualization
 - **[Draw.io](https://github.com/jgraph/drawio)** - Diagramming tool for collaborative diagram editing
 - **[MathLive](https://github.com/arnog/mathlive)** - Math rendering and full editing with built-in symbol and expression keyboard
+- **[Detypify](https://github.com/QuarticCat/detypify)** - Handwritten symbol recognition powered by a client-side ONNX model, used for draw-to-insert symbol search
 
 ### Runtime
 - **[WebPerl](https://github.com/haukex/webperl)** - Perl interpreter compiled to WebAssembly
