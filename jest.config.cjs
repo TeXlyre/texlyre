@@ -29,6 +29,8 @@ module.exports = {
         '^filepizza-client$': '<rootDir>/tests/mocks/filepizza-client.js',
         '^wasm-latex-tools$': '<rootDir>/tests/mocks/wasm-latex-tools.js',
         '^mathlive$': '<rootDir>/tests/mocks/mathlive.js',
+        '^detypify-service$': '<rootDir>/tests/mocks/detypify-service.js',
+        '^onnxruntime-web/wasm$': '<rootDir>/tests/mocks/detypify-service.js',
     },
     collectCoverageFrom: [
         'src/**/*.{ts,tsx}',
