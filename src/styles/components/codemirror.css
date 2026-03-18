@@ -696,6 +696,11 @@ math-field {
 	min-width: 50px;
 	max-width: calc(100vw - 32px);
 	pointer-events: auto;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	max-height: 80%;
+	overflow-y: auto;
 }
 
 .cm-math-editor-field {
@@ -790,6 +795,54 @@ math-field {
 .ML__keyboard [data-tooltip]::before {
 	background-color: var(--pico-secondary-background);
 	color: var(--pico-color);
+}
+
+/* ============================================================
+   Detypify panel
+   ============================================================ */
+
+.cm-symbol-search-panel {
+	margin: var(--space-sm);
+}
+
+.cm-symbol-search-input {
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	color: var(--text-color);
+}
+
+.cm-symbol-body {
+	display: flex;
+	gap: var(--space-md);
+	align-items: flex-start;
+}
+
+.cm-symbol-draw-area {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	flex-shrink: 0;
+}
+
+.cm-symbol-canvas {
+	border: 1px solid var(--border-color, #ccc);
+	border-radius: 4px;
+	cursor: crosshair;
+}
+
+.cm-symbol-results {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	align-content: flex-start;
+	flex: 1;
+	min-height: 200px;
+}
+
+.cm-symbol-result-label {
+	border: 1px solid var(--cm-color-atom);
 }
 
 /* ============================================================

@@ -64,6 +64,14 @@ export default defineConfig({
 					dest: "core/typst-ts-renderer/pkg/",
 				},
 				{
+					src: "node_modules/detypify-service/train/model.onnx",
+					dest: "core/detypify/",
+				},
+				{
+					src: "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm",
+					dest: "core/detypify/",
+				},
+				{
 					src: "userdata.json",
 					dest: "",
 				},
@@ -127,6 +135,7 @@ export default defineConfig({
 		exclude: [
 			"@myriaddreamin/typst.ts",
 			"@typstyle/typstyle-wasm-bundler",
+			"onnxruntime-web",
 		],
 	},
 });

@@ -254,8 +254,6 @@ class MathLiveProcessor {
         const dom = previewWidget.toDOM();
 
         dom.style.visibility = 'hidden';
-        dom.style.left = '0px';
-        dom.style.top = '0px';
 
         document.body.appendChild(dom);
         this.currentOverlay = dom;
@@ -333,25 +331,12 @@ class MathLiveProcessor {
             const dom = editWidget.toDOM();
 
             dom.style.visibility = 'hidden';
-            dom.style.left = '0px';
-            dom.style.top = '0px';
 
             document.body.appendChild(dom);
             this.currentOverlay = dom;
 
             setTimeout(() => {
                 if (!this.currentOverlay) return;
-
-                const domRect = dom.getBoundingClientRect();
-                const viewportWidth = window.innerWidth;
-                const viewportHeight = window.innerHeight;
-                const padding = 16;
-
-                const left = Math.max(padding, (viewportWidth - domRect.width) / 2);
-                const top = Math.max(50, (viewportHeight - domRect.height) / 2);
-
-                dom.style.left = `${left}px`;
-                dom.style.top = `${top}px`;
                 dom.style.visibility = 'visible';
             }, 50);
 
