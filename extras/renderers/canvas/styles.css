@@ -1,8 +1,17 @@
-.canvas-renderer-viewer,
+/* extras/renderers/canvas/styles/css */
+@import 'pdfjs-dist/web/pdf_viewer.css';
+
 .canvas-renderer-viewer *,
 .canvas-renderer-viewer *::before,
 .canvas-renderer-viewer *::after {
     box-sizing: content-box;
+}
+
+.canvas-page .textLayer,
+.canvas-page .textLayer *,
+.canvas-page .annotationLayer,
+.canvas-page .annotationLayer * {
+    box-sizing: border-box;
 }
 
 .canvas-renderer-container {
@@ -141,6 +150,7 @@
     padding: 10px 0;
     box-sizing: border-box;
     background-color: #f5f5f5;
+    text-align: center;
 }
 
 .canvas-page {
@@ -148,10 +158,9 @@
     margin: 10px auto;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: inline-block;
     padding: 0;
+    line-height: 0;
 }
 
 .canvas-page-canvas {
@@ -229,4 +238,83 @@
 .canvas-renderer-content.fullscreen:hover {
     scrollbar-width: thin;
     scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
+}
+
+.canvas-page .textLayer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.canvas-page .textLayer>span {
+    pointer-events: auto;
+}
+
+.canvas-page .textLayer .highlight {
+    margin: -1px;
+    padding: 1px;
+    background-color: rgba(180, 0, 255, 0.25);
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+.canvas-page .textLayer .highlight.selected {
+    background-color: rgba(0, 100, 255, 0.25);
+}
+
+.canvas-page .textLayer svg {
+    pointer-events: none;
+}
+
+.canvas-page .textLayer svg text,
+.canvas-page .textLayer svg [data-text] {
+    pointer-events: auto;
+    cursor: text;
+}
+
+.canvas-page .annotationLayer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.canvas-page .annotationLayer section {
+    position: absolute;
+    text-align: initial;
+    pointer-events: auto;
+    user-select: none !important;
+}
+
+.canvas-page .annotationLayer .linkAnnotation>a {
+    pointer-events: auto;
+}
+
+.canvas-page .annotationLayer .textWidgetAnnotation input,
+.canvas-page .annotationLayer .textWidgetAnnotation textarea,
+.canvas-page .annotationLayer .choiceWidgetAnnotation select {
+    background: rgba(0, 54, 255, 0.13);
+    border: 1px solid transparent;
+    box-sizing: border-box;
+    font-size: 9px;
+    height: 100%;
+    margin: 0;
+    padding: 0 3px;
+    vertical-align: top;
+    width: 100%;
+}
+
+.canvas-page .annotationLayer .buttonWidgetAnnotation.checkBox input,
+.canvas-page .annotationLayer .buttonWidgetAnnotation.radioButton input {
+    background: rgba(0, 54, 255, 0.13);
+    border: 1px solid transparent;
+    box-sizing: border-box;
+    height: 100%;
+    margin: 0;
+    vertical-align: top;
+    width: 100%;
 }

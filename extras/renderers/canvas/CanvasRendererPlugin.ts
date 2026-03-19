@@ -1,3 +1,4 @@
+// extras/renderers/canvas/CanvasRendererPlugin.ts
 import type { RendererPlugin } from '@/plugins/PluginInterface';
 import CanvasRenderer from './CanvasRenderer';
 import { getCanvasRendererSettings } from './settings';
@@ -15,7 +16,7 @@ const canvasRendererPlugin: RendererPlugin = {
     },
 
     canHandle: (outputType: string): boolean => {
-        return outputType === 'canvas';
+        return outputType === 'canvas' || outputType === 'pdf' || outputType === 'svg';
     },
 
     renderOutput: CanvasRenderer,
