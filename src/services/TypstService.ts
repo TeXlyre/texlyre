@@ -282,8 +282,32 @@ class TypstService {
         }
     }
 
-    clearCache(): void {
+    async clearCache(): Promise<void> {
         this.compilerEngine.terminate();
+        await this.clearOutputDirectories();
+    }
+
+    private async clearOutputDirectories(): Promise<void> {
+        try {
+            const allFiles = await fileStorageService.getAllFiles();
+            const filesToDelete = allFiles.filter((file) => {
+                const path = file.path;
+                return (
+                    (path.startsWith('/.texlyre_src/__output/') ||
+                        path.startsWith('/.texlyre_src/__work/')) &&
+                    file.type === 'file'
+                );
+            });
+            if (filesToDelete.length > 0) {
+                await fileStorageService.batchDeleteFiles(filesToDelete.map((f) => f.id),
+                    {
+                        showDeleteDialog: false,
+                        hardDelete: true,
+                    });
+            }
+        } catch (error) {
+            console.error('Failed to clear output directories:', error);
+        }
     }
 
     private async performCompilationInWorker(
