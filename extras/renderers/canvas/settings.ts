@@ -1,3 +1,4 @@
+// extras/renderers/canvas/settings.ts
 import { t } from '@/i18n';
 import type { Setting } from '@/contexts/SettingsContext';
 
@@ -30,5 +31,22 @@ export const getCanvasRendererSettings = (): Setting[] => [
       { label: t("300%"), value: '300' },
       { label: t("400%"), value: '400' },
       { label: t("500%"), value: '500' }]
-
+  },
+  {
+    id: 'canvas-renderer-text-selection',
+    category: t("Renderers"),
+    subcategory: t("Canvas Output"),
+    type: 'checkbox',
+    label: t("Enable text selection"),
+    description: t("Allow text selection and copying from PDF documents"),
+    defaultValue: false
+  },
+  {
+    id: 'canvas-renderer-annotations',
+    category: t("Renderers"),
+    subcategory: t("Canvas Output"),
+    type: 'checkbox',
+    label: t("Show annotations"),
+    description: t("Display interactive forms and annotations in PDF documents"),
+    defaultValue: false
   }];

@@ -213,58 +213,62 @@ class LaTeXService {
 		}
 	}
 
-	async compileLaTeX(mainFileName: string, fileTree: FileNode[]): Promise<CompileResult> {
+	async compileLaTeX(mainFileName: string, fileTree: FileNode[], format: string = 'pdf'): Promise<CompileResult> {
 		const engine = this.getCurrentEngine();
 		const operationId = `latex-compile-${nanoid()}`;
 
 		if (!engine.isReady()) {
-			this.showLoadingNotification(t('Initializing LaTeX engine...'), operationId);
+			this.showLoadingNotification(t('Initializing LaTeX engine...'), operationId, format);
 			await engine.initialize();
 		}
 		engine.setTexliveEndpoint(this.texliveEndpoint);
 
 		try {
-			this.showLoadingNotification(t('Preparing files for compilation...'), operationId);
+			this.showLoadingNotification(t('Preparing files for compilation...'), operationId, format);
 			await this.prepareFileNodes(mainFileName, fileTree);
 
-			this.showLoadingNotification(t('Compiling LaTeX document...'), operationId);
+			this.showLoadingNotification(t('Compiling LaTeX document...'), operationId, format);
 			await this.writeNodesToMemFS(engine, mainFileName);
 			let result = await engine.compile(mainFileName, this.processedNodes);
 
 			if (result.status === 0 && !result.pdf && (result as any).xdv) {
-				this.showLoadingNotification(t('Converting XDV to PDF...'), operationId);
+				this.showLoadingNotification(t('Converting XDV to PDF...'), operationId, format);
 				result = await this.processDviToPdf((result as any).xdv, mainFileName, result.log);
 			}
 
 			if (result.status === 0 && result.pdf && result.pdf.length > 0) {
-				this.showLoadingNotification(t('Saving compilation output...'), operationId);
+				this.showLoadingNotification(t('Saving compilation output...'), operationId, format);
 				await this.saveCompilationOutput(mainFileName.replace(/^\/+/, ''), result);
 				await this.storeOutputDirectories(engine);
 				this.showSuccessNotification(t('LaTeX compilation completed successfully'), {
 					operationId,
 					duration: 3000,
+					format,
 				});
 			} else {
 				await this.saveCompilationLog(mainFileName.replace(/^\/+/, ''), result.log);
 				this.showErrorNotification(t('LaTeX compilation failed'), {
 					operationId,
 					duration: 5000,
+					format,
 				});
 			}
 
-			engine.flushCache();
+			// engine.flushCache();
 			return result;
 		} catch (error) {
 			if (this.getStatus() === 'error') {
 				this.showInfoNotification(t('Compilation stopped by user'), {
 					operationId,
 					duration: 2000,
+					format,
 				});
 				return { pdf: null, status: -1, log: 'Compilation failed or was stopped by user.' };
 			}
 			this.showErrorNotification(`Compilation error: ${error instanceof Error ? error.message : t('Unknown error')}`, {
 				operationId,
 				duration: 5000,
+				format,
 			});
 			throw error;
 		}
@@ -510,9 +514,9 @@ class LaTeXService {
 		}
 	}
 
-	async clearCacheAndCompile(mainFileName: string, fileTree: FileNode[]): Promise<CompileResult> {
+	async clearCacheAndCompile(mainFileName: string, fileTree: FileNode[], format: string = 'pdf'): Promise<CompileResult> {
 		await this.clearCacheDirectories();
-		return this.compileLaTeX(mainFileName, fileTree);
+		return this.compileLaTeX(mainFileName, fileTree, format);
 	}
 
 	private async prepareFileNodes(
@@ -1044,6 +1048,9 @@ class LaTeXService {
 	private async getFileContent(
 		node: FileNode,
 	): Promise<ArrayBuffer | string | null> {
+		if (node.content !== undefined) {
+			return node.content;
+		}
 		try {
 			const rawFile = await fileStorageService.getFile(node.id);
 			if (rawFile?.content) {
@@ -1104,8 +1111,9 @@ class LaTeXService {
 		}
 	}
 
-	showLoadingNotification(message: string, operationId?: string): void {
-		if (this.areNotificationsEnabled()) {
+	showLoadingNotification(message: string, operationId?: string, format?: string): void {
+		if (this.areNotificationsEnabled() &&
+			!format?.toLowerCase().includes('canvas')) {
 			notificationService.showLoading(message, operationId);
 		}
 	}
@@ -1116,9 +1124,11 @@ class LaTeXService {
 			operationId?: string;
 			duration?: number;
 			data?: Record<string, any>;
+			format?: string;
 		} = {},
 	): void {
-		if (this.areNotificationsEnabled()) {
+		if (this.areNotificationsEnabled() &&
+			!options.format?.toLowerCase().includes('canvas')) {
 			notificationService.showSuccess(message, options);
 		}
 	}
@@ -1129,9 +1139,11 @@ class LaTeXService {
 			operationId?: string;
 			duration?: number;
 			data?: Record<string, any>;
+			format?: string;
 		} = {},
 	): void {
-		if (this.areNotificationsEnabled()) {
+		if (this.areNotificationsEnabled() &&
+			!options.format?.toLowerCase().includes('canvas')) {
 			notificationService.showError(message, options);
 		}
 	}
@@ -1142,9 +1154,11 @@ class LaTeXService {
 			operationId?: string;
 			duration?: number;
 			data?: Record<string, any>;
+			format?: string;
 		} = {},
 	): void {
-		if (this.areNotificationsEnabled()) {
+		if (this.areNotificationsEnabled() &&
+			!options.format?.toLowerCase().includes('canvas')) {
 			notificationService.showInfo(message, options);
 		}
 	}

@@ -45,8 +45,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     toggleOutputView,
     currentFormat,
     setCurrentFormat,
-    compileDocument,
-    activeCompiler
+    compileDocument
   } = useTypst();
 
   const { selectedFileId, getFile } = useFileTree();
@@ -170,6 +169,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
   const handleTabSwitch = useCallback((format: TypstOutputFormat) => {
     if (currentFormat !== format) {
       setCurrentFormat(format);
+      setProperty('typst-output-format', format);
 
       if (selectedDocId && linkedFileInfo && isTypstFile(linkedFileInfo.filePath)) {
         compileDocument(linkedFileInfo.filePath, format);

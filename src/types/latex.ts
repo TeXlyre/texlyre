@@ -8,17 +8,22 @@ declare global {
 	}
 }
 
+export type LaTeXOutputFormat = 'pdf' | 'canvas-pdf';
+
 export interface LaTeXContextType {
 	isCompiling: boolean;
 	compileError: string | null;
 	compiledPdf: Uint8Array | null;
+	compiledCanvas: Uint8Array | null;
 	clearCache: () => Promise<void>;
 	compileWithClearCache: (mainFileName: string) => Promise<void>;
 	compileLog: string;
-	compileDocument: (mainFileName: string) => Promise<void>;
+	compileDocument: (mainFileName: string, format?: LaTeXOutputFormat) => Promise<void>;
 	stopCompilation: () => void;
 	toggleOutputView: () => void;
-	currentView: 'log' | 'pdf';
+	currentView: 'log' | 'output';
+	currentFormat: LaTeXOutputFormat;
+	setCurrentFormat: (format: LaTeXOutputFormat) => void;
 	logIndicator: 'idle' | 'warn' | 'error' | 'success';
 	latexEngine: 'pdftex' | 'xetex' | 'luatex';
 	activeCompiler: string | null;

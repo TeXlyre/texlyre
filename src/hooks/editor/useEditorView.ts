@@ -151,6 +151,8 @@ export const useEditorView = (
                 refreshBibliographyCache(viewRef.current);
             }
 
+            const file = await fileStorageService.getFile(currentFileId);
+
             setShowSaveIndicator(true);
             setTimeout(() => setShowSaveIndicator(false), 1500);
 
@@ -159,6 +161,7 @@ export const useEditorView = (
                     detail: {
                         isFile: true,
                         fileId: currentFileId,
+                        filePath: file?.path,
                     },
                 }),
             );

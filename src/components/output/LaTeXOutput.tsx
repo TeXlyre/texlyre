@@ -8,6 +8,8 @@ import { useLaTeX } from '../../hooks/useLaTeX';
 import { useProperties } from '../../hooks/useProperties';
 import { useSettings } from '../../hooks/useSettings';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
+import type { RendererController } from '../../plugins/PluginInterface';
+import type { LaTeXOutputFormat } from '../../types/latex';
 import ResizablePanel from '../common/ResizablePanel';
 import LaTeXCompileButton from './LaTeXCompileButton';
 import { isLatexFile, toArrayBuffer } from '../../utils/fileUtils';
@@ -33,12 +35,17 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
   onExpandLatexOutput,
   linkedFileInfo
 }) => {
-  const { compileLog,
+  const {
+    compileLog,
     compiledPdf,
+    compiledCanvas,
     currentView,
     toggleOutputView,
     logIndicator,
-    activeCompiler } = useLaTeX();
+    currentFormat,
+    setCurrentFormat,
+    compileDocument
+  } = useLaTeX();
   const { selectedFileId, getFile } = useFileTree();
   const { getSetting } = useSettings();
   const { getProperty, setProperty, registerProperty } = useProperties();
@@ -50,6 +57,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
   const useEnhancedRenderer = getSetting('pdf-renderer-enable')?.value ?? true;
   const loggerPlugin = pluginRegistry.getLoggerForType('latex');
   const pdfRendererPlugin = pluginRegistry.getRendererForOutput('pdf');
+  const canvasControllerRef = useRef<RendererController | null>(null);
 
   const indicatorColor = {
     idle: '#777',
@@ -57,6 +65,12 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
     warn: '#ffc107',
     error: '#dc3545',
   }[logIndicator ?? 'idle'];
+
+  useEffect(() => {
+    if (compiledCanvas && currentFormat === 'canvas-pdf' && canvasControllerRef.current?.updateContent) {
+      canvasControllerRef.current.updateContent(compiledCanvas);
+    }
+  }, [compiledCanvas, currentFormat]);
 
   useEffect(() => {
     if (propertiesRegistered.current) return;
@@ -137,30 +151,68 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
     URL.revokeObjectURL(url);
   }, [compiledPdf]);
 
-  const pdfViewerContent = useMemo(() => {
-    if (currentView !== 'pdf' || !compiledPdf) return null;
+  const handleTabSwitch = useCallback((format: LaTeXOutputFormat) => {
+    if (currentFormat !== format) {
+      setCurrentFormat(format);
+      setProperty('latex-output-format', format);
 
-    return (
-      <div className="pdf-viewer">
-        {pdfRendererPlugin && useEnhancedRenderer ?
-          React.createElement(pdfRendererPlugin.renderOutput, {
-            content: toArrayBuffer(compiledPdf.buffer),
-            mimeType: 'application/pdf',
-            fileName: 'output.pdf',
-            onSave: handleSavePdf
-          }) :
+      if (selectedDocId && linkedFileInfo && isLatexFile(linkedFileInfo.filePath)) {
+        compileDocument(linkedFileInfo.filePath, format);
+      } else if (selectedFileId) {
+        getFile(selectedFileId).then((file) => {
+          if (file && isLatexFile(file.path)) {
+            compileDocument(file.path, format);
+          }
+        });
+      }
+    }
+  }, [currentFormat, setCurrentFormat, setProperty, compileDocument, selectedDocId, linkedFileInfo, selectedFileId, getFile]);
 
-          <embed
-            src={URL.createObjectURL(
-              new Blob([toArrayBuffer(compiledPdf)], { type: 'application/pdf' })
-            )}
-            type="application/pdf"
-            style={{ width: '100%', height: '100%' }} />
+  const outputViewerContent = useMemo(() => {
+    if (currentView !== 'output') return null;
 
-        }
-      </div>);
+    if (currentFormat === 'pdf' && compiledPdf) {
+      return (
+        <div className="pdf-viewer">
+          {pdfRendererPlugin && useEnhancedRenderer ?
+            React.createElement(pdfRendererPlugin.renderOutput, {
+              content: toArrayBuffer(compiledPdf.buffer),
+              mimeType: 'application/pdf',
+              fileName: 'output.pdf',
+              onSave: handleSavePdf
+            }) :
+            <embed
+              src={URL.createObjectURL(
+                new Blob([toArrayBuffer(compiledPdf)], { type: 'application/pdf' })
+              )}
+              type="application/pdf"
+              style={{ width: '100%', height: '100%' }} />
+          }
+        </div>
+      );
+    }
 
-  }, [currentView, compiledPdf, pdfRendererPlugin, useEnhancedRenderer, handleSavePdf]);
+    if (currentFormat === 'canvas-pdf' && compiledCanvas) {
+      const canvasRenderer = pluginRegistry.getRendererForOutput('canvas', 'canvas-renderer');
+      return (
+        <div className="canvas-viewer">
+          {canvasRenderer ?
+            React.createElement(canvasRenderer.renderOutput, {
+              content: compiledCanvas || new ArrayBuffer(0),
+              mimeType: 'application/pdf',
+              fileName: 'output.pdf',
+              controllerRef: (controller: RendererController) => { canvasControllerRef.current = controller; }
+            }) :
+            <div className="canvas-fallback">{t('Canvas renderer not available')}</div>
+          }
+        </div>
+      );
+    }
+
+    return null;
+  }, [currentView, currentFormat, !!compiledPdf, !!compiledCanvas, pdfRendererPlugin, useEnhancedRenderer, handleSavePdf]);
+
+  const hasAnyOutput = compiledPdf || compiledCanvas;
 
   return (
     <div className={`latex-output ${className}`}>
@@ -176,11 +228,25 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
             />
             {t('Log')}
           </button>
-          <button
-            className={`tab-button ${currentView === 'pdf' ? 'active' : ''}`}
-            onClick={() => currentView !== 'pdf' && toggleOutputView()}
-            disabled={!compiledPdf}>{t('PDF')}
-          </button>
+          {currentView === 'output' &&
+            <>
+              <button
+                className={`tab-button ${currentView === 'output' && currentFormat === 'pdf' ? 'active' : ''}`}
+                onClick={() => handleTabSwitch('pdf')}>{t('PDF')}
+              </button>
+              <button
+                className={`tab-button ${currentView === 'output' && currentFormat === 'canvas-pdf' ? 'active' : ''}`}
+                onClick={() => handleTabSwitch('canvas-pdf')}>{t('Canvas (PDF)')}
+              </button>
+            </>
+          }
+          {currentView === 'log' &&
+            <button
+              className={'tab-button'}
+              onClick={() => toggleOutputView()}
+              disabled={!hasAnyOutput}>{t('Output')}
+            </button>
+          }
         </div>
         <LaTeXCompileButton
           dropdownKey={'latex-output-dropdown'}
@@ -194,7 +260,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 
       </div>
 
-      {!compileLog && !compiledPdf ?
+      {!compileLog && !hasAnyOutput ?
         <div className="empty-state">
           <p>{t('No output available. Compile a LaTeX document to see results.')}</p>
         </div> :
@@ -234,7 +300,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
             </div>
           }
 
-          {pdfViewerContent}
+          {outputViewerContent}
         </>
       }
     </div>);
