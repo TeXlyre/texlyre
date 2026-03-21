@@ -151,6 +151,10 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     setAvailableTypstFiles(allTypstFiles);
 
     const findMainFile = async () => {
+      if (autoMainFile && allTypstFiles.includes(autoMainFile)) {
+        return;
+      }
+
       if (
         selectedDocId &&
         linkedFileInfo?.filePath &&
@@ -216,6 +220,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 
         const mainFileToCompile =
           detail.isFile ? effectiveMainFile : candidatePath;
+
         const targetFormat = effectiveFormat;
         const shouldShareFormat = !!projectFormat;
         const pdfOptions = targetFormat === 'pdf' ?

@@ -8,13 +8,12 @@ import {
   useCallback,
   useRef,
   useState
-} from
-  'react';
+} from 'react';
 
 import { useFileTree } from '../hooks/useFileTree';
 import { useSettings } from '../hooks/useSettings';
 import { latexService } from '../services/LaTeXService';
-import type { LaTeXContextType } from '../types/latex';
+import type { LaTeXContextType, LaTeXOutputFormat } from '../types/latex';
 import { parseUrlFragments } from '../utils/urlUtils';
 import { pdfWindowService } from '../services/PdfWindowService';
 
@@ -31,8 +30,10 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
   const [hasAutoCompiled, setHasAutoCompiled] = useState(false);
   const [compileError, setCompileError] = useState<string | null>(null);
   const [compiledPdf, setCompiledPdf] = useState<Uint8Array | null>(null);
+  const [compiledCanvas, setCompiledCanvas] = useState<Uint8Array | null>(null);
   const [compileLog, setCompileLog] = useState<string>('');
-  const [currentView, setCurrentView] = useState<'log' | 'pdf'>('log');
+  const [currentView, setCurrentView] = useState<'log' | 'output'>('log');
+  const [currentFormat, setCurrentFormat] = useState<LaTeXOutputFormat>('pdf');
   const [logIndicator, setLogIndicator] = useState<'idle' | 'success' | 'error'>('idle');
   const [latexEngine, setLatexEngine] = useState<'pdftex' | 'xetex' | 'luatex'>(
     'pdftex'
@@ -67,10 +68,13 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       getSetting('latex-store-working-directory')?.value as boolean ?? false;
     const initialAutoCompile =
       getSetting('latex-auto-compile-on-open')?.value as boolean ?? false;
+    const initialDefaultFormat =
+      getSetting('latex-default-format')?.value as LaTeXOutputFormat ?? 'pdf';
     const initialAutoNavigate =
       getSetting('latex-auto-navigate-to-main')?.value as string ?? 'conditional';
 
     setLatexEngine(initialEngine);
+    setCurrentFormat(initialDefaultFormat);
 
     registerSetting({
       id: 'latex-engine',
@@ -83,7 +87,6 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       options: [
         { label: t("pdfTeX"), value: 'pdftex' },
         { label: t("XeTeX"), value: 'xetex' }
-        // { label: "LuaTeX", value: "luatex" },
       ],
       onChange: (value) => {
         handleSetLatexEngine(value as 'pdftex' | 'xetex' | 'luatex');
@@ -125,7 +128,23 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
         { label: t("Only when no LaTeX file is open"), value: 'conditional' },
         { label: t("Always navigate to main file"), value: 'always' },
         { label: t("Never navigate to main file"), value: 'never' }]
+    });
 
+    registerSetting({
+      id: 'latex-default-format',
+      category: t("Compilation"),
+      subcategory: t("LaTeX"),
+      type: 'select',
+      label: t("Default output format"),
+      description: t("Default format for LaTeX compilation"),
+      defaultValue: initialDefaultFormat,
+      options: [
+        { label: t("PDF"), value: 'pdf' },
+        { label: t("Canvas (PDF)"), value: 'canvas-pdf' }
+      ],
+      onChange: (value) => {
+        setCurrentFormat(value as LaTeXOutputFormat);
+      }
     });
 
     registerSetting({
@@ -195,12 +214,10 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
   };
 
   const getProjectName = (): string => {
-    // Try to get project name from document title or URL
     if (document.title && document.title !== 'TeXlyre') {
       return document.title;
     }
 
-    // Fallback to extracting from URL hash
     const hash = window.location.hash;
     if (hash.includes('yjs:')) {
       const projectId = hash.split('yjs:')[1].split('&')[0];
@@ -210,7 +227,11 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     return 'LaTeX Project';
   };
 
-  const compileDocument = async (mainFileName: string): Promise<void> => {
+  const compileDocument = async (
+    mainFileName: string,
+    format: LaTeXOutputFormat = currentFormat
+  ): Promise<void> => {
+    setCurrentFormat(format);
     if (!latexService.isReady()) {
       await latexService.initialize(latexEngine);
     }
@@ -219,30 +240,42 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     setCompileError(null);
     setActiveCompiler('latex');
 
+    if (format === 'canvas-pdf') {
+      setCompiledPdf(null);
+    } else {
+      setCompiledCanvas(null);
+    }
+
     try {
-      const result = await latexService.compileLaTeX(mainFileName, fileTree);
+      const result = await latexService.compileLaTeX(mainFileName, fileTree, format);
 
       setCompileLog(result.log);
       if (result.status === 0 && result.pdf) {
-        setCompiledPdf(result.pdf);
-        setCurrentView('pdf');
-        setLogIndicator('success');
+        switch (format) {
+          case 'pdf':
+            setCompiledPdf(result.pdf);
+            setCurrentView('output');
+            setLogIndicator('success');
 
-        // Send PDF to window if open
-        const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx|latex)$/i, '.pdf') || 'output.pdf';
-        const projectName = getProjectName();
-
-        pdfWindowService.sendPdfUpdate(
-          result.pdf,
-          fileName,
-          projectName
-        );
+            const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx|latex)$/i, '.pdf') || 'output.pdf';
+            const projectName = getProjectName();
+            pdfWindowService.sendPdfUpdate(result.pdf, fileName, projectName);
+            break;
+          case 'canvas-pdf':
+            setCompiledCanvas(result.pdf);
+            setCurrentView('output');
+            setLogIndicator('success');
+            break;
+        }
       } else {
-        setCompileError('Compilation failed');
-        setCurrentView('log');
+        setCompileError(t('Compilation failed. Check the log in the main window.'));
+        switch (format) {
+          case 'pdf':
+            setCurrentView('log');
+            break;
+        }
         setLogIndicator('error');
 
-        // Send compile status to window
         pdfWindowService.sendCompileResult(result.status, result.log);
       }
 
@@ -252,7 +285,6 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       setCurrentView('log');
       setLogIndicator('error');
 
-      // Send error to window
       pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
     } finally {
       setIsCompiling(false);
@@ -299,31 +331,45 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       await latexService.initialize(latexEngine);
     }
 
+    const format = currentFormat;
     setIsCompiling(true);
     setCompileError(null);
     setActiveCompiler('latex');
 
+    if (format === 'canvas-pdf') {
+      setCompiledPdf(null);
+    } else {
+      setCompiledCanvas(null);
+    }
+
     try {
-      const result = await latexService.clearCacheAndCompile(mainFileName, fileTree);
+      const result = await latexService.clearCacheAndCompile(mainFileName, fileTree, format);
 
       setCompileLog(result.log);
       if (result.status === 0 && result.pdf) {
-        setCompiledPdf(result.pdf);
-        setCurrentView('pdf');
-        setLogIndicator('success');
+        switch (format) {
+          case 'pdf':
+            setCompiledPdf(result.pdf);
+            setCurrentView('output');
+            setLogIndicator('success');
 
-        // Send PDF to window if open
-        const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx|latex)$/i, '.pdf') || 'output.pdf';
-        const projectName = getProjectName();
-
-        pdfWindowService.sendPdfUpdate(
-          result.pdf,
-          fileName,
-          projectName
-        );
+            const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx|latex)$/i, '.pdf') || 'output.pdf';
+            const projectName = getProjectName();
+            pdfWindowService.sendPdfUpdate(result.pdf, fileName, projectName);
+            break;
+          case 'canvas-pdf':
+            setCompiledCanvas(result.pdf);
+            setCurrentView('output');
+            setLogIndicator('success');
+            break;
+        }
       } else {
-        setCompileError('Compilation failed');
-        setCurrentView('log');
+        setCompileError(t('Compilation failed. Check the log in the main window.'));
+        switch (format) {
+          case 'pdf':
+            setCurrentView('log');
+            break;
+        }
         setLogIndicator('error');
 
         pdfWindowService.sendCompileResult(result.status, result.log);
@@ -357,7 +403,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
   };
 
   const toggleOutputView = () => {
-    setCurrentView(currentView === 'log' ? 'pdf' : 'log');
+    setCurrentView(currentView === 'log' ? 'output' : 'log');
   };
 
   return (
@@ -366,11 +412,14 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
         isCompiling,
         compileError,
         compiledPdf,
+        compiledCanvas,
         compileLog,
         compileDocument,
         stopCompilation,
         toggleOutputView,
         currentView,
+        currentFormat,
+        setCurrentFormat,
         logIndicator,
         latexEngine,
         setLatexEngine: handleSetLatexEngine,
@@ -380,8 +429,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
         activeCompiler,
         exportDocument
       }}>
-
       {children}
-    </LaTeXContext.Provider>);
-
+    </LaTeXContext.Provider>
+  );
 };

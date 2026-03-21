@@ -11,6 +11,7 @@ import { useFileTree } from '../../hooks/useFileTree';
 import { useLaTeX } from '../../hooks/useLaTeX';
 import { useSettings } from '../../hooks/useSettings';
 import { useProperties } from '../../hooks/useProperties';
+import type { LaTeXOutputFormat } from '../../types/latex';
 import type { DocumentList } from '../../types/documents';
 import type { FileNode } from '../../types/files';
 import { isLatexFile, isTemporaryFile } from '../../utils/fileUtils';
@@ -51,7 +52,9 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     latexEngine,
     setLatexEngine,
     clearCache,
-    compileWithClearCache
+    compileWithClearCache,
+    currentFormat,
+    setCurrentFormat
   } = useLaTeX();
   const { selectedFileId, getFile, fileTree } = useFileTree();
   const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
@@ -92,6 +95,13 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
       subcategory: 'LaTeX',
       defaultValue: 'pdftex'
     });
+
+    registerProperty({
+      id: 'latex-output-format',
+      category: 'Compilation',
+      subcategory: 'LaTeX',
+      defaultValue: 'pdf'
+    });
   }, [registerProperty]);
 
   useEffect(() => {
@@ -99,6 +109,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
     const storedMainFile = getProperty('latex-main-file');
     const storedEngine = getProperty('latex-engine');
+    const storedFormat = getProperty('latex-output-format');
 
     if (storedMainFile !== undefined) {
       setUserSelectedMainFile(storedMainFile as string | undefined);
@@ -106,6 +117,10 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
     if (storedEngine !== undefined) {
       setLatexEngine(storedEngine as 'pdftex' | 'xetex' | 'luatex');
+    }
+
+    if (storedFormat !== undefined) {
+      setCurrentFormat(storedFormat as LaTeXOutputFormat);
     }
 
     setPropertiesLoaded(true);
@@ -129,6 +144,10 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     setAvailableTexFiles(allTexFiles);
 
     const findMainFile = async () => {
+      if (autoMainFile && allTexFiles.includes(autoMainFile)) {
+        return;
+      }
+
       if (
         selectedDocId &&
         linkedFileInfo?.filePath &&
@@ -276,25 +295,20 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
       }
 
       const shouldNavigate = await shouldNavigateToMain(effectiveMainFile);
-      console.log(`[Navigation] Should navigate: ${shouldNavigate}, shouldNavigateOnCompile: ${shouldNavigateOnCompile}`);
 
       if (shouldNavigateOnCompile && shouldNavigate) {
         if (linkedFileInfo?.filePath === effectiveMainFile && onNavigateToLinkedFile) {
-          console.log('[Navigation] Navigating to linked file');
           onNavigateToLinkedFile();
         } else {
-          console.log(`[Navigation] Dispatching navigate-to-compiled-file event for: ${effectiveMainFile}`);
           document.dispatchEvent(
             new CustomEvent('navigate-to-compiled-file', {
-              detail: {
-                filePath: effectiveMainFile
-              }
+              detail: { filePath: effectiveMainFile }
             })
           );
         }
       }
 
-      await compileDocument(effectiveMainFile);
+      await compileDocument(effectiveMainFile, currentFormat);
     }
   };
 
@@ -547,7 +561,23 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
             <div className="engine-status">{t('Switching engine...')}</div>
           }
         </div>
-
+        <div className="dropdown-section">
+          <div className="format-selector-header">
+            <div className="dropdown-title">{t('Output Format:')}</div>
+          </div>
+          <select
+            value={currentFormat}
+            onChange={(e) => {
+              const format = e.target.value as LaTeXOutputFormat;
+              setCurrentFormat(format);
+              setProperty('latex-output-format', format);
+            }}
+            className="dropdown-select"
+            disabled={isChangingEngine || isCompiling}>
+            <option value="pdf">{t('PDF')}</option>
+            <option value="canvas-pdf">{t('Canvas (PDF)')}</option>
+          </select>
+        </div>
         <div className="dropdown-section">
           {useSharedSettings && (
             <label className="dropdown-checkbox">

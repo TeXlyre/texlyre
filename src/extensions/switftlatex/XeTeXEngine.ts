@@ -118,7 +118,7 @@ export class XeTeXEngine extends BaseEngine {
 				log: result.log,
 			};
 		} catch (error) {
-			this.flushCache();
+			// this.flushCache();
 			this.setStatus('error');
 			throw error;
 		}
