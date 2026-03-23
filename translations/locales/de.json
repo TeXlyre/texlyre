@@ -488,6 +488,7 @@
   "Default citation style": "Standard-Zitierstil",
   "Default citation style for auto-completion": "Standard-Zitierstil für Auto-Vervollständigung",
   "Default Commit Message": "Standard-Commit-Nachricht",
+  "Default format for LaTeX compilation": "Standardformat für LaTeX kompilation",
   "Default format for Typst compilation": "Standardformat für Typst kompilation",
   "Default output format": "Standardausgabeformat",
   "Delay in milliseconds before saving changes": "Verzögerung in Millisekunden vor dem Speichern der Änderungen",

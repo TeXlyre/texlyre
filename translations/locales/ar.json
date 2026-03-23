@@ -539,6 +539,7 @@
   "Default citation style": "نمط الاقتباس الافتراضي",
   "Default citation style for auto-completion": "نمط الاستشهاد الافتراضي للإنجاز التلقائي",
   "Default Commit Message": "رسالة الالتزام الافتراضية",
+  "Default format for LaTeX compilation": "التنسيق الافتراضي لتجميع LaTeX",
   "Default format for Typst compilation": "التنسيق الافتراضي لتجميع Typst",
   "Default output format": "تنسيق الإخراج الافتراضي",
   "Delay in milliseconds before saving changes": "التأخير بالميلي ثانية قبل حفظ التغييرات",

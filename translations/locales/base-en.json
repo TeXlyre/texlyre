@@ -541,6 +541,7 @@
   "Default citation style": "Default citation style",
   "Default citation style for auto-completion": "Default citation style for auto-completion",
   "Default Commit Message": "Default Commit Message",
+  "Default format for LaTeX compilation": "Default format for LaTeX compilation",
   "Default format for Typst compilation": "Default format for Typst compilation",
   "Default output format": "Default output format",
   "Delay in milliseconds before saving changes": "Delay in milliseconds before saving changes",
