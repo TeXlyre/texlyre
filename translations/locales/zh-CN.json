@@ -531,6 +531,7 @@
   "Default citation style": "默认引用样式",
   "Default citation style for auto-completion": "自动完成的默认引用样式",
   "Default Commit Message": "默认提交消息",
+  "Default format for LaTeX compilation": "LaTeX 编译的默认格式",
   "Default format for Typst compilation": "Typst 编译的默认格式",
   "Default output format": "默认输出格式",
   "Delay in milliseconds before saving changes": "保存更改前的延迟（毫秒）",

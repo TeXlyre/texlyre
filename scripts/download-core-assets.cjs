@@ -7,7 +7,7 @@ const JSZip = require("jszip");
 const ASSETS = [
     {
         name: "drawio-embed",
-        version: "v29.5.2",
+        version: "v29.6.4",
         url: (version) =>
             `https://github.com/TeXlyre/drawio-embed-mirror/archive/refs/tags/${version}.zip`,
         dest: path.resolve(__dirname, "../public/core/drawio-embed"),
