@@ -21,7 +21,7 @@ const APP_THEME_MAP: Record<string, HighlightTheme> = {
     tomorrow_night_blue: 'tomorrowNightBlue',
     github_light: 'githubLight',
     solarized_light: 'solarizedLight',
-    atom_light: 'eclipse',
+    atom_light: 'githubLight',
 };
 
 const THEME_EXTENSION_MAP: Record<HighlightTheme, Extension> = {
