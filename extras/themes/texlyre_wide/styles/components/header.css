@@ -41,7 +41,7 @@
 [data-layout="texlyre-wide"] .project-title-container {
 	display: flex;
 	align-items: center;
-	gap: var(--texlyre-spacing-sm);
+	gap: 0;
 	cursor: pointer;
 	transition: opacity var(--texlyre-transition-normal);
 }
@@ -51,6 +51,7 @@
 	font-size: 0.8rem;
 	color: var(--text-color);
 	font-weight: 600;
+	padding-top: var(--texlyre-spacing-xs);
 }
 
 [data-layout="texlyre-wide"] .project-description {
