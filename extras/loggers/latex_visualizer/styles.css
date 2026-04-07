@@ -271,7 +271,7 @@
 }
 
 .latex-visualizer-content::-webkit-scrollbar {
-	width: 6px;
+	width: 8px;
 }
 
 .latex-visualizer-content::-webkit-scrollbar-track {
@@ -280,7 +280,7 @@
 
 .latex-visualizer-content::-webkit-scrollbar-thumb {
 	background: var(--accent-border);
-	border-radius: 3px;
+	border-radius: 4px;
 }
 
 .latex-visualizer-content::-webkit-scrollbar-thumb:hover {
