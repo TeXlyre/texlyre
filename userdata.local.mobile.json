@@ -28,7 +28,7 @@
     "file-tree-internal-drag-drop": true,
     "image-viewer-auto-center": true,
     "image-viewer-enable-filters": true,
-    "image-viewer-enable-panning": true,
+    "image-viewer-enable-panning": false,
     "image-viewer-quality": "high",
     "latex-engine": "pdftex",
     "latex-store-cache": true,

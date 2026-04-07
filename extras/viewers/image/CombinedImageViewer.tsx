@@ -91,6 +91,8 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rasterIframeRef = useRef<HTMLIFrameElement>(null);
+  const svgIframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     if (!(content instanceof ArrayBuffer)) {
@@ -121,6 +123,26 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
       setIsLoading(false);
     }
   }, [content, mimeType, fileName]);
+
+  useEffect(() => {
+    const applyTransforms = (iframe: HTMLIFrameElement | null) => {
+      const doc = iframe?.contentDocument;
+      if (!doc?.body) return;
+      const outer = doc.querySelector('.fx-outer') as HTMLElement | null;
+      const inner = doc.querySelector('.fx-inner') as HTMLElement | null;
+      if (!outer || !inner) return;
+      outer.style.transform = `translate(${transform.translateX}px, ${transform.translateY}px) scale(${transform.scale})`;
+      outer.style.filter = enableFilters
+        ? `brightness(${transform.brightness}%) contrast(${transform.contrast}%)`
+        : 'none';
+      inner.style.transform = `rotate(${transform.rotation}deg) scale(${transform.flipH ? -1 : 1}, ${transform.flipV ? -1 : 1})`;
+      const centered = autoCenter && transform.translateX === 0 && transform.translateY === 0;
+      doc.body.style.justifyContent = centered ? 'center' : 'flex-start';
+      doc.body.style.alignItems = centered ? 'center' : 'flex-start';
+    };
+    applyTransforms(rasterIframeRef.current);
+    applyTransforms(svgIframeRef.current);
+  }, [transform, enableFilters, autoCenter]);
 
   const updateTransform = (newTransform: Partial<ImageTransform>) => {
     setTransform((prev) => ({ ...prev, ...newTransform }));
@@ -253,76 +275,32 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
     setIsPanning(false);
   };
 
-  const getOuterTransformStyle = (): React.CSSProperties => {
-    return {
-      display: 'inline-block',
-      transform: `translate(${transform.translateX}px, ${transform.translateY}px) scale(${transform.scale})`,
-      transformOrigin: 'top left',
-      filter: enableFilters ? `brightness(${transform.brightness}%) contrast(${transform.contrast}%)` : 'none',
-      transition: isPanning ? 'none' : 'transform 0.2s ease'
-    };
-  };
-
-  const getInnerTransformStyle = (): React.CSSProperties => {
-    return {
-      display: 'inline-block',
-      transform: `rotate(${transform.rotation}deg) scale(${transform.flipH ? -1 : 1}, ${transform.flipV ? -1 : 1})`,
-      transformOrigin: 'center',
-      imageRendering: imageRenderingStyle as React.CSSProperties['imageRendering'],
-    };
-  };
-
-  const renderSvgIframe = () => {
-    if (!svgContent) return null;
-    const centerCss =
-      autoCenter && transform.translateX === 0 && transform.translateY === 0 ?
-        'display:flex;justify-content:center;align-items:center;' :
-        '';
-
-    const outerTransform = `translate(${transform.translateX}px, ${transform.translateY}px) scale(${transform.scale})`;
-    const innerTransform = `rotate(${transform.rotation}deg) scale(${transform.flipH ? -1 : 1}, ${transform.flipV ? -1 : 1})`;
-
-    const filterValue = enableFilters ?
-      `brightness(${transform.brightness}%) contrast(${transform.contrast}%)` :
-      'none';
-
+  const renderRasterIframe = () => {
+    if (!imageSrc) return null;
     return (
       <iframe
+        ref={rasterIframeRef}
         title={fileName}
         srcDoc={`<!DOCTYPE html>
           <html>
             <head>
               <style>
                 body, html {
-                  margin: 0;
-                  padding: 0;
-                  height: 100%;
-                  width: 100%;
-                  overflow: auto;
-                  background: transparent;
-                  ${centerCss}
+                  margin: 0; padding: 0; height: 100%; width: 100%;
+                  overflow: auto; background: transparent;
+                  display: flex; justify-content: center; align-items: center;
                 }
-                .svg-outer {
-                  display: inline-block;
-                  transform: ${outerTransform};
-                  transform-origin: top left;
-                  filter: ${filterValue};
-                }
-                .svg-inner {
-                  display: inline-block;
-                  transform: ${innerTransform};
-                  transform-origin: center;
-                }
-                .svg-inner svg {
-                  display: block;
-                  width: 100%;
-                  height: auto;
+                .fx-outer { display: inline-block; transform-origin: top left; }
+                .fx-inner { display: inline-block; transform-origin: center; }
+                .fx-inner img {
+                  display: block; max-width: none; max-height: none;
+                  user-select: none; -webkit-user-drag: none;
+                  image-rendering: ${imageRenderingStyle};
                 }
               </style>
             </head>
-            <body><div class="svg-outer"><div class="svg-inner">${svgContent}</div></div></body>
+            <body><div class="fx-outer"><div class="fx-inner"><img src="${imageSrc}" alt="${fileName}" draggable="false" /></div></div></body>
           </html>`}
-
         style={{
           overflow: 'auto',
           width: '100%',
@@ -330,7 +308,41 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
           border: 'none',
           pointerEvents: panningActive ? 'none' : 'auto'
         }}
-      />);
+      />
+    );
+  };
+
+  const renderSvgIframe = () => {
+    if (!svgContent) return null;
+    return (
+      <iframe
+        ref={svgIframeRef}
+        title={fileName}
+        srcDoc={`<!DOCTYPE html>
+          <html>
+            <head>
+              <style>
+                body, html {
+                  margin: 0; padding: 0; height: 100%; width: 100%;
+                  overflow: auto; background: transparent;
+                  display: flex; justify-content: center; align-items: center;
+                }
+                .fx-outer { display: inline-block; transform-origin: top left; }
+                .fx-inner { display: inline-block; transform-origin: center; }
+                .fx-inner svg { display: block; width: 100%; height: auto; }
+              </style>
+            </head>
+            <body><div class="fx-outer"><div class="fx-inner">${svgContent}</div></div></body>
+          </html>`}
+        style={{
+          overflow: 'auto',
+          width: '100%',
+          height: '100%',
+          border: 'none',
+          pointerEvents: panningActive ? 'none' : 'auto'
+        }}
+      />
+    );
   };
 
   const tooltipInfo = [
@@ -471,24 +483,13 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
         {isLoading && <div className="loading-indicator">{t('Loading image...')}</div>}
 
         {!isLoading && imageSrc && !isSvg &&
-          <div
-            className={`image-container${autoCenter && transform.translateX === 0 && transform.translateY === 0 ? '' : ' no-center'}`}>
-
-            <div style={getOuterTransformStyle()}>
-              <img
-                src={imageSrc}
-                alt={fileName}
-                style={getInnerTransformStyle()}
-                draggable={false} />
-            </div>
+          <div className="image-container" style={{ width: '100%', height: '100%' }}>
+            {renderRasterIframe()}
           </div>
         }
 
         {!isLoading && isSvg &&
-          <div
-            className={`svg-container${autoCenter && transform.translateX === 0 && transform.translateY === 0 ? '' : ' no-center'}`}
-            style={{ width: '100%', height: '100%' }}>
-
+          <div className="svg-container" style={{ width: '100%', height: '100%' }}>
             {renderSvgIframe()}
           </div>
         }
@@ -497,7 +498,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
           <div className="image-error-message">{t('Cannot display this image.')}</div>
         }
       </div>
-    </div >);
+    </div>);
 
 };
 

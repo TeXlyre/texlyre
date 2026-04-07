@@ -112,6 +112,7 @@ const config: TexlyreConfig = {
         mobile: {
             settings: {
                 themePlugin: 'texlyre-mobile-theme',
+                imageViewerEnablePanning: false,
             },
         },
         local: {

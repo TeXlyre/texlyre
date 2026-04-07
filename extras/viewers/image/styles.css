@@ -25,7 +25,6 @@
 	flex-wrap: wrap;
 }
 
-/* Special styling for zoom percentage button */
 .control-group button:nth-child(2) {
 	min-width: 50px;
 	font-size: var(--space-sd);
@@ -87,7 +86,6 @@
 	border-radius: 8px;
 }
 
-/* Responsive design for smaller screens */
 @media (max-width: 768px) {
 	.image-viewer-header {
 		flex-direction: column;
@@ -106,7 +104,6 @@
 	}
 }
 
-/* High contrast theme support */
 @media (prefers-contrast: high) {
 	.control-group {
 		border-width: 2px;
@@ -117,9 +114,7 @@
 	}
 }
 
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-
 	.control-group button,
 	.image-container img {
 		transition: none;
