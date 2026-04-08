@@ -249,6 +249,10 @@
     z-index: 2;
 }
 
+.canvas-page .textLayer {
+    --total-scale-factor: var(--scale-factor, 1);
+}
+
 .canvas-page .textLayer>span {
     pointer-events: auto;
 }
