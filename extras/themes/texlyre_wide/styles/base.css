@@ -64,7 +64,7 @@
 
 
 [data-theme-plugin="texlyre"] ::-webkit-scrollbar {
-	width: 6px;
+	width: 8px;
 }
 
 [data-theme-plugin="texlyre"] ::-webkit-scrollbar-track {
@@ -73,9 +73,9 @@
 
 [data-theme-plugin="texlyre"] ::-webkit-scrollbar-thumb {
 	background-color: var(--accent-border);
-	border-radius: 3px;
+	border-radius: 4px;
 }
 
 [data-theme-plugin="texlyre"] ::-webkit-scrollbar-thumb:hover {
-	background-color: var(--pico-secondary);
+	background-color: var(--pico-primary);
 }

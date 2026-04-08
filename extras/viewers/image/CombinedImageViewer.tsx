@@ -275,6 +275,19 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
     setIsPanning(false);
   };
 
+  const scrollbarCss = (() => {
+    const styles = getComputedStyle(document.documentElement);
+    const thumb = styles.getPropertyValue('--accent-border').trim() || '#888';
+    const track = styles.getPropertyValue('--accent-background').trim() || 'transparent';
+    return `
+      * { scrollbar-width: thin; scrollbar-color: ${thumb} ${track}; }
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: ${track}; }
+      ::-webkit-scrollbar-thumb { background: ${thumb}; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background-color: var(--pico-primary); }
+    `;
+  })();
+
   const renderRasterIframe = () => {
     if (!imageSrc) return null;
     return (
@@ -290,6 +303,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
                   overflow: auto; background: transparent;
                   display: flex; justify-content: center; align-items: center;
                 }
+                ${scrollbarCss}
                 .fx-outer { display: inline-block; transform-origin: top left; }
                 .fx-inner { display: inline-block; transform-origin: center; }
                 .fx-inner img {
@@ -327,6 +341,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
                   overflow: auto; background: transparent;
                   display: flex; justify-content: center; align-items: center;
                 }
+                ${scrollbarCss}
                 .fx-outer { display: inline-block; transform-origin: top left; }
                 .fx-inner { display: inline-block; transform-origin: center; }
                 .fx-inner svg { display: block; width: 100%; height: auto; }
