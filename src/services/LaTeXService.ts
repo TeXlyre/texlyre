@@ -12,6 +12,7 @@ import { XeTeXEngine } from '../extensions/switftlatex/XeTeXEngine';
 import type { FileNode } from '../types/files';
 import { getMimeType, isBinaryFile, isTemporaryFile, toArrayBuffer } from '../utils/fileUtils';
 import { downloadFiles } from '../utils/zipUtils';
+import { latexSourceMapService } from './LaTeXSourceMapService';
 import { fileStorageService } from './FileStorageService';
 import { notificationService } from './NotificationService';
 import { cleanContent } from '../utils/fileCommentUtils';
@@ -239,6 +240,7 @@ class LaTeXService {
 			if (result.status === 0 && result.pdf && result.pdf.length > 0) {
 				this.showLoadingNotification(t('Saving compilation output...'), operationId, format);
 				await this.saveCompilationOutput(mainFileName.replace(/^\/+/, ''), result);
+				await this.loadSourceMap(engine, mainFileName);
 				await this.storeOutputDirectories(engine);
 				this.showSuccessNotification(t('LaTeX compilation completed successfully'), {
 					operationId,
@@ -949,6 +951,7 @@ class LaTeXService {
 		}
 	}
 
+
 	private async cleanupDirectory(directoryPath: string): Promise<void> {
 		try {
 			const existingFiles = await fileStorageService.getAllFiles();
@@ -995,6 +998,28 @@ class LaTeXService {
 			excludeFromSync: true,
 		};
 	}
+
+	private async loadSourceMap(engine: BaseEngine, mainFileName: string): Promise<void> {
+    try {
+        const baseName = this.getBaseName(mainFileName);
+        const workFiles = await engine.dumpDirectory('/work');
+
+        const synctexKey = Object.keys(workFiles).find((key) =>
+            key.endsWith(`${baseName}.synctex.gz`) || key.endsWith(`${baseName}.synctex`)
+        );
+
+        if (!synctexKey) {
+            latexSourceMapService.clear();
+            return;
+        }
+
+        const bytes = new Uint8Array(workFiles[synctexKey]);
+        latexSourceMapService.loadFromBytes(bytes);
+    } catch (error) {
+        console.error('[LaTeXService] Failed to load source map:', error);
+        latexSourceMapService.clear();
+    }
+}
 
 	private async ensureOutputDirectoriesExist(): Promise<void> {
 		const requiredDirectories = [
