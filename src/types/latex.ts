@@ -10,8 +10,19 @@ declare global {
 
 export type LaTeXOutputFormat = 'pdf' | 'canvas-pdf';
 
+export type LaTeXEngine =
+	| 'pdftex'
+	| 'xetex'
+	| 'busytex-pdftex'
+	| 'busytex-xetex'
+	| 'busytex-luatex';
+
 export interface LaTeXContextType {
 	isCompiling: boolean;
+	isInitializing: boolean;
+	setIsInitializing: (boolean) => void;
+	isExporting: boolean;
+	setIsExporting: (boolean) => void;
 	compileError: string | null;
 	compiledPdf: Uint8Array | null;
 	compiledCanvas: Uint8Array | null;
@@ -25,18 +36,19 @@ export interface LaTeXContextType {
 	currentFormat: LaTeXOutputFormat;
 	setCurrentFormat: (format: LaTeXOutputFormat) => void;
 	logIndicator: 'idle' | 'warn' | 'error' | 'success';
-	latexEngine: 'pdftex' | 'xetex' | 'luatex';
+	latexEngine: LaTeXEngine;
 	activeCompiler: string | null;
-	setLatexEngine: (engine: 'pdftex' | 'xetex' | 'luatex') => Promise<void>;
+	setLatexEngine: (engine: LaTeXEngine) => Promise<void>;
 	triggerAutoCompile: () => void;
 	exportDocument: (
 		mainFileName: string,
 		options?: {
-			engine?: 'pdftex' | 'xetex' | 'luatex';
+			engine?: LaTeXEngine;
 			format?: 'pdf' | 'dvi';
 			includeLog?: boolean;
 			includeDvi?: boolean;
 			includeBbl?: boolean;
+			includeWorkDir?: boolean;
 		}
 	) => Promise<void>;
 }
