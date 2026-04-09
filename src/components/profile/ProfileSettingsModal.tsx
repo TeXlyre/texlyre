@@ -577,7 +577,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
               onClick={handleConfirmDelete}
               disabled={isSubmitting}>
 
-              {isSubmitting ? t('Clearing...') : t(`Clear {data}`, { data: deleteType === 'all' ? t('All Data') : t(deleteType) })}
+              {isSubmitting ? t('Clearing...') : t('Clear {data}', { data: deleteType === 'all' ? t('All Data') : t(deleteType) })}
             </button>
           </div>
         </div>

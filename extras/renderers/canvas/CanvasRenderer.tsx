@@ -1,6 +1,6 @@
 // extras/renderers/canvas/CanvasRenderer.tsx
-import { t } from "@/i18n";
-import type React from "react";
+import { t } from '@/i18n';
+import type React from 'react';
 import {
   useCallback,
   useEffect,
@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
   useImperativeHandle,
-} from "react";
+} from 'react';
 
 import {
   ChevronLeftIcon,
@@ -22,18 +22,18 @@ import {
   ZoomOutIcon,
   ExpandIcon,
   MinimizeIcon,
-} from "@/components/common/Icons";
-import { useSettings } from "@/hooks/useSettings";
-import { useProperties } from "@/hooks/useProperties";
-import type { RendererProps } from "@/plugins/PluginInterface";
-import "./styles.css";
-import { getCanvasRendererSettings } from "./settings";
+} from '@/components/common/Icons';
+import { useSettings } from '@/hooks/useSettings';
+import { useProperties } from '@/hooks/useProperties';
+import type { RendererProps } from '@/plugins/PluginInterface';
+import './styles.css';
+import { getCanvasRendererSettings } from './settings';
 import {
   parseSvgPages,
   renderSvgPageToCanvas,
   renderSvgOverlay,
   type SvgRenderContext,
-} from "./svgRenderer";
+} from './svgRenderer';
 import {
   parsePdfPages,
   renderPdfPageToCanvas,
@@ -41,7 +41,7 @@ import {
   renderAnnotationLayer,
   clearPdfCaches,
   type PdfRenderContext,
-} from "./pdfRenderer";
+} from './pdfRenderer';
 
 export interface CanvasRendererHandle {
   updateSvgContent: (svgBuffer: ArrayBuffer) => void;
@@ -59,7 +59,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageInput, setPageInput] = useState("1");
+  const [pageInput, setPageInput] = useState('1');
   const [pageOffsets, setPageOffsets] = useState<number[]>([]);
   const [totalHeight, setTotalHeight] = useState(0);
   const [isEditingPageInput, setIsEditingPageInput] = useState(false);
@@ -72,8 +72,8 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     end: number;
   }>({ start: 1, end: 1 });
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [fitMode, setFitMode] = useState<"fit-width" | "fit-height">(
-    "fit-width",
+  const [fitMode, setFitMode] = useState<'fit-width' | 'fit-height'>(
+    'fit-width',
   );
   const [pageMetadata, setPageMetadata] = useState<
     Map<number, { width: number; height: number }>
@@ -88,7 +88,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   const propertiesRegistered = useRef(false);
   const svgPagesRef = useRef<Map<number, string>>(new Map());
   const pdfDocRef = useRef<any>(null);
-  const contentTypeRef = useRef<"svg" | "pdf">("svg");
+  const contentTypeRef = useRef<'svg' | 'pdf'>('svg');
   const fullSvgBufferRef = useRef<ArrayBuffer | null>(null);
   const pendingRenderRef = useRef<Set<number>>(new Set());
   const renderingRef = useRef<Set<number>>(new Set());
@@ -101,11 +101,11 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   const HYSTERESIS_THRESHOLD = 0.2;
 
   const canvasRendererEnable =
-    (getSetting("canvas-renderer-enable")?.value as boolean) ?? true;
+    (getSetting('canvas-renderer-enable')?.value as boolean) ?? true;
   const canvasRendererTextSelection =
-    (getSetting("canvas-renderer-text-selection")?.value as boolean) ?? true;
+    (getSetting('canvas-renderer-text-selection')?.value as boolean) ?? true;
   const canvasRendererAnnotations =
-    (getSetting("canvas-renderer-annotations")?.value as boolean) ?? true;
+    (getSetting('canvas-renderer-annotations')?.value as boolean) ?? true;
 
   const [highlight, setHighlight] = useState<{
     page: number;
@@ -175,7 +175,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
       const targetTop = getPageTop(pageNum);
       scrollContainerRef.current.scrollTo({
         top: targetTop,
-        behavior: "smooth",
+        behavior: 'smooth',
       });
     },
     [scrollView, getPageTop],
@@ -277,9 +277,9 @@ const CanvasRenderer: React.FC<RendererProps> = ({
             const textEl = textLayerRefs.current.get(pageNum);
             if (!textEl) continue;
 
-            if (contentTypeRef.current === "pdf") {
+            if (contentTypeRef.current === 'pdf') {
               renderTextLayer(pdfDocRef, pageNum, textEl, scale);
-            } else if (contentTypeRef.current === "svg") {
+            } else if (contentTypeRef.current === 'svg') {
               const svgString = svgPagesRef.current.get(pageNum);
               if (svgString) {
                 const meta = pageMetadata.get(pageNum);
@@ -293,7 +293,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
               }
             }
           }
-          if (canvasRendererAnnotations && contentTypeRef.current === "pdf") {
+          if (canvasRendererAnnotations && contentTypeRef.current === 'pdf') {
             const annotEl = annotationLayerRefs.current.get(pageNum);
             if (annotEl)
               renderAnnotationLayer(pdfDocRef, pageNum, annotEl, scale);
@@ -315,10 +315,10 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     if (scrollView) {
       for (let i = renderRange.start; i <= renderRange.end; i++) {
         if (i <= numPages) {
-          if (contentTypeRef.current === "svg" && svgPagesRef.current.has(i)) {
+          if (contentTypeRef.current === 'svg' && svgPagesRef.current.has(i)) {
             renderSvgPageToCanvas(svgCtx, i);
             overlayPages.push(i);
-          } else if (contentTypeRef.current === "pdf" && pdfDocRef.current) {
+          } else if (contentTypeRef.current === 'pdf' && pdfDocRef.current) {
             renderPdfPageToCanvas(pdfCtx, i);
             overlayPages.push(i);
           }
@@ -326,12 +326,12 @@ const CanvasRenderer: React.FC<RendererProps> = ({
       }
     } else {
       if (
-        contentTypeRef.current === "svg" &&
+        contentTypeRef.current === 'svg' &&
         svgPagesRef.current.has(currentPage)
       ) {
         renderSvgPageToCanvas(svgCtx, currentPage);
         overlayPages.push(currentPage);
-      } else if (contentTypeRef.current === "pdf" && pdfDocRef.current) {
+      } else if (contentTypeRef.current === 'pdf' && pdfDocRef.current) {
         renderPdfPageToCanvas(pdfCtx, currentPage);
         overlayPages.push(currentPage);
       }
@@ -372,13 +372,13 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     };
 
     const container = scrollContainerRef.current;
-    container.addEventListener("scroll", handleScroll, { passive: true });
+    container.addEventListener('scroll', handleScroll, { passive: true });
 
     calculateVisibleRange();
     updateCurrentPageFromScroll();
 
     return () => {
-      container.removeEventListener("scroll", handleScroll);
+      container.removeEventListener('scroll', handleScroll);
       if (rafId !== null) {
         cancelAnimationFrame(rafId);
       }
@@ -411,7 +411,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         arr[1] === 0x50 &&
         arr[2] === 0x44 &&
         arr[3] === 0x46;
-      contentTypeRef.current = isPdf ? "pdf" : "svg";
+      contentTypeRef.current = isPdf ? 'pdf' : 'svg';
 
       clearPdfCaches();
 
@@ -435,7 +435,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
           renderVisiblePages();
         });
       } catch (err) {
-        console.error("[CanvasRenderer] Failed to parse content:", err);
+        console.error('[CanvasRenderer] Failed to parse content:', err);
         setError(`Failed to parse content: ${err}`);
         setIsLoading(false);
       }
@@ -448,7 +448,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     () => ({
       updateContent: (newContent: ArrayBuffer | string) => {
         const buffer =
-          typeof newContent === "string"
+          typeof newContent === 'string'
             ? new TextEncoder().encode(newContent).buffer
             : newContent;
         updateContent(buffer);
@@ -457,7 +457,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         setHighlight(newHighlight);
         if (newHighlight) {
           document.dispatchEvent(
-            new CustomEvent("canvas-renderer-navigate", {
+            new CustomEvent('canvas-renderer-navigate', {
               detail: { page: newHighlight.page },
             }),
           );
@@ -472,23 +472,23 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     propertiesRegistered.current = true;
 
     registerProperty({
-      id: "canvas-renderer-zoom",
-      category: "UI",
-      subcategory: "Canvas Viewer",
+      id: 'canvas-renderer-zoom',
+      category: 'UI',
+      subcategory: 'Canvas Viewer',
       defaultValue: 1.0,
     });
 
     registerProperty({
-      id: "canvas-renderer-scroll-view",
-      category: "UI",
-      subcategory: "Canvas Viewer",
+      id: 'canvas-renderer-scroll-view',
+      category: 'UI',
+      subcategory: 'Canvas Viewer',
       defaultValue: false,
     });
   }, [registerProperty]);
 
   useEffect(() => {
-    const storedZoom = getProperty("canvas-renderer-zoom");
-    const storedScrollView = getProperty("canvas-renderer-scroll-view");
+    const storedZoom = getProperty('canvas-renderer-zoom');
+    const storedScrollView = getProperty('canvas-renderer-scroll-view');
 
     if (storedZoom !== undefined) {
       setScale(Number(storedZoom));
@@ -550,7 +550,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 
   const handlePageInputKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === "Enter") {
+      if (event.key === 'Enter') {
         const pageNum = Number.parseInt(pageInput, 10);
         if (!Number.isNaN(pageNum) && pageNum >= 1 && pageNum <= numPages) {
           lastStablePageRef.current = pageNum;
@@ -585,7 +585,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   );
 
   const computeFitScale = useCallback(
-    (mode: "fit-width" | "fit-height") => {
+    (mode: 'fit-width' | 'fit-height') => {
       const container = scrollContainerRef.current || contentElRef.current;
       const containerWidth = container?.clientWidth || 800;
       const containerHeight = container?.clientHeight || 600;
@@ -593,7 +593,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
       const pageWidth = meta?.width || 595;
       const pageHeight = meta?.height || 842;
 
-      if (mode === "fit-width") {
+      if (mode === 'fit-width') {
         return Math.max(0.25, Math.min(5, (containerWidth - 40) / pageWidth));
       }
       return Math.max(0.25, Math.min(5, (containerHeight - 40) / pageHeight));
@@ -615,17 +615,17 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   const virtualWrapperWidth = maxPageWidth * scale + 80;
 
   const handleFitToggle = useCallback(() => {
-    const nextMode = fitMode === "fit-width" ? "fit-height" : "fit-width";
+    const nextMode = fitMode === 'fit-width' ? 'fit-height' : 'fit-width';
     setFitMode(nextMode);
     const s = computeFitScale(nextMode);
     setScale(s);
-    setProperty("canvas-renderer-zoom", s);
+    setProperty('canvas-renderer-zoom', s);
   }, [fitMode, computeFitScale, setProperty]);
 
   const handleZoomIn = useCallback(() => {
     setScale((prev) => {
       const newScale = Math.min(prev + 0.25, 5);
-      setProperty("canvas-renderer-zoom", newScale);
+      setProperty('canvas-renderer-zoom', newScale);
       return newScale;
     });
   }, [setProperty]);
@@ -633,7 +633,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   const handleZoomOut = useCallback(() => {
     setScale((prev) => {
       const newScale = Math.max(prev - 0.25, 0.25);
-      setProperty("canvas-renderer-zoom", newScale);
+      setProperty('canvas-renderer-zoom', newScale);
       return newScale;
     });
   }, [setProperty]);
@@ -641,10 +641,10 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   const handleZoomChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       const value = event.target.value;
-      if (value === "custom") return;
+      if (value === 'custom') return;
       const newScale = parseFloat(value) / 100;
       setScale(newScale);
-      setProperty("canvas-renderer-zoom", newScale);
+      setProperty('canvas-renderer-zoom', newScale);
     },
     [setProperty],
   );
@@ -652,7 +652,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   const handleToggleView = useCallback(() => {
     setScrollView((prev) => {
       const newScrollView = !prev;
-      setProperty("canvas-renderer-scroll-view", newScrollView);
+      setProperty('canvas-renderer-scroll-view', newScrollView);
       return newScrollView;
     });
   }, [setProperty]);
@@ -676,14 +676,14 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     const exportConfig = {
       pdf: {
         data: pdfDocRef.current,
-        mimeType: "application/pdf",
-        extension: ".pdf",
+        mimeType: 'application/pdf',
+        extension: '.pdf',
         getData: (doc: any) => doc.getData(),
       },
       svg: {
         data: fullSvgBufferRef.current,
-        mimeType: "image/svg+xml",
-        extension: ".svg",
+        mimeType: 'image/svg+xml',
+        extension: '.svg',
         getData: (buffer: any) => Promise.resolve(buffer),
       },
     };
@@ -695,7 +695,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     config.getData(config.data).then((data: ArrayBuffer | string) => {
       const blob = new Blob([data], { type: config.mimeType });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
+      const a = document.createElement('a');
       a.href = url;
       a.download =
         fileName?.replace(/\.(typ|pdf|svg)$/i, config.extension) ||
@@ -712,9 +712,9 @@ const CanvasRenderer: React.FC<RendererProps> = ({
       setIsFullscreen(!!document.fullscreenElement);
     };
 
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () =>
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
   useEffect(() => {
@@ -727,22 +727,22 @@ const CanvasRenderer: React.FC<RendererProps> = ({
       }
 
       switch (event.key) {
-        case "ArrowLeft":
-        case "ArrowUp":
+        case 'ArrowLeft':
+        case 'ArrowUp':
           event.preventDefault();
           handlePreviousPage();
           break;
-        case "ArrowRight":
-        case "ArrowDown":
-        case " ":
+        case 'ArrowRight':
+        case 'ArrowDown':
+        case ' ':
           event.preventDefault();
           handleNextPage();
           break;
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handlePreviousPage, handleNextPage]);
 
   useEffect(() => {
@@ -756,9 +756,9 @@ const CanvasRenderer: React.FC<RendererProps> = ({
       }
     };
 
-    document.addEventListener("canvas-renderer-navigate", handleNavigate);
+    document.addEventListener('canvas-renderer-navigate', handleNavigate);
     return () =>
-      document.removeEventListener("canvas-renderer-navigate", handleNavigate);
+      document.removeEventListener('canvas-renderer-navigate', handleNavigate);
   }, [numPages, scrollToPage]);
 
   const setCanvasRef = useCallback(
@@ -789,16 +789,16 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     return (
       <div className="canvas-renderer-container">
         <div className="canvas-renderer-error">
-          {t("Canvas renderer is disabled. Please enable it in settings.")}
+          {t('Canvas renderer is disabled. Please enable it in settings.')}
         </div>
       </div>
     );
   }
 
-  const isPdf = contentTypeRef.current === "pdf";
+  const isPdf = contentTypeRef.current === 'pdf';
   const zoomOptions =
     getCanvasRendererSettings().find(
-      (s) => s.id === "canvas-renderer-initial-zoom",
+      (s) => s.id === 'canvas-renderer-initial-zoom',
     )?.options || [];
   const currentZoom = Math.round(scale * 100).toString();
   const hasCustomZoom = !zoomOptions.some(
@@ -809,7 +809,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   return (
     <div className="canvas-renderer-container" ref={containerRef}>
       <div
-        className={`canvas-toolbar ${isFullscreen ? "fullscreen-toolbar" : ""}`}
+        className={`canvas-toolbar ${isFullscreen ? 'fullscreen-toolbar' : ''}`}
       >
         <div className="toolbar">
           <div id="toolbarLeft">
@@ -817,7 +817,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
               <button
                 onClick={handlePreviousPage}
                 className="toolbarButton"
-                title={t("Previous Page")}
+                title={t('Previous Page')}
                 disabled={currentPage <= 1 || isLoading}
               >
                 <ChevronLeftIcon />
@@ -825,7 +825,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
               <button
                 onClick={handleNextPage}
                 className="toolbarButton"
-                title={t("Next Page")}
+                title={t('Next Page')}
                 disabled={currentPage >= numPages || isLoading}
               >
                 <ChevronRightIcon />
@@ -858,18 +858,18 @@ const CanvasRenderer: React.FC<RendererProps> = ({
               <button
                 onClick={handleZoomOut}
                 className="toolbarButton"
-                title={t("Zoom Out")}
+                title={t('Zoom Out')}
                 disabled={isLoading}
               >
                 <ZoomOutIcon />
               </button>
 
               <select
-                value={hasCustomZoom ? "custom" : currentZoom}
+                value={hasCustomZoom ? 'custom' : currentZoom}
                 onChange={handleZoomChange}
                 disabled={isLoading}
                 className="toolbarZoomSelect"
-                title={t("Zoom Level")}
+                title={t('Zoom Level')}
               >
                 {zoomOptions.map((option) => (
                   <option
@@ -887,7 +887,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
               <button
                 onClick={handleZoomIn}
                 className="toolbarButton"
-                title={t("Zoom In")}
+                title={t('Zoom In')}
                 disabled={isLoading}
               >
                 <ZoomInIcon />
@@ -899,13 +899,13 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                 onClick={handleFitToggle}
                 className="toolbarButton"
                 title={
-                  fitMode === "fit-width"
-                    ? t("Fit to Height")
-                    : t("Fit to Width")
+                  fitMode === 'fit-width'
+                    ? t('Fit to Height')
+                    : t('Fit to Width')
                 }
                 disabled={isLoading}
               >
-                {fitMode === "fit-width" ? (
+                {fitMode === 'fit-width' ? (
                   <FitToWidthIcon />
                 ) : (
                   <FitToHeightIcon />
@@ -915,7 +915,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
               <button
                 onClick={handleToggleView}
                 className="toolbarButton"
-                title={scrollView ? t("Single Page View") : t("Scroll View")}
+                title={scrollView ? t('Single Page View') : t('Scroll View')}
                 disabled={isLoading}
               >
                 {scrollView ? <PageIcon /> : <ScrollIcon />}
@@ -924,7 +924,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
               <button
                 onClick={handleToggleFullscreen}
                 className="toolbarButton"
-                title={isFullscreen ? t("Exit Fullscreen") : t("Fullscreen")}
+                title={isFullscreen ? t('Exit Fullscreen') : t('Fullscreen')}
                 disabled={isLoading}
               >
                 {isFullscreen ? <MinimizeIcon /> : <ExpandIcon />}
@@ -935,7 +935,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
               <button
                 onClick={handleExport}
                 className="toolbarButton"
-                title={t("Download")}
+                title={t('Download')}
                 disabled={isLoading}
               >
                 <DownloadIcon />
@@ -946,7 +946,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
       </div>
 
       <div
-        className={`canvas-renderer-content ${isFullscreen ? "fullscreen" : ""}`}
+        className={`canvas-renderer-content ${isFullscreen ? 'fullscreen' : ''}`}
         ref={scrollView ? scrollContainerRef : contentElRef}
       >
         <div className="canvas-renderer-viewer">
@@ -954,16 +954,16 @@ const CanvasRenderer: React.FC<RendererProps> = ({
             <div
               className="canvas-virtual-wrapper"
               style={{
-                position: "relative",
+                position: 'relative',
                 height: totalHeight,
                 width: virtualWrapperWidth,
-                margin: "0 auto",
+                margin: '0 auto',
               }}
             >
               <div
                 className="canvas-virtual-inner"
                 style={{
-                  position: "absolute",
+                  position: 'absolute',
                   top: 0,
                   left: 0,
                   transform: `translateY(${topOffset}px)`,
@@ -1007,17 +1007,17 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                           <div
                             className="canvas-page-highlight"
                             style={{
-                              position: "absolute",
+                              position: 'absolute',
                               left: `${highlight.x * scale}px`,
                               top: `${highlight.y * scale}px`,
                               width: `${(highlight.width || 20) * scale}px`,
                               height: `${(highlight.height || 20) * scale}px`,
-                              pointerEvents: "none",
-                              backgroundColor: "rgba(255, 235, 59, 0.4)",
-                              border: "2px solid rgba(255, 193, 7, 0.8)",
-                              borderRadius: "2px",
+                              pointerEvents: 'none',
+                              backgroundColor: 'rgba(255, 235, 59, 0.4)',
+                              border: '2px solid rgba(255, 193, 7, 0.8)',
+                              borderRadius: '2px',
                               animation:
-                                "source-map-highlight-pulse 1.5s ease-out",
+                                'source-map-highlight-pulse 1.5s ease-out',
                             }}
                           />
                         )}
@@ -1055,16 +1055,16 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                 <div
                   className="canvas-page-highlight"
                   style={{
-                    position: "absolute",
+                    position: 'absolute',
                     left: `${highlight.x * scale}px`,
                     top: `${highlight.y * scale}px`,
                     width: `${(highlight.width || 20) * scale}px`,
                     height: `${(highlight.height || 20) * scale}px`,
-                    pointerEvents: "none",
-                    backgroundColor: "rgba(255, 235, 59, 0.4)",
-                    border: "2px solid rgba(255, 193, 7, 0.8)",
-                    borderRadius: "2px",
-                    animation: "source-map-highlight-pulse 1.5s ease-out",
+                    pointerEvents: 'none',
+                    backgroundColor: 'rgba(255, 235, 59, 0.4)',
+                    border: '2px solid rgba(255, 193, 7, 0.8)',
+                    borderRadius: '2px',
+                    animation: 'source-map-highlight-pulse 1.5s ease-out',
                   }}
                 />
               )}
@@ -1073,7 +1073,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 
           {isLoading && (
             <div className="canvas-renderer-loading">
-              {t("Loading document...")}
+              {t('Loading document...')}
             </div>
           )}
         </div>
@@ -1084,6 +1084,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   );
 };
 
-CanvasRenderer.displayName = "CanvasRenderer";
+CanvasRenderer.displayName = 'CanvasRenderer';
 
 export default CanvasRenderer;

@@ -57,7 +57,7 @@ class LaTeXService {
 		this.currentEngineType = engineType;
 		const engine = this.engines.get(engineType);
 		if (!engine) {
-			throw new Error(t(`Unsupported engine type: {engineType}`, { engineType }));
+			throw new Error(t('Unsupported engine type: {engineType}', { engineType }));
 		}
 
 		try {

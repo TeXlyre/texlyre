@@ -311,7 +311,7 @@ function countLatexColumns(colSpec: string): number {
                 if (!isNaN(num) && j < colSpec.length && colSpec[j] === '{') {
                     braceDepth = 1;
                     j++;
-                    let specStart = j;
+                    const specStart = j;
                     while (j < colSpec.length && braceDepth > 0) {
                         if (colSpec[j] === '{') braceDepth++;
                         else if (colSpec[j] === '}') braceDepth--;

@@ -155,8 +155,8 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ isOpen,
             <SettingsModal
                 isOpen={showSettings}
                 onClose={() => setShowSettings(false)}
-                initialCategory={t("Viewers")}
-                initialSubcategory={t("Text Editor")} />
+                initialCategory={t('Viewers')}
+                initialSubcategory={t('Text Editor')} />
 
         </>);
 

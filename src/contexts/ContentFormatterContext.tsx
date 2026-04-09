@@ -54,21 +54,21 @@ export const ContentFormatterProvider: React.FC<ContentFormatterProviderProps> =
 
     registerSetting({
       id: 'formatter-latex-notifications',
-      category: t("Viewers"),
-      subcategory: t("Text Editor"),
+      category: t('Viewers'),
+      subcategory: t('Text Editor'),
       type: 'checkbox',
-      label: t("Show LaTeX formatting notifications"),
-      description: t("Display notifications for LaTeX content formatting activities"),
+      label: t('Show LaTeX formatting notifications'),
+      description: t('Display notifications for LaTeX content formatting activities'),
       defaultValue: initialLatexNotifications
     });
 
     registerSetting({
       id: 'formatter-typst-notifications',
-      category: t("Viewers"),
-      subcategory: t("Text Editor"),
+      category: t('Viewers'),
+      subcategory: t('Text Editor'),
       type: 'checkbox',
-      label: t("Show Typst formatting notifications"),
-      description: t("Display notifications for Typst content formatting activities"),
+      label: t('Show Typst formatting notifications'),
+      description: t('Display notifications for Typst content formatting activities'),
       defaultValue: initialTypstNotifications
     });
   }, [registerSetting, getSetting]);

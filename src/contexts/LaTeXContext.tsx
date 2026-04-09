@@ -78,15 +78,15 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
     registerSetting({
       id: 'latex-engine',
-      category: t("Compilation"),
-      subcategory: t("LaTeX"),
+      category: t('Compilation'),
+      subcategory: t('LaTeX'),
       type: 'select',
-      label: t("LaTeX Engine"),
-      description: t("Choose the LaTeX engine for compilation"),
+      label: t('LaTeX Engine'),
+      description: t('Choose the LaTeX engine for compilation'),
       defaultValue: initialEngine,
       options: [
-        { label: t("pdfTeX"), value: 'pdftex' },
-        { label: t("XeTeX"), value: 'xetex' }
+        { label: t('pdfTeX'), value: 'pdftex' },
+        { label: t('XeTeX'), value: 'xetex' }
       ],
       onChange: (value) => {
         handleSetLatexEngine(value as 'pdftex' | 'xetex' | 'luatex');
@@ -95,11 +95,11 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
     registerSetting({
       id: 'latex-texlive-endpoint',
-      category: t("Compilation"),
-      subcategory: t("LaTeX"),
+      category: t('Compilation'),
+      subcategory: t('LaTeX'),
       type: 'text',
-      label: t("TexLive server endpoint"),
-      description: t("URL endpoint for TexLive package downloads"),
+      label: t('TexLive server endpoint'),
+      description: t('URL endpoint for TexLive package downloads'),
       defaultValue: initialTexliveEndpoint,
       onChange: (value) => {
         latexService.setTexliveEndpoint(value as string);
@@ -108,39 +108,39 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
     registerSetting({
       id: 'latex-auto-compile-on-open',
-      category: t("Compilation"),
-      subcategory: t("LaTeX"),
+      category: t('Compilation'),
+      subcategory: t('LaTeX'),
       type: 'checkbox',
-      label: t("Auto-compile on project open"),
-      description: t("Automatically compile LaTeX when opening a project"),
+      label: t('Auto-compile on project open'),
+      description: t('Automatically compile LaTeX when opening a project'),
       defaultValue: initialAutoCompile
     });
 
     registerSetting({
       id: 'latex-auto-navigate-to-main',
-      category: t("Compilation"),
-      subcategory: t("LaTeX"),
+      category: t('Compilation'),
+      subcategory: t('LaTeX'),
       type: 'select',
-      label: t("Auto-navigate to main file on compile"),
-      description: t("Control when to automatically navigate to the main LaTeX file during compilation"),
+      label: t('Auto-navigate to main file on compile'),
+      description: t('Control when to automatically navigate to the main LaTeX file during compilation'),
       defaultValue: initialAutoNavigate,
       options: [
-        { label: t("Only when no LaTeX file is open"), value: 'conditional' },
-        { label: t("Always navigate to main file"), value: 'always' },
-        { label: t("Never navigate to main file"), value: 'never' }]
+        { label: t('Only when no LaTeX file is open'), value: 'conditional' },
+        { label: t('Always navigate to main file'), value: 'always' },
+        { label: t('Never navigate to main file'), value: 'never' }]
     });
 
     registerSetting({
       id: 'latex-default-format',
-      category: t("Compilation"),
-      subcategory: t("LaTeX"),
+      category: t('Compilation'),
+      subcategory: t('LaTeX'),
       type: 'select',
-      label: t("Default output format"),
-      description: t("Default format for LaTeX compilation"),
+      label: t('Default output format'),
+      description: t('Default format for LaTeX compilation'),
       defaultValue: initialDefaultFormat,
       options: [
-        { label: t("PDF"), value: 'pdf' },
-        { label: t("Canvas (PDF)"), value: 'canvas-pdf' }
+        { label: t('PDF'), value: 'pdf' },
+        { label: t('Canvas (PDF)'), value: 'canvas-pdf' }
       ],
       onChange: (value) => {
         setCurrentFormat(value as LaTeXOutputFormat);
@@ -149,11 +149,11 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
     registerSetting({
       id: 'latex-store-cache',
-      category: t("Compilation"),
-      subcategory: t("LaTeX"),
+      category: t('Compilation'),
+      subcategory: t('LaTeX'),
       type: 'checkbox',
-      label: t("Store compilation cache"),
-      description: t("Save TeX cache files for faster subsequent compilations"),
+      label: t('Store compilation cache'),
+      description: t('Save TeX cache files for faster subsequent compilations'),
       defaultValue: initialStoreCache,
       onChange: (value) => {
         latexService.setStoreCache(value as boolean);
@@ -162,11 +162,11 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
     registerSetting({
       id: 'latex-store-working-directory',
-      category: t("Compilation"),
-      subcategory: t("LaTeX"),
+      category: t('Compilation'),
+      subcategory: t('LaTeX'),
       type: 'checkbox',
-      label: t("Store working directory"),
-      description: t("Save all working directory files after compilation"),
+      label: t('Store working directory'),
+      description: t('Save all working directory files after compilation'),
       defaultValue: initialStoreWorkingDirectory,
       onChange: (value) => {
         latexService.setStoreWorkingDirectory(value as boolean);
@@ -175,11 +175,11 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
     registerSetting({
       id: 'latex-notifications',
-      category: t("Compilation"),
-      subcategory: t("LaTeX"),
+      category: t('Compilation'),
+      subcategory: t('LaTeX'),
       type: 'checkbox',
-      label: t("Show compilation notifications"),
-      description: t("Display notifications for LaTeX compilation activities"),
+      label: t('Show compilation notifications'),
+      description: t('Display notifications for LaTeX compilation activities'),
       defaultValue: true,
       onChange: () => {
 

@@ -4,22 +4,25 @@ import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 
 export default [
-  // Ignore patterns
   {
-    ignores: ["dist", "eslint.config.js", "vite.config.ts"],
+    ignores: [
+      "node_modules",
+      "dist",
+      "coverage",
+      "build",
+      ".vite",
+      "eslint.config.js",
+      "vite.config.ts",
+    ],
   },
 
-  // Base JS config (eslint:recommended)
   js.configs.recommended,
 
-  // TypeScript + React Hooks config
-  ...tseslint.config({
-    extends: [
-      ...tseslint.configs.recommended,
-    ],
-  }),
+  ...tseslint.configs.recommended,
 
   {
+    files: ["**/*.ts", "**/*.tsx"],
+
     plugins: {
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
@@ -36,7 +39,6 @@ export default [
     },
 
     rules: {
-      // react-hooks recommended
       ...reactHooks.configs.recommended.rules,
 
       "react-refresh/only-export-components": [
@@ -44,17 +46,6 @@ export default [
         { allowConstantExport: true },
       ],
 
-      "@typescript-eslint/naming-convention": "warn",
-
-      quotes: ["error", "single", { avoidEscape: true }],
-    },
-  },
-
-  // TS-specific overrides
-  {
-    files: ["**/*.ts", "**/*.tsx"],
-
-    rules: {
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
@@ -90,6 +81,8 @@ export default [
         "warn",
         { ignoreRestArgs: true },
       ],
+
+      quotes: ["error", "single", { avoidEscape: true }],
     },
   },
 ];

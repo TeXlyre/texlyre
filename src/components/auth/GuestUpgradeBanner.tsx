@@ -34,9 +34,9 @@ const GuestUpgradeBanner: React.FC<GuestUpgradeBannerProps> = ({
         const minutes = Math.floor(remaining % (1000 * 60 * 60) / (1000 * 60));
 
         if (hours > 0) {
-          setTimeRemaining(t(`{hours}h {minutes}m remaining`, { hours, minutes }));
+          setTimeRemaining(t('{hours}h {minutes}m remaining', { hours, minutes }));
         } else {
-          setTimeRemaining(t(`{minutes}m remaining`, { minutes }));
+          setTimeRemaining(t('{minutes}m remaining', { minutes }));
         }
       }
     };

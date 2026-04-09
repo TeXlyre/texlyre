@@ -203,12 +203,12 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
             <div>
               {parsedDiagnostics.length === 0 ?
                 t('No errors or warnings found.') :
-                t(`No {filter} found.`, { filter })}
+                t('No {filter} found.', { filter })}
             </div>
             <div className="success-subtitle">
               {parsedDiagnostics.length === 0 ?
                 t('Compilation appears successful!') :
-                t(`Showing {filter} items only.`, { filter })}
+                t('Showing {filter} items only.', { filter })}
             </div>
           </div> :
 
@@ -219,7 +219,7 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
                 className={`diagnostic-item ${diagnostic.type} ${diagnostic.line ? 'clickable' : ''}`}
                 onClick={() => handleDiagnosticClick(diagnostic)}
                 title={
-                  diagnostic.line ? t(`Click to go to line {errorLine}`, { errorLine: diagnostic.line }) : undefined
+                  diagnostic.line ? t('Click to go to line {errorLine}', { errorLine: diagnostic.line }) : undefined
                 }>
 
                 <div className="diagnostic-header">
@@ -233,7 +233,7 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
                     {diagnostic.file &&
                       <span
                         className="diagnostic-file"
-                        title={t(`File: {errorFile}`, { errorFile: diagnostic.file })}>{t('\uD83D\uDCC4')}
+                        title={t('File: {errorFile}', { errorFile: diagnostic.file })}>{t('\uD83D\uDCC4')}
 
                         {diagnostic.file}
                       </span>

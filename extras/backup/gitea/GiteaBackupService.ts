@@ -766,7 +766,7 @@ export class GiteaBackupService {
 
                     this.addActivity({
                         type: 'import_complete',
-                        message: t(`Auto-imported missing project: {projectName}`, { projectName: projectMetadata.name }),
+                        message: t('Auto-imported missing project: {projectName}', { projectName: projectMetadata.name }),
                     });
                     fileStorageEventEmitter.emitChange();
                 } catch (error) {

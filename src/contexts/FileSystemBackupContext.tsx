@@ -256,11 +256,11 @@ export const FileSystemBackupProvider: React.FC<
 
       registerSetting({
         id: 'file-system-backup-enable',
-        category: t("Backup"),
-        subcategory: t("File System"),
+        category: t('Backup'),
+        subcategory: t('File System'),
         type: 'checkbox',
-        label: t("Enable file system backup"),
-        description: t("Sync your data to a local folder for backup and sharing via cloud storage"),
+        label: t('Enable file system backup'),
+        description: t('Sync your data to a local folder for backup and sharing via cloud storage'),
 
         defaultValue: false,
         onChange: (value) => {
@@ -277,11 +277,11 @@ export const FileSystemBackupProvider: React.FC<
 
       registerSetting({
         id: 'file-system-backup-auto-backup',
-        category: t("Backup"),
-        subcategory: t("File System"),
+        category: t('Backup'),
+        subcategory: t('File System'),
         type: 'checkbox',
-        label: t("Auto-backup connection on startup"),
-        description: t("Automatically start connection to file system when the application loads (requires folder authorization)"),
+        label: t('Auto-backup connection on startup'),
+        description: t('Automatically start connection to file system when the application loads (requires folder authorization)'),
 
         defaultValue: false,
         onChange: (value) => {

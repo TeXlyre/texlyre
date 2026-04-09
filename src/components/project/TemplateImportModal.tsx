@@ -76,11 +76,11 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 
     registerSetting({
       id: 'templates-api-url',
-      category: t("Templates"),
-      subcategory: t("Template Gallery"),
+      category: t('Templates'),
+      subcategory: t('Template Gallery'),
       type: 'text',
-      label: t("Template gallery API URL"),
-      description: t("URL endpoint for fetching project templates"),
+      label: t('Template gallery API URL'),
+      description: t('URL endpoint for fetching project templates'),
       defaultValue: initialUrl,
       onChange: (value) => {
         setTemplatesApiUrl(value as string);
@@ -89,11 +89,11 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 
     registerSetting({
       id: 'templates-per-page',
-      category: t("Templates"),
-      subcategory: t("Template Gallery"),
+      category: t('Templates'),
+      subcategory: t('Template Gallery'),
       type: 'number',
-      label: t("Templates per page"),
-      description: t("Number of templates to display per page"),
+      label: t('Templates per page'),
+      description: t('Number of templates to display per page'),
       defaultValue: 12,
       min: 6,
       max: 48,
@@ -580,8 +580,8 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
-        initialCategory={t("Templates")}
-        initialSubcategory={t("Template Gallery")} />
+        initialCategory={t('Templates')}
+        initialSubcategory={t('Template Gallery')} />
 
     </>);
 

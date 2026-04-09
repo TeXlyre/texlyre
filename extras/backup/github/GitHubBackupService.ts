@@ -268,7 +268,7 @@ export class GitHubBackupService {
 			this.notifyListeners();
 			this.addActivity({
 				type: 'backup_complete',
-				message: t(`Connected to GitHub repository: {repoName} ({branch})`, { repoName, branch: finalBranch }),
+				message: t('Connected to GitHub repository: {repoName} ({branch})', { repoName, branch: finalBranch }),
 			});
 			return true;
 		} catch (error) {
@@ -411,7 +411,7 @@ export class GitHubBackupService {
 					await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
 					this.addActivity({
 						type: 'backup_start',
-						message: t(`Retrying commit (attempt {attempt}/{maxRetries})...`, { attempt, maxRetries }),
+						message: t('Retrying commit (attempt {attempt}/{maxRetries})...', { attempt, maxRetries }),
 					});
 				}
 				await gitHubAPIService.createCommitFromFiles(
@@ -441,7 +441,7 @@ export class GitHubBackupService {
 		this.addActivity({
 			type: 'backup_start',
 			message: projectId
-				? t(`Syncing project: {projectId}`, { projectId })
+				? t('Syncing project: {projectId}', { projectId })
 				: t('Syncing all projects...'),
 		});
 		this.notifyListeners();
@@ -613,7 +613,7 @@ export class GitHubBackupService {
 		this.addActivity({
 			type: 'import_start',
 			message: projectId
-				? t(`Importing project: {projectId}`, { projectId })
+				? t('Importing project: {projectId}', { projectId })
 				: t('Importing from GitHub...'),
 		});
 		this.notifyListeners();
@@ -729,7 +729,7 @@ export class GitHubBackupService {
 
 					this.addActivity({
 						type: 'import_complete',
-						message: t(`Auto-imported missing project: {projectName}`, { projectName: projectMetadata.name }),
+						message: t('Auto-imported missing project: {projectName}', { projectName: projectMetadata.name }),
 					});
 					fileStorageEventEmitter.emitChange();
 				} catch (error) {
@@ -739,7 +739,7 @@ export class GitHubBackupService {
 					);
 					this.addActivity({
 						type: 'import_error',
-						message: t(`Failed to import missing project: {missingProjId}`, { missingProjId }),
+						message: t('Failed to import missing project: {missingProjId}', { missingProjId }),
 					});
 				}
 			}
@@ -1065,7 +1065,7 @@ export class GitHubBackupService {
 				console.error(`Failed to import file ${filePath}:`, error);
 				this.addActivity({
 					type: 'import_error',
-					message: t(`Failed to import file: {filePath}`, { filePath }),
+					message: t('Failed to import file: {filePath}', { filePath }),
 				});
 			}
 		}
@@ -1073,7 +1073,7 @@ export class GitHubBackupService {
 		if (importedFilesCount > 0) {
 			this.addActivity({
 				type: 'import_complete',
-				message: t(`Imported {count} file for project: {projectName}`, { count: importedFilesCount, projectName: projectMetadata.name }),
+				message: t('Imported {count} file for project: {projectName}', { count: importedFilesCount, projectName: projectMetadata.name }),
 			});
 			fileStorageEventEmitter.emitChange();
 		}
@@ -1105,7 +1105,7 @@ export class GitHubBackupService {
 		if (documents.length > 0) {
 			this.addActivity({
 				type: 'import_complete',
-				message: t(`Imported {count} document for project: {projectName}`, { count: documents.length, projectName: projectMetadata.name }),
+				message: t('Imported {count} document for project: {projectName}', { count: documents.length, projectName: projectMetadata.name }),
 			});
 		}
 

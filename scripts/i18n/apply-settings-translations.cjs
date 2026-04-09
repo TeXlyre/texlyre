@@ -1,14 +1,14 @@
-const fs = require("node:fs");
-const path = require("node:path");
-const parser = require("@babel/parser");
-const traverse = require("@babel/traverse").default;
-const generate = require("@babel/generator").default;
-const t = require("@babel/types");
-const { hasTranslationImport, injectImportIntoCode } = require("./import-manager.cjs");
+const fs = require('node:fs');
+const path = require('node:path');
+const parser = require('@babel/parser');
+const traverse = require('@babel/traverse').default;
+const generate = require('@babel/generator').default;
+const t = require('@babel/types');
+const { hasTranslationImport, injectImportIntoCode } = require('./import-manager.cjs');
 
 const CONFIG = {
-    extensions: [".tsx", ".ts"],
-    excludeDirs: ["node_modules", "dist", "build", ".git"],
+    extensions: ['.tsx', '.ts'],
+    excludeDirs: ['node_modules', 'dist', 'build', '.git'],
     createBackups: true,
     dryRun: false,
 };
@@ -38,7 +38,7 @@ function applySettingsTranslations(filePath, options = {}) {
     const config = { ...CONFIG, ...options };
 
     try {
-        const code = fs.readFileSync(filePath, "utf8");
+        const code = fs.readFileSync(filePath, 'utf8');
 
         if (!code.includes('registerSetting') && !code.includes(': Setting[]')) {
             return { success: true, modified: false, transformCount: 0 };
@@ -47,8 +47,8 @@ function applySettingsTranslations(filePath, options = {}) {
         console.log(`Processing ${filePath}...`);
 
         const ast = parser.parse(code, {
-            sourceType: "module",
-            plugins: ["jsx", "typescript", "decorators-legacy", "classProperties"],
+            sourceType: 'module',
+            plugins: ['jsx', 'typescript', 'decorators-legacy', 'classProperties'],
         });
 
         const hadImport = hasTranslationImport(ast);
@@ -147,7 +147,7 @@ function applySettingsTranslations(filePath, options = {}) {
             CallExpression(path) {
                 if (
                     t.isIdentifier(path.node.callee) &&
-                    path.node.callee.name === "registerSetting" &&
+                    path.node.callee.name === 'registerSetting' &&
                     path.node.arguments.length > 0
                 ) {
                     const arg = path.node.arguments[0];

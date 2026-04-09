@@ -20,7 +20,7 @@ interface TemplateProject {
   id: string;
   name: string;
   description: string;
-  type: "latex" | "typst";
+  type: 'latex' | 'typst';
   category: string;
   tags: string[];
   downloadUrl: string;
@@ -390,7 +390,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
                         {project.description || t('No description')}
                       </div>
                       <div className="project-meta">
-                        <span>{t(`Last Modified: {lastModified}`, { lastModified: formatDate(project.lastModified) })}
+                        <span>{t('Last Modified: {lastModified}', { lastModified: formatDate(project.lastModified) })}
                         </span>
                         <span>{getOwnershipText(project)}</span>
                       </div>

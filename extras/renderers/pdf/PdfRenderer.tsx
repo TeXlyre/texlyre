@@ -1,6 +1,6 @@
 // extras/renderers/pdf/PdfRenderer.tsx
-import { t } from "@/i18n";
-import type React from "react";
+import { t } from '@/i18n';
+import type React from 'react';
 import {
   useCallback,
   useEffect,
@@ -8,10 +8,10 @@ import {
   useRef,
   useState,
   useImperativeHandle,
-} from "react";
-import { Document, Page, pdfjs } from "react-pdf";
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
+} from 'react';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 
 import {
   ChevronLeftIcon,
@@ -25,17 +25,17 @@ import {
   ZoomOutIcon,
   ExpandIcon,
   MinimizeIcon,
-} from "@/components/common/Icons";
-import { getPdfRendererSettings } from "./settings";
-import { useSettings } from "@/hooks/useSettings";
-import { useProperties } from "@/hooks/useProperties";
-import type { RendererProps } from "@/plugins/PluginInterface";
-import "./styles.css";
+} from '@/components/common/Icons';
+import { getPdfRendererSettings } from './settings';
+import { useSettings } from '@/hooks/useSettings';
+import { useProperties } from '@/hooks/useProperties';
+import type { RendererProps } from '@/plugins/PluginInterface';
+import './styles.css';
 
 const BASE_PATH = __BASE_PATH__;
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
+  'pdfjs-dist/build/pdf.worker.min.mjs',
   import.meta.url,
 ).toString();
 
@@ -51,13 +51,13 @@ const PdfRenderer: React.FC<RendererProps> = ({
   const propertiesRegistered = useRef(false);
 
   const pdfRendererEnable =
-    (getSetting("pdf-renderer-enable")?.value as boolean) ?? true;
+    (getSetting('pdf-renderer-enable')?.value as boolean) ?? true;
   const pdfRendererTextSelection =
-    (getSetting("pdf-renderer-text-selection")?.value as boolean) ?? true;
+    (getSetting('pdf-renderer-text-selection')?.value as boolean) ?? true;
 
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageInput, setPageInput] = useState<string>("1");
+  const [pageInput, setPageInput] = useState<string>('1');
   const [isEditingPageInput, setIsEditingPageInput] = useState<boolean>(false);
   const [scale, setScale] = useState<number>(1.0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -69,14 +69,14 @@ const PdfRenderer: React.FC<RendererProps> = ({
     start: number;
     end: number;
   }>({ start: 1, end: 1 });
-  const [fitMode, setFitMode] = useState<"fit-width" | "fit-height">(
-    "fit-width",
+  const [fitMode, setFitMode] = useState<'fit-width' | 'fit-height'>(
+    'fit-width',
   );
 
   const pageWidths = useRef<Map<number, number>>(new Map());
   const pageHeights = useRef<Map<number, number>>(new Map());
   const lastStablePageRef = useRef<number>(1);
-  const contentHashRef = useRef<string>("");
+  const contentHashRef = useRef<string>('');
   const originalContentRef = useRef<ArrayBuffer | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const contentElRef = useRef<HTMLDivElement>(null);
@@ -103,31 +103,31 @@ const PdfRenderer: React.FC<RendererProps> = ({
     propertiesRegistered.current = true;
 
     registerProperty({
-      id: "pdf-renderer-zoom",
-      category: "UI",
-      subcategory: "PDF Viewer",
+      id: 'pdf-renderer-zoom',
+      category: 'UI',
+      subcategory: 'PDF Viewer',
       defaultValue: 1.0,
     });
 
     registerProperty({
-      id: "pdf-renderer-scroll-view",
-      category: "UI",
-      subcategory: "PDF Viewer",
+      id: 'pdf-renderer-scroll-view',
+      category: 'UI',
+      subcategory: 'PDF Viewer',
       defaultValue: false,
     });
 
     registerProperty({
-      id: "pdf-renderer-current-page",
-      category: "UI",
-      subcategory: "PDF Viewer",
+      id: 'pdf-renderer-current-page',
+      category: 'UI',
+      subcategory: 'PDF Viewer',
       defaultValue: 1,
     });
   }, [registerProperty]);
 
   useEffect(() => {
-    const storedZoom = getProperty("pdf-renderer-zoom");
-    const storedScrollView = getProperty("pdf-renderer-scroll-view");
-    const storedPage = getProperty("pdf-renderer-current-page");
+    const storedZoom = getProperty('pdf-renderer-zoom');
+    const storedScrollView = getProperty('pdf-renderer-scroll-view');
+    const storedPage = getProperty('pdf-renderer-current-page');
 
     if (storedZoom !== undefined) {
       setScale(Number(storedZoom));
@@ -145,7 +145,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
   const getContentHash = useCallback((buffer: ArrayBuffer): string => {
     const view = new Uint8Array(buffer);
     const sample = view.slice(0, Math.min(1024, view.length));
-    return `${buffer.byteLength}-${Array.from(sample.slice(0, 16)).join(",")}`;
+    return `${buffer.byteLength}-${Array.from(sample.slice(0, 16)).join(',')}`;
   }, []);
 
   useEffect(() => {
@@ -165,15 +165,15 @@ const PdfRenderer: React.FC<RendererProps> = ({
           setError(null);
         }
       } catch (error) {
-        console.error("Error creating PDF data:", error);
-        setError(t("Failed to process PDF content"));
+        console.error('Error creating PDF data:', error);
+        setError(t('Failed to process PDF content'));
         setIsLoading(false);
       }
     } else {
       setPdfData(null);
       originalContentRef.current = null;
-      contentHashRef.current = "";
-      setError(t("No PDF content available"));
+      contentHashRef.current = '';
+      setError(t('No PDF content available'));
       setIsLoading(false);
     }
   }, [content, getContentHash]);
@@ -214,7 +214,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
       const targetTop = getPageTop(pageNum);
       scrollContainerRef.current.scrollTo({
         top: targetTop,
-        behavior: "smooth",
+        behavior: 'smooth',
       });
     },
     [scrollView, getPageTop],
@@ -265,7 +265,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
         lastStablePageRef.current = closestPage;
         setCurrentPage(closestPage);
         setPageInput(String(closestPage));
-        setProperty("pdf-renderer-current-page", closestPage);
+        setProperty('pdf-renderer-current-page', closestPage);
       }
     }
   }, [scrollView, numPages, isEditingPageInput, getPageHeight, setProperty]);
@@ -327,13 +327,13 @@ const PdfRenderer: React.FC<RendererProps> = ({
     };
 
     const container = scrollContainerRef.current;
-    container.addEventListener("scroll", handleScroll, { passive: true });
+    container.addEventListener('scroll', handleScroll, { passive: true });
 
     calculateVisibleRange();
     updateCurrentPageFromScroll();
 
     return () => {
-      container.removeEventListener("scroll", handleScroll);
+      container.removeEventListener('scroll', handleScroll);
       if (rafId !== null) {
         cancelAnimationFrame(rafId);
       }
@@ -420,7 +420,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
   const persistCurrentPage = useCallback(
     (page: number) => {
       setCurrentPage(page);
-      setProperty("pdf-renderer-current-page", page);
+      setProperty('pdf-renderer-current-page', page);
     },
     [setProperty],
   );
@@ -450,7 +450,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
   const handlePageInputKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === "Enter") {
+      if (event.key === 'Enter') {
         const pageNum = Number.parseInt(pageInput, 10);
         if (!Number.isNaN(pageNum) && pageNum >= 1 && pageNum <= numPages) {
           lastStablePageRef.current = pageNum;
@@ -486,7 +486,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
   );
 
   const computeFitScale = useCallback(
-    (mode: "fit-width" | "fit-height") => {
+    (mode: 'fit-width' | 'fit-height') => {
       const container = scrollContainerRef.current || contentElRef.current;
       const containerWidth = container?.clientWidth || 800;
       const containerHeight = container?.clientHeight || 600;
@@ -496,8 +496,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
       const currentW = pageWidths.current.get(currentPage);
       const currentH = pageHeights.current.get(currentPage);
 
-      if (typeof currentW === "number") pageWidth = currentW;
-      if (typeof currentH === "number") pageHeight = currentH;
+      if (typeof currentW === 'number') pageWidth = currentW;
+      if (typeof currentH === 'number') pageHeight = currentH;
 
       if ((!currentW || !currentH) && pageWidths.current.size > 0) {
         const firstKey = Math.min(...Array.from(pageWidths.current.keys()));
@@ -505,7 +505,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
         pageHeight = pageHeights.current.get(firstKey) || pageHeight;
       }
 
-      if (mode === "fit-width") {
+      if (mode === 'fit-width') {
         return Math.max(0.5, Math.min(10, (containerWidth - 40) / pageWidth));
       } else {
         return Math.max(0.5, Math.min(10, (containerHeight - 40) / pageHeight));
@@ -515,17 +515,17 @@ const PdfRenderer: React.FC<RendererProps> = ({
   );
 
   const handleFitToggle = useCallback(() => {
-    const nextMode = fitMode === "fit-width" ? "fit-height" : "fit-width";
+    const nextMode = fitMode === 'fit-width' ? 'fit-height' : 'fit-width';
     setFitMode(nextMode);
     const s = computeFitScale(nextMode);
     setScale(s);
-    setProperty("pdf-renderer-zoom", s);
+    setProperty('pdf-renderer-zoom', s);
   }, [fitMode, computeFitScale, setProperty]);
 
   const handleZoomIn = useCallback(() => {
     setScale((prev) => {
       const newScale = Math.min(prev + 0.25, 5);
-      setProperty("pdf-renderer-zoom", newScale);
+      setProperty('pdf-renderer-zoom', newScale);
       return newScale;
     });
   }, [setProperty]);
@@ -533,7 +533,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
   const handleZoomOut = useCallback(() => {
     setScale((prev) => {
       const newScale = Math.max(prev - 0.25, 0.25);
-      setProperty("pdf-renderer-zoom", newScale);
+      setProperty('pdf-renderer-zoom', newScale);
       return newScale;
     });
   }, [setProperty]);
@@ -541,10 +541,10 @@ const PdfRenderer: React.FC<RendererProps> = ({
   const handleZoomChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       const value = event.target.value;
-      if (value === "custom") return;
+      if (value === 'custom') return;
       const newScale = parseFloat(value) / 100;
       setScale(newScale);
-      setProperty("pdf-renderer-zoom", newScale);
+      setProperty('pdf-renderer-zoom', newScale);
     },
     [setProperty],
   );
@@ -557,7 +557,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
       if (!pageWidth || !pageHeight) return;
 
       const target = event.currentTarget.querySelector(
-        ".react-pdf__Page",
+        '.react-pdf__Page',
       ) as HTMLElement | null;
       if (!target) return;
 
@@ -574,7 +574,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
   const handleToggleView = useCallback(() => {
     setScrollView((prev) => {
       const newScrollView = !prev;
-      setProperty("pdf-renderer-scroll-view", newScrollView);
+      setProperty('pdf-renderer-scroll-view', newScrollView);
       return newScrollView;
     });
   }, [setProperty]);
@@ -596,9 +596,9 @@ const PdfRenderer: React.FC<RendererProps> = ({
       setIsFullscreen(!!document.fullscreenElement);
     };
 
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
   }, []);
 
@@ -611,22 +611,22 @@ const PdfRenderer: React.FC<RendererProps> = ({
     ) {
       try {
         const blob = new Blob([originalContentRef.current], {
-          type: "application/pdf",
+          type: 'application/pdf',
         });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
+        const a = document.createElement('a');
         a.href = url;
-        a.download = fileName || "document.pdf";
+        a.download = fileName || 'document.pdf';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       } catch (error) {
-        console.error("Export error:", error);
-        setError(t("Failed to export PDF"));
+        console.error('Export error:', error);
+        setError(t('Failed to export PDF'));
       }
     } else {
-      setError(t("Cannot export: PDF content is not available"));
+      setError(t('Cannot export: PDF content is not available'));
     }
   }, [fileName, onDownload]);
 
@@ -640,23 +640,23 @@ const PdfRenderer: React.FC<RendererProps> = ({
       }
 
       switch (event.key) {
-        case "ArrowLeft":
-        case "ArrowUp":
+        case 'ArrowLeft':
+        case 'ArrowUp':
           event.preventDefault();
           handlePreviousPage();
           break;
-        case "ArrowRight":
-        case "ArrowDown":
-        case " ":
+        case 'ArrowRight':
+        case 'ArrowDown':
+        case ' ':
           event.preventDefault();
           handleNextPage();
           break;
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [handlePreviousPage, handleNextPage]);
 
@@ -665,7 +665,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
       <div className="pdf-renderer-container">
         <div className="pdf-renderer-error">
           {t(
-            "Enhanced PDF renderer is disabled. Please enable it in settings to use this renderer.",
+            'Enhanced PDF renderer is disabled. Please enable it in settings to use this renderer.',
           )}
         </div>
       </div>
@@ -675,7 +675,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
   return (
     <div className="pdf-renderer-container" ref={containerRef}>
       <div
-        className={`pdf-toolbar ${isFullscreen ? "fullscreen-toolbar" : ""}`}
+        className={`pdf-toolbar ${isFullscreen ? 'fullscreen-toolbar' : ''}`}
       >
         <div className="toolbar">
           <div id="toolbarLeft">
@@ -683,7 +683,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
               <button
                 onClick={handlePreviousPage}
                 className="toolbarButton"
-                title={t("Previous Page")}
+                title={t('Previous Page')}
                 disabled={currentPage <= 1 || isLoading}
               >
                 <ChevronLeftIcon />
@@ -691,7 +691,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
               <button
                 onClick={handleNextPage}
                 className="toolbarButton"
-                title={t("Next Page")}
+                title={t('Next Page')}
                 disabled={currentPage >= numPages || isLoading}
               >
                 <ChevronRightIcon />
@@ -722,7 +722,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
               <button
                 onClick={handleZoomOut}
                 className="toolbarButton"
-                title={t("Zoom Out")}
+                title={t('Zoom Out')}
                 disabled={isLoading}
               >
                 <ZoomOutIcon />
@@ -730,7 +730,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
               {(() => {
                 const zoomOptions =
                   getPdfRendererSettings().find(
-                    (s) => s.id === "pdf-renderer-initial-zoom",
+                    (s) => s.id === 'pdf-renderer-initial-zoom',
                   )?.options || [];
                 const currentZoom = Math.round(scale * 100).toString();
                 const hasCustomZoom = !zoomOptions.some(
@@ -739,11 +739,11 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
                 return (
                   <select
-                    value={hasCustomZoom ? "custom" : currentZoom}
+                    value={hasCustomZoom ? 'custom' : currentZoom}
                     onChange={handleZoomChange}
                     disabled={isLoading}
                     className="toolbarZoomSelect"
-                    title={t("Zoom Level")}
+                    title={t('Zoom Level')}
                   >
                     {zoomOptions.map((option) => (
                       <option
@@ -762,7 +762,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
               <button
                 onClick={handleZoomIn}
                 className="toolbarButton"
-                title={t("Zoom In")}
+                title={t('Zoom In')}
                 disabled={isLoading}
               >
                 <ZoomInIcon />
@@ -773,13 +773,13 @@ const PdfRenderer: React.FC<RendererProps> = ({
                 onClick={handleFitToggle}
                 className="toolbarButton"
                 title={
-                  fitMode === "fit-width"
-                    ? t("Fit to Height")
-                    : t("Fit to Width")
+                  fitMode === 'fit-width'
+                    ? t('Fit to Height')
+                    : t('Fit to Width')
                 }
                 disabled={isLoading}
               >
-                {fitMode === "fit-width" ? (
+                {fitMode === 'fit-width' ? (
                   <FitToWidthIcon />
                 ) : (
                   <FitToHeightIcon />
@@ -788,7 +788,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
               <button
                 onClick={handleToggleView}
                 className="toolbarButton"
-                title={scrollView ? t("Single Page View") : t("Scroll View")}
+                title={scrollView ? t('Single Page View') : t('Scroll View')}
                 disabled={isLoading}
               >
                 {scrollView ? <PageIcon /> : <ScrollIcon />}
@@ -796,7 +796,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
               <button
                 onClick={handleToggleFullscreen}
                 className="toolbarButton"
-                title={isFullscreen ? t("Exit Fullscreen") : t("Fullscreen")}
+                title={isFullscreen ? t('Exit Fullscreen') : t('Fullscreen')}
                 disabled={isLoading}
               >
                 {isFullscreen ? <MinimizeIcon /> : <ExpandIcon />}
@@ -806,7 +806,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
               <button
                 onClick={handleExport}
                 className="toolbarButton"
-                title={t("Download")}
+                title={t('Download')}
                 disabled={isLoading}
               >
                 <DownloadIcon />
@@ -817,7 +817,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
       </div>
 
       <div
-        className={`pdf-renderer-content ${isFullscreen ? "fullscreen" : ""}`}
+        className={`pdf-renderer-content ${isFullscreen ? 'fullscreen' : ''}`}
         ref={scrollView ? scrollContainerRef : contentElRef}
       >
         {fileData && (
@@ -827,7 +827,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
             onLoadError={onDocumentLoadError}
             loading={
               <div className="pdf-renderer-loading">
-                {t("Loading PDF document...")}
+                {t('Loading PDF document...')}
               </div>
             }
           >
@@ -850,7 +850,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
                         minHeight: shouldRender
                           ? undefined
                           : `${estimatedHeight}px`,
-                        position: "relative",
+                        position: 'relative',
                       }}
                       onClick={(e) => handlePageClick(pageNumber, e)}
                     >
@@ -863,8 +863,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
                           onLoadSuccess={onPageLoadSuccess}
                           loading={
                             <div className="pdf-page-loading">
-                              {t("Loading page")} {pageNumber}
-                              {t("...")}
+                              {t('Loading page')} {pageNumber}
+                              {t('...')}
                             </div>
                           }
                         />
@@ -873,17 +873,17 @@ const PdfRenderer: React.FC<RendererProps> = ({
                         <div
                           className="pdf-page-highlight"
                           style={{
-                            position: "absolute",
+                            position: 'absolute',
                             left: `${highlight.x * scale}px`,
                             top: `${highlight.y * scale}px`,
                             width: `${(highlight.width || 20) * scale}px`,
                             height: `${(highlight.height || 20) * scale}px`,
-                            pointerEvents: "none",
-                            backgroundColor: "rgba(255, 235, 59, 0.4)",
-                            border: "2px solid rgba(255, 193, 7, 0.8)",
-                            borderRadius: "2px",
+                            pointerEvents: 'none',
+                            backgroundColor: 'rgba(255, 235, 59, 0.4)',
+                            border: '2px solid rgba(255, 193, 7, 0.8)',
+                            borderRadius: '2px',
                             animation:
-                              "source-map-highlight-pulse 1.5s ease-out",
+                              'source-map-highlight-pulse 1.5s ease-out',
                           }}
                         />
                       )}
@@ -893,7 +893,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
               ) : (
                 <div
                   className="pdf-page-scroll"
-                  style={{ position: "relative" }}
+                  style={{ position: 'relative' }}
                   onClick={(e) => handlePageClick(currentPage, e)}
                 >
                   <Page
@@ -904,7 +904,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
                     onLoadSuccess={onPageLoadSuccess}
                     loading={
                       <div className="pdf-page-loading">
-                        {t("Loading page...")}
+                        {t('Loading page...')}
                       </div>
                     }
                   />
@@ -912,16 +912,16 @@ const PdfRenderer: React.FC<RendererProps> = ({
                     <div
                       className="pdf-page-highlight"
                       style={{
-                        position: "absolute",
+                        position: 'absolute',
                         left: `${highlight.x * scale}px`,
                         top: `${highlight.y * scale}px`,
                         width: `${(highlight.width || 20) * scale}px`,
                         height: `${(highlight.height || 20) * scale}px`,
-                        pointerEvents: "none",
-                        backgroundColor: "rgba(255, 235, 59, 0.4)",
-                        border: "2px solid rgba(255, 193, 7, 0.8)",
-                        borderRadius: "2px",
-                        animation: "source-map-highlight-pulse 1.5s ease-out",
+                        pointerEvents: 'none',
+                        backgroundColor: 'rgba(255, 235, 59, 0.4)',
+                        border: '2px solid rgba(255, 193, 7, 0.8)',
+                        borderRadius: '2px',
+                        animation: 'source-map-highlight-pulse 1.5s ease-out',
                       }}
                     />
                   )}
