@@ -112,15 +112,15 @@ export async function renderTextLayer(
         textContentCache.set(pageNumber, textContent);
     }
 
-    container.style.width = `${viewport.width}px`;
-    container.style.height = `${viewport.height}px`;
-
     const textLayer = new pdfjsLib.TextLayer({
         textContentSource: textContent,
         container,
         viewport,
     });
     await textLayer.render();
+
+    container.style.setProperty('--scale-factor', String(scale));
+    container.style.setProperty('--total-scale-factor', String(scale));
 
     overlayScaleCache.set(container, scale);
 }

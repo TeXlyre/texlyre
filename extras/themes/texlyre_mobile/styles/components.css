@@ -369,7 +369,7 @@
 }
 
 [data-layout="texlyre-mobile"] ::-webkit-scrollbar {
-	width: 6px;
+	width: 8px;
 }
 
 [data-layout="texlyre-mobile"] ::-webkit-scrollbar-thumb {
@@ -378,5 +378,5 @@
 }
 
 [data-layout="texlyre-mobile"] ::-webkit-scrollbar-thumb:hover {
-	background-color: var(--pico-secondary);
+	background-color: var(--pico-primary);
 }

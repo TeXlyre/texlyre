@@ -191,7 +191,7 @@
 }
 
 .typst-visualizer-content::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
 }
 
 .typst-visualizer-content::-webkit-scrollbar-track {
@@ -200,7 +200,7 @@
 
 .typst-visualizer-content::-webkit-scrollbar-thumb {
     background: var(--accent-border);
-    border-radius: 3px;
+    border-radius: 4px;
 }
 
 .typst-visualizer-content::-webkit-scrollbar-thumb:hover {
