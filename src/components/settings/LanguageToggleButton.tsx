@@ -119,7 +119,7 @@ const LanguageToggleButton: React.FC<LanguageToggleButtonProps> = ({ className =
                         {filteredLanguages.map((lang, index) => (
                             <div
                                 key={lang.code}
-                                ref={(el) => (optionRefs.current[index] = el)}
+                                ref={(el) => { optionRefs.current[index] = el; }}
                                 className={`dropdown-option ${currentLanguage.code === lang.code ? 'selected' : ''} ${focusedIndex === index ? 'focused' : ''}`}
                                 onClick={() => handleSelect(lang.code)}
                                 tabIndex={0}
