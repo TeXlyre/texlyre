@@ -4,30 +4,20 @@ import type React from 'react';
 import { useState } from 'react';
 
 import { useAuth } from '../../hooks/useAuth';
-import { useTheme } from '../../hooks/useTheme';
-import GuestConsentModal from './GuestConsentModal';
-import PrivacyModal from '../common/PrivacyModal';
 
 interface LoginProps {
   onLoginSuccess: () => void;
-  onSwitchToRegister: () => void;
-  onSwitchToImport: () => void;
 }
 
 const Login: React.FC<LoginProps> = ({
   onLoginSuccess,
-  onSwitchToRegister,
-  onSwitchToImport
 }) => {
-  const { login, createGuestAccount } = useAuth();
-  const { currentThemePlugin } = useTheme();
+  const { login } = useAuth();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showGuestModal, setShowGuestModal] = useState(false);
-  const [showPrivacy, setShowPrivacy] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,128 +43,48 @@ const Login: React.FC<LoginProps> = ({
     }
   };
 
-  const handleShowPrivacy = () => {
-    setShowPrivacy(true);
-  };
-
-  const handleClosePrivacy = () => {
-    setShowPrivacy(false);
-    // Don't close the guest modal when privacy modal closes
-  };
-
-  const handleGuestSession = async () => {
-    setError(null);
-    setIsLoading(true);
-
-    try {
-      console.log('[Login] Starting guest session creation...');
-      const guestUser = await createGuestAccount();
-      console.log('[Login] Guest session created successfully:', guestUser.id);
-      setShowGuestModal(false);
-      onLoginSuccess();
-    } catch (err) {
-      console.error('[Login] Guest session creation failed:', err);
-      setError(
-        err instanceof Error ? err.message : t('Failed to create guest session')
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <>
-      <div className="auth-form-container">
-        <h2>{t('Login')}</h2>
+    <div className="auth-form-container">
+      <h2>{t('Login')}</h2>
 
-        {error && <div className="auth-error">{error}</div>}
+      {error && <div className="auth-error">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="username">{t('Username')}</label>
-            <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              disabled={isLoading}
-              autoComplete="username" />
-
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">{t('Password')}</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isLoading}
-              autoComplete="current-password" />
-
-          </div>
-
-          <button
-            type="submit"
-            className={`auth-button ${isLoading ? 'loading' : ''}`}
-            disabled={isLoading}>
-
-            {isLoading ? t('Logging in...') : t('Login')}
-          </button>
-        </form>
-
-        <div className="guest-section">
-          <div className="guest-divider">
-            <span>{t('or')}</span>
-          </div>
-          <button
-            type="button"
-            className="auth-button guest-button"
-            onClick={() => setShowGuestModal(true)}
-            disabled={isLoading}>{t('Try as Guest')}
-
-
-          </button>
+      <form onSubmit={handleSubmit} className="auth-form">
+        <div className="form-group">
+          <label htmlFor="username">{t('Username')}</label>
+          <input
+            type="text"
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            disabled={isLoading}
+            autoComplete="username" />
         </div>
 
-        <div className="auth-alt-action">
-          <span>{t('Don\'t have an account?')}</span>
-          <button
-            className="text-button"
-            onClick={onSwitchToRegister}
-            disabled={isLoading}>{t('Sign up')}
-
-
-          </button>
-          <span className="auth-separator">{t('or')}</span>
-          <button
-            className="text-button"
-            onClick={onSwitchToImport}
-            disabled={isLoading}>{t('Import Account')}
-
-
-          </button>
+        <div className="form-group">
+          <label htmlFor="password">{t('Password')}</label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={isLoading}
+            autoComplete="current-password" />
         </div>
+
+        <button
+          type="submit"
+          className={`auth-button ${isLoading ? 'loading' : ''}`}
+          disabled={isLoading}>
+          {isLoading ? t('Logging in...') : t('Login')}
+        </button>
+      </form>
+
+      <div className="auth-enterprise-note">
+        <p>{t('Contact your administrator for account access.')}</p>
       </div>
-
-      <GuestConsentModal
-        isOpen={showGuestModal}
-        onClose={() => setShowGuestModal(false)}
-        onStartGuestSession={handleGuestSession}
-        onSwitchToRegister={() => {
-          setShowGuestModal(false);
-          onSwitchToRegister();
-        }}
-        onShowPrivacy={handleShowPrivacy}
-        isPrivacyOpen={showPrivacy} />
-
-
-      <PrivacyModal
-        isOpen={showPrivacy}
-        onClose={handleClosePrivacy} />
-
-    </>);
-
+    </div>
+  );
 };
 
 export default Login;

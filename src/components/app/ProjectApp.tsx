@@ -26,8 +26,7 @@ import ProjectPanel from '../project/ProjectPanel';
 import SettingsButton from '../settings/SettingsButton';
 import PrivacyModal from '../common/PrivacyModal';
 import DeleteAccountModal from '../profile/DeleteAccountModal';
-import GuestUpgradeBanner from '../auth/GuestUpgradeBanner';
-import GuestUpgradeModal from '../auth/GuestUpgradeModal';
+import AdminPanel from '../auth/AdminPanel';
 import { NewProjectIcon } from '../common/Icons';
 
 interface ProjectManagerProps {
@@ -55,7 +54,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
     updateProject,
     deleteProject,
     toggleFavorite,
-    isGuestUser
+    isAdmin
   } = useAuth();
   const { currentThemePlugin, currentLayout } = useTheme();
   const {
@@ -90,7 +89,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showAutoBackupModal, setShowAutoBackupModal] = useState(false);
-  const [showGuestUpgradeModal, setShowGuestUpgradeModal] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -133,10 +132,6 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
   const handleAccountDeleted = async () => {
     setIsDeleteAccountModalOpen(false);
     await onLogout();
-  };
-
-  const handleGuestUpgradeSuccess = () => {
-    setShowGuestUpgradeModal(false);
   };
 
   const handleMultiDeleteProjects = async (projectIds: string[]) => {
@@ -405,11 +400,6 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 
   return (
     <div className={`app-container ${currentThemePlugin?.id || 'default'}`}>
-      {isGuestUser(user) &&
-        <GuestUpgradeBanner
-          onOpenUpgradeModal={() => setShowGuestUpgradeModal(true)} />
-
-      }
       <header>
         <div className="header-left">
           <h1>{t('All Projects')}</h1>
@@ -426,9 +416,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
         </div>
 
         <div className="header-right">
-          {!isGuestUser(user) &&
-            <BackupStatusIndicator className="header-backup-indicator" />
-          }
+          <BackupStatusIndicator className="header-backup-indicator" />
           <SettingsButton className="header-settings-button" />
           <UserDropdown
             username={user?.username || ''}
@@ -436,8 +424,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
             onOpenProfile={() => setShowProfileModal(true)}
             onOpenExport={() => setShowAccountExportModal(true)}
             onOpenDeleteAccount={() => setIsDeleteAccountModalOpen(true)}
-            onOpenUpgrade={() => setShowGuestUpgradeModal(true)}
-            isGuest={isGuestUser(user)} />
+            onOpenAdminPanel={isAdmin(user) ? () => setShowAdminPanel(true) : undefined} />
 
         </div>
       </header>
@@ -606,33 +593,25 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
         </div>
       </Modal>
 
-      {/* Guest users cannot access profile/account features */}
-      {!isGuestUser(user) &&
-        <>
-          <ProfileSettingsModal
-            isOpen={showProfileModal}
-            onClose={() => setShowProfileModal(false)} />
+      <ProfileSettingsModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)} />
 
-          <ExportAccountModal
-            isOpen={showAccountExportModal}
-            onClose={() => setShowAccountExportModal(false)}
-            showProjectSelection={false} />
+      <ExportAccountModal
+        isOpen={showAccountExportModal}
+        onClose={() => setShowAccountExportModal(false)}
+        showProjectSelection={false} />
 
-          <DeleteAccountModal
-            isOpen={isDeleteAccountModalOpen}
-            onClose={() => setIsDeleteAccountModalOpen(false)}
-            onAccountDeleted={handleAccountDeleted}
-            onOpenExport={() => setShowAccountExportModal(true)} />
+      <DeleteAccountModal
+        isOpen={isDeleteAccountModalOpen}
+        onClose={() => setIsDeleteAccountModalOpen(false)}
+        onAccountDeleted={handleAccountDeleted}
+        onOpenExport={() => setShowAccountExportModal(true)} />
 
-        </>
-      }
-
-      {isGuestUser(user) &&
-        <GuestUpgradeModal
-          isOpen={showGuestUpgradeModal}
-          onClose={() => setShowGuestUpgradeModal(false)}
-          onUpgradeSuccess={handleGuestUpgradeSuccess} />
-
+      {isAdmin(user) &&
+        <AdminPanel
+          isOpen={showAdminPanel}
+          onClose={() => setShowAdminPanel(false)} />
       }
 
       <ProjectImportModal
@@ -641,34 +620,28 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
         onProjectsImported={handleProjectsImported} />
 
 
-      {/* Guest users cannot access backup features */}
-      {!isGuestUser(user) &&
-        <>
-          <BackupDiscoveryModal
-            isOpen={showDiscoveryModal}
-            onClose={dismissDiscovery}
-            rootHandle={getRootHandle()}
-            discoveredProjects={discoveredProjects}
-            onProjectsImported={handleDiscoveryImport} />
+      <BackupDiscoveryModal
+        isOpen={showDiscoveryModal}
+        onClose={dismissDiscovery}
+        rootHandle={getRootHandle()}
+        discoveredProjects={discoveredProjects}
+        onProjectsImported={handleDiscoveryImport} />
 
-          <BackupModal
-            isOpen={showAutoBackupModal}
-            onClose={() => setShowAutoBackupModal(false)}
-            status={status}
-            activities={activities}
-            onRequestAccess={requestAccess}
-            onSynchronize={synchronize}
-            onExportToFileSystem={synchronize}
-            onImportChanges={importChanges}
-            onDisconnect={disconnect}
-            onClearActivity={clearActivity}
-            onClearAllActivities={clearAllActivities}
-            onChangeDirectory={changeDirectory}
-            currentProjectId={sessionStorage.getItem('currentProjectId')}
-            isInEditor={true} />
-
-        </>
-      }
+      <BackupModal
+        isOpen={showAutoBackupModal}
+        onClose={() => setShowAutoBackupModal(false)}
+        status={status}
+        activities={activities}
+        onRequestAccess={requestAccess}
+        onSynchronize={synchronize}
+        onExportToFileSystem={synchronize}
+        onImportChanges={importChanges}
+        onDisconnect={disconnect}
+        onClearActivity={clearActivity}
+        onClearAllActivities={clearAllActivities}
+        onChangeDirectory={changeDirectory}
+        currentProjectId={sessionStorage.getItem('currentProjectId')}
+        isInEditor={true} />
     </div>);
 
 };

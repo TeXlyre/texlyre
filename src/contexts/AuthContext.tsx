@@ -3,7 +3,7 @@ import type React from 'react';
 import { type ReactNode, createContext, useEffect, useState } from 'react';
 
 import { authService } from '../services/AuthService';
-import type { AuthContextType, User } from '../types/auth';
+import type { AuthContextType, User, UserRole } from '../types/auth';
 import type { Project } from '../types/projects';
 
 export const AuthContext = createContext<AuthContextType>({
@@ -11,15 +11,6 @@ export const AuthContext = createContext<AuthContextType>({
 	isAuthenticated: false,
 	isInitializing: true,
 	login: async () => {
-		throw new Error('Not implemented');
-	},
-	register: async () => {
-		throw new Error('Not implemented');
-	},
-	createGuestAccount: async () => {
-		throw new Error('Not implemented');
-	},
-	upgradeGuestAccount: async () => {
 		throw new Error('Not implemented');
 	},
 	logout: async () => {
@@ -64,8 +55,17 @@ export const AuthContext = createContext<AuthContextType>({
 	updatePassword: async () => {
 		throw new Error('Not implemented');
 	},
-	isGuestUser: () => false,
-	cleanupExpiredGuests: async () => {
+	isAdmin: () => false,
+	adminCreateUser: async () => {
+		throw new Error('Not implemented');
+	},
+	adminDeleteUser: async () => {
+		throw new Error('Not implemented');
+	},
+	adminGetAllUsers: async () => {
+		throw new Error('Not implemented');
+	},
+	adminResetPassword: async () => {
 		throw new Error('Not implemented');
 	},
 });
@@ -92,36 +92,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 		const loggedInUser = await authService.login(username, password);
 		setUser(loggedInUser);
 		return loggedInUser;
-	};
-
-	const register = async (
-		username: string,
-		password: string,
-		email?: string,
-	): Promise<User> => {
-		const newUser = await authService.register(username, password, email);
-		setUser(newUser);
-		return newUser;
-	};
-
-	const createGuestAccount = async (): Promise<User> => {
-		const guestUser = await authService.createGuestAccount();
-		setUser(guestUser);
-		return guestUser;
-	};
-
-	const upgradeGuestAccount = async (
-		username: string,
-		password: string,
-		email?: string,
-	): Promise<User> => {
-		const upgradedUser = await authService.upgradeGuestAccount(
-			username,
-			password,
-			email,
-		);
-		setUser(upgradedUser);
-		return upgradedUser;
 	};
 
 	const logout = async (): Promise<void> => {
@@ -203,12 +173,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 		return updatedUser;
 	};
 
-	const isGuestUser = (targetUser?: User | null): boolean => {
-		return authService.isGuestUser(targetUser || user);
+	const isAdmin = (targetUser?: User | null): boolean => {
+		return authService.isAdmin(targetUser || user);
 	};
 
-	const cleanupExpiredGuests = async (): Promise<void> => {
-		return authService.cleanupExpiredGuests();
+	const adminCreateUser = async (
+		username: string,
+		password: string,
+		email?: string,
+		role?: UserRole,
+	): Promise<User> => {
+		return authService.adminCreateUser(username, password, email, role);
+	};
+
+	const adminDeleteUser = async (userId: string): Promise<void> => {
+		return authService.adminDeleteUser(userId);
+	};
+
+	const adminGetAllUsers = async (): Promise<User[]> => {
+		return authService.adminGetAllUsers();
+	};
+
+	const adminResetPassword = async (userId: string, newPassword: string): Promise<User> => {
+		return authService.adminResetPassword(userId, newPassword);
 	};
 
 	return (
@@ -218,9 +205,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 				isAuthenticated: !!user,
 				isInitializing,
 				login,
-				register,
-				createGuestAccount,
-				upgradeGuestAccount,
 				logout,
 				updateUser,
 				updateUserColor,
@@ -235,8 +219,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 				toggleFavorite,
 				verifyPassword,
 				updatePassword,
-				isGuestUser,
-				cleanupExpiredGuests,
+				isAdmin,
+				adminCreateUser,
+				adminDeleteUser,
+				adminGetAllUsers,
+				adminResetPassword,
 			}}
 		>
 			{children}

@@ -4,7 +4,7 @@ import { type IDBPDatabase, openDB } from 'idb';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 
-import type { User } from '../types/auth';
+import type { User, UserRole } from '../types/auth';
 import type { Project } from '../types/projects';
 import { cleanupProjectDatabases } from '../utils/dbDeleteUtils';
 import { fileSystemBackupService } from './FileSystemBackupService';
@@ -13,18 +13,21 @@ const shouldAutoSync = (): boolean => {
 	return localStorage.getItem('texlyre-auto-sync') === 'true';
 };
 
+const DEFAULT_ADMIN_USERNAME = 'admin';
+const DEFAULT_ADMIN_PASSWORD = 'admin';
+
 class AuthService {
 	public db: IDBPDatabase | null = null;
 	private readonly DB_NAME = 'texlyre-auth';
 	private readonly USER_STORE = 'users';
 	private readonly PROJECT_STORE = 'projects';
-	private readonly DB_VERSION = 1;
+	private readonly DB_VERSION = 2;
 	private currentUser: User | null = null;
 
 	async initialize(): Promise<void> {
 		try {
 			this.db = await openDB(this.DB_NAME, this.DB_VERSION, {
-				upgrade: (db, _oldVersion, _newVersion) => {
+				upgrade: (db, oldVersion, _newVersion) => {
 					if (!db.objectStoreNames.contains(this.USER_STORE)) {
 						const userStore = db.createObjectStore(this.USER_STORE, {
 							keyPath: 'id',
@@ -47,19 +50,16 @@ class AuthService {
 				},
 			});
 
+			// Seed default admin account if no users exist
+			await this.seedDefaultAdmin();
+
 			const userId = localStorage.getItem('texlyre-current-user');
 			if (userId) {
 				try {
 					const user = await this.getUserById(userId);
 					if (user) {
-						if (this.isGuestUser(user) && this.isGuestExpired(user)) {
-							console.log(`[AuthService] Guest session expired: ${userId}`);
-							await this.cleanupExpiredGuest(user);
-							localStorage.removeItem('texlyre-current-user');
-						} else {
-							this.currentUser = user;
-							console.log(`[AuthService] Restored user session: ${user.username} (${this.isGuestUser(user) ? 'guest' : 'full'})`);
-						}
+						this.currentUser = user;
+						console.log(`[AuthService] Restored user session: ${user.username} (role: ${user.role || 'user'})`);
 					} else {
 						console.log(`[AuthService] User not found: ${userId}`);
 						localStorage.removeItem('texlyre-current-user');
@@ -69,12 +69,37 @@ class AuthService {
 					localStorage.removeItem('texlyre-current-user');
 				}
 			}
-
-			// Run cleanup on initialization
-			this.cleanupExpiredGuests();
 		} catch (error) {
 			console.error('Failed to initialize database:', error);
 			throw error;
+		}
+	}
+
+	private async seedDefaultAdmin(): Promise<void> {
+		if (!this.db) return;
+
+		try {
+			const tx = this.db.transaction(this.USER_STORE, 'readonly');
+			const allUsers = await tx.store.getAll();
+
+			if (allUsers.length === 0) {
+				const passwordHash = await this.hashPassword(DEFAULT_ADMIN_PASSWORD);
+				const adminUser: User = {
+					id: crypto.randomUUID(),
+					username: DEFAULT_ADMIN_USERNAME,
+					passwordHash,
+					role: 'admin',
+					createdAt: Date.now(),
+					lastLogin: undefined,
+					color: this.generateRandomColor(false),
+					colorLight: this.generateRandomColor(true),
+				};
+
+				await this.db.put(this.USER_STORE, adminUser);
+				console.log('[AuthService] Default admin account created (username: admin, password: admin). Please change the password after first login.');
+			}
+		} catch (error) {
+			console.error('Error seeding default admin:', error);
 		}
 	}
 
@@ -85,219 +110,13 @@ class AuthService {
 		return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 	}
 
-	generateSessionId(): string {
-		return `guest_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`;
+	isAdmin(user?: User | null): boolean {
+		const target = user || this.currentUser;
+		return target?.role === 'admin';
 	}
 
-	isGuestUser(user: User | null): boolean {
-		return !!(user?.isGuest);
-	}
-
-	isGuestExpired(user: User | null): boolean {
-		if (!user || !this.isGuestUser(user) || !user.expiresAt) return false;
-		return Date.now() > user.expiresAt;
-	}
-
-	async createGuestAccount(): Promise<User> {
-		if (!this.db) {
-			console.log('[AuthService] Database not initialized, initializing...');
-			await this.initialize();
-		}
-
-		// Clean up any existing expired guests first
-		await this.cleanupExpiredGuests();
-
-		const sessionId = this.generateSessionId();
-		const userId = `guest_${crypto.randomUUID()}`;
-		const now = Date.now();
-		const expiresAt = now + (24 * 60 * 60 * 1000);
-
-		const guestUser: User = {
-			id: userId,
-			username: t('Guest User'),
-			passwordHash: await this.hashPassword(sessionId),
-			isGuest: true,
-			sessionId,
-			expiresAt,
-			createdAt: now,
-			lastLogin: now,
-			color: this.generateRandomColor(false),
-			colorLight: this.generateRandomColor(true),
-		};
-
-		try {
-			console.log(`[AuthService] Creating guest user with ID: ${userId}`);
-			await this.db?.put(this.USER_STORE, guestUser);
-
-			// Verify the user was created
-			const verifyUser = await this.db?.get(this.USER_STORE, userId);
-			if (!verifyUser) {
-				throw new Error(t('Failed to verify guest user creation'));
-			}
-
-			this.currentUser = guestUser;
-			localStorage.setItem('texlyre-current-user', userId);
-
-			console.log(`[AuthService] Successfully created guest account: ${sessionId}`);
-			return guestUser;
-		} catch (error) {
-			console.error('Failed to create guest account:', error);
-			throw new Error(t('Failed to create guest session. Please refresh the page and try again'));
-		}
-	}
-
-	async upgradeGuestAccount(
-		username: string,
-		password: string,
-		email?: string,
-	): Promise<User> {
-		if (!this.db) await this.initialize();
-		if (!this.currentUser || !this.isGuestUser(this.currentUser)) {
-			throw new Error(t('No guest account to upgrade'));
-		}
-
-		// Check for existing non-guest users only
-		const existingUser = await this.db?.getFromIndex(
-			this.USER_STORE,
-			'username',
-			username,
-		);
-		if (existingUser && !this.isGuestUser(existingUser)) {
-			throw new Error(t('Username already exists'));
-		}
-
-		if (email) {
-			const existingEmail = await this.db?.getFromIndex(
-				this.USER_STORE,
-				'email',
-				email,
-			);
-			if (existingEmail && !this.isGuestUser(existingEmail)) {
-				throw new Error(t('Email already exists'));
-			}
-		}
-
-		const passwordHash = await this.hashPassword(password);
-		const now = Date.now();
-		const oldGuestId = this.currentUser.id;
-
-		// Create a completely new user ID for the upgraded account
-		const newUserId = crypto.randomUUID();
-
-		const upgradedUser: User = {
-			id: newUserId,
-			username,
-			email,
-			passwordHash,
-			createdAt: this.currentUser.createdAt,
-			lastLogin: now,
-			color: this.currentUser.color,
-			colorLight: this.currentUser.colorLight,
-			// Explicitly remove guest properties
-			isGuest: undefined,
-			sessionId: undefined,
-			expiresAt: undefined,
-		};
-
-		// Transfer ownership of all guest projects to the new user
-		await this.transferGuestProjects(oldGuestId, newUserId);
-
-		// Add the new user
-		await this.db?.put(this.USER_STORE, upgradedUser);
-
-		// Remove the old guest account
-		await this.db?.delete(this.USER_STORE, oldGuestId);
-
-		this.currentUser = upgradedUser;
-		localStorage.setItem('texlyre-current-user', newUserId);
-
-		console.log(`[AuthService] Upgraded guest account ${oldGuestId} to full account: ${username} (${newUserId})`);
-		return upgradedUser;
-	}
-
-	private async transferGuestProjects(oldUserId: string, newUserId: string): Promise<void> {
-		if (!this.db) return;
-
-		try {
-			const guestProjects = await this.getProjectsByUser(oldUserId);
-
-			for (const project of guestProjects) {
-				const updatedProject = {
-					...project,
-					ownerId: newUserId,
-					updatedAt: Date.now(),
-				};
-				await this.db.put(this.PROJECT_STORE, updatedProject);
-			}
-
-			console.log(`[AuthService] Transferred ${guestProjects.length} projects from guest ${oldUserId} to user ${newUserId}`);
-		} catch (error) {
-			console.error('Error transferring guest projects:', error);
-		}
-	}
-
-	async cleanupExpiredGuests(): Promise<void> {
-		if (!this.db) return;
-
-		try {
-			const tx = this.db.transaction([this.USER_STORE, this.PROJECT_STORE], 'readwrite');
-			const userStore = tx.objectStore('users');
-
-			const allUsers = await userStore.getAll();
-			const expiredGuests = allUsers.filter(user =>
-				this.isGuestUser(user) && this.isGuestExpired(user)
-			);
-
-			for (const expiredGuest of expiredGuests) {
-				await this.cleanupExpiredGuest(expiredGuest);
-			}
-
-			console.log(`[AuthService] Cleaned up ${expiredGuests.length} expired guest accounts`);
-		} catch (error) {
-			console.error('Error during guest cleanup:', error);
-		}
-	}
-
-	async cleanupExpiredGuest(guestUser: User): Promise<void> {
-		if (!this.db) return;
-
-		try {
-			console.log(`[AuthService] Cleaning up guest: ${guestUser.id}`);
-
-			// Get guest projects
-			const guestProjects = await this.getProjectsByUser(guestUser.id);
-			console.log(`[AuthService] Found ${guestProjects.length} guest projects to cleanup`);
-
-			// Clean up project databases first
-			for (const project of guestProjects) {
-				try {
-					await cleanupProjectDatabases(project);
-				} catch (error) {
-					console.warn(`Failed to cleanup project database for ${project.id}:`, error);
-				}
-			}
-
-			// Remove projects from database
-			if (guestProjects.length > 0) {
-				const projectTx = this.db.transaction(this.PROJECT_STORE, 'readwrite');
-				for (const project of guestProjects) {
-					try {
-						await projectTx.objectStore('projects').delete(project.id);
-					} catch (error) {
-						console.warn(`Failed to delete project ${project.id}:`, error);
-					}
-				}
-			}
-
-			// Remove user from database
-			const userTx = this.db.transaction(this.USER_STORE, 'readwrite');
-			await userTx.objectStore('users').delete(guestUser.id);
-
-			console.log(`[AuthService] Successfully cleaned up guest: ${guestUser.id}`);
-		} catch (error) {
-			console.error(`Error cleaning up guest ${guestUser.id}:`, error);
-			// Don't rethrow - cleanup failures shouldn't block other operations
-		}
+	isGuestUser(_user: User | null): boolean {
+		return false;
 	}
 
 	private generateRandomColor(isLight: boolean): string {
@@ -356,20 +175,61 @@ class AuthService {
 		return hslToHex(hue, saturation, lightness);
 	}
 
-	async register(
+	async login(username: string, password: string): Promise<User> {
+		if (!this.db) await this.initialize();
+
+		const user = await this.db?.getFromIndex(
+			this.USER_STORE,
+			'username',
+			username,
+		);
+		if (!user) {
+			throw new Error(t('User not found'));
+		}
+
+		const passwordHash = await this.hashPassword(password);
+		if (user.passwordHash !== passwordHash) {
+			throw new Error(t('Invalid password'));
+		}
+
+		// Ensure role is set for legacy users
+		if (!user.role) {
+			user.role = 'user';
+		}
+
+		user.lastLogin = Date.now();
+		await this.db?.put(this.USER_STORE, user);
+
+		this.currentUser = user;
+		localStorage.setItem('texlyre-current-user', user.id);
+
+		return user;
+	}
+
+	async logout(): Promise<void> {
+		this.currentUser = null;
+		localStorage.removeItem('texlyre-current-user');
+	}
+
+	// Admin-only: create a new user
+	async adminCreateUser(
 		username: string,
 		password: string,
 		email?: string,
+		role: UserRole = 'user',
 	): Promise<User> {
 		if (!this.db) await this.initialize();
 
-		// Check for existing non-guest users only
+		if (!this.isAdmin()) {
+			throw new Error(t('Only administrators can create users'));
+		}
+
 		const existingUser = await this.db?.getFromIndex(
 			this.USER_STORE,
 			'username',
 			username,
 		);
-		if (existingUser && !this.isGuestUser(existingUser)) {
+		if (existingUser) {
 			throw new Error(t('Username already exists'));
 		}
 
@@ -379,7 +239,7 @@ class AuthService {
 				'email',
 				email,
 			);
-			if (existingEmail && !this.isGuestUser(existingEmail)) {
+			if (existingEmail) {
 				throw new Error(t('Email already exists'));
 			}
 		}
@@ -393,51 +253,79 @@ class AuthService {
 			username,
 			passwordHash,
 			email,
+			role,
 			createdAt: now,
-			lastLogin: now,
+			lastLogin: undefined,
+			color: this.generateRandomColor(false),
+			colorLight: this.generateRandomColor(true),
 		};
 
 		await this.db?.put(this.USER_STORE, newUser);
-		this.currentUser = newUser;
-		localStorage.setItem('texlyre-current-user', userId);
-
+		console.log(`[AuthService] Admin created user: ${username} (role: ${role})`);
 		return newUser;
 	}
 
-	async login(username: string, password: string): Promise<User> {
+	// Admin-only: delete a user
+	async adminDeleteUser(userId: string): Promise<void> {
 		if (!this.db) await this.initialize();
 
-		const user = await this.db?.getFromIndex(
-			this.USER_STORE,
-			'username',
-			username,
-		);
-		if (!user || this.isGuestUser(user)) {
+		if (!this.isAdmin()) {
+			throw new Error(t('Only administrators can delete users'));
+		}
+
+		if (userId === this.currentUser?.id) {
+			throw new Error(t('Cannot delete your own account'));
+		}
+
+		const user = await this.getUserById(userId);
+		if (!user) {
 			throw new Error(t('User not found'));
 		}
 
-		const passwordHash = await this.hashPassword(password);
-		if (user.passwordHash !== passwordHash) {
-			throw new Error(t('Invalid password'));
+		// Clean up user's projects
+		const userProjects = await this.getProjectsByUser(userId);
+		for (const project of userProjects) {
+			try {
+				await cleanupProjectDatabases(project);
+				await this.db?.delete(this.PROJECT_STORE, project.id);
+			} catch (error) {
+				console.warn(`Failed to cleanup project ${project.id}:`, error);
+			}
 		}
 
-		user.lastLogin = Date.now();
-		await this.db?.put(this.USER_STORE, user);
-
-		this.currentUser = user;
-		localStorage.setItem('texlyre-current-user', user.id);
-
-		return user;
+		await this.db?.delete(this.USER_STORE, userId);
+		console.log(`[AuthService] Admin deleted user: ${user.username} (${userId})`);
 	}
 
-	async logout(): Promise<void> {
-		// If logging out a guest, clean up their data immediately
-		if (this.currentUser && this.isGuestUser(this.currentUser)) {
-			await this.cleanupExpiredGuest(this.currentUser);
+	// Admin-only: get all users
+	async adminGetAllUsers(): Promise<User[]> {
+		if (!this.db) await this.initialize();
+
+		if (!this.isAdmin()) {
+			throw new Error(t('Only administrators can view all users'));
 		}
 
-		this.currentUser = null;
-		localStorage.removeItem('texlyre-current-user');
+		const tx = this.db?.transaction(this.USER_STORE, 'readonly');
+		return tx.store.getAll();
+	}
+
+	// Admin-only: reset a user's password
+	async adminResetPassword(userId: string, newPassword: string): Promise<User> {
+		if (!this.db) await this.initialize();
+
+		if (!this.isAdmin()) {
+			throw new Error(t('Only administrators can reset passwords'));
+		}
+
+		const user = await this.getUserById(userId);
+		if (!user) throw new Error(t('User not found'));
+
+		const passwordHash = await this.hashPassword(newPassword);
+		const updatedUser = { ...user, passwordHash };
+		await this.db?.put(this.USER_STORE, updatedUser);
+
+		console.log(`[AuthService] Admin reset password for user: ${user.username}`);
+		return updatedUser;
 	}
 
 	async updateUser(user: User): Promise<User> {
@@ -587,7 +475,7 @@ class AuthService {
 
 		await this.db?.put(this.PROJECT_STORE, newProject);
 
-		if (shouldAutoSync() && !this.isGuestUser(this.currentUser)) {
+		if (shouldAutoSync()) {
 			fileSystemBackupService.synchronize(newProject.id).catch(console.error);
 		}
 
@@ -613,7 +501,7 @@ class AuthService {
 
 		await this.db?.put(this.PROJECT_STORE, updatedProject);
 
-		if (shouldAutoSync() && !this.isGuestUser(this.currentUser)) {
+		if (shouldAutoSync()) {
 			fileSystemBackupService.synchronize(project.id).catch(console.error);
 		}
 
@@ -658,7 +546,7 @@ class AuthService {
 		await this.db?.delete(this.PROJECT_STORE, id);
 		await cleanupProjectDatabases(project);
 
-		if (shouldAutoSync() && !this.isGuestUser(this.currentUser)) {
+		if (shouldAutoSync()) {
 			fileSystemBackupService.synchronize().catch(console.error);
 		}
 	}

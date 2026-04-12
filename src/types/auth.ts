@@ -6,17 +6,6 @@ export interface AuthContextType {
 	isAuthenticated: boolean;
 	isInitializing: boolean;
 	login: (username: string, password: string) => Promise<User>;
-	register: (
-		username: string,
-		password: string,
-		email?: string,
-	) => Promise<User>;
-	createGuestAccount: () => Promise<User>;
-	upgradeGuestAccount: (
-		username: string,
-		password: string,
-		email?: string,
-	) => Promise<User>;
 	logout: () => Promise<void>;
 	updateUser: (user: User) => Promise<User>;
 	updateUserColor: (
@@ -42,9 +31,15 @@ export interface AuthContextType {
 	toggleFavorite: (projectId: string) => Promise<Project>;
 	verifyPassword: (userId: string, password: string) => Promise<boolean>;
 	updatePassword: (userId: string, newPassword: string) => Promise<User>;
-	isGuestUser: (user?: User | null) => boolean;
-	cleanupExpiredGuests: () => Promise<void>;
+	isAdmin: (user?: User | null) => boolean;
+	// Admin-only methods
+	adminCreateUser: (username: string, password: string, email?: string, role?: UserRole) => Promise<User>;
+	adminDeleteUser: (userId: string) => Promise<void>;
+	adminGetAllUsers: () => Promise<User[]>;
+	adminResetPassword: (userId: string, newPassword: string) => Promise<User>;
 }
+
+export type UserRole = 'admin' | 'user';
 
 export interface User {
 	id: string;
@@ -52,6 +47,7 @@ export interface User {
 	name?: string;
 	passwordHash: string;
 	email?: string;
+	role: UserRole;
 	createdAt: number;
 	lastLogin?: number;
 	color?: string;

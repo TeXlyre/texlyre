@@ -3,7 +3,7 @@ import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
-import { UserIcon, UpgradeAccountIcon, TrashIcon, ExportIcon, EditIcon, LogoutIcon } from '../common/Icons';
+import { UserIcon, TrashIcon, ExportIcon, EditIcon, LogoutIcon } from '../common/Icons';
 
 interface UserDropdownProps {
   username: string;
@@ -11,8 +11,7 @@ interface UserDropdownProps {
   onOpenProfile: () => void;
   onOpenExport: () => void;
   onOpenDeleteAccount: () => void;
-  onOpenUpgrade?: () => void;
-  isGuest?: boolean;
+  onOpenAdminPanel?: () => void;
 }
 
 const UserDropdown: React.FC<UserDropdownProps> = ({
@@ -21,8 +20,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
   onOpenProfile,
   onOpenExport,
   onOpenDeleteAccount,
-  onOpenUpgrade,
-  isGuest = false
+  onOpenAdminPanel,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -42,95 +40,70 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
     };
   }, []);
 
-  const displayUsername = isGuest ? t('Guest User') : username;
-
   return (
     <div className="user-dropdown-container" ref={dropdownRef}>
       <button
-        className={`user-dropdown-button ${isGuest ? 'guest' : ''}`}
+        className="user-dropdown-button"
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-haspopup="true">
-
         <UserIcon />
-        <span>{displayUsername}</span>
+        <span>{username}</span>
       </button>
 
       {isOpen &&
         <div className="user-dropdown-menu">
-          {!isGuest &&
+          <button
+            className="dropdown-item"
+            onClick={() => {
+              setIsOpen(false);
+              onOpenProfile();
+            }}>
+            <EditIcon />{t('Profile Settings')}
+          </button>
+          <button
+            className="dropdown-item"
+            onClick={() => {
+              setIsOpen(false);
+              onOpenExport();
+            }}>
+            <ExportIcon />{t('Export Account')}
+          </button>
+          {onOpenAdminPanel &&
             <>
-              <button
-                className="dropdown-item"
-                onClick={() => {
-                  setIsOpen(false);
-                  onOpenProfile();
-                }}>
-
-                <EditIcon />{t('Profile Settings')}
-
-              </button>
-              <button
-                className="dropdown-item"
-                onClick={() => {
-                  setIsOpen(false);
-                  onOpenExport();
-                }}>
-
-                <ExportIcon />{t('Export Account')}
-
-              </button>
               <div className="dropdown-separator" />
               <button
-                className="dropdown-item danger"
+                className="dropdown-item"
                 onClick={() => {
                   setIsOpen(false);
-                  onOpenDeleteAccount();
+                  onOpenAdminPanel();
                 }}>
-
-                <TrashIcon />{t('Delete Account')}
-
+                <UserIcon />{t('Manage Users')}
               </button>
             </>
           }
-          {isGuest && onOpenUpgrade &&
-            <>
-              <button
-                className="dropdown-item"
-                onClick={() => {
-                  setIsOpen(false);
-                  onOpenUpgrade();
-                }}>
-
-                <UpgradeAccountIcon />{t('Upgrade Account')}
-
-              </button>
-              <div className="dropdown-separator" />
-            </>
-          }
+          <div className="dropdown-separator" />
+          <button
+            className="dropdown-item danger"
+            onClick={() => {
+              setIsOpen(false);
+              onOpenDeleteAccount();
+            }}>
+            <TrashIcon />{t('Delete Account')}
+          </button>
           <button
             className="dropdown-item"
             onClick={() => {
               setIsOpen(false);
               onLogout();
             }}>
-
-            {isGuest ?
-              <>
-                <TrashIcon />
-                <span>{t('End Session')}</span>
-              </> :
-
-              <>
-                <LogoutIcon />
-                <span>{t('Logout')}</span>
-              </>
-            }
+            <LogoutIcon />
+            <span>{t('Logout')}</span>
           </button>
         </div>
       }
-    </div>);
-
+    </div>
+  );
 };
 
 export default UserDropdown;
