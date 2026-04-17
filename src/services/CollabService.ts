@@ -526,7 +526,7 @@ class CollabService {
 		const collectionName = `yjs_${documentId}`;
 		const containerId = `${projectId}-${collectionName}`;
 
-		let wasConnected = this.docContainers.has(containerId);
+		const wasConnected = this.docContainers.has(containerId);
 		let container: AnyDocContainer | undefined;
 
 		if (!wasConnected) {

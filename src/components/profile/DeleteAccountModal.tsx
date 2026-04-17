@@ -41,7 +41,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
       }
 
       if (confirmationText !== expectedConfirmationText) {
-        throw new Error(t(`Please type \"{expectedConfirmationText}\" to confirm`, { expectedConfirmationText }));
+        throw new Error(t('Please type \"{expectedConfirmationText}\" to confirm', { expectedConfirmationText }));
       }
 
       const isPasswordValid = await verifyPassword(user.id, currentPassword);
@@ -101,7 +101,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
     localStorage.removeItem(userSecretsKey);
     localStorage.removeItem('texlyre-current-user');
 
-    console.log(t(`Successfully deleted account for user: {userId}`, { userId }));
+    console.log(t('Successfully deleted account for user: {userId}', { userId }));
   };
 
   const handleOpenExport = () => {

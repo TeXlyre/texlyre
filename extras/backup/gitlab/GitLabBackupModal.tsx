@@ -692,8 +692,8 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
             <SettingsModal
                 isOpen={showSettings}
                 onClose={() => setShowSettings(false)}
-                initialCategory={t("Backup")}
-                initialSubcategory={t("GitLab")} />
+                initialCategory={t('Backup')}
+                initialSubcategory={t('GitLab')} />
 
         </>
     );

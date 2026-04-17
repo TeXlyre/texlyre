@@ -86,7 +86,7 @@ class TypstService {
                 return result;
             }
 
-            this.showNotification('info', t(`Compiling Typst to {format}...`, { format: format.toUpperCase() }), operationId, format);
+            this.showNotification('info', t('Compiling Typst to {format}...', { format: format.toUpperCase() }), operationId, format);
 
             const { output, diagnostics } = await this.performCompilationInWorker(
                 normalizedMainFileName,
@@ -116,7 +116,7 @@ class TypstService {
             const result = this.createSuccessResult(output, format, formattedLog);
             await this.saveCompilationOutput(normalizedMainFileName, result);
 
-            this.showNotification('success', t(`Typst {format} compilation completed`, { format: format.toUpperCase() }), operationId, format, 3000);
+            this.showNotification('success', t('Typst {format} compilation completed', { format: format.toUpperCase() }), operationId, format, 3000);
 
             return result;
         } catch (error) {
@@ -577,7 +577,7 @@ class TypstService {
 
     private handleCompilationError(operationId: string, format: TypstOutputFormat, message: string): void {
         this.setStatus('ready');
-        this.showNotification('error', t(`Typst compilation failed: {message}`, { message }), operationId, format, 5000);
+        this.showNotification('error', t('Typst compilation failed: {message}', { message }), operationId, format, 5000);
     }
 
     private showNotification(
@@ -588,7 +588,7 @@ class TypstService {
         duration?: number,
     ): void {
         if (!this.areNotificationsEnabled() ||
-            format.toLowerCase().includes("canvas")) return;
+            format.toLowerCase().includes('canvas')) return;
 
         switch (type) {
             case 'info':

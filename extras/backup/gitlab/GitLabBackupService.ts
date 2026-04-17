@@ -452,7 +452,7 @@ export class GitLabBackupService {
         this.addActivity({
             type: 'backup_start',
             message: localProjectId
-                ? t(`Syncing project: {projectId}`, { projectId: localProjectId })
+                ? t('Syncing project: {projectId}', { projectId: localProjectId })
                 : t('Syncing all projects...'),
         });
         this.notifyListeners();
@@ -772,7 +772,7 @@ export class GitLabBackupService {
 
                     this.addActivity({
                         type: 'import_complete',
-                        message: t(`Auto-imported missing project: {projectName}`, { projectName: projectMetadata.name }),
+                        message: t('Auto-imported missing project: {projectName}', { projectName: projectMetadata.name }),
                     });
                     fileStorageEventEmitter.emitChange();
                 } catch (error) {

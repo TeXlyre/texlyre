@@ -41,7 +41,7 @@ import { UndoManager } from 'yjs';
 
 import { resolveHighlightTheme } from '../../extensions/codemirror/HighlightThemeExtension';
 import { commentSystemExtension } from '../../extensions/codemirror/CommentExtension';
-import { latexTypstBidiIsolates } from "../../extensions/codemirror/BidiExtension";
+import { latexTypstBidiIsolates } from '../../extensions/codemirror/BidiExtension';
 import { searchHighlightExtension } from '../../extensions/codemirror/SearchHighlightExtension';
 import {
     createFilePathAutocompleteExtension,

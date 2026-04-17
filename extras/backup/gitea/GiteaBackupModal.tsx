@@ -686,8 +686,8 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
             <SettingsModal
                 isOpen={showSettings}
                 onClose={() => setShowSettings(false)}
-                initialCategory={t("Backup")}
-                initialSubcategory={t("Gitea")}
+                initialCategory={t('Backup')}
+                initialSubcategory={t('Gitea')}
             />
         </>
     );

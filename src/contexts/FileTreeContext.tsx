@@ -78,11 +78,11 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
     registerSetting({
       id: 'file-tree-filesystem-drag-drop',
-      category: t("Viewers"),
-      subcategory: t("File Explorer"),
+      category: t('Viewers'),
+      subcategory: t('File Explorer'),
       type: 'checkbox',
-      label: t("Enable file system drag and drop"),
-      description: t("Allow dragging files from your file system into the file explorer"),
+      label: t('Enable file system drag and drop'),
+      description: t('Allow dragging files from your file system into the file explorer'),
 
       defaultValue: true,
       onChange: (value) => {
@@ -92,11 +92,11 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
     registerSetting({
       id: 'file-tree-internal-drag-drop',
-      category: t("Viewers"),
-      subcategory: t("File Explorer"),
+      category: t('Viewers'),
+      subcategory: t('File Explorer'),
       type: 'checkbox',
-      label: t("Enable internal (local) drag and drop"),
-      description: t("Allow dragging files and folders within the TeXlyre file explorer to move them"),
+      label: t('Enable internal (local) drag and drop'),
+      description: t('Allow dragging files and folders within the TeXlyre file explorer to move them'),
 
       defaultValue: true,
       onChange: (value) => {

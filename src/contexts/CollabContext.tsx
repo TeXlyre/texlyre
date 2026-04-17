@@ -81,15 +81,15 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 
     registerSetting({
       id: 'collab-provider-type',
-      category: t("Collaboration"),
-      subcategory: t("Real-time Synchronization"),
+      category: t('Collaboration'),
+      subcategory: t('Real-time Synchronization'),
       type: 'select',
-      label: t("Connection provider"),
-      description: t("Choose WebRTC for peer-to-peer or WebSocket for server-based synchronization"),
+      label: t('Connection provider'),
+      description: t('Choose WebRTC for peer-to-peer or WebSocket for server-based synchronization'),
       defaultValue: initialProviderType,
       options: [
-        { label: t("WebRTC (peer-to-peer)"), value: 'webrtc' },
-        { label: t("WebSocket (server)"), value: 'websocket' }
+        { label: t('WebRTC (peer-to-peer)'), value: 'webrtc' },
+        { label: t('WebSocket (server)'), value: 'websocket' }
       ],
       liveUpdate: false,
       onChange: (value) => {
@@ -99,11 +99,11 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 
     registerSetting({
       id: 'collab-signaling-servers',
-      category: t("Collaboration"),
-      subcategory: t("Real-time Synchronization"),
+      category: t('Collaboration'),
+      subcategory: t('Real-time Synchronization'),
       type: 'text',
-      label: t("Signaling servers (WebRTC)"),
-      description: t("Comma-separated list of Yjs WebRTC signaling server URLs"),
+      label: t('Signaling servers (WebRTC)'),
+      description: t('Comma-separated list of Yjs WebRTC signaling server URLs'),
       defaultValue: initialSignalingServers,
       liveUpdate: false,
       onChange: (value) => {
@@ -113,11 +113,11 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 
     registerSetting({
       id: 'collab-websocket-server',
-      category: t("Collaboration"),
-      subcategory: t("Real-time Synchronization"),
+      category: t('Collaboration'),
+      subcategory: t('Real-time Synchronization'),
       type: 'text',
-      label: t("WebSocket server"),
-      description: t("WebSocket server URL for Yjs y-websocket or y/hub connections"),
+      label: t('WebSocket server'),
+      description: t('WebSocket server URL for Yjs y-websocket or y/hub connections'),
       defaultValue: initialWebsocketServer,
       liveUpdate: false,
       onChange: (value) => {
@@ -127,11 +127,11 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 
     registerSetting({
       id: 'collab-awareness-timeout',
-      category: t("Collaboration"),
-      subcategory: t("Real-time Synchronization"),
+      category: t('Collaboration'),
+      subcategory: t('Real-time Synchronization'),
       type: 'number',
-      label: t("Awareness timeout (seconds)"),
-      description: t("How long to wait before considering other users inactive"),
+      label: t('Awareness timeout (seconds)'),
+      description: t('How long to wait before considering other users inactive'),
       defaultValue: initialAwarenessTimeout,
       min: 10,
       max: 300,
@@ -142,11 +142,11 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 
     registerSetting({
       id: 'collab-auto-reconnect',
-      category: t("Collaboration"),
-      subcategory: t("Real-time Synchronization"),
+      category: t('Collaboration'),
+      subcategory: t('Real-time Synchronization'),
       type: 'checkbox',
-      label: t("Auto-reconnect on disconnect"),
-      description: t("Automatically attempt to reconnect when the connection is lost"),
+      label: t('Auto-reconnect on disconnect'),
+      description: t('Automatically attempt to reconnect when the connection is lost'),
       defaultValue: initialAutoReconnect,
       onChange: (value) => {
         setAutoReconnect(value as boolean);

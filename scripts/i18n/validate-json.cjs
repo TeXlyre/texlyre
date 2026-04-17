@@ -7,10 +7,10 @@ function validateJsonFile(filePath) {
     try {
         const rawContent = fs.readFileSync(filePath, 'utf8');
         JSON.parse(rawContent);
-        console.log(`✅ Valid JSON`);
+        console.log('✅ Valid JSON');
         return true;
     } catch (error) {
-        console.error(`\n❌ INVALID JSON`);
+        console.error('\n❌ INVALID JSON');
         console.error(`Error: ${error.message}\n`);
 
         const rawContent = fs.readFileSync(filePath, 'utf8');

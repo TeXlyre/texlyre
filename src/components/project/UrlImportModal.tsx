@@ -55,11 +55,11 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
 
     registerSetting({
       id: 'repository-proxy-url',
-      category: t("Templates"),
-      subcategory: t("URL Repository Import"),
+      category: t('Templates'),
+      subcategory: t('URL Repository Import'),
       type: 'text',
-      label: t("Repository proxy URL"),
-      description: t("Proxy URL to prepend ONLY to repository ZIP downloads to circumvent CORS policy (optional)"),
+      label: t('Repository proxy URL'),
+      description: t('Proxy URL to prepend ONLY to repository ZIP downloads to circumvent CORS policy (optional)'),
       defaultValue: 'https://proxy.texlyre.org/?url=',
       onChange: (value) => {
         setRepositoryProxyUrl(value as string);
@@ -166,7 +166,7 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
                   id="repository-url"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder={"https://github.com/user/repo " + t('or') + " https://example.com/project.zip"}
+                  placeholder={'https://github.com/user/repo ' + t('or') + ' https://example.com/project.zip'}
                   onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()} />
 
               </div>
@@ -375,8 +375,8 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
-        initialCategory={t("Templates")}
-        initialSubcategory={t("URL Repository Import")} />
+        initialCategory={t('Templates')}
+        initialSubcategory={t('URL Repository Import')} />
 
     </>);
 

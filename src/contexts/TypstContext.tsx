@@ -55,41 +55,41 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 
     registerSetting({
       id: 'typst-auto-compile-on-open',
-      category: t("Compilation"),
-      subcategory: t("Typst"),
+      category: t('Compilation'),
+      subcategory: t('Typst'),
       type: 'checkbox',
-      label: t("Auto-compile on project open"),
-      description: t("Automatically compile Typst when opening a project"),
+      label: t('Auto-compile on project open'),
+      description: t('Automatically compile Typst when opening a project'),
       defaultValue: initialAutoCompile
     });
 
     registerSetting({
       id: 'typst-auto-navigate-to-main',
-      category: t("Compilation"),
-      subcategory: t("Typst"),
+      category: t('Compilation'),
+      subcategory: t('Typst'),
       type: 'select',
-      label: t("Auto-navigate to main file on compile"),
-      description: t("Control when to automatically navigate to the main Typst file during compilation"),
+      label: t('Auto-navigate to main file on compile'),
+      description: t('Control when to automatically navigate to the main Typst file during compilation'),
       defaultValue: initialAutoNavigate,
       options: [
-        { label: t("Only when no Typst file is open"), value: 'conditional' },
-        { label: t("Always navigate to main file"), value: 'always' },
-        { label: t("Never navigate to main file"), value: 'never' }]
+        { label: t('Only when no Typst file is open'), value: 'conditional' },
+        { label: t('Always navigate to main file'), value: 'always' },
+        { label: t('Never navigate to main file'), value: 'never' }]
 
     });
 
     registerSetting({
       id: 'typst-default-format',
-      category: t("Compilation"),
-      subcategory: t("Typst"),
+      category: t('Compilation'),
+      subcategory: t('Typst'),
       type: 'select',
-      label: t("Default output format"),
-      description: t("Default format for Typst compilation"),
+      label: t('Default output format'),
+      description: t('Default format for Typst compilation'),
       defaultValue: initialDefaultFormat,
       options: [
-        { label: t("PDF"), value: 'pdf' },
-        { label: t("Canvas (PDF)"), value: 'canvas-pdf' },
-        { label: t("Canvas (SVG)"), value: 'canvas' }
+        { label: t('PDF'), value: 'pdf' },
+        { label: t('Canvas (PDF)'), value: 'canvas-pdf' },
+        { label: t('Canvas (SVG)'), value: 'canvas' }
       ],
       onChange: (value) => {
         setCurrentFormat(value as TypstOutputFormat);
@@ -99,11 +99,11 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 
     registerSetting({
       id: 'typst-notifications',
-      category: t("Compilation"),
-      subcategory: t("Typst"),
+      category: t('Compilation'),
+      subcategory: t('Typst'),
       type: 'checkbox',
-      label: t("Show compilation notifications"),
-      description: t("Display notifications for Typst compilation activities"),
+      label: t('Show compilation notifications'),
+      description: t('Display notifications for Typst compilation activities'),
       defaultValue: true
     });
 

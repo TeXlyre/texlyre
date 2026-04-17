@@ -15,7 +15,7 @@ export const formatLastModified = (timestamp: number | string) => {
 
 	if (diffDays === 0) return t('Today');
 	if (diffDays === 1) return t('Yesterday');
-	if (diffDays < 7) return t(`{count} day ago`, { count: diffDays });
+	if (diffDays < 7) return t('{count} day ago', { count: diffDays });
 	return date.toLocaleDateString(i18next.language);
 };
 
@@ -32,11 +32,11 @@ export const formatTimestamp = (timestamp: number | string): string => {
 	}
 	if (diff < 3600000) {
 		const minutes = Math.floor(diff / 60000);
-		return t(`{count}m ago`, { count: minutes });
+		return t('{count}m ago', { count: minutes });
 	}
 	if (diff < 86400000) {
 		const hours = Math.floor(diff / 3600000);
-		return t(`{count}h ago`, { count: hours });
+		return t('{count}h ago', { count: hours });
 	}
 
 	return new Date(ts).toLocaleDateString(i18next.language);

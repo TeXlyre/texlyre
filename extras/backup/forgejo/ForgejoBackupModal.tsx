@@ -686,8 +686,8 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
             <SettingsModal
                 isOpen={showSettings}
                 onClose={() => setShowSettings(false)}
-                initialCategory={t("Backup")}
-                initialSubcategory={t("Forgejo")}
+                initialCategory={t('Backup')}
+                initialSubcategory={t('Forgejo')}
             />
         </>
     );

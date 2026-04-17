@@ -1,5 +1,5 @@
 // src/extensions/codemirror/BidiExtension.ts
-import { RangeSetBuilder, type Extension, StateField, StateEffect } from "@codemirror/state";
+import { RangeSetBuilder, type Extension, StateField, StateEffect } from '@codemirror/state';
 import {
     Decoration,
     Direction,
@@ -7,9 +7,9 @@ import {
     ViewPlugin,
     ViewUpdate,
     type DecorationSet,
-} from "@codemirror/view";
+} from '@codemirror/view';
 
-import { allBidiPatterns } from "./bidi/patterns";
+import { allBidiPatterns } from './bidi/patterns';
 
 type TextRange = { from: number; to: number };
 
@@ -30,7 +30,7 @@ const mathEditRegionField = StateField.define<TextRange | null>({
 });
 
 const isolate = Decoration.mark({
-    attributes: { style: "unicode-bidi: isolate; direction: ltr;" },
+    attributes: { style: 'unicode-bidi: isolate; direction: ltr;' },
     bidiIsolate: Direction.LTR,
 });
 

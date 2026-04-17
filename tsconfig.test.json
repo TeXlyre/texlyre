@@ -5,18 +5,20 @@
             "jest",
             "@testing-library/jest-dom"
         ],
+        "ignoreDeprecations": "6.0",
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
-        "baseUrl": ".",
+        "moduleResolution": "node16",
+        "allowImportingTsExtensions": false,
         "paths": {
             "@/*": [
-                "src/*"
+                "./src/*"
             ],
             "@src/*": [
-                "src/*"
+                "./src/*"
             ],
             "@tests/*": [
-                "tests/*"
+                "./tests/*"
             ]
         }
     },

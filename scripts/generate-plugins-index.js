@@ -1,14 +1,14 @@
 // scripts/generate-plugins-index.js
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const rootDir = path.join(__dirname, "..");
+const rootDir = path.join(__dirname, '..');
 
 async function loadConfig() {
-    const configPath = path.join(rootDir, "texlyre.config.ts");
+    const configPath = path.join(rootDir, 'texlyre.config.ts');
     const { default: config } = await import(configPath);
     return config;
 }
@@ -55,12 +55,12 @@ async function generatePluginsIndex() {
     const pluginsByType = {};
     const allPluginTypes = Object.keys(texlyreConfig.plugins);
 
-    const srcPluginsDir = path.join(rootDir, "src", "plugins");
-    const rootExtrasDir = path.join(rootDir, "extras");
+    const srcPluginsDir = path.join(rootDir, 'src', 'plugins');
+    const rootExtrasDir = path.join(rootDir, 'extras');
 
     fs.mkdirSync(srcPluginsDir, { recursive: true });
 
-    console.log("Copying extras to src/plugins and fixing import paths...");
+    console.log('Copying extras to src/plugins and fixing import paths...');
     copyAndFixPlugins(rootExtrasDir, srcPluginsDir);
 
     for (const [pluginType, pluginsList] of Object.entries(texlyreConfig.plugins)) {
@@ -82,11 +82,11 @@ async function generatePluginsIndex() {
 // Generated on: ${new Date().toISOString()}
 
 // Import all configured plugins
-${imports.join("\n")}
+${imports.join('\n')}
 
 // Export individual plugins
 export {
-${exports.map((name) => `  ${name}`).join(",\n")}
+${exports.map((name) => `  ${name}`).join(',\n')}
 };
 
 `;
@@ -95,7 +95,7 @@ ${exports.map((name) => `  ${name}`).join(",\n")}
         const plugins = pluginsByType[type] || [];
         content += `// Export ${type} plugins as a group
 export const ${type} = {
-${plugins.map((name) => `  ${name}`).join(",\n")}
+${plugins.map((name) => `  ${name}`).join(',\n')}
 };
 
 `;
@@ -103,11 +103,11 @@ ${plugins.map((name) => `  ${name}`).join(",\n")}
 
     content += `// Export the structured plugins object as default
 export default {
-${allPluginTypes.map(type => `  ${type}`).join(",\n")}
+${allPluginTypes.map(type => `  ${type}`).join(',\n')}
 };
 `;
 
-    const outputPath = path.join(srcPluginsDir, "index.ts");
+    const outputPath = path.join(srcPluginsDir, 'index.ts');
     fs.writeFileSync(outputPath, content);
 
     console.log(`Generated plugins index at ${outputPath}`);

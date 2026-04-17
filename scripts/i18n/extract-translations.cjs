@@ -1,26 +1,26 @@
-const fs = require("node:fs");
-const path = require("node:path");
-const parser = require("@babel/parser");
-const traverse = require("@babel/traverse").default;
-const t = require("@babel/types");
-const { sortLocales } = require("./sort-locales.cjs");
-const { generateBasePlurals } = require("./generate-base-plurals.cjs");
+const fs = require('node:fs');
+const path = require('node:path');
+const parser = require('@babel/parser');
+const traverse = require('@babel/traverse').default;
+const t = require('@babel/types');
+const { sortLocales } = require('./sort-locales.cjs');
+const { generateBasePlurals } = require('./generate-base-plurals.cjs');
 
 const CONFIG = {
-    extensions: [".tsx", ".jsx", ".ts"],
-    excludeDirs: ["node_modules", "dist", "build", ".git"],
-    excludeFiles: ["i18n.ts", "i18n.js"],
+    extensions: ['.tsx', '.jsx', '.ts'],
+    excludeDirs: ['node_modules', 'dist', 'build', '.git'],
+    excludeFiles: ['i18n.ts', 'i18n.js'],
     minTextLength: 2,
-    processAttributes: ["placeholder", "title", "alt", "aria-label"],
+    processAttributes: ['placeholder', 'title', 'alt', 'aria-label'],
     ignorePatterns: [
-        "^\\{.*\\}$",
-        "^https?://",
-        "^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$",
-        "^\\d+(\\.\\d+)?$",
-        "^[A-Z_]+$",
+        '^\\{.*\\}$',
+        '^https?://',
+        '^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$',
+        '^\\d+(\\.\\d+)?$',
+        '^[A-Z_]+$',
     ],
-    excludeComponents: ["style", "script"],
-    excludeVariableNames: ["className", "style", "key", "ref"],
+    excludeComponents: ['style', 'script'],
+    excludeVariableNames: ['className', 'style', 'key', 'ref'],
 };
 
 function normalizeText(text) {
@@ -44,7 +44,7 @@ function shouldTranslate(text) {
 function loadExistingTranslations(outputFile) {
     try {
         if (fs.existsSync(outputFile)) {
-            const content = fs.readFileSync(outputFile, "utf8");
+            const content = fs.readFileSync(outputFile, 'utf8');
             return JSON.parse(content);
         }
     } catch (error) {
@@ -91,7 +91,7 @@ function extractOptionsLabels(optionsNode, translations, pluralKeys) {
 function extractFromRegisterSetting(path, translations, pluralKeys) {
     if (
         t.isIdentifier(path.node.callee) &&
-        path.node.callee.name === "registerSetting" &&
+        path.node.callee.name === 'registerSetting' &&
         path.node.arguments.length > 0
     ) {
         const arg = path.node.arguments[0];
@@ -184,10 +184,10 @@ function extractTranslations(sourceDir, outputFile) {
         fileCount++;
 
         try {
-            const code = fs.readFileSync(filePath, "utf8");
+            const code = fs.readFileSync(filePath, 'utf8');
             const ast = parser.parse(code, {
-                sourceType: "module",
-                plugins: ["jsx", "typescript", "decorators-legacy", "classProperties"],
+                sourceType: 'module',
+                plugins: ['jsx', 'typescript', 'decorators-legacy', 'classProperties'],
             });
 
             const hasRegisterSetting = code.includes('registerSetting');
@@ -289,7 +289,7 @@ function extractTranslations(sourceDir, outputFile) {
             JSON.stringify(
                 {
                     _meta: {
-                        description: "Keys that may need plural forms in translations",
+                        description: 'Keys that may need plural forms in translations',
                         note: "Use format: 'key_one', 'key_few', 'key_many', 'key_other'",
                         example: "For 'Delete {count} Item', create: 'Delete {count} Item_one', 'Delete {count} Item_other'"
                     },
@@ -303,7 +303,7 @@ function extractTranslations(sourceDir, outputFile) {
         console.log(`💾 Plural hints saved to: ${pluralFile}`);
     }
 
-    console.log(`\n✅ Extraction complete!`);
+    console.log('\n✅ Extraction complete!');
     console.log(`📁 Files processed: ${fileCount}`);
     console.log(`📝 Total translations: ${Object.keys(mergedTranslations).length}`);
     console.log(`🆕 New translations: ${newCount}`);
@@ -318,8 +318,8 @@ function extractTranslations(sourceDir, outputFile) {
 }
 
 if (require.main === module) {
-    const sourceDir = process.argv[2] || "./src";
-    const outputFile = process.argv[3] || "./translations/locales/en.json";
+    const sourceDir = process.argv[2] || './src';
+    const outputFile = process.argv[3] || './translations/locales/en.json';
 
     extractTranslations(sourceDir, outputFile);
 }
