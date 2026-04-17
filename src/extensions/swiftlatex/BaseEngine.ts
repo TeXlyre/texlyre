@@ -1,4 +1,4 @@
-// src/extensions/switftlatex/BaseEngine.ts
+// src/extensions/swiftlatex/BaseEngine.ts
 export interface CompileResult {
 	pdf?: Uint8Array;
 	status: number;
