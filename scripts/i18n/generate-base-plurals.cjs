@@ -85,7 +85,7 @@ function generateBasePlurals() {
 
     fs.writeFileSync(baseEnPath, JSON.stringify(sortedBaseEnData, null, 2));
 
-    console.log(`✅ Generated base-en.json`);
+    console.log('✅ Generated base-en.json');
     console.log(`📊 Plural base keys found: ${pluralBaseKeys.size}`);
     console.log(`🆕 Missing keys added: ${addedCount}`);
     console.log(`💾 Output: ${baseEnPath}`);

@@ -1,15 +1,15 @@
-const fs = require("node:fs");
-const path = require("node:path");
-const parser = require("@babel/parser");
-const traverse = require("@babel/traverse").default;
-const t = require("@babel/types");
+const fs = require('node:fs');
+const path = require('node:path');
+const parser = require('@babel/parser');
+const traverse = require('@babel/traverse').default;
+const t = require('@babel/types');
 
 const CONFIG = {
-    extensions: [".tsx", ".jsx"],
-    excludeDirs: ["node_modules", "dist", "build", ".git"],
-    excludeFiles: ["i18n.ts", "i18n.js"],
+    extensions: ['.tsx', '.jsx'],
+    excludeDirs: ['node_modules', 'dist', 'build', '.git'],
+    excludeFiles: ['i18n.ts', 'i18n.js'],
     minTextLength: 3,
-    excludeAttributes: ["className", "style", "key", "ref", "id", "data-", "aria-"],
+    excludeAttributes: ['className', 'style', 'key', 'ref', 'id', 'data-', 'aria-'],
 };
 
 function isExcludedAttribute(attrName) {
@@ -207,10 +207,10 @@ function detectDynamicContent(sourceDir, outputFile) {
         fileCount++;
 
         try {
-            const code = fs.readFileSync(filePath, "utf8");
+            const code = fs.readFileSync(filePath, 'utf8');
             const ast = parser.parse(code, {
-                sourceType: "module",
-                plugins: ["jsx", "typescript", "decorators-legacy", "classProperties"],
+                sourceType: 'module',
+                plugins: ['jsx', 'typescript', 'decorators-legacy', 'classProperties'],
             });
 
             traverse(ast, {
@@ -262,7 +262,7 @@ function detectDynamicContent(sourceDir, outputFile) {
         JSON.stringify(
             {
                 _meta: {
-                    description: "Detected dynamic content that should be converted to i18n",
+                    description: 'Detected dynamic content that should be converted to i18n',
                     filesAnalyzed: fileCount,
                     patternsFound: dynamicPatterns.length,
                     highConfidence: highConfidence.length,
@@ -276,7 +276,7 @@ function detectDynamicContent(sourceDir, outputFile) {
         )
     );
 
-    console.log(`\n✅ Analysis complete!`);
+    console.log('\n✅ Analysis complete!');
     console.log(`📁 Files analyzed: ${fileCount}`);
     console.log(`🔍 Dynamic patterns found: ${dynamicPatterns.length}`);
     console.log(`   High confidence: ${highConfidence.length}`);
@@ -284,7 +284,7 @@ function detectDynamicContent(sourceDir, outputFile) {
     console.log(`💾 Results saved to: ${outputFile}`);
 
     if (highConfidence.length > 0) {
-        console.log(`\n📋 High confidence patterns to convert:`);
+        console.log('\n📋 High confidence patterns to convert:');
         highConfidence.slice(0, 10).forEach(p => {
             console.log(`   ${p.file}:${p.line} [${p.type}]`);
             console.log(`   → "${p.suggested}"`);
@@ -293,8 +293,8 @@ function detectDynamicContent(sourceDir, outputFile) {
 }
 
 if (require.main === module) {
-    const sourceDir = process.argv[2] || "./src";
-    const outputFile = process.argv[3] || "./translations/dynamic-patterns.json";
+    const sourceDir = process.argv[2] || './src';
+    const outputFile = process.argv[3] || './translations/dynamic-patterns.json';
 
     detectDynamicContent(sourceDir, outputFile);
 }

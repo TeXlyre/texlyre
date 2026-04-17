@@ -337,7 +337,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 				if (charMatch) {
 					result.push({
 						type: 'warning',
-						message: t(`Missing character: {missingChar}`, { missingChar: charMatch[1] }),
+						message: t('Missing character: {missingChar}', { missingChar: charMatch[1] }),
 						line: charMatch[2] ? Number.parseInt(charMatch[2], 10) : undefined,
 						file: contextFile
 					});
@@ -356,7 +356,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 				if (fileMatch) {
 					result.push({
 						type: 'error',
-						message: t(`File not found: {missingFile}`, { missingFile: fileMatch[1] }),
+						message: t('File not found: {missingFile}', { missingFile: fileMatch[1] }),
 						line: undefined,
 						file: contextFile
 					});
@@ -417,8 +417,8 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 	return (
 		<div className="latex-visualizer">
 			<PluginHeader
-				fileName={t("LaTeX Log")}
-				filePath={t("LaTeX Compilation Output")}
+				fileName={t('LaTeX Log')}
+				filePath={t('LaTeX Compilation Output')}
 				pluginName={PLUGIN_NAME}
 				pluginVersion={PLUGIN_VERSION}
 				tooltipInfo={tooltipInfo}
@@ -432,12 +432,12 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 						<div>
 							{parsedErrors.length === 0 ?
 								t('No errors or warnings found.') :
-								t(`No {filter} found.`, { filter })}
+								t('No {filter} found.', { filter })}
 						</div>
 						<div className="success-subtitle">
 							{parsedErrors.length === 0 ?
 								t('Compilation appears successful!') :
-								t(`Showing {filter} items only.`, { filter })}
+								t('Showing {filter} items only.', { filter })}
 						</div>
 					</div> :
 
@@ -448,7 +448,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 								className={`error-item ${error.type} ${error.line ? 'clickable' : ''}`}
 								onClick={() => handleErrorClick(error)}
 								title={
-									error.line ? t(`Click to go to line {errorLine}`, { errorLine: error.line }) : undefined
+									error.line ? t('Click to go to line {errorLine}', { errorLine: error.line }) : undefined
 								}>
 
 								<div className="error-header">
@@ -462,7 +462,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 										{error.file &&
 											<span
 												className="error-file"
-												title={t(`File: {errorFile}`, { errorFile: error.file })}>{t('\uD83D\uDCC4')}
+												title={t('File: {errorFile}', { errorFile: error.file })}>{t('\uD83D\uDCC4')}
 
 												{error.file}
 											</span>

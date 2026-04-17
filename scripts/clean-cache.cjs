@@ -1,8 +1,8 @@
 // scripts/clean-cache.cjs
-const { rmSync, existsSync } = require("node:fs");
-const path = require("node:path");
+const { rmSync, existsSync } = require('node:fs');
+const path = require('node:path');
 
-const paths = ["node_modules/.vite", "dist", ".vite"];
+const paths = ['node_modules/.vite', 'dist', '.vite'];
 
 paths.forEach((p) => {
 	if (existsSync(p)) {
@@ -11,4 +11,4 @@ paths.forEach((p) => {
 	}
 });
 
-console.log("Cache cleaned successfully!");
+console.log('Cache cleaned successfully!');

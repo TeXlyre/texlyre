@@ -694,10 +694,10 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
     registerSetting({
       id: 'file-sync-enable',
-      category: t("Collaboration"),
-      subcategory: t("File Synchronization"),
+      category: t('Collaboration'),
+      subcategory: t('File Synchronization'),
       type: 'checkbox',
-      label: t("Enable file synchronization with peers"),
+      label: t('Enable file synchronization with peers'),
       defaultValue: initialEnable,
       onChange: (value) => {
         if (value) enableSync(); else
@@ -707,11 +707,11 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
     registerSetting({
       id: 'file-sync-auto-interval',
-      category: t("Collaboration"),
-      subcategory: t("File Synchronization"),
+      category: t('Collaboration'),
+      subcategory: t('File Synchronization'),
       type: 'number',
-      label: t("Auto-sync interval (seconds)"),
-      description: t("How often to check for file changes and sync"),
+      label: t('Auto-sync interval (seconds)'),
+      description: t('How often to check for file changes and sync'),
       defaultValue: initialAutoInterval,
       min: 5,
       max: 300,
@@ -722,11 +722,11 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
     registerSetting({
       id: 'file-sync-hold-timeout',
-      category: t("Collaboration"),
-      subcategory: t("File Synchronization"),
+      category: t('Collaboration'),
+      subcategory: t('File Synchronization'),
       type: 'number',
-      label: t("Hold signal timeout (seconds)"),
-      description: t("How long to hold a peer before timeout"),
+      label: t('Hold signal timeout (seconds)'),
+      description: t('How long to hold a peer before timeout'),
       defaultValue: initialHoldTimeout,
       min: 10,
       max: 120,
@@ -737,11 +737,11 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
     registerSetting({
       id: 'file-sync-request-timeout',
-      category: t("Collaboration"),
-      subcategory: t("File Synchronization"),
+      category: t('Collaboration'),
+      subcategory: t('File Synchronization'),
       type: 'number',
-      label: t("Request timeout (seconds)"),
-      description: t("How long to wait for file transfer completion"),
+      label: t('Request timeout (seconds)'),
+      description: t('How long to wait for file transfer completion'),
       defaultValue: initialRequestTimeout,
       min: 30,
       max: 300,
@@ -752,17 +752,17 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
     registerSetting({
       id: 'file-sync-conflict-resolution',
-      category: t("Collaboration"),
-      subcategory: t("File Synchronization"),
+      category: t('Collaboration'),
+      subcategory: t('File Synchronization'),
       type: 'select',
-      label: t("Conflict resolution strategy"),
-      description: t("How to handle file conflicts when both local and remote files have changed"),
+      label: t('Conflict resolution strategy'),
+      description: t('How to handle file conflicts when both local and remote files have changed'),
 
       defaultValue: initialConflictResolution,
       options: [
-        { label: t("Prefer Latest (Default)"), value: 'prefer-latest' },
-        { label: t("Prefer Local (Do nothing)"), value: 'prefer-local' },
-        { label: t("Notify of Conflicts"), value: 'notify' }],
+        { label: t('Prefer Latest (Default)'), value: 'prefer-latest' },
+        { label: t('Prefer Local (Do nothing)'), value: 'prefer-local' },
+        { label: t('Notify of Conflicts'), value: 'notify' }],
 
       onChange: (value) => {
         setConflictResolutionStrategy(value as string);
@@ -771,11 +771,11 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
     registerSetting({
       id: 'file-sync-server-url',
-      category: t("Collaboration"),
-      subcategory: t("File Synchronization"),
+      category: t('Collaboration'),
+      subcategory: t('File Synchronization'),
       type: 'text',
-      label: t("FilePizza server URL"),
-      description: t("Server URL for peer-to-peer file transfers"),
+      label: t('FilePizza server URL'),
+      description: t('Server URL for peer-to-peer file transfers'),
       defaultValue: initialServerUrl,
       onChange: (value) => {
         setFileSyncServerUrl(value as string);
@@ -784,11 +784,11 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
     registerSetting({
       id: 'file-sync-notifications',
-      category: t("Collaboration"),
-      subcategory: t("File Synchronization"),
+      category: t('Collaboration'),
+      subcategory: t('File Synchronization'),
       type: 'checkbox',
-      label: t("Show sync notifications"),
-      description: t("Display notifications for file sync activities"),
+      label: t('Show sync notifications'),
+      description: t('Display notifications for file sync activities'),
       defaultValue: initialNotifications,
       onChange: (value) => {
         setSyncNotificationsEnabled(value as boolean);

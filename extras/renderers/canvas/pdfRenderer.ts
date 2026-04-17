@@ -54,10 +54,10 @@ export async function renderPdfPageToCanvas(ctx: PdfRenderContext, pageNumber: n
         const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
         const scaledViewport = page.getViewport({ scale: scale * pixelRatio });
 
-        const off = document.createElement("canvas");
+        const off = document.createElement('canvas');
         off.width = scaledViewport.width;
         off.height = scaledViewport.height;
-        const offCtx = off.getContext("2d");
+        const offCtx = off.getContext('2d');
         if (!offCtx) return;
 
         await page.render({
@@ -65,7 +65,7 @@ export async function renderPdfPageToCanvas(ctx: PdfRenderContext, pageNumber: n
             viewport: scaledViewport
         }).promise;
 
-        const ctx2d = canvas.getContext("2d");
+        const ctx2d = canvas.getContext('2d');
         if (ctx2d) {
             canvas.width = scaledViewport.width;
             canvas.height = scaledViewport.height;
@@ -112,15 +112,15 @@ export async function renderTextLayer(
         textContentCache.set(pageNumber, textContent);
     }
 
+    container.style.width = `${viewport.width}px`;
+    container.style.height = `${viewport.height}px`;
+
     const textLayer = new pdfjsLib.TextLayer({
         textContentSource: textContent,
         container,
         viewport,
     });
     await textLayer.render();
-
-    container.style.setProperty('--scale-factor', String(scale));
-    container.style.setProperty('--total-scale-factor', String(scale));
 
     overlayScaleCache.set(container, scale);
 }

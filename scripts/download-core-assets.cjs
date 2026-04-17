@@ -1,16 +1,16 @@
 // scripts/copy-download-core-assets.cjs
-const fs = require("fs-extra");
-const path = require("node:path");
-const https = require("node:https");
-const JSZip = require("jszip");
+const fs = require('fs-extra');
+const path = require('node:path');
+const https = require('node:https');
+const JSZip = require('jszip');
 
 const ASSETS = [
     {
-        name: "drawio-embed",
-        version: "v29.6.4",
+        name: 'drawio-embed',
+        version: 'v29.6.4',
         url: (version) =>
             `https://github.com/TeXlyre/drawio-embed-mirror/archive/refs/tags/${version}.zip`,
-        dest: path.resolve(__dirname, "../public/core/drawio-embed"),
+        dest: path.resolve(__dirname, '../public/core/drawio-embed'),
         extractPath: (version) =>
             `drawio-embed-mirror-${version.substring(1)}/drawio-embed/`,
     },
@@ -26,11 +26,11 @@ async function downloadFile(url) {
                         .catch(reject);
                 }
                 const chunks = [];
-                response.on("data", (chunk) => chunks.push(chunk));
-                response.on("end", () => resolve(Buffer.concat(chunks)));
-                response.on("error", reject);
+                response.on('data', (chunk) => chunks.push(chunk));
+                response.on('end', () => resolve(Buffer.concat(chunks)));
+                response.on('error', reject);
             })
-            .on("error", reject);
+            .on('error', reject);
     });
 }
 
@@ -45,7 +45,7 @@ async function downloadAndExtract(asset) {
 
     console.log(`Downloading ${asset.name} ${asset.version}...`);
 
-    const url = typeof asset.url === "function" ? asset.url(asset.version) : asset.url;
+    const url = typeof asset.url === 'function' ? asset.url(asset.version) : asset.url;
     const zipBuffer = await downloadFile(url);
 
     console.log(`Extracting ${asset.name}...`);
@@ -64,7 +64,7 @@ async function downloadAndExtract(asset) {
         const destPath = path.join(asset.dest, relativePath);
 
         await fs.ensureDir(path.dirname(destPath));
-        const content = await file.async("nodebuffer");
+        const content = await file.async('nodebuffer');
         await fs.writeFile(destPath, content);
     }
 
@@ -76,9 +76,9 @@ async function downloadCoreAssets() {
         for (const asset of ASSETS) {
             await downloadAndExtract(asset);
         }
-        console.log("\n✅ All core assets ready");
+        console.log('\n✅ All core assets ready');
     } catch (err) {
-        console.error("❌ Error downloading core assets:", err);
+        console.error('❌ Error downloading core assets:', err);
         throw err;
     }
 }

@@ -83,10 +83,10 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 
     registerSetting({
       id: 'language',
-      category: t("Appearance"),
-      subcategory: t("Language"),
+      category: t('Appearance'),
+      subcategory: t('Language'),
       type: 'language-select',
-      label: t("Interface language"),
+      label: t('Interface language'),
       description: (
         <div>
           {t('Select the interface language and view translation coverage')}{' '}
@@ -109,16 +109,16 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 
     registerSetting({
       id: 'text-direction',
-      category: t("Appearance"),
-      subcategory: t("Language"),
+      category: t('Appearance'),
+      subcategory: t('Language'),
       type: 'select',
-      label: t("Text direction"),
-      description: t("Control text direction (Auto follows language)"),
+      label: t('Text direction'),
+      description: t('Control text direction (Auto follows language)'),
       defaultValue: 'auto',
       options: [
-        { label: t("Auto (follows app language)"), value: 'auto' },
-        { label: t("Left-to-Right (LTR)"), value: 'ltr' },
-        { label: t("Right-to-Left (RTL)"), value: 'rtl' }
+        { label: t('Auto (follows app language)'), value: 'auto' },
+        { label: t('Left-to-Right (LTR)'), value: 'ltr' },
+        { label: t('Right-to-Left (RTL)'), value: 'rtl' }
       ],
       onChange: (value) => {
         const currentLangCode = getSetting('language')?.value as string || 'en';

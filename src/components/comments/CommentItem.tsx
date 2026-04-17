@@ -113,7 +113,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
           <button
             className="comment-line-button"
             onClick={handleLineClick}
-            title={t(`Go to line {line}`, { line: comment.line })}>
+            title={t('Go to line {line}', { line: comment.line })}>
             {t('Line {line}', { line: comment.line })}
           </button>
         </div>

@@ -571,7 +571,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
           <button
             className={`${viewMode === 'table' ? 'active' : ''}`}
             onClick={() => setViewMode(viewMode === 'editor' ? 'table' : 'editor')}
-            title={t(`Switch to {viewMode}`, {
+            title={t('Switch to {viewMode}', {
               viewMode: viewMode === 'editor' ? t('Table View') : t('Editor View')
             })}>
 

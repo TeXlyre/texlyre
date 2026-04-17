@@ -126,11 +126,11 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     // Register theme plugin setting (only once initially)
     registerSetting({
       id: 'theme-plugin',
-      category: t("Appearance"),
-      subcategory: t("Theme"),
+      category: t('Appearance'),
+      subcategory: t('Theme'),
       type: 'select',
-      label: t("Layout"),
-      description: t("Select the theme layout to use for TeXlyre"),
+      label: t('Layout'),
+      description: t('Select the theme layout to use for TeXlyre'),
       defaultValue: initialThemePlugin?.id || defaultThemeId,
       options: availableThemes.map((theme) => ({
         label: t(theme.name),
@@ -185,11 +185,11 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
     registerSetting({
       id: 'theme-variant',
-      category: t("Appearance"),
-      subcategory: t("Theme"),
+      category: t('Appearance'),
+      subcategory: t('Theme'),
       type: 'select',
-      label: t("Variant"),
-      description: t("Select the theme variant (color palette)"),
+      label: t('Variant'),
+      description: t('Select the theme variant (color palette)'),
       // Ensure the default value is one of the new options
       defaultValue: defaultVariantForCurrentTheme,
       options: variantOptions,

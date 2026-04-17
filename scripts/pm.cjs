@@ -29,7 +29,7 @@ const result = spawnSync(command, finalArgs, {
 });
 
 if (result.error) {
-    console.error(`Error:`, result.error);
+    console.error('Error:', result.error);
     process.exit(1);
 }
 

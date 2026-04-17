@@ -1,24 +1,24 @@
-const fs = require("node:fs");
-const path = require("node:path");
-const parser = require("@babel/parser");
-const traverse = require("@babel/traverse").default;
-const generate = require("@babel/generator").default;
-const t = require("@babel/types");
-const { validateTransformedCode } = require("./validate-transforms.cjs");
-const { hasTranslationImport, injectImportIntoCode } = require("./import-manager.cjs");
+const fs = require('node:fs');
+const path = require('node:path');
+const parser = require('@babel/parser');
+const traverse = require('@babel/traverse').default;
+const generate = require('@babel/generator').default;
+const t = require('@babel/types');
+const { validateTransformedCode } = require('./validate-transforms.cjs');
+const { hasTranslationImport, injectImportIntoCode } = require('./import-manager.cjs');
 
 const CONFIG = {
-    extensions: [".tsx", ".jsx"],
-    excludeDirs: ["node_modules", "dist", "build", ".git"],
-    excludeFiles: ["i18n.ts", "i18n.js"],
+    extensions: ['.tsx', '.jsx'],
+    excludeDirs: ['node_modules', 'dist', 'build', '.git'],
+    excludeFiles: ['i18n.ts', 'i18n.js'],
     minTextLength: 2,
-    processAttributes: ["placeholder", "title", "alt", "aria-label"],
+    processAttributes: ['placeholder', 'title', 'alt', 'aria-label'],
     ignorePatterns: [
-        "^\\{.*\\}$",
-        "^https?://",
-        "^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$",
-        "^\\d+(\\.\\d+)?$",
-        "^[A-Z_]+$",
+        '^\\{.*\\}$',
+        '^https?://',
+        '^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$',
+        '^\\d+(\\.\\d+)?$',
+        '^[A-Z_]+$',
     ],
     createBackups: true,
     dryRun: false,
@@ -44,7 +44,7 @@ function shouldTranslate(text) {
 
 function createTranslationCall(text) {
     const cleanText = normalizeText(text);
-    return t.callExpression(t.identifier("t"), [t.stringLiteral(cleanText)]);
+    return t.callExpression(t.identifier('t'), [t.stringLiteral(cleanText)]);
 }
 
 function isAlreadyWrappedInTranslation(path) {
@@ -54,14 +54,14 @@ function isAlreadyWrappedInTranslation(path) {
         const expression = parent.expression;
 
         if (t.isCallExpression(expression)) {
-            if (t.isIdentifier(expression.callee) && expression.callee.name === "t") {
+            if (t.isIdentifier(expression.callee) && expression.callee.name === 't') {
                 return true;
             }
         }
     }
 
     if (t.isCallExpression(parent)) {
-        if (t.isIdentifier(parent.callee) && parent.callee.name === "t") {
+        if (t.isIdentifier(parent.callee) && parent.callee.name === 't') {
             return true;
         }
     }
@@ -75,11 +75,11 @@ function applyTranslations(filePath, options = {}) {
     console.log(`Processing ${filePath}...`);
 
     try {
-        const code = fs.readFileSync(filePath, "utf8");
+        const code = fs.readFileSync(filePath, 'utf8');
 
         const ast = parser.parse(code, {
-            sourceType: "module",
-            plugins: ["jsx", "typescript", "decorators-legacy", "classProperties"],
+            sourceType: 'module',
+            plugins: ['jsx', 'typescript', 'decorators-legacy', 'classProperties'],
             tokens: true,
         });
 
@@ -125,7 +125,7 @@ function applyTranslations(filePath, options = {}) {
 
             CallExpression(path) {
                 if (t.isIdentifier(path.node.callee) &&
-                    (path.node.callee.name === "t" || path.node.callee.name === "i")) {
+                    (path.node.callee.name === 't' || path.node.callee.name === 'i')) {
                     path.skip();
                 }
             },
@@ -137,7 +137,7 @@ function applyTranslations(filePath, options = {}) {
                 {
                     retainLines: true,
                     compact: false,
-                    jsescOption: { quotes: "single" },
+                    jsescOption: { quotes: 'single' },
                 },
                 code,
             );

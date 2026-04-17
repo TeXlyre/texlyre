@@ -87,9 +87,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   const getDropdownDisplayText = () => {
     if (project.lastOpenedFilePath) {
       const fileName = project.lastOpenedFilePath.split('/').pop() || t('Unknown file');
-      return t(`Last: {fileName}`, { fileName });
+      return t('Last: {fileName}', { fileName });
     } else if (project.lastOpenedDocId) {
-      return t(`Last: Document {docId}`, { docId: project.lastOpenedDocId.slice(0, 8) + '...' });
+      return t('Last: Document {docId}', { docId: project.lastOpenedDocId.slice(0, 8) + '...' });
     }
     return t('Open Project');
   };
@@ -176,8 +176,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       </p>
 
       <div className="project-meta">
-        <span>{t(`Created: {createdAt}`, { createdAt: formatDate(project.createdAt) })}</span>
-        <span>{t(`Last Modified: {lastModified}`, { lastModified: formatLastModified(project.updatedAt) })}</span>
+        <span>{t('Created: {createdAt}', { createdAt: formatDate(project.createdAt) })}</span>
+        <span>{t('Last Modified: {lastModified}', { lastModified: formatLastModified(project.updatedAt) })}</span>
       </div>
 
       {!isSelectionMode &&
