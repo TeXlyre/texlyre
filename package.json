@@ -103,7 +103,7 @@
 		"mathlive": "^0.108.2",
 		"mime": "^4.0.1",
 		"nanoid": "^5.0.5",
-		"next": "^16.1.6",
+		"next": "^16.2.4",
 		"onnxruntime-web": "^1.24.3",
 		"pdfjs-dist": "5.4.296",
 		"peerjs": "^1.5.5",
@@ -132,7 +132,7 @@
 		"whatwg-url": "^16.0.1",
 		"tough-cookie": "^6.0.1",
 		"glob": "^13.0.6",
-  		"inflight": "npm:inflight-lru@^1.0.0"
+		"inflight": "npm:inflight-lru@^1.0.0"
 	},
 	"pnpm": {
 		"overrides": {
