@@ -23,6 +23,8 @@ import { fileStorageService } from '../../services/FileStorageService';
 import { pdfWindowService } from '../../services/PdfWindowService';
 import type { DocumentList } from '../../types/documents';
 import type { YjsDocUrl } from '../../types/yjs';
+import type { TypstOutputFormat } from '../../types/typst';
+import type { LaTeXEngine } from '../../types/latex';
 import BackupModal from '../backup/BackupModal';
 import BackupStatusIndicator from '../backup/BackupStatusIndicator';
 import ChatPanel from '../chat/ChatPanel';
@@ -49,7 +51,6 @@ import KeyboardShortcutsModal from '../common/KeyboardShortcutsModal';
 import PrivacyModal from '../common/PrivacyModal';
 import GuestUpgradeBanner from '../auth/GuestUpgradeBanner';
 import GuestUpgradeModal from '../auth/GuestUpgradeModal';
-import { TypstOutputFormat } from '../../types/typst';
 
 interface EditorAppProps {
   docUrl: YjsDocUrl;
@@ -105,7 +106,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
     description: '',
     type: 'latex' as 'latex' | 'typst',
     mainFile: undefined as string | undefined,
-    latexEngine: undefined as ('pdftex' | 'xetex' | 'luatex') | undefined,
+    latexEngine: undefined as LaTeXEngine | undefined,
     typstEngine: undefined as string | undefined,
     typstOutputFormat: undefined as (TypstOutputFormat) | undefined
   });
@@ -705,10 +706,10 @@ const EditorApp: React.FC<EditorAppProps> = (props) => {
           <FileSyncProvider docUrl={props.docUrl}>
             <LaTeXProvider>
               <TypstProvider>
-                 <SourceMapProvider>
-                <ContentFormatterProvider>
-                  <EditorAppView {...props} />
-                </ContentFormatterProvider>
+                <SourceMapProvider>
+                  <ContentFormatterProvider>
+                    <EditorAppView {...props} />
+                  </ContentFormatterProvider>
                 </SourceMapProvider>
               </TypstProvider>
             </LaTeXProvider>

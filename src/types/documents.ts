@@ -1,6 +1,7 @@
 // src/types/documents.ts
 import type { ChatMessage } from './chat';
 import type { TypstPdfOptions, TypstOutputFormat } from './typst';
+import type { LaTeXEngine } from './latex';
 
 export interface Document {
 	id: string;
@@ -18,7 +19,7 @@ export interface DocumentList {
 		description: string;
 		type?: 'latex' | 'typst';
 		mainFile?: string;
-		latexEngine?: 'pdftex' | 'xetex' | 'luatex';
+		latexEngine?: LaTeXEngine;
 		typstEngine?: string;
 		typstOutputFormat?: TypstOutputFormat;
 		latexAutoCompileOnSave?: boolean;

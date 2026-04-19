@@ -2,13 +2,12 @@
 import { t } from '@/i18n';
 import { nanoid } from 'nanoid';
 
-import type {
-	BaseEngine,
-	CompileResult,
-} from '../extensions/switftlatex/BaseEngine';
+import type { BaseEngine, CompileResult } from '../extensions/switftlatex/BaseEngine';
 import { DvipdfmxEngine } from '../extensions/switftlatex/DvipdfmxEngine';
 import { PdfTeXEngine } from '../extensions/switftlatex/PdfTeXEngine';
 import { XeTeXEngine } from '../extensions/switftlatex/XeTeXEngine';
+import { busyTexService } from '../extensions/texlyre-busytex/BusyTeXService';
+import type { BusyTeXEngineType } from '../extensions/texlyre-busytex/BusyTeXEngine';
 import type { FileNode } from '../types/files';
 import { getMimeType, isBinaryFile, isTemporaryFile, toArrayBuffer } from '../utils/fileUtils';
 import { downloadFiles } from '../utils/zipUtils';
@@ -17,16 +16,20 @@ import { fileStorageService } from './FileStorageService';
 import { notificationService } from './NotificationService';
 import { cleanContent } from '../utils/fileCommentUtils';
 
-type EngineType = 'pdftex' | 'xetex' | 'luatex';
+type SwiftEngineType = 'pdftex' | 'xetex' | 'luatex';
+export type EngineType = SwiftEngineType | BusyTeXEngineType;
+
+function isBusyTeXEngine(engine: EngineType): engine is BusyTeXEngineType {
+	return engine.startsWith('busytex-');
+}
 
 class LaTeXService {
-	private engines: Map<EngineType | 'dvipdfmx', BaseEngine> = new Map();
+	private engines: Map<SwiftEngineType | 'dvipdfmx', BaseEngine> = new Map();
 	private currentEngineType: EngineType = 'pdftex';
 	private statusListeners: Set<() => void> = new Set();
 	private texliveEndpoint = '';
 	private storeCache = true;
 	private storeWorkingDirectory = false;
-	// Flatten main directory causes the main file's directory to be the root of the compilation, Forced with true for now.
 	private flattenMainDirectory = true;
 	private processedNodes: FileNode[] = [];
 	private sourceFileTimestamps: Map<string, number> = new Map();
@@ -47,19 +50,42 @@ class LaTeXService {
 
 	setStoreWorkingDirectory(store: boolean): void {
 		this.storeWorkingDirectory = store;
+		busyTexService.setStoreWorkingDirectory(store);
 	}
 
 	setFlattenMainDirectory(flatten: boolean): void {
 		this.flattenMainDirectory = flatten;
 	}
 
+	setBusyTeXBundles(bundles: string[]): void {
+		busyTexService.setSelectedBundles(bundles);
+	}
+
+	setBusyTeXEndpoint(endpoint: string): void {
+		busyTexService.setTexliveEndpoint(endpoint);
+	}
+
+	async isBusyTeXBundleCached(bundleId: string): Promise<boolean> {
+		return busyTexService.isBundleCached(bundleId);
+	}
+
+	async deleteBusyTeXBundle(bundleId: string): Promise<void> {
+		await busyTexService.deleteBundle(bundleId);
+	}
+
 	async initialize(engineType: EngineType = 'pdftex'): Promise<void> {
 		this.currentEngineType = engineType;
-		const engine = this.engines.get(engineType);
+
+		if (isBusyTeXEngine(engineType)) {
+			await busyTexService.initialize(engineType);
+			this.notifyStatusChange();
+			return;
+		}
+
+		const engine = this.engines.get(engineType as SwiftEngineType);
 		if (!engine) {
 			throw new Error(t('Unsupported engine type: {engineType}', { engineType }));
 		}
-
 		try {
 			await engine.initialize();
 			engine.setTexliveEndpoint(this.texliveEndpoint);
@@ -71,20 +97,14 @@ class LaTeXService {
 	}
 
 	async setEngine(engineType: EngineType): Promise<void> {
-		if (this.currentEngineType === engineType) {
-			return;
-		}
-
+		if (this.currentEngineType === engineType) return;
 		this.currentEngineType = engineType;
 		await this.initialize(engineType);
 	}
 
-	getCurrentEngine(): BaseEngine {
-		const engine = this.engines.get(this.currentEngineType);
-		if (!engine) {
-			throw new Error(`Engine ${this.currentEngineType} not found`);
-		}
-		return engine;
+	getCurrentEngine(): BaseEngine | null {
+		if (isBusyTeXEngine(this.currentEngineType)) return null;
+		return this.engines.get(this.currentEngineType as SwiftEngineType) ?? null;
 	}
 
 	getCurrentEngineType(): EngineType {
@@ -92,33 +112,39 @@ class LaTeXService {
 	}
 
 	getSupportedEngines(): EngineType[] {
-		return Array.from(this.engines.keys()).filter(
-			(key) => key !== 'dvipdfmx',
-		) as EngineType[];
+		const swiftEngines: EngineType[] = ['pdftex', 'xetex'];
+		const busyEngines: EngineType[] = ['busytex-pdftex', 'busytex-xetex', 'busytex-luatex'];
+		return [...swiftEngines, ...busyEngines];
 	}
 
 	getStatus(): string {
+		if (isBusyTeXEngine(this.currentEngineType)) {
+			return busyTexService.getStatus();
+		}
 		try {
-			const engine = this.getCurrentEngine();
-			return engine.getStatus();
+			return this.getCurrentEngine()?.getStatus() ?? 'unloaded';
 		} catch {
 			return 'unloaded';
 		}
 	}
 
 	isReady(): boolean {
+		if (isBusyTeXEngine(this.currentEngineType)) {
+			return busyTexService.isReady();
+		}
 		try {
-			const engine = this.getCurrentEngine();
-			return engine.isReady();
+			return this.getCurrentEngine()?.isReady() ?? false;
 		} catch {
 			return false;
 		}
 	}
 
 	isCompiling(): boolean {
+		if (isBusyTeXEngine(this.currentEngineType)) {
+			return busyTexService.isCompiling();
+		}
 		try {
-			const engine = this.getCurrentEngine();
-			return engine.isCompiling();
+			return this.getCurrentEngine()?.isCompiling() ?? false;
 		} catch {
 			return false;
 		}
@@ -127,14 +153,15 @@ class LaTeXService {
 	addStatusListener(listener: () => void): () => void {
 		this.statusListeners.add(listener);
 
-		const engines = Array.from(this.engines.values());
-		const engineUnsubscribers = engines.map((engine) =>
-			engine.addStatusListener(() => this.notifyStatusChange()),
+		const swiftUnsubs = Array.from(this.engines.values()).map((engine) =>
+			engine.addStatusListener(() => this.notifyStatusChange())
 		);
+		const busyUnsub = busyTexService.addStatusListener(() => this.notifyStatusChange());
 
 		return () => {
 			this.statusListeners.delete(listener);
-			engineUnsubscribers.forEach((unsubscribe) => unsubscribe());
+			swiftUnsubs.forEach((u) => u());
+			busyUnsub();
 		};
 	}
 
@@ -142,81 +169,98 @@ class LaTeXService {
 		this.statusListeners.forEach((listener) => listener());
 	}
 
-	private getCacheDirectory(engineType: EngineType | 'dvipdfmx'): string {
-		return engineType === 'dvipdfmx' ? '/.texlyre_cache/__dvi' : '/.texlyre_cache/__tex';
+	async compileLaTeX(
+		mainFileName: string,
+		fileTree: FileNode[],
+		format: string = 'pdf'
+	): Promise<CompileResult> {
+		const operationId = `latex-compile-${nanoid()}`;
+
+		if (isBusyTeXEngine(this.currentEngineType)) {
+			return this.compileBusyTeX(mainFileName, fileTree, format, operationId);
+		}
+
+		return this.compileSwiftLaTeX(mainFileName, fileTree, format, operationId);
 	}
 
-	private async processDviToPdf(
-		xdvData: Uint8Array,
+	private async compileBusyTeX(
 		mainFileName: string,
-		originalLog: string,
+		fileTree: FileNode[],
+		format: string,
+		operationId: string
 	): Promise<CompileResult> {
-		const dvipdfmxEngine = this.engines.get('dvipdfmx');
-		if (!dvipdfmxEngine) {
-			throw new Error(t('DvipdfmxEngine not available'));
+		if (!busyTexService.isReady()) {
+			this.showLoadingNotification(t('Initializing BusyTeX engine...'), operationId, format);
+			await busyTexService.initialize(this.currentEngineType as BusyTeXEngineType);
 		}
-
-		if (!dvipdfmxEngine.isReady()) {
-			await dvipdfmxEngine.initialize();
-		}
-		dvipdfmxEngine.setTexliveEndpoint(this.texliveEndpoint);
-
-		const originalEngineType = this.currentEngineType;
-		this.currentEngineType = 'dvipdfmx' as any;
 
 		try {
-			await this.writeNodesToMemFS(dvipdfmxEngine, mainFileName, 'dvipdfmx');
+			this.showLoadingNotification(t('Compiling LaTeX document...'), operationId, format);
 
-			const normalizedMainFile = mainFileName.replace(/^\/+/, '');
-			const baseFileName = normalizedMainFile.replace(/\.(tex|ltx)$/i, '');
-			const dviFileName = `${baseFileName}.xdv`;
+			const allNodes = this.collectAllFiles(fileTree);
+			const nodesWithContent = await this.loadFileContents(allNodes);
 
-			const dirPath = dviFileName.substring(0, dviFileName.lastIndexOf('/'));
-			if (dirPath) {
-				this.createDirectoryStructure(dvipdfmxEngine, `/work/${dirPath}`);
+			const result = await busyTexService.compile(mainFileName, nodesWithContent);
+
+			if (result.status === 0 && result.pdf && result.pdf.length > 0) {
+				this.showSuccessNotification(t('LaTeX compilation completed successfully'), {
+					operationId,
+					duration: 3000,
+					format,
+				});
+			} else {
+				this.showErrorNotification(t('LaTeX compilation failed'), {
+					operationId,
+					duration: 5000,
+					format,
+				});
 			}
 
-			console.log(
-				`[LaTeXService] Writing XDV file: ${dviFileName}, size: ${xdvData.length} bytes`,
-			);
-			dvipdfmxEngine.writeMemFSFile(`/work/${dviFileName}`, xdvData);
-			dvipdfmxEngine.setEngineMainFile(dviFileName);
-
-			const result = await dvipdfmxEngine.compile(dviFileName, []);
-
-			try {
-				const texFiles = await dvipdfmxEngine.dumpDirectory('/tex');
-				const workFiles = await dvipdfmxEngine.dumpDirectory('/work');
-			} catch (error) {
-				console.log('Error dumping dvipdfmx directories:', error);
-			}
-
-			if (result.status === 0 && this.storeCache) {
-				await this.storeCacheDirectory(dvipdfmxEngine);
-			}
-
-			return {
-				pdf: result.pdf,
-				status: result.status,
-				log:
-					result.status === 0
-						? originalLog
-						: `${originalLog}\n\nDvipdfmx conversion error:\n${result.log}`,
-			};
+			return result;
 		} catch (error) {
-			return {
-				pdf: undefined,
-				status: -1,
-				log: `${originalLog}\n\nDvipdfmx conversion failed: ${error.message}`,
-			};
-		} finally {
-			this.currentEngineType = originalEngineType;
+			if (busyTexService.getStatus() === 'error' || busyTexService.getStatus() === 'unloaded') {
+				this.showInfoNotification(t('Compilation stopped by user'), {
+					operationId,
+					duration: 2000,
+					format,
+				});
+				return { pdf: undefined, status: -1, log: 'Compilation failed or was stopped by user.' };
+			}
+			this.showErrorNotification(
+				`Compilation error: ${error instanceof Error ? error.message : t('Unknown error')}`,
+				{ operationId, duration: 5000, format }
+			);
+			throw error;
 		}
 	}
 
-	async compileLaTeX(mainFileName: string, fileTree: FileNode[], format: string = 'pdf'): Promise<CompileResult> {
+	private async loadFileContents(nodes: FileNode[]): Promise<FileNode[]> {
+		const result: FileNode[] = [];
+		for (const node of nodes) {
+			if (node.content !== undefined) {
+				result.push(node);
+				continue;
+			}
+			try {
+				const raw = await fileStorageService.getFile(node.id);
+				if (raw?.content) {
+					result.push({ ...node, content: raw.content });
+				}
+			} catch {
+				// skip unreadable files
+			}
+		}
+		return result;
+	}
+
+	private async compileSwiftLaTeX(
+		mainFileName: string,
+		fileTree: FileNode[],
+		format: string,
+		operationId: string
+	): Promise<CompileResult> {
 		const engine = this.getCurrentEngine();
-		const operationId = `latex-compile-${nanoid()}`;
+		if (!engine) throw new Error('No SwiftLaTeX engine available');
 
 		if (!engine.isReady()) {
 			this.showLoadingNotification(t('Initializing LaTeX engine...'), operationId, format);
@@ -256,7 +300,6 @@ class LaTeXService {
 				});
 			}
 
-			// engine.flushCache();
 			return result;
 		} catch (error) {
 			if (this.getStatus() === 'error') {
@@ -265,14 +308,71 @@ class LaTeXService {
 					duration: 2000,
 					format,
 				});
-				return { pdf: null, status: -1, log: 'Compilation failed or was stopped by user.' };
+				return { pdf: undefined, status: -1, log: 'Compilation failed or was stopped by user.' };
 			}
-			this.showErrorNotification(`Compilation error: ${error instanceof Error ? error.message : t('Unknown error')}`, {
+			this.showErrorNotification(
+				`Compilation error: ${error instanceof Error ? error.message : t('Unknown error')}`,
+				{ operationId, duration: 5000, format }
+			);
+			throw error;
+		}
+	}
+
+	async clearCacheDirectories(): Promise<void> {
+		const operationId = `latex-clear-cache-${nanoid()}`;
+		try {
+			this.showLoadingNotification(t('Clearing LaTeX cache...'), operationId);
+
+			const existingFiles = await fileStorageService.getAllFiles();
+			const cacheFiles = existingFiles.filter(
+				(file) => isTemporaryFile(file.path) && !file.isDeleted
+			);
+
+			if (cacheFiles.length > 0) {
+				await fileStorageService.batchDeleteFiles(
+					cacheFiles.map((f) => f.id),
+					{ showDeleteDialog: false, hardDelete: true }
+				);
+			}
+
+			try {
+				this.getCurrentEngine()?.flushCache();
+			} catch {
+				// non-fatal
+			}
+
+			this.showSuccessNotification(t('LaTeX cache cleared successfully'), {
 				operationId,
-				duration: 5000,
-				format,
+				duration: 2000,
+			});
+		} catch (error) {
+			console.error('Error clearing cache directories:', error);
+			this.showErrorNotification(t('Failed to clear LaTeX cache'), {
+				operationId,
+				duration: 3000,
 			});
 			throw error;
+		}
+	}
+
+	async clearCacheAndCompile(
+		mainFileName: string,
+		fileTree: FileNode[],
+		format: string = 'pdf'
+	): Promise<CompileResult> {
+		await this.clearCacheDirectories();
+		return this.compileLaTeX(mainFileName, fileTree, format);
+	}
+
+	stopCompilation(): void {
+		if (isBusyTeXEngine(this.currentEngineType)) {
+			busyTexService.stopCompilation();
+			return;
+		}
+		try {
+			this.getCurrentEngine()?.stopCompilation();
+		} catch (error) {
+			console.warn('Error stopping compilation:', error);
 		}
 	}
 
@@ -280,36 +380,96 @@ class LaTeXService {
 		mainFileName: string,
 		fileTree: FileNode[],
 		options: {
-			engine?: 'pdftex' | 'xetex' | 'luatex';
+			engine?: EngineType;
 			format?: 'pdf' | 'dvi';
 			includeLog?: boolean;
 			includeDvi?: boolean;
 			includeBbl?: boolean;
 		} = {}
 	): Promise<void> {
+		if (isBusyTeXEngine(options.engine ?? this.currentEngineType)) {
+			// BusyTeX export: compile and download directly
+			await this.exportBusyTeX(mainFileName, fileTree, options);
+			return;
+		}
+		await this.exportSwiftLaTeX(mainFileName, fileTree, options);
+	}
+
+	private async exportBusyTeX(
+		mainFileName: string,
+		fileTree: FileNode[],
+		options: { format?: 'pdf' | 'dvi'; includeLog?: boolean }
+	): Promise<void> {
+		const operationId = `latex-export-${nanoid()}`;
+		this.showLoadingNotification(t('Compiling for export...'), operationId);
+
+		try {
+			const allNodes = this.collectAllFiles(fileTree);
+			const nodesWithContent = await this.loadFileContents(allNodes);
+			const result = await busyTexService.compile(mainFileName, nodesWithContent);
+
+			if (result.status === 0 && result.pdf) {
+				const baseName = this.getBaseName(mainFileName);
+				const files: Array<{ content: Uint8Array; name: string; mimeType: string }> = [
+					{ content: result.pdf, name: `${baseName}.pdf`, mimeType: 'application/pdf' },
+				];
+				if (options.includeLog) {
+					files.push({
+						content: new TextEncoder().encode(result.log),
+						name: `${baseName}.log`,
+						mimeType: 'text/plain',
+					});
+				}
+				await downloadFiles(files, baseName);
+				this.showSuccessNotification(t('Export completed successfully'), {
+					operationId,
+					duration: 2000,
+				});
+			} else {
+				this.showErrorNotification(t('Export failed'), { operationId, duration: 3000 });
+			}
+		} catch (error) {
+			this.showErrorNotification(
+				`Export error: ${error instanceof Error ? error.message : t('Unknown error')}`,
+				{ operationId, duration: 5000 }
+			);
+			throw error;
+		}
+	}
+
+	// ── Forwarded SwiftLaTeX export (original exportDocument body) ────────────
+	private async exportSwiftLaTeX(
+		mainFileName: string,
+		fileTree: FileNode[],
+		options: {
+			engine?: EngineType;
+			format?: 'pdf' | 'dvi';
+			includeLog?: boolean;
+			includeDvi?: boolean;
+			includeBbl?: boolean;
+		}
+	): Promise<void> {
 		const {
 			engine: exportEngine,
 			format = 'pdf',
 			includeLog = false,
 			includeDvi = false,
-			includeBbl = false
+			includeBbl = false,
 		} = options;
 
 		const operationId = `latex-export-${nanoid()}`;
-
 		const originalEngine = this.currentEngineType;
-		const targetEngine = exportEngine || this.currentEngineType;
-
+		const targetEngine = (exportEngine as SwiftEngineType) || (this.currentEngineType as SwiftEngineType);
 		const originalStoreWorkingDirectory = this.storeWorkingDirectory;
-		if (includeBbl) {
-			this.storeWorkingDirectory = true;
-		}
+
+		if (includeBbl) this.storeWorkingDirectory = true;
 
 		if (targetEngine !== this.currentEngineType) {
 			await this.setEngine(targetEngine);
 		}
 
 		const engine = this.getCurrentEngine();
+		if (!engine) throw new Error('No SwiftLaTeX engine for export');
 
 		if (!engine.isReady()) {
 			this.showLoadingNotification(t('Initializing LaTeX engine...'), operationId);
@@ -336,57 +496,36 @@ class LaTeXService {
 				const files: Array<{ content: Uint8Array; name: string; mimeType: string }> = [];
 
 				if (format === 'pdf' && result.pdf) {
-					files.push({
-						content: result.pdf,
-						name: `${baseName}.pdf`,
-						mimeType: 'application/pdf'
-					});
-
+					files.push({ content: result.pdf, name: `${baseName}.pdf`, mimeType: 'application/pdf' });
 					if (includeDvi && xdvData) {
-						files.push({
-							content: xdvData,
-							name: `${baseName}.xdv`,
-							mimeType: 'application/x-dvi'
-						});
+						files.push({ content: xdvData, name: `${baseName}.xdv`, mimeType: 'application/x-dvi' });
 					}
 				} else if (format === 'dvi' && xdvData) {
-					files.push({
-						content: xdvData,
-						name: `${baseName}.xdv`,
-						mimeType: 'application/x-dvi'
-					});
+					files.push({ content: xdvData, name: `${baseName}.xdv`, mimeType: 'application/x-dvi' });
 				}
 
 				if (includeLog) {
-					const logContent = new TextEncoder().encode(result.log);
 					files.push({
-						content: logContent,
+						content: new TextEncoder().encode(result.log),
 						name: `${baseName}.log`,
-						mimeType: 'text/plain'
+						mimeType: 'text/plain',
 					});
 				}
 
 				if (includeBbl) {
 					await this.storeOutputDirectories(engine);
 					const bblFile = await this.extractBblFile(baseName);
-					if (bblFile) {
-						files.push(bblFile);
-					}
+					if (bblFile) files.push(bblFile);
 				}
 
-				if (files.length > 0) {
-					await downloadFiles(files, baseName);
-				}
+				if (files.length > 0) await downloadFiles(files, baseName);
 
 				this.showSuccessNotification(t('Export completed successfully'), {
 					operationId,
-					duration: 2000
+					duration: 2000,
 				});
 			} else {
-				this.showErrorNotification(t('Export failed'), {
-					operationId,
-					duration: 3000
-				});
+				this.showErrorNotification(t('Export failed'), { operationId, duration: 3000 });
 			}
 
 			engine.flushCache();
@@ -398,147 +537,73 @@ class LaTeXService {
 			throw error;
 		} finally {
 			this.storeWorkingDirectory = originalStoreWorkingDirectory;
-
-			if (targetEngine !== originalEngine) {
-				await this.setEngine(originalEngine);
-			}
+			if (targetEngine !== originalEngine) await this.setEngine(originalEngine);
 		}
 	}
 
-	private async extractBblFile(baseName: string): Promise<{ content: Uint8Array; name: string; mimeType: string } | null> {
-		const workDirectory = '/.texlyre_src/__work';
-
-		const tryPaths = [
-			`${workDirectory}/${baseName}.bbl`,
-			`${workDirectory}/_${baseName}.bbl`
-		];
-
-		for (const bblPath of tryPaths) {
-			try {
-				const bblFile = await fileStorageService.getFileByPath(bblPath, true);
-
-				if (bblFile?.content) {
-					const content = typeof bblFile.content === 'string'
-						? new TextEncoder().encode(bblFile.content)
-						: new Uint8Array(bblFile.content);
-
-					return {
-						content,
-						name: bblPath.split('/').pop() || `${baseName}.bbl`,
-						mimeType: 'text/plain'
-					};
-				}
-			} catch (error) {
-				continue;
-			}
-		}
-
-		try {
-			const bblFiles = await fileStorageService.getFilesByPath(
-				`${workDirectory}/`,
-				true,
-				{
-					fileExtension: '.bbl',
-					excludeDirectories: true
-				}
-			);
-
-			if (bblFiles.length > 0) {
-				console.log(`Found ${bblFiles.length} BBL file(s) in __work directory, using first one`);
-				const firstBblFile = bblFiles[0];
-
-				if (firstBblFile.content) {
-					const content = typeof firstBblFile.content === 'string'
-						? new TextEncoder().encode(firstBblFile.content)
-						: new Uint8Array(firstBblFile.content);
-
-					const fileName = firstBblFile.path.split('/').pop() || `${baseName}.bbl`;
-
-					return {
-						content,
-						name: fileName,
-						mimeType: 'text/plain'
-					};
-				}
-			}
-		} catch (error) {
-			console.warn('Error searching for BBL files in __work directory:', error);
-		}
-
-		return null;
+	private getCacheDirectory(engineType: SwiftEngineType | 'dvipdfmx'): string {
+		return engineType === 'dvipdfmx' ? '/.texlyre_cache/__dvi' : '/.texlyre_cache/__tex';
 	}
 
-	private getBaseName(filePath: string): string {
-		const fileName = filePath.split('/').pop() || filePath;
-		return fileName.includes('.') ? fileName.split('.').slice(0, -1).join('.') : fileName;
-	}
-
-	async clearCacheDirectories(): Promise<void> {
-		const operationId = `latex-clear-cache-${nanoid()}`;
-
-		try {
-			this.showLoadingNotification(t('Clearing LaTeX cache...'), operationId);
-
-			const existingFiles = await fileStorageService.getAllFiles();
-			const cacheFiles = existingFiles.filter(
-				(file) =>
-					(isTemporaryFile(file.path)) &&
-					!file.isDeleted,
-			);
-
-			if (cacheFiles.length > 0) {
-				const fileIds = cacheFiles.map((file) => file.id);
-				await fileStorageService.batchDeleteFiles(fileIds, {
-					showDeleteDialog: false,
-					hardDelete: true,
-				});
-				console.log(`[LaTeXService] Hard deleted ${cacheFiles.length} cache and source files`);
-			}
-
-			try {
-				const engine = this.getCurrentEngine();
-				engine.flushCache();
-			} catch (error) {
-				console.warn('Error flushing engine cache:', error);
-			}
-
-			this.showSuccessNotification(t('LaTeX cache cleared successfully'), {
-				operationId,
-				duration: 2000,
-			});
-		} catch (error) {
-			console.error('Error clearing cache directories:', error);
-			this.showErrorNotification(t('Failed to clear LaTeX cache'), {
-				operationId,
-				duration: 3000,
-			});
-			throw error;
-		}
-	}
-
-	async clearCacheAndCompile(mainFileName: string, fileTree: FileNode[], format: string = 'pdf'): Promise<CompileResult> {
-		await this.clearCacheDirectories();
-		return this.compileLaTeX(mainFileName, fileTree, format);
-	}
-
-	private async prepareFileNodes(
+	private async processDviToPdf(
+		xdvData: Uint8Array,
 		mainFileName: string,
-		fileTree: FileNode[],
-	): Promise<void> {
-		const allNodes = this.collectAllFiles(fileTree);
+		originalLog: string,
+	): Promise<CompileResult> {
+		const dvipdfmxEngine = this.engines.get('dvipdfmx');
+		if (!dvipdfmxEngine) throw new Error(t('DvipdfmxEngine not available'));
 
-		this.buildSourceFileTimestamps(allNodes);
+		if (!dvipdfmxEngine.isReady()) await dvipdfmxEngine.initialize();
+		dvipdfmxEngine.setTexliveEndpoint(this.texliveEndpoint);
 
-		if (this.storeCache) {
-			await this.loadAndValidateCachedNodes(allNodes);
+		const originalEngineType = this.currentEngineType;
+		this.currentEngineType = 'dvipdfmx' as any;
+
+		try {
+			await this.writeNodesToMemFS(dvipdfmxEngine, mainFileName, 'dvipdfmx');
+
+			const normalizedMainFile = mainFileName.replace(/^\/+/, '');
+			const baseFileName = normalizedMainFile.replace(/\.(tex|ltx)$/i, '');
+			const dviFileName = `${baseFileName}.xdv`;
+			const dirPath = dviFileName.substring(0, dviFileName.lastIndexOf('/'));
+			if (dirPath) this.createDirectoryStructure(dvipdfmxEngine, `/work/${dirPath}`);
+
+			dvipdfmxEngine.writeMemFSFile(`/work/${dviFileName}`, xdvData);
+			dvipdfmxEngine.setEngineMainFile(dviFileName);
+
+			const result = await dvipdfmxEngine.compile(dviFileName, []);
+
+			if (result.status === 0 && this.storeCache) {
+				await this.storeCacheDirectory(dvipdfmxEngine);
+			}
+
+			return {
+				pdf: result.pdf,
+				status: result.status,
+				log: result.status === 0
+					? originalLog
+					: `${originalLog}\n\nDvipdfmx conversion error:\n${result.log}`,
+			};
+		} catch (error) {
+			return {
+				pdf: undefined,
+				status: -1,
+				log: `${originalLog}\n\nDvipdfmx conversion failed: ${error.message}`,
+			};
+		} finally {
+			this.currentEngineType = originalEngineType;
 		}
+	}
 
+	private async prepareFileNodes(mainFileName: string, fileTree: FileNode[]): Promise<void> {
+		const allNodes = this.collectAllFiles(fileTree);
+		this.buildSourceFileTimestamps(allNodes);
+		if (this.storeCache) await this.loadAndValidateCachedNodes(allNodes);
 		this.processedNodes = this.preprocessNodes(allNodes, mainFileName);
 	}
 
 	private buildSourceFileTimestamps(nodes: FileNode[]): void {
 		this.sourceFileTimestamps.clear();
-
 		for (const node of nodes) {
 			if (node.type === 'file' && !isTemporaryFile(node.path)) {
 				this.sourceFileTimestamps.set(node.path, node.lastModified || 0);
@@ -549,7 +614,7 @@ class LaTeXService {
 	private async loadAndValidateCachedNodes(nodes: FileNode[]): Promise<void> {
 		try {
 			const existingFiles = await fileStorageService.getAllFiles();
-			const cacheDirectory = this.getCacheDirectory(this.currentEngineType);
+			const cacheDirectory = this.getCacheDirectory(this.currentEngineType as SwiftEngineType);
 			const cachedFiles = existingFiles.filter(
 				(file) =>
 					file.path.startsWith(`${cacheDirectory}/`) &&
@@ -558,7 +623,6 @@ class LaTeXService {
 			);
 
 			const validCachedFiles: FileNode[] = [];
-
 			for (const cachedFile of cachedFiles) {
 				if (await this.isCacheEntryValid(cachedFile)) {
 					validCachedFiles.push(cachedFile);
@@ -570,8 +634,6 @@ class LaTeXService {
 					nodes.push(validCache);
 				}
 			}
-
-			console.log(`[LaTeXService] Loaded ${validCachedFiles.length} valid cached files for ${this.currentEngineType}`);
 		} catch (error) {
 			console.error('Error loading and validating cached files:', error);
 		}
@@ -580,14 +642,8 @@ class LaTeXService {
 	private async isCacheEntryValid(cachedFile: FileNode): Promise<boolean> {
 		const maxAge = 24 * 60 * 60 * 1000;
 		const now = Date.now();
-
-		if (!cachedFile.lastModified || now - cachedFile.lastModified > maxAge) {
-			return false;
-		}
-
-		const latestSourceTimestamp = Math.max(
-			...Array.from(this.sourceFileTimestamps.values()),
-		);
+		if (!cachedFile.lastModified || now - cachedFile.lastModified > maxAge) return false;
+		const latestSourceTimestamp = Math.max(...Array.from(this.sourceFileTimestamps.values()));
 		return cachedFile.lastModified >= latestSourceTimestamp;
 	}
 
@@ -606,14 +662,12 @@ class LaTeXService {
 
 		for (const node of nodes) {
 			if (node.type !== 'file') continue;
-
 			const processedNode = { ...node };
 
 			if (node.path === mainFileName) {
 				if (!mainFileName.startsWith('/') || mainFileName === `/${node.name}`) {
 					processedNode.path = node.name;
 				} else {
-					// const randomPrefix = `${Math.random().toString(36).substring(2, 8)}_`;
 					const randomPrefix = '_';
 					processedNode.path = `${randomPrefix}${node.name}`;
 					processedNode.name = `${randomPrefix}${node.name}`;
@@ -621,16 +675,12 @@ class LaTeXService {
 				mainFileProcessed = true;
 			} else {
 				const normalizedPath = node.path.replace(/^\/+/, '');
-
 				if (isTemporaryFile(normalizedPath)) {
 					processedNode.path = normalizedPath;
 				} else if (this.flattenMainDirectory && mainFileDirectory) {
 					const mainDirWithSlash = `${mainFileDirectory}/`;
 					if (normalizedPath.startsWith(mainDirWithSlash)) {
-						const relativePath = normalizedPath.substring(
-							mainDirWithSlash.length,
-						);
-						processedNode.path = relativePath;
+						processedNode.path = normalizedPath.substring(mainDirWithSlash.length);
 					} else {
 						processedNode.path = normalizedPath;
 					}
@@ -652,42 +702,31 @@ class LaTeXService {
 	private async writeNodesToMemFS(
 		engine: BaseEngine,
 		mainFileName: string,
-		engineType?: EngineType | 'dvipdfmx',
+		engineType?: SwiftEngineType | 'dvipdfmx',
 	): Promise<void> {
-		const currentEngineType = engineType || this.currentEngineType;
+		const currentEngineType = (engineType || this.currentEngineType) as SwiftEngineType | 'dvipdfmx';
 		const cacheDirectory = this.getCacheDirectory(currentEngineType);
 		const cacheNodes = this.processedNodes.filter((node) =>
-			node.path.startsWith(`${cacheDirectory.substring(1)}/`),
+			node.path.startsWith(`${cacheDirectory.substring(1)}/`)
 		);
-		const workNodes = this.processedNodes.filter(
-			(node) => !isTemporaryFile(node.path),
-		);
+		const workNodes = this.processedNodes.filter((node) => !isTemporaryFile(node.path));
 
 		const workDirectories = new Set<string>();
 		const texDirectories = new Set<string>();
 
 		for (const node of workNodes) {
 			const dirPath = node.path.substring(0, node.path.lastIndexOf('/'));
-			if (dirPath) {
-				workDirectories.add(dirPath);
-			}
+			if (dirPath) workDirectories.add(dirPath);
 		}
 
 		for (const node of cacheNodes) {
 			const cleanPath = node.path.replace(`${cacheDirectory.substring(1)}/`, '');
 			const dirPath = cleanPath.substring(0, cleanPath.lastIndexOf('/'));
-			if (dirPath) {
-				texDirectories.add(dirPath);
-			}
+			if (dirPath) texDirectories.add(dirPath);
 		}
 
-		for (const dir of workDirectories) {
-			this.createDirectoryStructure(engine, `/work/${dir}`);
-		}
-
-		for (const dir of texDirectories) {
-			this.createDirectoryStructure(engine, `/work/${dir}`);
-		}
+		for (const dir of workDirectories) this.createDirectoryStructure(engine, `/work/${dir}`);
+		for (const dir of texDirectories) this.createDirectoryStructure(engine, `/work/${dir}`);
 
 		for (const node of workNodes) {
 			try {
@@ -697,10 +736,7 @@ class LaTeXService {
 					if (typeof cleanedContent === 'string') {
 						engine.writeMemFSFile(`/work/${node.path}`, cleanedContent);
 					} else {
-						engine.writeMemFSFile(
-							`/work/${node.path}`,
-							new Uint8Array(cleanedContent),
-						);
+						engine.writeMemFSFile(`/work/${node.path}`, new Uint8Array(cleanedContent));
 					}
 				}
 			} catch (error) {
@@ -716,10 +752,7 @@ class LaTeXService {
 					if (typeof fileContent === 'string') {
 						engine.writeMemFSFile(`/work/${cleanPath}`, fileContent);
 					} else {
-						engine.writeMemFSFile(
-							`/work/${cleanPath}`,
-							new Uint8Array(fileContent),
-						);
+						engine.writeMemFSFile(`/work/${cleanPath}`, new Uint8Array(fileContent));
 					}
 				}
 			} catch (error) {
@@ -731,25 +764,14 @@ class LaTeXService {
 		const mainFileNode = workNodes.find(
 			(node) =>
 				node.path === normalizedMainFile ||
-				node.path.endsWith(normalizedMainFile.split('/').pop() || ''),
+				node.path.endsWith(normalizedMainFile.split('/').pop() || '')
 		);
 
-		if (mainFileNode) {
-			engine.setEngineMainFile(mainFileNode.path);
-		} else {
-			engine.setEngineMainFile(normalizedMainFile);
-		}
-
-		console.log(
-			`[LaTeXService] Written ${workNodes.length} work files and ${cacheNodes.length} cache files to MemFS`,
-		);
+		engine.setEngineMainFile(mainFileNode ? mainFileNode.path : normalizedMainFile);
 	}
 
 	private async storeOutputDirectories(engine: BaseEngine): Promise<void> {
-		if (this.storeCache) {
-			await this.storeCacheDirectory(engine);
-		}
-
+		if (this.storeCache) await this.storeCacheDirectory(engine);
 		if (this.storeWorkingDirectory) {
 			await this.cleanupDirectory('/.texlyre_src/__work');
 			await this.storeWorkDirectory(engine);
@@ -759,7 +781,7 @@ class LaTeXService {
 	private async storeCacheDirectory(engine: BaseEngine): Promise<void> {
 		try {
 			const texFiles = await engine.dumpDirectory('/tex');
-			const cacheDirectory = this.getCacheDirectory(this.currentEngineType);
+			const cacheDirectory = this.getCacheDirectory(this.currentEngineType as SwiftEngineType);
 			await this.batchStoreDirectoryContents(texFiles, cacheDirectory);
 		} catch (error) {
 			console.error('Error saving cache directory:', error);
@@ -769,12 +791,8 @@ class LaTeXService {
 	private async storeWorkDirectory(engine: BaseEngine): Promise<void> {
 		try {
 			const workFiles = await engine.dumpDirectory('/work');
-			const filteredWorkFiles =
-				await this.filterWorkFilesExcludingCache(workFiles);
-			await this.batchStoreDirectoryContents(
-				filteredWorkFiles,
-				'/.texlyre_src/__work',
-			);
+			const filteredWorkFiles = await this.filterWorkFilesExcludingCache(workFiles);
+			await this.batchStoreDirectoryContents(filteredWorkFiles, '/.texlyre_src/__work');
 		} catch (error) {
 			console.error('Error saving work directory:', error);
 		}
@@ -784,21 +802,18 @@ class LaTeXService {
 		[key: string]: ArrayBuffer;
 	}): Promise<{ [key: string]: ArrayBuffer }> {
 		const filtered: { [key: string]: ArrayBuffer } = {};
-
 		try {
 			const existingFiles = await fileStorageService.getAllFiles();
-			const cacheDirectory = this.getCacheDirectory(this.currentEngineType);
-			const cacheFiles = existingFiles.filter(
-				(file) =>
-					file.path.startsWith(`${cacheDirectory}/`) &&
-					file.type === 'file' &&
-					!file.isDeleted,
-			);
-
+			const cacheDirectory = this.getCacheDirectory(this.currentEngineType as SwiftEngineType);
 			const cachePaths = new Set(
-				cacheFiles.map((file) =>
-					file.path.replace(cacheDirectory, ''),
-				),
+				existingFiles
+					.filter(
+						(file) =>
+							file.path.startsWith(`${cacheDirectory}/`) &&
+							file.type === 'file' &&
+							!file.isDeleted,
+					)
+					.map((file) => file.path.replace(cacheDirectory, ''))
 			);
 
 			for (const [workPath, content] of Object.entries(workFiles)) {
@@ -811,7 +826,6 @@ class LaTeXService {
 			console.error('Error filtering work files:', error);
 			return workFiles;
 		}
-
 		return filtered;
 	}
 
@@ -828,22 +842,15 @@ class LaTeXService {
 			const storagePath = originalPath.replace(/^\/(tex|work)/, baseDir);
 			const dirPath = storagePath.substring(0, storagePath.lastIndexOf('/'));
 			const fileName = storagePath.split('/').pop()!;
+			if (dirPath !== baseDir && dirPath) directoriesToCreate.add(dirPath);
 
-			if (dirPath !== baseDir && dirPath) {
-				directoriesToCreate.add(dirPath);
-			}
-
-			const existingFile = await fileStorageService.getFileByPath(
-				storagePath,
-				true,
-			);
-
+			const existingFile = await fileStorageService.getFileByPath(storagePath, true);
 			filesToStore.push({
 				id: existingFile?.id || nanoid(),
 				name: fileName,
 				path: storagePath,
 				type: 'file',
-				content: content,
+				content,
 				lastModified: Date.now(),
 				size: content.byteLength,
 				mimeType: getMimeType(fileName),
@@ -854,19 +861,15 @@ class LaTeXService {
 		}
 
 		await this.batchCreateDirectories(Array.from(directoriesToCreate));
-
 		if (filesToStore.length > 0) {
 			await fileStorageService.batchStoreFiles(filesToStore, {
 				showConflictDialog: false,
 				preserveTimestamp: true,
 			});
-			console.log(`[LaTeXService] Batch stored ${filesToStore.length} files to ${baseDir}`);
 		}
 	}
 
-	private async batchCreateDirectories(
-		directoryPaths: string[],
-	): Promise<void> {
+	private async batchCreateDirectories(directoryPaths: string[]): Promise<void> {
 		const directoriesToCreate: FileNode[] = [];
 		const existingFiles = await fileStorageService.getAllFiles();
 		const existingPaths = new Set(existingFiles.map((file) => file.path));
@@ -883,10 +886,9 @@ class LaTeXService {
 
 		for (const dirPath of allPaths) {
 			if (!existingPaths.has(dirPath)) {
-				const dirName = dirPath.split('/').pop()!;
 				directoriesToCreate.push({
 					id: nanoid(),
-					name: dirName,
+					name: dirPath.split('/').pop()!,
 					path: dirPath,
 					type: 'directory',
 					lastModified: Date.now(),
@@ -909,7 +911,6 @@ class LaTeXService {
 				const fileName = mainFile.split('/').pop() || mainFile;
 				const baseName = fileName.split('.').slice(0, -1).join('.');
 				const pdfFileName = `${baseName}.pdf`;
-
 				outputFiles.push({
 					id: nanoid(),
 					name: pdfFileName,
@@ -926,13 +927,9 @@ class LaTeXService {
 
 			const logFile = await this.createCompilationLogFile(mainFile, result.log);
 			outputFiles.push(logFile);
-
 			await this.ensureOutputDirectoriesExist();
-
 			if (outputFiles.length > 0) {
-				await fileStorageService.batchStoreFiles(outputFiles, {
-					showConflictDialog: false,
-				});
+				await fileStorageService.batchStoreFiles(outputFiles, { showConflictDialog: false });
 			}
 		} catch (error) {
 			console.error('Error saving compilation output:', error);
@@ -943,14 +940,11 @@ class LaTeXService {
 		try {
 			await this.ensureOutputDirectoriesExist();
 			const logFile = await this.createCompilationLogFile(mainFile, log);
-			await fileStorageService.batchStoreFiles([logFile], {
-				showConflictDialog: false,
-			});
+			await fileStorageService.batchStoreFiles([logFile], { showConflictDialog: false });
 		} catch (error) {
 			console.error('Error saving compilation log:', error);
 		}
 	}
-
 
 	private async cleanupDirectory(directoryPath: string): Promise<void> {
 		try {
@@ -958,33 +952,23 @@ class LaTeXService {
 			const filesToCleanup = existingFiles.filter(
 				(file) => file.path.startsWith(`${directoryPath}/`) && !file.isDeleted,
 			);
-
 			if (filesToCleanup.length > 0) {
-				const fileIds = filesToCleanup.map((file) => file.id);
-				await fileStorageService.batchDeleteFiles(fileIds, {
+				await fileStorageService.batchDeleteFiles(filesToCleanup.map((f) => f.id), {
 					showDeleteDialog: false,
 					hardDelete: true,
 				});
-				console.log(
-					`[LaTeXService] Cleaned up ${filesToCleanup.length} files from ${directoryPath}`,
-				);
 			}
 		} catch (error) {
 			console.error(`Error cleaning up directory ${directoryPath}:`, error);
 		}
 	}
 
-	private async createCompilationLogFile(
-		mainFile: string,
-		log: string,
-	): Promise<FileNode> {
+	private async createCompilationLogFile(mainFile: string, log: string): Promise<FileNode> {
 		const fileName = mainFile.split('/').pop() || mainFile;
 		const baseName = fileName.split('.').slice(0, -1).join('.');
 		const logFileName = `${baseName}.log`;
-
 		const encoder = new TextEncoder();
 		const logContent = encoder.encode(log).buffer;
-
 		return {
 			id: nanoid(),
 			name: logFileName,
@@ -1000,26 +984,22 @@ class LaTeXService {
 	}
 
 	private async loadSourceMap(engine: BaseEngine, mainFileName: string): Promise<void> {
-    try {
-        const baseName = this.getBaseName(mainFileName);
-        const workFiles = await engine.dumpDirectory('/work');
-
-        const synctexKey = Object.keys(workFiles).find((key) =>
-            key.endsWith(`${baseName}.synctex.gz`) || key.endsWith(`${baseName}.synctex`)
-        );
-
-        if (!synctexKey) {
-            latexSourceMapService.clear();
-            return;
-        }
-
-        const bytes = new Uint8Array(workFiles[synctexKey]);
-        latexSourceMapService.loadFromBytes(bytes);
-    } catch (error) {
-        console.error('[LaTeXService] Failed to load source map:', error);
-        latexSourceMapService.clear();
-    }
-}
+		try {
+			const baseName = this.getBaseName(mainFileName);
+			const workFiles = await engine.dumpDirectory('/work');
+			const synctexKey = Object.keys(workFiles).find(
+				(key) => key.endsWith(`${baseName}.synctex.gz`) || key.endsWith(`${baseName}.synctex`)
+			);
+			if (!synctexKey) {
+				latexSourceMapService.clear();
+				return;
+			}
+			latexSourceMapService.loadFromBytes(new Uint8Array(workFiles[synctexKey]));
+		} catch (error) {
+			console.error('[LaTeXService] Failed to load source map:', error);
+			latexSourceMapService.clear();
+		}
+	}
 
 	private async ensureOutputDirectoriesExist(): Promise<void> {
 		const requiredDirectories = [
@@ -1030,57 +1010,39 @@ class LaTeXService {
 			'/.texlyre_cache/__tex',
 			'/.texlyre_cache/__dvi',
 		];
-
 		const directoriesToCreate: FileNode[] = [];
 		const existingFiles = await fileStorageService.getAllFiles();
 		const existingPaths = new Set(existingFiles.map((file) => file.path));
-
 		for (const dirPath of requiredDirectories) {
 			if (!existingPaths.has(dirPath)) {
-				const dirName = dirPath.split('/').pop()!;
 				directoriesToCreate.push({
 					id: nanoid(),
-					name: dirName,
+					name: dirPath.split('/').pop()!,
 					path: dirPath,
 					type: 'directory',
 					lastModified: Date.now(),
 				});
 			}
 		}
-
 		if (directoriesToCreate.length > 0) {
-			await fileStorageService.batchStoreFiles(directoriesToCreate, {
-				showConflictDialog: false,
-			});
+			await fileStorageService.batchStoreFiles(directoriesToCreate, { showConflictDialog: false });
 		}
 	}
 
 	private collectAllFiles(nodes: FileNode[]): FileNode[] {
 		const result: FileNode[] = [];
-
 		for (const node of nodes) {
-			if (node.type === 'file') {
-				result.push(node);
-			}
-			if (node.children && node.children.length > 0) {
-				result.push(...this.collectAllFiles(node.children));
-			}
+			if (node.type === 'file') result.push(node);
+			if (node.children?.length) result.push(...this.collectAllFiles(node.children));
 		}
-
 		return result;
 	}
 
-	private async getFileContent(
-		node: FileNode,
-	): Promise<ArrayBuffer | string | null> {
-		if (node.content !== undefined) {
-			return node.content;
-		}
+	private async getFileContent(node: FileNode): Promise<ArrayBuffer | string | null> {
+		if (node.content !== undefined) return node.content;
 		try {
 			const rawFile = await fileStorageService.getFile(node.id);
-			if (rawFile?.content) {
-				return rawFile.content;
-			}
+			if (rawFile?.content) return rawFile.content;
 		} catch (error) {
 			console.error('Error retrieving file content:', error);
 		}
@@ -1088,48 +1050,64 @@ class LaTeXService {
 	}
 
 	private createDirectoryStructure(engine: BaseEngine, dirPath: string): void {
-		if (!dirPath || dirPath === '') return;
-
+		if (!dirPath) return;
 		try {
-			const normalizedPath = dirPath.replace(/\\/g, '/');
-			const parts = normalizedPath.split('/').filter((part) => part.length > 0);
-			// remove /work/ prefix if it exists
-			if (parts.length > 0 && parts[0] === 'work') {
-				parts.shift();
-			}
+			const parts = dirPath.replace(/\\/g, '/').split('/').filter(Boolean);
+			if (parts[0] === 'work') parts.shift();
 			if (parts.length === 0) return;
 
 			let currentPath = '';
-
 			for (const part of parts) {
-				if (currentPath) {
-					currentPath += `/${part}`;
-				} else {
-					currentPath = part;
-				}
-
-				try {
-					engine.makeMemFSFolder(currentPath);
-				} catch (_e) { }
+				currentPath = currentPath ? `${currentPath}/${part}` : part;
+				try { engine.makeMemFSFolder(currentPath); } catch { }
 			}
 		} catch (error) {
 			console.warn(`Error in directory creation: ${error.message}`);
 		}
 	}
 
-	stopCompilation(): void {
-		try {
-			const engine = this.getCurrentEngine();
-			engine.stopCompilation();
-		} catch (error) {
-			console.warn('Error stopping compilation:', error);
+	private getBaseName(filePath: string): string {
+		const fileName = filePath.split('/').pop() || filePath;
+		return fileName.includes('.') ? fileName.split('.').slice(0, -1).join('.') : fileName;
+	}
+
+	private async extractBblFile(baseName: string): Promise<{ content: Uint8Array; name: string; mimeType: string } | null> {
+		const workDirectory = '/.texlyre_src/__work';
+		for (const bblPath of [`${workDirectory}/${baseName}.bbl`, `${workDirectory}/_${baseName}.bbl`]) {
+			try {
+				const bblFile = await fileStorageService.getFileByPath(bblPath, true);
+				if (bblFile?.content) {
+					const content = typeof bblFile.content === 'string'
+						? new TextEncoder().encode(bblFile.content)
+						: new Uint8Array(bblFile.content as ArrayBuffer);
+					return { content, name: bblPath.split('/').pop() || `${baseName}.bbl`, mimeType: 'text/plain' };
+				}
+			} catch { continue; }
 		}
+
+		try {
+			const bblFiles = await fileStorageService.getFilesByPath(
+				`${workDirectory}/`, true, { fileExtension: '.bbl', excludeDirectories: true }
+			);
+			if (bblFiles.length > 0 && bblFiles[0].content) {
+				const content = typeof bblFiles[0].content === 'string'
+					? new TextEncoder().encode(bblFiles[0].content)
+					: new Uint8Array(bblFiles[0].content as ArrayBuffer);
+				return { content, name: bblFiles[0].path.split('/').pop() || `${baseName}.bbl`, mimeType: 'text/plain' };
+			}
+		} catch { }
+
+		return null;
 	}
 
 	async reinitializeCurrentEngine(): Promise<void> {
+		if (isBusyTeXEngine(this.currentEngineType)) {
+			busyTexService.terminate();
+			await busyTexService.initialize(this.currentEngineType as BusyTeXEngineType);
+			return;
+		}
 		try {
-			const engine = this.getCurrentEngine();
-			await engine.reinitialize();
+			await this.getCurrentEngine()?.reinitialize();
 		} catch (error) {
 			console.error('Failed to reinitialize engine:', error);
 			throw error;
@@ -1137,62 +1115,41 @@ class LaTeXService {
 	}
 
 	showLoadingNotification(message: string, operationId?: string, format?: string): void {
-		if (this.areNotificationsEnabled() &&
-			!format?.toLowerCase().includes('canvas')) {
+		if (this.areNotificationsEnabled() && !format?.toLowerCase().includes('canvas')) {
 			notificationService.showLoading(message, operationId);
 		}
 	}
 
 	showSuccessNotification(
 		message: string,
-		options: {
-			operationId?: string;
-			duration?: number;
-			data?: Record<string, any>;
-			format?: string;
-		} = {},
+		options: { operationId?: string; duration?: number; data?: Record<string, any>; format?: string } = {}
 	): void {
-		if (this.areNotificationsEnabled() &&
-			!options.format?.toLowerCase().includes('canvas')) {
+		if (this.areNotificationsEnabled() && !options.format?.toLowerCase().includes('canvas')) {
 			notificationService.showSuccess(message, options);
 		}
 	}
 
 	showErrorNotification(
 		message: string,
-		options: {
-			operationId?: string;
-			duration?: number;
-			data?: Record<string, any>;
-			format?: string;
-		} = {},
+		options: { operationId?: string; duration?: number; data?: Record<string, any>; format?: string } = {}
 	): void {
-		if (this.areNotificationsEnabled() &&
-			!options.format?.toLowerCase().includes('canvas')) {
+		if (this.areNotificationsEnabled() && !options.format?.toLowerCase().includes('canvas')) {
 			notificationService.showError(message, options);
 		}
 	}
 
 	showInfoNotification(
 		message: string,
-		options: {
-			operationId?: string;
-			duration?: number;
-			data?: Record<string, any>;
-			format?: string;
-		} = {},
+		options: { operationId?: string; duration?: number; data?: Record<string, any>; format?: string } = {}
 	): void {
-		if (this.areNotificationsEnabled() &&
-			!options.format?.toLowerCase().includes('canvas')) {
+		if (this.areNotificationsEnabled() && !options.format?.toLowerCase().includes('canvas')) {
 			notificationService.showInfo(message, options);
 		}
 	}
 
 	private areNotificationsEnabled(): boolean {
 		const userId = localStorage.getItem('texlyre-current-user');
-		const storageKey = userId
-			? `texlyre-user-${userId}-settings`
-			: 'texlyre-settings';
+		const storageKey = userId ? `texlyre-user-${userId}-settings` : 'texlyre-settings';
 		try {
 			const settings = JSON.parse(localStorage.getItem(storageKey) || '{}');
 			return settings['latex-notifications'] !== false;

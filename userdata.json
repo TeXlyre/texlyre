@@ -3,6 +3,10 @@
   "settings": {
     "bibtex-viewer-auto-tidy": false,
     "bibtex-viewer-tidy-options": "standard",
+    "canvas-renderer-annotations": false,
+    "canvas-renderer-enable": true,
+    "canvas-renderer-initial-zoom": "200",
+    "canvas-renderer-text-selection": false,
     "collab-auto-reconnect": false,
     "collab-awareness-timeout": 30,
     "collab-provider-type": "webrtc",
@@ -34,6 +38,7 @@
     "latex-store-cache": true,
     "latex-store-working-directory": false,
     "latex-texlive-endpoint": "https://texlive.texlyre.org",
+    "latex-busytex-endpoint": "https://texlive2026.texlyre.org",
     "pdf-renderer-annotations": true,
     "pdf-renderer-enable": true,
     "pdf-renderer-initial-zoom": "200",

@@ -8,6 +8,7 @@ import { useCollab } from '../../hooks/useCollab';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useLaTeX } from '../../hooks/useLaTeX';
 import { useProperties } from '../../hooks/useProperties';
+import type { LaTeXEngine } from '../../types/latex';
 import type { DocumentList } from '../../types/documents';
 import type { FileNode } from '../../types/files';
 import { isLatexFile, isTemporaryFile } from '../../utils/fileUtils';
@@ -25,6 +26,17 @@ interface LaTeXExportButtonProps {
     useSharedSettings?: boolean;
 }
 
+const SWIFT_ENGINES: Array<{ label: string; value: LaTeXEngine }> = [
+    { label: 'pdfTeX (SwiftLaTeX)', value: 'pdftex' },
+    { label: 'XeTeX (SwiftLaTeX)', value: 'xetex' },
+];
+
+const BUSYTEX_ENGINES: Array<{ label: string; value: LaTeXEngine }> = [
+    { label: 'pdfTeX (BusyTeX)', value: 'busytex-pdftex' },
+    { label: 'XeTeX (BusyTeX)', value: 'busytex-xetex' },
+    { label: 'LuaTeX (BusyTeX)', value: 'busytex-luatex' },
+];
+
 const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
     className = '',
     selectedDocId,
@@ -41,7 +53,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
     const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
     const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
     const [availableTexFiles, setAvailableTexFiles] = useState<string[]>([]);
-    const [selectedEngine, setSelectedEngine] = useState<'pdftex' | 'xetex' | 'luatex'>('pdftex');
+    const [selectedEngine, setSelectedEngine] = useState<LaTeXEngine>('pdftex');
     const [selectedFormat, setSelectedFormat] = useState<'pdf' | 'dvi'>('pdf');
     const [includeLog, setIncludeLog] = useState(false);
     const [includeDvi, setIncludeDvi] = useState(false);
@@ -52,6 +64,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 
     const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
     const effectiveMainFile = projectMainFile || userSelectedMainFile || autoMainFile;
+    const isBusyTeX = selectedEngine.startsWith('busytex-');
 
     useEffect(() => {
         if (propertiesRegistered.current) return;
@@ -110,29 +123,12 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
         const storedIncludeDvi = getProperty('latex-export-include-dvi');
         const storedIncludeBbl = getProperty('latex-export-include-bbl');
 
-        if (storedMainFile !== undefined) {
-            setUserSelectedMainFile(storedMainFile as string | undefined);
-        }
-
-        if (storedEngine !== undefined) {
-            setSelectedEngine(storedEngine as 'pdftex' | 'xetex' | 'luatex');
-        }
-
-        if (storedFormat !== undefined) {
-            setSelectedFormat(storedFormat as 'pdf' | 'dvi');
-        }
-
-        if (storedIncludeLog !== undefined) {
-            setIncludeLog(Boolean(storedIncludeLog));
-        }
-
-        if (storedIncludeDvi !== undefined) {
-            setIncludeDvi(Boolean(storedIncludeDvi));
-        }
-
-        if (storedIncludeBbl !== undefined) {
-            setIncludeBbl(Boolean(storedIncludeBbl));
-        }
+        if (storedMainFile !== undefined) setUserSelectedMainFile(storedMainFile as string | undefined);
+        if (storedEngine !== undefined) setSelectedEngine(storedEngine as LaTeXEngine);
+        if (storedFormat !== undefined) setSelectedFormat(storedFormat as 'pdf' | 'dvi');
+        if (storedIncludeLog !== undefined) setIncludeLog(Boolean(storedIncludeLog));
+        if (storedIncludeDvi !== undefined) setIncludeDvi(Boolean(storedIncludeDvi));
+        if (storedIncludeBbl !== undefined) setIncludeBbl(Boolean(storedIncludeBbl));
 
         setPropertiesLoaded(true);
     }, [getProperty, propertiesLoaded]);
@@ -148,9 +144,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                 if (node.type === 'file' && isLatexFile(node.path) && !isTemporaryFile(node.path)) {
                     texFiles.push(node.path);
                 }
-                if (node.children) {
-                    texFiles.push(...findTexFiles(node.children));
-                }
+                if (node.children) texFiles.push(...findTexFiles(node.children));
             }
             return texFiles;
         };
@@ -163,7 +157,6 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                 setAutoMainFile(linkedFileInfo.filePath);
                 return;
             }
-
             if (selectedFileId) {
                 const file = await getFile(selectedFileId);
                 if (file && isLatexFile(file.path)) {
@@ -171,50 +164,44 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                     return;
                 }
             }
-
-            const texFile = allTexFiles[0];
-            setAutoMainFile(texFile);
+            setAutoMainFile(allTexFiles[0]);
         };
 
         findMainFile();
     }, [selectedFileId, getFile, fileTree, selectedDocId, linkedFileInfo]);
 
     useEffect(() => {
+        if (isBusyTeX && selectedFormat === 'dvi') {
+            setSelectedFormat('pdf');
+        }
         if (selectedEngine !== 'xetex' && selectedFormat === 'dvi') {
             setSelectedFormat('pdf');
         }
-    }, [selectedEngine, selectedFormat]);
+    }, [selectedEngine, selectedFormat, isBusyTeX]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node;
-
             if (dropdownRef.current && !dropdownRef.current.contains(target)) {
                 const portaledDropdown = document.querySelector('.latex-dropdown');
-                if (portaledDropdown && portaledDropdown.contains(target)) {
-                    return;
-                }
+                if (portaledDropdown && portaledDropdown.contains(target)) return;
                 setIsDropdownOpen(false);
             }
         };
-
         document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [isDropdownOpen]);
 
     const handleExport = async () => {
         if (!effectiveMainFile || isExporting) return;
-
         setIsExporting(true);
         try {
             await exportDocument(effectiveMainFile, {
                 engine: selectedEngine,
                 format: selectedFormat,
                 includeLog,
-                includeDvi,
-                includeBbl
+                includeDvi: isBusyTeX ? false : includeDvi,
+                includeBbl: isBusyTeX ? false : includeBbl,
             });
         } finally {
             setIsExporting(false);
@@ -231,9 +218,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
         if (useSharedSettings && projectMainFile) {
             if (!changeDoc) return;
             changeDoc((d) => {
-                if (!d.projectMetadata) {
-                    d.projectMetadata = { name: '', description: '' };
-                }
+                if (!d.projectMetadata) d.projectMetadata = { name: '', description: '' };
                 d.projectMetadata.mainFile = filePath === 'auto' ? undefined : filePath;
             });
         } else {
@@ -250,14 +235,10 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 
     const getDisplayName = (path?: string) => {
         if (!path) return t('No .tex file');
-
         if (selectedDocId && linkedFileInfo?.filePath === path && documents) {
-            const doc = documents.find((d) => d.id === selectedDocId);
-            if (doc) {
-                return `${doc.name} ${t('(linked)')}`;
-            }
+            const found = documents.find((d) => d.id === selectedDocId);
+            if (found) return `${found.name} ${t('(linked)')}`;
         }
-
         return getFileName(path);
     };
 
@@ -273,7 +254,6 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                     title={t('Export')}>
                     <ExportIcon />
                 </button>
-
                 <button
                     className="latex-button dropdown-toggle"
                     onClick={toggleDropdown}
@@ -287,6 +267,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                 isOpen={isDropdownOpen}
                 triggerElement={dropdownRef.current?.querySelector('.compile-button-group') as HTMLElement}
                 className="latex-dropdown">
+
                 <div className="dropdown-section">
                     <div className="dropdown-title">{t('Main File:')}</div>
                     <div className="dropdown-value" title={effectiveMainFile}>
@@ -305,9 +286,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                             disabled={isExporting}>
                             <option value="auto">{t('Auto-detect')}</option>
                             {availableTexFiles.map((filePath) => (
-                                <option key={filePath} value={filePath}>
-                                    {getFileName(filePath)}
-                                </option>
+                                <option key={filePath} value={filePath}>{getFileName(filePath)}</option>
                             ))}
                         </select>
                     </div>
@@ -318,14 +297,22 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                     <select
                         value={selectedEngine}
                         onChange={(e) => {
-                            const engine = e.target.value as 'pdftex' | 'xetex' | 'luatex';
+                            const engine = e.target.value as LaTeXEngine;
                             setSelectedEngine(engine);
                             setProperty('latex-export-engine', engine);
                         }}
                         className="dropdown-select"
                         disabled={isExporting}>
-                        <option value="pdftex">{t('pdfTeX')}</option>
-                        <option value="xetex">{t('XeTeX')}</option>
+                        <optgroup label={t('SwiftLaTeX (TeX Live 2020)')}>
+                            {SWIFT_ENGINES.map(({ label, value }) => (
+                                <option key={value} value={value}>{t(label)}</option>
+                            ))}
+                        </optgroup>
+                        <optgroup label={t('BusyTeX (TeX Live 2026)')}>
+                            {BUSYTEX_ENGINES.map(({ label, value }) => (
+                                <option key={value} value={value}>{t(label)}</option>
+                            ))}
+                        </optgroup>
                     </select>
                 </div>
 
@@ -354,12 +341,11 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                                 setIncludeLog(e.target.checked);
                                 setProperty('latex-export-include-log', e.target.checked);
                             }}
-                            disabled={isExporting}
-                        />
+                            disabled={isExporting} />
                         {t('Include log file')}
                     </label>
 
-                    {selectedFormat === 'pdf' && selectedEngine === 'xetex' && (
+                    {!isBusyTeX && selectedFormat === 'pdf' && selectedEngine === 'xetex' && (
                         <label className="dropdown-checkbox">
                             <input
                                 type="checkbox"
@@ -368,24 +354,24 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                                     setIncludeDvi(e.target.checked);
                                     setProperty('latex-export-include-dvi', e.target.checked);
                                 }}
-                                disabled={isExporting}
-                            />
+                                disabled={isExporting} />
                             {t('Include DVI/XDV file')}
                         </label>
                     )}
 
-                    <label className="dropdown-checkbox">
-                        <input
-                            type="checkbox"
-                            checked={includeBbl}
-                            onChange={(e) => {
-                                setIncludeBbl(e.target.checked);
-                                setProperty('latex-export-include-bbl', e.target.checked);
-                            }}
-                            disabled={isExporting}
-                        />
-                        {t('Include BBL file')}
-                    </label>
+                    {!isBusyTeX && (
+                        <label className="dropdown-checkbox">
+                            <input
+                                type="checkbox"
+                                checked={includeBbl}
+                                onChange={(e) => {
+                                    setIncludeBbl(e.target.checked);
+                                    setProperty('latex-export-include-bbl', e.target.checked);
+                                }}
+                                disabled={isExporting} />
+                            {t('Include BBL file')}
+                        </label>
+                    )}
                 </div>
 
                 <div className="dropdown-section">

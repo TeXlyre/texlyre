@@ -1,7 +1,7 @@
 {
 	"name": "texlyre",
 	"private": true,
-	"version": "0.6.10",
+	"version": "0.6.11",
 	"description": "A local-first LaTeX & Typst collaborative web editor ",
 	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
 	"license": "AGPL-3.0-or-later",
@@ -113,6 +113,7 @@
 		"react-dom": "^19.2.5",
 		"react-i18next": "^17.0.2",
 		"react-pdf": "10.4.1",
+		"texlyre-busytex": "^1.1.1",
 		"vite-plugin-wasm": "^3.6.0",
 		"wasm-latex-tools": "^0.1.1",
 		"workbox-build": "^7.4.0",
