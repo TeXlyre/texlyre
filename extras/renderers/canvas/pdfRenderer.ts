@@ -1,7 +1,9 @@
 // extras/renderers/canvas/pdfRenderer.ts
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import 'pdfjs-dist/web/pdf_viewer.css';
+
+const BASE_PATH = __BASE_PATH__;
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
     'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -9,18 +11,22 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 ).toString();
 
 export interface PdfRenderContext {
-    pdfDocRef: MutableRefObject<any>;
-    canvasRefs: MutableRefObject<Map<number, HTMLCanvasElement>>;
+    pdfDocRef: RefObject<any>;
+    canvasRefs: RefObject<Map<number, HTMLCanvasElement>>;
     scale: number;
-    renderingRef: MutableRefObject<Set<number>>;
-    pendingRenderRef: MutableRefObject<Set<number>>;
+    renderingRef: RefObject<Set<number>>;
+    pendingRenderRef: RefObject<Set<number>>;
 }
 
 export async function parsePdfPages(pdfBuffer: ArrayBuffer): Promise<{
     pdfDoc: any;
     metadata: Map<number, { width: number; height: number }>;
 }> {
-    const loadingTask = pdfjsLib.getDocument({ data: pdfBuffer });
+    const loadingTask = pdfjsLib.getDocument({
+        data: pdfBuffer,
+        cMapUrl: `${BASE_PATH}/assets/cmaps/`,
+        cMapPacked: true,
+    });
     const pdfDoc = await loadingTask.promise;
 
     const metadata = new Map<number, { width: number; height: number }>();
@@ -94,7 +100,7 @@ export function clearPdfCaches() {
 }
 
 export async function renderTextLayer(
-    pdfDocRef: MutableRefObject<any>,
+    pdfDocRef: RefObject<any>,
     pageNumber: number,
     container: HTMLDivElement,
     scale: number
@@ -126,7 +132,7 @@ export async function renderTextLayer(
 }
 
 export async function renderAnnotationLayer(
-    pdfDocRef: MutableRefObject<any>,
+    pdfDocRef: RefObject<any>,
     pageNumber: number,
     container: HTMLDivElement,
     scale: number
@@ -279,7 +285,7 @@ function renderWidgetAnnotation(
 }
 
 async function handleInternalLink(
-    pdfDocRef: MutableRefObject<any>,
+    pdfDocRef: RefObject<any>,
     dest: any
 ): Promise<void> {
     if (!pdfDocRef.current || !dest) return;
