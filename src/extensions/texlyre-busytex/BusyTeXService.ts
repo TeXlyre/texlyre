@@ -113,7 +113,7 @@ class BusyTeXService {
             }
 
             if (this.storeWorkingDirectory) {
-                await this.storeWorkFiles(mainFileName);
+                await this.storeWorkFiles();
             }
         } else {
             await this.saveCompilationLog(mainFileName, result.log);
@@ -252,7 +252,7 @@ class BusyTeXService {
         }
     }
 
-    private async storeWorkFiles(mainFileName: string): Promise<void> {
+    private async storeWorkFiles(): Promise<void> {
         try {
             const workFiles = await busyTeXEngine.readWorkFiles();
             const filesToStore: FileNode[] = [];

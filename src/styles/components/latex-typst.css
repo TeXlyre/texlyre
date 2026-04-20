@@ -327,7 +327,6 @@ embed {
 }
 
 .dropdown-section+.dropdown-section {
-	border-top: 1px solid var(--accent-border);
 	margin-top: var(--space-sm);
 	padding-top: var(--space-sm);
 }

@@ -308,7 +308,7 @@ class SwiftLaTeXService {
         }
 
         for (const node of nodes) {
-            if (node.type !== 'file') continue;
+            if (node.type !== 'file' || isTemporaryFile(node.path)) continue;
             const p = { ...node };
 
             if (node.path === mainFileName) {
