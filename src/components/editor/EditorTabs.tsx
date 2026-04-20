@@ -323,8 +323,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
         <button
           className="scroll-button scroll-left"
           onClick={scrollLeft}
-          title={t('Scroll left')}
-          aria-label={t('Scroll tabs left')}>
+          title={t('Scroll tabs left')}>
 
           <ChevronLeftIcon />
         </button>
@@ -367,8 +366,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
               <button
                 className="tab-close"
                 onClick={(e) => handleCloseClick(e, tab.id)}
-                title={t('Close tab')}
-                aria-label={`Close ${tab.title}`}>
+                title={t('Close tab')}>
 
                 <CloseIcon />
               </button>
@@ -379,8 +377,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
         <button
           className="scroll-button scroll-right"
           onClick={scrollRight}
-          title={t('Scroll right')}
-          aria-label={t('Scroll tabs right')}>
+          title={t('Scroll tabs right')}>
 
           <ChevronRightIcon />
         </button>

@@ -57,6 +57,7 @@ const SettingControl: React.FC<SettingControlProps> = ({ setting, onLocalUpdate 
             <input
               type="text"
               value={String(value)}
+              dir={setting.forceLTR === false ? undefined : 'ltr'}
               onChange={(e) => handleChange(e.target.value)} />
           </div>);
 

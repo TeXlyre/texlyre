@@ -47,6 +47,7 @@ export interface Setting {
 	strictDefaultValue?: boolean;
 	liveUpdate?: boolean;
 	codeMirrorOptions?: SettingCodeMirrorOptions;
+	forceLTR?: boolean;
 }
 
 export interface SettingsContextType {

@@ -38,7 +38,7 @@
     "latex-store-cache": true,
     "latex-store-working-directory": false,
     "latex-texlive-endpoint": "http://localhost:5004",
-    "latex-busytex-endpoint": "https://texlive2026.texlyre.org",
+    "latex-busytex-endpoint": "http://localhost:8070",
     "pdf-renderer-annotations": true,
     "pdf-renderer-enable": true,
     "pdf-renderer-initial-zoom": "200",
