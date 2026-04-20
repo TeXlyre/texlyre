@@ -145,6 +145,8 @@ export class BusyTeXEngine {
                 options.remoteEndpoint || this.texliveEndpoint || undefined,
             );
 
+            await this.runner!.writeTexliveRemoteMisses([]);
+
             this.setStatus('ready');
 
             return {
