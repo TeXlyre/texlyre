@@ -122,7 +122,7 @@ class LaTeXService {
 		const operationId = `latex-compile-${nanoid()}`;
 
 		if (isBusyTeXEngine(this.currentEngineType)) {
-			if (!busyTexService.isReady()) {
+			if (!busyTexService.isReady() || busyTexService.getCurrentEngineType() !== this.currentEngineType) {
 				this.showLoadingNotification(t('Initializing BusyTeX engine...'), operationId, format);
 				await busyTexService.initialize(this.currentEngineType as BusyTeXEngineType);
 			}
@@ -137,7 +137,7 @@ class LaTeXService {
 			}
 		}
 
-		if (!swiftLaTeXService.isReady()) {
+		if (!swiftLaTeXService.isReady() || swiftLaTeXService.getCurrentEngineType() !== this.currentEngineType) {
 			this.showLoadingNotification(t('Initializing LaTeX engine...'), operationId, format);
 			await swiftLaTeXService.initialize(this.currentEngineType as SwiftEngineType);
 		}
@@ -204,6 +204,9 @@ class LaTeXService {
 			this.showLoadingNotification(t('Compiling for export...'), operationId);
 
 			if (isBusyTeXEngine(targetEngine)) {
+				if (!busyTexService.isReady() || busyTexService.getCurrentEngineType() !== targetEngine) {
+					await busyTexService.initialize(targetEngine as BusyTeXEngineType);
+				}
 				const nodesWithContent = await this.loadFileContents(this.collectAllFiles(fileTree));
 				const result = await busyTexService.compile(mainFileName, nodesWithContent);
 				if (result.status === 0 && result.pdf) {

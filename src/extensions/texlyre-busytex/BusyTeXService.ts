@@ -58,6 +58,10 @@ class BusyTeXService {
         return busyTeXEngine.getStatus();
     }
 
+    getCurrentEngineType(): BusyTeXEngineType {
+        return busyTeXEngine.getCurrentEngineType();
+    }
+
     isReady(): boolean {
         return busyTeXEngine.isReady();
     }

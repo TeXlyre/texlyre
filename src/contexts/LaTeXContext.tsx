@@ -227,22 +227,14 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
   }, [registerSetting, getSetting]);
 
   useEffect(() => {
-    latexService.initialize(latexEngine).catch(console.error);
-
     return latexService.addStatusListener(() => {
       setIsCompiling(latexService.getStatus() === 'compiling');
     });
-  }, [latexEngine]);
+  }, []);
 
-  const handleSetLatexEngine = async (engine: LaTeXEngine) => {
+  const handleSetLatexEngine = async (engine: LaTeXEngine): Promise<void> => {
     if (engine === latexEngine) return;
     setLatexEngineState(engine);
-    try {
-      await latexService.setEngine(engine);
-    } catch (error) {
-      console.error(`Failed to switch to ${engine} engine:`, error);
-      setCompileError(`Failed to switch to ${engine} engine`);
-    }
   };
 
   const getProjectName = (): string => {
@@ -260,7 +252,10 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     format: LaTeXOutputFormat = currentFormat
   ): Promise<void> => {
     setCurrentFormat(format);
-    if (!latexService.isReady()) {
+
+    if (latexService.getCurrentEngineType() !== latexEngine) {
+      await latexService.setEngine(latexEngine);
+    } else if (!latexService.isReady()) {
       await latexService.initialize(latexEngine);
     }
 
@@ -347,7 +342,9 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
   };
 
   const compileWithClearCache = async (mainFileName: string): Promise<void> => {
-    if (!latexService.isReady()) {
+    if (latexService.getCurrentEngineType() !== latexEngine) {
+      await latexService.setEngine(latexEngine);
+    } else if (!latexService.isReady()) {
       await latexService.initialize(latexEngine);
     }
 
