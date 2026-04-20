@@ -20,8 +20,7 @@ export const getJabrefLSPSettings = (): Setting[] => [
     type: 'text',
     label: t('LSP Server URL'),
     description: t('WebSocket URL for the JabRef LSP server'),
-    defaultValue: 'ws://localhost:2087/',
-    liveUpdate: false
+    defaultValue: 'ws://localhost:2087/'
   },
   {
     id: 'jabref-lsp-max-completions',

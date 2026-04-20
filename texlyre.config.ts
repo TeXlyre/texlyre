@@ -124,6 +124,7 @@ const config: TexlyreConfig = {
             settings: {
                 collabSignalingServers: 'ws://localhost:4444/',
                 fileSyncServerUrl: 'http://localhost:8080',
+                latexBusytexEndpoint: 'http://localhost:8070',
                 latexTexliveEndpoint: 'http://localhost:5004',
                 themeVariant: 'dark',
 

@@ -105,7 +105,6 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
       label: t('Signaling servers (WebRTC)'),
       description: t('Comma-separated list of Yjs WebRTC signaling server URLs'),
       defaultValue: initialSignalingServers,
-      liveUpdate: false,
       onChange: (value) => {
         setSignalingServers(value as string);
       }
@@ -119,7 +118,6 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
       label: t('WebSocket server'),
       description: t('WebSocket server URL for Yjs y-websocket or y/hub connections'),
       defaultValue: initialWebsocketServer,
-      liveUpdate: false,
       onChange: (value) => {
         setWebsocketServer(value as string);
       }
