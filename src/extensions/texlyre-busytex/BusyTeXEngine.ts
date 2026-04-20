@@ -1,7 +1,7 @@
 // src/extensions/texlyre-busytex/BusyTeXEngine.ts
 import { BusyTexRunner } from 'texlyre-busytex';
-import type { CompileResult as BusyTexCompileResult, FileInput } from 'texlyre-busytex';
-import type { CompileResult } from '../switftlatex/BaseEngine';
+import type { FileInput, TexliveRemoteFile } from 'texlyre-busytex';
+import type { CompileResult } from '../swiftlatex/BaseEngine';
 import type { FileNode } from '../../types/files';
 import { isTemporaryFile, toArrayBuffer } from '../../utils/fileUtils';
 
@@ -203,6 +203,37 @@ export class BusyTeXEngine {
             await this.runner.writeTexliveRemoteMisses(misses);
         } catch {
             // non-fatal
+        }
+    }
+
+    async readRemoteFiles(): Promise<TexliveRemoteFile[]> {
+        if (!this.runner?.isInitialized()) return [];
+        try {
+            const files = await this.runner.readProjectFiles('/tmp/texlive_remote');
+            const result: TexliveRemoteFile[] = [];
+            for (const f of files) {
+                const base = f.path.slice(f.path.lastIndexOf('/') + 1);
+                if (base === '.misses.json') continue;
+                const content = typeof f.content === 'string'
+                    ? new TextEncoder().encode(f.content)
+                    : (f.content as Uint8Array);
+                const match = base.match(/^(\d+)_(.+)$/);
+                result.push(match
+                    ? { name: match[2], format: Number.parseInt(match[1], 10), content }
+                    : { name: base, content });
+            }
+            return result;
+        } catch {
+            return [];
+        }
+    }
+
+    async writeRemoteFiles(files: TexliveRemoteFile[]): Promise<void> {
+        if (!this.runner?.isInitialized() || !files.length) return;
+        try {
+            await this.runner.writeTexliveRemoteFiles(files);
+        } catch (error) {
+            console.warn('[BusyTeXEngine] Failed to write remote files:', error);
         }
     }
 

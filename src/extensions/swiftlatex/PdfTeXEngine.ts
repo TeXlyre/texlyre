@@ -1,4 +1,4 @@
-// src/extensions/switftlatex/DvipdfmxEngine.ts
+// src/extensions/swiftlatex/PdfTeXEngine.ts
 import {
 	BaseEngine,
 	type CompileResult,
@@ -6,31 +6,27 @@ import {
 } from './BaseEngine';
 import { EngineLoader } from './EngineLoader';
 
-const BASE_PATH = __BASE_PATH__
-
-interface DvipdfmxCompileResult extends CompileResult {
-	xdv?: Uint8Array;
-}
+const BASE_PATH = __BASE_PATH__;
 
 declare global {
 	interface Window {
-		DvipdfmxEngine: any;
+		PdfTeXEngine: any;
 	}
 }
 
-export class DvipdfmxEngine extends BaseEngine {
+export class PdfTeXEngine extends BaseEngine {
 	constructor() {
 		const config: EngineConfig = {
-			name: 'Dvipdfmx',
-			setupScript: `${BASE_PATH}/core/swiftlatex/TexlyreDvipdfmxEngineSetup.js`,
-			engineScript: `${BASE_PATH}/core/swiftlatex/texlyredvipdfm.js`,
-			engineClass: 'DvipdfmxEngine',
+			name: 'PdfTeX',
+			setupScript: `${BASE_PATH}/core/swiftlatex/TexlyrePdfTeXEngineSetup.js`,
+			engineScript: `${BASE_PATH}/core/swiftlatex/texlyrepdftex.js`,
+			engineClass: 'PdfTeXEngine',
 		};
 		super(config);
 	}
 
 	async loadScripts(): Promise<void> {
-		if (typeof window.DvipdfmxEngine === 'function') {
+		if (typeof window.PdfTeXEngine === 'function') {
 			return;
 		}
 
@@ -39,18 +35,18 @@ export class DvipdfmxEngine extends BaseEngine {
 			this.config.engineScript,
 		]);
 
-		if (typeof window.DvipdfmxEngine !== 'function') {
-			throw new Error('DvipdfmxEngine not available after loading scripts');
+		if (typeof window.PdfTeXEngine !== 'function') {
+			throw new Error('PdfTeXEngine not available after loading scripts');
 		}
 	}
 
 	createEngine(): any {
-		return new window.DvipdfmxEngine();
+		return new window.PdfTeXEngine();
 	}
 
 	setTexliveEndpoint(endpoint: string): void {
 		this.engine.setTexliveEndpoint(endpoint);
-		console.log(`[DvipdfmxEngine] TexLive endpoint set for Dvipdfmx: ${endpoint}`);
+		console.log(`[PdfTeXEngine] TexLive endpoint set for PdfTeX: ${endpoint}`);
 	}
 
 	writeMemFSFile(filename: string, content: string | Uint8Array): void {
@@ -70,9 +66,7 @@ export class DvipdfmxEngine extends BaseEngine {
 
 	flushCache(): void {
 		if (!this.engine) throw new Error('Engine not initialized');
-		if (this.engine.flushCache) {
-			this.engine.flushCache();
-		}
+		this.engine.flushCache();
 	}
 
 	async dumpDirectory(dir: string): Promise<{ [key: string]: ArrayBuffer }> {
@@ -91,9 +85,18 @@ export class DvipdfmxEngine extends BaseEngine {
 		this.setStatus('compiling');
 
 		try {
-			const result = await this.engine.compilePDF();
+			await this.engine.compileLaTeX(); // Do it twice for tables
+			await this.engine.compileLaTeX(); // Do it thrice for good luck and bib
+			const result = await this.engine.compileLaTeX();
 			this.setStatus('ready');
 			// this.flushCache();
+
+			console.log('[PdfTeXEngine] PDFTeX compilation result:', {
+				status: result.status,
+				hasPdf: !!result.pdf,
+				pdfSize: result.pdf?.length
+			});
+
 			return {
 				pdf: result.pdf,
 				status: result.status,

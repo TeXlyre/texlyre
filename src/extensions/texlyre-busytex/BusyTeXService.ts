@@ -1,10 +1,11 @@
 // src/extensions/texlyre-busytex/BusyTeXService.ts
 import { nanoid } from 'nanoid';
 import { isPackageCached, deletePackageCache } from 'texlyre-busytex';
+import type { TexliveRemoteFile } from 'texlyre-busytex';
 
 import { busyTeXEngine, BUSYTEX_CACHE_DIR, MISSES_KEY } from './BusyTeXEngine';
 import type { BusyTeXEngineType, BusyTeXCompileResult } from './BusyTeXEngine';
-import type { CompileResult } from '../switftlatex/BaseEngine';
+import type { CompileResult } from '../swiftlatex/BaseEngine';
 import type { FileNode } from '../../types/files';
 import { getMimeType, isBinaryFile, toArrayBuffer } from '../../utils/fileUtils';
 import { fileStorageService } from '../../services/FileStorageService';
@@ -22,7 +23,10 @@ export const BUSYTEX_BUNDLE_LABELS: Record<string, string> = {
     extra: 'TeX Live Extra (~340 MB)',
 };
 
+const REMOTE_FILES_DIR = `${BUSYTEX_CACHE_DIR}/remote`;
+
 class BusyTeXService {
+    private storeCache = true;
     private storeWorkingDirectory = false;
     private texliveEndpoint = '';
     private selectedBundles: string[] = ['recommended'];
@@ -30,6 +34,10 @@ class BusyTeXService {
     setTexliveEndpoint(endpoint: string): void {
         this.texliveEndpoint = endpoint;
         busyTeXEngine.setTexliveEndpoint(endpoint);
+    }
+
+    setStoreCache(store: boolean): void {
+        this.storeCache = store;
     }
 
     setStoreWorkingDirectory(store: boolean): void {
@@ -82,6 +90,7 @@ class BusyTeXService {
         }
 
         const cachedMisses = await this.loadCachedMisses();
+        await this.loadCachedRemoteFiles();
 
         const result = await busyTeXEngine.compile(mainFileName, fileNodes, {
             bibtex: true,
@@ -92,6 +101,7 @@ class BusyTeXService {
         });
 
         await this.persistMisses();
+        await this.persistRemoteFiles();
 
         if (result.status === 0 && result.pdf) {
             await this.saveCompilationOutput(mainFileName, result);
@@ -167,6 +177,78 @@ class BusyTeXService {
             }], { showConflictDialog: false });
         } catch (error) {
             console.warn('[BusyTeXService] Failed to persist misses cache:', error);
+        }
+    }
+
+    private async loadCachedRemoteFiles(): Promise<void> {
+        if (!this.storeCache) return;
+        try {
+            const cached = await fileStorageService.getFilesByPath(
+                `${REMOTE_FILES_DIR}/`, true, { excludeDirectories: true }
+            );
+            if (!cached.length) return;
+
+            const files: TexliveRemoteFile[] = [];
+            for (const file of cached) {
+                if (!file.content || file.isDeleted) continue;
+                const content = typeof file.content === 'string'
+                    ? new TextEncoder().encode(file.content)
+                    : new Uint8Array(file.content as ArrayBuffer);
+
+                const match = file.name.match(/^(\d+)_(.+)$/);
+                files.push(match
+                    ? { name: match[2], format: Number.parseInt(match[1], 10), content }
+                    : { name: file.name, content });
+            }
+
+            if (files.length > 0) {
+                await busyTeXEngine.writeRemoteFiles(files);
+            }
+        } catch (error) {
+            console.warn('[BusyTeXService] Failed to load cached remote files:', error);
+        }
+    }
+
+    private async persistRemoteFiles(): Promise<void> {
+        if (!this.storeCache) return;
+        try {
+            const remoteFiles = await busyTeXEngine.readRemoteFiles();
+            if (!remoteFiles.length) return;
+
+            await this.ensureDirectoriesExist([REMOTE_FILES_DIR]);
+
+            const toStore: FileNode[] = [];
+            for (const file of remoteFiles) {
+                const bytes = typeof file.content === 'string'
+                    ? new TextEncoder().encode(file.content)
+                    : file.content;
+
+                const safeName = file.format !== undefined ? `${file.format}_${file.name}` : file.name;
+                const storagePath = `${REMOTE_FILES_DIR}/${safeName}`;
+                const existing = await fileStorageService.getFileByPath(storagePath, true);
+                const buffer = toArrayBuffer(bytes.buffer.slice(
+                    bytes.byteOffset,
+                    bytes.byteOffset + bytes.byteLength,
+                ));
+
+                toStore.push({
+                    id: existing?.id || nanoid(),
+                    name: safeName,
+                    path: storagePath,
+                    type: 'file',
+                    content: buffer,
+                    lastModified: Date.now(),
+                    size: buffer.byteLength,
+                    mimeType: 'application/octet-stream',
+                    isBinary: true,
+                    excludeFromSync: true,
+                    isDeleted: false,
+                });
+            }
+
+            await fileStorageService.batchStoreFiles(toStore, { showConflictDialog: false });
+        } catch (error) {
+            console.warn('[BusyTeXService] Failed to persist remote files:', error);
         }
     }
 
@@ -286,6 +368,7 @@ class BusyTeXService {
             '/.texlyre_src/__work',
             BUSYTEX_CACHE_DIR.split('/').slice(0, -1).join('/'),
             BUSYTEX_CACHE_DIR,
+            REMOTE_FILES_DIR,
         ];
         await this.ensureDirectoriesExist(dirs);
     }

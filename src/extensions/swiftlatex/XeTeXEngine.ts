@@ -1,4 +1,4 @@
-// src/extensions/switftlatex/XeTeXEngine.ts
+// src/extensions/swiftlatex/XeTeXEngine.ts
 import {
 	BaseEngine,
 	type CompileResult,

@@ -194,7 +194,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       subcategory: t('LaTeX'),
       type: 'checkbox',
       label: t('Store compilation cache'),
-      description: t('Save TeX cache files for faster subsequent compilations (SwiftLaTeX engines only)'),
+      description: t('Save TeX cache files for faster subsequent compilations'),
       defaultValue: initialStoreCache,
       onChange: (value) => {
         latexService.setStoreCache(value as boolean);
