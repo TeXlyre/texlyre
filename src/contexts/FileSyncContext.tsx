@@ -53,10 +53,9 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
   docUrl
 }) => {
   const { user } = useAuth();
-  const { registerSetting, getSetting } = useSettings();
+  const { getSetting } = useSettings();
   const { refreshFileTree } = useFileTree();
 
-  const [isFileSyncEnabled, setIsFileSyncEnabled] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTimestamp, setLastSyncTimestamp] = useState<number | null>(
     null
@@ -64,22 +63,30 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
   const [notifications, setNotifications] = useState<FileSyncNotification[]>(
     []
   );
-  const [autoSyncIntervalSeconds, setAutoSyncIntervalSeconds] = useState(10);
-  const [holdTimeoutSeconds, setHoldTimeoutSeconds] = useState(30);
-  const [_requestTimeoutSeconds, setRequestTimeoutSeconds] = useState(60);
-  const [conflictResolutionStrategy, setConflictResolutionStrategy] =
-    useState('prefer-latest');
-  const [fileSyncServerUrl, setFileSyncServerUrl] = useState('');
-  const [syncNotificationsEnabled, setSyncNotificationsEnabled] =
-    useState(true);
 
   const ydocRef = useRef<Y.Doc | null>(null);
   const isInitializedRef = useRef(false);
-  const settingsRegistered = useRef(false);
   const syncIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const activeHoldsRef = useRef<Set<string>>(new Set());
   const processedRequestsRef = useRef<Set<string>>(new Set());
   const syncThrottleRef = useRef<NodeJS.Timeout | null>(null);
+
+  const isFileSyncEnabled =
+    getSetting('file-sync-enable')?.value as boolean ?? false;
+  const autoSyncIntervalSeconds =
+    getSetting('file-sync-auto-interval')?.value as number ?? 10;
+  const holdTimeoutSeconds =
+    getSetting('file-sync-hold-timeout')?.value as number ?? 30;
+  const _requestTimeoutSeconds =
+    getSetting('file-sync-request-timeout')?.value as number ?? 60;
+  const conflictResolutionStrategy =
+    getSetting('file-sync-conflict-resolution')?.value as string ??
+    'prefer-latest';
+  const fileSyncServerUrl =
+    getSetting('file-sync-server-url')?.value as string ??
+    'http://filepizza.localhost:8082';
+  const syncNotificationsEnabled =
+    getSetting('file-sync-notifications')?.value as boolean ?? true;
 
   const projectId = docUrl ?
     docUrl.startsWith('yjs:') ?
@@ -626,7 +633,6 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
   const enableSync = useCallback(() => {
     console.log('[FileSyncContext] Enabling file sync');
-    setIsFileSyncEnabled(true);
     fileSyncService.showSuccessNotification(t('File sync enabled'), {
       duration: 2000
     });
@@ -635,7 +641,6 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
   const disableSync = useCallback(() => {
     console.log('[FileSyncContext] Disabling file sync');
-    setIsFileSyncEnabled(false);
     fileSyncService.cleanup();
     activeHoldsRef.current.clear();
     processedRequestsRef.current.clear();
@@ -662,139 +667,6 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
       duration: 2000
     });
   }, []);
-
-  useEffect(() => {
-    if (settingsRegistered.current) return;
-    settingsRegistered.current = true;
-
-    const initialEnable =
-      getSetting('file-sync-enable')?.value as boolean ?? false;
-    const initialAutoInterval =
-      getSetting('file-sync-auto-interval')?.value as number ?? 10;
-    const initialHoldTimeout =
-      getSetting('file-sync-hold-timeout')?.value as number ?? 30;
-    const initialRequestTimeout =
-      getSetting('file-sync-request-timeout')?.value as number ?? 60;
-    const initialConflictResolution =
-      getSetting('file-sync-conflict-resolution')?.value as string ??
-      'prefer-latest';
-    const initialServerUrl =
-      getSetting('file-sync-server-url')?.value as string ??
-      'http://filepizza.localhost:8082';
-    const initialNotifications =
-      getSetting('file-sync-notifications')?.value as boolean ?? true;
-
-    setIsFileSyncEnabled(initialEnable);
-    setAutoSyncIntervalSeconds(initialAutoInterval);
-    setHoldTimeoutSeconds(initialHoldTimeout);
-    setRequestTimeoutSeconds(initialRequestTimeout);
-    setConflictResolutionStrategy(initialConflictResolution);
-    setFileSyncServerUrl(initialServerUrl);
-    setSyncNotificationsEnabled(initialNotifications);
-
-    registerSetting({
-      id: 'file-sync-enable',
-      category: t("Collaboration"),
-      subcategory: t("File Synchronization"),
-      type: 'checkbox',
-      label: t("Enable file synchronization with peers"),
-      defaultValue: initialEnable,
-      onChange: (value) => {
-        if (value) enableSync(); else
-          disableSync();
-      }
-    });
-
-    registerSetting({
-      id: 'file-sync-auto-interval',
-      category: t("Collaboration"),
-      subcategory: t("File Synchronization"),
-      type: 'number',
-      label: t("Auto-sync interval (seconds)"),
-      description: t("How often to check for file changes and sync"),
-      defaultValue: initialAutoInterval,
-      min: 5,
-      max: 300,
-      onChange: (value) => {
-        setAutoSyncIntervalSeconds(value as number);
-      }
-    });
-
-    registerSetting({
-      id: 'file-sync-hold-timeout',
-      category: t("Collaboration"),
-      subcategory: t("File Synchronization"),
-      type: 'number',
-      label: t("Hold signal timeout (seconds)"),
-      description: t("How long to hold a peer before timeout"),
-      defaultValue: initialHoldTimeout,
-      min: 10,
-      max: 120,
-      onChange: (value) => {
-        setHoldTimeoutSeconds(value as number);
-      }
-    });
-
-    registerSetting({
-      id: 'file-sync-request-timeout',
-      category: t("Collaboration"),
-      subcategory: t("File Synchronization"),
-      type: 'number',
-      label: t("Request timeout (seconds)"),
-      description: t("How long to wait for file transfer completion"),
-      defaultValue: initialRequestTimeout,
-      min: 30,
-      max: 300,
-      onChange: (value) => {
-        setRequestTimeoutSeconds(value as number);
-      }
-    });
-
-    registerSetting({
-      id: 'file-sync-conflict-resolution',
-      category: t("Collaboration"),
-      subcategory: t("File Synchronization"),
-      type: 'select',
-      label: t("Conflict resolution strategy"),
-      description: t("How to handle file conflicts when both local and remote files have changed"),
-
-      defaultValue: initialConflictResolution,
-      options: [
-        { label: t("Prefer Latest (Default)"), value: 'prefer-latest' },
-        { label: t("Prefer Local (Do nothing)"), value: 'prefer-local' },
-        { label: t("Notify of Conflicts"), value: 'notify' }],
-
-      onChange: (value) => {
-        setConflictResolutionStrategy(value as string);
-      }
-    });
-
-    registerSetting({
-      id: 'file-sync-server-url',
-      category: t("Collaboration"),
-      subcategory: t("File Synchronization"),
-      type: 'text',
-      label: t("FilePizza server URL"),
-      description: t("Server URL for peer-to-peer file transfers"),
-      defaultValue: initialServerUrl,
-      onChange: (value) => {
-        setFileSyncServerUrl(value as string);
-      }
-    });
-
-    registerSetting({
-      id: 'file-sync-notifications',
-      category: t("Collaboration"),
-      subcategory: t("File Synchronization"),
-      type: 'checkbox',
-      label: t("Show sync notifications"),
-      description: t("Display notifications for file sync activities"),
-      defaultValue: initialNotifications,
-      onChange: (value) => {
-        setSyncNotificationsEnabled(value as boolean);
-      }
-    });
-  }, [registerSetting, getSetting, enableSync, disableSync]);
 
   useEffect(() => {
     if (!user || !projectId || isInitializedRef.current) return;
@@ -966,6 +838,14 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
     });
     return unsubscribe;
   }, [throttledPerformSync, isFileSyncEnabled]);
+
+  useEffect(() => {
+    if (isFileSyncEnabled) {
+      enableSync();
+    } else {
+      disableSync();
+    }
+  }, [isFileSyncEnabled, enableSync, disableSync]);
 
   return (
     <FileSyncContext.Provider
