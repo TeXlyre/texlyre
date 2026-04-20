@@ -200,7 +200,7 @@ class SwiftLaTeXService {
     }
 
     async clearCache(): Promise<void> {
-        const existing = await fileStorageService.getAllFiles();
+        const existing = await fileStorageService.getAllFiles(true, false, false);
         const cacheFiles = existing.filter((f) => isTemporaryFile(f.path) && !f.isDeleted);
         if (cacheFiles.length > 0) {
             await fileStorageService.batchDeleteFiles(cacheFiles.map((f) => f.id), {
@@ -273,7 +273,7 @@ class SwiftLaTeXService {
 
     private async loadAndValidateCachedNodes(nodes: FileNode[]): Promise<void> {
         try {
-            const existing = await fileStorageService.getAllFiles();
+            const existing = await fileStorageService.getAllFiles(true, false, false);
             const cacheDir = this.getCacheDirectory(this.currentEngineType);
             const cached = existing.filter(
                 (f) => f.path.startsWith(`${cacheDir}/`) && f.type === 'file' && !f.isDeleted,
@@ -432,7 +432,7 @@ class SwiftLaTeXService {
     ): Promise<{ [key: string]: ArrayBuffer }> {
         const filtered: { [key: string]: ArrayBuffer } = {};
         try {
-            const existing = await fileStorageService.getAllFiles();
+            const existing = await fileStorageService.getAllFiles(true, false, false);
             const cacheDir = this.getCacheDirectory(this.currentEngineType);
             const cachePaths = new Set(
                 existing
@@ -490,7 +490,7 @@ class SwiftLaTeXService {
 
     private async batchCreateDirectories(paths: string[]): Promise<void> {
         const toCreate: FileNode[] = [];
-        const existing = await fileStorageService.getAllFiles();
+        const existing = await fileStorageService.getAllFiles(true, false, false);
         const existingPaths = new Set(existing.map((f) => f.path));
 
         const all = new Set<string>();
@@ -564,7 +564,7 @@ class SwiftLaTeXService {
 
     private async cleanupDirectory(path: string): Promise<void> {
         try {
-            const existing = await fileStorageService.getAllFiles();
+            const existing = await fileStorageService.getAllFiles(true, false, false);
             const toCleanup = existing.filter((f) => f.path.startsWith(`${path}/`) && !f.isDeleted);
             if (toCleanup.length > 0) {
                 await fileStorageService.batchDeleteFiles(toCleanup.map((f) => f.id), {
@@ -615,7 +615,7 @@ class SwiftLaTeXService {
             '/.texlyre_cache', '/.texlyre_cache/__tex', '/.texlyre_cache/__dvi',
         ];
         const toCreate: FileNode[] = [];
-        const existing = await fileStorageService.getAllFiles();
+        const existing = await fileStorageService.getAllFiles(true, false, false);
         const existingPaths = new Set(existing.map((f) => f.path));
         for (const d of required) {
             if (!existingPaths.has(d)) {

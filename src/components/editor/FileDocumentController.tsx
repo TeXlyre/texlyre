@@ -499,7 +499,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
     const loadInitialLinkedFile = async () => {
       if (!isEditingFile && selectedDocId) {
         try {
-          const allFiles = await fileStorageService.getAllFiles(false);
+          const allFiles = await fileStorageService.getAllFiles(false, false, false);
           const linkedFile = allFiles.find(
             (file) => file.documentId === selectedDocId
           );

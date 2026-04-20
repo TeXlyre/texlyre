@@ -260,7 +260,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({ chil
 
 	const refreshAvailableFiles = useCallback(async () => {
 		try {
-			const allFiles = await fileStorageService.getAllFiles();
+			const allFiles = await fileStorageService.getAllFiles(false, false, false);
 			const bibFiles = allFiles.filter(file => isBibFile(file.name) && !file.isDeleted);
 			setAvailableBibFiles(bibFiles.map(file => ({ path: file.path, name: file.name, id: file.id })));
 		} catch (error) {

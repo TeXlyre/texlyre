@@ -50,7 +50,7 @@ class SearchService {
         } = options;
 
         const results: SearchResult[] = [];
-        const allFiles = await fileStorageService.getAllFiles(false);
+        const allFiles = await fileStorageService.getAllFiles(false, false, false);
 
         const linkedFileIds = new Set<string>();
         const linkedDocumentIds = new Set<string>();

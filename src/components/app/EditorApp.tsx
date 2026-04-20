@@ -301,7 +301,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
     const checkLinkedFile = async () => {
       if (localDocId && doc?.documents) {
         try {
-          const allFiles = await fileStorageService.getAllFiles();
+          const allFiles = await fileStorageService.getAllFiles(false, false, false);
           const linkedFile = allFiles.find(
             (file) => file.documentId === localDocId
           );

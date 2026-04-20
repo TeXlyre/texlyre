@@ -468,7 +468,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
   const batchDeleteFiles = useCallback(
     async (fileIds: string[]) => {
       try {
-        const allFiles = await fileStorageService.getAllFiles(false);
+        const allFiles = await fileStorageService.getAllFiles(false, false, false);
         const filesToDelete = fileIds.
           map((id) => allFiles.find((f) => f.id === id)).
           filter(Boolean) as FileNode[];

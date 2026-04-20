@@ -173,7 +173,7 @@ export const useEditorView = (
     const saveDocumentToLinkedFile = async (content: string) => {
         if (!documentId || isEditingFile) return;
         try {
-            const allFiles = await fileStorageService.getAllFiles(false);
+            const allFiles = await fileStorageService.getAllFiles(false, false, false);
             const linkedFile = allFiles.find((file) => file.documentId === documentId);
             if (linkedFile) {
                 await fileStorageService.updateFileContent(linkedFile.id, content);
@@ -491,7 +491,7 @@ export const useEditorView = (
                     filePathCacheService.updateCurrentFilePath('', documentId);
                     updateLinkNavigationFileName(viewRef.current, fileName || '');
 
-                    const allFiles = await fileStorageService.getAllFiles(false);
+                    const allFiles = await fileStorageService.getAllFiles(false, false, false);
                     const linkedFile = allFiles.find((file) => file.documentId === documentId);
                     if (linkedFile && viewRef.current) {
                         updateLinkNavigationFilePath(viewRef.current, linkedFile.path);

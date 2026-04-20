@@ -374,7 +374,7 @@ class BusyTeXService {
     }
 
     private async ensureDirectoriesExist(paths: string[]): Promise<void> {
-        const existing = await fileStorageService.getAllFiles();
+        const existing = await fileStorageService.getAllFiles(true, false, false);
         const existingPaths = new Set(existing.map((f) => f.path));
 
         const allPaths = new Set<string>();

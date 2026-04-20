@@ -110,7 +110,7 @@ class FileSyncService {
 		username: string,
 	): Promise<FileSyncInfo[]> {
 		try {
-			const allFiles = await fileStorageService.getAllFiles(true, true);
+			const allFiles = await fileStorageService.getAllFiles(true, true, false);
 			const relevantFiles = allFiles.filter(
 				(file) => file.type === 'file' && !isTemporaryFile(file.path),
 			);
@@ -118,13 +118,22 @@ class FileSyncService {
 			const syncInfo: FileSyncInfo[] = [];
 
 			for (const file of relevantFiles) {
-				const content = file.isDeleted
-					? new ArrayBuffer(0)
-					: file.content
-						? file.content instanceof ArrayBuffer
-							? file.content
-							: new TextEncoder().encode(file.content).buffer
-						: new ArrayBuffer(0);
+				let content: ArrayBuffer;
+
+				if (file.isDeleted) {
+					content = new ArrayBuffer(0);
+				} else {
+					try {
+						const storedFile = await fileStorageService.getFile(file.id);
+						content = storedFile?.content
+							? storedFile.content instanceof ArrayBuffer
+								? storedFile.content
+								: new TextEncoder().encode(storedFile.content).buffer
+							: new ArrayBuffer(0);
+					} catch {
+						content = new ArrayBuffer(0);
+					}
+				}
 
 				const checksum = await this.calculateFileChecksum(content);
 

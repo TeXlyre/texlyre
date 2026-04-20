@@ -855,6 +855,7 @@ class FileStorageService {
 	async getAllFiles(
 		includeDeleted = true,
 		excludeSyncIgnored = false,
+		includeContent = true,
 	): Promise<FileNode[]> {
 		if (!this.db) await this.initialize();
 		const allFiles = await this.db?.getAll(this.FILES_STORE);
@@ -867,6 +868,10 @@ class FileStorageService {
 
 		if (excludeSyncIgnored) {
 			filteredFiles = filteredFiles.filter((file) => !file.excludeFromSync);
+		}
+
+		if (!includeContent) {
+			filteredFiles = filteredFiles.map(({ content, ...rest }) => rest as FileNode);
 		}
 
 		return filteredFiles;
@@ -1011,7 +1016,7 @@ class FileStorageService {
 	}
 
 	async buildFileTree(): Promise<FileNode[]> {
-		const allFiles = await this.getAllFiles();
+		const allFiles = await this.getAllFiles(true, false, false);
 		const files = allFiles.filter((file) => !file.isDeleted);
 
 		const tree: FileNode[] = [];

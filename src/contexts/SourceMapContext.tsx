@@ -76,7 +76,7 @@ export const SourceMapProvider: React.FC<SourceMapProviderProps> = ({ children }
         if (!result) return;
 
         try {
-            const allFiles = await fileStorageService.getAllFiles(false);
+            const allFiles = await fileStorageService.getAllFiles(false, false, false);
             const normalized = result.file.replace(/^\.?\/+/, '');
 
             const targetFile = allFiles.find((file) =>
