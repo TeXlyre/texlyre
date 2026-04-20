@@ -9,7 +9,7 @@ const PDF_EXTENSIONS = ['pdf'];
 const PDF_MIMETYPES = ['application/pdf'];
 
 export const PLUGIN_NAME = t('PDF.js Viewer') + ' (pdfjs-dist 5.4.296)';
-export const PLUGIN_VERSION = '0.1.0';
+export const PLUGIN_VERSION = '0.2.0';
 
 const pdfViewerPlugin: ViewerPlugin = {
 	id: 'pdf-viewer',
