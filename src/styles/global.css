@@ -282,6 +282,20 @@ footer {
 	filter: drop-shadow(0 0 2em var(--pico-primary-focus));
 }
 
+
+::-webkit-scrollbar {
+	width: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+	background-color: var(--pico-secondary);
+	border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background-color: var(--pico-primary);
+}
+
 .theme-manager {
 	display: flex;
 	justify-content: center;
