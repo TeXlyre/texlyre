@@ -46,12 +46,18 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
     linkedFileInfo,
     useSharedSettings = false
 }) => {
-    const { exportDocument, latexEngine } = useLaTeX();
+    const {
+        isCompiling,
+        isInitializing,
+        isExporting,
+        setIsExporting,
+        exportDocument,
+        latexEngine,
+    } = useLaTeX();
     const { selectedFileId, getFile, fileTree } = useFileTree();
     const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
     const { getProperty, setProperty, registerProperty } = useProperties();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [isExporting, setIsExporting] = useState(false);
     const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
     const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
     const [availableTexFiles, setAvailableTexFiles] = useState<string[]>([]);
@@ -233,7 +239,6 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                 includeBbl: isBusyTeX ? false : includeBbl,
             });
         } finally {
-            setIsExporting(false);
             setIsDropdownOpen(false);
         }
     };
@@ -289,7 +294,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
         return getFileName(path);
     };
 
-    const isDisabled = isExporting || !effectiveMainFile;
+    const isDisabled = isExporting || isCompiling || isInitializing || !effectiveMainFile;
 
     return (
         <div className={`latex-export-buttons ${className}`} ref={dropdownRef}>

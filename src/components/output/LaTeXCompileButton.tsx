@@ -60,6 +60,9 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 }) => {
   const {
     isCompiling,
+    isInitializing,
+    setIsInitializing,
+    isExporting,
     compileDocument,
     stopCompilation,
     latexEngine,
@@ -281,6 +284,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     if (isCompiling) {
       stopCompilation();
     } else if (effectiveMainFile) {
+      setIsInitializing(true);
       if (onExpandLatexOutput) onExpandLatexOutput();
 
       const shouldNavigate = await shouldNavigateToMain(effectiveMainFile);
@@ -434,13 +438,13 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     return getFileName(path);
   };
 
-  const isDisabled = !isCompiling && (!effectiveMainFile || isChangingEngine);
+  const isDisabled = isInitializing || isExporting || (!isCompiling && (!effectiveMainFile || isChangingEngine));
 
   return (
     <div className={`latex-compile-buttons ${className}`} ref={dropdownRef}>
       <div className="compile-button-group">
         <button
-          className={`latex-button compile-button ${isCompiling ? 'compiling' : ''} ${isChangingEngine ? 'loading' : ''}`}
+          className={`latex-button compile-button ${isCompiling ? 'compiling' : ''} ${isInitializing ? 'initializing' : ''} ${isChangingEngine ? 'loading' : ''}`}
           onClick={handleCompileOrStop}
           disabled={isDisabled}
           title={
@@ -450,7 +454,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
                 ? t('Switching Engine...')
                 : t('Compile LaTeX Document') + ' ' + `${useSharedSettings ? t('(F9)') : ''}`
           }>
-          {isCompiling ? <StopIcon /> : <PlayIcon />}
+          {isCompiling ? <StopIcon /> : isInitializing ? <div className="loading-spinner" /> : <PlayIcon />}
         </button>
 
         <PdfWindowToggleButton

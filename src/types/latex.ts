@@ -19,6 +19,10 @@ export type LaTeXEngine =
 
 export interface LaTeXContextType {
 	isCompiling: boolean;
+	isInitializing: boolean;
+	setIsInitializing: (boolean) => void;
+	isExporting: boolean;
+	setIsExporting: (boolean) => void;
 	compileError: string | null;
 	compiledPdf: Uint8Array | null;
 	compiledCanvas: Uint8Array | null;

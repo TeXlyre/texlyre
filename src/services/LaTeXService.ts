@@ -20,6 +20,7 @@ function isBusyTeXEngine(engine: EngineType): engine is BusyTeXEngineType {
 class LaTeXService {
 	private currentEngineType: EngineType = 'pdftex';
 	private statusListeners: Set<() => void> = new Set();
+	private currentOperationId: string | null = null;
 	private texliveEndpoint = '';
 
 	setTexliveEndpoint(endpoint: string): void {
@@ -47,6 +48,10 @@ class LaTeXService {
 
 	setBusyTeXEndpoint(endpoint: string): void {
 		busyTexService.setTexliveEndpoint(endpoint);
+	}
+
+	getCurrentOperationId(): string | null {
+		return this.currentOperationId;
 	}
 
 	async isBusyTeXBundleCached(bundleId: string): Promise<boolean> {
@@ -120,6 +125,7 @@ class LaTeXService {
 		format: string = 'pdf',
 	): Promise<CompileResult> {
 		const operationId = `latex-compile-${nanoid()}`;
+		this.currentOperationId = operationId;
 
 		if (isBusyTeXEngine(this.currentEngineType)) {
 			if (!busyTexService.isReady() || busyTexService.getCurrentEngineType() !== this.currentEngineType) {
@@ -322,6 +328,12 @@ class LaTeXService {
 	private getBaseName(filePath: string): string {
 		const name = filePath.split('/').pop() || filePath;
 		return name.includes('.') ? name.split('.').slice(0, -1).join('.') : name;
+	}
+
+	dismissCurrentNotification(): void {
+		if (this.currentOperationId) {
+			notificationService.dismiss(this.currentOperationId);
+		}
 	}
 
 	showLoadingNotification(message: string, operationId?: string, format?: string): void {

@@ -28,6 +28,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
   const { fileTree, refreshFileTree } = useFileTree();
   const { registerSetting, getSetting } = useSettings();
   const [isCompiling, setIsCompiling] = useState<boolean>(false);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [hasAutoCompiled, setHasAutoCompiled] = useState(false);
   const [compileError, setCompileError] = useState<string | null>(null);
   const [compiledPdf, setCompiledPdf] = useState<Uint8Array | null>(null);
@@ -236,12 +238,6 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     });
   }, [registerSetting, getSetting]);
 
-  useEffect(() => {
-    return latexService.addStatusListener(() => {
-      setIsCompiling(latexService.getStatus() === 'compiling');
-    });
-  }, []);
-
   const handleSetLatexEngine = async (engine: LaTeXEngine): Promise<void> => {
     if (engine === latexEngine) return;
     setLatexEngineState(engine);
@@ -261,12 +257,16 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     mainFileName: string,
     format: LaTeXOutputFormat = currentFormat
   ): Promise<void> => {
-    setCurrentFormat(format);
+    try {
 
-    if (latexService.getCurrentEngineType() !== latexEngine) {
-      await latexService.setEngine(latexEngine);
-    } else if (!latexService.isReady()) {
-      await latexService.initialize(latexEngine);
+      setCurrentFormat(format);
+      if (latexService.getCurrentEngineType() !== latexEngine) {
+        await latexService.setEngine(latexEngine);
+      } else if (!latexService.isReady()) {
+        await latexService.initialize(latexEngine);
+      }
+    } finally {
+      setIsInitializing(false);
     }
 
     setIsCompiling(true);
@@ -352,10 +352,14 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
   };
 
   const compileWithClearCache = async (mainFileName: string): Promise<void> => {
-    if (latexService.getCurrentEngineType() !== latexEngine) {
-      await latexService.setEngine(latexEngine);
-    } else if (!latexService.isReady()) {
-      await latexService.initialize(latexEngine);
+    try {
+      if (latexService.getCurrentEngineType() !== latexEngine) {
+        await latexService.setEngine(latexEngine);
+      } else if (!latexService.isReady()) {
+        await latexService.initialize(latexEngine);
+      }
+    } finally {
+      setIsInitializing(false);
     }
 
     const format = currentFormat;
@@ -409,8 +413,9 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
   const stopCompilation = () => {
     if (isCompiling && latexService.isCompiling()) {
       latexService.stopCompilation();
+      latexService.dismissCurrentNotification();
       setIsCompiling(false);
-      setCompileError('Compilation stopped by user');
+      setCompileError(t('Compilation stopped by user'));
     }
   };
 
@@ -424,7 +429,11 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       includeBbl?: boolean;
     } = {}
   ): Promise<void> => {
-    await latexService.exportDocument(mainFileName, fileTree, options);
+    try {
+      await latexService.exportDocument(mainFileName, fileTree, options);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const toggleOutputView = () => {
@@ -435,6 +444,10 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     <LaTeXContext.Provider
       value={{
         isCompiling,
+        isInitializing,
+        setIsInitializing,
+        isExporting,
+        setIsExporting,
         compileError,
         compiledPdf,
         compiledCanvas,

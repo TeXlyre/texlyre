@@ -244,6 +244,13 @@ embed {
 	cursor: wait;
 }
 
+.compile-button .loading-spinner {
+	width: 14px;
+	height: 14px;
+	border-width: 2px;
+	margin-bottom: 0;
+}
+
 .shared-indicator {
 	font-size: var(--space-sd);
 	color: var(--accent-color);
