@@ -46,7 +46,7 @@ export class PdfTeXEngine extends BaseEngine {
 
 	setTexliveEndpoint(endpoint: string): void {
 		this.engine.setTexliveEndpoint(endpoint);
-		console.log(`[PdfTeXEngine] TexLive endpoint set for PdfTeX: ${endpoint}`);
+		console.log(`[PdfTeXEngine] TeX Live endpoint set for PdfTeX: ${endpoint}`);
 	}
 
 	writeMemFSFile(filename: string, content: string | Uint8Array): void {

@@ -50,7 +50,7 @@ export class DvipdfmxEngine extends BaseEngine {
 
 	setTexliveEndpoint(endpoint: string): void {
 		this.engine.setTexliveEndpoint(endpoint);
-		console.log(`[DvipdfmxEngine] TexLive endpoint set for Dvipdfmx: ${endpoint}`);
+		console.log(`[DvipdfmxEngine] TeX Live endpoint set for Dvipdfmx: ${endpoint}`);
 	}
 
 	writeMemFSFile(filename: string, content: string | Uint8Array): void {

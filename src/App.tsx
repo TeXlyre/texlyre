@@ -47,7 +47,7 @@ import './styles/components/collaborator-avatars.css';
 import './styles/components/settings.css';
 import './styles/components/language.css';
 import './styles/components/offline.css';
-import './styles/components/typsetter.css';
+import './styles/components/typesetter.css';
 import './styles/components/splash-screen.css';
 import './styles/components/keyboard-shortcuts.css';
 import './styles/components/legal.css';

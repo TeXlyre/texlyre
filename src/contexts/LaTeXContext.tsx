@@ -109,8 +109,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       category: t('Compilation'),
       subcategory: t('LaTeX'),
       type: 'text',
-      label: t('TexLive server endpoint (SwiftLaTeX)'),
-      description: t('URL endpoint for TexLive package downloads used by SwiftLaTeX engines'),
+      label: t('TeX Live server endpoint (SwiftLaTeX)'),
+      description: t('URL endpoint for TeX Live package downloads used by SwiftLaTeX engines'),
       defaultValue: initialTexliveEndpoint,
       onChange: (value) => {
         latexService.setTexliveEndpoint(value as string);

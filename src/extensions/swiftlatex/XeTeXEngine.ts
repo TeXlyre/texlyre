@@ -50,7 +50,7 @@ export class XeTeXEngine extends BaseEngine {
 
 	setTexliveEndpoint(endpoint: string): void {
 		this.engine.setTexliveEndpoint(endpoint);
-		console.log(`[XeTeXEngine] TexLive endpoint set for XeTeX: ${endpoint}`);
+		console.log(`[XeTeXEngine] TeX Live endpoint set for XeTeX: ${endpoint}`);
 	}
 
 	writeMemFSFile(filename: string, content: string | Uint8Array): void {
