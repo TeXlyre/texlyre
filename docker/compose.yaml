@@ -1,0 +1,21 @@
+services:
+  languagetool:
+    image: erikvl87/languagetool:latest
+    container_name: texlyre-languagetool
+    hostname: texlyre-languagetool
+    restart: unless-stopped
+    environment:
+      - Java_Xms=512m
+      - Java_Xmx=2g
+      - langtool_languageModel=/ngrams
+    volumes:
+      - ./data/ngrams:/ngrams:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --spider --timeout=5 http://localhost:8010/v2/languages 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    ports:
+      - 8010:8010
+

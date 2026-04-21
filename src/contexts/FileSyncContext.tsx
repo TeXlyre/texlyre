@@ -6,6 +6,7 @@ import {
   type ReactNode,
   createContext,
   useCallback,
+  useContext,
   useEffect,
   useRef,
   useState
@@ -14,7 +15,7 @@ import {
 import type * as Y from 'yjs';
 
 import { useAuth } from '../hooks/useAuth';
-import { useFileTree } from '../hooks/useFileTree';
+import { FileTreeContext } from '../contexts/FileTreeContext';
 import { useSettings } from '../hooks/useSettings';
 import { collabService } from '../services/CollabService';
 import { fileStorageEventEmitter } from '../services/FileStorageService';
@@ -54,7 +55,8 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 }) => {
   const { user } = useAuth();
   const { registerSetting, getSetting } = useSettings();
-  const { refreshFileTree } = useFileTree();
+  const fileTreeContext = useContext(FileTreeContext);
+  const refreshFileTree = fileTreeContext?.refreshFileTree ?? (async () => []);
 
   const [isFileSyncEnabled, setIsFileSyncEnabled] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);

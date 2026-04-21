@@ -67,13 +67,16 @@ import {
 
 import { useAuth } from '../useAuth';
 import { useEditor } from '../useEditor';
+import { useSettings } from '../useSettings';
 
 import { autoSaveManager } from '../../utils/autoSaveUtils';
 import { detectFileType, isBibFile } from '../../utils/fileUtils.ts';
 import { collabService } from '../../services/CollabService';
 import { fileStorageService } from '../../services/FileStorageService';
 import { filePathCacheService } from '../../services/FilePathCacheService';
+import { pluginRegistry } from '../../plugins/PluginRegistry';
 
+import { createLanguageToolExtension } from '../../extensions/codemirror/LanguageToolExtension';
 import { registerYjsBinding } from './yjsBinding';
 import { registerEditorClipboard } from './editorClipboard';
 import { registerEditorSearchHighlightEvents } from './editorSearchHighlights';
@@ -109,6 +112,7 @@ export const useEditorView = (
         editorSettings,
     } = useEditor();
 
+    const { getSetting } = useSettings();
     const { user } = useAuth();
 
     const ytextRef = useRef<Y.Text | null>(null);
@@ -416,8 +420,20 @@ export const useEditorView = (
         extensions.push(...genericLSPExts);
         const genericLSPCompletions = getGenericLSPCompletionSources(fileName);
         completionSources.push(...genericLSPCompletions);
-        if (genericLSPExts.length > 0) {
-            extensions.push(createCodeActionsExtension(fileName));
+
+        // Always include the code actions extension so right-click fixes work for diagnostics
+        // coming from LanguageTool or other non-LSP lint providers.
+        extensions.push(createCodeActionsExtension(fileName));
+
+        const ltPlugin = pluginRegistry.getLSPPlugin('languagetool-lsp');
+        if (ltPlugin?.isEnabled()) {
+            const serverUrl =
+                (getSetting('languagetool-server-url')?.value as string) ??
+                'http://localhost:8010';
+            const language =
+                (getSetting('languagetool-language')?.value as string) ??
+                'en-US';
+            extensions.push(...createLanguageToolExtension(fileName || '', serverUrl, language));
         }
 
         if (isLatexFileType || isTypstFileType || isBibFileType) {

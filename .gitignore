@@ -27,3 +27,5 @@ src/plugins/
 *.njsproj
 *.sln
 *.sw?
+
+node_modules

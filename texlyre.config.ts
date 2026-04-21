@@ -39,7 +39,7 @@ const config: TexlyreConfig = {
         renderers: ['pdf', 'canvas'],
         loggers: ['latex_visualizer', 'typst_visualizer'],
         bibliography: ['zotero', 'openalex'], // 'jabref' 
-        lsp: [],
+        lsp: ['languagetool'],
         backup: ['github', 'gitlab', 'forgejo', 'gitea'],
         themes: ['texlyre_slim', 'texlyre_wide', 'texlyre_mobile'],
     },

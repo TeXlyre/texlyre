@@ -13,6 +13,7 @@ export default {
 	  "loggers/typst_visualizer",
 	  "bibliography/zotero",
 	  "bibliography/openalex",
+	  "lsp/languagetool",
 	  "backup/github",
 	  "backup/gitlab",
 	  "backup/forgejo",

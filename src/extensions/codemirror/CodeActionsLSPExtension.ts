@@ -36,6 +36,29 @@ interface LspDiagnostic {
     message: string;
     severity?: number;
     source?: string;
+    info?: { replacements: string[]; raw: unknown };
+}
+
+function resolveDiagnosticActions(diagnostic: LspDiagnostic, fileUri: string): ResolvedAction[] {
+    const actions: ResolvedAction[] = [];
+    if (diagnostic.info?.replacements?.length) {
+        for (const replacement of diagnostic.info.replacements.slice(0, 3)) {
+            actions.push({
+                title: `Replace with "${replacement}"`,
+                edit: {
+                    changes: {
+                        [fileUri]: [
+                            {
+                                range: diagnostic.range,
+                                newText: replacement,
+                            },
+                        ],
+                    },
+                },
+            });
+        }
+    }
+    return actions;
 }
 
 interface ResolvedAction {
@@ -88,6 +111,7 @@ function getDiagnosticsAtPosition(state: any, pos: number): LspDiagnostic[] {
                 message: d.message,
                 severity: d.severity === 'error' ? 1 : d.severity === 'warning' ? 2 : 3,
                 source: d.source,
+                info: (d as any).info,
             });
         }
     });
@@ -155,13 +179,15 @@ function applyAction(action: ResolvedAction, view: EditorView, fileUri: string, 
     }
 }
 
-const setCodeActions = StateEffect.define<{ pos: number; actions: ResolvedAction[]; fileUri: string; clients: LSPClient[] } | null>();
+const setCodeActions = StateEffect.define<{ pos: number; actions: ResolvedAction[]; fileUri: string; clients: LSPClient[]; message?: string; showTooltip?: boolean } | null>();
 
 interface CodeActionState {
     pos: number;
     actions: ResolvedAction[];
     fileUri: string;
     clients: LSPClient[];
+    message?: string;
+    showTooltip?: boolean;
 }
 
 const codeActionField = StateField.define<CodeActionState | null>({
@@ -182,7 +208,8 @@ const codeActionField = StateField.define<CodeActionState | null>({
     provide(field) {
         return showTooltip.compute([field], (state) => {
             const value = state.field(field);
-            if (!value || value.actions.length === 0) return null;
+            if (!value || !value.showTooltip) return null;
+            if (value.actions.length === 0 && !value.message) return null;
 
             return {
                 pos: value.pos,
@@ -190,6 +217,13 @@ const codeActionField = StateField.define<CodeActionState | null>({
                 create(view: EditorView) {
                     const dom = document.createElement('div');
                     dom.className = 'cm-code-actions-tooltip';
+
+                    if (value.message) {
+                        const messageDom = document.createElement('div');
+                        messageDom.className = 'cm-code-action-message';
+                        messageDom.textContent = value.message;
+                        dom.appendChild(messageDom);
+                    }
 
                     value.actions.forEach(action => {
                         const button = document.createElement('button');
@@ -231,58 +265,88 @@ export function createCodeActionsExtension(fileName: string): Extension {
         }
     );
 
-    const fetchCodeActions = async (view: EditorView) => {
-        const clients = genericLSPService.getAllClientsForFile(fileName);
-        if (clients.length === 0) return;
-
-        const requestId = ++pendingRequest;
-        const pos = view.state.selection.main.head;
+    const fetchCodeActions = async (view: EditorView, pos: number, showTooltip = false) => {
         const diagnostics = getDiagnosticsAtPosition(view.state, pos);
-
         if (diagnostics.length === 0) {
             view.dispatch({ effects: setCodeActions.of(null) });
             return;
         }
 
-        const lspPos = offsetToPos(view.state.doc, pos);
+        const requestId = ++pendingRequest;
+        const clients = genericLSPService.getAllClientsForFile(fileName);
 
-        const actionPromises = clients.map(async client => {
-            try {
-                const capabilities = (client as any).serverCapabilities;
-                if (!capabilities?.codeActionProvider) return [];
+        const actionPromises = clients.length > 0
+            ? clients.map(async client => {
+                const lspPos = offsetToPos(view.state.doc, pos);
+                try {
+                    const capabilities = (client as any).serverCapabilities;
+                    if (!capabilities?.codeActionProvider) return [];
 
-                const result = await (client as any).request('textDocument/codeAction', {
-                    textDocument: { uri: fileUri },
-                    range: { start: lspPos, end: lspPos },
-                    context: {
-                        diagnostics,
-                        only: ['quickfix'],
-                    },
-                });
+                    const result = await (client as any).request('textDocument/codeAction', {
+                        textDocument: { uri: fileUri },
+                        range: { start: lspPos!, end: lspPos! },
+                        context: {
+                            diagnostics,
+                            only: ['quickfix'],
+                        },
+                    });
 
-                return (result || []) as CodeActionOrCommand[];
-            } catch {
-                return [];
-            }
-        });
+                    return (result || []) as CodeActionOrCommand[];
+                } catch {
+                    return [];
+                }
+            })
+            : [];
 
         const results = await Promise.all(actionPromises);
         if (requestId !== pendingRequest) return;
 
-        const allActions = results.flat().filter(a => a.title).map(resolveAction);
+        const lspActions = results.flat().filter(a => a.title).map(resolveAction);
+        const diagnosticActions = diagnostics.flatMap(d => resolveDiagnosticActions(d, fileUri));
+        const allActions = [...lspActions, ...diagnosticActions];
         const uniqueActions = allActions.filter((action, index) =>
             allActions.findIndex(a => a.title === action.title) === index
         );
 
-        if (uniqueActions.length === 0) {
-            view.dispatch({ effects: setCodeActions.of(null) });
-            return;
-        }
-
         view.dispatch({
-            effects: setCodeActions.of({ pos, actions: uniqueActions, fileUri, clients }),
+            effects: setCodeActions.of({
+                pos,
+                actions: uniqueActions,
+                fileUri,
+                clients,
+                message: diagnostics[0]?.message,
+                showTooltip,
+            }),
         });
     };
+
+    const contextMenuHandler = EditorView.domEventHandlers({
+        mousedown(event, view) {
+            if (event.button !== 2) return false;
+
+            const pos = view.posAtCoords({ x: event.clientX, y: event.clientY }) ?? view.state.selection.main.head;
+            if (pos == null) return false;
+
+            const diagnostics = getDiagnosticsAtPosition(view.state, pos);
+            if (diagnostics.length === 0) return false;
+
+            event.preventDefault();
+            return true;
+        },
+        contextmenu(event, view) {
+            const pos = view.posAtCoords({ x: event.clientX, y: event.clientY }) ?? view.state.selection.main.head;
+            if (pos == null) return false;
+
+            const diagnostics = getDiagnosticsAtPosition(view.state, pos);
+            if (diagnostics.length === 0) return false;
+
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            if (debounceTimer) clearTimeout(debounceTimer);
+            void fetchCodeActions(view, pos, true);
+            return true;
+        },
+    });
 
     const listener = EditorView.updateListener.of((update) => {
         if (update.docChanged) {
@@ -294,14 +358,41 @@ export function createCodeActionsExtension(fileName: string): Extension {
         if (update.selectionSet) {
             if (debounceTimer) clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
-                fetchCodeActions(update.view);
+                fetchCodeActions(update.view, update.view.state.selection.main.head);
             }, 600);
         }
     });
 
     const theme = EditorView.baseTheme({
-
+        '.cm-code-actions-tooltip': {
+            padding: '0.5rem',
+            backgroundColor: 'var(--pico-secondary-background)',
+            color: 'var(--pico-color)',
+            border: '1px solid var(--pico-border)',
+            borderRadius: '0.5rem',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+            maxWidth: '320px',
+            zIndex: '9999',
+        },
+        '.cm-code-actions-tooltip button': {
+            width: '100%',
+            textAlign: 'left',
+            padding: '0.5rem 0.75rem',
+            margin: '0.15rem 0 0 0',
+            border: 'none',
+            background: 'transparent',
+            color: 'inherit',
+            cursor: 'pointer',
+            borderRadius: '0.35rem',
+        },
+        '.cm-code-actions-tooltip button:hover': {
+            backgroundColor: 'var(--pico-primary-background)',
+        },
+        '.cm-code-action-message': {
+            marginBottom: '0.5rem',
+            whiteSpace: 'pre-wrap',
+        },
     });
 
-    return [codeActionField, listener, theme, applyEditPlugin];
+    return [codeActionField, listener, contextMenuHandler, theme, applyEditPlugin];
 }

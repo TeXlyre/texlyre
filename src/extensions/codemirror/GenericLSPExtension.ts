@@ -146,7 +146,9 @@ function createLSPDiagnosticsExtension(fileName: string): Extension {
         }
     );
 
-    const diagnosticsLinter = linter(() => currentDiagnostics, { delay: 0 });
+    const diagnosticsLinter = linter(() => currentDiagnostics, {
+        delay: 0,
+    });
 
     return [diagnosticsPlugin, diagnosticsLinter];
 }
