@@ -18,7 +18,7 @@ import { isLatexFile, isTemporaryFile } from '../../utils/fileUtils';
 import { fileStorageService } from '../../services/FileStorageService';
 import { latexService } from '../../services/LaTeXService';
 import { BUSYTEX_BUNDLE_LABELS } from '../../extensions/texlyre-busytex/BusyTeXService';
-import { ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon } from '../common/Icons';
+import { ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon, OptionsIcon } from '../common/Icons';
 
 interface LaTeXCompileButtonProps {
   dropdownKey?: string;
@@ -79,6 +79,8 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
   const [isChangingEngine, setIsChangingEngine] = useState(false);
   const [bundleCacheStatus, setBundleCacheStatus] = useState<Record<string, boolean>>({});
   const [isDeletingBundle, setIsDeletingBundle] = useState<string | null>(null);
+  const [selectedBundle, setSelectedBundle] = useState<string>('recommended');
+  const [isCacheOptionsOpen, setIsCacheOptionsOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [isDropdownOpen, setIsDropdownOpen] = usePersistentState(dropdownKey, false);
@@ -119,6 +121,13 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
       subcategory: 'LaTeX',
       defaultValue: 'pdf'
     });
+
+    registerProperty({
+      id: 'latex-busytex-bundle',
+      category: 'Compilation',
+      subcategory: 'LaTeX',
+      defaultValue: 'recommended'
+    });
   }, [registerProperty]);
 
   useEffect(() => {
@@ -127,10 +136,15 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     const storedMainFile = getProperty('latex-main-file');
     const storedEngine = getProperty('latex-engine');
     const storedFormat = getProperty('latex-output-format');
+    const storedBundle = getProperty('latex-busytex-bundle');
 
     if (storedMainFile !== undefined) setUserSelectedMainFile(storedMainFile as string | undefined);
     if (storedEngine !== undefined) setLatexEngine(storedEngine as LaTeXEngine);
     if (storedFormat !== undefined) setCurrentFormat(storedFormat as LaTeXOutputFormat);
+    if (storedBundle !== undefined) {
+      setSelectedBundle(storedBundle as string);
+      latexService.setBusyTeXBundles([storedBundle as string]);
+    }
 
     setPropertiesLoaded(true);
   }, [getProperty, propertiesLoaded, setLatexEngine]);
@@ -228,7 +242,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
   ]);
 
   useEffect(() => {
-    if (!isBusyTeX || !isDropdownOpen) return;
+    if (!isBusyTeX || !isCacheOptionsOpen) return;
 
     const checkBundleCache = async () => {
       const status: Record<string, boolean> = {};
@@ -239,7 +253,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     };
 
     checkBundleCache();
-  }, [isBusyTeX, isDropdownOpen]);
+  }, [isBusyTeX, isCacheOptionsOpen]);
 
   const shouldNavigateToMain = async (mainFilePath: string): Promise<boolean> => {
     const navigationSetting = getSetting('latex-auto-navigate-to-main')?.value as string ?? 'conditional';
@@ -340,7 +354,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
         await setLatexEngine(engine as LaTeXEngine);
         setProperty('latex-engine', engine);
       }
-      setIsDropdownOpen(false);
+      // setIsDropdownOpen(false);
     } catch (error) {
       console.error('Failed to change engine:', error);
     } finally {
@@ -386,6 +400,12 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
       if (!d.projectMetadata) d.projectMetadata = { name: '', description: '' };
       d.projectMetadata.latexAutoCompileOnSave = checked;
     });
+  };
+
+  const handleBundleChange = (bundleId: string) => {
+    setSelectedBundle(bundleId);
+    setProperty('latex-busytex-bundle', bundleId);
+    latexService.setBusyTeXBundles([bundleId]);
   };
 
   const handleDeleteBundle = async (bundleId: string) => {
@@ -486,23 +506,35 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
         <div className="dropdown-section">
           <div className="dropdown-title">{t('LaTeX Engine:')}</div>
-          <select
-            value={effectiveEngine}
-            onChange={(e) => handleEngineChange(e.target.value)}
-            className="dropdown-select"
-            disabled={isChangingEngine || isCompiling}>
-            <optgroup label={t('SwiftLaTeX (TeX Live 2020)')}>
-              {SWIFT_ENGINES.map(({ label, value }) => (
-                <option key={value} value={value}>{t(label)}</option>
-              ))}
-            </optgroup>
-            <optgroup label={t('BusyTeX (TeX Live 2026)')}>
-              {BUSYTEX_ENGINES.map(({ label, value }) => (
-                <option key={value} value={value}>{t(label)}</option>
-              ))}
-            </optgroup>
-          </select>
-          {useSharedSettings && (
+          <div className="format-selector-group">
+            <select
+              value={effectiveEngine}
+              onChange={(e) => handleEngineChange(e.target.value)}
+              className="dropdown-select"
+              disabled={isChangingEngine || isCompiling}>
+              <optgroup label={t('SwiftLaTeX (TeX Live 2020)')}>
+                {SWIFT_ENGINES.map(({ label, value }) => (
+                  <option key={value} value={value}>{t(label)}</option>
+                ))}
+              </optgroup>
+              <optgroup label={t('BusyTeX (TeX Live 2026)')}>
+                {BUSYTEX_ENGINES.map(({ label, value }) => (
+                  <option key={value} value={value}>{t(label)}</option>
+                ))}
+              </optgroup>
+            </select>
+            {isBusyTeX && (
+              <button
+                className={`pdf-options-toggle ${isCacheOptionsOpen ? 'active' : ''}`}
+                onClick={() => setIsCacheOptionsOpen(!isCacheOptionsOpen)}
+                title={t('Bundle Cache Options')}
+                disabled={isChangingEngine || isCompiling}>
+                <OptionsIcon />
+              </button>
+            )}
+          </div>
+          {/* TODO (fabawi): Need to restore this but it is causing infinite loop on change for now */}
+          {/* {useSharedSettings && (
             <label className="dropdown-checkbox">
               <input
                 type="checkbox"
@@ -511,34 +543,43 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
                 disabled={isChangingEngine || isCompiling} />
               {t('Share with collaborators')}
             </label>
-          )}
+          )} */}
           {isChangingEngine && (
             <div className="engine-status">{t('Switching engine...')}</div>
           )}
+          {isBusyTeX && isCacheOptionsOpen && (
+            <div className="pdf-options-section">
+              <div className="dropdown-label">{t('Bundle for next compile:')}</div>
+              <select
+                value={selectedBundle}
+                onChange={(e) => handleBundleChange(e.target.value)}
+                className="dropdown-select"
+                disabled={isChangingEngine || isCompiling}>
+                {Object.entries(BUSYTEX_BUNDLE_LABELS).map(([id, label]) => (
+                  <option key={id} value={id}>{t(label)}</option>
+                ))}
+              </select>
+              <div className="dropdown-label" style={{ marginTop: 'var(--space-sm)' }}>{t('Cached bundles:')}</div>
+              {Object.entries(BUSYTEX_BUNDLE_LABELS).map(([bundleId, label]) => (
+                <div key={bundleId} className="bundle-cache-row">
+                  <span className="bundle-label">{t(label)}</span>
+                  <span className={`bundle-status ${bundleCacheStatus[bundleId] ? 'cached' : 'not-cached'}`}>
+                    {bundleCacheStatus[bundleId] ? t('cached') : t('not downloaded')}
+                  </span>
+                  {bundleCacheStatus[bundleId] && (
+                    <button
+                      className="bundle-delete-btn"
+                      onClick={() => handleDeleteBundle(bundleId)}
+                      disabled={isDeletingBundle === bundleId || isCompiling}
+                      title={t('Delete cached bundle')}>
+                      <TrashIcon />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-
-        {isBusyTeX && (
-          <div className="dropdown-section">
-            <div className="dropdown-title">{t('TeX Live 2026 Bundles:')}</div>
-            {Object.entries(BUSYTEX_BUNDLE_LABELS).map(([bundleId, label]) => (
-              <div key={bundleId} className="bundle-cache-row">
-                <span className="bundle-label">{t(label)}</span>
-                <span className={`bundle-status ${bundleCacheStatus[bundleId] ? 'cached' : 'not-cached'}`}>
-                  {bundleCacheStatus[bundleId] ? t('cached') : t('not downloaded')}
-                </span>
-                {bundleCacheStatus[bundleId] && (
-                  <button
-                    className="bundle-delete-btn"
-                    onClick={() => handleDeleteBundle(bundleId)}
-                    disabled={isDeletingBundle === bundleId || isCompiling}
-                    title={t('Delete cached bundle')}>
-                    <TrashIcon />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
 
         <div className="dropdown-section">
           <div className="format-selector-header">

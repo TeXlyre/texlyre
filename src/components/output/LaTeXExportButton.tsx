@@ -12,7 +12,9 @@ import type { LaTeXEngine } from '../../types/latex';
 import type { DocumentList } from '../../types/documents';
 import type { FileNode } from '../../types/files';
 import { isLatexFile, isTemporaryFile } from '../../utils/fileUtils';
-import { ChevronDownIcon, ExportIcon } from '../common/Icons';
+import { latexService } from '../../services/LaTeXService';
+import { BUSYTEX_BUNDLE_LABELS } from '../../extensions/texlyre-busytex/BusyTeXService';
+import { ChevronDownIcon, ExportIcon, TrashIcon, OptionsIcon } from '../common/Icons';
 
 interface LaTeXExportButtonProps {
     className?: string;
@@ -58,6 +60,10 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
     const [includeLog, setIncludeLog] = useState(false);
     const [includeDvi, setIncludeDvi] = useState(false);
     const [includeBbl, setIncludeBbl] = useState(false);
+    const [selectedBundle, setSelectedBundle] = useState<string>('recommended');
+    const [isCacheOptionsOpen, setIsCacheOptionsOpen] = useState(false);
+    const [bundleCacheStatus, setBundleCacheStatus] = useState<Record<string, boolean>>({});
+    const [isDeletingBundle, setIsDeletingBundle] = useState<string | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const propertiesRegistered = useRef(false);
     const [propertiesLoaded, setPropertiesLoaded] = useState(false);
@@ -111,6 +117,13 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
             subcategory: 'LaTeX',
             defaultValue: false
         });
+
+        registerProperty({
+            id: 'latex-export-busytex-bundle',
+            category: 'Export',
+            subcategory: 'LaTeX',
+            defaultValue: 'recommended'
+        });
     }, [registerProperty]);
 
     useEffect(() => {
@@ -122,6 +135,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
         const storedIncludeLog = getProperty('latex-export-include-log');
         const storedIncludeDvi = getProperty('latex-export-include-dvi');
         const storedIncludeBbl = getProperty('latex-export-include-bbl');
+        const storedBundle = getProperty('latex-export-busytex-bundle');
 
         if (storedMainFile !== undefined) setUserSelectedMainFile(storedMainFile as string | undefined);
         if (storedEngine !== undefined) setSelectedEngine(storedEngine as LaTeXEngine);
@@ -129,6 +143,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
         if (storedIncludeLog !== undefined) setIncludeLog(Boolean(storedIncludeLog));
         if (storedIncludeDvi !== undefined) setIncludeDvi(Boolean(storedIncludeDvi));
         if (storedIncludeBbl !== undefined) setIncludeBbl(Boolean(storedIncludeBbl));
+        if (storedBundle !== undefined) setSelectedBundle(storedBundle as string);
 
         setPropertiesLoaded(true);
     }, [getProperty, propertiesLoaded]);
@@ -190,7 +205,21 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [isDropdownOpen]);
+    }, []);
+
+    useEffect(() => {
+        if (!isBusyTeX || !isCacheOptionsOpen) return;
+
+        const checkBundleCache = async () => {
+            const status: Record<string, boolean> = {};
+            for (const bundleId of Object.keys(BUSYTEX_BUNDLE_LABELS)) {
+                status[bundleId] = await latexService.isBusyTeXBundleCached(bundleId);
+            }
+            setBundleCacheStatus(status);
+        };
+
+        checkBundleCache();
+    }, [isBusyTeX, isCacheOptionsOpen]);
 
     const handleExport = async () => {
         if (!effectiveMainFile || isExporting) return;
@@ -225,6 +254,24 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
             const newMainFile = filePath === 'auto' ? undefined : filePath;
             setUserSelectedMainFile(newMainFile);
             setProperty('latex-export-main-file', newMainFile);
+        }
+    };
+
+    const handleBundleChange = (bundleId: string) => {
+        setSelectedBundle(bundleId);
+        setProperty('latex-export-busytex-bundle', bundleId);
+        latexService.setBusyTeXBundles([bundleId]);
+    };
+
+    const handleDeleteBundle = async (bundleId: string) => {
+        setIsDeletingBundle(bundleId);
+        try {
+            await latexService.deleteBusyTeXBundle(bundleId);
+            setBundleCacheStatus((prev) => ({ ...prev, [bundleId]: false }));
+        } catch (error) {
+            console.error('Failed to delete bundle:', error);
+        } finally {
+            setIsDeletingBundle(null);
         }
     };
 
@@ -294,26 +341,69 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
 
                 <div className="dropdown-section">
                     <div className="dropdown-title">{t('LaTeX Engine:')}</div>
-                    <select
-                        value={selectedEngine}
-                        onChange={(e) => {
-                            const engine = e.target.value as LaTeXEngine;
-                            setSelectedEngine(engine);
-                            setProperty('latex-export-engine', engine);
-                        }}
-                        className="dropdown-select"
-                        disabled={isExporting}>
-                        <optgroup label={t('SwiftLaTeX (TeX Live 2020)')}>
-                            {SWIFT_ENGINES.map(({ label, value }) => (
-                                <option key={value} value={value}>{t(label)}</option>
+                    <div className="format-selector-group">
+                        <select
+                            value={selectedEngine}
+                            onChange={(e) => {
+                                const engine = e.target.value as LaTeXEngine;
+                                setSelectedEngine(engine);
+                                setProperty('latex-export-engine', engine);
+                            }}
+                            className="dropdown-select"
+                            disabled={isExporting}>
+                            <optgroup label={t('SwiftLaTeX (TeX Live 2020)')}>
+                                {SWIFT_ENGINES.map(({ label, value }) => (
+                                    <option key={value} value={value}>{t(label)}</option>
+                                ))}
+                            </optgroup>
+                            <optgroup label={t('BusyTeX (TeX Live 2026)')}>
+                                {BUSYTEX_ENGINES.map(({ label, value }) => (
+                                    <option key={value} value={value}>{t(label)}</option>
+                                ))}
+                            </optgroup>
+                        </select>
+                        {isBusyTeX && (
+                            <button
+                                className={`pdf-options-toggle ${isCacheOptionsOpen ? 'active' : ''}`}
+                                onClick={() => setIsCacheOptionsOpen(!isCacheOptionsOpen)}
+                                title={t('Bundle Cache Options')}
+                                disabled={isExporting}>
+                                <OptionsIcon />
+                            </button>
+                        )}
+                    </div>
+                    {isBusyTeX && isCacheOptionsOpen && (
+                        <div className="pdf-options-section">
+                            <div className="dropdown-label">{t('Bundle for export:')}</div>
+                            <select
+                                value={selectedBundle}
+                                onChange={(e) => handleBundleChange(e.target.value)}
+                                className="dropdown-select"
+                                disabled={isExporting}>
+                                {Object.entries(BUSYTEX_BUNDLE_LABELS).map(([id, label]) => (
+                                    <option key={id} value={id}>{t(label)}</option>
+                                ))}
+                            </select>
+                            <div className="dropdown-label" style={{ marginTop: 'var(--space-sm)' }}>{t('Cached bundles:')}</div>
+                            {Object.entries(BUSYTEX_BUNDLE_LABELS).map(([bundleId, label]) => (
+                                <div key={bundleId} className="bundle-cache-row">
+                                    <span className="bundle-label">{t(label)}</span>
+                                    <span className={`bundle-status ${bundleCacheStatus[bundleId] ? 'cached' : 'not-cached'}`}>
+                                        {bundleCacheStatus[bundleId] ? t('cached') : t('not downloaded')}
+                                    </span>
+                                    {bundleCacheStatus[bundleId] && (
+                                        <button
+                                            className="bundle-delete-btn"
+                                            onClick={() => handleDeleteBundle(bundleId)}
+                                            disabled={isDeletingBundle === bundleId || isExporting}
+                                            title={t('Delete cached bundle')}>
+                                            <TrashIcon />
+                                        </button>
+                                    )}
+                                </div>
                             ))}
-                        </optgroup>
-                        <optgroup label={t('BusyTeX (TeX Live 2026)')}>
-                            {BUSYTEX_ENGINES.map(({ label, value }) => (
-                                <option key={value} value={value}>{t(label)}</option>
-                            ))}
-                        </optgroup>
-                    </select>
+                        </div>
+                    )}
                 </div>
 
                 <div className="dropdown-section">
