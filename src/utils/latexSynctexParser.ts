@@ -4,6 +4,7 @@ import { inflate } from 'pako';
 import type { SourceMapData, SourceMapForwardResult, SourceMapReverseResult } from '../types/sourceMap';
 
 const SP_TO_PT = 1 / 65536;
+const LINE_SNAP_PT = 2;
 
 interface Block {
     page: number;
@@ -20,6 +21,9 @@ interface Block {
 interface SynctexIndex {
     forwardMap: Map<string, Block[]>;
     reverseMap: Map<number, Block[]>;
+    magnification: number;
+    xOffset: number;
+    yOffset: number;
 }
 
 function decodeSynctex(bytes: Uint8Array): string {
@@ -60,32 +64,38 @@ function buildIndex(text: string): SynctexIndex {
     const inputs = new Map<number, string>();
     const forwardMap = new Map<string, Block[]>();
     const reverseMap = new Map<number, Block[]>();
-
+    let magnification = 1000;
+    let xOffset = 0;
+    let yOffset = 0;
     let currentPage = 0;
     let inContent = false;
 
     for (const line of lines) {
         if (!line) continue;
 
+        if (line.startsWith('Magnification:')) {
+            magnification = Number.parseInt(line.substring(14), 10) || 1000;
+            continue;
+        }
+        if (line.startsWith('X Offset:')) {
+            xOffset = Number.parseFloat(line.substring(9)) || 0;
+            continue;
+        }
+        if (line.startsWith('Y Offset:')) {
+            yOffset = Number.parseFloat(line.substring(9)) || 0;
+            continue;
+        }
         if (line.startsWith('Input:')) {
             const parts = line.substring(6).split(':');
             if (parts.length >= 2) {
                 const tag = Number.parseInt(parts[0], 10);
                 const path = parts.slice(1).join(':').trim();
-                if (!Number.isNaN(tag)) {
-                    inputs.set(tag, path);
-                }
+                if (!Number.isNaN(tag)) inputs.set(tag, path);
             }
             continue;
         }
-
-        if (line === 'Content:') {
-            inContent = true;
-            continue;
-        }
-
+        if (line === 'Content:') { inContent = true; continue; }
         if (!inContent) continue;
-
         if (line.startsWith('Postamble:')) break;
 
         const firstChar = line[0];
@@ -94,28 +104,20 @@ function buildIndex(text: string): SynctexIndex {
             const pageNum = Number.parseInt(line.substring(1), 10);
             if (!Number.isNaN(pageNum)) {
                 currentPage = pageNum;
-                if (!reverseMap.has(currentPage)) {
-                    reverseMap.set(currentPage, []);
-                }
+                if (!reverseMap.has(currentPage)) reverseMap.set(currentPage, []);
             }
             continue;
         }
-
-        if (firstChar === '}') {
-            currentPage = 0;
-            continue;
-        }
-
-        if (firstChar !== '[' && firstChar !== '(' && firstChar !== 'h' && firstChar !== 'v' && firstChar !== 'x' && firstChar !== 'k' && firstChar !== 'g' && firstChar !== '$') {
-            continue;
-        }
+        if (firstChar === '}') { currentPage = 0; continue; }
+        if (firstChar !== '[' && firstChar !== '(' && firstChar !== 'h' &&
+            firstChar !== 'v' && firstChar !== 'x' && firstChar !== 'k' &&
+            firstChar !== 'g' && firstChar !== '$') continue;
 
         const prefixEnd = line.indexOf(':');
         if (prefixEnd === -1) continue;
 
         const prefix = line.substring(1, prefixEnd);
-        const tagStr = prefix.split(',')[0];
-        const tag = Number.parseInt(tagStr, 10);
+        const tag = Number.parseInt(prefix.split(',')[0], 10);
         if (Number.isNaN(tag)) continue;
 
         const file = inputs.get(tag);
@@ -138,60 +140,32 @@ function buildIndex(text: string): SynctexIndex {
 
         const key = `${file}:${fields.line}`;
         const forwardList = forwardMap.get(key);
-        if (forwardList) {
-            forwardList.push(block);
-        } else {
-            forwardMap.set(key, [block]);
-        }
+        if (forwardList) forwardList.push(block);
+        else forwardMap.set(key, [block]);
 
-        const reverseList = reverseMap.get(currentPage);
-        if (reverseList) {
-            reverseList.push(block);
-        }
+        reverseMap.get(currentPage)?.push(block);
     }
 
-    return { forwardMap, reverseMap };
+    return { forwardMap, reverseMap, magnification, xOffset, yOffset };
 }
 
 function normalizePath(file: string): string {
     return file.replace(/^\.?\/+/, '').replace(/^_+/, '');
 }
 
-function findForwardBlock(index: SynctexIndex, file: string, line: number): Block | null {
-    const normalized = normalizePath(file);
+function medianLineHeight(index: SynctexIndex, page: number): number {
+    const pageBlocks = index.reverseMap.get(page);
+    if (!pageBlocks) return 12;
 
-    for (const [key, blocks] of index.forwardMap.entries()) {
-        const [blockFile, blockLine] = key.split(':');
-        if (Number.parseInt(blockLine, 10) !== line) continue;
-
-        const normalizedBlockFile = normalizePath(blockFile);
-        if (normalizedBlockFile === normalized || normalizedBlockFile.endsWith(`/${normalized}`) || normalized.endsWith(`/${normalizedBlockFile}`)) {
-            return blocks[0];
-        }
+    const heights: number[] = [];
+    for (const b of pageBlocks) {
+        const h = b.height + b.depth;
+        if (h > 0 && h < 50) heights.push(h);
     }
+    if (heights.length === 0) return 12;
 
-    let closest: Block | null = null;
-    let closestDelta = Number.POSITIVE_INFINITY;
-
-    for (const [key, blocks] of index.forwardMap.entries()) {
-        const [blockFile, blockLineStr] = key.split(':');
-        const normalizedBlockFile = normalizePath(blockFile);
-
-        const fileMatches = normalizedBlockFile === normalized ||
-            normalizedBlockFile.endsWith(`/${normalized}`) ||
-            normalized.endsWith(`/${normalizedBlockFile}`);
-
-        if (!fileMatches) continue;
-
-        const blockLine = Number.parseInt(blockLineStr, 10);
-        const delta = Math.abs(blockLine - line);
-        if (delta < closestDelta) {
-            closestDelta = delta;
-            closest = blocks[0];
-        }
-    }
-
-    return closest;
+    heights.sort((a, b) => a - b);
+    return heights[Math.floor(heights.length / 2)];
 }
 
 function findReverseBlock(index: SynctexIndex, page: number, x: number, y: number): Block | null {
@@ -237,15 +211,70 @@ export function parseSynctex(bytes: Uint8Array): SourceMapData {
 
     return {
         forward(file: string, line: number, _column?: number): SourceMapForwardResult | null {
-            const block = findForwardBlock(index, file, line);
-            if (!block) return null;
-            return {
-                page: block.page,
-                x: block.x,
-                y: block.y - block.height,
-                width: block.width || undefined,
-                height: (block.height + block.depth) || undefined,
-            };
+            const normalized = normalizePath(file);
+            let candidates: Block[] = [];
+
+            for (const [key, blocks] of index.forwardMap.entries()) {
+                const colonIdx = key.lastIndexOf(':');
+                const blockFile = key.substring(0, colonIdx);
+                const blockLine = Number.parseInt(key.substring(colonIdx + 1), 10);
+                const normalizedBlockFile = normalizePath(blockFile);
+
+                const fileMatches =
+                    normalizedBlockFile === normalized ||
+                    normalizedBlockFile.endsWith(`/${normalized}`) ||
+                    normalized.endsWith(`/${normalizedBlockFile}`);
+
+                if (!fileMatches) continue;
+                if (blockLine === line) candidates.push(...blocks);
+            }
+
+            if (candidates.length === 0) {
+                let closestDelta = Number.POSITIVE_INFINITY;
+                for (const [key, blocks] of index.forwardMap.entries()) {
+                    const colonIdx = key.lastIndexOf(':');
+                    const blockFile = key.substring(0, colonIdx);
+                    const blockLine = Number.parseInt(key.substring(colonIdx + 1), 10);
+                    const normalizedBlockFile = normalizePath(blockFile);
+
+                    const fileMatches =
+                        normalizedBlockFile === normalized ||
+                        normalizedBlockFile.endsWith(`/${normalized}`) ||
+                        normalized.endsWith(`/${normalizedBlockFile}`);
+
+                    if (!fileMatches) continue;
+                    const delta = Math.abs(blockLine - line);
+                    if (delta < closestDelta) {
+                        closestDelta = delta;
+                        candidates = blocks;
+                    }
+                }
+            }
+
+            if (candidates.length === 0) return null;
+
+            const page = candidates[0].page;
+            const withWidth = candidates.filter((b) => b.width > 0);
+            const pool = withWidth.length > 0 ? withWidth : candidates;
+            const fallbackHeight = medianLineHeight(index, page);
+
+            // Group blocks into PDF lines by snapping close y values together
+            const groups: Block[][] = [];
+            for (const block of pool) {
+                const group = groups.find((g) => Math.abs(g[0].y - block.y) <= LINE_SNAP_PT);
+                if (group) group.push(block);
+                else groups.push([block]);
+            }
+
+            const rects = groups.map((group) => {
+                const rep = group.reduce((a, b) => (a.width >= b.width ? a : b));
+                const blockHeight = rep.height + rep.depth;
+                const lineHeight = blockHeight > 0 ? blockHeight : fallbackHeight;
+                const topY = rep.y - (blockHeight > 0 ? rep.height : lineHeight * 0.8);
+                return { x: rep.x, y: topY, width: rep.width, height: lineHeight };
+            });
+
+            return { page, rects };
         },
 
         reverse(page: number, x: number, y: number): SourceMapReverseResult | null {

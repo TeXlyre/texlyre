@@ -166,7 +166,7 @@
 
 .pdf-page-scroll {
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   background-color: #f5f5f5 !important;
   padding: 10px 0;
   width: 100%;
@@ -212,7 +212,7 @@
   z-index: 2;
 }
 
-.textLayer > span {
+.textLayer>span {
   color: transparent;
   position: absolute;
   white-space: pre;
@@ -261,7 +261,7 @@
   user-select: none !important;
 }
 
-.annotationLayer .buttonWidgetAnnotation.pushButton > a {
+.annotationLayer .buttonWidgetAnnotation.pushButton>a {
   position: absolute;
   font-size: 1em;
   left: 0;
@@ -273,7 +273,7 @@
 .annotationLayer .textWidgetAnnotation input,
 .annotationLayer .textWidgetAnnotation textarea,
 .annotationLayer .choiceWidgetAnnotation select,
-.annotationLayer .buttonWidgetAnnotation.pushButton > a {
+.annotationLayer .buttonWidgetAnnotation.pushButton>a {
   background: rgba(0, 54, 255, 0.13);
   border: 1px solid transparent;
   box-sizing: border-box;
@@ -289,8 +289,8 @@
   padding: 0;
 }
 
-.annotationLayer .buttonWidgetAnnotation.pushButton > a:hover,
-.annotationLayer .buttonWidgetAnnotation.pushButton > a:focus {
+.annotationLayer .buttonWidgetAnnotation.pushButton>a:hover,
+.annotationLayer .buttonWidgetAnnotation.pushButton>a:focus {
   color: rgba(0, 0, 0, 1);
   background: rgba(0, 54, 255, 0.13);
 }
@@ -322,8 +322,8 @@
   background: rgba(0, 0, 0, 0.2);
 }
 
-.annotationLayer .linkAnnotation > a,
-.annotationLayer .buttonWidgetAnnotation.pushButton > a {
+.annotationLayer .linkAnnotation>a,
+.annotationLayer .buttonWidgetAnnotation.pushButton>a {
   pointer-events: auto;
 }
 
@@ -375,10 +375,12 @@
     opacity: 0;
     transform: scale(1.2);
   }
+
   30% {
     opacity: 1;
     transform: scale(1);
   }
+
   100% {
     opacity: 0.4;
     transform: scale(1);

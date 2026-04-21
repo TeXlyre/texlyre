@@ -60,6 +60,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
   const loggerPlugin = pluginRegistry.getLoggerForType('latex');
   const pdfRendererPlugin = pluginRegistry.getRendererForOutput('pdf');
   const canvasControllerRef = useRef<RendererController | null>(null);
+  const pdfControllerRef = useRef<RendererController | null>(null);
 
   const indicatorColor = {
     idle: '#777',
@@ -71,6 +72,9 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
   useEffect(() => {
     if (canvasControllerRef.current?.setHighlight) {
       canvasControllerRef.current.setHighlight(currentHighlight);
+    }
+    if (pdfControllerRef.current?.setHighlight) {
+      pdfControllerRef.current.setHighlight(currentHighlight);
     }
   }, [currentHighlight]);
 
@@ -214,6 +218,9 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
               fileName: 'output.pdf',
               onSave: handleSavePdf,
               onLocationClick: reverseSync,
+              controllerRef: (controller: RendererController) => {
+                pdfControllerRef.current = controller;
+              },
             })
           ) : (
             <embed

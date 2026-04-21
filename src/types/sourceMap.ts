@@ -1,10 +1,14 @@
 // src/types/sourceMap.ts
-export interface SourceMapForwardResult {
-    page: number;
+export interface SourceMapRect {
     x: number;
     y: number;
-    width?: number;
-    height?: number;
+    width: number;
+    height: number;
+}
+
+export interface SourceMapForwardResult {
+    page: number;
+    rects: SourceMapRect[];
 }
 
 export interface SourceMapReverseResult {
@@ -15,10 +19,7 @@ export interface SourceMapReverseResult {
 
 export interface SourceMapHighlight {
     page: number;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
+    rects: SourceMapRect[];
 }
 
 export interface SourceMapData {
