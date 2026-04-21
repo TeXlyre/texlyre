@@ -13,11 +13,9 @@ import { json } from '@codemirror/lang-json';
 
 import {
     bracketMatching,
-    defaultHighlightStyle,
     foldGutter,
     foldKeymap,
     indentOnInput,
-    syntaxHighlighting,
     bidiIsolates
 } from '@codemirror/language';
 import {
@@ -41,7 +39,7 @@ import { UndoManager } from 'yjs';
 
 import { resolveHighlightTheme } from '../../extensions/codemirror/HighlightThemeExtension';
 import { commentSystemExtension } from '../../extensions/codemirror/CommentExtension';
-import { latexTypstBidiIsolates } from "../../extensions/codemirror/BidiExtension";
+import { latexTypstBidiIsolates } from '../../extensions/codemirror/BidiExtension';
 import { searchHighlightExtension } from '../../extensions/codemirror/SearchHighlightExtension';
 import {
     createFilePathAutocompleteExtension,
@@ -173,7 +171,7 @@ export const useEditorView = (
     const saveDocumentToLinkedFile = async (content: string) => {
         if (!documentId || isEditingFile) return;
         try {
-            const allFiles = await fileStorageService.getAllFiles(false);
+            const allFiles = await fileStorageService.getAllFiles(false, false, false);
             const linkedFile = allFiles.find((file) => file.documentId === documentId);
             if (linkedFile) {
                 await fileStorageService.updateFileContent(linkedFile.id, content);
@@ -491,7 +489,7 @@ export const useEditorView = (
                     filePathCacheService.updateCurrentFilePath('', documentId);
                     updateLinkNavigationFileName(viewRef.current, fileName || '');
 
-                    const allFiles = await fileStorageService.getAllFiles(false);
+                    const allFiles = await fileStorageService.getAllFiles(false, false, false);
                     const linkedFile = allFiles.find((file) => file.documentId === documentId);
                     if (linkedFile && viewRef.current) {
                         updateLinkNavigationFilePath(viewRef.current, linkedFile.path);

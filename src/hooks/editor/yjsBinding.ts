@@ -1,16 +1,16 @@
 // src/hooks/editor/yjsBinding.ts
 import type * as Y from 'yjs';
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 import type { EditorView } from 'codemirror';
 
 interface YjsBindingOptions {
     enableComments: boolean;
     onUpdateContent: (content: string) => void;
     updateComments: (content: string) => void;
-    autoSaveRef: MutableRefObject<(() => void) | null>;
-    isUpdatingRef: MutableRefObject<boolean>;
-    viewRef: MutableRefObject<EditorView | null>;
-    hasEmittedReadyRef: MutableRefObject<boolean>;
+    autoSaveRef: RefObject<(() => void) | null>;
+    isUpdatingRef: RefObject<boolean>;
+    viewRef: RefObject<EditorView | null>;
+    hasEmittedReadyRef: RefObject<boolean>;
     currentFileId?: string;
     documentId?: string;
     isEditingFile: boolean;
