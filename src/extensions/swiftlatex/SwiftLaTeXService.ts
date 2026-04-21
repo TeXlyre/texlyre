@@ -7,7 +7,6 @@ import { PdfTeXEngine } from './PdfTeXEngine';
 import { XeTeXEngine } from './XeTeXEngine';
 import type { FileNode } from '../../types/files';
 import { fileStorageService } from '../../services/FileStorageService';
-import { latexSourceMapService } from '../../services/LaTeXSourceMapService';
 import { cleanContent } from '../../utils/fileCommentUtils';
 import { getMimeType, isBinaryFile, isTemporaryFile, toArrayBuffer } from '../../utils/fileUtils';
 
@@ -117,7 +116,6 @@ class SwiftLaTeXService {
 
         if (result.status === 0 && result.pdf && result.pdf.length > 0) {
             await this.saveCompilationOutput(mainFileName.replace(/^\/+/, ''), result);
-            await this.loadSourceMap(engine, mainFileName);
             await this.storeOutputDirectories(engine);
         } else {
             await this.saveCompilationLog(mainFileName.replace(/^\/+/, ''), result.log);
@@ -592,21 +590,6 @@ class SwiftLaTeXService {
             isBinary: false,
             excludeFromSync: true,
         };
-    }
-
-    private async loadSourceMap(engine: BaseEngine, mainFileName: string): Promise<void> {
-        try {
-            const baseName = this.getBaseName(mainFileName);
-            const workFiles = await engine.dumpDirectory('/work');
-            const synctexKey = Object.keys(workFiles).find(
-                (k) => k.endsWith(`${baseName}.synctex.gz`) || k.endsWith(`${baseName}.synctex`),
-            );
-            if (!synctexKey) { latexSourceMapService.clear(); return; }
-            latexSourceMapService.loadFromBytes(new Uint8Array(workFiles[synctexKey]));
-        } catch (error) {
-            console.error('[SwiftLaTeXService] Failed to load source map:', error);
-            latexSourceMapService.clear();
-        }
     }
 
     private async ensureOutputDirectoriesExist(): Promise<void> {

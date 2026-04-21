@@ -1,3 +1,4 @@
+// src/components/common/PositionedDropdown.tsx
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -10,6 +11,7 @@ interface PositionedDropdownProps {
   spacing?: number;
   padding?: number;
   align?: 'left' | 'right';
+  onClose?: () => void;
 }
 
 const PositionedDropdown: React.FC<PositionedDropdownProps> = ({
@@ -19,7 +21,8 @@ const PositionedDropdown: React.FC<PositionedDropdownProps> = ({
   className = '',
   spacing = 4,
   padding = 8,
-  align = 'right'
+  align = 'right',
+  onClose,
 }) => {
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const [isPositioned, setIsPositioned] = useState(false);
@@ -38,9 +41,10 @@ const PositionedDropdown: React.FC<PositionedDropdownProps> = ({
       const viewportHeight = window.innerHeight;
 
       let top = triggerRect.bottom + spacing;
-      let left = align === 'right'
-        ? triggerRect.right - dropdownRect.width
-        : triggerRect.left;
+      let left =
+        align === 'right'
+          ? triggerRect.right - dropdownRect.width
+          : triggerRect.left;
 
       if (left + dropdownRect.width > viewportWidth - padding) {
         left = viewportWidth - dropdownRect.width - padding;
@@ -74,8 +78,24 @@ const PositionedDropdown: React.FC<PositionedDropdownProps> = ({
   useEffect(() => {
     if (!isOpen) {
       setIsPositioned(false);
+      return;
     }
-  }, [isOpen]);
+
+    if (!onClose) return;
+
+    const handlePointerDown = (e: PointerEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node) &&
+        !triggerElement?.contains(e.target as Node)
+      ) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [isOpen, onClose, triggerElement]);
 
   if (!isOpen) return null;
 
@@ -89,11 +109,12 @@ const PositionedDropdown: React.FC<PositionedDropdownProps> = ({
         left: `${position.left}px`,
         zIndex: 1001,
         width: 'max-content',
-        opacity: isPositioned ? 1 : 0
-      }}>
+        opacity: isPositioned ? 1 : 0,
+      }}
+    >
       {children}
     </div>,
-    document.body
+    document.body,
   );
 };
 

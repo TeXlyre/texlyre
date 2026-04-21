@@ -7,9 +7,10 @@ import { busyTeXEngine, BUSYTEX_CACHE_DIR, MISSES_KEY } from './BusyTeXEngine';
 import type { BusyTeXEngineType, BusyTeXCompileResult } from './BusyTeXEngine';
 import type { CompileResult } from '../swiftlatex/BaseEngine';
 import type { FileNode } from '../../types/files';
-import { getMimeType, isBinaryFile, toArrayBuffer } from '../../utils/fileUtils';
 import { fileStorageService } from '../../services/FileStorageService';
 import { latexSourceMapService } from '../../services/LaTeXSourceMapService';
+import { getMimeType, isBinaryFile, toArrayBuffer } from '../../utils/fileUtils';
+import { cleanContent } from '../../utils/fileCommentUtils';
 
 export const BUSYTEX_BUNDLE_URLS: Record<string, string> = {
     basic: `${__BASE_PATH__}/core/busytex/texlive-basic.js`,
@@ -28,8 +29,13 @@ const REMOTE_FILES_DIR = `${BUSYTEX_CACHE_DIR}/remote`;
 class BusyTeXService {
     private storeCache = true;
     private storeWorkingDirectory = false;
+    private flattenMainDirectory = true;
     private texliveEndpoint = '';
     private selectedBundles: string[] = ['recommended'];
+
+    setFlattenMainDirectory(flatten: boolean): void {
+        this.flattenMainDirectory = flatten;
+    }
 
     setTexliveEndpoint(endpoint: string): void {
         this.texliveEndpoint = endpoint;
@@ -85,6 +91,17 @@ class BusyTeXService {
         await busyTeXEngine.setEngine(engineType);
     }
 
+    private flattenNodePath(nodePath: string, mainFileName: string): string {
+        const normalizedMain = mainFileName.replace(/^\/+/, '');
+        const lastSlash = normalizedMain.lastIndexOf('/');
+        if (lastSlash === -1) return nodePath.replace(/^\/+/, '');
+
+        const mainDir = normalizedMain.substring(0, lastSlash);
+        const normalized = nodePath.replace(/^\/+/, '');
+        const dirSlash = `${mainDir}/`;
+        return normalized.startsWith(dirSlash) ? normalized.substring(dirSlash.length) : normalized;
+    }
+
     async compile(
         mainFileName: string,
         fileNodes: FileNode[],
@@ -96,7 +113,16 @@ class BusyTeXService {
         const cachedMisses = await this.loadCachedMisses();
         await this.loadCachedRemoteFiles();
 
-        const result = await busyTeXEngine.compile(mainFileName, fileNodes, {
+        const cleanedNodes = fileNodes.map((node) => {
+            if (node.type !== 'file' || node.content === undefined) return node;
+            const cleaned = cleanContent(node.content);
+            const path = this.flattenMainDirectory
+                ? this.flattenNodePath(node.path, mainFileName)
+                : node.path.replace(/^\/+/, '');
+            return { ...node, path, content: cleaned };
+        });
+
+        const result = await busyTeXEngine.compile(mainFileName, cleanedNodes, {
             bibtex: true,
             makeindex: true,
             rerun: true,

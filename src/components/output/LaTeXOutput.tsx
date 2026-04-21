@@ -1,7 +1,6 @@
 // src/components/output/LaTeXOutput.tsx
 import { t } from '@/i18n';
-import React from 'react';
-import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFileTree } from '../../hooks/useFileTree';
 import { useLaTeX } from '../../hooks/useLaTeX';
@@ -11,8 +10,10 @@ import { useSettings } from '../../hooks/useSettings';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import type { RendererController } from '../../plugins/PluginInterface';
 import type { LaTeXOutputFormat } from '../../types/latex';
+import type { SourceMapClickMode } from '../../types/sourceMap';
 import ResizablePanel from '../common/ResizablePanel';
 import LaTeXCompileButton from './LaTeXCompileButton';
+import SourceMapFloatingButton from './SourceMapFloatingButton';
 import { isLatexFile, toArrayBuffer } from '../../utils/fileUtils';
 
 interface LaTeXOutputProps {
@@ -48,7 +49,13 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
     compileDocument,
   } = useLaTeX();
   const { selectedFileId, getFile } = useFileTree();
-  const { reverseSync, currentHighlight } = useSourceMap();
+  const {
+    reverseSync,
+    currentHighlight,
+    isAvailable: sourceMapAvailable,
+    reverseClickEnabled,
+    reverseClickMode,
+  } = useSourceMap();
   const { getSetting } = useSettings();
   const { getProperty, setProperty, registerProperty } = useProperties();
   const propertiesRegistered = useRef(false);
@@ -61,6 +68,9 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
   const pdfRendererPlugin = pluginRegistry.getRendererForOutput('pdf');
   const canvasControllerRef = useRef<RendererController | null>(null);
   const pdfControllerRef = useRef<RendererController | null>(null);
+
+  const clickCountRef = useRef(0);
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const indicatorColor = {
     idle: '#777',
@@ -205,6 +215,34 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
     ],
   );
 
+  const handleLocationClick = useCallback(
+    (page: number, x: number, y: number) => {
+      if (!reverseClickEnabled) return;
+
+      clickCountRef.current++;
+      if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+
+      clickTimerRef.current = setTimeout(() => {
+        const required: Record<SourceMapClickMode, number> = {
+          single: 1,
+          double: 2,
+          triple: 3,
+        };
+        if (clickCountRef.current >= required[reverseClickMode]) {
+          reverseSync(page, x, y);
+        }
+        clickCountRef.current = 0;
+      }, 300);
+    },
+    [reverseClickEnabled, reverseClickMode, reverseSync],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+    };
+  }, []);
+
   const outputViewerContent = useMemo(() => {
     if (currentView !== 'output') return null;
 
@@ -217,7 +255,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
               mimeType: 'application/pdf',
               fileName: 'output.pdf',
               onSave: handleSavePdf,
-              onLocationClick: reverseSync,
+              onLocationClick: handleLocationClick,
               controllerRef: (controller: RendererController) => {
                 pdfControllerRef.current = controller;
               },
@@ -252,7 +290,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
               controllerRef: (controller: RendererController) => {
                 canvasControllerRef.current = controller;
               },
-              onLocationClick: reverseSync,
+              onLocationClick: handleLocationClick,
             })
           ) : (
             <div className="canvas-fallback">
@@ -272,12 +310,13 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
     pdfRendererPlugin,
     useEnhancedRenderer,
     handleSavePdf,
+    handleLocationClick,
   ]);
 
   const hasAnyOutput = compiledPdf || compiledCanvas;
 
   return (
-    <div className={`latex-output ${className}`}>
+    <div className={`latex-output ${className}`} style={{ position: 'relative' }}>
       <div className="output-header">
         <div className="view-tabs">
           <button
@@ -372,6 +411,14 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 
           {outputViewerContent}
         </>
+      )}
+
+      {sourceMapAvailable && (
+        <SourceMapFloatingButton
+          onForwardSync={() => {
+            document.dispatchEvent(new CustomEvent('trigger-sourcemap-forward'));
+          }}
+        />
       )}
     </div>
   );

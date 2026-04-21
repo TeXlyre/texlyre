@@ -147,6 +147,16 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     });
 
     registerSetting({
+      id: 'latex-sourcemap-enabled',
+      category: t('Compilation'),
+      subcategory: t('LaTeX'),
+      type: 'checkbox',
+      label: t('Enable source map (SyncTeX)'),
+      description: t('Enable SyncTeX source mapping between editor and PDF output'),
+      defaultValue: true,
+    });
+
+    registerSetting({
       id: 'latex-auto-compile-on-open',
       category: t('Compilation'),
       subcategory: t('LaTeX'),
