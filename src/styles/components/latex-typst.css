@@ -244,6 +244,13 @@ embed {
 	cursor: wait;
 }
 
+.compile-button .loading-spinner {
+	width: 14px;
+	height: 14px;
+	border-width: 2px;
+	margin-bottom: 0;
+}
+
 .shared-indicator {
 	font-size: var(--space-sd);
 	color: var(--accent-color);
@@ -326,8 +333,53 @@ embed {
 	gap: var(--space-xs);
 }
 
+.bundle-cache-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	padding: var(--space-xs) 0;
+	font-size: 0.8rem;
+}
+
+.bundle-label {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.bundle-status {
+	font-size: 0.75rem;
+	color: var(--text-muted, #888);
+	white-space: nowrap;
+}
+
+.bundle-status.cached {
+	color: var(--color-success, #28a745);
+}
+
+.bundle-delete-btn {
+	background: none;
+	border: none;
+	cursor: pointer;
+	padding: 0 var(--space-xs);
+	color: var(--color-error, #dc3545);
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+}
+
+.bundle-delete-btn:hover:not(:disabled) {
+	opacity: 0.7;
+}
+
+.bundle-delete-btn:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
 .dropdown-section+.dropdown-section {
-	border-top: 1px solid var(--accent-border);
 	margin-top: var(--space-sm);
 	padding-top: var(--space-sm);
 }

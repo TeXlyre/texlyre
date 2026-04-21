@@ -11,12 +11,14 @@ import { useFileTree } from '../../hooks/useFileTree';
 import { useLaTeX } from '../../hooks/useLaTeX';
 import { useSettings } from '../../hooks/useSettings';
 import { useProperties } from '../../hooks/useProperties';
-import type { LaTeXOutputFormat } from '../../types/latex';
+import type { LaTeXOutputFormat, LaTeXEngine } from '../../types/latex';
 import type { DocumentList } from '../../types/documents';
 import type { FileNode } from '../../types/files';
-import { isLatexFile, isTemporaryFile } from '../../utils/fileUtils';
+import { isLatexFile, isLatexMainFile, isTemporaryFile } from '../../utils/fileUtils';
 import { fileStorageService } from '../../services/FileStorageService';
-import { ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon } from '../common/Icons';
+import { latexService } from '../../services/LaTeXService';
+import { BUSYTEX_BUNDLE_LABELS } from '../../extensions/texlyre-busytex/BusyTeXService';
+import { ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon, OptionsIcon } from '../common/Icons';
 
 interface LaTeXCompileButtonProps {
   dropdownKey?: string;
@@ -34,6 +36,17 @@ interface LaTeXCompileButtonProps {
   useSharedSettings?: boolean;
 }
 
+const SWIFT_ENGINES: Array<{ label: string; value: LaTeXEngine }> = [
+  { label: 'pdfTeX (SwiftLaTeX)', value: 'pdftex' },
+  { label: 'XeTeX (SwiftLaTeX)', value: 'xetex' },
+];
+
+const BUSYTEX_ENGINES: Array<{ label: string; value: LaTeXEngine }> = [
+  { label: 'pdfTeX (BusyTeX)', value: 'busytex-pdftex' },
+  { label: 'XeTeX (BusyTeX)', value: 'busytex-xetex' },
+  { label: 'LuaTeX (BusyTeX)', value: 'busytex-luatex' },
+];
+
 const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
   dropdownKey,
   className = '',
@@ -47,6 +60,9 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 }) => {
   const {
     isCompiling,
+    isInitializing,
+    setIsInitializing,
+    isExporting,
     compileDocument,
     stopCompilation,
     latexEngine,
@@ -64,11 +80,18 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
   const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
   const [availableTexFiles, setAvailableTexFiles] = useState<string[]>([]);
   const [isChangingEngine, setIsChangingEngine] = useState(false);
+  const [bundleCacheStatus, setBundleCacheStatus] = useState<Record<string, boolean>>({});
+  const [isDeletingBundle, setIsDeletingBundle] = useState<string | null>(null);
+  const [selectedBundle, setSelectedBundle] = useState<string>('recommended');
+  const [isCacheOptionsOpen, setIsCacheOptionsOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [isDropdownOpen, setIsDropdownOpen] = usePersistentState(dropdownKey, false);
   const propertiesRegistered = useRef(false);
   const [propertiesLoaded, setPropertiesLoaded] = useState(false);
+
+  const projectId = fileStorageService.getCurrentProjectId() || undefined;
+  const isBusyTeX = latexEngine.startsWith('busytex-');
 
   const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
   const effectiveAutoCompileOnSave = useSharedSettings
@@ -102,25 +125,29 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
       subcategory: 'LaTeX',
       defaultValue: 'pdf'
     });
+
+    registerProperty({
+      id: 'latex-busytex-bundle',
+      category: 'Compilation',
+      subcategory: 'LaTeX',
+      defaultValue: 'recommended'
+    });
   }, [registerProperty]);
 
   useEffect(() => {
     if (propertiesLoaded) return;
 
-    const storedMainFile = getProperty('latex-main-file');
-    const storedEngine = getProperty('latex-engine');
-    const storedFormat = getProperty('latex-output-format');
+    const storedMainFile = getProperty('latex-main-file', { scope: 'project', projectId });
+    const storedEngine = getProperty('latex-engine', { scope: 'project', projectId });
+    const storedFormat = getProperty('latex-output-format', { scope: 'project', projectId });
+    const storedBundle = getProperty('latex-busytex-bundle', { scope: 'project', projectId });
 
-    if (storedMainFile !== undefined) {
-      setUserSelectedMainFile(storedMainFile as string | undefined);
-    }
-
-    if (storedEngine !== undefined) {
-      setLatexEngine(storedEngine as 'pdftex' | 'xetex' | 'luatex');
-    }
-
-    if (storedFormat !== undefined) {
-      setCurrentFormat(storedFormat as LaTeXOutputFormat);
+    if (storedMainFile !== undefined) setUserSelectedMainFile(storedMainFile as string | undefined);
+    if (storedEngine !== undefined) setLatexEngine(storedEngine as LaTeXEngine);
+    if (storedFormat !== undefined) setCurrentFormat(storedFormat as LaTeXOutputFormat);
+    if (storedBundle !== undefined) {
+      setSelectedBundle(storedBundle as string);
+      latexService.setBusyTeXBundles([storedBundle as string]);
     }
 
     setPropertiesLoaded(true);
@@ -130,12 +157,10 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     const findTexFiles = (nodes: FileNode[]): string[] => {
       const texFiles: string[] = [];
       for (const node of nodes) {
-        if (node.type === 'file' && isLatexFile(node.path) && !isTemporaryFile(node.path)) {
+        if (node.type === 'file' && isLatexMainFile(node.path) && !isTemporaryFile(node.path)) {
           texFiles.push(node.path);
         }
-        if (node.children) {
-          texFiles.push(...findTexFiles(node.children));
-        }
+        if (node.children) texFiles.push(...findTexFiles(node.children));
       }
       return texFiles;
     };
@@ -144,28 +169,22 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     setAvailableTexFiles(allTexFiles);
 
     const findMainFile = async () => {
-      if (autoMainFile && allTexFiles.includes(autoMainFile)) {
-        return;
-      }
+      if (autoMainFile && allTexFiles.includes(autoMainFile)) return;
 
-      if (
-        selectedDocId &&
-        linkedFileInfo?.filePath &&
-        isLatexFile(linkedFileInfo.filePath)) {
+      if (selectedDocId && linkedFileInfo?.filePath && isLatexMainFile(linkedFileInfo.filePath)) {
         setAutoMainFile(linkedFileInfo.filePath);
         return;
       }
 
       if (selectedFileId) {
         const file = await getFile(selectedFileId);
-        if (file && isLatexFile(file.path)) {
+        if (file && isLatexMainFile(file.path)) {
           setAutoMainFile(file.path);
           return;
         }
       }
 
-      const texFile = allTexFiles[0];
-      setAutoMainFile(texFile);
+      setAutoMainFile(allTexFiles[0]);
     };
 
     findMainFile();
@@ -173,27 +192,21 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
   useEffect(() => {
     if (useSharedSettings && projectEngine && projectEngine !== latexEngine) {
-      setLatexEngine(projectEngine);
+      setLatexEngine(projectEngine as LaTeXEngine);
     }
   }, [projectEngine, latexEngine, setLatexEngine, useSharedSettings]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
-
       if (dropdownRef.current && !dropdownRef.current.contains(target)) {
         const portaledDropdown = document.querySelector('.latex-dropdown');
-        if (portaledDropdown && portaledDropdown.contains(target)) {
-          return;
-        }
+        if (portaledDropdown && portaledDropdown.contains(target)) return;
         setIsDropdownOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isDropdownOpen]);
 
   useEffect(() => {
@@ -201,29 +214,23 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
     const handleFileSaved = async (event: Event) => {
       if (isCompiling) return;
-
       try {
         const customEvent = event as CustomEvent;
         const detail = customEvent.detail;
-
         if (!detail) return;
 
         const candidatePath = detail.isFile
           ? detail.fileId
-            ? detail.filePath ||
-            (await fileStorageService.getFile(detail.fileId))?.path
+            ? detail.filePath || (await fileStorageService.getFile(detail.fileId))?.path
             : undefined
           : linkedFileInfo?.filePath ?? detail.filePath;
 
         if (!candidatePath || !isLatexFile(candidatePath)) return;
 
-        const mainFileToCompile =
-          detail.isFile ? effectiveMainFile : candidatePath;
+        const mainFileToCompile = detail.isFile ? effectiveMainFile : candidatePath;
 
         setTimeout(async () => {
-          if (onExpandLatexOutput) {
-            onExpandLatexOutput();
-          }
+          if (onExpandLatexOutput) onExpandLatexOutput();
           await compileDocument(mainFileToCompile);
         }, 120);
       } catch (error) {
@@ -232,54 +239,42 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     };
 
     document.addEventListener('file-saved', handleFileSaved);
-    return () => {
-      document.removeEventListener('file-saved', handleFileSaved);
-    };
+    return () => document.removeEventListener('file-saved', handleFileSaved);
   }, [
-    useSharedSettings,
-    effectiveAutoCompileOnSave,
-    effectiveMainFile,
-    isCompiling,
-    compileDocument,
-    onExpandLatexOutput,
-    linkedFileInfo,
+    useSharedSettings, effectiveAutoCompileOnSave, effectiveMainFile, isCompiling,
+    compileDocument, onExpandLatexOutput, linkedFileInfo,
   ]);
+
+  useEffect(() => {
+    if (!isBusyTeX || !isCacheOptionsOpen) return;
+
+    const checkBundleCache = async () => {
+      const status: Record<string, boolean> = {};
+      for (const bundleId of Object.keys(BUSYTEX_BUNDLE_LABELS)) {
+        status[bundleId] = await latexService.isBusyTeXBundleCached(bundleId);
+      }
+      setBundleCacheStatus(status);
+    };
+
+    checkBundleCache();
+  }, [isBusyTeX, isCacheOptionsOpen]);
 
   const shouldNavigateToMain = async (mainFilePath: string): Promise<boolean> => {
     const navigationSetting = getSetting('latex-auto-navigate-to-main')?.value as string ?? 'conditional';
 
-    console.log(`[Navigation] Setting: ${navigationSetting}, selectedFileId: ${selectedFileId}, selectedDocId: ${selectedDocId}`);
-
-    if (navigationSetting === 'never') {
-      console.log("[Navigation] Never navigate - setting is 'never'");
-      return false;
-    }
-
-    if (navigationSetting === 'always') {
-      console.log("[Navigation] Always navigate - setting is 'always'");
-      return true;
-    }
+    if (navigationSetting === 'never') return false;
+    if (navigationSetting === 'always') return true;
 
     if (navigationSetting === 'conditional') {
       if (selectedFileId) {
         try {
           const currentFile = await getFile(selectedFileId);
-          console.log(`[Navigation] Current file: ${currentFile?.path}, isTeX: ${isLatexFile(currentFile.path)}`);
-          if (currentFile && isLatexFile(currentFile.path)) {
-            console.log(`[Navigation] Not navigating - already editing LaTeX file: ${currentFile.path}`);
-            return false;
-          }
+          if (currentFile && isLatexFile(currentFile.path)) return false;
         } catch (error) {
           console.warn('Error getting current file:', error);
         }
       }
-
-      if (selectedDocId && linkedFileInfo?.fileName && isLatexFile(linkedFileInfo.fileName)) {
-        console.log(`[Navigation] Not navigating - already editing LaTeX-linked document: ${linkedFileInfo.fileName}`);
-        return false;
-      }
-
-      console.log(`[Navigation] Will navigate to main file: ${mainFilePath}`);
+      if (selectedDocId && linkedFileInfo?.fileName && isLatexFile(linkedFileInfo.fileName)) return false;
       return true;
     }
 
@@ -290,21 +285,17 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     if (isCompiling) {
       stopCompilation();
     } else if (effectiveMainFile) {
-      if (onExpandLatexOutput) {
-        onExpandLatexOutput();
-      }
+      setIsInitializing(true);
+      if (onExpandLatexOutput) onExpandLatexOutput();
 
       const shouldNavigate = await shouldNavigateToMain(effectiveMainFile);
-
       if (shouldNavigateOnCompile && shouldNavigate) {
         if (linkedFileInfo?.filePath === effectiveMainFile && onNavigateToLinkedFile) {
           onNavigateToLinkedFile();
         } else {
-          document.dispatchEvent(
-            new CustomEvent('navigate-to-compiled-file', {
-              detail: { filePath: effectiveMainFile }
-            })
-          );
+          document.dispatchEvent(new CustomEvent('navigate-to-compiled-file', {
+            detail: { filePath: effectiveMainFile }
+          }));
         }
       }
 
@@ -322,24 +313,16 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
   const handleClearCacheAndCompile = async () => {
     if (!effectiveMainFile) return;
-
-    if (onExpandLatexOutput) {
-      onExpandLatexOutput();
-    }
+    if (onExpandLatexOutput) onExpandLatexOutput();
 
     const shouldNavigate = await shouldNavigateToMain(effectiveMainFile);
-
     if (shouldNavigateOnCompile && shouldNavigate) {
       if (linkedFileInfo?.filePath === effectiveMainFile && onNavigateToLinkedFile) {
         onNavigateToLinkedFile();
       } else {
-        document.dispatchEvent(
-          new CustomEvent('navigate-to-compiled-file', {
-            detail: {
-              filePath: effectiveMainFile
-            }
-          })
-        );
+        document.dispatchEvent(new CustomEvent('navigate-to-compiled-file', {
+          detail: { filePath: effectiveMainFile }
+        }));
       }
     }
 
@@ -368,17 +351,15 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
       if (useSharedSettings && projectEngine) {
         if (changeDoc) {
           changeDoc((d) => {
-            if (!d.projectMetadata) {
-              d.projectMetadata = { name: '', description: '' };
-            }
-            d.projectMetadata.latexEngine = engine as 'pdftex' | 'xetex' | 'luatex';
+            if (!d.projectMetadata) d.projectMetadata = { name: '', description: '' };
+            d.projectMetadata.latexEngine = engine as LaTeXEngine;
           });
         }
       } else {
-        await setLatexEngine(engine as 'pdftex' | 'xetex' | 'luatex');
-        setProperty('latex-engine', engine);
+        await setLatexEngine(engine as LaTeXEngine);
+        setProperty('latex-engine', engine, { scope: 'project', projectId });
       }
-      setIsDropdownOpen(false);
+      // setIsDropdownOpen(false);
     } catch (error) {
       console.error('Failed to change engine:', error);
     } finally {
@@ -390,57 +371,58 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     if (useSharedSettings && projectMainFile) {
       if (!changeDoc) return;
       changeDoc((d) => {
-        if (!d.projectMetadata) {
-          d.projectMetadata = { name: '', description: '' };
-        }
+        if (!d.projectMetadata) d.projectMetadata = { name: '', description: '' };
         d.projectMetadata.mainFile = filePath === 'auto' ? undefined : filePath;
       });
     } else {
       const newMainFile = filePath === 'auto' ? undefined : filePath;
       setUserSelectedMainFile(newMainFile);
-      setProperty('latex-main-file', newMainFile);
+      setProperty('latex-main-file', newMainFile, { scope: 'project', projectId });
     }
   };
 
   const handleShareMainFile = (checked: boolean) => {
     if (!useSharedSettings || !changeDoc) return;
-
     changeDoc((d) => {
-      if (!d.projectMetadata) {
-        d.projectMetadata = { name: '', description: '' };
-      }
-      if (checked) {
-        d.projectMetadata.mainFile = userSelectedMainFile || autoMainFile;
-      } else {
-        delete d.projectMetadata.mainFile;
-      }
+      if (!d.projectMetadata) d.projectMetadata = { name: '', description: '' };
+      if (checked) { d.projectMetadata.mainFile = userSelectedMainFile || autoMainFile; }
+      else { delete d.projectMetadata.mainFile; }
     });
   };
 
   const handleShareEngine = (checked: boolean) => {
     if (!useSharedSettings || !changeDoc) return;
-
     changeDoc((d) => {
-      if (!d.projectMetadata) {
-        d.projectMetadata = { name: '', description: '' };
-      }
-      if (checked) {
-        d.projectMetadata.latexEngine = latexEngine;
-      } else {
-        delete d.projectMetadata.latexEngine;
-      }
+      if (!d.projectMetadata) d.projectMetadata = { name: '', description: '' };
+      if (checked) { d.projectMetadata.latexEngine = latexEngine; }
+      else { delete d.projectMetadata.latexEngine; }
     });
   };
 
   const handleAutoCompileOnSaveChange = (checked: boolean) => {
     if (!useSharedSettings || !changeDoc) return;
-
     changeDoc((d) => {
-      if (!d.projectMetadata) {
-        d.projectMetadata = { name: '', description: '' };
-      }
+      if (!d.projectMetadata) d.projectMetadata = { name: '', description: '' };
       d.projectMetadata.latexAutoCompileOnSave = checked;
     });
+  };
+
+  const handleBundleChange = (bundleId: string) => {
+    setSelectedBundle(bundleId);
+    setProperty('latex-busytex-bundle', bundleId, { scope: 'project', projectId });
+    latexService.setBusyTeXBundles([bundleId]);
+  };
+
+  const handleDeleteBundle = async (bundleId: string) => {
+    setIsDeletingBundle(bundleId);
+    try {
+      await latexService.deleteBusyTeXBundle(bundleId);
+      setBundleCacheStatus((prev) => ({ ...prev, [bundleId]: false }));
+    } catch (error) {
+      console.error('Failed to delete bundle:', error);
+    } finally {
+      setIsDeletingBundle(null);
+    }
   };
 
   const getFileName = (path?: string) => {
@@ -450,40 +432,35 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
   const getDisplayName = (path?: string) => {
     if (!path) return t('No .tex file');
-
     if (selectedDocId && linkedFileInfo?.filePath === path && documents) {
-      const doc = documents.find((d) => d.id === selectedDocId);
-      if (doc) {
-        return `${doc.name}` + ' ' + t('(linked)');
-      }
+      const found = documents.find((d) => d.id === selectedDocId);
+      if (found) return `${found.name} ${t('(linked)')}`;
     }
-
     return getFileName(path);
   };
 
-  const isDisabled = !isCompiling && (!effectiveMainFile || isChangingEngine);
+  const isDisabled = isInitializing || isExporting || (!isCompiling && (!effectiveMainFile || isChangingEngine));
 
   return (
     <div className={`latex-compile-buttons ${className}`} ref={dropdownRef}>
       <div className="compile-button-group">
         <button
-          className={`latex-button compile-button ${isCompiling ? 'compiling' : ''} ${isChangingEngine ? 'loading' : ''}`}
+          className={`latex-button compile-button ${isCompiling ? 'compiling' : ''} ${isInitializing ? 'initializing' : ''} ${isChangingEngine ? 'loading' : ''}`}
           onClick={handleCompileOrStop}
           disabled={isDisabled}
           title={
-            isCompiling ?
-              t('Stop Compilation') + ' ' + `${useSharedSettings ? t('(F8)') : ''}` :
-              isChangingEngine ?
-                t('Switching Engine...') :
-                t('Compile LaTeX Document') + ' ' + `${useSharedSettings ? t('(F9)') : ''}`
+            isCompiling
+              ? t('Stop Compilation') + ' ' + `${useSharedSettings ? t('(F8)') : ''}`
+              : isChangingEngine
+                ? t('Switching Engine...')
+                : t('Compile LaTeX Document') + ' ' + `${useSharedSettings ? t('(F9)') : ''}`
           }>
-
-          {isCompiling ? <StopIcon /> : <PlayIcon />}
+          {isCompiling ? <StopIcon /> : isInitializing ? <div className="loading-spinner" /> : <PlayIcon />}
         </button>
 
         <PdfWindowToggleButton
           className="pdf-window-button"
-          projectId={fileStorageService.getCurrentProjectId() || 'default'}
+          projectId={projectId || 'default'}
           title={t('Open PDF in new window')} />
 
         <button
@@ -491,14 +468,15 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
           onClick={toggleDropdown}
           disabled={isChangingEngine}
           title={t('Compilation Options')}>
-
           <ChevronDownIcon />
         </button>
       </div>
+
       <PositionedDropdown
         isOpen={isDropdownOpen}
         triggerElement={dropdownRef.current?.querySelector('.compile-button-group') as HTMLElement}
         className="latex-dropdown">
+
         <div className="dropdown-section">
           <div className="dropdown-title">{t('Main File:')}</div>
           <div className="dropdown-value" title={effectiveMainFile}>
@@ -507,47 +485,61 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
           </div>
         </div>
 
-        {useSharedSettings &&
-          <>
-            <div className="dropdown-section">
-              <div className="dropdown-label">{t('Select main file:')}</div>
-              <select
-                value={projectMainFile || userSelectedMainFile || 'auto'}
-                onChange={(e) => handleMainFileChange(e.target.value)}
-                className="dropdown-select"
-                disabled={isChangingEngine || isCompiling}>
-
-                <option value="auto">{t('Auto-detect')}</option>
-                {availableTexFiles.map((filePath) =>
-                  <option key={filePath} value={filePath}>
-                    {getFileName(filePath)}
-                  </option>
-                )}
-              </select>
-              <label className="dropdown-checkbox">
-                <input
-                  type="checkbox"
-                  checked={!!projectMainFile}
-                  onChange={(e) => handleShareMainFile(e.target.checked)}
-                  disabled={isChangingEngine || isCompiling || !effectiveMainFile} />
-                {t('Share with collaborators')}
-              </label>
-            </div>
-          </>
-        }
+        {useSharedSettings && (
+          <div className="dropdown-section">
+            <div className="dropdown-label">{t('Select main file:')}</div>
+            <select
+              value={projectMainFile || userSelectedMainFile || 'auto'}
+              onChange={(e) => handleMainFileChange(e.target.value)}
+              className="dropdown-select"
+              disabled={isChangingEngine || isCompiling}>
+              <option value="auto">{t('Auto-detect')}</option>
+              {availableTexFiles.map((filePath) => (
+                <option key={filePath} value={filePath}>{getFileName(filePath)}</option>
+              ))}
+            </select>
+            <label className="dropdown-checkbox">
+              <input
+                type="checkbox"
+                checked={!!projectMainFile}
+                onChange={(e) => handleShareMainFile(e.target.checked)}
+                disabled={isChangingEngine || isCompiling || !effectiveMainFile} />
+              {t('Share with collaborators')}
+            </label>
+          </div>
+        )}
 
         <div className="dropdown-section">
           <div className="dropdown-title">{t('LaTeX Engine:')}</div>
-          <select
-            value={effectiveEngine}
-            onChange={(e) => handleEngineChange(e.target.value)}
-            className="dropdown-select"
-            disabled={isChangingEngine || isCompiling}>
-
-            <option value="pdftex">{t('pdfTeX')}</option>
-            <option value="xetex">{t('XeTeX')}</option>
-          </select>
-          {useSharedSettings &&
+          <div className="format-selector-group">
+            <select
+              value={effectiveEngine}
+              onChange={(e) => handleEngineChange(e.target.value)}
+              className="dropdown-select"
+              disabled={isChangingEngine || isCompiling}>
+              <optgroup label={t('SwiftLaTeX (TeX Live 2020)')}>
+                {SWIFT_ENGINES.map(({ label, value }) => (
+                  <option key={value} value={value}>{t(label)}</option>
+                ))}
+              </optgroup>
+              <optgroup label={t('BusyTeX (TeX Live 2026)')}>
+                {BUSYTEX_ENGINES.map(({ label, value }) => (
+                  <option key={value} value={value}>{t(label)}</option>
+                ))}
+              </optgroup>
+            </select>
+            {isBusyTeX && (
+              <button
+                className={`pdf-options-toggle ${isCacheOptionsOpen ? 'active' : ''}`}
+                onClick={() => setIsCacheOptionsOpen(!isCacheOptionsOpen)}
+                title={t('Bundle Cache Options')}
+                disabled={isChangingEngine || isCompiling}>
+                <OptionsIcon />
+              </button>
+            )}
+          </div>
+          {/* TODO (fabawi): Need to restore this but it is causing infinite loop on change for now */}
+          {/* {useSharedSettings && (
             <label className="dropdown-checkbox">
               <input
                 type="checkbox"
@@ -556,11 +548,44 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
                 disabled={isChangingEngine || isCompiling} />
               {t('Share with collaborators')}
             </label>
-          }
-          {isChangingEngine &&
+          )} */}
+          {isChangingEngine && (
             <div className="engine-status">{t('Switching engine...')}</div>
-          }
+          )}
+          {isBusyTeX && isCacheOptionsOpen && (
+            <div className="pdf-options-section">
+              <div className="dropdown-label">{t('Bundle for next compile:')}</div>
+              <select
+                value={selectedBundle}
+                onChange={(e) => handleBundleChange(e.target.value)}
+                className="dropdown-select"
+                disabled={isChangingEngine || isCompiling}>
+                {Object.entries(BUSYTEX_BUNDLE_LABELS).map(([id, label]) => (
+                  <option key={id} value={id}>{t(label)}</option>
+                ))}
+              </select>
+              <div className="dropdown-label" style={{ marginTop: 'var(--space-sm)' }}>{t('Cached bundles:')}</div>
+              {Object.entries(BUSYTEX_BUNDLE_LABELS).map(([bundleId, label]) => (
+                <div key={bundleId} className="bundle-cache-row">
+                  <span className="bundle-label">{t(label)}</span>
+                  <span className={`bundle-status ${bundleCacheStatus[bundleId] ? 'cached' : 'not-cached'}`}>
+                    {bundleCacheStatus[bundleId] ? t('cached') : t('not downloaded')}
+                  </span>
+                  {bundleCacheStatus[bundleId] && (
+                    <button
+                      className="bundle-delete-btn"
+                      onClick={() => handleDeleteBundle(bundleId)}
+                      disabled={isDeletingBundle === bundleId || isCompiling}
+                      title={t('Delete cached bundle')}>
+                      <TrashIcon />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+
         <div className="dropdown-section">
           <div className="format-selector-header">
             <div className="dropdown-title">{t('Output Format:')}</div>
@@ -570,7 +595,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
             onChange={(e) => {
               const format = e.target.value as LaTeXOutputFormat;
               setCurrentFormat(format);
-              setProperty('latex-output-format', format);
+              setProperty('latex-output-format', format, { scope: 'project', projectId });
             }}
             className="dropdown-select"
             disabled={isChangingEngine || isCompiling}>
@@ -578,6 +603,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
             <option value="canvas-pdf">{t('Canvas (PDF)')}</option>
           </select>
         </div>
+
         <div className="dropdown-section">
           {useSharedSettings && (
             <label className="dropdown-checkbox">
@@ -585,8 +611,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
                 type="checkbox"
                 checked={effectiveAutoCompileOnSave}
                 onChange={(e) => handleAutoCompileOnSaveChange(e.target.checked)}
-                disabled={isCompiling}
-              />
+                disabled={isCompiling} />
               {t('Auto-compile on save')}
             </label>
           )}
@@ -595,7 +620,6 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
             className="cache-item"
             onClick={handleClearCache}
             title={t('Clear compilation cache and source files')}>
-
             <TrashIcon />{t('Clear Cache')}
           </div>
           <div
