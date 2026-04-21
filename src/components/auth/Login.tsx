@@ -4,6 +4,7 @@ import type React from 'react';
 import { useState } from 'react';
 
 import { useAuth } from '../../hooks/useAuth';
+import { initiateOidcLogin, isBackendAuthEnabled } from '../../services/backend/AuthBackendApi';
 import { useTheme } from '../../hooks/useTheme';
 import GuestConsentModal from './GuestConsentModal';
 import PrivacyModal from '../common/PrivacyModal';
@@ -21,6 +22,9 @@ const Login: React.FC<LoginProps> = ({
 }) => {
   const { login, createGuestAccount } = useAuth();
   const { currentThemePlugin } = useTheme();
+  const oidcEnabled = isBackendAuthEnabled();
+  const oidcProviderName =
+    import.meta.env.VITE_TEXLYRE_OIDC_PROVIDER_NAME ?? t('OIDC Provider');
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -122,6 +126,18 @@ const Login: React.FC<LoginProps> = ({
             {isLoading ? t('Logging in...') : t('Login')}
           </button>
         </form>
+
+        {oidcEnabled && (
+          <div className="oidc-section">
+            <button
+              type="button"
+              className="auth-button oauth-button"
+              onClick={() => initiateOidcLogin()}
+              disabled={isLoading}>
+              {t('Log in with {{provider}}', { provider: oidcProviderName })}
+            </button>
+          </div>
+        )}
 
         <div className="guest-section">
           <div className="guest-divider">

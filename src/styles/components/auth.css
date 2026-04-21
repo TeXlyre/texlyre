@@ -261,6 +261,7 @@
 	transition: background-color var(--transition-normal);
 	text-decoration: none;
 	justify-content: center;
+	width: 100%;
 }
 
 .auth-button:hover:not(:disabled) {

@@ -2,6 +2,7 @@
 import type React from 'react';
 import { type ReactNode, createContext, useEffect, useState } from 'react';
 
+import { initiateOidcLogin as initiateOidcLoginApi, getOidcSession, isBackendAuthEnabled } from '../services/backend/AuthBackendApi';
 import { authService } from '../services/AuthService';
 import type { AuthContextType, User } from '../types/auth';
 import type { Project } from '../types/projects';
@@ -23,6 +24,9 @@ export const AuthContext = createContext<AuthContextType>({
 		throw new Error('Not implemented');
 	},
 	logout: async () => {
+		throw new Error('Not implemented');
+	},
+	initiateOidcLogin: () => {
 		throw new Error('Not implemented');
 	},
 	updateUser: async () => {
@@ -74,6 +78,25 @@ interface AuthProviderProps {
 	children: ReactNode;
 }
 
+const normalizeExternalUser = (user: Record<string, unknown>): User => {
+	const id = String(user.id ?? user.username ?? user.email ?? crypto.randomUUID());
+	const username = String(user.username ?? user.email ?? id);
+
+	return {
+		id,
+		username,
+		passwordHash: '',
+		email: typeof user.email === 'string' ? user.email : undefined,
+		createdAt: typeof user.createdAt === 'number' ? user.createdAt : Date.now(),
+		lastLogin: Date.now(),
+		color: typeof user.color === 'string' ? user.color : undefined,
+		colorLight: typeof user.colorLight === 'string' ? user.colorLight : undefined,
+		isGuest: false,
+		authProvider: typeof user.authProvider === 'string' ? user.authProvider : undefined,
+		metadata: user,
+	};
+};
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 	const [user, setUser] = useState<User | null>(null);
 	const [isInitializing, setIsInitializing] = useState(true);
@@ -81,7 +104,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 	useEffect(() => {
 		const initAuth = async () => {
 			await authService.initialize();
-			setUser(authService.getCurrentUser());
+
+			if (isBackendAuthEnabled()) {
+				try {
+					const authResponse = await getOidcSession();
+					if (authResponse?.user) {
+						const externalUser = normalizeExternalUser(authResponse.user);
+						const loggedInUser = await authService.loginWithExternalUser(externalUser);
+						setUser(loggedInUser);
+					} else {
+						setUser(authService.getCurrentUser());
+					}
+				} catch (error) {
+					console.error('[AuthContext] Failed to restore OIDC session:', error);
+					setUser(authService.getCurrentUser());
+				}
+
+				const url = new URL(window.location.href);
+				if (url.searchParams.has('oidc')) {
+					url.searchParams.delete('oidc');
+					window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+				}
+			} else {
+				setUser(authService.getCurrentUser());
+			}
+
 			setIsInitializing(false);
 		};
 
@@ -127,6 +174,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 	const logout = async (): Promise<void> => {
 		await authService.logout();
 		setUser(null);
+	};
+
+	const initiateOidcLogin = (): void => {
+		initiateOidcLoginApi();
 	};
 
 	const updateUser = async (updatedUser: User): Promise<User> => {
@@ -222,6 +273,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 				createGuestAccount,
 				upgradeGuestAccount,
 				logout,
+				initiateOidcLogin,
 				updateUser,
 				updateUserColor,
 				createProject,

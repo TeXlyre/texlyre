@@ -18,6 +18,7 @@ export interface AuthContextType {
 		email?: string,
 	) => Promise<User>;
 	logout: () => Promise<void>;
+	initiateOidcLogin: () => void;
 	updateUser: (user: User) => Promise<User>;
 	updateUserColor: (
 		userId: string,
@@ -59,4 +60,6 @@ export interface User {
 	isGuest?: boolean;
 	sessionId?: string;
 	expiresAt?: number;
+	authProvider?: string;
+	metadata?: Record<string, unknown>;
 }

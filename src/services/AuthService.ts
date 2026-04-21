@@ -8,6 +8,7 @@ import type { User } from '../types/auth';
 import type { Project } from '../types/projects';
 import { cleanupProjectDatabases } from '../utils/dbDeleteUtils';
 import { fileSystemBackupService } from './FileSystemBackupService';
+import { backendLogout, isBackendAuthEnabled } from './backend/AuthBackendApi';
 
 const shouldAutoSync = (): boolean => {
 	return localStorage.getItem('texlyre-auto-sync') === 'true';
@@ -431,6 +432,14 @@ class AuthService {
 	}
 
 	async logout(): Promise<void> {
+		if (isBackendAuthEnabled()) {
+			try {
+				await backendLogout();
+			} catch (error) {
+				console.warn('[AuthService] Failed to logout from backend auth:', error);
+			}
+		}
+
 		// If logging out a guest, clean up their data immediately
 		if (this.currentUser && this.isGuestUser(this.currentUser)) {
 			await this.cleanupExpiredGuest(this.currentUser);
@@ -438,6 +447,43 @@ class AuthService {
 
 		this.currentUser = null;
 		localStorage.removeItem('texlyre-current-user');
+	}
+
+	async loginWithExternalUser(
+		externalUser: Partial<User> & { id?: string; username?: string; email?: string; authProvider?: string; metadata?: Record<string, unknown> },
+	): Promise<User> {
+		if (!this.db) await this.initialize();
+
+		const id =
+			externalUser.id ||
+			externalUser.username ||
+			externalUser.email ||
+			crypto.randomUUID();
+
+		const existingUser = await this.getUserById(id);
+		const now = Date.now();
+
+		const user: User = {
+			id,
+			username: externalUser.username || externalUser.email || id,
+			passwordHash: externalUser.passwordHash ?? '',
+			email: externalUser.email,
+			createdAt: existingUser?.createdAt ?? externalUser.createdAt ?? now,
+			lastLogin: now,
+			color: externalUser.color ?? existingUser?.color,
+			colorLight: externalUser.colorLight ?? existingUser?.colorLight,
+			isGuest: false,
+			sessionId: undefined,
+			expiresAt: undefined,
+			authProvider: externalUser.authProvider,
+			metadata: externalUser.metadata,
+		};
+
+		await this.db?.put(this.USER_STORE, user);
+		this.currentUser = user;
+		localStorage.setItem('texlyre-current-user', user.id);
+
+		return user;
 	}
 
 	async updateUser(user: User): Promise<User> {
