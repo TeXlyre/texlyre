@@ -3,7 +3,6 @@ import type React from 'react';
 import { type ReactNode, createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { fileStorageService } from '../services/FileStorageService';
-import { latexService } from '../services/LaTeXService';
 import { latexSourceMapService } from '../services/LaTeXSourceMapService';
 // import { typstSourceMapService } from '../services/TypstSourceMapService';
 import type { SourceMapContextType, SourceMapHighlight, SourceMapService, SourceMapClickMode } from '../types/sourceMap';

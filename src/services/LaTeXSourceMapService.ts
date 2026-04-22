@@ -7,6 +7,12 @@ class LaTeXSourceMapService implements SourceMapService {
     private listeners: Set<() => void> = new Set();
 
     loadFromBytes(bytes: Uint8Array): void {
+        if (!this.isSourceMapEnabled()) {
+            this.data = null;
+            this.notifyListeners();
+            return;
+        }
+
         try {
             this.data = parseSynctex(bytes);
             this.notifyListeners();
@@ -37,6 +43,17 @@ class LaTeXSourceMapService implements SourceMapService {
     addListener(listener: () => void): () => void {
         this.listeners.add(listener);
         return () => this.listeners.delete(listener);
+    }
+
+    private isSourceMapEnabled(): boolean {
+        const userId = localStorage.getItem('texlyre-current-user');
+        const storageKey = userId ? `texlyre-user-${userId}-settings` : 'texlyre-settings';
+        try {
+            const settings = JSON.parse(localStorage.getItem(storageKey) || '{}');
+            return settings['latex-sourcemap-enabled'] !== false;
+        } catch {
+            return true;
+        }
     }
 
     private notifyListeners(): void {
