@@ -2,12 +2,13 @@
 import type React from 'react';
 import { type ReactNode, createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
-import { LaTeXContext } from './LaTeXContext';
-import { TypstContext } from './TypstContext';
 import { fileStorageService } from '../services/FileStorageService';
+import { latexService } from '../services/LaTeXService';
 import { latexSourceMapService } from '../services/LaTeXSourceMapService';
 // import { typstSourceMapService } from '../services/TypstSourceMapService';
 import type { SourceMapContextType, SourceMapHighlight, SourceMapService, SourceMapClickMode } from '../types/sourceMap';
+import { useLaTeX } from '../hooks/useLaTeX';
+import { useTypst } from '../hooks/useTypst';
 import { useSettings } from '../hooks/useSettings';
 import { useProperties } from '../hooks/useProperties';
 
@@ -18,8 +19,8 @@ interface SourceMapProviderProps {
 }
 
 export const SourceMapProvider: React.FC<SourceMapProviderProps> = ({ children }) => {
-    const latexContext = useContext(LaTeXContext);
-    const typstContext = useContext(TypstContext);
+    const { activeCompiler: latexActiveCompiler } = useLaTeX();
+    const { activeCompiler: typstActiveCompiler } = useTypst();
     const { getSetting } = useSettings();
     const { getProperty, setProperty, registerProperty } = useProperties();
     const [isAvailable, setIsAvailable] = useState(false);
@@ -33,7 +34,7 @@ export const SourceMapProvider: React.FC<SourceMapProviderProps> = ({ children }
     const pageDimensionsRef = useRef<Map<number, { width: number; height: number }>>(new Map());
     const propertiesRegistered = useRef(false);
 
-    const activeCompiler = latexContext?.activeCompiler || typstContext?.activeCompiler || null;
+    const activeCompiler = latexActiveCompiler || typstActiveCompiler || null;
 
     const getActiveService = useCallback((): SourceMapService | null => {
         if (activeCompiler === 'latex') return latexSourceMapService;
