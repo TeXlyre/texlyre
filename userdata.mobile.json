@@ -1,5 +1,5 @@
 {
-  "version": "1.0.1",
+  "version": "1.2.0",
   "settings": {
     "bibtex-viewer-auto-tidy": false,
     "bibtex-viewer-tidy-options": "standard",
@@ -46,6 +46,7 @@
     "pdf-viewer-auto-scale": true,
     "pdf-viewer-rendering-quality": "high",
     "repository-proxy-url": "https://proxy.texlyre.org/?url=",
+    "latex-sourcemap-enabled": true,
     "templates-api-url": "https://texlyre.github.io/texlyre-templates/api/templates.json",
     "theme-plugin": "texlyre-mobile-theme",
     "theme-variant": "atom_light",
@@ -60,6 +61,7 @@
     "pdf-renderer-scroll-view:global": true,
     "sidebar-collapsed:global": false,
     "sidebar-width:global": 502,
+    "sourcemap-show-floating-buttons:global": true,
     "toolbar-visible:global": true
   },
   "secrets": {}

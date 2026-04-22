@@ -46,7 +46,7 @@ const config: TexlyreConfig = {
 
     // overwrite priority is default < local < mobile for corresponding configs
     userdata: {
-        version: '1.0.1',
+        version: '1.2.0',
         default: {
             settings: {
                 bibtexViewerAutoTidy: false,
@@ -94,6 +94,7 @@ const config: TexlyreConfig = {
                 pdfViewerAutoScale: true,
                 pdfViewerRenderingQuality: 'high',
                 repositoryProxyUrl: 'https://proxy.texlyre.org/?url=',
+                latexSourcemapEnabled: true,
                 templatesApiUrl: 'https://texlyre.github.io/texlyre-templates/api/templates.json',
                 themePlugin: 'texlyre-wide-theme',
                 themeVariant: 'atom_light',
@@ -109,6 +110,7 @@ const config: TexlyreConfig = {
                     pdfRendererScrollView: true,
                     sidebarCollapsed: false,
                     sidebarWidth: 502,
+                    sourcemapShowFloatingButtons: true,
                     toolbarVisible: true,
                 },
             },
