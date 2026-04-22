@@ -108,6 +108,8 @@ const config: TexlyreConfig = {
                     logVisualizerCollapsed: false,
                     pdfRendererZoom: 1,
                     pdfRendererScrollView: true,
+                    canvasRendererZoom: 1,
+                    canvasRendererScrollView: true,
                     sidebarCollapsed: false,
                     sidebarWidth: 502,
                     sourcemapShowFloatingButtons: true,
