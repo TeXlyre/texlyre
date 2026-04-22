@@ -223,7 +223,8 @@ export function parseSynctex(bytes: Uint8Array): SourceMapData {
                 const fileMatches =
                     normalizedBlockFile === normalized ||
                     normalizedBlockFile.endsWith(`/${normalized}`) ||
-                    normalized.endsWith(`/${normalizedBlockFile}`);
+                    normalized.endsWith(`/${normalizedBlockFile}`) ||
+                    normalized.split('/').pop() === normalizedBlockFile.split('/').pop();
 
                 if (!fileMatches) continue;
                 if (blockLine === line) candidates.push(...blocks);
@@ -240,7 +241,8 @@ export function parseSynctex(bytes: Uint8Array): SourceMapData {
                     const fileMatches =
                         normalizedBlockFile === normalized ||
                         normalizedBlockFile.endsWith(`/${normalized}`) ||
-                        normalized.endsWith(`/${normalizedBlockFile}`);
+                        normalized.endsWith(`/${normalizedBlockFile}`) ||
+                        normalized.split('/').pop() === normalizedBlockFile.split('/').pop();
 
                     if (!fileMatches) continue;
                     const delta = Math.abs(blockLine - line);
