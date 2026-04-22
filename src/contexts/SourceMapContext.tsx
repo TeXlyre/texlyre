@@ -24,7 +24,7 @@ export const SourceMapProvider: React.FC<SourceMapProviderProps> = ({ children }
     const { getProperty, setProperty, registerProperty } = useProperties();
     const [isAvailable, setIsAvailable] = useState(false);
     const [currentHighlight, setCurrentHighlight] = useState<SourceMapHighlight | null>(null);
-    const [reverseClickMode, setReverseClickMode] = useState<SourceMapClickMode>('single');
+    const [reverseClickMode, setReverseClickMode] = useState<SourceMapClickMode>('double');
     const [forwardClickMode, setForwardClickMode] = useState<SourceMapClickMode>('double');
     const [showFloatingButtons, setShowFloatingButtons] = useState(false);
     const [reverseClickEnabled, setReverseClickEnabled] = useState(true);
@@ -45,7 +45,7 @@ export const SourceMapProvider: React.FC<SourceMapProviderProps> = ({ children }
         if (propertiesRegistered.current) return;
         propertiesRegistered.current = true;
 
-        registerProperty({ id: 'sourcemap-reverse-click-mode', category: 'UI', subcategory: 'Source Map', defaultValue: 'single' });
+        registerProperty({ id: 'sourcemap-reverse-click-mode', category: 'UI', subcategory: 'Source Map', defaultValue: 'double' });
         registerProperty({ id: 'sourcemap-forward-click-mode', category: 'UI', subcategory: 'Source Map', defaultValue: 'double' });
         registerProperty({ id: 'sourcemap-show-floating-buttons', category: 'UI', subcategory: 'Source Map', defaultValue: false });
         registerProperty({ id: 'sourcemap-reverse-click-enabled', category: 'UI', subcategory: 'Source Map', defaultValue: true });
