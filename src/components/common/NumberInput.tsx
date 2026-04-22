@@ -1,3 +1,4 @@
+// src/components/common/NumberInput.tsx
 import { forwardRef, InputHTMLAttributes, useEffect, useState } from 'react';
 
 type NumberInputProps = Omit<

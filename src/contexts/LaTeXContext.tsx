@@ -109,8 +109,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       category: t('Compilation'),
       subcategory: t('LaTeX'),
       type: 'text',
-      label: t('TeX Live server endpoint (SwiftLaTeX)'),
-      description: t('URL endpoint for TeX Live package downloads used by SwiftLaTeX engines'),
+      label: t('TeX Live 2020 remote endpoint (SwiftLaTeX)'),
+      description: t('URL endpoint for on-demand TeX Live 2020 package downloads used by SwiftLaTeX engines. Leave blank to disable.'),
       defaultValue: initialTexliveEndpoint,
       onChange: (value) => {
         latexService.setTexliveEndpoint(value as string);
@@ -123,7 +123,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       subcategory: t('LaTeX'),
       type: 'text',
       label: t('TeX Live 2026 remote endpoint (BusyTeX)'),
-      description: t('On-demand TeX Live 2026 server for packages beyond preloaded bundles. Leave blank to disable.'),
+      description: t('URL endpoint for on-demand TeX Live 2026 package downloads used by BusyTeX engines beyond preloaded bundles. Leave blank to disable.'),
       defaultValue: initialBusyTeXEndpoint,
       onChange: (value) => {
         latexService.setBusyTeXEndpoint(value as string);
