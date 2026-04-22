@@ -4,6 +4,7 @@ import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
 import PositionedDropdown from '../common/PositionedDropdown';
+import { NumberInput } from '../common/NumberInput';
 import { useContentFormatter } from '../../hooks/useContentFormatter';
 import { ChevronDownIcon, LoaderIcon, TextFormatterIcon } from '../common/Icons';
 
@@ -141,15 +142,13 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
             <div className="dropdown-option">
               <label>{t('Wrap length:')}
 
-                <input
-                  type="number"
-                  min="40"
-                  max="120"
+                <NumberInput
+                  min={40}
+                  max={120}
+                  integer
                   value={latexOptions.wraplen}
-                  onChange={(e) => setLatexOptions({
-                    ...latexOptions,
-                    wraplen: parseInt(e.target.value, 10)
-                  })} />
+                  onChange={(wraplen) => setLatexOptions({ ...latexOptions, wraplen })}
+                />
 
               </label>
             </div>
@@ -158,15 +157,13 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
           <div className="dropdown-option">
             <label>{t('Tab size:')}
 
-              <input
-                type="number"
-                min="1"
-                max="8"
+              <NumberInput
+                min={1}
+                max={31}
+                integer
                 value={latexOptions.tabsize}
-                onChange={(e) => setLatexOptions({
-                  ...latexOptions,
-                  tabsize: parseInt(e.target.value, 10)
-                })} />
+                onChange={(tabsize) => setLatexOptions({ ...latexOptions, tabsize })}
+              />
 
             </label>
           </div>
@@ -195,15 +192,13 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
           <div className="dropdown-option">
             <label>{t('Line width:')}
 
-              <input
-                type="number"
-                min="40"
-                max="120"
+              <NumberInput
+                min={40}
+                max={120}
+                integer
                 value={typstOptions.lineWidth}
-                onChange={(e) => setTypstOptions({
-                  ...typstOptions,
-                  lineWidth: parseInt(e.target.value, 10)
-                })} />
+                onChange={(lineWidth) => setTypstOptions({ ...typstOptions, lineWidth })}
+              />
 
             </label>
           </div>
@@ -211,15 +206,13 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
           <div className="dropdown-option">
             <label>{t('Indent width:')}
 
-              <input
-                type="number"
-                min="1"
-                max="8"
+              <NumberInput
+                min={1}
+                max={8}
+                integer
                 value={typstOptions.indentWidth}
-                onChange={(e) => setTypstOptions({
-                  ...typstOptions,
-                  indentWidth: parseInt(e.target.value, 10)
-                })} />
+                onChange={(indentWidth) => setTypstOptions({ ...typstOptions, indentWidth })}
+              />
 
             </label>
           </div>

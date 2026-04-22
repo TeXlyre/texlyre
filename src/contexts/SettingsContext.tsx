@@ -42,6 +42,7 @@ export interface Setting {
 	options?: SettingOption[];
 	min?: number;
 	max?: number;
+	step?: number;
 	validate?: (value: unknown) => boolean;
 	onChange?: (value: unknown) => void;
 	strictDefaultValue?: boolean;
