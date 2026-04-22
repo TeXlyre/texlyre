@@ -98,7 +98,7 @@ export class LinkNavigator {
         }
 
         try {
-            const allFiles = await fileStorageService.getAllFiles(false);
+            const allFiles = await fileStorageService.getAllFiles(false, false, false);
             const latexFiles = allFiles.filter(file =>
                 !file.isDeleted && isLatexFile(file.name)
             );
@@ -106,9 +106,12 @@ export class LinkNavigator {
             for (const file of latexFiles) {
                 if (file.path === this.currentFilePath) continue;
 
-                const content = typeof file.content === 'string'
-                    ? file.content
-                    : new TextDecoder().decode(file.content);
+                const storedFile = await fileStorageService.getFile(file.id);
+                if (!storedFile?.content) continue;
+
+                const content = typeof storedFile.content === 'string'
+                    ? storedFile.content
+                    : new TextDecoder().decode(storedFile.content);
 
                 const match = labelPattern.exec(content);
                 if (match) {
@@ -153,7 +156,7 @@ export class LinkNavigator {
         }
 
         try {
-            const allFiles = await fileStorageService.getAllFiles(false);
+            const allFiles = await fileStorageService.getAllFiles(false, false, false);
             const typstFiles = allFiles.filter(file =>
                 !file.isDeleted && isTypstFile(file.name)
             );
@@ -161,9 +164,12 @@ export class LinkNavigator {
             for (const file of typstFiles) {
                 if (file.path === this.currentFilePath) continue;
 
-                const content = typeof file.content === 'string'
-                    ? file.content
-                    : new TextDecoder().decode(file.content);
+                const storedFile = await fileStorageService.getFile(file.id);
+                if (!storedFile?.content) continue;
+
+                const content = typeof storedFile.content === 'string'
+                    ? storedFile.content
+                    : new TextDecoder().decode(storedFile.content);
 
                 const match = labelPattern.exec(content);
                 if (match) {
@@ -238,7 +244,7 @@ export class LinkNavigator {
     private async navigateToFile(filePath: string): Promise<void> {
         try {
             const resolvedPath = this.resolveFilePath(filePath);
-            const allFiles = await fileStorageService.getAllFiles(false);
+            const allFiles = await fileStorageService.getAllFiles(false, false, false);
 
             const targetFile = allFiles.find(file =>
                 file.path === resolvedPath ||
@@ -273,15 +279,18 @@ export class LinkNavigator {
 
     private async navigateToBibEntry(key: string): Promise<void> {
         try {
-            const allFiles = await fileStorageService.getAllFiles(false);
+            const allFiles = await fileStorageService.getAllFiles(false, false, false);
             const bibFiles = allFiles.filter(file =>
                 isBibFile(file.name) && !file.isDeleted
             );
 
             for (const bibFile of bibFiles) {
-                const content = typeof bibFile.content === 'string'
-                    ? bibFile.content
-                    : new TextDecoder().decode(bibFile.content);
+                const storedFile = await fileStorageService.getFile(bibFile.id);
+                if (!storedFile?.content) continue;
+
+                const content = typeof storedFile.content === 'string'
+                    ? storedFile.content
+                    : new TextDecoder().decode(storedFile.content);
 
                 const entryPattern = new RegExp(`@\\w+\\{\\s*${this.escapeRegex(key)}\\s*,`, 'i');
                 const match = entryPattern.exec(content);

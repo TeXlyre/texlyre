@@ -5,6 +5,7 @@ import type React from 'react';
 import type { Setting } from '../../contexts/SettingsContext';
 import { SettingsCodeMirror } from './SettingsCodeMirror';
 import SettingsLanguage from './SettingsLanguage';
+import { NumberInput } from '../common/NumberInput';
 
 interface SettingControlProps {
   setting: Setting & {
@@ -57,6 +58,7 @@ const SettingControl: React.FC<SettingControlProps> = ({ setting, onLocalUpdate 
             <input
               type="text"
               value={String(value)}
+              dir={setting.forceLTR === false ? undefined : 'ltr'}
               onChange={(e) => handleChange(e.target.value)} />
           </div>);
 
@@ -75,12 +77,13 @@ const SettingControl: React.FC<SettingControlProps> = ({ setting, onLocalUpdate 
         return (
           <div className="number-control">
             <label>{setting.label}</label>
-            <input
-              type="number"
+            <NumberInput
               value={Number(value)}
               min={setting.min}
               max={setting.max}
-              onChange={(e) => handleChange(Number(e.target.value))} />
+              step={setting.step}
+              onChange={handleChange}
+            />
           </div>);
 
       case 'color':

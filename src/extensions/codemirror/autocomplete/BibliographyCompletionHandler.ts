@@ -40,19 +40,21 @@ export class BibliographyCompletionHandler {
 
     private async getLocalBibliographyEntries(): Promise<BibliographyEntry[]> {
         try {
-            const allFiles = await fileStorageService.getAllFiles();
+            const allFiles = await fileStorageService.getAllFiles(true, false, false);
             const bibFiles = allFiles.filter(file =>
                 isBibFile(file.name) &&
-                !file.isDeleted &&
-                file.content
+                !file.isDeleted
             );
 
             const allEntries: BibliographyEntry[] = [];
 
             for (const bibFile of bibFiles) {
-                const content = typeof bibFile.content === 'string'
-                    ? bibFile.content
-                    : new TextDecoder().decode(bibFile.content);
+                const storedFile = await fileStorageService.getFile(bibFile.id);
+                if (!storedFile?.content) continue;
+
+                const content = typeof storedFile.content === 'string'
+                    ? storedFile.content
+                    : new TextDecoder().decode(storedFile.content);
 
                 const parsedEntries = BibtexParser.parse(content);
                 const entries: BibliographyEntry[] = parsedEntries.map(entry => ({

@@ -13,6 +13,7 @@ dist-ssr
 coverage
 *.local
 public/core/drawio-embed/*
+public/core/busytex/*
 src/plugins/
 !src/plugins/PluginRegistry.ts
 !src/plugins/PluginInterface.ts

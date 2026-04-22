@@ -76,9 +76,8 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
         <>
           <h4 className="typesetter-tooltip-title">{t('LaTeX')}</h4>
           <div className="typesetter-tooltip-section">
-            <strong>{t('LaTeX Engine:')}</strong> {t('SwiftLaTeX v20/02/2022')}
-          </div>
-          <div className="typesetter-tooltip-section">
+            <strong>{t('LaTeX Engine:')}</strong> {t('SwiftLaTeX v20/02/2022 (TeX Live 2020, 10/04/2020)')}
+            <br />
             <strong>{t('LaTeX Compilers:')}</strong>
             <ul>
               <li>{t('pdfTeX (2020)')}</li>
@@ -86,10 +85,20 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
             </ul>
           </div>
           <div className="typesetter-tooltip-section">
+            <strong>{t('LaTeX Engine:')}</strong> {t('BusyTeX: texlyre-busytex v1.1.1 (TeX Live 2026, 01/03/2026)')}
+            <br />
+            <strong>{t('LaTeX Compilers:')}</strong>
+            <ul>
+              <li>{t('pdfTeX (2026)')}</li>
+              <li>{t('XeTeX (2026)')}</li>
+              <li>{t('LuaHBTeX (2026)')}</li>
+            </ul>
+          </div>
+          <div className="typesetter-tooltip-section">
             <strong>{t('Output Format:')}</strong> {t('PDF')}
           </div>
-        </>);
-
+        </>
+      );
     }
 
     return (

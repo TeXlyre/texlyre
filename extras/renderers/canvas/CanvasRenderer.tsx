@@ -78,6 +78,10 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   const [pageMetadata, setPageMetadata] = useState<
     Map<number, { width: number; height: number }>
   >(new Map());
+  const [highlight, setHighlight] = useState<{
+    page: number;
+    rects: Array<{ x: number; y: number; width: number; height: number }>;
+  } | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const contentElRef = useRef<HTMLDivElement>(null);
@@ -107,14 +111,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   const canvasRendererAnnotations =
     (getSetting('canvas-renderer-annotations')?.value as boolean) ?? true;
 
-  const [highlight, setHighlight] = useState<{
-    page: number;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  } | null>(null);
-
   const svgCtx = useMemo<SvgRenderContext>(
     () => ({
       svgPagesRef,
@@ -137,16 +133,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     }),
     [scale],
   );
-
-  useEffect(() => {
-    if (scrollView) return;
-    renderVisiblePages();
-  }, [currentPage, scale, scrollView]);
-
-  useEffect(() => {
-    if (!scrollView) return;
-    renderVisiblePages();
-  }, [renderRange, scrollView]);
 
   const getPageHeight = useCallback(
     (pageNum: number): number => {
@@ -171,10 +157,8 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   const scrollToPage = useCallback(
     (pageNum: number) => {
       if (!scrollView || !scrollContainerRef.current) return;
-
-      const targetTop = getPageTop(pageNum);
       scrollContainerRef.current.scrollTo({
-        top: targetTop,
+        top: getPageTop(pageNum),
         behavior: 'smooth',
       });
     },
@@ -187,9 +171,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
       !scrollContainerRef.current ||
       isEditingPageInput ||
       !isTrackingEnabledRef.current
-    ) {
-      return;
-    }
+    ) return;
 
     const container = scrollContainerRef.current;
     const scrollTop = container.scrollTop;
@@ -216,8 +198,8 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     }
 
     if (closestPage !== lastStablePageRef.current) {
-      const currentPageHeight = getPageHeight(lastStablePageRef.current);
-      const hysteresisThreshold = currentPageHeight * HYSTERESIS_THRESHOLD;
+      const hysteresisThreshold =
+        getPageHeight(lastStablePageRef.current) * HYSTERESIS_THRESHOLD;
 
       if (
         minDistance < hysteresisThreshold ||
@@ -252,13 +234,11 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         startPage = Math.max(1, i - BUFFER_PAGES);
         foundStart = true;
       }
-
       if (pageTop < scrollBottom) {
         endPage = Math.min(numPages, i + BUFFER_PAGES);
       }
 
       accumulatedHeight += pageHeight;
-
       if (foundStart && pageTop > scrollBottom) break;
     }
 
@@ -267,9 +247,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 
   const renderOverlays = useCallback(
     (pages: number[]) => {
-      if (overlayTimerRef.current) {
-        clearTimeout(overlayTimerRef.current);
-      }
+      if (overlayTimerRef.current) clearTimeout(overlayTimerRef.current);
 
       overlayTimerRef.current = setTimeout(() => {
         for (const pageNum of pages) {
@@ -301,12 +279,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         }
       }, 150);
     },
-    [
-      scale,
-      canvasRendererTextSelection,
-      canvasRendererAnnotations,
-      pageMetadata,
-    ],
+    [scale, canvasRendererTextSelection, canvasRendererAnnotations, pageMetadata],
   );
 
   const renderVisiblePages = useCallback(() => {
@@ -325,10 +298,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         }
       }
     } else {
-      if (
-        contentTypeRef.current === 'svg' &&
-        svgPagesRef.current.has(currentPage)
-      ) {
+      if (contentTypeRef.current === 'svg' && svgPagesRef.current.has(currentPage)) {
         renderSvgPageToCanvas(svgCtx, currentPage);
         overlayPages.push(currentPage);
       } else if (contentTypeRef.current === 'pdf' && pdfDocRef.current) {
@@ -337,18 +307,18 @@ const CanvasRenderer: React.FC<RendererProps> = ({
       }
     }
 
-    if (overlayPages.length > 0) {
-      renderOverlays(overlayPages);
-    }
-  }, [
-    scrollView,
-    renderRange,
-    currentPage,
-    numPages,
-    svgCtx,
-    pdfCtx,
-    renderOverlays,
-  ]);
+    if (overlayPages.length > 0) renderOverlays(overlayPages);
+  }, [scrollView, renderRange, currentPage, numPages, svgCtx, pdfCtx, renderOverlays]);
+
+  useEffect(() => {
+    if (scrollView) return;
+    renderVisiblePages();
+  }, [currentPage, scale, scrollView]);
+
+  useEffect(() => {
+    if (!scrollView) return;
+    renderVisiblePages();
+  }, [renderRange, scrollView]);
 
   useEffect(() => {
     if (!scrollView || !scrollContainerRef.current) return;
@@ -357,10 +327,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     let lastUpdateTime = 0;
 
     const handleScroll = () => {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-      }
-
+      if (rafId !== null) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
         const now = Date.now();
         if (now - lastUpdateTime >= UPDATE_THROTTLE) {
@@ -373,15 +340,12 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 
     const container = scrollContainerRef.current;
     container.addEventListener('scroll', handleScroll, { passive: true });
-
     calculateVisibleRange();
     updateCurrentPageFromScroll();
 
     return () => {
       container.removeEventListener('scroll', handleScroll);
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-      }
+      if (rafId !== null) cancelAnimationFrame(rafId);
     };
   }, [scrollView, calculateVisibleRange, updateCurrentPageFromScroll]);
 
@@ -389,7 +353,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     if (!scrollView) return;
 
     isTrackingEnabledRef.current = false;
-
     const timer = setTimeout(() => {
       isTrackingEnabledRef.current = true;
       updateCurrentPageFromScroll();
@@ -431,9 +394,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         setIsLoading(false);
         setError(null);
 
-        requestAnimationFrame(() => {
-          renderVisiblePages();
-        });
+        requestAnimationFrame(() => renderVisiblePages());
       } catch (err) {
         console.error('[CanvasRenderer] Failed to parse content:', err);
         setError(`Failed to parse content: ${err}`);
@@ -490,12 +451,8 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     const storedZoom = getProperty('canvas-renderer-zoom');
     const storedScrollView = getProperty('canvas-renderer-scroll-view');
 
-    if (storedZoom !== undefined) {
-      setScale(Number(storedZoom));
-    }
-    if (storedScrollView !== undefined) {
-      setScrollView(Boolean(storedScrollView));
-    }
+    if (storedZoom !== undefined) setScale(Number(storedZoom));
+    if (storedScrollView !== undefined) setScrollView(Boolean(storedScrollView));
   }, [getProperty]);
 
   useEffect(() => {
@@ -520,9 +477,16 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   }, [numPages, scale, pageMetadata]);
 
   useEffect(() => {
-    if (scrollView) {
-      calculateVisibleRange();
-    }
+    if (pageMetadata.size === 0) return;
+    document.dispatchEvent(
+      new CustomEvent('canvas-renderer-dimensions', {
+        detail: { dimensions: pageMetadata },
+      }),
+    );
+  }, [pageMetadata]);
+
+  useEffect(() => {
+    if (scrollView) calculateVisibleRange();
   }, [scrollView, numPages, scale, calculateVisibleRange]);
 
   const handlePreviousPage = useCallback(() => {
@@ -576,7 +540,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
       const rect = canvas.getBoundingClientRect();
       const meta = pageMetadata.get(pageNum);
       if (!meta) return;
-
       const x = ((event.clientX - rect.left) / rect.width) * meta.width;
       const y = ((event.clientY - rect.top) / rect.height) * meta.height;
       onLocationClick(pageNum, x, y);
@@ -605,14 +568,10 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     let maxW = 595;
     for (let i = renderRange.start; i <= renderRange.end; i++) {
       const meta = pageMetadata.get(i);
-      if (meta && meta.width > maxW) {
-        maxW = meta.width;
-      }
+      if (meta && meta.width > maxW) maxW = meta.width;
     }
     return maxW;
   }, [renderRange, pageMetadata]);
-
-  const virtualWrapperWidth = maxPageWidth * scale + 80;
 
   const handleFitToggle = useCallback(() => {
     const nextMode = fitMode === 'fit-width' ? 'fit-height' : 'fit-width';
@@ -659,9 +618,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 
   const handleToggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
-      containerRef.current
-        ?.requestFullscreen()
-        .then(() => setIsFullscreen(true));
+      containerRef.current?.requestFullscreen().then(() => setIsFullscreen(true));
     } else {
       document.exitFullscreen().then(() => setIsFullscreen(false));
     }
@@ -711,7 +668,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
-
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () =>
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
@@ -722,9 +678,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
       if (
         !document.fullscreenElement &&
         !containerRef.current?.contains(document.activeElement)
-      ) {
-        return;
-      }
+      ) return;
 
       switch (event.key) {
         case 'ArrowLeft':
@@ -785,6 +739,28 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     [],
   );
 
+  const renderHighlight = (pageNum: number) => {
+    if (!highlight || highlight.page !== pageNum) return null;
+    return highlight.rects.map((rect, i) => (
+      <div
+        key={i}
+        className="canvas-page-highlight"
+        style={{
+          position: 'absolute',
+          left: `${rect.x * scale}px`,
+          top: `${rect.y * scale}px`,
+          width: `${Math.max(rect.width, 0) * scale}px`,
+          height: `${Math.max(rect.height, 1) * scale}px`,
+          pointerEvents: 'none',
+          backgroundColor: 'rgba(255, 235, 59, 0.4)',
+          border: '2px solid rgba(255, 193, 7, 0.8)',
+          borderRadius: '2px',
+          animation: 'source-map-highlight-pulse 1.5s ease-out',
+        }}
+      />
+    ));
+  };
+
   if (!canvasRendererEnable) {
     return (
       <div className="canvas-renderer-container">
@@ -796,6 +772,8 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   }
 
   const isPdf = contentTypeRef.current === 'pdf';
+  const virtualWrapperWidth = maxPageWidth * scale + 80;
+  const topOffset = scrollView ? pageOffsets[renderRange.start - 1] || 0 : 0;
   const zoomOptions =
     getCanvasRendererSettings().find(
       (s) => s.id === 'canvas-renderer-initial-zoom',
@@ -804,7 +782,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   const hasCustomZoom = !zoomOptions.some(
     (opt) => String(opt.value) === currentZoom,
   );
-  const topOffset = scrollView ? pageOffsets[renderRange.start - 1] || 0 : 0;
 
   return (
     <div className="canvas-renderer-container" ref={containerRef}>
@@ -863,7 +840,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
               >
                 <ZoomOutIcon />
               </button>
-
               <select
                 value={hasCustomZoom ? 'custom' : currentZoom}
                 onChange={handleZoomChange}
@@ -883,7 +859,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                   <option value="custom">{Math.round(scale * 100)}%</option>
                 )}
               </select>
-
               <button
                 onClick={handleZoomIn}
                 className="toolbarButton"
@@ -905,13 +880,8 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                 }
                 disabled={isLoading}
               >
-                {fitMode === 'fit-width' ? (
-                  <FitToWidthIcon />
-                ) : (
-                  <FitToHeightIcon />
-                )}
+                {fitMode === 'fit-width' ? <FitToWidthIcon /> : <FitToHeightIcon />}
               </button>
-
               <button
                 onClick={handleToggleView}
                 className="toolbarButton"
@@ -920,7 +890,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
               >
                 {scrollView ? <PageIcon /> : <ScrollIcon />}
               </button>
-
               <button
                 onClick={handleToggleFullscreen}
                 className="toolbarButton"
@@ -950,125 +919,92 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         ref={scrollView ? scrollContainerRef : contentElRef}
       >
         <div className="canvas-renderer-viewer">
-          {!isLoading && !error && numPages > 0 && scrollView && (
-            <div
-              className="canvas-virtual-wrapper"
-              style={{
-                position: 'relative',
-                height: totalHeight,
-                width: virtualWrapperWidth,
-                margin: '0 auto',
-              }}
-            >
+          {!isLoading && !error && numPages > 0 && (
+            scrollView ? (
               <div
-                className="canvas-virtual-inner"
+                className="canvas-virtual-wrapper"
                 style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  transform: `translateY(${topOffset}px)`,
+                  position: 'relative',
+                  height: totalHeight,
+                  width: virtualWrapperWidth,
+                  margin: '0 auto',
                 }}
               >
-                {Array.from(
-                  { length: renderRange.end - renderRange.start + 1 },
-                  (_, idx) => {
-                    const pageNumber = renderRange.start + idx;
-                    const meta = pageMetadata.get(pageNumber);
-                    const width = meta?.width || 595;
-                    const height = meta?.height || 842;
-
-                    return (
-                      <div
-                        key={pageNumber}
-                        className="canvas-page"
-                        onClick={(e) => handlePageClick(pageNumber, e)}
-                      >
-                        <canvas
-                          ref={setCanvasRef(pageNumber)}
-                          className="canvas-page-canvas"
-                          style={{
-                            width: `${width * scale}px`,
-                            height: `${height * scale}px`,
-                          }}
-                        />
-                        {canvasRendererTextSelection && (
-                          <div
-                            ref={setTextLayerRef(pageNumber)}
-                            className="textLayer"
-                          />
-                        )}
-                        {isPdf && canvasRendererAnnotations && (
-                          <div
-                            ref={setAnnotationLayerRef(pageNumber)}
-                            className="annotationLayer"
-                          />
-                        )}
-                        {highlight?.page === pageNumber && (
-                          <div
-                            className="canvas-page-highlight"
-                            style={{
-                              position: 'absolute',
-                              left: `${highlight.x * scale}px`,
-                              top: `${highlight.y * scale}px`,
-                              width: `${(highlight.width || 20) * scale}px`,
-                              height: `${(highlight.height || 20) * scale}px`,
-                              pointerEvents: 'none',
-                              backgroundColor: 'rgba(255, 235, 59, 0.4)',
-                              border: '2px solid rgba(255, 193, 7, 0.8)',
-                              borderRadius: '2px',
-                              animation:
-                                'source-map-highlight-pulse 1.5s ease-out',
-                            }}
-                          />
-                        )}
-                      </div>
-                    );
-                  },
-                )}
-              </div>
-            </div>
-          )}
-
-          {!isLoading && !error && numPages > 0 && !scrollView && (
-            <div
-              className="canvas-page"
-              onClick={(e) => handlePageClick(currentPage, e)}
-            >
-              <canvas
-                ref={setCanvasRef(currentPage)}
-                className="canvas-page-canvas"
-                style={{
-                  width: `${(pageMetadata.get(currentPage)?.width || 595) * scale}px`,
-                  height: `${(pageMetadata.get(currentPage)?.height || 842) * scale}px`,
-                }}
-              />
-              {canvasRendererTextSelection && (
-                <div ref={setTextLayerRef(currentPage)} className="textLayer" />
-              )}
-              {isPdf && canvasRendererAnnotations && (
                 <div
-                  ref={setAnnotationLayerRef(currentPage)}
-                  className="annotationLayer"
-                />
-              )}
-              {highlight?.page === currentPage && (
-                <div
-                  className="canvas-page-highlight"
+                  className="canvas-virtual-inner"
                   style={{
                     position: 'absolute',
-                    left: `${highlight.x * scale}px`,
-                    top: `${highlight.y * scale}px`,
-                    width: `${(highlight.width || 20) * scale}px`,
-                    height: `${(highlight.height || 20) * scale}px`,
-                    pointerEvents: 'none',
-                    backgroundColor: 'rgba(255, 235, 59, 0.4)',
-                    border: '2px solid rgba(255, 193, 7, 0.8)',
-                    borderRadius: '2px',
-                    animation: 'source-map-highlight-pulse 1.5s ease-out',
+                    top: 0,
+                    left: 0,
+                    transform: `translateY(${topOffset}px)`,
+                  }}
+                >
+                  {Array.from(
+                    { length: renderRange.end - renderRange.start + 1 },
+                    (_, idx) => {
+                      const pageNumber = renderRange.start + idx;
+                      const meta = pageMetadata.get(pageNumber);
+                      const width = meta?.width || 595;
+                      const height = meta?.height || 842;
+
+                      return (
+                        <div
+                          key={pageNumber}
+                          className="canvas-page"
+                          onClick={(e) => handlePageClick(pageNumber, e)}
+                        >
+                          <canvas
+                            ref={setCanvasRef(pageNumber)}
+                            className="canvas-page-canvas"
+                            style={{
+                              width: `${width * scale}px`,
+                              height: `${height * scale}px`,
+                            }}
+                          />
+                          {canvasRendererTextSelection && (
+                            <div
+                              ref={setTextLayerRef(pageNumber)}
+                              className="textLayer"
+                            />
+                          )}
+                          {isPdf && canvasRendererAnnotations && (
+                            <div
+                              ref={setAnnotationLayerRef(pageNumber)}
+                              className="annotationLayer"
+                            />
+                          )}
+                          {renderHighlight(pageNumber)}
+                        </div>
+                      );
+                    },
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div
+                className="canvas-page"
+                onClick={(e) => handlePageClick(currentPage, e)}
+              >
+                <canvas
+                  ref={setCanvasRef(currentPage)}
+                  className="canvas-page-canvas"
+                  style={{
+                    width: `${(pageMetadata.get(currentPage)?.width || 595) * scale}px`,
+                    height: `${(pageMetadata.get(currentPage)?.height || 842) * scale}px`,
                   }}
                 />
-              )}
-            </div>
+                {canvasRendererTextSelection && (
+                  <div ref={setTextLayerRef(currentPage)} className="textLayer" />
+                )}
+                {isPdf && canvasRendererAnnotations && (
+                  <div
+                    ref={setAnnotationLayerRef(currentPage)}
+                    className="annotationLayer"
+                  />
+                )}
+                {renderHighlight(currentPage)}
+              </div>
+            )
           )}
 
           {isLoading && (

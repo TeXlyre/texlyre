@@ -13,7 +13,8 @@ import {
 import { useFileTree } from '../hooks/useFileTree';
 import { useSettings } from '../hooks/useSettings';
 import { latexService } from '../services/LaTeXService';
-import type { LaTeXContextType, LaTeXOutputFormat } from '../types/latex';
+import { BUSYTEX_BUNDLE_LABELS } from '../extensions/texlyre-busytex/BusyTeXService';
+import type { LaTeXContextType, LaTeXOutputFormat, LaTeXEngine } from '../types/latex';
 import { parseUrlFragments } from '../utils/urlUtils';
 import { pdfWindowService } from '../services/PdfWindowService';
 
@@ -27,6 +28,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
   const { fileTree, refreshFileTree } = useFileTree();
   const { registerSetting, getSetting } = useSettings();
   const [isCompiling, setIsCompiling] = useState<boolean>(false);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [hasAutoCompiled, setHasAutoCompiled] = useState(false);
   const [compileError, setCompileError] = useState<string | null>(null);
   const [compiledPdf, setCompiledPdf] = useState<Uint8Array | null>(null);
@@ -35,9 +38,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
   const [currentView, setCurrentView] = useState<'log' | 'output'>('log');
   const [currentFormat, setCurrentFormat] = useState<LaTeXOutputFormat>('pdf');
   const [logIndicator, setLogIndicator] = useState<'idle' | 'success' | 'error'>('idle');
-  const [latexEngine, setLatexEngine] = useState<'pdftex' | 'xetex' | 'luatex'>(
-    'pdftex'
-  );
+  const [latexEngine, setLatexEngineState] = useState<LaTeXEngine>('pdftex');
   const [activeCompiler, setActiveCompiler] = useState<string | null>(null);
   const settingsRegistered = useRef(false);
 
@@ -45,7 +46,6 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     const handleCompilerActive = (event: CustomEvent) => {
       setActiveCompiler(event.detail.type);
     };
-
     document.addEventListener('compiler-active', handleCompilerActive as EventListener);
     return () => {
       document.removeEventListener('compiler-active', handleCompilerActive as EventListener);
@@ -57,11 +57,9 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     settingsRegistered.current = true;
 
     const initialEngine =
-      getSetting('latex-engine')?.value as 'pdftex' | 'xetex' | 'luatex' ??
-      'pdftex';
+      getSetting('latex-engine')?.value as LaTeXEngine ?? 'pdftex';
     const initialTexliveEndpoint =
-      getSetting('latex-texlive-endpoint')?.value as string ??
-      'http://texlive.localhost:8082';
+      getSetting('latex-texlive-endpoint')?.value as string ?? 'http://texlive.localhost:8082';
     const initialStoreCache =
       getSetting('latex-store-cache')?.value as boolean ?? true;
     const initialStoreWorkingDirectory =
@@ -72,9 +70,19 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       getSetting('latex-default-format')?.value as LaTeXOutputFormat ?? 'pdf';
     const initialAutoNavigate =
       getSetting('latex-auto-navigate-to-main')?.value as string ?? 'conditional';
+    const initialBusyTeXEndpoint =
+      getSetting('latex-busytex-endpoint')?.value as string ?? 'http://texlive2026.localhost:8082';
+    const initialBusyTeXBundles =
+      getSetting('latex-busytex-bundles')?.value as string ?? 'recommended';
 
-    setLatexEngine(initialEngine);
+    setLatexEngineState(initialEngine);
     setCurrentFormat(initialDefaultFormat);
+
+    latexService.setTexliveEndpoint(initialTexliveEndpoint);
+    latexService.setStoreCache(initialStoreCache);
+    latexService.setStoreWorkingDirectory(initialStoreWorkingDirectory);
+    latexService.setBusyTeXEndpoint(initialBusyTeXEndpoint);
+    latexService.setBusyTeXBundles(initialBusyTeXBundles.split(',').filter(Boolean));
 
     registerSetting({
       id: 'latex-engine',
@@ -85,12 +93,15 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       description: t('Choose the LaTeX engine for compilation'),
       defaultValue: initialEngine,
       options: [
-        { label: t('pdfTeX'), value: 'pdftex' },
-        { label: t('XeTeX'), value: 'xetex' }
+        { label: t('pdfTeX (SwiftLaTeX / TeX Live 2020)'), value: 'pdftex' },
+        { label: t('XeTeX (SwiftLaTeX / TeX Live 2020)'), value: 'xetex' },
+        { label: t('pdfTeX (BusyTeX / TeX Live 2026)'), value: 'busytex-pdftex' },
+        { label: t('XeTeX (BusyTeX / TeX Live 2026)'), value: 'busytex-xetex' },
+        { label: t('LuaTeX (BusyTeX / TeX Live 2026)'), value: 'busytex-luatex' },
       ],
       onChange: (value) => {
-        handleSetLatexEngine(value as 'pdftex' | 'xetex' | 'luatex');
-      }
+        handleSetLatexEngine(value as LaTeXEngine);
+      },
     });
 
     registerSetting({
@@ -98,12 +109,53 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       category: t('Compilation'),
       subcategory: t('LaTeX'),
       type: 'text',
-      label: t('TexLive server endpoint'),
-      description: t('URL endpoint for TexLive package downloads'),
+      label: t('TeX Live 2020 remote endpoint (SwiftLaTeX)'),
+      description: t('URL endpoint for on-demand TeX Live 2020 package downloads used by SwiftLaTeX engines. Leave blank to disable.'),
       defaultValue: initialTexliveEndpoint,
       onChange: (value) => {
         latexService.setTexliveEndpoint(value as string);
-      }
+      },
+    });
+
+    registerSetting({
+      id: 'latex-busytex-endpoint',
+      category: t('Compilation'),
+      subcategory: t('LaTeX'),
+      type: 'text',
+      label: t('TeX Live 2026 remote endpoint (BusyTeX)'),
+      description: t('URL endpoint for on-demand TeX Live 2026 package downloads used by BusyTeX engines beyond preloaded bundles. Leave blank to disable.'),
+      defaultValue: initialBusyTeXEndpoint,
+      onChange: (value) => {
+        latexService.setBusyTeXEndpoint(value as string);
+      },
+    });
+
+    registerSetting({
+      id: 'latex-busytex-bundles',
+      category: t('Compilation'),
+      subcategory: t('LaTeX'),
+      type: 'select',
+      label: t('BusyTeX preloaded bundle'),
+      description: t('TeX Live 2026 package bundle to preload. Larger bundles take longer to download but cover more packages offline.'),
+      defaultValue: initialBusyTeXBundles,
+      options: Object.entries(BUSYTEX_BUNDLE_LABELS).map(([id, label]) => ({
+        label: t(label),
+        value: id,
+      })),
+      onChange: (value) => {
+        const bundles = (value as string).split(',').filter(Boolean);
+        latexService.setBusyTeXBundles(bundles);
+      },
+    });
+
+    registerSetting({
+      id: 'latex-sourcemap-enabled',
+      category: t('Compilation'),
+      subcategory: t('LaTeX'),
+      type: 'checkbox',
+      label: t('Enable source map (SyncTeX)'),
+      description: t('Enable SyncTeX source mapping between editor and PDF output'),
+      defaultValue: true,
     });
 
     registerSetting({
@@ -113,7 +165,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       type: 'checkbox',
       label: t('Auto-compile on project open'),
       description: t('Automatically compile LaTeX when opening a project'),
-      defaultValue: initialAutoCompile
+      defaultValue: initialAutoCompile,
     });
 
     registerSetting({
@@ -127,7 +179,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       options: [
         { label: t('Only when no LaTeX file is open'), value: 'conditional' },
         { label: t('Always navigate to main file'), value: 'always' },
-        { label: t('Never navigate to main file'), value: 'never' }]
+        { label: t('Never navigate to main file'), value: 'never' },
+      ],
     });
 
     registerSetting({
@@ -140,11 +193,11 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       defaultValue: initialDefaultFormat,
       options: [
         { label: t('PDF'), value: 'pdf' },
-        { label: t('Canvas (PDF)'), value: 'canvas-pdf' }
+        { label: t('Canvas (PDF)'), value: 'canvas-pdf' },
       ],
       onChange: (value) => {
         setCurrentFormat(value as LaTeXOutputFormat);
-      }
+      },
     });
 
     registerSetting({
@@ -157,7 +210,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       defaultValue: initialStoreCache,
       onChange: (value) => {
         latexService.setStoreCache(value as boolean);
-      }
+      },
     });
 
     registerSetting({
@@ -170,7 +223,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       defaultValue: initialStoreWorkingDirectory,
       onChange: (value) => {
         latexService.setStoreWorkingDirectory(value as boolean);
-      }
+      },
     });
 
     registerSetting({
@@ -181,49 +234,22 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       label: t('Show compilation notifications'),
       description: t('Display notifications for LaTeX compilation activities'),
       defaultValue: true,
-      onChange: () => {
-
-        // Notification setting changes are handled by the service
-      }
+      onChange: () => { },
     });
-
-    latexService.setTexliveEndpoint(initialTexliveEndpoint);
-    latexService.setStoreCache(initialStoreCache);
-    latexService.setStoreWorkingDirectory(initialStoreWorkingDirectory);
   }, [registerSetting, getSetting]);
 
-  useEffect(() => {
-    latexService.initialize(latexEngine).catch(console.error);
-
-    return latexService.addStatusListener(() => {
-      setIsCompiling(latexService.getStatus() === 'compiling');
-    });
-  }, [latexEngine]);
-
-  const handleSetLatexEngine = async (
-    engine: 'pdftex' | 'xetex' | 'luatex') => {
+  const handleSetLatexEngine = async (engine: LaTeXEngine): Promise<void> => {
     if (engine === latexEngine) return;
-
-    setLatexEngine(engine);
-    try {
-      await latexService.setEngine(engine);
-    } catch (error) {
-      console.error(`Failed to switch to ${engine} engine:`, error);
-      setCompileError(`Failed to switch to ${engine} engine`);
-    }
+    setLatexEngineState(engine);
   };
 
   const getProjectName = (): string => {
-    if (document.title && document.title !== 'TeXlyre') {
-      return document.title;
-    }
-
+    if (document.title && document.title !== 'TeXlyre') return document.title;
     const hash = window.location.hash;
     if (hash.includes('yjs:')) {
       const projectId = hash.split('yjs:')[1].split('&')[0];
       return `Project ${projectId.substring(0, 8)}`;
     }
-
     return 'LaTeX Project';
   };
 
@@ -231,9 +257,16 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     mainFileName: string,
     format: LaTeXOutputFormat = currentFormat
   ): Promise<void> => {
-    setCurrentFormat(format);
-    if (!latexService.isReady()) {
-      await latexService.initialize(latexEngine);
+    try {
+
+      setCurrentFormat(format);
+      if (latexService.getCurrentEngineType() !== latexEngine) {
+        await latexService.setEngine(latexEngine);
+      } else if (!latexService.isReady()) {
+        await latexService.initialize(latexEngine);
+      }
+    } finally {
+      setIsInitializing(false);
     }
 
     setIsCompiling(true);
@@ -256,10 +289,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
             setCompiledPdf(result.pdf);
             setCurrentView('output');
             setLogIndicator('success');
-
             const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx|latex)$/i, '.pdf') || 'output.pdf';
-            const projectName = getProjectName();
-            pdfWindowService.sendPdfUpdate(result.pdf, fileName, projectName);
+            pdfWindowService.sendPdfUpdate(result.pdf, fileName, getProjectName());
             break;
           case 'canvas-pdf':
             setCompiledCanvas(result.pdf);
@@ -269,13 +300,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
         }
       } else {
         setCompileError(t('Compilation failed. Check the log in the main window.'));
-        switch (format) {
-          case 'pdf':
-            setCurrentView('log');
-            break;
-        }
+        if (format === 'pdf') setCurrentView('log');
         setLogIndicator('error');
-
         pdfWindowService.sendCompileResult(result.status, result.log);
       }
 
@@ -284,7 +310,6 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       setCompileError(error instanceof Error ? error.message : t('Unknown error'));
       setCurrentView('log');
       setLogIndicator('error');
-
       pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
     } finally {
       setIsCompiling(false);
@@ -299,8 +324,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       const cleanUrl = hashUrl.replace(/&compile:[^&]*/, '');
       window.location.hash = cleanUrl;
 
-      const engine = fragments.compile as 'pdftex' | 'xetex' | 'luatex';
-      if (['pdftex', 'xetex', 'luatex'].includes(engine)) {
+      const engine = fragments.compile as LaTeXEngine;
+      if (['pdftex', 'xetex', 'busytex-pdftex', 'busytex-xetex', 'busytex-luatex'].includes(engine)) {
         handleSetLatexEngine(engine).then(() => {
           document.dispatchEvent(new CustomEvent('trigger-compile'));
         });
@@ -327,8 +352,14 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
   };
 
   const compileWithClearCache = async (mainFileName: string): Promise<void> => {
-    if (!latexService.isReady()) {
-      await latexService.initialize(latexEngine);
+    try {
+      if (latexService.getCurrentEngineType() !== latexEngine) {
+        await latexService.setEngine(latexEngine);
+      } else if (!latexService.isReady()) {
+        await latexService.initialize(latexEngine);
+      }
+    } finally {
+      setIsInitializing(false);
     }
 
     const format = currentFormat;
@@ -352,10 +383,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
             setCompiledPdf(result.pdf);
             setCurrentView('output');
             setLogIndicator('success');
-
             const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx|latex)$/i, '.pdf') || 'output.pdf';
-            const projectName = getProjectName();
-            pdfWindowService.sendPdfUpdate(result.pdf, fileName, projectName);
+            pdfWindowService.sendPdfUpdate(result.pdf, fileName, getProjectName());
             break;
           case 'canvas-pdf':
             setCompiledCanvas(result.pdf);
@@ -365,13 +394,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
         }
       } else {
         setCompileError(t('Compilation failed. Check the log in the main window.'));
-        switch (format) {
-          case 'pdf':
-            setCurrentView('log');
-            break;
-        }
+        if (format === 'pdf') setCurrentView('log');
         setLogIndicator('error');
-
         pdfWindowService.sendCompileResult(result.status, result.log);
       }
 
@@ -380,7 +404,6 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       setCompileError(error instanceof Error ? error.message : t('Unknown error'));
       setCurrentView('log');
       setLogIndicator('error');
-
       pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
     } finally {
       setIsCompiling(false);
@@ -390,16 +413,28 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
   const stopCompilation = () => {
     if (isCompiling && latexService.isCompiling()) {
       latexService.stopCompilation();
+      latexService.dismissCurrentNotification();
       setIsCompiling(false);
-      setCompileError('Compilation stopped by user');
+      setCompileError(t('Compilation stopped by user'));
     }
   };
 
   const exportDocument = async (
     mainFileName: string,
-    options: { format?: 'pdf' | 'dvi'; includeLog?: boolean } = {}
+    options: {
+      engine?: LaTeXEngine;
+      format?: 'pdf' | 'dvi';
+      includeLog?: boolean;
+      includeDvi?: boolean;
+      includeBbl?: boolean;
+      includeWorkDir?: boolean;
+    } = {}
   ): Promise<void> => {
-    await latexService.exportDocument(mainFileName, fileTree, options);
+    try {
+      await latexService.exportDocument(mainFileName, fileTree, options);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const toggleOutputView = () => {
@@ -410,6 +445,10 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     <LaTeXContext.Provider
       value={{
         isCompiling,
+        isInitializing,
+        setIsInitializing,
+        isExporting,
+        setIsExporting,
         compileError,
         compiledPdf,
         compiledCanvas,
@@ -427,7 +466,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
         compileWithClearCache,
         triggerAutoCompile,
         activeCompiler,
-        exportDocument
+        exportDocument,
       }}>
       {children}
     </LaTeXContext.Provider>

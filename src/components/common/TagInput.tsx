@@ -66,7 +66,7 @@ export const TagInput: React.FC<TagInputProps> = ({
                                 type="button"
                                 onClick={() => removeTag(tag)}
                                 className="tag-input-remove"
-                                aria-label={t('Remove {tag}', { tag })}
+                                title={t('Remove {tag}', { tag })}
                             >
                                 ×
                             </button>

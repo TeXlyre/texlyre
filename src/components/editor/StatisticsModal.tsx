@@ -2,8 +2,9 @@
 import { t } from '@/i18n';
 import type React from 'react';
 
-import Modal from '../common/Modal';
 import type { DocumentStatistics, StatisticsOptions } from '../../types/statistics';
+import Modal from '../common/Modal';
+import { NumberInput } from '../common/NumberInput';
 import { WordCountIcon } from '../common/Icons';
 
 interface StatisticsModalProps {
@@ -59,12 +60,13 @@ const StatisticsOptionsPanel: React.FC<StatisticsOptionsPanelProps> = ({
                     <h4>{t('Detail Level')}</h4>
                     <label>{t('Verbosity: ')}
 
-                        <input
-                            type="number"
-                            min="0"
-                            max="4"
+                        <NumberInput
+                            min={0}
+                            max={4}
+                            integer
                             value={verbose}
-                            onChange={(e) => onVerboseChange(parseInt(e.target.value, 10))} />
+                            onChange={onVerboseChange}
+                        />
 
                     </label>
                 </div>
@@ -128,12 +130,13 @@ const StatisticsOptionsPanel: React.FC<StatisticsOptionsPanelProps> = ({
                 <h4>{t('Detail Level')}</h4>
                 <label>{t('Verbosity: ')}
 
-                    <input
-                        type="number"
-                        min="0"
-                        max="4"
+                    <NumberInput
+                        min={0}
+                        max={4}
+                        integer
                         value={verbose}
-                        onChange={(e) => onVerboseChange(parseInt(e.target.value, 10))} />
+                        onChange={onVerboseChange}
+                    />
 
                 </label>
             </div>

@@ -29,6 +29,7 @@ export const getGitLabBackupSettings = (): Setting[] => [
         label: t('Default Commit Message'),
         description: t('Template for commit messages. Use {date} for current date, {time} for current time'),
         defaultValue: '',
+        forceLTR: false,
     },
     {
         id: 'gitlab-backup-ignore-patterns',

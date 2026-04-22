@@ -31,6 +31,7 @@ module.exports = {
         '^mathlive$': '<rootDir>/tests/mocks/mathlive.js',
         '^detypify-service$': '<rootDir>/tests/mocks/detypify-service.js',
         '^onnxruntime-web/wasm$': '<rootDir>/tests/mocks/detypify-service.js',
+        '^texlyre-busytex$': '<rootDir>/tests/mocks/texlyre-busytex.js',
     },
     collectCoverageFrom: [
         'src/**/*.{ts,tsx}',

@@ -531,6 +531,20 @@ class FileStorageService {
 		fileStorageEventEmitter.emitChange();
 	}
 
+	async cleanupDirectory(path: string): Promise<void> {
+		try {
+			const existing = await this.getAllFiles(true, false, false);
+			const toCleanup = existing.filter((f) => f.path.startsWith(`${path}/`) && !f.isDeleted);
+			if (toCleanup.length > 0) {
+				await this.batchDeleteFiles(toCleanup.map((f) => f.id), {
+					showDeleteDialog: false, hardDelete: true,
+				});
+			}
+		} catch (error) {
+			console.error(`Error cleaning up ${path}:`, error);
+		}
+	}
+
 	async batchMoveFiles(
 		moveOperations: Array<{
 			fileId: string;
@@ -855,6 +869,7 @@ class FileStorageService {
 	async getAllFiles(
 		includeDeleted = true,
 		excludeSyncIgnored = false,
+		includeContent = true,
 	): Promise<FileNode[]> {
 		if (!this.db) await this.initialize();
 		const allFiles = await this.db?.getAll(this.FILES_STORE);
@@ -867,6 +882,10 @@ class FileStorageService {
 
 		if (excludeSyncIgnored) {
 			filteredFiles = filteredFiles.filter((file) => !file.excludeFromSync);
+		}
+
+		if (!includeContent) {
+			filteredFiles = filteredFiles.map(({ content, ...rest }) => rest as FileNode);
 		}
 
 		return filteredFiles;
@@ -1011,7 +1030,7 @@ class FileStorageService {
 	}
 
 	async buildFileTree(): Promise<FileNode[]> {
-		const allFiles = await this.getAllFiles();
+		const allFiles = await this.getAllFiles(true, false, false);
 		const files = allFiles.filter((file) => !file.isDeleted);
 
 		const tree: FileNode[] = [];

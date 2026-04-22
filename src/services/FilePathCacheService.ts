@@ -1,6 +1,6 @@
 // src/services/FilePathCacheService.ts
 import type { FileNode, FilePathCache } from '../types/files';
-import { isLatexFile, isTypstFile, isBibFile } from '../utils/fileUtils';
+import { isLatexFile, isTypstFile, isBibFile, isTemporaryFile } from '../utils/fileUtils';
 import { fileStorageEventEmitter } from './FileStorageService';
 
 type CacheUpdateCallback = (files: FileNode[]) => void;
@@ -256,28 +256,41 @@ class FilePathCacheService {
 	}
 
 	private async updateLabelsCache() {
+		const { fileStorageService } = await import('./FileStorageService');
 		const texLabels = new Map<string, string[]>();
 		const typstLabels = new Map<string, string[]>();
 
 		for (const file of this.cachedFiles) {
-			if (file.type !== 'file' || file.isDeleted || !file.content) {
+			if (
+				file.type !== 'file' ||
+				file.isDeleted ||
+				isTemporaryFile(file.path) ||
+				(!isLatexFile(file.name) && !isTypstFile(file.name))
+			) {
 				continue;
 			}
 
-			const content = typeof file.content === 'string'
-				? file.content
-				: new TextDecoder().decode(file.content);
+			try {
+				const storedFile = await fileStorageService.getFile(file.id);
+				if (!storedFile?.content) continue;
 
-			if (isLatexFile(file.name)) {
-				const labels = this.extractTexLabels(content);
-				if (labels.length > 0) {
-					texLabels.set(file.path, labels);
+				const content = typeof storedFile.content === 'string'
+					? storedFile.content
+					: new TextDecoder().decode(storedFile.content);
+
+				if (isLatexFile(file.name)) {
+					const labels = this.extractTexLabels(content);
+					if (labels.length > 0) {
+						texLabels.set(file.path, labels);
+					}
+				} else if (isTypstFile(file.name)) {
+					const labels = this.extractTypstLabels(content);
+					if (labels.length > 0) {
+						typstLabels.set(file.path, labels);
+					}
 				}
-			} else if (isTypstFile(file.name)) {
-				const labels = this.extractTypstLabels(content);
-				if (labels.length > 0) {
-					typstLabels.set(file.path, labels);
-				}
+			} catch (error) {
+				console.warn(`Failed to read content for label extraction: ${file.path}`, error);
 			}
 		}
 
@@ -299,7 +312,7 @@ class FilePathCacheService {
 		} else {
 			const { fileStorageService } = await import('./FileStorageService');
 			try {
-				this.cachedFiles = await fileStorageService.getAllFiles(false);
+				this.cachedFiles = await fileStorageService.getAllFiles(false, false, false);
 			} catch (error) {
 				console.error('Error fetching files for path cache:', error);
 				this.cachedFiles = [];

@@ -1,10 +1,16 @@
 // src/types/sourceMap.ts
-export interface SourceMapForwardResult {
-    page: number;
+export type SourceMapClickMode = 'single' | 'double' | 'triple';
+
+export interface SourceMapRect {
     x: number;
     y: number;
-    width?: number;
-    height?: number;
+    width: number;
+    height: number;
+}
+
+export interface SourceMapForwardResult {
+    page: number;
+    rects: SourceMapRect[];
 }
 
 export interface SourceMapReverseResult {
@@ -15,10 +21,7 @@ export interface SourceMapReverseResult {
 
 export interface SourceMapHighlight {
     page: number;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
+    rects: SourceMapRect[];
 }
 
 export interface SourceMapData {
@@ -39,4 +42,14 @@ export interface SourceMapContextType {
     forwardSync: (file: string, line: number, column?: number) => void;
     reverseSync: (page: number, x: number, y: number) => void;
     clearHighlight: () => void;
+    reverseClickMode: SourceMapClickMode;
+    forwardClickMode: SourceMapClickMode;
+    showFloatingButtons: boolean;
+    reverseClickEnabled: boolean;
+    forwardClickEnabled: boolean;
+    updateReverseClickMode: (mode: SourceMapClickMode) => void;
+    updateForwardClickMode: (mode: SourceMapClickMode) => void;
+    updateShowFloatingButtons: (show: boolean) => void;
+    updateReverseClickEnabled: (enabled: boolean) => void;
+    updateForwardClickEnabled: (enabled: boolean) => void;
 }

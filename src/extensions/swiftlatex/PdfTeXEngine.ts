@@ -1,4 +1,4 @@
-// src/extensions/switftlatex/XeTeXEngine.ts
+// src/extensions/swiftlatex/PdfTeXEngine.ts
 import {
 	BaseEngine,
 	type CompileResult,
@@ -6,31 +6,27 @@ import {
 } from './BaseEngine';
 import { EngineLoader } from './EngineLoader';
 
-const BASE_PATH = __BASE_PATH__
+const BASE_PATH = __BASE_PATH__;
 
 declare global {
 	interface Window {
-		XeTeXEngine: any;
+		PdfTeXEngine: any;
 	}
 }
 
-interface XeTeXCompileResult extends CompileResult {
-	xdv?: Uint8Array;
-}
-
-export class XeTeXEngine extends BaseEngine {
+export class PdfTeXEngine extends BaseEngine {
 	constructor() {
 		const config: EngineConfig = {
-			name: 'XeTeX',
-			setupScript: `${BASE_PATH}/core/swiftlatex/TexlyreXeTeXEngineSetup.js`,
-			engineScript: `${BASE_PATH}/core/swiftlatex/texlyrexetex.js`,
-			engineClass: 'XeTeXEngine',
+			name: 'PdfTeX',
+			setupScript: `${BASE_PATH}/core/swiftlatex/TexlyrePdfTeXEngineSetup.js`,
+			engineScript: `${BASE_PATH}/core/swiftlatex/texlyrepdftex.js`,
+			engineClass: 'PdfTeXEngine',
 		};
 		super(config);
 	}
 
 	async loadScripts(): Promise<void> {
-		if (typeof window.XeTeXEngine === 'function') {
+		if (typeof window.PdfTeXEngine === 'function') {
 			return;
 		}
 
@@ -39,18 +35,18 @@ export class XeTeXEngine extends BaseEngine {
 			this.config.engineScript,
 		]);
 
-		if (typeof window.XeTeXEngine !== 'function') {
-			throw new Error('XeTeXEngine not available after loading scripts');
+		if (typeof window.PdfTeXEngine !== 'function') {
+			throw new Error('PdfTeXEngine not available after loading scripts');
 		}
 	}
 
 	createEngine(): any {
-		return new window.XeTeXEngine();
+		return new window.PdfTeXEngine();
 	}
 
 	setTexliveEndpoint(endpoint: string): void {
 		this.engine.setTexliveEndpoint(endpoint);
-		console.log(`[XeTeXEngine] TexLive endpoint set for XeTeX: ${endpoint}`);
+		console.log(`[PdfTeXEngine] TeX Live endpoint set for PdfTeX: ${endpoint}`);
 	}
 
 	writeMemFSFile(filename: string, content: string | Uint8Array): void {
@@ -95,22 +91,11 @@ export class XeTeXEngine extends BaseEngine {
 			this.setStatus('ready');
 			// this.flushCache();
 
-			console.log('[XeTeXEngine] XeTeX compilation result:', {
+			console.log('[PdfTeXEngine] PDFTeX compilation result:', {
 				status: result.status,
 				hasPdf: !!result.pdf,
-				hasXdv: !!result.xdv,
-				pdfSize: result.pdf?.length,
-				xdvSize: result.xdv?.length,
+				pdfSize: result.pdf?.length
 			});
-
-			if (result.status === 0 && result.pdf) {
-				return {
-					pdf: undefined,
-					status: result.status,
-					log: result.log,
-					xdv: result.pdf,
-				} as XeTeXCompileResult;
-			}
 
 			return {
 				pdf: result.pdf,

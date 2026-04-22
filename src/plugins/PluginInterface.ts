@@ -3,6 +3,7 @@ import type React from 'react';
 import type { Setting } from '../contexts/SettingsContext';
 import type { BackupStatus } from '../types/backup';
 import type { BibEntry } from '../types/bibliography';
+import type { SourceMapHighlight } from '../types/sourceMap';
 
 export interface Plugin {
 	id: string;
@@ -60,7 +61,7 @@ export interface RendererPlugin extends Plugin {
 
 export interface RendererController {
 	updateContent?: (content: ArrayBuffer | Uint8Array | string) => void;
-	setHighlight?: (highlight: { page: number; x: number; y: number; width: number; height: number } | null) => void;
+	setHighlight?: (highlight: SourceMapHighlight | null) => void;
 }
 
 export interface RendererProps {

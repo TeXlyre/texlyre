@@ -763,7 +763,6 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
         { label: t('Prefer Latest (Default)'), value: 'prefer-latest' },
         { label: t('Prefer Local (Do nothing)'), value: 'prefer-local' },
         { label: t('Notify of Conflicts'), value: 'notify' }],
-
       onChange: (value) => {
         setConflictResolutionStrategy(value as string);
       }

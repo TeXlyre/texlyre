@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { nanoid } from 'nanoid';
 
 import PositionedDropdown from '@/components/common/PositionedDropdown';
+import { NumberInput } from '@/components/common/NumberInput';
 import { ChevronDownIcon, LoaderIcon } from '@/components/common/Icons';
 import { useProperties } from '@/hooks/useProperties';
 import { fileStorageService } from '@/services/FileStorageService';
@@ -278,13 +279,12 @@ const DrawioSvgExportButton: React.FC<DrawioSvgExportButtonProps> = ({
                 <div className="dropdown-option">
                     <label>
                         {t('Margin (px):')}
-                        <input
-                            type="number"
-                            min="0"
-                            max="100"
+                        <NumberInput
+                            min={0}
+                            max={100}
+                            integer
                             value={margin}
-                            onChange={(e) => {
-                                const value = parseInt(e.target.value, 10);
+                            onChange={(value) => {
                                 setMargin(value);
                                 setProperty('drawio-svg-margin', value);
                             }}
@@ -295,14 +295,12 @@ const DrawioSvgExportButton: React.FC<DrawioSvgExportButtonProps> = ({
                 <div className="dropdown-option">
                     <label>
                         {t('Image scale:')}
-                        <input
-                            type="number"
-                            min="0.1"
-                            max="10"
-                            step="0.1"
+                        <NumberInput
+                            min={0.1}
+                            max={10}
+                            step={0.1}
                             value={scale}
-                            onChange={(e) => {
-                                const value = parseFloat(e.target.value);
+                            onChange={(value) => {
                                 setScale(value);
                                 setProperty('drawio-svg-scale', value);
                             }}

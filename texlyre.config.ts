@@ -51,6 +51,10 @@ const config: TexlyreConfig = {
             settings: {
                 bibtexViewerAutoTidy: false,
                 bibtexViewerTidyOptions: 'standard',
+                canvasRendererAnnotations: false,
+                canvasRendererEnable: true,
+                canvasRendererInitialZoom: '200',
+                canvasRendererTextSelection: false,
                 collabAutoReconnect: false,
                 collabAwarenessTimeout: 30,
                 collabProviderType: 'webrtc',
@@ -82,6 +86,7 @@ const config: TexlyreConfig = {
                 latexStoreCache: true,
                 latexStoreWorkingDirectory: false,
                 latexTexliveEndpoint: 'https://texlive.texlyre.org',
+                latexBusytexEndpoint: 'https://texlive2026.texlyre.org',
                 pdfRendererAnnotations: true,
                 pdfRendererEnable: true,
                 pdfRendererInitialZoom: '200',
@@ -119,6 +124,7 @@ const config: TexlyreConfig = {
             settings: {
                 collabSignalingServers: 'ws://localhost:4444/',
                 fileSyncServerUrl: 'http://localhost:8080',
+                latexBusytexEndpoint: 'http://localhost:8070',
                 latexTexliveEndpoint: 'http://localhost:5004',
                 themeVariant: 'dark',
 

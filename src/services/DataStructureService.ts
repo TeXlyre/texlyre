@@ -3,6 +3,7 @@ import type { User } from '../types/auth';
 import type { FileNode } from '../types/files';
 import type { Project } from '../types/projects';
 import type { TypstPdfOptions, TypstOutputFormat } from '../types/typst';
+import type { LaTeXEngine } from '../types/latex';
 
 export interface UnifiedManifest {
 	version: string;
@@ -16,7 +17,7 @@ export interface ProjectMetadata {
 	description: string;
 	type?: 'latex' | 'typst';
 	mainFile?: string;
-	latexEngine?: 'pdftex' | 'xetex' | 'luatex';
+	latexEngine?: LaTeXEngine;
 	typstEngine?: string;
 	typstOutputFormat?: TypstOutputFormat;
 	typstPdfOptions?: TypstPdfOptions;

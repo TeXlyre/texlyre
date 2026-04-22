@@ -82,16 +82,12 @@ const PdfRenderer: React.FC<RendererProps> = ({
   const contentElRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isTrackingEnabledRef = useRef<boolean>(true);
-
   const pendingRestorePageRef = useRef<number | null>(null);
   const loadedPagesRef = useRef<Set<number>>(new Set());
 
   const [highlight, setHighlight] = useState<{
     page: number;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
+    rects: Array<{ x: number; y: number; width: number; height: number }>;
   } | null>(null);
 
   const BUFFER_PAGES = 2;
@@ -129,14 +125,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
     const storedScrollView = getProperty('pdf-renderer-scroll-view');
     const storedPage = getProperty('pdf-renderer-current-page');
 
-    if (storedZoom !== undefined) {
-      setScale(Number(storedZoom));
-    }
-
-    if (storedScrollView !== undefined) {
-      setScrollView(Boolean(storedScrollView));
-    }
-
+    if (storedZoom !== undefined) setScale(Number(storedZoom));
+    if (storedScrollView !== undefined) setScrollView(Boolean(storedScrollView));
     if (storedPage !== undefined && Number(storedPage) >= 1) {
       pendingRestorePageRef.current = Number(storedPage);
     }
@@ -152,15 +142,11 @@ const PdfRenderer: React.FC<RendererProps> = ({
     if (content instanceof ArrayBuffer && content.byteLength > 0) {
       try {
         const contentHash = getContentHash(content);
-
         if (contentHashRef.current !== contentHash) {
-          const data = new Uint8Array(content);
-          const dataCopy = new Uint8Array(data);
+          const dataCopy = new Uint8Array(new Uint8Array(content));
           setPdfData(dataCopy);
-
           originalContentRef.current = dataCopy.buffer.slice(0);
           contentHashRef.current = contentHash;
-
           setIsLoading(true);
           setError(null);
         }
@@ -181,10 +167,10 @@ const PdfRenderer: React.FC<RendererProps> = ({
   const fileData = useMemo(() => {
     return pdfData
       ? {
-          data: pdfData,
-          cMapUrl: `${BASE_PATH}/assets/cmaps/`,
-          cMapPacked: true,
-        }
+        data: pdfData,
+        cMapUrl: `${BASE_PATH}/assets/cmaps/`,
+        cMapPacked: true,
+      }
       : null;
   }, [pdfData]);
 
@@ -210,10 +196,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
   const scrollToPage = useCallback(
     (pageNum: number) => {
       if (!scrollView || !scrollContainerRef.current) return;
-
-      const targetTop = getPageTop(pageNum);
       scrollContainerRef.current.scrollTo({
-        top: targetTop,
+        top: getPageTop(pageNum),
         behavior: 'smooth',
       });
     },
@@ -226,9 +210,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
       !scrollContainerRef.current ||
       isEditingPageInput ||
       !isTrackingEnabledRef.current
-    ) {
-      return;
-    }
+    ) return;
 
     const container = scrollContainerRef.current;
     const scrollTop = container.scrollTop;
@@ -241,8 +223,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
     for (let i = 1; i <= numPages; i++) {
       const pageHeight = getPageHeight(i);
-      const pageTop = accumulatedHeight;
-      const pageCenter = pageTop + pageHeight / 2;
+      const pageCenter = accumulatedHeight + pageHeight / 2;
       const distance = Math.abs(viewportCenter - pageCenter);
 
       if (distance < minDistance) {
@@ -251,12 +232,12 @@ const PdfRenderer: React.FC<RendererProps> = ({
       }
 
       accumulatedHeight += pageHeight;
-      if (pageTop > viewportCenter + containerHeight) break;
+      if (accumulatedHeight > viewportCenter + containerHeight) break;
     }
 
     if (closestPage !== lastStablePageRef.current) {
-      const currentPageHeight = getPageHeight(lastStablePageRef.current);
-      const hysteresisThreshold = currentPageHeight * HYSTERESIS_THRESHOLD;
+      const hysteresisThreshold =
+        getPageHeight(lastStablePageRef.current) * HYSTERESIS_THRESHOLD;
 
       if (
         minDistance < hysteresisThreshold ||
@@ -292,13 +273,11 @@ const PdfRenderer: React.FC<RendererProps> = ({
         startPage = Math.max(1, i - BUFFER_PAGES);
         foundStart = true;
       }
-
       if (pageTop < scrollBottom) {
         endPage = Math.min(numPages, i + BUFFER_PAGES);
       }
 
       accumulatedHeight += pageHeight;
-
       if (foundStart && pageTop > scrollBottom) break;
     }
 
@@ -312,10 +291,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
     let lastUpdateTime = 0;
 
     const handleScroll = () => {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-      }
-
+      if (rafId !== null) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
         const now = Date.now();
         if (now - lastUpdateTime >= UPDATE_THROTTLE) {
@@ -328,15 +304,12 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
     const container = scrollContainerRef.current;
     container.addEventListener('scroll', handleScroll, { passive: true });
-
     calculateVisibleRange();
     updateCurrentPageFromScroll();
 
     return () => {
       container.removeEventListener('scroll', handleScroll);
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-      }
+      if (rafId !== null) cancelAnimationFrame(rafId);
     };
   }, [scrollView, calculateVisibleRange, updateCurrentPageFromScroll]);
 
@@ -344,7 +317,6 @@ const PdfRenderer: React.FC<RendererProps> = ({
     if (!scrollView) return;
 
     isTrackingEnabledRef.current = false;
-
     const timer = setTimeout(() => {
       isTrackingEnabledRef.current = true;
       updateCurrentPageFromScroll();
@@ -365,7 +337,6 @@ const PdfRenderer: React.FC<RendererProps> = ({
           : 1;
 
       pendingRestorePageRef.current = null;
-
       lastStablePageRef.current = restorePage;
       setCurrentPage(restorePage);
       if (!isEditingPageInput) setPageInput(String(restorePage));
@@ -392,7 +363,6 @@ const PdfRenderer: React.FC<RendererProps> = ({
     (page: any) => {
       const pageNum = page.pageNumber;
       const viewport = page.getViewport({ scale: 1.0 });
-
       pageWidths.current.set(pageNum, viewport.width);
       pageHeights.current.set(pageNum, viewport.height);
       loadedPagesRef.current.add(pageNum);
@@ -400,13 +370,9 @@ const PdfRenderer: React.FC<RendererProps> = ({
       const pendingPage = pendingRestorePageRef.current;
       if (pendingPage && pageNum === pendingPage && scrollView) {
         pendingRestorePageRef.current = null;
-
         isTrackingEnabledRef.current = false;
-
-        // Use a rAF so the DOM has the rendered page dimensions.
         requestAnimationFrame(() => {
           scrollToPage(pendingPage);
-          // Re-enable tracking after the scroll settles.
           setTimeout(() => {
             isTrackingEnabledRef.current = true;
             calculateVisibleRange();
@@ -471,7 +437,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
   useImperativeHandle(
     controllerRef,
     () => ({
-      updateContent: (_newContent: ArrayBuffer | string) => {},
+      updateContent: (_newContent: ArrayBuffer | string) => { },
       setHighlight: (newHighlight) => {
         setHighlight(newHighlight);
         if (newHighlight && newHighlight.page !== currentPage) {
@@ -495,7 +461,6 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
       const currentW = pageWidths.current.get(currentPage);
       const currentH = pageHeights.current.get(currentPage);
-
       if (typeof currentW === 'number') pageWidth = currentW;
       if (typeof currentH === 'number') pageHeight = currentH;
 
@@ -507,9 +472,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
       if (mode === 'fit-width') {
         return Math.max(0.5, Math.min(10, (containerWidth - 40) / pageWidth));
-      } else {
-        return Math.max(0.5, Math.min(10, (containerHeight - 40) / pageHeight));
       }
+      return Math.max(0.5, Math.min(10, (containerHeight - 40) / pageHeight));
     },
     [currentPage],
   );
@@ -557,7 +521,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
       if (!pageWidth || !pageHeight) return;
 
       const target = event.currentTarget.querySelector(
-        '.react-pdf__Page',
+        '.react-pdf__Page canvas',
       ) as HTMLElement | null;
       if (!target) return;
 
@@ -581,13 +545,9 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
   const handleToggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen().then(() => {
-        setIsFullscreen(true);
-      });
+      containerRef.current?.requestFullscreen().then(() => setIsFullscreen(true));
     } else {
-      document.exitFullscreen().then(() => {
-        setIsFullscreen(false);
-      });
+      document.exitFullscreen().then(() => setIsFullscreen(false));
     }
   }, []);
 
@@ -595,20 +555,14 @@ const PdfRenderer: React.FC<RendererProps> = ({
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
-
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
   const handleExport = useCallback(() => {
     if (onDownload && fileName) {
       onDownload(fileName);
-    } else if (
-      originalContentRef.current &&
-      originalContentRef.current.byteLength > 0
-    ) {
+    } else if (originalContentRef.current?.byteLength > 0) {
       try {
         const blob = new Blob([originalContentRef.current], {
           type: 'application/pdf',
@@ -635,9 +589,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
       if (
         !document.fullscreenElement &&
         !containerRef.current?.contains(document.activeElement)
-      ) {
-        return;
-      }
+      ) return;
 
       switch (event.key) {
         case 'ArrowLeft':
@@ -655,28 +607,52 @@ const PdfRenderer: React.FC<RendererProps> = ({
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handlePreviousPage, handleNextPage]);
+
+  const renderHighlight = (pageNum: number) => {
+    if (!highlight || highlight.page !== pageNum) return null;
+    return highlight.rects.map((rect, i) => (
+      <div
+        key={i}
+        className="pdf-page-highlight"
+        style={{
+          position: 'absolute',
+          left: `${rect.x * scale}px`,
+          top: `${10 + rect.y * scale}px`,
+          width: `${Math.max(rect.width, 0) * scale}px`,
+          height: `${Math.max(rect.height, 1) * scale}px`,
+          pointerEvents: 'none',
+          backgroundColor: 'rgba(255, 235, 59, 0.4)',
+          border: '2px solid rgba(255, 193, 7, 0.8)',
+          borderRadius: '2px',
+          animation: 'source-map-highlight-pulse 1.5s ease-out',
+        }}
+      />
+    ));
+  };
 
   if (!pdfRendererEnable) {
     return (
       <div className="pdf-renderer-container">
         <div className="pdf-renderer-error">
-          {t(
-            'Enhanced PDF renderer is disabled. Please enable it in settings to use this renderer.',
-          )}
+          {t('Enhanced PDF renderer is disabled. Please enable it in settings to use this renderer.')}
         </div>
       </div>
     );
   }
 
+  const zoomOptions =
+    getPdfRendererSettings().find((s) => s.id === 'pdf-renderer-initial-zoom')
+      ?.options || [];
+  const currentZoom = Math.round(scale * 100).toString();
+  const hasCustomZoom = !zoomOptions.some(
+    (opt) => String(opt.value) === currentZoom,
+  );
+
   return (
     <div className="pdf-renderer-container" ref={containerRef}>
-      <div
-        className={`pdf-toolbar ${isFullscreen ? 'fullscreen-toolbar' : ''}`}
-      >
+      <div className={`pdf-toolbar ${isFullscreen ? 'fullscreen-toolbar' : ''}`}>
         <div className="toolbar">
           <div id="toolbarLeft">
             <div className="toolbarButtonGroup">
@@ -727,38 +703,22 @@ const PdfRenderer: React.FC<RendererProps> = ({
               >
                 <ZoomOutIcon />
               </button>
-              {(() => {
-                const zoomOptions =
-                  getPdfRendererSettings().find(
-                    (s) => s.id === 'pdf-renderer-initial-zoom',
-                  )?.options || [];
-                const currentZoom = Math.round(scale * 100).toString();
-                const hasCustomZoom = !zoomOptions.some(
-                  (opt) => String(opt.value) === currentZoom,
-                );
-
-                return (
-                  <select
-                    value={hasCustomZoom ? 'custom' : currentZoom}
-                    onChange={handleZoomChange}
-                    disabled={isLoading}
-                    className="toolbarZoomSelect"
-                    title={t('Zoom Level')}
-                  >
-                    {zoomOptions.map((option) => (
-                      <option
-                        key={String(option.value)}
-                        value={String(option.value)}
-                      >
-                        {option.label}
-                      </option>
-                    ))}
-                    {hasCustomZoom && (
-                      <option value="custom">{Math.round(scale * 100)}%</option>
-                    )}
-                  </select>
-                );
-              })()}
+              <select
+                value={hasCustomZoom ? 'custom' : currentZoom}
+                onChange={handleZoomChange}
+                disabled={isLoading}
+                className="toolbarZoomSelect"
+                title={t('Zoom Level')}
+              >
+                {zoomOptions.map((option) => (
+                  <option key={String(option.value)} value={String(option.value)}>
+                    {option.label}
+                  </option>
+                ))}
+                {hasCustomZoom && (
+                  <option value="custom">{Math.round(scale * 100)}%</option>
+                )}
+              </select>
               <button
                 onClick={handleZoomIn}
                 className="toolbarButton"
@@ -772,18 +732,10 @@ const PdfRenderer: React.FC<RendererProps> = ({
               <button
                 onClick={handleFitToggle}
                 className="toolbarButton"
-                title={
-                  fitMode === 'fit-width'
-                    ? t('Fit to Height')
-                    : t('Fit to Width')
-                }
+                title={fitMode === 'fit-width' ? t('Fit to Height') : t('Fit to Width')}
                 disabled={isLoading}
               >
-                {fitMode === 'fit-width' ? (
-                  <FitToWidthIcon />
-                ) : (
-                  <FitToHeightIcon />
-                )}
+                {fitMode === 'fit-width' ? <FitToWidthIcon /> : <FitToHeightIcon />}
               </button>
               <button
                 onClick={handleToggleView}
@@ -831,9 +783,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
               </div>
             }
           >
-            {!isLoading &&
-              !error &&
-              (scrollView ? (
+            {!isLoading && !error && (
+              scrollView ? (
                 Array.from(new Array(numPages), (_, index) => {
                   const pageNumber = index + 1;
                   const shouldRender =
@@ -847,45 +798,27 @@ const PdfRenderer: React.FC<RendererProps> = ({
                       data-page-number={pageNumber}
                       className="pdf-page-scroll"
                       style={{
-                        minHeight: shouldRender
-                          ? undefined
-                          : `${estimatedHeight}px`,
+                        minHeight: shouldRender ? undefined : `${estimatedHeight}px`,
                         position: 'relative',
                       }}
                       onClick={(e) => handlePageClick(pageNumber, e)}
                     >
-                      {shouldRender ? (
-                        <Page
-                          pageNumber={pageNumber}
-                          scale={scale}
-                          renderTextLayer={pdfRendererTextSelection}
-                          renderAnnotationLayer={true}
-                          onLoadSuccess={onPageLoadSuccess}
-                          loading={
-                            <div className="pdf-page-loading">
-                              {t('Loading page')} {pageNumber}
-                              {t('...')}
-                            </div>
-                          }
-                        />
-                      ) : null}
-                      {highlight?.page === pageNumber && (
-                        <div
-                          className="pdf-page-highlight"
-                          style={{
-                            position: 'absolute',
-                            left: `${highlight.x * scale}px`,
-                            top: `${highlight.y * scale}px`,
-                            width: `${(highlight.width || 20) * scale}px`,
-                            height: `${(highlight.height || 20) * scale}px`,
-                            pointerEvents: 'none',
-                            backgroundColor: 'rgba(255, 235, 59, 0.4)',
-                            border: '2px solid rgba(255, 193, 7, 0.8)',
-                            borderRadius: '2px',
-                            animation:
-                              'source-map-highlight-pulse 1.5s ease-out',
-                          }}
-                        />
+                      {shouldRender && (
+                        <div style={{ position: 'relative', display: 'inline-block' }}>
+                          <Page
+                            pageNumber={pageNumber}
+                            scale={scale}
+                            renderTextLayer={pdfRendererTextSelection}
+                            renderAnnotationLayer={true}
+                            onLoadSuccess={onPageLoadSuccess}
+                            loading={
+                              <div className="pdf-page-loading">
+                                {t('Loading page')} {pageNumber}{t('...')}
+                              </div>
+                            }
+                          />
+                          {renderHighlight(pageNumber)}
+                        </div>
                       )}
                     </div>
                   );
@@ -896,37 +829,24 @@ const PdfRenderer: React.FC<RendererProps> = ({
                   style={{ position: 'relative' }}
                   onClick={(e) => handlePageClick(currentPage, e)}
                 >
-                  <Page
-                    pageNumber={currentPage}
-                    scale={scale}
-                    renderTextLayer={pdfRendererTextSelection}
-                    renderAnnotationLayer={true}
-                    onLoadSuccess={onPageLoadSuccess}
-                    loading={
-                      <div className="pdf-page-loading">
-                        {t('Loading page...')}
-                      </div>
-                    }
-                  />
-                  {highlight?.page === currentPage && (
-                    <div
-                      className="pdf-page-highlight"
-                      style={{
-                        position: 'absolute',
-                        left: `${highlight.x * scale}px`,
-                        top: `${highlight.y * scale}px`,
-                        width: `${(highlight.width || 20) * scale}px`,
-                        height: `${(highlight.height || 20) * scale}px`,
-                        pointerEvents: 'none',
-                        backgroundColor: 'rgba(255, 235, 59, 0.4)',
-                        border: '2px solid rgba(255, 193, 7, 0.8)',
-                        borderRadius: '2px',
-                        animation: 'source-map-highlight-pulse 1.5s ease-out',
-                      }}
+                  <div style={{ position: 'relative', display: 'inline-block' }}>
+                    <Page
+                      pageNumber={currentPage}
+                      scale={scale}
+                      renderTextLayer={pdfRendererTextSelection}
+                      renderAnnotationLayer={true}
+                      onLoadSuccess={onPageLoadSuccess}
+                      loading={
+                        <div className="pdf-page-loading">
+                          {t('Loading page...')}
+                        </div>
+                      }
                     />
-                  )}
+                    {renderHighlight(currentPage)}
+                  </div>
                 </div>
-              ))}
+              )
+            )}
           </Document>
         )}
       </div>

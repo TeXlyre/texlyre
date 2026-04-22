@@ -1,4 +1,4 @@
-// src/extensions/switftlatex/EngineLoader.ts
+// src/extensions/swiftlatex/EngineLoader.ts
 export class EngineLoader {
 	private static loadedScripts = new Set<string>();
 

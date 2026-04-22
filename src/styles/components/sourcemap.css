@@ -1,0 +1,119 @@
+.sourcemap-button-container {
+    display: flex;
+    gap: var(--space-xs);
+    position: relative;
+}
+
+.sourcemap-button-group {
+    display: flex;
+    align-items: center;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.sourcemap-button-group .sourcemap-locate-button {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.sourcemap-button-group .dropdown-toggle {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    min-width: 0 !important;
+}
+
+.sourcemap-click-mode-group {
+    display: flex;
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-top: var(--space-xs);
+}
+
+.sourcemap-click-mode-btn {
+    flex: 1;
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.8rem;
+    background-color: var(--pico-background);
+    border: none;
+    border-right: 1px solid var(--accent-border);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background-color var(--transition-normal);
+}
+
+.sourcemap-click-mode-btn:last-child {
+    border-right: none;
+}
+
+.sourcemap-click-mode-btn:hover {
+    background-color: var(--pico-primary-focus);
+}
+
+.sourcemap-click-mode-btn.active {
+    background-color: var(--pico-primary);
+    color: var(--pico-primary-inverse);
+}
+
+.sourcemap-dropdown {
+    min-width: 240px;
+    padding: var(--space-sm);
+    background-color: var(--pico-background);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    z-index: var(--z-dropdown);
+}
+
+.sourcemap-dropdown-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.sourcemap-dropdown-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted, #888);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding-bottom: var(--space-xs);
+}
+
+.sourcemap-dropdown-divider {
+    border-top: 1px solid var(--accent-border);
+    margin: var(--space-sm) 0;
+}
+
+.sourcemap-floating-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    position: absolute;
+    left: var(--space-xs);
+    top: 30%;
+    transform: translateY(-50%);
+    z-index: 20;
+}
+
+.sourcemap-floating-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.75rem;
+    background-color: var(--pico-secondary-background);
+    border: 3px solid var(--accent-border);
+    border-radius: var(--radius-sm);
+    color: var(--text-color);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color var(--transition-normal);
+    box-shadow: var(--shadow-md);
+}
+
+.sourcemap-floating-btn:hover {
+    background-color: var(--pico-primary-focus);
+    color: var(--pico-background);
+    opacity: 100%;
+}

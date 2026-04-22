@@ -289,7 +289,7 @@ class TypstService {
 
     private async clearOutputDirectories(): Promise<void> {
         try {
-            const allFiles = await fileStorageService.getAllFiles();
+            const allFiles = await fileStorageService.getAllFiles(false, false, false);
             const filesToDelete = allFiles.filter((file) => {
                 const path = file.path;
                 return (
