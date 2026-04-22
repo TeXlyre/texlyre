@@ -201,6 +201,7 @@ class LaTeXService {
 			includeLog?: boolean;
 			includeDvi?: boolean;
 			includeBbl?: boolean;
+			includeWorkDir?: boolean;
 		} = {},
 	): Promise<void> {
 		const targetEngine = options.engine ?? this.currentEngineType;
@@ -213,26 +214,47 @@ class LaTeXService {
 				if (!busyTexService.isReady() || busyTexService.getCurrentEngineType() !== targetEngine) {
 					await busyTexService.initialize(targetEngine as BusyTeXEngineType);
 				}
-				const nodesWithContent = await this.loadFileContents(this.collectAllFiles(fileTree));
-				const result = await busyTexService.compile(mainFileName, nodesWithContent);
-				if (result.status === 0 && result.pdf) {
-					const baseName = this.getBaseName(mainFileName);
-					const files: Array<{ content: Uint8Array; name: string; mimeType: string }> = [
-						{ content: result.pdf, name: `${baseName}.pdf`, mimeType: 'application/pdf' },
-					];
-					if (options.includeLog) {
-						files.push({
-							content: new TextEncoder().encode(result.log),
-							name: `${baseName}.log`,
-							mimeType: 'text/plain',
+
+				const needsWorkDir = !!(options.includeBbl || options.includeWorkDir);
+				const originalStoreWorking = busyTexService.getStoreWorkingDirectory();
+				if (needsWorkDir) busyTexService.setStoreWorkingDirectory(true);
+
+				try {
+					const nodesWithContent = await this.loadFileContents(this.collectAllFiles(fileTree));
+					const result = await busyTexService.compile(mainFileName, nodesWithContent);
+
+					if (result.status === 0 && result.pdf) {
+						const baseName = this.getBaseName(mainFileName);
+						const files: Array<{ content: Uint8Array; name: string; mimeType: string }> = [
+							{ content: result.pdf, name: `${baseName}.pdf`, mimeType: 'application/pdf' },
+						];
+						if (options.includeLog) {
+							files.push({
+								content: new TextEncoder().encode(result.log),
+								name: `${baseName}.log`,
+								mimeType: 'text/plain',
+							});
+						}
+						if (options.includeBbl) {
+							const bbl = await busyTexService.extractBblFile(mainFileName);
+							if (bbl) files.push(bbl);
+						}
+						if (options.includeWorkDir) {
+							const workFiles = await busyTexService.collectStoredWorkFiles();
+							files.push(...workFiles);
+						}
+						await downloadFiles(files, baseName);
+						this.showSuccessNotification(t('Export completed successfully'), {
+							operationId, duration: 2000,
 						});
+					} else {
+						this.showErrorNotification(t('Export failed'), { operationId, duration: 3000 });
 					}
-					await downloadFiles(files, baseName);
-					this.showSuccessNotification(t('Export completed successfully'), {
-						operationId, duration: 2000,
-					});
-				} else {
-					this.showErrorNotification(t('Export failed'), { operationId, duration: 3000 });
+				} finally {
+					if (needsWorkDir) busyTexService.setStoreWorkingDirectory(originalStoreWorking);
+					if (needsWorkDir && !originalStoreWorking) {
+						await busyTexService.cleanupStoredWorkDirectory();
+					}
 				}
 				return;
 			}
@@ -243,6 +265,7 @@ class LaTeXService {
 				includeLog: options.includeLog,
 				includeDvi: options.includeDvi,
 				includeBbl: options.includeBbl,
+				includeWorkDir: options.includeWorkDir,
 			});
 
 			if (result.status === 0 && result.files.length > 0) {

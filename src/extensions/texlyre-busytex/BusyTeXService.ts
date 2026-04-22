@@ -9,7 +9,7 @@ import type { CompileResult } from '../swiftlatex/BaseEngine';
 import type { FileNode } from '../../types/files';
 import { fileStorageService } from '../../services/FileStorageService';
 import { latexSourceMapService } from '../../services/LaTeXSourceMapService';
-import { getMimeType, isBinaryFile, toArrayBuffer } from '../../utils/fileUtils';
+import { getMimeType, isBinaryFile, isTemporaryFile, toArrayBuffer } from '../../utils/fileUtils';
 import { cleanContent } from '../../utils/fileCommentUtils';
 
 export const BUSYTEX_BUNDLE_URLS: Record<string, string> = {
@@ -58,6 +58,10 @@ class BusyTeXService {
 
     setUseWorker(useWorker: boolean): void {
         busyTeXEngine.setUseWorker(useWorker);
+    }
+
+    getStoreWorkingDirectory(): boolean {
+        return this.storeWorkingDirectory;
     }
 
     getStatus(): string {
@@ -113,14 +117,16 @@ class BusyTeXService {
         const cachedMisses = await this.loadCachedMisses();
         await this.loadCachedRemoteFiles();
 
-        const cleanedNodes = fileNodes.map((node) => {
-            if (node.type !== 'file' || node.content === undefined) return node;
-            const cleaned = cleanContent(node.content);
-            const path = this.flattenMainDirectory
-                ? this.flattenNodePath(node.path, mainFileName)
-                : node.path.replace(/^\/+/, '');
-            return { ...node, path, content: cleaned };
-        });
+        const cleanedNodes = fileNodes
+            .filter((node) => !isTemporaryFile(node.path))
+            .map((node) => {
+                if (node.type !== 'file' || node.content === undefined) return node;
+                const cleaned = cleanContent(node.content);
+                const path = this.flattenMainDirectory
+                    ? this.flattenNodePath(node.path, mainFileName)
+                    : node.path.replace(/^\/+/, '');
+                return { ...node, path, content: cleaned };
+            });
 
         const result = await busyTeXEngine.compile(mainFileName, cleanedNodes, {
             bibtex: true,
@@ -386,6 +392,10 @@ class BusyTeXService {
         };
     }
 
+    async cleanupStoredWorkDirectory(): Promise<void> {
+        await fileStorageService.cleanupDirectory('/.texlyre_src/__work');
+    }
+
     private getBaseName(filePath: string): string {
         const name = filePath.split('/').pop() || filePath;
         return name.includes('.') ? name.split('.').slice(0, -1).join('.') : name;
@@ -434,6 +444,62 @@ class BusyTeXService {
             await fileStorageService.batchStoreFiles(toCreate, { showConflictDialog: false });
         }
     }
+
+    async extractBblFile(mainFileName: string): Promise<{ content: Uint8Array; name: string; mimeType: string } | null> {
+        const baseName = this.getBaseName(mainFileName);
+        const workDir = '/.texlyre_src/__work';
+        for (const p of [`${workDir}/${baseName}.bbl`, `${workDir}/_${baseName}.bbl`]) {
+            try {
+                const file = await fileStorageService.getFileByPath(p, true);
+                if (file?.content) {
+                    const content = typeof file.content === 'string'
+                        ? new TextEncoder().encode(file.content)
+                        : new Uint8Array(file.content as ArrayBuffer);
+                    return { content, name: p.split('/').pop() || `${baseName}.bbl`, mimeType: 'text/plain' };
+                }
+            } catch { continue; }
+        }
+
+        try {
+            const bblFiles = await fileStorageService.getFilesByPath(
+                `${workDir}/`, true, { fileExtension: '.bbl', excludeDirectories: true },
+            );
+            if (bblFiles.length > 0 && bblFiles[0].content) {
+                const content = typeof bblFiles[0].content === 'string'
+                    ? new TextEncoder().encode(bblFiles[0].content)
+                    : new Uint8Array(bblFiles[0].content as ArrayBuffer);
+                return { content, name: bblFiles[0].path.split('/').pop() || `${baseName}.bbl`, mimeType: 'text/plain' };
+            }
+        } catch { }
+
+        return null;
+    }
+
+    async collectStoredWorkFiles(): Promise<Array<{ content: Uint8Array; name: string; mimeType: string }>> {
+        const workDir = '/.texlyre_src/__work';
+        const artifacts: Array<{ content: Uint8Array; name: string; mimeType: string }> = [];
+        try {
+            const files = await fileStorageService.getFilesByPath(
+                `${workDir}/`, true, { excludeDirectories: true },
+            );
+            for (const file of files) {
+                if (!file.content || file.isDeleted) continue;
+                const content = typeof file.content === 'string'
+                    ? new TextEncoder().encode(file.content)
+                    : new Uint8Array(file.content as ArrayBuffer);
+                const relativePath = file.path.substring(workDir.length + 1);
+                artifacts.push({
+                    content,
+                    name: `work/${relativePath}`,
+                    mimeType: file.mimeType || 'application/octet-stream',
+                });
+            }
+        } catch (error) {
+            console.error('[BusyTeXService] Failed to collect stored work files:', error);
+        }
+        return artifacts;
+    }
+
 }
 
 export const busyTexService = new BusyTeXService();

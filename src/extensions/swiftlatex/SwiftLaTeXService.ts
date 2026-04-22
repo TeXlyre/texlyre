@@ -19,6 +19,7 @@ export interface SwiftExportOptions {
     includeLog?: boolean;
     includeDvi?: boolean;
     includeBbl?: boolean;
+    includeWorkDir?: boolean;
 }
 
 export interface SwiftExportArtifact {
@@ -54,17 +55,26 @@ class SwiftLaTeXService {
     setStoreWorkingDirectory(store: boolean): void { this.storeWorkingDirectory = store; }
     setFlattenMainDirectory(flatten: boolean): void { this.flattenMainDirectory = flatten; }
 
-    getCurrentEngineType(): SwiftEngineType { return this.currentEngineType; }
+    getCurrentEngineType(): SwiftEngineType {
+        return this.currentEngineType;
+    }
+
     getCurrentEngine(): BaseEngine | null {
         return this.engines.get(this.currentEngineType) ?? null;
+    }
+
+    getStoreWorkingDirectory(): boolean {
+        return this.storeWorkingDirectory;
     }
 
     getStatus(): string {
         try { return this.getCurrentEngine()?.getStatus() ?? 'unloaded'; } catch { return 'unloaded'; }
     }
+
     isReady(): boolean {
         try { return this.getCurrentEngine()?.isReady() ?? false; } catch { return false; }
     }
+
     isCompiling(): boolean {
         try { return this.getCurrentEngine()?.isCompiling() ?? false; } catch { return false; }
     }
@@ -135,13 +145,15 @@ class SwiftLaTeXService {
             includeLog = false,
             includeDvi = false,
             includeBbl = false,
+            includeWorkDir = false,
         } = options;
 
         const originalEngine = this.currentEngineType;
         const targetEngine = exportEngine ?? this.currentEngineType;
         const originalStoreWorking = this.storeWorkingDirectory;
+        const needsWorkDir = includeBbl || includeWorkDir;
 
-        if (includeBbl) this.storeWorkingDirectory = true;
+        if (needsWorkDir) this.storeWorkingDirectory = true;
         if (targetEngine !== this.currentEngineType) await this.setEngine(targetEngine);
 
         const engine = this.getCurrentEngine();
@@ -182,10 +194,16 @@ class SwiftLaTeXService {
                     });
                 }
 
-                if (includeBbl) {
+                if (needsWorkDir) {
                     await this.storeOutputDirectories(engine);
-                    const bbl = await this.extractBblFile(baseName);
-                    if (bbl) files.push(bbl);
+                    if (includeBbl) {
+                        const bbl = await this.extractBblFile(mainFileName);
+                        if (bbl) files.push(bbl);
+                    }
+                    if (includeWorkDir) {
+                        const workArtifacts = await this.collectStoredWorkFiles();
+                        files.push(...workArtifacts);
+                    }
                 }
             }
 
@@ -193,6 +211,9 @@ class SwiftLaTeXService {
             return { status: result.status, log: result.log, files };
         } finally {
             this.storeWorkingDirectory = originalStoreWorking;
+            if (needsWorkDir && !originalStoreWorking) {
+                await this.cleanupStoredWorkDirectory();
+            }
             if (targetEngine !== originalEngine) await this.setEngine(originalEngine);
         }
     }
@@ -401,7 +422,7 @@ class SwiftLaTeXService {
     private async storeOutputDirectories(engine: BaseEngine): Promise<void> {
         if (this.storeCache) await this.storeCacheDirectory(engine);
         if (this.storeWorkingDirectory) {
-            await this.cleanupDirectory('/.texlyre_src/__work');
+            await fileStorageService.cleanupDirectory('/.texlyre_src/__work');
             await this.storeWorkDirectory(engine);
         }
     }
@@ -560,18 +581,8 @@ class SwiftLaTeXService {
         }
     }
 
-    private async cleanupDirectory(path: string): Promise<void> {
-        try {
-            const existing = await fileStorageService.getAllFiles(true, false, false);
-            const toCleanup = existing.filter((f) => f.path.startsWith(`${path}/`) && !f.isDeleted);
-            if (toCleanup.length > 0) {
-                await fileStorageService.batchDeleteFiles(toCleanup.map((f) => f.id), {
-                    showDeleteDialog: false, hardDelete: true,
-                });
-            }
-        } catch (error) {
-            console.error(`Error cleaning up ${path}:`, error);
-        }
+    async cleanupStoredWorkDirectory(): Promise<void> {
+        await fileStorageService.cleanupDirectory('/.texlyre_src/__work');
     }
 
     private async createCompilationLogFile(mainFile: string, log: string): Promise<FileNode> {
@@ -654,7 +665,8 @@ class SwiftLaTeXService {
         return name.includes('.') ? name.split('.').slice(0, -1).join('.') : name;
     }
 
-    private async extractBblFile(baseName: string): Promise<SwiftExportArtifact | null> {
+    async extractBblFile(mainFileName: string): Promise<SwiftExportArtifact | null> {
+        const baseName = this.getBaseName(mainFileName);
         const workDir = '/.texlyre_src/__work';
         for (const p of [`${workDir}/${baseName}.bbl`, `${workDir}/_${baseName}.bbl`]) {
             try {
@@ -681,6 +693,31 @@ class SwiftLaTeXService {
         } catch { }
 
         return null;
+    }
+
+    async collectStoredWorkFiles(): Promise<SwiftExportArtifact[]> {
+        const workDir = '/.texlyre_src/__work';
+        const artifacts: SwiftExportArtifact[] = [];
+        try {
+            const files = await fileStorageService.getFilesByPath(
+                `${workDir}/`, true, { excludeDirectories: true },
+            );
+            for (const file of files) {
+                if (!file.content || file.isDeleted) continue;
+                const content = typeof file.content === 'string'
+                    ? new TextEncoder().encode(file.content)
+                    : new Uint8Array(file.content as ArrayBuffer);
+                const relativePath = file.path.substring(workDir.length + 1);
+                artifacts.push({
+                    content,
+                    name: `work/${relativePath}`,
+                    mimeType: file.mimeType || 'application/octet-stream',
+                });
+            }
+        } catch (error) {
+            console.error('Error collecting stored work files:', error);
+        }
+        return artifacts;
     }
 }
 

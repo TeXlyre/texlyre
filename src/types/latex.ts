@@ -48,6 +48,7 @@ export interface LaTeXContextType {
 			includeLog?: boolean;
 			includeDvi?: boolean;
 			includeBbl?: boolean;
+			includeWorkDir?: boolean;
 		}
 	) => Promise<void>;
 }

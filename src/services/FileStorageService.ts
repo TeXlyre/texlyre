@@ -531,6 +531,20 @@ class FileStorageService {
 		fileStorageEventEmitter.emitChange();
 	}
 
+	async cleanupDirectory(path: string): Promise<void> {
+		try {
+			const existing = await fileStorageService.getAllFiles(true, false, false);
+			const toCleanup = existing.filter((f) => f.path.startsWith(`${path}/`) && !f.isDeleted);
+			if (toCleanup.length > 0) {
+				await fileStorageService.batchDeleteFiles(toCleanup.map((f) => f.id), {
+					showDeleteDialog: false, hardDelete: true,
+				});
+			}
+		} catch (error) {
+			console.error(`Error cleaning up ${path}:`, error);
+		}
+	}
+
 	async batchMoveFiles(
 		moveOperations: Array<{
 			fileId: string;

@@ -66,6 +66,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
     const [includeLog, setIncludeLog] = useState(false);
     const [includeDvi, setIncludeDvi] = useState(false);
     const [includeBbl, setIncludeBbl] = useState(false);
+    const [includeWorkDir, setIncludeWorkDir] = useState(false);
     const [selectedBundle, setSelectedBundle] = useState<string>('recommended');
     const [isCacheOptionsOpen, setIsCacheOptionsOpen] = useState(false);
     const [bundleCacheStatus, setBundleCacheStatus] = useState<Record<string, boolean>>({});
@@ -125,6 +126,13 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
         });
 
         registerProperty({
+            id: 'latex-export-include-workdir',
+            category: 'Export',
+            subcategory: 'LaTeX',
+            defaultValue: false
+        });
+
+        registerProperty({
             id: 'latex-export-busytex-bundle',
             category: 'Export',
             subcategory: 'LaTeX',
@@ -141,6 +149,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
         const storedIncludeLog = getProperty('latex-export-include-log');
         const storedIncludeDvi = getProperty('latex-export-include-dvi');
         const storedIncludeBbl = getProperty('latex-export-include-bbl');
+        const storedIncludeWorkDir = getProperty('latex-export-include-workdir');
         const storedBundle = getProperty('latex-export-busytex-bundle');
 
         if (storedMainFile !== undefined) setUserSelectedMainFile(storedMainFile as string | undefined);
@@ -149,6 +158,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
         if (storedIncludeLog !== undefined) setIncludeLog(Boolean(storedIncludeLog));
         if (storedIncludeDvi !== undefined) setIncludeDvi(Boolean(storedIncludeDvi));
         if (storedIncludeBbl !== undefined) setIncludeBbl(Boolean(storedIncludeBbl));
+        if (storedIncludeWorkDir !== undefined) setIncludeWorkDir(Boolean(storedIncludeWorkDir));
         if (storedBundle !== undefined) setSelectedBundle(storedBundle as string);
 
         setPropertiesLoaded(true);
@@ -236,7 +246,8 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                 format: selectedFormat,
                 includeLog,
                 includeDvi: isBusyTeX ? false : includeDvi,
-                includeBbl: isBusyTeX ? false : includeBbl,
+                includeBbl,
+                includeWorkDir,
             });
         } finally {
             setIsDropdownOpen(false);
@@ -454,19 +465,29 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                         </label>
                     )}
 
-                    {!isBusyTeX && (
-                        <label className="dropdown-checkbox">
-                            <input
-                                type="checkbox"
-                                checked={includeBbl}
-                                onChange={(e) => {
-                                    setIncludeBbl(e.target.checked);
-                                    setProperty('latex-export-include-bbl', e.target.checked);
-                                }}
-                                disabled={isExporting} />
-                            {t('Include BBL file')}
-                        </label>
-                    )}
+                    <label className="dropdown-checkbox">
+                        <input
+                            type="checkbox"
+                            checked={includeBbl}
+                            onChange={(e) => {
+                                setIncludeBbl(e.target.checked);
+                                setProperty('latex-export-include-bbl', e.target.checked);
+                            }}
+                            disabled={isExporting} />
+                        {t('Include BBL file')}
+                    </label>
+
+                    <label className="dropdown-checkbox">
+                        <input
+                            type="checkbox"
+                            checked={includeWorkDir}
+                            onChange={(e) => {
+                                setIncludeWorkDir(e.target.checked);
+                                setProperty('latex-export-include-workdir', e.target.checked);
+                            }}
+                            disabled={isExporting} />
+                        {t('Include work directory')}
+                    </label>
                 </div>
 
                 <div className="dropdown-section">

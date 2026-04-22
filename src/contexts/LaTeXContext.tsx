@@ -427,6 +427,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       includeLog?: boolean;
       includeDvi?: boolean;
       includeBbl?: boolean;
+      includeWorkDir?: boolean;
     } = {}
   ): Promise<void> => {
     try {
