@@ -1,8 +1,7 @@
 // src/contexts/LanguageContext.tsx
-import { t } from '@/i18n';
 import i18next from 'i18next';
 import type React from 'react';
-import { type ReactNode, createContext, useCallback, useEffect, useRef, useState } from 'react';
+import { type ReactNode, createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSettings } from '../hooks/useSettings';
 import languagesConfig from '../../translations/languages.config.json';
@@ -37,11 +36,11 @@ interface LanguageProviderProps {
 }
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
-  const { registerSetting, getSetting } = useSettings();
+  const { getSetting } = useSettings();
   const [currentLanguage, setCurrentLanguage] = useState<Language | null>(null);
   const [isRTL, setIsRTL] = useState(false);
-  const availableLanguages = languagesConfig.languages as Language[] || [];
-  const settingsRegistered = useRef(false);
+  const availableLanguages = useMemo(() => languagesConfig.languages as Language[] || [], []);
+  const lastAppliedLanguageRef = useRef<string | null>(null);
 
   const applyDirection = useCallback((direction: 'ltr' | 'rtl') => {
     document.documentElement.setAttribute('dir', direction);
@@ -60,88 +59,30 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     window.dispatchEvent(new CustomEvent('language-changed', {
       detail: { languageCode }
     }));
+  }, [availableLanguages]);
 
-    const directionSetting = getSetting('text-direction');
-    const directionValue = directionSetting?.value as string || 'auto';
-
-    if (directionValue === 'auto') {
-      requestAnimationFrame(() => {
-        applyDirection(language.direction);
-      });
-    }
-  }, [availableLanguages, applyDirection, getSetting]);
+  const languageCode = getSetting('language')?.value as string || 'en';
+  const directionValue = getSetting('text-direction')?.value as string || 'auto';
 
   useEffect(() => {
-    if (settingsRegistered.current) return;
+    const initialLanguage =
+      availableLanguages.find((lang) => lang.code === languageCode) || availableLanguages[0] || null;
 
-    const initialLanguageCode = getSetting('language')?.value as string || 'en';
-    const initialLanguage = availableLanguages.find((lang) => lang.code === initialLanguageCode) || availableLanguages[0];
-
-    if (initialLanguage) {
+    if (initialLanguage && currentLanguage?.code !== initialLanguage.code) {
       setCurrentLanguage(initialLanguage);
     }
+  }, [availableLanguages, languageCode, currentLanguage]);
 
-    registerSetting({
-      id: 'language',
-      category: t("Appearance"),
-      subcategory: t("Language"),
-      type: 'language-select',
-      label: t("Interface language"),
-      description: (
-        <div>
-          {t('Select the interface language and view translation coverage')}{' '}
-          <br />
-          <a href="https://github.com/TeXlyre/texlyre/blob/main/CONTRIBUTING.md#translation--localization" target="_blank" rel="noopener noreferrer">
-            {t('Help translate or add a language')}
-          </a>
-        </div>
-      ),
-      defaultValue: initialLanguageCode,
-      options: availableLanguages.map((lang) => ({
-        label: `${lang.nativeName} (${lang.name})`,
-        value: lang.code
-      })),
-      liveUpdate: false,
-      onChange: (value) => {
-        changeLanguage(value as string);
-      }
-    });
+  useEffect(() => {
+    if (!languageCode) return;
+    if (lastAppliedLanguageRef.current === languageCode) return;
 
-    registerSetting({
-      id: 'text-direction',
-      category: t("Appearance"),
-      subcategory: t("Language"),
-      type: 'select',
-      label: t("Text direction"),
-      description: t("Control text direction (Auto follows language)"),
-      defaultValue: 'auto',
-      options: [
-        { label: t("Auto (follows app language)"), value: 'auto' },
-        { label: t("Left-to-Right (LTR)"), value: 'ltr' },
-        { label: t("Right-to-Left (RTL)"), value: 'rtl' }
-      ],
-      onChange: (value) => {
-        const currentLangCode = getSetting('language')?.value as string || 'en';
-        const lang = availableLanguages.find((l) => l.code === currentLangCode);
-
-        requestAnimationFrame(() => {
-          if (value === 'auto' && lang) {
-            applyDirection(lang.direction);
-          } else {
-            applyDirection(value as 'ltr' | 'rtl');
-          }
-        });
-      }
-    });
-
-    settingsRegistered.current = true;
-  }, [availableLanguages, registerSetting, changeLanguage, applyDirection, getSetting]);
+    lastAppliedLanguageRef.current = languageCode;
+    changeLanguage(languageCode);
+  }, [languageCode, changeLanguage]);
 
   useEffect(() => {
     if (!currentLanguage) return;
-
-    const directionSetting = getSetting('text-direction');
-    const directionValue = directionSetting?.value as string || 'auto';
 
     requestAnimationFrame(() => {
       if (directionValue === 'auto') {
@@ -150,7 +91,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         applyDirection(directionValue as 'ltr' | 'rtl');
       }
     });
-  }, [currentLanguage, applyDirection, getSetting]);
+  }, [currentLanguage, directionValue, applyDirection]);
 
   return (
     <LanguageContext.Provider value={{ currentLanguage, availableLanguages, changeLanguage, isRTL }}>

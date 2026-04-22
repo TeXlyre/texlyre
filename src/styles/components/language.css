@@ -178,9 +178,20 @@
     font-size: 0.85rem;
 }
 
+.language-dropdown-menu {
+    max-height: min(420px, calc(100vh - 2rem));
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    border: 1px solid rgba(224, 224, 224, 0.5);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(224, 224, 224, 0.3);
+}
+
 .language-dropdown-menu .dropdown-search {
     padding: 0.5rem;
     border-bottom: 1px solid var(--border-color);
+    flex: 0 0 auto;
 }
 
 .language-dropdown-menu .dropdown-search .dropdown-search-input {
@@ -191,17 +202,24 @@
     background: var(--background-secondary);
     color: var(--text-primary);
     font-size: 0.875rem;
+    box-sizing: border-box;
 }
 
 .language-dropdown-menu .dropdown-options {
-    max-height: 320px;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
     overflow-y: auto;
+    padding: 0 0 4px 0;
+    box-sizing: border-box;
+    scroll-padding-block: 4px;
 }
 
 .language-dropdown-menu .dropdown-options .dropdown-option {
     padding: var(--space-sd) 1rem;
     cursor: pointer;
     transition: background 0.2s ease;
+    scroll-margin-block: 4px;
 }
 
 .language-dropdown-menu .dropdown-options .dropdown-option:hover {
@@ -209,13 +227,14 @@
 }
 
 .language-dropdown-menu .dropdown-options .dropdown-option.selected {
-    background: var(--primary-color);
-    color: var(--text-on-primary);
+    background: var(--pico-primary);
+    color: var(--pico-secondary-background);
 }
 
 .language-dropdown-menu .dropdown-options .dropdown-option.focused {
     background-color: var(--pico-primary-focus);
     outline: 2px solid var(--border-color);
+    color: var(--text-color);
 }
 
 .language-dropdown-menu .dropdown-options .dropdown-option .option-header .option-name {

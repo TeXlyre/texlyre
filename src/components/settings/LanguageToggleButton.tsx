@@ -109,7 +109,7 @@ const LanguageToggleButton: React.FC<LanguageToggleButtonProps> = ({ className =
                         <input
                             ref={searchInputRef}
                             type="text"
-                            placeholder={t("Search languages...")}
+                            placeholder={t('Search languages...')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="dropdown-search-input"
@@ -119,7 +119,7 @@ const LanguageToggleButton: React.FC<LanguageToggleButtonProps> = ({ className =
                         {filteredLanguages.map((lang, index) => (
                             <div
                                 key={lang.code}
-                                ref={(el) => (optionRefs.current[index] = el)}
+                                ref={(el) => { optionRefs.current[index] = el; }}
                                 className={`dropdown-option ${currentLanguage.code === lang.code ? 'selected' : ''} ${focusedIndex === index ? 'focused' : ''}`}
                                 onClick={() => handleSelect(lang.code)}
                                 tabIndex={0}
@@ -133,7 +133,7 @@ const LanguageToggleButton: React.FC<LanguageToggleButtonProps> = ({ className =
                             </div>
                         ))}
                         {filteredLanguages.length === 0 && (
-                            <div className="no-options">{t("No languages found")}</div>
+                            <div className="no-options">{t('No languages found')}</div>
                         )}
                     </div>
                 </div>

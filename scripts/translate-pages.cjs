@@ -1,34 +1,34 @@
-const { extractTranslations } = require("./i18n/extract-translations.cjs");
-const { processDirectory } = require("./i18n/apply-translations.cjs");
-const { detectDynamicContent } = require("./i18n/detect-dynamic-content.cjs");
-const { processDirectory: processSettingsDirectory } = require("./i18n/apply-settings-translations.cjs");
+const { extractTranslations } = require('./i18n/extract-translations.cjs');
+const { processDirectory } = require('./i18n/apply-translations.cjs');
+const { detectDynamicContent } = require('./i18n/detect-dynamic-content.cjs');
+const { processDirectory: processSettingsDirectory } = require('./i18n/apply-settings-translations.cjs');
 
 function main() {
     const args = process.argv.slice(2);
     const command = args[0];
 
-    if (command === "detect") {
-        const sourceDir = args[1] || "./src";
-        const outputFile = args[2] || "./translations/dynamic-patterns.json";
+    if (command === 'detect') {
+        const sourceDir = args[1] || './src';
+        const outputFile = args[2] || './translations/dynamic-patterns.json';
 
-        console.log("=== Detecting dynamic content ===\n");
+        console.log('=== Detecting dynamic content ===\n');
         detectDynamicContent(sourceDir, outputFile);
 
-    } else if (command === "extract") {
-        const sourceDir = args[1] || "./src";
-        const outputFile = args[2] || "./translations/locales/en.json";
+    } else if (command === 'extract') {
+        const sourceDir = args[1] || './src';
+        const outputFile = args[2] || './translations/locales/en.json';
 
-        console.log("=== Extracting translations ===\n");
+        console.log('=== Extracting translations ===\n');
         extractTranslations(sourceDir, outputFile);
 
-    } else if (command === "apply") {
-        const sourceDir = args[1] || "./src";
-        const dryRun = args.includes("--dry-run");
-        const noBackup = args.includes("--no-backup");
+    } else if (command === 'apply') {
+        const sourceDir = args[1] || './src';
+        const dryRun = args.includes('--dry-run');
+        const noBackup = args.includes('--no-backup');
 
-        console.log("=== Applying translations ===");
-        console.log(`Mode: ${dryRun ? "DRY RUN" : "LIVE"}`);
-        console.log(`Backups: ${noBackup ? "DISABLED" : "ENABLED"}\n`);
+        console.log('=== Applying translations ===');
+        console.log(`Mode: ${dryRun ? 'DRY RUN' : 'LIVE'}`);
+        console.log(`Backups: ${noBackup ? 'DISABLED' : 'ENABLED'}\n`);
 
         const startTime = Date.now();
         const stats = processDirectory(sourceDir, {
@@ -37,7 +37,7 @@ function main() {
         });
         const duration = ((Date.now() - startTime) / 1000).toFixed(2);
 
-        console.log("\n===== Translation Application Complete =====");
+        console.log('\n===== Translation Application Complete =====');
         console.log(`⏱️  Time taken: ${duration} seconds`);
         console.log(`📁 Files processed: ${stats.processed}`);
         console.log(`✅ Files modified: ${stats.modified}`);
@@ -51,14 +51,14 @@ function main() {
             );
         }
 
-    } else if (command === "apply-settings") {
-        const sourceDir = args[1] || "./src";
-        const dryRun = args.includes("--dry-run");
-        const noBackup = args.includes("--no-backup");
+    } else if (command === 'apply-settings') {
+        const sourceDir = args[1] || './src';
+        const dryRun = args.includes('--dry-run');
+        const noBackup = args.includes('--no-backup');
 
-        console.log("=== Applying Settings Translations ===");
-        console.log(`Mode: ${dryRun ? "DRY RUN" : "LIVE"}`);
-        console.log(`Backups: ${noBackup ? "DISABLED" : "ENABLED"}\n`);
+        console.log('=== Applying Settings Translations ===');
+        console.log(`Mode: ${dryRun ? 'DRY RUN' : 'LIVE'}`);
+        console.log(`Backups: ${noBackup ? 'DISABLED' : 'ENABLED'}\n`);
 
         const startTime = Date.now();
         const stats = processSettingsDirectory(sourceDir, {
@@ -67,7 +67,7 @@ function main() {
         });
         const duration = ((Date.now() - startTime) / 1000).toFixed(2);
 
-        console.log("\n===== Settings Translation Application Complete =====");
+        console.log('\n===== Settings Translation Application Complete =====');
         console.log(`⏱️  Time taken: ${duration} seconds`);
         console.log(`📁 Files processed: ${stats.processed}`);
         console.log(`✅ Files modified: ${stats.modified}`);

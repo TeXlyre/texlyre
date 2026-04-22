@@ -1,5 +1,5 @@
-const t = require("@babel/types");
-const traverse = require("@babel/traverse").default;
+const t = require('@babel/types');
+const traverse = require('@babel/traverse').default;
 
 function hasTranslationImport(ast) {
     let hasImport = false;
@@ -23,8 +23,8 @@ function hasTranslationImport(ast) {
 
 function addTranslationImport(ast) {
     const importDeclaration = t.importDeclaration(
-        [t.importSpecifier(t.identifier("t"), t.identifier("t"))],
-        t.stringLiteral("@/i18n"),
+        [t.importSpecifier(t.identifier('t'), t.identifier('t'))],
+        t.stringLiteral('@/i18n'),
     );
 
     const body = ast.program.body;
