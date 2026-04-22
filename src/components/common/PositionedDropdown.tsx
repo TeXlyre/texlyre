@@ -24,7 +24,7 @@ const PositionedDropdown: React.FC<PositionedDropdownProps> = ({
   align = 'right',
   onClose,
 }) => {
-  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [position, setPosition] = useState({ top: 0, left: 0, maxHeight: 0 });
   const [isPositioned, setIsPositioned] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -53,24 +53,39 @@ const PositionedDropdown: React.FC<PositionedDropdownProps> = ({
         left = padding;
       }
 
+      let maxHeight = 0;
       if (top + dropdownRect.height > viewportHeight - padding) {
-        top = triggerRect.top - dropdownRect.height - spacing;
-        if (top < padding) {
-          top = padding;
+        const flippedTop = triggerRect.top - dropdownRect.height - spacing;
+        if (flippedTop >= padding) {
+          top = flippedTop;
+        } else {
+          const spaceBelow = viewportHeight - top - padding;
+          const spaceAbove = triggerRect.top - spacing - padding;
+          if (spaceAbove > spaceBelow) {
+            top = padding;
+            maxHeight = spaceAbove;
+          } else {
+            maxHeight = spaceBelow;
+          }
         }
       }
 
-      setPosition({ top, left });
+      setPosition({ top, left, maxHeight });
       setIsPositioned(true);
     };
 
     updatePosition();
 
-    window.addEventListener('scroll', updatePosition, true);
+    const handleScroll = (e: Event) => {
+      if (dropdownRef.current?.contains(e.target as Node)) return;
+      updatePosition();
+    };
+
+    window.addEventListener('scroll', handleScroll, true);
     window.addEventListener('resize', updatePosition);
 
     return () => {
-      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('scroll', handleScroll, true);
       window.removeEventListener('resize', updatePosition);
     };
   }, [isOpen, triggerElement, spacing, padding, align]);
@@ -109,6 +124,8 @@ const PositionedDropdown: React.FC<PositionedDropdownProps> = ({
         left: `${position.left}px`,
         zIndex: 1001,
         width: 'max-content',
+        maxHeight: position.maxHeight ? `${position.maxHeight}px` : undefined,
+        overflowY: position.maxHeight ? 'auto' : undefined,
         opacity: isPositioned ? 1 : 0,
       }}
     >
