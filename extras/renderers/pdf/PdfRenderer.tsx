@@ -619,7 +619,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
         style={{
           position: 'absolute',
           left: `${rect.x * scale}px`,
-          top: `${rect.y * scale}px`,
+          top: `${10 + rect.y * scale}px`,
           width: `${Math.max(rect.width, 0) * scale}px`,
           height: `${Math.max(rect.height, 1) * scale}px`,
           pointerEvents: 'none',
