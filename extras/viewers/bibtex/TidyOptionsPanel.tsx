@@ -3,6 +3,7 @@ import { t } from '@/i18n';
 import type React from 'react';
 
 import { TagInput } from '@/components/common/TagInput';
+import { NumberInput } from '@/components/common/NumberInput';
 import { CleanIcon, ResetIcon } from '@/components/common/Icons';
 import type { TidyOptions } from './tidyOptions';
 
@@ -255,24 +256,22 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
           {!options.tab && (
             <label className="option-item sub-option">
               <span>{t('Space indentation:')}</span>
-              <input
-                type="number"
+              <NumberInput
                 min="1"
                 max="8"
                 value={typeof options.space === 'number' ? options.space : 2}
-                onChange={(e) => updateOption('space', Number.parseInt(e.target.value))}
+                onChange={(value) => updateOption('space', value)}
               />
             </label>
           )}
 
           <label className="option-item">
             <span>{t('Align values:')}</span>
-            <input
-              type="number"
+            <NumberInput
               min="0"
               max="50"
               value={typeof options.align === 'number' ? options.align : 14}
-              onChange={(e) => updateOption('align', Number.parseInt(e.target.value))}
+              onChange={(value) => updateOption('align', value)}
             />
           </label>
 
@@ -297,12 +296,11 @@ export const TidyOptionsPanel: React.FC<TidyOptionsPanelProps> = ({
           {options.wrap && (
             <label className="option-item sub-option">
               <span>{t('Wrap at column:')}</span>
-              <input
-                type="number"
+              <NumberInput
                 min="40"
                 max="200"
                 value={typeof options.wrap === 'number' ? options.wrap : 80}
-                onChange={(e) => updateOption('wrap', Number.parseInt(e.target.value))}
+                onChange={(value) => updateOption('wrap', value)}
               />
             </label>
           )}

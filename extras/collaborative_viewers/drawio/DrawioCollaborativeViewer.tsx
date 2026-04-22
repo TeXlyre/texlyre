@@ -110,7 +110,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
     const embedUrl = useMemo(() => {
         const params =
-            `embed=1&proto=json&spin=1&libraries=1&saveAndExit=0&noSaveBtn=1&noExitBtn=1` +
+            'embed=1&proto=json&spin=1&libraries=1&saveAndExit=0&noSaveBtn=1&noExitBtn=1' +
             `&db=0&od=0&gapi=0&tr=0&gh=0&gl=0&stealth=1&ui=${encodeURIComponent(uiParam)}` +
             (resolvedLanguage ? `&lang=${encodeURIComponent(resolvedLanguage)}` : '');
         return `${baseUrl}/${resolvedTheme}/app.html?${params}`;

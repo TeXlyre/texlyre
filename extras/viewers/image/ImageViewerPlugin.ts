@@ -27,7 +27,7 @@ const IMAGE_MIMETYPES = [
 ];
 
 export const PLUGIN_NAME = t('Image Viewer');
-export const PLUGIN_VERSION = '0.1.0';
+export const PLUGIN_VERSION = '0.2.0';
 
 const imageViewerPlugin: ViewerPlugin = {
 	id: 'image-viewer',

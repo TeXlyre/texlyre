@@ -374,7 +374,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
       <PluginControlGroup>
         <button
           onClick={handleRotate}
-          title={t(`Rotate 90° ({degree}°)`, { degree: transform.rotation })}>
+          title={t('Rotate 90° ({degree}°)', { degree: transform.rotation })}>
 
           <RotateIcon />
         </button>
@@ -398,7 +398,7 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
         <PluginControlGroup>
           <button
             onClick={() => setPanningActive((prev) => !prev)}
-            title={t(`Panning: {status}`, { status: panningActive ? t('enabled') : t('disabled') })}
+            title={t('Panning: {status}', { status: panningActive ? t('enabled') : t('disabled') })}
             className={panningActive ? 'active' : ''}>
             <MoveIcon />
           </button>
@@ -409,25 +409,25 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
         <PluginControlGroup>
           <button
             onClick={() => handleBrightnessChange(-10)}
-            title={t(`Decrease Brightness ({percent}%)`, { percent: transform.brightness })}>
+            title={t('Decrease Brightness ({percent}%)', { percent: transform.brightness })}>
 
             <BrightnessDownIcon />
           </button>
           <button
             onClick={() => handleBrightnessChange(10)}
-            title={t(`Increase Brightness ({percent}%)`, { percent: transform.brightness })}>
+            title={t('Increase Brightness ({percent}%)', { percent: transform.brightness })}>
 
             <BrightnessIcon />
           </button>
           <button
             onClick={() => handleContrastChange(-10)}
-            title={t(`Decrease Contrast ({percent}%)`, { percent: transform.contrast })}>
+            title={t('Decrease Contrast ({percent}%)', { percent: transform.contrast })}>
 
             <ContrastDownIcon />
           </button>
           <button
             onClick={() => handleContrastChange(10)}
-            title={t(`Increase Contrast ({percent}%)`, { percent: transform.contrast })}>
+            title={t('Increase Contrast ({percent}%)', { percent: transform.contrast })}>
 
             <ContrastIcon />
           </button>
