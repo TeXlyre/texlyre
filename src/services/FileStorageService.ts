@@ -533,10 +533,10 @@ class FileStorageService {
 
 	async cleanupDirectory(path: string): Promise<void> {
 		try {
-			const existing = await fileStorageService.getAllFiles(true, false, false);
+			const existing = await this.getAllFiles(true, false, false);
 			const toCleanup = existing.filter((f) => f.path.startsWith(`${path}/`) && !f.isDeleted);
 			if (toCleanup.length > 0) {
-				await fileStorageService.batchDeleteFiles(toCleanup.map((f) => f.id), {
+				await this.batchDeleteFiles(toCleanup.map((f) => f.id), {
 					showDeleteDialog: false, hardDelete: true,
 				});
 			}

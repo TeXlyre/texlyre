@@ -34,13 +34,19 @@ TeXlyre also includes an embedded diagram editor powered by [Draw.io](https://ww
 <img src="showcase/collab_cursor_drawio.png" alt="Collaborators editing a draw.io diagram simultaneously within a TeXlyre project">
 </p>
 
-
 ### LaTeX Compilation
 
-The platform integrates **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX) WASM engines** to provide in-browser LaTeX compilation without server dependencies. Currently supports **pdfTeX** and **XeTeX** engines for document processing. TeXlyre supports real-time syntax highlighting and error detection, with an integrated PDF viewer that offers zoom, navigation, and side-by-side editing capabilities.
+The platform integrates **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX (TeX Live 2020)) and [BusyTeX (TeX Live 2026)](https://github.com/busytex/busytex) WASM engines** to provide in-browser LaTeX compilation without server dependencies. Currently supports **pdfTeX**, **XeTeX**, and **LuaTeX** engines for document processing. TeXlyre supports real-time syntax highlighting and error detection, with an integrated PDF viewer that offers zoom, navigation, and side-by-side editing capabilities.
 
 <p align="center">
 <img src="showcase/error_parser_zoomed_latex.png" alt="LaTeX compilation in progress with error panel and PDF output" width="600">
+</p>
+
+**[SyncTeX](https://github.com/jlaurens/synctex)** (source mapping between the LaTeX source and the compiled PDF) is supported **only with BusyTeX engines**. Clicking the SyncTeX button in the PDF viewer highlights the corresponding region in the output, making it easier to locate where a given source line is rendered. Reverse SyncTeX is also supported, allowing you to jump from a location in the compiled PDF back to the matching line in the source.
+
+<p align="center">
+  <img src="showcase/synctex_highlight_zoomed.svg"
+       alt="SyncTeX highlighting the header in the compiled PDF after clicking the SyncTeX button">
 </p>
 
 ### Typst Compilation
@@ -121,7 +127,7 @@ Moreover, you can start your project from a template and share the link with you
 
 ## Architecture
 
-TeXlyre's architecture emphasizes **local-first principles** while enabling real-time collaboration. The React frontend communicates with Yjs documents stored in IndexedDB, providing offline-first functionality. WebRTC establishes direct peer connections for real-time synchronization, while **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX) WASM engines** and **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)** handle LaTeX and Typst compilation entirely in the browser.
+TeXlyre's architecture emphasizes **local-first principles** while enabling real-time collaboration. The React frontend communicates with Yjs documents stored in IndexedDB, providing offline-first functionality. WebRTC establishes direct peer connections for real-time synchronization, while **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX),[texlyre-busytex](https://github.com/TeXlyre/texlyre-busytex)** and **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)** handle LaTeX and Typst compilation entirely in the browser.
 
 The **plugin system** allows extensibility through custom viewers, renderers, and backup providers. Core plugins handle PDF rendering, Bibliography cleaning, LaTeX and Typst log visualization, an embedded **[Draw.io](https://drawio.com)** diagram editor with collaborative support, **[Zotero](https://www.zotero.org/)** and **[OpenAlex](https://www.openalex.org/)** reference search, import, and update panel, file system backups, and repository backups to/from GitHub, GitLab, Gitea, and Codeberg (Forgejo). Theme plugins also provide customizable layouts and visual styles.
 
@@ -196,10 +202,12 @@ The optional GitHub, GitLab, Gitea, and Forgejo (Codeberg) integration only acti
 
 TeXlyre uses open source signaling servers for WebRTC connections:
 
-- **Y-WebRTC Signaling**: Based on [y-webrtc](https://github.com/yjs/y-webrtc)
-- **PeerJS Signaling**: Based on [PeerJS Server](https://github.com/peers/peerjs-server)
-- **TeX Live Download Server**: Based on [SwiftLaTeX Texlive On-Demand Server](https://github.com/SwiftLaTeX/Texlive-Ondemand)
-- **FilePizza Server**: Based on [FilePizza](https://github.com/kern/filepizza) which relies on PeerJS (built-in TURN containers are not deployed on TeXlyre servers)
+- **[Y-WebRTC Signaling](https://github.com/TeXlyre/y-webrtc-server)**: Based on [y-webrtc](https://github.com/yjs/y-webrtc)
+- **[PeerJS Signaling](https://github.com/TeXlyre/peerjs-server)**: Based on [PeerJS Server](https://github.com/peers/peerjs-server)
+- **[FilePizza Server](https://github.com/TeXlyre/filepizza-server)**: Based on [FilePizza](https://github.com/kern/filepizza) which relies on PeerJS (built-in TURN containers are not deployed on TeXlyre servers)
+- **[TeX Live 2020 Download Server](https://github.com/TeXlyre/texlive-ondemand-server)**: Based on [SwiftLaTeX Texlive On-Demand Server](https://github.com/SwiftLaTeX/Texlive-Ondemand)
+- **[TeX Live 2026 Download Server](https://github.com/TeXlyre/texlyre-busytex-build/tree/main/texlive-server)**: Custom server for providing TeX Live packages
+- **[Git Repository Proxy Server](https://github.com/TeXlyre/repository-proxy-server)**: Custom server for downloading repositories from GitHub, GitLab, and Codeberg
 
 All servers are hosted locally and made publicly available with [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/).
 
@@ -211,6 +219,7 @@ TeXlyre builds upon several key technologies:
 
 ### Core Technologies
 - **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX)** - WASM-based LaTeX compilation engine
+- **[BusyTeX](https://github.com/busytex/busytex)** - WASM-based LaTeX compilation engine
 - **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)** - WASM-based Typst compilation engine
 - **[Yjs](https://github.com/yjs/yjs)** - Conflict-free collaborative editing with CRDTs
 - **[CodeMirror](https://codemirror.net/)** - Extensible code editor
