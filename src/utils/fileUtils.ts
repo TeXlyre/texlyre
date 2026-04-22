@@ -226,7 +226,13 @@ export const isLatexFile = (pathOrName: string): boolean => {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return lower.endsWith('.tex') || lower.endsWith('.latex') || lower.endsWith('.ltx')
-		|| lower.endsWith('.cls') || lower.endsWith('.sty');
+		|| lower.endsWith('.cls') || lower.endsWith('.sty');  // || lower.endsWith('.ind') || lower.endsWith('.bbl')
+};
+
+export const isLatexMainFile = (pathOrName: string): boolean => {
+	if (!pathOrName) return false;
+	const lower = pathOrName.toLowerCase();
+	return lower.endsWith('.tex') || lower.endsWith('.latex') || lower.endsWith('.ltx')
 };
 
 export const isTypstFile = (pathOrName: string): boolean => {
@@ -234,6 +240,12 @@ export const isTypstFile = (pathOrName: string): boolean => {
 	const lower = pathOrName.toLowerCase();
 	return lower.endsWith('.typ') || lower.endsWith('.typst');
 };
+
+// export const isTypstMainFile = (pathOrName: string): boolean => {
+// 	if (!pathOrName) return false;
+// 	const lower = pathOrName.toLowerCase();
+// 	return lower.endsWith('.typ') || lower.endsWith('.typst');
+// };
 
 export const isBibFile = (pathOrName: string): boolean => {
 	if (!pathOrName) return false;
