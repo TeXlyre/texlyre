@@ -4,7 +4,7 @@ import type { FileNode } from '@src/types/files';
 
 jest.mock('@src/services/FileStorageService');
 
-const { setupSwiftLaTeXMocks } = require('../mocks/swiftlatex-engines');
+const { setupSwiftLaTeXMocks } = require('../../mocks/swiftlatex-engines');
 
 // EngineLoader injects scripts via <script> tags; mock it to a no-op so engines
 // fall through to the window globals set up by setupSwiftLaTeXMocks.
