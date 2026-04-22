@@ -85,7 +85,7 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
             </ul>
           </div>
           <div className="typesetter-tooltip-section">
-            <strong>{t('LaTeX Engine:')}</strong> {t('TeXlyre-BusyTeX v1.1.1 (TeX Live 2026, 01/03/2026)')}
+            <strong>{t('LaTeX Engine:')}</strong> {t('BusyTeX: texlyre-busytex v1.1.1 (TeX Live 2026, 01/03/2026)')}
             <br />
             <strong>{t('LaTeX Compilers:')}</strong>
             <ul>
