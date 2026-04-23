@@ -1,3 +1,4 @@
+// src/settings/registerLanguageSettings.tsx
 import { t } from '@/i18n';
 import { useEffect, useRef } from 'react';
 

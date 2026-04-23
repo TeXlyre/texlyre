@@ -1,3 +1,4 @@
+// src/settings/registerLatexSettings.ts
 import { t } from '@/i18n';
 import { useEffect, useRef } from 'react';
 

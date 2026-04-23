@@ -1,5 +1,7 @@
+// src/settings/registerFileSystemBackupSettings.ts
 import { t } from '@/i18n';
 import { useEffect, useRef } from 'react';
+
 import { useSettings } from '../hooks/useSettings';
 
 export function useRegisterFileSystemBackupSettings() {

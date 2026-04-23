@@ -831,7 +831,7 @@ math-field {
 	border: 1px solid var(--border-color, #ccc);
 	border-radius: 4px;
 	cursor: crosshair;
-	background-color: var(--text-color);
+	background-color: var(--pico-secondary);
 }
 
 .cm-symbol-results {
