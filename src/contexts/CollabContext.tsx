@@ -1,5 +1,4 @@
 // src/contexts/CollabContext.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import {
   type ReactNode,
@@ -14,7 +13,11 @@ import type * as Y from 'yjs';
 
 import { useSettings } from '../hooks/useSettings';
 import { collabService } from '../services/CollabService';
-import type { CollabContextType, CollabProvider as ICollabProvider, CollabProviderType } from '../types/collab';
+import type {
+  CollabContextType,
+  CollabProvider as ICollabProvider,
+  CollabProviderType
+} from '../types/collab';
 import type { YjsDocUrl } from '../types/yjs';
 
 export const CollabContext = createContext<CollabContextType | null>(null);
@@ -35,122 +38,24 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
   const [doc, setDoc] = useState<Y.Doc | undefined>();
   const [provider, setProvider] = useState<ICollabProvider | undefined>();
   const isUpdatingRef = useRef(false);
-  const { registerSetting, batchGetSettings } = useSettings();
-  const settingsRegistered = useRef(false);
+  const { getSetting } = useSettings();
 
-  const [providerType, setProviderType] = useState<CollabProviderType>('webrtc');
-  const [signalingServers, setSignalingServers] = useState<string>('');
-  const [websocketServer, setWebsocketServer] = useState<string>('');
-  const [awarenessTimeout, setAwarenessTimeout] = useState(30);
-  const [autoReconnect, setAutoReconnect] = useState(false);
+  const providerType =
+    (getSetting('collab-provider-type')?.value as CollabProviderType | undefined) ?? 'webrtc';
+  const signalingServers =
+    (getSetting('collab-signaling-servers')?.value as string | undefined) ?? 'ws://ywebrtc.localhost:8082/';
+  const websocketServer =
+    (getSetting('collab-websocket-server')?.value as string | undefined) ?? 'ws://yweb.localhost:8082/';
+  const awarenessTimeout =
+    (getSetting('collab-awareness-timeout')?.value as number | undefined) ?? 30;
+  const autoReconnect =
+    (getSetting('collab-auto-reconnect')?.value as boolean | undefined) ?? false;
 
   const projectId = useMemo(() => {
     return docUrl.startsWith('yjs:') ?
       docUrl.slice(4) :
       docUrl.replace(/[^a-zA-Z0-9]/g, '-');
   }, [docUrl]);
-
-  useEffect(() => {
-    if (settingsRegistered.current) return;
-    settingsRegistered.current = true;
-
-    const batchedSettings = batchGetSettings([
-      'collab-provider-type',
-      'collab-signaling-servers',
-      'collab-websocket-server',
-      'collab-awareness-timeout',
-      'collab-auto-reconnect'
-    ]);
-
-    const initialProviderType =
-      (batchedSettings['collab-provider-type'] as CollabProviderType) ?? 'webrtc';
-    const initialSignalingServers =
-      (batchedSettings['collab-signaling-servers'] as string) ?? 'ws://ywebrtc.localhost:8082/';
-    const initialWebsocketServer =
-      (batchedSettings['collab-websocket-server'] as string) ?? 'ws://yweb.localhost:8082/';
-    const initialAwarenessTimeout =
-      (batchedSettings['collab-awareness-timeout'] as number) ?? 30;
-    const initialAutoReconnect =
-      (batchedSettings['collab-auto-reconnect'] as boolean) ?? false;
-
-    setProviderType(initialProviderType);
-    setSignalingServers(initialSignalingServers);
-    setWebsocketServer(initialWebsocketServer);
-    setAwarenessTimeout(initialAwarenessTimeout);
-    setAutoReconnect(initialAutoReconnect);
-
-    registerSetting({
-      id: 'collab-provider-type',
-      category: t('Collaboration'),
-      subcategory: t('Real-time Synchronization'),
-      type: 'select',
-      label: t('Connection provider'),
-      description: t('Choose WebRTC for peer-to-peer or WebSocket for server-based synchronization'),
-      defaultValue: initialProviderType,
-      options: [
-        { label: t('WebRTC (peer-to-peer)'), value: 'webrtc' },
-        { label: t('WebSocket (server)'), value: 'websocket' }
-      ],
-      liveUpdate: false,
-      onChange: (value) => {
-        setProviderType(value as CollabProviderType);
-      }
-    });
-
-    registerSetting({
-      id: 'collab-signaling-servers',
-      category: t('Collaboration'),
-      subcategory: t('Real-time Synchronization'),
-      type: 'text',
-      label: t('Signaling servers (WebRTC)'),
-      description: t('Comma-separated list of Yjs WebRTC signaling server URLs'),
-      defaultValue: initialSignalingServers,
-      onChange: (value) => {
-        setSignalingServers(value as string);
-      }
-    });
-
-    registerSetting({
-      id: 'collab-websocket-server',
-      category: t('Collaboration'),
-      subcategory: t('Real-time Synchronization'),
-      type: 'text',
-      label: t('WebSocket server'),
-      description: t('WebSocket server URL for Yjs y-websocket or y/hub connections'),
-      defaultValue: initialWebsocketServer,
-      onChange: (value) => {
-        setWebsocketServer(value as string);
-      }
-    });
-
-    registerSetting({
-      id: 'collab-awareness-timeout',
-      category: t('Collaboration'),
-      subcategory: t('Real-time Synchronization'),
-      type: 'number',
-      label: t('Awareness timeout (seconds)'),
-      description: t('How long to wait before considering other users inactive'),
-      defaultValue: initialAwarenessTimeout,
-      min: 10,
-      max: 300,
-      onChange: (value) => {
-        setAwarenessTimeout(value as number);
-      }
-    });
-
-    registerSetting({
-      id: 'collab-auto-reconnect',
-      category: t('Collaboration'),
-      subcategory: t('Real-time Synchronization'),
-      type: 'checkbox',
-      label: t('Auto-reconnect on disconnect'),
-      description: t('Automatically attempt to reconnect when the connection is lost'),
-      defaultValue: initialAutoReconnect,
-      onChange: (value) => {
-        setAutoReconnect(value as boolean);
-      }
-    });
-  }, [registerSetting, batchGetSettings]);
 
   useEffect(() => {
     if (!projectId || !collectionName) return;

@@ -55,6 +55,7 @@ import './styles/components/legal.css';
 import i18next from 'i18next';
 import { useContext, useEffect, useState } from 'react';
 import AppRouter from './components/app/AppRouter';
+import AppBootstrap from './components/app/AppBootrap';
 import PasswordModal from './components/auth/PasswordModal';
 import SplashScreen from './components/common/SplashScreen';
 import FileConflictModal from './components/editor/FileConflictModal';
@@ -125,6 +126,8 @@ function App() {
 									defaultThemeId="texlyre-theme"
 									defaultVariant="system"
 								>
+
+									<AppBootstrap />
 									<SecretsProvider>
 										<FileSystemBackupProvider>
 											<LSPConfigProvider>

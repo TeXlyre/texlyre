@@ -1,5 +1,4 @@
 // src/contexts/FileTreeContext.tsx
-import { t } from '@/i18n';
 import { nanoid } from 'nanoid';
 import type React from 'react';
 import {
@@ -43,15 +42,16 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
   docUrl
 }) => {
   const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
-  const { registerSetting, getSetting } = useSettings();
+  const { getSetting } = useSettings();
   const [fileTree, setFileTree] = useState<FileNode[]>([]);
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [enableFileSystemDragDrop, setEnableFileSystemDragDrop] =
-    useState(true);
-  const [enableInternalDragDrop, setEnableInternalDragDrop] = useState(true);
   const storageInitialized = useRef(false);
-  const settingsRegistered = useRef(false);
+
+  const enableFileSystemDragDrop =
+    getSetting('file-tree-filesystem-drag-drop')?.value as boolean ?? true;
+  const enableInternalDragDrop =
+    getSetting('file-tree-internal-drag-drop')?.value as boolean ?? true;
 
   useEffect(() => {
     // Start duplicate detection when file tree is loaded
@@ -63,47 +63,6 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
       duplicateKeyDetector.stop();
     };
   }, [isLoading, fileTree]);
-
-  useEffect(() => {
-    if (settingsRegistered.current) return;
-    settingsRegistered.current = true;
-
-    const initialFileSystemDragDrop =
-      getSetting('file-tree-filesystem-drag-drop')?.value as boolean ?? true;
-    const initialInternalDragDrop =
-      getSetting('file-tree-internal-drag-drop')?.value as boolean ?? true;
-
-    setEnableFileSystemDragDrop(initialFileSystemDragDrop);
-    setEnableInternalDragDrop(initialInternalDragDrop);
-
-    registerSetting({
-      id: 'file-tree-filesystem-drag-drop',
-      category: t('Viewers'),
-      subcategory: t('File Explorer'),
-      type: 'checkbox',
-      label: t('Enable file system drag and drop'),
-      description: t('Allow dragging files from your file system into the file explorer'),
-
-      defaultValue: true,
-      onChange: (value) => {
-        setEnableFileSystemDragDrop(value as boolean);
-      }
-    });
-
-    registerSetting({
-      id: 'file-tree-internal-drag-drop',
-      category: t('Viewers'),
-      subcategory: t('File Explorer'),
-      type: 'checkbox',
-      label: t('Enable internal (local) drag and drop'),
-      description: t('Allow dragging files and folders within the TeXlyre file explorer to move them'),
-
-      defaultValue: true,
-      onChange: (value) => {
-        setEnableInternalDragDrop(value as boolean);
-      }
-    });
-  }, [registerSetting, getSetting]);
 
   useEffect(() => {
     if (!storageInitialized.current && docUrl) {

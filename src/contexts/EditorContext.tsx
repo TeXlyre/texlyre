@@ -1,13 +1,10 @@
 // src/contexts/EditorContext.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import {
   type ReactNode,
   createContext,
   useCallback,
-  useEffect,
-  useRef,
-  useState,
+  useMemo,
 } from 'react';
 
 import { pluginRegistry } from '../plugins/PluginRegistry';
@@ -19,7 +16,6 @@ import type {
   HighlightTheme,
 } from '../types/editor';
 import type { CollabConnectOptions, CollabProviderType } from '../types/collab';
-import type { Setting } from '../contexts/SettingsContext';
 
 export const fontSizeMap: Record<FontSize, string> = {
   xs: '10px',
@@ -62,211 +58,6 @@ export const defaultEditorSettings: EditorSettings = {
   language: 'en',
 };
 
-interface EditorSettingDescriptor extends Setting {
-  ref: keyof EditorSettings;
-  onAfterChange?: (value: EditorSettings[keyof EditorSettings]) => void;
-}
-
-function getSettingDescriptors(): EditorSettingDescriptor[] {
-  return [
-    {
-      id: 'editor-font-family',
-      ref: 'fontFamily',
-      category: t('Appearance'),
-      subcategory: t('Text Editor'),
-      type: 'select',
-      label: t('Font family'),
-      description: t('Select the font family for the editor'),
-      defaultValue: defaultEditorSettings.fontFamily,
-      options: [
-        { label: t('Monospace (System)'), value: 'monospace' },
-        { label: t('JetBrains Mono'), value: 'jetbrains-mono' },
-        { label: t('Fira Code'), value: 'fira-code' },
-        { label: t('Source Code Pro'), value: 'source-code-pro' },
-        { label: t('Inconsolata'), value: 'inconsolata' },
-        { label: t('Serif'), value: 'serif' },
-        { label: t('Sans Serif'), value: 'sans-serif' },
-      ],
-      onAfterChange: (value) => {
-        document.documentElement.style.setProperty(
-          '--editor-font-family',
-          fontFamilyMap[value as FontFamily]
-        );
-      },
-    },
-    {
-      id: 'editor-font-size',
-      ref: 'fontSize',
-      category: t('Appearance'),
-      subcategory: t('Text Editor'),
-      type: 'select',
-      label: t('Font size'),
-      description: t('Select the font size for the editor'),
-      defaultValue: defaultEditorSettings.fontSize,
-      options: [
-        { label: t('Extra Small (10px)'), value: 'xs' },
-        { label: t('Small (12px)'), value: 'sm' },
-        { label: t('Base (14px)'), value: 'base' },
-        { label: t('Large (16px)'), value: 'lg' },
-        { label: t('Extra Large (18px)'), value: 'xl' },
-        { label: t('2X Large (20px)'), value: '2xl' },
-        { label: t('3X Large (24px)'), value: '3xl' },
-      ],
-      onAfterChange: (value) => {
-        document.documentElement.style.setProperty(
-          '--editor-font-size',
-          fontSizeMap[value as FontSize]
-        );
-      },
-    },
-    {
-      id: 'editor-show-line-numbers',
-      ref: 'showLineNumbers',
-      category: t('Appearance'),
-      subcategory: t('Text Editor'),
-      type: 'checkbox',
-      label: t('Show line numbers'),
-      description: t('Show line numbers in the editor'),
-      defaultValue: defaultEditorSettings.showLineNumbers,
-    },
-    {
-      id: 'editor-syntax-highlighting',
-      ref: 'syntaxHighlighting',
-      category: t('Appearance'),
-      subcategory: t('Text Editor'),
-      type: 'checkbox',
-      label: t('Show syntax highlighting'),
-      description: t('Show syntax highlighting in the editor including tooltip and linting (LaTeX, Typst, BibTeX, and markdown)'),
-      defaultValue: defaultEditorSettings.syntaxHighlighting,
-    },
-    {
-      id: 'editor-theme-highlights',
-      ref: 'highlightTheme',
-      category: t('Appearance'),
-      subcategory: t('Text Editor'),
-      type: 'select',
-      label: t('Syntax highlighting theme'),
-      description: t('Choose the color theme for syntax highlighting'),
-      defaultValue: defaultEditorSettings.highlightTheme,
-      options: [
-        { label: t('Auto (follows app theme)'), value: 'auto' },
-        { label: t('Light'), value: 'light' },
-        { label: t('Dark (One Dark)'), value: 'dark' },
-        { label: 'Abcdef', value: 'abcdef' },
-        { label: 'Abyss', value: 'abyss' },
-        { label: 'Android Studio', value: 'androidstudio' },
-        { label: 'Andromeda', value: 'andromeda' },
-        { label: 'Atom One', value: 'atomone' },
-        { label: 'Aura', value: 'aura' },
-        { label: 'Basic Light', value: 'basicLight' },
-        { label: 'Basic Dark', value: 'basicDark' },
-        { label: 'BBEdit', value: 'bbedit' },
-        { label: 'Bespin', value: 'bespin' },
-        { label: 'Copilot', value: 'copilot' },
-        { label: 'Darcula', value: 'darcula' },
-        { label: 'Dracula', value: 'dracula' },
-        { label: 'Duotone Dark', value: 'duotoneDark' },
-        { label: 'Duotone Light', value: 'duotoneLight' },
-        { label: 'Eclipse', value: 'eclipse' },
-        { label: 'GitHub Light', value: 'githubLight' },
-        { label: 'GitHub Dark', value: 'githubDark' },
-        { label: 'Gruvbox Dark', value: 'gruvboxDark' },
-        { label: 'Kimbie', value: 'kimbie' },
-        { label: 'Material Dark', value: 'materialDark' },
-        { label: 'Material Light', value: 'materialLight' },
-        { label: 'Monokai', value: 'monokai' },
-        { label: 'Monokai Dimmed', value: 'monokaiDimmed' },
-        { label: 'Noctis Lilac', value: 'noctisLilac' },
-        { label: 'Nord', value: 'nord' },
-        { label: 'Okaidia', value: 'okaidia' },
-        { label: 'Quiet Light', value: 'quietlight' },
-        { label: 'Red', value: 'red' },
-        { label: 'Solarized Light', value: 'solarizedLight' },
-        { label: 'Solarized Dark', value: 'solarizedDark' },
-        { label: 'Sublime', value: 'sublime' },
-        { label: 'Tokyo Night', value: 'tokyoNight' },
-        { label: 'Tokyo Night Storm', value: 'tokyoNightStorm' },
-        { label: 'Tokyo Night Day', value: 'tokyoNightDay' },
-        { label: 'Tomorrow Night Blue', value: 'tomorrowNightBlue' },
-        { label: 'VS Code Dark', value: 'vscodeDark' },
-        { label: 'VS Code Light', value: 'vscodeLight' },
-        { label: 'White Light', value: 'whiteLight' },
-        { label: 'White Dark', value: 'whiteDark' },
-        { label: 'XCode Dark', value: 'xcodeDark' },
-        { label: 'XCode Light', value: 'xcodeLight' },
-      ],
-    },
-    {
-      id: 'editor-auto-save-enable',
-      ref: 'autoSaveEnabled',
-      category: t('Viewers'),
-      subcategory: t('Text Editor'),
-      type: 'checkbox',
-      label: t('Auto-save on changes'),
-      description: t('Automatically save file changes while editing'),
-      defaultValue: defaultEditorSettings.autoSaveEnabled,
-    },
-    {
-      id: 'editor-auto-save-delay',
-      ref: 'autoSaveDelay',
-      category: t('Viewers'),
-      subcategory: t('Text Editor'),
-      type: 'number',
-      label: t('Auto-save delay (milliseconds)'),
-      description: t('Delay in milliseconds before saving changes'),
-      defaultValue: defaultEditorSettings.autoSaveDelay,
-      min: 50,
-      max: 10000,
-    },
-    {
-      id: 'editor-vim-mode',
-      ref: 'vimMode',
-      category: t('Viewers'),
-      subcategory: t('Text Editor'),
-      type: 'checkbox',
-      label: t('Enable Vim keybindings'),
-      description: t('Enable Vim-style keybindings in the editor'),
-      defaultValue: defaultEditorSettings.vimMode,
-    },
-    {
-      id: 'editor-spell-check',
-      ref: 'spellCheck',
-      category: t('Viewers'),
-      subcategory: t('Text Editor'),
-      type: 'checkbox',
-      label: t('Enable spell checking'),
-      description: t('Enable browser spell checking in the editor (note: not compatible with typesetter syntax)'),
-      defaultValue: defaultEditorSettings.spellCheck,
-    },
-    {
-      id: 'editor-mathlive-enabled',
-      ref: 'mathLiveEnabled',
-      category: t('Viewers'),
-      subcategory: t('Text Editor'),
-      type: 'checkbox',
-      label: t('Enable MathLive'),
-      description: t('Enable interactive math editing with MathLive'),
-      defaultValue: defaultEditorSettings.mathLiveEnabled,
-    },
-    {
-      id: 'editor-mathlive-preview-mode',
-      ref: 'mathLivePreviewMode',
-      category: t('Viewers'),
-      subcategory: t('Text Editor'),
-      type: 'select',
-      label: t('MathLive preview mode'),
-      description: t('When to show rendered math equations'),
-      defaultValue: defaultEditorSettings.mathLivePreviewMode,
-      options: [
-        { label: t('On hover and cursor'), value: 'hover-cursor' },
-        { label: t('On hover'), value: 'hover' },
-        { label: t('On cursor'), value: 'cursor' },
-        // { label: t('Never'), value: 'never' },
-      ],
-    },
-  ];
-}
-
 interface EditorContextType {
   editorSettings: EditorSettings;
   updateEditorSetting: <K extends keyof EditorSettings>(
@@ -304,52 +95,73 @@ interface EditorProviderProps {
 }
 
 export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
-  const { getSetting, batchGetSettings, registerSetting } = useSettings();
-  const [editorSettings, setEditorSettings] =
-    useState<EditorSettings>(defaultEditorSettings);
-  const [editorSettingsVersion, setEditorSettingsVersion] = useState(0);
-  const settingsRegisteredOnce = useRef(false);
+  const { getSetting, updateSetting } = useSettings();
+
+  const editorSettings = useMemo<EditorSettings>(() => {
+    return {
+      fontFamily:
+        (getSetting('editor-font-family')?.value as FontFamily) ??
+        defaultEditorSettings.fontFamily,
+      fontSize:
+        (getSetting('editor-font-size')?.value as FontSize) ??
+        defaultEditorSettings.fontSize,
+      showLineNumbers:
+        (getSetting('editor-show-line-numbers')?.value as boolean) ??
+        defaultEditorSettings.showLineNumbers,
+      syntaxHighlighting:
+        (getSetting('editor-syntax-highlighting')?.value as boolean) ??
+        defaultEditorSettings.syntaxHighlighting,
+      autoSaveEnabled:
+        (getSetting('editor-auto-save-enable')?.value as boolean) ??
+        defaultEditorSettings.autoSaveEnabled,
+      autoSaveDelay:
+        (getSetting('editor-auto-save-delay')?.value as number) ??
+        defaultEditorSettings.autoSaveDelay,
+      highlightTheme:
+        (getSetting('editor-theme-highlights')?.value as HighlightTheme) ??
+        defaultEditorSettings.highlightTheme,
+      vimMode:
+        (getSetting('editor-vim-mode')?.value as boolean) ??
+        defaultEditorSettings.vimMode,
+      spellCheck:
+        (getSetting('editor-spell-check')?.value as boolean) ??
+        defaultEditorSettings.spellCheck,
+      mathLiveEnabled:
+        (getSetting('editor-mathlive-enabled')?.value as boolean) ??
+        defaultEditorSettings.mathLiveEnabled,
+      mathLivePreviewMode:
+        (getSetting('editor-mathlive-preview-mode')?.value as EditorSettings['mathLivePreviewMode']) ??
+        defaultEditorSettings.mathLivePreviewMode,
+      language:
+        (getSetting('language')?.value as string) ??
+        defaultEditorSettings.language,
+    };
+  }, [getSetting]);
 
   const updateEditorSetting = useCallback(
     <K extends keyof EditorSettings>(key: K, value: EditorSettings[K]) => {
-      setEditorSettings((prev) => ({ ...prev, [key]: value }));
-      setEditorSettingsVersion((prev) => prev + 1);
+      const settingIdMap: Partial<Record<keyof EditorSettings, string>> = {
+        fontFamily: 'editor-font-family',
+        fontSize: 'editor-font-size',
+        showLineNumbers: 'editor-show-line-numbers',
+        syntaxHighlighting: 'editor-syntax-highlighting',
+        autoSaveEnabled: 'editor-auto-save-enable',
+        autoSaveDelay: 'editor-auto-save-delay',
+        highlightTheme: 'editor-theme-highlights',
+        vimMode: 'editor-vim-mode',
+        spellCheck: 'editor-spell-check',
+        mathLiveEnabled: 'editor-mathlive-enabled',
+        mathLivePreviewMode: 'editor-mathlive-preview-mode',
+        language: 'language',
+      };
+
+      const settingId = settingIdMap[key];
+      if (settingId) {
+        updateSetting(settingId, value);
+      }
     },
-    []
+    [updateSetting]
   );
-
-  useEffect(() => {
-    if (settingsRegisteredOnce.current) return;
-    settingsRegisteredOnce.current = true;
-
-    const descriptors = getSettingDescriptors();
-    const settingIds = descriptors.map((d) => d.id);
-    const batchedSettings = batchGetSettings([...settingIds, 'language']);
-
-    const initialLanguage = (batchedSettings['language'] as string) ?? 'en';
-    updateEditorSetting('language', initialLanguage);
-
-    for (const descriptor of descriptors) {
-      const persisted = batchedSettings[descriptor.id];
-      const initialValue = persisted ?? descriptor.defaultValue;
-
-      const { ref, onAfterChange, ...baseSetting } = descriptor;
-
-      registerSetting({
-        ...baseSetting,
-        defaultValue: initialValue,
-        onChange: (value) => {
-          updateEditorSetting(
-            ref,
-            value as EditorSettings[typeof ref]
-          );
-          onAfterChange?.(
-            value as EditorSettings[keyof EditorSettings]
-          );
-        },
-      });
-    }
-  }, [registerSetting, batchGetSettings]);
 
   const getLineNumbersEnabled = useCallback(
     () => editorSettings.showLineNumbers,
@@ -424,6 +236,10 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       })
       .map((plugin) => plugin.id);
   }, [getSetting]);
+
+  const editorSettingsVersion = useMemo(() => {
+    return JSON.stringify(editorSettings).length;
+  }, [editorSettings]);
 
   const contextValue = {
     editorSettings,
