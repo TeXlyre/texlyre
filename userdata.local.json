@@ -1,8 +1,12 @@
 {
-  "version": "1.0.1",
+  "version": "1.2.0",
   "settings": {
     "bibtex-viewer-auto-tidy": false,
     "bibtex-viewer-tidy-options": "standard",
+    "canvas-renderer-annotations": false,
+    "canvas-renderer-enable": true,
+    "canvas-renderer-initial-zoom": "200",
+    "canvas-renderer-text-selection": false,
     "collab-auto-reconnect": false,
     "collab-awareness-timeout": 30,
     "collab-provider-type": "webrtc",
@@ -34,6 +38,7 @@
     "latex-store-cache": true,
     "latex-store-working-directory": false,
     "latex-texlive-endpoint": "http://localhost:5004",
+    "latex-busytex-endpoint": "http://localhost:8070",
     "pdf-renderer-annotations": true,
     "pdf-renderer-enable": true,
     "pdf-renderer-initial-zoom": "200",
@@ -41,6 +46,7 @@
     "pdf-viewer-auto-scale": true,
     "pdf-viewer-rendering-quality": "high",
     "repository-proxy-url": "https://proxy.texlyre.org/?url=",
+    "latex-sourcemap-enabled": true,
     "templates-api-url": "https://texlyre.github.io/texlyre-templates/api/templates.json",
     "theme-plugin": "texlyre-wide-theme",
     "theme-variant": "dark",
@@ -53,8 +59,11 @@
     "log-visualizer-collapsed:global": false,
     "pdf-renderer-zoom:global": 1,
     "pdf-renderer-scroll-view:global": false,
+    "canvas-renderer-zoom:global": 1,
+    "canvas-renderer-scroll-view:global": true,
     "sidebar-collapsed:global": false,
     "sidebar-width:global": 502,
+    "sourcemap-show-floating-buttons:global": true,
     "toolbar-visible:global": true
   },
   "secrets": {}

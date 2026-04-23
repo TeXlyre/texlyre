@@ -1,28 +1,28 @@
 // scripts/update-manifest-extensions.ts
-import fs from "fs-extra";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import fs from 'fs-extra';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const ROOT_DIR = path.resolve(__dirname, "..");
-const MANIFEST_PATH = path.resolve(ROOT_DIR, "public/manifest.json");
+const ROOT_DIR = path.resolve(__dirname, '..');
+const MANIFEST_PATH = path.resolve(ROOT_DIR, 'public/manifest.json');
 
 function extractSupportedExtensions(source: string): Array<{ extension?: string; mimeType?: string }> {
-    const stripped = source.replace(/\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
+    const stripped = source.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
 
     const fnStart = stripped.search(/getSupportedExtensions\s*:\s*\(\s*\)\s*=>/);
     if (fnStart === -1) return [];
 
-    const arrowEnd = stripped.indexOf("=>", fnStart) + 2;
+    const arrowEnd = stripped.indexOf('=>', fnStart) + 2;
     let pos = arrowEnd;
     while (pos < stripped.length && /\s/.test(stripped[pos])) pos++;
 
     // find the first [ or ( bracket, skipping over any identifier characters
-    while (pos < stripped.length && stripped[pos] !== "[" && stripped[pos] !== "(") pos++;
+    while (pos < stripped.length && stripped[pos] !== '[' && stripped[pos] !== '(') pos++;
 
     const opener = stripped[pos];
-    const closer = opener === "[" ? "]" : opener === "(" ? ")" : null;
+    const closer = opener === '[' ? ']' : opener === '(' ? ')' : null;
     if (!closer) return [];
 
     let depth = 0;
@@ -47,12 +47,12 @@ function extractSupportedExtensions(source: string): Array<{ extension?: string;
         const varMatch = stripped.match(
             new RegExp(`(?:const|let|var)\\s+${varName}\\s*=\\s*\\[[^\\]]+\\]`)
         );
-        if (varMatch) varDeclarations.push(varMatch[0] + ";");
+        if (varMatch) varDeclarations.push(varMatch[0] + ';');
     }
 
     const evalSource = `
         const t = (s) => s;
-        ${varDeclarations.join("\n")}
+        ${varDeclarations.join('\n')}
         const fn = () => ${fnBody};
         return fn();
     `;
@@ -72,16 +72,16 @@ export async function updateManifestExtensions(config: any) {
     const allMimeTypes = new Set<string>();
 
     for (const viewer of enabledViewers) {
-        const pluginDir = path.join(ROOT_DIR, "extras", "viewers", viewer);
+        const pluginDir = path.join(ROOT_DIR, 'extras', 'viewers', viewer);
         if (!fs.existsSync(pluginDir)) continue;
 
         const files = fs.readdirSync(pluginDir).filter(
-            (f: string) => f.endsWith(".ts") && f.toLowerCase().includes("plugin")
+            (f: string) => f.endsWith('.ts') && f.toLowerCase().includes('plugin')
         );
 
         for (const file of files) {
             try {
-                const source = fs.readFileSync(path.join(pluginDir, file), "utf8");
+                const source = fs.readFileSync(path.join(pluginDir, file), 'utf8');
                 const entries = extractSupportedExtensions(source);
                 for (const entry of entries) {
                     if (entry.extension) allExtensions.add(`.${entry.extension}`);
@@ -94,7 +94,7 @@ export async function updateManifestExtensions(config: any) {
     }
 
     if (allExtensions.size === 0 && allMimeTypes.size === 0) {
-        console.log("✓ No viewer extensions found, manifest share_target unchanged");
+        console.log('✓ No viewer extensions found, manifest share_target unchanged');
         return;
     }
 
@@ -103,7 +103,7 @@ export async function updateManifestExtensions(config: any) {
         manifest?.share_target?.params?.files?.[0]?.accept;
 
     if (!Array.isArray(acceptArray)) {
-        console.warn("⚠️  manifest.json share_target accept array not found");
+        console.warn('⚠️  manifest.json share_target accept array not found');
         return;
     }
 
@@ -130,6 +130,6 @@ export async function updateManifestExtensions(config: any) {
         await fs.writeJson(MANIFEST_PATH, manifest, { spaces: 2 });
         console.log(`✓ Added ${added} entries to manifest.json share_target accept`);
     } else {
-        console.log("✓ manifest.json share_target accept already up to date");
+        console.log('✓ manifest.json share_target accept already up to date');
     }
 }
