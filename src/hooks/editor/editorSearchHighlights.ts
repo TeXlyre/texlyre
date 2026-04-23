@@ -1,5 +1,5 @@
 // src/hooks/editor/editorSearchHighlights.ts
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 import type { EditorView } from 'codemirror';
 import {
     clearSearchHighlights,
@@ -7,7 +7,7 @@ import {
 } from '../../extensions/codemirror/SearchHighlightExtension';
 
 export const registerEditorSearchHighlightEvents = (
-    viewRef: MutableRefObject<EditorView | null>,
+    viewRef: RefObject<EditorView | null>,
 ) => {
     const handleHighlightSearch = (event: Event) => {
         const customEvent = event as CustomEvent<{

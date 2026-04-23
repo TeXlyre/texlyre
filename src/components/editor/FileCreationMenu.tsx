@@ -36,7 +36,7 @@ const FileCreationMenu: React.FC<FileCreationMenuProps> = ({
     const targetRef = useRef<HTMLElement>(null);
 
     if (triggerElement && targetRef.current !== triggerElement) {
-        (targetRef as React.MutableRefObject<HTMLElement | null>).current = triggerElement;
+        (targetRef as React.RefObject<HTMLElement | null>).current = triggerElement;
     }
 
     const fileTemplates: FileTemplate[] = [

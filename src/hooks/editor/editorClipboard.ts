@@ -1,11 +1,11 @@
 // src/hooks/editor/editorClipboard.ts
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 import type { EditorView } from 'codemirror';
 import { processTextSelection } from '../../utils/fileCommentUtils.ts';
 
 export const registerEditorClipboard = (
     editorElement: HTMLDivElement,
-    viewRef: MutableRefObject<EditorView | null>,
+    viewRef: RefObject<EditorView | null>,
 ) => {
     const handleCopy = (event: ClipboardEvent) => {
         const view = viewRef.current;

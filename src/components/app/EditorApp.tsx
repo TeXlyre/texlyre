@@ -77,7 +77,6 @@ const EditorAppView: React.FC<EditorAppProps> = ({
   const {
     status,
     activities,
-    shouldShowAutoBackupModal,
     requestAccess,
     synchronize,
     importChanges,

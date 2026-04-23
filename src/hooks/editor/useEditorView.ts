@@ -13,11 +13,9 @@ import { json } from '@codemirror/lang-json';
 
 import {
     bracketMatching,
-    defaultHighlightStyle,
     foldGutter,
     foldKeymap,
     indentOnInput,
-    syntaxHighlighting,
     bidiIsolates
 } from '@codemirror/language';
 import {

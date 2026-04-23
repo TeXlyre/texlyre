@@ -1,5 +1,5 @@
 // src/hooks/editor/editorEvents.ts
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 import type { EditorView as CompatEditorView } from 'codemirror';
 import { EditorView as CMEditorView } from '@codemirror/view';
 
@@ -16,7 +16,7 @@ interface EditorEventHandlerOptions {
 }
 
 export const registerEditorEventHandlers = (
-    viewRef: MutableRefObject<CompatEditorView | null>,
+    viewRef: RefObject<CompatEditorView | null>,
     opts: EditorEventHandlerOptions,
 ) => {
     const {

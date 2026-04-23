@@ -1,5 +1,5 @@
 // extras/renderers/canvas/svgRenderer.ts
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 
 let workerInstance: Worker | null = null;
 
@@ -37,12 +37,12 @@ export function parseSvgPages(svgBuffer: ArrayBuffer): Promise<{
 }
 
 export interface SvgRenderContext {
-    svgPagesRef: MutableRefObject<Map<number, string>>;
-    canvasRefs: MutableRefObject<Map<number, HTMLCanvasElement>>;
+    svgPagesRef: RefObject<Map<number, string>>;
+    canvasRefs: RefObject<Map<number, HTMLCanvasElement>>;
     pageMetadata: Map<number, { width: number; height: number }>;
     scale: number;
-    renderingRef: MutableRefObject<Set<number>>;
-    pendingRenderRef: MutableRefObject<Set<number>>;
+    renderingRef: RefObject<Set<number>>;
+    pendingRenderRef: RefObject<Set<number>>;
 }
 
 export function renderSvgPageToCanvas(ctx: SvgRenderContext, pageNumber: number) {
