@@ -13,6 +13,7 @@ import type { TypstPdfOptions } from '../../types/typst';
 import type { FileNode } from '../../types/files';
 import type { TypstOutputFormat } from '../../types/typst';
 import { isTypstFile, isTemporaryFile } from '../../utils/fileUtils';
+import { fileStorageService } from '../../services/FileStorageService';
 import { ChevronDownIcon, OptionsIcon, ExportIcon } from '../common/Icons';
 
 interface TypstExportButtonProps {
@@ -53,6 +54,8 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
     const dropdownRef = useRef<HTMLDivElement>(null);
     const propertiesRegistered = useRef(false);
     const [propertiesLoaded, setPropertiesLoaded] = useState(false);
+
+    const projectId = fileStorageService.getCurrentProjectId() || undefined;
 
     const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
     const effectiveMainFile = projectMainFile || userSelectedMainFile || autoMainFile;
@@ -100,11 +103,11 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
     useEffect(() => {
         if (propertiesLoaded) return;
 
-        const storedMainFile = getProperty('typst-export-main-file');
-        const storedFormat = getProperty('typst-export-format');
-        const storedPdfStandard = getProperty('typst-export-pdf-standard');
-        const storedPdfTags = getProperty('typst-export-pdf-tags');
-        const storedIncludeLog = getProperty('typst-export-include-log');
+        const storedMainFile = getProperty('typst-export-main-file', { scope: 'project', projectId });
+        const storedFormat = getProperty('typst-export-format', { scope: 'project', projectId });
+        const storedPdfStandard = getProperty('typst-export-pdf-standard', { scope: 'project', projectId });
+        const storedPdfTags = getProperty('typst-export-pdf-tags', { scope: 'project', projectId });
+        const storedIncludeLog = getProperty('typst-export-include-log', { scope: 'project', projectId });
 
         if (storedMainFile !== undefined) {
             setUserSelectedMainFile(storedMainFile as string | undefined);
@@ -219,7 +222,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
         } else {
             const newMainFile = filePath === 'auto' ? undefined : filePath;
             setUserSelectedMainFile(newMainFile);
-            setProperty('typst-export-main-file', newMainFile);
+            setProperty('typst-export-main-file', newMainFile, { scope: 'project', projectId });
         }
     };
 
@@ -304,7 +307,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                             onChange={(e) => {
                                 const format = e.target.value as TypstOutputFormat;
                                 setSelectedFormat(format);
-                                setProperty('typst-export-format', format);
+                                setProperty('typst-export-format', format, { scope: 'project', projectId });
                                 if (format !== 'pdf') {
                                     setIsPdfOptionsOpen(false);
                                 }
@@ -333,7 +336,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                                     onChange={(e) => {
                                         const newOptions = { ...localPdfOptions, pdfStandard: e.target.value };
                                         setLocalPdfOptions(newOptions);
-                                        setProperty('typst-export-pdf-standard', e.target.value);
+                                        setProperty('typst-export-pdf-standard', e.target.value, { scope: 'project', projectId });
                                     }}
                                     className="dropdown-select"
                                     disabled={isExporting}>
@@ -378,7 +381,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                                     onChange={(e) => {
                                         const newOptions = { ...localPdfOptions, pdfTags: e.target.checked };
                                         setLocalPdfOptions(newOptions);
-                                        setProperty('typst-export-pdf-tags', e.target.checked);
+                                        setProperty('typst-export-pdf-tags', e.target.checked, { scope: 'project', projectId });
                                     }}
                                     disabled={isExporting} />
 
@@ -395,7 +398,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
                             checked={includeLog}
                             onChange={(e) => {
                                 setIncludeLog(e.target.checked);
-                                setProperty('typst-export-include-log', e.target.checked);
+                                setProperty('typst-export-include-log', e.target.checked, { scope: 'project', projectId });
                             }}
                             disabled={isExporting} />
 

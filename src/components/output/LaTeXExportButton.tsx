@@ -11,7 +11,8 @@ import { useProperties } from '../../hooks/useProperties';
 import type { LaTeXEngine } from '../../types/latex';
 import type { DocumentList } from '../../types/documents';
 import type { FileNode } from '../../types/files';
-import { isLatexFile, isTemporaryFile } from '../../utils/fileUtils';
+import { isLatexMainFile, isTemporaryFile } from '../../utils/fileUtils';
+import { fileStorageService } from '../../services/FileStorageService';
 import { latexService } from '../../services/LaTeXService';
 import { BUSYTEX_BUNDLE_LABELS } from '../../extensions/texlyre-busytex/BusyTeXService';
 import { ChevronDownIcon, ExportIcon, TrashIcon, OptionsIcon } from '../common/Icons';
@@ -75,9 +76,11 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
     const propertiesRegistered = useRef(false);
     const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 
+    const projectId = fileStorageService.getCurrentProjectId() || undefined;
+    const isBusyTeX = selectedEngine.startsWith('busytex-');
+
     const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
     const effectiveMainFile = projectMainFile || userSelectedMainFile || autoMainFile;
-    const isBusyTeX = selectedEngine.startsWith('busytex-');
 
     useEffect(() => {
         if (propertiesRegistered.current) return;
@@ -143,14 +146,14 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
     useEffect(() => {
         if (propertiesLoaded) return;
 
-        const storedMainFile = getProperty('latex-export-main-file');
-        const storedEngine = getProperty('latex-export-engine');
-        const storedFormat = getProperty('latex-export-format');
-        const storedIncludeLog = getProperty('latex-export-include-log');
-        const storedIncludeDvi = getProperty('latex-export-include-dvi');
-        const storedIncludeBbl = getProperty('latex-export-include-bbl');
-        const storedIncludeWorkDir = getProperty('latex-export-include-workdir');
-        const storedBundle = getProperty('latex-export-busytex-bundle');
+        const storedMainFile = getProperty('latex-export-main-file', { scope: 'project', projectId });
+        const storedEngine = getProperty('latex-export-engine', { scope: 'project', projectId });
+        const storedFormat = getProperty('latex-export-format', { scope: 'project', projectId });
+        const storedIncludeLog = getProperty('latex-export-include-log', { scope: 'project', projectId });
+        const storedIncludeDvi = getProperty('latex-export-include-dvi', { scope: 'project', projectId });
+        const storedIncludeBbl = getProperty('latex-export-include-bbl', { scope: 'project', projectId });
+        const storedIncludeWorkDir = getProperty('latex-export-include-workdir', { scope: 'project', projectId });
+        const storedBundle = getProperty('latex-export-busytex-bundle', { scope: 'project', projectId });
 
         if (storedMainFile !== undefined) setUserSelectedMainFile(storedMainFile as string | undefined);
         if (storedEngine !== undefined) setSelectedEngine(storedEngine as LaTeXEngine);
@@ -172,7 +175,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
         const findTexFiles = (nodes: FileNode[]): string[] => {
             const texFiles: string[] = [];
             for (const node of nodes) {
-                if (node.type === 'file' && isLatexFile(node.path) && !isTemporaryFile(node.path)) {
+                if (node.type === 'file' && isLatexMainFile(node.path) && !isTemporaryFile(node.path)) {
                     texFiles.push(node.path);
                 }
                 if (node.children) texFiles.push(...findTexFiles(node.children));
@@ -184,13 +187,13 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
         setAvailableTexFiles(allTexFiles);
 
         const findMainFile = async () => {
-            if (selectedDocId && linkedFileInfo?.filePath && isLatexFile(linkedFileInfo.filePath)) {
+            if (selectedDocId && linkedFileInfo?.filePath && isLatexMainFile(linkedFileInfo.filePath)) {
                 setAutoMainFile(linkedFileInfo.filePath);
                 return;
             }
             if (selectedFileId) {
                 const file = await getFile(selectedFileId);
-                if (file && isLatexFile(file.path)) {
+                if (file && isLatexMainFile(file.path)) {
                     setAutoMainFile(file.path);
                     return;
                 }
@@ -269,13 +272,13 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
         } else {
             const newMainFile = filePath === 'auto' ? undefined : filePath;
             setUserSelectedMainFile(newMainFile);
-            setProperty('latex-export-main-file', newMainFile);
+            setProperty('latex-export-main-file', newMainFile, { scope: 'project', projectId });
         }
     };
 
     const handleBundleChange = (bundleId: string) => {
         setSelectedBundle(bundleId);
-        setProperty('latex-export-busytex-bundle', bundleId);
+        setProperty('latex-export-busytex-bundle', bundleId, { scope: 'project', projectId });
         latexService.setBusyTeXBundles([bundleId]);
     };
 
@@ -363,7 +366,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                             onChange={(e) => {
                                 const engine = e.target.value as LaTeXEngine;
                                 setSelectedEngine(engine);
-                                setProperty('latex-export-engine', engine);
+                                setProperty('latex-export-engine', engine, { scope: 'project', projectId });
                             }}
                             className="dropdown-select"
                             disabled={isExporting}>
@@ -429,7 +432,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                         onChange={(e) => {
                             const format = e.target.value as 'pdf' | 'dvi';
                             setSelectedFormat(format);
-                            setProperty('latex-export-format', format);
+                            setProperty('latex-export-format', format, { scope: 'project', projectId });
                         }}
                         className="dropdown-select"
                         disabled={isExporting}>
@@ -445,7 +448,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                             checked={includeLog}
                             onChange={(e) => {
                                 setIncludeLog(e.target.checked);
-                                setProperty('latex-export-include-log', e.target.checked);
+                                setProperty('latex-export-include-log', e.target.checked, { scope: 'project', projectId });
                             }}
                             disabled={isExporting} />
                         {t('Include log file')}
@@ -458,7 +461,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                                 checked={includeDvi}
                                 onChange={(e) => {
                                     setIncludeDvi(e.target.checked);
-                                    setProperty('latex-export-include-dvi', e.target.checked);
+                                    setProperty('latex-export-include-dvi', e.target.checked, { scope: 'project', projectId });
                                 }}
                                 disabled={isExporting} />
                             {t('Include DVI/XDV file')}
@@ -471,7 +474,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                             checked={includeBbl}
                             onChange={(e) => {
                                 setIncludeBbl(e.target.checked);
-                                setProperty('latex-export-include-bbl', e.target.checked);
+                                setProperty('latex-export-include-bbl', e.target.checked, { scope: 'project', projectId });
                             }}
                             disabled={isExporting} />
                         {t('Include BBL file')}
@@ -483,7 +486,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
                             checked={includeWorkDir}
                             onChange={(e) => {
                                 setIncludeWorkDir(e.target.checked);
-                                setProperty('latex-export-include-workdir', e.target.checked);
+                                setProperty('latex-export-include-workdir', e.target.checked, { scope: 'project', projectId });
                             }}
                             disabled={isExporting} />
                         {t('Include work directory')}

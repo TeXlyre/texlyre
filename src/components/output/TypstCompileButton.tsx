@@ -17,7 +17,7 @@ import type { FileNode } from '../../types/files';
 import type { TypstOutputFormat } from '../../types/typst';
 import { isTypstFile, isTemporaryFile } from '../../utils/fileUtils';
 import { fileStorageService } from '../../services/FileStorageService';
-import { OptionsIcon, ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon, InfoIcon } from '../common/Icons';
+import { OptionsIcon, ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon } from '../common/Icons';
 
 interface TypstCompileButtonProps {
   dropdownKey: string;
@@ -60,6 +60,8 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
   const [isPdfOptionsOpen, setIsPdfOptionsOpen] = usePersistentState(`${dropdownKey}-pdf`, false);
   const propertiesRegistered = useRef(false);
   const [propertiesLoaded, setPropertiesLoaded] = useState(false);
+
+  const projectId = fileStorageService.getCurrentProjectId() || undefined;
 
   const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
   const effectiveMainFile = projectMainFile || userSelectedMainFile || autoMainFile;
@@ -110,10 +112,10 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
   useEffect(() => {
     if (propertiesLoaded) return;
 
-    const storedMainFile = getProperty('typst-main-file');
-    const storedFormat = getProperty('typst-output-format');
-    const storedPdfStandard = getProperty('typst-pdf-standard');
-    const storedPdfTags = getProperty('typst-pdf-tags');
+    const storedMainFile = getProperty('typst-main-file', { scope: 'project', projectId });
+    const storedFormat = getProperty('typst-output-format', { scope: 'project', projectId });
+    const storedPdfStandard = getProperty('typst-pdf-standard', { scope: 'project', projectId });
+    const storedPdfTags = getProperty('typst-pdf-tags', { scope: 'project', projectId });
 
     if (storedMainFile !== undefined) {
       setUserSelectedMainFile(storedMainFile as string | undefined);
@@ -383,7 +385,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     } else {
       const newMainFile = filePath === 'auto' ? undefined : filePath;
       setUserSelectedMainFile(newMainFile);
-      setProperty('typst-main-file', newMainFile);
+      setProperty('typst-main-file', newMainFile, { scope: 'project', projectId });
     }
   };
 
@@ -465,7 +467,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 
         <PdfWindowToggleButton
           className="pdf-window-button"
-          projectId={fileStorageService.getCurrentProjectId() || 'default'}
+          projectId={projectId || 'default'}
           title={t('Open PDF in new window')} />
 
         <button
@@ -532,7 +534,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                   });
                 } else {
                   setLocalFormat(format);
-                  setProperty('typst-output-format', format);
+                  setProperty('typst-output-format', format, { scope: 'project', projectId });
                 }
                 if (format !== 'pdf') {
                   setIsPdfOptionsOpen(false);
@@ -578,7 +580,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                     } else {
                       const newOptions = { ...localPdfOptions, pdfStandard: e.target.value };
                       setLocalPdfOptions(newOptions);
-                      setProperty('typst-pdf-standard', e.target.value);
+                      setProperty('typst-pdf-standard', e.target.value, { scope: 'project', projectId });
                     }
                   }}
                   className="dropdown-select"
@@ -640,7 +642,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                     } else {
                       const newOptions = { ...localPdfOptions, pdfTags: e.target.checked };
                       setLocalPdfOptions(newOptions);
-                      setProperty('typst-pdf-tags', e.target.checked);
+                      setProperty('typst-pdf-tags', e.target.checked, { scope: 'project', projectId });
                     }
                   }}
                   disabled={isCompiling} />
