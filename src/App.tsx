@@ -37,6 +37,7 @@ import './styles/components/latex-typst-templates.css';
 import './styles/components/latex-typst-toolbar.css';
 import './styles/components/statistics.css';
 import './styles/components/formatter.css';
+import './styles/components/sourcemap.css';
 import './styles/components/url-metadata.css';
 import './styles/components/bibliography.css';
 import './styles/components/chat.css';
@@ -46,7 +47,7 @@ import './styles/components/collaborator-avatars.css';
 import './styles/components/settings.css';
 import './styles/components/language.css';
 import './styles/components/offline.css';
-import './styles/components/typsetter.css';
+import './styles/components/typesetter.css';
 import './styles/components/splash-screen.css';
 import './styles/components/keyboard-shortcuts.css';
 import './styles/components/legal.css';
@@ -54,6 +55,7 @@ import './styles/components/legal.css';
 import i18next from 'i18next';
 import { useContext, useEffect, useState } from 'react';
 import AppRouter from './components/app/AppRouter';
+import AppBootstrap from './components/app/AppSettingBootrap';
 import PasswordModal from './components/auth/PasswordModal';
 import SplashScreen from './components/common/SplashScreen';
 import FileConflictModal from './components/editor/FileConflictModal';
@@ -124,6 +126,8 @@ function App() {
 									defaultThemeId="texlyre-theme"
 									defaultVariant="system"
 								>
+
+									<AppBootstrap />
 									<SecretsProvider>
 										<FileSystemBackupProvider>
 											<LSPConfigProvider>

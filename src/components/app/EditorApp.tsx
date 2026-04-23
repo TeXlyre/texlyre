@@ -10,6 +10,7 @@ import { FileSyncProvider } from '../../contexts/FileSyncContext';
 import { FileTreeProvider } from '../../contexts/FileTreeContext';
 import { LaTeXProvider } from '../../contexts/LaTeXContext';
 import { TypstProvider } from '../../contexts/TypstContext';
+import { SourceMapProvider } from '../../contexts/SourceMapContext';
 import { ContentFormatterProvider } from '../../contexts/ContentFormatterContext';
 import { useAuth } from '../../hooks/useAuth';
 import { useLaTeX } from '../../hooks/useLaTeX';
@@ -22,6 +23,8 @@ import { fileStorageService } from '../../services/FileStorageService';
 import { pdfWindowService } from '../../services/PdfWindowService';
 import type { DocumentList } from '../../types/documents';
 import type { YjsDocUrl } from '../../types/yjs';
+import type { TypstOutputFormat } from '../../types/typst';
+import type { LaTeXEngine } from '../../types/latex';
 import BackupModal from '../backup/BackupModal';
 import BackupStatusIndicator from '../backup/BackupStatusIndicator';
 import ChatPanel from '../chat/ChatPanel';
@@ -48,7 +51,6 @@ import KeyboardShortcutsModal from '../common/KeyboardShortcutsModal';
 import PrivacyModal from '../common/PrivacyModal';
 import GuestUpgradeBanner from '../auth/GuestUpgradeBanner';
 import GuestUpgradeModal from '../auth/GuestUpgradeModal';
-import { TypstOutputFormat } from '../../types/typst';
 
 interface EditorAppProps {
   docUrl: YjsDocUrl;
@@ -75,7 +77,6 @@ const EditorAppView: React.FC<EditorAppProps> = ({
   const {
     status,
     activities,
-    shouldShowAutoBackupModal,
     requestAccess,
     synchronize,
     importChanges,
@@ -104,7 +105,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
     description: '',
     type: 'latex' as 'latex' | 'typst',
     mainFile: undefined as string | undefined,
-    latexEngine: undefined as ('pdftex' | 'xetex' | 'luatex') | undefined,
+    latexEngine: undefined as LaTeXEngine | undefined,
     typstEngine: undefined as string | undefined,
     typstOutputFormat: undefined as (TypstOutputFormat) | undefined
   });
@@ -299,7 +300,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
     const checkLinkedFile = async () => {
       if (localDocId && doc?.documents) {
         try {
-          const allFiles = await fileStorageService.getAllFiles();
+          const allFiles = await fileStorageService.getAllFiles(false, false, false);
           const linkedFile = allFiles.find(
             (file) => file.documentId === localDocId
           );
@@ -576,7 +577,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
       <footer>
 
-        <div className="project-type-badge">{t('Typesetter: ')}
+        <div className="project-type-badge">{t('Typesetter: ')}{' '}
           <TypesetterInfo type={projectType} />
         </div>
 
@@ -704,9 +705,11 @@ const EditorApp: React.FC<EditorAppProps> = (props) => {
           <FileSyncProvider docUrl={props.docUrl}>
             <LaTeXProvider>
               <TypstProvider>
-                <ContentFormatterProvider>
-                  <EditorAppView {...props} />
-                </ContentFormatterProvider>
+                <SourceMapProvider>
+                  <ContentFormatterProvider>
+                    <EditorAppView {...props} />
+                  </ContentFormatterProvider>
+                </SourceMapProvider>
               </TypstProvider>
             </LaTeXProvider>
           </FileSyncProvider>

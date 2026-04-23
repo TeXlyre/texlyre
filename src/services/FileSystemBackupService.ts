@@ -160,7 +160,7 @@ class FileSystemBackupService {
 		this.addActivity({
 			type: 'backup_start',
 			message: projectId
-				? t(`Starting export for project: {projectId}`, { projectId })
+				? t('Starting export for project: {projectId}', { projectId })
 				: t('Starting full export...'),
 		});
 
@@ -201,7 +201,7 @@ class FileSystemBackupService {
 		this.addActivity({
 			type: 'import_start',
 			message: projectId
-				? t(`Starting import for project: {projectId}`, { projectId })
+				? t('Starting import for project: {projectId}', { projectId })
 				: t('Starting import from filesystem...'),
 		});
 
@@ -224,7 +224,7 @@ class FileSystemBackupService {
 			this.addActivity({
 				type: 'import_complete',
 				message: projectId
-					? t(`Successfully imported project: {projectId}`, { projectId })
+					? t('Successfully imported project: {projectId}', { projectId })
 					: t('Successfully imported projects from filesystem'),
 			});
 			this.updateStatus({
@@ -277,7 +277,7 @@ class FileSystemBackupService {
 
 		if (localProjects.length === 0) {
 			throw new Error(
-				projectId ? t(`Project {projectId} not found`, { projectId }) : t('No projects found'),
+				projectId ? t('Project {projectId} not found', { projectId }) : t('No projects found'),
 			);
 		}
 
@@ -396,7 +396,7 @@ class FileSystemBackupService {
 			: filesystemData.projects;
 
 		if (projectId && projectsToProcess.length === 0) {
-			throw new Error(t(`Project {projectId} not found in backup data`, { projectId }));
+			throw new Error(t('Project {projectId} not found in backup data', { projectId }));
 		}
 
 		for (const projectMetadata of projectsToProcess) {
@@ -456,7 +456,7 @@ class FileSystemBackupService {
 				if (projects.length > 0) {
 					this.addActivity({
 						type: 'backup_complete',
-						message: t(`Found {count} importable project in backup directory`, { count: projects.length }),
+						message: t('Found {count} importable project in backup directory', { count: projects.length }),
 					});
 					this.notifyDiscoveryListeners({
 						hasImportableProjects: true,

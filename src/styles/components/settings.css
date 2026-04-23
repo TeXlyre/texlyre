@@ -121,6 +121,7 @@
 .subcategory-item.active {
 	font-weight: 500;
 	color: var(--pico-primary);
+	background-color: var(--pico-primary-focus);
 }
 
 .setting-control {

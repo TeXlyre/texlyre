@@ -492,6 +492,7 @@
 	left: 0;
 	z-index: 100;
 	padding: 2px 6px;
+	width: max-content;
 	border-radius: var(--radius-sm);
 	font-size: 0.8em;
 	white-space: nowrap;
@@ -830,6 +831,7 @@ math-field {
 	border: 1px solid var(--border-color, #ccc);
 	border-radius: 4px;
 	cursor: crosshair;
+	background-color: var(--pico-secondary);
 }
 
 .cm-symbol-results {

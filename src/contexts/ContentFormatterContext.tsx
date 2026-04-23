@@ -26,10 +26,9 @@ interface ContentFormatterProviderProps {
 
 export const ContentFormatterProvider: React.FC<ContentFormatterProviderProps> = ({ children }) => {
   const { getProperty, setProperty, registerProperty } = useProperties();
-  const { registerSetting, getSetting } = useSettings();
+  const { getSetting } = useSettings();
   const [isFormatting, setIsFormatting] = useState(false);
   const propertiesRegistered = useRef(false);
-  const settingsRegistered = useRef(false);
   const [latexOptions, setLatexOptions] = useState<LatexFormatOptions>({
     wrap: true,
     wraplen: 80,
@@ -43,35 +42,10 @@ export const ContentFormatterProvider: React.FC<ContentFormatterProviderProps> =
     wrapText: false
   });
 
-  useEffect(() => {
-    if (settingsRegistered.current) return;
-    settingsRegistered.current = true;
-
-    const initialLatexNotifications =
-      getSetting('formatter-latex-notifications')?.value as boolean ?? true;
-    const initialTypstNotifications =
-      getSetting('formatter-typst-notifications')?.value as boolean ?? true;
-
-    registerSetting({
-      id: 'formatter-latex-notifications',
-      category: t("Viewers"),
-      subcategory: t("Text Editor"),
-      type: 'checkbox',
-      label: t("Show LaTeX formatting notifications"),
-      description: t("Display notifications for LaTeX content formatting activities"),
-      defaultValue: initialLatexNotifications
-    });
-
-    registerSetting({
-      id: 'formatter-typst-notifications',
-      category: t("Viewers"),
-      subcategory: t("Text Editor"),
-      type: 'checkbox',
-      label: t("Show Typst formatting notifications"),
-      description: t("Display notifications for Typst content formatting activities"),
-      defaultValue: initialTypstNotifications
-    });
-  }, [registerSetting, getSetting]);
+  const showLatexNotifications =
+    getSetting('formatter-latex-notifications')?.value as boolean ?? true;
+  const showTypstNotifications =
+    getSetting('formatter-typst-notifications')?.value as boolean ?? true;
 
   useEffect(() => {
     if (propertiesRegistered.current) return;
@@ -191,34 +165,42 @@ export const ContentFormatterProvider: React.FC<ContentFormatterProviderProps> =
     const operationId = `format-latex-${nanoid()}`;
 
     try {
-      contentFormatterService.showLoadingNotification(t('Formatting LaTeX content...'), operationId, 'latex');
+      if (showLatexNotifications) {
+        contentFormatterService.showLoadingNotification(t('Formatting LaTeX content...'), operationId, 'latex');
+      }
 
       const result = await contentFormatterService.formatLatex(content, formatOptions);
 
       if (result.success && result.output) {
-        contentFormatterService.showSuccessNotification(t('Content formatted successfully'), {
-          operationId,
-          duration: 2000,
-          type: 'latex'
-        });
+        if (showLatexNotifications) {
+          contentFormatterService.showSuccessNotification(t('Content formatted successfully'), {
+            operationId,
+            duration: 2000,
+            type: 'latex'
+          });
+        }
         return result.output;
       }
 
-      contentFormatterService.showErrorNotification(
-        result.error || 'Formatting failed',
-        { operationId, duration: 3000, type: 'latex' }
-      );
+      if (showLatexNotifications) {
+        contentFormatterService.showErrorNotification(
+          result.error || 'Formatting failed',
+          { operationId, duration: 3000, type: 'latex' }
+        );
+      }
       return null;
     } catch (error) {
-      contentFormatterService.showErrorNotification(
-        `Formatting error: ${error instanceof Error ? error.message : t('Unknown error')}`,
-        { operationId, duration: 3000, type: 'latex' }
-      );
+      if (showLatexNotifications) {
+        contentFormatterService.showErrorNotification(
+          `Formatting error: ${error instanceof Error ? error.message : t('Unknown error')}`,
+          { operationId, duration: 3000, type: 'latex' }
+        );
+      }
       return null;
     } finally {
       setIsFormatting(false);
     }
-  }, [isFormatting]);
+  }, [isFormatting, showLatexNotifications]);
 
   const formatTypst = useCallback(async (
     content: string,
@@ -230,34 +212,42 @@ export const ContentFormatterProvider: React.FC<ContentFormatterProviderProps> =
     const operationId = `format-typst-${nanoid()}`;
 
     try {
-      contentFormatterService.showLoadingNotification(t('Formatting Typst content...'), operationId, 'typst');
+      if (showTypstNotifications) {
+        contentFormatterService.showLoadingNotification(t('Formatting Typst content...'), operationId, 'typst');
+      }
 
       const result = await contentFormatterService.formatTypst(content, formatOptions);
 
       if (result.success && result.output) {
-        contentFormatterService.showSuccessNotification(t('Content formatted successfully'), {
-          operationId,
-          duration: 2000,
-          type: 'typst'
-        });
+        if (showTypstNotifications) {
+          contentFormatterService.showSuccessNotification(t('Content formatted successfully'), {
+            operationId,
+            duration: 2000,
+            type: 'typst'
+          });
+        }
         return result.output;
       }
 
-      contentFormatterService.showErrorNotification(
-        result.error || 'Formatting failed',
-        { operationId, duration: 3000, type: 'typst' }
-      );
+      if (showTypstNotifications) {
+        contentFormatterService.showErrorNotification(
+          result.error || 'Formatting failed',
+          { operationId, duration: 3000, type: 'typst' }
+        );
+      }
       return null;
     } catch (error) {
-      contentFormatterService.showErrorNotification(
-        `Formatting error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        { operationId, duration: 3000, type: 'typst' }
-      );
+      if (showTypstNotifications) {
+        contentFormatterService.showErrorNotification(
+          `Formatting error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          { operationId, duration: 3000, type: 'typst' }
+        );
+      }
       return null;
     } finally {
       setIsFormatting(false);
     }
-  }, [isFormatting]);
+  }, [isFormatting, showTypstNotifications]);
 
   return (
     <ContentFormatterContext.Provider

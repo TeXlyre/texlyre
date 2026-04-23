@@ -108,8 +108,8 @@ const CollabModal: React.FC<CollabModalProps> = ({
 			<SettingsModal
 				isOpen={showSettings}
 				onClose={() => setShowSettings(false)}
-				initialCategory={t("Collaboration")}
-				initialSubcategory={t("Real-time Synchronization")} />
+				initialCategory={t('Collaboration')}
+				initialSubcategory={t('Real-time Synchronization')} />
 
 		</>);
 

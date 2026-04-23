@@ -1,11 +1,10 @@
 // src/contexts/LSPConfigContext.tsx
-import { t } from '@/i18n';
 import type React from 'react';
-import { createContext, useCallback, useEffect, useState, useRef, type ReactNode } from 'react';
+import { createContext, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import type { LSPClientConfig } from '@codemirror/lsp-client';
 
 import { useSettings } from '../hooks/useSettings';
 import { genericLSPService } from '../services/GenericLSPService';
-import type { LSPClientConfig } from '@codemirror/lsp-client';
 
 interface LSPConfig {
     id: string;
@@ -43,58 +42,40 @@ interface LSPConfigProviderProps {
 }
 
 export const LSPConfigProvider: React.FC<LSPConfigProviderProps> = ({ children }) => {
-    const { batchGetSettings, updateSetting, registerSetting } = useSettings();
+    const { getSetting, updateSetting } = useSettings();
     const [configs, setConfigs] = useState<LSPConfig[]>([]);
-    const hasRegisteredRef = useRef(false);
+    const registeredConfigIdsRef = useRef<Set<string>>(new Set());
 
-    useEffect(() => {
-        if (hasRegisteredRef.current) return;
-        hasRegisteredRef.current = true;
+    const settingValue = getSetting('generic-lsp-configs')?.value;
 
-        const batchedSettings = batchGetSettings(['generic-lsp-configs']);
-        const settingValue = batchedSettings['generic-lsp-configs'];
-
-        let storedConfigs: LSPConfig[] = [];
-
+    const storedConfigs = useMemo(() => {
         if (typeof settingValue === 'string') {
             try {
-                storedConfigs = JSON.parse(settingValue);
+                return JSON.parse(settingValue) as LSPConfig[];
             } catch {
-                storedConfigs = [];
+                return [];
             }
         } else if (Array.isArray(settingValue)) {
-            storedConfigs = settingValue;
+            return settingValue as LSPConfig[];
         }
 
+        return [];
+    }, [settingValue]);
+
+    useEffect(() => {
         console.log(`[LSPConfigContext] Loaded ${storedConfigs.length} LSP configurations`);
-
-        registerSetting({
-            id: 'generic-lsp-configs',
-            category: t('LSP'),
-            subcategory: t('Generic LSP'),
-            type: 'codemirror',
-            label: t('LSP Configurations'),
-            description: (
-                <>
-                    {t('Stored LSP server configurations (JSON array)')}{' '}
-                    <br />
-                    <a href="https://texlyre.github.io/docs/lsp-with-texlyre" target="_blank" rel="noopener noreferrer">
-                        {t('Learn more about the LSP configuration format')}
-                    </a>
-                    <br />
-                    <a href="https://texlyre.github.io/docs/category/supported-lsp" target="_blank" rel="noopener noreferrer">
-                        {t('Tested LSP servers and setup guides')}
-                    </a>
-                </>
-            ),
-            defaultValue: '[]',
-            liveUpdate: false,
-        });
-
         setConfigs(storedConfigs);
+    }, [storedConfigs]);
+
+    useEffect(() => {
+        const nextIds = new Set<string>();
 
         storedConfigs.forEach(config => {
+            nextIds.add(config.id);
+
             try {
+                genericLSPService.unregisterConfig(config.id);
+
                 const clientConfig = JSON.parse(config.clientConfig) as LSPClientConfig;
                 genericLSPService.registerConfig({
                     id: config.id,
@@ -109,68 +90,36 @@ export const LSPConfigProvider: React.FC<LSPConfigProviderProps> = ({ children }
                 console.error(`[LSPConfigContext] Invalid LSP config for ${config.id}:`, error);
             }
         });
-    }, [registerSetting, batchGetSettings]);
+
+        registeredConfigIdsRef.current.forEach(id => {
+            if (!nextIds.has(id)) {
+                genericLSPService.unregisterConfig(id);
+            }
+        });
+
+        registeredConfigIdsRef.current = nextIds;
+    }, [storedConfigs]);
 
     const saveConfigs = useCallback((newConfigs: LSPConfig[]) => {
+        setConfigs(newConfigs);
         updateSetting('generic-lsp-configs', newConfigs);
     }, [updateSetting]);
 
     const addConfig = useCallback((config: LSPConfig) => {
-        setConfigs(prev => {
-            const updated = [...prev, config];
-            saveConfigs(updated);
-            return updated;
-        });
-
-        try {
-            const clientConfig = JSON.parse(config.clientConfig) as LSPClientConfig;
-            genericLSPService.registerConfig({
-                id: config.id,
-                name: config.name,
-                enabled: config.enabled,
-                fileExtensions: config.fileExtensions,
-                languageIdMap: config.languageIdMap,
-                transportConfig: config.transportConfig,
-                clientConfig,
-            });
-        } catch (error) {
-            console.error('Invalid client config:', error);
-        }
-    }, [saveConfigs]);
+        const updated = [...configs, config];
+        saveConfigs(updated);
+    }, [configs, saveConfigs]);
 
     const updateConfig = useCallback((id: string, updates: Partial<LSPConfig>) => {
-        setConfigs(prev => {
-            const updated = prev.map(c => c.id === id ? { ...c, ...updates } : c);
-            saveConfigs(updated);
-            return updated;
-        });
-
-        try {
-            const serverConfigUpdates: Record<string, any> = {};
-
-            if (updates.name !== undefined) serverConfigUpdates.name = updates.name;
-            if (updates.enabled !== undefined) serverConfigUpdates.enabled = updates.enabled;
-            if (updates.fileExtensions !== undefined) serverConfigUpdates.fileExtensions = updates.fileExtensions;
-            if (updates.transportConfig !== undefined) serverConfigUpdates.transportConfig = updates.transportConfig;
-
-            if (updates.clientConfig !== undefined) {
-                serverConfigUpdates.clientConfig = JSON.parse(updates.clientConfig) as LSPClientConfig;
-            }
-
-            genericLSPService.updateConfig(id, serverConfigUpdates);
-        } catch (error) {
-            console.error('Invalid client config:', error);
-        }
-    }, [saveConfigs]);
+        const updated = configs.map(c => c.id === id ? { ...c, ...updates } : c);
+        saveConfigs(updated);
+    }, [configs, saveConfigs]);
 
     const removeConfig = useCallback((id: string) => {
-        setConfigs(prev => {
-            const updated = prev.filter(c => c.id !== id);
-            saveConfigs(updated);
-            return updated;
-        });
+        const updated = configs.filter(c => c.id !== id);
+        saveConfigs(updated);
         genericLSPService.unregisterConfig(id);
-    }, [saveConfigs]);
+    }, [configs, saveConfigs]);
 
     const getConfigsForFile = useCallback((fileName: string): LSPConfig[] => {
         const ext = fileName.split('.').pop()?.toLowerCase();

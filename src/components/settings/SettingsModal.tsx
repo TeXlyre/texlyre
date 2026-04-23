@@ -4,6 +4,7 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 
 import { useSettings } from '../../hooks/useSettings';
+import { DEFERRED_UPDATE_TYPES } from '../../contexts/SettingsContext';
 import type { Setting } from '../../contexts/SettingsContext';
 import { SettingsIcon } from '../common/Icons';
 import Modal from '../common/Modal';
@@ -29,7 +30,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     hasUnsavedChanges,
     needsRefresh,
     updateSetting,
-    getSettings
   } = useSettings();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,6 +47,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   const hasInitialValues = Boolean(initialCategory);
 
   const hasPendingChanges = Object.keys(pendingValues).length > 0;
+
+  const isDeferred = (setting: Setting) =>
+    setting.liveUpdate === false ||
+    (setting.liveUpdate === undefined && DEFERRED_UPDATE_TYPES.includes(setting.type));
 
   useEffect(() => {
     if (hasInitialValues && !searchQuery) {
@@ -102,11 +106,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   );
 
   const handleLocalUpdate = (settingId: string, value: unknown, setting: Setting) => {
-    if (setting.liveUpdate === false) {
-      // Store locally, don't update context
+    if (isDeferred(setting)) {
       setPendingValues(prev => ({ ...prev, [settingId]: value }));
     } else {
-      // Update context immediately
       updateSetting(settingId, value);
     }
   };

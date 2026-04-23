@@ -13,6 +13,8 @@ import { pluginRegistry } from '../plugins/PluginRegistry';
 
 export type SettingType = 'checkbox' | 'select' | 'text' | 'codemirror' | 'number' | 'color' | 'language-select';
 
+export const DEFERRED_UPDATE_TYPES: SettingType[] = ['number', 'text'];
+
 export interface SettingOption {
 	label: string;
 	value: string | number | boolean;
@@ -40,11 +42,13 @@ export interface Setting {
 	options?: SettingOption[];
 	min?: number;
 	max?: number;
+	step?: number;
 	validate?: (value: unknown) => boolean;
 	onChange?: (value: unknown) => void;
 	strictDefaultValue?: boolean;
 	liveUpdate?: boolean;
 	codeMirrorOptions?: SettingCodeMirrorOptions;
+	forceLTR?: boolean;
 }
 
 export interface SettingsContextType {
@@ -273,11 +277,15 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 
 				const updated = { ...s, value: validatedValue };
 
-				if (s.liveUpdate !== false && s.onChange) {
+				const needsLiveUpdate = s.liveUpdate !== undefined
+					? s.liveUpdate
+					: !DEFERRED_UPDATE_TYPES.includes(s.type);
+
+				if (needsLiveUpdate && s.onChange) {
 					s.onChange(validatedValue);
 				}
 
-				if (s.liveUpdate === false) {
+				if (!needsLiveUpdate) {
 					setNeedsRefresh(true);
 				}
 
