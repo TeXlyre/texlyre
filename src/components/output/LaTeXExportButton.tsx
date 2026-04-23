@@ -11,7 +11,7 @@ import { useProperties } from '../../hooks/useProperties';
 import type { LaTeXEngine } from '../../types/latex';
 import type { DocumentList } from '../../types/documents';
 import type { FileNode } from '../../types/files';
-import { isLatexFile, isTemporaryFile } from '../../utils/fileUtils';
+import { isLatexMainFile, isTemporaryFile } from '../../utils/fileUtils';
 import { fileStorageService } from '../../services/FileStorageService';
 import { latexService } from '../../services/LaTeXService';
 import { BUSYTEX_BUNDLE_LABELS } from '../../extensions/texlyre-busytex/BusyTeXService';
@@ -175,7 +175,7 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
         const findTexFiles = (nodes: FileNode[]): string[] => {
             const texFiles: string[] = [];
             for (const node of nodes) {
-                if (node.type === 'file' && isLatexFile(node.path) && !isTemporaryFile(node.path)) {
+                if (node.type === 'file' && isLatexMainFile(node.path) && !isTemporaryFile(node.path)) {
                     texFiles.push(node.path);
                 }
                 if (node.children) texFiles.push(...findTexFiles(node.children));
@@ -187,13 +187,13 @@ const LaTeXExportButton: React.FC<LaTeXExportButtonProps> = ({
         setAvailableTexFiles(allTexFiles);
 
         const findMainFile = async () => {
-            if (selectedDocId && linkedFileInfo?.filePath && isLatexFile(linkedFileInfo.filePath)) {
+            if (selectedDocId && linkedFileInfo?.filePath && isLatexMainFile(linkedFileInfo.filePath)) {
                 setAutoMainFile(linkedFileInfo.filePath);
                 return;
             }
             if (selectedFileId) {
                 const file = await getFile(selectedFileId);
-                if (file && isLatexFile(file.path)) {
+                if (file && isLatexMainFile(file.path)) {
                     setAutoMainFile(file.path);
                     return;
                 }
