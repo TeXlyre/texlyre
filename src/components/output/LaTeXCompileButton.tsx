@@ -90,6 +90,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
   const propertiesRegistered = useRef(false);
   const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 
+  const projectId = fileStorageService.getCurrentProjectId() || undefined;
   const isBusyTeX = latexEngine.startsWith('busytex-');
 
   const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
@@ -136,10 +137,10 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
   useEffect(() => {
     if (propertiesLoaded) return;
 
-    const storedMainFile = getProperty('latex-main-file');
-    const storedEngine = getProperty('latex-engine');
-    const storedFormat = getProperty('latex-output-format');
-    const storedBundle = getProperty('latex-busytex-bundle');
+    const storedMainFile = getProperty('latex-main-file', { scope: 'project', projectId });
+    const storedEngine = getProperty('latex-engine', { scope: 'project', projectId });
+    const storedFormat = getProperty('latex-output-format', { scope: 'project', projectId });
+    const storedBundle = getProperty('latex-busytex-bundle', { scope: 'project', projectId });
 
     if (storedMainFile !== undefined) setUserSelectedMainFile(storedMainFile as string | undefined);
     if (storedEngine !== undefined) setLatexEngine(storedEngine as LaTeXEngine);
@@ -356,7 +357,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
         }
       } else {
         await setLatexEngine(engine as LaTeXEngine);
-        setProperty('latex-engine', engine);
+        setProperty('latex-engine', engine, { scope: 'project', projectId });
       }
       // setIsDropdownOpen(false);
     } catch (error) {
@@ -376,7 +377,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     } else {
       const newMainFile = filePath === 'auto' ? undefined : filePath;
       setUserSelectedMainFile(newMainFile);
-      setProperty('latex-main-file', newMainFile);
+      setProperty('latex-main-file', newMainFile, { scope: 'project', projectId });
     }
   };
 
@@ -408,7 +409,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
   const handleBundleChange = (bundleId: string) => {
     setSelectedBundle(bundleId);
-    setProperty('latex-busytex-bundle', bundleId);
+    setProperty('latex-busytex-bundle', bundleId, { scope: 'project', projectId });
     latexService.setBusyTeXBundles([bundleId]);
   };
 
@@ -459,7 +460,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
         <PdfWindowToggleButton
           className="pdf-window-button"
-          projectId={fileStorageService.getCurrentProjectId() || 'default'}
+          projectId={projectId || 'default'}
           title={t('Open PDF in new window')} />
 
         <button
@@ -594,7 +595,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
             onChange={(e) => {
               const format = e.target.value as LaTeXOutputFormat;
               setCurrentFormat(format);
-              setProperty('latex-output-format', format);
+              setProperty('latex-output-format', format, { scope: 'project', projectId });
             }}
             className="dropdown-select"
             disabled={isChangingEngine || isCompiling}>
