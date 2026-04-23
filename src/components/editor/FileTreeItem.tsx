@@ -70,7 +70,7 @@ interface FileTreeItemProps {
   onConfirmNewItem: () => void;
   onCancelNewItem: () => void;
   onNewItemKeyDown: (e: React.KeyboardEvent) => void;
-  menuRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
+  menuRefs: React.RefObject<Map<string, HTMLDivElement>>;
 }
 
 const FileTreeItem: React.FC<FileTreeItemProps> = ({
