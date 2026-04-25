@@ -30,7 +30,7 @@
     "file-system-backup-enable": false,
     "file-tree-filesystem-drag-drop": true,
     "file-tree-internal-drag-drop": true,
-    "image-viewer-auto-center": true,
+    "image-viewer-auto-center": false,
     "image-viewer-enable-filters": true,
     "image-viewer-enable-panning": false,
     "image-viewer-quality": "high",
