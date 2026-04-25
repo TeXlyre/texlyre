@@ -138,6 +138,39 @@ class GenericLSPService {
         }
     }
 
+    private resolveConfigurationSection(settings: any, section: string | undefined): any {
+        if (!settings || typeof settings !== 'object') return {};
+        if (!section) return settings;
+
+        if (Object.prototype.hasOwnProperty.call(settings, section)) {
+            return settings[section];
+        }
+
+        const nested = section.split('.').reduce<any>(
+            (acc, key) => (acc && typeof acc === 'object' ? acc[key] : undefined),
+            settings,
+        );
+        if (nested !== undefined) return nested;
+
+        const prefix = `${section}.`;
+        const collected: Record<string, any> = {};
+        let found = false;
+        for (const key of Object.keys(settings)) {
+            if (key.startsWith(prefix)) {
+                const subKey = key.slice(prefix.length);
+                const parts = subKey.split('.');
+                let cursor = collected;
+                for (let i = 0; i < parts.length - 1; i++) {
+                    cursor[parts[i]] = cursor[parts[i]] ?? {};
+                    cursor = cursor[parts[i]];
+                }
+                cursor[parts[parts.length - 1]] = settings[key];
+                found = true;
+            }
+        }
+        return found ? collected : {};
+    }
+
     private mergeCapabilities(defaults: any, overrides: any): any {
         if (!overrides) return defaults;
         if (!defaults) return overrides;
@@ -212,7 +245,10 @@ class GenericLSPService {
 
                 if (parsed.method === 'workspace/configuration' && parsed.id !== undefined) {
                     const items = parsed.params?.items || [];
-                    const result = items.map(() => ({}));
+                    const settings = (clientConfig as any).initializationOptions;
+                    const result = items.map((item: any) =>
+                        self.resolveConfigurationSection(settings, item?.section),
+                    );
                     transport.send(JSON.stringify({ jsonrpc: '2.0', id: parsed.id, result }));
                     return;
                 }
