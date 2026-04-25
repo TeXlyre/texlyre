@@ -1824,7 +1824,7 @@
     "@lezer/highlight" "^1.0.0"
     "@lezer/lr" "^1.3.0"
 
-"@lezer/generator@^1.0.0", "@lezer/generator@^1.8.0":
+"@lezer/generator@^1.8.0":
   version "1.8.0"
   resolved "https://registry.npmjs.org/@lezer/generator/-/generator-1.8.0.tgz"
   integrity sha512-/SF4EDWowPqV1jOgoGSGTIFsE7Ezdr7ZYxyihl5eMKVO5tlnpIhFcDavgm1hHY5GEonoOAEnJ0CU0x+tvuAuUg==
@@ -2291,13 +2291,6 @@
   dependencies:
     "@babel/types" "^7.28.2"
 
-"@types/dompurify@^3.0.5":
-  version "3.0.5"
-  resolved "https://registry.npmjs.org/@types/dompurify/-/dompurify-3.0.5.tgz"
-  integrity sha512-1Wg0g3BtQF7sSb27fJQAKck1HECM6zV1EB66j8JH9i3LCjYabJa0FSdiSgsD5K/RbrsR0SiraKacLB+T8ZVYAg==
-  dependencies:
-    "@types/trusted-types" "*"
-
 "@types/estree@^1.0.0", "@types/estree@^1.0.6", "@types/estree@1.0.8":
   version "1.0.8"
   resolved "https://registry.npmjs.org/@types/estree/-/estree-1.0.8.tgz"
@@ -2390,7 +2383,7 @@
   resolved "https://registry.npmjs.org/@types/tough-cookie/-/tough-cookie-4.0.5.tgz"
   integrity sha512-/Ad8+nIOV7Rl++6f1BdKxFSMgmoqEoYbHRpPcx3JEfv8VRsQe9Z4mCXeJBzxs7mbHY/XOZZuXlRNfhpVPbs6ZA==
 
-"@types/trusted-types@*", "@types/trusted-types@^2.0.2", "@types/trusted-types@^2.0.7":
+"@types/trusted-types@^2.0.2", "@types/trusted-types@^2.0.7":
   version "2.0.7"
   resolved "https://registry.npmjs.org/@types/trusted-types/-/trusted-types-2.0.7.tgz"
   integrity sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==
@@ -3270,10 +3263,10 @@ codemirror-lang-bib@^0.1.1:
   resolved "https://registry.npmjs.org/codemirror-lang-bib/-/codemirror-lang-bib-0.1.1.tgz"
   integrity sha512-uQHe5jbzvCWsIpxFMcs09cH/HdA1bSS9IA1KXViFo84/6VoobAAQi/D4UmPQ4y6wxh2eV3oc6sxBcOc8XetUEg==
 
-codemirror-lang-latex@^0.2.0:
-  version "0.2.0"
-  resolved "https://registry.npmjs.org/codemirror-lang-latex/-/codemirror-lang-latex-0.2.0.tgz"
-  integrity sha512-A3rCW9Q0SnAel74Y/fR2SvQVLWKxDWyf4rqPTC60lcSMYl247OJ+HHZ2lf7mWtpVdVjw3MItInXQHMUpTFLOfg==
+codemirror-lang-latex@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.npmjs.org/codemirror-lang-latex/-/codemirror-lang-latex-0.3.0.tgz"
+  integrity sha512-1Ax0F0js20vvRQLYACxMHLOMcu3Hi9Z9iEqGVQr2JHBNjoRB1NT80PA7tIYHIhvVM0OMX5ErfhuUa1vzljSZWQ==
 
 codemirror-lang-typst@^0.4.0:
   version "0.4.0"

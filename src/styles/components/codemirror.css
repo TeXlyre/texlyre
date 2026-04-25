@@ -443,6 +443,12 @@
 /* ============================================================
    Autocomplete
    ============================================================ */
+.cm-tooltip {
+	min-width: min-content;
+	border: 1px solid var(--pico-muted-border-color);
+	border-radius: var(--radius-sm);
+	padding: var(--space-sm) !important;
+}
 
 .codemirror-editor-container .cm-tooltip.cm-tooltip-autocomplete>ul {
 	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;

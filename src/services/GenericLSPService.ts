@@ -21,6 +21,20 @@ interface LSPServerConfig {
     clientConfig: LSPClientConfig;
 }
 
+const HANDSHAKE_INIT_ID = -10001;
+
+const defaultClientCapabilities = {
+    textDocument: {
+        synchronization: { didSave: true, willSave: false, willSaveWaitUntil: false },
+        publishDiagnostics: { relatedInformation: true },
+        hover: { contentFormat: ['markdown', 'plaintext'] },
+        completion: { completionItem: { snippetSupport: false } },
+        codeAction: { codeActionLiteralSupport: { codeActionKind: { valueSet: ['quickfix'] } } },
+    },
+    workspace: { workspaceFolders: true, configuration: true, applyEdit: true },
+    window: { workDoneProgress: false },
+};
+
 class GenericLSPService {
     private clients: Map<string, LSPClient> = new Map();
     private configs: Map<string, LSPServerConfig> = new Map();
@@ -86,56 +100,176 @@ class GenericLSPService {
         return undefined;
     }
 
+    getClient(configId: string): LSPClient | null {
+        return this.clients.get(configId) ?? null;
+    }
+
     private async initializeClient(config: LSPServerConfig) {
         this.setConnectionStatus(config.id, 'connecting');
 
         try {
+            const { capabilities: userCapabilities, ...restClientConfig } =
+                config.clientConfig as LSPClientConfig & { capabilities?: Record<string, any> };
+
             const client = new LSPClient({
-                ...config.clientConfig,
+                ...restClientConfig,
                 extensions: [],
             });
 
             const transport = this.createTransport(config);
-            if (transport) {
-                const wrappedTransport = this.wrapTransport(config.id, transport);
-                client.connect(wrappedTransport);
-                this.clients.set(config.id, client);
-                this.setConnectionStatus(config.id, 'connected');
-                console.log(`[GenericLSPService] Connected to LSP server: ${config.name}`);
-            } else {
+            if (!transport) {
                 this.setConnectionStatus(config.id, 'error');
+                return;
             }
+
+            const wrappedTransport = this.wrapTransport(
+                config.id,
+                transport,
+                userCapabilities,
+                restClientConfig as LSPClientConfig,
+            );
+            client.connect(wrappedTransport);
+            this.clients.set(config.id, client);
+            this.setConnectionStatus(config.id, 'connected');
+            console.log(`[GenericLSPService] Connected to LSP server: ${config.name}`);
         } catch (error) {
             console.error(`[GenericLSPService] Failed to connect to ${config.name}:`, error);
             this.setConnectionStatus(config.id, 'error');
         }
     }
 
-    private wrapTransport(configId: string, transport: Transport): Transport {
+    private mergeCapabilities(defaults: any, overrides: any): any {
+        if (!overrides) return defaults;
+        if (!defaults) return overrides;
+
+        const result: Record<string, any> = { ...defaults };
+        for (const key of Object.keys(overrides)) {
+            const a = result[key];
+            const b = overrides[key];
+            if (a && b && typeof a === 'object' && typeof b === 'object' && !Array.isArray(a) && !Array.isArray(b)) {
+                result[key] = this.mergeCapabilities(a, b);
+            } else {
+                result[key] = b;
+            }
+        }
+        return result;
+    }
+
+    private wrapTransport(
+        configId: string,
+        transport: Transport,
+        userCapabilities: Record<string, any> | undefined,
+        clientConfig: LSPClientConfig,
+    ): Transport {
         const self = this;
+        let handshakeComplete = false;
+        const outgoingQueue: string[] = [];
+        let downstreamHandler: ((value: string) => void) | null = null;
+
+        const sendInitialize = () => {
+            const initParams: any = {
+                processId: null,
+                clientInfo: { name: 'TeXlyre' },
+                rootUri: (clientConfig as any).rootUri ?? null,
+                workspaceFolders: (clientConfig as any).workspaceFolders ?? [],
+                capabilities: self.mergeCapabilities(defaultClientCapabilities, userCapabilities),
+                initializationOptions: (clientConfig as any).initializationOptions,
+            };
+            transport.send(JSON.stringify({
+                jsonrpc: '2.0',
+                id: HANDSHAKE_INIT_ID,
+                method: 'initialize',
+                params: initParams,
+            }));
+        };
+
+        const completeHandshake = (capabilities: any) => {
+            transport.send(JSON.stringify({ jsonrpc: '2.0', method: 'initialized', params: {} }));
+            handshakeComplete = true;
+
+            // Patch the LSP client with the real server capabilities. The client received
+            // synthetic capabilities earlier to avoid timing out; this overwrite happens
+            // before any user-driven feature request reads serverCapabilities.
+            const client = self.clients.get(configId);
+            if (client) {
+                (client as any).serverCapabilities = capabilities ?? {};
+            }
+
+            while (outgoingQueue.length > 0) {
+                const queued = outgoingQueue.shift();
+                if (queued) transport.send(queued);
+            }
+        };
+
+        transport.subscribe((message: string) => {
+            try {
+                const parsed = JSON.parse(message);
+
+                if (!handshakeComplete && parsed.id === HANDSHAKE_INIT_ID && parsed.result) {
+                    completeHandshake(parsed.result.capabilities);
+                    return;
+                }
+
+                if (parsed.method === 'workspace/configuration' && parsed.id !== undefined) {
+                    const items = parsed.params?.items || [];
+                    const result = items.map(() => ({}));
+                    transport.send(JSON.stringify({ jsonrpc: '2.0', id: parsed.id, result }));
+                    return;
+                }
+
+                if (parsed.method === 'textDocument/publishDiagnostics' && parsed.params) {
+                    self.diagnosticListeners.forEach(listener => {
+                        try {
+                            listener(configId, parsed.params);
+                        } catch (error) {
+                            console.error('[GenericLSPService] Diagnostic listener error:', error);
+                        }
+                    });
+                }
+
+                if (parsed.method === 'workspace/applyEdit' && parsed.id !== undefined) {
+                    self.handleApplyEditRequest(configId, parsed.id, parsed.params, transport);
+                }
+            } catch { }
+
+            if (downstreamHandler) downstreamHandler(message);
+        });
+
+        sendInitialize();
+
         return {
-            send: transport.send.bind(transport),
-            subscribe(handler: (value: string) => void) {
-                transport.subscribe((message: string) => {
-                    try {
-                        const parsed = JSON.parse(message);
-                        if (parsed.method === 'textDocument/publishDiagnostics' && parsed.params) {
-                            self.diagnosticListeners.forEach(listener => {
-                                try {
-                                    listener(configId, parsed.params);
-                                } catch (error) {
-                                    console.error('[GenericLSPService] Diagnostic listener error:', error);
-                                }
-                            });
-                        }
-                        if (parsed.method === 'workspace/applyEdit' && parsed.id !== undefined) {
-                            self.handleApplyEditRequest(configId, parsed.id, parsed.params, transport);
-                        }
-                    } catch { }
-                    handler(message);
-                });
+            send: (message: string) => {
+                try {
+                    const parsed = JSON.parse(message);
+                    if (parsed.method === 'initialize' && parsed.id !== undefined) {
+                        const fakeResponse = JSON.stringify({
+                            jsonrpc: '2.0',
+                            id: parsed.id,
+                            result: {
+                                capabilities: self.mergeCapabilities(defaultClientCapabilities, userCapabilities),
+                            },
+                        });
+                        // Defer so the LSP client's subscribe() runs first.
+                        setTimeout(() => downstreamHandler?.(fakeResponse), 0);
+                        return;
+                    }
+                    if (parsed.method === 'initialized') {
+                        return;
+                    }
+                } catch { }
+
+                if (handshakeComplete) {
+                    transport.send(message);
+                } else {
+                    outgoingQueue.push(message);
+                }
             },
-            unsubscribe: transport.unsubscribe?.bind(transport),
+            subscribe: (handler: (value: string) => void) => {
+                downstreamHandler = handler;
+            },
+            unsubscribe: () => {
+                downstreamHandler = null;
+            },
         };
     }
 
@@ -164,11 +298,16 @@ class GenericLSPService {
         const ws = new WebSocket(url);
         const handlers = new Set<(value: string) => void>();
         const messageQueue: string[] = [];
+        const pendingMessages: string[] = [];
         let isOpen = false;
         const useContentLength = config.transportConfig.contentLength ?? false;
         let buffer = '';
 
         const dispatchMessage = (message: string) => {
+            if (handlers.size === 0) {
+                pendingMessages.push(message);
+                return;
+            }
             handlers.forEach(handler => handler(message));
         };
 
@@ -238,6 +377,10 @@ class GenericLSPService {
             },
             subscribe: (handler: (value: string) => void) => {
                 handlers.add(handler);
+                if (pendingMessages.length > 0) {
+                    const queued = pendingMessages.splice(0);
+                    queued.forEach(msg => handler(msg));
+                }
             },
             unsubscribe: (handler: (value: string) => void) => {
                 handlers.delete(handler);
@@ -269,26 +412,6 @@ class GenericLSPService {
         }
     }
 
-    getClient(configId: string): LSPClient | null {
-        return this.clients.get(configId) ?? null;
-    }
-
-    getClientForFile(fileName: string): LSPClient | null {
-        const ext = fileName.split('.').pop()?.toLowerCase();
-        if (!ext) return null;
-
-        for (const [configId, config] of this.configs.entries()) {
-            if (config.enabled && config.fileExtensions.includes(ext)) {
-                const client = this.clients.get(configId);
-                if (client) {
-                    console.log(`[GenericLSPService] Using LSP server for ${fileName}: ${config.name}`);
-                }
-                return client || null;
-            }
-        }
-        return null;
-    }
-
     getAllClientsForFile(fileName: string): LSPClient[] {
         const ext = fileName.split('.').pop()?.toLowerCase();
         if (!ext) return [];
@@ -298,7 +421,6 @@ class GenericLSPService {
             if (config.enabled && config.fileExtensions.includes(ext)) {
                 const client = this.clients.get(configId);
                 if (client) {
-                    console.log(`[GenericLSPService] Using LSP server for ${fileName}: ${config.name}`);
                     clients.push(client);
                 }
             }
@@ -314,9 +436,13 @@ class GenericLSPService {
         const updated = { ...config, ...updates };
         this.configs.set(configId, updated);
 
-        const hasConnectionChanges =
-            updates.transportConfig !== undefined ||
-            updates.clientConfig !== undefined;
+        const transportChanged =
+            updates.transportConfig !== undefined &&
+            JSON.stringify(updates.transportConfig) !== JSON.stringify(config.transportConfig);
+        const clientConfigChanged =
+            updates.clientConfig !== undefined &&
+            JSON.stringify(updates.clientConfig) !== JSON.stringify(config.clientConfig);
+        const hasConnectionChanges = transportChanged || clientConfigChanged;
 
         if (!updated.enabled) {
             if (wasEnabled) {
