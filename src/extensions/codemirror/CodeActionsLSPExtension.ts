@@ -50,16 +50,9 @@ function isBareCommand(item: CodeActionOrCommand): item is LspCommand {
 
 function resolveAction(item: CodeActionOrCommand): ResolvedAction {
     if (isBareCommand(item)) {
-        return {
-            title: item.title,
-            command: item,
-        };
+        return { title: item.title, command: item };
     }
-    return {
-        title: item.title,
-        edit: item.edit,
-        command: item.command,
-    };
+    return { title: item.title, edit: item.edit, command: item.command };
 }
 
 function posToOffset(doc: any, pos: { line: number; character: number }): number | null {
@@ -149,7 +142,6 @@ function applyAction(action: ResolvedAction, view: EditorView, fileUri: string, 
     if (action.edit) {
         applyWorkspaceEdit(action.edit, view, fileUri);
     }
-
     if (action.command) {
         executeCommand(action.command, view, fileUri, clients);
     }
@@ -233,7 +225,10 @@ export function createCodeActionsExtension(fileName: string): Extension {
 
     const fetchCodeActions = async (view: EditorView) => {
         const clients = genericLSPService.getAllClientsForFile(fileName);
-        if (clients.length === 0) return;
+        if (clients.length === 0) {
+            view.dispatch({ effects: setCodeActions.of(null) });
+            return;
+        }
 
         const requestId = ++pendingRequest;
         const pos = view.state.selection.main.head;
@@ -249,15 +244,19 @@ export function createCodeActionsExtension(fileName: string): Extension {
         const actionPromises = clients.map(async client => {
             try {
                 const capabilities = (client as any).serverCapabilities;
-                if (!capabilities?.codeActionProvider) return [];
+                const provider = capabilities?.codeActionProvider;
+                if (!provider) return [];
+
+                const advertisedKinds: string[] | undefined =
+                    typeof provider === 'object' ? provider.codeActionKinds : undefined;
+                const only = advertisedKinds && advertisedKinds.length > 0
+                    ? advertisedKinds
+                    : [];
 
                 const result = await (client as any).request('textDocument/codeAction', {
                     textDocument: { uri: fileUri },
                     range: { start: lspPos, end: lspPos },
-                    context: {
-                        diagnostics,
-                        only: ['quickfix'],
-                    },
+                    context: { diagnostics, only },
                 });
 
                 return (result || []) as CodeActionOrCommand[];
@@ -295,13 +294,9 @@ export function createCodeActionsExtension(fileName: string): Extension {
             if (debounceTimer) clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
                 fetchCodeActions(update.view);
-            }, 600);
+            }, 300);
         }
     });
 
-    const theme = EditorView.baseTheme({
-
-    });
-
-    return [codeActionField, listener, theme, applyEditPlugin];
+    return [codeActionField, listener, applyEditPlugin];
 }

@@ -45,6 +45,7 @@ export const LSPConfigProvider: React.FC<LSPConfigProviderProps> = ({ children }
     const { getSetting, updateSetting } = useSettings();
     const [configs, setConfigs] = useState<LSPConfig[]>([]);
     const registeredConfigIdsRef = useRef<Set<string>>(new Set());
+    const lastSerializedConfigsRef = useRef<Map<string, string>>(new Map());
 
     const settingValue = getSetting('generic-lsp-configs')?.value;
 
@@ -69,15 +70,21 @@ export const LSPConfigProvider: React.FC<LSPConfigProviderProps> = ({ children }
 
     useEffect(() => {
         const nextIds = new Set<string>();
+        const nextSerialized = new Map<string, string>();
 
         storedConfigs.forEach(config => {
             nextIds.add(config.id);
 
-            try {
-                genericLSPService.unregisterConfig(config.id);
+            const serialized = JSON.stringify(config);
+            nextSerialized.set(config.id, serialized);
 
+            if (lastSerializedConfigsRef.current.get(config.id) === serialized) {
+                return;
+            }
+
+            try {
                 const clientConfig = JSON.parse(config.clientConfig) as LSPClientConfig;
-                genericLSPService.registerConfig({
+                const registration = {
                     id: config.id,
                     name: config.name,
                     enabled: config.enabled,
@@ -85,7 +92,13 @@ export const LSPConfigProvider: React.FC<LSPConfigProviderProps> = ({ children }
                     languageIdMap: config.languageIdMap,
                     transportConfig: config.transportConfig,
                     clientConfig,
-                });
+                };
+
+                if (registeredConfigIdsRef.current.has(config.id)) {
+                    genericLSPService.updateConfig(config.id, registration);
+                } else {
+                    genericLSPService.registerConfig(registration);
+                }
             } catch (error) {
                 console.error(`[LSPConfigContext] Invalid LSP config for ${config.id}:`, error);
             }
@@ -98,6 +111,7 @@ export const LSPConfigProvider: React.FC<LSPConfigProviderProps> = ({ children }
         });
 
         registeredConfigIdsRef.current = nextIds;
+        lastSerializedConfigsRef.current = nextSerialized;
     }, [storedConfigs]);
 
     const saveConfigs = useCallback((newConfigs: LSPConfig[]) => {
