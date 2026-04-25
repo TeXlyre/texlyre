@@ -8,62 +8,6 @@ import { linter, forceLinting, type Diagnostic } from '@codemirror/lint';
 import { genericLSPService } from '../../services/GenericLSPService';
 import type { LSPClient } from '@codemirror/lsp-client';
 
-class GenericLSPProcessor {
-    private view: EditorView;
-    private currentFileName: string = '';
-
-    constructor(view: EditorView) {
-        this.view = view;
-    }
-
-    setCurrentFileName(fileName: string) {
-        this.currentFileName = fileName;
-    }
-
-    update(_update: any) {
-    }
-
-    destroy() {
-    }
-}
-
-let globalProcessor: GenericLSPProcessor | null = null;
-
-export function createGenericLSPExtension(fileName?: string): Extension {
-    const plugin = ViewPlugin.fromClass(
-        class {
-            processor: GenericLSPProcessor;
-
-            constructor(view: EditorView) {
-                this.processor = new GenericLSPProcessor(view);
-                if (fileName) {
-                    this.processor.setCurrentFileName(fileName);
-                }
-                globalProcessor = this.processor;
-            }
-
-            update(update: any) {
-                this.processor?.update(update);
-            }
-
-            destroy() {
-                this.processor?.destroy();
-                if (globalProcessor === this.processor) {
-                    globalProcessor = null;
-                }
-            }
-        }
-    );
-
-    return [plugin];
-}
-
-export function setCurrentFileNameInGenericLSP(fileName: string) {
-    if (globalProcessor) {
-        globalProcessor.setCurrentFileName(fileName);
-    }
-}
-
 function detectLanguageId(fileName: string, client?: LSPClient): string {
     const ext = fileName.split('.').pop()?.toLowerCase() || '';
 
@@ -102,6 +46,15 @@ function lspSeverityToCodeMirror(severity?: number): 'error' | 'warning' | 'info
         case 4: return 'hint';
         default: return 'warning';
     }
+}
+
+function sendNotification(client: LSPClient, method: string, params: any) {
+    try {
+        const transport = (client as any).transport;
+        if (transport?.send) {
+            transport.send(JSON.stringify({ jsonrpc: '2.0', method, params }));
+        }
+    } catch { }
 }
 
 function createLSPDiagnosticsExtension(fileName: string): Extension {
@@ -166,8 +119,11 @@ function renderHoverContent(content: string): HTMLElement {
     return container;
 }
 
-function createAggregatedHoverExtension(fileName: string, clients: LSPClient[]): Extension {
+function createAggregatedHoverExtension(fileName: string): Extension {
     return hoverTooltip(async (view, pos) => {
+        const clients = genericLSPService.getAllClientsForFile(fileName);
+        if (clients.length === 0) return null;
+
         const doc = view.state.doc;
         const line = doc.lineAt(pos);
         const character = pos - line.from;
@@ -201,7 +157,7 @@ function createAggregatedHoverExtension(fileName: string, clients: LSPClient[]):
                 }
 
                 return content.trim();
-            } catch (error) {
+            } catch {
                 return null;
             }
         });
@@ -231,130 +187,115 @@ function createAggregatedHoverExtension(fileName: string, clients: LSPClient[]):
     });
 }
 
-function createDocumentSyncExtension(fileName: string, clients: LSPClient[]): Extension {
+function createDocumentSyncExtension(fileName: string): Extension {
     const fileUri = `file:///${fileName}`;
-    const documentVersions = new Map<string, number>();
+    let version = 1;
 
     return ViewPlugin.fromClass(
         class {
-            private version: number;
+            private openedFor = new Set<LSPClient>();
 
             constructor(view: EditorView) {
-                this.version = documentVersions.get(fileName) || 1;
+                this.syncOpenState(view);
+            }
+
+            private syncOpenState(view: EditorView) {
+                const clients = genericLSPService.getAllClientsForFile(fileName);
                 const text = view.state.doc.toString();
+
                 clients.forEach(client => {
+                    if (this.openedFor.has(client)) return;
                     const languageId = detectLanguageId(fileName, client);
-                    try {
-                        (client as any).request('textDocument/didOpen', {
-                            textDocument: {
-                                uri: fileUri,
-                                languageId,
-                                version: this.version,
-                                text,
-                            }
-                        }).catch(() => { });
-                    } catch { }
+                    sendNotification(client, 'textDocument/didOpen', {
+                        textDocument: { uri: fileUri, languageId, version, text },
+                    });
+                    this.openedFor.add(client);
                 });
             }
 
             update(update: any) {
+                this.syncOpenState(update.view);
+
                 if (!update.docChanged) return;
-                this.version++;
-                documentVersions.set(fileName, this.version);
+                version++;
                 const text = update.state.doc.toString();
-                clients.forEach(client => {
-                    try {
-                        (client as any).request('textDocument/didChange', {
-                            textDocument: {
-                                uri: fileUri,
-                                version: this.version,
-                            },
-                            contentChanges: [{ text }],
-                        }).catch(() => { });
-                    } catch { }
+                this.openedFor.forEach(client => {
+                    sendNotification(client, 'textDocument/didChange', {
+                        textDocument: { uri: fileUri, version },
+                        contentChanges: [{ text }],
+                    });
                 });
             }
 
             destroy() {
-                clients.forEach(client => {
-                    try {
-                        (client as any).request('textDocument/didClose', {
-                            textDocument: { uri: fileUri }
-                        }).catch(() => { });
-                    } catch { }
+                this.openedFor.forEach(client => {
+                    sendNotification(client, 'textDocument/didClose', {
+                        textDocument: { uri: fileUri },
+                    });
                 });
-                documentVersions.delete(fileName);
+                this.openedFor.clear();
             }
         }
     );
 }
 
 export function getGenericLSPExtensionsForFile(fileName: string): Extension[] {
-    const clients = genericLSPService.getAllClientsForFile(fileName);
-    if (clients.length === 0) return [];
+    if (!fileName) return [];
 
-    const extensions: Extension[] = [];
-
-    extensions.push(createDocumentSyncExtension(fileName, clients));
-    extensions.push(createAggregatedHoverExtension(fileName, clients));
-    extensions.push(createLSPDiagnosticsExtension(fileName));
-
-    return extensions;
-}
-
-export function releaseGenericLSPFile(_fileName: string) {
+    return [
+        createDocumentSyncExtension(fileName),
+        createAggregatedHoverExtension(fileName),
+        createLSPDiagnosticsExtension(fileName),
+    ];
 }
 
 export function getGenericLSPCompletionSources(fileName: string) {
-    const clients = genericLSPService.getAllClientsForFile(fileName);
-    console.log(`[GenericLSPExtension] Getting completion sources for ${fileName}, found ${clients.length} clients`);
+    if (!fileName) return [];
 
-    if (clients.length === 0) return [];
+    return [
+        async (context: CompletionContext): Promise<CompletionResult | null> => {
+            const clients = genericLSPService.getAllClientsForFile(fileName);
+            if (clients.length === 0) return null;
 
-    return clients.map(client => {
-        return async (context: CompletionContext): Promise<CompletionResult | null> => {
-            console.log(`[GenericLSPExtension] Completion triggered at position ${context.pos}`);
-
-            const capabilities = (client as any).serverCapabilities;
-            if (!capabilities?.completionProvider) {
-                console.log('[GenericLSPExtension] No completion provider in server capabilities');
-                return null;
-            }
-
-            try {
-                const doc = context.state.doc;
-                const line = doc.lineAt(context.pos);
-                const character = context.pos - line.from;
-
-                console.log('[GenericLSPExtension] Requesting completion at line', line.number, 'character', character);
-
-                const result = await (client as any).request('textDocument/completion', {
-                    textDocument: { uri: `file:///${fileName}` },
-                    position: { line: line.number - 1, character }
-                });
-
-                console.log('[GenericLSPExtension] Completion result:', result);
-
-                if (!result || !result.items || result.items.length === 0) {
-                    return null;
+            for (const client of clients) {
+                const capabilities = (client as any).serverCapabilities;
+                const completionProvider = capabilities?.completionProvider;
+                if (!completionProvider || Object.keys(completionProvider).length === 0) {
+                    continue;
                 }
 
-                const options = result.items.map((item: any) => ({
-                    label: item.label,
-                    type: item.kind === 1 ? 'text' : 'keyword',
-                    detail: item.detail,
-                    info: item.documentation,
-                    apply: item.insertText || item.label,
-                }));
+                try {
+                    const doc = context.state.doc;
+                    const line = doc.lineAt(context.pos);
+                    const character = context.pos - line.from;
 
-                return {
-                    from: context.pos,
-                    options
-                };
-            } catch (error) {
-                console.error('[GenericLSPExtension] Completion error:', error);
-                return null;
+                    const result = await (client as any).request('textDocument/completion', {
+                        textDocument: { uri: `file:///${fileName}` },
+                        position: { line: line.number - 1, character }
+                    });
+
+                    if (!result || !result.items || result.items.length === 0) {
+                        continue;
+                    }
+
+                    const options = result.items.map((item: any) => ({
+                        label: item.label,
+                        type: item.kind === 1 ? 'text' : 'keyword',
+                        detail: item.detail,
+                        info: item.documentation,
+                        apply: item.insertText || item.label,
+                    }));
+
+                    return {
+                        from: context.pos,
+                        options
+                    };
+                } catch {
+                    continue;
+                }
             }
-        };
-    });
+
+            return null;
+        }
+    ];
 }

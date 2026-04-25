@@ -1,5 +1,5 @@
 // src/hooks/editor/useEditorView.ts
-import { autocompletion, completionKeymap, type CompletionSource } from '@codemirror/autocomplete';
+import { type CompletionSource, autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import {
     defaultKeymap,
     history,
@@ -49,8 +49,6 @@ import {
 import {
     getGenericLSPExtensionsForFile,
     getGenericLSPCompletionSources,
-    setCurrentFileNameInGenericLSP,
-    releaseGenericLSPFile
 } from '../../extensions/codemirror/GenericLSPExtension';
 import { createCodeActionsExtension } from '../../extensions/codemirror/CodeActionsLSPExtension.ts';
 import { createToolbarExtension } from '../../extensions/codemirror/ToolbarExtension';
@@ -261,14 +259,15 @@ export const useEditorView = (
             foldGutter(),
             indentOnInput(),
             bidiIsolates(),
-
             bracketMatching(),
+            closeBrackets(),
             autocompletion(),
             highlightSelectionMatches(),
             search(),
             spellCheckExtension(),
             keymap.of([
                 indentWithTab,
+                ...closeBracketsKeymap,
                 ...defaultKeymap,
                 ...searchKeymap,
                 ...foldKeymap,
@@ -410,11 +409,9 @@ export const useEditorView = (
         extensions.push(...getBasicSetupExtensions());
         extensions.push(...getLanguageExtension(fileName, contentToUse));
 
-        const genericLSPExts = getGenericLSPExtensionsForFile(fileName);
-        extensions.push(...genericLSPExts);
-        const genericLSPCompletions = getGenericLSPCompletionSources(fileName);
-        completionSources.push(...genericLSPCompletions);
-        if (genericLSPExts.length > 0) {
+        if (fileName) {
+            extensions.push(...getGenericLSPExtensionsForFile(fileName));
+            completionSources.push(...getGenericLSPCompletionSources(fileName));
             extensions.push(createCodeActionsExtension(fileName));
         }
 
@@ -608,9 +605,6 @@ export const useEditorView = (
             const view = new EditorView({ state, parent: editorRef.current });
             viewRef.current = view;
 
-            if (fileName) {
-                setCurrentFileNameInGenericLSP(fileName);
-            }
             setTimeout(() => {
                 document.dispatchEvent(
                     new CustomEvent('editor-ready', {
@@ -633,9 +627,6 @@ export const useEditorView = (
         }
 
         return () => {
-            if (fileName) {
-                releaseGenericLSPFile(fileName);
-            }
             if (viewRef.current) {
                 filePathCacheService.cleanup();
                 viewRef.current.destroy();
