@@ -88,7 +88,7 @@
 		"bib-editor": "^1.14.0",
 		"codemirror": "^6.0.2",
 		"codemirror-lang-bib": "^0.1.1",
-		"codemirror-lang-latex": "^0.2.0",
+		"codemirror-lang-latex": "^0.3.0",
 		"codemirror-lang-typst": "^0.4.0",
 		"codemirror-markdown-commands": "^0.1.0",
 		"codemirror-toolbar": "^0.1.0",
@@ -152,10 +152,10 @@
 			"inflight": "npm:inflight-lru@^1.0.0"
 		},
 		"peerDependencyRules": {
-			"ignoreMissing": [
-				"@myriaddreamin/typst-ts-renderer",
-				"@myriaddreamin/typst-ts-web-compiler"
-			]
+			"allowedVersions": {
+				"@myriaddreamin/typst-ts-renderer": "^0.7.0-rc2",
+				"@myriaddreamin/typst-ts-web-compiler": "^0.7.0-rc2"
+			}
 		},
 		"onlyBuiltDependencies": [
 			"esbuild",
@@ -172,7 +172,6 @@
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/react": "^16.3.2",
 		"@testing-library/user-event": "^14.6.1",
-		"@types/dompurify": "^3.0.5",
 		"@types/jest": "^30.0.0",
 		"@types/node": "^25.6.0",
 		"@types/qrcode": "^1.5.6",
