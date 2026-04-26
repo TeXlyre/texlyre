@@ -114,8 +114,8 @@ importers:
         specifier: ^0.1.1
         version: 0.1.1(@codemirror/autocomplete@6.20.1)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.5)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/common@1.5.2)(@lezer/highlight@1.2.3)(@lezer/lr@1.4.8)
       codemirror-lang-latex:
-        specifier: ^0.4.0
-        version: 0.4.0(@codemirror/autocomplete@6.20.1)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.5)(@codemirror/search@6.6.0)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/common@1.5.2)(@lezer/generator@1.8.0)(@lezer/highlight@1.2.3)(@lezer/lr@1.4.8)
+        specifier: ^0.4.1
+        version: 0.4.1(@codemirror/autocomplete@6.20.1)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.5)(@codemirror/search@6.6.0)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/common@1.5.2)(@lezer/generator@1.8.0)(@lezer/highlight@1.2.3)(@lezer/lr@1.4.8)
       codemirror-lang-typst:
         specifier: ^0.4.0
         version: 0.4.0
@@ -2766,8 +2766,8 @@ packages:
       '@lezer/highlight': ^1.0.0
       '@lezer/lr': ^1.0.0
 
-  codemirror-lang-latex@0.4.0:
-    resolution: {integrity: sha512-qZo0tZIJKyOnSBAje1Ud9gYthUZeBlompnMF9DNKPH7De10ZF4H+omb+i0Sc4VJe8DXfaCKyM6Wz3AzP9g2cIw==}
+  codemirror-lang-latex@0.4.1:
+    resolution: {integrity: sha512-7uhwWoay81Bi9YashzosjXJYmdIAmtmPlmMJ3b4uZBMcrSfAy/js5+OXY/5mPHaMiPReCKe0SfzkXDAvBXVTxw==}
     peerDependencies:
       '@codemirror/autocomplete': ^6.20.1
       '@codemirror/commands': ^6.10.3
@@ -7907,7 +7907,7 @@ snapshots:
       '@lezer/highlight': 1.2.3
       '@lezer/lr': 1.4.8
 
-  codemirror-lang-latex@0.4.0(@codemirror/autocomplete@6.20.1)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.5)(@codemirror/search@6.6.0)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/common@1.5.2)(@lezer/generator@1.8.0)(@lezer/highlight@1.2.3)(@lezer/lr@1.4.8):
+  codemirror-lang-latex@0.4.1(@codemirror/autocomplete@6.20.1)(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.5)(@codemirror/search@6.6.0)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(@lezer/common@1.5.2)(@lezer/generator@1.8.0)(@lezer/highlight@1.2.3)(@lezer/lr@1.4.8):
     dependencies:
       '@codemirror/autocomplete': 6.20.1
       '@codemirror/commands': 6.10.3

@@ -88,7 +88,7 @@
 		"bib-editor": "^1.14.0",
 		"codemirror": "^6.0.2",
 		"codemirror-lang-bib": "^0.1.1",
-		"codemirror-lang-latex": "^0.4.0",
+		"codemirror-lang-latex": "^0.4.1",
 		"codemirror-lang-typst": "^0.4.0",
 		"codemirror-markdown-commands": "^0.1.0",
 		"codemirror-toolbar": "^0.1.0",
