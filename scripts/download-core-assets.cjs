@@ -11,7 +11,7 @@ const execAsync = promisify(exec);
 const ASSETS = [
     {
         name: 'drawio-embed',
-        version: 'v29.6.4',
+        version: 'v29.7.9',
         url: (version) =>
             `https://github.com/TeXlyre/drawio-embed-mirror/archive/refs/tags/${version}.zip`,
         dest: path.resolve(__dirname, '../public/core/drawio-embed'),
