@@ -298,7 +298,7 @@ export const useEditorView = (
 
         switch (fileType) {
             case 'latex':
-                return [latex({ autoCloseBrackets: false, enableAutocomplete: false })];
+                return [latex({ autoCloseBrackets: false, enableAutocomplete: false, fileName: fn })];
             case 'typst':
                 return [typst()];
             case 'bib':
