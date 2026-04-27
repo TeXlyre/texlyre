@@ -3258,10 +3258,10 @@ co@^4.6.0:
   resolved "https://registry.npmjs.org/co/-/co-4.6.0.tgz"
   integrity sha512-QVb0dM5HvG+uaxitm8wONl7jltx8dqhfU33DcqtOZcLSVIKSDDLDi7+0LbAKiyI8hD9u42m2YxXSkMGWThaecQ==
 
-codemirror-lang-bib@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.npmjs.org/codemirror-lang-bib/-/codemirror-lang-bib-0.1.1.tgz"
-  integrity sha512-uQHe5jbzvCWsIpxFMcs09cH/HdA1bSS9IA1KXViFo84/6VoobAAQi/D4UmPQ4y6wxh2eV3oc6sxBcOc8XetUEg==
+codemirror-lang-bib@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.npmjs.org/codemirror-lang-bib/-/codemirror-lang-bib-0.2.0.tgz"
+  integrity sha512-nYAeAlq848i5efvEPt+MHZGfbfPQsPsFBBjEiO/+Y5TMMHf1OHZ+506GcZbk9X3Bkc0bbquM51HSc/ydf+nyrg==
 
 codemirror-lang-latex@^0.4.1:
   version "0.4.1"
