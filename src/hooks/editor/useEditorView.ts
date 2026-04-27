@@ -393,7 +393,7 @@ export const useEditorView = (
         }
 
         const contentToUse = isEditingFile
-            ? currentContentRef.current
+            ? (textContent || currentContentRef.current)
             : ytextRef.current?.toString() || '';
 
         const extensions: Extension[] = [];
