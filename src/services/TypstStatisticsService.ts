@@ -228,7 +228,7 @@ class TypstStatisticsService {
             !f.isDeleted &&
             !f.path.startsWith('/.texlyre_') &&
             f.path !== mainFile.path &&
-            f.path.match(/\.(png|jpg|jpeg|gif|svg|pdf|bib|cls|sty|toml|yaml|yml|typ)$/i)
+            f.path.match(/\.(png|jpg|jpeg|gif|webp|svg|pdf|bib|bibtex|cls|sty|toml|csv|json|yaml|yml|xml|html|txt|cbor|typ|typst)$/i)
         );
 
         for (const file of resourceFiles) {
