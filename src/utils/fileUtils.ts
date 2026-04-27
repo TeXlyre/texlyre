@@ -259,6 +259,12 @@ export const isMarkdownFile = (pathOrName: string): boolean => {
 	return lower.endsWith('.md') || lower.endsWith('.markdown');
 };
 
+export const isYamlFile = (pathOrName: string): boolean => {
+	if (!pathOrName) return false;
+	const lower = pathOrName.toLowerCase();
+	return lower.endsWith('.yml') || lower.endsWith('.yaml');
+};
+
 export const isJsonFile = (pathOrName: string): boolean => {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
@@ -283,12 +289,14 @@ export const isBibContent = (content: string): boolean => {
 	return /@(?:article|book|inproceedings|incollection|phdthesis|mastersthesis|techreport|misc|manual|conference)\s*\{/i.test(content);
 };
 
-export const detectFileType = (fileName: string | undefined, content?: string): 'latex' | 'typst' | 'bib' | 'markdown' | 'json' | 'html' | 'unknown' => {
+export const detectFileType = (fileName: string | undefined, content?: string):
+	'latex' | 'typst' | 'bib' | 'markdown' | 'yaml' | 'json' | 'html' | 'unknown' => {
 	if (fileName) {
 		if (isLatexFile(fileName)) return 'latex';
 		if (isTypstFile(fileName)) return 'typst';
 		if (isBibFile(fileName)) return 'bib';
 		if (isMarkdownFile(fileName)) return 'markdown';
+		if (isYamlFile(fileName)) return 'yaml';
 		if (isJsonFile(fileName)) return 'json';
 		if (isHtmlFile(fileName)) return 'html';
 	}

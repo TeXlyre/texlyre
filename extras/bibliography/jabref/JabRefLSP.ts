@@ -3,6 +3,7 @@ import type { LSPPluginTransportConfig } from '@/plugins/PluginInterface';
 import { genericLSPService } from '@/services/GenericLSPService';
 import { bibliographyImportService } from '@/services/BibliographyImportService';
 import type { BibEntry } from '@/types/bibliography';
+import { BibtexParser, type BibtexEntry } from '@/utils/bibtexParser';
 
 export type JabRefLSPConfig = {
     id: string;
@@ -15,20 +16,28 @@ export const createJabRefLSP = () => {
     let registered = false;
 
     const setupBibtexParser = () => {
-        try {
-            const { BibtexParser } = require('../../viewers/bibtex/BibtexParser');
-            if (BibtexParser) {
-                bibliographyImportService.setParser({
-                    parse: (content: string) => BibtexParser.parse(content),
-                    serialize: (entries: any[]) => BibtexParser.serialize(entries),
-                    serializeEntry: (entry: any) => BibtexParser.serializeEntry(entry),
-                    findEntryPosition: (content: string, entry: any) => BibtexParser.findEntryPosition(content, entry),
-                    updateEntryInContent: (content: string, entry: any) => BibtexParser.updateEntryInContent(content, entry)
-                });
-            }
-        } catch (error) {
-            console.log('[JabRefLSP] Using default BibTeX parser - BibtexParser not available');
-        }
+        const toBibEntry = (entry: BibtexEntry): BibEntry => ({
+            key: entry.id,
+            entryType: entry.type,
+            fields: entry.fields,
+            rawEntry: BibtexParser.serializeEntry(entry),
+            source: 'local',
+        });
+
+        const fromBibEntry = (entry: BibEntry): BibtexEntry => ({
+            id: entry.key,
+            type: entry.entryType,
+            fields: entry.fields,
+            originalIndex: 0,
+        });
+
+        bibliographyImportService.setParser({
+            parse: (content) => BibtexParser.parse(content).map(toBibEntry),
+            serialize: (entries) => BibtexParser.serialize(entries.map(fromBibEntry)),
+            serializeEntry: (entry) => BibtexParser.serializeEntry(fromBibEntry(entry)),
+            findEntryPosition: (content, entry) => BibtexParser.findEntryPosition(content, fromBibEntry(entry)),
+            updateEntryInContent: (content, entry) => BibtexParser.updateEntryInContent(content, fromBibEntry(entry)),
+        });
     };
 
     const getTransportConfig = (): LSPPluginTransportConfig => {

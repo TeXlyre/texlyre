@@ -87,7 +87,7 @@ export class FilePathCompletionHandler {
                 break;
             case 'data':
                 candidates = cache.allFiles.filter(path =>
-                    /\.(toml|csv|json|yaml|yml|xml|html|txt)$/i.test(path)
+                    /\.(toml|csv|json|yml|yaml|xml|html|txt|md|markdown|cbor)$/i.test(path)
                 );
                 break;
             case 'all':

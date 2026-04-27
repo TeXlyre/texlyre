@@ -94,7 +94,8 @@ class FilePathCacheService {
 		return this.cachedFiles.filter(file =>
 			file.type === 'file' &&
 			isBibFile(file.name) &&
-			!file.isDeleted
+			!file.isDeleted &&
+			!isTemporaryFile(file.path)
 		);
 	}
 
@@ -121,7 +122,7 @@ class FilePathCacheService {
 	}
 
 	buildCacheFromFiles(files: FileNode[]): FilePathCache {
-		const imageExtensions = new Set(['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp', 'ico']);
+		const imageExtensions = new Set(['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp', 'ico', 'eps']);
 
 		const cache: FilePathCache = {
 			files: [],
@@ -134,7 +135,7 @@ class FilePathCacheService {
 		};
 
 		const processNode = (node: FileNode) => {
-			if (node.type === 'file') {
+			if (node.type === 'file' && !node.isDeleted && !isTemporaryFile(node.path)) {
 				const ext = node.name.split('.').pop()?.toLowerCase();
 
 				cache.files.push(node);

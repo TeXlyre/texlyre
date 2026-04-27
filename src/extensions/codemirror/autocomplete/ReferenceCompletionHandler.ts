@@ -29,6 +29,31 @@ export class ReferenceCompletionHandler {
         }
     }
 
+    // Returns the partial text and insertion offset when the cursor sits inside
+    // a Typst @-style reference (which can resolve to either a label or a citation).
+    getTypstReferenceMatch(context: CompletionContext): { partial: string; from: number } | null {
+        const refInfo = this.findTypstReferenceCommand(context);
+        if (!refInfo || refInfo.type !== 'reference-or-citation') return null;
+        const from = this.getReferenceCompletionStart(context, typstReferencePatterns);
+        return { partial: refInfo.partial, from };
+    }
+
+    // Returns ranked Typst label completion options filtered by the given partial.
+    getTypstLabelOptions(partial: string) {
+        const all: Array<{ label: string; filePath: string }> = [];
+        for (const [filePath, labels] of this.typstLabels.entries()) {
+            for (const label of labels) {
+                all.push({ label, filePath });
+            }
+        }
+
+        const filtered = all.filter(({ label }) =>
+            !partial || label.toLowerCase().includes(partial.toLowerCase())
+        );
+
+        return this.createLabelOptions(filtered, partial);
+    }
+
     private findLatexReferenceCommand(context: CompletionContext): { command: string; partial: string; type: 'reference' } | null {
         const line = context.state.doc.lineAt(context.pos);
         const lineText = line.text;

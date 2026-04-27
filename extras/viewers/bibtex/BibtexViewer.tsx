@@ -31,11 +31,10 @@ import { bibliographyImportService } from '@/services/BibliographyImportService'
 import { formatFileSize } from '@/utils/fileUtils';
 import { detectFileType } from '@/utils/fileUtils';
 import { TextDiffUtils } from '@/utils/textDiffUtils';
+import { BibtexParser, type BibtexEntry } from '@/utils/bibtexParser';
 import { TidyOptionsPanel } from './TidyOptionsPanel';
 import { type TidyOptions, getPresetOptions } from './tidyOptions';
 import { BibtexTableView } from './BibtexTableView';
-import { BibtexParser } from './BibtexParser';
-import type { BibtexEntry } from './BibtexParser';
 import './styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './BibtexViewerPlugin';
 

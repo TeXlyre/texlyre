@@ -32,6 +32,7 @@ import { collabService } from '@/services/CollabService';
 import { formatFileSize } from '@/utils/fileUtils';
 import { detectFileType } from '@/utils/fileUtils';
 import { TextDiffUtils } from '@/utils/textDiffUtils';
+import { BibtexParser, type BibtexEntry } from '@/utils/bibtexParser';
 import { TidyOptionsPanel } from '../../viewers/bibtex/TidyOptionsPanel';
 import {
   type TidyOptions,
@@ -39,8 +40,6 @@ import {
 } from
   '../../viewers/bibtex/tidyOptions';
 import { BibtexTableView } from '../../viewers/bibtex/BibtexTableView';
-import { BibtexParser } from '../../viewers/bibtex/BibtexParser';
-import type { BibtexEntry } from '../../viewers/bibtex/BibtexParser';
 import '../../viewers/bibtex/styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './BibtexCollaborativeViewerPlugin';
 
