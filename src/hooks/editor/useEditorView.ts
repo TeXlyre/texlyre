@@ -10,6 +10,7 @@ import { languages } from '@codemirror/language-data';
 import { html } from '@codemirror/lang-html';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { json } from '@codemirror/lang-json';
+import { yaml } from '@codemirror/lang-yaml';
 
 import {
     bracketMatching,
@@ -311,6 +312,8 @@ export const useEditorView = (
                 })];
             case 'json':
                 return [json()];
+            case 'yaml':
+                return [yaml()];
             case 'html':
                 return [html()];
             default:

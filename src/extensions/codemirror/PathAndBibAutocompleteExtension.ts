@@ -83,39 +83,26 @@ class AutocompleteProcessor {
 		this.currentFilePath = filePath;
 	}
 
+	// Public passthrough so external callers can refresh the bibliography cache
+	// without reaching into the handler instance directly.
+	refreshBibliographyCache() {
+		return this.bibliographyHandler.updateCache();
+	}
+
 	update(update: any) {
 	}
 
-	private async getMergedTypstCompletions(context: CompletionContext, refInfo: any): Promise<CompletionResult | null> {
-		const refLabels: Array<{ label: string; filePath: string }> = [];
-		const typstLabels = this.referenceHandler['typstLabels'];
+	private getMergedTypstCompletions(context: CompletionContext): CompletionResult | null {
+		const match = this.referenceHandler.getTypstReferenceMatch(context);
+		if (!match) return null;
 
-		for (const [filePath, labels] of typstLabels.entries()) {
-			for (const label of labels) {
-				refLabels.push({ label, filePath });
-			}
-		}
-
-		const bibCache = this.bibliographyHandler['bibliographyCache'];
-		const partial = refInfo.partial;
-
-		const filteredRefs = refLabels.filter(({ label }) =>
-			!partial || label.toLowerCase().includes(partial.toLowerCase())
-		);
-
-		const filteredCitations = bibCache.filter(entry =>
-			!partial ||
-			entry.key.toLowerCase().includes(partial.toLowerCase()) ||
-			entry.title.toLowerCase().includes(partial.toLowerCase()) ||
-			entry.authors.some(author => author.toLowerCase().includes(partial.toLowerCase()))
-		);
-
-		const refOptions = this.referenceHandler['createLabelOptions'](filteredRefs, partial);
-		const citationOptions = this.bibliographyHandler['createCitationOptions'](filteredCitations, partial);
+		const { partial, from } = match;
+		const refOptions = this.referenceHandler.getTypstLabelOptions(partial);
+		const citationOptions = this.bibliographyHandler.getCitationOptions(partial);
 
 		const mergedOptions = [
 			...refOptions.map(opt => ({ ...opt, section: 'References' })),
-			...citationOptions.map(opt => ({ ...opt, section: 'Citations' }))
+			...citationOptions.map(opt => ({ ...opt, section: 'Citations' })),
 		].sort((a, b) => {
 			const aStartsWith = a.label.toLowerCase().startsWith(partial.toLowerCase());
 			const bStartsWith = b.label.toLowerCase().startsWith(partial.toLowerCase());
@@ -126,11 +113,8 @@ class AutocompleteProcessor {
 
 		if (mergedOptions.length === 0) return null;
 
-		const { typstReferencePatterns } = await import('./autocomplete/patterns');
-		const partialStart = this.referenceHandler['getReferenceCompletionStart'](context, typstReferencePatterns);
-
 		return {
-			from: partialStart,
+			from,
 			options: mergedOptions,
 			validFor: /^[^>\s]*$/,
 		};
@@ -141,10 +125,8 @@ class AutocompleteProcessor {
 		if (refResult) return refResult;
 
 		if (isTypstFile(this.currentFilePath)) {
-			const refInfo = this.referenceHandler['findTypstReferenceCommand'](context);
-			if (refInfo && (refInfo.type as any) === 'reference-or-citation') {
-				return this.getMergedTypstCompletions(context, refInfo);
-			}
+			const merged = this.getMergedTypstCompletions(context);
+			if (merged) return merged;
 		}
 
 		const bibResult = await this.bibliographyHandler.getCompletions(context, this.currentFilePath);
@@ -203,7 +185,5 @@ export function setCurrentFilePath(view: EditorView, filePath: string) {
 }
 
 export function refreshBibliographyCache(view: EditorView) {
-	if (globalProcessor) {
-		globalProcessor['bibliographyHandler']?.updateCache();
-	}
+	globalProcessor?.refreshBibliographyCache();
 }

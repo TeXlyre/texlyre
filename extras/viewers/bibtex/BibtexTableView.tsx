@@ -1,6 +1,8 @@
 import type React from 'react';
 import { useState, useMemo, useEffect, useRef } from 'react';
-import type { BibtexEntry } from './BibtexParser';
+
+import type { BibtexEntry } from '@/utils/bibtexParser';
+
 
 interface BibtexTableViewProps {
 	entries: BibtexEntry[];

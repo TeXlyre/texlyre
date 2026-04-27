@@ -426,7 +426,7 @@ class TypstService {
                 return true;
             }
 
-            if (normalizedPath.match(/\.(png|jpg|jpeg|gif|webp|svg|pdf|bib|bibtex|cls|sty|toml|csv|json|yaml|yml|xml|html|txt|cbor)$/i)) {
+            if (normalizedPath.match(/\.(png|jpg|jpeg|gif|webp|svg|pdf|bib|bibtex|cls|sty|toml|csv|json|yml|yaml|xml|html|txt|md|markdown|cbor)$/i)) {
                 return true;
             }
 

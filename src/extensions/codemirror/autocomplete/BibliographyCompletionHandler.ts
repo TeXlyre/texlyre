@@ -3,8 +3,9 @@ import type { CompletionContext, CompletionResult } from '@codemirror/autocomple
 import type { EditorView } from '@codemirror/view';
 
 import { fileStorageService } from '../../../services/FileStorageService';
-import { BibtexParser } from '../../../../extras/viewers/bibtex/BibtexParser';
-import { isLatexFile, isTypstFile, isBibFile } from '../../../utils/fileUtils';
+import { filePathCacheService } from '../../../services/FilePathCacheService';
+import { BibtexParser } from '../../../utils/bibtexParser';
+import { isLatexFile, isTypstFile } from '../../../utils/fileUtils';
 import { citationCommandPatterns, bibtexEntryPatterns } from './patterns';
 
 interface BibliographyEntry {
@@ -38,14 +39,20 @@ export class BibliographyCompletionHandler {
         }
     }
 
+    // Returns ranked citation completion options filtered by the given partial.
+    getCitationOptions(partial: string) {
+        const filtered = this.bibliographyCache.filter(entry =>
+            !partial ||
+            entry.key.toLowerCase().includes(partial.toLowerCase()) ||
+            entry.title.toLowerCase().includes(partial.toLowerCase()) ||
+            entry.authors.some(author => author.toLowerCase().includes(partial.toLowerCase()))
+        );
+        return this.createCitationOptions(filtered, partial);
+    }
+
     private async getLocalBibliographyEntries(): Promise<BibliographyEntry[]> {
         try {
-            const allFiles = await fileStorageService.getAllFiles(true, false, false);
-            const bibFiles = allFiles.filter(file =>
-                isBibFile(file.name) &&
-                !file.isDeleted
-            );
-
+            const bibFiles = filePathCacheService.getBibliographyFiles();
             const allEntries: BibliographyEntry[] = [];
 
             for (const bibFile of bibFiles) {

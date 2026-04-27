@@ -1,7 +1,7 @@
 // src/services/TypstStatisticsService.ts
 import type { FileNode } from '../types/files';
 import { fileStorageService } from './FileStorageService';
-import { isTypstFile } from '../utils/fileUtils';
+import { isTemporaryFile, isTypstFile } from '../utils/fileUtils';
 import { cleanContent } from '../utils/fileCommentUtils';
 import type { DocumentStatistics, StatisticsOptions } from '../types/statistics';
 import { TypstCompilerEngine } from '../extensions/typst.ts/TypstCompilerEngine';
@@ -226,9 +226,9 @@ class TypstStatisticsService {
         const resourceFiles = allFiles.filter(f =>
             f.type === 'file' &&
             !f.isDeleted &&
-            !f.path.startsWith('/.texlyre_') &&
+            !isTemporaryFile(f.path) &&
             f.path !== mainFile.path &&
-            f.path.match(/\.(png|jpg|jpeg|gif|webp|svg|pdf|bib|bibtex|cls|sty|toml|csv|json|yaml|yml|xml|html|txt|cbor|typ|typst)$/i)
+            f.path.match(/\.(png|jpg|jpeg|gif|webp|svg|pdf|bib|bibtex|cls|sty|toml|csv|json|yml|yaml|xml|html|txt|md|markdown|cbor|typ|typst)$/i)
         );
 
         for (const file of resourceFiles) {

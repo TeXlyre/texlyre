@@ -30,6 +30,11 @@ export const typstCommandPatterns = [
         fileTypes: 'typst' as const,
     },
     {
+        commands: ['import'],
+        pattern: /#import\s+"/,
+        fileTypes: 'typst' as const,
+    },
+    {
         commands: ['image'],
         pattern: /\bimage\s*\(\s*"/,
         fileTypes: 'images' as const,
@@ -40,13 +45,8 @@ export const typstCommandPatterns = [
         fileTypes: 'all' as const,
     },
     {
-        commands: ['csv'],
-        pattern: /\bcsv\s*\(\s*"/,
-        fileTypes: 'data' as const,
-    },
-    {
-        commands: ['json', 'yaml', 'toml'],
-        pattern: /\b(json|yaml|toml)\s*\(\s*"/,
+        commands: ['csv', 'json', 'yaml', 'toml', 'xml', 'cbor'],
+        pattern: /\b(csv|json|yaml|toml|xml|cbor)\s*\(\s*"/,
         fileTypes: 'data' as const,
     },
     {
@@ -71,8 +71,8 @@ export const typstCitationPatterns = [
 
 export const citationCommandPatterns = [
     {
-        commands: ['cite', 'citep', 'citet', 'autocite', 'textcite', 'parencite', 'footcite', 'fullcite'],
-        pattern: /\\(cite|citep|citet|autocite|textcite|parencite|footcite|fullcite)\w*(?:\[[^\]]*\])?(?:\[[^\]]*\])?\{([^}]*)/,
+        commands: ['cite', 'citep', 'citet', 'autocite', 'textcite', 'parencite', 'footcite', 'fullcite', 'smartcite', 'supercite', 'nocite'],
+        pattern: /\\([Cc]ite|[Cc]itep|[Cc]itet|[Aa]utocite|[Tt]extcite|[Pp]arencite|[Ff]ootcite|[Ff]ullcite|smartcite|supercite|nocite)\w*(?:\[[^\]]*\])?(?:\[[^\]]*\])?\{([^}]*)/,
         type: 'citation' as const,
     },
     ...typstCitationPatterns,
@@ -80,8 +80,8 @@ export const citationCommandPatterns = [
 
 export const latexReferencePatterns = [
     {
-        commands: ['ref', 'eqref', 'pageref', 'autoref', 'nameref', 'cref', 'Cref', 'vref'],
-        pattern: /\\(ref|eqref|pageref|autoref|nameref|cref|Cref|vref)\{([^}]*)/,
+        commands: ['ref', 'eqref', 'pageref', 'autoref', 'nameref', 'cref', 'Cref', 'vref', 'Vref', 'crefrange', 'Crefrange', 'labelcref', 'vpageref'],
+        pattern: /\\(ref|eqref|pageref|autoref|nameref|cref|Cref|vref|Vref|crefrange|Crefrange|labelcref|vpageref)\*?\{([^}]*)/,
         type: 'reference' as const,
     },
 ];
