@@ -1,4 +1,3 @@
-/* extras/viewers/image/styles.css */
 .image-viewer-container {
 	display: flex;
 	flex-direction: column;
@@ -33,44 +32,15 @@
 
 .image-viewer-content {
 	flex: 1;
-	display: flex;
 	overflow: hidden;
 	position: relative;
 	background-color: var(--pico-background);
 }
 
-.image-container,
-.svg-container {
-	display: flex;
-	justify-content: center;
-	align-items: center;
+.image-scroll-area {
 	width: 100%;
 	height: 100%;
 	overflow: auto;
-	position: relative;
-}
-
-/* When auto-center = off or panning is active, pin to top-left */
-.image-container.no-center,
-.svg-container.no-center {
-	justify-content: flex-start;
-	align-items: flex-start;
-}
-
-.image-container img {
-	max-width: none;
-	max-height: none;
-	user-select: none;
-	-webkit-user-drag: none;
-}
-
-/* Panning cursor states */
-.image-viewer-content.panning {
-	cursor: grabbing !important;
-}
-
-.image-viewer-content.panning * {
-	cursor: grabbing !important;
 }
 
 .image-error-message {
@@ -105,18 +75,15 @@
 }
 
 @media (prefers-contrast: high) {
-	.control-group {
-		border-width: 2px;
-	}
 
+	.control-group,
 	.control-group button {
 		border-width: 2px;
 	}
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.control-group button,
-	.image-container img {
+	.control-group button {
 		transition: none;
 	}
 }
