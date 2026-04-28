@@ -617,7 +617,6 @@ export const useEditorView = (
         isViewOnly,
         fileName,
         editorSettingsVersion,
-        getEnabledLSPPlugins,
         enableComments,
         toolbarVisible,
     ]);
