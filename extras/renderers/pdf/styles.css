@@ -168,7 +168,7 @@
   display: flex;
   justify-content: center;
   background-color: #f5f5f5 !important;
-  padding: 10px 40px;
+  padding: 10px 0;
   min-width: min-content;
   width: 100%;
   scroll-margin-top: 56px;

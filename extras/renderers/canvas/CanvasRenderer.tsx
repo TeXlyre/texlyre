@@ -772,7 +772,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   }
 
   const isPdf = contentTypeRef.current === 'pdf';
-  const virtualWrapperWidth = maxPageWidth * scale + 80;
+  const virtualWrapperWidth = maxPageWidth;
   const topOffset = scrollView ? pageOffsets[renderRange.start - 1] || 0 : 0;
   const zoomOptions =
     getCanvasRendererSettings().find(
