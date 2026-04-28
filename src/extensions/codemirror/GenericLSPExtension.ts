@@ -3,7 +3,7 @@ import { type Extension } from '@codemirror/state';
 import { CompletionContext, CompletionResult } from '@codemirror/autocomplete';
 import { ViewPlugin, type EditorView, hoverTooltip } from '@codemirror/view';
 import type { Tooltip } from '@codemirror/view';
-import { linter, forceLinting, type Diagnostic } from '@codemirror/lint';
+import { linter, setDiagnostics, forEachDiagnostic, type Diagnostic } from '@codemirror/lint';
 
 import { genericLSPService } from '../../services/GenericLSPService';
 import type { LSPClient } from '@codemirror/lsp-client';
@@ -86,14 +86,27 @@ function createLSPDiagnosticsExtension(fileName: string): Extension {
                             to: Math.max(from, to),
                             severity: lspSeverityToCodeMirror(d.severity),
                             message: d.message,
-                            source: d.source || configId,
+                            source: d.source || genericLSPService.getConfigName(configId) || configId,
                         } satisfies Diagnostic;
                     });
 
                     diagnosticsByConfig.set(configId, mapped);
                     mergedDiagnostics = Array.from(diagnosticsByConfig.values()).flat();
 
-                    forceLinting(this.view);
+                    queueMicrotask(() => {
+                        if (!this.view.dom.isConnected) return;
+
+                        const lspSources = new Set(mergedDiagnostics.map(d => d.source).filter(Boolean));
+
+                        const preserved: Diagnostic[] = [];
+                        forEachDiagnostic(this.view.state, (d, from, to) => {
+                            if (!lspSources.has(d.source ?? '')) {
+                                preserved.push({ ...d, from, to });
+                            }
+                        });
+
+                        this.view.dispatch(setDiagnostics(this.view.state, [...preserved, ...mergedDiagnostics]));
+                    });
                 });
             }
 
@@ -162,27 +175,41 @@ function createAggregatedHoverExtension(fileName: string): Extension {
                     content = contents.value;
                 }
 
-                return content.trim();
+                const trimmed = content.trim();
+                if (!trimmed) return null;
+
+                const configId = genericLSPService.getConfigId(client);
+                const label = (configId && genericLSPService.getConfigName(configId)) || configId || 'LSP';
+                return { label, content: trimmed };
             } catch {
                 return null;
             }
         });
 
         const results = await Promise.all(hoverPromises);
-        const validResults = results.filter((r): r is string => r !== null && r !== '');
-
+        const validResults = results.filter((r): r is { label: string; content: string } => r !== null);
         if (validResults.length === 0) return null;
 
-        const uniqueResults = Array.from(new Set(validResults));
+        const seen = new Set<string>();
+        const uniqueResults = validResults.filter(r => {
+            const key = `${r.label}::${r.content}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
 
         const dom = document.createElement('div');
         dom.className = 'cm-tooltip-hover';
 
-        uniqueResults.forEach((content, i) => {
-            if (i > 0) {
-                dom.appendChild(document.createElement('hr'));
-            }
-            dom.appendChild(renderHoverContent(content));
+        uniqueResults.forEach((entry, i) => {
+            if (i > 0) dom.appendChild(document.createElement('hr'));
+
+            const header = document.createElement('div');
+            header.className = 'cm-tooltip-hover-source';
+            header.textContent = entry.label;
+            dom.appendChild(header);
+
+            dom.appendChild(renderHoverContent(entry.content));
         });
 
         return {

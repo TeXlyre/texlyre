@@ -100,6 +100,10 @@ class GenericLSPService {
         return undefined;
     }
 
+    getConfigName(configId: string): string | undefined {
+        return this.configs.get(configId)?.name;
+    }
+
     getClient(configId: string): LSPClient | null {
         return this.clients.get(configId) ?? null;
     }

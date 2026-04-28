@@ -42,17 +42,18 @@ interface ResolvedAction {
     title: string;
     edit?: WorkspaceEdit;
     command?: LspCommand;
+    client?: LSPClient;
 }
 
 function isBareCommand(item: CodeActionOrCommand): item is LspCommand {
     return 'command' in item && typeof item.command === 'string';
 }
 
-function resolveAction(item: CodeActionOrCommand): ResolvedAction {
+function resolveAction(item: CodeActionOrCommand, client?: LSPClient): ResolvedAction {
     if (isBareCommand(item)) {
-        return { title: item.title, command: item };
+        return { title: item.title, command: item, client };
     }
-    return { title: item.title, edit: item.edit, command: item.command };
+    return { title: item.title, edit: item.edit, command: item.command, client };
 }
 
 function posToOffset(doc: any, pos: { line: number; character: number }): number | null {
@@ -183,17 +184,46 @@ const codeActionField = StateField.define<CodeActionState | null>({
                     const dom = document.createElement('div');
                     dom.className = 'cm-code-actions-tooltip';
 
+                    const grouped = new Map<LSPClient, ResolvedAction[]>();
                     value.actions.forEach(action => {
-                        const button = document.createElement('button');
-                        button.className = 'cm-code-action-button';
-                        button.textContent = action.title;
-                        button.addEventListener('mousedown', (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            applyAction(action, view, value.fileUri, value.clients);
-                            view.dispatch({ effects: setCodeActions.of(null) });
+                        const key = action.client ?? (value.clients[0] as LSPClient);
+                        const list = grouped.get(key) ?? [];
+                        list.push(action);
+                        grouped.set(key, list);
+                    });
+
+                    let first = true;
+                    grouped.forEach((actions, client) => {
+                        if (!first) {
+                            dom.appendChild(document.createElement('hr'));
+                        }
+                        first = false;
+
+                        const configId = genericLSPService.getConfigId(client);
+                        const label = (configId && genericLSPService.getConfigName(configId)) || configId || 'LSP';
+
+                        const header = document.createElement('div');
+                        header.className = 'cm-code-actions-source';
+                        header.textContent = label;
+                        dom.appendChild(header);
+
+                        const buttonRow = document.createElement('div');
+                        buttonRow.className = 'cm-code-actions-row';
+
+                        actions.forEach(action => {
+                            const button = document.createElement('button');
+                            button.className = 'cm-code-action-button';
+                            button.textContent = action.title;
+                            button.addEventListener('mousedown', (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                applyAction(action, view, value.fileUri, value.clients);
+                                view.dispatch({ effects: setCodeActions.of(null) });
+                            });
+                            buttonRow.appendChild(button);
                         });
-                        dom.appendChild(button);
+
+                        dom.appendChild(buttonRow);
                     });
 
                     return { dom };
@@ -268,7 +298,7 @@ export function createCodeActionsExtension(fileName: string): Extension {
                     try {
                         const capabilities = (client as any).serverCapabilities;
                         const provider = capabilities?.codeActionProvider;
-                        if (capabilities && !provider) return [];
+                        if (capabilities && !provider) return [] as ResolvedAction[];
 
                         const advertisedKinds: string[] | undefined =
                             typeof provider === 'object' ? provider.codeActionKinds : undefined;
@@ -280,24 +310,25 @@ export function createCodeActionsExtension(fileName: string): Extension {
                             context: { diagnostics, only },
                         });
 
-                        return (result || []) as CodeActionOrCommand[];
+                        return ((result || []) as CodeActionOrCommand[])
+                            .filter(a => a.title)
+                            .map(a => resolveAction(a, client));
                     } catch {
-                        return [];
+                        return [] as ResolvedAction[];
                     }
                 });
 
                 const results = await Promise.all(actionPromises);
                 if (requestId !== this.pendingRequest) return;
 
-                const allActions = results.flat().filter(a => a.title).map(resolveAction);
-                const uniqueActions = allActions.filter(
-                    (action, index) => allActions.findIndex(a => a.title === action.title) === index,
-                );
-
-                if (uniqueActions.length === 0) {
-                    view.dispatch({ effects: setCodeActions.of(null) });
-                    return;
-                }
+                const allActions = results.flat();
+                const seen = new Set<string>();
+                const uniqueActions = allActions.filter(action => {
+                    const key = `${genericLSPService.getConfigId(action.client!) ?? ''}::${action.title}`;
+                    if (seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                });
 
                 view.dispatch({
                     effects: setCodeActions.of({ pos, actions: uniqueActions, fileUri, clients }),
