@@ -3,7 +3,7 @@ import { type Extension } from '@codemirror/state';
 import { CompletionContext, CompletionResult } from '@codemirror/autocomplete';
 import { ViewPlugin, type EditorView, hoverTooltip } from '@codemirror/view';
 import type { Tooltip } from '@codemirror/view';
-import { linter, forceLinting, type Diagnostic } from '@codemirror/lint';
+import { linter, setDiagnostics, forEachDiagnostic, type Diagnostic } from '@codemirror/lint';
 
 import { genericLSPService } from '../../services/GenericLSPService';
 import type { LSPClient } from '@codemirror/lsp-client';
@@ -59,7 +59,8 @@ function sendNotification(client: LSPClient, method: string, params: any) {
 
 function createLSPDiagnosticsExtension(fileName: string): Extension {
     const fileUri = `file:///${fileName}`;
-    let currentDiagnostics: Diagnostic[] = [];
+    const diagnosticsByConfig = new Map<string, Diagnostic[]>();
+    let mergedDiagnostics: Diagnostic[] = [];
 
     const diagnosticsPlugin = ViewPlugin.fromClass(
         class {
@@ -68,11 +69,11 @@ function createLSPDiagnosticsExtension(fileName: string): Extension {
 
             constructor(view: EditorView) {
                 this.view = view;
-                this.unsubscribe = genericLSPService.onDiagnostics((_configId, params) => {
+                this.unsubscribe = genericLSPService.onDiagnostics((configId, params) => {
                     if (params.uri !== fileUri) return;
 
                     const doc = this.view.state.doc;
-                    currentDiagnostics = (params.diagnostics || []).map((d: any) => {
+                    const mapped: Diagnostic[] = (params.diagnostics || []).map((d: any) => {
                         const fromLine = Math.min(d.range.start.line, doc.lines - 1);
                         const toLine = Math.min(d.range.end.line, doc.lines - 1);
                         const lineFrom = doc.line(fromLine + 1);
@@ -85,21 +86,39 @@ function createLSPDiagnosticsExtension(fileName: string): Extension {
                             to: Math.max(from, to),
                             severity: lspSeverityToCodeMirror(d.severity),
                             message: d.message,
-                            source: d.source || 'lsp',
+                            source: d.source || genericLSPService.getConfigName(configId) || configId,
                         } satisfies Diagnostic;
                     });
 
-                    forceLinting(this.view);
+                    diagnosticsByConfig.set(configId, mapped);
+                    mergedDiagnostics = Array.from(diagnosticsByConfig.values()).flat();
+
+                    queueMicrotask(() => {
+                        if (!this.view.dom.isConnected) return;
+
+                        const lspSources = new Set(mergedDiagnostics.map(d => d.source).filter(Boolean));
+
+                        const preserved: Diagnostic[] = [];
+                        forEachDiagnostic(this.view.state, (d, from, to) => {
+                            if (!lspSources.has(d.source ?? '')) {
+                                preserved.push({ ...d, from, to });
+                            }
+                        });
+
+                        this.view.dispatch(setDiagnostics(this.view.state, [...preserved, ...mergedDiagnostics]));
+                    });
                 });
             }
 
             destroy() {
                 this.unsubscribe();
+                diagnosticsByConfig.clear();
+                mergedDiagnostics = [];
             }
         }
     );
 
-    const diagnosticsLinter = linter(() => currentDiagnostics, { delay: 0 });
+    const diagnosticsLinter = linter(() => mergedDiagnostics, { delay: 0 });
 
     return [diagnosticsPlugin, diagnosticsLinter];
 }
@@ -131,7 +150,7 @@ function createAggregatedHoverExtension(fileName: string): Extension {
         const hoverPromises = clients.map(async client => {
             try {
                 const capabilities = (client as any).serverCapabilities;
-                if (!capabilities?.hoverProvider) return null;
+                if (capabilities && capabilities.hoverProvider === false) return null;
 
                 const result = await (client as any).request('textDocument/hover', {
                     textDocument: { uri: `file:///${fileName}` },
@@ -156,27 +175,41 @@ function createAggregatedHoverExtension(fileName: string): Extension {
                     content = contents.value;
                 }
 
-                return content.trim();
+                const trimmed = content.trim();
+                if (!trimmed) return null;
+
+                const configId = genericLSPService.getConfigId(client);
+                const label = (configId && genericLSPService.getConfigName(configId)) || configId || 'LSP';
+                return { label, content: trimmed };
             } catch {
                 return null;
             }
         });
 
         const results = await Promise.all(hoverPromises);
-        const validResults = results.filter((r): r is string => r !== null && r !== '');
-
+        const validResults = results.filter((r): r is { label: string; content: string } => r !== null);
         if (validResults.length === 0) return null;
 
-        const uniqueResults = Array.from(new Set(validResults));
+        const seen = new Set<string>();
+        const uniqueResults = validResults.filter(r => {
+            const key = `${r.label}::${r.content}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
 
         const dom = document.createElement('div');
         dom.className = 'cm-tooltip-hover';
 
-        uniqueResults.forEach((content, i) => {
-            if (i > 0) {
-                dom.appendChild(document.createElement('hr'));
-            }
-            dom.appendChild(renderHoverContent(content));
+        uniqueResults.forEach((entry, i) => {
+            if (i > 0) dom.appendChild(document.createElement('hr'));
+
+            const header = document.createElement('div');
+            header.className = 'cm-tooltip-hover-source';
+            header.textContent = entry.label;
+            dom.appendChild(header);
+
+            dom.appendChild(renderHoverContent(entry.content));
         });
 
         return {
@@ -259,8 +292,7 @@ export function getGenericLSPCompletionSources(fileName: string) {
 
             for (const client of clients) {
                 const capabilities = (client as any).serverCapabilities;
-                const completionProvider = capabilities?.completionProvider;
-                if (!completionProvider || Object.keys(completionProvider).length === 0) {
+                if (capabilities && capabilities.completionProvider === undefined) {
                     continue;
                 }
 

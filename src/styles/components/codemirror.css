@@ -596,23 +596,50 @@
    Code actions tooltip
    ============================================================ */
 
+/* ============================================================
+   Code actions tooltip
+   ============================================================ */
+
 .cm-code-actions-tooltip {
-	padding: 4px;
+	background-color: var(--pico-background);
+	border: 1px solid var(--pico-muted-border-color);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-lg);
+	color: var(--pico-color);
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+		Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+	font-size: 12px;
+	line-height: 1.4;
+	max-width: 400px;
+	padding: var(--space-sm);
+	z-index: var(--z-tooltip);
+}
+
+.cm-code-actions-source,
+.cm-tooltip-hover-source {
+	color: var(--pico-muted-color);
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	padding: var(--space-xs) var(--space-sm) 0;
+}
+
+.cm-code-actions-row {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 4px;
-	max-width: 400px;
+	gap: var(--space-xs);
+	padding: var(--space-xs) var(--space-sm);
 }
 
 .cm-code-action-button {
-	padding: 3px 10px;
-	font-size: 12px;
-	border-radius: 4px;
-	border: 1px solid var(--pico-muted-border-color);
 	background-color: var(--pico-background);
-	cursor: pointer;
+	border: 1px solid var(--pico-muted-border-color);
+	border-radius: var(--radius-xs);
 	color: var(--pico-color);
+	cursor: pointer;
+	font-size: 12px;
 	line-height: 1.4;
+	padding: 3px var(--space-sm);
 	white-space: nowrap;
 }
 
