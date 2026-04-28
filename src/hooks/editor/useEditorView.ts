@@ -4,6 +4,7 @@ import {
     defaultKeymap,
     history,
     historyKeymap,
+    historyField,
     indentWithTab,
 } from '@codemirror/commands';
 import { languages } from '@codemirror/language-data';
@@ -98,6 +99,8 @@ const classifyFileType = (fileName: string | undefined, content: string): FileTy
         isStructured: isLatex || isTypst || isBib || isMarkdown,
     };
 };
+
+const fileUndoHistoryCache = new Map<string, unknown>();
 
 export const useEditorView = (
     editorRef: React.RefObject<HTMLDivElement>,
@@ -546,7 +549,29 @@ export const useEditorView = (
         extensions.push(...buildCommentExtensions());
         extensions.push(...buildKeymapExtensions(info));
 
-        const state = EditorState.create({ doc: contentToUse, extensions });
+        const cachedUndoHistory = isEditingFile && currentFileId
+            ? fileUndoHistoryCache.get(currentFileId)
+            : undefined;
+
+        let state: EditorState;
+        if (cachedUndoHistory) {
+            try {
+                state = EditorState.fromJSON(
+                    {
+                        doc: contentToUse,
+                        selection: { ranges: [{ anchor: 0, head: 0 }], main: 0 },
+                        history: cachedUndoHistory,
+                    },
+                    { extensions },
+                    { history: historyField },
+                );
+            } catch {
+                fileUndoHistoryCache.delete(currentFileId!);
+                state = EditorState.create({ doc: contentToUse, extensions });
+            }
+        } else {
+            state = EditorState.create({ doc: contentToUse, extensions });
+        }
 
         try {
             const view = new EditorView({ state, parent: editorRef.current });
@@ -572,6 +597,10 @@ export const useEditorView = (
 
         return () => {
             if (viewRef.current) {
+                if (isEditingFile && currentFileId) {
+                    const snapshot = viewRef.current.state.toJSON({ history: historyField });
+                    fileUndoHistoryCache.set(currentFileId, snapshot.history);
+                }
                 filePathCacheService.cleanup();
                 viewRef.current.destroy();
                 viewRef.current = null;
