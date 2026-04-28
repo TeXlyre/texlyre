@@ -387,7 +387,7 @@ export const useEditorView = (
                         new CustomEvent('trigger-format', {
                             detail: {
                                 content: view.state.doc.toString(),
-                                fileType: info.fileType,
+                                contentType: info.fileType,
                                 fileId: currentFileId,
                                 documentId,
                                 view,
