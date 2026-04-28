@@ -100,7 +100,7 @@ const classifyFileType = (fileName: string | undefined, content: string): FileTy
     };
 };
 
-const fileHistoryCache = new Map<string, unknown>();
+const fileUndoHistoryCache = new Map<string, unknown>();
 
 export const useEditorView = (
     editorRef: React.RefObject<HTMLDivElement>,
@@ -549,24 +549,24 @@ export const useEditorView = (
         extensions.push(...buildCommentExtensions());
         extensions.push(...buildKeymapExtensions(info));
 
-        const cachedHistory = isEditingFile && currentFileId
-            ? fileHistoryCache.get(currentFileId)
+        const cachedUndoHistory = isEditingFile && currentFileId
+            ? fileUndoHistoryCache.get(currentFileId)
             : undefined;
 
         let state: EditorState;
-        if (cachedHistory) {
+        if (cachedUndoHistory) {
             try {
                 state = EditorState.fromJSON(
                     {
                         doc: contentToUse,
                         selection: { ranges: [{ anchor: 0, head: 0 }], main: 0 },
-                        history: cachedHistory,
+                        history: cachedUndoHistory,
                     },
                     { extensions },
                     { history: historyField },
                 );
             } catch {
-                fileHistoryCache.delete(currentFileId!);
+                fileUndoHistoryCache.delete(currentFileId!);
                 state = EditorState.create({ doc: contentToUse, extensions });
             }
         } else {
@@ -599,7 +599,7 @@ export const useEditorView = (
             if (viewRef.current) {
                 if (isEditingFile && currentFileId) {
                     const snapshot = viewRef.current.state.toJSON({ history: historyField });
-                    fileHistoryCache.set(currentFileId, snapshot.history);
+                    fileUndoHistoryCache.set(currentFileId, snapshot.history);
                 }
                 filePathCacheService.cleanup();
                 viewRef.current.destroy();
