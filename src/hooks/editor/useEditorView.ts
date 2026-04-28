@@ -32,7 +32,7 @@ import { bibtex, bibtexCompletionSource } from 'codemirror-lang-bib';
 import { latex, latexCompletionSource } from 'codemirror-lang-latex';
 import { typst } from 'codemirror-lang-typst';
 import { useEffect, useRef, useState } from 'react';
-import { yCollab } from 'y-codemirror.next';
+import { yCollab, yUndoManagerKeymap } from 'y-codemirror.next';
 import type * as Y from 'yjs';
 import { UndoManager } from 'yjs';
 
@@ -532,7 +532,12 @@ export const useEditorView = (
         if (isViewOnly) extensions.push(EditorState.readOnly.of(true));
 
         if (!isEditingFile && provider && ytextRef.current && undoManagerRef.current) {
-            extensions.push(yCollab(ytextRef.current, provider.awareness, { undoManager: undoManagerRef.current }));
+            extensions.push(
+                yCollab(ytextRef.current, provider.awareness, {
+                    undoManager: undoManagerRef.current,
+                }),
+            );
+            extensions.push(keymap.of(yUndoManagerKeymap));
         } else if (isEditingFile) {
             extensions.push(history());
             extensions.push(keymap.of(historyKeymap));
@@ -576,6 +581,7 @@ export const useEditorView = (
         editorRef,
         yDoc,
         provider,
+        undoManagerRef.current,
         isDocumentSelected,
         isEditingFile,
         textContent,
