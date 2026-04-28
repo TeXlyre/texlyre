@@ -205,8 +205,6 @@ const codeActionField = StateField.define<CodeActionState | null>({
 
 export function createCodeActionsExtension(fileName: string): Extension {
     const fileUri = `file:///${fileName}`;
-    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-    let pendingRequest = 0;
 
     const applyEditPlugin = ViewPlugin.fromClass(
         class {
@@ -223,80 +221,90 @@ export function createCodeActionsExtension(fileName: string): Extension {
         }
     );
 
-    const fetchCodeActions = async (view: EditorView) => {
-        const clients = genericLSPService.getAllClientsForFile(fileName);
-        if (clients.length === 0) {
-            view.dispatch({ effects: setCodeActions.of(null) });
-            return;
-        }
+    const requestPlugin = ViewPlugin.fromClass(
+        class {
+            private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+            private pendingRequest = 0;
 
-        const requestId = ++pendingRequest;
-        const pos = view.state.selection.main.head;
-        const diagnostics = getDiagnosticsAtPosition(view.state, pos);
+            constructor(private view: EditorView) { }
 
-        if (diagnostics.length === 0) {
-            view.dispatch({ effects: setCodeActions.of(null) });
-            return;
-        }
+            update(update: any) {
+                if (update.docChanged) {
+                    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+                    queueMicrotask(() => {
+                        update.view.dispatch({ effects: setCodeActions.of(null) });
+                    });
+                    return;
+                }
+                if (update.selectionSet) {
+                    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+                    this.debounceTimer = setTimeout(() => this.fetch(update.view), 300);
+                }
+            }
 
-        const lspPos = offsetToPos(view.state.doc, pos);
+            destroy() {
+                if (this.debounceTimer) clearTimeout(this.debounceTimer);
+            }
 
-        const actionPromises = clients.map(async client => {
-            try {
-                const capabilities = (client as any).serverCapabilities;
-                const provider = capabilities?.codeActionProvider;
-                if (!provider) return [];
+            private async fetch(view: EditorView) {
+                const clients = genericLSPService.getAllClientsForFile(fileName);
+                if (clients.length === 0) {
+                    view.dispatch({ effects: setCodeActions.of(null) });
+                    return;
+                }
 
-                const advertisedKinds: string[] | undefined =
-                    typeof provider === 'object' ? provider.codeActionKinds : undefined;
-                const only = advertisedKinds && advertisedKinds.length > 0
-                    ? advertisedKinds
-                    : [];
+                const requestId = ++this.pendingRequest;
+                const pos = view.state.selection.main.head;
+                const diagnostics = getDiagnosticsAtPosition(view.state, pos);
 
-                const result = await (client as any).request('textDocument/codeAction', {
-                    textDocument: { uri: fileUri },
-                    range: { start: lspPos, end: lspPos },
-                    context: { diagnostics, only },
+                if (diagnostics.length === 0) {
+                    view.dispatch({ effects: setCodeActions.of(null) });
+                    return;
+                }
+
+                const lspPos = offsetToPos(view.state.doc, pos);
+
+                const actionPromises = clients.map(async client => {
+                    try {
+                        const capabilities = (client as any).serverCapabilities;
+                        const provider = capabilities?.codeActionProvider;
+                        if (capabilities && !provider) return [];
+
+                        const advertisedKinds: string[] | undefined =
+                            typeof provider === 'object' ? provider.codeActionKinds : undefined;
+                        const only = advertisedKinds && advertisedKinds.length > 0 ? advertisedKinds : [];
+
+                        const result = await (client as any).request('textDocument/codeAction', {
+                            textDocument: { uri: fileUri },
+                            range: { start: lspPos, end: lspPos },
+                            context: { diagnostics, only },
+                        });
+
+                        return (result || []) as CodeActionOrCommand[];
+                    } catch {
+                        return [];
+                    }
                 });
 
-                return (result || []) as CodeActionOrCommand[];
-            } catch {
-                return [];
+                const results = await Promise.all(actionPromises);
+                if (requestId !== this.pendingRequest) return;
+
+                const allActions = results.flat().filter(a => a.title).map(resolveAction);
+                const uniqueActions = allActions.filter(
+                    (action, index) => allActions.findIndex(a => a.title === action.title) === index,
+                );
+
+                if (uniqueActions.length === 0) {
+                    view.dispatch({ effects: setCodeActions.of(null) });
+                    return;
+                }
+
+                view.dispatch({
+                    effects: setCodeActions.of({ pos, actions: uniqueActions, fileUri, clients }),
+                });
             }
-        });
-
-        const results = await Promise.all(actionPromises);
-        if (requestId !== pendingRequest) return;
-
-        const allActions = results.flat().filter(a => a.title).map(resolveAction);
-        const uniqueActions = allActions.filter((action, index) =>
-            allActions.findIndex(a => a.title === action.title) === index
-        );
-
-        if (uniqueActions.length === 0) {
-            view.dispatch({ effects: setCodeActions.of(null) });
-            return;
         }
+    );
 
-        view.dispatch({
-            effects: setCodeActions.of({ pos, actions: uniqueActions, fileUri, clients }),
-        });
-    };
-
-    const listener = EditorView.updateListener.of((update) => {
-        if (update.docChanged) {
-            if (debounceTimer) clearTimeout(debounceTimer);
-            update.view.dispatch({ effects: setCodeActions.of(null) });
-            return;
-        }
-
-        if (update.selectionSet) {
-            if (debounceTimer) clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
-                fetchCodeActions(update.view);
-            }, 300);
-        }
-    });
-
-    return [codeActionField, listener, applyEditPlugin];
+    return [codeActionField, requestPlugin, applyEditPlugin];
 }

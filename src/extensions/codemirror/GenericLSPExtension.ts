@@ -59,7 +59,8 @@ function sendNotification(client: LSPClient, method: string, params: any) {
 
 function createLSPDiagnosticsExtension(fileName: string): Extension {
     const fileUri = `file:///${fileName}`;
-    let currentDiagnostics: Diagnostic[] = [];
+    const diagnosticsByConfig = new Map<string, Diagnostic[]>();
+    let mergedDiagnostics: Diagnostic[] = [];
 
     const diagnosticsPlugin = ViewPlugin.fromClass(
         class {
@@ -68,11 +69,11 @@ function createLSPDiagnosticsExtension(fileName: string): Extension {
 
             constructor(view: EditorView) {
                 this.view = view;
-                this.unsubscribe = genericLSPService.onDiagnostics((_configId, params) => {
+                this.unsubscribe = genericLSPService.onDiagnostics((configId, params) => {
                     if (params.uri !== fileUri) return;
 
                     const doc = this.view.state.doc;
-                    currentDiagnostics = (params.diagnostics || []).map((d: any) => {
+                    const mapped: Diagnostic[] = (params.diagnostics || []).map((d: any) => {
                         const fromLine = Math.min(d.range.start.line, doc.lines - 1);
                         const toLine = Math.min(d.range.end.line, doc.lines - 1);
                         const lineFrom = doc.line(fromLine + 1);
@@ -85,9 +86,12 @@ function createLSPDiagnosticsExtension(fileName: string): Extension {
                             to: Math.max(from, to),
                             severity: lspSeverityToCodeMirror(d.severity),
                             message: d.message,
-                            source: d.source || 'lsp',
+                            source: d.source || configId,
                         } satisfies Diagnostic;
                     });
+
+                    diagnosticsByConfig.set(configId, mapped);
+                    mergedDiagnostics = Array.from(diagnosticsByConfig.values()).flat();
 
                     forceLinting(this.view);
                 });
@@ -95,11 +99,13 @@ function createLSPDiagnosticsExtension(fileName: string): Extension {
 
             destroy() {
                 this.unsubscribe();
+                diagnosticsByConfig.clear();
+                mergedDiagnostics = [];
             }
         }
     );
 
-    const diagnosticsLinter = linter(() => currentDiagnostics, { delay: 0 });
+    const diagnosticsLinter = linter(() => mergedDiagnostics, { delay: 0 });
 
     return [diagnosticsPlugin, diagnosticsLinter];
 }
@@ -131,7 +137,7 @@ function createAggregatedHoverExtension(fileName: string): Extension {
         const hoverPromises = clients.map(async client => {
             try {
                 const capabilities = (client as any).serverCapabilities;
-                if (!capabilities?.hoverProvider) return null;
+                if (capabilities && capabilities.hoverProvider === false) return null;
 
                 const result = await (client as any).request('textDocument/hover', {
                     textDocument: { uri: `file:///${fileName}` },
@@ -259,8 +265,7 @@ export function getGenericLSPCompletionSources(fileName: string) {
 
             for (const client of clients) {
                 const capabilities = (client as any).serverCapabilities;
-                const completionProvider = capabilities?.completionProvider;
-                if (!completionProvider || Object.keys(completionProvider).length === 0) {
+                if (capabilities && capabilities.completionProvider === undefined) {
                     continue;
                 }
 
