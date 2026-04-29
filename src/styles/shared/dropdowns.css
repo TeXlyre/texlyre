@@ -22,7 +22,7 @@
 	font-size: 0.9rem;
 	text-align: left;
 	transition: background-color var(--transition-normal);
-	border-bottom: 1px solid var(--accent-border);
+
 }
 
 .dropdown-item:last-child {

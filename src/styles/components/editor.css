@@ -30,30 +30,6 @@
 	color: var(--text-color);
 }
 
-.editor-toolbar {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 0;
-	border-bottom: 1px solid var(--accent-border);
-	background-color: var(--pico-secondary-background);
-}
-
-.editor-toolbar:not(:empty) {
-	padding: var(--space-sm);
-}
-
-.editor-toolbar:has(.linked-file-notice),
-.editor-toolbar:has(.unlinked-document-notice) {
-	flex-direction: column;
-	align-items: stretch;
-	gap: var(--space-sm);
-}
-
-.editor-toolbar-button {
-	margin-right: var(--space-sm);
-}
-
 .linked-file-notice {
 	display: flex;
 	align-items: center;

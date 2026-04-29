@@ -1416,11 +1416,35 @@ export const SettingsIcon: React.FC = () => (
 	</svg>
 );
 
-export const MoreIcon: React.FC = () => (
-	<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+export const MoreVerticalIcon: React.FC = () => (
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width="16"
+		height="16"
+		viewBox="0 0 16 16"
+		fill="currentColor"
+	>
 		<circle cx="8" cy="2" r="1.5" />
 		<circle cx="8" cy="8" r="1.5" />
 		<circle cx="8" cy="14" r="1.5" />
+	</svg>
+);
+
+export const MoreHorizontalIcon: React.FC = () => (
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width="16"
+		height="16"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="2"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+	>
+		<circle cx="12" cy="12" r="1" />
+		<circle cx="19" cy="12" r="1" />
+		<circle cx="5" cy="12" r="1" />
 	</svg>
 );
 

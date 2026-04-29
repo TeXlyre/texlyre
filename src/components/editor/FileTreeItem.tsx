@@ -19,7 +19,7 @@ import {
   FolderPlusIcon,
   InfoIcon,
   LinkIcon,
-  MoreIcon,
+  MoreVerticalIcon,
   MoveIcon,
   TrashIcon,
   UnlinkIcon,
@@ -297,7 +297,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
                 onSetActiveMenu(activeMenu === node.id ? null : node.id);
               }}>
 
-              <MoreIcon />
+              <MoreVerticalIcon />
             </button>
             <DropdownMenu
               targetRef={

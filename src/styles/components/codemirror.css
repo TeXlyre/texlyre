@@ -523,6 +523,42 @@
 }
 
 /* ============================================================
+   Toolbar overflow menu
+   ============================================================ */
+
+.cm-toolbar-overflow-menu {
+	min-width: min-content;
+	max-height: 40vh;
+	padding: var(--space-xs) 0;
+}
+
+.cm-toolbar-overflow-section {
+	display: flex;
+	flex-direction: column;
+}
+
+.cm-toolbar-overflow-separator {
+	height: 1px;
+	background-color: var(--accent-border);
+	margin: var(--space-xs) 0;
+}
+
+.cm-toolbar-overflow-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	flex-shrink: 0;
+	color: var(--text-color);
+}
+
+.cm-toolbar-overflow-icon svg {
+	width: 16px;
+	height: 16px;
+}
+
+/* ============================================================
    Comments
    ============================================================ */
 
@@ -591,10 +627,6 @@
 	padding: 0 !important;
 	border: none !important;
 }
-
-/* ============================================================
-   Code actions tooltip
-   ============================================================ */
 
 /* ============================================================
    Code actions tooltip
