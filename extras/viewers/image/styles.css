@@ -24,12 +24,6 @@
 	flex-wrap: wrap;
 }
 
-.control-group button:nth-child(2) {
-	min-width: 50px;
-	font-size: var(--space-sd);
-	font-weight: 600;
-}
-
 .image-viewer-content {
 	flex: 1;
 	overflow: hidden;
@@ -40,7 +34,7 @@
 .image-scroll-area {
 	width: 100%;
 	height: 100%;
-	overflow: auto;
+	overflow: hidden;
 }
 
 .image-error-message {
@@ -66,24 +60,5 @@
 	.image-controls {
 		justify-content: center;
 		flex-wrap: wrap;
-	}
-
-	.control-group {
-		flex: 1;
-		min-width: max-content;
-	}
-}
-
-@media (prefers-contrast: high) {
-
-	.control-group,
-	.control-group button {
-		border-width: 2px;
-	}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.control-group button {
-		transition: none;
 	}
 }

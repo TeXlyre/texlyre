@@ -83,7 +83,8 @@ export class OverflowMenu {
         if (this.isOpen) return;
 
         this.render();
-        document.body.appendChild(this.container);
+        const host = document.fullscreenElement ?? document.body;
+        host.appendChild(this.container);
 
         const buttonRect = this.button.getBoundingClientRect();
         this.container.style.position = 'fixed';

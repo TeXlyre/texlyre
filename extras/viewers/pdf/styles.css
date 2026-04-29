@@ -25,7 +25,6 @@
 	flex-wrap: wrap;
 }
 
-/* Special styling for page input and zoom percentage */
 .page-input-group {
 	display: flex;
 	align-items: center;
@@ -142,7 +141,6 @@
 	border-radius: 8px;
 }
 
-/* Responsive design for smaller screens */
 @media (max-width: 768px) {
 	.pdf-viewer-header {
 		flex-direction: column;
@@ -155,31 +153,24 @@
 		flex-wrap: wrap;
 	}
 
-	.control-group,
 	.page-input-group {
 		flex: 1;
 		min-width: max-content;
 	}
 }
 
-/* High contrast theme support */
 @media (prefers-contrast: high) {
 
-	.control-group,
 	.page-input-group {
 		border-width: 2px;
 	}
 
-	.control-group button,
 	.page-input-group input {
 		border-width: 2px;
 	}
 }
 
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-
-	.control-group button,
 	.pdf-page-container {
 		transition: none;
 	}
