@@ -99,6 +99,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   const lastStablePageRef = useRef<number>(1);
   const isTrackingEnabledRef = useRef<boolean>(true);
   const overlayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const renderTokensRef = useRef<Map<number, number>>(new Map());
 
   const BUFFER_PAGES = 2;
   const UPDATE_THROTTLE = 100;
@@ -119,6 +120,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
       scale,
       renderingRef,
       pendingRenderRef,
+      renderTokensRef,
     }),
     [pageMetadata, scale],
   );
@@ -573,48 +575,86 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     return maxW;
   }, [renderRange, pageMetadata]);
 
+  const anchorScrollToCurrentPage = useCallback(
+    (newScale: number) => {
+      if (!scrollView || !scrollContainerRef.current) return;
+      const container = scrollContainerRef.current;
+      const oldTop = getPageTop(currentPage);
+      const offsetWithinPage = container.scrollTop - oldTop;
+      const meta = pageMetadata.get(currentPage);
+      const oldPageHeight = (meta?.height || 842) * scale + 20;
+      const newPageHeight = (meta?.height || 842) * newScale + 20;
+      const ratio = oldPageHeight > 0 ? offsetWithinPage / oldPageHeight : 0;
+
+      requestAnimationFrame(() => {
+        if (!scrollContainerRef.current) return;
+        let acc = 0;
+        for (let i = 1; i < currentPage; i++) {
+          const m = pageMetadata.get(i);
+          acc += (m?.height || 842) * newScale + 20;
+        }
+        scrollContainerRef.current.scrollTop = acc + ratio * newPageHeight;
+      });
+    },
+    [scrollView, currentPage, pageMetadata, scale],
+  );
+
   const handleFitToggle = useCallback(() => {
     const nextMode = fitMode === 'fit-width' ? 'fit-height' : 'fit-width';
-    setFitMode(nextMode);
     const s = computeFitScale(nextMode);
+    if (s !== scale) anchorScrollToCurrentPage(s);
+    setFitMode(nextMode);
     setScale(s);
     setProperty('canvas-renderer-zoom', s);
-  }, [fitMode, computeFitScale, setProperty]);
+  }, [fitMode, scale, computeFitScale, setProperty, anchorScrollToCurrentPage]);
 
   const handleZoomIn = useCallback(() => {
-    setScale((prev) => {
-      const newScale = Math.min(prev + 0.25, 5);
-      setProperty('canvas-renderer-zoom', newScale);
-      return newScale;
-    });
-  }, [setProperty]);
+    const newScale = Math.min(scale + 0.25, 5);
+    if (newScale === scale) return;
+    anchorScrollToCurrentPage(newScale);
+    setScale(newScale);
+    setProperty('canvas-renderer-zoom', newScale);
+  }, [scale, setProperty, anchorScrollToCurrentPage]);
 
   const handleZoomOut = useCallback(() => {
-    setScale((prev) => {
-      const newScale = Math.max(prev - 0.25, 0.25);
-      setProperty('canvas-renderer-zoom', newScale);
-      return newScale;
-    });
-  }, [setProperty]);
+    const newScale = Math.max(scale - 0.25, 0.25);
+    if (newScale === scale) return;
+    anchorScrollToCurrentPage(newScale);
+    setScale(newScale);
+    setProperty('canvas-renderer-zoom', newScale);
+  }, [scale, setProperty, anchorScrollToCurrentPage]);
 
   const handleZoomChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       const value = event.target.value;
       if (value === 'custom') return;
       const newScale = parseFloat(value) / 100;
+      anchorScrollToCurrentPage(newScale);
       setScale(newScale);
       setProperty('canvas-renderer-zoom', newScale);
     },
-    [setProperty],
+    [setProperty, anchorScrollToCurrentPage],
   );
 
   const handleToggleView = useCallback(() => {
-    setScrollView((prev) => {
-      const newScrollView = !prev;
-      setProperty('canvas-renderer-scroll-view', newScrollView);
-      return newScrollView;
-    });
-  }, [setProperty]);
+    const newScrollView = !scrollView;
+    const targetPage = currentPage;
+    setScrollView(newScrollView);
+    setProperty('canvas-renderer-scroll-view', newScrollView);
+
+    if (newScrollView) {
+      isTrackingEnabledRef.current = false;
+      requestAnimationFrame(() => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = getPageTop(targetPage);
+        }
+        lastStablePageRef.current = targetPage;
+        setTimeout(() => {
+          isTrackingEnabledRef.current = true;
+        }, 200);
+      });
+    }
+  }, [scrollView, currentPage, setProperty, getPageTop]);
 
   const handleToggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {

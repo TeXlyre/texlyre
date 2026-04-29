@@ -478,39 +478,65 @@ const PdfRenderer: React.FC<RendererProps> = ({
     [currentPage],
   );
 
+  const anchorScrollToCurrentPage = useCallback(
+    (newScale: number) => {
+      if (!scrollView || !scrollContainerRef.current) return;
+      const container = scrollContainerRef.current;
+      const oldTop = getPageTop(currentPage);
+      const offsetWithinPage = container.scrollTop - oldTop;
+      const baseHeight = pageHeights.current.get(currentPage) || 842;
+      const oldPageHeight = baseHeight * scale + 20;
+      const newPageHeight = baseHeight * newScale + 20;
+      const ratio = oldPageHeight > 0 ? offsetWithinPage / oldPageHeight : 0;
+
+      requestAnimationFrame(() => {
+        if (!scrollContainerRef.current) return;
+        let acc = 0;
+        for (let i = 1; i < currentPage; i++) {
+          const h = pageHeights.current.get(i) || 842;
+          acc += h * newScale + 20;
+        }
+        scrollContainerRef.current.scrollTop = acc + ratio * newPageHeight;
+      });
+    },
+    [scrollView, currentPage, scale, getPageTop],
+  );
+
   const handleFitToggle = useCallback(() => {
     const nextMode = fitMode === 'fit-width' ? 'fit-height' : 'fit-width';
-    setFitMode(nextMode);
     const s = computeFitScale(nextMode);
+    if (s !== scale) anchorScrollToCurrentPage(s);
+    setFitMode(nextMode);
     setScale(s);
     setProperty('pdf-renderer-zoom', s);
-  }, [fitMode, computeFitScale, setProperty]);
+  }, [fitMode, scale, computeFitScale, setProperty, anchorScrollToCurrentPage]);
 
   const handleZoomIn = useCallback(() => {
-    setScale((prev) => {
-      const newScale = Math.min(prev + 0.25, 5);
-      setProperty('pdf-renderer-zoom', newScale);
-      return newScale;
-    });
-  }, [setProperty]);
+    const newScale = Math.min(scale + 0.25, 5);
+    if (newScale === scale) return;
+    anchorScrollToCurrentPage(newScale);
+    setScale(newScale);
+    setProperty('pdf-renderer-zoom', newScale);
+  }, [scale, setProperty, anchorScrollToCurrentPage]);
 
   const handleZoomOut = useCallback(() => {
-    setScale((prev) => {
-      const newScale = Math.max(prev - 0.25, 0.25);
-      setProperty('pdf-renderer-zoom', newScale);
-      return newScale;
-    });
-  }, [setProperty]);
+    const newScale = Math.max(scale - 0.25, 0.25);
+    if (newScale === scale) return;
+    anchorScrollToCurrentPage(newScale);
+    setScale(newScale);
+    setProperty('pdf-renderer-zoom', newScale);
+  }, [scale, setProperty, anchorScrollToCurrentPage]);
 
   const handleZoomChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       const value = event.target.value;
       if (value === 'custom') return;
       const newScale = parseFloat(value) / 100;
+      anchorScrollToCurrentPage(newScale);
       setScale(newScale);
       setProperty('pdf-renderer-zoom', newScale);
     },
-    [setProperty],
+    [setProperty, anchorScrollToCurrentPage],
   );
 
   const handlePageClick = useCallback(
@@ -536,12 +562,10 @@ const PdfRenderer: React.FC<RendererProps> = ({
   );
 
   const handleToggleView = useCallback(() => {
-    setScrollView((prev) => {
-      const newScrollView = !prev;
-      setProperty('pdf-renderer-scroll-view', newScrollView);
-      return newScrollView;
-    });
-  }, [setProperty]);
+    const newScrollView = !scrollView;
+    setScrollView(newScrollView);
+    setProperty('pdf-renderer-scroll-view', newScrollView);
+  }, [scrollView, setProperty]);
 
   const handleToggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
