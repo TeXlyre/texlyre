@@ -43,10 +43,14 @@ export interface SvgRenderContext {
     scale: number;
     renderingRef: RefObject<Set<number>>;
     pendingRenderRef: RefObject<Set<number>>;
+    renderTokensRef: RefObject<Map<number, number>>;
 }
 
 export function renderSvgPageToCanvas(ctx: SvgRenderContext, pageNumber: number) {
-    const { svgPagesRef, canvasRefs, pageMetadata, scale, renderingRef, pendingRenderRef } = ctx;
+    const { svgPagesRef, canvasRefs, pageMetadata, scale, renderingRef, pendingRenderRef, renderTokensRef } = ctx;
+
+    const token = (renderTokensRef.current.get(pageNumber) || 0) + 1;
+    renderTokensRef.current.set(pageNumber, token);
 
     if (renderingRef.current.has(pageNumber)) {
         pendingRenderRef.current.add(pageNumber);
@@ -74,7 +78,6 @@ export function renderSvgPageToCanvas(ctx: SvgRenderContext, pageNumber: number)
     const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
     const scaledWidth = width * scale;
     const scaledHeight = height * scale;
-
     const newCanvasWidth = Math.floor(scaledWidth * pixelRatio);
     const newCanvasHeight = Math.floor(scaledHeight * pixelRatio);
 
@@ -90,14 +93,19 @@ export function renderSvgPageToCanvas(ctx: SvgRenderContext, pageNumber: number)
     const url = URL.createObjectURL(blob);
 
     img.onload = () => {
+        URL.revokeObjectURL(url);
+        renderingRef.current.delete(pageNumber);
+
+        if (renderTokensRef.current.get(pageNumber) !== token) {
+            pendingRenderRef.current.delete(pageNumber);
+            return;
+        }
+
         canvasCtx.setTransform(1, 0, 0, 1, 0, 0);
         canvasCtx.scale(pixelRatio, pixelRatio);
         canvasCtx.fillStyle = 'white';
         canvasCtx.fillRect(0, 0, scaledWidth, scaledHeight);
         canvasCtx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
-
-        URL.revokeObjectURL(url);
-        renderingRef.current.delete(pageNumber);
 
         if (pendingRenderRef.current.has(pageNumber)) {
             pendingRenderRef.current.delete(pageNumber);
