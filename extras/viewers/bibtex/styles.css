@@ -546,7 +546,6 @@
 	font-style: italic;
 }
 
-/* Media Queries */
 @media (max-width: 768px) {
 	.bibtex-viewer-header {
 		flex-direction: column;
@@ -557,11 +556,6 @@
 	.bibtex-controls {
 		justify-content: center;
 		flex-wrap: wrap;
-	}
-
-	.control-group {
-		flex: 1;
-		min-width: max-content;
 	}
 
 	.bibtex-sidebar {
@@ -585,11 +579,7 @@
 }
 
 @media (prefers-contrast: high) {
-	.control-group {
-		border-width: 2px;
-	}
 
-	.control-group button,
 	.tidy-button,
 	.reset-button {
 		border-width: 2px;
@@ -598,7 +588,6 @@
 
 @media (prefers-reduced-motion: reduce) {
 
-	.control-group button,
 	.tidy-button,
 	.reset-button,
 	.option-item input,

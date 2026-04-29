@@ -106,6 +106,12 @@
 	border-radius: 6px;
 	background-color: var(--accent-background);
 	border: 1px solid var(--accent-border, #444);
+
+
+}
+
+.control-group:empty {
+	display: none;
 }
 
 .control-group button {
@@ -140,6 +146,13 @@
 	cursor: not-allowed;
 }
 
+
+.control-group button:nth-child(2) {
+	min-width: 50px;
+	font-size: var(--space-sd);
+	font-weight: 600;
+}
+
 .plugin-controls {
 	display: flex;
 	gap: 0.1rem;
@@ -163,5 +176,19 @@
 		flex: 1;
 		min-width: max-content;
 		justify-content: center;
+	}
+}
+
+@media (prefers-contrast: high) {
+
+	.control-group,
+	.control-group button {
+		border-width: 2px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.control-group button {
+		transition: none;
 	}
 }

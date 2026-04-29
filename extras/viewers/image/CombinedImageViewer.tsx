@@ -120,19 +120,52 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 
   const srcDoc = useMemo(() => {
     if (!innerHtml) return '';
-    const align = autoCenter ? 'center' : 'flex-start';
+
+    const align = autoCenter ? 'safe center' : 'flex-start';
+
     return `<!DOCTYPE html>
 <html><head><style>
-  html, body { margin: 0; padding: 0; background: transparent;
-    display: flex; justify-content: ${align}; align-items: ${align};
-    width: max-content; height: max-content; min-width: 100%; min-height: 100%;
-    overflow: visible; }
-  .fx-outer { display: inline-block; transform-origin: top left; }
-  .fx-inner { display: inline-block; transform-origin: center; }
-  .fx-inner img { display: block; image-rendering: ${imageRenderingStyle};
-    user-select: none; -webkit-user-drag: none; }
-  .fx-inner > svg { display: block; }
-  .fx-inner > svg:not([width]):not([height]) { width: 512px; height: 512px; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+  }
+
+  body {
+    display: flex;
+    justify-content: ${align};
+    align-items: ${align};
+  }
+
+  .fx-outer {
+    display: inline-block;
+    transform-origin: center top;
+    flex-shrink: 0;
+  }
+
+  .fx-inner {
+    display: inline-block;
+    transform-origin: center center;
+  }
+
+  .fx-inner img {
+    display: block;
+    image-rendering: ${imageRenderingStyle};
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .fx-inner > svg {
+    display: block;
+  }
+
+  .fx-inner > svg:not([width]):not([height]) {
+    width: min-content;
+    height: min-content;
+  }
 </style></head>
 <body><div class="fx-outer"><div class="fx-inner">${innerHtml}</div></div></body></html>`;
   }, [innerHtml, autoCenter, imageRenderingStyle]);
@@ -144,20 +177,23 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
     const sync = () => {
       const doc = iframe.contentDocument;
       if (!doc?.body) return;
+
       const outer = doc.querySelector('.fx-outer') as HTMLElement | null;
       const inner = doc.querySelector('.fx-inner') as HTMLElement | null;
       if (!outer || !inner) return;
 
-      outer.style.transform = `translate(${transform.translateX}px, ${transform.translateY}px) scale(${transform.scale})`;
+      outer.style.transformOrigin = 'center top';
+      inner.style.transformOrigin = 'center center';
+
+      outer.style.transform =
+        `translate(${transform.translateX}px, ${transform.translateY}px) scale(${transform.scale})`;
+
       outer.style.filter = enableFilters
         ? `brightness(${transform.brightness}%) contrast(${transform.contrast}%)`
         : 'none';
-      inner.style.transform = `rotate(${transform.rotation}deg) scale(${transform.flipH ? -1 : 1}, ${transform.flipV ? -1 : 1})`;
 
-      const w = Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth);
-      const h = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight);
-      iframe.style.width = `${w}px`;
-      iframe.style.height = `${h}px`;
+      inner.style.transform =
+        `rotate(${transform.rotation}deg) scale(${transform.flipH ? -1 : 1}, ${transform.flipV ? -1 : 1})`;
     };
 
     const handleLoad = () => {
@@ -165,13 +201,8 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
       const doc = iframe.contentDocument;
       if (!doc) return;
 
-      const observer = new ResizeObserver(sync);
-      if (doc.body) observer.observe(doc.body);
-
       const img = doc.querySelector('img');
       if (img && !img.complete) img.addEventListener('load', sync, { once: true });
-
-      (iframe as any)._cleanup = () => observer.disconnect();
     };
 
     iframe.addEventListener('load', handleLoad);
@@ -180,7 +211,6 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
 
     return () => {
       iframe.removeEventListener('load', handleLoad);
-      (iframe as any)._cleanup?.();
     };
   }, [transform, enableFilters, srcDoc]);
 
@@ -382,6 +412,8 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
               style={{
                 border: 'none',
                 display: 'block',
+                width: '100%',
+                height: '100%',
                 pointerEvents: panningActive ? 'none' : 'auto'
               }} />
           </div>

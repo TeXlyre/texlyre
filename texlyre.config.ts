@@ -122,7 +122,7 @@ const config: TexlyreConfig = {
             settings: {
                 themePlugin: 'texlyre-mobile-theme',
                 imageViewerEnablePanning: false,
-                imageViewerAutoCenter: false,
+                imageViewerAutoCenter: true,
             },
         },
         local: {
