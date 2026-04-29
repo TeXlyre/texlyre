@@ -58,6 +58,14 @@ const RENDERING_BY_QUALITY = {
   high: 'auto'
 } as const;
 
+const readScrollbarColors = () => {
+  const styles = getComputedStyle(document.documentElement);
+  return {
+    thumb: styles.getPropertyValue('--pico-secondary').trim() || '#555',
+    thumbHover: styles.getPropertyValue('--pico-primary').trim() || '#777'
+  };
+};
+
 const CombinedImageViewer: React.FC<ViewerProps> = ({
   content,
   mimeType,
@@ -82,6 +90,8 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
   const [panningActive, setPanningActive] = useState(enablePanning);
   const [isPanning, setIsPanning] = useState(false);
 
+
+  const [scrollbarColors, setScrollbarColors] = useState(readScrollbarColors);
   const isSvg = mimeType === 'image/svg+xml' || fileName.toLowerCase().endsWith('.svg');
   const panStart = useRef({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -118,57 +128,85 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
     ? sanitizedSvg
     : imageSrc ? `<img src="${imageSrc}" alt="${fileName}" draggable="false" />` : '';
 
+  useEffect(() => {
+    const update = () => setScrollbarColors(readScrollbarColors());
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'data-theme-mode']
+    });
+    const media = window.matchMedia('(prefers-color-scheme: light)');
+    media.addEventListener('change', update);
+    return () => {
+      observer.disconnect();
+      media.removeEventListener('change', update);
+    };
+  }, []);
+
   const srcDoc = useMemo(() => {
     if (!innerHtml) return '';
 
     const align = autoCenter ? 'safe center' : 'flex-start';
 
     return `<!DOCTYPE html>
-<html><head><style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    background: transparent;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-  }
+      <html><head><style>
+        html, body {
+          margin: 0;
+          padding: 0;
+          background: transparent;
+          width: 100%;
+          height: 100%;
+          overflow: auto;
+          scrollbar-width: thin;
+          scrollbar-color: ${scrollbarColors.thumb} transparent;
+        }
 
-  body {
-    display: flex;
-    justify-content: ${align};
-    align-items: ${align};
-  }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-thumb {
+          background-color: ${scrollbarColors.thumb};
+          border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background-color: ${scrollbarColors.thumbHover};
+        }
 
-  .fx-outer {
-    display: inline-block;
-    transform-origin: center top;
-    flex-shrink: 0;
-  }
+        body {
+          display: flex;
+          justify-content: ${align};
+          align-items: ${align};
+        }
 
-  .fx-inner {
-    display: inline-block;
-    transform-origin: center center;
-  }
+        .fx-outer {
+          display: inline-block;
+          transform-origin: center top;
+          flex-shrink: 0;
+        }
 
-  .fx-inner img {
-    display: block;
-    image-rendering: ${imageRenderingStyle};
-    user-select: none;
-    -webkit-user-drag: none;
-  }
+        .fx-inner {
+          display: inline-block;
+          transform-origin: center center;
+        }
 
-  .fx-inner > svg {
-    display: block;
-  }
+        .fx-inner img {
+          display: block;
+          image-rendering: ${imageRenderingStyle};
+          user-select: none;
+          -webkit-user-drag: none;
+        }
 
-  .fx-inner > svg:not([width]):not([height]) {
-    width: min-content;
-    height: min-content;
-  }
-</style></head>
-<body><div class="fx-outer"><div class="fx-inner">${innerHtml}</div></div></body></html>`;
-  }, [innerHtml, autoCenter, imageRenderingStyle]);
+        .fx-inner > svg {
+          display: block;
+        }
+
+        .fx-inner > svg:not([width]):not([height]) {
+          width: min-content;
+          height: min-content;
+        }
+      </style></head>
+      <body><div class="fx-outer"><div class="fx-inner">${innerHtml}
+      </div></div>
+      </body></html>`;
+  }, [innerHtml, autoCenter, imageRenderingStyle, scrollbarColors]);
 
   useEffect(() => {
     const iframe = iframeRef.current;
