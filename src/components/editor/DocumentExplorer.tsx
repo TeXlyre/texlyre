@@ -12,7 +12,7 @@ import {
   EditIcon,
   FileTextIcon,
   InfoIcon,
-  MoreIcon,
+  MoreVerticalIcon,
   PlusIcon,
   SyncIcon
 } from
@@ -263,7 +263,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
                       setActiveMenu(activeMenu === doc.id ? null : doc.id);
                     }}>
 
-                    <MoreIcon />
+                    <MoreVerticalIcon />
                   </button>
                   <DropdownMenu
                     targetRef={
