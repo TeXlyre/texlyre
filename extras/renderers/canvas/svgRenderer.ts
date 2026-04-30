@@ -10,6 +10,10 @@ function getWorker(): Worker {
     return workerInstance;
 }
 
+export function invalidateSvgOverlayCache(container: HTMLDivElement): void {
+    svgOverlayScaleCache.delete(container);
+}
+
 export function parseSvgPages(svgBuffer: ArrayBuffer): Promise<{
     pages: Map<number, string>;
     metadata: Map<number, { width: number; height: number }>;
@@ -140,22 +144,25 @@ export function renderSvgOverlay(
     container.style.width = `${scaledWidth}px`;
     container.style.height = `${scaledHeight}px`;
 
-    const scaled = textLayerSvg
-        .replace(/width="[^"]*"/, `width="${scaledWidth}"`)
-        .replace(/height="[^"]*"/, `height="${scaledHeight}"`);
+    const shadow = container.shadowRoot ?? container.attachShadow({ mode: 'open' });
 
-    container.innerHTML = scaled;
+    const doc = new DOMParser().parseFromString(textLayerSvg, 'image/svg+xml');
+    const svg = doc.documentElement as unknown as SVGSVGElement;
 
-    const svg = container.querySelector('svg');
-    if (svg) {
-        svg.style.width = `${scaledWidth}px`;
-        svg.style.height = `${scaledHeight}px`;
-        svg.style.pointerEvents = 'none';
-        svg.querySelectorAll('text, [data-text]').forEach((el) => {
-            (el as HTMLElement).style.pointerEvents = 'auto';
-            (el as HTMLElement).style.cursor = 'text';
-        });
+    if (!svg.hasAttribute('viewBox')) {
+        svg.setAttribute('viewBox', `0 0 ${pageWidth} ${pageHeight}`);
     }
+    svg.setAttribute('width', String(scaledWidth));
+    svg.setAttribute('height', String(scaledHeight));
+    svg.setAttribute('preserveAspectRatio', 'xMinYMin meet');
+    svg.style.pointerEvents = 'none';
+
+    svg.querySelectorAll('text, [data-text]').forEach((el) => {
+        (el as HTMLElement).style.pointerEvents = 'auto';
+        (el as HTMLElement).style.cursor = 'text';
+    });
+
+    shadow.replaceChildren(svg);
 
     svgOverlayScaleCache.set(container, scale);
 }

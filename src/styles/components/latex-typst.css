@@ -151,7 +151,7 @@ embed {
 	position: relative;
 }
 
-.pdf-window-toggle {
+.popout-viewer-toggle {
 	padding-left: var(--space-ss);
 	padding-right: var(--space-ss);
 	background: var(--pico-secondary);
@@ -159,7 +159,7 @@ embed {
 	color: var(--pico-color);
 }
 
-.pdf-window-toggle.active {
+.popout-viewer-toggle.active {
 	background: var(--pico-primary);
 	color: var(--pico-primary-inverse);
 }

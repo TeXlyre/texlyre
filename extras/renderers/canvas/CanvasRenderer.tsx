@@ -32,6 +32,7 @@ import {
   parseSvgPages,
   renderSvgPageToCanvas,
   renderSvgOverlay,
+  invalidateSvgOverlayCache,
   type SvgRenderContext,
 } from './svgRenderer';
 import {
@@ -39,6 +40,7 @@ import {
   renderPdfPageToCanvas,
   renderTextLayer,
   renderAnnotationLayer,
+  invalidatePdfOverlayCaches,
   clearPdfCaches,
   type PdfRenderContext,
 } from './pdfRenderer';
@@ -380,6 +382,14 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 
       clearPdfCaches();
 
+      for (const el of textLayerRefs.current.values()) {
+        invalidateSvgOverlayCache(el);
+        invalidatePdfOverlayCaches(el);
+      }
+      for (const el of annotationLayerRefs.current.values()) {
+        invalidatePdfOverlayCaches(el);
+      }
+
       try {
         if (isPdf) {
           const { pdfDoc, metadata } = await parsePdfPages(buffer);
@@ -395,15 +405,13 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 
         setIsLoading(false);
         setError(null);
-
-        requestAnimationFrame(() => renderVisiblePages());
       } catch (err) {
         console.error('[CanvasRenderer] Failed to parse content:', err);
         setError(`Failed to parse content: ${err}`);
         setIsLoading(false);
       }
     },
-    [renderVisiblePages],
+    [],
   );
 
   useImperativeHandle(
@@ -491,6 +499,11 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     if (scrollView) calculateVisibleRange();
   }, [scrollView, numPages, scale, calculateVisibleRange]);
 
+  useEffect(() => {
+    if (numPages === 0 || pageMetadata.size === 0) return;
+    renderVisiblePages();
+  }, [numPages, pageMetadata, renderVisiblePages]);
+
   const handlePreviousPage = useCallback(() => {
     const targetPage = Math.max(currentPage - 1, 1);
     lastStablePageRef.current = targetPage;
@@ -559,9 +572,9 @@ const CanvasRenderer: React.FC<RendererProps> = ({
       const pageHeight = meta?.height || 842;
 
       if (mode === 'fit-width') {
-        return Math.max(0.25, Math.min(5, (containerWidth - 40) / pageWidth));
+        return Math.max(0.25, Math.min(5, (containerWidth - 60) / pageWidth));
       }
-      return Math.max(0.25, Math.min(5, (containerHeight - 40) / pageHeight));
+      return Math.max(0.25, Math.min(5, (containerHeight - 70) / pageHeight));
     },
     [currentPage, pageMetadata],
   );
@@ -706,12 +719,21 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const fs = !!document.fullscreenElement;
+      setIsFullscreen(fs);
+      requestAnimationFrame(() => {
+        const s = computeFitScale(fitMode);
+        if (s !== scale) {
+          anchorScrollToCurrentPage(s);
+          setScale(s);
+          setProperty('canvas-renderer-zoom', s);
+        }
+      });
     };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () =>
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
+  }, [fitMode, scale, computeFitScale, anchorScrollToCurrentPage, setProperty]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -1026,6 +1048,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                 onClick={(e) => handlePageClick(currentPage, e)}
               >
                 <canvas
+                  key={`canvas-${currentPage}`}
                   ref={setCanvasRef(currentPage)}
                   className="canvas-page-canvas"
                   style={{
@@ -1034,10 +1057,15 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                   }}
                 />
                 {canvasRendererTextSelection && (
-                  <div ref={setTextLayerRef(currentPage)} className="textLayer" />
+                  <div
+                    key={`text-${currentPage}`}
+                    ref={setTextLayerRef(currentPage)}
+                    className="textLayer"
+                  />
                 )}
                 {isPdf && canvasRendererAnnotations && (
                   <div
+                    key={`annot-${currentPage}`}
                     ref={setAnnotationLayerRef(currentPage)}
                     className="annotationLayer"
                   />

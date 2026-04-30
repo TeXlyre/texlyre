@@ -67,7 +67,7 @@ export function useRegisterTypstSettings() {
             subcategory: t('Typst'),
             type: 'checkbox',
             label: t('Show compilation notifications'),
-            description: t('Display notifications for Typst compilation activities'),
+            description: t('Display notifications for Typst compilation activities (PDF only)'),
             defaultValue: true
         });
 

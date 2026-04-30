@@ -3,7 +3,7 @@ import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
-import PdfWindowToggleButton from './PopoutViewerToggleButton';
+import PopoutViewerToggleButton from './PopoutViewerToggleButton';
 import PositionedDropdown from '../common/PositionedDropdown';
 import { usePersistentState } from '../../hooks/usePersistentState';
 import { useCollab } from '../../hooks/useCollab';
@@ -17,7 +17,7 @@ import type { FileNode } from '../../types/files';
 import type { TypstOutputFormat } from '../../types/typst';
 import { isTypstFile, isTemporaryFile } from '../../utils/fileUtils';
 import { fileStorageService } from '../../services/FileStorageService';
-import { OptionsIcon, ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon } from '../common/Icons';
+import { OptionsIcon, ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon, ResetIcon } from '../common/Icons';
 
 interface TypstCompileButtonProps {
   dropdownKey: string;
@@ -46,32 +46,43 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
   shouldNavigateOnCompile = false,
   useSharedSettings = false
 }) => {
-  const { isCompiling, compileDocument, stopCompilation, clearCache } = useTypst();
+  const {
+    isCompiling,
+    compileDocument,
+    stopCompilation,
+    clearCache,
+    currentFormat,
+  } = useTypst();
   const { selectedFileId, getFile, fileTree } = useFileTree();
   const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
   const { getSetting } = useSettings();
-  const { getProperty, setProperty, registerProperty } = useProperties();
+  const { getProperty, setProperty, registerProperty, unregisterProperty } = useProperties();
   const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
-  const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
   const [availableTypstFiles, setAvailableTypstFiles] = useState<string[]>([]);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [isDropdownOpen, setIsDropdownOpen] = usePersistentState(dropdownKey, false);
   const [isPdfOptionsOpen, setIsPdfOptionsOpen] = usePersistentState(`${dropdownKey}-pdf`, false);
   const propertiesRegistered = useRef(false);
-  const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 
   const projectId = fileStorageService.getCurrentProjectId() || undefined;
 
+  const settingFormat = getSetting('typst-default-format')?.value as TypstOutputFormat ?? 'pdf';
+
+  const propMainFile = getProperty('typst-main-file', { scope: 'project', projectId }) as string | undefined;
+  const propFormat = getProperty('typst-output-format', { scope: 'project', projectId }) as TypstOutputFormat | undefined;
+  const propPdfStandard = getProperty('typst-pdf-standard', { scope: 'project', projectId }) as string | undefined;
+  const propPdfTags = getProperty('typst-pdf-tags', { scope: 'project', projectId }) as boolean | undefined;
+
   const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
-  const effectiveMainFile = projectMainFile || userSelectedMainFile || autoMainFile;
   const projectFormat = useSharedSettings ? doc?.projectMetadata?.typstOutputFormat : undefined;
-  const [localFormat, setLocalFormat] = useState<TypstOutputFormat>('pdf');
-  const [localPdfOptions, setLocalPdfOptions] = useState<TypstPdfOptions>({
-    pdfStandard: '"1.7"',
-    pdfTags: true
-  });
-  const effectiveFormat = projectFormat || localFormat;
+
+  const effectiveMainFile = projectMainFile || propMainFile || autoMainFile;
+  const effectiveFormat = projectFormat || propFormat || currentFormat || settingFormat;
+  const localPdfOptions: TypstPdfOptions = {
+    pdfStandard: propPdfStandard ?? '"1.7"',
+    pdfTags: propPdfTags ?? true,
+  };
   const effectiveAutoCompileOnSave = useSharedSettings ?
     doc?.projectMetadata?.typstAutoCompileOnSave ?? false :
     false;
@@ -108,32 +119,6 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
       defaultValue: true
     });
   }, [registerProperty]);
-
-  useEffect(() => {
-    if (propertiesLoaded) return;
-
-    const storedMainFile = getProperty('typst-main-file', { scope: 'project', projectId });
-    const storedFormat = getProperty('typst-output-format', { scope: 'project', projectId });
-    const storedPdfStandard = getProperty('typst-pdf-standard', { scope: 'project', projectId });
-    const storedPdfTags = getProperty('typst-pdf-tags', { scope: 'project', projectId });
-
-    if (storedMainFile !== undefined) {
-      setUserSelectedMainFile(storedMainFile as string | undefined);
-    }
-
-    if (storedFormat !== undefined) {
-      setLocalFormat(storedFormat as TypstOutputFormat);
-    }
-
-    if (storedPdfStandard !== undefined || storedPdfTags !== undefined) {
-      setLocalPdfOptions({
-        pdfStandard: storedPdfStandard as string || '"1.7"',
-        pdfTags: storedPdfTags !== undefined ? Boolean(storedPdfTags) : true
-      });
-    }
-
-    setPropertiesLoaded(true);
-  }, [getProperty, propertiesLoaded]);
 
   useEffect(() => {
     const findTypstFiles = (nodes: FileNode[]): string[] => {
@@ -255,10 +240,18 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     onExpandTypstOutput,
     linkedFileInfo,
     doc?.projectMetadata?.typstPdfOptions,
-    localPdfOptions]
+    localPdfOptions.pdfStandard,
+    localPdfOptions.pdfTags]
   );
 
-  const shouldNavigateToMain = async (mainFilePath: string): Promise<boolean> => {
+  const handleResetProperties = () => {
+    unregisterProperty('typst-main-file', { scope: 'project', projectId });
+    unregisterProperty('typst-output-format', { scope: 'project', projectId });
+    unregisterProperty('typst-pdf-standard', { scope: 'project', projectId });
+    unregisterProperty('typst-pdf-tags', { scope: 'project', projectId });
+  };
+
+  const shouldNavigateToMain = async (): Promise<boolean> => {
     const navigationSetting = getSetting('typst-auto-navigate-to-main')?.value as string ?? 'conditional';
 
     if (navigationSetting === 'never') {
@@ -299,7 +292,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
         onExpandTypstOutput();
       }
 
-      const shouldNavigate = await shouldNavigateToMain(effectiveMainFile);
+      const shouldNavigate = await shouldNavigateToMain();
 
       if (shouldNavigateOnCompile && shouldNavigate) {
         if (linkedFileInfo?.filePath === effectiveMainFile && onNavigateToLinkedFile) {
@@ -339,7 +332,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
       onExpandTypstOutput();
     }
 
-    const shouldNavigate = await shouldNavigateToMain(effectiveMainFile);
+    const shouldNavigate = await shouldNavigateToMain();
 
     if (shouldNavigateOnCompile && shouldNavigate) {
       if (linkedFileInfo?.filePath === effectiveMainFile && onNavigateToLinkedFile) {
@@ -384,7 +377,6 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
       });
     } else {
       const newMainFile = filePath === 'auto' ? undefined : filePath;
-      setUserSelectedMainFile(newMainFile);
       setProperty('typst-main-file', newMainFile, { scope: 'project', projectId });
     }
   };
@@ -397,7 +389,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
         d.projectMetadata = { name: '', description: '' };
       }
       if (checked) {
-        d.projectMetadata.mainFile = userSelectedMainFile || autoMainFile;
+        d.projectMetadata.mainFile = propMainFile || autoMainFile;
       } else {
         delete d.projectMetadata.mainFile;
       }
@@ -465,10 +457,11 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
           {isCompiling ? <StopIcon /> : <PlayIcon />}
         </button>
 
-        <PdfWindowToggleButton
-          className="pdf-window-button"
+        <PopoutViewerToggleButton
+          className="popout-viewer-button"
           projectId={projectId || 'default'}
-          title={t('Open PDF in new window')} />
+          title={t('Open output in new window')}
+        />
 
         <button
           className="typst-button dropdown-toggle"
@@ -483,7 +476,16 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
         triggerElement={dropdownRef.current?.querySelector('.compile-button-group') as HTMLElement}
         className="typst-dropdown">
         <div className="dropdown-section">
-          <div className="dropdown-title">{t('Main File:')}</div>
+          <div className="format-selector-header">
+            <div className="dropdown-title">{t('Main File:')}</div>
+            <button
+              className="pdf-options-toggle"
+              onClick={handleResetProperties}
+              title={t('Reset to global settings')}
+              disabled={isCompiling}>
+              <ResetIcon />
+            </button>
+          </div>
           <div className="dropdown-value" title={effectiveMainFile}>
             {getDisplayName(effectiveMainFile)}
             {projectMainFile && <span className="shared-indicator">{t('(shared)')}</span>}
@@ -493,7 +495,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
           <div className="dropdown-section">
             <div className="dropdown-label">{t('Select main file:')}</div>
             <select
-              value={projectMainFile || userSelectedMainFile || 'auto'}
+              value={projectMainFile || propMainFile || 'auto'}
               onChange={(e) => handleMainFileChange(e.target.value)}
               className="dropdown-select"
               disabled={isCompiling}>
@@ -533,7 +535,6 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                     d.projectMetadata.typstOutputFormat = format;
                   });
                 } else {
-                  setLocalFormat(format);
                   setProperty('typst-output-format', format, { scope: 'project', projectId });
                 }
                 if (format !== 'pdf') {
@@ -578,8 +579,6 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                         d.projectMetadata.typstPdfOptions.pdfStandard = e.target.value;
                       });
                     } else {
-                      const newOptions = { ...localPdfOptions, pdfStandard: e.target.value };
-                      setLocalPdfOptions(newOptions);
                       setProperty('typst-pdf-standard', e.target.value, { scope: 'project', projectId });
                     }
                   }}
@@ -640,8 +639,6 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                         d.projectMetadata.typstPdfOptions.pdfTags = e.target.checked;
                       });
                     } else {
-                      const newOptions = { ...localPdfOptions, pdfTags: e.target.checked };
-                      setLocalPdfOptions(newOptions);
                       setProperty('typst-pdf-tags', e.target.checked, { scope: 'project', projectId });
                     }
                   }}
@@ -651,8 +648,8 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
               </label>
             </div>
           }
-
-          {useSharedSettings &&
+          {/* TODO (fabawi): disabled for now as it conflicts with the output setting from tabs*/}
+          {/* {useSharedSettings &&
             <label className="dropdown-checkbox">
               <input
                 type="checkbox"
@@ -661,7 +658,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                 disabled={isCompiling} />
               {t('Share with collaborators')}
             </label>
-          }
+          } */}
         </div>
 
         <div className="dropdown-section">

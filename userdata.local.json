@@ -1,12 +1,12 @@
 {
-  "version": "1.2.0",
+  "version": "1.2.1",
   "settings": {
     "bibtex-viewer-auto-tidy": false,
     "bibtex-viewer-tidy-options": "standard",
-    "canvas-renderer-annotations": false,
+    "canvas-renderer-annotations": true,
     "canvas-renderer-enable": true,
-    "canvas-renderer-initial-zoom": "200",
-    "canvas-renderer-text-selection": false,
+    "canvas-renderer-initial-zoom": "100",
+    "canvas-renderer-text-selection": true,
     "collab-auto-reconnect": false,
     "collab-awareness-timeout": 30,
     "collab-provider-type": "webrtc",
@@ -35,13 +35,14 @@
     "image-viewer-enable-panning": true,
     "image-viewer-quality": "high",
     "latex-engine": "pdftex",
+    "latex-default-format": "pdf",
     "latex-store-cache": true,
     "latex-store-working-directory": false,
     "latex-texlive-endpoint": "http://localhost:5004",
     "latex-busytex-endpoint": "http://localhost:8070",
     "pdf-renderer-annotations": true,
     "pdf-renderer-enable": true,
-    "pdf-renderer-initial-zoom": "200",
+    "pdf-renderer-initial-zoom": "100",
     "pdf-renderer-text-selection": true,
     "pdf-viewer-auto-scale": true,
     "pdf-viewer-rendering-quality": "high",
@@ -50,7 +51,8 @@
     "templates-api-url": "https://texlyre.github.io/texlyre-templates/api/templates.json",
     "theme-plugin": "texlyre-wide-theme",
     "theme-variant": "dark",
-    "typst-auto-compile-on-open": false
+    "typst-auto-compile-on-open": false,
+    "typst-default-format": "canvas"
   },
   "properties": {
     "latex-output-collapsed:global": true,

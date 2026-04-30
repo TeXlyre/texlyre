@@ -14,7 +14,7 @@ import {
   fileStorageService
 } from
   '../../services/FileStorageService';
-import { pdfWindowService } from '../../services/PdfWindowService';
+import { popoutViewerService } from '../../services/PopoutViewerService';
 import type { Document } from '../../types/documents';
 import type { FileNode } from '../../types/files';
 import type { Project } from '../../types/projects';
@@ -1214,7 +1214,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
               selectedDocId={selectedDocId}
               documents={documents}
               onNavigateToLinkedFile={handleNavigateToLinkedFile}
-              onExpandLatexOutput={pdfWindowService.isWindowOpen() ? undefined : handleLatexOutputExpand}
+              onExpandLatexOutput={popoutViewerService.isWindowOpen() ? undefined : handleLatexOutputExpand}
               linkedFileInfo={linkedFileInfo} />
 
           </ResizablePanel>
@@ -1236,7 +1236,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
               selectedDocId={selectedDocId}
               documents={documents}
               onNavigateToLinkedFile={handleNavigateToLinkedFile}
-              onExpandTypstOutput={handleTypstOutputExpand}
+              onExpandTypstOutput={popoutViewerService.isWindowOpen() ? undefined : handleTypstOutputExpand}
               linkedFileInfo={linkedFileInfo} />
 
           </ResizablePanel>

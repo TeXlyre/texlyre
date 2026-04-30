@@ -25,7 +25,6 @@ export interface TypstContextType {
     compiledCanvas: Uint8Array | null;
     compileLog: string;
     currentFormat: TypstOutputFormat;
-    setCurrentFormat: (format: TypstOutputFormat) => void;
     compileDocument: (mainFileName: string, format?: TypstOutputFormat, pdfOptions?: TypstPdfOptions) => Promise<void>;
     stopCompilation: () => void;
     toggleOutputView: () => void;
