@@ -579,7 +579,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
             <button
               className="pdf-options-toggle"
               onClick={handleResetProperties}
-              title={t('Reset to follow global settings')}
+              title={t('Reset to global settings')}
               disabled={isChangingEngine || isCompiling}>
               <ResetIcon />
             </button>

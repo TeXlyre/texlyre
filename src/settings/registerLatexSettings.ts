@@ -161,7 +161,7 @@ export function useRegisterLatexSettings() {
             subcategory: t('LaTeX'),
             type: 'checkbox',
             label: t('Show compilation notifications'),
-            description: t('Display notifications for LaTeX compilation activities'),
+            description: t('Display notifications for LaTeX compilation activities (PDF only)'),
             defaultValue: initialNotifications,
         });
     }, [registerSetting, getSetting]);

@@ -46,7 +46,7 @@ const config: TexlyreConfig = {
 
     // overwrite priority is default < local < mobile for corresponding configs
     userdata: {
-        version: '1.2.0',
+        version: '1.2.1',
         default: {
             settings: {
                 bibtexViewerAutoTidy: false,
@@ -59,7 +59,7 @@ const config: TexlyreConfig = {
                 collabAwarenessTimeout: 30,
                 collabProviderType: 'webrtc',
                 collabSignalingServers: 'wss://ywebrtc.texlyre.org',
-                editorAutoSaveDelay: 500,
+                editorAutoSaveDelay: 1000,
                 editorAutoSaveEnable: true,
                 editorFontFamily: 'monospace',
                 editorFontSize: 'lg',
