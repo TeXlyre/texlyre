@@ -204,9 +204,10 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     typstService.clearCache();
   };
 
-  const handleSetCurrentFormat = (format: TypstOutputFormat) => {
+  const handleSetCurrentFormat = useCallback((format: TypstOutputFormat) => {
+    if (format === currentFormat) return;
     updateSetting('typst-default-format', format);
-  };
+  }, [currentFormat, updateSetting]);
 
   return (
     <TypstContext.Provider

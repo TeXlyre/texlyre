@@ -46,7 +46,7 @@ const config: TexlyreConfig = {
 
     // overwrite priority is default < local < mobile for corresponding configs
     userdata: {
-        version: '1.2.2',
+        version: '1.2.1',
         default: {
             settings: {
                 bibtexViewerAutoTidy: false,

@@ -1,4 +1,3 @@
-// src/contexts/LaTeXContext.tsx
 import { t } from '@/i18n';
 import type React from 'react';
 import {
@@ -34,6 +33,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
   const [compiledCanvas, setCompiledCanvas] = useState<Uint8Array | null>(null);
   const [compileLog, setCompileLog] = useState<string>('');
   const [currentView, setCurrentView] = useState<'log' | 'output'>('log');
+  const [logIndicator, setLogIndicator] = useState<'idle' | 'success' | 'error'>('idle');
   const [activeCompiler, setActiveCompiler] = useState<string | null>(null);
 
   const latexEngine =
@@ -50,8 +50,6 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     getSetting('latex-busytex-endpoint')?.value as string ?? 'http://texlive2026.localhost:8082';
   const busyTeXBundles =
     getSetting('latex-busytex-bundles')?.value as string ?? 'recommended';
-  const latexNotifications =
-    getSetting('latex-notifications')?.value as boolean ?? true;
 
   useEffect(() => {
     const handleCompilerActive = (event: CustomEvent) => {
@@ -77,23 +75,17 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     busyTeXBundles
   ]);
 
-  const handleSetLatexEngine = async (engine: LaTeXEngine): Promise<void> => {
-    if (engine === latexEngine) return;
-    updateSetting('latex-engine', engine);
-  };
-
-  const handleSetCurrentFormat = (format: LaTeXOutputFormat) => {
-    if (format === currentFormat) return;
-    updateSetting('latex-default-format', format);
-  };
-
   const getProjectName = (): string => {
-    if (document.title && document.title !== 'TeXlyre') return document.title;
+    if (document.title && document.title !== 'TeXlyre') {
+      return document.title;
+    }
+
     const hash = window.location.hash;
     if (hash.includes('yjs:')) {
       const projectId = hash.split('yjs:')[1].split('&')[0];
       return `Project ${projectId.substring(0, 8)}`;
     }
+
     return 'LaTeX Project';
   };
 
@@ -101,15 +93,14 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     mainFileName: string,
     format: LaTeXOutputFormat = currentFormat
   ): Promise<void> => {
-    try {
-      if (format !== currentFormat) {
-        updateSetting('latex-default-format', format);
-      }
+    if (format !== currentFormat) {
+      updateSetting('latex-default-format', format);
+    }
 
-      if (latexService.getCurrentEngineType() !== latexEngine) {
-        await latexService.setEngine(latexEngine);
-      } else if (!latexService.isReady()) {
-        await latexService.initialize(latexEngine);
+    try {
+      const engineToUse = latexService.getCurrentEngineType();
+      if (!latexService.isReady()) {
+        await latexService.initialize(engineToUse);
       }
     } finally {
       setIsInitializing(false);
@@ -119,11 +110,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     setCompileError(null);
     setActiveCompiler('latex');
 
-    if (format === 'canvas-pdf') {
-      setCompiledPdf(null);
-    } else {
-      setCompiledCanvas(null);
-    }
+    setCompiledPdf(null);
+    setCompiledCanvas(null);
 
     try {
       const result = await latexService.compileLaTeX(mainFileName, fileTree, format);
@@ -134,17 +122,27 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
           case 'pdf':
             setCompiledPdf(result.pdf);
             setCurrentView('output');
+            setLogIndicator('success');
             const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx|latex)$/i, '.pdf') || 'output.pdf';
-            pdfWindowService.sendPdfUpdate(result.pdf, fileName, getProjectName());
+            const projectName = getProjectName();
+
+            pdfWindowService.sendPdfUpdate(
+              result.pdf,
+              fileName,
+              projectName
+            );
             break;
           case 'canvas-pdf':
             setCompiledCanvas(result.pdf);
             setCurrentView('output');
+            setLogIndicator('success');
             break;
         }
       } else {
         setCompileError(t('Compilation failed. Check the log in the main window.'));
         if (format === 'pdf') setCurrentView('log');
+        setLogIndicator('error');
+
         pdfWindowService.sendCompileResult(result.status, result.log);
       }
 
@@ -152,6 +150,8 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     } catch (error) {
       setCompileError(error instanceof Error ? error.message : t('Unknown error'));
       setCurrentView('log');
+      setLogIndicator('error');
+
       pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
     } finally {
       setIsCompiling(false);
@@ -182,71 +182,6 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       setHasAutoCompiled(true);
     }
   }, [getSetting, hasAutoCompiled, latexEngine]);
-
-  const clearCache = async (): Promise<void> => {
-    try {
-      await latexService.clearCacheDirectories();
-      await refreshFileTree();
-    } catch (error) {
-      console.error('Failed to clear cache:', error);
-      setCompileError('Failed to clear cache');
-    }
-  };
-
-  const compileWithClearCache = async (mainFileName: string): Promise<void> => {
-    try {
-      if (latexService.getCurrentEngineType() !== latexEngine) {
-        await latexService.setEngine(latexEngine);
-      } else if (!latexService.isReady()) {
-        await latexService.initialize(latexEngine);
-      }
-    } finally {
-      setIsInitializing(false);
-    }
-
-    const format = currentFormat;
-    setIsCompiling(true);
-    setCompileError(null);
-    setActiveCompiler('latex');
-
-    if (format === 'canvas-pdf') {
-      setCompiledPdf(null);
-    } else {
-      setCompiledCanvas(null);
-    }
-
-    try {
-      const result = await latexService.clearCacheAndCompile(mainFileName, fileTree, format);
-
-      setCompileLog(result.log);
-      if (result.status === 0 && result.pdf) {
-        switch (format) {
-          case 'pdf':
-            setCompiledPdf(result.pdf);
-            setCurrentView('output');
-            const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx|latex)$/i, '.pdf') || 'output.pdf';
-            pdfWindowService.sendPdfUpdate(result.pdf, fileName, getProjectName());
-            break;
-          case 'canvas-pdf':
-            setCompiledCanvas(result.pdf);
-            setCurrentView('output');
-            break;
-        }
-      } else {
-        setCompileError(t('Compilation failed. Check the log in the main window.'));
-        if (format === 'pdf') setCurrentView('log');
-        pdfWindowService.sendCompileResult(result.status, result.log);
-      }
-
-      await refreshFileTree();
-    } catch (error) {
-      setCompileError(error instanceof Error ? error.message : t('Unknown error'));
-      setCurrentView('log');
-      pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
-    } finally {
-      setIsCompiling(false);
-    }
-  };
 
   const stopCompilation = () => {
     if (isCompiling && latexService.isCompiling()) {
@@ -279,6 +214,95 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     setCurrentView(currentView === 'log' ? 'output' : 'log');
   };
 
+  const clearCache = async (): Promise<void> => {
+    try {
+      await latexService.clearCacheDirectories();
+      await refreshFileTree();
+    } catch (error) {
+      console.error('Failed to clear cache:', error);
+      setCompileError('Failed to clear cache');
+    }
+  };
+
+  const compileWithClearCache = async (
+    mainFileName: string,
+    format: LaTeXOutputFormat = currentFormat
+  ): Promise<void> => {
+    if (format !== currentFormat) {
+      updateSetting('latex-default-format', format);
+    }
+
+    try {
+      const engineToUse = latexService.getCurrentEngineType();
+      if (!latexService.isReady()) {
+        await latexService.initialize(engineToUse);
+      }
+    } finally {
+      setIsInitializing(false);
+    }
+
+    setIsCompiling(true);
+    setCompileError(null);
+    setActiveCompiler('latex');
+
+    setCompiledPdf(null);
+    setCompiledCanvas(null);
+
+    try {
+      const result = await latexService.clearCacheAndCompile(mainFileName, fileTree, format);
+
+      setCompileLog(result.log);
+      if (result.status === 0 && result.pdf) {
+        switch (format) {
+          case 'pdf':
+            setCompiledPdf(result.pdf);
+            setCurrentView('output');
+            setLogIndicator('success');
+            const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx|latex)$/i, '.pdf') || 'output.pdf';
+            const projectName = getProjectName();
+
+            pdfWindowService.sendPdfUpdate(
+              result.pdf,
+              fileName,
+              projectName
+            );
+            break;
+          case 'canvas-pdf':
+            setCompiledCanvas(result.pdf);
+            setCurrentView('output');
+            setLogIndicator('success');
+            break;
+        }
+      } else {
+        setCompileError(t('Compilation failed. Check the log in the main window.'));
+        if (format === 'pdf') setCurrentView('log');
+        setLogIndicator('error');
+
+        pdfWindowService.sendCompileResult(result.status, result.log);
+      }
+
+      await refreshFileTree();
+    } catch (error) {
+      setCompileError(error instanceof Error ? error.message : t('Unknown error'));
+      setCurrentView('log');
+      setLogIndicator('error');
+
+      pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
+    } finally {
+      setIsCompiling(false);
+    }
+  };
+
+  const handleSetLatexEngine = useCallback(async (engine: LaTeXEngine): Promise<void> => {
+    if (engine === latexEngine) return;
+    updateSetting('latex-engine', engine);
+  }, [latexEngine, updateSetting]);
+
+  const handleSetCurrentFormat = useCallback((format: LaTeXOutputFormat) => {
+    if (format === currentFormat) return;
+    updateSetting('latex-default-format', format);
+  }, [currentFormat, updateSetting]);
+
   return (
     <LaTeXContext.Provider
       value={{
@@ -291,13 +315,13 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
         compiledPdf,
         compiledCanvas,
         compileLog,
+        currentFormat,
+        setCurrentFormat: handleSetCurrentFormat,
         compileDocument,
         stopCompilation,
         toggleOutputView,
         currentView,
-        currentFormat,
-        setCurrentFormat: handleSetCurrentFormat,
-        logIndicator: compileError ? 'error' : (currentView === 'output' ? 'success' : 'idle'),
+        logIndicator,
         latexEngine,
         setLatexEngine: handleSetLatexEngine,
         clearCache,

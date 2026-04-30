@@ -17,7 +17,7 @@ import type { FileNode } from '../../types/files';
 import type { TypstOutputFormat } from '../../types/typst';
 import { isTypstFile, isTemporaryFile } from '../../utils/fileUtils';
 import { fileStorageService } from '../../services/FileStorageService';
-import { OptionsIcon, ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon } from '../common/Icons';
+import { OptionsIcon, ChevronDownIcon, ClearCompileIcon, PlayIcon, StopIcon, TrashIcon, ResetIcon } from '../common/Icons';
 
 interface TypstCompileButtonProps {
   dropdownKey: string;
@@ -46,11 +46,18 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
   shouldNavigateOnCompile = false,
   useSharedSettings = false
 }) => {
-  const { isCompiling, compileDocument, stopCompilation, clearCache } = useTypst();
+  const {
+    isCompiling,
+    compileDocument,
+    stopCompilation,
+    clearCache,
+    currentFormat,
+    setCurrentFormat,
+  } = useTypst();
   const { selectedFileId, getFile, fileTree } = useFileTree();
   const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
   const { getSetting } = useSettings();
-  const { getProperty, setProperty, registerProperty } = useProperties();
+  const { getProperty, setProperty, registerProperty, unregisterProperty } = useProperties();
   const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
   const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
   const [availableTypstFiles, setAvailableTypstFiles] = useState<string[]>([]);
@@ -66,12 +73,11 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
   const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
   const effectiveMainFile = projectMainFile || userSelectedMainFile || autoMainFile;
   const projectFormat = useSharedSettings ? doc?.projectMetadata?.typstOutputFormat : undefined;
-  const [localFormat, setLocalFormat] = useState<TypstOutputFormat>('pdf');
   const [localPdfOptions, setLocalPdfOptions] = useState<TypstPdfOptions>({
     pdfStandard: '"1.7"',
     pdfTags: true
   });
-  const effectiveFormat = projectFormat || localFormat;
+  const effectiveFormat = projectFormat || currentFormat;
   const effectiveAutoCompileOnSave = useSharedSettings ?
     doc?.projectMetadata?.typstAutoCompileOnSave ?? false :
     false;
@@ -122,7 +128,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     }
 
     if (storedFormat !== undefined) {
-      setLocalFormat(storedFormat as TypstOutputFormat);
+      setCurrentFormat(storedFormat as TypstOutputFormat);
     }
 
     if (storedPdfStandard !== undefined || storedPdfTags !== undefined) {
@@ -133,7 +139,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     }
 
     setPropertiesLoaded(true);
-  }, [getProperty, propertiesLoaded]);
+  }, [getProperty, propertiesLoaded, setCurrentFormat]);
 
   useEffect(() => {
     const findTypstFiles = (nodes: FileNode[]): string[] => {
@@ -258,7 +264,18 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     localPdfOptions]
   );
 
-  const shouldNavigateToMain = async (mainFilePath: string): Promise<boolean> => {
+  const handleResetProperties = () => {
+    unregisterProperty('typst-main-file', { scope: 'project', projectId });
+    unregisterProperty('typst-output-format', { scope: 'project', projectId });
+    unregisterProperty('typst-pdf-standard', { scope: 'project', projectId });
+    unregisterProperty('typst-pdf-tags', { scope: 'project', projectId });
+    setUserSelectedMainFile(undefined);
+    setLocalPdfOptions({ pdfStandard: '"1.7"', pdfTags: true });
+    setCurrentFormat(getSetting('typst-default-format')?.value as TypstOutputFormat ?? 'pdf');
+    setPropertiesLoaded(false);
+  };
+
+  const shouldNavigateToMain = async (): Promise<boolean> => {
     const navigationSetting = getSetting('typst-auto-navigate-to-main')?.value as string ?? 'conditional';
 
     if (navigationSetting === 'never') {
@@ -299,7 +316,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
         onExpandTypstOutput();
       }
 
-      const shouldNavigate = await shouldNavigateToMain(effectiveMainFile);
+      const shouldNavigate = await shouldNavigateToMain();
 
       if (shouldNavigateOnCompile && shouldNavigate) {
         if (linkedFileInfo?.filePath === effectiveMainFile && onNavigateToLinkedFile) {
@@ -339,7 +356,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
       onExpandTypstOutput();
     }
 
-    const shouldNavigate = await shouldNavigateToMain(effectiveMainFile);
+    const shouldNavigate = await shouldNavigateToMain();
 
     if (shouldNavigateOnCompile && shouldNavigate) {
       if (linkedFileInfo?.filePath === effectiveMainFile && onNavigateToLinkedFile) {
@@ -465,10 +482,12 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
           {isCompiling ? <StopIcon /> : <PlayIcon />}
         </button>
 
-        <PdfWindowToggleButton
-          className="pdf-window-button"
-          projectId={projectId || 'default'}
-          title={t('Open PDF in new window')} />
+        {effectiveFormat === 'pdf' && (
+          <PdfWindowToggleButton
+            className="pdf-window-button"
+            projectId={projectId || 'default'}
+            title={t('Open PDF in new window')} />
+        )}
 
         <button
           className="typst-button dropdown-toggle"
@@ -483,7 +502,16 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
         triggerElement={dropdownRef.current?.querySelector('.compile-button-group') as HTMLElement}
         className="typst-dropdown">
         <div className="dropdown-section">
-          <div className="dropdown-title">{t('Main File:')}</div>
+          <div className="format-selector-header">
+            <div className="dropdown-title">{t('Main File:')}</div>
+            <button
+              className="pdf-options-toggle"
+              onClick={handleResetProperties}
+              title={t('Reset to follow global settings')}
+              disabled={isCompiling}>
+              <ResetIcon />
+            </button>
+          </div>
           <div className="dropdown-value" title={effectiveMainFile}>
             {getDisplayName(effectiveMainFile)}
             {projectMainFile && <span className="shared-indicator">{t('(shared)')}</span>}
@@ -533,7 +561,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                     d.projectMetadata.typstOutputFormat = format;
                   });
                 } else {
-                  setLocalFormat(format);
+                  setCurrentFormat(format);
                   setProperty('typst-output-format', format, { scope: 'project', projectId });
                 }
                 if (format !== 'pdf') {

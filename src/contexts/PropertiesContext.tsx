@@ -29,7 +29,10 @@ export interface PropertiesContextType {
 		projectId?: string;
 	}) => void;
 	registerProperty: (property: Property) => void;
-	unregisterProperty: (id: string) => void;
+	unregisterProperty: (id: string, options?: {
+		scope?: 'global' | 'project';
+		projectId?: string;
+	}) => void;
 	getPropertiesByCategory: (
 		category: string,
 		subcategory?: string,
@@ -246,9 +249,33 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 		});
 	}, [loadStoredValue]);
 
-	const unregisterProperty = useCallback((id: string) => {
-		setProperties((prev) => prev.filter((p) => p.id !== id));
-	}, []);
+	const unregisterProperty = useCallback((id: string, options?: {
+		scope?: 'global' | 'project';
+		projectId?: string;
+	}) => {
+		const propertyId = options
+			? getPropertyId(id, options.scope || 'global', options.projectId)
+			: id;
+
+		if (localStoragePropertiesRef.current) {
+			delete localStoragePropertiesRef.current[propertyId];
+		}
+
+		setProperties((prev) => prev.filter((p) => p.id !== propertyId && p.id !== id));
+
+		try {
+			const storageKey = getStorageKey();
+			const currentStored = localStorage.getItem(storageKey);
+			const currentVersion = currentStored ? JSON.parse(currentStored)._version : undefined;
+
+			localStorage.setItem(storageKey, JSON.stringify({
+				...localStoragePropertiesRef.current,
+				_version: currentVersion,
+			}));
+		} catch (error) {
+			console.error('Error removing property from localStorage:', error);
+		}
+	}, [getPropertyId, getStorageKey]);
 
 	const getPropertiesByCategory = useCallback(
 		(category: string, subcategory?: string) => {

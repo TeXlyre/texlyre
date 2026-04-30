@@ -186,13 +186,8 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
     (format: LaTeXOutputFormat) => {
       if (currentFormat !== format) {
         setCurrentFormat(format);
-        setProperty('latex-output-format', format);
 
-        if (
-          selectedDocId &&
-          linkedFileInfo &&
-          isLatexFile(linkedFileInfo.filePath)
-        ) {
+        if (selectedDocId && linkedFileInfo && isLatexFile(linkedFileInfo.filePath)) {
           compileDocument(linkedFileInfo.filePath, format);
         } else if (selectedFileId) {
           getFile(selectedFileId).then((file) => {
@@ -203,16 +198,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
         }
       }
     },
-    [
-      currentFormat,
-      setCurrentFormat,
-      setProperty,
-      compileDocument,
-      selectedDocId,
-      linkedFileInfo,
-      selectedFileId,
-      getFile,
-    ],
+    [currentFormat, setCurrentFormat, compileDocument, selectedDocId, linkedFileInfo, selectedFileId, getFile],
   );
 
   const handleLocationClick = useCallback(

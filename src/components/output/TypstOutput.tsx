@@ -169,8 +169,6 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
   const handleTabSwitch = useCallback((format: TypstOutputFormat) => {
     if (currentFormat !== format) {
       setCurrentFormat(format);
-      setProperty('typst-output-format', format);
-
       if (selectedDocId && linkedFileInfo && isTypstFile(linkedFileInfo.filePath)) {
         compileDocument(linkedFileInfo.filePath, format);
       } else if (selectedFileId) {
