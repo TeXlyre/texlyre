@@ -52,7 +52,6 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
     toggleOutputView,
     logIndicator,
     currentFormat,
-    setCurrentFormat,
     compileDocument,
   } = useLaTeX();
 
@@ -69,16 +68,20 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
   const { getSetting } = useSettings();
   const { getProperty, setProperty, registerProperty } = useProperties();
   const propertiesRegistered = useRef(false);
-  const propertiesLoaded = useRef(false);
 
   const projectId = fileStorageService.getCurrentProjectId() || undefined;
 
   const [visualizerHeight, setVisualizerHeight] = useState(300);
   const [visualizerCollapsed, setVisualizerCollapsed] = useState(false);
   const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
-  const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
 
-  const effectiveMainFile = userSelectedMainFile || autoMainFile;
+  const settingFormat = getSetting('latex-default-format')?.value as LaTeXOutputFormat ?? 'pdf';
+
+  const propMainFile = getProperty('latex-main-file', { scope: 'project', projectId }) as string | undefined;
+  const propFormat = getProperty('latex-output-format', { scope: 'project', projectId }) as LaTeXOutputFormat | undefined;
+
+  const effectiveMainFile = propMainFile || autoMainFile;
+  const effectiveFormat = propFormat || currentFormat || settingFormat;
 
   const useEnhancedRenderer = getSetting('pdf-renderer-enable')?.value ?? true;
   const loggerPlugin = pluginRegistry.getLoggerForType('latex');
@@ -128,29 +131,6 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
       defaultValue: 'pdf',
     });
   }, [registerProperty]);
-
-  useEffect(() => {
-    if (propertiesLoaded.current) return;
-    propertiesLoaded.current = true;
-
-    const storedMainFile = getProperty('latex-main-file', {
-      scope: 'project',
-      projectId,
-    });
-
-    const storedFormat = getProperty('latex-output-format', {
-      scope: 'project',
-      projectId,
-    });
-
-    if (storedMainFile !== undefined) {
-      setUserSelectedMainFile(storedMainFile as string | undefined);
-    }
-
-    if (storedFormat !== undefined) {
-      setCurrentFormat(storedFormat as LaTeXOutputFormat);
-    }
-  }, [getProperty, projectId, setCurrentFormat]);
 
   useEffect(() => {
     const findTexFiles = (nodes: FileNode[]): string[] => {
@@ -236,12 +216,12 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
   useEffect(() => {
     if (
       compiledCanvas &&
-      currentFormat === 'canvas-pdf' &&
+      effectiveFormat === 'canvas-pdf' &&
       canvasControllerRef.current?.updateContent
     ) {
       canvasControllerRef.current.updateContent(compiledCanvas);
     }
-  }, [compiledCanvas, currentFormat]);
+  }, [compiledCanvas, effectiveFormat]);
 
   const handleVisualizerResize = (height: number) => {
     setVisualizerHeight(height);
@@ -333,9 +313,8 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 
   const handleTabSwitch = useCallback(
     async (format: LaTeXOutputFormat) => {
-      if (currentFormat === format) return;
+      if (effectiveFormat === format) return;
 
-      setCurrentFormat(format);
       setProperty('latex-output-format', format, {
         scope: 'project',
         projectId,
@@ -348,8 +327,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
       }
     },
     [
-      currentFormat,
-      setCurrentFormat,
+      effectiveFormat,
       setProperty,
       projectId,
       resolveCompileTarget,
@@ -395,7 +373,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
   const outputViewerContent = useMemo(() => {
     if (currentView !== 'output') return null;
 
-    if (currentFormat === 'pdf' && compiledPdf) {
+    if (effectiveFormat === 'pdf' && compiledPdf) {
       return (
         <div className="pdf-viewer">
           {pdfRendererPlugin && useEnhancedRenderer ? (
@@ -424,7 +402,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
       );
     }
 
-    if (currentFormat === 'canvas-pdf') {
+    if (effectiveFormat === 'canvas-pdf') {
       const canvasRenderer = pluginRegistry.getRendererForOutput(
         'canvas',
         'canvas-renderer',
@@ -454,7 +432,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
     return null;
   }, [
     currentView,
-    currentFormat,
+    effectiveFormat,
     compiledPdf,
     compiledCanvas,
     pdfRendererPlugin,
@@ -483,7 +461,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
           {currentView === 'output' && (
             <>
               <button
-                className={`tab-button ${currentView === 'output' && currentFormat === 'pdf' ? 'active' : ''
+                className={`tab-button ${currentView === 'output' && effectiveFormat === 'pdf' ? 'active' : ''
                   }`}
                 onClick={() => handleTabSwitch('pdf')}
               >
@@ -491,7 +469,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
               </button>
 
               <button
-                className={`tab-button ${currentView === 'output' && currentFormat === 'canvas-pdf'
+                className={`tab-button ${currentView === 'output' && effectiveFormat === 'canvas-pdf'
                   ? 'active'
                   : ''
                   }`}

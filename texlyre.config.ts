@@ -46,7 +46,7 @@ const config: TexlyreConfig = {
 
     // overwrite priority is default < local < mobile for corresponding configs
     userdata: {
-        version: '1.2.1',
+        version: '1.2.0',
         default: {
             settings: {
                 bibtexViewerAutoTidy: false,
@@ -83,7 +83,7 @@ const config: TexlyreConfig = {
                 imageViewerEnablePanning: true,
                 imageViewerQuality: 'high',
                 latexEngine: 'pdftex',
-                latexDefaultFormat: 'canvas-pdf',
+                latexDefaultFormat: 'pdf',  // 'canvas-pdf'
                 latexStoreCache: true,
                 latexStoreWorkingDirectory: false,
                 latexTexliveEndpoint: 'https://texlive.texlyre.org',

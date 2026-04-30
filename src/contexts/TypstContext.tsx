@@ -25,12 +25,12 @@ interface TypstProviderProps {
 
 export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
   const { fileTree, refreshFileTree } = useFileTree();
-  const { getSetting, updateSetting } = useSettings();
+  const { getSetting } = useSettings();
   const [isCompiling, setIsCompiling] = useState<boolean>(false);
   const [hasAutoCompiled, setHasAutoCompiled] = useState(false);
   const [compileError, setCompileError] = useState<string | null>(null);
   const [compiledPdf, setCompiledPdf] = useState<Uint8Array | null>(null);
-  const [compiledSvg, setCompiledSvg] = useState<string | null>(null);
+  const [compiledSvg] = useState<string | null>(null);
   const [compiledCanvas, setCompiledCanvas] = useState<Uint8Array | null>(null);
   const [compileLog, setCompileLog] = useState<string>('');
   const [currentView, setCurrentView] = useState<'log' | 'output'>('log');
@@ -73,10 +73,6 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
   ): Promise<void> => {
     console.log('[TypstContext] compileDocument called', { mainFileName, format, pdfOptions });
 
-    if (format !== currentFormat) {
-      updateSetting('typst-default-format', format);
-    }
-
     if (!typstService.isReady()) {
       await typstService.initialize();
     }
@@ -86,7 +82,6 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     setActiveCompiler('typst');
 
     setCompiledPdf(null);
-    // setCompiledSvg(null);
     setCompiledCanvas(null);
 
     try {
@@ -204,11 +199,6 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     typstService.clearCache();
   };
 
-  const handleSetCurrentFormat = useCallback((format: TypstOutputFormat) => {
-    if (format === currentFormat) return;
-    updateSetting('typst-default-format', format);
-  }, [currentFormat, updateSetting]);
-
   return (
     <TypstContext.Provider
       value={{
@@ -219,7 +209,6 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         compiledCanvas,
         compileLog,
         currentFormat,
-        setCurrentFormat: handleSetCurrentFormat,
         compileDocument,
         stopCompilation,
         toggleOutputView,

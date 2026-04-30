@@ -67,41 +67,46 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     stopCompilation,
     clearCache,
     compileWithClearCache,
-    latexEngine,
-    setLatexEngine,
-    currentFormat,
-    setCurrentFormat,
   } = useLaTeX();
   const { selectedFileId, getFile, fileTree } = useFileTree();
   const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
   const { getSetting } = useSettings();
   const { getProperty, setProperty, registerProperty, unregisterProperty } = useProperties();
   const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
-  const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
   const [availableTexFiles, setAvailableTexFiles] = useState<string[]>([]);
   const [isChangingEngine, setIsChangingEngine] = useState(false);
   const [bundleCacheStatus, setBundleCacheStatus] = useState<Record<string, boolean>>({});
   const [isDeletingBundle, setIsDeletingBundle] = useState<string | null>(null);
-  const [selectedBundle, setSelectedBundle] = useState<string>('recommended');
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [isDropdownOpen, setIsDropdownOpen] = usePersistentState(dropdownKey, false);
   const [isCacheOptionsOpen, setIsCacheOptionsOpen] = usePersistentState(`${dropdownKey}-cache`, false);
   const propertiesRegistered = useRef(false);
-  const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 
   const projectId = fileStorageService.getCurrentProjectId() || undefined;
-  const isBusyTeX = latexEngine.startsWith('busytex-');
+
+  const settingEngine = getSetting('latex-engine')?.value as LaTeXEngine ?? 'pdftex';
+  const settingFormat = getSetting('latex-default-format')?.value as LaTeXOutputFormat ?? 'pdf';
+  const settingBundle = getSetting('latex-busytex-bundles')?.value as string ?? 'recommended';
+
+  const propMainFile = getProperty('latex-main-file', { scope: 'project', projectId }) as string | undefined;
+  const propEngine = getProperty('latex-engine', { scope: 'project', projectId }) as LaTeXEngine | undefined;
+  const propFormat = getProperty('latex-output-format', { scope: 'project', projectId }) as LaTeXOutputFormat | undefined;
+  const propBundle = getProperty('latex-busytex-bundle', { scope: 'project', projectId }) as string | undefined;
 
   const projectMainFile = useSharedSettings ? doc?.projectMetadata?.mainFile : undefined;
   const projectEngine = useSharedSettings ? doc?.projectMetadata?.latexEngine : undefined;
   const projectFormat = useSharedSettings ? doc?.projectMetadata?.latexOutputFormat : undefined;
-  const effectiveMainFile = projectMainFile || userSelectedMainFile || autoMainFile;
-  const effectiveEngine = projectEngine || latexEngine;
-  const effectiveFormat = projectFormat || currentFormat;
+
+  const effectiveMainFile = projectMainFile || propMainFile || autoMainFile;
+  const effectiveEngine = projectEngine || propEngine || settingEngine;
+  const effectiveFormat = projectFormat || propFormat || settingFormat;
+  const effectiveBundle = propBundle || settingBundle;
   const effectiveAutoCompileOnSave = useSharedSettings ?
     doc?.projectMetadata?.latexAutoCompileOnSave ?? false :
     false;
+
+  const isBusyTeX = effectiveEngine.startsWith('busytex-');
 
   useEffect(() => {
     if (propertiesRegistered.current) return;
@@ -137,32 +142,9 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
   }, [registerProperty]);
 
   useEffect(() => {
-    if (propertiesLoaded) return;
-
-    const storedMainFile = getProperty('latex-main-file', { scope: 'project', projectId });
-    const storedEngine = getProperty('latex-engine', { scope: 'project', projectId });
-    const storedFormat = getProperty('latex-output-format', { scope: 'project', projectId });
-    const storedBundle = getProperty('latex-busytex-bundle', { scope: 'project', projectId });
-
-    if (storedMainFile !== undefined) {
-      setUserSelectedMainFile(storedMainFile as string | undefined);
-    }
-
-    if (storedEngine !== undefined) {
-      setLatexEngine(storedEngine as LaTeXEngine);
-    }
-
-    if (storedFormat !== undefined) {
-      setCurrentFormat(storedFormat as LaTeXOutputFormat);
-    }
-
-    if (storedBundle !== undefined) {
-      setSelectedBundle(storedBundle as string);
-      latexService.setBusyTeXBundles([storedBundle as string]);
-    }
-
-    setPropertiesLoaded(true);
-  }, [getProperty, propertiesLoaded, setLatexEngine, setCurrentFormat]);
+    if (!propBundle) return;
+    latexService.setBusyTeXBundles([propBundle]);
+  }, [propBundle]);
 
   useEffect(() => {
     const findTexFiles = (nodes: FileNode[]): string[] => {
@@ -307,11 +289,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     unregisterProperty('latex-engine', { scope: 'project', projectId });
     unregisterProperty('latex-output-format', { scope: 'project', projectId });
     unregisterProperty('latex-busytex-bundle', { scope: 'project', projectId });
-    setUserSelectedMainFile(undefined);
-    setSelectedBundle(getSetting('latex-busytex-bundles')?.value as string ?? 'recommended');
-    setCurrentFormat(getSetting('latex-default-format')?.value as LaTeXOutputFormat ?? 'pdf');
-    setLatexEngine(getSetting('latex-engine')?.value as LaTeXEngine ?? 'pdftex');
-    setPropertiesLoaded(false);
+    latexService.setBusyTeXBundles([settingBundle]);
   };
 
   const shouldNavigateToMain = async (): Promise<boolean> => {
@@ -442,7 +420,6 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
           d.projectMetadata.latexEngine = engine as LaTeXEngine;
         });
       } else {
-        await setLatexEngine(engine as LaTeXEngine);
         setProperty('latex-engine', engine, { scope: 'project', projectId });
       }
     } catch (error) {
@@ -463,7 +440,6 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
       });
     } else {
       const newMainFile = filePath === 'auto' ? undefined : filePath;
-      setUserSelectedMainFile(newMainFile);
       setProperty('latex-main-file', newMainFile, { scope: 'project', projectId });
     }
   };
@@ -476,7 +452,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
         d.projectMetadata = { name: '', description: '' };
       }
       if (checked) {
-        d.projectMetadata.mainFile = userSelectedMainFile || autoMainFile;
+        d.projectMetadata.mainFile = propMainFile || autoMainFile;
       } else {
         delete d.projectMetadata.mainFile;
       }
@@ -491,7 +467,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
         d.projectMetadata = { name: '', description: '' };
       }
       if (checked) {
-        d.projectMetadata.latexEngine = latexEngine;
+        d.projectMetadata.latexEngine = effectiveEngine;
       } else {
         delete d.projectMetadata.latexEngine;
       }
@@ -525,7 +501,6 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
   };
 
   const handleBundleChange = (bundleId: string) => {
-    setSelectedBundle(bundleId);
     setProperty('latex-busytex-bundle', bundleId, { scope: 'project', projectId });
     latexService.setBusyTeXBundles([bundleId]);
   };
@@ -619,7 +594,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
           <div className="dropdown-section">
             <div className="dropdown-label">{t('Select main file:')}</div>
             <select
-              value={projectMainFile || userSelectedMainFile || 'auto'}
+              value={projectMainFile || propMainFile || 'auto'}
               onChange={(e) => handleMainFileChange(e.target.value)}
               className="dropdown-select"
               disabled={isChangingEngine || isCompiling}>
@@ -676,7 +651,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
             <div className="pdf-options-section">
               <div className="dropdown-label">{t('Bundle for next compile:')}</div>
               <select
-                value={selectedBundle}
+                value={effectiveBundle}
                 onChange={(e) => handleBundleChange(e.target.value)}
                 className="dropdown-select"
                 disabled={isChangingEngine || isCompiling}>
@@ -737,7 +712,6 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
                     d.projectMetadata.latexOutputFormat = format;
                   });
                 } else {
-                  setCurrentFormat(format);
                   setProperty('latex-output-format', format, { scope: 'project', projectId });
                 }
               }}
@@ -747,7 +721,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
               <option value="canvas-pdf">{t('Canvas (PDF)')}</option>
             </select>
           </div>
-          {/* fabawi: disabled for now as it conflicts with the output setting from tabs*/}
+          {/* TODO (fabawi): disabled for now as it conflicts with the output setting from tabs*/}
           {/* {useSharedSettings &&
             <label className="dropdown-checkbox">
               <input

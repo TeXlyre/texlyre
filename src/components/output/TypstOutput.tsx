@@ -45,7 +45,6 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     logIndicator,
     toggleOutputView,
     currentFormat,
-    setCurrentFormat,
     compileDocument
   } = useTypst();
 
@@ -57,6 +56,10 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 
   const [visualizerHeight, setVisualizerHeight] = useState(300);
   const [visualizerCollapsed, setVisualizerCollapsed] = useState(false);
+
+  const settingFormat = getSetting('typst-default-format')?.value as TypstOutputFormat ?? 'pdf';
+  const propFormat = getProperty('typst-output-format', { scope: 'project', projectId }) as TypstOutputFormat | undefined;
+  const effectiveFormat = propFormat || currentFormat || settingFormat;
 
   const canvasControllerRef = useRef<RendererController | null>(null);
   const useEnhancedRenderer = getSetting('pdf-renderer-enable')?.value ?? true;
@@ -70,10 +73,10 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
   }[logIndicator ?? 'idle'];
 
   useEffect(() => {
-    if (compiledCanvas && (currentFormat === 'canvas' || currentFormat === 'canvas-pdf') && canvasControllerRef.current?.updateContent) {
+    if (compiledCanvas && (effectiveFormat === 'canvas' || effectiveFormat === 'canvas-pdf') && canvasControllerRef.current?.updateContent) {
       canvasControllerRef.current.updateContent(compiledCanvas);
     }
-  }, [compiledCanvas, currentFormat]);
+  }, [compiledCanvas, effectiveFormat]);
 
   useEffect(() => {
     if (propertiesRegistered.current) return;
@@ -140,20 +143,6 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     }
   };
 
-  const getCurrentOutput = () => {
-    switch (currentFormat) {
-      case 'pdf':
-        return compiledPdf;
-      case 'svg':
-        return compiledSvg;
-      case 'canvas':
-      case 'canvas-pdf':
-        return compiledCanvas;
-      default:
-        return null;
-    }
-  };
-
   const handleSavePdf = useCallback((fileName: string) => {
     if (!compiledPdf) return;
 
@@ -169,8 +158,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
   }, [compiledPdf]);
 
   const handleTabSwitch = useCallback((format: TypstOutputFormat) => {
-    if (currentFormat !== format) {
-      setCurrentFormat(format);
+    if (effectiveFormat !== format) {
       setProperty('typst-output-format', format, {
         scope: 'project',
         projectId,
@@ -186,8 +174,9 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
         });
       }
     }
-  }, [currentFormat,
-    setCurrentFormat,
+  }, [effectiveFormat,
+    setProperty,
+    projectId,
     compileDocument,
     selectedDocId,
     linkedFileInfo,
@@ -197,14 +186,14 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
   const outputViewerContent = useMemo(() => {
     console.log('[TypstOutput] outputViewerContent recalculating', {
       currentView,
-      currentFormat,
+      effectiveFormat,
       hasCompiledPdf: !!compiledPdf,
       hasCompiledSvg: !!compiledSvg,
       hasCompiledCanvas: !!compiledCanvas
     });
     if (currentView !== 'output') return null;
 
-    if (currentFormat === 'pdf' && compiledPdf) {
+    if (effectiveFormat === 'pdf' && compiledPdf) {
       const pdfRenderer = pluginRegistry.getRendererForOutput('pdf', 'pdf-renderer');
       return (
         <div className="pdf-viewer">
@@ -226,7 +215,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 
     }
 
-    if (currentFormat === 'canvas' || currentFormat === 'canvas-pdf') {
+    if (effectiveFormat === 'canvas' || effectiveFormat === 'canvas-pdf') {
       const canvasRenderer = pluginRegistry.getRendererForOutput('canvas', 'canvas-renderer');
 
       return (
@@ -234,8 +223,8 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
           {canvasRenderer ?
             React.createElement(canvasRenderer.renderOutput, {
               content: compiledCanvas || new ArrayBuffer(0),
-              mimeType: currentFormat === 'canvas-pdf' ? 'application/pdf' : 'image/svg+xml',
-              fileName: currentFormat === 'canvas-pdf' ? 'output.pdf' : 'output.svg',
+              mimeType: effectiveFormat === 'canvas-pdf' ? 'application/pdf' : 'image/svg+xml',
+              fileName: effectiveFormat === 'canvas-pdf' ? 'output.pdf' : 'output.svg',
               controllerRef: (controller) => { canvasControllerRef.current = controller; }
             }) :
             <div className="canvas-fallback">{t('Canvas renderer not available')}</div>
@@ -246,7 +235,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 
     return null;
   }, [currentView,
-    currentFormat,
+    effectiveFormat,
     !!compiledPdf,
     !!compiledCanvas,
     useEnhancedRenderer,
@@ -271,16 +260,16 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
           {currentView === 'output' &&
             <>
               <button
-                className={`tab-button ${currentView === 'output' && currentFormat === 'pdf' ? 'active' : ''}`}
+                className={`tab-button ${currentView === 'output' && effectiveFormat === 'pdf' ? 'active' : ''}`}
                 onClick={() => handleTabSwitch('pdf')}>{t('PDF')}
               </button>
 
               <button
-                className={`tab-button ${currentView === 'output' && currentFormat === 'canvas-pdf' ? 'active' : ''}`}
+                className={`tab-button ${currentView === 'output' && effectiveFormat === 'canvas-pdf' ? 'active' : ''}`}
                 onClick={() => handleTabSwitch('canvas-pdf')}>{t('Canvas (PDF)')}
               </button>
               <button
-                className={`tab-button ${currentView === 'output' && currentFormat === 'canvas' ? 'active' : ''}`}
+                className={`tab-button ${currentView === 'output' && effectiveFormat === 'canvas' ? 'active' : ''}`}
                 onClick={() => handleTabSwitch('canvas')}>{t('Canvas (SVG)')}
               </button>
             </>

@@ -24,7 +24,7 @@ interface LaTeXProviderProps {
 
 export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
   const { fileTree, refreshFileTree } = useFileTree();
-  const { getSetting, updateSetting } = useSettings();
+  const { getSetting } = useSettings();
   const [isCompiling, setIsCompiling] = useState<boolean>(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -94,10 +94,6 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     mainFileName: string,
     format: LaTeXOutputFormat = currentFormat
   ): Promise<void> => {
-    if (format !== currentFormat) {
-      updateSetting('latex-default-format', format);
-    }
-
     try {
       const engineToUse = latexService.getCurrentEngineType();
       if (!latexService.isReady()) {
@@ -229,10 +225,6 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
     mainFileName: string,
     format: LaTeXOutputFormat = currentFormat
   ): Promise<void> => {
-    if (format !== currentFormat) {
-      updateSetting('latex-default-format', format);
-    }
-
     try {
       const engineToUse = latexService.getCurrentEngineType();
       if (!latexService.isReady()) {
@@ -295,14 +287,9 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
   };
 
   const handleSetLatexEngine = useCallback(async (engine: LaTeXEngine): Promise<void> => {
-    if (engine === latexEngine) return;
-    updateSetting('latex-engine', engine);
-  }, [latexEngine, updateSetting]);
+    // NOTE (fabawi): no-op since engine is now driven by project properties with global setting fallback
+  }, []);
 
-  const handleSetCurrentFormat = useCallback((format: LaTeXOutputFormat) => {
-    if (format === currentFormat) return;
-    updateSetting('latex-default-format', format);
-  }, [currentFormat, updateSetting]);
 
   return (
     <LaTeXContext.Provider
@@ -317,7 +304,6 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
         compiledCanvas,
         compileLog,
         currentFormat,
-        setCurrentFormat: handleSetCurrentFormat,
         compileDocument,
         stopCompilation,
         toggleOutputView,

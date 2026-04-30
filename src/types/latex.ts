@@ -34,7 +34,6 @@ export interface LaTeXContextType {
 	toggleOutputView: () => void;
 	currentView: 'log' | 'output';
 	currentFormat: LaTeXOutputFormat;
-	setCurrentFormat: (format: LaTeXOutputFormat) => void;
 	logIndicator: 'idle' | 'warn' | 'error' | 'success';
 	latexEngine: LaTeXEngine;
 	activeCompiler: string | null;
