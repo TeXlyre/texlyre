@@ -3,7 +3,7 @@ import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
-import PdfWindowToggleButton from './PopoutViewerToggleButton';
+import PopoutViewerToggleButton from './PopoutViewerToggleButton';
 import PositionedDropdown from '../common/PositionedDropdown';
 import { usePersistentState } from '../../hooks/usePersistentState';
 import { useCollab } from '../../hooks/useCollab';
@@ -554,12 +554,11 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
           {isCompiling ? <StopIcon /> : isInitializing ? <div className="loading-spinner" /> : <PlayIcon />}
         </button>
 
-        {effectiveFormat === 'pdf' && (
-          <PdfWindowToggleButton
-            className="pdf-window-button"
-            projectId={projectId || 'default'}
-            title={t('Open PDF in new window')} />
-        )}
+        <PopoutViewerToggleButton
+          className="popout-viewer-button"
+          projectId={projectId || 'default'}
+          title={t('Open output in new window')}
+        />
 
         <button
           className="latex-button dropdown-toggle"

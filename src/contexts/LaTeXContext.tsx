@@ -14,7 +14,7 @@ import { useSettings } from '../hooks/useSettings';
 import { latexService } from '../services/LaTeXService';
 import type { LaTeXContextType, LaTeXOutputFormat, LaTeXEngine } from '../types/latex';
 import { parseUrlFragments } from '../utils/urlUtils';
-import { pdfWindowService } from '../services/PdfWindowService';
+import { popoutViewerService } from '../services/PopoutViewerService';
 
 export const LaTeXContext = createContext<LaTeXContextType | null>(null);
 
@@ -121,26 +121,33 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
             setCurrentView('output');
             setLogIndicator('success');
             const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx|latex)$/i, '.pdf') || 'output.pdf';
-            const projectName = getProjectName();
-
-            pdfWindowService.sendPdfUpdate(
-              result.pdf,
+            popoutViewerService.sendContent({
+              kind: 'pdf',
+              content: result.pdf,
+              mimeType: 'application/pdf',
               fileName,
-              projectName
-            );
+              projectName: getProjectName(),
+            });
             break;
           case 'canvas-pdf':
             setCompiledCanvas(result.pdf);
             setCurrentView('output');
             setLogIndicator('success');
+            const canvasFileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx|latex)$/i, '.pdf') || 'output.pdf';
+            popoutViewerService.sendContent({
+              kind: 'canvas-pdf',
+              content: result.pdf,
+              mimeType: 'application/pdf',
+              fileName: canvasFileName,
+              projectName: getProjectName(),
+            });
             break;
         }
       } else {
         setCompileError(t('Compilation failed. Check the log in the main window.'));
         if (format === 'pdf') setCurrentView('log');
         setLogIndicator('error');
-
-        pdfWindowService.sendCompileResult(result.status, result.log);
+        popoutViewerService.sendCompileResult(result.status, result.log);
       }
 
       await refreshFileTree();
@@ -149,7 +156,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       setCurrentView('log');
       setLogIndicator('error');
 
-      pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
+      popoutViewerService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
     } finally {
       setIsCompiling(false);
     }
@@ -252,26 +259,33 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
             setCurrentView('output');
             setLogIndicator('success');
             const fileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx|latex)$/i, '.pdf') || 'output.pdf';
-            const projectName = getProjectName();
-
-            pdfWindowService.sendPdfUpdate(
-              result.pdf,
+            popoutViewerService.sendContent({
+              kind: 'pdf',
+              content: result.pdf,
+              mimeType: 'application/pdf',
               fileName,
-              projectName
-            );
+              projectName: getProjectName(),
+            });
             break;
           case 'canvas-pdf':
             setCompiledCanvas(result.pdf);
             setCurrentView('output');
             setLogIndicator('success');
+            const canvasFileName = mainFileName.split('/').pop()?.replace(/\.(tex|ltx|latex)$/i, '.pdf') || 'output.pdf';
+            popoutViewerService.sendContent({
+              kind: 'canvas-pdf',
+              content: result.pdf,
+              mimeType: 'application/pdf',
+              fileName: canvasFileName,
+              projectName: getProjectName(),
+            });
             break;
         }
       } else {
         setCompileError(t('Compilation failed. Check the log in the main window.'));
         if (format === 'pdf') setCurrentView('log');
         setLogIndicator('error');
-
-        pdfWindowService.sendCompileResult(result.status, result.log);
+        popoutViewerService.sendCompileResult(result.status, result.log);
       }
 
       await refreshFileTree();
@@ -280,7 +294,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
       setCurrentView('log');
       setLogIndicator('error');
 
-      pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
+      popoutViewerService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
     } finally {
       setIsCompiling(false);
     }

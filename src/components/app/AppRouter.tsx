@@ -145,8 +145,8 @@ const AppRouter: React.FC = () => {
 			return;
 		}
 
-		if (hashUrl.startsWith('pdf-viewer:')) {
-			const projectId = hashUrl.replace('pdf-viewer:', '');
+		if (hashUrl.startsWith('popout-viewer:')) {
+			const projectId = hashUrl.replace('popout-viewer:', '');
 			setIsPdfViewerWindow(true);
 			setPdfViewerProjectId(projectId);
 			return;

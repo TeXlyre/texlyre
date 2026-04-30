@@ -20,7 +20,7 @@ import { useGlobalKeyboard } from '../../hooks/useGlobalKeyboard';
 import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
 import { useOffline } from '../../hooks/useOffline';
 import { fileStorageService } from '../../services/FileStorageService';
-import { pdfWindowService } from '../../services/PdfWindowService';
+import { popoutViewerService } from '../../services/PopoutViewerService';
 import type { DocumentList } from '../../types/documents';
 import type { YjsDocUrl } from '../../types/yjs';
 import type { TypstOutputFormat } from '../../types/typst';
@@ -410,13 +410,13 @@ const EditorAppView: React.FC<EditorAppProps> = ({
   };
 
   const handleExpandLatexOutput = () => {
-    if (!pdfWindowService.isWindowOpen()) {
+    if (!popoutViewerService.isWindowOpen()) {
       document.dispatchEvent(new CustomEvent('expand-latex-output'));
     }
   };
 
   const handleExpandTypstOutput = () => {
-    if (!pdfWindowService.isWindowOpen()) {
+    if (!popoutViewerService.isWindowOpen()) {
       document.dispatchEvent(new CustomEvent('expand-typst-output'));
     }
   };

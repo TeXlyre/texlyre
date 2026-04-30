@@ -14,7 +14,7 @@ import { useFileTree } from '../hooks/useFileTree';
 import { useSettings } from '../hooks/useSettings';
 import type { TypstContextType, TypstOutputFormat, TypstPdfOptions } from '../types/typst';
 import { typstService } from '../services/TypstService';
-import { pdfWindowService } from '../services/PdfWindowService';
+import { popoutViewerService } from '../services/PopoutViewerService';
 import { parseUrlFragments } from '../utils/urlUtils';
 
 export const TypstContext = createContext<TypstContextType | null>(null);
@@ -103,25 +103,29 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
               setCurrentView('output');
               setLogIndicator('success');
               const fileName = mainFileName.split('/').pop()?.replace(/\.typ$/i, '.pdf') || 'output.pdf';
-              const projectName = getProjectName();
-
-              pdfWindowService.sendPdfUpdate(
-                result.pdf,
+              popoutViewerService.sendContent({
+                kind: 'pdf',
+                content: result.pdf,
+                mimeType: 'application/pdf',
                 fileName,
-                projectName
-              );
+                projectName: getProjectName(),
+              });
             }
             break;
           case 'svg':
           case 'canvas':
-            console.log('[TypstContext] Setting Canvas', { hasCanvas: !!result.canvas });
             if (result.canvas) {
-              console.log('[TypstContext] Canvas content length:', result.canvas.length);
               setCompiledCanvas(result.canvas);
               setCurrentView('output');
               setLogIndicator('success');
-            } else {
-              console.error('[TypstContext] result.canvas is null/undefined!');
+              const svgFileName = mainFileName.split('/').pop()?.replace(/\.typ$/i, '.svg') || 'output.svg';
+              popoutViewerService.sendContent({
+                kind: 'canvas-svg',
+                content: result.canvas,
+                mimeType: 'image/svg+xml',
+                fileName: svgFileName,
+                projectName: getProjectName(),
+              });
             }
             break;
           case 'canvas-pdf':
@@ -129,6 +133,14 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
               setCompiledCanvas(result.canvas);
               setCurrentView('output');
               setLogIndicator('success');
+              const canvasPdfFileName = mainFileName.split('/').pop()?.replace(/\.typ$/i, '.pdf') || 'output.pdf';
+              popoutViewerService.sendContent({
+                kind: 'canvas-pdf',
+                content: result.canvas,
+                mimeType: 'application/pdf',
+                fileName: canvasPdfFileName,
+                projectName: getProjectName(),
+              });
             }
             break;
         }
@@ -141,8 +153,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
             break;
         }
         setLogIndicator('error');
-
-        pdfWindowService.sendCompileResult(result.status, result.log);
+        popoutViewerService.sendCompileResult(result.status, result.log);
       }
 
       await refreshFileTree();
@@ -151,7 +162,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
       setCurrentView('log');
       setLogIndicator('error');
 
-      pdfWindowService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
+      popoutViewerService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
     } finally {
       setIsCompiling(false);
     }

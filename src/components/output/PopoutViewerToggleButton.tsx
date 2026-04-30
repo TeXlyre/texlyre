@@ -1,34 +1,31 @@
-// src/components/output/PdfWindowToggleButton.tsx
+// src/components/output/PopoutViewerToggleButton.tsx
 import React, { useEffect, useState } from 'react';
 
-import { pdfWindowService } from '../../services/PdfWindowService';
+import { popoutViewerService } from '../../services/PopoutViewerService';
 import { ExternalLinkIcon } from '../common/Icons';
 
-interface PdfWindowToggleButtonProps {
+interface PopoutViewerToggleButtonProps {
 	className?: string;
 	projectId: string;
 	title?: string;
 }
 
-const PdfWindowToggleButton: React.FC<PdfWindowToggleButtonProps> = ({
+const PopoutViewerToggleButton: React.FC<PopoutViewerToggleButtonProps> = ({
 	className = '',
 	projectId,
-	title = 'Open PDF in new window'
+	title = 'Open in new window',
 }) => {
 	const [isWindowOpen, setIsWindowOpen] = useState(false);
 
 	useEffect(() => {
-		pdfWindowService.initialize(projectId);
+		popoutViewerService.initialize(projectId);
 
-		const unsubscribe = pdfWindowService.addListener((message) => {
-			if (message.type === 'window-closed') {
-				setIsWindowOpen(false);
-			} else if (message.type === 'window-ready') {
-				setIsWindowOpen(true);
-			}
+		const unsubscribe = popoutViewerService.addListener((message) => {
+			if (message.type === 'window-closed') setIsWindowOpen(false);
+			else if (message.type === 'window-ready') setIsWindowOpen(true);
 		});
 
-		setIsWindowOpen(pdfWindowService.isWindowOpen());
+		setIsWindowOpen(popoutViewerService.isWindowOpen());
 
 		return () => {
 			unsubscribe();
@@ -37,19 +34,16 @@ const PdfWindowToggleButton: React.FC<PdfWindowToggleButtonProps> = ({
 
 	const handleToggle = () => {
 		if (isWindowOpen) {
-			pdfWindowService.closeWindow();
+			popoutViewerService.closeWindow();
 			setIsWindowOpen(false);
-		} else {
-			const success = pdfWindowService.openPdfWindow();
-			if (success) {
-				setIsWindowOpen(true);
-			}
+		} else if (popoutViewerService.openWindow()) {
+			setIsWindowOpen(true);
 		}
 	};
 
 	return (
 		<button
-			className={`latex-button pdf-window-toggle ${className} ${isWindowOpen ? 'active' : ''}`}
+			className={`latex-button popout-viewer-toggle ${className} ${isWindowOpen ? 'active' : ''}`}
 			onClick={handleToggle}
 			title={title}
 		>
@@ -58,4 +52,4 @@ const PdfWindowToggleButton: React.FC<PdfWindowToggleButtonProps> = ({
 	);
 };
 
-export default PdfWindowToggleButton;
+export default PopoutViewerToggleButton;
