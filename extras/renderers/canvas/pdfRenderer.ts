@@ -18,6 +18,16 @@ export interface PdfRenderContext {
     pendingRenderRef: RefObject<Set<number>>;
 }
 
+export function invalidatePdfOverlayCaches(container: HTMLDivElement): void {
+    overlayScaleCache.delete(container);
+    annotationScaleCache.delete(container);
+}
+
+export function clearPdfCaches() {
+    textContentCache.clear();
+    annotationDataCache.clear();
+}
+
 export async function parsePdfPages(pdfBuffer: ArrayBuffer): Promise<{
     pdfDoc: any;
     metadata: Map<number, { width: number; height: number }>;
@@ -94,11 +104,6 @@ const overlayScaleCache = new WeakMap<HTMLDivElement, number>();
 const annotationScaleCache = new WeakMap<HTMLDivElement, number>();
 const annotationDataCache = new Map<number, any[]>();
 
-export function clearPdfCaches() {
-    textContentCache.clear();
-    annotationDataCache.clear();
-}
-
 export async function renderTextLayer(
     pdfDocRef: RefObject<any>,
     pageNumber: number,
@@ -126,6 +131,11 @@ export async function renderTextLayer(
         container,
         viewport,
     });
+
+    container.style.setProperty('--scale-factor', String(scale));
+    container.style.width = `${viewport.width}px`;
+    container.style.height = `${viewport.height}px`;
+
     await textLayer.render();
 
     overlayScaleCache.set(container, scale);

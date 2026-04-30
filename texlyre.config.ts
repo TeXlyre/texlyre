@@ -46,20 +46,20 @@ const config: TexlyreConfig = {
 
     // overwrite priority is default < local < mobile for corresponding configs
     userdata: {
-        version: '1.2.0',
+        version: '1.2.2',
         default: {
             settings: {
                 bibtexViewerAutoTidy: false,
                 bibtexViewerTidyOptions: 'standard',
-                canvasRendererAnnotations: false,
+                canvasRendererAnnotations: true,
                 canvasRendererEnable: true,
-                canvasRendererInitialZoom: '200',
-                canvasRendererTextSelection: false,
+                canvasRendererInitialZoom: '100',
+                canvasRendererTextSelection: true,
                 collabAutoReconnect: false,
                 collabAwarenessTimeout: 30,
                 collabProviderType: 'webrtc',
                 collabSignalingServers: 'wss://ywebrtc.texlyre.org',
-                editorAutoSaveDelay: 1000,
+                editorAutoSaveDelay: 500,
                 editorAutoSaveEnable: true,
                 editorFontFamily: 'monospace',
                 editorFontSize: 'lg',
@@ -83,13 +83,14 @@ const config: TexlyreConfig = {
                 imageViewerEnablePanning: true,
                 imageViewerQuality: 'high',
                 latexEngine: 'pdftex',
+                latexDefaultFormat: 'canvas-pdf',
                 latexStoreCache: true,
                 latexStoreWorkingDirectory: false,
                 latexTexliveEndpoint: 'https://texlive.texlyre.org',
                 latexBusytexEndpoint: 'https://texlive2026.texlyre.org',
                 pdfRendererAnnotations: true,
                 pdfRendererEnable: true,
-                pdfRendererInitialZoom: '200',
+                pdfRendererInitialZoom: '100',
                 pdfRendererTextSelection: true,
                 pdfViewerAutoScale: true,
                 pdfViewerRenderingQuality: 'high',
@@ -99,6 +100,7 @@ const config: TexlyreConfig = {
                 themePlugin: 'texlyre-wide-theme',
                 themeVariant: 'atom_light',
                 typstAutoCompileOnOpen: false,
+                typstDefaultFormat: 'canvas',
             },
             properties: {
                 global: {

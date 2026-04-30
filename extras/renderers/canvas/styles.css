@@ -1,6 +1,4 @@
 /* extras/renderers/canvas/styles/css */
-@import "pdfjs-dist/web/pdf_viewer.css";
-
 .canvas-renderer-viewer *,
 .canvas-renderer-viewer *::before,
 .canvas-renderer-viewer *::after {
