@@ -747,8 +747,8 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
               <option value="canvas-pdf">{t('Canvas (PDF)')}</option>
             </select>
           </div>
-
-          {useSharedSettings &&
+          {/* fabawi: disabled for now as it conflicts with the output setting from tabs*/}
+          {/* {useSharedSettings &&
             <label className="dropdown-checkbox">
               <input
                 type="checkbox"
@@ -757,7 +757,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
                 disabled={isChangingEngine || isCompiling} />
               {t('Share with collaborators')}
             </label>
-          }
+          } */}
         </div>
 
         <div className="dropdown-section">

@@ -2,6 +2,7 @@
 import { t } from '@/i18n';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { fileStorageService } from '../../services/FileStorageService';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useLaTeX } from '../../hooks/useLaTeX';
 import { useSourceMap } from '../../hooks/useSourceMap';
@@ -11,10 +12,16 @@ import { pluginRegistry } from '../../plugins/PluginRegistry';
 import type { RendererController } from '../../plugins/PluginInterface';
 import type { LaTeXOutputFormat } from '../../types/latex';
 import type { SourceMapClickMode } from '../../types/sourceMap';
+import type { FileNode } from '../../types/files';
 import ResizablePanel from '../common/ResizablePanel';
 import LaTeXCompileButton from './LaTeXCompileButton';
 import SourceMapFloatingButton from './SourceMapFloatingButton';
-import { isLatexFile, toArrayBuffer } from '../../utils/fileUtils';
+import {
+  isLatexFile,
+  isLatexMainFile,
+  isTemporaryFile,
+  toArrayBuffer,
+} from '../../utils/fileUtils';
 
 interface LaTeXOutputProps {
   className?: string;
@@ -48,7 +55,9 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
     setCurrentFormat,
     compileDocument,
   } = useLaTeX();
-  const { selectedFileId, getFile } = useFileTree();
+
+  const { selectedFileId, getFile, fileTree } = useFileTree();
+
   const {
     reverseSync,
     currentHighlight,
@@ -56,12 +65,20 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
     reverseClickEnabled,
     reverseClickMode,
   } = useSourceMap();
+
   const { getSetting } = useSettings();
   const { getProperty, setProperty, registerProperty } = useProperties();
   const propertiesRegistered = useRef(false);
+  const propertiesLoaded = useRef(false);
+
+  const projectId = fileStorageService.getCurrentProjectId() || undefined;
 
   const [visualizerHeight, setVisualizerHeight] = useState(300);
   const [visualizerCollapsed, setVisualizerCollapsed] = useState(false);
+  const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
+  const [userSelectedMainFile, setUserSelectedMainFile] = useState<string | undefined>();
+
+  const effectiveMainFile = userSelectedMainFile || autoMainFile;
 
   const useEnhancedRenderer = getSetting('pdf-renderer-enable')?.value ?? true;
   const loggerPlugin = pluginRegistry.getLoggerForType('latex');
@@ -80,25 +97,6 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
   }[logIndicator ?? 'idle'];
 
   useEffect(() => {
-    if (canvasControllerRef.current?.setHighlight) {
-      canvasControllerRef.current.setHighlight(currentHighlight);
-    }
-    if (pdfControllerRef.current?.setHighlight) {
-      pdfControllerRef.current.setHighlight(currentHighlight);
-    }
-  }, [currentHighlight]);
-
-  useEffect(() => {
-    if (
-      compiledCanvas &&
-      currentFormat === 'canvas-pdf' &&
-      canvasControllerRef.current?.updateContent
-    ) {
-      canvasControllerRef.current.updateContent(compiledCanvas);
-    }
-  }, [compiledCanvas, currentFormat]);
-
-  useEffect(() => {
     if (propertiesRegistered.current) return;
     propertiesRegistered.current = true;
 
@@ -115,7 +113,102 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
       subcategory: 'Layout',
       defaultValue: false,
     });
+
+    registerProperty({
+      id: 'latex-main-file',
+      category: 'Compilation',
+      subcategory: 'LaTeX',
+      defaultValue: undefined,
+    });
+
+    registerProperty({
+      id: 'latex-output-format',
+      category: 'Compilation',
+      subcategory: 'LaTeX',
+      defaultValue: 'pdf',
+    });
   }, [registerProperty]);
+
+  useEffect(() => {
+    if (propertiesLoaded.current) return;
+    propertiesLoaded.current = true;
+
+    const storedMainFile = getProperty('latex-main-file', {
+      scope: 'project',
+      projectId,
+    });
+
+    const storedFormat = getProperty('latex-output-format', {
+      scope: 'project',
+      projectId,
+    });
+
+    if (storedMainFile !== undefined) {
+      setUserSelectedMainFile(storedMainFile as string | undefined);
+    }
+
+    if (storedFormat !== undefined) {
+      setCurrentFormat(storedFormat as LaTeXOutputFormat);
+    }
+  }, [getProperty, projectId, setCurrentFormat]);
+
+  useEffect(() => {
+    const findTexFiles = (nodes: FileNode[]): string[] => {
+      const texFiles: string[] = [];
+
+      for (const node of nodes) {
+        if (
+          node.type === 'file' &&
+          isLatexMainFile(node.path) &&
+          !isTemporaryFile(node.path)
+        ) {
+          texFiles.push(node.path);
+        }
+
+        if (node.children) {
+          texFiles.push(...findTexFiles(node.children));
+        }
+      }
+
+      return texFiles;
+    };
+
+    const allTexFiles = findTexFiles(fileTree);
+
+    const findMainFile = async () => {
+      if (autoMainFile && allTexFiles.includes(autoMainFile)) {
+        return;
+      }
+
+      if (
+        selectedDocId &&
+        linkedFileInfo?.filePath &&
+        isLatexMainFile(linkedFileInfo.filePath)
+      ) {
+        setAutoMainFile(linkedFileInfo.filePath);
+        return;
+      }
+
+      if (selectedFileId) {
+        const file = await getFile(selectedFileId);
+        if (file && isLatexMainFile(file.path)) {
+          setAutoMainFile(file.path);
+          return;
+        }
+      }
+
+      setAutoMainFile(allTexFiles[0]);
+    };
+
+    findMainFile();
+  }, [
+    fileTree,
+    selectedFileId,
+    selectedDocId,
+    linkedFileInfo,
+    getFile,
+    autoMainFile,
+  ]);
 
   useEffect(() => {
     const storedHeight = getProperty('log-visualizer-height');
@@ -129,6 +222,26 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
       setVisualizerCollapsed(Boolean(storedCollapsed));
     }
   }, [getProperty]);
+
+  useEffect(() => {
+    if (canvasControllerRef.current?.setHighlight) {
+      canvasControllerRef.current.setHighlight(currentHighlight);
+    }
+
+    if (pdfControllerRef.current?.setHighlight) {
+      pdfControllerRef.current.setHighlight(currentHighlight);
+    }
+  }, [currentHighlight]);
+
+  useEffect(() => {
+    if (
+      compiledCanvas &&
+      currentFormat === 'canvas-pdf' &&
+      canvasControllerRef.current?.updateContent
+    ) {
+      canvasControllerRef.current.updateContent(compiledCanvas);
+    }
+  }, [compiledCanvas, currentFormat]);
 
   const handleVisualizerResize = (height: number) => {
     setVisualizerHeight(height);
@@ -145,19 +258,21 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 
     try {
       const file = await getFile(selectedFileId);
+
       if (!file || !isLatexFile(file.path)) {
         console.log('[LaTeXOutput] Selected file is not a .tex file');
         return;
       }
 
-      const event = new CustomEvent('codemirror-goto-line', {
-        detail: {
-          line: line,
-          fileId: selectedFileId,
-          filePath: file.path,
-        },
-      });
-      document.dispatchEvent(event);
+      document.dispatchEvent(
+        new CustomEvent('codemirror-goto-line', {
+          detail: {
+            line,
+            fileId: selectedFileId,
+            filePath: file.path,
+          },
+        }),
+      );
     } catch (error) {
       console.error('Error handling line click:', error);
     }
@@ -170,35 +285,76 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
       const blob = new Blob([toArrayBuffer(compiledPdf)], {
         type: 'application/pdf',
       });
+
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
+
       a.href = url;
       a.download = fileName;
+
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+
       URL.revokeObjectURL(url);
     },
     [compiledPdf],
   );
 
-  const handleTabSwitch = useCallback(
-    (format: LaTeXOutputFormat) => {
-      if (currentFormat !== format) {
-        setCurrentFormat(format);
+  const resolveCompileTarget = useCallback(async (): Promise<string | undefined> => {
+    if (effectiveMainFile) {
+      return effectiveMainFile;
+    }
 
-        if (selectedDocId && linkedFileInfo && isLatexFile(linkedFileInfo.filePath)) {
-          compileDocument(linkedFileInfo.filePath, format);
-        } else if (selectedFileId) {
-          getFile(selectedFileId).then((file) => {
-            if (file && isLatexFile(file.path)) {
-              compileDocument(file.path, format);
-            }
-          });
-        }
+    if (
+      selectedDocId &&
+      linkedFileInfo?.filePath &&
+      isLatexMainFile(linkedFileInfo.filePath)
+    ) {
+      return linkedFileInfo.filePath;
+    }
+
+    if (selectedFileId) {
+      const file = await getFile(selectedFileId);
+
+      if (file && isLatexMainFile(file.path)) {
+        return file.path;
+      }
+    }
+
+    return undefined;
+  }, [
+    effectiveMainFile,
+    selectedDocId,
+    linkedFileInfo,
+    selectedFileId,
+    getFile,
+  ]);
+
+  const handleTabSwitch = useCallback(
+    async (format: LaTeXOutputFormat) => {
+      if (currentFormat === format) return;
+
+      setCurrentFormat(format);
+      setProperty('latex-output-format', format, {
+        scope: 'project',
+        projectId,
+      });
+
+      const mainFile = await resolveCompileTarget();
+
+      if (mainFile) {
+        await compileDocument(mainFile, format);
       }
     },
-    [currentFormat, setCurrentFormat, compileDocument, selectedDocId, linkedFileInfo, selectedFileId, getFile],
+    [
+      currentFormat,
+      setCurrentFormat,
+      setProperty,
+      projectId,
+      resolveCompileTarget,
+      compileDocument,
+    ],
   );
 
   const handleLocationClick = useCallback(
@@ -206,7 +362,10 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
       if (!reverseClickEnabled) return;
 
       clickCountRef.current++;
-      if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+
+      if (clickTimerRef.current) {
+        clearTimeout(clickTimerRef.current);
+      }
 
       clickTimerRef.current = setTimeout(() => {
         const required: Record<SourceMapClickMode, number> = {
@@ -214,9 +373,11 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
           double: 2,
           triple: 3,
         };
+
         if (clickCountRef.current >= required[reverseClickMode]) {
           reverseSync(page, x, y);
         }
+
         clickCountRef.current = 0;
       }, 300);
     },
@@ -225,7 +386,9 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 
   useEffect(() => {
     return () => {
-      if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+      if (clickTimerRef.current) {
+        clearTimeout(clickTimerRef.current);
+      }
     };
   }, []);
 
@@ -261,11 +424,12 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
       );
     }
 
-    if (currentFormat === 'canvas-pdf' && compiledCanvas) {
+    if (currentFormat === 'canvas-pdf') {
       const canvasRenderer = pluginRegistry.getRendererForOutput(
         'canvas',
         'canvas-renderer',
       );
+
       return (
         <div className="canvas-viewer">
           {canvasRenderer ? (
@@ -291,8 +455,8 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
   }, [
     currentView,
     currentFormat,
-    !!compiledPdf,
-    !!compiledCanvas,
+    compiledPdf,
+    compiledCanvas,
     pdfRendererPlugin,
     useEnhancedRenderer,
     handleSavePdf,
@@ -315,25 +479,32 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
             />
             {t('Log')}
           </button>
+
           {currentView === 'output' && (
             <>
               <button
-                className={`tab-button ${currentView === 'output' && currentFormat === 'pdf' ? 'active' : ''}`}
+                className={`tab-button ${currentView === 'output' && currentFormat === 'pdf' ? 'active' : ''
+                  }`}
                 onClick={() => handleTabSwitch('pdf')}
               >
                 {t('PDF')}
               </button>
+
               <button
-                className={`tab-button ${currentView === 'output' && currentFormat === 'canvas-pdf' ? 'active' : ''}`}
+                className={`tab-button ${currentView === 'output' && currentFormat === 'canvas-pdf'
+                  ? 'active'
+                  : ''
+                  }`}
                 onClick={() => handleTabSwitch('canvas-pdf')}
               >
                 {t('Canvas (PDF)')}
               </button>
             </>
           )}
+
           {currentView === 'log' && (
             <button
-              className={'tab-button'}
+              className="tab-button"
               onClick={() => toggleOutputView()}
               disabled={!hasAnyOutput}
             >
@@ -341,8 +512,9 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
             </button>
           )}
         </div>
+
         <LaTeXCompileButton
-          dropdownKey={'latex-output-dropdown'}
+          dropdownKey="latex-output-dropdown"
           className="output-compile-button"
           selectedDocId={selectedDocId}
           documents={documents}
@@ -355,9 +527,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 
       {!compileLog && !hasAnyOutput ? (
         <div className="empty-state">
-          <p>
-            {t('No output available. Compile a LaTeX document to see results.')}
-          </p>
+          <p>{t('No output available. Compile a LaTeX document to see results.')}</p>
         </div>
       ) : (
         <>
@@ -383,6 +553,7 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
                       })}
                     </div>
                   </ResizablePanel>
+
                   <div className="raw-log-panel">
                     <pre className="log-viewer">{compileLog}</pre>
                   </div>

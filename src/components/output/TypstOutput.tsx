@@ -3,6 +3,7 @@ import { t } from '@/i18n';
 import React from 'react';
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 
+import { fileStorageService } from '../../services/FileStorageService';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useTypst } from '../../hooks/useTypst';
 import { useProperties } from '../../hooks/useProperties';
@@ -48,6 +49,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     compileDocument
   } = useTypst();
 
+  const projectId = fileStorageService.getCurrentProjectId() || undefined;
   const { selectedFileId, getFile } = useFileTree();
   const { getSetting } = useSettings();
   const { getProperty, setProperty, registerProperty } = useProperties();
@@ -169,6 +171,11 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
   const handleTabSwitch = useCallback((format: TypstOutputFormat) => {
     if (currentFormat !== format) {
       setCurrentFormat(format);
+      setProperty('typst-output-format', format, {
+        scope: 'project',
+        projectId,
+      });
+
       if (selectedDocId && linkedFileInfo && isTypstFile(linkedFileInfo.filePath)) {
         compileDocument(linkedFileInfo.filePath, format);
       } else if (selectedFileId) {
@@ -179,7 +186,13 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
         });
       }
     }
-  }, [currentFormat, setCurrentFormat, compileDocument, selectedDocId, linkedFileInfo, selectedFileId, getFile]);
+  }, [currentFormat,
+    setCurrentFormat,
+    compileDocument,
+    selectedDocId,
+    linkedFileInfo,
+    selectedFileId,
+    getFile]);
 
   const outputViewerContent = useMemo(() => {
     console.log('[TypstOutput] outputViewerContent recalculating', {
@@ -232,7 +245,12 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     }
 
     return null;
-  }, [currentView, currentFormat, !!compiledPdf, !!compiledCanvas, useEnhancedRenderer, handleSavePdf]);
+  }, [currentView,
+    currentFormat,
+    !!compiledPdf,
+    !!compiledCanvas,
+    useEnhancedRenderer,
+    handleSavePdf]);
 
   const hasAnyOutput = compiledPdf || compiledCanvas;
 

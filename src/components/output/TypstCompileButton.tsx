@@ -679,8 +679,8 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
               </label>
             </div>
           }
-
-          {useSharedSettings &&
+          {/* fabawi: disabled for now as it conflicts with the output setting from tabs*/}
+          {/* {useSharedSettings &&
             <label className="dropdown-checkbox">
               <input
                 type="checkbox"
@@ -689,7 +689,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
                 disabled={isCompiling} />
               {t('Share with collaborators')}
             </label>
-          }
+          } */}
         </div>
 
         <div className="dropdown-section">

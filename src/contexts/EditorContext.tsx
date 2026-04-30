@@ -54,7 +54,7 @@ export const defaultEditorSettings: EditorSettings = {
   vimMode: false,
   spellCheck: true,
   mathLiveEnabled: true,
-  mathLivePreviewMode: 'cursor', // hover-cursor, hover, cursor, never
+  mathLivePreviewMode: 'cursor',
   language: 'en',
 };
 
@@ -70,7 +70,7 @@ interface EditorContextType {
   getAutoSaveDelay: () => number;
   getVimModeEnabled: () => boolean;
   getSpellCheckEnabled: () => boolean;
-  getCollabOptions: () => CollabConnectOptions;
+  getCollabOptions: () => CollabConnectOptions | null;
   getEnabledLSPPlugins: () => string[];
   editorSettingsVersion: number;
 }
@@ -84,7 +84,7 @@ export const EditorContext = createContext<EditorContextType>({
   getAutoSaveDelay: () => 2000,
   getVimModeEnabled: () => false,
   getSpellCheckEnabled: () => true,
-  getCollabOptions: () => ({}),
+  getCollabOptions: () => null,
   getEnabledLSPPlugins: () =>
     pluginRegistry.getLSPPlugins().map((plugin) => plugin.id),
   editorSettingsVersion: 0,
@@ -237,9 +237,17 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       .map((plugin) => plugin.id);
   }, [getSetting]);
 
+  const editorSettingsSignature = JSON.stringify(editorSettings);
+
   const editorSettingsVersion = useMemo(() => {
-    return JSON.stringify(editorSettings).length;
-  }, [editorSettings]);
+    let hash = 0;
+
+    for (let i = 0; i < editorSettingsSignature.length; i++) {
+      hash = (hash * 31 + editorSettingsSignature.charCodeAt(i)) | 0;
+    }
+
+    return hash;
+  }, [editorSettingsSignature]);
 
   const contextValue = {
     editorSettings,
