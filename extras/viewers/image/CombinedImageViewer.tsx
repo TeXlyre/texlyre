@@ -58,6 +58,13 @@ const RENDERING_BY_QUALITY = {
   high: 'auto'
 } as const;
 
+DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+  if (node.nodeName?.toLowerCase() === 'a') {
+    node.setAttribute('target', '_blank');
+    node.setAttribute('rel', 'noopener noreferrer');
+  }
+});
+
 const readScrollbarColors = () => {
   const styles = getComputedStyle(document.documentElement);
   return {
@@ -120,7 +127,15 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
   }, [content, mimeType, isSvg]);
 
   const sanitizedSvg = useMemo(
-    () => svgContent ? DOMPurify.sanitize(svgContent, { USE_PROFILES: { svg: true, svgFilters: true } }) : '',
+    () => svgContent
+      ? DOMPurify.sanitize(svgContent, {
+        USE_PROFILES: { svg: true, svgFilters: true },
+        ADD_TAGS: ['animate', 'animateTransform', 'animateMotion', 'set', 'mpath', 'a'],
+        ADD_ATTR: ['href', 'xlink:href', 'target', 'rel'],
+        FORBID_TAGS: ['foreignObject'],
+        ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel|ftp|#):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
+      })
+      : '',
     [svgContent]
   );
 
@@ -199,8 +214,9 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
         }
 
         .fx-inner > svg:not([width]):not([height]) {
-          width: min-content;
-          height: min-content;
+          width: 100%;
+          height: auto;
+          max-width: 800px;
         }
       </style></head>
       <body><div class="fx-outer"><div class="fx-inner">${innerHtml}
