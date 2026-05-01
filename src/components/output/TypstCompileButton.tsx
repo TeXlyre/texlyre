@@ -138,14 +138,11 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     setAvailableTypstFiles(allTypstFiles);
 
     const findMainFile = async () => {
-      if (autoMainFile && allTypstFiles.includes(autoMainFile)) {
-        return;
-      }
-
       if (
         selectedDocId &&
         linkedFileInfo?.filePath &&
-        isTypstFile(linkedFileInfo.filePath)) {
+        isTypstFile(linkedFileInfo.filePath)
+      ) {
         setAutoMainFile(linkedFileInfo.filePath);
         return;
       }
@@ -158,8 +155,11 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
         }
       }
 
-      const typstFile = allTypstFiles[0];
-      setAutoMainFile(typstFile);
+      if (autoMainFile && allTypstFiles.includes(autoMainFile)) {
+        return;
+      }
+
+      setAutoMainFile(allTypstFiles[0]);
     };
 
     findMainFile();

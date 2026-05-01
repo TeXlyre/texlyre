@@ -164,14 +164,11 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     setAvailableTexFiles(allTexFiles);
 
     const findMainFile = async () => {
-      if (autoMainFile && allTexFiles.includes(autoMainFile)) {
-        return;
-      }
-
       if (
         selectedDocId &&
         linkedFileInfo?.filePath &&
-        isLatexMainFile(linkedFileInfo.filePath)) {
+        isLatexMainFile(linkedFileInfo.filePath)
+      ) {
         setAutoMainFile(linkedFileInfo.filePath);
         return;
       }
@@ -184,8 +181,11 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
         }
       }
 
-      const texFile = allTexFiles[0];
-      setAutoMainFile(texFile);
+      if (autoMainFile && allTexFiles.includes(autoMainFile)) {
+        return;
+      }
+
+      setAutoMainFile(allTexFiles[0]);
     };
 
     findMainFile();

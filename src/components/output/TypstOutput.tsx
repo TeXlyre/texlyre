@@ -10,9 +10,10 @@ import { useProperties } from '../../hooks/useProperties';
 import { useSettings } from '../../hooks/useSettings';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import type { RendererController } from '../../plugins/PluginInterface'
+import type { FileNode } from '../../types/files';
 import ResizablePanel from '../common/ResizablePanel';
 import TypstCompileButton from './TypstCompileButton';
-import { isTypstFile, toArrayBuffer } from '../../utils/fileUtils';
+import { isTypstFile, isTemporaryFile, toArrayBuffer } from '../../utils/fileUtils';
 import { TypstOutputFormat } from '../../types/typst';
 
 interface TypstOutputProps {
@@ -49,16 +50,21 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
   } = useTypst();
 
   const projectId = fileStorageService.getCurrentProjectId() || undefined;
-  const { selectedFileId, getFile } = useFileTree();
+  const { selectedFileId, getFile, fileTree } = useFileTree();
   const { getSetting } = useSettings();
   const { getProperty, setProperty, registerProperty } = useProperties();
   const propertiesRegistered = useRef(false);
 
   const [visualizerHeight, setVisualizerHeight] = useState(300);
   const [visualizerCollapsed, setVisualizerCollapsed] = useState(false);
+  const [autoMainFile, setAutoMainFile] = useState<string | undefined>();
 
   const settingFormat = getSetting('typst-default-format')?.value as TypstOutputFormat ?? 'pdf';
+
+  const propMainFile = getProperty('typst-main-file', { scope: 'project', projectId }) as string | undefined;
   const propFormat = getProperty('typst-output-format', { scope: 'project', projectId }) as TypstOutputFormat | undefined;
+
+  const effectiveMainFile = propMainFile || autoMainFile;
   const effectiveFormat = propFormat || currentFormat || settingFormat;
 
   const canvasControllerRef = useRef<RendererController | null>(null);
@@ -95,7 +101,79 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
       subcategory: 'Layout',
       defaultValue: false
     });
+
+    registerProperty({
+      id: 'typst-main-file',
+      category: 'Compilation',
+      subcategory: 'Typst',
+      defaultValue: undefined,
+    });
+
+    registerProperty({
+      id: 'typst-output-format',
+      category: 'Compilation',
+      subcategory: 'Typst',
+      defaultValue: 'pdf',
+    });
   }, [registerProperty]);
+
+  useEffect(() => {
+    const findTypstFiles = (nodes: FileNode[]): string[] => {
+      const typstFiles: string[] = [];
+
+      for (const node of nodes) {
+        if (
+          node.type === 'file' &&
+          isTypstFile(node.path) &&
+          !isTemporaryFile(node.path)
+        ) {
+          typstFiles.push(node.path);
+        }
+
+        if (node.children) {
+          typstFiles.push(...findTypstFiles(node.children));
+        }
+      }
+
+      return typstFiles;
+    };
+
+    const allTypstFiles = findTypstFiles(fileTree);
+
+    const findMainFile = async () => {
+      if (
+        selectedDocId &&
+        linkedFileInfo?.filePath &&
+        isTypstFile(linkedFileInfo.filePath)
+      ) {
+        setAutoMainFile(linkedFileInfo.filePath);
+        return;
+      }
+
+      if (selectedFileId) {
+        const file = await getFile(selectedFileId);
+        if (file && isTypstFile(file.path)) {
+          setAutoMainFile(file.path);
+          return;
+        }
+      }
+
+      if (autoMainFile && allTypstFiles.includes(autoMainFile)) {
+        return;
+      }
+
+      setAutoMainFile(allTypstFiles[0]);
+    };
+
+    findMainFile();
+  }, [
+    fileTree,
+    selectedFileId,
+    selectedDocId,
+    linkedFileInfo,
+    getFile,
+    autoMainFile,
+  ]);
 
   useEffect(() => {
     const storedHeight = getProperty('typst-log-visualizer-height');
@@ -157,31 +235,59 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     URL.revokeObjectURL(url);
   }, [compiledPdf]);
 
-  const handleTabSwitch = useCallback((format: TypstOutputFormat) => {
-    if (effectiveFormat !== format) {
+  const resolveCompileTarget = useCallback(async (): Promise<string | undefined> => {
+    if (effectiveMainFile) {
+      return effectiveMainFile;
+    }
+
+    if (
+      selectedDocId &&
+      linkedFileInfo?.filePath &&
+      isTypstFile(linkedFileInfo.filePath)
+    ) {
+      return linkedFileInfo.filePath;
+    }
+
+    if (selectedFileId) {
+      const file = await getFile(selectedFileId);
+
+      if (file && isTypstFile(file.path)) {
+        return file.path;
+      }
+    }
+
+    return undefined;
+  }, [
+    effectiveMainFile,
+    selectedDocId,
+    linkedFileInfo,
+    selectedFileId,
+    getFile,
+  ]);
+
+  const handleTabSwitch = useCallback(
+    async (format: TypstOutputFormat) => {
+      if (effectiveFormat === format) return;
+
       setProperty('typst-output-format', format, {
         scope: 'project',
         projectId,
       });
 
-      if (selectedDocId && linkedFileInfo && isTypstFile(linkedFileInfo.filePath)) {
-        compileDocument(linkedFileInfo.filePath, format);
-      } else if (selectedFileId) {
-        getFile(selectedFileId).then((file) => {
-          if (file && isTypstFile(file.path)) {
-            compileDocument(file.path, format);
-          }
-        });
+      const mainFile = await resolveCompileTarget();
+
+      if (mainFile) {
+        await compileDocument(mainFile, format);
       }
-    }
-  }, [effectiveFormat,
-    setProperty,
-    projectId,
-    compileDocument,
-    selectedDocId,
-    linkedFileInfo,
-    selectedFileId,
-    getFile]);
+    },
+    [
+      effectiveFormat,
+      setProperty,
+      projectId,
+      resolveCompileTarget,
+      compileDocument,
+    ],
+  );
 
   const outputViewerContent = useMemo(() => {
     console.log('[TypstOutput] outputViewerContent recalculating', {
