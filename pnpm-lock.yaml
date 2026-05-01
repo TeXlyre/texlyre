@@ -84,14 +84,14 @@ importers:
         specifier: ^1.4.8
         version: 1.4.8
       '@myriaddreamin/typst-ts-renderer':
-        specifier: npm:@texlyre/typst-ts-renderer@^0.7.0-rc2
-        version: '@texlyre/typst-ts-renderer@0.7.0-rc2'
+        specifier: npm:@texlyre/typst-ts-renderer@0.7.0-rc4
+        version: '@texlyre/typst-ts-renderer@0.7.0-rc4'
       '@myriaddreamin/typst-ts-web-compiler':
-        specifier: npm:@texlyre/typst-ts-web-compiler@^0.7.0-rc2
-        version: '@texlyre/typst-ts-web-compiler@0.7.0-rc2'
+        specifier: npm:@texlyre/typst-ts-web-compiler@0.7.0-rc4
+        version: '@texlyre/typst-ts-web-compiler@0.7.0-rc4'
       '@myriaddreamin/typst.ts':
-        specifier: npm:@texlyre/typst.ts@^0.7.0-rc2
-        version: '@texlyre/typst.ts@0.7.0-rc2(@texlyre/typst-ts-renderer@0.7.0-rc2)(@texlyre/typst-ts-web-compiler@0.7.0-rc2)'
+        specifier: npm:@texlyre/typst.ts@0.7.0-rc4
+        version: '@texlyre/typst.ts@0.7.0-rc4(@texlyre/typst-ts-renderer@0.7.0-rc4)(@texlyre/typst-ts-web-compiler@0.7.0-rc4)'
       '@picocss/pico':
         specifier: ^2.1.1
         version: 2.1.1
@@ -2119,17 +2119,17 @@ packages:
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
 
-  '@texlyre/typst-ts-renderer@0.7.0-rc2':
-    resolution: {integrity: sha512-vzHDLup+5+T24fh3pPwr2BZSKvd3puzgrLCumebz2XU8C9ki8lAJeMzEJQecu0pTYEvfmbfZhR8/HyBU+FxTsQ==}
+  '@texlyre/typst-ts-renderer@0.7.0-rc4':
+    resolution: {integrity: sha512-thuK/Kx8gFRd83PHE7BRHzeuMYF3vspZOYbIjhyYhJyZEj90F/GbcH1+6T0UiNYWIL3XJ/naClh92mcFFz/oGw==}
 
-  '@texlyre/typst-ts-web-compiler@0.7.0-rc2':
-    resolution: {integrity: sha512-N8dyN1vispjyYCQnD7IEi1jSrREx3rDKXpBc++fkBTpMBqmECqaSEXa2tVGW0zWoRIznJr+rbodngnWHKfSzbg==}
+  '@texlyre/typst-ts-web-compiler@0.7.0-rc4':
+    resolution: {integrity: sha512-skqq3IiH9SVYDFDa61r4HChwQIj2OzErlqR7yFPT8NEC0p4+cwKDT30yDra1A2zpHOB9Dhg+mFInmK/KoJcTQQ==}
 
-  '@texlyre/typst.ts@0.7.0-rc2':
-    resolution: {integrity: sha512-wdOH0T0VgVxZ2O+/+5aPhe3ZdsrXOt9mrjcUnc4BHMU/vTj5whweL4gkXdiyIyTFVCSlJEVbUiyii23+Kc2KMw==}
+  '@texlyre/typst.ts@0.7.0-rc4':
+    resolution: {integrity: sha512-4TSvFnNFgQU5tYK2sMF1MUd+xBQEbWNB3/ZvjfD/1r/B5Act4NcBl6JYWv63X3RX2naNwEncqOBpyWcIFRr1Bg==}
     peerDependencies:
-      '@myriaddreamin/typst-ts-renderer': npm:@texlyre/typst-ts-renderer@^0.7.0-rc2
-      '@myriaddreamin/typst-ts-web-compiler': npm:@texlyre/typst-ts-web-compiler@^0.7.0-rc2
+      '@myriaddreamin/typst-ts-renderer': npm:@texlyre/typst-ts-renderer@>=0.7.0-rc4
+      '@myriaddreamin/typst-ts-web-compiler': npm:@texlyre/typst-ts-web-compiler@>=0.7.0-rc4
     peerDependenciesMeta:
       '@myriaddreamin/typst-ts-renderer':
         optional: true
@@ -7029,16 +7029,16 @@ snapshots:
     dependencies:
       '@testing-library/dom': 10.4.1
 
-  '@texlyre/typst-ts-renderer@0.7.0-rc2': {}
+  '@texlyre/typst-ts-renderer@0.7.0-rc4': {}
 
-  '@texlyre/typst-ts-web-compiler@0.7.0-rc2': {}
+  '@texlyre/typst-ts-web-compiler@0.7.0-rc4': {}
 
-  '@texlyre/typst.ts@0.7.0-rc2(@texlyre/typst-ts-renderer@0.7.0-rc2)(@texlyre/typst-ts-web-compiler@0.7.0-rc2)':
+  '@texlyre/typst.ts@0.7.0-rc4(@texlyre/typst-ts-renderer@0.7.0-rc4)(@texlyre/typst-ts-web-compiler@0.7.0-rc4)':
     dependencies:
       idb: 7.1.1
     optionalDependencies:
-      '@myriaddreamin/typst-ts-renderer': '@texlyre/typst-ts-renderer@0.7.0-rc2'
-      '@myriaddreamin/typst-ts-web-compiler': '@texlyre/typst-ts-web-compiler@0.7.0-rc2'
+      '@myriaddreamin/typst-ts-renderer': '@texlyre/typst-ts-renderer@0.7.0-rc4'
+      '@myriaddreamin/typst-ts-web-compiler': '@texlyre/typst-ts-web-compiler@0.7.0-rc4'
 
   '@tsconfig/node10@1.0.12': {}
 

@@ -110,6 +110,10 @@ async function loadFonts(baseUrl: string = `${BASE_PATH}/assets/fonts`) {
     return fonts.filter((f) => f !== null) as Uint8Array[];
 }
 
+function removeEmbeddedSvgScripts(svg: string): string {
+    return svg.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+}
+
 async function ensureInit() {
     if (initialized) return;
 
@@ -226,10 +230,11 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
                 self.postMessage(resp, transferList);
                 return;
             }
-
-            output = await renderer.renderSvg({
+            const rawSvg = await renderer.renderSvg({
                 artifactContent: compileResult.result,
             });
+
+            output = removeEmbeddedSvgScripts(String(rawSvg));
         }
 
         const transferList: Transferable[] =

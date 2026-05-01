@@ -1963,20 +1963,20 @@
   resolved "https://registry.npmjs.org/@msgpack/msgpack/-/msgpack-2.8.0.tgz"
   integrity sha512-h9u4u/jiIRKbq25PM+zymTyW6bhTzELvOoUd+AvYriWOAKpLGnIamaET3pnHYoI5iYphAHBI4ayx0MehR+VVPQ==
 
-"@myriaddreamin/typst-ts-renderer@npm:@texlyre/typst-ts-renderer@^0.7.0-rc2":
-  version "0.7.0-rc2"
-  resolved "https://registry.npmjs.org/@texlyre/typst-ts-renderer/-/typst-ts-renderer-0.7.0-rc2.tgz"
-  integrity sha512-vzHDLup+5+T24fh3pPwr2BZSKvd3puzgrLCumebz2XU8C9ki8lAJeMzEJQecu0pTYEvfmbfZhR8/HyBU+FxTsQ==
+"@myriaddreamin/typst-ts-renderer@npm:@texlyre/typst-ts-renderer@>=0.7.0-rc4", "@myriaddreamin/typst-ts-renderer@npm:@texlyre/typst-ts-renderer@0.7.0-rc4":
+  version "0.7.0-rc4"
+  resolved "https://registry.npmjs.org/@texlyre/typst-ts-renderer/-/typst-ts-renderer-0.7.0-rc4.tgz"
+  integrity sha512-thuK/Kx8gFRd83PHE7BRHzeuMYF3vspZOYbIjhyYhJyZEj90F/GbcH1+6T0UiNYWIL3XJ/naClh92mcFFz/oGw==
 
-"@myriaddreamin/typst-ts-web-compiler@npm:@texlyre/typst-ts-web-compiler@^0.7.0-rc2":
-  version "0.7.0-rc2"
-  resolved "https://registry.npmjs.org/@texlyre/typst-ts-web-compiler/-/typst-ts-web-compiler-0.7.0-rc2.tgz"
-  integrity sha512-N8dyN1vispjyYCQnD7IEi1jSrREx3rDKXpBc++fkBTpMBqmECqaSEXa2tVGW0zWoRIznJr+rbodngnWHKfSzbg==
+"@myriaddreamin/typst-ts-web-compiler@npm:@texlyre/typst-ts-web-compiler@>=0.7.0-rc4", "@myriaddreamin/typst-ts-web-compiler@npm:@texlyre/typst-ts-web-compiler@0.7.0-rc4":
+  version "0.7.0-rc4"
+  resolved "https://registry.npmjs.org/@texlyre/typst-ts-web-compiler/-/typst-ts-web-compiler-0.7.0-rc4.tgz"
+  integrity sha512-skqq3IiH9SVYDFDa61r4HChwQIj2OzErlqR7yFPT8NEC0p4+cwKDT30yDra1A2zpHOB9Dhg+mFInmK/KoJcTQQ==
 
-"@myriaddreamin/typst.ts@npm:@texlyre/typst.ts@^0.7.0-rc2":
-  version "0.7.0-rc2"
-  resolved "https://registry.npmjs.org/@texlyre/typst.ts/-/typst.ts-0.7.0-rc2.tgz"
-  integrity sha512-wdOH0T0VgVxZ2O+/+5aPhe3ZdsrXOt9mrjcUnc4BHMU/vTj5whweL4gkXdiyIyTFVCSlJEVbUiyii23+Kc2KMw==
+"@myriaddreamin/typst.ts@npm:@texlyre/typst.ts@0.7.0-rc4":
+  version "0.7.0-rc4"
+  resolved "https://registry.npmjs.org/@texlyre/typst.ts/-/typst.ts-0.7.0-rc4.tgz"
+  integrity sha512-4TSvFnNFgQU5tYK2sMF1MUd+xBQEbWNB3/ZvjfD/1r/B5Act4NcBl6JYWv63X3RX2naNwEncqOBpyWcIFRr1Bg==
   dependencies:
     idb "^7.1.1"
 

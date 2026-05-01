@@ -95,6 +95,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   const svgPagesRef = useRef<Map<number, string>>(new Map());
   const pdfDocRef = useRef<any>(null);
   const contentTypeRef = useRef<'svg' | 'pdf'>('svg');
+  const [contentType, setContentType] = useState<'svg' | 'pdf'>('svg');
   const fullSvgBufferRef = useRef<ArrayBuffer | null>(null);
   const pendingRenderRef = useRef<Set<number>>(new Set());
   const renderingRef = useRef<Set<number>>(new Set());
@@ -379,7 +380,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         arr[2] === 0x44 &&
         arr[3] === 0x46;
       contentTypeRef.current = isPdf ? 'pdf' : 'svg';
-
+      setContentType(contentTypeRef.current);
       clearPdfCaches();
 
       for (const el of textLayerRefs.current.values()) {
@@ -670,10 +671,10 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   }, [scrollView, currentPage, setProperty, getPageTop]);
 
   const handleToggleFullscreen = useCallback(() => {
-    if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen().then(() => setIsFullscreen(true));
-    } else {
+    if (document.fullscreenElement === containerRef.current) {
       document.exitFullscreen().then(() => setIsFullscreen(false));
+    } else if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen().then(() => setIsFullscreen(true));
     }
   }, []);
 
@@ -719,8 +720,13 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      const fs = !!document.fullscreenElement;
-      setIsFullscreen(fs);
+      const fullscreenElement = document.fullscreenElement;
+      const isCanvasFullscreen = fullscreenElement === containerRef.current;
+
+      setIsFullscreen(isCanvasFullscreen);
+
+      if (!isCanvasFullscreen) return;
+
       requestAnimationFrame(() => {
         const s = computeFitScale(fitMode);
         if (s !== scale) {
@@ -730,6 +736,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         }
       });
     };
+
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () =>
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
@@ -1011,7 +1018,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 
                       return (
                         <div
-                          key={pageNumber}
+                          key={`canvas-${contentType}-${pageNumber}`}
                           className="canvas-page"
                           onClick={(e) => handlePageClick(pageNumber, e)}
                         >
@@ -1048,7 +1055,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                 onClick={(e) => handlePageClick(currentPage, e)}
               >
                 <canvas
-                  key={`canvas-${currentPage}`}
+                  key={`canvas-${contentType}-${currentPage}`}
                   ref={setCanvasRef(currentPage)}
                   className="canvas-page-canvas"
                   style={{
@@ -1058,14 +1065,14 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                 />
                 {canvasRendererTextSelection && (
                   <div
-                    key={`text-${currentPage}`}
+                    key={`text-${contentType}-${currentPage}`}
                     ref={setTextLayerRef(currentPage)}
                     className="textLayer"
                   />
                 )}
                 {isPdf && canvasRendererAnnotations && (
                   <div
-                    key={`annot-${currentPage}`}
+                    key={`annot-${contentType}-${currentPage}`}
                     ref={setAnnotationLayerRef(currentPage)}
                     className="annotationLayer"
                   />
