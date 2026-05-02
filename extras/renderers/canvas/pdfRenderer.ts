@@ -193,6 +193,7 @@ function buildTextLayerChunked(
         const items = textContent.items as any[];
         const styles = textContent.styles as Record<string, any>;
         const total = items.length;
+        const builtSpans: HTMLSpanElement[] = [];
         let index = 0;
 
         const processChunk = () => {
@@ -209,7 +210,10 @@ function buildTextLayerChunked(
                 if (!item.str || item.str.length === 0) continue;
 
                 const span = createTextSpan(item, styles, viewport);
-                if (span) fragment.appendChild(span);
+                if (span) {
+                    fragment.appendChild(span);
+                    builtSpans.push(span);
+                }
             }
 
             container.appendChild(fragment);
@@ -218,12 +222,48 @@ function buildTextLayerChunked(
             if (index < total) {
                 requestAnimationFrame(processChunk);
             } else {
-                resolve();
+                requestAnimationFrame(() => {
+                    if (!job.cancelled) correctSpanWidths(container, builtSpans);
+                    resolve();
+                });
             }
         };
 
         requestAnimationFrame(processChunk);
     });
+}
+
+function correctSpanWidths(
+    container: HTMLDivElement,
+    spans: HTMLSpanElement[]
+): void {
+    const previousScale = container.style.getPropertyValue('--scale-factor');
+    container.style.setProperty('--scale-factor', '1');
+
+    const measurements = new Float32Array(spans.length);
+    for (let i = 0; i < spans.length; i++) {
+        measurements[i] = spans[i].getBoundingClientRect().width;
+    }
+
+    if (previousScale) {
+        container.style.setProperty('--scale-factor', previousScale);
+    }
+
+    for (let i = 0; i < spans.length; i++) {
+        const span = spans[i];
+        const target = parseFloat(span.dataset.targetWidth || '0');
+        const measured = measurements[i];
+        if (!target || measured === 0) continue;
+
+        const ratio = target / measured;
+        if (!isFinite(ratio) || ratio <= 0) continue;
+        if (Math.abs(ratio - 1) < 0.02) continue;
+
+        const angle = parseFloat(span.dataset.angle || '0');
+        span.style.transform = angle !== 0
+            ? `rotate(${angle}rad) scaleX(${ratio})`
+            : `scaleX(${ratio})`;
+    }
 }
 
 function createTextSpan(
@@ -245,6 +285,8 @@ function createTextSpan(
     span.style.top = `calc(var(--scale-factor) * ${tx[5] - fontHeight * ascent}px)`;
     span.style.fontSize = `calc(var(--scale-factor) * ${fontHeight}px)`;
     span.style.fontFamily = style?.fontFamily || 'sans-serif';
+    span.dataset.targetWidth = String(Math.abs(item.width || 0));
+    span.dataset.angle = String(angle);
 
     if (angle !== 0) {
         span.style.transform = `rotate(${angle}rad)`;
