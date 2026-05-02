@@ -108,6 +108,17 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
   const isBusyTeX = effectiveEngine.startsWith('busytex-');
 
+  const compileStateRef = useRef({
+    mainFile: effectiveMainFile,
+    format: effectiveFormat,
+    isCompiling,
+  });
+  compileStateRef.current = {
+    mainFile: effectiveMainFile,
+    format: effectiveFormat,
+    isCompiling,
+  };
+
   useEffect(() => {
     if (propertiesRegistered.current) return;
     propertiesRegistered.current = true;
@@ -164,10 +175,6 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
     setAvailableTexFiles(allTexFiles);
 
     const findMainFile = async () => {
-      if (autoMainFile && allTexFiles.includes(autoMainFile)) {
-        return;
-      }
-
       if (
         selectedDocId &&
         linkedFileInfo?.filePath &&
@@ -184,12 +191,15 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
         }
       }
 
-      const texFile = allTexFiles[0];
-      setAutoMainFile(texFile);
+      if (autoMainFile && allTexFiles.includes(autoMainFile)) {
+        return;
+      }
+
+      setAutoMainFile(allTexFiles[0]);
     };
 
     findMainFile();
-  }, [selectedFileId, getFile, fileTree, selectedDocId, linkedFileInfo]);
+  }, [selectedFileId, getFile, fileTree, selectedDocId, linkedFileInfo, autoMainFile]);
 
   useEffect(() => {
     if (!useSharedSettings || !projectEngine) return;
@@ -219,56 +229,25 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
   }, [isDropdownOpen]);
 
   useEffect(() => {
-    if (!useSharedSettings || !effectiveAutoCompileOnSave || !effectiveMainFile) return;
+    if (!useSharedSettings || !effectiveAutoCompileOnSave) return;
 
-    const handleFileSaved = async (event: Event) => {
-      if (isCompiling) return;
+    const handleFileSaved = async () => {
+      const state = compileStateRef.current;
+      if (state.isCompiling) return;
+      if (!state.mainFile) return;
 
-      try {
-        const customEvent = event as CustomEvent;
-        const detail = customEvent.detail;
-
-        if (!detail) return;
-
-        const candidatePath = detail.isFile ?
-          detail.fileId ?
-            detail.filePath ||
-            (await fileStorageService.getFile(detail.fileId))?.path :
-            undefined :
-          linkedFileInfo?.filePath ?? detail.filePath;
-
-        if (!candidatePath || !isLatexFile(candidatePath)) return;
-
-        const mainFileToCompile =
-          detail.isFile ? effectiveMainFile : candidatePath;
-
-        const targetFormat = effectiveFormat;
-
-        setTimeout(async () => {
-          if (onExpandLatexOutput) {
-            onExpandLatexOutput();
-          }
-          await compileDocument(mainFileToCompile, targetFormat);
-        }, 120);
-      } catch (error) {
-        console.error('Error in LaTeX auto-compile on save:', error);
+      if (onExpandLatexOutput) {
+        onExpandLatexOutput();
       }
+
+      await compileDocument(state.mainFile, state.format);
     };
 
     document.addEventListener('file-saved', handleFileSaved);
     return () => {
       document.removeEventListener('file-saved', handleFileSaved);
     };
-  }, [
-    useSharedSettings,
-    effectiveAutoCompileOnSave,
-    effectiveMainFile,
-    effectiveFormat,
-    isCompiling,
-    compileDocument,
-    onExpandLatexOutput,
-    linkedFileInfo]
-  );
+  }, [useSharedSettings, effectiveAutoCompileOnSave, compileDocument, onExpandLatexOutput]);
 
   useEffect(() => {
     if (!isBusyTeX || !isCacheOptionsOpen) return;

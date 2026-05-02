@@ -156,10 +156,6 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
     const allTexFiles = findTexFiles(fileTree);
 
     const findMainFile = async () => {
-      if (autoMainFile && allTexFiles.includes(autoMainFile)) {
-        return;
-      }
-
       if (
         selectedDocId &&
         linkedFileInfo?.filePath &&
@@ -175,6 +171,10 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
           setAutoMainFile(file.path);
           return;
         }
+      }
+
+      if (autoMainFile && allTexFiles.includes(autoMainFile)) {
+        return;
       }
 
       setAutoMainFile(allTexFiles[0]);

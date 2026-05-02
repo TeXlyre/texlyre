@@ -227,12 +227,12 @@ export interface InitOutput {
   readonly qcms_white_point_sRGB: (a: number) => void;
   readonly lut_interp_linear16: (a: number, b: number, c: number) => number;
   readonly lut_inverse_interp16: (a: number, b: number, c: number) => number;
-  readonly __wasm_bindgen_func_elem_1035: (a: number, b: number, c: number) => void;
+  readonly __wasm_bindgen_func_elem_1035: (a: number, b: number) => void;
   readonly __wasm_bindgen_func_elem_1022: (a: number, b: number) => void;
   readonly __wasm_bindgen_func_elem_1056: (a: number, b: number, c: number) => void;
   readonly __wasm_bindgen_func_elem_1077: (a: number, b: number) => void;
-  readonly __wasm_bindgen_func_elem_1034: (a: number, b: number) => void;
-  readonly __wasm_bindgen_func_elem_3555: (a: number, b: number, c: number, d: number) => void;
+  readonly __wasm_bindgen_func_elem_1034: (a: number, b: number, c: number) => void;
+  readonly __wasm_bindgen_func_elem_3560: (a: number, b: number, c: number, d: number) => void;
   readonly __wbindgen_export: (a: number, b: number) => number;
   readonly __wbindgen_export2: (a: number, b: number, c: number, d: number) => number;
   readonly __wbindgen_export3: (a: number) => void;

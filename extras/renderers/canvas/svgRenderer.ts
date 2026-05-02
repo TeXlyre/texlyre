@@ -17,7 +17,6 @@ export function invalidateSvgOverlayCache(container: HTMLDivElement): void {
 export function parseSvgPages(svgBuffer: ArrayBuffer): Promise<{
     pages: Map<number, string>;
     metadata: Map<number, { width: number; height: number }>;
-    textLayers: Map<number, string>;
 }> {
     return new Promise((resolve, reject) => {
         const worker = getWorker();
@@ -25,10 +24,11 @@ export function parseSvgPages(svgBuffer: ArrayBuffer): Promise<{
         const handleMessage = (e: MessageEvent) => {
             if (e.data.type === 'parsed') {
                 worker.removeEventListener('message', handleMessage);
+
                 const pages = new Map<number, string>(e.data.pages);
                 const metadata = new Map<number, { width: number; height: number }>(e.data.metadata);
-                const textLayers = new Map<number, string>(e.data.textLayers);
-                resolve({ pages, metadata, textLayers });
+
+                resolve({ pages, metadata });
             } else if (e.data.type === 'error') {
                 worker.removeEventListener('message', handleMessage);
                 reject(new Error(e.data.error));
@@ -101,7 +101,10 @@ export function renderSvgPageToCanvas(ctx: SvgRenderContext, pageNumber: number)
         renderingRef.current.delete(pageNumber);
 
         if (renderTokensRef.current.get(pageNumber) !== token) {
-            pendingRenderRef.current.delete(pageNumber);
+            if (pendingRenderRef.current.has(pageNumber)) {
+                pendingRenderRef.current.delete(pageNumber);
+                requestAnimationFrame(() => renderSvgPageToCanvas(ctx, pageNumber));
+            }
             return;
         }
 
@@ -152,10 +155,21 @@ export function renderSvgOverlay(
     if (!svg.hasAttribute('viewBox')) {
         svg.setAttribute('viewBox', `0 0 ${pageWidth} ${pageHeight}`);
     }
+
     svg.setAttribute('width', String(scaledWidth));
     svg.setAttribute('height', String(scaledHeight));
     svg.setAttribute('preserveAspectRatio', 'xMinYMin meet');
     svg.style.pointerEvents = 'none';
+
+    svg.querySelectorAll('text, [data-text], video, foreignObject, foreignObject *').forEach((el) => {
+        (el as HTMLElement).style.pointerEvents = 'auto';
+
+        if (el.tagName.toLowerCase() === 'text' || el.hasAttribute('data-text')) {
+            (el as HTMLElement).style.cursor = 'text';
+        } else {
+            (el as HTMLElement).style.cursor = 'auto';
+        }
+    });
 
     svg.querySelectorAll('text, [data-text]').forEach((el) => {
         (el as HTMLElement).style.pointerEvents = 'auto';

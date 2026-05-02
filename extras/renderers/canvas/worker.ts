@@ -10,7 +10,6 @@ interface ParsedResult {
     type: 'parsed';
     pages: Array<[number, string]>;
     metadata: Array<[number, { width: number; height: number }]>;
-    textLayers: Array<[number, string]>;
 }
 
 interface ErrorResult {
@@ -53,7 +52,7 @@ function extractSvgAttributes(svgString: string): { attrs: string; width: number
         }
     }
 
-    if (!filteredAttrs.some(attr => attr.startsWith('xmlns='))) {
+    if (!filteredAttrs.some((attr) => attr.startsWith('xmlns='))) {
         filteredAttrs.unshift('xmlns="http://www.w3.org/2000/svg"');
     }
 
@@ -91,10 +90,12 @@ function extractPages(svgString: string): Array<{ fullTag: string; transform: st
             } else if (startIndex !== -1) {
                 depth++;
             }
+
             i = tagEnd + 1;
         } else if (svgString.substring(i, i + 4) === '</g>') {
             if (startIndex !== -1) {
                 depth--;
+
                 if (depth === 0) {
                     const fullTag = svgString.substring(startIndex, i + 4);
                     pages.push({ fullTag, transform: currentTransform });
@@ -102,6 +103,7 @@ function extractPages(svgString: string): Array<{ fullTag: string; transform: st
                     currentTransform = '';
                 }
             }
+
             i += 4;
         } else {
             i++;
@@ -116,65 +118,38 @@ function extractYOffset(transform: string): number {
     return match ? parseFloat(match[1]) || 0 : 0;
 }
 
-function extractTextOnlySvg(
-    pageSvg: string,
-    width: number,
-    height: number
-): string {
-    const groups: string[] = [];
-
-    const textGroupRegex = /<g[^>]*class=["']typst-text["'][^>]*>[\s\S]*?<\/g>/g;
-    let match;
-    while ((match = textGroupRegex.exec(pageSvg)) !== null) {
-        groups.push(match[0]);
-    }
-
-    const textElementRegex = /<text[^>]*>[\s\S]*?<\/text>/g;
-    while ((match = textElementRegex.exec(pageSvg)) !== null) {
-        groups.push(match[0]);
-    }
-
-    if (groups.length === 0) return '';
-
-    const styles = extractStyles(pageSvg);
-    const defs = extractDefs(pageSvg);
-
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${styles}${defs}${groups.join('')}</svg>`;
-}
-
 self.onmessage = (e: MessageEvent<ParseMessage>) => {
-    if (e.data.type === 'parse') {
-        try {
-            const decoder = new TextDecoder();
-            const svgString = decoder.decode(e.data.svgBuffer);
+    if (e.data.type !== 'parse') return;
 
-            const pages: Array<[number, string]> = [];
-            const metadata: Array<[number, { width: number; height: number }]> = [];
-            const textLayers: Array<[number, string]> = [];
+    try {
+        const decoder = new TextDecoder();
+        const svgString = decoder.decode(e.data.svgBuffer);
 
-            const { attrs: attrsString, width: svgWidth, height: svgHeight } = extractSvgAttributes(svgString);
-            const defsString = extractDefs(svgString);
-            const stylesString = extractStyles(svgString);
-            const pageGroups = extractPages(svgString);
+        const pages: Array<[number, string]> = [];
+        const metadata: Array<[number, { width: number; height: number }]> = [];
 
-            if (pageGroups.length === 0) {
-                pages.push([1, svgString]);
-                metadata.push([1, { width: svgWidth, height: svgHeight }]);
-                textLayers.push([1, extractTextOnlySvg(svgString, svgWidth, svgHeight)]);
-            } else {
-                pageGroups.forEach((pageGroup, index) => {
-                    const pageNumber = index + 1;
-                    const yOffset = extractYOffset(pageGroup.transform);
+        const { attrs: attrsString, width: svgWidth, height: svgHeight } = extractSvgAttributes(svgString);
+        const defsString = extractDefs(svgString);
+        const stylesString = extractStyles(svgString);
+        const pageGroups = extractPages(svgString);
 
-                    let pageHeight: number;
-                    if (index < pageGroups.length - 1) {
-                        const nextYOffset = extractYOffset(pageGroups[index + 1].transform);
-                        pageHeight = Math.abs(nextYOffset - yOffset);
-                    } else {
-                        pageHeight = svgHeight - yOffset;
-                    }
+        if (pageGroups.length === 0) {
+            pages.push([1, svgString]);
+            metadata.push([1, { width: svgWidth, height: svgHeight }]);
+        } else {
+            pageGroups.forEach((pageGroup, index) => {
+                const pageNumber = index + 1;
+                const yOffset = extractYOffset(pageGroup.transform);
 
-                    const pageSvg = `<svg ${attrsString} width="${svgWidth}" height="${pageHeight}" viewBox="0 0 ${svgWidth} ${pageHeight}">
+                let pageHeight: number;
+                if (index < pageGroups.length - 1) {
+                    const nextYOffset = extractYOffset(pageGroups[index + 1].transform);
+                    pageHeight = Math.abs(nextYOffset - yOffset);
+                } else {
+                    pageHeight = svgHeight - yOffset;
+                }
+
+                const pageSvg = `<svg ${attrsString} width="${svgWidth}" height="${pageHeight}" viewBox="0 0 ${svgWidth} ${pageHeight}">
 ${stylesString}
 ${defsString}
 <g transform="translate(0, ${-yOffset})">
@@ -182,25 +157,24 @@ ${pageGroup.fullTag}
 </g>
 </svg>`;
 
-                    pages.push([pageNumber, pageSvg]);
-                    metadata.push([pageNumber, { width: svgWidth, height: pageHeight }]);
-                    textLayers.push([pageNumber, extractTextOnlySvg(pageSvg, svgWidth, pageHeight)]);
-                });
-            }
-
-            const result: ParsedResult = {
-                type: 'parsed',
-                pages,
-                metadata,
-                textLayers
-            };
-            self.postMessage(result);
-        } catch (err) {
-            const errorResult: ErrorResult = {
-                type: 'error',
-                error: err instanceof Error ? err.message : String(err)
-            };
-            self.postMessage(errorResult);
+                pages.push([pageNumber, pageSvg]);
+                metadata.push([pageNumber, { width: svgWidth, height: pageHeight }]);
+            });
         }
+
+        const result: ParsedResult = {
+            type: 'parsed',
+            pages,
+            metadata
+        };
+
+        self.postMessage(result);
+    } catch (err) {
+        const errorResult: ErrorResult = {
+            type: 'error',
+            error: err instanceof Error ? err.message : String(err)
+        };
+
+        self.postMessage(errorResult);
     }
 };
