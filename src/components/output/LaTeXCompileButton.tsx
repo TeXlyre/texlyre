@@ -111,11 +111,13 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
   const compileStateRef = useRef({
     mainFile: effectiveMainFile,
     format: effectiveFormat,
+    engine: effectiveEngine,
     isCompiling,
   });
   compileStateRef.current = {
     mainFile: effectiveMainFile,
     format: effectiveFormat,
+    engine: effectiveEngine,
     isCompiling,
   };
 
@@ -238,6 +240,10 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 
       if (onExpandLatexOutput) {
         onExpandLatexOutput();
+      }
+
+      if (state.engine !== latexService.getCurrentEngineType()) {
+        await latexService.setEngine(state.engine);
       }
 
       await compileDocument(state.mainFile, state.format);
