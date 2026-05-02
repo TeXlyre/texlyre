@@ -18,14 +18,45 @@ export interface PdfRenderContext {
     pendingRenderRef: RefObject<Set<number>>;
 }
 
+const REFERENCE_SCALE = 1;
+const TEXT_LAYER_CHUNK_SIZE = 80;
+
+type TextLayerJob = {
+    cancelled: boolean;
+};
+
+const textContentCache = new Map<number, any>();
+const annotationDataCache = new Map<number, any[]>();
+const pageObjectCache = new Map<number, any>();
+
+const overlayScaleCache = new WeakMap<HTMLDivElement, number>();
+const annotationScaleCache = new WeakMap<HTMLDivElement, number>();
+const textLayerBuiltCache = new WeakMap<HTMLDivElement, number>();
+const textLayerJobs = new WeakMap<HTMLDivElement, TextLayerJob>();
+
 export function invalidatePdfOverlayCaches(container: HTMLDivElement): void {
     overlayScaleCache.delete(container);
     annotationScaleCache.delete(container);
+    textLayerBuiltCache.delete(container);
+
+    const job = textLayerJobs.get(container);
+    if (job) job.cancelled = true;
+    textLayerJobs.delete(container);
 }
 
 export function clearPdfCaches() {
     textContentCache.clear();
     annotationDataCache.clear();
+    pageObjectCache.clear();
+}
+
+async function getCachedPage(pdfDocRef: RefObject<any>, pageNumber: number): Promise<any> {
+    let page = pageObjectCache.get(pageNumber);
+    if (!page) {
+        page = await pdfDocRef.current.getPage(pageNumber);
+        pageObjectCache.set(pageNumber, page);
+    }
+    return page;
 }
 
 export async function parsePdfPages(pdfBuffer: ArrayBuffer): Promise<{
@@ -65,7 +96,7 @@ export async function renderPdfPageToCanvas(ctx: PdfRenderContext, pageNumber: n
     renderingRef.current.add(pageNumber);
 
     try {
-        const page = await pdfDocRef.current.getPage(pageNumber);
+        const page = await getCachedPage(pdfDocRef, pageNumber);
         const viewport = page.getViewport({ scale });
         const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
         const scaledViewport = page.getViewport({ scale: scale * pixelRatio });
@@ -99,11 +130,6 @@ export async function renderPdfPageToCanvas(ctx: PdfRenderContext, pageNumber: n
     }
 }
 
-const textContentCache = new Map<number, any>();
-const overlayScaleCache = new WeakMap<HTMLDivElement, number>();
-const annotationScaleCache = new WeakMap<HTMLDivElement, number>();
-const annotationDataCache = new Map<number, any[]>();
-
 export async function renderTextLayer(
     pdfDocRef: RefObject<any>,
     pageNumber: number,
@@ -113,8 +139,30 @@ export async function renderTextLayer(
     if (!pdfDocRef.current) return;
     if (overlayScaleCache.get(container) === scale) return;
 
+    const builtForPage = textLayerBuiltCache.get(container);
+
+    if (builtForPage === pageNumber) {
+        const page = await getCachedPage(pdfDocRef, pageNumber);
+        const viewport = page.getViewport({ scale });
+        container.style.setProperty('--scale-factor', String(scale));
+        container.style.width = `${viewport.width}px`;
+        container.style.height = `${viewport.height}px`;
+        overlayScaleCache.set(container, scale);
+        return;
+    }
+
+    const previousJob = textLayerJobs.get(container);
+    if (previousJob) previousJob.cancelled = true;
+
+    const job: TextLayerJob = { cancelled: false };
+    textLayerJobs.set(container, job);
+
     container.innerHTML = '';
-    const page = await pdfDocRef.current.getPage(pageNumber);
+
+    const page = await getCachedPage(pdfDocRef, pageNumber);
+    if (job.cancelled) return;
+
+    const referenceViewport = page.getViewport({ scale: REFERENCE_SCALE });
     const viewport = page.getViewport({ scale });
 
     let textContent = textContentCache.get(pageNumber);
@@ -122,23 +170,88 @@ export async function renderTextLayer(
         textContent = await page.getTextContent();
         textContentCache.set(pageNumber, textContent);
     }
-
-    container.style.width = `${viewport.width}px`;
-    container.style.height = `${viewport.height}px`;
-
-    const textLayer = new pdfjsLib.TextLayer({
-        textContentSource: textContent,
-        container,
-        viewport,
-    });
+    if (job.cancelled) return;
 
     container.style.setProperty('--scale-factor', String(scale));
     container.style.width = `${viewport.width}px`;
     container.style.height = `${viewport.height}px`;
 
-    await textLayer.render();
+    await buildTextLayerChunked(container, textContent, referenceViewport, job);
+    if (job.cancelled) return;
 
+    textLayerBuiltCache.set(container, pageNumber);
     overlayScaleCache.set(container, scale);
+}
+
+function buildTextLayerChunked(
+    container: HTMLDivElement,
+    textContent: any,
+    viewport: any,
+    job: TextLayerJob
+): Promise<void> {
+    return new Promise((resolve) => {
+        const items = textContent.items as any[];
+        const styles = textContent.styles as Record<string, any>;
+        const total = items.length;
+        let index = 0;
+
+        const processChunk = () => {
+            if (job.cancelled) {
+                resolve();
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+            const end = Math.min(index + TEXT_LAYER_CHUNK_SIZE, total);
+
+            for (let i = index; i < end; i++) {
+                const item = items[i];
+                if (!item.str || item.str.length === 0) continue;
+
+                const span = createTextSpan(item, styles, viewport);
+                if (span) fragment.appendChild(span);
+            }
+
+            container.appendChild(fragment);
+            index = end;
+
+            if (index < total) {
+                requestAnimationFrame(processChunk);
+            } else {
+                resolve();
+            }
+        };
+
+        requestAnimationFrame(processChunk);
+    });
+}
+
+function createTextSpan(
+    item: any,
+    styles: Record<string, any>,
+    viewport: any
+): HTMLSpanElement | null {
+    const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
+    const fontHeight = Math.hypot(tx[2], tx[3]);
+    if (fontHeight === 0) return null;
+
+    const angle = Math.atan2(tx[1], tx[0]);
+    const style = styles[item.fontName];
+    const ascent = typeof style?.ascent === 'number' ? style.ascent : 0.8;
+
+    const span = document.createElement('span');
+    span.textContent = item.str;
+    span.style.left = `calc(var(--scale-factor) * ${tx[4]}px)`;
+    span.style.top = `calc(var(--scale-factor) * ${tx[5] - fontHeight * ascent}px)`;
+    span.style.fontSize = `calc(var(--scale-factor) * ${fontHeight}px)`;
+    span.style.fontFamily = style?.fontFamily || 'sans-serif';
+
+    if (angle !== 0) {
+        span.style.transform = `rotate(${angle}rad)`;
+        span.style.transformOrigin = 'left bottom';
+    }
+
+    return span;
 }
 
 export async function renderAnnotationLayer(
@@ -151,7 +264,7 @@ export async function renderAnnotationLayer(
     if (annotationScaleCache.get(container) === scale) return;
 
     container.innerHTML = '';
-    const page = await pdfDocRef.current.getPage(pageNumber);
+    const page = await getCachedPage(pdfDocRef, pageNumber);
     const viewport = page.getViewport({ scale });
 
     let annotations = annotationDataCache.get(pageNumber);

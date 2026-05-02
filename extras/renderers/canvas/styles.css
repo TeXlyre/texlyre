@@ -254,14 +254,19 @@
   overflow: hidden;
   pointer-events: none;
   z-index: 2;
-}
-
-.canvas-page .textLayer {
   --total-scale-factor: var(--scale-factor, 1);
+  contain: strict;
+  font-family: sans-serif;
 }
 
 .canvas-page .textLayer>span {
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  color: transparent;
   pointer-events: auto;
+  line-height: 1;
 }
 
 .canvas-page .textLayer .highlight {
