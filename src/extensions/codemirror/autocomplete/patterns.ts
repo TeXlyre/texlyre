@@ -40,6 +40,16 @@ export const typstCommandPatterns = [
         fileTypes: 'images' as const,
     },
     {
+        commands: ['video-svg'],
+        pattern: /\bvideo-svg\s*\(\s*"/,
+        fileTypes: 'videos' as const,
+    },
+    {
+        commands: ['audio-svg'],
+        pattern: /\baudio-svg\s*\(\s*"/,
+        fileTypes: 'audios' as const,
+    },
+    {
         commands: ['read'],
         pattern: /\bread\s*\(\s*"/,
         fileTypes: 'all' as const,

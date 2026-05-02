@@ -1,6 +1,7 @@
 // src/services/SearchService.ts
 import { fileStorageService } from './FileStorageService';
 import type { FileNode } from '../types/files';
+import { isTemporaryFile, isBinaryFile } from '../utils/fileUtils';
 
 export interface SearchResult {
     fileId: string;
@@ -52,19 +53,26 @@ class SearchService {
         const results: SearchResult[] = [];
         const allFiles = await fileStorageService.getAllFiles(false, false, false);
 
+        const searchableFiles = allFiles.filter(file =>
+            // !file.isBinary &&
+            !isBinaryFile(file.path) &&
+            !isTemporaryFile(file.path)
+        );
+
         const linkedFileIds = new Set<string>();
         const linkedDocumentIds = new Set<string>();
 
-        allFiles.forEach(file => {
+        searchableFiles.forEach(file => {
             if (file.documentId) {
                 linkedFileIds.add(file.id);
                 linkedDocumentIds.add(file.documentId);
             }
         });
 
-        const unlinkedFiles = allFiles.filter(file => !file.documentId);
-        const textFiles = unlinkedFiles.filter(
-            (file) => file.type === 'file' && !file.isBinary
+        const unlinkedFiles = searchableFiles.filter(file => !file.documentId);
+
+        const textFiles = unlinkedFiles.filter(file =>
+            file.type === 'file'
         );
 
         if (includeFilenames) {
@@ -92,7 +100,7 @@ class SearchService {
         if (includeContent && linkedDocumentIds.size > 0) {
             const documentResults = await this.searchLinkedDocuments(
                 Array.from(linkedDocumentIds),
-                allFiles,
+                searchableFiles,
                 query,
                 caseSensitive,
                 wholeWord,

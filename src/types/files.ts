@@ -18,6 +18,8 @@ export interface FileNode {
 export interface FilePathCache {
 	files: FileNode[];
 	imageFiles: string[];
+	videoFiles: string[];
+	audioFiles: string[];
 	bibFiles: string[];
 	texFiles: string[];
 	typstFiles: string[];

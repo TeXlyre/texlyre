@@ -17,6 +17,8 @@ export const filePathCacheField = StateField.define<FilePathCache>({
 		return {
 			files: [],
 			imageFiles: [],
+			videoFiles: [],
+			audioFiles: [],
 			bibFiles: [],
 			texFiles: [],
 			typstFiles: [],

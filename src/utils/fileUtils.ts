@@ -202,6 +202,7 @@ export const isBinaryFile = (fileName: string): boolean => {
 		'z',
 		'zip',
 		'zstd',
+		'dataurl'
 	]);
 
 	return binaryExtensions.has(extension);

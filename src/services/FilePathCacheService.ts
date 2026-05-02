@@ -123,10 +123,14 @@ class FilePathCacheService {
 
 	buildCacheFromFiles(files: FileNode[]): FilePathCache {
 		const imageExtensions = new Set(['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp', 'ico', 'eps']);
+		const videoExtensions = new Set(['mp4', 'webm', 'ogv', 'mov']);
+		const audioExtensions = new Set(['mp3', 'ogg', 'oga', 'opus', 'wav', 'flac', 'm4a']);
 
 		const cache: FilePathCache = {
 			files: [],
 			imageFiles: [],
+			videoFiles: [],
+			audioFiles: [],
 			bibFiles: [],
 			texFiles: [],
 			typstFiles: [],
@@ -142,6 +146,12 @@ class FilePathCacheService {
 				cache.allFiles.push(node.path);
 
 				if (ext && imageExtensions.has(ext)) {
+					cache.imageFiles.push(node.path);
+				} else if (ext && videoExtensions.has(ext)) {
+					cache.videoFiles.push(node.path);
+				} else if (ext && audioExtensions.has(ext)) {
+					cache.audioFiles.push(node.path);
+				} else if (ext && imageExtensions.has(ext)) {
 					cache.imageFiles.push(node.path);
 				} else if (isBibFile(node.name)) {
 					cache.bibFiles.push(node.path);

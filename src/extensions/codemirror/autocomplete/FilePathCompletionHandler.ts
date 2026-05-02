@@ -76,6 +76,12 @@ export class FilePathCompletionHandler {
             case 'images':
                 candidates = cache.imageFiles;
                 break;
+            case 'videos':
+                candidates = cache.videoFiles;
+                break;
+            case 'audios':
+                candidates = cache.audioFiles;
+                break;
             case 'latex':
                 candidates = cache.texFiles;
                 break;
@@ -87,7 +93,7 @@ export class FilePathCompletionHandler {
                 break;
             case 'data':
                 candidates = cache.allFiles.filter(path =>
-                    /\.(toml|csv|json|yml|yaml|xml|html|txt|md|markdown|cbor)$/i.test(path)
+                    /\.(dataurl|toml|csv|json|yml|yaml|xml|html|txt|md|markdown|cbor)$/i.test(path)
                 );
                 break;
             case 'all':
