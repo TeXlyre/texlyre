@@ -87,6 +87,23 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     doc?.projectMetadata?.typstAutoCompileOnSave ?? false :
     false;
 
+  const compileStateRef = useRef({
+    mainFile: effectiveMainFile,
+    format: effectiveFormat,
+    pdfOptions: localPdfOptions as TypstPdfOptions | undefined,
+    sharedPdfOptions: doc?.projectMetadata?.typstPdfOptions,
+    shareFormat: !!projectFormat,
+    isCompiling,
+  });
+  compileStateRef.current = {
+    mainFile: effectiveMainFile,
+    format: effectiveFormat,
+    pdfOptions: localPdfOptions,
+    sharedPdfOptions: doc?.projectMetadata?.typstPdfOptions,
+    shareFormat: !!projectFormat,
+    isCompiling,
+  };
+
   useEffect(() => {
     if (propertiesRegistered.current) return;
     propertiesRegistered.current = true;
@@ -141,8 +158,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
       if (
         selectedDocId &&
         linkedFileInfo?.filePath &&
-        isTypstFile(linkedFileInfo.filePath)
-      ) {
+        isTypstFile(linkedFileInfo.filePath)) {
         setAutoMainFile(linkedFileInfo.filePath);
         return;
       }
@@ -163,7 +179,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
     };
 
     findMainFile();
-  }, [selectedFileId, getFile, fileTree, selectedDocId, linkedFileInfo]);
+  }, [selectedFileId, getFile, fileTree, selectedDocId, linkedFileInfo, autoMainFile]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -185,64 +201,29 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
   }, [isDropdownOpen]);
 
   useEffect(() => {
-    if (!useSharedSettings || !effectiveAutoCompileOnSave || !effectiveMainFile) return;
+    if (!useSharedSettings || !effectiveAutoCompileOnSave) return;
 
-    const handleFileSaved = async (event: Event) => {
-      if (isCompiling) return;
+    const handleFileSaved = async () => {
+      const state = compileStateRef.current;
+      if (state.isCompiling) return;
+      if (!state.mainFile) return;
 
-      try {
-        const customEvent = event as CustomEvent;
-        const detail = customEvent.detail;
+      const pdfOptions = state.format === 'pdf'
+        ? state.shareFormat ? state.sharedPdfOptions : state.pdfOptions
+        : undefined;
 
-        if (!detail) return;
-
-        const candidatePath = detail.isFile ?
-          detail.fileId ?
-            detail.filePath ||
-            (await fileStorageService.getFile(detail.fileId))?.path :
-            undefined :
-          linkedFileInfo?.filePath ?? detail.filePath;
-
-        if (!candidatePath || !isTypstFile(candidatePath)) return;
-
-        const mainFileToCompile =
-          detail.isFile ? effectiveMainFile : candidatePath;
-
-        const targetFormat = effectiveFormat;
-        const shouldShareFormat = !!projectFormat;
-        const pdfOptions = targetFormat === 'pdf' ?
-          shouldShareFormat ? doc?.projectMetadata?.typstPdfOptions : localPdfOptions :
-          undefined;
-
-        setTimeout(async () => {
-          if (onExpandTypstOutput) {
-            onExpandTypstOutput();
-          }
-          await compileDocument(mainFileToCompile, targetFormat, pdfOptions);
-        }, 120);
-      } catch (error) {
-        console.error('Error in Typst auto-compile on save:', error);
+      if (onExpandTypstOutput) {
+        onExpandTypstOutput();
       }
+
+      await compileDocument(state.mainFile, state.format, pdfOptions);
     };
 
     document.addEventListener('file-saved', handleFileSaved);
     return () => {
       document.removeEventListener('file-saved', handleFileSaved);
     };
-  }, [
-    useSharedSettings,
-    effectiveAutoCompileOnSave,
-    effectiveMainFile,
-    effectiveFormat,
-    projectFormat,
-    isCompiling,
-    compileDocument,
-    onExpandTypstOutput,
-    linkedFileInfo,
-    doc?.projectMetadata?.typstPdfOptions,
-    localPdfOptions.pdfStandard,
-    localPdfOptions.pdfTags]
-  );
+  }, [useSharedSettings, effectiveAutoCompileOnSave, compileDocument, onExpandTypstOutput]);
 
   const handleResetProperties = () => {
     unregisterProperty('typst-main-file', { scope: 'project', projectId });
