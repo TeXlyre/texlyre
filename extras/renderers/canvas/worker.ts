@@ -60,8 +60,8 @@ function extractSvgAttributes(svgString: string): { attrs: string; width: number
 }
 
 function extractDefs(svgString: string): string {
-    const defsMatch = svgString.match(/<defs[^>]*>[\s\S]*?<\/defs>/);
-    return defsMatch ? defsMatch[0] : '';
+    const defsMatches = svgString.match(/<defs[^>]*>[\s\S]*?<\/defs>/g);
+    return defsMatches ? defsMatches.join('\n') : '';
 }
 
 function extractStyles(svgString: string): string {
