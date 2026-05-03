@@ -126,18 +126,24 @@ const CombinedImageViewer: React.FC<ViewerProps> = ({
     return () => URL.revokeObjectURL(url);
   }, [content, mimeType, isSvg]);
 
-  const sanitizedSvg = useMemo(
-    () => svgContent
-      ? DOMPurify.sanitize(svgContent, {
-        USE_PROFILES: { svg: true, svgFilters: true },
-        ADD_TAGS: ['animate', 'animateTransform', 'animateMotion', 'set', 'mpath', 'a'],
-        ADD_ATTR: ['href', 'xlink:href', 'target', 'rel'],
-        FORBID_TAGS: ['foreignObject'],
-        ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel|ftp|#):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
-      })
-      : '',
-    [svgContent]
-  );
+  const sanitizedSvg = useMemo(() => {
+    if (!svgContent) return '';
+
+    return DOMPurify.sanitize(svgContent, {
+      FORBID_TAGS: ['script', 'foreignObject'],
+      FORBID_ATTR: [
+        'onload', 'onerror', 'onclick', 'onmouseover', 'onmouseout',
+        'onmousemove', 'onmousedown', 'onmouseup', 'onfocus', 'onblur',
+        'onkeydown', 'onkeyup', 'onkeypress', 'onbegin', 'onend', 'onrepeat'
+      ],
+      ADD_TAGS: ['use'],
+      ADD_ATTR: ['href', 'xlink:href'],
+      ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel|ftp|#):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+      ALLOW_DATA_ATTR: true,
+      ALLOW_ARIA_ATTR: true,
+      KEEP_CONTENT: true
+    });
+  }, [svgContent]);
 
   const innerHtml = isSvg
     ? sanitizedSvg

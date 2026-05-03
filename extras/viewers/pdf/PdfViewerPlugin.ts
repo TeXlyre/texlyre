@@ -17,6 +17,7 @@ const pdfViewerPlugin: ViewerPlugin = {
 	version: PLUGIN_VERSION,
 	type: 'viewer',
 	icon: PdfIcon,
+	rendererPluginIds: ['pdf-renderer'], // ['pdf-renderer', 'canvas-renderer']
 	get settings() {
 		return getPdfViewerSettings();
 	},

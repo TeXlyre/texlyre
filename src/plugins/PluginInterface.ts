@@ -24,6 +24,8 @@ export interface ViewerPlugin extends Plugin {
 	type: 'viewer';
 	isEditable?: boolean;
 	icon?: React.ComponentType;
+	rendererPluginIds?: string[];
+	rendererSizeThreshold?: number;
 	canHandle: (fileType: string, mimeType?: string) => boolean;
 	getSupportedExtensions?: () => SupportedExtension[];
 	renderViewer: React.ComponentType<ViewerProps>;
@@ -68,6 +70,8 @@ export interface RendererProps {
 	content: ArrayBuffer | Uint8Array | string;
 	mimeType?: string;
 	fileName?: string;
+	headerLabel?: string;
+	headerTitle?: string;
 	onSave?: (fileName: string) => void;
 	onDownload?: (fileName: string) => void;
 	controllerRef?: (controller: RendererController | null) => void;

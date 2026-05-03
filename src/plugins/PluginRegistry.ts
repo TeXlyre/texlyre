@@ -263,6 +263,23 @@ class PluginRegistryManager {
 		return this.registry.renderers;
 	}
 
+	getRendererIfAvailable(
+		outputType: string,
+		rendererPluginIds: string[],
+		getSetting: (id: string) => { value?: unknown } | undefined,
+	): RendererPlugin | null {
+		for (const rendererId of rendererPluginIds) {
+			const renderer = this.getRendererForOutput(outputType, rendererId);
+			if (!renderer) continue;
+
+			const enableSetting = getSetting(`${renderer.id}-enable`);
+			if (enableSetting !== undefined && enableSetting.value === false) continue;
+
+			return renderer;
+		}
+		return null;
+	}
+
 	getRendererForOutput(outputType: string, preferredRenderer?: string): RendererPlugin | null {
 		const availableRenderers = this.registry.renderers.filter(renderer =>
 			renderer.canHandle(outputType)
