@@ -123,14 +123,13 @@ class TypstService {
                 const stringSources: Record<string, string> = {};
                 const decoder = new TextDecoder();
                 for (const [path, content] of Object.entries(sources)) {
+                    if (!path.endsWith('.typ')) continue;
                     if (typeof content === 'string') {
                         stringSources[path] = content;
-                    } else if (path.endsWith('.typ')) {
+                    } else {
                         try {
                             stringSources[path] = decoder.decode(content);
-                        } catch {
-                            continue;
-                        }
+                        } catch { continue; }
                     }
                 }
                 typstSourceMapService.loadFromSvg(output, pageInfos, stringSources, normalizedMainFileName);
