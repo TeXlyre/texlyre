@@ -2,6 +2,7 @@
 import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 
@@ -10,6 +11,7 @@ import { useFileTree } from '../../hooks/useFileTree';
 import { useProperties } from '../../hooks/useProperties';
 import { useTheme } from '../../hooks/useTheme';
 import { useEditorTabs } from '../../hooks/useEditorTabs';
+import { pluginRegistry } from '../../plugins/PluginRegistry';
 import {
   fileStorageService
 } from
@@ -34,6 +36,15 @@ import DocumentExplorer from './DocumentExplorer';
 import Editor from './Editor';
 import FileExplorer from './FileExplorer';
 import SearchPanel from './SearchPanel';
+
+type LinkedFileInfo = {
+  fileName: string;
+  filePath: string;
+  fileId: string;
+  mimeType?: string;
+};
+
+type LinkedFileInfoState = Partial<LinkedFileInfo>;
 
 interface FileDocumentControllerProps {
   documents: Document[];
@@ -112,16 +123,13 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   const [currentEditorContent, setCurrentEditorContent] = useState<string>('');
   const [isEditingFile, setIsEditingFile] = useState(false);
   const [isBinaryFile, setIsBinaryFile] = useState(false);
+  const isViewerHandledRef = useRef(false);
   const [currentFilePath, setCurrentFilePath] = useState<string | undefined>(undefined);
   const [fileName, setFileName] = useState('');
+  const [isFileLoading, setIsFileLoading] = useState(false);
   const [mimeType, setMimeType] = useState<string | undefined>(undefined);
   const [linkedDocumentId, setLinkedDocumentId] = useState<string | null>(null);
-  const [linkedFileInfo, setLinkedFileInfo] = useState<{
-    fileName?: string;
-    mimeType?: string;
-    fileId?: string;
-    filePath?: string;
-  }>({});
+  const [linkedFileInfo, setLinkedFileInfo] = useState<LinkedFileInfoState>({});
   const [currentLine, setCurrentLine] = useState(1);
 
   const [sidebarWidth, setSidebarWidth] = useState(
@@ -141,6 +149,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   const [toolbarVisible, setToolbarVisible] = useState(true);
   const [documentSelectionChange, setDocumentSelectionChange] = useState(0);
   const [fileSelectionChange, setFileSelectionChange] = useState(0);
+  const fileContentRef = useRef<string | ArrayBuffer>('');
   const [hasNavigatedToFile, setHasNavigatedToFile] = useState(false);
   const [initialSelectedFile, setInitialSelectedFile] = useState<
     string | undefined>(
@@ -152,6 +161,8 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
     string | null>(
       null);
 
+  const docToFileMapRef = useRef<Map<string, LinkedFileInfo>>(new Map());
+  const [docToFileMapReady, setDocToFileMapReady] = useState(false);
   const [showCurrentProjectExportModal, setShowCurrentProjectExportModal] =
     useState(false);
   const [currentProjectForExport, setCurrentProjectForExport] =
@@ -496,55 +507,67 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   }, [selectedFileId, isEditingFile, getFile]);
 
   useEffect(() => {
-    const loadInitialLinkedFile = async () => {
-      if (!isEditingFile && selectedDocId) {
-        try {
-          const allFiles = await fileStorageService.getAllFiles(false, false, false);
-          const linkedFile = allFiles.find(
-            (file) => file.documentId === selectedDocId
-          );
-
-          if (linkedFile) {
-            setLinkedFileInfo({
-              fileName: linkedFile.name,
-              filePath: linkedFile.path,
-              fileId: linkedFile.id,
-              mimeType: linkedFile.mimeType
-            });
-            setLinkedDocumentId(selectedDocId);
-
-            // Only show one output at a time
-            if (linkedFile.name && isLatexFile(linkedFile.name)) {
-              setShowLatexOutput(true);
-              setShowTypstOutput(false);
-            } else if (linkedFile.name && isTypstFile(linkedFile.name)) {
-              setShowTypstOutput(true);
-              setShowLatexOutput(false);
-            } else {
-              setShowLatexOutput(false);
-              setShowTypstOutput(false);
-            }
-          } else {
-            setLinkedFileInfo({});
-            setLinkedDocumentId(null);
-            setShowLatexOutput(false);
-            setShowTypstOutput(false);
-          }
-        } catch (error) {
-          console.error('Error loading initial linked file:', error);
-          setLinkedFileInfo({});
-          setLinkedDocumentId(null);
-          setShowLatexOutput(false);
-          setShowTypstOutput(false);
+    const buildDocToFileMap = async () => {
+      const allFiles = await fileStorageService.getAllFiles(false, false, false);
+      const map = new Map<string, LinkedFileInfo>();
+      for (const file of allFiles) {
+        if (file.documentId) {
+          map.set(file.documentId, {
+            fileName: file.name,
+            filePath: file.path,
+            fileId: file.id,
+            mimeType: file.mimeType,
+          });
         }
-      } else if (isEditingFile) {
+      }
+      docToFileMapRef.current = map;
+      setDocToFileMapReady(true);
+    };
+
+    buildDocToFileMap();
+
+    document.addEventListener('refresh-file-tree', buildDocToFileMap);
+    document.addEventListener('file-saved', buildDocToFileMap);
+
+    return () => {
+      document.removeEventListener('refresh-file-tree', buildDocToFileMap);
+      document.removeEventListener('file-saved', buildDocToFileMap);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!docToFileMapReady) return;
+
+    if (isEditingFile || !selectedDocId) {
+      if (isEditingFile) {
         setLinkedFileInfo({});
         setLinkedDocumentId(null);
       }
-    };
+      return;
+    }
 
-    loadInitialLinkedFile();
-  }, [selectedDocId, isEditingFile]);
+    const linkedFile = docToFileMapRef.current.get(selectedDocId);
+
+    if (linkedFile) {
+      setLinkedFileInfo(linkedFile);
+      setLinkedDocumentId(selectedDocId);
+      if (isLatexFile(linkedFile.fileName)) {
+        setShowLatexOutput(true);
+        setShowTypstOutput(false);
+      } else if (isTypstFile(linkedFile.fileName)) {
+        setShowTypstOutput(true);
+        setShowLatexOutput(false);
+      } else {
+        setShowLatexOutput(false);
+        setShowTypstOutput(false);
+      }
+    } else {
+      setLinkedFileInfo({});
+      setLinkedDocumentId(null);
+      setShowLatexOutput(false);
+      setShowTypstOutput(false);
+    }
+  }, [selectedDocId, isEditingFile, docToFileMapReady]);
 
   useEffect(() => {
     if (
@@ -773,16 +796,29 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
     content: string | ArrayBuffer,
     isBinary = false) => {
 
+    flushSync(() => {
+      setIsFileLoading(true);
+    });
+
+    fileContentRef.current = content;
+    selectFile(fileId);
+
     const file = await getFile(fileId);
+
+    isViewerHandledRef.current = !!pluginRegistry.getViewerForFile(
+      file?.name ?? '',
+      file?.mimeType,
+    );
 
     setFileContent(content);
     setIsEditingFile(true);
-    setIsBinaryFile(isBinary);
+    setIsBinaryFile(isBinary || isViewerHandledRef.current);
     setFileSelectionChange((prev) => prev + 1);
     setFileName(file?.name ?? '');
     setMimeType(file?.mimeType);
     setLinkedDocumentId(file?.documentId || null);
     setCurrentFilePath(file?.path);
+    setIsFileLoading(false);
 
     if (typeof content === 'string') {
       setCurrentEditorContent(content);
@@ -793,8 +829,6 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
     if (selectedDocId !== null) {
       onSelectDocument('');
     }
-
-    selectFile(fileId);
 
     if (file) {
       if (isLatexFile(file.name)) {
@@ -810,8 +844,14 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
       createTabForFile(fileId, file);
 
-      const currentFragment = parseUrlFragments(window.location.hash.substring(1));
-      const newUrl = buildUrlWithFragments(currentFragment.yjsUrl, undefined, file.path);
+      const currentFragment = parseUrlFragments(
+        window.location.hash.substring(1)
+      );
+      const newUrl = buildUrlWithFragments(
+        currentFragment.yjsUrl,
+        undefined,
+        file.path
+      );
       window.location.hash = newUrl;
     }
   };
@@ -1162,7 +1202,9 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
         className="editor-container-outer"
         style={{ flex: 1, display: 'flex', minHeight: 0 }}>
 
-        <div className="editor-container" style={{ flex: 1, minWidth: 0 }}>
+        <div className="editor-container"
+          style={{ flex: 1, minWidth: 0, position: 'relative' }}>
+
           <EditorTabs onTabSwitch={handleTabSwitch} />
 
           <Editor
@@ -1196,6 +1238,12 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
             onToolbarToggle={handleToolbarToggle} />
 
         </div>
+
+        {isFileLoading && (
+          <div className="file-loading-overlay">
+            <div className="loading-spinner" />
+          </div>
+        )}
 
         {showLatexOutput &&
           <ResizablePanel

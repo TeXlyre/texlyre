@@ -372,8 +372,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     async (buffer: ArrayBuffer) => {
       if (!buffer || buffer.byteLength === 0) return;
 
-      fullSvgBufferRef.current = buffer;
-
       const arr = new Uint8Array(buffer);
       const isPdf =
         arr.length > 4 &&
@@ -385,6 +383,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
       const newContentType = isPdf ? 'pdf' : 'svg';
       contentTypeRef.current = newContentType;
       setContentType(newContentType);
+      fullSvgBufferRef.current = buffer.slice(0);
       clearPdfCaches();
 
       for (const el of textLayerRefs.current.values()) {
@@ -690,39 +689,23 @@ const CanvasRenderer: React.FC<RendererProps> = ({
       return;
     }
 
-    const exportConfig = {
-      pdf: {
-        data: pdfDocRef.current,
-        mimeType: 'application/pdf',
-        extension: '.pdf',
-        getData: (doc: any) => doc.getData(),
-      },
-      svg: {
-        data: fullSvgBufferRef.current,
-        mimeType: 'image/svg+xml',
-        extension: '.svg',
-        getData: (buffer: any) => Promise.resolve(buffer),
-      },
-    };
+    const isPdf = contentType === 'pdf';
+    const buffer = fullSvgBufferRef.current;
+    if (!buffer || buffer.byteLength === 0) return;
 
-    const config =
-      exportConfig[contentTypeRef.current as keyof typeof exportConfig];
-    if (!config?.data) return;
+    const mimeType = isPdf ? 'application/pdf' : 'image/svg+xml';
+    const extension = isPdf ? '.pdf' : '.svg';
 
-    config.getData(config.data).then((data: ArrayBuffer | string) => {
-      const blob = new Blob([data], { type: config.mimeType });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download =
-        fileName?.replace(/\.(typ|pdf|svg)$/i, config.extension) ||
-        `output${config.extension}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
-  }, [fileName, onDownload]);
+    const blob = new Blob([buffer], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName?.replace(/\.(typ|pdf|svg)$/i, extension) || `output${extension}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [fileName, onDownload, contentType]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
