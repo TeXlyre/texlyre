@@ -2,6 +2,13 @@
 
 export type TypstOutputFormat = 'pdf' | 'svg' | 'canvas' | 'canvas-pdf';
 
+
+export interface TypstPageInfo {
+    pageOffset: number;
+    width: number;
+    height: number;
+}
+
 export interface TypstPdfOptions {
     pdfStandard?: string;
     pdfTags?: boolean;
@@ -15,6 +22,7 @@ export interface TypstCompileResult {
     pdf?: Uint8Array;
     svg?: string;
     canvas?: Uint8Array;
+    pageInfos?: TypstPageInfo[];
 }
 
 export interface TypstContextType {

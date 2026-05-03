@@ -40,6 +40,7 @@ type DoneResponse = {
         format: OutputFormat;
         output: Uint8Array | string;
         diagnostics?: any[];
+        pageInfos?: any[];
     };
 };
 
@@ -112,6 +113,23 @@ async function loadFonts(baseUrl: string = `${BASE_PATH}/assets/fonts`) {
 
 function removeEmbeddedSvgScripts(svg: string): string {
     return svg.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+}
+
+async function retrievePageInfos(artifact: Uint8Array): Promise<any[]> {
+    let pageInfos: any[] = [];
+    await renderer.runWithSession(async (session: any) => {
+        await renderer.manipulateData({
+            renderSession: session,
+            action: 'reset',
+            data: artifact,
+        });
+        try {
+            pageInfos = session.retrievePagesInfo() ?? [];
+        } catch {
+            pageInfos = [];
+        }
+    });
+    return pageInfos;
 }
 
 async function ensureInit() {
@@ -221,20 +239,29 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
             diagnostics = compileResult.diagnostics || [];
 
             if (!compileResult.result || compileResult.result.byteLength === 0) {
-                const transferList: Transferable[] = [];
                 const resp: DoneResponse = {
                     id,
                     type: 'done',
                     result: { format, output: new Uint8Array(0), diagnostics },
                 };
-                self.postMessage(resp, transferList);
+                self.postMessage(resp);
                 return;
             }
+
             const rawSvg = await renderer.renderSvg({
                 artifactContent: compileResult.result,
             });
 
             output = removeEmbeddedSvgScripts(String(rawSvg));
+            const pageInfos = await retrievePageInfos(compileResult.result);
+
+            const resp: DoneResponse = {
+                id,
+                type: 'done',
+                result: { format, output, diagnostics, pageInfos },
+            };
+            self.postMessage(resp);
+            return;
         }
 
         const transferList: Transferable[] =

@@ -2,10 +2,11 @@
 import { t } from '@/i18n';
 import { nanoid } from 'nanoid';
 
-import type { TypstCompileResult, TypstOutputFormat, TypstPdfOptions } from '../types/typst';
+import type { TypstCompileResult, TypstOutputFormat, TypstPdfOptions, TypstPageInfo } from '../types/typst';
 import type { FileNode } from '../types/files';
 import { fileStorageService } from './FileStorageService';
 import { notificationService } from './NotificationService';
+import { typstSourceMapService } from './TypstSourceMapService';
 import { cleanContent } from '../utils/fileCommentUtils';
 import { TypstCompilerEngine } from '../extensions/typst.ts/TypstCompilerEngine';
 import { isTypstFile, isTemporaryFile, toArrayBuffer } from '../utils/fileUtils';
@@ -83,12 +84,13 @@ class TypstService {
                     format,
                 };
                 this.handleCompilationError(operationId, format, result.log);
+                typstSourceMapService.clear();
                 return result;
             }
 
             this.showNotification('info', t('Compiling Typst to {format}...', { format: format.toUpperCase() }), operationId, format);
 
-            const { output, diagnostics } = await this.performCompilationInWorker(
+            const { output, diagnostics, pageInfos } = await this.performCompilationInWorker(
                 normalizedMainFileName,
                 sources,
                 format,
@@ -110,11 +112,31 @@ class TypstService {
                 };
                 this.handleCompilationError(operationId, format, 'Compilation failed');
                 await this.saveCompilationLog(normalizedMainFileName, result.log);
+                typstSourceMapService.clear();
                 return result;
             }
 
-            const result = this.createSuccessResult(output, format, formattedLog);
+            const result = this.createSuccessResult(output, format, formattedLog, pageInfos);
             await this.saveCompilationOutput(normalizedMainFileName, result);
+
+            if (format === 'canvas' && typeof output === 'string' && pageInfos) {
+                const stringSources: Record<string, string> = {};
+                const decoder = new TextDecoder();
+                for (const [path, content] of Object.entries(sources)) {
+                    if (typeof content === 'string') {
+                        stringSources[path] = content;
+                    } else if (path.endsWith('.typ')) {
+                        try {
+                            stringSources[path] = decoder.decode(content);
+                        } catch {
+                            continue;
+                        }
+                    }
+                }
+                typstSourceMapService.loadFromSvg(output, pageInfos, stringSources, normalizedMainFileName);
+            } else {
+                typstSourceMapService.clear();
+            }
 
             this.showNotification('success', t('Typst {format} compilation completed', { format: format.toUpperCase() }), operationId, format, 3000);
 
@@ -126,6 +148,7 @@ class TypstService {
                     log: 'Compilation was cancelled',
                     format,
                 };
+                typstSourceMapService.clear();
                 return result;
             }
 
@@ -142,6 +165,7 @@ class TypstService {
 
             this.handleCompilationError(operationId, format, 'Compilation failed');
             await this.saveCompilationLog(normalizedMainFileName, result.log);
+            typstSourceMapService.clear();
 
             return result;
         } finally {
@@ -316,7 +340,7 @@ class TypstService {
         format: TypstOutputFormat,
         pdfOptions: TypstPdfOptions | undefined,
         signal: AbortSignal
-    ): Promise<{ output: Uint8Array | string; diagnostics?: any[] }> {
+    ): Promise<{ output: Uint8Array | string; diagnostics?: any[]; pageInfos?: TypstPageInfo[] }> {
         const result = await this.compilerEngine.compile(
             mainFilePath,
             sources,
@@ -325,18 +349,19 @@ class TypstService {
             signal
         );
 
-        return { output: result.output, diagnostics: result.diagnostics };
+        return {
+            output: result.output,
+            diagnostics: result.diagnostics,
+            pageInfos: result.pageInfos as TypstPageInfo[] | undefined,
+        };
     }
 
-    private createSuccessResult(output: Uint8Array | string, format: TypstOutputFormat, log?: string): TypstCompileResult {
-        console.log('[TypstService] createSuccessResult', {
-            format,
-            outputType: typeof output,
-            isUint8Array: output instanceof Uint8Array,
-            isString: typeof output === 'string',
-            outputLength: output instanceof Uint8Array ? output.length : output.length
-        });
-
+    private createSuccessResult(
+        output: Uint8Array | string,
+        format: TypstOutputFormat,
+        log?: string,
+        pageInfos?: TypstPageInfo[]
+    ): TypstCompileResult {
         const result: TypstCompileResult = {
             status: 0,
             log: log || 'Compilation successful',
@@ -351,13 +376,14 @@ class TypstService {
                 result.svg = output as string;
                 break;
             case 'canvas':
-                console.log('[TypstService] Creating canvas result, encoding string to Uint8Array');
                 result.canvas = new TextEncoder().encode(output as string);
                 break;
             case 'canvas-pdf':
                 result.canvas = output as Uint8Array;
                 break;
         }
+
+        if (pageInfos) result.pageInfos = pageInfos;
 
         return result;
     }
