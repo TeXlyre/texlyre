@@ -588,25 +588,27 @@ const PdfRenderer: React.FC<RendererProps> = ({
   const handleExport = useCallback(() => {
     if (onDownload && fileName) {
       onDownload(fileName);
-    } else if (originalContentRef.current?.byteLength > 0) {
-      try {
-        const blob = new Blob([originalContentRef.current], {
-          type: 'application/pdf',
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName || 'document.pdf';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      } catch (error) {
-        console.error('Export error:', error);
-        setError(t('Failed to export PDF'));
-      }
-    } else {
+      return;
+    }
+
+    if (!originalContentRef.current?.byteLength) {
       setError(t('Cannot export: PDF content is not available'));
+      return;
+    }
+
+    try {
+      const blob = new Blob([originalContentRef.current], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName || 'document.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Export error:', error);
+      setError(t('Failed to export PDF'));
     }
   }, [fileName, onDownload]);
 

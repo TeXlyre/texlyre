@@ -10,6 +10,7 @@ import { useFileTree } from '../../hooks/useFileTree';
 import { useProperties } from '../../hooks/useProperties';
 import { useTheme } from '../../hooks/useTheme';
 import { useEditorTabs } from '../../hooks/useEditorTabs';
+import { pluginRegistry } from '../../plugins/PluginRegistry';
 import {
   fileStorageService
 } from
@@ -112,6 +113,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   const [currentEditorContent, setCurrentEditorContent] = useState<string>('');
   const [isEditingFile, setIsEditingFile] = useState(false);
   const [isBinaryFile, setIsBinaryFile] = useState(false);
+  const isViewerHandledRef = useRef(false);
   const [currentFilePath, setCurrentFilePath] = useState<string | undefined>(undefined);
   const [fileName, setFileName] = useState('');
   const [mimeType, setMimeType] = useState<string | undefined>(undefined);
@@ -141,6 +143,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   const [toolbarVisible, setToolbarVisible] = useState(true);
   const [documentSelectionChange, setDocumentSelectionChange] = useState(0);
   const [fileSelectionChange, setFileSelectionChange] = useState(0);
+  const fileContentRef = useRef<string | ArrayBuffer>('');
   const [hasNavigatedToFile, setHasNavigatedToFile] = useState(false);
   const [initialSelectedFile, setInitialSelectedFile] = useState<
     string | undefined>(
@@ -773,11 +776,23 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
     content: string | ArrayBuffer,
     isBinary = false) => {
 
+    setFileName('');
+    setMimeType(undefined);
+    setIsEditingFile(false);
+    setFileContent('');
+    setIsBinaryFile(true);
+    fileContentRef.current = content;
+
     const file = await getFile(fileId);
+
+    isViewerHandledRef.current = !!pluginRegistry.getViewerForFile(
+      file?.name ?? '',
+      file?.mimeType,
+    );
 
     setFileContent(content);
     setIsEditingFile(true);
-    setIsBinaryFile(isBinary);
+    setIsBinaryFile(isBinary || isViewerHandledRef.current);
     setFileSelectionChange((prev) => prev + 1);
     setFileName(file?.name ?? '');
     setMimeType(file?.mimeType);
@@ -810,8 +825,14 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
       createTabForFile(fileId, file);
 
-      const currentFragment = parseUrlFragments(window.location.hash.substring(1));
-      const newUrl = buildUrlWithFragments(currentFragment.yjsUrl, undefined, file.path);
+      const currentFragment = parseUrlFragments(
+        window.location.hash.substring(1)
+      );
+      const newUrl = buildUrlWithFragments(
+        currentFragment.yjsUrl,
+        undefined,
+        file.path
+      );
       window.location.hash = newUrl;
     }
   };

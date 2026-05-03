@@ -822,16 +822,6 @@ const Editor: React.FC<EditorComponentProps> = ({
   const editorRef = useRef<HTMLDivElement>(null);
   const isUpdatingRef = useRef<boolean>(false);
 
-  const textContent = useMemo(() => {
-    if (content instanceof ArrayBuffer) {
-      return arrayBufferToString(content);
-    }
-    if (typeof content === 'string') {
-      return content;
-    }
-    return '';
-  }, [content])
-
   useEffect(() => {
     const handleShowCommentModal = (event: Event) => {
       const customEvent = event as CustomEvent;
@@ -979,6 +969,7 @@ const Editor: React.FC<EditorComponentProps> = ({
     [isEditingFile, fileName, linkedDocumentId, mimeType],
   );
 
+
   const rendererDelegate = useMemo(() => {
     if (!viewerPlugin?.rendererPluginIds?.length) return null;
     if (!(content instanceof ArrayBuffer)) return null;
@@ -1000,6 +991,18 @@ const Editor: React.FC<EditorComponentProps> = ({
       getSetting,
     );
   }, [viewerPlugin, content, fileName, mimeType, getSetting]);
+
+  const textContent = useMemo(() => {
+    if (isBinaryFile) return '';
+    if (viewerPlugin || rendererDelegate) return '';
+    if (content instanceof ArrayBuffer) {
+      return arrayBufferToString(content);
+    }
+    if (typeof content === 'string') {
+      return content;
+    }
+    return '';
+  }, [content, isBinaryFile, viewerPlugin, rendererDelegate]);
 
   if (
     collaborativeViewerPlugin &&
