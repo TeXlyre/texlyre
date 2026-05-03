@@ -1,7 +1,7 @@
 // src/components/editor/Editor.tsx
 import { t } from '@/i18n';
 import { Trans } from 'react-i18next';
-import type React from 'react';
+import React from 'react';
 import { useCallback, useEffect, useRef, useMemo, useState } from 'react';
 
 import { BibliographyProvider } from '../../contexts/BibliographyContext';
@@ -12,6 +12,7 @@ import { useCollab } from '../../hooks/useCollab';
 import { useComments } from '../../hooks/useComments';
 import { usePluginFileInfo } from '../../hooks/usePluginFileInfo';
 import { useSourceMap } from '../../hooks/useSourceMap';
+import { useSettings } from '../../hooks/useSettings';
 import type {
   BibliographyPlugin,
   LSPPlugin,
@@ -51,6 +52,7 @@ import {
 } from '../common/Icons';
 import { PluginControlGroup, PluginHeader } from '../common/PluginHeader';
 import UnlinkedDocumentNotice from './UnlinkedDocumentNotice';
+import { file } from 'jszip';
 
 interface EditorComponentProps {
   content: string | ArrayBuffer;
@@ -809,7 +811,7 @@ const Editor: React.FC<EditorComponentProps> = ({
   toolbarVisible = true,
   onToolbarToggle,
 }) => {
-  const [textContent, setTextContent] = useState<string>('');
+  const { getSetting } = useSettings();
   const [filePath, setFilePath] = useState<string>('');
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [pendingSelection, setPendingSelection] = useState<{
@@ -819,6 +821,16 @@ const Editor: React.FC<EditorComponentProps> = ({
 
   const editorRef = useRef<HTMLDivElement>(null);
   const isUpdatingRef = useRef<boolean>(false);
+
+  const textContent = useMemo(() => {
+    if (content instanceof ArrayBuffer) {
+      return arrayBufferToString(content);
+    }
+    if (typeof content === 'string') {
+      return content;
+    }
+    return '';
+  }, [content])
 
   useEffect(() => {
     const handleShowCommentModal = (event: Event) => {
@@ -871,16 +883,6 @@ const Editor: React.FC<EditorComponentProps> = ({
       );
     }
   };
-
-  useEffect(() => {
-    if (content instanceof ArrayBuffer) {
-      setTextContent(arrayBufferToString(content));
-    } else if (typeof content === 'string') {
-      setTextContent(content);
-    } else {
-      setTextContent('');
-    }
-  }, [content]);
 
   useEffect(() => {
     const loadFilePath = async () => {
@@ -970,10 +972,34 @@ const Editor: React.FC<EditorComponentProps> = ({
     return pluginRegistry.getCollaborativeViewerForFile(fileName, mimeType);
   }, [shouldUseCollaborativeViewer, fileName, mimeType]);
 
-  const viewerPlugin =
+  const viewerPlugin = useMemo(() =>
     isEditingFile && fileName && !linkedDocumentId
       ? pluginRegistry.getViewerForFile(fileName, mimeType)
-      : null;
+      : null,
+    [isEditingFile, fileName, linkedDocumentId, mimeType],
+  );
+
+  const rendererDelegate = useMemo(() => {
+    if (!viewerPlugin?.rendererPluginIds?.length) return null;
+    if (!(content instanceof ArrayBuffer)) return null;
+    const threshold = viewerPlugin.rendererSizeThreshold ?? 0;
+    if (threshold > 0 && content.byteLength < threshold) return null;
+
+    const isSvg = fileName?.toLowerCase().endsWith('.svg') ||
+      mimeType === 'image/svg+xml';
+    const isPdf = fileName?.toLowerCase().endsWith('.pdf') ||
+      mimeType === 'application/pdf';
+
+    if (!isSvg && !isPdf) return null;
+
+    const outputType = isPdf ? 'pdf' : 'svg';
+
+    return pluginRegistry.getRendererIfAvailable(
+      outputType,
+      viewerPlugin.rendererPluginIds,
+      getSetting,
+    );
+  }, [viewerPlugin, content, fileName, mimeType, getSetting]);
 
   if (
     collaborativeViewerPlugin &&
@@ -981,7 +1007,6 @@ const Editor: React.FC<EditorComponentProps> = ({
     shouldUseCollaborativeViewer
   ) {
     const CollaborativeViewerComponent = collaborativeViewerPlugin.renderViewer;
-
     return (
       <BibliographyProvider>
         <CommentProvider
@@ -1029,8 +1054,23 @@ const Editor: React.FC<EditorComponentProps> = ({
     );
   }
 
-  if (viewerPlugin && isEditingFile) {
-    const ViewerComponent = viewerPlugin.renderViewer;
+  if (isEditingFile && (viewerPlugin || rendererDelegate)) {
+    if (rendererDelegate) {
+      return (
+        <div className="editor-container viewer-container">
+          {React.createElement(rendererDelegate.renderOutput, {
+            key: `${fileName}-${mimeType}`,
+            content: content as ArrayBuffer,
+            mimeType,
+            fileName,
+            headerLabel: fileName,
+            headerTitle: filePath,
+          })}
+        </div>
+      );
+    }
+
+    const ViewerComponent = viewerPlugin!.renderViewer;
     const viewerProps: ViewerProps = {
       fileId,
       content: content as ArrayBuffer,
@@ -1043,7 +1083,7 @@ const Editor: React.FC<EditorComponentProps> = ({
         <div className="viewer-plugin-info">
           <span>
             {t('Viewing with')}&nbsp;
-            {viewerPlugin.name} v{viewerPlugin.version}
+            {viewerPlugin!.name} v{viewerPlugin!.version}
           </span>
         </div>
         <ViewerComponent {...viewerProps} />

@@ -55,6 +55,8 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   onDownload,
   controllerRef,
   onLocationClick,
+  headerLabel,
+  headerTitle,
 }) => {
   const { getSetting } = useSettings();
   const { getProperty, setProperty, registerProperty } = useProperties();
@@ -379,8 +381,10 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         arr[1] === 0x50 &&
         arr[2] === 0x44 &&
         arr[3] === 0x46;
-      contentTypeRef.current = isPdf ? 'pdf' : 'svg';
-      setContentType(contentTypeRef.current);
+
+      const newContentType = isPdf ? 'pdf' : 'svg';
+      contentTypeRef.current = newContentType;
+      setContentType(newContentType);
       clearPdfCaches();
 
       for (const el of textLayerRefs.current.values()) {
@@ -393,11 +397,13 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 
       try {
         if (isPdf) {
+          svgPagesRef.current.clear();
           const { pdfDoc, metadata } = await parsePdfPages(buffer);
           pdfDocRef.current = pdfDoc;
           setPageMetadata(metadata);
           setNumPages(pdfDoc.numPages);
         } else {
+          pdfDocRef.current = null;
           const { pages, metadata } = await parseSvgPages(buffer);
           svgPagesRef.current = pages;
           setPageMetadata(metadata);
@@ -980,6 +986,13 @@ const CanvasRenderer: React.FC<RendererProps> = ({
               </button>
             </div>
           </div>
+          {headerLabel && (
+            <div id="toolbarRight">
+              <span className="toolbar-file-label" title={headerTitle}>
+                {headerLabel}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

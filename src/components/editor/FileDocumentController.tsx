@@ -772,10 +772,17 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
     fileId: string,
     content: string | ArrayBuffer,
     isBinary = false) => {
+
+    const file = await getFile(fileId);
+
     setFileContent(content);
     setIsEditingFile(true);
     setIsBinaryFile(isBinary);
     setFileSelectionChange((prev) => prev + 1);
+    setFileName(file?.name ?? '');
+    setMimeType(file?.mimeType);
+    setLinkedDocumentId(file?.documentId || null);
+    setCurrentFilePath(file?.path);
 
     if (typeof content === 'string') {
       setCurrentEditorContent(content);
@@ -788,13 +795,12 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
     }
 
     selectFile(fileId);
-    const file = await getFile(fileId);
+
     if (file) {
-      setCurrentFilePath(file.path);
-      if (file.name && isLatexFile(file.name)) {
+      if (isLatexFile(file.name)) {
         setShowLatexOutput(true);
         setShowTypstOutput(false);
-      } else if (file.name && isTypstFile(file.name)) {
+      } else if (isTypstFile(file.name)) {
         setShowTypstOutput(true);
         setShowLatexOutput(false);
       } else {
@@ -802,17 +808,10 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
         setShowTypstOutput(false);
       }
 
-      // Create or switch to tab
       createTabForFile(fileId, file);
 
-      const currentFragment = parseUrlFragments(
-        window.location.hash.substring(1)
-      );
-      const newUrl = buildUrlWithFragments(
-        currentFragment.yjsUrl,
-        undefined,
-        file.path
-      );
+      const currentFragment = parseUrlFragments(window.location.hash.substring(1));
+      const newUrl = buildUrlWithFragments(currentFragment.yjsUrl, undefined, file.path);
       window.location.hash = newUrl;
     }
   };

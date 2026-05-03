@@ -35,6 +35,8 @@ const imageViewerPlugin: ViewerPlugin = {
 	version: PLUGIN_VERSION,
 	type: 'viewer',
 	icon: ImageIcon,
+	rendererPluginIds: ['canvas-renderer'],
+	rendererSizeThreshold: 1 * 1024 * 1024, // 1 MB > will open in renderer
 	get settings() {
 		return getImageViewerSettings();
 	},

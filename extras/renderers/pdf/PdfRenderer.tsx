@@ -45,6 +45,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
   onDownload,
   controllerRef,
   onLocationClick,
+  headerLabel,
+  headerTitle,
 }) => {
   const { getSetting } = useSettings();
   const { getProperty, setProperty, registerProperty } = useProperties();
@@ -789,6 +791,13 @@ const PdfRenderer: React.FC<RendererProps> = ({
               </button>
             </div>
           </div>
+          {headerLabel && (
+            <div id="toolbarRight">
+              <span className="toolbar-file-label" title={headerTitle}>
+                {headerLabel}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

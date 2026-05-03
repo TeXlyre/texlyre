@@ -40,6 +40,23 @@
   gap: 10px;
 }
 
+#toolbarRight {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  padding-right: 0.5rem;
+}
+
+.toolbar-file-label {
+  font-size: 0.85rem;
+  color: var(--text-color);
+  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
 .toolbarButtonGroup {
   display: flex;
   align-items: center;
