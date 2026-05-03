@@ -37,6 +37,15 @@ import Editor from './Editor';
 import FileExplorer from './FileExplorer';
 import SearchPanel from './SearchPanel';
 
+type LinkedFileInfo = {
+  fileName: string;
+  filePath: string;
+  fileId: string;
+  mimeType?: string;
+};
+
+type LinkedFileInfoState = Partial<LinkedFileInfo>;
+
 interface FileDocumentControllerProps {
   documents: Document[];
   selectedDocId: string | null;
@@ -120,12 +129,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   const [isFileLoading, setIsFileLoading] = useState(false);
   const [mimeType, setMimeType] = useState<string | undefined>(undefined);
   const [linkedDocumentId, setLinkedDocumentId] = useState<string | null>(null);
-  const [linkedFileInfo, setLinkedFileInfo] = useState<{
-    fileName?: string;
-    mimeType?: string;
-    fileId?: string;
-    filePath?: string;
-  }>({});
+  const [linkedFileInfo, setLinkedFileInfo] = useState<LinkedFileInfoState>({});
   const [currentLine, setCurrentLine] = useState(1);
 
   const [sidebarWidth, setSidebarWidth] = useState(
@@ -157,6 +161,8 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
     string | null>(
       null);
 
+  const docToFileMapRef = useRef<Map<string, LinkedFileInfo>>(new Map());
+  const [docToFileMapReady, setDocToFileMapReady] = useState(false);
   const [showCurrentProjectExportModal, setShowCurrentProjectExportModal] =
     useState(false);
   const [currentProjectForExport, setCurrentProjectForExport] =
@@ -501,55 +507,67 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   }, [selectedFileId, isEditingFile, getFile]);
 
   useEffect(() => {
-    const loadInitialLinkedFile = async () => {
-      if (!isEditingFile && selectedDocId) {
-        try {
-          const allFiles = await fileStorageService.getAllFiles(false, false, false);
-          const linkedFile = allFiles.find(
-            (file) => file.documentId === selectedDocId
-          );
-
-          if (linkedFile) {
-            setLinkedFileInfo({
-              fileName: linkedFile.name,
-              filePath: linkedFile.path,
-              fileId: linkedFile.id,
-              mimeType: linkedFile.mimeType
-            });
-            setLinkedDocumentId(selectedDocId);
-
-            // Only show one output at a time
-            if (linkedFile.name && isLatexFile(linkedFile.name)) {
-              setShowLatexOutput(true);
-              setShowTypstOutput(false);
-            } else if (linkedFile.name && isTypstFile(linkedFile.name)) {
-              setShowTypstOutput(true);
-              setShowLatexOutput(false);
-            } else {
-              setShowLatexOutput(false);
-              setShowTypstOutput(false);
-            }
-          } else {
-            setLinkedFileInfo({});
-            setLinkedDocumentId(null);
-            setShowLatexOutput(false);
-            setShowTypstOutput(false);
-          }
-        } catch (error) {
-          console.error('Error loading initial linked file:', error);
-          setLinkedFileInfo({});
-          setLinkedDocumentId(null);
-          setShowLatexOutput(false);
-          setShowTypstOutput(false);
+    const buildDocToFileMap = async () => {
+      const allFiles = await fileStorageService.getAllFiles(false, false, false);
+      const map = new Map<string, LinkedFileInfo>();
+      for (const file of allFiles) {
+        if (file.documentId) {
+          map.set(file.documentId, {
+            fileName: file.name,
+            filePath: file.path,
+            fileId: file.id,
+            mimeType: file.mimeType,
+          });
         }
-      } else if (isEditingFile) {
+      }
+      docToFileMapRef.current = map;
+      setDocToFileMapReady(true);
+    };
+
+    buildDocToFileMap();
+
+    document.addEventListener('refresh-file-tree', buildDocToFileMap);
+    document.addEventListener('file-saved', buildDocToFileMap);
+
+    return () => {
+      document.removeEventListener('refresh-file-tree', buildDocToFileMap);
+      document.removeEventListener('file-saved', buildDocToFileMap);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!docToFileMapReady) return;
+
+    if (isEditingFile || !selectedDocId) {
+      if (isEditingFile) {
         setLinkedFileInfo({});
         setLinkedDocumentId(null);
       }
-    };
+      return;
+    }
 
-    loadInitialLinkedFile();
-  }, [selectedDocId, isEditingFile]);
+    const linkedFile = docToFileMapRef.current.get(selectedDocId);
+
+    if (linkedFile) {
+      setLinkedFileInfo(linkedFile);
+      setLinkedDocumentId(selectedDocId);
+      if (isLatexFile(linkedFile.fileName)) {
+        setShowLatexOutput(true);
+        setShowTypstOutput(false);
+      } else if (isTypstFile(linkedFile.fileName)) {
+        setShowTypstOutput(true);
+        setShowLatexOutput(false);
+      } else {
+        setShowLatexOutput(false);
+        setShowTypstOutput(false);
+      }
+    } else {
+      setLinkedFileInfo({});
+      setLinkedDocumentId(null);
+      setShowLatexOutput(false);
+      setShowTypstOutput(false);
+    }
+  }, [selectedDocId, isEditingFile, docToFileMapReady]);
 
   useEffect(() => {
     if (
