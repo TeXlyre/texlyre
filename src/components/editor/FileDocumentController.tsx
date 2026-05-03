@@ -2,6 +2,7 @@
 import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 
@@ -116,6 +117,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   const isViewerHandledRef = useRef(false);
   const [currentFilePath, setCurrentFilePath] = useState<string | undefined>(undefined);
   const [fileName, setFileName] = useState('');
+  const [isFileLoading, setIsFileLoading] = useState(false);
   const [mimeType, setMimeType] = useState<string | undefined>(undefined);
   const [linkedDocumentId, setLinkedDocumentId] = useState<string | null>(null);
   const [linkedFileInfo, setLinkedFileInfo] = useState<{
@@ -776,12 +778,12 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
     content: string | ArrayBuffer,
     isBinary = false) => {
 
-    setFileName('');
-    setMimeType(undefined);
-    setIsEditingFile(false);
-    setFileContent('');
-    setIsBinaryFile(true);
+    flushSync(() => {
+      setIsFileLoading(true);
+    });
+
     fileContentRef.current = content;
+    selectFile(fileId);
 
     const file = await getFile(fileId);
 
@@ -798,6 +800,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
     setMimeType(file?.mimeType);
     setLinkedDocumentId(file?.documentId || null);
     setCurrentFilePath(file?.path);
+    setIsFileLoading(false);
 
     if (typeof content === 'string') {
       setCurrentEditorContent(content);
@@ -808,8 +811,6 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
     if (selectedDocId !== null) {
       onSelectDocument('');
     }
-
-    selectFile(fileId);
 
     if (file) {
       if (isLatexFile(file.name)) {
@@ -1183,7 +1184,9 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
         className="editor-container-outer"
         style={{ flex: 1, display: 'flex', minHeight: 0 }}>
 
-        <div className="editor-container" style={{ flex: 1, minWidth: 0 }}>
+        <div className="editor-container"
+          style={{ flex: 1, minWidth: 0, position: 'relative' }}>
+
           <EditorTabs onTabSwitch={handleTabSwitch} />
 
           <Editor
@@ -1217,6 +1220,12 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
             onToolbarToggle={handleToolbarToggle} />
 
         </div>
+
+        {isFileLoading && (
+          <div className="file-loading-overlay">
+            <div className="loading-spinner" />
+          </div>
+        )}
 
         {showLatexOutput &&
           <ResizablePanel
