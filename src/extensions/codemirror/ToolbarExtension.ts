@@ -21,6 +21,25 @@ export type FileType = 'latex' | 'typst';
 
 type ToolbarEntry = ToolbarItem | ToolbarSplit | ToolbarSpace;
 
+const toolbarCommandsByView = new WeakMap<EditorView, Map<string, ToolbarItem>>();
+
+function registerToolbarCommands(view: EditorView, items: ToolbarEntry[]) {
+	const commands = new Map<string, ToolbarItem>();
+
+	for (const item of items) {
+		if (!('type' in item)) {
+			commands.set(item.key, item);
+		}
+	}
+
+	toolbarCommandsByView.set(view, commands);
+}
+
+export function runToolbarCommand(view: EditorView, key: string): boolean {
+	const command = toolbarCommandsByView.get(view)?.get(key)?.command;
+	return command?.(view) ?? false;
+}
+
 const getTableScopeItems = (fileType: FileType): ToolbarEntry[] => [
 	split,
 	TableScopeItems.createRowAddBefore(fileType),
@@ -157,6 +176,11 @@ function createToolbarPlugin(
 			constructor(private view: EditorView) {
 				this.boundFullScreenHandler = this.handleFullScreenChange.bind(this);
 				view.dom.ownerDocument.addEventListener('fullscreenchange', this.boundFullScreenHandler);
+
+				registerToolbarCommands(
+					view,
+					getItems(fileType, this.isFullScreen, scopeState.inTable, scopeState.inColor, undoManager),
+				);
 			}
 
 			update() {
@@ -181,6 +205,9 @@ function createToolbarPlugin(
 
 			private reconfigureToolbar() {
 				const items = getItems(fileType, this.isFullScreen, scopeState.inTable, scopeState.inColor, undoManager);
+
+				registerToolbarCommands(this.view, items);
+
 				requestAnimationFrame(() => {
 					this.view.dispatch({ effects: toolbarCompartment.reconfigure(toolbar({ items })) });
 				});
@@ -197,6 +224,8 @@ export const createToolbarExtension = (fileType: FileType, undoManager?: UndoMan
 	const toolbarCompartment = new Compartment();
 	const scopeState = { inTable: false, inColor: false };
 
+	const initialItems = getItems(fileType, false, false, false, undoManager);
+
 	const { plugin: responsivePlugin, reset: resetResponsive } = createCollapsableToolbar(
 		() => getItems(fileType, !!document.fullscreenElement, scopeState.inTable, scopeState.inColor, undoManager),
 		toolbarCompartment,
@@ -204,7 +233,7 @@ export const createToolbarExtension = (fileType: FileType, undoManager?: UndoMan
 	);
 
 	return [
-		toolbarCompartment.of(toolbar({ items: getItems(fileType, false, false, false, undoManager) })),
+		toolbarCompartment.of(toolbar({ items: initialItems })),
 		createToolbarPlugin(fileType, toolbarCompartment, scopeState, resetResponsive, undoManager),
 		responsivePlugin,
 	];
