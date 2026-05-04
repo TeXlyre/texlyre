@@ -52,7 +52,8 @@
     "theme-plugin": "texlyre-mobile-theme",
     "theme-variant": "dark",
     "typst-auto-compile-on-open": false,
-    "typst-default-format": "canvas"
+    "typst-default-format": "canvas",
+    "typst-sourcemap-enabled": true
   },
   "properties": {
     "latex-output-collapsed:global": true,

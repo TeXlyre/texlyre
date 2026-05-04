@@ -91,13 +91,27 @@ export const SourceMapProvider: React.FC<SourceMapProviderProps> = ({ children }
         setProperty('sourcemap-forward-click-enabled', enabled);
     }, [setProperty]);
 
+    const getSourceMapEnabled = useCallback(() => {
+        if (activeCompiler === 'latex') {
+            return getSetting('latex-sourcemap-enabled')?.value !== false;
+        }
+
+        if (activeCompiler === 'typst') {
+            return getSetting('typst-sourcemap-enabled')?.value !== false;
+        }
+
+        return false;
+    }, [activeCompiler, getSetting]);
+
     useEffect(() => {
         const update = () => {
-            const sourcemapEnabled = getSetting('latex-sourcemap-enabled')?.value !== false;
             const service = getActiveService();
-            setIsAvailable(sourcemapEnabled && (service?.isAvailable() ?? false));
+
+            setIsAvailable(getSourceMapEnabled() && (service?.isAvailable() ?? false));
         };
+
         update();
+
         const unsubLatex = latexSourceMapService.addListener(update);
         const unsubTypst = typstSourceMapService.addListener(update);
 
@@ -105,7 +119,7 @@ export const SourceMapProvider: React.FC<SourceMapProviderProps> = ({ children }
             unsubLatex();
             unsubTypst();
         };
-    }, [getActiveService]);
+    }, [getActiveService, getSourceMapEnabled]);
 
     useEffect(() => {
         const handleDimensions = (e: Event) => {

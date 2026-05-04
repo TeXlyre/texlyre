@@ -37,8 +37,8 @@ export const getCanvasRendererSettings = (): Setting[] => [
     category: t('Renderers'),
     subcategory: t('Canvas Output'),
     type: 'checkbox',
-    label: t('Enable text selection'),
-    description: t('Allow text selection and copying from PDF documents'),
+    label: t('Enable text selection and SVG interaction'),
+    description: t('Allow text selection in PDF output and interaction with embedded content in SVG output'),
     defaultValue: false
   },
   {
@@ -46,7 +46,7 @@ export const getCanvasRendererSettings = (): Setting[] => [
     category: t('Renderers'),
     subcategory: t('Canvas Output'),
     type: 'checkbox',
-    label: t('Show annotations'),
-    description: t('Display interactive forms and annotations in PDF documents'),
+    label: t('Enable annotations and forms (PDF only)'),
+    description: t('Allow interaction with PDF links, form fields, and annotations'),
     defaultValue: false
   }];

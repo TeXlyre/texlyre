@@ -52,7 +52,8 @@
     "theme-plugin": "texlyre-wide-theme",
     "theme-variant": "atom_light",
     "typst-auto-compile-on-open": false,
-    "typst-default-format": "canvas"
+    "typst-default-format": "canvas",
+    "typst-sourcemap-enabled": true
   },
   "properties": {
     "latex-output-collapsed:global": true,
