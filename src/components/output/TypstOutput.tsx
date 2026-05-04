@@ -14,9 +14,14 @@ import type { RendererController } from '../../plugins/PluginInterface'
 import type { FileNode } from '../../types/files';
 import ResizablePanel from '../common/ResizablePanel';
 import TypstCompileButton from './TypstCompileButton';
-import { isTypstFile, isTemporaryFile, toArrayBuffer } from '../../utils/fileUtils';
 import { TypstOutputFormat } from '../../types/typst';
 import type { SourceMapClickMode } from '../../types/sourceMap';
+import SourceMapFloatingButton from './SourceMapFloatingButton';
+import {
+  isTypstFile,
+  isTemporaryFile,
+  toArrayBuffer
+} from '../../utils/fileUtils';
 
 interface TypstOutputProps {
   className?: string;
@@ -72,6 +77,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
   const {
     reverseSync,
     currentHighlight,
+    isAvailable: sourceMapAvailable,
     reverseClickEnabled,
     reverseClickMode,
   } = useSourceMap();
@@ -456,11 +462,11 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 
       </div>
 
-      {!compileLog && !hasAnyOutput ?
+      {!compileLog && !hasAnyOutput ? (
         <div className="empty-state">
           <p>{t('No output available. Compile a Typst document to see results.')}</p>
-        </div> :
-
+        </div>
+      ) : (
         <>
           {currentView === 'log' &&
             <div className="log-view-container">
@@ -497,10 +503,19 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
           }
 
           {outputViewerContent}
-        </>
-      }
-    </div>);
 
+        </>
+      )}
+
+      {sourceMapAvailable && (
+        <SourceMapFloatingButton
+          onForwardSync={() => {
+            document.dispatchEvent(new CustomEvent('trigger-sourcemap-forward'));
+          }}
+        />
+      )}
+    </div>
+  );
 };
 
 export default TypstOutput;
