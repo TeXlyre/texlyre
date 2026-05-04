@@ -532,7 +532,7 @@ class TypstService {
         } else if ((result.svg || result.canvas) && (result.format === 'svg' || result.format === 'canvas')) {
             const content = result.format === 'svg' ? result.svg : new TextDecoder().decode(result.canvas!);
             const buffer = new TextEncoder().encode(content).buffer;
-            files.push(this.createFileNode(`${baseName}.svg`, buffer, 'image/svg+xml', false));
+            files.push(this.createFileNode(`${baseName}.svg`, buffer, 'image/svg+xml', true));
         }
 
         files.push(this.createLogFile(baseName, result.log));
