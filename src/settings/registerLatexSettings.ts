@@ -22,6 +22,8 @@ export function useRegisterLatexSettings() {
             getSetting('latex-store-cache')?.value as boolean ?? true;
         const initialStoreWorkingDirectory =
             getSetting('latex-store-working-directory')?.value as boolean ?? false;
+        const initialSourceMap =
+            getSetting('latex-sourcemap-enabled')?.value as boolean ?? true;
         const initialAutoCompile =
             getSetting('latex-auto-compile-on-open')?.value as boolean ?? false;
         const initialDefaultFormat =
@@ -93,7 +95,7 @@ export function useRegisterLatexSettings() {
             type: 'checkbox',
             label: t('Enable source map (SyncTeX)'),
             description: t('Enable SyncTeX source mapping between editor and PDF output'),
-            defaultValue: true,
+            defaultValue: initialSourceMap,
         });
 
         registerSetting({

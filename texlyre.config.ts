@@ -101,6 +101,7 @@ const config: TexlyreConfig = {
                 themeVariant: 'atom_light',
                 typstAutoCompileOnOpen: false,
                 typstDefaultFormat: 'canvas',
+                typstSourcemapEnabled: true,
             },
             properties: {
                 global: {

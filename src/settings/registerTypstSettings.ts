@@ -18,8 +18,21 @@ export function useRegisterTypstSettings() {
             getSetting('typst-auto-compile-on-open')?.value as boolean ?? false;
         const initialDefaultFormat =
             getSetting('typst-default-format')?.value as TypstOutputFormat ?? 'pdf';
+        const initialSourceMap =
+            getSetting('typst-sourcemap-enabled')?.value as boolean ?? true;
         const initialAutoNavigate =
             getSetting('typst-auto-navigate-to-main')?.value as string ?? 'conditional';
+
+
+        registerSetting({
+            id: 'typst-sourcemap-enabled',
+            category: t('Compilation'),
+            subcategory: t('Typst'),
+            type: 'checkbox',
+            label: t('Enable source map (SVG only)'),
+            description: t('Enable source mapping between editor and SVG output'),
+            defaultValue: initialSourceMap,
+        });
 
         registerSetting({
             id: 'typst-auto-compile-on-open',

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { fileStorageService } from '../../services/FileStorageService';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useTypst } from '../../hooks/useTypst';
+import { useSourceMap } from '../../hooks/useSourceMap';
 import { useProperties } from '../../hooks/useProperties';
 import { useSettings } from '../../hooks/useSettings';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
@@ -15,6 +16,7 @@ import ResizablePanel from '../common/ResizablePanel';
 import TypstCompileButton from './TypstCompileButton';
 import { isTypstFile, isTemporaryFile, toArrayBuffer } from '../../utils/fileUtils';
 import { TypstOutputFormat } from '../../types/typst';
+import type { SourceMapClickMode } from '../../types/sourceMap';
 
 interface TypstOutputProps {
   className?: string;
@@ -67,9 +69,20 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
   const effectiveMainFile = propMainFile || autoMainFile;
   const effectiveFormat = propFormat || currentFormat || settingFormat;
 
+  const {
+    reverseSync,
+    currentHighlight,
+    reverseClickEnabled,
+    reverseClickMode,
+  } = useSourceMap();
+
   const canvasControllerRef = useRef<RendererController | null>(null);
+  const clickCountRef = useRef(0);
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const useEnhancedRenderer = getSetting('pdf-renderer-enable')?.value ?? true;
   const loggerPlugin = pluginRegistry.getLoggerForType('typst');
+
+
 
   const indicatorColor = {
     idle: '#777',
@@ -197,6 +210,47 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
     setVisualizerCollapsed(collapsed);
     setProperty('typst-log-visualizer-collapsed', collapsed);
   };
+
+  useEffect(() => {
+    if (canvasControllerRef.current?.setHighlight) {
+      canvasControllerRef.current.setHighlight(currentHighlight);
+    }
+  }, [currentHighlight]);
+
+  useEffect(() => {
+    return () => {
+      if (clickTimerRef.current) {
+        clearTimeout(clickTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleLocationClick = useCallback(
+    (page: number, x: number, y: number) => {
+      if (!reverseClickEnabled) return;
+
+      clickCountRef.current++;
+
+      if (clickTimerRef.current) {
+        clearTimeout(clickTimerRef.current);
+      }
+
+      clickTimerRef.current = setTimeout(() => {
+        const required: Record<SourceMapClickMode, number> = {
+          single: 1,
+          double: 2,
+          triple: 3,
+        };
+
+        if (clickCountRef.current >= required[reverseClickMode]) {
+          reverseSync(page, x, y);
+        }
+
+        clickCountRef.current = 0;
+      }, 300);
+    },
+    [reverseClickEnabled, reverseClickMode, reverseSync],
+  );
 
   const handleLineClick = async (line: number) => {
     if (!selectedFileId) return;
@@ -331,7 +385,8 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
               content: compiledCanvas || new ArrayBuffer(0),
               mimeType: effectiveFormat === 'canvas-pdf' ? 'application/pdf' : 'image/svg+xml',
               fileName: effectiveFormat === 'canvas-pdf' ? 'output.pdf' : 'output.svg',
-              controllerRef: (controller) => { canvasControllerRef.current = controller; }
+              controllerRef: (controller) => { canvasControllerRef.current = controller; },
+              onLocationClick: handleLocationClick,
             }) :
             <div className="canvas-fallback">{t('Canvas renderer not available')}</div>
           }

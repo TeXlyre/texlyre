@@ -4,7 +4,7 @@ import { type ReactNode, createContext, useCallback, useContext, useEffect, useR
 
 import { fileStorageService } from '../services/FileStorageService';
 import { latexSourceMapService } from '../services/LaTeXSourceMapService';
-// import { typstSourceMapService } from '../services/TypstSourceMapService';
+import { typstSourceMapService } from '../services/TypstSourceMapService';
 import type { SourceMapContextType, SourceMapHighlight, SourceMapService, SourceMapClickMode } from '../types/sourceMap';
 import { useLaTeX } from '../hooks/useLaTeX';
 import { useTypst } from '../hooks/useTypst';
@@ -37,7 +37,7 @@ export const SourceMapProvider: React.FC<SourceMapProviderProps> = ({ children }
 
     const getActiveService = useCallback((): SourceMapService | null => {
         if (activeCompiler === 'latex') return latexSourceMapService;
-        // if (activeCompiler === 'typst') return typstSourceMapService;
+        if (activeCompiler === 'typst') return typstSourceMapService;
         return null;
     }, [activeCompiler]);
 
@@ -91,21 +91,35 @@ export const SourceMapProvider: React.FC<SourceMapProviderProps> = ({ children }
         setProperty('sourcemap-forward-click-enabled', enabled);
     }, [setProperty]);
 
+    const getSourceMapEnabled = useCallback(() => {
+        if (activeCompiler === 'latex') {
+            return getSetting('latex-sourcemap-enabled')?.value !== false;
+        }
+
+        if (activeCompiler === 'typst') {
+            return getSetting('typst-sourcemap-enabled')?.value !== false;
+        }
+
+        return false;
+    }, [activeCompiler, getSetting]);
+
     useEffect(() => {
         const update = () => {
-            const sourcemapEnabled = getSetting('latex-sourcemap-enabled')?.value !== false;
             const service = getActiveService();
-            setIsAvailable(sourcemapEnabled && (service?.isAvailable() ?? false));
+
+            setIsAvailable(getSourceMapEnabled() && (service?.isAvailable() ?? false));
         };
+
         update();
+
         const unsubLatex = latexSourceMapService.addListener(update);
-        // const unsubTypst = typstSourceMapService.addListener(update);
+        const unsubTypst = typstSourceMapService.addListener(update);
 
         return () => {
             unsubLatex();
-            // unsubTypst();
+            unsubTypst();
         };
-    }, [getActiveService]);
+    }, [getActiveService, getSourceMapEnabled]);
 
     useEffect(() => {
         const handleDimensions = (e: Event) => {
