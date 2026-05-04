@@ -1,3 +1,4 @@
+// src/extensions/codemirror/PasteExtension.ts
 import { EditorView } from '@codemirror/view';
 
 import { detectFileType } from '../../utils/fileUtils';
