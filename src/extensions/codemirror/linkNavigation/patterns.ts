@@ -75,6 +75,23 @@ export const typstLinkPatterns: LinkPattern[] = [
         extractValue: (match) => match[1]
     },
     {
+        pattern: /#import\s+"@preview\/([^:"]+):([^"]+)"/g,
+        type: 'url',
+        fileType: 'typst',
+        extractValue: (match) => {
+            const name = match[1];
+            const version = match[2];
+
+            return `https://github.com/typst/packages/tree/main/packages/preview/${name}/${version}`;
+        }
+    },
+    {
+        pattern: /#import\s+"((?!@preview\/)[^"]+)"/g,
+        type: 'file',
+        fileType: 'typst',
+        extractValue: (match) => match[1]
+    },
+    {
         pattern: /image\s*\(\s*"([^"]+)"/g,
         type: 'file',
         fileType: 'typst',
