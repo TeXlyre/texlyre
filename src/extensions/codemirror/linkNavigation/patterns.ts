@@ -63,7 +63,7 @@ export const typstLinkPatterns: LinkPattern[] = [
         extractValue: (match) => match[1]
     },
     {
-        pattern: /https?:\/\/[^\s\)>\]]+/g,
+        pattern: /https?:\/\/[^\s\)>\]"']+/g,
         type: 'url',
         fileType: 'typst',
         extractValue: (match) => match[0]
@@ -75,7 +75,60 @@ export const typstLinkPatterns: LinkPattern[] = [
         extractValue: (match) => match[1]
     },
     {
+        pattern: /#import\s+"@preview\/([^:"]+):([^"]+)"/g,
+        type: 'url',
+        fileType: 'typst',
+        extractValue: (match) => {
+            const name = match[1];
+            const version = match[2];
+
+            return `https://github.com/typst/packages/tree/main/packages/preview/${name}/${version}`;
+        }
+    },
+    {
+        pattern: /#import\s+"((?!@preview\/)[^"]+)"/g,
+        type: 'file',
+        fileType: 'typst',
+        extractValue: (match) => match[1]
+    },
+    {
         pattern: /image\s*\(\s*"([^"]+)"/g,
+        type: 'file',
+        fileType: 'typst',
+        extractValue: (match) => match[1]
+    },
+    {
+        pattern: /audio-svg\s*\(\s*"(https?:\/\/[^"\s]+)"/g,
+        type: 'url',
+        fileType: 'typst',
+        extractValue: (match) => match[1]
+    },
+    {
+        pattern: /video-svg\s*\(\s*"(https?:\/\/[^"\s]+)"/g,
+        type: 'url',
+        fileType: 'typst',
+        extractValue: (match) => match[1]
+    },
+    {
+        pattern: /audio-svg\s*\(\s*"((?!https?:\/\/)[^"]+)"/g,
+        type: 'file',
+        fileType: 'typst',
+        extractValue: (match) => match[1]
+    },
+    {
+        pattern: /video-svg\s*\(\s*"((?!https?:\/\/)[^"]+)"/g,
+        type: 'file',
+        fileType: 'typst',
+        extractValue: (match) => match[1]
+    },
+    {
+        pattern: /#?\b(?:csv|json|toml|yaml|xml|cbor|read)\s*\(\s*"([^"]+)"/g,
+        type: 'file',
+        fileType: 'typst',
+        extractValue: (match) => match[1]
+    },
+    {
+        pattern: /#?\bbibliography\s*\(\s*"([^"]+)"/g,
         type: 'file',
         fileType: 'typst',
         extractValue: (match) => match[1]
@@ -108,7 +161,7 @@ export const bibLinkPatterns: LinkPattern[] = [
         extractValue: (match) => match[1]
     },
     {
-        pattern: /\bdoi\s*=\s*([^,\s}]+)/gi,
+        pattern: /\bdoi\s*=\s*"?([^,\s}"]+)"?/gi,
         type: 'doi',
         fileType: 'bib',
         extractValue: (match) => match[1]
@@ -120,13 +173,13 @@ export const bibLinkPatterns: LinkPattern[] = [
         extractValue: (match) => match[1]
     },
     {
-        pattern: /\burl\s*=\s*([^,\s}]+)/gi,
+        pattern: /\burl\s*=\s*"?([^,\s}"]+)"?/gi,
         type: 'url',
         fileType: 'bib',
         extractValue: (match) => match[1]
     },
     {
-        pattern: /https?:\/\/[^\s,}\]]+/g,
+        pattern: /https?:\/\/[^\s,}\]"']+/g,
         type: 'url',
         fileType: 'bib',
         extractValue: (match) => match[0]
@@ -141,7 +194,7 @@ export const markdownLinkPatterns: LinkPattern[] = [
         extractValue: (match) => match[2]
     },
     {
-        pattern: /https?:\/\/[^\s\)>\]]+/g,
+        pattern: /https?:\/\/[^\s\)>\]"']+/g,
         type: 'url',
         fileType: 'markdown',
         extractValue: (match) => match[0]

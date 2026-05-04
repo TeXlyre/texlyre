@@ -1,6 +1,9 @@
+// src/extensions/codemirror/PasteExtension.ts
 import { EditorView } from '@codemirror/view';
+
 import { detectFileType } from '../../utils/fileUtils';
 import { uploadPastedFile } from '../../utils/clipboardUtils';
+import { runToolbarCommand } from './ToolbarExtension';
 
 let pendingImagePath: string | null = null;
 
@@ -28,14 +31,10 @@ export const createPasteExtension = (currentFileId?: string, fileName?: string) 
                 .then(uploadedPath => {
                     pendingImagePath = uploadedPath;
 
-                    const toolbar = view.dom.querySelector('.codemirror-toolbar');
                     const fileType = detectFileType(fileName);
-                    const figureButton = toolbar?.querySelector(`[data-item="${fileType}-figure"]`) as HTMLElement;
-
-                    if (figureButton) {
-                        figureButton.click();
-                    } else {
-                        console.warn('Figure button not found in toolbar');
+                    const toolbar_command = runToolbarCommand(view, `${fileType}-figure`);
+                    if (!toolbar_command) {
+                        console.warn('Figure command not found in toolbar');
                         pendingImagePath = null;
                     }
                 })

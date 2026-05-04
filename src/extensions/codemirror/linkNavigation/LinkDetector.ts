@@ -98,13 +98,13 @@ export class LinkDetector {
                         rawValue
                     );
 
-                    const extractedValue = lineText.substring(valueStart, valueEnd).trim();
+                    const fallbackValue = lineText.substring(valueStart, valueEnd).trim();
 
                     return {
                         from: line.from + valueStart,
                         to: line.from + valueEnd,
                         type,
-                        value: extractedValue,
+                        value: extractValue ? rawValue.trim() : fallbackValue,
                         fileType: fileType || this.currentFileType
                     };
                 }
