@@ -155,14 +155,14 @@
 }
 
 .file-loading-overlay {
-	position: absolute;
+	position: fixed;
 	inset: 0;
-	z-index: 10;
+	z-index: var(--z-above-all);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background-color: var(--pico-background);
-	opacity: 0.8;
+	background-color: transparent;
+	opacity: 1;
 }
 
 .editor-main-container {
