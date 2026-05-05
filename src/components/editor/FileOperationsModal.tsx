@@ -199,7 +199,10 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 								className="button primary"
 								onClick={onConfirmMove}
 								disabled={
-									selectedTargetPath === fileToMove.path ||
+									(
+										selectedTargetPath ===
+										(fileToMove.path.substring(0, fileToMove.path.lastIndexOf('/')) || '/')
+									) ||
 									(fileToMove.type === 'directory' &&
 										selectedTargetPath.startsWith(`${fileToMove.path}/`))
 								}

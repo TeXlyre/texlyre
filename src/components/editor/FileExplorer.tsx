@@ -5,6 +5,7 @@ import { type DragEvent, useEffect, useRef, useState } from 'react';
 
 import { useFileTree } from '../../hooks/useFileTree';
 import type { FileNode } from '../../types/files';
+import { validateFileName } from '../../utils/fileUtils';
 import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
 import { cleanContent } from '../../utils/fileCommentUtils.ts';
 import { createZipFromFolder, downloadZipFile } from '../../utils/zipUtils';
@@ -100,6 +101,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   const [fileCreationParentPath, setFileCreationParentPath] = useState<string>('/');
   const fileCreationButtonRef = useRef<HTMLButtonElement>(null);
 
+  const [nameError, setNameError] = useState<string | null>(null);
   const [renamingFileId, setRenamingFileId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [showPropertiesModal, setShowPropertiesModal] = useState(false);
@@ -267,6 +269,13 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   const handleConfirmNewItem = async () => {
     if (!creatingNewItem || !newItemName.trim()) return;
 
+    const result = validateFileName(newItemName);
+    if (!result.valid) {
+      setNameError(result.error!);
+      return;
+    }
+    setNameError(null);
+
     try {
       if (creatingNewItem.type === 'directory') {
         await createDirectory(newItemName.trim(), creatingNewItem.parentPath);
@@ -344,6 +353,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   const handleCancelNewItem = () => {
     setCreatingNewItem(null);
     setNewItemName('');
+    setNameError(null);
   };
 
   const handleNewItemKeyDown = (e: React.KeyboardEvent) => {
@@ -397,30 +407,36 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   };
 
   const handleSaveRename = async (node: FileNode) => {
-    if (renamingFileId) {
-      try {
-        const parentPath = node.path.substring(0, node.path.lastIndexOf('/'));
-        const newFullPath =
-          parentPath === '' ?
-            `/${renameValue.trim()}` :
-            `${parentPath}/${renameValue.trim()}`;
+    if (!renamingFileId) return;
 
-        if (node.path === newFullPath) {
-          setRenamingFileId(null);
-          setRenameValue('');
+    const result = validateFileName(renameValue);
+    if (!result.valid) {
+      setNameError(result.error!);
+      return;
+    }
+    setNameError(null);
+    try {
+      const parentPath = node.path.substring(0, node.path.lastIndexOf('/'));
+      const newFullPath =
+        parentPath === '' ?
+          `/${renameValue.trim()}` :
+          `${parentPath}/${renameValue.trim()}`;
+
+      if (node.path === newFullPath) {
+        setRenamingFileId(null);
+        setRenameValue('');
+        return;
+      }
+
+      await renameFile(node.id, newFullPath);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message === 'File operation cancelled by user') {
+        } else if (
+          error.message === 'File unlinked. Please try rename again.') {
           return;
-        }
-
-        await renameFile(node.id, newFullPath);
-      } catch (error) {
-        if (error instanceof Error) {
-          if (error.message === 'File operation cancelled by user') {
-          } else if (
-            error.message === 'File unlinked. Please try rename again.') {
-            return;
-          } else {
-            console.error('Error renaming file:', error);
-          }
+        } else {
+          console.error('Error renaming file:', error);
         }
       }
     }
@@ -431,6 +447,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   const handleCancelRename = () => {
     setRenamingFileId(null);
     setRenameValue('');
+    setNameError(null);
   };
 
   const handleRenameKeyDown = (e: React.KeyboardEvent, node: FileNode) => {
@@ -449,19 +466,19 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   };
 
   const handleConfirmMove = async () => {
-    if (fileToMove && selectedTargetPath !== fileToMove.path) {
+    if (fileToMove) {
+      const newFullPath =
+        selectedTargetPath === '/' ?
+          `/${fileToMove.name}` :
+          `${selectedTargetPath}/${fileToMove.name}`;
+
+      if (fileToMove.path === newFullPath) {
+        setShowMoveDialog(false);
+        setFileToMove(null);
+        return;
+      }
+
       try {
-        const newFullPath =
-          selectedTargetPath === '/' ?
-            `/${fileToMove.name}` :
-            `${selectedTargetPath}/${fileToMove.name}`;
-
-        if (fileToMove.path === newFullPath) {
-          setShowMoveDialog(false);
-          setFileToMove(null);
-          return;
-        }
-
         await renameFile(fileToMove.id, newFullPath);
         setShowMoveDialog(false);
         setFileToMove(null);
@@ -705,14 +722,20 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
         return;
       }
 
+      const newFullPath =
+        targetNode.path === '/' ?
+          `/${sourceFile.name}` :
+          `${targetNode.path}/${sourceFile.name}`;
+
+      if (sourceFile.path === newFullPath) {
+        setDragOverTarget(null);
+        return;
+      }
+
       setDragDropFile(sourceFile);
       setDragDropTargetPath(targetNode.path);
       setShowDragDropDialog(true);
       setPendingDragDropOperation(() => async () => {
-        const newFullPath =
-          targetNode.path === '/' ?
-            `/${sourceFile.name}` :
-            `${targetNode.path}/${sourceFile.name}`;
         await renameFile(nodeId, newFullPath);
       });
     } catch (error) {
@@ -823,12 +846,18 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
         return;
       }
 
-      // Show confirmation dialog
+      const newFullPath = `/${sourceFile.name}`;
+
+      if (sourceFile.path === newFullPath) {
+        setDragOverTarget(null);
+        setIsDragging(false);
+        return;
+      }
+
       setDragDropFile(sourceFile);
       setDragDropTargetPath('/');
       setShowDragDropDialog(true);
       setPendingDragDropOperation(() => async () => {
-        const newFullPath = `/${sourceFile.name}`;
         await renameFile(nodeId, newFullPath);
       });
     } catch (error) {
@@ -975,21 +1004,29 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                 }
               </span>
               <div className="file-name-input-container">
-                <input
-                  type="text"
-                  value={newItemName}
-                  onChange={(e) => setNewItemName(e.target.value)}
-                  onBlur={handleConfirmNewItem}
-                  onKeyDown={handleNewItemKeyDown}
-                  className="file-name-input" />
-
-                <button
-                  className="cancel-input-button"
-                  onClick={handleCancelNewItem}
-                  title={t('Cancel')}>
-
-                  ×
-                </button>
+                <div className="file-name-input-row">
+                  <input
+                    type="text"
+                    value={newItemName}
+                    onChange={(e) => {
+                      setNewItemName(e.target.value);
+                      if (nameError) setNameError(null);
+                    }}
+                    onBlur={handleConfirmNewItem}
+                    onKeyDown={handleNewItemKeyDown}
+                    className={`file-name-input ${nameError ? 'invalid' : ''}`} />
+                  <button
+                    className="cancel-input-button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleCancelNewItem();
+                    }}
+                    title={t('Cancel')}>
+                    ×
+                  </button>
+                </div>
+                {nameError && <span className="file-name-error">{nameError}</span>}
               </div>
             </div>
           }
@@ -1005,6 +1042,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                   expandedFolders={expandedFolders}
                   renamingFileId={renamingFileId}
                   renameValue={renameValue}
+                  nameError={nameError}
                   activeMenu={activeMenu}
                   dragOverTarget={dragOverTarget}
                   enableFileSystemDragDrop={enableFileSystemDragDrop && !isEditingFileName}
@@ -1018,6 +1056,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                   onCancelRename={handleCancelRename}
                   onRenameKeyDown={handleRenameKeyDown}
                   onSetRenameValue={setRenameValue}
+                  onSetNameError={setNameError}
                   onSetActiveMenu={setActiveMenu}
                   onLinkToDocument={linkFileToDocument}
                   onUnlinkFromDocument={unlinkFileFromDocument}

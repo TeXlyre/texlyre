@@ -72,6 +72,40 @@ export const joinPaths = (base: string, path: string): string => {
 	return `${base}/${path}`;
 };
 
+export interface NameValidationResult {
+	valid: boolean;
+	error?: string;
+}
+
+const ILLEGAL_NAME_CHARS = /[<>:"/\\|?*\x00-\x1F]/;
+// NOTE (fabawi): File gets excluded from ZIP on WINDOWS if name contains the following
+const RESERVED_WINDOWS_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i;
+const MAX_NAME_BYTES = 255;
+
+export const validateFileName = (name: string): NameValidationResult => {
+	const trimmed = name.trim();
+
+	if (!trimmed) {
+		return { valid: false, error: t('Name cannot be empty') };
+	}
+	if (trimmed === '.' || trimmed === '..') {
+		return { valid: false, error: t('Name cannot be "." or ".."') };
+	}
+	if (ILLEGAL_NAME_CHARS.test(trimmed)) {
+		return { valid: false, error: t('Name contains illegal characters: < > : " / \\ | ? *') };
+	}
+	if (/[. ]$/.test(trimmed)) {
+		return { valid: false, error: t('Name cannot end with a space or period') };
+	}
+	if (RESERVED_WINDOWS_NAMES.test(trimmed)) {
+		return { valid: false, error: t('"{name}" is a reserved system name', { name: trimmed }) };
+	}
+	if (new TextEncoder().encode(trimmed).length > MAX_NAME_BYTES) {
+		return { valid: false, error: t('Name exceeds {max} bytes', { max: MAX_NAME_BYTES }) };
+	}
+	return { valid: true };
+};
+
 export const getMimeType = (fileName: string): string => {
 	return mime.getType(fileName) || 'application/octet-stream';
 };

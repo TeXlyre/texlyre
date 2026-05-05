@@ -35,6 +35,7 @@ interface FileTreeItemProps {
   expandedFolders: Set<string>;
   renamingFileId: string | null;
   renameValue: string;
+  nameError: string | null;
   activeMenu: string | null;
   dragOverTarget: string | null;
   enableFileSystemDragDrop: boolean;
@@ -48,6 +49,7 @@ interface FileTreeItemProps {
   onCancelRename: () => void;
   onRenameKeyDown: (e: React.KeyboardEvent, node: FileNode) => void;
   onSetRenameValue: (value: string) => void;
+  onSetNameError: (error: string | null) => void;
   onSetActiveMenu: (id: string | null) => void;
   onLinkToDocument: (fileId: string) => void;
   onUnlinkFromDocument: (fileId: string) => void;
@@ -80,6 +82,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
   expandedFolders,
   renamingFileId,
   renameValue,
+  nameError,
   activeMenu,
   dragOverTarget,
   enableFileSystemDragDrop,
@@ -93,6 +96,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
   onCancelRename,
   onRenameKeyDown,
   onSetRenameValue,
+  onSetNameError,
   onSetActiveMenu,
   onLinkToDocument,
   onUnlinkFromDocument,
@@ -214,25 +218,30 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 
         {isRenaming ?
           <div className="file-name-input-container">
-            <input
-              type="text"
-              value={renameValue}
-              onChange={(e) => onSetRenameValue(e.target.value)}
-              onBlur={() => onSaveRename(node)}
-              onKeyDown={(e) => onRenameKeyDown(e, node)}
-              onClick={(e) => e.stopPropagation()}
-              className="file-name-input" />
-
-            <button
-              className="cancel-input-button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onCancelRename();
-              }}
-              title={t('Cancel')}>
-
-              ×
-            </button>
+            <div className="file-name-input-row">
+              <input
+                type="text"
+                value={renameValue}
+                onChange={(e) => {
+                  onSetRenameValue(e.target.value);
+                  if (nameError) onSetNameError(null);
+                }}
+                onBlur={() => onSaveRename(node)}
+                onKeyDown={(e) => onRenameKeyDown(e, node)}
+                onClick={(e) => e.stopPropagation()}
+                className={`file-name-input ${nameError ? 'invalid' : ''}`} />
+              <button
+                className="cancel-input-button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onCancelRename();
+                }}
+                title={t('Cancel')}>
+                ×
+              </button>
+            </div>
+            {nameError && <span className="file-name-error">{nameError}</span>}
           </div> :
 
           <span className="file-name">
@@ -479,21 +488,30 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
                 }
               </span>
               <div className="file-name-input-container">
-                <input
-                  type="text"
-                  value={newItemName}
-                  onChange={(e) => onSetNewItemName(e.target.value)}
-                  onBlur={onConfirmNewItem}
-                  onKeyDown={onNewItemKeyDown}
-                  className="file-name-input" />
+                <div className="file-name-input-row">
+                  <input
+                    type="text"
+                    value={newItemName}
+                    onChange={(e) => {
+                      onSetNewItemName(e.target.value);
+                      if (nameError) onSetNameError(null);
+                    }}
+                    onBlur={onConfirmNewItem}
+                    onKeyDown={onNewItemKeyDown}
+                    className={`file-name-input ${nameError ? 'invalid' : ''}`} />
 
-                <button
-                  className="cancel-input-button"
-                  onClick={onCancelNewItem}
-                  title={t('Cancel')}>
-
-                  ×
-                </button>
+                  <button
+                    className="cancel-input-button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onCancelNewItem();
+                    }}
+                    title={t('Cancel')}>
+                    ×
+                  </button>
+                </div>
+                {nameError && <span className="file-name-error">{nameError}</span>}
               </div>
             </div>
           }
@@ -507,6 +525,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
               expandedFolders={expandedFolders}
               renamingFileId={renamingFileId}
               renameValue={renameValue}
+              nameError={nameError}
               activeMenu={activeMenu}
               dragOverTarget={dragOverTarget}
               enableFileSystemDragDrop={enableFileSystemDragDrop}
@@ -520,6 +539,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
               onCancelRename={onCancelRename}
               onRenameKeyDown={onRenameKeyDown}
               onSetRenameValue={onSetRenameValue}
+              onSetNameError={onSetNameError}
               onSetActiveMenu={onSetActiveMenu}
               onLinkToDocument={onLinkToDocument}
               onUnlinkFromDocument={onUnlinkFromDocument}
