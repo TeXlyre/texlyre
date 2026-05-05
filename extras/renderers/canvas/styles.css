@@ -151,13 +151,8 @@
   overflow: auto;
 }
 
-.canvas-renderer-viewer {
-  align-items: stretch;
-  text-align: initial;
-}
-
 .canvas-virtual-wrapper {
-  width: 100% !important;
+  min-width: min-content;
   margin: 0;
 }
 
@@ -167,6 +162,7 @@
 
 .canvas-renderer-viewer {
   min-height: 100%;
+  min-width: min-content;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -175,6 +171,7 @@
   box-sizing: border-box;
   background-color: var(--pico-background);
   text-align: center;
+
 }
 
 .canvas-page {
