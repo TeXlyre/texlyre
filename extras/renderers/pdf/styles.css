@@ -134,7 +134,6 @@
 
 .react-pdf__Document,
 .react-pdf__Document__container {
-  background-color: #f5f5f5 !important;
   min-height: 100%;
   width: 100%;
 }
@@ -150,6 +149,7 @@
 .react-pdf__Page .textLayer,
 .react-pdf__Page .annotationLayer {
   box-sizing: content-box !important;
+  box-shadow: 0 2px 8px var(--color-shadow);
 }
 
 .react-pdf__Page {
@@ -166,7 +166,7 @@
   right: 0;
   bottom: 0;
   overflow: auto;
-  background-color: #f5f5f5;
+  background-color: var(--pico-background);
 }
 
 .pdf-renderer-viewer {
@@ -177,15 +177,13 @@
 
 .pdf-renderer-viewer .page {
   margin: 10px auto;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   position: relative;
-  background-color: white;
 }
 
 .pdf-page-scroll {
   display: flex;
   justify-content: center;
-  background-color: #f5f5f5 !important;
+  background-color: var(--pico-background) !important;
   padding: 10px 0;
   min-width: min-content;
   width: 100%;

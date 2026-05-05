@@ -256,12 +256,20 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     (pages: number[]) => {
       if (overlayTimerRef.current) clearTimeout(overlayTimerRef.current);
 
-      overlayTimerRef.current = setTimeout(() => {
+      requestAnimationFrame(() => {
         for (const pageNum of pages) {
-          if (canvasRendererTextSelection) {
-            const textEl = textLayerRefs.current.get(pageNum);
-            if (!textEl) continue;
+          const textEl = textLayerRefs.current.get(pageNum);
+          const annotEl = annotationLayerRefs.current.get(pageNum);
 
+          if (textEl) {
+            textEl.style.visibility = 'hidden';
+          }
+
+          if (annotEl) {
+            annotEl.style.visibility = 'hidden';
+          }
+
+          if (canvasRendererTextSelection && textEl) {
             if (contentTypeRef.current === 'pdf') {
               renderTextLayer(pdfDocRef, pageNum, textEl, scale);
             } else if (contentTypeRef.current === 'svg') {
@@ -277,14 +285,16 @@ const CanvasRenderer: React.FC<RendererProps> = ({
                 );
               }
             }
+
+            textEl.style.visibility = 'visible';
           }
-          if (canvasRendererAnnotations && contentTypeRef.current === 'pdf') {
-            const annotEl = annotationLayerRefs.current.get(pageNum);
-            if (annotEl)
-              renderAnnotationLayer(pdfDocRef, pageNum, annotEl, scale);
+
+          if (canvasRendererAnnotations && contentTypeRef.current === 'pdf' && annotEl) {
+            renderAnnotationLayer(pdfDocRef, pageNum, annotEl, scale);
+            annotEl.style.visibility = 'visible';
           }
         }
-      }, 150);
+      });
     },
     [scale, canvasRendererTextSelection, canvasRendererAnnotations, pageMetadata],
   );
@@ -830,7 +840,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   }
 
   const isPdf = contentTypeRef.current === 'pdf';
-  const virtualWrapperWidth = maxPageWidth;
+  const virtualWrapperWidth = maxPageWidth * scale;
   const topOffset = scrollView ? pageOffsets[renderRange.start - 1] || 0 : 0;
   const zoomOptions =
     getCanvasRendererSettings().find(

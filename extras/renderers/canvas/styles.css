@@ -145,7 +145,6 @@
   right: 0;
   bottom: 0;
   overflow: auto;
-  background-color: #f5f5f5;
 }
 
 .canvas-renderer-viewer {
@@ -162,10 +161,6 @@
   width: 100%;
 }
 
-.canvas-virtual-inner .canvas-page {
-  margin: 10px auto;
-}
-
 .canvas-renderer-viewer {
   min-height: 100%;
   width: 100%;
@@ -174,18 +169,18 @@
   align-items: center;
   padding: 10px 0;
   box-sizing: border-box;
-  background-color: #f5f5f5;
+  background-color: var(--pico-background);
   text-align: center;
 }
 
 .canvas-page {
   background-color: white;
-  margin: 10px auto;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px var(--color-shadow);
   position: relative;
   display: inline-block;
-  padding: 0;
+  margin: 10px auto;
   line-height: 0;
+  margin: var(--space-xs);
 }
 
 .canvas-page-canvas {
@@ -195,7 +190,6 @@
 .canvas-page-scroll {
   display: flex;
   justify-content: center;
-  background-color: #f5f5f5;
   padding: 10px 0;
   width: 100%;
   scroll-margin-top: 56px;
