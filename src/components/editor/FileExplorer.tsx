@@ -121,6 +121,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     parentPath: string;
   } | null>(null);
   const [newItemName, setNewItemName] = useState('');
+  const isEditingFileName = !!creatingNewItem || !!renamingFileId;
 
   useEffect(() => {
     const handleRefreshEvent = () => {
@@ -747,6 +748,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   const handleDragOver = (
     event: DragEvent<HTMLDivElement>,
     nodeId?: string) => {
+    if (isEditingFileName) return;
+
     const isFileDrop = Array.from(event.dataTransfer.items).some(
       (item) => item.kind === 'file'
     );
@@ -771,6 +774,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   };
 
   const handleDropOnRoot = async (e: React.DragEvent) => {
+    if (isEditingFileName) return;
+
     e.preventDefault();
     e.stopPropagation();
 
@@ -886,7 +891,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   return (
     <>
       <div
-        className={`file-explorer ${isDragging ? 'dragging' : ''} ${dragOverTarget === 'root' ? 'root-drag-over' : ''}`}
+        className={`file-explorer ${!isEditingFileName && isDragging ? 'dragging' : ''} ${!isEditingFileName && dragOverTarget === 'root' ? 'root-drag-over' : ''}`}
         ref={dropRef}
         onDragEnter={handleDragEnter}
         onDragOver={(e) => handleDragOver(e)}
@@ -1002,8 +1007,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                   renameValue={renameValue}
                   activeMenu={activeMenu}
                   dragOverTarget={dragOverTarget}
-                  enableFileSystemDragDrop={enableFileSystemDragDrop}
-                  enableInternalDragDrop={enableInternalDragDrop}
+                  enableFileSystemDragDrop={enableFileSystemDragDrop && !isEditingFileName}
+                  enableInternalDragDrop={enableInternalDragDrop && !isEditingFileName}
                   creatingNewItem={creatingNewItem}
                   newItemName={newItemName}
                   onFileSelect={handleFileSelect}
