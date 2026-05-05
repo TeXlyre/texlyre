@@ -9,6 +9,7 @@ import {
   useState,
   useImperativeHandle,
 } from 'react';
+import { flushSync } from 'react-dom';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -39,6 +40,116 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url,
 ).toString();
 
+type Range = { start: number; end: number };
+
+const DEFAULT_WIDTH = 595;
+const DEFAULT_HEIGHT = 842;
+const PAGE_GAP = 20;
+const BUFFER_PAGES = 2;
+const MIN_SCALE = 0.25;
+const MAX_SCALE = 5;
+const ZOOM_STEP = 0.25;
+const PAGE_SYNC_SUPPRESS_MS = 180;
+
+const clamp = (value: number, min: number, max: number) =>
+  Math.max(min, Math.min(max, value));
+
+const getContentHash = (buffer: ArrayBuffer): string => {
+  const view = new Uint8Array(buffer);
+  const start = Array.from(view.slice(0, Math.min(32, view.length))).join(',');
+  const end = Array.from(view.slice(Math.max(0, view.length - 32))).join(',');
+
+  return `${buffer.byteLength}-${start}-${end}`;
+};
+
+const pageHeightFor = (
+  heights: Map<number, number>,
+  page: number,
+  scale: number,
+) => (heights.get(page) || DEFAULT_HEIGHT) * scale + PAGE_GAP;
+
+const pageTopFor = (
+  heights: Map<number, number>,
+  page: number,
+  scale: number,
+) => {
+  let top = 0;
+
+  for (let i = 1; i < page; i++) {
+    top += pageHeightFor(heights, i, scale);
+  }
+
+  return top;
+};
+
+const totalHeightFor = (
+  heights: Map<number, number>,
+  numPages: number,
+  scale: number,
+) => {
+  let total = 0;
+
+  for (let page = 1; page <= numPages; page++) {
+    total += pageHeightFor(heights, page, scale);
+  }
+
+  return total;
+};
+
+const rangeFor = (
+  heights: Map<number, number>,
+  numPages: number,
+  scrollTop: number,
+  viewportHeight: number,
+  scale: number,
+): Range => {
+  if (numPages <= 0) return { start: 1, end: 1 };
+
+  const scrollBottom = scrollTop + viewportHeight;
+  let top = 0;
+  let start = 1;
+  let end = 1;
+  let foundStart = false;
+
+  for (let page = 1; page <= numPages; page++) {
+    const bottom = top + pageHeightFor(heights, page, scale);
+
+    if (!foundStart && bottom > scrollTop) {
+      start = Math.max(1, page - BUFFER_PAGES);
+      foundStart = true;
+    }
+
+    if (top < scrollBottom) {
+      end = Math.min(numPages, page + BUFFER_PAGES);
+    }
+
+    top = bottom;
+
+    if (foundStart && top > scrollBottom) break;
+  }
+
+  return { start, end };
+};
+
+const pageAtOffsetFor = (
+  heights: Map<number, number>,
+  numPages: number,
+  offset: number,
+  scale: number,
+) => {
+  let top = 0;
+
+  for (let page = 1; page <= numPages; page++) {
+    const bottom = top + pageHeightFor(heights, page, scale);
+
+    if (offset <= bottom || page === numPages) return page;
+
+    top = bottom;
+  }
+
+  return 1;
+};
+
 const PdfRenderer: React.FC<RendererProps> = ({
   content,
   fileName,
@@ -50,51 +161,225 @@ const PdfRenderer: React.FC<RendererProps> = ({
 }) => {
   const { getSetting } = useSettings();
   const { getProperty, setProperty, registerProperty } = useProperties();
-  const propertiesRegistered = useRef(false);
 
   const pdfRendererEnable =
     (getSetting('pdf-renderer-enable')?.value as boolean) ?? true;
   const pdfRendererTextSelection =
     (getSetting('pdf-renderer-text-selection')?.value as boolean) ?? true;
 
-  const [numPages, setNumPages] = useState<number>(0);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageInput, setPageInput] = useState<string>('1');
-  const [isEditingPageInput, setIsEditingPageInput] = useState<boolean>(false);
-  const [scale, setScale] = useState<number>(1.0);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [numPages, setNumPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageInput, setPageInput] = useState('1');
+  const [isEditingPageInput, setIsEditingPageInput] = useState(false);
+  const [scale, setScale] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
-  const [scrollView, setScrollView] = useState<boolean>(false);
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-  const [renderRange, setRenderRange] = useState<{
-    start: number;
-    end: number;
-  }>({ start: 1, end: 1 });
+  const [scrollView, setScrollView] = useState(false);
+  const [renderRange, setRenderRange] = useState<Range>({
+    start: 1,
+    end: 1,
+  });
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [fitMode, setFitMode] = useState<'fit-width' | 'fit-height'>(
     'fit-width',
   );
-
-  const pageWidths = useRef<Map<number, number>>(new Map());
-  const pageHeights = useRef<Map<number, number>>(new Map());
-  const lastStablePageRef = useRef<number>(1);
-  const contentHashRef = useRef<string>('');
-  const originalContentRef = useRef<ArrayBuffer | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const contentElRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const isTrackingEnabledRef = useRef<boolean>(true);
-  const pendingRestorePageRef = useRef<number | null>(null);
-  const loadedPagesRef = useRef<Set<number>>(new Set());
-
   const [highlight, setHighlight] = useState<{
     page: number;
     rects: Array<{ x: number; y: number; width: number; height: number }>;
   } | null>(null);
 
-  const BUFFER_PAGES = 2;
-  const UPDATE_THROTTLE = 100;
-  const HYSTERESIS_THRESHOLD = 0.2;
+  const propertiesRegistered = useRef(false);
+  const pageWidths = useRef<Map<number, number>>(new Map());
+  const pageHeights = useRef<Map<number, number>>(new Map());
+  const lastStablePageRef = useRef(1);
+  const suppressPageSyncUntilRef = useRef(0);
+  const contentHashRef = useRef('');
+  const originalContentRef = useRef<ArrayBuffer | null>(null);
+  const pendingRestorePageRef = useRef<number | null>(null);
+  const pendingRestoreScrollTopRef = useRef<number | null>(null);
+
+  const numPagesRef = useRef(0);
+  const scaleRef = useRef(1);
+  const scrollViewRef = useRef(false);
+  const pointerInsideRef = useRef(false);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const contentElRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    numPagesRef.current = numPages;
+  }, [numPages]);
+
+  useEffect(() => {
+    scaleRef.current = scale;
+  }, [scale]);
+
+  useEffect(() => {
+    scrollViewRef.current = scrollView;
+  }, [scrollView]);
+
+  const fileData = useMemo(() => {
+    return pdfData
+      ? {
+        data: pdfData,
+        cMapUrl: `${BASE_PATH}/assets/cmaps/`,
+        cMapPacked: true,
+      }
+      : null;
+  }, [pdfData]);
+
+  const suppressPageSync = () => {
+    suppressPageSyncUntilRef.current = Date.now() + PAGE_SYNC_SUPPRESS_MS;
+  };
+
+  const setPage = useCallback(
+    (page: number) => {
+      const target = clamp(page, 1, numPagesRef.current || 1);
+
+      lastStablePageRef.current = target;
+      setCurrentPage(target);
+      setPageInput(String(target));
+      setProperty('pdf-renderer-current-page', target);
+    },
+    [setProperty],
+  );
+
+  const syncScroll = useCallback(
+    (targetScale = scale) => {
+      if (!scrollView || !scrollContainerRef.current) return;
+
+      const container = scrollContainerRef.current;
+
+      setRenderRange(
+        rangeFor(
+          pageHeights.current,
+          numPages,
+          container.scrollTop,
+          container.clientHeight,
+          targetScale,
+        ),
+      );
+
+      if (
+        isEditingPageInput ||
+        Date.now() < suppressPageSyncUntilRef.current
+      ) {
+        return;
+      }
+
+      const probeY =
+        container.scrollTop + Math.min(80, container.clientHeight * 0.25);
+      const page = pageAtOffsetFor(
+        pageHeights.current,
+        numPages,
+        probeY,
+        targetScale,
+      );
+
+      if (page !== lastStablePageRef.current) {
+        setPage(page);
+      }
+    },
+    [scrollView, numPages, scale, isEditingPageInput, setPage],
+  );
+
+  const goToPage = useCallback(
+    (page: number) => {
+      const target = clamp(page, 1, numPages || 1);
+
+      suppressPageSync();
+      setPage(target);
+
+      if (!scrollView || !scrollContainerRef.current) return;
+
+      const container = scrollContainerRef.current;
+      const top = pageTopFor(pageHeights.current, target, scale);
+
+      container.scrollTop = top;
+      setRenderRange(
+        rangeFor(
+          pageHeights.current,
+          numPages,
+          top,
+          container.clientHeight,
+          scale,
+        ),
+      );
+    },
+    [numPages, scrollView, scale, setPage],
+  );
+
+  const setPdfContent = useCallback((buffer: ArrayBuffer) => {
+    if (!buffer || buffer.byteLength === 0) {
+      setPdfData(null);
+      originalContentRef.current = null;
+      contentHashRef.current = '';
+      setError(t('No PDF content available'));
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const nextHash = getContentHash(buffer);
+      if (contentHashRef.current === nextHash) return;
+
+      const hadDocument = numPagesRef.current > 0;
+      const keepPage = lastStablePageRef.current;
+      const keepScrollTop = scrollContainerRef.current?.scrollTop ?? null;
+      const dataCopy = new Uint8Array(new Uint8Array(buffer));
+
+      pageWidths.current.clear();
+      pageHeights.current.clear();
+
+      originalContentRef.current = dataCopy.buffer.slice(0);
+      contentHashRef.current = nextHash;
+      pendingRestorePageRef.current = keepPage;
+      pendingRestoreScrollTopRef.current = keepScrollTop;
+
+      if (!hadDocument) setIsLoading(true);
+
+      setPdfData(dataCopy);
+      setError(null);
+    } catch (err) {
+      console.error('Error creating PDF data:', err);
+      setError(t('Failed to process PDF content'));
+      setIsLoading(false);
+    }
+  }, []);
+
+  useImperativeHandle(
+    controllerRef,
+    () => ({
+      updateContent: (nextContent: ArrayBuffer | string) => {
+        setPdfContent(
+          typeof nextContent === 'string'
+            ? new TextEncoder().encode(nextContent).buffer
+            : nextContent,
+        );
+      },
+      updatePdfContent: (nextContent: ArrayBuffer | string) => {
+        setPdfContent(
+          typeof nextContent === 'string'
+            ? new TextEncoder().encode(nextContent).buffer
+            : nextContent,
+        );
+      },
+      setHighlight: (nextHighlight) => {
+        setHighlight(nextHighlight);
+
+        if (nextHighlight) {
+          document.dispatchEvent(
+            new CustomEvent('pdf-renderer-navigate', {
+              detail: { page: nextHighlight.page },
+            }),
+          );
+        }
+      },
+    }),
+    [setPdfContent],
+  );
 
   useEffect(() => {
     if (propertiesRegistered.current) return;
@@ -104,7 +389,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
       id: 'pdf-renderer-zoom',
       category: 'UI',
       subcategory: 'PDF Viewer',
-      defaultValue: 1.0,
+      defaultValue: 1,
     });
 
     registerProperty({
@@ -120,470 +405,386 @@ const PdfRenderer: React.FC<RendererProps> = ({
       subcategory: 'PDF Viewer',
       defaultValue: 1,
     });
-  }, [registerProperty]);
 
-  useEffect(() => {
     const storedZoom = getProperty('pdf-renderer-zoom');
     const storedScrollView = getProperty('pdf-renderer-scroll-view');
     const storedPage = getProperty('pdf-renderer-current-page');
 
-    if (storedZoom !== undefined) setScale(Number(storedZoom));
-    if (storedScrollView !== undefined) setScrollView(Boolean(storedScrollView));
+    if (storedZoom !== undefined) {
+      setScale(clamp(Number(storedZoom), MIN_SCALE, MAX_SCALE));
+    }
+
+    if (storedScrollView !== undefined) {
+      setScrollView(Boolean(storedScrollView));
+    }
+
     if (storedPage !== undefined && Number(storedPage) >= 1) {
       pendingRestorePageRef.current = Number(storedPage);
     }
-  }, [getProperty]);
-
-  const getContentHash = useCallback((buffer: ArrayBuffer): string => {
-    const view = new Uint8Array(buffer);
-    const sample = view.slice(0, Math.min(1024, view.length));
-    return `${buffer.byteLength}-${Array.from(sample.slice(0, 16)).join(',')}`;
-  }, []);
+  }, [registerProperty, getProperty]);
 
   useEffect(() => {
     if (content instanceof ArrayBuffer && content.byteLength > 0) {
-      try {
-        const contentHash = getContentHash(content);
-        if (contentHashRef.current !== contentHash) {
-          const dataCopy = new Uint8Array(new Uint8Array(content));
-          setPdfData(dataCopy);
-          originalContentRef.current = dataCopy.buffer.slice(0);
-          contentHashRef.current = contentHash;
-          setIsLoading(true);
-          setError(null);
-        }
-      } catch (error) {
-        console.error('Error creating PDF data:', error);
-        setError(t('Failed to process PDF content'));
-        setIsLoading(false);
-      }
-    } else {
-      setPdfData(null);
-      originalContentRef.current = null;
-      contentHashRef.current = '';
-      setError(t('No PDF content available'));
-      setIsLoading(false);
+      setPdfContent(content);
     }
-  }, [content, getContentHash]);
-
-  const fileData = useMemo(() => {
-    return pdfData
-      ? {
-        data: pdfData,
-        cMapUrl: `${BASE_PATH}/assets/cmaps/`,
-        cMapPacked: true,
-      }
-      : null;
-  }, [pdfData]);
-
-  const getPageHeight = useCallback(
-    (pageNum: number): number => {
-      const baseHeight = pageHeights.current.get(pageNum) || 842;
-      return baseHeight * scale + 20;
-    },
-    [scale],
-  );
-
-  const getPageTop = useCallback(
-    (pageNum: number): number => {
-      let height = 0;
-      for (let i = 1; i < pageNum; i++) {
-        height += getPageHeight(i);
-      }
-      return height;
-    },
-    [getPageHeight],
-  );
-
-  const scrollToPage = useCallback(
-    (pageNum: number) => {
-      if (!scrollView || !scrollContainerRef.current) return;
-      scrollContainerRef.current.scrollTo({
-        top: getPageTop(pageNum),
-        behavior: 'smooth',
-      });
-    },
-    [scrollView, getPageTop],
-  );
-
-  const updateCurrentPageFromScroll = useCallback(() => {
-    if (
-      !scrollView ||
-      !scrollContainerRef.current ||
-      isEditingPageInput ||
-      !isTrackingEnabledRef.current
-    ) return;
-
-    const container = scrollContainerRef.current;
-    const scrollTop = container.scrollTop;
-    const containerHeight = container.clientHeight;
-    const viewportCenter = scrollTop + containerHeight / 2;
-
-    let accumulatedHeight = 0;
-    let closestPage = 1;
-    let minDistance = Infinity;
-
-    for (let i = 1; i <= numPages; i++) {
-      const pageHeight = getPageHeight(i);
-      const pageCenter = accumulatedHeight + pageHeight / 2;
-      const distance = Math.abs(viewportCenter - pageCenter);
-
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestPage = i;
-      }
-
-      accumulatedHeight += pageHeight;
-      if (accumulatedHeight > viewportCenter + containerHeight) break;
-    }
-
-    if (closestPage !== lastStablePageRef.current) {
-      const hysteresisThreshold =
-        getPageHeight(lastStablePageRef.current) * HYSTERESIS_THRESHOLD;
-
-      if (
-        minDistance < hysteresisThreshold ||
-        Math.abs(closestPage - lastStablePageRef.current) > 1
-      ) {
-        lastStablePageRef.current = closestPage;
-        setCurrentPage(closestPage);
-        setPageInput(String(closestPage));
-        setProperty('pdf-renderer-current-page', closestPage);
-      }
-    }
-  }, [scrollView, numPages, isEditingPageInput, getPageHeight, setProperty]);
-
-  const calculateVisibleRange = useCallback(() => {
-    if (!scrollView || !scrollContainerRef.current) return;
-
-    const container = scrollContainerRef.current;
-    const scrollTop = container.scrollTop;
-    const containerHeight = container.clientHeight;
-    const scrollBottom = scrollTop + containerHeight;
-
-    let accumulatedHeight = 0;
-    let startPage = 1;
-    let endPage = 1;
-    let foundStart = false;
-
-    for (let i = 1; i <= numPages; i++) {
-      const pageHeight = getPageHeight(i);
-      const pageTop = accumulatedHeight;
-      const pageBottom = accumulatedHeight + pageHeight;
-
-      if (!foundStart && pageBottom > scrollTop) {
-        startPage = Math.max(1, i - BUFFER_PAGES);
-        foundStart = true;
-      }
-      if (pageTop < scrollBottom) {
-        endPage = Math.min(numPages, i + BUFFER_PAGES);
-      }
-
-      accumulatedHeight += pageHeight;
-      if (foundStart && pageTop > scrollBottom) break;
-    }
-
-    setRenderRange({ start: startPage, end: endPage });
-  }, [scrollView, numPages, getPageHeight]);
-
-  useEffect(() => {
-    if (!scrollView || !scrollContainerRef.current) return;
-
-    let rafId: number | null = null;
-    let lastUpdateTime = 0;
-
-    const handleScroll = () => {
-      if (rafId !== null) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        const now = Date.now();
-        if (now - lastUpdateTime >= UPDATE_THROTTLE) {
-          lastUpdateTime = now;
-          calculateVisibleRange();
-          updateCurrentPageFromScroll();
-        }
-      });
-    };
-
-    const container = scrollContainerRef.current;
-    container.addEventListener('scroll', handleScroll, { passive: true });
-    calculateVisibleRange();
-    updateCurrentPageFromScroll();
-
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
-      if (rafId !== null) cancelAnimationFrame(rafId);
-    };
-  }, [scrollView, calculateVisibleRange, updateCurrentPageFromScroll]);
-
-  useEffect(() => {
-    if (!scrollView) return;
-
-    isTrackingEnabledRef.current = false;
-    const timer = setTimeout(() => {
-      isTrackingEnabledRef.current = true;
-      updateCurrentPageFromScroll();
-    }, 200);
-
-    return () => clearTimeout(timer);
-  }, [scale, scrollView, updateCurrentPageFromScroll]);
+  }, [content, setPdfContent]);
 
   const onDocumentLoadSuccess = useCallback(
     ({ numPages: loadedNumPages }: { numPages: number }) => {
-      setNumPages(loadedNumPages);
-      loadedPagesRef.current.clear();
-
       const pendingPage = pendingRestorePageRef.current;
-      const restorePage =
-        pendingPage && pendingPage >= 1 && pendingPage <= loadedNumPages
-          ? pendingPage
-          : 1;
+      const restorePage = clamp(
+        pendingPage || lastStablePageRef.current || 1,
+        1,
+        loadedNumPages || 1,
+      );
 
       pendingRestorePageRef.current = null;
+      numPagesRef.current = loadedNumPages;
       lastStablePageRef.current = restorePage;
+
+      setNumPages(loadedNumPages);
       setCurrentPage(restorePage);
       if (!isEditingPageInput) setPageInput(String(restorePage));
       setIsLoading(false);
       setError(null);
 
-      if (scrollView && restorePage > 1) {
-        pendingRestorePageRef.current = restorePage;
-        setRenderRange({
-          start: Math.max(1, restorePage - BUFFER_PAGES),
-          end: Math.min(loadedNumPages, restorePage + BUFFER_PAGES),
-        });
-      }
+      setRenderRange({
+        start: Math.max(1, restorePage - BUFFER_PAGES),
+        end: Math.min(loadedNumPages, restorePage + BUFFER_PAGES),
+      });
+
+      requestAnimationFrame(() => {
+        if (!scrollViewRef.current || !scrollContainerRef.current) return;
+
+        const container = scrollContainerRef.current;
+        const fallbackTop = pageTopFor(
+          pageHeights.current,
+          restorePage,
+          scaleRef.current,
+        );
+        const maxTop = Math.max(
+          0,
+          totalHeightFor(
+            pageHeights.current,
+            loadedNumPages,
+            scaleRef.current,
+          ) - container.clientHeight,
+        );
+        const top = clamp(
+          pendingRestoreScrollTopRef.current ?? fallbackTop,
+          0,
+          maxTop,
+        );
+
+        pendingRestoreScrollTopRef.current = null;
+        suppressPageSync();
+        container.scrollTop = top;
+
+        setRenderRange(
+          rangeFor(
+            pageHeights.current,
+            loadedNumPages,
+            top,
+            container.clientHeight,
+            scaleRef.current,
+          ),
+        );
+      });
     },
-    [isEditingPageInput, scrollView],
+    [isEditingPageInput],
   );
 
-  const onDocumentLoadError = useCallback((error: Error) => {
-    setError(`Failed to load PDF: ${error.message}`);
+  const onDocumentLoadError = useCallback((err: Error) => {
+    setError(`Failed to load PDF: ${err.message}`);
     setIsLoading(false);
   }, []);
 
   const onPageLoadSuccess = useCallback(
     (page: any) => {
       const pageNum = page.pageNumber;
-      const viewport = page.getViewport({ scale: 1.0 });
+      const viewport = page.getViewport({ scale: 1 });
+
       pageWidths.current.set(pageNum, viewport.width);
       pageHeights.current.set(pageNum, viewport.height);
-      loadedPagesRef.current.add(pageNum);
 
-      const pendingPage = pendingRestorePageRef.current;
-      if (pendingPage && pageNum === pendingPage && scrollView) {
-        pendingRestorePageRef.current = null;
-        isTrackingEnabledRef.current = false;
-        requestAnimationFrame(() => {
-          scrollToPage(pendingPage);
-          setTimeout(() => {
-            isTrackingEnabledRef.current = true;
-            calculateVisibleRange();
-          }, 300);
-        });
+      requestAnimationFrame(() => {
+        syncScroll();
+      });
+    },
+    [syncScroll],
+  );
+
+  useEffect(() => {
+    if (!scrollView || !scrollContainerRef.current) return;
+
+    const container = scrollContainerRef.current;
+    let rafId = 0;
+
+    const onScroll = () => {
+      if (rafId) return;
+
+      rafId = requestAnimationFrame(() => {
+        rafId = 0;
+        syncScroll();
+      });
+    };
+
+    container.addEventListener('scroll', onScroll, { passive: true });
+    syncScroll();
+
+    return () => {
+      container.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(rafId);
+    };
+  }, [scrollView, syncScroll]);
+
+  useEffect(() => {
+    syncScroll();
+  }, [syncScroll]);
+
+  useEffect(() => {
+    const handleNavigate = (event: Event) => {
+      const page = Number((event as CustomEvent).detail?.page);
+
+      if (!Number.isFinite(page) || page < 1 || page > numPagesRef.current) {
+        return;
       }
-    },
-    [scrollView, scrollToPage, calculateVisibleRange],
-  );
 
-  const persistCurrentPage = useCallback(
-    (page: number) => {
-      setCurrentPage(page);
-      setProperty('pdf-renderer-current-page', page);
-    },
-    [setProperty],
-  );
+      goToPage(page);
+    };
 
-  const handlePreviousPage = useCallback(() => {
-    const targetPage = Math.max(currentPage - 1, 1);
-    lastStablePageRef.current = targetPage;
-    persistCurrentPage(targetPage);
-    setPageInput(String(targetPage));
-    scrollToPage(targetPage);
-  }, [currentPage, scrollToPage, persistCurrentPage]);
+    document.addEventListener('pdf-renderer-navigate', handleNavigate);
 
-  const handleNextPage = useCallback(() => {
-    const targetPage = Math.min(currentPage + 1, numPages);
-    lastStablePageRef.current = targetPage;
-    persistCurrentPage(targetPage);
-    setPageInput(String(targetPage));
-    scrollToPage(targetPage);
-  }, [currentPage, numPages, scrollToPage, persistCurrentPage]);
-
-  const handlePageInputChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setPageInput(event.target.value);
-    },
-    [],
-  );
-
-  const handlePageInputKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === 'Enter') {
-        const pageNum = Number.parseInt(pageInput, 10);
-        if (!Number.isNaN(pageNum) && pageNum >= 1 && pageNum <= numPages) {
-          lastStablePageRef.current = pageNum;
-          persistCurrentPage(pageNum);
-          setIsEditingPageInput(false);
-          (event.target as HTMLInputElement).blur();
-          scrollToPage(pageNum);
-        } else {
-          setPageInput(String(currentPage));
-          setIsEditingPageInput(false);
-          (event.target as HTMLInputElement).blur();
-        }
-      }
-    },
-    [numPages, currentPage, pageInput, scrollToPage, persistCurrentPage],
-  );
-
-  useImperativeHandle(
-    controllerRef,
-    () => ({
-      updateContent: (_newContent: ArrayBuffer | string) => { },
-      setHighlight: (newHighlight) => {
-        setHighlight(newHighlight);
-        if (newHighlight && newHighlight.page !== currentPage) {
-          lastStablePageRef.current = newHighlight.page;
-          persistCurrentPage(newHighlight.page);
-          setPageInput(String(newHighlight.page));
-          scrollToPage(newHighlight.page);
-        }
-      },
-    }),
-    [currentPage, persistCurrentPage, scrollToPage],
-  );
+    return () => {
+      document.removeEventListener('pdf-renderer-navigate', handleNavigate);
+    };
+  }, [goToPage]);
 
   const computeFitScale = useCallback(
     (mode: 'fit-width' | 'fit-height') => {
       const container = scrollContainerRef.current || contentElRef.current;
-      const containerWidth = container?.clientWidth || 800;
-      const containerHeight = container?.clientHeight || 600;
-      let pageWidth = 595;
-      let pageHeight = 842;
+      const width =
+        pageWidths.current.get(lastStablePageRef.current) || DEFAULT_WIDTH;
+      const height =
+        pageHeights.current.get(lastStablePageRef.current) || DEFAULT_HEIGHT;
 
-      const currentW = pageWidths.current.get(currentPage);
-      const currentH = pageHeights.current.get(currentPage);
-      if (typeof currentW === 'number') pageWidth = currentW;
-      if (typeof currentH === 'number') pageHeight = currentH;
-
-      if ((!currentW || !currentH) && pageWidths.current.size > 0) {
-        const firstKey = Math.min(...Array.from(pageWidths.current.keys()));
-        pageWidth = pageWidths.current.get(firstKey) || pageWidth;
-        pageHeight = pageHeights.current.get(firstKey) || pageHeight;
-      }
-
-      if (mode === 'fit-width') {
-        return Math.max(0.5, Math.min(10, (containerWidth - 40) / pageWidth));
-      }
-      return Math.max(0.5, Math.min(10, (containerHeight - 40) / pageHeight));
+      return mode === 'fit-width'
+        ? clamp(
+          ((container?.clientWidth || 800) - 40) / width,
+          MIN_SCALE,
+          MAX_SCALE,
+        )
+        : clamp(
+          ((container?.clientHeight || 600) - 40) / height,
+          MIN_SCALE,
+          MAX_SCALE,
+        );
     },
-    [currentPage],
+    [],
   );
 
-  const anchorScrollToCurrentPage = useCallback(
-    (newScale: number) => {
-      if (!scrollView || !scrollContainerRef.current) return;
+  const commitZoom = useCallback(
+    (nextScale: number, nextFitMode?: 'fit-width' | 'fit-height') => {
+      nextScale = clamp(nextScale, MIN_SCALE, MAX_SCALE);
+      if (nextScale === scale && nextFitMode === undefined) return;
+
+      const anchorPage = clamp(lastStablePageRef.current, 1, numPages || 1);
+
+      suppressPageSync();
+
+      if (!scrollView || !scrollContainerRef.current) {
+        flushSync(() => {
+          if (nextFitMode) setFitMode(nextFitMode);
+          setScale(nextScale);
+        });
+
+        setProperty('pdf-renderer-zoom', nextScale);
+        return;
+      }
+
       const container = scrollContainerRef.current;
-      const oldTop = getPageTop(currentPage);
-      const offsetWithinPage = container.scrollTop - oldTop;
-      const baseHeight = pageHeights.current.get(currentPage) || 842;
-      const oldPageHeight = baseHeight * scale + 20;
-      const newPageHeight = baseHeight * newScale + 20;
-      const ratio = oldPageHeight > 0 ? offsetWithinPage / oldPageHeight : 0;
+      const oldTop = pageTopFor(pageHeights.current, anchorPage, scale);
+      const oldHeight = pageHeightFor(pageHeights.current, anchorPage, scale);
+      const ratio = oldHeight
+        ? clamp((container.scrollTop - oldTop) / oldHeight, 0, 1)
+        : 0;
+
+      const nextTop = pageTopFor(pageHeights.current, anchorPage, nextScale);
+      const nextHeight = pageHeightFor(
+        pageHeights.current,
+        anchorPage,
+        nextScale,
+      );
+      const nextTotal = totalHeightFor(
+        pageHeights.current,
+        numPages,
+        nextScale,
+      );
+      const nextScrollTop = clamp(
+        nextTop + ratio * nextHeight,
+        0,
+        Math.max(0, nextTotal - container.clientHeight),
+      );
+
+      flushSync(() => {
+        if (nextFitMode) setFitMode(nextFitMode);
+        setScale(nextScale);
+      });
+
+      container.scrollTop = nextScrollTop;
+
+      setRenderRange(
+        rangeFor(
+          pageHeights.current,
+          numPages,
+          nextScrollTop,
+          container.clientHeight,
+          nextScale,
+        ),
+      );
+      setPage(anchorPage);
+      setProperty('pdf-renderer-zoom', nextScale);
 
       requestAnimationFrame(() => {
-        if (!scrollContainerRef.current) return;
-        let acc = 0;
-        for (let i = 1; i < currentPage; i++) {
-          const h = pageHeights.current.get(i) || 842;
-          acc += h * newScale + 20;
-        }
-        scrollContainerRef.current.scrollTop = acc + ratio * newPageHeight;
+        syncScroll(nextScale);
       });
     },
-    [scrollView, currentPage, scale, getPageTop],
+    [scale, numPages, scrollView, setProperty, setPage, syncScroll],
+  );
+
+  const handlePreviousPage = useCallback(() => {
+    goToPage(lastStablePageRef.current - 1);
+  }, [goToPage]);
+
+  const handleNextPage = useCallback(() => {
+    goToPage(lastStablePageRef.current + 1);
+  }, [goToPage]);
+
+  const handlePageInputKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key !== 'Enter') return;
+
+      const page = Number.parseInt(pageInput, 10);
+
+      if (Number.isFinite(page)) {
+        goToPage(page);
+      } else {
+        setPageInput(String(currentPage));
+      }
+
+      setIsEditingPageInput(false);
+      event.currentTarget.blur();
+    },
+    [pageInput, currentPage, goToPage],
   );
 
   const handleFitToggle = useCallback(() => {
     const nextMode = fitMode === 'fit-width' ? 'fit-height' : 'fit-width';
-    const s = computeFitScale(nextMode);
-    if (s !== scale) anchorScrollToCurrentPage(s);
-    setFitMode(nextMode);
-    setScale(s);
-    setProperty('pdf-renderer-zoom', s);
-  }, [fitMode, scale, computeFitScale, setProperty, anchorScrollToCurrentPage]);
 
-  const handleZoomIn = useCallback(() => {
-    const newScale = Math.min(scale + 0.25, 5);
-    if (newScale === scale) return;
-    anchorScrollToCurrentPage(newScale);
-    setScale(newScale);
-    setProperty('pdf-renderer-zoom', newScale);
-  }, [scale, setProperty, anchorScrollToCurrentPage]);
-
-  const handleZoomOut = useCallback(() => {
-    const newScale = Math.max(scale - 0.25, 0.25);
-    if (newScale === scale) return;
-    anchorScrollToCurrentPage(newScale);
-    setScale(newScale);
-    setProperty('pdf-renderer-zoom', newScale);
-  }, [scale, setProperty, anchorScrollToCurrentPage]);
+    commitZoom(computeFitScale(nextMode), nextMode);
+  }, [fitMode, computeFitScale, commitZoom]);
 
   const handleZoomChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
-      const value = event.target.value;
-      if (value === 'custom') return;
-      const newScale = parseFloat(value) / 100;
-      anchorScrollToCurrentPage(newScale);
-      setScale(newScale);
-      setProperty('pdf-renderer-zoom', newScale);
+      if (event.target.value === 'custom') return;
+
+      commitZoom(Number.parseFloat(event.target.value) / 100);
     },
-    [setProperty, anchorScrollToCurrentPage],
+    [commitZoom],
   );
 
   const handlePageClick = useCallback(
-    (pageNum: number, event: React.MouseEvent<HTMLDivElement>) => {
+    (page: number, event: React.MouseEvent<HTMLDivElement>) => {
       if (!onLocationClick) return;
-      const pageWidth = pageWidths.current.get(pageNum);
-      const pageHeight = pageHeights.current.get(pageNum);
+
+      const pageWidth = pageWidths.current.get(page);
+      const pageHeight = pageHeights.current.get(page);
+
       if (!pageWidth || !pageHeight) return;
 
-      const target = event.currentTarget.querySelector(
+      const canvas = event.currentTarget.querySelector(
         '.react-pdf__Page canvas',
       ) as HTMLElement | null;
-      if (!target) return;
 
-      const rect = target.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) return;
+      if (!canvas) return;
 
-      const x = ((event.clientX - rect.left) / rect.width) * pageWidth;
-      const y = ((event.clientY - rect.top) / rect.height) * pageHeight;
-      onLocationClick(pageNum, x, y);
+      const rect = canvas.getBoundingClientRect();
+
+      if (rect.width <= 0 || rect.height <= 0) return;
+
+      onLocationClick(
+        page,
+        ((event.clientX - rect.left) / rect.width) * pageWidth,
+        ((event.clientY - rect.top) / rect.height) * pageHeight,
+      );
     },
     [onLocationClick],
   );
 
   const handleToggleView = useCallback(() => {
-    const newScrollView = !scrollView;
-    setScrollView(newScrollView);
-    setProperty('pdf-renderer-scroll-view', newScrollView);
-  }, [scrollView, setProperty]);
+    const nextScrollView = !scrollView;
+
+    suppressPageSync();
+    setScrollView(nextScrollView);
+    setProperty('pdf-renderer-scroll-view', nextScrollView);
+
+    if (!nextScrollView) return;
+
+    requestAnimationFrame(() => {
+      if (!scrollContainerRef.current) return;
+
+      const container = scrollContainerRef.current;
+      const top = pageTopFor(
+        pageHeights.current,
+        lastStablePageRef.current,
+        scale,
+      );
+
+      container.scrollTop = top;
+      setRenderRange(
+        rangeFor(
+          pageHeights.current,
+          numPages,
+          top,
+          container.clientHeight,
+          scale,
+        ),
+      );
+    });
+  }, [scrollView, numPages, scale, setProperty]);
 
   const handleToggleFullscreen = useCallback(() => {
-    if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen().then(() => setIsFullscreen(true));
-    } else {
+    if (document.fullscreenElement === containerRef.current) {
       document.exitFullscreen().then(() => setIsFullscreen(false));
+      return;
+    }
+
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen().then(() => {
+        setIsFullscreen(true);
+      });
     }
   }, []);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const active = document.fullscreenElement === containerRef.current;
+
+      setIsFullscreen(active);
+
+      if (active) {
+        requestAnimationFrame(() => {
+          commitZoom(computeFitScale(fitMode));
+        });
+      }
     };
+
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, [commitZoom, computeFitScale, fitMode]);
 
   const handleExport = useCallback(() => {
     if (onDownload && fileName) {
@@ -597,57 +798,72 @@ const PdfRenderer: React.FC<RendererProps> = ({
     }
 
     try {
-      const blob = new Blob([originalContentRef.current], { type: 'application/pdf' });
+      const blob = new Blob([originalContentRef.current], {
+        type: 'application/pdf',
+      });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName || 'document.pdf';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      const link = document.createElement('a');
+
+      link.href = url;
+      link.download = fileName || 'document.pdf';
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Export error:', error);
+    } catch (err) {
+      console.error('Export error:', err);
       setError(t('Failed to export PDF'));
     }
   }, [fileName, onDownload]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        !document.fullscreenElement &&
-        !containerRef.current?.contains(document.activeElement)
-      ) return;
+      const active = document.activeElement;
 
-      switch (event.key) {
-        case 'ArrowLeft':
-        case 'ArrowUp':
-          event.preventDefault();
-          handlePreviousPage();
-          break;
-        case 'ArrowRight':
-        case 'ArrowDown':
-        case ' ':
-          event.preventDefault();
-          handleNextPage();
-          break;
+      const isTyping =
+        active instanceof HTMLInputElement ||
+        active instanceof HTMLTextAreaElement ||
+        active instanceof HTMLSelectElement ||
+        active?.getAttribute('contenteditable') === 'true';
+
+      if (isTyping) return;
+
+      if (!document.fullscreenElement && !pointerInsideRef.current) return;
+
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        handlePreviousPage();
+      }
+
+      if (
+        event.key === 'ArrowRight' ||
+        event.key === 'ArrowDown' ||
+        event.key === ' '
+      ) {
+        event.preventDefault();
+        handleNextPage();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [handlePreviousPage, handleNextPage]);
 
-  const renderHighlight = (pageNum: number) => {
-    if (!highlight || highlight.page !== pageNum) return null;
-    return highlight.rects.map((rect, i) => (
+  const renderHighlight = (page: number) => {
+    if (!highlight || highlight.page !== page) return null;
+
+    return highlight.rects.map((rect, index) => (
       <div
-        key={i}
+        key={index}
         className="pdf-page-highlight"
         style={{
           position: 'absolute',
           left: `${rect.x * scale}px`,
-          top: `${10 + rect.y * scale}px`,
+          top: `${rect.y * scale}px`,
           width: `${Math.max(rect.width, 0) * scale}px`,
           height: `${Math.max(rect.height, 1) * scale}px`,
           pointerEvents: 'none',
@@ -664,23 +880,38 @@ const PdfRenderer: React.FC<RendererProps> = ({
     return (
       <div className="pdf-renderer-container">
         <div className="pdf-renderer-error">
-          {t('Enhanced PDF renderer is disabled. Please enable it in settings to use this renderer.')}
+          {t(
+            'Enhanced PDF renderer is disabled. Please enable it in settings to use this renderer.',
+          )}
         </div>
       </div>
     );
   }
 
   const zoomOptions =
-    getPdfRendererSettings().find((s) => s.id === 'pdf-renderer-initial-zoom')
-      ?.options || [];
+    getPdfRendererSettings().find(
+      (setting) => setting.id === 'pdf-renderer-initial-zoom',
+    )?.options || [];
+
   const currentZoom = Math.round(scale * 100).toString();
   const hasCustomZoom = !zoomOptions.some(
-    (opt) => String(opt.value) === currentZoom,
+    (option) => String(option.value) === currentZoom,
   );
 
   return (
-    <div className="pdf-renderer-container" ref={containerRef}>
-      <div className={`pdf-toolbar ${isFullscreen ? 'fullscreen-toolbar' : ''}`}>
+    <div
+      className="pdf-renderer-container"
+      ref={containerRef}
+      onMouseEnter={() => {
+        pointerInsideRef.current = true;
+      }}
+      onMouseLeave={() => {
+        pointerInsideRef.current = false;
+      }}
+    >
+      <div
+        className={`pdf-toolbar ${isFullscreen ? 'fullscreen-toolbar' : ''}`}
+      >
         <div className="toolbar">
           <div id="toolbarLeft">
             <div className="toolbarButtonGroup">
@@ -692,6 +923,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
               >
                 <ChevronLeftIcon />
               </button>
+
               <button
                 onClick={handleNextPage}
                 className="toolbarButton"
@@ -701,12 +933,13 @@ const PdfRenderer: React.FC<RendererProps> = ({
                 <ChevronRightIcon />
               </button>
             </div>
+
             <div className="toolbarButtonGroup">
               <div className="pageNumber">
                 <input
                   type="number"
                   value={pageInput}
-                  onChange={handlePageInputChange}
+                  onChange={(event) => setPageInput(event.target.value)}
                   onKeyDown={handlePageInputKeyDown}
                   onFocus={() => setIsEditingPageInput(true)}
                   onBlur={() => {
@@ -722,15 +955,17 @@ const PdfRenderer: React.FC<RendererProps> = ({
                 <span>{numPages}</span>
               </div>
             </div>
+
             <div className="toolbarButtonGroup">
               <button
-                onClick={handleZoomOut}
+                onClick={() => commitZoom(scale - ZOOM_STEP)}
                 className="toolbarButton"
                 title={t('Zoom Out')}
                 disabled={isLoading}
               >
                 <ZoomOutIcon />
               </button>
+
               <select
                 value={hasCustomZoom ? 'custom' : currentZoom}
                 onChange={handleZoomChange}
@@ -739,16 +974,21 @@ const PdfRenderer: React.FC<RendererProps> = ({
                 title={t('Zoom Level')}
               >
                 {zoomOptions.map((option) => (
-                  <option key={String(option.value)} value={String(option.value)}>
+                  <option
+                    key={String(option.value)}
+                    value={String(option.value)}
+                  >
                     {option.label}
                   </option>
                 ))}
+
                 {hasCustomZoom && (
                   <option value="custom">{Math.round(scale * 100)}%</option>
                 )}
               </select>
+
               <button
-                onClick={handleZoomIn}
+                onClick={() => commitZoom(scale + ZOOM_STEP)}
                 className="toolbarButton"
                 title={t('Zoom In')}
                 disabled={isLoading}
@@ -756,15 +996,25 @@ const PdfRenderer: React.FC<RendererProps> = ({
                 <ZoomInIcon />
               </button>
             </div>
+
             <div className="toolbarButtonGroup">
               <button
                 onClick={handleFitToggle}
                 className="toolbarButton"
-                title={fitMode === 'fit-width' ? t('Fit to Height') : t('Fit to Width')}
+                title={
+                  fitMode === 'fit-width'
+                    ? t('Fit to Height')
+                    : t('Fit to Width')
+                }
                 disabled={isLoading}
               >
-                {fitMode === 'fit-width' ? <FitToWidthIcon /> : <FitToHeightIcon />}
+                {fitMode === 'fit-width' ? (
+                  <FitToWidthIcon />
+                ) : (
+                  <FitToHeightIcon />
+                )}
               </button>
+
               <button
                 onClick={handleToggleView}
                 className="toolbarButton"
@@ -773,6 +1023,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
               >
                 {scrollView ? <PageIcon /> : <ScrollIcon />}
               </button>
+
               <button
                 onClick={handleToggleFullscreen}
                 className="toolbarButton"
@@ -782,6 +1033,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
                 {isFullscreen ? <MinimizeIcon /> : <ExpandIcon />}
               </button>
             </div>
+
             <div className="toolbarButtonGroup">
               <button
                 onClick={handleExport}
@@ -793,6 +1045,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
               </button>
             </div>
           </div>
+
           {headerLabel && (
             <div id="toolbarRight">
               <span className="toolbar-file-label" title={headerTitle}>
@@ -813,75 +1066,93 @@ const PdfRenderer: React.FC<RendererProps> = ({
             onLoadSuccess={onDocumentLoadSuccess}
             onLoadError={onDocumentLoadError}
             loading={
-              <div className="pdf-renderer-loading">
-                {t('Loading PDF document...')}
-              </div>
+              isLoading ? (
+                <div className="pdf-renderer-loading">
+                  {t('Loading PDF document...')}
+                </div>
+              ) : null
             }
           >
-            {!isLoading && !error && (
-              scrollView ? (
-                Array.from(new Array(numPages), (_, index) => {
-                  const pageNumber = index + 1;
+            {!isLoading &&
+              !error &&
+              (scrollView
+                ? Array.from({ length: numPages }, (_, index) => {
+                  const page = index + 1;
                   const shouldRender =
-                    pageNumber >= renderRange.start &&
-                    pageNumber <= renderRange.end;
-                  const estimatedHeight = getPageHeight(pageNumber);
+                    page >= renderRange.start && page <= renderRange.end;
+                  const estimatedHeight = pageHeightFor(
+                    pageHeights.current,
+                    page,
+                    scale,
+                  );
 
                   return (
                     <div
-                      key={`page_${pageNumber}`}
-                      data-page-number={pageNumber}
+                      key={page}
+                      data-page-number={page}
                       className="pdf-page-scroll"
                       style={{
-                        minHeight: shouldRender ? undefined : `${estimatedHeight}px`,
+                        minHeight: shouldRender
+                          ? undefined
+                          : `${estimatedHeight}px`,
                         position: 'relative',
                       }}
-                      onClick={(e) => handlePageClick(pageNumber, e)}
+                      onClick={(event) => handlePageClick(page, event)}
                     >
                       {shouldRender && (
-                        <div style={{ position: 'relative', display: 'inline-block' }}>
+                        <div
+                          style={{
+                            position: 'relative',
+                            display: 'inline-block',
+                          }}
+                        >
                           <Page
-                            pageNumber={pageNumber}
+                            pageNumber={page}
                             scale={scale}
                             renderTextLayer={pdfRendererTextSelection}
-                            renderAnnotationLayer={true}
+                            renderAnnotationLayer
                             onLoadSuccess={onPageLoadSuccess}
                             loading={
                               <div className="pdf-page-loading">
-                                {t('Loading page')} {pageNumber}{t('...')}
+                                {t('Loading page')} {page}
+                                {t('...')}
                               </div>
                             }
                           />
-                          {renderHighlight(pageNumber)}
+                          {renderHighlight(page)}
                         </div>
                       )}
                     </div>
                   );
                 })
-              ) : (
-                <div
-                  className="pdf-page-scroll"
-                  style={{ position: 'relative' }}
-                  onClick={(e) => handlePageClick(currentPage, e)}
-                >
-                  <div style={{ position: 'relative', display: 'inline-block' }}>
-                    <Page
-                      pageNumber={currentPage}
-                      scale={scale}
-                      renderTextLayer={pdfRendererTextSelection}
-                      renderAnnotationLayer={true}
-                      onLoadSuccess={onPageLoadSuccess}
-                      loading={
-                        <div className="pdf-page-loading">
-                          {t('Loading page...')}
-                        </div>
-                      }
-                    />
-                    {renderHighlight(currentPage)}
+                : (
+                  <div
+                    className="pdf-page-scroll"
+                    style={{ position: 'relative' }}
+                    onClick={(event) => handlePageClick(currentPage, event)}
+                  >
+                    <div
+                      style={{
+                        position: 'relative',
+                        display: 'inline-block',
+                      }}
+                    >
+                      <Page
+                        pageNumber={currentPage}
+                        scale={scale}
+                        renderTextLayer={pdfRendererTextSelection}
+                        renderAnnotationLayer
+                        onLoadSuccess={onPageLoadSuccess}
+                        loading={
+                          <div className="pdf-page-loading">
+                            {t('Loading page...')}
+                          </div>
+                        }
+                      />
+                      {renderHighlight(currentPage)}
+                    </div>
                   </div>
-                </div>
-              )
-            )}
+                ))}
           </Document>
         )}
       </div>

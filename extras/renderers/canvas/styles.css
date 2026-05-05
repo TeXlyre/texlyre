@@ -22,6 +22,10 @@
   position: relative;
 }
 
+.canvas-renderer-container:focus {
+  outline: none;
+}
+
 .canvas-toolbar {
   display: flex;
   min-height: 40px;

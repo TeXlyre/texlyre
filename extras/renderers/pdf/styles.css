@@ -16,6 +16,10 @@
   position: relative;
 }
 
+.pdf-renderer-container:focus {
+  outline: none;
+}
+
 .pdf-toolbar {
   display: flex;
   min-height: 40px;
@@ -380,7 +384,6 @@
 
 .pdf-renderer-content.fullscreen:hover {
   scrollbar-width: thin;
-  /* show thin scrollbar on hover */
   scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
 }
 
