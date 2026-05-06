@@ -55,6 +55,21 @@
 /* ============================================================
    Editor layout
    ============================================================ */
+.cm-editor .cm-panel.cm-search button {
+	border-radius: var(--radius-sm);
+	padding: var(--space-xs) var(--space-sm);
+}
+
+.cm-panel.cm-search [name=close] {
+	position: absolute;
+	top: 0;
+	right: var(--space-md);
+	background-color: inherit;
+	border: none;
+	font: inherit;
+	padding: 0;
+	margin: 0;
+}
 
 .codemirror-editor-container {
 	width: 100%;

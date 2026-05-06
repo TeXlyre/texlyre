@@ -472,7 +472,6 @@ const BackupModal: React.FC<BackupModalProps> = ({
                             onClick={() => onClearActivity(activity.id)}
                             title={t('Dismiss')}
                             disabled={isOperating}>
-
                             ×
                           </button>
                         </div>

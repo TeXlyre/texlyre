@@ -4,6 +4,7 @@ import { EditorView as CMEditorView } from '@codemirror/view';
 
 import { isBibFile, isLatexFile, isTypstFile } from '../../../utils/fileUtils';
 import { fileStorageService } from '../../../services/FileStorageService';
+import { filePathCacheService } from '../../../services/FilePathCacheService';
 import type { DetectedLink } from './LinkDetector';
 
 export class LinkNavigator {
@@ -38,19 +39,35 @@ export class LinkNavigator {
         }
     }
 
+    async canNavigateToFile(filePath: string): Promise<boolean> {
+        return !!(await this.findTargetFile(filePath));
+    }
+
+    private async findTargetFile(filePath: string) {
+        return await filePathCacheService.findFileByPath(this.currentFilePath, filePath);
+    }
+
     private async navigateToTypstReference(view: EditorView, label: string): Promise<void> {
         const foundLabel = await this.findTypstLabel(view, label);
 
         if (foundLabel) {
             if (foundLabel.inCurrentFile) {
                 view.dispatch({
-                    selection: { anchor: foundLabel.position, head: foundLabel.position + foundLabel.length },
-                    effects: [CMEditorView.scrollIntoView(foundLabel.position, { y: 'center' })]
+                    selection: {
+                        anchor: foundLabel.position,
+                        head: foundLabel.position! + foundLabel.length!
+                    },
+                    effects: [
+                        CMEditorView.scrollIntoView(foundLabel.position!, {
+                            y: 'center'
+                        })
+                    ]
                 });
                 view.focus();
             } else if (foundLabel.filePath) {
-                this.navigateToFileAndLine(foundLabel.filePath, foundLabel.line);
+                this.navigateToFileAndLine(foundLabel.filePath, foundLabel.line!);
             }
+
             return;
         }
 
@@ -63,12 +80,19 @@ export class LinkNavigator {
         if (foundLabel) {
             if (foundLabel.inCurrentFile) {
                 view.dispatch({
-                    selection: { anchor: foundLabel.position, head: foundLabel.position + foundLabel.length },
-                    effects: [CMEditorView.scrollIntoView(foundLabel.position, { y: 'center' })]
+                    selection: {
+                        anchor: foundLabel.position,
+                        head: foundLabel.position! + foundLabel.length!
+                    },
+                    effects: [
+                        CMEditorView.scrollIntoView(foundLabel.position!, {
+                            y: 'center'
+                        })
+                    ]
                 });
                 view.focus();
             } else if (foundLabel.filePath) {
-                this.navigateToFileAndLine(foundLabel.filePath, foundLabel.line);
+                this.navigateToFileAndLine(foundLabel.filePath, foundLabel.line!);
             }
         } else {
             console.warn(`Label not found: ${label}`);
@@ -88,46 +112,39 @@ export class LinkNavigator {
         const currentContent = view.state.doc.toString();
         const labelPattern = new RegExp(`\\\\label\\{\\s*${this.escapeRegex(label)}\\s*\\}`, 'g');
 
-        const match = labelPattern.exec(currentContent);
-        if (match) {
+        const currentMatch = labelPattern.exec(currentContent);
+        if (currentMatch) {
             return {
                 inCurrentFile: true,
-                position: match.index,
-                length: match[0].length
+                position: currentMatch.index,
+                length: currentMatch[0].length
             };
         }
 
-        try {
-            const allFiles = await fileStorageService.getAllFiles(false, false, false);
-            const latexFiles = allFiles.filter(file =>
-                !file.isDeleted && isLatexFile(file.name)
+        const labelsByFile = filePathCacheService.getTexLabels();
+
+        for (const [filePath, labels] of labelsByFile.entries()) {
+            if (filePath === this.currentFilePath) continue;
+            if (!labels.includes(label)) continue;
+
+            const line = await this.findLineInFile(
+                filePath,
+                new RegExp(`\\\\label\\{\\s*${this.escapeRegex(label)}\\s*\\}`, 'g')
             );
 
-            for (const file of latexFiles) {
-                if (file.path === this.currentFilePath) continue;
-
-                const storedFile = await fileStorageService.getFile(file.id);
-                if (!storedFile?.content) continue;
-
-                const content = typeof storedFile.content === 'string'
-                    ? storedFile.content
-                    : new TextDecoder().decode(storedFile.content);
-
-                const match = labelPattern.exec(content);
-                if (match) {
-                    const beforeMatch = content.substring(0, match.index);
-                    const lines = beforeMatch.split('\n');
-                    const lineNumber = lines.length + 1;
-
-                    return {
-                        inCurrentFile: false,
-                        filePath: file.path,
-                        line: lineNumber
-                    };
-                }
+            if (line !== null) {
+                return {
+                    inCurrentFile: false,
+                    filePath,
+                    line
+                };
             }
-        } catch (error) {
-            console.error('Error searching for LaTeX label:', error);
+
+            return {
+                inCurrentFile: false,
+                filePath,
+                line: 1
+            };
         }
 
         return null;
@@ -146,49 +163,69 @@ export class LinkNavigator {
         const currentContent = view.state.doc.toString();
         const labelPattern = new RegExp(`<${this.escapeRegex(label)}>(?!\\s*\\))`, 'g');
 
-        const match = labelPattern.exec(currentContent);
-        if (match) {
+        const currentMatch = labelPattern.exec(currentContent);
+        if (currentMatch) {
             return {
                 inCurrentFile: true,
-                position: match.index,
-                length: match[0].length
+                position: currentMatch.index,
+                length: currentMatch[0].length
             };
         }
 
-        try {
-            const allFiles = await fileStorageService.getAllFiles(false, false, false);
-            const typstFiles = allFiles.filter(file =>
-                !file.isDeleted && isTypstFile(file.name)
+        const labelsByFile = filePathCacheService.getTypstLabels();
+
+        for (const [filePath, labels] of labelsByFile.entries()) {
+            if (filePath === this.currentFilePath) continue;
+            if (!labels.includes(label)) continue;
+
+            const line = await this.findLineInFile(
+                filePath,
+                new RegExp(`<${this.escapeRegex(label)}>(?!\\s*\\))`, 'g')
             );
 
-            for (const file of typstFiles) {
-                if (file.path === this.currentFilePath) continue;
-
-                const storedFile = await fileStorageService.getFile(file.id);
-                if (!storedFile?.content) continue;
-
-                const content = typeof storedFile.content === 'string'
-                    ? storedFile.content
-                    : new TextDecoder().decode(storedFile.content);
-
-                const match = labelPattern.exec(content);
-                if (match) {
-                    const beforeMatch = content.substring(0, match.index);
-                    const lines = beforeMatch.split('\n');
-                    const lineNumber = lines.length + 1;
-
-                    return {
-                        inCurrentFile: false,
-                        filePath: file.path,
-                        line: lineNumber
-                    };
-                }
+            if (line !== null) {
+                return {
+                    inCurrentFile: false,
+                    filePath,
+                    line
+                };
             }
-        } catch (error) {
-            console.error('Error searching for Typst label:', error);
+
+            return {
+                inCurrentFile: false,
+                filePath,
+                line: 1
+            };
         }
 
         return null;
+    }
+
+    private async findLineInFile(filePath: string, pattern: RegExp): Promise<number | null> {
+        try {
+            const file = await filePathCacheService.findFileByPath('', filePath);
+            if (!file) return null;
+
+            const storedFile = await fileStorageService.getFile(file.id);
+            if (!storedFile?.content) return null;
+
+            const content =
+                typeof storedFile.content === 'string'
+                    ? storedFile.content
+                    : new TextDecoder().decode(storedFile.content);
+
+            pattern.lastIndex = 0;
+            const match = pattern.exec(content);
+
+            if (!match) {
+                return null;
+            }
+
+            return content.substring(0, match.index).split('\n').length + 1;
+        } catch (error) {
+            console.error(`Error finding line in file: ${filePath}`, error);
+            return null;
+        }
     }
 
     private navigateToFileAndLine(filePath: string, lineNumber: number): void {
@@ -209,10 +246,11 @@ export class LinkNavigator {
                                 new CustomEvent('codemirror-goto-line', {
                                     detail: {
                                         line: this.pendingNavigation!.line,
-                                        fileId: fileId
+                                        fileId
                                     }
                                 })
                             );
+
                             this.pendingNavigation = null;
                         }, 100);
                     }
@@ -235,21 +273,17 @@ export class LinkNavigator {
 
     private navigateToUrl(url: string): void {
         let finalUrl = url.trim();
+
         if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
             finalUrl = 'https://' + finalUrl;
         }
+
         window.open(finalUrl, '_blank');
     }
 
     private async navigateToFile(filePath: string): Promise<void> {
         try {
-            const resolvedPath = this.resolveFilePath(filePath);
-            const allFiles = await fileStorageService.getAllFiles(false, false, false);
-
-            const targetFile = allFiles.find(file =>
-                file.path === resolvedPath ||
-                file.path.endsWith(resolvedPath)
-            );
+            const targetFile = await this.findTargetFile(filePath);
 
             if (targetFile) {
                 document.dispatchEvent(
@@ -258,7 +292,7 @@ export class LinkNavigator {
                     })
                 );
             } else {
-                console.warn(`File not found: ${resolvedPath}`);
+                console.warn(`File not found: ${filePath}`);
             }
         } catch (error) {
             console.error('Error navigating to file:', error);
@@ -268,7 +302,10 @@ export class LinkNavigator {
     private navigateToDoi(doi: string): void {
         let cleanDoi = doi.trim();
 
-        if (cleanDoi.startsWith('http://dx.doi.org/') || cleanDoi.startsWith('https://dx.doi.org/')) {
+        if (
+            cleanDoi.startsWith('http://dx.doi.org/') ||
+            cleanDoi.startsWith('https://dx.doi.org/')
+        ) {
             cleanDoi = cleanDoi.replace(/^https?:\/\/dx\.doi\.org\//, 'https://doi.org/');
         } else if (!cleanDoi.startsWith('http://') && !cleanDoi.startsWith('https://')) {
             cleanDoi = `https://doi.org/${cleanDoi}`;
@@ -279,27 +316,27 @@ export class LinkNavigator {
 
     private async navigateToBibEntry(key: string): Promise<void> {
         try {
-            const allFiles = await fileStorageService.getAllFiles(false, false, false);
-            const bibFiles = allFiles.filter(file =>
-                isBibFile(file.name) && !file.isDeleted
+            const cachedFiles = await filePathCacheService.getCachedFiles();
+            const bibFiles = filePathCacheService.flattenFiles(cachedFiles).filter((file) =>
+                file.type === 'file' &&
+                isBibFile(file.name) &&
+                !file.isDeleted
             );
 
             for (const bibFile of bibFiles) {
                 const storedFile = await fileStorageService.getFile(bibFile.id);
                 if (!storedFile?.content) continue;
 
-                const content = typeof storedFile.content === 'string'
-                    ? storedFile.content
-                    : new TextDecoder().decode(storedFile.content);
+                const content =
+                    typeof storedFile.content === 'string'
+                        ? storedFile.content
+                        : new TextDecoder().decode(storedFile.content);
 
                 const entryPattern = new RegExp(`@\\w+\\{\\s*${this.escapeRegex(key)}\\s*,`, 'i');
                 const match = entryPattern.exec(content);
 
                 if (match) {
-                    const beforeMatch = content.substring(0, match.index);
-                    const lines = beforeMatch.split('\n');
-                    const lineNumber = lines.length + 1;
-
+                    const lineNumber = content.substring(0, match.index).split('\n').length + 1;
                     this.navigateToFileAndLine(bibFile.path, lineNumber);
                     return;
                 }
@@ -313,22 +350,5 @@ export class LinkNavigator {
 
     private escapeRegex(str: string): string {
         return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }
-
-    private resolveFilePath(filePath: string): string {
-        if (filePath.startsWith('/')) {
-            return filePath;
-        }
-
-        if (!this.currentFilePath) {
-            return '/' + filePath;
-        }
-
-        const currentDir = this.currentFilePath.substring(
-            0,
-            this.currentFilePath.lastIndexOf('/')
-        );
-
-        return currentDir + '/' + filePath;
     }
 }
