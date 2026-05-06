@@ -44,7 +44,18 @@ export function invalidatePdfOverlayCaches(container: HTMLDivElement): void {
     textLayerJobs.delete(container);
 }
 
-export function clearPdfCaches() {
+export async function destroyPdf(pdfDocRef: RefObject<any>): Promise<void> {
+    const doc = pdfDocRef.current;
+    pdfDocRef.current = null;
+    resetPdfCaches();
+    if (!doc) return;
+    try {
+        await doc.destroy();
+    } catch {
+    }
+}
+
+function resetPdfCaches(): void {
     textContentCache.clear();
     annotationDataCache.clear();
     pageObjectCache.clear();
@@ -63,20 +74,29 @@ export async function parsePdfPages(pdfBuffer: ArrayBuffer): Promise<{
     pdfDoc: any;
     metadata: Map<number, { width: number; height: number }>;
 }> {
+    const safeBuffer = pdfBuffer.slice(0);
+
     const loadingTask = pdfjsLib.getDocument({
-        data: pdfBuffer,
+        data: safeBuffer,
         cMapUrl: `${BASE_PATH}/assets/cmaps/`,
         cMapPacked: true,
     });
     const pdfDoc = await loadingTask.promise;
 
     const metadata = new Map<number, { width: number; height: number }>();
+    const pagePromises: Promise<void>[] = [];
+
     for (let i = 1; i <= pdfDoc.numPages; i++) {
-        const page = await pdfDoc.getPage(i);
-        const viewport = page.getViewport({ scale: 1.0 });
-        metadata.set(i, { width: viewport.width, height: viewport.height });
+        pagePromises.push(
+            pdfDoc.getPage(i).then((page: any) => {
+                const viewport = page.getViewport({ scale: 1.0 });
+                metadata.set(i, { width: viewport.width, height: viewport.height });
+                pageObjectCache.set(i, page);
+            })
+        );
     }
 
+    await Promise.all(pagePromises);
     return { pdfDoc, metadata };
 }
 
