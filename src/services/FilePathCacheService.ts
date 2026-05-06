@@ -91,7 +91,7 @@ class FilePathCacheService {
 	}
 
 	getBibliographyFiles(): FileNode[] {
-		return this.cachedFiles.filter(file =>
+		return this.flattenFiles(this.cachedFiles).filter(file =>
 			file.type === 'file' &&
 			isBibFile(file.name) &&
 			!file.isDeleted &&
@@ -101,7 +101,7 @@ class FilePathCacheService {
 
 	async getLinkedFilePath(documentId: string): Promise<string> {
 		const cachedFiles = await this.getCachedFiles();
-		const linkedFile = cachedFiles.find(file => file.documentId === documentId);
+		const linkedFile = this.flattenFiles(cachedFiles).find(file => file.documentId === documentId);
 		return linkedFile?.path || '';
 	}
 
@@ -151,8 +151,6 @@ class FilePathCacheService {
 					cache.videoFiles.push(node.path);
 				} else if (ext && audioExtensions.has(ext)) {
 					cache.audioFiles.push(node.path);
-				} else if (ext && imageExtensions.has(ext)) {
-					cache.imageFiles.push(node.path);
 				} else if (isBibFile(node.name)) {
 					cache.bibFiles.push(node.path);
 				} else if (isLatexFile(node.name)) {
@@ -169,6 +167,86 @@ class FilePathCacheService {
 
 		files.forEach(processNode);
 		return cache;
+	}
+
+	flattenFiles(files: FileNode[]): FileNode[] {
+		const result: FileNode[] = [];
+
+		const visit = (file: FileNode) => {
+			result.push(file);
+
+			if (file.children) {
+				file.children.forEach(visit);
+			}
+		};
+
+		files.forEach(visit);
+		return result;
+	}
+
+	normalizePath(path: string): string {
+		const trimmedPath = path.trim().replace(/\\/g, '/');
+		const isAbsolute = trimmedPath.startsWith('/');
+		const parts = trimmedPath.split('/').filter(Boolean);
+		const normalizedParts: string[] = [];
+
+		for (const part of parts) {
+			if (part === '.') {
+				continue;
+			}
+
+			if (part === '..') {
+				normalizedParts.pop();
+				continue;
+			}
+
+			normalizedParts.push(part);
+		}
+
+		return `${isAbsolute ? '/' : ''}${normalizedParts.join('/')}`;
+	}
+
+	resolveFilePath(fromPath: string, candidatePath: string): string {
+		const trimmedPath = candidatePath.trim();
+
+		if (trimmedPath.startsWith('/')) {
+			return this.normalizePath(trimmedPath);
+		}
+
+		if (!fromPath) {
+			return this.normalizePath('/' + trimmedPath);
+		}
+
+		const lastSlashIndex = fromPath.lastIndexOf('/');
+		const currentDir =
+			lastSlashIndex === -1
+				? ''
+				: fromPath.substring(0, lastSlashIndex);
+
+		return this.normalizePath(`${currentDir}/${trimmedPath}`);
+	}
+
+	async findFileByPath(fromPath: string, candidatePath: string): Promise<FileNode | null> {
+		const resolvedPath = this.resolveFilePath(fromPath, candidatePath);
+		const relativeResolvedPath = resolvedPath.replace(/^\/+/, '');
+		const cachedFiles = this.flattenFiles(await this.getCachedFiles());
+
+		return cachedFiles.find(file => {
+			if (
+				file.type !== 'file' ||
+				file.isDeleted ||
+				isTemporaryFile(file.path)
+			) {
+				return false;
+			}
+
+			const storedPath = this.normalizePath(file.path);
+
+			return (
+				storedPath === resolvedPath ||
+				storedPath.endsWith('/' + relativeResolvedPath)
+			);
+		}) ?? null;
 	}
 
 	getLatexRelativePath(fromPath: string, toPath: string): string {
@@ -271,7 +349,7 @@ class FilePathCacheService {
 		const texLabels = new Map<string, string[]>();
 		const typstLabels = new Map<string, string[]>();
 
-		for (const file of this.cachedFiles) {
+		for (const file of this.flattenFiles(this.cachedFiles)) {
 			if (
 				file.type !== 'file' ||
 				file.isDeleted ||

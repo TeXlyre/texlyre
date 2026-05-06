@@ -5,7 +5,6 @@ import { useRef, useState } from 'react';
 
 import { collabService } from '../../services/CollabService';
 import type { Document } from '../../types/documents';
-import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
 import type { YjsDocUrl } from '../../types/yjs';
 import {
   DownloadIcon,
@@ -120,12 +119,6 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 
   const handleDocumentSelect = (docId: string) => {
     onSelectDocument(docId);
-
-    const currentFragment = parseUrlFragments(
-      window.location.hash.substring(1)
-    );
-    const newUrl = buildUrlWithFragments(currentFragment.yjsUrl, docId);
-    window.location.hash = newUrl;
   };
 
   const handleSyncAll = async () => {

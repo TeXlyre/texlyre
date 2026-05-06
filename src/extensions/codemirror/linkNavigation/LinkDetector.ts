@@ -1,7 +1,23 @@
 // src/extensions/codemirror/linkNavigation/LinkDetector.ts
 import type { EditorView } from '@codemirror/view';
-import { isLatexFile, isTypstFile, isBibFile, isMarkdownFile, isLatexContent, isTypstContent, isBibContent } from '../../../utils/fileUtils';
-import { latexLinkPatterns, typstLinkPatterns, bibLinkPatterns, markdownLinkPatterns, type LinkPattern } from './patterns';
+
+import {
+    isLatexFile,
+    isTypstFile,
+    isBibFile,
+    isMarkdownFile,
+    isLatexContent,
+    isTypstContent,
+    isBibContent
+} from '../../../utils/fileUtils';
+
+import {
+    latexLinkPatterns,
+    typstLinkPatterns,
+    bibLinkPatterns,
+    markdownLinkPatterns,
+    type LinkPattern
+} from './patterns';
 
 export interface DetectedLink {
     from: number;
@@ -25,14 +41,17 @@ export class LinkDetector {
                 this.currentFileType = 'typst';
                 return;
             }
+
             if (isBibFile(fileName)) {
                 this.currentFileType = 'bib';
                 return;
             }
+
             if (isMarkdownFile(fileName)) {
                 this.currentFileType = 'markdown';
                 return;
             }
+
             if (isLatexFile(fileName)) {
                 this.currentFileType = 'latex';
                 return;
@@ -53,65 +72,191 @@ export class LinkDetector {
     }
 
     detectLinkAtPosition(view: EditorView, pos: number): DetectedLink | null {
-        const doc = view.state.doc;
-        const line = doc.lineAt(pos);
+        const line = view.state.doc.lineAt(pos);
         const lineText = line.text;
         const posInLine = pos - line.from;
 
+        const explicitLink = this.detectExplicitLink(lineText, posInLine, line.from);
+        if (explicitLink) {
+            return explicitLink;
+        }
+
+        return this.detectFileCandidateAtPosition(lineText, posInLine, line.from);
+    }
+
+    private detectExplicitLink(
+        lineText: string,
+        posInLine: number,
+        lineFrom: number
+    ): DetectedLink | null {
         const patterns = this.getPatterns();
 
         for (const patternConfig of patterns) {
             const { pattern, type, fileType, extractValue } = patternConfig;
             pattern.lastIndex = 0;
-            let match;
+
+            let match: RegExpExecArray | null;
 
             while ((match = pattern.exec(lineText)) !== null) {
                 const matchStart = match.index;
                 const matchEnd = matchStart + match[0].length;
 
-                if (posInLine >= matchStart && posInLine <= matchEnd) {
-                    if (type === 'bibentry' && fileType === 'latex') {
-                        const individualLink = this.detectIndividualCitation(lineText, match, posInLine, line.from);
-                        if (individualLink) {
-                            return individualLink;
-                        }
-                    }
+                if (posInLine < matchStart || posInLine > matchEnd) {
+                    continue;
+                }
 
-                    if (type === 'reference' && fileType === 'typst' && match[0].startsWith('@')) {
-                        const label = match[1];
-                        return {
-                            from: line.from + matchStart,
-                            to: line.from + matchEnd,
-                            type: 'reference',
-                            value: label,
-                            fileType: 'typst'
-                        };
-                    }
-
-                    const rawValue = extractValue ? extractValue(match) : (match[1] || match[0]);
-
-                    const { valueStart, valueEnd } = this.findValueBounds(
+                if (type === 'bibentry' && fileType === 'latex') {
+                    const individualLink = this.detectIndividualCitation(
                         lineText,
                         match,
-                        type,
-                        this.currentFileType,
-                        rawValue
+                        posInLine,
+                        lineFrom
                     );
 
-                    const fallbackValue = lineText.substring(valueStart, valueEnd).trim();
+                    if (individualLink) {
+                        return individualLink;
+                    }
+                }
 
+                if (type === 'reference' && fileType === 'typst' && match[0].startsWith('@')) {
                     return {
-                        from: line.from + valueStart,
-                        to: line.from + valueEnd,
-                        type,
-                        value: extractValue ? rawValue.trim() : fallbackValue,
-                        fileType: fileType || this.currentFileType
+                        from: lineFrom + matchStart,
+                        to: lineFrom + matchEnd,
+                        type: 'reference',
+                        value: match[1],
+                        fileType: 'typst'
                     };
                 }
+
+                const rawValue = extractValue ? extractValue(match) : match[1] || match[0];
+
+                const { valueStart, valueEnd } = this.findValueBounds(
+                    lineText,
+                    match,
+                    type,
+                    this.currentFileType
+                );
+
+                const fallbackValue = lineText.substring(valueStart, valueEnd).trim();
+
+                return {
+                    from: lineFrom + valueStart,
+                    to: lineFrom + valueEnd,
+                    type,
+                    value: extractValue ? rawValue.trim() : fallbackValue,
+                    fileType: fileType || this.currentFileType
+                };
             }
         }
 
         return null;
+    }
+
+    private detectFileCandidateAtPosition(
+        lineText: string,
+        posInLine: number,
+        lineFrom: number
+    ): DetectedLink | null {
+        const candidates = [
+            ...this.detectDelimitedFileCandidates(lineText, lineFrom),
+            ...this.detectBareFileCandidates(lineText, lineFrom)
+        ];
+
+        for (const candidate of candidates) {
+            const fromInLine = candidate.from - lineFrom;
+            const toInLine = candidate.to - lineFrom;
+
+            if (posInLine >= fromInLine && posInLine <= toInLine) {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    private detectDelimitedFileCandidates(lineText: string, lineFrom: number): DetectedLink[] {
+        const candidates: DetectedLink[] = [];
+
+        const patterns = [
+            /\{([^{}]+)\}/g,
+            /"([^"]+)"/g,
+            /'([^']+)'/g
+        ];
+
+        for (const pattern of patterns) {
+            let match: RegExpExecArray | null;
+
+            while ((match = pattern.exec(lineText)) !== null) {
+                const value = match[1].trim();
+
+                if (!this.looksLikeFilePath(value)) {
+                    continue;
+                }
+
+                const valueStartInMatch = match[0].indexOf(match[1]);
+
+                candidates.push({
+                    from: lineFrom + match.index + valueStartInMatch,
+                    to: lineFrom + match.index + valueStartInMatch + match[1].length,
+                    type: 'file',
+                    value,
+                    fileType: this.currentFileType
+                });
+            }
+        }
+
+        return candidates;
+    }
+
+    private detectBareFileCandidates(lineText: string, lineFrom: number): DetectedLink[] {
+        const candidates: DetectedLink[] = [];
+
+        const pattern =
+            /(?:\.{1,2}\/|\/)?[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)+(?:\.[A-Za-z0-9_-]+)?/g;
+
+        let match: RegExpExecArray | null;
+
+        while ((match = pattern.exec(lineText)) !== null) {
+            const value = match[0].trim();
+
+            if (!this.looksLikeFilePath(value)) {
+                continue;
+            }
+
+            candidates.push({
+                from: lineFrom + match.index,
+                to: lineFrom + match.index + match[0].length,
+                type: 'file',
+                value,
+                fileType: this.currentFileType
+            });
+        }
+
+        return candidates;
+    }
+
+    private looksLikeFilePath(value: string): boolean {
+        const trimmedValue = value.trim();
+
+        if (!trimmedValue) return false;
+
+        if (/^[a-z][a-z0-9+.-]*:/i.test(trimmedValue)) {
+            return false;
+        }
+
+        if (trimmedValue.startsWith('@preview/')) {
+            return false;
+        }
+
+        if (trimmedValue.includes('\\')) {
+            return true;
+        }
+
+        if (trimmedValue.includes('/')) {
+            return true;
+        }
+
+        return /\.[A-Za-z0-9_-]+$/.test(trimmedValue);
     }
 
     private detectIndividualCitation(
@@ -131,9 +276,13 @@ export class LinkDetector {
         }
 
         const content = lineText.substring(braceStart + 1, braceEnd);
-        const citations = content.split(',').map(c => c.trim()).filter(c => c.length > 0);
+        const citations = content
+            .split(',')
+            .map((citation) => citation.trim())
+            .filter((citation) => citation.length > 0);
 
         let currentPos = braceStart + 1;
+
         for (const citation of citations) {
             while (currentPos < braceEnd && lineText[currentPos] === ' ') {
                 currentPos++;
@@ -153,6 +302,7 @@ export class LinkDetector {
             }
 
             currentPos = citationEnd;
+
             const nextComma = lineText.indexOf(',', currentPos);
             if (nextComma !== -1 && nextComma < braceEnd) {
                 currentPos = nextComma + 1;
@@ -181,13 +331,13 @@ export class LinkDetector {
         lineText: string,
         match: RegExpExecArray,
         type: string,
-        fileType: string,
-        rawValue: string
+        fileType: string
     ): { valueStart: number; valueEnd: number } {
         if (fileType === 'markdown' && type === 'url') {
             if (match[0].startsWith('[')) {
                 const openParen = lineText.indexOf('(', match.index);
                 const closeParen = lineText.indexOf(')', openParen);
+
                 if (openParen !== -1 && closeParen !== -1) {
                     return {
                         valueStart: openParen + 1,
@@ -195,6 +345,7 @@ export class LinkDetector {
                     };
                 }
             }
+
             if (match[0].startsWith('http')) {
                 return {
                     valueStart: match.index,
@@ -226,10 +377,10 @@ export class LinkDetector {
             }
 
             const fieldMatch = lineText.substring(match.index).match(/^\s*(doi|url)\s*=/i);
+
             if (fieldMatch) {
                 const afterEquals = match.index + fieldMatch[0].length;
                 let valueStart = afterEquals;
-                let valueEnd = afterEquals;
 
                 while (valueStart < lineText.length && /\s/.test(lineText[valueStart])) {
                     valueStart++;
@@ -237,6 +388,7 @@ export class LinkDetector {
 
                 if (valueStart < lineText.length && lineText[valueStart] === '{') {
                     const closeIndex = lineText.indexOf('}', valueStart + 1);
+
                     if (closeIndex !== -1) {
                         return {
                             valueStart: valueStart + 1,
@@ -245,9 +397,12 @@ export class LinkDetector {
                     }
                 }
 
-                valueEnd = valueStart;
-                while (valueEnd < lineText.length &&
-                    !/[,\s}]/.test(lineText[valueEnd])) {
+                let valueEnd = valueStart;
+
+                while (
+                    valueEnd < lineText.length &&
+                    !/[,\s}]/.test(lineText[valueEnd])
+                ) {
                     valueEnd++;
                 }
 
@@ -258,7 +413,7 @@ export class LinkDetector {
             }
         }
 
-        const openDelimiters: { [key: string]: string } = {
+        const openDelimiters: Record<string, string> = {
             '{': '}',
             '"': '"',
             '<': '>'
@@ -266,9 +421,11 @@ export class LinkDetector {
 
         for (let i = match.index; i < match.index + match[0].length; i++) {
             const char = lineText[i];
+
             if (char in openDelimiters) {
                 const closeDelim = openDelimiters[char];
                 const closeIndex = lineText.indexOf(closeDelim, i + 1);
+
                 if (closeIndex !== -1) {
                     return {
                         valueStart: i + 1,

@@ -6,7 +6,7 @@ import { type DragEvent, useEffect, useRef, useState } from 'react';
 import { useFileTree } from '../../hooks/useFileTree';
 import type { FileNode } from '../../types/files';
 import { validateFileName } from '../../utils/fileUtils';
-import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
+import { buildUrlWithFragments, parseUrlFragments, pushHash } from '../../utils/urlUtils';
 import { cleanContent } from '../../utils/fileCommentUtils.ts';
 import { createZipFromFolder, downloadZipFile } from '../../utils/zipUtils';
 import {
@@ -250,7 +250,6 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   const expandAllParentDirectories = (dirPath: string) => {
     const newExpandedFolders = new Set(expandedFolders);
 
-    // Split the path and build all parent paths
     const pathSegments = dirPath.split('/').filter((segment) => segment);
     let currentPath = '';
 
@@ -260,7 +259,6 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
       newExpandedFolders.add(currentPath);
     }
 
-    // Always ensure root is expanded
     newExpandedFolders.add('/');
 
     setExpandedFolders(newExpandedFolders);
@@ -291,7 +289,6 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
         const file = new File([''], newItemName.trim(), { type: 'text/plain' });
         await uploadFiles([file], creatingNewItem.parentPath);
 
-        // Expand all parent directories first
         expandAllParentDirectories(creatingNewItem.parentPath);
 
         const newFilePath =
@@ -299,10 +296,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
             `/${newItemName.trim()}` :
             `${creatingNewItem.parentPath}/${newItemName.trim()}`;
 
-        // Use refreshFileTree to ensure we have the latest state
         const updatedFileTree = await refreshFileTree();
 
-        // Find the file in the refreshed file tree
         const findFileByPath = (
           nodes: FileNode[],
           path: string)
@@ -336,7 +331,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
               undefined,
               newFile.path
             );
-            window.location.hash = newUrl;
+            pushHash(newUrl);
           }
         } else {
           console.warn('Could not find newly created file:', newFilePath);
@@ -367,26 +362,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   const handleFileSelect = async (node: FileNode) => {
     if (node.type !== 'file') return;
 
-    if (node.documentId && onOpenDocument) {
-      selectFile(node.id);
-      onOpenDocument(node.documentId);
-      return;
-    }
-
     selectFile(node.id);
     const content = await getFileContent(node.id);
     if (content) {
       onFileSelect(node.id, content, node.isBinary);
-
-      const currentFragment = parseUrlFragments(
-        window.location.hash.substring(1)
-      );
-      const newUrl = buildUrlWithFragments(
-        currentFragment.yjsUrl,
-        undefined,
-        node.path
-      );
-      window.location.hash = newUrl;
     }
   };
 

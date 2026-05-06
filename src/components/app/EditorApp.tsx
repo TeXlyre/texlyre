@@ -94,7 +94,6 @@ const EditorAppView: React.FC<EditorAppProps> = ({
   const [isEditingMetadata, setIsEditingMetadata] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localDocId, setLocalDocId] = useState<string>('');
-  const [hasNavigated, setHasNavigated] = useState(false);
   const [linkedFileInfo, setLinkedFileInfo] = useState<{
     fileName?: string;
     filePath?: string;
@@ -287,14 +286,13 @@ const EditorAppView: React.FC<EditorAppProps> = ({
   }, [doc?.currentDocId, targetDocId]);
 
   useEffect(() => {
-    if (!hasNavigated && doc && doc.documents && targetDocId) {
+    if (doc && doc.documents && targetDocId) {
       const targetDoc = doc.documents.find((d) => d.id === targetDocId);
       if (targetDoc) {
         handleSelectDocument(targetDocId);
-        setHasNavigated(true);
       }
     }
-  }, [doc, targetDocId, hasNavigated]);
+  }, [doc, targetDocId]);
 
   useEffect(() => {
     const checkLinkedFile = async () => {

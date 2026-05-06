@@ -18,31 +18,6 @@ export const latexLinkPatterns: LinkPattern[] = [
         fileType: 'latex'
     },
     {
-        pattern: /\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}/g,
-        type: 'file',
-        fileType: 'latex'
-    },
-    {
-        pattern: /\\includesvg(?:\[[^\]]*\])?\{([^}]+)\}/g,
-        type: 'file',
-        fileType: 'latex'
-    },
-    {
-        pattern: /\\input\{([^}]+)\}/g,
-        type: 'file',
-        fileType: 'latex'
-    },
-    {
-        pattern: /\\include\{([^}]+)\}/g,
-        type: 'file',
-        fileType: 'latex'
-    },
-    {
-        pattern: /\\subfile\{([^}]+)\}/g,
-        type: 'file',
-        fileType: 'latex'
-    },
-    {
         pattern: /\\cite(?:\w*)\{([^}]+)\}/g,
         type: 'bibentry',
         fileType: 'latex'
@@ -69,12 +44,6 @@ export const typstLinkPatterns: LinkPattern[] = [
         extractValue: (match) => match[0]
     },
     {
-        pattern: /#include\s+"([^"]+)"/g,
-        type: 'file',
-        fileType: 'typst',
-        extractValue: (match) => match[1]
-    },
-    {
         pattern: /#import\s+"@preview\/([^:"]+):([^"]+)"/g,
         type: 'url',
         fileType: 'typst',
@@ -84,54 +53,6 @@ export const typstLinkPatterns: LinkPattern[] = [
 
             return `https://github.com/typst/packages/tree/main/packages/preview/${name}/${version}`;
         }
-    },
-    {
-        pattern: /#import\s+"((?!@preview\/)[^"]+)"/g,
-        type: 'file',
-        fileType: 'typst',
-        extractValue: (match) => match[1]
-    },
-    {
-        pattern: /image\s*\(\s*"([^"]+)"/g,
-        type: 'file',
-        fileType: 'typst',
-        extractValue: (match) => match[1]
-    },
-    {
-        pattern: /audio-svg\s*\(\s*"(https?:\/\/[^"\s]+)"/g,
-        type: 'url',
-        fileType: 'typst',
-        extractValue: (match) => match[1]
-    },
-    {
-        pattern: /video-svg\s*\(\s*"(https?:\/\/[^"\s]+)"/g,
-        type: 'url',
-        fileType: 'typst',
-        extractValue: (match) => match[1]
-    },
-    {
-        pattern: /audio-svg\s*\(\s*"((?!https?:\/\/)[^"]+)"/g,
-        type: 'file',
-        fileType: 'typst',
-        extractValue: (match) => match[1]
-    },
-    {
-        pattern: /video-svg\s*\(\s*"((?!https?:\/\/)[^"]+)"/g,
-        type: 'file',
-        fileType: 'typst',
-        extractValue: (match) => match[1]
-    },
-    {
-        pattern: /#?\b(?:csv|json|toml|yaml|xml|cbor|read)\s*\(\s*"([^"]+)"/g,
-        type: 'file',
-        fileType: 'typst',
-        extractValue: (match) => match[1]
-    },
-    {
-        pattern: /#?\bbibliography\s*\(\s*"([^"]+)"/g,
-        type: 'file',
-        fileType: 'typst',
-        extractValue: (match) => match[1]
     },
     {
         pattern: /#cite\s*\(\s*<([^>]+)>/g,

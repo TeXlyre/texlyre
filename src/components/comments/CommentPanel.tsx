@@ -81,7 +81,6 @@ const CommentPanel: React.FC<CommentPanelProps> = ({
           <button
             className="clear-search-button"
             onClick={() => setSearchQuery('')}>
-
             ×
           </button>
         }

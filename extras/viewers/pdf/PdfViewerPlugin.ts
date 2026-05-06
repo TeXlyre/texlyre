@@ -17,7 +17,9 @@ const pdfViewerPlugin: ViewerPlugin = {
 	version: PLUGIN_VERSION,
 	type: 'viewer',
 	icon: PdfIcon,
-	rendererPluginIds: ['pdf-renderer'], // ['pdf-renderer', 'canvas-renderer']
+	// NOTE (fabawi): You can re-enable here to divert to PDF renderers, 
+	// but for now disabled due to text annotation layer hogging memmory 
+	// rendererPluginIds: ['pdf-renderer'], // ['pdf-renderer', 'canvas-renderer']
 	get settings() {
 		return getPdfViewerSettings();
 	},

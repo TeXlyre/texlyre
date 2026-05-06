@@ -42,7 +42,7 @@ import {
   renderTextLayer,
   renderAnnotationLayer,
   invalidatePdfOverlayCaches,
-  clearPdfCaches,
+  destroyPdf,
   type PdfRenderContext,
 } from './pdfRenderer';
 
@@ -236,6 +236,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   const pendingRenderRef = useRef<Set<number>>(new Set());
   const renderingRef = useRef<Set<number>>(new Set());
   const renderTokensRef = useRef<Map<number, number>>(new Map());
+  const lastBufferRef = useRef<ArrayBuffer | null>(null);
 
   const propertiesRegistered = useRef(false);
   const lastStablePageRef = useRef(1);
@@ -638,8 +639,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         previousType === nextType ? previousType : nextType,
       );
 
-      clearPdfCaches();
-
       for (const el of textLayerRefs.current.values()) {
         invalidateSvgOverlayCache(el);
         invalidatePdfOverlayCaches(el);
@@ -656,6 +655,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         let nextMetadata = new Map<number, PageMeta>();
 
         if (isPdfBuffer) {
+          await destroyPdf(pdfDocRef);
           svgPagesRef.current.clear();
 
           const { pdfDoc, metadata } = await parsePdfPages(buffer);
@@ -664,7 +664,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
           nextNumPages = pdfDoc.numPages;
           nextMetadata = metadata;
         } else {
-          pdfDocRef.current = null;
+          await destroyPdf(pdfDocRef);
 
           const { pages, metadata } = await parseSvgPages(buffer);
 
@@ -942,6 +942,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   useEffect(() => {
     return () => {
       cancelTimers();
+      destroyPdf(pdfDocRef);
     };
   }, [cancelTimers]);
 

@@ -13,7 +13,7 @@ import { useFileTree } from '../hooks/useFileTree';
 import { useSettings } from '../hooks/useSettings';
 import { latexService } from '../services/LaTeXService';
 import type { LaTeXContextType, LaTeXOutputFormat, LaTeXEngine } from '../types/latex';
-import { parseUrlFragments } from '../utils/urlUtils';
+import { parseUrlFragments, replaceHash } from '../utils/urlUtils';
 import { popoutViewerService } from '../services/PopoutViewerService';
 
 export const LaTeXContext = createContext<LaTeXContextType | null>(null);
@@ -168,7 +168,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 
     if (fragments.compile) {
       const cleanUrl = hashUrl.replace(/&compile:[^&]*/, '');
-      window.location.hash = cleanUrl;
+      replaceHash(cleanUrl);
 
       const engine = fragments.compile as LaTeXEngine;
       if (['pdftex', 'xetex', 'busytex-pdftex', 'busytex-xetex', 'busytex-luatex'].includes(engine)) {
