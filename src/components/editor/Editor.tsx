@@ -22,7 +22,7 @@ import { pluginRegistry } from '../../plugins/PluginRegistry';
 import { fileStorageService } from '../../services/FileStorageService';
 import { collabService } from '../../services/CollabService';
 import type { DocumentList } from '../../types/documents';
-import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
+import { buildUrlWithFragments, parseUrlFragments, replaceHash } from '../../utils/urlUtils';
 import { copyCleanTextToClipboard } from '../../utils/clipboardUtils';
 import { processTextSelection } from '../../utils/fileCommentUtils';
 import { isBibFile } from '../../utils/fileUtils';
@@ -52,7 +52,7 @@ import {
 } from '../common/Icons';
 import { PluginControlGroup, PluginHeader } from '../common/PluginHeader';
 import UnlinkedDocumentNotice from './UnlinkedDocumentNotice';
-import { file } from 'jszip';
+
 
 interface EditorComponentProps {
   content: string | ArrayBuffer;
@@ -274,7 +274,7 @@ const EditorContent: React.FC<{
     useEffect(() => {
       let timeoutId: NodeJS.Timeout;
       if (!isEditingFile && documentId && !linkedFileInfo?.fileName && documents) {
-        timeoutId = setTimeout(() => setShowUnlinkedNotice(true), 250);
+        timeoutId = setTimeout(() => setShowUnlinkedNotice(true), 750);
       } else {
         setShowUnlinkedNotice(false);
       }
@@ -751,14 +751,14 @@ const EditorContent: React.FC<{
                     currentFragment.yjsUrl,
                     newSelectedId,
                   );
-                  window.location.hash = newUrl;
+                  replaceHash(newUrl);
                 } else if (onSelectDocument) {
                   onSelectDocument('');
                   const currentFragment = parseUrlFragments(
                     window.location.hash.substring(1),
                   );
                   const newUrl = buildUrlWithFragments(currentFragment.yjsUrl);
-                  window.location.hash = newUrl;
+                  replaceHash(newUrl);
                 }
               }}
               onDocumentLinked={() => {

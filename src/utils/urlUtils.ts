@@ -1,5 +1,5 @@
 // src/utils/urlUtils.ts
-import {UrlFragments} from '../types/yjs.ts';
+import { UrlFragments } from '../types/yjs.ts';
 
 export const isValidYjsUrl = (url: string): boolean => {
 	return url.startsWith('yjs:');
@@ -44,4 +44,14 @@ export const buildUrlWithFragments = (
 	}
 
 	return url;
+};
+
+export const pushHash = (hash: string): void => {
+	const target = hash ? `#${hash}` : `${window.location.pathname}${window.location.search}`;
+	window.history.pushState(null, '', target);
+};
+
+export const replaceHash = (hash: string): void => {
+	const target = hash ? `#${hash}` : `${window.location.pathname}${window.location.search}`;
+	window.history.replaceState(null, '', target);
 };

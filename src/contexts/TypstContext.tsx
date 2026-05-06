@@ -15,7 +15,7 @@ import { useSettings } from '../hooks/useSettings';
 import type { TypstContextType, TypstOutputFormat, TypstPdfOptions } from '../types/typst';
 import { typstService } from '../services/TypstService';
 import { popoutViewerService } from '../services/PopoutViewerService';
-import { parseUrlFragments } from '../utils/urlUtils';
+import { parseUrlFragments, replaceHash } from '../utils/urlUtils';
 
 export const TypstContext = createContext<TypstContextType | null>(null);
 
@@ -174,7 +174,7 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 
     if (fragments.compile === 'typst') {
       const cleanUrl = hashUrl.replace(/&compile:[^&]*/, '');
-      window.location.hash = cleanUrl;
+      replaceHash(cleanUrl);
       document.dispatchEvent(new CustomEvent('trigger-typst-compile'));
       setHasAutoCompiled(true);
       return;

@@ -1,13 +1,13 @@
 // src/components/app/AppRouter.tsx
 import type React from 'react';
-import { lazy, useEffect, useState, Suspense } from 'react';
+import { lazy, useCallback, useEffect, useState, Suspense } from 'react';
 
 import { useAuth } from '../../hooks/useAuth';
 import { collabService } from '../../services/CollabService';
 import { fileStorageService } from '../../services/FileStorageService';
 import { shareTargetService, type PendingShare } from '../../services/ShareTargetService';
 import type { YjsDocUrl } from '../../types/yjs';
-import { isValidYjsUrl, parseUrlFragments } from '../../utils/urlUtils';
+import { isValidYjsUrl, parseUrlFragments, pushHash, replaceHash } from '../../utils/urlUtils';
 import { batchExtractZip } from '../../utils/zipUtils';
 import AuthApp from './AuthApp';
 import EditorApp from './EditorApp';
@@ -137,13 +137,12 @@ const AppRouter: React.FC = () => {
 		}
 	};
 
-	useEffect(() => {
-		const hashUrl = window.location.hash.substring(1);
-
+	const resolveViewFromHash = useCallback((hashUrl: string) => {
 		if (hashUrl === 'privacy-policy') {
 			setShowPrivacy(true);
 			return;
 		}
+		setShowPrivacy(false);
 
 		if (hashUrl.startsWith('popout-viewer:')) {
 			const projectId = hashUrl.replace('popout-viewer:', '');
@@ -152,42 +151,62 @@ const AppRouter: React.FC = () => {
 			return;
 		}
 
+		if (hashUrl?.includes('yjs:')) {
+			const fragments = parseUrlFragments(hashUrl);
+			if (fragments.yjsUrl && isValidYjsUrl(fragments.yjsUrl)) {
+				setDocUrl(fragments.yjsUrl);
+				setTargetDocId(fragments.docId || null);
+				setTargetFilePath(fragments.filePath || null);
+				if (isAuthenticated && !isInitializing) setCurrentView('editor');
+				return;
+			}
+		}
+
+		if (isValidYjsUrl(hashUrl)) {
+			setDocUrl(hashUrl);
+			if (isAuthenticated && !isInitializing) setCurrentView('editor');
+			return;
+		}
+
+		if (isAuthenticated && !isInitializing) {
+			setDocUrl(null);
+			setTargetDocId(null);
+			setTargetFilePath(null);
+			setCurrentProjectId(null);
+			sessionStorage.removeItem('currentProjectId');
+			sessionStorage.removeItem('lastCheckedDocUrl');
+			setCurrentView('projects');
+		}
+	}, [isAuthenticated, isInitializing]);
+
+	useEffect(() => {
+		const hashUrl = window.location.hash.substring(1);
+
 		const urlProjectParams = parseUrlProjectParams(hashUrl);
 		if (urlProjectParams && isAuthenticated && !isInitializing) {
 			createProjectFromUrl(urlProjectParams).then((createdDocUrl) => {
 				if (createdDocUrl) {
 					setDocUrl(createdDocUrl);
 					setCurrentView('editor');
-					window.location.hash = createdDocUrl;
+					replaceHash(createdDocUrl);
 				} else {
 					setCurrentView('projects');
-					window.location.hash = '';
+					replaceHash('');
 				}
 			});
 			return;
 		}
 
-		if (hashUrl?.includes('yjs:')) {
-			const fragments = parseUrlFragments(hashUrl);
+		resolveViewFromHash(hashUrl);
+	}, [isAuthenticated, isInitializing, resolveViewFromHash]);
 
-			if (fragments.yjsUrl && isValidYjsUrl(fragments.yjsUrl)) {
-				setDocUrl(fragments.yjsUrl);
-				setTargetDocId(fragments.docId || null);
-				setTargetFilePath(fragments.filePath || null);
-
-				if (isAuthenticated && !isInitializing) {
-					setCurrentView('editor');
-				}
-			}
-		} else if (isValidYjsUrl(hashUrl)) {
-			setDocUrl(hashUrl);
-			if (isAuthenticated && !isInitializing) {
-				setCurrentView('editor');
-			}
-		} else if (isAuthenticated && !isInitializing && !hashUrl) {
-			setCurrentView('projects');
-		}
-	}, [isAuthenticated, isInitializing]);
+	useEffect(() => {
+		const handlePopState = () => {
+			resolveViewFromHash(window.location.hash.substring(1));
+		};
+		window.addEventListener('popstate', handlePopState);
+		return () => window.removeEventListener('popstate', handlePopState);
+	}, [resolveViewFromHash]);
 
 	useEffect(() => {
 		const checkAndCreateProject = async () => {
@@ -333,7 +352,7 @@ const AppRouter: React.FC = () => {
 			finalUrl = projectDocUrl;
 		}
 
-		window.location.hash = finalUrl;
+		pushHash(finalUrl);
 		setCurrentView('editor');
 	};
 
@@ -345,7 +364,7 @@ const AppRouter: React.FC = () => {
 		setTargetFilePath(null);
 		sessionStorage.removeItem('currentProjectId');
 		sessionStorage.removeItem('lastCheckedDocUrl');
-		window.location.hash = '';
+		replaceHash('');
 		window.location.reload();
 		setCurrentView('auth');
 	};
@@ -358,12 +377,12 @@ const AppRouter: React.FC = () => {
 		setTargetFilePath(null);
 		sessionStorage.removeItem('currentProjectId');
 		sessionStorage.removeItem('lastCheckedDocUrl');
-		window.location.hash = '';
+		replaceHash('');
 	};
 
 	const handleClosePrivacy = () => {
 		setShowPrivacy(false);
-		window.location.hash = '';
+		replaceHash('');
 	};
 
 	const handleShareTargetOpen = (openDocUrl: string, projectId: string) => {
@@ -374,7 +393,7 @@ const AppRouter: React.FC = () => {
 		setDocUrl(openDocUrl as YjsDocUrl);
 		setCurrentProjectId(projectId);
 		sessionStorage.setItem('currentProjectId', projectId);
-		window.location.hash = openDocUrl;
+		pushHash(openDocUrl);
 		setCurrentView('editor');
 	};
 
