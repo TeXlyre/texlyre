@@ -58,7 +58,7 @@
 .zoom-dropdown {
 	min-width: 70px;
 	text-align: center;
-	padding: 0.25rem 0.5rem;
+	padding: 0 var(--space-xl) !important;
 	margin-bottom: 0;
 	border: 1px solid var(--accent-border, #444);
 	border-radius: 4px;
@@ -68,6 +68,7 @@
 	font-weight: 600;
 	height: 32px;
 	cursor: pointer;
+	line-height: 90%;
 }
 
 .zoom-dropdown:disabled {

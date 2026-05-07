@@ -237,7 +237,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
   }, [fileName]);
 
   const zoomOptions =
-    getPdfViewerSettings().find((s) => s.id === 'pdf-renderer-initial-zoom')
+    getPdfViewerSettings().find((s) => s.id === 'pdf-viewer-initial-zoom')
       ?.options || [];
   const currentZoom = Math.round(scale * 100).toString();
   const hasCustomZoom = !zoomOptions.some(

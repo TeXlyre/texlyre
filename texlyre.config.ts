@@ -35,7 +35,7 @@ const config: TexlyreConfig = {
 
     plugins: {
         collaborative_viewers: ['bibtex', 'drawio'],
-        viewers: ['bibtex', 'image', 'pdf', 'drawio'],
+        viewers: ['bibtex', 'image', 'media', 'pdf', 'drawio'],
         renderers: ['pdf', 'canvas'],
         loggers: ['latex_visualizer', 'typst_visualizer'],
         bibliography: ['zotero', 'openalex'], // 'jabref' 
