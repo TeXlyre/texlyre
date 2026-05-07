@@ -40,12 +40,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
   const [activeCategory, setActiveCategory] = useState('');
   const [activeSubcategory, setActiveSubcategory] = useState<string | undefined>();
-
-  // Local state for pending changes (liveUpdate: false settings only)
   const [pendingValues, setPendingValues] = useState<Record<string, unknown>>({});
-
-  const hasInitialValues = Boolean(initialCategory);
-
   const hasPendingChanges = Object.keys(pendingValues).length > 0;
 
   const isDeferred = (setting: Setting) =>
@@ -53,45 +48,30 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     (setting.liveUpdate === undefined && DEFERRED_UPDATE_TYPES.includes(setting.type));
 
   useEffect(() => {
-    if (hasInitialValues && !searchQuery) {
-      const allCategories = getCategories();
-      setFilteredData({ categories: allCategories, allSettings: [] });
+    const result = searchSettings(searchQuery);
+    setFilteredData(result);
 
-      if (
-        initialCategory &&
-        allCategories.some((c) => c.category === initialCategory)) {
-        setActiveCategory(initialCategory);
-        const targetCategory = allCategories.find(
-          (c) => c.category === initialCategory
-        );
-        if (targetCategory) {
-          if (
-            initialSubcategory &&
-            targetCategory.subcategories.includes(initialSubcategory)) {
-            setActiveSubcategory(initialSubcategory);
-          } else {
-            setActiveSubcategory(targetCategory.subcategories[0]);
-          }
-        }
+    if (result.categories.length === 0) return;
+
+    if (!activeCategory && initialCategory && result.categories.some((c) => c.category === initialCategory)) {
+      setActiveCategory(initialCategory);
+      const targetCategory = result.categories.find((c) => c.category === initialCategory);
+      if (targetCategory) {
+        const targetSub = initialSubcategory && targetCategory.subcategories.includes(initialSubcategory)
+          ? initialSubcategory
+          : targetCategory.subcategories[0];
+        setActiveSubcategory(targetSub);
       }
-    } else {
-      const result = searchSettings(searchQuery);
-      setFilteredData(result);
+      return;
+    }
 
-      if (result.categories.length > 0) {
-        if (!result.categories.some((c) => c.category === activeCategory)) {
-          setActiveCategory(result.categories[0].category);
-          setActiveSubcategory(result.categories[0].subcategories[0]);
-        } else if (activeSubcategory) {
-          const currentCategory = result.categories.find(
-            (c) => c.category === activeCategory
-          );
-          if (
-            currentCategory &&
-            !currentCategory.subcategories.includes(activeSubcategory)) {
-            setActiveSubcategory(currentCategory.subcategories[0]);
-          }
-        }
+    if (!result.categories.some((c) => c.category === activeCategory)) {
+      setActiveCategory(result.categories[0].category);
+      setActiveSubcategory(result.categories[0].subcategories[0]);
+    } else if (activeSubcategory) {
+      const currentCategory = result.categories.find((c) => c.category === activeCategory);
+      if (currentCategory && !currentCategory.subcategories.includes(activeSubcategory)) {
+        setActiveSubcategory(currentCategory.subcategories[0]);
       }
     }
   }, [
@@ -100,10 +80,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     initialSubcategory,
     activeCategory,
     activeSubcategory,
-    hasInitialValues,
     getCategories,
-    searchSettings]
-  );
+    searchSettings,
+  ]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setActiveCategory(initialCategory || '');
+      setActiveSubcategory(initialSubcategory);
+    }
+  }, [isOpen, initialCategory, initialSubcategory]);
 
   const handleLocalUpdate = (settingId: string, value: unknown, setting: Setting) => {
     if (isDeferred(setting)) {
@@ -185,25 +171,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       <div className="settings-wrapper">
         <div className="settings-container">
           <div className="settings-sidebar">
-            {!hasInitialValues &&
-              <div className="settings-search">
-                <input
-                  type="text"
-                  placeholder={t('Search settings...')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="search-input" />
-
-                {searchQuery &&
-                  <button
-                    className="clear-search-button"
-                    onClick={() => setSearchQuery('')}>
-                    ×
-                  </button>
-                }
-              </div>
-            }
-
+            <div className="settings-search">
+              <input
+                type="text"
+                placeholder={t('Search settings...')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input" />
+              {searchQuery &&
+                <button
+                  className="clear-search-button"
+                  onClick={() => setSearchQuery('')}>
+                  ×
+                </button>
+              }
+            </div>
             {filteredData.categories.map(({ category, subcategories }) =>
               <div key={category} className="settings-category">
                 <div
