@@ -5,6 +5,7 @@ export default {
 	  "collaborative_viewers/drawio",
 	  "viewers/bibtex",
 	  "viewers/image",
+	  "viewers/media",
 	  "viewers/pdf",
 	  "viewers/drawio",
 	  "renderers/pdf",

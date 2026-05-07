@@ -35,7 +35,7 @@ const config: TexlyreConfig = {
 
     plugins: {
         collaborative_viewers: ['bibtex', 'drawio'],
-        viewers: ['bibtex', 'image', 'pdf', 'drawio'],
+        viewers: ['bibtex', 'image', 'media', 'pdf', 'drawio'],
         renderers: ['pdf', 'canvas'],
         loggers: ['latex_visualizer', 'typst_visualizer'],
         bibliography: ['zotero', 'openalex'], // 'jabref' 
@@ -80,7 +80,6 @@ const config: TexlyreConfig = {
                 fileTreeInternalDragDrop: true,
                 imageViewerAutoCenter: true,
                 imageViewerEnableFilters: true,
-                imageViewerEnablePanning: true,
                 imageViewerQuality: 'high',
                 latexEngine: 'pdftex',
                 latexDefaultFormat: 'pdf',  // 'canvas-pdf'
@@ -124,7 +123,6 @@ const config: TexlyreConfig = {
         mobile: {
             settings: {
                 themePlugin: 'texlyre-mobile-theme',
-                imageViewerEnablePanning: false,
                 imageViewerAutoCenter: true,
             },
         },
