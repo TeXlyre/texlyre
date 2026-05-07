@@ -34,6 +34,30 @@
 	display: none;
 }
 
+.texlyre-mobile-nav {
+	display: none;
+}
+
+[data-layout="texlyre-mobile"]~* .texlyre-mobile-nav,
+html[data-layout="texlyre-mobile"] .texlyre-mobile-nav,
+body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
+	/* existing styles from the layout.css .mobile-bottom-nav rule */
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	width: 100vw;
+	height: var(--mobile-nav-height);
+	background-color: var(--pico-secondary-background);
+	border-top: 1px solid var(--accent-border);
+	display: flex;
+	z-index: var(--mobile-z-navigation);
+	box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.1);
+	padding-left: max(0px, env(safe-area-inset-left));
+	padding-right: max(0px, env(safe-area-inset-right));
+	padding-bottom: max(0px, env(safe-area-inset-bottom));
+}
+
 [data-layout="texlyre-mobile"] footer .project-type-badge {
 	position: absolute;
 	top: var(--mobile-spacing-sm);

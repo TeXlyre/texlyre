@@ -48,10 +48,18 @@ export const buildUrlWithFragments = (
 
 export const pushHash = (hash: string): void => {
 	const target = hash ? `#${hash}` : `${window.location.pathname}${window.location.search}`;
+	const oldURL = window.location.href;
 	window.history.pushState(null, '', target);
+	if (window.location.href !== oldURL) {
+		window.dispatchEvent(new HashChangeEvent('hashchange', { oldURL, newURL: window.location.href }));
+	}
 };
 
 export const replaceHash = (hash: string): void => {
 	const target = hash ? `#${hash}` : `${window.location.pathname}${window.location.search}`;
+	const oldURL = window.location.href;
 	window.history.replaceState(null, '', target);
+	if (window.location.href !== oldURL) {
+		window.dispatchEvent(new HashChangeEvent('hashchange', { oldURL, newURL: window.location.href }));
+	}
 };
