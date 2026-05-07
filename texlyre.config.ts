@@ -80,7 +80,6 @@ const config: TexlyreConfig = {
                 fileTreeInternalDragDrop: true,
                 imageViewerAutoCenter: true,
                 imageViewerEnableFilters: true,
-                imageViewerEnablePanning: true,
                 imageViewerQuality: 'high',
                 latexEngine: 'pdftex',
                 latexDefaultFormat: 'pdf',  // 'canvas-pdf'
@@ -124,7 +123,6 @@ const config: TexlyreConfig = {
         mobile: {
             settings: {
                 themePlugin: 'texlyre-mobile-theme',
-                imageViewerEnablePanning: false,
                 imageViewerAutoCenter: true,
             },
         },

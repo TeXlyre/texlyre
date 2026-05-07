@@ -27,15 +27,6 @@ export const getImageViewerSettings = (): Setting[] => [
 
   },
   {
-    id: 'image-viewer-enable-panning',
-    category: t('Viewers'),
-    subcategory: t('Image Viewer'),
-    type: 'checkbox',
-    label: t('Enable panning'),
-    description: t('Allow dragging images to pan around when zoomed'),
-    defaultValue: true
-  },
-  {
     id: 'image-viewer-enable-filters',
     category: t('Viewers'),
     subcategory: t('Image Viewer'),
