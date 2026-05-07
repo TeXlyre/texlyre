@@ -242,7 +242,7 @@ footer {
 	gap: var(--space-md);
 }
 
-.read-the-docs {
+.texlyre-info {
 	color: var(--pico-primary);
 	text-align: center;
 	font-size: 0.8em;
@@ -250,11 +250,11 @@ footer {
 	padding: 0;
 }
 
-.read-the-docs:hover {
+.texlyre-info:hover {
 	color: var(--text-color);
 }
 
-.read-the-docs .logo {
+.texlyre-info .logo {
 	color: inherit;
 	text-decoration: none;
 	margin-bottom: var(--space-us);

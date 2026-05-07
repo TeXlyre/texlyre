@@ -3,9 +3,9 @@ import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
+import SettingsModal from '../settings/SettingsModal';
 import { KeyboardIcon } from './Icons';
 import Modal from './Modal';
-import SettingsModal from '../settings/SettingsModal';
 
 interface KeyboardShortcutsModalProps {
     isOpen: boolean;

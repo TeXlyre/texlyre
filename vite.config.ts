@@ -8,15 +8,15 @@ import wasm from "vite-plugin-wasm";
 const useHttps = process.env.VITE_USE_HTTPS === "true";
 
 const basePath = "/texlyre/";
+const appVersion = process.env.npm_package_version || "1.0.0";
 
 // @ts-ignore
 export default defineConfig({
 	base: basePath,
 
 	define: {
-		"process.env.npm_package_version": JSON.stringify(
-			process.env.npm_package_version || "1.0.0",
-		),
+		"process.env.npm_package_version": JSON.stringify(appVersion),
+		__APP_VERSION__: JSON.stringify(appVersion),
 		__BASE_PATH__: JSON.stringify(basePath.slice(0, -1)),
 	},
 

@@ -8,7 +8,6 @@ const config: TexlyreConfig = {
     baseUrl: '/texlyre/',
     organizationName: 'texlyre',
     projectName: 'texlyre',
-
     favicon: '/favicon.ico',
 
     pwa: {

@@ -210,8 +210,8 @@
 }
 
 .file-name-input.invalid {
-	border-color: var(--pico-del-color, #c62828);
-	box-shadow: 0 0 0 2px color-mix(in srgb, var(--pico-del-color, #c62828) 20%, transparent);
+	border-color: var(--pico-del-color, var(--color-error));
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--pico-del-color, var(--color-error)) 20%, transparent);
 }
 
 .cancel-input-button {
@@ -240,7 +240,7 @@
 	font-size: 0.7rem;
 	font-weight: 400;
 	line-height: 1.2;
-	color: var(--pico-del-color, #c62828);
+	color: var(--pico-del-color, var(--color-error));
 	white-space: normal;
 	word-break: break-word;
 }

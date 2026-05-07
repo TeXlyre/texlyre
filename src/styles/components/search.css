@@ -205,6 +205,7 @@
     font-weight: 500;
     white-space: nowrap;
     transition: opacity var(--transition-normal);
+    min-width: min-content !important;
 }
 
 .replace-all-btn {

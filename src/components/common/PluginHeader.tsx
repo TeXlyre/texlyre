@@ -1,7 +1,7 @@
 // src/components/common/PluginHeader.tsx
 import type React from 'react';
-
 import type { Awareness } from 'y-protocols/awareness';
+
 import CollaboratorAvatars from './CollaboratorAvatars';
 import { InfoIcon, LinkIcon } from './Icons';
 
