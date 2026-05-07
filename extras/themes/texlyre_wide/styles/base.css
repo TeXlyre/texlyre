@@ -33,7 +33,7 @@
 	font-family: var(--texlyre-font-family);
 }
 
-[data-theme-plugin="texlyre"] .read-the-docs {
+[data-theme-plugin="texlyre"] .texlyre-info {
 	display: inline-block;
 	padding: var(--texlyre-spacing-xs) var(--texlyre-spacing-sm);
 	border-radius: var(--texlyre-radius-md);
@@ -45,7 +45,7 @@
 	line-height: 0.5;
 }
 
-[data-theme-plugin="texlyre"] .read-the-docs:hover {
+[data-theme-plugin="texlyre"] .texlyre-info:hover {
 	background-color: var(--pico-primary-focus);
 	color: var(--pico-secondary);
 }

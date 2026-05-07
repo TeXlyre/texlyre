@@ -5,8 +5,8 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useSearch } from '../../hooks/useSearch';
 import { SearchIcon, ReplaceIcon, FileTextIcon } from '../common/Icons';
-import SearchReplaceModal from './SearchReplaceModal';
 import { fileOperationNotificationService } from '../../services/FileOperationNotificationService';
+import SearchReplaceModal from './SearchReplaceModal';
 
 interface SearchPanelProps {
   className?: string;

@@ -262,8 +262,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
                 className="action-btn"
                 title={
                   isTemporaryFile(node.path) ?
-                    'Link Document (Not recommended for temporary files)' :
-                    'Link Document'
+                    t('Link Document (Not recommended for temporary files)') :
+                    t('Link Document')
                 }
                 onClick={(e) => {
                   e.stopPropagation();

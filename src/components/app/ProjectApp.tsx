@@ -511,12 +511,12 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
       </div>
 
       <footer>
-        <p className="read-the-docs">{t('Built with TeXlyre')}
+        <p className="texlyre-info">{t('Built with TeXlyre')}
 
           <a href="https://texlyre.github.io" target="_blank" rel="noreferrer">
             <img src={texlyreLogo} className="logo" alt={t('TeXlyre logo')} />
           </a>
-          <span className="legal-links">
+          <span className="footer-links">
             <br /> <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">{t('Documentation')}
 
             </a>
@@ -527,6 +527,9 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
               event.preventDefault();
               setShowPrivacy(true);
             }} className="privacy-link">{t('Privacy')}</a>
+          </span>
+          <span className="footer-links">
+            {' '} • {'v' + __APP_VERSION__}
           </span>
         </p>
       </footer>

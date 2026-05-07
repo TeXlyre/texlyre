@@ -218,7 +218,7 @@ const PopoutViewerWindow: React.FC<PopoutViewerWindowProps> = ({ projectId }) =>
           >
             <div>{t('No output available')}</div>
             {compileStatus !== 0 && (
-              <div style={{ fontSize: '0.9rem', color: 'var(--pico-del-color, #dc3545)' }}>
+              <div style={{ fontSize: '0.9rem', color: 'var(--pico-del-color, var(--color-error))' }}>
                 {t('Compilation failed. Check the log in the main window.')}
               </div>
             )}

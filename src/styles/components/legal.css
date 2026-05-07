@@ -1,14 +1,14 @@
-.legal-links {
+.footer-links {
   font-size: 0.85em;
   color: var(--text-secondary);
 }
 
-.legal-links a {
+.footer-links a {
   color: var(--text-secondary);
   text-decoration: none;
 }
 
-.legal-links a:hover {
+.footer-links a:hover {
   text-decoration: underline;
 }
 

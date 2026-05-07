@@ -26,11 +26,11 @@
 	flex-direction: column;
 }
 
-[data-layout="texlyre-mobile"] footer .read-the-docs {
+[data-layout="texlyre-mobile"] footer .texlyre-info {
 	display: block;
 }
 
-[data-layout="texlyre-mobile"] body:has(.mobile-bottom-nav) footer .read-the-docs {
+[data-layout="texlyre-mobile"] body:has(.mobile-bottom-nav) footer .texlyre-info {
 	display: none;
 }
 

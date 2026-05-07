@@ -1,4 +1,5 @@
 // src/components/common/ResizablePanel.tsx
+import { t } from '@/i18n';
 import type React from 'react';
 import { type MouseEvent, useEffect, useRef, useState } from 'react';
 
@@ -261,9 +262,9 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 	const getCollapseIcon = () => {
 		if (direction === 'horizontal') {
 			if (alignment === 'start') {
-				return collapsed ? '◂' : '▸';
+				return collapsed ? t('◂') : t('▸');
 			}
-			return collapsed ? '▸' : '◂';
+			return collapsed ? t('▸') : t('◂');
 		}
 		if (alignment === 'start') {
 			return collapsed ? '▴' : '▾';
@@ -317,7 +318,7 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 						e.stopPropagation();
 						toggleCollapse();
 					}}
-					title={collapsed ? 'Expand' : 'Collapse'}
+					title={collapsed ? t('Expand') : t('Collapse')}
 				>
 					<span className="collapse-icon">{getCollapseIcon()}</span>
 				</button>

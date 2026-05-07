@@ -100,7 +100,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   const handleSaveChanges = () => {
-    // Commit all pending changes to context
     Object.entries(pendingValues).forEach(([id, value]) => {
       updateSetting(id, value);
     });
