@@ -19,6 +19,8 @@ const renderIcon = (IconComponent: React.FC<any>, props = {}) => {
 const createTeXlyreMobileTheme = (): ThemePlugin => {
 	let currentThemeId = 'dark';
 	let currentView: 'explorer' | 'editor' | 'output' | 'chat' = 'editor';
+	const nav = document.createElement('div');
+	nav.className = 'mobile-bottom-nav texlyre-mobile-nav';
 	let mobileClickHandler: ((e: Event) => void) | null = null;
 	let hashChangeHandler: (() => void) | null = null;
 	let loginCheckInterval: NodeJS.Timeout | null = null;
@@ -67,6 +69,7 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 
 		if (hashChangeHandler) {
 			window.removeEventListener('hashchange', hashChangeHandler);
+			window.removeEventListener('popstate', hashChangeHandler);
 			hashChangeHandler = null;
 		}
 	};
@@ -88,6 +91,8 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 
 		if (hashChangeHandler) {
 			window.removeEventListener('hashchange', hashChangeHandler);
+			window.removeEventListener('popstate', hashChangeHandler);
+			hashChangeHandler = null;
 		}
 
 		hashChangeHandler = () => {
@@ -100,10 +105,15 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 			if (isProjectsView()) {
 				currentView = 'editor';
 				updateMobileView('editor');
+			} else {
+				const savedView = localStorage.getItem('texlyre-mobile-view') || 'editor';
+				currentView = savedView as typeof currentView;
+				updateMobileView(currentView);
 			}
 		};
 
 		window.addEventListener('hashchange', hashChangeHandler);
+		window.addEventListener('popstate', hashChangeHandler);
 	};
 
 	const setupMobileNavigation = () => {
@@ -154,42 +164,37 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 
 		if (isProjectsView()) {
 			nav.innerHTML = `
-			<button class="mobile-nav-button ${currentView === 'explorer' ? 'active' : ''}" data-view="explorer">
-				${renderIcon(ProjectsPlusIcon)}
-				<span>${t('Create Project')}</span>
-			</button>
-			<button class="mobile-nav-button ${currentView === 'editor' ? 'active' : ''}" data-view="editor">
-				${renderIcon(ProjectsIcon)}
-				<span>${t('Projects')}</span>
-			</button>
-		`;
+        <button class="mobile-nav-button ${currentView === 'explorer' ? 'active' : ''}" data-view="explorer">
+            ${renderIcon(ProjectsPlusIcon)}
+            <span>${t('Create Project')}</span>
+        </button>
+        <button class="mobile-nav-button ${currentView === 'editor' ? 'active' : ''}" data-view="editor">
+            ${renderIcon(ProjectsIcon)}
+            <span>${t('Projects')}</span>
+        </button>
+    `;
 		} else {
 			nav.innerHTML = `
-			<button class="mobile-nav-button ${currentView === 'explorer' ? 'active' : ''}" data-view="explorer">
-				${renderIcon(FolderIcon)}
-				<span>${t('Explorer')}</span>
-			</button>
-			<button class="mobile-nav-button ${currentView === 'editor' ? 'active' : ''}" data-view="editor">
-				${renderIcon(EditFileIcon)}
-				<span>${t('Editor')}</span>
-			</button>
-			<button class="mobile-nav-button ${currentView === 'output' ? 'active' : ''}" data-view="output">
-				${renderIcon(OutputIcon)}
-				<span>${t('Output')}</span>
-			</button>
-			<button class="mobile-nav-button ${currentView === 'chat' ? 'active' : ''}" data-view="chat">
-				${renderIcon(ChatIcon)}
-				<span>${t('Chat')}</span>
-			</button>
-		`;
+        <button class="mobile-nav-button ${currentView === 'explorer' ? 'active' : ''}" data-view="explorer">
+            ${renderIcon(FolderIcon)}
+            <span>${t('Explorer')}</span>
+        </button>
+        <button class="mobile-nav-button ${currentView === 'editor' ? 'active' : ''}" data-view="editor">
+            ${renderIcon(EditFileIcon)}
+            <span>${t('Editor')}</span>
+        </button>
+        <button class="mobile-nav-button ${currentView === 'output' ? 'active' : ''}" data-view="output">
+            ${renderIcon(OutputIcon)}
+            <span>${t('Output')}</span>
+        </button>
+        <button class="mobile-nav-button ${currentView === 'chat' ? 'active' : ''}" data-view="chat">
+            ${renderIcon(ChatIcon)}
+            <span>${t('Chat')}</span>
+        </button>
+    `;
 		}
 
-		const appContainer = document.querySelector('.app-container');
-		if (appContainer) {
-			appContainer.appendChild(nav);
-		} else {
-			document.body.appendChild(nav);
-		}
+		document.body.appendChild(nav);
 	};
 
 	const updateMobileView = (view: string) => {
