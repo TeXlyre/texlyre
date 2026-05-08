@@ -1,3 +1,4 @@
+// src/utils/svgSanitizer.ts
 export type SanitizeSvgOptions = {
     baseUrl?: string;
     allowRemoteUrls?: boolean;

@@ -1,9 +1,11 @@
 /// <reference lib="webworker" />
 export { };
+import { sanitizeSvg } from '@/utils/svgSanitizer';
 
 interface ParseMessage {
     type: 'parse';
     svgBuffer: ArrayBuffer;
+    trusted?: boolean;
 }
 
 interface ParsedResult {
@@ -123,7 +125,13 @@ self.onmessage = (e: MessageEvent<ParseMessage>) => {
 
     try {
         const decoder = new TextDecoder();
-        const svgString = decoder.decode(e.data.svgBuffer);
+        const decoded = decoder.decode(e.data.svgBuffer);
+        const svgString = e.data.trusted
+            ? decoded
+            : sanitizeSvg(decoded, {
+                baseUrl: self.location.href,
+                allowRemoteUrls: true,
+            });
 
         const pages: Array<[number, string]> = [];
         const metadata: Array<[number, { width: number; height: number }]> = [];

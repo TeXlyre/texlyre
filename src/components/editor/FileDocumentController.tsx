@@ -163,6 +163,8 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   const [activeView, setActiveView] = useState<'documents' | 'files' | 'search'>(
     'files'
   );
+  const lastOpenedFilePathRef = useRef<string | null>(null);
+  const lastOpenedDocIdRef = useRef<string | null>(null);
   const [fileContent, setFileContent] = useState<string | ArrayBuffer>('');
   const [currentEditorContent, setCurrentEditorContent] = useState<string>('');
   const [isEditingFile, setIsEditingFile] = useState(false);
@@ -249,6 +251,9 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
     const document = documents.find((doc) => doc.id === docId);
     if (!document) return;
 
+    lastOpenedDocIdRef.current = docId;
+    lastOpenedFilePathRef.current = docToFileMapRef.current.get(docId)?.filePath ?? null;
+
     if (!preserveView) {
       setActiveView(view);
     }
@@ -318,6 +323,9 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   const openFileByNode = async (file: FileNode, preserveView = false) => {
     const loadedContent = await getFileContent(file.id);
     if (!loadedContent) return;
+
+    lastOpenedFilePathRef.current = file.path;
+    lastOpenedDocIdRef.current = null;
 
     if (!preserveView) {
       setActiveView('files');
@@ -677,6 +685,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   useEffect(() => {
     if (!docToFileMapReady) return;
     if (!targetDocId) return;
+    if (lastOpenedDocIdRef.current === targetDocId) return;
 
     if (targetFilePath) {
       openDocumentById(targetDocId, 'files');
@@ -690,11 +699,11 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
     if (!docToFileMapReady) return;
     if (targetDocId || !targetFilePath) return;
     if (fileTree.length === 0) return;
+    if (lastOpenedFilePathRef.current === targetFilePath) return;
 
     const navigate = async () => {
       const targetFile = findFileByPath(fileTree, targetFilePath);
       if (!targetFile) return;
-
       await openFileByNode(targetFile);
     };
 

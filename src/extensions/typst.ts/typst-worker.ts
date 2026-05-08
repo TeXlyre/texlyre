@@ -3,8 +3,9 @@ export { };
 import { createTypstCompiler } from '@myriaddreamin/typst.ts/compiler';
 import { createTypstRenderer } from '@myriaddreamin/typst.ts/renderer';
 import { TypstSnippet } from '@myriaddreamin/typst.ts/dist/esm/contrib/snippet.mjs';
-import { TypstOutputFormat } from '@/types/typst';
-import { sanitizeSvg } from './sanitize-svgs';
+
+import { TypstOutputFormat } from '../../types/typst';
+import { sanitizeSvg } from '../../utils/svgSanitizer';
 
 const BASE_PATH = __BASE_PATH__;
 
