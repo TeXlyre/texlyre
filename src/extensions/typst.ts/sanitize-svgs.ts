@@ -79,18 +79,19 @@ function sanitize(svg: string, opts: ResolvedOptions): string {
             continue;
         }
 
-        if (localName === 'style' && !/\/\s*>$/.test(tag)) {
-            const close = svg.slice(cursor).search(/<\/(?:[\w.-]+:)?style\s*>/i);
-            if (close !== -1) {
-                const css = svg.slice(cursor, cursor + close);
-                const closeTag = svg.slice(cursor + close).match(/<\/(?:[\w.-]+:)?style\s*>/i)![0];
-                if (isSafeStyle(css)) {
-                    output += rebuildTag(rawName, rawAttrs ?? '', false, opts) + css + closeTag;
-                }
-                cursor = cursor + close + closeTag.length;
-                continue;
-            }
-        }
+        // TODO (fabawi): This is a very naive approach and breaks the svgs format, but must be revisited
+        // if (localName === 'style' && !/\/\s*>$/.test(tag)) {
+        //     const close = svg.slice(cursor).search(/<\/(?:[\w.-]+:)?style\s*>/i);
+        //     if (close !== -1) {
+        //         const css = svg.slice(cursor, cursor + close);
+        //         const closeTag = svg.slice(cursor + close).match(/<\/(?:[\w.-]+:)?style\s*>/i)![0];
+        //         if (isSafeStyle(css)) {
+        //             output += rebuildTag(rawName, rawAttrs ?? '', false, opts) + css + closeTag;
+        //         }
+        //         cursor = cursor + close + closeTag.length;
+        //         continue;
+        //     }
+        // }
 
         if (ANIMATION_TAGS.has(localName) && isUnsafeAnimation(rawAttrs ?? '')) continue;
 
