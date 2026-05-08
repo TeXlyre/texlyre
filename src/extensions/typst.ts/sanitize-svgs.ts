@@ -3,450 +3,288 @@ export type SanitizeSvgOptions = {
     allowRemoteUrls?: boolean;
 };
 
-const BLOCKED_BLOCK_TAGS = [
-    'script',
-    'iframe',
-    'object',
-    'embed',
+type ResolvedOptions = Required<SanitizeSvgOptions> & { svgDataUrlDepth: number };
+
+const MAX_SVG_DATA_URL_DEPTH = 2;
+const MAX_SVG_DATA_URL_BYTES = 2_000_000;
+
+const BLOCKED_TAGS = new Set(['script', 'iframe', 'object', 'embed', 'meta', 'link', 'base']);
+
+const ANIMATION_TAGS = new Set(['animate', 'set', 'animatetransform', 'animatemotion', 'animatecolor']);
+
+const BLOCKED_ANIMATION_TARGETS = new Set([
+    'href', 'xlink:href', 'src', 'poster', 'action', 'formaction',
+    'background', 'cite', 'data', 'style', 'class', 'id',
+]);
+
+const URL_ATTRS = new Set(['href', 'src', 'poster', 'action', 'formaction', 'background', 'cite', 'data']);
+
+const DROP_ATTRS = new Set(['srcdoc', 'srcset']);
+
+const DANGEROUS_PROTOCOLS = new Set(['javascript:', 'vbscript:', 'file:']);
+
+const SAFE_DATA_PREFIXES = [
+    'data:image/png', 'data:image/jpeg', 'data:image/gif', 'data:image/webp',
+    'data:audio/', 'data:video/', 'data:font/', 'data:application/font-',
 ];
 
-const BLOCKED_SINGLE_TAGS = new Set([
-    'meta',
-    'link',
-    'base',
-
-    // TODO (fabawi): These can mutate href-like attributes, see if needed
-    'animate',
-    'set',
-    'animatetransform',
-    'animatemotion',
-    'animatecolor',
-]);
-
-const URL_ATTRS = new Set([
-    'href',
-    'src',
-    'poster',
-    'action',
-    'formaction',
-    'background',
-    'cite',
-    'data',
-]);
-
-const DROP_ATTRS = new Set([
-    'srcdoc',
-    'srcset',
-]);
+const TAG_RE = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<!?\??\/?\s*([\w.:-]+)([^>]*?)\/?\s*>/g;
+const ATTR_RE = /([^\s/=>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s/>]+)))?/g;
 
 export function sanitizeSvg(svg: string, options: SanitizeSvgOptions = {}): string {
-    const opts = {
+    return sanitize(svg, {
         baseUrl: options.baseUrl ?? 'http://localhost/',
         allowRemoteUrls: options.allowRemoteUrls ?? false,
-    };
-
-    let sanitized = svg;
-
-    sanitized = removeBlockedBlocks(sanitized);
-    sanitized = removeBlockedSingleTags(sanitized);
-    sanitized = sanitizeTags(sanitized, opts);
-
-    return sanitized;
-}
-
-function removeBlockedBlocks(svg: string): string {
-    let output = svg;
-
-    for (const tag of BLOCKED_BLOCK_TAGS) {
-        const namespacedTag = `(?:(?:[\\w.-]+):)?${tag}`;
-
-        output = output
-            .replace(
-                new RegExp(`<${namespacedTag}\\b[^>]*>[\\s\\S]*?<\\/${namespacedTag}>`, 'gi'),
-                ''
-            )
-            .replace(
-                new RegExp(`<${namespacedTag}\\b[^>]*\\/>`, 'gi'),
-                ''
-            );
-    }
-
-    return output;
-}
-
-function removeBlockedSingleTags(svg: string): string {
-    return svg.replace(/<(?:(?:[\w.-]+):)?([\w.-]+)\b[^>]*\/?>/gi, (tag, rawName) => {
-        const name = getLocalName(String(rawName));
-
-        if (BLOCKED_SINGLE_TAGS.has(name)) {
-            return '';
-        }
-
-        return tag;
+        svgDataUrlDepth: 0,
     });
 }
 
-function sanitizeTags(
-    svg: string,
-    opts: Required<SanitizeSvgOptions>
-): string {
+function sanitize(svg: string, opts: ResolvedOptions): string {
     let output = '';
-    let i = 0;
+    let cursor = 0;
+    let skipUntil: RegExp | null = null;
 
-    while (i < svg.length) {
-        const lt = svg.indexOf('<', i);
+    for (const match of svg.matchAll(TAG_RE)) {
+        const [tag, rawName, rawAttrs] = match;
+        const start = match.index!;
 
-        if (lt === -1) {
-            output += svg.slice(i);
-            break;
+        if (skipUntil) {
+            if (skipUntil.test(tag)) skipUntil = null;
+            cursor = start + tag.length;
+            continue;
         }
 
-        output += svg.slice(i, lt);
+        output += svg.slice(cursor, start);
+        cursor = start + tag.length;
 
-        const gt = findTagEnd(svg, lt + 1);
-
-        if (gt === -1) {
-            output += svg.slice(lt);
-            break;
+        if (tag.startsWith('<!--') || tag.startsWith('<![CDATA[')) {
+            output += tag;
+            continue;
         }
 
-        const tag = svg.slice(lt, gt + 1);
-        output += sanitizeTag(tag, opts);
+        if (tag.startsWith('<!') || tag.startsWith('<?')) continue;
 
-        i = gt + 1;
-    }
+        if (tag.startsWith('</')) {
+            output += tag;
+            continue;
+        }
 
-    return output;
-}
+        const localName = getLocalName(rawName ?? '');
 
-function findTagEnd(input: string, start: number): number {
-    let quote: '"' | "'" | null = null;
-
-    for (let i = start; i < input.length; i++) {
-        const ch = input[i];
-
-        if (quote) {
-            if (ch === quote) {
-                quote = null;
+        if (BLOCKED_TAGS.has(localName)) {
+            const selfClosing = /\/\s*>$/.test(tag);
+            if (!selfClosing) {
+                skipUntil = new RegExp(`</(?:[\\w.-]+:)?${localName}\\s*>`, 'i');
             }
             continue;
         }
 
-        if (ch === '"' || ch === "'") {
-            quote = ch;
-            continue;
-        }
-
-        if (ch === '>') {
-            return i;
-        }
-    }
-
-    return -1;
-}
-
-function sanitizeTag(
-    tag: string,
-    opts: Required<SanitizeSvgOptions>
-): string {
-    if (
-        tag.startsWith('</') ||
-        tag.startsWith('<!--') ||
-        tag.startsWith('<?')
-    ) {
-        return tag;
-    }
-
-    if (tag.startsWith('<!')) {
-        return '';
-    }
-
-    const content = tag.slice(1, -1);
-    const nameMatch = content.match(/^\s*([^\s/>]+)/);
-
-    if (!nameMatch) {
-        return tag;
-    }
-
-    const tagName = getLocalName(nameMatch[1]);
-
-    if (BLOCKED_SINGLE_TAGS.has(tagName)) {
-        return '';
-    }
-
-    const tagNameEnd = nameMatch[0].length;
-    const beforeAttrs = content.slice(0, tagNameEnd);
-    const attrs = content.slice(tagNameEnd);
-
-    return `<${beforeAttrs}${sanitizeAttributes(attrs, opts)}>`;
-}
-
-function sanitizeAttributes(
-    attrs: string,
-    opts: Required<SanitizeSvgOptions>
-): string {
-    let output = '';
-    let i = 0;
-
-    while (i < attrs.length) {
-        const chunkStart = i;
-
-        while (i < attrs.length && /\s/.test(attrs[i])) {
-            i++;
-        }
-
-        if (i >= attrs.length) {
-            output += attrs.slice(chunkStart);
-            break;
-        }
-
-        if (attrs[i] === '/') {
-            output += attrs.slice(chunkStart);
-            break;
-        }
-
-        const nameStart = i;
-
-        while (
-            i < attrs.length &&
-            !/\s/.test(attrs[i]) &&
-            attrs[i] !== '=' &&
-            attrs[i] !== '/' &&
-            attrs[i] !== '>'
-        ) {
-            i++;
-        }
-
-        const rawName = attrs.slice(nameStart, i);
-
-        while (i < attrs.length && /\s/.test(attrs[i])) {
-            i++;
-        }
-
-        let rawValue: string | null = null;
-
-        if (attrs[i] === '=') {
-            i++;
-
-            while (i < attrs.length && /\s/.test(attrs[i])) {
-                i++;
-            }
-
-            const quote = attrs[i];
-
-            if (quote === '"' || quote === "'") {
-                i++;
-                const valueStart = i;
-
-                while (i < attrs.length && attrs[i] !== quote) {
-                    i++;
+        if (localName === 'style' && !/\/\s*>$/.test(tag)) {
+            const close = svg.slice(cursor).search(/<\/(?:[\w.-]+:)?style\s*>/i);
+            if (close !== -1) {
+                const css = svg.slice(cursor, cursor + close);
+                const closeTag = svg.slice(cursor + close).match(/<\/(?:[\w.-]+:)?style\s*>/i)![0];
+                if (isSafeStyle(css)) {
+                    output += rebuildTag(rawName, rawAttrs ?? '', false, opts) + css + closeTag;
                 }
-
-                rawValue = attrs.slice(valueStart, i);
-
-                if (attrs[i] === quote) {
-                    i++;
-                }
-            } else {
-                const valueStart = i;
-
-                while (
-                    i < attrs.length &&
-                    !/\s/.test(attrs[i]) &&
-                    attrs[i] !== '/' &&
-                    attrs[i] !== '>'
-                ) {
-                    i++;
-                }
-
-                rawValue = attrs.slice(valueStart, i);
+                cursor = cursor + close + closeTag.length;
+                continue;
             }
         }
 
-        const fullAttr = attrs.slice(chunkStart, i);
+        if (ANIMATION_TAGS.has(localName) && isUnsafeAnimation(rawAttrs ?? '')) continue;
 
-        if (shouldKeepAttribute(rawName, rawValue, opts)) {
-            output += fullAttr;
-        }
+        output += rebuildTag(rawName, rawAttrs ?? '', /\/\s*>$/.test(tag), opts);
     }
 
+    output += svg.slice(cursor);
     return output;
 }
 
-function shouldKeepAttribute(
+function rebuildTag(name: string, rawAttrs: string, selfClosing: boolean, opts: ResolvedOptions): string {
+    const attrs: string[] = [];
+
+    for (const match of rawAttrs.matchAll(ATTR_RE)) {
+        const [, rawAttrName, dq, sq, uq] = match;
+        const hasValue = match[0].includes('=');
+        const value = dq ?? sq ?? uq ?? null;
+        const quote: '"' | "'" = sq !== undefined ? "'" : '"';
+        const sanitized = sanitizeAttribute(rawAttrName, hasValue ? (value ?? '') : null, quote, opts);
+        if (sanitized) attrs.push(sanitized);
+    }
+
+    const attrStr = attrs.length ? ' ' + attrs.join(' ') : '';
+    return `<${name}${attrStr}${selfClosing ? '/>' : '>'}`;
+}
+
+function sanitizeAttribute(
     rawName: string,
     rawValue: string | null,
-    opts: Required<SanitizeSvgOptions>
-): boolean {
+    quote: '"' | "'",
+    opts: ResolvedOptions,
+): string | null {
     const name = rawName.toLowerCase();
     const localName = getLocalName(name);
 
-    if (localName.startsWith('on')) {
-        return false;
-    }
+    if (localName.startsWith('on') || DROP_ATTRS.has(localName)) return null;
 
-    if (DROP_ATTRS.has(localName)) {
-        return false;
-    }
-
-    if (rawValue === null) {
-        return true;
-    }
+    if (rawValue === null) return rawName;
 
     if (localName === 'style') {
-        return isSafeStyle(rawValue);
+        return isSafeStyle(rawValue) ? formatAttr(rawName, rawValue, quote) : null;
     }
 
-    if (
-        URL_ATTRS.has(localName) ||
-        name === 'xlink:href' ||
-        name.endsWith(':href')
-    ) {
-        return isSafeUrl(rawValue, opts);
+    if (URL_ATTRS.has(localName) || name === 'xlink:href' || name.endsWith(':href')) {
+        const url = sanitizeUrl(rawValue, opts);
+        return url === null ? null : formatAttr(rawName, url, quote);
     }
 
-    return true;
+    return formatAttr(rawName, rawValue, quote);
 }
 
-function isSafeUrl(
-    rawValue: string,
-    opts: Required<SanitizeSvgOptions>
-): boolean {
-    const decoded = decodeBasicEntities(rawValue).trim();
+function sanitizeUrl(rawValue: string, opts: ResolvedOptions): string | null {
+    const decoded = decodeEntities(rawValue).trim();
+    if (decoded === '' || decoded.startsWith('#')) return rawValue;
 
-    if (decoded === '') {
-        return true;
-    }
+    const compact = decoded.replace(/[\u0000-\u001F\u007F\s]+/g, '').toLowerCase();
 
-    if (decoded.startsWith('#')) {
-        return true;
-    }
-
-    const compact = decoded
-        .replace(/[\u0000-\u001F\u007F\s]+/g, '')
-        .toLowerCase();
-
-    if (
-        compact.startsWith('javascript:') ||
-        compact.startsWith('vbscript:') ||
-        compact.startsWith('file:')
-    ) {
-        return false;
-    }
-
-    if (compact.startsWith('data:')) {
-        return isSafeDataUrl(compact);
-    }
-
-    if (compact.startsWith('//')) {
-        return opts.allowRemoteUrls;
-    }
+    if ([...DANGEROUS_PROTOCOLS].some(p => compact.startsWith(p))) return null;
+    if (compact.startsWith('data:image/svg+xml')) return sanitizeSvgDataUrl(decoded, opts);
+    if (compact.startsWith('data:')) return isSafeDataUrl(compact) ? rawValue : null;
+    if (compact.startsWith('//')) return opts.allowRemoteUrls ? rawValue : null;
 
     let parsed: URL;
-
     try {
         parsed = new URL(decoded, opts.baseUrl);
     } catch {
-        return false;
+        return null;
     }
 
     const protocol = parsed.protocol.toLowerCase();
-
-    if (
-        protocol === 'javascript:' ||
-        protocol === 'vbscript:' ||
-        protocol === 'file:'
-    ) {
-        return false;
-    }
-
-    if (protocol === 'data:') {
-        return isSafeDataUrl(compact);
-    }
-
-    if (protocol === 'blob:') {
-        return true;
-    }
+    if (DANGEROUS_PROTOCOLS.has(protocol)) return null;
+    if (protocol === 'blob:') return rawValue;
 
     if (protocol === 'http:' || protocol === 'https:') {
-        if (opts.allowRemoteUrls) {
-            return true;
-        }
-
-        const base = new URL(opts.baseUrl);
-        return parsed.origin === base.origin;
+        if (opts.allowRemoteUrls) return rawValue;
+        return parsed.origin === new URL(opts.baseUrl).origin ? rawValue : null;
     }
 
-    return false;
+    return null;
 }
 
 function isSafeDataUrl(compact: string): boolean {
-    if (
-        compact.startsWith('data:text/html') ||
-        compact.startsWith('data:application/xhtml+xml')
-    ) {
+    if (compact.startsWith('data:text/html') || compact.startsWith('data:application/xhtml+xml')) {
         return false;
     }
+    return SAFE_DATA_PREFIXES.some(p => compact.startsWith(p));
+}
 
-    // Keep these to avoids breaking <image xlink:href="data:image/svg+xml;base64,...">.
-    return (
-        compact.startsWith('data:image/svg+xml') ||
-        compact.startsWith('data:image/png') ||
-        compact.startsWith('data:image/jpeg') ||
-        compact.startsWith('data:image/gif') ||
-        compact.startsWith('data:image/webp') ||
-        compact.startsWith('data:audio/') ||
-        compact.startsWith('data:video/') ||
-        compact.startsWith('data:font/') ||
-        compact.startsWith('data:application/font-')
+function sanitizeSvgDataUrl(value: string, opts: ResolvedOptions): string | null {
+    if (opts.svgDataUrlDepth >= MAX_SVG_DATA_URL_DEPTH) return null;
+
+    const match = value.match(/^data:image\/svg\+xml((?:;[^,]*)?),(.*)$/i);
+    if (!match) return null;
+
+    const isBase64 = /(?:^|;)base64(?:;|$)/i.test(match[1] ?? '');
+    let svg: string;
+
+    try {
+        svg = isBase64 ? decodeBase64(safeDecodeUri(match[2])) : safeDecodeUri(match[2]);
+    } catch {
+        return null;
+    }
+
+    if (svg.length > MAX_SVG_DATA_URL_BYTES || !looksLikeSvg(svg)) return null;
+
+    const sanitized = sanitize(svg, { ...opts, svgDataUrlDepth: opts.svgDataUrlDepth + 1 });
+    if (!looksLikeSvg(sanitized)) return null;
+
+    return `data:image/svg+xml,${encodeURIComponent(sanitized)}`;
+}
+
+function isUnsafeAnimation(rawAttrs: string): boolean {
+    let target: string | null = null;
+    const dangerousValues: string[] = [];
+
+    for (const match of rawAttrs.matchAll(ATTR_RE)) {
+        const [, rawAttrName, dq, sq, uq] = match;
+        const value = dq ?? sq ?? uq;
+        if (value === undefined) continue;
+
+        const attr = rawAttrName.toLowerCase();
+        if (attr === 'attributename') target = decodeEntities(value).trim().toLowerCase();
+        else if (attr === 'from' || attr === 'to' || attr === 'by' || attr === 'values') {
+            dangerousValues.push(decodeEntities(value).replace(/[\u0000-\u001F\u007F\s]+/g, '').toLowerCase());
+        }
+    }
+
+    if (target && (BLOCKED_ANIMATION_TARGETS.has(target) || BLOCKED_ANIMATION_TARGETS.has(getLocalName(target)))) {
+        return true;
+    }
+
+    return dangerousValues.some(v =>
+        [...DANGEROUS_PROTOCOLS].some(p => v.includes(p)) ||
+        v.includes('data:text/html') ||
+        v.includes('data:application/xhtml+xml')
     );
 }
 
 function isSafeStyle(value: string): boolean {
-    const decoded = decodeBasicEntities(value);
-
-    const compact = decoded
+    const compact = decodeCssEscapes(decodeEntities(value))
         .replace(/\/\*[\s\S]*?\*\//g, '')
         .replace(/[\u0000-\u001F\u007F]+/g, '')
         .toLowerCase();
+    return !compact.includes('url(') && !compact.includes('@import');
+}
 
-    return !(
-        compact.includes('url(') ||
-        compact.includes('@import') ||
-        compact.includes('expression(') ||
-        compact.includes('behavior:') ||
-        compact.includes('-moz-binding')
+function decodeCssEscapes(value: string): string {
+    return value.replace(/\\([0-9a-f]{1,6})[ \t\n\r\f]?|\\([^\n\r\f0-9a-f])/gi,
+        (_, hex: string | undefined, ch: string | undefined) => {
+            if (hex) {
+                const code = Number.parseInt(hex, 16);
+                return Number.isFinite(code) && code !== 0 ? String.fromCodePoint(code) : '';
+            }
+            return ch ?? '';
+        }
     );
 }
 
-function decodeBasicEntities(value: string): string {
-    return value.replace(
-        /&(#x[0-9a-f]+|#\d+|colon|tab|newline);?/gi,
-        (_, entity: string) => {
-            const lower = entity.toLowerCase();
+function looksLikeSvg(value: string): boolean {
+    return /^\s*(?:<\?xml[\s\S]*?\?>\s*)?(?:<!--[\s\S]*?-->\s*)*<svg[\s>]/i.test(value);
+}
 
-            if (lower.startsWith('#x')) {
-                const code = Number.parseInt(lower.slice(2), 16);
-                return Number.isFinite(code) ? String.fromCodePoint(code) : '';
-            }
+function formatAttr(name: string, value: string, quote: '"' | "'"): string {
+    const escaped = quote === "'" ? value.replace(/'/g, '&#39;') : value.replace(/"/g, '&quot;');
+    return `${name}=${quote}${escaped}${quote}`;
+}
 
-            if (lower.startsWith('#')) {
-                const code = Number.parseInt(lower.slice(1), 10);
-                return Number.isFinite(code) ? String.fromCodePoint(code) : '';
-            }
+function safeDecodeUri(value: string): string {
+    try { return decodeURIComponent(value); } catch { return value; }
+}
 
-            switch (lower) {
-                case 'colon':
-                    return ':';
-                case 'tab':
-                    return '\t';
-                case 'newline':
-                    return '\n';
-                default:
-                    return '';
-            }
+function decodeBase64(value: string): string {
+    const normalized = value.replace(/\s+/g, '');
+    if (typeof atob === 'function') {
+        return new TextDecoder().decode(Uint8Array.from(atob(normalized), c => c.charCodeAt(0)));
+    }
+    const buffer = (globalThis as { Buffer?: { from(v: string, e: 'base64'): { toString(e: 'utf8'): string } } }).Buffer;
+    if (buffer) return buffer.from(normalized, 'base64').toString('utf8');
+    throw new Error('Base64 decoding is unavailable');
+}
+
+function decodeEntities(value: string): string {
+    return value.replace(/&(#x[0-9a-f]+|#\d+|colon|tab|newline);?/gi, (_, entity: string) => {
+        const lower = entity.toLowerCase();
+        if (lower.startsWith('#x')) {
+            const code = Number.parseInt(lower.slice(2), 16);
+            return Number.isFinite(code) ? String.fromCodePoint(code) : '';
         }
-    );
+        if (lower.startsWith('#')) {
+            const code = Number.parseInt(lower.slice(1), 10);
+            return Number.isFinite(code) ? String.fromCodePoint(code) : '';
+        }
+        return { colon: ':', tab: '\t', newline: '\n' }[lower] ?? '';
+    });
 }
 
 function getLocalName(name: string): string {
