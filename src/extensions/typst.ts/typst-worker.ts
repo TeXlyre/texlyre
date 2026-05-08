@@ -4,6 +4,7 @@ import { createTypstCompiler } from '@myriaddreamin/typst.ts/compiler';
 import { createTypstRenderer } from '@myriaddreamin/typst.ts/renderer';
 import { TypstSnippet } from '@myriaddreamin/typst.ts/dist/esm/contrib/snippet.mjs';
 import { TypstOutputFormat } from '@/types/typst';
+import { sanitizeSvg } from './sanitize-svgs';
 
 const BASE_PATH = __BASE_PATH__;
 
@@ -109,10 +110,6 @@ async function loadFonts(baseUrl: string = `${BASE_PATH}/assets/fonts`) {
     });
     const fonts = await Promise.all(fontPromises);
     return fonts.filter((f) => f !== null) as Uint8Array[];
-}
-
-function removeEmbeddedSvgScripts(svg: string): string {
-    return svg.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
 }
 
 async function retrievePageInfos(artifact: Uint8Array): Promise<any[]> {
@@ -252,7 +249,10 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
                 artifactContent: compileResult.result,
             });
 
-            output = removeEmbeddedSvgScripts(String(rawSvg));
+            output = sanitizeSvg(String(rawSvg), {
+                baseUrl: self.location.href,
+                allowRemoteUrls: true,
+            });
             const pageInfos = await retrievePageInfos(compileResult.result);
 
             const resp: DoneResponse = {
