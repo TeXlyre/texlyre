@@ -612,7 +612,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   );
 
   const updateContent = useCallback(
-    async (buffer: ArrayBuffer) => {
+    async (buffer: ArrayBuffer, trusted = false) => {
       if (!buffer || buffer.byteLength === 0) return;
 
       const bytes = new Uint8Array(buffer);
@@ -666,7 +666,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         } else {
           await destroyPdf(pdfDocRef);
 
-          const { pages, metadata } = await parseSvgPages(buffer);
+          const { pages, metadata } = await parseSvgPages(buffer, { trusted });
 
           svgPagesRef.current = pages;
           nextNumPages = pages.size;
@@ -732,6 +732,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
           typeof nextContent === 'string'
             ? new TextEncoder().encode(nextContent).buffer
             : nextContent,
+          true,
         );
       };
 

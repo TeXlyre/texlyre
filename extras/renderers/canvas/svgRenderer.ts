@@ -14,7 +14,10 @@ export function invalidateSvgOverlayCache(container: HTMLDivElement): void {
     svgOverlayScaleCache.delete(container);
 }
 
-export function parseSvgPages(svgBuffer: ArrayBuffer): Promise<{
+export function parseSvgPages(
+    svgBuffer: ArrayBuffer,
+    options: { trusted?: boolean } = {}
+): Promise<{
     pages: Map<number, string>;
     metadata: Map<number, { width: number; height: number }>;
 }> {
@@ -36,7 +39,7 @@ export function parseSvgPages(svgBuffer: ArrayBuffer): Promise<{
         };
 
         worker.addEventListener('message', handleMessage);
-        worker.postMessage({ type: 'parse', svgBuffer });
+        worker.postMessage({ type: 'parse', svgBuffer, trusted: options.trusted });
     });
 }
 
