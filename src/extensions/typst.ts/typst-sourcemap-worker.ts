@@ -3,30 +3,13 @@ export { };
 
 declare const self: DedicatedWorkerGlobalScope;
 
-interface PageInfo {
-    pageOffset: number;
-    width: number;
-    height: number;
-}
-
-interface Overlay {
-    text: string;
-    page: number;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-}
+interface PageInfo { pageOffset: number; width: number; height: number }
+interface Overlay { text: string; page: number; x: number; y: number; width: number; height: number }
 
 interface BuildMessage {
     id: string;
     type: 'build';
-    payload: {
-        svg: string;
-        pageInfos: PageInfo[];
-        sources: Record<string, string>;
-        mainFile?: string;
-    };
+    payload: { svg: string; pageInfos: PageInfo[]; sources: Record<string, string>; mainFile?: string };
 }
 
 interface AnnotatedRect {
@@ -45,241 +28,527 @@ interface BuildResult {
     fileInCodeBlock: Array<[string, boolean[]]>;
 }
 
-const FENCE_REGEX = /^\s*```/;
-const RAW_CALL_REGEX = /#raw\s*\(/;
-const TRANSLATE_REGEX = /translate\(\s*(-?[\d.]+)(?:\s*[, ]\s*(-?[\d.]+))?\s*\)/;
-const SCALE_REGEX = /scale\(\s*(-?[\d.]+)(?:\s*[, ]\s*(-?[\d.]+))?\s*\)/;
-const FOREIGN_OBJECT_REGEX = /<foreignObject\b([^>]*)>([\s\S]*?)<\/foreignObject>/g;
-const TEXT_CONTENT_REGEX = />([^<]+)</g;
-const ATTR_REGEX = /(\w[\w:-]*)\s*=\s*"([^"]*)"/g;
+type SourceKind = 'heading' | 'list' | 'prose' | 'raw' | 'impl';
+type OverlayKind = 'prose' | 'codeish' | 'short';
 
-const CONTEXT_WINDOW = 6;
-const SHORT_TEXT_THRESHOLD = 12;
-const AMBIGUITY_MARGIN = 2;
-const EXACT_MATCH = 5;
-const TIGHT_MATCH = 3;
-const TIGHT_RATIO = 1.4;
-const SCORE_MAIN = 100;
-const SCORE_LOCAL = 50;
-const CODE_BLOCK_BONUS = 1000;
-
-function normalize(s: string): string {
-    return s.replace(/\s+/g, ' ').trim();
+interface SourceFile {
+    lines: string[];
+    code: boolean[];
+    kind: SourceKind[];
+    shingles: Map<string, number[]>;
 }
 
-function decodeEntities(s: string): string {
-    return s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'");
+interface Candidate {
+    file: string;
+    line: number;
+    score: number;
+    hits: number;
+    left: number;
+    right: number;
+    window: string;
+    exact: boolean;
+    tight: boolean;
+    kind: SourceKind;
 }
 
-function buildSourceIndex(sources: Record<string, string>): Map<string, { lines: string[]; inCodeBlock: boolean[] }> {
-    const index = new Map<string, { lines: string[]; inCodeBlock: boolean[] }>();
-    for (const [path, content] of Object.entries(sources)) {
-        const rawLines = content.split(/\r?\n/);
-        const inCodeBlock = new Array(rawLines.length).fill(false);
-        let inFence = false;
-        for (let i = 0; i < rawLines.length; i++) {
-            if (FENCE_REGEX.test(rawLines[i])) {
-                inCodeBlock[i] = true;
-                inFence = !inFence;
-            } else if (inFence || RAW_CALL_REGEX.test(rawLines[i])) {
-                inCodeBlock[i] = true;
+interface Window { text: string; start: number }
+
+const FENCE = /^\s*```/;
+const RAW = /#raw\s*\(/;
+const TAG = /<(\/?)([a-zA-Z][\w:-]*)\b([^>]*?)(\/?)>/g;
+const ATTR = /(\w[\w:-]*)\s*=\s*"([^"]*)"/g;
+const TEXT = />([^<]+)</g;
+const TR = /translate\(\s*(-?[\d.]+)(?:\s*[, ]\s*(-?[\d.]+))?\s*\)/;
+const SC = /scale\(\s*(-?[\d.]+)(?:\s*[, ]\s*(-?[\d.]+))?\s*\)/;
+
+const CONTEXT = 10;
+const SOURCE_CONTEXT = 6;
+const SHORT = 12;
+const MARGIN = 4;
+const SHINGLE = 6;
+
+const WEAK = new Set([
+    'the', 'a', 'an', 'and', 'or', 'is', 'are', 'to', 'in', 'of', 'with', 'for', 'from',
+    'true', 'false', 'none', 'auto', 'default', 'width', 'height', 'title', 'description',
+    'audio', 'video', 'media', 'source', 'sources', 'fallback', 'background', 'local', 'remote',
+]);
+
+function norm(s: string): string {
+    return s
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&apos;/g, "'")
+        .replace(/[“”]/g, '"')
+        .replace(/[‘’]/g, "'")
+        .replace(/[‐-‒–—]/g, '-')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+}
+
+function commandLike(s: string): boolean {
+    return /^[a-z_][\w-]*(?:\(\))?$/.test(s);
+}
+
+function overlayKind(s: string): OverlayKind {
+    if (s.length < 10) return 'short';
+    if (/[#{}();=<>]|:\s*["\w-]/.test(s)) return 'codeish';
+    return 'prose';
+}
+
+function usefulContext(s: string): boolean {
+    const words = s.split(/\s+/).filter(w => w.length > 2 && !WEAK.has(w));
+    return s.length >= 18 || words.length >= 2 || /[`#:/.-]/.test(s);
+}
+
+function stripComment(s: string): string {
+    let quoted = false;
+
+    for (let i = 0; i < s.length - 1; i++) {
+        if (s[i] === '"' && s[i - 1] !== '\\') quoted = !quoted;
+        if (!quoted && s[i] === '/' && s[i + 1] === '/' && (i === 0 || /\s/.test(s[i - 1]))) {
+            return s.slice(0, i);
+        }
+    }
+
+    return s;
+}
+
+function sourceKind(raw: string, code: boolean): SourceKind {
+    const t = raw.trim();
+
+    if (code) return 'raw';
+    if (/^\s*=+\s+\S/.test(raw)) return 'heading';
+    if (/^\s*[-+*]\s+\S/.test(raw)) return 'list';
+
+    if (
+        !t ||
+        t.startsWith('#') ||
+        /^let\s+/.test(t) ||
+        /^if\s+/.test(t) ||
+        /^else\b/.test(t) ||
+        /^[a-zA-Z_]\w*\s*=/.test(t) ||
+        /^[a-zA-Z_][\w-]*\s*:/.test(t) ||
+        /"\s*\+|\+\s*"/.test(t) ||
+        /<\/?\w+[^>]*>/.test(t) ||
+        /^[\]\}\)],?$/.test(t)
+    ) {
+        return 'impl';
+    }
+
+    return 'prose';
+}
+
+function visibleTypst(s: string, kind: SourceKind): string {
+    if (kind === 'raw') return norm(s);
+    if (kind === 'impl') return '';
+
+    return norm(stripComment(s)
+        .replace(/#(?:link|text|emph|strong)(?:\([^)]*\))?\[([^\]]*)\]/g, '$1')
+        .replace(/^\s*=+\s*/, '')
+        .replace(/^\s*[-+*]\s+/, '')
+        .replace(/^\s*\d+[.)]\s+/, '')
+        .replace(/^[)\]]*\s*\[([^\]]*)\]\s*,?$/, '$1')
+        .replace(/<[^>]+>/g, '')
+        .replace(/[`*_~]/g, ''));
+}
+
+function buildSourceIndex(sources: Record<string, string>): Map<string, SourceFile> {
+    const out = new Map<string, SourceFile>();
+
+    for (const [file, content] of Object.entries(sources)) {
+        const raw = content.split(/\r?\n/);
+        const code = new Array(raw.length).fill(false);
+        const kind = new Array<SourceKind>(raw.length);
+        let fenced = false;
+
+        for (let i = 0; i < raw.length; i++) {
+            if (FENCE.test(raw[i])) {
+                code[i] = true;
+                fenced = !fenced;
+            } else {
+                code[i] = fenced || RAW.test(raw[i]);
+            }
+            kind[i] = sourceKind(raw[i], code[i]);
+        }
+
+        const lines = raw.map((line, i) => visibleTypst(line, kind[i]));
+        const shingles = new Map<string, number[]>();
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            for (let p = 0; p + SHINGLE <= line.length; p++) {
+                const key = line.slice(p, p + SHINGLE);
+                const bucket = shingles.get(key);
+                if (bucket) {
+                    if (bucket[bucket.length - 1] !== i) bucket.push(i);
+                } else {
+                    shingles.set(key, [i]);
+                }
             }
         }
-        index.set(path, { lines: rawLines.map(normalize), inCodeBlock });
+
+        out.set(file, { lines, code, kind, shingles });
     }
-    return index;
+
+    return out;
 }
 
-function findPage(pageInfos: PageInfo[], docY: number): { index: number; offset: number } {
-    let cumulative = 0;
-    for (let i = 0; i < pageInfos.length; i++) {
-        const next = cumulative + pageInfos[i].height;
-        if (docY < next) return { index: i, offset: cumulative };
-        cumulative = next;
-    }
-    const last = pageInfos.length - 1;
-    return { index: last, offset: cumulative - pageInfos[last].height };
+function parseAttrs(s: string): Map<string, string> {
+    const out = new Map<string, string>();
+    let m: RegExpExecArray | null;
+
+    ATTR.lastIndex = 0;
+    while ((m = ATTR.exec(s))) out.set(m[1], m[2]);
+
+    return out;
 }
 
-function collectOverlays(svg: string, pageInfos: PageInfo[]): Overlay[] {
+function textFromHtml(s: string): string {
+    const parts: string[] = [];
+    let m: RegExpExecArray | null;
+
+    TEXT.lastIndex = 0;
+    while ((m = TEXT.exec(s))) {
+        const part = norm(m[1]);
+        if (part) parts.push(part);
+    }
+
+    return norm(parts.join(' '));
+}
+
+function pageAt(pages: PageInfo[], y: number): { page: number; offset: number } {
+    let offset = 0;
+
+    for (let i = 0; i < pages.length; i++) {
+        if (y < offset + pages[i].height) return { page: i + 1, offset };
+        offset += pages[i].height;
+    }
+
+    const last = Math.max(0, pages.length - 1);
+    return { page: last + 1, offset: offset - (pages[last]?.height ?? 0) };
+}
+
+function transformOf(
+    parent: { tx: number; ty: number; sx: number; sy: number },
+    attrs: string,
+): { tx: number; ty: number; sx: number; sy: number } {
+    const transform = /transform\s*=\s*"([^"]*)"/.exec(attrs);
+    let { tx, ty, sx, sy } = parent;
+
+    if (!transform) return { tx, ty, sx, sy };
+
+    const t = TR.exec(transform[1]);
+    const s = SC.exec(transform[1]);
+
+    if (t) {
+        tx += Number.parseFloat(t[1]) * parent.sx;
+        ty += Number.parseFloat(t[2] ?? '0') * parent.sy;
+    }
+
+    if (s) {
+        sx *= Number.parseFloat(s[1]);
+        sy *= Number.parseFloat(s[2] ?? s[1]);
+    }
+
+    return { tx, ty, sx, sy };
+}
+
+function collectOverlays(svg: string, pages: PageInfo[]): Overlay[] {
     const overlays: Overlay[] = [];
-    const transformStack: Array<{ tx: number; ty: number; sx: number; sy: number }> = [{ tx: 0, ty: 0, sx: 1, sy: 1 }];
-    const tagRegex = /<(\/?)([a-zA-Z][\w:-]*)\b([^>]*?)(\/?)>/g;
-    let match: RegExpExecArray | null;
+    const stack = [{ tx: 0, ty: 0, sx: 1, sy: 1 }];
+    let m: RegExpExecArray | null;
 
-    const cur = () => transformStack[transformStack.length - 1];
+    TAG.lastIndex = 0;
 
-    while ((match = tagRegex.exec(svg)) !== null) {
-        const isClosing = match[1] === '/';
-        const tagName = match[2].toLowerCase();
-        const attrs = match[3];
-        const isSelfClosing = match[4] === '/';
+    while ((m = TAG.exec(svg))) {
+        const closing = m[1] === '/';
+        const tag = m[2].toLowerCase();
+        const attrs = m[3];
+        const selfClosing = m[4] === '/';
 
-        if (isClosing) {
-            transformStack.pop();
+        if (closing) {
+            if (stack.length > 1) stack.pop();
             continue;
         }
 
-        let tx = cur().tx, ty = cur().ty, sx = cur().sx, sy = cur().sy;
-        const transformAttr = /transform\s*=\s*"([^"]*)"/.exec(attrs);
-        if (transformAttr) {
-            const t = TRANSLATE_REGEX.exec(transformAttr[1]);
-            const s = SCALE_REGEX.exec(transformAttr[1]);
-            if (t) {
-                tx = cur().tx + Number.parseFloat(t[1]) * cur().sx;
-                ty = cur().ty + Number.parseFloat(t[2] ?? '0') * cur().sy;
-            }
-            if (s) {
-                sx = cur().sx * Number.parseFloat(s[1]);
-                sy = cur().sy * Number.parseFloat(s[2] ?? s[1]);
-            }
-        }
+        const current = transformOf(stack[stack.length - 1], attrs);
 
-        if (tagName === 'foreignobject') {
-            const attrMap = parseAttrs(attrs);
-            const localX = Number.parseFloat(attrMap.get('x') ?? '0');
-            const localY = Number.parseFloat(attrMap.get('y') ?? '0');
-            const width = Number.parseFloat(attrMap.get('width') ?? '0');
-            const height = Number.parseFloat(attrMap.get('height') ?? '0');
+        if (tag === 'foreignobject') {
+            const close = svg.indexOf('</foreignObject>', TAG.lastIndex);
+            if (close === -1) continue;
 
-            const closeIdx = svg.indexOf('</foreignObject>', tagRegex.lastIndex);
-            if (closeIdx === -1) continue;
-            const inner = svg.substring(tagRegex.lastIndex, closeIdx);
-            const text = normalize(decodeEntities(extractText(inner)));
-            tagRegex.lastIndex = closeIdx + '</foreignObject>'.length;
+            const attr = parseAttrs(attrs);
+            const text = textFromHtml(svg.slice(TAG.lastIndex, close));
+            TAG.lastIndex = close + '</foreignObject>'.length;
 
-            if (text) {
-                const docY = ty + localY * sy;
-                const { index, offset } = findPage(pageInfos, docY);
-                overlays.push({
-                    text,
-                    page: index + 1,
-                    x: tx + localX * sx,
-                    y: docY - offset,
-                    width: Math.abs(width * sx),
-                    height: Math.abs(height * sy),
-                });
-            }
+            if (!text) continue;
+
+            const x = Number.parseFloat(attr.get('x') ?? '0');
+            const y = Number.parseFloat(attr.get('y') ?? '0');
+            const w = Number.parseFloat(attr.get('width') ?? '0');
+            const h = Number.parseFloat(attr.get('height') ?? '0');
+            const docY = current.ty + y * current.sy;
+            const page = pageAt(pages, docY);
+
+            overlays.push({
+                text,
+                page: page.page,
+                x: current.tx + x * current.sx,
+                y: docY - page.offset,
+                width: Math.abs(w * current.sx),
+                height: Math.abs(h * current.sy),
+            });
+
             continue;
         }
 
-        if (!isSelfClosing) {
-            transformStack.push({ tx, ty, sx, sy });
-        }
+        if (!selfClosing) stack.push(current);
     }
 
     return overlays;
 }
 
-function parseAttrs(attrs: string): Map<string, string> {
-    const map = new Map<string, string>();
-    let m: RegExpExecArray | null;
-    ATTR_REGEX.lastIndex = 0;
-    while ((m = ATTR_REGEX.exec(attrs)) !== null) {
-        map.set(m[1], m[2]);
+function sourceWindow(lines: string[], i: number): Window {
+    const from = Math.max(0, i - SOURCE_CONTEXT);
+    const to = Math.min(lines.length, i + SOURCE_CONTEXT + 1);
+    let text = '';
+    let start = 0;
+
+    for (let j = from; j < to; j++) {
+        if (text) text += ' ';
+        if (j === i) start = text.length;
+        text += lines[j];
     }
-    return map;
+
+    return { text, start };
 }
 
-function extractText(html: string): string {
-    let m: RegExpExecArray | null;
-    TEXT_CONTENT_REGEX.lastIndex = 0;
-    const parts: string[] = [];
-    while ((m = TEXT_CONTENT_REGEX.exec(html)) !== null) {
-        const piece = m[1].trim();
-        if (piece) parts.push(piece);
+function candidateScore(
+    file: string,
+    src: SourceFile,
+    i: number,
+    exact: boolean,
+    tight: boolean,
+    mainFile?: string,
+): number {
+    const mainDir = mainFile?.slice(0, mainFile.lastIndexOf('/') + 1) ?? '';
+    const local = mainDir ? file.startsWith(mainDir) : !file.includes('/packages/') && !file.startsWith('@');
+    const base = file === mainFile ? 100 : local ? 50 : 0;
+
+    const kind =
+        src.kind[i] === 'heading' ? 1000 :
+            src.kind[i] === 'list' ? 100 :
+                src.kind[i] === 'prose' ? 40 :
+                    src.kind[i] === 'raw' ? -20 :
+                        -300;
+
+    return base + kind + (exact ? 30 : tight ? 8 : 1);
+}
+
+function seed(index: Map<string, SourceFile>, target: string, mainFile?: string): Candidate[] {
+    const out: Candidate[] = [];
+    const command = commandLike(target);
+    const oKind = overlayKind(target);
+    const key = target.length >= SHINGLE ? target.slice(0, SHINGLE) : null;
+    const windowCache = new Map<string, Window>();
+
+    const visit = (file: string, src: SourceFile, i: number): void => {
+        const line = src.lines[i];
+        if (!line || !line.includes(target)) return;
+
+        const exact = line === target;
+        const tight = command ? line.length <= target.length + 3 : line.length <= target.length * 1.4;
+
+        if (command && !exact && !tight && src.kind[i] !== 'raw' && src.kind[i] !== 'list') return;
+        if (oKind === 'prose' && src.kind[i] === 'impl') return;
+        if (target.length >= 24 && /\s/.test(target) && !line.includes(target)) return;
+
+        const cacheKey = `${file}:${i}`;
+        let win = windowCache.get(cacheKey);
+        if (!win) {
+            win = sourceWindow(src.lines, i);
+            windowCache.set(cacheKey, win);
+        }
+
+        let at = line.indexOf(target);
+        while (at !== -1) {
+            const left = win.start + at;
+            out.push({
+                file,
+                line: i + 1,
+                score: candidateScore(file, src, i, exact, tight, mainFile),
+                hits: 0,
+                left,
+                right: left + target.length,
+                window: win.text,
+                exact,
+                tight,
+                kind: src.kind[i],
+            });
+            at = line.indexOf(target, at + Math.max(1, target.length));
+        }
+    };
+
+    for (const [file, src] of index) {
+        if (key) {
+            const bucket = src.shingles.get(key);
+            if (!bucket) continue;
+            for (const i of bucket) visit(file, src, i);
+        } else {
+            for (let i = 0; i < src.lines.length; i++) visit(file, src, i);
+        }
     }
-    return parts.join(' ');
+
+    const exactHeadings = out.filter(c => c.kind === 'heading' && c.exact);
+    if (exactHeadings.length) return exactHeadings;
+
+    const exact = out.filter(c => c.exact);
+    return exact.length ? exact : out;
+}
+
+function walk(candidates: Candidate[], before: string[], after: string[]): Candidate[] {
+    let current = candidates;
+
+    for (let d = 1; d <= CONTEXT; d++) {
+        const prev = before[before.length - d] ?? '';
+        const next = after[d - 1] ?? '';
+        if (!prev && !next) break;
+
+        const walked: Candidate[] = [];
+
+        for (const c of current) {
+            let { left, right, score, hits } = c;
+            let matched = false;
+
+            if (prev && usefulContext(prev)) {
+                const found = c.window.lastIndexOf(prev, left - 1);
+                if (found !== -1) {
+                    left = found;
+                    score += CONTEXT + 1 - d;
+                    hits++;
+                    matched = true;
+                }
+            }
+
+            if (next && usefulContext(next)) {
+                const found = c.window.indexOf(next, right);
+                if (found !== -1) {
+                    right = found + next.length;
+                    score += CONTEXT + 1 - d;
+                    hits++;
+                    matched = true;
+                }
+            }
+
+            if (matched) walked.push({ ...c, left, right, score, hits });
+        }
+
+        if (walked.length) current = walked;
+        if (current.length <= 1) break;
+    }
+
+    return current;
+}
+
+function choose(candidates: Candidate[], target: string): Candidate | null {
+    candidates.sort((a, b) =>
+        b.hits - a.hits ||
+        b.score - a.score ||
+        a.file.localeCompare(b.file) ||
+        a.line - b.line,
+    );
+
+    const best = candidates[0];
+    const second = candidates[1];
+    const command = commandLike(target);
+
+    if (!best) return null;
+
+    if (!second) {
+        if (command) return best.exact || best.tight || best.hits >= 2 ? best : null;
+        if (best.kind === 'raw' && target.length < 10 && best.hits < 2) return null;
+        if (target.length < 8 && !best.exact && best.hits < 2) return null;
+        return target.length >= SHORT || best.hits > 0 || best.kind === 'heading' || best.kind === 'list' ? best : null;
+    }
+
+    if (best.kind === 'heading' && second.kind !== 'heading' && best.exact) return best;
+
+    if (command) {
+        if (best.kind === 'raw' && best.hits < 2) return null;
+        if (!best.exact && !best.tight && best.kind !== 'list' && best.hits < 2) return null;
+        if (best.hits === second.hits && best.score - second.score < MARGIN + 2) return null;
+        return best;
+    }
+
+    if (target.length < 8 && !best.exact && best.hits < 2) return null;
+    if (best.kind === 'raw' && target.length < 10 && best.hits < 2) return null;
+    if (best.hits === 0 && best.kind !== 'heading' && best.kind !== 'list') return null;
+    if (best.hits === second.hits && best.score - second.score < MARGIN) return null;
+
+    return best;
 }
 
 function findLine(
-    sourceIndex: Map<string, { lines: string[]; inCodeBlock: boolean[] }>,
-    targetText: string,
+    index: Map<string, SourceFile>,
+    text: string,
     before: string[],
     after: string[],
-    mainFile: string | undefined,
+    mainFile?: string,
 ): { file: string; line: number } | null {
-    const target = normalize(targetText);
+    const target = norm(text);
     if (!target) return null;
 
-    const mainDir = mainFile ? mainFile.substring(0, mainFile.lastIndexOf('/') + 1) : '';
-    const isShort = target.length < SHORT_TEXT_THRESHOLD;
+    const best = choose(walk(seed(index, target, mainFile), before, after), target);
+    return best ? { file: best.file, line: best.line } : null;
+}
 
-    let bestFile: string | null = null;
-    let bestLine = -1;
-    let bestScore = -1;
-    let secondScore = -1;
+function context(overlays: Overlay[], i: number, normCache: string[]): { before: string[]; after: string[] } {
+    const before: string[] = [];
+    const after: string[] = [];
+    const page = overlays[i].page;
 
-    for (const [file, { lines, inCodeBlock }] of sourceIndex.entries()) {
-        const isMain = file === mainFile;
-        const isLocal = mainDir ? file.startsWith(mainDir) : !file.includes('/packages/') && !file.startsWith('@');
-        const baseScore = isMain ? SCORE_MAIN : isLocal ? SCORE_LOCAL : 0;
-
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            if (!line.includes(target)) continue;
-
-            const quality = line === target ? EXACT_MATCH : line.length <= target.length * TIGHT_RATIO ? TIGHT_MATCH : 1;
-            let score = baseScore + quality;
-            if (inCodeBlock[i]) score += CODE_BLOCK_BONUS;
-
-            for (let k = 0; k < before.length; k++) {
-                const probe = i - 1 - k;
-                if (probe < 0) break;
-                const probeLine = lines[probe];
-                const ctx = before[before.length - 1 - k];
-                const matches = inCodeBlock[i] ? probeLine === ctx : probeLine.includes(ctx);
-                if (!probeLine || !matches) break;
-                score++;
-            }
-            for (let k = 0; k < after.length; k++) {
-                const probe = i + 1 + k;
-                if (probe >= lines.length) break;
-                const probeLine = lines[probe];
-                const ctx = after[k];
-                const matches = inCodeBlock[i] ? probeLine === ctx : probeLine.includes(ctx);
-                if (!probeLine || !matches) break;
-                score++;
-            }
-
-            if (score > bestScore) {
-                secondScore = bestScore;
-                bestScore = score;
-                bestFile = file;
-                bestLine = i + 1;
-            } else if (score > secondScore) {
-                secondScore = score;
-            }
-        }
+    for (let k = 1; k <= CONTEXT && i - k >= 0 && overlays[i - k].page === page; k++) {
+        before.unshift(normCache[i - k]);
+    }
+    for (let k = 1; k <= CONTEXT && i + k < overlays.length && overlays[i + k].page === page; k++) {
+        after.push(normCache[i + k]);
     }
 
-    if (!bestFile) return null;
-    if ((isShort || bestScore >= CODE_BLOCK_BONUS) && bestScore - secondScore < AMBIGUITY_MARGIN) return null;
-    return { file: bestFile, line: bestLine };
+    return { before, after };
+}
+
+function addRect(
+    forward: Map<string, AnnotatedRect[]>,
+    reverse: Map<number, AnnotatedRect[]>,
+    rect: AnnotatedRect,
+): void {
+    const key = `${rect.file}:${rect.line}`;
+    let f = forward.get(key);
+    if (!f) { f = []; forward.set(key, f); }
+    f.push(rect);
+
+    let r = reverse.get(rect.page);
+    if (!r) { r = []; reverse.set(rect.page, r); }
+    r.push(rect);
 }
 
 function build(svg: string, pageInfos: PageInfo[], sources: Record<string, string>, mainFile?: string): BuildResult {
-    const sourceIndex = buildSourceIndex(sources);
+    const index = buildSourceIndex(sources);
     const overlays = collectOverlays(svg, pageInfos);
-
-    const forwardMap = new Map<string, AnnotatedRect[]>();
-    const reverseMap = new Map<number, AnnotatedRect[]>();
+    const normCache = overlays.map(o => norm(o.text));
+    const forward = new Map<string, AnnotatedRect[]>();
+    const reverse = new Map<number, AnnotatedRect[]>();
 
     for (let i = 0; i < overlays.length; i++) {
         const entry = overlays[i];
-        const before: string[] = [];
-        for (let k = 1; k <= CONTEXT_WINDOW && i - k >= 0 && overlays[i - k].page === entry.page; k++) {
-            before.unshift(overlays[i - k].text);
-        }
-        const after: string[] = [];
-        for (let k = 1; k <= CONTEXT_WINDOW && i + k < overlays.length && overlays[i + k].page === entry.page; k++) {
-            after.push(overlays[i + k].text);
-        }
-
-        const match = findLine(sourceIndex, entry.text, before, after, mainFile);
+        const ctx = context(overlays, i, normCache);
+        const match = findLine(index, entry.text, ctx.before, ctx.after, mainFile);
         if (!match) continue;
 
-        const rect: AnnotatedRect = {
+        addRect(forward, reverse, {
             page: entry.page,
             file: match.file,
             line: match.line,
@@ -287,32 +556,31 @@ function build(svg: string, pageInfos: PageInfo[], sources: Record<string, strin
             y: entry.y,
             width: entry.width,
             height: entry.height,
-        };
-
-        const key = `${match.file}:${match.line}`;
-        const list = forwardMap.get(key);
-        if (list) list.push(rect);
-        else forwardMap.set(key, [rect]);
-
-        const pageList = reverseMap.get(rect.page);
-        if (pageList) pageList.push(rect);
-        else reverseMap.set(rect.page, [rect]);
+        });
     }
 
     return {
-        forwardEntries: Array.from(forwardMap.entries()),
-        reverseEntries: Array.from(reverseMap.entries()),
-        fileInCodeBlock: Array.from(sourceIndex.entries()).map(([file, { inCodeBlock }]) => [file, inCodeBlock] as [string, boolean[]]),
+        forwardEntries: Array.from(forward.entries()),
+        reverseEntries: Array.from(reverse.entries()),
+        fileInCodeBlock: Array.from(index.entries()).map(([file, src]) => [file, src.code] as [string, boolean[]]),
     };
 }
 
 self.addEventListener('message', (e: MessageEvent<BuildMessage>) => {
     const { id, type, payload } = e.data;
     if (type !== 'build') return;
+
     try {
-        const result = build(payload.svg, payload.pageInfos, payload.sources, payload.mainFile);
-        self.postMessage({ id, type: 'done', result });
+        self.postMessage({
+            id,
+            type: 'done',
+            result: build(payload.svg, payload.pageInfos, payload.sources, payload.mainFile),
+        });
     } catch (err) {
-        self.postMessage({ id, type: 'error', error: err instanceof Error ? err.message : String(err) });
+        self.postMessage({
+            id,
+            type: 'error',
+            error: err instanceof Error ? err.message : String(err),
+        });
     }
 });
