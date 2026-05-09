@@ -7,11 +7,11 @@ import {
   useEffect,
   useRef,
   useState,
-  useContext,
 } from 'react';
 
 import { useProperties } from '../hooks/useProperties';
 import type { EditorTab, EditorTabsContextType } from '../types/editorTabs';
+import { type EditorTarget, gotoEditor } from '../utils/editorNavigator';
 
 export const EditorTabsContext = createContext<EditorTabsContextType | null>(null);
 
@@ -293,26 +293,16 @@ export const EditorTabsProvider: React.FC<EditorTabsProviderProps> = ({
       const pendingGoto = pendingGotoRef.current;
       if (!pendingGoto) return;
 
-      const customEvent = event as CustomEvent;
-      const { fileId, documentId, isEditingFile } = customEvent.detail;
-
+      const { fileId, documentId, isEditingFile } = (event as CustomEvent).detail;
       const isTargetFile = isEditingFile && tab.fileId === fileId;
       const isTargetDoc = !isEditingFile && tab.documentId === documentId;
 
       if (isTargetFile || isTargetDoc) {
-        const { position } = pendingGoto;
+        const target: EditorTarget = tab.documentId
+          ? { kind: 'document', documentId: tab.documentId }
+          : { kind: 'file', fileId: tab.fileId! };
 
-        setTimeout(() => {
-          document.dispatchEvent(new CustomEvent('codemirror-goto-char', {
-            detail: {
-              position: position,
-              tabId: tab.id,
-              fileId: tab.fileId,
-              documentId: tab.documentId
-            }
-          }));
-        }, 100);
-
+        gotoEditor(target, { position: pendingGoto.position, tabId: tab.id });
         pendingGotoRef.current = null;
       }
     };

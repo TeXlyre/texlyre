@@ -10,6 +10,7 @@ import { useLaTeX } from '../hooks/useLaTeX';
 import { useTypst } from '../hooks/useTypst';
 import { useSettings } from '../hooks/useSettings';
 import { useProperties } from '../hooks/useProperties';
+import { gotoEditor, type EditorTarget } from '../utils/editorNavigator';
 
 export const SourceMapContext = createContext<SourceMapContextType | null>(null);
 
@@ -179,15 +180,15 @@ export const SourceMapProvider: React.FC<SourceMapProviderProps> = ({ children }
                 return;
             }
 
+            const target: EditorTarget = targetFile.documentId
+                ? { kind: 'document', documentId: targetFile.documentId }
+                : { kind: 'file', fileId: targetFile.id };
+
             document.dispatchEvent(new CustomEvent('navigate-to-compiled-file', {
                 detail: { filePath: targetFile.path },
             }));
 
-            setTimeout(() => {
-                document.dispatchEvent(new CustomEvent('codemirror-goto-line', {
-                    detail: { line: result.line, fileId: targetFile.id, filePath: targetFile.path },
-                }));
-            }, 150);
+            gotoEditor(target, { line: result.line }, { waitForReady: true });
         } catch (error) {
             console.error('[SourceMapContext] Reverse sync navigation failed:', error);
         }

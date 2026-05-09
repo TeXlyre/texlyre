@@ -22,6 +22,7 @@ import {
   isTemporaryFile,
   toArrayBuffer
 } from '../../utils/fileUtils';
+import { gotoEditor } from '../../utils/editorNavigator';
 
 interface TypstOutputProps {
   className?: string;
@@ -260,22 +261,10 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 
   const handleLineClick = async (line: number) => {
     if (!selectedFileId) return;
-
     try {
       const file = await getFile(selectedFileId);
-      if (!file || !isTypstFile(file.path)) {
-        console.log('[TypstOutput] Selected file is not a .typ file');
-        return;
-      }
-
-      const event = new CustomEvent('codemirror-goto-line', {
-        detail: {
-          line: line,
-          fileId: selectedFileId,
-          filePath: file.path
-        }
-      });
-      document.dispatchEvent(event);
+      if (!file || !isTypstFile(file.path)) return;
+      gotoEditor({ kind: 'file', fileId: selectedFileId }, { line });
     } catch (error) {
       console.error('Error handling line click:', error);
     }

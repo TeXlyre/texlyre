@@ -22,6 +22,7 @@ import {
   isTemporaryFile,
   toArrayBuffer,
 } from '../../utils/fileUtils';
+import { gotoEditor } from '../../utils/editorNavigator';
 
 interface LaTeXOutputProps {
   className?: string;
@@ -235,24 +236,10 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 
   const handleLineClick = async (line: number) => {
     if (!selectedFileId) return;
-
     try {
       const file = await getFile(selectedFileId);
-
-      if (!file || !isLatexFile(file.path)) {
-        console.log('[LaTeXOutput] Selected file is not a .tex file');
-        return;
-      }
-
-      document.dispatchEvent(
-        new CustomEvent('codemirror-goto-line', {
-          detail: {
-            line,
-            fileId: selectedFileId,
-            filePath: file.path,
-          },
-        }),
-      );
+      if (!file || !isLatexFile(file.path)) return;
+      gotoEditor({ kind: 'file', fileId: selectedFileId }, { line });
     } catch (error) {
       console.error('Error handling line click:', error);
     }
