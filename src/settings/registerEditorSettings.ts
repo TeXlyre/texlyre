@@ -44,6 +44,9 @@ export function useRegisterEditorSettings() {
         const initialHighlightTheme =
             (batchedSettings['editor-theme-highlights'] as HighlightTheme) ??
             defaultEditorSettings.highlightTheme;
+        const initialTextDirection =
+            (batchedSettings['editor-text-direction'] as 'auto' | 'ltr' | 'rtl') ??
+            defaultEditorSettings.textDirection;
         const initialAutoSaveEnabled =
             (batchedSettings['editor-auto-save-enable'] as boolean) ??
             defaultEditorSettings.autoSaveEnabled;
@@ -197,6 +200,21 @@ export function useRegisterEditorSettings() {
                 { label: 'White Dark', value: 'whiteDark' },
                 { label: 'XCode Dark', value: 'xcodeDark' },
                 { label: 'XCode Light', value: 'xcodeLight' },
+            ],
+        });
+
+        registerSetting({
+            id: 'editor-text-direction',
+            category: t('Appearance'),
+            subcategory: t('Text Editor'),
+            type: 'select',
+            label: t('Editor text direction'),
+            description: t('Control text direction within the editor'),
+            defaultValue: initialTextDirection,
+            options: [
+                { label: t('Auto (follows app language)'), value: 'auto' },
+                { label: t('Left-to-Right (LTR)'), value: 'ltr' },
+                { label: t('Right-to-Left (RTL)'), value: 'rtl' },
             ],
         });
 

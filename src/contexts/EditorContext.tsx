@@ -56,6 +56,7 @@ export const defaultEditorSettings: EditorSettings = {
   mathLiveEnabled: true,
   mathLivePreviewMode: 'cursor',
   language: 'en',
+  textDirection: 'auto',
 };
 
 interface EditorContextType {
@@ -66,6 +67,7 @@ interface EditorContextType {
   ) => void;
   getLineNumbersEnabled: () => boolean;
   getSyntaxHighlightingEnabled: () => boolean;
+  getEditorTextDirection: () => 'auto' | 'ltr' | 'rtl';
   getAutoSaveEnabled: () => boolean;
   getAutoSaveDelay: () => number;
   getVimModeEnabled: () => boolean;
@@ -80,6 +82,7 @@ export const EditorContext = createContext<EditorContextType>({
   updateEditorSetting: () => { },
   getLineNumbersEnabled: () => true,
   getSyntaxHighlightingEnabled: () => true,
+  getEditorTextDirection: () => 'auto',
   getAutoSaveEnabled: () => false,
   getAutoSaveDelay: () => 2000,
   getVimModeEnabled: () => false,
@@ -135,6 +138,9 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       language:
         (getSetting('language')?.value as string) ??
         defaultEditorSettings.language,
+      textDirection:
+        (getSetting('editor-text-direction')?.value as EditorSettings['textDirection']) ??
+        defaultEditorSettings.textDirection,
     };
   }, [getSetting]);
 
@@ -153,6 +159,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
         mathLiveEnabled: 'editor-mathlive-enabled',
         mathLivePreviewMode: 'editor-mathlive-preview-mode',
         language: 'language',
+        textDirection: 'editor-text-direction',
       };
 
       const settingId = settingIdMap[key];
@@ -171,6 +178,11 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
   const getSyntaxHighlightingEnabled = useCallback(
     () => editorSettings.syntaxHighlighting,
     [editorSettings.syntaxHighlighting]
+  );
+
+  const getEditorTextDirection = useCallback(
+    () => editorSettings.textDirection,
+    [editorSettings.textDirection]
   );
 
   const getAutoSaveEnabled = useCallback(
@@ -254,6 +266,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
     updateEditorSetting,
     getLineNumbersEnabled,
     getSyntaxHighlightingEnabled,
+    getEditorTextDirection,
     getAutoSaveEnabled,
     getAutoSaveDelay,
     getVimModeEnabled,

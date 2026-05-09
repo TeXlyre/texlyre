@@ -762,7 +762,7 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
           <div className="bib-detail-view">
             <div className="detail-header">
               <button className="back-button" onClick={handleBackToList}>
-                ← {t('Back to Items')}
+                {t('←')} {t('Back to Items')}
               </button>
             </div>
             <div className="detail-content">

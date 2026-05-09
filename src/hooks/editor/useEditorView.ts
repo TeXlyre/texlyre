@@ -124,10 +124,11 @@ export const useEditorView = (
         getAutoSaveDelay,
         getLineNumbersEnabled,
         getSyntaxHighlightingEnabled,
+        getEditorTextDirection,
         getVimModeEnabled,
         getSpellCheckEnabled,
         getCollabOptions,
-        getEnabledLSPPlugins,
+        // getEnabledLSPPlugins,
         editorSettingsVersion,
         editorSettings,
     } = useEditor();
@@ -247,6 +248,7 @@ export const useEditorView = (
     };
 
     const buildBaseExtensions = (): Extension[] => {
+        const direction = getEditorTextDirection();
         const extensions: Extension[] = [
             EditorView.theme({
                 '.cm-content': {
@@ -274,6 +276,21 @@ export const useEditorView = (
             buildCursorTrackingExtension(),
             searchHighlightExtension,
         ];
+
+        if (direction !== 'auto') {
+            extensions.push(
+                EditorView.editorAttributes.of({
+                    dir: direction,
+                    style: `direction: ${direction};`,
+                }),
+            );
+            extensions.push(
+                EditorView.contentAttributes.of({
+                    dir: direction,
+                    style: `direction: ${direction};`,
+                }),
+            );
+        }
 
         if (getLineNumbersEnabled()) extensions.push(lineNumbers());
         if (getSyntaxHighlightingEnabled()) {

@@ -409,9 +409,8 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
                     <div className="template-detail-header">
                       <button
                         className="back-button"
-                        onClick={() => setSelectedTemplate(null)}>{t('\u2190 Back to Templates')}
-
-
+                        onClick={() => setSelectedTemplate(null)}>
+                        {t('←')} {t('Back to Templates')}
                       </button>
                       <h3>{selectedTemplate.name}</h3>
                     </div>

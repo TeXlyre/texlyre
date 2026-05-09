@@ -29,7 +29,7 @@ import BackupModal from '../backup/BackupModal';
 import BackupStatusIndicator from '../backup/BackupStatusIndicator';
 import ChatPanel from '../chat/ChatPanel';
 import CollabStatusIndicator from '../collab/CollabStatusIndicator';
-import { ChevronLeftIcon, EditIcon } from '../common/Icons';
+import { EditIcon, ProjectsIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 import OfflineBanner from '../common/OfflineBanner';
 import ToastContainer from '../common/ToastContainer';
@@ -497,7 +497,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
       <header>
         <div className="header-left">
           <button className="back-button" onClick={onBackToProjects}>
-            <ChevronLeftIcon />{t('Projects')}
+            <ProjectsIcon />{t('Projects')}
 
           </button>
         </div>
