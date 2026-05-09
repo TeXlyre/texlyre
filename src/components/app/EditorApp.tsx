@@ -280,17 +280,20 @@ const EditorAppView: React.FC<EditorAppProps> = ({
   }, [doc?.projectMetadata, updateProject, getProjectById]);
 
   useEffect(() => {
-    if (!targetDocId && doc?.currentDocId !== undefined) {
-      setLocalDocId(doc.currentDocId);
-    }
-  }, [doc?.currentDocId, targetDocId]);
+    if (targetDocId) return;
+    if (targetFilePath) return;
+    if (doc?.currentDocId === undefined) return;
+
+    setLocalDocId(doc.currentDocId);
+  }, [doc?.currentDocId, targetDocId, targetFilePath]);
 
   useEffect(() => {
-    if (doc && doc.documents && targetDocId) {
-      const targetDoc = doc.documents.find((d) => d.id === targetDocId);
-      if (targetDoc) {
-        handleSelectDocument(targetDocId);
-      }
+    if (!doc?.documents) return;
+    if (!targetDocId) return;
+
+    const targetDoc = doc.documents.find((d) => d.id === targetDocId);
+    if (targetDoc) {
+      handleSelectDocument(targetDocId);
     }
   }, [doc, targetDocId]);
 

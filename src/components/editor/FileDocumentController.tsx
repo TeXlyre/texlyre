@@ -170,6 +170,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   const [isEditingFile, setIsEditingFile] = useState(false);
   const [isBinaryFile, setIsBinaryFile] = useState(false);
   const isViewerHandledRef = useRef(false);
+  const [bootstrapResolved, setBootstrapResolved] = useState(false);
   const [currentFilePath, setCurrentFilePath] = useState<string | undefined>();
   const [fileName, setFileName] = useState('');
   const [isFileLoading, setIsFileLoading] = useState(false);
@@ -343,18 +344,23 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
       const project = await getProjectById(projectId);
       if (!project) return;
 
-      const hasDocChange = docId !== project.lastOpenedDocId;
-      const hasFileChange = filePath !== project.lastOpenedFilePath;
+      const nextDocId = docId ?? null;
+      const nextFilePath = filePath ?? null;
 
-      if (hasDocChange || hasFileChange) {
-        updateProject({
-          ...project,
-          lastOpenedDocId: docId,
-          lastOpenedFilePath: filePath
-        }).catch((error) => {
-          console.warn('Failed to update project last opened state:', error);
-        });
+      if (
+        nextDocId === (project.lastOpenedDocId ?? null) &&
+        nextFilePath === (project.lastOpenedFilePath ?? null)
+      ) {
+        return;
       }
+
+      updateProject({
+        ...project,
+        lastOpenedDocId: nextDocId,
+        lastOpenedFilePath: nextFilePath,
+      }).catch((error) => {
+        console.warn('Failed to update project last opened state:', error);
+      });
     } catch (error) {
       console.warn('Error updating project last opened state:', error);
     }
@@ -661,13 +667,12 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   useEffect(() => {
     if (!docToFileMapReady) return;
 
-    if (isEditingFile || !selectedDocId) {
-      if (isEditingFile) {
-        setLinkedFileInfo({});
-        setLinkedDocumentId(null);
-      }
+    if (isEditingFile) {
+      setLinkedFileInfo({});
       return;
     }
+
+    if (!selectedDocId) return;
 
     const linkedFile = docToFileMapRef.current.get(selectedDocId);
 
@@ -684,27 +689,40 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
   useEffect(() => {
     if (!docToFileMapReady) return;
-    if (!targetDocId) return;
-    if (lastOpenedDocIdRef.current === targetDocId) return;
-
-    if (targetFilePath) {
-      openDocumentById(targetDocId, 'files');
+    if (!targetDocId) {
+      setBootstrapResolved(true);
+      return;
+    }
+    if (lastOpenedDocIdRef.current === targetDocId) {
+      setBootstrapResolved(true);
       return;
     }
 
-    openDocumentById(targetDocId, 'documents');
+    openDocumentById(targetDocId, targetFilePath ? 'files' : 'documents');
+    setBootstrapResolved(true);
   }, [targetDocId, targetFilePath, docToFileMapReady]);
 
   useEffect(() => {
     if (!docToFileMapReady) return;
-    if (targetDocId || !targetFilePath) return;
+    if (targetDocId) return;
+    if (!targetFilePath) {
+      setBootstrapResolved(true);
+      return;
+    }
     if (fileTree.length === 0) return;
-    if (lastOpenedFilePathRef.current === targetFilePath) return;
+    if (lastOpenedFilePathRef.current === targetFilePath) {
+      setBootstrapResolved(true);
+      return;
+    }
 
     const navigate = async () => {
       const targetFile = findFileByPath(fileTree, targetFilePath);
-      if (!targetFile) return;
+      if (!targetFile) {
+        setBootstrapResolved(true);
+        return;
+      }
       await openFileByNode(targetFile);
+      setBootstrapResolved(true);
     };
 
     navigate();
@@ -1137,36 +1155,42 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
         >
           <EditorTabs onTabSwitch={handleTabSwitch} />
 
-          <Editor
-            content={isEditingFile ? fileContent : content}
-            documentId={selectedDocId || ''}
-            onUpdateContent={handleUpdateContent}
-            isDocumentSelected={isEditingFile || !!selectedDocId}
-            isBinaryFile={isEditingFile && isBinaryFile}
-            fileName={isEditingFile ? fileName : linkedFileInfo.fileName}
-            mimeType={isEditingFile ? mimeType : linkedFileInfo.mimeType}
-            fileId={
-              isEditingFile ? selectedFileId || '' : linkedFileInfo.fileId || ''
-            }
-            docUrl={docUrl}
-            documentSelectionChange={
-              isEditingFile ? fileSelectionChange : documentSelectionChange
-            }
-            isEditingFile={isEditingFile}
-            onSelectDocument={handleDocumentSelect}
-            onSwitchToDocuments={handleSwitchToDocuments}
-            linkedDocumentId={
-              isEditingFile
-                ? linkedDocumentId
-                : linkedFileInfo.fileName
-                  ? selectedDocId
-                  : null
-            }
-            documents={documents}
-            linkedFileInfo={linkedFileInfo}
-            toolbarVisible={toolbarVisible}
-            onToolbarToggle={handleToolbarToggle}
-          />
+          {!bootstrapResolved ? (
+            <div className="file-loading-overlay">
+              <div className="loading-spinner" />
+            </div>
+          ) : (
+            <Editor
+              content={isEditingFile ? fileContent : content}
+              documentId={selectedDocId || ''}
+              onUpdateContent={handleUpdateContent}
+              isDocumentSelected={bootstrapResolved && (isEditingFile || !!selectedDocId)}
+              isBinaryFile={isEditingFile && isBinaryFile}
+              fileName={isEditingFile ? fileName : linkedFileInfo.fileName}
+              mimeType={isEditingFile ? mimeType : linkedFileInfo.mimeType}
+              fileId={
+                isEditingFile ? selectedFileId || '' : linkedFileInfo.fileId || ''
+              }
+              docUrl={docUrl}
+              documentSelectionChange={
+                isEditingFile ? fileSelectionChange : documentSelectionChange
+              }
+              isEditingFile={isEditingFile}
+              onSelectDocument={handleDocumentSelect}
+              onSwitchToDocuments={handleSwitchToDocuments}
+              linkedDocumentId={
+                isEditingFile
+                  ? linkedDocumentId
+                  : linkedFileInfo.fileName
+                    ? selectedDocId
+                    : null
+              }
+              documents={documents}
+              linkedFileInfo={linkedFileInfo}
+              toolbarVisible={toolbarVisible}
+              onToolbarToggle={handleToolbarToggle}
+            />
+          )}
         </div>
 
         {isFileLoading && (
