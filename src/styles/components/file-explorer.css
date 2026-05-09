@@ -19,6 +19,7 @@
 	color: var(--text-color);
 	flex: 1;
 	min-height: 0;
+	overflow: hidden;
 }
 
 .file-explorer:hover {

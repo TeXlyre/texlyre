@@ -23,6 +23,7 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 	nav.className = 'mobile-bottom-nav texlyre-mobile-nav';
 	let mobileClickHandler: ((e: Event) => void) | null = null;
 	let hashChangeHandler: (() => void) | null = null;
+	let languageChangeHandler: (() => void) | null = null;
 	let loginCheckInterval: NodeJS.Timeout | null = null;
 
 	const layout: ThemeLayout = {
@@ -72,6 +73,11 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 			window.removeEventListener('popstate', hashChangeHandler);
 			hashChangeHandler = null;
 		}
+
+		if (languageChangeHandler) {
+			window.removeEventListener('language-changed', languageChangeHandler);
+			languageChangeHandler = null;
+		}
 	};
 
 	const handleMobileNavigation = () => {
@@ -114,6 +120,21 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 
 		window.addEventListener('hashchange', hashChangeHandler);
 		window.addEventListener('popstate', hashChangeHandler);
+
+		if (languageChangeHandler) {
+			window.removeEventListener('language-changed', languageChangeHandler);
+		}
+
+		languageChangeHandler = () => {
+			const existingNav = document.querySelector('.mobile-bottom-nav');
+			if (existingNav) {
+				existingNav.remove();
+			}
+			createMobileNavigation();
+			updateMobileView(currentView);
+		};
+
+		window.addEventListener('language-changed', languageChangeHandler);
 	};
 
 	const setupMobileNavigation = () => {
