@@ -2,14 +2,14 @@
 import type { EditorView } from '@codemirror/view';
 import { EditorView as CMEditorView } from '@codemirror/view';
 
-import { isBibFile, isLatexFile, isTypstFile } from '../../../utils/fileUtils';
+import { isBibFile } from '../../../utils/fileUtils';
+import { gotoEditor } from '../../../utils/editorNavigator';
 import { fileStorageService } from '../../../services/FileStorageService';
 import { filePathCacheService } from '../../../services/FilePathCacheService';
 import type { DetectedLink } from './LinkDetector';
 
 export class LinkNavigator {
     private currentFilePath: string = '';
-    private pendingNavigation: { filePath: string; line: number } | null = null;
 
     setCurrentFilePath(filePath: string): void {
         this.currentFilePath = filePath;
@@ -229,45 +229,19 @@ export class LinkNavigator {
     }
 
     private navigateToFileAndLine(filePath: string, lineNumber: number): void {
-        this.pendingNavigation = {
-            filePath,
-            line: lineNumber
-        };
-
         const handleEditorReady = (event: Event) => {
-            const customEvent = event as CustomEvent;
-            const { fileId } = customEvent.detail;
-
-            if (this.pendingNavigation) {
-                fileStorageService.getFile(fileId).then((file) => {
-                    if (file && file.path === this.pendingNavigation!.filePath) {
-                        setTimeout(() => {
-                            document.dispatchEvent(
-                                new CustomEvent('codemirror-goto-line', {
-                                    detail: {
-                                        line: this.pendingNavigation!.line,
-                                        fileId
-                                    }
-                                })
-                            );
-
-                            this.pendingNavigation = null;
-                        }, 100);
-                    }
-                });
-            }
-
-            document.removeEventListener('editor-ready', handleEditorReady);
+            const { fileId } = (event as CustomEvent).detail;
+            fileStorageService.getFile(fileId).then((file) => {
+                if (file?.path !== filePath) return;
+                document.removeEventListener('editor-ready', handleEditorReady);
+                gotoEditor({ kind: 'file', fileId }, { line: lineNumber });
+            });
         };
 
         document.addEventListener('editor-ready', handleEditorReady);
 
         document.dispatchEvent(
-            new CustomEvent('navigate-to-compiled-file', {
-                detail: {
-                    filePath
-                }
-            })
+            new CustomEvent('navigate-to-compiled-file', { detail: { filePath } }),
         );
     }
 

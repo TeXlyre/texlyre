@@ -27,6 +27,7 @@ import {
   buildUrlWithFragments,
   parseUrlFragments
 } from '../../utils/urlUtils';
+import { gotoEditor } from '../../utils/editorNavigator';
 import type { YjsDocUrl } from '../../types/yjs';
 import { EditorTabsProvider } from '../../contexts/EditorTabsContext';
 import { SearchProvider } from '../../contexts/SearchContext';
@@ -808,11 +809,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
   };
 
   const handleOutlineSectionClick = (line: number) => {
-    document.dispatchEvent(
-      new CustomEvent('codemirror-goto-line', {
-        detail: { line }
-      })
-    );
+    gotoEditor(null, { line });
   };
 
   const handleOutlineRefresh = async () => {
@@ -1033,24 +1030,14 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
                 line,
                 column,
                 documentId,
-                isLinkedDocument
+                isLinkedDocument,
               ) => {
-                const goToLine = () => {
-                  if (line !== undefined) {
-                    document.dispatchEvent(
-                      new CustomEvent('codemirror-goto-line', {
-                        detail: { line, column, fileId, documentId }
-                      })
-                    );
-                  }
-                };
+                if (line === undefined) return;
 
                 if (isLinkedDocument && documentId) {
-                  const file = await getFile(fileId);
-                  if (!file) return;
-
+                  if (!(await getFile(fileId))) return;
                   openDocumentById(documentId, 'files', true);
-                  setTimeout(goToLine, 100);
+                  gotoEditor({ kind: 'document', documentId }, { line, column }, { waitForReady: true });
                   return;
                 }
 
@@ -1059,12 +1046,16 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
                 if (file.documentId) {
                   openDocumentById(file.documentId, 'files', true);
-                  setTimeout(goToLine, 100);
+                  gotoEditor(
+                    { kind: 'document', documentId: file.documentId },
+                    { line, column },
+                    { waitForReady: true },
+                  );
                   return;
                 }
 
                 await openFileByNode(file, true);
-                setTimeout(goToLine, 100);
+                gotoEditor({ kind: 'file', fileId: file.id }, { line, column }, { waitForReady: true });
               }}
             />
           ) : activeView === 'documents' ? (

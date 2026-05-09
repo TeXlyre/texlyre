@@ -217,38 +217,29 @@ export const registerEditorEventHandlers = (
         const customEvent = event as CustomEvent<{
             line?: number;
             fileId?: string;
-            filePath?: string;
             documentId?: string;
             tabId?: string;
         }>;
         if (!viewRef.current) return;
 
         try {
-            const { line, fileId, filePath, documentId: eventDocId, tabId } =
+            const { line, fileId, documentId: eventDocId, tabId } =
                 customEvent.detail;
             const view = viewRef.current;
             const doc = view.state.doc;
-
-            if (
-                isEditingFile &&
-                fileId &&
-                currentFileId &&
-                currentFileId !== fileId
-            ) {
-                return;
-            }
-
-            if (!isEditingFile && filePath && documentId && !filePath.includes(documentId)) {
-                return;
-            }
 
             if (tabId) {
                 const isTargetFile =
                     isEditingFile && fileId && currentFileId === fileId;
                 const isTargetDoc =
                     !isEditingFile && eventDocId && documentId === eventDocId;
-
                 if (!isTargetFile && !isTargetDoc) return;
+            } else {
+                if (isEditingFile) {
+                    if (fileId && currentFileId && currentFileId !== fileId) return;
+                } else {
+                    if (eventDocId && documentId && eventDocId !== documentId) return;
+                }
             }
 
             if (line && line > 0) {
@@ -271,14 +262,13 @@ export const registerEditorEventHandlers = (
         const customEvent = event as CustomEvent<{
             position?: number;
             fileId?: string;
-            filePath?: string;
             documentId?: string;
             tabId?: string;
         }>;
         if (!viewRef.current) return;
 
         try {
-            const { position, fileId, filePath, documentId: eventDocId, tabId } =
+            const { position, fileId, documentId: eventDocId, tabId } =
                 customEvent.detail;
             const view = viewRef.current;
             const doc = view.state.doc;
@@ -288,20 +278,12 @@ export const registerEditorEventHandlers = (
                     isEditingFile && fileId && currentFileId === fileId;
                 const isTargetDoc =
                     !isEditingFile && eventDocId && documentId === eventDocId;
-
                 if (!isTargetFile && !isTargetDoc) return;
             } else {
-                if (
-                    isEditingFile &&
-                    fileId &&
-                    currentFileId &&
-                    currentFileId !== fileId
-                ) {
-                    return;
-                }
-
-                if (!isEditingFile && filePath && documentId && !filePath.includes(documentId)) {
-                    return;
+                if (isEditingFile) {
+                    if (fileId && currentFileId && currentFileId !== fileId) return;
+                } else {
+                    if (eventDocId && documentId && eventDocId !== documentId) return;
                 }
             }
 
