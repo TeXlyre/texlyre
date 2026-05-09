@@ -70,4 +70,5 @@ export interface EditorSettings {
 	mathLiveEnabled: boolean;
 	mathLivePreviewMode: 'hover-cursor' | 'hover' | 'cursor' | 'never';
 	language: string;
+	textDirection: 'auto' | 'ltr' | 'rtl';
 }
