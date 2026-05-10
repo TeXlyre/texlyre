@@ -1,0 +1,46 @@
+/* extras/themes/texlyre_slim/styles/components.css */
+[data-layout="texlyre-slim"] .chat-panel {
+    background-color: var(--pico-background);
+    border-color: var(--pico-secondary);
+}
+
+[data-layout="texlyre-slim"] .chat-panel-header {
+    background: var(--pico-secondary-background);
+}
+
+[data-layout="texlyre-slim"] .message-count {
+    background: var(--pico-primary);
+    color: var(--pico-primary-inverse);
+}
+
+[data-layout="texlyre-slim"] .empty-chat {
+    color: var(--pico-secondary);
+}
+
+[data-layout="texlyre-slim"] .chat-panel-input-container {
+    background: var(--pico-background);
+    border-top-color: var(--pico-secondary);
+}
+
+[data-layout="texlyre-slim"] .chat-panel-send-button {
+    background: var(--pico-primary);
+    color: var(--pico-primary-inverse);
+}
+
+[data-layout="texlyre-slim"] .chat-panel-send-button:hover:not(:disabled) {
+    background: var(--pico-primary-hover);
+}
+
+[data-layout="texlyre-slim"] .chat-message.own-message .message-content {
+    background: var(--pico-primary);
+    color: var(--pico-primary-inverse);
+}
+
+[data-layout="texlyre-slim"] .chat-message.other-message .message-content {
+    background: var(--pico-secondary-background);
+    color: var(--text-color);
+}
+
+[data-layout="texlyre-slim"] footer .project-type-badge {
+    background: none;
+}

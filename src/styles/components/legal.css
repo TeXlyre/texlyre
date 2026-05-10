@@ -1,6 +1,7 @@
 .footer-links {
   font-size: 0.85em;
   color: var(--text-secondary);
+  border-top: solid 1px var(--pico-background);
 }
 
 .footer-links a {

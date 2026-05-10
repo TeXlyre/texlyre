@@ -1,8 +1,38 @@
 /* extras/themes/texlyre_wide/styles/components/footer.css */
 [data-layout="texlyre-wide"] footer {
-	font-size: 0.85rem;
+	font-size: 0.75rem;
+	padding: 0 var(--texlyre-spacing-md);
+	min-height: 0;
+	overflow: visible;
+}
+
+[data-layout="texlyre-wide"] footer .project-type-badge {
+	flex: 0 0 auto;
+}
+
+[data-layout="texlyre-wide"] footer .texlyre-info {
+	flex: 0 0 auto;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 [data-layout="texlyre-wide"] footer p {
 	margin: 0;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--texlyre-spacing-xs);
+	white-space: nowrap;
+	line-height: 1;
+}
+
+[data-layout="texlyre-wide"] footer .texlyre-info .logo {
+	height: 1.2em;
+	width: 1.2em;
+	padding: 0;
+	margin: 0 var(--texlyre-spacing-xs);
+}
+
+[data-layout="texlyre-wide"] footer .footer-links {
+	font-size: 0.75rem;
+	white-space: nowrap;
 }

@@ -511,25 +511,20 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
       </div>
 
       <footer>
-        <p className="texlyre-info">{t('Built with TeXlyre')}
-
-          <a href="https://texlyre.github.io" target="_blank" rel="noreferrer">
-            <img src={texlyreLogo} className="logo" alt={t('TeXlyre logo')} />
-          </a>
+        <p className="texlyre-info">
           <span className="footer-links">
-            <br /> <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">{t('Documentation')}
-
-            </a>
-            {' '} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">{t('Source Code')}
-
-            </a>
+            <a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">{t('Documentation')}</a>
+            {' '} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">{t('Source Code')}</a>
             {' '} • <a href="#" onClick={(event) => {
               event.preventDefault();
               setShowPrivacy(true);
             }} className="privacy-link">{t('Privacy')}</a>
-          </span>
-          <span className="footer-links">
-            {' '} • {'v' + __APP_VERSION__}
+            {' '} •
+            {/* {t('Built with TeXlyre')} */}
+            <a href="https://texlyre.github.io" target="_blank" rel="noreferrer">
+              <img src={texlyreLogo} className="logo" alt={t('TeXlyre logo')} />
+            </a>
+            {' '} {'v' + __APP_VERSION__}
           </span>
         </p>
       </footer>

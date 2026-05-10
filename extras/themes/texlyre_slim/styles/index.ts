@@ -1,5 +1,8 @@
 // extras/themes/texlyre_slim/styles/index.ts
 import './base.css';
+import './layout.css';
+
+import './components.css';
 
 import './variants/light.css';
 import './variants/dark.css';
