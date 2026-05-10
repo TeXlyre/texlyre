@@ -1,0 +1,44 @@
+/* extras/themes/texlyre_slim/styles/layout.css */
+[data-layout="texlyre-slim"] footer {
+    display: flex;
+    align-items: center;
+    padding: 0 var(--spacing-md);
+    min-height: 28px;
+    font-size: 0.75rem;
+    margin: 0;
+}
+
+[data-layout="texlyre-slim"] footer .project-type-badge {
+    flex-basis: 0;
+    flex-grow: 1;
+}
+
+[data-layout="texlyre-slim"] footer .texlyre-info {
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+[data-layout="texlyre-slim"] footer p {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    white-space: nowrap;
+    line-height: 1;
+}
+
+[data-layout="texlyre-slim"] footer .texlyre-info .logo {
+    height: 1.2em;
+    width: 1.2em;
+    padding: 0;
+    margin: 0 var(--spacing-xs);
+}
+
+[data-layout="texlyre-slim"] footer .footer-links {
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+[data-layout="texlyre-slim"] .chat-panel.collapsed {
+    transform: translateY(calc(100% - 28px));
+}

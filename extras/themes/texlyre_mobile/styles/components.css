@@ -176,9 +176,14 @@
 	margin: var(--mobile-spacing-xs);
 }
 
+[data-layout="texlyre-mobile"] .chat-panel {
+	background-color: var(--pico-background);
+}
+
 [data-layout="texlyre-mobile"] .chat-panel-header {
 	padding: var(--mobile-spacing-md);
 	min-height: calc(var(--mobile-min-touch-target) + 8px);
+	background: var(--pico-secondary-background);
 }
 
 [data-layout="texlyre-mobile"] .chat-panel-title {
@@ -204,6 +209,36 @@
 	font-size: var(--mobile-font-sm);
 	padding: var(--mobile-spacing-md) var(--mobile-spacing-lg);
 	min-height: var(--mobile-min-touch-target);
+	background: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+}
+
+[data-layout="texlyre-mobile"] .chat-panel-send-button:hover:not(:disabled) {
+	background: var(--pico-primary-hover);
+}
+
+[data-layout="texlyre-mobile"] .message-count {
+	background: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+}
+
+[data-layout="texlyre-mobile"] .empty-chat {
+	color: var(--pico-secondary);
+}
+
+[data-layout="texlyre-mobile"] .chat-panel-input-container {
+	background: var(--pico-background);
+	border-top-color: var(--pico-secondary);
+}
+
+[data-layout="texlyre-mobile"] .chat-message.own-message .message-content {
+	background: var(--pico-primary);
+	color: var(--pico-primary-inverse);
+}
+
+[data-layout="texlyre-mobile"] .chat-message.other-message .message-content {
+	background: var(--pico-secondary-background);
+	color: var(--text-color);
 }
 
 [data-layout="texlyre-mobile"] .settings-button {

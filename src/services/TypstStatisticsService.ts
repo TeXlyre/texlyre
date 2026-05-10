@@ -70,18 +70,15 @@ class TypstStatisticsService {
         const result = await engine.compile(
             `/${normalizedMainPath}`,
             sources,
-            'canvas'
+            'pdf'
         );
 
-        if (!result.output) {
+        if (!result.output || !(result.output instanceof Uint8Array) || result.output.byteLength === 0) {
             throw new Error('Statistics compilation produced no output');
         }
 
-        const htmlOutput = typeof result.output === 'string'
-            ? result.output
-            : new TextDecoder().decode(result.output as Uint8Array);
-
-        return this.parseWordmeterOutput(htmlOutput, mainFile.name, options.verbose);
+        const pageText = await this.extractFirstPageText(result.output);
+        return this.parseWordmeterOutput(pageText, mainFile.name, options.verbose);
     }
 
     private injectWordometer(content: string): string {
@@ -116,33 +113,40 @@ class TypstStatisticsService {
 
         const hasShowWordCount = content.includes('#show: word-count');
         if (!hasShowWordCount) {
-            const insertIndex = lastImportIndex + 1;
-            lines.splice(insertIndex, 0, '', '#show: word-count');
+            lines.splice(lastImportIndex + 1, 0, '', '#show: word-count');
         }
 
-        let modified = lines.join('\n');
-
-        const hasOutputBlock = modified.includes('WORDOMETER_OUTPUT_START');
-        if (!hasOutputBlock) {
-            modified += `\n\n#pagebreak()
-#context {
+        const outputBlock = `#context {
   let total = total-words
   let headings = query(heading)
-  
   let heading_words = 0
   for h in headings {
     let h_count = word-count-of(h.body)
     heading_words += h_count.words
   }
-  
-  [WORDOMETER_OUTPUT_START]
-  [TOTAL_WORDS: #total]
-  [HEADING_WORDS: #heading_words]
-  [WORDOMETER_OUTPUT_END]
+  [WORDOMETER_OUTPUT_START TOTAL_WORDS: #total HEADING_WORDS: #heading_words WORDOMETER_OUTPUT_END]
 }`;
-        }
 
-        return modified;
+        const showIndex = lines.findIndex(l => l.trim().startsWith('#show: word-count'));
+        const insertAt = showIndex >= 0 ? showIndex + 1 : lastImportIndex + 1;
+        lines.splice(insertAt, 0, '', outputBlock, '');
+
+        return lines.join('\n');
+    }
+
+    private async extractFirstPageText(pdfBytes: Uint8Array): Promise<string> {
+        const pdfjsLib = await import('pdfjs-dist');
+        const buffer = pdfBytes.slice().buffer;
+        const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+        try {
+            const page = await pdf.getPage(1);
+            const textContent = await page.getTextContent();
+            return (textContent.items as Array<{ str?: string }>)
+                .map((item) => item.str ?? '')
+                .join(' ');
+        } finally {
+            await pdf.destroy();
+        }
     }
 
     private parseWordmeterOutput(
@@ -158,32 +162,14 @@ class TypstStatisticsService {
             mathDisplay: 0,
         };
 
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(output, 'text/html');
-
-        const allTextNodes: string[] = [];
-        const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT);
-        let node;
-        while (node = walker.nextNode()) {
-            const text = node.textContent?.trim();
-            if (text) {
-                allTextNodes.push(text);
-            }
-        }
-
-        const fullText = allTextNodes.join(' ');
-
-        const totalMatch = fullText.match(/TOTAL_WORDS:\s*(\d+)/);
-        const headingWordsMatch = fullText.match(/HEADING_WORDS:\s*(\d+)/);
+        const totalMatch = output.match(/TOTAL_WORDS:\s*(\d+)/);
+        const headingWordsMatch = output.match(/HEADING_WORDS:\s*(\d+)/);
 
         const total = totalMatch ? parseInt(totalMatch[1], 10) : 0;
         const headingWords = headingWordsMatch ? parseInt(headingWordsMatch[1], 10) : 0;
 
         stats.headers = headingWords;
-        stats.captions = 0;
-        stats.mathInline = 0;
-        stats.mathDisplay = 0;
-        stats.words = total - stats.headers;
+        stats.words = Math.max(0, total - stats.headers);
 
         let rawOutputText = `File: ${mainFileName}\n`;
         rawOutputText += `Words in text: ${stats.words}\n`;
@@ -194,15 +180,12 @@ class TypstStatisticsService {
         rawOutputText += `\nTotal: ${total}\n`;
 
         if (verbose && verbose > 0) {
-            rawOutputText += '\n\n=== Extracted Text ===\n';
-            rawOutputText += fullText;
-            rawOutputText += '\n\n=== Rendered HTML Output ===\n';
+            rawOutputText += '\n\n=== Extracted Page 1 Text ===\n';
             rawOutputText += output;
             rawOutputText += '\n=== End of Output ===';
         }
 
         stats.rawOutput = rawOutputText;
-
         return stats;
     }
 

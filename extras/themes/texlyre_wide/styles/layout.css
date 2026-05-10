@@ -2,7 +2,7 @@
 [data-layout="texlyre-wide"] {
 	--texlyre-sidebar-width: 320px;
 	--texlyre-header-height: 70px;
-	--texlyre-footer-height: 45px;
+	--texlyre-footer-height: 28px;
 }
 
 [data-layout="texlyre-wide"] #root {
@@ -15,9 +15,7 @@
 
 [data-layout="texlyre-wide"] .app-container {
 	display: grid;
-	grid-template-rows: var(--texlyre-header-height) 1fr var(
-			--texlyre-footer-height
-		);
+	grid-template-rows: var(--texlyre-header-height) 1fr var(--texlyre-footer-height);
 	grid-template-columns: minmax(0, 1fr);
 	height: 100vh;
 	width: 100%;

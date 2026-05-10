@@ -52,10 +52,8 @@
   color: var(--text-color);
   padding: 0 var(--space-sm);
   border-radius: var(--radius-sm);
-  font-size: 0.8rem;
-  position: fixed;
-  left: var(--space-xs);
-  bottom: var(--space-xs);
+  font-size: 0.75rem;
+  white-space: nowrap;
 }
 
 .project-type-badge .type-info-help {
