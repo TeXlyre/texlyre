@@ -326,18 +326,7 @@ function sourceWindow(lines: string[], i: number): Window {
     return { text, start };
 }
 
-function candidateScore(
-    file: string,
-    src: SourceFile,
-    i: number,
-    exact: boolean,
-    tight: boolean,
-    mainFile?: string,
-): number {
-    const mainDir = mainFile?.slice(0, mainFile.lastIndexOf('/') + 1) ?? '';
-    const local = mainDir ? file.startsWith(mainDir) : !file.includes('/packages/') && !file.startsWith('@');
-    const base = file === mainFile ? 100 : local ? 50 : 0;
-
+function candidateScore(src: SourceFile, i: number, base: number, exact: boolean, tight: boolean): number {
     const kind =
         src.kind[i] === 'heading' ? 1000 :
             src.kind[i] === 'list' ? 100 :
@@ -348,23 +337,32 @@ function candidateScore(
     return base + kind + (exact ? 30 : tight ? 8 : 1);
 }
 
-function seed(index: Map<string, SourceFile>, target: string, mainFile?: string): Candidate[] {
+function seed(
+    index: Map<string, SourceFile>,
+    target: string,
+    command: boolean,
+    oKind: OverlayKind,
+    mainFile?: string,
+): Candidate[] {
     const out: Candidate[] = [];
-    const command = commandLike(target);
-    const oKind = overlayKind(target);
     const key = target.length >= SHINGLE ? target.slice(0, SHINGLE) : null;
+    const tightBound = command ? target.length + 3 : target.length * 1.4;
+    const mainDir = mainFile?.slice(0, mainFile.lastIndexOf('/') + 1) ?? '';
     const windowCache = new Map<string, Window>();
 
-    const visit = (file: string, src: SourceFile, i: number): void => {
+    const visit = (file: string, src: SourceFile, i: number, base: number): void => {
         const line = src.lines[i];
-        if (!line || !line.includes(target)) return;
+        if (!line) return;
+
+        let at = line.indexOf(target);
+        if (at === -1) return;
 
         const exact = line === target;
-        const tight = command ? line.length <= target.length + 3 : line.length <= target.length * 1.4;
+        const tight = line.length <= tightBound;
+        const kind = src.kind[i];
 
-        if (command && !exact && !tight && src.kind[i] !== 'raw' && src.kind[i] !== 'list') return;
-        if (oKind === 'prose' && src.kind[i] === 'impl') return;
-        if (target.length >= 24 && /\s/.test(target) && !line.includes(target)) return;
+        if (command && !exact && !tight && kind !== 'raw' && kind !== 'list') return;
+        if (oKind === 'prose' && kind === 'impl') return;
 
         const cacheKey = `${file}:${i}`;
         let win = windowCache.get(cacheKey);
@@ -373,32 +371,29 @@ function seed(index: Map<string, SourceFile>, target: string, mainFile?: string)
             windowCache.set(cacheKey, win);
         }
 
-        let at = line.indexOf(target);
+        const score = candidateScore(src, i, base, exact, tight);
+
         while (at !== -1) {
             const left = win.start + at;
             out.push({
-                file,
-                line: i + 1,
-                score: candidateScore(file, src, i, exact, tight, mainFile),
-                hits: 0,
-                left,
-                right: left + target.length,
-                window: win.text,
-                exact,
-                tight,
-                kind: src.kind[i],
+                file, line: i + 1, score, hits: 0,
+                left, right: left + target.length,
+                window: win.text, exact, tight, kind,
             });
-            at = line.indexOf(target, at + Math.max(1, target.length));
+            at = line.indexOf(target, at + target.length);
         }
     };
 
     for (const [file, src] of index) {
+        const isLocal = mainDir ? file.startsWith(mainDir) : !file.includes('/packages/') && !file.startsWith('@');
+        const base = file === mainFile ? 100 : isLocal ? 50 : 0;
+
         if (key) {
             const bucket = src.shingles.get(key);
             if (!bucket) continue;
-            for (const i of bucket) visit(file, src, i);
+            for (const i of bucket) visit(file, src, i, base);
         } else {
-            for (let i = 0; i < src.lines.length; i++) visit(file, src, i);
+            for (let i = 0; i < src.lines.length; i++) visit(file, src, i, base);
         }
     }
 
@@ -417,30 +412,24 @@ function walk(candidates: Candidate[], before: string[], after: string[]): Candi
         const next = after[d - 1] ?? '';
         if (!prev && !next) break;
 
+        const usePrev = prev && usefulContext(prev) ? prev : '';
+        const useNext = next && usefulContext(next) ? next : '';
+        if (!usePrev && !useNext) continue;
+
+        const bonus = CONTEXT + 1 - d;
         const walked: Candidate[] = [];
 
         for (const c of current) {
             let { left, right, score, hits } = c;
             let matched = false;
 
-            if (prev && usefulContext(prev)) {
-                const found = c.window.lastIndexOf(prev, left - 1);
-                if (found !== -1) {
-                    left = found;
-                    score += CONTEXT + 1 - d;
-                    hits++;
-                    matched = true;
-                }
+            if (usePrev) {
+                const found = c.window.lastIndexOf(usePrev, left - 1);
+                if (found !== -1) { left = found; score += bonus; hits++; matched = true; }
             }
-
-            if (next && usefulContext(next)) {
-                const found = c.window.indexOf(next, right);
-                if (found !== -1) {
-                    right = found + next.length;
-                    score += CONTEXT + 1 - d;
-                    hits++;
-                    matched = true;
-                }
+            if (useNext) {
+                const found = c.window.indexOf(useNext, right);
+                if (found !== -1) { right = found + useNext.length; score += bonus; hits++; matched = true; }
             }
 
             if (matched) walked.push({ ...c, left, right, score, hits });
@@ -453,7 +442,7 @@ function walk(candidates: Candidate[], before: string[], after: string[]): Candi
     return current;
 }
 
-function choose(candidates: Candidate[], target: string): Candidate | null {
+function choose(candidates: Candidate[], target: string, command: boolean): Candidate | null {
     candidates.sort((a, b) =>
         b.hits - a.hits ||
         b.score - a.score ||
@@ -463,7 +452,6 @@ function choose(candidates: Candidate[], target: string): Candidate | null {
 
     const best = candidates[0];
     const second = candidates[1];
-    const command = commandLike(target);
 
     if (!best) return null;
 
@@ -493,28 +481,31 @@ function choose(candidates: Candidate[], target: string): Candidate | null {
 
 function findLine(
     index: Map<string, SourceFile>,
-    text: string,
+    target: string,
     before: string[],
     after: string[],
     mainFile?: string,
 ): { file: string; line: number } | null {
-    const target = norm(text);
     if (!target) return null;
 
-    const best = choose(walk(seed(index, target, mainFile), before, after), target);
+    const command = commandLike(target);
+    const oKind = overlayKind(target);
+    const best = choose(walk(seed(index, target, command, oKind, mainFile), before, after), target, command);
     return best ? { file: best.file, line: best.line } : null;
 }
 
-function context(overlays: Overlay[], i: number, normCache: string[]): { before: string[]; after: string[] } {
+function context(overlays: Overlay[], i: number): { before: string[]; after: string[] } {
     const before: string[] = [];
     const after: string[] = [];
     const page = overlays[i].page;
 
-    for (let k = 1; k <= CONTEXT && i - k >= 0 && overlays[i - k].page === page; k++) {
-        before.unshift(normCache[i - k]);
+    for (let k = i - 1, d = 0; k >= 0 && d < CONTEXT && overlays[k].page === page; k--, d++) {
+        before.push(overlays[k].text);
     }
-    for (let k = 1; k <= CONTEXT && i + k < overlays.length && overlays[i + k].page === page; k++) {
-        after.push(normCache[i + k]);
+    before.reverse();
+
+    for (let k = i + 1, d = 0; k < overlays.length && d < CONTEXT && overlays[k].page === page; k++, d++) {
+        after.push(overlays[k].text);
     }
 
     return { before, after };
@@ -538,24 +529,18 @@ function addRect(
 function build(svg: string, pageInfos: PageInfo[], sources: Record<string, string>, mainFile?: string): BuildResult {
     const index = buildSourceIndex(sources);
     const overlays = collectOverlays(svg, pageInfos);
-    const normCache = overlays.map(o => norm(o.text));
     const forward = new Map<string, AnnotatedRect[]>();
     const reverse = new Map<number, AnnotatedRect[]>();
 
     for (let i = 0; i < overlays.length; i++) {
         const entry = overlays[i];
-        const ctx = context(overlays, i, normCache);
+        const ctx = context(overlays, i);
         const match = findLine(index, entry.text, ctx.before, ctx.after, mainFile);
         if (!match) continue;
 
         addRect(forward, reverse, {
-            page: entry.page,
-            file: match.file,
-            line: match.line,
-            x: entry.x,
-            y: entry.y,
-            width: entry.width,
-            height: entry.height,
+            page: entry.page, file: match.file, line: match.line,
+            x: entry.x, y: entry.y, width: entry.width, height: entry.height,
         });
     }
 
