@@ -1,3 +1,4 @@
+// src/utils/latexSynctexParser.ts
 import { inflate } from 'pako';
 
 import type {
