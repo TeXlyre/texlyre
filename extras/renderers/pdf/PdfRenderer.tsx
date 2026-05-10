@@ -14,6 +14,8 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
+import { PluginHeader } from '@/components/common/PluginHeader';
+import { formatFileSize } from '@/utils/fileUtils';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -229,6 +231,25 @@ const PdfRenderer: React.FC<RendererProps> = ({
       }
       : null;
   }, [pdfData]);
+
+  const tooltipInfo = useMemo(() => {
+    if (numPages <= 0) return undefined;
+
+    const firstWidth = pageWidths.current.get(1);
+    const firstHeight = pageHeights.current.get(1);
+    const fileSize = originalContentRef.current?.byteLength ?? 0;
+
+    return [
+      t('Type: PDF'),
+      t('MIME Type: {mimeType}', { mimeType: 'application/pdf' }),
+      t('Pages: {count}', { count: numPages }),
+      t('Dimensions: {width} × {height}', {
+        width: firstWidth ?? '—',
+        height: firstHeight ?? '—',
+      }),
+      t('Size: {size}', { size: formatFileSize(fileSize) }),
+    ];
+  }, [numPages, currentPage]);
 
   const suppressPageSync = () => {
     suppressPageSyncUntilRef.current = Date.now() + PAGE_SYNC_SUPPRESS_MS;
@@ -912,8 +933,17 @@ const PdfRenderer: React.FC<RendererProps> = ({
       <div
         className={`pdf-toolbar ${isFullscreen ? 'fullscreen-toolbar' : ''}`}
       >
-        <div className="toolbar">
-          <div id="toolbarLeft">
+        <div className={`toolbar ${!headerLabel ? 'toolbar-no-left' : ''}`}>
+          {headerLabel && (
+            <div id="toolbarLeft">
+              <PluginHeader
+                fileName={headerLabel}
+                filePath={headerTitle}
+                tooltipInfo={tooltipInfo}
+              />
+            </div>
+          )}
+          <div id="toolbarRight">
             <div className="toolbarButtonGroup">
               <button
                 onClick={handlePreviousPage}
@@ -1045,14 +1075,6 @@ const PdfRenderer: React.FC<RendererProps> = ({
               </button>
             </div>
           </div>
-
-          {headerLabel && (
-            <div id="toolbarRight">
-              <span className="toolbar-file-label" title={headerTitle}>
-                {headerLabel}
-              </span>
-            </div>
-          )}
         </div>
       </div>
 

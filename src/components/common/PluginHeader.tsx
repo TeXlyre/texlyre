@@ -8,10 +8,10 @@ import { InfoIcon, LinkIcon } from './Icons';
 interface PluginHeaderProps {
 	fileName: string;
 	filePath?: string;
-	pluginName: string;
-	pluginVersion: string;
-	tooltipInfo: string | string[];
-	controls: React.ReactNode;
+	pluginName?: string;
+	pluginVersion?: string;
+	tooltipInfo?: string | string[];
+	controls?: React.ReactNode;
 	onNavigateToLinkedFile?: () => void;
 	linkedFileInfo?: {
 		fileName?: string;
@@ -20,6 +20,7 @@ interface PluginHeaderProps {
 	} | null;
 	awareness?: Awareness | null;
 }
+
 interface PluginControlGroupProps {
 	children: React.ReactNode;
 	className?: string;
@@ -60,27 +61,13 @@ export const PluginHeader: React.FC<PluginHeaderProps> = ({
 	linkedFileInfo,
 	awareness,
 }) => {
-	const formattedTooltip = formatTooltipInfo(
-		tooltipInfo,
-		pluginName,
-		pluginVersion,
-	);
+	const formattedTooltip = tooltipInfo
+		? formatTooltipInfo(tooltipInfo, pluginName, pluginVersion)
+		: '';
 
 	return (
 		<div className="plugin-header">
 			<div className="file-info">
-				<div className="file-title-row">
-					<h3>{fileName}</h3>
-					{linkedFileInfo && onNavigateToLinkedFile && (
-						<button
-							onClick={onNavigateToLinkedFile}
-							title={`Navigate to linked file: ${linkedFileInfo.fileName}`}
-							className="linked-file-icon"
-						>
-							<LinkIcon />
-						</button>
-					)}
-				</div>
 				<div className="filepath-info">
 					<span
 						className={linkedFileInfo ? 'linked-filepath' : ''}
@@ -97,15 +84,28 @@ export const PluginHeader: React.FC<PluginHeaderProps> = ({
 					>
 						{filePath || fileName}
 					</span>
-					<abbr title={formattedTooltip} className="info-icon-abbr">
-						<InfoIcon />
-					</abbr>
+					{linkedFileInfo && onNavigateToLinkedFile && (
+						<button
+							onClick={onNavigateToLinkedFile}
+							title={`Navigate to linked file: ${linkedFileInfo.fileName}`}
+							className="linked-file-icon"
+						>
+							<LinkIcon />
+						</button>
+					)}
+					{formattedTooltip && (
+						<abbr title={formattedTooltip} className="info-icon-abbr">
+							<InfoIcon />
+						</abbr>
+					)}
 				</div>
 			</div>
-			<div className="plugin-controls">
-				{awareness && <CollaboratorAvatars awareness={awareness} />}
-				{controls}
-			</div>
+			{(awareness || controls) && (
+				<div className="plugin-controls">
+					{awareness && <CollaboratorAvatars awareness={awareness} />}
+					{controls}
+				</div>
+			)}
 		</div>
 	);
 };

@@ -11,6 +11,8 @@ import {
 } from 'react';
 import { flushSync } from 'react-dom';
 
+import { PluginHeader } from '@/components/common/PluginHeader';
+import { formatFileSize } from '@/utils/fileUtils';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -310,6 +312,27 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     }),
     [scale],
   );
+
+  const tooltipInfo = useMemo(() => {
+    if (numPages <= 0) return undefined;
+
+    const firstPage = pageMetadata.get(1);
+    const fileSize = fullBufferRef.current?.byteLength ?? 0;
+    const isPdfContent = contentType === 'pdf';
+
+    return [
+      t('Type: {type}', { type: isPdfContent ? 'PDF' : 'SVG' }),
+      t('MIME Type: {mimeType}', {
+        mimeType: isPdfContent ? 'application/pdf' : 'image/svg+xml',
+      }),
+      t('Pages: {count}', { count: numPages }),
+      t('Dimensions: {width} × {height}', {
+        width: firstPage?.width ?? '—',
+        height: firstPage?.height ?? '—',
+      }),
+      t('Size: {size}', { size: formatFileSize(fileSize) }),
+    ];
+  }, [contentType, pageMetadata, numPages]);
 
   const cancelTimers = useCallback(() => {
     if (renderTimerRef.current) clearTimeout(renderTimerRef.current);
@@ -1181,8 +1204,17 @@ const CanvasRenderer: React.FC<RendererProps> = ({
       <div
         className={`canvas-toolbar ${isFullscreen ? 'fullscreen-toolbar' : ''}`}
       >
-        <div className="toolbar">
-          <div id="toolbarLeft">
+        <div className={`toolbar ${!headerLabel ? 'toolbar-no-left' : ''}`}>
+          {headerLabel && (
+            <div id="toolbarLeft">
+              <PluginHeader
+                fileName={headerLabel}
+                filePath={headerTitle}
+                tooltipInfo={tooltipInfo}
+              />
+            </div>
+          )}
+          <div id="toolbarRight">
             <div className="toolbarButtonGroup">
               <button
                 onClick={() => goToPage(lastStablePageRef.current - 1)}
@@ -1323,14 +1355,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
               </button>
             </div>
           </div>
-
-          {headerLabel && (
-            <div id="toolbarRight">
-              <span className="toolbar-file-label" title={headerTitle}>
-                {headerLabel}
-              </span>
-            </div>
-          )}
         </div>
       </div>
 

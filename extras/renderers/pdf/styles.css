@@ -1,4 +1,3 @@
-/* extras/renderers/pdf/styles.css */
 .pdf-renderer-viewer,
 .pdf-renderer-viewer *,
 .pdf-renderer-viewer *::before,
@@ -25,41 +24,56 @@
   min-height: 40px;
   background-color: var(--pico-secondary-background);
   border-bottom: 1px solid var(--accent-border, #333);
-  overflow-y: hidden;
   z-index: 10;
+  flex-shrink: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
 }
 
 .toolbar {
   display: flex;
   width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
+  align-items: center;
+  gap: 10px;
+  min-width: min-content;
 }
 
-#toolbarLeft {
+.pdf-toolbar #toolbarLeft {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
 }
 
-#toolbarRight {
+.pdf-toolbar #toolbarRight {
   display: flex;
   align-items: center;
-  margin-left: auto;
-  padding-right: 0.5rem;
-  padding-left: 0.5rem;
+  gap: 10px;
+  flex-shrink: 0;
+  margin-left: 0;
+  margin-right: 0;
 }
 
-.toolbar-file-label {
-  font-size: 0.85rem;
-  color: var(--text-color);
-  opacity: 0.7;
-  white-space: nowrap;
+.pdf-toolbar .toolbar.toolbar-no-left #toolbarRight {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.pdf-toolbar #toolbarRight .plugin-header,
+.pdf-toolbar #toolbarRight .plugin-header .file-info,
+.pdf-toolbar #toolbarRight .plugin-header .filepath-info {
+  border: none;
+  background-color: transparent;
+  min-width: 0;
+}
+
+.pdf-toolbar #toolbarRight .plugin-header .filepath-info>span {
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 200px;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .toolbarButtonGroup {
@@ -68,8 +82,13 @@
   gap: 5px;
 }
 
+.toolbarField {
+  min-width: min-content;
+}
+
 .toolbarButton {
-  padding: 0.2rem 0.5rem;
+  height: 28px;
+  padding: 0 0.5rem;
   font-size: 0.9rem;
   background-color: var(--pico-background);
   border: 1px solid var(--accent-border, #444);
@@ -77,6 +96,11 @@
   color: var(--text-color);
   cursor: pointer;
   transition: background-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  box-sizing: border-box;
 }
 
 .toolbarButton:hover:not(:disabled) {
@@ -89,17 +113,21 @@
 }
 
 .toolbarZoomSelect {
-  min-width: 40px;
+  height: 28px;
+  min-width: min-content;
   text-align: center;
-  padding: 0.2rem 0.2rem;
+  padding: 0 0.4rem;
   font-size: 0.9rem;
-  margin-top: var(--space-md);
   background-color: var(--pico-background);
   border: 1px solid var(--accent-border, #444);
   border-radius: 4px;
   color: var(--text-color);
   cursor: pointer;
   transition: background-color 0.2s;
+  margin: 0;
+  line-height: 0.7;
+  vertical-align: middle;
+  box-sizing: border-box;
 }
 
 .toolbarZoomSelect:hover:not(:disabled) {
@@ -121,19 +149,21 @@
   align-items: center;
   gap: 5px;
   margin: 0 5px;
-  padding: 0;
 }
 
 .pageNumber input {
   width: 3em;
+  height: 28px;
   text-align: center;
-  padding: 0.87rem 0;
-  margin: 0.02rem;
+  padding: 0;
+  margin: 0;
   border: 1px solid var(--accent-border, #444);
   border-radius: 4px;
   background-color: var(--pico-background);
   color: var(--text-color);
-  height: 24px;
+  vertical-align: middle;
+  box-sizing: border-box;
+  line-height: 1;
 }
 
 .react-pdf__Document,
@@ -164,23 +194,9 @@
 }
 
 .pdf-renderer-content {
-  position: absolute;
-  top: 70px;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  flex: 1 1 auto;
   overflow: auto;
   background-color: var(--pico-background);
-}
-
-.pdf-renderer-viewer {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-}
-
-.pdf-renderer-viewer .page {
-  margin: 10px auto;
   position: relative;
 }
 
@@ -222,6 +238,35 @@
   z-index: 100;
 }
 
+.pdf-renderer-content.fullscreen {
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.pdf-renderer-content.fullscreen::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.pdf-renderer-content.fullscreen:hover {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
+}
+
+.pdf-renderer-content.fullscreen:hover::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.pdf-renderer-content.fullscreen:hover::-webkit-scrollbar-thumb {
+  background: rgba(100, 100, 100, 0.5);
+  border-radius: 4px;
+}
+
+.pdf-renderer-content.fullscreen:hover::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 .textLayer {
   position: absolute;
   left: 0;
@@ -253,15 +298,15 @@
 }
 
 .textLayer .highlight.begin {
-  border-radius: 4px 0px 0px 4px;
+  border-radius: 4px 0 0 4px;
 }
 
 .textLayer .highlight.end {
-  border-radius: 0px 4px 4px 0px;
+  border-radius: 0 4px 4px 0;
 }
 
 .textLayer .highlight.middle {
-  border-radius: 0px;
+  border-radius: 0;
 }
 
 .textLayer .highlight.selected {
@@ -347,44 +392,6 @@
 .annotationLayer .linkAnnotation>a,
 .annotationLayer .buttonWidgetAnnotation.pushButton>a {
   pointer-events: auto;
-}
-
-/* match toolbar height */
-.fullscreen .pdf-page-scroll {
-  scroll-margin-top: 56px;
-}
-
-/* Hide scrollbar in fullscreen mode, except on hover */
-.pdf-renderer-content.fullscreen {
-  overflow-y: auto;
-}
-
-.pdf-renderer-content.fullscreen::-webkit-scrollbar {
-  width: 0px;
-  height: 0px;
-}
-
-.pdf-renderer-content.fullscreen:hover::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.pdf-renderer-content.fullscreen:hover::-webkit-scrollbar-thumb {
-  background: rgba(100, 100, 100, 0.5);
-  border-radius: 4px;
-}
-
-.pdf-renderer-content.fullscreen:hover::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.pdf-renderer-content.fullscreen {
-  scrollbar-width: none;
-}
-
-.pdf-renderer-content.fullscreen:hover {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
 }
 
 @keyframes source-map-highlight-pulse {

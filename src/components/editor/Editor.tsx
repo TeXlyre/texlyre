@@ -1017,13 +1017,13 @@ const Editor: React.FC<EditorComponentProps> = ({
           onUpdateContent={onUpdateContent}
         >
           <div className="editor-container viewer-container collaborative-viewer">
-            <div className="viewer-plugin-info">
+            {/* <div className="viewer-plugin-info">
               <span>
                 {t('Collaborative viewing with')}
                 {collaborativeViewerPlugin.name} v
                 {collaborativeViewerPlugin.version}
               </span>
-            </div>
+            </div> */}
             <CollaborativeViewerComponent
               fileId={fileId}
               content={content as ArrayBuffer}
@@ -1083,12 +1083,12 @@ const Editor: React.FC<EditorComponentProps> = ({
 
     return (
       <div className="editor-container viewer-container">
-        <div className="viewer-plugin-info">
+        {/* <div className="viewer-plugin-info">
           <span>
             {t('Viewing with')}&nbsp;
             {viewerPlugin!.name} v{viewerPlugin!.version}
           </span>
-        </div>
+        </div> */}
         <ViewerComponent {...viewerProps} />
       </div>
     );
