@@ -188,7 +188,7 @@ export const SourceMapProvider: React.FC<SourceMapProviderProps> = ({ children }
                 detail: { filePath: targetFile.path },
             }));
 
-            gotoEditor(target, { line: result.line }, { waitForReady: true });
+            gotoEditor(target, { line: result.line }, { waitForReady: false });
         } catch (error) {
             console.error('[SourceMapContext] Reverse sync navigation failed:', error);
         }
