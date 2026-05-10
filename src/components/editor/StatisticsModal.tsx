@@ -172,7 +172,7 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({
             icon={WordCountIcon}>
 
             <div className="statistics-modal-content">
-                <div>
+                <div className="statistics-controls">
                     <StatisticsOptionsPanel
                         contentType={contentType}
                         includeFiles={options.includeFiles}
@@ -215,7 +215,7 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({
 
                 {error &&
                     <div className="statistics-error">
-                        <p>{error}</p>
+                        <pre>{error}</pre>
                     </div>
                 }
 

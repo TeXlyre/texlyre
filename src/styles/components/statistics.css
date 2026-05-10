@@ -32,7 +32,7 @@
 .statistics-modal-content {
     display: grid;
     grid-template-columns: var(--statistics-panel-width) 1fr;
-    gap: 0;
+    gap: var(--space-lg);
     max-height: calc(90vh - var(--statistics-panel-width));
     overflow-y: auto;
 }
@@ -71,7 +71,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
-
+    min-width: min-content;
     padding-right: var(--space-md);
 }
 
@@ -108,6 +108,14 @@
 
 .statistics-error {
     color: var(--color-error);
+}
+
+.statistics-error pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+    font-family: inherit;
+    text-align: left;
 }
 
 .statistics-data {

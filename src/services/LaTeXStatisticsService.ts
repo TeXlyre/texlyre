@@ -6,13 +6,24 @@ import { isLatexFile } from '../utils/fileUtils';
 import { cleanContent } from '../utils/fileCommentUtils';
 import type { DocumentStatistics, StatisticsOptions, FileStatistics } from '../types/statistics';
 
+const INCLUDE_PATTERN = /\\(?:input|include)\{([^}]+)\}/g;
+const BRIEF_FILE_PATTERN = /^(\d+):\s+(?:File|Included file):\s+(.+)$/;
+const FILE_HEADER_PATTERN = /^(?:File|Included file):\s+(.+)$/;
+
+const FIELD_PATTERNS: Array<{ marker: string; key: keyof FileStatistics & keyof DocumentStatistics }> = [
+    { marker: 'Words in text:', key: 'words' },
+    { marker: 'Words in headers:', key: 'headers' },
+    { marker: 'Number of math inlines:', key: 'mathInline' },
+    { marker: 'Number of math displayed:', key: 'mathDisplay' },
+    { marker: 'Number of headers:', key: 'numHeaders' },
+    { marker: 'Number of floats/tables/figures:', key: 'numFloats' },
+];
+
 class LaTeXStatisticsService {
     private engine: WasmToolsEngine | null = null;
 
     private getEngine(): WasmToolsEngine {
-        if (!this.engine) {
-            this.engine = new WasmToolsEngine();
-        }
+        if (!this.engine) this.engine = new WasmToolsEngine();
         return this.engine;
     }
 
@@ -21,8 +32,6 @@ class LaTeXStatisticsService {
         fileTree: FileNode[],
         options: StatisticsOptions
     ): Promise<DocumentStatistics> {
-        const engine = this.getEngine();
-
         const allFiles = this.collectFiles(fileTree);
         const normalizedPath = mainFilePath.replace(/^\/+/, '');
 
@@ -38,21 +47,15 @@ class LaTeXStatisticsService {
             throw new Error(`Main file not found: ${mainFilePath}`);
         }
 
-        if (!mainFile.content) {
-            const storedFile = await fileStorageService.getFile(mainFile.id);
-            if (!storedFile?.content) {
-                throw new Error('Main file content not found');
-            }
-            mainFile.content = storedFile.content;
-        }
-
+        await this.ensureContent(mainFile);
         const mainContent = await this.getCleanContent(mainFile);
         const mainFileName = mainFile.name || normalizedPath.split('/').pop() || 'main.tex';
+
         const includedFiles = options.includeFiles
             ? await this.extractIncludedFiles(mainContent, allFiles)
             : [];
 
-        const result = await engine.count(mainContent, options, includedFiles);
+        const result = await this.getEngine().count(mainContent, options, includedFiles);
 
         if (!result.success) {
             throw new Error(result.error || 'Statistics generation failed');
@@ -61,10 +64,17 @@ class LaTeXStatisticsService {
         return this.parseStatistics(result.output!, options.merge, mainFileName);
     }
 
+    terminate(): void {
+        if (this.engine) {
+            this.engine.terminate();
+            this.engine = null;
+        }
+    }
+
     private collectFiles(nodes: FileNode[]): FileNode[] {
         const files: FileNode[] = [];
-        const traverse = (nodeList: FileNode[]) => {
-            for (const node of nodeList) {
+        const traverse = (list: FileNode[]) => {
+            for (const node of list) {
                 if (node.type === 'file') files.push(node);
                 if (node.children) traverse(node.children);
             }
@@ -73,38 +83,32 @@ class LaTeXStatisticsService {
         return files;
     }
 
+    private async ensureContent(file: FileNode): Promise<void> {
+        if (file.content) return;
+        const stored = await fileStorageService.getFile(file.id);
+        if (!stored?.content) throw new Error('File content not found');
+        file.content = stored.content;
+    }
+
     private async getCleanContent(file: FileNode): Promise<string> {
-        let content: string;
-
-        if (file.content) {
-            content = typeof file.content === 'string'
-                ? file.content
-                : new TextDecoder().decode(file.content);
-        } else {
-            const storedFile = await fileStorageService.getFile(file.id);
-            if (!storedFile?.content) throw new Error('File content not found');
-
-            content = typeof storedFile.content === 'string'
-                ? storedFile.content
-                : new TextDecoder().decode(storedFile.content);
-        }
-
-        return cleanContent(content) as string;
+        await this.ensureContent(file);
+        const text = typeof file.content === 'string'
+            ? file.content
+            : new TextDecoder().decode(file.content!);
+        return cleanContent(text) as string;
     }
 
     private async extractIncludedFiles(
         content: string,
         allFiles: FileNode[]
     ): Promise<Array<{ path: string; content: string }>> {
-        const includePattern = /\\(?:input|include)\{([^}]+)\}/g;
         const files: Array<{ path: string; content: string }> = [];
         let match;
 
-        while ((match = includePattern.exec(content)) !== null) {
+        INCLUDE_PATTERN.lastIndex = 0;
+        while ((match = INCLUDE_PATTERN.exec(content)) !== null) {
             let filename = match[1];
-            if (!isLatexFile(filename)) {
-                filename += '.tex';
-            }
+            if (!isLatexFile(filename)) filename += '.tex';
 
             const file = allFiles.find(f =>
                 f.path === filename ||
@@ -113,8 +117,7 @@ class LaTeXStatisticsService {
             );
 
             if (file) {
-                const cleanContent = await this.getCleanContent(file);
-                files.push({ path: filename, content: cleanContent });
+                files.push({ path: filename, content: await this.getCleanContent(file) });
             }
         }
 
@@ -128,197 +131,162 @@ class LaTeXStatisticsService {
             captions: 0,
             mathInline: 0,
             mathDisplay: 0,
-            rawOutput: output.replace(/\bmain\.tex\b/g, mainFileName)
+            rawOutput: output.replace(/\bmain\.tex\b/g, mainFileName),
         };
 
-        const lines = output.split('\n');
         const fileStatsMap = new Map<string, FileStatistics>();
+        const lines = output.split('\n');
+
         let currentFileStat: FileStatistics | null = null;
         let inVerboseOutput = false;
         let inFileSummary = false;
         let inTotalSummary = false;
 
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-
-            if (line.startsWith('Total')) {
-                continue;
+        const flushCurrent = () => {
+            if (currentFileStat && this.fileHasContent(currentFileStat)) {
+                fileStatsMap.set(currentFileStat.filename, currentFileStat);
             }
+            currentFileStat = null;
+        };
 
-            const briefMatch = line.match(/^(\d+):\s+(?:File|Included file):\s+(.+)$/);
+        for (const line of lines) {
+            if (line.startsWith('Total')) continue;
+
+            const briefMatch = line.match(BRIEF_FILE_PATTERN);
             if (briefMatch) {
-                const wordCount = parseInt(briefMatch[1], 10);
-                let filename = briefMatch[2].trim();
-                if (filename === 'main.tex') {
-                    filename = mainFileName;
-                }
-
-                const fileStat: FileStatistics = {
-                    filename,
-                    words: wordCount,
-                    headers: 0,
-                    captions: 0,
-                    mathInline: 0,
-                    mathDisplay: 0,
-                    numHeaders: 0,
-                    numFloats: 0
-                };
-
-                fileStatsMap.set(filename, fileStat);
+                const filename = this.resolveFilename(briefMatch[2].trim(), mainFileName);
+                fileStatsMap.set(filename, this.makeFileStat(filename, parseInt(briefMatch[1], 10)));
                 continue;
             }
 
             if (line.startsWith('File: ') || line.startsWith('Included file: ')) {
-                if (currentFileStat && (inFileSummary || !inVerboseOutput)) {
-                    if (currentFileStat.words > 0 || currentFileStat.headers > 0 || currentFileStat.captions > 0) {
-                        fileStatsMap.set(currentFileStat.filename, currentFileStat);
-                    }
-                }
+                if (inFileSummary || !inVerboseOutput) flushCurrent();
 
-                const fileMatch = line.match(/^(?:File|Included file):\s+(.+)$/);
-                let filename = fileMatch ? fileMatch[1].trim() : '';
-                if (filename === 'main.tex') {
-                    filename = mainFileName;
-                }
+                const fileMatch = line.match(FILE_HEADER_PATTERN);
+                const filename = this.resolveFilename(fileMatch ? fileMatch[1].trim() : '', mainFileName);
 
-                currentFileStat = {
-                    filename,
-                    words: 0,
-                    headers: 0,
-                    captions: 0,
-                    mathInline: 0,
-                    mathDisplay: 0,
-                    numHeaders: 0,
-                    numFloats: 0
-                };
-
-                if (line.includes('[')) {
-                    inVerboseOutput = true;
-                    inFileSummary = false;
-                } else {
-                    inVerboseOutput = false;
-                    inFileSummary = true;
-                }
+                currentFileStat = this.makeFileStat(filename);
+                inVerboseOutput = line.includes('[');
+                inFileSummary = !inVerboseOutput;
                 inTotalSummary = false;
-            } else if (line.includes('Encoding:')) {
+                continue;
+            }
+
+            if (line.includes('Encoding:')) {
                 inVerboseOutput = false;
-                if (currentFileStat) {
-                    inFileSummary = true;
-                }
-            } else if (line.includes('Sum of files:') || line.includes('File(s) total:')) {
-                if (currentFileStat && inFileSummary) {
-                    if (currentFileStat.words > 0 || currentFileStat.headers > 0 || currentFileStat.captions > 0) {
-                        fileStatsMap.set(currentFileStat.filename, currentFileStat);
-                    }
-                }
-                currentFileStat = null;
+                if (currentFileStat) inFileSummary = true;
+                continue;
+            }
+
+            if (line.includes('Sum of files:') || line.includes('File(s) total:')) {
+                if (inFileSummary) flushCurrent();
                 inFileSummary = false;
                 inVerboseOutput = false;
                 inTotalSummary = true;
-            } else if (line.includes('Subcounts:') || line.includes('Format/colour codes')) {
-                if (currentFileStat && inFileSummary) {
-                    if (currentFileStat.words > 0 || currentFileStat.headers > 0 || currentFileStat.captions > 0) {
-                        fileStatsMap.set(currentFileStat.filename, currentFileStat);
-                    }
-                }
-                currentFileStat = null;
+                continue;
+            }
+
+            if (line.includes('Subcounts:') || line.includes('Format/colour codes')) {
+                if (inFileSummary) flushCurrent();
                 inFileSummary = false;
                 inVerboseOutput = false;
                 inTotalSummary = false;
+                continue;
             }
 
-            if (line.includes('Words in text:')) {
-                const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
-                if (inFileSummary && currentFileStat) {
-                    currentFileStat.words = value;
-                } else if (inTotalSummary || (!inVerboseOutput && !inFileSummary)) {
-                    stats.words = value;
-                }
-            } else if (line.includes('Words in headers:')) {
-                const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
-                if (inFileSummary && currentFileStat) {
-                    currentFileStat.headers = value;
-                } else if (inTotalSummary || (!inVerboseOutput && !inFileSummary)) {
-                    stats.headers = value;
-                }
-            } else if (line.includes('Words outside text') || line.includes('Words in float captions:')) {
-                const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
-                if (inFileSummary && currentFileStat) {
-                    currentFileStat.captions = value;
-                } else if (inTotalSummary || (!inVerboseOutput && !inFileSummary)) {
-                    stats.captions = value;
-                }
-            } else if (line.includes('Number of math inlines:')) {
-                const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
-                if (inFileSummary && currentFileStat) {
-                    currentFileStat.mathInline = value;
-                } else if (inTotalSummary || (!inVerboseOutput && !inFileSummary)) {
-                    stats.mathInline = value;
-                }
-            } else if (line.includes('Number of math displayed:')) {
-                const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
-                if (inFileSummary && currentFileStat) {
-                    currentFileStat.mathDisplay = value;
-                } else if (inTotalSummary || (!inVerboseOutput && !inFileSummary)) {
-                    stats.mathDisplay = value;
-                }
-            } else if (line.includes('Number of headers:')) {
-                const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
-                if (inFileSummary && currentFileStat) {
-                    currentFileStat.numHeaders = value;
-                } else if (inTotalSummary || (!inVerboseOutput && !inFileSummary)) {
-                    stats.numHeaders = value;
-                }
-            } else if (line.includes('Number of floats/tables/figures:')) {
-                const value = parseInt(line.split(':')[1]?.trim() || '0', 10);
-                if (inFileSummary && currentFileStat) {
-                    currentFileStat.numFloats = value;
-                } else if (inTotalSummary || (!inVerboseOutput && !inFileSummary)) {
-                    stats.numFloats = value;
-                }
-            } else if (line.includes('Files:')) {
-                stats.files = parseInt(line.split(':')[1]?.trim() || '0', 10);
-            }
+            this.assignFieldValue(line, stats, currentFileStat, inFileSummary, inVerboseOutput, inTotalSummary);
         }
 
-        if (currentFileStat && inFileSummary) {
-            if (currentFileStat.words > 0 || currentFileStat.headers > 0 || currentFileStat.captions > 0) {
-                fileStatsMap.set(currentFileStat.filename, currentFileStat);
-            }
-        }
+        if (inFileSummary) flushCurrent();
 
         const fileStats = Array.from(fileStatsMap.values());
-
         if (fileStats.length > 0) {
-            const totalWords = fileStats.reduce((sum, file) => sum + file.words, 0);
-            const totalHeaders = fileStats.reduce((sum, file) => sum + file.headers, 0);
-            const totalCaptions = fileStats.reduce((sum, file) => sum + file.captions, 0);
-            const totalMathInline = fileStats.reduce((sum, file) => sum + file.mathInline, 0);
-            const totalMathDisplay = fileStats.reduce((sum, file) => sum + file.mathDisplay, 0);
-            const totalNumHeaders = fileStats.reduce((sum, file) => sum + file.numHeaders, 0);
-            const totalNumFloats = fileStats.reduce((sum, file) => sum + file.numFloats, 0);
-
-            if (stats.words === 0) stats.words = totalWords;
-            if (stats.headers === 0) stats.headers = totalHeaders;
-            if (stats.captions === 0) stats.captions = totalCaptions;
-            if (stats.mathInline === 0) stats.mathInline = totalMathInline;
-            if (stats.mathDisplay === 0) stats.mathDisplay = totalMathDisplay;
-            if (!stats.numHeaders) stats.numHeaders = totalNumHeaders;
-            if (!stats.numFloats) stats.numFloats = totalNumFloats;
-        }
-
-        if (!merged && fileStats.length > 0) {
-            stats.fileStats = fileStats;
+            this.fillTotalsFromFiles(stats, fileStats);
+            if (!merged) stats.fileStats = fileStats;
         }
 
         return stats;
     }
 
-    terminate(): void {
-        if (this.engine) {
-            this.engine.terminate();
-            this.engine = null;
+    private resolveFilename(name: string, mainFileName: string): string {
+        return name === 'main.tex' ? mainFileName : name;
+    }
+
+    private makeFileStat(filename: string, words: number = 0): FileStatistics {
+        return {
+            filename,
+            words,
+            headers: 0,
+            captions: 0,
+            mathInline: 0,
+            mathDisplay: 0,
+            numHeaders: 0,
+            numFloats: 0,
+        };
+    }
+
+    private fileHasContent(stat: FileStatistics): boolean {
+        return stat.words > 0 || stat.headers > 0 || stat.captions > 0;
+    }
+
+    private assignFieldValue(
+        line: string,
+        stats: DocumentStatistics,
+        currentFileStat: FileStatistics | null,
+        inFileSummary: boolean,
+        inVerboseOutput: boolean,
+        inTotalSummary: boolean
+    ): void {
+        if (line.includes('Files:')) {
+            stats.files = this.parseLineValue(line);
+            return;
         }
+
+        const isCaptionLine = line.includes('Words outside text') || line.includes('Words in float captions:');
+        if (isCaptionLine) {
+            this.assign('captions', this.parseLineValue(line), stats, currentFileStat, inFileSummary, inVerboseOutput, inTotalSummary);
+            return;
+        }
+
+        for (const { marker, key } of FIELD_PATTERNS) {
+            if (line.includes(marker)) {
+                this.assign(key, this.parseLineValue(line), stats, currentFileStat, inFileSummary, inVerboseOutput, inTotalSummary);
+                return;
+            }
+        }
+    }
+
+    private assign(
+        key: keyof FileStatistics & keyof DocumentStatistics,
+        value: number,
+        stats: DocumentStatistics,
+        currentFileStat: FileStatistics | null,
+        inFileSummary: boolean,
+        inVerboseOutput: boolean,
+        inTotalSummary: boolean
+    ): void {
+        if (inFileSummary && currentFileStat) {
+            (currentFileStat as any)[key] = value;
+        } else if (inTotalSummary || (!inVerboseOutput && !inFileSummary)) {
+            (stats as any)[key] = value;
+        }
+    }
+
+    private parseLineValue(line: string): number {
+        return parseInt(line.split(':')[1]?.trim() || '0', 10);
+    }
+
+    private fillTotalsFromFiles(stats: DocumentStatistics, fileStats: FileStatistics[]): void {
+        const sum = (key: keyof FileStatistics) =>
+            fileStats.reduce((acc, file) => acc + ((file as any)[key] as number), 0);
+
+        if (stats.words === 0) stats.words = sum('words');
+        if (stats.headers === 0) stats.headers = sum('headers');
+        if (stats.captions === 0) stats.captions = sum('captions');
+        if (stats.mathInline === 0) stats.mathInline = sum('mathInline');
+        if (stats.mathDisplay === 0) stats.mathDisplay = sum('mathDisplay');
+        if (!stats.numHeaders) stats.numHeaders = sum('numHeaders');
+        if (!stats.numFloats) stats.numFloats = sum('numFloats');
     }
 }
 

@@ -13,6 +13,11 @@ import { notificationService } from './NotificationService';
 
 export type EngineType = SwiftEngineType | BusyTeXEngineType;
 
+type NotificationOptions = { operationId?: string; duration?: number; data?: Record<string, any>; format?: string };
+type ExportFile = { content: Uint8Array; name: string; mimeType: string };
+
+const SUPPORTED_ENGINES: EngineType[] = ['pdftex', 'xetex', 'busytex-pdftex', 'busytex-xetex', 'busytex-luatex'];
+
 function isBusyTeXEngine(engine: EngineType): engine is BusyTeXEngineType {
 	return engine.startsWith('busytex-');
 }
@@ -74,35 +79,14 @@ class LaTeXService {
 
 	async setEngine(engineType: EngineType): Promise<void> {
 		if (this.currentEngineType === engineType) return;
-		this.currentEngineType = engineType;
 		await this.initialize(engineType);
 	}
 
-	getCurrentEngineType(): EngineType {
-		return this.currentEngineType;
-	}
-
-	getSupportedEngines(): EngineType[] {
-		return ['pdftex', 'xetex', 'busytex-pdftex', 'busytex-xetex', 'busytex-luatex'];
-	}
-
-	getStatus(): string {
-		return isBusyTeXEngine(this.currentEngineType)
-			? busyTexService.getStatus()
-			: swiftLaTeXService.getStatus();
-	}
-
-	isReady(): boolean {
-		return isBusyTeXEngine(this.currentEngineType)
-			? busyTexService.isReady()
-			: swiftLaTeXService.isReady();
-	}
-
-	isCompiling(): boolean {
-		return isBusyTeXEngine(this.currentEngineType)
-			? busyTexService.isCompiling()
-			: swiftLaTeXService.isCompiling();
-	}
+	getCurrentEngineType(): EngineType { return this.currentEngineType; }
+	getSupportedEngines(): EngineType[] { return SUPPORTED_ENGINES; }
+	getStatus(): string { return this.activeEngine().getStatus(); }
+	isReady(): boolean { return this.activeEngine().isReady(); }
+	isCompiling(): boolean { return this.activeEngine().isCompiling(); }
 
 	addStatusListener(listener: () => void): () => void {
 		this.statusListeners.add(listener);
@@ -115,10 +99,6 @@ class LaTeXService {
 		};
 	}
 
-	private notifyStatusChange(): void {
-		this.statusListeners.forEach((l) => l());
-	}
-
 	async compileLaTeX(
 		mainFileName: string,
 		fileTree: FileNode[],
@@ -127,34 +107,15 @@ class LaTeXService {
 		const operationId = `latex-compile-${nanoid()}`;
 		this.currentOperationId = operationId;
 
-		if (isBusyTeXEngine(this.currentEngineType)) {
-			if (!busyTexService.isReady() || busyTexService.getCurrentEngineType() !== this.currentEngineType) {
-				this.showLoadingNotification(t('Initializing BusyTeX engine...'), operationId, format);
-				await busyTexService.initialize(this.currentEngineType as BusyTeXEngineType);
-			}
-			try {
-				this.showLoadingNotification(t('Compiling LaTeX document...'), operationId, format);
-				const nodesWithContent = await this.loadFileContents(this.collectAllFiles(fileTree));
-				const result = await busyTexService.compile(mainFileName, nodesWithContent);
-				this.reportCompileOutcome(result, operationId, format);
-				return result;
-			} catch (error) {
-				return this.handleCompileError(error, busyTexService.getStatus(), operationId, format);
-			}
-		}
-
-		if (!swiftLaTeXService.isReady() || swiftLaTeXService.getCurrentEngineType() !== this.currentEngineType) {
-			this.showLoadingNotification(t('Initializing LaTeX engine...'), operationId, format);
-			await swiftLaTeXService.initialize(this.currentEngineType as SwiftEngineType);
-		}
+		await this.ensureEngineReady(this.currentEngineType, operationId, format);
 
 		try {
 			this.showLoadingNotification(t('Compiling LaTeX document...'), operationId, format);
-			const result = await swiftLaTeXService.compile(mainFileName, fileTree);
+			const result = await this.runCompile(this.currentEngineType, mainFileName, fileTree);
 			this.reportCompileOutcome(result, operationId, format);
 			return result;
 		} catch (error) {
-			return this.handleCompileError(error, swiftLaTeXService.getStatus(), operationId, format);
+			return this.handleCompileError(error, this.activeEngine().getStatus(), operationId, format);
 		}
 	}
 
@@ -163,14 +124,10 @@ class LaTeXService {
 		try {
 			this.showLoadingNotification(t('Clearing LaTeX cache...'), operationId);
 			await swiftLaTeXService.clearCache();
-			this.showSuccessNotification(t('LaTeX cache cleared successfully'), {
-				operationId, duration: 2000,
-			});
+			this.showSuccessNotification(t('LaTeX cache cleared successfully'), { operationId, duration: 2000 });
 		} catch (error) {
 			console.error('Error clearing cache directories:', error);
-			this.showErrorNotification(t('Failed to clear LaTeX cache'), {
-				operationId, duration: 3000,
-			});
+			this.showErrorNotification(t('Failed to clear LaTeX cache'), { operationId, duration: 3000 });
 			throw error;
 		}
 	}
@@ -185,11 +142,7 @@ class LaTeXService {
 	}
 
 	stopCompilation(): void {
-		if (isBusyTeXEngine(this.currentEngineType)) {
-			busyTexService.stopCompilation();
-		} else {
-			swiftLaTeXService.stopCompilation();
-		}
+		this.activeEngine().stopCompilation();
 	}
 
 	async exportDocument(
@@ -211,70 +164,9 @@ class LaTeXService {
 			this.showLoadingNotification(t('Compiling for export...'), operationId);
 
 			if (isBusyTeXEngine(targetEngine)) {
-				if (!busyTexService.isReady() || busyTexService.getCurrentEngineType() !== targetEngine) {
-					await busyTexService.initialize(targetEngine as BusyTeXEngineType);
-				}
-
-				const needsWorkDir = !!(options.includeBbl || options.includeWorkDir);
-				const originalStoreWorking = busyTexService.getStoreWorkingDirectory();
-				if (needsWorkDir) busyTexService.setStoreWorkingDirectory(true);
-
-				try {
-					const nodesWithContent = await this.loadFileContents(this.collectAllFiles(fileTree));
-					const result = await busyTexService.compile(mainFileName, nodesWithContent);
-
-					if (result.status === 0 && result.pdf) {
-						const baseName = this.getBaseName(mainFileName);
-						const files: Array<{ content: Uint8Array; name: string; mimeType: string }> = [
-							{ content: result.pdf, name: `${baseName}.pdf`, mimeType: 'application/pdf' },
-						];
-						if (options.includeLog) {
-							files.push({
-								content: new TextEncoder().encode(result.log),
-								name: `${baseName}.log`,
-								mimeType: 'text/plain',
-							});
-						}
-						if (options.includeBbl) {
-							const bbl = await busyTexService.extractBblFile(mainFileName);
-							if (bbl) files.push(bbl);
-						}
-						if (options.includeWorkDir) {
-							const workFiles = await busyTexService.collectStoredWorkFiles();
-							files.push(...workFiles);
-						}
-						await downloadFiles(files, baseName);
-						this.showSuccessNotification(t('Export completed successfully'), {
-							operationId, duration: 2000,
-						});
-					} else {
-						this.showErrorNotification(t('Export failed'), { operationId, duration: 3000 });
-					}
-				} finally {
-					if (needsWorkDir) busyTexService.setStoreWorkingDirectory(originalStoreWorking);
-					if (needsWorkDir && !originalStoreWorking) {
-						await busyTexService.cleanupStoredWorkDirectory();
-					}
-				}
-				return;
-			}
-
-			const result = await swiftLaTeXService.export(mainFileName, fileTree, {
-				engine: targetEngine as SwiftEngineType,
-				format: options.format,
-				includeLog: options.includeLog,
-				includeDvi: options.includeDvi,
-				includeBbl: options.includeBbl,
-				includeWorkDir: options.includeWorkDir,
-			});
-
-			if (result.status === 0 && result.files.length > 0) {
-				await downloadFiles(result.files, this.getBaseName(mainFileName));
-				this.showSuccessNotification(t('Export completed successfully'), {
-					operationId, duration: 2000,
-				});
+				await this.exportWithBusyTeX(targetEngine, mainFileName, fileTree, options, operationId);
 			} else {
-				this.showErrorNotification(t('Export failed'), { operationId, duration: 3000 });
+				await this.exportWithSwift(targetEngine as SwiftEngineType, mainFileName, fileTree, options, operationId);
 			}
 		} catch (error) {
 			this.showErrorNotification(
@@ -299,15 +191,138 @@ class LaTeXService {
 		}
 	}
 
-	private reportCompileOutcome(result: CompileResult, operationId: string, format: string): void {
-		if (result.status === 0 && result.pdf && result.pdf.length > 0) {
-			this.showSuccessNotification(t('LaTeX compilation completed successfully'), {
-				operationId, duration: 3000, format,
-			});
+	dismissCurrentNotification(): void {
+		if (this.currentOperationId) notificationService.dismiss(this.currentOperationId);
+	}
+
+	showLoadingNotification(message: string, operationId?: string, format?: string): void {
+		if (this.canNotify(format)) notificationService.showLoading(message, operationId);
+	}
+
+	showSuccessNotification(message: string, options: NotificationOptions = {}): void {
+		if (this.canNotify(options.format)) notificationService.showSuccess(message, options);
+	}
+
+	showErrorNotification(message: string, options: NotificationOptions = {}): void {
+		if (this.canNotify(options.format)) notificationService.showError(message, options);
+	}
+
+	showInfoNotification(message: string, options: NotificationOptions = {}): void {
+		if (this.canNotify(options.format)) notificationService.showInfo(message, options);
+	}
+
+	private activeEngine() {
+		return isBusyTeXEngine(this.currentEngineType) ? busyTexService : swiftLaTeXService;
+	}
+
+	private async ensureEngineReady(engine: EngineType, operationId: string, format: string): Promise<void> {
+		if (isBusyTeXEngine(engine)) {
+			if (busyTexService.isReady() && busyTexService.getCurrentEngineType() === engine) return;
+			this.showLoadingNotification(t('Initializing BusyTeX engine...'), operationId, format);
+			await busyTexService.initialize(engine as BusyTeXEngineType);
+			return;
+		}
+		if (swiftLaTeXService.isReady() && swiftLaTeXService.getCurrentEngineType() === engine) return;
+		this.showLoadingNotification(t('Initializing LaTeX engine...'), operationId, format);
+		await swiftLaTeXService.initialize(engine as SwiftEngineType);
+	}
+
+	private async runCompile(
+		engine: EngineType,
+		mainFileName: string,
+		fileTree: FileNode[],
+	): Promise<CompileResult> {
+		if (isBusyTeXEngine(engine)) {
+			const nodesWithContent = await this.loadFileContents(this.collectAllFiles(fileTree));
+			return busyTexService.compile(mainFileName, nodesWithContent);
+		}
+		return swiftLaTeXService.compile(mainFileName, fileTree);
+	}
+
+	private async exportWithBusyTeX(
+		engine: BusyTeXEngineType,
+		mainFileName: string,
+		fileTree: FileNode[],
+		options: { includeLog?: boolean; includeBbl?: boolean; includeWorkDir?: boolean },
+		operationId: string,
+	): Promise<void> {
+		if (!busyTexService.isReady() || busyTexService.getCurrentEngineType() !== engine) {
+			await busyTexService.initialize(engine);
+		}
+
+		const needsWorkDir = !!(options.includeBbl || options.includeWorkDir);
+		const originalStoreWorking = busyTexService.getStoreWorkingDirectory();
+		if (needsWorkDir) busyTexService.setStoreWorkingDirectory(true);
+
+		try {
+			const nodesWithContent = await this.loadFileContents(this.collectAllFiles(fileTree));
+			const result = await busyTexService.compile(mainFileName, nodesWithContent);
+
+			if (result.status !== 0 || !result.pdf) {
+				this.showErrorNotification(t('Export failed'), { operationId, duration: 3000 });
+				return;
+			}
+
+			const baseName = this.getBaseName(mainFileName);
+			const files: ExportFile[] = [
+				{ content: result.pdf, name: `${baseName}.pdf`, mimeType: 'application/pdf' },
+			];
+
+			if (options.includeLog) {
+				files.push({ content: new TextEncoder().encode(result.log), name: `${baseName}.log`, mimeType: 'text/plain' });
+			}
+			if (options.includeBbl) {
+				const bbl = await busyTexService.extractBblFile(mainFileName);
+				if (bbl) files.push(bbl);
+			}
+			if (options.includeWorkDir) {
+				files.push(...await busyTexService.collectStoredWorkFiles());
+			}
+
+			await downloadFiles(files, baseName);
+			this.showSuccessNotification(t('Export completed successfully'), { operationId, duration: 2000 });
+		} finally {
+			if (needsWorkDir) {
+				busyTexService.setStoreWorkingDirectory(originalStoreWorking);
+				if (!originalStoreWorking) await busyTexService.cleanupStoredWorkDirectory();
+			}
+		}
+	}
+
+	private async exportWithSwift(
+		engine: SwiftEngineType,
+		mainFileName: string,
+		fileTree: FileNode[],
+		options: { format?: 'pdf' | 'dvi'; includeLog?: boolean; includeDvi?: boolean; includeBbl?: boolean; includeWorkDir?: boolean },
+		operationId: string,
+	): Promise<void> {
+		const result = await swiftLaTeXService.export(mainFileName, fileTree, {
+			engine,
+			format: options.format,
+			includeLog: options.includeLog,
+			includeDvi: options.includeDvi,
+			includeBbl: options.includeBbl,
+			includeWorkDir: options.includeWorkDir,
+		});
+
+		if (result.status === 0 && result.files.length > 0) {
+			await downloadFiles(result.files, this.getBaseName(mainFileName));
+			this.showSuccessNotification(t('Export completed successfully'), { operationId, duration: 2000 });
 		} else {
-			this.showErrorNotification(t('LaTeX compilation failed'), {
-				operationId, duration: 5000, format,
-			});
+			this.showErrorNotification(t('Export failed'), { operationId, duration: 3000 });
+		}
+	}
+
+	private notifyStatusChange(): void {
+		this.statusListeners.forEach(l => l());
+	}
+
+	private reportCompileOutcome(result: CompileResult, operationId: string, format: string): void {
+		const succeeded = result.status === 0 && result.pdf && result.pdf.length > 0;
+		if (succeeded) {
+			this.showSuccessNotification(t('LaTeX compilation completed successfully'), { operationId, duration: 3000, format });
+		} else {
+			this.showErrorNotification(t('LaTeX compilation failed'), { operationId, duration: 5000, format });
 		}
 	}
 
@@ -315,9 +330,7 @@ class LaTeXService {
 		error: unknown, engineStatus: string, operationId: string, format: string,
 	): CompileResult {
 		if (engineStatus === 'error' || engineStatus === 'unloaded') {
-			this.showInfoNotification(t('Compilation stopped by user'), {
-				operationId, duration: 2000, format,
-			});
+			this.showInfoNotification(t('Compilation stopped by user'), { operationId, duration: 2000, format });
 			return { pdf: undefined, status: -1, log: 'Compilation failed or was stopped by user.' };
 		}
 		this.showErrorNotification(
@@ -353,43 +366,9 @@ class LaTeXService {
 		return name.includes('.') ? name.split('.').slice(0, -1).join('.') : name;
 	}
 
-	dismissCurrentNotification(): void {
-		if (this.currentOperationId) {
-			notificationService.dismiss(this.currentOperationId);
-		}
-	}
-
-	showLoadingNotification(message: string, operationId?: string, format?: string): void {
-		if (this.areNotificationsEnabled() && !format?.toLowerCase().includes('canvas')) {
-			notificationService.showLoading(message, operationId);
-		}
-	}
-
-	showSuccessNotification(
-		message: string,
-		options: { operationId?: string; duration?: number; data?: Record<string, any>; format?: string } = {},
-	): void {
-		if (this.areNotificationsEnabled() && !options.format?.toLowerCase().includes('canvas')) {
-			notificationService.showSuccess(message, options);
-		}
-	}
-
-	showErrorNotification(
-		message: string,
-		options: { operationId?: string; duration?: number; data?: Record<string, any>; format?: string } = {},
-	): void {
-		if (this.areNotificationsEnabled() && !options.format?.toLowerCase().includes('canvas')) {
-			notificationService.showError(message, options);
-		}
-	}
-
-	showInfoNotification(
-		message: string,
-		options: { operationId?: string; duration?: number; data?: Record<string, any>; format?: string } = {},
-	): void {
-		if (this.areNotificationsEnabled() && !options.format?.toLowerCase().includes('canvas')) {
-			notificationService.showInfo(message, options);
-		}
+	private canNotify(format?: string): boolean {
+		if (!this.areNotificationsEnabled()) return false;
+		return !format?.toLowerCase().includes('canvas');
 	}
 
 	private areNotificationsEnabled(): boolean {

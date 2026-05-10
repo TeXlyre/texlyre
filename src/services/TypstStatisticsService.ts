@@ -6,6 +6,24 @@ import { cleanContent } from '../utils/fileCommentUtils';
 import type { DocumentStatistics, StatisticsOptions } from '../types/statistics';
 import { TypstCompilerEngine } from '../extensions/typst.ts/TypstCompilerEngine';
 
+const RESOURCE_EXT = /\.(mp4|webm|ogv|mov|mp3|ogg|oga|opus|wav|flac|m4a|png|jpg|jpeg|gif|webp|svg|pdf|bib|bibtex|cls|sty|dataurl|toml|csv|json|yml|yaml|xml|html|txt|md|markdown|cbor|typ|typst)$/i;
+
+const WORDOMETER_IMPORT = '#import "@preview/wordometer:0.1.5": word-count, total-words, word-count-of';
+
+const OUTPUT_BLOCK = `#pagebreak(weak: true)
+#context {
+  let total = total-words
+  let headings = query(heading)
+  let heading_words = 0
+  for h in headings {
+    let h_count = word-count-of(h.body)
+    heading_words += h_count.words
+  }
+  [WORDOMETER_OUTPUT_START TOTAL_WORDS: #total HEADING_WORDS: #heading_words WORDOMETER_OUTPUT_END]
+}`;
+
+const PRIOR_INJECTION = /\n*#pagebreak\(weak: true\)\s*\n#context \{[\s\S]*?WORDOMETER_OUTPUT_END\][\s\S]*?\}\s*$/g;
+
 class TypstStatisticsService {
     private compilerEngine: TypstCompilerEngine | null = null;
 
@@ -41,152 +59,212 @@ class TypstStatisticsService {
             throw new Error('Main file content not found');
         }
 
-        const mainContent = await this.getCleanContentFromStorage(storedFile);
-
-        if (!mainContent || mainContent.trim().length === 0) {
+        const mainContent = this.decodeAndClean(storedFile.content);
+        if (!mainContent.trim()) {
             throw new Error('Main file content is empty');
         }
 
         try {
-            return await this.wordmeterCount(mainFile, allFiles, options, mainContent);
+            return await this.runWordometer(mainFile, allFiles, options, mainContent);
         } finally {
             this.terminate();
         }
     }
 
-    private async wordmeterCount(
+    private async runWordometer(
         mainFile: FileNode,
         allFiles: FileNode[],
         options: StatisticsOptions,
         mainContent: string
     ): Promise<DocumentStatistics> {
-        const engine = this.getCompilerEngine();
         const sources = await this.prepareSources(mainFile, allFiles, options.includeFiles, mainContent);
-
-        const modifiedMainContent = this.injectWordometer(mainContent);
+        const modifiedSource = this.injectWordometer(mainContent);
         const normalizedMainPath = mainFile.path.replace(/^\/+/, '');
-        sources[`/${normalizedMainPath}`] = modifiedMainContent;
+        sources[`/${normalizedMainPath}`] = modifiedSource;
 
-        const result = await engine.compile(
-            `/${normalizedMainPath}`,
-            sources,
-            'pdf'
-        );
+        const result = await this.compileWithDebug(`/${normalizedMainPath}`, sources, modifiedSource, options.verbose);
+        const pageText = await this.extractLastPageText(result);
+        return this.parseOutput(pageText, mainFile.name, options.verbose, modifiedSource);
+    }
 
-        if (!result.output || !(result.output instanceof Uint8Array) || result.output.byteLength === 0) {
-            throw new Error('Statistics compilation produced no output');
+    private async compileWithDebug(
+        mainPath: string,
+        sources: Record<string, string | Uint8Array>,
+        modifiedSource: string,
+        verbose?: number
+    ): Promise<Uint8Array> {
+        const engine = this.getCompilerEngine();
+
+        try {
+            const result = await engine.compile(mainPath, sources, 'pdf');
+
+            if (!result.output || !(result.output instanceof Uint8Array) || result.output.byteLength === 0) {
+                throw new Error('Statistics compilation produced no output');
+            }
+
+            return result.output;
+        } catch (err) {
+            const baseMessage = err instanceof Error ? err.message : String(err);
+            throw new Error(this.formatDebugMessage(baseMessage, modifiedSource, verbose));
         }
+    }
 
-        const pageText = await this.extractFirstPageText(result.output);
-        return this.parseWordmeterOutput(pageText, mainFile.name, options.verbose);
+    private formatDebugMessage(message: string, modifiedSource: string, verbose?: number): string {
+        if (!verbose || verbose < 2) return message;
+        return `${message}\n\n=== Modified Typst Source (with wordometer injection) ===\n\`\`\`typst\n${modifiedSource}\n\`\`\`\n=== End of Source ===`;
     }
 
     private injectWordometer(content: string): string {
-        const lines = content.split('\n');
+        const stripped = content.replace(PRIOR_INJECTION, '');
+        const lines = stripped.split('\n');
 
-        let lastImportIndex = -1;
-        let hasWordometerImport = false;
+        const scan = this.scanDocument(lines);
 
-        for (let i = 0; i < lines.length; i++) {
-            const trimmed = lines[i].trim();
-            if (trimmed.startsWith('#import')) {
-                lastImportIndex = i;
-                if (trimmed.includes('@preview/wordometer')) {
-                    hasWordometerImport = true;
-                }
-            }
-        }
-
-        if (!hasWordometerImport) {
-            const insertIndex = lastImportIndex >= 0 ? lastImportIndex + 1 : 0;
-            lines.splice(insertIndex, 0, '#import "@preview/wordometer:0.1.5": word-count, total-words, word-count-of');
-            lastImportIndex = insertIndex;
+        if (scan.existingWordometerIndex >= 0) {
+            lines[scan.existingWordometerIndex] = WORDOMETER_IMPORT;
         } else {
-            for (let i = 0; i < lines.length; i++) {
-                const trimmed = lines[i].trim();
-                if (trimmed.includes('@preview/wordometer') && !trimmed.includes('word-count-of')) {
-                    lines[i] = lines[i].replace('total-words', 'total-words, word-count-of');
-                    break;
-                }
-            }
+            const insertIndex = scan.lastImportIndex >= 0 ? scan.lastImportIndex + 1 : 0;
+            lines.splice(insertIndex, 0, WORDOMETER_IMPORT);
+            if (scan.lastShowIndex >= insertIndex) scan.lastShowIndex += 1;
+            scan.lastImportIndex = insertIndex;
         }
 
-        const hasShowWordCount = content.includes('#show: word-count');
-        if (!hasShowWordCount) {
-            lines.splice(lastImportIndex + 1, 0, '', '#show: word-count');
+        if (!scan.hasShowWordCount) {
+            const anchor = scan.lastShowIndex >= 0
+                ? this.findStatementEnd(lines, scan.lastShowIndex)
+                : scan.lastImportIndex;
+            lines.splice(anchor + 1, 0, '', '#show: word-count');
         }
 
-        const outputBlock = `#context {
-  let total = total-words
-  let headings = query(heading)
-  let heading_words = 0
-  for h in headings {
-    let h_count = word-count-of(h.body)
-    heading_words += h_count.words
-  }
-  [WORDOMETER_OUTPUT_START TOTAL_WORDS: #total HEADING_WORDS: #heading_words WORDOMETER_OUTPUT_END]
-}`;
-
-        const showIndex = lines.findIndex(l => l.trim().startsWith('#show: word-count'));
-        const insertAt = showIndex >= 0 ? showIndex + 1 : lastImportIndex + 1;
-        lines.splice(insertAt, 0, '', outputBlock, '');
-
+        lines.push('', OUTPUT_BLOCK, '');
         return lines.join('\n');
     }
 
-    private async extractFirstPageText(pdfBytes: Uint8Array): Promise<string> {
+    private scanDocument(lines: string[]): {
+        lastImportIndex: number;
+        lastShowIndex: number;
+        existingWordometerIndex: number;
+        hasShowWordCount: boolean;
+    } {
+        let lastImportIndex = -1;
+        let lastShowIndex = -1;
+        let existingWordometerIndex = -1;
+        let hasShowWordCount = false;
+        let inRawBlock = false;
+
+        for (let i = 0; i < lines.length; i++) {
+            const trimmed = lines[i].trim();
+
+            if (trimmed.startsWith('```')) {
+                inRawBlock = !inRawBlock;
+                continue;
+            }
+            if (inRawBlock) continue;
+
+            if (trimmed.startsWith('#import')) {
+                lastImportIndex = i;
+                if (trimmed.includes('@preview/wordometer')) existingWordometerIndex = i;
+            } else if (trimmed.startsWith('#show:') || trimmed.startsWith('#show :')) {
+                lastShowIndex = i;
+                if (trimmed.includes('word-count')) hasShowWordCount = true;
+            }
+        }
+
+        return { lastImportIndex, lastShowIndex, existingWordometerIndex, hasShowWordCount };
+    }
+
+    private findStatementEnd(lines: string[], startIndex: number): number {
+        let depth = 0;
+
+        for (let i = startIndex; i < lines.length; i++) {
+            depth += this.netDepth(lines[i]);
+            if (depth <= 0) return i;
+        }
+
+        return lines.length - 1;
+    }
+
+    private netDepth(line: string): number {
+        let depth = 0;
+        let inString = false;
+        let stringChar = '';
+
+        for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            const prev = i > 0 ? line[i - 1] : '';
+
+            if (inString) {
+                if (ch === stringChar && prev !== '\\') inString = false;
+                continue;
+            }
+            if (ch === '"' || ch === "'") {
+                inString = true;
+                stringChar = ch;
+                continue;
+            }
+            if (ch === '(' || ch === '[' || ch === '{') depth++;
+            else if (ch === ')' || ch === ']' || ch === '}') depth--;
+        }
+
+        return depth;
+    }
+
+    private async extractLastPageText(pdfBytes: Uint8Array): Promise<string> {
         const pdfjsLib = await import('pdfjs-dist');
-        const buffer = pdfBytes.slice().buffer;
-        const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+        const pdf = await pdfjsLib.getDocument({ data: pdfBytes.slice().buffer }).promise;
         try {
-            const page = await pdf.getPage(1);
+            const page = await pdf.getPage(pdf.numPages);
             const textContent = await page.getTextContent();
             return (textContent.items as Array<{ str?: string }>)
-                .map((item) => item.str ?? '')
+                .map(item => item.str ?? '')
                 .join(' ');
         } finally {
             await pdf.destroy();
         }
     }
 
-    private parseWordmeterOutput(
+    private parseOutput(
         output: string,
         mainFileName: string,
-        verbose?: number
+        verbose?: number,
+        modifiedSource?: string
     ): DocumentStatistics {
+        const total = this.matchNumber(output, /TOTAL_WORDS:\s*(\d+)/);
+        const headers = this.matchNumber(output, /HEADING_WORDS:\s*(\d+)/);
+
         const stats: DocumentStatistics = {
-            words: 0,
-            headers: 0,
+            words: Math.max(0, total - headers),
+            headers,
             captions: 0,
             mathInline: 0,
             mathDisplay: 0,
         };
 
-        const totalMatch = output.match(/TOTAL_WORDS:\s*(\d+)/);
-        const headingWordsMatch = output.match(/HEADING_WORDS:\s*(\d+)/);
-
-        const total = totalMatch ? parseInt(totalMatch[1], 10) : 0;
-        const headingWords = headingWordsMatch ? parseInt(headingWordsMatch[1], 10) : 0;
-
-        stats.headers = headingWords;
-        stats.words = Math.max(0, total - stats.headers);
-
-        let rawOutputText = `File: ${mainFileName}\n`;
-        rawOutputText += `Words in text: ${stats.words}\n`;
-        rawOutputText += `Headers: ${stats.headers}\n`;
-        rawOutputText += `Captions: ${stats.captions}\n`;
-        rawOutputText += `Math inline: ${stats.mathInline}\n`;
-        rawOutputText += `Math display: ${stats.mathDisplay}\n`;
-        rawOutputText += `\nTotal: ${total}\n`;
+        const lines = [
+            `File: ${mainFileName}`,
+            `Words in text: ${stats.words}`,
+            `Headers: ${stats.headers}`,
+            `Captions: ${stats.captions}`,
+            `Math inline: ${stats.mathInline}`,
+            `Math display: ${stats.mathDisplay}`,
+            ``,
+            `Total: ${total}`,
+        ];
 
         if (verbose && verbose > 0) {
-            rawOutputText += '\n\n=== Extracted Page 1 Text ===\n';
-            rawOutputText += output;
-            rawOutputText += '\n=== End of Output ===';
+            lines.push('', '=== Extracted Last Page Text ===', output, '=== End of Output ===');
+        }
+        if (verbose && verbose >= 2 && modifiedSource) {
+            lines.push('', '=== Modified Typst Source (with wordometer injection) ===', modifiedSource, '=== End of Source ===');
         }
 
-        stats.rawOutput = rawOutputText;
+        stats.rawOutput = lines.join('\n');
         return stats;
+    }
+
+    private matchNumber(text: string, pattern: RegExp): number {
+        const match = text.match(pattern);
+        return match ? parseInt(match[1], 10) : 0;
     }
 
     private async prepareSources(
@@ -199,10 +277,8 @@ class TypstStatisticsService {
 
         if (includeFiles) {
             const includedFiles = await this.extractIncludedFiles(mainContent, allFiles);
-
             for (const file of includedFiles) {
-                const normalizedPath = file.path.replace(/^\/+/, '');
-                sources[`/${normalizedPath}`] = file.content;
+                sources[`/${file.path.replace(/^\/+/, '')}`] = file.content;
             }
         }
 
@@ -211,20 +287,15 @@ class TypstStatisticsService {
             !f.isDeleted &&
             !isTemporaryFile(f.path) &&
             f.path !== mainFile.path &&
-            f.path.match(/\.(mp4|webm|ogv|mov|mp3|ogg|oga|opus|wav|flac|m4a|png|jpg|jpeg|gif|webp|svg|pdf|bib|bibtex|cls|sty|dataurl|toml|csv|json|yml|yaml|xml|html|txt|md|markdown|cbor|typ|typst)$/i)
+            RESOURCE_EXT.test(f.path)
         );
 
         for (const file of resourceFiles) {
             try {
                 const content = await this.getFileContent(file);
-                if (content) {
-                    const normalizedPath = file.path.replace(/^\/+/, '');
-                    if (typeof content === 'string') {
-                        sources[`/${normalizedPath}`] = content;
-                    } else {
-                        sources[`/${normalizedPath}`] = new Uint8Array(content);
-                    }
-                }
+                if (!content) continue;
+                const key = `/${file.path.replace(/^\/+/, '')}`;
+                sources[key] = typeof content === 'string' ? content : new Uint8Array(content);
             } catch (error) {
                 console.warn(`Failed to load resource file ${file.path}:`, error);
             }
@@ -240,46 +311,33 @@ class TypstStatisticsService {
         const includePattern = /#include\s+"([^"]+)"/g;
         const files: Array<{ path: string; content: string }> = [];
         const processedPaths = new Set<string>();
-        let match;
 
-        while ((match = includePattern.exec(content)) !== null) {
-            let filename = match[1];
+        const visit = async (text: string): Promise<void> => {
+            let match;
+            while ((match = includePattern.exec(text)) !== null) {
+                let filename = match[1];
+                if (!isTypstFile(filename)) filename += '.typ';
 
-            if (!isTypstFile(filename)) {
-                filename += '.typ';
-            }
+                if (processedPaths.has(filename)) continue;
+                processedPaths.add(filename);
 
-            if (processedPaths.has(filename)) continue;
-            processedPaths.add(filename);
+                const file = allFiles.find(f =>
+                    f.path === filename ||
+                    f.path === `/${filename}` ||
+                    f.path.endsWith(`/${filename}`)
+                );
+                if (!file) continue;
 
-            const file = allFiles.find(f =>
-                f.path === filename ||
-                f.path === `/${filename}` ||
-                f.path.endsWith(`/${filename}`)
-            );
-
-            if (file) {
                 const storedFile = await fileStorageService.getFile(file.id);
-                if (storedFile?.content) {
-                    const content = typeof storedFile.content === 'string'
-                        ? storedFile.content
-                        : new TextDecoder().decode(storedFile.content);
-                    const cleaned = cleanContent(content);
-                    const cleanFileContent = typeof cleaned === 'string' ? cleaned : new TextDecoder().decode(cleaned);
+                if (!storedFile?.content) continue;
 
-                    files.push({ path: filename, content: cleanFileContent });
-
-                    const nestedFiles = await this.extractIncludedFiles(cleanFileContent, allFiles);
-                    for (const nested of nestedFiles) {
-                        if (!processedPaths.has(nested.path)) {
-                            processedPaths.add(nested.path);
-                            files.push(nested);
-                        }
-                    }
-                }
+                const cleaned = this.decodeAndClean(storedFile.content);
+                files.push({ path: filename, content: cleaned });
+                await visit(cleaned);
             }
-        }
+        };
 
+        await visit(content);
         return files;
     }
 
@@ -295,12 +353,9 @@ class TypstStatisticsService {
         return files;
     }
 
-    private async getCleanContentFromStorage(file: FileNode): Promise<string> {
-        const content = typeof file.content === 'string'
-            ? file.content
-            : new TextDecoder().decode(file.content);
-
-        const cleaned = cleanContent(content);
+    private decodeAndClean(content: ArrayBuffer | string): string {
+        const text = typeof content === 'string' ? content : new TextDecoder().decode(content);
+        const cleaned = cleanContent(text);
         return typeof cleaned === 'string' ? cleaned : new TextDecoder().decode(cleaned);
     }
 
