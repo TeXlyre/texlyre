@@ -29,10 +29,8 @@ export interface SourceMapData {
     reverse(page: number, x: number, y: number): SourceMapReverseResult | null;
 }
 
-export interface SourceMapService {
+export interface SourceMapService extends SourceMapData {
     isAvailable(): boolean;
-    forward(file: string, line: number, column?: number): SourceMapForwardResult | null;
-    reverse(page: number, x: number, y: number): SourceMapReverseResult | null;
     clear(): void;
 }
 

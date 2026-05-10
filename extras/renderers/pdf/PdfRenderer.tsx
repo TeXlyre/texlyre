@@ -892,6 +892,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
           border: '2px solid rgba(255, 193, 7, 0.8)',
           borderRadius: '2px',
           animation: 'source-map-highlight-pulse 1.5s ease-out',
+          zIndex: 3,
         }}
       />
     ));
@@ -1122,27 +1123,21 @@ const PdfRenderer: React.FC<RendererProps> = ({
                       onClick={(event) => handlePageClick(page, event)}
                     >
                       {shouldRender && (
-                        <div
-                          style={{
-                            position: 'relative',
-                            display: 'inline-block',
-                          }}
+                        <Page
+                          pageNumber={page}
+                          scale={scale}
+                          renderTextLayer={pdfRendererTextSelection}
+                          renderAnnotationLayer
+                          onLoadSuccess={onPageLoadSuccess}
+                          loading={
+                            <div className="pdf-page-loading">
+                              {t('Loading page')} {page}
+                              {t('...')}
+                            </div>
+                          }
                         >
-                          <Page
-                            pageNumber={page}
-                            scale={scale}
-                            renderTextLayer={pdfRendererTextSelection}
-                            renderAnnotationLayer
-                            onLoadSuccess={onPageLoadSuccess}
-                            loading={
-                              <div className="pdf-page-loading">
-                                {t('Loading page')} {page}
-                                {t('...')}
-                              </div>
-                            }
-                          />
                           {renderHighlight(page)}
-                        </div>
+                        </Page>
                       )}
                     </div>
                   );
@@ -1153,26 +1148,20 @@ const PdfRenderer: React.FC<RendererProps> = ({
                     style={{ position: 'relative' }}
                     onClick={(event) => handlePageClick(currentPage, event)}
                   >
-                    <div
-                      style={{
-                        position: 'relative',
-                        display: 'inline-block',
-                      }}
+                    <Page
+                      pageNumber={currentPage}
+                      scale={scale}
+                      renderTextLayer={pdfRendererTextSelection}
+                      renderAnnotationLayer
+                      onLoadSuccess={onPageLoadSuccess}
+                      loading={
+                        <div className="pdf-page-loading">
+                          {t('Loading page...')}
+                        </div>
+                      }
                     >
-                      <Page
-                        pageNumber={currentPage}
-                        scale={scale}
-                        renderTextLayer={pdfRendererTextSelection}
-                        renderAnnotationLayer
-                        onLoadSuccess={onPageLoadSuccess}
-                        loading={
-                          <div className="pdf-page-loading">
-                            {t('Loading page...')}
-                          </div>
-                        }
-                      />
                       {renderHighlight(currentPage)}
-                    </div>
+                    </Page>
                   </div>
                 ))}
           </Document>
