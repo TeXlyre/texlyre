@@ -221,7 +221,13 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 
 [data-layout="texlyre-mobile"] .latex-outline,
 [data-layout="texlyre-mobile"] .typst-outline {
-	display: none !important;
+	width: 100% !important;
+	max-width: 100% !important;
+	flex: 1 !important;
+	display: block !important;
+	overflow-y: auto !important;
+	min-height: 0 !important;
+	max-height: 50% !important;
 }
 
 [data-layout="texlyre-mobile"] .view-toggle {
@@ -289,7 +295,6 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 /* Hidden / mobile-only utilities */
 [data-layout="texlyre-mobile"] .resize-handle,
 [data-layout="texlyre-mobile"] .collapse-button,
-[data-layout="texlyre-mobile"] .comment-panel,
 [data-layout="texlyre-mobile"] .comment-toggle-button,
 [data-layout="texlyre-mobile"] .mobile-hidden {
 	display: none !important;
@@ -380,8 +385,7 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 [data-layout="texlyre-mobile"] body.mobile-view-editor .comment-panel {
 	position: relative !important;
 	right: 0 !important;
-	width: 95vw !important;
-	max-width: 450px !important;
+	width: 65vw !important;
 	z-index: calc(var(--mobile-z-navigation) - 1) !important;
 	background-color: var(--pico-background) !important;
 	border-left: 1px solid var(--accent-border) !important;
