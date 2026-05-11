@@ -24,12 +24,35 @@ export const registerEditorEventHandlers = (
         isEditingFile,
         currentFileId,
         documentId,
-        enableComments, // currently just part of the shape; logic is in main hook
+        enableComments,
         updateComments,
         saveFileToStorage,
         saveDocumentToLinkedFile,
         setShowSaveIndicator,
     } = opts;
+
+    const refreshCommentsSoon = (delay = 50) => {
+        setTimeout(() => {
+            if (!viewRef.current) return;
+            updateComments(viewRef.current.state.doc.toString());
+        }, delay);
+    };
+
+    const isValidTagRange = (
+        openTagStart: number,
+        openTagEnd: number,
+        closeTagStart: number,
+        closeTagEnd: number,
+        contentLength: number,
+    ) => {
+        return (
+            openTagStart >= 0 &&
+            openTagEnd > openTagStart &&
+            closeTagStart >= openTagEnd &&
+            closeTagEnd > closeTagStart &&
+            closeTagEnd <= contentLength
+        );
+    };
 
     const handleCommentResponseAdded = (event: Event) => {
         const customEvent = event as CustomEvent<{
@@ -37,7 +60,7 @@ export const registerEditorEventHandlers = (
             rawComment: { openTag: string; closeTag: string };
         }>;
 
-        if (!viewRef.current || isViewOnly) return;
+        if (!viewRef.current || isViewOnly || !enableComments) return;
 
         try {
             const { commentId, rawComment } = customEvent.detail;
@@ -48,86 +71,79 @@ export const registerEditorEventHandlers = (
                 `<###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${commentId}`,
                 'g',
             );
-            const openMatch = openTagRegex.exec(currentContent);
 
+            const openMatch = openTagRegex.exec(currentContent);
             if (!openMatch) return;
 
             let openTagStart = openMatch.index;
-            const backtickBefore =
-                openTagStart > 0 && currentContent[openTagStart - 1] === '`';
 
-            if (backtickBefore) {
-                openTagStart = openTagStart - 1;
+            if (openTagStart > 0 && currentContent[openTagStart - 1] === '`') {
+                openTagStart -= 1;
             }
 
             const openTagCoreEnd =
                 currentContent.indexOf('###>', openMatch.index) + 4;
-            const backtickAfter =
-                openTagCoreEnd < currentContent.length &&
-                currentContent[openTagCoreEnd] === '`';
 
-            const openTagEnd = backtickAfter
-                ? openTagCoreEnd + 1
-                : openTagCoreEnd;
+            if (openTagCoreEnd < 4) return;
+
+            const openTagEnd =
+                openTagCoreEnd < currentContent.length &&
+                    currentContent[openTagCoreEnd] === '`'
+                    ? openTagCoreEnd + 1
+                    : openTagCoreEnd;
 
             const closeTagRegex = new RegExp(
                 `<\\/###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${commentId}(?:\\s|%)*###>`,
                 'g',
             );
+
             closeTagRegex.lastIndex = openTagEnd;
             const closeMatch = closeTagRegex.exec(currentContent);
-
             if (!closeMatch) return;
 
             let closeTagStart = closeMatch.index;
-            const closeTagBeforeBacktick =
-                closeTagStart > 0 && currentContent[closeTagStart - 1] === '`';
 
-            if (closeTagBeforeBacktick) {
-                closeTagStart = closeTagStart - 1;
+            if (closeTagStart > 0 && currentContent[closeTagStart - 1] === '`') {
+                closeTagStart -= 1;
             }
 
             const closeTagCoreEnd = closeMatch.index + closeMatch[0].length;
-            const closeTagAfterBacktick =
+
+            const closeTagEnd =
                 closeTagCoreEnd < currentContent.length &&
-                currentContent[closeTagCoreEnd] === '`';
+                    currentContent[closeTagCoreEnd] === '`'
+                    ? closeTagCoreEnd + 1
+                    : closeTagCoreEnd;
 
-            const closeTagEnd = closeTagAfterBacktick
-                ? closeTagCoreEnd + 1
-                : closeTagCoreEnd;
+            if (
+                !isValidTagRange(
+                    openTagStart,
+                    openTagEnd,
+                    closeTagStart,
+                    closeTagEnd,
+                    currentContent.length,
+                )
+            ) {
+                console.warn('Invalid comment response range, skipping');
+                return;
+            }
 
-            const commentedTextStart = backtickAfter
-                ? openTagCoreEnd + 1
-                : openTagCoreEnd;
-            const commentedTextEnd = closeTagBeforeBacktick
-                ? closeTagStart
-                : closeMatch.index;
-
-            const commentedText = currentContent.slice(
-                commentedTextStart,
-                commentedTextEnd,
-            );
-
-            const newContent = `${rawComment.openTag}${commentedText}${rawComment.closeTag}`;
-
-            const transaction = view.state.update({
+            view.dispatch({
                 changes: [
                     {
                         from: openTagStart,
+                        to: openTagEnd,
+                        insert: rawComment.openTag,
+                    },
+                    {
+                        from: closeTagStart,
                         to: closeTagEnd,
-                        insert: newContent,
+                        insert: rawComment.closeTag,
                     },
                 ],
             });
 
-            view.dispatch(transaction);
-
-            setTimeout(() => {
-                if (viewRef.current) {
-                    const finalContent = viewRef.current.state.doc.toString();
-                    updateComments(finalContent);
-                }
-            }, 10);
+            refreshCommentsSoon(10);
         } catch (error) {
             console.error('Error processing comment response:', error);
         }
@@ -141,28 +157,44 @@ export const registerEditorEventHandlers = (
             closeTagEnd: number;
         }>;
 
-        if (!viewRef.current || isViewOnly) return;
+        if (!viewRef.current || isViewOnly || !enableComments) return;
 
         try {
             const { openTagStart, openTagEnd, closeTagStart, closeTagEnd } =
                 customEvent.detail;
-            const view = viewRef.current;
 
-            const transaction = view.state.update({
+            const view = viewRef.current;
+            const currentContent = view.state.doc.toString();
+
+            if (
+                !isValidTagRange(
+                    openTagStart,
+                    openTagEnd,
+                    closeTagStart,
+                    closeTagEnd,
+                    currentContent.length,
+                )
+            ) {
+                console.warn('Invalid comment deletion range, skipping');
+                return;
+            }
+
+            view.dispatch({
                 changes: [
-                    { from: closeTagStart, to: closeTagEnd },
-                    { from: openTagStart, to: openTagEnd },
+                    {
+                        from: openTagStart,
+                        to: openTagEnd,
+                        insert: '',
+                    },
+                    {
+                        from: closeTagStart,
+                        to: closeTagEnd,
+                        insert: '',
+                    },
                 ],
             });
 
-            view.dispatch(transaction);
-
-            setTimeout(() => {
-                if (viewRef.current) {
-                    const updatedContent = viewRef.current.state.doc.toString();
-                    updateComments(updatedContent);
-                }
-            }, 50);
+            refreshCommentsSoon();
         } catch (error) {
             console.error('Error processing comment deletion:', error);
         }
@@ -177,7 +209,7 @@ export const registerEditorEventHandlers = (
             rawComment: { openTag: string; closeTag: string };
         }>;
 
-        if (!viewRef.current || isViewOnly) return;
+        if (!viewRef.current || isViewOnly || !enableComments) return;
 
         try {
             const {
@@ -187,27 +219,39 @@ export const registerEditorEventHandlers = (
                 closeTagEnd,
                 rawComment,
             } = customEvent.detail;
-            const view = viewRef.current;
 
-            const transaction = view.state.update({
+            const view = viewRef.current;
+            const currentContent = view.state.doc.toString();
+
+            if (
+                !isValidTagRange(
+                    openTagStart,
+                    openTagEnd,
+                    closeTagStart,
+                    closeTagEnd,
+                    currentContent.length,
+                )
+            ) {
+                console.warn('Invalid comment update range, skipping');
+                return;
+            }
+
+            view.dispatch({
                 changes: [
+                    {
+                        from: openTagStart,
+                        to: openTagEnd,
+                        insert: rawComment.openTag,
+                    },
                     {
                         from: closeTagStart,
                         to: closeTagEnd,
                         insert: rawComment.closeTag,
                     },
-                    { from: openTagStart, to: openTagEnd, insert: rawComment.openTag },
                 ],
             });
 
-            view.dispatch(transaction);
-
-            setTimeout(() => {
-                if (viewRef.current) {
-                    const updatedContent = viewRef.current.state.doc.toString();
-                    updateComments(updatedContent);
-                }
-            }, 50);
+            refreshCommentsSoon();
         } catch (error) {
             console.error('Error processing comment update:', error);
         }
@@ -220,6 +264,7 @@ export const registerEditorEventHandlers = (
             documentId?: string;
             tabId?: string;
         }>;
+
         if (!viewRef.current) return;
 
         try {
@@ -233,13 +278,12 @@ export const registerEditorEventHandlers = (
                     isEditingFile && fileId && currentFileId === fileId;
                 const isTargetDoc =
                     !isEditingFile && eventDocId && documentId === eventDocId;
+
                 if (!isTargetFile && !isTargetDoc) return;
-            } else {
-                if (isEditingFile) {
-                    if (fileId && currentFileId && currentFileId !== fileId) return;
-                } else {
-                    if (eventDocId && documentId && eventDocId !== documentId) return;
-                }
+            } else if (isEditingFile) {
+                if (fileId && currentFileId && currentFileId !== fileId) return;
+            } else if (eventDocId && documentId && eventDocId !== documentId) {
+                return;
             }
 
             if (line && line > 0) {
@@ -265,6 +309,7 @@ export const registerEditorEventHandlers = (
             documentId?: string;
             tabId?: string;
         }>;
+
         if (!viewRef.current) return;
 
         try {
@@ -278,13 +323,12 @@ export const registerEditorEventHandlers = (
                     isEditingFile && fileId && currentFileId === fileId;
                 const isTargetDoc =
                     !isEditingFile && eventDocId && documentId === eventDocId;
+
                 if (!isTargetFile && !isTargetDoc) return;
-            } else {
-                if (isEditingFile) {
-                    if (fileId && currentFileId && currentFileId !== fileId) return;
-                } else {
-                    if (eventDocId && documentId && eventDocId !== documentId) return;
-                }
+            } else if (isEditingFile) {
+                if (fileId && currentFileId && currentFileId !== fileId) return;
+            } else if (eventDocId && documentId && eventDocId !== documentId) {
+                return;
             }
 
             if (position !== undefined && position >= 0) {

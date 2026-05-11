@@ -134,10 +134,17 @@ class LinkNavigationPlugin {
     };
 
     private handleMouseMove = (event: MouseEvent): void => {
-        const pos = this.view.posAtCoords({
-            x: event.clientX,
-            y: event.clientY
-        });
+        let pos: number | null;
+        try {
+            pos = this.view.posAtCoords({
+                x: event.clientX,
+                y: event.clientY,
+            });
+        } catch {
+            this.currentLink = null;
+            this.clearHighlight();
+            return;
+        }
 
         if (pos === null) {
             this.currentLink = null;
@@ -146,7 +153,6 @@ class LinkNavigationPlugin {
         }
 
         const link = this.detector.detectLinkAtPosition(this.view, pos);
-
         if (!link) {
             this.currentLink = null;
             this.clearHighlight();
