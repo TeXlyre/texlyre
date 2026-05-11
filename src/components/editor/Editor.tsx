@@ -287,26 +287,33 @@ const EditorContent: React.FC<{
         if (!viewRef.current || isViewOnly) return;
 
         const { content, selection } = customEvent.detail;
-        if (content && selection && selection.from !== selection.to) {
-          try {
-            const rawComment = addComment(content) as any;
-            if (rawComment?.openTag && rawComment.closeTag) {
-              viewRef.current.dispatch({
-                changes: [
-                  { from: selection.to, insert: rawComment.closeTag },
-                  { from: selection.from, insert: rawComment.openTag },
-                ],
-              });
-              updateComments(viewRef.current.state.doc.toString());
-            }
-          } catch (error) {
-            console.error('Error adding comment:', error);
-          }
+        if (!content || !selection || selection.from === selection.to) return;
+
+        try {
+          const rawComment = addComment(content) as any;
+          if (!rawComment?.openTag || !rawComment.closeTag) return;
+
+          const view = viewRef.current;
+          const cursorPos =
+            selection.to +
+            rawComment.openTag.length +
+            rawComment.closeTag.length;
+          view.dispatch({
+            changes: [
+              { from: selection.to, insert: rawComment.closeTag },
+              { from: selection.from, insert: rawComment.openTag },
+            ],
+            selection: { anchor: cursorPos, head: cursorPos },
+          });
+          updateComments(view.state.doc.toString());
+        } catch (error) {
+          console.error('Error adding comment:', error);
         }
       };
 
       document.addEventListener('add-comment-to-editor', handleAddCommentToEditor);
-      return () => document.removeEventListener('add-comment-to-editor', handleAddCommentToEditor);
+      return () =>
+        document.removeEventListener('add-comment-to-editor', handleAddCommentToEditor);
     }, [viewRef, isViewOnly, addComment, updateComments]);
 
     useEffect(() => {

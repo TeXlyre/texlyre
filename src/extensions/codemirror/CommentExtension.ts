@@ -1,15 +1,18 @@
-// src/extensions/codemirror/CommentExtension.ts
 import {
+	Annotation,
+	EditorState,
+	Prec,
 	RangeSet,
 	StateEffect,
 	StateField,
-	type Transaction,
+	Transaction,
 } from '@codemirror/state';
 import {
 	Decoration,
 	EditorView,
 	ViewPlugin,
 	WidgetType,
+	keymap,
 } from '@codemirror/view';
 
 import type { Comment } from '../../types/comments';
@@ -24,7 +27,11 @@ export const addComment = StateEffect.define<{
 	};
 	resolved?: boolean;
 }>();
+
 export const clearComments = StateEffect.define<null>();
+
+const removeComment = StateEffect.define<string>();
+const skipCommentProtection = Annotation.define<boolean>();
 
 class CommentWidget extends WidgetType {
 	constructor(
@@ -62,12 +69,28 @@ interface CommentRange {
 	closeEnd: number;
 }
 
+interface SingleChange {
+	from: number;
+	to: number;
+	insert: string;
+}
+
+interface Replacement {
+	from: number;
+	to: number;
+	insert: string;
+	cursorPos: number;
+	removeId?: string;
+	removeIds?: string[];
+}
+
 const commentRanges = StateField.define<CommentRange[]>({
 	create() {
 		return [];
 	},
+
 	update(ranges, tr) {
-		let newRanges = ranges.map((range) => ({
+		let nextRanges = ranges.map((range) => ({
 			...range,
 			openStart: tr.changes.mapPos(range.openStart),
 			openEnd: tr.changes.mapPos(range.openEnd),
@@ -75,133 +98,427 @@ const commentRanges = StateField.define<CommentRange[]>({
 			closeEnd: tr.changes.mapPos(range.closeEnd),
 		}));
 
-		for (const e of tr.effects) {
-			if (e.is(clearComments)) {
-				newRanges = [];
+		for (const effect of tr.effects) {
+			if (effect.is(clearComments)) {
+				nextRanges = [];
 				break;
 			}
-		}
 
-		for (const e of tr.effects) {
-			if (e.is(addComment)) {
-				const { id, positions } = e.value;
-
-				if (
-					positions.openTag.start < positions.openTag.end &&
-					positions.closeTag.start < positions.closeTag.end &&
-					positions.openTag.end <= positions.closeTag.start
-				) {
-					newRanges.push({
-						id,
-						openStart: positions.openTag.start,
-						openEnd: positions.openTag.end,
-						closeStart: positions.closeTag.start,
-						closeEnd: positions.closeTag.end,
-					});
-				} else {
-					console.warn(`Invalid comment range for comment ${id}, skipping`);
-				}
+			if (effect.is(removeComment)) {
+				nextRanges = nextRanges.filter((range) => range.id !== effect.value);
 			}
 		}
 
-		newRanges.sort((a, b) => a.openStart - b.openStart);
-		return newRanges;
+		for (const effect of tr.effects) {
+			if (!effect.is(addComment)) continue;
+
+			const { id, positions } = effect.value;
+
+			if (
+				positions.openTag.start < positions.openTag.end &&
+				positions.closeTag.start < positions.closeTag.end &&
+				positions.openTag.end <= positions.closeTag.start
+			) {
+				nextRanges = nextRanges.filter((range) => range.id !== id);
+
+				nextRanges.push({
+					id,
+					openStart: positions.openTag.start,
+					openEnd: positions.openTag.end,
+					closeStart: positions.closeTag.start,
+					closeEnd: positions.closeTag.end,
+				});
+			} else {
+				console.warn(`Invalid comment range for comment ${id}, skipping`);
+			}
+		}
+
+		nextRanges.sort((a, b) => a.openStart - b.openStart);
+		return nextRanges;
 	},
 });
 
-function preventTagEdits(tr: Transaction): Transaction | null {
-	const ranges = tr.startState.field(commentRanges, false);
-	if (!ranges || ranges.length === 0 || !tr.changes.length) {
-		return tr;
-	}
+const atomicCommentRanges = EditorView.atomicRanges.of((view) => {
+	const ranges = view.state.field(commentRanges, false);
+	if (!ranges?.length) return RangeSet.empty;
 
-	let hasTagEdit = false;
-	const changesArray: Array<{ from: number; to: number; insert: string }> = [];
+	const decorations = ranges
+		.flatMap((range) => [
+			{ from: range.openStart, to: range.openEnd },
+			{ from: range.closeStart, to: range.closeEnd },
+		])
+		.filter((range) => range.from < range.to)
+		.sort((a, b) => a.from - b.from)
+		.map((range) => Decoration.mark({}).range(range.from, range.to));
+
+	return RangeSet.of(decorations);
+});
+
+function intersects(
+	from: number,
+	to: number,
+	rangeFrom: number,
+	rangeTo: number,
+): boolean {
+	return from < rangeTo && to > rangeFrom;
+}
+
+function touchesTags(
+	from: number,
+	to: number,
+	ranges: readonly CommentRange[],
+): boolean {
+	return ranges.some(
+		(range) =>
+			intersects(from, to, range.openStart, range.openEnd) ||
+			intersects(from, to, range.closeStart, range.closeEnd),
+	);
+}
+
+function getSingleChange(tr: Transaction): SingleChange | null {
+	const changes: SingleChange[] = [];
 
 	tr.changes.iterChanges((fromA, toA, _fromB, _toB, inserted) => {
-		for (const range of ranges) {
-			if (
-				(fromA < range.openEnd && toA > range.openStart) ||
-				(fromA < range.closeEnd && toA > range.closeStart)
-			) {
-				hasTagEdit = true;
-			}
-		}
-		changesArray.push({
+		changes.push({
 			from: fromA,
 			to: toA,
 			insert: inserted.toString(),
 		});
 	});
 
-	if (!hasTagEdit) {
-		return tr;
-	}
+	return changes.length === 1 ? changes[0] : null;
+}
 
-	const adjustedChanges: Array<{ from: number; to: number; insert: string }> =
-		[];
-
-	for (const change of changesArray) {
-		let { from, to, insert } = change;
-		let processed = false;
-
-		const sortedRanges = [...ranges].sort((a, b) => a.openStart - b.openStart);
-
-		for (const range of sortedRanges) {
-			if (from < range.openEnd && to > range.openStart) {
-				if (from < range.openStart && to > range.openEnd) {
-					adjustedChanges.push({ from, to: range.openStart, insert });
-					adjustedChanges.push({ from: range.openEnd, to, insert: '' });
-					processed = true;
-					break;
-				}
-				if (from < range.openStart) {
-					to = range.openStart;
-				} else if (to > range.openEnd) {
-					from = range.openEnd;
-				} else {
-					processed = true;
-					break;
-				}
-			}
-
-			if (!processed && from < range.closeEnd && to > range.closeStart) {
-				if (from < range.closeStart && to > range.closeEnd) {
-					adjustedChanges.push({ from, to: range.closeStart, insert });
-					adjustedChanges.push({ from: range.closeEnd, to, insert: '' });
-					processed = true;
-					break;
-				}
-				if (from < range.closeStart) {
-					to = range.closeStart;
-				} else if (to > range.closeEnd) {
-					from = range.closeEnd;
-				} else {
-					processed = true;
-					break;
-				}
-			}
-		}
-
-		if (!processed && from < to) {
-			adjustedChanges.push({ from, to, insert });
-		}
-	}
-
-	if (adjustedChanges.length === 0) {
+function getDeleteDirection(
+	tr: Transaction,
+	change: SingleChange,
+): 'backward' | 'forward' | null {
+	if (change.insert.length > 0 || change.to - change.from !== 1) {
 		return null;
 	}
 
-	try {
-		return tr.startState.update({
-			changes: adjustedChanges,
-			selection: tr.selection,
-			effects: tr.effects,
-		});
-	} catch (error) {
-		console.error('Error creating adjusted transaction:', error);
+	const userEvent = tr.annotation(Transaction.userEvent);
+	if (userEvent === 'delete.backward') return 'backward';
+	if (userEvent === 'delete.forward') return 'forward';
+
+	const selection = tr.startState.selection.main;
+	if (!selection.empty) return null;
+
+	if (selection.from === change.to) return 'backward';
+	if (selection.from === change.from) return 'forward';
+
+	return null;
+}
+
+function removeCommentEffects(replacement: Replacement): StateEffect<unknown>[] {
+	const ids =
+		replacement.removeIds ?? (replacement.removeId ? [replacement.removeId] : []);
+
+	return [...new Set(ids)].map((id) => removeComment.of(id));
+}
+
+function unwrapCommentReplacement(
+	state: EditorState,
+	range: CommentRange,
+): Replacement {
+	const content = state.doc.sliceString(range.openEnd, range.closeStart);
+
+	return {
+		from: range.openStart,
+		to: range.closeEnd,
+		insert: content,
+		cursorPos: range.openStart,
+		removeId: range.id,
+	};
+}
+
+function getBoundaryDeletion(
+	tr: Transaction,
+	change: SingleChange,
+	ranges: readonly CommentRange[],
+): Replacement | null {
+	const direction = getDeleteDirection(tr, change);
+	if (!direction) return null;
+
+	const cursorPos = direction === 'backward' ? change.to : change.from;
+
+	for (const range of ranges) {
+		const atOpenBoundary =
+			direction === 'backward'
+				? cursorPos === range.openEnd
+				: cursorPos === range.openStart;
+
+		const atCloseBoundary =
+			direction === 'backward'
+				? cursorPos === range.closeEnd
+				: cursorPos === range.closeStart;
+
+		if (atOpenBoundary || atCloseBoundary) {
+			return unwrapCommentReplacement(tr.startState, range);
+		}
+	}
+
+	return null;
+}
+
+function getProtectedCursorMove(
+	tr: Transaction,
+	change: SingleChange,
+	ranges: readonly CommentRange[],
+): number | null {
+	const direction = getDeleteDirection(tr, change);
+	if (!direction) return null;
+
+	for (const range of ranges) {
+		if (intersects(change.from, change.to, range.openStart, range.openEnd)) {
+			return direction === 'backward' ? range.openStart : range.openEnd;
+		}
+
+		if (intersects(change.from, change.to, range.closeStart, range.closeEnd)) {
+			return direction === 'backward' ? range.closeStart : range.closeEnd;
+		}
+	}
+
+	return null;
+}
+
+function buildProtectedReplacement(
+	state: EditorState,
+	change: SingleChange,
+	ranges: readonly CommentRange[],
+): Replacement | null {
+	const from = Math.min(change.from, change.to);
+	const to = Math.max(change.from, change.to);
+
+	if (!touchesTags(from, to, ranges)) {
+		return null;
+	}
+
+	const protectedPieces: Array<{ from: number; to: number }> = [];
+	const removeIds: string[] = [];
+
+	for (const range of ranges) {
+		if (range.closeEnd <= from || range.openStart >= to) {
+			continue;
+		}
+
+		if (from <= range.openStart && to >= range.closeEnd) {
+			removeIds.push(range.id);
+			continue;
+		}
+
+		for (const protectedRange of [
+			{ from: range.openStart, to: range.openEnd },
+			{ from: range.closeStart, to: range.closeEnd },
+		]) {
+			const protectedFrom = Math.max(protectedRange.from, from);
+			const protectedTo = Math.min(protectedRange.to, to);
+
+			if (protectedFrom < protectedTo) {
+				protectedPieces.push({
+					from: protectedFrom,
+					to: protectedTo,
+				});
+			}
+		}
+	}
+
+	protectedPieces.sort((a, b) => a.from - b.from || a.to - b.to);
+
+	const mergedPieces: Array<{ from: number; to: number }> = [];
+
+	for (const piece of protectedPieces) {
+		const last = mergedPieces[mergedPieces.length - 1];
+
+		if (last && piece.from <= last.to) {
+			last.to = Math.max(last.to, piece.to);
+		} else {
+			mergedPieces.push({ ...piece });
+		}
+	}
+
+	let insert = '';
+	let cursorOffset = 0;
+	let inserted = false;
+
+	const appendInsertedText = () => {
+		if (inserted) return;
+
+		insert += change.insert;
+		cursorOffset = insert.length;
+		inserted = true;
+	};
+
+	for (const piece of mergedPieces) {
+		appendInsertedText();
+		insert += state.doc.sliceString(piece.from, piece.to);
+	}
+
+	appendInsertedText();
+
+	return {
+		from,
+		to,
+		insert,
+		cursorPos: from + cursorOffset,
+		removeIds,
+	};
+}
+
+function dispatchReplacement(view: EditorView, replacement: Replacement): void {
+	view.dispatch({
+		changes: {
+			from: replacement.from,
+			to: replacement.to,
+			insert: replacement.insert,
+		},
+		selection: {
+			anchor: replacement.cursorPos,
+			head: replacement.cursorPos,
+		},
+		effects: removeCommentEffects(replacement),
+		annotations: skipCommentProtection.of(true),
+	});
+}
+
+const commentProtectionTransactionFilter = EditorState.transactionFilter.of((tr) => {
+	if (!tr.docChanged || tr.annotation(skipCommentProtection)) {
 		return tr;
 	}
+
+	const ranges = tr.startState.field(commentRanges, false);
+	if (!ranges?.length) return tr;
+
+	const change = getSingleChange(tr);
+	if (!change || !touchesTags(change.from, change.to, ranges)) {
+		return tr;
+	}
+
+	const boundaryDeletion = getBoundaryDeletion(tr, change, ranges);
+	if (boundaryDeletion) {
+		return {
+			changes: {
+				from: boundaryDeletion.from,
+				to: boundaryDeletion.to,
+				insert: boundaryDeletion.insert,
+			},
+			selection: {
+				anchor: boundaryDeletion.cursorPos,
+				head: boundaryDeletion.cursorPos,
+			},
+			effects: removeCommentEffects(boundaryDeletion),
+			annotations: skipCommentProtection.of(true),
+		};
+	}
+
+	const cursorMove = getProtectedCursorMove(tr, change, ranges);
+	if (cursorMove !== null) {
+		return {
+			selection: {
+				anchor: cursorMove,
+				head: cursorMove,
+			},
+			annotations: skipCommentProtection.of(true),
+		};
+	}
+
+	const replacement = buildProtectedReplacement(tr.startState, change, ranges);
+	if (!replacement) return tr;
+
+	const originalText = tr.startState.doc.sliceString(
+		replacement.from,
+		replacement.to,
+	);
+
+	if (originalText === replacement.insert) {
+		return {
+			selection: {
+				anchor: replacement.cursorPos,
+				head: replacement.cursorPos,
+			},
+			annotations: skipCommentProtection.of(true),
+		};
+	}
+
+	return {
+		changes: {
+			from: replacement.from,
+			to: replacement.to,
+			insert: replacement.insert,
+		},
+		selection: {
+			anchor: replacement.cursorPos,
+			head: replacement.cursorPos,
+		},
+		effects: removeCommentEffects(replacement),
+		annotations: skipCommentProtection.of(true),
+	};
+});
+
+function getBoundaryComment(
+	view: EditorView,
+	direction: 'forward' | 'backward',
+): CommentRange | null {
+	const selection = view.state.selection.main;
+	if (!selection.empty) return null;
+
+	const ranges = view.state.field(commentRanges, false);
+	if (!ranges?.length) return null;
+
+	const pos = selection.from;
+
+	for (const range of ranges) {
+		const atOpenBoundary =
+			direction === 'backward'
+				? pos === range.openEnd
+				: pos === range.openStart;
+
+		const atCloseBoundary =
+			direction === 'backward'
+				? pos === range.closeEnd
+				: pos === range.closeStart;
+
+		if (atOpenBoundary || atCloseBoundary) {
+			return range;
+		}
+	}
+
+	return null;
+}
+
+function deleteWholeCommentIfBoundary(
+	view: EditorView,
+	direction: 'forward' | 'backward',
+): boolean {
+	const range = getBoundaryComment(view, direction);
+	if (!range) return false;
+
+	try {
+		dispatchReplacement(view, unwrapCommentReplacement(view.state, range));
+
+		return true;
+	} catch (error) {
+		console.error('Error deleting comment chunk:', error);
+		return false;
+	}
+}
+
+const commentDeletionKeymap = Prec.highest(
+	keymap.of([
+		{
+			key: 'Backspace',
+			run: (view) => deleteWholeCommentIfBoundary(view, 'backward'),
+		},
+		{
+			key: 'Delete',
+			run: (view) => deleteWholeCommentIfBoundary(view, 'forward'),
+		},
+	]),
+);
+
+function getDecorationCommentId(decoration: Decoration): string | undefined {
+	const spec = (decoration as unknown as { spec?: any }).spec;
+	return spec?.attributes?.['data-comment-id'] ?? spec?.widget?.id;
 }
 
 export const commentState = StateField.define<RangeSet<Decoration>>({
@@ -212,169 +529,150 @@ export const commentState = StateField.define<RangeSet<Decoration>>({
 	update(value, tr) {
 		value = value.map(tr.changes);
 
-		for (const e of tr.effects) {
-			if (e.is(clearComments)) {
+		for (const effect of tr.effects) {
+			if (effect.is(clearComments)) {
 				value = RangeSet.empty;
-				break;
+			}
+
+			if (effect.is(removeComment)) {
+				value = value.update({
+					filter: (_from, _to, decoration) =>
+						getDecorationCommentId(decoration) !== effect.value,
+				});
 			}
 		}
 
-		const allDecorations = [];
+		const decorations: Array<{
+			decoration: Decoration;
+			from: number;
+			to: number;
+			priority: number;
+		}> = [];
 
-		for (const e of tr.effects) {
-			if (e.is(addComment)) {
-				const { id, positions, resolved } = e.value;
+		for (const effect of tr.effects) {
+			if (!effect.is(addComment)) continue;
 
-				if (
-					positions.openTag &&
-					positions.openTag.start !== undefined &&
-					positions.openTag.end !== undefined
-				) {
-					allDecorations.push({
-						decoration: Decoration.replace({
-							widget: new CommentWidget('open', id),
-							inclusive: false,
-						}),
-						from: positions.openTag.start,
-						to: positions.openTag.end,
-						priority: 1000 + positions.openTag.start,
-					});
-				}
+			const { id, positions, resolved } = effect.value;
 
-				if (
-					positions.closeTag &&
-					positions.closeTag.start !== undefined &&
-					positions.closeTag.end !== undefined
-				) {
-					allDecorations.push({
-						decoration: Decoration.replace({
-							widget: new CommentWidget('close', id),
-							inclusive: false,
-						}),
-						from: positions.closeTag.start,
-						to: positions.closeTag.end,
-						priority: 1000 + positions.closeTag.start,
-					});
-				}
+			value = value.update({
+				filter: (_from, _to, decoration) =>
+					getDecorationCommentId(decoration) !== id,
+			});
 
-				if (
-					!resolved &&
-					positions.content &&
-					positions.content.start !== undefined &&
-					positions.content.end !== undefined &&
-					positions.content.start < positions.content.end
-				) {
-					allDecorations.push({
-						decoration: Decoration.mark({
-							class: 'cm-comment-content',
-							attributes: { 'data-comment-id': id },
-						}),
-						from: positions.content.start,
-						to: positions.content.end,
-						priority: 500 + positions.content.start,
-					});
-				}
+			decorations.push({
+				decoration: Decoration.replace({
+					widget: new CommentWidget('open', id),
+					inclusive: false,
+				}),
+				from: positions.openTag.start,
+				to: positions.openTag.end,
+				priority: 1000 + positions.openTag.start,
+			});
+
+			decorations.push({
+				decoration: Decoration.replace({
+					widget: new CommentWidget('close', id),
+					inclusive: false,
+				}),
+				from: positions.closeTag.start,
+				to: positions.closeTag.end,
+				priority: 1000 + positions.closeTag.start,
+			});
+
+			if (!resolved && positions.content.start < positions.content.end) {
+				decorations.push({
+					decoration: Decoration.mark({
+						class: 'cm-comment-content',
+						attributes: { 'data-comment-id': id },
+					}),
+					from: positions.content.start,
+					to: positions.content.end,
+					priority: 500 + positions.content.start,
+				});
 			}
 		}
 
-		if (allDecorations.length > 0) {
-			allDecorations.sort((a, b) => a.from - b.from || b.priority - a.priority);
+		if (!decorations.length) return value;
 
-			const decorationRanges = allDecorations.map((d) =>
-				d.decoration.range(d.from, d.to),
-			);
+		decorations.sort((a, b) => a.from - b.from || b.priority - a.priority);
 
-			value = value.update({ add: decorationRanges });
-		}
-
-		return value;
+		return value.update({
+			add: decorations.map((item) =>
+				item.decoration.range(item.from, item.to),
+			),
+		});
 	},
 
 	provide: (field) => EditorView.decorations.from(field),
 });
 
 export function processComments(view: EditorView, comments: Comment[]): void {
-	if (!view || !comments || !Array.isArray(comments)) return;
+	if (!view || !Array.isArray(comments)) return;
 
 	if (comments.length === 0) {
 		const currentState = view.state.field(commentState, false);
+
 		if (currentState && currentState.size > 0) {
 			view.dispatch({ effects: [clearComments.of(null)] });
 		}
+
 		return;
 	}
 
 	try {
-		const effects: (
-			| StateEffect<null>
-			| StateEffect<{
-					id: string;
-					positions: {
-						openTag: { start: number; end: number };
-						content: { start: number; end: number };
-						closeTag: { start: number; end: number };
-					};
-					resolved?: boolean;
-			  }>
-		)[] = [];
-
-		const clearEffect = clearComments.of(null);
-		effects.push(clearEffect);
-
+		const effects: StateEffect<unknown>[] = [clearComments.of(null)];
 		const docLength = view.state.doc.length;
 
-		console.log('[CommentExtension] Processing comments:', comments.length);
-
-		const sortedComments = [...comments].sort(
-			(a, b) => a.openTagStart - b.openTagStart,
-		);
+		const sortedComments = Array.from(
+			new Map(comments.map((comment) => [comment.id, comment])).values(),
+		).sort((a, b) => a.openTagStart - b.openTagStart);
 
 		for (const comment of sortedComments) {
 			if (
-				comment.openTagStart !== undefined &&
-				comment.openTagEnd !== undefined &&
-				comment.closeTagStart !== undefined &&
-				comment.closeTagEnd !== undefined
+				comment.openTagStart === undefined ||
+				comment.openTagEnd === undefined ||
+				comment.closeTagStart === undefined ||
+				comment.closeTagEnd === undefined
 			) {
-				if (
-					comment.openTagStart < 0 ||
-					comment.closeTagEnd > docLength ||
-					comment.openTagStart >= comment.openTagEnd ||
-					comment.closeTagStart >= comment.closeTagEnd ||
-					comment.openTagEnd > comment.closeTagStart
-				) {
-					console.warn(
-						`Invalid comment positions for comment ${comment.id}, skipping`,
-					);
-					continue;
-				}
-
-				const positions = {
-					openTag: {
-						start: comment.openTagStart,
-						end: comment.openTagEnd,
-					},
-					content: {
-						start: comment.openTagEnd,
-						end: comment.closeTagStart,
-					},
-					closeTag: {
-						start: comment.closeTagStart,
-						end: comment.closeTagEnd,
-					},
-				};
-
-				effects.push(
-					addComment.of({
-						id: comment.id,
-						positions,
-						resolved: comment.resolved,
-					}),
-				);
+				continue;
 			}
+
+			if (
+				comment.openTagStart < 0 ||
+				comment.closeTagEnd > docLength ||
+				comment.openTagStart >= comment.openTagEnd ||
+				comment.closeTagStart >= comment.closeTagEnd ||
+				comment.openTagEnd > comment.closeTagStart
+			) {
+				console.warn(
+					`Invalid comment positions for comment ${comment.id}, skipping`,
+				);
+				continue;
+			}
+
+			effects.push(
+				addComment.of({
+					id: comment.id,
+					positions: {
+						openTag: {
+							start: comment.openTagStart,
+							end: comment.openTagEnd,
+						},
+						content: {
+							start: comment.openTagEnd,
+							end: comment.closeTagStart,
+						},
+						closeTag: {
+							start: comment.closeTagStart,
+							end: comment.closeTagEnd,
+						},
+					},
+					resolved: comment.resolved,
+				}),
+			);
 		}
 
-		if (view.state && effects.length > 1) {
+		if (effects.length > 1) {
 			view.dispatch({ effects });
 		}
 	} catch (error) {
@@ -382,329 +680,57 @@ export function processComments(view: EditorView, comments: Comment[]): void {
 	}
 }
 
+export function unwrapCommentById(view: EditorView, id: string): boolean {
+	const ranges = view.state.field(commentRanges, false);
+	const range = ranges?.find((commentRange) => commentRange.id === id);
+
+	if (!range) return false;
+
+	try {
+		dispatchReplacement(view, unwrapCommentReplacement(view.state, range));
+
+		return true;
+	} catch (error) {
+		console.error('Error unwrapping comment:', error);
+		return false;
+	}
+}
+
+export function deleteCommentById(view: EditorView, id: string): boolean {
+	const ranges = view.state.field(commentRanges, false);
+	const range = ranges?.find((commentRange) => commentRange.id === id);
+
+	if (!range) return false;
+
+	try {
+		dispatchReplacement(view, {
+			from: range.openStart,
+			to: range.closeEnd,
+			insert: '',
+			cursorPos: range.openStart,
+			removeId: id,
+		});
+
+		return true;
+	} catch (error) {
+		console.error('Error deleting comment:', error);
+		return false;
+	}
+}
+
 class CommentProcessor {
-	private view: EditorView;
 	private lastContent = '';
-	private pendingUpdate: number | null = null;
-	private commentRanges: CommentRange[] = [];
-	private inputHandler: ((event: Event) => boolean) | null = null;
-	private keydownHandler: ((event: KeyboardEvent) => boolean) | null = null;
 	private contentChangeTimeout: number | null = null;
 	private lastProcessTime = 0;
 	private readonly PROCESS_DEBOUNCE_DELAY = 150;
 
-	constructor(view: EditorView) {
-		this.view = view;
-		this.setupEventHandlers();
+	constructor(private view: EditorView) {
 		this.scheduleProcess();
 	}
 
-	private setupEventHandlers() {
-		this.inputHandler = (event: Event) => {
-			const inputEvent = event as InputEvent;
-			if (this.commentRanges.length === 0) return false;
-
-			const selection = this.view.state.selection.main;
-			const { from, to } = selection;
-
-			if (
-				inputEvent.inputType &&
-				(inputEvent.inputType.includes('delete') ||
-					inputEvent.inputType.includes('insert') ||
-					inputEvent.inputType === 'insertText' ||
-					inputEvent.inputType === 'insertCompositionText')
-			) {
-				if (this.wouldAffectTags(from, to, inputEvent.inputType)) {
-					event.preventDefault();
-					event.stopPropagation();
-					this.handleSkipOperation(
-						from,
-						to,
-						inputEvent.inputType,
-						inputEvent.data,
-					);
-					return true;
-				}
-			}
-
-			return false;
-		};
-
-		this.keydownHandler = (event: KeyboardEvent) => {
-			if (this.commentRanges.length === 0) return false;
-
-			const selection = this.view.state.selection.main;
-			const { from, to } = selection;
-
-			if (event.key === 'Backspace' || event.key === 'Delete') {
-				let deleteFrom: number;
-				let deleteTo: number;
-
-				if (from === to) {
-					if (event.key === 'Backspace') {
-						deleteFrom = Math.max(0, from - 1);
-						deleteTo = from;
-					} else {
-						deleteFrom = from;
-						deleteTo = Math.min(this.view.state.doc.length, from + 1);
-					}
-				} else {
-					deleteFrom = from;
-					deleteTo = to;
-				}
-
-				if (
-					deleteFrom < deleteTo &&
-					this.wouldAffectTags(deleteFrom, deleteTo, 'deleteContentBackward')
-				) {
-					event.preventDefault();
-					event.stopPropagation();
-					this.handleSkipOperation(
-						deleteFrom,
-						deleteTo,
-						event.key === 'Backspace'
-							? 'deleteContentBackward'
-							: 'deleteContentForward',
-					);
-					return true;
-				}
-			}
-
-			if (from !== to && this.wouldAffectTags(from, to)) {
-				if (
-					event.key === 'Backspace' ||
-					event.key === 'Delete' ||
-					event.key === 'Enter' ||
-					event.key === 'Tab' ||
-					(!event.ctrlKey &&
-						!event.altKey &&
-						!event.metaKey &&
-						event.key.length === 1)
-				) {
-					event.preventDefault();
-					event.stopPropagation();
-
-					const inputType =
-						event.key === 'Backspace'
-							? 'deleteContentBackward'
-							: event.key === 'Delete'
-								? 'deleteContentForward'
-								: 'insertText';
-					const data =
-						event.key.length === 1 &&
-						!event.ctrlKey &&
-						!event.altKey &&
-						!event.metaKey
-							? event.key
-							: null;
-
-					this.handleSkipOperation(from, to, inputType, data);
-					return true;
-				}
-			}
-
-			return false;
-		};
-
-		this.view.dom.addEventListener('beforeinput', this.inputHandler, true);
-		this.view.dom.addEventListener('keydown', this.keydownHandler, true);
-	}
-
-	private wouldAffectTags(
-		from: number,
-		to: number,
-		_inputType?: string,
-	): boolean {
-		const sortedRanges = [...this.commentRanges].sort(
-			(a, b) => a.openStart - b.openStart,
-		);
-
-		for (const range of sortedRanges) {
-			if (
-				(from < range.openEnd && to > range.openStart) ||
-				(from < range.closeEnd && to > range.closeStart)
-			) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private handleSkipOperation(
-		from: number,
-		to: number,
-		inputType?: string,
-		data?: string | null,
-	) {
-		if (
-			data &&
-			(inputType === 'insertText' || inputType === 'insertCompositionText')
-		) {
-			const deleteChanges = this.calculateSkipChanges(from, to, 'delete');
-			if (deleteChanges.changes.length > 0) {
-				try {
-					this.view.dispatch({
-						changes: deleteChanges.changes,
-						selection: {
-							anchor: deleteChanges.cursorPos,
-							head: deleteChanges.cursorPos,
-						},
-					});
-
-					setTimeout(() => {
-						this.view.dispatch({
-							changes: {
-								from: deleteChanges.cursorPos,
-								to: deleteChanges.cursorPos,
-								insert: data,
-							},
-							selection: {
-								anchor: deleteChanges.cursorPos + data.length,
-								head: deleteChanges.cursorPos + data.length,
-							},
-						});
-					}, 0);
-				} catch (error) {
-					console.error('Error applying insertion with skip operation:', error);
-				}
-			}
-			return;
-		}
-
-		if (from + 1 === to || from - 1 === to) {
-			const newCursorPos = this.handleSingleCharDeletion(from, to, inputType);
-			if (newCursorPos !== null) {
-				try {
-					this.view.dispatch({
-						selection: { anchor: newCursorPos, head: newCursorPos },
-					});
-				} catch (error) {
-					console.error('Error moving cursor for single char deletion:', error);
-				}
-				return;
-			}
-		}
-
-		const result = this.calculateSkipChanges(from, to, 'delete');
-
-		if (result.changes.length > 0) {
-			try {
-				this.view.dispatch({
-					changes: result.changes,
-					selection: { anchor: result.cursorPos, head: result.cursorPos },
-				});
-			} catch (error) {
-				console.error('Error applying skip operation:', error);
-			}
-		} else if (result.cursorPos !== from) {
-			try {
-				this.view.dispatch({
-					selection: { anchor: result.cursorPos, head: result.cursorPos },
-				});
-			} catch (error) {
-				console.error('Error moving cursor:', error);
-			}
-		}
-	}
-
-	private handleSingleCharDeletion(
-		from: number,
-		to: number,
-		inputType?: string,
-	): number | null {
-		const isBackspace = inputType === 'deleteContentBackward';
-		const sortedRanges = [...this.commentRanges].sort(
-			(a, b) => a.openStart - b.openStart,
-		);
-
-		for (const range of sortedRanges) {
-			if (from < range.openEnd && to > range.openStart) {
-				if (isBackspace) {
-					return range.openStart;
-				}
-				return range.openEnd;
-			}
-
-			if (from < range.closeEnd && to > range.closeStart) {
-				if (isBackspace) {
-					return range.closeStart;
-				}
-				return range.closeEnd;
-			}
-		}
-
-		return null;
-	}
-
-	private calculateSkipChanges(
-		from: number,
-		to: number,
-		_operation: 'delete',
-	): {
-		changes: Array<{ from: number; to: number; insert: string }>;
-		cursorPos: number;
-	} {
-		const changes = [];
-		let newCursorPos = from;
-		const sortedRanges = [...this.commentRanges].sort(
-			(a, b) => a.openStart - b.openStart,
-		);
-
-		let currentFrom = from;
-		const currentTo = to;
-
-		for (const range of sortedRanges) {
-			if (currentTo <= range.openStart || currentFrom >= range.closeEnd) {
-				continue;
-			}
-
-			if (currentFrom < range.openEnd && currentTo > range.openStart) {
-				if (currentFrom < range.openStart) {
-					changes.push({ from: currentFrom, to: range.openStart, insert: '' });
-					newCursorPos = range.openStart;
-				}
-
-				if (currentTo > range.openEnd) {
-					currentFrom = range.openEnd;
-				} else {
-					newCursorPos = range.openStart;
-					break;
-				}
-			}
-
-			if (currentFrom >= range.openEnd && currentFrom < range.closeStart) {
-				const contentEnd = Math.min(currentTo, range.closeStart);
-				if (currentFrom < contentEnd) {
-					changes.push({ from: currentFrom, to: contentEnd, insert: '' });
-					newCursorPos = currentFrom;
-				}
-				currentFrom = contentEnd;
-			}
-
-			if (currentFrom < range.closeEnd && currentTo > range.closeStart) {
-				if (currentTo > range.closeEnd) {
-					currentFrom = range.closeEnd;
-				} else {
-					newCursorPos = range.closeStart;
-					break;
-				}
-			}
-		}
-
-		if (currentFrom < currentTo) {
-			changes.push({ from: currentFrom, to: currentTo, insert: '' });
-			if (changes.length === 1 && currentFrom === from) {
-				newCursorPos = currentFrom;
-			}
-		}
-
-		return { changes, cursorPos: newCursorPos };
-	}
-
 	scheduleProcess() {
-		if (this.contentChangeTimeout) {
+		if (this.contentChangeTimeout !== null) {
 			clearTimeout(this.contentChangeTimeout);
-			this.contentChangeTimeout = null;
 		}
 
 		this.contentChangeTimeout = window.setTimeout(() => {
@@ -715,52 +741,36 @@ class CommentProcessor {
 
 	checkContent() {
 		const content = this.view.state.doc.toString();
-		
-		if (content !== this.lastContent) {
-			const now = Date.now();
-			
-			if (now - this.lastProcessTime < 100) {
-				this.scheduleProcess();
-				return;
-			}
-			
-			this.lastContent = content;
-			this.lastProcessTime = now;
 
-			const event = new CustomEvent('codemirror-content-changed', {
-				detail: { content, view: this.view },
-			});
-			document.dispatchEvent(event);
+		if (content === this.lastContent) return;
+
+		const now = Date.now();
+
+		if (now - this.lastProcessTime < 100) {
+			this.scheduleProcess();
+			return;
 		}
+
+		this.lastContent = content;
+		this.lastProcessTime = now;
+
+		document.dispatchEvent(
+			new CustomEvent('codemirror-content-changed', {
+				detail: { content, view: this.view },
+			}),
+		);
 	}
 
-	update(update: any) {
-		const ranges = update.state.field(commentRanges, false);
-		if (ranges) {
-			this.commentRanges = ranges;
-		}
-
+	update(update: { docChanged: boolean }) {
 		if (update.docChanged) {
 			this.scheduleProcess();
 		}
 	}
 
 	destroy() {
-		if (this.pendingUpdate !== null) {
-			cancelAnimationFrame(this.pendingUpdate);
-			this.pendingUpdate = null;
-		}
-
 		if (this.contentChangeTimeout !== null) {
 			clearTimeout(this.contentChangeTimeout);
 			this.contentChangeTimeout = null;
-		}
-
-		if (this.inputHandler) {
-			this.view.dom.removeEventListener('beforeinput', this.inputHandler, true);
-		}
-		if (this.keydownHandler) {
-			this.view.dom.removeEventListener('keydown', this.keydownHandler, true);
 		}
 	}
 }
@@ -768,6 +778,9 @@ class CommentProcessor {
 export const commentSystemExtension = [
 	commentRanges,
 	commentState,
+	atomicCommentRanges,
+	commentProtectionTransactionFilter,
+	commentDeletionKeymap,
 	ViewPlugin.define((view) => new CommentProcessor(view)),
 	...commentBubbleExtension,
 ];
