@@ -1,7 +1,19 @@
-// These constants are automatically generated. Do not edit directly. **
-const CACHE_NAME = `texlyre-v0.7.44`;
+// These constants are automatically generated. Do not edit directly.
+// Generated on: 2026-05-11T20:38:53.896Z
+const CACHE_NAME = `texlyre-v0.7.45`;
 const BASE_PATH = '/texlyre/';
 const FONTS_CACHE_NAME = 'fonts-cache-v1';
+const AIRGAP_ALLOWED_DOMAINS = [
+	"texlyre.github.io",
+	"texlyre.org",
+	"typst.org"
+];
+const AIRGAP_ALLOWED_PROTOCOLS = [
+	"https:",
+	"http:",
+	"wss:",
+	"ws:"
+];
 // *** End automatic generation ***
 
 let airgapExternalRequests = false;
@@ -65,9 +77,26 @@ async function handleShareTarget(request) {
   return Response.redirect(BASE_PATH, 303);
 }
 
-function isExternalRequest(request) {
+function isAllowedAirgapProtocol(protocol) {
+  return AIRGAP_ALLOWED_PROTOCOLS.includes(protocol);
+}
+
+function isBlockedByAirgap(request) {
   const url = new URL(request.url);
-  return url.origin !== self.location.origin;
+
+  if (!isAllowedAirgapProtocol(url.protocol)) {
+    return false;
+  }
+
+  if (url.origin === self.location.origin || url.hostname === self.location.hostname) {
+    return false;
+  }
+
+  if (isAllowedAirgapHost(url.hostname)) {
+    return false;
+  }
+
+  return true;
 }
 
 function blockedByAirgapResponse(request) {
@@ -181,8 +210,8 @@ async function cacheWithExpiry(cacheName, request, response) {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  if (airgapExternalRequests && isExternalRequest(event.request)) {
-    console.warn('[ServiceWorker] Blocked external request by air-gap mode:', event.request.url);
+  if (airgapExternalRequests && isBlockedByAirgap(event.request)) {
+    console.warn('[ServiceWorker] Blocked request by air-gap mode:', event.request.url);
     event.respondWith(blockedByAirgapResponse(event.request));
     return;
   }
