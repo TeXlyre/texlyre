@@ -21,8 +21,8 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
 	const { getSetting } = useSettings();
 
-	const forceAppOffline =
-		(getSetting('offline-force-app-offline')?.value as boolean) ?? false;
+	const airgapExternalRequests =
+		(getSetting('offline-airgap-external-requests')?.value as boolean) ?? false;
 
 	const forceCollabOffline =
 		(getSetting('offline-force-collab-offline')?.value as boolean) ?? false;
@@ -30,16 +30,10 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({
 	const hideOfflineBanner =
 		(getSetting('offline-hide-banner')?.value as boolean) ?? false;
 
-	const airgapExternalRequests =
-		(getSetting('offline-airgap-external-requests')?.value as boolean) ?? false;
-
 	const [status, setStatus] = useState(offlineService.getStatus());
 
 	useEffect(() => {
-		offlineService.setForceOffline(forceAppOffline);
-	}, [forceAppOffline]);
-
-	useEffect(() => {
+		offlineService.setForceOffline(airgapExternalRequests);
 		offlineService.setAirgapExternalRequests(airgapExternalRequests);
 	}, [airgapExternalRequests]);
 

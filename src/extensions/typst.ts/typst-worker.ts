@@ -25,6 +25,9 @@ type CompileMessage = {
             pdfTags?: boolean;
             creationTimestamp?: number;
         };
+        options?: {
+            allowRemoteUrls?: boolean;
+        };
     };
 };
 
@@ -196,7 +199,8 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
         await ensureInit();
 
         const { payload } = data as CompileMessage;
-        const { mainFilePath, sources, format, pdfOptions } = payload;
+        const { mainFilePath, sources, format, pdfOptions, options } = payload;
+        const allowRemoteUrls = options?.allowRemoteUrls !== false;
 
         compiler.resetShadow();
         for (const [path, content] of Object.entries(sources)) {
@@ -252,7 +256,7 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
 
             output = sanitizeSvg(String(rawSvg), {
                 baseUrl: self.location.href,
-                allowRemoteUrls: true,
+                allowRemoteUrls,
             });
             const pageInfos = await retrievePageInfos(compileResult.result);
 

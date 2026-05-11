@@ -58,7 +58,8 @@ class TypstService {
         mainFileName: string,
         fileTree: FileNode[],
         format: TypstOutputFormat = this.defaultFormat,
-        pdfOptions?: TypstPdfOptions
+        pdfOptions?: TypstPdfOptions,
+        options: { allowRemoteUrls?: boolean } = {}
     ): Promise<TypstCompileResult> {
         if (!this.isReady()) await this.initialize();
 
@@ -78,7 +79,14 @@ class TypstService {
 
             this.notify('info', t('Compiling Typst to {format}...', { format: format.toUpperCase() }), operationId, format);
 
-            const { output, diagnostics, pageInfos } = await this.runCompile(normalizedMain, sources, format, pdfOptions, signal);
+            const { output, diagnostics, pageInfos } = await this.runCompile(
+                normalizedMain,
+                sources,
+                format,
+                pdfOptions,
+                signal,
+                options,
+            );
 
             const log = this.formatDiagnostics(diagnostics);
             const hasErrors = this.hasErrorDiagnostics(diagnostics);
@@ -110,9 +118,11 @@ class TypstService {
     async exportDocument(
         mainFileName: string,
         fileTree: FileNode[],
-        options: { format?: TypstOutputFormat; includeLog?: boolean; pdfOptions?: TypstPdfOptions } = {}
+        format: TypstOutputFormat = this.defaultFormat,
+        pdfOptions?: TypstPdfOptions,
+        includeLog = false,
+        compileOptions: { allowRemoteUrls?: boolean } = {}
     ): Promise<void> {
-        const { format = this.defaultFormat, includeLog = false, pdfOptions } = options;
         const operationId = `typst-export-${nanoid()}`;
 
         if (!this.isReady()) await this.initialize();
@@ -124,8 +134,21 @@ class TypstService {
             this.notify('info', t('Preparing files for export...'), operationId, format);
             const { sources } = await this.prepareSources(normalizedMain, fileTree, signal);
 
-            this.notify('info', t('Compiling for export to {format}...', { format: format.toUpperCase() }), operationId, format);
-            const { output, diagnostics } = await this.runCompile(normalizedMain, sources, format, pdfOptions, signal);
+            this.notify(
+                'info',
+                t('Compiling for export to {format}...', { format: format.toUpperCase() }),
+                operationId,
+                format
+            );
+
+            const { output, diagnostics } = await this.runCompile(
+                normalizedMain,
+                sources,
+                format,
+                pdfOptions,
+                signal,
+                compileOptions
+            );
 
             if (this.hasErrorDiagnostics(diagnostics)) {
                 this.notify('error', t('Export failed'), operationId, format, 3000);
@@ -133,7 +156,12 @@ class TypstService {
             }
 
             const baseName = this.getBaseName(normalizedMain);
-            const files = this.buildExportFiles(output, format, baseName, includeLog ? this.formatDiagnostics(diagnostics) : null);
+            const files = this.buildExportFiles(
+                output,
+                format,
+                baseName,
+                includeLog ? this.formatDiagnostics(diagnostics) : null
+            );
 
             if (files.length > 0) {
                 await downloadFiles(files, baseName);
@@ -142,6 +170,7 @@ class TypstService {
             this.notify('success', t('Export completed successfully'), operationId, format, 2000);
         } catch (error) {
             if (this.isCancellation(error)) return;
+
             const message = error instanceof Error ? error.message : t('Unknown error');
             this.notify('error', `Export error: ${message}`, operationId, format, 5000);
         } finally {
@@ -208,9 +237,18 @@ class TypstService {
         sources: Record<string, string | Uint8Array>,
         format: TypstOutputFormat,
         pdfOptions: TypstPdfOptions | undefined,
-        signal: AbortSignal
+        signal: AbortSignal,
+        options: { allowRemoteUrls?: boolean } = {}
     ): Promise<{ output: Uint8Array | string; diagnostics?: any[]; pageInfos?: TypstPageInfo[] }> {
-        const result = await this.compilerEngine.compile(mainFilePath, sources, format, pdfOptions, signal);
+        const result = await this.compilerEngine.compile(
+            mainFilePath,
+            sources,
+            format,
+            pdfOptions,
+            signal,
+            options
+        );
+
         return {
             output: result.output,
             diagnostics: result.diagnostics,

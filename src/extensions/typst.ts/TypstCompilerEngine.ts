@@ -2,13 +2,34 @@
 import { nanoid } from 'nanoid';
 import type { TypstOutputFormat, TypstPdfOptions } from '../../types/typst';
 
+type TypstCompileWorkerOptions = {
+    allowRemoteUrls?: boolean;
+};
+
+type TypstCompilePayload = {
+    mainFilePath: string;
+    sources: Record<string, string | Uint8Array>;
+    format: TypstOutputFormat;
+    pdfOptions?: TypstPdfOptions;
+    options?: TypstCompileWorkerOptions;
+};
+
 export type TypstWorkerMessage =
-    | { id: string; type: 'compile'; payload: { mainFilePath: string; sources: Record<string, string | Uint8Array>; format: TypstOutputFormat; pdfOptions?: TypstPdfOptions } }
+    | { id: string; type: 'compile'; payload: TypstCompilePayload }
     | { id: string; type: 'ping' };
 
 export type TypstWorkerResponse =
     | { id: string; type: 'pong' }
-    | { id: string; type: 'done'; result: { format: string; output: Uint8Array | string; diagnostics?: any[]; pageInfos?: any[] } }
+    | {
+        id: string;
+        type: 'done';
+        result: {
+            format: string;
+            output: Uint8Array | string;
+            diagnostics?: any[];
+            pageInfos?: any[];
+        };
+    }
     | { id: string; type: 'error'; error: string };
 
 export class TypstCompilerEngine {
@@ -60,9 +81,25 @@ export class TypstCompilerEngine {
         sources: Record<string, string | Uint8Array>,
         format: TypstOutputFormat,
         pdfOptions?: TypstPdfOptions,
-        signal?: AbortSignal
-    ): Promise<{ format: string; output: Uint8Array | string; diagnostics?: any[]; pageInfos?: any[] }> {
-        return this.callWorker('compile', { mainFilePath, sources, format, pdfOptions }, signal);
+        signal?: AbortSignal,
+        options?: TypstCompileWorkerOptions
+    ): Promise<{
+        format: string;
+        output: Uint8Array | string;
+        diagnostics?: any[];
+        pageInfos?: any[];
+    }> {
+        return this.callWorker(
+            'compile',
+            {
+                mainFilePath,
+                sources,
+                format,
+                pdfOptions,
+                options,
+            },
+            signal
+        );
     }
 
     terminate(): void {
@@ -70,15 +107,14 @@ export class TypstCompilerEngine {
             this.worker.terminate();
             this.worker = null;
         }
+
         this.pendingResolves.clear();
         this.pendingRejects.clear();
     }
 
     private callWorker<TType extends 'compile' | 'ping'>(
         type: TType,
-        payload: TType extends 'compile'
-            ? { mainFilePath: string; sources: Record<string, string | Uint8Array>; format: TypstOutputFormat; pdfOptions?: TypstPdfOptions }
-            : undefined,
+        payload: TType extends 'compile' ? TypstCompilePayload : undefined,
         signal?: AbortSignal
     ): Promise<any> {
         const id = nanoid();
@@ -94,8 +130,10 @@ export class TypstCompilerEngine {
                 this.worker.terminate();
                 this.worker = null;
             }
+
             const reject = this.pendingRejects.get(id);
             if (reject) reject(new Error('Compilation was cancelled'));
+
             this.pendingResolves.delete(id);
             this.pendingRejects.delete(id);
         };
@@ -105,6 +143,7 @@ export class TypstCompilerEngine {
                 abort();
                 return Promise.reject(new Error('Compilation was cancelled'));
             }
+
             signal.addEventListener('abort', abort, { once: true });
         }
 

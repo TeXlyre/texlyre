@@ -238,7 +238,6 @@ const CanvasRenderer: React.FC<RendererProps> = ({
   const pendingRenderRef = useRef<Set<number>>(new Set());
   const renderingRef = useRef<Set<number>>(new Set());
   const renderTokensRef = useRef<Map<number, number>>(new Map());
-  const lastBufferRef = useRef<ArrayBuffer | null>(null);
 
   const propertiesRegistered = useRef(false);
   const lastStablePageRef = useRef(1);
@@ -258,6 +257,8 @@ const CanvasRenderer: React.FC<RendererProps> = ({
     (getSetting('canvas-renderer-text-selection')?.value as boolean) ?? true;
   const canvasRendererAnnotations =
     (getSetting('canvas-renderer-annotations')?.value as boolean) ?? true;
+  const airgapExternalRequests =
+    (getSetting('offline-airgap-external-requests')?.value as boolean) ?? false;
 
   const isPdf = contentType === 'pdf';
 
@@ -689,7 +690,10 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         } else {
           await destroyPdf(pdfDocRef);
 
-          const { pages, metadata } = await parseSvgPages(buffer, { trusted });
+          const { pages, metadata } = await parseSvgPages(buffer, {
+            trusted,
+            allowRemoteUrls: !airgapExternalRequests,
+          });
 
           svgPagesRef.current = pages;
           nextNumPages = pages.size;
@@ -744,7 +748,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         setIsLoading(false);
       }
     },
-    [cancelTimers],
+    [cancelTimers, airgapExternalRequests],
   );
 
   useImperativeHandle(
