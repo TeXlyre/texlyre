@@ -237,7 +237,7 @@ const FileSyncModal: React.FC<FileSyncModalProps> = ({ isOpen, onClose }) => {
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
-        initialCategory={t('Collaboration')}
+        initialCategory={t('Connectivity')}
         initialSubcategory={t('File Synchronization')} />
 
     </>);

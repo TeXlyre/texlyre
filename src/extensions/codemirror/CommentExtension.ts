@@ -1,3 +1,4 @@
+// src/extensions/codemirror/CommentExtension.ts
 import {
 	Annotation,
 	EditorState,

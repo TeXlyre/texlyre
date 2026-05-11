@@ -1,3 +1,4 @@
+// src/components/app/AppSettingBootstrap.tsx
 import type React from 'react';
 
 import { useRegisterLanguageSettings } from '../../settings/registerLanguageSettings';
@@ -11,6 +12,7 @@ import { useRegisterFileTreeSettings } from '../../settings/registerFileTreeSett
 import { useRegisterLatexSettings } from '../../settings/registerLatexSettings';
 import { useRegisterTypstSettings } from '../../settings/registerTypstSettings';
 import { useRegisterLSPConfigSettings } from '../../settings/registerLSPConfigSettings';
+import { useRegisterOfflineSettings } from '../../settings/registerOfflineSettings';
 
 const AppBootstrap: React.FC = () => {
     useRegisterEditorSettings();
@@ -24,6 +26,7 @@ const AppBootstrap: React.FC = () => {
     useRegisterLSPConfigSettings();
     useRegisterLanguageSettings();
     useRegisterThemeSettings();
+    useRegisterOfflineSettings();
     return null;
 };
 

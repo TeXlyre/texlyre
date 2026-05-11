@@ -31,7 +31,7 @@ export function useRegisterFileSyncSettings() {
 
         registerSetting({
             id: 'file-sync-enable',
-            category: t('Collaboration'),
+            category: t('Connectivity'),
             subcategory: t('File Synchronization'),
             type: 'checkbox',
             label: t('Enable file synchronization with peers'),
@@ -40,7 +40,7 @@ export function useRegisterFileSyncSettings() {
 
         registerSetting({
             id: 'file-sync-auto-interval',
-            category: t('Collaboration'),
+            category: t('Connectivity'),
             subcategory: t('File Synchronization'),
             type: 'number',
             label: t('Auto-sync interval (seconds)'),
@@ -52,7 +52,7 @@ export function useRegisterFileSyncSettings() {
 
         registerSetting({
             id: 'file-sync-hold-timeout',
-            category: t('Collaboration'),
+            category: t('Connectivity'),
             subcategory: t('File Synchronization'),
             type: 'number',
             label: t('Hold signal timeout (seconds)'),
@@ -64,7 +64,7 @@ export function useRegisterFileSyncSettings() {
 
         registerSetting({
             id: 'file-sync-request-timeout',
-            category: t('Collaboration'),
+            category: t('Connectivity'),
             subcategory: t('File Synchronization'),
             type: 'number',
             label: t('Request timeout (seconds)'),
@@ -76,7 +76,7 @@ export function useRegisterFileSyncSettings() {
 
         registerSetting({
             id: 'file-sync-conflict-resolution',
-            category: t('Collaboration'),
+            category: t('Connectivity'),
             subcategory: t('File Synchronization'),
             type: 'select',
             label: t('Conflict resolution strategy'),
@@ -91,7 +91,7 @@ export function useRegisterFileSyncSettings() {
 
         registerSetting({
             id: 'file-sync-server-url',
-            category: t('Collaboration'),
+            category: t('Connectivity'),
             subcategory: t('File Synchronization'),
             type: 'text',
             label: t('FilePizza server URL'),
@@ -101,7 +101,7 @@ export function useRegisterFileSyncSettings() {
 
         registerSetting({
             id: 'file-sync-notifications',
-            category: t('Collaboration'),
+            category: t('Connectivity'),
             subcategory: t('File Synchronization'),
             type: 'checkbox',
             label: t('Show sync notifications'),

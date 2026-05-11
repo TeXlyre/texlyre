@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useAuth } from '../../hooks/useAuth';
 import { useChat } from '../../hooks/useChat';
+import { useOffline } from '../../hooks/useOffline';
 import { ChevronDownIcon, ChevronUpIcon } from '../common/Icons';
 import ChatMessage from './ChatMessage';
 
@@ -15,6 +16,7 @@ interface ChatPanelProps {
 const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
   const { user } = useAuth();
   const { messages, isConnected, sendMessage } = useChat();
+  const { isCollabOfflineMode } = useOffline();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -49,9 +51,17 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
       <div className="chat-panel-header" onClick={toggleCollapsed}>
         <span className="chat-panel-title">{t('Project Chat')}</span>
         <div className="chat-panel-status">
-          {isConnected &&
-            <div className="connection-indicator connected" title={t('Connected')} />
-          }
+          <div
+            className={`connection-indicator ${isConnected && !isCollabOfflineMode ? 'connected' : 'offline'
+              }`}
+            title={
+              isCollabOfflineMode
+                ? t('Collaboration offline')
+                : isConnected
+                  ? t('Connected')
+                  : t('Disconnected')
+            }
+          />
           {messages.length > 0 &&
             <span className="message-count">{messages.length}</span>
           }
@@ -88,12 +98,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
               onKeyDown={handleKeyDown}
               placeholder={t('Type a message...')}
               className="chat-panel-input"
-              disabled={!isConnected}
+              disabled={!isConnected || isCollabOfflineMode}
               rows={1} />
 
             <button
               onClick={handleSendMessage}
-              disabled={!inputValue.trim() || !isConnected}
+              disabled={!inputValue.trim() || !isConnected || isCollabOfflineMode}
               className="chat-panel-send-button">{t('Send')}
 
 

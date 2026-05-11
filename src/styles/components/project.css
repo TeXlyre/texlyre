@@ -392,6 +392,7 @@
 .projects-list .project-card .project-title {
   grid-area: title;
   font-size: 1rem;
+  padding: 0;
 }
 
 .projects-list .project-card-header-actions {
@@ -401,6 +402,11 @@
 .projects-list .project-card .project-description {
   grid-area: description;
   font-size: 0.85rem;
+  max-width: var(--project-title-width, 450px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: var(--space-sm) var(--space-sm);
 }
 
 .projects-list .project-meta {

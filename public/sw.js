@@ -1,8 +1,10 @@
 // These constants are automatically generated. Do not edit directly. **
-const CACHE_NAME = `texlyre-v0.7.43`;
+const CACHE_NAME = `texlyre-v0.7.44`;
 const BASE_PATH = '/texlyre/';
 const FONTS_CACHE_NAME = 'fonts-cache-v1';
 // *** End automatic generation ***
+
+let airgapExternalRequests = false;
 
 console.log('[ServiceWorker] Service Worker loading with base path:', BASE_PATH);
 
@@ -61,6 +63,32 @@ async function handleShareTarget(request) {
   }
 
   return Response.redirect(BASE_PATH, 303);
+}
+
+function isExternalRequest(request) {
+  const url = new URL(request.url);
+  return url.origin !== self.location.origin;
+}
+
+function blockedByAirgapResponse(request) {
+  if (
+    request.destination === 'image' ||
+    request.destination === 'video' ||
+    request.destination === 'audio'
+  ) {
+    return new Response('', {
+      status: 204,
+      statusText: 'Blocked by air-gap mode',
+    });
+  }
+
+  return new Response('Blocked by air-gap mode.', {
+    status: 451,
+    statusText: 'Blocked by air-gap mode',
+    headers: {
+      'Content-Type': 'text/plain',
+    },
+  });
 }
 
 self.addEventListener('install', (event) => {
@@ -153,6 +181,12 @@ async function cacheWithExpiry(cacheName, request, response) {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
+  if (airgapExternalRequests && isExternalRequest(event.request)) {
+    console.warn('[ServiceWorker] Blocked external request by air-gap mode:', event.request.url);
+    event.respondWith(blockedByAirgapResponse(event.request));
+    return;
+  }
+
   if (event.request.method === 'POST' && url.searchParams.has('share-target')) {
     event.respondWith(handleShareTarget(event.request));
     return;
@@ -225,6 +259,12 @@ self.addEventListener('fetch', (event) => {
 });
 
 self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SET_AIRGAP_EXTERNAL_REQUESTS') {
+    airgapExternalRequests = event.data.enabled === true;
+    console.log('[ServiceWorker] Air-gap external requests:', airgapExternalRequests);
+    return;
+  }
+
   if (event.data && event.data.type === 'CACHE_URLS') {
     event.waitUntil(
       caches.open(CACHE_NAME)

@@ -2,11 +2,16 @@
 export interface OfflineStatus {
 	isOnline: boolean;
 	lastOnline: number | null;
+	airgapExternalRequests: boolean;
 }
 
 class OfflineService {
 	private listeners = new Set<(status: OfflineStatus) => void>();
-	private status: OfflineStatus = {
+
+	private forceOffline = false;
+	private airgapExternalRequests = false;
+
+	private status: Omit<OfflineStatus, 'airgapExternalRequests'> = {
 		isOnline: navigator.onLine,
 		lastOnline: navigator.onLine ? Date.now() : null,
 	};
@@ -32,8 +37,36 @@ class OfflineService {
 		this.notifyListeners();
 	};
 
+	setForceOffline(forceOffline: boolean): void {
+		if (this.forceOffline === forceOffline) return;
+
+		this.forceOffline = forceOffline;
+		this.notifyListeners();
+	}
+
+	setAirgapExternalRequests(enabled: boolean): void {
+		if (this.airgapExternalRequests === enabled) return;
+
+		this.airgapExternalRequests = enabled;
+		this.notifyServiceWorker();
+		this.notifyListeners();
+	}
+
+	private notifyServiceWorker(): void {
+		if (!navigator.serviceWorker?.controller) return;
+
+		navigator.serviceWorker.controller.postMessage({
+			type: 'SET_AIRGAP_EXTERNAL_REQUESTS',
+			enabled: this.airgapExternalRequests,
+		});
+	}
+
 	getStatus(): OfflineStatus {
-		return { ...this.status };
+		return {
+			...this.status,
+			isOnline: this.forceOffline ? false : this.status.isOnline,
+			airgapExternalRequests: this.airgapExternalRequests,
+		};
 	}
 
 	addStatusListener(callback: (status: OfflineStatus) => void): () => void {
@@ -52,3 +85,4 @@ class OfflineService {
 }
 
 export const offlineService = new OfflineService();
+

@@ -33,7 +33,6 @@ import { bibtex, bibtexCompletionSource } from 'codemirror-lang-bib';
 import { latex, latexCompletionSource } from 'codemirror-lang-latex';
 import { typst } from 'codemirror-lang-typst';
 import { useEffect, useRef, useState } from 'react';
-import { yCollab, yUndoManagerKeymap } from 'y-codemirror.next';
 import type * as Y from 'yjs';
 import { UndoManager } from 'yjs';
 
@@ -68,10 +67,14 @@ import { collabService } from '../../services/CollabService';
 import { fileStorageService } from '../../services/FileStorageService';
 import { filePathCacheService } from '../../services/FilePathCacheService';
 import type { CollabProvider } from '../../types/collab';
-import { registerYjsBinding } from './yjsBinding';
 import { registerEditorClipboard } from './editorClipboard';
 import { registerEditorSearchHighlightEvents } from './editorSearchHighlights';
 import { registerEditorEventHandlers } from './EditorEvents';
+import {
+    registerYjsBinding,
+    createYjsEditorBindingExtensions,
+    type YjsEditorBindingResult,
+} from './yjsBinding';
 
 type FileTypeInfo = {
     fileType: ReturnType<typeof detectFileType>;
@@ -139,6 +142,7 @@ export const useEditorView = (
     const viewRef = useRef<EditorView | null>(null);
     const isUpdatingRef = useRef<boolean>(false);
     const autoSaveRef = useRef<(() => void) | null>(null);
+    const yjsEditorBindingRef = useRef<YjsEditorBindingResult | null>(null);
     const [showSaveIndicator, setShowSaveIndicator] = useState(false);
     const [yDoc, setYDoc] = useState<Y.Doc | null>(null);
     const [provider, setProvider] = useState<CollabProvider | null>(null);
@@ -551,13 +555,16 @@ export const useEditorView = (
 
         if (isViewOnly) extensions.push(EditorState.readOnly.of(true));
 
-        if (!isEditingFile && provider && ytextRef.current && undoManagerRef.current) {
-            extensions.push(
-                yCollab(ytextRef.current, provider.awareness, {
-                    undoManager: undoManagerRef.current,
-                }),
+        if (!isEditingFile && ytextRef.current && undoManagerRef.current) {
+            yjsEditorBindingRef.current?.cleanup();
+
+            yjsEditorBindingRef.current = createYjsEditorBindingExtensions(
+                ytextRef.current,
+                provider?.awareness,
+                undoManagerRef.current,
             );
-            extensions.push(keymap.of(yUndoManagerKeymap));
+
+            extensions.push(...yjsEditorBindingRef.current.extensions);
         } else if (isEditingFile) {
             extensions.push(history());
             extensions.push(keymap.of(historyKeymap));
@@ -618,6 +625,10 @@ export const useEditorView = (
                     const snapshot = viewRef.current.state.toJSON({ history: historyField });
                     fileUndoHistoryCache.set(currentFileId, snapshot.history);
                 }
+
+                yjsEditorBindingRef.current?.cleanup();
+                yjsEditorBindingRef.current = null;
+
                 filePathCacheService.cleanup();
                 viewRef.current.destroy();
                 viewRef.current = null;

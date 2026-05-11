@@ -7,9 +7,6 @@ import type { collabService } from '../services/CollabService';
 
 export type CollabProviderType = 'webrtc' | 'websocket';
 
-/**
- * Unified provider interface exposing the shared surface of WebrtcProvider and WebsocketProvider.
- */
 export interface CollabProvider {
 	awareness: Awareness;
 	connect(): void;
@@ -39,7 +36,7 @@ export interface CollabConnectOptions {
 	providerType?: CollabProviderType;
 	signalingServers?: string | string[];
 	websocketServer?: string;
+	websocketParams?: Record<string, string>;
 	autoReconnect?: boolean;
 	awarenessTimeout?: number;
-	websocketParams?: Record<string, string>;
 }

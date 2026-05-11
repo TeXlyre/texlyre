@@ -34,7 +34,7 @@ export function useRegisterCollabSettings() {
 
         registerSetting({
             id: 'collab-provider-type',
-            category: t('Collaboration'),
+            category: t('Connectivity'),
             subcategory: t('Real-time Synchronization'),
             type: 'select',
             label: t('Connection provider'),
@@ -49,7 +49,7 @@ export function useRegisterCollabSettings() {
 
         registerSetting({
             id: 'collab-signaling-servers',
-            category: t('Collaboration'),
+            category: t('Connectivity'),
             subcategory: t('Real-time Synchronization'),
             type: 'text',
             label: t('Signaling servers (WebRTC)'),
@@ -59,7 +59,7 @@ export function useRegisterCollabSettings() {
 
         registerSetting({
             id: 'collab-websocket-server',
-            category: t('Collaboration'),
+            category: t('Connectivity'),
             subcategory: t('Real-time Synchronization'),
             type: 'text',
             label: t('WebSocket server'),
@@ -69,7 +69,7 @@ export function useRegisterCollabSettings() {
 
         registerSetting({
             id: 'collab-awareness-timeout',
-            category: t('Collaboration'),
+            category: t('Connectivity'),
             subcategory: t('Real-time Synchronization'),
             type: 'number',
             label: t('Awareness timeout (seconds)'),
@@ -81,7 +81,7 @@ export function useRegisterCollabSettings() {
 
         registerSetting({
             id: 'collab-auto-reconnect',
-            category: t('Collaboration'),
+            category: t('Connectivity'),
             subcategory: t('Real-time Synchronization'),
             type: 'checkbox',
             label: t('Auto-reconnect on disconnect'),

@@ -29,12 +29,18 @@ class CollabService {
 	private docContainers: Map<string, AnyDocContainer> = new Map();
 	private offlineStatusUnsubscribe: (() => void) | null = null;
 
+	private forceLocalConnections = false;
+
 	constructor() {
 		this.offlineStatusUnsubscribe = offlineService.addStatusListener(
 			(status) => {
 				this.handleNetworkChange(status.isOnline);
 			},
 		);
+	}
+
+	public setForceLocalConnections(forceLocalConnections: boolean): void {
+		this.forceLocalConnections = forceLocalConnections;
 	}
 
 	private isOfflineMode(): boolean {
@@ -99,7 +105,7 @@ class CollabService {
 			`[CollabService] Creating new connection for: ${containerId} (offline: ${this.isOfflineMode()})`,
 		);
 
-		if (this.isOfflineMode()) {
+		if (this.forceLocalConnections || this.isOfflineMode()) {
 			return this.createOfflineConnection(docId, collectionName, containerId);
 		}
 		return this.createOnlineConnection(
