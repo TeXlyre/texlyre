@@ -22,7 +22,8 @@ export function useRegisterTypstSettings() {
             getSetting('typst-sourcemap-enabled')?.value as boolean ?? true;
         const initialAutoNavigate =
             getSetting('typst-auto-navigate-to-main')?.value as string ?? 'conditional';
-
+        const initialAllowRemoteContent =
+            getSetting('typst-allow-remote-content')?.value as boolean ?? true;
 
         registerSetting({
             id: 'typst-sourcemap-enabled',
@@ -72,6 +73,16 @@ export function useRegisterTypstSettings() {
                 { label: t('Canvas (PDF)'), value: 'canvas-pdf' },
                 { label: t('Canvas (SVG)'), value: 'canvas' }
             ]
+        });
+
+        registerSetting({
+            id: 'typst-allow-remote-content',
+            category: t('Compilation'),
+            subcategory: t('Typst'),
+            type: 'checkbox',
+            label: t('Allow remote content in Typst output'),
+            description: t('Allow Typst SVG output to keep references to remote images, media, and other external resources. Air-gap mode may still block remote content in TeXlyre previews.'),
+            defaultValue: initialAllowRemoteContent,
         });
 
         registerSetting({

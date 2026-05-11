@@ -16,7 +16,7 @@ export function invalidateSvgOverlayCache(container: HTMLDivElement): void {
 
 export function parseSvgPages(
     svgBuffer: ArrayBuffer,
-    options: { trusted?: boolean } = {}
+    options: { trusted?: boolean; allowRemoteUrls?: boolean } = {}
 ): Promise<{
     pages: Map<number, string>;
     metadata: Map<number, { width: number; height: number }>;
@@ -39,7 +39,12 @@ export function parseSvgPages(
         };
 
         worker.addEventListener('message', handleMessage);
-        worker.postMessage({ type: 'parse', svgBuffer, trusted: options.trusted });
+        worker.postMessage({
+            type: 'parse',
+            svgBuffer,
+            trusted: options.trusted,
+            allowRemoteUrls: options.allowRemoteUrls,
+        });
     });
 }
 

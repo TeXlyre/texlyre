@@ -7,12 +7,15 @@ import {
   useEffect,
   useCallback,
   useState
-} from
-  'react';
+} from 'react';
 
 import { useFileTree } from '../hooks/useFileTree';
 import { useSettings } from '../hooks/useSettings';
-import type { TypstContextType, TypstOutputFormat, TypstPdfOptions } from '../types/typst';
+import type {
+  TypstContextType,
+  TypstOutputFormat,
+  TypstPdfOptions
+} from '../types/typst';
 import { typstService } from '../services/TypstService';
 import { popoutViewerService } from '../services/PopoutViewerService';
 import { parseUrlFragments, replaceHash } from '../utils/urlUtils';
@@ -26,6 +29,7 @@ interface TypstProviderProps {
 export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
   const { fileTree, refreshFileTree } = useFileTree();
   const { getSetting } = useSettings();
+
   const [isCompiling, setIsCompiling] = useState<boolean>(false);
   const [hasAutoCompiled, setHasAutoCompiled] = useState(false);
   const [compileError, setCompileError] = useState<string | null>(null);
@@ -39,6 +43,15 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 
   const currentFormat =
     getSetting('typst-default-format')?.value as TypstOutputFormat ?? 'pdf';
+
+  const typstAllowRemoteContent =
+    getSetting('typst-allow-remote-content')?.value as boolean ?? true;
+
+  const airgapExternalRequests =
+    getSetting('offline-airgap-external-requests')?.value as boolean ?? false;
+
+  const previewAllowRemoteUrls =
+    typstAllowRemoteContent && !airgapExternalRequests;
 
   useEffect(() => {
     typstService.setDefaultFormat(currentFormat);
@@ -71,7 +84,12 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     format: TypstOutputFormat = currentFormat,
     pdfOptions?: TypstPdfOptions
   ): Promise<void> => {
-    console.log('[TypstContext] compileDocument called', { mainFileName, format, pdfOptions });
+    console.log('[TypstContext] compileDocument called', {
+      mainFileName,
+      format,
+      pdfOptions,
+      allowRemoteUrls: previewAllowRemoteUrls,
+    });
 
     if (!typstService.isReady()) {
       await typstService.initialize();
@@ -85,7 +103,14 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
     setCompiledCanvas(null);
 
     try {
-      const result = await typstService.compileTypst(mainFileName, fileTree, format, pdfOptions);
+      const result = await typstService.compileTypst(
+        mainFileName,
+        fileTree,
+        format,
+        pdfOptions,
+        { allowRemoteUrls: previewAllowRemoteUrls }
+      );
+
       console.log('[TypstContext] Compilation result', {
         status: result.status,
         format: result.format,
@@ -94,7 +119,9 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         hasCanvas: !!result.canvas,
         canvasLength: result.canvas?.length
       });
+
       setCompileLog(result.log);
+
       if (result.status === 0) {
         switch (result.format) {
           case 'pdf':
@@ -102,7 +129,11 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
               setCompiledPdf(result.pdf);
               setCurrentView('output');
               setLogIndicator('success');
-              const fileName = mainFileName.split('/').pop()?.replace(/\.typ$/i, '.pdf') || 'output.pdf';
+
+              const fileName =
+                mainFileName.split('/').pop()?.replace(/\.typ$/i, '.pdf') ||
+                'output.pdf';
+
               popoutViewerService.sendContent({
                 kind: 'pdf',
                 content: result.pdf,
@@ -112,13 +143,18 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
               });
             }
             break;
+
           case 'svg':
           case 'canvas':
             if (result.canvas) {
               setCompiledCanvas(result.canvas);
               setCurrentView('output');
               setLogIndicator('success');
-              const svgFileName = mainFileName.split('/').pop()?.replace(/\.typ$/i, '.svg') || 'output.svg';
+
+              const svgFileName =
+                mainFileName.split('/').pop()?.replace(/\.typ$/i, '.svg') ||
+                'output.svg';
+
               popoutViewerService.sendContent({
                 kind: 'canvas-svg',
                 content: result.canvas,
@@ -128,12 +164,17 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
               });
             }
             break;
+
           case 'canvas-pdf':
             if (result.canvas) {
               setCompiledCanvas(result.canvas);
               setCurrentView('output');
               setLogIndicator('success');
-              const canvasPdfFileName = mainFileName.split('/').pop()?.replace(/\.typ$/i, '.pdf') || 'output.pdf';
+
+              const canvasPdfFileName =
+                mainFileName.split('/').pop()?.replace(/\.typ$/i, '.pdf') ||
+                'output.pdf';
+
               popoutViewerService.sendContent({
                 kind: 'canvas-pdf',
                 content: result.canvas,
@@ -146,23 +187,28 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         }
       } else {
         setCompileError(t('Compilation failed. Check the log in the main window.'));
+
         switch (result.format) {
           case 'svg':
           case 'pdf':
             setCurrentView('log');
             break;
         }
+
         setLogIndicator('error');
         popoutViewerService.sendCompileResult(result.status, result.log);
       }
 
       await refreshFileTree();
     } catch (error) {
-      setCompileError(error instanceof Error ? error.message : t('Unknown error'));
+      const message =
+        error instanceof Error ? error.message : t('Unknown error');
+
+      setCompileError(message);
       setCurrentView('log');
       setLogIndicator('error');
 
-      popoutViewerService.sendCompileResult(-1, error instanceof Error ? error.message : t('Unknown error'));
+      popoutViewerService.sendCompileResult(-1, message);
     } finally {
       setIsCompiling(false);
     }
@@ -180,7 +226,9 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
       return;
     }
 
-    const autoCompileEnabled = getSetting('typst-auto-compile-on-open')?.value as boolean ?? false;
+    const autoCompileEnabled =
+      getSetting('typst-auto-compile-on-open')?.value as boolean ?? false;
+
     if (autoCompileEnabled && !hasAutoCompiled) {
       document.dispatchEvent(new CustomEvent('trigger-typst-compile'));
       setHasAutoCompiled(true);
@@ -197,9 +245,20 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 
   const exportDocument = async (
     mainFileName: string,
-    options: { format?: TypstOutputFormat; includeLog?: boolean } = {}
+    options: {
+      format?: TypstOutputFormat;
+      includeLog?: boolean;
+      pdfOptions?: TypstPdfOptions;
+    } = {}
   ): Promise<void> => {
-    await typstService.exportDocument(mainFileName, fileTree, options);
+    await typstService.exportDocument(
+      mainFileName,
+      fileTree,
+      options.format ?? currentFormat,
+      options.pdfOptions,
+      options.includeLog ?? false,
+      { allowRemoteUrls: typstAllowRemoteContent }
+    );
   };
 
   const toggleOutputView = () => {
@@ -229,9 +288,9 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
         triggerAutoCompile,
         activeCompiler,
         exportDocument
-      }}>
-
+      }}
+    >
       {children}
-    </TypstContext.Provider>);
-
+    </TypstContext.Provider>
+  );
 };

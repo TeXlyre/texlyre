@@ -6,6 +6,7 @@ interface ParseMessage {
     type: 'parse';
     svgBuffer: ArrayBuffer;
     trusted?: boolean;
+    allowRemoteUrls?: boolean;
 }
 
 interface ParsedResult {
@@ -126,12 +127,15 @@ self.onmessage = (e: MessageEvent<ParseMessage>) => {
     try {
         const decoder = new TextDecoder();
         const decoded = decoder.decode(e.data.svgBuffer);
-        const svgString = e.data.trusted
-            ? decoded
-            : sanitizeSvg(decoded, {
-                baseUrl: self.location.href,
-                allowRemoteUrls: true,
-            });
+        const allowRemoteUrls = e.data.allowRemoteUrls !== false;
+
+        const svgString =
+            e.data.trusted && allowRemoteUrls
+                ? decoded
+                : sanitizeSvg(decoded, {
+                    baseUrl: self.location.href,
+                    allowRemoteUrls,
+                });
 
         const pages: Array<[number, string]> = [];
         const metadata: Array<[number, { width: number; height: number }]> = [];
