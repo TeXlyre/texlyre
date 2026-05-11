@@ -21,6 +21,10 @@ export interface TexlyreConfig {
 
     favicon: string;
 
+    airgap?: {
+        allowedDomains?: string[];
+        allowedProtocols?: string[];
+    };
 
     pwa?: {
         enabled: boolean;

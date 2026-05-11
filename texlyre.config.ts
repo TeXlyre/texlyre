@@ -10,6 +10,22 @@ const config: TexlyreConfig = {
     projectName: 'texlyre',
     favicon: '/favicon.ico',
 
+
+    airgap: {
+        allowedDomains: [
+            'texlyre.org',
+            'texlyre.github.io',
+            'typst.org',
+        ],
+        allowedProtocols: [
+            'https:',
+            'http:',
+            // Collaboration is blocked by airgap but allow ws anyway
+            'wss:',
+            'ws:',
+        ],
+    },
+
     pwa: {
         enabled: true,
         themeColor: '#ffffff',
@@ -43,7 +59,7 @@ const config: TexlyreConfig = {
         themes: ['texlyre_slim', 'texlyre_wide', 'texlyre_mobile'],
     },
 
-    // overwrite priority is default < local < mobile for corresponding configs
+    // Overwrite priority is default < local < mobile for corresponding configs
     userdata: {
         version: '1.2.1',
         default: {

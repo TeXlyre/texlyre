@@ -12,24 +12,55 @@ async function loadConfig() {
 	return config;
 }
 
+function unique(values) {
+	return [...new Set(values.filter(Boolean))];
+}
+
+function getHostname(value) {
+	try {
+		return new URL(value).hostname;
+	} catch {
+		return null;
+	}
+}
+
 const packageJson = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'));
 const version = packageJson.version;
 
 const config = await loadConfig();
 const basePath = config.baseUrl;
 
+const generatedAt = new Date().toISOString();
+
+const configUrlHostname = getHostname(config.url);
+
+const airgapAllowedDomains = unique([
+	configUrlHostname,
+	...(config.airgap?.allowedDomains ?? []),
+]);
+
+const airgapAllowedProtocols = unique([
+	...(config.airgap?.allowedProtocols ?? ['https:', 'http:', 'wss:', 'ws:']),
+]);
+
+const generatedBlock = `// These constants are automatically generated. Do not edit directly.
+// Generated on: ${generatedAt}
+const CACHE_NAME = \`texlyre-v${version}\`;
+const BASE_PATH = '${basePath}';
+const FONTS_CACHE_NAME = 'fonts-cache-v1';
+const AIRGAP_ALLOWED_DOMAINS = ${JSON.stringify(airgapAllowedDomains, null, '\t')};
+const AIRGAP_ALLOWED_PROTOCOLS = ${JSON.stringify(airgapAllowedProtocols, null, '\t')};
+// *** End automatic generation ***`;
+
 const swPath = join(__dirname, '..', 'public', 'sw.js');
 const swContent = readFileSync(swPath, 'utf8');
 
-const updatedContent = swContent
-	.replace(
-		/const CACHE_NAME = `texlyre-v[\d.]+`;/,
-		`const CACHE_NAME = \`texlyre-v${version}\`;`,
-	)
-	.replace(
-		/const BASE_PATH = ['"`][^'"`]*['"`];/,
-		`const BASE_PATH = '${basePath}';`,
-	);
+const updatedContent = swContent.replace(
+	/\/\/ These constants are automatically generated\. Do not edit directly\.[\s\S]*?\/\/ \*\*\* End automatic generation \*\*\*/,
+	generatedBlock,
+);
 
 writeFileSync(swPath, updatedContent);
-console.log(`Updated service worker: version=${version}, basePath=${basePath}`);
+console.log(
+	`Updated service worker: version=${version}, basePath=${basePath}, airgapAllowedDomains=${airgapAllowedDomains.join(', ')}`,
+);
