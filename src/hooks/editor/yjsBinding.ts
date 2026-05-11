@@ -1,7 +1,12 @@
 // src/hooks/editor/yjsBinding.ts
 import type * as Y from 'yjs';
+import type { UndoManager } from 'yjs';
 import type { RefObject } from 'react';
 import type { EditorView } from 'codemirror';
+import type { Extension } from '@codemirror/state';
+import { keymap } from '@codemirror/view';
+import { Awareness } from 'y-protocols/awareness';
+import { yCollab, yUndoManagerKeymap } from 'y-codemirror.next';
 
 interface YjsBindingOptions {
     enableComments: boolean;
@@ -15,6 +20,32 @@ interface YjsBindingOptions {
     documentId?: string;
     isEditingFile: boolean;
 }
+
+export interface YjsEditorBindingResult {
+    extensions: Extension[];
+    cleanup: () => void;
+}
+
+export const createYjsEditorBindingExtensions = (
+    yText: Y.Text,
+    providerAwareness: Awareness | null | undefined,
+    undoManager: UndoManager,
+): YjsEditorBindingResult => {
+    const localAwareness = providerAwareness ? null : new Awareness(yText.doc!);
+    const awareness = providerAwareness ?? localAwareness!;
+
+    return {
+        extensions: [
+            yCollab(yText, awareness, {
+                undoManager,
+            }),
+            keymap.of(yUndoManagerKeymap),
+        ],
+        cleanup: () => {
+            localAwareness?.destroy();
+        },
+    };
+};
 
 export const registerYjsBinding = (yText: Y.Text, opts: YjsBindingOptions) => {
     const {

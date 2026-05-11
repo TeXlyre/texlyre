@@ -110,7 +110,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
   });
   const { isCompiling, triggerAutoCompile } = useLaTeX();
   const { isCompiling: isTypstCompiling, triggerAutoCompile: triggerTypstAutoCompile } = useTypst();
-  const { isOfflineMode } = useOffline();
+  const { isOfflineMode, hideOfflineBanner } = useOffline();
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   useGlobalKeyboard();
@@ -488,7 +488,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
   return (
     <div className="app-container">
-      {isOfflineMode && <OfflineBanner />}
+      {isOfflineMode && !hideOfflineBanner && <OfflineBanner />}
       {isGuestUser(user) &&
         <GuestUpgradeBanner
           onOpenUpgradeModal={() => setShowGuestUpgradeModal(true)} />

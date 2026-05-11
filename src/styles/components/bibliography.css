@@ -30,33 +30,6 @@
 	position: relative;
 }
 
-.connection-indicator {
-	width: 6px;
-	height: 6px;
-	border-radius: 50%;
-	background-color: var(--pico-secondary);
-	position: absolute;
-	top: -2px;
-	right: -2px;
-}
-
-.connection-indicator.connected {
-	background-color: var(--color-success);
-}
-
-.connection-indicator.connecting {
-	background-color: var(--color-warning);
-	animation: bib-pulse 1s infinite;
-}
-
-.connection-indicator.disconnected {
-	background-color: var(--pico-secondary);
-}
-
-.connection-indicator.error {
-	background-color: var(--color-danger);
-}
-
 .bib-panel {
 	order: 3;
 	width: var(--lsp-panel-width, 350px);

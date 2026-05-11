@@ -40,13 +40,6 @@
 	gap: var(--space-sm);
 }
 
-.connection-indicator {
-	width: 8px;
-	height: 8px;
-	border-radius: 50%;
-	background: var(--color-success);
-}
-
 .message-count {
 	background: var(--accent-color);
 	color: var(--text-on-accent);

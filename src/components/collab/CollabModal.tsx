@@ -3,7 +3,7 @@ import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
-import { DisconnectIcon, SettingsIcon, SyncIcon } from '../common/Icons';
+import { SettingsIcon, SyncIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 import SettingsModal from '../settings/SettingsModal';
 
@@ -108,7 +108,7 @@ const CollabModal: React.FC<CollabModalProps> = ({
 			<SettingsModal
 				isOpen={showSettings}
 				onClose={() => setShowSettings(false)}
-				initialCategory={t('Collaboration')}
+				initialCategory={t('Connectivity')}
 				initialSubcategory={t('Real-time Synchronization')} />
 
 		</>);
