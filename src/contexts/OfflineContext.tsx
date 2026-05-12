@@ -36,6 +36,10 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({
 	const [status, setStatus] = useState(offlineService.getStatus());
 
 	useEffect(() => {
+		offlineService.syncServiceWorkerState();
+	}, []);
+
+	useEffect(() => {
 		offlineService.setForceOffline(forceAppOffline);
 	}, [forceAppOffline]);
 
