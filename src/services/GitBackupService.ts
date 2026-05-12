@@ -162,6 +162,40 @@ export class GitBackupService<TTarget> {
         return { success: true };
     }
 
+    async getStoredCredentials(
+        projectId?: string,
+    ): Promise<{ token: string; target: string; branch: string } | null> {
+        if (!this.secretsContext) return null;
+
+        const scopeOptions = this._getScopeOptions(projectId);
+
+        const tokenSecret = await this.secretsContext.getSecret(
+            this.adapter.pluginId,
+            this.adapter.tokenSecretKey,
+            scopeOptions,
+        );
+
+        const targetSecret = await this.secretsContext.getSecret(
+            this.adapter.pluginId,
+            this.adapter.targetSecretKey,
+            scopeOptions,
+        );
+
+        const targetMetadata = await this.secretsContext.getSecretMetadata(
+            this.adapter.pluginId,
+            this.adapter.targetSecretKey,
+            scopeOptions,
+        );
+
+        if (!tokenSecret?.value || !targetSecret?.value) return null;
+
+        return {
+            token: tokenSecret.value,
+            target: targetSecret.value,
+            branch: targetMetadata?.branch || this.getDefaultBranch(),
+        };
+    }
+
     async connectWithToken(
         token: string,
     ): Promise<{ success: boolean; targets?: any[]; repositories?: any[]; projects?: any[]; error?: string }> {

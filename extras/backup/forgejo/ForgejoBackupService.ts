@@ -169,6 +169,9 @@ export const forgejoBackupService = {
     getStoredBranch: sharedForgejoBackupService.getStoredBranch.bind(
         sharedForgejoBackupService,
     ),
+    getStoredCredentials: sharedForgejoBackupService.getStoredCredentials.bind(
+        sharedForgejoBackupService,
+    ),
     hasStoredCredentials: sharedForgejoBackupService.hasStoredCredentials.bind(
         sharedForgejoBackupService,
     ),

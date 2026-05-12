@@ -48,6 +48,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
     const [availableProjects, setAvailableProjects] = useState<any[]>([]);
     const [availableBranches, setAvailableBranches] = useState<any[]>([]);
     const [selectedProject, setSelectedProject] = useState('');
+    const [projectInput, setProjectInput] = useState('');
     const [selectedBranch, setSelectedBranch] = useState('main');
     const [displayBranch, setDisplayBranch] = useState<string>('main');
     const [connectionStep, setConnectionStep] = useState<'token' | 'project' | 'branch'>('token');
@@ -158,6 +159,40 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
         }
     }, [isOpen, isInEditor, syncScope, currentProjectId]);
 
+    const normalizeGitLabProjectInput = (input: string): string => {
+        const trimmed = input.trim();
+        if (!trimmed) return '';
+
+        const gitlabProjectUrlMatch = trimmed.match(
+            /gitlab\.[^/]+\/(.+?)(?:\.git)?(?:[?#].*)?$/i,
+        );
+
+        if (gitlabProjectUrlMatch) {
+            return gitlabProjectUrlMatch[1].replace(/\.git$/, '');
+        }
+
+        return trimmed.replace(/\.git$/, '');
+    };
+
+    const normalizedProjectInput = normalizeGitLabProjectInput(projectInput);
+
+    const filteredProjects = availableProjects.filter((project) =>
+        (project.path_with_namespace || project.name || '')
+            .toLowerCase()
+            .includes(projectInput.trim().toLowerCase()),
+    );
+
+    const selectedProjectData = availableProjects.find(
+        (project) => project.id.toString() === selectedProject,
+    );
+
+    const effectiveProjectId = selectedProject || normalizedProjectInput;
+
+    const effectiveProjectPathWithNamespace =
+        selectedProjectData?.path_with_namespace ||
+        normalizedProjectInput ||
+        selectedProject;
+
     const handleAsyncOperation = async (operation: () => Promise<void>) => {
         if (isOperating) return;
         setIsOperating(true);
@@ -198,46 +233,53 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                 setAvailableProjects(result.projects);
                 setConnectionStep('project');
             } else {
-                alert(result.error || 'Failed to connect with token.');
+                alert(result.error || t('Failed to connect with token.'));
             }
         });
 
     const handleProjectSubmit = () =>
         handleAsyncOperation(async () => {
-            if (!selectedProject) return;
-            const selectedProjectData = availableProjects.find(
-                (p) => p.id.toString() === selectedProject,
-            );
-            if (!selectedProjectData) return;
+            if (!effectiveProjectId) return;
+
             const branches = await gitLabAPIService.getBranches(
                 gitLabToken,
-                selectedProject,
+                effectiveProjectId,
             );
+
             setAvailableBranches(branches);
+
+            const defaultBranch =
+                branches.find((b) => b.name === selectedBranch) ||
+                branches.find((b) => b.name === 'main') ||
+                branches.find((b) => b.name === 'master') ||
+                branches[0];
+
+            if (defaultBranch) setSelectedBranch(defaultBranch.name);
+
             setConnectionStep('branch');
         });
 
     const handleBranchSubmit = () =>
         handleAsyncOperation(async () => {
-            if (!selectedBranch) return;
-            const projectId =
+            if (!selectedBranch || !effectiveProjectId) return;
+
+            const localProjectId =
                 isInEditor && syncScope === 'current' ? currentProjectId : undefined;
-            const selectedProjectData = availableProjects.find(
-                (p) => p.id.toString() === selectedProject
-            );
-            if (!selectedProjectData) return;
+
             const success = await gitLabBackupService.connectToProject(
                 gitLabToken,
-                selectedProject,
-                selectedProjectData.path_with_namespace,
-                projectId,
-                selectedBranch
+                effectiveProjectId,
+                effectiveProjectPathWithNamespace,
+                localProjectId,
+                selectedBranch,
             );
+
             if (success) {
                 setDisplayBranch(selectedBranch);
                 setShowConnectionFlow(false);
                 setGitLabToken('');
                 setSelectedProject('');
+                setProjectInput('');
                 setConnectionStep('token');
             }
         });
@@ -246,23 +288,24 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
         handleAsyncOperation(async () => {
             const projectId =
                 isInEditor && syncScope === 'current' ? currentProjectId : undefined;
-            const credentials = await (gitLabBackupService as any).getGitLabCredentials(
-                projectId,
-            );
+
+            const credentials = await gitLabBackupService.getStoredCredentials(projectId);
+
             if (!credentials) {
-                alert('Could not retrieve GitLab credentials. Please reconnect.');
+                alert(t('Could not retrieve GitLab credentials. Please reconnect.'));
                 return;
             }
 
             setGitLabToken(credentials.token);
-            const result = await gitLabBackupService.connectWithToken(
-                credentials.token,
-            );
+
+            const result = await gitLabBackupService.connectWithToken(credentials.token);
+
             if (result.success && result.projects) {
                 setAvailableProjects(result.projects);
-                const currentBranch =
-                    await gitLabBackupService.getStoredBranch(projectId);
-                setSelectedBranch(currentBranch);
+                setSelectedProject(credentials.target);
+                setProjectInput(credentials.target);
+                setSelectedBranch(credentials.branch);
+                setDisplayBranch(credentials.branch);
                 setShowConnectionFlow(true);
                 setConnectionStep('project');
             }
@@ -406,24 +449,42 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                             )}
                             {connectionStep === 'project' && (
                                 <div>
-                                    <label>{t('Select Project:')}</label>
+                                    <label>{t('Project:')}</label>
+                                    <input
+                                        type="text"
+                                        value={projectInput}
+                                        onChange={(e) => {
+                                            setProjectInput(e.target.value);
+                                            setSelectedProject('');
+                                        }}
+                                        placeholder={t('Search projects or paste project ID / namespace/project / URL')}
+                                    />
+
                                     <select
                                         value={selectedProject}
-                                        onChange={(e) => handleProjectChange(e.target.value)}
+                                        onChange={(e) => {
+                                            setSelectedProject(e.target.value);
+                                            const selected = availableProjects.find(
+                                                (project) => project.id.toString() === e.target.value,
+                                            );
+                                            setProjectInput(selected?.path_with_namespace || e.target.value);
+                                            handleProjectChange(e.target.value);
+                                        }}
                                     >
-                                        <option value="">{t('Choose a project...')}</option>
-                                        {availableProjects.map((project) => (
+                                        <option value="">{t('Choose from loaded projects...')}</option>
+                                        {filteredProjects.map((project) => (
                                             <option key={project.id} value={project.id.toString()}>
                                                 {project.path_with_namespace} (
-                                                {project.visibility === 'private' ? t('(Private)') : t('(Public)')})
+                                                {project.visibility === 'private' ? t('Private') : t('Public')})
                                             </option>
                                         ))}
                                     </select>
+
                                     <div className="button-group">
                                         <button
                                             className="button primary"
                                             onClick={handleProjectSubmit}
-                                            disabled={!selectedProject || isOperating}
+                                            disabled={!effectiveProjectId || isOperating}
                                         >
                                             {isOperating ? t('Loading...') : t('Next')}
                                         </button>

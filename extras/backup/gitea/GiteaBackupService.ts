@@ -165,6 +165,9 @@ export const giteaBackupService = {
     getStoredBranch: sharedGiteaBackupService.getStoredBranch.bind(
         sharedGiteaBackupService,
     ),
+    getStoredCredentials: sharedGiteaBackupService.getStoredCredentials.bind(
+        sharedGiteaBackupService,
+    ),
     hasStoredCredentials: sharedGiteaBackupService.hasStoredCredentials.bind(
         sharedGiteaBackupService,
     ),

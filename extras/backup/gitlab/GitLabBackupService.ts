@@ -160,6 +160,9 @@ export const gitLabBackupService = {
     getStoredBranch: sharedGitLabBackupService.getStoredBranch.bind(
         sharedGitLabBackupService,
     ),
+    getStoredCredentials: sharedGitLabBackupService.getStoredCredentials.bind(
+        sharedGitLabBackupService,
+    ),
     hasStoredCredentials: sharedGitLabBackupService.hasStoredCredentials.bind(
         sharedGitLabBackupService,
     ),

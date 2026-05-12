@@ -158,51 +158,42 @@ export const gitHubBackupService = {
 	disconnect: sharedGitHubBackupService.disconnect.bind(
 		sharedGitHubBackupService,
 	),
-
 	getStoredRepository: sharedGitHubBackupService.getStoredTarget.bind(
 		sharedGitHubBackupService,
 	),
-
 	getStoredBranch: sharedGitHubBackupService.getStoredBranch.bind(
 		sharedGitHubBackupService,
 	),
-
+	getStoredCredentials: sharedGitHubBackupService.getStoredCredentials.bind(
+		sharedGitHubBackupService,
+	),
 	hasStoredCredentials: sharedGitHubBackupService.hasStoredCredentials.bind(
 		sharedGitHubBackupService,
 	),
-
 	synchronize: sharedGitHubBackupService.synchronize.bind(
 		sharedGitHubBackupService,
 	),
-
 	exportData: sharedGitHubBackupService.exportData.bind(
 		sharedGitHubBackupService,
 	),
-
 	importChanges: sharedGitHubBackupService.importChanges.bind(
 		sharedGitHubBackupService,
 	),
-
 	getStatus: sharedGitHubBackupService.getStatus.bind(
 		sharedGitHubBackupService,
 	),
-
 	getActivities: sharedGitHubBackupService.getActivities.bind(
 		sharedGitHubBackupService,
 	),
-
 	addStatusListener: sharedGitHubBackupService.addStatusListener.bind(
 		sharedGitHubBackupService,
 	),
-
 	addActivityListener: sharedGitHubBackupService.addActivityListener.bind(
 		sharedGitHubBackupService,
 	),
-
 	clearActivity: sharedGitHubBackupService.clearActivity.bind(
 		sharedGitHubBackupService,
 	),
-
 	clearAllActivities: sharedGitHubBackupService.clearAllActivities.bind(
 		sharedGitHubBackupService,
 	),
