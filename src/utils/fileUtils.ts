@@ -29,6 +29,25 @@ export const toArrayBuffer = (data: string | ArrayBuffer | SharedArrayBuffer | A
 	throw new Error('Unsupported binary content type');
 };
 
+export const encodeContentToBase64 = (
+	content: string | Uint8Array | ArrayBuffer,
+): string => {
+	const uint8Array =
+		typeof content === 'string'
+			? new TextEncoder().encode(content)
+			: content instanceof ArrayBuffer
+				? new Uint8Array(content)
+				: content;
+
+	let binaryString = '';
+
+	for (let i = 0; i < uint8Array.length; i++) {
+		binaryString += String.fromCharCode(uint8Array[i]);
+	}
+
+	return btoa(binaryString);
+};
+
 export const formatFileSize = (size?: number): string => {
 	if (!size) return t('Unknown size');
 	if (size < 1024) return t('{count} bytes', { count: size });

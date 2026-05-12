@@ -26,6 +26,7 @@ interface GiteaCommitAction {
     path: string;
     content?: string;
     encoding?: 'base64';
+    sha?: string;
 }
 
 export class GiteaAPIService {
@@ -83,19 +84,6 @@ export class GiteaAPIService {
             }
             throw error;
         }
-    }
-
-    private _encodeContent(content: string | Uint8Array | ArrayBuffer): string {
-        if (typeof content === 'string')
-            return btoa(unescape(encodeURIComponent(content)));
-
-        const uint8Array =
-            content instanceof ArrayBuffer ? new Uint8Array(content) : content;
-        let binaryString = '';
-        for (let i = 0; i < uint8Array.length; i++) {
-            binaryString += String.fromCharCode(uint8Array[i]);
-        }
-        return btoa(binaryString);
     }
 
     async testConnection(token: string): Promise<boolean> {
@@ -166,8 +154,13 @@ export class GiteaAPIService {
                 path: action.path,
             };
 
+            if (action.sha) {
+                operation.sha = action.sha;
+            }
+
             if (action.operation !== 'delete') {
                 operation.content = action.content;
+
                 if (action.encoding) {
                     operation.encoding = action.encoding;
                 }

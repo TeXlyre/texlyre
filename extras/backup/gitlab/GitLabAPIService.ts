@@ -28,6 +28,9 @@ interface GitLabCommitAction {
     encoding?: 'base64';
 }
 
+const encodeGitLabFilePath = (path: string): string =>
+    encodeURIComponent(path.replace(/^\/+/, ''));
+
 export class GitLabAPIService {
     private baseUrl: string = 'https://gitlab.com/api/v4';
     private requestTimeout: number = 30000;
@@ -50,6 +53,7 @@ export class GitLabAPIService {
         options: RequestInit = {},
     ): Promise<T> {
         const url = `${this.baseUrl}/${endpoint}`;
+
         const headers = new Headers({
             'PRIVATE-TOKEN': token,
             'Content-Type': 'application/json',
@@ -70,32 +74,25 @@ export class GitLabAPIService {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
+
                 throw new Error(
-                    `GitLab API request to '${endpoint}' failed: ${response.statusText}. ${errorData.message || ''}`,
+                    `GitLab API request to '${endpoint}' failed: ${response.statusText}. ${errorData.message || ''
+                    }`,
                 );
             }
 
             return response.status === 204 ? (null as T) : response.json();
         } catch (error) {
             clearTimeout(timeoutId);
+
             if (error instanceof Error && error.name === 'AbortError') {
-                throw new Error(`Request timeout after ${this.requestTimeout / 1000} seconds`);
+                throw new Error(
+                    `Request timeout after ${this.requestTimeout / 1000} seconds`,
+                );
             }
+
             throw error;
         }
-    }
-
-    private _encodeContent(content: string | Uint8Array | ArrayBuffer): string {
-        if (typeof content === 'string')
-            return btoa(unescape(encodeURIComponent(content)));
-
-        const uint8Array =
-            content instanceof ArrayBuffer ? new Uint8Array(content) : content;
-        let binaryString = '';
-        for (let i = 0; i < uint8Array.length; i++) {
-            binaryString += String.fromCharCode(uint8Array[i]);
-        }
-        return btoa(binaryString);
     }
 
     async testConnection(token: string): Promise<boolean> {
@@ -112,6 +109,7 @@ export class GitLabAPIService {
             });
 
             clearTimeout(timeoutId);
+
             return response.ok;
         } catch {
             return false;
@@ -131,9 +129,17 @@ export class GitLabAPIService {
         path = '',
         ref = 'main',
     ): Promise<GitLabFile[]> {
+        const query = new URLSearchParams({
+            path,
+            ref,
+            recursive: 'false',
+        });
+
         return this._request<GitLabFile[]>(
             token,
-            `projects/${encodeURIComponent(projectId)}/repository/tree?path=${path}&ref=${ref}&recursive=false`,
+            `projects/${encodeURIComponent(
+                projectId,
+            )}/repository/tree?${query.toString()}`,
         );
     }
 
@@ -143,13 +149,25 @@ export class GitLabAPIService {
         filePath: string,
         ref = 'main',
     ): Promise<string> {
+        const normalizedPath = filePath.replace(/^\/+/, '');
+
+        const query = new URLSearchParams({
+            ref,
+        });
+
         const data = await this._request<{ content: string; encoding: string }>(
             token,
-            `projects/${encodeURIComponent(projectId)}/repository/files/${encodeURIComponent(filePath)}?ref=${ref}`,
+            `projects/${encodeURIComponent(
+                projectId,
+            )}/repository/files/${encodeGitLabFilePath(
+                normalizedPath,
+            )}?${query.toString()}`,
         );
+
         if (data.encoding === 'base64') {
-            return atob(data.content);
+            return atob(data.content.replace(/\n/g, ''));
         }
+
         return data.content;
     }
 
@@ -179,21 +197,42 @@ export class GitLabAPIService {
         projectId: string,
         ref = 'main',
     ): Promise<GitLabTreeItem[]> {
-        return this._request<GitLabTreeItem[]>(
-            token,
-            `projects/${encodeURIComponent(projectId)}/repository/tree?recursive=true&ref=${ref}&per_page=100`,
-        );
+        const allItems: GitLabTreeItem[] = [];
+        let page = 1;
+
+        while (true) {
+            const query = new URLSearchParams({
+                recursive: 'true',
+                ref,
+                per_page: '100',
+                page: String(page),
+            });
+
+            const items = await this._request<GitLabTreeItem[]>(
+                token,
+                `projects/${encodeURIComponent(
+                    projectId,
+                )}/repository/tree?${query.toString()}`,
+            );
+
+            allItems.push(...items);
+
+            if (items.length < 100) break;
+
+            page++;
+        }
+
+        return allItems;
     }
 
     async getBranches(
         token: string,
         projectId: string,
     ): Promise<{ name: string; protected: boolean }[]> {
-        const data = await this._request<{ name: string; protected: boolean }[]>(
+        return this._request<{ name: string; protected: boolean }[]>(
             token,
             `projects/${encodeURIComponent(projectId)}/repository/branches`,
         );
-        return data;
     }
 }
 

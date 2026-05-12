@@ -473,7 +473,11 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
       } catch (error) {
         console.error('Error in batch delete:', error);
         if (error instanceof Error) {
-          alert(error.message);
+          const operationId = `batch-delete-${Date.now()}`;
+          fileOperationNotificationService.showError(
+            operationId,
+            `Failed to delete files: ${error.message}`
+          );
         }
       }
     },
