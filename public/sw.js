@@ -1,6 +1,6 @@
 // These constants are automatically generated. Do not edit directly.
-// Generated on: 2026-05-11T23:05:28.900Z
-const CACHE_NAME = `texlyre-v0.7.46`;
+// Generated on: 2026-05-12T07:36:12.244Z
+const CACHE_NAME = `texlyre-v0.7.47`;
 const BASE_PATH = '/texlyre/';
 const FONTS_CACHE_NAME = 'fonts-cache-v1';
 const AIRGAP_ALLOWED_DOMAINS = [
@@ -17,6 +17,15 @@ const AIRGAP_ALLOWED_PROTOCOLS = [
 // *** End automatic generation ***
 
 let airgapExternalRequests = false;
+let forceOfflineMode = false;
+
+function networkFetch(request) {
+  if (forceOfflineMode) {
+    return Promise.reject(new TypeError('Force offline mode'));
+  }
+
+  return fetch(request);
+}
 
 console.log('[ServiceWorker] Service Worker loading with base path:', BASE_PATH);
 
@@ -81,6 +90,12 @@ function isAllowedAirgapProtocol(protocol) {
   return AIRGAP_ALLOWED_PROTOCOLS.includes(protocol);
 }
 
+function isAllowedAirgapHost(hostname) {
+  return AIRGAP_ALLOWED_DOMAINS.some((domain) => {
+    return hostname === domain || hostname.endsWith(`.${domain}`);
+  });
+}
+
 function isBlockedByAirgap(request) {
   const url = new URL(request.url);
 
@@ -129,7 +144,7 @@ self.addEventListener('install', (event) => {
         return Promise.all(
           STATIC_ASSETS.map(async (url) => {
             try {
-              const response = await fetch(url);
+              const response = await networkFetch(url);
               if (response.ok) {
                 await cache.put(url, response);
                 console.log('[ServiceWorker] Successfully cached:', url);
@@ -182,7 +197,7 @@ async function getCachedWithExpiry(cacheName, request, maxAge) {
   const cachedTime = cached.headers.get('sw-cached-time');
   if (cachedTime) {
     const age = Date.now() - parseInt(cachedTime, 10);
-    if (navigator.onLine && age > maxAge) {
+    if (!forceOfflineMode && navigator.onLine && age > maxAge) {
       console.log('[ServiceWorker] Cache expired and online, fetching fresh:', request.url);
       return null;
     }
@@ -230,7 +245,7 @@ self.addEventListener('fetch', (event) => {
           }
 
           try {
-            const response = await fetch(event.request);
+            const response = await networkFetch(event.request);
             if (response.ok) {
               await cacheWithExpiry(FONTS_CACHE_NAME, event.request, response.clone());
             }
@@ -264,7 +279,7 @@ self.addEventListener('fetch', (event) => {
           return cachedResponse;
         }
 
-        return fetch(event.request)
+        return networkFetch(event.request)
           .then((response) => {
             if (response.status === 200 && response.type === 'basic') {
               const responseClone = response.clone();
@@ -288,6 +303,12 @@ self.addEventListener('fetch', (event) => {
 });
 
 self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SET_FORCE_OFFLINE_MODE') {
+    forceOfflineMode = event.data.enabled === true;
+    console.log('[ServiceWorker] Force offline mode:', forceOfflineMode);
+    return;
+  }
+
   if (event.data && event.data.type === 'SET_AIRGAP_EXTERNAL_REQUESTS') {
     airgapExternalRequests = event.data.enabled === true;
     console.log('[ServiceWorker] Air-gap external requests:', airgapExternalRequests);
@@ -302,7 +323,7 @@ self.addEventListener('message', (event) => {
           return Promise.all(
             event.data.urls.map(async (url) => {
               try {
-                const response = await fetch(url);
+                const response = await networkFetch(url);
                 if (response.ok) {
                   await cache.put(url, response);
                   console.log('[ServiceWorker] Successfully cached via message:', url);
