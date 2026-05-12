@@ -527,9 +527,7 @@ class AuthService {
 		projectType?: 'latex' | 'typst',
 	): string {
 		try {
-			const projectId =
-				Math.random().toString(36).substring(2, 15) +
-				Math.random().toString(36).substring(2, 15);
+			const projectId = crypto.randomUUID();
 			const dbName = `texlyre-project-${projectId}`;
 			const yjsCollection = `${dbName}-yjs_metadata`;
 
