@@ -430,7 +430,7 @@ export class GitBackupService<TTarget> {
                     .filter((item) => item.type === 'blob' && item.path)
                     .map((item) => [
                         item.path!,
-                        this.getFileRef(item, item.path!, finalBranch),
+                        item.sha || item.id || '',
                     ]),
             );
 
@@ -923,7 +923,7 @@ export class GitBackupService<TTarget> {
             }
 
             const projectData = projectFiles.get(currentProjectId)!;
-            const ref = this.getFileRef(item, item.path, branch);
+            const ref = item.path;
 
             if (pathParts[2] === 'metadata.json') {
                 projectData.metadataRef = ref;

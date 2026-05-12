@@ -58,7 +58,7 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({
 		return unsubscribe;
 	}, []);
 
-	const effectiveStatus = offlineService.getStatus();
+	const effectiveStatus = status;
 	const isOfflineMode = !effectiveStatus.isOnline;
 	const isCollabOfflineMode =
 		isOfflineMode || forceCollabOffline || effectiveStatus.airgapExternalRequests;
