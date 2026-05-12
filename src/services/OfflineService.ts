@@ -1,5 +1,6 @@
 // src/services/OfflineService.ts
 const BASE_PATH = __BASE_PATH__;
+const LAST_ONLINE_KEY = 'texlyre-last-online';
 
 export interface OfflineStatus {
 	isOnline: boolean;
@@ -15,7 +16,7 @@ class OfflineService {
 
 	private status: Omit<OfflineStatus, 'airgapExternalRequests'> = {
 		isOnline: navigator.onLine,
-		lastOnline: navigator.onLine ? Date.now() : null,
+		lastOnline: Number(localStorage.getItem(LAST_ONLINE_KEY)) || null,
 	};
 
 	constructor() {
@@ -37,9 +38,15 @@ class OfflineService {
 			}
 		}
 
+		if (isOnline && !this.forceOffline) {
+			localStorage.setItem(LAST_ONLINE_KEY, Date.now().toString());
+		}
+
 		this.status = {
 			isOnline: this.forceOffline ? false : isOnline,
-			lastOnline: isOnline && !this.forceOffline ? Date.now() : this.status.lastOnline,
+			lastOnline: isOnline && !this.forceOffline
+				? Date.now()
+				: this.status.lastOnline,
 		};
 
 		this.notifyListeners();
