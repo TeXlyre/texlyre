@@ -51,6 +51,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
     const [projectInput, setProjectInput] = useState('');
     const [selectedBranch, setSelectedBranch] = useState('main');
     const [displayBranch, setDisplayBranch] = useState<string>('main');
+    const [modalMessage, setModalMessage] = useState('');
     const [connectionStep, setConnectionStep] = useState<'token' | 'project' | 'branch'>('token');
 
     const { getProjectById } = useAuth();
@@ -196,11 +197,12 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
     const handleAsyncOperation = async (operation: () => Promise<void>) => {
         if (isOperating) return;
         setIsOperating(true);
+        setModalMessage('');
         try {
             await operation();
         } catch (error) {
             console.error('Operation failed:', error);
-            alert(
+            setModalMessage(
                 `Operation failed: ${error instanceof Error ? error.message : String(error)}`,
             );
         } finally {
@@ -233,13 +235,16 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                 setAvailableProjects(result.projects);
                 setConnectionStep('project');
             } else {
-                alert(result.error || t('Failed to connect with token.'));
+                setModalMessage(result.error || t('Failed to connect with token.'));
             }
         });
 
     const handleProjectSubmit = () =>
         handleAsyncOperation(async () => {
-            if (!effectiveProjectId) return;
+            if (!effectiveProjectId) {
+                setModalMessage(t('Enter a project ID, namespace/project, or GitLab project URL.'));
+                return;
+            }
 
             const branches = await gitLabAPIService.getBranches(
                 gitLabToken,
@@ -261,7 +266,10 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
 
     const handleBranchSubmit = () =>
         handleAsyncOperation(async () => {
-            if (!selectedBranch || !effectiveProjectId) return;
+            if (!selectedBranch || !effectiveProjectId) {
+                setModalMessage(t('Select a project and branch before connecting.'));
+                return;
+            }
 
             const localProjectId =
                 isInEditor && syncScope === 'current' ? currentProjectId : undefined;
@@ -292,7 +300,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
             const credentials = await gitLabBackupService.getStoredCredentials(projectId);
 
             if (!credentials) {
-                alert(t('Could not retrieve GitLab credentials. Please reconnect.'));
+                setModalMessage(t('Could not retrieve GitLab credentials. Please reconnect.'));
                 return;
             }
 
@@ -410,6 +418,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                 }
             >
                 <div className="backup-modal">
+                    {modalMessage && <div className="error-message">{modalMessage}</div>}
                     {showConnectionFlow && (
                         <div className="connection-flow">
                             <h3>{t('Connect to GitLab')}</h3>
@@ -419,7 +428,10 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                     <input
                                         type="password"
                                         value={gitLabToken}
-                                        onChange={(e) => setGitLabToken(e.target.value)}
+                                        onChange={(e) => {
+                                            setModalMessage('');
+                                            setGitLabToken(e.target.value);
+                                        }}
                                         placeholder={t('glpat-...')}
                                     />
                                     <div className="button-group">
@@ -454,6 +466,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                         type="text"
                                         value={projectInput}
                                         onChange={(e) => {
+                                            setModalMessage('');
                                             setProjectInput(e.target.value);
                                             setSelectedProject('');
                                         }}
@@ -463,6 +476,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                     <select
                                         value={selectedProject}
                                         onChange={(e) => {
+                                            setModalMessage('');
                                             setSelectedProject(e.target.value);
                                             const selected = availableProjects.find(
                                                 (project) => project.id.toString() === e.target.value,
@@ -502,7 +516,10 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                     <label>{t('Select Branch:')}</label>
                                     <select
                                         value={selectedBranch}
-                                        onChange={(e) => setSelectedBranch(e.target.value)}
+                                        onChange={(e) => {
+                                            setModalMessage('');
+                                            setSelectedBranch(e.target.value);
+                                        }}
                                     >
                                         {availableBranches.map((branch) => (
                                             <option key={branch.name} value={branch.name}>
@@ -555,11 +572,10 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                                                     name="syncScope"
                                                                     value="current"
                                                                     checked={syncScope === 'current'}
-                                                                    onChange={(e) =>
-                                                                        setSyncScope(
-                                                                            e.target.value as 'current' | 'all',
-                                                                        )
-                                                                    }
+                                                                    onChange={(e) => {
+                                                                        setModalMessage('');
+                                                                        setSyncScope(e.target.value as 'current' | 'all');
+                                                                    }}
                                                                     disabled={isOperating}
                                                                 />
                                                                 <span>
@@ -573,11 +589,10 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                                                     name="syncScope"
                                                                     value="all"
                                                                     checked={syncScope === 'all'}
-                                                                    onChange={(e) =>
-                                                                        setSyncScope(
-                                                                            e.target.value as 'current' | 'all',
-                                                                        )
-                                                                    }
+                                                                    onChange={(e) => {
+                                                                        setModalMessage('');
+                                                                        setSyncScope(e.target.value as 'current' | 'all');
+                                                                    }}
                                                                     disabled={isOperating}
                                                                 />
                                                                 <span>{t('All projects')}</span>
@@ -590,7 +605,10 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
                                                     <input
                                                         type="text"
                                                         value={commitMessage}
-                                                        onChange={(e) => setCommitMessage(e.target.value)}
+                                                        onChange={(e) => {
+                                                            setModalMessage('');
+                                                            setCommitMessage(e.target.value);
+                                                        }}
                                                         placeholder={getDefaultCommitMessagePlaceholder()}
                                                         disabled={isOperating}
                                                     />

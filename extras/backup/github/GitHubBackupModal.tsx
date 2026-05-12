@@ -51,6 +51,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
   const [repoInput, setRepoInput] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('main');
   const [displayBranch, setDisplayBranch] = useState<string>('main');
+  const [modalMessage, setModalMessage] = useState('');
   const [connectionStep, setConnectionStep] = useState<'token' | 'repo' | 'branch'>('token');
 
   const { getProjectById } = useAuth();
@@ -193,11 +194,12 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
   const handleAsyncOperation = async (operation: () => Promise<void>) => {
     if (isOperating) return;
     setIsOperating(true);
+    setModalMessage('');
     try {
       await operation();
     } catch (error) {
       console.error('Operation failed:', error);
-      alert(
+      setModalMessage(
         `Operation failed: ${error instanceof Error ? error.message : String(error)}`
       );
     } finally {
@@ -230,7 +232,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
         setAvailableRepos(result.repositories);
         setConnectionStep('repo');
       } else {
-        alert(result.error || t('Failed to connect with token.'));
+        setModalMessage(result.error || t('Failed to connect with token.'));
       }
     });
 
@@ -239,7 +241,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
       const repoName = effectiveSelectedRepo;
 
       if (!repoName || !repoName.includes('/')) {
-        alert(t('Enter a repository as owner/repo or paste a GitHub repository URL.'));
+        setModalMessage(t('Enter a repository as owner/repo or paste a GitHub repository URL.'));
         return;
       }
 
@@ -274,7 +276,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
       const repoName = effectiveSelectedRepo || selectedRepo;
 
       if (!repoName || !repoName.includes('/')) {
-        alert(t('Enter a repository as owner/repo or paste a GitHub repository URL.'));
+        setModalMessage(t('Enter a repository as owner/repo or paste a GitHub repository URL.'));
         return;
       }
 
@@ -308,7 +310,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
       );
 
       if (!credentials) {
-        alert(t('Could not retrieve GitHub credentials. Please reconnect.'));
+        setModalMessage(t('Could not retrieve GitHub credentials. Please reconnect.'));
         return;
       }
 
@@ -428,6 +430,8 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
           </button>
         }>
         <div className="backup-modal">
+          {modalMessage && <div className="error-message">{modalMessage}</div>}
+
           {showConnectionFlow && (
             <div className="connection-flow">
               <h3>{t('Connect to GitHub')}</h3>
@@ -437,7 +441,10 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                   <input
                     type="password"
                     value={gitHubToken}
-                    onChange={(e) => setGitHubToken(e.target.value)}
+                    onChange={(e) => {
+                      setModalMessage('');
+                      setGitHubToken(e.target.value);
+                    }}
                     placeholder={t('ghp_...')} />
                   <div className="button-group">
                     <button
@@ -469,6 +476,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                     type="text"
                     value={repoInput}
                     onChange={(e) => {
+                      setModalMessage('');
                       setRepoInput(e.target.value);
                       setSelectedRepo('');
                     }}
@@ -478,6 +486,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                   <select
                     value={selectedRepo}
                     onChange={(e) => {
+                      setModalMessage('');
                       setSelectedRepo(e.target.value);
                       setRepoInput(e.target.value);
                       handleRepoChange(e.target.value);
@@ -513,7 +522,10 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                   <label>{t('Select Branch:')}</label>
                   <select
                     value={selectedBranch}
-                    onChange={(e) => setSelectedBranch(e.target.value)}>
+                    onChange={(e) => {
+                      setModalMessage('');
+                      setSelectedBranch(e.target.value);
+                    }}>
                     {availableBranches.map((branch) => (
                       <option key={branch.name} value={branch.name}>
                         {branch.name} {branch.protected ? t('(Protected)') : ''}
@@ -562,11 +574,10 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                                   name="syncScope"
                                   value="current"
                                   checked={syncScope === 'current'}
-                                  onChange={(e) =>
-                                    setSyncScope(
-                                      e.target.value as 'current' | 'all'
-                                    )
-                                  }
+                                  onChange={(e) => {
+                                    setModalMessage('');
+                                    setSyncScope(e.target.value as 'current' | 'all');
+                                  }}
                                   disabled={isOperating} />
                                 <span>
                                   {t('Current Project (')}
@@ -579,11 +590,10 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                                   name="syncScope"
                                   value="all"
                                   checked={syncScope === 'all'}
-                                  onChange={(e) =>
-                                    setSyncScope(
-                                      e.target.value as 'current' | 'all'
-                                    )
-                                  }
+                                  onChange={(e) => {
+                                    setModalMessage('');
+                                    setSyncScope(e.target.value as 'current' | 'all');
+                                  }}
                                   disabled={isOperating} />
                                 <span>{t('All projects')}</span>
                               </label>
@@ -595,7 +605,10 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                           <input
                             type="text"
                             value={commitMessage}
-                            onChange={(e) => setCommitMessage(e.target.value)}
+                            onChange={(e) => {
+                              setModalMessage('');
+                              setCommitMessage(e.target.value);
+                            }}
                             placeholder={getDefaultCommitMessagePlaceholder()}
                             disabled={isOperating} />
                         </div>

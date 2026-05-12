@@ -51,6 +51,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
     const [repoInput, setRepoInput] = useState('');
     const [selectedBranch, setSelectedBranch] = useState('main');
     const [displayBranch, setDisplayBranch] = useState<string>('main');
+    const [modalMessage, setModalMessage] = useState('');
     const [connectionStep, setConnectionStep] = useState<'token' | 'repo' | 'branch'>('token');
 
     const { getProjectById } = useAuth();
@@ -193,11 +194,12 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
     const handleAsyncOperation = async (operation: () => Promise<void>) => {
         if (isOperating) return;
         setIsOperating(true);
+        setModalMessage('');
         try {
             await operation();
         } catch (error) {
             console.error('Operation failed:', error);
-            alert(
+            setModalMessage(
                 `Operation failed: ${error instanceof Error ? error.message : String(error)}`,
             );
         } finally {
@@ -230,7 +232,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
                 setAvailableRepos(result.repositories);
                 setConnectionStep('repo');
             } else {
-                alert(result.error || t('Failed to connect with token.'));
+                setModalMessage(result.error || t('Failed to connect with token.'));
             }
         });
 
@@ -239,7 +241,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
             const repoName = effectiveSelectedRepo;
 
             if (!repoName || !repoName.includes('/')) {
-                alert(t('Enter a repository as owner/repo or paste a repository URL.'));
+                setModalMessage(t('Enter a repository as owner/repo or paste a repository URL.'));
                 return;
             }
 
@@ -272,7 +274,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
             const repoName = effectiveSelectedRepo || selectedRepo;
 
             if (!repoName || !repoName.includes('/')) {
-                alert(t('Enter a repository as owner/repo or paste a repository URL.'));
+                setModalMessage(t('Enter a repository as owner/repo or paste a repository URL.'));
                 return;
             }
 
@@ -304,7 +306,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
             const credentials = await giteaBackupService.getStoredCredentials(projectId);
 
             if (!credentials) {
-                alert(t('Could not retrieve Gitea credentials. Please reconnect.'));
+                setModalMessage(t('Could not retrieve Gitea credentials. Please reconnect.'));
                 return;
             }
 
@@ -424,6 +426,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
                 }
             >
                 <div className="backup-modal">
+                    {modalMessage && <div className="error-message">{modalMessage}</div>}
                     {showConnectionFlow && (
                         <div className="connection-flow">
                             <h3>{t('Connect to Gitea')}</h3>
@@ -433,7 +436,10 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
                                     <input
                                         type="password"
                                         value={giteaToken}
-                                        onChange={(e) => setGiteaToken(e.target.value)}
+                                        onChange={(e) => {
+                                            setModalMessage('');
+                                            setGiteaToken(e.target.value);
+                                        }}
                                         placeholder={t('token...')}
                                     />
                                     <div className="button-group">
@@ -468,6 +474,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
                                         type="text"
                                         value={repoInput}
                                         onChange={(e) => {
+                                            setModalMessage('');
                                             setRepoInput(e.target.value);
                                             setSelectedRepo('');
                                         }}
@@ -477,6 +484,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
                                     <select
                                         value={selectedRepo}
                                         onChange={(e) => {
+                                            setModalMessage('');
                                             setSelectedRepo(e.target.value);
                                             setRepoInput(e.target.value);
                                             handleRepoChange(e.target.value);
@@ -512,7 +520,10 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
                                     <label>{t('Select Branch:')}</label>
                                     <select
                                         value={selectedBranch}
-                                        onChange={(e) => setSelectedBranch(e.target.value)}
+                                        onChange={(e) => {
+                                            setModalMessage('');
+                                            setSelectedBranch(e.target.value);
+                                        }}
                                     >
                                         {availableBranches.map((branch) => (
                                             <option key={branch.name} value={branch.name}>
@@ -565,11 +576,10 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
                                                                     name="syncScope"
                                                                     value="current"
                                                                     checked={syncScope === 'current'}
-                                                                    onChange={(e) =>
-                                                                        setSyncScope(
-                                                                            e.target.value as 'current' | 'all',
-                                                                        )
-                                                                    }
+                                                                    onChange={(e) => {
+                                                                        setModalMessage('');
+                                                                        setSyncScope(e.target.value as 'current' | 'all');
+                                                                    }}
                                                                     disabled={isOperating}
                                                                 />
                                                                 <span>
@@ -583,11 +593,10 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
                                                                     name="syncScope"
                                                                     value="all"
                                                                     checked={syncScope === 'all'}
-                                                                    onChange={(e) =>
-                                                                        setSyncScope(
-                                                                            e.target.value as 'current' | 'all',
-                                                                        )
-                                                                    }
+                                                                    onChange={(e) => {
+                                                                        setModalMessage('');
+                                                                        setSyncScope(e.target.value as 'current' | 'all');
+                                                                    }}
                                                                     disabled={isOperating}
                                                                 />
                                                                 <span>{t('All projects')}</span>
@@ -600,7 +609,10 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
                                                     <input
                                                         type="text"
                                                         value={commitMessage}
-                                                        onChange={(e) => setCommitMessage(e.target.value)}
+                                                        onChange={(e) => {
+                                                            setModalMessage('');
+                                                            setCommitMessage(e.target.value);
+                                                        }}
                                                         placeholder={getDefaultCommitMessagePlaceholder()}
                                                         disabled={isOperating}
                                                     />

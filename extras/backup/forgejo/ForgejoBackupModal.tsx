@@ -51,6 +51,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
     const [repoInput, setRepoInput] = useState('');
     const [selectedBranch, setSelectedBranch] = useState('main');
     const [displayBranch, setDisplayBranch] = useState<string>('main');
+    const [modalMessage, setModalMessage] = useState('');
     const [connectionStep, setConnectionStep] = useState<'token' | 'repo' | 'branch'>('token');
 
     const { getProjectById } = useAuth();
@@ -193,11 +194,12 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
     const handleAsyncOperation = async (operation: () => Promise<void>) => {
         if (isOperating) return;
         setIsOperating(true);
+        setModalMessage('');
         try {
             await operation();
         } catch (error) {
             console.error('Operation failed:', error);
-            alert(
+            setModalMessage(
                 `Operation failed: ${error instanceof Error ? error.message : String(error)}`,
             );
         } finally {
@@ -230,7 +232,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
                 setAvailableRepos(result.repositories);
                 setConnectionStep('repo');
             } else {
-                alert(result.error || t('Failed to connect with token.'));
+                setModalMessage(result.error || t('Failed to connect with token.'));
             }
         });
 
@@ -239,7 +241,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
             const repoName = effectiveSelectedRepo;
 
             if (!repoName || !repoName.includes('/')) {
-                alert(t('Enter a repository as owner/repo or paste a repository URL.'));
+                setModalMessage(t('Enter a repository as owner/repo or paste a repository URL.'));
                 return;
             }
 
@@ -274,7 +276,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
             const repoName = effectiveSelectedRepo || selectedRepo;
 
             if (!repoName || !repoName.includes('/')) {
-                alert(t('Enter a repository as owner/repo or paste a repository URL.'));
+                setModalMessage(t('Enter a repository as owner/repo or paste a repository URL.'));
                 return;
             }
 
@@ -308,7 +310,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
             );
 
             if (!credentials) {
-                alert(t('Could not retrieve Forgejo credentials. Please reconnect.'));
+                setModalMessage(t('Could not retrieve Forgejo credentials. Please reconnect.'));
                 return;
             }
 
@@ -430,6 +432,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
                 }
             >
                 <div className="backup-modal">
+                    {modalMessage && <div className="error-message">{modalMessage}</div>}
                     {showConnectionFlow && (
                         <div className="connection-flow">
                             <h3>{t('Connect to Forgejo')}</h3>
@@ -439,7 +442,11 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
                                     <input
                                         type="password"
                                         value={forgejoToken}
-                                        onChange={(e) => setForgejoToken(e.target.value)}
+                                        onChange={(e) => {
+                                            setModalMessage('');
+                                            setRepoInput(e.target.value);
+                                            setSelectedRepo('');
+                                        }}
                                         placeholder={t('token...')}
                                     />
                                     <div className="button-group">
@@ -474,6 +481,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
                                         type="text"
                                         value={repoInput}
                                         onChange={(e) => {
+                                            setModalMessage('');
                                             setRepoInput(e.target.value);
                                             setSelectedRepo('');
                                         }}
@@ -483,6 +491,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
                                     <select
                                         value={selectedRepo}
                                         onChange={(e) => {
+                                            setModalMessage('');
                                             setSelectedRepo(e.target.value);
                                             setRepoInput(e.target.value);
                                             handleRepoChange(e.target.value);
@@ -518,7 +527,10 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
                                     <label>{t('Select Branch:')}</label>
                                     <select
                                         value={selectedBranch}
-                                        onChange={(e) => setSelectedBranch(e.target.value)}
+                                        onChange={(e) => {
+                                            setModalMessage('');
+                                            setSelectedBranch(e.target.value);
+                                        }}
                                     >
                                         {availableBranches.map((branch) => (
                                             <option key={branch.name} value={branch.name}>
@@ -571,11 +583,10 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
                                                                     name="syncScope"
                                                                     value="current"
                                                                     checked={syncScope === 'current'}
-                                                                    onChange={(e) =>
-                                                                        setSyncScope(
-                                                                            e.target.value as 'current' | 'all',
-                                                                        )
-                                                                    }
+                                                                    onChange={(e) => {
+                                                                        setModalMessage('');
+                                                                        setSyncScope(e.target.value as 'current' | 'all');
+                                                                    }}
                                                                     disabled={isOperating}
                                                                 />
                                                                 <span>
@@ -589,11 +600,10 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
                                                                     name="syncScope"
                                                                     value="all"
                                                                     checked={syncScope === 'all'}
-                                                                    onChange={(e) =>
-                                                                        setSyncScope(
-                                                                            e.target.value as 'current' | 'all',
-                                                                        )
-                                                                    }
+                                                                    onChange={(e) => {
+                                                                        setModalMessage('');
+                                                                        setSyncScope(e.target.value as 'current' | 'all');
+                                                                    }}
                                                                     disabled={isOperating}
                                                                 />
                                                                 <span>{t('All projects')}</span>
@@ -606,7 +616,10 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
                                                     <input
                                                         type="text"
                                                         value={commitMessage}
-                                                        onChange={(e) => setCommitMessage(e.target.value)}
+                                                        onChange={(e) => {
+                                                            setModalMessage('');
+                                                            setCommitMessage(e.target.value);
+                                                        }}
                                                         placeholder={getDefaultCommitMessagePlaceholder()}
                                                         disabled={isOperating}
                                                     />
