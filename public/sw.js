@@ -1,6 +1,6 @@
 // These constants are automatically generated. Do not edit directly.
-// Generated on: 2026-05-12T16:29:16.416Z
-const CACHE_NAME = `texlyre-v0.7.49`;
+// Generated on: 2026-05-12T17:39:38.980Z
+const CACHE_NAME = `texlyre-v0.7.50`;
 const BASE_PATH = '/texlyre/';
 const FONTS_CACHE_NAME = 'fonts-cache-v1';
 const AIRGAP_ALLOWED_DOMAINS = [
@@ -29,8 +29,10 @@ function networkFetch(request) {
 
 console.log('[ServiceWorker] Service Worker loading with base path:', BASE_PATH);
 
+const APP_SHELL_URL = new URL(BASE_PATH + 'index.html', self.location.origin).href;
+
 const STATIC_ASSETS = [
-  BASE_PATH + 'index.html'
+  APP_SHELL_URL
 ];
 
 const CACHE_MAX_AGE = {
@@ -294,7 +296,7 @@ self.addEventListener('fetch', (event) => {
 
             if (event.request.mode === 'navigate') {
               console.log('[ServiceWorker] Serving index.html for navigation');
-              return caches.match(BASE_PATH + 'index.html');
+              return caches.match(APP_SHELL_URL);
             }
 
             throw new Error('Resource not available offline');
