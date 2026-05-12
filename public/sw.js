@@ -1,6 +1,6 @@
 // These constants are automatically generated. Do not edit directly.
-// Generated on: 2026-05-12T07:36:12.244Z
-const CACHE_NAME = `texlyre-v0.7.47`;
+// Generated on: 2026-05-12T08:21:29.383Z
+const CACHE_NAME = `texlyre-v0.7.48`;
 const BASE_PATH = '/texlyre/';
 const FONTS_CACHE_NAME = 'fonts-cache-v1';
 const AIRGAP_ALLOWED_DOMAINS = [
@@ -272,30 +272,31 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(event.request)
-      .then((cachedResponse) => {
-        if (cachedResponse) {
-          console.log('[ServiceWorker] Serving from cache:', event.request.url);
-          return cachedResponse;
+    networkFetch(event.request)
+      .then((response) => {
+        if (response.status === 200 && response.type === 'basic') {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME)
+            .then((cache) => {
+              console.log('[ServiceWorker] Caching new resource:', event.request.url);
+              cache.put(event.request, responseClone);
+            });
         }
-
-        return networkFetch(event.request)
-          .then((response) => {
-            if (response.status === 200 && response.type === 'basic') {
-              const responseClone = response.clone();
-              caches.open(CACHE_NAME)
-                .then((cache) => {
-                  console.log('[ServiceWorker] Caching new resource:', event.request.url);
-                  cache.put(event.request, responseClone);
-                });
+        return response;
+      })
+      .catch(() => {
+        return caches.match(event.request)
+          .then((cachedResponse) => {
+            if (cachedResponse) {
+              console.log('[ServiceWorker] Serving from cache:', event.request.url);
+              return cachedResponse;
             }
-            return response;
-          })
-          .catch(() => {
+
             if (event.request.mode === 'navigate') {
               console.log('[ServiceWorker] Serving index.html for navigation');
               return caches.match(BASE_PATH + 'index.html');
             }
+
             throw new Error('Resource not available offline');
           });
       })
