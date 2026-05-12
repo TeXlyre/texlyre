@@ -58,7 +58,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
   const [notifications, setNotifications] = useState<FileSyncNotification[]>([]);
 
   const ydocRef = useRef<Y.Doc | null>(null);
-  const isInitializedRef = useRef(false);
+  const initializedProjectIdRef = useRef<string | null>(null);
   const syncIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const syncThrottleRef = useRef<NodeJS.Timeout | null>(null);
   const activeHoldsRef = useRef<Set<string>>(new Set());
@@ -163,11 +163,22 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
   const updateLocalFileMap = useCallback(async () => {
     if (!user || !ydocRef.current || !isFileSyncEnabled || !docUrl) return;
 
+    const activeProjectId = projectId;
+
     try {
       const localFiles = await fileSyncService.getLocalFileSyncInfo(
         user.id,
-        user.username
+        user.username,
+        docUrl
       );
+
+      if (
+        initializedProjectIdRef.current !== activeProjectId ||
+        !ydocRef.current
+      ) {
+        return;
+      }
+
       ydocRef.current.getMap('fileSync').set(user.id, localFiles);
 
       console.log(
@@ -183,7 +194,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
           }`
       });
     }
-  }, [user, isFileSyncEnabled, addNotification, docUrl]);
+  }, [user, isFileSyncEnabled, addNotification, docUrl, projectId]);
 
   const createHoldSignal = useCallback(
     (targetPeerId: string): FileSyncHoldSignal => ({
@@ -261,12 +272,21 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
   const checkAndRequestFiles = useCallback(async () => {
     if (!user || !ydocRef.current || !isFileSyncEnabled) return;
 
+    const activeProjectId = projectId;
+
     try {
       const fileSyncMap = ydocRef.current.getMap('fileSync');
       const localFiles = await fileSyncService.getLocalFileSyncInfo(
         user.id,
         user.username
       );
+
+      if (
+        initializedProjectIdRef.current !== activeProjectId ||
+        !ydocRef.current
+      ) {
+        return;
+      }
 
       fileSyncMap.forEach((remoteFiles, peerId) => {
         if (peerId === user.id || fileSyncService.isSyncDisabledForPeer(peerId))
@@ -298,6 +318,8 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
         if (!holdSignal) return;
 
         setTimeout(() => {
+          if (initializedProjectIdRef.current !== activeProjectId) return;
+
           const requestsArray = getRequestsArray();
           if (!requestsArray) return;
 
@@ -339,6 +361,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
   }, [
     user,
     isFileSyncEnabled,
+    projectId,
     conflictResolutionStrategy,
     issueHoldSignal,
     addNotification,
@@ -364,7 +387,8 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
         const uploadResult = await fileSyncService.uploadFiles(
           request.files,
           request.id,
-          fileSyncServerUrl
+          fileSyncServerUrl,
+          docUrl
         );
 
         updateRequest(request.id, {
@@ -408,7 +432,8 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
       addNotification,
       updateRequest,
       deleteRequest,
-      isRequestExpired
+      isRequestExpired,
+      docUrl
     ]
   );
 
@@ -459,7 +484,8 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
           remoteTimestamps,
           remoteDocumentIds,
           remoteDeletionStates,
-          fileSyncServerUrl
+          fileSyncServerUrl,
+          docUrl
         );
 
         deleteRequest(request.id);
@@ -551,7 +577,8 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
       releaseHoldSignal,
       updateRequest,
       deleteRequest,
-      isRequestExpired
+      isRequestExpired,
+      docUrl
     ]
   );
 
@@ -614,8 +641,14 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
   }, [cleanupStaleRequests]);
 
   const performSync = useCallback(async () => {
-    if (!isFileSyncEnabled || !user || !isInitializedRef.current || !docUrl)
+    if (
+      !isFileSyncEnabled ||
+      !user ||
+      initializedProjectIdRef.current !== projectId ||
+      !docUrl
+    ) {
       return;
+    }
 
     console.log('[FileSyncContext] Performing sync cycle...');
     cleanupExpiredHolds();
@@ -626,6 +659,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
     isFileSyncEnabled,
     user,
     docUrl,
+    projectId,
     cleanupExpiredHolds,
     cleanupCompletedRequests,
     updateLocalFileMap,
@@ -674,7 +708,8 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
   }, []);
 
   useEffect(() => {
-    if (!user || !projectId || isInitializedRef.current) return;
+    if (!user || !projectId) return;
+    if (initializedProjectIdRef.current === projectId) return;
 
     const signalingServersSetting = getSetting('collab-signaling-servers');
     const awarenessTimeoutSetting = getSetting('collab-awareness-timeout');
@@ -698,7 +733,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
       });
 
       ydocRef.current = doc;
-      isInitializedRef.current = true;
+      initializedProjectIdRef.current = projectId;
 
       const fileSyncMap = doc.getMap('fileSync');
       const requestsArray = doc.getArray<FileSyncRequest>('syncRequests');
@@ -740,7 +775,20 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
     return () => {
       if (projectId) collabService.disconnect(projectId, 'file_sync');
-      isInitializedRef.current = false;
+
+      if (initializedProjectIdRef.current === projectId) {
+        initializedProjectIdRef.current = null;
+      }
+
+      ydocRef.current = null;
+      activeHoldsRef.current.clear();
+      processedRequestsRef.current.clear();
+
+      if (syncThrottleRef.current) clearTimeout(syncThrottleRef.current);
+      if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
+
+      syncThrottleRef.current = null;
+      syncIntervalRef.current = null;
     };
   }, [
     user,
@@ -755,7 +803,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
   ]);
 
   useEffect(() => {
-    if (!isFileSyncEnabled || !isInitializedRef.current) {
+    if (!isFileSyncEnabled || initializedProjectIdRef.current !== projectId) {
       if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
       syncIntervalRef.current = null;
       return;
@@ -780,7 +828,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
     };
   }, [
     isFileSyncEnabled,
-    isInitializedRef.current,
+    projectId,
     performSync,
     monitorConnectedPeers,
     autoSyncIntervalSeconds
