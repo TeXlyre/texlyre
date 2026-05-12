@@ -108,8 +108,13 @@ class FileSyncService {
 	async getLocalFileSyncInfo(
 		userId: string,
 		username: string,
+		docUrl?: string,
 	): Promise<FileSyncInfo[]> {
 		try {
+			if (docUrl) {
+				await fileStorageService.initialize(docUrl);
+			}
+
 			const allFiles = await fileStorageService.getAllFiles(true, true, false);
 			const relevantFiles = allFiles.filter(
 				(file) => file.type === 'file' && !isTemporaryFile(file.path),
@@ -311,8 +316,12 @@ class FileSyncService {
 		fileIds: string[],
 		requestId: string,
 		filePizzaServerUrl?: string,
+		docUrl?: string,
 	): Promise<{ link: string }> {
 		try {
+			if (docUrl) {
+				await fileStorageService.initialize(docUrl);
+			}
 			console.log(
 				`[FileSyncService] Uploading ${fileIds.length} files for request ${requestId}`,
 			);
@@ -389,9 +398,11 @@ class FileSyncService {
 		remoteDocumentIds: Map<string, string>,
 		remoteDeletionStates: Map<string, boolean>,
 		filePizzaServerUrl?: string,
+		docUrl?: string,
 	): Promise<void> {
-		console.log(`[FileSyncService] Downloading files from: ${filePizzaLink}`);
-		console.log('[FileSyncService] Expecting files:', expectedFiles);
+		if (docUrl) {
+			await fileStorageService.initialize(docUrl);
+		}
 
 		await this.downloadFromLink(
 			filePizzaLink,
@@ -400,6 +411,7 @@ class FileSyncService {
 			remoteDocumentIds,
 			remoteDeletionStates,
 			filePizzaServerUrl,
+			docUrl,
 		);
 	}
 
@@ -485,6 +497,7 @@ class FileSyncService {
 		remoteDocumentIds: Map<string, string>,
 		remoteDeletionStates: Map<string, boolean>,
 		filePizzaServerUrl?: string,
+		docUrl?: string,
 	): Promise<void> {
 		return new Promise((resolve, reject) => {
 			console.log(`[FileSyncService] Starting download from: ${link}`);
@@ -554,6 +567,10 @@ class FileSyncService {
 									remoteDeletionStates.get(expectedPath) ||
 									file.metadata?.isDeleted ||
 									false;
+
+								if (docUrl) {
+									await fileStorageService.initialize(docUrl);
+								}
 
 								if (isDeleted) {
 									console.log(

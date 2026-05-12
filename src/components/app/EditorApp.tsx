@@ -51,6 +51,7 @@ import KeyboardShortcutsModal from '../common/KeyboardShortcutsModal';
 import PrivacyModal from '../common/PrivacyModal';
 import GuestUpgradeBanner from '../auth/GuestUpgradeBanner';
 import GuestUpgradeModal from '../auth/GuestUpgradeModal';
+import { isValidYjsUrl } from '../../utils/urlUtils';
 
 interface EditorAppProps {
   docUrl: YjsDocUrl;
@@ -695,6 +696,18 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 };
 
 const EditorApp: React.FC<EditorAppProps> = (props) => {
+  if (!isValidYjsUrl(props.docUrl)) {
+    return (
+      <div className="app-container">
+        <div className="error-message">
+          <p>{t('Invalid project URL.')}</p>
+          <button className="button primary" onClick={props.onBackToProjects}>
+            {t('Back to Projects')}
+          </button>
+        </div>
+      </div>
+    );
+  }
   return (
     <CollabProvider docUrl={props.docUrl} collectionName="yjs_metadata">
       <ChatProvider docUrl={props.docUrl}>

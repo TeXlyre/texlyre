@@ -1,8 +1,26 @@
 // src/utils/urlUtils.ts
 import { UrlFragments } from '../types/yjs.ts';
 
+const LEGACY_YJS_PROJECT_ID_RE = /^[a-z0-9]{20,32}$/;
+const UUID_PROJECT_ID_RE =
+	/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export const isValidYjsProjectId = (projectId: string): boolean => {
+	const value = projectId.trim();
+
+	return (
+		LEGACY_YJS_PROJECT_ID_RE.test(value) ||
+		UUID_PROJECT_ID_RE.test(value)
+	);
+};
+
 export const isValidYjsUrl = (url: string): boolean => {
-	return url.startsWith('yjs:');
+	const value = url.trim();
+
+	if (!value.startsWith('yjs:')) return false;
+	if (value.includes('&')) return false;
+
+	return isValidYjsProjectId(value.slice(4));
 };
 
 export const parseUrlFragments = (url: string): UrlFragments => {
@@ -11,7 +29,8 @@ export const parseUrlFragments = (url: string): UrlFragments => {
 
 	for (const part of parts) {
 		if (part.startsWith('yjs:')) {
-			result.yjsUrl = part; // leave as-is or optionally decode
+			const candidate = part.trim();
+			result.yjsUrl = isValidYjsUrl(candidate) ? candidate : '';
 		} else if (part.startsWith('doc:')) {
 			result.docId = decodeURIComponent(part.slice(4));
 		} else if (part.startsWith('file:')) {
