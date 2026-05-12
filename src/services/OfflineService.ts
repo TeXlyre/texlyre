@@ -41,7 +41,17 @@ class OfflineService {
 		if (this.forceOffline === forceOffline) return;
 
 		this.forceOffline = forceOffline;
+		this.notifyForceOfflineMode();
 		this.notifyListeners();
+	}
+
+	private notifyForceOfflineMode(): void {
+		if (!navigator.serviceWorker?.controller) return;
+
+		navigator.serviceWorker.controller.postMessage({
+			type: 'SET_FORCE_OFFLINE_MODE',
+			enabled: this.forceOffline,
+		});
 	}
 
 	setAirgapExternalRequests(enabled: boolean): void {
