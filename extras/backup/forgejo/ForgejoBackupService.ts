@@ -6,7 +6,7 @@ import {
     type GitBackupChange,
     type GitTreeItem,
 } from '@/services/GitBackupService';
-import { encodeContentToBase64 } from '@/utils/fileUtils';
+import { encodeContentToBase64 } from '@/utils/fileUtils.ts';
 import { forgejoAPIService } from './ForgejoAPIService';
 
 interface ForgejoTarget {
@@ -14,6 +14,20 @@ interface ForgejoTarget {
     repo: string;
     fullName: string;
 }
+
+type ForgejoCommitAction =
+    | {
+        operation: 'delete';
+        path: string;
+        sha?: string;
+    }
+    | {
+        operation: 'create' | 'update';
+        path: string;
+        content: string;
+        encoding: 'base64';
+        sha?: string;
+    };
 
 function parseForgejoRepository(repoName: string): ForgejoTarget {
     if (!repoName || !repoName.includes('/')) {
@@ -25,24 +39,13 @@ function parseForgejoRepository(repoName: string): ForgejoTarget {
     return { owner, repo, fullName: repoName };
 }
 
-type ForgejoCommitAction =
-    | {
-        operation: 'delete';
-        path: string;
-    }
-    | {
-        operation: 'create' | 'update';
-        path: string;
-        content: string;
-        encoding: 'base64';
-    };
-
 function mapForgejoChanges(changes: GitBackupChange[]): ForgejoCommitAction[] {
     return changes.map((change): ForgejoCommitAction => {
         if (change.type === 'delete') {
             return {
                 operation: 'delete',
                 path: change.path,
+                sha: change.previousRef,
             };
         }
 
@@ -51,6 +54,7 @@ function mapForgejoChanges(changes: GitBackupChange[]): ForgejoCommitAction[] {
             path: change.path,
             content: encodeContentToBase64(change.content),
             encoding: 'base64',
+            sha: change.previousRef,
         };
     });
 }
@@ -68,7 +72,6 @@ const forgejoBackupAdapter: GitBackupAdapter<ForgejoTarget> = {
     setRequestTimeout: (timeout) => forgejoAPIService.setRequestTimeout(timeout),
 
     testConnection: (token) => forgejoAPIService.testConnection(token),
-
     listTargets: (token) => forgejoAPIService.getRepositories(token),
 
     parseTarget: (repoName: string) => parseForgejoRepository(repoName),
@@ -79,7 +82,6 @@ const forgejoBackupAdapter: GitBackupAdapter<ForgejoTarget> = {
     },
 
     getTargetLabel: (target) => target.fullName,
-
     getTargetSecretValue: (target) => target.fullName,
 
     getTargetMetadata: (target) => ({
@@ -96,7 +98,7 @@ const forgejoBackupAdapter: GitBackupAdapter<ForgejoTarget> = {
             branch,
         ),
 
-    getFileRefForPath: (_item: GitTreeItem, path: string) => path,
+    getFileRefForPath: (item: GitTreeItem) => item.sha || item.path || '',
 
     readFile: (token, target, path, branch) =>
         forgejoAPIService.getFileContent(
@@ -149,6 +151,7 @@ export const forgejoBackupService = {
         branch?: string,
     ): Promise<boolean> => {
         const target = forgejoBackupAdapter.parseTarget(repoName);
+
         return sharedForgejoBackupService.connectToTarget(
             token,
             target,

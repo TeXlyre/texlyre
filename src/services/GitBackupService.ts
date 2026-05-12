@@ -1,7 +1,7 @@
 // src/services/GitBackupService.ts
 import { t } from '@/i18n';
 import type { SecretsContextType } from '../contexts/SecretsContext';
-import { getMimeType, isBinaryFile } from '../utils/fileUtils';
+import { getMimeType, isBinaryFile, isTemporaryFile } from '../utils/fileUtils';
 import { authService } from './AuthService';
 import { UnifiedDataStructureService } from './DataStructureService';
 import {
@@ -56,10 +56,12 @@ export type GitBackupChange =
         type: 'create' | 'update';
         path: string;
         content: string | Uint8Array | ArrayBuffer;
+        previousRef?: string;
     }
     | {
         type: 'delete';
         path: string;
+        previousRef?: string;
     };
 
 export interface GitBackupAdapter<TTarget> {
@@ -389,9 +391,16 @@ export class GitBackupService<TTarget> {
                 finalBranch,
             );
 
-            const existingFiles = new Set(
-                tree.filter((item) => item.type === 'blob').map((item) => item.path),
+            const existingFileRefs = new Map(
+                tree
+                    .filter((item) => item.type === 'blob' && item.path)
+                    .map((item) => [
+                        item.path!,
+                        this.getFileRef(item, item.path!, finalBranch),
+                    ]),
             );
+
+            const existingFiles = new Set(existingFileRefs.keys());
 
             const changes: GitBackupChange[] = [];
             const maxFileSize = this.getMaxFileSize();
@@ -419,6 +428,7 @@ export class GitBackupService<TTarget> {
                         null,
                         2,
                     ),
+                    previousRef: existingFileRefs.get(metadataPath),
                 });
 
                 if (documents.documents.length > 0) {
@@ -436,6 +446,7 @@ export class GitBackupService<TTarget> {
                         type: existingFiles.has(docMetadataPath) ? 'update' : 'create',
                         path: docMetadataPath,
                         content: JSON.stringify(documentsMetadata, null, 2),
+                        previousRef: existingFileRefs.get(docMetadataPath),
                     });
                 }
 
@@ -459,6 +470,7 @@ export class GitBackupService<TTarget> {
                             type: existingFiles.has(yjsPath) ? 'update' : 'create',
                             path: yjsPath,
                             content: content.yjsState,
+                            previousRef: existingFileRefs.get(yjsPath),
                         });
                     }
                 });
@@ -480,6 +492,7 @@ export class GitBackupService<TTarget> {
                         type: existingFiles.has(filesMetadataPath) ? 'update' : 'create',
                         path: filesMetadataPath,
                         content: JSON.stringify(allFilesMetadata, null, 2),
+                        previousRef: existingFileRefs.get(filesMetadataPath),
                     });
                 }
 
@@ -488,7 +501,9 @@ export class GitBackupService<TTarget> {
 
                     if (file.type !== 'file' || content === undefined) return;
 
-                    if (this.shouldIgnoreFile(file.path)) return;
+                    if (isTemporaryFile(file.path) || this.shouldIgnoreFile(file.path)) {
+                        return;
+                    }
 
                     const fileSize =
                         content instanceof ArrayBuffer ? content.byteLength : content.length;
@@ -510,6 +525,7 @@ export class GitBackupService<TTarget> {
                         type: existingFiles.has(filePath) ? 'update' : 'create',
                         path: filePath,
                         content,
+                        previousRef: existingFileRefs.get(filePath),
                     });
                 });
 
@@ -522,6 +538,7 @@ export class GitBackupService<TTarget> {
                         changes.push({
                             type: 'delete',
                             path: filePath,
+                            previousRef: existingFileRefs.get(filePath),
                         });
                     }
                 }
@@ -1116,8 +1133,12 @@ export class GitBackupService<TTarget> {
         }
 
         let importedFilesCount = 0;
+        let failedFilesCount = 0;
 
         for (const [filePath, fileRef] of data.files.entries()) {
+            if (isTemporaryFile(filePath) || this.shouldIgnoreFile(filePath)) {
+                continue;
+            }
             try {
                 await fileStorageService.createDirectoryPath(filePath);
 
@@ -1200,6 +1221,8 @@ export class GitBackupService<TTarget> {
 
                 importedFilesCount++;
             } catch (error) {
+                failedFilesCount++;
+
                 console.error(`Failed to import file ${filePath}:`, error);
 
                 this.addActivity({
@@ -1207,6 +1230,14 @@ export class GitBackupService<TTarget> {
                     message: t('Failed to import file: {filePath}', { filePath }),
                 });
             }
+        }
+
+        if (failedFilesCount > 0) {
+            throw new Error(
+                t('Imported with {count} file error(s)', {
+                    count: failedFilesCount,
+                }),
+            );
         }
 
         if (importedFilesCount > 0) {

@@ -6,7 +6,7 @@ import {
     type GitBackupChange,
     type GitTreeItem,
 } from '@/services/GitBackupService';
-import { encodeContentToBase64 } from '@/utils/fileUtils';
+import { encodeContentToBase64 } from '@/utils/fileUtils.ts';
 import { giteaAPIService } from './GiteaAPIService';
 
 interface GiteaTarget {
@@ -14,6 +14,20 @@ interface GiteaTarget {
     repo: string;
     fullName: string;
 }
+
+type GiteaCommitAction =
+    | {
+        operation: 'delete';
+        path: string;
+        sha?: string;
+    }
+    | {
+        operation: 'create' | 'update';
+        path: string;
+        content: string;
+        encoding: 'base64';
+        sha?: string;
+    };
 
 function parseGiteaRepository(repoName: string): GiteaTarget {
     if (!repoName || !repoName.includes('/')) {
@@ -25,24 +39,13 @@ function parseGiteaRepository(repoName: string): GiteaTarget {
     return { owner, repo, fullName: repoName };
 }
 
-type GiteaCommitAction =
-    | {
-        operation: 'delete';
-        path: string;
-    }
-    | {
-        operation: 'create' | 'update';
-        path: string;
-        content: string;
-        encoding: 'base64';
-    };
-
 function mapGiteaChanges(changes: GitBackupChange[]): GiteaCommitAction[] {
     return changes.map((change): GiteaCommitAction => {
         if (change.type === 'delete') {
             return {
                 operation: 'delete',
                 path: change.path,
+                sha: change.previousRef,
             };
         }
 
@@ -51,6 +54,7 @@ function mapGiteaChanges(changes: GitBackupChange[]): GiteaCommitAction[] {
             path: change.path,
             content: encodeContentToBase64(change.content),
             encoding: 'base64',
+            sha: change.previousRef,
         };
     });
 }
@@ -68,7 +72,6 @@ const giteaBackupAdapter: GitBackupAdapter<GiteaTarget> = {
     setRequestTimeout: (timeout) => giteaAPIService.setRequestTimeout(timeout),
 
     testConnection: (token) => giteaAPIService.testConnection(token),
-
     listTargets: (token) => giteaAPIService.getRepositories(token),
 
     parseTarget: (repoName: string) => parseGiteaRepository(repoName),
@@ -79,7 +82,6 @@ const giteaBackupAdapter: GitBackupAdapter<GiteaTarget> = {
     },
 
     getTargetLabel: (target) => target.fullName,
-
     getTargetSecretValue: (target) => target.fullName,
 
     getTargetMetadata: (target) => ({
@@ -96,7 +98,7 @@ const giteaBackupAdapter: GitBackupAdapter<GiteaTarget> = {
             branch,
         ),
 
-    getFileRefForPath: (_item: GitTreeItem, path: string) => path,
+    getFileRefForPath: (item: GitTreeItem) => item.sha || item.path || '',
 
     readFile: (token, target, path, branch) =>
         giteaAPIService.getFileContent(
@@ -147,6 +149,7 @@ export const giteaBackupService = {
         branch?: string,
     ): Promise<boolean> => {
         const target = giteaBackupAdapter.parseTarget(repoName);
+
         return sharedGiteaBackupService.connectToTarget(
             token,
             target,
