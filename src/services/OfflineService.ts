@@ -1,4 +1,6 @@
 // src/services/OfflineService.ts
+const BASE_PATH = __BASE_PATH__;
+
 export interface OfflineStatus {
 	isOnline: boolean;
 	lastOnline: number | null;
@@ -17,39 +19,36 @@ class OfflineService {
 	};
 
 	constructor() {
-		window.addEventListener('online', this.handleOnline);
-		window.addEventListener('offline', this.handleOffline);
+		window.addEventListener('online', this.refreshStatus);
+		window.addEventListener('offline', this.refreshStatus);
 	}
 
-	private handleOnline = () => {
-		this.status = {
-			isOnline: true,
-			lastOnline: Date.now(),
-		};
-		this.notifyListeners();
-	};
+	refreshStatus = async (): Promise<void> => {
+		let isOnline = navigator.onLine;
 
-	private handleOffline = () => {
+		if (isOnline && !this.forceOffline) {
+			try {
+				await fetch(`${BASE_PATH}/index.html?offline-check=${Date.now()}`, {
+					method: 'HEAD',
+					cache: 'no-store',
+				});
+			} catch {
+				isOnline = false;
+			}
+		}
+
 		this.status = {
-			...this.status,
-			isOnline: false,
+			isOnline: this.forceOffline ? false : isOnline,
+			lastOnline: isOnline && !this.forceOffline ? Date.now() : this.status.lastOnline,
 		};
+
 		this.notifyListeners();
 	};
 
 	setForceOffline(forceOffline: boolean): void {
 		this.forceOffline = forceOffline;
-		this.notifyForceOfflineMode();
-		this.notifyListeners();
-	}
-
-	private notifyForceOfflineMode(): void {
-		if (!navigator.serviceWorker?.controller) return;
-
-		navigator.serviceWorker.controller.postMessage({
-			type: 'SET_FORCE_OFFLINE_MODE',
-			enabled: this.forceOffline,
-		});
+		this.notifyServiceWorker();
+		void this.refreshStatus();
 	}
 
 	setAirgapExternalRequests(enabled: boolean): void {
@@ -58,24 +57,13 @@ class OfflineService {
 		this.notifyListeners();
 	}
 
-	private notifyServiceWorker(): void {
-		if (!navigator.serviceWorker?.controller) return;
-
-		navigator.serviceWorker.controller.postMessage({
-			type: 'SET_AIRGAP_EXTERNAL_REQUESTS',
-			enabled: this.airgapExternalRequests,
-		});
-	}
-
 	syncServiceWorkerState(): void {
-		this.notifyForceOfflineMode();
 		this.notifyServiceWorker();
 	}
 
 	getStatus(): OfflineStatus {
 		return {
 			...this.status,
-			isOnline: this.forceOffline ? false : this.status.isOnline,
 			airgapExternalRequests: this.airgapExternalRequests,
 		};
 	}
@@ -85,13 +73,27 @@ class OfflineService {
 		return () => this.listeners.delete(callback);
 	}
 
-	private notifyListeners() {
+	private notifyServiceWorker(): void {
+		if (!navigator.serviceWorker?.controller) return;
+
+		navigator.serviceWorker.controller.postMessage({
+			type: 'SET_FORCE_OFFLINE_MODE',
+			enabled: this.forceOffline,
+		});
+
+		navigator.serviceWorker.controller.postMessage({
+			type: 'SET_AIRGAP_EXTERNAL_REQUESTS',
+			enabled: this.airgapExternalRequests,
+		});
+	}
+
+	private notifyListeners(): void {
 		this.listeners.forEach((callback) => callback(this.getStatus()));
 	}
 
-	cleanup() {
-		window.removeEventListener('online', this.handleOnline);
-		window.removeEventListener('offline', this.handleOffline);
+	cleanup(): void {
+		window.removeEventListener('online', this.refreshStatus);
+		window.removeEventListener('offline', this.refreshStatus);
 	}
 }
 

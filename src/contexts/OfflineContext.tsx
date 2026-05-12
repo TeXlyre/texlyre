@@ -36,7 +36,12 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({
 	const [status, setStatus] = useState(offlineService.getStatus());
 
 	useEffect(() => {
+		const unsubscribe = offlineService.addStatusListener(setStatus);
+
 		offlineService.syncServiceWorkerState();
+		void offlineService.refreshStatus();
+
+		return unsubscribe;
 	}, []);
 
 	useEffect(() => {
@@ -53,20 +58,14 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({
 		);
 	}, [forceCollabOffline, airgapExternalRequests]);
 
-	useEffect(() => {
-		const unsubscribe = offlineService.addStatusListener(setStatus);
-		return unsubscribe;
-	}, []);
-
-	const effectiveStatus = status;
-	const isOfflineMode = !effectiveStatus.isOnline;
+	const isOfflineMode = !status.isOnline;
 	const isCollabOfflineMode =
-		isOfflineMode || forceCollabOffline || effectiveStatus.airgapExternalRequests;
+		isOfflineMode || forceCollabOffline || status.airgapExternalRequests;
 
 	return (
 		<OfflineContext.Provider
 			value={{
-				...effectiveStatus,
+				...status,
 				isOfflineMode,
 				isCollabOfflineMode,
 				hideOfflineBanner,
@@ -76,3 +75,4 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({
 		</OfflineContext.Provider>
 	);
 };
+

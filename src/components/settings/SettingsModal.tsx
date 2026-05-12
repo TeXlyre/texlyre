@@ -168,6 +168,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       size="large">
 
       <div className="settings-wrapper">
+        {hasPendingChanges &&
+          <div className="pending-changes-bar warning-message">
+            <span>{t('You have unsaved changes that require page refresh')}</span>
+            <button
+              className="button primary"
+              onClick={handleSaveChanges}>
+              {t('Save Changes')}
+            </button>
+          </div>
+        }
         <div className="settings-container">
           <div className="settings-sidebar">
             <div className="settings-search">
@@ -252,17 +262,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           }
         </div>
-
-        {hasPendingChanges &&
-          <div className="pending-changes-bar warning-message">
-            <span>{t('You have unsaved changes that require page refresh')}</span>
-            <button
-              className="button primary"
-              onClick={handleSaveChanges}>
-              {t('Save Changes')}
-            </button>
-          </div>
-        }
       </div>
     </Modal>);
 };
