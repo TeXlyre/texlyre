@@ -136,7 +136,7 @@ class TypstService {
 
             this.notify(
                 'info',
-                t('Compiling for export to {format}...', { format: format.toUpperCase() }),
+                t('Compiling Typst to {format}...', { format: format.toUpperCase() }),
                 operationId,
                 format
             );
