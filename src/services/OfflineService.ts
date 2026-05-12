@@ -38,8 +38,6 @@ class OfflineService {
 	};
 
 	setForceOffline(forceOffline: boolean): void {
-		if (this.forceOffline === forceOffline) return;
-
 		this.forceOffline = forceOffline;
 		this.notifyForceOfflineMode();
 		this.notifyListeners();
@@ -55,8 +53,6 @@ class OfflineService {
 	}
 
 	setAirgapExternalRequests(enabled: boolean): void {
-		if (this.airgapExternalRequests === enabled) return;
-
 		this.airgapExternalRequests = enabled;
 		this.notifyServiceWorker();
 		this.notifyListeners();
@@ -69,6 +65,11 @@ class OfflineService {
 			type: 'SET_AIRGAP_EXTERNAL_REQUESTS',
 			enabled: this.airgapExternalRequests,
 		});
+	}
+
+	syncServiceWorkerState(): void {
+		this.notifyForceOfflineMode();
+		this.notifyServiceWorker();
 	}
 
 	getStatus(): OfflineStatus {
@@ -95,4 +96,3 @@ class OfflineService {
 }
 
 export const offlineService = new OfflineService();
-
