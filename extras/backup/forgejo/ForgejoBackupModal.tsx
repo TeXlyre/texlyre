@@ -444,8 +444,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
                                         value={forgejoToken}
                                         onChange={(e) => {
                                             setModalMessage('');
-                                            setRepoInput(e.target.value);
-                                            setSelectedRepo('');
+                                            setForgejoToken(e.target.value);
                                         }}
                                         placeholder={t('token...')}
                                     />
