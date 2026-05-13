@@ -60,7 +60,7 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
                 setSelectedLibrary(libs[0].id);
                 setSelectedLibraryType(libs[0].type);
             }
-        } catch (err) {
+        } catch (error) {
             setError(t('Failed to load libraries'));
         } finally {
             setIsLoading(false);
@@ -85,7 +85,7 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
 
             await loadLibraries(apiKey, userId);
             setStep('library');
-        } catch (err) {
+        } catch (error) {
             setError(t('Connection failed'));
         } finally {
             setIsLoading(false);
@@ -102,7 +102,7 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
         try {
             await onConnect(apiKey, userId, selectedLibrary, selectedLibraryType);
             onClose();
-        } catch (err) {
+        } catch (error) {
             setError(t('Connection failed'));
         } finally {
             setIsLoading(false);

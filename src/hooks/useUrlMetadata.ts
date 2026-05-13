@@ -22,8 +22,8 @@ export const usePageMetadata = (url: string | null, proxyUrl: string | null = nu
             try {
                 const data = await fetchPageMetadata(url, proxyUrl);
                 setMetadata(data);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : t('Failed to fetch metadata'));
+            } catch (error) {
+                setError(error instanceof Error ? error.message : t('Failed to fetch metadata'));
                 setMetadata(null);
             } finally {
                 setLoading(false);

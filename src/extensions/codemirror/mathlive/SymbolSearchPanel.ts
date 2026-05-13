@@ -212,9 +212,9 @@ export class SymbolSearchPanel {
                 .filter((c): c is SymbolCandidate => c !== null);
 
             this.updateResults();
-        } catch (err) {
-            console.error('[SymbolSearchPanel] Classification error:', err);
-            this.showError(String(err));
+        } catch (error) {
+            console.error('[SymbolSearchPanel] Classification error:', error);
+            this.showError(String(error));
         }
     }
 

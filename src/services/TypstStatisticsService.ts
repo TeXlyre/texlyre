@@ -103,8 +103,8 @@ class TypstStatisticsService {
             }
 
             return result.output;
-        } catch (err) {
-            const baseMessage = err instanceof Error ? err.message : String(err);
+        } catch (error) {
+            const baseMessage = error instanceof Error ? error.message : String(error);
             throw new Error(this.formatDebugMessage(baseMessage, modifiedSource, verbose));
         }
     }

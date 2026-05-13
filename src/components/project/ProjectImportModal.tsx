@@ -192,7 +192,9 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 
       if (result.errors.length > 0) {
         setError(
-          `Import completed with errors: ${result.errors.map((e) => e.error).join(', ')}`
+          t('Import completed with errors: {errors}', {
+            errors: result.errors.map((e) => e.error).join(', ')
+          })
         );
       }
 

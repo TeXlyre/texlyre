@@ -561,11 +561,11 @@ self.addEventListener('message', (e: MessageEvent<BuildMessage>) => {
             type: 'done',
             result: build(payload.svg, payload.pageInfos, payload.sources, payload.mainFile),
         });
-    } catch (err) {
+    } catch (error) {
         self.postMessage({
             id,
             type: 'error',
-            error: err instanceof Error ? err.message : String(err),
+            error: error instanceof Error ? error.message : String(error),
         });
     }
 });

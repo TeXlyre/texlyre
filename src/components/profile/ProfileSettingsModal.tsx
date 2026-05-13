@@ -155,8 +155,8 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('An error occurred'));
+    } catch (error) {
+      setError(error instanceof Error ? error.message : t('An error occurred'));
     } finally {
       setIsSubmitting(false);
     }
@@ -170,8 +170,8 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
       const message = type === 'all' ? t('Downloaded all data') : t('Downloaded {type}', { type });
       setSuccessMessage(message);
       setTimeout(() => setSuccessMessage(null), 2000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('Failed to download data'));
+    } catch (error) {
+      setError(error instanceof Error ? error.message : t('Failed to download data'));
     }
   };
 
@@ -201,8 +201,8 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
       setTimeout(() => {
         window.location.reload();
       }, 1500);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('Failed to clear data'));
+    } catch (error) {
+      setError(error instanceof Error ? error.message : t('Failed to clear data'));
     } finally {
       setIsSubmitting(false);
     }
@@ -227,8 +227,8 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
       setTimeout(() => {
         window.location.reload();
       }, 1500);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('Failed to import data'));
+    } catch (error) {
+      setError(error instanceof Error ? error.message : t('Failed to import data'));
     } finally {
       setIsSubmitting(false);
       e.target.value = '';

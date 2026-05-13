@@ -291,9 +291,11 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
     if (content instanceof ArrayBuffer) {
       try {
         text = new TextDecoder('utf-8').decode(content);
-      } catch (e) {
-        console.error('BibtexCollaborativeViewer: Error decoding content:', e);
-        setError(t('Failed to decode file content'));
+      } catch (error) {
+        console.error('BibtexCollaborativeViewer: Error decoding content:', error);
+        setError(t('Failed to decode file content: {error}', {
+          error: error instanceof Error ? error.message : String(error)
+        }));
         return;
       }
     } else if (typeof content === 'string') {
@@ -424,9 +426,9 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
       setWarnings(result.warnings || []);
       setHasChanges(true);
       if (autoTidy) setCurrentView('processed');
-    } catch (err) {
+    } catch (error) {
       setError(
-        err instanceof Error ? err.message : t('Failed to process BibTeX file')
+        error instanceof Error ? error.message : t('Failed to process BibTeX file')
       );
     } finally {
       setIsProcessing(false);
@@ -467,8 +469,8 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
             originalView.dispatch({
               changes: changes
             });
-          } catch (e) {
-            console.warn('Range error during diff dispatch, replacing full content:', e);
+          } catch (error) {
+            console.warn('Range error during diff dispatch, replacing full content:', error);
             const docLength = originalView.state.doc.length;
             if (docLength > 0) {
               originalView.dispatch({
@@ -495,10 +497,12 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
       onUpdateContent(contentToSave);
 
-    } catch (e) {
-      console.error('Error saving processed BibTeX file:', e);
+    } catch (error) {
+      console.error('Error saving processed BibTeX file:', error);
       setError(
-        `Failed to save file: ${e instanceof Error ? e.message : 'Unknown error'}`
+        t('Failed to save file: {error}', {
+          error: error instanceof Error ? error.message : t('Unknown error')
+        })
       );
     } finally {
       setIsSaving(false);
@@ -516,10 +520,12 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error('Error exporting file:', e);
+    } catch (error) {
+      console.error('Error exporting file:', error);
       setError(
-        `Failed to export file: ${e instanceof Error ? e.message : 'Unknown error'}`
+        t('Failed to export file: {error}', {
+          error: error instanceof Error ? error.message : t('Unknown error')
+        })
       );
     }
   };

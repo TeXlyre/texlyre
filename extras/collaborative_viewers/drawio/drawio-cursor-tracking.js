@@ -91,7 +91,7 @@
             if (msg.action === 'updateRemoteCursors') {
                 updateRemoteCursors(msg.cursors);
             }
-        } catch (err) {
+        } catch (error) {
         }
     });
 

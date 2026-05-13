@@ -514,8 +514,8 @@ class FileSyncService {
 				if (this.activeDownloaders.has(link)) {
 					try {
 						downloader.cancelDownload?.();
-					} catch (e) {
-						console.warn('Error during downloader cleanup:', e);
+					} catch (error) {
+						console.warn('Error during downloader cleanup:', error);
 					}
 					this.activeDownloaders.delete(link);
 				}

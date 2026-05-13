@@ -69,11 +69,11 @@ const Register: React.FC<RegisterProps> = ({
         await register(username, password, email || undefined);
       }
       onRegisterSuccess();
-    } catch (err) {
+    } catch (error) {
       setError(
-        err instanceof Error ?
-          err.message :
-          `An error occurred during ${isUpgrade ? 'upgrade' : 'registration'}`
+        error instanceof Error ?
+          error.message :
+          t('An error occurred during {action}', { action: isUpgrade ? t('upgrade') : t('registration') })
       );
     } finally {
       setIsLoading(false);

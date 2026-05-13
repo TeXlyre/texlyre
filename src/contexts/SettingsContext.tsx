@@ -175,10 +175,10 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 			} else {
 				localStorageSettingsRef.current = {};
 			}
-		} catch (err) {
+		} catch (error) {
 			console.error(
 				'Error parsing settings from localStorage on initial load:',
-				err,
+				error,
 			);
 			localStorage.removeItem(userStorageKey);
 			localStorageSettingsRef.current = {};

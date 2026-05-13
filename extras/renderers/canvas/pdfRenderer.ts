@@ -490,7 +490,7 @@ async function handleInternalLink(
             bubbles: true,
         });
         document.dispatchEvent(event);
-    } catch (e) {
-        console.warn('[CanvasRenderer] Failed to resolve internal link:', e);
+    } catch (error) {
+        console.warn('[CanvasRenderer] Failed to resolve internal link:', error);
     }
 }

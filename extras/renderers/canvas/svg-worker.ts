@@ -181,10 +181,10 @@ ${pageGroup.fullTag}
         };
 
         self.postMessage(result);
-    } catch (err) {
+    } catch (error) {
         const errorResult: ErrorResult = {
             type: 'error',
-            error: err instanceof Error ? err.message : String(err)
+            error: error instanceof Error ? error.message : String(error)
         };
 
         self.postMessage(errorResult);

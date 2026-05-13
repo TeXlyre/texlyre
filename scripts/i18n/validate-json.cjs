@@ -9,14 +9,14 @@ function validateJsonFile(filePath) {
         JSON.parse(rawContent);
         console.log('✅ Valid JSON');
         return true;
-    } catch (error) {
+    } catch (err) {
         console.error('\n❌ INVALID JSON');
-        console.error(`Error: ${error.message}\n`);
+        console.error(`Error: ${err.message}\n`);
 
         const rawContent = fs.readFileSync(filePath, 'utf8');
         const lines = rawContent.split('\n');
 
-        const posMatch = error.message.match(/position (\d+)/);
+        const posMatch = err.message.match(/position (\d+)/);
         if (posMatch) {
             const position = parseInt(posMatch[1]);
             let currentPos = 0;
@@ -54,15 +54,15 @@ function validateJsonFile(filePath) {
         }
 
         console.error('\n🔧 Possible fixes:');
-        if (error.message.includes('Unexpected token')) {
-            const token = error.message.match(/Unexpected token '(.+?)'/)?.[1];
+        if (err.message.includes('Unexpected token')) {
+            const token = err.message.match(/Unexpected token '(.+?)'/)?.[1];
             if (token === ',' || token === '}' || token === ']') {
                 console.error('   • Remove trailing comma before closing bracket/brace');
             }
             console.error('   • Check for missing or extra commas');
             console.error('   • Verify all brackets/braces are properly closed');
         }
-        if (error.message.includes('Unexpected end')) {
+        if (err.message.includes('Unexpected end')) {
             console.error('   • Missing closing bracket } or ]');
             console.error('   • Unclosed string');
         }

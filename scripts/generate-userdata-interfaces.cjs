@@ -119,8 +119,8 @@ function extractSettingsAndProperties(sourceDir) {
                     }
                 }
             });
-        } catch (error) {
-            console.error(`Error processing ${filePath}:`, error.message);
+        } catch (err) {
+            console.error(`Error processing ${filePath}:`, err.message);
         }
     }
 
