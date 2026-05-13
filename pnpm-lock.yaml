@@ -136,8 +136,8 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5
       filepizza-client:
-        specifier: ^2.1.0
-        version: 2.1.0(peerjs@1.5.5)
+        specifier: ^2.1.2
+        version: 2.1.2(peerjs@1.5.5)
       i18next:
         specifier: ^26.0.11
         version: 26.1.0(typescript@6.0.2)
@@ -3138,8 +3138,8 @@ packages:
   filelist@1.0.6:
     resolution: {integrity: sha512-5giy2PkLYY1cP39p17Ech+2xlpTRL9HLspOfEgm0L6CwBXBTgsK5ou0JtzYuepxkaQ/tvhCFIJ5uXo0OrM2DxA==}
 
-  filepizza-client@2.1.0:
-    resolution: {integrity: sha512-3wHHdhxS2BtZJ7YPoRrBYZ18tNE6fUKWOwReRJq03rghe8CXaP3/qAavsgr6igm+9HbOyL62Mww/dSJ2CRO9TQ==}
+  filepizza-client@2.1.2:
+    resolution: {integrity: sha512-PEL0hl0ZmHRy3IFnDkza3dZP8m1J6uWzvChxkpsKQJGWpy+CVY92gIREQp0YJ0YBOtyPnOJj5uo4zgGmvzA6Mw==}
     peerDependencies:
       peerjs: ^1.5.1
 
@@ -8353,7 +8353,7 @@ snapshots:
     dependencies:
       minimatch: 10.2.5
 
-  filepizza-client@2.1.0(peerjs@1.5.5):
+  filepizza-client@2.1.2(peerjs@1.5.5):
     dependencies:
       peerjs: 1.5.5
 
