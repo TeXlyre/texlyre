@@ -248,7 +248,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
             flashSavedIndicator();
         } catch (err) {
             console.error('Error saving Draw.io file:', err);
-            setError(`Failed to save file: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            setError(t('Failed to save file: {error}', { error: err instanceof Error ? err.message : t('Unknown error') }));
         } finally {
             setIsSaving(false);
         }
@@ -337,7 +337,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
             URL.revokeObjectURL(url);
         } catch (err) {
             console.error('Error downloading file:', err);
-            setError(`Failed to download file: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            setError(t('Failed to download file: {error}', { error: err instanceof Error ? err.message : t('Unknown error') }));
         }
     }, [drawioContent, fileName]);
 

@@ -173,7 +173,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
         !err.message.includes('Worker was destroyed')
       ) {
         console.error('Error rendering PDF page:', err);
-        setError(`Failed to render page ${currentPage}.`);
+        setError(t('Failed to render page {page}', { page: currentPage }));
       }
     }
   }, [pdfDocRef, currentPage, scale, autoScale, renderingQuality]);

@@ -1,7 +1,7 @@
 {
 	"name": "texlyre",
 	"private": true,
-	"version": "0.7.52",
+	"version": "0.7.53",
 	"description": "A local-first LaTeX & Typst collaborative web editor ",
 	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
 	"license": "AGPL-3.0-or-later",
@@ -94,8 +94,8 @@
 		"codemirror-toolbar": "^0.1.0",
 		"detypify-service": "^0.3.0",
 		"file-saver": "^2.0.5",
-		"filepizza-client": "^2.0.1",
-		"i18next": "^26.0.4",
+		"filepizza-client": "^2.1.0",
+		"i18next": "^26.0.11",
 		"idb": "^8.0.3",
 		"jszip": "^3.10.1",
 		"lib0": "^0.2.117",
@@ -130,12 +130,16 @@
 		"minimatch": "^10.2.2",
 		"postcss": "^8.5.10",
 		"uri-js": "npm:uri-js-replace@1.0.1",
-		"serialize-javascript": ">=7.0.3",
+		"serialize-javascript": "^7.0.5",
 		"tr46": "^6.0.0",
 		"whatwg-url": "^16.0.1",
 		"tough-cookie": "^6.0.1",
 		"glob": "^13.0.6",
-		"inflight": "npm:inflight-lru@^1.0.0"
+		"inflight": "npm:inflight-lru@^1.0.0",
+		"protobufjs": "^7.5.8",
+		"fast-uri": "^3.1.2",
+		"@babel/plugin-transform-modules-systemjs@>=7.12.0 <=7.29.3": "^7.29.4",
+		"@protobufjs/utf8@<=1.1.0": "^1.1.1"
 	},
 	"pnpm": {
 		"overrides": {
@@ -143,18 +147,16 @@
 			"minimatch": "^10.2.2",
 			"postcss": "^8.5.10",
 			"uri-js": "npm:uri-js-replace@1.0.1",
-			"serialize-javascript": ">=7.0.3",
+			"serialize-javascript": "^7.0.5",
 			"tr46": "^6.0.0",
 			"whatwg-url": "^16.0.1",
 			"tough-cookie": "^6.0.1",
 			"glob": "^13.0.6",
 			"inflight": "npm:inflight-lru@^1.0.0",
-			"protobufjs@<7.5.5": ">=7.5.5",
-			"fast-uri@<=3.1.0": ">=3.1.1",
-			"fast-uri@<=3.1.1": ">=3.1.2",
-			"@babel/plugin-transform-modules-systemjs@>=7.12.0 <=7.29.3": ">=7.29.4",
-			"@protobufjs/utf8@<=1.1.0": ">=1.1.1",
-			"protobufjs@<=7.5.5": ">=7.5.6"
+			"protobufjs": "^7.5.8",
+			"fast-uri": "^3.1.2",
+			"@babel/plugin-transform-modules-systemjs@>=7.12.0 <=7.29.3": "^7.29.4",
+			"@protobufjs/utf8@<=1.1.0": "^1.1.1"
 		},
 		"peerDependencyRules": {
 			"allowedVersions": {
@@ -165,6 +167,9 @@
 		"onlyBuiltDependencies": [
 			"esbuild",
 			"sharp"
+		],
+		"ignoredBuiltDependencies": [
+			"protobufjs"
 		]
 	},
 	"devDependencies": {

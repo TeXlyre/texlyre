@@ -26,20 +26,20 @@ const OpenAlexConnectionModal: React.FC<OpenAlexConnectionModalProps> = ({
     const [apiKey, setApiKey] = useState('');
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
+    const [error, setError] = useState<string | null>(null);
     const [isTesting, setIsTesting] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
             setApiKey('');
             setEmail(existingEmail || '');
-            setError('');
+            setError(null);
         }
     }, [isOpen, existingEmail]);
 
     const handleSubmit = async () => {
         setIsTesting(true);
-        setError('');
+        setError(null);
         try {
             const isValid = await openAlexAPIService.testConnection(
                 apiKey.trim() || undefined,
@@ -69,7 +69,7 @@ const OpenAlexConnectionModal: React.FC<OpenAlexConnectionModalProps> = ({
 
     const handleConnectAnonymously = async () => {
         setIsTesting(true);
-        setError('');
+        setError(null);
         try {
             const isValid = await openAlexAPIService.testConnection(undefined, undefined);
             if (!isValid) {
