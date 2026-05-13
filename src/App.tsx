@@ -1,6 +1,6 @@
 /*
- * TeXlyre - Collaborative LaTeX Editor
- * Copyright (C) 2025 Fares Abawi
+ * TeXlyre - Collaborative LaTeX & Typst Editor
+ * Copyright (C) 2026 Fares Abawi
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -28,6 +28,7 @@ import './styles/components/latex-typst-outline.css';
 import './styles/components/backup-collab.css';
 import './styles/components/resizable-panel.css';
 import './styles/components/toast.css';
+import './styles/components/tooltip.css';
 import './styles/components/tags.css';
 import './styles/components/comments.css';
 import './styles/components/auth.css';

@@ -1,4 +1,5 @@
 // src/components/common/Modal.tsx
+import { t } from '@/i18n';
 import type React from 'react';
 import { type ReactNode, useEffect, useRef } from 'react';
 
@@ -40,11 +41,9 @@ const Modal: React.FC<ModalProps> = ({
 				modalRef.current &&
 				!modalRef.current.contains(event.target as Node)
 			) {
-				// Check if the click is inside any modal
 				const clickedElement = event.target as Element;
 				const isInsideAnyModal = clickedElement.closest('.modal-container');
 
-				// Only close if the click is not inside any modal
 				if (!isInsideAnyModal) {
 					onClose();
 				}
@@ -60,7 +59,7 @@ const Modal: React.FC<ModalProps> = ({
 		return () => {
 			document.removeEventListener('keydown', handleEscape);
 			document.removeEventListener('mousedown', handleClickOutside);
-			// Only restore body overflow if no other modals are open
+
 			const openModals = document.querySelectorAll('.modal-overlay');
 			if (openModals.length <= 1) {
 				document.body.style.overflow = 'auto';
@@ -85,7 +84,11 @@ const Modal: React.FC<ModalProps> = ({
 					<div style={{ display: 'flex', gap: '0.5rem' }}>
 						{headerActions}
 						{showCloseButton && (
-							<button className="modal-close-button" onClick={onClose}>
+							<button
+								aria-label={t('Close modal')}
+								className="modal-close-button"
+								onClick={onClose}
+								title={t('Close modal')}>
 								<CloseIcon />
 							</button>
 						)}

@@ -734,14 +734,14 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
                                                                 {activity.message}
                                                             </span>
                                                             <button
+                                                                aria-label={t('Dismiss activity')}
                                                                 className="activity-close"
                                                                 onClick={() =>
                                                                     forgejoBackupService.clearActivity(activity.id)
                                                                 }
-                                                                title={t('Dismiss')}
-                                                                disabled={isOperating}
-                                                            >
-                                                                ×
+                                                                title={t('Dismiss activity')}
+                                                                disabled={isOperating}>
+                                                                <span aria-hidden="true">×</span>
                                                             </button>
                                                         </div>
                                                         <div className="activity-time">

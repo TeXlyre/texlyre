@@ -187,11 +187,11 @@ const FileSyncModal: React.FC<FileSyncModalProps> = ({ isOpen, onClose }) => {
                             {notification.message}
                           </span>
                           <button
+                            aria-label={t('Dismiss notification')}
                             className="notification-close"
                             onClick={() => clearNotification(notification.id)}
-                            title={t('Dismiss')}>
-
-                            ×
+                            title={t('Dismiss notification')}>
+                            <span aria-hidden="true">×</span>
                           </button>
                         </div>
                         <div className="notification-time">

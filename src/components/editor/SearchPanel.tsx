@@ -276,8 +276,12 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ className = '', onNavigateToR
           className="search-input" />
 
         {query &&
-          <button className="clear-search-button" onClick={clearSearch}>
-            ×
+          <button
+            aria-label={t('Clear search')}
+            className="clear-search-button"
+            onClick={clearSearch}
+            title={t('Clear search')}>
+            <span aria-hidden="true">×</span>
           </button>
         }
       </div>

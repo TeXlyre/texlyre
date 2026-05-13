@@ -714,13 +714,14 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
                               {activity.message}
                             </span>
                             <button
+                              aria-label={t('Dismiss activity')}
                               className="activity-close"
                               onClick={() =>
                                 gitHubBackupService.clearActivity(activity.id)
                               }
-                              title={t('Dismiss')}
+                              title={t('Dismiss activity')}
                               disabled={isOperating}>
-                              ×
+                              <span aria-hidden="true">×</span>
                             </button>
                           </div>
                           <div className="activity-time">

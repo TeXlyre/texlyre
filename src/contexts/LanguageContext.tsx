@@ -53,9 +53,9 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     if (!language) return;
 
     await i18next.changeLanguage(languageCode);
+    document.documentElement.lang = languageCode;
     setCurrentLanguage(language);
 
-    // Dispatch custom event for settings to refresh plugin settings
     window.dispatchEvent(new CustomEvent('language-changed', {
       detail: { languageCode }
     }));

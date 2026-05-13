@@ -31,8 +31,7 @@
 .plugin-header .filepath-info {
 	display: flex;
 	align-items: center;
-	margin-bottom: 0;
-	padding-bottom: 0;
+	margin: 0.1rem;
 	gap: var(--space-xs);
 	flex-wrap: nowrap;
 }
@@ -79,18 +78,14 @@
 	color: var(--pico-primary);
 }
 
-.info-icon-abbr {
-	border-bottom: none !important;
-	cursor: inherit !important;
-	text-decoration: none !important;
-	padding-bottom: 0.2rem;
-}
-
-.info-icon-abbr svg {
-	margin-left: var(--space-xs);
-	width: 0.6rem;
-	height: 0.6rem;
-	transition: fill 0.2s ease;
+.plugin-header-tooltip-text {
+	margin: 0;
+	white-space: pre-wrap;
+	font-family: inherit;
+	font-size: inherit;
+	background: none;
+	padding: 0;
+	color: var(--text-color);
 }
 
 .control-group {

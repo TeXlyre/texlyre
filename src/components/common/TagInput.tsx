@@ -64,11 +64,11 @@ export const TagInput: React.FC<TagInputProps> = ({
                         {!disabled && (
                             <button
                                 type="button"
+                                aria-label={t('Remove {tag}', { tag })}
                                 onClick={() => removeTag(tag)}
                                 className="tag-input-remove"
-                                title={t('Remove {tag}', { tag })}
-                            >
-                                ×
+                                title={t('Remove {tag}', { tag })}>
+                                <span aria-hidden="true">×</span>
                             </button>
                         )}
                     </span>

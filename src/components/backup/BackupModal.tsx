@@ -468,11 +468,12 @@ const BackupModal: React.FC<BackupModalProps> = ({
                             {activity.message}
                           </span>
                           <button
+                            aria-label={t('Dismiss activity')}
                             className="activity-close"
                             onClick={() => onClearActivity(activity.id)}
-                            title={t('Dismiss')}
+                            title={t('Dismiss activity')}
                             disabled={isOperating}>
-                            ×
+                            <span aria-hidden="true">×</span>
                           </button>
                         </div>
                         <div className="activity-time">
