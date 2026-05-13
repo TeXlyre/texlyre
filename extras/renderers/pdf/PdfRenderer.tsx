@@ -363,9 +363,9 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
       setPdfData(dataCopy);
       setError(null);
-    } catch (err) {
-      console.error('Error creating PDF data:', err);
-      setError(t('Failed to process PDF content'));
+    } catch (error) {
+      console.error('Error creating PDF data:', error);
+      setError(t('Failed to process PDF content: {error}', { error: error instanceof Error ? error.message : t('Unknown error') }));
       setIsLoading(false);
     }
   }, []);
@@ -832,8 +832,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Export error:', err);
+    } catch (error) {
+      console.error('Export error:', error);
       setError(t('Failed to export PDF'));
     }
   }, [fileName, onDownload]);

@@ -222,8 +222,8 @@ function detectDynamicContent(sourceDir, outputFile) {
                     analyzeJSXAttribute(path, filePath);
                 },
             });
-        } catch (error) {
-            console.error(`Error processing ${filePath}:`, error.message);
+        } catch (err) {
+            console.error(`Error processing ${filePath}:`, err.message);
         }
     }
 
@@ -242,8 +242,8 @@ function detectDynamicContent(sourceDir, outputFile) {
                     processFile(fullPath);
                 }
             }
-        } catch (error) {
-            console.error(`Error reading directory ${directory}:`, error);
+        } catch (err) {
+            console.error(`Error reading directory ${directory}:`, err);
         }
     }
 

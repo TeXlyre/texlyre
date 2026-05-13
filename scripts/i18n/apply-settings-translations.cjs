@@ -203,9 +203,9 @@ function applySettingsTranslations(filePath, options = {}) {
         }
 
         return { success: true, modified: false, transformCount: 0 };
-    } catch (error) {
-        console.error(`❌ Error processing ${filePath}:`, error.message);
-        return { success: false, modified: false, transformCount: 0, error };
+    } catch (err) {
+        console.error(`❌ Error processing ${filePath}:`, err.message);
+        return { success: false, modified: false, transformCount: 0, err };
     }
 }
 
@@ -248,8 +248,8 @@ function processDirectory(directory, options = {}) {
                     }
                 }
             }
-        } catch (error) {
-            console.error(`❌ Error reading directory ${dir}:`, error);
+        } catch (err) {
+            console.error(`❌ Error reading directory ${dir}:`, err);
             stats.errors++;
         }
     }

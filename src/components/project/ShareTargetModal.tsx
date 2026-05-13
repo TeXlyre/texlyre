@@ -106,8 +106,8 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
             await storeFilesInProject(project.docUrl);
             onOpenProject(project.docUrl, project.id);
             onClose();
-        } catch (err) {
-            setError(err instanceof Error ? err.message : t('Failed to add files'));
+        } catch (error) {
+            setError(error instanceof Error ? error.message : t('Failed to add files'));
         } finally {
             setIsSubmitting(false);
         }
@@ -152,8 +152,8 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
             await storeFilesInProject(project.docUrl);
             onOpenProject(project.docUrl, project.id);
             onClose();
-        } catch (err) {
-            setError(err instanceof Error ? err.message : t('Failed to create project'));
+        } catch (error) {
+            setError(error instanceof Error ? error.message : t('Failed to create project'));
         } finally {
             setIsSubmitting(false);
         }

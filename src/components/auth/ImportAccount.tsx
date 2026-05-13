@@ -47,8 +47,8 @@ const ImportAccount: React.FC<ImportAccountProps> = ({
     try {
       await accountExportService.importAccount(file);
       setSuccess(t('Account imported successfully!'));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('Error importing account'));
+    } catch (error) {
+      setError(error instanceof Error ? error.message : t('Error importing account'));
     } finally {
       setIsImporting(false);
     }

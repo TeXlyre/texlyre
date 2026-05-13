@@ -137,9 +137,11 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
             originalContentRef.current = text;
             setIsLoading(false);
             setError(null);
-        } catch (err) {
-            console.error('Error decoding Draw.io content:', err);
-            setError(t('Failed to decode file content'));
+        } catch (error) {
+            console.error('Error decoding Draw.io content:', error);
+            setError(t('Failed to decode file content: {error}', {
+                error: error instanceof Error ? error.message : String(error)
+            }));
             setIsLoading(false);
         }
     }, [content, t]);
@@ -203,9 +205,9 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
             sendMessageToDrawio({ action: 'status', modified: false });
             flashSavedIndicator();
-        } catch (err) {
-            console.error('Error saving Draw.io file:', err);
-            setError(t('Failed to save file: {error}', { error: err instanceof Error ? err.message : t('Unknown error') }));
+        } catch (error) {
+            console.error('Error saving Draw.io file:', error);
+            setError(t('Failed to save file: {error}', { error: error instanceof Error ? error.message : t('Unknown error') }));
         } finally {
             setIsSaving(false);
         }
@@ -326,8 +328,8 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
                     });
                     return;
                 }
-            } catch (err) {
-                console.error('Error handling message from draw.io:', err);
+            } catch (error) {
+                console.error('Error handling message from draw.io:', error);
             }
         },
         [drawioOrigin, drawioContent, autoSave, autoSaveFile, fileId, sendMessageToDrawio, handleSave, t]
@@ -388,9 +390,9 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-        } catch (err) {
-            console.error('Error downloading file:', err);
-            setError(t('Failed to download file: {error}', { error: err instanceof Error ? err.message : t('Unknown error') }));
+        } catch (error) {
+            console.error('Error downloading file:', error);
+            setError(t('Failed to download file: {error}', { error: error instanceof Error ? error.message : t('Unknown error') }));
         }
     };
 

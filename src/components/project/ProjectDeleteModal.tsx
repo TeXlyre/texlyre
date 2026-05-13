@@ -33,8 +33,8 @@ const ProjectDeleteModal: React.FC<ProjectDeleteModalProps> = ({
 			const projectIds = selectedProjects.map((p) => p.id);
 			await onDeleteProjects(projectIds);
 			handleClose();
-		} catch (err) {
-			setError(err instanceof Error ? err.message : t('Delete failed'));
+		} catch (error) {
+			setError(error instanceof Error ? error.message : t('Delete failed'));
 		} finally {
 			setIsDeleting(false);
 		}

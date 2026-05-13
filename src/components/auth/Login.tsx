@@ -44,9 +44,9 @@ const Login: React.FC<LoginProps> = ({
       await login(username, password);
       onLoginSuccess();
       window.location.reload();
-    } catch (err) {
+    } catch (error) {
       setError(
-        err instanceof Error ? err.message : t('An error occurred during login')
+        error instanceof Error ? error.message : t('An error occurred during {action}', { action: t('login') })
       );
     } finally {
       setIsLoading(false);
@@ -72,10 +72,10 @@ const Login: React.FC<LoginProps> = ({
       console.log('[Login] Guest session created successfully:', guestUser.id);
       setShowGuestModal(false);
       onLoginSuccess();
-    } catch (err) {
-      console.error('[Login] Guest session creation failed:', err);
+    } catch (error) {
+      console.error('[Login] Guest session creation failed:', error);
       setError(
-        err instanceof Error ? err.message : t('Failed to create guest session')
+        error instanceof Error ? error.message : t('Failed to create guest session')
       );
     } finally {
       setIsLoading(false);

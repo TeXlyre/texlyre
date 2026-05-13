@@ -54,8 +54,8 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 			);
 
 			onClose();
-		} catch (err) {
-			setError(err instanceof Error ? err.message : t('Export failed'));
+		} catch (error) {
+			setError(error instanceof Error ? error.message : t('Export failed'));
 		} finally {
 			setIsExporting(false);
 		}

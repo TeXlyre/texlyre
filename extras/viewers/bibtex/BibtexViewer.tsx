@@ -314,7 +314,9 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
         setParsedEntries([]);
         setProcessedParsedEntries([]);
         setError(
-          `Failed to decode file content: ${error instanceof Error ? error.message : 'Unknown error'}`
+          t('Failed to decode file content: {error}', {
+            error: error instanceof Error ? error.message : t('Unknown error')
+          })
         );
       }
     } else if (content as any instanceof Uint8Array) {
@@ -344,7 +346,9 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
         setParsedEntries([]);
         setProcessedParsedEntries([]);
         setError(
-          `Failed to decode file content: ${error instanceof Error ? error.message : 'Unknown error'}`
+          t('Failed to decode file content: {error}', {
+            error: error instanceof Error ? error.message : t('Unknown error')
+          })
         );
       }
     } else if (typeof content === 'string') {
@@ -462,9 +466,9 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
       if (autoTidy) {
         setCurrentView('processed');
       }
-    } catch (err) {
+    } catch (error) {
       setError(
-        err instanceof Error ? err.message : t('Failed to process BibTeX file')
+        error instanceof Error ? error.message : t('Failed to process BibTeX file')
       );
     } finally {
       setIsProcessing(false);
@@ -505,7 +509,9 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
     } catch (error) {
       console.error('Error saving BibTeX file:', error);
       setError(
-        `Failed to save file: ${error instanceof Error ? error.message : 'Unknown error'}`
+        t('Failed to save file: {error}', {
+          error: error instanceof Error ? error.message : t('Unknown error')
+        })
       );
     } finally {
       setIsSaving(false);
@@ -545,7 +551,9 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
     } catch (error) {
       console.error('Error exporting file:', error);
       setError(
-        `Failed to export file: ${error instanceof Error ? error.message : 'Unknown error'}`
+        t('Failed to export file: {error}', {
+          error: error instanceof Error ? error.message : t('Unknown error')
+        })
       );
     }
   };

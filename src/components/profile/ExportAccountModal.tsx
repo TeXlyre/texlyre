@@ -38,8 +38,8 @@ const ExportAccountModal: React.FC<ExportAccountModalProps> = ({
       const exportAllProjects = exportScope === 'all';
       await accountExportService.exportAccount(user.id, exportAllProjects, includeUserData);
       onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Export failed');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Export failed');
     } finally {
       setIsExporting(false);
     }

@@ -100,8 +100,8 @@ function App() {
 			try {
 				const settings = JSON.parse(storedSettings);
 				targetLanguage = settings.language || 'en';
-			} catch (e) {
-				console.warn('Failed to parse stored settings');
+			} catch (error) {
+				console.warn('Failed to parse stored settings', error);
 			}
 		}
 

@@ -107,8 +107,8 @@ async function loadFonts(baseUrl: string = `${BASE_PATH}/assets/fonts`) {
             }
             const buffer = await response.arrayBuffer();
             return new Uint8Array(buffer);
-        } catch (err) {
-            console.warn(`Error loading font ${path}:`, err);
+        } catch (error) {
+            console.warn(`Error loading font ${path}:`, error);
             return null;
         }
     });

@@ -10,8 +10,8 @@ function validateTransformedCode(originalCode, transformedCode, filePath) {
             plugins: ['jsx', 'typescript', 'decorators-legacy', 'classProperties'],
             errorRecovery: true,
         });
-    } catch (error) {
-        errors.push(`Syntax error: ${error.message}`);
+    } catch (err) {
+        errors.push(`Syntax error: ${err.message}`);
         return { valid: false, errors };
     }
 

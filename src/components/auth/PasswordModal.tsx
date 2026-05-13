@@ -51,8 +51,8 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
       } else {
         setError(t('Incorrect password'));
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('Authentication failed'));
+    } catch (error) {
+      setError(error instanceof Error ? error.message : t('Authentication failed'));
     } finally {
       setIsSubmitting(false);
     }

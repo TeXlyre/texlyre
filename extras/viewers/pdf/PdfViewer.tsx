@@ -99,9 +99,9 @@ const PdfViewer: React.FC<ViewerProps> = ({
         setNumPages(doc.numPages);
         setCurrentPage(1);
         setIsLoading(false);
-      } catch (err) {
+      } catch (error) {
         if (!cancelled) {
-          console.error('Error loading PDF:', err);
+          console.error('Error loading PDF:', error);
           setError(t('Failed to load PDF document'));
           setIsLoading(false);
         }
@@ -166,13 +166,13 @@ const PdfViewer: React.FC<ViewerProps> = ({
       });
       await renderTaskRef.current.promise;
       renderTaskRef.current = null;
-    } catch (err) {
+    } catch (error) {
       if (
-        err instanceof Error &&
-        !err.message.includes('Rendering cancelled') &&
-        !err.message.includes('Worker was destroyed')
+        error instanceof Error &&
+        !error.message.includes('Rendering cancelled') &&
+        !error.message.includes('Worker was destroyed')
       ) {
-        console.error('Error rendering PDF page:', err);
+        console.error('Error rendering PDF page:', error);
         setError(t('Failed to render page {page}', { page: currentPage }));
       }
     }

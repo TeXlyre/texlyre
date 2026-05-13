@@ -134,8 +134,8 @@ function generateManifest(config: any) {
     let manifest: any;
     try {
         manifest = JSON.parse(raw);
-    } catch (e) {
-        console.error('Failed to parse manifest.json:', e);
+    } catch (err) {
+        console.error('Failed to parse manifest.json:', err);
         return;
     }
 

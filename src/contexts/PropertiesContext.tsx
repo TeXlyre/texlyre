@@ -121,10 +121,10 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 			} else {
 				localStoragePropertiesRef.current = {};
 			}
-		} catch (err) {
+		} catch (error) {
 			console.error(
 				'Error parsing properties from localStorage on initial load:',
-				err,
+				error,
 			);
 			localStorage.removeItem(userStorageKey);
 			localStoragePropertiesRef.current = {};

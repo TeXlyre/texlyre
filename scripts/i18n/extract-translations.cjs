@@ -47,8 +47,8 @@ function loadExistingTranslations(outputFile) {
             const content = fs.readFileSync(outputFile, 'utf8');
             return JSON.parse(content);
         }
-    } catch (error) {
-        console.warn(`⚠️  Could not load existing translations: ${error.message}`);
+    } catch (err) {
+        console.warn(`⚠️  Could not load existing translations: ${err.message}`);
     }
     return {};
 }
@@ -241,8 +241,8 @@ function extractTranslations(sourceDir, outputFile) {
                     }
                 },
             });
-        } catch (error) {
-            console.error(`Error processing ${filePath}:`, error.message);
+        } catch (err) {
+            console.error(`Error processing ${filePath}:`, err.message);
         }
     }
 
@@ -261,8 +261,8 @@ function extractTranslations(sourceDir, outputFile) {
                     processFile(fullPath);
                 }
             }
-        } catch (error) {
-            console.error(`Error reading directory ${directory}:`, error);
+        } catch (err) {
+            console.error(`Error reading directory ${directory}:`, err);
         }
     }
 

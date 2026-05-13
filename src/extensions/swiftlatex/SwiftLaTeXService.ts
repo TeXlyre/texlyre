@@ -103,8 +103,11 @@ class SwiftLaTeXService {
     }
 
     stopCompilation(): void {
-        try { this.getCurrentEngine()?.stopCompilation(); } catch (err) {
-            console.warn('Error stopping compilation:', err);
+        try {
+            this.getCurrentEngine()?.stopCompilation();
+        }
+        catch (error) {
+            console.warn('Error stopping compilation:', error);
         }
     }
 

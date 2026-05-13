@@ -200,9 +200,11 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
                 setDrawioContent(text);
                 setIsLoading(false);
                 setError(null);
-            } catch (err) {
-                console.error('Error decoding Draw.io content:', err);
-                setError(t('Failed to decode file content'));
+            } catch (error) {
+                console.error('Error decoding Draw.io content:', error);
+                setError(t('Failed to decode file content: {error}', {
+                    error: error instanceof Error ? error.message : String(error)
+                }));
                 setIsLoading(false);
             }
         };
@@ -246,9 +248,9 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
             setHasChanges(false);
             flashSavedIndicator();
-        } catch (err) {
-            console.error('Error saving Draw.io file:', err);
-            setError(t('Failed to save file: {error}', { error: err instanceof Error ? err.message : t('Unknown error') }));
+        } catch (error) {
+            console.error('Error saving Draw.io file:', error);
+            setError(t('Failed to save file: {error}', { error: error instanceof Error ? error.message : t('Unknown error') }));
         } finally {
             setIsSaving(false);
         }
@@ -335,9 +337,9 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-        } catch (err) {
-            console.error('Error downloading file:', err);
-            setError(t('Failed to download file: {error}', { error: err instanceof Error ? err.message : t('Unknown error') }));
+        } catch (error) {
+            console.error('Error downloading file:', error);
+            setError(t('Failed to download file: {error}', { error: error instanceof Error ? error.message : t('Unknown error') }));
         }
     }, [drawioContent, fileName]);
 
