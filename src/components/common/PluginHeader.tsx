@@ -3,7 +3,8 @@ import type React from 'react';
 import type { Awareness } from 'y-protocols/awareness';
 
 import CollaboratorAvatars from './CollaboratorAvatars';
-import { InfoIcon, LinkIcon } from './Icons';
+import InfoTooltip from './InfoTooltip';
+import { LinkIcon } from './Icons';
 
 interface PluginHeaderProps {
 	fileName: string;
@@ -94,9 +95,17 @@ export const PluginHeader: React.FC<PluginHeaderProps> = ({
 						</button>
 					)}
 					{formattedTooltip && (
-						<abbr title={formattedTooltip} className="info-icon-abbr">
-							<InfoIcon />
-						</abbr>
+						<InfoTooltip
+							title={pluginName ? `${pluginName}${pluginVersion ? ` v${pluginVersion}` : ''}` : undefined}
+							content={
+								<pre className="plugin-header-tooltip-text">
+									{typeof tooltipInfo === 'string'
+										? tooltipInfo
+										: (tooltipInfo ?? []).filter((l) => l.trim()).join('\n')}
+								</pre>
+							}
+							className="plugin-header-info"
+						/>
 					)}
 				</div>
 			</div>

@@ -81,7 +81,7 @@ class AccountExportService {
 		try {
 			const user = authService.getCurrentUser();
 			if (!user || user.id !== userId) {
-				throw new Error('User not authenticated or ID mismatch');
+				throw new Error(t('User not authenticated'));
 			}
 
 			const account = options.includeAccount
@@ -202,7 +202,7 @@ class AccountExportService {
 			saveAs(zipBlob, fileName);
 		} catch (error) {
 			console.error('Error exporting:', error);
-			throw new Error('Failed to export data');
+			throw new Error(t('Failed to export data'));
 		}
 	}
 
@@ -375,7 +375,7 @@ class AccountExportService {
 				await this.fileSystemManager.readUnifiedStructure(zipAdapter);
 
 			if (!this.unifiedService.validateStructure(unifiedData)) {
-				throw new Error('Invalid export file format');
+				throw new Error(t('Invalid export file format'));
 			}
 
 			const isAccountExport =
@@ -401,7 +401,7 @@ class AccountExportService {
 			}
 		} catch (error) {
 			console.error('Error importing account:', error);
-			throw new Error('Failed to import account data');
+			throw new Error(t('Failed to import account data'));
 		}
 	}
 
@@ -439,7 +439,7 @@ class AccountExportService {
 			(await authService.initialize().then(() => authService.db));
 
 		if (!authDb) {
-			throw new Error('Could not access auth database');
+			throw new Error(t('Could not access auth database'));
 		}
 
 		const userToImport = {
@@ -464,7 +464,7 @@ class AccountExportService {
 		const authenticatedUser = await authService.setCurrentUser(user.id);
 
 		if (!authenticatedUser) {
-			throw new Error('Failed to authenticate imported user');
+			throw new Error(t('Failed to authenticate imported user'));
 		}
 
 		console.log(`[AccountExportService] Successfully authenticated imported user: ${user.username}`);
@@ -482,7 +482,7 @@ class AccountExportService {
 
 		if (!targetUser) {
 			throw new Error(
-				'No user available for project import. Please log in first.',
+				t('No user available for project import. Please log in first.'),
 			);
 		}
 
@@ -523,7 +523,7 @@ class AccountExportService {
 			(await authService.initialize().then(() => authService.db));
 
 		if (!authDb) {
-			throw new Error('Could not access auth database');
+			throw new Error(t('Could not access auth database'));
 		}
 
 		const now = Date.now();
