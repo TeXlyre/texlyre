@@ -79,9 +79,10 @@ const CommentPanel: React.FC<CommentPanelProps> = ({
 
         {searchQuery &&
           <button
+            aria-label={t('Clear search')}
             className="clear-search-button"
             onClick={() => setSearchQuery('')}>
-            ×
+            <span aria-hidden="true">×</span>
           </button>
         }
       </div>

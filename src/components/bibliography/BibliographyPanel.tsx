@@ -445,8 +445,12 @@ const BibliographyPanel: React.FC<BibliographyPanelProps> = ({ className = '' })
               className="bib-search-input"
             />
             {searchQuery && (
-              <button className="bib-clear-search-button" onClick={() => setSearchQuery('')}>
-                ×
+              <button
+                aria-label={t('Clear search')}
+                className="bib-clear-search-button"
+                onClick={() => setSearchQuery('')}
+                title={t('Clear search')}>
+                <span aria-hidden="true">×</span>
               </button>
             )}
           </div>

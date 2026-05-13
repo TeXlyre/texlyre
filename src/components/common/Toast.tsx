@@ -1,4 +1,5 @@
 // src/components/common/Toast.tsx
+import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
@@ -85,10 +86,11 @@ const Toast: React.FC<ToastProps> = ({ notification, onDismiss }) => {
 			<span className="toast-message">{notification.message}</span>
 			{notification.type !== 'loading' && (
 				<button
+					aria-label={t('Dismiss notification')}
 					className="toast-dismiss"
 					onClick={() => onDismiss(notification.id, notification.operationId)}
-				>
-					×
+					title={t('Dismiss notification')}>
+					<span aria-hidden="true">×</span>
 				</button>
 			)}
 		</div>

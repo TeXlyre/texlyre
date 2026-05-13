@@ -189,9 +189,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 className="search-input" />
               {searchQuery &&
                 <button
+                  aria-label={t('Clear search')}
                   className="clear-search-button"
-                  onClick={() => setSearchQuery('')}>
-                  ×
+                  onClick={() => setSearchQuery('')}
+                  title={t('Clear search')}>
+                  <span aria-hidden="true">×</span>
                 </button>
               }
             </div>

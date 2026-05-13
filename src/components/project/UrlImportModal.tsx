@@ -283,9 +283,10 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
                               <span>{tag}</span>
                               <button
                                 type="button"
-                                onClick={() => handleRemoveTag(tag)}>
-
-                                ×
+                                aria-label={t('Remove tag')}
+                                onClick={() => handleRemoveTag(tag)}
+                                title={t('Remove tag')}>
+                                <span aria-hidden="true">×</span>
                               </button>
                             </div>
                           )}

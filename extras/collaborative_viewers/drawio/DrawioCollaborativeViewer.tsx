@@ -427,7 +427,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
                         <button
                             className="button icon-only small"
                             onClick={() => setShowOfflineBanner(false)}
-                            title={t('Dismiss')}>
+                            title={t('Dismiss offline banner')}>
                             <CloseIcon />
                         </button>
                     </div>

@@ -728,14 +728,14 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
                                                                 {activity.message}
                                                             </span>
                                                             <button
+                                                                aria-label={t('Dismiss activity')}
                                                                 className="activity-close"
                                                                 onClick={() =>
                                                                     giteaBackupService.clearActivity(activity.id)
                                                                 }
-                                                                title={t('Dismiss')}
-                                                                disabled={isOperating}
-                                                            >
-                                                                ×
+                                                                title={t('Dismiss activity')}
+                                                                disabled={isOperating}>
+                                                                <span aria-hidden="true">×</span>
                                                             </button>
                                                         </div>
                                                         <div className="activity-time">

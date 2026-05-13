@@ -231,14 +231,15 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
                 onClick={(e) => e.stopPropagation()}
                 className={`file-name-input ${nameError ? 'invalid' : ''}`} />
               <button
+                aria-label={t('Cancel renaming')}
                 className="cancel-input-button"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   onCancelRename();
                 }}
-                title={t('Cancel')}>
-                ×
+                title={t('Cancel renaming')}>
+                <span aria-hidden="true">×</span>
               </button>
             </div>
             {nameError && <span className="file-name-error">{nameError}</span>}
@@ -501,14 +502,15 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
                     className={`file-name-input ${nameError ? 'invalid' : ''}`} />
 
                   <button
+                    aria-label={t('Cancel new item')}
                     className="cancel-input-button"
                     onMouseDown={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       onCancelNewItem();
                     }}
-                    title={t('Cancel')}>
-                    ×
+                    title={t('Cancel new item')}>
+                    <span aria-hidden="true">×</span>
                   </button>
                 </div>
                 {nameError && <span className="file-name-error">{nameError}</span>}

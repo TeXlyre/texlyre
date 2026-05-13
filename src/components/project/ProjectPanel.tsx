@@ -97,8 +97,12 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
           className="search-input" />
 
         {searchQuery &&
-          <button className="clear-search-button" onClick={handleClearSearch}>
-            ×
+          <button
+            aria-label={t('Clear search')}
+            className="clear-search-button"
+            onClick={handleClearSearch}
+            title={t('Clear search')}>
+            <span aria-hidden="true">×</span>
           </button>
         }
 

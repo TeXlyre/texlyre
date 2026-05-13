@@ -995,14 +995,15 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                     onKeyDown={handleNewItemKeyDown}
                     className={`file-name-input ${nameError ? 'invalid' : ''}`} />
                   <button
+                    aria-label={t('Cancel new item')}
                     className="cancel-input-button"
                     onMouseDown={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       handleCancelNewItem();
                     }}
-                    title={t('Cancel')}>
-                    ×
+                    title={t('Cancel new item')}>
+                    <span aria-hidden="true">×</span>
                   </button>
                 </div>
                 {nameError && <span className="file-name-error">{nameError}</span>}

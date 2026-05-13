@@ -63,22 +63,18 @@ const GuestUpgradeBanner: React.FC<GuestUpgradeBannerProps> = ({
             <span className="time-remaining">{timeRemaining}</span>
           </div>
           <div className="banner-sub">{t('Create an account to keep your projects permanently')}
-
           </div>
         </div>
         <div className="banner-actions">
           <button
             className="button primary small"
             onClick={onOpenUpgradeModal}>
-
             <UpgradeAccountIcon />{t('Upgrade Account')}
-
           </button>
           <button
             className="button icon-only small"
             onClick={() => setIsVisible(false)}
-            title={t('Dismiss')}>
-
+            title={t('Dismiss upgrade banner')}>
             <CloseIcon />
           </button>
         </div>
