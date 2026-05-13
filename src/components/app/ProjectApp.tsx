@@ -356,7 +356,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 
     if (!isValidYjsUrl(project.docUrl)) {
       console.error('Invalid document URL format:', project.docUrl);
-      setError(`Invalid document URL format: ${project.docUrl}`);
+      setError(t('Invalid document URL format: {url}', { url: project.docUrl }));
       return;
     }
 
@@ -386,7 +386,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 
     if (!isValidYjsUrl(project.docUrl)) {
       console.error('Invalid document URL format:', project.docUrl);
-      setError(`Invalid document URL format: ${project.docUrl}`);
+      setError(t('Invalid document URL format: {url}', { url: project.docUrl }));
       return;
     }
 

@@ -744,7 +744,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
         });
       } catch (err) {
         console.error('[CanvasRenderer] Failed to parse content:', err);
-        setError(`Failed to parse content: ${err}`);
+        setError(t('Failed to parse content: {error}', { error: err instanceof Error ? err.message : t('Unknown error') }));
         setIsLoading(false);
       }
     },

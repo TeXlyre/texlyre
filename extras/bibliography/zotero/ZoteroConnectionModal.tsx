@@ -30,7 +30,7 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
     const [selectedLibrary, setSelectedLibrary] = useState('');
     const [selectedLibraryType, setSelectedLibraryType] = useState<'user' | 'group'>('user');
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -45,14 +45,14 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
                 setUserId('');
                 setLibraries([]);
                 setSelectedLibrary('');
-                setError('');
+                setError(null);
             }
         }
     }, [isOpen, existingApiKey, existingUserId]);
 
     const loadLibraries = async (key: string, uid: string) => {
         setIsLoading(true);
-        setError('');
+        setError(null);
         try {
             const libs = await zoteroAPIService.getUserLibraries(key, uid);
             setLibraries(libs);
@@ -61,7 +61,7 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
                 setSelectedLibraryType(libs[0].type);
             }
         } catch (err) {
-            setError('Failed to load libraries');
+            setError(t('Failed to load libraries'));
         } finally {
             setIsLoading(false);
         }
@@ -69,24 +69,24 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
 
     const handleCredentialsSubmit = async () => {
         if (!apiKey.trim() || !userId.trim()) {
-            setError('API key and User ID are required');
+            setError(t('API key and User ID are required'));
             return;
         }
 
         setIsLoading(true);
-        setError('');
+        setError(null);
 
         try {
             const isValid = await zoteroAPIService.testConnection(apiKey, userId);
             if (!isValid) {
-                setError('Invalid API key or User ID');
+                setError(t('Invalid API key or User ID'));
                 return;
             }
 
             await loadLibraries(apiKey, userId);
             setStep('library');
         } catch (err) {
-            setError('Connection failed');
+            setError(t('Connection failed'));
         } finally {
             setIsLoading(false);
         }
@@ -94,7 +94,7 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
 
     const handleLibrarySubmit = async () => {
         if (!selectedLibrary) {
-            setError('Please select a library');
+            setError(t('Please select a library'));
             return;
         }
 
@@ -103,7 +103,7 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
             await onConnect(apiKey, userId, selectedLibrary, selectedLibraryType);
             onClose();
         } catch (err) {
-            setError('Connection failed');
+            setError(t('Connection failed'));
         } finally {
             setIsLoading(false);
         }

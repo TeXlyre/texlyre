@@ -516,7 +516,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
   );
 
   const onDocumentLoadError = useCallback((err: Error) => {
-    setError(`Failed to load PDF: ${err.message}`);
+    setError(t('Failed to load PDF: {error}', { error: err.message }));
     setIsLoading(false);
   }, []);
 

@@ -605,7 +605,7 @@
     "@babel/helper-module-transforms" "^7.28.6"
     "@babel/helper-plugin-utils" "^7.28.6"
 
-"@babel/plugin-transform-modules-systemjs@^7.29.0":
+"@babel/plugin-transform-modules-systemjs@^7.29.4":
   version "7.29.4"
   resolved "https://registry.npmjs.org/@babel/plugin-transform-modules-systemjs/-/plugin-transform-modules-systemjs-7.29.4.tgz"
   integrity sha512-N7QmZ0xRZfjHOfZeQLJjwgX2zS9pdGHSVl/cjSGlo4dXMqvurfxXDMKY4RqEKzPozV78VMcd0lxyG13mlbKc4w==
@@ -3913,7 +3913,7 @@ fast-levenshtein@^2.0.6:
   resolved "https://registry.npmjs.org/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz"
   integrity sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==
 
-fast-uri@^3.0.1:
+fast-uri@^3.1.2:
   version "3.1.2"
   resolved "https://registry.npmjs.org/fast-uri/-/fast-uri-3.1.2.tgz"
   integrity sha512-rVjf7ArG3LTk+FS6Yw81V1DLuZl1bRbNrev6Tmd/9RaroeeRRJhAt7jg/6YFxbvAQXUCavSoZhPPj6oOx+5KjQ==
@@ -3949,10 +3949,10 @@ filelist@^1.0.4:
   dependencies:
     minimatch "^5.0.1"
 
-filepizza-client@^2.0.1:
-  version "2.0.1"
-  resolved "https://registry.npmjs.org/filepizza-client/-/filepizza-client-2.0.1.tgz"
-  integrity sha512-Jb6t3fk8xIHyy1VSAYJIzB/esun6CXRpVEyo29HPX1M0yEpRBPqeWf1zvCCyBbn6xJci0SOEtZYF4Su1UXrSJw==
+filepizza-client@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.npmjs.org/filepizza-client/-/filepizza-client-2.1.0.tgz"
+  integrity sha512-3wHHdhxS2BtZJ7YPoRrBYZ18tNE6fUKWOwReRJq03rghe8CXaP3/qAavsgr6igm+9HbOyL62Mww/dSJ2CRO9TQ==
 
 fill-range@^7.1.1:
   version "7.1.1"
@@ -4289,7 +4289,7 @@ human-signals@^2.1.0:
   resolved "https://registry.npmjs.org/human-signals/-/human-signals-2.1.0.tgz"
   integrity sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==
 
-i18next@^26.0.4, "i18next@>= 26.0.10":
+i18next@^26.0.11, "i18next@>= 26.0.10":
   version "26.1.0"
   resolved "https://registry.npmjs.org/i18next/-/i18next-26.1.0.tgz"
   integrity sha512-dIU6td04DvQuIqVst5S9g0GviTmhZ0DYD4b9ociVGJmuCa5vZ2de/t+Enf4olvj87mF8Y2lwjNQBwC9QZsvzKQ==
@@ -5779,7 +5779,7 @@ prop-types@^15.8.1:
     object-assign "^4.1.1"
     react-is "^16.13.1"
 
-protobufjs@^7.2.4:
+protobufjs@^7.5.8:
   version "7.5.8"
   resolved "https://registry.npmjs.org/protobufjs/-/protobufjs-7.5.8.tgz"
   integrity sha512-dvpCIeLPbXZS/Ete7yLaO7RenOdken2NHKykBXbsaGxZT0UTltcarBciw+A78SRQs9iMAAVpsYA+l8b1hTePIA==
@@ -6180,7 +6180,7 @@ semver@^7.7.4:
   resolved "https://registry.npmjs.org/semver/-/semver-7.7.4.tgz"
   integrity sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA==
 
-serialize-javascript@>=7.0.3:
+serialize-javascript@^7.0.5:
   version "7.0.5"
   resolved "https://registry.npmjs.org/serialize-javascript/-/serialize-javascript-7.0.5.tgz"
   integrity sha512-F4LcB0UqUl1zErq+1nYEEzSHJnIwb3AF2XWB94b+afhrekOUijwooAYqFyRbjYkm2PAKBabx6oYv/xDxNi8IBw==
