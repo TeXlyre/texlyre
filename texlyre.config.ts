@@ -140,6 +140,11 @@ const config: TexlyreConfig = {
                 themePlugin: 'texlyre-mobile-theme',
                 imageViewerAutoCenter: true,
             },
+            properties: {
+                global: {
+                    projectListViewMode: 'list',
+                }
+            }
         },
         local: {
             settings: {

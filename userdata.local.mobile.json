@@ -66,7 +66,8 @@
     "sidebar-collapsed:global": false,
     "sidebar-width:global": 502,
     "sourcemap-show-floating-buttons:global": true,
-    "toolbar-visible:global": true
+    "toolbar-visible:global": true,
+    "project-list-view-mode:global": "list"
   },
   "secrets": {}
 }
