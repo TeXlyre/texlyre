@@ -276,31 +276,34 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     networkFetch(event.request)
       .then((response) => {
-        if (response.status === 200 && response.type === 'basic') {
+        if (response.status === 200 &&
+          response.type === 'basic' &&
+          event.request.method === 'GET') {
           const responseClone = response.clone();
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              console.log('[ServiceWorker] Caching new resource:', event.request.url);
-              cache.put(event.request, responseClone);
-            });
+
+          event.waitUntil(
+            caches.open(CACHE_NAME)
+              .then((cache) => cache.put(event.request, responseClone))
+              .catch((error) => {
+                console.warn('[ServiceWorker] Failed to cache:', event.request.url, error);
+              })
+          );
         }
+
         return response;
       })
-      .catch(() => {
-        return caches.match(event.request)
-          .then((cachedResponse) => {
-            if (cachedResponse) {
-              console.log('[ServiceWorker] Serving from cache:', event.request.url);
-              return cachedResponse;
-            }
+      .catch(async () => {
+        const cachedResponse = await caches.match(event.request);
 
-            if (event.request.mode === 'navigate') {
-              console.log('[ServiceWorker] Serving index.html for navigation');
-              return caches.match(APP_SHELL_URL);
-            }
+        if (cachedResponse) {
+          return cachedResponse;
+        }
 
-            throw new Error('Resource not available offline');
-          });
+        if (event.request.mode === 'navigate') {
+          return caches.match(APP_SHELL_URL);
+        }
+
+        throw new Error('Resource not available offline');
       })
   );
 });

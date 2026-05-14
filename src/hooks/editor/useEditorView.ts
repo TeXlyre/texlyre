@@ -653,6 +653,7 @@ export const useEditorView = (
         currentFileId,
         documentId,
         enableComments,
+        textContent
     ]);
 
     useEffect(() => {
