@@ -14,7 +14,7 @@ export interface ProcessorOptions {
 
 const COMMENT_DETECTION_REGEX = /<###(?:\s|%)*comment(?:\s|%)*id:/;
 
-const hasBinaryComments = (buffer: ArrayBuffer): boolean => {
+function hasBinaryComments(buffer: ArrayBuffer): boolean {
 	const view = new Uint8Array(buffer);
 	const backtick = 0x60;
 	const openMarker = new TextEncoder().encode('<###');
@@ -72,16 +72,16 @@ const hasBinaryComments = (buffer: ArrayBuffer): boolean => {
 	}
 
 	return false;
-};
+}
 
-export const hasComments = (content: string | ArrayBuffer): boolean => {
+export function hasComments(content: string | ArrayBuffer): boolean {
 	if (content instanceof ArrayBuffer) {
 		return hasBinaryComments(content);
 	}
 	return COMMENT_DETECTION_REGEX.test(content);
-};
+}
 
-export const cleanText = (text: string): string => {
+export function cleanText(text: string): string {
 	if (!hasComments(text)) {
 		return text;
 	}
@@ -143,9 +143,9 @@ export const cleanText = (text: string): string => {
 	}
 
 	return cleanedText;
-};
+}
 
-export const cleanContent = (content: string | ArrayBuffer): string | ArrayBuffer => {
+export function cleanContent(content: string | ArrayBuffer): string | ArrayBuffer {
 	if (content instanceof ArrayBuffer) {
 		const textContent = new TextDecoder().decode(content);
 		if (!hasComments(textContent)) {
@@ -156,9 +156,12 @@ export const cleanContent = (content: string | ArrayBuffer): string | ArrayBuffe
 	}
 
 	return cleanText(content);
-};
+}
 
-export const processFile = (fileNode: FileNode, options: ProcessorOptions = {}): FileNode => {
+export function processFile(
+	fileNode: FileNode,
+	options: ProcessorOptions = {},
+): FileNode {
 	if (fileNode.type === 'directory' || fileNode.isBinary) {
 		return fileNode;
 	}
@@ -175,22 +178,22 @@ export const processFile = (fileNode: FileNode, options: ProcessorOptions = {}):
 	processedNode.content = cleanContent(fileNode.content);
 
 	return processedNode;
-};
+}
 
-export const processFiles = (
+export function processFiles(
 	fileNodes: FileNode[],
 	options: ProcessorOptions = {},
-): FileNode[] => {
+): FileNode[] {
 	return fileNodes.map((node) => processFile(node, options));
-};
+}
 
-export const processFilesWithStats = (
+export function processFilesWithStats(
 	fileNodes: FileNode[],
 	options: ProcessorOptions = {},
 ): {
 	processed: FileNode[];
 	stats: ProcessorStats;
-} => {
+} {
 	const stats: ProcessorStats = {
 		total: fileNodes.length,
 		cleaned: 0,
@@ -212,8 +215,8 @@ export const processFilesWithStats = (
 	});
 
 	return { processed, stats };
-};
+}
 
-export const processTextSelection = (text: string): string => {
+export function processTextSelection(text: string): string {
 	return cleanText(text);
-};
+}

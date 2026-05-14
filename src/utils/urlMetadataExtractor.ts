@@ -8,7 +8,7 @@ interface PageMetadata {
     zipUrl: string;
 }
 
-const parseGitUrl = (url: string) => {
+function parseGitUrl(url: string) {
     try {
         const urlObj = new URL(url);
         const hostname = urlObj.hostname.toLowerCase();
@@ -24,9 +24,11 @@ const parseGitUrl = (url: string) => {
     } catch {
         return null;
     }
-};
+}
 
-const detectTypeFromLanguages = (languages: Record<string, number>): 'latex' | 'typst' | null => {
+function detectTypeFromLanguages(
+    languages: Record<string, number>,
+): 'latex' | 'typst' | null {
     const entries = Object.entries(languages);
     if (entries.length === 0) return null;
 
@@ -37,18 +39,22 @@ const detectTypeFromLanguages = (languages: Record<string, number>): 'latex' | '
     if (primaryLanguage.includes('typst')) return 'typst';
 
     return null;
-};
+}
 
-const applyProxyToZipUrl = (zipUrl: string, proxyUrl: string | null): string => {
+function applyProxyToZipUrl(zipUrl: string, proxyUrl: string | null): string {
     if (!proxyUrl || !proxyUrl.trim()) return zipUrl;
 
     const trimmedProxy = proxyUrl.trim();
     // const normalizedProxy = trimmedProxy.endsWith('/') ? trimmedProxy.slice(0, -1) : trimmedProxy;
 
     return `${trimmedProxy}${zipUrl}`;
-};
+}
 
-const fetchGitHubMetadata = async (owner: string, repo: string, proxyUrl: string | null): Promise<PageMetadata | null> => {
+async function fetchGitHubMetadata(
+    owner: string,
+    repo: string,
+    proxyUrl: string | null,
+): Promise<PageMetadata | null> {
     try {
         const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
         if (!response.ok) return null;
@@ -73,9 +79,13 @@ const fetchGitHubMetadata = async (owner: string, repo: string, proxyUrl: string
     } catch {
         return null;
     }
-};
+}
 
-const fetchGitLabMetadata = async (owner: string, repo: string, proxyUrl: string | null): Promise<PageMetadata | null> => {
+async function fetchGitLabMetadata(
+    owner: string,
+    repo: string,
+    proxyUrl: string | null,
+): Promise<PageMetadata | null> {
     try {
         const projectPath = encodeURIComponent(`${owner}/${repo}`);
         const response = await fetch(`https://gitlab.com/api/v4/projects/${projectPath}`);
@@ -100,9 +110,14 @@ const fetchGitLabMetadata = async (owner: string, repo: string, proxyUrl: string
     } catch {
         return null;
     }
-};
+}
 
-const fetchGiteaMetadata = async (hostname: string, owner: string, repo: string, proxyUrl: string | null): Promise<PageMetadata | null> => {
+async function fetchGiteaMetadata(
+    hostname: string,
+    owner: string,
+    repo: string,
+    proxyUrl: string | null,
+): Promise<PageMetadata | null> {
     try {
         const response = await fetch(`https://${hostname}/api/v1/repos/${owner}/${repo}`);
         if (!response.ok) return null;
@@ -126,9 +141,9 @@ const fetchGiteaMetadata = async (hostname: string, owner: string, repo: string,
     } catch {
         return null;
     }
-};
+}
 
-const detectGiteaInstance = async (hostname: string) => {
+async function detectGiteaInstance(hostname: string): Promise<boolean> {
     try {
         const response = await fetch(`https://${hostname}/api/v1/version`, {
             method: 'HEAD'
@@ -137,9 +152,12 @@ const detectGiteaInstance = async (hostname: string) => {
     } catch {
         return false;
     }
-};
+}
 
-export const fetchPageMetadata = async (url: string, proxyUrl: string | null = null): Promise<PageMetadata> => {
+export async function fetchPageMetadata(
+    url: string,
+    proxyUrl: string | null = null,
+): Promise<PageMetadata> {
     const parsed = parseGitUrl(url);
 
     if (parsed) {
@@ -170,4 +188,4 @@ export const fetchPageMetadata = async (url: string, proxyUrl: string | null = n
         type: null,
         zipUrl: url
     };
-};
+}

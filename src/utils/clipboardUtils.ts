@@ -6,11 +6,10 @@ import { fileStorageService } from '../services/FileStorageService';
 import { isLatexFile, getFileExtension, getRelativePath } from './fileUtils.ts';
 import { processTextSelection } from './fileCommentUtils.ts';
 
-
-export const uploadPastedFile = async (
+export async function uploadPastedFile(
 	blob: Blob,
-	currentFileId?: string
-): Promise<string> => {
+	currentFileId?: string,
+): Promise<string> {
 	const timestamp = Date.now();
 	const ext = getFileExtension(blob.type);
 	const filename = `pasted_${timestamp}.${ext}`;
@@ -50,7 +49,6 @@ export const uploadPastedFile = async (
 				} else {
 					return relativePath;
 				}
-
 			}
 		}
 
@@ -61,7 +59,7 @@ export const uploadPastedFile = async (
 	}
 }
 
-export const copyCleanTextToClipboard = async (text: string): Promise<void> => {
+export async function copyCleanTextToClipboard(text: string): Promise<void> {
 	try {
 		const cleanedText = processTextSelection(text);
 		await navigator.clipboard.writeText(cleanedText);
@@ -73,11 +71,13 @@ export const copyCleanTextToClipboard = async (text: string): Promise<void> => {
 		textArea.value = processTextSelection(text);
 		document.body.appendChild(textArea);
 		textArea.select();
+
 		try {
 			document.execCommand('copy');
 		} catch (fallbackError) {
 			console.error('Fallback copy failed:', fallbackError);
 		}
+
 		document.body.removeChild(textArea);
 	}
-};
+}

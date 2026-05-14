@@ -5,25 +5,25 @@ const LEGACY_YJS_PROJECT_ID_RE = /^[a-z0-9]{20,32}$/;
 const UUID_PROJECT_ID_RE =
 	/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-export const isValidYjsProjectId = (projectId: string): boolean => {
+export function isValidYjsProjectId(projectId: string): boolean {
 	const value = projectId.trim();
 
 	return (
 		LEGACY_YJS_PROJECT_ID_RE.test(value) ||
 		UUID_PROJECT_ID_RE.test(value)
 	);
-};
+}
 
-export const isValidYjsUrl = (url: string): boolean => {
+export function isValidYjsUrl(url: string): boolean {
 	const value = url.trim();
 
 	if (!value.startsWith('yjs:')) return false;
 	if (value.includes('&')) return false;
 
 	return isValidYjsProjectId(value.slice(4));
-};
+}
 
-export const parseUrlFragments = (url: string): UrlFragments => {
+export function parseUrlFragments(url: string): UrlFragments {
 	const parts = url.split('&');
 	const result: UrlFragments = { yjsUrl: '' };
 
@@ -41,13 +41,13 @@ export const parseUrlFragments = (url: string): UrlFragments => {
 	}
 
 	return result;
-};
+}
 
-export const buildUrlWithFragments = (
+export function buildUrlWithFragments(
 	yjsUrl: string,
 	docId?: string,
 	filePath?: string,
-): string => {
+): string {
 	const currentHash = window.location.hash.substring(1);
 	const existingFragments = parseUrlFragments(currentHash);
 
@@ -63,22 +63,22 @@ export const buildUrlWithFragments = (
 	}
 
 	return url;
-};
+}
 
-export const pushHash = (hash: string): void => {
+export function pushHash(hash: string): void {
 	const target = hash ? `#${hash}` : `${window.location.pathname}${window.location.search}`;
 	const oldURL = window.location.href;
 	window.history.pushState(null, '', target);
 	if (window.location.href !== oldURL) {
 		window.dispatchEvent(new HashChangeEvent('hashchange', { oldURL, newURL: window.location.href }));
 	}
-};
+}
 
-export const replaceHash = (hash: string): void => {
+export function replaceHash(hash: string): void {
 	const target = hash ? `#${hash}` : `${window.location.pathname}${window.location.search}`;
 	const oldURL = window.location.href;
 	window.history.replaceState(null, '', target);
 	if (window.location.href !== oldURL) {
 		window.dispatchEvent(new HashChangeEvent('hashchange', { oldURL, newURL: window.location.href }));
 	}
-};
+}

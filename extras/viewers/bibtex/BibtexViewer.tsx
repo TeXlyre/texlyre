@@ -30,7 +30,7 @@ import { fileStorageService } from '@/services/FileStorageService';
 import { bibliographyImportService } from '@/services/BibliographyImportService';
 import { formatFileSize } from '@/utils/fileUtils';
 import { detectFileType } from '@/utils/fileUtils';
-import { TextDiffUtils } from '@/utils/textDiffUtils';
+import { computeReplacementChange } from '@/utils/textDiffUtils';
 import { BibtexParser, type BibtexEntry } from '@/utils/bibtexParser';
 import { TidyOptionsPanel } from './TidyOptionsPanel';
 import { type TidyOptions, getPresetOptions } from './tidyOptions';
@@ -429,7 +429,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
       setCurrentView('processed');
 
       if (processedViewRef.current) {
-        const changes = TextDiffUtils.computeChanges(sourceContent, newContent);
+        const changes = computeReplacementChange(sourceContent, newContent);
         if (changes.length > 0) {
           processedViewRef.current.dispatch({
             changes: changes

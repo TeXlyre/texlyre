@@ -5,7 +5,7 @@ import * as Y from 'yjs';
 import { fileStorageService } from '../services/FileStorageService';
 import type { Project } from '../types/projects';
 
-export const deleteDatabase = async (dbName: string): Promise<void> => {
+export async function deleteDatabase(dbName: string): Promise<void> {
 	return new Promise((resolve, reject) => {
 		const deleteRequest = indexedDB.deleteDatabase(dbName);
 
@@ -31,11 +31,11 @@ export const deleteDatabase = async (dbName: string): Promise<void> => {
 			}, 1000);
 		};
 	});
-};
+}
 
-export const closeActiveConnections = async (
+export async function closeActiveConnections(
 	projectId: string,
-): Promise<void> => {
+): Promise<void> {
 	try {
 		if (fileStorageService.isConnectedToProject(projectId)) {
 			fileStorageService.cleanup();
@@ -46,11 +46,11 @@ export const closeActiveConnections = async (
 	} catch (error) {
 		console.warn('Error closing FileStorageService connection:', error);
 	}
-};
+}
 
-export const cleanupProjectDatabases = async (
+export async function cleanupProjectDatabases(
 	project: Project,
-): Promise<void> => {
+): Promise<void> {
 	try {
 		const projectId = project.docUrl.startsWith('yjs:')
 			? project.docUrl.slice(4)
@@ -84,11 +84,11 @@ export const cleanupProjectDatabases = async (
 	} catch (error) {
 		console.error('Error cleaning up project databases:', error);
 	}
-};
+}
 
-export const cleanupDocumentDatabases = async (
+export async function cleanupDocumentDatabases(
 	projectId: string,
-): Promise<void> => {
+): Promise<void> {
 	try {
 		const dbName = `texlyre-project-${projectId}`;
 		const metadataCollection = `${dbName}-yjs_metadata`;
@@ -132,4 +132,4 @@ export const cleanupDocumentDatabases = async (
 	} catch (error) {
 		console.error('Error cleaning up document databases:', error);
 	}
-};
+}

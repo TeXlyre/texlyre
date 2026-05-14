@@ -2,12 +2,12 @@
 import { t } from '@/i18n';
 import i18next from 'i18next';
 
-export const formatDate = (timestamp: number | string): string => {
+export function formatDate(timestamp: number | string): string {
 	const date = new Date(typeof timestamp === 'string' && !isNaN(Number(timestamp)) ? parseInt(timestamp, 10) : timestamp);
 	return date.toLocaleString(i18next.language);
-};
+}
 
-export const formatLastModified = (timestamp: number | string) => {
+export function formatLastModified(timestamp: number | string): string {
 	const date = new Date(typeof timestamp === 'string' && !isNaN(Number(timestamp)) ? parseInt(timestamp, 10) : timestamp);
 	const now = new Date();
 	const diffMs = now.getTime() - date.getTime();
@@ -17,9 +17,9 @@ export const formatLastModified = (timestamp: number | string) => {
 	if (diffDays === 1) return t('Yesterday');
 	if (diffDays < 7) return t('{count} day ago', { count: diffDays });
 	return date.toLocaleDateString(i18next.language);
-};
+}
 
-export const formatTimestamp = (timestamp: number | string): string => {
+export function formatTimestamp(timestamp: number | string): string {
 	const ts = typeof timestamp === 'string' && !isNaN(Number(timestamp))
 		? parseInt(timestamp, 10)
 		: timestamp;
@@ -40,4 +40,4 @@ export const formatTimestamp = (timestamp: number | string): string => {
 	}
 
 	return new Date(ts).toLocaleDateString(i18next.language);
-};
+}

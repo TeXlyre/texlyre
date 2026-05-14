@@ -61,7 +61,7 @@ import {
 } from '../../extensions/codemirror/LinkNavigationExtension';
 import { useAuth } from '../useAuth';
 import { useEditor } from '../useEditor';
-import { autoSaveManager } from '../../utils/autoSaveUtils';
+import { autoSaveService } from '../../services/AutoSaveService.ts';
 import { detectFileType, isBibFile } from '../../utils/fileUtils.ts';
 import { collabService } from '../../services/CollabService';
 import { fileStorageService } from '../../services/FileStorageService';
@@ -658,7 +658,7 @@ export const useEditorView = (
         const autoSaveKey = isEditingFile ? currentFileId : documentId;
 
         if (autoSaveRef.current && autoSaveKey) {
-            autoSaveManager.clearAutoSaver(autoSaveKey);
+            autoSaveService.clearAutoSaver(autoSaveKey);
             autoSaveRef.current = null;
         }
 
@@ -672,7 +672,7 @@ export const useEditorView = (
                 return;
             }
 
-            autoSaveRef.current = autoSaveManager.createAutoSaver(
+            autoSaveRef.current = autoSaveService.createAutoSaver(
                 autoSaveKey,
                 () => viewRef.current?.state?.doc?.toString() || '',
                 {
@@ -690,7 +690,7 @@ export const useEditorView = (
         setupAutoSave();
 
         return () => {
-            if (autoSaveKey) autoSaveManager.clearAutoSaver(autoSaveKey);
+            if (autoSaveKey) autoSaveService.clearAutoSaver(autoSaveKey);
             autoSaveRef.current = null;
         };
     }, [
@@ -766,8 +766,8 @@ export const useEditorView = (
         return () => {
             const autoSaveKey = isEditingFile ? currentFileId : documentId;
             if (autoSaveKey) {
-                autoSaveManager.flushPendingSaves().catch(console.error);
-                autoSaveManager.clearAutoSaver(autoSaveKey);
+                autoSaveService.flushPendingSaves().catch(console.error);
+                autoSaveService.clearAutoSaver(autoSaveKey);
             }
         };
     }, [currentFileId, documentId, isEditingFile]);

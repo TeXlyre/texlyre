@@ -10,7 +10,7 @@ interface GotoOptions {
     tabId?: string;
 }
 
-const dispatchGoto = (target: EditorTarget | null, opts: GotoOptions) => {
+function dispatchGoto(target: EditorTarget | null, opts: GotoOptions): void {
     const detail = {
         ...opts,
         fileId: target?.kind === 'file' ? target.fileId : undefined,
@@ -21,13 +21,13 @@ const dispatchGoto = (target: EditorTarget | null, opts: GotoOptions) => {
         opts.position !== undefined ? 'codemirror-goto-char' : 'codemirror-goto-line';
 
     document.dispatchEvent(new CustomEvent(eventName, { detail }));
-};
+}
 
-export const gotoEditor = (
+export function gotoEditor(
     target: EditorTarget | null,
     opts: GotoOptions,
     options?: { waitForReady?: boolean; timeoutMs?: number },
-): void => {
+): void {
     if (!options?.waitForReady || !target) {
         dispatchGoto(target, opts);
         return;
@@ -59,4 +59,4 @@ export const gotoEditor = (
     };
 
     document.addEventListener('editor-ready', handler);
-};
+}

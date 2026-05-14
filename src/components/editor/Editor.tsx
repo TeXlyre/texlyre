@@ -34,7 +34,7 @@ import {
   isLatexFile,
   isTypstFile,
 } from '../../utils/fileUtils';
-import { TextDiffUtils } from '../../utils/textDiffUtils';
+import { computeReplacementChange } from '../../utils/textDiffUtils';
 import CommentPanel from '../comments/CommentPanel';
 import CommentToggleButton from '../comments/CommentToggleButton';
 import LSPToggleButton from '../bibliography/LSPToggleButton';
@@ -341,7 +341,7 @@ const EditorContent: React.FC<{
       const currentContent = viewRef.current.state.doc.toString();
       if (currentContent === formatted) return;
 
-      const changes = TextDiffUtils.computeChanges(currentContent, formatted);
+      const changes = computeReplacementChange(currentContent, formatted);
       if (changes.length > 0) viewRef.current.dispatch({ changes });
     }, [viewRef]);
 
