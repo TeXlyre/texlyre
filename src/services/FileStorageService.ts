@@ -273,7 +273,7 @@ class FileStorageService {
 			}
 		} else if (existingFile) {
 			file.id = existingFile.id;
-			if (existingFile.isDeleted) {
+			if (existingFile.isDeleted && file.isDeleted === undefined) {
 				file.isDeleted = false;
 			}
 			await this.db?.delete(this.FILES_STORE, existingFile.id);
