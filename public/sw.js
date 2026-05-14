@@ -4,15 +4,15 @@ const CACHE_NAME = `texlyre-v0.7.56`;
 const BASE_PATH = '/texlyre/';
 const FONTS_CACHE_NAME = 'fonts-cache-v1';
 const AIRGAP_ALLOWED_DOMAINS = [
-	"texlyre.github.io",
-	"texlyre.org",
-	"typst.org"
+  "texlyre.github.io",
+  "texlyre.org",
+  "typst.org"
 ];
 const AIRGAP_ALLOWED_PROTOCOLS = [
-	"https:",
-	"http:",
-	"wss:",
-	"ws:"
+  "https:",
+  "http:",
+  "wss:",
+  "ws:"
 ];
 // *** End automatic generation ***
 
@@ -228,8 +228,22 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   if (airgapExternalRequests && isBlockedByAirgap(event.request)) {
-    console.warn('[ServiceWorker] Blocked request by air-gap mode:', event.request.url);
-    event.respondWith(blockedByAirgapResponse(event.request));
+    event.respondWith(
+      (async () => {
+        const cachedResponse =
+          await caches.match(event.request) ||
+          await caches.match(event.request.url);
+
+        if (cachedResponse) {
+          console.log('[ServiceWorker] Serving air-gap blocked resource from cache:', event.request.url);
+          return cachedResponse;
+        }
+
+        console.warn('[ServiceWorker] Blocked request by air-gap mode:', event.request.url);
+        return blockedByAirgapResponse(event.request);
+      })()
+    );
+
     return;
   }
 
@@ -265,46 +279,76 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (url.origin !== self.location.origin || event.request.method !== 'GET') {
+  if (event.request.method !== 'GET') {
     return;
   }
 
-  if (!url.pathname.startsWith(BASE_PATH)) {
+  const isSameOriginAppResource =
+    url.origin === self.location.origin &&
+    url.pathname.startsWith(BASE_PATH);
+
+  const isAllowedExternalResource =
+    url.origin !== self.location.origin &&
+    isAllowedAirgapProtocol(url.protocol) &&
+    isAllowedAirgapHost(url.hostname);
+
+  if (!isSameOriginAppResource && !isAllowedExternalResource) {
     return;
   }
 
   event.respondWith(
-    networkFetch(event.request)
-      .then((response) => {
-        if (response.status === 200 &&
-          response.type === 'basic' &&
-          event.request.method === 'GET') {
+    (async () => {
+      const cachedResponse =
+        await caches.match(event.request) ||
+        await caches.match(event.request.url);
+
+      if (forceOfflineMode) {
+        if (cachedResponse) {
+          console.log('[ServiceWorker] Serving from cache in force offline mode:', event.request.url);
+          return cachedResponse;
+        }
+
+        if (event.request.mode === 'navigate') {
+          console.log('[ServiceWorker] Serving index.html for navigation in force offline mode');
+          return caches.match(APP_SHELL_URL);
+        }
+
+        throw new Error('Resource not available offline');
+      }
+
+      try {
+        const response = await networkFetch(event.request);
+
+        if (response.status === 200 && response.type !== 'error') {
           const responseClone = response.clone();
 
           event.waitUntil(
             caches.open(CACHE_NAME)
-              .then((cache) => cache.put(event.request, responseClone))
+              .then((cache) => {
+                console.log('[ServiceWorker] Caching resource:', event.request.url);
+                return cache.put(event.request, responseClone);
+              })
               .catch((error) => {
-                console.warn('[ServiceWorker] Failed to cache:', event.request.url, error);
+                console.warn('[ServiceWorker] Failed to cache resource:', event.request.url, error);
               })
           );
         }
 
         return response;
-      })
-      .catch(async () => {
-        const cachedResponse = await caches.match(event.request);
-
+      } catch (error) {
         if (cachedResponse) {
+          console.log('[ServiceWorker] Serving from cache:', event.request.url);
           return cachedResponse;
         }
 
         if (event.request.mode === 'navigate') {
+          console.log('[ServiceWorker] Serving index.html for navigation');
           return caches.match(APP_SHELL_URL);
         }
 
         throw new Error('Resource not available offline');
-      })
+      }
+    })()
   );
 });
 
