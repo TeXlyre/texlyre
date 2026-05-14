@@ -196,6 +196,24 @@ export class ForgejoAPIService {
         return data.tree;
     }
 
+    async getBranchHeadSha(token: string, owner: string, repo: string, branch: string): Promise<string> {
+        const data = await this._request<{ commit: { id: string } }>(
+            token,
+            `repos/${owner}/${repo}/branches/${branch}?_=${Date.now()}`,
+        );
+        return data.commit.id;
+    }
+
+    async getFileContentAtRef(
+        token: string,
+        owner: string,
+        repo: string,
+        path: string,
+        ref: string,
+    ): Promise<string> {
+        return this.getFileContent(token, owner, repo, path, ref);
+    }
+
     async getBranches(
         token: string,
         owner: string,

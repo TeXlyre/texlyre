@@ -225,6 +225,23 @@ export class GitLabAPIService {
         return allItems;
     }
 
+    async getBranchHeadSha(token: string, projectId: string, branch: string): Promise<string> {
+        const data = await this._request<{ commit: { id: string } }>(
+            token,
+            `projects/${encodeURIComponent(projectId)}/repository/branches/${encodeURIComponent(branch)}?_=${Date.now()}`,
+        );
+        return data.commit.id;
+    }
+
+    async getFileContentAtRef(
+        token: string,
+        projectId: string,
+        filePath: string,
+        ref: string,
+    ): Promise<string> {
+        return this.getFileContent(token, projectId, filePath, ref);
+    }
+
     async getBranches(
         token: string,
         projectId: string,

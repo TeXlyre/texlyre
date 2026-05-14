@@ -94,6 +94,12 @@ const gitLabBackupAdapter: GitBackupAdapter<GitLabTarget> = {
 
     getFileRefForPath: (_item: GitTreeItem, path: string) => path,
 
+    getLatestCommitSha: (token, target, branch) =>
+        gitLabAPIService.getBranchHeadSha(token, target.projectId, branch),
+
+    readFileAtRef: (token, target, path, ref) =>
+        gitLabAPIService.getFileContentAtRef(token, target.projectId, path, ref),
+
     readFile: (token, target, path, branch) =>
         gitLabAPIService.getFileContent(token, target.projectId, path, branch),
 

@@ -186,7 +186,7 @@ export class GitHubAPIService {
 	): Promise<{ sha: string; treeSha: string }> {
 		const data = await this._request<{
 			commit: { sha: string; commit: { tree: { sha: string } } };
-		}>(token, `repos/${owner}/${repo}/branches/${branch}`);
+		}>(token, `repos/${owner}/${repo}/branches/${branch}?_=${Date.now()}`);
 		return { sha: data.commit.sha, treeSha: data.commit.commit.tree.sha };
 	}
 
@@ -367,6 +367,33 @@ export class GitHubAPIService {
 			`repos/${owner}/${repo}/git/trees/${latestCommit.treeSha}?recursive=true`,
 		);
 		return data.tree;
+	}
+
+	async getBranchHeadSha(
+		token: string,
+		owner: string,
+		repo: string,
+		branch: string,
+	): Promise<string> {
+		const data = await this._request<{ commit: { sha: string } }>(
+			token,
+			`repos/${owner}/${repo}/branches/${branch}?_=${Date.now()}`,
+		);
+		return data.commit.sha;
+	}
+
+	async getFileContentAtRef(
+		token: string,
+		owner: string,
+		repo: string,
+		path: string,
+		ref: string,
+	): Promise<string> {
+		const data = await this._request<{ content: string }>(
+			token,
+			`repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${ref}`,
+		);
+		return atob(data.content.replace(/\n/g, ''));
 	}
 
 	async getBlobContent(

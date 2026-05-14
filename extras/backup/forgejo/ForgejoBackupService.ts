@@ -98,6 +98,14 @@ const forgejoBackupAdapter: GitBackupAdapter<ForgejoTarget> = {
             branch,
         ),
 
+    getFileRefForPath: (_item, path) => path,
+
+    getLatestCommitSha: (token, target, branch) =>
+        forgejoAPIService.getBranchHeadSha(token, target.owner, target.repo, branch),
+
+    readFileAtRef: (token, target, path, ref) =>
+        forgejoAPIService.getFileContentAtRef(token, target.owner, target.repo, path, ref),
+
     readFile: (token, target, path, branch) =>
         forgejoAPIService.getFileContent(
             token,

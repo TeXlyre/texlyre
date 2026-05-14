@@ -98,7 +98,13 @@ const giteaBackupAdapter: GitBackupAdapter<GiteaTarget> = {
             branch,
         ),
 
-    getFileRefForPath: (item: GitTreeItem) => item.sha || item.path || '',
+    getFileRefForPath: (_item, path) => path,
+
+    getLatestCommitSha: (token, target, branch) =>
+        giteaAPIService.getBranchHeadSha(token, target.owner, target.repo, branch),
+
+    readFileAtRef: (token, target, path, ref) =>
+        giteaAPIService.getFileContentAtRef(token, target.owner, target.repo, path, ref),
 
     readFile: (token, target, path, branch) =>
         giteaAPIService.getFileContent(
@@ -158,7 +164,8 @@ export const giteaBackupService = {
         );
     },
 
-    disconnect: sharedGiteaBackupService.disconnect.bind(sharedGiteaBackupService),
+    disconnect: sharedGiteaBackupService.disconnect.bind(
+        sharedGiteaBackupService),
     getStoredRepository: sharedGiteaBackupService.getStoredTarget.bind(
         sharedGiteaBackupService,
     ),
