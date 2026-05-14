@@ -11,9 +11,10 @@ interface ModalProps {
 	title: string;
 	icon?: React.ComponentType;
 	children: ReactNode;
-	size?: 'small' | 'medium' | 'large';
+	size?: 'small' | 'medium' | 'large' | 'wide';
 	showCloseButton?: boolean;
 	headerActions?: ReactNode;
+	closeOnClickOutside?: boolean;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -25,6 +26,7 @@ const Modal: React.FC<ModalProps> = ({
 	size = 'medium',
 	showCloseButton = true,
 	headerActions,
+	closeOnClickOutside = true,
 }) => {
 	const modalRef = useRef<HTMLDivElement>(null);
 	const IconComponent = icon;
@@ -37,6 +39,8 @@ const Modal: React.FC<ModalProps> = ({
 		};
 
 		const handleClickOutside = (event: MouseEvent) => {
+			if (!closeOnClickOutside) return;
+
 			if (
 				modalRef.current &&
 				!modalRef.current.contains(event.target as Node)
@@ -65,7 +69,7 @@ const Modal: React.FC<ModalProps> = ({
 				document.body.style.overflow = 'auto';
 			}
 		};
-	}, [isOpen, onClose]);
+	}, [isOpen, onClose, closeOnClickOutside]);
 
 	if (!isOpen) return null;
 
@@ -88,7 +92,8 @@ const Modal: React.FC<ModalProps> = ({
 								aria-label={t('Close modal')}
 								className="modal-close-button"
 								onClick={onClose}
-								title={t('Close modal')}>
+								title={t('Close modal')}
+							>
 								<CloseIcon />
 							</button>
 						)}

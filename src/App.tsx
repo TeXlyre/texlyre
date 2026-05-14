@@ -22,6 +22,7 @@ import './styles/global.css';
 import './styles/components/editor.css';
 import './styles/components/editor-tabs.css';
 import './styles/components/codemirror.css';
+import './styles/components/conflicts.css';
 import './styles/components/file-explorer.css';
 import './styles/components/search.css';
 import './styles/components/latex-typst-outline.css';
@@ -59,6 +60,7 @@ import AppRouter from './components/app/AppRouter';
 import AppBootstrap from './components/app/AppSettingBootrap';
 import PasswordModal from './components/auth/PasswordModal';
 import SplashScreen from './components/common/SplashScreen';
+import ConflictResolutionModal from './components/conflicts/ConflictResolutionModal';
 import FileConflictModal from './components/editor/FileConflictModal';
 import { AuthProvider } from './contexts/AuthContext';
 import { EditorProvider } from './contexts/EditorContext';
@@ -159,6 +161,7 @@ function AppContent() {
 	return (
 		<>
 			<AppRouter />
+			<ConflictResolutionModal />
 			<FileConflictModal />
 			<PasswordModal
 				isOpen={isPasswordModalOpen}
