@@ -24,7 +24,7 @@ import {
     search,
     searchKeymap,
 } from '@codemirror/search';
-import { EditorState, type Extension } from '@codemirror/state';
+import { Compartment, EditorState, type Extension } from '@codemirror/state';
 import { type ViewUpdate, keymap } from '@codemirror/view';
 import { lineNumbers } from '@codemirror/view';
 import { EditorView } from 'codemirror';
@@ -148,6 +148,13 @@ export const useEditorView = (
     const [provider, setProvider] = useState<CollabProvider | null>(null);
     const hasEmittedReadyRef = useRef<boolean>(false);
     const undoManagerRef = useRef<UndoManager | null>(null);
+
+    const compartmentsRef = useRef({
+        base: new Compartment(),
+        language: new Compartment(),
+        toolbar: new Compartment(),
+        languageSpecific: new Compartment(),
+    });
 
     const projectId = docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl;
 
@@ -523,13 +530,14 @@ export const useEditorView = (
         const info = classifyFileType(fileName, contentToUse);
         const completionSources: CompletionSource[] = [];
         const extensions: Extension[] = [];
+        const { base, language, toolbar: toolbarComp, languageSpecific } = compartmentsRef.current;
 
         if (info.isLatex || info.isTypst) {
             extensions.push(createListingsExtension(info.fileType as 'latex' | 'typst'));
         }
 
-        extensions.push(...buildBaseExtensions());
-        extensions.push(...buildLanguageExtension(info));
+        extensions.push(base.of(buildBaseExtensions()));
+        extensions.push(language.of(buildLanguageExtension(info)));
 
         if (fileName) {
             extensions.push(...getGenericLSPExtensionsForFile(fileName));
@@ -541,7 +549,9 @@ export const useEditorView = (
             extensions.push(latexTypstBidiIsolates());
         }
 
-        extensions.push(...buildLanguageSpecificExtensions(info, contentToUse, completionSources));
+        extensions.push(
+            languageSpecific.of(buildLanguageSpecificExtensions(info, contentToUse, completionSources)),
+        );
 
         if (info.isStructured) {
             extensions.push(autocompletion({
@@ -557,13 +567,11 @@ export const useEditorView = (
 
         if (!isEditingFile && ytextRef.current && undoManagerRef.current) {
             yjsEditorBindingRef.current?.cleanup();
-
             yjsEditorBindingRef.current = createYjsEditorBindingExtensions(
                 ytextRef.current,
                 provider?.awareness,
                 undoManagerRef.current,
             );
-
             extensions.push(...yjsEditorBindingRef.current.extensions);
         } else if (isEditingFile) {
             extensions.push(history());
@@ -638,16 +646,39 @@ export const useEditorView = (
         editorRef,
         yDoc,
         provider,
-        undoManagerRef.current,
         isDocumentSelected,
         isEditingFile,
-        textContent,
         isViewOnly,
         fileName,
-        editorSettingsVersion,
+        currentFileId,
+        documentId,
         enableComments,
-        toolbarVisible,
     ]);
+
+    useEffect(() => {
+        const view = viewRef.current;
+        if (!view) return;
+
+        const info = classifyFileType(fileName, view.state.doc.toString());
+        const completionSources: CompletionSource[] = [];
+        const { base, language, toolbar: toolbarComp, languageSpecific } = compartmentsRef.current;
+
+        const toolbarExt: Extension[] =
+            (info.isLatex || info.isTypst) && toolbarVisible
+                ? [createToolbarExtension(info.fileType as 'latex' | 'typst', undoManagerRef.current || undefined)]
+                : [];
+
+        view.dispatch({
+            effects: [
+                base.reconfigure(buildBaseExtensions()),
+                language.reconfigure(buildLanguageExtension(info)),
+                languageSpecific.reconfigure(
+                    buildLanguageSpecificExtensions(info, view.state.doc.toString(), completionSources),
+                ),
+                toolbarComp.reconfigure(toolbarExt),
+            ],
+        });
+    }, [editorSettingsVersion, toolbarVisible, fileName]);
 
     useEffect(() => {
         if (!editorRef.current || !viewRef.current) return;
