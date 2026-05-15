@@ -1,7 +1,7 @@
 // extras/bibliography/zotero/ZoteroConnectionModal.tsx
 import { t } from '@/i18n';
 import type React from 'react';
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 
 import Modal from '@/components/common/Modal';
 import { ZoteroIcon } from './Icon';
@@ -41,6 +41,23 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
+	const loadLibraries = useCallback(async (key: string, uid: string) => {
+		setIsLoading(true);
+		setError(null);
+		try {
+			const libs = await zoteroAPIService.getUserLibraries(key, uid);
+			setLibraries(libs);
+			if (libs.length > 0) {
+				setSelectedLibrary(libs[0].id);
+				setSelectedLibraryType(libs[0].type);
+			}
+		} catch (_error) {
+			setError(t('Failed to load libraries'));
+		} finally {
+			setIsLoading(false);
+		}
+	}, []);
+
 	useEffect(() => {
 		if (isOpen) {
 			if (existingApiKey && existingUserId) {
@@ -58,23 +75,6 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
 			}
 		}
 	}, [isOpen, existingApiKey, existingUserId, loadLibraries]);
-
-	const loadLibraries = async (key: string, uid: string) => {
-		setIsLoading(true);
-		setError(null);
-		try {
-			const libs = await zoteroAPIService.getUserLibraries(key, uid);
-			setLibraries(libs);
-			if (libs.length > 0) {
-				setSelectedLibrary(libs[0].id);
-				setSelectedLibraryType(libs[0].type);
-			}
-		} catch (_error) {
-			setError(t('Failed to load libraries'));
-		} finally {
-			setIsLoading(false);
-		}
-	};
 
 	const handleCredentialsSubmit = async () => {
 		if (!apiKey.trim() || !userId.trim()) {

@@ -1084,47 +1084,18 @@ const Editor: React.FC<EditorComponentProps> = ({
 		const CollaborativeViewerComponent = collaborativeViewerPlugin.renderViewer;
 		return (
 			<BibliographyProvider>
-				<CommentProvider
-					editorContent={textContent}
-					onUpdateContent={onUpdateContent}
-				>
-					<div className='editor-container viewer-container collaborative-viewer'>
-						{/* <div className="viewer-plugin-info">
-              <span>
-                {t('Collaborative viewing with')}
-                {collaborativeViewerPlugin.name} v
-                {collaborativeViewerPlugin.version}
-              </span>
-            </div> */}
-						<CollaborativeViewerComponent
-							fileId={fileId}
-							content={content as ArrayBuffer}
-							mimeType={mimeType}
-							fileName={fileName}
-							docUrl={docUrl}
-							documentId={documentId}
-							isDocumentSelected={isDocumentSelected}
-							onUpdateContent={onUpdateContent}
-							parseComments={(text: string) => {
-								const { parseComments } = useComments();
-								return parseComments(text);
-							}}
-							addComment={(content: string) => {
-								const { addComment } = useComments();
-								return addComment(content);
-							}}
-							updateComments={(content: string) => {
-								const { updateComments } = useComments();
-								updateComments(content);
-							}}
-						/>
-					</div>
-					<CommentModal
-						isOpen={showCommentModal}
-						onClose={handleCommentModalClose}
-						onCommentSubmit={handleCommentSubmit}
+				<div className='editor-container viewer-container collaborative-viewer'>
+					<CollaborativeViewerComponent
+						fileId={fileId}
+						content={content as ArrayBuffer}
+						mimeType={mimeType}
+						fileName={fileName}
+						docUrl={docUrl}
+						documentId={documentId}
+						isDocumentSelected={isDocumentSelected}
+						onUpdateContent={onUpdateContent}
 					/>
-				</CommentProvider>
+				</div>
 			</BibliographyProvider>
 		);
 	}

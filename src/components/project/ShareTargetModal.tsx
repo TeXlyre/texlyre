@@ -1,6 +1,6 @@
 // src/components/project/ShareTargetModal.tsx
 import type React from 'react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { t } from '@/i18n';
 import { useAuth } from '../../hooks/useAuth';
@@ -42,17 +42,18 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
 	const isZip =
 		files.length === 1 && files[0].name.toLowerCase().endsWith('.zip');
 
-	const checkIsTexlyreZip = async (
-		file: PendingShareFile,
-	): Promise<boolean> => {
-		try {
-			const zipFile = new File([file.buffer], file.name, { type: file.type });
-			const scanned = await projectImportService.scanZipFile(zipFile);
-			return scanned.length > 0;
-		} catch {
-			return false;
-		}
-	};
+	const checkIsTexlyreZip = useCallback(
+		async (file: PendingShareFile): Promise<boolean> => {
+			try {
+				const zipFile = new File([file.buffer], file.name, { type: file.type });
+				const scanned = await projectImportService.scanZipFile(zipFile);
+				return scanned.length > 0;
+			} catch {
+				return false;
+			}
+		},
+		[],
+	);
 
 	useEffect(() => {
 		if (isOpen) {

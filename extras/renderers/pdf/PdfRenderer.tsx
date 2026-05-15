@@ -251,9 +251,9 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		];
 	}, [numPages]);
 
-	const suppressPageSync = () => {
+	const suppressPageSync = useCallback(() => {
 		suppressPageSyncUntilRef.current = Date.now() + PAGE_SYNC_SUPPRESS_MS;
-	};
+	}, []);
 
 	const setPage = useCallback(
 		(page: number) => {

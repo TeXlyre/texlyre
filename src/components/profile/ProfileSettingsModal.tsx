@@ -1,6 +1,6 @@
 // src/components/profile/ProfileSettingsModal.tsx
 import type React from 'react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { t } from '@/i18n';
 import {
@@ -43,7 +43,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 		null,
 	);
 
-	const generateRandomColor = (isLight: boolean): string => {
+	const generateRandomColor = useCallback((isLight: boolean) => {
 		const hue = Math.floor(Math.random() * 360);
 		const saturation = isLight
 			? 60 + Math.floor(Math.random() * 20)
@@ -97,7 +97,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 		};
 
 		return hslToHex(hue, saturation, lightness);
-	};
+	}, []);
 
 	useEffect(() => {
 		if (user) {

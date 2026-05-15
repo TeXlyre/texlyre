@@ -208,40 +208,43 @@ const DrawioViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		});
 	};
 
-	const handleSave = async (contentToSave?: string) => {
-		if (!fileId) return;
+	const handleSave = useCallback(
+		async (contentToSave?: string) => {
+			if (!fileId) return;
 
-		const content = contentToSave || drawioContent;
-		if (!content.trim()) {
-			console.warn('Attempted to save empty content');
-			return;
-		}
+			const content = contentToSave || drawioContent;
+			if (!content.trim()) {
+				console.warn('Attempted to save empty content');
+				return;
+			}
 
-		setIsSaving(true);
-		setError(null);
+			setIsSaving(true);
+			setError(null);
 
-		try {
-			const encoder = new TextEncoder();
-			const dataToSave = encoder.encode(content);
+			try {
+				const encoder = new TextEncoder();
+				const dataToSave = encoder.encode(content);
 
-			await fileStorageService.updateFileContent(fileId, dataToSave.buffer);
+				await fileStorageService.updateFileContent(fileId, dataToSave.buffer);
 
-			originalContentRef.current = content;
-			setHasChanges(false);
+				originalContentRef.current = content;
+				setHasChanges(false);
 
-			sendMessageToDrawio({ action: 'status', modified: false });
-			flashSavedIndicator();
-		} catch (error) {
-			console.error('Error saving Draw.io file:', error);
-			setError(
-				t('Failed to save file: {error}', {
-					error: error instanceof Error ? error.message : t('Unknown error'),
-				}),
-			);
-		} finally {
-			setIsSaving(false);
-		}
-	};
+				sendMessageToDrawio({ action: 'status', modified: false });
+				flashSavedIndicator();
+			} catch (error) {
+				console.error('Error saving Draw.io file:', error);
+				setError(
+					t('Failed to save file: {error}', {
+						error: error instanceof Error ? error.message : t('Unknown error'),
+					}),
+				);
+			} finally {
+				setIsSaving(false);
+			}
+		},
+		[fileId, drawioContent, sendMessageToDrawio, flashSavedIndicator],
+	);
 
 	const handleMessage = useCallback(
 		(event: MessageEvent) => {

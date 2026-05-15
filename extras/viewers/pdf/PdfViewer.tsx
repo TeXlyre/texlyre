@@ -30,6 +30,8 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 	import.meta.url,
 ).toString();
 
+const QUALITY_SCALE_MAP = { low: 0.75, medium: 1.0, high: 1.5 } as const;
+
 const PdfViewer: React.FC<ViewerProps> = ({
 	content,
 	mimeType,
@@ -46,8 +48,6 @@ const PdfViewer: React.FC<ViewerProps> = ({
 			| 'low'
 			| 'medium'
 			| 'high') ?? 'high';
-
-	const qualityScaleMap = { low: 0.75, medium: 1.0, high: 1.5 };
 
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -158,7 +158,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 			}
 
 			const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-			const outputScale = qualityScaleMap[renderingQuality] * pixelRatio;
+			const outputScale = QUALITY_SCALE_MAP[renderingQuality] * pixelRatio;
 			const displayViewport = page.getViewport({ scale: renderScale });
 			const scaledViewport = page.getViewport({
 				scale: renderScale * outputScale,
@@ -190,7 +190,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 				setError(t('Failed to render page {page}', { page: currentPage }));
 			}
 		}
-	}, [currentPage, scale, autoScale, renderingQuality, qualityScaleMap]);
+	}, [currentPage, scale, autoScale, renderingQuality]);
 
 	useEffect(() => {
 		if (isLoading) return;

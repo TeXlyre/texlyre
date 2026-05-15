@@ -1,6 +1,6 @@
 // src/components/editor/FileDocumentController.tsx
 import type React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
@@ -191,12 +191,8 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	const [toolbarVisible, setToolbarVisible] = useState(true);
 	const [documentSelectionChange, setDocumentSelectionChange] = useState(0);
 	const [fileSelectionChange, setFileSelectionChange] = useState(0);
-	const [initialSelectedFile, setInitialSelectedFile] = useState<
-		string | undefined
-	>();
-	const [initialExpandedPaths, setInitialExpandedPaths] = useState<
-		string[] | undefined
-	>();
+	const [initialSelectedFile, setInitialSelectedFile] = useState<string | undefined>();
+	const [initialExpandedPaths, setInitialExpandedPaths] = useState<string[] | undefined>();
 
 	const docToFileMapRef = useRef<Map<string, LinkedFileInfo>>(new Map());
 	const [docToFileMapReady, setDocToFileMapReady] = useState(false);
@@ -205,15 +201,18 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	const [currentProjectForExport, setCurrentProjectForExport] =
 		useState<Project | null>(null);
 
-	const selectFileInExplorer = (file: FileNode | LinkedFileInfo) => {
-		const fileId = 'fileId' in file ? file.fileId : file.id;
-		const filePath = 'filePath' in file ? file.filePath : file.path;
+	const selectFileInExplorer = useCallback(
+		(file: FileNode | LinkedFileInfo) => {
+			const fileId = 'fileId' in file ? file.fileId : file.id;
+			const filePath = 'filePath' in file ? file.filePath : file.path;
 
-		setInitialSelectedFile(fileId);
-		setInitialExpandedPaths(getExpandPaths(filePath));
-	};
+			setInitialSelectedFile(fileId);
+			setInitialExpandedPaths(getExpandPaths(filePath));
+		},
+		[],
+	);
 
-	const setOutputForFileName = (name?: string) => {
+	const setOutputForFileName = useCallback((name?: string) => {
 		if (name && isLatexFile(name)) {
 			setShowLatexOutput(true);
 			setShowTypstOutput(false);
@@ -224,161 +223,204 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 			setShowLatexOutput(false);
 			setShowTypstOutput(false);
 		}
-	};
+	}, []);
 
-	const createTabForFile = (file: FileNode) => {
-		openTab({
-			title: file.name,
-			type: 'file',
-			fileId: file.id,
-			filePath: file.path,
-		});
-	};
-
-	const createTabForDocument = (documentId: string, document: Document) => {
-		openTab({
-			title: document.name,
-			type: 'document',
-			documentId,
-		});
-	};
-
-	const openDocumentById = (
-		docId: string,
-		view: 'documents' | 'files',
-		preserveView = false,
-	) => {
-		const document = documents.find((doc) => doc.id === docId);
-		if (!document) return;
-
-		lastOpenedDocIdRef.current = docId;
-		lastOpenedFilePathRef.current =
-			docToFileMapRef.current.get(docId)?.filePath ?? null;
-
-		if (!preserveView) {
-			setActiveView(view);
-		}
-
-		setIsEditingFile(false);
-		onSelectDocument(docId);
-		setDocumentSelectionChange((prev) => prev + 1);
-		createTabForDocument(docId, document);
-
-		const linkedFile = docToFileMapRef.current.get(docId);
-
-		if (linkedFile) {
-			setLinkedFileInfo(linkedFile);
-			setLinkedDocumentId(docId);
-			setOutputForFileName(linkedFile.fileName);
-
-			if (view === 'files' && !preserveView) {
-				selectFileInExplorer(linkedFile);
-			}
-		} else {
-			setLinkedFileInfo({});
-			setLinkedDocumentId(null);
-			setOutputForFileName(undefined);
-		}
-	};
-
-	const handleFileSelect = async (
-		file: FileNode,
-		loadedContent: string | ArrayBuffer,
-		isBinary = false,
-	) => {
-		flushSync(() => {
-			setIsFileLoading(true);
-		});
-
-		selectFile(file.id);
-
-		isViewerHandledRef.current = !!pluginRegistry.getViewerForFile(
-			file.name,
-			file.mimeType,
-		);
-
-		flushSync(() => {
-			setFileContent(loadedContent);
-			setFileName(file.name);
-			setMimeType(file.mimeType);
-			setIsBinaryFile(isBinary || isViewerHandledRef.current);
-			setLinkedDocumentId(file.documentId || null);
-			setCurrentFilePath(file.path);
-			setCurrentEditorContent(
-				typeof loadedContent === 'string' ? loadedContent : '',
-			);
-			setIsEditingFile(true);
-			setFileSelectionChange((prev) => prev + 1);
-		});
-
-		setIsFileLoading(false);
-
-		if (selectedDocId !== null) {
-			onSelectDocument('');
-		}
-
-		setOutputForFileName(file.name);
-		createTabForFile(file);
-	};
-
-	const openFileByNode = async (file: FileNode, preserveView = false) => {
-		const loadedContent = await getFileContent(file.id);
-		if (!loadedContent) return;
-
-		lastOpenedFilePathRef.current = file.path;
-		lastOpenedDocIdRef.current = null;
-
-		if (!preserveView) {
-			setActiveView('files');
-			selectFileInExplorer(file);
-		}
-
-		await handleFileSelect(file, loadedContent, file.isBinary || false);
-	};
-
-	const updateProjectLastOpened = async (docId?: string, filePath?: string) => {
-		const projectId = sessionStorage.getItem('currentProjectId');
-		if (!projectId) return;
-
-		try {
-			const project = await getProjectById(projectId);
-			if (!project) return;
-
-			const nextDocId = docId ?? null;
-			const nextFilePath = filePath ?? null;
-
-			if (
-				nextDocId === (project.lastOpenedDocId ?? null) &&
-				nextFilePath === (project.lastOpenedFilePath ?? null)
-			) {
-				return;
-			}
-
-			updateProject({
-				...project,
-				lastOpenedDocId: nextDocId,
-				lastOpenedFilePath: nextFilePath,
-			}).catch((error) => {
-				console.warn('Failed to update project last opened state:', error);
+	const createTabForFile = useCallback(
+		(file: FileNode) => {
+			openTab({
+				title: file.name,
+				type: 'file',
+				fileId: file.id,
+				filePath: file.path,
 			});
-		} catch (error) {
-			console.warn('Error updating project last opened state:', error);
+		},
+		[openTab],
+	);
+
+	const createTabForDocument = useCallback(
+		(documentId: string, document: Document) => {
+			openTab({
+				title: document.name,
+				type: 'document',
+				documentId,
+			});
+		},
+		[openTab],
+	);
+
+	const updateProjectLastOpened = useCallback(
+		async (docId?: string, filePath?: string) => {
+			const projectId = sessionStorage.getItem('currentProjectId');
+			if (!projectId) return;
+
+			try {
+				const project = await getProjectById(projectId);
+				if (!project) return;
+
+				const nextDocId = docId ?? null;
+				const nextFilePath = filePath ?? null;
+
+				if (
+					nextDocId === (project.lastOpenedDocId ?? null) &&
+					nextFilePath === (project.lastOpenedFilePath ?? null)
+				) {
+					return;
+				}
+
+				updateProject({
+					...project,
+					lastOpenedDocId: nextDocId,
+					lastOpenedFilePath: nextFilePath,
+				}).catch((error) => {
+					console.warn('Failed to update project last opened state:', error);
+				});
+			} catch (error) {
+				console.warn('Error updating project last opened state:', error);
+			}
+		},
+		[getProjectById, updateProject],
+	);
+
+	const pushEditorRoute = useCallback(
+		(docId?: string, filePath?: string) => {
+			const currentFragment = parseUrlFragments(
+				window.location.hash.substring(1),
+			);
+			const newUrl = buildUrlWithFragments(
+				currentFragment.yjsUrl,
+				docId,
+				filePath,
+			);
+
+			window.location.hash = newUrl.startsWith('#') ? newUrl.slice(1) : newUrl;
+			updateProjectLastOpened(docId, filePath);
+		},
+		[updateProjectLastOpened],
+	);
+
+	const handleFileSelect = useCallback(
+		async (
+			file: FileNode,
+			loadedContent: string | ArrayBuffer,
+			isBinary = false,
+		) => {
+			flushSync(() => {
+				setIsFileLoading(true);
+			});
+
+			selectFile(file.id);
+
+			isViewerHandledRef.current = !!pluginRegistry.getViewerForFile(
+				file.name,
+				file.mimeType,
+			);
+
+			flushSync(() => {
+				setFileContent(loadedContent);
+				setFileName(file.name);
+				setMimeType(file.mimeType);
+				setIsBinaryFile(isBinary || isViewerHandledRef.current);
+				setLinkedDocumentId(file.documentId || null);
+				setCurrentFilePath(file.path);
+				setCurrentEditorContent(
+					typeof loadedContent === 'string' ? loadedContent : '',
+				);
+				setIsEditingFile(true);
+				setFileSelectionChange((prev) => prev + 1);
+			});
+
+			setIsFileLoading(false);
+
+			if (selectedDocId !== null) {
+				onSelectDocument('');
+			}
+
+			setOutputForFileName(file.name);
+			createTabForFile(file);
+		},
+		[
+			selectFile,
+			selectedDocId,
+			onSelectDocument,
+			setOutputForFileName,
+			createTabForFile,
+		],
+	);
+
+	const openFileByNode = useCallback(
+		async (file: FileNode, preserveView = false) => {
+			const loadedContent = await getFileContent(file.id);
+			if (!loadedContent) return;
+
+			lastOpenedFilePathRef.current = file.path;
+			lastOpenedDocIdRef.current = null;
+
+			if (!preserveView) {
+				setActiveView('files');
+				selectFileInExplorer(file);
+			}
+
+			await handleFileSelect(file, loadedContent, file.isBinary || false);
+		},
+		[getFileContent, selectFileInExplorer, handleFileSelect],
+	);
+
+	const openDocumentById = useCallback(
+		(docId: string, view: 'documents' | 'files', preserveView = false) => {
+			const document = documents.find((doc) => doc.id === docId);
+			if (!document) return;
+
+			lastOpenedDocIdRef.current = docId;
+			lastOpenedFilePathRef.current =
+				docToFileMapRef.current.get(docId)?.filePath ?? null;
+
+			if (!preserveView) {
+				setActiveView(view);
+			}
+
+			setIsEditingFile(false);
+			onSelectDocument(docId);
+			setDocumentSelectionChange((prev) => prev + 1);
+			createTabForDocument(docId, document);
+
+			const linkedFile = docToFileMapRef.current.get(docId);
+
+			if (linkedFile) {
+				setLinkedFileInfo(linkedFile);
+				setLinkedDocumentId(docId);
+				setOutputForFileName(linkedFile.fileName);
+
+				if (view === 'files' && !preserveView) {
+					selectFileInExplorer(linkedFile);
+				}
+			} else {
+				setLinkedFileInfo({});
+				setLinkedDocumentId(null);
+				setOutputForFileName(undefined);
+			}
+		},
+		[
+			documents,
+			onSelectDocument,
+			createTabForDocument,
+			setOutputForFileName,
+			selectFileInExplorer,
+		],
+	);
+
+	const handleLatexOutputExpand = useCallback(() => {
+		if (!showLatexOutput) {
+			setShowLatexOutput(true);
 		}
-	};
+		setTemporaryLatexExpand(true);
+	}, [showLatexOutput]);
 
-	const pushEditorRoute = (docId?: string, filePath?: string) => {
-		const currentFragment = parseUrlFragments(
-			window.location.hash.substring(1),
-		);
-		const newUrl = buildUrlWithFragments(
-			currentFragment.yjsUrl,
-			docId,
-			filePath,
-		);
-
-		window.location.hash = newUrl.startsWith('#') ? newUrl.slice(1) : newUrl;
-		updateProjectLastOpened(docId, filePath);
-	};
+	const handleTypstOutputExpand = useCallback(() => {
+		if (!showTypstOutput) {
+			setShowTypstOutput(true);
+		}
+		setTemporaryTypstExpand(true);
+	}, [showTypstOutput]);
 
 	const handleExportCurrentProject = async (projectId: string) => {
 		try {
@@ -797,11 +839,11 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		setShowOutline(
 			Boolean(
 				isTexFile ||
-					isTypFile ||
-					isDocumentLinkedToTex ||
-					isDocumentLinkedToTyp ||
-					hasLatexContent ||
-					hasTypstContent,
+				isTypFile ||
+				isDocumentLinkedToTex ||
+				isDocumentLinkedToTyp ||
+				hasLatexContent ||
+				hasTypstContent,
 			),
 		);
 	}, [isEditingFile, fileName, linkedFileInfo?.fileName, content]);
@@ -955,14 +997,6 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		}
 	};
 
-	const handleLatexOutputExpand = () => {
-		if (!showLatexOutput) {
-			setShowLatexOutput(true);
-		}
-
-		setTemporaryLatexExpand(true);
-	};
-
 	const handleTypstOutputWidthResize = (width: number) => {
 		setTypstOutputWidth(width);
 		setProperty('typst-output-width', width);
@@ -975,14 +1009,6 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		if (collapsed) {
 			setTemporaryTypstExpand(false);
 		}
-	};
-
-	const handleTypstOutputExpand = () => {
-		if (!showTypstOutput) {
-			setShowTypstOutput(true);
-		}
-
-		setTemporaryTypstExpand(true);
 	};
 
 	const handleToolbarToggle = (visible: boolean) => {

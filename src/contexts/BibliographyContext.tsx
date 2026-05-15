@@ -130,6 +130,20 @@ export interface BibliographyContextType {
 	importAllExternal: () => Promise<void>;
 	updateAllLocal: () => Promise<void>;
 }
+const getProjectId = (): string | undefined => {
+	const currentFragment = parseUrlFragments(window.location.hash.substring(1));
+	return currentFragment.yjsUrl ? currentFragment.yjsUrl.slice(4) : undefined;
+};
+
+const getPropertyId = (pluginId: string) => `${pluginId}-target-bib-file`;
+
+const getFilterPropertyId = (pluginId: string, key: string) =>
+	`${pluginId}-filter-${key}`;
+
+const getScopeOptions = (projectId?: string) =>
+	projectId
+		? { scope: 'project' as const, projectId }
+		: { scope: 'global' as const };
 
 export const BibliographyContext =
 	createContext<BibliographyContextType | null>(null);
@@ -215,22 +229,6 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 
 	const parser = bibliographyImportService.getParser();
 
-	const getProjectId = (): string | undefined => {
-		const currentFragment = parseUrlFragments(
-			window.location.hash.substring(1),
-		);
-		return currentFragment.yjsUrl ? currentFragment.yjsUrl.slice(4) : undefined;
-	};
-
-	const getPropertyId = (pluginId: string) => `${pluginId}-target-bib-file`;
-	const getFilterPropertyId = (pluginId: string, key: string) =>
-		`${pluginId}-filter-${key}`;
-
-	const getScopeOptions = (projectId?: string) =>
-		projectId
-			? { scope: 'project' as const, projectId }
-			: { scope: 'global' as const };
-
 	const getTargetFile = useCallback(
 		(pluginId: string, projectId?: string): string | null => {
 			if (selectedBibFile) return selectedBibFile;
@@ -251,14 +249,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 
 			return val;
 		},
-		[
-			getProperty,
-			setProperty,
-			availableBibFiles,
-			selectedBibFile,
-			getScopeOptions,
-			getPropertyId,
-		],
+		[getProperty, setProperty, availableBibFiles, selectedBibFile],
 	);
 
 	const setTargetFileProperty = useCallback(
@@ -266,7 +257,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 			const propertyId = getPropertyId(pluginId);
 			setProperty(propertyId, filePath, getScopeOptions(projectId));
 		},
-		[setProperty, getPropertyId, getScopeOptions],
+		[setProperty],
 	);
 
 	const loadFilterState = useCallback(
@@ -284,7 +275,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 			setSelectedCollection(get('selectedCollection') || 'all');
 			setShowToolbar(get('showToolbar') === 'true');
 		},
-		[getProperty, getFilterPropertyId, getScopeOptions, getProjectId],
+		[getProperty],
 	);
 
 	const saveFilterProperty = useCallback(
@@ -295,7 +286,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 				getScopeOptions(getProjectId()),
 			);
 		},
-		[setProperty, getScopeOptions, getProjectId, getFilterPropertyId],
+		[setProperty],
 	);
 
 	const handleSetSortField = useCallback(
@@ -903,7 +894,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 		if (saved && availableBibFiles.some((f) => f.path === saved)) {
 			setTargetBibFile(saved);
 		}
-	}, [currentProvider, availableBibFiles, getTargetFile, getProjectId]);
+	}, [currentProvider, availableBibFiles, getTargetFile]);
 
 	useEffect(() => {
 		if (selectedProvider === 'local') {
