@@ -295,10 +295,10 @@ embed {
 
 .pdf-options-toggle {
 	line-height: 1;
-	height: auto !important;
+	height: auto;
 	align-self: stretch;
 	box-sizing: border-box;
-	margin-bottom: 1rem !important;
+	margin-bottom: 1rem;
 }
 
 .pdf-options-toggle:hover:not(:disabled) {
@@ -379,7 +379,7 @@ embed {
 	cursor: not-allowed;
 }
 
-.dropdown-section+.dropdown-section {
+.dropdown-section + .dropdown-section {
 	margin-top: var(--space-sm);
 	padding-top: var(--space-sm);
 }

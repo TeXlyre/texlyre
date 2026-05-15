@@ -166,9 +166,9 @@
 }
 
 .editor-main-container {
-	height: 100% !important;
-	overflow: hidden !important;
-	display: flex !important;
+	height: 100%;
+	overflow: hidden;
+	display: flex;
 }
 
 .temp-file-icon {

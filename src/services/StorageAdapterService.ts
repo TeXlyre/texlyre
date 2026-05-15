@@ -16,7 +16,7 @@ export interface FileSystemAdapter {
 }
 
 export class DirectoryAdapter implements FileSystemAdapter {
-	constructor(private rootHandle: FileSystemDirectoryHandle) { }
+	constructor(private rootHandle: FileSystemDirectoryHandle) {}
 
 	async writeFile(
 		path: string,
@@ -210,20 +210,32 @@ export class StorageAdapterService {
 		const paths = this.unifiedService.getPaths();
 
 		// Write manifest
-		await adapter.writeFile(paths.MANIFEST, JSON.stringify(data.manifest, null, 2));
+		await adapter.writeFile(
+			paths.MANIFEST,
+			JSON.stringify(data.manifest, null, 2),
+		);
 
 		// Write account if exists
 		if (data.account) {
-			await adapter.writeFile(paths.ACCOUNT, JSON.stringify(data.account, null, 2));
+			await adapter.writeFile(
+				paths.ACCOUNT,
+				JSON.stringify(data.account, null, 2),
+			);
 		}
 
 		// Write userData if exists
 		if (data.userData) {
-			await adapter.writeFile('userdata.json', JSON.stringify(data.userData, null, 2));
+			await adapter.writeFile(
+				'userdata.json',
+				JSON.stringify(data.userData, null, 2),
+			);
 		}
 
 		// Write projects
-		await adapter.writeFile(paths.PROJECTS, JSON.stringify(data.projects, null, 2));
+		await adapter.writeFile(
+			paths.PROJECTS,
+			JSON.stringify(data.projects, null, 2),
+		);
 
 		// Write project data
 		for (const [projectId, projectData] of data.projectData) {
@@ -231,9 +243,7 @@ export class StorageAdapterService {
 		}
 	}
 
-	async readUnifiedStructure(
-		adapter: FileSystemAdapter,
-	): Promise<{
+	async readUnifiedStructure(adapter: FileSystemAdapter): Promise<{
 		manifest: any;
 		account: any;
 		userData?: any;
@@ -367,8 +377,13 @@ export class StorageAdapterService {
 			const content = projectData.fileContents.get(file.path);
 			if (!content) continue;
 
-			const cleanPath = file.path.startsWith('/') ? file.path.slice(1) : file.path;
-			const filePath = this.unifiedService.getFileContentPath(projectId, cleanPath);
+			const cleanPath = file.path.startsWith('/')
+				? file.path.slice(1)
+				: file.path;
+			const filePath = this.unifiedService.getFileContentPath(
+				projectId,
+				cleanPath,
+			);
 			const dirPath = filePath.substring(0, filePath.lastIndexOf('/'));
 
 			if (dirPath && dirPath !== this.unifiedService.getFilesPath(projectId)) {
@@ -457,7 +472,7 @@ export class StorageAdapterService {
 				if (contents.some((name) => name.endsWith('.yjs'))) {
 					return path;
 				}
-			} catch { }
+			} catch {}
 		}
 
 		return null;
@@ -509,7 +524,9 @@ export class StorageAdapterService {
 
 				for (const file of filesMetadata) {
 					if (file.type === 'file') {
-						const cleanPath = file.path.startsWith('/') ? file.path.slice(1) : file.path;
+						const cleanPath = file.path.startsWith('/')
+							? file.path.slice(1)
+							: file.path;
 						const contentPath = this.unifiedService.getFileContentPath(
 							projectId,
 							cleanPath,

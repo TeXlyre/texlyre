@@ -58,7 +58,7 @@
 .zoom-dropdown {
 	min-width: 70px;
 	text-align: center;
-	padding: 0 var(--space-xl) !important;
+	padding: 0 var(--space-xl);
 	margin-bottom: 0;
 	border: 1px solid var(--accent-border, #444);
 	border-radius: 4px;
@@ -161,7 +161,6 @@
 }
 
 @media (prefers-contrast: high) {
-
 	.page-input-group {
 		border-width: 2px;
 	}

@@ -7,7 +7,12 @@ import type { BibliographyPanelProps } from '@/plugins/PluginInterface';
 import { useSecrets } from '@/hooks/useSecrets';
 import { useProperties } from '@/hooks/useProperties';
 import { useBibliography } from '@/hooks/useBibliography';
-import { GitBranchIcon, DisconnectIcon, ImportIcon, UpdateIcon } from '@/components/common/Icons';
+import {
+	GitBranchIcon,
+	DisconnectIcon,
+	ImportIcon,
+	UpdateIcon,
+} from '@/components/common/Icons';
 import { zoteroService } from './ZoteroService';
 import ZoteroConnectionModal from './ZoteroConnectionModal';
 
@@ -24,8 +29,13 @@ const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
 		handleRefresh,
 	} = useBibliography();
 	const [showModal, setShowModal] = useState(false);
-	const [existingCredentials, setExistingCredentials] = useState<{ apiKey: string; userId: string } | null>(null);
-	const [connectionStatus, setConnectionStatus] = useState(zoteroService.getConnectionStatus());
+	const [existingCredentials, setExistingCredentials] = useState<{
+		apiKey: string;
+		userId: string;
+	} | null>(null);
+	const [connectionStatus, setConnectionStatus] = useState(
+		zoteroService.getConnectionStatus(),
+	);
 
 	useEffect(() => {
 		zoteroService.setSecretsContext(secrets);
@@ -81,28 +91,37 @@ const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
 		setExistingCredentials(null);
 	};
 
-	const hasUpdatable = localEntries.some(e =>
-		externalEntries.some(ext => (ext.remoteId && ext.remoteId === e.remoteId) || ext.key === e.key)
+	const hasUpdatable = localEntries.some((e) =>
+		externalEntries.some(
+			(ext) =>
+				(ext.remoteId && ext.remoteId === e.remoteId) || ext.key === e.key,
+		),
 	);
-	const hasImportable = externalEntries.some(e => !e.isImported);
+	const hasImportable = externalEntries.some((e) => !e.isImported);
 
 	return (
 		<div className={`zotero-panel ${className}`}>
-			<div className="zotero-connection-info">
+			<div className='zotero-connection-info'>
 				{connectionStatus === 'disconnected' && (
-					<div className="zotero-not-connected">
-						<p>{t('Connect to your Zotero library to access your bibliography.')}</p>
-						<div className="backup-toolbar">
-							<div className="primary-actions">
-								<button className="button primary" onClick={() => setShowModal(true)}>
+					<div className='zotero-not-connected'>
+						<p>
+							{t('Connect to your Zotero library to access your bibliography.')}
+						</p>
+						<div className='backup-toolbar'>
+							<div className='primary-actions'>
+								<button
+									className='button primary'
+									onClick={() => setShowModal(true)}
+								>
 									{t('Connect to Zotero')}
 								</button>
 							</div>
-							<div className="secondary-actions">
+							<div className='secondary-actions'>
 								<button
-									className="button secondary icon-only"
+									className='button secondary icon-only'
 									onClick={handleDisconnect}
-									title={t('Disconnect (deletes API key)')}>
+									title={t('Disconnect (deletes API key)')}
+								>
 									<DisconnectIcon />
 								</button>
 							</div>
@@ -111,36 +130,40 @@ const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
 				)}
 
 				{connectionStatus === 'connected' && (
-					<div className="zotero-connected">
-						<div className="backup-toolbar">
-							<div className="primary-actions">
+					<div className='zotero-connected'>
+						<div className='backup-toolbar'>
+							<div className='primary-actions'>
 								<button
-									className="button secondary"
+									className='button secondary'
 									onClick={updateAllLocal}
 									disabled={isBulkOperating || !hasUpdatable}
-									title={t('Update all local entries from Zotero')}>
+									title={t('Update all local entries from Zotero')}
+								>
 									<UpdateIcon />
 									{t('Update')}
 								</button>
 								<button
-									className="button secondary icon-only"
+									className='button secondary icon-only'
 									onClick={importAllExternal}
 									disabled={isBulkOperating || !targetBibFile || !hasImportable}
-									title={t('Import all unimported Zotero entries')}>
+									title={t('Import all unimported Zotero entries')}
+								>
 									<ImportIcon />
 								</button>
 							</div>
-							<div className="secondary-actions">
+							<div className='secondary-actions'>
 								<button
-									className="button secondary icon-only"
+									className='button secondary icon-only'
 									onClick={() => setShowModal(true)}
-									title={t('Change library')}>
+									title={t('Change library')}
+								>
 									<GitBranchIcon />
 								</button>
 								<button
-									className="button secondary icon-only"
+									className='button secondary icon-only'
 									onClick={handleDisconnect}
-									title={t('Disconnect (deletes API key)')}>
+									title={t('Disconnect (deletes API key)')}
+								>
 									<DisconnectIcon />
 								</button>
 							</div>
@@ -149,25 +172,31 @@ const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
 				)}
 
 				{connectionStatus === 'connecting' && (
-					<div className="zotero-connecting">
+					<div className='zotero-connecting'>
 						<p>{t('Connecting to Zotero...')}</p>
 					</div>
 				)}
 
 				{connectionStatus === 'error' && (
-					<div className="zotero-error">
-						<p className="error-message">{t('Failed to connect to Zotero. Please check your credentials.')}</p>
-						<div className="backup-toolbar">
-							<div className="primary-actions">
-								<button className="button primary" onClick={() => setShowModal(true)}>
+					<div className='zotero-error'>
+						<p className='error-message'>
+							{t('Failed to connect to Zotero. Please check your credentials.')}
+						</p>
+						<div className='backup-toolbar'>
+							<div className='primary-actions'>
+								<button
+									className='button primary'
+									onClick={() => setShowModal(true)}
+								>
 									{t('Reconnect')}
 								</button>
 							</div>
-							<div className="secondary-actions">
+							<div className='secondary-actions'>
 								<button
-									className="button secondary icon-only"
+									className='button secondary icon-only'
 									onClick={handleDisconnect}
-									title={t('Disconnect (deletes API key)')}>
+									title={t('Disconnect (deletes API key)')}
+								>
 									<DisconnectIcon />
 								</button>
 							</div>

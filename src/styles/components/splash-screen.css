@@ -1,87 +1,90 @@
 .splash-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: #1a1a1a; /* Start with dark background to avoid flash */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  opacity: 1;
-  transition: background-color 0.3s ease-out, opacity 0.3s ease-out;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background: #1a1a1a; /* Start with dark background to avoid flash */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 9999;
+	opacity: 1;
+	transition:
+		background-color 0.3s ease-out,
+		opacity 0.3s ease-out;
 }
 
 /* Once theme is loaded, apply the proper background */
 .splash-screen.theme-loaded {
-  background: var(--pico-background);
+	background: var(--pico-background);
 }
 
 .splash-content {
-  text-align: center;
-  animation: splash-fade-in 0.6s ease-out;
+	text-align: center;
+	animation: splash-fade-in 0.6s ease-out;
 }
 
 .splash-logo {
-  margin-bottom: 1rem;
-  animation: splash-logo-pulse 2s ease-in-out infinite;
+	margin-bottom: 1rem;
+	animation: splash-logo-pulse 2s ease-in-out infinite;
 }
 
 .splash-logo img {
-  width: 80px;
-  height: 80px;
+	width: 80px;
+	height: 80px;
 }
 
 .splash-title {
-  font-size: 2.5rem;
-  font-weight: 300;
-  color: #ffffff; /* Start with white text */
-  margin: 1rem 0 2rem 0;
-  letter-spacing: 0.1em;
-  transition: color 0.3s ease-out;
+	font-size: 2.5rem;
+	font-weight: 300;
+	color: #ffffff; /* Start with white text */
+	margin: 1rem 0 2rem 0;
+	letter-spacing: 0.1em;
+	transition: color 0.3s ease-out;
 }
 
 /* Once theme is loaded, apply the proper text color */
 .splash-screen.theme-loaded .splash-title {
-  color: var(--text-color);
+	color: var(--text-color);
 }
 
 .splash-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1rem;
 }
 
 .splash-loading p {
-  color: #b0b0b0; /* Start with light gray */
-  font-size: 0.9rem;
-  margin: 0;
-  transition: color 0.3s ease-out;
+	color: #b0b0b0; /* Start with light gray */
+	font-size: 0.9rem;
+	margin: 0;
+	transition: color 0.3s ease-out;
 }
 
 /* Once theme is loaded, apply the proper secondary text color */
 .splash-screen.theme-loaded .splash-loading p {
-  color: var(--pico-secondary);
+	color: var(--pico-secondary);
 }
 
 @keyframes splash-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 @keyframes splash-logo-pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
+	0%,
+	100% {
+		transform: scale(1);
+	}
+	50% {
+		transform: scale(1.05);
+	}
 }

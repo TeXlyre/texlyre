@@ -372,7 +372,7 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 	});
 
 	const handleFilterClick = (type: 'error' | 'warning') => {
-		setFilter((current) => current === type ? 'all' : type);
+		setFilter((current) => (current === type ? 'all' : type));
 	};
 
 	const handleErrorClick = (error: ParsedError) => {
@@ -395,104 +395,119 @@ const LaTeXVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 	};
 
 	const tooltipInfo = [
-		t('Total errors: {count}', { count: parsedErrors.filter((e) => e.type === 'error').length }),
-		t('Total warnings: {count}', { count: parsedErrors.filter((e) => e.type === 'warning').length }),
+		t('Total errors: {count}', {
+			count: parsedErrors.filter((e) => e.type === 'error').length,
+		}),
+		t('Total warnings: {count}', {
+			count: parsedErrors.filter((e) => e.type === 'warning').length,
+		}),
 		t('Log size: {size}', { size: log ? formatFileSize(log.length) : 'Empty' }),
-		t('Click error items to navigate to line')
+		t('Click error items to navigate to line'),
 	];
 
-	const headerControls =
-		<div className="error-stats">
+	const headerControls = (
+		<div className='error-stats'>
 			<span
 				className={`error-count ${filter === 'error' ? 'active' : ''}`}
 				onClick={() => handleFilterClick('error')}
-				title={t('Click to filter errors')}>
-
+				title={t('Click to filter errors')}
+			>
 				{getErrorTypeIcon('error')}{' '}
 				{parsedErrors.filter((e) => e.type === 'error').length}
 			</span>
 			<span
 				className={`warning-count ${filter === 'warning' ? 'active' : ''}`}
 				onClick={() => handleFilterClick('warning')}
-				title={t('Click to filter warnings')}>
-
+				title={t('Click to filter warnings')}
+			>
 				{getErrorTypeIcon('warning')}{' '}
 				{parsedErrors.filter((e) => e.type === 'warning').length}
 			</span>
-		</div>;
-
+		</div>
+	);
 
 	return (
-		<div className="latex-visualizer">
+		<div className='latex-visualizer'>
 			<PluginHeader
 				fileName={t('LaTeX Log')}
 				filePath={t('LaTeX Compilation Output')}
 				pluginName={PLUGIN_NAME}
 				pluginVersion={PLUGIN_VERSION}
 				tooltipInfo={tooltipInfo}
-				controls={headerControls} />
+				controls={headerControls}
+			/>
 
-
-			<div className="latex-visualizer-content">
-				{filteredErrors.length === 0 ?
-					<div className="no-errors">
-						<div className="success-icon">✅</div>
+			<div className='latex-visualizer-content'>
+				{filteredErrors.length === 0 ? (
+					<div className='no-errors'>
+						<div className='success-icon'>✅</div>
 						<div>
-							{parsedErrors.length === 0 ?
-								t('No errors or warnings found.') :
-								t('No {filter} found.', { filter })}
+							{parsedErrors.length === 0
+								? t('No errors or warnings found.')
+								: t('No {filter} found.', { filter })}
 						</div>
-						<div className="success-subtitle">
-							{parsedErrors.length === 0 ?
-								t('Compilation appears successful!') :
-								t('Showing {filter} items only.', { filter })}
+						<div className='success-subtitle'>
+							{parsedErrors.length === 0
+								? t('Compilation appears successful!')
+								: t('Showing {filter} items only.', { filter })}
 						</div>
-					</div> :
-
-					<ul className="error-list">
-						{filteredErrors.map((error, index) =>
+					</div>
+				) : (
+					<ul className='error-list'>
+						{filteredErrors.map((error, index) => (
 							<li
 								key={index}
 								className={`error-item ${error.type} ${error.line ? 'clickable' : ''}`}
 								onClick={() => handleErrorClick(error)}
 								title={
-									error.line ? t('Click to go to line {errorLine}', { errorLine: error.line }) : undefined
-								}>
-
-								<div className="error-header">
-									<span className="error-type-badge">
-										<span className="error-icon">
+									error.line
+										? t('Click to go to line {errorLine}', {
+												errorLine: error.line,
+											})
+										: undefined
+								}
+							>
+								<div className='error-header'>
+									<span className='error-type-badge'>
+										<span className='error-icon'>
 											{getErrorTypeIcon(error.type)}
 										</span>
-										<span className="error-type-text">{t(error.type)}</span>
+										<span className='error-type-text'>{t(error.type)}</span>
 									</span>
-									<div className="error-location">
-										{error.file &&
+									<div className='error-location'>
+										{error.file && (
 											<span
-												className="error-file"
-												title={t('File: {errorFile}', { errorFile: error.file })}>{t('\uD83D\uDCC4')}
+												className='error-file'
+												title={t('File: {errorFile}', {
+													errorFile: error.file,
+												})}
+											>
+												{t('\uD83D\uDCC4')}
 
 												{error.file}
 											</span>
-										}
-										{error.line &&
-											<span className="error-line">{t('Line')}{error.line}</span>
-										}
+										)}
+										{error.line && (
+											<span className='error-line'>
+												{t('Line')}
+												{error.line}
+											</span>
+										)}
 									</div>
 								</div>
-								<div className="latex-error-message">
+								<div className='latex-error-message'>
 									{error.fullMessage || error.message}
 								</div>
-								{error.lineContent &&
-									<pre className="error-context">{error.lineContent}</pre>
-								}
+								{error.lineContent && (
+									<pre className='error-context'>{error.lineContent}</pre>
+								)}
 							</li>
-						)}
+						))}
 					</ul>
-				}
+				)}
 			</div>
-		</div>);
-
+		</div>
+	);
 };
 
 export default LaTeXVisualizer;

@@ -45,14 +45,14 @@
 	font-family: monospace;
 	font-size: 0.85rem;
 	box-sizing: border-box;
-	height: auto !important;
+	height: auto;
 }
 
 .share-url-input,
 .share-url-input-group button.secondary.icon-only,
 .share-url-input-group button.primary.smaller,
 .share-url-input-group button.danger.smaller {
-	height: 100% !important;
+	height: 100%;
 	box-sizing: border-box;
 }
 
@@ -135,7 +135,7 @@
 	border-bottom-left-radius: var(--radius-sm);
 	padding-left: var(--space-xs);
 	padding-right: var(--space-xs);
-	top: 0 !important;
+	top: 0;
 }
 
 .share-button-group .dropdown-toggle {

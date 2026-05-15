@@ -1,10 +1,8 @@
-/// <reference lib="webworker" />
-export { };
 import { createTypstCompiler } from '@myriaddreamin/typst.ts/compiler';
 import { createTypstRenderer } from '@myriaddreamin/typst.ts/renderer';
 import { TypstSnippet } from '@myriaddreamin/typst.ts/dist/esm/contrib/snippet.mjs';
 
-import { TypstOutputFormat } from '../../types/typst';
+import type { TypstOutputFormat } from '../../types/typst';
 import { sanitizeSvg } from '../../utils/svgSanitizer';
 
 const BASE_PATH = __BASE_PATH__;
@@ -14,50 +12,50 @@ declare const self: DedicatedWorkerGlobalScope;
 type OutputFormat = TypstOutputFormat;
 
 type CompileMessage = {
-    id: string;
-    type: 'compile';
-    payload: {
-        mainFilePath: string;
-        sources: Record<string, string | Uint8Array>;
-        format: OutputFormat;
-        pdfOptions?: {
-            pdfStandard?: string;
-            pdfTags?: boolean;
-            creationTimestamp?: number;
-        };
-        options?: {
-            allowRemoteUrls?: boolean;
-        };
-    };
+	id: string;
+	type: 'compile';
+	payload: {
+		mainFilePath: string;
+		sources: Record<string, string | Uint8Array>;
+		format: OutputFormat;
+		pdfOptions?: {
+			pdfStandard?: string;
+			pdfTags?: boolean;
+			creationTimestamp?: number;
+		};
+		options?: {
+			allowRemoteUrls?: boolean;
+		};
+	};
 };
 
 type PingMessage = {
-    id: string;
-    type: 'ping';
+	id: string;
+	type: 'ping';
 };
 
 type InboundMessage = CompileMessage | PingMessage;
 
 type DoneResponse = {
-    id: string;
-    type: 'done';
-    result: {
-        format: OutputFormat;
-        output: Uint8Array | string;
-        diagnostics?: any[];
-        pageInfos?: any[];
-    };
+	id: string;
+	type: 'done';
+	result: {
+		format: OutputFormat;
+		output: Uint8Array | string;
+		diagnostics?: any[];
+		pageInfos?: any[];
+	};
 };
 
 type PongResponse = {
-    id: string;
-    type: 'pong';
+	id: string;
+	type: 'pong';
 };
 
 type ErrorResponse = {
-    id: string;
-    type: 'error';
-    error: string;
+	id: string;
+	type: 'error';
+	error: string;
 };
 
 let compiler: any = null;
@@ -65,224 +63,229 @@ let renderer: any = null;
 let initialized = false;
 
 const defaultFonts = [
-    'DejaVuSansMono-Bold.ttf',
-    'DejaVuSansMono-BoldOblique.ttf',
-    'DejaVuSansMono-Oblique.ttf',
-    'DejaVuSansMono.ttf',
-    'LibertinusSerif-Bold.otf',
-    'LibertinusSerif-BoldItalic.otf',
-    'LibertinusSerif-Italic.otf',
-    'LibertinusSerif-Regular.otf',
-    'LibertinusSerif-Semibold.otf',
-    'LibertinusSerif-SemiboldItalic.otf',
-    'NewCM10-Bold.otf',
-    'NewCM10-BoldItalic.otf',
-    'NewCM10-Italic.otf',
-    'NewCM10-Regular.otf',
-    'NewCMMath-Bold.otf',
-    'NewCMMath-Book.otf',
-    'NewCMMath-Regular.otf',
+	'DejaVuSansMono-Bold.ttf',
+	'DejaVuSansMono-BoldOblique.ttf',
+	'DejaVuSansMono-Oblique.ttf',
+	'DejaVuSansMono.ttf',
+	'LibertinusSerif-Bold.otf',
+	'LibertinusSerif-BoldItalic.otf',
+	'LibertinusSerif-Italic.otf',
+	'LibertinusSerif-Regular.otf',
+	'LibertinusSerif-Semibold.otf',
+	'LibertinusSerif-SemiboldItalic.otf',
+	'NewCM10-Bold.otf',
+	'NewCM10-BoldItalic.otf',
+	'NewCM10-Italic.otf',
+	'NewCM10-Regular.otf',
+	'NewCMMath-Bold.otf',
+	'NewCMMath-Book.otf',
+	'NewCMMath-Regular.otf',
 ];
 
 async function loadFonts(baseUrl: string = `${BASE_PATH}/assets/fonts`) {
-    const fontPaths: string[] = [];
+	const fontPaths: string[] = [];
 
-    try {
-        const indexResponse = await fetch(`${baseUrl}/fonts.json`);
-        if (indexResponse.ok) {
-            const fontList = await indexResponse.json();
-            fontPaths.push(...fontList.map((font: string) => `${baseUrl}/${font}`));
-        }
-    } catch {
-        console.warn('fonts.json not found, using default font list');
-        fontPaths.push(...defaultFonts.map(font => `${baseUrl}/${font}`));
-    }
+	try {
+		const indexResponse = await fetch(`${baseUrl}/fonts.json`);
+		if (indexResponse.ok) {
+			const fontList = await indexResponse.json();
+			fontPaths.push(...fontList.map((font: string) => `${baseUrl}/${font}`));
+		}
+	} catch {
+		console.warn('fonts.json not found, using default font list');
+		fontPaths.push(...defaultFonts.map((font) => `${baseUrl}/${font}`));
+	}
 
-    const fontPromises = fontPaths.map(async (path) => {
-        try {
-            const response = await fetch(path);
-            if (!response.ok) {
-                console.warn(`Failed to fetch font: ${path}`);
-                return null;
-            }
-            const buffer = await response.arrayBuffer();
-            return new Uint8Array(buffer);
-        } catch (error) {
-            console.warn(`Error loading font ${path}:`, error);
-            return null;
-        }
-    });
-    const fonts = await Promise.all(fontPromises);
-    return fonts.filter((f) => f !== null) as Uint8Array[];
+	const fontPromises = fontPaths.map(async (path) => {
+		try {
+			const response = await fetch(path);
+			if (!response.ok) {
+				console.warn(`Failed to fetch font: ${path}`);
+				return null;
+			}
+			const buffer = await response.arrayBuffer();
+			return new Uint8Array(buffer);
+		} catch (error) {
+			console.warn(`Error loading font ${path}:`, error);
+			return null;
+		}
+	});
+	const fonts = await Promise.all(fontPromises);
+	return fonts.filter((f) => f !== null) as Uint8Array[];
 }
 
 async function retrievePageInfos(artifact: Uint8Array): Promise<any[]> {
-    let pageInfos: any[] = [];
-    await renderer.runWithSession(async (session: any) => {
-        await renderer.manipulateData({
-            renderSession: session,
-            action: 'reset',
-            data: artifact,
-        });
-        try {
-            pageInfos = session.retrievePagesInfo() ?? [];
-        } catch {
-            pageInfos = [];
-        }
-    });
-    return pageInfos;
+	let pageInfos: any[] = [];
+	await renderer.runWithSession(async (session: any) => {
+		await renderer.manipulateData({
+			renderSession: session,
+			action: 'reset',
+			data: artifact,
+		});
+		try {
+			pageInfos = session.retrievePagesInfo() ?? [];
+		} catch {
+			pageInfos = [];
+		}
+	});
+	return pageInfos;
 }
 
 async function ensureInit() {
-    if (initialized) return;
+	if (initialized) return;
 
-    const fonts = await loadFonts();
-    const packageRegistry = TypstSnippet.fetchPackageRegistry();
+	const fonts = await loadFonts();
+	const packageRegistry = TypstSnippet.fetchPackageRegistry();
 
-    compiler = createTypstCompiler();
+	compiler = createTypstCompiler();
 
-    // TODO (fabawi): this is hard-coded for now. **NOT NEEDED ANYMORE**
-    // Need to add mechanism for re-initializing when pdf options change
-    // compiler.setPdfOpts({
-    //     pdf_standard: '"2.0"',
-    //     pdf_tags: false,
-    //     creation_timestamp: Math.floor(Date.now() / 1000)
-    // });
+	// TODO (fabawi): this is hard-coded for now. **NOT NEEDED ANYMORE**
+	// Need to add mechanism for re-initializing when pdf options change
+	// compiler.setPdfOpts({
+	//     pdf_standard: '"2.0"',
+	//     pdf_tags: false,
+	//     creation_timestamp: Math.floor(Date.now() / 1000)
+	// });
 
-    await compiler.init({
-        getModule: () => `${BASE_PATH}/core/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm`,
-        beforeBuild: [
-            ...packageRegistry.provides,
-            async (_: any, { builder }: any) => {
-                for (const font of fonts) {
-                    await builder.add_raw_font(font);
-                }
-            }
-        ],
-    });
+	await compiler.init({
+		getModule: () =>
+			`${BASE_PATH}/core/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm`,
+		beforeBuild: [
+			...packageRegistry.provides,
+			async (_: any, { builder }: any) => {
+				for (const font of fonts) {
+					await builder.add_raw_font(font);
+				}
+			},
+		],
+	});
 
-    renderer = createTypstRenderer();
-    await renderer.init({
-        getModule: () => `${BASE_PATH}/core/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm`,
-        beforeBuild: [
-            async (_: any, { builder }: any) => {
-                for (const font of fonts) {
-                    await builder.add_raw_font(font);
-                }
-            }
-        ],
-    });
+	renderer = createTypstRenderer();
+	await renderer.init({
+		getModule: () =>
+			`${BASE_PATH}/core/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm`,
+		beforeBuild: [
+			async (_: any, { builder }: any) => {
+				for (const font of fonts) {
+					await builder.add_raw_font(font);
+				}
+			},
+		],
+	});
 
-    initialized = true;
+	initialized = true;
 }
 
 function getFormatArg(format: string): number {
-    switch (format) {
-        case 'vector':
-            return 0;
-        case 'pdf':
-            return 1;
-        default:
-            throw new Error(`Unsupported format: ${format}`);
-    }
+	switch (format) {
+		case 'vector':
+			return 0;
+		case 'pdf':
+			return 1;
+		default:
+			throw new Error(`Unsupported format: ${format}`);
+	}
 }
 
 self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
-    const data = e.data;
-    const { id, type } = data;
-    try {
-        if (type === 'ping') {
-            const resp: PongResponse = { id, type: 'pong' };
-            self.postMessage(resp);
-            return;
-        }
-        await ensureInit();
+	const data = e.data;
+	const { id, type } = data;
+	try {
+		if (type === 'ping') {
+			const resp: PongResponse = { id, type: 'pong' };
+			self.postMessage(resp);
+			return;
+		}
+		await ensureInit();
 
-        const { payload } = data as CompileMessage;
-        const { mainFilePath, sources, format, pdfOptions, options } = payload;
-        const allowRemoteUrls = options?.allowRemoteUrls !== false;
+		const { payload } = data as CompileMessage;
+		const { mainFilePath, sources, format, pdfOptions, options } = payload;
+		const allowRemoteUrls = options?.allowRemoteUrls !== false;
 
-        compiler.resetShadow();
-        for (const [path, content] of Object.entries(sources)) {
-            const absolutePath = path.startsWith('/') ? path : `/${path}`;
-            if (typeof content === 'string') {
-                compiler.addSource(absolutePath, content);
-            } else {
-                compiler.mapShadow(absolutePath, content);
-            }
-        }
-        const absoluteMainPath =
-            mainFilePath.startsWith('/') ? mainFilePath : `/${mainFilePath}`;
-        let output: Uint8Array | string;
-        let diagnostics: any[] = [];
+		compiler.resetShadow();
+		for (const [path, content] of Object.entries(sources)) {
+			const absolutePath = path.startsWith('/') ? path : `/${path}`;
+			if (typeof content === 'string') {
+				compiler.addSource(absolutePath, content);
+			} else {
+				compiler.mapShadow(absolutePath, content);
+			}
+		}
+		const absoluteMainPath = mainFilePath.startsWith('/')
+			? mainFilePath
+			: `/${mainFilePath}`;
+		let output: Uint8Array | string;
+		let diagnostics: any[] = [];
 
-        if (format === 'pdf' || format === 'canvas-pdf') {
-            const pdfStandard = pdfOptions?.pdfStandard || '"1.7"';
-            const pdfTags = pdfOptions?.pdfTags !== undefined ? pdfOptions.pdfTags : true;
-            const creationTimestamp = pdfOptions?.creationTimestamp || Math.floor(Date.now() / 1000);
+		if (format === 'pdf' || format === 'canvas-pdf') {
+			const pdfStandard = pdfOptions?.pdfStandard || '"1.7"';
+			const pdfTags =
+				pdfOptions?.pdfTags !== undefined ? pdfOptions.pdfTags : true;
+			const creationTimestamp =
+				pdfOptions?.creationTimestamp || Math.floor(Date.now() / 1000);
 
-            compiler.setPdfOptsForNextCompile({
-                pdf_standard: pdfStandard,
-                pdf_tags: pdfTags,
-                creation_timestamp: creationTimestamp
-            });
+			compiler.setPdfOptsForNextCompile({
+				pdf_standard: pdfStandard,
+				pdf_tags: pdfTags,
+				creation_timestamp: creationTimestamp,
+			});
 
-            const compileResult = await compiler.compile({
-                mainFilePath: absoluteMainPath,
-                format: getFormatArg('pdf'),
-            });
-            output = compileResult.result as Uint8Array;
-            diagnostics = compileResult.diagnostics || [];
-        } else {
-            const compileResult = await compiler.compile({
-                mainFilePath: absoluteMainPath,
-                format: 'vector',
-            });
-            diagnostics = compileResult.diagnostics || [];
+			const compileResult = await compiler.compile({
+				mainFilePath: absoluteMainPath,
+				format: getFormatArg('pdf'),
+			});
+			output = compileResult.result as Uint8Array;
+			diagnostics = compileResult.diagnostics || [];
+		} else {
+			const compileResult = await compiler.compile({
+				mainFilePath: absoluteMainPath,
+				format: 'vector',
+			});
+			diagnostics = compileResult.diagnostics || [];
 
-            if (!compileResult.result || compileResult.result.byteLength === 0) {
-                const resp: DoneResponse = {
-                    id,
-                    type: 'done',
-                    result: { format, output: new Uint8Array(0), diagnostics },
-                };
-                self.postMessage(resp);
-                return;
-            }
+			if (!compileResult.result || compileResult.result.byteLength === 0) {
+				const resp: DoneResponse = {
+					id,
+					type: 'done',
+					result: { format, output: new Uint8Array(0), diagnostics },
+				};
+				self.postMessage(resp);
+				return;
+			}
 
-            const rawSvg = await renderer.renderSvg({
-                artifactContent: compileResult.result,
-            });
+			const rawSvg = await renderer.renderSvg({
+				artifactContent: compileResult.result,
+			});
 
-            output = sanitizeSvg(String(rawSvg), {
-                baseUrl: self.location.href,
-                allowRemoteUrls,
-            });
-            const pageInfos = await retrievePageInfos(compileResult.result);
+			output = sanitizeSvg(String(rawSvg), {
+				baseUrl: self.location.href,
+				allowRemoteUrls,
+			});
+			const pageInfos = await retrievePageInfos(compileResult.result);
 
-            const resp: DoneResponse = {
-                id,
-                type: 'done',
-                result: { format, output, diagnostics, pageInfos },
-            };
-            self.postMessage(resp);
-            return;
-        }
+			const resp: DoneResponse = {
+				id,
+				type: 'done',
+				result: { format, output, diagnostics, pageInfos },
+			};
+			self.postMessage(resp);
+			return;
+		}
 
-        const transferList: Transferable[] =
-            output instanceof Uint8Array ? [output.buffer as ArrayBuffer] : [];
-        const resp: DoneResponse = {
-            id,
-            type: 'done',
-            result: { format, output, diagnostics },
-        };
-        self.postMessage(resp, transferList);
-    } catch (err: unknown) {
-        const message =
-            typeof err === 'object' && err && 'message' in err
-                ? String((err as any).message)
-                : String(err);
-        const resp: ErrorResponse = { id, type: 'error', error: message };
-        self.postMessage(resp);
-    }
+		const transferList: Transferable[] =
+			output instanceof Uint8Array ? [output.buffer as ArrayBuffer] : [];
+		const resp: DoneResponse = {
+			id,
+			type: 'done',
+			result: { format, output, diagnostics },
+		};
+		self.postMessage(resp, transferList);
+	} catch (err: unknown) {
+		const message =
+			typeof err === 'object' && err && 'message' in err
+				? String((err as any).message)
+				: String(err);
+		const resp: ErrorResponse = { id, type: 'error', error: message };
+		self.postMessage(resp);
+	}
 });

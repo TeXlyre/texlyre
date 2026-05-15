@@ -15,19 +15,19 @@ import { useRegisterLSPConfigSettings } from '../../settings/registerLSPConfigSe
 import { useRegisterOfflineSettings } from '../../settings/registerOfflineSettings';
 
 const AppBootstrap: React.FC = () => {
-    useRegisterEditorSettings();
-    useRegisterCollabSettings();
-    useRegisterContentFormatterSettings();
-    useRegisterFileSyncSettings();
-    useRegisterFileSystemBackupSettings();
-    useRegisterFileTreeSettings();
-    useRegisterLatexSettings();
-    useRegisterTypstSettings();
-    useRegisterLSPConfigSettings();
-    useRegisterLanguageSettings();
-    useRegisterThemeSettings();
-    useRegisterOfflineSettings();
-    return null;
+	useRegisterEditorSettings();
+	useRegisterCollabSettings();
+	useRegisterContentFormatterSettings();
+	useRegisterFileSyncSettings();
+	useRegisterFileSystemBackupSettings();
+	useRegisterFileTreeSettings();
+	useRegisterLatexSettings();
+	useRegisterTypstSettings();
+	useRegisterLSPConfigSettings();
+	useRegisterLanguageSettings();
+	useRegisterThemeSettings();
+	useRegisterOfflineSettings();
+	return null;
 };
 
 export default AppBootstrap;

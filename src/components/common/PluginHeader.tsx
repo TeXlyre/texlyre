@@ -67,9 +67,9 @@ export const PluginHeader: React.FC<PluginHeaderProps> = ({
 		: '';
 
 	return (
-		<div className="plugin-header">
-			<div className="file-info">
-				<div className="filepath-info">
+		<div className='plugin-header'>
+			<div className='file-info'>
+				<div className='filepath-info'>
 					<span
 						className={linkedFileInfo ? 'linked-filepath' : ''}
 						onClick={
@@ -89,28 +89,32 @@ export const PluginHeader: React.FC<PluginHeaderProps> = ({
 						<button
 							onClick={onNavigateToLinkedFile}
 							title={`Navigate to linked file: ${linkedFileInfo.fileName}`}
-							className="linked-file-icon"
+							className='linked-file-icon'
 						>
 							<LinkIcon />
 						</button>
 					)}
 					{formattedTooltip && (
 						<InfoTooltip
-							title={pluginName ? `${pluginName}${pluginVersion ? ` v${pluginVersion}` : ''}` : undefined}
+							title={
+								pluginName
+									? `${pluginName}${pluginVersion ? ` v${pluginVersion}` : ''}`
+									: undefined
+							}
 							content={
-								<pre className="plugin-header-tooltip-text">
+								<pre className='plugin-header-tooltip-text'>
 									{typeof tooltipInfo === 'string'
 										? tooltipInfo
 										: (tooltipInfo ?? []).filter((l) => l.trim()).join('\n')}
 								</pre>
 							}
-							className="plugin-header-info"
+							className='plugin-header-info'
 						/>
 					)}
 				</div>
 			</div>
 			{(awareness || controls) && (
-				<div className="plugin-controls">
+				<div className='plugin-controls'>
 					{awareness && <CollaboratorAvatars awareness={awareness} />}
 					{controls}
 				</div>

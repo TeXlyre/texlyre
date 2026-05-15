@@ -27,7 +27,7 @@ export async function uploadPastedFile(
 			lastModified: Date.now(),
 			size: blob.size,
 			mimeType: blob.type,
-			isBinary: true
+			isBinary: true,
 		};
 
 		await fileStorageService.storeFile(fileNode, { showConflictDialog: false });
@@ -42,7 +42,9 @@ export async function uploadPastedFile(
 				const isLatex = isLatexFile(currentFile.path);
 				if (isLatex) {
 					if (relativePath.startsWith('../')) {
-						return uploadPath.startsWith('/') ? uploadPath.slice(1) : uploadPath;
+						return uploadPath.startsWith('/')
+							? uploadPath.slice(1)
+							: uploadPath;
 					} else {
 						return relativePath;
 					}

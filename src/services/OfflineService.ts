@@ -44,9 +44,8 @@ class OfflineService {
 
 		this.status = {
 			isOnline: this.forceOffline ? false : isOnline,
-			lastOnline: isOnline && !this.forceOffline
-				? Date.now()
-				: this.status.lastOnline,
+			lastOnline:
+				isOnline && !this.forceOffline ? Date.now() : this.status.lastOnline,
 		};
 
 		this.notifyListeners();

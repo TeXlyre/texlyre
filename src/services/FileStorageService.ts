@@ -231,11 +231,12 @@ class FileStorageService {
 		}
 
 		if (file.type === 'file' && file.content !== undefined) {
-			file.size = typeof file.content === 'string'
-				? new Blob([file.content]).size
-				: file.content instanceof ArrayBuffer
-					? file.content.byteLength
-					: 0;
+			file.size =
+				typeof file.content === 'string'
+					? new Blob([file.content]).size
+					: file.content instanceof ArrayBuffer
+						? file.content.byteLength
+						: 0;
 		}
 
 		if (!preserveTimestamp) {
@@ -350,11 +351,12 @@ class FileStorageService {
 			const file = files[i];
 
 			if (file.type === 'file' && file.content !== undefined) {
-				file.size = typeof file.content === 'string'
-					? new Blob([file.content]).size
-					: file.content instanceof ArrayBuffer
-						? file.content.byteLength
-						: 0;
+				file.size =
+					typeof file.content === 'string'
+						? new Blob([file.content]).size
+						: file.content instanceof ArrayBuffer
+							? file.content.byteLength
+							: 0;
 			}
 
 			if (!preserveTimestamp) {
@@ -534,11 +536,17 @@ class FileStorageService {
 	async cleanupDirectory(path: string): Promise<void> {
 		try {
 			const existing = await this.getAllFiles(true, false, false);
-			const toCleanup = existing.filter((f) => f.path.startsWith(`${path}/`) && !f.isDeleted);
+			const toCleanup = existing.filter(
+				(f) => f.path.startsWith(`${path}/`) && !f.isDeleted,
+			);
 			if (toCleanup.length > 0) {
-				await this.batchDeleteFiles(toCleanup.map((f) => f.id), {
-					showDeleteDialog: false, hardDelete: true,
-				});
+				await this.batchDeleteFiles(
+					toCleanup.map((f) => f.id),
+					{
+						showDeleteDialog: false,
+						hardDelete: true,
+					},
+				);
 			}
 		} catch (error) {
 			console.error(`Error cleaning up ${path}:`, error);
@@ -617,7 +625,9 @@ class FileStorageService {
 			return sourceFile.id;
 		}
 
-		console.log(`[FileStorageService] Moving file from ${sourceFile.path} to ${newFullPath}`);
+		console.log(
+			`[FileStorageService] Moving file from ${sourceFile.path} to ${newFullPath}`,
+		);
 
 		const existingFile = await this.getFileByPath(newFullPath, true);
 		const filesToDelete: string[] = [];
@@ -808,7 +818,7 @@ class FileStorageService {
 		options?: {
 			fileExtension?: string;
 			excludeDirectories?: boolean;
-		}
+		},
 	): Promise<FileNode[]> {
 		if (!this.db) await this.initialize();
 
@@ -820,13 +830,19 @@ class FileStorageService {
 		while (cursor) {
 			const file = cursor.value as FileNode;
 
-			if (file.path.startsWith(pathPrefix) && (includeDeleted || !file.isDeleted)) {
+			if (
+				file.path.startsWith(pathPrefix) &&
+				(includeDeleted || !file.isDeleted)
+			) {
 				if (options?.excludeDirectories && file.type === 'directory') {
 					cursor = await cursor.continue();
 					continue;
 				}
 
-				if (options?.fileExtension && !file.path.endsWith(options.fileExtension)) {
+				if (
+					options?.fileExtension &&
+					!file.path.endsWith(options.fileExtension)
+				) {
 					cursor = await cursor.continue();
 					continue;
 				}
@@ -885,7 +901,9 @@ class FileStorageService {
 		}
 
 		if (!includeContent) {
-			filteredFiles = filteredFiles.map(({ content, ...rest }) => rest as FileNode);
+			filteredFiles = filteredFiles.map(
+				({ content, ...rest }) => rest as FileNode,
+			);
 		}
 
 		return filteredFiles;
@@ -909,9 +927,10 @@ class FileStorageService {
 		if (file) {
 			file.content = content;
 
-			file.size = typeof content === 'string'
-				? new Blob([content]).size
-				: content.byteLength;
+			file.size =
+				typeof content === 'string'
+					? new Blob([content]).size
+					: content.byteLength;
 
 			if (!options.preserveTimestamp) {
 				file.lastModified = Date.now();

@@ -3,7 +3,7 @@
 }
 
 .backup-status-indicator:hover {
-	background-color: rgba(var(--pico-primary-rgb), 0.1) !important;
+	background-color: rgba(var(--pico-primary-rgb), 0.1);
 }
 
 .backup-button-group,
@@ -449,7 +449,6 @@
 }
 
 @media (max-width: 768px) {
-
 	.backup-toolbar,
 	.sync-toolbar,
 	.collab-toolbar {

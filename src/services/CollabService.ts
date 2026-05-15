@@ -6,7 +6,12 @@ import * as Y from 'yjs';
 import { collabWebrtc } from '../extensions/yjs/CollabWebrtc';
 import { collabWebsocket } from '../extensions/yjs/CollabWebsocket';
 import type { User } from '../types/auth';
-import type { CollabConnectOptions, CollabProvider, CollabProviderType, DocContainer } from '../types/collab';
+import type {
+	CollabConnectOptions,
+	CollabProvider,
+	CollabProviderType,
+	DocContainer,
+} from '../types/collab';
 import type { YjsDocUrl } from '../types/yjs';
 import { parseUrlFragments } from '../utils/urlUtils';
 import { offlineService } from './OfflineService';
@@ -47,7 +52,9 @@ class CollabService {
 		return !offlineService.getStatus().isOnline;
 	}
 
-	private validateSignalingServers(signalingServers: string | string[]): string[] {
+	private validateSignalingServers(
+		signalingServers: string | string[],
+	): string[] {
 		const isValidWebSocketUrl = (url: string): boolean => {
 			try {
 				const u = new URL(url);
@@ -71,7 +78,10 @@ class CollabService {
 
 			try {
 				const urlObj = new URL(serverUrl);
-				if (window.location.protocol === 'https:' && urlObj.protocol === 'ws:') {
+				if (
+					window.location.protocol === 'https:' &&
+					urlObj.protocol === 'ws:'
+				) {
 					continue;
 				}
 				if (isValidWebSocketUrl(serverUrl)) {
@@ -166,19 +176,23 @@ class CollabService {
 		}
 
 		if (options?.autoReconnect) {
-			provider.on('status', (event: { connected?: boolean; status?: string }) => {
-				const isDisconnected = event.connected === false || event.status === 'disconnected';
-				if (isDisconnected) {
-					console.log(
-						`[CollabService] Connection lost for ${containerId}, attempting reconnect...`,
-					);
-					setTimeout(() => {
-						if (this.docContainers.has(containerId)) {
-							provider.connect();
-						}
-					}, 2000);
-				}
-			});
+			provider.on(
+				'status',
+				(event: { connected?: boolean; status?: string }) => {
+					const isDisconnected =
+						event.connected === false || event.status === 'disconnected';
+					if (isDisconnected) {
+						console.log(
+							`[CollabService] Connection lost for ${containerId}, attempting reconnect...`,
+						);
+						setTimeout(() => {
+							if (this.docContainers.has(containerId)) {
+								provider.connect();
+							}
+						}, 2000);
+					}
+				},
+			);
 		}
 
 		const awarenessTimeout = options?.awarenessTimeout ?? 30000;
@@ -216,11 +230,14 @@ class CollabService {
 	): CollabProvider {
 		let finalSignalingServers: string[] = [];
 		if (options?.signalingServers) {
-			finalSignalingServers = this.validateSignalingServers(options.signalingServers);
+			finalSignalingServers = this.validateSignalingServers(
+				options.signalingServers,
+			);
 		}
 
 		return collabWebrtc.getProvider(roomName, doc, {
-			signaling: finalSignalingServers.length > 0 ? finalSignalingServers : undefined,
+			signaling:
+				finalSignalingServers.length > 0 ? finalSignalingServers : undefined,
 		});
 	}
 
@@ -327,7 +344,7 @@ class CollabService {
 
 	public async getDocumentMetadata(
 		url: YjsDocUrl,
-	): Promise<{ name: string; description: string, type: string } | null> {
+	): Promise<{ name: string; description: string; type: string } | null> {
 		const fragments = parseUrlFragments(url);
 		const yjsUrl = fragments.yjsUrl;
 
@@ -527,7 +544,7 @@ class CollabService {
 	public async updateDocumentContent(
 		projectId: string,
 		documentId: string,
-		updater: (currentContent: string) => string
+		updater: (currentContent: string) => string,
 	): Promise<void> {
 		const collectionName = `yjs_${documentId}`;
 		const containerId = `${projectId}-${collectionName}`;
@@ -545,7 +562,7 @@ class CollabService {
 
 					const handleSynced = () => {
 						clearTimeout(timeout);
-						container!.persistence.off('synced', handleSynced);
+						container?.persistence.off('synced', handleSynced);
 						resolve();
 					};
 
@@ -560,7 +577,7 @@ class CollabService {
 			}
 
 			if (provider && !this.isOfflineMode()) {
-				await new Promise(resolve => setTimeout(resolve, 500));
+				await new Promise((resolve) => setTimeout(resolve, 500));
 			}
 		} else {
 			container = this.getDocContainer(projectId, collectionName);
@@ -578,7 +595,7 @@ class CollabService {
 		});
 
 		if (!wasConnected) {
-			await new Promise(resolve => setTimeout(resolve, 500));
+			await new Promise((resolve) => setTimeout(resolve, 500));
 			this.disconnect(projectId, collectionName);
 		}
 	}

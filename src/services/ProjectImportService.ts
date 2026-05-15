@@ -345,24 +345,6 @@ class ProjectImportService {
 
 		await authDb.put('projects', newProject);
 	}
-
-	private async updateProjectCollaborators(
-		projectId: string,
-		collaboratorIds: string[],
-	): Promise<void> {
-		try {
-			const project = await authService.getProjectById(projectId);
-			if (project) {
-				const updatedProject = {
-					...project,
-					collaboratorIds,
-				} as Project & { collaboratorIds: string[] };
-				await authService.updateProject(updatedProject);
-			}
-		} catch (error) {
-			console.error('Error updating project collaborators:', error);
-		}
-	}
 }
 
 export const projectImportService = new ProjectImportService();

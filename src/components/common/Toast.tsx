@@ -82,15 +82,16 @@ const Toast: React.FC<ToastProps> = ({ notification, onDismiss }) => {
 		<div
 			className={`toast ${getTypeClass()} ${isVisible ? 'toast-visible' : 'toast-hidden'}`}
 		>
-			<div className="toast-icon">{getIcon()}</div>
-			<span className="toast-message">{notification.message}</span>
+			<div className='toast-icon'>{getIcon()}</div>
+			<span className='toast-message'>{notification.message}</span>
 			{notification.type !== 'loading' && (
 				<button
 					aria-label={t('Dismiss notification')}
-					className="toast-dismiss"
+					className='toast-dismiss'
 					onClick={() => onDismiss(notification.id, notification.operationId)}
-					title={t('Dismiss notification')}>
-					<span aria-hidden="true">×</span>
+					title={t('Dismiss notification')}
+				>
+					<span aria-hidden='true'>×</span>
 				</button>
 			)}
 		</div>

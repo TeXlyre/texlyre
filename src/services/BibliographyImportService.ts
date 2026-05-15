@@ -1,6 +1,5 @@
 // src/services/BibliographyImportService.ts
 import { t } from '@/i18n';
-import { isBibFile } from '../utils/fileUtils';
 import { parseUrlFragments } from '../utils/urlUtils';
 import { fileStorageService } from './FileStorageService';
 import { collabService } from './CollabService';
@@ -28,7 +27,10 @@ export interface BibTexParser {
 	parse(content: string): BibEntry[];
 	serialize(entries: BibEntry[]): string;
 	serializeEntry(entry: BibEntry): string;
-	findEntryPosition(content: string, entry: BibEntry): { start: number; end: number } | null;
+	findEntryPosition(
+		content: string,
+		entry: BibEntry,
+	): { start: number; end: number } | null;
 	updateEntryInContent(content: string, entry: BibEntry): string;
 }
 
@@ -39,7 +41,7 @@ class DefaultBibTexParser implements BibTexParser {
 		// Remove comments and clean content
 		const cleanContent = content
 			.split('\n')
-			.map(line => line.replace(/%.*$/, '').trim())
+			.map((line) => line.replace(/%.*$/, '').trim())
 			.join('\n');
 
 		let pos = 0;
@@ -49,7 +51,9 @@ class DefaultBibTexParser implements BibTexParser {
 			if (atPos === -1) break;
 
 			// Find entry type and opening brace
-			const typeMatch = cleanContent.slice(atPos).match(/^@(\w+)\s*\{\s*([^,\s]+)\s*,/);
+			const typeMatch = cleanContent
+				.slice(atPos)
+				.match(/^@(\w+)\s*\{\s*([^,\s]+)\s*,/);
 			if (!typeMatch) {
 				pos = atPos + 1;
 				continue;
@@ -93,14 +97,19 @@ class DefaultBibTexParser implements BibTexParser {
 
 			while (fieldPos < fieldsContent.length) {
 				// Skip whitespace and commas
-				while (fieldPos < fieldsContent.length && /[\s,]/.test(fieldsContent[fieldPos])) {
+				while (
+					fieldPos < fieldsContent.length &&
+					/[\s,]/.test(fieldsContent[fieldPos])
+				) {
 					fieldPos++;
 				}
 
 				if (fieldPos >= fieldsContent.length) break;
 
 				// Find field name
-				const fieldNameMatch = fieldsContent.slice(fieldPos).match(/^([\w-]+)\s*=/);
+				const fieldNameMatch = fieldsContent
+					.slice(fieldPos)
+					.match(/^([\w-]+)\s*=/);
 				if (!fieldNameMatch) {
 					fieldPos++;
 					continue;
@@ -110,7 +119,10 @@ class DefaultBibTexParser implements BibTexParser {
 				fieldPos += fieldNameMatch[0].length;
 
 				// Skip whitespace after =
-				while (fieldPos < fieldsContent.length && /\s/.test(fieldsContent[fieldPos])) {
+				while (
+					fieldPos < fieldsContent.length &&
+					/\s/.test(fieldsContent[fieldPos])
+				) {
 					fieldPos++;
 				}
 
@@ -144,7 +156,10 @@ class DefaultBibTexParser implements BibTexParser {
 					fieldPos++; // Skip opening quote
 					const valueStart = fieldPos;
 
-					while (fieldPos < fieldsContent.length && fieldsContent[fieldPos] !== '"') {
+					while (
+						fieldPos < fieldsContent.length &&
+						fieldsContent[fieldPos] !== '"'
+					) {
 						if (fieldsContent[fieldPos] === '\\') {
 							fieldPos += 2; // Skip escaped character
 						} else {
@@ -157,9 +172,11 @@ class DefaultBibTexParser implements BibTexParser {
 				} else {
 					// Unquoted value (until comma or end)
 					const valueStart = fieldPos;
-					while (fieldPos < fieldsContent.length &&
+					while (
+						fieldPos < fieldsContent.length &&
 						fieldsContent[fieldPos] !== ',' &&
-						fieldsContent[fieldPos] !== '}') {
+						fieldsContent[fieldPos] !== '}'
+					) {
 						fieldPos++;
 					}
 					fieldValue = fieldsContent.slice(valueStart, fieldPos).trim();
@@ -181,7 +198,7 @@ class DefaultBibTexParser implements BibTexParser {
 				entryType: type.toLowerCase(),
 				fields,
 				rawEntry: fullEntry,
-				remoteId: fields['remote-id'] || fields['external-id'] || undefined
+				remoteId: fields['remote-id'] || fields['external-id'] || undefined,
 			});
 
 			pos = entryEnd + 1;
@@ -191,7 +208,7 @@ class DefaultBibTexParser implements BibTexParser {
 	}
 
 	serialize(entries: BibEntry[]): string {
-		return entries.map(entry => this.serializeEntry(entry)).join('\n\n');
+		return entries.map((entry) => this.serializeEntry(entry)).join('\n\n');
 	}
 
 	serializeEntry(entry: BibEntry): string {
@@ -202,7 +219,10 @@ class DefaultBibTexParser implements BibTexParser {
 		return `@${entry.entryType}{${entry.key},\n${fieldsString}\n}`;
 	}
 
-	findEntryPosition(content: string, entry: BibEntry): { start: number; end: number } | null {
+	findEntryPosition(
+		content: string,
+		entry: BibEntry,
+	): { start: number; end: number } | null {
 		// Try exact rawEntry match first
 		const index = content.indexOf(entry.rawEntry);
 		if (index !== -1) {
@@ -211,7 +231,10 @@ class DefaultBibTexParser implements BibTexParser {
 
 		// Fallback: find by entry type + key using regex
 		const escapedKey = entry.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-		const entryRegex = new RegExp(`@${entry.entryType}\\s*\\{\\s*${escapedKey}\\s*,`, 'i');
+		const entryRegex = new RegExp(
+			`@${entry.entryType}\\s*\\{\\s*${escapedKey}\\s*,`,
+			'i',
+		);
 		const match = entryRegex.exec(content);
 		if (!match) return null;
 
@@ -232,9 +255,11 @@ class DefaultBibTexParser implements BibTexParser {
 		if (!position) return content;
 
 		const newEntryContent = this.serializeEntry(entry);
-		return content.substring(0, position.start) +
+		return (
+			content.substring(0, position.start) +
 			newEntryContent +
-			content.substring(position.end);
+			content.substring(position.end)
+		);
 	}
 }
 
@@ -264,7 +289,9 @@ export class BibliographyImportService {
 		return this.parser;
 	}
 
-	addNotificationCallback(callback: (result: ImportResult) => void): () => void {
+	addNotificationCallback(
+		callback: (result: ImportResult) => void,
+	): () => void {
 		this.notificationCallbacks.push(callback);
 		return () => {
 			const index = this.notificationCallbacks.indexOf(callback);
@@ -274,46 +301,50 @@ export class BibliographyImportService {
 		};
 	}
 
-	private notifyCallbacks(result: ImportResult): void {
-		this.notificationCallbacks.forEach(callback => {
-			try {
-				callback(result);
-			} catch (error) {
-				console.error('Error in import notification callback:', error);
-			}
-		});
-	}
-
 	private async dispatchFileReload(filePath: string): Promise<void> {
 		const file = await fileStorageService.getFileByPath(filePath);
 		if (!file) return;
-		document.dispatchEvent(new CustomEvent('file-reloaded', {
-			detail: { filePath, fileId: file.id }
-		}));
+		document.dispatchEvent(
+			new CustomEvent('file-reloaded', {
+				detail: { filePath, fileId: file.id },
+			}),
+		);
 	}
 
 	async batchImport(
 		filePath: string,
 		entries: Array<{ entryKey: string; rawEntry: string; remoteId?: string }>,
-		duplicateHandling: 'keep-local' | 'replace' | 'rename' | 'ask' = 'keep-local'
+		duplicateHandling:
+			| 'keep-local'
+			| 'replace'
+			| 'rename'
+			| 'ask' = 'keep-local',
 	): Promise<void> {
 		await this.updateContent(filePath, (content) => {
 			let current = content;
-			const allKeys = new Set(this.parser.parse(current).map(e => e.key));
+			const allKeys = new Set(this.parser.parse(current).map((e) => e.key));
 
 			for (let { entryKey, rawEntry, remoteId } of entries) {
-				const existing = this.parser.parse(current).find(e =>
-					e.key === entryKey ||
-					(remoteId && (e.remoteId || e.fields['remote-id'] || e.fields['external-id']) === remoteId)
-				);
+				const existing = this.parser
+					.parse(current)
+					.find(
+						(e) =>
+							e.key === entryKey ||
+							(remoteId &&
+								(e.remoteId ||
+									e.fields['remote-id'] ||
+									e.fields['external-id']) === remoteId),
+					);
 
 				if (existing) {
-					if (duplicateHandling === 'keep-local' || duplicateHandling === 'ask') continue;
+					if (duplicateHandling === 'keep-local' || duplicateHandling === 'ask')
+						continue;
 
 					if (duplicateHandling === 'replace') {
 						const position = this.parser.findEntryPosition(current, existing);
 						if (position) {
-							current = current.substring(0, position.start) +
+							current =
+								current.substring(0, position.start) +
 								this.formatEntryForAppending(rawEntry).trim() +
 								current.substring(position.end);
 						}
@@ -323,7 +354,10 @@ export class BibliographyImportService {
 					if (duplicateHandling === 'rename') {
 						let counter = 1;
 						let newKey = `${entryKey}_${counter}`;
-						while (allKeys.has(newKey)) { counter++; newKey = `${entryKey}_${counter}`; }
+						while (allKeys.has(newKey)) {
+							counter++;
+							newKey = `${entryKey}_${counter}`;
+						}
 						rawEntry = rawEntry.replace(entryKey, newKey);
 						entryKey = newKey;
 						allKeys.add(newKey);
@@ -331,39 +365,55 @@ export class BibliographyImportService {
 				}
 
 				const formatted = this.formatEntryForAppending(rawEntry);
-				current = current.trim() ? `${current.trim()}\n\n${formatted}` : formatted;
+				current = current.trim()
+					? `${current.trim()}\n\n${formatted}`
+					: formatted;
 			}
 			return current;
 		});
 		document.dispatchEvent(new CustomEvent('refresh-file-tree'));
-		if (this.openBibFiles.has(filePath)) await this.dispatchFileReload(filePath);
+		if (this.openBibFiles.has(filePath))
+			await this.dispatchFileReload(filePath);
 	}
 
 	async batchUpdate(
 		filePath: string,
-		updates: Array<{ entryKey: string; rawEntry: string; remoteId?: string }>
+		updates: Array<{ entryKey: string; rawEntry: string; remoteId?: string }>,
 	): Promise<void> {
 		await this.updateContent(filePath, (content) => {
 			let current = content;
 			for (const { entryKey, rawEntry, remoteId } of updates) {
-				const existing = this.parser.parse(current).find(e =>
-					e.key === entryKey ||
-					(remoteId && (e.remoteId || e.fields['remote-id'] || e.fields['external-id']) === remoteId)
-				);
+				const existing = this.parser
+					.parse(current)
+					.find(
+						(e) =>
+							e.key === entryKey ||
+							(remoteId &&
+								(e.remoteId ||
+									e.fields['remote-id'] ||
+									e.fields['external-id']) === remoteId),
+					);
 				if (!existing) continue;
-				const remoteFieldKey = existing.fields['external-id'] ? 'external-id' : 'remote-id';
-				const resolvedRemoteId = remoteId || existing.remoteId || existing.fields[remoteFieldKey];
+				const remoteFieldKey = existing.fields['external-id']
+					? 'external-id'
+					: 'remote-id';
+				const resolvedRemoteId =
+					remoteId || existing.remoteId || existing.fields[remoteFieldKey];
 				const incoming = this.parser.parse(rawEntry)[0];
 				const updatedEntry: BibEntry = {
 					key: existing.key,
 					entryType: incoming?.entryType || existing.entryType,
-					fields: { ...incoming?.fields, ...(resolvedRemoteId ? { [remoteFieldKey]: resolvedRemoteId } : {}) },
+					fields: {
+						...incoming?.fields,
+						...(resolvedRemoteId ? { [remoteFieldKey]: resolvedRemoteId } : {}),
+					},
 					rawEntry,
-					remoteId: resolvedRemoteId
+					remoteId: resolvedRemoteId,
 				};
 				const position = this.parser.findEntryPosition(current, existing);
 				if (position) {
-					current = current.substring(0, position.start) +
+					current =
+						current.substring(0, position.start) +
 						this.parser.serializeEntry(updatedEntry) +
 						current.substring(position.end);
 				}
@@ -371,20 +421,27 @@ export class BibliographyImportService {
 			return current;
 		});
 		document.dispatchEvent(new CustomEvent('refresh-file-tree'));
-		if (this.openBibFiles.has(filePath)) await this.dispatchFileReload(filePath);
+		if (this.openBibFiles.has(filePath))
+			await this.dispatchFileReload(filePath);
 	}
 
 	async batchDelete(
 		filePath: string,
-		entries: Array<{ entryKey: string; remoteId?: string }>
+		entries: Array<{ entryKey: string; remoteId?: string }>,
 	): Promise<void> {
 		await this.updateContent(filePath, (content) => {
 			let current = content;
 			for (const { entryKey, remoteId } of entries) {
-				const existing = this.parser.parse(current).find(e =>
-					e.key === entryKey ||
-					(remoteId && (e.remoteId || e.fields['remote-id'] || e.fields['external-id']) === remoteId)
-				);
+				const existing = this.parser
+					.parse(current)
+					.find(
+						(e) =>
+							e.key === entryKey ||
+							(remoteId &&
+								(e.remoteId ||
+									e.fields['remote-id'] ||
+									e.fields['external-id']) === remoteId),
+					);
 				if (!existing) continue;
 				const position = this.parser.findEntryPosition(current, existing);
 				if (!position) continue;
@@ -395,34 +452,38 @@ export class BibliographyImportService {
 			return current;
 		});
 		document.dispatchEvent(new CustomEvent('refresh-file-tree'));
-		if (this.openBibFiles.has(filePath)) await this.dispatchFileReload(filePath);
+		if (this.openBibFiles.has(filePath))
+			await this.dispatchFileReload(filePath);
 	}
 
 	private async updateContent(
 		filePath: string,
-		updater: (currentContent: string) => string
+		updater: (currentContent: string) => string,
 	): Promise<void> {
 		const file = await fileStorageService.getFileByPath(filePath);
 		if (!file) throw new Error('File not found');
 
 		if (file.documentId) {
-			const currentFragment = parseUrlFragments(window.location.hash.substring(1));
+			const currentFragment = parseUrlFragments(
+				window.location.hash.substring(1),
+			);
 			const projectId = currentFragment.yjsUrl?.slice(4);
 
 			if (projectId) {
 				await collabService.updateDocumentContent(
 					projectId,
 					file.documentId,
-					updater
+					updater,
 				);
 			}
 		}
 
 		let currentContent = '';
 		if (file.content) {
-			currentContent = typeof file.content === 'string'
-				? file.content
-				: new TextDecoder().decode(file.content);
+			currentContent =
+				typeof file.content === 'string'
+					? file.content
+					: new TextDecoder().decode(file.content);
 		}
 
 		const newContent = updater(currentContent);
@@ -460,7 +521,7 @@ export class BibliographyImportService {
 				return {
 					success: false,
 					entryKey,
-					error: error instanceof Error ? error.message : t('Unknown error')
+					error: error instanceof Error ? error.message : t('Unknown error'),
 				};
 			}
 		}
@@ -472,4 +533,5 @@ export class BibliographyImportService {
 	}
 }
 
-export const bibliographyImportService = BibliographyImportService.getInstance();
+export const bibliographyImportService =
+	BibliographyImportService.getInstance();

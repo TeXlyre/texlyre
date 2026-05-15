@@ -29,7 +29,10 @@ export interface LaTeXContextType {
 	clearCache: () => Promise<void>;
 	compileWithClearCache: (mainFileName: string) => Promise<void>;
 	compileLog: string;
-	compileDocument: (mainFileName: string, format?: LaTeXOutputFormat) => Promise<void>;
+	compileDocument: (
+		mainFileName: string,
+		format?: LaTeXOutputFormat,
+	) => Promise<void>;
 	stopCompilation: () => void;
 	toggleOutputView: () => void;
 	currentView: 'log' | 'output';
@@ -48,6 +51,6 @@ export interface LaTeXContextType {
 			includeDvi?: boolean;
 			includeBbl?: boolean;
 			includeWorkDir?: boolean;
-		}
+		},
 	) => Promise<void>;
 }

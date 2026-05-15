@@ -1,6 +1,6 @@
 // scripts/clean-cache.cjs
 const { rmSync, existsSync } = require('node:fs');
-const path = require('node:path');
+const _path = require('node:path');
 
 const paths = ['node_modules/.vite', 'dist', '.vite'];
 

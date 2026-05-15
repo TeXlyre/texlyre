@@ -5,9 +5,17 @@ import { lazy, useCallback, useEffect, useState, Suspense } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { collabService } from '../../services/CollabService';
 import { fileStorageService } from '../../services/FileStorageService';
-import { shareTargetService, type PendingShare } from '../../services/ShareTargetService';
+import {
+	shareTargetService,
+	type PendingShare,
+} from '../../services/ShareTargetService';
 import type { YjsDocUrl } from '../../types/yjs';
-import { isValidYjsUrl, parseUrlFragments, pushHash, replaceHash } from '../../utils/urlUtils';
+import {
+	isValidYjsUrl,
+	parseUrlFragments,
+	pushHash,
+	replaceHash,
+} from '../../utils/urlUtils';
 import { batchExtractZip } from '../../utils/zipUtils';
 import AuthApp from './AuthApp';
 import EditorApp from './EditorApp';
@@ -47,7 +55,9 @@ const AppRouter: React.FC = () => {
 	const [pendingShare, setPendingShare] = useState<PendingShare | null>(null);
 
 	const [isPdfViewerWindow, setIsPdfViewerWindow] = useState(false);
-	const [pdfViewerProjectId, setPdfViewerProjectId] = useState<string | null>(null);
+	const [pdfViewerProjectId, setPdfViewerProjectId] = useState<string | null>(
+		null,
+	);
 
 	const parseUrlProjectParams = (hashUrl: string): UrlProjectParams | null => {
 		try {
@@ -137,47 +147,50 @@ const AppRouter: React.FC = () => {
 		}
 	};
 
-	const resolveViewFromHash = useCallback((hashUrl: string) => {
-		if (hashUrl === 'privacy-policy') {
-			setShowPrivacy(true);
-			return;
-		}
-		setShowPrivacy(false);
+	const resolveViewFromHash = useCallback(
+		(hashUrl: string) => {
+			if (hashUrl === 'privacy-policy') {
+				setShowPrivacy(true);
+				return;
+			}
+			setShowPrivacy(false);
 
-		if (hashUrl.startsWith('popout-viewer:')) {
-			const projectId = hashUrl.replace('popout-viewer:', '');
-			setIsPdfViewerWindow(true);
-			setPdfViewerProjectId(projectId);
-			return;
-		}
+			if (hashUrl.startsWith('popout-viewer:')) {
+				const projectId = hashUrl.replace('popout-viewer:', '');
+				setIsPdfViewerWindow(true);
+				setPdfViewerProjectId(projectId);
+				return;
+			}
 
-		if (hashUrl?.includes('yjs:')) {
-			const fragments = parseUrlFragments(hashUrl);
-			if (fragments.yjsUrl && isValidYjsUrl(fragments.yjsUrl)) {
-				setDocUrl(fragments.yjsUrl);
-				setTargetDocId(fragments.docId || null);
-				setTargetFilePath(fragments.filePath || null);
+			if (hashUrl?.includes('yjs:')) {
+				const fragments = parseUrlFragments(hashUrl);
+				if (fragments.yjsUrl && isValidYjsUrl(fragments.yjsUrl)) {
+					setDocUrl(fragments.yjsUrl);
+					setTargetDocId(fragments.docId || null);
+					setTargetFilePath(fragments.filePath || null);
+					if (isAuthenticated && !isInitializing) setCurrentView('editor');
+					return;
+				}
+			}
+
+			if (isValidYjsUrl(hashUrl)) {
+				setDocUrl(hashUrl);
 				if (isAuthenticated && !isInitializing) setCurrentView('editor');
 				return;
 			}
-		}
 
-		if (isValidYjsUrl(hashUrl)) {
-			setDocUrl(hashUrl);
-			if (isAuthenticated && !isInitializing) setCurrentView('editor');
-			return;
-		}
-
-		if (isAuthenticated && !isInitializing) {
-			setDocUrl(null);
-			setTargetDocId(null);
-			setTargetFilePath(null);
-			setCurrentProjectId(null);
-			sessionStorage.removeItem('currentProjectId');
-			sessionStorage.removeItem('lastCheckedDocUrl');
-			setCurrentView('projects');
-		}
-	}, [isAuthenticated, isInitializing]);
+			if (isAuthenticated && !isInitializing) {
+				setDocUrl(null);
+				setTargetDocId(null);
+				setTargetFilePath(null);
+				setCurrentProjectId(null);
+				sessionStorage.removeItem('currentProjectId');
+				sessionStorage.removeItem('lastCheckedDocUrl');
+				setCurrentView('projects');
+			}
+		},
+		[isAuthenticated, isInitializing],
+	);
 
 	useEffect(() => {
 		const hashUrl = window.location.hash.substring(1);
@@ -198,7 +211,13 @@ const AppRouter: React.FC = () => {
 		}
 
 		resolveViewFromHash(hashUrl);
-	}, [isAuthenticated, isInitializing, resolveViewFromHash]);
+	}, [
+		isAuthenticated,
+		isInitializing,
+		resolveViewFromHash,
+		createProjectFromUrl,
+		parseUrlProjectParams,
+	]);
 
 	useEffect(() => {
 		const handlePopState = () => {
@@ -256,7 +275,13 @@ const AppRouter: React.FC = () => {
 		};
 
 		checkAndCreateProject();
-	}, [isAuthenticated, isInitializing, docUrl, createProject, getProjects]);
+	}, [
+		isAuthenticated,
+		isInitializing,
+		docUrl,
+		getProjects,
+		createProjectForDocument,
+	]);
 
 	useEffect(() => {
 		if (!isAuthenticated || isInitializing) return;
@@ -435,10 +460,7 @@ const AppRouter: React.FC = () => {
 				<ProjectApp onOpenProject={handleOpenProject} onLogout={handleLogout} />
 			)}
 
-			<PrivacyModal
-				isOpen={showPrivacy}
-				onClose={handleClosePrivacy}
-			/>
+			<PrivacyModal isOpen={showPrivacy} onClose={handleClosePrivacy} />
 
 			<ShareTargetModal
 				isOpen={!!pendingShare && isAuthenticated && !isInitializing}

@@ -49,7 +49,7 @@ export const AuthContext = createContext<AuthContextType>({
 	getProjectsByTag: async () => {
 		throw new Error('Not implemented');
 	},
-	getProjectsByType: async (type: 'latex' | 'typst') => {
+	getProjectsByType: async (_type: 'latex' | 'typst') => {
 		throw new Error('Not implemented');
 	},
 	searchProjects: async () => {
@@ -175,7 +175,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 		return authService.getProjectsByTag(tag);
 	};
 
-	const getProjectsByType = async (type: 'latex' | 'typst'): Promise<Project[]> => {
+	const getProjectsByType = async (
+		type: 'latex' | 'typst',
+	): Promise<Project[]> => {
 		return authService.getProjectsByType(type);
 	};
 

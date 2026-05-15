@@ -20,11 +20,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isOwnMessage }) => {
 		<div
 			className={`chat-message ${isOwnMessage ? 'own-message' : 'other-message'}`}
 		>
-			<div className="message-content">
-				{!isOwnMessage && <div className="message-user">{message.user}</div>}
-				<div className="message-text">{message.content}</div>
+			<div className='message-content'>
+				{!isOwnMessage && <div className='message-user'>{message.user}</div>}
+				<div className='message-text'>{message.content}</div>
 				<div
-					className="message-timestamp"
+					className='message-timestamp'
 					title={formatDate(message.timestamp)}
 				>
 					{formatTimestamp(message.timestamp)}

@@ -179,7 +179,6 @@ button:focus-visible {
 	color: var(--pico-secondary);
 }
 
-
 .pagination-button:hover:not(:disabled) {
 	background-color: var(--pico-primary-focus);
 	border-color: var(--pico-primary);
@@ -281,7 +280,6 @@ footer {
 .logo:hover {
 	filter: drop-shadow(0 0 2em var(--pico-primary-focus));
 }
-
 
 .loading-spinner {
 	border: 4px solid rgba(0, 0, 0, 0.1);
@@ -450,7 +448,6 @@ footer {
 	margin-right: 6px;
 }
 
-
 .connection-indicator {
 	width: 6px;
 	height: 6px;
@@ -493,28 +490,30 @@ footer {
 	background-color: var(--accent-background);
 	border-radius: 8px;
 	border: 1px solid var(--accent-border);
-	z-index: 100 !important;
+	z-index: 100;
 }
 
 .save-indicator {
-	position: absolute !important;
-	bottom: var(--mobile-spacing-lg, 12px) !important;
-	right: var(--mobile-spacing-lg, 12px) !important;
+	position: absolute;
+	bottom: var(--mobile-spacing-lg, 12px);
+	right: var(--mobile-spacing-lg, 12px);
 	background-color: var(--color-success);
 	color: var(--pico-secondary-inverse);
-	padding: var(--mobile-spacing-md, 8px) var(--mobile-spacing-lg, 12px) !important;
-	border-radius: var(--mobile-radius-lg, 15px) !important;
-	font-size: 0.65rem !important;
-	font-weight: 700 !important;
-	box-shadow: var(--mobile-shadow-md, 0 2px 8px rgba(0, 0, 0, 0.2)) !important;
-	z-index: 100 !important;
-	animation: saveIndicatorFadeIn var(--mobile-transition-normal, 0.25s) ease-out,
-		saveIndicatorFadeOut var(--mobile-transition-normal, 0.25s) ease-out 1.2s forwards !important;
-	pointer-events: none !important;
+	padding: var(--mobile-spacing-md, 8px) var(--mobile-spacing-lg, 12px);
+	border-radius: var(--mobile-radius-lg, 15px);
+	font-size: 0.65rem;
+	font-weight: 700;
+	box-shadow: var(--mobile-shadow-md, 0 2px 8px rgba(0, 0, 0, 0.2));
+	z-index: 100;
+	animation:
+		saveIndicatorFadeIn var(--mobile-transition-normal, 0.25s) ease-out,
+		saveIndicatorFadeOut var(--mobile-transition-normal, 0.25s) ease-out 1.2s
+		forwards;
+	pointer-events: none;
 }
 
 .save-indicator.read-only {
-	background-color: var(--color-error) !important;
+	background-color: var(--color-error);
 	color: var(--pico-secondary-inverse, #fff);
 }
 

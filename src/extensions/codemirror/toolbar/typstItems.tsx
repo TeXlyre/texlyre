@@ -89,7 +89,10 @@ export const createHeading1 = (): ToolbarItem => ({
 	icon: renderToString(<ToolbarHeading1Icon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
-		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		const selectedText = view.state.doc.sliceString(
+			selection.from,
+			selection.to,
+		);
 		const text = selectedText || 'Heading';
 		return insertText(view, `= ${text}\n`, -(text.length + 1));
 	},
@@ -101,7 +104,10 @@ export const createHeading2 = (): ToolbarItem => ({
 	icon: renderToString(<ToolbarHeading2Icon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
-		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		const selectedText = view.state.doc.sliceString(
+			selection.from,
+			selection.to,
+		);
 		const text = selectedText || 'Heading';
 		return insertText(view, `== ${text}\n`, -(text.length + 1));
 	},
@@ -113,7 +119,10 @@ export const createHeading3 = (): ToolbarItem => ({
 	icon: renderToString(<ToolbarHeading3Icon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
-		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		const selectedText = view.state.doc.sliceString(
+			selection.from,
+			selection.to,
+		);
 		const text = selectedText || 'Heading';
 		return insertText(view, `=== ${text}\n`, -(text.length + 1));
 	},
@@ -125,7 +134,10 @@ export const createHeading4 = (): ToolbarItem => ({
 	icon: renderToString(<ToolbarHeading4Icon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
-		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		const selectedText = view.state.doc.sliceString(
+			selection.from,
+			selection.to,
+		);
 		const text = selectedText || 'Heading';
 		return insertText(view, `==== ${text}\n`, -(text.length + 1));
 	},
@@ -174,9 +186,16 @@ export const createDisplayMath = (): ToolbarItem => ({
 	icon: renderToString(<ToolbarMathBlockIcon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
-		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		const selectedText = view.state.doc.sliceString(
+			selection.from,
+			selection.to,
+		);
 		const text = `$ ${selectedText} $`;
-		return insertText(view, text, selectedText ? -(selectedText.length + 2) : -2);
+		return insertText(
+			view,
+			text,
+			selectedText ? -(selectedText.length + 2) : -2,
+		);
 	},
 });
 
@@ -223,9 +242,16 @@ export const createCodeBlock = (): ToolbarItem => ({
 	icon: renderToString(<ToolbarCodeBlockIcon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
-		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		const selectedText = view.state.doc.sliceString(
+			selection.from,
+			selection.to,
+		);
 		const text = `\`\`\`\n${selectedText}\n\`\`\``;
-		return insertText(view, text, selectedText ? -(selectedText.length + 4) : -4);
+		return insertText(
+			view,
+			text,
+			selectedText ? -(selectedText.length + 4) : -4,
+		);
 	},
 });
 
@@ -245,7 +271,10 @@ export const createLink = (): ToolbarItem => ({
 	icon: renderToString(<ToolbarHyperlinkIcon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
-		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		const selectedText = view.state.doc.sliceString(
+			selection.from,
+			selection.to,
+		);
 		if (selectedText) {
 			const text = `#link("")[${selectedText}]`;
 			return insertText(view, text, -(selectedText.length + 4));
@@ -261,9 +290,16 @@ export const createQuote = (): ToolbarItem => ({
 	icon: renderToString(<ToolbarQuoteIcon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
-		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		const selectedText = view.state.doc.sliceString(
+			selection.from,
+			selection.to,
+		);
 		const text = `#quote[\n${selectedText}\n]`;
-		return insertText(view, text, selectedText ? -(selectedText.length + 2) : -2);
+		return insertText(
+			view,
+			text,
+			selectedText ? -(selectedText.length + 2) : -2,
+		);
 	},
 });
 
@@ -294,7 +330,10 @@ export const createReference = (): ToolbarItem => ({
 	icon: renderToString(<ToolbarReferenceIcon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
-		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		const selectedText = view.state.doc.sliceString(
+			selection.from,
+			selection.to,
+		);
 		if (selectedText) {
 			const text = `<${selectedText}>`;
 			return insertText(view, text, 0);
@@ -310,7 +349,10 @@ export const createCitation = (): ToolbarItem => ({
 	icon: renderToString(<ToolbarCitationIcon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
-		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		const selectedText = view.state.doc.sliceString(
+			selection.from,
+			selection.to,
+		);
 		if (selectedText) {
 			const text = `@${selectedText}`;
 			return insertText(view, text, 0);
@@ -326,7 +368,10 @@ export const createLabel = (): ToolbarItem => ({
 	icon: renderToString(<ToolbarLabelIcon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
-		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		const selectedText = view.state.doc.sliceString(
+			selection.from,
+			selection.to,
+		);
 		if (selectedText) {
 			const text = `#label("${selectedText}")`;
 			return insertText(view, text, 0);
@@ -355,12 +400,18 @@ function createColorCommand(fileType: 'typst', type: 'text' | 'highlight') {
 		const toolbar = view.dom.querySelector('.codemirror-toolbar');
 		if (!toolbar) return false;
 
-		const button = toolbar.querySelector(`[data-item="${fileType}-${type === 'text' ? 'textcolor' : 'highlight'}"]`) as HTMLElement;
+		const button = toolbar.querySelector(
+			`[data-item="${fileType}-${type === 'text' ? 'textcolor' : 'highlight'}"]`,
+		) as HTMLElement;
 		if (!button) return false;
 
 		let picker = colorPickers.get(view);
 
-		if (picker && !document.body.contains(picker.container) && !toolbar.contains(picker.container)) {
+		if (
+			picker &&
+			!document.body.contains(picker.container) &&
+			!toolbar.contains(picker.container)
+		) {
 			picker.destroy();
 			colorPickers.delete(view);
 			picker = null;
@@ -370,7 +421,10 @@ function createColorCommand(fileType: 'typst', type: 'text' | 'highlight') {
 			picker = new ColorPicker(view, button, {
 				onSelect: (v, color) => {
 					const selection = v.state.selection.main;
-					const selectedText = v.state.doc.sliceString(selection.from, selection.to);
+					const selectedText = v.state.doc.sliceString(
+						selection.from,
+						selection.to,
+					);
 					const func = type === 'text' ? 'text' : 'highlight';
 					const text = `#${func}(fill: rgb("${color}"))[${selectedText}]`;
 					insertText(v, text, selectedText ? -(selectedText.length + 1) : -1);

@@ -115,14 +115,14 @@
 	align-items: center;
 	justify-content: center;
 	background: none;
-	padding-left: var(--space-xs) !important;
-	padding-right: var(--space-xs) !important;
-	border: none !important;
-	outline: none !important;
+	padding-left: var(--space-xs);
+	padding-right: var(--space-xs);
+	border: none;
+	outline: none;
 	cursor: pointer;
 	color: var(--pico-primary);
 	transition: color var(--transition-normal);
-	font-size: var(--space-sd) !important;
+	font-size: var(--space-sd);
 	border-radius: 2px;
 	flex-shrink: 0;
 }
@@ -166,7 +166,7 @@
 }
 
 .outline-children::before {
-	content: '';
+	content: "";
 	position: absolute;
 	left: 20px;
 	top: 0;

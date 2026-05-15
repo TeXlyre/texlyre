@@ -9,26 +9,31 @@ interface ThemeToggleButtonProps {
 	className?: string;
 }
 
-const ThemeToggleButton: React.FC<ThemeToggleButtonProps> = ({ className = '' }) => {
+const ThemeToggleButton: React.FC<ThemeToggleButtonProps> = ({
+	className = '',
+}) => {
 	const { getSetting, updateSetting } = useSettings();
 
 	const themeVariantSetting = getSetting('theme-variant');
-	const currentVariant = themeVariantSetting?.value || themeVariantSetting?.defaultValue || 'system';
+	const currentVariant =
+		themeVariantSetting?.value || themeVariantSetting?.defaultValue || 'system';
 
 	const toggleTheme = () => {
 		const newVariant = currentVariant === 'dark' ? 'light' : 'dark';
 		updateSetting('theme-variant', newVariant);
 	};
 
-	const isDark = currentVariant === 'dark' ||
-		(currentVariant === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+	const isDark =
+		currentVariant === 'dark' ||
+		(currentVariant === 'system' &&
+			window.matchMedia('(prefers-color-scheme: dark)').matches);
 
 	return (
 		<button
 			className={`${className}`}
 			onClick={toggleTheme}
 			title={t('Switch to {theme}', {
-				theme: isDark ? t('Light Theme') : t('Dark Theme')
+				theme: isDark ? t('Light Theme') : t('Dark Theme'),
 			})}
 		>
 			{isDark ? <SunIcon /> : <MoonIcon />}

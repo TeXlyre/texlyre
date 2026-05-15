@@ -23,11 +23,11 @@
 	width: 100%;
 	padding: var(--space-sm);
 	padding-right: 2rem;
-	border: 1px solid var(--accent-border) !important;
-	border-radius: var(--radius-sm) !important;
-	background-color: var(--pico-background) !important;
-	color: var(--text-color) !important;
-	font-size: 0.9rem !important;
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	background-color: var(--pico-background);
+	color: var(--text-color);
+	font-size: 0.9rem;
 }
 
 .settings-search .clear-search-button {
@@ -190,25 +190,25 @@
 }
 
 .settings-container .save-indicator {
-	position: absolute !important;
-	bottom: var(--space-lg, 12px) !important;
-	right: var(--space-lg, 12px) !important;
+	position: absolute;
+	bottom: var(--space-lg, 12px);
+	right: var(--space-lg, 12px);
 }
 
 .settings-container .refresh-indicator {
-	position: absolute !important;
-	bottom: var(--space-lg, 12px) !important;
-	right: var(--space-lg, 12px) !important;
-	background-color: var(--color-error) !important;
-	color: #fff !important;
-	padding: var(--space-sm, 8px) var(--space-lg, 12px) !important;
-	border-radius: var(--radius-lg, 15px) !important;
-	font-size: 0.65rem !important;
-	font-weight: 700 !important;
-	box-shadow: var(--shadow-md, 0 2px 8px rgba(0, 0, 0, 0.2)) !important;
-	z-index: 100 !important;
-	animation: refreshIndicatorPulse 2s infinite !important;
-	pointer-events: none !important;
+	position: absolute;
+	bottom: var(--space-lg, 12px);
+	right: var(--space-lg, 12px);
+	background-color: var(--color-error);
+	color: #fff;
+	padding: var(--space-sm, 8px) var(--space-lg, 12px);
+	border-radius: var(--radius-lg, 15px);
+	font-size: 0.65rem;
+	font-weight: 700;
+	box-shadow: var(--shadow-md, 0 2px 8px rgba(0, 0, 0, 0.2));
+	z-index: 100;
+	animation: refreshIndicatorPulse 2s infinite;
+	pointer-events: none;
 }
 
 .settings-wrapper {
@@ -238,7 +238,6 @@
 }
 
 @keyframes refreshIndicatorPulse {
-
 	0%,
 	100% {
 		opacity: 1;

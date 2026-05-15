@@ -1,16 +1,16 @@
 /* CodeMirror comment styles */
 .comment-open-tag,
 .comment-close-tag {
-	display: none !important;
-	width: 0 !important;
-	height: 0 !important;
-	overflow: hidden !important;
-	position: absolute !important;
-	visibility: hidden !important;
+	display: none;
+	width: 0;
+	height: 0;
+	overflow: hidden;
+	position: absolute;
+	visibility: hidden;
 }
 
 .highlight-comment {
-	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.2) !important;
+	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.2);
 	transition: background-color 0.3s ease;
 }
 
@@ -140,12 +140,14 @@
 	justify-content: center;
 	gap: 0.25rem;
 	background-color: var(--pico-primary);
-	color: #fff !important;
+	color: #fff;
 	border-radius: var(--space-sm);
 	height: 32px;
 	box-shadow: var(--shadow-sm);
 	cursor: pointer;
-	transition: background-color var(--transition-normal), opacity var(--transition-normal);
+	transition:
+		background-color var(--transition-normal),
+		opacity var(--transition-normal);
 	font-size: 0.6rem;
 	opacity: 0.4;
 	border: none;
@@ -153,13 +155,13 @@
 
 .comment-toggle-button:hover {
 	background-color: var(--pico-primary-hover);
-	color: #fff !important;
+	color: #fff;
 	opacity: 1;
 }
 
 .comment-toggle-button.active {
 	opacity: 1;
-	color: #fff !important;
+	color: #fff;
 }
 
 .comment-count-badge {
@@ -355,11 +357,11 @@
 }
 
 .comment-line-section .comment-line-button {
-	color: var(--pico-primary) !important;
+	color: var(--pico-primary);
 	font-weight: 500;
 	cursor: pointer;
 	padding: 0.25rem 0.5rem;
-	border-radius: 4px !important;
+	border-radius: 4px;
 	background-color: rgba(var(--pico-primary-rgb, 16, 149, 193), 0.1);
 	font-size: 0.55rem;
 	transition: background-color 0.2s ease;
@@ -427,7 +429,7 @@
 
 .submit-response-button {
 	background-color: var(--pico-primary);
-	color: var(--pico-primary-inverse) !important;
+	color: var(--pico-primary-inverse);
 	border: none;
 }
 
@@ -457,7 +459,7 @@
 	display: inline-block;
 	padding: 4px 6px;
 	background-color: var(--pico-primary);
-	color: var(--pico-primary-inverse) !important;
+	color: var(--pico-primary-inverse);
 	border: none;
 	border-radius: var(--radius-sm);
 	font-size: 10px;

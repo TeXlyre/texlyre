@@ -2,10 +2,13 @@
 import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import * as Y from 'yjs';
+import type * as Y from 'yjs';
 
 import { DownloadIcon, SaveIcon, CloseIcon } from '@/components/common/Icons';
-import { PluginControlGroup, PluginHeader } from '@/components/common/PluginHeader';
+import {
+	PluginControlGroup,
+	PluginHeader,
+} from '@/components/common/PluginHeader';
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
 import { useAuth } from '@/hooks/useAuth';
@@ -30,17 +33,21 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	docUrl,
 	documentId,
 	isDocumentSelected,
-	onUpdateContent
+	onUpdateContent,
 }) => {
 	const { getSetting } = useSettings();
 	const { user } = useAuth();
 	const fileInfo = usePluginFileInfo(fileId, fileName);
 	const { isCurrentVariantDark } = useTheme();
 
-	const autoSave = (getSetting('drawio-viewer-auto-save')?.value as boolean) ?? false;
-	const autoSaveFile = (getSetting('drawio-viewer-auto-save-file')?.value as boolean) ?? false;
-	const theme = (getSetting('drawio-viewer-theme')?.value as string) ?? 'auto-app';
-	const language = (getSetting('drawio-viewer-language')?.value as string) ?? 'auto-app';
+	const autoSave =
+		(getSetting('drawio-viewer-auto-save')?.value as boolean) ?? false;
+	const autoSaveFile =
+		(getSetting('drawio-viewer-auto-save-file')?.value as boolean) ?? false;
+	const theme =
+		(getSetting('drawio-viewer-theme')?.value as string) ?? 'auto-app';
+	const language =
+		(getSetting('drawio-viewer-language')?.value as string) ?? 'auto-app';
 
 	const [isLoading, setIsLoading] = useState(true);
 	const [isSaving, setIsSaving] = useState(false);
@@ -71,7 +78,11 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	const collectionName = useMemo(() => `yjs_${documentId}`, [documentId]);
 
 	useEffect(() => {
-		console.log('[DrawioCollaborativeViewer] Connecting to Y.Doc:', projectId, collectionName);
+		console.log(
+			'[DrawioCollaborativeViewer] Connecting to Y.Doc:',
+			projectId,
+			collectionName,
+		);
 
 		const { doc, provider } = collabService.connect(projectId, collectionName);
 		setYjsDoc(doc);
@@ -88,25 +99,36 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			return isCurrentVariantDark ? 'dark' : 'light';
 		}
 		if (theme === 'auto-drawio') {
-			return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+			return window.matchMedia('(prefers-color-scheme: dark)').matches
+				? 'dark'
+				: 'light';
 		}
 		return theme;
-	}, [theme, isCurrentVariantDark, getSetting]);
+	}, [theme, isCurrentVariantDark]);
 
 	const getLanguageParam = useCallback(() => {
 		if (language === 'auto-app') {
-			const appLanguage = getSetting('language')?.value as string || 'en';
+			const appLanguage = (getSetting('language')?.value as string) || 'en';
 			return appLanguage;
 		}
 		return undefined;
 	}, [language, getSetting]);
 
 	const resolvedTheme = useMemo(() => getThemeParam(), [getThemeParam]);
-	const resolvedLanguage = useMemo(() => getLanguageParam(), [getLanguageParam]);
-	const uiParam = useMemo(() => (resolvedTheme === 'dark' ? 'dark' : 'kennedy'), [resolvedTheme]);
+	const resolvedLanguage = useMemo(
+		() => getLanguageParam(),
+		[getLanguageParam],
+	);
+	const uiParam = useMemo(
+		() => (resolvedTheme === 'dark' ? 'dark' : 'kennedy'),
+		[resolvedTheme],
+	);
 
 	const baseUrl = `${BASE_PATH}/core/drawio-embed`;
-	const drawioOrigin = useMemo(() => new URL(baseUrl, window.location.origin).origin, [baseUrl]);
+	const drawioOrigin = useMemo(
+		() => new URL(baseUrl, window.location.origin).origin,
+		[baseUrl],
+	);
 
 	const embedUrl = useMemo(() => {
 		const params =
@@ -145,7 +167,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			adapterRef.current.destroy();
 			adapterRef.current = null;
 		}
-	}, [fileId, fileName]);
+	}, []);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -202,9 +224,11 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				setError(null);
 			} catch (error) {
 				console.error('Error decoding Draw.io content:', error);
-				setError(t('Failed to decode file content: {error}', {
-					error: error instanceof Error ? error.message : String(error)
-				}));
+				setError(
+					t('Failed to decode file content: {error}', {
+						error: error instanceof Error ? error.message : String(error),
+					}),
+				);
 				setIsLoading(false);
 			}
 		};
@@ -213,8 +237,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		return () => {
 			cancelled = true;
 		};
-	}, [content, t, fileId, fileInfo.fileSize]);
-
+	}, [content, fileId, fileInfo.fileSize]);
 
 	const flashSavedIndicator = useCallback(() => {
 		setShowSaveIndicator(true);
@@ -229,32 +252,39 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		}, 1000);
 	}, []);
 
-	const handleSave = useCallback(async (contentToSave: string) => {
-		if (!fileId) return;
+	const handleSave = useCallback(
+		async (contentToSave: string) => {
+			if (!fileId) return;
 
-		if (!contentToSave.trim()) {
-			console.warn('Attempted to save empty content');
-			return;
-		}
+			if (!contentToSave.trim()) {
+				console.warn('Attempted to save empty content');
+				return;
+			}
 
-		setIsSaving(true);
-		setError(null);
+			setIsSaving(true);
+			setError(null);
 
-		try {
-			const encoder = new TextEncoder();
-			const dataToSave = encoder.encode(contentToSave);
+			try {
+				const encoder = new TextEncoder();
+				const dataToSave = encoder.encode(contentToSave);
 
-			await fileStorageService.updateFileContent(fileId, dataToSave.buffer);
+				await fileStorageService.updateFileContent(fileId, dataToSave.buffer);
 
-			setHasChanges(false);
-			flashSavedIndicator();
-		} catch (error) {
-			console.error('Error saving Draw.io file:', error);
-			setError(t('Failed to save file: {error}', { error: error instanceof Error ? error.message : t('Unknown error') }));
-		} finally {
-			setIsSaving(false);
-		}
-	}, [fileId, flashSavedIndicator]);
+				setHasChanges(false);
+				flashSavedIndicator();
+			} catch (error) {
+				console.error('Error saving Draw.io file:', error);
+				setError(
+					t('Failed to save file: {error}', {
+						error: error instanceof Error ? error.message : t('Unknown error'),
+					}),
+				);
+			} finally {
+				setIsSaving(false);
+			}
+		},
+		[fileId, flashSavedIndicator],
+	);
 
 	useEffect(() => {
 		if (!iframeLoaded || !drawioContent || !yjsDoc || adapterRef.current) {
@@ -278,7 +308,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				if (autoSaveFile && fileId) {
 					handleSave(xml);
 				}
-			}
+			},
 		});
 
 		adapter.initialize(drawioContent);
@@ -292,17 +322,34 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				color: user.color || '#4A90E2',
 				colorLight: user.colorLight || '#85B8F0',
 			});
-			console.log('[DrawioCollaborativeViewer] Set local user in awareness:', user.username);
+			console.log(
+				'[DrawioCollaborativeViewer] Set local user in awareness:',
+				user.username,
+			);
 		}
 
 		return () => {
-			console.log('[DrawioCollaborativeViewer] Effect cleanup - NOT destroying adapter');
+			console.log(
+				'[DrawioCollaborativeViewer] Effect cleanup - NOT destroying adapter',
+			);
 		};
-	}, [iframeLoaded, drawioContent, yjsDoc, yjsProvider, drawioOrigin, autoSaveFile, fileId, handleSave, user]);
+	}, [
+		iframeLoaded,
+		drawioContent,
+		yjsDoc,
+		yjsProvider,
+		drawioOrigin,
+		autoSaveFile,
+		fileId,
+		handleSave,
+		user,
+	]);
 
 	useEffect(() => {
 		return () => {
-			console.log('[DrawioCollaborativeViewer] Component unmounting, destroying adapter');
+			console.log(
+				'[DrawioCollaborativeViewer] Component unmounting, destroying adapter',
+			);
 			if (adapterRef.current) {
 				adapterRef.current.destroy();
 				adapterRef.current = null;
@@ -323,7 +370,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
 			return adapterRef.current.requestExport(options.format, options);
 		},
-		[iframeLoaded, t]
+		[iframeLoaded],
 	);
 
 	const handleDownload = useCallback(() => {
@@ -339,14 +386,17 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			URL.revokeObjectURL(url);
 		} catch (error) {
 			console.error('Error downloading file:', error);
-			setError(t('Failed to download file: {error}', { error: error instanceof Error ? error.message : t('Unknown error') }));
+			setError(
+				t('Failed to download file: {error}', {
+					error: error instanceof Error ? error.message : t('Unknown error'),
+				}),
+			);
 		}
 	}, [drawioContent, fileName]);
 
 	const handleManualSave = useCallback(() => {
 		handleSave(drawioContent);
 	}, [drawioContent, handleSave]);
-
 
 	const getThemeDisplayText = useCallback(() => {
 		if (theme === 'auto-app') return t('Auto (follows app theme)');
@@ -360,53 +410,93 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		return language;
 	}, [language]);
 
-	const tooltipInfo = useMemo(() => [
-		t('Auto-save editor: {status}', { status: autoSave ? t('enabled') : t('disabled') }),
-		t('Auto-save file: {status}', { status: autoSaveFile ? t('enabled') : t('disabled') }),
-		t('Theme: {theme}', { theme: getThemeDisplayText() }),
-		t('Language: {language}', { language: getLanguageDisplayText() }),
-		t('Collaborative Mode: Active'),
-		t('Document ID: {documentId}', { documentId }),
-		t('MIME Type: {mimeType}', { mimeType: fileInfo.mimeType || 'application/vnd.jgraph.mxfile' }),
-		t('Size: {size}', { size: formatFileSize(fileInfo.fileSize) })
-	], [autoSave, autoSaveFile, theme, language, documentId, fileInfo.mimeType, fileInfo.fileSize, t]);
+	const tooltipInfo = useMemo(
+		() => [
+			t('Auto-save editor: {status}', {
+				status: autoSave ? t('enabled') : t('disabled'),
+			}),
+			t('Auto-save file: {status}', {
+				status: autoSaveFile ? t('enabled') : t('disabled'),
+			}),
+			t('Theme: {theme}', { theme: getThemeDisplayText() }),
+			t('Language: {language}', { language: getLanguageDisplayText() }),
+			t('Collaborative Mode: Active'),
+			t('Document ID: {documentId}', { documentId }),
+			t('MIME Type: {mimeType}', {
+				mimeType: fileInfo.mimeType || 'application/vnd.jgraph.mxfile',
+			}),
+			t('Size: {size}', { size: formatFileSize(fileInfo.fileSize) }),
+		],
+		[
+			autoSave,
+			autoSaveFile,
+			documentId,
+			fileInfo.mimeType,
+			fileInfo.fileSize,
+			getLanguageDisplayText,
+			getThemeDisplayText,
+		],
+	);
 
-	const headerControls = useMemo(() => (
-		<>
-			<PluginControlGroup>
-				{fileId && (
-					<>
+	const headerControls = useMemo(
+		() => (
+			<>
+				<PluginControlGroup>
+					{fileId && (
 						<button
 							onClick={handleManualSave}
 							title={t('Save File (Ctrl+S)')}
 							disabled={isSaving || !iframeLoaded}
-							className={hasChanges ? 'active' : ''}>
+							className={hasChanges ? 'active' : ''}
+						>
 							<SaveIcon />
 						</button>
-					</>
-				)}
-				<button onClick={handleDownload} title={t('Download as Draw.io XML')} disabled={!iframeLoaded}>
-					<DownloadIcon />
-				</button>
-			</PluginControlGroup>
+					)}
+					<button
+						onClick={handleDownload}
+						title={t('Download as Draw.io XML')}
+						disabled={!iframeLoaded}
+					>
+						<DownloadIcon />
+					</button>
+				</PluginControlGroup>
 
-			<PluginControlGroup>
-				<DrawioPngExportButton disabled={!iframeLoaded} fileName={fileName} onExport={handleExport} />
-				<DrawioSvgExportButton disabled={!iframeLoaded} fileName={fileName} onExport={handleExport} />
-			</PluginControlGroup>
-		</>
-	), [fileId, isSaving, iframeLoaded, hasChanges, fileName, handleManualSave, handleDownload, handleExport, t]);
+				<PluginControlGroup>
+					<DrawioPngExportButton
+						disabled={!iframeLoaded}
+						fileName={fileName}
+						onExport={handleExport}
+					/>
+					<DrawioSvgExportButton
+						disabled={!iframeLoaded}
+						fileName={fileName}
+						onExport={handleExport}
+					/>
+				</PluginControlGroup>
+			</>
+		),
+		[
+			fileId,
+			isSaving,
+			iframeLoaded,
+			hasChanges,
+			fileName,
+			handleManualSave,
+			handleDownload,
+			handleExport,
+		],
+	);
 
 	if (isLoading) {
 		return (
-			<div className="drawio-viewer-container">
-				<div className="loading-indicator">{t('Loading diagram...')}</div>
+			<div className='drawio-viewer-container'>
+				<div className='loading-indicator'>{t('Loading diagram...')}</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="drawio-viewer-container">
+		<div className='drawio-viewer-container'>
 			<PluginHeader
 				fileName={fileInfo.fileName}
 				filePath={fileInfo.filePath}
@@ -417,18 +507,23 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				awareness={yjsProvider?.awareness}
 			/>
 
-			<div className="drawio-viewer-content">
-				{error && <div className="drawio-error-message error-message">{error}</div>}
+			<div className='drawio-viewer-content'>
+				{error && (
+					<div className='drawio-error-message error-message'>{error}</div>
+				)}
 
 				{!isOnline && showOfflineBanner && (
-					<div className="drawio-warning-message warning-message">
+					<div className='drawio-warning-message warning-message'>
 						<span>
-							{t('You are currently offline. Draw.io is cached and will work, but some features may be limited.')}
+							{t(
+								'You are currently offline. Draw.io is cached and will work, but some features may be limited.',
+							)}
 						</span>
 						<button
-							className="button icon-only small"
+							className='button icon-only small'
 							onClick={() => setShowOfflineBanner(false)}
-							title={t('Dismiss offline banner')}>
+							title={t('Dismiss offline banner')}
+						>
 							<CloseIcon />
 						</button>
 					</div>
@@ -436,21 +531,24 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
 				{!error && (
 					<>
-						<DrawioSplashScreen iframeLoaded={iframeLoaded} fileKey={fileId ?? fileName} />
+						<DrawioSplashScreen
+							iframeLoaded={iframeLoaded}
+							fileKey={fileId ?? fileName}
+						/>
 						<iframe
 							key={fileId ?? fileName}
 							ref={iframeRef}
 							src={embedUrl}
-							className="drawio-iframe"
+							className='drawio-iframe'
 							title={fileName}
 							onLoad={handleIframeLoad}
-							sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-popups-to-escape-sandbox"
+							sandbox='allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-popups-to-escape-sandbox'
 						/>
 					</>
 				)}
 
 				{showSaveIndicator && (
-					<div className="save-indicator">
+					<div className='save-indicator'>
 						<span>{t('Saved')}</span>
 					</div>
 				)}

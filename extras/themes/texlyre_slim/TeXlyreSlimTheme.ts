@@ -45,7 +45,11 @@ const createTeXlyreSlimTheme = (): ThemePlugin => {
 			{ id: 'dark', name: t('Dark'), isDark: true },
 			{ id: 'system', name: t('System'), isDark: false },
 			{ id: 'monokai', name: t('Monokai'), isDark: true },
-			{ id: 'tomorrow_night_blue', name: t('Tomorrow Night Blue'), isDark: true },
+			{
+				id: 'tomorrow_night_blue',
+				name: t('Tomorrow Night Blue'),
+				isDark: true,
+			},
 			{ id: 'github_light', name: t('GitHub Light'), isDark: false },
 			{ id: 'solarized_light', name: t('Solarized Light'), isDark: false },
 			{ id: 'atom_light', name: t('Atom Light'), isDark: false },
@@ -58,17 +62,31 @@ const createTeXlyreSlimTheme = (): ThemePlugin => {
 			currentThemeId = variantId;
 
 			if (variantId === 'system') {
-				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+				const prefersDark = window.matchMedia(
+					'(prefers-color-scheme: dark)',
+				).matches;
 				applyThemeColors(prefersDark ? 'dark' : 'light');
-				document.documentElement.setAttribute('data-theme-mode', prefersDark ? 'dark' : 'light');
+				document.documentElement.setAttribute(
+					'data-theme-mode',
+					prefersDark ? 'dark' : 'light',
+				);
 			} else {
 				applyThemeColors(variantId);
-				document.documentElement.setAttribute('data-theme-mode', theme.isDark ? 'dark' : 'light');
+				document.documentElement.setAttribute(
+					'data-theme-mode',
+					theme.isDark ? 'dark' : 'light',
+				);
 			}
 
 			document.documentElement.setAttribute('data-theme', variantId);
-			document.documentElement.setAttribute('data-theme-plugin', 'texlyre-slim');
-			document.documentElement.setAttribute('data-theme-mode', theme.isDark ? 'dark' : 'light');
+			document.documentElement.setAttribute(
+				'data-theme-plugin',
+				'texlyre-slim',
+			);
+			document.documentElement.setAttribute(
+				'data-theme-mode',
+				theme.isDark ? 'dark' : 'light',
+			);
 			return true;
 		},
 

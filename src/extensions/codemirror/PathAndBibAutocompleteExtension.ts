@@ -1,5 +1,9 @@
 // src/extensions/codemirror/PathAndBibAutocompleteExtension.ts
-import { type CompletionContext, type CompletionResult, type CompletionSource } from '@codemirror/autocomplete';
+import type {
+	CompletionContext,
+	CompletionResult,
+	CompletionSource,
+} from '@codemirror/autocomplete';
 import { StateEffect, StateField, type Extension } from '@codemirror/state';
 import { ViewPlugin, type EditorView } from '@codemirror/view';
 
@@ -68,7 +72,7 @@ class AutocompleteProcessor {
 
 	private handleCacheUpdate = (files: FileNode[]) => {
 		this.view.dispatch({
-			effects: updateFileCache.of(files)
+			effects: updateFileCache.of(files),
 		});
 		this.bibliographyHandler.updateCache();
 	};
@@ -91,27 +95,35 @@ class AutocompleteProcessor {
 		return this.bibliographyHandler.updateCache();
 	}
 
-	update(update: any) {
-	}
+	update(_update: any) {}
 
-	private getMergedTypstCompletions(context: CompletionContext): CompletionResult | null {
+	private getMergedTypstCompletions(
+		context: CompletionContext,
+	): CompletionResult | null {
 		const match = this.referenceHandler.getTypstReferenceMatch(context);
 		if (!match) return null;
 
 		const { partial, from } = match;
 		const refOptions = this.referenceHandler.getTypstLabelOptions(partial);
-		const citationOptions = this.bibliographyHandler.getCitationOptions(partial);
+		const citationOptions =
+			this.bibliographyHandler.getCitationOptions(partial);
 
 		const mergedOptions = [
-			...refOptions.map(opt => ({ ...opt, section: 'References' })),
-			...citationOptions.map(opt => ({ ...opt, section: 'Citations' })),
-		].sort((a, b) => {
-			const aStartsWith = a.label.toLowerCase().startsWith(partial.toLowerCase());
-			const bStartsWith = b.label.toLowerCase().startsWith(partial.toLowerCase());
-			if (aStartsWith && !bStartsWith) return -1;
-			if (!aStartsWith && bStartsWith) return 1;
-			return (b.boost || 0) - (a.boost || 0);
-		}).slice(0, 20);
+			...refOptions.map((opt) => ({ ...opt, section: 'References' })),
+			...citationOptions.map((opt) => ({ ...opt, section: 'Citations' })),
+		]
+			.sort((a, b) => {
+				const aStartsWith = a.label
+					.toLowerCase()
+					.startsWith(partial.toLowerCase());
+				const bStartsWith = b.label
+					.toLowerCase()
+					.startsWith(partial.toLowerCase());
+				if (aStartsWith && !bStartsWith) return -1;
+				if (!aStartsWith && bStartsWith) return 1;
+				return (b.boost || 0) - (a.boost || 0);
+			})
+			.slice(0, 20);
 
 		if (mergedOptions.length === 0) return null;
 
@@ -122,8 +134,13 @@ class AutocompleteProcessor {
 		};
 	}
 
-	getCompletions = async (context: CompletionContext): Promise<CompletionResult | null> => {
-		const refResult = this.referenceHandler.getCompletions(context, this.currentFilePath);
+	getCompletions = async (
+		context: CompletionContext,
+	): Promise<CompletionResult | null> => {
+		const refResult = this.referenceHandler.getCompletions(
+			context,
+			this.currentFilePath,
+		);
 		if (refResult) return refResult;
 
 		if (isTypstFile(this.currentFilePath)) {
@@ -131,10 +148,16 @@ class AutocompleteProcessor {
 			if (merged) return merged;
 		}
 
-		const bibResult = await this.bibliographyHandler.getCompletions(context, this.currentFilePath);
+		const bibResult = await this.bibliographyHandler.getCompletions(
+			context,
+			this.currentFilePath,
+		);
 		if (bibResult) return bibResult;
 
-		const fileResult = this.filePathHandler.getCompletions(context, this.currentFilePath);
+		const fileResult = this.filePathHandler.getCompletions(
+			context,
+			this.currentFilePath,
+		);
 		if (fileResult) return fileResult;
 
 		return null;
@@ -143,7 +166,9 @@ class AutocompleteProcessor {
 
 let globalProcessor: AutocompleteProcessor | null = null;
 
-export function createFilePathAutocompleteExtension(currentFilePath: string = ''): [Extension, Extension, CompletionSource] {
+export function createFilePathAutocompleteExtension(
+	currentFilePath: string = '',
+): [Extension, Extension, CompletionSource] {
 	const plugin = ViewPlugin.fromClass(
 		class {
 			processor: AutocompleteProcessor;
@@ -164,28 +189,29 @@ export function createFilePathAutocompleteExtension(currentFilePath: string = ''
 					globalProcessor = null;
 				}
 			}
-		}
+		},
 	);
 
-	const completionSource: CompletionSource = async (context: CompletionContext) => {
-		return await globalProcessor?.getCompletions(context) || null;
+	const completionSource: CompletionSource = async (
+		context: CompletionContext,
+	) => {
+		return (await globalProcessor?.getCompletions(context)) || null;
 	};
 
 	const stateExtensions = [filePathCacheField];
 
-	return [
-		stateExtensions,
-		plugin,
-		completionSource,
-	];
+	return [stateExtensions, plugin, completionSource];
 }
 
-export function setCurrentFilePath(view: EditorView, filePath: string) {
-	if (globalProcessor && typeof globalProcessor.setCurrentFilePath === 'function') {
+export function setCurrentFilePath(_view: EditorView, filePath: string) {
+	if (
+		globalProcessor &&
+		typeof globalProcessor.setCurrentFilePath === 'function'
+	) {
 		globalProcessor.setCurrentFilePath(filePath);
 	}
 }
 
-export function refreshBibliographyCache(view: EditorView) {
+export function refreshBibliographyCache(_view: EditorView) {
 	globalProcessor?.refreshBibliographyCache();
 }

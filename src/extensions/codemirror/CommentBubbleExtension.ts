@@ -12,11 +12,26 @@ const commentBubblePlugin = ViewPlugin.fromClass(
 		constructor(private view: EditorView) {
 			this.view.dom.addEventListener('click', this.onClick.bind(this));
 			this.view.dom.addEventListener('mouseup', this.onMouseUp.bind(this));
-			this.view.dom.addEventListener('selectionchange', this.onSelectionChange.bind(this));
-			document.addEventListener('selectionchange', this.onSelectionChange.bind(this));
-			document.addEventListener('show-comment-modal', this.onModalOpen.bind(this));
-			document.addEventListener('comment-modal-closed', this.onModalClose.bind(this));
-			document.addEventListener('hide-floating-comment-button', this.hideFloatingButton.bind(this));
+			this.view.dom.addEventListener(
+				'selectionchange',
+				this.onSelectionChange.bind(this),
+			);
+			document.addEventListener(
+				'selectionchange',
+				this.onSelectionChange.bind(this),
+			);
+			document.addEventListener(
+				'show-comment-modal',
+				this.onModalOpen.bind(this),
+			);
+			document.addEventListener(
+				'comment-modal-closed',
+				this.onModalClose.bind(this),
+			);
+			document.addEventListener(
+				'hide-floating-comment-button',
+				this.hideFloatingButton.bind(this),
+			);
 		}
 
 		onModalOpen() {
@@ -102,7 +117,10 @@ const commentBubblePlugin = ViewPlugin.fromClass(
 
 			const selection = this.view.state.selection.main;
 
-			if (selection.from === selection.to || selection.to - selection.from < 1) {
+			if (
+				selection.from === selection.to ||
+				selection.to - selection.from < 1
+			) {
 				this.hideFloatingButton();
 				return;
 			}
@@ -128,7 +146,7 @@ const commentBubblePlugin = ViewPlugin.fromClass(
 				document.dispatchEvent(
 					new CustomEvent('show-comment-modal', {
 						detail: { selection: { from: selection.from, to: selection.to } },
-					})
+					}),
 				);
 
 				this.hideFloatingButton();
@@ -146,9 +164,11 @@ const commentBubblePlugin = ViewPlugin.fromClass(
 				return;
 			}
 
-			const editorRect = this.view.dom.getBoundingClientRect();
-			const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-			const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+			const _editorRect = this.view.dom.getBoundingClientRect();
+			const scrollLeft =
+				window.pageXOffset || document.documentElement.scrollLeft;
+			const scrollTop =
+				window.pageYOffset || document.documentElement.scrollTop;
 
 			this.floatingButton.style.position = 'absolute';
 			this.floatingButton.style.left = `${coords.left + scrollLeft + 10}px`;
@@ -166,11 +186,26 @@ const commentBubblePlugin = ViewPlugin.fromClass(
 		destroy() {
 			this.view.dom.removeEventListener('click', this.onClick.bind(this));
 			this.view.dom.removeEventListener('mouseup', this.onMouseUp.bind(this));
-			this.view.dom.removeEventListener('selectionchange', this.onSelectionChange.bind(this));
-			document.removeEventListener('selectionchange', this.onSelectionChange.bind(this));
-			document.removeEventListener('show-comment-modal', this.onModalOpen.bind(this));
-			document.removeEventListener('comment-modal-closed', this.onModalClose.bind(this));
-			document.removeEventListener('hide-floating-comment-button', this.hideFloatingButton.bind(this));
+			this.view.dom.removeEventListener(
+				'selectionchange',
+				this.onSelectionChange.bind(this),
+			);
+			document.removeEventListener(
+				'selectionchange',
+				this.onSelectionChange.bind(this),
+			);
+			document.removeEventListener(
+				'show-comment-modal',
+				this.onModalOpen.bind(this),
+			);
+			document.removeEventListener(
+				'comment-modal-closed',
+				this.onModalClose.bind(this),
+			);
+			document.removeEventListener(
+				'hide-floating-comment-button',
+				this.hideFloatingButton.bind(this),
+			);
 
 			if (this.hideTimeout) {
 				clearTimeout(this.hideTimeout);

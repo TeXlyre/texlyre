@@ -3,7 +3,6 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 
 import type { BibtexEntry } from '@/utils/bibtexParser';
 
-
 interface BibtexTableViewProps {
 	entries: BibtexEntry[];
 	onEntriesChange: (entries: BibtexEntry[]) => void;
@@ -20,22 +19,30 @@ export const BibtexTableView: React.FC<BibtexTableViewProps> = ({
 	onEntriesChange,
 	onSingleEntryChange,
 }) => {
-	const [editingCell, setEditingCell] = useState<{ entryIndex: number; field: string } | null>(null);
+	const [editingCell, setEditingCell] = useState<{
+		entryIndex: number;
+		field: string;
+	} | null>(null);
 	const [editValue, setEditValue] = useState('');
-	const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
+	const [sortConfig, setSortConfig] = useState<SortConfig>({
+		key: null,
+		direction: 'asc',
+	});
 	const tableRef = useRef<HTMLTableElement>(null);
 	// TODO (fabawi): implement proper column resizing
-	const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
-	const [isResizing, setIsResizing] = useState(false);
-	const [resizingField, setResizingField] = useState<string | null>(null);
-	const startXRef = useRef(0);
-	const startWidthRef = useRef(0);
+	const [_columnWidths, _setColumnWidths] = useState<Record<string, number>>(
+		{},
+	);
+	const [_isResizing, _setIsResizing] = useState(false);
+	const [_resizingField, _setResizingField] = useState<string | null>(null);
+	const _startXRef = useRef(0);
+	const _startWidthRef = useRef(0);
 
 	const allFields = useMemo(() => {
 		const fieldSet = new Set<string>();
 		fieldSet.add('type');
-		entries.forEach(entry => {
-			Object.keys(entry.fields).forEach(field => fieldSet.add(field));
+		entries.forEach((entry) => {
+			Object.keys(entry.fields).forEach((field) => fieldSet.add(field));
 		});
 		const otherFields = Array.from(fieldSet).sort();
 		return ['id', ...otherFields];
@@ -82,14 +89,16 @@ export const BibtexTableView: React.FC<BibtexTableViewProps> = ({
 	const handleSort = (field: string, direction: 'asc' | 'desc') => {
 		setSortConfig({
 			key: field,
-			direction: direction
+			direction: direction,
 		});
 	};
 
 	const startEdit = (entryIndex: number, field: string) => {
 		if (field === 'id') return; // Can't edit id field
 
-		const actualIndex = entries.findIndex(e => e.originalIndex === displayEntries[entryIndex].originalIndex);
+		const actualIndex = entries.findIndex(
+			(e) => e.originalIndex === displayEntries[entryIndex].originalIndex,
+		);
 		const entry = entries[actualIndex];
 		let currentValue = '';
 
@@ -151,18 +160,22 @@ export const BibtexTableView: React.FC<BibtexTableViewProps> = ({
 	};
 
 	return (
-		<div className="bibtex-table-container">
-			<table ref={tableRef} className="bibtex-table resizable-table">
+		<div className='bibtex-table-container'>
+			<table ref={tableRef} className='bibtex-table resizable-table'>
 				<thead>
 					<tr>
-						{allFields.map(field => (
+						{allFields.map((field) => (
 							<th
 								key={field}
-								className={sortConfig.key === field ? `sorted-${sortConfig.direction}` : ''}
+								className={
+									sortConfig.key === field
+										? `sorted-${sortConfig.direction}`
+										: ''
+								}
 							>
-								<div className="header-content">
-									<span className="field-name">{field}</span>
-									<div className="sort-buttons">
+								<div className='header-content'>
+									<span className='field-name'>{field}</span>
+									<div className='sort-buttons'>
 										<button
 											className={`sort-btn ${sortConfig.key === field && sortConfig.direction === 'asc' ? 'active' : ''}`}
 											onClick={() => handleSort(field, 'asc')}
@@ -185,32 +198,37 @@ export const BibtexTableView: React.FC<BibtexTableViewProps> = ({
 				</thead>
 				<tbody>
 					{displayEntries.map((entry, displayIndex) => {
-						const actualIndex = entries.findIndex(e => e.originalIndex === entry.originalIndex);
+						const actualIndex = entries.findIndex(
+							(e) => e.originalIndex === entry.originalIndex,
+						);
 						return (
 							<tr key={entry.originalIndex}>
-								{allFields.map(field => {
-									const isEditing = editingCell?.entryIndex === actualIndex && editingCell?.field === field;
+								{allFields.map((field) => {
+									const isEditing =
+										editingCell?.entryIndex === actualIndex &&
+										editingCell?.field === field;
 									const value = getCellValue(entry, field);
 
 									return (
 										<td
 											key={field}
-											onClick={() => !isEditing && startEdit(displayIndex, field)}
+											onClick={() =>
+												!isEditing && startEdit(displayIndex, field)
+											}
 											className={`${isEditing ? 'editing' : field === 'id' ? 'non-editable' : 'editable'}`}
 										>
 											{isEditing ? (
 												<input
-													type="text"
+													type='text'
 													value={editValue}
 													onChange={(e) => setEditValue(e.target.value)}
 													onBlur={saveEdit}
 													onKeyDown={handleKeyDown}
-													autoFocus
-													className="cell-input"
+													className='cell-input'
 												/>
 											) : (
-												<span className="cell-content">
-													{value || <em className="empty-field">—</em>}
+												<span className='cell-content'>
+													{value || <em className='empty-field'>—</em>}
 												</span>
 											)}
 										</td>

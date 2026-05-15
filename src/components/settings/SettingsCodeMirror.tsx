@@ -88,11 +88,17 @@ export const SettingsCodeMirror: React.FC<SettingsCodeMirrorProps> = ({
 			basicSetup,
 			languageCompartmentRef.current.of(getLanguageExtension(options.language)),
 			themeCompartmentRef.current.of(getThemeExtension()),
-			heightCompartmentRef.current.of(options.height ? EditorView.theme({
-				'&': { height: `${options.height * 1.5}em` },
-				'.cm-scroller': { overflow: 'auto' }
-			}) : []),
-			lineNumbersCompartmentRef.current.of(options.lineNumbers ? lineNumbers() : []),
+			heightCompartmentRef.current.of(
+				options.height
+					? EditorView.theme({
+							'&': { height: `${options.height * 1.5}em` },
+							'.cm-scroller': { overflow: 'auto' },
+						})
+					: [],
+			),
+			lineNumbersCompartmentRef.current.of(
+				options.lineNumbers ? lineNumbers() : [],
+			),
 			EditorView.contentAttributes.of({ dir: 'ltr' }),
 			EditorView.editorAttributes.of({ dir: 'ltr' }),
 			EditorView.updateListener.of((update) => {
@@ -103,7 +109,7 @@ export const SettingsCodeMirror: React.FC<SettingsCodeMirrorProps> = ({
 						isInternalUpdateRef.current = false;
 					});
 				}
-			})
+			}),
 		];
 
 		if (options.wordWrap) {
@@ -126,7 +132,14 @@ export const SettingsCodeMirror: React.FC<SettingsCodeMirrorProps> = ({
 				editorViewRef.current = null;
 			}
 		};
-	}, []);
+	}, [
+		options.wordWrap,
+		options.lineNumbers,
+		value,
+		options.language,
+		options.height,
+		getThemeExtension,
+	]);
 
 	useEffect(() => {
 		if (!editorViewRef.current || isInternalUpdateRef.current) return;
@@ -138,7 +151,7 @@ export const SettingsCodeMirror: React.FC<SettingsCodeMirrorProps> = ({
 					from: 0,
 					to: currentDoc.length,
 					insert: value || '',
-				}
+				},
 			});
 		}
 	}, [value]);
@@ -148,8 +161,8 @@ export const SettingsCodeMirror: React.FC<SettingsCodeMirrorProps> = ({
 
 		editorViewRef.current.dispatch({
 			effects: languageCompartmentRef.current.reconfigure(
-				getLanguageExtension(options.language)
-			)
+				getLanguageExtension(options.language),
+			),
 		});
 	}, [options.language]);
 
@@ -157,20 +170,22 @@ export const SettingsCodeMirror: React.FC<SettingsCodeMirrorProps> = ({
 		if (!editorViewRef.current) return;
 
 		editorViewRef.current.dispatch({
-			effects: themeCompartmentRef.current.reconfigure(getThemeExtension())
+			effects: themeCompartmentRef.current.reconfigure(getThemeExtension()),
 		});
-	}, [options.theme, currentVariant]);
+	}, [getThemeExtension]);
 
 	useEffect(() => {
 		if (!editorViewRef.current) return;
 
 		editorViewRef.current.dispatch({
 			effects: heightCompartmentRef.current.reconfigure(
-				options.height ? EditorView.theme({
-					'&': { height: `${options.height * 1.5}em` },
-					'.cm-scroller': { overflow: 'auto' }
-				}) : []
-			)
+				options.height
+					? EditorView.theme({
+							'&': { height: `${options.height * 1.5}em` },
+							'.cm-scroller': { overflow: 'auto' },
+						})
+					: [],
+			),
 		});
 	}, [options.height]);
 
@@ -179,23 +194,21 @@ export const SettingsCodeMirror: React.FC<SettingsCodeMirrorProps> = ({
 
 		editorViewRef.current.dispatch({
 			effects: lineNumbersCompartmentRef.current.reconfigure(
-				options.lineNumbers ? lineNumbers() : []
-			)
+				options.lineNumbers ? lineNumbers() : [],
+			),
 		});
 	}, [options.lineNumbers]);
 
 	return (
-		<div className="settings-codemirror">
-			<label className="setting-label">
-				{setting.label}
-			</label>
+		<div className='settings-codemirror'>
+			<label className='setting-label'>{setting.label}</label>
 			<div
 				ref={containerRef}
 				className={`settings-codemirror-container ${options.resizable ? 'resizable' : ''}`}
 				style={{
 					border: '1px solid #ddd',
 					borderRadius: '4px',
-					...(options.resizable && { resize: 'vertical', overflow: 'auto' })
+					...(options.resizable && { resize: 'vertical', overflow: 'auto' }),
 				}}
 			/>
 		</div>

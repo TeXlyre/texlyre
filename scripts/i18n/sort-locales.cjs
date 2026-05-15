@@ -5,37 +5,37 @@ const translationsDir = path.join(__dirname, '../../translations');
 const configFile = path.join(translationsDir, 'languages.config.json');
 
 function sortLocales() {
-    if (!fs.existsSync(configFile)) {
-        console.error('❌ languages.config.json not found');
-        return;
-    }
+	if (!fs.existsSync(configFile)) {
+		console.error('❌ languages.config.json not found');
+		return;
+	}
 
-    const config = JSON.parse(fs.readFileSync(configFile, 'utf8'));
-    let sortedCount = 0;
+	const config = JSON.parse(fs.readFileSync(configFile, 'utf8'));
+	let sortedCount = 0;
 
-    for (const lang of config.languages) {
-        const filePath = path.join(translationsDir, lang.filePath);
+	for (const lang of config.languages) {
+		const filePath = path.join(translationsDir, lang.filePath);
 
-        if (!fs.existsSync(filePath)) {
-            console.warn(`⚠️  ${lang.filePath} not found, skipping`);
-            continue;
-        }
+		if (!fs.existsSync(filePath)) {
+			console.warn(`⚠️  ${lang.filePath} not found, skipping`);
+			continue;
+		}
 
-        const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        const sortedData = Object.fromEntries(
-            Object.entries(data).sort(([a], [b]) => a.localeCompare(b))
-        );
+		const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+		const sortedData = Object.fromEntries(
+			Object.entries(data).sort(([a], [b]) => a.localeCompare(b)),
+		);
 
-        fs.writeFileSync(filePath, JSON.stringify(sortedData, null, 2));
-        sortedCount++;
-        console.log(`✓ Sorted ${lang.name} (${lang.code})`);
-    }
+		fs.writeFileSync(filePath, JSON.stringify(sortedData, null, 2));
+		sortedCount++;
+		console.log(`✓ Sorted ${lang.name} (${lang.code})`);
+	}
 
-    console.log(`\n✅ Sorted ${sortedCount} locale files`);
+	console.log(`\n✅ Sorted ${sortedCount} locale files`);
 }
 
 if (require.main === module) {
-    sortLocales();
+	sortLocales();
 }
 
 module.exports = { sortLocales };

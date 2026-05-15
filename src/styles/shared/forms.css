@@ -40,88 +40,88 @@ input[type="checkbox"],
 input[type="radio"],
 *[type="checkbox"],
 *[type="radio"] {
-	-webkit-appearance: none !important;
-	-moz-appearance: none !important;
-	appearance: none !important;
-	width: 16px !important;
-	height: 16px !important;
-	min-width: 16px !important;
-	min-height: 16px !important;
-	max-width: 16px !important;
-	max-height: 16px !important;
-	padding: 0 !important;
-	margin: 0 !important;
-	margin-right: var(--space-sm) !important;
-	border: 1.5px solid var(--accent-border, #ddd) !important;
-	border-radius: var(--radius-sm) !important;
-	background-color: var(--pico-background) !important;
-	cursor: pointer !important;
-	position: relative !important;
-	flex-shrink: 0 !important;
-	transform: none !important;
-	box-shadow: none !important;
-	outline: none !important;
-	accent-color: var(--pico-primary-inverse) !important;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	width: 16px;
+	height: 16px;
+	min-width: 16px;
+	min-height: 16px;
+	max-width: 16px;
+	max-height: 16px;
+	padding: 0;
+	margin: 0;
+	margin-right: var(--space-sm);
+	border: 1.5px solid var(--accent-border, #ddd);
+	border-radius: var(--radius-sm);
+	background-color: var(--pico-background);
+	cursor: pointer;
+	position: relative;
+	flex-shrink: 0;
+	transform: none;
+	box-shadow: none;
+	outline: none;
+	accent-color: var(--pico-primary-inverse);
 }
 
 input[type="checkbox"]:focus,
 input[type="radio"]:focus,
 *[type="checkbox"]:focus,
 *[type="radio"]:focus {
-	outline: 2px solid var(--pico-primary-focus) !important;
-	outline-offset: 2px !important;
+	outline: 2px solid var(--pico-primary-focus);
+	outline-offset: 2px;
 }
 
 input[type="checkbox"]:hover,
 input[type="radio"]:hover,
 *[type="checkbox"]:hover,
 *[type="radio"]:hover {
-	border-color: var(--pico-primary) !important;
+	border-color: var(--pico-primary);
 }
 
 input[type="checkbox"]:checked,
 *[type="checkbox"]:checked {
-	background-color: var(--pico-primary) !important;
-	border-color: var(--pico-primary) !important;
-	color: var(--pico-primary-inverse) !important;
+	background-color: var(--pico-primary);
+	border-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
 	appearance: none;
 	-webkit-appearance: none;
 	-moz-appearance: none;
-	accent-color: var(--pico-primary-inverse) !important;
+	accent-color: var(--pico-primary-inverse);
 }
 
 input[type="checkbox"]:checked::after,
 *[type="checkbox"]:checked::after {
-	background-color: var(--pico-primary) !important;
-	border-color: var(--pico-primary) !important;
-	color: var(--pico-primary-inverse) !important;
+	background-color: var(--pico-primary);
+	border-color: var(--pico-primary);
+	color: var(--pico-primary-inverse);
 	appearance: none;
 	-webkit-appearance: none;
 	-moz-appearance: none;
-	accent-color: var(--pico-primary-inverse) !important;
+	accent-color: var(--pico-primary-inverse);
 }
 
 input[type="radio"],
 *[type="radio"] {
-	border-radius: 50% !important;
+	border-radius: 50%;
 }
 
 input[type="radio"]:checked,
 *[type="radio"]:checked {
-	border-color: var(--pico-primary) !important;
+	border-color: var(--pico-primary);
 }
 
 input[type="radio"]:checked::before,
 *[type="radio"]:checked::before {
-	content: "" !important;
-	position: absolute !important;
-	top: 50% !important;
-	left: 50% !important;
-	transform: translate(-50%, -50%) !important;
-	width: 8px !important;
-	height: 8px !important;
-	border-radius: 50% !important;
-	background-color: var(--pico-primary) !important;
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background-color: var(--pico-primary);
 }
 
 input[type="range"],
@@ -229,7 +229,6 @@ input[type="range"]:disabled::-moz-range-thumb {
 	margin-top: var(--space-md);
 }
 
-
 .checkbox {
 	width: 16px;
 	height: 16px;
@@ -268,7 +267,7 @@ input[type="range"]:disabled::-moz-range-thumb {
 	margin-bottom: var(--space-md);
 }
 
-.color-picker-group>label {
+.color-picker-group > label {
 	display: block;
 	margin-bottom: var(--space-sm);
 	font-weight: 500;

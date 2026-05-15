@@ -1,191 +1,209 @@
 // src/utils/urlMetadataExtractor.ts
 interface PageMetadata {
-    title: string | null;
-    description: string | null;
-    image: string | null;
-    tags: string[];
-    type: 'latex' | 'typst' | null;
-    zipUrl: string;
+	title: string | null;
+	description: string | null;
+	image: string | null;
+	tags: string[];
+	type: 'latex' | 'typst' | null;
+	zipUrl: string;
 }
 
 function parseGitUrl(url: string) {
-    try {
-        const urlObj = new URL(url);
-        const hostname = urlObj.hostname.toLowerCase();
-        const parts = urlObj.pathname.split('/').filter(Boolean);
+	try {
+		const urlObj = new URL(url);
+		const hostname = urlObj.hostname.toLowerCase();
+		const parts = urlObj.pathname.split('/').filter(Boolean);
 
-        if (parts.length < 2) return null;
+		if (parts.length < 2) return null;
 
-        return {
-            hostname,
-            owner: parts[0],
-            repo: parts[1].replace(/\.git$/, '')
-        };
-    } catch {
-        return null;
-    }
+		return {
+			hostname,
+			owner: parts[0],
+			repo: parts[1].replace(/\.git$/, ''),
+		};
+	} catch {
+		return null;
+	}
 }
 
 function detectTypeFromLanguages(
-    languages: Record<string, number>,
+	languages: Record<string, number>,
 ): 'latex' | 'typst' | null {
-    const entries = Object.entries(languages);
-    if (entries.length === 0) return null;
+	const entries = Object.entries(languages);
+	if (entries.length === 0) return null;
 
-    const sorted = entries.sort((a, b) => b[1] - a[1]);
-    const primaryLanguage = sorted[0][0].toLowerCase();
+	const sorted = entries.sort((a, b) => b[1] - a[1]);
+	const primaryLanguage = sorted[0][0].toLowerCase();
 
-    if (primaryLanguage.includes('tex')) return 'latex';
-    if (primaryLanguage.includes('typst')) return 'typst';
+	if (primaryLanguage.includes('tex')) return 'latex';
+	if (primaryLanguage.includes('typst')) return 'typst';
 
-    return null;
+	return null;
 }
 
 function applyProxyToZipUrl(zipUrl: string, proxyUrl: string | null): string {
-    if (!proxyUrl || !proxyUrl.trim()) return zipUrl;
+	if (!proxyUrl?.trim()) return zipUrl;
 
-    const trimmedProxy = proxyUrl.trim();
-    // const normalizedProxy = trimmedProxy.endsWith('/') ? trimmedProxy.slice(0, -1) : trimmedProxy;
+	const trimmedProxy = proxyUrl.trim();
+	// const normalizedProxy = trimmedProxy.endsWith('/') ? trimmedProxy.slice(0, -1) : trimmedProxy;
 
-    return `${trimmedProxy}${zipUrl}`;
+	return `${trimmedProxy}${zipUrl}`;
 }
 
 async function fetchGitHubMetadata(
-    owner: string,
-    repo: string,
-    proxyUrl: string | null,
+	owner: string,
+	repo: string,
+	proxyUrl: string | null,
 ): Promise<PageMetadata | null> {
-    try {
-        const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
-        if (!response.ok) return null;
+	try {
+		const response = await fetch(
+			`https://api.github.com/repos/${owner}/${repo}`,
+		);
+		if (!response.ok) return null;
 
-        const data = await response.json();
+		const data = await response.json();
 
-        const languagesResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/languages`);
-        const languages = languagesResponse.ok ? await languagesResponse.json() : {};
+		const languagesResponse = await fetch(
+			`https://api.github.com/repos/${owner}/${repo}/languages`,
+		);
+		const languages = languagesResponse.ok
+			? await languagesResponse.json()
+			: {};
 
-        const detectedType = detectTypeFromLanguages(languages);
-        const socialImageUrl = `https://opengraph.githubassets.com/1/${owner}/${repo}`;
-        const zipUrl = `https://github.com/${owner}/${repo}/archive/refs/heads/${data.default_branch}.zip`;
+		const detectedType = detectTypeFromLanguages(languages);
+		const socialImageUrl = `https://opengraph.githubassets.com/1/${owner}/${repo}`;
+		const zipUrl = `https://github.com/${owner}/${repo}/archive/refs/heads/${data.default_branch}.zip`;
 
-        return {
-            title: data.name,
-            description: data.description,
-            image: socialImageUrl,
-            tags: data.topics || [],
-            type: detectedType,
-            zipUrl: applyProxyToZipUrl(zipUrl, proxyUrl)
-        };
-    } catch {
-        return null;
-    }
+		return {
+			title: data.name,
+			description: data.description,
+			image: socialImageUrl,
+			tags: data.topics || [],
+			type: detectedType,
+			zipUrl: applyProxyToZipUrl(zipUrl, proxyUrl),
+		};
+	} catch {
+		return null;
+	}
 }
 
 async function fetchGitLabMetadata(
-    owner: string,
-    repo: string,
-    proxyUrl: string | null,
+	owner: string,
+	repo: string,
+	proxyUrl: string | null,
 ): Promise<PageMetadata | null> {
-    try {
-        const projectPath = encodeURIComponent(`${owner}/${repo}`);
-        const response = await fetch(`https://gitlab.com/api/v4/projects/${projectPath}`);
-        if (!response.ok) return null;
+	try {
+		const projectPath = encodeURIComponent(`${owner}/${repo}`);
+		const response = await fetch(
+			`https://gitlab.com/api/v4/projects/${projectPath}`,
+		);
+		if (!response.ok) return null;
 
-        const data = await response.json();
+		const data = await response.json();
 
-        const languagesResponse = await fetch(`https://gitlab.com/api/v4/projects/${projectPath}/languages`);
-        const languages = languagesResponse.ok ? await languagesResponse.json() : {};
+		const languagesResponse = await fetch(
+			`https://gitlab.com/api/v4/projects/${projectPath}/languages`,
+		);
+		const languages = languagesResponse.ok
+			? await languagesResponse.json()
+			: {};
 
-        const detectedType = detectTypeFromLanguages(languages);
-        const zipUrl = `https://gitlab.com/${owner}/${repo}/-/archive/${data.default_branch}/${repo}-${data.default_branch}.zip`;
+		const detectedType = detectTypeFromLanguages(languages);
+		const zipUrl = `https://gitlab.com/${owner}/${repo}/-/archive/${data.default_branch}/${repo}-${data.default_branch}.zip`;
 
-        return {
-            title: data.name,
-            description: data.description,
-            image: data.avatar_url,
-            tags: data.topics || data.tag_list || [],
-            type: detectedType,
-            zipUrl: applyProxyToZipUrl(zipUrl, proxyUrl)
-        };
-    } catch {
-        return null;
-    }
+		return {
+			title: data.name,
+			description: data.description,
+			image: data.avatar_url,
+			tags: data.topics || data.tag_list || [],
+			type: detectedType,
+			zipUrl: applyProxyToZipUrl(zipUrl, proxyUrl),
+		};
+	} catch {
+		return null;
+	}
 }
 
 async function fetchGiteaMetadata(
-    hostname: string,
-    owner: string,
-    repo: string,
-    proxyUrl: string | null,
+	hostname: string,
+	owner: string,
+	repo: string,
+	proxyUrl: string | null,
 ): Promise<PageMetadata | null> {
-    try {
-        const response = await fetch(`https://${hostname}/api/v1/repos/${owner}/${repo}`);
-        if (!response.ok) return null;
+	try {
+		const response = await fetch(
+			`https://${hostname}/api/v1/repos/${owner}/${repo}`,
+		);
+		if (!response.ok) return null;
 
-        const data = await response.json();
+		const data = await response.json();
 
-        const languagesResponse = await fetch(`https://${hostname}/api/v1/repos/${owner}/${repo}/languages`);
-        const languages = languagesResponse.ok ? await languagesResponse.json() : {};
+		const languagesResponse = await fetch(
+			`https://${hostname}/api/v1/repos/${owner}/${repo}/languages`,
+		);
+		const languages = languagesResponse.ok
+			? await languagesResponse.json()
+			: {};
 
-        const detectedType = detectTypeFromLanguages(languages);
-        const zipUrl = `https://${hostname}/${owner}/${repo}/archive/${data.default_branch}.zip`;
+		const detectedType = detectTypeFromLanguages(languages);
+		const zipUrl = `https://${hostname}/${owner}/${repo}/archive/${data.default_branch}.zip`;
 
-        return {
-            title: data.name,
-            description: data.description,
-            image: data.avatar_url || data.owner?.avatar_url,
-            tags: data.topics || [],
-            type: detectedType,
-            zipUrl: applyProxyToZipUrl(zipUrl, proxyUrl)
-        };
-    } catch {
-        return null;
-    }
+		return {
+			title: data.name,
+			description: data.description,
+			image: data.avatar_url || data.owner?.avatar_url,
+			tags: data.topics || [],
+			type: detectedType,
+			zipUrl: applyProxyToZipUrl(zipUrl, proxyUrl),
+		};
+	} catch {
+		return null;
+	}
 }
 
 async function detectGiteaInstance(hostname: string): Promise<boolean> {
-    try {
-        const response = await fetch(`https://${hostname}/api/v1/version`, {
-            method: 'HEAD'
-        });
-        return response.ok;
-    } catch {
-        return false;
-    }
+	try {
+		const response = await fetch(`https://${hostname}/api/v1/version`, {
+			method: 'HEAD',
+		});
+		return response.ok;
+	} catch {
+		return false;
+	}
 }
 
 export async function fetchPageMetadata(
-    url: string,
-    proxyUrl: string | null = null,
+	url: string,
+	proxyUrl: string | null = null,
 ): Promise<PageMetadata> {
-    const parsed = parseGitUrl(url);
+	const parsed = parseGitUrl(url);
 
-    if (parsed) {
-        const { hostname, owner, repo } = parsed;
-        let metadata = null;
+	if (parsed) {
+		const { hostname, owner, repo } = parsed;
+		let metadata = null;
 
-        if (hostname === 'github.com') {
-            metadata = await fetchGitHubMetadata(owner, repo, proxyUrl);
-        } else if (hostname === 'gitlab.com') {
-            metadata = await fetchGitLabMetadata(owner, repo, proxyUrl);
-        } else if (hostname === 'codeberg.org') {
-            metadata = await fetchGiteaMetadata(hostname, owner, repo, proxyUrl);
-        } else {
-            const isGitea = await detectGiteaInstance(hostname);
-            if (isGitea) {
-                metadata = await fetchGiteaMetadata(hostname, owner, repo, proxyUrl);
-            }
-        }
+		if (hostname === 'github.com') {
+			metadata = await fetchGitHubMetadata(owner, repo, proxyUrl);
+		} else if (hostname === 'gitlab.com') {
+			metadata = await fetchGitLabMetadata(owner, repo, proxyUrl);
+		} else if (hostname === 'codeberg.org') {
+			metadata = await fetchGiteaMetadata(hostname, owner, repo, proxyUrl);
+		} else {
+			const isGitea = await detectGiteaInstance(hostname);
+			if (isGitea) {
+				metadata = await fetchGiteaMetadata(hostname, owner, repo, proxyUrl);
+			}
+		}
 
-        if (metadata) return metadata;
-    }
+		if (metadata) return metadata;
+	}
 
-    return {
-        title: null,
-        description: null,
-        image: null,
-        tags: [],
-        type: null,
-        zipUrl: url
-    };
+	return {
+		title: null,
+		description: null,
+		image: null,
+		tags: [],
+		type: null,
+		zipUrl: url,
+	};
 }

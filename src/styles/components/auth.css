@@ -17,7 +17,9 @@
 	background-color: var(--pico-secondary-background, #f9f9f9);
 	border: 1px solid rgba(224, 224, 224, 0.5);
 	border-radius: var(--radius-lg);
-	box-shadow: var(--shadow-lg), 0 0 0 1px rgba(224, 224, 224, 0.3);
+	box-shadow:
+		var(--shadow-lg),
+		0 0 0 1px rgba(224, 224, 224, 0.3);
 	padding: var(--space-lg);
 	margin-bottom: var(--space-xs);
 }
@@ -43,9 +45,11 @@
 	width: 100%;
 	height: 100%;
 	border-radius: 50%;
-	background: radial-gradient(circle,
-			rgba(64, 185, 255, 0.6) 0%,
-			rgba(0, 120, 255, 0) 70%);
+	background: radial-gradient(
+		circle,
+		rgba(64, 185, 255, 0.6) 0%,
+		rgba(0, 120, 255, 0) 70%
+	);
 	z-index: 1;
 	opacity: 0;
 	pointer-events: none;
@@ -54,9 +58,11 @@
 
 .auth-logo-wrapper::after {
 	animation-delay: 1.5s;
-	background: radial-gradient(circle,
-			rgba(120, 64, 255, 0.5) 0%,
-			rgba(120, 0, 255, 0) 70%);
+	background: radial-gradient(
+		circle,
+		rgba(120, 64, 255, 0.5) 0%,
+		rgba(120, 0, 255, 0) 70%
+	);
 }
 
 @keyframes pulse-glow {
@@ -158,7 +164,6 @@
 	background-color: var(--pico-primary-focus);
 }
 
-
 .language-dropdown-menu {
 	position: absolute;
 	top: calc(100% + 0.5rem);
@@ -252,7 +257,7 @@
 	gap: var(--space-sm);
 	padding: var(--space-ss) 0.8rem;
 	background-color: var(--pico-primary);
-	color: var(--pico-primary-inverse) !important;
+	color: var(--pico-primary-inverse);
 	border: none;
 	border-radius: var(--radius-sm);
 	font-size: 0.9rem;
@@ -392,7 +397,7 @@
 }
 
 .modal-overlay:has(.export-account-modal) {
-	z-index: var(--z-above-all) !important;
+	z-index: var(--z-above-all);
 }
 
 /* Additional CSS for guest features - add to src/styles/components/auth.css */
@@ -423,15 +428,15 @@
 }
 
 .guest-button {
-	background-color: var(--pico-secondary-background) !important;
-	border: 1px solid var(--accent-border) !important;
-	color: var(--text-color) !important;
+	background-color: var(--pico-secondary-background);
+	border: 1px solid var(--accent-border);
+	color: var(--text-color);
 	width: 100%;
 }
 
 .guest-button:hover:not(:disabled) {
-	background-color: var(--pico-primary-focus) !important;
-	border-color: var(--pico-primary) !important;
+	background-color: var(--pico-primary-focus);
+	border-color: var(--pico-primary);
 }
 
 /* Guest consent modal styling */
@@ -759,17 +764,17 @@
 
 /* Z-index fixes for nested modals */
 .modal-overlay:has(.export-account-modal) {
-	z-index: var(--z-above-all) !important;
+	z-index: var(--z-above-all);
 }
 
 .modal-overlay:has(.privacy-content) {
-	z-index: calc(var(--z-above-all) + 10) !important;
+	z-index: calc(var(--z-above-all) + 10);
 }
 
 .modal-overlay:has(.guest-consent-modal) {
-	z-index: var(--z-above-all) !important;
+	z-index: var(--z-above-all);
 }
 
 .modal-overlay:has(.clear-storage-modal) {
-	z-index: calc(var(--z-above-all)) !important;
+	z-index: calc(var(--z-above-all));
 }

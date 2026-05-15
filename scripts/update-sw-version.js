@@ -24,7 +24,9 @@ function getHostname(value) {
 	}
 }
 
-const packageJson = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'));
+const packageJson = JSON.parse(
+	readFileSync(join(__dirname, '..', 'package.json'), 'utf8'),
+);
 const version = packageJson.version;
 
 const config = await loadConfig();

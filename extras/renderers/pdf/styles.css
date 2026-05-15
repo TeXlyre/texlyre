@@ -2,411 +2,411 @@
 .pdf-renderer-viewer *,
 .pdf-renderer-viewer *::before,
 .pdf-renderer-viewer *::after {
-  box-sizing: content-box;
+	box-sizing: content-box;
 }
 
 .pdf-renderer-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-  background-color: var(--pico-background);
-  overflow: hidden;
-  position: relative;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	width: 100%;
+	background-color: var(--pico-background);
+	overflow: hidden;
+	position: relative;
 }
 
 .pdf-renderer-container:focus {
-  outline: none;
+	outline: none;
 }
 
 .pdf-toolbar {
-  display: flex;
-  min-height: 40px;
-  background-color: var(--pico-secondary-background);
-  border-bottom: 1px solid var(--accent-border, #333);
-  z-index: 10;
-  flex-shrink: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
+	display: flex;
+	min-height: 40px;
+	background-color: var(--pico-secondary-background);
+	border-bottom: 1px solid var(--accent-border, #333);
+	z-index: 10;
+	flex-shrink: 0;
+	overflow-x: auto;
+	overflow-y: hidden;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
 }
 
 .toolbar {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 10px;
-  min-width: min-content;
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 10px;
+	min-width: min-content;
 }
 
 .pdf-toolbar #toolbarLeft {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-shrink: 0;
 }
 
 .pdf-toolbar #toolbarRight {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-  margin-left: 0;
-  margin-right: 0;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-shrink: 0;
+	margin-left: 0;
+	margin-right: 0;
 }
 
 .pdf-toolbar .toolbar.toolbar-no-left #toolbarRight {
-  margin-left: auto;
-  margin-right: auto;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 .pdf-toolbar #toolbarRight .plugin-header,
 .pdf-toolbar #toolbarRight .plugin-header .file-info,
 .pdf-toolbar #toolbarRight .plugin-header .filepath-info {
-  border: none;
-  background-color: transparent;
-  min-width: 0;
+	border: none;
+	background-color: transparent;
+	min-width: 0;
 }
 
-.pdf-toolbar #toolbarRight .plugin-header .filepath-info>span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
+.pdf-toolbar #toolbarRight .plugin-header .filepath-info > span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
 }
 
 .toolbarButtonGroup {
-  display: flex;
-  align-items: center;
-  gap: 5px;
+	display: flex;
+	align-items: center;
+	gap: 5px;
 }
 
 .toolbarField {
-  min-width: min-content;
+	min-width: min-content;
 }
 
 .toolbarButton {
-  height: 28px;
-  padding: 0 0.5rem;
-  font-size: 0.9rem;
-  background-color: var(--pico-background);
-  border: 1px solid var(--accent-border, #444);
-  border-radius: 4px;
-  color: var(--text-color);
-  cursor: pointer;
-  transition: background-color 0.2s;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  vertical-align: middle;
-  box-sizing: border-box;
+	height: 28px;
+	padding: 0 0.5rem;
+	font-size: 0.9rem;
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border, #444);
+	border-radius: 4px;
+	color: var(--text-color);
+	cursor: pointer;
+	transition: background-color 0.2s;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	vertical-align: middle;
+	box-sizing: border-box;
 }
 
 .toolbarButton:hover:not(:disabled) {
-  background-color: var(--pico-primary-focus);
+	background-color: var(--pico-primary-focus);
 }
 
 .toolbarButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+	opacity: 0.5;
+	cursor: not-allowed;
 }
 
 .toolbarZoomSelect {
-  height: 28px;
-  min-width: min-content;
-  text-align: center;
-  padding: 0 0.4rem;
-  font-size: 0.9rem;
-  background-color: var(--pico-background);
-  border: 1px solid var(--accent-border, #444);
-  border-radius: 4px;
-  color: var(--text-color);
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin: 0;
-  line-height: 0.7;
-  vertical-align: middle;
-  box-sizing: border-box;
+	height: 28px;
+	min-width: min-content;
+	text-align: center;
+	padding: 0 0.4rem;
+	font-size: 0.9rem;
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border, #444);
+	border-radius: 4px;
+	color: var(--text-color);
+	cursor: pointer;
+	transition: background-color 0.2s;
+	margin: 0;
+	line-height: 0.7;
+	vertical-align: middle;
+	box-sizing: border-box;
 }
 
 .toolbarZoomSelect:hover:not(:disabled) {
-  background-color: var(--pico-primary-focus);
+	background-color: var(--pico-primary-focus);
 }
 
 .toolbarZoomSelect:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+	opacity: 0.5;
+	cursor: not-allowed;
 }
 
 .toolbarZoomSelect option {
-  background-color: var(--pico-background);
-  color: var(--text-color);
+	background-color: var(--pico-background);
+	color: var(--text-color);
 }
 
 .pageNumber {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin: 0 5px;
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	margin: 0 5px;
 }
 
 .pageNumber input {
-  width: 3em;
-  height: 28px;
-  text-align: center;
-  padding: 0;
-  margin: 0;
-  border: 1px solid var(--accent-border, #444);
-  border-radius: 4px;
-  background-color: var(--pico-background);
-  color: var(--text-color);
-  vertical-align: middle;
-  box-sizing: border-box;
-  line-height: 1;
+	width: 3em;
+	height: 28px;
+	text-align: center;
+	padding: 0;
+	margin: 0;
+	border: 1px solid var(--accent-border, #444);
+	border-radius: 4px;
+	background-color: var(--pico-background);
+	color: var(--text-color);
+	vertical-align: middle;
+	box-sizing: border-box;
+	line-height: 1;
 }
 
 .react-pdf__Document,
 .react-pdf__Document__container {
-  min-height: 100%;
-  width: 100%;
+	min-height: 100%;
+	width: 100%;
 }
 
 .react-pdf__Page .textLayer,
 .react-pdf__Page .annotationLayer {
-  inset: 0;
-  position: absolute;
+	inset: 0;
+	position: absolute;
 }
 
 .react-pdf__Page,
 .react-pdf__Page canvas,
 .react-pdf__Page .textLayer,
 .react-pdf__Page .annotationLayer {
-  box-sizing: content-box !important;
-  box-shadow: 0 2px 8px var(--color-shadow);
+	box-sizing: content-box;
+	box-shadow: 0 2px 8px var(--color-shadow);
 }
 
 .react-pdf__Page {
-  background-color: white !important;
-  margin: 10px auto !important;
-  width: auto !important;
-  max-width: none !important;
+	background-color: white;
+	margin: 10px auto;
+	width: auto;
+	max-width: none;
 }
 
 .pdf-renderer-content {
-  flex: 1 1 auto;
-  overflow: auto;
-  background-color: var(--pico-background);
-  position: relative;
+	flex: 1 1 auto;
+	overflow: auto;
+	background-color: var(--pico-background);
+	position: relative;
 }
 
 .pdf-page-scroll {
-  display: flex;
-  justify-content: center;
-  background-color: var(--pico-background) !important;
-  padding: 10px 0;
-  min-width: min-content;
-  width: 100%;
-  scroll-margin-top: 56px;
+	display: flex;
+	justify-content: center;
+	background-color: var(--pico-background);
+	padding: 10px 0;
+	min-width: min-content;
+	width: 100%;
+	scroll-margin-top: 56px;
 }
 
 .pdf-renderer-loading {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  padding: 1rem 2rem;
-  background-color: var(--pico-background);
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  color: var(--text-color);
-  z-index: 100;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	padding: 1rem 2rem;
+	background-color: var(--pico-background);
+	border-radius: 4px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	color: var(--text-color);
+	z-index: 100;
 }
 
 .pdf-renderer-error {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  padding: 1rem 2rem;
-  background-color: rgba(220, 53, 69, 0.1);
-  border: 1px solid rgba(220, 53, 69, 0.3);
-  border-radius: 4px;
-  color: var(--color-error);
-  max-width: 80%;
-  text-align: center;
-  z-index: 100;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	padding: 1rem 2rem;
+	background-color: rgba(220, 53, 69, 0.1);
+	border: 1px solid rgba(220, 53, 69, 0.3);
+	border-radius: 4px;
+	color: var(--color-error);
+	max-width: 80%;
+	text-align: center;
+	z-index: 100;
 }
 
 .pdf-renderer-content.fullscreen {
-  overflow-y: auto;
-  scrollbar-width: none;
+	overflow-y: auto;
+	scrollbar-width: none;
 }
 
 .pdf-renderer-content.fullscreen::-webkit-scrollbar {
-  width: 0;
-  height: 0;
+	width: 0;
+	height: 0;
 }
 
 .pdf-renderer-content.fullscreen:hover {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(100, 100, 100, 0.5) transparent;
 }
 
 .pdf-renderer-content.fullscreen:hover::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+	width: 8px;
+	height: 8px;
 }
 
 .pdf-renderer-content.fullscreen:hover::-webkit-scrollbar-thumb {
-  background: rgba(100, 100, 100, 0.5);
-  border-radius: 4px;
+	background: rgba(100, 100, 100, 0.5);
+	border-radius: 4px;
 }
 
 .pdf-renderer-content.fullscreen:hover::-webkit-scrollbar-track {
-  background: transparent;
+	background: transparent;
 }
 
 .textLayer {
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  overflow: hidden;
-  line-height: 1;
-  pointer-events: none;
-  z-index: 2;
+	position: absolute;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	overflow: hidden;
+	line-height: 1;
+	pointer-events: none;
+	z-index: 2;
 }
 
-.textLayer>span {
-  color: transparent;
-  position: absolute;
-  white-space: pre;
-  cursor: text;
-  transform-origin: 0% 0%;
-  user-select: text !important;
-  pointer-events: auto;
+.textLayer > span {
+	color: transparent;
+	position: absolute;
+	white-space: pre;
+	cursor: text;
+	transform-origin: 0% 0%;
+	user-select: text;
+	pointer-events: auto;
 }
 
 .textLayer .highlight {
-  margin: -1px;
-  padding: 1px;
-  background-color: rgba(180, 0, 255, 0.25);
-  border-radius: 4px;
-  pointer-events: none;
+	margin: -1px;
+	padding: 1px;
+	background-color: rgba(180, 0, 255, 0.25);
+	border-radius: 4px;
+	pointer-events: none;
 }
 
 .textLayer .highlight.begin {
-  border-radius: 4px 0 0 4px;
+	border-radius: 4px 0 0 4px;
 }
 
 .textLayer .highlight.end {
-  border-radius: 0 4px 4px 0;
+	border-radius: 0 4px 4px 0;
 }
 
 .textLayer .highlight.middle {
-  border-radius: 0;
+	border-radius: 0;
 }
 
 .textLayer .highlight.selected {
-  background-color: rgba(0, 100, 255, 0.25);
+	background-color: rgba(0, 100, 255, 0.25);
 }
 
 .annotationLayer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  z-index: 3;
+	position: absolute;
+	top: 0;
+	left: 0;
+	pointer-events: none;
+	z-index: 3;
 }
 
 .annotationLayer section {
-  position: absolute;
-  text-align: initial;
-  pointer-events: auto;
-  user-select: none !important;
+	position: absolute;
+	text-align: initial;
+	pointer-events: auto;
+	user-select: none;
 }
 
-.annotationLayer .buttonWidgetAnnotation.pushButton>a {
-  position: absolute;
-  font-size: 1em;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
+.annotationLayer .buttonWidgetAnnotation.pushButton > a {
+	position: absolute;
+	font-size: 1em;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
 }
 
 .annotationLayer .textWidgetAnnotation input,
 .annotationLayer .textWidgetAnnotation textarea,
 .annotationLayer .choiceWidgetAnnotation select,
-.annotationLayer .buttonWidgetAnnotation.pushButton>a {
-  background: rgba(0, 54, 255, 0.13);
-  border: 1px solid transparent;
-  box-sizing: border-box;
-  font-size: 9px;
-  height: 100%;
-  margin: 0;
-  padding: 0 3px;
-  vertical-align: top;
-  width: 100%;
+.annotationLayer .buttonWidgetAnnotation.pushButton > a {
+	background: rgba(0, 54, 255, 0.13);
+	border: 1px solid transparent;
+	box-sizing: border-box;
+	font-size: 9px;
+	height: 100%;
+	margin: 0;
+	padding: 0 3px;
+	vertical-align: top;
+	width: 100%;
 }
 
 .annotationLayer .choiceWidgetAnnotation select option {
-  padding: 0;
+	padding: 0;
 }
 
-.annotationLayer .buttonWidgetAnnotation.pushButton>a:hover,
-.annotationLayer .buttonWidgetAnnotation.pushButton>a:focus {
-  color: rgba(0, 0, 0, 1);
-  background: rgba(0, 54, 255, 0.13);
+.annotationLayer .buttonWidgetAnnotation.pushButton > a:hover,
+.annotationLayer .buttonWidgetAnnotation.pushButton > a:focus {
+	color: rgba(0, 0, 0, 1);
+	background: rgba(0, 54, 255, 0.13);
 }
 
 .annotationLayer .textWidgetAnnotation input:focus,
 .annotationLayer .textWidgetAnnotation textarea:focus,
 .annotationLayer .choiceWidgetAnnotation select:focus {
-  background: rgba(0, 54, 255, 0.13);
-  border: 1px solid transparent;
+	background: rgba(0, 54, 255, 0.13);
+	border: 1px solid transparent;
 }
 
 .annotationLayer .buttonWidgetAnnotation.checkBox input,
 .annotationLayer .buttonWidgetAnnotation.radioButton input {
-  background: rgba(0, 54, 255, 0.13);
-  border: 1px solid transparent;
-  box-sizing: border-box;
-  height: 100%;
-  margin: 0;
-  vertical-align: top;
-  width: 100%;
+	background: rgba(0, 54, 255, 0.13);
+	border: 1px solid transparent;
+	box-sizing: border-box;
+	height: 100%;
+	margin: 0;
+	vertical-align: top;
+	width: 100%;
 }
 
 .annotationLayer .choiceWidgetAnnotation select {
-  background: rgba(0, 54, 255, 0.13);
+	background: rgba(0, 54, 255, 0.13);
 }
 
 .annotationLayer .buttonWidgetAnnotation.checkBox input[disabled],
 .annotationLayer .buttonWidgetAnnotation.radioButton input[disabled] {
-  background: rgba(0, 0, 0, 0.2);
+	background: rgba(0, 0, 0, 0.2);
 }
 
-.annotationLayer .linkAnnotation>a,
-.annotationLayer .buttonWidgetAnnotation.pushButton>a {
-  pointer-events: auto;
+.annotationLayer .linkAnnotation > a,
+.annotationLayer .buttonWidgetAnnotation.pushButton > a {
+	pointer-events: auto;
 }
 
 @keyframes source-map-highlight-pulse {
-  0% {
-    opacity: 0;
-    transform: scale(1.2);
-  }
+	0% {
+		opacity: 0;
+		transform: scale(1.2);
+	}
 
-  30% {
-    opacity: 1;
-    transform: scale(1);
-  }
+	30% {
+		opacity: 1;
+		transform: scale(1);
+	}
 
-  100% {
-    opacity: 0.4;
-    transform: scale(1);
-  }
+	100% {
+		opacity: 0.4;
+		transform: scale(1);
+	}
 }

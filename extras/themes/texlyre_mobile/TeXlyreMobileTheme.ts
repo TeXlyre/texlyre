@@ -8,7 +8,14 @@ import type {
 	ThemePlugin,
 	ThemeVariant,
 } from '@/plugins/PluginInterface';
-import { ProjectsIcon, ProjectsPlusIcon, FolderIcon, EditFileIcon, OutputIcon, ChatIcon } from '@/components/common/Icons';
+import {
+	ProjectsIcon,
+	ProjectsPlusIcon,
+	FolderIcon,
+	EditFileIcon,
+	OutputIcon,
+	ChatIcon,
+} from '@/components/common/Icons';
 import { themes } from './colors';
 import './styles/index.css';
 
@@ -61,7 +68,10 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 			existingNav.remove();
 		}
 
-		document.body.className = document.body.className.replace(/mobile-view-\w+/g, '');
+		document.body.className = document.body.className.replace(
+			/mobile-view-\w+/g,
+			'',
+		);
 
 		if (mobileClickHandler) {
 			document.removeEventListener('click', mobileClickHandler);
@@ -112,7 +122,8 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 				currentView = 'editor';
 				updateMobileView('editor');
 			} else {
-				const savedView = localStorage.getItem('texlyre-mobile-view') || 'editor';
+				const savedView =
+					localStorage.getItem('texlyre-mobile-view') || 'editor';
 				currentView = savedView as typeof currentView;
 				updateMobileView(currentView);
 			}
@@ -219,16 +230,21 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 	};
 
 	const updateMobileView = (view: string) => {
-		document.querySelectorAll('.mobile-nav-button').forEach(btn => {
+		document.querySelectorAll('.mobile-nav-button').forEach((btn) => {
 			btn.classList.toggle('active', btn.getAttribute('data-view') === view);
 		});
 
-		document.body.className = document.body.className.replace(/mobile-view-\w+/g, '');
+		document.body.className = document.body.className.replace(
+			/mobile-view-\w+/g,
+			'',
+		);
 		document.body.classList.add(`mobile-view-${view}`);
 
 		if (view === 'chat') {
 			setTimeout(() => {
-				const chatHeader = document.querySelector('.chat-panel-header') as HTMLElement;
+				const chatHeader = document.querySelector(
+					'.chat-panel-header',
+				) as HTMLElement;
 				if (chatHeader) {
 					const chatPanel = chatHeader.closest('.chat-panel');
 					if (chatPanel?.classList.contains('collapsed')) {
@@ -249,15 +265,24 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 			document.head.appendChild(viewportMeta);
 		}
 
-		const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+		const isMobile =
+			/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+				navigator.userAgent,
+			);
 
 		if (isMobile) {
-			viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=yes');
+			viewportMeta.setAttribute(
+				'content',
+				'width=device-width, initial-scale=1.0, user-scalable=yes',
+			);
 		} else {
 			const screenWidth = window.screen.width;
 			const targetWidth = 1200;
 			const scale = screenWidth / targetWidth;
-			viewportMeta.setAttribute('content', `width=${targetWidth}, initial-scale=${scale}, user-scalable=yes`);
+			viewportMeta.setAttribute(
+				'content',
+				`width=${targetWidth}, initial-scale=${scale}, user-scalable=yes`,
+			);
 		}
 	};
 
@@ -267,7 +292,10 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 			const screenWidth = window.screen.width;
 			const targetWidth = 1200;
 			const scale = screenWidth / targetWidth;
-			viewportMeta.setAttribute('content', `width=${targetWidth}, initial-scale=${scale}, user-scalable=yes`);
+			viewportMeta.setAttribute(
+				'content',
+				`width=${targetWidth}, initial-scale=${scale}, user-scalable=yes`,
+			);
 		}
 	};
 
@@ -281,7 +309,11 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 			{ id: 'dark', name: t('Dark'), isDark: true },
 			{ id: 'system', name: t('System'), isDark: false },
 			{ id: 'monokai', name: t('Monokai'), isDark: true },
-			{ id: 'tomorrow_night_blue', name: t('Tomorrow Night Blue'), isDark: true },
+			{
+				id: 'tomorrow_night_blue',
+				name: t('Tomorrow Night Blue'),
+				isDark: true,
+			},
 			{ id: 'github_light', name: t('GitHub Light'), isDark: false },
 			{ id: 'solarized_light', name: t('Solarized Light'), isDark: false },
 			{ id: 'atom_light', name: t('Atom Light'), isDark: false },
@@ -294,17 +326,31 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 			currentThemeId = variantId;
 
 			if (variantId === 'system') {
-				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+				const prefersDark = window.matchMedia(
+					'(prefers-color-scheme: dark)',
+				).matches;
 				applyThemeColors(prefersDark ? 'dark' : 'light');
-				document.documentElement.setAttribute('data-theme-mode', prefersDark ? 'dark' : 'light');
+				document.documentElement.setAttribute(
+					'data-theme-mode',
+					prefersDark ? 'dark' : 'light',
+				);
 			} else {
 				applyThemeColors(variantId);
-				document.documentElement.setAttribute('data-theme-mode', theme.isDark ? 'dark' : 'light');
+				document.documentElement.setAttribute(
+					'data-theme-mode',
+					theme.isDark ? 'dark' : 'light',
+				);
 			}
 
 			document.documentElement.setAttribute('data-theme', variantId);
-			document.documentElement.setAttribute('data-theme-plugin', 'texlyre-mobile');
-			document.documentElement.setAttribute('data-theme-mode', theme.isDark ? 'dark' : 'light');
+			document.documentElement.setAttribute(
+				'data-theme-plugin',
+				'texlyre-mobile',
+			);
+			document.documentElement.setAttribute(
+				'data-theme-mode',
+				theme.isDark ? 'dark' : 'light',
+			);
 
 			const isLoggedIn = localStorage.getItem('texlyre-current-user') !== null;
 
@@ -374,8 +420,12 @@ window.addEventListener('beforeunload', () => {
 
 const observer = new MutationObserver((mutations) => {
 	mutations.forEach((mutation) => {
-		if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme-plugin') {
-			const currentPlugin = document.documentElement.getAttribute('data-theme-plugin');
+		if (
+			mutation.type === 'attributes' &&
+			mutation.attributeName === 'data-theme-plugin'
+		) {
+			const currentPlugin =
+				document.documentElement.getAttribute('data-theme-plugin');
 			if (currentPlugin !== 'texlyre-mobile' && teXlyreMobileTheme.cleanup) {
 				teXlyreMobileTheme.cleanup();
 			}
@@ -385,7 +435,7 @@ const observer = new MutationObserver((mutations) => {
 
 observer.observe(document.documentElement, {
 	attributes: true,
-	attributeFilter: ['data-theme-plugin']
+	attributeFilter: ['data-theme-plugin'],
 });
 
 export default teXlyreMobileTheme;

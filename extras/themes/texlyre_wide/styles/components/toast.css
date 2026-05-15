@@ -1,6 +1,10 @@
 /* extras/themes/texlyre_wide/styles/components/toast.css */
 [data-layout="texlyre-wide"] {
-	--toast-top-offset: calc(var(--texlyre-header-height) + var(--texlyre-spacing-xl) + var(--texlyre-spacing-md));
+	--toast-top-offset: calc(
+		var(--texlyre-header-height) +
+		var(--texlyre-spacing-xl) +
+		var(--texlyre-spacing-md)
+	);
 	--toast-right-offset: var(--texlyre-spacing-xl);
 	--toast-max-width: 360px;
 	--toast-padding: var(--texlyre-spacing-md) var(--texlyre-spacing-lg);
@@ -8,7 +12,8 @@
 	--toast-shadow: var(--texlyre-shadow-lg);
 	--toast-background-color: var(--pico-background);
 	--toast-text-color: var(--pico-background-inverse);
-	--toast-animation: toastSlideInWide 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+	--toast-animation: toastSlideInWide 0.4s
+		cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 /* Toast container positioning */
@@ -111,7 +116,10 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
 	[data-layout="texlyre-wide"] {
-		--toast-top-offset: calc(var(--texlyre-header-height) + var(--texlyre-spacing-md));
+		--toast-top-offset: calc(
+			var(--texlyre-header-height) +
+			var(--texlyre-spacing-md)
+		);
 		--toast-right-offset: var(--texlyre-spacing-md);
 		--toast-max-width: calc(100vw - 2 * var(--texlyre-spacing-md));
 		--toast-padding: var(--texlyre-spacing-sm) var(--texlyre-spacing-md);
@@ -127,5 +135,5 @@
 }
 
 [data-layout="texlyre-wide"] .notification-toast-container {
-	display: none !important;
+	display: none;
 }

@@ -71,7 +71,6 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 	const collapsed =
 		externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
 
-
 	const getLimits = useCallback(() => {
 		const parent = panelRef.current?.parentElement;
 		const containerSize = parent
@@ -85,7 +84,7 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 		if (direction === 'horizontal') {
 			return {
 				min: parseLimit(minWidth, containerSize),
-				max: parseLimit(maxWidth, containerSize)
+				max: parseLimit(maxWidth, containerSize),
 			};
 		}
 		return {
@@ -135,7 +134,7 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 			window.addEventListener('resize', handleWindowResize);
 			return () => window.removeEventListener('resize', handleWindowResize);
 		}
-	}, [maintainAlignment, collapsed, size, minWidth, maxWidth, minHeight, maxHeight, onResize]);
+	}, [maintainAlignment, collapsed, size, onResize, getLimits]);
 
 	useEffect(() => {
 		const handleMouseMove = (e: Event) => {
@@ -186,16 +185,7 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 			document.removeEventListener('touchmove', handleMouseMove);
 			document.removeEventListener('touchend', handleMouseUp);
 		};
-	}, [
-		resizing,
-		direction,
-		minWidth,
-		maxWidth,
-		minHeight,
-		maxHeight,
-		onResize,
-		alignment,
-	]);
+	}, [resizing, direction, onResize, alignment, getLimits]);
 
 	const toggleCollapse = () => {
 		const newCollapsed = !collapsed;
@@ -238,14 +228,15 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 
 	const getHandleClassName = () => {
 		const baseClass = `resize-handle ${direction}`;
-		const alignmentClass = `${direction === 'horizontal'
-			? alignment === 'start'
-				? 'left'
-				: 'right'
-			: alignment === 'start'
-				? 'bottom'
-				: 'top'
-			}`;
+		const alignmentClass = `${
+			direction === 'horizontal'
+				? alignment === 'start'
+					? 'left'
+					: 'right'
+				: alignment === 'start'
+					? 'bottom'
+					: 'top'
+		}`;
 
 		return `${baseClass} ${alignmentClass} ${handleClassName}`;
 	};
@@ -287,17 +278,17 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 		height: '100%',
 		...(direction === 'horizontal'
 			? {
-				width: `${size}px`,
-				minWidth: collapsed ? '0' : `${minLimit}px`,
-				maxWidth: collapsed ? '0' : `${maxLimit}px`,
-				transition: resizing ? 'none' : 'width 0.2s ease-in-out',
-			}
+					width: `${size}px`,
+					minWidth: collapsed ? '0' : `${minLimit}px`,
+					maxWidth: collapsed ? '0' : `${maxLimit}px`,
+					transition: resizing ? 'none' : 'width 0.2s ease-in-out',
+				}
 			: {
-				height: `${size}px`,
-				minHeight: collapsed ? '0' : `${minLimit}px`,
-				maxHeight: collapsed ? '0' : `${maxLimit}px`,
-				transition: resizing ? 'none' : 'height 0.2s ease-in-out',
-			}),
+					height: `${size}px`,
+					minHeight: collapsed ? '0' : `${minLimit}px`,
+					maxHeight: collapsed ? '0' : `${maxLimit}px`,
+					transition: resizing ? 'none' : 'height 0.2s ease-in-out',
+				}),
 	};
 
 	return (
@@ -326,7 +317,7 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 					}}
 					title={collapsed ? t('Expand') : t('Collapse')}
 				>
-					<span className="collapse-icon">{getCollapseIcon()}</span>
+					<span className='collapse-icon'>{getCollapseIcon()}</span>
 				</button>
 			)}
 		</div>
