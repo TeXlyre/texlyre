@@ -423,7 +423,9 @@ class GenericLSPService {
 				pendingMessages.push(message);
 				return;
 			}
-			handlers.forEach((handler) => { handler(message); });
+			handlers.forEach((handler) => {
+				handler(message);
+			});
 		};
 
 		const processBuffer = () => {
@@ -496,7 +498,9 @@ class GenericLSPService {
 				handlers.add(handler);
 				if (pendingMessages.length > 0) {
 					const queued = pendingMessages.splice(0);
-					queued.forEach((msg) => { handler(msg); });
+					queued.forEach((msg) => {
+						handler(msg);
+					});
 				}
 			},
 			unsubscribe: (handler: (value: string) => void) => {
@@ -591,7 +595,9 @@ class GenericLSPService {
 		console.log(
 			`[GenericLSPService] Cleaning up ${this.clients.size} LSP connections`,
 		);
-		this.clients.forEach((_, configId) => { this.disconnectClient(configId); });
+		this.clients.forEach((_, configId) => {
+			this.disconnectClient(configId);
+		});
 		this.configs.clear();
 		this.connectionStatuses.clear();
 		this.statusListeners.clear();

@@ -638,8 +638,8 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
 				<p className='texlyre-info'>
 					<span className='footer-links'>
-						<a
-							href='#'
+						<button
+							type='button'
 							onClick={(event) => {
 								event.preventDefault();
 								setShowKeyboardShortcuts(true);
@@ -647,7 +647,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 							className='shortcuts-link'
 						>
 							{t('Keyboard Map')}
-						</a>{' '}
+						</button>{' '}
 						•{' '}
 						<a
 							href='https://texlyre.github.io/docs/intro'
@@ -665,8 +665,8 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 							{t('Source Code')}
 						</a>{' '}
 						•{' '}
-						<a
-							href='#'
+						<button
+							type='button'
 							onClick={(event) => {
 								event.preventDefault();
 								setShowPrivacy(true);
@@ -674,7 +674,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 							className='privacy-link'
 						>
 							{t('Privacy')}
-						</a>{' '}
+						</button>{' '}
 						•{/* {t('Built with TeXlyre')} */}
 						<a
 							href='https://texlyre.github.io'

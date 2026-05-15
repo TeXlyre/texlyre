@@ -390,6 +390,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 							onDrop={(e) => handleDrop(e, index)}
 							onDragEnd={handleDragEnd}
 							title={`${tab.filePath || tab.title}${tab.editorState.currentLine ? ` (${t('Line {line}', { line: tab.editorState.currentLine })})` : ''}`}
+							// biome-ignore lint/a11y/useSemanticElements: draggable tab requires div for HTML5 DnD compatibility
 							role='button'
 							tabIndex={0}
 							onKeyDown={(e) => {

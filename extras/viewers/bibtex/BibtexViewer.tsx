@@ -307,10 +307,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		fileId,
 	);
 
-	const {
-		viewRef: processedViewRef,
-		showSaveIndicator: processedShowSaveIndicator,
-	} = useEditorView(
+	const { viewRef: processedViewRef } = useEditorView(
 		processedEditorRef,
 		'bibtex-viewer',
 		`${fileName}-processed-editor`,

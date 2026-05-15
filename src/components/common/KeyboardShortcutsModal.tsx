@@ -177,15 +177,15 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
 							)}
 						</p>
 						<p>
-							<a
-								href='#'
+							<button
+								type='button'
 								onClick={(e) => {
 									e.preventDefault();
 									setShowSettings(true);
 								}}
 							>
 								{t('Enable Vim keybindings')}&nbsp;
-							</a>
+							</button>
 							{t('to use Vim-style shortcuts. Vim mode uses')}
 							<kbd>{t('Ctrl')}</kbd> + <kbd>C</kbd>
 							{t('to switch between insert and normal mode.')}

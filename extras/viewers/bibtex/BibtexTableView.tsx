@@ -42,7 +42,9 @@ export const BibtexTableView: React.FC<BibtexTableViewProps> = ({
 		const fieldSet = new Set<string>();
 		fieldSet.add('type');
 		entries.forEach((entry) => {
-			Object.keys(entry.fields).forEach((field) => { fieldSet.add(field); });
+			Object.keys(entry.fields).forEach((field) => {
+				fieldSet.add(field);
+			});
 		});
 		const otherFields = Array.from(fieldSet).sort();
 		return ['id', ...otherFields];

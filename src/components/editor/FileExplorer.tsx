@@ -149,7 +149,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			!hasProcessedInitialFile
 		) {
 			const newExpandedFolders = new Set(expandedFolders);
-			initialExpandedPaths.forEach((path) => { newExpandedFolders.add(path); });
+			initialExpandedPaths.forEach((path) => {
+				newExpandedFolders.add(path);
+			});
 			setExpandedFolders(newExpandedFolders);
 
 			selectFile(initialSelectedFile);

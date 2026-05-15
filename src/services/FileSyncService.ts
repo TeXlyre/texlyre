@@ -807,7 +807,9 @@ class FileSyncService {
 	}
 
 	private notifyListeners(notification: FileSyncNotification): void {
-		this.listeners.forEach((listener) => { listener(notification); });
+		this.listeners.forEach((listener) => {
+			listener(notification);
+		});
 	}
 }
 

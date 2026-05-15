@@ -72,7 +72,9 @@ class OpenAlexService {
 	}
 
 	private notifyStatusListeners(): void {
-		this.statusListeners.forEach((l) => { l(this.connectionStatus); });
+		this.statusListeners.forEach((l) => {
+			l(this.connectionStatus);
+		});
 	}
 
 	async connect(apiKey?: string, email?: string): Promise<void> {

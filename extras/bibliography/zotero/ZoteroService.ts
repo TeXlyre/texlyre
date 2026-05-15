@@ -71,7 +71,9 @@ class ZoteroService {
 	}
 
 	private notifyStatusListeners(): void {
-		this.statusListeners.forEach((listener) => { listener(this.connectionStatus); });
+		this.statusListeners.forEach((listener) => {
+			listener(this.connectionStatus);
+		});
 	}
 
 	async connect(

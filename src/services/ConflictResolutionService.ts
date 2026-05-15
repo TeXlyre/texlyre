@@ -62,7 +62,9 @@ class ConflictResolutionService {
 	): Promise<Map<string, ConflictResolution> | null> {
 		return new Promise((resolve) => {
 			const request: ConflictResolutionRequest = { conflicts, resolve };
-			this.listeners.forEach((listener) => { listener(request); });
+			this.listeners.forEach((listener) => {
+				listener(request);
+			});
 		});
 	}
 

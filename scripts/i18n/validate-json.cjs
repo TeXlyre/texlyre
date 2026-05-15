@@ -113,7 +113,9 @@ function validateAllLocales() {
 
 	if (invalidFiles.length > 0) {
 		console.log('\n❌ Files with errors:');
-		invalidFiles.forEach((f) => { console.log(`   • ${f.name}: ${f.path}`); });
+		invalidFiles.forEach((f) => {
+			console.log(`   • ${f.name}: ${f.path}`);
+		});
 	}
 	console.log('═'.repeat(80));
 }

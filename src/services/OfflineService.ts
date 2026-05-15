@@ -94,7 +94,9 @@ class OfflineService {
 	}
 
 	private notifyListeners(): void {
-		this.listeners.forEach((callback) => { callback(this.getStatus()); });
+		this.listeners.forEach((callback) => {
+			callback(this.getStatus());
+		});
 	}
 
 	cleanup(): void {

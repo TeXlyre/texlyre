@@ -108,7 +108,10 @@ class SwiftLaTeXService {
 		const unsubs = Array.from(this.engines.values()).map((e) =>
 			e.addStatusListener(listener),
 		);
-		return () => unsubs.forEach((u) => { u(); });
+		return () =>
+			unsubs.forEach((u) => {
+				u();
+			});
 	}
 
 	async initialize(engineType: SwiftEngineType = 'pdftex'): Promise<void> {

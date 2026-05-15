@@ -108,8 +108,8 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 							{t('Source Code')}
 						</a>{' '}
 						•{' '}
-						<a
-							href='#'
+						<button
+							type='button'
 							onClick={(event) => {
 								event.preventDefault();
 								setShowPrivacy(true);
@@ -117,7 +117,7 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 							className='privacy-link'
 						>
 							{t('Privacy')}
-						</a>{' '}
+						</button>{' '}
 						•{/* {t('Built with TeXlyre')} */}
 						<a
 							href='https://texlyre.github.io'

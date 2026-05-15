@@ -161,7 +161,9 @@ function applyTranslations(filePath, options = {}) {
 
 			if (!validation.valid) {
 				console.error(`❌ Validation failed for ${filePath}:`);
-				validation.errors.forEach((err) => { console.error(`   - ${err}`); });
+				validation.errors.forEach((err) => {
+					console.error(`   - ${err}`);
+				});
 				return { success: false, modified: false, transformCount: 0 };
 			}
 

@@ -1,4 +1,5 @@
 // src/utils/svgSanitizer.ts
+// biome-ignore-all lint/suspicious/noControlCharactersInRegex: SVG content sanitization
 export type SanitizeSvgOptions = {
 	baseUrl?: string;
 	allowRemoteUrls?: boolean;
@@ -171,7 +172,7 @@ function rebuildTag(
 		if (sanitized) attrs.push(sanitized);
 	}
 
-	const attrStr = attrs.length ? ` ${attrs.join(' ')}` : '';
+	const attrStr = attrs.length ? ' ' + attrs.join(' ') : '';
 	return `<${name}${attrStr}${selfClosing ? '/>' : '>'}`;
 }
 

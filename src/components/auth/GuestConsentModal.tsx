@@ -135,15 +135,15 @@ const GuestConsentModal: React.FC<GuestConsentModalProps> = ({
 								{t(
 									'I understand this is a temporary session and how my data is handled as described in the',
 								)}{' '}
-								<a
-									href='#'
+								<button
+									type='button'
 									onClick={(e) => {
 										e.preventDefault();
 										onShowPrivacy();
 									}}
 								>
 									{t('privacy information')}
-								</a>
+								</button>
 							</span>
 						</label>
 					</div>

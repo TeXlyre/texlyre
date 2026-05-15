@@ -178,7 +178,7 @@
 .option-item.sub-option::before {
 	content: "";
 	position: absolute;
-	left: -var(--space-sd);
+	left: calc(-1 * var(--space-sm));
 	top: 0.1rem;
 	width: 0.5rem;
 	height: 1px;

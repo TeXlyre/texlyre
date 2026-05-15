@@ -594,12 +594,7 @@ export const useEditorView = (
 		const info = classifyFileType(fileName, contentToUse);
 		const completionSources: CompletionSource[] = [];
 		const extensions: Extension[] = [];
-		const {
-			base,
-			language,
-			toolbar: toolbarComp,
-			languageSpecific,
-		} = compartmentsRef.current;
+		const { base, language, languageSpecific } = compartmentsRef.current;
 
 		if (info.isLatex || info.isTypst) {
 			extensions.push(

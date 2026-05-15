@@ -124,7 +124,9 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 
 			const tags = new Set<string>();
 			userProjects.forEach((project) => {
-				project.tags.forEach((tag) => { tags.add(tag); });
+				project.tags.forEach((tag) => {
+					tags.add(tag);
+				});
 			});
 
 			setAvailableTags(Array.from(tags));
@@ -551,8 +553,8 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 							{t('Source Code')}
 						</a>{' '}
 						•{' '}
-						<a
-							href='#'
+						<button
+							type='button'
 							onClick={(event) => {
 								event.preventDefault();
 								setShowPrivacy(true);
@@ -560,7 +562,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 							className='privacy-link'
 						>
 							{t('Privacy')}
-						</a>{' '}
+						</button>{' '}
 						•{/* {t('Built with TeXlyre')} */}
 						<a
 							href='https://texlyre.github.io'
