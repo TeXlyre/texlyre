@@ -34,6 +34,8 @@ export class DrawioYjsAdapter {
 	private ignoreNextObserverCall = false;
 	private cursorUpdateInterval: number | null = null;
 	private lastValidXml: string | null = null;
+	private cursorTrackingEnabled = false;
+	private isLocalUpdate = false;
 
 	constructor(options: DrawioYjsAdapterOptions) {
 		this.doc = options.doc;

@@ -42,7 +42,7 @@ class LaTeXService {
 	private currentOperationId: string | null = null;
 
 	setTexliveEndpoint(endpoint: string): void {
-		this.setTexliveEndpoint(endpoint);
+		// this.setTexliveEndpoint(endpoint);
 		swiftLaTeXService.setTexliveEndpoint(endpoint);
 	}
 
@@ -525,7 +525,7 @@ class LaTeXService {
 			try {
 				const raw = await fileStorageService.getFile(node.id);
 				if (raw?.content) result.push({ ...node, content: raw.content });
-			} catch {}
+			} catch { }
 		}
 		return result;
 	}
