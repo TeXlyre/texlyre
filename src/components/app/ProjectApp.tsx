@@ -124,7 +124,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 
 			const tags = new Set<string>();
 			userProjects.forEach((project) => {
-				project.tags.forEach((tag) => { tags.add(tag)); }
+				project.tags.forEach((tag) => { tags.add(tag); });
 			});
 
 			setAvailableTags(Array.from(tags));

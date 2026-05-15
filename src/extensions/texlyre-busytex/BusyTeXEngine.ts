@@ -60,7 +60,7 @@ export class BusyTeXEngine {
 
 	private setStatus(status: typeof this.status): void {
 		this.status = status;
-		this.statusListeners.forEach((l) => { l()); }
+		this.statusListeners.forEach((l) => { l(); });
 	}
 
 	setBusytexBasePath(path: string): void {

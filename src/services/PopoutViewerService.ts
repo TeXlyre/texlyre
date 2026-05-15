@@ -31,7 +31,7 @@ class PopoutViewerService {
 		this.channel = new BroadcastChannel(`texlyre-popout-${this.projectId}`);
 		this.channel.addEventListener('message', (event) => {
 			const message = event.data as PopoutMessage;
-			this.listeners.forEach((listener) => { listener(message)); }
+			this.listeners.forEach((listener) => { listener(message); });
 		});
 	}
 

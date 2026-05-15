@@ -200,7 +200,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 		} finally {
 			isLocalStorageLoaded.current = true;
 			const freshPluginSettings = pluginRegistry.refreshPluginSettings();
-			freshPluginSettings.forEach((setting) => { registerSetting(setting)); }
+			freshPluginSettings.forEach((setting) => { registerSetting(setting); });
 		}
 	}, [getCurrentUserId, registerSetting]);
 

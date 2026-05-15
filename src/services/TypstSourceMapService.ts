@@ -229,7 +229,7 @@ class TypstSourceMapService implements SourceMapService {
 	}
 
 	private notify(): void {
-		this.listeners.forEach((l) => { l()); }
+		this.listeners.forEach((l) => { l(); });
 	}
 }
 

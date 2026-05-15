@@ -176,7 +176,7 @@ class FileConflictService {
 	}
 
 	private notifyListeners(event: FileConflictEvent): void {
-		this.listeners.forEach((listener) => { listener(event)); }
+		this.listeners.forEach((listener) => { listener(event); });
 	}
 }
 
