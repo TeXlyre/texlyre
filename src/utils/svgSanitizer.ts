@@ -1,3 +1,4 @@
+/* biome-ignore-all lint/suspicious/noControlCharactersInRegex: SVG sanitizer must strip control characters */
 // src/utils/svgSanitizer.ts
 export type SanitizeSvgOptions = {
 	baseUrl?: string;
