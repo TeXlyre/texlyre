@@ -590,7 +590,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		if (selectedDocId && linkedFileInfo?.filePath === path && documents) {
 			const doc = documents.find((d) => d.id === selectedDocId);
 			if (doc) {
-				return `${doc.name}` + ' ' + t('(linked)');
+				return `${doc.name} ${t('(linked)')}`;
 			}
 		}
 

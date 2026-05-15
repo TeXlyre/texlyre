@@ -106,7 +106,7 @@ function validateAllLocales() {
 		}
 	}
 
-	console.log('\n' + '═'.repeat(80));
+	console.log(`\n${'═'.repeat(80)}`);
 	console.log('📊 Validation Summary:');
 	console.log(`   ✅ Valid files:   ${valid}`);
 	console.log(`   ❌ Invalid files: ${invalid}`);

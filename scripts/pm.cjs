@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { spawnSync } = require('child_process');
+const { spawnSync } = require('node:child_process');
 
 const detectPackageManager = () => {
 	const userAgent = process.env.npm_config_user_agent || '';

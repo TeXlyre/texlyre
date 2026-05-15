@@ -247,7 +247,7 @@ class FilePathCacheService {
 		}
 
 		if (!fromPath) {
-			return this.normalizePath('/' + trimmedPath);
+			return this.normalizePath(`/${trimmedPath}`);
 		}
 
 		const lastSlashIndex = fromPath.lastIndexOf('/');
@@ -279,7 +279,7 @@ class FilePathCacheService {
 
 				return (
 					storedPath === resolvedPath ||
-					storedPath.endsWith('/' + relativeResolvedPath)
+					storedPath.endsWith(`/${relativeResolvedPath}`)
 				);
 			}) ?? null
 		);
@@ -298,7 +298,7 @@ class FilePathCacheService {
 			return toFileName;
 		}
 
-		if (toPath.startsWith(fromDir + '/')) {
+		if (toPath.startsWith(`${fromDir}/`)) {
 			return toPath.substring(fromDir.length + 1);
 		}
 
@@ -322,7 +322,7 @@ class FilePathCacheService {
 			return toFileName;
 		}
 
-		return '/' + (toPath.startsWith('/') ? toPath.slice(1) : toPath);
+		return `/${toPath.startsWith('/') ? toPath.slice(1) : toPath}`;
 	}
 
 	private invalidateCache() {

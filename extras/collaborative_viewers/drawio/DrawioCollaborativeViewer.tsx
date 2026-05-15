@@ -444,16 +444,14 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			<>
 				<PluginControlGroup>
 					{fileId && (
-						<>
-							<button
-								onClick={handleManualSave}
-								title={t('Save File (Ctrl+S)')}
-								disabled={isSaving || !iframeLoaded}
-								className={hasChanges ? 'active' : ''}
-							>
-								<SaveIcon />
-							</button>
-						</>
+						<button
+							onClick={handleManualSave}
+							title={t('Save File (Ctrl+S)')}
+							disabled={isSaving || !iframeLoaded}
+							className={hasChanges ? 'active' : ''}
+						>
+							<SaveIcon />
+						</button>
 					)}
 					<button
 						onClick={handleDownload}

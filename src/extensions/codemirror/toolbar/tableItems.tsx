@@ -9,7 +9,7 @@ export type TableType = 'latex' | 'typst';
 const gridSelectors = new WeakMap<EditorView, TableGridSelector>();
 
 const generateLatexTable = (rows: number, cols: number): string => {
-	const colSpec = '|' + 'c|'.repeat(cols);
+	const colSpec = `|${'c|'.repeat(cols)}`;
 	const headerRow = new Array(cols)
 		.fill(null)
 		.map((_, i) => `Header ${i + 1}`)

@@ -238,7 +238,7 @@ function setupDirection() {
 			const directionSetting = settings['text-direction'];
 
 			if (directionSetting === 'auto') {
-				const languageSetting = settings['language'] || 'en';
+				// const languageSetting = settings.language || 'en';
 				direction = localStorage.getItem('text-direction') || 'ltr';
 			} else if (directionSetting) {
 				direction = directionSetting;

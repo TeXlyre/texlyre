@@ -93,7 +93,7 @@ export class OpenAlexAPIService {
 		const headers: Record<string, string> = {
 			Accept: 'application/json',
 		};
-		if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+		if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
 		return headers;
 	}
 

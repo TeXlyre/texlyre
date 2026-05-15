@@ -865,38 +865,36 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 									)}
 								</div>
 
-								<>
-									<div
-										ref={originalEditorRef}
-										className='codemirror-editor-container'
-										style={{
-											display:
-												currentView === 'original' && viewMode === 'editor'
-													? 'block'
-													: 'none',
-										}}
-									/>
+								<div
+									ref={originalEditorRef}
+									className='codemirror-editor-container'
+									style={{
+										display:
+											currentView === 'original' && viewMode === 'editor'
+												? 'block'
+												: 'none',
+									}}
+								/>
 
-									<div
-										ref={processedEditorRef}
-										className='codemirror-editor-container'
-										style={{
-											display:
-												currentView === 'processed' && viewMode === 'editor'
-													? 'block'
-													: 'none',
-										}}
-									/>
+								<div
+									ref={processedEditorRef}
+									className='codemirror-editor-container'
+									style={{
+										display:
+											currentView === 'processed' && viewMode === 'editor'
+												? 'block'
+												: 'none',
+									}}
+								/>
 
-									{viewMode === 'table' && (
-										<BibtexTableView
-											key={`${currentView}-${updateCounter}`}
-											entries={currentEntries}
-											onEntriesChange={handleTableEntryUpdate}
-											onSingleEntryChange={handleSingleTableEntryUpdate}
-										/>
-									)}
-								</>
+								{viewMode === 'table' && (
+									<BibtexTableView
+										key={`${currentView}-${updateCounter}`}
+										entries={currentEntries}
+										onEntriesChange={handleTableEntryUpdate}
+										onSingleEntryChange={handleSingleTableEntryUpdate}
+									/>
+								)}
 
 								{originalShowSaveIndicator &&
 									currentView === 'original' &&

@@ -569,7 +569,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						>
 							<img src={texlyreLogo} className='logo' alt={t('TeXlyre logo')} />
 						</a>{' '}
-						{'v' + __APP_VERSION__}
+						{`v${__APP_VERSION__}`}
 					</span>
 				</p>
 			</footer>

@@ -371,11 +371,11 @@ function insertColumnInSpec(
 	const insertIdx = before ? index : index + 1;
 
 	if (insertIdx >= positions.length) {
-		return colSpec + 'c';
+		return `${colSpec}c`;
 	}
 
 	const insertPos = positions[insertIdx];
-	return colSpec.slice(0, insertPos) + 'c' + colSpec.slice(insertPos);
+	return `${colSpec.slice(0, insertPos)}c${colSpec.slice(insertPos)}`;
 }
 
 function removeColumnFromSpec(colSpec: string, index: number): string {

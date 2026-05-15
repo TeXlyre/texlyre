@@ -100,7 +100,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 			return t('Last: {fileName}', { fileName });
 		} else if (project.lastOpenedDocId) {
 			return t('Last: Document {docId}', {
-				docId: project.lastOpenedDocId.slice(0, 8) + '...',
+				docId: `${project.lastOpenedDocId.slice(0, 8)}...`,
 			});
 		}
 		return t('Open Project');

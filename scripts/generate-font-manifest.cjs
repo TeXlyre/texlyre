@@ -1,6 +1,6 @@
 // scripts/generate-font-manifest.cjs
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const fontsDir = path.join(__dirname, '../public/assets/fonts');
 const outputPath = path.join(fontsDir, 'fonts.json');

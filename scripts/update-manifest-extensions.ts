@@ -59,7 +59,7 @@ function extractSupportedExtensions(
 		const varMatch = stripped.match(
 			new RegExp(`(?:const|let|var)\\s+${varName}\\s*=\\s*\\[[^\\]]+\\]`),
 		);
-		if (varMatch) varDeclarations.push(varMatch[0] + ';');
+		if (varMatch) varDeclarations.push(`${varMatch[0]};`);
 	}
 
 	const evalSource = `

@@ -7,8 +7,7 @@ import BibtexCollaborativeViewer from './BibtexCollaborativeViewer';
 const BIBTEX_EXTENSIONS = ['bib', 'bibtex'];
 const BIBTEX_MIMETYPES = ['text/x-bibtex', 'application/x-bibtex'];
 
-export const PLUGIN_NAME =
-	t('BibTeX Collaborative Editor') + ' (bib-editor 1.14.0)';
+export const PLUGIN_NAME = `${t('BibTeX Collaborative Editor')} (bib-editor 1.14.0)`;
 export const PLUGIN_VERSION = '0.2.0';
 
 const bibtexCollaborativeViewerPlugin: CollaborativeViewerPlugin = {

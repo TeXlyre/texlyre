@@ -172,7 +172,7 @@ function rebuildTag(
 		if (sanitized) attrs.push(sanitized);
 	}
 
-	const attrStr = attrs.length ? ' ' + attrs.join(' ') : '';
+	const attrStr = attrs.length ? ` ${attrs.join(' ')}` : '';
 	return `<${name}${attrStr}${selfClosing ? '/>' : '>'}`;
 }
 

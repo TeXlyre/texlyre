@@ -267,7 +267,7 @@ export class LinkNavigator {
 		let finalUrl = url.trim();
 
 		if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
-			finalUrl = 'https://' + finalUrl;
+			finalUrl = `https://${finalUrl}`;
 		}
 
 		window.open(finalUrl, '_blank');

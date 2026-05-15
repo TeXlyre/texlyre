@@ -20,8 +20,8 @@ async function getDetypify(): Promise<Detypify> {
 	if (!detypifyLoading) {
 		detypifyLoading = (async () => {
 			ortEnv.wasm.numThreads = 1;
-			ortEnv.wasm.wasmPaths = BASE_PATH + '/core/detypify/';
-			const response = await fetch(BASE_PATH + '/core/detypify/model.onnx');
+			ortEnv.wasm.wasmPaths = `${BASE_PATH}/core/detypify/`;
+			const response = await fetch(`${BASE_PATH}/core/detypify/model.onnx`);
 			const modelData = await response.arrayBuffer();
 			const { InferenceSession } = await import('onnxruntime-web/wasm');
 			const session = await InferenceSession.create(modelData);

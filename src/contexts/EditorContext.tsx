@@ -1,8 +1,6 @@
 // src/contexts/EditorContext.tsx
 import type React from 'react';
 import { type ReactNode, createContext, useCallback, useMemo } from 'react';
-import { text } from 'node:stream/consumers';
-import { language } from '@codemirror/language';
 
 import { pluginRegistry } from '../plugins/PluginRegistry';
 import { useSettings } from '../hooks/useSettings';

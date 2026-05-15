@@ -11,7 +11,7 @@ const DRAWIO_MIMETYPES = [
 	'application/x-drawio',
 ];
 
-export const PLUGIN_NAME = t('Draw.io Diagram Editor') + ' (draw.io 29.7.9)';
+export const PLUGIN_NAME = `${t('Draw.io Diagram Editor')} (draw.io 29.7.9)`;
 export const PLUGIN_VERSION = '0.1.0';
 
 const drawioViewerPlugin: ViewerPlugin = {

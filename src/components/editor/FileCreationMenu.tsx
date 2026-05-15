@@ -111,22 +111,20 @@ const FileCreationMenu: React.FC<FileCreationMenuProps> = ({
 			</div>
 
 			{viewerFiles.length > 0 && (
-				<>
-					<div className='dropdown-section'>
-						<div className='dropdown-title'>{t('Editable Viewers')}</div>
-						{viewerFiles.map((template, idx) => (
-							<button
-								key={`viewer-${idx}`}
-								className='dropdown-item'
-								onClick={() => handleCreateFile(template.extension)}
-							>
-								{template.icon ? <template.icon /> : <FilePlusIcon />}
-								<span className='dropdown-label'>{t(template.label)}</span>
-								<span className='dropdown-value'>{template.extension}</span>
-							</button>
-						))}
-					</div>
-				</>
+				<div className='dropdown-section'>
+					<div className='dropdown-title'>{t('Editable Viewers')}</div>
+					{viewerFiles.map((template, idx) => (
+						<button
+							key={`viewer-${idx}`}
+							className='dropdown-item'
+							onClick={() => handleCreateFile(template.extension)}
+						>
+							{template.icon ? <template.icon /> : <FilePlusIcon />}
+							<span className='dropdown-label'>{t(template.label)}</span>
+							<span className='dropdown-value'>{template.extension}</span>
+						</button>
+					))}
+				</div>
 			)}
 		</DropdownMenu>
 	);

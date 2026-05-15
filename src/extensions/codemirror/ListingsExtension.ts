@@ -1,5 +1,3 @@
-// src/extensions/codemirror/ListingsExtension.ts
-import { booleanLiteral } from '@babel/types';
 import type { Extension } from '@codemirror/state';
 import { keymap, type KeyBinding } from '@codemirror/view';
 import type { EditorView } from 'codemirror';

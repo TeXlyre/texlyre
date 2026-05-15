@@ -358,31 +358,29 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 									className='dropdown-select'
 									disabled={isExporting}
 								>
-									<>
-										<optgroup label={t('PDF Versions')}>
-											<option value='"1.4"'>{t('PDF 1.4')}</option>
-											<option value='"1.5"'>{t('PDF 1.5')}</option>
-											<option value='"1.6"'>{t('PDF 1.6')}</option>
-											<option value='"1.7"'>{t('PDF 1.7')}</option>
-											<option value='"2.0"'>{t('PDF 2.0')}</option>
-										</optgroup>
-										<optgroup label={t('PDF/A Standards')}>
-											<option value='"a-1b"'>{t('PDF/A-1b')}</option>
-											<option value='"a-1a"'>{t('PDF/A-1a')}</option>
-											<option value='"a-2b"'>{t('PDF/A-2b')}</option>
-											<option value='"a-2u"'>{t('PDF/A-2u')}</option>
-											<option value='"a-2a"'>{t('PDF/A-2a')}</option>
-											<option value='"a-3b"'>{t('PDF/A-3b')}</option>
-											<option value='"a-3u"'>{t('PDF/A-3u')}</option>
-											<option value='"a-3a"'>{t('PDF/A-3a')}</option>
-											<option value='"a-4"'>{t('PDF/A-4')}</option>
-											<option value='"a-4f"'>{t('PDF/A-4f')}</option>
-											<option value='"a-4e"'>{t('PDF/A-4e')}</option>
-										</optgroup>
-										<optgroup label={t('Accessibility Standards')}>
-											<option value='"ua-1"'>{t('PDF/UA-1 \u267F')}</option>
-										</optgroup>
-									</>
+									<optgroup label={t('PDF Versions')}>
+										<option value='"1.4"'>{t('PDF 1.4')}</option>
+										<option value='"1.5"'>{t('PDF 1.5')}</option>
+										<option value='"1.6"'>{t('PDF 1.6')}</option>
+										<option value='"1.7"'>{t('PDF 1.7')}</option>
+										<option value='"2.0"'>{t('PDF 2.0')}</option>
+									</optgroup>
+									<optgroup label={t('PDF/A Standards')}>
+										<option value='"a-1b"'>{t('PDF/A-1b')}</option>
+										<option value='"a-1a"'>{t('PDF/A-1a')}</option>
+										<option value='"a-2b"'>{t('PDF/A-2b')}</option>
+										<option value='"a-2u"'>{t('PDF/A-2u')}</option>
+										<option value='"a-2a"'>{t('PDF/A-2a')}</option>
+										<option value='"a-3b"'>{t('PDF/A-3b')}</option>
+										<option value='"a-3u"'>{t('PDF/A-3u')}</option>
+										<option value='"a-3a"'>{t('PDF/A-3a')}</option>
+										<option value='"a-4"'>{t('PDF/A-4')}</option>
+										<option value='"a-4f"'>{t('PDF/A-4f')}</option>
+										<option value='"a-4e"'>{t('PDF/A-4e')}</option>
+									</optgroup>
+									<optgroup label={t('Accessibility Standards')}>
+										<option value='"ua-1"'>{t('PDF/UA-1 \u267F')}</option>
+									</optgroup>
 								</select>
 								<a
 									href='https://typst.app/docs/reference/pdf/'

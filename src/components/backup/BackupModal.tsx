@@ -322,16 +322,14 @@ const BackupModal: React.FC<BackupModalProps> = ({
 						<div className='status-header'>
 							<div className='backup-controls'>
 								{!status.isConnected ? (
-									<>
-										<button
-											className='button primary'
-											onClick={handleRequestAccess}
-											disabled={isOperating}
-										>
-											<FolderIcon />
-											{isOperating ? t('Connecting...') : t('Connect Folder')}
-										</button>
-									</>
+									<button
+										className='button primary'
+										onClick={handleRequestAccess}
+										disabled={isOperating}
+									>
+										<FolderIcon />
+										{isOperating ? t('Connecting...') : t('Connect Folder')}
+									</button>
 								) : (
 									<>
 										{isInEditor && (

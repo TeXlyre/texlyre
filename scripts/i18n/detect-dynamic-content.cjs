@@ -94,7 +94,7 @@ function isPluralPair(singular, plural) {
 
 	if (s === p) return false;
 
-	if (p === s + 's' || p === s + 'es' || p === s + 'ies') {
+	if (p === `${s}s` || p === `${s}es` || p === `${s}ies`) {
 		return true;
 	}
 
@@ -208,7 +208,7 @@ function detectDynamicContent(sourceDir, outputFile) {
 					type: 'template-literal',
 					confidence: 'high',
 					attribute: attrName,
-					original: '`' + expr.quasis[0]?.value.raw + '...`',
+					original: `\`${expr.quasis[0]?.value.raw}...\``,
 					suggested: templateString,
 				});
 			}
