@@ -79,14 +79,14 @@
 
 .codemirror-editor-container .cm-editor {
 	height: 100%;
-	color: var(--cm-color-editor-text);
-	background-color: var(--pico-secondary-background) !important;
+	/* color: var(--cm-color-editor-text); */
+	background-color: var(--pico-secondary-background);
 }
 
 .codemirror-editor-container .cm-editor.cm-focused {
 	outline: 2px solid var(--pico-primary);
 	outline-offset: -2px;
-	background-color: var(--pico-secondary-background) !important;
+	/* background-color: var(--pico-secondary-background) !important; */
 }
 
 .codemirror-editor-container .cm-scroller {
@@ -99,9 +99,9 @@
 
 .codemirror-editor-container .cm-content {
 	min-height: 100%;
-	white-space: pre-wrap;
+	/* white-space: pre-wrap; */
 	padding: var(--space-sm);
-	background-color: transparent !important;
+	/* background-color: transparent !important; */
 }
 
 .codemirror-editor-container .cm-line {
@@ -110,34 +110,18 @@
 
 .codemirror-editor-container .cm-gutters {
 	background-color: var(--pico-background) !important;
-	color: var(--cm-color-gutter-text);
+	/* color: var(--cm-color-gutter-text); */
 	border-right: 1px solid var(--accent-border);
 }
 
 .codemirror-editor-container .cm-lineNumbers .cm-gutterElement {
-	color: var(--pico-muted-color, #6a737d);
+	/* color: var(--pico-muted-color, #6a737d); */
 	padding: 0 var(--space-xs) 0 var(--space-sm);
-}
-
-/* ============================================================
-   Cursor, selection & active line
-   ============================================================ */
-
-.codemirror-editor-container .cm-cursor {
-	border-left: 2px solid var(--pico-primary);
-}
-
-.codemirror-editor-container .cm-selectionBackground {
-	background-color: var(--pico-primary-focus, rgba(0, 123, 255, 0.2)) !important;
-}
-
-.codemirror-editor-container .cm-activeLine {
-	background-color: var(--cm-color-active-line-bg);
 }
 
 .codemirror-editor-container .cm-completionInfo {
 	color: var(--cm-color-editor-text);
-	background-color: var(--pico-secondary-background);
+	/* background-color: var(--pico-secondary-background); */
 }
 
 /* ============================================================
@@ -145,12 +129,12 @@
    ============================================================ */
 
 .codemirror-editor-container .cm-matchingBracket {
-	background-color: rgba(40, 167, 69, 0.2);
+	/* background-color: rgba(40, 167, 69, 0.2); */
 	outline: 1px solid var(--color-success);
 }
 
 .codemirror-editor-container .cm-nonmatchingBracket {
-	background-color: rgba(220, 53, 69, 0.2);
+	/* background-color: rgba(220, 53, 69, 0.2); */
 	outline: 1px solid var(--color-error);
 }
 

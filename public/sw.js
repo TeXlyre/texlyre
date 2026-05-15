@@ -1,18 +1,18 @@
 // These constants are automatically generated. Do not edit directly.
-// Generated on: 2026-05-13T19:02:33.319Z
-const CACHE_NAME = `texlyre-v0.7.56`;
+// Generated on: 2026-05-15T02:15:00.833Z
+const CACHE_NAME = `texlyre-v0.7.57`;
 const BASE_PATH = '/texlyre/';
 const FONTS_CACHE_NAME = 'fonts-cache-v1';
 const AIRGAP_ALLOWED_DOMAINS = [
-  "texlyre.github.io",
-  "texlyre.org",
-  "typst.org"
+	"texlyre.github.io",
+	"texlyre.org",
+	"typst.org"
 ];
 const AIRGAP_ALLOWED_PROTOCOLS = [
-  "https:",
-  "http:",
-  "wss:",
-  "ws:"
+	"https:",
+	"http:",
+	"wss:",
+	"ws:"
 ];
 // *** End automatic generation ***
 
