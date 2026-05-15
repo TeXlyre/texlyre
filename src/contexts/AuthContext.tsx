@@ -175,7 +175,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 		return authService.getProjectsByTag(tag);
 	};
 
-	const getProjectsByType = async (type: 'latex' | 'typst'): Promise<Project[]> => {
+	const getProjectsByType = async (
+		type: 'latex' | 'typst',
+	): Promise<Project[]> => {
 		return authService.getProjectsByType(type);
 	};
 

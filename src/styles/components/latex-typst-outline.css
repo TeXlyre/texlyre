@@ -166,7 +166,7 @@
 }
 
 .outline-children::before {
-	content: '';
+	content: "";
 	position: absolute;
 	left: 20px;
 	top: 0;

@@ -1,7 +1,7 @@
 // src/services/AccountExportService.ts
-import { t } from '@/i18n';
 import { saveAs } from 'file-saver';
 
+import { t } from '@/i18n';
 import { cleanContent, processFile } from '../utils/fileCommentUtils';
 import { authService } from './AuthService';
 import { UnifiedDataStructureService } from './DataStructureService';
@@ -324,8 +324,7 @@ class AccountExportService {
 						if (file.type === 'file') {
 							const content = projectData.fileContents.get(file.path);
 							if (content) {
-								const cleanedContent =
-									cleanContent(content);
+								const cleanedContent = cleanContent(content);
 
 								const cleanPath = file.path.startsWith('/')
 									? file.path.slice(1)
@@ -389,7 +388,10 @@ class AccountExportService {
 			}
 
 			if (unifiedData.userData && importedUser) {
-				await this.importUserLocalStorageData(importedUser.id, unifiedData.userData);
+				await this.importUserLocalStorageData(
+					importedUser.id,
+					unifiedData.userData,
+				);
 			}
 
 			await this.importProjectsData(unifiedData.projects, importedUser);
@@ -405,7 +407,10 @@ class AccountExportService {
 		}
 	}
 
-	private async importUserLocalStorageData(userId: string, userData: any): Promise<void> {
+	private async importUserLocalStorageData(
+		userId: string,
+		userData: any,
+	): Promise<void> {
 		await importUserData(userId, userData);
 	}
 
@@ -422,7 +427,9 @@ class AccountExportService {
 
 			const importedUser = await this.createUserFromImport(userData);
 
-			console.log(`[AccountExportService] Successfully imported user: ${userData.username}`);
+			console.log(
+				`[AccountExportService] Successfully imported user: ${userData.username}`,
+			);
 			return importedUser;
 		} catch (error) {
 			console.error('Error importing user data:', error);
@@ -456,7 +463,9 @@ class AccountExportService {
 
 		await authDb.put('users', userToImport);
 
-		console.log(`[AccountExportService] Successfully imported user: ${userData.username}`);
+		console.log(
+			`[AccountExportService] Successfully imported user: ${userData.username}`,
+		);
 		return userToImport;
 	}
 
@@ -467,7 +476,9 @@ class AccountExportService {
 			throw new Error(t('Failed to authenticate imported user'));
 		}
 
-		console.log(`[AccountExportService] Successfully authenticated imported user: ${user.username}`);
+		console.log(
+			`[AccountExportService] Successfully authenticated imported user: ${user.username}`,
+		);
 	}
 
 	private async importProjectsData(

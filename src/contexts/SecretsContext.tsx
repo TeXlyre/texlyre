@@ -1,5 +1,4 @@
 // src/contexts/SecretsContext.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import {
 	type ReactNode,
@@ -9,6 +8,7 @@ import {
 	useState,
 } from 'react';
 
+import { t } from '@/i18n';
 import { useAuth } from '../hooks/useAuth';
 
 export interface SecretValue {
@@ -85,18 +85,18 @@ export interface SecretsContextType {
 export const SecretsContext = createContext<SecretsContextType>({
 	isPasswordSet: false,
 	setPassword: async () => false,
-	clearPassword: () => { },
-	setSecret: async () => { },
+	clearPassword: () => {},
+	setSecret: async () => {},
 	getSecret: async () => null,
-	removeSecret: async () => { },
+	removeSecret: async () => {},
 	hasSecret: () => false,
 	promptForPassword: async () => null,
 	getSecretMetadata: () => null,
-	clearAllSecrets: async () => { },
+	clearAllSecrets: async () => {},
 	isPasswordModalOpen: false,
 	passwordModalMessage: '',
 	showPasswordModal: async () => null,
-	hidePasswordModal: () => { },
+	hidePasswordModal: () => {},
 	submitPassword: async () => false,
 });
 
@@ -356,7 +356,8 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 			return new Promise((resolve) => {
 				setPasswordModalMessage(
-					message || t('Enter your TeXlyre password to access encrypted secrets:'),
+					message ||
+						t('Enter your TeXlyre password to access encrypted secrets:'),
 				);
 				setPasswordResolve(() => resolve);
 				setIsPasswordModalOpen(true);

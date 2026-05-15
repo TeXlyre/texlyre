@@ -11,7 +11,7 @@ import {
 import type * as Y from 'yjs';
 
 import { useAuth } from '../hooks/useAuth';
-import { useSettings} from '../hooks/useSettings';
+import { useSettings } from '../hooks/useSettings';
 import { collabService } from '../services/CollabService';
 import type { ChatContextType, ChatMessage } from '../types/chat';
 import type { YjsDocUrl } from '../types/yjs';
@@ -43,7 +43,11 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
 		const autoReconnectSetting = getSetting('collab-auto-reconnect');
 
 		// Wait until all collaboration settings are available
-		if (!signalingServersSetting || !awarenessTimeoutSetting || !autoReconnectSetting) {
+		if (
+			!signalingServersSetting ||
+			!awarenessTimeoutSetting ||
+			!autoReconnectSetting
+		) {
 			return;
 		}
 

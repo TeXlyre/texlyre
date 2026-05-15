@@ -3,7 +3,7 @@ import { t } from '@/i18n';
 import type { ViewerPlugin } from '@/plugins/PluginInterface';
 import PdfViewer from './PdfViewer';
 import { getPdfViewerSettings } from './settings';
-import { PdfIcon } from './Icon'
+import { PdfIcon } from './Icon';
 
 const PDF_EXTENSIONS = ['pdf'];
 const PDF_MIMETYPES = ['application/pdf'];
@@ -17,8 +17,8 @@ const pdfViewerPlugin: ViewerPlugin = {
 	version: PLUGIN_VERSION,
 	type: 'viewer',
 	icon: PdfIcon,
-	// NOTE (fabawi): You can re-enable here to divert to PDF renderers, 
-	// but for now disabled due to text annotation layer hogging memmory 
+	// NOTE (fabawi): You can re-enable here to divert to PDF renderers,
+	// but for now disabled due to text annotation layer hogging memmory
 	// rendererPluginIds: ['pdf-renderer'], // ['pdf-renderer', 'canvas-renderer']
 	get settings() {
 		return getPdfViewerSettings();
@@ -33,10 +33,11 @@ const pdfViewerPlugin: ViewerPlugin = {
 		return extension ? PDF_EXTENSIONS.includes(extension) : false;
 	},
 
-	getSupportedExtensions: () => PDF_EXTENSIONS.map((ext, idx) => ({
-		extension: ext,
-		mimeType: PDF_MIMETYPES[idx]
-	})),
+	getSupportedExtensions: () =>
+		PDF_EXTENSIONS.map((ext, idx) => ({
+			extension: ext,
+			mimeType: PDF_MIMETYPES[idx],
+		})),
 
 	renderViewer: PdfViewer,
 };

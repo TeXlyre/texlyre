@@ -1,8 +1,8 @@
 // src/components/lsp/LSPToggleButton.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
+import { t } from '@/i18n';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import { useBibliography } from '../../hooks/useBibliography';
 
@@ -21,7 +21,7 @@ const LSPToggleButton: React.FC<LSPToggleButtonProps> = ({
 	const lspPlugin = pluginRegistry.getLSPPlugin(pluginId);
 	const bibPlugin = lspPlugin
 		? null
-		: availableProviders.find(p => p.id === pluginId) ?? null;
+		: (availableProviders.find((p) => p.id === pluginId) ?? null);
 	const plugin = lspPlugin || bibPlugin;
 
 	if (!plugin) return null;
@@ -33,8 +33,8 @@ const LSPToggleButton: React.FC<LSPToggleButtonProps> = ({
 
 		document.dispatchEvent(
 			new CustomEvent('toggle-bibliography-panel', {
-				detail: { show: !showPanel, pluginId }
-			})
+				detail: { show: !showPanel, pluginId },
+			}),
 		);
 	};
 
@@ -46,10 +46,10 @@ const LSPToggleButton: React.FC<LSPToggleButtonProps> = ({
 			onClick={handleTogglePanel}
 			title={t('{action} {pluginName} panel', {
 				action: showPanel ? t('Hide') : t('Show'),
-				pluginName: plugin.name
+				pluginName: plugin.name,
 			})}
 		>
-			<div className="bib-button-content">
+			<div className='bib-button-content'>
 				{IconComponent && <IconComponent />}
 				<span className={`connection-indicator ${connectionStatus}`} />
 			</div>

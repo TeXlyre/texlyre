@@ -7,22 +7,22 @@ import { GiteaIcon } from './Icon';
 import { getGiteaBackupSettings } from './settings';
 
 const giteaBackupPlugin: BackupPlugin = {
-    id: 'gitea-backup',
-    name: 'Gitea',
-    version: '1.0.0',
-    type: 'backup',
-    icon: GiteaIcon,
-    get settings() {
-        return getGiteaBackupSettings();
-    },
+	id: 'gitea-backup',
+	name: 'Gitea',
+	version: '1.0.0',
+	type: 'backup',
+	icon: GiteaIcon,
+	get settings() {
+		return getGiteaBackupSettings();
+	},
 
-    canHandle: (backupType: string): boolean => {
-        return backupType === 'gitea';
-    },
+	canHandle: (backupType: string): boolean => {
+		return backupType === 'gitea';
+	},
 
-    renderStatusIndicator: GiteaBackupStatusIndicator,
-    renderModal: GiteaBackupModal,
-    getService: () => giteaBackupService,
+	renderStatusIndicator: GiteaBackupStatusIndicator,
+	renderModal: GiteaBackupModal,
+	getService: () => giteaBackupService,
 };
 
 export default giteaBackupPlugin;

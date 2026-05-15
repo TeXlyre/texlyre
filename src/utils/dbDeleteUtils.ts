@@ -33,9 +33,7 @@ export async function deleteDatabase(dbName: string): Promise<void> {
 	});
 }
 
-export async function closeActiveConnections(
-	projectId: string,
-): Promise<void> {
+export async function closeActiveConnections(projectId: string): Promise<void> {
 	try {
 		if (fileStorageService.isConnectedToProject(projectId)) {
 			fileStorageService.cleanup();
@@ -48,9 +46,7 @@ export async function closeActiveConnections(
 	}
 }
 
-export async function cleanupProjectDatabases(
-	project: Project,
-): Promise<void> {
+export async function cleanupProjectDatabases(project: Project): Promise<void> {
 	try {
 		const projectId = project.docUrl.startsWith('yjs:')
 			? project.docUrl.slice(4)
@@ -80,7 +76,9 @@ export async function cleanupProjectDatabases(
 			}
 		}
 
-		console.log(`[dbDeleteUtils] Cleaned up databases for project: ${project.name}`);
+		console.log(
+			`[dbDeleteUtils] Cleaned up databases for project: ${project.name}`,
+		);
 	} catch (error) {
 		console.error('Error cleaning up project databases:', error);
 	}

@@ -379,7 +379,7 @@ embed {
 	cursor: not-allowed;
 }
 
-.dropdown-section+.dropdown-section {
+.dropdown-section + .dropdown-section {
 	margin-top: var(--space-sm);
 	padding-top: var(--space-sm);
 }

@@ -60,7 +60,7 @@
 	padding: var(--space-xs) var(--space-sm);
 }
 
-.cm-panel.cm-search [name=close] {
+.cm-panel.cm-search [name="close"] {
 	position: absolute;
 	top: 0;
 	right: var(--space-md);
@@ -322,8 +322,9 @@
 	border-radius: var(--radius-md);
 	box-shadow: var(--shadow-lg);
 	color: var(--pico-color);
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-		Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+	font-family:
+		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+		Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 	font-size: 12px;
 	line-height: 1.4;
 	max-width: 400px;
@@ -401,8 +402,9 @@
 	border-radius: var(--radius-md);
 	box-shadow: var(--shadow-lg);
 	color: var(--pico-color);
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-		Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+	font-family:
+		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+		Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 	font-size: 12px;
 	line-height: 1.4;
 	padding: 12px var(--space-md);
@@ -449,7 +451,7 @@
 	padding: var(--space-sm) !important;
 }
 
-.codemirror-editor-container .cm-tooltip.cm-tooltip-autocomplete>ul {
+.codemirror-editor-container .cm-tooltip.cm-tooltip-autocomplete > ul {
 	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 	font-size: 12px;
 	background-color: var(--pico-background);
@@ -588,12 +590,14 @@
 }
 
 .codemirror-editor-container .comment-selection-active {
-	background-color: var(--comment-highlight-active-bg, rgba(100, 200, 255, 0.2));
+	background-color: var(
+		--comment-highlight-active-bg,
+		rgba(100, 200, 255, 0.2)
+	);
 	border-radius: var(--radius-xs);
 }
 
 @keyframes comment-pulse {
-
 	0%,
 	100% {
 		background-color: rgba(255, 220, 100, 0.2);
@@ -637,8 +641,9 @@
 	border-radius: var(--radius-md);
 	box-shadow: var(--shadow-lg);
 	color: var(--pico-color);
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-		Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+	font-family:
+		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+		Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 	font-size: 12px;
 	line-height: 1.4;
 	max-width: 400px;

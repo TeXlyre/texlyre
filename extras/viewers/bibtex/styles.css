@@ -144,7 +144,7 @@
 	align-items: center;
 }
 
-.option-item>span {
+.option-item > span {
 	margin-left: 0;
 	color: var(--text-color);
 	cursor: pointer;
@@ -185,7 +185,7 @@
 	background-color: var(--accent-border, #444);
 }
 
-.option-item.sub-option>span {
+.option-item.sub-option > span {
 	color: var(--pico-secondary);
 	font-weight: 400;
 }
@@ -579,7 +579,6 @@
 }
 
 @media (prefers-contrast: high) {
-
 	.tidy-button,
 	.reset-button {
 		border-width: 2px;
@@ -587,7 +586,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-
 	.tidy-button,
 	.reset-button,
 	.option-item input,

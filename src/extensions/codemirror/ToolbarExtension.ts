@@ -1,6 +1,10 @@
 // src/extensions/codemirror/ToolbarExtension.ts
 import { type Extension, Compartment } from '@codemirror/state';
-import type { ToolbarSplit, ToolbarSpace, ToolbarItem } from 'codemirror-toolbar';
+import type {
+	ToolbarSplit,
+	ToolbarSpace,
+	ToolbarItem,
+} from 'codemirror-toolbar';
 import toolbar from 'codemirror-toolbar';
 import { type EditorView, ViewPlugin } from '@codemirror/view';
 import type { UndoManager } from 'yjs';
@@ -21,7 +25,10 @@ export type FileType = 'latex' | 'typst';
 
 type ToolbarEntry = ToolbarItem | ToolbarSplit | ToolbarSpace;
 
-const toolbarCommandsByView = new WeakMap<EditorView, Map<string, ToolbarItem>>();
+const toolbarCommandsByView = new WeakMap<
+	EditorView,
+	Map<string, ToolbarItem>
+>();
 
 function registerToolbarCommands(view: EditorView, items: ToolbarEntry[]) {
 	const commands = new Map<string, ToolbarItem>();
@@ -57,7 +64,10 @@ const getColorScopeItems = (fileType: FileType): ToolbarEntry[] => [
 	ColorScopeItems.createColorRemove(fileType),
 ];
 
-const getCommonEndItems = (isFullScreen: boolean, undoManager?: UndoManager): ToolbarEntry[] => [
+const getCommonEndItems = (
+	isFullScreen: boolean,
+	undoManager?: UndoManager,
+): ToolbarEntry[] => [
 	space,
 	CodeMirrorItems.createUndo(undoManager),
 	CodeMirrorItems.createRedo(undoManager),
@@ -65,7 +75,13 @@ const getCommonEndItems = (isFullScreen: boolean, undoManager?: UndoManager): To
 	CodeMirrorItems.createFullScreen(isFullScreen),
 ];
 
-const getItems = (fileType: FileType, isFullScreen: boolean, inTable: boolean, inColor: boolean, undoManager?: UndoManager): ToolbarEntry[] => {
+const getItems = (
+	fileType: FileType,
+	isFullScreen: boolean,
+	inTable: boolean,
+	inColor: boolean,
+	undoManager?: UndoManager,
+): ToolbarEntry[] => {
 	const tableItems = inTable ? getTableScopeItems(fileType) : [];
 	const colorItems = inColor ? getColorScopeItems(fileType) : [];
 	const endItems = getCommonEndItems(isFullScreen, undoManager);
@@ -175,11 +191,20 @@ function createToolbarPlugin(
 
 			constructor(private view: EditorView) {
 				this.boundFullScreenHandler = this.handleFullScreenChange.bind(this);
-				view.dom.ownerDocument.addEventListener('fullscreenchange', this.boundFullScreenHandler);
+				view.dom.ownerDocument.addEventListener(
+					'fullscreenchange',
+					this.boundFullScreenHandler,
+				);
 
 				registerToolbarCommands(
 					view,
-					getItems(fileType, this.isFullScreen, scopeState.inTable, scopeState.inColor, undoManager),
+					getItems(
+						fileType,
+						this.isFullScreen,
+						scopeState.inTable,
+						scopeState.inColor,
+						undoManager,
+					),
 				);
 			}
 
@@ -187,7 +212,10 @@ function createToolbarPlugin(
 				const nowInTable = detectTableScope(this.view, fileType) !== null;
 				const nowInColor = detectColorScope(this.view, fileType) !== null;
 
-				if (nowInTable !== scopeState.inTable || nowInColor !== scopeState.inColor) {
+				if (
+					nowInTable !== scopeState.inTable ||
+					nowInColor !== scopeState.inColor
+				) {
 					scopeState.inTable = nowInTable;
 					scopeState.inColor = nowInColor;
 					this.reconfigureToolbar();
@@ -199,42 +227,72 @@ function createToolbarPlugin(
 				if (nowFullScreen !== this.isFullScreen) {
 					this.isFullScreen = nowFullScreen;
 					this.reconfigureToolbar();
-					requestAnimationFrame(() => requestAnimationFrame(onFullScreenChange));
+					requestAnimationFrame(() =>
+						requestAnimationFrame(onFullScreenChange),
+					);
 				}
 			}
 
 			private reconfigureToolbar() {
-				const items = getItems(fileType, this.isFullScreen, scopeState.inTable, scopeState.inColor, undoManager);
+				const items = getItems(
+					fileType,
+					this.isFullScreen,
+					scopeState.inTable,
+					scopeState.inColor,
+					undoManager,
+				);
 
 				registerToolbarCommands(this.view, items);
 
 				requestAnimationFrame(() => {
-					this.view.dispatch({ effects: toolbarCompartment.reconfigure(toolbar({ items })) });
+					this.view.dispatch({
+						effects: toolbarCompartment.reconfigure(toolbar({ items })),
+					});
 				});
 			}
 
 			destroy() {
-				this.view.dom.ownerDocument.removeEventListener('fullscreenchange', this.boundFullScreenHandler);
+				this.view.dom.ownerDocument.removeEventListener(
+					'fullscreenchange',
+					this.boundFullScreenHandler,
+				);
 			}
 		},
 	);
 }
 
-export const createToolbarExtension = (fileType: FileType, undoManager?: UndoManager): Extension => {
+export const createToolbarExtension = (
+	fileType: FileType,
+	undoManager?: UndoManager,
+): Extension => {
 	const toolbarCompartment = new Compartment();
 	const scopeState = { inTable: false, inColor: false };
 
 	const initialItems = getItems(fileType, false, false, false, undoManager);
 
-	const { plugin: responsivePlugin, reset: resetResponsive } = createCollapsableToolbar(
-		() => getItems(fileType, !!document.fullscreenElement, scopeState.inTable, scopeState.inColor, undoManager),
-		toolbarCompartment,
-		() => (scopeState.inTable ? 2 : 0) + (scopeState.inColor ? 1 : 0),
-	);
+	const { plugin: responsivePlugin, reset: resetResponsive } =
+		createCollapsableToolbar(
+			() =>
+				getItems(
+					fileType,
+					!!document.fullscreenElement,
+					scopeState.inTable,
+					scopeState.inColor,
+					undoManager,
+				),
+			toolbarCompartment,
+			() => (scopeState.inTable ? 2 : 0) + (scopeState.inColor ? 1 : 0),
+		);
 
 	return [
 		toolbarCompartment.of(toolbar({ items: initialItems })),
-		createToolbarPlugin(fileType, toolbarCompartment, scopeState, resetResponsive, undoManager),
+		createToolbarPlugin(
+			fileType,
+			toolbarCompartment,
+			scopeState,
+			resetResponsive,
+			undoManager,
+		),
 		responsivePlugin,
 	];
 };

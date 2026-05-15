@@ -1,15 +1,20 @@
 // src/components/project/ProjectExportModal.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
+import { t } from '@/i18n';
 import {
 	type ExportOptions,
 	accountExportService,
 } from '../../services/AccountExportService';
 import type { Project } from '../../types/projects';
 import { formatDate } from '../../utils/dateUtils';
-import { ExportIcon, FileIcon, FileTextIcon, ZipFileIcon } from '../common/Icons';
+import {
+	ExportIcon,
+	FileIcon,
+	FileTextIcon,
+	ZipFileIcon,
+} from '../common/Icons';
 import Modal from '../common/Modal';
 
 interface ProjectExportModalProps {
@@ -73,54 +78,60 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 			onClose={handleClose}
 			title={t('Export Projects')}
 			icon={ZipFileIcon}
-			size="medium"
+			size='medium'
 		>
-			<div className="project-export-modal">
-				{error && <div className="export-error-message">{error}</div>}
+			<div className='project-export-modal'>
+				{error && <div className='export-error-message'>{error}</div>}
 
-				<div className="export-info">
+				<div className='export-info'>
 					<p>
-						{t('Export {count} project in your preferred format.', { count: selectedProjects.length })}
+						{t('Export {count} project in your preferred format.', {
+							count: selectedProjects.length,
+						})}
 					</p>
 				</div>
 
-				<div className="selected-projects-list">
+				<div className='selected-projects-list'>
 					{selectedProjects.map((project) => (
-						<div key={project.id} className="export-project-item">
+						<div key={project.id} className='export-project-item'>
 							<strong>{project.name}</strong>
-							<div className="export-project-details">
+							<div className='export-project-details'>
 								{project.description || t('No description')}
 							</div>
-							<div className="export-project-details">
-								{t('Last Modified: {lastModified}', { lastModified: formatDate(project.updatedAt) })}
+							<div className='export-project-details'>
+								{t('Last Modified: {lastModified}', {
+									lastModified: formatDate(project.updatedAt),
+								})}
 							</div>
 						</div>
 					))}
 				</div>
 
-				<div className="export-format-selection">
+				<div className='export-format-selection'>
 					<h3>{t('Export Format')}</h3>
 
-					<div className="dropdown-options">
+					<div className='dropdown-options'>
 						<div
 							className={`dropdown-option ${exportFormat === 'texlyre' ? 'selected' : ''}`}
 							onClick={() => setExportFormat('texlyre')}
 						>
-							<label className="dropdown-option-label">
+							<label className='dropdown-option-label'>
 								<input
-									type="radio"
-									name="exportFormat"
-									value="texlyre"
+									type='radio'
+									name='exportFormat'
+									value='texlyre'
 									checked={exportFormat === 'texlyre'}
 									onChange={() => setExportFormat('texlyre')}
 								/>
-								<div className="option-content">
-									<div className="option-header">
+								<div className='option-content'>
+									<div className='option-header'>
 										<FileTextIcon />
 										<strong>{t('TeXlyre Format')}</strong>
 									</div>
 									<p>
-										{t('Complete project export including documents, collaboration data, and files. Can be imported back into TeXlyre.')}
+										{t(
+											'Complete project export including documents, collaboration data, and files. Can be imported back into TeXlyre.',
+										)}
 									</p>
 								</div>
 							</label>
@@ -130,21 +141,23 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 							className={`dropdown-option ${exportFormat === 'files-only' ? 'selected' : ''}`}
 							onClick={() => setExportFormat('files-only')}
 						>
-							<label className="dropdown-option-label">
+							<label className='dropdown-option-label'>
 								<input
-									type="radio"
-									name="exportFormat"
-									value="files-only"
+									type='radio'
+									name='exportFormat'
+									value='files-only'
 									checked={exportFormat === 'files-only'}
 									onChange={() => setExportFormat('files-only')}
 								/>
-								<div className="option-content">
-									<div className="option-header">
+								<div className='option-content'>
+									<div className='option-header'>
 										<FileIcon />
 										<strong>{t('Files Only')}</strong>
 									</div>
 									<p>
-										{t('Export only the files from your projects in a simple folder structure. Compatible with any application.')}
+										{t(
+											'Export only the files from your projects in a simple folder structure. Compatible with any application.',
+										)}
 									</p>
 								</div>
 							</label>
@@ -152,21 +165,21 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 					</div>
 				</div>
 
-				<div className="export-option-group">
+				<div className='export-option-group'>
 					{exportFormat === 'texlyre' && (
 						<>
-							<label className="export-option-label">
+							<label className='export-option-label'>
 								<input
-									type="checkbox"
+									type='checkbox'
 									checked={includeDocuments}
 									onChange={(e) => setIncludeDocuments(e.target.checked)}
 									disabled={isExporting}
 								/>
 								<span>{t('Include documents and collaboration data')}</span>
 							</label>
-							<label className="export-option-label">
+							<label className='export-option-label'>
 								<input
-									type="checkbox"
+									type='checkbox'
 									checked={includeFiles}
 									onChange={(e) => setIncludeFiles(e.target.checked)}
 									disabled={isExporting}
@@ -176,9 +189,9 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 						</>
 					)}
 
-					<label className="export-option-label">
+					<label className='export-option-label'>
 						<input
-							type="checkbox"
+							type='checkbox'
 							checked={includeTemporaryFiles}
 							onChange={(e) => setIncludeTemporaryFiles(e.target.checked)}
 							disabled={isExporting}
@@ -188,24 +201,26 @@ const ProjectExportModal: React.FC<ProjectExportModalProps> = ({
 				</div>
 
 				{exportFormat === 'files-only' && selectedProjects.length > 1 && (
-					<div className="warning-message">
-						{t('Files will be organized by project name in separate folders. Documents are not included in files-only export.')}
+					<div className='warning-message'>
+						{t(
+							'Files will be organized by project name in separate folders. Documents are not included in files-only export.',
+						)}
 					</div>
 				)}
 			</div>
 
-			<div className="modal-actions">
+			<div className='modal-actions'>
 				<button
-					type="button"
-					className="button secondary"
+					type='button'
+					className='button secondary'
 					onClick={handleClose}
 					disabled={isExporting}
 				>
 					{t('Cancel')}
 				</button>
 				<button
-					type="button"
-					className="button primary"
+					type='button'
+					className='button primary'
 					onClick={handleExport}
 					disabled={isExporting || (!includeDocuments && !includeFiles)}
 				>

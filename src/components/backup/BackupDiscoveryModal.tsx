@@ -1,8 +1,8 @@
 // src/components/backup/BackupDiscoveryModal.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
+import { t } from '@/i18n';
 import {
 	type ImportableProject,
 	projectImportService,
@@ -69,7 +69,7 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 			if (result.errors.length > 0) {
 				setError(
 					t('Import completed with errors: {errors}', {
-						errors: result.errors.map((e) => e.error).join(', ')
+						errors: result.errors.map((e) => e.error).join(', '),
 					}),
 				);
 			}
@@ -97,24 +97,27 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 			isOpen={isOpen}
 			onClose={handleClose}
 			title={t('Projects Found in Backup')}
-			size="medium"
+			size='medium'
 		>
-			<div className="backup-discovery-modal">
+			<div className='backup-discovery-modal'>
 				{error && (
-					<div className="error-message" style={{ marginBottom: '1rem' }}>
+					<div className='error-message' style={{ marginBottom: '1rem' }}>
 						{error}
 					</div>
 				)}
 
-				<div className="discovery-info">
+				<div className='discovery-info'>
 					<p>
-						{t('We found {count} project in your backup that are not on TeXlyre. Would you like to import them?', { count: discoveredProjects.length })}
+						{t(
+							'We found {count} project in your backup that are not on TeXlyre. Would you like to import them?',
+							{ count: discoveredProjects.length },
+						)}
 					</p>
 				</div>
 
-				<div className="selection-header">
+				<div className='selection-header'>
 					<button
-						className="button secondary small"
+						className='button secondary small'
 						onClick={handleSelectAll}
 						disabled={isImporting}
 					>
@@ -124,7 +127,7 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 					</button>
 				</div>
 
-				<div className="projects-list">
+				<div className='projects-list'>
 					{discoveredProjects.map((project) => (
 						<div
 							key={project.id}
@@ -132,43 +135,49 @@ const BackupDiscoveryModal: React.FC<BackupDiscoveryModalProps> = ({
 							onClick={() => !isImporting && handleProjectToggle(project.id)}
 						>
 							<input
-								type="checkbox"
+								type='checkbox'
 								checked={selectedProjects.has(project.id)}
 								onChange={() => handleProjectToggle(project.id)}
 								disabled={isImporting}
 							/>
-							<div className="project-details">
-								<div className="project-name">{project.name}</div>
-								<div className="project-description">
+							<div className='project-details'>
+								<div className='project-name'>{project.name}</div>
+								<div className='project-description'>
 									{project.description || t('No description')}
 								</div>
-								<div className="project-meta">
-									<span>{t('Last Modified: {lastModified}', { lastModified: formatDate(project.lastModified) })}</span>
+								<div className='project-meta'>
+									<span>
+										{t('Last Modified: {lastModified}', {
+											lastModified: formatDate(project.lastModified),
+										})}
+									</span>
 								</div>
 							</div>
 						</div>
 					))}
 				</div>
 
-				<div className="import-note">
+				<div className='import-note'>
 					<ImportIcon />
 					<span>
-						{t('Projects will be imported as collaborations, preserving original ownership.')}
+						{t(
+							'Projects will be imported as collaborations, preserving original ownership.',
+						)}
 					</span>
 				</div>
 
-				<div className="modal-actions">
+				<div className='modal-actions'>
 					<button
-						type="button"
-						className="button secondary"
+						type='button'
+						className='button secondary'
 						onClick={handleClose}
 						disabled={isImporting}
 					>
 						{t('Not Now')}
 					</button>
 					<button
-						type="button"
-						className="button primary"
+						type='button'
+						className='button primary'
 						onClick={handleImport}
 						disabled={selectedProjects.size === 0 || isImporting}
 					>

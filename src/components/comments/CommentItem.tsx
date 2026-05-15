@@ -1,8 +1,8 @@
 // src/components/comments/CommentItem.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
+import { t } from '@/i18n';
 import { useComments } from '../../hooks/useComments';
 import type { Comment } from '../../types/comments';
 import { formatDate } from '../../utils/dateUtils';
@@ -10,165 +10,169 @@ import { gotoEditor } from '../../utils/editorNavigator';
 import { CheckIcon, TrashIcon } from '../common/Icons';
 
 interface CommentItemProps {
-  comment: Comment;
-  view: 'list' | 'resolved';
-  onLineClick?: (line: number) => void;
+	comment: Comment;
+	view: 'list' | 'resolved';
+	onLineClick?: (line: number) => void;
 }
 
 const CommentItem: React.FC<CommentItemProps> = ({
-  comment,
-  view,
-  onLineClick
+	comment,
+	view,
+	onLineClick,
 }) => {
-  const [newResponse, setNewResponse] = useState('');
-  const [isAddingResponse, setIsAddingResponse] = useState(false);
-  const { addResponse, deleteComment, deleteResponse, resolveComment } =
-    useComments();
+	const [newResponse, setNewResponse] = useState('');
+	const [isAddingResponse, setIsAddingResponse] = useState(false);
+	const { addResponse, deleteComment, deleteResponse, resolveComment } =
+		useComments();
 
-  const handleAddResponse = () => {
-    if (newResponse.trim()) {
-      addResponse(comment.id, newResponse);
-      setNewResponse('');
-      setIsAddingResponse(false);
-    }
-  };
+	const handleAddResponse = () => {
+		if (newResponse.trim()) {
+			addResponse(comment.id, newResponse);
+			setNewResponse('');
+			setIsAddingResponse(false);
+		}
+	};
 
-  const handleDeleteResponse = (responseId: string) => {
-    deleteResponse(comment.id, responseId);
-  };
+	const handleDeleteResponse = (responseId: string) => {
+		deleteResponse(comment.id, responseId);
+	};
 
-  const handleResolveComment = () => {
-    resolveComment(comment.id);
-  };
+	const handleResolveComment = () => {
+		resolveComment(comment.id);
+	};
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleAddResponse();
-    }
-  };
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === 'Enter' && !e.shiftKey) {
+			e.preventDefault();
+			handleAddResponse();
+		}
+	};
 
-  const handleLineClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!comment.line) return;
-    gotoEditor(null, { line: comment.line });
-  };
+	const handleLineClick = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		if (!comment.line) return;
+		gotoEditor(null, { line: comment.line });
+	};
 
-  const truncateUsername = (username: string, maxLength = 15) => {
-    return username.length > maxLength ?
-      `${username.substring(0, maxLength)}...` :
-      username;
-  };
+	const truncateUsername = (username: string, maxLength = 15) => {
+		return username.length > maxLength
+			? `${username.substring(0, maxLength)}...`
+			: username;
+	};
 
-  return (
-    <div
-      className={`comment-item ${comment.resolved ? 'resolved' : ''}`}
-      data-comment-id={comment.id}>
+	return (
+		<div
+			className={`comment-item ${comment.resolved ? 'resolved' : ''}`}
+			data-comment-id={comment.id}
+		>
+			<div className='comment-header'>
+				<div className='comment-author-container'>
+					<div className='comment-author' title={comment.user}>
+						{truncateUsername(comment.user)}
+					</div>
+					<div className='comment-time'>{formatDate(comment.timestamp)}</div>
+				</div>
+				<div className='comment-header-actions'>
+					<button
+						className='resolve-button'
+						onClick={handleResolveComment}
+						title={
+							comment.resolved ? t('Mark as unresolved') : t('Mark as resolved')
+						}
+					>
+						<CheckIcon />
+					</button>
+					<button
+						className='delete-button'
+						onClick={() => deleteComment(comment.id)}
+						title={t('Delete comment')}
+					>
+						<TrashIcon />
+					</button>
+				</div>
+			</div>
 
-      <div className="comment-header">
-        <div className="comment-author-container">
-          <div className="comment-author" title={comment.user}>
-            {truncateUsername(comment.user)}
-          </div>
-          <div className="comment-time">{formatDate(comment.timestamp)}</div>
-        </div>
-        <div className="comment-header-actions">
-          <button
-            className="resolve-button"
-            onClick={handleResolveComment}
-            title={comment.resolved ? t('Mark as unresolved') : t('Mark as resolved')}>
+			{comment.line && (
+				<div className='comment-line-section'>
+					<button
+						className='comment-line-button'
+						onClick={handleLineClick}
+						title={t('Go to line {line}', { line: comment.line })}
+					>
+						{t('Line {line}', { line: comment.line })}
+					</button>
+				</div>
+			)}
 
-            <CheckIcon />
-          </button>
-          <button
-            className="delete-button"
-            onClick={() => deleteComment(comment.id)}
-            title={t('Delete comment')}>
+			<div className='comment-content'>{comment.content}</div>
 
-            <TrashIcon />
-          </button>
-        </div>
-      </div>
+			{comment.responses.length > 0 && (
+				<div className='comment-responses'>
+					{comment.responses.map((response) => (
+						<div key={response.id} className='response-item'>
+							<div className='response-header'>
+								<div className='response-author-container'>
+									<div className='response-author' title={response.user}>
+										{truncateUsername(response.user)}
+									</div>
+									<div className='response-time'>
+										{formatDate(response.timestamp)}
+									</div>
+								</div>
+								<button
+									className='delete-button small'
+									onClick={() => handleDeleteResponse(response.id)}
+									title={t('Delete response')}
+								>
+									<TrashIcon />
+								</button>
+							</div>
+							<div className='response-content'>{response.content}</div>
+						</div>
+					))}
+				</div>
+			)}
 
-      {comment.line &&
-        <div className="comment-line-section">
-          <button
-            className="comment-line-button"
-            onClick={handleLineClick}
-            title={t('Go to line {line}', { line: comment.line })}>
-            {t('Line {line}', { line: comment.line })}
-          </button>
-        </div>
-      }
+			{!comment.resolved &&
+				(isAddingResponse ? (
+					<div className='add-response-form'>
+						<textarea
+							value={newResponse}
+							onChange={(e) => setNewResponse(e.target.value)}
+							onKeyDown={handleKeyDown}
+							placeholder={t('Type your response...')}
+							rows={2}
+						/>
 
-      <div className="comment-content">{comment.content}</div>
-
-      {comment.responses.length > 0 &&
-        <div className="comment-responses">
-          {comment.responses.map((response) =>
-            <div key={response.id} className="response-item">
-              <div className="response-header">
-                <div className="response-author-container">
-                  <div className="response-author" title={response.user}>
-                    {truncateUsername(response.user)}
-                  </div>
-                  <div className="response-time">
-                    {formatDate(response.timestamp)}
-                  </div>
-                </div>
-                <button
-                  className="delete-button small"
-                  onClick={() => handleDeleteResponse(response.id)}
-                  title={t('Delete response')}>
-
-                  <TrashIcon />
-                </button>
-              </div>
-              <div className="response-content">{response.content}</div>
-            </div>
-          )}
-        </div>
-      }
-
-      {!comment.resolved && (
-        isAddingResponse ?
-          <div className="add-response-form">
-            <textarea
-              value={newResponse}
-              onChange={(e) => setNewResponse(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={t('Type your response...')}
-              rows={2} />
-
-            <div className="form-actions">
-              <button
-                className="cancel-response-button"
-                onClick={() => {
-                  setIsAddingResponse(false);
-                  setNewResponse('');
-                }}>{t('Cancel')}
-
-
-              </button>
-              <button
-                className="submit-response-button"
-                onClick={handleAddResponse}
-                disabled={!newResponse.trim()}>{t('Submit')}
-
-
-              </button>
-            </div>
-          </div> :
-
-          <button
-            className="add-response-button"
-            onClick={() => setIsAddingResponse(true)}>{t('Add response')}
-
-
-          </button>)
-      }
-    </div>);
-
+						<div className='form-actions'>
+							<button
+								className='cancel-response-button'
+								onClick={() => {
+									setIsAddingResponse(false);
+									setNewResponse('');
+								}}
+							>
+								{t('Cancel')}
+							</button>
+							<button
+								className='submit-response-button'
+								onClick={handleAddResponse}
+								disabled={!newResponse.trim()}
+							>
+								{t('Submit')}
+							</button>
+						</div>
+					</div>
+				) : (
+					<button
+						className='add-response-button'
+						onClick={() => setIsAddingResponse(true)}
+					>
+						{t('Add response')}
+					</button>
+				))}
+		</div>
+	);
 };
 
 export default CommentItem;

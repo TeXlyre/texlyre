@@ -49,7 +49,7 @@ class PopoutViewerService {
 		this.popoutWindow = window.open(
 			popoutUrl,
 			`texlyre-popout-${this.projectId}`,
-			'width=1000,height=800,scrollbars=yes,resizable=yes,menubar=no,toolbar=no,location=no,status=no'
+			'width=1000,height=800,scrollbars=yes,resizable=yes,menubar=no,toolbar=no,location=no,status=no',
 		);
 
 		if (this.popoutWindow) {

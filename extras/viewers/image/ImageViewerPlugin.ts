@@ -3,7 +3,7 @@ import { t } from '@/i18n';
 import type { ViewerPlugin } from '@/plugins/PluginInterface';
 import CombinedImageViewer from './CombinedImageViewer';
 import { getImageViewerSettings } from './settings';
-import { ImageIcon } from './Icon'
+import { ImageIcon } from './Icon';
 
 const IMAGE_EXTENSIONS = [
 	'png',
@@ -50,10 +50,11 @@ const imageViewerPlugin: ViewerPlugin = {
 		return extension ? IMAGE_EXTENSIONS.includes(extension) : false;
 	},
 
-	getSupportedExtensions: () => IMAGE_EXTENSIONS.map((ext, idx) => ({
-		extension: ext,
-		mimeType: IMAGE_MIMETYPES[idx]
-	})),
+	getSupportedExtensions: () =>
+		IMAGE_EXTENSIONS.map((ext, idx) => ({
+			extension: ext,
+			mimeType: IMAGE_MIMETYPES[idx],
+		})),
 
 	renderViewer: CombinedImageViewer,
 };

@@ -87,12 +87,7 @@ const gitHubBackupAdapter: GitBackupAdapter<GitHubTarget> = {
 	}),
 
 	getRecursiveTree: (token, target, branch) =>
-		gitHubAPIService.getRecursiveTree(
-			token,
-			target.owner,
-			target.repo,
-			branch,
-		),
+		gitHubAPIService.getRecursiveTree(token, target.owner, target.repo, branch),
 
 	getFileRefForPath: (item: GitTreeItem) => item.sha || item.path || '',
 
@@ -100,7 +95,13 @@ const gitHubBackupAdapter: GitBackupAdapter<GitHubTarget> = {
 		gitHubAPIService.getBranchHeadSha(token, target.owner, target.repo, branch),
 
 	readFileAtRef: (token, target, path, ref) =>
-		gitHubAPIService.getFileContentAtRef(token, target.owner, target.repo, path, ref),
+		gitHubAPIService.getFileContentAtRef(
+			token,
+			target.owner,
+			target.repo,
+			path,
+			ref,
+		),
 
 	readFile: (token, target, ref) =>
 		gitHubAPIService.getBlobContent(token, target.owner, target.repo, ref),

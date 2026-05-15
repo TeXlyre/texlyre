@@ -1,7 +1,7 @@
 // src/components/editor/FileOperationsModal.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 
+import { t } from '@/i18n';
 import type { FileNode } from '../../types/files';
 import { formatFileSize, isTemporaryFile } from '../../utils/fileUtils';
 import { FolderIcon, TempFileIcon } from '../common/Icons';
@@ -63,13 +63,19 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 
 		if (operation === 'move') {
 			if (isSourceTemporary && isTargetTemporary) {
-				return t('Moving between temporary locations may cause system instability.');
+				return t(
+					'Moving between temporary locations may cause system instability.',
+				);
 			}
 			if (isSourceTemporary) {
-				return t('Moving temporary files may break caching or cause system issues.');
+				return t(
+					'Moving temporary files may break caching or cause system issues.',
+				);
 			}
 			if (isTargetTemporary) {
-				return t("Moving files to temporary locations means they won't be synced with collaborators. Additionally, temporary locations may be cleared automatically.");
+				return t(
+					"Moving files to temporary locations means they won't be synced with collaborators. Additionally, temporary locations may be cleared automatically.",
+				);
 			}
 		}
 
@@ -83,13 +89,19 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 		const isTargetTemporary = isTemporaryFile(dragDropTargetPath);
 
 		if (isSourceTemporary && isTargetTemporary) {
-			return t('Moving between temporary locations may cause system instability.');
+			return t(
+				'Moving between temporary locations may cause system instability.',
+			);
 		}
 		if (isSourceTemporary) {
-			return t('Moving temporary files may break caching or cause system issues.');
+			return t(
+				'Moving temporary files may break caching or cause system issues.',
+			);
 		}
 		if (isTargetTemporary) {
-			return t("Moving files to temporary locations means they won't be synced with collaborators. Additionally, temporary locations may be cleared automatically.");
+			return t(
+				"Moving files to temporary locations means they won't be synced with collaborators. Additionally, temporary locations may be cleared automatically.",
+			);
 		}
 
 		return null;
@@ -105,39 +117,43 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 					isOpen={showPropertiesModal}
 					onClose={onClosePropertiesModal}
 					title={t('Properties')}
-					size="medium"
+					size='medium'
 				>
-					<div className="file-properties">
-						<div className="property-item">
+					<div className='file-properties'>
+						<div className='property-item'>
 							<strong>{t('Name')}:</strong> {propertiesInfo.name}
 						</div>
-						<div className="property-item">
+						<div className='property-item'>
 							<strong>{t('Path')}:</strong> {propertiesInfo.path}
 						</div>
-						<div className="property-item">
+						<div className='property-item'>
 							<strong>{t('Type')}:</strong> {propertiesInfo.type}
 						</div>
 						{propertiesInfo.size !== undefined && (
-							<div className="property-item">
-								<strong>{t('Size')}:</strong> {formatFileSize(propertiesInfo.size)}
+							<div className='property-item'>
+								<strong>{t('Size')}:</strong>{' '}
+								{formatFileSize(propertiesInfo.size)}
 							</div>
 						)}
 						{propertiesInfo.mimeType && (
-							<div className="property-item">
+							<div className='property-item'>
 								<strong>{t('MIME Type')}:</strong> {propertiesInfo.mimeType}
 							</div>
 						)}
-						<div className="property-item">
-							<strong>{t('Binary')}:</strong> {propertiesInfo.isBinary ? t('Yes') : t('No')}
+						<div className='property-item'>
+							<strong>{t('Binary')}:</strong>{' '}
+							{propertiesInfo.isBinary ? t('Yes') : t('No')}
 						</div>
 						{propertiesInfo.documentId && (
-							<div className="property-item">
-								<strong>{t('Linked Document')}:</strong> {t('Yes')} ({t('ID')}: {propertiesInfo.documentId})
+							<div className='property-item'>
+								<strong>{t('Linked Document')}:</strong> {t('Yes')} ({t('ID')}:{' '}
+								{propertiesInfo.documentId})
 							</div>
 						)}
 						{isTemporaryFile(propertiesInfo.path) && (
-							<div className="property-item">
-								<strong>{t('Temporary')}:</strong> {t('Yes')} ({t('System/Cache file')})
+							<div className='property-item'>
+								<strong>{t('Temporary')}:</strong> {t('Yes')} (
+								{t('System/Cache file')})
 							</div>
 						)}
 					</div>
@@ -149,12 +165,12 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 					isOpen={showMoveDialog}
 					onClose={onCloseMoveDialog}
 					title={t('Move {name}', { name: fileToMove.name })}
-					size="medium"
+					size='medium'
 				>
-					<div className="move-dialog-content">
+					<div className='move-dialog-content'>
 						<p>{t('Select destination folder')}:</p>
 
-						<div className="directory-tree">
+						<div className='directory-tree'>
 							<div
 								className={`directory-option ${selectedTargetPath === '/' ? 'selected' : ''}`}
 								onClick={() => onSetSelectedTargetPath('/')}
@@ -172,7 +188,10 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 									<FolderIcon />
 									<span>{dir.path}</span>
 									{isTemporaryFile(dir.path) && (
-										<span className="temp-indicator" title={t('Temporary folder')}>
+										<span
+											className='temp-indicator'
+											title={t('Temporary folder')}
+										>
 											<TempFileIcon />
 										</span>
 									)}
@@ -181,28 +200,29 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 						</div>
 
 						{moveWarning && (
-							<div className="warning-message" style={{ marginTop: '1rem' }}>
+							<div className='warning-message' style={{ marginTop: '1rem' }}>
 								{moveWarning}
 							</div>
 						)}
 
-						<div className="modal-actions">
+						<div className='modal-actions'>
 							<button
-								type="button"
-								className="button secondary"
+								type='button'
+								className='button secondary'
 								onClick={onCloseMoveDialog}
 							>
 								{t('Cancel')}
 							</button>
 							<button
-								type="button"
-								className="button primary"
+								type='button'
+								className='button primary'
 								onClick={onConfirmMove}
 								disabled={
-									(
-										selectedTargetPath ===
-										(fileToMove.path.substring(0, fileToMove.path.lastIndexOf('/')) || '/')
-									) ||
+									selectedTargetPath ===
+										(fileToMove.path.substring(
+											0,
+											fileToMove.path.lastIndexOf('/'),
+										) || '/') ||
 									(fileToMove.type === 'directory' &&
 										selectedTargetPath.startsWith(`${fileToMove.path}/`))
 								}
@@ -219,31 +239,34 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 					isOpen={showDragDropDialog}
 					onClose={onCloseDragDropDialog}
 					title={t('Confirm Move')}
-					size="medium"
+					size='medium'
 				>
-					<div className="drag-drop-confirm-content">
+					<div className='drag-drop-confirm-content'>
 						<p>
 							{t('Move "{name}" to {target}?', {
 								name: dragDropFile.name,
-								target: dragDropTargetPath === '/' ? t('root folder') : dragDropTargetPath
+								target:
+									dragDropTargetPath === '/'
+										? t('root folder')
+										: dragDropTargetPath,
 							})}
 						</p>
 
-						<div className="move-info">
-							<div className="move-source">
+						<div className='move-info'>
+							<div className='move-source'>
 								<strong>{t('From')}:</strong> {dragDropFile.path}
 								{isTemporaryFile(dragDropFile.path) && (
-									<span className="temp-file-indicator">
+									<span className='temp-file-indicator'>
 										{' '}
 										<TempFileIcon /> {t('Temporary')}
 									</span>
 								)}
 							</div>
-							<div className="move-target">
+							<div className='move-target'>
 								<strong>{t('To')}:</strong>{' '}
 								{dragDropTargetPath === '/' ? '/' : dragDropTargetPath}
 								{isTemporaryFile(dragDropTargetPath) && (
-									<span className="temp-file-indicator">
+									<span className='temp-file-indicator'>
 										{' '}
 										<TempFileIcon /> {t('Temporary')}
 									</span>
@@ -252,20 +275,20 @@ const FileOperationsModal: React.FC<FileOperationsModalProps> = ({
 						</div>
 
 						{dragDropWarning && (
-							<div className="warning-message">{dragDropWarning}</div>
+							<div className='warning-message'>{dragDropWarning}</div>
 						)}
 
-						<div className="modal-actions">
+						<div className='modal-actions'>
 							<button
-								type="button"
-								className="button secondary"
+								type='button'
+								className='button secondary'
 								onClick={onCloseDragDropDialog}
 							>
 								{t('Cancel')}
 							</button>
 							<button
-								type="button"
-								className="button primary"
+								type='button'
+								className='button primary'
 								onClick={onConfirmDragDrop}
 							>
 								{t('Move')}

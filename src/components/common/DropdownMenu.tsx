@@ -44,7 +44,10 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
 			if (left < 4) {
 				left = 4;
 			} else if (left + dropdownWidth > viewportWidth - 4) {
-				left = mode === 'submenu' ? rect.left - dropdownWidth - 4 : viewportWidth - dropdownWidth - 4;
+				left =
+					mode === 'submenu'
+						? rect.left - dropdownWidth - 4
+						: viewportWidth - dropdownWidth - 4;
 			}
 
 			if (top + dropdownHeight > viewportHeight - 4) {
@@ -106,7 +109,8 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
 				minWidth: `${width}px`,
 				maxHeight: `${maxHeight}px`,
 				visibility: positionCalculated.current ? 'visible' : 'hidden',
-			}}>
+			}}
+		>
 			{children}
 		</div>,
 		document.body,

@@ -7,22 +7,22 @@ import { GitLabIcon } from './Icon';
 import { getGitLabBackupSettings } from './settings';
 
 const gitLabBackupPlugin: BackupPlugin = {
-    id: 'gitlab-backup',
-    name: 'GitLab',
-    version: '1.0.0',
-    type: 'backup',
-    icon: GitLabIcon,
-    get settings() {
-        return getGitLabBackupSettings();
-    },
+	id: 'gitlab-backup',
+	name: 'GitLab',
+	version: '1.0.0',
+	type: 'backup',
+	icon: GitLabIcon,
+	get settings() {
+		return getGitLabBackupSettings();
+	},
 
-    canHandle: (backupType: string): boolean => {
-        return backupType === 'gitlab';
-    },
+	canHandle: (backupType: string): boolean => {
+		return backupType === 'gitlab';
+	},
 
-    renderStatusIndicator: GitLabBackupStatusIndicator,
-    renderModal: GitLabBackupModal,
-    getService: () => gitLabBackupService,
+	renderStatusIndicator: GitLabBackupStatusIndicator,
+	renderModal: GitLabBackupModal,
+	getService: () => gitLabBackupService,
 };
 
 export default gitLabBackupPlugin;

@@ -9,92 +9,92 @@ import { Awareness } from 'y-protocols/awareness';
 import { yCollab, yUndoManagerKeymap } from 'y-codemirror.next';
 
 interface YjsBindingOptions {
-    enableComments: boolean;
-    onUpdateContent: (content: string) => void;
-    updateComments: (content: string) => void;
-    autoSaveRef: RefObject<(() => void) | null>;
-    isUpdatingRef: RefObject<boolean>;
-    viewRef: RefObject<EditorView | null>;
-    hasEmittedReadyRef: RefObject<boolean>;
-    currentFileId?: string;
-    documentId?: string;
-    isEditingFile: boolean;
+	enableComments: boolean;
+	onUpdateContent: (content: string) => void;
+	updateComments: (content: string) => void;
+	autoSaveRef: RefObject<(() => void) | null>;
+	isUpdatingRef: RefObject<boolean>;
+	viewRef: RefObject<EditorView | null>;
+	hasEmittedReadyRef: RefObject<boolean>;
+	currentFileId?: string;
+	documentId?: string;
+	isEditingFile: boolean;
 }
 
 export interface YjsEditorBindingResult {
-    extensions: Extension[];
-    cleanup: () => void;
+	extensions: Extension[];
+	cleanup: () => void;
 }
 
 export const createYjsEditorBindingExtensions = (
-    yText: Y.Text,
-    providerAwareness: Awareness | null | undefined,
-    undoManager: UndoManager,
+	yText: Y.Text,
+	providerAwareness: Awareness | null | undefined,
+	undoManager: UndoManager,
 ): YjsEditorBindingResult => {
-    const localAwareness = providerAwareness ? null : new Awareness(yText.doc!);
-    const awareness = providerAwareness ?? localAwareness!;
+	const localAwareness = providerAwareness ? null : new Awareness(yText.doc!);
+	const awareness = providerAwareness ?? localAwareness!;
 
-    return {
-        extensions: [
-            yCollab(yText, awareness, {
-                undoManager,
-            }),
-            keymap.of(yUndoManagerKeymap),
-        ],
-        cleanup: () => {
-            localAwareness?.destroy();
-        },
-    };
+	return {
+		extensions: [
+			yCollab(yText, awareness, {
+				undoManager,
+			}),
+			keymap.of(yUndoManagerKeymap),
+		],
+		cleanup: () => {
+			localAwareness?.destroy();
+		},
+	};
 };
 
 export const registerYjsBinding = (yText: Y.Text, opts: YjsBindingOptions) => {
-    const {
-        enableComments,
-        onUpdateContent,
-        updateComments,
-        autoSaveRef,
-        isUpdatingRef,
-        viewRef,
-        hasEmittedReadyRef,
-        currentFileId,
-        documentId,
-        isEditingFile,
-    } = opts;
+	const {
+		enableComments,
+		onUpdateContent,
+		updateComments,
+		autoSaveRef,
+		isUpdatingRef,
+		viewRef,
+		hasEmittedReadyRef,
+		currentFileId,
+		documentId,
+		isEditingFile,
+	} = opts;
 
-    const observer = () => {
-        if (isUpdatingRef.current) return;
-        const content = yText.toString() || '';
-        isUpdatingRef.current = true;
-        try {
-            onUpdateContent(content);
-            if (enableComments) {
-                updateComments(content);
-            }
-            if (autoSaveRef.current) autoSaveRef.current();
+	const observer = () => {
+		if (isUpdatingRef.current) return;
+		const content = yText.toString() || '';
+		isUpdatingRef.current = true;
+		try {
+			onUpdateContent(content);
+			if (enableComments) {
+				updateComments(content);
+			}
+			if (autoSaveRef.current) autoSaveRef.current();
 
-            if (!hasEmittedReadyRef.current && content && viewRef.current) {
-                hasEmittedReadyRef.current = true;
-                setTimeout(() => {
-                    document.dispatchEvent(
-                        new CustomEvent('editor-ready-yjs', {
-                            detail: {
-                                fileId: currentFileId,
-                                documentId,
-                                isEditingFile,
-                            },
-                        }),
-                    );
-                }, 50);
-            }
-        } finally {
-            isUpdatingRef.current = false;
-        }
-    };
+			if (!hasEmittedReadyRef.current && content && viewRef.current) {
+				hasEmittedReadyRef.current = true;
+				setTimeout(() => {
+					document.dispatchEvent(
+						new CustomEvent('editor-ready-yjs', {
+							detail: {
+								fileId: currentFileId,
+								documentId,
+								isEditingFile,
+							},
+						}),
+					);
+				}, 50);
+			}
+		} finally {
+			isUpdatingRef.current = false;
+		}
+	};
 
-    yText.observe(observer);
+	yText.observe(observer);
 
-    return () => {
-        yText.unobserve(observer);
-        isUpdatingRef.current = false;
-    };
+	return () => {
+		yText.unobserve(observer);
+		isUpdatingRef.current = false;
+	};
 };

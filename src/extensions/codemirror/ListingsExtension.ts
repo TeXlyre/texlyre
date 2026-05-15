@@ -1,327 +1,352 @@
 // src/extensions/codemirror/ListingsExtension.ts
 import { booleanLiteral } from '@babel/types';
-import { type Extension } from '@codemirror/state';
+import type { Extension } from '@codemirror/state';
 import { keymap, type KeyBinding } from '@codemirror/view';
 import type { EditorView } from 'codemirror';
 
 export type FileType = 'latex' | 'typst';
 
 interface ListContext {
-    type: 'latex-itemize' | 'latex-enumerate' | 'latex-description' | 'typst-bullet' | 'typst-numbered' | 'typst-term';
-    indentLevel: number;
-    itemPrefix: string;
-    lineStart: number;
-    lineEnd: number;
+	type:
+		| 'latex-itemize'
+		| 'latex-enumerate'
+		| 'latex-description'
+		| 'typst-bullet'
+		| 'typst-numbered'
+		| 'typst-term';
+	indentLevel: number;
+	itemPrefix: string;
+	lineStart: number;
+	lineEnd: number;
 }
 
 function getEnclosingLatexListEnv(
-    view: EditorView,
-    pos: number,
-    maxLinesToSearch = 200, // (100–300 is usually plenty)
+	view: EditorView,
+	pos: number,
+	maxLinesToSearch = 200, // (100–300 is usually plenty)
 ): 'itemize' | 'enumerate' | 'description' | null {
-    let searchPos = pos;
-    let depth = 0;
-    let lines = 0;
+	let searchPos = pos;
+	let depth = 0;
+	let lines = 0;
 
-    while (searchPos > 0 && lines < maxLinesToSearch) {
-        const line = view.state.doc.lineAt(searchPos);
-        const text = line.text;
+	while (searchPos > 0 && lines < maxLinesToSearch) {
+		const line = view.state.doc.lineAt(searchPos);
+		const text = line.text;
 
-        if (text.indexOf('\\begin{') !== -1 || text.indexOf('\\end{') !== -1) {
-            const trimmed = text.trim();
+		if (text.indexOf('\\begin{') !== -1 || text.indexOf('\\end{') !== -1) {
+			const trimmed = text.trim();
 
-            const m = trimmed.match(/\\(begin|end)\{(itemize|enumerate|description)\}/);
-            if (m) {
-                const kind = m[1];      // "begin" | "end"
-                const env = m[2] as 'itemize' | 'enumerate' | 'description';
+			const m = trimmed.match(
+				/\\(begin|end)\{(itemize|enumerate|description)\}/,
+			);
+			if (m) {
+				const kind = m[1]; // "begin" | "end"
+				const env = m[2] as 'itemize' | 'enumerate' | 'description';
 
-                if (kind === 'end') depth++;
-                else {
-                    if (depth === 0) return env;
-                    depth--;
-                }
-            }
-        }
+				if (kind === 'end') depth++;
+				else {
+					if (depth === 0) return env;
+					depth--;
+				}
+			}
+		}
 
-        searchPos = line.from - 1;
-        lines++;
-    }
+		searchPos = line.from - 1;
+		lines++;
+	}
 
-    return null;
+	return null;
 }
 
-function detectLatexListContext(view: EditorView, pos: number): ListContext | null {
-    const line = view.state.doc.lineAt(pos);
-    const lineText = line.text;
-    const trimmedText = lineText.trim();
+function detectLatexListContext(
+	view: EditorView,
+	pos: number,
+): ListContext | null {
+	const line = view.state.doc.lineAt(pos);
+	const lineText = line.text;
+	const trimmedText = lineText.trim();
 
-    if (!trimmedText.startsWith('\\item')) {
-        return null;
-    }
+	if (!trimmedText.startsWith('\\item')) {
+		return null;
+	}
 
-    let searchPos = line.from;
-    let depth = 0;
-    let currentEnv: 'itemize' | 'enumerate' | 'description' | null = null;
+	let searchPos = line.from;
+	let depth = 0;
+	let currentEnv: 'itemize' | 'enumerate' | 'description' | null = null;
 
-    while (searchPos > 0) {
-        const currentLine = view.state.doc.lineAt(searchPos);
-        const currentText = currentLine.text.trim();
+	while (searchPos > 0) {
+		const currentLine = view.state.doc.lineAt(searchPos);
+		const currentText = currentLine.text.trim();
 
-        const beginMatch = currentText.match(/\\begin\{(itemize|enumerate|description)\}/);
-        if (beginMatch) {
-            if (depth === 0) {
-                currentEnv = beginMatch[1] as 'itemize' | 'enumerate' | 'description';
-                break;
-            }
-            depth--;
-        }
+		const beginMatch = currentText.match(
+			/\\begin\{(itemize|enumerate|description)\}/,
+		);
+		if (beginMatch) {
+			if (depth === 0) {
+				currentEnv = beginMatch[1] as 'itemize' | 'enumerate' | 'description';
+				break;
+			}
+			depth--;
+		}
 
-        const endMatch = currentText.match(/\\end\{(itemize|enumerate|description)\}/);
-        if (endMatch) {
-            depth++;
-        }
+		const endMatch = currentText.match(
+			/\\end\{(itemize|enumerate|description)\}/,
+		);
+		if (endMatch) {
+			depth++;
+		}
 
-        searchPos = currentLine.from - 1;
-        if (searchPos < 0) break;
-    }
+		searchPos = currentLine.from - 1;
+		if (searchPos < 0) break;
+	}
 
-    if (!currentEnv) {
-        return null;
-    }
+	if (!currentEnv) {
+		return null;
+	}
 
-    const leadingWhitespace = lineText.match(/^(\s*)/)?.[1] || '';
-    const indentLevel = leadingWhitespace.length;
+	const leadingWhitespace = lineText.match(/^(\s*)/)?.[1] || '';
+	const indentLevel = leadingWhitespace.length;
 
-    return {
-        type: `latex-${currentEnv}`,
-        indentLevel,
-        itemPrefix: currentEnv === 'description' ? '\\item[]' : '\\item',
-        lineStart: line.from,
-        lineEnd: line.to,
-    };
+	return {
+		type: `latex-${currentEnv}`,
+		indentLevel,
+		itemPrefix: currentEnv === 'description' ? '\\item[]' : '\\item',
+		lineStart: line.from,
+		lineEnd: line.to,
+	};
 }
 
-function detectTypstListContext(view: EditorView, pos: number): ListContext | null {
-    const line = view.state.doc.lineAt(pos);
-    const lineText = line.text;
-    const trimmedText = lineText.trim();
+function detectTypstListContext(
+	view: EditorView,
+	pos: number,
+): ListContext | null {
+	const line = view.state.doc.lineAt(pos);
+	const lineText = line.text;
+	const trimmedText = lineText.trim();
 
-    let listType: 'typst-bullet' | 'typst-numbered' | 'typst-term' | null = null;
-    let itemPrefix = '';
+	let listType: 'typst-bullet' | 'typst-numbered' | 'typst-term' | null = null;
+	let itemPrefix = '';
 
-    if (trimmedText.match(/^-(\s|$)/)) {
-        listType = 'typst-bullet';
-        itemPrefix = '-';
-    } else if (trimmedText.match(/^\+(\s|$)/)) {
-        listType = 'typst-numbered';
-        itemPrefix = '+';
-    } else if (trimmedText.match(/^\/\s+\w+:/)) {
-        listType = 'typst-term';
-        itemPrefix = '/';
-    } else {
-        return null;
-    }
+	if (trimmedText.match(/^-(\s|$)/)) {
+		listType = 'typst-bullet';
+		itemPrefix = '-';
+	} else if (trimmedText.match(/^\+(\s|$)/)) {
+		listType = 'typst-numbered';
+		itemPrefix = '+';
+	} else if (trimmedText.match(/^\/\s+\w+:/)) {
+		listType = 'typst-term';
+		itemPrefix = '/';
+	} else {
+		return null;
+	}
 
-    const leadingWhitespace = lineText.match(/^(\s*)/)?.[1] || '';
-    const indentLevel = leadingWhitespace.length;
+	const leadingWhitespace = lineText.match(/^(\s*)/)?.[1] || '';
+	const indentLevel = leadingWhitespace.length;
 
-    return {
-        type: listType,
-        indentLevel,
-        itemPrefix,
-        lineStart: line.from,
-        lineEnd: line.to,
-    };
+	return {
+		type: listType,
+		indentLevel,
+		itemPrefix,
+		lineStart: line.from,
+		lineEnd: line.to,
+	};
 }
 
-function findParentListContext(view: EditorView, fileType: FileType, startPos: number): ListContext | null {
+function findParentListContext(
+	view: EditorView,
+	fileType: FileType,
+	startPos: number,
+): ListContext | null {
+	let searchPos = startPos;
+	let linesSearched = 0;
+	const maxLinesToSearch = 20;
 
-    let searchPos = startPos;
-    let linesSearched = 0;
-    const maxLinesToSearch = 20;
+	if (fileType === 'latex') {
+		if (!getEnclosingLatexListEnv(view, startPos)) {
+			return null;
+		}
+	}
 
-    if (fileType === 'latex') {
-        if (!getEnclosingLatexListEnv(view, startPos)) {
-            return null;
-        }
-    }
+	while (searchPos > 0 && linesSearched < maxLinesToSearch) {
+		const currentLine = view.state.doc.lineAt(searchPos);
+		const currentText = currentLine.text.trim();
 
-    while (searchPos > 0 && linesSearched < maxLinesToSearch) {
-        const currentLine = view.state.doc.lineAt(searchPos);
-        const currentText = currentLine.text.trim();
+		if (currentText === '') {
+			return null;
+		}
 
-        if (currentText === '') {
-            return null;
-        }
+		if (fileType === 'latex') {
+			if (currentText.match(/\\end\{(itemize|enumerate|description)\}/)) {
+				return null;
+			}
+			if (currentText.startsWith('\\item')) {
+				return detectLatexListContext(view, currentLine.from + 1);
+			}
+		} else if (fileType === 'typst') {
+			if (currentText.match(/^[-+](\s|$)/) || currentText.match(/^\/\s+\w+:/)) {
+				return detectTypstListContext(view, currentLine.from + 1);
+			}
+		}
 
-        if (fileType === 'latex') {
-            if (currentText.match(/\\end\{(itemize|enumerate|description)\}/)) {
-                return null;
-            }
-            if (currentText.startsWith('\\item')) {
-                return detectLatexListContext(view, currentLine.from + 1);
-            }
-        } else if (fileType === 'typst') {
-            if (currentText.match(/^[-+](\s|$)/) || currentText.match(/^\/\s+\w+:/)) {
-                return detectTypstListContext(view, currentLine.from + 1);
-            }
-        }
+		searchPos = currentLine.from - 1;
+		linesSearched++;
+		if (searchPos < 0) break;
+	}
 
-        searchPos = currentLine.from - 1;
-        linesSearched++;
-        if (searchPos < 0) break;
-    }
-
-    return null;
+	return null;
 }
 
 function handleEnterInList(view: EditorView, fileType: FileType): boolean {
-    const pos = view.state.selection.main.head;
-    const line = view.state.doc.lineAt(pos);
-    const lineText = line.text;
-    const trimmedText = lineText.trim();
+	const pos = view.state.selection.main.head;
+	const line = view.state.doc.lineAt(pos);
+	const lineText = line.text;
+	const trimmedText = lineText.trim();
 
-    let listContext = null;
+	let listContext = null;
 
-    if (fileType === 'latex') {
-        listContext = detectLatexListContext(view, pos);
-    }
-    if (fileType === 'typst') {
-        listContext = detectTypstListContext(view, pos);
-    }
+	if (fileType === 'latex') {
+		listContext = detectLatexListContext(view, pos);
+	}
+	if (fileType === 'typst') {
+		listContext = detectTypstListContext(view, pos);
+	}
 
-    if (!listContext) {
-        const hasContent = trimmedText.length > 0;
-        const isItemLine = fileType === 'latex'
-            ? trimmedText.startsWith('\\item')
-            : (trimmedText.match(/^[-+](\s|$)/) || trimmedText.match(/^\/\s+\w+:/));
+	if (!listContext) {
+		const hasContent = trimmedText.length > 0;
+		const isItemLine =
+			fileType === 'latex'
+				? trimmedText.startsWith('\\item')
+				: trimmedText.match(/^[-+](\s|$)/) || trimmedText.match(/^\/\s+\w+:/);
 
-        if (!hasContent || isItemLine) {
-            return false;
-        }
+		if (!hasContent || isItemLine) {
+			return false;
+		}
 
-        listContext = findParentListContext(view, fileType, pos);
-    }
+		listContext = findParentListContext(view, fileType, pos);
+	}
 
-    if (!listContext) {
-        return false;
-    }
+	if (!listContext) {
+		return false;
+	}
 
-    if (fileType === 'latex') {
-        const isOnItemLine = trimmedText.startsWith('\\item');
+	if (fileType === 'latex') {
+		const isOnItemLine = trimmedText.startsWith('\\item');
 
-        if (isOnItemLine) {
-            const afterItem = trimmedText.substring(listContext.itemPrefix.length).trim();
+		if (isOnItemLine) {
+			const afterItem = trimmedText
+				.substring(listContext.itemPrefix.length)
+				.trim();
 
-            if (!afterItem) {
-                view.dispatch({
-                    changes: {
-                        from: line.from,
-                        to: line.to,
-                        insert: '',
-                    },
-                    selection: { anchor: line.from },
-                });
-                return true;
-            }
-        }
+			if (!afterItem) {
+				view.dispatch({
+					changes: {
+						from: line.from,
+						to: line.to,
+						insert: '',
+					},
+					selection: { anchor: line.from },
+				});
+				return true;
+			}
+		}
 
-        const indent = ' '.repeat(listContext.indentLevel);
-        const newLine = `\n${indent}${listContext.itemPrefix} `;
+		const indent = ' '.repeat(listContext.indentLevel);
+		const newLine = `\n${indent}${listContext.itemPrefix} `;
 
-        view.dispatch({
-            changes: {
-                from: pos,
-                to: pos,
-                insert: newLine,
-            },
-            selection: { anchor: pos + newLine.length },
-        });
-        return true;
-    } else if (fileType === 'typst') {
-        const isOnItemLine = trimmedText.match(/^[-+](\s|$)/) || trimmedText.match(/^\/\s+\w+:/);
+		view.dispatch({
+			changes: {
+				from: pos,
+				to: pos,
+				insert: newLine,
+			},
+			selection: { anchor: pos + newLine.length },
+		});
+		return true;
+	} else if (fileType === 'typst') {
+		const isOnItemLine =
+			trimmedText.match(/^[-+](\s|$)/) || trimmedText.match(/^\/\s+\w+:/);
 
-        if (isOnItemLine) {
-            const prefixMatch = trimmedText.match(/^([-+]|\/)(\s+\w+:)?(\s*)(.*)$/);
-            if (prefixMatch) {
-                const afterItem = prefixMatch[4].trim();
+		if (isOnItemLine) {
+			const prefixMatch = trimmedText.match(/^([-+]|\/)(\s+\w+:)?(\s*)(.*)$/);
+			if (prefixMatch) {
+				const afterItem = prefixMatch[4].trim();
 
-                if (!afterItem) {
-                    view.dispatch({
-                        changes: {
-                            from: line.from,
-                            to: line.to,
-                            insert: '\n',
-                        },
-                        selection: { anchor: line.from + 1 },
-                    });
-                    return true;
-                }
-            }
-        }
+				if (!afterItem) {
+					view.dispatch({
+						changes: {
+							from: line.from,
+							to: line.to,
+							insert: '\n',
+						},
+						selection: { anchor: line.from + 1 },
+					});
+					return true;
+				}
+			}
+		}
 
-        const indent = ' '.repeat(listContext.indentLevel);
-        const newLine = `\n${indent}${listContext.itemPrefix} `;
+		const indent = ' '.repeat(listContext.indentLevel);
+		const newLine = `\n${indent}${listContext.itemPrefix} `;
 
-        view.dispatch({
-            changes: {
-                from: pos,
-                to: pos,
-                insert: newLine,
-            },
-            selection: { anchor: pos + newLine.length },
-        });
-        return true;
-    }
+		view.dispatch({
+			changes: {
+				from: pos,
+				to: pos,
+				insert: newLine,
+			},
+			selection: { anchor: pos + newLine.length },
+		});
+		return true;
+	}
 }
 
 function handleShiftEnterInList(view: EditorView, fileType: FileType): boolean {
-    const pos = view.state.selection.main.head;
+	const pos = view.state.selection.main.head;
 
-    let listContext = null;
+	let listContext = null;
 
-    if (fileType === 'latex') {
-        listContext = detectLatexListContext(view, pos);
-    }
-    if (fileType === 'typst') {
-        listContext = detectTypstListContext(view, pos);
-    }
+	if (fileType === 'latex') {
+		listContext = detectLatexListContext(view, pos);
+	}
+	if (fileType === 'typst') {
+		listContext = detectTypstListContext(view, pos);
+	}
 
-    if (!listContext) {
-        const line = view.state.doc.lineAt(pos);
-        listContext = findParentListContext(view, fileType, pos);
-    }
+	if (!listContext) {
+		const line = view.state.doc.lineAt(pos);
+		listContext = findParentListContext(view, fileType, pos);
+	}
 
-    if (!listContext) {
-        return false;
-    }
+	if (!listContext) {
+		return false;
+	}
 
-    const indent = ' '.repeat(listContext.indentLevel + 2);
-    const newLine = `\n${indent}`;
+	const indent = ' '.repeat(listContext.indentLevel + 2);
+	const newLine = `\n${indent}`;
 
-    view.dispatch({
-        changes: {
-            from: pos,
-            to: pos,
-            insert: newLine,
-        },
-        selection: { anchor: pos + newLine.length },
-    });
+	view.dispatch({
+		changes: {
+			from: pos,
+			to: pos,
+			insert: newLine,
+		},
+		selection: { anchor: pos + newLine.length },
+	});
 
-    return true;
+	return true;
 }
 
 export function createListingsExtension(fileType: FileType): Extension {
-    const listingsKeymap: KeyBinding[] = [
-        {
-            key: 'Enter',
-            run: (view: EditorView) => handleEnterInList(view, fileType),
-        },
-        {
-            key: 'Shift-Enter',
-            run: (view: EditorView) => handleShiftEnterInList(view, fileType),
-        },
-    ];
+	const listingsKeymap: KeyBinding[] = [
+		{
+			key: 'Enter',
+			run: (view: EditorView) => handleEnterInList(view, fileType),
+		},
+		{
+			key: 'Shift-Enter',
+			run: (view: EditorView) => handleShiftEnterInList(view, fileType),
+		},
+	];
 
-    return keymap.of(listingsKeymap);
+	return keymap.of(listingsKeymap);
 }

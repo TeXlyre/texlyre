@@ -36,11 +36,13 @@ const bibtexViewerPlugin: ViewerPlugin = {
 	// 	mimeType: BIBTEX_MIMETYPES[idx],
 	// 	fileLabel: t('Bibliography File')
 	// })),
-	getSupportedExtensions: () => [{
-		extension: BIBTEX_EXTENSIONS[0],
-		mimeType: BIBTEX_MIMETYPES[0],
-		fileLabel: t('Bibliography File')
-	}],
+	getSupportedExtensions: () => [
+		{
+			extension: BIBTEX_EXTENSIONS[0],
+			mimeType: BIBTEX_MIMETYPES[0],
+			fileLabel: t('Bibliography File'),
+		},
+	],
 
 	renderViewer: BibtexViewer,
 };
