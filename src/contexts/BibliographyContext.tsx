@@ -473,7 +473,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 			if (entry.fields?.groups)
 				entry.fields.groups
 					.split(',')
-					.forEach((g) => collections.add(g.trim()));
+					.forEach((g) => { collections.add(g.trim())); }
 		});
 		setAvailableCollections(Array.from(collections).filter(Boolean));
 	}, [externalEntries]);
@@ -965,7 +965,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 			if (selectedProvider === 'local') {
 				await fetchLocalEntries();
 			} else if (selectedProvider === 'all') {
-				availableProviders.forEach((p) => genericLSPService.reconnect(p.id));
+				availableProviders.forEach((p) => { genericLSPService.reconnect(p.id)); }
 				await fetchLocalEntries();
 				await fetchAllEntries();
 			} else if (currentProvider) {

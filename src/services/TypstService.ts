@@ -840,7 +840,7 @@ class TypstService {
 
 	private setStatus(status: CompilationStatus): void {
 		this.status = status;
-		this.statusListeners.forEach((l) => l());
+		this.statusListeners.forEach((l) => { l()); }
 	}
 }
 

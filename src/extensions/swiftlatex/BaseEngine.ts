@@ -54,7 +54,7 @@ export abstract class BaseEngine {
 	}
 
 	protected notifyStatusChange(): void {
-		this.statusListeners.forEach((listener) => listener());
+		this.statusListeners.forEach((listener) => { listener()); }
 	}
 
 	protected setStatus(status: typeof this.status): void {
