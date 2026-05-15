@@ -1,7 +1,22 @@
 // src/components/common/ResizablePanel.tsx
-import { t } from '@/i18n';
 import type React from 'react';
-import { type MouseEvent, useEffect, useRef, useState } from 'react';
+import {
+	type MouseEvent,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from 'react';
+
+import { t } from '@/i18n';
+
+const parseLimit = (limit: number | string, containerSize: number): number => {
+	if (typeof limit === 'string' && limit.endsWith('%')) {
+		const percentage = parseFloat(limit.slice(0, -1));
+		return Math.round((percentage / 100) * containerSize);
+	}
+	return typeof limit === 'number' ? limit : parseInt(limit, 10);
+};
 
 interface ResizablePanelProps {
 	children: React.ReactNode;
@@ -56,36 +71,28 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 	const collapsed =
 		externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
 
-	const parseLimit = (limit: number | string, containerSize: number): number => {
-		if (typeof limit === 'string' && limit.endsWith('%')) {
-			const percentage = parseFloat(limit.slice(0, -1));
-			return Math.round((percentage / 100) * containerSize);
-		}
-		return typeof limit === 'number' ? limit : parseInt(limit, 10);
-	};
 
-	const getContainerSize = (): number => {
-		if (!panelRef.current?.parentElement) return direction === 'horizontal' ? 800 : 600;
-
-		const parent = panelRef.current.parentElement;
-		return direction === 'horizontal' ? parent.clientWidth : parent.clientHeight;
-	};
-
-	const getLimits = () => {
-		const containerSize = getContainerSize();
+	const getLimits = useCallback(() => {
+		const parent = panelRef.current?.parentElement;
+		const containerSize = parent
+			? direction === 'horizontal'
+				? parent.clientWidth
+				: parent.clientHeight
+			: direction === 'horizontal'
+				? 800
+				: 600;
 
 		if (direction === 'horizontal') {
 			return {
 				min: parseLimit(minWidth, containerSize),
 				max: parseLimit(maxWidth, containerSize)
 			};
-		} else {
-			return {
-				min: parseLimit(minHeight, containerSize),
-				max: parseLimit(maxHeight, containerSize)
-			};
 		}
-	};
+		return {
+			min: parseLimit(minHeight, containerSize),
+			max: parseLimit(maxHeight, containerSize),
+		};
+	}, [direction, minWidth, maxWidth, minHeight, maxHeight]);
 
 	const handleMouseDown = (e: MouseEvent | React.TouchEvent) => {
 		e.preventDefault();
@@ -204,7 +211,6 @@ const ResizablePanel: React.FC<ResizablePanelProps> = ({
 			const restoredSize = previousSize;
 			setSize(restoredSize);
 
-			// Force a re-render after restoration to apply styles correctly
 			requestAnimationFrame(() => {
 				if (onResize) {
 					onResize(restoredSize);

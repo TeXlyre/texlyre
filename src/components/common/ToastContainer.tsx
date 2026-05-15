@@ -4,6 +4,21 @@ import { useEffect, useState } from 'react';
 
 import Toast, { type ToastNotification } from './Toast';
 
+const getDefaultDuration = (type: string): number => {
+	switch (type) {
+		case 'loading':
+			return 0;
+		case 'success':
+			return 3000;
+		case 'error':
+			return 5000;
+		case 'sync':
+			return 4000;
+		default:
+			return 3000;
+	}
+};
+
 const ToastContainer: React.FC = () => {
 	const [notifications, setNotifications] = useState<ToastNotification[]>([]);
 
@@ -29,7 +44,6 @@ const ToastContainer: React.FC = () => {
 			};
 
 			setNotifications((prev) => {
-				// If this is an update to an existing operation, replace it
 				if (operationId) {
 					const existingIndex = prev.findIndex(
 						(n) => n.operationId === operationId,
@@ -40,7 +54,6 @@ const ToastContainer: React.FC = () => {
 						return updated;
 					}
 				}
-				// Otherwise add new notification
 				return [...prev, notification];
 			});
 		};
@@ -50,25 +63,9 @@ const ToastContainer: React.FC = () => {
 			document.removeEventListener('toast-notification', handleToastEvent);
 	}, []);
 
-	const getDefaultDuration = (type: string): number => {
-		switch (type) {
-			case 'loading':
-				return 0; // Persistent until explicitly dismissed
-			case 'success':
-				return 3000;
-			case 'error':
-				return 5000;
-			case 'sync':
-				return 4000;
-			default:
-				return 3000;
-		}
-	};
-
 	const handleDismiss = (id: string, operationId?: string) => {
 		setNotifications((prev) => prev.filter((n) => n.id !== id));
 		if (operationId) {
-			// Notify the service to clean up
 			document.dispatchEvent(
 				new CustomEvent('toast-notification', {
 					detail: { type: 'dismiss', message: '', operationId },
