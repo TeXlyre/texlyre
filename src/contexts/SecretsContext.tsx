@@ -1,5 +1,4 @@
 // src/contexts/SecretsContext.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import {
 	type ReactNode,
@@ -9,6 +8,7 @@ import {
 	useState,
 } from 'react';
 
+import { t } from '@/i18n';
 import { useAuth } from '../hooks/useAuth';
 
 export interface SecretValue {

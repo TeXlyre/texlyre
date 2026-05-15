@@ -1,11 +1,11 @@
 // src/extensions/codemirror/toolbar/codemirrorItems.tsx
-import { t } from '@/i18n';
 import type { EditorView } from '@codemirror/view';
 import type { ToolbarItem } from 'codemirror-toolbar';
 import { renderToString } from 'react-dom/server';
 import { undo, redo } from '@codemirror/commands';
 import type { UndoManager } from 'yjs';
 
+import { t } from '@/i18n';
 import {
 	ExpandIcon,
 	MinimizeIcon,

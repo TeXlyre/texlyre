@@ -1,7 +1,7 @@
 // src/components/settings/ThemeToggleButton.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 
+import { t } from '@/i18n';
 import { useSettings } from '../../hooks/useSettings';
 import { SunIcon, MoonIcon } from '../common/Icons';
 

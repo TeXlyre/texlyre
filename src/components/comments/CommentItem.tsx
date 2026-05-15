@@ -1,8 +1,8 @@
 // src/components/comments/CommentItem.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
+import { t } from '@/i18n';
 import { useComments } from '../../hooks/useComments';
 import type { Comment } from '../../types/comments';
 import { formatDate } from '../../utils/dateUtils';

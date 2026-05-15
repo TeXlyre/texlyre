@@ -1,8 +1,8 @@
 // src/components/projects/ProjectPanel.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
+import { t } from '@/i18n';
 import type { Project } from '../../types/projects';
 import { formatLastModified } from '../../utils/dateUtils';
 import { ImportIcon, NewProjectIcon, StarIcon } from '../common/Icons';

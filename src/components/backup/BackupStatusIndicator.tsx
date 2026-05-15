@@ -1,8 +1,8 @@
 // src/components/backup/BackupStatusIndicator.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
+import { t } from '@/i18n';
 import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import PositionedDropdown from '../common/PositionedDropdown';

@@ -12,9 +12,9 @@ import {
 	forEachDiagnostic,
 	type Diagnostic,
 } from '@codemirror/lint';
+import type { LSPClient } from '@codemirror/lsp-client';
 
 import { genericLSPService } from '../../services/GenericLSPService';
-import type { LSPClient } from '@codemirror/lsp-client';
 
 function detectLanguageId(fileName: string, client?: LSPClient): string {
 	const ext = fileName.split('.').pop()?.toLowerCase() || '';

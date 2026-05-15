@@ -1,7 +1,7 @@
 // src/extensions/codemirror/mathlive/SymbolSearchPanel.ts
-import { t } from '@/i18n';
 import { Detypify, inferSyms, ortEnv, type Strokes } from 'detypify-service';
 
+import { t } from '@/i18n';
 import {
 	searchSymbols,
 	symbolInfoToCandidate,
@@ -256,12 +256,12 @@ export class SymbolSearchPanel {
 
 	private showError(message?: string): void {
 		this.resultsContainer.innerHTML = '';
-		const err = document.createElement('div');
-		err.className = 'cm-symbol-hint cm-symbol-error';
-		err.textContent = message
+		const error = document.createElement('div');
+		error.className = 'cm-symbol-hint cm-symbol-error';
+		error.textContent = message
 			? t('Recognition failed: ') + message
 			: t('Symbol recognition unavailable');
-		this.resultsContainer.appendChild(err);
+		this.resultsContainer.appendChild(error);
 	}
 
 	private renderResults(candidates: SymbolCandidate[]): void {

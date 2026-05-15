@@ -1,8 +1,8 @@
 // src/components/output/LaTeXExportButton.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
+import { t } from '@/i18n';
 import PositionedDropdown from '../common/PositionedDropdown';
 import { useCollab } from '../../hooks/useCollab';
 import { useFileTree } from '../../hooks/useFileTree';

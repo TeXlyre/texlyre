@@ -160,6 +160,8 @@ export class GitBackupService<TTarget> {
 
 	private dataSerializer = new ProjectDataService();
 	private unifiedService = new UnifiedDataStructureService();
+
+	private currentTarget: TTarget | null = null;
 	private secretsContext: SecretsContextType | null = null;
 
 	private lastOperationTime = 0;

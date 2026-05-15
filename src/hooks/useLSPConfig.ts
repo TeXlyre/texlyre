@@ -1,5 +1,6 @@
 // src/hooks/useLSPConfigs.ts
 import { useContext } from 'react';
+
 import { LSPConfigContext } from '../contexts/LSPConfigContext';
 
 export const useLSPConfig = () => {

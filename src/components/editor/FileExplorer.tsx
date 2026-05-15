@@ -1,8 +1,8 @@
 // src/components/editor/FileExplorer.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { type DragEvent, useEffect, useRef, useState } from 'react';
 
+import { t } from '@/i18n';
 import { useFileTree } from '../../hooks/useFileTree';
 import type { FileNode } from '../../types/files';
 import { validateFileName } from '../../utils/fileUtils';

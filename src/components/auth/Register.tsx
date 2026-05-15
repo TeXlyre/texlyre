@@ -1,8 +1,8 @@
 // src/components/auth/Register.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
+import { t } from '@/i18n';
 import PasswordInfo from './PasswordInfo';
 import { useAuth } from '../../hooks/useAuth';
 

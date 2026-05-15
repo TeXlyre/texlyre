@@ -1,7 +1,8 @@
 // src/components/project/UrlImportModal.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useState, useEffect, useRef } from 'react';
+
+import { t } from '@/i18n';
 import { useSettings } from '../../hooks/useSettings';
 import { usePageMetadata } from '../../hooks/useUrlMetadata';
 import {

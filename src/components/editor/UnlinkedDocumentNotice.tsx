@@ -1,8 +1,8 @@
 // src/components/editor/UnlinkedDocumentNotice.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
+import { t } from '@/i18n';
 import { LinkIcon, TrashIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 import LinkFileModal from './LinkFileModal';

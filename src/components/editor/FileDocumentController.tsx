@@ -1,11 +1,11 @@
 // src/components/editor/FileDocumentController.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 
+import { t } from '@/i18n';
 import { useAuth } from '../../hooks/useAuth';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useProperties } from '../../hooks/useProperties';

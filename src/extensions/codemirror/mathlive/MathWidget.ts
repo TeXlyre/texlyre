@@ -1,11 +1,11 @@
 // src/extensions/codemirror/mathlive/MathWidget.ts
-import { t } from '@/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement } from 'react';
 import { WidgetType } from '@codemirror/view';
 import type { EditorView } from '@codemirror/view';
 import { MathfieldElement } from 'mathlive';
 
+import { t } from '@/i18n';
 import { EditIcon } from '../../../components/common/Icons';
 import type { MathRegion } from './MathDetector';
 import { SymbolSearchPanel } from './SymbolSearchPanel';

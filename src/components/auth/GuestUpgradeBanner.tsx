@@ -1,8 +1,8 @@
 // src/components/auth/GuestUpgradeBanner.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useState, useEffect } from 'react';
 
+import { t } from '@/i18n';
 import { useAuth } from '../../hooks/useAuth';
 import { UpgradeAccountIcon, UserIcon, CloseIcon } from '../common/Icons';
 

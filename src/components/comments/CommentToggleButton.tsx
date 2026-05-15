@@ -1,7 +1,7 @@
 // src/components/comments/CommentToggleButton.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 
+import { t } from '@/i18n';
 import { useComments } from '../../hooks/useComments';
 import { CommentIcon } from '../common/Icons';
 

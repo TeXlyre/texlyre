@@ -1,6 +1,7 @@
 // src/utils/fileUtils.ts
-import { t } from '@/i18n';
 import mime from 'mime';
+
+import { t } from '@/i18n';
 
 export function arrayBufferToString(buffer: ArrayBuffer | Uint8Array): string {
 	return new TextDecoder().decode(buffer);

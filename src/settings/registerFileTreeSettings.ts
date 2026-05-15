@@ -1,7 +1,7 @@
 // src/settings/registerFileTreeSettings.ts
-import { t } from '@/i18n';
 import { useEffect, useRef } from 'react';
 
+import { t } from '@/i18n';
 import { useSettings } from '../hooks/useSettings';
 
 export function useRegisterFileTreeSettings() {

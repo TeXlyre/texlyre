@@ -1,8 +1,8 @@
 // src/components/projects/ProjectForm.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
+import { t } from '@/i18n';
 import type { Project } from '../../types/projects.ts';
 import { TagInput } from '../common/TagInput';
 

@@ -1,5 +1,6 @@
 // src/plugins/PluginInterface.ts
 import type React from 'react';
+
 import type { Setting } from '../contexts/SettingsContext';
 import type { BackupStatus } from '../types/backup';
 import type { BibEntry } from '../types/bibliography';

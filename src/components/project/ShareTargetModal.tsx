@@ -1,8 +1,8 @@
 // src/components/project/ShareTargetModal.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
+import { t } from '@/i18n';
 import { useAuth } from '../../hooks/useAuth';
 import { fileStorageService } from '../../services/FileStorageService';
 import { projectImportService } from '../../services/ProjectImportService';

@@ -260,8 +260,8 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 	useEffect(() => {
 		if (!useSharedSettings || !projectEngine) return;
 		if (projectEngine === latexService.getCurrentEngineType()) return;
-		latexService.setEngine(projectEngine as LaTeXEngine).catch((err) => {
-			console.error('Failed to sync shared engine:', err);
+		latexService.setEngine(projectEngine as LaTeXEngine).catch((error) => {
+			console.error('Failed to sync shared engine:', error);
 		});
 	}, [projectEngine, useSharedSettings]);
 

@@ -1,8 +1,8 @@
 // src/components/auth/PasswordModal.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
+import { t } from '@/i18n';
 import { LockIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 

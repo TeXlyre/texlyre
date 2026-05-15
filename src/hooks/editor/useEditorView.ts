@@ -140,8 +140,7 @@ export const useEditorView = (
 		getVimModeEnabled,
 		getSpellCheckEnabled,
 		getCollabOptions,
-		// getEnabledLSPPlugins,
-		editorSettingsVersion,
+		//
 		editorSettings,
 	} = useEditor();
 

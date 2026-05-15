@@ -1,7 +1,7 @@
 // src/components/settings/SettingControl.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 
+import { t } from '@/i18n';
 import type { Setting } from '../../contexts/SettingsContext';
 import { SettingsCodeMirror } from './SettingsCodeMirror';
 import SettingsLanguage from './SettingsLanguage';

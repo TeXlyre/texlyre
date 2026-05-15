@@ -19,9 +19,10 @@
 // src/main.tsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { openDB } from 'idb';
+
 import './i18n';
 import App from './App';
-import { openDB } from 'idb';
 import { authService } from './services/AuthService';
 
 const BASE_PATH = __BASE_PATH__;

@@ -10,7 +10,6 @@ import {
 	isTypstContent,
 	isBibContent,
 } from '../../../utils/fileUtils';
-
 import {
 	latexLinkPatterns,
 	typstLinkPatterns,

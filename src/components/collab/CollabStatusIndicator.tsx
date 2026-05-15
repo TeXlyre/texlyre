@@ -1,8 +1,8 @@
 // src/components/collab/CollabStatusIndicator.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
+import { t } from '@/i18n';
 import { useCollab } from '../../hooks/useCollab';
 import { useFileSync } from '../../hooks/useFileSync';
 import { useOffline } from '../../hooks/useOffline';

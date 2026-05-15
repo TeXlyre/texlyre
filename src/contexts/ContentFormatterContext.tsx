@@ -1,5 +1,4 @@
 // src/contexts/ContentFormatterContext.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import {
 	createContext,
@@ -11,6 +10,7 @@ import {
 } from 'react';
 import { nanoid } from 'nanoid';
 
+import { t } from '@/i18n';
 import {
 	contentFormatterService,
 	type LatexFormatOptions,

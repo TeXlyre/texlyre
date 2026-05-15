@@ -1,8 +1,8 @@
 // src/components/profile/ExportAccountModal.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
+import { t } from '@/i18n';
 import { accountExportService } from '../../services/AccountExportService';
 import { useAuth } from '../../hooks/useAuth';
 import { ExportIcon, ZipFileIcon } from '../common/Icons';

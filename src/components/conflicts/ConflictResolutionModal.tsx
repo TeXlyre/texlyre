@@ -1,7 +1,7 @@
 // src/components/conflicts/ConflictResolutionModal.tsx
-import { t } from '@/i18n';
 import { useEffect, useState } from 'react';
 
+import { t } from '@/i18n';
 import Modal from '../../components/common/Modal';
 import {
 	conflictResolutionService,

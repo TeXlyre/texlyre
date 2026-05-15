@@ -1,7 +1,7 @@
 // src/services/TypstService.ts
-import { t } from '@/i18n';
 import { nanoid } from 'nanoid';
 
+import { t } from '@/i18n';
 import type {
 	TypstCompileResult,
 	TypstOutputFormat,

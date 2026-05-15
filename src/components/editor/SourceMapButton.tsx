@@ -1,7 +1,7 @@
-import { t } from '@/i18n';
 import type React from 'react';
 import { useRef, useState } from 'react';
 
+import { t } from '@/i18n';
 import PositionedDropdown from '../common/PositionedDropdown';
 import { useSourceMap } from '../../hooks/useSourceMap';
 import { LocateIcon, ChevronDownIcon } from '../common/Icons';

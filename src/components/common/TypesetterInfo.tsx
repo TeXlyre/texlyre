@@ -1,8 +1,9 @@
 // src/components/common/TypesetterInfo.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+
+import { t } from '@/i18n';
 
 interface TypesetterInfoProps {
 	type: 'latex' | 'typst';

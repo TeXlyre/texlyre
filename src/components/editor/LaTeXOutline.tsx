@@ -1,8 +1,8 @@
 // src/components/editor/LaTeXOutline.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { t } from '@/i18n';
 import { useProperties } from '../../hooks/useProperties';
 import { useFileTree } from '../../hooks/useFileTree';
 import { LaTeXOutlineParser } from '../../utils/latexOutlineParser';

@@ -1,8 +1,8 @@
 // src/components/editor/DocumentExplorer.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useRef, useState } from 'react';
 
+import { t } from '@/i18n';
 import { collabService } from '../../services/CollabService';
 import type { Document } from '../../types/documents';
 import type { YjsDocUrl } from '../../types/yjs';

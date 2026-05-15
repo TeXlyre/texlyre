@@ -1,6 +1,7 @@
 // src/hooks/editor/editorSearchHighlights.ts
 import type { RefObject } from 'react';
 import type { EditorView } from 'codemirror';
+
 import {
 	clearSearchHighlights,
 	setSearchHighlights,

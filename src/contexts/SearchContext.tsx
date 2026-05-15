@@ -1,6 +1,7 @@
 // src/contexts/SearchContext.tsx
 import type React from 'react';
 import { createContext, useCallback, useState, useEffect } from 'react';
+
 import { searchService, type SearchResult } from '../services/SearchService';
 
 export interface SearchContextType {

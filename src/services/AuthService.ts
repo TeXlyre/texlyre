@@ -1,9 +1,9 @@
 // src/services/AuthService.ts
-import { t } from '@/i18n';
 import { type IDBPDatabase, openDB } from 'idb';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 
+import { t } from '@/i18n';
 import type { User } from '../types/auth';
 import type { Project } from '../types/projects';
 import { cleanupProjectDatabases } from '../utils/dbDeleteUtils';

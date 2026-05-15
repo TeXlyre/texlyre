@@ -1,8 +1,8 @@
 // src/components/common/SplashScreen.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
+import { t } from '@/i18n';
 import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
 
 interface SplashScreenProps {

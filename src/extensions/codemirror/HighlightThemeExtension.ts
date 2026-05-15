@@ -49,6 +49,7 @@ import {
 	xcodeDark,
 	xcodeLight,
 } from '@uiw/codemirror-themes-all';
+
 import type { HighlightTheme } from '../../types/editor';
 
 const APP_THEME_MAP: Record<string, HighlightTheme> = {

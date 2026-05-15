@@ -1,8 +1,8 @@
 // src/components/auth/GuestUpgradeModal.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
+import { t } from '@/i18n';
 import { useAuth } from '../../hooks/useAuth';
 import { UserIcon } from '../common/Icons';
 import Modal from '../common/Modal';

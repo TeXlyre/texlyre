@@ -1,9 +1,9 @@
 // src/components/project/ShareProjectModal.tsx
-import { t } from '@/i18n';
 import QRCode from 'qrcode';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
+import { t } from '@/i18n';
 import { CopyUrlIcon, ShareIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 

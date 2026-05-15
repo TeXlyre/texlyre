@@ -1,8 +1,8 @@
 // src/components/project/TemplateImportModal.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState, useRef } from 'react';
 
+import { t } from '@/i18n';
 import { useSettings } from '../../hooks/useSettings';
 import Modal from '../common/Modal';
 import SettingsModal from '../settings/SettingsModal';

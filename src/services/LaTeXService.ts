@@ -1,7 +1,7 @@
 // src/services/LaTeXService.ts
-import { t } from '@/i18n';
 import { nanoid } from 'nanoid';
 
+import { t } from '@/i18n';
 import type { CompileResult } from '../extensions/swiftlatex/BaseEngine';
 import {
 	swiftLaTeXService,
@@ -42,7 +42,7 @@ class LaTeXService {
 	private currentOperationId: string | null = null;
 
 	setTexliveEndpoint(endpoint: string): void {
-		this.texliveEndpoint = endpoint;
+		this.setTexliveEndpoint(endpoint);
 		swiftLaTeXService.setTexliveEndpoint(endpoint);
 	}
 

@@ -1,10 +1,9 @@
 // src/components/auth/Login.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
+import { t } from '@/i18n';
 import { useAuth } from '../../hooks/useAuth';
-import { useTheme } from '../../hooks/useTheme';
 import GuestConsentModal from './GuestConsentModal';
 import PrivacyModal from '../common/PrivacyModal';
 
@@ -20,7 +19,6 @@ const Login: React.FC<LoginProps> = ({
 	onSwitchToImport,
 }) => {
 	const { login, createGuestAccount } = useAuth();
-	const { currentThemePlugin } = useTheme();
 
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');

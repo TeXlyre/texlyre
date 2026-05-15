@@ -112,7 +112,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		if (typeof savedSidebar === 'boolean') {
 			setShowSidebar(savedSidebar);
 		}
-	}, [getProperty, tidyPreset, registerProperty]);
+	}, []);
 
 	const handleOptionsChange = (newOptions: TidyOptions) => {
 		setOptions(newOptions);
@@ -405,7 +405,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				}, 500);
 			}
 		}
-	}, [content, autoTidy, tidyPreset, processBibtexWithOptions, parseContent]);
+	}, [content, autoTidy, tidyPreset]);
 
 	useEffect(() => {
 		const currentProjectId = sessionStorage.getItem('currentProjectId');
@@ -416,7 +416,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		if (!saved) {
 			setOptions(getPresetOptions(tidyPreset));
 		}
-	}, [tidyPreset, getProperty]);
+	}, [tidyPreset]);
 
 	useEffect(() => {
 		const handleBibEntryImport = (event: Event) => {
@@ -505,17 +505,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		return () => {
 			document.removeEventListener('bib-entry-imported', handleBibEntryImport);
 		};
-	}, [
-		bibtexContent,
-		processedContent,
-		fileInfo.filePath,
-		originalViewRef.current.state.doc.length,
-		processedViewRef.current.dispatch,
-		originalViewRef.current.dispatch,
-		originalViewRef.current,
-		processedViewRef.current,
-		parseContent,
-	]);
+	}, [bibtexContent, processedContent, fileInfo.filePath]);
 
 	const processBibtexWithOptions = async (
 		content: string,
@@ -669,16 +659,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				}
 			}
 		}
-	}, [
-		viewMode,
-		currentView,
-		bibtexContent,
-		processedContent,
-		processedViewRef.current,
-		parseContent,
-		originalViewRef.current.state?.doc?.toString,
-		originalViewRef.current,
-	]);
+	}, [viewMode, currentView, bibtexContent, processedContent]);
 
 	useEffect(() => {
 		console.log('Current entries changed:', {
@@ -884,36 +865,38 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 									)}
 								</div>
 
-								<div
-									ref={originalEditorRef}
-									className='codemirror-editor-container'
-									style={{
-										display:
-											currentView === 'original' && viewMode === 'editor'
-												? 'block'
-												: 'none',
-									}}
-								/>
-
-								<div
-									ref={processedEditorRef}
-									className='codemirror-editor-container'
-									style={{
-										display:
-											currentView === 'processed' && viewMode === 'editor'
-												? 'block'
-												: 'none',
-									}}
-								/>
-
-								{viewMode === 'table' && (
-									<BibtexTableView
-										key={`${currentView}-${updateCounter}`}
-										entries={currentEntries}
-										onEntriesChange={handleTableEntryUpdate}
-										onSingleEntryChange={handleSingleTableEntryUpdate}
+								<>
+									<div
+										ref={originalEditorRef}
+										className='codemirror-editor-container'
+										style={{
+											display:
+												currentView === 'original' && viewMode === 'editor'
+													? 'block'
+													: 'none',
+										}}
 									/>
-								)}
+
+									<div
+										ref={processedEditorRef}
+										className='codemirror-editor-container'
+										style={{
+											display:
+												currentView === 'processed' && viewMode === 'editor'
+													? 'block'
+													: 'none',
+										}}
+									/>
+
+									{viewMode === 'table' && (
+										<BibtexTableView
+											key={`${currentView}-${updateCounter}`}
+											entries={currentEntries}
+											onEntriesChange={handleTableEntryUpdate}
+											onSingleEntryChange={handleSingleTableEntryUpdate}
+										/>
+									)}
+								</>
 
 								{originalShowSaveIndicator &&
 									currentView === 'original' &&
