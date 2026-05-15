@@ -96,6 +96,7 @@ export interface NameValidationResult {
 	error?: string;
 }
 
+// biome-ignore lint/suspicious/noControlCharactersInRegex: intentional - Windows filename validation
 const ILLEGAL_NAME_CHARS = /[<>:"/\\|?*\x00-\x1F]/;
 // NOTE (fabawi): File gets excluded from ZIP on WINDOWS if name contains the following
 const RESERVED_WINDOWS_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i;

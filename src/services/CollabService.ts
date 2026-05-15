@@ -536,7 +536,7 @@ class CollabService {
 		let container: AnyDocContainer | undefined;
 
 		if (!wasConnected) {
-			const { doc, provider } = this.connect(projectId, collectionName);
+			const { doc: _doc, provider } = this.connect(projectId, collectionName);
 			container = this.getDocContainer(projectId, collectionName);
 
 			if (container?.persistence) {

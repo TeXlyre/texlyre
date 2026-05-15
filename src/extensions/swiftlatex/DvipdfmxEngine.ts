@@ -8,10 +8,6 @@ import { EngineLoader } from './EngineLoader';
 
 const BASE_PATH = __BASE_PATH__
 
-interface DvipdfmxCompileResult extends CompileResult {
-	xdv?: Uint8Array;
-}
-
 declare global {
 	interface Window {
 		DvipdfmxEngine: any;
