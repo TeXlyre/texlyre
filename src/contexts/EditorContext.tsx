@@ -16,6 +16,8 @@ import type {
   HighlightTheme,
 } from '../types/editor';
 import type { CollabConnectOptions, CollabProviderType } from '../types/collab';
+import { text } from 'node:stream/consumers';
+import { language } from '@codemirror/language';
 
 export const fontSizeMap: Record<FontSize, string> = {
   xs: '10px',
@@ -249,7 +251,13 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
       .map((plugin) => plugin.id);
   }, [getSetting]);
 
-  const editorSettingsSignature = JSON.stringify(editorSettings);
+  const editorSettingsSignature = JSON.stringify({
+    editorSettings,
+    theme: getSetting("theme-plugin")?.value,
+    variant: getSetting("theme-variant")?.value,
+    language: getSetting("language")?.value,
+    textDirection: getSetting("text-direction")?.value,
+  });
 
   const editorSettingsVersion = useMemo(() => {
     let hash = 0;
