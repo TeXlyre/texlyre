@@ -36,10 +36,8 @@ class ProjectImportService {
 	private fileSystemManager = new StorageAdapterService();
 	private unifiedService = new UnifiedDataStructureService();
 
-	private generateNewDocumentUrl(): string {
-		const projectId =
-			Math.random().toString(36).substring(2, 15) +
-			Math.random().toString(36).substring(2, 15);
+	private generateNewDocumentUrl(
+		projectId: string = crypto.randomUUID()): string {
 		return `yjs:${projectId}`;
 	}
 
@@ -239,7 +237,7 @@ class ProjectImportService {
 							projectMetadata.name,
 							existingProjectNames,
 						);
-						finalDocUrl = this.generateNewDocumentUrl();
+						finalDocUrl = this.generateNewDocumentUrl(finalProjectId);
 						shouldCreateNewProject = true;
 					}
 				}

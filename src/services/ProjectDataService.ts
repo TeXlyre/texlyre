@@ -543,9 +543,8 @@ export class ProjectDataService {
 			files: { path: string; content: string | ArrayBuffer }[];
 		},
 	): Promise<void> {
-		// Convert the simplified format to proper metadata format
 		const fileMetadata: FileMetadata[] = data.files.map((file) => ({
-			id: Math.random().toString(36).substring(2), // Generate ID if not provided
+			id: Math.random().toString(36).substring(2),
 			name: file.path.split('/').pop() || 'unknown',
 			path: file.path,
 			type: 'file' as const,
