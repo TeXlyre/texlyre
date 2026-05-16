@@ -68,7 +68,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
         return hash;
     }, [docUrl]);
 
-    const collectionName = useMemo(() => `yjs_${documentId}`, [documentId]);
+    const collectionName = useMemo(() => fileId ? `file_${fileId}` : `doc_${documentId}`, [fileId, documentId]);
 
     useEffect(() => {
         console.log('[DrawioCollaborativeViewer] Connecting to Y.Doc:', projectId, collectionName);
@@ -79,6 +79,15 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
         return () => {
             console.log('[DrawioCollaborativeViewer] Disconnecting from Y.Doc');
+
+            if (adapterRef.current) {
+                adapterRef.current.destroy();
+                adapterRef.current = null;
+            }
+
+            setYjsDoc(null);
+            setYjsProvider(null);
+
             collabService.disconnect(projectId, collectionName);
         };
     }, [projectId, collectionName]);
@@ -145,7 +154,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
             adapterRef.current.destroy();
             adapterRef.current = null;
         }
-    }, [fileId, fileName]);
+    }, [fileId, fileName, collectionName]);
 
     useEffect(() => {
         let cancelled = false;
@@ -296,7 +305,12 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
         }
 
         return () => {
-            console.log('[DrawioCollaborativeViewer] Effect cleanup - NOT destroying adapter');
+            console.log('[DrawioCollaborativeViewer] Effect cleanup, destroying adapter');
+
+            if (adapterRef.current === adapter) {
+                adapter.destroy();
+                adapterRef.current = null;
+            }
         };
     }, [iframeLoaded, drawioContent, yjsDoc, yjsProvider, drawioOrigin, autoSaveFile, fileId, handleSave, user]);
 
@@ -437,7 +451,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
                     <>
                         <DrawioSplashScreen iframeLoaded={iframeLoaded} fileKey={fileId ?? fileName} />
                         <iframe
-                            key={fileId ?? fileName}
+                            key={`${fileId ?? fileName}:${collectionName}`}
                             ref={iframeRef}
                             src={embedUrl}
                             className="drawio-iframe"

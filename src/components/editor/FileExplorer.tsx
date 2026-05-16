@@ -28,9 +28,6 @@ interface FileExplorerProps {
     content: string | ArrayBuffer,
     isBinary?: boolean)
     => void;
-  onOpenDocument?: (documentId: string) => void;
-  onCreateDocument: (name: string) => string;
-  documents: Array<{ id: number; name: string; }>;
   initialSelectedFile?: string;
   initialExpandedPaths?: string[];
   currentProjectId?: string | null;
@@ -50,9 +47,6 @@ interface FilePropertiesInfo {
 
 const FileExplorer: React.FC<FileExplorerProps> = ({
   onFileSelect,
-  onOpenDocument,
-  onCreateDocument,
-  documents,
   initialSelectedFile,
   initialExpandedPaths,
   currentProjectId,
