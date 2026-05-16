@@ -301,7 +301,7 @@ export class ProjectDataService {
 			);
 
 			console.log(
-				`Successfully deserialized ${documents.length} documents for project ${projectId}`,
+				`[ProjectDataService] Successfully deserialized ${documents.length} documents for project ${projectId}`,
 			);
 		} catch (error) {
 			console.error('Error deserializing project documents:', error);
@@ -317,14 +317,28 @@ export class ProjectDataService {
 				const docYDoc = new Y.Doc();
 				const docPersistence = new IndexeddbPersistence(collection, docYDoc);
 
-				docPersistence.once('synced', () => {
-					Y.applyUpdate(docYDoc, yjsState);
+				docPersistence.once('synced', async () => {
+					try {
+						await docPersistence.clearData();
 
-					setTimeout(() => {
+						const freshDoc = new Y.Doc();
+						const freshPersistence = new IndexeddbPersistence(collection, freshDoc);
+
+						freshPersistence.once('synced', () => {
+							Y.applyUpdate(freshDoc, yjsState);
+
+							setTimeout(() => {
+								freshPersistence.destroy();
+								freshDoc.destroy();
+								resolve();
+							}, 500);
+						});
+
 						docPersistence.destroy();
 						docYDoc.destroy();
-						resolve();
-					}, 500);
+					} catch (error) {
+						reject(error);
+					}
 				});
 			} catch (error) {
 				reject(error);
@@ -430,7 +444,7 @@ export class ProjectDataService {
 			});
 
 			console.log(
-				`Successfully imported ${files.length} files for project ${projectId} using fileStorageService`,
+				`[ProjectDataService] Successfully imported ${files.length} files for project ${projectId} using fileStorageService`,
 			);
 		} catch (error) {
 			console.error(
@@ -476,7 +490,7 @@ export class ProjectDataService {
 			db.close();
 
 			console.log(
-				`Successfully imported ${files.length} files for project ${projectId} via fallback`,
+				`[ProjectDataService] Successfully imported ${files.length} files for project ${projectId} via fallback`,
 			);
 		}
 	}
@@ -518,7 +532,7 @@ export class ProjectDataService {
 		});
 
 		console.log(
-			`Successfully deserialized ${files.length} files for project ${projectId}`,
+			`[ProjectDataService] Successfully deserialized ${files.length} files for project ${projectId}`,
 		);
 	}
 
@@ -554,7 +568,7 @@ export class ProjectDataService {
 		// Handle documents if needed
 		if (data.documents.length > 0) {
 			console.log(
-				`Importing ${data.documents.length} documents for project ${projectId}`,
+				`[ProjectDataService] Importing ${data.documents.length} documents for project ${projectId}`,
 			);
 			// Documents are handled separately by the existing document deserialization
 		}

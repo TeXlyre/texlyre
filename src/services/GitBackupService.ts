@@ -516,6 +516,7 @@ export class GitBackupService<TTarget> {
 			await this.persistBaseline(resolvedCredentials, projectId);
 			fileStorageEventEmitter.emitChange();
 		} catch (error) {
+			console.error(error);
 			this._handleError(error, 'import_error', t('{provider} import failed', {
 				provider: this.adapter.displayName,
 			}));
@@ -881,26 +882,29 @@ export class GitBackupService<TTarget> {
 		data: ProjectFilesData,
 		credentials: ResolvedCredentials<TTarget>,
 	): Promise<void> {
+		const docUrl = projectMetadata.docUrl ?? `yjs:${projectId}`;
+		const resolvedMetadata = { ...projectMetadata, docUrl };
+
 		await authService.createOrUpdateProject(
-			this.unifiedService.convertMetadataToProject(projectMetadata),
+			this.unifiedService.convertMetadataToProject(resolvedMetadata),
 			false,
 		);
 
 		const { documents, documentContents } = await this.importDocuments(data, credentials);
 
-		await fileStorageService.switchToProject(projectMetadata.docUrl);
+		await fileStorageService.switchToProject(resolvedMetadata.docUrl);
 
-		await this.importFiles(data, credentials, projectMetadata);
+		await this.importFiles(data, credentials, resolvedMetadata);
 
 		const unifiedData = {
 			manifest: this.unifiedService.createManifest('import'),
 			account: null,
-			projects: [projectMetadata],
+			projects: [resolvedMetadata],
 			projectData: new Map([
 				[
 					projectId,
 					{
-						metadata: projectMetadata,
+						metadata: resolvedMetadata,
 						documents,
 						documentContents,
 						files: [],
@@ -911,7 +915,7 @@ export class GitBackupService<TTarget> {
 		};
 
 		await this.dataSerializer.deserializeToIndexedDB(
-			unifiedData, projectId, projectMetadata.docUrl,
+			unifiedData, projectId, resolvedMetadata.docUrl,
 		);
 
 		if (documents.length > 0) {
@@ -1178,6 +1182,8 @@ export class GitBackupService<TTarget> {
 			this.adapter.targetSecretKey,
 			this._getScopeOptions(projectId),
 		);
+		console.log('[GitBackupService] loadBaselineSha:', metadata?.lastSyncedCommitSha, 'full metadata:', metadata);
+
 		return metadata?.lastSyncedCommitSha as string | undefined;
 	}
 
@@ -1191,6 +1197,7 @@ export class GitBackupService<TTarget> {
 			const newSha = await this.adapter.getLatestCommitSha(
 				credentials.token, credentials.target, credentials.branch,
 			);
+			console.log('[GitBackupService] persistBaseline saving sha:', newSha);
 			const existingMeta = await this.secretsContext.getSecretMetadata(
 				this.adapter.pluginId,
 				this.adapter.targetSecretKey,
