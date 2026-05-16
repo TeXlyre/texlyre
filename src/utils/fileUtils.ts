@@ -10,18 +10,26 @@ export function stringToArrayBuffer(str: string): ArrayBuffer {
 	return new TextEncoder().encode(str).buffer;
 }
 
-export function toArrayBuffer(data: string | ArrayBuffer | SharedArrayBuffer | ArrayBufferView): ArrayBuffer {
-	if (typeof data === 'string') return stringToArrayBuffer(data);
-	if (data instanceof ArrayBuffer) return data;
-	if (ArrayBuffer.isView(data)) {
-		const { buffer, byteOffset, byteLength } = data;
+export function latin1ToBytes(latin1: string): Uint8Array {
+	const bytes = new Uint8Array(latin1.length);
+	for (let i = 0; i < latin1.length; i++) bytes[i] = latin1.charCodeAt(i) & 0xff;
+	return bytes;
+}
+
+export function toArrayBuffer(
+	content: string | ArrayBuffer | SharedArrayBuffer | ArrayBufferView)
+	: ArrayBuffer {
+	if (typeof content === 'string') return stringToArrayBuffer(content);
+	if (content instanceof ArrayBuffer) return content;
+	if (ArrayBuffer.isView(content)) {
+		const { buffer, byteOffset, byteLength } = content;
 		if (buffer instanceof ArrayBuffer && byteOffset === 0 && byteLength === buffer.byteLength) return buffer;
 		const out = new Uint8Array(byteLength);
 		out.set(new Uint8Array(buffer, byteOffset, byteLength));
 		return out.buffer;
 	}
-	if (typeof SharedArrayBuffer !== 'undefined' && data instanceof SharedArrayBuffer) {
-		const src = new Uint8Array(data);
+	if (typeof SharedArrayBuffer !== 'undefined' && content instanceof SharedArrayBuffer) {
+		const src = new Uint8Array(content);
 		const out = new Uint8Array(src.byteLength);
 		out.set(src);
 		return out.buffer;
@@ -29,9 +37,9 @@ export function toArrayBuffer(data: string | ArrayBuffer | SharedArrayBuffer | A
 	throw new Error('Unsupported binary content type');
 }
 
-export const encodeContentToBase64 = (
+export function toBase64(
 	content: string | Uint8Array | ArrayBuffer,
-): string => {
+): string {
 	const uint8Array =
 		typeof content === 'string'
 			? new TextEncoder().encode(content)

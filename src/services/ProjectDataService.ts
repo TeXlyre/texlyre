@@ -315,24 +315,16 @@ export class ProjectDataService {
 		return new Promise<void>((resolve, reject) => {
 			try {
 				const docYDoc = new Y.Doc();
-
-				// Apply the state before setting up persistence
-				Y.applyUpdate(docYDoc, yjsState);
-
 				const docPersistence = new IndexeddbPersistence(collection, docYDoc);
 
-				// Wait for initial sync, then force a save
 				docPersistence.once('synced', () => {
-					// Force another transaction to ensure persistence
-					docYDoc.transact(() => {
-						// This empty transaction forces the persistence to save the applied state
-					});
+					Y.applyUpdate(docYDoc, yjsState);
 
 					setTimeout(() => {
 						docPersistence.destroy();
 						docYDoc.destroy();
 						resolve();
-					}, 1000);
+					}, 500);
 				});
 			} catch (error) {
 				reject(error);

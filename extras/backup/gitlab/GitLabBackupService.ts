@@ -6,7 +6,7 @@ import {
     type GitBackupChange,
     type GitTreeItem,
 } from '@/services/GitBackupService';
-import { encodeContentToBase64 } from '@/utils/fileUtils';
+import { toBase64 } from '@/utils/fileUtils';
 import { gitLabAPIService } from './GitLabAPIService';
 
 interface GitLabTarget {
@@ -52,7 +52,7 @@ function mapGitLabChanges(changes: GitBackupChange[]): GitLabCommitAction[] {
         return {
             action: change.type,
             file_path: change.path,
-            content: encodeContentToBase64(change.content),
+            content: toBase64(change.content),
             encoding: 'base64',
         };
     });

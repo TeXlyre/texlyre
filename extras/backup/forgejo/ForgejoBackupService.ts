@@ -6,7 +6,7 @@ import {
     type GitBackupChange,
     type GitTreeItem,
 } from '@/services/GitBackupService';
-import { encodeContentToBase64 } from '@/utils/fileUtils.ts';
+import { toBase64 } from '@/utils/fileUtils.ts';
 import { forgejoAPIService } from './ForgejoAPIService';
 
 interface ForgejoTarget {
@@ -52,7 +52,7 @@ function mapForgejoChanges(changes: GitBackupChange[]): ForgejoCommitAction[] {
         return {
             operation: change.type,
             path: change.path,
-            content: encodeContentToBase64(change.content),
+            content: toBase64(change.content),
             encoding: 'base64',
             sha: change.previousRef,
         };
