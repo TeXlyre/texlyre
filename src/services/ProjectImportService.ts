@@ -9,6 +9,7 @@ import {
 	StorageAdapterService,
 	ZipAdapter,
 } from './StorageAdapterService';
+import { generateYjsProjectId } from '../utils/urlUtils';
 
 export interface ImportableProject {
 	id: string;
@@ -36,11 +37,6 @@ class ProjectImportService {
 	private fileSystemManager = new StorageAdapterService();
 	private unifiedService = new UnifiedDataStructureService();
 
-	private generateNewDocumentUrl(
-		projectId: string = crypto.randomUUID()): string {
-		return `yjs:${projectId}`;
-	}
-
 	private generateUniqueProjectName(
 		baseName: string,
 		existingNames: Set<string>,
@@ -52,7 +48,6 @@ class ProjectImportService {
 			candidateName = `${baseName} (imported ${counter})`;
 			counter++;
 		}
-
 		return candidateName;
 	}
 
@@ -232,12 +227,12 @@ class ProjectImportService {
 						await authService.deleteProject(projectId);
 						shouldCreateNewProject = true;
 					} else if (options.conflictResolution === 'create-new') {
-						finalProjectId = crypto.randomUUID();
+						finalProjectId = generateYjsProjectId();
 						finalProjectName = this.generateUniqueProjectName(
 							projectMetadata.name,
 							existingProjectNames,
 						);
-						finalDocUrl = this.generateNewDocumentUrl(finalProjectId);
+						finalDocUrl = `yjs:${finalProjectId}`;
 						shouldCreateNewProject = true;
 					}
 				}

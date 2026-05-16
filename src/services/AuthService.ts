@@ -7,6 +7,7 @@ import * as Y from 'yjs';
 import type { User } from '../types/auth';
 import type { Project } from '../types/projects';
 import { cleanupProjectDatabases } from '../utils/dbDeleteUtils';
+import { generateYjsProjectId } from '../utils/urlUtils';
 import { fileSystemBackupService } from './FileSystemBackupService';
 
 const shouldAutoSync = (): boolean => {
@@ -522,7 +523,7 @@ class AuthService {
 	}
 
 	private createNewDocumentUrl(
-		projectId: string = crypto.randomUUID(),
+		projectId: string = generateYjsProjectId(),
 		projectName = "Untitled Project",
 		projectDescription = "",
 	): string {
@@ -571,7 +572,7 @@ class AuthService {
 			? project.docUrl.startsWith("yjs:")
 				? project.docUrl.slice(4)
 				: project.docUrl
-			: crypto.randomUUID();
+			: generateYjsProjectId();
 
 		const docUrl =
 			project.docUrl ||

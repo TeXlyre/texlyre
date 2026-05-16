@@ -65,7 +65,7 @@ export class DirectoryAdapter implements FileSystemAdapter {
 		return entries;
 	}
 
-	private parsePath(path: string): { dir: string; fileName?: string } {
+	private parsePath(path: string): { dir: string; fileName: string } {
 		const normalizedPath = path.replace(/^\/+/, '');
 		const lastSlash = normalizedPath.lastIndexOf('/');
 
@@ -82,7 +82,7 @@ export class DirectoryAdapter implements FileSystemAdapter {
 	private async getDirectory(path: string): Promise<FileSystemDirectoryHandle> {
 		if (!path) return this.rootHandle;
 
-		const parts = path.split('/').filter((p) => p);
+		const parts = path.split('/').filter(Boolean);
 		let current = this.rootHandle;
 
 		for (const part of parts) {
@@ -97,7 +97,7 @@ export class DirectoryAdapter implements FileSystemAdapter {
 	): Promise<FileSystemDirectoryHandle> {
 		if (!path) return this.rootHandle;
 
-		const parts = path.split('/').filter((p) => p);
+		const parts = path.split('/').filter(Boolean);
 		let current = this.rootHandle;
 
 		for (const part of parts) {
@@ -125,7 +125,10 @@ export class ZipAdapter implements FileSystemAdapter {
 	async readFile(path: string): Promise<string | ArrayBuffer> {
 		const normalizedPath = this.normalizePath(path);
 		const file = this.zip.file(normalizedPath);
-		if (!file) throw new Error(`File not found: ${normalizedPath}`);
+
+		if (!file) {
+			throw new Error(`File not found: ${normalizedPath}`);
+		}
 
 		return !isBinaryFile(normalizedPath)
 			? file.async('string')
@@ -145,8 +148,8 @@ export class ZipAdapter implements FileSystemAdapter {
 		const folderPath = normalizedPath.endsWith('/')
 			? normalizedPath
 			: `${normalizedPath}/`;
-		let hasEntries = false;
 
+		let hasEntries = false;
 		this.zip.forEach((relativePath) => {
 			if (relativePath.startsWith(folderPath)) {
 				hasEntries = true;
@@ -166,15 +169,15 @@ export class ZipAdapter implements FileSystemAdapter {
 			: '';
 
 		this.zip.forEach((relativePath) => {
-			if (relativePath.startsWith(searchPath)) {
-				const remaining = relativePath.substring(searchPath.length);
-				const firstSlash = remaining.indexOf('/');
-				const name =
-					firstSlash === -1 ? remaining : remaining.substring(0, firstSlash);
+			if (!relativePath.startsWith(searchPath)) return;
 
-				if (name && !entries.includes(name)) {
-					entries.push(name);
-				}
+			const remaining = relativePath.substring(searchPath.length);
+			const firstSlash = remaining.indexOf('/');
+			const name =
+				firstSlash === -1 ? remaining : remaining.substring(0, firstSlash);
+
+			if (name && !entries.includes(name)) {
+				entries.push(name);
 			}
 		});
 
@@ -209,23 +212,21 @@ export class StorageAdapterService {
 	): Promise<void> {
 		const paths = this.unifiedService.getPaths();
 
-		// Write manifest
 		await adapter.writeFile(paths.MANIFEST, JSON.stringify(data.manifest, null, 2));
 
-		// Write account if exists
 		if (data.account) {
 			await adapter.writeFile(paths.ACCOUNT, JSON.stringify(data.account, null, 2));
 		}
 
-		// Write userData if exists
 		if (data.userData) {
-			await adapter.writeFile('userdata.json', JSON.stringify(data.userData, null, 2));
+			await adapter.writeFile(
+				'userdata.json',
+				JSON.stringify(data.userData, null, 2),
+			);
 		}
 
-		// Write projects
 		await adapter.writeFile(paths.PROJECTS, JSON.stringify(data.projects, null, 2));
 
-		// Write project data
 		for (const [projectId, projectData] of data.projectData) {
 			await this.writeProjectData(adapter, projectId, projectData);
 		}
@@ -242,24 +243,20 @@ export class StorageAdapterService {
 	}> {
 		const paths = this.unifiedService.getPaths();
 
-		// Read manifest and projects
 		const [manifest, projects] = await Promise.all([
 			this.readJsonFile(adapter, paths.MANIFEST),
 			this.readJsonFile(adapter, paths.PROJECTS),
 		]);
 
-		// Read account if exists
 		let account = null;
 		if (await adapter.exists(paths.ACCOUNT)) {
 			try {
 				account = await this.readJsonFile(adapter, paths.ACCOUNT);
 			} catch (error) {
 				console.warn('Could not read account.json, using null:', error);
-				account = null;
 			}
 		}
 
-		// Read userData if exists
 		let userData = null;
 		try {
 			if (await adapter.exists('userdata.json')) {
@@ -269,8 +266,8 @@ export class StorageAdapterService {
 			console.warn('Could not read userdata.json:', error);
 		}
 
-		// Read project data
 		const projectData = new Map();
+
 		for (const project of projects) {
 			const data = await this.readProjectData(adapter, project.id);
 			projectData.set(project.id, data);
@@ -317,7 +314,7 @@ export class StorageAdapterService {
 		await adapter.createDirectory(docsPath);
 
 		await adapter.writeFile(
-			`${docsPath}/metadata.json`,
+			this.unifiedService.getDocumentMetadataPath(projectId),
 			JSON.stringify(projectData.documents, null, 2),
 		);
 
@@ -325,7 +322,7 @@ export class StorageAdapterService {
 			const docContent = projectData.documentContents.get(doc.id);
 			if (!docContent) continue;
 
-			const writePromises = [];
+			const writePromises: Promise<void>[] = [];
 
 			if (docContent.yjsState) {
 				writePromises.push(
@@ -367,7 +364,7 @@ export class StorageAdapterService {
 			const content = projectData.fileContents.get(file.path);
 			if (!content) continue;
 
-			const cleanPath = file.path.startsWith('/') ? file.path.slice(1) : file.path;
+			const cleanPath = this.cleanRelativePath(file.path);
 			const filePath = this.unifiedService.getFileContentPath(projectId, cleanPath);
 			const dirPath = filePath.substring(0, filePath.lastIndexOf('/'));
 
@@ -410,7 +407,11 @@ export class StorageAdapterService {
 
 			if (!docsPath) return [documents, documentContents];
 
-			const savedDocs = await this.getDocumentMetadata(adapter, docsPath);
+			const savedDocs = await this.readDocumentMetadata(
+				adapter,
+				projectId,
+				docsPath,
+			);
 
 			for (const doc of savedDocs) {
 				const [yjsPath, contentPath] = this.getDocumentPaths(docsPath, doc.id);
@@ -421,19 +422,19 @@ export class StorageAdapterService {
 						adapter.exists(contentPath),
 					]);
 
-					if (yjsExists) {
-						const [yjsState, readableContent] = await Promise.all([
-							adapter
-								.readFile(yjsPath)
-								.then((data) => new Uint8Array(data as ArrayBuffer)),
-							contentExists
-								? (adapter.readFile(contentPath) as Promise<string>)
-								: Promise.resolve(''),
-						]);
+					if (!yjsExists) continue;
 
-						documents.push({ ...doc, hasReadableContent: !!readableContent });
-						documentContents.set(doc.id, { yjsState, readableContent });
-					}
+					const [yjsState, readableContent] = await Promise.all([
+						adapter
+							.readFile(yjsPath)
+							.then((data) => new Uint8Array(data as ArrayBuffer)),
+						contentExists
+							? (adapter.readFile(contentPath) as Promise<string>)
+							: Promise.resolve(''),
+					]);
+
+					documents.push({ ...doc, hasReadableContent: !!readableContent });
+					documentContents.set(doc.id, { yjsState, readableContent });
 				} catch (error) {
 					console.error(`Error reading document ${doc.id}:`, error);
 				}
@@ -454,6 +455,7 @@ export class StorageAdapterService {
 		for (const path of directPaths) {
 			try {
 				const contents = await adapter.listDirectory(path);
+
 				if (contents.some((name) => name.endsWith('.yjs'))) {
 					return path;
 				}
@@ -463,26 +465,43 @@ export class StorageAdapterService {
 		return null;
 	}
 
-	private async getDocumentMetadata(
+	private async readDocumentMetadata(
 		adapter: FileSystemAdapter,
+		projectId: string,
 		docsPath: string,
 	): Promise<any[]> {
-		const metadataPath = `${docsPath}/metadata.json`;
+		const metadataPath = await this.resolveMetadataPath(
+			adapter,
+			this.unifiedService.getDocumentMetadataPath(projectId),
+			this.unifiedService.getLegacyDocumentMetadataPath(projectId),
+		);
 
-		if (await adapter.exists(metadataPath)) {
+		if (metadataPath) {
 			return await this.readJsonFile(adapter, metadataPath);
 		}
 
+		return await this.inferDocumentMetadata(adapter, docsPath);
+	}
+
+	private async inferDocumentMetadata(
+		adapter: FileSystemAdapter,
+		docsPath: string,
+	): Promise<any[]> {
 		const docFiles = await adapter.listDirectory(docsPath);
+
 		return docFiles
 			.filter((name) => name.endsWith('.yjs'))
-			.map((name) => ({
-				id: name.replace('.yjs', ''),
-				name: `Document ${name.replace('.yjs', '')}`,
-				lastModified: Date.now(),
-				hasYjsState: true,
-				hasReadableContent: true,
-			}));
+			.map((name) => {
+				const id = name.replace('.yjs', '');
+
+				return {
+					id,
+					name: `Document ${id}`,
+					lastModified: Date.now(),
+					hasYjsState: true,
+					hasReadableContent: true,
+				};
+			});
 	}
 
 	private getDocumentPaths(docsPath: string, docId: string): [string, string] {
@@ -497,29 +516,29 @@ export class StorageAdapterService {
 		const fileContents = new Map();
 
 		try {
-			const filesMetadataPath =
-				this.unifiedService.getFilesMetadataPath(projectId);
+			const metadataPath = await this.resolveMetadataPath(
+				adapter,
+				this.unifiedService.getFilesMetadataPath(projectId),
+				this.unifiedService.getLegacyFilesMetadataPath(projectId),
+			);
 
-			if (await adapter.exists(filesMetadataPath)) {
-				const filesMetadata = await this.readJsonFile(
-					adapter,
-					filesMetadataPath,
+			if (!metadataPath) return [files, fileContents];
+
+			const filesMetadata = await this.readJsonFile(adapter, metadataPath);
+			files.push(...filesMetadata);
+
+			for (const file of filesMetadata) {
+				if (file.type !== 'file') continue;
+
+				const cleanPath = this.cleanRelativePath(file.path);
+				const contentPath = this.unifiedService.getFileContentPath(
+					projectId,
+					cleanPath,
 				);
-				files.push(...filesMetadata);
 
-				for (const file of filesMetadata) {
-					if (file.type === 'file') {
-						const cleanPath = file.path.startsWith('/') ? file.path.slice(1) : file.path;
-						const contentPath = this.unifiedService.getFileContentPath(
-							projectId,
-							cleanPath,
-						);
-
-						if (await adapter.exists(contentPath)) {
-							const content = await adapter.readFile(contentPath);
-							fileContents.set(file.path, content);
-						}
-					}
+				if (await adapter.exists(contentPath)) {
+					const content = await adapter.readFile(contentPath);
+					fileContents.set(file.path, content);
 				}
 			}
 		} catch (error) {
@@ -527,5 +546,19 @@ export class StorageAdapterService {
 		}
 
 		return [files, fileContents];
+	}
+
+	private async resolveMetadataPath(
+		adapter: FileSystemAdapter,
+		metadataPath: string,
+		legacyMetadataPath: string,
+	): Promise<string | null> {
+		if (await adapter.exists(metadataPath)) return metadataPath;
+		if (await adapter.exists(legacyMetadataPath)) return legacyMetadataPath;
+		return null;
+	}
+
+	private cleanRelativePath(path: string): string {
+		return path.startsWith('/') ? path.slice(1) : path;
 	}
 }

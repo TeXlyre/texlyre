@@ -23,6 +23,10 @@ export function isValidYjsUrl(url: string): boolean {
 	return isValidYjsProjectId(value.slice(4));
 }
 
+export function generateYjsProjectId(): string {
+	return crypto.randomUUID()
+}
+
 export function parseUrlFragments(url: string): UrlFragments {
 	const parts = url.split('&');
 	const result: UrlFragments = { yjsUrl: '' };
