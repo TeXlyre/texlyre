@@ -62,6 +62,7 @@
   "{provider} token is invalid or expired. Please reconnect.": "{{provider}} token is invalid or expired. Please reconnect.",
   "{size} KB": "{{size}} KB",
   "{size} MB": "{{size}} MB",
+  "Resolve Conflicts ({resolved}/{total} resolved)": "Resolve Conflicts ({{resolved}}/{{total}} resolved)",
   "{totalMatches} match in {count} file": "{{totalMatches}} matches in {{count}} files",
   "{totalMatches} match in {count} file_one": "{{totalMatches}} match in {{count}} file",
   "{totalMatches} match in {count} file_other": "{{totalMatches}} matches in {{count}} files",

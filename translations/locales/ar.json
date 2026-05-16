@@ -59,6 +59,7 @@
   "{count}h ago_few": "قبل {{count}} ساعات",
   "{count}h ago_many": "قبل {{count}} ساعة",
   "{count}h ago_one": "قبل ساعة",
+  "Resolve Conflicts ({resolved}/{total} resolved)": "حل التعارضات (تم حل {{resolved}} من أصل {{total}})",
   "{count}h ago_other": "قبل {{count}} ساعات",
   "{count}h ago_two": "قبل ساعتان",
   "{count}h ago_zero": "لم تمر ساعة",

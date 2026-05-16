@@ -628,6 +628,37 @@
 }
 
 /* ============================================================
+   Conflicts view gutter
+   ============================================================ */
+
+.cm-conflict-gutter {
+	width: 1.4rem;
+}
+
+.cm-conflict-copy-btn {
+	all: unset;
+	cursor: pointer;
+	font-size: 0.7rem;
+	color: var(--pico-primary);
+	opacity: 0.6;
+	line-height: 1;
+	padding: 0 2px;
+	transition: opacity var(--transition-normal);
+}
+
+.cm-conflict-copy-btn:hover {
+	opacity: 1;
+}
+
+.merge-editor-container .cm-mergeView {
+	height: auto;
+}
+
+.merge-editor-container .cm-mergeViewEditors {
+	height: 100%;
+}
+
+/* ============================================================
    Code actions tooltip
    ============================================================ */
 

@@ -1,42 +1,62 @@
 // src/components/conflicts/MergeEditor.tsx
-import { useEffect, useRef } from 'react';
+import { useEffect, useImperativeHandle, useRef, forwardRef } from 'react';
 import { MergeView } from '@codemirror/merge';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { basicSetup } from 'codemirror';
 
+import { conflictsGutterExtension } from '../../extensions/codemirror/ConflictsGutterExtension';
+
+export interface MergeEditorHandle {
+    getMergedContent: () => string;
+}
+
 interface MergeEditorProps {
     local: string;
     remote: string;
-    onMergedChange: (merged: string) => void;
+    initialMerged?: string;
 }
 
-export const MergeEditor: React.FC<MergeEditorProps> = ({ local, remote, onMergedChange }) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const viewRef = useRef<MergeView | null>(null);
+export const MergeEditor = forwardRef<MergeEditorHandle, MergeEditorProps>(
+    ({ local, remote, initialMerged }, ref) => {
+        const containerRef = useRef<HTMLDivElement>(null);
+        const viewRef = useRef<MergeView | null>(null);
 
-    useEffect(() => {
-        if (!containerRef.current) return;
+        useImperativeHandle(ref, () => ({
+            getMergedContent: () => viewRef.current?.a.state.doc.toString() ?? '',
+        }), []);
 
-        const updateListener = EditorView.updateListener.of((update) => {
-            if (update.docChanged) {
-                onMergedChange(update.state.doc.toString());
-            }
-        });
+        useEffect(() => {
+            if (!containerRef.current) return;
+            const getMergeView = () => viewRef.current;
 
-        viewRef.current = new MergeView({
-            a: { doc: local, extensions: [basicSetup, updateListener] },
-            b: { doc: remote, extensions: [basicSetup, EditorState.readOnly.of(true)] },
-            parent: containerRef.current,
-        });
+            viewRef.current = new MergeView({
+                a: {
+                    doc: initialMerged ?? local,
+                    extensions: [basicSetup, EditorView.lineWrapping],
+                },
+                b: {
+                    doc: remote,
+                    extensions: [
+                        basicSetup,
+                        EditorState.readOnly.of(true),
+                        EditorView.lineWrapping,
+                        conflictsGutterExtension(getMergeView),
+                    ],
+                },
+                parent: containerRef.current,
+            });
 
-        return () => {
-            viewRef.current?.destroy();
-            viewRef.current = null;
-        };
-    }, []);
+            return () => {
+                viewRef.current?.destroy();
+                viewRef.current = null;
+            };
+        }, []);
 
-    return <div ref={containerRef} className="merge-editor-container" />;
-};
+        return <div ref={containerRef} className="merge-editor-container" />;
+    }
+);
+
+MergeEditor.displayName = 'MergeEditor';
 
 export default MergeEditor;

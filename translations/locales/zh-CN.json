@@ -63,6 +63,7 @@
   "{count}m ago_zero": "{{count}} 分钟前",
   "{count}phrase translated": "已翻译短语",
   "{count}phrase translated_few": "已翻译短语",
+  "Resolve Conflicts ({resolved}/{total} resolved)": "解决冲突（已解决 {{resolved}}/{{total}}）",
   "{count}phrase translated_many": "已翻译短语",
   "{count}phrase translated_one": "已翻译短语",
   "{count}phrase translated_other": "已翻译短语",
