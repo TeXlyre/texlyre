@@ -312,33 +312,32 @@ export class ProjectDataService {
 		collection: string,
 		yjsState: Uint8Array,
 	): Promise<void> {
+		const docYDoc = new Y.Doc();
+		const docPersistence = new IndexeddbPersistence(collection, docYDoc);
+
+		await new Promise<void>((resolve) => {
+			docPersistence.once('synced', resolve);
+		});
+
+		await docPersistence.clearData();
+		docPersistence.destroy();
+		docYDoc.destroy();
+
+		await new Promise<void>((resolve) => setTimeout(resolve, 100));
+
 		return new Promise<void>((resolve, reject) => {
 			try {
-				const docYDoc = new Y.Doc();
-				const docPersistence = new IndexeddbPersistence(collection, docYDoc);
+				const freshDoc = new Y.Doc();
+				const freshPersistence = new IndexeddbPersistence(collection, freshDoc);
 
-				docPersistence.once('synced', async () => {
-					try {
-						await docPersistence.clearData();
+				freshPersistence.once('synced', () => {
+					Y.applyUpdate(freshDoc, yjsState);
 
-						const freshDoc = new Y.Doc();
-						const freshPersistence = new IndexeddbPersistence(collection, freshDoc);
-
-						freshPersistence.once('synced', () => {
-							Y.applyUpdate(freshDoc, yjsState);
-
-							setTimeout(() => {
-								freshPersistence.destroy();
-								freshDoc.destroy();
-								resolve();
-							}, 500);
-						});
-
-						docPersistence.destroy();
-						docYDoc.destroy();
-					} catch (error) {
-						reject(error);
-					}
+					setTimeout(() => {
+						freshPersistence.destroy();
+						freshDoc.destroy();
+						resolve();
+					}, 500);
 				});
 			} catch (error) {
 				reject(error);

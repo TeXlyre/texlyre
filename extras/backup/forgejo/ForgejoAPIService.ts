@@ -135,7 +135,7 @@ export class ForgejoAPIService {
             `repos/${owner}/${repo}/contents/${filePath}?ref=${ref}`,
         );
         if (data.encoding === 'base64') {
-            return atob(data.content.replace(/\n/g, ''));
+            return atob(data.content.replace(/[\r\n]/g, ''));
         }
         return data.content;
     }

@@ -139,7 +139,7 @@ export class GitHubAPIService {
 			token,
 			`repos/${owner}/${repo}/contents/${path}`,
 		);
-		return atob(data.content.replace(/\n/g, ''));
+		return atob(data.content.replace(/[\r\n]/g, ''));
 	}
 
 	async createOrUpdateFile(
@@ -393,7 +393,7 @@ export class GitHubAPIService {
 			token,
 			`repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${ref}`,
 		);
-		return atob(data.content.replace(/\n/g, ''));
+		return atob(data.content.replace(/[\r\n]/g, ''));
 	}
 
 	async getBlobContent(
@@ -408,7 +408,7 @@ export class GitHubAPIService {
 		);
 		if (data.encoding !== 'base64')
 			throw new Error(`Unsupported blob encoding: ${data.encoding}`);
-		return atob(data.content.replace(/\n/g, ''));
+		return atob(data.content.replace(/[\r\n]/g, ''));
 	}
 
 	async getBranches(
