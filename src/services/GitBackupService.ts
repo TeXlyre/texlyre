@@ -2,6 +2,7 @@
 import { t } from '@/i18n';
 import type { SecretsContextType } from '../contexts/SecretsContext';
 import {
+	computeGitBlobSha,
 	getMimeType,
 	isBinaryFile,
 	isTemporaryFile,
@@ -1121,13 +1122,21 @@ export class GitBackupService<TTarget> {
 		metadataByPath: Map<string, any>,
 		credentials: ResolvedCredentials<TTarget>,
 	): Promise<void> {
+		const existingFile = await fileStorageService.getFileByPath(filePath, true);
+		if (existingFile?.content) {
+			const localSha = await computeGitBlobSha(existingFile.content as string | ArrayBuffer);
+			if (localSha === fileRef) {
+				console.log(`[GitBackupService] File ${existingFile.name} identical to remote. Not downloading`)
+				return
+			}
+		}
+
 		await fileStorageService.createDirectoryPath(filePath);
 
 		const rawContentString = await this.adapter.readFile(
 			credentials.token, credentials.target, fileRef, credentials.branch,
 		);
 
-		const existingFile = await fileStorageService.getFileByPath(filePath, true);
 		const remoteMetadata = metadataByPath.get(filePath);
 		const binary = remoteMetadata ? remoteMetadata.isBinary : isBinaryFile(filePath);
 

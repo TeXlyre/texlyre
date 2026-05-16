@@ -63,6 +63,18 @@ export function formatFileSize(size?: number): string {
 	return t('{size} MB', { size: (size / (1024 * 1024)).toFixed(1) });
 }
 
+export async function computeGitBlobSha(content: string | ArrayBuffer): Promise<string> {
+	const bytes = typeof content === 'string'
+		? new TextEncoder().encode(content)
+		: new Uint8Array(content);
+	const header = new TextEncoder().encode(`blob ${bytes.byteLength}\0`);
+	const data = new Uint8Array(header.byteLength + bytes.byteLength);
+	data.set(header, 0);
+	data.set(bytes, header.byteLength);
+	const hash = await crypto.subtle.digest('SHA-1', data);
+	return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 export function getFilenameFromPath(path: string): string {
 	const parts = path.split('/');
 	return parts[parts.length - 1];
