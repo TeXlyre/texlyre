@@ -98,7 +98,7 @@ const giteaBackupAdapter: GitBackupAdapter<GiteaTarget> = {
             branch,
         ),
 
-    getFileRefForPath: (item: GitTreeItem) => item.sha || item.path || '',
+    getFileRefForPath: (_item: GitTreeItem, path: string) => path,
 
     readFile: (token, target, path, branch) =>
         giteaAPIService.getFileContent(

@@ -98,6 +98,8 @@ const forgejoBackupAdapter: GitBackupAdapter<ForgejoTarget> = {
             branch,
         ),
 
+    getFileRefForPath: (_item: GitTreeItem, path: string) => path,
+
     readFile: (token, target, path, branch) =>
         forgejoAPIService.getFileContent(
             token,

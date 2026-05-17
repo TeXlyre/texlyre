@@ -955,7 +955,7 @@ export class GitBackupService<TTarget> {
             }
 
             const projectData = projectFiles.get(currentProjectId)!;
-            const ref = item.path;
+            const ref = this.getFileRef(item, item.path, branch);
 
             if (pathParts[2] === 'metadata.json') {
                 projectData.metadataRef = ref;
