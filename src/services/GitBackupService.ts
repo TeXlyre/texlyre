@@ -719,7 +719,8 @@ export class GitBackupService<TTarget> {
                         finalBranch,
                     );
 
-                    const projectMetadata = JSON.parse(
+                    const projectMetadata = this.normalizeProjectMetadata(
+                        missingProjId,
                         this.decodeRemoteTextContent(metadataContent),
                     );
 
@@ -753,7 +754,7 @@ export class GitBackupService<TTarget> {
                         type: 'import_error',
                         message: t('Failed to import missing project: {missingProjId}', {
                             missingProjId,
-                        }),
+                        }) + ` (${this.getErrorMessage(error)})`,
                     });
                 }
             }
@@ -768,7 +769,8 @@ export class GitBackupService<TTarget> {
                     finalBranch,
                 );
 
-                const projectMetadata = JSON.parse(
+                const projectMetadata = this.normalizeProjectMetadata(
+                    projId,
                     this.decodeRemoteTextContent(metadataContent),
                 );
 
@@ -1023,6 +1025,20 @@ export class GitBackupService<TTarget> {
         };
 
         await authDb.put('projects', newProject);
+    }
+
+    private normalizeProjectMetadata(projectId: string, content: string): any {
+        const projectMetadata = JSON.parse(content);
+
+        return {
+            ...projectMetadata,
+            id: projectMetadata.id || projectId,
+            docUrl: projectMetadata.docUrl || `yjs:${projectId}`,
+        };
+    }
+
+    private getErrorMessage(error: unknown): string {
+        return error instanceof Error ? error.message : String(error);
     }
 
     private async importProjectSafely(
