@@ -138,6 +138,34 @@ export class GitBackupService<TTarget> {
 
     constructor(private adapter: GitBackupAdapter<TTarget>) { }
 
+    private binaryStringToArrayBuffer(content: string): ArrayBuffer {
+        const bytes = new Uint8Array(content.length);
+
+        for (let i = 0; i < content.length; i++) {
+            bytes[i] = content.charCodeAt(i);
+        }
+
+        return bytes.buffer;
+    }
+
+    private decodeRemoteFileContent(
+        content: string,
+        isBinary: boolean,
+    ): string | ArrayBuffer {
+        const buffer = this.binaryStringToArrayBuffer(content);
+        if (isBinary) return buffer;
+
+        try {
+            return new TextDecoder('utf-8').decode(buffer);
+        } catch {
+            return content;
+        }
+    }
+
+    private decodeRemoteTextContent(content: string): string {
+        return this.decodeRemoteFileContent(content, false) as string;
+    }
+
     setSettings(settings: GitBackupSettings): void {
         this.settingsCache = { ...settings };
 
@@ -691,7 +719,9 @@ export class GitBackupService<TTarget> {
                         finalBranch,
                     );
 
-                    const projectMetadata = JSON.parse(metadataContent);
+                    const projectMetadata = JSON.parse(
+                        this.decodeRemoteTextContent(metadataContent),
+                    );
 
                     await this.createProjectDirectly(projectMetadata, user.id);
 
@@ -738,7 +768,9 @@ export class GitBackupService<TTarget> {
                     finalBranch,
                 );
 
-                const projectMetadata = JSON.parse(metadataContent);
+                const projectMetadata = JSON.parse(
+                    this.decodeRemoteTextContent(metadataContent),
+                );
 
                 await this.importProjectSafely(
                     projId,
@@ -1021,7 +1053,9 @@ export class GitBackupService<TTarget> {
                     branch,
                 );
 
-                remoteDocumentsMetadata = JSON.parse(metadataContent);
+                remoteDocumentsMetadata = JSON.parse(
+                    this.decodeRemoteTextContent(metadataContent),
+                );
             } catch (error) {
                 console.error('Failed to load documents metadata from remote:', error);
             }
@@ -1055,12 +1089,14 @@ export class GitBackupService<TTarget> {
             } = {};
 
             if (docData.txtRef) {
-                contentData.readableContent = await this.adapter.readFile(
+                const readableContent = await this.adapter.readFile(
                     credentials.token,
                     credentials.target,
                     docData.txtRef,
                     branch,
                 );
+                contentData.readableContent =
+                    this.decodeRemoteTextContent(readableContent);
             }
 
             if (docData.yjsRef) {
@@ -1112,7 +1148,9 @@ export class GitBackupService<TTarget> {
                     branch,
                 );
 
-                remoteFilesMetadata = JSON.parse(metadataContent);
+                remoteFilesMetadata = JSON.parse(
+                    this.decodeRemoteTextContent(metadataContent),
+                );
             } catch (error) {
                 console.error('Failed to load files metadata from remote:', error);
             }
@@ -1193,19 +1231,10 @@ export class GitBackupService<TTarget> {
                     ? remoteMetadata.isBinary
                     : isBinaryFile(filePath);
 
-                let finalContent: string | ArrayBuffer;
-
-                if (isBinary) {
-                    const uint8Array = new Uint8Array(rawContentString.length);
-
-                    for (let i = 0; i < rawContentString.length; i++) {
-                        uint8Array[i] = rawContentString.charCodeAt(i);
-                    }
-
-                    finalContent = uint8Array.buffer;
-                } else {
-                    finalContent = rawContentString;
-                }
+                const finalContent = this.decodeRemoteFileContent(
+                    rawContentString,
+                    isBinary,
+                );
 
                 const fileSize =
                     finalContent instanceof ArrayBuffer

@@ -1,7 +1,7 @@
 // scripts/generate-plugins-index.js
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,7 +9,7 @@ const rootDir = path.join(__dirname, '..');
 
 async function loadConfig() {
     const configPath = path.join(rootDir, 'texlyre.config.ts');
-    const { default: config } = await import(configPath);
+    const { default: config } = await import(pathToFileURL(configPath).href);
     return config;
 }
 
