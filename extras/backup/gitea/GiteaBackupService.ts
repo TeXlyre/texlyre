@@ -4,7 +4,6 @@ import {
     GitBackupService,
     type GitBackupAdapter,
     type GitBackupChange,
-    type GitTreeItem,
 } from '@/services/GitBackupService';
 import { toBase64 } from '@/utils/fileUtils.ts';
 import { giteaAPIService } from './GiteaAPIService';
@@ -131,9 +130,18 @@ const sharedGiteaBackupService = new GitBackupService(giteaBackupAdapter);
 
 export const giteaBackupService = {
     setSettings: sharedGiteaBackupService.setSettings.bind(sharedGiteaBackupService),
+
     setSecretsContext: sharedGiteaBackupService.setSecretsContext.bind(
         sharedGiteaBackupService,
     ),
+
+    setRecordsContext: sharedGiteaBackupService.setRecordsContext.bind(
+        sharedGiteaBackupService,
+    ),
+    setCurrentProjectId: sharedGiteaBackupService.setCurrentProjectId.bind(
+        sharedGiteaBackupService,
+    ),
+
     requestAccess: sharedGiteaBackupService.requestAccess.bind(
         sharedGiteaBackupService,
     ),

@@ -68,6 +68,7 @@ import { LSPConfigProvider } from './contexts/LSPConfigContext';
 import { FileSystemBackupProvider } from './contexts/FileSystemBackupContext';
 import { OfflineProvider } from './contexts/OfflineContext';
 import { PropertiesProvider } from './contexts/PropertiesContext';
+import { RecordsProvider } from './contexts/RecordsContext';
 import { SecretsContext, SecretsProvider } from './contexts/SecretsContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -125,22 +126,24 @@ function App() {
 					<OfflineProvider>
 						<AuthProvider>
 							<PropertiesProvider>
-								<ThemeProvider
-									defaultThemeId="texlyre-theme"
-									defaultVariant="system"
-								>
+								<RecordsProvider >
+									<ThemeProvider
+										defaultThemeId="texlyre-theme"
+										defaultVariant="system"
+									>
 
-									<AppBootstrap />
-									<SecretsProvider>
-										<FileSystemBackupProvider>
-											<LSPConfigProvider>
-												<EditorProvider>
-													<AppContent />
-												</EditorProvider>
-											</LSPConfigProvider>
-										</FileSystemBackupProvider>
-									</SecretsProvider>
-								</ThemeProvider>
+										<AppBootstrap />
+										<SecretsProvider>
+											<FileSystemBackupProvider>
+												<LSPConfigProvider>
+													<EditorProvider>
+														<AppContent />
+													</EditorProvider>
+												</LSPConfigProvider>
+											</FileSystemBackupProvider>
+										</SecretsProvider>
+									</ThemeProvider>
+								</RecordsProvider>
 							</PropertiesProvider>
 						</AuthProvider>
 					</OfflineProvider>

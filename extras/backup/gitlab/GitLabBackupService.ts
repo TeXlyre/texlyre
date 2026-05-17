@@ -120,9 +120,18 @@ export const gitLabBackupService = {
     setSettings: sharedGitLabBackupService.setSettings.bind(
         sharedGitLabBackupService,
     ),
+
     setSecretsContext: sharedGitLabBackupService.setSecretsContext.bind(
         sharedGitLabBackupService,
     ),
+
+    setRecordsContext: sharedGitLabBackupService.setRecordsContext.bind(
+        sharedGitLabBackupService,
+    ),
+    setCurrentProjectId: sharedGitLabBackupService.setCurrentProjectId.bind(
+        sharedGitLabBackupService,
+    ),
+
     requestAccess: sharedGitLabBackupService.requestAccess.bind(
         sharedGitLabBackupService,
     ),

@@ -131,6 +131,13 @@ export const gitHubBackupService = {
 		sharedGitHubBackupService,
 	),
 
+	setRecordsContext: sharedGitHubBackupService.setRecordsContext.bind(
+		sharedGitHubBackupService,
+	),
+	setCurrentProjectId: sharedGitHubBackupService.setCurrentProjectId.bind(
+		sharedGitHubBackupService,
+	),
+
 	requestAccess: sharedGitHubBackupService.requestAccess.bind(
 		sharedGitHubBackupService,
 	),

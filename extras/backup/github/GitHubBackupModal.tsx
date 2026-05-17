@@ -15,6 +15,7 @@ import SettingsModal from '@/components/settings/SettingsModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useSecrets } from '@/hooks/useSecrets';
 import { useSettings } from '@/hooks/useSettings';
+import { useRecords } from '@/hooks/useRecords';
 import { formatDate } from '@/utils/dateUtils';
 import { gitHubAPIService } from './GitHubAPIService';
 import { gitHubBackupService } from './GitHubBackupService';
@@ -56,6 +57,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
 
   const { getProjectById } = useAuth();
   const secrets = useSecrets();
+  const records = useRecords();
   const { getSetting } = useSettings();
 
   useEffect(() => {
@@ -107,6 +109,16 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
   useEffect(() => {
     gitHubBackupService.setSecretsContext(secrets);
   }, [secrets]);
+
+  useEffect(() => {
+    gitHubBackupService.setRecordsContext(records);
+  }, [records]);
+
+  useEffect(() => {
+    const scopedProjectId =
+      isInEditor && syncScope === 'current' ? currentProjectId ?? undefined : undefined;
+    gitHubBackupService.setCurrentProjectId(scopedProjectId);
+  }, [isInEditor, syncScope, currentProjectId]);
 
   useEffect(() => {
     const unsubscribeStatus = gitHubBackupService.addStatusListener(setStatus);

@@ -4,7 +4,6 @@ import {
     GitBackupService,
     type GitBackupAdapter,
     type GitBackupChange,
-    type GitTreeItem,
 } from '@/services/GitBackupService';
 import { toBase64 } from '@/utils/fileUtils.ts';
 import { forgejoAPIService } from './ForgejoAPIService';
@@ -133,9 +132,18 @@ export const forgejoBackupService = {
     setSettings: sharedForgejoBackupService.setSettings.bind(
         sharedForgejoBackupService,
     ),
+
     setSecretsContext: sharedForgejoBackupService.setSecretsContext.bind(
         sharedForgejoBackupService,
     ),
+
+    setRecordsContext: sharedForgejoBackupService.setRecordsContext.bind(
+        sharedForgejoBackupService,
+    ),
+    setCurrentProjectId: sharedForgejoBackupService.setCurrentProjectId.bind(
+        sharedForgejoBackupService,
+    ),
+
     requestAccess: sharedForgejoBackupService.requestAccess.bind(
         sharedForgejoBackupService,
     ),
