@@ -118,7 +118,7 @@ export interface NameValidationResult {
 
 const ILLEGAL_NAME_CHARS = /[<>:"/\\|?*\x00-\x1F]/;
 // NOTE (fabawi): File gets excluded from ZIP on WINDOWS if name contains the following
-const RESERVED_WINDOWS_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i;
+const RESERVED_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$|^\.texlyre_/i;
 const MAX_NAME_BYTES = 255;
 
 export function validateFileName(name: string): NameValidationResult {
@@ -136,7 +136,7 @@ export function validateFileName(name: string): NameValidationResult {
 	if (/[. ]$/.test(trimmed)) {
 		return { valid: false, error: t('Name cannot end with a space or period') };
 	}
-	if (RESERVED_WINDOWS_NAMES.test(trimmed)) {
+	if (RESERVED_NAMES.test(trimmed)) {
 		return { valid: false, error: t('"{name}" is a reserved system name', { name: trimmed }) };
 	}
 	if (new TextEncoder().encode(trimmed).length > MAX_NAME_BYTES) {

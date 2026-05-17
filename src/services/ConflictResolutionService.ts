@@ -3,6 +3,8 @@ import * as Y from 'yjs';
 import { toArrayBuffer } from '../utils/fileUtils';
 import { threeWayMerge } from '../utils/textDiffUtils';
 
+const FILES_METADATA = '.texlyre_metadata.json';
+
 export interface FileConflict {
     path: string;
     isBinary: boolean;
@@ -58,7 +60,7 @@ class ConflictResolutionService {
     async resolveConflicts(
         conflicts: FileConflict[],
     ): Promise<Map<string, ConflictResolution> | null> {
-        const metadataConflicts = conflicts.filter((c) => c.path.endsWith('metadata.json'));
+        const metadataConflicts = conflicts.filter((c) => c.path.endsWith(FILES_METADATA));
         const yjsConflicts = conflicts.filter((c) => c.path.endsWith('.yjs'));
 
         const docIdToPaths = this.extractDocumentIdToPaths(metadataConflicts);
@@ -74,7 +76,8 @@ class ConflictResolutionService {
 
         const realConflicts = conflicts.filter(
             (c) =>
-                !c.path.endsWith('metadata.json') &&
+                !c.path.endsWith(FILES_METADATA) &&
+                !c.path.endsWith('/metadata.json') &&
                 !c.path.endsWith('.yjs') &&
                 !linkedTxtConflicts.includes(c),
         );
@@ -116,7 +119,7 @@ class ConflictResolutionService {
 
         for (const conflict of metadataConflicts) {
             if (!conflict.path.includes('/files/')) continue;
-            const projectPrefix = conflict.path.replace(/\/files\/metadata\.json$/, '/files');
+            const projectPrefix = conflict.path.replace(`/files/${FILES_METADATA}`, '/files');
 
             const collect = (source: string | ArrayBuffer) => {
                 try {
@@ -183,7 +186,7 @@ class ConflictResolutionService {
         resolutions: Map<string, ConflictResolution>,
     ): void {
         for (const [path, resolution] of resolutions.entries()) {
-            if (!path.endsWith('metadata.json') || !path.includes('/files/')) continue;
+            if (!path.endsWith(FILES_METADATA) || !path.includes('/files/')) continue;
             if (resolution.action !== 'merged') continue;
 
             try {
@@ -210,7 +213,7 @@ class ConflictResolutionService {
         resolutions: Map<string, ConflictResolution>,
     ): void {
         for (const conflict of metadataConflicts) {
-            const pathPrefix = conflict.path.replace(/\/[^/]+\/metadata\.json$/, '/');
+            const pathPrefix = conflict.path.replace(`/${FILES_METADATA}`, '/');
             const relevantResolutions = [...resolutions.entries()]
                 .filter(([p]) => p.startsWith(pathPrefix));
 

@@ -255,9 +255,6 @@ const ConflictResolutionModal: React.FC = () => {
                             >
                                 {t('Next →')}
                             </button>
-                        </div>
-
-                        <div className="conflict-actions-right">
                             {!showComplete && (
                                 <>
                                     <button
@@ -290,6 +287,10 @@ const ConflictResolutionModal: React.FC = () => {
                                     )}
                                 </>
                             )}
+                        </div>
+
+                        <div className="conflict-actions-right">
+
                             <button className="button secondary" onClick={handleCancel}>
                                 {t('Cancel Push')}
                             </button>

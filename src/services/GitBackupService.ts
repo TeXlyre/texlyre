@@ -22,6 +22,9 @@ import {
 } from './FileStorageService';
 import { ProjectDataService } from './ProjectDataService';
 
+const FILES_METADATA = '.texlyre_metadata.json'
+const PROJECT_METADATA = 'metadata.json'
+
 export interface GitBackupStatus {
 	isConnected: boolean;
 	isEnabled: boolean;
@@ -654,7 +657,7 @@ export class GitBackupService<TTarget> {
 				hasReadableContent: doc.hasReadableContent,
 			}));
 			await pushIfChanged(
-				`${projectPath}/documents/metadata.json`,
+				`${projectPath}/documents/${FILES_METADATA}`,
 				JSON.stringify(documentsMetadata, null, 2),
 			);
 		}
@@ -689,7 +692,7 @@ export class GitBackupService<TTarget> {
 					})),
 			];
 			await pushIfChanged(
-				`${projectPath}/files/metadata.json`,
+				`${projectPath}/files/${FILES_METADATA}`,
 				JSON.stringify(allFilesMetadata, null, 2),
 			);
 		}
@@ -1350,10 +1353,10 @@ export class GitBackupService<TTarget> {
 			const projectData = projectFiles.get(currentProjectId)!;
 			const ref = this.getFileRef(item, item.path, branch);
 
-			if (pathParts[2] === 'metadata.json') {
+			if (pathParts[2] === `${PROJECT_METADATA}`) {
 				projectData.metadataRef = ref;
 			} else if (pathParts[2] === 'documents') {
-				if (pathParts[3] === 'metadata.json') {
+				if (pathParts[3] === `${FILES_METADATA}`) {
 					projectData.documentsMetadataRef = ref;
 				} else if (pathParts[3]) {
 					const fileName = pathParts[3];
@@ -1366,7 +1369,7 @@ export class GitBackupService<TTarget> {
 					else if (fileName.endsWith('.yjs')) docData.yjsRef = ref;
 				}
 			} else if (pathParts[2] === 'files') {
-				if (pathParts[3] === 'metadata.json') {
+				if (pathParts[3] === `${FILES_METADATA}`) {
 					projectData.filesMetadataRef = ref;
 				} else if (pathParts[3]) {
 					projectData.files.set(`/${pathParts.slice(3).join('/')}`, ref);
