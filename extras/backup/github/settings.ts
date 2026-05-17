@@ -68,6 +68,15 @@ export const getGitHubBackupSettings = (): Setting[] => [
         defaultValue: 3,
     },
     {
+        id: 'github-backup-import-after-push',
+        category: t('Backup'),
+        subcategory: t('GitHub'),
+        type: 'checkbox',
+        label: t('Import After Push'),
+        description: t('Automatically import from the repository after a successful push to reconcile local state with resolved conflicts'),
+        defaultValue: true,
+    },
+    {
         id: 'github-backup-activity-history-limit',
         category: t('Backup'),
         subcategory: t('GitHub'),

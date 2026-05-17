@@ -78,6 +78,8 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
         const activityHistoryLimit =
             (getSetting('gitea-backup-activity-history-limit')?.value as number) ||
             50;
+        const importAfterPush =
+            (getSetting('gitea-backup-import-after-push')?.value as boolean) ?? true;
 
         giteaBackupService.setSettings({
             apiEndpoint,
@@ -91,6 +93,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
             requestTimeout,
             maxRetryAttempts,
             activityHistoryLimit,
+            importAfterPush,
         });
 
         setSelectedBranch(defaultBranch);

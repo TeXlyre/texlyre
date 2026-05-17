@@ -78,6 +78,9 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
     const activityHistoryLimit =
       (getSetting('github-backup-activity-history-limit')?.value as number) ||
       50;
+    const importAfterPush =
+      (getSetting('github-backup-import-after-push')?.value as boolean) ?? true;
+
 
     gitHubBackupService.setSettings({
       apiEndpoint,
@@ -91,6 +94,7 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
       requestTimeout,
       maxRetryAttempts,
       activityHistoryLimit,
+      importAfterPush,
     });
 
     setSelectedBranch(defaultBranch);

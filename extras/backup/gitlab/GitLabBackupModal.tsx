@@ -78,6 +78,8 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
         const activityHistoryLimit =
             (getSetting('gitlab-backup-activity-history-limit')?.value as number) ||
             50;
+        const importAfterPush =
+            (getSetting('gitlab-backup-import-after-push')?.value as boolean) ?? true;
 
         gitLabBackupService.setSettings({
             apiEndpoint,
@@ -91,6 +93,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
             requestTimeout,
             maxRetryAttempts,
             activityHistoryLimit,
+            importAfterPush,
         });
 
         setSelectedBranch(defaultBranch);

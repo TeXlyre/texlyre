@@ -78,6 +78,8 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
         const activityHistoryLimit =
             (getSetting('forgejo-backup-activity-history-limit')?.value as number) ||
             50;
+        const importAfterPush =
+            (getSetting('forgejo-backup-import-after-push')?.value as boolean) ?? true;
 
         forgejoBackupService.setSettings({
             apiEndpoint,
@@ -91,6 +93,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
             requestTimeout,
             maxRetryAttempts,
             activityHistoryLimit,
+            importAfterPush,
         });
 
         setSelectedBranch(defaultBranch);

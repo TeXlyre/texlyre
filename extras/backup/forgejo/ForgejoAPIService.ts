@@ -134,10 +134,12 @@ export class ForgejoAPIService {
             token,
             `repos/${owner}/${repo}/contents/${filePath}?ref=${ref}`,
         );
-        if (data.encoding === 'base64') {
-            return atob(data.content.replace(/[\r\n]/g, ''));
+        if (data.encoding !== 'base64') {
+            throw new Error(
+                `Unexpected encoding '${data.encoding}' for '${filePath}'; expected base64`,
+            );
         }
-        return data.content;
+        return atob(data.content.replace(/[\r\n]/g, ''));
     }
 
     async createOrUpdateFiles(

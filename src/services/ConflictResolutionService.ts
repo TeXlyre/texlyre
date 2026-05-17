@@ -10,6 +10,7 @@ export interface FileConflict {
     localContent: string | ArrayBuffer;
     remoteContent: string | ArrayBuffer;
     previousRef?: string;
+    localMatchesRemote?: boolean;
 }
 
 export type ConflictResolution =
@@ -40,7 +41,7 @@ class ConflictResolutionService {
         }
 
         if (base !== undefined && base === local) {
-            return { resolved: true, content: remote };
+            return { resolved: true, content: remote, unchanged: true };
         }
 
         if (base !== undefined && base === remote) {
@@ -62,14 +63,27 @@ class ConflictResolutionService {
     async resolveConflicts(
         conflicts: FileConflict[],
     ): Promise<Map<string, ConflictResolution> | null> {
-        const metadataConflicts = conflicts.filter((c) => c.path.endsWith('metadata.json'));
-        const yjsConflicts = conflicts.filter((c) => c.path.endsWith('.yjs'));
+        const resolutions = new Map<string, ConflictResolution>();
+
+        for (const conflict of conflicts) {
+            if (conflict.localMatchesRemote) {
+                resolutions.set(conflict.path, { action: 'keep-remote' });
+            }
+        }
+
+        const unresolvedConflicts = conflicts.filter((c) => !resolutions.has(c.path));
+
+        const metadataConflicts = unresolvedConflicts.filter((c) => c.path.endsWith('metadata.json'));
+        const yjsConflicts = unresolvedConflicts.filter((c) => c.path.endsWith('.yjs'));
+
         const linkedDocumentIds = this.extractLinkedDocumentIds(metadataConflicts);
-        const linkedTxtConflicts = conflicts.filter((c) =>
+
+        const linkedTxtConflicts = unresolvedConflicts.filter((c) =>
             c.path.endsWith('.txt') &&
             linkedDocumentIds.has(this.basenameWithoutExt(c.path)),
         );
-        const realConflicts = conflicts.filter(
+
+        const realConflicts = unresolvedConflicts.filter(
             (c) =>
                 !c.path.endsWith('metadata.json') &&
                 !c.path.endsWith('.yjs') &&
@@ -77,7 +91,6 @@ class ConflictResolutionService {
         );
 
         if (realConflicts.length === 0) {
-            const resolutions = new Map<string, ConflictResolution>();
             this.deriveMetadataResolutions(metadataConflicts, resolutions);
             this.deriveLinkedTxtResolutions(linkedTxtConflicts, conflicts, resolutions);
             await this.deriveYjsResolutions(yjsConflicts, resolutions);
@@ -87,14 +100,24 @@ class ConflictResolutionService {
         return new Promise((resolve) => {
             const request: ConflictResolutionRequest = {
                 conflicts: realConflicts,
-                resolve: async (resolutions) => {
-                    if (resolutions === null) { resolve(null); return; }
+                resolve: async (userResolutions) => {
+                    if (userResolutions === null) {
+                        resolve(null);
+                        return;
+                    }
+
+                    for (const [path, resolution] of userResolutions.entries()) {
+                        resolutions.set(path, resolution);
+                    }
+
                     this.deriveMetadataResolutions(metadataConflicts, resolutions);
                     this.deriveLinkedTxtResolutions(linkedTxtConflicts, conflicts, resolutions);
                     await this.deriveYjsResolutions(yjsConflicts, resolutions);
+
                     resolve(resolutions);
                 },
             };
+
             this.listeners.forEach((listener) => listener(request));
         });
     }
@@ -280,7 +303,12 @@ class ConflictResolutionService {
             const txtPath = conflict.path.replace(/\.yjs$/, '.txt');
             const txtResolution = resolutions.get(txtPath);
 
-            if (!txtResolution || txtResolution.action === 'keep-local') {
+            if (!txtResolution) {
+                resolutions.set(conflict.path, { action: 'keep-remote' });
+                continue;
+            }
+
+            if (txtResolution.action === 'keep-local') {
                 resolutions.set(conflict.path, { action: 'keep-local' });
                 continue;
             }

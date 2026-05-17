@@ -68,6 +68,15 @@ export const getGiteaBackupSettings = (): Setting[] => [
         defaultValue: 3,
     },
     {
+        id: 'gitea-backup-import-after-push',
+        category: t('Backup'),
+        subcategory: t('Gitea'),
+        type: 'checkbox',
+        label: t('Import After Push'),
+        description: t('Automatically import from the repository after a successful push to reconcile local state with resolved conflicts'),
+        defaultValue: true,
+    },
+    {
         id: 'gitea-backup-activity-history-limit',
         category: t('Backup'),
         subcategory: t('Gitea'),
