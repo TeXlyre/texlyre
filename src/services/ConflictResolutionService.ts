@@ -10,7 +10,6 @@ export interface FileConflict {
     localContent: string | ArrayBuffer;
     remoteContent: string | ArrayBuffer;
     previousRef?: string;
-    localMatchesRemote?: boolean;
 }
 
 export type ConflictResolution =
@@ -39,15 +38,12 @@ class ConflictResolutionService {
         if (local === remote) {
             return { resolved: true, content: local, unchanged: base === local };
         }
-
         if (base !== undefined && base === local) {
-            return { resolved: true, content: remote, unchanged: true };
+            return { resolved: true, content: remote };
         }
-
         if (base !== undefined && base === remote) {
             return { resolved: true, content: local };
         }
-
         if (isBinary || base === undefined) {
             return { resolved: false };
         }
@@ -56,68 +52,54 @@ class ConflictResolutionService {
         if (!merged.hasConflicts) {
             return { resolved: true, content: merged.merged };
         }
-
         return { resolved: false };
     }
 
     async resolveConflicts(
         conflicts: FileConflict[],
     ): Promise<Map<string, ConflictResolution> | null> {
-        const resolutions = new Map<string, ConflictResolution>();
+        const metadataConflicts = conflicts.filter((c) => c.path.endsWith('metadata.json'));
+        const yjsConflicts = conflicts.filter((c) => c.path.endsWith('.yjs'));
 
-        for (const conflict of conflicts) {
-            if (conflict.localMatchesRemote) {
-                resolutions.set(conflict.path, { action: 'keep-remote' });
-            }
+        const docIdToPaths = this.extractDocumentIdToPaths(metadataConflicts);
+        const pathToDocId = new Map<string, string>();
+        for (const [docId, paths] of docIdToPaths) {
+            for (const p of paths) pathToDocId.set(p, docId);
         }
 
-        const unresolvedConflicts = conflicts.filter((c) => !resolutions.has(c.path));
-
-        const metadataConflicts = unresolvedConflicts.filter((c) => c.path.endsWith('metadata.json'));
-        const yjsConflicts = unresolvedConflicts.filter((c) => c.path.endsWith('.yjs'));
-
-        const linkedDocumentIds = this.extractLinkedDocumentIds(metadataConflicts);
-
-        const linkedTxtConflicts = unresolvedConflicts.filter((c) =>
+        const linkedTxtConflicts = conflicts.filter((c) =>
             c.path.endsWith('.txt') &&
-            linkedDocumentIds.has(this.basenameWithoutExt(c.path)),
+            docIdToPaths.has(this.basenameWithoutExt(c.path)),
         );
 
-        const realConflicts = unresolvedConflicts.filter(
+        const realConflicts = conflicts.filter(
             (c) =>
                 !c.path.endsWith('metadata.json') &&
                 !c.path.endsWith('.yjs') &&
                 !linkedTxtConflicts.includes(c),
         );
 
-        if (realConflicts.length === 0) {
+        const derive = async (resolutions: Map<string, ConflictResolution>) => {
             this.deriveMetadataResolutions(metadataConflicts, resolutions);
-            this.deriveLinkedTxtResolutions(linkedTxtConflicts, conflicts, resolutions);
+            this.deriveLinkedTxtResolutions(linkedTxtConflicts, pathToDocId, resolutions);
             await this.deriveYjsResolutions(yjsConflicts, resolutions);
+        };
+
+        if (realConflicts.length === 0) {
+            const resolutions = new Map<string, ConflictResolution>();
+            await derive(resolutions);
             return resolutions;
         }
 
         return new Promise((resolve) => {
             const request: ConflictResolutionRequest = {
                 conflicts: realConflicts,
-                resolve: async (userResolutions) => {
-                    if (userResolutions === null) {
-                        resolve(null);
-                        return;
-                    }
-
-                    for (const [path, resolution] of userResolutions.entries()) {
-                        resolutions.set(path, resolution);
-                    }
-
-                    this.deriveMetadataResolutions(metadataConflicts, resolutions);
-                    this.deriveLinkedTxtResolutions(linkedTxtConflicts, conflicts, resolutions);
-                    await this.deriveYjsResolutions(yjsConflicts, resolutions);
-
+                resolve: async (resolutions) => {
+                    if (resolutions === null) { resolve(null); return; }
+                    await derive(resolutions);
                     resolve(resolutions);
                 },
             };
-
             this.listeners.forEach((listener) => listener(request));
         });
     }
@@ -129,49 +111,56 @@ class ConflictResolutionService {
         };
     }
 
-    private extractLinkedDocumentIds(metadataConflicts: FileConflict[]): Set<string> {
-        const documentIds = new Set<string>();
+    private extractDocumentIdToPaths(metadataConflicts: FileConflict[]): Map<string, Set<string>> {
+        const docIdToPaths = new Map<string, Set<string>>();
 
         for (const conflict of metadataConflicts) {
             if (!conflict.path.includes('/files/')) continue;
+            const projectPrefix = conflict.path.replace(/\/files\/metadata\.json$/, '/files');
 
-            try {
-                const local = JSON.parse(typeof conflict.localContent === 'string'
-                    ? conflict.localContent
-                    : new TextDecoder().decode(conflict.localContent));
-                const arr: any[] = Array.isArray(local) ? local : [local];
-                for (const entry of arr) {
-                    if (entry.documentId) documentIds.add(entry.documentId);
+            const collect = (source: string | ArrayBuffer) => {
+                try {
+                    const parsed = JSON.parse(this.toText(source));
+                    const arr: any[] = Array.isArray(parsed) ? parsed : [parsed];
+                    for (const entry of arr) {
+                        if (!entry.documentId || !entry.path) continue;
+                        const fullPath = `${projectPrefix}${entry.path}`;
+                        if (!docIdToPaths.has(entry.documentId)) {
+                            docIdToPaths.set(entry.documentId, new Set());
+                        }
+                        docIdToPaths.get(entry.documentId)!.add(fullPath);
+                    }
+                } catch {
+                    // unparseable metadata, skip
                 }
-            } catch {
-                // unparseable metadata, skip
-            }
+            };
+
+            collect(conflict.localContent);
+            collect(conflict.remoteContent);
         }
 
-        return documentIds;
+        return docIdToPaths;
     }
 
     private deriveLinkedTxtResolutions(
         linkedTxtConflicts: FileConflict[],
-        allConflicts: FileConflict[],
+        pathToDocId: Map<string, string>,
         resolutions: Map<string, ConflictResolution>,
     ): void {
+        const docIdToResolvedPath = new Map<string, string>();
+        for (const [path, docId] of pathToDocId) {
+            if (resolutions.has(path)) docIdToResolvedPath.set(docId, path);
+        }
+
         for (const txtConflict of linkedTxtConflicts) {
             const docId = this.basenameWithoutExt(txtConflict.path);
-            const linkedFileConflict = allConflicts.find(
-                (c) => !c.path.endsWith('metadata.json') &&
-                    !c.path.endsWith('.yjs') &&
-                    !c.path.endsWith('.txt') &&
-                    resolutions.has(c.path) &&
-                    this.conflictContentMatches(c, txtConflict),
-            );
+            const linkedFilePath = docIdToResolvedPath.get(docId);
+            const fileResolution = linkedFilePath ? resolutions.get(linkedFilePath) : undefined;
 
-            if (!linkedFileConflict) {
+            if (!fileResolution) {
                 resolutions.set(txtConflict.path, { action: 'keep-local' });
                 continue;
             }
-
-            const fileResolution = resolutions.get(linkedFileConflict.path)!;
 
             if (fileResolution.action === 'keep-local') {
                 resolutions.set(txtConflict.path, { action: 'keep-local' });
@@ -198,10 +187,7 @@ class ConflictResolutionService {
             if (resolution.action !== 'merged') continue;
 
             try {
-                const arr = JSON.parse(typeof (resolution as any).content === 'string'
-                    ? (resolution as any).content
-                    : new TextDecoder().decode((resolution as any).content));
-
+                const arr = JSON.parse(this.toText((resolution as any).content));
                 const updated = arr.map((entry: any) => {
                     if (entry.documentId !== docId) return entry;
                     if (fileResolution.action === 'keep-remote') return entry;
@@ -209,7 +195,6 @@ class ConflictResolutionService {
                         ? { ...entry, lastModified: Date.now() }
                         : entry;
                 });
-
                 resolutions.set(path, {
                     action: 'merged',
                     content: JSON.stringify(updated, null, 2),
@@ -218,16 +203,6 @@ class ConflictResolutionService {
                 // leave as-is
             }
         }
-    }
-
-    private conflictContentMatches(a: FileConflict, b: FileConflict): boolean {
-        const aLocal = typeof a.localContent === 'string'
-            ? a.localContent
-            : new TextDecoder().decode(a.localContent);
-        const bLocal = typeof b.localContent === 'string'
-            ? b.localContent
-            : new TextDecoder().decode(b.localContent);
-        return aLocal === bLocal;
     }
 
     private deriveMetadataResolutions(
@@ -251,17 +226,10 @@ class ConflictResolutionService {
             }
 
             try {
-                const localMeta = JSON.parse(typeof conflict.localContent === 'string'
-                    ? conflict.localContent
-                    : new TextDecoder().decode(conflict.localContent));
-                const remoteMeta = JSON.parse(typeof conflict.remoteContent === 'string'
-                    ? conflict.remoteContent
-                    : new TextDecoder().decode(conflict.remoteContent));
-
-                const localArr: any[] = Array.isArray(localMeta) ? localMeta : [localMeta];
-                const remoteArr: any[] = Array.isArray(remoteMeta) ? remoteMeta : [remoteMeta];
-
+                const localArr = this.parseMetadataArray(conflict.localContent);
+                const remoteArr = this.parseMetadataArray(conflict.remoteContent);
                 const remoteById = new Map(remoteArr.map((e) => [e.id ?? e.path, e]));
+
                 const merged = localArr.map((localEntry) => {
                     const key = localEntry.id ?? localEntry.path;
                     const resolution = relevantResolutions.find(([p]) =>
@@ -276,9 +244,7 @@ class ConflictResolutionService {
                 for (const [, remoteEntry] of remoteById) {
                     const key = remoteEntry.id ?? remoteEntry.path;
                     if (!merged.find((e) => (e.id ?? e.path) === key)) {
-                        const resolution = relevantResolutions.find(([p]) =>
-                            p.includes(key),
-                        );
+                        const resolution = relevantResolutions.find(([p]) => p.includes(key));
                         if (resolution?.[1].action !== 'keep-local') {
                             merged.push(remoteEntry);
                         }
@@ -303,26 +269,16 @@ class ConflictResolutionService {
             const txtPath = conflict.path.replace(/\.yjs$/, '.txt');
             const txtResolution = resolutions.get(txtPath);
 
-            if (!txtResolution) {
-                resolutions.set(conflict.path, { action: 'keep-remote' });
-                continue;
-            }
-
-            if (txtResolution.action === 'keep-local') {
+            if (!txtResolution || txtResolution.action === 'keep-local') {
                 resolutions.set(conflict.path, { action: 'keep-local' });
                 continue;
             }
-
             if (txtResolution.action === 'keep-remote') {
                 resolutions.set(conflict.path, { action: 'keep-remote' });
                 continue;
             }
-
             if (txtResolution.action === 'merged') {
-                const mergedText = typeof txtResolution.content === 'string'
-                    ? txtResolution.content
-                    : new TextDecoder().decode(txtResolution.content);
-
+                const mergedText = this.toText(txtResolution.content);
                 resolutions.set(conflict.path, {
                     action: 'merged',
                     content: this.yjsStateFromText(mergedText),
@@ -337,6 +293,15 @@ class ConflictResolutionService {
         const state = Y.encodeStateAsUpdate(doc);
         doc.destroy();
         return toArrayBuffer(state);
+    }
+
+    private parseMetadataArray(source: string | ArrayBuffer): any[] {
+        const parsed = JSON.parse(this.toText(source));
+        return Array.isArray(parsed) ? parsed : [parsed];
+    }
+
+    private toText(content: string | ArrayBuffer): string {
+        return typeof content === 'string' ? content : new TextDecoder().decode(content);
     }
 
     private basenameWithoutExt(path: string): string {

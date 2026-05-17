@@ -1,13 +1,14 @@
 // src/services/GitBackupService.ts
 import { t } from '@/i18n';
 import type { SecretsContextType } from '../contexts/SecretsContext';
+import type { RecordsContextType } from '../contexts/RecordsContext';
 import {
 	computeGitBlobSha,
 	getMimeType,
 	isBinaryFile,
 	isTemporaryFile,
 	toArrayBuffer,
-	latin1ToBytes
+	latin1ToBytes,
 } from '../utils/fileUtils';
 import { authService } from './AuthService';
 import {
@@ -136,6 +137,13 @@ export interface GitBackupAdapter<TTarget> {
 		path: string,
 		ref: string,
 	): Promise<string>;
+
+	readFileBytesAtRef?(
+		token: string,
+		target: TTarget,
+		path: string,
+		ref: string,
+	): Promise<ArrayBuffer>;
 }
 
 interface ResolvedCredentials<TTarget> {
@@ -167,8 +175,9 @@ export class GitBackupService<TTarget> {
 	private dataSerializer = new ProjectDataService();
 	private unifiedService = new UnifiedDataStructureService();
 
-	private currentTarget: TTarget | null = null;
 	private secretsContext: SecretsContextType | null = null;
+	private recordsContext: RecordsContextType | null = null;
+	private currentProjectId: string | undefined;
 
 	private lastOperationTime = 0;
 	private readonly MIN_OPERATION_INTERVAL = 2000;
@@ -176,6 +185,12 @@ export class GitBackupService<TTarget> {
 	private settingsCache: GitBackupSettings = {};
 
 	constructor(private adapter: GitBackupAdapter<TTarget>) { }
+
+	setCurrentProjectId(projectId: string | undefined): void {
+		if (this.currentProjectId === projectId) return;
+		this.currentProjectId = projectId;
+		this.hydrateActivities();
+	}
 
 	setSettings(settings: GitBackupSettings): void {
 		this.settingsCache = { ...settings };
@@ -185,6 +200,11 @@ export class GitBackupService<TTarget> {
 
 	setSecretsContext(secretsContext: SecretsContextType): void {
 		this.secretsContext = secretsContext;
+	}
+
+	setRecordsContext(recordsContext: RecordsContextType): void {
+		this.recordsContext = recordsContext;
+		this.hydrateActivities();
 	}
 
 	async requestAccess(): Promise<{ success: boolean; error?: string }> {
@@ -199,8 +219,7 @@ export class GitBackupService<TTarget> {
 	): Promise<{ token: string; target: string; branch: string } | null> {
 		if (!this.secretsContext) return null;
 
-		const scopeOptions = this._getScopeOptions(projectId);
-
+		const scopeOptions = this.getScopeOptions(projectId);
 		const tokenSecret = await this.secretsContext.getSecret(
 			this.adapter.pluginId, this.adapter.tokenSecretKey, scopeOptions,
 		);
@@ -253,8 +272,7 @@ export class GitBackupService<TTarget> {
 				throw new Error(t('Secrets context not initialized'));
 			}
 
-			this.currentTarget = target;
-			const scopeOptions = this._getScopeOptions(projectId);
+			const scopeOptions = this.getScopeOptions(projectId);
 			const finalBranch = branch || this.getDefaultBranch();
 			const targetLabel = this.adapter.getTargetLabel(target);
 			const targetValue = this.adapter.getTargetSecretValue(target);
@@ -322,7 +340,7 @@ export class GitBackupService<TTarget> {
 
 	async disconnect(projectId?: string): Promise<void> {
 		if (!this.secretsContext) return;
-		const scopeOptions = this._getScopeOptions(projectId);
+		const scopeOptions = this.getScopeOptions(projectId);
 
 		await this.secretsContext.removeSecret(
 			this.adapter.pluginId, this.adapter.tokenSecretKey, scopeOptions,
@@ -331,7 +349,6 @@ export class GitBackupService<TTarget> {
 			this.adapter.pluginId, this.adapter.targetSecretKey, scopeOptions,
 		);
 
-		this.currentTarget = null;
 		this.status = {
 			...this.status,
 			isConnected: false,
@@ -344,7 +361,7 @@ export class GitBackupService<TTarget> {
 	async getStoredTarget(projectId?: string): Promise<string | null> {
 		if (!this.secretsContext) return null;
 		const metadata = await this.secretsContext.getSecretMetadata(
-			this.adapter.pluginId, this.adapter.targetSecretKey, this._getScopeOptions(projectId),
+			this.adapter.pluginId, this.adapter.targetSecretKey, this.getScopeOptions(projectId),
 		);
 		return (
 			metadata?.fullName ||
@@ -358,14 +375,14 @@ export class GitBackupService<TTarget> {
 	async getStoredBranch(projectId?: string): Promise<string> {
 		if (!this.secretsContext) return this.getDefaultBranch();
 		const metadata = await this.secretsContext.getSecretMetadata(
-			this.adapter.pluginId, this.adapter.targetSecretKey, this._getScopeOptions(projectId),
+			this.adapter.pluginId, this.adapter.targetSecretKey, this.getScopeOptions(projectId),
 		);
 		return metadata?.branch || this.getDefaultBranch();
 	}
 
 	async hasStoredCredentials(projectId?: string): Promise<boolean> {
 		if (!this.secretsContext) return false;
-		const scopeOptions = this._getScopeOptions(projectId);
+		const scopeOptions = this.getScopeOptions(projectId);
 		const hasToken = await this.secretsContext.hasSecret(
 			this.adapter.pluginId, this.adapter.tokenSecretKey, scopeOptions,
 		);
@@ -375,100 +392,21 @@ export class GitBackupService<TTarget> {
 		return hasToken && hasTarget;
 	}
 
-	private startSync(projectId?: string): void {
-		this.status = { ...this.status, status: 'syncing' };
+	async synchronize(
+		projectId?: string,
+		commitMessage?: string,
+		branch?: string,
+	): Promise<void> {
+		await this.throttleOperation();
 
+		this.status = { ...this.status, status: 'syncing' };
 		this.addActivity({
 			type: 'backup_start',
 			message: projectId
 				? t('Syncing project: {projectId}', { projectId })
 				: t('Syncing all projects...'),
 		});
-
 		this.notifyListeners();
-	}
-
-	private async collectLocalChanges(
-		projectId: string | undefined,
-		credentials: ResolvedCredentials<TTarget>,
-	): Promise<GitBackupChange[]> {
-		const localProjects = await this.loadLocalProjects(projectId);
-
-		const tree = await this.adapter.getRecursiveTree(
-			credentials.token,
-			credentials.target,
-			credentials.branch,
-		);
-
-		const { existingFiles, existingFileRefs } = this.indexRemoteTree(tree);
-
-		const changes: GitBackupChange[] = [];
-
-		for (const project of localProjects) {
-			const projectChanges = await this.buildChangesForProject(
-				project,
-				existingFiles,
-				existingFileRefs,
-			);
-			changes.push(...projectChanges);
-		}
-
-		return changes;
-	}
-
-	private cancelSyncDueToConflicts(): void {
-		this.addActivity({
-			type: 'backup_error',
-			message: t('Push cancelled due to unresolved conflicts'),
-		});
-
-		this.status = { ...this.status, status: 'idle', error: undefined };
-		this.notifyListeners();
-	}
-
-	private async finishSuccessfulSync(
-		credentials: ResolvedCredentials<TTarget>,
-		projectId?: string,
-	): Promise<void> {
-		await this.persistBaseline(credentials, projectId);
-
-		this.addActivity({
-			type: 'backup_complete',
-			message: t('{provider} sync completed successfully', {
-				provider: this.adapter.displayName,
-			}),
-		});
-
-		this.status = {
-			...this.status,
-			status: 'idle',
-			lastSync: Date.now(),
-			error: undefined,
-		};
-
-		this.notifyListeners();
-	}
-
-	private async runPostPushImport(projectId?: string, branch?: string): Promise<void> {
-		try {
-			await this.importChanges(projectId, branch);
-		} catch (error) {
-			console.warn('Post-push reconciliation import failed:', error);
-			this.addActivity({
-				type: 'import_error',
-				message: t('Push succeeded but local reconciliation failed. Run import manually to sync local state.'),
-			});
-		}
-	}
-
-	async synchronize(
-		projectId?: string,
-		commitMessage?: string,
-		branch?: string,
-	): Promise<void> {
-		await this._throttleOperation();
-
-		this.startSync(projectId);
 
 		let shouldImportAfterPush = false;
 
@@ -479,16 +417,32 @@ export class GitBackupService<TTarget> {
 				branch: branch || credentials.branch,
 			};
 
-			const changes = await this.collectLocalChanges(projectId, resolvedCredentials);
+			const localProjects = await this.loadLocalProjects(projectId);
+			const tree = await this.adapter.getRecursiveTree(
+				resolvedCredentials.token, resolvedCredentials.target, resolvedCredentials.branch,
+			);
+			const { existingFiles, existingFileRefs } = this.indexRemoteTree(tree);
 
+			const changes: GitBackupChange[] = [];
+			for (const project of localProjects) {
+				const projectChanges = await this.buildChangesForProject(
+					project, existingFiles, existingFileRefs,
+				);
+				changes.push(...projectChanges);
+			}
+
+			const baselineCommitSha = await this.loadBaselineSha(projectId);
 			const resolvedChanges = await this.detectAndResolveConflicts(
-				resolvedCredentials,
-				changes,
-				await this.loadBaselineSha(projectId),
+				resolvedCredentials, changes, baselineCommitSha,
 			);
 
 			if (resolvedChanges === null) {
-				this.cancelSyncDueToConflicts();
+				this.addActivity({
+					type: 'backup_error',
+					message: t('Push cancelled due to unresolved conflicts'),
+				});
+				this.status = { ...this.status, status: 'idle', error: undefined };
+				this.notifyListeners();
 				return;
 			}
 
@@ -500,18 +454,39 @@ export class GitBackupService<TTarget> {
 				);
 			}
 
-			await this.finishSuccessfulSync(resolvedCredentials, projectId);
+			await this.persistBaseline(resolvedCredentials, projectId);
+
+			this.addActivity({
+				type: 'backup_complete',
+				message: t('{provider} sync completed successfully', {
+					provider: this.adapter.displayName,
+				}),
+			});
+
+			this.status = {
+				...this.status, status: 'idle', lastSync: Date.now(), error: undefined,
+			};
 			shouldImportAfterPush = true;
 		} catch (error) {
-			this._handleError(error, 'backup_error', t('{provider} sync failed', {
+			this.handleError(error, 'backup_error', t('{provider} sync failed', {
 				provider: this.adapter.displayName,
 			}));
 			this.notifyListeners();
 			return;
 		}
 
+		this.notifyListeners();
+
 		if (shouldImportAfterPush && this.getImportAfterPush()) {
-			await this.runPostPushImport(projectId, branch);
+			try {
+				await this.importChanges(projectId, branch);
+			} catch (error) {
+				console.warn('Post-push reconciliation import failed:', error);
+				this.addActivity({
+					type: 'import_error',
+					message: t('Push succeeded but local reconciliation failed. Run import manually to sync local state.'),
+				});
+			}
 		}
 	}
 
@@ -524,7 +499,7 @@ export class GitBackupService<TTarget> {
 	}
 
 	async importChanges(projectId?: string, branch?: string): Promise<void> {
-		await this._throttleOperation();
+		await this.throttleOperation();
 
 		this.status = { ...this.status, status: 'syncing' };
 		this.addActivity({
@@ -551,19 +526,16 @@ export class GitBackupService<TTarget> {
 			const importedMissing = await this.importMissingProjects(
 				projectFiles, resolvedCredentials, user.id,
 			);
-
 			await this.importExistingProjects(projectFiles, resolvedCredentials, user.id);
 
 			let successMessage = t('{provider} import completed successfully', {
 				provider: this.adapter.displayName,
 			});
-
 			if (importedMissing > 0) {
 				successMessage += ` (${importedMissing} missing project${importedMissing === 1 ? '' : 's'} auto-imported)`;
 			}
 
 			this.addActivity({ type: 'import_complete', message: successMessage });
-
 			this.status = {
 				...this.status, status: 'idle', lastSync: Date.now(), error: undefined,
 			};
@@ -572,7 +544,7 @@ export class GitBackupService<TTarget> {
 			fileStorageEventEmitter.emitChange();
 		} catch (error) {
 			console.error(error);
-			this._handleError(error, 'import_error', t('{provider} import failed', {
+			this.handleError(error, 'import_error', t('{provider} import failed', {
 				provider: this.adapter.displayName,
 			}));
 		}
@@ -594,11 +566,17 @@ export class GitBackupService<TTarget> {
 	};
 
 	clearActivity = (id: string): void => {
+		this.recordsContext?.removeRecord(
+			this.getActivityRecordKey(), id, this.getActivityScopeOptions(),
+		);
 		this.activities = this.activities.filter((a) => a.id !== id);
 		this.notifyActivityListeners();
 	};
 
 	clearAllActivities = (): void => {
+		this.recordsContext?.clearRecords(
+			this.getActivityRecordKey(), this.getActivityScopeOptions(),
+		);
 		this.activities = [];
 		this.notifyActivityListeners();
 	};
@@ -637,19 +615,35 @@ export class GitBackupService<TTarget> {
 		const projectPath = `projects/${project.id}`;
 		const maxFileSize = this.getMaxFileSize();
 
+		const pushIfChanged = async (
+			path: string,
+			content: string | Uint8Array | ArrayBuffer,
+		): Promise<void> => {
+			const remoteRef = existingFileRefs.get(path);
+			if (remoteRef) {
+				const localSha = await computeGitBlobSha(
+					content instanceof Uint8Array ? toArrayBuffer(content) : content,
+				);
+				if (localSha === remoteRef) return;
+			}
+			changes.push({
+				type: existingFiles.has(path) ? 'update' : 'create',
+				path,
+				content,
+				previousRef: remoteRef,
+			});
+		};
+
 		const documents = await this.dataSerializer.serializeProjectDocuments(project);
 		const files = await this.dataSerializer.serializeProjectFiles(project, true);
 
-		const metadataPath = `${projectPath}/metadata.json`;
-		changes.push({
-			type: existingFiles.has(metadataPath) ? 'update' : 'create',
-			path: metadataPath,
-			content: JSON.stringify(
+		await pushIfChanged(
+			`${projectPath}/metadata.json`,
+			JSON.stringify(
 				this.unifiedService.convertProjectToMetadata(project, 'backup'),
 				null, 2,
 			),
-			previousRef: existingFileRefs.get(metadataPath),
-		});
+		);
 
 		if (documents.documents.length > 0) {
 			const documentsMetadata = documents.documents.map((doc) => ({
@@ -659,39 +653,27 @@ export class GitBackupService<TTarget> {
 				hasYjsState: doc.hasYjsState,
 				hasReadableContent: doc.hasReadableContent,
 			}));
-
-			const docMetadataPath = `${projectPath}/documents/metadata.json`;
-			changes.push({
-				type: existingFiles.has(docMetadataPath) ? 'update' : 'create',
-				path: docMetadataPath,
-				content: JSON.stringify(documentsMetadata, null, 2),
-				previousRef: existingFileRefs.get(docMetadataPath),
-			});
+			await pushIfChanged(
+				`${projectPath}/documents/metadata.json`,
+				JSON.stringify(documentsMetadata, null, 2),
+			);
 		}
 
-		documents.documents.forEach((doc) => {
+		for (const doc of documents.documents) {
 			const content = documents.documentContents.get(doc.id);
-
 			if (content?.readableContent) {
-				const txtPath = `${projectPath}/documents/${doc.id}.txt`;
-				changes.push({
-					type: existingFiles.has(txtPath) ? 'update' : 'create',
-					path: txtPath,
-					content: content.readableContent,
-					previousRef: existingFileRefs.get(txtPath),
-				});
+				await pushIfChanged(
+					`${projectPath}/documents/${doc.id}.txt`,
+					content.readableContent,
+				);
 			}
-
 			if (content?.yjsState) {
-				const yjsPath = `${projectPath}/documents/${doc.id}.yjs`;
-				changes.push({
-					type: existingFiles.has(yjsPath) ? 'update' : 'create',
-					path: yjsPath,
-					content: content.yjsState,  // Uint8Array
-					previousRef: existingFileRefs.get(yjsPath),
-				});
+				await pushIfChanged(
+					`${projectPath}/documents/${doc.id}.yjs`,
+					content.yjsState,
+				);
 			}
-		});
+		}
 
 		if (files.files.length > 0 || files.deletedFiles.length > 0) {
 			const activePaths = new Set(files.files.map((f) => f.path));
@@ -706,20 +688,16 @@ export class GitBackupService<TTarget> {
 						isDeleted: true,
 					})),
 			];
-
-			const filesMetadataPath = `${projectPath}/files/metadata.json`;
-			changes.push({
-				type: existingFiles.has(filesMetadataPath) ? 'update' : 'create',
-				path: filesMetadataPath,
-				content: JSON.stringify(allFilesMetadata, null, 2),
-				previousRef: existingFileRefs.get(filesMetadataPath),
-			});
+			await pushIfChanged(
+				`${projectPath}/files/metadata.json`,
+				JSON.stringify(allFilesMetadata, null, 2),
+			);
 		}
 
-		files.files.forEach((file) => {
+		for (const file of files.files) {
 			const content = files.fileContents.get(file.path);
-			if (file.type !== 'file' || content === undefined) return;
-			if (isTemporaryFile(file.path) || this.shouldIgnoreFile(file.path)) return;
+			if (file.type !== 'file' || content === undefined) continue;
+			if (isTemporaryFile(file.path) || this.shouldIgnoreFile(file.path)) continue;
 
 			const fileSize = content instanceof ArrayBuffer ? content.byteLength : content.length;
 			if (fileSize > maxFileSize) {
@@ -729,17 +707,11 @@ export class GitBackupService<TTarget> {
 						path: file.path, size: Math.round(maxFileSize / 1024 / 1024),
 					}),
 				});
-				return;
+				continue;
 			}
 
-			const filePath = `${projectPath}/files${file.path}`;
-			changes.push({
-				type: existingFiles.has(filePath) ? 'update' : 'create',
-				path: filePath,
-				content,
-				previousRef: existingFileRefs.get(filePath),
-			});
-		});
+			await pushIfChanged(`${projectPath}/files${file.path}`, content);
+		}
 
 		for (const deletedFile of files.deletedFiles) {
 			if (deletedFile.type !== 'file') continue;
@@ -768,7 +740,6 @@ export class GitBackupService<TTarget> {
 		const currentRemoteSha = await this.adapter.getLatestCommitSha(
 			credentials.token, credentials.target, credentials.branch,
 		);
-
 		if (currentRemoteSha === baselineCommitSha) return changes;
 
 		const conflicts: FileConflict[] = [];
@@ -782,10 +753,19 @@ export class GitBackupService<TTarget> {
 
 			const binary = isBinaryFile(change.path);
 
+			if (binary) {
+				const conflict = await this.detectBinaryConflict(
+					credentials, change, baselineCommitSha, currentRemoteSha,
+				);
+				if (conflict === 'skip') continue;
+				if (conflict === 'push') { nonConflicting.push(change); continue; }
+				conflicts.push(conflict);
+				continue;
+			}
+
 			const baseContent = await this.readFileAtRefSafe(
 				credentials, change.path, baselineCommitSha,
 			);
-
 			const remoteContent = await this.readFileAtRefSafe(
 				credentials, change.path, currentRemoteSha,
 			);
@@ -795,46 +775,13 @@ export class GitBackupService<TTarget> {
 				continue;
 			}
 
-			if (binary) {
-				const localContent = toArrayBuffer(change.content);
-				const localSha = await computeGitBlobSha(localContent);
-
-				conflicts.push({
-					path: change.path,
-					isBinary: true,
-					baseContent,
-					localContent,
-					remoteContent,
-					previousRef: change.previousRef,
-					localMatchesRemote: localSha === change.previousRef,
-				});
-
-				continue;
-			}
-
-			const localContent = this.changeContentAsText(change.content);
-
+			const localText = this.changeContentAsText(change.content);
 			const merge = conflictResolutionService.tryAutoMerge(
-				baseContent,
-				localContent,
-				remoteContent,
-				false,
+				baseContent, localText, remoteContent, false,
 			);
 
 			if (merge.resolved) {
-				if (merge.unchanged) {
-					conflicts.push({
-						path: change.path,
-						isBinary: false,
-						baseContent,
-						localContent,
-						remoteContent,
-						previousRef: change.previousRef,
-						localMatchesRemote: true,
-					});
-					continue;
-				}
-
+				if (merge.unchanged) continue;
 				nonConflicting.push({ ...change, content: merge.content });
 				continue;
 			}
@@ -843,10 +790,9 @@ export class GitBackupService<TTarget> {
 				path: change.path,
 				isBinary: false,
 				baseContent,
-				localContent,
+				localContent: toArrayBuffer(change.content),
 				remoteContent,
 				previousRef: change.previousRef,
-				localMatchesRemote: localContent === remoteContent,
 			});
 		}
 
@@ -879,6 +825,44 @@ export class GitBackupService<TTarget> {
 		return nonConflicting;
 	}
 
+	private async detectBinaryConflict(
+		credentials: ResolvedCredentials<TTarget>,
+		change: Extract<GitBackupChange, { type: 'create' | 'update' }>,
+		baselineCommitSha: string,
+		currentRemoteSha: string,
+	): Promise<'skip' | 'push' | FileConflict> {
+		const localContent = toArrayBuffer(change.content);
+		const localSha = await computeGitBlobSha(localContent);
+
+		const remoteText = await this.readFileAtRefSafe(
+			credentials, change.path, currentRemoteSha,
+		);
+		if (remoteText === undefined) return 'push';
+
+		const remoteBytes = toArrayBuffer(latin1ToBytes(remoteText));
+		const remoteSha = await computeGitBlobSha(remoteBytes);
+		if (localSha === remoteSha) return 'skip';
+
+		const baseText = await this.readFileAtRefSafe(
+			credentials, change.path, baselineCommitSha,
+		);
+		const baseSha = baseText
+			? await computeGitBlobSha(toArrayBuffer(latin1ToBytes(baseText)))
+			: undefined;
+
+		if (baseSha === localSha) return 'skip';
+		if (baseSha === remoteSha) return 'push';
+
+		return {
+			path: change.path,
+			isBinary: true,
+			baseContent: undefined,
+			localContent,
+			remoteContent: remoteBytes,
+			previousRef: change.previousRef,
+		};
+	}
+
 	private async readFileAtRefSafe(
 		credentials: ResolvedCredentials<TTarget>,
 		path: string,
@@ -908,10 +892,8 @@ export class GitBackupService<TTarget> {
 		const existingProjectIds = new Set(existingProjects.map((p) => p.id));
 
 		let imported = 0;
-
 		for (const [projId, data] of projectFiles.entries()) {
-			if (!data.metadataRef) continue;
-			if (existingProjectIds.has(projId)) continue;
+			if (!data.metadataRef || existingProjectIds.has(projId)) continue;
 
 			try {
 				const metadataContent = await this.adapter.readFile(
@@ -929,7 +911,6 @@ export class GitBackupService<TTarget> {
 						projectName: projectMetadata.name,
 					}),
 				});
-
 				fileStorageEventEmitter.emitChange();
 			} catch (error) {
 				console.error(`Failed to import missing project ${projId}:`, error);
@@ -954,14 +935,12 @@ export class GitBackupService<TTarget> {
 		const existingProjectIds = new Set(existingProjects.map((p) => p.id));
 
 		for (const [projId, data] of projectFiles.entries()) {
-			if (!data.metadataRef) continue;
-			if (!existingProjectIds.has(projId)) continue;
+			if (!data.metadataRef || !existingProjectIds.has(projId)) continue;
 
 			const metadataContent = await this.adapter.readFile(
 				credentials.token, credentials.target, data.metadataRef, credentials.branch,
 			);
 			const projectMetadata = JSON.parse(metadataContent);
-
 			await this.importProjectSafely(projId, projectMetadata, data, credentials);
 		}
 	}
@@ -981,9 +960,7 @@ export class GitBackupService<TTarget> {
 		);
 
 		const { documents, documentContents } = await this.importDocuments(data, credentials);
-
 		await fileStorageService.switchToProject(resolvedMetadata.docUrl);
-
 		await this.importFiles(data, credentials, resolvedMetadata);
 
 		const unifiedData = {
@@ -1052,7 +1029,6 @@ export class GitBackupService<TTarget> {
 				hasYjsState: !!docData.yjsRef,
 				hasReadableContent: !!docData.txtRef,
 			};
-
 			documents.push(docInfo);
 
 			const contentData: { readableContent?: string; yjsState?: Uint8Array } = {};
@@ -1063,7 +1039,6 @@ export class GitBackupService<TTarget> {
 				);
 			}
 
-			// TODO (fabawi): Figure out why bytes are distorted, or even better, do Yjs merge here
 			if (docData.yjsRef) {
 				const yjsContent = await this.adapter.readFile(
 					credentials.token, credentials.target, docData.yjsRef, credentials.branch,
@@ -1193,11 +1168,6 @@ export class GitBackupService<TTarget> {
 					},
 					{ showConflictDialog: false, preserveTimestamp: true },
 				);
-
-				// this.addActivity({
-				//     type: 'import_complete',
-				//     message: `Restored deleted file metadata: ${filePath}`,
-				// });
 				fileStorageEventEmitter.emitChange();
 			} catch (error) {
 				console.error(`Failed to restore deleted file metadata ${filePath}:`, error);
@@ -1212,7 +1182,6 @@ export class GitBackupService<TTarget> {
 		credentials: ResolvedCredentials<TTarget>,
 	): Promise<void> {
 		const existingFile = await fileStorageService.getFileByPath(filePath, true);
-
 		if (existingFile?.content) {
 			const localSha = await computeGitBlobSha(existingFile.content as string | ArrayBuffer);
 			if (localSha === fileRef) return;
@@ -1221,42 +1190,48 @@ export class GitBackupService<TTarget> {
 		await fileStorageService.createDirectoryPath(filePath);
 
 		const rawContentString = await this.adapter.readFile(
-			credentials.token,
-			credentials.target,
-			fileRef,
-			credentials.branch,
+			credentials.token, credentials.target, fileRef, credentials.branch,
 		);
 
 		const remoteMetadata = metadataByPath.get(filePath);
-		const binary = remoteMetadata?.isBinary === true || isBinaryFile(filePath);
-
-		const bytes = latin1ToBytes(rawContentString);
+		const binary = remoteMetadata ? remoteMetadata.isBinary : isBinaryFile(filePath);
 
 		const finalContent: string | ArrayBuffer = binary
-			? toArrayBuffer(bytes)
-			: new TextDecoder('utf-8').decode(bytes);
+			? toArrayBuffer(latin1ToBytes(rawContentString))
+			: new TextDecoder('utf-8').decode(latin1ToBytes(rawContentString));
 
-		const fileSize =
-			finalContent instanceof ArrayBuffer
-				? finalContent.byteLength
-				: new Blob([finalContent]).size;
+		const fileSize = finalContent instanceof ArrayBuffer
+			? finalContent.byteLength
+			: finalContent.length;
 
-		const fileToStore = {
-			id:
-				existingFile?.id ||
-				remoteMetadata?.id ||
-				`${this.adapter.importIdPrefix}-${Math.random().toString(36).substring(2, 15)}`,
-			name: remoteMetadata?.name || filePath.split('/').pop() || '',
-			path: remoteMetadata?.path || filePath,
-			type: 'file' as const,
-			lastModified: remoteMetadata?.lastModified || Date.now(),
-			size: remoteMetadata?.size || fileSize,
-			mimeType: remoteMetadata?.mimeType || getMimeType(filePath),
-			isBinary: binary,
-			documentId: remoteMetadata?.documentId,
-			content: finalContent,
-			isDeleted: false,
-		};
+		const fileToStore = remoteMetadata
+			? {
+				id: existingFile?.id || remoteMetadata.id ||
+					`${this.adapter.importIdPrefix}-${Math.random().toString(36).substring(2, 15)}`,
+				name: remoteMetadata.name,
+				path: remoteMetadata.path,
+				type: remoteMetadata.type as 'file' | 'directory',
+				lastModified: remoteMetadata.lastModified || Date.now(),
+				size: remoteMetadata.size || fileSize,
+				mimeType: remoteMetadata.mimeType,
+				isBinary: remoteMetadata.isBinary,
+				documentId: remoteMetadata.documentId,
+				content: finalContent,
+				isDeleted: false,
+			}
+			: {
+				id: existingFile?.id ||
+					`${this.adapter.importIdPrefix}-${Math.random().toString(36).substring(2, 15)}`,
+				name: filePath.split('/').pop() || '',
+				path: filePath,
+				type: 'file' as const,
+				lastModified: Date.now(),
+				size: fileSize,
+				mimeType: getMimeType(filePath),
+				isBinary: binary,
+				content: finalContent,
+				isDeleted: false,
+			};
 
 		await fileStorageService.storeFile(fileToStore, {
 			showConflictDialog: false,
@@ -1268,10 +1243,8 @@ export class GitBackupService<TTarget> {
 		const metadata = await this.secretsContext?.getSecretMetadata(
 			this.adapter.pluginId,
 			this.adapter.targetSecretKey,
-			this._getScopeOptions(projectId),
+			this.getScopeOptions(projectId),
 		);
-		console.log('[GitBackupService] loadBaselineSha:', metadata?.lastSyncedCommitSha, 'full metadata:', metadata);
-
 		return metadata?.lastSyncedCommitSha as string | undefined;
 	}
 
@@ -1285,18 +1258,17 @@ export class GitBackupService<TTarget> {
 			const newSha = await this.adapter.getLatestCommitSha(
 				credentials.token, credentials.target, credentials.branch,
 			);
-			console.log('[GitBackupService] persistBaseline saving sha:', newSha);
 			const existingMeta = await this.secretsContext.getSecretMetadata(
 				this.adapter.pluginId,
 				this.adapter.targetSecretKey,
-				this._getScopeOptions(projectId),
+				this.getScopeOptions(projectId),
 			);
 			await this.secretsContext.setSecret(
 				this.adapter.pluginId,
 				this.adapter.targetSecretKey,
 				this.adapter.getTargetSecretValue(credentials.target),
 				{
-					...this._getScopeOptions(projectId),
+					...this.getScopeOptions(projectId),
 					metadata: { ...existingMeta, lastSyncedCommitSha: newSha },
 				},
 			);
@@ -1314,8 +1286,7 @@ export class GitBackupService<TTarget> {
 			}));
 		}
 
-		const scopeOptions = this._getScopeOptions(projectId);
-
+		const scopeOptions = this.getScopeOptions(projectId);
 		const tokenSecret = await this.secretsContext.getSecret(
 			this.adapter.pluginId, this.adapter.tokenSecretKey, scopeOptions,
 		);
@@ -1339,8 +1310,6 @@ export class GitBackupService<TTarget> {
 		}
 
 		const target = this.adapter.targetFromStoredValue(targetSecret.value, targetMetadata);
-		this.currentTarget = target;
-
 		this.status = {
 			...this.status,
 			isConnected: true,
@@ -1451,7 +1420,6 @@ export class GitBackupService<TTarget> {
 						}),
 					});
 				}
-
 				await this.adapter.commitChanges(
 					credentials.token, credentials.target, credentials.branch,
 					commitMessage, changes,
@@ -1524,14 +1492,43 @@ export class GitBackupService<TTarget> {
 		return false;
 	}
 
-	private _getScopeOptions(projectId?: string) {
+	private getScopeOptions(projectId?: string) {
 		return {
 			scope: projectId ? 'project' : ('global' as 'project' | 'global'),
 			projectId,
 		};
 	}
 
-	private _handleError(
+	private getActivityRecordKey(): string {
+		return `${this.adapter.pluginId}-activity`;
+	}
+
+	private getActivityScopeOptions() {
+		return {
+			scope: this.currentProjectId ? 'project' as const : 'global' as const,
+			projectId: this.currentProjectId,
+			maxEntries: this.getActivityHistoryLimit(),
+		};
+	}
+
+	private hydrateActivities(): void {
+		if (!this.recordsContext) return;
+		const entries = this.recordsContext.listRecords<Omit<GitBackupActivity, 'id' | 'timestamp'>>(
+			this.getActivityRecordKey(),
+			{
+				scope: this.currentProjectId ? 'project' : 'global',
+				projectId: this.currentProjectId,
+			},
+		);
+		this.activities = entries.map((entry) => ({
+			id: entry.id,
+			timestamp: entry.timestamp,
+			...entry.data,
+		}));
+		this.notifyActivityListeners();
+	}
+
+	private handleError(
 		error: unknown,
 		type: 'backup_error' | 'import_error',
 		messagePrefix: string,
@@ -1542,7 +1539,7 @@ export class GitBackupService<TTarget> {
 		this.notifyListeners();
 	}
 
-	private async _throttleOperation(): Promise<void> {
+	private async throttleOperation(): Promise<void> {
 		const now = Date.now();
 		const timeSinceLastOp = now - this.lastOperationTime;
 		if (timeSinceLastOp < this.MIN_OPERATION_INTERVAL) {
@@ -1562,11 +1559,18 @@ export class GitBackupService<TTarget> {
 	}
 
 	private addActivity(activity: Omit<GitBackupActivity, 'id' | 'timestamp'>): void {
-		const fullActivity: GitBackupActivity = {
-			id: Math.random().toString(36).substring(2),
-			timestamp: Date.now(),
-			...activity,
-		};
+		const entry = this.recordsContext?.appendRecord(
+			this.getActivityRecordKey(), activity, this.getActivityScopeOptions(),
+		);
+
+		const fullActivity: GitBackupActivity = entry
+			? { id: entry.id, timestamp: entry.timestamp, ...activity }
+			: {
+				id: Math.random().toString(36).substring(2),
+				timestamp: Date.now(),
+				...activity,
+			};
+
 		const limit = this.getActivityHistoryLimit();
 		this.activities = [...this.activities.slice(-limit + 1), fullActivity];
 		this.notifyActivityListeners();
