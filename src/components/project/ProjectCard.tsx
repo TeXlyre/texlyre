@@ -236,7 +236,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       }
 
       <div className="project-tags">
-        {project.tags.map((tag, index) =>
+        {project.tags?.map((tag, index) =>
           <span key={index} className="project-tag">
             {tag}
           </span>

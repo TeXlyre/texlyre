@@ -140,7 +140,9 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
   };
 
   const shouldShowLinkButton =
-    node.type === 'file' && !node.isBinary && !isTemporaryFile(node.name);
+    node.type === 'file' &&
+    (!node.isBinary || !!pluginRegistry.getCollaborativeViewerForFile(node.name, node.mimeType)) &&
+    !isTemporaryFile(node.name);
 
   return (
     <div

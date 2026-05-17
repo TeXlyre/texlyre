@@ -6,7 +6,7 @@ import {
     type GitBackupChange,
     type GitTreeItem,
 } from '@/services/GitBackupService';
-import { encodeContentToBase64 } from '@/utils/fileUtils';
+import { toBase64 } from '@/utils/fileUtils';
 import { gitLabAPIService } from './GitLabAPIService';
 
 interface GitLabTarget {
@@ -52,7 +52,7 @@ function mapGitLabChanges(changes: GitBackupChange[]): GitLabCommitAction[] {
         return {
             action: change.type,
             file_path: change.path,
-            content: encodeContentToBase64(change.content),
+            content: toBase64(change.content),
             encoding: 'base64',
         };
     });
@@ -94,6 +94,12 @@ const gitLabBackupAdapter: GitBackupAdapter<GitLabTarget> = {
 
     getFileRefForPath: (_item: GitTreeItem, path: string) => path,
 
+    getLatestCommitSha: (token, target, branch) =>
+        gitLabAPIService.getBranchHeadSha(token, target.projectId, branch),
+
+    readFileAtRef: (token, target, path, ref) =>
+        gitLabAPIService.getFileContentAtRef(token, target.projectId, path, ref),
+
     readFile: (token, target, path, branch) =>
         gitLabAPIService.getFileContent(token, target.projectId, path, branch),
 
@@ -114,9 +120,18 @@ export const gitLabBackupService = {
     setSettings: sharedGitLabBackupService.setSettings.bind(
         sharedGitLabBackupService,
     ),
+
     setSecretsContext: sharedGitLabBackupService.setSecretsContext.bind(
         sharedGitLabBackupService,
     ),
+
+    setRecordsContext: sharedGitLabBackupService.setRecordsContext.bind(
+        sharedGitLabBackupService,
+    ),
+    setCurrentProjectId: sharedGitLabBackupService.setCurrentProjectId.bind(
+        sharedGitLabBackupService,
+    ),
+
     requestAccess: sharedGitLabBackupService.requestAccess.bind(
         sharedGitLabBackupService,
     ),

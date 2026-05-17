@@ -31,7 +31,7 @@ import { bibliographyImportService } from '@/services/BibliographyImportService'
 import { collabService } from '@/services/CollabService';
 import { formatFileSize } from '@/utils/fileUtils';
 import { detectFileType } from '@/utils/fileUtils';
-import { TextDiffUtils } from '@/utils/textDiffUtils';
+import { computeReplacementChange } from '@/utils/textDiffUtils';
 import { BibtexParser, type BibtexEntry } from '@/utils/bibtexParser';
 import { TidyOptionsPanel } from '../../viewers/bibtex/TidyOptionsPanel';
 import {
@@ -393,7 +393,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
       setCurrentView('processed');
 
       if (currentView === 'processed' && viewRef.current) {
-        const changes = TextDiffUtils.computeChanges(sourceContent, newContent);
+        const changes = computeReplacementChange(sourceContent, newContent);
         if (changes.length > 0) {
           viewRef.current.dispatch({
             changes: changes
@@ -455,7 +455,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
     try {
       await fileStorageService.updateFileContent(fileId, contentToSave);
 
-      const changes = TextDiffUtils.computeChanges(bibtexContent, contentToSave);
+      const changes = computeReplacementChange(bibtexContent, contentToSave);
 
       if (viewRef.current && changes.length > 0) {
         setCurrentView('original');

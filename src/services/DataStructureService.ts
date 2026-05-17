@@ -80,7 +80,8 @@ export class UnifiedDataStructureService {
 		PROJECTS_DIR: 'projects',
 		DOCUMENTS_DIR: 'documents',
 		FILES_DIR: 'files',
-		FILES_METADATA: 'metadata.json',
+		FILES_METADATA: '.texlyre_metadata.json',
+		LEGACY_FILES_METADATA: 'metadata.json',
 	} as const;
 
 	createManifest(mode: 'backup' | 'export' | 'import'): UnifiedManifest {
@@ -111,16 +112,29 @@ export class UnifiedDataStructureService {
 		return `${this.getDocumentsPath(projectId)}/${docId}.txt`;
 	}
 
+
+	getDocumentMetadataPath(projectId: string): string {
+		return `${this.getDocumentsPath(projectId)}/${this.PATHS.FILES_METADATA}`;
+	}
+
+	getLegacyDocumentMetadataPath(projectId: string): string {
+		return `${this.getDocumentsPath(projectId)}/${this.PATHS.LEGACY_FILES_METADATA}`;
+	}
+
 	getFilesPath(projectId: string): string {
 		return `${this.getProjectPath(projectId)}/${this.PATHS.FILES_DIR}`;
+	}
+
+	getFileContentPath(projectId: string, relativePath: string): string {
+		return `${this.getFilesPath(projectId)}/${relativePath}`;
 	}
 
 	getFilesMetadataPath(projectId: string): string {
 		return `${this.getFilesPath(projectId)}/${this.PATHS.FILES_METADATA}`;
 	}
 
-	getFileContentPath(projectId: string, relativePath: string): string {
-		return `${this.getFilesPath(projectId)}/${relativePath}`;
+	getLegacyFilesMetadataPath(projectId: string): string {
+		return `${this.getFilesPath(projectId)}/${this.PATHS.LEGACY_FILES_METADATA}`;
 	}
 
 	convertProjectToMetadata(

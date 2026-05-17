@@ -68,6 +68,15 @@ export const getForgejoBackupSettings = (): Setting[] => [
         defaultValue: 3,
     },
     {
+        id: 'forgejo-backup-import-after-push',
+        category: t('Backup'),
+        subcategory: t('Forgejo'),
+        type: 'checkbox',
+        label: t('Import After Push'),
+        description: t('Automatically import from the repository after a successful push to reconcile local state with resolved conflicts'),
+        defaultValue: true,
+    },
+    {
         id: 'forgejo-backup-activity-history-limit',
         category: t('Backup'),
         subcategory: t('Forgejo'),

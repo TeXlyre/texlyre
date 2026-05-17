@@ -4,9 +4,8 @@ import {
     GitBackupService,
     type GitBackupAdapter,
     type GitBackupChange,
-    type GitTreeItem,
 } from '@/services/GitBackupService';
-import { encodeContentToBase64 } from '@/utils/fileUtils.ts';
+import { toBase64 } from '@/utils/fileUtils.ts';
 import { giteaAPIService } from './GiteaAPIService';
 
 interface GiteaTarget {
@@ -52,7 +51,7 @@ function mapGiteaChanges(changes: GitBackupChange[]): GiteaCommitAction[] {
         return {
             operation: change.type,
             path: change.path,
-            content: encodeContentToBase64(change.content),
+            content: toBase64(change.content),
             encoding: 'base64',
             sha: change.previousRef,
         };
@@ -98,7 +97,13 @@ const giteaBackupAdapter: GitBackupAdapter<GiteaTarget> = {
             branch,
         ),
 
-    getFileRefForPath: (item: GitTreeItem) => item.sha || item.path || '',
+    getFileRefForPath: (_item, path) => path,
+
+    getLatestCommitSha: (token, target, branch) =>
+        giteaAPIService.getBranchHeadSha(token, target.owner, target.repo, branch),
+
+    readFileAtRef: (token, target, path, ref) =>
+        giteaAPIService.getFileContentAtRef(token, target.owner, target.repo, path, ref),
 
     readFile: (token, target, path, branch) =>
         giteaAPIService.getFileContent(
@@ -125,9 +130,18 @@ const sharedGiteaBackupService = new GitBackupService(giteaBackupAdapter);
 
 export const giteaBackupService = {
     setSettings: sharedGiteaBackupService.setSettings.bind(sharedGiteaBackupService),
+
     setSecretsContext: sharedGiteaBackupService.setSecretsContext.bind(
         sharedGiteaBackupService,
     ),
+
+    setRecordsContext: sharedGiteaBackupService.setRecordsContext.bind(
+        sharedGiteaBackupService,
+    ),
+    setCurrentProjectId: sharedGiteaBackupService.setCurrentProjectId.bind(
+        sharedGiteaBackupService,
+    ),
+
     requestAccess: sharedGiteaBackupService.requestAccess.bind(
         sharedGiteaBackupService,
     ),
@@ -158,7 +172,8 @@ export const giteaBackupService = {
         );
     },
 
-    disconnect: sharedGiteaBackupService.disconnect.bind(sharedGiteaBackupService),
+    disconnect: sharedGiteaBackupService.disconnect.bind(
+        sharedGiteaBackupService),
     getStoredRepository: sharedGiteaBackupService.getStoredTarget.bind(
         sharedGiteaBackupService,
     ),

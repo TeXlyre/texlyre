@@ -20,7 +20,7 @@ import { fileStorageService } from '../services/FileStorageService';
 import type { DocumentList } from '../types/documents';
 import type { FileNode, FileTreeContextType } from '../types/files';
 import type { YjsDocUrl } from '../types/yjs';
-import { duplicateKeyDetector } from '../utils/duplicateKeyDetector';
+import { duplicateKeyDetectionService } from '../services/DuplicateKeyDetectionService';
 import {
   getMimeType,
   isBinaryFile,
@@ -56,11 +56,11 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
   useEffect(() => {
     // Start duplicate detection when file tree is loaded
     if (!isLoading && fileTree.length > 0) {
-      duplicateKeyDetector.start();
+      duplicateKeyDetectionService.start();
     }
 
     return () => {
-      duplicateKeyDetector.stop();
+      duplicateKeyDetectionService.stop();
     };
   }, [isLoading, fileTree]);
 

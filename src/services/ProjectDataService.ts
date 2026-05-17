@@ -301,7 +301,7 @@ export class ProjectDataService {
 			);
 
 			console.log(
-				`Successfully deserialized ${documents.length} documents for project ${projectId}`,
+				`[ProjectDataService] Successfully deserialized ${documents.length} documents for project ${projectId}`,
 			);
 		} catch (error) {
 			console.error('Error deserializing project documents:', error);
@@ -312,27 +312,32 @@ export class ProjectDataService {
 		collection: string,
 		yjsState: Uint8Array,
 	): Promise<void> {
+		const docYDoc = new Y.Doc();
+		const docPersistence = new IndexeddbPersistence(collection, docYDoc);
+
+		await new Promise<void>((resolve) => {
+			docPersistence.once('synced', resolve);
+		});
+
+		await docPersistence.clearData();
+		docPersistence.destroy();
+		docYDoc.destroy();
+
+		await new Promise<void>((resolve) => setTimeout(resolve, 100));
+
 		return new Promise<void>((resolve, reject) => {
 			try {
-				const docYDoc = new Y.Doc();
+				const freshDoc = new Y.Doc();
+				const freshPersistence = new IndexeddbPersistence(collection, freshDoc);
 
-				// Apply the state before setting up persistence
-				Y.applyUpdate(docYDoc, yjsState);
-
-				const docPersistence = new IndexeddbPersistence(collection, docYDoc);
-
-				// Wait for initial sync, then force a save
-				docPersistence.once('synced', () => {
-					// Force another transaction to ensure persistence
-					docYDoc.transact(() => {
-						// This empty transaction forces the persistence to save the applied state
-					});
+				freshPersistence.once('synced', () => {
+					Y.applyUpdate(freshDoc, yjsState);
 
 					setTimeout(() => {
-						docPersistence.destroy();
-						docYDoc.destroy();
+						freshPersistence.destroy();
+						freshDoc.destroy();
 						resolve();
-					}, 1000);
+					}, 500);
 				});
 			} catch (error) {
 				reject(error);
@@ -438,7 +443,7 @@ export class ProjectDataService {
 			});
 
 			console.log(
-				`Successfully imported ${files.length} files for project ${projectId} using fileStorageService`,
+				`[ProjectDataService] Successfully imported ${files.length} files for project ${projectId} using fileStorageService`,
 			);
 		} catch (error) {
 			console.error(
@@ -484,7 +489,7 @@ export class ProjectDataService {
 			db.close();
 
 			console.log(
-				`Successfully imported ${files.length} files for project ${projectId} via fallback`,
+				`[ProjectDataService] Successfully imported ${files.length} files for project ${projectId} via fallback`,
 			);
 		}
 	}
@@ -526,7 +531,7 @@ export class ProjectDataService {
 		});
 
 		console.log(
-			`Successfully deserialized ${files.length} files for project ${projectId}`,
+			`[ProjectDataService] Successfully deserialized ${files.length} files for project ${projectId}`,
 		);
 	}
 
@@ -537,9 +542,8 @@ export class ProjectDataService {
 			files: { path: string; content: string | ArrayBuffer }[];
 		},
 	): Promise<void> {
-		// Convert the simplified format to proper metadata format
 		const fileMetadata: FileMetadata[] = data.files.map((file) => ({
-			id: Math.random().toString(36).substring(2), // Generate ID if not provided
+			id: Math.random().toString(36).substring(2),
 			name: file.path.split('/').pop() || 'unknown',
 			path: file.path,
 			type: 'file' as const,
@@ -562,7 +566,7 @@ export class ProjectDataService {
 		// Handle documents if needed
 		if (data.documents.length > 0) {
 			console.log(
-				`Importing ${data.documents.length} documents for project ${projectId}`,
+				`[ProjectDataService] Importing ${data.documents.length} documents for project ${projectId}`,
 			);
 			// Documents are handled separately by the existing document deserialization
 		}

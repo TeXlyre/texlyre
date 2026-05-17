@@ -15,6 +15,7 @@ import SettingsModal from '@/components/settings/SettingsModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useSecrets } from '@/hooks/useSecrets';
 import { useSettings } from '@/hooks/useSettings';
+import { useRecords } from '@/hooks/useRecords';
 import { formatDate } from '@/utils/dateUtils';
 import { gitLabAPIService } from './GitLabAPIService';
 import { gitLabBackupService } from './GitLabBackupService';
@@ -56,6 +57,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
 
     const { getProjectById } = useAuth();
     const secrets = useSecrets();
+    const records = useRecords();
     const { getSetting } = useSettings();
 
     useEffect(() => {
@@ -78,6 +80,8 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
         const activityHistoryLimit =
             (getSetting('gitlab-backup-activity-history-limit')?.value as number) ||
             50;
+        const importAfterPush =
+            (getSetting('gitlab-backup-import-after-push')?.value as boolean) ?? true;
 
         gitLabBackupService.setSettings({
             apiEndpoint,
@@ -91,6 +95,7 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
             requestTimeout,
             maxRetryAttempts,
             activityHistoryLimit,
+            importAfterPush,
         });
 
         setSelectedBranch(defaultBranch);
@@ -103,6 +108,16 @@ const GitLabBackupModal: React.FC<GitLabBackupModalProps> = ({
     useEffect(() => {
         gitLabBackupService.setSecretsContext(secrets);
     }, [secrets]);
+
+    useEffect(() => {
+        gitLabBackupService.setRecordsContext(records);
+    }, [records]);
+
+    useEffect(() => {
+        const scopedProjectId =
+            isInEditor && syncScope === 'current' ? currentProjectId ?? undefined : undefined;
+        gitLabBackupService.setCurrentProjectId(scopedProjectId);
+    }, [isInEditor, syncScope, currentProjectId]);
 
     useEffect(() => {
         const unsubscribeStatus =

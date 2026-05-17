@@ -25,6 +25,7 @@ export class DrawioYjsAdapter {
     private drawioOrigin: string;
     private onContentChange?: (xml: string) => void;
     private isInitialized = false;
+    private isReady = false;
     private pendingXml: string | null = null;
     private messageHandler: ((event: MessageEvent) => void) | null = null;
     private ytextObserver: ((event: Y.YTextEvent, transaction: Y.Transaction) => void) | null = null;
@@ -153,9 +154,9 @@ export class DrawioYjsAdapter {
         if (!this.pendingXml) return;
 
         try {
-            const hasContent = this.ytext.length > 0;
+            const hasExistingContent = this.ytext.length > 0;
 
-            if (!hasContent) {
+            if (!hasExistingContent) {
                 this.ignoreNextObserverCall = true;
                 this.doc.transact(() => {
                     this.isLocalUpdate = true;
@@ -165,15 +166,17 @@ export class DrawioYjsAdapter {
                 });
             }
 
-            const xmlToSend = this.ytext.length > 0 ? this.ytext.toString() : this.pendingXml;
-
+            // Y.Doc is always authoritative at this point — IndexedDB has already
+            // synced before the adapter was initialized, so either we just wrote
+            // the file XML (new doc) or the persisted collaborative state is present.
             this.sendToDrawio({
                 action: 'load',
-                xml: xmlToSend,
+                xml: this.ytext.toString(),
                 autosave: 1
             });
 
             this.pendingXml = null;
+            setTimeout(() => { this.isReady = true; }, 500);
         } catch (error) {
             console.error('[DrawioYjsAdapter] Error loading initial content:', error);
         }
@@ -216,6 +219,8 @@ export class DrawioYjsAdapter {
             console.warn('[DrawioYjsAdapter] Empty XML received');
             return;
         }
+
+        if (!this.isReady) return;
 
         try {
             const currentXml = this.ytext.toString();
@@ -303,13 +308,7 @@ export class DrawioYjsAdapter {
 
             window.addEventListener('message', exportHandler);
 
-            const exportMessage: any = {
-                action: 'export',
-                format,
-                ...options
-            };
-
-            this.sendToDrawio(exportMessage);
+            this.sendToDrawio({ action: 'export', format, ...options });
         });
     }
 
@@ -335,6 +334,7 @@ export class DrawioYjsAdapter {
         }
 
         this.isInitialized = false;
+        this.isReady = false;
         this.pendingXml = null;
         this.cursorTrackingEnabled = false;
     }

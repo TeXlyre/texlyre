@@ -4,9 +4,8 @@ import {
     GitBackupService,
     type GitBackupAdapter,
     type GitBackupChange,
-    type GitTreeItem,
 } from '@/services/GitBackupService';
-import { encodeContentToBase64 } from '@/utils/fileUtils.ts';
+import { toBase64 } from '@/utils/fileUtils.ts';
 import { forgejoAPIService } from './ForgejoAPIService';
 
 interface ForgejoTarget {
@@ -52,7 +51,7 @@ function mapForgejoChanges(changes: GitBackupChange[]): ForgejoCommitAction[] {
         return {
             operation: change.type,
             path: change.path,
-            content: encodeContentToBase64(change.content),
+            content: toBase64(change.content),
             encoding: 'base64',
             sha: change.previousRef,
         };
@@ -98,6 +97,14 @@ const forgejoBackupAdapter: GitBackupAdapter<ForgejoTarget> = {
             branch,
         ),
 
+    getFileRefForPath: (_item, path) => path,
+
+    getLatestCommitSha: (token, target, branch) =>
+        forgejoAPIService.getBranchHeadSha(token, target.owner, target.repo, branch),
+
+    readFileAtRef: (token, target, path, ref) =>
+        forgejoAPIService.getFileContentAtRef(token, target.owner, target.repo, path, ref),
+
     readFile: (token, target, path, branch) =>
         forgejoAPIService.getFileContent(
             token,
@@ -125,9 +132,18 @@ export const forgejoBackupService = {
     setSettings: sharedForgejoBackupService.setSettings.bind(
         sharedForgejoBackupService,
     ),
+
     setSecretsContext: sharedForgejoBackupService.setSecretsContext.bind(
         sharedForgejoBackupService,
     ),
+
+    setRecordsContext: sharedForgejoBackupService.setRecordsContext.bind(
+        sharedForgejoBackupService,
+    ),
+    setCurrentProjectId: sharedForgejoBackupService.setCurrentProjectId.bind(
+        sharedForgejoBackupService,
+    ),
+
     requestAccess: sharedForgejoBackupService.requestAccess.bind(
         sharedForgejoBackupService,
     ),

@@ -22,6 +22,7 @@ import './styles/global.css';
 import './styles/components/editor.css';
 import './styles/components/editor-tabs.css';
 import './styles/components/codemirror.css';
+import './styles/components/conflicts.css';
 import './styles/components/file-explorer.css';
 import './styles/components/search.css';
 import './styles/components/latex-typst-outline.css';
@@ -59,6 +60,7 @@ import AppRouter from './components/app/AppRouter';
 import AppBootstrap from './components/app/AppSettingBootrap';
 import PasswordModal from './components/auth/PasswordModal';
 import SplashScreen from './components/common/SplashScreen';
+import ConflictResolutionModal from './components/conflicts/ConflictResolutionModal';
 import FileConflictModal from './components/editor/FileConflictModal';
 import { AuthProvider } from './contexts/AuthContext';
 import { EditorProvider } from './contexts/EditorContext';
@@ -66,6 +68,7 @@ import { LSPConfigProvider } from './contexts/LSPConfigContext';
 import { FileSystemBackupProvider } from './contexts/FileSystemBackupContext';
 import { OfflineProvider } from './contexts/OfflineContext';
 import { PropertiesProvider } from './contexts/PropertiesContext';
+import { RecordsProvider } from './contexts/RecordsContext';
 import { SecretsContext, SecretsProvider } from './contexts/SecretsContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -123,22 +126,24 @@ function App() {
 					<OfflineProvider>
 						<AuthProvider>
 							<PropertiesProvider>
-								<ThemeProvider
-									defaultThemeId="texlyre-theme"
-									defaultVariant="system"
-								>
+								<RecordsProvider >
+									<ThemeProvider
+										defaultThemeId="texlyre-theme"
+										defaultVariant="system"
+									>
 
-									<AppBootstrap />
-									<SecretsProvider>
-										<FileSystemBackupProvider>
-											<LSPConfigProvider>
-												<EditorProvider>
-													<AppContent />
-												</EditorProvider>
-											</LSPConfigProvider>
-										</FileSystemBackupProvider>
-									</SecretsProvider>
-								</ThemeProvider>
+										<AppBootstrap />
+										<SecretsProvider>
+											<FileSystemBackupProvider>
+												<LSPConfigProvider>
+													<EditorProvider>
+														<AppContent />
+													</EditorProvider>
+												</LSPConfigProvider>
+											</FileSystemBackupProvider>
+										</SecretsProvider>
+									</ThemeProvider>
+								</RecordsProvider>
 							</PropertiesProvider>
 						</AuthProvider>
 					</OfflineProvider>
@@ -159,6 +164,7 @@ function AppContent() {
 	return (
 		<>
 			<AppRouter />
+			<ConflictResolutionModal />
 			<FileConflictModal />
 			<PasswordModal
 				isOpen={isPasswordModalOpen}

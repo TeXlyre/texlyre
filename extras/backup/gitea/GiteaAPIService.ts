@@ -135,7 +135,7 @@ export class GiteaAPIService {
             `repos/${owner}/${repo}/contents/${filePath}?ref=${ref}`,
         );
         if (data.encoding === 'base64') {
-            return atob(data.content.replace(/\n/g, ''));
+            return atob(data.content.replace(/[\r\n]/g, ''));
         }
         return data.content;
     }
@@ -194,6 +194,24 @@ export class GiteaAPIService {
             `repos/${owner}/${repo}/git/trees/${ref}?recursive=true`,
         );
         return data.tree;
+    }
+
+    async getBranchHeadSha(token: string, owner: string, repo: string, branch: string): Promise<string> {
+        const data = await this._request<{ commit: { id: string } }>(
+            token,
+            `repos/${owner}/${repo}/branches/${branch}?_=${Date.now()}`,
+        );
+        return data.commit.id;
+    }
+
+    async getFileContentAtRef(
+        token: string,
+        owner: string,
+        repo: string,
+        path: string,
+        ref: string,
+    ): Promise<string> {
+        return this.getFileContent(token, owner, repo, path, ref);
     }
 
     async getBranches(

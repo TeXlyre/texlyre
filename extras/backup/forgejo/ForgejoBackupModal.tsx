@@ -14,6 +14,7 @@ import Modal from '@/components/common/Modal';
 import SettingsModal from '@/components/settings/SettingsModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useSecrets } from '@/hooks/useSecrets';
+import { useRecords } from '@/hooks/useRecords';
 import { useSettings } from '@/hooks/useSettings';
 import { formatDate } from '@/utils/dateUtils';
 import { forgejoAPIService } from './ForgejoAPIService';
@@ -56,6 +57,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 
     const { getProjectById } = useAuth();
     const secrets = useSecrets();
+    const records = useRecords();
     const { getSetting } = useSettings();
 
     useEffect(() => {
@@ -78,6 +80,8 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
         const activityHistoryLimit =
             (getSetting('forgejo-backup-activity-history-limit')?.value as number) ||
             50;
+        const importAfterPush =
+            (getSetting('forgejo-backup-import-after-push')?.value as boolean) ?? true;
 
         forgejoBackupService.setSettings({
             apiEndpoint,
@@ -91,6 +95,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
             requestTimeout,
             maxRetryAttempts,
             activityHistoryLimit,
+            importAfterPush,
         });
 
         setSelectedBranch(defaultBranch);
@@ -103,6 +108,16 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
     useEffect(() => {
         forgejoBackupService.setSecretsContext(secrets);
     }, [secrets]);
+
+    useEffect(() => {
+        forgejoBackupService.setRecordsContext(records);
+    }, [records]);
+
+    useEffect(() => {
+        const scopedProjectId =
+            isInEditor && syncScope === 'current' ? currentProjectId ?? undefined : undefined;
+        forgejoBackupService.setCurrentProjectId(scopedProjectId);
+    }, [isInEditor, syncScope, currentProjectId]);
 
     useEffect(() => {
         const unsubscribeStatus =

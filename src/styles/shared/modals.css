@@ -34,6 +34,12 @@
 	width: 900px;
 }
 
+.modal-wide {
+	width: calc(100vw - 1rem);
+	max-width: calc(100vw - 1rem);
+	height: calc(100vh - 1rem);
+}
+
 .modal-header {
 	display: flex;
 	justify-content: space-between;

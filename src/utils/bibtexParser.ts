@@ -107,7 +107,7 @@ export class BibtexParser {
             id,
             type,
             fields,
-            originalIndex: 0, // Will be set by caller
+            originalIndex: 0,
             endPos: pos
         };
     }

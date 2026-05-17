@@ -96,6 +96,12 @@ const gitHubBackupAdapter: GitBackupAdapter<GitHubTarget> = {
 
 	getFileRefForPath: (item: GitTreeItem) => item.sha || item.path || '',
 
+	getLatestCommitSha: (token, target, branch) =>
+		gitHubAPIService.getBranchHeadSha(token, target.owner, target.repo, branch),
+
+	readFileAtRef: (token, target, path, ref) =>
+		gitHubAPIService.getFileContentAtRef(token, target.owner, target.repo, path, ref),
+
 	readFile: (token, target, ref) =>
 		gitHubAPIService.getBlobContent(token, target.owner, target.repo, ref),
 
@@ -122,6 +128,13 @@ export const gitHubBackupService = {
 	),
 
 	setSecretsContext: sharedGitHubBackupService.setSecretsContext.bind(
+		sharedGitHubBackupService,
+	),
+
+	setRecordsContext: sharedGitHubBackupService.setRecordsContext.bind(
+		sharedGitHubBackupService,
+	),
+	setCurrentProjectId: sharedGitHubBackupService.setCurrentProjectId.bind(
 		sharedGitHubBackupService,
 	),
 

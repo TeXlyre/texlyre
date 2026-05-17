@@ -52,12 +52,14 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
     const [showSaveIndicator, setShowSaveIndicator] = useState(false);
     const [yjsDoc, setYjsDoc] = useState<Y.Doc | null>(null);
     const [yjsProvider, setYjsProvider] = useState<any>(null);
+    const [isPersistenceSynced, setIsPersistenceSynced] = useState(false);
     const [showOfflineBanner, setShowOfflineBanner] = useState(true);
 
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const adapterRef = useRef<DrawioYjsAdapter | null>(null);
     const saveIndicatorTimerRef = useRef<number | null>(null);
     const onUpdateContentRef = useRef(onUpdateContent);
+    const initialContentRef = useRef<string>('');
 
     useEffect(() => {
         onUpdateContentRef.current = onUpdateContent;
@@ -71,14 +73,31 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
     const collectionName = useMemo(() => `yjs_${documentId}`, [documentId]);
 
     useEffect(() => {
-        console.log('[DrawioCollaborativeViewer] Connecting to Y.Doc:', projectId, collectionName);
+        setIsPersistenceSynced(false);
 
         const { doc, provider } = collabService.connect(projectId, collectionName);
         setYjsDoc(doc);
         setYjsProvider(provider);
 
+        let cancelled = false;
+
+        const checkSynced = () => {
+            const container = collabService.getDocContainer(projectId, collectionName);
+            if (!container?.persistence || container.persistence.synced) {
+                if (!cancelled) setIsPersistenceSynced(true);
+                return;
+            }
+            const onSynced = () => {
+                if (!cancelled) setIsPersistenceSynced(true);
+            };
+            container.persistence.once('synced', onSynced);
+        };
+
+        const timer = window.setTimeout(checkSynced, 0);
+
         return () => {
-            console.log('[DrawioCollaborativeViewer] Disconnecting from Y.Doc');
+            cancelled = true;
+            window.clearTimeout(timer);
             collabService.disconnect(projectId, collectionName);
         };
     }, [projectId, collectionName]);
@@ -140,6 +159,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
     useEffect(() => {
         setIframeLoaded(false);
+        setIsPersistenceSynced(false);
 
         if (adapterRef.current) {
             adapterRef.current.destroy();
@@ -197,9 +217,12 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 </mxfile>`;
                 }
 
-                setDrawioContent(text);
-                setIsLoading(false);
-                setError(null);
+                if (!cancelled) {
+                    initialContentRef.current = text;
+                    setDrawioContent(text);
+                    setIsLoading(false);
+                    setError(null);
+                }
             } catch (error) {
                 console.error('Error decoding Draw.io content:', error);
                 setError(t('Failed to decode file content: {error}', {
@@ -213,8 +236,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
         return () => {
             cancelled = true;
         };
-    }, [content, t, fileId, fileInfo.fileSize]);
-
+    }, [content, fileId, fileInfo.fileSize]);
 
     const flashSavedIndicator = useCallback(() => {
         setShowSaveIndicator(true);
@@ -257,11 +279,9 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
     }, [fileId, flashSavedIndicator]);
 
     useEffect(() => {
-        if (!iframeLoaded || !drawioContent || !yjsDoc || adapterRef.current) {
+        if (!iframeLoaded || !isPersistenceSynced || !yjsDoc || adapterRef.current) {
             return;
         }
-
-        console.log('[DrawioCollaborativeViewer] Initializing adapter');
 
         const adapter = new DrawioYjsAdapter({
             doc: yjsDoc,
@@ -269,10 +289,8 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
             iframeRef,
             drawioOrigin,
             onContentChange: (xml: string) => {
-                // console.log('[DrawioCollaborativeViewer] Content changed from adapter, length:', xml.length);
                 setDrawioContent(xml);
                 setHasChanges(true);
-
                 onUpdateContentRef.current(xml);
 
                 if (autoSaveFile && fileId) {
@@ -281,7 +299,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
             }
         });
 
-        adapter.initialize(drawioContent);
+        adapter.initialize(initialContentRef.current);
         adapterRef.current = adapter;
 
         if (yjsProvider?.awareness && user) {
@@ -292,17 +310,11 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
                 color: user.color || '#4A90E2',
                 colorLight: user.colorLight || '#85B8F0',
             });
-            console.log('[DrawioCollaborativeViewer] Set local user in awareness:', user.username);
         }
-
-        return () => {
-            console.log('[DrawioCollaborativeViewer] Effect cleanup - NOT destroying adapter');
-        };
-    }, [iframeLoaded, drawioContent, yjsDoc, yjsProvider, drawioOrigin, autoSaveFile, fileId, handleSave, user]);
+    }, [iframeLoaded, isPersistenceSynced, yjsDoc, yjsProvider, drawioOrigin, autoSaveFile, fileId, handleSave, user]);
 
     useEffect(() => {
         return () => {
-            console.log('[DrawioCollaborativeViewer] Component unmounting, destroying adapter');
             if (adapterRef.current) {
                 adapterRef.current.destroy();
                 adapterRef.current = null;
@@ -311,7 +323,6 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
     }, []);
 
     const handleIframeLoad = useCallback(() => {
-        console.log('[DrawioCollaborativeViewer] Iframe loaded');
         setTimeout(() => setIframeLoaded(true), 50);
     }, []);
 
@@ -323,7 +334,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
             return adapterRef.current.requestExport(options.format, options);
         },
-        [iframeLoaded, t]
+        [iframeLoaded]
     );
 
     const handleDownload = useCallback(() => {
@@ -368,7 +379,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
         t('Document ID: {documentId}', { documentId }),
         t('MIME Type: {mimeType}', { mimeType: fileInfo.mimeType || 'application/vnd.jgraph.mxfile' }),
         t('Size: {size}', { size: formatFileSize(fileInfo.fileSize) })
-    ], [autoSave, autoSaveFile, theme, language, documentId, fileInfo.mimeType, fileInfo.fileSize, t]);
+    ], [autoSave, autoSaveFile, theme, language, documentId, fileInfo.mimeType, fileInfo.fileSize]);
 
     const headerControls = useMemo(() => (
         <>
@@ -394,7 +405,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
                 <DrawioSvgExportButton disabled={!iframeLoaded} fileName={fileName} onExport={handleExport} />
             </PluginControlGroup>
         </>
-    ), [fileId, isSaving, iframeLoaded, hasChanges, fileName, handleManualSave, handleDownload, handleExport, t]);
+    ), [fileId, isSaving, iframeLoaded, hasChanges, fileName, handleManualSave, handleDownload, handleExport]);
 
     if (isLoading) {
         return (

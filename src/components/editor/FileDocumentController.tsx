@@ -1073,12 +1073,6 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
           ) : (
             <FileExplorer
               onFileSelect={handleUserFileSelect}
-              onOpenDocument={handleDocumentSelect}
-              onCreateDocument={handleCreateDocument}
-              documents={documents.map((doc) => ({
-                id: Number.parseInt(doc.id, 36),
-                name: doc.name
-              }))}
               initialSelectedFile={initialSelectedFile}
               initialExpandedPaths={initialExpandedPaths}
               currentProjectId={sessionStorage.getItem('currentProjectId')}

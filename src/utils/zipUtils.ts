@@ -12,10 +12,16 @@ import {
 	toArrayBuffer
 } from './fileUtils';
 
-export const extractZip = async (
+export interface DownloadableFile {
+	content: Uint8Array;
+	name: string;
+	mimeType: string;
+}
+
+export async function extractZip(
 	zipFile: File,
 	currentPath: string,
-): Promise<FileNode[]> => {
+): Promise<FileNode[]> {
 	const zip = new JSZip();
 	const content = await zipFile.arrayBuffer();
 	const zipContents = await zip.loadAsync(content);
@@ -72,24 +78,24 @@ export const extractZip = async (
 
 	await Promise.all(processPromises);
 	return files;
-};
+}
 
-export const batchExtractZip = async (
+export async function batchExtractZip(
 	zipFile: File,
 	currentPath: string,
-): Promise<{ files: FileNode[]; directories: FileNode[] }> => {
+): Promise<{ files: FileNode[]; directories: FileNode[] }> {
 	const files = await extractZip(zipFile, currentPath);
 	return {
 		files: files.filter((f) => f.type === 'file'),
 		directories: files.filter((f) => f.type === 'directory'),
 	};
-};
+}
 
-export const createZipFromFolder = async (
+export async function createZipFromFolder(
 	folderNode: FileNode,
 	getFileContent: (fileId: string) => Promise<string | ArrayBuffer | null>,
 	_getFile: (fileId: string) => Promise<FileNode | null>,
-): Promise<Blob> => {
+): Promise<Blob> {
 	const zip = new JSZip();
 
 	const collectFiles = async (node: FileNode, basePath = ''): Promise<void> => {
@@ -125,9 +131,9 @@ export const createZipFromFolder = async (
 	}
 
 	return await zip.generateAsync({ type: 'blob' });
-};
+}
 
-export const downloadZipFile = (blob: Blob, filename: string): void => {
+export function downloadZipFile(blob: Blob, filename: string): void {
 	const url = URL.createObjectURL(blob);
 	const a = document.createElement('a');
 	a.href = url;
@@ -136,15 +142,13 @@ export const downloadZipFile = (blob: Blob, filename: string): void => {
 	a.click();
 	document.body.removeChild(a);
 	URL.revokeObjectURL(url);
-};
-
-export interface DownloadableFile {
-	content: Uint8Array;
-	name: string;
-	mimeType: string;
 }
 
-export const downloadFile = (content: Uint8Array, fileName: string, mimeType: string): void => {
+export function downloadFile(
+	content: Uint8Array,
+	fileName: string,
+	mimeType: string,
+): void {
 	const blob = new Blob([toArrayBuffer(content)], { type: mimeType });
 	const url = URL.createObjectURL(blob);
 	const a = document.createElement('a');
@@ -154,11 +158,11 @@ export const downloadFile = (content: Uint8Array, fileName: string, mimeType: st
 	a.click();
 	document.body.removeChild(a);
 	URL.revokeObjectURL(url);
-};
+}
 
-export const createZipFromFiles = async (
-	files: DownloadableFile[]
-): Promise<Blob> => {
+export async function createZipFromFiles(
+	files: DownloadableFile[],
+): Promise<Blob> {
 	const zip = new JSZip();
 
 	for (const file of files) {
@@ -166,12 +170,12 @@ export const createZipFromFiles = async (
 	}
 
 	return await zip.generateAsync({ type: 'blob' });
-};
+}
 
-export const downloadFiles = async (
+export async function downloadFiles(
 	files: DownloadableFile[],
-	baseName: string
-): Promise<void> => {
+	baseName: string,
+): Promise<void> {
 	if (files.length === 0) return;
 
 	if (files.length === 1) {
@@ -180,4 +184,4 @@ export const downloadFiles = async (
 		const zipBlob = await createZipFromFiles(files);
 		downloadZipFile(zipBlob, `${baseName}_export.zip`);
 	}
-};
+}

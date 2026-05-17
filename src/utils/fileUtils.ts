@@ -2,36 +2,44 @@
 import { t } from '@/i18n';
 import mime from 'mime';
 
-export const arrayBufferToString = (buffer: ArrayBuffer | Uint8Array): string => {
+export function arrayBufferToString(buffer: ArrayBuffer | Uint8Array): string {
 	return new TextDecoder().decode(buffer);
-};
+}
 
-export const stringToArrayBuffer = (str: string): ArrayBuffer => {
+export function stringToArrayBuffer(str: string): ArrayBuffer {
 	return new TextEncoder().encode(str).buffer;
-};
+}
 
-export const toArrayBuffer = (data: string | ArrayBuffer | SharedArrayBuffer | ArrayBufferView): ArrayBuffer => {
-	if (typeof data === 'string') return stringToArrayBuffer(data);
-	if (data instanceof ArrayBuffer) return data;
-	if (ArrayBuffer.isView(data)) {
-		const { buffer, byteOffset, byteLength } = data;
+export function latin1ToBytes(latin1: string): Uint8Array {
+	const bytes = new Uint8Array(latin1.length);
+	for (let i = 0; i < latin1.length; i++) bytes[i] = latin1.charCodeAt(i) & 0xff;
+	return bytes;
+}
+
+export function toArrayBuffer(
+	content: string | ArrayBuffer | SharedArrayBuffer | ArrayBufferView)
+	: ArrayBuffer {
+	if (typeof content === 'string') return stringToArrayBuffer(content);
+	if (content instanceof ArrayBuffer) return content;
+	if (ArrayBuffer.isView(content)) {
+		const { buffer, byteOffset, byteLength } = content;
 		if (buffer instanceof ArrayBuffer && byteOffset === 0 && byteLength === buffer.byteLength) return buffer;
 		const out = new Uint8Array(byteLength);
 		out.set(new Uint8Array(buffer, byteOffset, byteLength));
 		return out.buffer;
 	}
-	if (typeof SharedArrayBuffer !== 'undefined' && data instanceof SharedArrayBuffer) {
-		const src = new Uint8Array(data);
+	if (typeof SharedArrayBuffer !== 'undefined' && content instanceof SharedArrayBuffer) {
+		const src = new Uint8Array(content);
 		const out = new Uint8Array(src.byteLength);
 		out.set(src);
 		return out.buffer;
 	}
 	throw new Error('Unsupported binary content type');
-};
+}
 
-export const encodeContentToBase64 = (
+export function toBase64(
 	content: string | Uint8Array | ArrayBuffer,
-): string => {
+): string {
 	const uint8Array =
 		typeof content === 'string'
 			? new TextEncoder().encode(content)
@@ -46,26 +54,38 @@ export const encodeContentToBase64 = (
 	}
 
 	return btoa(binaryString);
-};
+}
 
-export const formatFileSize = (size?: number): string => {
+export function formatFileSize(size?: number): string {
 	if (!size) return t('Unknown size');
 	if (size < 1024) return t('{count} bytes', { count: size });
 	if (size < 1024 * 1024) return t('{size} KB', { size: (size / 1024).toFixed(1) });
 	return t('{size} MB', { size: (size / (1024 * 1024)).toFixed(1) });
-};
+}
 
-export const getFilenameFromPath = (path: string): string => {
+export async function computeGitBlobSha(content: string | ArrayBuffer): Promise<string> {
+	const bytes = typeof content === 'string'
+		? new TextEncoder().encode(content)
+		: new Uint8Array(content);
+	const header = new TextEncoder().encode(`blob ${bytes.byteLength}\0`);
+	const data = new Uint8Array(header.byteLength + bytes.byteLength);
+	data.set(header, 0);
+	data.set(bytes, header.byteLength);
+	const hash = await crypto.subtle.digest('SHA-1', data);
+	return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+export function getFilenameFromPath(path: string): string {
 	const parts = path.split('/');
 	return parts[parts.length - 1];
-};
+}
 
-export const getParentPath = (path: string): string => {
+export function getParentPath(path: string): string {
 	const lastSlashIndex = path.lastIndexOf('/');
 	return lastSlashIndex === 0 ? '/' : path.substring(0, lastSlashIndex);
-};
+}
 
-export const getRelativePath = (fromPath: string, toPath: string): string => {
+export function getRelativePath(fromPath: string, toPath: string): string {
 	const fromParts = fromPath.split('/').filter(p => p);
 	const toParts = toPath.split('/').filter(p => p);
 
@@ -82,14 +102,14 @@ export const getRelativePath = (fromPath: string, toPath: string): string => {
 	const downPath = toParts.slice(commonLength);
 
 	return '../'.repeat(upLevels) + downPath.join('/');
-};
+}
 
-export const joinPaths = (base: string, path: string): string => {
+export function joinPaths(base: string, path: string): string {
 	if (base === '/') {
 		return `/${path}`;
 	}
 	return `${base}/${path}`;
-};
+}
 
 export interface NameValidationResult {
 	valid: boolean;
@@ -98,10 +118,10 @@ export interface NameValidationResult {
 
 const ILLEGAL_NAME_CHARS = /[<>:"/\\|?*\x00-\x1F]/;
 // NOTE (fabawi): File gets excluded from ZIP on WINDOWS if name contains the following
-const RESERVED_WINDOWS_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i;
+const RESERVED_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$|^\.texlyre_/i;
 const MAX_NAME_BYTES = 255;
 
-export const validateFileName = (name: string): NameValidationResult => {
+export function validateFileName(name: string): NameValidationResult {
 	const trimmed = name.trim();
 
 	if (!trimmed) {
@@ -116,20 +136,20 @@ export const validateFileName = (name: string): NameValidationResult => {
 	if (/[. ]$/.test(trimmed)) {
 		return { valid: false, error: t('Name cannot end with a space or period') };
 	}
-	if (RESERVED_WINDOWS_NAMES.test(trimmed)) {
+	if (RESERVED_NAMES.test(trimmed)) {
 		return { valid: false, error: t('"{name}" is a reserved system name', { name: trimmed }) };
 	}
 	if (new TextEncoder().encode(trimmed).length > MAX_NAME_BYTES) {
 		return { valid: false, error: t('Name exceeds {max} bytes', { max: MAX_NAME_BYTES }) };
 	}
 	return { valid: true };
-};
+}
 
-export const getMimeType = (fileName: string): string => {
+export function getMimeType(fileName: string): string {
 	return mime.getType(fileName) || 'application/octet-stream';
-};
+}
 
-export const getFileExtension = (mimeType: string): string => {
+export function getFileExtension(mimeType: string): string {
 	const typeMap: Record<string, string> = {
 		// Images
 		'image/jpeg': 'jpg',
@@ -206,9 +226,9 @@ export const getFileExtension = (mimeType: string): string => {
 	};
 
 	return typeMap[mimeType] || mimeType.split('/')[1]?.split('+')[0] || 'png';
-};
+}
 
-export const isBinaryFile = (fileName: string): boolean => {
+export function isBinaryFile(fileName: string): boolean {
 	const baseName = fileName.split('/').pop()?.toLowerCase() || '';
 
 	if (!baseName) {
@@ -350,9 +370,9 @@ export const isBinaryFile = (fileName: string): boolean => {
 	]);
 
 	return !textExtensions.has(extension);
-};
+}
 
-export const isTemporaryFile = (fileName: string): boolean => {
+export function isTemporaryFile(fileName: string): boolean {
 	const temporaryPaths = [
 		// '/.texlyre_src',
 		// '/.texlyre_cache',
@@ -365,74 +385,74 @@ export const isTemporaryFile = (fileName: string): boolean => {
 	];
 
 	return temporaryPaths.some((tempPath) => fileName.startsWith(tempPath));
-};
+}
 
-export const isLatexFile = (pathOrName: string): boolean => {
+export function isLatexFile(pathOrName: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return lower.endsWith('.tex') || lower.endsWith('.latex') || lower.endsWith('.ltx')
 		|| lower.endsWith('.cls') || lower.endsWith('.sty');  // || lower.endsWith('.ind') || lower.endsWith('.bbl')
-};
+}
 
-export const isLatexMainFile = (pathOrName: string): boolean => {
+export function isLatexMainFile(pathOrName: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return lower.endsWith('.tex') || lower.endsWith('.latex') || lower.endsWith('.ltx')
-};
+}
 
-export const isTypstFile = (pathOrName: string): boolean => {
+export function isTypstFile(pathOrName: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return lower.endsWith('.typ') || lower.endsWith('.typst');
-};
+}
 
-// export const isTypstMainFile = (pathOrName: string): boolean => {
+// export function isTypstMainFile(pathOrName: string): boolean {
 // 	if (!pathOrName) return false;
 // 	const lower = pathOrName.toLowerCase();
 // 	return lower.endsWith('.typ') || lower.endsWith('.typst');
 // };
 
-export const isBibFile = (pathOrName: string): boolean => {
+export function isBibFile(pathOrName: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return lower.endsWith('.bib') || lower.endsWith('.bibtex');
-};
+}
 
-export const isMarkdownFile = (pathOrName: string): boolean => {
+export function isMarkdownFile(pathOrName: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return lower.endsWith('.md') || lower.endsWith('.markdown');
-};
+}
 
-export const isYamlFile = (pathOrName: string): boolean => {
+export function isYamlFile(pathOrName: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return lower.endsWith('.yml') || lower.endsWith('.yaml');
-};
+}
 
-export const isJsonFile = (pathOrName: string): boolean => {
+export function isJsonFile(pathOrName: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return lower.endsWith('.json');
-};
+}
 
-export const isHtmlFile = (pathOrName: string): boolean => {
+export function isHtmlFile(pathOrName: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
 	return lower.endsWith('.html');
-};
+}
 
-export const isLatexContent = (content: string): boolean => {
+export function isLatexContent(content: string): boolean {
 	return /\\(?:documentclass|usepackage|begin|end|section|chapter|part|maketitle)/i.test(content);
-};
+}
 
-export const isTypstContent = (content: string): boolean => {
+export function isTypstContent(content: string): boolean {
 	return /(?:#import|#include|#let|#set|^=+\s|\*\*|\/\/)/m.test(content);
-};
+}
 
-export const isBibContent = (content: string): boolean => {
+export function isBibContent(content: string): boolean {
 	return /@(?:article|book|inproceedings|incollection|phdthesis|mastersthesis|techreport|misc|manual|conference)\s*\{/i.test(content);
-};
+}
 
 export const detectFileType = (fileName: string | undefined, content?: string):
 	'latex' | 'typst' | 'bib' | 'markdown' | 'yaml' | 'json' | 'html' | 'unknown' => {
@@ -451,4 +471,4 @@ export const detectFileType = (fileName: string | undefined, content?: string):
 		if (isLatexContent(content)) return 'latex';
 	}
 	return 'unknown';
-};
+}
