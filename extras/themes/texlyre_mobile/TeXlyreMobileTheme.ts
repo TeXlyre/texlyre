@@ -55,6 +55,10 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 		return hash === '' || hash === '#';
 	};
 
+	const isLoggedIn = (): boolean => {
+		return localStorage.getItem('texlyre-current-user') !== null;
+	};
+
 	const cleanupMobileNavigation = () => {
 		const existingNav = document.querySelector('.mobile-bottom-nav');
 		if (existingNav) {
@@ -81,6 +85,11 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 	};
 
 	const handleMobileNavigation = () => {
+		if (!isLoggedIn()) {
+			cleanupMobileNavigation();
+			return;
+		}
+
 		const setupNav = () => {
 			const existingNav = document.querySelector('.mobile-bottom-nav');
 			if (existingNav) {
@@ -106,6 +115,7 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 			if (existingNav) {
 				existingNav.remove();
 			}
+			if (!isLoggedIn()) return;
 			createMobileNavigation();
 
 			if (isProjectsView()) {
@@ -130,6 +140,7 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 			if (existingNav) {
 				existingNav.remove();
 			}
+			if (!isLoggedIn()) return;
 			createMobileNavigation();
 			updateMobileView(currentView);
 		};
@@ -306,9 +317,7 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 			document.documentElement.setAttribute('data-theme-plugin', 'texlyre-mobile');
 			document.documentElement.setAttribute('data-theme-mode', theme.isDark ? 'dark' : 'light');
 
-			const isLoggedIn = localStorage.getItem('texlyre-current-user') !== null;
-
-			if (isLoggedIn) {
+			if (isLoggedIn()) {
 				handleMobileNavigation();
 
 				const savedView = localStorage.getItem('texlyre-mobile-view');
@@ -317,11 +326,12 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 					updateMobileView(savedView);
 				}
 			} else {
+				cleanupMobileNavigation();
 				if (loginCheckInterval) {
 					clearInterval(loginCheckInterval);
 				}
 				loginCheckInterval = setInterval(() => {
-					if (localStorage.getItem('texlyre-current-user') !== null) {
+					if (isLoggedIn()) {
 						if (loginCheckInterval) {
 							clearInterval(loginCheckInterval);
 							loginCheckInterval = null;
@@ -350,7 +360,9 @@ const createTeXlyreMobileTheme = (): ThemePlugin => {
 
 		applyLayout(): void {
 			document.documentElement.setAttribute('data-layout', layout.id);
-			handleMobileNavigation();
+			if (isLoggedIn()) {
+				handleMobileNavigation();
+			}
 		},
 
 		cleanup(): void {
