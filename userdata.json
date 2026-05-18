@@ -68,5 +68,6 @@
     "sourcemap-show-floating-buttons:global": true,
     "toolbar-visible:global": true
   },
-  "secrets": {}
+  "secrets": {},
+  "records": {}
 }

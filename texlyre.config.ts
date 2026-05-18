@@ -134,6 +134,7 @@ const config: TexlyreConfig = {
                 },
             },
             secrets: {},
+            records: {},
         },
         mobile: {
             settings: {

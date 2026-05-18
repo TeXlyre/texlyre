@@ -189,12 +189,14 @@ function generateManifest(config: any) {
 }
 
 function generateUserdataFiles(config: any) {
-    const writeUserdataFile = (filename: string, settings: any, properties: any, secrets: any) => {
+    const writeUserdataFile = (filename: string,
+        settings: any, properties: any, secrets: any, records: any) => {
         const userdata = {
             version: config.userdata.version || '1.0.0',
             settings: flattenSettings(settings),
             properties: flattenProperties(properties),
             secrets,
+            records,
         };
 
         fs.writeFileSync(
@@ -209,8 +211,9 @@ function generateUserdataFiles(config: any) {
                 settings: deepMerge(acc.settings, part?.settings || {}),
                 properties: deepMerge(acc.properties, part?.properties || {}),
                 secrets: deepMerge(acc.secrets, part?.secrets || {}),
+                records: deepMerge(acc.records, part?.records || {}),
             }),
-            { settings: {}, properties: {}, secrets: {} }
+            { settings: {}, properties: {}, secrets: {}, records: {} }
         );
     };
 
@@ -218,21 +221,21 @@ function generateUserdataFiles(config: any) {
     const local = config.userdata.local;
     const mobile = config.userdata.mobile;
 
-    writeUserdataFile('userdata.json', base.settings, base.properties, base.secrets);
+    writeUserdataFile('userdata.json', base.settings, base.properties, base.secrets, base.records);
 
     if (mobile) {
         const merged = mergeUserdata(base, mobile);
-        writeUserdataFile('userdata.mobile.json', merged.settings, merged.properties, merged.secrets);
+        writeUserdataFile('userdata.mobile.json', merged.settings, merged.properties, merged.secrets, merged.records);
     }
 
     if (local) {
         const merged = mergeUserdata(base, local);
-        writeUserdataFile('userdata.local.json', merged.settings, merged.properties, merged.secrets);
+        writeUserdataFile('userdata.local.json', merged.settings, merged.properties, merged.secrets, merged.records);
     }
 
     if (local && mobile) {
         const merged = mergeUserdata(base, local, mobile);
-        writeUserdataFile('userdata.local.mobile.json', merged.settings, merged.properties, merged.secrets);
+        writeUserdataFile('userdata.local.mobile.json', merged.settings, merged.properties, merged.secrets, merged.records);
     }
 }
 
