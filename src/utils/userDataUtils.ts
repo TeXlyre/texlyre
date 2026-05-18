@@ -1,6 +1,6 @@
 // src/utils/userDataUtils.ts
 
-export type UserDataType = 'settings' | 'properties' | 'secrets' | 'all';
+export type UserDataType = 'settings' | 'properties' | 'secrets' | 'records' | 'all';
 
 export function getUserDataKey(
   userId: string,
@@ -29,7 +29,7 @@ export function setUserData(
 
 export function clearUserData(userId: string, type: UserDataType): void {
   if (type === 'all') {
-    ['settings', 'properties', 'secrets'].forEach((t) => {
+    ['settings', 'properties', 'secrets', 'records'].forEach((t) => {
       localStorage.removeItem(getUserDataKey(userId, t as Exclude<UserDataType, 'all'>));
     });
   } else {
@@ -42,7 +42,8 @@ export function exportUserData(userId: string, type: UserDataType): any {
     return {
       settings: getUserData(userId, 'settings'),
       properties: getUserData(userId, 'properties'),
-      secrets: getUserData(userId, 'secrets')
+      secrets: getUserData(userId, 'secrets'),
+      records: getUserData(userId, 'records')
     };
   }
   return getUserData(userId, type);
@@ -57,6 +58,9 @@ export function importUserData(userId: string, data: any): void {
   }
   if (data.secrets) {
     setUserData(userId, 'secrets', data.secrets);
+  }
+  if (data.records) {
+    setUserData(userId, 'records', data.records);
   }
 }
 

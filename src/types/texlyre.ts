@@ -5,6 +5,7 @@ export interface UserData {
     settings: UserDataSettings;
     properties: UserDataProperties;
     secrets: Record<string, unknown>;
+    records: Record<string, unknown>;
 }
 
 export type DeepPartial<T> = {
@@ -65,11 +66,13 @@ export interface TexlyreConfig {
             settings?: DeepPartial<UserDataSettings>;
             properties?: DeepPartial<UserDataProperties>;
             secrets?: Record<string, unknown>;
+            records?: Record<string, unknown>;
         };
         local?: {
             settings?: DeepPartial<UserDataSettings>;
             properties?: DeepPartial<UserDataProperties>;
             secrets?: Record<string, unknown>;
+            records?: Record<string, unknown>;
         };
     };
 }

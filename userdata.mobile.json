@@ -69,5 +69,6 @@
     "toolbar-visible:global": true,
     "project-list-view-mode:global": "list"
   },
-  "secrets": {}
+  "secrets": {},
+  "records": {}
 }
