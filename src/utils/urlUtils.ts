@@ -1,5 +1,5 @@
 // src/utils/urlUtils.ts
-import { UrlFragments } from '../types/yjs.ts';
+import type { UrlFragments } from '../types/yjs.ts';
 
 const LEGACY_YJS_PROJECT_ID_RE = /^[a-z0-9]{20,32}$/;
 const UUID_PROJECT_ID_RE =
@@ -8,10 +8,7 @@ const UUID_PROJECT_ID_RE =
 export function isValidYjsProjectId(projectId: string): boolean {
 	const value = projectId.trim();
 
-	return (
-		LEGACY_YJS_PROJECT_ID_RE.test(value) ||
-		UUID_PROJECT_ID_RE.test(value)
-	);
+	return LEGACY_YJS_PROJECT_ID_RE.test(value) || UUID_PROJECT_ID_RE.test(value);
 }
 
 export function isValidYjsUrl(url: string): boolean {
@@ -24,7 +21,7 @@ export function isValidYjsUrl(url: string): boolean {
 }
 
 export function generateYjsProjectId(): string {
-	return crypto.randomUUID()
+	return crypto.randomUUID();
 }
 
 export function parseUrlFragments(url: string): UrlFragments {
@@ -70,19 +67,33 @@ export function buildUrlWithFragments(
 }
 
 export function pushHash(hash: string): void {
-	const target = hash ? `#${hash}` : `${window.location.pathname}${window.location.search}`;
+	const target = hash
+		? `#${hash}`
+		: `${window.location.pathname}${window.location.search}`;
 	const oldURL = window.location.href;
 	window.history.pushState(null, '', target);
 	if (window.location.href !== oldURL) {
-		window.dispatchEvent(new HashChangeEvent('hashchange', { oldURL, newURL: window.location.href }));
+		window.dispatchEvent(
+			new HashChangeEvent('hashchange', {
+				oldURL,
+				newURL: window.location.href,
+			}),
+		);
 	}
 }
 
 export function replaceHash(hash: string): void {
-	const target = hash ? `#${hash}` : `${window.location.pathname}${window.location.search}`;
+	const target = hash
+		? `#${hash}`
+		: `${window.location.pathname}${window.location.search}`;
 	const oldURL = window.location.href;
 	window.history.replaceState(null, '', target);
 	if (window.location.href !== oldURL) {
-		window.dispatchEvent(new HashChangeEvent('hashchange', { oldURL, newURL: window.location.href }));
+		window.dispatchEvent(
+			new HashChangeEvent('hashchange', {
+				oldURL,
+				newURL: window.location.href,
+			}),
+		);
 	}
 }

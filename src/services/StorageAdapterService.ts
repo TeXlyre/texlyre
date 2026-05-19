@@ -16,7 +16,7 @@ export interface FileSystemAdapter {
 }
 
 export class DirectoryAdapter implements FileSystemAdapter {
-	constructor(private rootHandle: FileSystemDirectoryHandle) { }
+	constructor(private rootHandle: FileSystemDirectoryHandle) {}
 
 	async writeFile(
 		path: string,
@@ -212,10 +212,16 @@ export class StorageAdapterService {
 	): Promise<void> {
 		const paths = this.unifiedService.getPaths();
 
-		await adapter.writeFile(paths.MANIFEST, JSON.stringify(data.manifest, null, 2));
+		await adapter.writeFile(
+			paths.MANIFEST,
+			JSON.stringify(data.manifest, null, 2),
+		);
 
 		if (data.account) {
-			await adapter.writeFile(paths.ACCOUNT, JSON.stringify(data.account, null, 2));
+			await adapter.writeFile(
+				paths.ACCOUNT,
+				JSON.stringify(data.account, null, 2),
+			);
 		}
 
 		if (data.userData) {
@@ -225,16 +231,17 @@ export class StorageAdapterService {
 			);
 		}
 
-		await adapter.writeFile(paths.PROJECTS, JSON.stringify(data.projects, null, 2));
+		await adapter.writeFile(
+			paths.PROJECTS,
+			JSON.stringify(data.projects, null, 2),
+		);
 
 		for (const [projectId, projectData] of data.projectData) {
 			await this.writeProjectData(adapter, projectId, projectData);
 		}
 	}
 
-	async readUnifiedStructure(
-		adapter: FileSystemAdapter,
-	): Promise<{
+	async readUnifiedStructure(adapter: FileSystemAdapter): Promise<{
 		manifest: any;
 		account: any;
 		userData?: any;
@@ -365,7 +372,10 @@ export class StorageAdapterService {
 			if (!content) continue;
 
 			const cleanPath = this.cleanRelativePath(file.path);
-			const filePath = this.unifiedService.getFileContentPath(projectId, cleanPath);
+			const filePath = this.unifiedService.getFileContentPath(
+				projectId,
+				cleanPath,
+			);
 			const dirPath = filePath.substring(0, filePath.lastIndexOf('/'));
 
 			if (dirPath && dirPath !== this.unifiedService.getFilesPath(projectId)) {
@@ -459,7 +469,7 @@ export class StorageAdapterService {
 				if (contents.some((name) => name.endsWith('.yjs'))) {
 					return path;
 				}
-			} catch { }
+			} catch {}
 		}
 
 		return null;

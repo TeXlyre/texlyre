@@ -6,20 +6,20 @@ const { copyTypstAssets } = require('./copy-typst-assets.cjs');
 const { downloadCoreAssets } = require('./download-core-assets.cjs');
 
 async function setupAssets() {
-    console.log('=== Setting up assets ===\n');
+	console.log('=== Setting up assets ===\n');
 
-    try {
-        await copyCmaps();
-        await copyKTeXFonts();
-        await copyDetypifyAssets();
-        await copyTypstAssets();
-        await downloadCoreAssets();
+	try {
+		await copyCmaps();
+		await copyKTeXFonts();
+		await copyDetypifyAssets();
+		await copyTypstAssets();
+		await downloadCoreAssets();
 
-        console.log('\n✅ Asset setup complete');
-    } catch (err) {
-        console.error('\n❌ Asset setup failed:', err);
-        process.exit(1);
-    }
+		console.log('\n✅ Asset setup complete');
+	} catch (err) {
+		console.error('\n❌ Asset setup failed:', err);
+		process.exit(1);
+	}
 }
 
 setupAssets();

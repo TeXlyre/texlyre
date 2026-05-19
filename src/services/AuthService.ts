@@ -59,7 +59,9 @@ class AuthService {
 							localStorage.removeItem('texlyre-current-user');
 						} else {
 							this.currentUser = user;
-							console.log(`[AuthService] Restored user session: ${user.username} (${this.isGuestUser(user) ? 'guest' : 'full'})`);
+							console.log(
+								`[AuthService] Restored user session: ${user.username} (${this.isGuestUser(user) ? 'guest' : 'full'})`,
+							);
 						}
 					} else {
 						console.log(`[AuthService] User not found: ${userId}`);
@@ -91,7 +93,7 @@ class AuthService {
 	}
 
 	isGuestUser(user: User | null): boolean {
-		return !!(user?.isGuest);
+		return !!user?.isGuest;
 	}
 
 	isGuestExpired(user: User | null): boolean {
@@ -111,7 +113,7 @@ class AuthService {
 		const sessionId = this.generateSessionId();
 		const userId = `guest_${crypto.randomUUID()}`;
 		const now = Date.now();
-		const expiresAt = now + (24 * 60 * 60 * 1000);
+		const expiresAt = now + 24 * 60 * 60 * 1000;
 
 		const guestUser: User = {
 			id: userId,
@@ -139,11 +141,17 @@ class AuthService {
 			this.currentUser = guestUser;
 			localStorage.setItem('texlyre-current-user', userId);
 
-			console.log(`[AuthService] Successfully created guest account: ${sessionId}`);
+			console.log(
+				`[AuthService] Successfully created guest account: ${sessionId}`,
+			);
 			return guestUser;
 		} catch (error) {
 			console.error('Failed to create guest account:', error);
-			throw new Error(t('Failed to create guest session. Please refresh the page and try again'));
+			throw new Error(
+				t(
+					'Failed to create guest session. Please refresh the page and try again',
+				),
+			);
 		}
 	}
 
@@ -212,11 +220,16 @@ class AuthService {
 		this.currentUser = upgradedUser;
 		localStorage.setItem('texlyre-current-user', newUserId);
 
-		console.log(`[AuthService] Upgraded guest account ${oldGuestId} to full account: ${username} (${newUserId})`);
+		console.log(
+			`[AuthService] Upgraded guest account ${oldGuestId} to full account: ${username} (${newUserId})`,
+		);
 		return upgradedUser;
 	}
 
-	private async transferGuestProjects(oldUserId: string, newUserId: string): Promise<void> {
+	private async transferGuestProjects(
+		oldUserId: string,
+		newUserId: string,
+	): Promise<void> {
 		if (!this.db) return;
 
 		try {
@@ -231,7 +244,9 @@ class AuthService {
 				await this.db.put(this.PROJECT_STORE, updatedProject);
 			}
 
-			console.log(`[AuthService] Transferred ${guestProjects.length} projects from guest ${oldUserId} to user ${newUserId}`);
+			console.log(
+				`[AuthService] Transferred ${guestProjects.length} projects from guest ${oldUserId} to user ${newUserId}`,
+			);
 		} catch (error) {
 			console.error('Error transferring guest projects:', error);
 		}
@@ -241,19 +256,24 @@ class AuthService {
 		if (!this.db) return;
 
 		try {
-			const tx = this.db.transaction([this.USER_STORE, this.PROJECT_STORE], 'readwrite');
+			const tx = this.db.transaction(
+				[this.USER_STORE, this.PROJECT_STORE],
+				'readwrite',
+			);
 			const userStore = tx.objectStore('users');
 
 			const allUsers = await userStore.getAll();
-			const expiredGuests = allUsers.filter(user =>
-				this.isGuestUser(user) && this.isGuestExpired(user)
+			const expiredGuests = allUsers.filter(
+				(user) => this.isGuestUser(user) && this.isGuestExpired(user),
 			);
 
 			for (const expiredGuest of expiredGuests) {
 				await this.cleanupExpiredGuest(expiredGuest);
 			}
 
-			console.log(`[AuthService] Cleaned up ${expiredGuests.length} expired guest accounts`);
+			console.log(
+				`[AuthService] Cleaned up ${expiredGuests.length} expired guest accounts`,
+			);
 		} catch (error) {
 			console.error('Error during guest cleanup:', error);
 		}
@@ -267,14 +287,19 @@ class AuthService {
 
 			// Get guest projects
 			const guestProjects = await this.getProjectsByUser(guestUser.id);
-			console.log(`[AuthService] Found ${guestProjects.length} guest projects to cleanup`);
+			console.log(
+				`[AuthService] Found ${guestProjects.length} guest projects to cleanup`,
+			);
 
 			// Clean up project databases first
 			for (const project of guestProjects) {
 				try {
 					await cleanupProjectDatabases(project);
 				} catch (error) {
-					console.warn(`Failed to cleanup project database for ${project.id}:`, error);
+					console.warn(
+						`Failed to cleanup project database for ${project.id}:`,
+						error,
+					);
 				}
 			}
 
@@ -294,7 +319,9 @@ class AuthService {
 			const userTx = this.db.transaction(this.USER_STORE, 'readwrite');
 			await userTx.objectStore('users').delete(guestUser.id);
 
-			console.log(`[AuthService] Successfully cleaned up guest: ${guestUser.id}`);
+			console.log(
+				`[AuthService] Successfully cleaned up guest: ${guestUser.id}`,
+			);
 		} catch (error) {
 			console.error(`Error cleaning up guest ${guestUser.id}:`, error);
 			// Don't rethrow - cleanup failures shouldn't block other operations
@@ -524,8 +551,8 @@ class AuthService {
 
 	private createNewDocumentUrl(
 		projectId: string = generateYjsProjectId(),
-		projectName = "Untitled Project",
-		projectDescription = "",
+		projectName = 'Untitled Project',
+		projectDescription = '',
 	): string {
 		try {
 			const dbName = `texlyre-project-${projectId}`;
@@ -535,13 +562,13 @@ class AuthService {
 			const persistence = new IndexeddbPersistence(yjsCollection, ydoc);
 
 			ydoc.transact(() => {
-				const ymap = ydoc.getMap("data");
+				const ymap = ydoc.getMap('data');
 
-				ymap.set("documents", []);
-				ymap.set("currentDocId", "");
-				ymap.set("cursors", []);
-				ymap.set("chatMessages", []);
-				ymap.set("projectMetadata", {
+				ymap.set('documents', []);
+				ymap.set('currentDocId', '');
+				ymap.set('cursors', []);
+				ymap.set('chatMessages', []);
+				ymap.set('projectMetadata', {
 					name: projectName,
 					description: projectDescription,
 				});
@@ -554,33 +581,29 @@ class AuthService {
 
 			return `yjs:${projectId}`;
 		} catch (error) {
-			console.error("Error creating new document:", error);
-			throw new Error(t("Failed to create document for project"));
+			console.error('Error creating new document:', error);
+			throw new Error(t('Failed to create document for project'));
 		}
 	}
 
 	async createProject(
-		project: Omit<Project, "id" | "createdAt" | "updatedAt" | "ownerId">,
+		project: Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'ownerId'>,
 		requireAuth = true,
 	): Promise<Project> {
 		if (!this.db) await this.initialize();
 		if (requireAuth && !this.currentUser) {
-			throw new Error("User not authenticated");
+			throw new Error('User not authenticated');
 		}
 
 		const projectId = project.docUrl
-			? project.docUrl.startsWith("yjs:")
+			? project.docUrl.startsWith('yjs:')
 				? project.docUrl.slice(4)
 				: project.docUrl
 			: generateYjsProjectId();
 
 		const docUrl =
 			project.docUrl ||
-			this.createNewDocumentUrl(
-				projectId,
-				project.name,
-				project.description,
-			);
+			this.createNewDocumentUrl(projectId, project.name, project.description);
 
 		const now = Date.now();
 		const newProject: Project = {
@@ -718,7 +741,8 @@ class AuthService {
 		const projects: Project[] = await tx.store.getAll();
 
 		return projects.filter(
-			(project) => project.ownerId === this.currentUser?.id && project.type === type,
+			(project) =>
+				project.ownerId === this.currentUser?.id && project.type === type,
 		);
 	}
 

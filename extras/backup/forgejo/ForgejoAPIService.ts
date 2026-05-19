@@ -1,232 +1,235 @@
 // extras/backup/forgejo/ForgejoAPIService.ts
 interface ForgejoFile {
-    name: string;
-    path: string;
-    content?: string;
-    type: 'file' | 'dir';
+	name: string;
+	path: string;
+	content?: string;
+	type: 'file' | 'dir';
 }
 
 interface ForgejoRepo {
-    id: number;
-    name: string;
-    full_name: string;
-    private: boolean;
-    default_branch: string;
+	id: number;
+	name: string;
+	full_name: string;
+	private: boolean;
+	default_branch: string;
 }
 
 interface ForgejoTreeItem {
-    path: string;
-    mode: string;
-    type: 'blob' | 'tree';
-    sha: string;
+	path: string;
+	mode: string;
+	type: 'blob' | 'tree';
+	sha: string;
 }
 
 interface ForgejoCommitAction {
-    operation: 'create' | 'update' | 'delete';
-    path: string;
-    content?: string;
-    encoding?: 'base64';
-    sha?: string;
+	operation: 'create' | 'update' | 'delete';
+	path: string;
+	content?: string;
+	encoding?: 'base64';
+	sha?: string;
 }
 
 export class ForgejoAPIService {
-    private baseUrl: string = 'https://codeberg.org/api/v1';
-    private requestTimeout: number = 30000;
+	private baseUrl: string = 'https://codeberg.org/api/v1';
+	private requestTimeout: number = 30000;
 
-    setBaseUrl(url: string): void {
-        this.baseUrl = url.replace(/\/$/, '');
-    }
+	setBaseUrl(url: string): void {
+		this.baseUrl = url.replace(/\/$/, '');
+	}
 
-    getBaseUrl(): string {
-        return this.baseUrl;
-    }
+	getBaseUrl(): string {
+		return this.baseUrl;
+	}
 
-    setRequestTimeout(timeoutSeconds: number): void {
-        this.requestTimeout = timeoutSeconds * 1000;
-    }
+	setRequestTimeout(timeoutSeconds: number): void {
+		this.requestTimeout = timeoutSeconds * 1000;
+	}
 
-    private async _request<T>(
-        token: string,
-        endpoint: string,
-        options: RequestInit = {},
-    ): Promise<T> {
-        const url = `${this.baseUrl}/${endpoint}`;
-        const headers = new Headers({
-            'Authorization': `token ${token}`,
-            'Content-Type': 'application/json',
-            ...options.headers,
-        });
+	private async _request<T>(
+		token: string,
+		endpoint: string,
+		options: RequestInit = {},
+	): Promise<T> {
+		const url = `${this.baseUrl}/${endpoint}`;
+		const headers = new Headers({
+			Authorization: `token ${token}`,
+			'Content-Type': 'application/json',
+			...options.headers,
+		});
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
 
-        try {
-            const response = await fetch(url, {
-                ...options,
-                headers,
-                signal: controller.signal,
-            });
+		try {
+			const response = await fetch(url, {
+				...options,
+				headers,
+				signal: controller.signal,
+			});
 
-            clearTimeout(timeoutId);
+			clearTimeout(timeoutId);
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(
-                    `Forgejo API request to '${endpoint}' failed: ${response.statusText}. ${errorData.message || ''}`,
-                );
-            }
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({}));
+				throw new Error(
+					`Forgejo API request to '${endpoint}' failed: ${response.statusText}. ${errorData.message || ''}`,
+				);
+			}
 
-            return response.status === 204 ? (null as T) : response.json();
-        } catch (error) {
-            clearTimeout(timeoutId);
-            if (error instanceof Error && error.name === 'AbortError') {
-                throw new Error(`Request timeout after ${this.requestTimeout / 1000} seconds`);
-            }
-            throw error;
-        }
-    }
+			return response.status === 204 ? (null as T) : response.json();
+		} catch (error) {
+			clearTimeout(timeoutId);
+			if (error instanceof Error && error.name === 'AbortError') {
+				throw new Error(
+					`Request timeout after ${this.requestTimeout / 1000} seconds`,
+				);
+			}
+			throw error;
+		}
+	}
 
-    async testConnection(token: string): Promise<boolean> {
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(
-                () => controller.abort(),
-                this.requestTimeout,
-            );
+	async testConnection(token: string): Promise<boolean> {
+		try {
+			const controller = new AbortController();
+			const timeoutId = setTimeout(
+				() => controller.abort(),
+				this.requestTimeout,
+			);
 
-            const response = await fetch(`${this.baseUrl}/user`, {
-                headers: { 'Authorization': `token ${token}` },
-                signal: controller.signal,
-            });
+			const response = await fetch(`${this.baseUrl}/user`, {
+				headers: { Authorization: `token ${token}` },
+				signal: controller.signal,
+			});
 
-            clearTimeout(timeoutId);
-            return response.ok;
-        } catch {
-            return false;
-        }
-    }
+			clearTimeout(timeoutId);
+			return response.ok;
+		} catch {
+			return false;
+		}
+	}
 
-    async getRepositories(token: string): Promise<ForgejoRepo[]> {
-        return this._request<ForgejoRepo[]>(token, 'user/repos?limit=100');
-    }
+	async getRepositories(token: string): Promise<ForgejoRepo[]> {
+		return this._request<ForgejoRepo[]>(token, 'user/repos?limit=100');
+	}
 
-    async getRepositoryTree(
-        token: string,
-        owner: string,
-        repo: string,
-        path = '',
-        ref = 'main',
-    ): Promise<ForgejoFile[]> {
-        return this._request<ForgejoFile[]>(
-            token,
-            `repos/${owner}/${repo}/contents/${path}?ref=${ref}`,
-        );
-    }
+	async getRepositoryTree(
+		token: string,
+		owner: string,
+		repo: string,
+		path = '',
+		ref = 'main',
+	): Promise<ForgejoFile[]> {
+		return this._request<ForgejoFile[]>(
+			token,
+			`repos/${owner}/${repo}/contents/${path}?ref=${ref}`,
+		);
+	}
 
-    async getFileContent(
-        token: string,
-        owner: string,
-        repo: string,
-        filePath: string,
-        ref = 'main',
-    ): Promise<string> {
-        const data = await this._request<{ content: string; encoding: string }>(
-            token,
-            `repos/${owner}/${repo}/contents/${filePath}?ref=${ref}`,
-        );
-        if (data.encoding !== 'base64') {
-            throw new Error(
-                `Unexpected encoding '${data.encoding}' for '${filePath}'; expected base64`,
-            );
-        }
-        return atob(data.content.replace(/[\r\n]/g, ''));
-    }
+	async getFileContent(
+		token: string,
+		owner: string,
+		repo: string,
+		filePath: string,
+		ref = 'main',
+	): Promise<string> {
+		const data = await this._request<{ content: string; encoding: string }>(
+			token,
+			`repos/${owner}/${repo}/contents/${filePath}?ref=${ref}`,
+		);
+		if (data.encoding !== 'base64') {
+			throw new Error(
+				`Unexpected encoding '${data.encoding}' for '${filePath}'; expected base64`,
+			);
+		}
+		return atob(data.content.replace(/[\r\n]/g, ''));
+	}
 
-    async createOrUpdateFiles(
-        token: string,
-        owner: string,
-        repo: string,
-        branch: string,
-        commitMessage: string,
-        actions: ForgejoCommitAction[],
-    ): Promise<void> {
-        const fileOperations = actions.map((action) => {
-            const operation: any = {
-                operation: action.operation,
-                path: action.path,
-            };
+	async createOrUpdateFiles(
+		token: string,
+		owner: string,
+		repo: string,
+		branch: string,
+		commitMessage: string,
+		actions: ForgejoCommitAction[],
+	): Promise<void> {
+		const fileOperations = actions.map((action) => {
+			const operation: any = {
+				operation: action.operation,
+				path: action.path,
+			};
 
-            if (action.sha) {
-                operation.sha = action.sha;
-            }
+			if (action.sha) {
+				operation.sha = action.sha;
+			}
 
-            if (action.operation !== 'delete') {
-                operation.content = action.content;
+			if (action.operation !== 'delete') {
+				operation.content = action.content;
 
-                if (action.encoding) {
-                    operation.encoding = action.encoding;
-                }
-            }
+				if (action.encoding) {
+					operation.encoding = action.encoding;
+				}
+			}
 
-            return operation;
-        });
+			return operation;
+		});
 
-        await this._request<void>(
-            token,
-            `repos/${owner}/${repo}/contents`,
-            {
-                method: 'POST',
-                body: JSON.stringify({
-                    branch,
-                    message: commitMessage,
-                    files: fileOperations,
-                }),
-            },
-        );
-    }
+		await this._request<void>(token, `repos/${owner}/${repo}/contents`, {
+			method: 'POST',
+			body: JSON.stringify({
+				branch,
+				message: commitMessage,
+				files: fileOperations,
+			}),
+		});
+	}
 
-    async getRecursiveTree(
-        token: string,
-        owner: string,
-        repo: string,
-        ref = 'main',
-    ): Promise<ForgejoTreeItem[]> {
-        const data = await this._request<{ tree: ForgejoTreeItem[] }>(
-            token,
-            `repos/${owner}/${repo}/git/trees/${ref}?recursive=true`,
-        );
-        return data.tree;
-    }
+	async getRecursiveTree(
+		token: string,
+		owner: string,
+		repo: string,
+		ref = 'main',
+	): Promise<ForgejoTreeItem[]> {
+		const data = await this._request<{ tree: ForgejoTreeItem[] }>(
+			token,
+			`repos/${owner}/${repo}/git/trees/${ref}?recursive=true`,
+		);
+		return data.tree;
+	}
 
-    async getBranchHeadSha(token: string, owner: string, repo: string, branch: string): Promise<string> {
-        const data = await this._request<{ commit: { id: string } }>(
-            token,
-            `repos/${owner}/${repo}/branches/${branch}?_=${Date.now()}`,
-        );
-        return data.commit.id;
-    }
+	async getBranchHeadSha(
+		token: string,
+		owner: string,
+		repo: string,
+		branch: string,
+	): Promise<string> {
+		const data = await this._request<{ commit: { id: string } }>(
+			token,
+			`repos/${owner}/${repo}/branches/${branch}?_=${Date.now()}`,
+		);
+		return data.commit.id;
+	}
 
-    async getFileContentAtRef(
-        token: string,
-        owner: string,
-        repo: string,
-        path: string,
-        ref: string,
-    ): Promise<string> {
-        return this.getFileContent(token, owner, repo, path, ref);
-    }
+	async getFileContentAtRef(
+		token: string,
+		owner: string,
+		repo: string,
+		path: string,
+		ref: string,
+	): Promise<string> {
+		return this.getFileContent(token, owner, repo, path, ref);
+	}
 
-    async getBranches(
-        token: string,
-        owner: string,
-        repo: string,
-    ): Promise<{ name: string; protected: boolean }[]> {
-        const data = await this._request<{ name: string; protected: boolean }[]>(
-            token,
-            `repos/${owner}/${repo}/branches`,
-        );
-        return data;
-    }
+	async getBranches(
+		token: string,
+		owner: string,
+		repo: string,
+	): Promise<{ name: string; protected: boolean }[]> {
+		const data = await this._request<{ name: string; protected: boolean }[]>(
+			token,
+			`repos/${owner}/${repo}/branches`,
+		);
+		return data;
+	}
 }
 
 export const forgejoAPIService = new ForgejoAPIService();

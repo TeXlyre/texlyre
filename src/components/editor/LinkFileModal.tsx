@@ -25,7 +25,7 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 	documentId,
 	documentName,
 	onLinked,
-	projectType = 'latex'
+	projectType = 'latex',
 }) => {
 	const { fileTree, refreshFileTree } = useFileTree();
 	const [selectedDirectory, setSelectedDirectory] = useState<string>('/');
@@ -61,9 +61,9 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 		setIsCreating(true);
 		try {
 			const filePath =
-				selectedDirectory === '/' ?
-					`/${fileName.trim()}` :
-					`${selectedDirectory}/${fileName.trim()}`;
+				selectedDirectory === '/'
+					? `/${fileName.trim()}`
+					: `${selectedDirectory}/${fileName.trim()}`;
 
 			await fileStorageService.createDirectoryPath(filePath);
 
@@ -77,7 +77,7 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 				size: 0,
 				mimeType: 'text/plain',
 				isBinary: false,
-				documentId: documentId
+				documentId: documentId,
 			};
 
 			await fileStorageService.storeFile(fileNode);
@@ -86,7 +86,8 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 		} catch (error) {
 			if (
 				error instanceof Error &&
-				error.message === 'File operation cancelled by user') {
+				error.message === 'File operation cancelled by user'
+			) {
 				// User cancelled due to conflict
 				return;
 			}
@@ -101,68 +102,72 @@ const LinkFileModal: React.FC<LinkFileModalProps> = ({
 			isOpen={isOpen}
 			onClose={onClose}
 			title={t('Link Document to New File')}
-			size="medium">
+			size='medium'
+		>
+			<div className='link-file-modal-content'>
+				<p>
+					{t('Create a new file and link it to the document "')}
+					{documentName}
+					{t('".')}
+				</p>
 
-			<div className="link-file-modal-content">
-				<p>{t('Create a new file and link it to the document "')}{documentName}{t('".')}</p>
-
-				<div className="form-group">
-					<label htmlFor="fileName">{t('File name')}</label>
+				<div className='form-group'>
+					<label htmlFor='fileName'>{t('File name')}</label>
 					<input
-						type="text"
-						id="fileName"
+						type='text'
+						id='fileName'
 						value={fileName}
 						onChange={(e) => setFileName(e.target.value)}
 						disabled={isCreating}
-						placeholder={t('Enter file name')} />
-
+						placeholder={t('Enter file name')}
+					/>
 				</div>
 
-				<div className="form-group">
+				<div className='form-group'>
 					<label>{t('Select destination folder')}</label>
-					<div className="directory-tree">
+					<div className='directory-tree'>
 						<div
 							className={`directory-option ${selectedDirectory === '/' ? 'selected' : ''}`}
-							onClick={() => setSelectedDirectory('/')}>
-
+							onClick={() => setSelectedDirectory('/')}
+						>
 							<FolderIcon />
 							<span>/</span>
 						</div>
 
-						{getDirectoryOptions().map((dir) =>
+						{getDirectoryOptions().map((dir) => (
 							<div
 								key={dir.path}
 								className={`directory-option ${selectedDirectory === dir.path ? 'selected' : ''}`}
-								onClick={() => setSelectedDirectory(dir.path)}>
-
+								onClick={() => setSelectedDirectory(dir.path)}
+							>
 								<FolderIcon />
 								<span>{dir.path}</span>
 							</div>
-						)}
+						))}
 					</div>
 				</div>
 
-				<div className="modal-actions">
+				<div className='modal-actions'>
 					<button
-						type="button"
-						className="button secondary"
+						type='button'
+						className='button secondary'
 						onClick={onClose}
-						disabled={isCreating}>{t('Cancel')}
-
-
+						disabled={isCreating}
+					>
+						{t('Cancel')}
 					</button>
 					<button
-						type="button"
-						className="button primary"
+						type='button'
+						className='button primary'
 						onClick={handleCreate}
-						disabled={isCreating || !fileName.trim()}>
-
+						disabled={isCreating || !fileName.trim()}
+					>
 						{isCreating ? t('Creating...') : t('Create & Link')}
 					</button>
 				</div>
 			</div>
-		</Modal>);
-
+		</Modal>
+	);
 };
 
 export default LinkFileModal;

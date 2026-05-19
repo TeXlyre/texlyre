@@ -211,9 +211,12 @@ function getDeleteDirection(
 	return null;
 }
 
-function removeCommentEffects(replacement: Replacement): StateEffect<unknown>[] {
+function removeCommentEffects(
+	replacement: Replacement,
+): StateEffect<unknown>[] {
 	const ids =
-		replacement.removeIds ?? (replacement.removeId ? [replacement.removeId] : []);
+		replacement.removeIds ??
+		(replacement.removeId ? [replacement.removeId] : []);
 
 	return [...new Set(ids)].map((id) => removeComment.of(id));
 }
@@ -382,79 +385,85 @@ function dispatchReplacement(view: EditorView, replacement: Replacement): void {
 	});
 }
 
-const commentProtectionTransactionFilter = EditorState.transactionFilter.of((tr) => {
-	if (!tr.docChanged || tr.annotation(skipCommentProtection)) {
-		return tr;
-	}
+const commentProtectionTransactionFilter = EditorState.transactionFilter.of(
+	(tr) => {
+		if (!tr.docChanged || tr.annotation(skipCommentProtection)) {
+			return tr;
+		}
 
-	const ranges = tr.startState.field(commentRanges, false);
-	if (!ranges?.length) return tr;
+		const ranges = tr.startState.field(commentRanges, false);
+		if (!ranges?.length) return tr;
 
-	const change = getSingleChange(tr);
-	if (!change || !touchesTags(change.from, change.to, ranges)) {
-		return tr;
-	}
+		const change = getSingleChange(tr);
+		if (!change || !touchesTags(change.from, change.to, ranges)) {
+			return tr;
+		}
 
-	const boundaryDeletion = getBoundaryDeletion(tr, change, ranges);
-	if (boundaryDeletion) {
+		const boundaryDeletion = getBoundaryDeletion(tr, change, ranges);
+		if (boundaryDeletion) {
+			return {
+				changes: {
+					from: boundaryDeletion.from,
+					to: boundaryDeletion.to,
+					insert: boundaryDeletion.insert,
+				},
+				selection: {
+					anchor: boundaryDeletion.cursorPos,
+					head: boundaryDeletion.cursorPos,
+				},
+				effects: removeCommentEffects(boundaryDeletion),
+				annotations: skipCommentProtection.of(true),
+			};
+		}
+
+		const cursorMove = getProtectedCursorMove(tr, change, ranges);
+		if (cursorMove !== null) {
+			return {
+				selection: {
+					anchor: cursorMove,
+					head: cursorMove,
+				},
+				annotations: skipCommentProtection.of(true),
+			};
+		}
+
+		const replacement = buildProtectedReplacement(
+			tr.startState,
+			change,
+			ranges,
+		);
+		if (!replacement) return tr;
+
+		const originalText = tr.startState.doc.sliceString(
+			replacement.from,
+			replacement.to,
+		);
+
+		if (originalText === replacement.insert) {
+			return {
+				selection: {
+					anchor: replacement.cursorPos,
+					head: replacement.cursorPos,
+				},
+				annotations: skipCommentProtection.of(true),
+			};
+		}
+
 		return {
 			changes: {
-				from: boundaryDeletion.from,
-				to: boundaryDeletion.to,
-				insert: boundaryDeletion.insert,
+				from: replacement.from,
+				to: replacement.to,
+				insert: replacement.insert,
 			},
-			selection: {
-				anchor: boundaryDeletion.cursorPos,
-				head: boundaryDeletion.cursorPos,
-			},
-			effects: removeCommentEffects(boundaryDeletion),
-			annotations: skipCommentProtection.of(true),
-		};
-	}
-
-	const cursorMove = getProtectedCursorMove(tr, change, ranges);
-	if (cursorMove !== null) {
-		return {
-			selection: {
-				anchor: cursorMove,
-				head: cursorMove,
-			},
-			annotations: skipCommentProtection.of(true),
-		};
-	}
-
-	const replacement = buildProtectedReplacement(tr.startState, change, ranges);
-	if (!replacement) return tr;
-
-	const originalText = tr.startState.doc.sliceString(
-		replacement.from,
-		replacement.to,
-	);
-
-	if (originalText === replacement.insert) {
-		return {
 			selection: {
 				anchor: replacement.cursorPos,
 				head: replacement.cursorPos,
 			},
+			effects: removeCommentEffects(replacement),
 			annotations: skipCommentProtection.of(true),
 		};
-	}
-
-	return {
-		changes: {
-			from: replacement.from,
-			to: replacement.to,
-			insert: replacement.insert,
-		},
-		selection: {
-			anchor: replacement.cursorPos,
-			head: replacement.cursorPos,
-		},
-		effects: removeCommentEffects(replacement),
-		annotations: skipCommentProtection.of(true),
-	};
-});
+	},
+);
 
 function getBoundaryComment(
 	view: EditorView,
@@ -598,9 +607,7 @@ export const commentState = StateField.define<RangeSet<Decoration>>({
 		decorations.sort((a, b) => a.from - b.from || b.priority - a.priority);
 
 		return value.update({
-			add: decorations.map((item) =>
-				item.decoration.range(item.from, item.to),
-			),
+			add: decorations.map((item) => item.decoration.range(item.from, item.to)),
 		});
 	},
 

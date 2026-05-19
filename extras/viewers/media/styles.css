@@ -1,228 +1,230 @@
 .media-viewer-container {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    width: 100%;
-    background-color: var(--pico-secondary-background);
-    overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	width: 100%;
+	background-color: var(--pico-secondary-background);
+	overflow: hidden;
 }
 
 .media-viewer-content {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    padding: 1rem;
-    background-color: var(--pico-background);
-    box-sizing: border-box;
-    position: relative;
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	padding: 1rem;
+	background-color: var(--pico-background);
+	box-sizing: border-box;
+	position: relative;
 }
 
 .media-stage {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    max-width: 100%;
-    max-height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 100%;
+	max-height: 100%;
 }
 
 .media-stage.is-video .media-element {
-    max-width: 100%;
-    max-height: 100%;
-    display: block;
-    background-color: black;
+	max-width: 100%;
+	max-height: 100%;
+	display: block;
+	background-color: black;
 }
 
 .media-stage.is-audio {
-    width: 100%;
-    max-width: 480px;
+	width: 100%;
+	max-width: 480px;
 }
 
 .media-stage.is-audio .media-element {
-    width: 100%;
+	width: 100%;
 }
 
 .media-seek-bar {
-    padding: 0.5rem 1rem;
-    background-color: var(--pico-secondary-background);
-    border-top: 1px solid var(--accent-border, #333);
+	padding: 0.5rem 1rem;
+	background-color: var(--pico-secondary-background);
+	border-top: 1px solid var(--accent-border, #333);
 }
 
 .media-seek {
-    width: 100%;
-    cursor: pointer;
+	width: 100%;
+	cursor: pointer;
 }
 
 .media-time-group {
-    font-variant-numeric: tabular-nums;
-    font-size: 0.85rem;
-    color: var(--text-color);
-    gap: 0.25rem;
-    border: none;
+	font-variant-numeric: tabular-nums;
+	font-size: 0.85rem;
+	color: var(--text-color);
+	gap: 0.25rem;
+	border: none;
 }
 
 .media-time {
-    min-width: 3.5em;
-    text-align: center;
+	min-width: 3.5em;
+	text-align: center;
 }
 
 .media-volume {
-    width: 80px;
-    cursor: pointer;
-    margin-bottom: 0 !important;
-    border: none !important;
+	width: 80px;
+	cursor: pointer;
+	margin-bottom: 0 !important;
+	border: none !important;
 }
 
 .media-rate-select {
-    min-width: 70px;
-    text-align: center;
-    padding: 0 var(--space-xl) !important;
-    margin-bottom: 0;
-    border: 1px solid var(--accent-border, #444);
-    border-radius: 4px;
-    background-color: var(--pico-background);
-    color: var(--text-color);
-    font-size: var(--space-sd);
-    font-weight: 600;
-    height: 32px;
-    cursor: pointer;
-    line-height: 90%;
+	min-width: 70px;
+	text-align: center;
+	padding: 0 var(--space-xl) !important;
+	margin-bottom: 0;
+	border: 1px solid var(--accent-border, #444);
+	border-radius: 4px;
+	background-color: var(--pico-background);
+	color: var(--text-color);
+	font-size: var(--space-sd);
+	font-weight: 600;
+	height: 32px;
+	cursor: pointer;
+	line-height: 90%;
 }
 
 .media-rate-select:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+	opacity: 0.5;
+	cursor: not-allowed;
 }
 
 .media-rate-select:hover:not(:disabled) {
-    background-color: var(--pico-primary-focus);
+	background-color: var(--pico-primary-focus);
 }
 
 .media-audio-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    padding: 2rem 2.5rem;
-    border: 1px solid var(--accent-border, #333);
-    border-radius: 12px;
-    background-color: var(--pico-secondary-background);
-    box-shadow: 0 4px 16px var(--color-shadow, rgba(0, 0, 0, 0.15));
-    max-width: 90%;
-    min-width: 280px;
-    box-sizing: border-box;
-    text-align: center;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1rem;
+	padding: 2rem 2.5rem;
+	border: 1px solid var(--accent-border, #333);
+	border-radius: 12px;
+	background-color: var(--pico-secondary-background);
+	box-shadow: 0 4px 16px var(--color-shadow, rgba(0, 0, 0, 0.15));
+	max-width: 90%;
+	min-width: 280px;
+	box-sizing: border-box;
+	text-align: center;
 }
 
 .media-audio-card-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background-color: var(--pico-background);
-    border: 1px solid var(--accent-border, #444);
-    color: var(--pico-primary);
-    cursor: pointer;
-    padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 72px;
+	height: 72px;
+	border-radius: 50%;
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border, #444);
+	color: var(--pico-primary);
+	cursor: pointer;
+	padding: 0;
 }
 
 .media-audio-card-icon svg {
-    width: 32px;
-    height: 32px;
+	width: 32px;
+	height: 32px;
 }
 
 .media-audio-card-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-color);
-    word-break: break-word;
-    max-width: 100%;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--text-color);
+	word-break: break-word;
+	max-width: 100%;
 }
 
 .media-audio-card-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    font-size: 0.85rem;
-    color: var(--text-color);
-    opacity: 0.7;
-    font-variant-numeric: tabular-nums;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	font-size: 0.85rem;
+	color: var(--text-color);
+	opacity: 0.7;
+	font-variant-numeric: tabular-nums;
 }
 
 .media-stage.is-video {
-    position: relative;
+	position: relative;
 }
 
 .media-video-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s ease;
-    color: white;
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.15s ease;
+	color: white;
 }
 
 .media-stage.is-video:hover .media-video-overlay {
-    opacity: 1;
+	opacity: 1;
 }
 
 .media-video-overlay-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background-color: rgba(0, 0, 0, 0.5);
-    border: none;
-    color: white;
-    cursor: pointer;
-    pointer-events: auto;
-    transition: background-color 0.15s ease, transform 0.15s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 72px;
+	height: 72px;
+	border-radius: 50%;
+	background-color: rgba(0, 0, 0, 0.5);
+	border: none;
+	color: white;
+	cursor: pointer;
+	pointer-events: auto;
+	transition:
+		background-color 0.15s ease,
+		transform 0.15s ease;
 }
 
 .media-video-overlay-button svg {
-    color: white;
+	color: white;
 }
 
 .media-video-overlay-button:hover {
-    background-color: rgba(0, 0, 0, 0.7);
-    transform: scale(1.05);
+	background-color: rgba(0, 0, 0, 0.7);
+	transform: scale(1.05);
 }
 
 .media-video-overlay-button svg {
-    width: 32px;
-    height: 32px;
+	width: 32px;
+	height: 32px;
 }
 
 .media-error-message {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 2rem;
-    text-align: center;
-    color: var(--color-error);
-    background-color: rgba(220, 53, 69, 0.1);
-    border: 1px solid rgba(220, 53, 69, 0.3);
-    border-radius: 8px;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	padding: 2rem;
+	text-align: center;
+	color: var(--color-error);
+	background-color: rgba(220, 53, 69, 0.1);
+	border: 1px solid rgba(220, 53, 69, 0.3);
+	border-radius: 8px;
 }
 
 @media (max-width: 768px) {
-    .media-volume {
-        width: 60px;
-    }
+	.media-volume {
+		width: 60px;
+	}
 
-    .media-time {
-        min-width: 3em;
-        font-size: 0.75rem;
-    }
+	.media-time {
+		min-width: 3em;
+		font-size: 0.75rem;
+	}
 }

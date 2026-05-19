@@ -19,7 +19,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 	isOpen,
 	onClose,
 	onAccountDeleted,
-	onOpenExport
+	onOpenExport,
 }) => {
 	const { user, verifyPassword, getProjects } = useAuth();
 	const [currentPassword, setCurrentPassword] = useState('');
@@ -41,7 +41,11 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 			}
 
 			if (confirmationText !== expectedConfirmationText) {
-				throw new Error(t('Please type \"{expectedConfirmationText}\" to confirm', { expectedConfirmationText }));
+				throw new Error(
+					t('Please type "{expectedConfirmationText}" to confirm', {
+						expectedConfirmationText,
+					}),
+				);
 			}
 
 			const isPasswordValid = await verifyPassword(user.id, currentPassword);
@@ -52,7 +56,9 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 			await deleteUserAccount(user.id);
 			onAccountDeleted();
 		} catch (error) {
-			setError(error instanceof Error ? error.message : t('Failed to delete account'));
+			setError(
+				error instanceof Error ? error.message : t('Failed to delete account'),
+			);
 		} finally {
 			setIsDeleting(false);
 		}
@@ -103,7 +109,9 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 		localStorage.removeItem(userRecordsKey);
 		localStorage.removeItem('texlyre-current-user');
 
-		console.log(t('Successfully deleted account for user: {userId}', { userId }));
+		console.log(
+			t('Successfully deleted account for user: {userId}', { userId }),
+		);
 	};
 
 	const handleOpenExport = () => {
@@ -127,101 +135,116 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 			onClose={handleClose}
 			title={t('Delete Account')}
 			icon={TrashIcon}
-			size="medium">
+			size='medium'
+		>
+			<div className='delete-account-container'>
+				{error && <div className='error-message'>{error}</div>}
 
-			<div className="delete-account-container">
-				{error && <div className="error-message">{error}</div>}
-
-				<div className="warning-message">
+				<div className='warning-message'>
 					<h3>{t('\u26A0\uFE0F Warning: This action cannot be undone')}</h3>
-					<p>{t('Deleting your account will permanently remove:')}
-
-					</p>
+					<p>{t('Deleting your account will permanently remove:')}</p>
 					<ul>
-						<li><strong>{t('All your projects')}</strong>&nbsp;{t('and their documents')}</li>
-						<li><strong>{t('All project files')}</strong>&nbsp;{t('and folders')}</li>
-						<li><strong>{t('All settings')}</strong>&nbsp;{t('and preferences')}</li>
-						<li><strong>{t('All encrypted secrets')}</strong>&nbsp;{t('and API keys')}</li>
-						<li><strong>{t('Your user profile')}</strong>&nbsp;{t('and login credentials')}</li>
+						<li>
+							<strong>{t('All your projects')}</strong>&nbsp;
+							{t('and their documents')}
+						</li>
+						<li>
+							<strong>{t('All project files')}</strong>&nbsp;{t('and folders')}
+						</li>
+						<li>
+							<strong>{t('All settings')}</strong>&nbsp;{t('and preferences')}
+						</li>
+						<li>
+							<strong>{t('All encrypted secrets')}</strong>&nbsp;
+							{t('and API keys')}
+						</li>
+						<li>
+							<strong>{t('Your user profile')}</strong>&nbsp;
+							{t('and login credentials')}
+						</li>
 					</ul>
 					<p>
-						<strong>{t('This data cannot be recovered after deletion.')}</strong>
+						<strong>
+							{t('This data cannot be recovered after deletion.')}
+						</strong>
 					</p>
 				</div>
 
-				<div className="form-group">
-					<label htmlFor="current-password">{t('Enter your password to confirm')}
-
+				<div className='form-group'>
+					<label htmlFor='current-password'>
+						{t('Enter your password to confirm')}
 					</label>
 					<input
-						type="password"
-						id="current-password"
+						type='password'
+						id='current-password'
 						value={currentPassword}
 						onChange={(e) => setCurrentPassword(e.target.value)}
 						disabled={isDeleting}
-						placeholder={t('Enter your password')} />
-
+						placeholder={t('Enter your password')}
+					/>
 				</div>
 
-				<div className="form-group">
-					<label htmlFor="confirmation-text">{t('Type the following text to confirm:')}
+				<div className='form-group'>
+					<label htmlFor='confirmation-text'>
+						{t('Type the following text to confirm:')}
 						&nbsp;<strong>{expectedConfirmationText}</strong>
 					</label>
 					<input
-						type="text"
-						id="confirmation-text"
+						type='text'
+						id='confirmation-text'
 						value={confirmationText}
 						onChange={(e) => setConfirmationText(e.target.value)}
 						disabled={isDeleting}
-						placeholder={expectedConfirmationText} />
-
+						placeholder={expectedConfirmationText}
+					/>
 				</div>
 
-				<div className="export-reminder">
+				<div className='export-reminder'>
 					<p>
-						<strong>{t('Reminder: ')}</strong>{t('If you want to keep your data, use the')}{' '}
-						{onOpenExport ?
+						<strong>{t('Reminder: ')}</strong>
+						{t('If you want to keep your data, use the')}{' '}
+						{onOpenExport ? (
 							<button
-								type="button"
-								className="export-link-button"
+								type='button'
+								className='export-link-button'
 								onClick={handleOpenExport}
-								disabled={isDeleting}>
-
-								<ExportIcon />{t('Export Account')}
-
-							</button> :
-
+								disabled={isDeleting}
+							>
+								<ExportIcon />
+								{t('Export Account')}
+							</button>
+						) : (
 							<strong>{t('Export Account')}</strong>
-						}{' '}{t('option before deleting your account.')}
-
+						)}{' '}
+						{t('option before deleting your account.')}
 					</p>
 				</div>
 
-				<div className="modal-actions">
+				<div className='modal-actions'>
 					<button
-						type="button"
-						className="button secondary"
+						type='button'
+						className='button secondary'
 						onClick={handleClose}
-						disabled={isDeleting}>{t('Cancel')}
-
-
+						disabled={isDeleting}
+					>
+						{t('Cancel')}
 					</button>
 					<button
-						type="button"
-						className="button danger"
+						type='button'
+						className='button danger'
 						onClick={handleDelete}
 						disabled={
 							isDeleting ||
 							!currentPassword ||
 							confirmationText !== expectedConfirmationText
-						}>
-
+						}
+					>
 						{isDeleting ? t('Deleting Account...') : t('Delete Account')}
 					</button>
 				</div>
 			</div>
-		</Modal>);
-
+		</Modal>
+	);
 };
 
 export default DeleteAccountModal;

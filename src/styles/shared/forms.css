@@ -229,7 +229,6 @@ input[type="range"]:disabled::-moz-range-thumb {
 	margin-top: var(--space-md);
 }
 
-
 .checkbox {
 	width: 16px;
 	height: 16px;
@@ -268,7 +267,7 @@ input[type="range"]:disabled::-moz-range-thumb {
 	margin-bottom: var(--space-md);
 }
 
-.color-picker-group>label {
+.color-picker-group > label {
 	display: block;
 	margin-bottom: var(--space-sm);
 	font-weight: 500;

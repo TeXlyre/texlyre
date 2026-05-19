@@ -20,7 +20,7 @@ function hasBinaryComments(buffer: ArrayBuffer): boolean {
 	const openMarker = new TextEncoder().encode('<###');
 	const commentMarker = new TextEncoder().encode('comment');
 	const idMarker = new TextEncoder().encode('id:');
-	const whitespaceChars = [0x20, 0x09, 0x0A, 0x0D];
+	const whitespaceChars = [0x20, 0x09, 0x0a, 0x0d];
 
 	for (let i = 0; i <= view.length - openMarker.length; i++) {
 		let pos = i;
@@ -102,16 +102,20 @@ export function cleanText(text: string): string {
 		const openTagStart = openMatch.index;
 		const id = openMatch[1];
 
-		const backtickBefore = openTagStart > 0 &&
-			cleanedText[openTagStart - 1] === '`';
+		const backtickBefore =
+			openTagStart > 0 && cleanedText[openTagStart - 1] === '`';
 
 		const openTagEnd = cleanedText.indexOf('###>', openTagStart);
 		if (openTagEnd === -1) break;
 
-		const backtickAfter = openTagEnd + 4 < cleanedText.length &&
+		const backtickAfter =
+			openTagEnd + 4 < cleanedText.length &&
 			cleanedText[openTagEnd + 4] === '`';
 
-		const closeTagRegex = new RegExp(`<\\/###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${id}(?:\\s|%)*###>`, 'g');
+		const closeTagRegex = new RegExp(
+			`<\\/###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${id}(?:\\s|%)*###>`,
+			'g',
+		);
 		closeTagRegex.lastIndex = openTagEnd + 4;
 		const closeMatch = closeTagRegex.exec(cleanedText);
 
@@ -123,16 +127,21 @@ export function cleanText(text: string): string {
 		const closeTagEnd = closeTagStart + closeMatch[0].length;
 
 		const commentedTextStart = openTagEnd + 4 + (backtickAfter ? 1 : 0);
-		const commentedTextEnd = closeTagStart - (backtickBefore &&
-			cleanedText[closeTagStart - 1] === '`' ? 1 : 0);
+		const commentedTextEnd =
+			closeTagStart -
+			(backtickBefore && cleanedText[closeTagStart - 1] === '`' ? 1 : 0);
 		const commentedText = cleanedText.substring(
 			commentedTextStart,
 			commentedTextEnd,
 		);
 
 		const actualOpenTagStart = backtickBefore ? openTagStart - 1 : openTagStart;
-		const actualCloseTagEnd = (backtickAfter && closeTagEnd < cleanedText.length &&
-			cleanedText[closeTagEnd] === '`') ? closeTagEnd + 1 : closeTagEnd;
+		const actualCloseTagEnd =
+			backtickAfter &&
+			closeTagEnd < cleanedText.length &&
+			cleanedText[closeTagEnd] === '`'
+				? closeTagEnd + 1
+				: closeTagEnd;
 
 		cleanedText =
 			cleanedText.substring(0, actualOpenTagStart) +
@@ -145,7 +154,9 @@ export function cleanText(text: string): string {
 	return cleanedText;
 }
 
-export function cleanContent(content: string | ArrayBuffer): string | ArrayBuffer {
+export function cleanContent(
+	content: string | ArrayBuffer,
+): string | ArrayBuffer {
 	if (content instanceof ArrayBuffer) {
 		const textContent = new TextDecoder().decode(content);
 		if (!hasComments(textContent)) {

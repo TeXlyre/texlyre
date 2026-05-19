@@ -4,11 +4,11 @@ import type React from 'react';
 
 const LoadingScreen: React.FC = () => {
 	return (
-		<div className="loading-container">
-			<div className="loading-spinner" />
+		<div className='loading-container'>
+			<div className='loading-spinner' />
 			<p>{t('Loading TeXlyre...')}</p>
-		</div>);
-
+		</div>
+	);
 };
 
 export default LoadingScreen;

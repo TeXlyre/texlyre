@@ -126,12 +126,11 @@ function App() {
 					<OfflineProvider>
 						<AuthProvider>
 							<PropertiesProvider>
-								<RecordsProvider >
+								<RecordsProvider>
 									<ThemeProvider
-										defaultThemeId="texlyre-theme"
-										defaultVariant="system"
+										defaultThemeId='texlyre-theme'
+										defaultVariant='system'
 									>
-
 										<AppBootstrap />
 										<SecretsProvider>
 											<FileSystemBackupProvider>

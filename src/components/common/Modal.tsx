@@ -74,9 +74,9 @@ const Modal: React.FC<ModalProps> = ({
 	if (!isOpen) return null;
 
 	return (
-		<div className="modal-overlay">
+		<div className='modal-overlay'>
 			<div className={`modal-container modal-${size}`} ref={modalRef}>
-				<div className="modal-header">
+				<div className='modal-header'>
 					<h2>
 						{IconComponent && (
 							<span>
@@ -90,7 +90,7 @@ const Modal: React.FC<ModalProps> = ({
 						{showCloseButton && (
 							<button
 								aria-label={t('Close modal')}
-								className="modal-close-button"
+								className='modal-close-button'
 								onClick={onClose}
 								title={t('Close modal')}
 							>
@@ -99,7 +99,7 @@ const Modal: React.FC<ModalProps> = ({
 						)}
 					</div>
 				</div>
-				<div className="modal-content">{children}</div>
+				<div className='modal-content'>{children}</div>
 			</div>
 		</div>
 	);

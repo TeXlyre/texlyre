@@ -1,5 +1,6 @@
 // src/components/output/PopoutViewerToggleButton.tsx
-import React, { useEffect, useState } from 'react';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 
 import { popoutViewerService } from '../../services/PopoutViewerService';
 import { ExternalLinkIcon } from '../common/Icons';

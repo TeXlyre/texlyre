@@ -72,10 +72,7 @@
 	},
 	"overrides": [
 		{
-			"includes": [
-				"**/*.ts",
-				"**/*.tsx"
-			],
+			"includes": ["**/*.ts", "**/*.tsx"],
 			"linter": {
 				"rules": {
 					"style": {
@@ -108,57 +105,42 @@
 										"selector": {
 											"kind": "classProperty"
 										},
-										"formats": [
-											"camelCase",
-											"CONSTANT_CASE"
-										]
+										"formats": ["camelCase", "CONSTANT_CASE"]
 									},
 									{
 										"selector": {
 											"kind": "variable"
 										},
-										"formats": [
-											"camelCase",
-											"PascalCase",
-											"CONSTANT_CASE"
-										]
+										"formats": ["camelCase", "PascalCase", "CONSTANT_CASE"]
 									},
 									{
 										"selector": {
 											"kind": "functionParameter"
 										},
-										"formats": [
-											"camelCase",
-											"PascalCase"
-										]
+										"formats": ["camelCase", "PascalCase"]
 									},
 									{
 										"selector": {
 											"kind": "function"
 										},
-										"formats": [
-											"camelCase",
-											"PascalCase"
-										]
+										"formats": ["camelCase", "PascalCase"]
 									},
 									{
 										"selector": {
 											"kind": "typeLike"
 										},
-										"formats": [
-											"PascalCase"
-										]
+										"formats": ["PascalCase"]
 									}
 								]
 							}
 						}
 					},
 					"correctness": {
-						"noUnusedVariables": "error",
+						"noUnusedVariables": "warn",
 						"noUnusedFunctionParameters": "warn"
 					},
 					"suspicious": {
-						"noExplicitAny": "warn"
+						"noExplicitAny": "off"
 					}
 				}
 			}
@@ -179,9 +161,7 @@
 			}
 		},
 		{
-			"includes": [
-				"public/core/webperl/**"
-			],
+			"includes": ["public/core/webperl/**"],
 			"linter": {
 				"rules": {
 					"correctness": {

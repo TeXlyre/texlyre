@@ -96,8 +96,6 @@
 	border-radius: 6px;
 	background-color: var(--accent-background);
 	border: 1px solid var(--accent-border, #444);
-
-
 }
 
 .control-group:empty {
@@ -136,7 +134,6 @@
 	cursor: not-allowed;
 }
 
-
 .control-group button:nth-child(2) {
 	min-width: 50px;
 	font-size: var(--space-sd);
@@ -170,7 +167,6 @@
 }
 
 @media (prefers-contrast: high) {
-
 	.control-group,
 	.control-group button {
 		border-width: 2px;

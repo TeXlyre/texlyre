@@ -80,7 +80,7 @@ const ToastContainer: React.FC = () => {
 	if (notifications.length === 0) return null;
 
 	return (
-		<div className="toast-container">
+		<div className='toast-container'>
 			{notifications.slice(-5).map((notification) => (
 				<Toast
 					key={notification.id}

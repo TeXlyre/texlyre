@@ -12,23 +12,32 @@ export function stringToArrayBuffer(str: string): ArrayBuffer {
 
 export function latin1ToBytes(latin1: string): Uint8Array {
 	const bytes = new Uint8Array(latin1.length);
-	for (let i = 0; i < latin1.length; i++) bytes[i] = latin1.charCodeAt(i) & 0xff;
+	for (let i = 0; i < latin1.length; i++)
+		bytes[i] = latin1.charCodeAt(i) & 0xff;
 	return bytes;
 }
 
 export function toArrayBuffer(
-	content: string | ArrayBuffer | SharedArrayBuffer | ArrayBufferView)
-	: ArrayBuffer {
+	content: string | ArrayBuffer | SharedArrayBuffer | ArrayBufferView,
+): ArrayBuffer {
 	if (typeof content === 'string') return stringToArrayBuffer(content);
 	if (content instanceof ArrayBuffer) return content;
 	if (ArrayBuffer.isView(content)) {
 		const { buffer, byteOffset, byteLength } = content;
-		if (buffer instanceof ArrayBuffer && byteOffset === 0 && byteLength === buffer.byteLength) return buffer;
+		if (
+			buffer instanceof ArrayBuffer &&
+			byteOffset === 0 &&
+			byteLength === buffer.byteLength
+		)
+			return buffer;
 		const out = new Uint8Array(byteLength);
 		out.set(new Uint8Array(buffer, byteOffset, byteLength));
 		return out.buffer;
 	}
-	if (typeof SharedArrayBuffer !== 'undefined' && content instanceof SharedArrayBuffer) {
+	if (
+		typeof SharedArrayBuffer !== 'undefined' &&
+		content instanceof SharedArrayBuffer
+	) {
 		const src = new Uint8Array(content);
 		const out = new Uint8Array(src.byteLength);
 		out.set(src);
@@ -37,9 +46,7 @@ export function toArrayBuffer(
 	throw new Error('Unsupported binary content type');
 }
 
-export function toBase64(
-	content: string | Uint8Array | ArrayBuffer,
-): string {
+export function toBase64(content: string | Uint8Array | ArrayBuffer): string {
 	const uint8Array =
 		typeof content === 'string'
 			? new TextEncoder().encode(content)
@@ -59,20 +66,26 @@ export function toBase64(
 export function formatFileSize(size?: number): string {
 	if (!size) return t('Unknown size');
 	if (size < 1024) return t('{count} bytes', { count: size });
-	if (size < 1024 * 1024) return t('{size} KB', { size: (size / 1024).toFixed(1) });
+	if (size < 1024 * 1024)
+		return t('{size} KB', { size: (size / 1024).toFixed(1) });
 	return t('{size} MB', { size: (size / (1024 * 1024)).toFixed(1) });
 }
 
-export async function computeGitBlobSha(content: string | ArrayBuffer): Promise<string> {
-	const bytes = typeof content === 'string'
-		? new TextEncoder().encode(content)
-		: new Uint8Array(content);
+export async function computeGitBlobSha(
+	content: string | ArrayBuffer,
+): Promise<string> {
+	const bytes =
+		typeof content === 'string'
+			? new TextEncoder().encode(content)
+			: new Uint8Array(content);
 	const header = new TextEncoder().encode(`blob ${bytes.byteLength}\0`);
 	const data = new Uint8Array(header.byteLength + bytes.byteLength);
 	data.set(header, 0);
 	data.set(bytes, header.byteLength);
 	const hash = await crypto.subtle.digest('SHA-1', data);
-	return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, '0')).join('');
+	return Array.from(new Uint8Array(hash))
+		.map((b) => b.toString(16).padStart(2, '0'))
+		.join('');
 }
 
 export function getFilenameFromPath(path: string): string {
@@ -86,15 +99,17 @@ export function getParentPath(path: string): string {
 }
 
 export function getRelativePath(fromPath: string, toPath: string): string {
-	const fromParts = fromPath.split('/').filter(p => p);
-	const toParts = toPath.split('/').filter(p => p);
+	const fromParts = fromPath.split('/').filter((p) => p);
+	const toParts = toPath.split('/').filter((p) => p);
 
 	fromParts.pop();
 
 	let commonLength = 0;
-	while (commonLength < fromParts.length &&
+	while (
+		commonLength < fromParts.length &&
 		commonLength < toParts.length &&
-		fromParts[commonLength] === toParts[commonLength]) {
+		fromParts[commonLength] === toParts[commonLength]
+	) {
 		commonLength++;
 	}
 
@@ -118,7 +133,8 @@ export interface NameValidationResult {
 
 const ILLEGAL_NAME_CHARS = /[<>:"/\\|?*\x00-\x1F]/;
 // NOTE (fabawi): File gets excluded from ZIP on WINDOWS if name contains the following
-const RESERVED_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$|^\.texlyre_/i;
+const RESERVED_NAMES =
+	/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$|^\.texlyre_/i;
 const MAX_NAME_BYTES = 255;
 
 export function validateFileName(name: string): NameValidationResult {
@@ -131,16 +147,25 @@ export function validateFileName(name: string): NameValidationResult {
 		return { valid: false, error: t('Name cannot be "." or ".."') };
 	}
 	if (ILLEGAL_NAME_CHARS.test(trimmed)) {
-		return { valid: false, error: t('Name contains illegal characters: < > : " / \\ | ? *') };
+		return {
+			valid: false,
+			error: t('Name contains illegal characters: < > : " / \\ | ? *'),
+		};
 	}
 	if (/[. ]$/.test(trimmed)) {
 		return { valid: false, error: t('Name cannot end with a space or period') };
 	}
 	if (RESERVED_NAMES.test(trimmed)) {
-		return { valid: false, error: t('"{name}" is a reserved system name', { name: trimmed }) };
+		return {
+			valid: false,
+			error: t('"{name}" is a reserved system name', { name: trimmed }),
+		};
 	}
 	if (new TextEncoder().encode(trimmed).length > MAX_NAME_BYTES) {
-		return { valid: false, error: t('Name exceeds {max} bytes', { max: MAX_NAME_BYTES }) };
+		return {
+			valid: false,
+			error: t('Name exceeds {max} bytes', { max: MAX_NAME_BYTES }),
+		};
 	}
 	return { valid: true };
 }
@@ -222,7 +247,7 @@ export function getFileExtension(mimeType: string): string {
 		'application/x-7z-compressed': '7z',
 		'application/x-tar': 'tar',
 		'application/x-bzip2': 'bz2',
-		'application/x-xz': 'xz'
+		'application/x-xz': 'xz',
 	};
 
 	return typeMap[mimeType] || mimeType.split('/')[1]?.split('+')[0] || 'png';
@@ -235,15 +260,15 @@ export function isBinaryFile(fileName: string): boolean {
 		return false;
 	}
 
-	const textSuffixes = [
-		'.cmake.in', '.fdb_latexmk', '.gradle.kts'
-	];
+	const textSuffixes = ['.cmake.in', '.fdb_latexmk', '.gradle.kts'];
 
 	if (textSuffixes.some((suffix) => baseName.endsWith(suffix))) {
 		return false;
 	}
 
-	const extension = baseName.includes('.') ? baseName.split('.').pop() || '' : '';
+	const extension = baseName.includes('.')
+		? baseName.split('.').pop() || ''
+		: '';
 
 	if (!extension) {
 		return false;
@@ -251,122 +276,452 @@ export function isBinaryFile(fileName: string): boolean {
 
 	const textExtensions = new Set([
 		// Build systems / project files
-		'bazel', 'bzl', 'cake', 'cmake', 'csproj',
-		'fsproj', 'gradle', 'gyp', 'gypi', 'mak',
-		'make', 'meson', 'mk', 'mkfile', 'ninja',
-		'sln', 'targets', 'vbproj', 'vcxproj',
+		'bazel',
+		'bzl',
+		'cake',
+		'cmake',
+		'csproj',
+		'fsproj',
+		'gradle',
+		'gyp',
+		'gypi',
+		'mak',
+		'make',
+		'meson',
+		'mk',
+		'mkfile',
+		'ninja',
+		'sln',
+		'targets',
+		'vbproj',
+		'vcxproj',
 
 		// Data / config
-		'babelrc', 'browserslistrc', 'cfg', 'cnf', 'conf',
-		'config', 'coveragerc', 'curlrc', 'dockerignore', 'editorconfig',
-		'env', 'eslintrc', 'flake8', 'gitattributes', 'gitignore',
-		'gitmodules', 'htaccess', 'htpasswd', 'ignore', 'ini',
-		'json', 'json5', 'jsonc', 'map', 'npmignore',
-		'npmrc', 'pnpmfile', 'prettierrc', 'properties', 'props',
-		'pylintrc', 'stylelintrc', 'toml', 'wgetrc', 'yaml',
-		'yarnrc', 'yml',
+		'babelrc',
+		'browserslistrc',
+		'cfg',
+		'cnf',
+		'conf',
+		'config',
+		'coveragerc',
+		'curlrc',
+		'dockerignore',
+		'editorconfig',
+		'env',
+		'eslintrc',
+		'flake8',
+		'gitattributes',
+		'gitignore',
+		'gitmodules',
+		'htaccess',
+		'htpasswd',
+		'ignore',
+		'ini',
+		'json',
+		'json5',
+		'jsonc',
+		'map',
+		'npmignore',
+		'npmrc',
+		'pnpmfile',
+		'prettierrc',
+		'properties',
+		'props',
+		'pylintrc',
+		'stylelintrc',
+		'toml',
+		'wgetrc',
+		'yaml',
+		'yarnrc',
+		'yml',
 
 		// DevOps / infra
-		'compose', 'cue', 'desktop', 'hcl', 'jenkinsfile',
-		'jsonnet', 'kdl', 'libsonnet', 'mount', 'nomad',
-		'pipeline', 'rego', 'service', 'skaffold', 'socket',
-		'tf', 'tfvars', 'tiltfile', 'timer',
+		'compose',
+		'cue',
+		'desktop',
+		'hcl',
+		'jenkinsfile',
+		'jsonnet',
+		'kdl',
+		'libsonnet',
+		'mount',
+		'nomad',
+		'pipeline',
+		'rego',
+		'service',
+		'skaffold',
+		'socket',
+		'tf',
+		'tfvars',
+		'tiltfile',
+		'timer',
 
 		// Documentation / API
-		'apib', 'openapi', 'raml', 'swagger',
+		'apib',
+		'openapi',
+		'raml',
+		'swagger',
 
 		// General programming languages
-		'agda', 'ahk', 'apl', 'asm', 'bas',
-		'bf', 'bicep', 'c', 'c++', 'cc',
-		'cbl', 'cl', 'clj', 'cljc', 'cljs',
-		'cob', 'coffee', 'cpp', 'cr', 'cs',
-		'cxx', 'd', 'dart', 'di', 'edn',
-		'elm', 'erl', 'ex', 'exs', 'f03',
-		'f08', 'f90', 'f95', 'for', 'forth',
-		'fs', 'fsi', 'fsscript', 'fst', 'fsx',
-		'fth', 'gd', 'gdshader', 'gleam', 'go',
-		'groovy', 'gsp', 'gvy', 'gy', 'h',
-		'h++', 'hack', 'hh', 'hpp', 'hrl',
-		'hs', 'hx', 'hxx', 'idr', 'inc',
-		'io', 'ipynb', 'java', 'jl', 'kt',
-		'kts', 'lagda', 'lean', 'lfe', 'lhs',
-		'lid', 'lisp', 'lsp', 'lua', 'm',
-		'm4', 'mc', 'ml', 'mli', 'mll',
-		'mly', 'mm', 'nim', 'nimble', 'nix',
-		'nu', 'odin', 'pas', 'php', 'php3',
-		'php4', 'php5', 'php7', 'php8', 'phps',
-		'phtml', 'pl', 'pm', 'pony', 'pp',
-		'prg', 'pro', 'prolog', 'purs', 'py',
-		'pyi', 'pyw', 'r', 'raku', 'rakumod',
-		'rb', 're', 'rei', 'rkt', 'rmd',
-		'rs', 's', 'scala', 'sc', 'scm',
-		'sml', 'sol', 'ss', 'st', 'sv',
-		'svh', 'swift', 't', 'v', 'vala',
-		'vb', 'vbs', 'vd', 'vhd', 'vhdl',
-		'vhf', 'wl', 'wls', 'x10', 'zig',
+		'agda',
+		'ahk',
+		'apl',
+		'asm',
+		'bas',
+		'bf',
+		'bicep',
+		'c',
+		'c++',
+		'cc',
+		'cbl',
+		'cl',
+		'clj',
+		'cljc',
+		'cljs',
+		'cob',
+		'coffee',
+		'cpp',
+		'cr',
+		'cs',
+		'cxx',
+		'd',
+		'dart',
+		'di',
+		'edn',
+		'elm',
+		'erl',
+		'ex',
+		'exs',
+		'f03',
+		'f08',
+		'f90',
+		'f95',
+		'for',
+		'forth',
+		'fs',
+		'fsi',
+		'fsscript',
+		'fst',
+		'fsx',
+		'fth',
+		'gd',
+		'gdshader',
+		'gleam',
+		'go',
+		'groovy',
+		'gsp',
+		'gvy',
+		'gy',
+		'h',
+		'h++',
+		'hack',
+		'hh',
+		'hpp',
+		'hrl',
+		'hs',
+		'hx',
+		'hxx',
+		'idr',
+		'inc',
+		'io',
+		'ipynb',
+		'java',
+		'jl',
+		'kt',
+		'kts',
+		'lagda',
+		'lean',
+		'lfe',
+		'lhs',
+		'lid',
+		'lisp',
+		'lsp',
+		'lua',
+		'm',
+		'm4',
+		'mc',
+		'ml',
+		'mli',
+		'mll',
+		'mly',
+		'mm',
+		'nim',
+		'nimble',
+		'nix',
+		'nu',
+		'odin',
+		'pas',
+		'php',
+		'php3',
+		'php4',
+		'php5',
+		'php7',
+		'php8',
+		'phps',
+		'phtml',
+		'pl',
+		'pm',
+		'pony',
+		'pp',
+		'prg',
+		'pro',
+		'prolog',
+		'purs',
+		'py',
+		'pyi',
+		'pyw',
+		'r',
+		'raku',
+		'rakumod',
+		'rb',
+		're',
+		'rei',
+		'rkt',
+		'rmd',
+		'rs',
+		's',
+		'scala',
+		'sc',
+		'scm',
+		'sml',
+		'sol',
+		'ss',
+		'st',
+		'sv',
+		'svh',
+		'swift',
+		't',
+		'v',
+		'vala',
+		'vb',
+		'vbs',
+		'vd',
+		'vhd',
+		'vhdl',
+		'vhf',
+		'wl',
+		'wls',
+		'x10',
+		'zig',
 
 		// LaTeX / TeX ecosystem
-		'aux', 'bbl', 'bbx', 'bib', 'biblatex',
-		'bibtex', 'blg', 'bst', 'cbx', 'clo',
-		'cls', 'def', 'dtx', 'fd', 'fls',
-		'glo', 'gls', 'idx', 'ilg', 'ind',
-		'ins', 'ist', 'latex', 'loa', 'lof',
-		'lot', 'ltx', 'nav', 'out', 'snm',
-		'sty', 'tex', 'toc', 'vrb',
+		'aux',
+		'bbl',
+		'bbx',
+		'bib',
+		'biblatex',
+		'bibtex',
+		'blg',
+		'bst',
+		'cbx',
+		'clo',
+		'cls',
+		'def',
+		'dtx',
+		'fd',
+		'fls',
+		'glo',
+		'gls',
+		'idx',
+		'ilg',
+		'ind',
+		'ins',
+		'ist',
+		'latex',
+		'loa',
+		'lof',
+		'lot',
+		'ltx',
+		'nav',
+		'out',
+		'snm',
+		'sty',
+		'tex',
+		'toc',
+		'vrb',
 
 		// Logs / patches / diffs
-		'diff', 'log', 'patch', 'rej', 'trace',
+		'diff',
+		'log',
+		'patch',
+		'rej',
+		'trace',
 
 		// Misc text-ish formats
-		'entitlements', 'ical', 'ics', 'ifb', 'lrc',
-		'pbxproj', 'plist', 'po', 'pot', 'rc',
-		'reg', 'resx', 'sami', 'sbv', 'smi',
-		'srt', 'strings', 'sub', 'ttml', 'url',
-		'vcf', 'vcs', 'vtt', 'webloc', 'xcconfig',
+		'entitlements',
+		'ical',
+		'ics',
+		'ifb',
+		'lrc',
+		'pbxproj',
+		'plist',
+		'po',
+		'pot',
+		'rc',
+		'reg',
+		'resx',
+		'sami',
+		'sbv',
+		'smi',
+		'srt',
+		'strings',
+		'sub',
+		'ttml',
+		'url',
+		'vcf',
+		'vcs',
+		'vtt',
+		'webloc',
+		'xcconfig',
 
 		// Plain text / docs / markup
-		'adoc', 'asciidoc', 'context', 'creole', 'ditaa',
-		'dot', 'eqn', 'grap', 'groff', 'gv',
-		'ily', 'jtex', 'ly', 'man', 'markdown',
-		'md', 'mdown', 'mdx', 'mkdn', 'ms',
-		'nw', 'noweb', 'org', 'pic', 'qmd',
-		'roff', 'rst', 'rtf', 'rtx', 'saty',
-		'satyh', 'sil', 't2t', 'texi', 'texinfo',
-		'text', 'textile', 'troff', 'txt', 'w',
-		'web', 'wiki',
+		'adoc',
+		'asciidoc',
+		'context',
+		'creole',
+		'ditaa',
+		'dot',
+		'eqn',
+		'grap',
+		'groff',
+		'gv',
+		'ily',
+		'jtex',
+		'ly',
+		'man',
+		'markdown',
+		'md',
+		'mdown',
+		'mdx',
+		'mkdn',
+		'ms',
+		'nw',
+		'noweb',
+		'org',
+		'pic',
+		'qmd',
+		'roff',
+		'rst',
+		'rtf',
+		'rtx',
+		'saty',
+		'satyh',
+		'sil',
+		't2t',
+		'texi',
+		'texinfo',
+		'text',
+		'textile',
+		'troff',
+		'txt',
+		'w',
+		'web',
+		'wiki',
 
 		// Shell / scripts
-		'awk', 'bash', 'bat', 'cmd', 'csh',
-		'exp', 'fish', 'ksh', 'ps1', 'psd1',
-		'psm1', 'sed', 'sh', 'tcl', 'zsh',
+		'awk',
+		'bash',
+		'bat',
+		'cmd',
+		'csh',
+		'exp',
+		'fish',
+		'ksh',
+		'ps1',
+		'psd1',
+		'psm1',
+		'sed',
+		'sh',
+		'tcl',
+		'zsh',
 
 		// SQL / database
-		'ddl', 'dml', 'pgsql', 'psql', 'sql',
+		'ddl',
+		'dml',
+		'pgsql',
+		'psql',
+		'sql',
 
 		// Structured data / interchange
-		'avsc', 'csv', 'cson', 'geojson', 'gql',
-		'graphql', 'hjson', 'jsonl', 'jsonld', 'n3',
-		'ndjson', 'nq', 'nt', 'proto', 'psv',
-		'rdf', 'soap', 'ssv', 'thrift', 'topojson',
-		'trig', 'tsv', 'ttl', 'wsdl', 'xsd',
+		'avsc',
+		'csv',
+		'cson',
+		'geojson',
+		'gql',
+		'graphql',
+		'hjson',
+		'jsonl',
+		'jsonld',
+		'n3',
+		'ndjson',
+		'nq',
+		'nt',
+		'proto',
+		'psv',
+		'rdf',
+		'soap',
+		'ssv',
+		'thrift',
+		'topojson',
+		'trig',
+		'tsv',
+		'ttl',
+		'wsdl',
+		'xsd',
 
 		// Templates
-		'ejs', 'erb', 'eta', 'ftl', 'gotmpl',
-		'haml', 'handlebars', 'hbs', 'jade', 'j2',
-		'jinja', 'jinja2', 'latte', 'liquid', 'mustache',
-		'njk', 'pug', 'slim', 'tera', 'tpl',
-		'twig', 'vm',
+		'ejs',
+		'erb',
+		'eta',
+		'ftl',
+		'gotmpl',
+		'haml',
+		'handlebars',
+		'hbs',
+		'jade',
+		'j2',
+		'jinja',
+		'jinja2',
+		'latte',
+		'liquid',
+		'mustache',
+		'njk',
+		'pug',
+		'slim',
+		'tera',
+		'tpl',
+		'twig',
+		'vm',
 
 		// Typst
-		'typ', 'typst',
+		'typ',
+		'typst',
 
 		// Web / frontend
-		'astro', 'cjs', 'css', 'heex', 'htm',
-		'html', 'js', 'jsx', 'leex', 'less',
-		'mjs', 'riot', 'sass', 'scss', 'styl',
-		'svelte', 'tsx', // 'svg'
-		'ts', 'vue', 'webmanifest', 'xhtml', 'xml',
-		'xsl', 'xslt'
+		'astro',
+		'cjs',
+		'css',
+		'heex',
+		'htm',
+		'html',
+		'js',
+		'jsx',
+		'leex',
+		'less',
+		'mjs',
+		'riot',
+		'sass',
+		'scss',
+		'styl',
+		'svelte',
+		'tsx', // 'svg'
+		'ts',
+		'vue',
+		'webmanifest',
+		'xhtml',
+		'xml',
+		'xsl',
+		'xslt',
 	]);
 
 	return !textExtensions.has(extension);
@@ -390,14 +745,21 @@ export function isTemporaryFile(fileName: string): boolean {
 export function isLatexFile(pathOrName: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
-	return lower.endsWith('.tex') || lower.endsWith('.latex') || lower.endsWith('.ltx')
-		|| lower.endsWith('.cls') || lower.endsWith('.sty');  // || lower.endsWith('.ind') || lower.endsWith('.bbl')
+	return (
+		lower.endsWith('.tex') ||
+		lower.endsWith('.latex') ||
+		lower.endsWith('.ltx') ||
+		lower.endsWith('.cls') ||
+		lower.endsWith('.sty')
+	); // || lower.endsWith('.ind') || lower.endsWith('.bbl')
 }
 
 export function isLatexMainFile(pathOrName: string): boolean {
 	if (!pathOrName) return false;
 	const lower = pathOrName.toLowerCase();
-	return lower.endsWith('.tex') || lower.endsWith('.latex') || lower.endsWith('.ltx')
+	return (
+		lower.endsWith('.tex') || lower.endsWith('.latex') || lower.endsWith('.ltx')
+	);
 }
 
 export function isTypstFile(pathOrName: string): boolean {
@@ -443,7 +805,9 @@ export function isHtmlFile(pathOrName: string): boolean {
 }
 
 export function isLatexContent(content: string): boolean {
-	return /\\(?:documentclass|usepackage|begin|end|section|chapter|part|maketitle)/i.test(content);
+	return /\\(?:documentclass|usepackage|begin|end|section|chapter|part|maketitle)/i.test(
+		content,
+	);
 }
 
 export function isTypstContent(content: string): boolean {
@@ -451,11 +815,23 @@ export function isTypstContent(content: string): boolean {
 }
 
 export function isBibContent(content: string): boolean {
-	return /@(?:article|book|inproceedings|incollection|phdthesis|mastersthesis|techreport|misc|manual|conference)\s*\{/i.test(content);
+	return /@(?:article|book|inproceedings|incollection|phdthesis|mastersthesis|techreport|misc|manual|conference)\s*\{/i.test(
+		content,
+	);
 }
 
-export const detectFileType = (fileName: string | undefined, content?: string):
-	'latex' | 'typst' | 'bib' | 'markdown' | 'yaml' | 'json' | 'html' | 'unknown' => {
+export const detectFileType = (
+	fileName: string | undefined,
+	content?: string,
+):
+	| 'latex'
+	| 'typst'
+	| 'bib'
+	| 'markdown'
+	| 'yaml'
+	| 'json'
+	| 'html'
+	| 'unknown' => {
 	if (fileName) {
 		if (isLatexFile(fileName)) return 'latex';
 		if (isTypstFile(fileName)) return 'typst';
@@ -471,4 +847,4 @@ export const detectFileType = (fileName: string | undefined, content?: string):
 		if (isLatexContent(content)) return 'latex';
 	}
 	return 'unknown';
-}
+};

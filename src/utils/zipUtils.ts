@@ -9,7 +9,7 @@ import {
 	getParentPath,
 	isBinaryFile,
 	joinPaths,
-	toArrayBuffer
+	toArrayBuffer,
 } from './fileUtils';
 
 export interface DownloadableFile {
