@@ -32,6 +32,61 @@ interface UrlProjectParams {
 	files?: string;
 }
 
+const parseUrlProjectParams = (hashUrl: string): UrlProjectParams | null => {
+	try {
+		const params: UrlProjectParams = {};
+		const parts = hashUrl.split('&');
+
+		for (const part of parts) {
+			if (part.startsWith('newProjectName:')) {
+				params.newProjectName = decodeURIComponent(part.slice(15));
+			} else if (part.startsWith('newProjectDescription:')) {
+				params.newProjectDescription = decodeURIComponent(part.slice(22));
+			} else if (part.startsWith('newProjectType:')) {
+				params.newProjectType = decodeURIComponent(part.slice(15));
+			} else if (part.startsWith('newProjectTags:')) {
+				params.newProjectTags = decodeURIComponent(part.slice(15));
+			} else if (part.startsWith('files:')) {
+				params.files = decodeURIComponent(part.slice(6));
+			}
+		}
+
+		return params.newProjectName ? params : null;
+	} catch (error) {
+		console.error('Error parsing URL project params:', error);
+		return null;
+	}
+};
+
+const downloadAndExtractZip = async (
+	zipUrl: string,
+	projectId: string,
+): Promise<void> => {
+	try {
+		const response = await fetch(zipUrl);
+		if (!response.ok) {
+			throw new Error(`Failed to download zip: ${response.statusText}`);
+		}
+
+		const zipBlob = await response.blob();
+		const zipFile = new File([zipBlob], 'template.zip', {
+			type: 'application/zip',
+		});
+
+		await fileStorageService.initialize(`yjs:${projectId}`);
+
+		const { files, directories } = await batchExtractZip(zipFile, '/');
+		const allFiles = [...directories, ...files];
+
+		await fileStorageService.batchStoreFiles(allFiles, {
+			showConflictDialog: false,
+			preserveTimestamp: false,
+		});
+	} catch (error) {
+		console.error('Error downloading and extracting zip:', error);
+	}
+};
+
 const AppRouter: React.FC = () => {
 	const {
 		isAuthenticated,
@@ -59,93 +114,65 @@ const AppRouter: React.FC = () => {
 		null,
 	);
 
-	const parseUrlProjectParams = (hashUrl: string): UrlProjectParams | null => {
-		try {
-			const params: UrlProjectParams = {};
-			const parts = hashUrl.split('&');
+	const createProjectForDocument = useCallback(
+		async (docUrl: string, name: string, description: string, type: string) => {
+			try {
+				await new Promise((resolve) => setTimeout(resolve, 500));
 
-			for (const part of parts) {
-				if (part.startsWith('newProjectName:')) {
-					params.newProjectName = decodeURIComponent(part.slice(15));
-				} else if (part.startsWith('newProjectDescription:')) {
-					params.newProjectDescription = decodeURIComponent(part.slice(22));
-				} else if (part.startsWith('newProjectType:')) {
-					params.newProjectType = decodeURIComponent(part.slice(15));
-				} else if (part.startsWith('newProjectTags:')) {
-					params.newProjectTags = decodeURIComponent(part.slice(15));
-				} else if (part.startsWith('files:')) {
-					params.files = decodeURIComponent(part.slice(6));
+				const project = await createProject({
+					name,
+					description,
+					type,
+					docUrl,
+					tags: [],
+					isFavorite: false,
+				});
+
+				setCurrentProjectId(project.id);
+				sessionStorage.setItem('currentProjectId', project.id);
+
+				return project;
+			} catch (error) {
+				console.error('Failed to create project for document:', error);
+				throw error;
+			}
+		},
+		[createProject],
+	);
+
+	const createProjectFromUrl = useCallback(
+		async (params: UrlProjectParams): Promise<string | null> => {
+			if (!isAuthenticated || !params.newProjectName) return null;
+
+			setIsCreatingProject(true);
+
+			try {
+				const newProject = await createProject({
+					name: params.newProjectName,
+					description: params.newProjectDescription || '',
+					type: params.newProjectType || 'latex',
+					tags: params.newProjectTags?.split(',') || [],
+					isFavorite: false,
+				});
+
+				const projectId = newProject.docUrl.startsWith('yjs:')
+					? newProject.docUrl.slice(4)
+					: newProject.docUrl;
+
+				if (params.files) {
+					await downloadAndExtractZip(params.files, projectId);
 				}
+
+				return newProject.docUrl;
+			} catch (error) {
+				console.error('Error creating project from URL:', error);
+				return null;
+			} finally {
+				setIsCreatingProject(false);
 			}
-
-			return params.newProjectName ? params : null;
-		} catch (error) {
-			console.error('Error parsing URL project params:', error);
-			return null;
-		}
-	};
-
-	const downloadAndExtractZip = async (
-		zipUrl: string,
-		projectId: string,
-	): Promise<void> => {
-		try {
-			const response = await fetch(zipUrl);
-			if (!response.ok) {
-				throw new Error(`Failed to download zip: ${response.statusText}`);
-			}
-
-			const zipBlob = await response.blob();
-			const zipFile = new File([zipBlob], 'template.zip', {
-				type: 'application/zip',
-			});
-
-			await fileStorageService.initialize(`yjs:${projectId}`);
-
-			const { files, directories } = await batchExtractZip(zipFile, '/');
-			const allFiles = [...directories, ...files];
-
-			await fileStorageService.batchStoreFiles(allFiles, {
-				showConflictDialog: false,
-				preserveTimestamp: false,
-			});
-		} catch (error) {
-			console.error('Error downloading and extracting zip:', error);
-		}
-	};
-
-	const createProjectFromUrl = async (
-		params: UrlProjectParams,
-	): Promise<string | null> => {
-		if (!isAuthenticated || !params.newProjectName) return null;
-
-		setIsCreatingProject(true);
-
-		try {
-			const newProject = await createProject({
-				name: params.newProjectName,
-				description: params.newProjectDescription || '',
-				type: params.newProjectType || 'latex',
-				tags: params.newProjectTags.split(',') || [],
-				isFavorite: false,
-			});
-
-			const projectId = newProject.docUrl.startsWith('yjs:')
-				? newProject.docUrl.slice(4)
-				: newProject.docUrl;
-
-			if (params.files) {
-				await downloadAndExtractZip(params.files, projectId);
-			}
-
-			return newProject.docUrl;
-		} catch (error) {
-			console.error('Error creating project from URL:', error);
-			return null;
-		} finally {
-			setIsCreatingProject(false);
-		}
-	};
+		},
+		[isAuthenticated, createProject],
+	);
 
 	const resolveViewFromHash = useCallback(
 		(hashUrl: string) => {
@@ -211,7 +238,12 @@ const AppRouter: React.FC = () => {
 		}
 
 		resolveViewFromHash(hashUrl);
-	}, [isAuthenticated, isInitializing, resolveViewFromHash]);
+	}, [
+		isAuthenticated,
+		isInitializing,
+		resolveViewFromHash,
+		createProjectFromUrl,
+	]);
 
 	useEffect(() => {
 		const handlePopState = () => {
@@ -269,7 +301,13 @@ const AppRouter: React.FC = () => {
 		};
 
 		checkAndCreateProject();
-	}, [isAuthenticated, isInitializing, docUrl, createProject, getProjects]);
+	}, [
+		isAuthenticated,
+		isInitializing,
+		docUrl,
+		getProjects,
+		createProjectForDocument,
+	]);
 
 	useEffect(() => {
 		if (!isAuthenticated || isInitializing) return;
@@ -284,34 +322,6 @@ const AppRouter: React.FC = () => {
 
 		checkPendingShare();
 	}, [isAuthenticated, isInitializing]);
-
-	const createProjectForDocument = async (
-		docUrl: string,
-		name: string,
-		description: string,
-		type: string,
-	) => {
-		try {
-			await new Promise((resolve) => setTimeout(resolve, 500));
-
-			const project = await createProject({
-				name,
-				description,
-				type,
-				docUrl,
-				tags: [],
-				isFavorite: false,
-			});
-
-			setCurrentProjectId(project.id);
-			sessionStorage.setItem('currentProjectId', project.id);
-
-			return project;
-		} catch (error) {
-			console.error('Failed to create project for document:', error);
-			throw error;
-		}
-	};
 
 	const handleAuthSuccess = () => {
 		if (docUrl) {

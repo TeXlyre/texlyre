@@ -1,6 +1,6 @@
 // src/components/settings/SettingsCodeMirror.tsx
 import type React from 'react';
-import { useRef, useEffect, useContext } from 'react';
+import { useCallback, useContext, useEffect, useRef } from 'react';
 import { EditorView, lineNumbers } from '@codemirror/view';
 import { EditorState, Compartment } from '@codemirror/state';
 import { basicSetup } from 'codemirror';
@@ -75,12 +75,13 @@ export const SettingsCodeMirror: React.FC<SettingsCodeMirrorProps> = ({
 		onChangeRef.current = onChange;
 	}, [onChange]);
 
-	const getThemeExtension = () => {
+	const getThemeExtension = useCallback(() => {
 		if (options.theme === 'dark') return oneDark;
 		if (options.theme === 'light') return [];
 		return isDarkTheme(currentVariant) ? oneDark : [];
-	};
+	}, [options.theme, currentVariant]);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: Mount-only; reactive updates are handled by the compartment effects below */
 	useEffect(() => {
 		if (!containerRef.current || editorViewRef.current) return;
 
@@ -165,7 +166,7 @@ export const SettingsCodeMirror: React.FC<SettingsCodeMirrorProps> = ({
 		editorViewRef.current.dispatch({
 			effects: themeCompartmentRef.current.reconfigure(getThemeExtension()),
 		});
-	}, [options.theme, currentVariant]);
+	}, [getThemeExtension]);
 
 	useEffect(() => {
 		if (!editorViewRef.current) return;

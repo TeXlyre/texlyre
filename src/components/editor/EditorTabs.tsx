@@ -115,10 +115,12 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 		);
 		if (!activeTab) return;
 
-		activeTab.scrollIntoView({
-			behavior: 'smooth',
-			block: 'nearest',
-			inline: 'nearest',
+		requestAnimationFrame(() => {
+			activeTab.scrollIntoView({
+				behavior: 'smooth',
+				block: 'nearest',
+				inline: 'nearest',
+			});
 		});
 	}, [activeTabId, tabs.length]);
 
