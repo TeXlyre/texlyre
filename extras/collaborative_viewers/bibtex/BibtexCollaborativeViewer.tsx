@@ -3,7 +3,7 @@ import { t } from '@/i18n';
 import { Trans } from 'react-i18next';
 import { tidy } from 'bib-editor';
 import type React from 'react';
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
 	DownloadIcon,
@@ -60,6 +60,15 @@ const noopAddComment = () => ({ openTag: '', closeTag: '', commentId: '' });
 const noopParseComments = () => [];
 const noopUpdateComments = () => {};
 
+function parseContent(content: string): BibtexEntry[] {
+	try {
+		return BibtexParser.parse(content);
+	} catch (error) {
+		console.warn('Failed to parse BibTeX content:', error);
+		return [];
+	}
+}
+
 const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	content,
 	fileName,
@@ -109,6 +118,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		getPresetOptions(tidyPreset),
 	);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: One-time registration guarded by ref; getProperty/registerProperty/tidyPreset are read for initial defaults only. */
 	useEffect(() => {
 		if (propertiesRegistered.current) return;
 		propertiesRegistered.current = true;
@@ -156,9 +166,6 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		});
 	};
 
-	const _activeContent =
-		currentView === 'original' ? bibtexContent : processedContent;
-
 	const initialContentRef = useRef<string>(
 		typeof content === 'string'
 			? content
@@ -166,6 +173,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				? new TextDecoder('utf-8').decode(content)
 				: '',
 	);
+
 	const projectId = useMemo(() => {
 		const hash = docUrl.split(':').pop() || '';
 		return hash;
@@ -199,15 +207,6 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			}
 		};
 	}, [fileId, fileInfo.filePath]);
-
-	const parseContent = (content: string) => {
-		try {
-			return BibtexParser.parse(content);
-		} catch (error) {
-			console.warn('Failed to parse BibTeX content:', error);
-			return [];
-		}
-	};
 
 	const handleContentUpdate = (newContent: string) => {
 		if (currentView === 'original') {
@@ -274,6 +273,109 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		setHasChanges(true);
 	};
 
+	const processBibtexWithOptions = useCallback(
+		async (input: string, tidyOptions: TidyOptions) => {
+			if (!input) return;
+			setIsProcessing(true);
+			setError(null);
+			setWarnings([]);
+			try {
+				const result = await tidy(input, tidyOptions);
+				setProcessedContent(result.bibtex);
+				setProcessedParsedEntries(parseContent(result.bibtex));
+				setWarnings(result.warnings || []);
+				setHasChanges(true);
+				if (autoTidy) setCurrentView('processed');
+			} catch (error) {
+				setError(
+					error instanceof Error
+						? error.message
+						: t('Failed to process BibTeX file'),
+				);
+			} finally {
+				setIsProcessing(false);
+			}
+		},
+		[autoTidy],
+	);
+
+	const processBibtex = async () => {
+		await processBibtexWithOptions(bibtexContent, options);
+		setCurrentView('processed');
+	};
+
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: viewRef is accessed imperatively and is not a reactive dep. */
+	const handleSaveProcessed = useCallback(async () => {
+		if (!fileId || currentView !== 'processed') return;
+
+		const currentEditorContent = viewRef.current?.state?.doc?.toString() || '';
+		const contentToSave = currentEditorContent.trim()
+			? currentEditorContent
+			: processedContent;
+		if (!contentToSave.trim()) return;
+
+		setIsSaving(true);
+		setError(null);
+
+		try {
+			await fileStorageService.updateFileContent(fileId, contentToSave);
+
+			const changes = computeReplacementChange(bibtexContent, contentToSave);
+
+			if (viewRef.current && changes.length > 0) {
+				setCurrentView('original');
+
+				await new Promise((resolve) => setTimeout(resolve, 100));
+
+				const originalView = viewRef.current;
+
+				if (originalView && originalView.state) {
+					try {
+						originalView.dispatch({
+							changes: changes,
+						});
+					} catch (error) {
+						console.warn(
+							'Range error during diff dispatch, replacing full content:',
+							error,
+						);
+						const docLength = originalView.state.doc.length;
+						if (docLength > 0) {
+							originalView.dispatch({
+								changes: { from: 0, to: docLength, insert: contentToSave },
+							});
+						} else {
+							await new Promise((resolve) => setTimeout(resolve, 200));
+							const syncedLength = originalView.state.doc.length;
+							originalView.dispatch({
+								changes: { from: 0, to: syncedLength, insert: contentToSave },
+							});
+						}
+					}
+				}
+			} else {
+				setCurrentView('original');
+			}
+
+			initialContentRef.current = contentToSave;
+			setBibtexContent(contentToSave);
+			setProcessedContent('');
+			setProcessedParsedEntries([]);
+			setHasChanges(false);
+
+			onUpdateContent(contentToSave);
+		} catch (error) {
+			console.error('Error saving processed BibTeX file:', error);
+			setError(
+				t('Failed to save file: {error}', {
+					error: error instanceof Error ? error.message : t('Unknown error'),
+				}),
+			);
+		} finally {
+			setIsSaving(false);
+		}
+	}, [fileId, currentView, processedContent, bibtexContent, onUpdateContent]);
+
 	const isOriginalView = currentView === 'original';
 
 	const { viewRef, showSaveIndicator } = useEditorView(
@@ -324,8 +426,9 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				processBibtexWithOptions(text, getPresetOptions(tidyPreset));
 			}, 500);
 		}
-	}, [content, autoTidy, tidyPreset]);
+	}, [content, autoTidy, tidyPreset, processBibtexWithOptions]);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: Intentionally only reacts to tidyPreset; getProperty identity should not trigger re-reads. */
 	useEffect(() => {
 		const currentProjectId = sessionStorage.getItem('currentProjectId');
 		const saved = getProperty('bibtex-tidy-options', {
@@ -337,6 +440,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		}
 	}, [tidyPreset]);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: ViewRef is accessed imperatively and is not a reactive dep. */
 	useEffect(() => {
 		if (viewMode === 'table' && currentView === 'processed') {
 			console.log(
@@ -358,6 +462,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		}
 	}, [viewMode, currentView, processedContent]);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: ViewRef is accessed imperatively and is not a reactive dep. */
 	useEffect(() => {
 		const handleBibEntryImport = (event: Event) => {
 			const customEvent = event as CustomEvent;
@@ -446,109 +551,13 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		return () => {
 			document.removeEventListener('bib-entry-imported', handleBibEntryImport);
 		};
-	}, [currentView, bibtexContent, processedContent, fileInfo.filePath]);
-
-	const processBibtexWithOptions = async (
-		input: string,
-		tidyOptions: TidyOptions,
-	) => {
-		if (!input) return;
-		setIsProcessing(true);
-		setError(null);
-		setWarnings([]);
-		try {
-			const result = await tidy(input, tidyOptions);
-			setProcessedContent(result.bibtex);
-			setProcessedParsedEntries(parseContent(result.bibtex));
-			setWarnings(result.warnings || []);
-			setHasChanges(true);
-			if (autoTidy) setCurrentView('processed');
-		} catch (error) {
-			setError(
-				error instanceof Error
-					? error.message
-					: t('Failed to process BibTeX file'),
-			);
-		} finally {
-			setIsProcessing(false);
-		}
-	};
-
-	const processBibtex = async () => {
-		await processBibtexWithOptions(bibtexContent, options);
-		setCurrentView('processed');
-	};
-
-	const handleSaveProcessed = async () => {
-		if (!fileId || currentView !== 'processed') return;
-
-		const currentEditorContent = viewRef.current?.state?.doc?.toString() || '';
-		const contentToSave = currentEditorContent.trim()
-			? currentEditorContent
-			: processedContent;
-		if (!contentToSave.trim()) return;
-
-		setIsSaving(true);
-		setError(null);
-
-		try {
-			await fileStorageService.updateFileContent(fileId, contentToSave);
-
-			const changes = computeReplacementChange(bibtexContent, contentToSave);
-
-			if (viewRef.current && changes.length > 0) {
-				setCurrentView('original');
-
-				await new Promise((resolve) => setTimeout(resolve, 100));
-
-				const originalView = viewRef.current;
-
-				if (originalView && originalView.state) {
-					try {
-						originalView.dispatch({
-							changes: changes,
-						});
-					} catch (error) {
-						console.warn(
-							'Range error during diff dispatch, replacing full content:',
-							error,
-						);
-						const docLength = originalView.state.doc.length;
-						if (docLength > 0) {
-							originalView.dispatch({
-								changes: { from: 0, to: docLength, insert: contentToSave },
-							});
-						} else {
-							await new Promise((resolve) => setTimeout(resolve, 200));
-							const syncedLength = originalView.state.doc.length;
-							originalView.dispatch({
-								changes: { from: 0, to: syncedLength, insert: contentToSave },
-							});
-						}
-					}
-				}
-			} else {
-				setCurrentView('original');
-			}
-
-			initialContentRef.current = contentToSave;
-			setBibtexContent(contentToSave);
-			setProcessedContent('');
-			setProcessedParsedEntries([]);
-			setHasChanges(false);
-
-			onUpdateContent(contentToSave);
-		} catch (error) {
-			console.error('Error saving processed BibTeX file:', error);
-			setError(
-				t('Failed to save file: {error}', {
-					error: error instanceof Error ? error.message : t('Unknown error'),
-				}),
-			);
-		} finally {
-			setIsSaving(false);
-		}
-	};
+	}, [
+		currentView,
+		bibtexContent,
+		processedContent,
+		fileInfo.filePath,
+		onUpdateContent,
+	]);
 
 	const handleExport = (text: string, suffix = '') => {
 		try {

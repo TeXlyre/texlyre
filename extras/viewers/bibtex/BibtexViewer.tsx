@@ -3,7 +3,7 @@ import { t } from '@/i18n';
 import { Trans } from 'react-i18next';
 import { tidy } from 'bib-editor';
 import type React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
 	DownloadIcon,
@@ -35,6 +35,15 @@ import { type TidyOptions, getPresetOptions } from './tidyOptions';
 import { BibtexTableView } from './BibtexTableView';
 import './styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './BibtexViewerPlugin';
+
+const parseContent = (content: string): BibtexEntry[] => {
+	try {
+		return BibtexParser.parse(content);
+	} catch (error) {
+		console.warn('Failed to parse BibTeX content:', error);
+		return [];
+	}
+};
 
 const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	const { getSetting } = useSettings();
@@ -76,6 +85,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		getPresetOptions(tidyPreset),
 	);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: One-time registration guarded by ref; getProperty/registerProperty/tidyPreset are read for initial defaults only. */
 	useEffect(() => {
 		if (propertiesRegistered.current) return;
 		propertiesRegistered.current = true;
@@ -161,15 +171,6 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 			}
 		};
 	}, [fileId, fileInfo.filePath]);
-
-	const parseContent = (content: string) => {
-		try {
-			return BibtexParser.parse(content);
-		} catch (error) {
-			console.warn('Failed to parse BibTeX content:', error);
-			return [];
-		}
-	};
 
 	const handleOriginalContentUpdate = (newContent: string) => {
 		console.log('Original content updated:', newContent.length, 'characters');
@@ -326,6 +327,82 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		undefined,
 	);
 
+	const processBibtexWithOptions = useCallback(
+		async (content: string, tidyOptions: TidyOptions) => {
+			if (!content) return;
+
+			setIsProcessing(true);
+			setError(null);
+			setWarnings([]);
+
+			try {
+				const result = await tidy(content, tidyOptions);
+				setProcessedContent(result.bibtex);
+				setProcessedParsedEntries(parseContent(result.bibtex));
+				setWarnings(result.warnings || []);
+				setHasChanges(true);
+				if (autoTidy) {
+					setCurrentView('processed');
+				}
+			} catch (error) {
+				setError(
+					error instanceof Error
+						? error.message
+						: t('Failed to process BibTeX file'),
+				);
+			} finally {
+				setIsProcessing(false);
+			}
+		},
+		[autoTidy],
+	);
+
+	const processBibtex = async () => {
+		const currentOriginalContent =
+			originalViewRef.current?.state?.doc?.toString() || bibtexContent;
+		await processBibtexWithOptions(currentOriginalContent, options);
+		setCurrentView('processed');
+	};
+
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: ProcessedViewRef is accessed imperatively and is not a reactive dep. */
+	const handleSaveProcessed = useCallback(async () => {
+		if (!fileId) return;
+
+		const currentEditorContent =
+			processedViewRef.current?.state?.doc?.toString() || processedContent;
+
+		if (!currentEditorContent.trim()) {
+			console.warn('BibtexViewer: Attempted to save empty content');
+			return;
+		}
+
+		setIsSaving(true);
+		setError(null);
+
+		try {
+			const encoder = new TextEncoder();
+			const dataToSave = encoder.encode(currentEditorContent);
+
+			await fileStorageService.updateFileContent(fileId, dataToSave.buffer);
+
+			setBibtexContent(currentEditorContent);
+			setProcessedContent('');
+			setParsedEntries(parseContent(currentEditorContent));
+			setProcessedParsedEntries([]);
+			setHasChanges(false);
+			setCurrentView('original');
+		} catch (error) {
+			console.error('Error saving BibTeX file:', error);
+			setError(
+				t('Failed to save file: {error}', {
+					error: error instanceof Error ? error.message : t('Unknown error'),
+				}),
+			);
+		} finally {
+			setIsSaving(false);
+		}
+	}, [fileId, processedContent, parseContent]);
+
 	useEffect(() => {
 		if (content instanceof ArrayBuffer) {
 			try {
@@ -405,8 +482,9 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				}, 500);
 			}
 		}
-	}, [content, autoTidy, tidyPreset]);
+	}, [content, autoTidy, tidyPreset, processBibtexWithOptions]);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: Intentionally only reacts to tidyPreset; getProperty identity should not trigger re-reads. */
 	useEffect(() => {
 		const currentProjectId = sessionStorage.getItem('currentProjectId');
 		const saved = getProperty('bibtex-tidy-options', {
@@ -418,6 +496,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		}
 	}, [tidyPreset]);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: Refs (originalViewRef, processedViewRef) are accessed imperatively and are not reactive deps. */
 	useEffect(() => {
 		const handleBibEntryImport = (event: Event) => {
 			const customEvent = event as CustomEvent;
@@ -505,82 +584,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		return () => {
 			document.removeEventListener('bib-entry-imported', handleBibEntryImport);
 		};
-	}, [bibtexContent, processedContent, fileInfo.filePath]);
-
-	const processBibtexWithOptions = async (
-		content: string,
-		tidyOptions: TidyOptions,
-	) => {
-		if (!content) return;
-
-		setIsProcessing(true);
-		setError(null);
-		setWarnings([]);
-
-		try {
-			const result = await tidy(content, tidyOptions);
-			setProcessedContent(result.bibtex);
-			setProcessedParsedEntries(parseContent(result.bibtex));
-			setWarnings(result.warnings || []);
-			setHasChanges(true);
-			if (autoTidy) {
-				setCurrentView('processed');
-			}
-		} catch (error) {
-			setError(
-				error instanceof Error
-					? error.message
-					: t('Failed to process BibTeX file'),
-			);
-		} finally {
-			setIsProcessing(false);
-		}
-	};
-
-	const processBibtex = async () => {
-		const currentOriginalContent =
-			originalViewRef.current?.state?.doc?.toString() || bibtexContent;
-		await processBibtexWithOptions(currentOriginalContent, options);
-		setCurrentView('processed');
-	};
-
-	const handleSaveProcessed = async () => {
-		if (!fileId) return;
-
-		const currentEditorContent =
-			processedViewRef.current?.state?.doc?.toString() || processedContent;
-
-		if (!currentEditorContent.trim()) {
-			console.warn('BibtexViewer: Attempted to save empty content');
-			return;
-		}
-
-		setIsSaving(true);
-		setError(null);
-
-		try {
-			const encoder = new TextEncoder();
-			const dataToSave = encoder.encode(currentEditorContent);
-
-			await fileStorageService.updateFileContent(fileId, dataToSave.buffer);
-
-			setBibtexContent(currentEditorContent);
-			setProcessedContent('');
-			setParsedEntries(parseContent(currentEditorContent));
-			setProcessedParsedEntries([]);
-			setHasChanges(false);
-			setCurrentView('original');
-		} catch (error) {
-			console.error('Error saving BibTeX file:', error);
-			setError(
-				t('Failed to save file: {error}', {
-					error: error instanceof Error ? error.message : t('Unknown error'),
-				}),
-			);
-		} finally {
-			setIsSaving(false);
-		}
-	};
+	}, [bibtexContent, processedContent, fileInfo.filePath, parseContent]);
 
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -629,6 +633,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	const currentEntries =
 		currentView === 'original' ? parsedEntries : processedParsedEntries;
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: Refs (originalViewRef, processedViewRef) are accessed imperatively and are not reactive deps. */
 	useEffect(() => {
 		if (viewMode === 'table') {
 			console.log('Switching to table view - syncing with editor content');
@@ -659,7 +664,7 @@ const BibtexViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 				}
 			}
 		}
-	}, [viewMode, currentView, bibtexContent, processedContent]);
+	}, [viewMode, currentView, bibtexContent, processedContent, parseContent]);
 
 	useEffect(() => {
 		console.log('Current entries changed:', {
