@@ -20,7 +20,6 @@ const Login: React.FC<LoginProps> = ({
 	onSwitchToImport,
 }) => {
 	const { login, createGuestAccount } = useAuth();
-	const { currentThemePlugin } = useTheme();
 
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
@@ -61,7 +60,6 @@ const Login: React.FC<LoginProps> = ({
 
 	const handleClosePrivacy = () => {
 		setShowPrivacy(false);
-		// Don't close the guest modal when privacy modal closes
 	};
 
 	const handleGuestSession = async () => {

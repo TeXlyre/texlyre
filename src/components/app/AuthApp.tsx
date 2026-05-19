@@ -5,6 +5,7 @@ import { useState } from 'react';
 
 import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
 import { useTheme } from '../../hooks/useTheme';
+import { pushHash } from '../../utils/urlUtils';
 import ImportAccount from '../auth/ImportAccount';
 import Login from '../auth/Login';
 import Register from '../auth/Register';
@@ -108,16 +109,16 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 							{t('Source Code')}
 						</a>{' '}
 						•{' '}
-						<a
-							href='#'
-							onClick={(event) => {
-								event.preventDefault();
+						<button
+							type='button'
+							onClick={() => {
+								pushHash('privacy-policy');
 								setShowPrivacy(true);
 							}}
 							className='privacy-link'
 						>
 							{t('Privacy')}
-						</a>{' '}
+						</button>{' '}
 						•{/* {t('Built with TeXlyre')} */}
 						<a
 							href='https://texlyre.github.io'
@@ -133,7 +134,12 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 
 			<PrivacyModal
 				isOpen={showPrivacy}
-				onClose={() => setShowPrivacy(false)}
+				onClose={() => {
+					setShowPrivacy(false);
+					if (window.location.hash === '#privacy-policy') {
+						history.back();
+					}
+				}}
 			/>
 		</div>
 	);

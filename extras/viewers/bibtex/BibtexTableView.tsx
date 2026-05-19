@@ -224,6 +224,7 @@ export const BibtexTableView: React.FC<BibtexTableViewProps> = ({
 													onChange={(e) => setEditValue(e.target.value)}
 													onBlur={saveEdit}
 													onKeyDown={handleKeyDown}
+													/* biome-ignore lint/a11y/noAutofocus: Cell edit input requires immediate focus for usability */
 													autoFocus
 													className='cell-input'
 												/>

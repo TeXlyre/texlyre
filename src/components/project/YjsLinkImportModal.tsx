@@ -104,6 +104,7 @@ const YjsLinkImportModal: React.FC<YjsLinkImportModalProps> = ({
 						onChange={(e) => setYjsInput(e.target.value)}
 						placeholder='yjs:abc123... or abc123...'
 						onKeyDown={(e) => e.key === 'Enter' && handleOpen()}
+						/* biome-ignore lint/a11y/noAutofocus: Import modal expects immediate paste focus */
 						autoFocus
 					/>
 					<small>

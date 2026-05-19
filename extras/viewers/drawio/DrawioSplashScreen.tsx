@@ -52,6 +52,7 @@ const DrawioSplashScreen: React.FC<DrawioSplashScreenProps> = ({
 						strokeLinecap='round'
 						strokeLinejoin='round'
 					>
+						<title>{t('Draw.io logo')}</title>
 						<rect x='9' y='3' width='6' height='6' rx='1.5' />
 						<rect x='3' y='15' width='6' height='6' rx='1.5' />
 						<rect x='15' y='15' width='6' height='6' rx='1.5' />

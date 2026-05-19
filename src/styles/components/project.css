@@ -61,6 +61,7 @@
 	border: none;
 	padding: 0;
 	margin: 0;
+	margin-bottom: var(--space-md);
 	font-size: 0.8rem;
 	font-weight: 600;
 	color: var(--pico-primary);

@@ -12,6 +12,7 @@ import {
 	isValidYjsUrl,
 	buildUrlWithFragments,
 	parseUrlFragments,
+	pushHash,
 } from '../../utils/urlUtils';
 import BackupDiscoveryModal from '../backup/BackupDiscoveryModal';
 import BackupModal from '../backup/BackupModal';
@@ -553,16 +554,16 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 							{t('Source Code')}
 						</a>{' '}
 						•{' '}
-						<a
-							href='#'
-							onClick={(event) => {
-								event.preventDefault();
+						<button
+							type='button'
+							onClick={() => {
+								pushHash('privacy-policy');
 								setShowPrivacy(true);
 							}}
 							className='privacy-link'
 						>
 							{t('Privacy')}
-						</a>{' '}
+						</button>{' '}
 						•{/* {t('Built with TeXlyre')} */}
 						<a
 							href='https://texlyre.github.io'
@@ -578,7 +579,12 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 
 			<PrivacyModal
 				isOpen={showPrivacy}
-				onClose={() => setShowPrivacy(false)}
+				onClose={() => {
+					setShowPrivacy(false);
+					if (window.location.hash === '#privacy-policy') {
+						history.back();
+					}
+				}}
 			/>
 
 			<Modal

@@ -51,7 +51,7 @@ import KeyboardShortcutsModal from '../common/KeyboardShortcutsModal';
 import PrivacyModal from '../common/PrivacyModal';
 import GuestUpgradeBanner from '../auth/GuestUpgradeBanner';
 import GuestUpgradeModal from '../auth/GuestUpgradeModal';
-import { isValidYjsUrl } from '../../utils/urlUtils';
+import { isValidYjsUrl, pushHash } from '../../utils/urlUtils';
 
 interface EditorAppProps {
 	docUrl: YjsDocUrl;
@@ -638,16 +638,13 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
 				<p className='texlyre-info'>
 					<span className='footer-links'>
-						<a
-							href='#'
-							onClick={(event) => {
-								event.preventDefault();
-								setShowKeyboardShortcuts(true);
-							}}
+						<button
+							type='button'
+							onClick={() => setShowKeyboardShortcuts(true)}
 							className='shortcuts-link'
 						>
 							{t('Keyboard Map')}
-						</a>{' '}
+						</button>{' '}
 						•{' '}
 						<a
 							href='https://texlyre.github.io/docs/intro'
@@ -665,16 +662,16 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 							{t('Source Code')}
 						</a>{' '}
 						•{' '}
-						<a
-							href='#'
-							onClick={(event) => {
-								event.preventDefault();
+						<button
+							type='button'
+							onClick={() => {
+								pushHash('privacy-policy');
 								setShowPrivacy(true);
 							}}
 							className='privacy-link'
 						>
 							{t('Privacy')}
-						</a>{' '}
+						</button>{' '}
 						•{/* {t('Built with TeXlyre')} */}
 						<a
 							href='https://texlyre.github.io'
@@ -697,7 +694,12 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
 			<PrivacyModal
 				isOpen={showPrivacy}
-				onClose={() => setShowPrivacy(false)}
+				onClose={() => {
+					setShowPrivacy(false);
+					if (window.location.hash === '#privacy-policy') {
+						history.back();
+					}
+				}}
 			/>
 
 			<Modal

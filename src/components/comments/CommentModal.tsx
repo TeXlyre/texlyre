@@ -64,6 +64,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
 							onKeyDown={handleKeyDown}
 							placeholder={t('Enter your comment...')}
 							rows={4}
+							/* biome-ignore lint/a11y/noAutofocus: Comment modal expects immediate typing focus */
 							autoFocus
 						/>
 					</div>

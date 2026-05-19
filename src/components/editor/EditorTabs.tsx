@@ -99,10 +99,28 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 		};
 	}, [updateScrollState]);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: tabs.length triggers recompute when overflow changes */
 	useEffect(() => {
 		// Update scroll state when tabs change
 		updateScrollState();
-	}, [tabs, updateScrollState]);
+	}, [tabs.length, updateScrollState]);
+
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: tabs.length triggers scroll-into-view after tab list updates */
+	useEffect(() => {
+		const tabsContainer = tabsRef.current;
+		if (!tabsContainer || !activeTabId) return;
+
+		const activeTab = tabsContainer.querySelector<HTMLElement>(
+			`[data-tab-id='${activeTabId}']`,
+		);
+		if (!activeTab) return;
+
+		activeTab.scrollIntoView({
+			behavior: 'smooth',
+			block: 'nearest',
+			inline: 'nearest',
+		});
+	}, [activeTabId, tabs.length]);
 
 	useEffect(() => {
 		const tabs = tabsRef.current;
@@ -374,10 +392,12 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 					<ChevronLeftIcon />
 				</button>
 
-				<div ref={tabsRef} className='editor-tabs'>
+				<div ref={tabsRef} className='editor-tabs' role='tablist'>
 					{tabs.map((tab, index) => (
 						<div
 							key={tab.id}
+							data-tab-id={tab.id}
+							aria-selected={tab.id === activeTabId}
 							className={getTabClasses(index, tab.id)}
 							onClick={(e) => handleTabClick(e, tab.id)}
 							onMouseDown={(e) => handleMiddleClick(e, tab.id)}
@@ -390,7 +410,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 							onDrop={(e) => handleDrop(e, index)}
 							onDragEnd={handleDragEnd}
 							title={`${tab.filePath || tab.title}${tab.editorState.currentLine ? ` (${t('Line {line}', { line: tab.editorState.currentLine })})` : ''}`}
-							role='button'
+							role='tab'
 							tabIndex={0}
 							onKeyDown={(e) => {
 								if (e.key === 'Enter' || e.key === ' ') {
