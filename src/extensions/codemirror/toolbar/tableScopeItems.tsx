@@ -422,7 +422,7 @@ function findColumnPositions(colSpec: string): number[] {
 					j++;
 				}
 				const num = parseInt(repeatCount, 10);
-				if (!isNaN(num) && j < colSpec.length && colSpec[j] === '{') {
+				if (!Number.isNaN(num) && j < colSpec.length && colSpec[j] === '{') {
 					for (let k = 0; k < num; k++) {
 						positions.push(i);
 					}

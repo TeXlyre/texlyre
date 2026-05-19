@@ -766,11 +766,11 @@ class TypstService {
 		const errorStr = String(error?.message || error);
 		const diagnostics: any[] = [];
 
-		let match;
+		let match: RegExpExecArray | null;
 		DIAG_PATTERN.lastIndex = 0;
 		while ((match = DIAG_PATTERN.exec(errorStr)) !== null) {
 			const hints: string[] = [];
-			let hintMatch;
+			let hintMatch: RegExpExecArray | null;
 			HINT_PATTERN.lastIndex = 0;
 			while ((hintMatch = HINT_PATTERN.exec(match[4])) !== null) {
 				hints.push(hintMatch[1]);

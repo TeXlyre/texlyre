@@ -35,7 +35,7 @@ export class MathDetector {
 		for (const patternConfig of patterns) {
 			const { pattern, type, fileType, getDelimiters } = patternConfig;
 			pattern.lastIndex = 0;
-			let match;
+			let match: RegExpExecArray | null;
 
 			while ((match = pattern.exec(doc)) !== null) {
 				const matchStart = match.index;
@@ -93,7 +93,7 @@ export class MathDetector {
 		for (const patternConfig of patterns) {
 			const { pattern, type, getDelimiters } = patternConfig;
 			pattern.lastIndex = 0;
-			let match;
+			let match: RegExpExecArray | null;
 
 			while ((match = pattern.exec(doc)) !== null) {
 				const matchStart = match.index;

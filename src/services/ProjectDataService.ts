@@ -40,7 +40,7 @@ export class ProjectDataService {
 		mode: 'backup' | 'export',
 		projectIds?: string[],
 	): Promise<ProjectMetadata[]> {
-		let projects;
+		let projects: Project[];
 		if (projectIds && projectIds.length > 0) {
 			projects = [];
 			for (const projectId of projectIds) {

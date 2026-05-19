@@ -117,7 +117,7 @@ class LaTeXStatisticsService {
 		allFiles: FileNode[],
 	): Promise<Array<{ path: string; content: string }>> {
 		const files: Array<{ path: string; content: string }> = [];
-		let match;
+		let match: RegExpExecArray | null;
 
 		INCLUDE_PATTERN.lastIndex = 0;
 		while ((match = INCLUDE_PATTERN.exec(content)) !== null) {

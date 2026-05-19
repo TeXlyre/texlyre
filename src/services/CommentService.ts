@@ -90,7 +90,7 @@ class CommentService {
 				);
 				const responseRegex =
 					/<####(?:\s|%)*response(?:\s|%)*id:(?:\s|%)*'([\w-]+)',(?:\s|%)*user:(?:\s|%)*([^,]+?),(?:\s|%)*time:(?:\s|%)*(\d+),(?:\s|%)*content:(?:\s|%)*'([^']*)'(?:\s|%)*####\/>/g;
-				let responseMatch;
+				let responseMatch: RegExpExecArray | null;
 				while (
 					(responseMatch = responseRegex.exec(cleanedResponsesString)) !== null
 				) {

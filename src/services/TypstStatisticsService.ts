@@ -373,7 +373,7 @@ class TypstStatisticsService {
 		const processedPaths = new Set<string>();
 
 		const visit = async (text: string): Promise<void> => {
-			let match;
+			let match: RegExpExecArray | null;
 			while ((match = includePattern.exec(text)) !== null) {
 				let filename = match[1];
 				if (!isTypstFile(filename)) filename += '.typ';

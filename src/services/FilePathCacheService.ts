@@ -350,7 +350,7 @@ class FilePathCacheService {
 		const patterns = [/\\label\{([^}]+)\}/g, /\\hypertarget\{([^}]+)\}/g];
 
 		for (const pattern of patterns) {
-			let match;
+			let match: RegExpExecArray | null;
 			while ((match = pattern.exec(content)) !== null) {
 				const label = match[1].trim();
 				if (label) {
@@ -365,7 +365,7 @@ class FilePathCacheService {
 	private extractTypstLabels(content: string): string[] {
 		const labels = new Set<string>();
 		const pattern = /<([^>]+)>/g;
-		let match;
+		let match: RegExpExecArray | null;
 
 		while ((match = pattern.exec(content)) !== null) {
 			const label = match[1].trim();

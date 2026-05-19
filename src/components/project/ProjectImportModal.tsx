@@ -181,19 +181,18 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 				conflictResolution,
 			};
 
-			let result;
-			if (importSource === 'zip') {
-				if (!selectedZipFile) {
-					throw new Error(t('No ZIP file available for import'));
-				}
-				result = await projectImportService.importFromZip(
-					selectedZipFile,
-					Array.from(selectedProjects),
-					options,
-				);
-			} else {
+			if (importSource !== 'zip') {
 				throw new Error(t('Invalid import source'));
 			}
+			if (!selectedZipFile) {
+				throw new Error(t('No ZIP file available for import'));
+			}
+
+			const result = await projectImportService.importFromZip(
+				selectedZipFile,
+				Array.from(selectedProjects),
+				options,
+			);
 
 			if (result.errors.length > 0) {
 				setError(

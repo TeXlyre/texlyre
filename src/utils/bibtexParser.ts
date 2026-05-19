@@ -280,7 +280,7 @@ export class BibtexParser {
 		targetEntry: BibtexEntry,
 	): { start: number; end: number } | null {
 		const entryRegex = /@(\w+)\s*\{\s*([^,\s]+)\s*,?\s*([\s\S]*?)\n\s*\}/g;
-		let match;
+		let match: RegExpExecArray | null;
 		let currentIndex = 0;
 
 		while ((match = entryRegex.exec(content)) !== null) {

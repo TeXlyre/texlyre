@@ -4,7 +4,7 @@ import i18next from 'i18next';
 
 export function formatDate(timestamp: number | string): string {
 	const date = new Date(
-		typeof timestamp === 'string' && !isNaN(Number(timestamp))
+		typeof timestamp === 'string' && !Number.isNaN(Number(timestamp))
 			? parseInt(timestamp, 10)
 			: timestamp,
 	);
@@ -13,7 +13,7 @@ export function formatDate(timestamp: number | string): string {
 
 export function formatLastModified(timestamp: number | string): string {
 	const date = new Date(
-		typeof timestamp === 'string' && !isNaN(Number(timestamp))
+		typeof timestamp === 'string' && !Number.isNaN(Number(timestamp))
 			? parseInt(timestamp, 10)
 			: timestamp,
 	);
@@ -29,7 +29,7 @@ export function formatLastModified(timestamp: number | string): string {
 
 export function formatTimestamp(timestamp: number | string): string {
 	const ts =
-		typeof timestamp === 'string' && !isNaN(Number(timestamp))
+		typeof timestamp === 'string' && !Number.isNaN(Number(timestamp))
 			? parseInt(timestamp, 10)
 			: timestamp;
 

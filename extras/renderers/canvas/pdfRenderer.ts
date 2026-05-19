@@ -281,7 +281,7 @@ function correctSpanWidths(
 		if (!target || measured === 0) continue;
 
 		const ratio = target / measured;
-		if (!isFinite(ratio) || ratio <= 0) continue;
+		if (!Number.isFinite(ratio) || ratio <= 0) continue;
 		if (Math.abs(ratio - 1) < 0.02) continue;
 
 		const angle = parseFloat(span.dataset.angle || '0');

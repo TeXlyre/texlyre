@@ -1,9 +1,9 @@
+/* biome-ignore-all lint/style/useNamingConvention: Unicode math symbol keys map to LaTeX commands */
 // src/extensions/codemirror/mathlive/SymbolData.ts
 import { inferSyms, type SymbolInfo } from 'detypify-service';
 
 import type { FileType } from './patterns';
 
-// biome-ignore lint/style/useNamingConvention: Unicode math symbol keys map to LaTeX commands
 const UNICODE_TO_LATEX: Record<string, string> = {
 	α: '\\alpha',
 	β: '\\beta',

@@ -267,7 +267,7 @@ function findLatexTableBoundaries(doc: string): TableBoundary[] {
 	const tables: TableBoundary[] = [];
 	const envPattern =
 		/\\begin\{(tabular|array|longtable|tabularx)\}(\[[^\]]*\])?\{([^}]+)\}/g;
-	let match;
+	let match: RegExpExecArray | null;
 
 	while ((match = envPattern.exec(doc)) !== null) {
 		const envName = match[1];
@@ -329,7 +329,7 @@ function countLatexColumns(colSpec: string): number {
 					j++;
 				}
 				const num = parseInt(repeatCount, 10);
-				if (!isNaN(num) && j < colSpec.length && colSpec[j] === '{') {
+				if (!Number.isNaN(num) && j < colSpec.length && colSpec[j] === '{') {
 					braceDepth = 1;
 					j++;
 					const specStart = j;

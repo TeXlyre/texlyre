@@ -71,7 +71,9 @@ export class FilePathCompletionHandler {
 		const isCurrentlyInTypstFile = isTypstFile(currentFilePath);
 		const isCurrentlyInLatexFile = isLatexFile(currentFilePath);
 
-		let commandInfo;
+		let commandInfo:
+			| ReturnType<typeof this.findTypstCommand>
+			| ReturnType<typeof this.findLatexCommand> = null;
 		if (isCurrentlyInTypstFile) {
 			commandInfo = this.findTypstCommand(context);
 		} else if (isCurrentlyInLatexFile) {

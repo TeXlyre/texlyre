@@ -31,7 +31,7 @@ function detectLatexColor(doc: string, pos: number): ColorInfo | null {
 	const textColorPattern = /\\textcolor(?:\[HTML\])?\{([^}]+)\}\{/g;
 	const highlightPattern = /\\colorbox\{([^}]+)\}\{/g;
 
-	let match;
+	let match: RegExpExecArray | null;
 	while ((match = textColorPattern.exec(doc)) !== null) {
 		const start = match.index;
 		const contentStart = start + match[0].length;
@@ -75,7 +75,7 @@ function detectTypstColor(doc: string, pos: number): ColorInfo | null {
 	const textPattern = /#text\(fill:\s*rgb\("([^"]+)"\)\)\[/g;
 	const highlightPattern = /#highlight\(fill:\s*rgb\("([^"]+)"\)\)\[/g;
 
-	let match;
+	let match: RegExpExecArray | null;
 	while ((match = textPattern.exec(doc)) !== null) {
 		const start = match.index;
 		const contentStart = start + match[0].length;

@@ -40,7 +40,7 @@ function extractSvgAttributes(svgString: string): {
 
 	const filteredAttrs: string[] = [];
 	const attrRegex = /(\w+(?:-\w+)*)\s*=\s*["']([^"']*)["']/g;
-	let match;
+	let match: RegExpExecArray | null;
 
 	while ((match = attrRegex.exec(svgAttrs)) !== null) {
 		const [, name, value] = match;
