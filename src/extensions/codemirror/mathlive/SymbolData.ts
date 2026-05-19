@@ -3,6 +3,7 @@ import { inferSyms, type SymbolInfo } from 'detypify-service';
 
 import type { FileType } from './patterns';
 
+// biome-ignore lint/style/useNamingConvention: Unicode math symbol keys map to LaTeX commands
 const UNICODE_TO_LATEX: Record<string, string> = {
     'α': '\\alpha', 'β': '\\beta', 'γ': '\\gamma', 'δ': '\\delta',
     'ε': '\\epsilon', 'ζ': '\\zeta', 'η': '\\eta', 'θ': '\\theta',

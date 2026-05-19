@@ -1,6 +1,6 @@
 {
 	"files": {
-		"include": [
+		"includes": [
 			"src/**/*",
 			"extras/**/*",
 			"scripts/**/*",
@@ -13,28 +13,179 @@
 			"biome.json",
 			"**/*.cjs",
 			"**/*.css",
-			"**/*.html"
-		],
-		"ignore": ["**/__generated__/**", "dist/**", "build/**"]
+			"**/*.html",
+			"!**/__generated__",
+			"!dist",
+			"!public",
+			"!build",
+			"!src/plugins"
+		]
+	},
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": "off"
+			}
+		}
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"lineWidth": 80
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "single",
+			"jsxQuoteStyle": "single",
+			"trailingCommas": "all",
+			"semicolons": "always",
+			"arrowParentheses": "always"
+		}
 	},
 	"linter": {
 		"rules": {
 			"correctness": {
 				"useImportExtensions": "off"
+			},
+			"a11y": {
+				"noStaticElementInteractions": "off",
+				"useKeyWithClickEvents": "off",
+				"noLabelWithoutControl": "warn",
+				"useButtonType": "warn"
+			},
+			"style": {
+				"noNonNullAssertion": "warn",
+				"noDescendingSpecificity": "off"
+			},
+			"suspicious": {
+				"noAssignInExpressions": "warn",
+				"noArrayIndexKey": "warn",
+				"noImplicitAnyLet": "warn"
+			},
+			"performance": {
+				"noImgElement": "off"
+			},
+			"complexity": {
+				"noStaticOnlyClass": "warn"
 			}
 		}
 	},
 	"overrides": [
 		{
-			"include": ["**/*.ts", "**/*.tsx"],
+			"includes": [
+				"**/*.ts",
+				"**/*.tsx"
+			],
 			"linter": {
 				"rules": {
 					"style": {
 						"useImportType": "error",
-						"useConst": "error"
+						"useConst": "error",
+						"useNamingConvention": {
+							"level": "error",
+							"options": {
+								"strictCase": false,
+								"conventions": [
+									{
+										"selector": {
+											"kind": "objectLiteralProperty"
+										},
+										"match": ".*"
+									},
+									{
+										"selector": {
+											"kind": "objectLiteralMember"
+										},
+										"match": ".*"
+									},
+									{
+										"selector": {
+											"kind": "typeProperty"
+										},
+										"match": ".*"
+									},
+									{
+										"selector": {
+											"kind": "classProperty"
+										},
+										"formats": [
+											"camelCase",
+											"CONSTANT_CASE"
+										]
+									},
+									{
+										"selector": {
+											"kind": "variable"
+										},
+										"formats": [
+											"camelCase",
+											"PascalCase",
+											"CONSTANT_CASE"
+										]
+									},
+									{
+										"selector": {
+											"kind": "functionParameter"
+										},
+										"formats": [
+											"camelCase",
+											"PascalCase"
+										]
+									},
+									{
+										"selector": {
+											"kind": "function"
+										},
+										"formats": [
+											"camelCase",
+											"PascalCase"
+										]
+									},
+									{
+										"selector": {
+											"kind": "typeLike"
+										},
+										"formats": [
+											"PascalCase"
+										]
+									}
+								]
+							}
+						}
 					},
 					"correctness": {
-						"noUnusedVariables": "error"
+						"noUnusedVariables": "error",
+						"noUnusedFunctionParameters": "warn"
+					},
+					"suspicious": {
+						"noExplicitAny": "warn"
+					}
+				}
+			}
+		},
+		{
+			"includes": [
+				"**/icons/**/*.tsx",
+				"**/Icons/**/*.tsx",
+				"**/*Icon.tsx",
+				"**/*Icons.tsx"
+			],
+			"linter": {
+				"rules": {
+					"a11y": {
+						"noSvgWithoutTitle": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": [
+				"public/core/webperl/**"
+			],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noInnerDeclarations": "off"
 					}
 				}
 			}
