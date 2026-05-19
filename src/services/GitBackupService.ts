@@ -1166,9 +1166,9 @@ export class GitBackupService<TTarget> {
 		}
 
 		const docMetadataById = new Map<string, any>();
-		remoteDocumentsMetadata.forEach((meta) =>
-			docMetadataById.set(meta.id, meta),
-		);
+		remoteDocumentsMetadata.forEach((meta) => {
+			docMetadataById.set(meta.id, meta);
+		});
 
 		const documents: any[] = [];
 		const documentContents = new Map();
@@ -1767,13 +1767,15 @@ export class GitBackupService<TTarget> {
 	}
 
 	private notifyListeners(): void {
-		this.listeners.forEach((listener) => listener(this.status));
+		this.listeners.forEach((listener) => {
+			listener(this.status);
+		});
 	}
 
 	private notifyActivityListeners(): void {
-		this.activityListeners.forEach((listener) =>
-			listener([...this.activities]),
-		);
+		this.activityListeners.forEach((listener) => {
+			listener([...this.activities]);
+		});
 	}
 
 	private addActivity(

@@ -113,7 +113,9 @@ class ConflictResolutionService {
 					resolve(resolutions);
 				},
 			};
-			this.listeners.forEach((listener) => listener(request));
+			this.listeners.forEach((listener) => {
+				listener(request);
+			});
 		});
 	}
 

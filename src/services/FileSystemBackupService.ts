@@ -500,15 +500,21 @@ class FileSystemBackupService {
 	}
 
 	private notifyListeners(): void {
-		this.listeners.forEach((listener) => listener(this.status));
+		this.listeners.forEach((listener) => {
+			listener(this.status);
+		});
 	}
 
 	private notifyActivityListeners(): void {
-		this.activityListeners.forEach((listener) => listener(this.activities));
+		this.activityListeners.forEach((listener) => {
+			listener(this.activities);
+		});
 	}
 
 	private notifyDiscoveryListeners(result: BackupDiscoveryResult): void {
-		this.discoveryListeners.forEach((listener) => listener(result));
+		this.discoveryListeners.forEach((listener) => {
+			listener(result);
+		});
 	}
 }
 

@@ -456,7 +456,9 @@ class LaTeXService {
 	}
 
 	private notifyStatusChange(): void {
-		this.statusListeners.forEach((l) => l());
+		this.statusListeners.forEach((l) => {
+			l();
+		});
 	}
 
 	private reportCompileOutcome(

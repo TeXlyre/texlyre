@@ -63,7 +63,9 @@ export class TypstCompilerEngine {
 
 		this.worker.onerror = (ev) => {
 			const err = new Error(`Typst worker error: ${String(ev.message || ev)}`);
-			this.pendingRejects.forEach((reject) => reject(err));
+			this.pendingRejects.forEach((reject) => {
+				reject(err);
+			});
 			this.pendingResolves.clear();
 			this.pendingRejects.clear();
 			this.worker = null;
