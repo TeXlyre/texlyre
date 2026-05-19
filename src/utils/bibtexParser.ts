@@ -279,24 +279,20 @@ export class BibtexParser {
 		content: string,
 		targetEntry: BibtexEntry,
 	): { start: number; end: number } | null {
-		const entryRegex = /@(\w+)\s*\{\s*([^,\s]+)\s*,?\s*([\s\S]*?)\n\s*\}/g;
+		const entryRegex = /@(\w+)\s*\{\s*([^,\s}]+)\s*,?\s*([\s\S]*?)\n\s*\}/g;
 		let match: RegExpExecArray | null;
-		let currentIndex = 0;
 
 		while ((match = entryRegex.exec(content)) !== null) {
 			const [fullMatch, type, id] = match;
-
 			if (
 				type.toLowerCase() === targetEntry.type &&
-				id.trim() === targetEntry.id &&
-				currentIndex === targetEntry.originalIndex
+				id.trim() === targetEntry.id
 			) {
 				return {
 					start: match.index,
 					end: match.index + fullMatch.length,
 				};
 			}
-			currentIndex++;
 		}
 
 		return null;
