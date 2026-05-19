@@ -271,7 +271,6 @@
 .project-card-header-actions {
 	display: flex;
 	flex-direction: row;
-	align-items: center;
 	padding-right: var(--space-md);
 	gap: var(--space-sm);
 	align-items: first baseline;

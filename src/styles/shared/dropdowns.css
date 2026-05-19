@@ -134,7 +134,6 @@
 .dropdown-option {
 	border: 1px solid var(--border-color);
 	border-radius: 8px;
-	padding: 1rem;
 	margin-bottom: var(--space-sd);
 	cursor: pointer;
 	background-color: transparent;

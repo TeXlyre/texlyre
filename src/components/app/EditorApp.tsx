@@ -477,6 +477,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			/>,
 
 			<LaTeXExportButton
+				key='latex-export'
 				className='output-export-button'
 				selectedDocId={localDocId}
 				documents={doc?.documents}
@@ -500,6 +501,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			/>,
 
 			<TypstExportButton
+				key='typst-export'
 				className='output-export-button'
 				selectedDocId={localDocId}
 				documents={doc?.documents}

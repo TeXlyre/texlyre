@@ -131,7 +131,7 @@ export interface NameValidationResult {
 	error?: string;
 }
 
-const ILLEGAL_NAME_CHARS = /[<>:"/\\|?*\x00-\x1F]/;
+const ILLEGAL_NAME_CHARS = /[<>:"/\\|?*\u0000-\u001F]/;
 // NOTE (fabawi): File gets excluded from ZIP on WINDOWS if name contains the following
 const RESERVED_NAMES =
 	/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$|^\.texlyre_/i;

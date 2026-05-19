@@ -40,6 +40,26 @@ import { BibtexTableView } from '../../viewers/bibtex/BibtexTableView';
 import '../../viewers/bibtex/styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './BibtexCollaborativeViewerPlugin';
 
+function getPluginToggleButtons(fileTypes: string[] | undefined) {
+	if (!fileTypes?.length) return { lsp: [], bib: [] };
+
+	const types = new Set(fileTypes);
+	const lsp = [
+		...new Set(
+			[...types].flatMap((t) => pluginRegistry.getLSPPluginsForFileType(t)),
+		),
+	];
+	const bib = pluginRegistry
+		.getBibliographyPlugins()
+		.filter((p) => p.getSupportedFileTypes().some((t) => types.has(t)));
+
+	return { lsp, bib };
+}
+
+const noopAddComment = () => ({ openTag: '', closeTag: '', commentId: '' });
+const noopParseComments = () => [];
+const noopUpdateComments = () => {};
+
 const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	content,
 	fileName,
@@ -163,22 +183,6 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	const hasPluginToggles =
 		availableLSPPlugins.length > 0 || availableBibPlugins.length > 0;
 
-	function getPluginToggleButtons(fileTypes: string[] | undefined) {
-		if (!fileTypes?.length) return { lsp: [], bib: [] };
-
-		const types = new Set(fileTypes);
-		const lsp = [
-			...new Set(
-				[...types].flatMap((t) => pluginRegistry.getLSPPluginsForFileType(t)),
-			),
-		];
-		const bib = pluginRegistry
-			.getBibliographyPlugins()
-			.filter((p) => p.getSupportedFileTypes().some((t) => types.has(t)));
-
-		return { lsp, bib };
-	}
-
 	useEffect(() => {
 		if (fileId && fileInfo.filePath) {
 			document.dispatchEvent(
@@ -270,40 +274,24 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		setHasChanges(true);
 	};
 
-	const { viewRef, showSaveIndicator } =
-		currentView === 'original'
-			? useEditorView(
-					editorRef,
-					docUrl,
-					documentId,
-					isDocumentSelected,
-					initialContentRef.current,
-					handleContentUpdate,
-					parseComments || (() => []),
-					addComment || (() => ({ openTag: '', closeTag: '', commentId: '' })),
-					updateComments || (() => {}),
-					false,
-					false,
-					fileName,
-					undefined,
-					false,
-				)
-			: useEditorView(
-					editorRef,
-					'bibtex-viewer',
-					`${documentId}-processed`,
-					true,
-					processedContent,
-					handleContentUpdate,
-					() => [],
-					() => ({ openTag: '', closeTag: '', commentId: '' }),
-					() => {},
-					true,
-					false,
-					fileName,
-					undefined,
-					false,
-				);
+	const isOriginalView = currentView === 'original';
+
+	const { viewRef, showSaveIndicator } = useEditorView(
+		editorRef,
+		isOriginalView ? docUrl : 'bibtex-viewer',
+		isOriginalView ? documentId : `${documentId}-processed`,
+		isOriginalView ? isDocumentSelected : true,
+		isOriginalView ? initialContentRef.current : processedContent,
+		handleContentUpdate,
+		isOriginalView ? parseComments || noopParseComments : noopParseComments,
+		isOriginalView ? addComment || noopAddComment : noopAddComment,
+		isOriginalView ? updateComments || noopUpdateComments : noopUpdateComments,
+		!isOriginalView,
+		false,
+		fileName,
+		undefined,
+		false,
+	);
 
 	useEffect(() => {
 		let text = '';

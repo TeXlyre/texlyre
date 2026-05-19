@@ -15,6 +15,7 @@ import { useSourceMap } from '../../hooks/useSourceMap';
 import { useSettings } from '../../hooks/useSettings';
 import type {
 	BibliographyPlugin,
+	CollaborativeViewerPlugin,
 	LSPPlugin,
 	ViewerProps,
 } from '../../plugins/PluginInterface';
@@ -111,6 +112,29 @@ function getPluginToggleButtons(fileTypes: string[] | undefined) {
 	fileTypeCache.set(key, result);
 	return result;
 }
+
+const CollaborativeViewerBridge: React.FC<{
+	plugin: CollaborativeViewerPlugin;
+	fileId: string;
+	content: ArrayBuffer;
+	mimeType?: string;
+	fileName: string;
+	docUrl: string;
+	documentId: string;
+	isDocumentSelected: boolean;
+	onUpdateContent: (content: string) => void;
+}> = ({ plugin, ...props }) => {
+	const { parseComments, addComment, updateComments } = useComments();
+	const ViewerComponent = plugin.renderViewer;
+	return (
+		<ViewerComponent
+			{...props}
+			parseComments={parseComments}
+			addComment={addComment}
+			updateComments={updateComments}
+		/>
+	);
+};
 
 const EditorContent: React.FC<{
 	editorRef: React.RefObject<HTMLDivElement>;
@@ -224,7 +248,6 @@ const EditorContent: React.FC<{
 		handleForwardSyncRef.current = handleForwardSync;
 	}, [handleForwardSync]);
 
-	// Editor click → forward sync (configured click count)
 	useEffect(() => {
 		if (!forwardClickEnabled || !isSourceMapAvailable) return;
 		const el = editorRef.current;
@@ -255,7 +278,6 @@ const EditorContent: React.FC<{
 		};
 	}, [forwardClickEnabled, forwardClickMode, isSourceMapAvailable, editorRef]);
 
-	// Floating button → forward sync
 	useEffect(() => {
 		if (!isSourceMapAvailable) return;
 		const handler = () => handleForwardSyncRef.current();
@@ -1081,7 +1103,6 @@ const Editor: React.FC<EditorComponentProps> = ({
 		!isEditingFile &&
 		shouldUseCollaborativeViewer
 	) {
-		const CollaborativeViewerComponent = collaborativeViewerPlugin.renderViewer;
 		return (
 			<BibliographyProvider>
 				<CommentProvider
@@ -1089,14 +1110,8 @@ const Editor: React.FC<EditorComponentProps> = ({
 					onUpdateContent={onUpdateContent}
 				>
 					<div className='editor-container viewer-container collaborative-viewer'>
-						{/* <div className="viewer-plugin-info">
-              <span>
-                {t('Collaborative viewing with')}
-                {collaborativeViewerPlugin.name} v
-                {collaborativeViewerPlugin.version}
-              </span>
-            </div> */}
-						<CollaborativeViewerComponent
+						<CollaborativeViewerBridge
+							plugin={collaborativeViewerPlugin}
 							fileId={fileId}
 							content={content as ArrayBuffer}
 							mimeType={mimeType}
@@ -1105,18 +1120,6 @@ const Editor: React.FC<EditorComponentProps> = ({
 							documentId={documentId}
 							isDocumentSelected={isDocumentSelected}
 							onUpdateContent={onUpdateContent}
-							parseComments={(text: string) => {
-								const { parseComments } = useComments();
-								return parseComments(text);
-							}}
-							addComment={(content: string) => {
-								const { addComment } = useComments();
-								return addComment(content);
-							}}
-							updateComments={(content: string) => {
-								const { updateComments } = useComments();
-								updateComments(content);
-							}}
 						/>
 					</div>
 					<CommentModal
@@ -1155,12 +1158,6 @@ const Editor: React.FC<EditorComponentProps> = ({
 
 		return (
 			<div className='editor-container viewer-container'>
-				{/* <div className="viewer-plugin-info">
-          <span>
-            {t('Viewing with')}&nbsp;
-            {viewerPlugin!.name} v{viewerPlugin!.version}
-          </span>
-        </div> */}
 				<ViewerComponent {...viewerProps} />
 			</div>
 		);
