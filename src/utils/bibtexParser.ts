@@ -249,27 +249,28 @@ export class BibtexParser {
         return { value: value.trim(), endPos: pos };
     }
 
-    static findEntryPosition(content: string, targetEntry: BibtexEntry): { start: number; end: number } | null {
-        const entryRegex = /@(\w+)\s*\{\s*([^,\s]+)\s*,?\s*([\s\S]*?)\n\s*\}/g;
-        let match;
-        let currentIndex = 0;
+	static findEntryPosition(
+		content: string,
+		targetEntry: BibtexEntry,
+	): { start: number; end: number } | null {
+		const entryRegex = /@(\w+)\s*\{\s*([^,\s}]+)\s*,?\s*([\s\S]*?)\n\s*\}/g;
+		let match: RegExpExecArray | null;
 
-        while ((match = entryRegex.exec(content)) !== null) {
-            const [fullMatch, type, id] = match;
+		while ((match = entryRegex.exec(content)) !== null) {
+			const [fullMatch, type, id] = match;
+			if (
+				type.toLowerCase() === targetEntry.type &&
+				id.trim() === targetEntry.id
+			) {
+				return {
+					start: match.index,
+					end: match.index + fullMatch.length,
+				};
+			}
+		}
 
-            if (type.toLowerCase() === targetEntry.type &&
-                id.trim() === targetEntry.id &&
-                currentIndex === targetEntry.originalIndex) {
-                return {
-                    start: match.index,
-                    end: match.index + fullMatch.length
-                };
-            }
-            currentIndex++;
-        }
-
-        return null;
-    }
+		return null;
+	}
 
     static serializeEntry(entry: BibtexEntry): string {
         const fieldsString = Object.entries(entry.fields)
