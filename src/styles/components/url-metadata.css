@@ -69,7 +69,7 @@
 .preview-type-badge .type-info-help {
 	background-color: var(--pico-primary);
 	color: var(--pico-primary-inverse);
-	padding: 0 var(--space-xs);
+	padding: var(--space-xs);
 	margin: 0;
 	font-size: 0.8rem;
 	font-weight: 600;

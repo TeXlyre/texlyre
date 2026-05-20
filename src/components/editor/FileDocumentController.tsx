@@ -776,11 +776,11 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		setShowOutline(
 			Boolean(
 				isTexFile ||
-				isTypFile ||
-				isDocumentLinkedToTex ||
-				isDocumentLinkedToTyp ||
-				hasLatexContent ||
-				hasTypstContent,
+					isTypFile ||
+					isDocumentLinkedToTex ||
+					isDocumentLinkedToTyp ||
+					hasLatexContent ||
+					hasTypstContent,
 			),
 		);
 	}, [isEditingFile, fileName, linkedFileInfo?.fileName, content]);

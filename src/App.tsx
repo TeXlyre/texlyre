@@ -52,7 +52,7 @@ import './styles/components/offline.css';
 import './styles/components/typesetter.css';
 import './styles/components/splash-screen.css';
 import './styles/components/keyboard-shortcuts.css';
-import './styles/components/legal.css';
+import './styles/components/privacy.css';
 
 import i18next from 'i18next';
 import { useContext, useEffect, useState } from 'react';
