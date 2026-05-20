@@ -243,7 +243,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
-	}, [isDropdownOpen]);
+	}, [setIsDropdownOpen]);
 
 	useEffect(() => {
 		if (!useSharedSettings || !effectiveAutoCompileOnSave) return;

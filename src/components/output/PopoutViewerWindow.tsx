@@ -30,9 +30,14 @@ const PopoutViewerWindow: React.FC<PopoutViewerWindowProps> = ({
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const channelRef = useRef<BroadcastChannel | null>(null);
 	const controllerRef = useRef<RendererController | null>(null);
+	const kindRef = useRef<PopoutContentKind>('pdf');
 	const { getSetting } = useSettings();
 
 	const useEnhancedRenderer = getSetting('pdf-renderer-enable')?.value ?? true;
+
+	useEffect(() => {
+		kindRef.current = kind;
+	}, [kind]);
 
 	useEffect(() => {
 		const channel = new BroadcastChannel(`texlyre-popout-${projectId}`);
@@ -44,7 +49,7 @@ const PopoutViewerWindow: React.FC<PopoutViewerWindowProps> = ({
 				case 'content-update':
 					if (message.data?.content !== undefined) {
 						const incoming = message.data.content;
-						const incomingKind = message.data.kind ?? kind;
+						const incomingKind = message.data.kind ?? kindRef.current;
 
 						if (
 							(incomingKind === 'canvas-pdf' ||

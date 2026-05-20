@@ -185,7 +185,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
-	}, [isDropdownOpen]);
+	}, []);
 
 	const handleExport = async () => {
 		if (!effectiveMainFile || isExporting) return;

@@ -1,7 +1,7 @@
 // src/components/output/LaTeXCompileButton.tsx
 import { t } from '@/i18n';
 import type React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import PopoutViewerToggleButton from './PopoutViewerToggleButton';
 import PositionedDropdown from '../common/PositionedDropdown';
@@ -282,7 +282,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
-	}, [isDropdownOpen]);
+	}, [setIsDropdownOpen]);
 
 	useEffect(() => {
 		if (!useSharedSettings || !effectiveAutoCompileOnSave) return;
@@ -336,7 +336,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		latexService.setBusyTeXBundles([settingBundle]);
 	};
 
-	const shouldNavigateToMain = async (): Promise<boolean> => {
+	const shouldNavigateToMain = useCallback(async (): Promise<boolean> => {
 		const navigationSetting =
 			(getSetting('latex-auto-navigate-to-main')?.value as string) ??
 			'conditional';
@@ -373,7 +373,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		}
 
 		return false;
-	};
+	}, [getSetting, selectedFileId, getFile, selectedDocId, linkedFileInfo]);
 
 	const handleCompileOrStop = async () => {
 		if (isCompiling) {
@@ -419,7 +419,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		}
 	};
 
-	const handleClearCacheAndCompile = async () => {
+	const handleClearCacheAndCompile = useCallback(async () => {
 		if (!effectiveMainFile) return;
 
 		if (onExpandLatexOutput) {
@@ -450,7 +450,15 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		} catch (error) {
 			console.error('Failed to compile with cache clear:', error);
 		}
-	};
+	}, [
+		effectiveMainFile,
+		onExpandLatexOutput,
+		shouldNavigateOnCompile,
+		linkedFileInfo,
+		onNavigateToLinkedFile,
+		compileWithClearCache,
+		shouldNavigateToMain,
+	]);
 
 	useEffect(() => {
 		const buttonElement = document.querySelector('.header-compile-button');
