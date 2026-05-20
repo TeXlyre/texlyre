@@ -57,7 +57,7 @@ const CollabStatusIndicator: React.FC<CollabStatusIndicatorProps> = ({
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
-	}, [isDropdownOpen]);
+	}, []);
 
 	const getMainStatus = () => {
 		const hasConnectedService = isCollabConnected && !isCollabOfflineMode;

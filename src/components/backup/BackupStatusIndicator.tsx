@@ -64,7 +64,7 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
-	}, [isDropdownOpen]);
+	}, []);
 
 	const handleMainButtonClick = () => {
 		if (enabledServices.length === 0) {

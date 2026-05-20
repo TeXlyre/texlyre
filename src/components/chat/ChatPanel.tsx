@@ -21,6 +21,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
 	const [inputValue, setInputValue] = useState('');
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: messages is an intentional trigger; its change is the signal to scroll, even though the body reads it via the ref. */
 	useEffect(() => {
 		if (messagesEndRef.current && !isCollapsed) {
 			messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
