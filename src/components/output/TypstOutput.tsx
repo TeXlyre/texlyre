@@ -428,10 +428,12 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 	}, [
 		currentView,
 		effectiveFormat,
-		!!compiledPdf,
-		!!compiledCanvas,
+		compiledPdf,
+		compiledSvg,
+		compiledCanvas,
 		useEnhancedRenderer,
 		handleSavePdf,
+		handleLocationClick,
 	]);
 
 	const hasAnyOutput = compiledPdf || compiledCanvas;
