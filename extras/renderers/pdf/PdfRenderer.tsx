@@ -249,11 +249,11 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			}),
 			t('Size: {size}', { size: formatFileSize(fileSize) }),
 		];
-	}, [numPages, currentPage]);
+	}, [numPages]);
 
-	const suppressPageSync = () => {
+	const suppressPageSync = useCallback(() => {
 		suppressPageSyncUntilRef.current = Date.now() + PAGE_SYNC_SUPPRESS_MS;
-	};
+	}, []);
 
 	const setPage = useCallback(
 		(page: number) => {
@@ -326,7 +326,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				),
 			);
 		},
-		[numPages, scrollView, scale, setPage],
+		[numPages, scrollView, scale, setPage, suppressPageSync],
 	);
 
 	const setPdfContent = useCallback((buffer: ArrayBuffer) => {
@@ -513,7 +513,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				);
 			});
 		},
-		[isEditingPageInput],
+		[isEditingPageInput, suppressPageSync],
 	);
 
 	const onDocumentLoadError = useCallback((err: Error) => {
@@ -668,7 +668,15 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				syncScroll(nextScale);
 			});
 		},
-		[scale, numPages, scrollView, setProperty, setPage, syncScroll],
+		[
+			scale,
+			numPages,
+			scrollView,
+			setProperty,
+			setPage,
+			syncScroll,
+			suppressPageSync,
+		],
 	);
 
 	const handlePreviousPage = useCallback(() => {
@@ -770,7 +778,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				),
 			);
 		});
-	}, [scrollView, numPages, scale, setProperty]);
+	}, [scrollView, numPages, scale, setProperty, suppressPageSync]);
 
 	const handleToggleFullscreen = useCallback(() => {
 		if (document.fullscreenElement === containerRef.current) {

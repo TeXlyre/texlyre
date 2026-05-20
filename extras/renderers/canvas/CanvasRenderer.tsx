@@ -343,9 +343,9 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 		overlayTimerRef.current = null;
 	}, []);
 
-	const suppressPageSync = () => {
+	const suppressPageSync = useCallback(() => {
 		suppressPageSyncUntilRef.current = Date.now() + PAGE_SYNC_SUPPRESS_MS;
-	};
+	}, []);
 
 	const setPage = useCallback((page: number) => {
 		const target = clamp(page, 1, numPagesRef.current || 1);
@@ -422,7 +422,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 				rangeFor(pageMetadata, numPages, top, container.clientHeight, scale),
 			);
 		},
-		[numPages, scrollView, pageMetadata, scale, setPage],
+		[numPages, scrollView, pageMetadata, scale, setPage, suppressPageSync],
 	);
 
 	const renderOverlays = useCallback(
@@ -600,6 +600,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 			setPage,
 			setProperty,
 			syncScroll,
+			suppressPageSync,
 		],
 	);
 
@@ -742,7 +743,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 				setIsLoading(false);
 			}
 		},
-		[cancelTimers, airgapExternalRequests],
+		[cancelTimers, airgapExternalRequests, suppressPageSync],
 	);
 
 	useImperativeHandle(controllerRef, () => {
@@ -840,6 +841,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 		renderVisiblePages();
 	}, [renderVisiblePages]);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: currentPage and renderRange are intentional triggers paired with pdfOverlayRefreshAfterJumpRef to detect when a navigation update has landed. */
 	useEffect(() => {
 		if (
 			!pdfOverlayRefreshAfterJumpRef.current ||

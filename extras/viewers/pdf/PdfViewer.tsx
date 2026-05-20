@@ -25,6 +25,8 @@ import { PLUGIN_NAME, PLUGIN_VERSION } from './PdfViewerPlugin';
 
 const BASE_PATH = __BASE_PATH__;
 
+const qualityScaleMap = { low: 0.75, medium: 1.0, high: 1.5 };
+
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 	'pdfjs-dist/build/pdf.worker.min.mjs',
 	import.meta.url,
@@ -46,8 +48,6 @@ const PdfViewer: React.FC<ViewerProps> = ({
 			| 'low'
 			| 'medium'
 			| 'high') ?? 'high';
-
-	const qualityScaleMap = { low: 0.75, medium: 1.0, high: 1.5 };
 
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -123,6 +123,12 @@ const PdfViewer: React.FC<ViewerProps> = ({
 				} catch (_e) {}
 				renderTaskRef.current = null;
 			}
+			if (pdfDocRef.current) {
+				try {
+					pdfDocRef.current.destroy();
+				} catch (_e) {}
+				pdfDocRef.current = null;
+			}
 		};
 	}, [content]);
 
@@ -190,7 +196,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 				setError(t('Failed to render page {page}', { page: currentPage }));
 			}
 		}
-	}, [pdfDocRef, currentPage, scale, autoScale, renderingQuality]);
+	}, [currentPage, scale, autoScale, renderingQuality]);
 
 	useEffect(() => {
 		if (isLoading) return;
