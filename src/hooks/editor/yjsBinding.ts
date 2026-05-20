@@ -61,16 +61,13 @@ export const registerYjsBinding = (yText: Y.Text, opts: YjsBindingOptions) => {
 		isEditingFile,
 	} = opts;
 
-	const observer = () => {
-		if (isUpdatingRef.current) return;
-		const content = yText.toString() || '';
+	const emit = (content: string) => {
 		isUpdatingRef.current = true;
 		try {
 			onUpdateContent(content);
 			if (enableComments) {
 				updateComments(content);
 			}
-			if (autoSaveRef.current) autoSaveRef.current();
 
 			if (!hasEmittedReadyRef.current && content && viewRef.current) {
 				hasEmittedReadyRef.current = true;
@@ -91,7 +88,16 @@ export const registerYjsBinding = (yText: Y.Text, opts: YjsBindingOptions) => {
 		}
 	};
 
+	const observer = () => {
+		if (isUpdatingRef.current) return;
+		emit(yText.toString() || '');
+		if (autoSaveRef.current) autoSaveRef.current();
+	};
+
 	yText.observe(observer);
+
+	const initial = yText.toString() || '';
+	if (initial) emit(initial);
 
 	return () => {
 		yText.unobserve(observer);

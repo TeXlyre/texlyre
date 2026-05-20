@@ -776,11 +776,11 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		setShowOutline(
 			Boolean(
 				isTexFile ||
-					isTypFile ||
-					isDocumentLinkedToTex ||
-					isDocumentLinkedToTyp ||
-					hasLatexContent ||
-					hasTypstContent,
+				isTypFile ||
+				isDocumentLinkedToTex ||
+				isDocumentLinkedToTyp ||
+				hasLatexContent ||
+				hasTypstContent,
 			),
 		);
 	}, [isEditingFile, fileName, linkedFileInfo?.fileName, content]);
@@ -898,8 +898,10 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	};
 
 	const handleUpdateContent = (newContent: string) => {
-		if (!isEditingFile) return;
-
+		if (!isEditingFile) {
+			setCurrentEditorContent(newContent);
+			return;
+		}
 		if (newContent !== fileContent) {
 			onUpdateContent(newContent);
 		}
