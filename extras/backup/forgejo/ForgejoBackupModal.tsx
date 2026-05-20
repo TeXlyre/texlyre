@@ -100,13 +100,21 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 			activityHistoryLimit,
 			importAfterPush,
 		});
+	}, [getSetting]);
+
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: One-time seed of branch and commit message with settings defaults; stored credentials and user input take over after mount. */
+	useEffect(() => {
+		const defaultBranch =
+			(getSetting('forgejo-backup-default-branch')?.value as string) || 'main';
+		const defaultCommitMessage =
+			(getSetting('forgejo-backup-default-commit-message')?.value as string) ||
+			'';
 
 		setSelectedBranch(defaultBranch);
-
 		if (!commitMessage) {
 			setCommitMessage(defaultCommitMessage);
 		}
-	}, [getSetting]);
+	}, []);
 
 	useEffect(() => {
 		forgejoBackupService.setSecretsContext(secrets);

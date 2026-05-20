@@ -99,13 +99,21 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
 			activityHistoryLimit,
 			importAfterPush,
 		});
+	}, [getSetting]);
+
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: One-time seed of branch and commit message with settings defaults; stored credentials and user input take over after mount. */
+	useEffect(() => {
+		const defaultBranch =
+			(getSetting('github-backup-default-branch')?.value as string) || 'main';
+		const defaultCommitMessage =
+			(getSetting('github-backup-default-commit-message')?.value as string) ||
+			'';
 
 		setSelectedBranch(defaultBranch);
-
 		if (!commitMessage) {
 			setCommitMessage(defaultCommitMessage);
 		}
-	}, [getSetting]);
+	}, []);
 
 	useEffect(() => {
 		gitHubBackupService.setSecretsContext(secrets);

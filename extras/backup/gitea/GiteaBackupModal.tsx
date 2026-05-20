@@ -99,13 +99,21 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
 			activityHistoryLimit,
 			importAfterPush,
 		});
+	}, [getSetting]);
+
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: one-time seed of branch and commit message with settings defaults; stored credentials and user input take over after mount. */
+	useEffect(() => {
+		const defaultBranch =
+			(getSetting('gitea-backup-default-branch')?.value as string) || 'main';
+		const defaultCommitMessage =
+			(getSetting('gitea-backup-default-commit-message')?.value as string) ||
+			'';
 
 		setSelectedBranch(defaultBranch);
-
 		if (!commitMessage) {
 			setCommitMessage(defaultCommitMessage);
 		}
-	}, [getSetting]);
+	}, []);
 
 	useEffect(() => {
 		giteaBackupService.setSecretsContext(secrets);
