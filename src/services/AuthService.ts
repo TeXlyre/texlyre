@@ -524,8 +524,9 @@ class AuthService {
 
 	private createNewDocumentUrl(
 		projectId: string = generateYjsProjectId(),
-		projectName = "Untitled Project",
-		projectDescription = "",
+		projectName = 'Untitled Project',
+		projectDescription = '',
+		projectType: 'latex' | 'typst' = 'latex',
 	): string {
 		try {
 			const dbName = `texlyre-project-${projectId}`;
@@ -535,15 +536,16 @@ class AuthService {
 			const persistence = new IndexeddbPersistence(yjsCollection, ydoc);
 
 			ydoc.transact(() => {
-				const ymap = ydoc.getMap("data");
+				const ymap = ydoc.getMap('data');
 
-				ymap.set("documents", []);
-				ymap.set("currentDocId", "");
-				ymap.set("cursors", []);
-				ymap.set("chatMessages", []);
-				ymap.set("projectMetadata", {
+				ymap.set('documents', []);
+				ymap.set('currentDocId', '');
+				ymap.set('cursors', []);
+				ymap.set('chatMessages', []);
+				ymap.set('projectMetadata', {
 					name: projectName,
 					description: projectDescription,
+					type: projectType,
 				});
 			});
 
@@ -554,22 +556,22 @@ class AuthService {
 
 			return `yjs:${projectId}`;
 		} catch (error) {
-			console.error("Error creating new document:", error);
-			throw new Error(t("Failed to create document for project"));
+			console.error('Error creating new document:', error);
+			throw new Error(t('Failed to create document for project'));
 		}
 	}
 
 	async createProject(
-		project: Omit<Project, "id" | "createdAt" | "updatedAt" | "ownerId">,
+		project: Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'ownerId'>,
 		requireAuth = true,
 	): Promise<Project> {
 		if (!this.db) await this.initialize();
 		if (requireAuth && !this.currentUser) {
-			throw new Error("User not authenticated");
+			throw new Error('User not authenticated');
 		}
 
 		const projectId = project.docUrl
-			? project.docUrl.startsWith("yjs:")
+			? project.docUrl.startsWith('yjs:')
 				? project.docUrl.slice(4)
 				: project.docUrl
 			: generateYjsProjectId();
@@ -580,6 +582,7 @@ class AuthService {
 				projectId,
 				project.name,
 				project.description,
+				project.type,
 			);
 
 		const now = Date.now();
