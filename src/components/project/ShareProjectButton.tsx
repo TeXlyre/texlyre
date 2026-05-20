@@ -8,15 +8,11 @@ import { ChevronDownIcon, ShareIcon } from '../common/Icons';
 
 interface ShareProjectButtonProps {
 	className?: string;
-	projectName: string;
-	shareUrl: string;
 	onOpenShareModal: () => void;
 }
 
 const ShareProjectButton: React.FC<ShareProjectButtonProps> = ({
 	className = '',
-	projectName,
-	shareUrl,
 	onOpenShareModal,
 }) => {
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -39,7 +35,7 @@ const ShareProjectButton: React.FC<ShareProjectButtonProps> = ({
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
-	}, [isDropdownOpen]);
+	}, []);
 
 	const handleShareClick = () => {
 		onOpenShareModal();

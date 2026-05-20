@@ -1,7 +1,7 @@
 // src/components/project/TemplateImportModal.tsx
 import { t } from '@/i18n';
 import type React from 'react';
-import { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useSettings } from '../../hooks/useSettings';
 import Modal from '../common/Modal';
@@ -117,32 +117,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 		});
 	}, [registerSetting, getSetting]);
 
-	useEffect(() => {
-		if (isOpen) {
-			loadTemplates();
-		}
-	}, [isOpen]);
-
-	useEffect(() => {
-		filterAndPaginateTemplates();
-	}, [
-		allTemplates,
-		selectedCategory,
-		selectedType,
-		searchQuery,
-		currentPage,
-		templatesPerPage,
-	]);
-
-	useEffect(() => {
-		paginatedTemplates.forEach((template) => {
-			if (template.previewImage && !loadedImages.has(template.id)) {
-				loadImage(template.id, template.previewImage);
-			}
-		});
-	}, [paginatedTemplates]);
-
-	const loadTemplates = async () => {
+	const loadTemplates = useCallback(async () => {
 		try {
 			setIsLoading(true);
 			setError(null);
@@ -171,9 +146,9 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 		} finally {
 			setIsLoading(false);
 		}
-	};
+	}, [templatesApiUrl]);
 
-	const filterAndPaginateTemplates = () => {
+	const filterAndPaginateTemplates = useCallback(() => {
 		let filtered: TemplateProject[] = [];
 
 		if (selectedCategory === 'all') {
@@ -206,26 +181,54 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 		const startIndex = (currentPage - 1) * templatesPerPage;
 		const endIndex = startIndex + templatesPerPage;
 		setPaginatedTemplates(filtered.slice(startIndex, endIndex));
-	};
+	}, [
+		allTemplates,
+		selectedCategory,
+		selectedType,
+		searchQuery,
+		currentPage,
+		templatesPerPage,
+	]);
+
+	const loadImage = useCallback(
+		(templateId: string, imageUrl: string) => {
+			if (loadedImages.has(templateId)) return;
+
+			const img = new Image();
+			img.onload = () => {
+				setLoadedImages((prev) => new Set(prev).add(templateId));
+			};
+			img.onerror = () => {
+				console.warn(`Failed to load image for template ${templateId}`);
+			};
+			img.src = imageUrl;
+		},
+		[loadedImages],
+	);
+
+	useEffect(() => {
+		if (isOpen) {
+			loadTemplates();
+		}
+	}, [isOpen, loadTemplates]);
+
+	useEffect(() => {
+		filterAndPaginateTemplates();
+	}, [filterAndPaginateTemplates]);
+
+	useEffect(() => {
+		paginatedTemplates.forEach((template) => {
+			if (template.previewImage && !loadedImages.has(template.id)) {
+				loadImage(template.id, template.previewImage);
+			}
+		});
+	}, [paginatedTemplates, loadImage, loadedImages]);
 
 	const handleTemplateSelect = (template: TemplateProject) => {
 		setSelectedTemplate(template);
 		if (template.previewImage) {
 			loadImage(template.id, template.previewImage);
 		}
-	};
-
-	const loadImage = (templateId: string, imageUrl: string) => {
-		if (loadedImages.has(templateId)) return;
-
-		const img = new Image();
-		img.onload = () => {
-			setLoadedImages((prev) => new Set(prev).add(templateId));
-		};
-		img.onerror = () => {
-			console.warn(`Failed to load image for template ${templateId}`);
-		};
-		img.src = imageUrl;
 	};
 
 	const handleTemplateConfirm = () => {
@@ -310,7 +313,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 						onClick={() => handlePageChange(currentPage - 1)}
 						disabled={currentPage === 1 || isLoading}
 					>
-						{t('Previous')}
+						{t('← Prev')}
 					</button>
 
 					{currentPage > 2 && (
@@ -359,7 +362,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 						onClick={() => handlePageChange(currentPage + 1)}
 						disabled={currentPage === totalPages || isLoading}
 					>
-						{t('Next')}
+						{t('Next →')}
 					</button>
 				</div>
 			</div>

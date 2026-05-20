@@ -20,6 +20,16 @@ interface ShareTargetModalProps {
 	onOpenProject: (docUrl: string, projectId: string) => void;
 }
 
+async function checkIsTexlyreZip(file: PendingShareFile): Promise<boolean> {
+	try {
+		const zipFile = new File([file.buffer], file.name, { type: file.type });
+		const scanned = await projectImportService.scanZipFile(zipFile);
+		return scanned.length > 0;
+	} catch {
+		return false;
+	}
+}
+
 const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
 	isOpen,
 	onClose,
@@ -42,18 +52,6 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
 	const isZip =
 		files.length === 1 && files[0].name.toLowerCase().endsWith('.zip');
 
-	const checkIsTexlyreZip = async (
-		file: PendingShareFile,
-	): Promise<boolean> => {
-		try {
-			const zipFile = new File([file.buffer], file.name, { type: file.type });
-			const scanned = await projectImportService.scanZipFile(zipFile);
-			return scanned.length > 0;
-		} catch {
-			return false;
-		}
-	};
-
 	useEffect(() => {
 		if (isOpen) {
 			setMode(isZip ? 'new' : 'choose');
@@ -68,7 +66,7 @@ const ShareTargetModal: React.FC<ShareTargetModalProps> = ({
 				setIsTexlyreStructuredZip(false);
 			}
 		}
-	}, [isOpen]);
+	}, [isOpen, isZip, files]);
 
 	useEffect(() => {
 		if (mode === 'existing') {

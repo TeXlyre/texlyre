@@ -142,7 +142,14 @@ const UrlImportModal: React.FC<UrlImportModalProps> = ({
 			}
 			if (metadata.zipUrl && !customZipUrl) setCustomZipUrl(metadata.zipUrl);
 		}
-	}, [metadata, hasAttemptedFetch]);
+	}, [
+		metadata,
+		hasAttemptedFetch,
+		name,
+		description,
+		tags.length,
+		customZipUrl,
+	]);
 
 	return (
 		<>

@@ -349,7 +349,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
 						onClick={handlePrevPage}
 						disabled={currentPage === 1}
 					>
-						{t('Previous')}
+						{t('← Prev')}
 					</button>
 					<span className='pagination-info'>
 						{t('Page {currentPage} of {totalPages}', {
@@ -362,7 +362,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
 						onClick={handleNextPage}
 						disabled={currentPage === totalPages}
 					>
-						{t('Next')}
+						{t('Next →')}
 					</button>
 				</div>
 			)}

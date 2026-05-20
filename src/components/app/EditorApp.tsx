@@ -139,13 +139,13 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			const buttonSelectors =
 				projectType === 'typst'
 					? [
-							'.header-typst-compile-button .compile-button',
-							'.header-compile-button .compile-button',
-						]
+						'.header-typst-compile-button .compile-button',
+						'.header-compile-button .compile-button',
+					]
 					: [
-							'.header-compile-button .compile-button',
-							'.header-typst-compile-button .compile-button',
-						];
+						'.header-compile-button .compile-button',
+						'.header-typst-compile-button .compile-button',
+					];
 
 			for (const selector of buttonSelectors) {
 				const button = document.querySelector(selector) as HTMLButtonElement;
@@ -585,8 +585,6 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
 					<ShareProjectButton
 						className='header-share-button'
-						projectName={projectName}
-						shareUrl={shareUrl}
 						onOpenShareModal={() => setShowShareModal(true)}
 					/>
 
