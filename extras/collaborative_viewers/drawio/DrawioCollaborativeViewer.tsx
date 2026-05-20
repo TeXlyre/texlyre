@@ -1,7 +1,7 @@
 // extras/collaborative_viewers/drawio/DrawioCollaborativeViewer.tsx
 import { t } from '@/i18n';
 import type React from 'react';
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import type * as Y from 'yjs';
 
 import { DownloadIcon, SaveIcon, CloseIcon } from '@/components/common/Icons';
@@ -122,7 +122,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				: 'light';
 		}
 		return theme;
-	}, [theme, isCurrentVariantDark, getSetting]);
+	}, [theme, isCurrentVariantDark]);
 
 	const getLanguageParam = useCallback(() => {
 		if (language === 'auto-app') {
@@ -178,6 +178,7 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		};
 	}, []);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: fileId/fileName are change-detection triggers; body only resets state and disposes the adapter. */
 	useEffect(() => {
 		setIframeLoaded(false);
 		setIsPersistenceSynced(false);
@@ -419,81 +420,58 @@ const DrawioCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		return language;
 	};
 
-	const tooltipInfo = useMemo(
-		() => [
-			t('Auto-save editor: {status}', {
-				status: autoSave ? t('enabled') : t('disabled'),
-			}),
-			t('Auto-save file: {status}', {
-				status: autoSaveFile ? t('enabled') : t('disabled'),
-			}),
-			t('Theme: {theme}', { theme: getThemeDisplayText() }),
-			t('Language: {language}', { language: getLanguageDisplayText() }),
-			t('Collaborative Mode: Active'),
-			t('Document ID: {documentId}', { documentId }),
-			t('MIME Type: {mimeType}', {
-				mimeType: fileInfo.mimeType || 'application/vnd.jgraph.mxfile',
-			}),
-			t('Size: {size}', { size: formatFileSize(fileInfo.fileSize) }),
-		],
-		[
-			autoSave,
-			autoSaveFile,
-			theme,
-			language,
-			documentId,
-			fileInfo.mimeType,
-			fileInfo.fileSize,
-		],
-	);
+	const tooltipInfo = [
+		t('Auto-save editor: {status}', {
+			status: autoSave ? t('enabled') : t('disabled'),
+		}),
+		t('Auto-save file: {status}', {
+			status: autoSaveFile ? t('enabled') : t('disabled'),
+		}),
+		t('Theme: {theme}', { theme: getThemeDisplayText() }),
+		t('Language: {language}', { language: getLanguageDisplayText() }),
+		t('Collaborative Mode: Active'),
+		t('Document ID: {documentId}', { documentId }),
+		t('MIME Type: {mimeType}', {
+			mimeType: fileInfo.mimeType || 'application/vnd.jgraph.mxfile',
+		}),
+		t('Size: {size}', { size: formatFileSize(fileInfo.fileSize) }),
+	];
 
-	const headerControls = useMemo(
-		() => (
-			<>
-				<PluginControlGroup>
-					{fileId && (
-						<button
-							onClick={handleManualSave}
-							title={t('Save File (Ctrl+S)')}
-							disabled={isSaving || !iframeLoaded}
-							className={hasChanges ? 'active' : ''}
-						>
-							<SaveIcon />
-						</button>
-					)}
+	const headerControls = (
+		<>
+			<PluginControlGroup>
+				{fileId && (
 					<button
-						onClick={handleDownload}
-						title={t('Download as Draw.io XML')}
-						disabled={!iframeLoaded}
+						onClick={handleManualSave}
+						title={t('Save File (Ctrl+S)')}
+						disabled={isSaving || !iframeLoaded}
+						className={hasChanges ? 'active' : ''}
 					>
-						<DownloadIcon />
+						<SaveIcon />
 					</button>
-				</PluginControlGroup>
+				)}
+				<button
+					onClick={handleDownload}
+					title={t('Download as Draw.io XML')}
+					disabled={!iframeLoaded}
+				>
+					<DownloadIcon />
+				</button>
+			</PluginControlGroup>
 
-				<PluginControlGroup>
-					<DrawioPngExportButton
-						disabled={!iframeLoaded}
-						fileName={fileName}
-						onExport={handleExport}
-					/>
-					<DrawioSvgExportButton
-						disabled={!iframeLoaded}
-						fileName={fileName}
-						onExport={handleExport}
-					/>
-				</PluginControlGroup>
-			</>
-		),
-		[
-			fileId,
-			isSaving,
-			iframeLoaded,
-			hasChanges,
-			fileName,
-			handleManualSave,
-			handleDownload,
-			handleExport,
-		],
+			<PluginControlGroup>
+				<DrawioPngExportButton
+					disabled={!iframeLoaded}
+					fileName={fileName}
+					onExport={handleExport}
+				/>
+				<DrawioSvgExportButton
+					disabled={!iframeLoaded}
+					fileName={fileName}
+					onExport={handleExport}
+				/>
+			</PluginControlGroup>
+		</>
 	);
 
 	if (isLoading) {
