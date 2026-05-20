@@ -134,7 +134,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 		return () => {
 			document.removeEventListener('refresh-file-tree', handleRefreshEvent);
 		};
-	}, []);
+	}, [refreshFileTree]);
 
 	useEffect(() => {
 		if (
@@ -142,16 +142,23 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			initialExpandedPaths &&
 			!hasProcessedInitialFile
 		) {
-			const newExpandedFolders = new Set(expandedFolders);
-			initialExpandedPaths.forEach((path) => {
-				newExpandedFolders.add(path);
+			setExpandedFolders((prev) => {
+				const next = new Set(prev);
+				initialExpandedPaths.forEach((path) => {
+					next.add(path);
+				});
+				return next;
 			});
-			setExpandedFolders(newExpandedFolders);
 
 			selectFile(initialSelectedFile);
 			setHasProcessedInitialFile(true);
 		}
-	}, [initialSelectedFile, initialExpandedPaths, hasProcessedInitialFile]);
+	}, [
+		initialSelectedFile,
+		initialExpandedPaths,
+		hasProcessedInitialFile,
+		selectFile,
+	]);
 
 	const processFiles = async (files: File[], targetPath: string) => {
 		const zipFiles = files.filter((file) =>

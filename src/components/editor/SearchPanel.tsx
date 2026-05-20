@@ -120,7 +120,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 				clearTimeout(searchTimeoutRef.current);
 			}
 		};
-	}, [query, caseSensitive, wholeWord, useRegex]);
+	}, [query, performSearch, clearSearch]);
 
 	const handleResultClick = (
 		fileId: string,

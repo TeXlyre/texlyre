@@ -56,7 +56,7 @@ const ContentFormatterButton: React.FC<ContentFormatterButtonProps> = ({
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
-	}, [isDropdownOpen]);
+	}, []);
 
 	useEffect(() => {
 		const handleRequestFormat = async (event: Event) => {

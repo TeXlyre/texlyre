@@ -91,6 +91,7 @@ const TypstOutline: React.FC<TypstOutlineProps> = ({
 		setPropertiesLoaded(true);
 	}, [getProperty, propertiesLoaded]);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: refreshKey is a manual re-parse trigger; bumping it via handleRefresh must invalidate this memo even when content is unchanged. */
 	const sections = useMemo(() => {
 		if (!content.trim()) return [];
 		return TypstOutlineParser.parse(content);

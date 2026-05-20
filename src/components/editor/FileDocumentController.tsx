@@ -776,11 +776,11 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		setShowOutline(
 			Boolean(
 				isTexFile ||
-					isTypFile ||
-					isDocumentLinkedToTex ||
-					isDocumentLinkedToTyp ||
-					hasLatexContent ||
-					hasTypstContent,
+				isTypFile ||
+				isDocumentLinkedToTex ||
+				isDocumentLinkedToTyp ||
+				hasLatexContent ||
+				hasTypstContent,
 			),
 		);
 	}, [isEditingFile, fileName, linkedFileInfo?.fileName, content]);
@@ -1045,7 +1045,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 									gotoEditor(
 										{ kind: 'document', documentId },
 										{ line, column },
-										{ waitForReady: true },
+										{ waitForReady: false },
 									);
 									return;
 								}
@@ -1058,7 +1058,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 									gotoEditor(
 										{ kind: 'document', documentId: file.documentId },
 										{ line, column },
-										{ waitForReady: true },
+										{ waitForReady: false },
 									);
 									return;
 								}
@@ -1067,7 +1067,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 								gotoEditor(
 									{ kind: 'file', fileId: file.id },
 									{ line, column },
-									{ waitForReady: true },
+									{ waitForReady: false },
 								);
 							}}
 						/>
