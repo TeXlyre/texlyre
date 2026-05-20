@@ -553,6 +553,7 @@ class AuthService {
 		projectId: string = generateYjsProjectId(),
 		projectName = 'Untitled Project',
 		projectDescription = '',
+		projectType: 'latex' | 'typst' = 'latex',
 	): string {
 		try {
 			const dbName = `texlyre-project-${projectId}`;
@@ -571,6 +572,7 @@ class AuthService {
 				ymap.set('projectMetadata', {
 					name: projectName,
 					description: projectDescription,
+					type: projectType,
 				});
 			});
 
@@ -603,7 +605,12 @@ class AuthService {
 
 		const docUrl =
 			project.docUrl ||
-			this.createNewDocumentUrl(projectId, project.name, project.description);
+			this.createNewDocumentUrl(
+				projectId,
+				project.name,
+				project.description,
+				project.type,
+			);
 
 		const now = Date.now();
 		const newProject: Project = {
