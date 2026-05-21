@@ -38,7 +38,7 @@ import { vim } from '@replit/codemirror-vim';
 import { bibtex, bibtexCompletionSource } from 'codemirror-lang-bib';
 import { latex, latexCompletionSource } from 'codemirror-lang-latex';
 import { typst } from 'codemirror-lang-typst';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type * as Y from 'yjs';
 import { UndoManager } from 'yjs';
 
@@ -174,53 +174,22 @@ export const useEditorView = (
 		};
 	}, []);
 
-	const saveFileToStorage = async (content: string) => {
-		if (!currentFileId || !isEditingFile) return;
-		try {
-			const encoder = new TextEncoder();
-			const contentBuffer = encoder.encode(content).buffer;
-			await fileStorageService.updateFileContent(currentFileId, contentBuffer);
+	const saveFileToStorage = useCallback(
+		async (content: string) => {
+			if (!currentFileId || !isEditingFile) return;
+			try {
+				const encoder = new TextEncoder();
+				const contentBuffer = encoder.encode(content).buffer;
+				await fileStorageService.updateFileContent(
+					currentFileId,
+					contentBuffer,
+				);
 
-			if (fileName && isBibFile(fileName) && viewRef.current) {
-				refreshBibliographyCache(viewRef.current);
-			}
-
-			const file = await fileStorageService.getFile(currentFileId);
-
-			setShowSaveIndicator(true);
-			setTimeout(() => setShowSaveIndicator(false), 1500);
-
-			document.dispatchEvent(
-				new CustomEvent('file-saved', {
-					detail: {
-						isFile: true,
-						fileId: currentFileId,
-						filePath: file?.path,
-					},
-				}),
-			);
-		} catch (error) {
-			console.error('Error saving file:', error);
-		}
-	};
-
-	const saveDocumentToLinkedFile = async (content: string) => {
-		if (!documentId || isEditingFile) return;
-		try {
-			const allFiles = await fileStorageService.getAllFiles(
-				false,
-				false,
-				false,
-			);
-			const linkedFile = allFiles.find(
-				(file) => file.documentId === documentId,
-			);
-			if (linkedFile) {
-				await fileStorageService.updateFileContent(linkedFile.id, content);
-
-				if (isBibFile(linkedFile.name) && viewRef.current) {
+				if (fileName && isBibFile(fileName) && viewRef.current) {
 					refreshBibliographyCache(viewRef.current);
 				}
+
+				const file = await fileStorageService.getFile(currentFileId);
 
 				setShowSaveIndicator(true);
 				setTimeout(() => setShowSaveIndicator(false), 1500);
@@ -228,18 +197,58 @@ export const useEditorView = (
 				document.dispatchEvent(
 					new CustomEvent('file-saved', {
 						detail: {
-							isFile: false,
-							documentId,
-							fileId: linkedFile.id,
-							filePath: linkedFile.path,
+							isFile: true,
+							fileId: currentFileId,
+							filePath: file?.path,
 						},
 					}),
 				);
+			} catch (error) {
+				console.error('Error saving file:', error);
 			}
-		} catch (error) {
-			console.error('Error saving document to linked file:', error);
-		}
-	};
+		},
+		[currentFileId, isEditingFile, fileName],
+	);
+
+	const saveDocumentToLinkedFile = useCallback(
+		async (content: string) => {
+			if (!documentId || isEditingFile) return;
+			try {
+				const allFiles = await fileStorageService.getAllFiles(
+					false,
+					false,
+					false,
+				);
+				const linkedFile = allFiles.find(
+					(file) => file.documentId === documentId,
+				);
+				if (linkedFile) {
+					await fileStorageService.updateFileContent(linkedFile.id, content);
+
+					if (isBibFile(linkedFile.name) && viewRef.current) {
+						refreshBibliographyCache(viewRef.current);
+					}
+
+					setShowSaveIndicator(true);
+					setTimeout(() => setShowSaveIndicator(false), 1500);
+
+					document.dispatchEvent(
+						new CustomEvent('file-saved', {
+							detail: {
+								isFile: false,
+								documentId,
+								fileId: linkedFile.id,
+								filePath: linkedFile.path,
+							},
+						}),
+					);
+				}
+			} catch (error) {
+				console.error('Error saving document to linked file:', error);
+			}
+		},
+		[documentId, isEditingFile],
+	);
 
 	const buildSpellCheckExtension = (): Extension => {
 		if (!getSpellCheckEnabled()) return [];
@@ -574,6 +583,7 @@ export const useEditorView = (
 	]);
 
 	// --- Create / recreate EditorView ---
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: Build helpers (buildBaseExtensions, buildKeymapExtensions, buildLanguageSpecificExtensions, buildCommentExtensions, buildLanguageExtension, scheduleFilePathSync) close over editorSettings/getXxxEnabled and are intentionally re-evaluated only on the listed triggers; settings-only changes go through the separate reconfigure effect below. yDoc and enableComments are triggers, not body reads. */
 	useEffect(() => {
 		if (
 			!editorRef.current ||
@@ -736,6 +746,7 @@ export const useEditorView = (
 		textContent,
 	]);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: Build helpers are called for live compartment reconfiguration; editorSettingsVersion is the intentional trigger for settings-driven rebuilds. */
 	useEffect(() => {
 		const view = viewRef.current;
 		if (!view) return;
@@ -778,8 +789,9 @@ export const useEditorView = (
 	useEffect(() => {
 		if (!editorRef.current || !viewRef.current) return;
 		return registerEditorClipboard(editorRef.current, viewRef);
-	}, [editorRef, viewRef]);
+	}, [editorRef]);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: editorSettingsVersion is the trigger to recreate the auto-saver when auto-save delay/enabled changes. */
 	useEffect(() => {
 		const autoSaveKey = isEditingFile ? currentFileId : documentId;
 
@@ -829,6 +841,8 @@ export const useEditorView = (
 		getAutoSaveEnabled,
 		getAutoSaveDelay,
 		editorSettingsVersion,
+		saveFileToStorage,
+		saveDocumentToLinkedFile,
 	]);
 
 	useEffect(() => {
@@ -847,7 +861,6 @@ export const useEditorView = (
 			isEditingFile,
 		});
 	}, [
-		ytextRef,
 		isDocumentSelected,
 		isEditingFile,
 		enableComments,
@@ -860,7 +873,7 @@ export const useEditorView = (
 	useEffect(() => {
 		if (!viewRef.current) return;
 		return registerEditorSearchHighlightEvents(viewRef);
-	}, [viewRef]);
+	}, []);
 
 	useEffect(() => {
 		if (!viewRef.current || !isDocumentSelected) return;
@@ -877,7 +890,6 @@ export const useEditorView = (
 			setShowSaveIndicator,
 		});
 	}, [
-		viewRef,
 		isDocumentSelected,
 		isViewOnly,
 		isEditingFile,
@@ -887,7 +899,6 @@ export const useEditorView = (
 		updateComments,
 		saveFileToStorage,
 		saveDocumentToLinkedFile,
-		setShowSaveIndicator,
 	]);
 
 	useEffect(() => {
