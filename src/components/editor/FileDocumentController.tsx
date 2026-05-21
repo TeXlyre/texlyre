@@ -895,6 +895,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		}
 	}, [selectedDocId, isEditingFile, docToFileMapReady, setOutputForFileName]);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: Bootstrap effect intentionally reacts only to URL-derived targets; openDocumentById identity changes (driven by tabs/documents churn) are not relevant triggers. */
 	useEffect(() => {
 		if (!docToFileMapReady) return;
 		if (!targetDocId) {
@@ -908,8 +909,9 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
 		openDocumentById(targetDocId, targetFilePath ? 'files' : 'documents');
 		setBootstrapResolved(true);
-	}, [targetDocId, targetFilePath, docToFileMapReady, openDocumentById]);
+	}, [targetDocId, targetFilePath, docToFileMapReady]);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: Bootstrap effect intentionally reacts only to URL-derived targets; fileTree identity and openFileByNode identity changes are not relevant triggers (fileTree.length is observed as a "files have arrived" signal). */
 	useEffect(() => {
 		if (!docToFileMapReady) return;
 		if (targetDocId) return;
@@ -934,13 +936,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		};
 
 		navigate();
-	}, [
-		targetDocId,
-		targetFilePath,
-		docToFileMapReady,
-		fileTree,
-		openFileByNode,
-	]);
+	}, [targetDocId, targetFilePath, docToFileMapReady, fileTree.length]);
 
 	useEffect(() => {
 		const handleDocumentLinked = (event: Event) => {

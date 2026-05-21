@@ -101,7 +101,6 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabSwitch }) => {
 
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: tabs.length triggers recompute when overflow changes */
 	useEffect(() => {
-		// Update scroll state when tabs change
 		updateScrollState();
 	}, [tabs.length, updateScrollState]);
 
