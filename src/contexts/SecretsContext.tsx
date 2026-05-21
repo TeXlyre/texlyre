@@ -315,22 +315,6 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 		[user, getStorageKey, getSecretId],
 	);
 
-	const _saveSecretsToStorage = useCallback(async (): Promise<void> => {
-		if (!user || !userPassword) return;
-
-		try {
-			const storageKey = getStorageKey(user.id);
-			const storedData = localStorage.getItem(storageKey);
-			const existingSecrets: SecretEntry[] = storedData
-				? JSON.parse(storedData)
-				: [];
-
-			localStorage.setItem(storageKey, JSON.stringify(existingSecrets));
-		} catch (error) {
-			console.error('Error saving secrets to storage:', error);
-		}
-	}, [user, userPassword, getStorageKey]);
-
 	const setPassword = useCallback(
 		async (password: string): Promise<boolean> => {
 			if (!password.trim()) return false;
@@ -470,14 +454,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 				throw new Error('Failed to store secret');
 			}
 		},
-		[
-			user,
-			userPassword,
-			promptForPassword,
-			getSecretId,
-			encryptWithPassword,
-			getStorageKey,
-		],
+		[user, promptForPassword, getSecretId, encryptWithPassword, getStorageKey],
 	);
 
 	const getSecret = useCallback(

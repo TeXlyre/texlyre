@@ -20,6 +20,7 @@ export interface Property {
 }
 
 export interface PropertiesContextType {
+	isReady: boolean;
 	getProperty: (
 		id: string,
 		options?: {
@@ -65,6 +66,7 @@ export interface PropertiesContextType {
 }
 
 export const PropertiesContext = createContext<PropertiesContextType>({
+	isReady: false,
 	getProperty: () => undefined,
 	setProperty: () => {},
 	registerProperty: () => {},
@@ -83,10 +85,11 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 	children,
 }) => {
 	const [properties, setProperties] = useState<Property[]>([]);
+	const [isReady, setIsReady] = useState(false);
 	const localStoragePropertiesRef = useRef<Record<string, unknown> | null>(
 		null,
 	);
-	const isLocalStorageLoaded = useRef(false);
+	const hasInitializedSaveRef = useRef(false);
 
 	const getCurrentUserId = useCallback((): string | null => {
 		return localStorage.getItem('texlyre-current-user');
@@ -153,7 +156,7 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 			localStorage.removeItem(userStorageKey);
 			localStoragePropertiesRef.current = {};
 		} finally {
-			isLocalStorageLoaded.current = true;
+			setIsReady(true);
 		}
 	}, [getCurrentUserId]);
 
@@ -168,7 +171,12 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 	}, []);
 
 	useEffect(() => {
-		if (properties.length === 0 || !isLocalStorageLoaded.current) return;
+		if (!isReady) return;
+		if (!hasInitializedSaveRef.current) {
+			hasInitializedSaveRef.current = true;
+			return;
+		}
+		if (properties.length === 0) return;
 
 		const toSave = { ...localStoragePropertiesRef.current };
 
@@ -191,7 +199,7 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 		} catch (error) {
 			console.error('Error saving properties to localStorage:', error);
 		}
-	}, [properties, getStorageKey]);
+	}, [properties, getStorageKey, isReady]);
 
 	const getProperty = useCallback(
 		(
@@ -410,6 +418,7 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 	return (
 		<PropertiesContext.Provider
 			value={{
+				isReady,
 				getProperty,
 				setProperty,
 				registerProperty,

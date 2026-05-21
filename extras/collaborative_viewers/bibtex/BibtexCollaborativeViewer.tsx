@@ -440,7 +440,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		}
 	}, [tidyPreset]);
 
-	/* biome-ignore lint/correctness/useExhaustiveDependencies: ViewRef is accessed imperatively and is not a reactive dep. */
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: viewRef is accessed imperatively and is not a reactive dep. */
 	useEffect(() => {
 		if (viewMode === 'table' && currentView === 'processed') {
 			console.log(
@@ -462,7 +462,7 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		}
 	}, [viewMode, currentView, processedContent]);
 
-	/* biome-ignore lint/correctness/useExhaustiveDependencies: ViewRef is accessed imperatively and is not a reactive dep. */
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: viewRef is accessed imperatively and is not a reactive dep. */
 	useEffect(() => {
 		const handleBibEntryImport = (event: Event) => {
 			const customEvent = event as CustomEvent;

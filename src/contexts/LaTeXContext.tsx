@@ -197,6 +197,13 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 		}
 	};
 
+	const handleSetLatexEngine = useCallback(
+		async (_engine: LaTeXEngine): Promise<void> => {
+			// NOTE (fabawi): no-op since engine is now driven by project properties with global setting fallback
+		},
+		[],
+	);
+
 	const triggerAutoCompile = useCallback(() => {
 		const hashUrl = window.location.hash.substring(1);
 		const fragments = parseUrlFragments(hashUrl);
@@ -229,7 +236,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			document.dispatchEvent(new CustomEvent('trigger-compile'));
 			setHasAutoCompiled(true);
 		}
-	}, [getSetting, hasAutoCompiled, latexEngine]);
+	}, [getSetting, hasAutoCompiled, handleSetLatexEngine]);
 
 	const stopCompilation = () => {
 		if (isCompiling && latexService.isCompiling()) {
@@ -364,13 +371,6 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			setIsCompiling(false);
 		}
 	};
-
-	const handleSetLatexEngine = useCallback(
-		async (engine: LaTeXEngine): Promise<void> => {
-			// NOTE (fabawi): no-op since engine is now driven by project properties with global setting fallback
-		},
-		[],
-	);
 
 	return (
 		<LaTeXContext.Provider
