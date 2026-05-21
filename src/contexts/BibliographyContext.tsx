@@ -138,6 +138,27 @@ interface BibliographyProviderProps {
 	children: ReactNode;
 }
 
+function getPropertyId(pluginId: string): string {
+	return `${pluginId}-target-bib-file`;
+}
+
+function getFilterPropertyId(pluginId: string, key: string): string {
+	return `${pluginId}-filter-${key}`;
+}
+
+function getScopeOptions(
+	projectId?: string,
+): { scope: 'project'; projectId: string } | { scope: 'global' } {
+	return projectId
+		? { scope: 'project' as const, projectId }
+		: { scope: 'global' as const };
+}
+
+function getProjectId(): string | undefined {
+	const currentFragment = parseUrlFragments(window.location.hash.substring(1));
+	return currentFragment.yjsUrl ? currentFragment.yjsUrl.slice(4) : undefined;
+}
+
 export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 	children,
 }) => {
@@ -214,22 +235,6 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 		(getProviderSetting('merge-duplicates') as string) ?? 'keep-local';
 
 	const parser = bibliographyImportService.getParser();
-
-	const getProjectId = (): string | undefined => {
-		const currentFragment = parseUrlFragments(
-			window.location.hash.substring(1),
-		);
-		return currentFragment.yjsUrl ? currentFragment.yjsUrl.slice(4) : undefined;
-	};
-
-	const getPropertyId = (pluginId: string) => `${pluginId}-target-bib-file`;
-	const getFilterPropertyId = (pluginId: string, key: string) =>
-		`${pluginId}-filter-${key}`;
-
-	const getScopeOptions = (projectId?: string) =>
-		projectId
-			? { scope: 'project' as const, projectId }
-			: { scope: 'global' as const };
 
 	const getTargetFile = useCallback(
 		(pluginId: string, projectId?: string): string | null => {
@@ -471,6 +476,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 		setAvailableCollections(Array.from(collections).filter(Boolean));
 	}, [externalEntries]);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: Intentionally one-shot at mount; per-provider enable/disable is handled by the LSP-config-apply effect below. */
 	useEffect(() => {
 		const providers = pluginRegistry.getAllBibliographyPlugins();
 		setAvailableProviders(
@@ -605,7 +611,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 				setIsLoading(false);
 			}
 		},
-		[selectedProvider, getLocalEntriesAsync],
+		[selectedProvider, getLocalEntriesAsync, maxCompletions],
 	);
 
 	const triggerSearch = useCallback(() => {
@@ -667,7 +673,12 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 		} finally {
 			setIsLoading(false);
 		}
-	}, [availableProviders, selectedProvider, getLocalEntriesAsync]);
+	}, [
+		availableProviders,
+		selectedProvider,
+		getLocalEntriesAsync,
+		maxCompletions,
+	]);
 
 	const importAllExternal = useCallback(async () => {
 		if (!targetBibFile || isBulkOperating) return;
@@ -861,7 +872,6 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 	}, [
 		searchQuery,
 		entries,
-		maxCompletions,
 		entryTypeFilter,
 		sourceFilter,
 		selectedCollection,
@@ -930,7 +940,6 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 	}, [
 		currentProvider,
 		selectedProvider,
-		availableProviders,
 		fetchLocalEntries,
 		fetchExternalEntries,
 		fetchAllEntries,
@@ -944,6 +953,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 		initializeFiles();
 	}, [refreshAvailableFiles]);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: selectedProvider is the trigger; clearSelection is stable (useCallback []). */
 	useEffect(() => {
 		setIsMultiSelectMode(false);
 		clearSelection();
