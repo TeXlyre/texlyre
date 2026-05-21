@@ -22,8 +22,8 @@ import {
 } from './FileStorageService';
 import { ProjectDataService } from './ProjectDataService';
 
-const FILES_METADATA = '.texlyre_metadata.json'
-const PROJECT_METADATA = 'metadata.json'
+const FILES_METADATA = '.texlyre_metadata.json';
+const PROJECT_METADATA = 'metadata.json';
 
 export interface GitBackupStatus {
 	isConnected: boolean;
@@ -37,12 +37,12 @@ export interface GitBackupStatus {
 export interface GitBackupActivity {
 	id: string;
 	type:
-	| 'backup_start'
-	| 'backup_complete'
-	| 'backup_error'
-	| 'import_start'
-	| 'import_complete'
-	| 'import_error';
+		| 'backup_start'
+		| 'backup_complete'
+		| 'backup_error'
+		| 'import_start'
+		| 'import_complete'
+		| 'import_error';
 	message: string;
 	timestamp: number;
 	data?: any;
@@ -69,16 +69,16 @@ export interface GitTreeItem {
 
 export type GitBackupChange =
 	| {
-		type: 'create' | 'update';
-		path: string;
-		content: string | Uint8Array | ArrayBuffer;
-		previousRef?: string;
-	}
+			type: 'create' | 'update';
+			path: string;
+			content: string | Uint8Array | ArrayBuffer;
+			previousRef?: string;
+	  }
 	| {
-		type: 'delete';
-		path: string;
-		previousRef?: string;
-	};
+			type: 'delete';
+			path: string;
+			previousRef?: string;
+	  };
 
 export interface GitBackupAdapter<TTarget> {
 	displayName: string;
@@ -114,11 +114,7 @@ export interface GitBackupAdapter<TTarget> {
 		branch: string,
 	): Promise<string>;
 
-	getFileRefForPath?(
-		item: GitTreeItem,
-		path: string,
-		branch: string,
-	): string;
+	getFileRefForPath?(item: GitTreeItem, path: string, branch: string): string;
 
 	commitChanges(
 		token: string,
@@ -173,7 +169,8 @@ export class GitBackupService<TTarget> {
 
 	private listeners: Array<(status: GitBackupStatus) => void> = [];
 	private activities: GitBackupActivity[] = [];
-	private activityListeners: Array<(activities: GitBackupActivity[]) => void> = [];
+	private activityListeners: Array<(activities: GitBackupActivity[]) => void> =
+		[];
 
 	private dataSerializer = new ProjectDataService();
 	private unifiedService = new UnifiedDataStructureService();
@@ -187,7 +184,7 @@ export class GitBackupService<TTarget> {
 
 	private settingsCache: GitBackupSettings = {};
 
-	constructor(private adapter: GitBackupAdapter<TTarget>) { }
+	constructor(private adapter: GitBackupAdapter<TTarget>) {}
 
 	setCurrentProjectId(projectId: string | undefined): void {
 		if (this.currentProjectId === projectId) return;
@@ -198,7 +195,8 @@ export class GitBackupService<TTarget> {
 	setSettings(settings: GitBackupSettings): void {
 		this.settingsCache = { ...settings };
 		if (settings.apiEndpoint) this.adapter.setBaseUrl?.(settings.apiEndpoint);
-		if (settings.requestTimeout) this.adapter.setRequestTimeout?.(settings.requestTimeout);
+		if (settings.requestTimeout)
+			this.adapter.setRequestTimeout?.(settings.requestTimeout);
 	}
 
 	setSecretsContext(secretsContext: SecretsContextType): void {
@@ -224,13 +222,19 @@ export class GitBackupService<TTarget> {
 
 		const scopeOptions = this.getScopeOptions(projectId);
 		const tokenSecret = await this.secretsContext.getSecret(
-			this.adapter.pluginId, this.adapter.tokenSecretKey, scopeOptions,
+			this.adapter.pluginId,
+			this.adapter.tokenSecretKey,
+			scopeOptions,
 		);
 		const targetSecret = await this.secretsContext.getSecret(
-			this.adapter.pluginId, this.adapter.targetSecretKey, scopeOptions,
+			this.adapter.pluginId,
+			this.adapter.targetSecretKey,
+			scopeOptions,
 		);
 		const targetMetadata = await this.secretsContext.getSecretMetadata(
-			this.adapter.pluginId, this.adapter.targetSecretKey, scopeOptions,
+			this.adapter.pluginId,
+			this.adapter.targetSecretKey,
+			scopeOptions,
 		);
 
 		if (!tokenSecret?.value || !targetSecret?.value) return null;
@@ -242,24 +246,38 @@ export class GitBackupService<TTarget> {
 		};
 	}
 
-	async connectWithToken(
-		token: string,
-	): Promise<{ success: boolean; targets?: any[]; repositories?: any[]; projects?: any[]; error?: string }> {
+	async connectWithToken(token: string): Promise<{
+		success: boolean;
+		targets?: any[];
+		repositories?: any[];
+		projects?: any[];
+		error?: string;
+	}> {
 		try {
 			if (!(await this.adapter.testConnection(token))) {
 				return {
 					success: false,
-					error: t('Invalid {provider} token', { provider: this.adapter.displayName }),
+					error: t('Invalid {provider} token', {
+						provider: this.adapter.displayName,
+					}),
 				};
 			}
 			const targets = await this.adapter.listTargets(token);
-			return { success: true, targets, repositories: targets, projects: targets };
+			return {
+				success: true,
+				targets,
+				repositories: targets,
+				projects: targets,
+			};
 		} catch (error) {
 			return {
 				success: false,
-				error: error instanceof Error
-					? error.message
-					: t('Failed to connect to {provider}', { provider: this.adapter.displayName }),
+				error:
+					error instanceof Error
+						? error.message
+						: t('Failed to connect to {provider}', {
+								provider: this.adapter.displayName,
+							}),
 			};
 		}
 	}
@@ -281,15 +299,21 @@ export class GitBackupService<TTarget> {
 			const targetValue = this.adapter.getTargetSecretValue(target);
 
 			await this.secretsContext.setSecret(
-				this.adapter.pluginId, this.adapter.tokenSecretKey, token,
+				this.adapter.pluginId,
+				this.adapter.tokenSecretKey,
+				token,
 				{ ...scopeOptions, metadata: { tokenType: this.adapter.tokenType } },
 			);
 
 			const existingTargetSecret = await this.secretsContext.getSecret(
-				this.adapter.pluginId, this.adapter.targetSecretKey, scopeOptions,
+				this.adapter.pluginId,
+				this.adapter.targetSecretKey,
+				scopeOptions,
 			);
 			const existingMeta = await this.secretsContext.getSecretMetadata(
-				this.adapter.pluginId, this.adapter.targetSecretKey, scopeOptions,
+				this.adapter.pluginId,
+				this.adapter.targetSecretKey,
+				scopeOptions,
 			);
 
 			const sameTarget =
@@ -297,7 +321,9 @@ export class GitBackupService<TTarget> {
 				existingMeta?.branch === finalBranch;
 
 			await this.secretsContext.setSecret(
-				this.adapter.pluginId, this.adapter.targetSecretKey, targetValue,
+				this.adapter.pluginId,
+				this.adapter.targetSecretKey,
+				targetValue,
 				{
 					...scopeOptions,
 					metadata: {
@@ -323,7 +349,9 @@ export class GitBackupService<TTarget> {
 			this.addActivity({
 				type: 'backup_complete',
 				message: t('Connected to {provider}: {target} ({branch})', {
-					provider: this.adapter.displayName, target: targetLabel, branch: finalBranch,
+					provider: this.adapter.displayName,
+					target: targetLabel,
+					branch: finalBranch,
 				}),
 			});
 
@@ -332,9 +360,12 @@ export class GitBackupService<TTarget> {
 			this.status = {
 				...this.status,
 				status: 'error',
-				error: error instanceof Error
-					? error.message
-					: t('Failed to connect to {provider}', { provider: this.adapter.displayName }),
+				error:
+					error instanceof Error
+						? error.message
+						: t('Failed to connect to {provider}', {
+								provider: this.adapter.displayName,
+							}),
 			};
 			this.notifyListeners();
 			return false;
@@ -346,10 +377,14 @@ export class GitBackupService<TTarget> {
 		const scopeOptions = this.getScopeOptions(projectId);
 
 		await this.secretsContext.removeSecret(
-			this.adapter.pluginId, this.adapter.tokenSecretKey, scopeOptions,
+			this.adapter.pluginId,
+			this.adapter.tokenSecretKey,
+			scopeOptions,
 		);
 		await this.secretsContext.removeSecret(
-			this.adapter.pluginId, this.adapter.targetSecretKey, scopeOptions,
+			this.adapter.pluginId,
+			this.adapter.targetSecretKey,
+			scopeOptions,
 		);
 
 		this.status = {
@@ -364,7 +399,9 @@ export class GitBackupService<TTarget> {
 	async getStoredTarget(projectId?: string): Promise<string | null> {
 		if (!this.secretsContext) return null;
 		const metadata = await this.secretsContext.getSecretMetadata(
-			this.adapter.pluginId, this.adapter.targetSecretKey, this.getScopeOptions(projectId),
+			this.adapter.pluginId,
+			this.adapter.targetSecretKey,
+			this.getScopeOptions(projectId),
 		);
 		return (
 			metadata?.fullName ||
@@ -378,7 +415,9 @@ export class GitBackupService<TTarget> {
 	async getStoredBranch(projectId?: string): Promise<string> {
 		if (!this.secretsContext) return this.getDefaultBranch();
 		const metadata = await this.secretsContext.getSecretMetadata(
-			this.adapter.pluginId, this.adapter.targetSecretKey, this.getScopeOptions(projectId),
+			this.adapter.pluginId,
+			this.adapter.targetSecretKey,
+			this.getScopeOptions(projectId),
 		);
 		return metadata?.branch || this.getDefaultBranch();
 	}
@@ -387,10 +426,14 @@ export class GitBackupService<TTarget> {
 		if (!this.secretsContext) return false;
 		const scopeOptions = this.getScopeOptions(projectId);
 		const hasToken = await this.secretsContext.hasSecret(
-			this.adapter.pluginId, this.adapter.tokenSecretKey, scopeOptions,
+			this.adapter.pluginId,
+			this.adapter.tokenSecretKey,
+			scopeOptions,
 		);
 		const hasTarget = await this.secretsContext.hasSecret(
-			this.adapter.pluginId, this.adapter.targetSecretKey, scopeOptions,
+			this.adapter.pluginId,
+			this.adapter.targetSecretKey,
+			scopeOptions,
 		);
 		return hasToken && hasTarget;
 	}
@@ -422,21 +465,27 @@ export class GitBackupService<TTarget> {
 
 			const localProjects = await this.loadLocalProjects(projectId);
 			const tree = await this.adapter.getRecursiveTree(
-				resolvedCredentials.token, resolvedCredentials.target, resolvedCredentials.branch,
+				resolvedCredentials.token,
+				resolvedCredentials.target,
+				resolvedCredentials.branch,
 			);
 			const { existingFiles, existingFileRefs } = this.indexRemoteTree(tree);
 
 			const changes: GitBackupChange[] = [];
 			for (const project of localProjects) {
 				const projectChanges = await this.buildChangesForProject(
-					project, existingFiles, existingFileRefs,
+					project,
+					existingFiles,
+					existingFileRefs,
 				);
 				changes.push(...projectChanges);
 			}
 
 			const baselineCommitSha = await this.loadBaselineSha(projectId);
 			const resolvedChanges = await this.detectAndResolveConflicts(
-				resolvedCredentials, changes, baselineCommitSha,
+				resolvedCredentials,
+				changes,
+				baselineCommitSha,
 			);
 
 			if (resolvedChanges === null) {
@@ -467,13 +516,20 @@ export class GitBackupService<TTarget> {
 			});
 
 			this.status = {
-				...this.status, status: 'idle', lastSync: Date.now(), error: undefined,
+				...this.status,
+				status: 'idle',
+				lastSync: Date.now(),
+				error: undefined,
 			};
 			shouldImportAfterPush = true;
 		} catch (error) {
-			this.handleError(error, 'backup_error', t('{provider} sync failed', {
-				provider: this.adapter.displayName,
-			}));
+			this.handleError(
+				error,
+				'backup_error',
+				t('{provider} sync failed', {
+					provider: this.adapter.displayName,
+				}),
+			);
 			this.notifyListeners();
 			return;
 		}
@@ -487,7 +543,9 @@ export class GitBackupService<TTarget> {
 				console.warn('Post-push reconciliation import failed:', error);
 				this.addActivity({
 					type: 'import_error',
-					message: t('Push succeeded but local reconciliation failed. Run import manually to sync local state.'),
+					message: t(
+						'Push succeeded but local reconciliation failed. Run import manually to sync local state.',
+					),
 				});
 			}
 		}
@@ -509,7 +567,9 @@ export class GitBackupService<TTarget> {
 			type: 'import_start',
 			message: projectId
 				? t('Importing project: {projectId}', { projectId })
-				: t('Importing from {provider}...', { provider: this.adapter.displayName }),
+				: t('Importing from {provider}...', {
+						provider: this.adapter.displayName,
+					}),
 		});
 		this.notifyListeners();
 
@@ -519,7 +579,9 @@ export class GitBackupService<TTarget> {
 			const resolvedCredentials = { ...credentials, branch: finalBranch };
 
 			const tree = await this.adapter.getRecursiveTree(
-				credentials.token, credentials.target, finalBranch,
+				credentials.token,
+				credentials.target,
+				finalBranch,
 			);
 			const projectFiles = this.groupProjectFiles(tree, projectId, finalBranch);
 
@@ -527,9 +589,15 @@ export class GitBackupService<TTarget> {
 			if (!user) throw new Error(t('No authenticated user'));
 
 			const importedMissing = await this.importMissingProjects(
-				projectFiles, resolvedCredentials, user.id,
+				projectFiles,
+				resolvedCredentials,
+				user.id,
 			);
-			await this.importExistingProjects(projectFiles, resolvedCredentials, user.id);
+			await this.importExistingProjects(
+				projectFiles,
+				resolvedCredentials,
+				user.id,
+			);
 
 			let successMessage = t('{provider} import completed successfully', {
 				provider: this.adapter.displayName,
@@ -540,16 +608,23 @@ export class GitBackupService<TTarget> {
 
 			this.addActivity({ type: 'import_complete', message: successMessage });
 			this.status = {
-				...this.status, status: 'idle', lastSync: Date.now(), error: undefined,
+				...this.status,
+				status: 'idle',
+				lastSync: Date.now(),
+				error: undefined,
 			};
 
 			await this.persistBaseline(resolvedCredentials, projectId);
 			fileStorageEventEmitter.emitChange();
 		} catch (error) {
 			console.error(error);
-			this.handleError(error, 'import_error', t('{provider} import failed', {
-				provider: this.adapter.displayName,
-			}));
+			this.handleError(
+				error,
+				'import_error',
+				t('{provider} import failed', {
+					provider: this.adapter.displayName,
+				}),
+			);
 		}
 
 		this.notifyListeners();
@@ -560,17 +635,25 @@ export class GitBackupService<TTarget> {
 
 	addStatusListener = (cb: (status: GitBackupStatus) => void): (() => void) => {
 		this.listeners.push(cb);
-		return () => { this.listeners = this.listeners.filter((l) => l !== cb); };
+		return () => {
+			this.listeners = this.listeners.filter((l) => l !== cb);
+		};
 	};
 
-	addActivityListener = (cb: (activities: GitBackupActivity[]) => void): (() => void) => {
+	addActivityListener = (
+		cb: (activities: GitBackupActivity[]) => void,
+	): (() => void) => {
 		this.activityListeners.push(cb);
-		return () => { this.activityListeners = this.activityListeners.filter((l) => l !== cb); };
+		return () => {
+			this.activityListeners = this.activityListeners.filter((l) => l !== cb);
+		};
 	};
 
 	clearActivity = (id: string): void => {
 		this.recordsContext?.removeRecord(
-			this.getActivityRecordKey(), id, this.getActivityScopeOptions(),
+			this.getActivityRecordKey(),
+			id,
+			this.getActivityScopeOptions(),
 		);
 		this.activities = this.activities.filter((a) => a.id !== id);
 		this.notifyActivityListeners();
@@ -578,7 +661,8 @@ export class GitBackupService<TTarget> {
 
 	clearAllActivities = (): void => {
 		this.recordsContext?.clearRecords(
-			this.getActivityRecordKey(), this.getActivityScopeOptions(),
+			this.getActivityRecordKey(),
+			this.getActivityScopeOptions(),
 		);
 		this.activities = [];
 		this.notifyActivityListeners();
@@ -602,7 +686,9 @@ export class GitBackupService<TTarget> {
 	private indexRemoteTree(tree: GitTreeItem[]) {
 		const existingFileRefs = new Map(
 			tree
-				.filter((item) => item.type === 'blob' && item.path && (item.sha || item.id))
+				.filter(
+					(item) => item.type === 'blob' && item.path && (item.sha || item.id),
+				)
 				.map((item) => [item.path!, item.sha || item.id || '']),
 		);
 		const existingFiles = new Set(existingFileRefs.keys());
@@ -637,14 +723,19 @@ export class GitBackupService<TTarget> {
 			});
 		};
 
-		const documents = await this.dataSerializer.serializeProjectDocuments(project);
-		const files = await this.dataSerializer.serializeProjectFiles(project, true);
+		const documents =
+			await this.dataSerializer.serializeProjectDocuments(project);
+		const files = await this.dataSerializer.serializeProjectFiles(
+			project,
+			true,
+		);
 
 		await pushIfChanged(
 			`${projectPath}/metadata.json`,
 			JSON.stringify(
 				this.unifiedService.convertProjectToMetadata(project, 'backup'),
-				null, 2,
+				null,
+				2,
 			),
 		);
 
@@ -700,14 +791,17 @@ export class GitBackupService<TTarget> {
 		for (const file of files.files) {
 			const content = files.fileContents.get(file.path);
 			if (file.type !== 'file' || content === undefined) continue;
-			if (isTemporaryFile(file.path) || this.shouldIgnoreFile(file.path)) continue;
+			if (isTemporaryFile(file.path) || this.shouldIgnoreFile(file.path))
+				continue;
 
-			const fileSize = content instanceof ArrayBuffer ? content.byteLength : content.length;
+			const fileSize =
+				content instanceof ArrayBuffer ? content.byteLength : content.length;
 			if (fileSize > maxFileSize) {
 				this.addActivity({
 					type: 'backup_error',
 					message: t('Skipped file {path}: exceeds max size of {size}MB', {
-						path: file.path, size: Math.round(maxFileSize / 1024 / 1024),
+						path: file.path,
+						size: Math.round(maxFileSize / 1024 / 1024),
 					}),
 				});
 				continue;
@@ -736,12 +830,18 @@ export class GitBackupService<TTarget> {
 		changes: GitBackupChange[],
 		baselineCommitSha: string | undefined,
 	): Promise<GitBackupChange[] | null> {
-		if (!baselineCommitSha || !this.adapter.getLatestCommitSha || !this.adapter.readFileAtRef) {
+		if (
+			!baselineCommitSha ||
+			!this.adapter.getLatestCommitSha ||
+			!this.adapter.readFileAtRef
+		) {
 			return changes;
 		}
 
 		const currentRemoteSha = await this.adapter.getLatestCommitSha(
-			credentials.token, credentials.target, credentials.branch,
+			credentials.token,
+			credentials.target,
+			credentials.branch,
 		);
 		if (currentRemoteSha === baselineCommitSha) return changes;
 
@@ -758,19 +858,29 @@ export class GitBackupService<TTarget> {
 
 			if (binary) {
 				const conflict = await this.detectBinaryConflict(
-					credentials, change, baselineCommitSha, currentRemoteSha,
+					credentials,
+					change,
+					baselineCommitSha,
+					currentRemoteSha,
 				);
 				if (conflict === 'skip') continue;
-				if (conflict === 'push') { nonConflicting.push(change); continue; }
+				if (conflict === 'push') {
+					nonConflicting.push(change);
+					continue;
+				}
 				conflicts.push(conflict);
 				continue;
 			}
 
 			const baseContent = await this.readFileAtRefSafe(
-				credentials, change.path, baselineCommitSha,
+				credentials,
+				change.path,
+				baselineCommitSha,
 			);
 			const remoteContent = await this.readFileAtRefSafe(
-				credentials, change.path, currentRemoteSha,
+				credentials,
+				change.path,
+				currentRemoteSha,
 			);
 
 			if (remoteContent === undefined) {
@@ -780,7 +890,10 @@ export class GitBackupService<TTarget> {
 
 			const localText = this.changeContentAsText(change.content);
 			const merge = conflictResolutionService.tryAutoMerge(
-				baseContent, localText, remoteContent, false,
+				baseContent,
+				localText,
+				remoteContent,
+				false,
 			);
 
 			if (merge.resolved) {
@@ -801,7 +914,8 @@ export class GitBackupService<TTarget> {
 
 		if (conflicts.length === 0) return nonConflicting;
 
-		const resolutions = await conflictResolutionService.resolveConflicts(conflicts);
+		const resolutions =
+			await conflictResolutionService.resolveConflicts(conflicts);
 		if (!resolutions) return null;
 
 		for (const conflict of conflicts) {
@@ -838,7 +952,9 @@ export class GitBackupService<TTarget> {
 		const localSha = await computeGitBlobSha(localContent);
 
 		const remoteText = await this.readFileAtRefSafe(
-			credentials, change.path, currentRemoteSha,
+			credentials,
+			change.path,
+			currentRemoteSha,
 		);
 		if (remoteText === undefined) return 'push';
 
@@ -847,7 +963,9 @@ export class GitBackupService<TTarget> {
 		if (localSha === remoteSha) return 'skip';
 
 		const baseText = await this.readFileAtRefSafe(
-			credentials, change.path, baselineCommitSha,
+			credentials,
+			change.path,
+			baselineCommitSha,
 		);
 		const baseSha = baseText
 			? await computeGitBlobSha(toArrayBuffer(latin1ToBytes(baseText)))
@@ -874,14 +992,19 @@ export class GitBackupService<TTarget> {
 		if (!this.adapter.readFileAtRef) return undefined;
 		try {
 			return await this.adapter.readFileAtRef(
-				credentials.token, credentials.target, path, ref,
+				credentials.token,
+				credentials.target,
+				path,
+				ref,
 			);
 		} catch {
 			return undefined;
 		}
 	}
 
-	private changeContentAsText(content: string | Uint8Array | ArrayBuffer): string {
+	private changeContentAsText(
+		content: string | Uint8Array | ArrayBuffer,
+	): string {
 		if (typeof content === 'string') return content;
 		return new TextDecoder().decode(content as ArrayBuffer);
 	}
@@ -900,12 +1023,20 @@ export class GitBackupService<TTarget> {
 
 			try {
 				const metadataContent = await this.adapter.readFile(
-					credentials.token, credentials.target, data.metadataRef, credentials.branch,
+					credentials.token,
+					credentials.target,
+					data.metadataRef,
+					credentials.branch,
 				);
 				const projectMetadata = JSON.parse(metadataContent);
 
 				await this.createProjectDirectly(projectMetadata, ownerId);
-				await this.importProjectSafely(projId, projectMetadata, data, credentials);
+				await this.importProjectSafely(
+					projId,
+					projectMetadata,
+					data,
+					credentials,
+				);
 
 				imported++;
 				this.addActivity({
@@ -941,10 +1072,18 @@ export class GitBackupService<TTarget> {
 			if (!data.metadataRef || !existingProjectIds.has(projId)) continue;
 
 			const metadataContent = await this.adapter.readFile(
-				credentials.token, credentials.target, data.metadataRef, credentials.branch,
+				credentials.token,
+				credentials.target,
+				data.metadataRef,
+				credentials.branch,
 			);
 			const projectMetadata = JSON.parse(metadataContent);
-			await this.importProjectSafely(projId, projectMetadata, data, credentials);
+			await this.importProjectSafely(
+				projId,
+				projectMetadata,
+				data,
+				credentials,
+			);
 		}
 	}
 
@@ -962,7 +1101,10 @@ export class GitBackupService<TTarget> {
 			false,
 		);
 
-		const { documents, documentContents } = await this.importDocuments(data, credentials);
+		const { documents, documentContents } = await this.importDocuments(
+			data,
+			credentials,
+		);
 		await fileStorageService.switchToProject(resolvedMetadata.docUrl);
 		await this.importFiles(data, credentials, resolvedMetadata);
 
@@ -985,14 +1127,17 @@ export class GitBackupService<TTarget> {
 		};
 
 		await this.dataSerializer.deserializeToIndexedDB(
-			unifiedData, projectId, resolvedMetadata.docUrl,
+			unifiedData,
+			projectId,
+			resolvedMetadata.docUrl,
 		);
 
 		if (documents.length > 0) {
 			this.addActivity({
 				type: 'import_complete',
 				message: t('Imported {count} document for project: {projectName}', {
-					count: documents.length, projectName: projectMetadata.name,
+					count: documents.length,
+					projectName: projectMetadata.name,
 				}),
 			});
 		}
@@ -1009,7 +1154,10 @@ export class GitBackupService<TTarget> {
 		if (data.documentsMetadataRef) {
 			try {
 				const metadataContent = await this.adapter.readFile(
-					credentials.token, credentials.target, data.documentsMetadataRef, credentials.branch,
+					credentials.token,
+					credentials.target,
+					data.documentsMetadataRef,
+					credentials.branch,
 				);
 				remoteDocumentsMetadata = JSON.parse(metadataContent);
 			} catch (error) {
@@ -1018,7 +1166,9 @@ export class GitBackupService<TTarget> {
 		}
 
 		const docMetadataById = new Map<string, any>();
-		remoteDocumentsMetadata.forEach((meta) => docMetadataById.set(meta.id, meta));
+		remoteDocumentsMetadata.forEach((meta) => {
+			docMetadataById.set(meta.id, meta);
+		});
 
 		const documents: any[] = [];
 		const documentContents = new Map();
@@ -1034,17 +1184,24 @@ export class GitBackupService<TTarget> {
 			};
 			documents.push(docInfo);
 
-			const contentData: { readableContent?: string; yjsState?: Uint8Array } = {};
+			const contentData: { readableContent?: string; yjsState?: Uint8Array } =
+				{};
 
 			if (docData.txtRef) {
 				contentData.readableContent = await this.adapter.readFile(
-					credentials.token, credentials.target, docData.txtRef, credentials.branch,
+					credentials.token,
+					credentials.target,
+					docData.txtRef,
+					credentials.branch,
 				);
 			}
 
 			if (docData.yjsRef) {
 				const yjsContent = await this.adapter.readFile(
-					credentials.token, credentials.target, docData.yjsRef, credentials.branch,
+					credentials.token,
+					credentials.target,
+					docData.yjsRef,
+					credentials.branch,
 				);
 				contentData.yjsState = latin1ToBytes(yjsContent);
 			}
@@ -1073,9 +1230,8 @@ export class GitBackupService<TTarget> {
 		credentials: ResolvedCredentials<TTarget>,
 		projectMetadata: any,
 	): Promise<void> {
-		const { metadataByPath, deletedFilesMetadata } = await this.loadRemoteFilesMetadata(
-			data, credentials,
-		);
+		const { metadataByPath, deletedFilesMetadata } =
+			await this.loadRemoteFilesMetadata(data, credentials);
 
 		await this.restoreDeletedFileTombstones(deletedFilesMetadata, data);
 
@@ -1083,10 +1239,16 @@ export class GitBackupService<TTarget> {
 		let failedCount = 0;
 
 		for (const [filePath, fileRef] of data.files.entries()) {
-			if (isTemporaryFile(filePath) || this.shouldIgnoreFile(filePath)) continue;
+			if (isTemporaryFile(filePath) || this.shouldIgnoreFile(filePath))
+				continue;
 
 			try {
-				await this.importSingleFile(filePath, fileRef, metadataByPath, credentials);
+				await this.importSingleFile(
+					filePath,
+					fileRef,
+					metadataByPath,
+					credentials,
+				);
 				importedCount++;
 			} catch (error) {
 				failedCount++;
@@ -1099,14 +1261,17 @@ export class GitBackupService<TTarget> {
 		}
 
 		if (failedCount > 0) {
-			throw new Error(t('Imported with {count} file error(s)', { count: failedCount }));
+			throw new Error(
+				t('Imported with {count} file error(s)', { count: failedCount }),
+			);
 		}
 
 		if (importedCount > 0) {
 			this.addActivity({
 				type: 'import_complete',
 				message: t('Imported {count} file for project: {projectName}', {
-					count: importedCount, projectName: projectMetadata.name,
+					count: importedCount,
+					projectName: projectMetadata.name,
 				}),
 			});
 			fileStorageEventEmitter.emitChange();
@@ -1125,7 +1290,10 @@ export class GitBackupService<TTarget> {
 		if (data.filesMetadataRef) {
 			try {
 				const metadataContent = await this.adapter.readFile(
-					credentials.token, credentials.target, data.filesMetadataRef, credentials.branch,
+					credentials.token,
+					credentials.target,
+					data.filesMetadataRef,
+					credentials.branch,
 				);
 				remoteFilesMetadata = JSON.parse(metadataContent);
 			} catch (error) {
@@ -1157,7 +1325,9 @@ export class GitBackupService<TTarget> {
 			try {
 				await fileStorageService.storeFile(
 					{
-						id: fileMetadata.id || `deleted-${Math.random().toString(36).substring(2, 15)}`,
+						id:
+							fileMetadata.id ||
+							`deleted-${Math.random().toString(36).substring(2, 15)}`,
 						name: fileMetadata.name,
 						path: fileMetadata.path,
 						type: fileMetadata.type as 'file' | 'directory',
@@ -1173,7 +1343,10 @@ export class GitBackupService<TTarget> {
 				);
 				fileStorageEventEmitter.emitChange();
 			} catch (error) {
-				console.error(`Failed to restore deleted file metadata ${filePath}:`, error);
+				console.error(
+					`Failed to restore deleted file metadata ${filePath}:`,
+					error,
+				);
 			}
 		}
 	}
@@ -1186,55 +1359,66 @@ export class GitBackupService<TTarget> {
 	): Promise<void> {
 		const existingFile = await fileStorageService.getFileByPath(filePath, true);
 		if (existingFile?.content) {
-			const localSha = await computeGitBlobSha(existingFile.content as string | ArrayBuffer);
+			const localSha = await computeGitBlobSha(
+				existingFile.content as string | ArrayBuffer,
+			);
 			if (localSha === fileRef) return;
 		}
 
 		await fileStorageService.createDirectoryPath(filePath);
 
 		const rawContentString = await this.adapter.readFile(
-			credentials.token, credentials.target, fileRef, credentials.branch,
+			credentials.token,
+			credentials.target,
+			fileRef,
+			credentials.branch,
 		);
 
 		const remoteMetadata = metadataByPath.get(filePath);
-		const binary = remoteMetadata ? remoteMetadata.isBinary : isBinaryFile(filePath);
+		const binary = remoteMetadata
+			? remoteMetadata.isBinary
+			: isBinaryFile(filePath);
 
 		const finalContent: string | ArrayBuffer = binary
 			? toArrayBuffer(latin1ToBytes(rawContentString))
 			: new TextDecoder('utf-8').decode(latin1ToBytes(rawContentString));
 
-		const fileSize = finalContent instanceof ArrayBuffer
-			? finalContent.byteLength
-			: finalContent.length;
+		const fileSize =
+			finalContent instanceof ArrayBuffer
+				? finalContent.byteLength
+				: finalContent.length;
 
 		const fileToStore = remoteMetadata
 			? {
-				id: existingFile?.id || remoteMetadata.id ||
-					`${this.adapter.importIdPrefix}-${Math.random().toString(36).substring(2, 15)}`,
-				name: remoteMetadata.name,
-				path: remoteMetadata.path,
-				type: remoteMetadata.type as 'file' | 'directory',
-				lastModified: remoteMetadata.lastModified || Date.now(),
-				size: remoteMetadata.size || fileSize,
-				mimeType: remoteMetadata.mimeType,
-				isBinary: remoteMetadata.isBinary,
-				documentId: remoteMetadata.documentId,
-				content: finalContent,
-				isDeleted: false,
-			}
+					id:
+						existingFile?.id ||
+						remoteMetadata.id ||
+						`${this.adapter.importIdPrefix}-${Math.random().toString(36).substring(2, 15)}`,
+					name: remoteMetadata.name,
+					path: remoteMetadata.path,
+					type: remoteMetadata.type as 'file' | 'directory',
+					lastModified: remoteMetadata.lastModified || Date.now(),
+					size: remoteMetadata.size || fileSize,
+					mimeType: remoteMetadata.mimeType,
+					isBinary: remoteMetadata.isBinary,
+					documentId: remoteMetadata.documentId,
+					content: finalContent,
+					isDeleted: false,
+				}
 			: {
-				id: existingFile?.id ||
-					`${this.adapter.importIdPrefix}-${Math.random().toString(36).substring(2, 15)}`,
-				name: filePath.split('/').pop() || '',
-				path: filePath,
-				type: 'file' as const,
-				lastModified: Date.now(),
-				size: fileSize,
-				mimeType: getMimeType(filePath),
-				isBinary: binary,
-				content: finalContent,
-				isDeleted: false,
-			};
+					id:
+						existingFile?.id ||
+						`${this.adapter.importIdPrefix}-${Math.random().toString(36).substring(2, 15)}`,
+					name: filePath.split('/').pop() || '',
+					path: filePath,
+					type: 'file' as const,
+					lastModified: Date.now(),
+					size: fileSize,
+					mimeType: getMimeType(filePath),
+					isBinary: binary,
+					content: finalContent,
+					isDeleted: false,
+				};
 
 		await fileStorageService.storeFile(fileToStore, {
 			showConflictDialog: false,
@@ -1242,7 +1426,9 @@ export class GitBackupService<TTarget> {
 		});
 	}
 
-	private async loadBaselineSha(projectId?: string): Promise<string | undefined> {
+	private async loadBaselineSha(
+		projectId?: string,
+	): Promise<string | undefined> {
 		const metadata = await this.secretsContext?.getSecretMetadata(
 			this.adapter.pluginId,
 			this.adapter.targetSecretKey,
@@ -1259,7 +1445,9 @@ export class GitBackupService<TTarget> {
 
 		try {
 			const newSha = await this.adapter.getLatestCommitSha(
-				credentials.token, credentials.target, credentials.branch,
+				credentials.token,
+				credentials.target,
+				credentials.branch,
 			);
 			const existingMeta = await this.secretsContext.getSecretMetadata(
 				this.adapter.pluginId,
@@ -1284,35 +1472,50 @@ export class GitBackupService<TTarget> {
 		projectId?: string,
 	): Promise<ResolvedCredentials<TTarget>> {
 		if (!this.secretsContext) {
-			throw new Error(t('{provider} credentials not available. Please reconnect.', {
-				provider: this.adapter.displayName,
-			}));
+			throw new Error(
+				t('{provider} credentials not available. Please reconnect.', {
+					provider: this.adapter.displayName,
+				}),
+			);
 		}
 
 		const scopeOptions = this.getScopeOptions(projectId);
 		const tokenSecret = await this.secretsContext.getSecret(
-			this.adapter.pluginId, this.adapter.tokenSecretKey, scopeOptions,
+			this.adapter.pluginId,
+			this.adapter.tokenSecretKey,
+			scopeOptions,
 		);
 		const targetSecret = await this.secretsContext.getSecret(
-			this.adapter.pluginId, this.adapter.targetSecretKey, scopeOptions,
+			this.adapter.pluginId,
+			this.adapter.targetSecretKey,
+			scopeOptions,
 		);
 		const targetMetadata = await this.secretsContext.getSecretMetadata(
-			this.adapter.pluginId, this.adapter.targetSecretKey, scopeOptions,
+			this.adapter.pluginId,
+			this.adapter.targetSecretKey,
+			scopeOptions,
 		);
 
 		if (!tokenSecret?.value || !targetSecret?.value) {
-			throw new Error(t('{provider} credentials not available. Please reconnect.', {
-				provider: this.adapter.displayName,
-			}));
+			throw new Error(
+				t('{provider} credentials not available. Please reconnect.', {
+					provider: this.adapter.displayName,
+				}),
+			);
 		}
 
 		if (!(await this.adapter.testConnection(tokenSecret.value))) {
-			throw new Error(t('{provider} token is invalid or expired. Please reconnect.', {
-				provider: this.adapter.displayName,
-			}));
+			throw new Error(
+				t('{provider} token is invalid or expired. Please reconnect.', {
+					provider: this.adapter.displayName,
+				}),
+			);
 		}
 
-		const target = this.adapter.targetFromStoredValue(targetSecret.value, targetMetadata);
+		const target = this.adapter.targetFromStoredValue(
+			targetSecret.value,
+			targetMetadata,
+		);
 		this.status = {
 			...this.status,
 			isConnected: true,
@@ -1380,8 +1583,12 @@ export class GitBackupService<TTarget> {
 		return projectFiles;
 	}
 
-	private async createProjectDirectly(projectMetadata: any, ownerId: string): Promise<void> {
-		const authDb = (await authService.db) ||
+	private async createProjectDirectly(
+		projectMetadata: any,
+		ownerId: string,
+	): Promise<void> {
+		const authDb =
+			(await authService.db) ||
 			(await authService.initialize().then(() => authService.db));
 		if (!authDb) throw new Error(t('Could not access auth database'));
 
@@ -1419,13 +1626,17 @@ export class GitBackupService<TTarget> {
 					this.addActivity({
 						type: 'backup_start',
 						message: t('Retrying commit (attempt {attempt}/{maxRetries})...', {
-							attempt, maxRetries,
+							attempt,
+							maxRetries,
 						}),
 					});
 				}
 				await this.adapter.commitChanges(
-					credentials.token, credentials.target, credentials.branch,
-					commitMessage, changes,
+					credentials.token,
+					credentials.target,
+					credentials.branch,
+					commitMessage,
+					changes,
 				);
 				return;
 			} catch (error) {
@@ -1438,7 +1649,9 @@ export class GitBackupService<TTarget> {
 	private getFileRef(item: GitTreeItem, path: string, branch: string): string {
 		return (
 			this.adapter.getFileRefForPath?.(item, path, branch) ||
-			item.sha || item.id || path
+			item.sha ||
+			item.id ||
+			path
 		);
 	}
 
@@ -1447,7 +1660,8 @@ export class GitBackupService<TTarget> {
 	}
 
 	private getDefaultCommitMessage(): string {
-		const template = this.settingsCache.defaultCommitMessage || 'TeXlyre Backup: {date}';
+		const template =
+			this.settingsCache.defaultCommitMessage || 'TeXlyre Backup: {date}';
 		const now = new Date();
 		return template
 			.replace('{date}', now.toLocaleDateString())
@@ -1508,7 +1722,7 @@ export class GitBackupService<TTarget> {
 
 	private getActivityScopeOptions() {
 		return {
-			scope: this.currentProjectId ? 'project' as const : 'global' as const,
+			scope: this.currentProjectId ? ('project' as const) : ('global' as const),
 			projectId: this.currentProjectId,
 			maxEntries: this.getActivityHistoryLimit(),
 		};
@@ -1516,13 +1730,12 @@ export class GitBackupService<TTarget> {
 
 	private hydrateActivities(): void {
 		if (!this.recordsContext) return;
-		const entries = this.recordsContext.listRecords<Omit<GitBackupActivity, 'id' | 'timestamp'>>(
-			this.getActivityRecordKey(),
-			{
-				scope: this.currentProjectId ? 'project' : 'global',
-				projectId: this.currentProjectId,
-			},
-		);
+		const entries = this.recordsContext.listRecords<
+			Omit<GitBackupActivity, 'id' | 'timestamp'>
+		>(this.getActivityRecordKey(), {
+			scope: this.currentProjectId ? 'project' : 'global',
+			projectId: this.currentProjectId,
+		});
 		this.activities = entries.map((entry) => ({
 			id: entry.id,
 			timestamp: entry.timestamp,
@@ -1554,25 +1767,33 @@ export class GitBackupService<TTarget> {
 	}
 
 	private notifyListeners(): void {
-		this.listeners.forEach((listener) => listener(this.status));
+		this.listeners.forEach((listener) => {
+			listener(this.status);
+		});
 	}
 
 	private notifyActivityListeners(): void {
-		this.activityListeners.forEach((listener) => listener([...this.activities]));
+		this.activityListeners.forEach((listener) => {
+			listener([...this.activities]);
+		});
 	}
 
-	private addActivity(activity: Omit<GitBackupActivity, 'id' | 'timestamp'>): void {
+	private addActivity(
+		activity: Omit<GitBackupActivity, 'id' | 'timestamp'>,
+	): void {
 		const entry = this.recordsContext?.appendRecord(
-			this.getActivityRecordKey(), activity, this.getActivityScopeOptions(),
+			this.getActivityRecordKey(),
+			activity,
+			this.getActivityScopeOptions(),
 		);
 
 		const fullActivity: GitBackupActivity = entry
 			? { id: entry.id, timestamp: entry.timestamp, ...activity }
 			: {
-				id: Math.random().toString(36).substring(2),
-				timestamp: Date.now(),
-				...activity,
-			};
+					id: Math.random().toString(36).substring(2),
+					timestamp: Date.now(),
+					...activity,
+				};
 
 		const limit = this.getActivityHistoryLimit();
 		this.activities = [...this.activities.slice(-limit + 1), fullActivity];

@@ -34,7 +34,10 @@ class WebrtcProviderRegistry {
 
 			return provider;
 		} catch (error) {
-			console.error(`Error creating WebRTC provider for room ${roomName}:`, error);
+			console.error(
+				`Error creating WebRTC provider for room ${roomName}:`,
+				error,
+			);
 			throw error;
 		}
 	}
@@ -51,7 +54,9 @@ class WebrtcProviderRegistry {
 		entry.refCount -= 1;
 
 		if (entry.refCount <= 0) {
-			console.log(`[CollabWebrtc] Destroying WebRTC provider for room: ${roomName}`);
+			console.log(
+				`[CollabWebrtc] Destroying WebRTC provider for room: ${roomName}`,
+			);
 			try {
 				entry.provider.disconnect();
 				entry.provider.destroy();

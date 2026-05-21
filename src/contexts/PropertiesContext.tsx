@@ -20,43 +20,61 @@ export interface Property {
 }
 
 export interface PropertiesContextType {
-	getProperty: (id: string, options?: {
-		scope?: 'global' | 'project';
-		projectId?: string;
-	}) => unknown;
-	setProperty: (id: string, value: unknown, options?: {
-		scope?: 'global' | 'project';
-		projectId?: string;
-	}) => void;
+	isReady: boolean;
+	getProperty: (
+		id: string,
+		options?: {
+			scope?: 'global' | 'project';
+			projectId?: string;
+		},
+	) => unknown;
+	setProperty: (
+		id: string,
+		value: unknown,
+		options?: {
+			scope?: 'global' | 'project';
+			projectId?: string;
+		},
+	) => void;
 	registerProperty: (property: Property) => void;
-	unregisterProperty: (id: string, options?: {
-		scope?: 'global' | 'project';
-		projectId?: string;
-	}) => void;
+	unregisterProperty: (
+		id: string,
+		options?: {
+			scope?: 'global' | 'project';
+			projectId?: string;
+		},
+	) => void;
 	getPropertiesByCategory: (
 		category: string,
 		subcategory?: string,
 	) => Property[];
-	hasProperty: (id: string, options?: {
-		scope?: 'global' | 'project';
-		projectId?: string;
-	}) => boolean;
-	getPropertyMetadata: (id: string, options?: {
-		scope?: 'global' | 'project';
-		projectId?: string;
-	}) => Record<string, any> | null;
+	hasProperty: (
+		id: string,
+		options?: {
+			scope?: 'global' | 'project';
+			projectId?: string;
+		},
+	) => boolean;
+	getPropertyMetadata: (
+		id: string,
+		options?: {
+			scope?: 'global' | 'project';
+			projectId?: string;
+		},
+	) => Record<string, any> | null;
 	clearAllProperties: (pluginId?: string) => void;
 }
 
 export const PropertiesContext = createContext<PropertiesContextType>({
+	isReady: false,
 	getProperty: () => undefined,
-	setProperty: () => { },
-	registerProperty: () => { },
-	unregisterProperty: () => { },
+	setProperty: () => {},
+	registerProperty: () => {},
+	unregisterProperty: () => {},
 	getPropertiesByCategory: () => [],
 	hasProperty: () => false,
 	getPropertyMetadata: () => null,
-	clearAllProperties: () => { },
+	clearAllProperties: () => {},
 });
 
 interface PropertiesProviderProps {
@@ -67,10 +85,11 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 	children,
 }) => {
 	const [properties, setProperties] = useState<Property[]>([]);
+	const [isReady, setIsReady] = useState(false);
 	const localStoragePropertiesRef = useRef<Record<string, unknown> | null>(
 		null,
 	);
-	const isLocalStorageLoaded = useRef(false);
+	const hasInitializedSaveRef = useRef(false);
 
 	const getCurrentUserId = useCallback((): string | null => {
 		return localStorage.getItem('texlyre-current-user');
@@ -81,16 +100,19 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 		return userId ? `texlyre-user-${userId}-properties` : 'texlyre-properties';
 	}, [getCurrentUserId]);
 
-	const getPropertyId = useCallback((
-		id: string,
-		scope: 'global' | 'project' = 'global',
-		projectId?: string,
-	): string => {
-		if (scope === 'project' && projectId) {
-			return `${id}:project:${projectId}`;
-		}
-		return `${id}:global`;
-	}, []);
+	const getPropertyId = useCallback(
+		(
+			id: string,
+			scope: 'global' | 'project' = 'global',
+			projectId?: string,
+		): string => {
+			if (scope === 'project' && projectId) {
+				return `${id}:project:${projectId}`;
+			}
+			return `${id}:global`;
+		},
+		[],
+	);
 
 	useEffect(() => {
 		const userId = getCurrentUserId();
@@ -101,13 +123,18 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 
 		try {
 			const globalProperties = localStorage.getItem(globalStorageKey);
-			const globalPropertiesParsed = globalProperties ? JSON.parse(globalProperties) : {};
+			const globalPropertiesParsed = globalProperties
+				? JSON.parse(globalProperties)
+				: {};
 			const globalVersion = globalPropertiesParsed._version;
 
 			let stored = localStorage.getItem(userStorageKey);
 			let storedParsed = stored ? JSON.parse(stored) : null;
 
-			if (userId && (!storedParsed || storedParsed._version !== globalVersion)) {
+			if (
+				userId &&
+				(!storedParsed || storedParsed._version !== globalVersion)
+			) {
 				if (globalProperties) {
 					localStorage.setItem(userStorageKey, globalProperties);
 					stored = globalProperties;
@@ -129,7 +156,7 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 			localStorage.removeItem(userStorageKey);
 			localStoragePropertiesRef.current = {};
 		} finally {
-			isLocalStorageLoaded.current = true;
+			setIsReady(true);
 		}
 	}, [getCurrentUserId]);
 
@@ -144,35 +171,51 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 	}, []);
 
 	useEffect(() => {
-		if (properties.length === 0 || !isLocalStorageLoaded.current) return;
+		if (!isReady) return;
+		if (!hasInitializedSaveRef.current) {
+			hasInitializedSaveRef.current = true;
+			return;
+		}
+		if (properties.length === 0) return;
 
 		const toSave = { ...localStoragePropertiesRef.current };
 
-		properties.forEach(p => {
+		properties.forEach((p) => {
 			toSave[p.id] = p.value;
 		});
 
 		try {
 			const storageKey = getStorageKey();
 			const currentStored = localStorage.getItem(storageKey);
-			const currentVersion = currentStored ? JSON.parse(currentStored)._version : undefined;
+			const currentVersion = currentStored
+				? JSON.parse(currentStored)._version
+				: undefined;
 
-			localStorage.setItem(storageKey, JSON.stringify({ ...toSave, _version: currentVersion }));
+			localStorage.setItem(
+				storageKey,
+				JSON.stringify({ ...toSave, _version: currentVersion }),
+			);
 			localStoragePropertiesRef.current = toSave;
 		} catch (error) {
 			console.error('Error saving properties to localStorage:', error);
 		}
-	}, [properties, getStorageKey]);
+	}, [properties, getStorageKey, isReady]);
 
 	const getProperty = useCallback(
-		(id: string, options?: {
-			scope?: 'global' | 'project';
-			projectId?: string;
-		}): unknown => {
+		(
+			id: string,
+			options?: {
+				scope?: 'global' | 'project';
+				projectId?: string;
+			},
+		): unknown => {
 			const scope = options?.scope || 'global';
 			const propertyId = getPropertyId(id, scope, options?.projectId);
 
-			if (localStoragePropertiesRef.current && localStoragePropertiesRef.current[propertyId] !== undefined) {
+			if (
+				localStoragePropertiesRef.current &&
+				localStoragePropertiesRef.current[propertyId] !== undefined
+			) {
 				return localStoragePropertiesRef.current[propertyId];
 			}
 
@@ -182,100 +225,128 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 		[properties, getPropertyId],
 	);
 
-	const setProperty = useCallback((id: string, value: unknown, options?: {
-		scope?: 'global' | 'project';
-		projectId?: string;
-	}) => {
-		const scope = options?.scope || 'global';
-		const propertyId = getPropertyId(id, scope, options?.projectId);
+	const setProperty = useCallback(
+		(
+			id: string,
+			value: unknown,
+			options?: {
+				scope?: 'global' | 'project';
+				projectId?: string;
+			},
+		) => {
+			const scope = options?.scope || 'global';
+			const propertyId = getPropertyId(id, scope, options?.projectId);
 
-		if (localStoragePropertiesRef.current) {
-			localStoragePropertiesRef.current[propertyId] = value;
-		}
-
-		setProperties((prev) => {
-			const existingIndex = prev.findIndex((p) => p.id === propertyId);
-			if (existingIndex >= 0) {
-				return prev.map((p) => {
-					if (p.id !== propertyId) return p;
-					return { ...p, value };
-				});
+			if (localStoragePropertiesRef.current) {
+				localStoragePropertiesRef.current[propertyId] = value;
 			}
 
-			const baseProperty = prev.find((p) => p.id === id);
-			if (baseProperty) {
-				return [...prev, { ...baseProperty, id: propertyId, value }];
+			setProperties((prev) => {
+				const existingIndex = prev.findIndex((p) => p.id === propertyId);
+				if (existingIndex >= 0) {
+					return prev.map((p) => {
+						if (p.id !== propertyId) return p;
+						return { ...p, value };
+					});
+				}
+
+				const baseProperty = prev.find((p) => p.id === id);
+				if (baseProperty) {
+					return [...prev, { ...baseProperty, id: propertyId, value }];
+				}
+
+				return prev;
+			});
+
+			try {
+				const storageKey = getStorageKey();
+				const currentStored = localStorage.getItem(storageKey);
+				const currentVersion = currentStored
+					? JSON.parse(currentStored)._version
+					: undefined;
+
+				localStorage.setItem(
+					storageKey,
+					JSON.stringify({
+						...localStoragePropertiesRef.current,
+						_version: currentVersion,
+					}),
+				);
+			} catch (error) {
+				console.error('Error saving property to localStorage:', error);
+			}
+		},
+		[getPropertyId, getStorageKey],
+	);
+
+	const registerProperty = useCallback(
+		(property: Property) => {
+			setProperties((prev) => {
+				const idx = prev.findIndex((p) => p.id === property.id);
+				let valueToUse: unknown;
+
+				if (idx >= 0) {
+					valueToUse = prev[idx].value;
+				} else {
+					valueToUse =
+						property.value !== undefined
+							? property.value
+							: loadStoredValue(property);
+				}
+
+				const propertyWithValue = { ...property, value: valueToUse };
+
+				if (idx >= 0) {
+					const updated = [...prev];
+					updated[idx] = propertyWithValue;
+					return updated;
+				}
+				return [...prev, propertyWithValue];
+			});
+		},
+		[loadStoredValue],
+	);
+
+	const unregisterProperty = useCallback(
+		(
+			id: string,
+			options?: {
+				scope?: 'global' | 'project';
+				projectId?: string;
+			},
+		) => {
+			const propertyId = options
+				? getPropertyId(id, options.scope || 'global', options.projectId)
+				: id;
+
+			if (localStoragePropertiesRef.current) {
+				delete localStoragePropertiesRef.current[propertyId];
 			}
 
-			return prev;
-		});
+			setProperties((prev) =>
+				prev.filter((p) => p.id !== propertyId && p.id !== id),
+			);
 
-		try {
-			const storageKey = getStorageKey();
-			const currentStored = localStorage.getItem(storageKey);
-			const currentVersion = currentStored ? JSON.parse(currentStored)._version : undefined;
+			try {
+				const storageKey = getStorageKey();
+				const currentStored = localStorage.getItem(storageKey);
+				const currentVersion = currentStored
+					? JSON.parse(currentStored)._version
+					: undefined;
 
-			localStorage.setItem(storageKey, JSON.stringify({
-				...localStoragePropertiesRef.current,
-				_version: currentVersion
-			}));
-		} catch (error) {
-			console.error('Error saving property to localStorage:', error);
-		}
-	}, [getPropertyId, getStorageKey]);
-
-	const registerProperty = useCallback((property: Property) => {
-		setProperties((prev) => {
-			const idx = prev.findIndex((p) => p.id === property.id);
-			let valueToUse: unknown;
-
-			if (idx >= 0) {
-				valueToUse = prev[idx].value;
-			} else {
-				valueToUse =
-					property.value !== undefined
-						? property.value
-						: loadStoredValue(property);
+				localStorage.setItem(
+					storageKey,
+					JSON.stringify({
+						...localStoragePropertiesRef.current,
+						_version: currentVersion,
+					}),
+				);
+			} catch (error) {
+				console.error('Error removing property from localStorage:', error);
 			}
-
-			const propertyWithValue = { ...property, value: valueToUse };
-
-			if (idx >= 0) {
-				const updated = [...prev];
-				updated[idx] = propertyWithValue;
-				return updated;
-			}
-			return [...prev, propertyWithValue];
-		});
-	}, [loadStoredValue]);
-
-	const unregisterProperty = useCallback((id: string, options?: {
-		scope?: 'global' | 'project';
-		projectId?: string;
-	}) => {
-		const propertyId = options
-			? getPropertyId(id, options.scope || 'global', options.projectId)
-			: id;
-
-		if (localStoragePropertiesRef.current) {
-			delete localStoragePropertiesRef.current[propertyId];
-		}
-
-		setProperties((prev) => prev.filter((p) => p.id !== propertyId && p.id !== id));
-
-		try {
-			const storageKey = getStorageKey();
-			const currentStored = localStorage.getItem(storageKey);
-			const currentVersion = currentStored ? JSON.parse(currentStored)._version : undefined;
-
-			localStorage.setItem(storageKey, JSON.stringify({
-				...localStoragePropertiesRef.current,
-				_version: currentVersion,
-			}));
-		} catch (error) {
-			console.error('Error removing property from localStorage:', error);
-		}
-	}, [getPropertyId, getStorageKey]);
+		},
+		[getPropertyId, getStorageKey],
+	);
 
 	const getPropertiesByCategory = useCallback(
 		(category: string, subcategory?: string) => {
@@ -289,14 +360,20 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 	);
 
 	const hasProperty = useCallback(
-		(id: string, options?: {
-			scope?: 'global' | 'project';
-			projectId?: string;
-		}): boolean => {
+		(
+			id: string,
+			options?: {
+				scope?: 'global' | 'project';
+				projectId?: string;
+			},
+		): boolean => {
 			const scope = options?.scope || 'global';
 			const propertyId = getPropertyId(id, scope, options?.projectId);
 
-			if (localStoragePropertiesRef.current && localStoragePropertiesRef.current[propertyId] !== undefined) {
+			if (
+				localStoragePropertiesRef.current &&
+				localStoragePropertiesRef.current[propertyId] !== undefined
+			) {
 				return true;
 			}
 
@@ -306,37 +383,42 @@ export const PropertiesProvider: React.FC<PropertiesProviderProps> = ({
 	);
 
 	const getPropertyMetadata = useCallback(
-		(id: string, options?: {
-			scope?: 'global' | 'project';
-			projectId?: string;
-		}): Record<string, any> | null => {
+		(
+			id: string,
+			options?: {
+				scope?: 'global' | 'project';
+				projectId?: string;
+			},
+		): Record<string, any> | null => {
 			const scope = options?.scope || 'global';
 			const propertyId = getPropertyId(id, scope, options?.projectId);
 			const property = properties.find((p) => p.id === propertyId);
-			return property ? {
-				defaultValue: property.defaultValue,
-				category: property.category,
-				subcategory: property.subcategory,
-				options: property.options
-			} : null;
+			return property
+				? {
+						defaultValue: property.defaultValue,
+						category: property.category,
+						subcategory: property.subcategory,
+						options: property.options,
+					}
+				: null;
 		},
 		[properties, getPropertyId],
 	);
 
-	const clearAllProperties = useCallback(
-		(pluginId?: string): void => {
-			if (pluginId) {
-				setProperties((prev) => prev.filter((p) => !p.id.startsWith(`${pluginId}-`)));
-			} else {
-				setProperties([]);
-			}
-		},
-		[],
-	);
+	const clearAllProperties = useCallback((pluginId?: string): void => {
+		if (pluginId) {
+			setProperties((prev) =>
+				prev.filter((p) => !p.id.startsWith(`${pluginId}-`)),
+			);
+		} else {
+			setProperties([]);
+		}
+	}, []);
 
 	return (
 		<PropertiesContext.Provider
 			value={{
+				isReady,
 				getProperty,
 				setProperty,
 				registerProperty,

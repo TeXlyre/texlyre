@@ -134,7 +134,7 @@
 }
 
 [data-layout="texlyre-mobile"] .mobile-bottom-nav,
-[data-layout="texlyre-mobile"]~* .texlyre-mobile-nav,
+[data-layout="texlyre-mobile"] ~ * .texlyre-mobile-nav,
 html[data-layout="texlyre-mobile"] .texlyre-mobile-nav,
 body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	position: fixed;
@@ -158,7 +158,10 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	display: block;
 }
 
-[data-layout="texlyre-mobile"] body:has(.mobile-bottom-nav) footer .texlyre-info {
+[data-layout="texlyre-mobile"]
+	body:has(.mobile-bottom-nav)
+	footer
+	.texlyre-info {
 	display: none;
 }
 
@@ -331,12 +334,15 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	margin: 0 !important;
 }
 
-[data-layout="texlyre-mobile"] body.mobile-view-explorer .main-content>*:not(.sidebar-container) {
+[data-layout="texlyre-mobile"]
+	body.mobile-view-explorer
+	.main-content
+	> *:not(.sidebar-container) {
 	display: none !important;
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-explorer .sidebar-container,
-[data-layout="texlyre-mobile"] body.mobile-view-explorer .sidebar-container>*,
+[data-layout="texlyre-mobile"] body.mobile-view-explorer .sidebar-container > *,
 [data-layout="texlyre-mobile"] body.mobile-view-explorer .explorer-container {
 	width: 100vw !important;
 	max-width: 100vw !important;
@@ -351,12 +357,18 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	overflow: hidden !important;
 }
 
-[data-layout="texlyre-mobile"] body.mobile-view-explorer .sidebar-container .file-explorer {
+[data-layout="texlyre-mobile"]
+	body.mobile-view-explorer
+	.sidebar-container
+	.file-explorer {
 	margin-top: 0 !important;
 }
 
 /* View: editor */
-[data-layout="texlyre-mobile"] body.mobile-view-editor .main-content>.sidebar-container,
+[data-layout="texlyre-mobile"]
+	body.mobile-view-editor
+	.main-content
+	> .sidebar-container,
 [data-layout="texlyre-mobile"] body.mobile-view-editor .latex-output-container,
 [data-layout="texlyre-mobile"] body.mobile-view-editor .latex-output,
 [data-layout="texlyre-mobile"] body.mobile-view-editor .typst-output-container,
@@ -377,7 +389,9 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	overflow: hidden !important;
 }
 
-[data-layout="texlyre-mobile"] body.mobile-view-editor .codemirror-editor-container {
+[data-layout="texlyre-mobile"]
+	body.mobile-view-editor
+	.codemirror-editor-container {
 	height: 100% !important;
 	overflow-y: auto !important;
 }
@@ -392,7 +406,9 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	box-shadow: var(--mobile-shadow-lg) !important;
 }
 
-[data-layout="texlyre-mobile"] body.mobile-view-editor .comment-panel.editor-comment-panel {
+[data-layout="texlyre-mobile"]
+	body.mobile-view-editor
+	.comment-panel.editor-comment-panel {
 	display: flex !important;
 }
 
@@ -401,16 +417,23 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 }
 
 /* View: output */
-[data-layout="texlyre-mobile"] body.mobile-view-output .main-content>.sidebar-container,
+[data-layout="texlyre-mobile"]
+	body.mobile-view-output
+	.main-content
+	> .sidebar-container,
 [data-layout="texlyre-mobile"] body.mobile-view-output .editor-wrapper,
 [data-layout="texlyre-mobile"] body.mobile-view-output .editor-container,
-[data-layout="texlyre-mobile"] body.mobile-view-output .codemirror-editor-container,
+[data-layout="texlyre-mobile"]
+	body.mobile-view-output
+	.codemirror-editor-container,
 [data-layout="texlyre-mobile"] body.mobile-view-output .editor-tabs-container {
 	display: none !important;
 }
 
 [data-layout="texlyre-mobile"] body.mobile-view-output .editor-container-outer,
-[data-layout="texlyre-mobile"] body.mobile-view-output .editor-output-container {
+[data-layout="texlyre-mobile"]
+	body.mobile-view-output
+	.editor-output-container {
 	width: 100vw !important;
 	height: 100% !important;
 	flex: 1 !important;
@@ -499,14 +522,18 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	flex-direction: column !important;
 }
 
-[data-layout="texlyre-mobile"] body.mobile-view-chat .chat-panel .chat-panel-content {
+[data-layout="texlyre-mobile"]
+	body.mobile-view-chat
+	.chat-panel
+	.chat-panel-content {
 	width: 98% !important;
 }
 
-[data-layout="texlyre-mobile"] body.mobile-view-chat .chat-panel-input-container {
+[data-layout="texlyre-mobile"]
+	body.mobile-view-chat
+	.chat-panel-input-container {
 	margin-bottom: 0 !important;
 }
-
 
 [data-layout="texlyre-mobile"] body.mobile-view-chat footer,
 [data-layout="texlyre-mobile"] body.mobile-view-chat .chat-panel {
@@ -518,10 +545,14 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 }
 
 /* Cross-view utilities */
-[data-layout="texlyre-mobile"] body[class*="mobile-view-"] .modal-overlay:has(.project-export-modal) {
+[data-layout="texlyre-mobile"]
+	body[class*="mobile-view-"]
+	.modal-overlay:has(.project-export-modal) {
 	display: flex !important;
 }
 
-[data-layout="texlyre-mobile"] body[class*="mobile-view-"] .project-export-modal {
+[data-layout="texlyre-mobile"]
+	body[class*="mobile-view-"]
+	.project-export-modal {
 	display: block !important;
 }

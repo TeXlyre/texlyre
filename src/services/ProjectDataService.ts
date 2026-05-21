@@ -40,7 +40,7 @@ export class ProjectDataService {
 		mode: 'backup' | 'export',
 		projectIds?: string[],
 	): Promise<ProjectMetadata[]> {
-		let projects;
+		let projects: Project[];
 		if (projectIds && projectIds.length > 0) {
 			projects = [];
 			for (const projectId of projectIds) {
@@ -220,8 +220,12 @@ export class ProjectDataService {
 		newProjectId?: string,
 		newDocUrl?: string,
 	): Promise<void> {
-		console.log('[ProjectDataService] Starting deserialization to IndexedDB...');
-		console.log(`[ProjectDataService] Found ${data.projectData.size} projects to deserialize`);
+		console.log(
+			'[ProjectDataService] Starting deserialization to IndexedDB...',
+		);
+		console.log(
+			`[ProjectDataService] Found ${data.projectData.size} projects to deserialize`,
+		);
 
 		for (const [originalProjectId, projectData] of data.projectData) {
 			const projectId = newProjectId || originalProjectId;
@@ -297,7 +301,7 @@ export class ProjectDataService {
 				documentContents,
 				projectName,
 				projectDescription,
-				projectType
+				projectType,
 			);
 
 			console.log(

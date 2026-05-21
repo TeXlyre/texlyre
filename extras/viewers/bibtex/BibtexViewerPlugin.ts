@@ -8,7 +8,7 @@ import { BibIcon } from './Icon';
 const BIBTEX_EXTENSIONS = ['bib', 'bibtex'];
 const BIBTEX_MIMETYPES = ['text/x-bibtex', 'application/x-bibtex'];
 
-export const PLUGIN_NAME = t('BibTeX Editor') + ' (bib-editor 1.14.0)';
+export const PLUGIN_NAME = `${t('BibTeX Editor')} (bib-editor 1.14.0)`;
 export const PLUGIN_VERSION = '0.2.0';
 
 const bibtexViewerPlugin: ViewerPlugin = {
@@ -36,11 +36,13 @@ const bibtexViewerPlugin: ViewerPlugin = {
 	// 	mimeType: BIBTEX_MIMETYPES[idx],
 	// 	fileLabel: t('Bibliography File')
 	// })),
-	getSupportedExtensions: () => [{
-		extension: BIBTEX_EXTENSIONS[0],
-		mimeType: BIBTEX_MIMETYPES[0],
-		fileLabel: t('Bibliography File')
-	}],
+	getSupportedExtensions: () => [
+		{
+			extension: BIBTEX_EXTENSIONS[0],
+			mimeType: BIBTEX_MIMETYPES[0],
+			fileLabel: t('Bibliography File'),
+		},
+	],
 
 	renderViewer: BibtexViewer,
 };

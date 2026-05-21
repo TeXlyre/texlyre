@@ -54,7 +54,11 @@
 .action-separator {
 	width: 1px;
 	height: 16px;
-	background-image: linear-gradient(to bottom, var(--border-color) 50%, transparent 50%);
+	background-image: linear-gradient(
+		to bottom,
+		var(--border-color) 50%,
+		transparent 50%
+	);
 	background-size: 1px 4px;
 	background-repeat: repeat-y;
 	margin: 0 4px;
@@ -113,7 +117,7 @@
 	min-height: 0;
 }
 
-.file-tree>.file-node {
+.file-tree > .file-node {
 	padding: var(--space-xs) var(--space-sm);
 	margin-left: 0;
 }
@@ -212,7 +216,12 @@
 
 .file-name-input.invalid {
 	border-color: var(--pico-del-color, var(--color-error));
-	box-shadow: 0 0 0 2px color-mix(in srgb, var(--pico-del-color, var(--color-error)) 20%, transparent);
+	box-shadow: 0 0 0 2px
+		color-mix(
+			in srgb,
+			var(--pico-del-color, var(--color-error)) 20%,
+			transparent
+		);
 }
 
 .cancel-input-button {
@@ -304,7 +313,9 @@
 	font-size: 0.9rem;
 	color: var(--text-color);
 	opacity: 0.7;
-	transition: opacity var(--transition-normal), background-color var(--transition-normal);
+	transition:
+		opacity var(--transition-normal),
+		background-color var(--transition-normal);
 	margin: 0;
 	border-radius: 0;
 }

@@ -290,6 +290,8 @@
   "Auto-navigate to main file on compile": "编译时自动导航到主文件",
   "Auto-reconnect on disconnect": "断开连接时自动重新连接",
   "Auto-save delay (milliseconds)": "自动保存延迟（毫秒）",
+  "Auto-save editor: {status}": "编辑器自动保存：{{status}}",
+  "Auto-save file: {status}": "文件自动保存：{{status}}",
   "Auto-save in editor": "编辑器自动保存",
   "Auto-save on changes": "更改时自动保存",
   "Auto-save to file": "自动保存到文件",

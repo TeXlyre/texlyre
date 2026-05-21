@@ -56,7 +56,9 @@ export const CommentProvider: React.FC<CommentProviderProps> = ({
 				commentElement.classList.remove('highlight-comment');
 			}, 2000);
 		} else {
-			console.log('[CommentContext] Comment item not found - is the comment panel open?');
+			console.log(
+				'[CommentContext] Comment item not found - is the comment panel open?',
+			);
 		}
 	}, []);
 

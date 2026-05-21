@@ -1,6 +1,6 @@
 /*
  * TeXlyre - A local-first LaTeX & Typst collaborative web editor
- * Copyright (C) 2026 TeXlyre 
+ * Copyright (C) 2026 TeXlyre
  * Maintainer: Fares Abawi <fares@abawi.me> (https://abawi.me)
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,17 +19,20 @@
 // src/main.tsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { openDB } from 'idb';
+
 import './i18n';
 import App from './App';
-import { openDB } from 'idb';
 import { authService } from './services/AuthService';
 
-const BASE_PATH = __BASE_PATH__
+const BASE_PATH = __BASE_PATH__;
 
 const isMobileDevice = (): boolean => {
-	return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-		navigator.userAgent
-	) || window.innerWidth <= 768;
+	return (
+		/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+			navigator.userAgent,
+		) || window.innerWidth <= 768
+	);
 };
 
 // Guest account cleanup - runs every hour when app is active
@@ -67,9 +70,15 @@ const setupGuestCleanup = () => {
 async function clearExistingServiceWorkers() {
 	if ('serviceWorker' in navigator) {
 		const registrations = await navigator.serviceWorker.getRegistrations();
-		console.log('[ServiceWroker] Found existing service workers:', registrations.length);
+		console.log(
+			'[ServiceWroker] Found existing service workers:',
+			registrations.length,
+		);
 		for (const registration of registrations) {
-			console.log('[ServiceWroker] Unregistering existing service worker:', registration.scope);
+			console.log(
+				'[ServiceWroker] Unregistering existing service worker:',
+				registration.scope,
+			);
 			await registration.unregister();
 		}
 	}
@@ -86,7 +95,8 @@ const clearServiceWorkerOnLoad = false; // Set to true to clear existing SWs on 
 
 if (
 	'serviceWorker' in navigator &&
-	((isHttpsMode && enableServiceWorkerForHttps) || (!isHttpsMode && enableServiceWorkerForHttp))
+	((isHttpsMode && enableServiceWorkerForHttps) ||
+		(!isHttpsMode && enableServiceWorkerForHttp))
 ) {
 	(async () => {
 		if (clearServiceWorkerOnLoad) {
@@ -109,7 +119,10 @@ if (
 			const registration = await navigator.serviceWorker.register(swPath, {
 				scope,
 			});
-			console.log('[ServiceWorker] Service worker registered successfully:', registration.scope);
+			console.log(
+				'[ServiceWorker] Service worker registered successfully:',
+				registration.scope,
+			);
 
 			if (registration.active) {
 				registration.active.postMessage({
@@ -138,8 +151,12 @@ async function initUserData(): Promise<void> {
 		const userData = await response.json();
 		const newVersion = userData.version || '1.0.0';
 
-		const existingSettingsParsed = existingSettings ? JSON.parse(existingSettings) : {};
-		const existingPropertiesParsed = existingProperties ? JSON.parse(existingProperties) : {};
+		const existingSettingsParsed = existingSettings
+			? JSON.parse(existingSettings)
+			: {};
+		const existingPropertiesParsed = existingProperties
+			? JSON.parse(existingProperties)
+			: {};
 
 		const existingSettingsVersion = existingSettingsParsed._version;
 		const existingPropertiesVersion = existingPropertiesParsed._version;
@@ -148,24 +165,34 @@ async function initUserData(): Promise<void> {
 			const mergedSettings = {
 				...existingSettingsParsed,
 				...userData.settings,
-				_version: newVersion
+				_version: newVersion,
 			};
 			localStorage.setItem(settingsKey, JSON.stringify(mergedSettings));
-			console.log(`Settings updated from version ${existingSettingsVersion || 'none'} to ${newVersion}`);
+			console.log(
+				`Settings updated from version ${existingSettingsVersion || 'none'} to ${newVersion}`,
+			);
 		} else if (!existingSettings) {
-			localStorage.setItem(settingsKey, JSON.stringify({ ...userData.settings, _version: newVersion }));
+			localStorage.setItem(
+				settingsKey,
+				JSON.stringify({ ...userData.settings, _version: newVersion }),
+			);
 		}
 
 		if (existingPropertiesVersion !== newVersion) {
 			const mergedProperties = {
 				...existingPropertiesParsed,
 				...userData.properties,
-				_version: newVersion
+				_version: newVersion,
 			};
 			localStorage.setItem(propertiesKey, JSON.stringify(mergedProperties));
-			console.log(`Properties updated from version ${existingPropertiesVersion || 'none'} to ${newVersion}`);
+			console.log(
+				`Properties updated from version ${existingPropertiesVersion || 'none'} to ${newVersion}`,
+			);
 		} else if (!existingProperties) {
-			localStorage.setItem(propertiesKey, JSON.stringify({ ...userData.properties, _version: newVersion }));
+			localStorage.setItem(
+				propertiesKey,
+				JSON.stringify({ ...userData.properties, _version: newVersion }),
+			);
 		}
 	} catch (error) {
 		console.warn('Failed to load default user data:', error);
@@ -211,7 +238,7 @@ function setupDirection() {
 			const directionSetting = settings['text-direction'];
 
 			if (directionSetting === 'auto') {
-				const languageSetting = settings['language'] || 'en';
+				const languageSetting = settings.language || 'en';
 				direction = localStorage.getItem('text-direction') || 'ltr';
 			} else if (directionSetting) {
 				direction = directionSetting;
@@ -226,7 +253,11 @@ function setupDirection() {
 
 async function startApp() {
 	try {
-		await Promise.all([initDatabases(), authService.initialize(), initUserData()]);
+		await Promise.all([
+			initDatabases(),
+			authService.initialize(),
+			initUserData(),
+		]);
 	} catch (error) {
 		console.error('Error during initialization:', error);
 	}

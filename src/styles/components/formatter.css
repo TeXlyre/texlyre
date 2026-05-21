@@ -1,45 +1,45 @@
 .formatter-button-container {
-    display: flex;
-    gap: var(--space-xs);
-    position: relative;
+	display: flex;
+	gap: var(--space-xs);
+	position: relative;
 }
 
 .formatter-button-group {
-    display: flex;
-    align-items: center;
-    border-radius: var(--radius-sm);
-    overflow: hidden;
+	display: flex;
+	align-items: center;
+	border-radius: var(--radius-sm);
+	overflow: hidden;
 }
 
 .formatter-button-group .format-button {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    flex: 2;
-    width: 20px;
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+	flex: 2;
+	width: 20px;
 }
 
 .formatter-button-group .dropdown-toggle {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    flex: 1;
-    min-width: 0 !important;
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+	flex: 1;
+	min-width: 0 !important;
 }
 
 .format-button.formatting {
-    opacity: 0.6;
-    cursor: wait;
+	opacity: 0.6;
+	cursor: wait;
 }
 
 .formatter-dropdown {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    margin-top: 2px;
-    min-width: 260px;
-    padding: var(--space-sm);
-    background-color: var(--pico-background);
-    border: 1px solid var(--accent-border);
-    border-radius: var(--radius-sm);
-    box-shadow: var(--shadow-md);
-    z-index: var(--z-dropdown);
+	position: absolute;
+	top: 100%;
+	right: 0;
+	margin-top: 2px;
+	min-width: 260px;
+	padding: var(--space-sm);
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-md);
+	z-index: var(--z-dropdown);
 }

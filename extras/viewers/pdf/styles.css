@@ -161,7 +161,6 @@
 }
 
 @media (prefers-contrast: high) {
-
 	.page-input-group {
 		border-width: 2px;
 	}

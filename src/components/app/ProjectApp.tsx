@@ -1,14 +1,19 @@
 // src/components/app/ProjectApp.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
+import { t } from '@/i18n';
 import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
 import { useAuth } from '../../hooks/useAuth';
 import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
 import { useTheme } from '../../hooks/useTheme';
 import type { Project } from '../../types/projects';
-import { isValidYjsUrl, buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
+import {
+	isValidYjsUrl,
+	buildUrlWithFragments,
+	parseUrlFragments,
+	pushHash,
+} from '../../utils/urlUtils';
 import BackupDiscoveryModal from '../backup/BackupDiscoveryModal';
 import BackupModal from '../backup/BackupModal';
 import BackupStatusIndicator from '../backup/BackupStatusIndicator';
@@ -36,14 +41,14 @@ interface ProjectManagerProps {
 		projectName?: string,
 		projectDescription?: string,
 		projectType?: 'latex' | 'typst',
-		projectId?: string)
-		=> void;
+		projectId?: string,
+	) => void;
 	onLogout: () => void;
 }
 
 const ProjectApp: React.FC<ProjectManagerProps> = ({
 	onOpenProject,
-	onLogout
+	onLogout,
 }) => {
 	const {
 		user,
@@ -55,7 +60,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		updateProject,
 		deleteProject,
 		toggleFavorite,
-		isGuestUser
+		isGuestUser,
 	} = useAuth();
 	const { currentThemePlugin, currentLayout } = useTheme();
 	const {
@@ -72,7 +77,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		disconnect,
 		clearActivity,
 		clearAllActivities,
-		changeDirectory
+		changeDirectory,
 	} = useFileSystemBackup();
 
 	const [projects, setProjects] = useState<Project[]>([]);
@@ -81,7 +86,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 	const [availableTags, setAvailableTags] = useState<string[]>([]);
 	const [sidebarWidth, setSidebarWidth] = useState(
-		currentLayout?.defaultFileExplorerWidth || 250
+		currentLayout?.defaultFileExplorerWidth || 250,
 	);
 
 	const [showProfileModal, setShowProfileModal] = useState(false);
@@ -97,9 +102,14 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const [showImportModal, setShowImportModal] = useState(false);
 	const [showExportModal, setShowExportModal] = useState(false);
 	const [showMultiDeleteModal, setShowMultiDeleteModal] = useState(false);
-	const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
-	const [selectedProjectsForExport, setSelectedProjectsForExport] = useState<Project[]>([]);
-	const [selectedProjectsForDelete, setSelectedProjectsForDelete] = useState<Project[]>([]);
+	const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] =
+		useState(false);
+	const [selectedProjectsForExport, setSelectedProjectsForExport] = useState<
+		Project[]
+	>([]);
+	const [selectedProjectsForDelete, setSelectedProjectsForDelete] = useState<
+		Project[]
+	>([]);
 	const [showPrivacy, setShowPrivacy] = useState(false);
 
 	useEffect(() => {
@@ -115,7 +125,9 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 
 			const tags = new Set<string>();
 			userProjects.forEach((project) => {
-				project.tags?.forEach((tag) => tags.add(tag));
+				project.tags?.forEach((tag) => {
+					tags.add(tag);
+				});
 			});
 
 			setAvailableTags(Array.from(tags));
@@ -149,7 +161,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		} catch (error) {
 			console.error('Failed to delete projects:', error);
 			setError(
-				error instanceof Error ? error.message : t('Failed to delete projects')
+				error instanceof Error ? error.message : t('Failed to delete projects'),
 			);
 		} finally {
 			setIsSubmitting(false);
@@ -208,21 +220,21 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 					JSON.stringify({
 						name: projectData.name,
 						description: projectData.description,
-						type: projectData.type
-					})
+						type: projectData.type,
+					}),
 				);
 				onOpenProject(
 					newProject.docUrl,
 					newProject.name,
 					newProject.description,
 					newProject.type,
-					newProject.id
+					newProject.id,
 				);
 			}
 		} catch (error) {
 			console.error('Failed to create project:', error);
 			setError(
-				error instanceof Error ? error.message : t('Failed to create project')
+				error instanceof Error ? error.message : t('Failed to create project'),
 			);
 		} finally {
 			setIsSubmitting(false);
@@ -245,14 +257,14 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			await updateProject({
 				...currentProject,
 				tags: projectData.tags,
-				isFavorite: projectData.isFavorite
+				isFavorite: projectData.isFavorite,
 			});
 			setShowEditModal(false);
 			await loadProjects();
 		} catch (error) {
 			console.error('Failed to update project:', error);
 			setError(
-				error instanceof Error ? error.message : t('Failed to update project')
+				error instanceof Error ? error.message : t('Failed to update project'),
 			);
 		} finally {
 			setIsSubmitting(false);
@@ -270,7 +282,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 		} catch (error) {
 			console.error('Failed to delete project:', error);
 			setError(
-				error instanceof Error ? error.message : t('Failed to delete project')
+				error instanceof Error ? error.message : t('Failed to delete project'),
 			);
 		} finally {
 			setIsSubmitting(false);
@@ -287,13 +299,13 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	};
 
 	const handleToggleViewMode = () => {
-		setViewMode((prev) => prev === 'grid' ? 'list' : 'grid');
+		setViewMode((prev) => (prev === 'grid' ? 'list' : 'grid'));
 	};
 
 	const handleExportSelected = async (selectedIds: string[]) => {
 		try {
 			const selectedProjects = projects.filter((p) =>
-				selectedIds.includes(p.id)
+				selectedIds.includes(p.id),
 			);
 			setSelectedProjectsForExport(selectedProjects);
 			setShowExportModal(true);
@@ -306,7 +318,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const handleDeleteSelected = async (selectedIds: string[]) => {
 		try {
 			const selectedProjects = projects.filter((p) =>
-				selectedIds.includes(p.id)
+				selectedIds.includes(p.id),
 			);
 			setSelectedProjectsForDelete(selectedProjects);
 			setShowMultiDeleteModal(true);
@@ -350,13 +362,19 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	const handleOpenDefault = (project: Project) => {
 		if (!project.docUrl) {
 			console.error('Project has no document URL:', project);
-			setError(t('This project has no associated document. Please try creating a new project'));
+			setError(
+				t(
+					'This project has no associated document. Please try creating a new project',
+				),
+			);
 			return;
 		}
 
 		if (!isValidYjsUrl(project.docUrl)) {
 			console.error('Invalid document URL format:', project.docUrl);
-			setError(t('Invalid document URL format: {url}', { url: project.docUrl }));
+			setError(
+				t('Invalid document URL format: {url}', { url: project.docUrl }),
+			);
 			return;
 		}
 
@@ -367,26 +385,36 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			const newUrl = buildUrlWithFragments(
 				currentFragment.yjsUrl,
 				project.lastOpenedDocId,
-				project.lastOpenedFilePath
+				project.lastOpenedFilePath,
 			);
 			finalUrl = newUrl;
 		}
 
-		onOpenProject(finalUrl, project.name, project.description, project.type, project.id);
+		onOpenProject(
+			finalUrl,
+			project.name,
+			project.description,
+			project.type,
+			project.id,
+		);
 	};
 
 	const openProject = async (project: Project) => {
 		if (!project.docUrl) {
 			console.error('Project has no document URL:', project);
 			setError(
-				t('This project has no associated document. Please try creating a new project')
+				t(
+					'This project has no associated document. Please try creating a new project',
+				),
 			);
 			return;
 		}
 
 		if (!isValidYjsUrl(project.docUrl)) {
 			console.error('Invalid document URL format:', project.docUrl);
-			setError(t('Invalid document URL format: {url}', { url: project.docUrl }));
+			setError(
+				t('Invalid document URL format: {url}', { url: project.docUrl }),
+			);
 			return;
 		}
 
@@ -395,7 +423,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			project.name,
 			project.description,
 			project.type,
-			project.id
+			project.id,
 		);
 	};
 
@@ -405,31 +433,27 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 
 	return (
 		<div className={`app-container ${currentThemePlugin?.id || 'default'}`}>
-			{isGuestUser(user) &&
+			{isGuestUser(user) && (
 				<GuestUpgradeBanner
-					onOpenUpgradeModal={() => setShowGuestUpgradeModal(true)} />
-
-			}
+					onOpenUpgradeModal={() => setShowGuestUpgradeModal(true)}
+				/>
+			)}
 			<header>
-				<div className="header-left">
+				<div className='header-left'>
 					<h1>{t('All Projects')}</h1>
 				</div>
 
-				<div className="header-center">
-					<a
-						href="https://texlyre.github.io"
-						target="_blank"
-						rel="noreferrer">
-
-						<img src={texlyreLogo} className="logo" alt={t('TeXlyre logo')} />
+				<div className='header-center'>
+					<a href='https://texlyre.github.io' target='_blank' rel='noreferrer'>
+						<img src={texlyreLogo} className='logo' alt={t('TeXlyre logo')} />
 					</a>
 				</div>
 
-				<div className="header-right">
-					{!isGuestUser(user) &&
-						<BackupStatusIndicator className="header-backup-indicator" />
-					}
-					<SettingsButton className="header-settings-button" />
+				<div className='header-right'>
+					{!isGuestUser(user) && (
+						<BackupStatusIndicator className='header-backup-indicator' />
+					)}
+					<SettingsButton className='header-settings-button' />
 					<UserDropdown
 						username={user?.username || ''}
 						onLogout={onLogout}
@@ -437,20 +461,20 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						onOpenExport={() => setShowAccountExportModal(true)}
 						onOpenDeleteAccount={() => setIsDeleteAccountModalOpen(true)}
 						onOpenUpgrade={() => setShowGuestUpgradeModal(true)}
-						isGuest={isGuestUser(user)} />
-
+						isGuest={isGuestUser(user)}
+					/>
 				</div>
 			</header>
 
-			<div className="main-content">
+			<div className='main-content'>
 				<ResizablePanel
-					direction="horizontal"
+					direction='horizontal'
 					width={sidebarWidth}
 					minWidth={currentLayout?.minFileExplorerWidth || 200}
 					maxWidth={currentLayout?.maxFileExplorerWidth || 500}
 					onResize={handleSidebarResize}
-					className="sidebar-container">
-
+					className='sidebar-container'
+				>
 					<ProjectPanel
 						onCreateProject={openCreateModal}
 						onImportProject={openImportModal}
@@ -459,30 +483,30 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						onFilterByType={handleFilterByType}
 						onOpenProject={openProject}
 						projects={projects}
-						availableTags={availableTags} />
-
+						availableTags={availableTags}
+					/>
 				</ResizablePanel>
 
-				<div className="editor-container">
-					{error &&
+				<div className='editor-container'>
+					{error && (
 						<div
-							className="error-message"
+							className='error-message'
 							style={{
 								padding: '1rem',
 								margin: '1rem',
-								borderRadius: '4px'
-							}}>
-
+								borderRadius: '4px',
+							}}
+						>
 							{error}
 						</div>
-					}
+					)}
 
-					{isLoading ?
-						<div className="loading-container">
-							<div className="loading-spinner" />
+					{isLoading ? (
+						<div className='loading-container'>
+							<div className='loading-spinner' />
 							<p>{t('Loading projects...')}</p>
-						</div> :
-
+						</div>
+					) : (
 						<ProjectList
 							projects={filteredProjects}
 							onOpenProject={openProject}
@@ -493,111 +517,144 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 							onToggleViewMode={handleToggleViewMode}
 							onExportSelected={handleExportSelected}
 							onDeleteSelected={handleDeleteSelected}
-							viewMode={viewMode} />
-
-					}
+							viewMode={viewMode}
+						/>
+					)}
 				</div>
 				<ProjectExportModal
 					isOpen={showExportModal}
 					onClose={() => setShowExportModal(false)}
-					selectedProjects={selectedProjectsForExport} />
+					selectedProjects={selectedProjectsForExport}
+				/>
 
 				<ProjectDeleteModal
 					isOpen={showMultiDeleteModal}
 					onClose={() => setShowMultiDeleteModal(false)}
 					selectedProjects={selectedProjectsForDelete}
-					onDeleteProjects={handleMultiDeleteProjects} />
-
+					onDeleteProjects={handleMultiDeleteProjects}
+				/>
 			</div>
 
 			<footer>
-				<p className="texlyre-info">
-					<span className="footer-links">
-						<a href="https://texlyre.github.io/docs/intro" target="_blank" rel="noreferrer">{t('Documentation')}</a>
-						{' '} • <a href="https://github.com/TeXlyre/texlyre" target="_blank" rel="noreferrer">{t('Source Code')}</a>
-						{' '} • <a href="#" onClick={(event) => {
-							event.preventDefault();
-							setShowPrivacy(true);
-						}} className="privacy-link">{t('Privacy')}</a>
-						{' '} •
-						{/* {t('Built with TeXlyre')} */}
-						<a href="https://texlyre.github.io" target="_blank" rel="noreferrer">
-							<img src={texlyreLogo} className="logo" alt={t('TeXlyre logo')} />
-						</a>
-						{' '} {'v' + __APP_VERSION__}
+				<p className='texlyre-info'>
+					<span className='footer-links'>
+						<a
+							href='https://texlyre.github.io/docs/intro'
+							target='_blank'
+							rel='noreferrer'
+						>
+							{t('Documentation')}
+						</a>{' '}
+						•{' '}
+						<a
+							href='https://github.com/TeXlyre/texlyre'
+							target='_blank'
+							rel='noreferrer'
+						>
+							{t('Source Code')}
+						</a>{' '}
+						•{' '}
+						<button
+							type='button'
+							onClick={() => {
+								pushHash('privacy-policy');
+								setShowPrivacy(true);
+							}}
+							className='privacy-link'
+						>
+							{t('Privacy')}
+						</button>{' '}
+						•{/* {t('Built with TeXlyre')} */}
+						<a
+							href='https://texlyre.github.io'
+							target='_blank'
+							rel='noreferrer'
+						>
+							<img src={texlyreLogo} className='logo' alt={t('TeXlyre logo')} />
+						</a>{' '}
+						{`v${__APP_VERSION__}`}
 					</span>
 				</p>
 			</footer>
 
 			<PrivacyModal
 				isOpen={showPrivacy}
-				onClose={() => setShowPrivacy(false)} />
-
+				onClose={() => {
+					setShowPrivacy(false);
+					if (window.location.hash === '#privacy-policy') {
+						history.back();
+					}
+				}}
+			/>
 
 			<Modal
 				isOpen={showCreateModal}
 				onClose={() => setShowCreateModal(false)}
 				title={t('Create New Project')}
-				icon={NewProjectIcon}>
-
-				{error &&
-					<div className="form-error" style={{ marginBottom: '1rem' }}>
+				icon={NewProjectIcon}
+			>
+				{error && (
+					<div className='form-error' style={{ marginBottom: '1rem' }}>
 						{error}
 					</div>
-				}
+				)}
 				<ProjectForm
 					onSubmit={handleCreateProject}
 					onCancel={() => setShowCreateModal(false)}
-					isSubmitting={isSubmitting} />
-
+					isSubmitting={isSubmitting}
+				/>
 			</Modal>
 
 			<Modal
 				isOpen={showEditModal}
 				onClose={() => setShowEditModal(false)}
-				title={t('Edit Project')}>
-
-				{error &&
-					<div className="form-error" style={{ marginBottom: '1rem' }}>
+				title={t('Edit Project')}
+			>
+				{error && (
+					<div className='form-error' style={{ marginBottom: '1rem' }}>
 						{error}
 					</div>
-				}
-				{currentProject &&
+				)}
+				{currentProject && (
 					<ProjectForm
 						project={currentProject}
 						onSubmit={handleUpdateProject}
 						onCancel={() => setShowEditModal(false)}
 						isSubmitting={isSubmitting}
-						disableNameAndDescription={true} />
-
-				}
+						disableNameAndDescription={true}
+					/>
+				)}
 			</Modal>
 
 			<Modal
 				isOpen={showDeleteModal}
 				onClose={() => setShowDeleteModal(false)}
 				title={t('Delete Project')}
-				size="small">
-
-				<div className="delete-confirmation">
-					<p>{t('Are you sure you want to delete the project \"{projectName}\"?',
-						{ projectName: currentProject?.name || '' })}
+				size='small'
+			>
+				<div className='delete-confirmation'>
+					<p>
+						{t('Are you sure you want to delete the project "{projectName}"?', {
+							projectName: currentProject?.name || '',
+						})}
 					</p>
-					<p className="warning-message">{t('This action cannot be undone.')}</p>
+					<p className='warning-message'>
+						{t('This action cannot be undone.')}
+					</p>
 
-					<div className="modal-actions">
+					<div className='modal-actions'>
 						<button
-							className="button secondary"
+							className='button secondary'
 							onClick={() => setShowDeleteModal(false)}
-							disabled={isSubmitting}>{t('Cancel')}
-
-
+							disabled={isSubmitting}
+						>
+							{t('Cancel')}
 						</button>
 						<button
-							className="button danger"
+							className='button danger'
 							onClick={handleDeleteProject}
-							disabled={isSubmitting}>
-
+							disabled={isSubmitting}
+						>
 							{isSubmitting ? t('Deleting...') : t('Delete Project')}
 						</button>
 					</div>
@@ -605,49 +662,52 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			</Modal>
 
 			{/* Guest users cannot access profile/account features */}
-			{!isGuestUser(user) &&
+			{!isGuestUser(user) && (
 				<>
 					<ProfileSettingsModal
 						isOpen={showProfileModal}
-						onClose={() => setShowProfileModal(false)} />
+						onClose={() => setShowProfileModal(false)}
+					/>
 
 					<ExportAccountModal
 						isOpen={showAccountExportModal}
 						onClose={() => setShowAccountExportModal(false)}
-						showProjectSelection={false} />
+						showProjectSelection={false}
+					/>
 
 					<DeleteAccountModal
 						isOpen={isDeleteAccountModalOpen}
 						onClose={() => setIsDeleteAccountModalOpen(false)}
 						onAccountDeleted={handleAccountDeleted}
-						onOpenExport={() => setShowAccountExportModal(true)} />
-
+						onOpenExport={() => setShowAccountExportModal(true)}
+					/>
 				</>
-			}
+			)}
 
-			{isGuestUser(user) &&
+			{isGuestUser(user) && (
 				<GuestUpgradeModal
 					isOpen={showGuestUpgradeModal}
 					onClose={() => setShowGuestUpgradeModal(false)}
-					onUpgradeSuccess={handleGuestUpgradeSuccess} />
-
-			}
+					onUpgradeSuccess={handleGuestUpgradeSuccess}
+				/>
+			)}
 
 			<ProjectImportModal
 				isOpen={showImportModal}
 				onClose={() => setShowImportModal(false)}
-				onProjectsImported={handleProjectsImported} />
-
+				onProjectsImported={handleProjectsImported}
+			/>
 
 			{/* Guest users cannot access backup features */}
-			{!isGuestUser(user) &&
+			{!isGuestUser(user) && (
 				<>
 					<BackupDiscoveryModal
 						isOpen={showDiscoveryModal}
 						onClose={dismissDiscovery}
 						rootHandle={getRootHandle()}
 						discoveredProjects={discoveredProjects}
-						onProjectsImported={handleDiscoveryImport} />
+						onProjectsImported={handleDiscoveryImport}
+					/>
 
 					<BackupModal
 						isOpen={showAutoBackupModal}
@@ -663,12 +723,12 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 						onClearAllActivities={clearAllActivities}
 						onChangeDirectory={changeDirectory}
 						currentProjectId={sessionStorage.getItem('currentProjectId')}
-						isInEditor={true} />
-
+						isInEditor={true}
+					/>
 				</>
-			}
-		</div>);
-
+			)}
+		</div>
+	);
 };
 
 export default ProjectApp;

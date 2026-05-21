@@ -75,4 +75,3 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({
 		</OfflineContext.Provider>
 	);
 };
-

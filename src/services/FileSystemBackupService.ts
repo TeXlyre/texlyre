@@ -130,7 +130,9 @@ class FileSystemBackupService {
 			this.updateStatus({
 				status: 'error',
 				error:
-					error instanceof Error ? error.message : t('Failed to change directory'),
+					error instanceof Error
+						? error.message
+						: t('Failed to change directory'),
 			});
 			return false;
 		}
@@ -253,8 +255,9 @@ class FileSystemBackupService {
 
 		if (error instanceof DOMException) {
 			if (error.name === 'SecurityError' && isAutoStart) {
-				errorMessage =
-					t('Auto-backup requires manual folder selection. Click to select backup folder.');
+				errorMessage = t(
+					'Auto-backup requires manual folder selection. Click to select backup folder.',
+				);
 			} else if (error.name === 'AbortError') {
 				errorMessage = t('Folder selection was cancelled');
 			}
@@ -271,13 +274,15 @@ class FileSystemBackupService {
 
 		const localProjects = projectId
 			? [await authService.getProjectById(projectId)].filter(
-				(p): p is Project => !!p,
-			)
+					(p): p is Project => !!p,
+				)
 			: await authService.getProjectsByUser(user.id);
 
 		if (localProjects.length === 0) {
 			throw new Error(
-				projectId ? t('Project {projectId} not found', { projectId }) : t('No projects found'),
+				projectId
+					? t('Project {projectId} not found', { projectId })
+					: t('No projects found'),
 			);
 		}
 
@@ -396,7 +401,9 @@ class FileSystemBackupService {
 			: filesystemData.projects;
 
 		if (projectId && projectsToProcess.length === 0) {
-			throw new Error(t('Project {projectId} not found in backup data', { projectId }));
+			throw new Error(
+				t('Project {projectId} not found in backup data', { projectId }),
+			);
 		}
 
 		for (const projectMetadata of projectsToProcess) {
@@ -456,7 +463,9 @@ class FileSystemBackupService {
 				if (projects.length > 0) {
 					this.addActivity({
 						type: 'backup_complete',
-						message: t('Found {count} importable project in backup directory', { count: projects.length }),
+						message: t('Found {count} importable project in backup directory', {
+							count: projects.length,
+						}),
 					});
 					this.notifyDiscoveryListeners({
 						hasImportableProjects: true,
@@ -491,15 +500,21 @@ class FileSystemBackupService {
 	}
 
 	private notifyListeners(): void {
-		this.listeners.forEach((listener) => listener(this.status));
+		this.listeners.forEach((listener) => {
+			listener(this.status);
+		});
 	}
 
 	private notifyActivityListeners(): void {
-		this.activityListeners.forEach((listener) => listener(this.activities));
+		this.activityListeners.forEach((listener) => {
+			listener(this.activities);
+		});
 	}
 
 	private notifyDiscoveryListeners(result: BackupDiscoveryResult): void {
-		this.discoveryListeners.forEach((listener) => listener(result));
+		this.discoveryListeners.forEach((listener) => {
+			listener(result);
+		});
 	}
 }
 

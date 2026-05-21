@@ -5,9 +5,17 @@ import { lazy, useCallback, useEffect, useState, Suspense } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { collabService } from '../../services/CollabService';
 import { fileStorageService } from '../../services/FileStorageService';
-import { shareTargetService, type PendingShare } from '../../services/ShareTargetService';
+import {
+	shareTargetService,
+	type PendingShare,
+} from '../../services/ShareTargetService';
 import type { YjsDocUrl } from '../../types/yjs';
-import { isValidYjsUrl, parseUrlFragments, pushHash, replaceHash } from '../../utils/urlUtils';
+import {
+	isValidYjsUrl,
+	parseUrlFragments,
+	pushHash,
+	replaceHash,
+} from '../../utils/urlUtils';
 import { batchExtractZip } from '../../utils/zipUtils';
 import AuthApp from './AuthApp';
 import EditorApp from './EditorApp';
@@ -23,6 +31,61 @@ interface UrlProjectParams {
 	newProjectTags?: string;
 	files?: string;
 }
+
+const parseUrlProjectParams = (hashUrl: string): UrlProjectParams | null => {
+	try {
+		const params: UrlProjectParams = {};
+		const parts = hashUrl.split('&');
+
+		for (const part of parts) {
+			if (part.startsWith('newProjectName:')) {
+				params.newProjectName = decodeURIComponent(part.slice(15));
+			} else if (part.startsWith('newProjectDescription:')) {
+				params.newProjectDescription = decodeURIComponent(part.slice(22));
+			} else if (part.startsWith('newProjectType:')) {
+				params.newProjectType = decodeURIComponent(part.slice(15));
+			} else if (part.startsWith('newProjectTags:')) {
+				params.newProjectTags = decodeURIComponent(part.slice(15));
+			} else if (part.startsWith('files:')) {
+				params.files = decodeURIComponent(part.slice(6));
+			}
+		}
+
+		return params.newProjectName ? params : null;
+	} catch (error) {
+		console.error('Error parsing URL project params:', error);
+		return null;
+	}
+};
+
+const downloadAndExtractZip = async (
+	zipUrl: string,
+	projectId: string,
+): Promise<void> => {
+	try {
+		const response = await fetch(zipUrl);
+		if (!response.ok) {
+			throw new Error(`Failed to download zip: ${response.statusText}`);
+		}
+
+		const zipBlob = await response.blob();
+		const zipFile = new File([zipBlob], 'template.zip', {
+			type: 'application/zip',
+		});
+
+		await fileStorageService.initialize(`yjs:${projectId}`);
+
+		const { files, directories } = await batchExtractZip(zipFile, '/');
+		const allFiles = [...directories, ...files];
+
+		await fileStorageService.batchStoreFiles(allFiles, {
+			showConflictDialog: false,
+			preserveTimestamp: false,
+		});
+	} catch (error) {
+		console.error('Error downloading and extracting zip:', error);
+	}
+};
 
 const AppRouter: React.FC = () => {
 	const {
@@ -47,137 +110,114 @@ const AppRouter: React.FC = () => {
 	const [pendingShare, setPendingShare] = useState<PendingShare | null>(null);
 
 	const [isPdfViewerWindow, setIsPdfViewerWindow] = useState(false);
-	const [pdfViewerProjectId, setPdfViewerProjectId] = useState<string | null>(null);
+	const [pdfViewerProjectId, setPdfViewerProjectId] = useState<string | null>(
+		null,
+	);
 
-	const parseUrlProjectParams = (hashUrl: string): UrlProjectParams | null => {
-		try {
-			const params: UrlProjectParams = {};
-			const parts = hashUrl.split('&');
+	const createProjectForDocument = useCallback(
+		async (docUrl: string, name: string, description: string, type: string) => {
+			try {
+				await new Promise((resolve) => setTimeout(resolve, 500));
 
-			for (const part of parts) {
-				if (part.startsWith('newProjectName:')) {
-					params.newProjectName = decodeURIComponent(part.slice(15));
-				} else if (part.startsWith('newProjectDescription:')) {
-					params.newProjectDescription = decodeURIComponent(part.slice(22));
-				} else if (part.startsWith('newProjectType:')) {
-					params.newProjectType = decodeURIComponent(part.slice(15));
-				} else if (part.startsWith('newProjectTags:')) {
-					params.newProjectTags = decodeURIComponent(part.slice(15));
-				} else if (part.startsWith('files:')) {
-					params.files = decodeURIComponent(part.slice(6));
+				const project = await createProject({
+					name,
+					description,
+					type,
+					docUrl,
+					tags: [],
+					isFavorite: false,
+				});
+
+				setCurrentProjectId(project.id);
+				sessionStorage.setItem('currentProjectId', project.id);
+
+				return project;
+			} catch (error) {
+				console.error('Failed to create project for document:', error);
+				throw error;
+			}
+		},
+		[createProject],
+	);
+
+	const createProjectFromUrl = useCallback(
+		async (params: UrlProjectParams): Promise<string | null> => {
+			if (!isAuthenticated || !params.newProjectName) return null;
+
+			setIsCreatingProject(true);
+
+			try {
+				const newProject = await createProject({
+					name: params.newProjectName,
+					description: params.newProjectDescription || '',
+					type: params.newProjectType || 'latex',
+					tags: params.newProjectTags?.split(',') || [],
+					isFavorite: false,
+				});
+
+				const projectId = newProject.docUrl.startsWith('yjs:')
+					? newProject.docUrl.slice(4)
+					: newProject.docUrl;
+
+				if (params.files) {
+					await downloadAndExtractZip(params.files, projectId);
+				}
+
+				return newProject.docUrl;
+			} catch (error) {
+				console.error('Error creating project from URL:', error);
+				return null;
+			} finally {
+				setIsCreatingProject(false);
+			}
+		},
+		[isAuthenticated, createProject],
+	);
+
+	const resolveViewFromHash = useCallback(
+		(hashUrl: string) => {
+			if (hashUrl === 'privacy-policy') {
+				setShowPrivacy(true);
+				return;
+			}
+			setShowPrivacy(false);
+
+			if (hashUrl.startsWith('popout-viewer:')) {
+				const projectId = hashUrl.replace('popout-viewer:', '');
+				setIsPdfViewerWindow(true);
+				setPdfViewerProjectId(projectId);
+				return;
+			}
+
+			if (hashUrl?.includes('yjs:')) {
+				const fragments = parseUrlFragments(hashUrl);
+				if (fragments.yjsUrl && isValidYjsUrl(fragments.yjsUrl)) {
+					setDocUrl(fragments.yjsUrl);
+					setTargetDocId(fragments.docId || null);
+					setTargetFilePath(fragments.filePath || null);
+					if (isAuthenticated && !isInitializing) setCurrentView('editor');
+					return;
 				}
 			}
 
-			return params.newProjectName ? params : null;
-		} catch (error) {
-			console.error('Error parsing URL project params:', error);
-			return null;
-		}
-	};
-
-	const downloadAndExtractZip = async (
-		zipUrl: string,
-		projectId: string,
-	): Promise<void> => {
-		try {
-			const response = await fetch(zipUrl);
-			if (!response.ok) {
-				throw new Error(`Failed to download zip: ${response.statusText}`);
-			}
-
-			const zipBlob = await response.blob();
-			const zipFile = new File([zipBlob], 'template.zip', {
-				type: 'application/zip',
-			});
-
-			await fileStorageService.initialize(`yjs:${projectId}`);
-
-			const { files, directories } = await batchExtractZip(zipFile, '/');
-			const allFiles = [...directories, ...files];
-
-			await fileStorageService.batchStoreFiles(allFiles, {
-				showConflictDialog: false,
-				preserveTimestamp: false,
-			});
-		} catch (error) {
-			console.error('Error downloading and extracting zip:', error);
-		}
-	};
-
-	const createProjectFromUrl = async (
-		params: UrlProjectParams,
-	): Promise<string | null> => {
-		if (!isAuthenticated || !params.newProjectName) return null;
-
-		setIsCreatingProject(true);
-
-		try {
-			const newProject = await createProject({
-				name: params.newProjectName,
-				description: params.newProjectDescription || '',
-				type: params.newProjectType || 'latex',
-				tags: params.newProjectTags.split(',') || [],
-				isFavorite: false,
-			});
-
-			const projectId = newProject.docUrl.startsWith('yjs:')
-				? newProject.docUrl.slice(4)
-				: newProject.docUrl;
-
-			if (params.files) {
-				await downloadAndExtractZip(params.files, projectId);
-			}
-
-			return newProject.docUrl;
-		} catch (error) {
-			console.error('Error creating project from URL:', error);
-			return null;
-		} finally {
-			setIsCreatingProject(false);
-		}
-	};
-
-	const resolveViewFromHash = useCallback((hashUrl: string) => {
-		if (hashUrl === 'privacy-policy') {
-			setShowPrivacy(true);
-			return;
-		}
-		setShowPrivacy(false);
-
-		if (hashUrl.startsWith('popout-viewer:')) {
-			const projectId = hashUrl.replace('popout-viewer:', '');
-			setIsPdfViewerWindow(true);
-			setPdfViewerProjectId(projectId);
-			return;
-		}
-
-		if (hashUrl?.includes('yjs:')) {
-			const fragments = parseUrlFragments(hashUrl);
-			if (fragments.yjsUrl && isValidYjsUrl(fragments.yjsUrl)) {
-				setDocUrl(fragments.yjsUrl);
-				setTargetDocId(fragments.docId || null);
-				setTargetFilePath(fragments.filePath || null);
+			if (isValidYjsUrl(hashUrl)) {
+				setDocUrl(hashUrl);
 				if (isAuthenticated && !isInitializing) setCurrentView('editor');
 				return;
 			}
-		}
 
-		if (isValidYjsUrl(hashUrl)) {
-			setDocUrl(hashUrl);
-			if (isAuthenticated && !isInitializing) setCurrentView('editor');
-			return;
-		}
-
-		if (isAuthenticated && !isInitializing) {
-			setDocUrl(null);
-			setTargetDocId(null);
-			setTargetFilePath(null);
-			setCurrentProjectId(null);
-			sessionStorage.removeItem('currentProjectId');
-			sessionStorage.removeItem('lastCheckedDocUrl');
-			setCurrentView('projects');
-		}
-	}, [isAuthenticated, isInitializing]);
+			if (isAuthenticated && !isInitializing) {
+				setDocUrl(null);
+				setTargetDocId(null);
+				setTargetFilePath(null);
+				setCurrentProjectId(null);
+				sessionStorage.removeItem('currentProjectId');
+				sessionStorage.removeItem('lastCheckedDocUrl');
+				setCurrentView('projects');
+			}
+		},
+		[isAuthenticated, isInitializing],
+	);
 
 	useEffect(() => {
 		const hashUrl = window.location.hash.substring(1);
@@ -198,7 +238,12 @@ const AppRouter: React.FC = () => {
 		}
 
 		resolveViewFromHash(hashUrl);
-	}, [isAuthenticated, isInitializing, resolveViewFromHash]);
+	}, [
+		isAuthenticated,
+		isInitializing,
+		resolveViewFromHash,
+		createProjectFromUrl,
+	]);
 
 	useEffect(() => {
 		const handlePopState = () => {
@@ -256,7 +301,13 @@ const AppRouter: React.FC = () => {
 		};
 
 		checkAndCreateProject();
-	}, [isAuthenticated, isInitializing, docUrl, createProject, getProjects]);
+	}, [
+		isAuthenticated,
+		isInitializing,
+		docUrl,
+		getProjects,
+		createProjectForDocument,
+	]);
 
 	useEffect(() => {
 		if (!isAuthenticated || isInitializing) return;
@@ -271,34 +322,6 @@ const AppRouter: React.FC = () => {
 
 		checkPendingShare();
 	}, [isAuthenticated, isInitializing]);
-
-	const createProjectForDocument = async (
-		docUrl: string,
-		name: string,
-		description: string,
-		type: string,
-	) => {
-		try {
-			await new Promise((resolve) => setTimeout(resolve, 500));
-
-			const project = await createProject({
-				name,
-				description,
-				type,
-				docUrl,
-				tags: [],
-				isFavorite: false,
-			});
-
-			setCurrentProjectId(project.id);
-			sessionStorage.setItem('currentProjectId', project.id);
-
-			return project;
-		} catch (error) {
-			console.error('Failed to create project for document:', error);
-			throw error;
-		}
-	};
 
 	const handleAuthSuccess = () => {
 		if (docUrl) {
@@ -435,10 +458,7 @@ const AppRouter: React.FC = () => {
 				<ProjectApp onOpenProject={handleOpenProject} onLogout={handleLogout} />
 			)}
 
-			<PrivacyModal
-				isOpen={showPrivacy}
-				onClose={handleClosePrivacy}
-			/>
+			<PrivacyModal isOpen={showPrivacy} onClose={handleClosePrivacy} />
 
 			<ShareTargetModal
 				isOpen={!!pendingShare && isAuthenticated && !isInitializing}

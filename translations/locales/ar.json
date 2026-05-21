@@ -298,6 +298,8 @@
   "Auto-navigate to main file on compile": "الانتقال التلقائي إلى الملف الرئيسي عند التجميع",
   "Auto-reconnect on disconnect": "إعادة الاتصال التلقائي عند انقطاع الاتصال",
   "Auto-save delay (milliseconds)": "تأخير الحفظ التلقائي (بالميلي ثانية)",
+  "Auto-save editor: {status}": "الحفظ التلقائي للمحرر: {{status}}",
+  "Auto-save file: {status}": "الحفظ التلقائي للملف: {{status}}",
   "Auto-save in editor": "الحفظ التلقائي في المحرر",
   "Auto-save on changes": "الحفظ التلقائي عند التغييرات",
   "Auto-save to file": "الحفظ التلقائي في الملف",

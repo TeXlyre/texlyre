@@ -7,19 +7,21 @@ export const PLUGIN_NAME = 'Canvas Renderer';
 export const PLUGIN_VERSION = '0.1.0';
 
 const canvasRendererPlugin: RendererPlugin = {
-    id: 'canvas-renderer',
-    name: PLUGIN_NAME,
-    version: PLUGIN_VERSION,
-    type: 'renderer',
-    get settings() {
-        return getCanvasRendererSettings();
-    },
+	id: 'canvas-renderer',
+	name: PLUGIN_NAME,
+	version: PLUGIN_VERSION,
+	type: 'renderer',
+	get settings() {
+		return getCanvasRendererSettings();
+	},
 
-    canHandle: (outputType: string): boolean => {
-        return outputType === 'canvas' || outputType === 'pdf' || outputType === 'svg';
-    },
+	canHandle: (outputType: string): boolean => {
+		return (
+			outputType === 'canvas' || outputType === 'pdf' || outputType === 'svg'
+		);
+	},
 
-    renderOutput: CanvasRenderer,
+	renderOutput: CanvasRenderer,
 };
 
 export default canvasRendererPlugin;

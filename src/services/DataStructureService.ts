@@ -112,7 +112,6 @@ export class UnifiedDataStructureService {
 		return `${this.getDocumentsPath(projectId)}/${docId}.txt`;
 	}
 
-
 	getDocumentMetadataPath(projectId: string): string {
 		return `${this.getDocumentsPath(projectId)}/${this.PATHS.FILES_METADATA}`;
 	}

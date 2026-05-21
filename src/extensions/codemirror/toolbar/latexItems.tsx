@@ -1,9 +1,9 @@
 // src/extensions/codemirror/toolbar/latexItems.tsx
-import { t } from '@/i18n';
 import type { EditorView } from '@codemirror/view';
 import type { ToolbarItem } from 'codemirror-toolbar';
 import { renderToString } from 'react-dom/server';
 
+import { t } from '@/i18n';
 import { getPendingImagePath } from '../PasteExtension';
 import { wrapSelection, insertText } from './helpers';
 import { createTableCommand } from './tableItems';
@@ -36,7 +36,7 @@ import {
 	ToolbarDescriptionIcon,
 	ToolbarStrikeIcon,
 	ToolbarQuoteIcon,
-	ToolbarHyperlinkIcon
+	ToolbarHyperlinkIcon,
 } from '../../../components/common/Icons';
 
 const colorPickers = new WeakMap<EditorView, ColorPicker>();
@@ -82,7 +82,10 @@ export const createSection = (): ToolbarItem => ({
 	icon: renderToString(<ToolbarHeading1Icon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
-		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		const selectedText = view.state.doc.sliceString(
+			selection.from,
+			selection.to,
+		);
 		const text = selectedText || '';
 		return insertText(view, `\\section{${text}}\n`, -(text.length + 2));
 	},
@@ -94,7 +97,10 @@ export const createSubsection = (): ToolbarItem => ({
 	icon: renderToString(<ToolbarHeading2Icon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
-		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		const selectedText = view.state.doc.sliceString(
+			selection.from,
+			selection.to,
+		);
 		const text = selectedText || '';
 		return insertText(view, `\\subsection{${text}}\n`, -(text.length + 2));
 	},
@@ -106,7 +112,10 @@ export const createSubsubsection = (): ToolbarItem => ({
 	icon: renderToString(<ToolbarHeading3Icon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
-		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		const selectedText = view.state.doc.sliceString(
+			selection.from,
+			selection.to,
+		);
 		const text = selectedText || '';
 		return insertText(view, `\\subsubsection{${text}}\n`, -(text.length + 2));
 	},
@@ -145,9 +154,16 @@ export const createDisplayMath = (): ToolbarItem => ({
 	icon: renderToString(<ToolbarMathBlockIcon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
-		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		const selectedText = view.state.doc.sliceString(
+			selection.from,
+			selection.to,
+		);
 		const text = `\\[\n\t${selectedText}\n\\]`;
-		return insertText(view, text, selectedText ? -(selectedText.length + 3) : -3);
+		return insertText(
+			view,
+			text,
+			selectedText ? -(selectedText.length + 3) : -3,
+		);
 	},
 });
 
@@ -187,9 +203,16 @@ export const createVerbatim = (): ToolbarItem => ({
 	icon: renderToString(<ToolbarCodeInlineIcon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
-		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		const selectedText = view.state.doc.sliceString(
+			selection.from,
+			selection.to,
+		);
 		const text = `\\begin{verbatim}\n${selectedText}\n\\end{verbatim}`;
-		return insertText(view, text, selectedText ? -(selectedText.length + 13) : -13);
+		return insertText(
+			view,
+			text,
+			selectedText ? -(selectedText.length + 13) : -13,
+		);
 	},
 });
 
@@ -230,9 +253,16 @@ export const createQuote = (): ToolbarItem => ({
 	icon: renderToString(<ToolbarQuoteIcon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
-		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		const selectedText = view.state.doc.sliceString(
+			selection.from,
+			selection.to,
+		);
 		const text = `\\begin{quote}\n${selectedText}\n\\end{quote}`;
-		return insertText(view, text, selectedText ? -(selectedText.length + 11) : -11);
+		return insertText(
+			view,
+			text,
+			selectedText ? -(selectedText.length + 11) : -11,
+		);
 	},
 });
 
@@ -242,7 +272,10 @@ export const createHyperlink = (): ToolbarItem => ({
 	icon: renderToString(<ToolbarHyperlinkIcon />),
 	command: (view: EditorView) => {
 		const selection = view.state.selection.main;
-		const selectedText = view.state.doc.sliceString(selection.from, selection.to);
+		const selectedText = view.state.doc.sliceString(
+			selection.from,
+			selection.to,
+		);
 		if (selectedText) {
 			const text = `\\href{}{${selectedText}}`;
 			return insertText(view, text, -(selectedText.length + 2));
@@ -285,7 +318,8 @@ export const createDescription = (): ToolbarItem => ({
 	label: t('Description List'),
 	icon: renderToString(<ToolbarDescriptionIcon />),
 	command: (view: EditorView) => {
-		const text = '\\begin{description}\n\t\\item[Term] Description\n\\end{description}';
+		const text =
+			'\\begin{description}\n\t\\item[Term] Description\n\\end{description}';
 		return insertText(view, text, -18);
 	},
 });
@@ -309,12 +343,18 @@ function createColorCommand(fileType: 'latex', type: 'text' | 'highlight') {
 		const toolbar = view.dom.querySelector('.codemirror-toolbar');
 		if (!toolbar) return false;
 
-		const button = toolbar.querySelector(`[data-item="${fileType}-${type === 'text' ? 'textcolor' : 'highlight'}"]`) as HTMLElement;
+		const button = toolbar.querySelector(
+			`[data-item="${fileType}-${type === 'text' ? 'textcolor' : 'highlight'}"]`,
+		) as HTMLElement;
 		if (!button) return false;
 
 		let picker = colorPickers.get(view);
 
-		if (picker && !document.body.contains(picker.container) && !toolbar.contains(picker.container)) {
+		if (
+			picker &&
+			!document.body.contains(picker.container) &&
+			!toolbar.contains(picker.container)
+		) {
 			picker.destroy();
 			colorPickers.delete(view);
 			picker = null;
@@ -324,10 +364,14 @@ function createColorCommand(fileType: 'latex', type: 'text' | 'highlight') {
 			picker = new ColorPicker(view, button, {
 				onSelect: (v, color) => {
 					const selection = v.state.selection.main;
-					const selectedText = v.state.doc.sliceString(selection.from, selection.to);
-					const text = type === 'text'
-						? `\\textcolor[HTML]{${color.substring(1)}}{${selectedText}}`
-						: `\\colorbox{${color}}{${selectedText}}`;
+					const selectedText = v.state.doc.sliceString(
+						selection.from,
+						selection.to,
+					);
+					const text =
+						type === 'text'
+							? `\\textcolor[HTML]{${color.substring(1)}}{${selectedText}}`
+							: `\\colorbox{${color}}{${selectedText}}`;
 					insertText(v, text, selectedText ? -(selectedText.length + 1) : -1);
 				},
 			});

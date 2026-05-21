@@ -1,14 +1,23 @@
 // src/utils/dateUtils.ts
-import { t } from '@/i18n';
 import i18next from 'i18next';
 
+import { t } from '@/i18n';
+
 export function formatDate(timestamp: number | string): string {
-	const date = new Date(typeof timestamp === 'string' && !isNaN(Number(timestamp)) ? parseInt(timestamp, 10) : timestamp);
+	const date = new Date(
+		typeof timestamp === 'string' && !Number.isNaN(Number(timestamp))
+			? parseInt(timestamp, 10)
+			: timestamp,
+	);
 	return date.toLocaleString(i18next.language);
 }
 
 export function formatLastModified(timestamp: number | string): string {
-	const date = new Date(typeof timestamp === 'string' && !isNaN(Number(timestamp)) ? parseInt(timestamp, 10) : timestamp);
+	const date = new Date(
+		typeof timestamp === 'string' && !Number.isNaN(Number(timestamp))
+			? parseInt(timestamp, 10)
+			: timestamp,
+	);
 	const now = new Date();
 	const diffMs = now.getTime() - date.getTime();
 	const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -20,9 +29,10 @@ export function formatLastModified(timestamp: number | string): string {
 }
 
 export function formatTimestamp(timestamp: number | string): string {
-	const ts = typeof timestamp === 'string' && !isNaN(Number(timestamp))
-		? parseInt(timestamp, 10)
-		: timestamp;
+	const ts =
+		typeof timestamp === 'string' && !Number.isNaN(Number(timestamp))
+			? parseInt(timestamp, 10)
+			: timestamp;
 
 	const now = Date.now();
 	const diff = now - (typeof ts === 'number' ? ts : 0);

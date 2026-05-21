@@ -11,7 +11,14 @@ import {
 
 import { pluginRegistry } from '../plugins/PluginRegistry';
 
-export type SettingType = 'checkbox' | 'select' | 'text' | 'codemirror' | 'number' | 'color' | 'language-select';
+export type SettingType =
+	| 'checkbox'
+	| 'select'
+	| 'text'
+	| 'codemirror'
+	| 'number'
+	| 'color'
+	| 'language-select';
 
 export const DEFERRED_UPDATE_TYPES: SettingType[] = ['number', 'text'];
 
@@ -72,9 +79,9 @@ export const SettingsContext = createContext<SettingsContextType>({
 	getSettings: () => [],
 	getSetting: () => undefined,
 	batchGetSettings: () => ({}),
-	updateSetting: () => { },
-	registerSetting: () => { },
-	unregisterSetting: () => { },
+	updateSetting: () => {},
+	registerSetting: () => {},
+	unregisterSetting: () => {},
 	getSettingsByCategory: () => [],
 	getCategories: () => [],
 	searchSettings: () => ({ categories: [], allSettings: [] }),
@@ -117,34 +124,37 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 		return setting.defaultValue;
 	}, []);
 
-	const registerSetting = useCallback((setting: Setting) => {
-		setSettings((prev) => {
-			const idx = prev.findIndex((s) => s.id === setting.id);
-			let valueToUse: unknown;
+	const registerSetting = useCallback(
+		(setting: Setting) => {
+			setSettings((prev) => {
+				const idx = prev.findIndex((s) => s.id === setting.id);
+				let valueToUse: unknown;
 
-			if (idx >= 0) {
-				valueToUse = prev[idx].value;
-			} else {
-				valueToUse =
-					setting.value !== undefined
-						? setting.value
-						: loadStoredValue(setting);
-			}
+				if (idx >= 0) {
+					valueToUse = prev[idx].value;
+				} else {
+					valueToUse =
+						setting.value !== undefined
+							? setting.value
+							: loadStoredValue(setting);
+				}
 
-			if (setting.onChange) {
-				setTimeout(() => setting.onChange?.(valueToUse), 0);
-			}
+				if (setting.onChange) {
+					setTimeout(() => setting.onChange?.(valueToUse), 0);
+				}
 
-			const settingWithValue = { ...setting, value: valueToUse };
+				const settingWithValue = { ...setting, value: valueToUse };
 
-			if (idx >= 0) {
-				const updated = [...prev];
-				updated[idx] = settingWithValue;
-				return updated;
-			}
-			return [...prev, settingWithValue];
-		});
-	}, [loadStoredValue]);
+				if (idx >= 0) {
+					const updated = [...prev];
+					updated[idx] = settingWithValue;
+					return updated;
+				}
+				return [...prev, settingWithValue];
+			});
+		},
+		[loadStoredValue],
+	);
 
 	useEffect(() => {
 		const userId = getCurrentUserId();
@@ -155,13 +165,18 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 
 		try {
 			const globalSettings = localStorage.getItem(globalStorageKey);
-			const globalSettingsParsed = globalSettings ? JSON.parse(globalSettings) : {};
+			const globalSettingsParsed = globalSettings
+				? JSON.parse(globalSettings)
+				: {};
 			const globalVersion = globalSettingsParsed._version;
 
 			let stored = localStorage.getItem(userStorageKey);
 			let storedParsed = stored ? JSON.parse(stored) : null;
 
-			if (userId && (!storedParsed || storedParsed._version !== globalVersion)) {
+			if (
+				userId &&
+				(!storedParsed || storedParsed._version !== globalVersion)
+			) {
 				if (globalSettings) {
 					localStorage.setItem(userStorageKey, globalSettings);
 					stored = globalSettings;
@@ -185,7 +200,9 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 		} finally {
 			isLocalStorageLoaded.current = true;
 			const freshPluginSettings = pluginRegistry.refreshPluginSettings();
-			freshPluginSettings.forEach((setting) => registerSetting(setting));
+			freshPluginSettings.forEach((setting) => {
+				registerSetting(setting);
+			});
 		}
 	}, [getCurrentUserId, registerSetting]);
 
@@ -206,9 +223,14 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 		try {
 			const storageKey = getStorageKey();
 			const currentStored = localStorage.getItem(storageKey);
-			const currentVersion = currentStored ? JSON.parse(currentStored)._version : undefined;
+			const currentVersion = currentStored
+				? JSON.parse(currentStored)._version
+				: undefined;
 
-			localStorage.setItem(storageKey, JSON.stringify({ ...toSave, _version: currentVersion }));
+			localStorage.setItem(
+				storageKey,
+				JSON.stringify({ ...toSave, _version: currentVersion }),
+			);
 		} catch (error) {
 			console.error('Error saving settings to localStorage:', error);
 		}
@@ -218,41 +240,47 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 		const handleLanguageChange = () => {
 			const freshPluginSettings = pluginRegistry.refreshPluginSettings();
 
-			freshPluginSettings.forEach(setting => {
+			freshPluginSettings.forEach((setting) => {
 				registerSetting(setting);
 			});
 		};
 
 		window.addEventListener('language-changed', handleLanguageChange);
-		return () => window.removeEventListener('language-changed', handleLanguageChange);
+		return () =>
+			window.removeEventListener('language-changed', handleLanguageChange);
 	}, [registerSetting]);
 
 	const getSettings = () => settings;
 
 	const getSetting = (id: string) => settings.find((s) => s.id === id);
 
-	const batchGetSettings = useCallback((ids: string[]): Record<string, unknown> => {
-		const userId = getCurrentUserId();
-		const storageKey = userId ? `texlyre-user-${userId}-settings` : 'texlyre-settings';
+	const batchGetSettings = useCallback(
+		(ids: string[]): Record<string, unknown> => {
+			const userId = getCurrentUserId();
+			const storageKey = userId
+				? `texlyre-user-${userId}-settings`
+				: 'texlyre-settings';
 
-		try {
-			const stored = localStorage.getItem(storageKey);
-			const storedSettings = stored ? JSON.parse(stored) : {};
+			try {
+				const stored = localStorage.getItem(storageKey);
+				const storedSettings = stored ? JSON.parse(stored) : {};
 
-			const result: Record<string, unknown> = {};
-			for (const id of ids) {
-				const existingSetting = settings.find(s => s.id === id);
-				if (existingSetting?.value !== undefined) {
-					result[id] = existingSetting.value;
-				} else if (storedSettings[id] !== undefined) {
-					result[id] = storedSettings[id];
+				const result: Record<string, unknown> = {};
+				for (const id of ids) {
+					const existingSetting = settings.find((s) => s.id === id);
+					if (existingSetting?.value !== undefined) {
+						result[id] = existingSetting.value;
+					} else if (storedSettings[id] !== undefined) {
+						result[id] = storedSettings[id];
+					}
 				}
+				return result;
+			} catch {
+				return {};
 			}
-			return result;
-		} catch {
-			return {};
-		}
-	}, [getCurrentUserId, settings]);
+		},
+		[getCurrentUserId, settings],
+	);
 
 	const updateSetting = (id: string, value: unknown) => {
 		setSettings((prev) =>
@@ -277,9 +305,10 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 
 				const updated = { ...s, value: validatedValue };
 
-				const needsLiveUpdate = s.liveUpdate !== undefined
-					? s.liveUpdate
-					: !DEFERRED_UPDATE_TYPES.includes(s.type);
+				const needsLiveUpdate =
+					s.liveUpdate !== undefined
+						? s.liveUpdate
+						: !DEFERRED_UPDATE_TYPES.includes(s.type);
 
 				if (needsLiveUpdate && s.onChange) {
 					s.onChange(validatedValue);
@@ -332,7 +361,8 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
 				s.category.toLowerCase().includes(lowerQuery) ||
 				s.subcategory?.toLowerCase().includes(lowerQuery) ||
 				s.label.toLowerCase().includes(lowerQuery) ||
-				(typeof s.description === 'string' && s.description.toLowerCase().includes(lowerQuery)),
+				(typeof s.description === 'string' &&
+					s.description.toLowerCase().includes(lowerQuery)),
 		);
 
 		const categoriesMap = matchingSettings.reduce(

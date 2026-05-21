@@ -1,15 +1,15 @@
 // src/services/FileSyncService.ts
-import { t } from '@/i18n'
 import { FilePizzaDownloader, FilePizzaUploader } from 'filepizza-client';
-
 import { nanoid } from 'nanoid';
 
-import type {
-	FileSyncInfo,
-	FileSyncNotification,
-} from '../types/fileSync';
+import { t } from '@/i18n';
+import type { FileSyncInfo, FileSyncNotification } from '../types/fileSync';
 import type { FileNode } from '../types/files';
-import { isBinaryFile, isTemporaryFile, toArrayBuffer } from '../utils/fileUtils.ts';
+import {
+	isBinaryFile,
+	isTemporaryFile,
+	toArrayBuffer,
+} from '../utils/fileUtils.ts';
 import { fileStorageService } from './FileStorageService';
 import { notificationService } from './NotificationService';
 
@@ -433,10 +433,12 @@ class FileSyncService {
 			} else if (fileContent instanceof ArrayBuffer) {
 				processedContent = fileContent;
 			} else if (fileContent instanceof Uint8Array) {
-				processedContent = toArrayBuffer(fileContent.buffer.slice(
-					fileContent.byteOffset,
-					fileContent.byteOffset + fileContent.byteLength,
-				));
+				processedContent = toArrayBuffer(
+					fileContent.buffer.slice(
+						fileContent.byteOffset,
+						fileContent.byteOffset + fileContent.byteLength,
+					),
+				);
 			} else if (fileContent instanceof Blob) {
 				processedContent = await fileContent.arrayBuffer();
 			} else if (typeof fileContent === 'string') {
@@ -628,11 +630,14 @@ class FileSyncService {
 						this.notifyListeners({
 							id: nanoid(),
 							type: 'sync_complete',
-							message: t('Successfully processed {count} file ({stored} stored, {deleted} deleted)', {
-								count: totalProcessed,
-								stored: filesToStore.length,
-								deleted: filesToDelete.length
-							}),
+							message: t(
+								'Successfully processed {count} file ({stored} stored, {deleted} deleted)',
+								{
+									count: totalProcessed,
+									stored: filesToStore.length,
+									deleted: filesToDelete.length,
+								},
+							),
 							timestamp: Date.now(),
 							data: {
 								fileCount: totalProcessed,
@@ -674,7 +679,9 @@ class FileSyncService {
 					downloader.on('passwordInvalid', (message) => {
 						console.log('[FileSyncService] Invalid password:', message);
 						clearTimeout(timeout);
-						rejectOnce(new Error(t('Invalid password: {message}', { message })));
+						rejectOnce(
+							new Error(t('Invalid password: {message}', { message })),
+						);
 					});
 
 					downloader.on('info', (filesInfo) => {
@@ -800,7 +807,9 @@ class FileSyncService {
 	}
 
 	private notifyListeners(notification: FileSyncNotification): void {
-		this.listeners.forEach((listener) => listener(notification));
+		this.listeners.forEach((listener) => {
+			listener(notification);
+		});
 	}
 }
 

@@ -1,5 +1,4 @@
 // src/contexts/SecretsContext.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import {
 	type ReactNode,
@@ -9,6 +8,7 @@ import {
 	useState,
 } from 'react';
 
+import { t } from '@/i18n';
 import { useAuth } from '../hooks/useAuth';
 
 export interface SecretValue {
@@ -85,18 +85,18 @@ export interface SecretsContextType {
 export const SecretsContext = createContext<SecretsContextType>({
 	isPasswordSet: false,
 	setPassword: async () => false,
-	clearPassword: () => { },
-	setSecret: async () => { },
+	clearPassword: () => {},
+	setSecret: async () => {},
 	getSecret: async () => null,
-	removeSecret: async () => { },
+	removeSecret: async () => {},
 	hasSecret: () => false,
 	promptForPassword: async () => null,
 	getSecretMetadata: () => null,
-	clearAllSecrets: async () => { },
+	clearAllSecrets: async () => {},
 	isPasswordModalOpen: false,
 	passwordModalMessage: '',
 	showPasswordModal: async () => null,
-	hidePasswordModal: () => { },
+	hidePasswordModal: () => {},
 	submitPassword: async () => false,
 });
 
@@ -315,22 +315,6 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 		[user, getStorageKey, getSecretId],
 	);
 
-	const _saveSecretsToStorage = useCallback(async (): Promise<void> => {
-		if (!user || !userPassword) return;
-
-		try {
-			const storageKey = getStorageKey(user.id);
-			const storedData = localStorage.getItem(storageKey);
-			const existingSecrets: SecretEntry[] = storedData
-				? JSON.parse(storedData)
-				: [];
-
-			localStorage.setItem(storageKey, JSON.stringify(existingSecrets));
-		} catch (error) {
-			console.error('Error saving secrets to storage:', error);
-		}
-	}, [user, userPassword, getStorageKey]);
-
 	const setPassword = useCallback(
 		async (password: string): Promise<boolean> => {
 			if (!password.trim()) return false;
@@ -356,7 +340,8 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 
 			return new Promise((resolve) => {
 				setPasswordModalMessage(
-					message || t('Enter your TeXlyre password to access encrypted secrets:'),
+					message ||
+						t('Enter your TeXlyre password to access encrypted secrets:'),
 				);
 				setPasswordResolve(() => resolve);
 				setIsPasswordModalOpen(true);
@@ -469,14 +454,7 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 				throw new Error('Failed to store secret');
 			}
 		},
-		[
-			user,
-			userPassword,
-			promptForPassword,
-			getSecretId,
-			encryptWithPassword,
-			getStorageKey,
-		],
+		[user, promptForPassword, getSecretId, encryptWithPassword, getStorageKey],
 	);
 
 	const getSecret = useCallback(

@@ -1,7 +1,7 @@
 {
   "_meta": {
-    "lastUpdated": "2026-05-18T16:15:03.869Z",
-    "totalKeys": 2114
+    "lastUpdated": "2026-05-21T19:56:11.303Z",
+    "totalKeys": 2116
   },
   "languages": [
     {
@@ -10,7 +10,7 @@
       "nativeName": "English",
       "direction": "ltr",
       "coverage": 100,
-      "totalKeys": 2114,
+      "totalKeys": 2116,
       "translatedKeys": 0,
       "filePath": "locales/en.json"
     },
@@ -20,8 +20,8 @@
       "nativeName": "العربية",
       "direction": "rtl",
       "coverage": 93,
-      "totalKeys": 2114,
-      "translatedKeys": 1972,
+      "totalKeys": 2116,
+      "translatedKeys": 1974,
       "filePath": "locales/ar.json"
     },
     {
@@ -30,8 +30,8 @@
       "nativeName": "简体中文",
       "direction": "ltr",
       "coverage": 93,
-      "totalKeys": 2114,
-      "translatedKeys": 1964,
+      "totalKeys": 2116,
+      "translatedKeys": 1966,
       "filePath": "locales/zh-CN.json"
     },
     {
@@ -40,8 +40,8 @@
       "nativeName": "Deutsch",
       "direction": "ltr",
       "coverage": 90,
-      "totalKeys": 2114,
-      "translatedKeys": 1911,
+      "totalKeys": 2116,
+      "translatedKeys": 1913,
       "filePath": "locales/de.json"
     }
   ]

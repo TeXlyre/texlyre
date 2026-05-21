@@ -31,7 +31,9 @@ class PopoutViewerService {
 		this.channel = new BroadcastChannel(`texlyre-popout-${this.projectId}`);
 		this.channel.addEventListener('message', (event) => {
 			const message = event.data as PopoutMessage;
-			this.listeners.forEach((listener) => listener(message));
+			this.listeners.forEach((listener) => {
+				listener(message);
+			});
 		});
 	}
 
@@ -49,7 +51,7 @@ class PopoutViewerService {
 		this.popoutWindow = window.open(
 			popoutUrl,
 			`texlyre-popout-${this.projectId}`,
-			'width=1000,height=800,scrollbars=yes,resizable=yes,menubar=no,toolbar=no,location=no,status=no'
+			'width=1000,height=800,scrollbars=yes,resizable=yes,menubar=no,toolbar=no,location=no,status=no',
 		);
 
 		if (this.popoutWindow) {

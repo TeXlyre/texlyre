@@ -99,7 +99,7 @@ export default {
 6. Run the plugin build script to generate the plugin index:
 
 ```bash
-npm run generate-plugins
+npm run generate:plugins
 # OR simply run the project
 npm run dev
 ```

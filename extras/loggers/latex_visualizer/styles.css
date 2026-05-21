@@ -113,7 +113,9 @@
 	border-radius: 8px;
 	border-left: 4px solid;
 	background-color: var(--accent-background);
-	transition: background-color 0.2s ease, box-shadow 0.2s ease;
+	transition:
+		background-color 0.2s ease,
+		box-shadow 0.2s ease;
 	position: relative;
 	box-sizing: border-box;
 }
@@ -334,7 +336,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-
 	.error-item,
 	.error-line,
 	.error-count,

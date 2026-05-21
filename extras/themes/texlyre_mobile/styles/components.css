@@ -18,7 +18,9 @@
 [data-layout="texlyre-mobile"] .codemirror-editor-container .cm-content,
 [data-layout="texlyre-mobile"] .codemirror-editor-container .cm-line,
 [data-layout="texlyre-mobile"] .codemirror-editor-container .cm-lineWrapping,
-[data-layout="texlyre-mobile"] .codemirror-editor-container .cm-contentEditable {
+[data-layout="texlyre-mobile"]
+	.codemirror-editor-container
+	.cm-contentEditable {
 	font-size: var(--mobile-font-lg) !important;
 }
 
@@ -97,7 +99,6 @@
 	height: var(--mobile-icon-size-md);
 }
 
-
 [data-layout="texlyre-mobile"] .compile-button-group .compile-button {
 	min-height: var(--mobile-min-touch-target);
 	padding: var(--mobile-spacing-sm) var(--mobile-spacing-sm);
@@ -140,12 +141,14 @@
 [data-layout="texlyre-mobile"] .share-button-group .main-button svg,
 [data-layout="texlyre-mobile"] .dropdown-toggle svg,
 [data-layout="texlyre-mobile"] .collab-button-group .collab-dropdown-toggle svg,
-[data-layout="texlyre-mobile"] .backup-button-group .backup-dropdown-toggle svg {
+[data-layout="texlyre-mobile"]
+	.backup-button-group
+	.backup-dropdown-toggle
+	svg {
 	width: var(--mobile-icon-size-sm);
 	height: var(--mobile-icon-size-sm);
 	flex-shrink: 0;
 }
-
 
 /* TODO (fabawi): Hidden for now, but might consider restoring them in the future */
 [data-layout="texlyre-mobile"] .backup-button-group .main-button .backup-label,

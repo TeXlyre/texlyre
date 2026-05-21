@@ -74,7 +74,9 @@ export class GitHubAPIService {
 		} catch (error) {
 			clearTimeout(timeoutId);
 			if (error instanceof Error && error.name === 'AbortError') {
-				throw new Error(`Request timeout after ${this.requestTimeout / 1000} seconds`);
+				throw new Error(
+					`Request timeout after ${this.requestTimeout / 1000} seconds`,
+				);
 			}
 			throw error;
 		}

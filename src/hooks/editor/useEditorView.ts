@@ -1,11 +1,17 @@
 // src/hooks/editor/useEditorView.ts
-import { type CompletionSource, autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import {
-    defaultKeymap,
-    history,
-    historyKeymap,
-    historyField,
-    indentWithTab,
+	type CompletionSource,
+	autocompletion,
+	completionKeymap,
+	closeBrackets,
+	closeBracketsKeymap,
+} from '@codemirror/autocomplete';
+import {
+	defaultKeymap,
+	history,
+	historyKeymap,
+	historyField,
+	indentWithTab,
 } from '@codemirror/commands';
 import { languages } from '@codemirror/language-data';
 import { html } from '@codemirror/lang-html';
@@ -13,16 +19,16 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { json } from '@codemirror/lang-json';
 import { yaml } from '@codemirror/lang-yaml';
 import {
-    bracketMatching,
-    foldGutter,
-    foldKeymap,
-    indentOnInput,
-    bidiIsolates
+	bracketMatching,
+	foldGutter,
+	foldKeymap,
+	indentOnInput,
+	bidiIsolates,
 } from '@codemirror/language';
 import {
-    highlightSelectionMatches,
-    search,
-    searchKeymap,
+	highlightSelectionMatches,
+	search,
+	searchKeymap,
 } from '@codemirror/search';
 import { Compartment, EditorState, type Extension } from '@codemirror/state';
 import { type ViewUpdate, keymap } from '@codemirror/view';
@@ -32,7 +38,7 @@ import { vim } from '@replit/codemirror-vim';
 import { bibtex, bibtexCompletionSource } from 'codemirror-lang-bib';
 import { latex, latexCompletionSource } from 'codemirror-lang-latex';
 import { typst } from 'codemirror-lang-typst';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type * as Y from 'yjs';
 import { UndoManager } from 'yjs';
 
@@ -41,13 +47,13 @@ import { commentSystemExtension } from '../../extensions/codemirror/CommentExten
 import { latexTypstBidiIsolates } from '../../extensions/codemirror/BidiExtension';
 import { searchHighlightExtension } from '../../extensions/codemirror/SearchHighlightExtension';
 import {
-    createFilePathAutocompleteExtension,
-    setCurrentFilePath,
-    refreshBibliographyCache,
+	createFilePathAutocompleteExtension,
+	setCurrentFilePath,
+	refreshBibliographyCache,
 } from '../../extensions/codemirror/PathAndBibAutocompleteExtension.ts';
 import {
-    getGenericLSPExtensionsForFile,
-    getGenericLSPCompletionSources,
+	getGenericLSPExtensionsForFile,
+	getGenericLSPCompletionSources,
 } from '../../extensions/codemirror/GenericLSPExtension';
 import { createCodeActionsExtension } from '../../extensions/codemirror/CodeActionsLSPExtension.ts';
 import { createToolbarExtension } from '../../extensions/codemirror/ToolbarExtension';
@@ -55,9 +61,9 @@ import { createMathLiveExtension } from '../../extensions/codemirror/MathLiveExt
 import { createPasteExtension } from '../../extensions/codemirror/PasteExtension';
 import { createListingsExtension } from '../../extensions/codemirror/ListingsExtension';
 import {
-    createLinkNavigationExtension,
-    updateLinkNavigationFilePath,
-    updateLinkNavigationFileName
+	createLinkNavigationExtension,
+	updateLinkNavigationFilePath,
+	updateLinkNavigationFileName,
 } from '../../extensions/codemirror/LinkNavigationExtension';
 import { useAuth } from '../useAuth';
 import { useEditor } from '../useEditor';
@@ -71,758 +77,865 @@ import { registerEditorClipboard } from './editorClipboard';
 import { registerEditorSearchHighlightEvents } from './editorSearchHighlights';
 import { registerEditorEventHandlers } from './EditorEvents';
 import {
-    registerYjsBinding,
-    createYjsEditorBindingExtensions,
-    type YjsEditorBindingResult,
+	registerYjsBinding,
+	createYjsEditorBindingExtensions,
+	type YjsEditorBindingResult,
 } from './yjsBinding';
 
 type FileTypeInfo = {
-    fileType: ReturnType<typeof detectFileType>;
-    isLatex: boolean;
-    isTypst: boolean;
-    isBib: boolean;
-    isMarkdown: boolean;
-    hasFormatter: boolean;
-    isStructured: boolean;
+	fileType: ReturnType<typeof detectFileType>;
+	isLatex: boolean;
+	isTypst: boolean;
+	isBib: boolean;
+	isMarkdown: boolean;
+	hasFormatter: boolean;
+	isStructured: boolean;
 };
 
-const classifyFileType = (fileName: string | undefined, content: string): FileTypeInfo => {
-    const fileType = detectFileType(fileName, content);
-    const isLatex = fileType === 'latex';
-    const isTypst = fileType === 'typst';
-    const isBib = fileType === 'bib';
-    const isMarkdown = fileType === 'markdown';
-    return {
-        fileType,
-        isLatex,
-        isTypst,
-        isBib,
-        isMarkdown,
-        hasFormatter: isLatex || isTypst || isBib,
-        isStructured: isLatex || isTypst || isBib || isMarkdown,
-    };
+const classifyFileType = (
+	fileName: string | undefined,
+	content: string,
+): FileTypeInfo => {
+	const fileType = detectFileType(fileName, content);
+	const isLatex = fileType === 'latex';
+	const isTypst = fileType === 'typst';
+	const isBib = fileType === 'bib';
+	const isMarkdown = fileType === 'markdown';
+	return {
+		fileType,
+		isLatex,
+		isTypst,
+		isBib,
+		isMarkdown,
+		hasFormatter: isLatex || isTypst || isBib,
+		isStructured: isLatex || isTypst || isBib || isMarkdown,
+	};
 };
 
 const fileUndoHistoryCache = new Map<string, unknown>();
 
 export const useEditorView = (
-    editorRef: React.RefObject<HTMLDivElement>,
-    docUrl: string,
-    documentId: string,
-    isDocumentSelected: boolean,
-    textContent: string,
-    onUpdateContent: (content: string) => void,
-    _parseComments: (text: string) => unknown[],
-    _addComment: (content: string) => unknown,
-    updateComments: (content: string) => void,
-    isEditingFile = false,
-    isViewOnly = false,
-    fileName?: string,
-    currentFileId?: string,
-    enableComments = false,
-    toolbarVisible = true,
+	editorRef: React.RefObject<HTMLDivElement>,
+	docUrl: string,
+	documentId: string,
+	isDocumentSelected: boolean,
+	textContent: string,
+	onUpdateContent: (content: string) => void,
+	_parseComments: (text: string) => unknown[],
+	_addComment: (content: string) => unknown,
+	updateComments: (content: string) => void,
+	isEditingFile = false,
+	isViewOnly = false,
+	fileName?: string,
+	currentFileId?: string,
+	enableComments = false,
+	toolbarVisible = true,
 ) => {
-    const {
-        getAutoSaveEnabled,
-        getAutoSaveDelay,
-        getLineNumbersEnabled,
-        getSyntaxHighlightingEnabled,
-        getEditorTextDirection,
-        getVimModeEnabled,
-        getSpellCheckEnabled,
-        getCollabOptions,
-        // getEnabledLSPPlugins,
-        editorSettingsVersion,
-        editorSettings,
-    } = useEditor();
-
-    const { user } = useAuth();
-
-    const ytextRef = useRef<Y.Text | null>(null);
-    const viewRef = useRef<EditorView | null>(null);
-    const isUpdatingRef = useRef<boolean>(false);
-    const autoSaveRef = useRef<(() => void) | null>(null);
-    const yjsEditorBindingRef = useRef<YjsEditorBindingResult | null>(null);
-    const [showSaveIndicator, setShowSaveIndicator] = useState(false);
-    const [yDoc, setYDoc] = useState<Y.Doc | null>(null);
-    const [provider, setProvider] = useState<CollabProvider | null>(null);
-    const hasEmittedReadyRef = useRef<boolean>(false);
-    const undoManagerRef = useRef<UndoManager | null>(null);
-
-    const compartmentsRef = useRef({
-        base: new Compartment(),
-        language: new Compartment(),
-        toolbar: new Compartment(),
-        languageSpecific: new Compartment(),
-    });
-
-    const projectId = docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl;
-
-    useEffect(() => {
-        filePathCacheService.initialize();
-        return () => {
-            filePathCacheService.cleanup();
-        };
-    }, []);
-
-    const saveFileToStorage = async (content: string) => {
-        if (!currentFileId || !isEditingFile) return;
-        try {
-            const encoder = new TextEncoder();
-            const contentBuffer = encoder.encode(content).buffer;
-            await fileStorageService.updateFileContent(currentFileId, contentBuffer);
-
-            if (fileName && isBibFile(fileName) && viewRef.current) {
-                refreshBibliographyCache(viewRef.current);
-            }
-
-            const file = await fileStorageService.getFile(currentFileId);
-
-            setShowSaveIndicator(true);
-            setTimeout(() => setShowSaveIndicator(false), 1500);
-
-            document.dispatchEvent(
-                new CustomEvent('file-saved', {
-                    detail: {
-                        isFile: true,
-                        fileId: currentFileId,
-                        filePath: file?.path,
-                    },
-                }),
-            );
-        } catch (error) {
-            console.error('Error saving file:', error);
-        }
-    };
-
-    const saveDocumentToLinkedFile = async (content: string) => {
-        if (!documentId || isEditingFile) return;
-        try {
-            const allFiles = await fileStorageService.getAllFiles(false, false, false);
-            const linkedFile = allFiles.find((file) => file.documentId === documentId);
-            if (linkedFile) {
-                await fileStorageService.updateFileContent(linkedFile.id, content);
-
-                if (isBibFile(linkedFile.name) && viewRef.current) {
-                    refreshBibliographyCache(viewRef.current);
-                }
-
-                setShowSaveIndicator(true);
-                setTimeout(() => setShowSaveIndicator(false), 1500);
-
-                document.dispatchEvent(
-                    new CustomEvent('file-saved', {
-                        detail: {
-                            isFile: false,
-                            documentId,
-                            fileId: linkedFile.id,
-                            filePath: linkedFile.path,
-                        },
-                    }),
-                );
-            }
-        } catch (error) {
-            console.error('Error saving document to linked file:', error);
-        }
-    };
-
-    const buildSpellCheckExtension = (): Extension => {
-        if (!getSpellCheckEnabled()) return [];
-        return EditorView.contentAttributes.of({
-            spellcheck: 'true',
-            contenteditable: 'true',
-        });
-    };
-
-    const buildCursorTrackingExtension = (): Extension => {
-        let cursorUpdateTimeout: NodeJS.Timeout | null = null;
-
-        return EditorView.updateListener.of((update: ViewUpdate) => {
-            if (update.docChanged && autoSaveRef.current) {
-                autoSaveRef.current();
-            }
-
-            if (update.selectionSet) {
-                if (cursorUpdateTimeout) clearTimeout(cursorUpdateTimeout);
-                cursorUpdateTimeout = setTimeout(() => {
-                    if (!update.view?.state) return;
-                    const pos = update.view.state.selection.main.head;
-                    const line = update.view.state.doc.lineAt(pos).number;
-                    document.dispatchEvent(
-                        new CustomEvent('editor-cursor-update', {
-                            detail: { line, position: pos, fileId: currentFileId, documentId, isEditingFile },
-                        }),
-                    );
-                }, 200);
-            }
-        });
-    };
-
-    const buildBaseExtensions = (): Extension[] => {
-        const direction = getEditorTextDirection();
-        const extensions: Extension[] = [
-            EditorView.theme({
-                '.cm-content': {
-                    fontFamily: editorSettings.fontFamily,
-                    fontSize: editorSettings.fontSize,
-                },
-            }),
-            EditorView.lineWrapping,
-            foldGutter(),
-            indentOnInput(),
-            bidiIsolates(),
-            bracketMatching(),
-            closeBrackets(),
-            highlightSelectionMatches(),
-            search(),
-            buildSpellCheckExtension(),
-            keymap.of([
-                indentWithTab,
-                ...closeBracketsKeymap,
-                ...defaultKeymap,
-                ...searchKeymap,
-                ...foldKeymap,
-                ...completionKeymap,
-            ]),
-            buildCursorTrackingExtension(),
-            searchHighlightExtension,
-        ];
-
-        if (direction !== 'auto') {
-            extensions.push(
-                EditorView.editorAttributes.of({
-                    dir: direction,
-                    style: `direction: ${direction};`,
-                }),
-            );
-            extensions.push(
-                EditorView.contentAttributes.of({
-                    dir: direction,
-                    style: `direction: ${direction};`,
-                }),
-            );
-        }
-
-        if (getLineNumbersEnabled()) extensions.push(lineNumbers());
-        if (getSyntaxHighlightingEnabled()) {
-            extensions.push(resolveHighlightTheme(editorSettings.highlightTheme || 'auto'));
-        }
-        if (getVimModeEnabled()) extensions.push(vim());
-
-        return extensions;
-    };
-
-    const buildLanguageExtension = (info: FileTypeInfo): Extension[] => {
-        if (!getSyntaxHighlightingEnabled()) return [];
-
-        switch (info.fileType) {
-            case 'latex':
-                return [latex({ autoCloseBrackets: false, enableAutocomplete: false, fileName })];
-            case 'typst':
-                return [typst()];
-            case 'bib':
-                return [bibtex({ autoCloseBrackets: false, enableAutocomplete: false })];
-            case 'markdown':
-                return [markdown({ base: markdownLanguage, codeLanguages: languages, htmlTagLanguage: html() })];
-            case 'json':
-                return [json()];
-            case 'yaml':
-                return [yaml()];
-            case 'html':
-                return [html()];
-            default:
-                return [];
-        }
-    };
-
-    const buildLanguageSpecificExtensions = (
-        info: FileTypeInfo,
-        content: string,
-        completionSources: CompletionSource[],
-    ): Extension[] => {
-        const extensions: Extension[] = [];
-
-        if (!info.isStructured) return extensions;
-
-        extensions.push(createLinkNavigationExtension(fileName, content));
-
-        if (info.isLatex || info.isTypst) {
-            const [stateExtensions, filePathPlugin, enhancedCompletionSource] =
-                createFilePathAutocompleteExtension('');
-            extensions.push(stateExtensions, filePathPlugin);
-            extensions.push(createPasteExtension(currentFileId, fileName));
-
-            if (toolbarVisible) {
-                extensions.push(createToolbarExtension(info.fileType as 'latex' | 'typst', undoManagerRef.current || undefined));
-            }
-
-            if (editorSettings.mathLiveEnabled) {
-                extensions.push(createMathLiveExtension(
-                    info.fileType as 'latex' | 'typst',
-                    editorSettings.mathLivePreviewMode,
-                    editorSettings.language,
-                ));
-            }
-
-            completionSources.push(enhancedCompletionSource);
-            if (info.isLatex) completionSources.push(latexCompletionSource(true));
-        } else if (info.isBib) {
-            const [stateExtensions, filePathPlugin, enhancedCompletionSource] =
-                createFilePathAutocompleteExtension('');
-            extensions.push(stateExtensions, filePathPlugin);
-            completionSources.push(enhancedCompletionSource);
-            completionSources.push(bibtexCompletionSource);
-        }
-
-        return extensions;
-    };
-
-    const scheduleFilePathSync = (info: FileTypeInfo) => {
-        if (!info.isStructured) return;
-
-        if (isEditingFile && currentFileId) {
-            setTimeout(async () => {
-                const file = await fileStorageService.getFile(currentFileId);
-                if (file && viewRef.current) {
-                    setCurrentFilePath(viewRef.current, file.path);
-                    filePathCacheService.updateCurrentFilePath(file.path);
-                    updateLinkNavigationFilePath(viewRef.current, file.path);
-                    updateLinkNavigationFileName(viewRef.current, fileName || '');
-                }
-            }, 100);
-        } else if (!isEditingFile && documentId) {
-            setTimeout(async () => {
-                if (!viewRef.current) return;
-                filePathCacheService.updateCurrentFilePath('', documentId);
-                updateLinkNavigationFileName(viewRef.current, fileName || '');
-
-                const allFiles = await fileStorageService.getAllFiles(false, false, false);
-                const linkedFile = allFiles.find((file) => file.documentId === documentId);
-                if (linkedFile && viewRef.current) {
-                    updateLinkNavigationFilePath(viewRef.current, linkedFile.path);
-                }
-            }, 100);
-        }
-    };
-
-    const buildKeymapExtensions = (info: FileTypeInfo): Extension[] => {
-        const formatBinding = keymap.of([
-            {
-                key: 'Ctrl-Shift-i',
-                run: (view) => {
-                    if (isViewOnly || !info.hasFormatter) return false;
-                    document.dispatchEvent(
-                        new CustomEvent('trigger-format', {
-                            detail: {
-                                content: view.state.doc.toString(),
-                                contentType: info.fileType,
-                                fileId: currentFileId,
-                                documentId,
-                                view,
-                            },
-                        }),
-                    );
-                    return true;
-                },
-            },
-        ]);
-
-        const saveBinding = keymap.of([
-            {
-                key: 'Ctrl-s',
-                run: (view) => {
-                    if (isViewOnly) {
-                        setShowSaveIndicator(true);
-                        setTimeout(() => setShowSaveIndicator(false), 2000);
-                        return true;
-                    }
-                    const content = view.state.doc.toString();
-                    if (isEditingFile && currentFileId) void saveFileToStorage(content);
-                    else if (!isEditingFile && documentId) void saveDocumentToLinkedFile(content);
-                    return true;
-                },
-            },
-        ]);
-
-        return [formatBinding, saveBinding];
-    };
-
-    const buildCommentExtensions = (): Extension[] => {
-        if (!enableComments || isViewOnly) return [];
-
-        const commentBinding = keymap.of([
-            {
-                key: 'Alt-c',
-                run: (view) => {
-                    if (isViewOnly) return false;
-                    const range = view.state.selection.main;
-                    if (range.from === range.to) return false;
-                    try {
-                        document.dispatchEvent(
-                            new CustomEvent('show-comment-modal', { detail: { selection: range } }),
-                        );
-                        return true;
-                    } catch (error) {
-                        console.error('Error in commentKeymap:', error);
-                        return false;
-                    }
-                },
-            },
-        ]);
-
-        return [commentBinding, commentSystemExtension];
-    };
-
-    // --- Yjs / collaboration connection ---
-    useEffect(() => {
-        if (!isDocumentSelected || isEditingFile || !documentId || !projectId) return;
-
-        const collectionName = `yjs_${documentId}`;
-        const collabOptions = getCollabOptions();
-        const { doc, provider: collabProvider } = collabService.connect(
-            projectId,
-            collectionName,
-            collabOptions ?? {},
-        );
-        setYDoc(doc);
-        setProvider(collabProvider);
-
-        const ytext = doc.getText('codemirror');
-        ytextRef.current = ytext;
-        undoManagerRef.current = new UndoManager(ytext);
-
-        if (user) {
-            collabService.setUserInfo(projectId, collectionName, {
-                id: user.id,
-                username: user.username,
-                name: user.name,
-                color: user.color,
-                colorLight: user.colorLight,
-                passwordHash: '',
-                createdAt: 0,
-            });
-        }
-
-        return () => {
-            undoManagerRef.current = null;
-            collabService.disconnect(projectId, collectionName);
-            setYDoc(null);
-            setProvider(null);
-            ytextRef.current = null;
-        };
-    }, [projectId, documentId, isDocumentSelected, isEditingFile, user, getCollabOptions]);
-
-    // --- Create / recreate EditorView ---
-    useEffect(() => {
-        if (!editorRef.current || (!ytextRef.current && !isEditingFile) || !isDocumentSelected) {
-            return;
-        }
-
-        if (viewRef.current) {
-            viewRef.current.destroy();
-            viewRef.current = null;
-        }
-
-        const contentToUse = isEditingFile
-            ? textContent
-            : ytextRef.current?.toString() || '';
-
-        const info = classifyFileType(fileName, contentToUse);
-        const completionSources: CompletionSource[] = [];
-        const extensions: Extension[] = [];
-        const { base, language, toolbar: toolbarComp, languageSpecific } = compartmentsRef.current;
-
-        if (info.isLatex || info.isTypst) {
-            extensions.push(createListingsExtension(info.fileType as 'latex' | 'typst'));
-        }
-
-        extensions.push(base.of(buildBaseExtensions()));
-        extensions.push(language.of(buildLanguageExtension(info)));
-
-        if (fileName) {
-            extensions.push(...getGenericLSPExtensionsForFile(fileName));
-            completionSources.push(...getGenericLSPCompletionSources(fileName));
-            extensions.push(createCodeActionsExtension(fileName));
-        }
-
-        if (info.isLatex || info.isTypst || info.isBib) {
-            extensions.push(latexTypstBidiIsolates());
-        }
-
-        extensions.push(
-            languageSpecific.of(buildLanguageSpecificExtensions(info, contentToUse, completionSources)),
-        );
-
-        if (info.isStructured) {
-            extensions.push(autocompletion({
-                override: completionSources.length > 0 ? completionSources : undefined,
-                maxRenderedOptions: 20,
-                closeOnBlur: false,
-            }));
-        } else {
-            extensions.push(autocompletion());
-        }
-
-        if (isViewOnly) extensions.push(EditorState.readOnly.of(true));
-
-        if (!isEditingFile && ytextRef.current && undoManagerRef.current) {
-            yjsEditorBindingRef.current?.cleanup();
-            yjsEditorBindingRef.current = createYjsEditorBindingExtensions(
-                ytextRef.current,
-                provider?.awareness,
-                undoManagerRef.current,
-            );
-            extensions.push(...yjsEditorBindingRef.current.extensions);
-        } else if (isEditingFile) {
-            extensions.push(history());
-            extensions.push(keymap.of(historyKeymap));
-        }
-
-        extensions.push(...buildCommentExtensions());
-        extensions.push(...buildKeymapExtensions(info));
-
-        const cachedUndoHistory = isEditingFile && currentFileId
-            ? fileUndoHistoryCache.get(currentFileId)
-            : undefined;
-
-        let state: EditorState;
-        if (cachedUndoHistory) {
-            try {
-                state = EditorState.fromJSON(
-                    {
-                        doc: contentToUse,
-                        selection: { ranges: [{ anchor: 0, head: 0 }], main: 0 },
-                        history: cachedUndoHistory,
-                    },
-                    { extensions },
-                    { history: historyField },
-                );
-            } catch {
-                fileUndoHistoryCache.delete(currentFileId!);
-                state = EditorState.create({ doc: contentToUse, extensions });
-            }
-        } else {
-            state = EditorState.create({ doc: contentToUse, extensions });
-        }
-
-        try {
-            const view = new EditorView({ state, parent: editorRef.current });
-            viewRef.current = view;
-
-            scheduleFilePathSync(info);
-
-            setTimeout(() => {
-                document.dispatchEvent(
-                    new CustomEvent('editor-ready', {
-                        detail: { fileId: currentFileId, documentId, isEditingFile },
-                    }),
-                );
-            }, 50);
-
-            if (info.isLatex || info.isTypst) {
-                filePathCacheService.updateCache();
-                updateLinkNavigationFileName(view, fileName);
-            }
-        } catch (error) {
-            console.error('Error creating editor view:', error);
-        }
-
-        return () => {
-            if (viewRef.current) {
-                if (isEditingFile && currentFileId) {
-                    const snapshot = viewRef.current.state.toJSON({ history: historyField });
-                    fileUndoHistoryCache.set(currentFileId, snapshot.history);
-                }
-
-                yjsEditorBindingRef.current?.cleanup();
-                yjsEditorBindingRef.current = null;
-
-                filePathCacheService.cleanup();
-                viewRef.current.destroy();
-                viewRef.current = null;
-            }
-        };
-    }, [
-        editorRef,
-        yDoc,
-        provider,
-        isDocumentSelected,
-        isEditingFile,
-        isViewOnly,
-        fileName,
-        currentFileId,
-        documentId,
-        enableComments,
-        textContent
-    ]);
-
-    useEffect(() => {
-        const view = viewRef.current;
-        if (!view) return;
-
-        const info = classifyFileType(fileName, view.state.doc.toString());
-        const completionSources: CompletionSource[] = [];
-        const { base, language, toolbar: toolbarComp, languageSpecific } = compartmentsRef.current;
-
-        const toolbarExt: Extension[] =
-            (info.isLatex || info.isTypst) && toolbarVisible
-                ? [createToolbarExtension(info.fileType as 'latex' | 'typst', undoManagerRef.current || undefined)]
-                : [];
-
-        view.dispatch({
-            effects: [
-                base.reconfigure(buildBaseExtensions()),
-                language.reconfigure(buildLanguageExtension(info)),
-                languageSpecific.reconfigure(
-                    buildLanguageSpecificExtensions(info, view.state.doc.toString(), completionSources),
-                ),
-                toolbarComp.reconfigure(toolbarExt),
-            ],
-        });
-    }, [editorSettingsVersion, toolbarVisible, fileName]);
-
-    useEffect(() => {
-        if (!editorRef.current || !viewRef.current) return;
-        return registerEditorClipboard(editorRef.current, viewRef);
-    }, [editorRef, viewRef]);
-
-    useEffect(() => {
-        const autoSaveKey = isEditingFile ? currentFileId : documentId;
-
-        if (autoSaveRef.current && autoSaveKey) {
-            autoSaveService.clearAutoSaver(autoSaveKey);
-            autoSaveRef.current = null;
-        }
-
-        if (!autoSaveKey || isViewOnly || !getAutoSaveEnabled()) return;
-
-        const autoSaveDelay = getAutoSaveDelay();
-
-        const setupAutoSave = () => {
-            if (!viewRef.current) {
-                setTimeout(setupAutoSave, 100);
-                return;
-            }
-
-            autoSaveRef.current = autoSaveService.createAutoSaver(
-                autoSaveKey,
-                () => viewRef.current?.state?.doc?.toString() || '',
-                {
-                    enabled: true,
-                    delay: autoSaveDelay,
-                    onSave: async (_saveKey, content) => {
-                        if (isEditingFile && currentFileId) await saveFileToStorage(content);
-                        else if (!isEditingFile && documentId) await saveDocumentToLinkedFile(content);
-                    },
-                    onError: (error) => console.error('Auto-save failed:', error),
-                },
-            );
-        };
-
-        setupAutoSave();
-
-        return () => {
-            if (autoSaveKey) autoSaveService.clearAutoSaver(autoSaveKey);
-            autoSaveRef.current = null;
-        };
-    }, [
-        isEditingFile,
-        isViewOnly,
-        currentFileId,
-        documentId,
-        getAutoSaveEnabled,
-        getAutoSaveDelay,
-        editorSettingsVersion,
-    ]);
-
-    useEffect(() => {
-        if (!ytextRef.current || !isDocumentSelected || isEditingFile) return;
-
-        return registerYjsBinding(ytextRef.current, {
-            enableComments,
-            onUpdateContent,
-            updateComments,
-            autoSaveRef,
-            isUpdatingRef,
-            viewRef,
-            hasEmittedReadyRef,
-            currentFileId,
-            documentId,
-            isEditingFile,
-        });
-    }, [
-        ytextRef,
-        isDocumentSelected,
-        isEditingFile,
-        enableComments,
-        onUpdateContent,
-        updateComments,
-        currentFileId,
-        documentId,
-    ]);
-
-    useEffect(() => {
-        if (!viewRef.current) return;
-        return registerEditorSearchHighlightEvents(viewRef);
-    }, [viewRef]);
-
-    useEffect(() => {
-        if (!viewRef.current || !isDocumentSelected) return;
-
-        return registerEditorEventHandlers(viewRef, {
-            isViewOnly,
-            isEditingFile,
-            currentFileId,
-            documentId,
-            enableComments,
-            updateComments,
-            saveFileToStorage,
-            saveDocumentToLinkedFile,
-            setShowSaveIndicator,
-        });
-    }, [
-        viewRef,
-        isDocumentSelected,
-        isViewOnly,
-        isEditingFile,
-        currentFileId,
-        documentId,
-        enableComments,
-        updateComments,
-        saveFileToStorage,
-        saveDocumentToLinkedFile,
-        setShowSaveIndicator,
-    ]);
-
-    useEffect(() => {
-        return () => {
-            const autoSaveKey = isEditingFile ? currentFileId : documentId;
-            if (autoSaveKey) {
-                autoSaveService.flushPendingSaves().catch(console.error);
-                autoSaveService.clearAutoSaver(autoSaveKey);
-            }
-        };
-    }, [currentFileId, documentId, isEditingFile]);
-
-    useEffect(() => {
-        if (!isEditingFile || !currentFileId) return;
-
-        const handleFileReloaded = async (e: Event) => {
-            const { fileId } = (e as CustomEvent).detail;
-            if (fileId !== currentFileId || !viewRef.current) return;
-            const file = await fileStorageService.getFile(fileId);
-            if (!file?.content) return;
-            const content = typeof file.content === 'string'
-                ? file.content
-                : new TextDecoder().decode(file.content);
-            viewRef.current.dispatch({
-                changes: { from: 0, to: viewRef.current.state.doc.length, insert: content },
-            });
-        };
-
-        document.addEventListener('file-reloaded', handleFileReloaded);
-        return () => document.removeEventListener('file-reloaded', handleFileReloaded);
-    }, [isEditingFile, currentFileId]);
-
-    return { viewRef, isUpdatingRef, showSaveIndicator };
+	const {
+		getAutoSaveEnabled,
+		getAutoSaveDelay,
+		getLineNumbersEnabled,
+		getSyntaxHighlightingEnabled,
+		getEditorTextDirection,
+		getVimModeEnabled,
+		getSpellCheckEnabled,
+		getCollabOptions,
+		// getEnabledLSPPlugins,
+		editorSettingsVersion,
+		editorSettings,
+	} = useEditor();
+
+	const { user } = useAuth();
+
+	const ytextRef = useRef<Y.Text | null>(null);
+	const viewRef = useRef<EditorView | null>(null);
+	const isUpdatingRef = useRef<boolean>(false);
+	const autoSaveRef = useRef<(() => void) | null>(null);
+	const yjsEditorBindingRef = useRef<YjsEditorBindingResult | null>(null);
+	const [showSaveIndicator, setShowSaveIndicator] = useState(false);
+	const [yDoc, setYDoc] = useState<Y.Doc | null>(null);
+	const [provider, setProvider] = useState<CollabProvider | null>(null);
+	const hasEmittedReadyRef = useRef<boolean>(false);
+	const undoManagerRef = useRef<UndoManager | null>(null);
+
+	const compartmentsRef = useRef({
+		base: new Compartment(),
+		language: new Compartment(),
+		toolbar: new Compartment(),
+		languageSpecific: new Compartment(),
+	});
+
+	const projectId = docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl;
+
+	useEffect(() => {
+		filePathCacheService.initialize();
+		return () => {
+			filePathCacheService.cleanup();
+		};
+	}, []);
+
+	const saveFileToStorage = useCallback(
+		async (content: string) => {
+			if (!currentFileId || !isEditingFile) return;
+			try {
+				const encoder = new TextEncoder();
+				const contentBuffer = encoder.encode(content).buffer;
+				await fileStorageService.updateFileContent(
+					currentFileId,
+					contentBuffer,
+				);
+
+				if (fileName && isBibFile(fileName) && viewRef.current) {
+					refreshBibliographyCache(viewRef.current);
+				}
+
+				const file = await fileStorageService.getFile(currentFileId);
+
+				setShowSaveIndicator(true);
+				setTimeout(() => setShowSaveIndicator(false), 1500);
+
+				document.dispatchEvent(
+					new CustomEvent('file-saved', {
+						detail: {
+							isFile: true,
+							fileId: currentFileId,
+							filePath: file?.path,
+						},
+					}),
+				);
+			} catch (error) {
+				console.error('Error saving file:', error);
+			}
+		},
+		[currentFileId, isEditingFile, fileName],
+	);
+
+	const saveDocumentToLinkedFile = useCallback(
+		async (content: string) => {
+			if (!documentId || isEditingFile) return;
+			try {
+				const allFiles = await fileStorageService.getAllFiles(
+					false,
+					false,
+					false,
+				);
+				const linkedFile = allFiles.find(
+					(file) => file.documentId === documentId,
+				);
+				if (linkedFile) {
+					await fileStorageService.updateFileContent(linkedFile.id, content);
+
+					if (isBibFile(linkedFile.name) && viewRef.current) {
+						refreshBibliographyCache(viewRef.current);
+					}
+
+					setShowSaveIndicator(true);
+					setTimeout(() => setShowSaveIndicator(false), 1500);
+
+					document.dispatchEvent(
+						new CustomEvent('file-saved', {
+							detail: {
+								isFile: false,
+								documentId,
+								fileId: linkedFile.id,
+								filePath: linkedFile.path,
+							},
+						}),
+					);
+				}
+			} catch (error) {
+				console.error('Error saving document to linked file:', error);
+			}
+		},
+		[documentId, isEditingFile],
+	);
+
+	const buildSpellCheckExtension = (): Extension => {
+		if (!getSpellCheckEnabled()) return [];
+		return EditorView.contentAttributes.of({
+			spellcheck: 'true',
+			contenteditable: 'true',
+		});
+	};
+
+	const buildCursorTrackingExtension = (): Extension => {
+		let cursorUpdateTimeout: NodeJS.Timeout | null = null;
+
+		return EditorView.updateListener.of((update: ViewUpdate) => {
+			if (update.docChanged && autoSaveRef.current) {
+				autoSaveRef.current();
+			}
+
+			if (update.selectionSet) {
+				if (cursorUpdateTimeout) clearTimeout(cursorUpdateTimeout);
+				cursorUpdateTimeout = setTimeout(() => {
+					if (!update.view?.state) return;
+					const pos = update.view.state.selection.main.head;
+					const line = update.view.state.doc.lineAt(pos).number;
+					document.dispatchEvent(
+						new CustomEvent('editor-cursor-update', {
+							detail: {
+								line,
+								position: pos,
+								fileId: currentFileId,
+								documentId,
+								isEditingFile,
+							},
+						}),
+					);
+				}, 200);
+			}
+		});
+	};
+
+	const buildBaseExtensions = (): Extension[] => {
+		const direction = getEditorTextDirection();
+		const extensions: Extension[] = [
+			EditorView.theme({
+				'.cm-content': {
+					fontFamily: editorSettings.fontFamily,
+					fontSize: editorSettings.fontSize,
+				},
+			}),
+			EditorView.lineWrapping,
+			foldGutter(),
+			indentOnInput(),
+			bidiIsolates(),
+			bracketMatching(),
+			closeBrackets(),
+			highlightSelectionMatches(),
+			search(),
+			buildSpellCheckExtension(),
+			keymap.of([
+				indentWithTab,
+				...closeBracketsKeymap,
+				...defaultKeymap,
+				...searchKeymap,
+				...foldKeymap,
+				...completionKeymap,
+			]),
+			buildCursorTrackingExtension(),
+			searchHighlightExtension,
+		];
+
+		if (direction !== 'auto') {
+			extensions.push(
+				EditorView.editorAttributes.of({
+					dir: direction,
+					style: `direction: ${direction};`,
+				}),
+			);
+			extensions.push(
+				EditorView.contentAttributes.of({
+					dir: direction,
+					style: `direction: ${direction};`,
+				}),
+			);
+		}
+
+		if (getLineNumbersEnabled()) extensions.push(lineNumbers());
+		if (getSyntaxHighlightingEnabled()) {
+			extensions.push(
+				resolveHighlightTheme(editorSettings.highlightTheme || 'auto'),
+			);
+		}
+		if (getVimModeEnabled()) extensions.push(vim());
+
+		return extensions;
+	};
+
+	const buildLanguageExtension = (info: FileTypeInfo): Extension[] => {
+		if (!getSyntaxHighlightingEnabled()) return [];
+
+		switch (info.fileType) {
+			case 'latex':
+				return [
+					latex({
+						autoCloseBrackets: false,
+						enableAutocomplete: false,
+						fileName,
+					}),
+				];
+			case 'typst':
+				return [typst()];
+			case 'bib':
+				return [
+					bibtex({ autoCloseBrackets: false, enableAutocomplete: false }),
+				];
+			case 'markdown':
+				return [
+					markdown({
+						base: markdownLanguage,
+						codeLanguages: languages,
+						htmlTagLanguage: html(),
+					}),
+				];
+			case 'json':
+				return [json()];
+			case 'yaml':
+				return [yaml()];
+			case 'html':
+				return [html()];
+			default:
+				return [];
+		}
+	};
+
+	const buildLanguageSpecificExtensions = (
+		info: FileTypeInfo,
+		content: string,
+		completionSources: CompletionSource[],
+	): Extension[] => {
+		const extensions: Extension[] = [];
+
+		if (!info.isStructured) return extensions;
+
+		extensions.push(createLinkNavigationExtension(fileName, content));
+
+		if (info.isLatex || info.isTypst) {
+			const [stateExtensions, filePathPlugin, enhancedCompletionSource] =
+				createFilePathAutocompleteExtension('');
+			extensions.push(stateExtensions, filePathPlugin);
+			extensions.push(createPasteExtension(currentFileId, fileName));
+
+			if (toolbarVisible) {
+				extensions.push(
+					createToolbarExtension(
+						info.fileType as 'latex' | 'typst',
+						undoManagerRef.current || undefined,
+					),
+				);
+			}
+
+			if (editorSettings.mathLiveEnabled) {
+				extensions.push(
+					createMathLiveExtension(
+						info.fileType as 'latex' | 'typst',
+						editorSettings.mathLivePreviewMode,
+						editorSettings.language,
+					),
+				);
+			}
+
+			completionSources.push(enhancedCompletionSource);
+			if (info.isLatex) completionSources.push(latexCompletionSource(true));
+		} else if (info.isBib) {
+			const [stateExtensions, filePathPlugin, enhancedCompletionSource] =
+				createFilePathAutocompleteExtension('');
+			extensions.push(stateExtensions, filePathPlugin);
+			completionSources.push(enhancedCompletionSource);
+			completionSources.push(bibtexCompletionSource);
+		}
+
+		return extensions;
+	};
+
+	const scheduleFilePathSync = (info: FileTypeInfo) => {
+		if (!info.isStructured) return;
+
+		if (isEditingFile && currentFileId) {
+			setTimeout(async () => {
+				const file = await fileStorageService.getFile(currentFileId);
+				if (file && viewRef.current) {
+					setCurrentFilePath(viewRef.current, file.path);
+					filePathCacheService.updateCurrentFilePath(file.path);
+					updateLinkNavigationFilePath(viewRef.current, file.path);
+					updateLinkNavigationFileName(viewRef.current, fileName || '');
+				}
+			}, 100);
+		} else if (!isEditingFile && documentId) {
+			setTimeout(async () => {
+				if (!viewRef.current) return;
+				filePathCacheService.updateCurrentFilePath('', documentId);
+				updateLinkNavigationFileName(viewRef.current, fileName || '');
+
+				const allFiles = await fileStorageService.getAllFiles(
+					false,
+					false,
+					false,
+				);
+				const linkedFile = allFiles.find(
+					(file) => file.documentId === documentId,
+				);
+				if (linkedFile && viewRef.current) {
+					updateLinkNavigationFilePath(viewRef.current, linkedFile.path);
+				}
+			}, 100);
+		}
+	};
+
+	const buildKeymapExtensions = (info: FileTypeInfo): Extension[] => {
+		const formatBinding = keymap.of([
+			{
+				key: 'Ctrl-Shift-i',
+				run: (view) => {
+					if (isViewOnly || !info.hasFormatter) return false;
+					document.dispatchEvent(
+						new CustomEvent('trigger-format', {
+							detail: {
+								content: view.state.doc.toString(),
+								contentType: info.fileType,
+								fileId: currentFileId,
+								documentId,
+								view,
+							},
+						}),
+					);
+					return true;
+				},
+			},
+		]);
+
+		const saveBinding = keymap.of([
+			{
+				key: 'Ctrl-s',
+				run: (view) => {
+					if (isViewOnly) {
+						setShowSaveIndicator(true);
+						setTimeout(() => setShowSaveIndicator(false), 2000);
+						return true;
+					}
+					const content = view.state.doc.toString();
+					if (isEditingFile && currentFileId) void saveFileToStorage(content);
+					else if (!isEditingFile && documentId)
+						void saveDocumentToLinkedFile(content);
+					return true;
+				},
+			},
+		]);
+
+		return [formatBinding, saveBinding];
+	};
+
+	const buildCommentExtensions = (): Extension[] => {
+		if (!enableComments || isViewOnly) return [];
+
+		const commentBinding = keymap.of([
+			{
+				key: 'Alt-c',
+				run: (view) => {
+					if (isViewOnly) return false;
+					const range = view.state.selection.main;
+					if (range.from === range.to) return false;
+					try {
+						document.dispatchEvent(
+							new CustomEvent('show-comment-modal', {
+								detail: { selection: range },
+							}),
+						);
+						return true;
+					} catch (error) {
+						console.error('Error in commentKeymap:', error);
+						return false;
+					}
+				},
+			},
+		]);
+
+		return [commentBinding, commentSystemExtension];
+	};
+
+	// --- Yjs / collaboration connection ---
+	useEffect(() => {
+		if (!isDocumentSelected || isEditingFile || !documentId || !projectId)
+			return;
+
+		const collectionName = `yjs_${documentId}`;
+		const collabOptions = getCollabOptions();
+		const { doc, provider: collabProvider } = collabService.connect(
+			projectId,
+			collectionName,
+			collabOptions ?? {},
+		);
+		setYDoc(doc);
+		setProvider(collabProvider);
+
+		const ytext = doc.getText('codemirror');
+		ytextRef.current = ytext;
+		undoManagerRef.current = new UndoManager(ytext);
+
+		if (user) {
+			collabService.setUserInfo(projectId, collectionName, {
+				id: user.id,
+				username: user.username,
+				name: user.name,
+				color: user.color,
+				colorLight: user.colorLight,
+				passwordHash: '',
+				createdAt: 0,
+			});
+		}
+
+		return () => {
+			undoManagerRef.current = null;
+			collabService.disconnect(projectId, collectionName);
+			setYDoc(null);
+			setProvider(null);
+			ytextRef.current = null;
+		};
+	}, [
+		projectId,
+		documentId,
+		isDocumentSelected,
+		isEditingFile,
+		user,
+		getCollabOptions,
+	]);
+
+	// --- Create / recreate EditorView ---
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: Build helpers (buildBaseExtensions, buildKeymapExtensions, buildLanguageSpecificExtensions, buildCommentExtensions, buildLanguageExtension, scheduleFilePathSync) close over editorSettings/getXxxEnabled and are intentionally re-evaluated only on the listed triggers; settings-only changes go through the separate reconfigure effect below. yDoc and enableComments are triggers, not body reads. */
+	useEffect(() => {
+		if (
+			!editorRef.current ||
+			(!ytextRef.current && !isEditingFile) ||
+			!isDocumentSelected
+		) {
+			return;
+		}
+
+		if (viewRef.current) {
+			viewRef.current.destroy();
+			viewRef.current = null;
+		}
+
+		const contentToUse = isEditingFile
+			? textContent
+			: ytextRef.current?.toString() || '';
+
+		const info = classifyFileType(fileName, contentToUse);
+		const completionSources: CompletionSource[] = [];
+		const extensions: Extension[] = [];
+		const {
+			base,
+			language,
+			toolbar: toolbarComp,
+			languageSpecific,
+		} = compartmentsRef.current;
+
+		if (info.isLatex || info.isTypst) {
+			extensions.push(
+				createListingsExtension(info.fileType as 'latex' | 'typst'),
+			);
+		}
+
+		extensions.push(base.of(buildBaseExtensions()));
+		extensions.push(language.of(buildLanguageExtension(info)));
+
+		if (fileName) {
+			extensions.push(...getGenericLSPExtensionsForFile(fileName));
+			completionSources.push(...getGenericLSPCompletionSources(fileName));
+			extensions.push(createCodeActionsExtension(fileName));
+		}
+
+		if (info.isLatex || info.isTypst || info.isBib) {
+			extensions.push(latexTypstBidiIsolates());
+		}
+
+		extensions.push(
+			languageSpecific.of(
+				buildLanguageSpecificExtensions(info, contentToUse, completionSources),
+			),
+		);
+
+		if (info.isStructured) {
+			extensions.push(
+				autocompletion({
+					override:
+						completionSources.length > 0 ? completionSources : undefined,
+					maxRenderedOptions: 20,
+					closeOnBlur: false,
+				}),
+			);
+		} else {
+			extensions.push(autocompletion());
+		}
+
+		if (isViewOnly) extensions.push(EditorState.readOnly.of(true));
+
+		if (!isEditingFile && ytextRef.current && undoManagerRef.current) {
+			yjsEditorBindingRef.current?.cleanup();
+			yjsEditorBindingRef.current = createYjsEditorBindingExtensions(
+				ytextRef.current,
+				provider?.awareness,
+				undoManagerRef.current,
+			);
+			extensions.push(...yjsEditorBindingRef.current.extensions);
+		} else if (isEditingFile) {
+			extensions.push(history());
+			extensions.push(keymap.of(historyKeymap));
+		}
+
+		extensions.push(...buildCommentExtensions());
+		extensions.push(...buildKeymapExtensions(info));
+
+		const cachedUndoHistory =
+			isEditingFile && currentFileId
+				? fileUndoHistoryCache.get(currentFileId)
+				: undefined;
+
+		let state: EditorState;
+		if (cachedUndoHistory) {
+			try {
+				state = EditorState.fromJSON(
+					{
+						doc: contentToUse,
+						selection: { ranges: [{ anchor: 0, head: 0 }], main: 0 },
+						history: cachedUndoHistory,
+					},
+					{ extensions },
+					{ history: historyField },
+				);
+			} catch {
+				fileUndoHistoryCache.delete(currentFileId!);
+				state = EditorState.create({ doc: contentToUse, extensions });
+			}
+		} else {
+			state = EditorState.create({ doc: contentToUse, extensions });
+		}
+
+		try {
+			const view = new EditorView({ state, parent: editorRef.current });
+			viewRef.current = view;
+
+			scheduleFilePathSync(info);
+
+			setTimeout(() => {
+				document.dispatchEvent(
+					new CustomEvent('editor-ready', {
+						detail: { fileId: currentFileId, documentId, isEditingFile },
+					}),
+				);
+			}, 50);
+
+			if (info.isLatex || info.isTypst) {
+				filePathCacheService.updateCache();
+				updateLinkNavigationFileName(view, fileName);
+			}
+		} catch (error) {
+			console.error('Error creating editor view:', error);
+		}
+
+		return () => {
+			if (viewRef.current) {
+				if (isEditingFile && currentFileId) {
+					const snapshot = viewRef.current.state.toJSON({
+						history: historyField,
+					});
+					fileUndoHistoryCache.set(currentFileId, snapshot.history);
+				}
+
+				yjsEditorBindingRef.current?.cleanup();
+				yjsEditorBindingRef.current = null;
+
+				filePathCacheService.cleanup();
+				viewRef.current.destroy();
+				viewRef.current = null;
+			}
+		};
+	}, [
+		editorRef,
+		yDoc,
+		provider,
+		isDocumentSelected,
+		isEditingFile,
+		isViewOnly,
+		fileName,
+		currentFileId,
+		documentId,
+		enableComments,
+		textContent,
+	]);
+
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: Build helpers are called for live compartment reconfiguration; editorSettingsVersion is the intentional trigger for settings-driven rebuilds. */
+	useEffect(() => {
+		const view = viewRef.current;
+		if (!view) return;
+
+		const info = classifyFileType(fileName, view.state.doc.toString());
+		const completionSources: CompletionSource[] = [];
+		const {
+			base,
+			language,
+			toolbar: toolbarComp,
+			languageSpecific,
+		} = compartmentsRef.current;
+
+		const toolbarExt: Extension[] =
+			(info.isLatex || info.isTypst) && toolbarVisible
+				? [
+						createToolbarExtension(
+							info.fileType as 'latex' | 'typst',
+							undoManagerRef.current || undefined,
+						),
+					]
+				: [];
+
+		view.dispatch({
+			effects: [
+				base.reconfigure(buildBaseExtensions()),
+				language.reconfigure(buildLanguageExtension(info)),
+				languageSpecific.reconfigure(
+					buildLanguageSpecificExtensions(
+						info,
+						view.state.doc.toString(),
+						completionSources,
+					),
+				),
+				toolbarComp.reconfigure(toolbarExt),
+			],
+		});
+	}, [editorSettingsVersion, toolbarVisible, fileName]);
+
+	useEffect(() => {
+		if (!editorRef.current || !viewRef.current) return;
+		return registerEditorClipboard(editorRef.current, viewRef);
+	}, [editorRef]);
+
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: editorSettingsVersion is the trigger to recreate the auto-saver when auto-save delay/enabled changes. */
+	useEffect(() => {
+		const autoSaveKey = isEditingFile ? currentFileId : documentId;
+
+		if (autoSaveRef.current && autoSaveKey) {
+			autoSaveService.clearAutoSaver(autoSaveKey);
+			autoSaveRef.current = null;
+		}
+
+		if (!autoSaveKey || isViewOnly || !getAutoSaveEnabled()) return;
+
+		const autoSaveDelay = getAutoSaveDelay();
+
+		const setupAutoSave = () => {
+			if (!viewRef.current) {
+				setTimeout(setupAutoSave, 100);
+				return;
+			}
+
+			autoSaveRef.current = autoSaveService.createAutoSaver(
+				autoSaveKey,
+				() => viewRef.current?.state?.doc?.toString() || '',
+				{
+					enabled: true,
+					delay: autoSaveDelay,
+					onSave: async (_saveKey, content) => {
+						if (isEditingFile && currentFileId)
+							await saveFileToStorage(content);
+						else if (!isEditingFile && documentId)
+							await saveDocumentToLinkedFile(content);
+					},
+					onError: (error) => console.error('Auto-save failed:', error),
+				},
+			);
+		};
+
+		setupAutoSave();
+
+		return () => {
+			if (autoSaveKey) autoSaveService.clearAutoSaver(autoSaveKey);
+			autoSaveRef.current = null;
+		};
+	}, [
+		isEditingFile,
+		isViewOnly,
+		currentFileId,
+		documentId,
+		getAutoSaveEnabled,
+		getAutoSaveDelay,
+		editorSettingsVersion,
+		saveFileToStorage,
+		saveDocumentToLinkedFile,
+	]);
+
+	useEffect(() => {
+		if (!ytextRef.current || !isDocumentSelected || isEditingFile) return;
+
+		return registerYjsBinding(ytextRef.current, {
+			enableComments,
+			onUpdateContent,
+			updateComments,
+			autoSaveRef,
+			isUpdatingRef,
+			viewRef,
+			hasEmittedReadyRef,
+			currentFileId,
+			documentId,
+			isEditingFile,
+		});
+	}, [
+		isDocumentSelected,
+		isEditingFile,
+		enableComments,
+		onUpdateContent,
+		updateComments,
+		currentFileId,
+		documentId,
+	]);
+
+	useEffect(() => {
+		if (!viewRef.current) return;
+		return registerEditorSearchHighlightEvents(viewRef);
+	}, []);
+
+	useEffect(() => {
+		if (!viewRef.current || !isDocumentSelected) return;
+
+		return registerEditorEventHandlers(viewRef, {
+			isViewOnly,
+			isEditingFile,
+			currentFileId,
+			documentId,
+			enableComments,
+			updateComments,
+			saveFileToStorage,
+			saveDocumentToLinkedFile,
+			setShowSaveIndicator,
+		});
+	}, [
+		isDocumentSelected,
+		isViewOnly,
+		isEditingFile,
+		currentFileId,
+		documentId,
+		enableComments,
+		updateComments,
+		saveFileToStorage,
+		saveDocumentToLinkedFile,
+	]);
+
+	useEffect(() => {
+		return () => {
+			const autoSaveKey = isEditingFile ? currentFileId : documentId;
+			if (autoSaveKey) {
+				autoSaveService.flushPendingSaves().catch(console.error);
+				autoSaveService.clearAutoSaver(autoSaveKey);
+			}
+		};
+	}, [currentFileId, documentId, isEditingFile]);
+
+	useEffect(() => {
+		if (!isEditingFile || !currentFileId) return;
+
+		const handleFileReloaded = async (e: Event) => {
+			const { fileId } = (e as CustomEvent).detail;
+			if (fileId !== currentFileId || !viewRef.current) return;
+			const file = await fileStorageService.getFile(fileId);
+			if (!file?.content) return;
+			const content =
+				typeof file.content === 'string'
+					? file.content
+					: new TextDecoder().decode(file.content);
+			viewRef.current.dispatch({
+				changes: {
+					from: 0,
+					to: viewRef.current.state.doc.length,
+					insert: content,
+				},
+			});
+		};
+
+		document.addEventListener('file-reloaded', handleFileReloaded);
+		return () =>
+			document.removeEventListener('file-reloaded', handleFileReloaded);
+	}, [isEditingFile, currentFileId]);
+
+	return { viewRef, isUpdatingRef, showSaveIndicator };
 };

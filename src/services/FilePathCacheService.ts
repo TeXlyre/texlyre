@@ -1,6 +1,11 @@
 // src/services/FilePathCacheService.ts
 import type { FileNode, FilePathCache } from '../types/files';
-import { isLatexFile, isTypstFile, isBibFile, isTemporaryFile } from '../utils/fileUtils';
+import {
+	isLatexFile,
+	isTypstFile,
+	isBibFile,
+	isTemporaryFile,
+} from '../utils/fileUtils';
 import { fileStorageEventEmitter } from './FileStorageService';
 
 type CacheUpdateCallback = (files: FileNode[]) => void;
@@ -72,7 +77,10 @@ class FilePathCacheService {
 
 	onLabelsUpdate(callback: LabelsUpdateCallback) {
 		this.labelsUpdateCallbacks.add(callback);
-		if (this.labelCache.texLabels.size > 0 || this.labelCache.typstLabels.size > 0) {
+		if (
+			this.labelCache.texLabels.size > 0 ||
+			this.labelCache.typstLabels.size > 0
+		) {
 			callback(this.labelCache.texLabels);
 			callback(this.labelCache.typstLabels);
 		}
@@ -91,40 +99,61 @@ class FilePathCacheService {
 	}
 
 	getBibliographyFiles(): FileNode[] {
-		return this.flattenFiles(this.cachedFiles).filter(file =>
-			file.type === 'file' &&
-			isBibFile(file.name) &&
-			!file.isDeleted &&
-			!isTemporaryFile(file.path)
+		return this.flattenFiles(this.cachedFiles).filter(
+			(file) =>
+				file.type === 'file' &&
+				isBibFile(file.name) &&
+				!file.isDeleted &&
+				!isTemporaryFile(file.path),
 		);
 	}
 
 	async getLinkedFilePath(documentId: string): Promise<string> {
 		const cachedFiles = await this.getCachedFiles();
-		const linkedFile = this.flattenFiles(cachedFiles).find(file => file.documentId === documentId);
+		const linkedFile = this.flattenFiles(cachedFiles).find(
+			(file) => file.documentId === documentId,
+		);
 		return linkedFile?.path || '';
 	}
 
 	updateCurrentFilePath(filePath: string, documentId?: string) {
 		if (!filePath && documentId) {
-			this.getLinkedFilePath(documentId).then(linkedPath => {
+			this.getLinkedFilePath(documentId).then((linkedPath) => {
 				if (linkedPath) {
-					this.filePathUpdateCallbacks.forEach(callback => {
+					this.filePathUpdateCallbacks.forEach((callback) => {
 						callback(linkedPath);
 					});
 				}
 			});
 		} else {
-			this.filePathUpdateCallbacks.forEach(callback => {
+			this.filePathUpdateCallbacks.forEach((callback) => {
 				callback(filePath);
 			});
 		}
 	}
 
 	buildCacheFromFiles(files: FileNode[]): FilePathCache {
-		const imageExtensions = new Set(['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp', 'ico', 'eps']);
+		const imageExtensions = new Set([
+			'png',
+			'jpg',
+			'jpeg',
+			'gif',
+			'bmp',
+			'svg',
+			'webp',
+			'ico',
+			'eps',
+		]);
 		const videoExtensions = new Set(['mp4', 'webm', 'ogv', 'mov']);
-		const audioExtensions = new Set(['mp3', 'ogg', 'oga', 'opus', 'wav', 'flac', 'm4a']);
+		const audioExtensions = new Set([
+			'mp3',
+			'ogg',
+			'oga',
+			'opus',
+			'wav',
+			'flac',
+			'm4a',
+		]);
 
 		const cache: FilePathCache = {
 			files: [],
@@ -139,7 +168,11 @@ class FilePathCacheService {
 		};
 
 		const processNode = (node: FileNode) => {
-			if (node.type === 'file' && !node.isDeleted && !isTemporaryFile(node.path)) {
+			if (
+				node.type === 'file' &&
+				!node.isDeleted &&
+				!isTemporaryFile(node.path)
+			) {
 				const ext = node.name.split('.').pop()?.toLowerCase();
 
 				cache.files.push(node);
@@ -214,39 +247,42 @@ class FilePathCacheService {
 		}
 
 		if (!fromPath) {
-			return this.normalizePath('/' + trimmedPath);
+			return this.normalizePath(`/${trimmedPath}`);
 		}
 
 		const lastSlashIndex = fromPath.lastIndexOf('/');
 		const currentDir =
-			lastSlashIndex === -1
-				? ''
-				: fromPath.substring(0, lastSlashIndex);
+			lastSlashIndex === -1 ? '' : fromPath.substring(0, lastSlashIndex);
 
 		return this.normalizePath(`${currentDir}/${trimmedPath}`);
 	}
 
-	async findFileByPath(fromPath: string, candidatePath: string): Promise<FileNode | null> {
+	async findFileByPath(
+		fromPath: string,
+		candidatePath: string,
+	): Promise<FileNode | null> {
 		const resolvedPath = this.resolveFilePath(fromPath, candidatePath);
 		const relativeResolvedPath = resolvedPath.replace(/^\/+/, '');
 		const cachedFiles = this.flattenFiles(await this.getCachedFiles());
 
-		return cachedFiles.find(file => {
-			if (
-				file.type !== 'file' ||
-				file.isDeleted ||
-				isTemporaryFile(file.path)
-			) {
-				return false;
-			}
+		return (
+			cachedFiles.find((file) => {
+				if (
+					file.type !== 'file' ||
+					file.isDeleted ||
+					isTemporaryFile(file.path)
+				) {
+					return false;
+				}
 
-			const storedPath = this.normalizePath(file.path);
+				const storedPath = this.normalizePath(file.path);
 
-			return (
-				storedPath === resolvedPath ||
-				storedPath.endsWith('/' + relativeResolvedPath)
-			);
-		}) ?? null;
+				return (
+					storedPath === resolvedPath ||
+					storedPath.endsWith(`/${relativeResolvedPath}`)
+				);
+			}) ?? null
+		);
 	}
 
 	getLatexRelativePath(fromPath: string, toPath: string): string {
@@ -262,7 +298,7 @@ class FilePathCacheService {
 			return toFileName;
 		}
 
-		if (toPath.startsWith(fromDir + '/')) {
+		if (toPath.startsWith(`${fromDir}/`)) {
 			return toPath.substring(fromDir.length + 1);
 		}
 
@@ -286,7 +322,7 @@ class FilePathCacheService {
 			return toFileName;
 		}
 
-		return '/' + (toPath.startsWith('/') ? toPath.slice(1) : toPath);
+		return `/${toPath.startsWith('/') ? toPath.slice(1) : toPath}`;
 	}
 
 	private invalidateCache() {
@@ -299,25 +335,22 @@ class FilePathCacheService {
 	}
 
 	private notifyCacheUpdate() {
-		this.cacheUpdateCallbacks.forEach(callback => {
+		this.cacheUpdateCallbacks.forEach((callback) => {
 			callback(this.cachedFiles);
 		});
 
 		const bibFiles = this.getBibliographyFiles();
-		this.bibliographyFileCallbacks.forEach(callback => {
+		this.bibliographyFileCallbacks.forEach((callback) => {
 			callback(bibFiles);
 		});
 	}
 
 	private extractTexLabels(content: string): string[] {
 		const labels = new Set<string>();
-		const patterns = [
-			/\\label\{([^}]+)\}/g,
-			/\\hypertarget\{([^}]+)\}/g,
-		];
+		const patterns = [/\\label\{([^}]+)\}/g, /\\hypertarget\{([^}]+)\}/g];
 
 		for (const pattern of patterns) {
-			let match;
+			let match: RegExpExecArray | null;
 			while ((match = pattern.exec(content)) !== null) {
 				const label = match[1].trim();
 				if (label) {
@@ -332,7 +365,7 @@ class FilePathCacheService {
 	private extractTypstLabels(content: string): string[] {
 		const labels = new Set<string>();
 		const pattern = /<([^>]+)>/g;
-		let match;
+		let match: RegExpExecArray | null;
 
 		while ((match = pattern.exec(content)) !== null) {
 			const label = match[1].trim();
@@ -363,9 +396,10 @@ class FilePathCacheService {
 				const storedFile = await fileStorageService.getFile(file.id);
 				if (!storedFile?.content) continue;
 
-				const content = typeof storedFile.content === 'string'
-					? storedFile.content
-					: new TextDecoder().decode(storedFile.content);
+				const content =
+					typeof storedFile.content === 'string'
+						? storedFile.content
+						: new TextDecoder().decode(storedFile.content);
 
 				if (isLatexFile(file.name)) {
 					const labels = this.extractTexLabels(content);
@@ -379,7 +413,10 @@ class FilePathCacheService {
 					}
 				}
 			} catch (error) {
-				console.warn(`Failed to read content for label extraction: ${file.path}`, error);
+				console.warn(
+					`Failed to read content for label extraction: ${file.path}`,
+					error,
+				);
 			}
 		}
 
@@ -389,7 +426,7 @@ class FilePathCacheService {
 			lastUpdate: Date.now(),
 		};
 
-		this.labelsUpdateCallbacks.forEach(callback => {
+		this.labelsUpdateCallbacks.forEach((callback) => {
 			callback(texLabels);
 			callback(typstLabels);
 		});
@@ -401,7 +438,11 @@ class FilePathCacheService {
 		} else {
 			const { fileStorageService } = await import('./FileStorageService');
 			try {
-				this.cachedFiles = await fileStorageService.getAllFiles(false, false, false);
+				this.cachedFiles = await fileStorageService.getAllFiles(
+					false,
+					false,
+					false,
+				);
 			} catch (error) {
 				console.error('Error fetching files for path cache:', error);
 				this.cachedFiles = [];
@@ -415,7 +456,10 @@ class FilePathCacheService {
 
 	async getCachedFiles(): Promise<FileNode[]> {
 		const now = Date.now();
-		if (now - this.lastCacheUpdate > this.cacheTimeout || this.cachedFiles.length === 0) {
+		if (
+			now - this.lastCacheUpdate > this.cacheTimeout ||
+			this.cachedFiles.length === 0
+		) {
 			await this.updateCache();
 		}
 		return this.cachedFiles;

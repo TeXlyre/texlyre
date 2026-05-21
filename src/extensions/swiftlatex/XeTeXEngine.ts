@@ -6,7 +6,7 @@ import {
 } from './BaseEngine';
 import { EngineLoader } from './EngineLoader';
 
-const BASE_PATH = __BASE_PATH__
+const BASE_PATH = __BASE_PATH__;
 
 declare global {
 	interface Window {

@@ -4,7 +4,14 @@ export interface OutlineSection {
 	title: string;
 	level: number;
 	line: number;
-	type: 'part' | 'chapter' | 'section' | 'subsection' | 'subsubsection' | 'paragraph' | 'subparagraph';
+	type:
+		| 'part'
+		| 'chapter'
+		| 'section'
+		| 'subsection'
+		| 'subsubsection'
+		| 'paragraph'
+		| 'subparagraph';
 	starred: boolean;
 	children: OutlineSection[];
 	label?: string;
@@ -28,20 +35,20 @@ export class LaTeXOutlineParser {
 
 		for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
 			const line = lines[lineIndex].trim();
-			
+
 			// Skip comments and empty lines
 			if (line.startsWith('%') || line === '') continue;
 
-			const sectionMatch = this.matchSectionCommand(line);
+			const sectionMatch = LaTeXOutlineParser.matchSectionCommand(line);
 			if (!sectionMatch) continue;
 
 			const { command, starred, title } = sectionMatch;
-			const sectionInfo = this.SECTION_COMMANDS[command];
-			
+			const sectionInfo = LaTeXOutlineParser.SECTION_COMMANDS[command];
+
 			if (!sectionInfo) continue;
 
 			// Look for label on the same line or next few lines
-			const label = this.findLabel(lines, lineIndex);
+			const label = LaTeXOutlineParser.findLabel(lines, lineIndex);
 
 			const section: OutlineSection = {
 				id: `section-${lineIndex}-${Date.now()}`,
@@ -51,11 +58,15 @@ export class LaTeXOutlineParser {
 				type: sectionInfo.type,
 				starred,
 				children: [],
-				label
+				label,
 			};
 
 			// Build hierarchy
-			this.insertSectionIntoHierarchy(section, sections, sectionStack);
+			LaTeXOutlineParser.insertSectionIntoHierarchy(
+				section,
+				sections,
+				sectionStack,
+			);
 		}
 
 		return sections;
@@ -67,19 +78,23 @@ export class LaTeXOutlineParser {
 		title: string;
 	} | null {
 		// Match section commands with optional star and title
-		const regex = /\\(part|chapter|section|subsection|subsubsection|paragraph|subparagraph)(\*?)\s*\{([^}]*)\}/;
+		const regex =
+			/\\(part|chapter|section|subsection|subsubsection|paragraph|subparagraph)(\*?)\s*\{([^}]*)\}/;
 		const match = line.match(regex);
-		
+
 		if (!match) return null;
 
 		return {
 			command: `\\${match[1]}`,
 			starred: match[2] === '*',
-			title: match[3].trim()
+			title: match[3].trim(),
 		};
 	}
 
-	private static findLabel(lines: string[], startIndex: number): string | undefined {
+	private static findLabel(
+		lines: string[],
+		startIndex: number,
+	): string | undefined {
 		// Look for \label{} in the current line and next 2 lines
 		for (let i = startIndex; i < Math.min(startIndex + 3, lines.length); i++) {
 			const line = lines[i];
@@ -94,10 +109,13 @@ export class LaTeXOutlineParser {
 	private static insertSectionIntoHierarchy(
 		section: OutlineSection,
 		sections: OutlineSection[],
-		sectionStack: OutlineSection[]
+		sectionStack: OutlineSection[],
 	): void {
 		// Remove sections from stack that are at the same or deeper level
-		while (sectionStack.length > 0 && sectionStack[sectionStack.length - 1].level >= section.level) {
+		while (
+			sectionStack.length > 0 &&
+			sectionStack[sectionStack.length - 1].level >= section.level
+		) {
 			sectionStack.pop();
 		}
 
@@ -113,7 +131,10 @@ export class LaTeXOutlineParser {
 		sectionStack.push(section);
 	}
 
-	static getCurrentSection(sections: OutlineSection[], currentLine: number): OutlineSection | null {
+	static getCurrentSection(
+		sections: OutlineSection[],
+		currentLine: number,
+	): OutlineSection | null {
 		let currentSection: OutlineSection | null = null;
 
 		const findCurrentSection = (sectionList: OutlineSection[]) => {

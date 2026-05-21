@@ -94,7 +94,7 @@ export class PdfTeXEngine extends BaseEngine {
 			console.log('[PdfTeXEngine] PDFTeX compilation result:', {
 				status: result.status,
 				hasPdf: !!result.pdf,
-				pdfSize: result.pdf?.length
+				pdfSize: result.pdf?.length,
 			});
 
 			return {

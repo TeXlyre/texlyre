@@ -1,5 +1,8 @@
 // extras/bibliography/jabref/JabRefBibliographyPlugin.ts
-import type { BibliographyPlugin, BibliographyPanelProps } from '@/plugins/PluginInterface';
+import type {
+	BibliographyPlugin,
+	BibliographyPanelProps,
+} from '@/plugins/PluginInterface';
 import { JabRefIcon } from './Icon';
 import { getJabrefLSPSettings } from './settings';
 import { genericLSPService } from '@/services/GenericLSPService';
@@ -25,7 +28,9 @@ const jabrefBibliographyPlugin: BibliographyPlugin = {
 	},
 
 	async getBibliographyEntries() {
-		return jabrefLSP.getBibliographyEntries(this.id, () => this.getConnectionStatus());
+		return jabrefLSP.getBibliographyEntries(this.id, () =>
+			this.getConnectionStatus(),
+		);
 	},
 
 	getSupportedFileTypes(): string[] {
@@ -43,10 +48,14 @@ const jabrefBibliographyPlugin: BibliographyPlugin = {
 	getStatusMessage(): string {
 		const status = this.getConnectionStatus();
 		switch (status) {
-			case 'connected': return 'Connected to citation language server';
-			case 'connecting': return 'Connecting to citation language server...';
-			case 'error': return 'Failed to connect to citation language server';
-			default: return '';
+			case 'connected':
+				return 'Connected to citation language server';
+			case 'connecting':
+				return 'Connecting to citation language server...';
+			case 'error':
+				return 'Failed to connect to citation language server';
+			default:
+				return '';
 		}
 	},
 

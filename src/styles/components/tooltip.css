@@ -1,59 +1,59 @@
 .info-tooltip {
-    position: fixed;
-    width: 300px;
-    height: auto;
-    margin: 0;
-    padding: var(--space-sm);
-    background-color: var(--pico-background);
-    border: 1px solid var(--accent-border);
-    border-radius: var(--radius-sm);
-    box-shadow: var(--shadow-md);
-    font-size: 0.8rem;
-    line-height: 1.4;
-    z-index: 10000;
-    overflow: auto;
-    pointer-events: auto;
-    box-sizing: border-box;
+	position: fixed;
+	width: 300px;
+	height: auto;
+	margin: 0;
+	padding: var(--space-sm);
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-md);
+	font-size: 0.8rem;
+	line-height: 1.4;
+	z-index: 10000;
+	overflow: auto;
+	pointer-events: auto;
+	box-sizing: border-box;
 }
 
 .info-tooltip-trigger {
-    width: 0.9rem;
-    height: 0.9rem;
-    min-height: 0;
-    min-width: 0;
-    padding: 0;
-    margin: 0 0 0 var(--space-sm);
-    background: none;
-    border: 0;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    line-height: 0;
-    font-size: 0;
-    vertical-align: middle;
-    box-sizing: border-box;
-    transition: color 0.2s ease;
+	width: 0.9rem;
+	height: 0.9rem;
+	min-height: 0;
+	min-width: 0;
+	padding: 0;
+	margin: 0 0 0 var(--space-sm);
+	background: none;
+	border: 0;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	line-height: 0;
+	font-size: 0;
+	vertical-align: middle;
+	box-sizing: border-box;
+	transition: color 0.2s ease;
 }
 
 .info-tooltip-trigger:hover {
-    background: none;
+	background: none;
 }
 
 .info-tooltip-trigger svg {
-    width: 0.6rem;
-    height: 0.6rem;
-    display: block;
+	width: 0.6rem;
+	height: 0.6rem;
+	display: block;
 }
 
 .info-tooltip-title {
-    margin: 0 0 var(--space-sm) 0;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--pico-primary);
+	margin: 0 0 var(--space-sm) 0;
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--pico-primary);
 }
 
 .info-tooltip-content {
-    color: var(--text-color);
+	color: var(--text-color);
 }

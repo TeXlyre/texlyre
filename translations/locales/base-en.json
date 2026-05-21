@@ -306,6 +306,8 @@
   "Auto-navigate to main file on compile": "Auto-navigate to main file on compile",
   "Auto-reconnect on disconnect": "Auto-reconnect on disconnect",
   "Auto-save delay (milliseconds)": "Auto-save delay (milliseconds)",
+  "Auto-save editor: {status}": "Auto-save editor: {{status}}",
+  "Auto-save file: {status}": "Auto-save file: {{status}}",
   "Auto-save in editor": "Auto-save in editor",
   "Auto-save on changes": "Auto-save on changes",
   "Auto-save to file": "Auto-save to file",

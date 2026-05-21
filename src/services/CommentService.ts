@@ -24,8 +24,8 @@ class CommentService {
 			const openTagStart = openMatch.index;
 			const id = openMatch[1];
 
-			const backtickBefore = openTagStart > 0 &&
-				editorContent[openTagStart - 1] === '`';
+			const backtickBefore =
+				openTagStart > 0 && editorContent[openTagStart - 1] === '`';
 
 			const openTagEnd = editorContent.indexOf('###>', openTagStart);
 			if (openTagEnd === -1) {
@@ -33,7 +33,8 @@ class CommentService {
 				continue;
 			}
 
-			const backtickAfter = openTagEnd + 4 < editorContent.length &&
+			const backtickAfter =
+				openTagEnd + 4 < editorContent.length &&
 				editorContent[openTagEnd + 4] === '`';
 
 			let openTagContent = editorContent.substring(
@@ -43,7 +44,10 @@ class CommentService {
 
 			openTagContent = openTagContent.replace(/\n\s*%\s*/g, ' ');
 
-			const closeTagRegex = new RegExp(`<\\/###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${id}(?:\\s|%)*###>`, 'g');
+			const closeTagRegex = new RegExp(
+				`<\\/###(?:\\s|%)*comment(?:\\s|%)*id:(?:\\s|%)*${id}(?:\\s|%)*###>`,
+				'g',
+			);
 			closeTagRegex.lastIndex = openTagEnd + 4;
 			const closeMatch = closeTagRegex.exec(editorContent);
 
@@ -63,13 +67,16 @@ class CommentService {
 
 			const user = userMatch ? userMatch[1].trim() : 'Anonymous';
 			const timestamp = timeMatch ? Number.parseInt(timeMatch[1]) : Date.now();
-			const commentContent = contentMatch ? contentMatch[1].replace(/\s+/g, ' ').trim() : '';
+			const commentContent = contentMatch
+				? contentMatch[1].replace(/\s+/g, ' ').trim()
+				: '';
 			const responsesString = responsesMatch ? responsesMatch[1] : '';
 			const resolved = resolvedMatch ? resolvedMatch[1] === 'true' : false;
 
 			const commentedTextStart = openTagEnd + 4 + (backtickAfter ? 1 : 0);
-			const commentedTextEnd = closeTagStart - (backtickBefore &&
-				editorContent[closeTagStart - 1] === '`' ? 1 : 0);
+			const commentedTextEnd =
+				closeTagStart -
+				(backtickBefore && editorContent[closeTagStart - 1] === '`' ? 1 : 0);
 			const commentedText = editorContent.substring(
 				commentedTextStart,
 				commentedTextEnd,
@@ -77,11 +84,16 @@ class CommentService {
 
 			const responses: CommentResponse[] = [];
 			if (responsesString?.trim()) {
-				const cleanedResponsesString = responsesString.replace(/\n\s*%\s*/g, ' ');
+				const cleanedResponsesString = responsesString.replace(
+					/\n\s*%\s*/g,
+					' ',
+				);
 				const responseRegex =
 					/<####(?:\s|%)*response(?:\s|%)*id:(?:\s|%)*'([\w-]+)',(?:\s|%)*user:(?:\s|%)*([^,]+?),(?:\s|%)*time:(?:\s|%)*(\d+),(?:\s|%)*content:(?:\s|%)*'([^']*)'(?:\s|%)*####\/>/g;
-				let responseMatch;
-				while ((responseMatch = responseRegex.exec(cleanedResponsesString)) !== null) {
+				let responseMatch: RegExpExecArray | null;
+				while (
+					(responseMatch = responseRegex.exec(cleanedResponsesString)) !== null
+				) {
 					const [
 						_,
 						responseId,
@@ -98,13 +110,20 @@ class CommentService {
 				}
 			}
 
-			const actualOpenTagStart = backtickBefore ? openTagStart - 1 : openTagStart;
+			const actualOpenTagStart = backtickBefore
+				? openTagStart - 1
+				: openTagStart;
 			const actualOpenTagEnd = backtickAfter ? openTagEnd + 5 : openTagEnd + 4;
-			const actualCloseTagStart = (backtickBefore && editorContent[closeTagStart - 1] === '`')
-				? closeTagStart - 1
-				: closeTagStart;
-			const actualCloseTagEnd = (backtickAfter && closeTagEnd < editorContent.length &&
-				editorContent[closeTagEnd] === '`') ? closeTagEnd + 1 : closeTagEnd;
+			const actualCloseTagStart =
+				backtickBefore && editorContent[closeTagStart - 1] === '`'
+					? closeTagStart - 1
+					: closeTagStart;
+			const actualCloseTagEnd =
+				backtickAfter &&
+				closeTagEnd < editorContent.length &&
+				editorContent[closeTagEnd] === '`'
+					? closeTagEnd + 1
+					: closeTagEnd;
 
 			parsedComments.push({
 				id,
