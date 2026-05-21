@@ -79,15 +79,17 @@ const buildIndex = (text: string): Index => {
     for (const raw of text.split('\n')) {
         if (!raw) continue;
 
-        if (!inContent) {
-            if (raw === 'Content:') { inContent = true; continue; }
-            if (raw.startsWith('Input:')) {
-                const parts = raw.substring(6).split(':');
-                const tag = Number.parseInt(parts[0], 10);
-                if (parts.length >= 2 && !Number.isNaN(tag)) {
-                    inputs.set(tag, parts.slice(1).join(':').trim());
-                }
+        if (raw.startsWith('Input:')) {
+            const parts = raw.substring(6).split(':');
+            const tag = Number.parseInt(parts[0], 10);
+            if (parts.length >= 2 && !Number.isNaN(tag)) {
+                inputs.set(tag, parts.slice(1).join(':').trim());
             }
+            continue;
+        }
+
+        if (!inContent) {
+            if (raw === 'Content:') inContent = true;
             continue;
         }
 
