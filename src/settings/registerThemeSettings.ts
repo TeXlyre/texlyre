@@ -24,6 +24,7 @@ export function useRegisterThemeSettings(
 		};
 	}, []);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: languageVersion is an intentional trigger; pluginRegistry.getThemes() returns translated names. */
 	const availableThemes = useMemo(() => {
 		return pluginRegistry.getThemes();
 	}, [languageVersion]);
@@ -63,13 +64,7 @@ export function useRegisterThemeSettings(
 		});
 
 		settingsRegisteredOnce.current = true;
-	}, [
-		availableThemes,
-		currentThemePlugin,
-		defaultThemeId,
-		registerSetting,
-		languageVersion,
-	]);
+	}, [availableThemes, currentThemePlugin, defaultThemeId, registerSetting]);
 
 	useEffect(() => {
 		if (!currentThemePlugin) {
@@ -97,5 +92,5 @@ export function useRegisterThemeSettings(
 			defaultValue: defaultVariantForCurrentTheme,
 			options: variantOptions,
 		});
-	}, [currentThemePlugin, currentVariant, registerSetting, languageVersion]);
+	}, [currentThemePlugin, currentVariant, registerSetting]);
 }

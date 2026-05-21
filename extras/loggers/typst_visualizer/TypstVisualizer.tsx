@@ -18,6 +18,103 @@ interface ParsedDiagnostic {
 	fullMessage?: string;
 }
 
+function parseLocation(location: string): { file?: string; line?: number } {
+	const match = location.match(/^([^:]+)(?::(\d+))?/);
+	if (!match) return {};
+
+	return {
+		file: match[1],
+		line: match[2] ? Number.parseInt(match[2], 10) + 1 : undefined,
+	};
+}
+
+function parseTypstLog(log: string): ParsedDiagnostic[] {
+	const result: ParsedDiagnostic[] = [];
+	const lines = log.split('\n');
+
+	for (let i = 0; i < lines.length; i++) {
+		const line = lines[i].trim();
+		if (!line) continue;
+
+		const errorMatch = line.match(/^error(?:\[([^\]]+)\])?\s*:\s*(.+)$/);
+		const warningMatch = line.match(/^warning(?:\[([^\]]+)\])?\s*:\s*(.+)$/);
+		const infoMatch = line.match(/^info(?:\[([^\]]+)\])?\s*:\s*(.+)$/);
+
+		let diagnostic: ParsedDiagnostic | null = null;
+
+		if (errorMatch) {
+			diagnostic = {
+				type: 'error',
+				message: errorMatch[2].trim(),
+				file: undefined,
+				line: undefined,
+				hints: [],
+			};
+
+			if (errorMatch[1]) {
+				const location = parseLocation(errorMatch[1]);
+				diagnostic.file = location.file;
+				diagnostic.line = location.line;
+			}
+		} else if (warningMatch) {
+			diagnostic = {
+				type: 'warning',
+				message: warningMatch[2].trim(),
+				file: undefined,
+				line: undefined,
+				hints: [],
+			};
+
+			if (warningMatch[1]) {
+				const location = parseLocation(warningMatch[1]);
+				diagnostic.file = location.file;
+				diagnostic.line = location.line;
+			}
+		} else if (infoMatch) {
+			diagnostic = {
+				type: 'info',
+				message: infoMatch[2].trim(),
+				file: undefined,
+				line: undefined,
+				hints: [],
+			};
+
+			if (infoMatch[1]) {
+				const location = parseLocation(infoMatch[1]);
+				diagnostic.file = location.file;
+				diagnostic.line = location.line;
+			}
+		}
+
+		if (diagnostic) {
+			let fullMessage = diagnostic.message;
+
+			for (let j = i + 1; j < lines.length; j++) {
+				const nextLine = lines[j].trim();
+
+				if (nextLine.startsWith('hint:')) {
+					const hint = nextLine.substring(5).trim();
+					diagnostic.hints?.push(hint);
+					continue;
+				}
+
+				if (nextLine.match(/^(error|warning|info)(?:\[|:)/)) {
+					break;
+				}
+
+				if (nextLine && !nextLine.startsWith('hint:')) {
+					fullMessage += ` ${nextLine}`;
+				}
+			}
+
+			diagnostic.fullMessage = fullMessage.replace(/\s+/g, ' ').trim();
+			result.push(diagnostic);
+		}
+	}
+
+	return result;
+}
+
 const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 	const [parsedDiagnostics, setParsedDiagnostics] = useState<
 		ParsedDiagnostic[]
@@ -41,105 +138,6 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 
 	const handleFilterClick = (type: 'error' | 'warning') => {
 		setFilter((current) => (current === type ? 'all' : type));
-	};
-
-	const parseTypstLog = (log: string): ParsedDiagnostic[] => {
-		const result: ParsedDiagnostic[] = [];
-		const lines = log.split('\n');
-
-		for (let i = 0; i < lines.length; i++) {
-			const line = lines[i].trim();
-			if (!line) continue;
-
-			const errorMatch = line.match(/^error(?:\[([^\]]+)\])?\s*:\s*(.+)$/);
-			const warningMatch = line.match(/^warning(?:\[([^\]]+)\])?\s*:\s*(.+)$/);
-			const infoMatch = line.match(/^info(?:\[([^\]]+)\])?\s*:\s*(.+)$/);
-
-			let diagnostic: ParsedDiagnostic | null = null;
-
-			if (errorMatch) {
-				diagnostic = {
-					type: 'error',
-					message: errorMatch[2].trim(),
-					file: undefined,
-					line: undefined,
-					hints: [],
-				};
-
-				if (errorMatch[1]) {
-					const location = parseLocation(errorMatch[1]);
-					diagnostic.file = location.file;
-					diagnostic.line = location.line;
-				}
-			} else if (warningMatch) {
-				diagnostic = {
-					type: 'warning',
-					message: warningMatch[2].trim(),
-					file: undefined,
-					line: undefined,
-					hints: [],
-				};
-
-				if (warningMatch[1]) {
-					const location = parseLocation(warningMatch[1]);
-					diagnostic.file = location.file;
-					diagnostic.line = location.line;
-				}
-			} else if (infoMatch) {
-				diagnostic = {
-					type: 'info',
-					message: infoMatch[2].trim(),
-					file: undefined,
-					line: undefined,
-					hints: [],
-				};
-
-				if (infoMatch[1]) {
-					const location = parseLocation(infoMatch[1]);
-					diagnostic.file = location.file;
-					diagnostic.line = location.line;
-				}
-			}
-
-			if (diagnostic) {
-				let fullMessage = diagnostic.message;
-
-				for (let j = i + 1; j < lines.length; j++) {
-					const nextLine = lines[j].trim();
-
-					if (nextLine.startsWith('hint:')) {
-						const hint = nextLine.substring(5).trim();
-						diagnostic.hints?.push(hint);
-						continue;
-					}
-
-					if (nextLine.match(/^(error|warning|info)(?:\[|:)/)) {
-						break;
-					}
-
-					if (nextLine && !nextLine.startsWith('hint:')) {
-						fullMessage += ` ${nextLine}`;
-					}
-				}
-
-				diagnostic.fullMessage = fullMessage.replace(/\s+/g, ' ').trim();
-				result.push(diagnostic);
-			}
-		}
-
-		return result;
-	};
-
-	const parseLocation = (
-		location: string,
-	): { file?: string; line?: number } => {
-		const match = location.match(/^([^:]+)(?::(\d+))?/);
-		if (!match) return {};
-
-		return {
-			file: match[1],
-			line: match[2] ? Number.parseInt(match[2], 10) + 1 : undefined,
-		};
 	};
 
 	const handleDiagnosticClick = (diagnostic: ParsedDiagnostic) => {

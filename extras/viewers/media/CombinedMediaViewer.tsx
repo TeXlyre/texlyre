@@ -91,6 +91,7 @@ const CombinedMediaViewer: React.FC<ViewerProps> = ({
 		return () => URL.revokeObjectURL(url);
 	}, [content, mimeType]);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: mediaSrc is an intentional trigger to re-apply volume/muted/playbackRate after media element is recreated on source change. */
 	useEffect(() => {
 		const media = mediaRef.current;
 		if (!media) return;

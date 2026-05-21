@@ -2,7 +2,7 @@
 import type React from 'react';
 
 import { useRegisterLanguageSettings } from '../../settings/registerLanguageSettings';
-import { useRegisterThemeSettings } from '../../settings/registerThemeSetting';
+import { useRegisterThemeSettings } from '../../settings/registerThemeSettings';
 import { useRegisterEditorSettings } from '../../settings/registerEditorSettings';
 import { useRegisterCollabSettings } from '../../settings/registerCollabSettings';
 import { useRegisterContentFormatterSettings } from '../../settings/registerContentFormatterSettings';

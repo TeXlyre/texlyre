@@ -16,6 +16,13 @@ import {
 import { zoteroService } from './ZoteroService';
 import ZoteroConnectionModal from './ZoteroConnectionModal';
 
+function getCurrentProjectId(): string | undefined {
+	const urlHash = window.location.hash.substring(1);
+	const fragments = urlHash.split('/');
+	const yjsFragment = fragments.find((f) => f.startsWith('yjs='));
+	return yjsFragment ? yjsFragment.slice(4) : undefined;
+}
+
 const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
 	const secrets = useSecrets();
 	const properties = useProperties();
@@ -58,13 +65,6 @@ const ZoteroPanel: React.FC<BibliographyPanelProps> = ({ className = '' }) => {
 		};
 		checkCredentials();
 	}, []);
-
-	const getCurrentProjectId = (): string | undefined => {
-		const urlHash = window.location.hash.substring(1);
-		const fragments = urlHash.split('/');
-		const yjsFragment = fragments.find((f) => f.startsWith('yjs='));
-		return yjsFragment ? yjsFragment.slice(4) : undefined;
-	};
 
 	const handleConnect = async (
 		apiKey: string,

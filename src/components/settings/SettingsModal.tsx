@@ -98,7 +98,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 		initialSubcategory,
 		activeCategory,
 		activeSubcategory,
-		getCategories,
 		searchSettings,
 	]);
 

@@ -1,7 +1,7 @@
 // src/components/app/EditorApp.tsx
 import { t } from '@/i18n';
 import type React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
 import { ChatProvider } from '../../contexts/ChatContext';
@@ -118,6 +118,14 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const { isOfflineMode, hideOfflineBanner } = useOffline();
 	const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
 	const [showPrivacy, setShowPrivacy] = useState(false);
+
+	const shareUrl = `${window.location.origin}${window.location.pathname}#${docUrl}`;
+	const selectedDocument = doc?.documents?.find((d) => d.id === localDocId);
+	const projectName = doc?.projectMetadata?.name || 'Untitled Project';
+	const projectDescription = doc?.projectMetadata?.description || '';
+
+	const projectType = doc?.projectMetadata?.type || 'latex';
+
 	useGlobalKeyboard();
 
 	const updateContent = (docId: string, content: string) => {
@@ -130,12 +138,105 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			}
 		});
 	};
+	const handleAccountDeleted = async () => {
+		setIsDeleteAccountModalOpen(false);
+		await onLogout();
+	};
+
+	const handleGuestUpgradeSuccess = () => {
+		setShowGuestUpgradeModal(false);
+	};
+
+	const handleCreateDocument = () => {
+		changeDoc((d) => {
+			if (!d.documents) {
+				d.documents = [];
+			}
+			const newDocId = Math.random().toString(36).substring(2, 15);
+			const newDocName = `Document ${d.documents.length + 1}`;
+			d.documents.push({
+				id: newDocId,
+				name: newDocName,
+				content: '',
+			});
+			d.currentDocId = newDocId;
+		});
+		if (doc?.documents) {
+			setLocalDocId(doc.documents[doc.documents.length - 1].id);
+		}
+	};
+
+	const handleSelectDocument = useCallback((docId: string) => {
+		setLocalDocId(docId);
+	}, []);
+
+	const handleUpdateContent = (content: string) => {
+		updateContent(localDocId, content);
+	};
+
+	const handleRenameDocument = (docId: string, newName: string) => {
+		changeDoc((d) => {
+			if (d.documents) {
+				const docIndex = d.documents.findIndex((doc) => doc.id === docId);
+				if (docIndex !== -1) {
+					d.documents[docIndex].name = newName;
+				}
+			}
+		});
+	};
+
+	const handleUpdateProjectMetadata = (projectData: {
+		name: string;
+		description: string;
+		type?: 'latex' | 'typst';
+	}) => {
+		setIsSubmitting(true);
+		changeDoc((d) => {
+			if (!d.projectMetadata) {
+				d.projectMetadata = {
+					name: projectData.name,
+					description: projectData.description,
+					type: projectData.type || 'latex',
+				};
+			} else {
+				d.projectMetadata.name = projectData.name;
+				d.projectMetadata.description = projectData.description;
+				d.projectMetadata.type = projectData.type || 'latex';
+			}
+		});
+		setIsSubmitting(false);
+		setIsEditingMetadata(false);
+	};
+
+	const handleNavigateToLinkedFile = () => {
+		if (linkedFileInfo?.filePath) {
+			document.dispatchEvent(
+				new CustomEvent('navigate-to-linked-file', {
+					detail: {
+						filePath: linkedFileInfo.filePath,
+						fileId: linkedFileInfo.fileId,
+					},
+				}),
+			);
+		}
+	};
+
+	const handleExpandLatexOutput = () => {
+		if (!popoutViewerService.isWindowOpen()) {
+			document.dispatchEvent(new CustomEvent('expand-latex-output'));
+		}
+	};
+
+	const handleExpandTypstOutput = () => {
+		if (!popoutViewerService.isWindowOpen()) {
+			document.dispatchEvent(new CustomEvent('expand-typst-output'));
+		}
+	};
 
 	useEffect(() => {
 		const handleCompile = () => {
 			if (isCompiling || isTypstCompiling) return;
 
-			const projectType = doc?.projectMetadata?.type || 'latex';
 			const buttonSelectors =
 				projectType === 'typst'
 					? [
@@ -159,7 +260,6 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		const handleCompileClean = () => {
 			if (isCompiling || isTypstCompiling) return;
 
-			const projectType = doc?.projectMetadata?.type || 'latex';
 			const containerSelectors =
 				projectType === 'typst'
 					? ['.header-typst-compile-button', '.header-compile-button']
@@ -222,7 +322,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			);
 			document.removeEventListener('trigger-typst-compile', handleTypstCompile);
 		};
-	}, [isCompiling, isTypstCompiling]);
+	}, [isCompiling, isTypstCompiling, projectType]);
 
 	useEffect(() => {
 		if (doc && isConnected) {
@@ -330,7 +430,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		if (targetDoc) {
 			handleSelectDocument(targetDocId);
 		}
-	}, [doc, targetDocId]);
+	}, [doc, targetDocId, handleSelectDocument]);
 
 	useEffect(() => {
 		const checkLinkedFile = async () => {
@@ -365,101 +465,6 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
 		checkLinkedFile();
 	}, [localDocId, doc?.documents]);
-
-	const handleAccountDeleted = async () => {
-		setIsDeleteAccountModalOpen(false);
-		await onLogout();
-	};
-
-	const handleGuestUpgradeSuccess = () => {
-		setShowGuestUpgradeModal(false);
-	};
-
-	const handleCreateDocument = () => {
-		changeDoc((d) => {
-			if (!d.documents) {
-				d.documents = [];
-			}
-			const newDocId = Math.random().toString(36).substring(2, 15);
-			const newDocName = `Document ${d.documents.length + 1}`;
-			d.documents.push({
-				id: newDocId,
-				name: newDocName,
-				content: '',
-			});
-			d.currentDocId = newDocId;
-		});
-		if (doc?.documents) {
-			setLocalDocId(doc.documents[doc.documents.length - 1].id);
-		}
-	};
-
-	const handleSelectDocument = (docId: string) => {
-		setLocalDocId(docId);
-	};
-
-	const handleUpdateContent = (content: string) => {
-		updateContent(localDocId, content);
-	};
-
-	const handleRenameDocument = (docId: string, newName: string) => {
-		changeDoc((d) => {
-			if (d.documents) {
-				const docIndex = d.documents.findIndex((doc) => doc.id === docId);
-				if (docIndex !== -1) {
-					d.documents[docIndex].name = newName;
-				}
-			}
-		});
-	};
-
-	const handleUpdateProjectMetadata = (projectData: {
-		name: string;
-		description: string;
-		type?: 'latex' | 'typst';
-	}) => {
-		setIsSubmitting(true);
-		changeDoc((d) => {
-			if (!d.projectMetadata) {
-				d.projectMetadata = {
-					name: projectData.name,
-					description: projectData.description,
-					type: projectData.type || 'latex',
-				};
-			} else {
-				d.projectMetadata.name = projectData.name;
-				d.projectMetadata.description = projectData.description;
-				d.projectMetadata.type = projectData.type || 'latex';
-			}
-		});
-		setIsSubmitting(false);
-		setIsEditingMetadata(false);
-	};
-
-	const handleNavigateToLinkedFile = () => {
-		if (linkedFileInfo?.filePath) {
-			document.dispatchEvent(
-				new CustomEvent('navigate-to-linked-file', {
-					detail: {
-						filePath: linkedFileInfo.filePath,
-						fileId: linkedFileInfo.fileId,
-					},
-				}),
-			);
-		}
-	};
-
-	const handleExpandLatexOutput = () => {
-		if (!popoutViewerService.isWindowOpen()) {
-			document.dispatchEvent(new CustomEvent('expand-latex-output'));
-		}
-	};
-
-	const handleExpandTypstOutput = () => {
-		if (!popoutViewerService.isWindowOpen()) {
-			document.dispatchEvent(new CustomEvent('expand-typst-output'));
-		}
-	};
 
 	const CompileButtons = () => {
 		const latexButtons = [
@@ -522,12 +527,6 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			</>
 		);
 	};
-
-	const shareUrl = `${window.location.origin}${window.location.pathname}#${docUrl}`;
-	const selectedDocument = doc?.documents?.find((d) => d.id === localDocId);
-	const projectName = doc?.projectMetadata?.name || 'Untitled Project';
-	const projectDescription = doc?.projectMetadata?.description || '';
-	const projectType = doc?.projectMetadata?.type || 'latex';
 
 	if (!isConnected && !doc) {
 		return (

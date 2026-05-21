@@ -1,4 +1,4 @@
-// extras/viewers/drawio/DrawioSpashScreen.tsx
+// extras/viewers/drawio/DrawioSplashScreen.tsx
 import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState } from 'react';
@@ -17,6 +17,7 @@ const DrawioSplashScreen: React.FC<DrawioSplashScreenProps> = ({
 	const [isVisible, setIsVisible] = useState(true);
 	const [startTime, setStartTime] = useState(Date.now());
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: fileKey is an intentional trigger to reset splash state on file switch. */
 	useEffect(() => {
 		setIsVisible(true);
 		setStartTime(Date.now());
