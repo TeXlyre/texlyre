@@ -1,8 +1,8 @@
 // Updated src/components/project/ProjectCard.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useRef, useState, useEffect } from 'react';
 
+import { t } from '@/i18n';
 import type { Project } from '../../types/projects.ts';
 import ProjectBackupControls from '../backup/ProjectBackupControls';
 import {

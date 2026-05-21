@@ -1,8 +1,8 @@
 // src/components/editor/SearchPanel.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
+import { t } from '@/i18n';
 import { useSearch } from '../../hooks/useSearch';
 import { SearchIcon, ReplaceIcon, FileTextIcon } from '../common/Icons';
 import { fileOperationNotificationService } from '../../services/FileOperationNotificationService';

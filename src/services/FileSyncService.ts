@@ -1,9 +1,8 @@
 // src/services/FileSyncService.ts
-import { t } from '@/i18n';
 import { FilePizzaDownloader, FilePizzaUploader } from 'filepizza-client';
-
 import { nanoid } from 'nanoid';
 
+import { t } from '@/i18n';
 import type { FileSyncInfo, FileSyncNotification } from '../types/fileSync';
 import type { FileNode } from '../types/files';
 import {

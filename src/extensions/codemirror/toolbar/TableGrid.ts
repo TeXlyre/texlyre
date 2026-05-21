@@ -1,6 +1,7 @@
 // src/extensions/codemirror/toolbar/tableGrid.ts
-import { t } from '@/i18n';
 import type { EditorView } from '@codemirror/view';
+
+import { t } from '@/i18n';
 
 export interface TableGridOptions {
 	maxRows: number;

@@ -1,5 +1,6 @@
 // src/extensions/wasm-tools/TypstyleEngine.ts
 import { t } from '@/i18n';
+
 export interface TypstyleOptions {
 	lineWidth?: number;
 	indentWidth?: number;

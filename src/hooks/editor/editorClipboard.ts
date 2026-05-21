@@ -1,6 +1,7 @@
 // src/hooks/editor/editorClipboard.ts
 import type { RefObject } from 'react';
 import type { EditorView } from 'codemirror';
+
 import { processTextSelection } from '../../utils/fileCommentUtils.ts';
 
 export const registerEditorClipboard = (

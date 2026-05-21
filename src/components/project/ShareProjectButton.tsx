@@ -1,8 +1,8 @@
 // src/components/project/ShareProjectButton.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
+import { t } from '@/i18n';
 import PositionedDropdown from '../common/PositionedDropdown';
 import { ChevronDownIcon, ShareIcon } from '../common/Icons';
 

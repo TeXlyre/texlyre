@@ -1,7 +1,7 @@
 // src/components/editor/SearchReplaceModal.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 
+import { t } from '@/i18n';
 import Modal from '../common/Modal';
 import { ReplaceIcon } from '../common/Icons';
 

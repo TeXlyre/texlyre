@@ -1,5 +1,6 @@
 // src/hooks/useContentFormatter.ts
 import { useContext } from 'react';
+
 import { ContentFormatterContext } from '../contexts/ContentFormatterContext';
 
 export const useContentFormatter = () => {

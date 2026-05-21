@@ -17,6 +17,8 @@
  */
 // src/App.tsx
 import '@picocss/pico/css/pico.min.css';
+import i18next from 'i18next';
+import { useContext, useEffect, useState } from 'react';
 
 import './styles/global.css';
 import './styles/components/editor.css';
@@ -53,9 +55,6 @@ import './styles/components/typesetter.css';
 import './styles/components/splash-screen.css';
 import './styles/components/keyboard-shortcuts.css';
 import './styles/components/privacy.css';
-
-import i18next from 'i18next';
-import { useContext, useEffect, useState } from 'react';
 import AppRouter from './components/app/AppRouter';
 import AppBootstrap from './components/app/AppSettingBootrap';
 import PasswordModal from './components/auth/PasswordModal';

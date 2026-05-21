@@ -1,7 +1,7 @@
 // src/settings/registerLanguageSettings.tsx
-import { t } from '@/i18n';
 import { useEffect, useRef } from 'react';
 
+import { t } from '@/i18n';
 import { useSettings } from '../hooks/useSettings';
 import languagesConfig from '../../translations/languages.config.json';
 

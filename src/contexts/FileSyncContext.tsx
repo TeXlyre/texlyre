@@ -1,4 +1,3 @@
-import { t } from '@/i18n';
 import { nanoid } from 'nanoid';
 import type React from 'react';
 import {
@@ -11,6 +10,7 @@ import {
 } from 'react';
 import type * as Y from 'yjs';
 
+import { t } from '@/i18n';
 import { useAuth } from '../hooks/useAuth';
 import { useFileTree } from '../hooks/useFileTree';
 import { useSettings } from '../hooks/useSettings';

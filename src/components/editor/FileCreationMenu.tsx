@@ -1,8 +1,8 @@
 // src/editor/FileCreationMenu.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useRef } from 'react';
 
+import { t } from '@/i18n';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import { FilePlusIcon } from '../common/Icons';
 import DropdownMenu from '../common/DropdownMenu';

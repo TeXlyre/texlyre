@@ -1,7 +1,7 @@
 // src/services/AccountExportService.ts
-import { t } from '@/i18n';
 import { saveAs } from 'file-saver';
 
+import { t } from '@/i18n';
 import { cleanContent, processFile } from '../utils/fileCommentUtils';
 import { authService } from './AuthService';
 import { UnifiedDataStructureService } from './DataStructureService';

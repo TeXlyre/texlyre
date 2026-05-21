@@ -1,6 +1,7 @@
 // src/hooks/useUrlMetadata.ts
-import { t } from '@/i18n';
 import { useState, useEffect } from 'react';
+
+import { t } from '@/i18n';
 import { fetchPageMetadata } from '../utils/urlMetadataExtractor';
 
 export const usePageMetadata = (

@@ -1,5 +1,4 @@
 // src/extensions/codemirror/toolbar/collapsableToolbar.tsx
-import { t } from '@/i18n';
 import type { Compartment } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
 import { ViewPlugin } from '@codemirror/view';
@@ -11,6 +10,7 @@ import type {
 } from 'codemirror-toolbar';
 import { renderToString } from 'react-dom/server';
 
+import { t } from '@/i18n';
 import { MoreHorizontalIcon } from '../../../components/common/Icons';
 import { OverflowMenu, type CollapsedGroup } from './overflowMenu';
 

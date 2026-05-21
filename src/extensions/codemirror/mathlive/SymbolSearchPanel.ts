@@ -1,7 +1,7 @@
 // src/extensions/codemirror/mathlive/SymbolSearchPanel.ts
-import { t } from '@/i18n';
 import { Detypify, inferSyms, ortEnv, type Strokes } from 'detypify-service';
 
+import { t } from '@/i18n';
 import {
 	searchSymbols,
 	symbolInfoToCandidate,

@@ -1,5 +1,4 @@
 // src/components/output/LaTeXOutput.tsx
-import { t } from '@/i18n';
 import React, {
 	useCallback,
 	useEffect,
@@ -8,6 +7,7 @@ import React, {
 	useState,
 } from 'react';
 
+import { t } from '@/i18n';
 import { fileStorageService } from '../../services/FileStorageService';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useLaTeX } from '../../hooks/useLaTeX';

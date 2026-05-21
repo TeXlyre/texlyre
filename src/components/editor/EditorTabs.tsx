@@ -1,8 +1,8 @@
 // src/components/editor/EditorTabs.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useCallback, useEffect, useState, useRef } from 'react';
 
+import { t } from '@/i18n';
 import { useEditorTabs } from '../../hooks/useEditorTabs';
 import {
 	CloseIcon,

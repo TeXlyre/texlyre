@@ -1,7 +1,7 @@
 // src/components/common/OfflineBanner.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 
+import { t } from '@/i18n';
 import { useOffline } from '../../hooks/useOffline';
 import { formatDate } from '../../utils/dateUtils';
 import { OfflineIcon } from './Icons';

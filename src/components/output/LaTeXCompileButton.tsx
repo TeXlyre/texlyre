@@ -1,8 +1,8 @@
 // src/components/output/LaTeXCompileButton.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { t } from '@/i18n';
 import PopoutViewerToggleButton from './PopoutViewerToggleButton';
 import PositionedDropdown from '../common/PositionedDropdown';
 import { usePersistentState } from '../../hooks/usePersistentState';

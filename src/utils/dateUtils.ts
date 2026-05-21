@@ -1,6 +1,7 @@
 // src/utils/dateUtils.ts
-import { t } from '@/i18n';
 import i18next from 'i18next';
+
+import { t } from '@/i18n';
 
 export function formatDate(timestamp: number | string): string {
 	const date = new Date(

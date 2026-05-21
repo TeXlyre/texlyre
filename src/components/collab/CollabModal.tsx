@@ -1,8 +1,8 @@
 // src/components/collab/CollabModal.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
+import { t } from '@/i18n';
 import { SettingsIcon, SyncIcon } from '../common/Icons';
 import Modal from '../common/Modal';
 import SettingsModal from '../settings/SettingsModal';

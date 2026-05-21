@@ -1,9 +1,9 @@
 // src/extensions/codemirror/toolbar/latexItems.tsx
-import { t } from '@/i18n';
 import type { EditorView } from '@codemirror/view';
 import type { ToolbarItem } from 'codemirror-toolbar';
 import { renderToString } from 'react-dom/server';
 
+import { t } from '@/i18n';
 import { getPendingImagePath } from '../PasteExtension';
 import { wrapSelection, insertText } from './helpers';
 import { createTableCommand } from './tableItems';

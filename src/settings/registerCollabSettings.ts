@@ -1,7 +1,7 @@
 // src/settings/registerCollabSettings.ts
-import { t } from '@/i18n';
 import { useEffect, useRef } from 'react';
 
+import { t } from '@/i18n';
 import { useSettings } from '../hooks/useSettings';
 import type { CollabProviderType } from '../types/collab';
 

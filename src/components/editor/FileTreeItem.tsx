@@ -1,7 +1,7 @@
 // src/components/editor/FileTreeItem.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 
+import { t } from '@/i18n';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import type { FileNode } from '../../types/files';
 import { isTemporaryFile } from '../../utils/fileUtils';

@@ -1,7 +1,7 @@
 // src/settings/registerTypstSettings.ts
-import { t } from '@/i18n';
 import { useEffect, useRef } from 'react';
 
+import { t } from '@/i18n';
 import { useSettings } from '../hooks/useSettings';
 import type { TypstOutputFormat } from '../types/typst';
 import { typstService } from '../services/TypstService';

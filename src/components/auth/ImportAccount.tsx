@@ -1,8 +1,8 @@
 // src/components/auth/ImportAccount.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
+import { t } from '@/i18n';
 import { accountExportService } from '../../services/AccountExportService';
 
 interface ImportAccountProps {

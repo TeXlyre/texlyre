@@ -1,7 +1,7 @@
 // src/components/output/SourceMapFloatingButtons.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 
+import { t } from '@/i18n';
 import { useSourceMap } from '../../hooks/useSourceMap';
 import { LocateIcon } from '../common/Icons';
 

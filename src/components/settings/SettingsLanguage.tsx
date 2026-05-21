@@ -1,8 +1,8 @@
 // src/components/settings/SettingsLanguage.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
 
+import { t } from '@/i18n';
 import type { Setting } from '../../contexts/SettingsContext';
 import { useLanguage } from '../../hooks/useLanguage';
 import { ChevronUpIcon, ChevronDownIcon } from '../common/Icons';

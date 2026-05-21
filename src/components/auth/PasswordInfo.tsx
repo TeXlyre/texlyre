@@ -1,7 +1,7 @@
 // src/components/auth/PasswordInfo.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 
+import { t } from '@/i18n';
 import InfoTooltip from '../common/InfoTooltip';
 
 const PasswordInfo: React.FC = () => {

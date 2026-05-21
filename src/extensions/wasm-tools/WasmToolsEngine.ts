@@ -1,5 +1,6 @@
 // src/extensions/wasm-tools/WasmToolsEngine.ts
 import { WebPerlRunner, TexCount, TexFmt } from 'wasm-latex-tools';
+
 import { TypstyleEngine, type TypstyleOptions } from './TypstyleEngine';
 
 const BASE_PATH = __BASE_PATH__;

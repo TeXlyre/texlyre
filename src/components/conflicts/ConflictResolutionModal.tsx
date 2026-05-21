@@ -1,8 +1,8 @@
 // src/components/conflicts/ConflictResolutionModal.tsx
 // src/components/conflicts/ConflictResolutionModal.tsx
-import { t } from '@/i18n';
 import { useEffect, useRef, useState } from 'react';
 
+import { t } from '@/i18n';
 import Modal from '../../components/common/Modal';
 import ResizablePanel from '../common/ResizablePanel';
 import {

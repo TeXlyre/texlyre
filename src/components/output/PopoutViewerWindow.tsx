@@ -1,7 +1,7 @@
 // src/components/output/PopoutViewerWindow.tsx
-import { t } from '@/i18n';
 import React, { useEffect, useRef, useState } from 'react';
 
+import { t } from '@/i18n';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import { useSettings } from '../../hooks/useSettings';
 import { toArrayBuffer } from '../../utils/fileUtils';

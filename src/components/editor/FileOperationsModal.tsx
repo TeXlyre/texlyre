@@ -1,7 +1,7 @@
 // src/components/editor/FileOperationsModal.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 
+import { t } from '@/i18n';
 import type { FileNode } from '../../types/files';
 import { formatFileSize, isTemporaryFile } from '../../utils/fileUtils';
 import { FolderIcon, TempFileIcon } from '../common/Icons';

@@ -1,8 +1,8 @@
 // src/components/settings/SettingsModal.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
+import { t } from '@/i18n';
 import { useSettings } from '../../hooks/useSettings';
 import { DEFERRED_UPDATE_TYPES } from '../../contexts/SettingsContext';
 import type { Setting } from '../../contexts/SettingsContext';

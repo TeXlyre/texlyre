@@ -1,7 +1,7 @@
 // src/settings/registerLatexSettings.ts
-import { t } from '@/i18n';
 import { useEffect, useRef } from 'react';
 
+import { t } from '@/i18n';
 import { useSettings } from '../hooks/useSettings';
 import { BUSYTEX_BUNDLE_LABELS } from '../extensions/texlyre-busytex/BusyTeXService';
 import type { LaTeXOutputFormat, LaTeXEngine } from '../types/latex';

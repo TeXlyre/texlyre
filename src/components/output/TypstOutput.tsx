@@ -1,8 +1,8 @@
 // src/components/output/TypstOutput.tsx
-import { t } from '@/i18n';
 import React from 'react';
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 
+import { t } from '@/i18n';
 import { fileStorageService } from '../../services/FileStorageService';
 import { useFileTree } from '../../hooks/useFileTree';
 import { useTypst } from '../../hooks/useTypst';

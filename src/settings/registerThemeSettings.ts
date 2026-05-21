@@ -1,7 +1,7 @@
 // src/settings/registerThemeSettings.ts
-import { t } from '@/i18n';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { t } from '@/i18n';
 import { useSettings } from '../hooks/useSettings';
 import { pluginRegistry } from '../plugins/PluginRegistry';
 

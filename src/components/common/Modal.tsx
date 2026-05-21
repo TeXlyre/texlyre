@@ -1,8 +1,8 @@
 // src/components/common/Modal.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { type ReactNode, useEffect, useRef } from 'react';
 
+import { t } from '@/i18n';
 import { CloseIcon } from './Icons';
 
 interface ModalProps {

@@ -1,8 +1,8 @@
 // src/components/app/AuthApp.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useState } from 'react';
 
+import { t } from '@/i18n';
 import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
 import { useTheme } from '../../hooks/useTheme';
 import { pushHash } from '../../utils/urlUtils';

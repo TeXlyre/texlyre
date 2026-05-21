@@ -1,8 +1,8 @@
 // src/components/settings/LanguageToggleButton.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
 
+import { t } from '@/i18n';
 import { useLanguage } from '../../hooks/useLanguage';
 import { useSettings } from '../../hooks/useSettings';
 import { LanguageIcon } from '../common/Icons';

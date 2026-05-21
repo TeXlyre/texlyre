@@ -1,7 +1,7 @@
 {
 	"name": "texlyre",
 	"private": true,
-	"version": "0.7.60",
+	"version": "0.8.0",
 	"description": "A local-first LaTeX & Typst collaborative web editor ",
 	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
 	"license": "AGPL-3.0-or-later",
@@ -20,7 +20,7 @@
 		"dev": "node scripts/pm.cjs vite",
 		"dev:https": "node scripts/pm.cjs cross-env VITE_USE_HTTPS=true vite --host",
 		"build": "node scripts/pm.cjs run generate:plugins && node scripts/pm.cjs tsc && node scripts/setup-assets.cjs && node scripts/pm.cjs vite build",
-		"build:prod": "node scripts/pm.cjs run generate:userdata-interfaces && node scripts/pm.cjs run generate:configs && node scripts/pm.cjs run i18n:coverage && node scripts/pm.cjs tsx scripts/update-sw-version.js && node scripts/pm.cjs run generate:plugins && node scripts/pm.cjs run generate:fonts && node scripts/pm.cjs tsc && node scripts/setup-assets.cjs && node scripts/pm.cjs vite build",
+		"build:prod": "node scripts/pm.cjs run generate:userdata-interfaces && node scripts/pm.cjs run generate:configs && node scripts/pm.cjs run i18n:coverage && node scripts/pm.cjs tsx scripts/update-sw-version.js && node scripts/pm.cjs run generate:plugins && node scripts/pm.cjs run generate:fonts && node scripts/pm.cjs tsc && node scripts/setup-assets.cjs && node scripts/pm.cjs vite build && node scripts/pm.cjs run lint:imports:fix && node scripts/pm.cjs run lint:biome:fix",
 		"build:local": "node scripts/pm.cjs tsx scripts/update-sw-version.js && node scripts/pm.cjs run generate:plugins && node scripts/pm.cjs run generate:fonts && node scripts/pm.cjs tsc && node scripts/setup-assets.cjs && node scripts/pm.cjs vite build",
 		"preview": "node scripts/pm.cjs vite preview",
 		"clean:cache": "node scripts/clean-cache.cjs",
@@ -31,8 +31,8 @@
 		"lint": "node scripts/pm.cjs run lint:check",
 		"lint:check": "node scripts/pm.cjs eslint . --ext ts,tsx --cache --report-unused-disable-directives --max-warnings 0",
 		"lint:fix": "node scripts/pm.cjs eslint . --ext ts,tsx --fix --cache --report-unused-disable-directives --max-warnings 0",
-		"lint:biome:check": "node scripts/pm.cjs @biomejs/biome check .",
-		"lint:biome:fix": "node scripts/pm.cjs @biomejs/biome check . --fix",
+		"lint:biome:check": "node scripts/pm.cjs biome check .",
+		"lint:biome:fix": "node scripts/pm.cjs biome check . --max-diagnostics=2000 --reporter=summary --fix",
 		"lint:imports:check": "node scripts/pm.cjs tsx scripts/lint-import-order.ts",
 		"lint:imports:preview": "node scripts/pm.cjs tsx scripts/lint-import-order.ts preview",
 		"lint:imports:fix": "node scripts/pm.cjs tsx scripts/lint-import-order.ts fix",
@@ -162,7 +162,9 @@
 			"protobufjs": "^7.5.8",
 			"fast-uri": "^3.1.2",
 			"@babel/plugin-transform-modules-systemjs@>=7.12.0 <=7.29.3": "^7.29.4",
-			"@protobufjs/utf8@<=1.1.0": "^1.1.1"
+			"@protobufjs/utf8@<=1.1.0": "^1.1.1",
+			"brace-expansion@>=5.0.0 <5.0.6": ">=5.0.6",
+			"ws@>=8.0.0 <8.20.1": ">=8.20.1"
 		},
 		"peerDependencyRules": {
 			"allowedVersions": {

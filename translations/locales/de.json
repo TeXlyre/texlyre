@@ -247,6 +247,8 @@
   "Auto-navigate to main file on compile": "Beim Kompilieren automatisch zur Hauptdatei navigieren",
   "Auto-reconnect on disconnect": "Beim Trennen automatisch wiederherstellen",
   "Auto-save delay (milliseconds)": "Verzögerung beim automatischen Speichern (Millisekunden)",
+  "Auto-save editor: {status}": "Editor automatisch speichern: {{status}}",
+  "Auto-save file: {status}": "Datei automatisch speichern: {{status}}",
   "Auto-save in editor": "Automatisches Speichern im Editor",
   "Auto-save on changes": "Bei Änderungen automatisch speichern",
   "Auto-save to file": "Automatisch in Datei speichern",

@@ -1,5 +1,4 @@
 // src/components/common/ResizablePanel.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import {
 	type MouseEvent,
@@ -8,6 +7,8 @@ import {
 	useRef,
 	useState,
 } from 'react';
+
+import { t } from '@/i18n';
 
 interface ResizablePanelProps {
 	children: React.ReactNode;
