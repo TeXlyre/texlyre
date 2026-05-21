@@ -15,12 +15,18 @@ interface MergeEditorProps {
 	local: string;
 	remote: string;
 	initialMerged?: string;
+	onMergedChange?: (merged: string) => void;
 }
 
 export const MergeEditor = forwardRef<MergeEditorHandle, MergeEditorProps>(
-	({ local, remote, initialMerged }, ref) => {
+	({ local, remote, initialMerged, onMergedChange }, ref) => {
 		const containerRef = useRef<HTMLDivElement>(null);
 		const viewRef = useRef<MergeView | null>(null);
+		const onMergedChangeRef = useRef(onMergedChange);
+
+		useEffect(() => {
+			onMergedChangeRef.current = onMergedChange;
+		}, [onMergedChange]);
 
 		useImperativeHandle(
 			ref,
@@ -30,14 +36,24 @@ export const MergeEditor = forwardRef<MergeEditorHandle, MergeEditorProps>(
 			[],
 		);
 
+		/* biome-ignore lint/correctness/useExhaustiveDependencies: MergeView is created once from initial props; re-mounting on prop change would discard in-progress merge work. */
 		useEffect(() => {
 			if (!containerRef.current) return;
 			const getMergeView = () => viewRef.current;
 
+			const mergedUpdateListener = EditorView.updateListener.of((update) => {
+				if (!update.docChanged) return;
+				onMergedChangeRef.current?.(update.state.doc.toString());
+			});
+
 			viewRef.current = new MergeView({
 				a: {
 					doc: initialMerged ?? local,
-					extensions: [basicSetup, EditorView.lineWrapping],
+					extensions: [
+						basicSetup,
+						EditorView.lineWrapping,
+						mergedUpdateListener,
+					],
 				},
 				b: {
 					doc: remote,

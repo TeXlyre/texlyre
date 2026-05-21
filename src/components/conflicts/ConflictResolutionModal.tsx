@@ -125,6 +125,18 @@ const ConflictResolutionModal: React.FC = () => {
 		handleResolutionAction({ action: 'merged', content: merged });
 	};
 
+	const handleMergedChange = (merged: string) => {
+		setStates((prev) => {
+			const next = new Map(prev);
+			const existing = next.get(selectedIndex) ?? { resolution: null };
+			next.set(selectedIndex, {
+				...existing,
+				resolution: { action: 'merged', content: merged },
+			});
+			return next;
+		});
+	};
+
 	const handleReset = () => {
 		updateState(selectedIndex, { resolution: null, initialMerged: undefined });
 		setResetKeys((prev) => {
@@ -251,6 +263,7 @@ const ConflictResolutionModal: React.FC = () => {
 											? toText(currentState.resolution.content)
 											: undefined)
 									}
+									onMergedChange={handleMergedChange}
 								/>
 							)}
 						</>
