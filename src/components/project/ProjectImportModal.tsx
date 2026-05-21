@@ -97,7 +97,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 
 			const templateUrl = `${window.location.origin}${window.location.pathname}#newProjectName:${encodeURIComponent(data.name)}&newProjectDescription:${encodeURIComponent(data.description)}&newProjectType:${encodeURIComponent(data.type)}&newProjectTags:${encodeURIComponent(data.tags.join(','))}&files:${encodeURIComponent(data.zipUrl)}`;
 
-			window.location.href = templateUrl;
+			window.location.replace(templateUrl);
 			window.location.reload();
 		} catch (error) {
 			setError(
@@ -115,7 +115,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 
 			const templateUrl = `${window.location.origin}${window.location.pathname}#newProjectName:${encodeURIComponent(template.name)}&newProjectDescription:${encodeURIComponent(template.description)}&newProjectType:${encodeURIComponent(template.type)}&newProjectTags:${encodeURIComponent(template.tags.join(','))}&files:${encodeURIComponent(template.downloadUrl)}`;
 
-			window.location.href = templateUrl;
+			window.location.replace(templateUrl);
 			window.location.reload();
 		} catch (error) {
 			setError(

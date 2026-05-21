@@ -1,6 +1,13 @@
 // src/components/app/AppRouter.tsx
 import type React from 'react';
-import { lazy, useCallback, useEffect, useState, Suspense } from 'react';
+import {
+	lazy,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+	Suspense,
+} from 'react';
 
 import { useAuth } from '../../hooks/useAuth';
 import { collabService } from '../../services/CollabService';
@@ -114,6 +121,8 @@ const AppRouter: React.FC = () => {
 		null,
 	);
 
+	const processedProjectHashRef = useRef<string | null>(null);
+
 	const createProjectForDocument = useCallback(
 		async (docUrl: string, name: string, description: string, type: string) => {
 			try {
@@ -224,6 +233,11 @@ const AppRouter: React.FC = () => {
 
 		const urlProjectParams = parseUrlProjectParams(hashUrl);
 		if (urlProjectParams && isAuthenticated && !isInitializing) {
+			if (processedProjectHashRef.current === hashUrl) {
+				return;
+			}
+			processedProjectHashRef.current = hashUrl;
+
 			createProjectFromUrl(urlProjectParams).then((createdDocUrl) => {
 				if (createdDocUrl) {
 					setDocUrl(createdDocUrl);
