@@ -78,25 +78,35 @@
 }
 
 .no-errors {
+	flex: 1;
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
+	justify-content: flex-start;
 	align-items: center;
-	height: 100%;
+	gap: 0.5rem;
+	padding: 1.5rem 1rem 0;
 	color: var(--pico-secondary);
 	text-align: center;
-	padding: 2rem;
 }
 
 .success-icon {
-	font-size: 3rem;
-	margin-bottom: 1rem;
+	font-size: 2.5rem;
+	line-height: 1;
+	color: var(--pico-primary);
+}
+
+.no-errors > div:nth-child(2) {
+	margin: 0;
+	font-size: 1.1rem;
+	font-weight: 600;
+	color: var(--text-color);
 }
 
 .success-subtitle {
+	margin: 0;
 	font-size: 0.85rem;
-	opacity: 0.8;
-	margin-top: 0.5rem;
+	color: var(--pico-secondary);
+	text-align: center;
 }
 
 .error-list {

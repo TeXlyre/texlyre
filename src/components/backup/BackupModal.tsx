@@ -113,7 +113,7 @@ const BackupModal: React.FC<BackupModalProps> = ({
 				return '❌';
 			case 'backup_complete':
 			case 'import_complete':
-				return '✅';
+				return '✓';
 			case 'backup_start':
 				return '📤';
 			case 'import_start':

@@ -40,7 +40,7 @@ const FileSyncModal: React.FC<FileSyncModalProps> = ({ isOpen, onClose }) => {
 			case 'sync_error':
 				return '❌';
 			case 'sync_complete':
-				return '✅';
+				return '✓';
 			case 'sync_request':
 				return '📤';
 			case 'sync_response':
