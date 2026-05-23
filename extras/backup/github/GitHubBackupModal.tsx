@@ -427,8 +427,8 @@ const GitHubBackupModal: React.FC<GitHubBackupModalProps> = ({
 		({
 			backup_error: '❌',
 			import_error: '❌',
-			backup_complete: '✅',
-			import_complete: '✅',
+			backup_complete: '✓',
+			import_complete: '✓',
 			backup_start: '📤',
 			import_start: '📥',
 		})[type] || 'ℹ️';

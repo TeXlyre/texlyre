@@ -44,6 +44,7 @@ export function useRegisterThemeSettings(
 		);
 	}, [availableThemes, currentThemeId]);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: languageVersion is an intentional trigger to re-register settings with translated labels. */
 	useEffect(() => {
 		if (availableThemes.length === 0) {
 			return;
@@ -64,8 +65,15 @@ export function useRegisterThemeSettings(
 		});
 
 		settingsRegisteredOnce.current = true;
-	}, [availableThemes, currentThemePlugin, defaultThemeId, registerSetting]);
+	}, [
+		availableThemes,
+		currentThemePlugin,
+		defaultThemeId,
+		registerSetting,
+		languageVersion,
+	]);
 
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: languageVersion is an intentional trigger to re-register settings with translated labels. */
 	useEffect(() => {
 		if (!currentThemePlugin) {
 			return;
@@ -92,5 +100,5 @@ export function useRegisterThemeSettings(
 			defaultValue: defaultVariantForCurrentTheme,
 			options: variantOptions,
 		});
-	}, [currentThemePlugin, currentVariant, registerSetting]);
+	}, [currentThemePlugin, currentVariant, registerSetting, languageVersion]);
 }

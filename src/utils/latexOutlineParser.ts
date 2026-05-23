@@ -36,7 +36,6 @@ export class LaTeXOutlineParser {
 		for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
 			const line = lines[lineIndex].trim();
 
-			// Skip comments and empty lines
 			if (line.startsWith('%') || line === '') continue;
 
 			const sectionMatch = LaTeXOutlineParser.matchSectionCommand(line);
@@ -47,21 +46,19 @@ export class LaTeXOutlineParser {
 
 			if (!sectionInfo) continue;
 
-			// Look for label on the same line or next few lines
 			const label = LaTeXOutlineParser.findLabel(lines, lineIndex);
 
 			const section: OutlineSection = {
 				id: `section-${lineIndex}-${Date.now()}`,
 				title: title || 'Untitled',
 				level: sectionInfo.level,
-				line: lineIndex + 1, // 1-based line numbering
+				line: lineIndex + 1,
 				type: sectionInfo.type,
 				starred,
 				children: [],
 				label,
 			};
 
-			// Build hierarchy
 			LaTeXOutlineParser.insertSectionIntoHierarchy(
 				section,
 				sections,
@@ -77,7 +74,6 @@ export class LaTeXOutlineParser {
 		starred: boolean;
 		title: string;
 	} | null {
-		// Match section commands with optional star and title
 		const regex =
 			/\\(part|chapter|section|subsection|subsubsection|paragraph|subparagraph)(\*?)\s*\{([^}]*)\}/;
 		const match = line.match(regex);
@@ -95,7 +91,6 @@ export class LaTeXOutlineParser {
 		lines: string[],
 		startIndex: number,
 	): string | undefined {
-		// Look for \label{} in the current line and next 2 lines
 		for (let i = startIndex; i < Math.min(startIndex + 3, lines.length); i++) {
 			const line = lines[i];
 			const labelMatch = line.match(/\\label\{([^}]+)\}/);
@@ -111,7 +106,6 @@ export class LaTeXOutlineParser {
 		sections: OutlineSection[],
 		sectionStack: OutlineSection[],
 	): void {
-		// Remove sections from stack that are at the same or deeper level
 		while (
 			sectionStack.length > 0 &&
 			sectionStack[sectionStack.length - 1].level >= section.level
@@ -119,7 +113,6 @@ export class LaTeXOutlineParser {
 			sectionStack.pop();
 		}
 
-		// Add to parent or root
 		if (sectionStack.length === 0) {
 			sections.push(section);
 		} else {
@@ -127,7 +120,6 @@ export class LaTeXOutlineParser {
 			parent.children.push(section);
 		}
 
-		// Add current section to stack
 		sectionStack.push(section);
 	}
 
