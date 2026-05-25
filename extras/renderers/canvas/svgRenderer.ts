@@ -116,6 +116,13 @@ export function renderSvgPageToCanvas(
 		canvas.style.height = `${scaledHeight}px`;
 	}
 
+	if (svgHasInteractivity(svgString)) {
+		canvasCtx.setTransform(1, 0, 0, 1, 0, 0);
+		canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+		renderingRef.current.delete(pageNumber);
+		return;
+	}
+
 	const img = new Image();
 	const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
 	const url = URL.createObjectURL(blob);
@@ -153,6 +160,12 @@ export function renderSvgPageToCanvas(
 	img.src = url;
 }
 
+function svgHasInteractivity(svg: string): boolean {
+	return /<animate|<set\b|begin\s*=\s*["'][^"']*\.(click|mouseover|mouseout|focus)/i.test(
+		svg,
+	);
+}
+
 const svgOverlayScaleCache = new WeakMap<HTMLDivElement, number>();
 
 export function renderSvgOverlay(
@@ -188,22 +201,20 @@ export function renderSvgOverlay(
 
 	svg
 		.querySelectorAll(
-			'text, [data-text], video, foreignObject, foreignObject *',
+			'a, [id], text, [data-text], video, audio, foreignObject, foreignObject *',
 		)
 		.forEach((el) => {
 			(el as HTMLElement).style.pointerEvents = 'auto';
 
-			if (el.tagName.toLowerCase() === 'text' || el.hasAttribute('data-text')) {
+			const tag = el.tagName.toLowerCase();
+			if (tag === 'text' || el.hasAttribute('data-text')) {
 				(el as HTMLElement).style.cursor = 'text';
+			} else if (tag === 'a' || el.hasAttribute('id')) {
+				(el as HTMLElement).style.cursor = 'pointer';
 			} else {
 				(el as HTMLElement).style.cursor = 'auto';
 			}
 		});
-
-	svg.querySelectorAll('text, [data-text]').forEach((el) => {
-		(el as HTMLElement).style.pointerEvents = 'auto';
-		(el as HTMLElement).style.cursor = 'text';
-	});
 
 	shadow.replaceChildren(svg);
 
