@@ -21,11 +21,13 @@ interface CollaboratorState {
 interface CollaboratorAvatarsProps {
 	awareness: Awareness;
 	maxVisible?: number;
+	excludeLocal?: boolean;
 }
 
 const CollaboratorAvatars: React.FC<CollaboratorAvatarsProps> = ({
 	awareness,
 	maxVisible = 4,
+	excludeLocal = false,
 }) => {
 	const [collaborators, setCollaborators] = useState<CollaboratorState[]>([]);
 	const [expanded, setExpanded] = useState(false);
@@ -38,10 +40,12 @@ const CollaboratorAvatars: React.FC<CollaboratorAvatarsProps> = ({
 
 			states.forEach((state, clientId) => {
 				if (!state.user) return;
+				const isLocal = clientId === awareness.clientID;
+				if (excludeLocal && isLocal) return;
 				result.push({
 					clientId,
 					user: state.user as CollaboratorUser,
-					isLocal: clientId === awareness.clientID,
+					isLocal,
 				});
 			});
 
@@ -60,7 +64,7 @@ const CollaboratorAvatars: React.FC<CollaboratorAvatarsProps> = ({
 		return () => {
 			awareness.off('change', update);
 		};
-	}, [awareness]);
+	}, [awareness, excludeLocal]);
 
 	useEffect(() => {
 		if (!expanded) return;

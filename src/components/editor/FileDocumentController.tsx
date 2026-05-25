@@ -11,6 +11,7 @@ import { useFileTree } from '../../hooks/useFileTree';
 import { useProperties } from '../../hooks/useProperties';
 import { useTheme } from '../../hooks/useTheme';
 import { useEditorTabs } from '../../hooks/useEditorTabs';
+import { usePeerDocumentTracking } from '../../hooks/usePeerDocumentTracking';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import { fileStorageService } from '../../services/FileStorageService';
 import { popoutViewerService } from '../../services/PopoutViewerService';
@@ -156,7 +157,11 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		registerProperty,
 	} = useProperties();
 	const { openTab, tabs } = useEditorTabs();
-
+	const {
+		projectId: collabProjectId,
+		docsWithPeers,
+		setLocalOpenDocument,
+	} = usePeerDocumentTracking(docUrl);
 	const [projectType, setProjectType] = useState<'latex' | 'typst'>('latex');
 	const propertiesRegistered = useRef(false);
 	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
@@ -956,6 +961,16 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	}, [openDocumentById]);
 
 	useEffect(() => {
+		const activeDocId =
+			!isEditingFile && selectedDocId
+				? selectedDocId
+				: isEditingFile && linkedDocumentId
+					? linkedDocumentId
+					: null;
+		setLocalOpenDocument(activeDocId);
+	}, [isEditingFile, selectedDocId, linkedDocumentId, setLocalOpenDocument]);
+
+	useEffect(() => {
 		const isTexFile = isEditingFile && fileName && isLatexFile(fileName);
 		const isTypFile = isEditingFile && fileName && isTypstFile(fileName);
 		const isDocumentLinkedToTex =
@@ -1107,6 +1122,8 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 							content={content}
 							docUrl={docUrl}
 							getDocumentContent={getDocumentContent}
+							collabProjectId={collabProjectId}
+							docsWithPeers={docsWithPeers}
 						/>
 					) : (
 						<FileExplorer
@@ -1116,6 +1133,8 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 							currentProjectId={sessionStorage.getItem('currentProjectId')}
 							onExportCurrentProject={handleExportCurrentProject}
 							projectType={projectType}
+							collabProjectId={collabProjectId}
+							docsWithPeers={docsWithPeers}
 						/>
 					)}
 				</ResizablePanel>

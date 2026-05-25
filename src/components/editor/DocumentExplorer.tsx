@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import { collabService } from '../../services/CollabService';
+import CollaboratorAvatars from '../common/CollaboratorAvatars';
 import type { Document } from '../../types/documents';
 import type { YjsDocUrl } from '../../types/yjs';
 import {
@@ -28,6 +29,8 @@ interface FileViewerProps {
 	content: string;
 	docUrl: YjsDocUrl;
 	getDocumentContent: (projectUrl: string, docId: string) => Promise<string>;
+	collabProjectId?: string;
+	docsWithPeers?: Set<string>;
 }
 
 interface DocumentPropertiesInfo {
@@ -46,6 +49,8 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 	content,
 	docUrl,
 	getDocumentContent,
+	collabProjectId,
+	docsWithPeers,
 }) => {
 	const [editingDocId, setEditingDocId] = useState<string | null>(null);
 	const [editName, setEditName] = useState('');
@@ -126,11 +131,8 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 		try {
 			setSyncProgress({ current: 0, total: 0 });
 
-			// Extract project ID from docUrl
-			const projectId = docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl;
-
 			const sessionId = await collabService.syncAllDocuments(
-				projectId,
+				collabProjectId,
 				(current, total) => {
 					setSyncProgress({ current, total });
 				},
@@ -238,7 +240,24 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 									className='file-name-input'
 								/>
 							) : (
-								<span className='file-name'>{doc.name}</span>
+								<>
+									<span className='file-name'>{doc.name}</span>
+									{collabProjectId &&
+										docsWithPeers?.has(doc.id) &&
+										(() => {
+											const awareness = collabService.getAwareness(
+												collabProjectId,
+												`yjs_${doc.id}`,
+											);
+											return awareness ? (
+												<CollaboratorAvatars
+													awareness={awareness}
+													excludeLocal
+													maxVisible={3}
+												/>
+											) : null;
+										})()}
+								</>
 							)}
 
 							<div className='file-actions'>

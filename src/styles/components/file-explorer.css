@@ -165,6 +165,26 @@
 	border-bottom-right-radius: var(--radius-sm);
 }
 
+.file-node .collab-avatars {
+	flex-shrink: 0;
+	margin-left: var(--space-xs);
+}
+
+.file-node .collab-avatar {
+	width: 16px;
+	height: 16px;
+	font-size: 9px;
+	border-width: 1px;
+}
+
+.file-node .file-name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
 .file-icon {
 	display: flex;
 	align-items: center;
