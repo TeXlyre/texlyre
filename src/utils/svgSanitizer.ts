@@ -309,7 +309,9 @@ function isUnsafeAnimation(rawAttrs: string): boolean {
 	if (
 		target &&
 		(BLOCKED_ANIMATION_TARGETS.has(target) ||
-			BLOCKED_ANIMATION_TARGETS.has(getLocalName(target)))
+			BLOCKED_ANIMATION_TARGETS.has(getLocalName(target)) ||
+			/^on/i.test(target) ||
+			/^on/i.test(getLocalName(target)))
 	) {
 		return true;
 	}
