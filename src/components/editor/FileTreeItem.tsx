@@ -3,6 +3,8 @@ import type React from 'react';
 
 import { t } from '@/i18n';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
+import { collabService } from '../../services/CollabService';
+import CollaboratorAvatars from '../common/CollaboratorAvatars';
 import type { FileNode } from '../../types/files';
 import { isTemporaryFile } from '../../utils/fileUtils';
 import {
@@ -72,6 +74,8 @@ interface FileTreeItemProps {
 	onCancelNewItem: () => void;
 	onNewItemKeyDown: (e: React.KeyboardEvent) => void;
 	menuRefs: React.RefObject<Map<string, HTMLDivElement>>;
+	collabProjectId?: string;
+	docsWithPeers?: Set<string>;
 }
 
 const FileTreeItem: React.FC<FileTreeItemProps> = ({
@@ -119,6 +123,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 	onCancelNewItem,
 	onNewItemKeyDown,
 	menuRefs,
+	collabProjectId,
+	docsWithPeers,
 }) => {
 	const isExpanded = expandedFolders.has(node.path);
 	const hasDocument = !!node.documentId;
@@ -253,18 +259,40 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 						{nameError && <span className='file-name-error'>{nameError}</span>}
 					</div>
 				) : (
-					<span className='file-name'>
-						{node.name}
-						{hasDocument && <span className='file-linked-indicator'>•</span>}
-						{hasViewer && (
-							<span
-								className='file-viewer-indicator'
-								title={t('Has viewer plugin')}
-							>
-								{/*👁️*/}
-							</span>
-						)}
-					</span>
+					<>
+						<span className='file-name'>
+							{node.name}
+							{hasDocument && <span className='file-linked-indicator'>•</span>}
+							{hasViewer && (
+								<span
+									className='file-viewer-indicator'
+									title={t('Has viewer plugin')}
+								>
+									{/*👁️*/}
+								</span>
+							)}
+						</span>
+						{(() => {
+							if (
+								!collabProjectId ||
+								!node.documentId ||
+								!docsWithPeers?.has(node.documentId)
+							)
+								return null;
+							const awareness = collabService.getAwareness(
+								collabProjectId,
+								`yjs_${node.documentId}`,
+							);
+							if (!awareness) return null;
+							return (
+								<CollaboratorAvatars
+									awareness={awareness}
+									excludeLocal
+									maxVisible={2}
+								/>
+							);
+						})()}
+					</>
 				)}
 
 				<div className='file-actions'>
@@ -580,6 +608,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 							onCancelNewItem={onCancelNewItem}
 							onNewItemKeyDown={onNewItemKeyDown}
 							menuRefs={menuRefs}
+							collabProjectId={collabProjectId}
+							docsWithPeers={docsWithPeers}
 						/>
 					))}
 				</div>

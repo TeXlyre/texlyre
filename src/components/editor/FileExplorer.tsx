@@ -36,6 +36,8 @@ interface FileExplorerProps {
 	currentProjectId?: string | null;
 	onExportCurrentProject?: (projectId: string) => void;
 	projectType?: 'latex' | 'typst';
+	collabProjectId?: string;
+	docsWithPeers?: Set<string>;
 }
 
 interface FilePropertiesInfo {
@@ -55,6 +57,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 	currentProjectId,
 	onExportCurrentProject,
 	projectType,
+	collabProjectId,
+	docsWithPeers,
 }) => {
 	const {
 		fileTree,
@@ -1092,6 +1096,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 									onCancelNewItem={handleCancelNewItem}
 									onNewItemKeyDown={handleNewItemKeyDown}
 									menuRefs={menuRefs}
+									collabProjectId={collabProjectId}
+									docsWithPeers={docsWithPeers}
 								/>
 							))}
 
