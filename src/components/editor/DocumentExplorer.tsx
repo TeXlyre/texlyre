@@ -3,7 +3,7 @@ import type React from 'react';
 import { useRef, useState } from 'react';
 
 import { t } from '@/i18n';
-import { collabService } from '../../services/CollabService';
+import { useCollab } from '../../hooks/useCollab';
 import CollaboratorAvatars from '../common/CollaboratorAvatars';
 import type { Document } from '../../types/documents';
 import type { YjsDocUrl } from '../../types/yjs';
@@ -52,6 +52,8 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 	collabProjectId,
 	docsWithPeers,
 }) => {
+	const { collabService, getAwareness } = useCollab();
+
 	const [editingDocId, setEditingDocId] = useState<string | null>(null);
 	const [editName, setEditName] = useState('');
 	const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -60,7 +62,6 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 	const [propertiesInfo, setPropertiesInfo] =
 		useState<DocumentPropertiesInfo | null>(null);
 
-	// Sync state
 	const [syncSession, setSyncSession] = useState<string | null>(null);
 	const [syncProgress, setSyncProgress] = useState({ current: 0, total: 0 });
 
@@ -126,7 +127,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 	};
 
 	const handleSyncAll = async () => {
-		if (syncSession || documents.length === 0) return;
+		if (syncSession || documents.length === 0 || !collabProjectId) return;
 
 		try {
 			setSyncProgress({ current: 0, total: 0 });
@@ -242,21 +243,18 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 							) : (
 								<>
 									<span className='file-name'>{doc.name}</span>
-									{collabProjectId &&
-										docsWithPeers?.has(doc.id) &&
-										(() => {
-											const awareness = collabService.getAwareness(
-												collabProjectId,
-												`yjs_${doc.id}`,
-											);
-											return awareness ? (
-												<CollaboratorAvatars
-													awareness={awareness}
-													excludeLocal
-													maxVisible={3}
-												/>
-											) : null;
-										})()}
+									{(() => {
+										if (!docsWithPeers?.has(doc.id)) return null;
+										const awareness = getAwareness(`yjs_${doc.id}`);
+										if (!awareness) return null;
+										return (
+											<CollaboratorAvatars
+												awareness={awareness}
+												excludeLocal
+												maxVisible={3}
+											/>
+										);
+									})()}
 								</>
 							)}
 

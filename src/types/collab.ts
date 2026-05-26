@@ -23,6 +23,7 @@ export interface CollabContextType<T = unknown> {
 	data: T | undefined;
 	changeData: (fn: (data: T) => void) => void;
 	isConnected: boolean;
+	getAwareness: (collectionName: string) => Awareness | null;
 }
 
 export interface DocContainer {
