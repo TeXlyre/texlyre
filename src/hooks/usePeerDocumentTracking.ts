@@ -2,7 +2,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { peerDocumentTrackingService } from '../services/PeerDocumentTrackingService';
-import { collabService } from '../services/CollabService';
 import { useCollab } from './useCollab';
 import { useEditor } from './useEditor';
 import type { YjsDocUrl } from '../types/yjs';
@@ -15,7 +14,7 @@ export const usePeerDocumentTracking = (
 	setLocalOpenDocument: (docId: string | null) => void;
 } => {
 	const { getCollabOptions } = useEditor();
-	const { isConnected } = useCollab();
+	const { isConnected, getAwareness } = useCollab();
 	const [docsWithPeers, setDocsWithPeers] = useState<Set<string>>(new Set());
 
 	const projectId = useMemo(
@@ -33,7 +32,7 @@ export const usePeerDocumentTracking = (
 
 		const tryRegister = () => {
 			if (cancelled) return;
-			const awareness = collabService.getAwareness(projectId, 'yjs_metadata');
+			const awareness = getAwareness('yjs_metadata');
 			if (!awareness) {
 				setTimeout(tryRegister, 250);
 				return;

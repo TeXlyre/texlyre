@@ -3,7 +3,7 @@ import type React from 'react';
 
 import { t } from '@/i18n';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
-import { collabService } from '../../services/CollabService';
+import { useCollab } from '../../hooks/useCollab';
 import CollaboratorAvatars from '../common/CollaboratorAvatars';
 import type { FileNode } from '../../types/files';
 import { isTemporaryFile } from '../../utils/fileUtils';
@@ -126,6 +126,8 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 	collabProjectId,
 	docsWithPeers,
 }) => {
+	const { getAwareness } = useCollab();
+
 	const isExpanded = expandedFolders.has(node.path);
 	const hasDocument = !!node.documentId;
 	const isDragOver = dragOverTarget === node.id;
@@ -279,10 +281,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 								!docsWithPeers?.has(node.documentId)
 							)
 								return null;
-							const awareness = collabService.getAwareness(
-								collabProjectId,
-								`yjs_${node.documentId}`,
-							);
+							const awareness = getAwareness(`yjs_${node.documentId}`);
 							if (!awareness) return null;
 							return (
 								<CollaboratorAvatars

@@ -152,6 +152,12 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 		[doc],
 	);
 
+	const getAwareness = useCallback(
+		(collectionName: string) =>
+			collabService.getAwareness(projectId, collectionName),
+		[projectId],
+	);
+
 	const value: CollabContextType<any> = {
 		collabService,
 		doc,
@@ -159,6 +165,7 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 		data,
 		changeData,
 		isConnected,
+		getAwareness,
 	};
 
 	return (
