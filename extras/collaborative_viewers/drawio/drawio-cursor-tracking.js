@@ -107,38 +107,47 @@
 	});
 
 	function createCursorElement(user) {
+		const parentRoot = window.parent.document.documentElement;
+		const isLight = parentRoot.getAttribute('data-theme-mode') === 'light';
+		const color = (isLight && user.colorLight) || user.color || '#4A90E2';
+		const textColor =
+			window.parent
+				.getComputedStyle(parentRoot)
+				.getPropertyValue('--pico-secondary-background')
+				.trim() || 'white';
+
 		const cursor = document.createElement('div');
 		cursor.className = 'remote-cursor';
 		cursor.style.cssText = `
-            position: fixed;
-            pointer-events: none;
-            z-index: 10000;
-            transition: transform 0.1s ease-out;
-            transform-origin: 0 0;
-            left: 0;
-            top: 0;
-        `;
+		position: fixed;
+		pointer-events: none;
+		z-index: 10000;
+		transition: transform 0.1s ease-out;
+		transform-origin: 0 0;
+		left: 0;
+		top: 0;
+	`;
 
 		cursor.innerHTML = `
-            <svg width="24" height="24" viewBox="0 0 24 24" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
-                <path d="M5 3 L5 17 L8 14 L11 20 L13 19 L10 13 L15 13 Z" 
-                      fill="${user.color || '#4A90E2'}" 
-                      stroke="white" 
-                      stroke-width="1"/>
-            </svg>
-            <div style="
-                position: absolute;
-                left: 20px;
-                top: 0;
-                background: ${user.color || '#4A90E2'};
-                color: white;
-                padding: 2px 8px;
-                border-radius: 4px;
-                font-size: 12px;
-                white-space: nowrap;
-                font-family: system-ui, -apple-system, sans-serif;
-            ">${user.username}</div>
-        `;
+		<svg width="24" height="24" viewBox="0 0 24 24" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+			<path d="M5 3 L5 17 L8 14 L11 20 L13 19 L10 13 L15 13 Z"
+				  fill="${color}"
+				  stroke="white"
+				  stroke-width="1"/>
+		</svg>
+		<div style="
+			position: absolute;
+			left: 20px;
+			top: 0;
+			background: ${color};
+			color: ${textColor};
+			padding: 2px 8px;
+			border-radius: 4px;
+			font-size: 12px;
+			white-space: nowrap;
+			font-family: system-ui, -apple-system, sans-serif;
+		">${user.username}</div>
+	`;
 
 		document.body.appendChild(cursor);
 		return cursor;

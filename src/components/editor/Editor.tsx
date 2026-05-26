@@ -3,6 +3,7 @@ import { t } from '@/i18n';
 import { Trans } from 'react-i18next';
 import React from 'react';
 import { useCallback, useEffect, useRef, useMemo, useState } from 'react';
+import type { Awareness } from 'y-protocols/awareness';
 
 import { BibliographyProvider } from '../../contexts/BibliographyContext';
 import { CommentProvider } from '../../contexts/CommentContext';
@@ -21,7 +22,6 @@ import type {
 } from '../../plugins/PluginInterface';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import { fileStorageService } from '../../services/FileStorageService';
-import { collabService } from '../../services/CollabService';
 import type { DocumentList } from '../../types/documents';
 import {
 	buildUrlWithFragments,
@@ -196,7 +196,11 @@ const EditorContent: React.FC<{
 	} = useSourceMap();
 	const { parseComments, addComment, updateComments } = useComments();
 	const fileInfo = usePluginFileInfo(fileId, fileName);
-	const { data: doc, changeData: changeDoc } = useCollab<DocumentList>();
+	const {
+		data: doc,
+		changeData: changeDoc,
+		getAwareness,
+	} = useCollab<DocumentList>();
 	const { viewRef, showSaveIndicator } = useEditorView(
 		editorRef,
 		docUrl,
@@ -215,13 +219,31 @@ const EditorContent: React.FC<{
 		toolbarVisible,
 	);
 
-	const projectId = useMemo(() => docUrl.split(':').pop() || '', [docUrl]);
 	const editorCollectionName = useMemo(() => `yjs_${documentId}`, [documentId]);
+	const [awareness, setAwareness] = useState<Awareness | null>(null);
 
-	const awareness = useMemo(() => {
-		if (!isDocumentSelected || isEditingFile) return null;
-		return collabService.getAwareness(projectId, editorCollectionName);
-	}, [isDocumentSelected, isEditingFile, projectId, editorCollectionName]);
+	useEffect(() => {
+		if (!isDocumentSelected || isEditingFile) {
+			setAwareness(null);
+			return;
+		}
+
+		let cancelled = false;
+		const tryResolve = () => {
+			if (cancelled) return;
+			const a = getAwareness(editorCollectionName);
+			if (a) {
+				setAwareness(a);
+			} else {
+				setTimeout(tryResolve, 100);
+			}
+		};
+		tryResolve();
+
+		return () => {
+			cancelled = true;
+		};
+	}, [isDocumentSelected, isEditingFile, editorCollectionName, getAwareness]);
 
 	const handleForwardSync = useCallback(() => {
 		if (!viewRef.current) return;

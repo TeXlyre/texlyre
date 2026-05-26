@@ -26,22 +26,72 @@ export interface YjsEditorBindingResult {
 	cleanup: () => void;
 }
 
+const THEME_WRAP = Symbol.for('texlyre.yjsAwarenessThemeWrap');
+
+const wrapAwarenessForTheme = (awareness: Awareness): Awareness => {
+	if ((awareness as unknown as Record<symbol, boolean>)[THEME_WRAP]) {
+		return awareness;
+	}
+
+	const origGetStates = awareness.getStates.bind(awareness);
+	const root = document.documentElement;
+
+	awareness.getStates = () => {
+		const states = origGetStates();
+		if (root.getAttribute('data-theme-mode') !== 'light') return states;
+
+		const out = new Map<number, Record<string, unknown>>();
+		states.forEach((state, clientId) => {
+			const user = state?.user as
+				| { color?: string; colorLight?: string }
+				| undefined;
+			if (user?.colorLight && user.colorLight !== user.color) {
+				out.set(clientId, {
+					...state,
+					user: { ...user, color: user.colorLight },
+				});
+			} else {
+				out.set(clientId, state);
+			}
+		});
+		return out;
+	};
+
+	(awareness as unknown as Record<symbol, boolean>)[THEME_WRAP] = true;
+	return awareness;
+};
+
 export const createYjsEditorBindingExtensions = (
 	yText: Y.Text,
 	providerAwareness: Awareness | null | undefined,
 	undoManager: UndoManager,
 ): YjsEditorBindingResult => {
 	const localAwareness = providerAwareness ? null : new Awareness(yText.doc!);
-	const awareness = providerAwareness ?? localAwareness!;
+	const awareness = wrapAwarenessForTheme(providerAwareness ?? localAwareness!);
+
+	const themeObserver = new MutationObserver(() => {
+		const remoteIds = Array.from(awareness.getStates().keys()).filter(
+			(id) => id !== awareness.clientID,
+		);
+		if (remoteIds.length > 0) {
+			awareness.emit('change', [
+				{ added: [], updated: remoteIds, removed: [] },
+				'local',
+			]);
+		}
+	});
+	themeObserver.observe(document.documentElement, {
+		attributes: true,
+		attributeFilter: ['data-theme-mode'],
+	});
 
 	return {
 		extensions: [
-			yCollab(yText, awareness, {
-				undoManager,
-			}),
+			yCollab(yText, awareness, { undoManager }),
 			keymap.of(yUndoManagerKeymap),
 		],
 		cleanup: () => {
+			themeObserver.disconnect();
 			localAwareness?.destroy();
 		},
 	};
