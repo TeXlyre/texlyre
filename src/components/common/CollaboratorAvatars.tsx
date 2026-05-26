@@ -118,7 +118,13 @@ const CollaboratorAvatars: React.FC<CollaboratorAvatarsProps> = ({
 					<div
 						key={collab.clientId}
 						className={`collab-avatar ${collab.isLocal ? 'local' : ''}`}
-						style={{ backgroundColor: collab.user.color }}
+						style={
+							{
+								'--collab-color': collab.user.color,
+								'--collab-color-light':
+									collab.user.colorLight || collab.user.color,
+							} as React.CSSProperties
+						}
 						title={
 							(collab.user.name || collab.user.username) +
 							(collab.isLocal ? ' (You)' : '')
@@ -140,7 +146,13 @@ const CollaboratorAvatars: React.FC<CollaboratorAvatarsProps> = ({
 						<div key={collab.clientId} className='collab-avatars-panel-item'>
 							<div
 								className='collab-avatar'
-								style={{ backgroundColor: collab.user.color }}
+								style={
+									{
+										'--collab-color': collab.user.color,
+										'--collab-color-light':
+											collab.user.colorLight || collab.user.color,
+									} as React.CSSProperties
+								}
 							>
 								{getInitial(collab.user)}
 							</div>

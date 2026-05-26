@@ -4,6 +4,7 @@ import { Trans } from 'react-i18next';
 import { tidy } from 'bib-editor';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { Awareness } from 'y-protocols/awareness';
 
 import {
 	DownloadIcon,
@@ -20,13 +21,13 @@ import { useSettings } from '@/hooks/useSettings';
 import { useProperties } from '@/hooks/useProperties';
 import { BibliographyProvider } from '@/contexts/BibliographyContext';
 import { useEditorView } from '@/hooks/editor/useEditorView';
+import { useCollab } from '@/hooks/useCollab';
 import LSPToggleButton from '@/components/bibliography/LSPToggleButton';
 import BibliographyPanel from '@/components/bibliography/BibliographyPanel';
 import type { CollaborativeViewerProps } from '@/plugins/PluginInterface';
 import { pluginRegistry } from '@/plugins/PluginRegistry';
 import { fileStorageService } from '@/services/FileStorageService';
 import { bibliographyImportService } from '@/services/BibliographyImportService';
-import { collabService } from '@/services/CollabService';
 import { formatFileSize } from '@/utils/fileUtils';
 import { detectFileType } from '@/utils/fileUtils';
 import { computeReplacementChange } from '@/utils/textDiffUtils';
@@ -81,6 +82,8 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	addComment,
 	updateComments,
 }) => {
+	const { getAwareness } = useCollab();
+
 	const { getSetting } = useSettings();
 	const { getProperty, setProperty, registerProperty } = useProperties();
 	const fileInfo = usePluginFileInfo(fileId, fileName);
@@ -174,16 +177,26 @@ const BibtexCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				: '',
 	);
 
-	const projectId = useMemo(() => {
-		const hash = docUrl.split(':').pop() || '';
-		return hash;
-	}, [docUrl]);
-
 	const collectionName = useMemo(() => `yjs_${documentId}`, [documentId]);
+	const [awareness, setAwareness] = useState<Awareness | null>(null);
 
-	const awareness = useMemo(() => {
-		return collabService.getAwareness(projectId, collectionName);
-	}, [projectId, collectionName]);
+	useEffect(() => {
+		let cancelled = false;
+		const tryResolve = () => {
+			if (cancelled) return;
+			const a = getAwareness(collectionName);
+			if (a) {
+				setAwareness(a);
+			} else {
+				setTimeout(tryResolve, 100);
+			}
+		};
+		tryResolve();
+
+		return () => {
+			cancelled = true;
+		};
+	}, [collectionName, getAwareness]);
 
 	const fileType = detectFileType(fileName);
 	const { lsp: availableLSPPlugins, bib: availableBibPlugins } =
