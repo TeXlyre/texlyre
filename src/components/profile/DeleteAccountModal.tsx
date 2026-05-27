@@ -65,10 +65,8 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 	};
 
 	const deleteUserAccount = async (userId: string): Promise<void> => {
-		// Get all user projects using the auth context
 		const projects = await getProjects();
 
-		// Clean up all project databases
 		for (const project of projects) {
 			await cleanupProjectDatabases(project);
 		}
@@ -82,22 +80,18 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 			throw new Error(t('Database not available'));
 		}
 
-		// Delete all user data in a single transaction
 		const tx = authDb.transaction(['projects', 'users'], 'readwrite');
 		const projectStore = tx.objectStore('projects');
 		const userStore = tx.objectStore('users');
 
-		// Delete all user's projects from the database
 		const userProjects = await projectStore.index('ownerId').getAll(userId);
 		for (const project of userProjects) {
 			await projectStore.delete(project.id);
 		}
 
-		// Delete the user record
 		await userStore.delete(userId);
 		await tx.done;
 
-		// Clean up localStorage
 		const userSettingsKey = `texlyre-user-${userId}-settings`;
 		const userPropertiesKey = `texlyre-user-${userId}-properties`;
 		const userSecretsKey = `texlyre-user-${userId}-secrets`;
@@ -116,7 +110,6 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 
 	const handleOpenExport = () => {
 		if (onOpenExport) {
-			// Don't close the delete modal - keep it open so user can return to deletion
 			onOpenExport();
 		}
 	};

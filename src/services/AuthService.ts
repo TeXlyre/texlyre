@@ -6,6 +6,7 @@ import * as Y from 'yjs';
 import { t } from '@/i18n';
 import type { User } from '../types/auth';
 import type { Project } from '../types/projects';
+import { generateRandomColor } from '../utils/colorUtils';
 import { cleanupProjectDatabases } from '../utils/dbDeleteUtils';
 import { generateYjsProjectId } from '../utils/urlUtils';
 import { fileSystemBackupService } from './FileSystemBackupService';
@@ -124,15 +125,14 @@ class AuthService {
 			expiresAt,
 			createdAt: now,
 			lastLogin: now,
-			color: this.generateRandomColor(false),
-			colorLight: this.generateRandomColor(true),
+			color: generateRandomColor(false),
+			colorLight: generateRandomColor(true),
 		};
 
 		try {
 			console.log(`[AuthService] Creating guest user with ID: ${userId}`);
 			await this.db?.put(this.USER_STORE, guestUser);
 
-			// Verify the user was created
 			const verifyUser = await this.db?.get(this.USER_STORE, userId);
 			if (!verifyUser) {
 				throw new Error(t('Failed to verify guest user creation'));
@@ -165,7 +165,6 @@ class AuthService {
 			throw new Error(t('No guest account to upgrade'));
 		}
 
-		// Check for existing non-guest users only
 		const existingUser = await this.db?.getFromIndex(
 			this.USER_STORE,
 			'username',
@@ -189,8 +188,6 @@ class AuthService {
 		const passwordHash = await this.hashPassword(password);
 		const now = Date.now();
 		const oldGuestId = this.currentUser.id;
-
-		// Create a completely new user ID for the upgraded account
 		const newUserId = crypto.randomUUID();
 
 		const upgradedUser: User = {
@@ -202,7 +199,6 @@ class AuthService {
 			lastLogin: now,
 			color: this.currentUser.color,
 			colorLight: this.currentUser.colorLight,
-			// Explicitly remove guest properties
 			isGuest: undefined,
 			sessionId: undefined,
 			expiresAt: undefined,
@@ -210,11 +206,7 @@ class AuthService {
 
 		// Transfer ownership of all guest projects to the new user
 		await this.transferGuestProjects(oldGuestId, newUserId);
-
-		// Add the new user
 		await this.db?.put(this.USER_STORE, upgradedUser);
-
-		// Remove the old guest account
 		await this.db?.delete(this.USER_STORE, oldGuestId);
 
 		this.currentUser = upgradedUser;
@@ -285,13 +277,11 @@ class AuthService {
 		try {
 			console.log(`[AuthService] Cleaning up guest: ${guestUser.id}`);
 
-			// Get guest projects
 			const guestProjects = await this.getProjectsByUser(guestUser.id);
 			console.log(
 				`[AuthService] Found ${guestProjects.length} guest projects to cleanup`,
 			);
 
-			// Clean up project databases first
 			for (const project of guestProjects) {
 				try {
 					await cleanupProjectDatabases(project);
@@ -324,64 +314,7 @@ class AuthService {
 			);
 		} catch (error) {
 			console.error(`Error cleaning up guest ${guestUser.id}:`, error);
-			// Don't rethrow - cleanup failures shouldn't block other operations
 		}
-	}
-
-	private generateRandomColor(isLight: boolean): string {
-		const hue = Math.floor(Math.random() * 360);
-		const saturation = isLight
-			? 60 + Math.floor(Math.random() * 20)
-			: 70 + Math.floor(Math.random() * 30);
-		const lightness = isLight
-			? 65 + Math.floor(Math.random() * 20)
-			: 45 + Math.floor(Math.random() * 25);
-
-		const hslToHex = (h: number, s: number, l: number): string => {
-			const sNorm = s / 100;
-			const lNorm = l / 100;
-			const c = (1 - Math.abs(2 * lNorm - 1)) * sNorm;
-			const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-			const m = lNorm - c / 2;
-
-			let r = 0;
-			let g = 0;
-			let b = 0;
-			if (0 <= h && h < 60) {
-				r = c;
-				g = x;
-				b = 0;
-			} else if (60 <= h && h < 120) {
-				r = x;
-				g = c;
-				b = 0;
-			} else if (120 <= h && h < 180) {
-				r = 0;
-				g = c;
-				b = x;
-			} else if (180 <= h && h < 240) {
-				r = 0;
-				g = x;
-				b = c;
-			} else if (240 <= h && h < 300) {
-				r = x;
-				g = 0;
-				b = c;
-			} else if (300 <= h && h < 360) {
-				r = c;
-				g = 0;
-				b = x;
-			}
-
-			const toHex = (n: number) => {
-				const hex = Math.round((n + m) * 255).toString(16);
-				return hex.length === 1 ? `0${hex}` : hex;
-			};
-
-			return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-		};
-
-		return hslToHex(hue, saturation, lightness);
 	}
 
 	async register(

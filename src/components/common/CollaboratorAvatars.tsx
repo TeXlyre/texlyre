@@ -1,6 +1,7 @@
 // src/components/common/CollaboratorAvatars.tsx
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { Awareness } from 'y-protocols/awareness';
 
 interface CollaboratorUser {
@@ -31,7 +32,9 @@ const CollaboratorAvatars: React.FC<CollaboratorAvatarsProps> = ({
 }) => {
 	const [collaborators, setCollaborators] = useState<CollaboratorState[]>([]);
 	const [expanded, setExpanded] = useState(false);
-	const containerRef = useRef<HTMLDivElement>(null);
+	const [position, setPosition] = useState({ top: 0, left: 0 });
+	const rowRef = useRef<HTMLDivElement>(null);
+	const panelRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		const update = () => {
@@ -67,12 +70,62 @@ const CollaboratorAvatars: React.FC<CollaboratorAvatarsProps> = ({
 	}, [awareness, excludeLocal]);
 
 	useEffect(() => {
+		if (!expanded || !rowRef.current || !panelRef.current) return;
+
+		const updatePosition = () => {
+			if (!rowRef.current || !panelRef.current) return;
+
+			const rowRect = rowRef.current.getBoundingClientRect();
+			const panelRect = panelRef.current.getBoundingClientRect();
+			const spacing = 4;
+			const padding = 8;
+
+			const viewportWidth = window.innerWidth;
+			const viewportHeight = window.innerHeight;
+
+			const spaceBelow = viewportHeight - rowRect.bottom;
+			const spaceAbove = rowRect.top;
+
+			let top =
+				spaceBelow >= panelRect.height + spacing || spaceBelow >= spaceAbove
+					? rowRect.bottom + spacing
+					: rowRect.top - panelRect.height - spacing;
+
+			let left = rowRect.right - panelRect.width;
+
+			top = Math.max(
+				padding,
+				Math.min(top, viewportHeight - panelRect.height - padding),
+			);
+			left = Math.max(
+				padding,
+				Math.min(left, viewportWidth - panelRect.width - padding),
+			);
+
+			setPosition({ top, left });
+		};
+
+		updatePosition();
+
+		window.addEventListener('scroll', updatePosition, true);
+		window.addEventListener('resize', updatePosition);
+
+		return () => {
+			window.removeEventListener('scroll', updatePosition, true);
+			window.removeEventListener('resize', updatePosition);
+		};
+	}, [expanded]);
+
+	useEffect(() => {
 		if (!expanded) return;
 
 		const handleClickOutside = (e: MouseEvent) => {
+			const target = e.target as Node;
 			if (
-				containerRef.current &&
-				!containerRef.current.contains(e.target as Node)
+				rowRef.current &&
+				!rowRef.current.contains(target) &&
+				panelRef.current &&
+				!panelRef.current.contains(target)
 			) {
 				setExpanded(false);
 			}
@@ -109,8 +162,9 @@ const CollaboratorAvatars: React.FC<CollaboratorAvatarsProps> = ({
 	);
 
 	return (
-		<div className='collab-avatars' ref={containerRef}>
+		<div className='collab-avatars'>
 			<div
+				ref={rowRef}
 				className='collab-avatars-row'
 				onClick={() => setExpanded(!expanded)}
 			>
@@ -140,27 +194,36 @@ const CollaboratorAvatars: React.FC<CollaboratorAvatarsProps> = ({
 				)}
 			</div>
 
-			{expanded && (
-				<div className='collab-avatars-panel'>
-					{collaborators.map((collab) => (
-						<div key={collab.clientId} className='collab-avatars-panel-item'>
-							<div
-								className='collab-avatar'
-								style={
-									{
-										'--collab-color': collab.user.color,
-										'--collab-color-light':
-											collab.user.colorLight || collab.user.color,
-									} as React.CSSProperties
-								}
-							>
-								{getInitial(collab.user)}
+			{expanded &&
+				createPortal(
+					<div
+						ref={panelRef}
+						className='collab-avatars-panel'
+						style={{
+							top: `${position.top}px`,
+							left: `${position.left}px`,
+						}}
+					>
+						{collaborators.map((collab) => (
+							<div key={collab.clientId} className='collab-avatars-panel-item'>
+								<div
+									className='collab-avatar'
+									style={
+										{
+											'--collab-color': collab.user.color,
+											'--collab-color-light':
+												collab.user.colorLight || collab.user.color,
+										} as React.CSSProperties
+									}
+								>
+									{getInitial(collab.user)}
+								</div>
+								{renderTooltipContent(collab)}
 							</div>
-							{renderTooltipContent(collab)}
-						</div>
-					))}
-				</div>
-			)}
+						))}
+					</div>,
+					document.body,
+				)}
 		</div>
 	);
 };
