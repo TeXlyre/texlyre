@@ -263,6 +263,44 @@ input[type="range"]:disabled::-moz-range-thumb {
 	color: var(--color-error);
 }
 
+.color-picker-wrapper {
+	position: relative;
+	display: block;
+	width: 100%;
+}
+
+.color-picker-wrapper input[type="color"] {
+	width: 100%;
+	min-height: min-content;
+	display: block;
+	padding: 0;
+}
+
+.color-picker-overlay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.8rem;
+	line-height: 1;
+	font-weight: 600;
+	pointer-events: none;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	padding: var(--space-xs);
+	min-height: min-content;
+}
+
+.color-picker-overlay.dark {
+	color: #ffffff;
+}
+
+.color-picker-overlay.light {
+	color: #000000;
+}
+
 .color-picker-group {
 	margin-bottom: var(--space-md);
 }

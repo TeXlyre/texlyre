@@ -9,6 +9,7 @@ import {
 	clearUserData,
 	importFromFile,
 } from '../../utils/userDataUtils';
+import { generateRandomColor } from '../../utils/colorUtils';
 import { useAuth } from '../../hooks/useAuth';
 import type { User } from '../../types/auth';
 import Modal from '../common/Modal';
@@ -20,58 +21,6 @@ interface ProfileSettingsModalProps {
 }
 
 type ClearType = 'settings' | 'properties' | 'secrets' | 'records' | 'all';
-
-function generateRandomColor(isLight: boolean): string {
-	const hue = Math.floor(Math.random() * 360);
-	const saturation = isLight
-		? 60 + Math.floor(Math.random() * 20)
-		: 70 + Math.floor(Math.random() * 30);
-	const lightness = isLight
-		? 65 + Math.floor(Math.random() * 20)
-		: 45 + Math.floor(Math.random() * 25);
-
-	const sNorm = saturation / 100;
-	const lNorm = lightness / 100;
-	const c = (1 - Math.abs(2 * lNorm - 1)) * sNorm;
-	const x = c * (1 - Math.abs(((hue / 60) % 2) - 1));
-	const m = lNorm - c / 2;
-
-	let r = 0;
-	let g = 0;
-	let b = 0;
-	if (0 <= hue && hue < 60) {
-		r = c;
-		g = x;
-		b = 0;
-	} else if (60 <= hue && hue < 120) {
-		r = x;
-		g = c;
-		b = 0;
-	} else if (120 <= hue && hue < 180) {
-		r = 0;
-		g = c;
-		b = x;
-	} else if (180 <= hue && hue < 240) {
-		r = 0;
-		g = x;
-		b = c;
-	} else if (240 <= hue && hue < 300) {
-		r = x;
-		g = 0;
-		b = c;
-	} else if (300 <= hue && hue < 360) {
-		r = c;
-		g = 0;
-		b = x;
-	}
-
-	const toHex = (n: number) => {
-		const hex = Math.round((n + m) * 255).toString(16);
-		return hex.length === 1 ? `0${hex}` : hex;
-	};
-
-	return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-}
 
 const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 	isOpen,
@@ -365,23 +314,29 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 						<div className='color-picker-row'>
 							<div className='form-group color-picker-item'>
 								<label htmlFor='color'>{t('Dark Theme')}</label>
-								<input
-									type='color'
-									id='color'
-									value={color}
-									onChange={(e) => setColor(e.target.value)}
-									disabled={isSubmitting}
-								/>
+								<div className='color-picker-wrapper'>
+									<input
+										type='color'
+										id='color'
+										value={color}
+										onChange={(e) => setColor(e.target.value)}
+										disabled={isSubmitting}
+									/>
+									<span className='color-picker-overlay dark'>{username}</span>
+								</div>
 							</div>
 							<div className='form-group color-picker-item'>
 								<label htmlFor='colorLight'>{t('Light Theme')}</label>
-								<input
-									type='color'
-									id='colorLight'
-									value={colorLight}
-									onChange={(e) => setColorLight(e.target.value)}
-									disabled={isSubmitting}
-								/>
+								<div className='color-picker-wrapper'>
+									<input
+										type='color'
+										id='colorLight'
+										value={colorLight}
+										onChange={(e) => setColorLight(e.target.value)}
+										disabled={isSubmitting}
+									/>
+									<span className='color-picker-overlay light'>{username}</span>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -421,7 +376,25 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 						/>
 					</div>
 
-					<h3>{t('Local Storage Data')}</h3>
+					<div className='modal-actions'>
+						<button
+							type='button'
+							className='button secondary'
+							onClick={onClose}
+							disabled={isSubmitting}
+						>
+							{t('Cancel')}
+						</button>
+						<button
+							type='submit'
+							className='button primary'
+							disabled={isSubmitting}
+						>
+							{isSubmitting ? t('Saving...') : t('Save Changes')}
+						</button>
+					</div>
+
+					<h3 style={{ paddingTop: '1rem' }}>{t('Local Storage Data')}</h3>
 
 					<div className='warning-message'>
 						<h3>{t('\u26A0\uFE0F Warning: This action cannot be undone')}</h3>
@@ -594,24 +567,6 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 								</button>
 							</div>
 						</div>
-					</div>
-
-					<div className='modal-actions'>
-						<button
-							type='button'
-							className='button secondary'
-							onClick={onClose}
-							disabled={isSubmitting}
-						>
-							{t('Cancel')}
-						</button>
-						<button
-							type='submit'
-							className='button primary'
-							disabled={isSubmitting}
-						>
-							{isSubmitting ? t('Saving...') : t('Save Changes')}
-						</button>
 					</div>
 				</form>
 			</Modal>

@@ -113,7 +113,7 @@
 		const textColor =
 			window.parent
 				.getComputedStyle(parentRoot)
-				.getPropertyValue('--pico-secondary-background')
+				.getPropertyValue('--text-color')
 				.trim() || 'white';
 
 		const cursor = document.createElement('div');
