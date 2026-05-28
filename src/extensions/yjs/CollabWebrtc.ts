@@ -16,6 +16,7 @@ class WebrtcProviderRegistry {
 		doc: Y.Doc,
 		options?: WebrtcProviderOptions,
 	): WebrtcProvider {
+		// console.log('[CollabWebrtc] getProvider', roomName, this.providers.has(roomName), this.getRefCount(roomName));
 		if (this.providers.has(roomName)) {
 			const entry = this.providers.get(roomName)!;
 			entry.refCount += 1;
@@ -24,7 +25,7 @@ class WebrtcProviderRegistry {
 
 		try {
 			const provider = new WebrtcProvider(roomName, doc, {
-				signaling: options?.signaling,
+				signaling: options?.signaling ?? [],
 			});
 
 			this.providers.set(roomName, {
