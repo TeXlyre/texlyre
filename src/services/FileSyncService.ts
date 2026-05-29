@@ -20,6 +20,11 @@ class FileSyncService {
 	private activeDownloaders = new Map<string, FilePizzaDownloader>();
 	private listeners: Array<(notification: FileSyncNotification) => void> = [];
 
+	private checksumCache = new Map<
+		string,
+		{ lastModified: number; checksum: string; size: number }
+	>();
+
 	showLoadingNotification(message: string, operationId?: string): void {
 		if (this.areNotificationsEnabled()) {
 			notificationService.showLoading(message, operationId);
@@ -123,37 +128,65 @@ class FileSyncService {
 			const syncInfo: FileSyncInfo[] = [];
 
 			for (const file of relevantFiles) {
-				let content: ArrayBuffer;
+				let checksum: string;
+				let size: number;
 
-				if (file.isDeleted) {
-					content = new ArrayBuffer(0);
+				const cached = this.checksumCache.get(file.id);
+
+				if (
+					!file.isDeleted &&
+					cached &&
+					cached.lastModified === file.lastModified
+				) {
+					checksum = cached.checksum;
+					size = cached.size;
 				} else {
-					try {
-						const storedFile = await fileStorageService.getFile(file.id);
-						content = storedFile?.content
-							? storedFile.content instanceof ArrayBuffer
-								? storedFile.content
-								: new TextEncoder().encode(storedFile.content).buffer
-							: new ArrayBuffer(0);
-					} catch {
+					let content: ArrayBuffer;
+
+					if (file.isDeleted) {
 						content = new ArrayBuffer(0);
+					} else {
+						try {
+							const storedFile = await fileStorageService.getFile(file.id);
+							content = storedFile?.content
+								? storedFile.content instanceof ArrayBuffer
+									? storedFile.content
+									: new TextEncoder().encode(storedFile.content).buffer
+								: new ArrayBuffer(0);
+						} catch {
+							content = new ArrayBuffer(0);
+						}
+					}
+
+					checksum = await this.calculateFileChecksum(content);
+					size = file.isDeleted ? 0 : file.size || content.byteLength;
+
+					if (!file.isDeleted) {
+						this.checksumCache.set(file.id, {
+							lastModified: file.lastModified,
+							checksum,
+							size,
+						});
 					}
 				}
-
-				const checksum = await this.calculateFileChecksum(content);
 
 				syncInfo.push({
 					fileId: file.id,
 					fileName: file.name,
 					filePath: file.path,
 					lastModified: file.lastModified,
-					size: file.isDeleted ? 0 : file.size || content.byteLength,
+					size,
 					checksum,
 					userId,
 					username,
 					documentId: file.documentId,
 					deleted: file.isDeleted,
 				});
+			}
+
+			const currentIds = new Set(relevantFiles.map((file) => file.id));
+			for (const id of this.checksumCache.keys()) {
+				if (!currentIds.has(id)) this.checksumCache.delete(id);
 			}
 
 			return syncInfo;
@@ -381,8 +414,8 @@ class FileSyncService {
 				`[FileSyncService] Generated shareable link: ${shareableLinks.short}`,
 			);
 
-			const uploadId = nanoid();
-			this.activeUploaders.set(uploadId, uploader);
+			this.releaseUploader(requestId);
+			this.activeUploaders.set(requestId, uploader);
 
 			return { link: shareableLinks.short };
 		} catch (error) {
@@ -759,6 +792,18 @@ class FileSyncService {
 					rejectOnce(error);
 				});
 		});
+	}
+
+	releaseUploader(requestId: string): void {
+		const uploader = this.activeUploaders.get(requestId);
+		if (!uploader) return;
+
+		try {
+			uploader.stop?.();
+		} catch (error) {
+			console.error('Error stopping uploader:', error);
+		}
+		this.activeUploaders.delete(requestId);
 	}
 
 	cleanup(): void {
