@@ -1,3 +1,4 @@
+// src/contexts/FileSyncContext.tsx
 import { nanoid } from 'nanoid';
 import type React from 'react';
 import {
@@ -26,6 +27,8 @@ import type {
 	FileSyncVerification,
 } from '../types/fileSync';
 import type { YjsDocUrl } from '../types/yjs';
+
+const LOCAL_FILE_MAP_ORIGIN = 'file-sync-local-update';
 
 export const FileSyncContext = createContext<FileSyncContextType>({
 	isEnabled: false,
@@ -139,6 +142,9 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 				.toArray()
 				.findIndex((r) => r.id === requestId);
 			if (index >= 0) requestsArray.delete(index, 1);
+
+			processedRequestsRef.current.delete(requestId);
+			processedRequestsRef.current.delete(`download_${requestId}`);
 		},
 		[getRequestsArray],
 	);
@@ -157,10 +163,15 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 				request.status === 'failed' ||
 				now - request.timestamp > timeoutMs
 			) {
+				if (request.providerId === user?.id) {
+					fileSyncService.releaseUploader(request.id);
+				}
+				processedRequestsRef.current.delete(request.id);
+				processedRequestsRef.current.delete(`download_${request.id}`);
 				requestsArray.delete(i, 1);
 			}
 		}
-	}, [getRequestsArray, requestTimeoutSeconds]);
+	}, [getRequestsArray, requestTimeoutSeconds, user]);
 
 	const isRequestExpired = useCallback(
 		(request: FileSyncRequest) =>
@@ -168,8 +179,10 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 		[requestTimeoutSeconds],
 	);
 
-	const updateLocalFileMap = useCallback(async () => {
-		if (!user || !ydocRef.current || !isFileSyncEnabled || !docUrl) return;
+	const updateLocalFileMap = useCallback(async (): Promise<
+		FileSyncInfo[] | null
+	> => {
+		if (!user || !ydocRef.current || !isFileSyncEnabled || !docUrl) return null;
 
 		const activeProjectId = projectId;
 
@@ -184,16 +197,20 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 				initializedProjectIdRef.current !== activeProjectId ||
 				!ydocRef.current
 			) {
-				return;
+				return null;
 			}
 
-			ydocRef.current.getMap('fileSync').set(user.id, localFiles);
+			ydocRef.current.transact(() => {
+				ydocRef.current!.getMap('fileSync').set(user.id, localFiles);
+			}, LOCAL_FILE_MAP_ORIGIN);
 
 			console.log(
 				'[FileSyncContext] Updated local file map with',
 				localFiles.length,
 				'files',
 			);
+
+			return localFiles;
 		} catch (error) {
 			console.error('Error updating local file map:', error);
 			addNotification({
@@ -202,6 +219,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 					error instanceof Error ? error.message : 'unknown error'
 				}`,
 			});
+			return null;
 		}
 	}, [user, isFileSyncEnabled, addNotification, docUrl, projectId]);
 
@@ -282,105 +300,110 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 		});
 	}, [user, isFileSyncEnabled, projectId]);
 
-	const checkAndRequestFiles = useCallback(async () => {
-		if (!user || !ydocRef.current || !isFileSyncEnabled) return;
+	const checkAndRequestFiles = useCallback(
+		async (localFilesArg?: FileSyncInfo[]) => {
+			if (!user || !ydocRef.current || !isFileSyncEnabled) return;
 
-		const activeProjectId = projectId;
+			const activeProjectId = projectId;
 
-		try {
-			const fileSyncMap = ydocRef.current.getMap('fileSync');
-			const localFiles = await fileSyncService.getLocalFileSyncInfo(
-				user.id,
-				user.username,
-			);
-
-			if (
-				initializedProjectIdRef.current !== activeProjectId ||
-				!ydocRef.current
-			) {
-				return;
-			}
-
-			fileSyncMap.forEach((remoteFiles, peerId) => {
-				if (peerId === user.id || fileSyncService.isSyncDisabledForPeer(peerId))
-					return;
+			try {
+				const fileSyncMap = ydocRef.current.getMap('fileSync');
+				const localFiles =
+					localFilesArg ??
+					(await fileSyncService.getLocalFileSyncInfo(user.id, user.username));
 
 				if (
-					!fileSyncService.shouldTriggerSync(
-						localFiles,
-						remoteFiles as FileSyncInfo[],
-					)
+					initializedProjectIdRef.current !== activeProjectId ||
+					!ydocRef.current
 				) {
 					return;
 				}
 
-				const filesToRequest = fileSyncService.determineFilesToRequest(
-					localFiles,
-					remoteFiles as FileSyncInfo[],
-					conflictResolutionStrategy as any,
-				);
+				fileSyncMap.forEach((remoteFiles, peerId) => {
+					if (
+						peerId === user.id ||
+						fileSyncService.isSyncDisabledForPeer(peerId)
+					)
+						return;
 
-				console.log(
-					`[FileSyncContext] Files to request for peer ${peerId}:`,
-					filesToRequest.length,
-				);
+					if (
+						!fileSyncService.shouldTriggerSync(
+							localFiles,
+							remoteFiles as FileSyncInfo[],
+						)
+					) {
+						return;
+					}
 
-				if (!filesToRequest.length) return;
+					const filesToRequest = fileSyncService.determineFilesToRequest(
+						localFiles,
+						remoteFiles as FileSyncInfo[],
+						conflictResolutionStrategy as any,
+					);
 
-				const holdSignal = issueHoldSignal(peerId);
-				if (!holdSignal) return;
+					console.log(
+						`[FileSyncContext] Files to request for peer ${peerId}:`,
+						filesToRequest.length,
+					);
 
-				setTimeout(() => {
-					if (initializedProjectIdRef.current !== activeProjectId) return;
+					if (!filesToRequest.length) return;
 
-					const requestsArray = getRequestsArray();
-					if (!requestsArray) return;
+					const holdSignal = issueHoldSignal(peerId);
+					if (!holdSignal) return;
 
-					const syncRequest: FileSyncRequest = {
-						id: nanoid(),
-						requesterId: user.id,
-						requesterUsername: user.username,
-						providerId: peerId,
-						files: filesToRequest.map((f) => f.remoteFileId),
-						filePaths: filesToRequest.map((f) => f.filePath),
-						remoteTimestamps: filesToRequest.map((f) => f.lastModified),
-						documentIds: filesToRequest.map((f) => f.documentId),
-						deletionStates: filesToRequest.map((f) => f.isDeleted),
-						timestamp: Date.now(),
-						status: 'pending',
-						holdSignalId: holdSignal.id,
-					};
+					setTimeout(() => {
+						if (initializedProjectIdRef.current !== activeProjectId) return;
 
-					requestsArray.push([syncRequest]);
+						const requestsArray = getRequestsArray();
+						if (!requestsArray) return;
 
-					addNotification({
-						type: 'sync_request',
-						message: `Requesting ${filesToRequest.length} file(s) from peer`,
-						data: {
-							requestId: syncRequest.id,
-							fileCount: filesToRequest.length,
-						},
-					});
-				}, 1000);
-			});
-		} catch (error) {
-			console.error('Error checking and requesting files:', error);
-			addNotification({
-				type: 'sync_error',
-				message: `Error during file check: ${
-					error instanceof Error ? error.message : 'unknown error'
-				}`,
-			});
-		}
-	}, [
-		user,
-		isFileSyncEnabled,
-		projectId,
-		conflictResolutionStrategy,
-		issueHoldSignal,
-		addNotification,
-		getRequestsArray,
-	]);
+						const syncRequest: FileSyncRequest = {
+							id: nanoid(),
+							requesterId: user.id,
+							requesterUsername: user.username,
+							providerId: peerId,
+							files: filesToRequest.map((f) => f.remoteFileId),
+							filePaths: filesToRequest.map((f) => f.filePath),
+							remoteTimestamps: filesToRequest.map((f) => f.lastModified),
+							documentIds: filesToRequest.map((f) => f.documentId),
+							deletionStates: filesToRequest.map((f) => f.isDeleted),
+							timestamp: Date.now(),
+							status: 'pending',
+							holdSignalId: holdSignal.id,
+						};
+
+						requestsArray.push([syncRequest]);
+
+						addNotification({
+							type: 'sync_request',
+							message: `Requesting ${filesToRequest.length} file(s) from peer`,
+							data: {
+								requestId: syncRequest.id,
+								fileCount: filesToRequest.length,
+							},
+						});
+					}, 1000);
+				});
+			} catch (error) {
+				console.error('Error checking and requesting files:', error);
+				addNotification({
+					type: 'sync_error',
+					message: `Error during file check: ${
+						error instanceof Error ? error.message : 'unknown error'
+					}`,
+				});
+			}
+		},
+		[
+			user,
+			isFileSyncEnabled,
+			projectId,
+			conflictResolutionStrategy,
+			issueHoldSignal,
+			addNotification,
+			getRequestsArray,
+		],
+	);
 
 	const handleIncomingSyncRequest = useCallback(
 		async (request: FileSyncRequest) => {
@@ -606,6 +629,9 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 		(verification: FileSyncVerification) => {
 			if (!user || verification.providerId !== user.id) return;
 
+			fileSyncService.releaseUploader(verification.requestId);
+			processedRequestsRef.current.delete(verification.requestId);
+
 			addNotification({
 				type: 'verification',
 				message:
@@ -674,8 +700,8 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 		console.log('[FileSyncContext] Performing sync cycle...');
 		cleanupExpiredHolds();
 		cleanupCompletedRequests();
-		await updateLocalFileMap();
-		await checkAndRequestFiles();
+		const localFiles = await updateLocalFileMap();
+		await checkAndRequestFiles(localFiles ?? undefined);
 	}, [
 		isFileSyncEnabled,
 		user,
@@ -766,7 +792,8 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
 			cleanupStaleRequests();
 
-			fileSyncMap.observe(() => {
+			fileSyncMap.observe((_event, transaction) => {
+				if (transaction.origin === LOCAL_FILE_MAP_ORIGIN) return;
 				if (isFileSyncEnabled) setTimeout(checkAndRequestFiles, 1000);
 			});
 
