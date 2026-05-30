@@ -70,6 +70,8 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 	const syncThrottleRef = useRef<NodeJS.Timeout | null>(null);
 	const activeHoldsRef = useRef<Set<string>>(new Set());
 	const processedRequestsRef = useRef<Set<string>>(new Set());
+	const awarenessCleanupRef = useRef<(() => void) | null>(null);
+	const enableSyncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
 	const isFileSyncEnabled =
 		(getSetting('file-sync-enable')?.value as boolean) ?? false;
@@ -292,13 +294,52 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 		const connectedPeers = new Set(Array.from(awareness.getStates().keys()));
 		const fileSyncMap = ydocRef.current.getMap('fileSync');
 
+		const disconnectedPeers: string[] = [];
 		fileSyncMap.forEach((_, peerId) => {
 			if (peerId !== user?.id && !connectedPeers.has(Number.parseInt(peerId))) {
-				console.log(`[FileSyncContext] Removing disconnected peer: ${peerId}`);
-				fileSyncMap.delete(peerId);
+				disconnectedPeers.push(peerId);
 			}
 		});
-	}, [user, isFileSyncEnabled, projectId]);
+
+		if (!disconnectedPeers.length) return;
+
+		const disconnected = new Set(disconnectedPeers);
+		for (const peerId of disconnectedPeers) {
+			console.log(`[FileSyncContext] Removing disconnected peer: ${peerId}`);
+			fileSyncMap.delete(peerId);
+		}
+
+		const requestsArray = getRequestsArray();
+		if (requestsArray) {
+			for (let i = requestsArray.length - 1; i >= 0; i--) {
+				const request = requestsArray.get(i);
+				if (
+					disconnected.has(request.providerId) ||
+					disconnected.has(request.requesterId)
+				) {
+					if (request.providerId === user?.id) {
+						fileSyncService.releaseUploader(request.id);
+					}
+					processedRequestsRef.current.delete(request.id);
+					processedRequestsRef.current.delete(`download_${request.id}`);
+					requestsArray.delete(i, 1);
+				}
+			}
+		}
+
+		const holdSignalsArray =
+			ydocRef.current.getArray<FileSyncHoldSignal>('holdSignals');
+		for (let i = holdSignalsArray.length - 1; i >= 0; i--) {
+			const signal = holdSignalsArray.get(i);
+			if (
+				disconnected.has(signal.targetPeerId) ||
+				(signal.holderId && disconnected.has(signal.holderId))
+			) {
+				holdSignalsArray.delete(i, 1);
+				activeHoldsRef.current.delete(signal.targetPeerId);
+			}
+		}
+	}, [user, isFileSyncEnabled, projectId, getRequestsArray]);
 
 	const checkAndRequestFiles = useCallback(
 		async (localFilesArg?: FileSyncInfo[]) => {
@@ -310,7 +351,11 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 				const fileSyncMap = ydocRef.current.getMap('fileSync');
 				const localFiles =
 					localFilesArg ??
-					(await fileSyncService.getLocalFileSyncInfo(user.id, user.username));
+					(await fileSyncService.getLocalFileSyncInfo(
+						user.id,
+						user.username,
+						docUrl,
+					));
 
 				if (
 					initializedProjectIdRef.current !== activeProjectId ||
@@ -398,6 +443,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 			user,
 			isFileSyncEnabled,
 			projectId,
+			docUrl,
 			conflictResolutionStrategy,
 			issueHoldSignal,
 			addNotification,
@@ -728,7 +774,9 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 		fileSyncService.showSuccessNotification(t('File sync enabled'), {
 			duration: 2000,
 		});
-		setTimeout(performSync, 1000);
+		if (enableSyncTimeoutRef.current)
+			clearTimeout(enableSyncTimeoutRef.current);
+		enableSyncTimeoutRef.current = setTimeout(performSync, 1000);
 	}, [performSync]);
 
 	const disableSync = useCallback(() => {
@@ -737,9 +785,12 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 		activeHoldsRef.current.clear();
 		processedRequestsRef.current.clear();
 
+		if (enableSyncTimeoutRef.current)
+			clearTimeout(enableSyncTimeoutRef.current);
 		if (syncThrottleRef.current) clearTimeout(syncThrottleRef.current);
 		if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
 
+		enableSyncTimeoutRef.current = null;
 		syncThrottleRef.current = null;
 		syncIntervalRef.current = null;
 
@@ -817,6 +868,15 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 
 				verificationsArray.toArray().forEach(handleVerification);
 			});
+
+			const awareness = collabService.getAwareness(projectId, 'file_sync');
+			const handleAwarenessChange = () => {
+				if (isFileSyncEnabled) monitorConnectedPeers();
+			};
+			awareness?.on('change', handleAwarenessChange);
+
+			awarenessCleanupRef.current = () =>
+				awareness?.off('change', handleAwarenessChange);
 		} catch (error) {
 			console.error('Error initializing YJS doc for file sync:', error);
 			fileSyncService.showErrorNotification(
@@ -828,6 +888,8 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 		}
 
 		return () => {
+			awarenessCleanupRef.current?.();
+			awarenessCleanupRef.current = null;
 			if (projectId) collabService.disconnect(projectId, 'file_sync');
 
 			if (initializedProjectIdRef.current === projectId) {
@@ -854,6 +916,7 @@ export const FileSyncProvider: React.FC<FileSyncProviderProps> = ({
 		handleVerification,
 		getSetting,
 		cleanupStaleRequests,
+		monitorConnectedPeers,
 	]);
 
 	useEffect(() => {
