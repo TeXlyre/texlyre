@@ -304,26 +304,17 @@ class FileSyncService {
 							continue;
 						}
 
-						if (conflictResolution === 'prefer-latest') {
-							const shouldRequest =
-								((!localIsLinked && !remoteIsLinked) ||
-									(localIsLinked &&
-										!remoteIsLinked &&
-										remoteFile.lastModified > localFile.lastModified) ||
-									(!localIsLinked &&
-										remoteIsLinked &&
-										remoteFile.lastModified > localFile.lastModified)) &&
-								remoteFile.lastModified > localFile.lastModified;
-
-							if (shouldRequest) {
-								filesToRequest.push({
-									remoteFileId: remoteFile.fileId,
-									filePath: remoteFile.filePath,
-									lastModified: remoteFile.lastModified,
-									documentId: remoteFile.documentId,
-									isDeleted: false,
-								});
-							}
+						if (
+							conflictResolution === 'prefer-latest' &&
+							remoteFile.lastModified > localFile.lastModified
+						) {
+							filesToRequest.push({
+								remoteFileId: remoteFile.fileId,
+								filePath: remoteFile.filePath,
+								lastModified: remoteFile.lastModified,
+								documentId: remoteFile.documentId,
+								isDeleted: false,
+							});
 						}
 					}
 				} else if (
@@ -453,7 +444,6 @@ class FileSyncService {
 		expectedPath: string,
 		remoteTimestamp: number,
 		remoteDocumentId?: string,
-		_isDeleted?: boolean,
 	): Promise<FileNode | null> {
 		try {
 			await fileStorageService.createDirectoryPath(expectedPath);
@@ -618,7 +608,6 @@ class FileSyncService {
 										expectedPath,
 										remoteTimestamp,
 										remoteDocumentId,
-										false,
 									);
 									if (fileNode) {
 										filesToStore.push(fileNode);
