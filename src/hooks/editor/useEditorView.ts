@@ -536,35 +536,25 @@ export const useEditorView = (
 	};
 
 	// --- Yjs / collaboration connection ---
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: getCollabOptions identity is unstable; reconnecting on settings-driven renders causes duplicate Yjs document opens. We intentionally read the latest options only when the document connection key changes. */
 	useEffect(() => {
 		if (!isDocumentSelected || isEditingFile || !documentId || !projectId)
 			return;
 
 		const collectionName = `yjs_${documentId}`;
-		const collabOptions = getCollabOptions();
+
 		const { doc, provider: collabProvider } = collabService.connect(
 			projectId,
 			collectionName,
-			collabOptions ?? {},
+			getCollabOptions() ?? {},
 		);
+
 		setYDoc(doc);
 		setProvider(collabProvider);
 
 		const ytext = doc.getText('codemirror');
 		ytextRef.current = ytext;
 		undoManagerRef.current = new UndoManager(ytext);
-
-		if (user) {
-			collabService.setUserInfo(projectId, collectionName, {
-				id: user.id,
-				username: user.username,
-				name: user.name,
-				color: user.color,
-				colorLight: user.colorLight,
-				passwordHash: '',
-				createdAt: 0,
-			});
-		}
 
 		return () => {
 			undoManagerRef.current = null;
@@ -573,13 +563,35 @@ export const useEditorView = (
 			setProvider(null);
 			ytextRef.current = null;
 		};
+	}, [projectId, documentId, isDocumentSelected, isEditingFile]);
+
+	const userId = user?.id;
+	const username = user?.username;
+	const userName = user?.name;
+	const userColor = user?.color;
+	const userColorLight = user?.colorLight;
+
+	useEffect(() => {
+		if (!userId || !projectId || !documentId || isEditingFile) return;
+
+		collabService.setUserInfo(projectId, `yjs_${documentId}`, {
+			id: userId,
+			username,
+			name: userName,
+			color: userColor,
+			colorLight: userColorLight,
+			passwordHash: '',
+			createdAt: 0,
+		});
 	}, [
 		projectId,
 		documentId,
-		isDocumentSelected,
 		isEditingFile,
-		user,
-		getCollabOptions,
+		userId,
+		username,
+		userName,
+		userColor,
+		userColorLight,
 	]);
 
 	// --- Create / recreate EditorView ---
@@ -605,12 +617,7 @@ export const useEditorView = (
 		const info = classifyFileType(fileName, contentToUse);
 		const completionSources: CompletionSource[] = [];
 		const extensions: Extension[] = [];
-		const {
-			base,
-			language,
-			toolbar: toolbarComp,
-			languageSpecific,
-		} = compartmentsRef.current;
+		const { base, language, languageSpecific } = compartmentsRef.current;
 
 		if (info.isLatex || info.isTypst) {
 			extensions.push(
@@ -686,7 +693,9 @@ export const useEditorView = (
 					{ history: historyField },
 				);
 			} catch {
-				fileUndoHistoryCache.delete(currentFileId!);
+				if (currentFileId) {
+					fileUndoHistoryCache.delete(currentFileId);
+				}
 				state = EditorState.create({ doc: contentToUse, extensions });
 			}
 		} else {
