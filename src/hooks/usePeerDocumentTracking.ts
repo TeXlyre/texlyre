@@ -14,7 +14,7 @@ export const usePeerDocumentTracking = (
 	setLocalOpenDocument: (docId: string | null) => void;
 } => {
 	const { getCollabOptions } = useEditor();
-	const { isConnected, getAwareness } = useCollab();
+	const { getAwareness } = useCollab();
 	const [docsWithPeers, setDocsWithPeers] = useState<Set<string>>(new Set());
 
 	const projectId = useMemo(
@@ -55,7 +55,7 @@ export const usePeerDocumentTracking = (
 			unsubscribe?.();
 			teardown?.();
 		};
-	}, [projectId, isConnected]);
+	}, [projectId]);
 
 	const setLocalOpenDocument = useMemo(
 		() => (docId: string | null) =>

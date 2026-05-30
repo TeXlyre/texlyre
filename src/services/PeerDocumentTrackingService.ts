@@ -152,7 +152,12 @@ class PeerDocumentTrackingService {
 		}
 
 		for (const docId of Array.from(tracker.backgroundDocs)) {
-			if (remoteOpenDocs.has(docId) && !tracker.localOpenDocs.has(docId)) {
+			if (tracker.localOpenDocs.has(docId)) {
+				tracker.backgroundDocs.delete(docId);
+				continue;
+			}
+
+			if (remoteOpenDocs.has(docId)) {
 				continue;
 			}
 			collabService.disconnect(tracker.projectId, `yjs_${docId}`);
