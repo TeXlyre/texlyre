@@ -27,7 +27,7 @@ const ImportAccount: React.FC<ImportAccountProps> = ({
 		}
 	};
 
-	const handleImport = async (e: React.FormEvent) => {
+	const handleImport = async (e: React.SyntheticEvent<HTMLFormElement>) => {
 		e.preventDefault();
 
 		if (!file) {
@@ -106,13 +106,13 @@ const ImportAccount: React.FC<ImportAccountProps> = ({
 					</form>
 
 					<div className='auth-alt-action'>
-						<span>{t('Back to login?')}</span>
+						<span>{t('Back to log in?')}</span>
 						<button
 							className='text-button'
 							onClick={onSwitchToLogin}
 							disabled={isImporting}
 						>
-							{t('Login')}
+							{t('Log in')}
 						</button>
 					</div>
 				</>
