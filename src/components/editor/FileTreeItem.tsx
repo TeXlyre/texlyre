@@ -513,7 +513,30 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 			</div>
 
 			{node.type === 'directory' && isExpanded && (
-				<div className='directory-children'>
+				<div
+					className='directory-children'
+					onDragOver={(e) => {
+						const isFileDrop = Array.from(e.dataTransfer.items).some(
+							(item) => item.kind === 'file',
+						);
+						const isInternalDrop = e.dataTransfer.getData('text/plain');
+						if (
+							(isFileDrop && !enableFileSystemDragDrop) ||
+							(isInternalDrop && !enableInternalDragDrop)
+						) {
+							return;
+						}
+						e.preventDefault();
+						e.stopPropagation();
+						e.dataTransfer.dropEffect = isFileDrop ? 'copy' : 'move';
+						onSetDragOverTarget(node.id);
+					}}
+					onDrop={(e) => {
+						e.stopPropagation();
+						onDropOnDirectory(e, node);
+						onSetDragOverTarget(null);
+					}}
+				>
 					{creatingNewItem && creatingNewItem.parentPath === node.path && (
 						<div
 							className='file-node creating-new-item'
