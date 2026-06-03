@@ -373,8 +373,6 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 	}, []);
 
 	const outputViewerContent = useMemo(() => {
-		if (currentView !== 'output') return null;
-
 		if (effectiveFormat === 'pdf' && compiledPdf) {
 			return (
 				<div className='pdf-viewer'>
@@ -433,7 +431,6 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 
 		return null;
 	}, [
-		currentView,
 		effectiveFormat,
 		compiledPdf,
 		compiledCanvas,
@@ -555,7 +552,11 @@ const LaTeXOutput: React.FC<LaTeXOutputProps> = ({
 						</div>
 					)}
 
-					{outputViewerContent}
+					<div
+						style={{ display: currentView === 'output' ? 'contents' : 'none' }}
+					>
+						{outputViewerContent}
+					</div>
 				</>
 			)}
 

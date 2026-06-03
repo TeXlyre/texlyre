@@ -362,7 +362,6 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 			hasCompiledSvg: !!compiledSvg,
 			hasCompiledCanvas: !!compiledCanvas,
 		});
-		if (currentView !== 'output') return null;
 
 		if (effectiveFormat === 'pdf' && compiledPdf) {
 			const pdfRenderer = pluginRegistry.getRendererForOutput(
@@ -426,7 +425,6 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 
 		return null;
 	}, [
-		currentView,
 		effectiveFormat,
 		compiledPdf,
 		compiledSvg,
@@ -540,7 +538,11 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 						</div>
 					)}
 
-					{outputViewerContent}
+					<div
+						style={{ display: currentView === 'output' ? 'contents' : 'none' }}
+					>
+						{outputViewerContent}
+					</div>
 				</>
 			)}
 
