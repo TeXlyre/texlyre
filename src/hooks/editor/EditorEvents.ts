@@ -88,7 +88,7 @@ export const registerEditorEventHandlers = (
 
 			const openTagEnd =
 				openTagCoreEnd < currentContent.length &&
-				currentContent[openTagCoreEnd] === '`'
+					currentContent[openTagCoreEnd] === '`'
 					? openTagCoreEnd + 1
 					: openTagCoreEnd;
 
@@ -111,7 +111,7 @@ export const registerEditorEventHandlers = (
 
 			const closeTagEnd =
 				closeTagCoreEnd < currentContent.length &&
-				currentContent[closeTagCoreEnd] === '`'
+					currentContent[closeTagCoreEnd] === '`'
 					? closeTagCoreEnd + 1
 					: closeTagCoreEnd;
 
@@ -263,6 +263,7 @@ export const registerEditorEventHandlers = (
 			fileId?: string;
 			documentId?: string;
 			tabId?: string;
+			attempt?: number;
 		}>;
 
 		if (!viewRef.current) return;
@@ -273,6 +274,7 @@ export const registerEditorEventHandlers = (
 				fileId,
 				documentId: eventDocId,
 				tabId,
+				attempt = 0,
 			} = customEvent.detail;
 			const view = viewRef.current;
 			const doc = view.state.doc;
@@ -291,6 +293,17 @@ export const registerEditorEventHandlers = (
 			}
 
 			if (line && line > 0) {
+				if (line > doc.lines && attempt < 40) {
+					setTimeout(() => {
+						document.dispatchEvent(
+							new CustomEvent('codemirror-goto-line', {
+								detail: { ...customEvent.detail, attempt: attempt + 1 },
+							}),
+						);
+					}, 100);
+					return;
+				}
+
 				const lineNumber = Math.max(1, Math.min(line, doc.lines)) - 1;
 				const linePos = doc.line(lineNumber + 1).from;
 

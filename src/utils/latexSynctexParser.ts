@@ -8,6 +8,8 @@ import type {
 } from '../types/sourceMap';
 
 const SP_TO_PT = 1 / 65536;
+const CONTAINER_HEIGHT_LINE_MULTIPLE = 16;
+const FALLBACK_VERTICAL_LINE_TOLERANCE = 1.5;
 
 interface Box {
 	page: number;
@@ -19,6 +21,7 @@ interface Box {
 	width: number;
 	height: number;
 	depth: number;
+	isVbox: boolean;
 }
 
 interface Index {
@@ -131,6 +134,7 @@ const buildIndex = (text: string): Index => {
 			width: fields.width * SP_TO_PT,
 			height: fields.height * SP_TO_PT,
 			depth: fields.depth * SP_TO_PT,
+			isVbox: kind === '[',
 		};
 
 		const key = `${file}:${fields.line}`;
@@ -206,41 +210,69 @@ export function parseSynctex(bytes: Uint8Array): SourceMapData {
 			const boxes = index.byPage.get(page);
 			if (!boxes?.length) return null;
 
-			let bestContained: Box | null = null;
-			let bestArea = Number.POSITIVE_INFINITY;
-			let closest: Box | null = null;
-			let closestDist = Number.POSITIVE_INFINITY;
+			const lineHeights = boxes
+				.filter((b) => !b.isVbox && b.height + b.depth > 0)
+				.map((b) => b.height + b.depth)
+				.sort((a, b) => a - b);
+			const medianLineHeight = lineHeights.length
+				? lineHeights[Math.floor(lineHeights.length / 2)]
+				: 0;
+			const maxBoxHeight =
+				medianLineHeight > 0
+					? medianLineHeight * CONTAINER_HEIGHT_LINE_MULTIPLE
+					: Number.POSITIVE_INFINITY;
 
-			for (const b of boxes) {
-				const top = b.y - b.height;
-				const bottom = b.y + b.depth;
-				const right = b.x + b.width;
+			const selectBox = (applyCap: boolean): Box | null => {
+				let bestContained: Box | null = null;
+				let bestScore = Number.POSITIVE_INFINITY;
+				let closest: Box | null = null;
+				let closestDist = Number.POSITIVE_INFINITY;
 
-				if (x >= b.x && x <= right && y >= top && y <= bottom) {
-					const area = b.width * (b.height + b.depth);
-					if (area < bestArea) {
-						bestArea = area;
-						bestContained = b;
-					}
-				} else if (!bestContained) {
-					const cx = Math.max(b.x, Math.min(x, right));
-					const cy = Math.max(top, Math.min(y, bottom));
-					const dx = x - cx;
-					const dy = y - cy;
-					const dist = dx * dx + dy * dy;
-					if (dist < closestDist) {
-						closestDist = dist;
-						closest = b;
+				for (const b of boxes) {
+					const boxHeight = b.height + b.depth;
+					if (applyCap && boxHeight > maxBoxHeight) continue;
+
+					const top = b.y - b.height;
+					const bottom = b.y + b.depth;
+					const right = b.x + b.width;
+
+					if (x >= b.x && x <= right && y >= top && y <= bottom) {
+						const cx = b.x + b.width / 2;
+						const cy = (top + bottom) / 2;
+						const dx = x - cx;
+						const dy = y - cy;
+						const area = b.width * (boxHeight || 1) || 1;
+						const score = (dx * dx + dy * dy) * Math.sqrt(area);
+						if (bestContained === null || score < bestScore) {
+							bestScore = score;
+							bestContained = b;
+						}
+					} else if (applyCap) {
+						const cx = Math.max(b.x, Math.min(x, right));
+						const cy = Math.max(top, Math.min(y, bottom));
+						const dx = x - cx;
+						const dy = y - cy;
+						const lineHeight = boxHeight || 1;
+						if (Math.abs(dy) > lineHeight * FALLBACK_VERTICAL_LINE_TOLERANCE) continue;
+						const dist = dx * dx + dy * dy;
+						if (dist < closestDist) {
+							closestDist = dist;
+							closest = b;
+						}
 					}
 				}
-			}
 
-			const hit = bestContained ?? closest;
+				return bestContained ?? closest;
+			};
+
+			const hit = selectBox(true) ?? selectBox(false);
 			if (!hit) return null;
+
+			const line = hit.isVbox ? Math.max(1, hit.line - 1) : hit.line;
 
 			return {
 				file: hit.file,
-				line: hit.line,
+				line,
 				column: hit.column >= 0 ? hit.column : undefined,
 			};
 		},
