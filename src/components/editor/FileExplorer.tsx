@@ -598,13 +598,11 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
 	const handleCreateFileInFolder = (_folderId: string, folderPath: string) => {
 		handleStartCreateFile(folderPath);
-		// Expand all parent directories
 		expandAllParentDirectories(folderPath);
 	};
 
 	const handleCreateSubfolder = (parentPath: string) => {
 		handleStartCreateDirectory(parentPath);
-		// Expand all parent directories
 		expandAllParentDirectories(parentPath);
 	};
 
@@ -649,6 +647,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 			e.preventDefault();
 			return;
 		}
+
+		setDragOverTarget(null);
+		setIsDragging(false);
 
 		e.stopPropagation();
 		e.dataTransfer.setData(

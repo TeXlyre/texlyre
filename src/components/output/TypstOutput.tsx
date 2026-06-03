@@ -48,7 +48,7 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 	const {
 		compileLog,
 		compiledPdf,
-		compiledSvg,
+		// compiledSvg,
 		compiledCanvas,
 		currentView,
 		logIndicator,
@@ -355,15 +355,6 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 	);
 
 	const outputViewerContent = useMemo(() => {
-		console.log('[TypstOutput] outputViewerContent recalculating', {
-			currentView,
-			effectiveFormat,
-			hasCompiledPdf: !!compiledPdf,
-			hasCompiledSvg: !!compiledSvg,
-			hasCompiledCanvas: !!compiledCanvas,
-		});
-		if (currentView !== 'output') return null;
-
 		if (effectiveFormat === 'pdf' && compiledPdf) {
 			const pdfRenderer = pluginRegistry.getRendererForOutput(
 				'pdf',
@@ -426,10 +417,9 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 
 		return null;
 	}, [
-		currentView,
 		effectiveFormat,
 		compiledPdf,
-		compiledSvg,
+		// compiledSvg,
 		compiledCanvas,
 		useEnhancedRenderer,
 		handleSavePdf,
@@ -540,7 +530,11 @@ const TypstOutput: React.FC<TypstOutputProps> = ({
 						</div>
 					)}
 
-					{outputViewerContent}
+					<div
+						style={{ display: currentView === 'output' ? 'contents' : 'none' }}
+					>
+						{outputViewerContent}
+					</div>
 				</>
 			)}
 

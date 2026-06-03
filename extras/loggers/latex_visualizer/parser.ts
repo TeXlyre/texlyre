@@ -11,10 +11,13 @@ export interface ParsedError {
 }
 
 const DEFAULT_FILE = 'main.tex';
+const LOG_WRAP_LIMIT = 79;
 
 export function parseLatexLog(log: string): ParsedError[] {
+	const transcript = extractCompilerOutput(log);
+	const lines = preprocessLogLines(transcript).split('\n');
+
 	const result: ParsedError[] = [];
-	const lines = preprocessLogLines(log).split('\n');
 
 	for (let i = 0; i < lines.length; i++) {
 		const line = lines[i];
@@ -22,6 +25,7 @@ export function parseLatexLog(log: string): ParsedError[] {
 
 		const parsed =
 			extractLatexError(lines, i, contextFile) ??
+			extractRunawayArgument(lines, i, contextFile) ??
 			extractGenericError(lines, i, contextFile) ??
 			extractLatexWarning(lines, i, contextFile) ??
 			extractPackageWarning(lines, i, contextFile) ??
@@ -31,6 +35,51 @@ export function parseLatexLog(log: string): ParsedError[] {
 		if (parsed) result.push(parsed);
 	}
 
+	return dedupeErrors(result);
+}
+
+function extractCompilerOutput(log: string): string {
+	if (!log.includes('======') && !/^\$ /m.test(log)) {
+		return log;
+	}
+
+	const blocks = log.split(/^======\s*$/m);
+	const transcripts: string[] = [];
+
+	for (const block of blocks) {
+		if (!/^\$ (?:pdflatex|xelatex|lualatex)/m.test(block)) continue;
+
+		const logSection = sliceSection(block, 'LOG:');
+		const stdoutSection = sliceSection(block, 'STDOUT:');
+		const chosen = logSection && logSection.trim() ? logSection : stdoutSection;
+		if (chosen?.trim()) transcripts.push(chosen);
+	}
+
+	return transcripts.length > 0 ? transcripts.join('\n') : log;
+}
+
+function sliceSection(block: string, header: string): string | null {
+	const match = block.match(new RegExp(`(?:^|\\n)${header}\\n`));
+	if (match?.index === undefined) return null;
+	const start = match.index + match[0].length;
+	const after = block.slice(start);
+	const end = after.search(
+		/^(?:==|TEXMFLOG:|MISSFONTLOG:|STDOUT:|STDERR:)\s*$/m,
+	);
+	return end === -1 ? after : after.slice(0, end);
+}
+
+function dedupeErrors(errors: ParsedError[]): ParsedError[] {
+	const seen = new Set<string>();
+	const result: ParsedError[] = [];
+
+	for (const error of errors) {
+		const key = `${error.type}|${error.message}|${error.line ?? ''}|${error.file ?? ''}`;
+		if (seen.has(key)) continue;
+		seen.add(key);
+		result.push(error);
+	}
+
 	return result;
 }
 
@@ -38,6 +87,8 @@ function shouldJoinLines(currentLine: string, nextLine: string): boolean {
 	if (!currentLine || !nextLine) return false;
 
 	const trimmedNext = nextLine.trim();
+
+	if (trimmedNext.match(/^l\.\d+/)) return false;
 
 	if (currentLine.includes('bef') && trimmedNext.startsWith('ore ')) {
 		return true;
@@ -72,8 +123,25 @@ function joinSplitLine(currentLine: string, nextLine: string): string {
 	return currentLine.replace(/\s*$/, '') + trimmedNext;
 }
 
-function preprocessLogLines(log: string): string {
+function unwrapHardWrappedLines(log: string): string {
 	const lines = log.split('\n');
+	if (lines.length === 0) return log;
+
+	const unwrapped = [lines[0]];
+	for (let i = 1; i < lines.length; i++) {
+		const prev = unwrapped[unwrapped.length - 1];
+		if (prev.length === LOG_WRAP_LIMIT && !prev.endsWith('...')) {
+			unwrapped[unwrapped.length - 1] = prev + lines[i];
+		} else {
+			unwrapped.push(lines[i]);
+		}
+	}
+
+	return unwrapped.join('\n');
+}
+
+function preprocessLogLines(log: string): string {
+	const lines = unwrapHardWrappedLines(log).split('\n');
 	const processedLines: string[] = [];
 
 	for (let i = 0; i < lines.length; i++) {
@@ -93,27 +161,23 @@ function preprocessLogLines(log: string): string {
 
 function getFileFromContext(lines: string[], lineIndex: number): string {
 	const fileStack: string[] = [];
+	const scanned = lines.slice(0, lineIndex + 1).join(' ');
 
-	for (let i = 0; i <= lineIndex; i++) {
-		const line = lines[i];
-		if (!line) continue;
+	for (let j = 0; j < scanned.length; j++) {
+		const char = scanned[j];
 
-		for (let j = 0; j < line.length; j++) {
-			const char = line[j];
-
-			if (char === '(') {
-				const remaining = line.substring(j + 1);
-				const fileMatch = remaining.match(
-					/^([^()]*\.(?:tex|sty|cls|def|fd|cfg))/,
-				);
-				if (fileMatch) {
-					const filePath = fileMatch[1];
-					const fileName = filePath.split('/').pop() || filePath;
-					fileStack.push(fileName);
-				}
-			} else if (char === ')') {
-				if (fileStack.length > 0) fileStack.pop();
+		if (char === '(') {
+			const remaining = scanned.substring(j + 1);
+			const fileMatch = remaining.match(
+				/^(_?[^()\s]*\.(?:tex|sty|cls|def|fd|cfg|clo|ltx|bbl))/,
+			);
+			if (fileMatch) {
+				const filePath = fileMatch[1];
+				const fileName = filePath.split('/').pop() || filePath;
+				fileStack.push(fileName);
 			}
+		} else if (char === ')') {
+			if (fileStack.length > 0) fileStack.pop();
 		}
 	}
 
@@ -193,6 +257,42 @@ function extractLatexError(
 	};
 }
 
+function extractRunawayArgument(
+	lines: string[],
+	i: number,
+	contextFile: string,
+): ParsedError | null {
+	const line = lines[i];
+	if (!line.startsWith('Runaway argument')) return null;
+
+	let lineNumber: number | undefined;
+	let lineContent: string | undefined;
+	let fullMessage = line.trim();
+
+	for (let j = i + 1; j < Math.min(i + 10, lines.length); j++) {
+		const lineMatch = lines[j].match(/^l\.(\d+)\s*(.*)/);
+		if (lineMatch) {
+			lineNumber = Number.parseInt(lineMatch[1], 10);
+			const content = lineMatch[2].trim();
+			lineContent = content && content.length > 1 ? content : undefined;
+			break;
+		}
+		const next = lines[j].trim();
+		if (next && !next.startsWith('l.')) {
+			fullMessage += ` ${next}`;
+		}
+	}
+
+	return {
+		type: 'error',
+		message: 'Runaway argument',
+		line: lineNumber,
+		file: contextFile,
+		lineContent,
+		fullMessage: fullMessage.replace(/\s+/g, ' ').trim(),
+	};
+}
+
 function extractGenericError(
 	lines: string[],
 	i: number,
@@ -229,9 +329,10 @@ function extractLatexWarning(
 	contextFile: string,
 ): ParsedError | null {
 	const line = lines[i];
-	if (!line.includes('LaTeX Warning:')) return null;
+	if (!line.includes('LaTeX Warning:') && !line.includes('LaTeX Font Warning:'))
+		return null;
 
-	const warningMatch = line.match(/LaTeX Warning:\s*(.+)/);
+	const warningMatch = line.match(/LaTeX(?: Font)? Warning:\s*(.+)/);
 	if (!warningMatch) return null;
 
 	let fullMessage = warningMatch[1];
@@ -252,14 +353,28 @@ function extractLatexWarning(
 	}
 
 	for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
-		const nextLine = lines[j].trim();
+		const trimmed = lines[j].trim();
+		if (!trimmed) break;
+
+		const contMatch = trimmed.match(/^\(Font\)\s*(.*)$/);
+		if (contMatch) {
+			const cont = contMatch[1];
+			const contLineMatch = cont.match(/(.+?)\s+on input line (\d+)/);
+			if (contLineMatch) {
+				fullMessage += ` ${contLineMatch[1]}`;
+				lineNumber = Number.parseInt(contLineMatch[2], 10);
+			} else {
+				fullMessage += ` ${cont}`;
+			}
+			continue;
+		}
+
 		if (
-			nextLine &&
-			!nextLine.match(/^[A-Z]/) &&
-			!nextLine.includes('Warning:') &&
-			!nextLine.includes('Error:')
+			!trimmed.match(/^[A-Z]/) &&
+			!trimmed.includes('Warning:') &&
+			!trimmed.includes('Error:')
 		) {
-			fullMessage += ` ${nextLine}`;
+			fullMessage += ` ${trimmed}`;
 		} else {
 			break;
 		}
@@ -284,33 +399,30 @@ function extractPackageWarning(
 	const packageWarningMatch = line.match(/Package\s+(\w+)\s+Warning:\s*(.+)/);
 	if (!packageWarningMatch) return null;
 
-	let fullMessage = `${packageWarningMatch[1]}: ${packageWarningMatch[2]}`;
+	const packageName = packageWarningMatch[1];
+	const prefixRegex = new RegExp(`(?:\\(${packageName}\\))*\\s*(.*)`, 'i');
+
+	const messageParts = [`${packageName}: ${packageWarningMatch[2]}`];
 	let lineNumber: number | undefined;
 
-	const lineMatch = fullMessage.match(/(.+?)\s+on input line (\d+)/);
-	if (lineMatch) {
-		fullMessage = lineMatch[1];
-		lineNumber = Number.parseInt(lineMatch[2], 10);
-	}
+	const firstLineMatch = line.match(/on input line (\d+)/);
+	if (firstLineMatch) lineNumber = Number.parseInt(firstLineMatch[1], 10);
 
-	for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
-		const nextLine = lines[j].trim();
-		if (
-			nextLine &&
-			!nextLine.match(/^[A-Z]/) &&
-			!nextLine.includes('Warning:') &&
-			!nextLine.includes('Error:') &&
-			!nextLine.startsWith('(')
-		) {
-			fullMessage += ` ${nextLine}`;
-		} else {
-			break;
-		}
+	for (let j = i + 1; j < lines.length; j++) {
+		const nextLine = lines[j];
+		if (!nextLine.trim()) break;
+		if (nextLine.includes('Warning:') || nextLine.includes('Error:')) break;
+
+		const inputLineMatch = nextLine.match(/on input line (\d+)/);
+		if (inputLineMatch) lineNumber = Number.parseInt(inputLineMatch[1], 10);
+
+		const cleaned = nextLine.match(prefixRegex);
+		if (cleaned?.[1]?.trim()) messageParts.push(cleaned[1].trim());
 	}
 
 	return {
 		type: 'warning',
-		message: fullMessage.replace(/\s+/g, ' ').trim(),
+		message: messageParts.join(' ').replace(/\s+/g, ' ').trim(),
 		line: lineNumber,
 		file: contextFile,
 	};
@@ -320,17 +432,15 @@ function extractBoxWarning(
 	line: string,
 	contextFile: string,
 ): ParsedError | null {
-	if (!line.match(/(Over|Under)full\s+\\(h|v)box/)) return null;
-
-	const boxMatch = line.match(
-		/(Over|Under)full\s+\\(h|v)box.*?(?:at lines?\s+(\d+)(?:--(\d+))?)/,
-	);
+	const boxMatch = line.match(/(Over|Under)full\s+\\(h|v)box/);
 	if (!boxMatch) return null;
+
+	const lineRangeMatch = line.match(/at lines?\s+(\d+)(?:--\d+)?/);
 
 	return {
 		type: 'warning',
 		message: `${boxMatch[1]}full ${boxMatch[2]}box`,
-		line: Number.parseInt(boxMatch[3], 10),
+		line: lineRangeMatch ? Number.parseInt(lineRangeMatch[1], 10) : undefined,
 		file: contextFile,
 	};
 }
