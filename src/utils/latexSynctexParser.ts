@@ -253,7 +253,8 @@ export function parseSynctex(bytes: Uint8Array): SourceMapData {
 						const dx = x - cx;
 						const dy = y - cy;
 						const lineHeight = boxHeight || 1;
-						if (Math.abs(dy) > lineHeight * FALLBACK_VERTICAL_LINE_TOLERANCE) continue;
+						if (Math.abs(dy) > lineHeight * FALLBACK_VERTICAL_LINE_TOLERANCE)
+							continue;
 						const dist = dx * dx + dy * dy;
 						if (dist < closestDist) {
 							closestDist = dist;

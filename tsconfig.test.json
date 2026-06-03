@@ -17,12 +17,16 @@
             "@src/*": [
                 "./src/*"
             ],
+            "@extras/*": [
+                "./extras/*"
+            ],
             "@tests/*": [
                 "./tests/*"
             ]
         }
     },
     "include": [
+        "extras/**/*",
         "tests/**/*",
         "src/**/*"
     ],

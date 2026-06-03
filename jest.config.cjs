@@ -11,6 +11,7 @@ module.exports = {
 	moduleNameMapper: {
 		'^@/(.*)$': '<rootDir>/src/$1',
 		'^@src/(.*)$': '<rootDir>/src/$1',
+		'^@extras/(.*)$': '<rootDir>/extras/$1',
 		'^@tests/(.*)$': '<rootDir>/tests/$1',
 		'\\.(css|less|scss|sass)$': 'identity-obj-proxy',
 		'\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/tests/mocks/fileMock.js',

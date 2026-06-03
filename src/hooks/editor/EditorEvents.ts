@@ -88,7 +88,7 @@ export const registerEditorEventHandlers = (
 
 			const openTagEnd =
 				openTagCoreEnd < currentContent.length &&
-					currentContent[openTagCoreEnd] === '`'
+				currentContent[openTagCoreEnd] === '`'
 					? openTagCoreEnd + 1
 					: openTagCoreEnd;
 
@@ -111,7 +111,7 @@ export const registerEditorEventHandlers = (
 
 			const closeTagEnd =
 				closeTagCoreEnd < currentContent.length &&
-					currentContent[closeTagCoreEnd] === '`'
+				currentContent[closeTagCoreEnd] === '`'
 					? closeTagCoreEnd + 1
 					: closeTagCoreEnd;
 
