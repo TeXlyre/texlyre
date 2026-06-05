@@ -62,7 +62,7 @@ export const typstLinkPatterns: LinkPattern[] = [
 		extractValue: (match) => match[1],
 	},
 	{
-		pattern: /@([a-zA-Z0-9_:-]+)/g,
+		pattern: /@([a-zA-Z0-9_:\-]+)/g,
 		type: 'reference',
 		fileType: 'typst',
 		extractValue: (match) => match[1],
@@ -110,8 +110,26 @@ export const bibLinkPatterns: LinkPattern[] = [
 
 export const markdownLinkPatterns: LinkPattern[] = [
 	{
-		pattern: /\[([^\]]+)\]\(([^)]+)\)/g,
-		type: 'url',
+		pattern: /(^|[^!])\[[^\]]+\]\(#([^)]+)\)/g,
+		type: 'reference',
+		fileType: 'markdown',
+		extractValue: (match) => match[2],
+	},
+	{
+		pattern: /(^|[^!])\[[^\]]+\]\((?![a-z][a-z0-9+.-]*:)([^)#\s]+#[^)]+)\)/gi,
+		type: 'reference',
+		fileType: 'markdown',
+		extractValue: (match) => match[2],
+	},
+	{
+		pattern: /!\[[^\]]*\]\((?!#|[a-z][a-z0-9+.-]*:)([^)#\s]+)\)/gi,
+		type: 'file',
+		fileType: 'markdown',
+		extractValue: (match) => match[1],
+	},
+	{
+		pattern: /(^|[^!])\[[^\]]+\]\((?!#|[a-z][a-z0-9+.-]*:)([^)#\s]+)\)/gi,
+		type: 'file',
 		fileType: 'markdown',
 		extractValue: (match) => match[2],
 	},
@@ -120,5 +138,17 @@ export const markdownLinkPatterns: LinkPattern[] = [
 		type: 'url',
 		fileType: 'markdown',
 		extractValue: (match) => match[0],
+	},
+	{
+		pattern: /(^|[^!])\[[^\]]+\]\((https?:\/\/[^)\s]+)\)/gi,
+		type: 'url',
+		fileType: 'markdown',
+		extractValue: (match) => match[2],
+	},
+	{
+		pattern: /!\[[^\]]*\]\((https?:\/\/[^)\s]+)\)/gi,
+		type: 'url',
+		fileType: 'markdown',
+		extractValue: (match) => match[1],
 	},
 ];

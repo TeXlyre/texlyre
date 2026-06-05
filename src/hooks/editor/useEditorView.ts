@@ -392,36 +392,43 @@ export const useEditorView = (
 
 		extensions.push(createLinkNavigationExtension(fileName, content));
 
-		if (info.isLatex || info.isTypst) {
+		if (info.isLatex || info.isTypst || info.isMarkdown) {
 			const [stateExtensions, filePathPlugin, enhancedCompletionSource] =
 				createFilePathAutocompleteExtension('');
+
 			extensions.push(stateExtensions, filePathPlugin);
 			extensions.push(createPasteExtension(currentFileId, fileName));
 
-			if (toolbarVisible) {
-				extensions.push(
-					createToolbarExtension(
-						info.fileType as 'latex' | 'typst',
-						undoManagerRef.current || undefined,
-					),
-				);
-			}
+			if (info.isLatex || info.isTypst) {
+				if (toolbarVisible) {
+					extensions.push(
+						createToolbarExtension(
+							info.fileType as 'latex' | 'typst',
+							undoManagerRef.current || undefined,
+						),
+					);
+				}
 
-			if (editorSettings.mathLiveEnabled) {
-				extensions.push(
-					createMathLiveExtension(
-						info.fileType as 'latex' | 'typst',
-						editorSettings.mathLivePreviewMode,
-						editorSettings.language,
-					),
-				);
+				if (editorSettings.mathLiveEnabled) {
+					extensions.push(
+						createMathLiveExtension(
+							info.fileType as 'latex' | 'typst',
+							editorSettings.mathLivePreviewMode,
+							editorSettings.language,
+						),
+					);
+				}
 			}
 
 			completionSources.push(enhancedCompletionSource);
-			if (info.isLatex) completionSources.push(latexCompletionSource(true));
+
+			if (info.isLatex) {
+				completionSources.push(latexCompletionSource(true));
+			}
 		} else if (info.isBib) {
 			const [stateExtensions, filePathPlugin, enhancedCompletionSource] =
 				createFilePathAutocompleteExtension('');
+
 			extensions.push(stateExtensions, filePathPlugin);
 			completionSources.push(enhancedCompletionSource);
 			completionSources.push(bibtexCompletionSource);
@@ -716,7 +723,7 @@ export const useEditorView = (
 				);
 			}, 50);
 
-			if (info.isLatex || info.isTypst) {
+			if (info.isLatex || info.isTypst || info.isMarkdown) {
 				filePathCacheService.updateCache();
 				updateLinkNavigationFileName(view, fileName);
 			}

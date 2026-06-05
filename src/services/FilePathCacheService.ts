@@ -4,6 +4,7 @@ import {
 	isLatexFile,
 	isTypstFile,
 	isBibFile,
+	isMarkdownFile,
 	isTemporaryFile,
 } from '../utils/fileUtils';
 import { fileStorageEventEmitter } from './FileStorageService';
@@ -11,11 +12,15 @@ import { fileStorageEventEmitter } from './FileStorageService';
 type CacheUpdateCallback = (files: FileNode[]) => void;
 type FilePathUpdateCallback = (filePath: string) => void;
 type BibliographyFilesCallback = (files: FileNode[]) => void;
-type LabelsUpdateCallback = (labels: Map<string, string[]>) => void;
+type LabelsUpdateCallback = (labelsByFormat: LabelsByFormat) => void;
+
+export type LabelFormat = 'tex' | 'typst' | 'markdown';
+export type LabelsByFormat = Partial<
+	Record<LabelFormat, Map<string, string[]>>
+>;
 
 interface LabelCache {
-	texLabels: Map<string, string[]>;
-	typstLabels: Map<string, string[]>;
+	labelsByFormat: LabelsByFormat;
 	lastUpdate: number;
 }
 
@@ -29,10 +34,22 @@ class FilePathCacheService {
 	private bibliographyFileCallbacks = new Set<BibliographyFilesCallback>();
 	private labelsUpdateCallbacks = new Set<LabelsUpdateCallback>();
 	private labelCache: LabelCache = {
-		texLabels: new Map(),
-		typstLabels: new Map(),
+		labelsByFormat: {
+			tex: new Map(),
+			typst: new Map(),
+			markdown: new Map(),
+		},
 		lastUpdate: 0,
 	};
+	private labelContentCache = new Map<
+		string,
+		{
+			lastModified: number;
+			format: LabelFormat;
+			labelsByFormat: Partial<Record<LabelFormat, string[]>>;
+		}
+	>();
+	private readonly MAX_LABEL_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 	initialize() {
 		fileStorageEventEmitter.onChange(() => {
@@ -78,11 +95,11 @@ class FilePathCacheService {
 	onLabelsUpdate(callback: LabelsUpdateCallback) {
 		this.labelsUpdateCallbacks.add(callback);
 		if (
-			this.labelCache.texLabels.size > 0 ||
-			this.labelCache.typstLabels.size > 0
+			Object.values(this.labelCache.labelsByFormat).some(
+				(labels) => labels && labels.size > 0,
+			)
 		) {
-			callback(this.labelCache.texLabels);
-			callback(this.labelCache.typstLabels);
+			callback(this.labelCache.labelsByFormat);
 		}
 	}
 
@@ -91,11 +108,19 @@ class FilePathCacheService {
 	}
 
 	getTexLabels(): Map<string, string[]> {
-		return this.labelCache.texLabels;
+		return this.labelCache.labelsByFormat.tex ?? new Map();
 	}
 
 	getTypstLabels(): Map<string, string[]> {
-		return this.labelCache.typstLabels;
+		return this.labelCache.labelsByFormat.typst ?? new Map();
+	}
+
+	getMarkdownLabels(): Map<string, string[]> {
+		return this.labelCache.labelsByFormat.markdown ?? new Map();
+	}
+
+	getLabelsByFormat(): LabelsByFormat {
+		return this.labelCache.labelsByFormat;
 	}
 
 	getBibliographyFiles(): FileNode[] {
@@ -377,22 +402,114 @@ class FilePathCacheService {
 		return Array.from(labels);
 	}
 
+	private getLabelFormat(fileName: string): LabelFormat | null {
+		if (isLatexFile(fileName)) return 'tex';
+		if (isTypstFile(fileName)) return 'typst';
+		if (isMarkdownFile(fileName)) return 'markdown';
+		return null;
+	}
+
+	private slugifyMarkdownHeading(heading: string): string {
+		return heading
+			.trim()
+			.toLowerCase()
+			.replace(/<[^>]*>/g, '')
+			.replace(/[[\]()`*_~]/g, '')
+			.replace(/[^a-z0-9\s-]/g, '')
+			.replace(/\s+/g, '-')
+			.replace(/-+/g, '-')
+			.replace(/^-|-$/g, '');
+	}
+
+	private extractMarkdownLabels(content: string): string[] {
+		const labels = new Set<string>();
+		const lines = content.split(/\r?\n/);
+		let inFence = false;
+
+		for (const line of lines) {
+			if (/^\s*(```|~~~)/.test(line)) {
+				inFence = !inFence;
+				continue;
+			}
+
+			if (inFence) continue;
+
+			const explicitAnchorPattern = /\{#([^}\s]+)\}/g;
+			let anchorMatch: RegExpExecArray | null;
+			while ((anchorMatch = explicitAnchorPattern.exec(line)) !== null) {
+				labels.add(anchorMatch[1].trim());
+			}
+
+			const htmlAnchorPattern =
+				/<a\s+[^>]*(?:id|name)=["']([^"']+)["'][^>]*>/gi;
+			let htmlAnchorMatch: RegExpExecArray | null;
+			while ((htmlAnchorMatch = htmlAnchorPattern.exec(line)) !== null) {
+				labels.add(htmlAnchorMatch[1].trim());
+			}
+
+			const headingMatch = /^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$/.exec(line);
+			if (headingMatch) {
+				const heading = headingMatch[1].replace(/\s*\{#[^}]+\}\s*$/, '');
+				const slug = this.slugifyMarkdownHeading(heading);
+				if (slug) labels.add(slug);
+			}
+		}
+
+		return Array.from(labels);
+	}
+
+	private extractLabelsForFormat(
+		format: LabelFormat,
+		content: string,
+	): string[] {
+		switch (format) {
+			case 'tex':
+				return this.extractTexLabels(content);
+			case 'typst':
+				return this.extractTypstLabels(content);
+			case 'markdown':
+				return this.extractMarkdownLabels(content);
+			default:
+				return [];
+		}
+	}
+
 	private async updateLabelsCache() {
 		const { fileStorageService } = await import('./FileStorageService');
-		const texLabels = new Map<string, string[]>();
-		const typstLabels = new Map<string, string[]>();
+		const labelsByFormat: Required<LabelsByFormat> = {
+			tex: new Map(),
+			typst: new Map(),
+			markdown: new Map(),
+		};
 
 		for (const file of this.flattenFiles(this.cachedFiles)) {
+			const format = this.getLabelFormat(file.name);
+
 			if (
 				file.type !== 'file' ||
 				file.isDeleted ||
 				isTemporaryFile(file.path) ||
-				(!isLatexFile(file.name) && !isTypstFile(file.name))
+				!format
 			) {
 				continue;
 			}
 
 			try {
+				const cached = this.labelContentCache.get(file.id);
+				if (
+					cached &&
+					cached.lastModified === (file.lastModified ?? 0) &&
+					cached.format === format
+				) {
+					const cachedLabels = cached.labelsByFormat[format];
+					if (cachedLabels && cachedLabels.length > 0) {
+						labelsByFormat[format].set(file.path, cachedLabels);
+					}
+					continue;
+				}
+
+				if ((file.size ?? 0) > this.MAX_LABEL_FILE_SIZE) continue;
+
 				const storedFile = await fileStorageService.getFile(file.id);
 				if (!storedFile?.content) continue;
 
@@ -401,17 +518,22 @@ class FilePathCacheService {
 						? storedFile.content
 						: new TextDecoder().decode(storedFile.content);
 
-				if (isLatexFile(file.name)) {
-					const labels = this.extractTexLabels(content);
-					if (labels.length > 0) {
-						texLabels.set(file.path, labels);
-					}
-				} else if (isTypstFile(file.name)) {
-					const labels = this.extractTypstLabels(content);
-					if (labels.length > 0) {
-						typstLabels.set(file.path, labels);
-					}
+				const labels = this.extractLabelsForFormat(format, content);
+				const entry: {
+					lastModified: number;
+					format: LabelFormat;
+					labelsByFormat: Partial<Record<LabelFormat, string[]>>;
+				} = {
+					lastModified: file.lastModified ?? 0,
+					format,
+					labelsByFormat: { [format]: labels },
+				};
+
+				if (labels.length > 0) {
+					labelsByFormat[format].set(file.path, labels);
 				}
+
+				this.labelContentCache.set(file.id, entry);
 			} catch (error) {
 				console.warn(
 					`Failed to read content for label extraction: ${file.path}`,
@@ -421,14 +543,12 @@ class FilePathCacheService {
 		}
 
 		this.labelCache = {
-			texLabels,
-			typstLabels,
+			labelsByFormat,
 			lastUpdate: Date.now(),
 		};
 
 		this.labelsUpdateCallbacks.forEach((callback) => {
-			callback(texLabels);
-			callback(typstLabels);
+			callback(labelsByFormat);
 		});
 	}
 
@@ -472,10 +592,14 @@ class FilePathCacheService {
 		this.bibliographyFileCallbacks.clear();
 		this.labelsUpdateCallbacks.clear();
 		this.labelCache = {
-			texLabels: new Map(),
-			typstLabels: new Map(),
+			labelsByFormat: {
+				tex: new Map(),
+				typst: new Map(),
+				markdown: new Map(),
+			},
 			lastUpdate: 0,
 		};
+		this.labelContentCache.clear();
 		if (this.cacheUpdateTimeout) {
 			clearTimeout(this.cacheUpdateTimeout);
 			this.cacheUpdateTimeout = null;

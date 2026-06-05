@@ -42,9 +42,11 @@ const MilkdownInner: React.FC<MilkdownEditorProps> = ({
 	useEffect(() => {
 		editableRef.current = editable;
 	}, [editable]);
+
 	useEffect(() => {
 		onChangeRef.current = onChange;
 	}, [onChange]);
+
 	useEffect(() => {
 		onReadyRef.current = onReady;
 	}, [onReady]);
@@ -66,6 +68,7 @@ const MilkdownInner: React.FC<MilkdownEditorProps> = ({
 
 	useEffect(() => {
 		if (loading) return;
+
 		const editor = getInstance();
 		if (editor) onReadyRef.current?.(editor);
 	}, [loading, getInstance]);
@@ -73,9 +76,12 @@ const MilkdownInner: React.FC<MilkdownEditorProps> = ({
 	useEffect(() => {
 		if (loading || !syncExternalChanges) return;
 		if (markdown === lastSyncedRef.current) return;
+
 		const editor = getInstance();
 		if (!editor) return;
+
 		lastSyncedRef.current = markdown;
+
 		editor.action((ctx) => {
 			replaceMarkdown(ctx, markdown);
 		});
@@ -86,8 +92,13 @@ const MilkdownInner: React.FC<MilkdownEditorProps> = ({
 
 const MilkdownEditor: React.FC<MilkdownEditorProps> = (props) => (
 	<MilkdownProvider>
-		{props.showToolbar !== false && <MilkdownToolbar />}
-		<MilkdownInner {...props} />
+		<div className='milkdown-editor-shell'>
+			{props.showToolbar !== false && <MilkdownToolbar />}
+
+			<div className='milkdown-editor-scroll'>
+				<MilkdownInner {...props} />
+			</div>
+		</div>
 	</MilkdownProvider>
 );
 

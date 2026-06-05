@@ -4,6 +4,7 @@
 	flex-direction: column;
 	height: 100%;
 	width: 100%;
+	min-height: 0;
 	background-color: var(--pico-secondary-background);
 	overflow: hidden;
 }
@@ -12,6 +13,7 @@
 	flex: 1;
 	display: flex;
 	flex-direction: column;
+	min-height: 0;
 	overflow: hidden;
 	position: relative;
 	background-color: var(--pico-background);
@@ -25,21 +27,36 @@
 	overflow: hidden;
 }
 
-.milkdown-visual-pane > div:first-child {
+.milkdown-editor-shell {
+	flex: 1;
 	display: flex;
 	flex-direction: column;
+	min-height: 0;
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+}
+
+.milkdown-editor-scroll {
 	flex: 1;
 	min-height: 0;
+	width: 100%;
+	overflow-y: auto;
+	overflow-x: hidden;
 }
 
 .milkdown-toolbar {
 	display: flex;
 	flex-wrap: wrap;
+	align-items: center;
 	gap: var(--space-xs);
 	padding: 0.4rem var(--space-sd);
 	background-color: var(--accent-background);
 	border-bottom: 1px solid var(--accent-border, #333);
 	flex-shrink: 0;
+	width: 100%;
+	box-sizing: border-box;
+	z-index: 1;
 }
 
 .milkdown-toolbar-button {
@@ -58,24 +75,41 @@
 	justify-content: center;
 }
 
-.milkdown-toolbar-button:hover {
+.milkdown-toolbar-button:hover:not(:disabled) {
 	background-color: var(--pico-primary-focus);
 	border-color: var(--pico-primary);
 }
 
-.milkdown-visual-pane .milkdown {
-	flex: 1;
-	min-height: 0;
-	overflow-y: auto;
-	overflow-x: hidden;
+.milkdown-toolbar-button:disabled {
+	opacity: 0.5;
+	cursor: default;
 }
 
-.milkdown-visual-pane .milkdown > .editor,
-.milkdown-visual-pane .milkdown > [contenteditable] {
+.milkdown-toolbar-split {
+	width: 1px;
+	height: 22px;
+	background-color: var(--accent-border, #444);
+	margin: 0 var(--space-xs);
+	flex-shrink: 0;
+}
+
+.milkdown-toolbar-space {
+	flex: 1;
+	min-width: var(--space-sd);
+}
+
+.milkdown-editor-scroll .milkdown {
+	width: 100%;
 	min-height: 100%;
 }
 
-.milkdown-error-message {
+.milkdown-editor-scroll .milkdown > .editor {
+	width: 100%;
+	min-height: 100%;
+}
+
+.milkdown-error-message,
+.milkdown-loading-message {
 	padding: 1rem;
 	margin: 1rem;
 	flex-shrink: 0;

@@ -7,9 +7,12 @@ import type {
 import { StateEffect, StateField, type Extension } from '@codemirror/state';
 import { ViewPlugin, type EditorView } from '@codemirror/view';
 
-import { isTypstFile } from '../../utils/fileUtils';
+import { isMarkdownFile, isTypstFile } from '../../utils/fileUtils';
 import type { FileNode, FilePathCache } from '../../types/files';
-import { filePathCacheService } from '../../services/FilePathCacheService';
+import {
+	filePathCacheService,
+	type LabelsByFormat,
+} from '../../services/FilePathCacheService';
 import { BibliographyCompletionHandler } from './autocomplete/BibliographyCompletionHandler';
 import { FilePathCompletionHandler } from './autocomplete/FilePathCompletionHandler';
 import { ReferenceCompletionHandler } from './autocomplete/ReferenceCompletionHandler';
@@ -81,8 +84,8 @@ class AutocompleteProcessor {
 		this.currentFilePath = filePath;
 	};
 
-	private handleLabelsUpdate = (labels: Map<string, string[]>) => {
-		this.referenceHandler.updateLabels(labels);
+	private handleLabelsUpdate = (labelsByFormat: LabelsByFormat) => {
+		this.referenceHandler.updateLabelsByFormat(labelsByFormat);
 	};
 
 	setCurrentFilePath(filePath: string) {
@@ -134,6 +137,39 @@ class AutocompleteProcessor {
 		};
 	}
 
+	private getMergedMarkdownCompletions(
+		context: CompletionContext,
+	): CompletionResult | null {
+		const match = this.referenceHandler.getMarkdownReferenceMatch(context);
+		if (!match) return null;
+
+		const { partial, from } = match;
+		const refOptions = this.referenceHandler.getMarkdownLabelOptions(partial);
+
+		const mergedOptions = refOptions
+			.map((opt) => ({ ...opt, section: 'Headings' }))
+			.sort((a, b) => {
+				const aStartsWith = a.label
+					.toLowerCase()
+					.startsWith(partial.toLowerCase());
+				const bStartsWith = b.label
+					.toLowerCase()
+					.startsWith(partial.toLowerCase());
+				if (aStartsWith && !bStartsWith) return -1;
+				if (!aStartsWith && bStartsWith) return 1;
+				return (b.boost || 0) - (a.boost || 0);
+			})
+			.slice(0, 20);
+
+		if (mergedOptions.length === 0) return null;
+
+		return {
+			from,
+			options: mergedOptions,
+			validFor: /^[^)#\s]*$/,
+		};
+	}
+
 	getCompletions = async (
 		context: CompletionContext,
 	): Promise<CompletionResult | null> => {
@@ -145,6 +181,11 @@ class AutocompleteProcessor {
 
 		if (isTypstFile(this.currentFilePath)) {
 			const merged = this.getMergedTypstCompletions(context);
+			if (merged) return merged;
+		}
+
+		if (isMarkdownFile(this.currentFilePath)) {
+			const merged = this.getMergedMarkdownCompletions(context);
 			if (merged) return merged;
 		}
 

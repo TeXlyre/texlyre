@@ -34,6 +34,8 @@ export class LinkNavigator {
 					await this.navigateToTypstReference(view, link.value);
 				} else if (link.fileType === 'latex') {
 					await this.navigateToLatexReference(view, link.value);
+				} else if (link.fileType === 'markdown') {
+					this.navigateToMarkdownReference(view, link.value);
 				}
 				break;
 		}
@@ -216,6 +218,213 @@ export class LinkNavigator {
 		return null;
 	}
 
+	private async navigateToMarkdownReference(
+		view: EditorView,
+		target: string,
+	): Promise<void> {
+		const [filePath, labelFromTarget] = target.includes('#')
+			? target.split('#', 2)
+			: ['', target];
+
+		const label = decodeURIComponent(labelFromTarget || '').trim();
+		if (!label) return;
+
+		const foundLabel = await this.findMarkdownLabel(view, label, filePath);
+
+		if (foundLabel) {
+			if (foundLabel.inCurrentFile) {
+				view.dispatch({
+					selection: {
+						anchor: foundLabel.position,
+						head: foundLabel.position! + foundLabel.length!,
+					},
+					effects: [
+						CMEditorView.scrollIntoView(foundLabel.position!, {
+							y: 'center',
+						}),
+					],
+				});
+				view.focus();
+			} else if (foundLabel.filePath) {
+				this.navigateToFileAndLine(foundLabel.filePath, foundLabel.line!);
+			}
+		} else {
+			console.warn(`Markdown anchor not found: ${target}`);
+		}
+	}
+
+	private async findMarkdownLabel(
+		view: EditorView,
+		label: string,
+		targetFilePath?: string,
+	): Promise<{
+		inCurrentFile: boolean;
+		position?: number;
+		length?: number;
+		filePath?: string;
+		line?: number;
+	} | null> {
+		const normalizedLabel = this.normalizeMarkdownAnchor(label);
+
+		// Same-file reference: [hello](#description)
+		if (!targetFilePath) {
+			const currentContent = view.state.doc.toString();
+			const currentMatch = this.findMarkdownAnchorInContent(
+				currentContent,
+				normalizedLabel,
+			);
+
+			if (currentMatch) {
+				return {
+					inCurrentFile: true,
+					position: currentMatch.index,
+					length: currentMatch.length,
+				};
+			}
+
+			const labelsByFile = filePathCacheService.getMarkdownLabels();
+
+			for (const [filePath, labels] of labelsByFile.entries()) {
+				if (filePath === this.currentFilePath) continue;
+
+				const hasLabel = labels.some(
+					(item) => this.normalizeMarkdownAnchor(item) === normalizedLabel,
+				);
+
+				if (!hasLabel) continue;
+
+				const line = await this.findMarkdownLineInFile(
+					filePath,
+					normalizedLabel,
+				);
+
+				return {
+					inCurrentFile: false,
+					filePath,
+					line: line ?? 1,
+				};
+			}
+
+			return null;
+		}
+
+		// Cross-file reference: [hello](../hello.md#description)
+		const targetFile = await this.findTargetFile(targetFilePath);
+		if (!targetFile) return null;
+
+		const line = await this.findMarkdownLineInFile(
+			targetFile.path,
+			normalizedLabel,
+		);
+
+		return {
+			inCurrentFile: false,
+			filePath: targetFile.path,
+			line: line ?? 1,
+		};
+	}
+
+	private async findMarkdownLineInFile(
+		filePath: string,
+		normalizedLabel: string,
+	): Promise<number | null> {
+		try {
+			const file = await filePathCacheService.findFileByPath('', filePath);
+			if (!file) return null;
+
+			const storedFile = await fileStorageService.getFile(file.id);
+			if (!storedFile?.content) return null;
+
+			const content =
+				typeof storedFile.content === 'string'
+					? storedFile.content
+					: new TextDecoder().decode(storedFile.content);
+
+			const match = this.findMarkdownAnchorInContent(content, normalizedLabel);
+			if (!match) return null;
+
+			return content.substring(0, match.index).split('\n').length + 1;
+		} catch (error) {
+			console.error(
+				`Error finding Markdown anchor in file: ${filePath}`,
+				error,
+			);
+			return null;
+		}
+	}
+
+	private findMarkdownAnchorInContent(
+		content: string,
+		normalizedLabel: string,
+	): { index: number; length: number } | null {
+		const lines = content.split('\n');
+		let offset = 0;
+
+		for (const line of lines) {
+			const headingMatch = /^(#{1,6})\s+(.+?)\s*#*\s*$/.exec(line);
+
+			if (headingMatch) {
+				const rawHeadingText = headingMatch[2];
+				const explicitAnchorMatch = /\{#([^}]+)\}\s*$/.exec(rawHeadingText);
+
+				if (
+					explicitAnchorMatch &&
+					this.normalizeMarkdownAnchor(explicitAnchorMatch[1]) ===
+						normalizedLabel
+				) {
+					return {
+						index: offset + line.indexOf(explicitAnchorMatch[0]),
+						length: explicitAnchorMatch[0].length,
+					};
+				}
+
+				const headingText = rawHeadingText
+					.replace(/\s+\{#[^}]+\}\s*$/, '')
+					.trim();
+
+				if (this.slugifyMarkdownHeading(headingText) === normalizedLabel) {
+					return {
+						index: offset,
+						length: line.length,
+					};
+				}
+			}
+
+			const htmlAnchorPattern = /<a\b[^>]*(?:id|name)=["']([^"']+)["'][^>]*>/gi;
+
+			let htmlAnchorMatch: RegExpExecArray | null;
+			while ((htmlAnchorMatch = htmlAnchorPattern.exec(line))) {
+				if (
+					this.normalizeMarkdownAnchor(htmlAnchorMatch[1]) === normalizedLabel
+				) {
+					return {
+						index: offset + htmlAnchorMatch.index,
+						length: htmlAnchorMatch[0].length,
+					};
+				}
+			}
+
+			offset += line.length + 1;
+		}
+
+		return null;
+	}
+
+	private normalizeMarkdownAnchor(value: string): string {
+		return decodeURIComponent(value.trim().replace(/^#/, '')).toLowerCase();
+	}
+
+	private slugifyMarkdownHeading(value: string): string {
+		return value
+			.trim()
+			.toLowerCase()
+			.replace(/[`*_~[\]()]/g, '')
+			.replace(/[^\p{L}\p{N}\s_-]/gu, '')
+			.replace(/\s+/g, '-')
+			.replace(/-+/g, '-')
+			.replace(/^-|-$/g, '');
+	}
+
 	private async findLineInFile(
 		filePath: string,
 		pattern: RegExp,
@@ -266,6 +475,11 @@ export class LinkNavigator {
 	private navigateToUrl(url: string): void {
 		let finalUrl = url.trim();
 
+		if (this.isSpecialUrl(finalUrl)) {
+			window.open(finalUrl, '_blank');
+			return;
+		}
+
 		if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
 			finalUrl = `https://${finalUrl}`;
 		}
@@ -275,7 +489,8 @@ export class LinkNavigator {
 
 	private async navigateToFile(filePath: string): Promise<void> {
 		try {
-			const targetFile = await this.findTargetFile(filePath);
+			const cleanFilePath = this.stripFileFragment(filePath);
+			const targetFile = await this.findTargetFile(cleanFilePath);
 
 			if (targetFile) {
 				document.dispatchEvent(
@@ -284,11 +499,15 @@ export class LinkNavigator {
 					}),
 				);
 			} else {
-				console.warn(`File not found: ${filePath}`);
+				console.warn(`File not found: ${cleanFilePath}`);
 			}
 		} catch (error) {
 			console.error('Error navigating to file:', error);
 		}
+	}
+
+	private stripFileFragment(filePath: string): string {
+		return filePath.split('#')[0];
 	}
 
 	private navigateToDoi(doi: string): void {
@@ -349,6 +568,10 @@ export class LinkNavigator {
 		} catch (error) {
 			console.error('Error navigating to bib entry:', error);
 		}
+	}
+
+	private isSpecialUrl(url: string): boolean {
+		return /^(mailto:|tel:|ftp:|data:)/i.test(url);
 	}
 
 	private escapeRegex(str: string): string {

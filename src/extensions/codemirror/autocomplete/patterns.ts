@@ -5,21 +5,25 @@ export const latexCommandPatterns = [
 		commands: ['includegraphics', 'includesvg'],
 		pattern: /\\(includegraphics|includesvg)(?:\[[^\]]*\])?\{([^}]*)/,
 		fileTypes: 'images' as const,
+		pathGroup: 2 as const,
 	},
 	{
 		commands: ['input', 'include', 'subfile'],
 		pattern: /\\(input|include|subfile)\{([^}]*)/,
 		fileTypes: 'tex' as const,
+		pathGroup: 2 as const,
 	},
 	{
 		commands: ['bibliography', 'addbibresource'],
 		pattern: /\\(bibliography|addbibresource)(?:\[[^\]]*\])?\{([^}]*)/,
 		fileTypes: 'bib' as const,
+		pathGroup: 2 as const,
 	},
 	{
 		commands: ['lstinputlisting', 'verbatiminput'],
 		pattern: /\\(lstinputlisting|verbatiminput)(?:\[[^\]]*\])?\{([^}]*)/,
 		fileTypes: 'all' as const,
+		pathGroup: 2 as const,
 	},
 ];
 
@@ -63,6 +67,46 @@ export const typstCommandPatterns = [
 		commands: ['bibliography'],
 		pattern: /#bibliography\("/,
 		fileTypes: 'bib' as const,
+	},
+];
+
+export const markdownCommandPatterns = [
+	{
+		commands: ['image'],
+		// ![alt](path
+		pattern: /!\[[^\]]*\]\(([^)\s]*)/,
+		fileTypes: 'images' as const,
+		pathGroup: 1 as const,
+	},
+	{
+		commands: ['link'],
+		pattern: /(^|[^!])\[[^\]]*\]\(([^)\s]*)/,
+		fileTypes: 'all' as const,
+		pathGroup: 2 as const,
+	},
+	{
+		commands: ['html-img-src-double'],
+		pattern: /<img\b[^>]*\bsrc="([^"]*)/i,
+		fileTypes: 'images' as const,
+		pathGroup: 1 as const,
+	},
+	{
+		commands: ['html-img-src-single'],
+		pattern: /<img\b[^>]*\bsrc='([^']*)/i,
+		fileTypes: 'images' as const,
+		pathGroup: 1 as const,
+	},
+	{
+		commands: ['html-a-href-double'],
+		pattern: /<a\b[^>]*\bhref="([^"]*)/i,
+		fileTypes: 'all' as const,
+		pathGroup: 1 as const,
+	},
+	{
+		commands: ['html-a-href-single'],
+		pattern: /<a\b[^>]*\bhref='([^']*)/i,
+		fileTypes: 'all' as const,
+		pathGroup: 1 as const,
 	},
 ];
 
@@ -127,7 +171,7 @@ export const latexReferencePatterns = [
 export const typstReferencePatterns = [
 	{
 		commands: ['ref'],
-		pattern: /@([a-zA-Z0-9_-]*)/,
+		pattern: /@([a-zA-Z0-9_:\-]*)/,
 		type: 'reference-or-citation' as const,
 	},
 	{

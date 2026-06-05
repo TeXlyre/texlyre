@@ -1,23 +1,34 @@
 // extras/viewers/milkdown/toolbar/MilkdownToolbar.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useInstance } from '@milkdown/react';
-import { callCommand } from '@milkdown/kit/utils';
+import { editorViewCtx } from '@milkdown/kit/core';
 
+import { t } from '@/i18n';
 import { milkdownToolbarItems } from './milkdownItems';
+import { isToolbarButton } from './types';
 
 const MilkdownToolbar: React.FC = () => {
 	const [loading, getInstance] = useInstance();
 
-	const run = (
-		command: Parameters<typeof callCommand>[0],
-		payload?: unknown,
-	) => {
-		if (loading || !command) return;
+	const run = (key: string) => {
+		if (loading) return;
+
+		const item = milkdownToolbarItems.find(
+			(entry) => isToolbarButton(entry) && entry.key === key,
+		);
 		const editor = getInstance();
-		if (!editor) return;
+
+		if (!item || !isToolbarButton(item) || !editor) return;
+
 		try {
-			editor.action(callCommand(command, payload));
+			editor.action((ctx) => {
+				const view = ctx.get(editorViewCtx);
+				const didRun = item.command(view);
+
+				if (!didRun) {
+					console.warn(`Milkdown toolbar command did not apply: ${key}`);
+				}
+			});
 		} catch (error) {
 			console.warn('Milkdown toolbar command failed:', error);
 		}
@@ -25,18 +36,30 @@ const MilkdownToolbar: React.FC = () => {
 
 	return (
 		<div className='milkdown-toolbar'>
-			{milkdownToolbarItems.map((item) => (
-				<button
-					key={item.key}
-					type='button'
-					className='milkdown-toolbar-button'
-					title={t(item.title)}
-					onMouseDown={(e) => e.preventDefault()}
-					onClick={() => run(item.command, item.payload)}
-				>
-					{item.label}
-				</button>
-			))}
+			{milkdownToolbarItems.map((item, index) => {
+				if (!isToolbarButton(item)) {
+					return item.type === 'space' ? (
+						<div key={`space-${index}`} className='milkdown-toolbar-space' />
+					) : (
+						<div key={`split-${index}`} className='milkdown-toolbar-split' />
+					);
+				}
+
+				return (
+					<button
+						key={item.key}
+						type='button'
+						className='milkdown-toolbar-button'
+						data-item={item.key}
+						title={t(item.title)}
+						disabled={loading}
+						onMouseDown={(event) => event.preventDefault()}
+						onClick={() => run(item.key)}
+					>
+						{item.label}
+					</button>
+				);
+			})}
 		</div>
 	);
 };

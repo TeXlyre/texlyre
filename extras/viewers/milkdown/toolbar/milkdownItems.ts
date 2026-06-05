@@ -1,103 +1,103 @@
 // extras/viewers/milkdown/toolbar/milkdownItems.ts
+import type { MilkdownToolbarEntry } from './types';
+import { split, space } from './types';
 import {
-	toggleStrongCommand,
-	toggleEmphasisCommand,
-	toggleInlineCodeCommand,
-	wrapInHeadingCommand,
-	wrapInBulletListCommand,
-	wrapInOrderedListCommand,
-	wrapInBlockquoteCommand,
-	createCodeBlockCommand,
-	insertHrCommand,
-} from '@milkdown/kit/preset/commonmark';
-import {
-	toggleStrikethroughCommand,
-	insertTableCommand,
-} from '@milkdown/kit/preset/gfm';
-import type { CmdKey } from '@milkdown/kit/core';
+	insertHorizontalRule,
+	insertTable,
+	setBlockTypeByName,
+	toggleMarkByName,
+	wrapInListByName,
+	wrapInNodeByName,
+} from './helpers';
 
-export interface MilkdownToolbarItem {
-	key: string;
-	title: string;
-	label: string;
-	command?: CmdKey<unknown>;
-	payload?: unknown;
-}
-
-const rawItems: MilkdownToolbarItem[] = [
-	{ key: 'bold', title: 'Bold', label: 'B', command: toggleStrongCommand?.key },
+export const milkdownToolbarItems: MilkdownToolbarEntry[] = [
+	{
+		key: 'bold',
+		title: 'Bold',
+		label: 'B',
+		command: (view) => toggleMarkByName(view, ['strong', 'bold']),
+	},
 	{
 		key: 'italic',
 		title: 'Italic',
 		label: 'I',
-		command: toggleEmphasisCommand?.key,
+		command: (view) => toggleMarkByName(view, ['emphasis', 'em', 'italic']),
 	},
 	{
 		key: 'strike',
 		title: 'Strikethrough',
 		label: 'S',
-		command: toggleStrikethroughCommand?.key,
+		command: (view) =>
+			toggleMarkByName(view, ['strike_through', 'strikethrough', 'strike']),
 	},
 	{
 		key: 'code',
 		title: 'Inline code',
 		label: '</>',
-		command: toggleInlineCodeCommand?.key,
+		command: (view) =>
+			toggleMarkByName(view, [
+				'inlineCode',
+				'inline_code',
+				'code_inline',
+				'code',
+			]),
 	},
+	split,
 	{
 		key: 'h1',
 		title: 'Heading 1',
 		label: 'H1',
-		command: wrapInHeadingCommand?.key,
-		payload: 1,
+		command: (view) => setBlockTypeByName(view, ['heading'], { level: 1 }),
 	},
 	{
 		key: 'h2',
 		title: 'Heading 2',
 		label: 'H2',
-		command: wrapInHeadingCommand?.key,
-		payload: 2,
+		command: (view) => setBlockTypeByName(view, ['heading'], { level: 2 }),
 	},
 	{
 		key: 'h3',
 		title: 'Heading 3',
 		label: 'H3',
-		command: wrapInHeadingCommand?.key,
-		payload: 3,
+		command: (view) => setBlockTypeByName(view, ['heading'], { level: 3 }),
 	},
+	split,
 	{
 		key: 'bullet',
 		title: 'Bullet list',
 		label: '•',
-		command: wrapInBulletListCommand?.key,
+		command: (view) => wrapInListByName(view, ['bullet_list', 'bulletList']),
 	},
 	{
 		key: 'ordered',
 		title: 'Numbered list',
 		label: '1.',
-		command: wrapInOrderedListCommand?.key,
+		command: (view) => wrapInListByName(view, ['ordered_list', 'orderedList']),
 	},
+	split,
 	{
 		key: 'quote',
 		title: 'Blockquote',
 		label: '""',
-		command: wrapInBlockquoteCommand?.key,
+		command: (view) => wrapInNodeByName(view, ['blockquote']),
 	},
 	{
 		key: 'codeblock',
 		title: 'Code block',
 		label: '{}',
-		command: createCodeBlockCommand?.key,
+		command: (view) => setBlockTypeByName(view, ['code_block', 'codeBlock']),
 	},
 	{
 		key: 'table',
 		title: 'Table',
 		label: '田',
-		command: insertTableCommand?.key,
+		command: insertTable,
 	},
-	{ key: 'hr', title: 'Divider', label: '―', command: insertHrCommand?.key },
+	{
+		key: 'hr',
+		title: 'Divider',
+		label: '―',
+		command: insertHorizontalRule,
+	},
+	space,
 ];
-
-export const milkdownToolbarItems: MilkdownToolbarItem[] = rawItems.filter(
-	(item) => item.command != null,
-);
