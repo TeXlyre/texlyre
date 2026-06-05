@@ -27,7 +27,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
 		}
 	}, [isOpen]);
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = (e: React.SyntheticEvent) => {
 		e.preventDefault();
 
 		if (!content.trim()) {

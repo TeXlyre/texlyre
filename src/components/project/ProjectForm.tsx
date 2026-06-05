@@ -49,7 +49,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 		}
 	}, [project]);
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
 		e.preventDefault();
 
 		if (!name.trim()) {
