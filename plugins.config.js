@@ -3,11 +3,13 @@ export default {
 	plugins: [
 		'collaborative_viewers/bibtex',
 		'collaborative_viewers/drawio',
+		'collaborative_viewers/milkdown',
 		'viewers/bibtex',
 		'viewers/image',
 		'viewers/media',
 		'viewers/pdf',
 		'viewers/drawio',
+		'viewers/milkdown',
 		'renderers/pdf',
 		'renderers/canvas',
 		'loggers/latex_visualizer',

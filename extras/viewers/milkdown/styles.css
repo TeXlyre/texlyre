@@ -1,0 +1,196 @@
+/* extras/viewers/milkdown/styles.css */
+.milkdown-viewer-container {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	width: 100%;
+	background-color: var(--pico-secondary-background);
+	overflow: hidden;
+}
+
+.milkdown-viewer-content {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	position: relative;
+	background-color: var(--pico-background);
+}
+
+.milkdown-visual-pane {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.milkdown-visual-pane > div:first-child {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+}
+
+.milkdown-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-xs);
+	padding: 0.4rem var(--space-sd);
+	background-color: var(--accent-background);
+	border-bottom: 1px solid var(--accent-border, #333);
+	flex-shrink: 0;
+}
+
+.milkdown-toolbar-button {
+	min-width: 28px;
+	height: 28px;
+	padding: 0 0.4rem;
+	font-size: 0.8rem;
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border, #444);
+	border-radius: var(--radius-sm, 4px);
+	color: var(--text-color);
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.milkdown-toolbar-button:hover {
+	background-color: var(--pico-primary-focus);
+	border-color: var(--pico-primary);
+}
+
+.milkdown-visual-pane .milkdown {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+.milkdown-visual-pane .milkdown > .editor,
+.milkdown-visual-pane .milkdown > [contenteditable] {
+	min-height: 100%;
+}
+
+.milkdown-error-message {
+	padding: 1rem;
+	margin: 1rem;
+	flex-shrink: 0;
+}
+
+.texlyre-milkdown {
+	padding: 1.5rem 2rem;
+	outline: none;
+	color: var(--text-color);
+	caret-color: var(--pico-primary);
+	min-height: 100%;
+	box-sizing: border-box;
+}
+
+.texlyre-milkdown:focus {
+	outline: none;
+}
+
+.texlyre-milkdown h1,
+.texlyre-milkdown h2,
+.texlyre-milkdown h3,
+.texlyre-milkdown h4,
+.texlyre-milkdown h5,
+.texlyre-milkdown h6 {
+	color: var(--text-color);
+	font-weight: 600;
+	line-height: 1.25;
+	margin: 1.4em 0 0.6em;
+}
+
+.texlyre-milkdown p {
+	line-height: 1.6;
+	margin: 0.6em 0;
+}
+
+.texlyre-milkdown a {
+	color: var(--pico-primary);
+	text-decoration: underline;
+}
+
+.texlyre-milkdown blockquote {
+	border-left: 3px solid var(--accent-border, #444);
+	margin: 0.8em 0;
+	padding: 0.2em 1em;
+	color: var(--pico-secondary);
+}
+
+.texlyre-milkdown code {
+	font-family: var(--font-mono, monospace);
+	background-color: var(--pico-secondary-background);
+	padding: 0.1em 0.35em;
+	border-radius: var(--radius-sm, 4px);
+	font-size: 0.9em;
+}
+
+.texlyre-milkdown pre {
+	background-color: var(--pico-secondary-background);
+	border: 1px solid var(--accent-border, #333);
+	border-radius: var(--radius-sm, 4px);
+	padding: 0.8em 1em;
+	overflow-x: auto;
+}
+
+.texlyre-milkdown pre code {
+	background: none;
+	padding: 0;
+}
+
+.texlyre-milkdown ul,
+.texlyre-milkdown ol {
+	padding-left: 1.6em;
+	margin: 0.6em 0;
+}
+
+.texlyre-milkdown li {
+	margin: 0.2em 0;
+	line-height: 1.6;
+}
+
+.texlyre-milkdown hr {
+	border: none;
+	border-top: 1px solid var(--accent-border, #333);
+	margin: 1.2em 0;
+}
+
+.texlyre-milkdown table {
+	width: 100%;
+	border-collapse: collapse;
+	margin: 0.8em 0;
+}
+
+.texlyre-milkdown th,
+.texlyre-milkdown td {
+	border: 1px solid var(--accent-border, #333);
+	padding: 0.4em 0.7em;
+	text-align: left;
+}
+
+.texlyre-milkdown th {
+	background-color: var(--accent-background);
+	font-weight: 600;
+}
+
+.texlyre-milkdown img {
+	max-width: 100%;
+	height: auto;
+}
+
+.texlyre-milkdown ul[data-item-type="task"] {
+	list-style: none;
+	padding-left: 0.6em;
+}
+
+@media (max-width: 768px) {
+	.texlyre-milkdown {
+		padding: 1rem;
+	}
+}
