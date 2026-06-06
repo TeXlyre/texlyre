@@ -11,7 +11,13 @@ import PluginToolbar, {
 import { milkdownToolbarItems } from './milkdownItems';
 import { isToolbarButton } from './types';
 
-const MilkdownToolbar: React.FC = () => {
+interface MilkdownToolbarProps {
+	getCurrentFilePath: () => string;
+}
+
+const MilkdownToolbar: React.FC<MilkdownToolbarProps> = ({
+	getCurrentFilePath,
+}) => {
 	const [loading, getInstance] = useInstance();
 
 	const entries = useMemo<ToolbarEntry[]>(
@@ -37,8 +43,7 @@ const MilkdownToolbar: React.FC = () => {
 		try {
 			editor.action((ctx) => {
 				const view = ctx.get(editorViewCtx);
-				const didRun = item.command(view);
-
+				const didRun = item.command(view, getCurrentFilePath);
 				if (!didRun) {
 					console.warn(`Milkdown toolbar command did not apply: ${key}`);
 				}

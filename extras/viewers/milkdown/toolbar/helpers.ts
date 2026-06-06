@@ -1,16 +1,15 @@
 // extras/viewers/milkdown/toolbar/helpers.ts
+import { t } from '@/i18n';
 import { setBlockType, toggleMark, wrapIn } from '@milkdown/kit/prose/commands';
 import { redo, undo } from '@milkdown/kit/prose/history';
-import type {
-	MarkType,
-	Node as ProseNode,
-	NodeType,
-	Schema,
-} from '@milkdown/kit/prose/model';
+import type { MarkType, NodeType, Schema } from '@milkdown/kit/prose/model';
 import { wrapInList } from '@milkdown/kit/prose/schema-list';
 import type { EditorView } from '@milkdown/kit/prose/view';
+import { insertTableCommand } from '@milkdown/kit/preset/gfm';
 
 import { TableGridSelector } from '@/components/common/TableGridSelector';
+import { ImagePicker } from './ImagePicker';
+import { getPendingMilkdownImagePath } from './pendingImage';
 
 const getMark = (schema: Schema, names: string[]): MarkType | null => {
 	for (const name of names) {
@@ -73,6 +72,61 @@ export const wrapInListByName = (
 ): boolean => {
 	const node = getNode(view.state.schema, names);
 	return !!node && run(view, wrapInList(node));
+};
+
+const imagePickers = new WeakMap<EditorView, ImagePicker>();
+
+const insertImageNode = (view: EditorView, src: string): void => {
+	const imageType = view.state.schema.nodes.image;
+	if (!imageType || !src) return;
+
+	const node = imageType.create({ src });
+	view.dispatch(
+		view.state.tr.replaceSelectionWith(node, false).scrollIntoView(),
+	);
+	view.focus();
+};
+
+export const insertImage = (
+	view: EditorView,
+	getCurrentFilePath: () => string = () => '',
+): boolean => {
+	const pending = getPendingMilkdownImagePath();
+	if (pending) {
+		insertImageNode(view, pending);
+		return true;
+	}
+
+	const toolbar = document.querySelector('.plugin-toolbar');
+	if (!toolbar) return false;
+
+	const button = toolbar.querySelector(
+		'[data-item="image"]',
+	) as HTMLElement | null;
+	if (!button) return false;
+
+	let picker = imagePickers.get(view);
+
+	if (
+		picker &&
+		!document.body.contains(picker.container) &&
+		!toolbar.contains(picker.container)
+	) {
+		picker.destroy();
+		imagePickers.delete(view);
+		picker = null;
+	}
+
+	if (!picker) {
+		picker = new ImagePicker(button, {
+			getCurrentFilePath,
+			onSelect: (src) => insertImageNode(view, src),
+		});
+		imagePickers.set(view, picker);
+	}
+
+	picker.toggle();
+	return true;
 };
 
 export const insertLink = (view: EditorView): boolean => {
@@ -157,38 +211,7 @@ const insertSizedTable = (
 	rows: number,
 	cols: number,
 ): void => {
-	const schema = view.state.schema;
-	const table = getNode(schema, ['table']);
-	const row = getNode(schema, ['table_row', 'tableRow']);
-	const headerCell = getNode(schema, ['table_header', 'tableHeader']);
-	const cell = getNode(schema, ['table_cell', 'tableCell']);
-	const paragraph = getNode(schema, ['paragraph']);
-
-	if (!table || !row || !cell || !paragraph) return;
-
-	const makeCell = (type: NodeType): ProseNode | null =>
-		type.createAndFill(null, paragraph.create()) ?? type.createAndFill();
-
-	const builtRows: ProseNode[] = [];
-
-	for (let r = 0; r < rows; r += 1) {
-		const cells: ProseNode[] = [];
-		const cellType = r === 0 && headerCell ? headerCell : cell;
-
-		for (let c = 0; c < cols; c += 1) {
-			const built = makeCell(cellType);
-			if (!built) return;
-			cells.push(built);
-		}
-
-		builtRows.push(row.createChecked(null, cells));
-	}
-
-	view.dispatch(
-		view.state.tr
-			.replaceSelectionWith(table.createChecked(null, builtRows))
-			.scrollIntoView(),
-	);
+	insertTableCommand.run({ row: rows, col: cols });
 	view.focus();
 };
 

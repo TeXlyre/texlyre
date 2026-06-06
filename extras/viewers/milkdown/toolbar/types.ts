@@ -5,7 +5,7 @@ export interface MilkdownToolbarButton {
 	key: string;
 	label: string;
 	title: string;
-	command: (view: EditorView) => boolean;
+	command: (view: EditorView, getCurrentFilePath?: () => string) => boolean;
 }
 
 export interface MilkdownToolbarSplit {

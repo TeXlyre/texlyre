@@ -1,9 +1,9 @@
 // extras/viewers/milkdown/MilkdownTextPane.tsx
 import type React from 'react';
 import { useEffect, useRef } from 'react';
+import type { EditorView } from '@codemirror/view';
 
 import { useEditorView } from '@/hooks/editor/useEditorView';
-import type { EditorView } from '@codemirror/view';
 
 const noopParse = () => [];
 const noopAdd = () => ({ openTag: '', closeTag: '', commentId: '' });

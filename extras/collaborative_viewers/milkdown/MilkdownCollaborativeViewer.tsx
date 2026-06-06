@@ -1,11 +1,11 @@
 // extras/collaborative_viewers/milkdown/MilkdownCollaborativeViewer.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Awareness } from 'y-protocols/awareness';
 import type * as Y from 'yjs';
 import type { Editor } from '@milkdown/kit/core';
 
+import { t } from '@/i18n';
 import { DownloadIcon, SaveIcon, ViewIcon } from '@/components/common/Icons';
 import {
 	PluginControlGroup,
@@ -428,6 +428,7 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 							onReady={handleVisualReady}
 							plugins={milkdownPlugins}
 							onPaste={handlePaste}
+							getCurrentFilePath={() => filePathRef.current}
 						/>
 					</div>
 				) : (

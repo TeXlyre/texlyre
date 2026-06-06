@@ -50,7 +50,7 @@
 	min-height: 100%;
 }
 
-.milkdown-editor-scroll .milkdown>.editor {
+.milkdown-editor-scroll .milkdown > .editor {
 	width: 100%;
 	min-height: 100%;
 }
@@ -60,6 +60,50 @@
 	padding: 1rem;
 	margin: 1rem;
 	flex-shrink: 0;
+}
+
+.milkdown-image-picker {
+	position: absolute;
+	z-index: 1000;
+	display: flex;
+	flex-direction: column;
+	min-width: 260px;
+	max-width: 360px;
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-color);
+	border-radius: 0.5rem;
+	box-shadow: var(--pico-card-box-shadow, 0 2px 8px rgba(0, 0, 0, 0.15));
+	overflow: hidden;
+}
+
+.milkdown-image-picker-input {
+	border: none;
+	border-bottom: 1px solid var(--accent-color);
+	padding: 0.5rem 0.6rem;
+	background: transparent;
+	color: var(--text-color);
+	outline: none;
+	font-size: 0.9em;
+}
+
+.milkdown-image-picker-list {
+	max-height: 220px;
+	overflow-y: auto;
+}
+
+.milkdown-image-picker-item {
+	padding: 0.4rem 0.6rem;
+	cursor: pointer;
+	font-size: 0.85em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	color: var(--text-color);
+}
+
+.milkdown-image-picker-item:hover,
+.milkdown-image-picker-item.active {
+	background-color: var(--pico-secondary-background);
 }
 
 .texlyre-milkdown {
@@ -75,10 +119,23 @@
 	border: 1px solid var(--accent-color);
 }
 
+.milkdown-table-block table.children {
+	border-collapse: collapse;
+}
+
+.milkdown-table-block table.children th,
+.milkdown-table-block table.children td {
+	border-width: 0.5px;
+	border-style: solid;
+	border-color: var(--accent-color, var(--crepe-color-outline, #73777f));
+}
+
 .milkdown-table-block td {
-	background-color: color-mix(in srgb,
-			var(--pico-background) 50%,
-			var(--pico-secondary-background));
+	background-color: color-mix(
+		in srgb,
+		var(--pico-background) 50%,
+		var(--pico-secondary-background)
+	);
 }
 
 .milkdown-table-block th {

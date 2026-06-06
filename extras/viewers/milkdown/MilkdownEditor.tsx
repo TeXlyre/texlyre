@@ -24,6 +24,7 @@ interface MilkdownEditorProps {
 	showToolbar?: boolean;
 	syncExternalChanges?: boolean;
 	onPaste?: (view: EditorView, event: ClipboardEvent) => boolean;
+	getCurrentFilePath: () => string;
 }
 
 const MilkdownInner: React.FC<MilkdownEditorProps> = ({
@@ -134,8 +135,9 @@ const MilkdownInner: React.FC<MilkdownEditorProps> = ({
 const MilkdownEditor: React.FC<MilkdownEditorProps> = (props) => (
 	<MilkdownProvider>
 		<div className='milkdown-editor-shell'>
-			{props.showToolbar !== false && <MilkdownToolbar />}
-
+			{props.showToolbar !== false && (
+				<MilkdownToolbar getCurrentFilePath={props.getCurrentFilePath} />
+			)}
 			<MilkdownInner {...props} />
 		</div>
 	</MilkdownProvider>

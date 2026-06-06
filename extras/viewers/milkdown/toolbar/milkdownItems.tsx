@@ -25,6 +25,7 @@ import type { MilkdownToolbarEntry } from './types';
 import { split, space } from './types';
 import {
 	insertHorizontalRule,
+	insertImage,
 	insertLink,
 	insertTable,
 	runRedo,
@@ -35,7 +36,6 @@ import {
 	toggleMarkByName,
 	wrapInNodeByName,
 } from './helpers';
-import { getPendingMilkdownImagePath } from './pendingImage';
 
 export const milkdownToolbarItems: MilkdownToolbarEntry[] = [
 	{
@@ -136,18 +136,8 @@ export const milkdownToolbarItems: MilkdownToolbarEntry[] = [
 		key: 'image',
 		title: 'Image',
 		label: renderToString(<ToolbarImageIcon />),
-		command: (view) => {
-			const imageType = view.state.schema.nodes.image;
-			if (!imageType) return false;
-
-			const src = getPendingMilkdownImagePath() ?? '';
-			const node = imageType.create({ src });
-			view.dispatch(
-				view.state.tr.replaceSelectionWith(node, false).scrollIntoView(),
-			);
-			view.focus();
-			return true;
-		},
+		command: (view, getCurrentFilePath) =>
+			insertImage(view, getCurrentFilePath),
 	},
 	{
 		key: 'link',

@@ -1,9 +1,9 @@
 // extras/viewers/milkdown/MilkdownViewer.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import '@milkdown/crepe/theme/common/style.css';
 
+import { t } from '@/i18n';
 import { DownloadIcon, SaveIcon, ViewIcon } from '@/components/common/Icons';
 import {
 	PluginControlGroup,
@@ -274,6 +274,7 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 							plugins={milkdownPlugins}
 							syncExternalChanges={true}
 							onPaste={handlePaste}
+							getCurrentFilePath={() => filePathRef.current}
 						/>
 					</div>
 				) : (
