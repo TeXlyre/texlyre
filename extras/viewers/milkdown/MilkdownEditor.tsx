@@ -7,8 +7,10 @@ import {
 	useEditor,
 	useInstance,
 } from '@milkdown/react';
+import { editorViewCtx } from '@milkdown/kit/core';
 import type { Editor } from '@milkdown/kit/core';
 import type { MilkdownPlugin } from '@milkdown/kit/ctx';
+import type { EditorView } from '@milkdown/kit/prose/view';
 
 import { configureMilkdownEditor, replaceMarkdown } from './milkdownSetup';
 import MilkdownToolbar from './toolbar/MilkdownToolbar';
@@ -21,6 +23,7 @@ interface MilkdownEditorProps {
 	plugins?: MilkdownPlugin[];
 	showToolbar?: boolean;
 	syncExternalChanges?: boolean;
+	onPaste?: (view: EditorView, event: ClipboardEvent) => boolean;
 }
 
 const MilkdownInner: React.FC<MilkdownEditorProps> = ({
@@ -30,13 +33,16 @@ const MilkdownInner: React.FC<MilkdownEditorProps> = ({
 	onReady,
 	plugins,
 	syncExternalChanges,
+	onPaste,
 }) => {
 	const editableRef = useRef(editable);
 	const initialMarkdownRef = useRef(markdown);
 	const onChangeRef = useRef(onChange);
 	const onReadyRef = useRef(onReady);
+	const onPasteRef = useRef(onPaste);
 	const pluginsRef = useRef(plugins);
 	const lastSyncedRef = useRef(markdown);
+	const scrollRef = useRef<HTMLDivElement>(null);
 	const [loading, getInstance] = useInstance();
 
 	useEffect(() => {
@@ -50,6 +56,10 @@ const MilkdownInner: React.FC<MilkdownEditorProps> = ({
 	useEffect(() => {
 		onReadyRef.current = onReady;
 	}, [onReady]);
+
+	useEffect(() => {
+		onPasteRef.current = onPaste;
+	}, [onPaste]);
 
 	useEditor(
 		(root) =>
@@ -74,6 +84,33 @@ const MilkdownInner: React.FC<MilkdownEditorProps> = ({
 	}, [loading, getInstance]);
 
 	useEffect(() => {
+		const node = scrollRef.current;
+		if (loading || !node) return;
+
+		const editor = getInstance();
+		if (!editor) return;
+
+		const listener = (event: ClipboardEvent) => {
+			if (!editableRef.current) return;
+
+			let view: EditorView | null = null;
+			editor.action((ctx) => {
+				view = ctx.get(editorViewCtx);
+			});
+			if (!view) return;
+
+			if (onPasteRef.current?.(view, event)) {
+				event.preventDefault();
+				event.stopPropagation();
+				event.stopImmediatePropagation();
+			}
+		};
+
+		node.addEventListener('paste', listener, true);
+		return () => node.removeEventListener('paste', listener, true);
+	}, [loading, getInstance]);
+
+	useEffect(() => {
 		if (loading || !syncExternalChanges) return;
 		if (markdown === lastSyncedRef.current) return;
 
@@ -87,7 +124,11 @@ const MilkdownInner: React.FC<MilkdownEditorProps> = ({
 		});
 	}, [loading, getInstance, markdown, syncExternalChanges]);
 
-	return <Milkdown />;
+	return (
+		<div ref={scrollRef} className='milkdown-editor-scroll'>
+			<Milkdown />
+		</div>
+	);
 };
 
 const MilkdownEditor: React.FC<MilkdownEditorProps> = (props) => (
@@ -95,9 +136,7 @@ const MilkdownEditor: React.FC<MilkdownEditorProps> = (props) => (
 		<div className='milkdown-editor-shell'>
 			{props.showToolbar !== false && <MilkdownToolbar />}
 
-			<div className='milkdown-editor-scroll'>
-				<MilkdownInner {...props} />
-			</div>
+			<MilkdownInner {...props} />
 		</div>
 	</MilkdownProvider>
 );

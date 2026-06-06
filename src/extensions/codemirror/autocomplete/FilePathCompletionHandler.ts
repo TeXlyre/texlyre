@@ -139,8 +139,6 @@ export class FilePathCompletionHandler {
 
 				if (groupStart === -1) continue;
 
-				// The command/path context must reach the cursor. This avoids matching
-				// an earlier completed command on the same line.
 				if (groupStart + partialPath.length !== textBeforeCursor.length) {
 					continue;
 				}
@@ -181,8 +179,6 @@ export class FilePathCompletionHandler {
 			return -1;
 		}
 
-		// We intentionally use lastIndexOf because the captured path is normally
-		// the last part of the matched command/link.
 		const offsetInsideMatch = fullMatch.lastIndexOf(capturedValue);
 		if (offsetInsideMatch === -1) return -1;
 
@@ -198,11 +194,8 @@ export class FilePathCompletionHandler {
 	}
 
 	private shouldIgnoreMarkdownPathTarget(partialPath: string): boolean {
-		// Let ReferenceCompletionHandler handle Markdown heading references:
-		// [See](#heading)
 		if (partialPath.startsWith('#')) return true;
 
-		// Do not offer project-file completions for external/special targets.
 		return /^(https?:|mailto:|tel:|ftp:|data:)/i.test(partialPath);
 	}
 

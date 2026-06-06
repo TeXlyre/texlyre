@@ -62,7 +62,7 @@ export const typstLinkPatterns: LinkPattern[] = [
 		extractValue: (match) => match[1],
 	},
 	{
-		pattern: /@([a-zA-Z0-9_:\-]+)/g,
+		pattern: /@([a-zA-Z0-9_:-]+)/g,
 		type: 'reference',
 		fileType: 'typst',
 		extractValue: (match) => match[1],

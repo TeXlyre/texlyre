@@ -171,7 +171,7 @@ export const latexReferencePatterns = [
 export const typstReferencePatterns = [
 	{
 		commands: ['ref'],
-		pattern: /@([a-zA-Z0-9_:\-]*)/,
+		pattern: /@([a-zA-Z0-9_:-]*)/,
 		type: 'reference-or-citation' as const,
 	},
 	{

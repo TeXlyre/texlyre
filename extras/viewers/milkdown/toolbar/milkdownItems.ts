@@ -9,6 +9,7 @@ import {
 	wrapInListByName,
 	wrapInNodeByName,
 } from './helpers';
+import { getPendingMilkdownImagePath } from './pendingImage';
 
 export const milkdownToolbarItems: MilkdownToolbarEntry[] = [
 	{
@@ -98,6 +99,23 @@ export const milkdownToolbarItems: MilkdownToolbarEntry[] = [
 		title: 'Divider',
 		label: '―',
 		command: insertHorizontalRule,
+	},
+	{
+		key: 'image',
+		title: 'Image',
+		label: '🖼',
+		command: (view) => {
+			const imageType = view.state.schema.nodes.image;
+			if (!imageType) return false;
+
+			const src = getPendingMilkdownImagePath() ?? '';
+			const node = imageType.create({ src });
+			view.dispatch(
+				view.state.tr.replaceSelectionWith(node, false).scrollIntoView(),
+			);
+			view.focus();
+			return true;
+		},
 	},
 	space,
 ];

@@ -47,6 +47,7 @@ import './styles/components/bibliography.css';
 import './styles/components/chat.css';
 import './styles/components/latex-typst.css';
 import './styles/components/plugin-header.css';
+import './styles/components/plugin-toolbar.css';
 import './styles/components/collaborator-avatars.css';
 import './styles/components/settings.css';
 import './styles/components/language.css';

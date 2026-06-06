@@ -16,6 +16,7 @@ import { formatFileSize } from '@/utils/fileUtils';
 import MilkdownEditor from './MilkdownEditor';
 import MilkdownTextPane from './MilkdownTextPane';
 import { createImageResolver } from './imageResolver';
+import { createMilkdownPasteHandler } from './toolbar/pasteUpload';
 import './styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './MilkdownViewerPlugin';
 
@@ -84,6 +85,11 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 	const milkdownPlugins = useMemo(
 		() => [imageResolver.plugin],
 		[imageResolver],
+	);
+
+	const handlePaste = useMemo(
+		() => createMilkdownPasteHandler(fileId),
+		[fileId],
 	);
 
 	useEffect(() => {
@@ -266,6 +272,7 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 							onChange={handleChange}
 							plugins={milkdownPlugins}
 							syncExternalChanges={true}
+							onPaste={handlePaste}
 						/>
 					</div>
 				) : (

@@ -2,7 +2,11 @@
 import { EditorView } from '@codemirror/view';
 
 import { detectFileType } from '../../utils/fileUtils';
-import { uploadPastedFile } from '../../utils/clipboardUtils';
+import {
+	extractUploadableBlob,
+	readClipboardBlob,
+	uploadPastedFile,
+} from '../../utils/clipboardUtils';
 import { runToolbarCommand } from './ToolbarExtension';
 
 let pendingImagePath: string | null = null;
@@ -17,33 +21,42 @@ export const createPasteExtension = (
 	currentFileId?: string,
 	fileName?: string,
 ) => {
+	const insert = (view: EditorView, blob: Blob) => {
+		uploadPastedFile(blob, currentFileId)
+			.then((uploadedPath) => {
+				pendingImagePath = uploadedPath;
+
+				const fileType = detectFileType(fileName, view.state.doc.toString());
+				const didRun = runToolbarCommand(view, `${fileType}-figure`);
+				if (!didRun) {
+					console.warn('Figure command not found in toolbar');
+					pendingImagePath = null;
+				}
+			})
+			.catch((error) => {
+				console.error('Error handling pasted file:', error);
+			});
+	};
+
 	return EditorView.domEventHandlers({
 		paste: (event, view) => {
-			const items = Array.from(event.clipboardData?.items || []);
-			const imageItem = items.find((item) => item.type.startsWith('image/'));
-			const pdfItem = items.find((item) => item.type === 'application/pdf');
+			const syncBlob = extractUploadableBlob(event);
+			if (syncBlob) {
+				event.preventDefault();
+				insert(view, syncBlob);
+				return true;
+			}
 
-			const fileItem = imageItem || pdfItem;
-			if (!fileItem) return false;
+			const types = Array.from(event.clipboardData?.types ?? []);
+			const hasImageHint = types.some(
+				(type) => type.startsWith('image/') || type === 'text/uri-list',
+			);
+			if (!hasImageHint) return false;
 
 			event.preventDefault();
-			const blob = fileItem.getAsFile();
-			if (!blob) return false;
-
-			uploadPastedFile(blob, currentFileId)
-				.then((uploadedPath) => {
-					pendingImagePath = uploadedPath;
-
-					const fileType = detectFileType(fileName);
-					const toolbarCommand = runToolbarCommand(view, `${fileType}-figure`);
-					if (!toolbarCommand) {
-						console.warn('Figure command not found in toolbar');
-						pendingImagePath = null;
-					}
-				})
-				.catch((error) => {
-					console.error('Error handling pasted file:', error);
-				});
+			readClipboardBlob().then((blob) => {
+				if (blob) insert(view, blob);
+			});
 
 			return true;
 		},

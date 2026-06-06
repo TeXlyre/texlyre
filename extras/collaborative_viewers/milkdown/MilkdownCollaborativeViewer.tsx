@@ -20,6 +20,7 @@ import { formatFileSize } from '@/utils/fileUtils';
 import MilkdownEditor from '../../viewers/milkdown/MilkdownEditor';
 import MilkdownTextPane from '../../viewers/milkdown/MilkdownTextPane';
 import { createImageResolver } from '../../viewers/milkdown/imageResolver';
+import { createMilkdownPasteHandler } from '../../viewers/milkdown/toolbar/pasteUpload';
 import type { MilkdownCollabStrategy } from './MilkdownCollabStrategy';
 import { TextBridgeStrategy } from './TextBridgeStrategy';
 import '../../viewers/milkdown/styles.css';
@@ -134,6 +135,11 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	const milkdownPlugins = useMemo(
 		() => [imageResolver.plugin],
 		[imageResolver],
+	);
+
+	const handlePaste = useMemo(
+		() => createMilkdownPasteHandler(fileId),
+		[fileId],
 	);
 
 	useEffect(() => {
@@ -421,6 +427,7 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 							onChange={handleVisualChange}
 							onReady={handleVisualReady}
 							plugins={milkdownPlugins}
+							onPaste={handlePaste}
 						/>
 					</div>
 				) : (

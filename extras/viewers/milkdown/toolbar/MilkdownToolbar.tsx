@@ -1,14 +1,28 @@
 // extras/viewers/milkdown/toolbar/MilkdownToolbar.tsx
 import type React from 'react';
+import { useMemo } from 'react';
 import { useInstance } from '@milkdown/react';
 import { editorViewCtx } from '@milkdown/kit/core';
 
 import { t } from '@/i18n';
+import PluginToolbar, {
+	type ToolbarEntry,
+} from '@/components/common/PluginToolbar';
 import { milkdownToolbarItems } from './milkdownItems';
 import { isToolbarButton } from './types';
 
 const MilkdownToolbar: React.FC = () => {
 	const [loading, getInstance] = useInstance();
+
+	const entries = useMemo<ToolbarEntry[]>(
+		() =>
+			milkdownToolbarItems.map((item) =>
+				isToolbarButton(item)
+					? { key: item.key, label: t(item.title), icon: item.label }
+					: { type: item.type },
+			),
+		[],
+	);
 
 	const run = (key: string) => {
 		if (loading) return;
@@ -34,34 +48,7 @@ const MilkdownToolbar: React.FC = () => {
 		}
 	};
 
-	return (
-		<div className='milkdown-toolbar'>
-			{milkdownToolbarItems.map((item, index) => {
-				if (!isToolbarButton(item)) {
-					return item.type === 'space' ? (
-						<div key={`space-${index}`} className='milkdown-toolbar-space' />
-					) : (
-						<div key={`split-${index}`} className='milkdown-toolbar-split' />
-					);
-				}
-
-				return (
-					<button
-						key={item.key}
-						type='button'
-						className='milkdown-toolbar-button'
-						data-item={item.key}
-						title={t(item.title)}
-						disabled={loading}
-						onMouseDown={(event) => event.preventDefault()}
-						onClick={() => run(item.key)}
-					>
-						{item.label}
-					</button>
-				);
-			})}
-		</div>
-	);
+	return <PluginToolbar items={entries} onRun={run} disabled={loading} />;
 };
 
 export default MilkdownToolbar;
