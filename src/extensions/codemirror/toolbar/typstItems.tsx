@@ -403,7 +403,6 @@ function createColorCommand(fileType: 'typst', type: 'text' | 'highlight') {
 		) as HTMLElement | null;
 		if (!toolbar || !button) return false;
 
-
 		let picker = colorPickers.get(view);
 
 		if (picker) {

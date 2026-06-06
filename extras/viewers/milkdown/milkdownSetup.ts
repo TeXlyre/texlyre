@@ -12,6 +12,11 @@ import { commonmark } from '@milkdown/kit/preset/commonmark';
 import { gfm } from '@milkdown/kit/preset/gfm';
 import { history } from '@milkdown/kit/plugin/history';
 import { listener, listenerCtx } from '@milkdown/kit/plugin/listener';
+import { tableBlock } from '@milkdown/kit/component/table-block';
+import {
+	linkTooltipPlugin,
+	configureLinkTooltip,
+} from '@milkdown/kit/component/link-tooltip';
 import { Slice } from '@milkdown/kit/prose/model';
 import { TextSelection } from '@milkdown/kit/prose/state';
 import type { Ctx } from '@milkdown/kit/ctx';
@@ -42,6 +47,7 @@ export function configureMilkdownEditor(
 				attributes: { class: MILKDOWN_THEME_CLASS, spellcheck: 'true' },
 				editable,
 			}));
+			configureLinkTooltip(ctx);
 			const l = ctx.get(listenerCtx);
 			l.markdownUpdated((_ctx, markdown, prevMarkdown) => {
 				if (markdown !== prevMarkdown) onMarkdownUpdated(markdown);
@@ -50,7 +56,9 @@ export function configureMilkdownEditor(
 		.use(commonmark)
 		.use(gfm)
 		.use(history)
-		.use(listener);
+		.use(listener)
+		.use(tableBlock)
+		.use(linkTooltipPlugin);
 
 	if (plugins) {
 		for (const plugin of plugins) editor.use(plugin);

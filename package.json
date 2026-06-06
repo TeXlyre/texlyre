@@ -1,7 +1,7 @@
 {
 	"name": "texlyre",
 	"private": true,
-	"version": "0.8.8",
+	"version": "0.8.9",
 	"description": "A local-first LaTeX & Typst collaborative web editor ",
 	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
 	"license": "AGPL-3.0-or-later",
@@ -83,6 +83,7 @@
 		"@lezer/generator": "^1.8.0",
 		"@lezer/highlight": "^1.2.3",
 		"@lezer/lr": "^1.4.8",
+		"@milkdown/crepe": "^7.21.2",
 		"@milkdown/kit": "^7.21.2",
 		"@milkdown/react": "^7.21.2",
 		"@myriaddreamin/typst-ts-renderer": "npm:@texlyre/typst-ts-renderer@0.7.0-rc4",

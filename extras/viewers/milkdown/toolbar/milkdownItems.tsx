@@ -15,13 +15,21 @@ import {
 	ToolbarCodeBlockIcon,
 	ToolbarTableIcon,
 	ToolbarImageIcon,
+	ToolbarHyperlinkIcon,
+	UndoIcon,
+	RedoIcon,
+	ExpandIcon,
 } from '@/components/common/Icons';
 import type { MilkdownToolbarEntry } from './types';
 import { split, space } from './types';
 import {
 	insertHorizontalRule,
+	insertLink,
 	insertTable,
+	runRedo,
+	runUndo,
 	setBlockTypeByName,
+	toggleFullScreen,
 	toggleMarkByName,
 	wrapInListByName,
 	wrapInNodeByName,
@@ -134,5 +142,30 @@ export const milkdownToolbarItems: MilkdownToolbarEntry[] = [
 			return true;
 		},
 	},
+	{
+		key: 'link',
+		title: 'Link',
+		label: renderToString(<ToolbarHyperlinkIcon />),
+		command: insertLink,
+	},
 	space,
+	{
+		key: 'undo',
+		title: 'Undo',
+		label: renderToString(<UndoIcon />),
+		command: runUndo,
+	},
+	{
+		key: 'redo',
+		title: 'Redo',
+		label: renderToString(<RedoIcon />),
+		command: runRedo,
+	},
+	split,
+	{
+		key: 'fullscreen',
+		title: 'Fullscreen',
+		label: renderToString(<ExpandIcon />),
+		command: toggleFullScreen,
+	},
 ];

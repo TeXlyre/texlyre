@@ -451,7 +451,7 @@
 	padding: var(--space-sm) !important;
 }
 
-.codemirror-editor-container .cm-tooltip.cm-tooltip-autocomplete>ul {
+.codemirror-editor-container .cm-tooltip.cm-tooltip-autocomplete > ul {
 	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 	font-size: 12px;
 	background-color: var(--pico-background);
@@ -554,13 +554,14 @@
 }
 
 .codemirror-editor-container .comment-selection-active {
-	background-color: var(--comment-highlight-active-bg,
-			rgba(100, 200, 255, 0.2));
+	background-color: var(
+		--comment-highlight-active-bg,
+		rgba(100, 200, 255, 0.2)
+	);
 	border-radius: var(--radius-xs);
 }
 
 @keyframes comment-pulse {
-
 	0%,
 	100% {
 		background-color: rgba(255, 220, 100, 0.2);

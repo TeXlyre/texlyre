@@ -1,102 +1,102 @@
 .plugin-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    align-content: flex-start;
-    gap: 2px;
-    padding: var(--space-xs);
-    background-color: var(--pico-background) !important;
-    border-bottom: 1px solid var(--accent-border);
-    position: relative;
-    flex-shrink: 0;
-    width: auto !important;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	align-content: flex-start;
+	gap: 2px;
+	padding: var(--space-xs);
+	background-color: var(--pico-background) !important;
+	border-bottom: 1px solid var(--accent-border);
+	position: relative;
+	flex-shrink: 0;
+	width: auto !important;
 }
 
 .plugin-toolbar__icon svg {
-    overflow: visible;
-    box-sizing: content-box;
-    height: 32px;
-    width: 32px;
+	overflow: visible;
+	box-sizing: content-box;
+	height: 32px;
+	width: 32px;
 }
 
 .plugin-toolbar__item {
-    height: 32px !important;
-    padding: 0 var(--space-xs);
-    margin: 0;
-    background: none;
-    border: none;
+	height: 32px !important;
+	padding: 0 var(--space-xs);
+	margin: 0;
+	background: none;
+	border: none;
 }
 
 .plugin-toolbar__item svg {
-    height: 1rem;
+	height: 1rem;
 }
 
-.plugin-toolbar__item>* {
-    pointer-events: none;
+.plugin-toolbar__item > * {
+	pointer-events: none;
 }
 
 .plugin-toolbar__item:hover {
-    color: var(--pico-primary);
+	color: var(--pico-primary);
 }
 
 .plugin-toolbar__split {
-    width: 1px;
-    height: 80%;
-    background-color: var(--text-color, #444);
-    margin: 0 var(--space-xs);
+	width: 1px;
+	height: 80%;
+	background-color: var(--text-color, #444);
+	margin: 0 var(--space-xs);
 }
 
 .plugin-toolbar__space {
-    flex: 1;
+	flex: 1;
 }
 
 .plugin-toolbar-overflow-menu {
-    position: absolute;
-    top: 100%;
-    z-index: var(--z-dropdown);
-    min-width: min-content;
-    max-height: 40vh;
-    padding: var(--space-xs) 0;
-    background-color: var(--pico-background);
-    border: 1px solid var(--accent-border);
-    border-radius: var(--radius-sm);
-    box-shadow: var(--shadow-md);
-    overflow-y: auto;
+	position: absolute;
+	top: 100%;
+	z-index: var(--z-dropdown);
+	min-width: min-content;
+	max-height: 40vh;
+	padding: var(--space-xs) 0;
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-md);
+	overflow-y: auto;
 }
 
 .plugin-toolbar-overflow-section {
-    display: flex;
-    flex-direction: column;
+	display: flex;
+	flex-direction: column;
 }
 
 .plugin-toolbar-overflow-separator {
-    height: 1px;
-    background-color: var(--text-color);
-    margin: var(--space-xs) 0;
+	height: 1px;
+	background-color: var(--text-color);
+	margin: var(--space-xs) 0;
 }
 
 .plugin-toolbar-overflow-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
-    color: var(--text-color);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	flex-shrink: 0;
+	color: var(--text-color);
 }
 
 .plugin-toolbar-overflow-icon svg {
-    width: 16px;
-    height: 16px;
+	width: 16px;
+	height: 16px;
 }
 
 .editor-wrapper:fullscreen {
-    background-color: var(--pico-background);
-    display: flex;
-    flex-direction: column;
+	background-color: var(--pico-background);
+	display: flex;
+	flex-direction: column;
 }
 
 .editor-wrapper:fullscreen .codemirror-editor-container {
-    flex: 1;
-    min-height: 0;
+	flex: 1;
+	min-height: 0;
 }

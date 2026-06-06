@@ -1,5 +1,6 @@
 // extras/viewers/milkdown/toolbar/helpers.ts
 import { setBlockType, toggleMark, wrapIn } from '@milkdown/kit/prose/commands';
+import { redo, undo } from '@milkdown/kit/prose/history';
 import type {
 	MarkType,
 	Node as ProseNode,
@@ -70,6 +71,30 @@ export const wrapInListByName = (
 ): boolean => {
 	const node = getNode(view.state.schema, names);
 	return !!node && run(view, wrapInList(node));
+};
+
+export const insertLink = (view: EditorView): boolean => {
+	const linkMark = getMark(view.state.schema, ['link']);
+	if (!linkMark || view.state.selection.empty) return false;
+
+	return run(view, toggleMark(linkMark, { href: '' }));
+};
+
+export const runUndo = (view: EditorView): boolean => run(view, undo);
+
+export const runRedo = (view: EditorView): boolean => run(view, redo);
+
+export const toggleFullScreen = (view: EditorView): boolean => {
+	const doc = view.dom.ownerDocument;
+
+	if (doc.fullscreenElement) {
+		doc.exitFullscreen();
+	} else {
+		const target = view.dom.closest('.milkdown-editor-shell') ?? view.dom;
+		target.requestFullscreen();
+	}
+
+	return true;
 };
 
 export const insertHorizontalRule = (view: EditorView): boolean => {

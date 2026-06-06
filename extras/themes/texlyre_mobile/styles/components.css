@@ -87,18 +87,6 @@
 	min-height: calc(var(--mobile-min-touch-target) * 1.5);
 }
 
-[data-theme-plugin="texlyre-mobile"] .ͼ1 .codemirror-toolbar__item {
-	min-height: var(--mobile-min-touch-target);
-	min-width: var(--mobile-min-touch-target);
-	padding-top: var(--mobile-spacing-xs);
-	padding-bottom: auto;
-}
-
-[data-theme-plugin="texlyre-mobile"] .ͼ1 .codemirror-toolbar__item svg {
-	width: var(--mobile-icon-size-md);
-	height: var(--mobile-icon-size-md);
-}
-
 [data-layout="texlyre-mobile"] .compile-button-group .compile-button {
 	min-height: var(--mobile-min-touch-target);
 	padding: var(--mobile-spacing-sm) var(--mobile-spacing-sm);

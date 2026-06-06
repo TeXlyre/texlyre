@@ -92,6 +92,9 @@ importers:
       '@lezer/lr':
         specifier: ^1.4.8
         version: 1.4.8
+      '@milkdown/crepe':
+        specifier: ^7.21.2
+        version: 7.21.2(prosemirror-model@1.25.7)(prosemirror-state@1.4.4)(prosemirror-view@1.41.8)(typescript@6.0.2)
       '@milkdown/kit':
         specifier: ^7.21.2
         version: 7.21.2(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(typescript@6.0.2)
@@ -137,9 +140,6 @@ importers:
       codemirror-markdown-commands:
         specifier: ^0.1.0
         version: 0.1.0
-      codemirror-toolbar:
-        specifier: ^0.1.0
-        version: 0.1.0(codemirror-markdown-commands@0.1.0)
       detypify-service:
         specifier: ^0.3.0
         version: 0.3.0
@@ -2960,14 +2960,6 @@ packages:
 
   codemirror-markdown-commands@0.1.0:
     resolution: {integrity: sha512-be/h9E0ZOezWvTSP14rZ2ZTtLYUadyL8hbziVn6p62pCCo0GTecrymo35wQzs+44ubigcKNnyo0giiOW9gIsKw==}
-
-  codemirror-toolbar@0.1.0:
-    resolution: {integrity: sha512-6rkeLrAw4kIgOhnT4YAitzAdxq36VsTJp5fUUxONu9UROlRcNpzAoUKaLGyKsdTXaKwE6CNaLYt/Geij4EkffA==}
-    peerDependencies:
-      codemirror-markdown-commands: ^0.1.0
-    peerDependenciesMeta:
-      codemirror-markdown-commands:
-        optional: true
 
   codemirror@6.0.2:
     resolution: {integrity: sha512-VhydHotNW5w1UGK0Qj96BwSk/Zqbp9WbnyK2W/eVMv4QyF41INRGpjUhFJY7/uDNuudSc33a/PKr4iDqRduvHw==}
@@ -8810,13 +8802,6 @@ snapshots:
     dependencies:
       '@codemirror/state': 6.6.0
       '@codemirror/view': 6.41.0
-
-  codemirror-toolbar@0.1.0(codemirror-markdown-commands@0.1.0):
-    dependencies:
-      '@codemirror/state': 6.6.0
-      '@codemirror/view': 6.41.0
-    optionalDependencies:
-      codemirror-markdown-commands: 0.1.0
 
   codemirror@6.0.2:
     dependencies:

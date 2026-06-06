@@ -2,6 +2,7 @@
 import { t } from '@/i18n';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import '@milkdown/crepe/theme/common/style.css';
 
 import { DownloadIcon, SaveIcon, ViewIcon } from '@/components/common/Icons';
 import {
