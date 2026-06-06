@@ -1,83 +1,96 @@
 .plugin-toolbar,
 .codemirror-toolbar {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	align-content: flex-start;
-	gap: 2px;
-	padding: var(--space-xs);
-	background-color: var(--pico-background) !important;
-	border-bottom: 1px solid var(--accent-border);
-	position: relative;
-	flex-shrink: 0;
-	width: auto !important;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    align-content: flex-start;
+    gap: 2px;
+    padding: var(--space-xs);
+    background-color: var(--pico-background) !important;
+    border-bottom: 1px solid var(--accent-border);
+    position: relative;
+    flex-shrink: 0;
+    width: auto !important;
 }
 
-.plugin-toolbar__icon,
-.codemirror-toolbar__icon {
-	width: auto !important;
-	padding: auto !important;
+.plugin-toolbar__icon svg,
+.codemirror-toolbar__icon svg {
+    overflow: visible;
+    box-sizing: content-box;
+    height: 32px;
+    width: 32px;
 }
 
-.plugin-toolbar__item,
+.plugin-toolbar__item {
+    height: 32px !important;
+    padding: 0 var(--space-xs);
+    margin: 0;
+    background: none;
+    border: none;
+}
+
 .codemirror-toolbar__item {
-	height: 32px !important;
-	padding-top: var(--space-xs);
-	padding-bottom: auto;
+    height: 32px !important;
+    padding-top: var(--space-xs);
+    padding-bottom: auto;
 }
 
 .plugin-toolbar__item svg,
 .codemirror-toolbar__item svg {
-	height: 16px;
+    height: 1rem;
+}
+
+.plugin-toolbar__item>*,
+.codemirror-toolbar__item>* {
+    pointer-events: none;
 }
 
 .plugin-toolbar__item:hover,
 .codemirror-toolbar__item:hover {
-	color: var(--pico-primary);
+    color: var(--pico-primary);
 }
 
 .plugin-toolbar__split,
 .codemirror-toolbar__split {
-	width: 1px;
-	height: 22px;
-	background-color: var(--accent-border, #444);
-	margin: 0 var(--space-xs);
-	flex-shrink: 0;
+    width: 1px;
+    height: 80%;
+    background-color: var(--text-color, #444);
+    margin: 0 var(--space-xs);
 }
 
 .plugin-toolbar__space,
 .codemirror-toolbar__space {
-	flex: 1;
+    flex: 1;
 }
 
 .plugin-toolbar-overflow-menu {
-	min-width: min-content;
-	max-height: 40vh;
-	padding: var(--space-xs) 0;
+    min-width: min-content;
+    max-height: 40vh;
+    padding: var(--space-xs) 0;
 }
 
 .plugin-toolbar-overflow-section {
-	display: flex;
-	flex-direction: column;
+    display: flex;
+    flex-direction: column;
 }
 
 .plugin-toolbar-overflow-separator {
-	height: 1px;
-	background-color: var(--accent-border);
-	margin: var(--space-xs) 0;
+    height: 1px;
+    background-color: var(--text-color);
+    margin: var(--space-xs) 0;
 }
 
 .plugin-toolbar-overflow-icon {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 18px;
-	height: 18px;
-	flex-shrink: 0;
-	color: var(--text-color);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: var(--text-color);
 }
 
 .plugin-toolbar-overflow-icon svg {
-	width: 16px;
-	height: 16px;
+    width: 16px;
+    height: 16px;
 }

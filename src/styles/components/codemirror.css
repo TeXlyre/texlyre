@@ -524,7 +524,7 @@
 }
 
 /* ============================================================
-   Toolbar overflow menu
+   Toolbar and toolbar overflow menu
    ============================================================ */
 
 .cm-toolbar-overflow-menu {
@@ -557,6 +557,25 @@
 .cm-toolbar-overflow-icon svg {
 	width: 16px;
 	height: 16px;
+}
+
+.codemirror-toolbar {
+	display: "flex";
+}
+
+.codemirror-toolbar__item {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.codemirror-toolbar__item > * {
+	pointer-events: none;
+}
+
+.codemirror-toolbar__space {
+	display: inline-block;
+	flex: 1;
 }
 
 /* ============================================================
