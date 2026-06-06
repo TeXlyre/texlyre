@@ -1,7 +1,7 @@
 // src/extensions/codemirror/toolbar/tableItems.ts
 import type { EditorView } from '@codemirror/view';
 
-import { TableGridSelector } from './TableGrid';
+import { TableGridSelector } from '../../../components/common/TableGridSelector';
 import { insertText } from './helpers';
 
 export type TableType = 'latex' | 'typst';
@@ -88,10 +88,10 @@ export const createTableCommand = (type: TableType) => {
 		}
 
 		if (!selector) {
-			selector = new TableGridSelector(view, button, {
+			selector = new TableGridSelector(button, {
 				maxRows: 8,
 				maxCols: 8,
-				onSelect: (v, rows, cols) => handleTableSelect(v, rows, cols, type),
+				onSelect: (rows, cols) => handleTableSelect(view, rows, cols, type),
 			});
 			gridSelectors.set(view, selector);
 		}

@@ -1,12 +1,10 @@
-// src/extensions/codemirror/toolbar/tableGrid.ts
-import type { EditorView } from '@codemirror/view';
-
+// src/components/common/TableGridSelector.ts
 import { t } from '@/i18n';
 
 export interface TableGridOptions {
 	maxRows: number;
 	maxCols: number;
-	onSelect: (view: EditorView, rows: number, cols: number) => void;
+	onSelect: (rows: number, cols: number) => void;
 }
 
 export class TableGridSelector {
@@ -18,7 +16,6 @@ export class TableGridSelector {
 	private boundHandleDocumentClick: (e: MouseEvent) => void;
 
 	constructor(
-		private readonly view: EditorView,
 		private readonly button: HTMLElement,
 		private readonly options: TableGridOptions,
 	) {
@@ -94,7 +91,7 @@ export class TableGridSelector {
 		const row = parseInt(target.dataset.row || '0', 10);
 		const col = parseInt(target.dataset.col || '0', 10);
 
-		this.options.onSelect(this.view, row + 1, col + 1);
+		this.options.onSelect(row + 1, col + 1);
 		this.close();
 	}
 
@@ -120,7 +117,7 @@ export class TableGridSelector {
 		}
 
 		this.label.textContent =
-			rows > 0 && cols > 0 ? `${rows} × ${cols}` : 'Select size';
+			rows > 0 && cols > 0 ? `${rows} × ${cols}` : t('Select size');
 	}
 
 	toggle(): void {

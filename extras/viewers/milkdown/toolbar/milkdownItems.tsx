@@ -11,6 +11,7 @@ import {
 	ToolbarHeading3Icon,
 	ToolbarBulletListIcon,
 	ToolbarNumberListIcon,
+	ToolbarTaskListIcon,
 	ToolbarQuoteIcon,
 	ToolbarCodeBlockIcon,
 	ToolbarTableIcon,
@@ -29,9 +30,9 @@ import {
 	runRedo,
 	runUndo,
 	setBlockTypeByName,
+	setListType,
 	toggleFullScreen,
 	toggleMarkByName,
-	wrapInListByName,
 	wrapInNodeByName,
 } from './helpers';
 import { getPendingMilkdownImagePath } from './pendingImage';
@@ -92,13 +93,19 @@ export const milkdownToolbarItems: MilkdownToolbarEntry[] = [
 		key: 'bullet',
 		title: 'Bullet list',
 		label: renderToString(<ToolbarBulletListIcon />),
-		command: (view) => wrapInListByName(view, ['bullet_list', 'bulletList']),
+		command: (view) => setListType(view, 'bullet'),
 	},
 	{
 		key: 'ordered',
 		title: 'Numbered list',
 		label: renderToString(<ToolbarNumberListIcon />),
-		command: (view) => wrapInListByName(view, ['ordered_list', 'orderedList']),
+		command: (view) => setListType(view, 'ordered'),
+	},
+	{
+		key: 'task',
+		title: 'Task list',
+		label: renderToString(<ToolbarTaskListIcon />),
+		command: (view) => setListType(view, 'task'),
 	},
 	split,
 	{

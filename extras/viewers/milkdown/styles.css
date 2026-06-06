@@ -50,7 +50,7 @@
 	min-height: 100%;
 }
 
-.milkdown-editor-scroll .milkdown > .editor {
+.milkdown-editor-scroll .milkdown>.editor {
 	width: 100%;
 	min-height: 100%;
 }
@@ -71,103 +71,32 @@
 	box-sizing: border-box;
 }
 
-.texlyre-milkdown:focus {
-	outline: none;
+.milkdown-table-block {
+	border: 1px solid var(--accent-color);
 }
 
-.texlyre-milkdown h1,
-.texlyre-milkdown h2,
-.texlyre-milkdown h3,
-.texlyre-milkdown h4,
-.texlyre-milkdown h5,
-.texlyre-milkdown h6 {
-	color: var(--text-color);
-	font-weight: 600;
-	line-height: 1.25;
-	margin: 1.4em 0 0.6em;
+.milkdown-table-block td {
+	background-color: color-mix(in srgb,
+			var(--pico-background) 50%,
+			var(--pico-secondary-background));
 }
 
-.texlyre-milkdown p {
-	line-height: 1.6;
-	margin: 0.6em 0;
-}
-
-.texlyre-milkdown a {
-	color: var(--pico-primary);
-	text-decoration: underline;
-}
-
-.texlyre-milkdown blockquote {
-	border-left: 3px solid var(--accent-border, #444);
-	margin: 0.8em 0;
-	padding: 0.2em 1em;
-	color: var(--pico-secondary);
-}
-
-.texlyre-milkdown code {
-	font-family: var(--font-mono, monospace);
+.milkdown-table-block th {
 	background-color: var(--pico-secondary-background);
-	padding: 0.1em 0.35em;
-	border-radius: var(--radius-sm, 4px);
-	font-size: 0.9em;
 }
 
-.texlyre-milkdown pre {
+.milkdown-link-preview,
+.milkdown-link-edit {
 	background-color: var(--pico-secondary-background);
-	border: 1px solid var(--accent-border, #333);
-	border-radius: var(--radius-sm, 4px);
-	padding: 0.8em 1em;
-	overflow-x: auto;
+	border: 1px solid var(--accent-color);
+	border-radius: 0.5rem;
+	min-height: fit-content;
 }
 
-.texlyre-milkdown pre code {
-	background: none;
+.milkdown-link-edit .input-area {
+	height: inherit;
 	padding: 0;
-}
-
-.texlyre-milkdown ul,
-.texlyre-milkdown ol {
-	padding-left: 1.6em;
-	margin: 0.6em 0;
-}
-
-.texlyre-milkdown li {
-	margin: 0.2em 0;
-	line-height: 1.6;
-}
-
-.texlyre-milkdown hr {
-	border: none;
-	border-top: 1px solid var(--accent-border, #333);
-	margin: 1.2em 0;
-}
-
-.texlyre-milkdown table {
-	width: 100%;
-	border-collapse: collapse;
-	margin: 0.8em 0;
-}
-
-.texlyre-milkdown th,
-.texlyre-milkdown td {
-	border: 1px solid var(--accent-border, #333);
-	padding: 0.4em 0.7em;
-	text-align: left;
-}
-
-.texlyre-milkdown th {
-	background-color: var(--accent-background);
-	font-weight: 600;
-}
-
-.texlyre-milkdown img {
-	max-width: 100%;
-	height: auto;
-}
-
-.texlyre-milkdown ul[data-item-type="task"] {
-	list-style: none;
-	padding-left: 0.6em;
+	margin: 0;
 }
 
 @media (max-width: 768px) {

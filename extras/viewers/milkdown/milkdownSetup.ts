@@ -13,6 +13,7 @@ import { gfm } from '@milkdown/kit/preset/gfm';
 import { history } from '@milkdown/kit/plugin/history';
 import { listener, listenerCtx } from '@milkdown/kit/plugin/listener';
 import { tableBlock } from '@milkdown/kit/component/table-block';
+import { listItemBlockComponent } from '@milkdown/kit/component/list-item-block';
 import {
 	linkTooltipPlugin,
 	configureLinkTooltip,
@@ -58,6 +59,7 @@ export function configureMilkdownEditor(
 		.use(history)
 		.use(listener)
 		.use(tableBlock)
+		.use(listItemBlockComponent)
 		.use(linkTooltipPlugin);
 
 	if (plugins) {

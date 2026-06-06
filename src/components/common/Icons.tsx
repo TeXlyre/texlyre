@@ -2209,6 +2209,27 @@ export const ToolbarNumberListIcon: React.FC = () => (
 	</svg>
 );
 
+export const ToolbarTaskListIcon: React.FC = () => (
+	<svg
+		xmlns='http://www.w3.org/2000/svg'
+		width='14'
+		height='14'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		strokeWidth='2'
+		strokeLinecap='round'
+		strokeLinejoin='round'
+	>
+		<line x1='10' y1='6' x2='21' y2='6' />
+		<line x1='10' y1='12' x2='21' y2='12' />
+		<line x1='10' y1='18' x2='21' y2='18' />
+		<rect x='3' y='4' width='4' height='4' rx='1' />
+		<path d='M4 12l1 1 2-2' />
+		<rect x='3' y='16' width='4' height='4' rx='1' />
+	</svg>
+);
+
 export const ToolbarTermListIcon: React.FC = () => (
 	<svg
 		xmlns='http://www.w3.org/2000/svg'

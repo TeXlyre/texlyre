@@ -10,6 +10,8 @@ import type {
 import { wrapInList } from '@milkdown/kit/prose/schema-list';
 import type { EditorView } from '@milkdown/kit/prose/view';
 
+import { TableGridSelector } from '@/components/common/TableGridSelector';
+
 const getMark = (schema: Schema, names: string[]): MarkType | null => {
 	for (const name of names) {
 		const mark = schema.marks[name];
@@ -115,41 +117,111 @@ export const insertHorizontalRule = (view: EditorView): boolean => {
 	return true;
 };
 
-const createFilledCell = (
-	cell: NodeType,
-	paragraph: NodeType,
-): ProseNode | null =>
-	cell.createAndFill(null, paragraph.create()) ?? cell.createAndFill();
+const tableSelectors = new WeakMap<EditorView, TableGridSelector>();
 
-export const insertTable = (view: EditorView): boolean => {
+export const setListType = (
+	view: EditorView,
+	kind: 'bullet' | 'ordered' | 'task',
+): boolean => {
+	const names =
+		kind === 'ordered'
+			? ['ordered_list', 'orderedList']
+			: ['bullet_list', 'bulletList'];
+
+	const listNode = getNode(view.state.schema, names);
+	if (!listNode) return false;
+
+	const attrs = kind === 'task' ? { checked: false } : undefined;
+	const wrapped = run(view, wrapInList(listNode, attrs));
+	if (!wrapped || kind !== 'task') return wrapped;
+
+	const itemNode = getNode(view.state.schema, ['list_item', 'listItem']);
+	if (!itemNode) return wrapped;
+
+	const { tr } = view.state;
+	view.state.doc.nodesBetween(
+		view.state.selection.from,
+		view.state.selection.to,
+		(node, pos) => {
+			if (node.type === itemNode) {
+				tr.setNodeMarkup(pos, undefined, { ...node.attrs, checked: false });
+			}
+		},
+	);
+	view.dispatch(tr);
+	return true;
+};
+
+const insertSizedTable = (
+	view: EditorView,
+	rows: number,
+	cols: number,
+): void => {
 	const schema = view.state.schema;
 	const table = getNode(schema, ['table']);
 	const row = getNode(schema, ['table_row', 'tableRow']);
+	const headerCell = getNode(schema, ['table_header', 'tableHeader']);
 	const cell = getNode(schema, ['table_cell', 'tableCell']);
 	const paragraph = getNode(schema, ['paragraph']);
 
-	if (!table || !row || !cell || !paragraph) return false;
+	if (!table || !row || !cell || !paragraph) return;
 
-	const rows: ProseNode[] = [];
+	const makeCell = (type: NodeType): ProseNode | null =>
+		type.createAndFill(null, paragraph.create()) ?? type.createAndFill();
 
-	for (let rowIndex = 0; rowIndex < 3; rowIndex += 1) {
+	const builtRows: ProseNode[] = [];
+
+	for (let r = 0; r < rows; r += 1) {
 		const cells: ProseNode[] = [];
+		const cellType = r === 0 && headerCell ? headerCell : cell;
 
-		for (let colIndex = 0; colIndex < 3; colIndex += 1) {
-			const nextCell = createFilledCell(cell, paragraph);
-			if (!nextCell) return false;
-			cells.push(nextCell);
+		for (let c = 0; c < cols; c += 1) {
+			const built = makeCell(cellType);
+			if (!built) return;
+			cells.push(built);
 		}
 
-		rows.push(row.createChecked(null, cells));
+		builtRows.push(row.createChecked(null, cells));
 	}
 
 	view.dispatch(
 		view.state.tr
-			.replaceSelectionWith(table.createChecked(null, rows))
+			.replaceSelectionWith(table.createChecked(null, builtRows))
 			.scrollIntoView(),
 	);
 	view.focus();
+};
 
+export const insertTable = (view: EditorView): boolean => {
+	const toolbar = document.querySelector('.plugin-toolbar');
+	if (!toolbar) return false;
+
+	const button = toolbar.querySelector(
+		'[data-item="table"]',
+	) as HTMLElement | null;
+	if (!button) return false;
+
+	let selector = tableSelectors.get(view);
+
+	if (
+		selector &&
+		!document.body.contains(selector.container) &&
+		!toolbar.contains(selector.container)
+	) {
+		selector.destroy();
+		tableSelectors.delete(view);
+		selector = null;
+	}
+
+	if (!selector) {
+		selector = new TableGridSelector(button, {
+			maxRows: 8,
+			maxCols: 8,
+			onSelect: (rows, cols) => insertSizedTable(view, rows, cols),
+		});
+		tableSelectors.set(view, selector);
+	}
+
+	selector.toggle();
 	return true;
 };
