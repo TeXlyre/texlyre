@@ -74,6 +74,18 @@ export const wrapInListByName = (
 	return !!node && run(view, wrapInList(node));
 };
 
+export const insertMath = (view: EditorView): boolean => {
+	const codeBlock = getNode(view.state.schema, ['code_block', 'codeBlock']);
+	if (!codeBlock) return false;
+
+	const node = codeBlock.createAndFill({ language: 'latex' });
+	if (!node) return false;
+
+	view.dispatch(view.state.tr.replaceSelectionWith(node).scrollIntoView());
+	view.focus();
+	return true;
+};
+
 const imagePickers = new WeakMap<EditorView, ImagePicker>();
 
 const insertImageNode = (view: EditorView, src: string): void => {
@@ -155,6 +167,7 @@ export const toggleFullScreen = (view: EditorView): boolean => {
 
 export const insertHorizontalRule = (view: EditorView): boolean => {
 	const horizontalRule = getNode(view.state.schema, [
+		'hr',
 		'horizontal_rule',
 		'horizontalRule',
 	]);

@@ -2,6 +2,7 @@
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import '@milkdown/crepe/theme/common/style.css';
+import 'katex/dist/katex.min.css';
 
 import { t } from '@/i18n';
 import { DownloadIcon, SaveIcon, ViewIcon } from '@/components/common/Icons';

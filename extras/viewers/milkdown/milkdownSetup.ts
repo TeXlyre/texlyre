@@ -23,6 +23,11 @@ import { TextSelection } from '@milkdown/kit/prose/state';
 import type { Ctx } from '@milkdown/kit/ctx';
 import type { EditorView } from '@milkdown/kit/prose/view';
 import type { MilkdownPlugin } from '@milkdown/kit/ctx';
+import {
+	codeBlockComponent,
+	codeBlockConfig,
+} from '@milkdown/kit/component/code-block';
+import katex from 'katex';
 
 export const MILKDOWN_THEME_CLASS = 'texlyre-milkdown';
 
@@ -49,6 +54,25 @@ export function configureMilkdownEditor(
 				editable,
 			}));
 			configureLinkTooltip(ctx);
+			ctx.update(codeBlockConfig.key, (defaultConfig) => ({
+				...defaultConfig,
+				renderPreview: (language: string, content: string) => {
+					if (language.toLowerCase() === 'latex' && content.length > 0) {
+						const dom = document.createElement('div');
+						dom.className = 'milkdown-latex-preview';
+						try {
+							dom.innerHTML = katex.renderToString(content, {
+								displayMode: true,
+								throwOnError: false,
+							});
+						} catch {
+							dom.textContent = content;
+						}
+						return dom;
+					}
+					return null;
+				},
+			}));
 			const l = ctx.get(listenerCtx);
 			l.markdownUpdated((_ctx, markdown, prevMarkdown) => {
 				if (markdown !== prevMarkdown) onMarkdownUpdated(markdown);
@@ -60,6 +84,8 @@ export function configureMilkdownEditor(
 		.use(listener)
 		.use(tableBlock)
 		.use(listItemBlockComponent)
+		.use(linkTooltipPlugin)
+		.use(codeBlockComponent)
 		.use(linkTooltipPlugin);
 
 	if (plugins) {

@@ -15,6 +15,7 @@ import {
 	ToolbarQuoteIcon,
 	ToolbarCodeBlockIcon,
 	ToolbarTableIcon,
+	ToolbarMathBlockIcon,
 	ToolbarImageIcon,
 	ToolbarHyperlinkIcon,
 	UndoIcon,
@@ -25,6 +26,7 @@ import type { MilkdownToolbarEntry } from './types';
 import { split, space } from './types';
 import {
 	insertHorizontalRule,
+	insertMath,
 	insertImage,
 	insertLink,
 	insertTable,
@@ -115,22 +117,29 @@ export const milkdownToolbarItems: MilkdownToolbarEntry[] = [
 		command: (view) => wrapInNodeByName(view, ['blockquote']),
 	},
 	{
+		key: 'hr',
+		title: 'Divider',
+		label: '—',
+		command: insertHorizontalRule,
+	},
+	{
 		key: 'codeblock',
 		title: 'Code block',
 		label: renderToString(<ToolbarCodeBlockIcon />),
 		command: (view) => setBlockTypeByName(view, ['code_block', 'codeBlock']),
 	},
 	{
+		key: 'math',
+		title: 'Math block',
+		label: renderToString(<ToolbarMathBlockIcon />),
+		command: insertMath,
+	},
+	split,
+	{
 		key: 'table',
 		title: 'Table',
 		label: renderToString(<ToolbarTableIcon />),
 		command: insertTable,
-	},
-	{
-		key: 'hr',
-		title: 'Divider',
-		label: renderToString(<ToolbarTableIcon />),
-		command: insertHorizontalRule,
 	},
 	{
 		key: 'image',
