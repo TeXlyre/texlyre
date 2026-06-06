@@ -98,7 +98,6 @@
 		"codemirror-lang-latex": "^0.4.1",
 		"codemirror-lang-typst": "^0.4.0",
 		"codemirror-markdown-commands": "^0.1.0",
-		"codemirror-toolbar": "^0.1.0",
 		"detypify-service": "^0.3.0",
 		"file-saver": "^2.0.5",
 		"filepizza-client": "^2.1.2",

@@ -1,5 +1,4 @@
-.plugin-toolbar,
-.codemirror-toolbar {
+.plugin-toolbar {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -13,8 +12,7 @@
     width: auto !important;
 }
 
-.plugin-toolbar__icon svg,
-.codemirror-toolbar__icon svg {
+.plugin-toolbar__icon svg {
     overflow: visible;
     box-sizing: content-box;
     height: 32px;
@@ -29,44 +27,41 @@
     border: none;
 }
 
-.codemirror-toolbar__item {
-    height: 32px !important;
-    padding-top: var(--space-xs);
-    padding-bottom: auto;
-}
-
-.plugin-toolbar__item svg,
-.codemirror-toolbar__item svg {
+.plugin-toolbar__item svg {
     height: 1rem;
 }
 
-.plugin-toolbar__item>*,
-.codemirror-toolbar__item>* {
+.plugin-toolbar__item>* {
     pointer-events: none;
 }
 
-.plugin-toolbar__item:hover,
-.codemirror-toolbar__item:hover {
+.plugin-toolbar__item:hover {
     color: var(--pico-primary);
 }
 
-.plugin-toolbar__split,
-.codemirror-toolbar__split {
+.plugin-toolbar__split {
     width: 1px;
     height: 80%;
     background-color: var(--text-color, #444);
     margin: 0 var(--space-xs);
 }
 
-.plugin-toolbar__space,
-.codemirror-toolbar__space {
+.plugin-toolbar__space {
     flex: 1;
 }
 
 .plugin-toolbar-overflow-menu {
+    position: absolute;
+    top: 100%;
+    z-index: var(--z-dropdown);
     min-width: min-content;
     max-height: 40vh;
     padding: var(--space-xs) 0;
+    background-color: var(--pico-background);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    overflow-y: auto;
 }
 
 .plugin-toolbar-overflow-section {
@@ -95,16 +90,13 @@
     height: 16px;
 }
 
-.plugin-toolbar-overflow-menu {
-    position: absolute;
-    top: 100%;
-    right: var(--space-xs);
-    z-index: var(--z-dropdown);
-    min-width: min-content;
-    max-height: 40vh;
-    padding: var(--space-xs) 0;
+.editor-wrapper:fullscreen {
     background-color: var(--pico-background);
-    border: 1px solid var(--accent-border);
-    border-radius: var(--radius-sm);
-    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+}
+
+.editor-wrapper:fullscreen .codemirror-editor-container {
+    flex: 1;
+    min-height: 0;
 }

@@ -229,7 +229,6 @@ TeXlyre builds upon several key technologies:
 ### Editor Extensions
 - **[codemirror-vim](https://github.com/replit/codemirror-vim)** - Vim keybindings for CodeMirror
 - **[codemirror-lang-typst](https://github.com/kxxt/codemirror-lang-typst)** - Typst language support for CodeMirror
-- **[codemirror-toolbar](https://github.com/yeliex/codemirror-extensions)** - Extensible toolbar for CodeMirror
 - **[uiw/codemirror-themes-all](https://github.com/uiwjs/react-codemirror/tree/master/themes/all)** - Collection of themes for CodeMirror
 
 ### LaTeX Tools

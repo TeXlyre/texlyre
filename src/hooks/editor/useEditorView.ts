@@ -56,7 +56,10 @@ import {
 	getGenericLSPCompletionSources,
 } from '../../extensions/codemirror/GenericLSPExtension';
 import { createCodeActionsExtension } from '../../extensions/codemirror/CodeActionsLSPExtension.ts';
-import { createToolbarExtension } from '../../extensions/codemirror/ToolbarExtension';
+import {
+	createToolbarController,
+	type ToolbarController,
+} from '../../extensions/codemirror/ToolbarExtension';
 import { createMathLiveExtension } from '../../extensions/codemirror/MathLiveExtension';
 import { createPasteExtension } from '../../extensions/codemirror/PasteExtension';
 import { createListingsExtension } from '../../extensions/codemirror/ListingsExtension';
@@ -157,6 +160,9 @@ export const useEditorView = (
 	const [provider, setProvider] = useState<CollabProvider | null>(null);
 	const hasEmittedReadyRef = useRef<boolean>(false);
 	const undoManagerRef = useRef<UndoManager | null>(null);
+	const toolbarControllerRef = useRef<ToolbarController | null>(null);
+	const [toolbarController, setToolbarController] =
+		useState<ToolbarController | null>(null);
 
 	const compartmentsRef = useRef({
 		base: new Compartment(),
@@ -400,15 +406,6 @@ export const useEditorView = (
 			extensions.push(createPasteExtension(currentFileId, fileName));
 
 			if (info.isLatex || info.isTypst) {
-				if (toolbarVisible) {
-					extensions.push(
-						createToolbarExtension(
-							info.fileType as 'latex' | 'typst',
-							undoManagerRef.current || undefined,
-						),
-					);
-				}
-
 				if (editorSettings.mathLiveEnabled) {
 					extensions.push(
 						createMathLiveExtension(
@@ -624,7 +621,12 @@ export const useEditorView = (
 		const info = classifyFileType(fileName, contentToUse);
 		const completionSources: CompletionSource[] = [];
 		const extensions: Extension[] = [];
-		const { base, language, languageSpecific } = compartmentsRef.current;
+		const {
+			base,
+			language,
+			languageSpecific,
+			toolbar: toolbarComp,
+		} = compartmentsRef.current;
 
 		if (info.isLatex || info.isTypst) {
 			extensions.push(
@@ -650,6 +652,16 @@ export const useEditorView = (
 				buildLanguageSpecificExtensions(info, contentToUse, completionSources),
 			),
 		);
+
+		let toolbarCtl: ToolbarController | null = null;
+		if ((info.isLatex || info.isTypst) && toolbarVisible) {
+			toolbarCtl = createToolbarController(
+				info.fileType as 'latex' | 'typst',
+				undoManagerRef.current || undefined,
+			);
+		}
+		toolbarControllerRef.current = toolbarCtl;
+		extensions.push(toolbarComp.of(toolbarCtl ? [toolbarCtl.extension] : []));
 
 		if (info.isStructured) {
 			extensions.push(
@@ -712,6 +724,7 @@ export const useEditorView = (
 		try {
 			const view = new EditorView({ state, parent: editorRef.current });
 			viewRef.current = view;
+			setToolbarController(toolbarControllerRef.current);
 
 			scheduleFilePathSync(info);
 
@@ -742,6 +755,9 @@ export const useEditorView = (
 
 				yjsEditorBindingRef.current?.cleanup();
 				yjsEditorBindingRef.current = null;
+
+				toolbarControllerRef.current = null;
+				setToolbarController(null);
 
 				filePathCacheService.cleanup();
 				viewRef.current.destroy();
@@ -776,13 +792,14 @@ export const useEditorView = (
 			languageSpecific,
 		} = compartmentsRef.current;
 
+		let controller: ToolbarController | null = null;
 		const toolbarExt: Extension[] =
 			(info.isLatex || info.isTypst) && toolbarVisible
 				? [
-						createToolbarExtension(
+						(controller = createToolbarController(
 							info.fileType as 'latex' | 'typst',
 							undoManagerRef.current || undefined,
-						),
+						)).extension,
 					]
 				: [];
 
@@ -800,6 +817,9 @@ export const useEditorView = (
 				toolbarComp.reconfigure(toolbarExt),
 			],
 		});
+
+		toolbarControllerRef.current = controller;
+		setToolbarController(controller);
 	}, [editorSettingsVersion, toolbarVisible, fileName]);
 
 	useEffect(() => {
@@ -953,5 +973,5 @@ export const useEditorView = (
 			document.removeEventListener('file-reloaded', handleFileReloaded);
 	}, [isEditingFile, currentFileId]);
 
-	return { viewRef, isUpdatingRef, showSaveIndicator };
+	return { viewRef, isUpdatingRef, showSaveIndicator, toolbarController };
 };

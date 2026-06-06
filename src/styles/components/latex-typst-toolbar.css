@@ -101,73 +101,58 @@
 }
 
 @media (max-width: 768px) {
-	.codemirror-toolbar {
+	.plugin-toolbar {
 		padding: var(--space-xs);
 		gap: 1px;
 	}
 
-	.codemirror-toolbar-button {
+	.plugin-toolbar__item {
 		min-width: 24px;
 		height: 24px;
 		padding: 2px;
 		font-size: var(--space-sd);
 	}
 
-	.codemirror-toolbar-button svg {
+	.plugin-toolbar__item svg {
 		width: 12px;
 		height: 12px;
 	}
 
-	.codemirror-toolbar-split {
+	.plugin-toolbar__split {
 		height: 16px;
 		margin: 0 2px;
 	}
 }
 
-.codemirror-toolbar [data-item="undo"],
-.codemirror-toolbar [data-item="redo"],
-.codemirror-toolbar [data-item="fullScreen"] {
-	border-radius: var(--radius-lg);
-	border: 1px solid var(--pico-primary);
-	color: var(--pico-primary);
-	padding-top: 0;
-}
 
-.codemirror-toolbar [data-item="undo"]:hover,
-.codemirror-toolbar [data-item="redo"]:hover,
-.codemirror-toolbar [data-item="fullScreen"]:hover {
-	background-color: var(--pico-primary);
-	color: var(--pico-primary-inverse);
-}
-
-.codemirror-toolbar [data-item="typst-row-add-before"],
-.codemirror-toolbar [data-item="latex-row-add-before"],
-.codemirror-toolbar [data-item="typst-col-add-before"],
-.codemirror-toolbar [data-item="latex-col-add-before"],
-.codemirror-toolbar [data-item="typst-row-add-after"],
-.codemirror-toolbar [data-item="latex-row-add-after"],
-.codemirror-toolbar [data-item="typst-col-add-after"],
-.codemirror-toolbar [data-item="latex-col-add-after"],
-.codemirror-toolbar [data-item="typst-row-remove"],
-.codemirror-toolbar [data-item="latex-row-remove"],
-.codemirror-toolbar [data-item="typst-col-remove"],
-.codemirror-toolbar [data-item="latex-col-remove"] {
+.plugin-toolbar [data-item="typst-row-add-before"],
+.plugin-toolbar [data-item="latex-row-add-before"],
+.plugin-toolbar [data-item="typst-col-add-before"],
+.plugin-toolbar [data-item="latex-col-add-before"],
+.plugin-toolbar [data-item="typst-row-add-after"],
+.plugin-toolbar [data-item="latex-row-add-after"],
+.plugin-toolbar [data-item="typst-col-add-after"],
+.plugin-toolbar [data-item="latex-col-add-after"],
+.plugin-toolbar [data-item="typst-row-remove"],
+.plugin-toolbar [data-item="latex-row-remove"],
+.plugin-toolbar [data-item="typst-col-remove"],
+.plugin-toolbar [data-item="latex-col-remove"] {
 	color: var(--pico-primary);
 }
 
-.codemirror-toolbar [data-item="typst-color-edit"],
-.codemirror-toolbar [data-item="latex-color-edit"],
-.codemirror-toolbar [data-item="typst-color-remove"],
-.codemirror-toolbar [data-item="latex-color-remove"] {
+.plugin-toolbar [data-item="typst-color-edit"],
+.plugin-toolbar [data-item="latex-color-edit"],
+.plugin-toolbar [data-item="typst-color-remove"],
+.plugin-toolbar [data-item="latex-color-remove"] {
 	color: var(--pico-primary);
 }
 
-.codemirror-toolbar [data-item="typst-highlight"],
-.codemirror-toolbar [data-item="latex-highlight"] {
+.plugin-toolbar [data-item="typst-highlight"],
+.plugin-toolbar [data-item="latex-highlight"] {
 	background-color: rgba(255, 255, 0, 0.3);
 }
 
-.codemirror-toolbar [data-item="typst-highlight"]:hover,
-.codemirror-toolbar [data-item="latex-highlight"]:hover {
+.plugin-toolbar [data-item="typst-highlight"]:hover,
+.plugin-toolbar [data-item="latex-highlight"]:hover {
 	background-color: rgba(255, 255, 0, 0.5);
 }

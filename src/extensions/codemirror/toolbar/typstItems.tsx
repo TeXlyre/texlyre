@@ -1,11 +1,11 @@
 // src/extensions/codemirror/toolbar/typstItems.tsx
 import type { EditorView } from '@codemirror/view';
-import type { ToolbarItem } from 'codemirror-toolbar';
 import { renderToString } from 'react-dom/server';
 
 import { t } from '@/i18n';
 import { getPendingImagePath } from '../PasteExtension';
 import { wrapSelection, insertText } from './helpers';
+import type { ToolbarItem } from './types';
 import { createTableCommand } from './tableItems';
 import { ColorPicker } from './ColorPicker';
 import {
@@ -397,41 +397,34 @@ export const createHighlight = (): ToolbarItem => ({
 
 function createColorCommand(fileType: 'typst', type: 'text' | 'highlight') {
 	return (view: EditorView): boolean => {
-		const toolbar = view.dom.querySelector('.codemirror-toolbar');
-		if (!toolbar) return false;
-
-		const button = toolbar.querySelector(
+		const toolbar = document.querySelector('.plugin-toolbar');
+		const button = toolbar?.querySelector(
 			`[data-item="${fileType}-${type === 'text' ? 'textcolor' : 'highlight'}"]`,
-		) as HTMLElement;
-		if (!button) return false;
+		) as HTMLElement | null;
+		if (!toolbar || !button) return false;
+
 
 		let picker = colorPickers.get(view);
 
-		if (
-			picker &&
-			!document.body.contains(picker.container) &&
-			!toolbar.contains(picker.container)
-		) {
+		if (picker) {
 			picker.destroy();
 			colorPickers.delete(view);
 			picker = null;
 		}
 
-		if (!picker) {
-			picker = new ColorPicker(view, button, {
-				onSelect: (v, color) => {
-					const selection = v.state.selection.main;
-					const selectedText = v.state.doc.sliceString(
-						selection.from,
-						selection.to,
-					);
-					const func = type === 'text' ? 'text' : 'highlight';
-					const text = `#${func}(fill: rgb("${color}"))[${selectedText}]`;
-					insertText(v, text, selectedText ? -(selectedText.length + 1) : -1);
-				},
-			});
-			colorPickers.set(view, picker);
-		}
+		picker = new ColorPicker(view, button, {
+			onSelect: (v, color) => {
+				const selection = v.state.selection.main;
+				const selectedText = v.state.doc.sliceString(
+					selection.from,
+					selection.to,
+				);
+				const func = type === 'text' ? 'text' : 'highlight';
+				const text = `#${func}(fill: rgb("${color}"))[${selectedText}]`;
+				insertText(v, text, selectedText ? -(selectedText.length + 1) : -1);
+			},
+		});
+		colorPickers.set(view, picker);
 
 		picker.toggle();
 		return true;

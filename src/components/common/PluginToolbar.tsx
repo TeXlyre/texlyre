@@ -1,6 +1,12 @@
 // src/components/common/PluginToolbar.tsx
 import type React from 'react';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import {
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from 'react';
 import { renderToString } from 'react-dom/server';
 
 import { t } from '@/i18n';
@@ -12,10 +18,7 @@ export interface ToolbarButton {
     icon?: string;
 }
 
-export type ToolbarEntry =
-    | ToolbarButton
-    | { type: 'split' }
-    | { type: 'space' };
+export type ToolbarEntry = ToolbarButton | { type: 'split' } | { type: 'space' };
 
 interface PluginToolbarProps {
     items: ToolbarEntry[];
@@ -67,6 +70,7 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
     protectedTailGroups = 0,
 }) => {
     const toolbarRef = useRef<HTMLDivElement>(null);
+    const overflowMenuRef = useRef<HTMLDivElement>(null);
     const isBaselineRef = useRef(true);
     const widthCacheRef = useRef<{
         byKey: Map<string, number>;
@@ -175,6 +179,21 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
         return () => observer.disconnect();
     }, [measure]);
 
+    useLayoutEffect(() => {
+        if (!overflowOpen) return;
+
+        const root = toolbarRef.current;
+        const menu = overflowMenuRef.current;
+        const button = root?.querySelector<HTMLElement>(
+            `[data-item="${OVERFLOW_KEY}"]`,
+        );
+        if (!root || !menu || !button) return;
+
+        const rootRect = root.getBoundingClientRect();
+        const buttonRect = button.getBoundingClientRect();
+        menu.style.left = `${buttonRect.left - rootRect.left}px`;
+    }, [overflowOpen]);
+
     useEffect(() => {
         if (!overflowOpen) return;
 
@@ -183,8 +202,10 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
             const root = toolbarRef.current;
             if (!root) return;
             const button = root.querySelector(`[data-item="${OVERFLOW_KEY}"]`);
-            const menu = root.querySelector('.plugin-toolbar-overflow-menu');
-            if (!button?.contains(target) && !menu?.contains(target)) {
+            if (
+                !button?.contains(target) &&
+                !overflowMenuRef.current?.contains(target)
+            ) {
                 setOverflowOpen(false);
             }
         };
@@ -224,6 +245,21 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
         </button>
     );
 
+    const runOverflowItem = (key: string) => {
+        const trigger = toolbarRef.current?.querySelector<HTMLElement>(
+            `[data-item="${OVERFLOW_KEY}"]`,
+        );
+        const original = trigger?.dataset.item;
+        if (trigger) trigger.dataset.item = key;
+        setOverflowOpen(false);
+        onRun(key);
+        queueMicrotask(() => {
+            if (!trigger) return;
+            if (original) trigger.dataset.item = original;
+            else delete trigger.dataset.item;
+        });
+    };
+
     return (
         <div ref={toolbarRef} className='plugin-toolbar'>
             {visibleGroups.map((group, idx) => (
@@ -261,7 +297,10 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
             )}
 
             {overflowOpen && collapsedGroups.length > 0 && (
-                <div className='plugin-toolbar-overflow-menu dropdown-menu'>
+                <div
+                    ref={overflowMenuRef}
+                    className='plugin-toolbar-overflow-menu dropdown-menu'
+                >
                     {collapsedGroups.map((group, groupIdx) => (
                         <div key={`section-${groupKey(group)}`}>
                             <div className='plugin-toolbar-overflow-section'>
@@ -270,10 +309,8 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
                                         key={item.key}
                                         type='button'
                                         className='dropdown-item plugin-toolbar-overflow-item'
-                                        onClick={() => {
-                                            setOverflowOpen(false);
-                                            onRun(item.key);
-                                        }}
+                                        onMouseDown={(event) => event.preventDefault()}
+                                        onClick={() => runOverflowItem(item.key)}
                                     >
                                         <span
                                             className='plugin-toolbar-overflow-icon'

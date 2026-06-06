@@ -1,10 +1,10 @@
 // src/extensions/codemirror/toolbar/tableScopeItems.tsx
 import type { EditorView } from '@codemirror/view';
-import type { ToolbarItem } from 'codemirror-toolbar';
 import { renderToString } from 'react-dom/server';
 
 import { t } from '@/i18n';
 import { detectTableScope, type TableInfo, type TableType } from './tableScope';
+import type { ToolbarItem } from './types';
 import {
 	ToolbarRowAddBeforeIcon,
 	ToolbarRowAddAfterIcon,

@@ -125,7 +125,7 @@ export class ColorPicker {
 		if (this.isOpen) return;
 
 		const buttonRect = this.button.getBoundingClientRect();
-		const toolbar = this.button.closest('.codemirror-toolbar');
+		const toolbar = this.button.closest('.plugin-toolbar');
 
 		if (toolbar) {
 			toolbar.appendChild(this.container);

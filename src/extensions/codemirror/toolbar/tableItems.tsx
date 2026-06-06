@@ -67,7 +67,7 @@ const handleTableSelect = (
 
 export const createTableCommand = (type: TableType) => {
 	return (view: EditorView): boolean => {
-		const toolbar = view.dom.querySelector('.codemirror-toolbar');
+		const toolbar = document.querySelector('.plugin-toolbar');
 		if (!toolbar) return false;
 
 		const button = toolbar.querySelector(

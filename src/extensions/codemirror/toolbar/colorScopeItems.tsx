@@ -1,9 +1,9 @@
 // src/extensions/codemirror/toolbar/colorScopeItems.tsx
 import type { EditorView } from '@codemirror/view';
-import type { ToolbarItem } from 'codemirror-toolbar';
 import { renderToString } from 'react-dom/server';
 
 import { t } from '@/i18n';
+import type { ToolbarItem } from './types';
 import { detectColorScope, type ColorInfo, type FileType } from './colorScope';
 import { ColorPicker } from './ColorPicker';
 import { EditIcon, TrashIcon } from '../../../components/common/Icons';
@@ -62,10 +62,7 @@ export const createColorEdit = (fileType: FileType): ToolbarItem => ({
 	label: t('Edit Color'),
 	icon: renderToString(<EditIcon />),
 	command: (view: EditorView): boolean => {
-		const info = detectColorScope(view, fileType);
-		if (!info) return false;
-
-		const toolbar = view.dom.querySelector('.codemirror-toolbar');
+		const toolbar = document.querySelector('.plugin-toolbar');
 		if (!toolbar) return false;
 
 		const button = toolbar.querySelector(
@@ -75,29 +72,24 @@ export const createColorEdit = (fileType: FileType): ToolbarItem => ({
 
 		let picker = colorPickers.get(view);
 
-		if (
-			picker &&
-			!document.body.contains(picker.container) &&
-			!toolbar.contains(picker.container)
-		) {
+		if (picker) {
 			picker.destroy();
 			colorPickers.delete(view);
 			picker = null;
 		}
 
-		if (!picker) {
-			picker = new ColorPicker(view, button, {
-				onSelect: (v, color) => {
-					const currentInfo = detectColorScope(v, fileType);
-					if (currentInfo) {
-						editColor(v, currentInfo, color);
-					}
-				},
-			});
-			colorPickers.set(view, picker);
-		}
+		picker = new ColorPicker(view, button, {
+			onSelect: (v, color) => {
+				const currentInfo = detectColorScope(v, fileType);
+				if (currentInfo) {
+					editColor(v, currentInfo, color);
+				}
+			},
+		});
+		colorPickers.set(view, picker);
 
-		picker.toggle();
+		picker.open();
+
 		return true;
 	},
 });

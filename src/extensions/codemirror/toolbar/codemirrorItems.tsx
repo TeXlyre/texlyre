@@ -1,11 +1,11 @@
 // src/extensions/codemirror/toolbar/codemirrorItems.tsx
 import type { EditorView } from '@codemirror/view';
-import type { ToolbarItem } from 'codemirror-toolbar';
 import { renderToString } from 'react-dom/server';
 import { undo, redo } from '@codemirror/commands';
 import type { UndoManager } from 'yjs';
 
 import { t } from '@/i18n';
+import type { ToolbarItem } from './types';
 import {
 	ExpandIcon,
 	MinimizeIcon,
@@ -47,7 +47,8 @@ export const createFullScreen = (isFullScreen: boolean): ToolbarItem => ({
 		if (view.dom.ownerDocument.fullscreenElement) {
 			view.dom.ownerDocument.exitFullscreen();
 		} else {
-			view.dom.requestFullscreen();
+			const target = view.dom.closest('.editor-wrapper') ?? view.dom;
+			target.requestFullscreen();
 		}
 		return true;
 	},
