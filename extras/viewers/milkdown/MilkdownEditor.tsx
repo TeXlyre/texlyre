@@ -12,6 +12,7 @@ import type { Editor } from '@milkdown/kit/core';
 import type { MilkdownPlugin } from '@milkdown/kit/ctx';
 import type { EditorView } from '@milkdown/kit/prose/view';
 
+import { navigateHref } from './linkClick';
 import { configureMilkdownEditor, replaceMarkdown } from './milkdownSetup';
 import MilkdownToolbar from './toolbar/MilkdownToolbar';
 
@@ -35,9 +36,11 @@ const MilkdownInner: React.FC<MilkdownEditorProps> = ({
 	plugins,
 	syncExternalChanges,
 	onPaste,
+	getCurrentFilePath,
 }) => {
 	const editableRef = useRef(editable);
 	const initialMarkdownRef = useRef(markdown);
+	const getCurrentFilePathRef = useRef(getCurrentFilePath);
 	const onChangeRef = useRef(onChange);
 	const onReadyRef = useRef(onReady);
 	const onPasteRef = useRef(onPaste);
@@ -73,6 +76,7 @@ const MilkdownInner: React.FC<MilkdownEditorProps> = ({
 					onChangeRef.current(md);
 				},
 				plugins: pluginsRef.current,
+				getCurrentFilePath: () => getCurrentFilePathRef.current(),
 			}),
 		[],
 	);
@@ -124,6 +128,53 @@ const MilkdownInner: React.FC<MilkdownEditorProps> = ({
 			replaceMarkdown(ctx, markdown);
 		});
 	}, [loading, getInstance, markdown, syncExternalChanges]);
+
+	useEffect(() => {
+		const node = scrollRef.current;
+		if (!node) return;
+
+		const onKey = (e: KeyboardEvent) => {
+			node.classList.toggle('mod-held', e.ctrlKey || e.metaKey);
+		};
+		const onBlur = () => node.classList.remove('mod-held');
+
+		document.addEventListener('keydown', onKey);
+		document.addEventListener('keyup', onKey);
+		window.addEventListener('blur', onBlur);
+		return () => {
+			document.removeEventListener('keydown', onKey);
+			document.removeEventListener('keyup', onKey);
+			window.removeEventListener('blur', onBlur);
+		};
+	}, []);
+
+	useEffect(() => {
+		if (loading) return;
+		const editor = getInstance();
+		if (!editor) return;
+
+		const onClick = (event: MouseEvent) => {
+			const target = event.target as HTMLElement;
+			const anchor = target.closest('a');
+			if (!anchor) return;
+			if (!anchor.closest('.milkdown-link-preview, .link-preview')) return;
+
+			const href = anchor.getAttribute('href') ?? '';
+
+			event.preventDefault();
+			event.stopPropagation();
+
+			if (!href.trim()) return;
+
+			editor.action((ctx) => {
+				const view = ctx.get(editorViewCtx);
+				navigateHref(view, href, getCurrentFilePathRef.current);
+			});
+		};
+
+		document.addEventListener('click', onClick, true);
+		return () => document.removeEventListener('click', onClick, true);
+	}, [loading, getInstance]);
 
 	return (
 		<div ref={scrollRef} className='milkdown-editor-scroll'>

@@ -29,6 +29,8 @@ import {
 } from '@milkdown/kit/component/code-block';
 import katex from 'katex';
 
+import { createLinkClickHandler } from './linkClick';
+
 export const MILKDOWN_THEME_CLASS = 'texlyre-milkdown';
 
 interface MilkdownConfigOptions {
@@ -37,12 +39,20 @@ interface MilkdownConfigOptions {
 	editable: () => boolean;
 	onMarkdownUpdated: (markdown: string) => void;
 	plugins?: MilkdownPlugin[];
+	getCurrentFilePath: () => string;
 }
 
 export function configureMilkdownEditor(
 	options: MilkdownConfigOptions,
 ): Editor {
-	const { root, defaultValue, editable, onMarkdownUpdated, plugins } = options;
+	const {
+		root,
+		defaultValue,
+		editable,
+		onMarkdownUpdated,
+		plugins,
+		getCurrentFilePath,
+	} = options;
 
 	const editor = Editor.make()
 		.config((ctx) => {
@@ -52,6 +62,7 @@ export function configureMilkdownEditor(
 				...prev,
 				attributes: { class: MILKDOWN_THEME_CLASS, spellcheck: 'true' },
 				editable,
+				handleClick: createLinkClickHandler(getCurrentFilePath),
 			}));
 			configureLinkTooltip(ctx);
 			ctx.update(codeBlockConfig.key, (defaultConfig) => ({

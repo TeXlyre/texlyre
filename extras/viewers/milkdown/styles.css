@@ -52,6 +52,10 @@
 	overflow-x: hidden;
 }
 
+.milkdown-editor-scroll.mod-held .texlyre-milkdown a {
+	cursor: pointer;
+}
+
 .milkdown-editor-scroll .milkdown {
 	width: 100%;
 	min-height: 100%;
@@ -172,6 +176,14 @@
 	height: inherit;
 	padding: 0;
 	margin: 0;
+}
+
+.milkdown-editor-shell:fullscreen {
+	background-color: var(--pico-background);
+}
+
+.milkdown-editor-shell:fullscreen::backdrop {
+	background-color: var(--pico-background);
 }
 
 @media (max-width: 768px) {

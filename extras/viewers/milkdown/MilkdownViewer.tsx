@@ -13,6 +13,7 @@ import {
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
 import type { ViewerProps } from '@/plugins/PluginInterface';
+import { autoSaveService } from '@/services/AutoSaveService';
 import { fileStorageService } from '@/services/FileStorageService';
 import { formatFileSize } from '@/utils/fileUtils';
 import MilkdownEditor from './MilkdownEditor';
@@ -74,6 +75,13 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 	const markdownRef = useRef('');
 	const getTextContentRef = useRef<() => string>(() => '');
 	const filePathRef = useRef(fileInfo.filePath || `/${fileName}`);
+
+	const autoSaveEnabled =
+		(getSetting('editor-auto-save-enable')?.value as boolean) ?? false;
+	const autoSaveDelay =
+		(getSetting('editor-auto-save-delay')?.value as number) ?? 2000;
+
+	const autoSaveRef = useRef<(() => void) | null>(null);
 
 	useEffect(() => {
 		filePathRef.current = fileInfo.filePath || `/${fileName}`;
@@ -168,7 +176,7 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 
 		const a = document.createElement('a');
 		a.href = url;
-		a.download = fileName.replace(/\.(md|markdown)$/i, '') + '.md';
+		a.download = `${fileName.replace(/\.(md|markdown)$/i, '')}.md`;
 
 		document.body.appendChild(a);
 		a.click();
@@ -189,6 +197,35 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 
 		return () => document.removeEventListener('keydown', handleKeyDown);
 	}, [viewMode, handleSave]);
+
+	useEffect(() => {
+		if (!fileId) return;
+
+		autoSaveRef.current = autoSaveService.createAutoSaver(
+			fileId,
+			() => getCurrentContent(),
+			{
+				enabled: autoSaveEnabled,
+				delay: autoSaveDelay,
+				onSave: async (_saveKey, content) => {
+					const bytes = new TextEncoder().encode(content).buffer;
+					await fileStorageService.updateFileContent(fileId, bytes);
+				},
+				onError: (error) => console.error('Auto-save failed:', error),
+			},
+		);
+
+		return () => {
+			autoSaveService.flushPendingSaves().catch(console.error);
+			autoSaveService.clearAutoSaver(fileId);
+			autoSaveRef.current = null;
+		};
+	}, [fileId, autoSaveEnabled, autoSaveDelay, getCurrentContent]);
+
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: markdown is the change trigger and not read in body */
+	useEffect(() => {
+		autoSaveRef.current?.();
+	}, [markdown]);
 
 	const tooltipInfo = [
 		t('MIME Type: {mimeType}', {

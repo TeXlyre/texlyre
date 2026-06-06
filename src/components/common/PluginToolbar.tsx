@@ -164,7 +164,7 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
 		);
 	}, [items, protectedTailGroups]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: items is a reset trigger, not read in body
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: items is a reset trigger, not read in body */
 	useLayoutEffect(() => {
 		widthCacheRef.current = null;
 		isBaselineRef.current = true;
@@ -242,7 +242,7 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
 		>
 			<i
 				className='plugin-toolbar__icon'
-				// biome-ignore lint/security/noDangerouslySetInnerHtml: icons are trusted pre-rendered SVG strings
+				/* biome-ignore lint/security/noDangerouslySetInnerHtml: Icons are trusted pre-rendered SVG strings */
 				dangerouslySetInnerHTML={{ __html: icon || '' }}
 			/>
 		</button>
@@ -317,7 +317,7 @@ const PluginToolbar: React.FC<PluginToolbarProps> = ({
 									>
 										<span
 											className='plugin-toolbar-overflow-icon'
-											// biome-ignore lint/security/noDangerouslySetInnerHtml: trusted pre-rendered icon
+											/* biome-ignore lint/security/noDangerouslySetInnerHtml: Trusted pre-rendered icon */
 											dangerouslySetInnerHTML={{ __html: item.icon || '' }}
 										/>
 										<span>{item.label}</span>

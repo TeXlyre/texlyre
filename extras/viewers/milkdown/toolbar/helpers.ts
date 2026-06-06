@@ -1,5 +1,4 @@
 // extras/viewers/milkdown/toolbar/helpers.ts
-import { t } from '@/i18n';
 import { setBlockType, toggleMark, wrapIn } from '@milkdown/kit/prose/commands';
 import { redo, undo } from '@milkdown/kit/prose/history';
 import type { MarkType, NodeType, Schema } from '@milkdown/kit/prose/model';
@@ -7,6 +6,7 @@ import { wrapInList } from '@milkdown/kit/prose/schema-list';
 import type { EditorView } from '@milkdown/kit/prose/view';
 import { insertTableCommand } from '@milkdown/kit/preset/gfm';
 
+import { t } from '@/i18n';
 import { TableGridSelector } from '@/components/common/TableGridSelector';
 import { ImagePicker } from './ImagePicker';
 import { getPendingMilkdownImagePath } from './pendingImage';

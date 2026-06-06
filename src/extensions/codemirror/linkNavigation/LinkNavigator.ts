@@ -52,6 +52,23 @@ export class LinkNavigator {
 		);
 	}
 
+	async navigateToTarget(link: DetectedLink): Promise<void> {
+		switch (link.type) {
+			case 'url':
+				this.navigateToUrl(link.value);
+				break;
+			case 'file':
+				await this.navigateToFile(link.value);
+				break;
+			case 'doi':
+				this.navigateToDoi(link.value);
+				break;
+			case 'bibentry':
+				await this.navigateToBibEntry(link.value);
+				break;
+		}
+	}
+
 	private async navigateToTypstReference(
 		view: EditorView,
 		label: string,
