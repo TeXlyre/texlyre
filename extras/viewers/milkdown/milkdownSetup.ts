@@ -34,10 +34,10 @@ import {
 } from '@codemirror/language';
 import { languages as allLanguages } from '@codemirror/language-data';
 import { latex } from 'codemirror-lang-latex';
-import { typst } from 'codemirror-lang-typst';
 import { bibtex } from 'codemirror-lang-bib';
 import katex from 'katex';
 
+import { safeTypst as typst } from '@/extensions/codemirror/SafeTypstPatch';
 import { createLinkClickHandler } from './linkClick';
 
 export const MILKDOWN_THEME_CLASS = 'texlyre-milkdown';

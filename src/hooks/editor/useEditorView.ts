@@ -37,11 +37,11 @@ import { EditorView } from 'codemirror';
 import { vim } from '@replit/codemirror-vim';
 import { bibtex, bibtexCompletionSource } from 'codemirror-lang-bib';
 import { latex, latexCompletionSource } from 'codemirror-lang-latex';
-import { typst } from 'codemirror-lang-typst';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type * as Y from 'yjs';
 import { UndoManager } from 'yjs';
 
+import { safeTypst as typst } from '../../extensions/codemirror/SafeTypstPatch.ts';
 import { resolveHighlightTheme } from '../../extensions/codemirror/HighlightThemeExtension';
 import { commentSystemExtension } from '../../extensions/codemirror/CommentExtension';
 import { latexTypstBidiIsolates } from '../../extensions/codemirror/BidiExtension';
