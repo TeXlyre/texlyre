@@ -1,0 +1,157 @@
+/* extras/viewers/milkdown/styles.css */
+[data-milkdown-root="true"] {
+	height: 100%;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.milkdown-viewer-container {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	width: 100%;
+	min-height: 0;
+	background-color: var(--pico-secondary-background);
+	overflow: hidden;
+}
+
+.milkdown-viewer-content {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	overflow: hidden;
+	position: relative;
+	background-color: var(--pico-background);
+}
+
+.milkdown-visual-pane {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.milkdown-editor-shell {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+}
+
+.milkdown-editor-scroll {
+	flex: 1;
+	min-height: 0;
+	width: 100%;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+.milkdown-editor-scroll.mod-held .texlyre-milkdown a {
+	cursor: pointer;
+}
+
+.milkdown-editor-scroll .milkdown {
+	width: 100%;
+	min-height: 100%;
+}
+
+.milkdown-editor-scroll .milkdown > .editor {
+	width: 100%;
+	min-height: 100%;
+}
+
+.milkdown-error-message,
+.milkdown-loading-message {
+	padding: 1rem;
+	margin: 1rem;
+	flex-shrink: 0;
+}
+
+.milkdown-latex-preview {
+	padding: 0.8em 1em;
+	overflow-x: auto;
+}
+
+.texlyre-milkdown {
+	padding: 1.5rem 2rem;
+	outline: none;
+	color: var(--text-color);
+	caret-color: var(--pico-primary);
+	min-height: 100%;
+	box-sizing: border-box;
+}
+
+.texlyre-milkdown hr {
+	border: none !important;
+	height: 1px;
+	background-color: var(--accent-color) !important;
+}
+
+.milkdown-code-block .list-wrapper {
+	background-color: var(--pico-secondary-background) !important;
+}
+
+.milkdown-code-block .list-wrapper .search-input {
+	background-color: var(--pico-background) !important;
+}
+
+.milkdown-table-block {
+	border: 1px solid var(--accent-color);
+}
+
+.milkdown-table-block table.children {
+	border-collapse: collapse;
+}
+
+.milkdown-table-block table.children th,
+.milkdown-table-block table.children td {
+	border-width: 0.5px;
+	border-style: solid;
+	border-color: var(--accent-color, var(--crepe-color-outline, #73777f));
+}
+
+.milkdown-table-block td {
+	background-color: color-mix(
+		in srgb,
+		var(--pico-background) 50%,
+		var(--pico-secondary-background)
+	);
+}
+
+.milkdown-table-block th {
+	background-color: var(--pico-secondary-background);
+}
+
+.milkdown-link-preview,
+.milkdown-link-edit {
+	background-color: var(--pico-secondary-background);
+	border: 1px solid var(--accent-color);
+	border-radius: 0.5rem;
+	min-height: fit-content;
+}
+
+.milkdown-link-edit .input-area {
+	height: inherit;
+	padding: 0;
+	margin: 0;
+}
+
+.milkdown-editor-shell:fullscreen {
+	background-color: var(--pico-background);
+}
+
+.milkdown-editor-shell:fullscreen::backdrop {
+	background-color: var(--pico-background);
+}
+
+@media (max-width: 768px) {
+	.texlyre-milkdown {
+		padding: 1rem;
+	}
+}

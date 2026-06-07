@@ -1,25 +1,43 @@
 // src/extensions/codemirror/autocomplete/ReferenceCompletionHandler.ts
 import type {
+	Completion,
 	CompletionContext,
 	CompletionResult,
 } from '@codemirror/autocomplete';
 import type { EditorView } from '@codemirror/view';
 
-import { filePathCacheService } from '../../../services/FilePathCacheService';
-import { isLatexFile, isTypstFile } from '../../../utils/fileUtils';
+import {
+	filePathCacheService,
+	type LabelsByFormat,
+} from '../../../services/FilePathCacheService';
+import {
+	isLatexFile,
+	isMarkdownFile,
+	isTypstFile,
+} from '../../../utils/fileUtils';
 import { latexReferencePatterns, typstReferencePatterns } from './patterns';
 
 export class ReferenceCompletionHandler {
 	private texLabels: Map<string, string[]> = new Map();
 	private typstLabels: Map<string, string[]> = new Map();
+	private markdownLabels: Map<string, string[]> = new Map();
 
 	initialize() {
 		this.texLabels = filePathCacheService.getTexLabels();
 		this.typstLabels = filePathCacheService.getTypstLabels();
+		this.markdownLabels = filePathCacheService.getMarkdownLabels();
 	}
 
 	destroy() {}
 
+	updateLabelsByFormat(labelsByFormat: LabelsByFormat) {
+		this.texLabels = labelsByFormat.tex ?? new Map();
+		this.typstLabels = labelsByFormat.typst ?? new Map();
+		this.markdownLabels = labelsByFormat.markdown ?? new Map();
+	}
+
+	// Optional compatibility method. You can remove this once all callers use
+	// updateLabelsByFormat().
 	updateLabels(labels: Map<string, string[]>) {
 		const isTexLabels = Array.from(labels.keys()).some((path) =>
 			isLatexFile(path),
@@ -27,43 +45,73 @@ export class ReferenceCompletionHandler {
 		const isTypstLabels = Array.from(labels.keys()).some((path) =>
 			isTypstFile(path),
 		);
+		const isMarkdownLabels = Array.from(labels.keys()).some((path) =>
+			isMarkdownFile(path),
+		);
 
 		if (isTexLabels) {
 			this.texLabels = labels;
 		} else if (isTypstLabels) {
 			this.typstLabels = labels;
+		} else if (isMarkdownLabels) {
+			this.markdownLabels = labels;
 		}
 	}
 
 	// Returns the partial text and insertion offset when the cursor sits inside
-	// a Typst @-style reference (which can resolve to either a label or a citation).
+	// a Typst @-style reference, which can resolve to either a label or a citation.
 	getTypstReferenceMatch(
 		context: CompletionContext,
 	): { partial: string; from: number } | null {
 		const refInfo = this.findTypstReferenceCommand(context);
 		if (!refInfo || refInfo.type !== 'reference-or-citation') return null;
+
 		const from = this.getReferenceCompletionStart(
 			context,
 			typstReferencePatterns,
 		);
+
 		return { partial: refInfo.partial, from };
 	}
 
 	// Returns ranked Typst label completion options filtered by the given partial.
-	getTypstLabelOptions(partial: string) {
-		const all: Array<{ label: string; filePath: string }> = [];
-		for (const [filePath, labels] of this.typstLabels.entries()) {
-			for (const label of labels) {
-				all.push({ label, filePath });
-			}
-		}
+	getTypstLabelOptions(partial: string): Completion[] {
+		return this.getLabelOptionsFromMap(this.typstLabels, partial);
+	}
 
-		const filtered = all.filter(
-			({ label }) =>
-				!partial || label.toLowerCase().includes(partial.toLowerCase()),
+	// Returns the partial text and insertion offset when the cursor sits inside
+	// a Markdown heading/anchor link, for example: [See section](#partial).
+	getMarkdownReferenceMatch(
+		context: CompletionContext,
+	): { partial: string; from: number } | null {
+		const line = context.state.doc.lineAt(context.pos);
+		const lineText = line.text;
+		const posInLine = context.pos - line.from;
+		const textBeforeCursor = lineText.substring(0, posInLine);
+
+		// Match Markdown anchor links while typing inside the fragment:
+		// [text](#partial
+		// [](#partial
+		// Also works for image-style syntax syntactically, though the caller only
+		// enables this in Markdown files.
+		const match = textBeforeCursor.match(
+			/\[[^\]]*\]\([^)]*#([A-Za-z0-9._~:%/-]*)$/,
 		);
+		if (!match || match.index === undefined) return null;
 
-		return this.createLabelOptions(filtered, partial);
+		const partial = match[1] ?? '';
+		const hashIndex = textBeforeCursor.lastIndexOf('#');
+
+		if (hashIndex === -1) return null;
+
+		return {
+			partial,
+			from: line.from + hashIndex + 1,
+		};
+	}
+
+	getMarkdownLabelOptions(partial: string): Completion[] {
+		return this.getLabelOptionsFromMap(this.markdownLabels, partial);
 	}
 
 	private findLatexReferenceCommand(
@@ -141,23 +189,11 @@ export class ReferenceCompletionHandler {
 
 	private handleLatexReferenceCompletion(
 		context: CompletionContext,
-		referenceInfo: any,
+		referenceInfo: { command: string; partial: string; type: 'reference' },
 	): CompletionResult | null {
 		const partial = referenceInfo.partial;
-		const allLabels: Array<{ label: string; filePath: string }> = [];
+		const options = this.getLabelOptionsFromMap(this.texLabels, partial);
 
-		for (const [filePath, labels] of this.texLabels.entries()) {
-			for (const label of labels) {
-				allLabels.push({ label, filePath });
-			}
-		}
-
-		const filteredLabels = allLabels.filter(
-			({ label }) =>
-				!partial || label.toLowerCase().includes(partial.toLowerCase()),
-		);
-
-		const options = this.createLabelOptions(filteredLabels, partial);
 		if (options.length === 0) return null;
 
 		const partialStart = this.getReferenceCompletionStart(
@@ -174,23 +210,15 @@ export class ReferenceCompletionHandler {
 
 	private handleTypstReferenceCompletion(
 		context: CompletionContext,
-		referenceInfo: any,
+		referenceInfo: {
+			command: string;
+			partial: string;
+			type: 'reference' | 'reference-or-citation';
+		},
 	): CompletionResult | null {
 		const partial = referenceInfo.partial;
-		const allLabels: Array<{ label: string; filePath: string }> = [];
+		const options = this.getLabelOptionsFromMap(this.typstLabels, partial);
 
-		for (const [filePath, labels] of this.typstLabels.entries()) {
-			for (const label of labels) {
-				allLabels.push({ label, filePath });
-			}
-		}
-
-		const filteredLabels = allLabels.filter(
-			({ label }) =>
-				!partial || label.toLowerCase().includes(partial.toLowerCase()),
-		);
-
-		const options = this.createLabelOptions(filteredLabels, partial);
 		if (options.length === 0) return null;
 
 		const partialStart = this.getReferenceCompletionStart(
@@ -205,10 +233,45 @@ export class ReferenceCompletionHandler {
 		};
 	}
 
+	private handleMarkdownReferenceCompletion(
+		context: CompletionContext,
+		referenceInfo: { partial: string; from: number },
+	): CompletionResult | null {
+		const options = this.getMarkdownLabelOptions(referenceInfo.partial);
+
+		if (options.length === 0) return null;
+
+		return {
+			from: referenceInfo.from,
+			options,
+			validFor: /^[^)#\s]*$/,
+		};
+	}
+
+	private getLabelOptionsFromMap(
+		labelsByFilePath: Map<string, string[]>,
+		partial: string,
+	): Completion[] {
+		const allLabels: Array<{ label: string; filePath: string }> = [];
+
+		for (const [filePath, labels] of labelsByFilePath.entries()) {
+			for (const label of labels) {
+				allLabels.push({ label, filePath });
+			}
+		}
+
+		const filteredLabels = allLabels.filter(
+			({ label }) =>
+				!partial || label.toLowerCase().includes(partial.toLowerCase()),
+		);
+
+		return this.createLabelOptions(filteredLabels, partial);
+	}
+
 	private createLabelOptions(
 		labels: Array<{ label: string; filePath: string }>,
 		partial: string,
-	) {
+	): Completion[] {
 		return labels
 			.sort((a, b) => {
 				const aStartsWith = a.label
@@ -217,8 +280,10 @@ export class ReferenceCompletionHandler {
 				const bStartsWith = b.label
 					.toLowerCase()
 					.startsWith(partial.toLowerCase());
+
 				if (aStartsWith && !bStartsWith) return -1;
 				if (!aStartsWith && bStartsWith) return 1;
+
 				return a.label.localeCompare(b.label);
 			})
 			.slice(0, 20)
@@ -231,7 +296,7 @@ export class ReferenceCompletionHandler {
 					info: filePath,
 					apply: (
 						view: EditorView,
-						completion: any,
+						completion: Completion,
 						from: number,
 						to: number,
 					) => {
@@ -270,21 +335,26 @@ export class ReferenceCompletionHandler {
 				if (isTypstReference && !isRefFunction) {
 					const atPos = match.index;
 					const matchEnd = match.index + match[0].length;
+
 					if (posInLine > atPos && posInLine <= matchEnd) {
 						return line.from + atPos + 1;
 					}
 				} else if (isRefFunction) {
 					const anglePos = match.index + match[0].lastIndexOf('<');
+
 					if (anglePos !== -1 && posInLine > anglePos) {
 						const closePos = lineText.indexOf('>', anglePos);
+
 						if (closePos === -1 || posInLine <= closePos) {
 							return line.from + anglePos + 1;
 						}
 					}
 				} else {
 					const bracePos = lineText.indexOf('{', match.index);
+
 					if (bracePos !== -1 && posInLine > bracePos) {
 						const braceEnd = lineText.indexOf('}', bracePos);
+
 						if (braceEnd === -1 || posInLine <= braceEnd) {
 							return line.from + bracePos + 1;
 						}
@@ -292,7 +362,8 @@ export class ReferenceCompletionHandler {
 				}
 			}
 		}
-		return posInLine;
+
+		return context.pos;
 	}
 
 	getCompletions(
@@ -301,9 +372,11 @@ export class ReferenceCompletionHandler {
 	): CompletionResult | null {
 		const isCurrentlyInLatexFile = isLatexFile(currentFilePath);
 		const isCurrentlyInTypstFile = isTypstFile(currentFilePath);
+		const isCurrentlyInMarkdownFile = isMarkdownFile(currentFilePath);
 
 		if (isCurrentlyInLatexFile) {
 			const referenceInfo = this.findLatexReferenceCommand(context);
+
 			if (referenceInfo) {
 				return this.handleLatexReferenceCompletion(context, referenceInfo);
 			}
@@ -311,11 +384,21 @@ export class ReferenceCompletionHandler {
 
 		if (isCurrentlyInTypstFile) {
 			const referenceInfo = this.findTypstReferenceCommand(context);
+
 			if (referenceInfo && referenceInfo.type === 'reference-or-citation') {
 				return null;
 			}
+
 			if (referenceInfo) {
 				return this.handleTypstReferenceCompletion(context, referenceInfo);
+			}
+		}
+
+		if (isCurrentlyInMarkdownFile) {
+			const referenceInfo = this.getMarkdownReferenceMatch(context);
+
+			if (referenceInfo) {
+				return this.handleMarkdownReferenceCompletion(context, referenceInfo);
 			}
 		}
 

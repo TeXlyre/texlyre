@@ -2,7 +2,14 @@
 import { t } from '@/i18n';
 import { Trans } from 'react-i18next';
 import React from 'react';
-import { useCallback, useEffect, useRef, useMemo, useState } from 'react';
+import {
+	useCallback,
+	useEffect,
+	useRef,
+	useMemo,
+	useState,
+	useSyncExternalStore,
+} from 'react';
 import type { Awareness } from 'y-protocols/awareness';
 
 import { BibliographyProvider } from '../../contexts/BibliographyContext';
@@ -56,6 +63,7 @@ import {
 	ToolbarShowIcon,
 } from '../common/Icons';
 import { PluginControlGroup, PluginHeader } from '../common/PluginHeader';
+import PluginToolbar, { type ToolbarEntry } from '../common/PluginToolbar';
 import UnlinkedDocumentNotice from './UnlinkedDocumentNotice';
 
 interface EditorComponentProps {
@@ -136,6 +144,8 @@ const CollaborativeViewerBridge: React.FC<{
 	);
 };
 
+const EMPTY_TOOLBAR_ITEMS: ToolbarEntry[] = [];
+
 const EditorContent: React.FC<{
 	editorRef: React.RefObject<HTMLDivElement>;
 	textContent: string;
@@ -201,7 +211,7 @@ const EditorContent: React.FC<{
 		changeData: changeDoc,
 		getAwareness,
 	} = useCollab<DocumentList>();
-	const { viewRef, showSaveIndicator } = useEditorView(
+	const { viewRef, showSaveIndicator, toolbarController } = useEditorView(
 		editorRef,
 		docUrl,
 		documentId,
@@ -218,6 +228,25 @@ const EditorContent: React.FC<{
 		true,
 		toolbarVisible,
 	);
+
+	const toolbarItems = useSyncExternalStore(
+		useCallback(
+			(cb) => toolbarController?.subscribe(cb) ?? (() => {}),
+			[toolbarController],
+		),
+		() => toolbarController?.getItems() ?? EMPTY_TOOLBAR_ITEMS,
+	);
+
+	const protectedTailGroups = useMemo(() => {
+		let count = 0;
+		if (
+			toolbarItems.some((i) => 'key' in i && i.key.endsWith('-row-add-before'))
+		)
+			count += 2;
+		if (toolbarItems.some((i) => 'key' in i && i.key.endsWith('-color-edit')))
+			count += 1;
+		return count;
+	}, [toolbarItems]);
 
 	const editorCollectionName = useMemo(() => `yjs_${documentId}`, [documentId]);
 	const [awareness, setAwareness] = useState<Awareness | null>(null);
@@ -888,6 +917,14 @@ const EditorContent: React.FC<{
 					className='editor-wrapper'
 					style={{ flex: 1, position: 'relative' }}
 				>
+					{toolbarVisible && toolbarController && (
+						<PluginToolbar
+							items={toolbarItems}
+							onRun={(key) => toolbarController.run(key)}
+							protectedTailGroups={protectedTailGroups}
+						/>
+					)}
+
 					<div ref={editorRef} className='codemirror-editor-container' />
 
 					{showSaveIndicator && (

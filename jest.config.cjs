@@ -29,6 +29,8 @@ module.exports = {
 		'^filepizza-client$': '<rootDir>/tests/mocks/filepizza-client.js',
 		'^wasm-latex-tools$': '<rootDir>/tests/mocks/wasm-latex-tools.js',
 		'^mathlive$': '<rootDir>/tests/mocks/mathlive.js',
+		'^@milkdown/(.*)$': '<rootDir>/tests/mocks/milkdown.js',
+		'^katex$': '<rootDir>/tests/mocks/katex.js',
 		'^detypify-service$': '<rootDir>/tests/mocks/detypify-service.js',
 		'^onnxruntime-web/wasm$': '<rootDir>/tests/mocks/detypify-service.js',
 		'^texlyre-busytex$': '<rootDir>/tests/mocks/texlyre-busytex.js',

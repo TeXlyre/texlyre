@@ -20,7 +20,7 @@
 	--space-lg: 1.5rem;
 	--space-xl: 2rem;
 
-	/* Button heights */
+	/* Button Heights */
 	--button-height-sm: 32px;
 	--button-height-md: 40px;
 	--button-height-lg: 48px;
@@ -36,11 +36,6 @@
 	--transition-normal: 0.25s;
 	--transition-slow: 0.4s;
 
-	/* Shadows */
-	--shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-	--shadow-md: 0 4px 8px rgba(0, 0, 0, 0.15);
-	--shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
-
 	/* Z-Index Scale */
 	--z-banner-above-user: 200;
 	--z-banner-below-user: 100;
@@ -51,9 +46,22 @@
 	--z-popup: 1040;
 	--z-tooltip: 1050;
 	--z-above-all: 1100;
+}
+
+[data-theme-mode="light"] {
+	/* Accent Colors */
+	--accent-color: #e9ecef;
+	--accent-color-light: #f8f9fa;
+	--accent-color-rgb: 233, 236, 239;
+	--accent-color-hover: #dee2e6;
+
+	/* Shadows */
+	--color-shadow: rgb(0 0 0 / 0.18);
+	--shadow-sm: 0 2px 4px rgb(0 0 0 / 0.1);
+	--shadow-md: 0 4px 8px rgb(0 0 0 / 0.15);
+	--shadow-lg: 0 8px 24px rgb(0 0 0 / 0.2);
 
 	/* Common Colors */
-	--color-shadow: rgb(0 0 0 / 0.18);
 	--color-error: #dc3545;
 	--color-success: #28a745;
 	--color-warning: #ffc107;
@@ -62,5 +70,22 @@
 }
 
 [data-theme-mode="dark"] {
-	--color-shadow: rgb(255 255 255 / 0.18);
+	/* Accent Colors */
+	--accent-color: #2f3337;
+	--accent-color-light: #3a3f44;
+	--accent-color-rgb: 47, 51, 55;
+	--accent-color-hover: #454b51;
+
+	/* Shadows */
+	--color-shadow: rgb(0 0 0 / 0.45);
+	--shadow-sm: 0 2px 4px rgb(0 0 0 / 0.3);
+	--shadow-md: 0 4px 8px rgb(0 0 0 / 0.4);
+	--shadow-lg: 0 8px 24px rgb(0 0 0 / 0.5);
+
+	/* Common Colors */
+	--color-error: #ff6b6b;
+	--color-success: #51cf66;
+	--color-warning: #ffd43b;
+	--color-info: #4dabf7;
+	--color-secondary: #adb5bd;
 }

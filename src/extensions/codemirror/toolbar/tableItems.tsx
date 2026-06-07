@@ -1,7 +1,7 @@
 // src/extensions/codemirror/toolbar/tableItems.ts
 import type { EditorView } from '@codemirror/view';
 
-import { TableGridSelector } from './TableGrid';
+import { TableGridSelector } from '../../../utils/popover/TableGridSelector';
 import { insertText } from './helpers';
 
 export type TableType = 'latex' | 'typst';
@@ -67,7 +67,7 @@ const handleTableSelect = (
 
 export const createTableCommand = (type: TableType) => {
 	return (view: EditorView): boolean => {
-		const toolbar = view.dom.querySelector('.codemirror-toolbar');
+		const toolbar = document.querySelector('.plugin-toolbar');
 		if (!toolbar) return false;
 
 		const button = toolbar.querySelector(
@@ -88,10 +88,10 @@ export const createTableCommand = (type: TableType) => {
 		}
 
 		if (!selector) {
-			selector = new TableGridSelector(view, button, {
+			selector = new TableGridSelector(button, {
 				maxRows: 8,
 				maxCols: 8,
-				onSelect: (v, rows, cols) => handleTableSelect(v, rows, cols, type),
+				onSelect: (rows, cols) => handleTableSelect(view, rows, cols, type),
 			});
 			gridSelectors.set(view, selector);
 		}

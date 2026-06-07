@@ -15,6 +15,9 @@ export default defineConfig({
 	base: basePath,
 
 	define: {
+		__VUE_OPTIONS_API__: 'false',
+		__VUE_PROD_DEVTOOLS__: 'false',
+		__VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false',
 		'process.env.npm_package_version': JSON.stringify(appVersion),
 		__APP_VERSION__: JSON.stringify(appVersion),
 		__BASE_PATH__: JSON.stringify(basePath.slice(0, -1)),

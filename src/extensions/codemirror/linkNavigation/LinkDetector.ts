@@ -10,6 +10,7 @@ import {
 	isTypstContent,
 	isBibContent,
 } from '../../../utils/fileUtils';
+import type { DetectedLink } from '../../../services/LinkNavigationService';
 import {
 	latexLinkPatterns,
 	typstLinkPatterns,
@@ -18,13 +19,7 @@ import {
 	type LinkPattern,
 } from './patterns';
 
-export interface DetectedLink {
-	from: number;
-	to: number;
-	type: 'url' | 'file' | 'doi' | 'bibentry' | 'reference';
-	value: string;
-	fileType: 'latex' | 'typst' | 'bib' | 'markdown';
-}
+export type { DetectedLink };
 
 export class LinkDetector {
 	private currentFileType: 'latex' | 'typst' | 'bib' | 'markdown' = 'latex';

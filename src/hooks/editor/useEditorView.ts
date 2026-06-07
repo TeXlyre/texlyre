@@ -37,11 +37,11 @@ import { EditorView } from 'codemirror';
 import { vim } from '@replit/codemirror-vim';
 import { bibtex, bibtexCompletionSource } from 'codemirror-lang-bib';
 import { latex, latexCompletionSource } from 'codemirror-lang-latex';
-import { typst } from 'codemirror-lang-typst';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type * as Y from 'yjs';
 import { UndoManager } from 'yjs';
 
+import { safeTypst as typst } from '../../extensions/codemirror/SafeTypstPatch.ts';
 import { resolveHighlightTheme } from '../../extensions/codemirror/HighlightThemeExtension';
 import { commentSystemExtension } from '../../extensions/codemirror/CommentExtension';
 import { latexTypstBidiIsolates } from '../../extensions/codemirror/BidiExtension';
@@ -56,10 +56,14 @@ import {
 	getGenericLSPCompletionSources,
 } from '../../extensions/codemirror/GenericLSPExtension';
 import { createCodeActionsExtension } from '../../extensions/codemirror/CodeActionsLSPExtension.ts';
-import { createToolbarExtension } from '../../extensions/codemirror/ToolbarExtension';
+import {
+	createToolbarController,
+	type ToolbarController,
+} from '../../extensions/codemirror/ToolbarExtension';
 import { createMathLiveExtension } from '../../extensions/codemirror/MathLiveExtension';
 import { createPasteExtension } from '../../extensions/codemirror/PasteExtension';
 import { createListingsExtension } from '../../extensions/codemirror/ListingsExtension';
+import { createBurstDeferredLanguage } from '../../extensions/codemirror/BurstDeferLanguage';
 import {
 	createLinkNavigationExtension,
 	updateLinkNavigationFilePath,
@@ -157,10 +161,14 @@ export const useEditorView = (
 	const [provider, setProvider] = useState<CollabProvider | null>(null);
 	const hasEmittedReadyRef = useRef<boolean>(false);
 	const undoManagerRef = useRef<UndoManager | null>(null);
+	const toolbarControllerRef = useRef<ToolbarController | null>(null);
+	const [toolbarController, setToolbarController] =
+		useState<ToolbarController | null>(null);
 
 	const compartmentsRef = useRef({
 		base: new Compartment(),
 		language: new Compartment(),
+		highlight: new Compartment(),
 		toolbar: new Compartment(),
 		languageSpecific: new Compartment(),
 	});
@@ -334,11 +342,6 @@ export const useEditorView = (
 		}
 
 		if (getLineNumbersEnabled()) extensions.push(lineNumbers());
-		if (getSyntaxHighlightingEnabled()) {
-			extensions.push(
-				resolveHighlightTheme(editorSettings.highlightTheme || 'auto'),
-			);
-		}
 		if (getVimModeEnabled()) extensions.push(vim());
 
 		return extensions;
@@ -392,36 +395,34 @@ export const useEditorView = (
 
 		extensions.push(createLinkNavigationExtension(fileName, content));
 
-		if (info.isLatex || info.isTypst) {
+		if (info.isLatex || info.isTypst || info.isMarkdown) {
 			const [stateExtensions, filePathPlugin, enhancedCompletionSource] =
 				createFilePathAutocompleteExtension('');
+
 			extensions.push(stateExtensions, filePathPlugin);
 			extensions.push(createPasteExtension(currentFileId, fileName));
 
-			if (toolbarVisible) {
-				extensions.push(
-					createToolbarExtension(
-						info.fileType as 'latex' | 'typst',
-						undoManagerRef.current || undefined,
-					),
-				);
-			}
-
-			if (editorSettings.mathLiveEnabled) {
-				extensions.push(
-					createMathLiveExtension(
-						info.fileType as 'latex' | 'typst',
-						editorSettings.mathLivePreviewMode,
-						editorSettings.language,
-					),
-				);
+			if (info.isLatex || info.isTypst) {
+				if (editorSettings.mathLiveEnabled) {
+					extensions.push(
+						createMathLiveExtension(
+							info.fileType as 'latex' | 'typst',
+							editorSettings.mathLivePreviewMode,
+							editorSettings.language,
+						),
+					);
+				}
 			}
 
 			completionSources.push(enhancedCompletionSource);
-			if (info.isLatex) completionSources.push(latexCompletionSource(true));
+
+			if (info.isLatex) {
+				completionSources.push(latexCompletionSource(true));
+			}
 		} else if (info.isBib) {
 			const [stateExtensions, filePathPlugin, enhancedCompletionSource] =
 				createFilePathAutocompleteExtension('');
+
 			extensions.push(stateExtensions, filePathPlugin);
 			completionSources.push(enhancedCompletionSource);
 			completionSources.push(bibtexCompletionSource);
@@ -617,7 +618,18 @@ export const useEditorView = (
 		const info = classifyFileType(fileName, contentToUse);
 		const completionSources: CompletionSource[] = [];
 		const extensions: Extension[] = [];
-		const { base, language, languageSpecific } = compartmentsRef.current;
+		const {
+			base,
+			language,
+			highlight,
+			languageSpecific,
+			toolbar: toolbarComp,
+		} = compartmentsRef.current;
+
+		const buildHighlightExtension = (): Extension =>
+			getSyntaxHighlightingEnabled()
+				? resolveHighlightTheme(editorSettings.highlightTheme || 'auto')
+				: [];
 
 		if (info.isLatex || info.isTypst) {
 			extensions.push(
@@ -627,6 +639,16 @@ export const useEditorView = (
 
 		extensions.push(base.of(buildBaseExtensions()));
 		extensions.push(language.of(buildLanguageExtension(info)));
+		extensions.push(highlight.of(buildHighlightExtension()));
+		extensions.push(
+			createBurstDeferredLanguage(
+				() => [language.reconfigure([]), highlight.reconfigure([])],
+				() => [
+					language.reconfigure(buildLanguageExtension(info)),
+					highlight.reconfigure(buildHighlightExtension()),
+				],
+			),
+		);
 
 		if (fileName) {
 			extensions.push(...getGenericLSPExtensionsForFile(fileName));
@@ -643,6 +665,16 @@ export const useEditorView = (
 				buildLanguageSpecificExtensions(info, contentToUse, completionSources),
 			),
 		);
+
+		let toolbarCtl: ToolbarController | null = null;
+		if ((info.isLatex || info.isTypst) && toolbarVisible) {
+			toolbarCtl = createToolbarController(
+				info.fileType as 'latex' | 'typst',
+				undoManagerRef.current || undefined,
+			);
+		}
+		toolbarControllerRef.current = toolbarCtl;
+		extensions.push(toolbarComp.of(toolbarCtl ? [toolbarCtl.extension] : []));
 
 		if (info.isStructured) {
 			extensions.push(
@@ -705,6 +737,7 @@ export const useEditorView = (
 		try {
 			const view = new EditorView({ state, parent: editorRef.current });
 			viewRef.current = view;
+			setToolbarController(toolbarControllerRef.current);
 
 			scheduleFilePathSync(info);
 
@@ -716,7 +749,7 @@ export const useEditorView = (
 				);
 			}, 50);
 
-			if (info.isLatex || info.isTypst) {
+			if (info.isLatex || info.isTypst || info.isMarkdown) {
 				filePathCacheService.updateCache();
 				updateLinkNavigationFileName(view, fileName);
 			}
@@ -735,6 +768,9 @@ export const useEditorView = (
 
 				yjsEditorBindingRef.current?.cleanup();
 				yjsEditorBindingRef.current = null;
+
+				toolbarControllerRef.current = null;
+				setToolbarController(null);
 
 				filePathCacheService.cleanup();
 				viewRef.current.destroy();
@@ -765,17 +801,19 @@ export const useEditorView = (
 		const {
 			base,
 			language,
+			highlight,
 			toolbar: toolbarComp,
 			languageSpecific,
 		} = compartmentsRef.current;
 
+		let controller: ToolbarController | null = null;
 		const toolbarExt: Extension[] =
 			(info.isLatex || info.isTypst) && toolbarVisible
 				? [
-						createToolbarExtension(
+						(controller = createToolbarController(
 							info.fileType as 'latex' | 'typst',
 							undoManagerRef.current || undefined,
-						),
+						)).extension,
 					]
 				: [];
 
@@ -783,6 +821,11 @@ export const useEditorView = (
 			effects: [
 				base.reconfigure(buildBaseExtensions()),
 				language.reconfigure(buildLanguageExtension(info)),
+				highlight.reconfigure(
+					getSyntaxHighlightingEnabled()
+						? resolveHighlightTheme(editorSettings.highlightTheme || 'auto')
+						: [],
+				),
 				languageSpecific.reconfigure(
 					buildLanguageSpecificExtensions(
 						info,
@@ -793,6 +836,9 @@ export const useEditorView = (
 				toolbarComp.reconfigure(toolbarExt),
 			],
 		});
+
+		toolbarControllerRef.current = controller;
+		setToolbarController(controller);
 	}, [editorSettingsVersion, toolbarVisible, fileName]);
 
 	useEffect(() => {
@@ -946,5 +992,5 @@ export const useEditorView = (
 			document.removeEventListener('file-reloaded', handleFileReloaded);
 	}, [isEditingFile, currentFileId]);
 
-	return { viewRef, isUpdatingRef, showSaveIndicator };
+	return { viewRef, isUpdatingRef, showSaveIndicator, toolbarController };
 };

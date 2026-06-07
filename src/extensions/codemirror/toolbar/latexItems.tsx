@@ -1,13 +1,9 @@
 // src/extensions/codemirror/toolbar/latexItems.tsx
 import type { EditorView } from '@codemirror/view';
-import type { ToolbarItem } from 'codemirror-toolbar';
 import { renderToString } from 'react-dom/server';
 
 import { t } from '@/i18n';
-import { getPendingImagePath } from '../PasteExtension';
-import { wrapSelection, insertText } from './helpers';
-import { createTableCommand } from './tableItems';
-import { ColorPicker } from './ColorPicker';
+import { ColorPicker } from '../../../utils/popover/ColorPicker';
 import {
 	ToolbarBoldIcon,
 	ToolbarItalicIcon,
@@ -38,6 +34,10 @@ import {
 	ToolbarQuoteIcon,
 	ToolbarHyperlinkIcon,
 } from '../../../components/common/Icons';
+import { getPendingImagePath } from '../PasteExtension';
+import { wrapSelection, insertText } from './helpers';
+import type { ToolbarItem } from './types';
+import { createTableCommand } from './tableItems';
 
 const colorPickers = new WeakMap<EditorView, ColorPicker>();
 
@@ -340,7 +340,7 @@ export const createHighlight = (): ToolbarItem => ({
 
 function createColorCommand(fileType: 'latex', type: 'text' | 'highlight') {
 	return (view: EditorView): boolean => {
-		const toolbar = view.dom.querySelector('.codemirror-toolbar');
+		const toolbar = document.querySelector('.plugin-toolbar');
 		if (!toolbar) return false;
 
 		const button = toolbar.querySelector(
@@ -350,33 +350,27 @@ function createColorCommand(fileType: 'latex', type: 'text' | 'highlight') {
 
 		let picker = colorPickers.get(view);
 
-		if (
-			picker &&
-			!document.body.contains(picker.container) &&
-			!toolbar.contains(picker.container)
-		) {
+		if (picker) {
 			picker.destroy();
 			colorPickers.delete(view);
 			picker = null;
 		}
 
-		if (!picker) {
-			picker = new ColorPicker(view, button, {
-				onSelect: (v, color) => {
-					const selection = v.state.selection.main;
-					const selectedText = v.state.doc.sliceString(
-						selection.from,
-						selection.to,
-					);
-					const text =
-						type === 'text'
-							? `\\textcolor[HTML]{${color.substring(1)}}{${selectedText}}`
-							: `\\colorbox{${color}}{${selectedText}}`;
-					insertText(v, text, selectedText ? -(selectedText.length + 1) : -1);
-				},
-			});
-			colorPickers.set(view, picker);
-		}
+		picker = new ColorPicker(view, button, {
+			onSelect: (v, color) => {
+				const selection = v.state.selection.main;
+				const selectedText = v.state.doc.sliceString(
+					selection.from,
+					selection.to,
+				);
+				const text =
+					type === 'text'
+						? `\\textcolor[HTML]{${color.substring(1)}}{${selectedText}}`
+						: `\\colorbox{${color}}{${selectedText}}`;
+				insertText(v, text, selectedText ? -(selectedText.length + 1) : -1);
+			},
+		});
+		colorPickers.set(view, picker);
 
 		picker.toggle();
 		return true;
