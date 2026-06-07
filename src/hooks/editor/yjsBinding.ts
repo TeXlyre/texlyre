@@ -92,7 +92,11 @@ export const createYjsEditorBindingExtensions = (
 		],
 		cleanup: () => {
 			themeObserver.disconnect();
-			localAwareness?.destroy();
+			if (localAwareness) {
+				localAwareness.destroy();
+			} else {
+				awareness.setLocalStateField('cursor', null);
+			}
 		},
 	};
 };
@@ -113,12 +117,16 @@ export const registerYjsBinding = (yText: Y.Text, opts: YjsBindingOptions) => {
 
 	let rafHandle: number | null = null;
 	let pendingContent: string | null = null;
+	let lastFlushedContent: string | null = null;
 
 	const flush = () => {
 		rafHandle = null;
 		if (pendingContent === null) return;
 		const content = pendingContent;
 		pendingContent = null;
+
+		const changed = content !== lastFlushedContent;
+		lastFlushedContent = content;
 
 		isUpdatingRef.current = true;
 		try {
@@ -145,7 +153,7 @@ export const registerYjsBinding = (yText: Y.Text, opts: YjsBindingOptions) => {
 			isUpdatingRef.current = false;
 		}
 
-		if (autoSaveRef.current) autoSaveRef.current();
+		if (changed && autoSaveRef.current) autoSaveRef.current();
 	};
 
 	const observer = () => {
@@ -160,6 +168,7 @@ export const registerYjsBinding = (yText: Y.Text, opts: YjsBindingOptions) => {
 
 	const initial = yText.toString() || '';
 	if (initial) {
+		lastFlushedContent = initial;
 		pendingContent = initial;
 		flush();
 	}

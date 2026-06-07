@@ -63,6 +63,7 @@ import {
 import { createMathLiveExtension } from '../../extensions/codemirror/MathLiveExtension';
 import { createPasteExtension } from '../../extensions/codemirror/PasteExtension';
 import { createListingsExtension } from '../../extensions/codemirror/ListingsExtension';
+import { createBurstDeferredLanguage } from '../../extensions/codemirror/BurstDeferLanguage';
 import {
 	createLinkNavigationExtension,
 	updateLinkNavigationFilePath,
@@ -167,6 +168,7 @@ export const useEditorView = (
 	const compartmentsRef = useRef({
 		base: new Compartment(),
 		language: new Compartment(),
+		highlight: new Compartment(),
 		toolbar: new Compartment(),
 		languageSpecific: new Compartment(),
 	});
@@ -340,11 +342,6 @@ export const useEditorView = (
 		}
 
 		if (getLineNumbersEnabled()) extensions.push(lineNumbers());
-		if (getSyntaxHighlightingEnabled()) {
-			extensions.push(
-				resolveHighlightTheme(editorSettings.highlightTheme || 'auto'),
-			);
-		}
 		if (getVimModeEnabled()) extensions.push(vim());
 
 		return extensions;
@@ -624,9 +621,15 @@ export const useEditorView = (
 		const {
 			base,
 			language,
+			highlight,
 			languageSpecific,
 			toolbar: toolbarComp,
 		} = compartmentsRef.current;
+
+		const buildHighlightExtension = (): Extension =>
+			getSyntaxHighlightingEnabled()
+				? resolveHighlightTheme(editorSettings.highlightTheme || 'auto')
+				: [];
 
 		if (info.isLatex || info.isTypst) {
 			extensions.push(
@@ -636,6 +639,16 @@ export const useEditorView = (
 
 		extensions.push(base.of(buildBaseExtensions()));
 		extensions.push(language.of(buildLanguageExtension(info)));
+		extensions.push(highlight.of(buildHighlightExtension()));
+		extensions.push(
+			createBurstDeferredLanguage(
+				() => [language.reconfigure([]), highlight.reconfigure([])],
+				() => [
+					language.reconfigure(buildLanguageExtension(info)),
+					highlight.reconfigure(buildHighlightExtension()),
+				],
+			),
+		);
 
 		if (fileName) {
 			extensions.push(...getGenericLSPExtensionsForFile(fileName));
@@ -788,6 +801,7 @@ export const useEditorView = (
 		const {
 			base,
 			language,
+			highlight,
 			toolbar: toolbarComp,
 			languageSpecific,
 		} = compartmentsRef.current;
@@ -807,6 +821,11 @@ export const useEditorView = (
 			effects: [
 				base.reconfigure(buildBaseExtensions()),
 				language.reconfigure(buildLanguageExtension(info)),
+				highlight.reconfigure(
+					getSyntaxHighlightingEnabled()
+						? resolveHighlightTheme(editorSettings.highlightTheme || 'auto')
+						: [],
+				),
 				languageSpecific.reconfigure(
 					buildLanguageSpecificExtensions(
 						info,
