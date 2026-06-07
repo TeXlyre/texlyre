@@ -111,6 +111,26 @@ export const milkdownToolbarItems: MilkdownToolbarEntry[] = [
 	},
 	split,
 	{
+		key: 'math',
+		title: 'Math block',
+		label: renderToString(<ToolbarMathBlockIcon />),
+		command: insertMath,
+	},
+	split,
+	{
+		key: 'code',
+		title: 'Code block',
+		label: renderToString(<ToolbarCodeBlockIcon />),
+		command: (view) => setBlockTypeByName(view, ['code_block', 'codeBlock']),
+	},
+	split,
+	{
+		key: 'link',
+		title: 'Link',
+		label: renderToString(<ToolbarHyperlinkIcon />),
+		command: insertLink,
+	},
+	{
 		key: 'quote',
 		title: 'Blockquote',
 		label: renderToString(<ToolbarQuoteIcon />),
@@ -122,25 +142,7 @@ export const milkdownToolbarItems: MilkdownToolbarEntry[] = [
 		label: '—',
 		command: insertHorizontalRule,
 	},
-	{
-		key: 'codeblock',
-		title: 'Code block',
-		label: renderToString(<ToolbarCodeBlockIcon />),
-		command: (view) => setBlockTypeByName(view, ['code_block', 'codeBlock']),
-	},
-	{
-		key: 'math',
-		title: 'Math block',
-		label: renderToString(<ToolbarMathBlockIcon />),
-		command: insertMath,
-	},
 	split,
-	{
-		key: 'table',
-		title: 'Table',
-		label: renderToString(<ToolbarTableIcon />),
-		command: insertTable,
-	},
 	{
 		key: 'image',
 		title: 'Image',
@@ -149,10 +151,10 @@ export const milkdownToolbarItems: MilkdownToolbarEntry[] = [
 			insertImage(view, getCurrentFilePath),
 	},
 	{
-		key: 'link',
-		title: 'Link',
-		label: renderToString(<ToolbarHyperlinkIcon />),
-		command: insertLink,
+		key: 'table',
+		title: 'Table',
+		label: renderToString(<ToolbarTableIcon />),
+		command: insertTable,
 	},
 	space,
 	{

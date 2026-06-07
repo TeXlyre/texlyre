@@ -26,6 +26,7 @@ interface MilkdownEditorProps {
 	syncExternalChanges?: boolean;
 	onPaste?: (view: EditorView, event: ClipboardEvent) => boolean;
 	getCurrentFilePath: () => string;
+	enabledPlugins?: Set<string>;
 }
 
 const MilkdownInner: React.FC<MilkdownEditorProps> = ({
@@ -37,6 +38,7 @@ const MilkdownInner: React.FC<MilkdownEditorProps> = ({
 	syncExternalChanges,
 	onPaste,
 	getCurrentFilePath,
+	enabledPlugins,
 }) => {
 	const editableRef = useRef(editable);
 	const initialMarkdownRef = useRef(markdown);
@@ -45,6 +47,7 @@ const MilkdownInner: React.FC<MilkdownEditorProps> = ({
 	const onReadyRef = useRef(onReady);
 	const onPasteRef = useRef(onPaste);
 	const pluginsRef = useRef(plugins);
+	const enabledPluginsRef = useRef(enabledPlugins);
 	const lastSyncedRef = useRef(markdown);
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const [loading, getInstance] = useInstance();
@@ -77,6 +80,7 @@ const MilkdownInner: React.FC<MilkdownEditorProps> = ({
 				},
 				plugins: pluginsRef.current,
 				getCurrentFilePath: () => getCurrentFilePathRef.current(),
+				enabledPlugins: enabledPluginsRef.current,
 			}),
 		[],
 	);

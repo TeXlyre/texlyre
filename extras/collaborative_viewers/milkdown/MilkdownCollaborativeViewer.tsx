@@ -6,13 +6,19 @@ import type * as Y from 'yjs';
 import type { Editor } from '@milkdown/kit/core';
 
 import { t } from '@/i18n';
-import { DownloadIcon, SaveIcon, ViewIcon } from '@/components/common/Icons';
+import {
+	DownloadIcon,
+	SaveIcon,
+	ToolbarShowIcon,
+	ViewIcon,
+} from '@/components/common/Icons';
 import {
 	PluginControlGroup,
 	PluginHeader,
 } from '@/components/common/PluginHeader';
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
+import { useProperties } from '@/hooks/useProperties';
 import type { CollaborativeViewerProps } from '@/plugins/PluginInterface';
 import { fileStorageService } from '@/services/FileStorageService';
 import { collabService } from '@/services/CollabService';
@@ -21,6 +27,7 @@ import MilkdownEditor from '../../viewers/milkdown/MilkdownEditor';
 import MilkdownTextPane from '../../viewers/milkdown/MilkdownTextPane';
 import { createImageResolver } from '../../viewers/milkdown/imageResolver';
 import { createMilkdownPasteHandler } from '../../viewers/milkdown/toolbar/pasteUpload';
+import { getEnabledMilkdownPluginIds } from '../../viewers/milkdown/settings';
 import type { MilkdownCollabStrategy } from './MilkdownCollabStrategy';
 import { TextBridgeStrategy } from './TextBridgeStrategy';
 import '../../viewers/milkdown/styles.css';
@@ -99,14 +106,12 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	updateComments,
 }) => {
 	const { getSetting } = useSettings();
+	const { getProperty, setProperty, registerProperty } = useProperties();
 	const fileInfo = usePluginFileInfo(fileId, fileName);
 
-	const defaultView =
-		(getSetting('milkdown-viewer-default-view')?.value as 'visual' | 'text') ??
-		'visual';
-
 	const [markdown, setMarkdown] = useState('');
-	const [viewMode, setViewMode] = useState<'visual' | 'text'>(defaultView);
+	const [viewMode, setViewMode] = useState<'visual' | 'text'>('visual');
+	const [showToolbar, setShowToolbar] = useState(true);
 	const [isSaving, setIsSaving] = useState(false);
 	const [isLoadingContent, setIsLoadingContent] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -120,8 +125,46 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	const textPaneInitialMarkdownRef = useRef<string | null>(null);
 	const getTextContentRef = useRef<() => string>(() => '');
 	const [textPaneVersion, setTextPaneVersion] = useState(0);
+	const propertiesRegistered = useRef(false);
 
 	const filePathRef = useRef(fileInfo.filePath || `/${fileName}`);
+
+	const enabledPluginIds = useMemo(
+		() => getEnabledMilkdownPluginIds(getSetting),
+		[getSetting],
+	);
+
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: One-time registration guarded by ref. */
+	useEffect(() => {
+		if (propertiesRegistered.current) return;
+		propertiesRegistered.current = true;
+
+		// const currentProjectId = sessionStorage.getItem('currentProjectId');
+
+		registerProperty({
+			id: 'milkdown-default-view',
+			category: 'Viewers',
+			subcategory: 'Markdown Editor',
+			defaultValue: 'visual',
+		});
+		const savedView = getProperty('milkdown-default-view', {
+			scope: 'global',
+			// projectId: currentProjectId ?? undefined,
+		});
+		if (savedView === 'visual' || savedView === 'text') setViewMode(savedView);
+
+		// registerProperty({
+		// 	id: 'milkdown-toolbar-visible',
+		// 	category: 'Viewers',
+		// 	subcategory: 'Markdown Editor',
+		// 	defaultValue: true,
+		// });
+		const savedToolbar = getProperty('toolbar-visible', {
+			scope: 'global',
+			// projectId: currentProjectId ?? undefined,
+		});
+		if (typeof savedToolbar === 'boolean') setShowToolbar(savedToolbar);
+	}, []);
 
 	useEffect(() => {
 		filePathRef.current = fileInfo.filePath || `/${fileName}`;
@@ -133,8 +176,9 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	);
 
 	const milkdownPlugins = useMemo(
-		() => [imageResolver.plugin],
-		[imageResolver],
+		() =>
+			enabledPluginIds.has('image-resolver') ? [imageResolver.plugin] : [],
+		[imageResolver, enabledPluginIds],
 	);
 
 	const handlePaste = useMemo(
@@ -291,16 +335,27 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 
 	const switchView = () => {
 		const current = currentContent();
+		const next: 'visual' | 'text' = isTextView ? 'visual' : 'text';
 
 		if (isTextView) {
 			updateLocalMarkdown(current);
-			setViewMode('visual');
-			return;
+		} else {
+			textPaneInitialMarkdownRef.current = current;
+			setTextPaneVersion((version) => version + 1);
 		}
 
-		textPaneInitialMarkdownRef.current = current;
-		setTextPaneVersion((version) => version + 1);
-		setViewMode('text');
+		setViewMode(next);
+		setProperty('milkdown-default-view', next, {
+			scope: 'global',
+		});
+	};
+
+	const toggleToolbar = () => {
+		const next = !showToolbar;
+		setShowToolbar(next);
+		setProperty('toolbar-visible', next, {
+			scope: 'global',
+		});
 	};
 
 	const handleSave = useCallback(async () => {
@@ -353,6 +408,14 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	const headerControls = (
 		<>
 			<PluginControlGroup>
+				<button
+					className={showToolbar ? 'active' : ''}
+					onClick={toggleToolbar}
+					title={showToolbar ? t('Hide Toolbar') : t('Show Toolbar')}
+					disabled={isLoadingContent}
+				>
+					<ToolbarShowIcon />
+				</button>
 				<button
 					className={isTextView ? 'active' : ''}
 					onClick={switchView}
@@ -427,6 +490,8 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 							onChange={handleVisualChange}
 							onReady={handleVisualReady}
 							plugins={milkdownPlugins}
+							showToolbar={showToolbar}
+							enabledPlugins={enabledPluginIds}
 							onPaste={handlePaste}
 							getCurrentFilePath={() => filePathRef.current}
 						/>

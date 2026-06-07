@@ -3,15 +3,22 @@ import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import '@milkdown/crepe/theme/common/style.css';
 import 'katex/dist/katex.min.css';
+import 'prismjs/themes/prism.css';
 
 import { t } from '@/i18n';
-import { DownloadIcon, SaveIcon, ViewIcon } from '@/components/common/Icons';
+import {
+	DownloadIcon,
+	SaveIcon,
+	ToolbarShowIcon,
+	ViewIcon,
+} from '@/components/common/Icons';
 import {
 	PluginControlGroup,
 	PluginHeader,
 } from '@/components/common/PluginHeader';
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
+import { useProperties } from '@/hooks/useProperties';
 import type { ViewerProps } from '@/plugins/PluginInterface';
 import { autoSaveService } from '@/services/AutoSaveService';
 import { fileStorageService } from '@/services/FileStorageService';
@@ -20,8 +27,9 @@ import MilkdownEditor from './MilkdownEditor';
 import MilkdownTextPane from './MilkdownTextPane';
 import { createImageResolver } from './imageResolver';
 import { createMilkdownPasteHandler } from './toolbar/pasteUpload';
-import './styles.css';
+import { getEnabledMilkdownPluginIds } from './settings';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './MilkdownViewerPlugin';
+import './styles.css';
 
 const MAX_SAFE_MARKDOWN_BYTES = 20 * 1024 * 1024;
 
@@ -60,14 +68,12 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 	fileId,
 }) => {
 	const { getSetting } = useSettings();
+	const { getProperty, setProperty, registerProperty } = useProperties();
 	const fileInfo = usePluginFileInfo(fileId, fileName);
 
-	const defaultView =
-		(getSetting('milkdown-viewer-default-view')?.value as 'visual' | 'text') ??
-		'visual';
-
 	const [markdown, setMarkdown] = useState('');
-	const [viewMode, setViewMode] = useState<'visual' | 'text'>(defaultView);
+	const [viewMode, setViewMode] = useState<'visual' | 'text'>('visual');
+	const [showToolbar, setShowToolbar] = useState(true);
 	const [isSaving, setIsSaving] = useState(false);
 	const [isLoadingContent, setIsLoadingContent] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -75,6 +81,7 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 	const markdownRef = useRef('');
 	const getTextContentRef = useRef<() => string>(() => '');
 	const filePathRef = useRef(fileInfo.filePath || `/${fileName}`);
+	const propertiesRegistered = useRef(false);
 
 	const autoSaveEnabled =
 		(getSetting('editor-auto-save-enable')?.value as boolean) ?? false;
@@ -82,6 +89,43 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 		(getSetting('editor-auto-save-delay')?.value as number) ?? 2000;
 
 	const autoSaveRef = useRef<(() => void) | null>(null);
+
+	const enabledPluginIds = useMemo(
+		() => getEnabledMilkdownPluginIds(getSetting),
+		[getSetting],
+	);
+
+	/* biome-ignore lint/correctness/useExhaustiveDependencies: One-time registration guarded by ref. */
+	useEffect(() => {
+		if (propertiesRegistered.current) return;
+		propertiesRegistered.current = true;
+
+		// const currentProjectId = sessionStorage.getItem('currentProjectId');
+
+		registerProperty({
+			id: 'milkdown-default-view',
+			category: 'Viewers',
+			subcategory: 'Markdown Editor',
+			defaultValue: 'visual',
+		});
+		const savedView = getProperty('milkdown-default-view', {
+			scope: 'global',
+			// projectId: currentProjectId ?? undefined,
+		});
+		if (savedView === 'visual' || savedView === 'text') setViewMode(savedView);
+
+		// registerProperty({
+		// 	id: 'milkdown-toolbar-visible',
+		// 	category: 'Viewers',
+		// 	subcategory: 'Markdown Editor',
+		// 	defaultValue: true,
+		// });
+		const savedToolbar = getProperty('toolbar-visible', {
+			scope: 'global',
+			// projectId: currentProjectId ?? undefined,
+		});
+		if (typeof savedToolbar === 'boolean') setShowToolbar(savedToolbar);
+	}, []);
 
 	useEffect(() => {
 		filePathRef.current = fileInfo.filePath || `/${fileName}`;
@@ -93,8 +137,9 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 	);
 
 	const milkdownPlugins = useMemo(
-		() => [imageResolver.plugin],
-		[imageResolver],
+		() =>
+			enabledPluginIds.has('image-resolver') ? [imageResolver.plugin] : [],
+		[imageResolver, enabledPluginIds],
 	);
 
 	const handlePaste = useMemo(
@@ -143,6 +188,17 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 		}
 
 		setViewMode(next);
+		setProperty('milkdown-default-view', next, {
+			scope: 'global',
+		});
+	};
+
+	const toggleToolbar = () => {
+		const next = !showToolbar;
+		setShowToolbar(next);
+		setProperty('toolbar-visible', next, {
+			scope: 'global',
+		});
 	};
 
 	const handleSave = useCallback(async () => {
@@ -240,6 +296,13 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 		<>
 			<PluginControlGroup>
 				<button
+					className={showToolbar ? 'active' : ''}
+					onClick={toggleToolbar}
+					title={showToolbar ? t('Hide Toolbar') : t('Show Toolbar')}
+				>
+					<ToolbarShowIcon />
+				</button>
+				<button
 					className={viewMode === 'text' ? 'active' : ''}
 					onClick={() => switchView(viewMode === 'visual' ? 'text' : 'visual')}
 					title={t('Switch to {viewMode}', {
@@ -311,6 +374,8 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 							onChange={handleChange}
 							plugins={milkdownPlugins}
 							syncExternalChanges={true}
+							showToolbar={showToolbar}
+							enabledPlugins={enabledPluginIds}
 							onPaste={handlePaste}
 							getCurrentFilePath={() => filePathRef.current}
 						/>

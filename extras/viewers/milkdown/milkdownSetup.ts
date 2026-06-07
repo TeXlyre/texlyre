@@ -27,6 +27,15 @@ import {
 	codeBlockComponent,
 	codeBlockConfig,
 } from '@milkdown/kit/component/code-block';
+import {
+	LanguageDescription,
+	defaultHighlightStyle,
+	syntaxHighlighting,
+} from '@codemirror/language';
+import { languages as allLanguages } from '@codemirror/language-data';
+import { latex } from 'codemirror-lang-latex';
+import { typst } from 'codemirror-lang-typst';
+import { bibtex } from 'codemirror-lang-bib';
 import katex from 'katex';
 
 import { createLinkClickHandler } from './linkClick';
@@ -40,7 +49,33 @@ interface MilkdownConfigOptions {
 	onMarkdownUpdated: (markdown: string) => void;
 	plugins?: MilkdownPlugin[];
 	getCurrentFilePath: () => string;
+	enabledPlugins?: Set<string>;
 }
+
+const codeBlockLanguages: LanguageDescription[] = [
+	...allLanguages,
+
+	LanguageDescription.of({
+		name: 'LaTeX',
+		alias: ['latex', 'tex'],
+		extensions: ['latex', 'ltx', 'tex', 'sty', 'cls'],
+		support: latex(),
+	}),
+
+	LanguageDescription.of({
+		name: 'Typst',
+		alias: ['typst', 'typ'],
+		extensions: ['typst', 'typ'],
+		support: typst(),
+	}),
+
+	LanguageDescription.of({
+		name: 'BibTeX',
+		alias: ['bibtex', 'bib', 'biblatex'],
+		extensions: ['bibtex', 'biblatex', 'bib'],
+		support: bibtex(),
+	}),
+];
 
 export function configureMilkdownEditor(
 	options: MilkdownConfigOptions,
@@ -52,7 +87,10 @@ export function configureMilkdownEditor(
 		onMarkdownUpdated,
 		plugins,
 		getCurrentFilePath,
+		enabledPlugins,
 	} = options;
+
+	const isEnabled = (id: string) => enabledPlugins?.has(id) ?? true;
 
 	const editor = Editor.make()
 		.config((ctx) => {
@@ -64,40 +102,54 @@ export function configureMilkdownEditor(
 				editable,
 				handleClick: createLinkClickHandler(getCurrentFilePath),
 			}));
-			configureLinkTooltip(ctx);
-			ctx.update(codeBlockConfig.key, (defaultConfig) => ({
-				...defaultConfig,
-				renderPreview: (language: string, content: string) => {
-					if (language.toLowerCase() === 'latex' && content.length > 0) {
-						const dom = document.createElement('div');
-						dom.className = 'milkdown-latex-preview';
-						try {
-							dom.innerHTML = katex.renderToString(content, {
-								displayMode: true,
-								throwOnError: false,
-							});
-						} catch {
-							dom.textContent = content;
+
+			if (isEnabled('link-tooltip')) configureLinkTooltip(ctx);
+
+			if (isEnabled('code-block')) {
+				ctx.update(codeBlockConfig.key, (defaultConfig) => ({
+					...defaultConfig,
+					languages: codeBlockLanguages,
+
+					extensions: [
+						...(defaultConfig.extensions ?? []),
+						syntaxHighlighting(defaultHighlightStyle),
+					],
+
+					renderPreview: (language: string, content: string) => {
+						if (language.toLowerCase() === 'latex' && content.length > 0) {
+							const dom = document.createElement('div');
+							dom.className = 'milkdown-latex-preview';
+							try {
+								dom.innerHTML = katex.renderToString(content, {
+									displayMode: true,
+									throwOnError: false,
+								});
+							} catch {
+								dom.textContent = content;
+							}
+							return dom;
 						}
-						return dom;
-					}
-					return null;
-				},
-			}));
+						return null;
+					},
+				}));
+			}
+
 			const l = ctx.get(listenerCtx);
 			l.markdownUpdated((_ctx, markdown, prevMarkdown) => {
 				if (markdown !== prevMarkdown) onMarkdownUpdated(markdown);
 			});
 		})
 		.use(commonmark)
-		.use(gfm)
 		.use(history)
 		.use(listener)
-		.use(tableBlock)
-		.use(listItemBlockComponent)
-		.use(linkTooltipPlugin)
-		.use(codeBlockComponent)
-		.use(linkTooltipPlugin);
+		.use(listItemBlockComponent);
+
+	if (isEnabled('code-block')) {
+		editor.use(codeBlockComponent);
+	}
+	if (isEnabled('gfm')) editor.use(gfm);
+	if (isEnabled('table-block')) editor.use(tableBlock);
+	if (isEnabled('link-tooltip')) editor.use(linkTooltipPlugin);
 
 	if (plugins) {
 		for (const plugin of plugins) editor.use(plugin);
