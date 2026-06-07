@@ -10,7 +10,7 @@ import {
 	DownloadIcon,
 	SaveIcon,
 	ToolbarShowIcon,
-	ViewIcon,
+	EditingViewIcon,
 } from '@/components/common/Icons';
 import {
 	PluginControlGroup,
@@ -424,7 +424,7 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 					})}
 					disabled={isLoadingContent}
 				>
-					<ViewIcon />
+					<EditingViewIcon />
 				</button>
 			</PluginControlGroup>
 

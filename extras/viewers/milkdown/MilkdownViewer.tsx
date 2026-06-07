@@ -10,7 +10,7 @@ import {
 	DownloadIcon,
 	SaveIcon,
 	ToolbarShowIcon,
-	ViewIcon,
+	EditingViewIcon,
 } from '@/components/common/Icons';
 import {
 	PluginControlGroup,
@@ -309,7 +309,7 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 						viewMode: viewMode === 'visual' ? t('Text View') : t('Visual View'),
 					})}
 				>
-					<ViewIcon />
+					<EditingViewIcon />
 				</button>
 			</PluginControlGroup>
 

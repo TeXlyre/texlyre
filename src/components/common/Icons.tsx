@@ -1203,6 +1203,35 @@ export const EditFileIcon: React.FC = () => (
 	</svg>
 );
 
+export const EditingViewIcon: React.FC = () => (
+	<svg
+		xmlns='http://www.w3.org/2000/svg'
+		width='16'
+		height='16'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		strokeWidth='2'
+		strokeLinecap='round'
+		strokeLinejoin='round'
+	>
+		<path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' />
+		<polyline points='14 2 14 8 20 8' />
+		<path d='M8 7h3' />
+		<path d='M8 11h2' />
+
+		<path d='M9 15l-1 4 4-1 8.5-8.5a2.12 2.12 0 0 0-3-3L9 15z' />
+
+		<path
+			d='M16.75 7.25l2.5-2.5 3 3-2.5 2.5z'
+			fill='currentColor'
+			stroke='currentColor'
+		/>
+
+		<path d='M16 8l3 3' />
+	</svg>
+);
+
 export const OutputIcon: React.FC = () => (
 	<svg
 		xmlns='http://www.w3.org/2000/svg'
