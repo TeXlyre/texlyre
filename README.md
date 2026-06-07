@@ -129,7 +129,7 @@ Moreover, you can start your project from a template and share the link with you
 
 TeXlyre's architecture emphasizes **local-first principles** while enabling real-time collaboration. The React frontend communicates with Yjs documents stored in IndexedDB, providing offline-first functionality. WebRTC establishes direct peer connections for real-time synchronization, while **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX),[texlyre-busytex](https://github.com/TeXlyre/texlyre-busytex)** and **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)** handle LaTeX and Typst compilation entirely in the browser.
 
-The **plugin system** allows extensibility through custom viewers, renderers, and backup providers. Core plugins handle PDF rendering, Bibliography cleaning, LaTeX and Typst log visualization, an embedded **[Draw.io](https://drawio.com)** diagram editor with collaborative support, **[Zotero](https://www.zotero.org/)** and **[OpenAlex](https://www.openalex.org/)** reference search, import, and update panel, file system backups, and repository backups to/from GitHub, GitLab, Gitea, and Codeberg (Forgejo). Theme plugins also provide customizable layouts and visual styles.
+The **plugin system** allows extensibility through custom viewers, renderers, and backup providers. Core plugins handle PDF rendering, Bibliography cleaning, LaTeX and Typst log visualization, embedded **[Milkdown](https://milkdown.dev/)** markdown editor and **[Draw.io](https://drawio.com)** diagram editor with collaborative support, **[Zotero](https://www.zotero.org/)** and **[OpenAlex](https://www.openalex.org/)** reference search, import, and update panel, file system backups, and repository backups to/from GitHub, GitLab, Gitea, and Codeberg (Forgejo). Theme plugins also provide customizable layouts and visual styles.
 
 <p align="center">
   <img src="showcase/zotero_bib_panel.png"
@@ -230,6 +230,7 @@ TeXlyre builds upon several key technologies:
 - **[codemirror-vim](https://github.com/replit/codemirror-vim)** - Vim keybindings for CodeMirror
 - **[codemirror-lang-typst](https://github.com/kxxt/codemirror-lang-typst)** - Typst language support for CodeMirror
 - **[uiw/codemirror-themes-all](https://github.com/uiwjs/react-codemirror/tree/master/themes/all)** - Collection of themes for CodeMirror
+- **[Milkdown](https://github.com/Milkdown/milkdown)** - A markdown editor built on top of [ProseMirror](https://prosemirror.net/) and [remark](https://github.com/remarkjs/remark)
 
 ### LaTeX Tools
 - **[tex-fmt](https://github.com/WGUNDERWOOD/tex-fmt)** - LaTeX code formatter
