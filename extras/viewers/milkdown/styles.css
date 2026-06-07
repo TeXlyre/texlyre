@@ -93,6 +93,14 @@
 	background-color: var(--accent-color) !important;
 }
 
+.milkdown-code-block .list-wrapper {
+	background-color: var(--pico-secondary-background) !important;
+}
+
+.milkdown-code-block .list-wrapper .search-input {
+	background-color: var(--pico-background) !important;
+}
+
 .milkdown-table-block {
 	border: 1px solid var(--accent-color);
 }

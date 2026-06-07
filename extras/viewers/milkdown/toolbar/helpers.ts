@@ -1,5 +1,6 @@
 // extras/viewers/milkdown/toolbar/helpers.ts
 import { setBlockType, toggleMark, wrapIn } from '@milkdown/kit/prose/commands';
+import { TextSelection } from '@milkdown/kit/prose/state';
 import { redo, undo } from '@milkdown/kit/prose/history';
 import type { MarkType, NodeType, Schema } from '@milkdown/kit/prose/model';
 import { wrapInList } from '@milkdown/kit/prose/schema-list';
@@ -73,17 +74,30 @@ export const wrapInListByName = (
 	return !!node && run(view, wrapInList(node));
 };
 
-export const insertMath = (view: EditorView): boolean => {
+const insertCodeBlockNode = (
+	view: EditorView,
+	attrs?: Record<string, unknown>,
+): boolean => {
 	const codeBlock = getNode(view.state.schema, ['code_block', 'codeBlock']);
 	if (!codeBlock) return false;
 
-	const node = codeBlock.createAndFill({ language: 'latex' });
+	const node = codeBlock.createAndFill(attrs);
 	if (!node) return false;
 
-	view.dispatch(view.state.tr.replaceSelectionWith(node).scrollIntoView());
+	const tr = view.state.tr.replaceSelectionWith(node);
+	const pos = tr.doc.resolve(Math.max(0, tr.selection.from - node.nodeSize));
+
+	tr.setSelection(TextSelection.near(pos, -1)).scrollIntoView();
+	view.dispatch(tr);
 	view.focus();
 	return true;
 };
+
+export const insertMath = (view: EditorView): boolean =>
+	insertCodeBlockNode(view, { language: 'latex' });
+
+export const insertCodeBlock = (view: EditorView): boolean =>
+	insertCodeBlockNode(view);
 
 const imagePickers = new WeakMap<EditorView, ImagePicker>();
 

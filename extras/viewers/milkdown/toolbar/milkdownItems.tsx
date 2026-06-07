@@ -27,6 +27,7 @@ import { split, space } from './types';
 import {
 	insertHorizontalRule,
 	insertMath,
+	insertCodeBlock,
 	insertImage,
 	insertLink,
 	insertTable,
@@ -60,16 +61,10 @@ export const milkdownToolbarItems: MilkdownToolbarEntry[] = [
 			toggleMarkByName(view, ['strike_through', 'strikethrough', 'strike']),
 	},
 	{
-		key: 'code',
-		title: 'Inline code',
-		label: renderToString(<ToolbarCodeInlineIcon />),
-		command: (view) =>
-			toggleMarkByName(view, [
-				'inlineCode',
-				'inline_code',
-				'code_inline',
-				'code',
-			]),
+		key: 'hr',
+		title: 'Divider',
+		label: '—',
+		command: insertHorizontalRule,
 	},
 	split,
 	{
@@ -93,35 +88,47 @@ export const milkdownToolbarItems: MilkdownToolbarEntry[] = [
 	split,
 	{
 		key: 'bullet',
-		title: 'Bullet list',
+		title: 'Bullet List',
 		label: renderToString(<ToolbarBulletListIcon />),
 		command: (view) => setListType(view, 'bullet'),
 	},
 	{
 		key: 'ordered',
-		title: 'Numbered list',
+		title: 'Numbered List',
 		label: renderToString(<ToolbarNumberListIcon />),
 		command: (view) => setListType(view, 'ordered'),
 	},
 	{
 		key: 'task',
-		title: 'Task list',
+		title: 'Task List',
 		label: renderToString(<ToolbarTaskListIcon />),
 		command: (view) => setListType(view, 'task'),
 	},
 	split,
 	{
 		key: 'math',
-		title: 'Math block',
+		title: 'Display Math',
 		label: renderToString(<ToolbarMathBlockIcon />),
 		command: insertMath,
 	},
 	split,
 	{
 		key: 'code',
-		title: 'Code block',
+		title: 'Inline Code',
+		label: renderToString(<ToolbarCodeInlineIcon />),
+		command: (view) =>
+			toggleMarkByName(view, [
+				'inlineCode',
+				'inline_code',
+				'code_inline',
+				'code',
+			]),
+	},
+	{
+		key: 'codeBlock',
+		title: 'Code Block',
 		label: renderToString(<ToolbarCodeBlockIcon />),
-		command: (view) => setBlockTypeByName(view, ['code_block', 'codeBlock']),
+		command: insertCodeBlock,
 	},
 	split,
 	{
@@ -132,15 +139,9 @@ export const milkdownToolbarItems: MilkdownToolbarEntry[] = [
 	},
 	{
 		key: 'quote',
-		title: 'Blockquote',
+		title: 'Quote',
 		label: renderToString(<ToolbarQuoteIcon />),
 		command: (view) => wrapInNodeByName(view, ['blockquote']),
-	},
-	{
-		key: 'hr',
-		title: 'Divider',
-		label: '—',
-		command: insertHorizontalRule,
 	},
 	split,
 	{
