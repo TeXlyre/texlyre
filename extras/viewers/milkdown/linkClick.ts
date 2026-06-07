@@ -2,10 +2,10 @@
 import type { EditorView } from '@milkdown/kit/prose/view';
 import type { Mark } from '@milkdown/kit/prose/model';
 
-import { LinkNavigator } from '@/extensions/codemirror/linkNavigation/LinkNavigator';
-import type { DetectedLink } from '@/extensions/codemirror/linkNavigation/LinkDetector';
-
-const navigator = new LinkNavigator();
+import {
+	linkNavigationService,
+	type DetectedLink,
+} from '@/services/LinkNavigationService';
 
 const isExternalScheme = (href: string): boolean =>
 	/^[a-z][a-z0-9+.-]*:/i.test(href);
@@ -80,9 +80,9 @@ export const navigateHref = (
 		return;
 	}
 
-	navigator.setCurrentFilePath(getCurrentFilePath());
+	linkNavigationService.setCurrentFilePath(getCurrentFilePath());
 	const type: DetectedLink['type'] = isExternalScheme(href) ? 'url' : 'file';
-	void navigator.navigateToTarget({
+	void linkNavigationService.navigate({
 		from: 0,
 		to: 0,
 		type,

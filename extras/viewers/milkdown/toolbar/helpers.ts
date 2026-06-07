@@ -6,9 +6,8 @@ import { wrapInList } from '@milkdown/kit/prose/schema-list';
 import type { EditorView } from '@milkdown/kit/prose/view';
 import { insertTableCommand } from '@milkdown/kit/preset/gfm';
 
-import { t } from '@/i18n';
-import { TableGridSelector } from '@/components/common/TableGridSelector';
-import { ImagePicker } from './ImagePicker';
+import { TableGridSelector } from '@/utils/popover/TableGridSelector';
+import { ImagePicker } from '@/utils/popover/ImagePicker';
 import { getPendingMilkdownImagePath } from './pendingImage';
 
 const getMark = (schema: Schema, names: string[]): MarkType | null => {

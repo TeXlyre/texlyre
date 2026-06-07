@@ -1,5 +1,6 @@
-// src/components/common/TableGridSelector.ts
+// src/utils/popover/TableGridSelector.ts
 import { t } from '@/i18n';
+import { PopoverAnchor } from './popoverAnchor';
 
 export interface TableGridOptions {
 	maxRows: number;
@@ -12,14 +13,12 @@ export class TableGridSelector {
 	private grid: HTMLDivElement;
 	private label: HTMLDivElement;
 	private cells: HTMLDivElement[][] = [];
-	private isOpen = false;
-	private boundHandleDocumentClick: (e: MouseEvent) => void;
+	private anchor: PopoverAnchor;
 
 	constructor(
-		private readonly button: HTMLElement,
+		button: HTMLElement,
 		private readonly options: TableGridOptions,
 	) {
-		this.boundHandleDocumentClick = this.handleDocumentClick.bind(this);
 		this.container = this.createContainer();
 		this.grid = this.createGrid();
 		this.label = this.createLabel();
@@ -27,24 +26,28 @@ export class TableGridSelector {
 		this.container.appendChild(this.grid);
 		this.container.appendChild(this.label);
 
-		this.setupEventListeners();
+		this.anchor = new PopoverAnchor(button, this.container);
+
+		this.grid.addEventListener('mouseover', this.handleMouseOver.bind(this));
+		this.grid.addEventListener('mouseleave', this.handleMouseLeave.bind(this));
+		this.grid.addEventListener('click', this.handleClick.bind(this));
 	}
 
 	private createContainer(): HTMLDivElement {
 		const container = document.createElement('div');
-		container.className = 'cm-table-grid-container';
+		container.className = 'popover';
 		return container;
 	}
 
 	private createGrid(): HTMLDivElement {
 		const grid = document.createElement('div');
-		grid.className = 'cm-table-grid';
+		grid.className = 'popover-grid';
 
 		for (let row = 0; row < this.options.maxRows; row++) {
 			this.cells[row] = [];
 			for (let col = 0; col < this.options.maxCols; col++) {
 				const cell = document.createElement('div');
-				cell.className = 'cm-table-grid-cell';
+				cell.className = 'popover-grid-cell';
 				cell.dataset.row = String(row);
 				cell.dataset.col = String(col);
 				this.cells[row][col] = cell;
@@ -57,22 +60,14 @@ export class TableGridSelector {
 
 	private createLabel(): HTMLDivElement {
 		const label = document.createElement('div');
-		label.className = 'cm-table-grid-label';
+		label.className = 'popover-grid-label';
 		label.textContent = t('Select size');
 		return label;
 	}
 
-	private setupEventListeners(): void {
-		this.grid.addEventListener('mouseover', this.handleMouseOver.bind(this));
-		this.grid.addEventListener('mouseleave', this.handleMouseLeave.bind(this));
-		this.grid.addEventListener('click', this.handleClick.bind(this));
-
-		document.addEventListener('click', this.boundHandleDocumentClick);
-	}
-
 	private handleMouseOver(e: MouseEvent): void {
 		const target = e.target as HTMLElement;
-		if (!target.classList.contains('cm-table-grid-cell')) return;
+		if (!target.classList.contains('popover-grid-cell')) return;
 
 		const row = parseInt(target.dataset.row || '0', 10);
 		const col = parseInt(target.dataset.col || '0', 10);
@@ -86,22 +81,13 @@ export class TableGridSelector {
 
 	private handleClick(e: MouseEvent): void {
 		const target = e.target as HTMLElement;
-		if (!target.classList.contains('cm-table-grid-cell')) return;
+		if (!target.classList.contains('popover-grid-cell')) return;
 
 		const row = parseInt(target.dataset.row || '0', 10);
 		const col = parseInt(target.dataset.col || '0', 10);
 
 		this.options.onSelect(row + 1, col + 1);
 		this.close();
-	}
-
-	private handleDocumentClick(e: MouseEvent): void {
-		if (!this.isOpen) return;
-
-		const target = e.target as HTMLElement;
-		if (!this.container.contains(target) && !this.button.contains(target)) {
-			this.close();
-		}
 	}
 
 	private highlightCells(rows: number, cols: number): void {
@@ -121,47 +107,18 @@ export class TableGridSelector {
 	}
 
 	toggle(): void {
-		if (this.isOpen) {
-			this.close();
-		} else {
-			setTimeout(() => this.open(), 0);
-		}
+		this.anchor.toggle(() => this.highlightCells(0, 0));
 	}
 
 	open(): void {
-		if (this.isOpen) return;
-
-		const buttonRect = this.button.getBoundingClientRect();
-		const toolbar = this.button.closest('.plugin-toolbar');
-
-		if (toolbar) {
-			toolbar.appendChild(this.container);
-		} else {
-			document.body.appendChild(this.container);
-		}
-
-		const toolbarRect = toolbar?.getBoundingClientRect();
-		if (toolbarRect) {
-			this.container.style.top = `${buttonRect.bottom - toolbarRect.top + 4}px`;
-			this.container.style.left = `${buttonRect.left - toolbarRect.left}px`;
-		} else {
-			this.container.style.top = `${buttonRect.bottom + 4}px`;
-			this.container.style.left = `${buttonRect.left}px`;
-		}
-
-		this.isOpen = true;
-		this.highlightCells(0, 0);
+		this.anchor.open(() => this.highlightCells(0, 0));
 	}
 
 	close(): void {
-		if (!this.isOpen) return;
-
-		this.container.remove();
-		this.isOpen = false;
+		this.anchor.close();
 	}
 
 	destroy(): void {
-		document.removeEventListener('click', this.boundHandleDocumentClick);
-		this.container.remove();
+		this.anchor.destroy();
 	}
 }

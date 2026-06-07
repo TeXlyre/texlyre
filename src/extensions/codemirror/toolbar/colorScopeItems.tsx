@@ -3,10 +3,10 @@ import type { EditorView } from '@codemirror/view';
 import { renderToString } from 'react-dom/server';
 
 import { t } from '@/i18n';
+import { ColorPicker } from '../../../utils/popover/ColorPicker';
+import { EditIcon, TrashIcon } from '../../../components/common/Icons';
 import type { ToolbarItem } from './types';
 import { detectColorScope, type ColorInfo, type FileType } from './colorScope';
-import { ColorPicker } from './ColorPicker';
-import { EditIcon, TrashIcon } from '../../../components/common/Icons';
 
 const colorPickers = new WeakMap<EditorView, ColorPicker>();
 

@@ -1,6 +1,7 @@
-// extras/viewers/milkdown/toolbar/ImagePicker.ts
+// src/utils/popover/ImagePicker.ts
 import { t } from '@/i18n';
 import { filePathCacheService } from '@/services/FilePathCacheService';
+import { PopoverAnchor } from './popoverAnchor';
 
 const IMAGE_EXTENSIONS = new Set([
 	'png',
@@ -28,14 +29,12 @@ export class ImagePicker {
 	private list: HTMLDivElement;
 	private suggestions: string[] = [];
 	private activeIndex = -1;
-	private isOpen = false;
-	private boundHandleDocumentClick: (e: MouseEvent) => void;
+	private anchor: PopoverAnchor;
 
 	constructor(
-		private readonly button: HTMLElement,
+		button: HTMLElement,
 		private readonly options: ImagePickerOptions,
 	) {
-		this.boundHandleDocumentClick = this.handleDocumentClick.bind(this);
 		this.container = this.createContainer();
 		this.input = this.createInput();
 		this.list = this.createList();
@@ -43,34 +42,31 @@ export class ImagePicker {
 		this.container.appendChild(this.input);
 		this.container.appendChild(this.list);
 
-		this.setupEventListeners();
+		this.anchor = new PopoverAnchor(button, this.container);
+
+		this.input.addEventListener('input', () => this.renderSuggestions());
+		this.input.addEventListener('keydown', this.handleKeyDown.bind(this));
+		this.list.addEventListener('click', this.handleListClick.bind(this));
 	}
 
 	private createContainer(): HTMLDivElement {
 		const container = document.createElement('div');
-		container.className = 'milkdown-image-picker';
+		container.className = 'popover';
 		return container;
 	}
 
 	private createInput(): HTMLInputElement {
 		const input = document.createElement('input');
 		input.type = 'text';
-		input.className = 'milkdown-image-picker-input';
+		input.className = 'popover-image-input';
 		input.placeholder = t('Image path or URL');
 		return input;
 	}
 
 	private createList(): HTMLDivElement {
 		const list = document.createElement('div');
-		list.className = 'milkdown-image-picker-list';
+		list.className = 'popover-image-list';
 		return list;
-	}
-
-	private setupEventListeners(): void {
-		this.input.addEventListener('input', () => this.renderSuggestions());
-		this.input.addEventListener('keydown', this.handleKeyDown.bind(this));
-		this.list.addEventListener('click', this.handleListClick.bind(this));
-		document.addEventListener('click', this.boundHandleDocumentClick);
 	}
 
 	private async loadSuggestions(): Promise<void> {
@@ -108,7 +104,7 @@ export class ImagePicker {
 
 		for (const path of matches) {
 			const item = document.createElement('div');
-			item.className = 'milkdown-image-picker-item';
+			item.className = 'popover-image-item';
 			item.dataset.path = path;
 			item.textContent = path;
 			this.list.appendChild(item);
@@ -117,7 +113,7 @@ export class ImagePicker {
 
 	private handleListClick(e: MouseEvent): void {
 		const target = (e.target as HTMLElement).closest(
-			'.milkdown-image-picker-item',
+			'.popover-image-item',
 		) as HTMLElement | null;
 		if (!target?.dataset.path) return;
 		this.commit(target.dataset.path);
@@ -125,7 +121,7 @@ export class ImagePicker {
 
 	private handleKeyDown(e: KeyboardEvent): void {
 		const items = Array.from(
-			this.list.querySelectorAll<HTMLElement>('.milkdown-image-picker-item'),
+			this.list.querySelectorAll<HTMLElement>('.popover-image-item'),
 		);
 
 		if (e.key === 'ArrowDown' && items.length) {
@@ -160,58 +156,26 @@ export class ImagePicker {
 		this.close();
 	}
 
-	private handleDocumentClick(e: MouseEvent): void {
-		if (!this.isOpen) return;
-		const target = e.target as HTMLElement;
-		if (!this.container.contains(target) && !this.button.contains(target)) {
-			this.close();
-		}
-	}
-
 	toggle(): void {
-		if (this.isOpen) {
-			this.close();
-		} else {
-			setTimeout(() => this.open(), 0);
-		}
+		this.anchor.toggle(() => this.onOpen());
 	}
 
 	open(): void {
-		if (this.isOpen) return;
+		this.anchor.open(() => this.onOpen());
+	}
 
-		const buttonRect = this.button.getBoundingClientRect();
-		const toolbar = this.button.closest('.plugin-toolbar');
+	close(): void {
+		this.anchor.close();
+	}
 
-		if (toolbar) {
-			toolbar.appendChild(this.container);
-		} else {
-			document.body.appendChild(this.container);
-		}
+	destroy(): void {
+		this.anchor.destroy();
+	}
 
-		const toolbarRect = toolbar?.getBoundingClientRect();
-		if (toolbarRect) {
-			this.container.style.top = `${buttonRect.bottom - toolbarRect.top + 4}px`;
-			this.container.style.left = `${buttonRect.left - toolbarRect.left}px`;
-		} else {
-			this.container.style.top = `${buttonRect.bottom + 4}px`;
-			this.container.style.left = `${buttonRect.left}px`;
-		}
-
-		this.isOpen = true;
+	private onOpen(): void {
 		this.input.value = '';
 		this.list.replaceChildren();
 		this.loadSuggestions();
 		this.input.focus();
-	}
-
-	close(): void {
-		if (!this.isOpen) return;
-		this.container.remove();
-		this.isOpen = false;
-	}
-
-	destroy(): void {
-		document.removeEventListener('click', this.boundHandleDocumentClick);
-		this.container.remove();
 	}
 }

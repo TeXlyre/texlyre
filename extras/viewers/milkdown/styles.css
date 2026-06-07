@@ -78,56 +78,6 @@
 	overflow-x: auto;
 }
 
-.texlyre-milkdown hr {
-	border: none !important;
-	height: 1px;
-	background-color: var(--accent-color) !important;
-}
-
-.milkdown-image-picker {
-	position: absolute;
-	z-index: 1000;
-	display: flex;
-	flex-direction: column;
-	min-width: 260px;
-	max-width: 360px;
-	background-color: var(--pico-background);
-	border: 1px solid var(--accent-color);
-	border-radius: 0.5rem;
-	box-shadow: var(--pico-card-box-shadow, 0 2px 8px rgba(0, 0, 0, 0.15));
-	overflow: hidden;
-}
-
-.milkdown-image-picker-input {
-	border: none;
-	border-bottom: 1px solid var(--accent-color);
-	padding: 0.5rem 0.6rem;
-	background: transparent;
-	color: var(--text-color);
-	outline: none;
-	font-size: 0.9em;
-}
-
-.milkdown-image-picker-list {
-	max-height: 220px;
-	overflow-y: auto;
-}
-
-.milkdown-image-picker-item {
-	padding: 0.4rem 0.6rem;
-	cursor: pointer;
-	font-size: 0.85em;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	color: var(--text-color);
-}
-
-.milkdown-image-picker-item:hover,
-.milkdown-image-picker-item.active {
-	background-color: var(--pico-secondary-background);
-}
-
 .texlyre-milkdown {
 	padding: 1.5rem 2rem;
 	outline: none;
@@ -135,6 +85,12 @@
 	caret-color: var(--pico-primary);
 	min-height: 100%;
 	box-sizing: border-box;
+}
+
+.texlyre-milkdown hr {
+	border: none !important;
+	height: 1px;
+	background-color: var(--accent-color) !important;
 }
 
 .milkdown-table-block {

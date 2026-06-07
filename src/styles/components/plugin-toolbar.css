@@ -100,3 +100,59 @@
 	flex: 1;
 	min-height: 0;
 }
+
+@media (max-width: 768px) {
+	.plugin-toolbar {
+		padding: var(--space-xs);
+		gap: 1px;
+	}
+
+	.plugin-toolbar__item {
+		min-width: 24px;
+		height: 24px;
+		padding: 2px;
+		font-size: var(--space-sd);
+	}
+
+	.plugin-toolbar__item svg {
+		width: 12px;
+		height: 12px;
+	}
+
+	.plugin-toolbar__split {
+		height: 16px;
+		margin: 0 2px;
+	}
+}
+
+.plugin-toolbar [data-item="typst-row-add-before"],
+.plugin-toolbar [data-item="latex-row-add-before"],
+.plugin-toolbar [data-item="typst-col-add-before"],
+.plugin-toolbar [data-item="latex-col-add-before"],
+.plugin-toolbar [data-item="typst-row-add-after"],
+.plugin-toolbar [data-item="latex-row-add-after"],
+.plugin-toolbar [data-item="typst-col-add-after"],
+.plugin-toolbar [data-item="latex-col-add-after"],
+.plugin-toolbar [data-item="typst-row-remove"],
+.plugin-toolbar [data-item="latex-row-remove"],
+.plugin-toolbar [data-item="typst-col-remove"],
+.plugin-toolbar [data-item="latex-col-remove"] {
+	color: var(--pico-primary);
+}
+
+.plugin-toolbar [data-item="typst-color-edit"],
+.plugin-toolbar [data-item="latex-color-edit"],
+.plugin-toolbar [data-item="typst-color-remove"],
+.plugin-toolbar [data-item="latex-color-remove"] {
+	color: var(--pico-primary);
+}
+
+.plugin-toolbar [data-item="typst-highlight"],
+.plugin-toolbar [data-item="latex-highlight"] {
+	background-color: rgba(255, 255, 0, 0.3);
+}
+
+.plugin-toolbar [data-item="typst-highlight"]:hover,
+.plugin-toolbar [data-item="latex-highlight"]:hover {
+	background-color: rgba(255, 255, 0, 0.5);
+}

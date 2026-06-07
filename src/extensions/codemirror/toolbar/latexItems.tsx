@@ -3,11 +3,7 @@ import type { EditorView } from '@codemirror/view';
 import { renderToString } from 'react-dom/server';
 
 import { t } from '@/i18n';
-import { getPendingImagePath } from '../PasteExtension';
-import { wrapSelection, insertText } from './helpers';
-import type { ToolbarItem } from './types';
-import { createTableCommand } from './tableItems';
-import { ColorPicker } from './ColorPicker';
+import { ColorPicker } from '../../../utils/popover/ColorPicker';
 import {
 	ToolbarBoldIcon,
 	ToolbarItalicIcon,
@@ -38,6 +34,10 @@ import {
 	ToolbarQuoteIcon,
 	ToolbarHyperlinkIcon,
 } from '../../../components/common/Icons';
+import { getPendingImagePath } from '../PasteExtension';
+import { wrapSelection, insertText } from './helpers';
+import type { ToolbarItem } from './types';
+import { createTableCommand } from './tableItems';
 
 const colorPickers = new WeakMap<EditorView, ColorPicker>();
 

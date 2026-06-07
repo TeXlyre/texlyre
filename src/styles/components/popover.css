@@ -1,0 +1,119 @@
+.popover {
+	position: absolute;
+	background-color: var(--pico-background);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	padding: var(--space-sm);
+	box-shadow: var(--shadow-md);
+	z-index: var(--z-above-all);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.popover-grid {
+	display: grid;
+	grid-template-columns: repeat(8, 16px);
+	grid-template-rows: repeat(8, 16px);
+	gap: 2px;
+}
+
+.popover-grid-cell {
+	width: 16px;
+	height: 16px;
+	border: 1px solid var(--accent-border);
+	background-color: var(--pico-secondary-background);
+	cursor: pointer;
+	transition:
+		background-color var(--transition-normal),
+		border-color var(--transition-normal);
+	border-radius: 2px;
+}
+
+.popover-grid-cell:hover,
+.popover-grid-cell.highlighted {
+	background-color: var(--pico-primary);
+	border-color: var(--pico-primary);
+}
+
+.popover-grid-label {
+	margin-top: var(--space-xs);
+	font-size: var(--space-sd);
+	color: var(--pico-secondary);
+	text-align: center;
+}
+
+.popover-color-grid {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	gap: 4px;
+	padding: 4px;
+}
+
+.popover-color-cell {
+	width: 24px;
+	height: 24px;
+	border: 1px solid var(--border-color);
+	border-radius: 3px;
+	cursor: pointer;
+	transition: transform 0.1s ease;
+}
+
+.popover-color-cell:hover {
+	transform: scale(1.1);
+	border-color: var(--primary-color);
+}
+
+.popover-color-custom {
+	width: 100%;
+	height: 32px;
+	border: 1px solid var(--border-color);
+	border-radius: 3px;
+	background-color: var(--pico-secondary);
+	cursor: pointer;
+	padding: 2px;
+}
+
+.popover-color-custom::-webkit-color-swatch-wrapper {
+	padding: 0;
+}
+
+.popover-color-custom::-webkit-color-swatch {
+	border: none;
+	border-radius: 2px;
+}
+
+.popover-color-custom::-moz-color-swatch {
+	border: none;
+	border-radius: 2px;
+}
+
+.popover-image-input {
+	border: none;
+	border-bottom: 1px solid var(--accent-color);
+	padding: 0.5rem 0.6rem;
+	background: transparent;
+	color: var(--text-color);
+	outline: none;
+	font-size: 0.9em;
+}
+
+.popover-image-list {
+	max-height: 220px;
+	overflow-y: auto;
+}
+
+.popover-image-item {
+	padding: 0.4rem 0.6rem;
+	cursor: pointer;
+	font-size: 0.85em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	color: var(--text-color);
+}
+
+.popover-image-item:hover,
+.popover-image-item.active {
+	background-color: var(--pico-secondary-background);
+}
