@@ -1,4 +1,4 @@
-// src/extensions/codemirror/SafeTypstExtension.ts
+// src/extensions/codemirror/SafeTypstPatch.ts
 // codemirror-lang-typst@0.4.0's incremental WASM edit() panics (Rust unwrap) on
 // document changes and the trap is not catchable from JS. We force every change
 // through a full reparse: edit() never enters WASM (always returns full_update),

@@ -111,7 +111,15 @@ export const registerYjsBinding = (yText: Y.Text, opts: YjsBindingOptions) => {
 		isEditingFile,
 	} = opts;
 
-	const emit = (content: string) => {
+	let rafHandle: number | null = null;
+	let pendingContent: string | null = null;
+
+	const flush = () => {
+		rafHandle = null;
+		if (pendingContent === null) return;
+		const content = pendingContent;
+		pendingContent = null;
+
 		isUpdatingRef.current = true;
 		try {
 			onUpdateContent(content);
@@ -136,21 +144,32 @@ export const registerYjsBinding = (yText: Y.Text, opts: YjsBindingOptions) => {
 		} finally {
 			isUpdatingRef.current = false;
 		}
+
+		if (autoSaveRef.current) autoSaveRef.current();
 	};
 
 	const observer = () => {
 		if (isUpdatingRef.current) return;
-		emit(yText.toString() || '');
-		if (autoSaveRef.current) autoSaveRef.current();
+		pendingContent = yText.toString() || '';
+		if (rafHandle === null) {
+			rafHandle = requestAnimationFrame(flush);
+		}
 	};
 
 	yText.observe(observer);
 
 	const initial = yText.toString() || '';
-	if (initial) emit(initial);
+	if (initial) {
+		pendingContent = initial;
+		flush();
+	}
 
 	return () => {
 		yText.unobserve(observer);
+		if (rafHandle !== null) {
+			cancelAnimationFrame(rafHandle);
+			rafHandle = null;
+		}
 		isUpdatingRef.current = false;
 	};
 };
