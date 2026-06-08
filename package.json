@@ -85,7 +85,6 @@
 		"@lezer/lr": "^1.4.8",
 		"@milkdown/crepe": "^7.21.2",
 		"@milkdown/kit": "^7.21.2",
-		"@milkdown/plugin-prism": "^7.21.2",
 		"@milkdown/react": "^7.21.2",
 		"@myriaddreamin/typst-ts-renderer": "npm:@texlyre/typst-ts-renderer@0.7.0-rc4",
 		"@myriaddreamin/typst-ts-web-compiler": "npm:@texlyre/typst-ts-web-compiler@0.7.0-rc4",

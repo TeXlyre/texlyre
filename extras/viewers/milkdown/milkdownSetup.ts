@@ -35,10 +35,18 @@ import {
 import { languages as allLanguages } from '@codemirror/language-data';
 import { latex } from 'codemirror-lang-latex';
 import { bibtex } from 'codemirror-lang-bib';
-import katex from 'katex';
 
 import { safeTypst as typst } from '@/extensions/codemirror/SafeTypstPatch';
 import { createLinkClickHandler } from './linkClick';
+import {
+	mathBlockInputRule,
+	mathBlockSchema,
+	mathBlockView,
+	mathInlineInputRule,
+	mathInlineSchema,
+	mathInlineView,
+	remarkMathPlugin,
+} from './plugins/math';
 
 export const MILKDOWN_THEME_CLASS = 'texlyre-milkdown';
 
@@ -96,14 +104,20 @@ export function configureMilkdownEditor(
 		.config((ctx) => {
 			ctx.set(rootCtx, root);
 			ctx.set(defaultValueCtx, defaultValue);
+
 			ctx.update(editorViewOptionsCtx, (prev) => ({
 				...prev,
-				attributes: { class: MILKDOWN_THEME_CLASS, spellcheck: 'true' },
+				attributes: {
+					class: MILKDOWN_THEME_CLASS,
+					spellcheck: 'true',
+				},
 				editable,
 				handleClick: createLinkClickHandler(getCurrentFilePath),
 			}));
 
-			if (isEnabled('link-tooltip')) configureLinkTooltip(ctx);
+			if (isEnabled('link-tooltip')) {
+				configureLinkTooltip(ctx);
+			}
 
 			if (isEnabled('code-block')) {
 				ctx.update(codeBlockConfig.key, (defaultConfig) => ({
@@ -114,29 +128,15 @@ export function configureMilkdownEditor(
 						...(defaultConfig.extensions ?? []),
 						syntaxHighlighting(defaultHighlightStyle),
 					],
-
-					renderPreview: (language: string, content: string) => {
-						if (language.toLowerCase() === 'latex' && content.length > 0) {
-							const dom = document.createElement('div');
-							dom.className = 'milkdown-latex-preview';
-							try {
-								dom.innerHTML = katex.renderToString(content, {
-									displayMode: true,
-									throwOnError: false,
-								});
-							} catch {
-								dom.textContent = content;
-							}
-							return dom;
-						}
-						return null;
-					},
 				}));
 			}
 
 			const l = ctx.get(listenerCtx);
+
 			l.markdownUpdated((_ctx, markdown, prevMarkdown) => {
-				if (markdown !== prevMarkdown) onMarkdownUpdated(markdown);
+				if (markdown !== prevMarkdown) {
+					onMarkdownUpdated(markdown);
+				}
 			});
 		})
 		.use(commonmark)
@@ -147,12 +147,34 @@ export function configureMilkdownEditor(
 	if (isEnabled('code-block')) {
 		editor.use(codeBlockComponent);
 	}
-	if (isEnabled('gfm')) editor.use(gfm);
-	if (isEnabled('table-block')) editor.use(tableBlock);
-	if (isEnabled('link-tooltip')) editor.use(linkTooltipPlugin);
+
+	if (isEnabled('math-inline')) {
+		editor
+			.use(remarkMathPlugin)
+			.use(mathInlineSchema)
+			.use(mathInlineView)
+			.use(mathInlineInputRule)
+			.use(mathBlockSchema)
+			.use(mathBlockView)
+			.use(mathBlockInputRule);
+	}
+
+	if (isEnabled('gfm')) {
+		editor.use(gfm);
+	}
+
+	if (isEnabled('table-block')) {
+		editor.use(tableBlock);
+	}
+
+	if (isEnabled('link-tooltip')) {
+		editor.use(linkTooltipPlugin);
+	}
 
 	if (plugins) {
-		for (const plugin of plugins) editor.use(plugin);
+		for (const plugin of plugins) {
+			editor.use(plugin);
+		}
 	}
 
 	return editor;
@@ -161,6 +183,7 @@ export function configureMilkdownEditor(
 export function readMarkdown(ctx: Ctx): string {
 	const view = ctx.get(editorViewCtx);
 	const serializer = ctx.get(serializerCtx);
+
 	return serializer(view.state.doc);
 }
 
@@ -168,13 +191,16 @@ export function replaceMarkdown(ctx: Ctx, markdown: string): void {
 	const view: EditorView = ctx.get(editorViewCtx);
 	const parser = ctx.get(parserCtx);
 	const doc = parser(markdown);
+
 	if (!doc) return;
 
 	const state = view.state;
 	const tr = state.tr;
+
 	tr.replace(0, state.doc.content.size, new Slice(doc.content, 0, 0));
 
 	const anchor = Math.min(state.selection.anchor, tr.doc.content.size);
+
 	tr.setSelection(TextSelection.create(tr.doc, anchor));
 	view.dispatch(tr.setMeta('addToHistory', false));
 }

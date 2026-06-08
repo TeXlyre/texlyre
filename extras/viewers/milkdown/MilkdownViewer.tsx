@@ -3,12 +3,12 @@ import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import '@milkdown/crepe/theme/common/style.css';
 import 'katex/dist/katex.min.css';
-import 'prismjs/themes/prism.css';
 
 import { t } from '@/i18n';
 import {
 	DownloadIcon,
 	SaveIcon,
+	CopyIcon,
 	ToolbarShowIcon,
 	EditingViewIcon,
 } from '@/components/common/Icons';
@@ -23,6 +23,7 @@ import type { ViewerProps } from '@/plugins/PluginInterface';
 import { autoSaveService } from '@/services/AutoSaveService';
 import { fileStorageService } from '@/services/FileStorageService';
 import { formatFileSize } from '@/utils/fileUtils';
+import { copyCleanTextToClipboard } from '@/utils/clipboardUtils';
 import MilkdownEditor from './MilkdownEditor';
 import MilkdownTextPane from './MilkdownTextPane';
 import { createImageResolver } from './imageResolver';
@@ -335,6 +336,13 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 						<SaveIcon />
 					</button>
 				)}
+				<button
+					onClick={() => copyCleanTextToClipboard(getCurrentContent())}
+					title={t('Copy Text')}
+					disabled={isLoadingContent}
+				>
+					<CopyIcon />
+				</button>
 
 				<button
 					onClick={handleExport}

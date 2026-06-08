@@ -2162,17 +2162,6 @@
     "@types/lodash-es" "^4.17.12"
     lodash-es "^4.17.21"
 
-"@milkdown/plugin-prism@^7.21.2":
-  version "7.21.2"
-  resolved "https://registry.npmjs.org/@milkdown/plugin-prism/-/plugin-prism-7.21.2.tgz"
-  integrity sha512-yA7y1GV2ciNEtqY3zPmDyTbBkfJMyGqRMc5eR6r4flYfkCWDHUpGV+noDiVvBXSwSEHFi3Kr5D2mIYJGY8rnwQ==
-  dependencies:
-    "@milkdown/ctx" "7.21.2"
-    "@milkdown/prose" "7.21.2"
-    "@milkdown/utils" "7.21.2"
-    "@types/hast" "^3.0.4"
-    refractor "^5.0.0"
-
 "@milkdown/plugin-slash@7.21.2":
   version "7.21.2"
   resolved "https://registry.npmjs.org/@milkdown/plugin-slash/-/plugin-slash-7.21.2.tgz"
@@ -2663,7 +2652,7 @@
   resolved "https://registry.npmjs.org/@types/estree/-/estree-0.0.39.tgz"
   integrity sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==
 
-"@types/hast@^3.0.0", "@types/hast@^3.0.4":
+"@types/hast@^3.0.0":
   version "3.0.4"
   resolved "https://registry.npmjs.org/@types/hast/-/hast-3.0.4.tgz"
   integrity sha512-WPs+bbQw5aCj+x6laNGWLH3wviHtoCv/P3+otBhbOhJgG8qtpdAMlTCxLtsTWA7LH1Oh/bFCHsBn0TPS5m30EQ==

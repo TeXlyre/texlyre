@@ -73,13 +73,105 @@
 	flex-shrink: 0;
 }
 
+.milkdown-math-block {
+	display: block;
+	margin: 0.75rem 0;
+	border-radius: 0.5rem;
+}
+
+.milkdown-math-block.is-preview {
+	cursor: pointer;
+}
+
+.milkdown-math-block.is-preview:hover .milkdown-math-block-preview {
+	background: color-mix(in srgb, currentColor 6%, transparent);
+}
+
+.milkdown-math-block-preview {
+	overflow-x: auto;
+	padding: 0.75rem 1rem;
+	border-radius: 0.5rem;
+	background: var(--pico-background) !important;
+}
+
+.milkdown-math-block-preview.is-empty {
+	opacity: 0.6;
+	font-style: italic;
+}
+
+.milkdown-math-block-editor {
+	overflow: hidden;
+	border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+	border-radius: 0.5rem;
+	background: var(--pico-background) !important;
+}
+
+.milkdown-math-editor-header {
+	margin: 6px 0;
+	font-size: 12px;
+	color: color-mix(in srgb, var(--crepe-color-on-surface), transparent 40%);
+	font-weight: 600;
+	text-transform: uppercase;
+	font-family: var(--crepe-font-default);
+	user-select: none;
+}
+
+.milkdown-math-block-editor-host .cm-editor {
+	min-height: 4rem;
+	background: transparent;
+}
+
+.milkdown-math-block-editor-host .cm-scroller {
+	font-family:
+		ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+		"Courier New", monospace;
+}
+
+.milkdown-math-block.is-editing {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 0.5rem;
+}
+
+.milkdown-math-block.is-editing .milkdown-math-block-preview {
+	border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.milkdown-math-inline.is-editing {
+	display: inline-grid;
+	grid-template-columns: minmax(10rem, 1fr);
+	gap: 0.25rem;
+	vertical-align: middle;
+	min-width: 16rem;
+	max-width: min(32rem, 100%);
+	padding: 0.25rem;
+	border-radius: 0.375rem;
+	background: color-mix(in srgb, currentColor 4%, transparent);
+}
+
+.milkdown-math-editor-inline {
+	display: block;
+}
+
+.milkdown-math-editor-inline .cm-editor {
+	min-height: 2.25rem;
+}
+
+.milkdown-math-editor-inline .cm-content {
+	padding: 0.25rem 0.5rem;
+}
+
+.milkdown-math-editor-inline .cm-scroller {
+	overflow: hidden;
+}
+
 .milkdown-latex-preview {
 	padding: 0.8em 1em;
 	overflow-x: auto;
 }
 
 .texlyre-milkdown {
-	padding: 1.5rem 2rem;
+	padding: 1rem 0.75rem !important;
 	outline: none;
 	color: var(--text-color);
 	caret-color: var(--pico-primary);
@@ -152,6 +244,6 @@
 
 @media (max-width: 768px) {
 	.texlyre-milkdown {
-		padding: 1rem;
+		padding: 0.5rem !important;
 	}
 }
