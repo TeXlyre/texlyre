@@ -51,6 +51,17 @@
 	background-color: #c82333;
 }
 
+.button.warn,
+.action-button.warn {
+	background-color: color-mix(in srgb, var(--color-warning) 20%, white);
+	border-color: var(--color-warning);
+}
+
+.button.warn:hover,
+.action-button.warn:hover {
+	background-color: var(--color-warning);
+}
+
 .button.icon-only {
 	padding: var(--space-sm);
 	min-width: auto;

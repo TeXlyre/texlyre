@@ -4,7 +4,8 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 
 import { t } from '@/i18n';
-import { CopyUrlIcon, ShareIcon } from '../common/Icons';
+import { ShareIcon } from '../common/Icons';
+import CopyField from '../common/CopyField';
 import Modal from '../common/Modal';
 
 interface ShareProjectModalProps {
@@ -21,9 +22,6 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 	shareUrl,
 }) => {
 	const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
-	const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>(
-		'idle',
-	);
 
 	useEffect(() => {
 		if (isOpen && shareUrl) {
@@ -39,44 +37,6 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 				.catch(console.error);
 		}
 	}, [isOpen, shareUrl]);
-
-	const handleSelectAll = (e: React.FocusEvent<HTMLInputElement>) => {
-		e.target.select();
-	};
-
-	const handleCopyLink = async () => {
-		try {
-			await navigator.clipboard.writeText(shareUrl);
-			setCopyStatus('copied');
-			setTimeout(() => setCopyStatus('idle'), 2000);
-		} catch (error) {
-			console.error('Failed to copy to clipboard:', error);
-			setCopyStatus('error');
-			setTimeout(() => setCopyStatus('idle'), 2000);
-		}
-	};
-
-	const getCopyButtonText = () => {
-		switch (copyStatus) {
-			case 'copied':
-				return t('Copied!');
-			case 'error':
-				return t('Failed to copy');
-			default:
-				return '';
-		}
-	};
-
-	const getCopyButtonClass = () => {
-		switch (copyStatus) {
-			case 'copied':
-				return 'button primary smaller';
-			case 'error':
-				return 'button danger smaller';
-			default:
-				return 'button secondary icon-only';
-		}
-	};
 
 	return (
 		<Modal
@@ -100,26 +60,11 @@ const ShareProjectModal: React.FC<ShareProjectModalProps> = ({
 				</div>
 
 				<div className='share-url-section'>
-					<label htmlFor='share-url'>{t('Project Link')}</label>
-					<div className='share-url-input-group'>
-						<input
-							id='share-url'
-							type='text'
-							value={shareUrl}
-							readOnly
-							className='share-url-input'
-							onFocus={handleSelectAll}
-						/>
-
-						<button
-							onClick={handleCopyLink}
-							className={getCopyButtonClass()}
-							disabled={copyStatus === 'copied'}
-						>
-							<CopyUrlIcon />
-							{getCopyButtonText()}
-						</button>
-					</div>
+					<CopyField
+						id='share-url'
+						label={t('Project Link')}
+						value={shareUrl}
+					/>
 				</div>
 
 				{qrCodeUrl && (
