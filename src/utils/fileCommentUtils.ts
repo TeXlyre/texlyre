@@ -17,66 +17,49 @@ const COMMENT_DETECTION_REGEX = /<###(?:\s|%)*comment(?:\s|%)*id:/;
 function hasBinaryComments(buffer: ArrayBuffer): boolean {
 	const view = new Uint8Array(buffer);
 	const backtick = 0x60;
+	const percent = 0x25;
 	const openMarker = new TextEncoder().encode('<###');
 	const commentMarker = new TextEncoder().encode('comment');
 	const idMarker = new TextEncoder().encode('id:');
 	const whitespaceChars = [0x20, 0x09, 0x0a, 0x0d];
 
-	for (let i = 0; i <= view.length - openMarker.length; i++) {
+	const isSeparator = (byte: number) =>
+		whitespaceChars.includes(byte) || byte === percent;
+
+	const matchAt = (pos: number, marker: Uint8Array): boolean => {
+		if (pos + marker.length > view.length) return false;
+		for (let j = 0; j < marker.length; j++) {
+			if (view[pos + j] !== marker[j]) return false;
+		}
+		return true;
+	};
+
+	const skipSeparators = (pos: number): number => {
+		while (pos < view.length && isSeparator(view[pos])) pos++;
+		return pos;
+	};
+
+	for (let i = 0; i < view.length; i++) {
 		let pos = i;
+		if (view[pos] === backtick) pos++;
 
-		if (view[pos] === backtick) {
-			pos++;
-		}
-
-		let match = true;
-		for (let j = 0; j < openMarker.length; j++) {
-			if (pos + j >= view.length || view[pos + j] !== openMarker[j]) {
-				match = false;
-				break;
-			}
-		}
-
-		if (!match) continue;
-
+		if (!matchAt(pos, openMarker)) continue;
 		pos += openMarker.length;
 
-		while (pos < view.length && whitespaceChars.includes(view[pos])) {
-			pos++;
-		}
-
-		match = true;
-		for (let j = 0; j < commentMarker.length; j++) {
-			if (pos + j >= view.length || view[pos + j] !== commentMarker[j]) {
-				match = false;
-				break;
-			}
-		}
-
-		if (!match) continue;
+		pos = skipSeparators(pos);
+		if (!matchAt(pos, commentMarker)) continue;
 		pos += commentMarker.length;
 
-		while (pos < view.length && whitespaceChars.includes(view[pos])) {
-			pos++;
-		}
-
-		match = true;
-		for (let j = 0; j < idMarker.length; j++) {
-			if (pos + j >= view.length || view[pos + j] !== idMarker[j]) {
-				match = false;
-				break;
-			}
-		}
-
-		if (match) return true;
+		pos = skipSeparators(pos);
+		if (matchAt(pos, idMarker)) return true;
 	}
 
 	return false;
 }
 
 export function hasComments(content: string | ArrayBuffer): boolean {
-	if (content instanceof ArrayBuffer) {
-		return hasBinaryComments(content);
+	if (typeof content !== 'string') {
+		return hasBinaryComments(content as ArrayBuffer);
 	}
 	return COMMENT_DETECTION_REGEX.test(content);
 }
@@ -157,10 +140,11 @@ export function cleanText(text: string): string {
 export function cleanContent(
 	content: string | ArrayBuffer,
 ): string | ArrayBuffer {
-	if (content instanceof ArrayBuffer) {
-		const textContent = new TextDecoder().decode(content);
+	if (typeof content !== 'string') {
+		const buffer = content as ArrayBuffer;
+		const textContent = new TextDecoder().decode(buffer);
 		if (!hasComments(textContent)) {
-			return content;
+			return buffer;
 		}
 		const cleanedText = cleanText(textContent);
 		return new TextEncoder().encode(cleanedText).buffer;

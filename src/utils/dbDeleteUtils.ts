@@ -131,3 +131,14 @@ export async function cleanupDocumentDatabases(
 		console.error('Error cleaning up document databases:', error);
 	}
 }
+
+export function projectDbNames(docUrl: string): string[] {
+	const projectId = docUrl.startsWith('yjs:') ? docUrl.slice(4) : docUrl;
+	const dbName = `texlyre-project-${projectId}`;
+	return [
+		`${dbName}-yjs_metadata`,
+		`${dbName}-chat`,
+		`${dbName}-file_sync`,
+		dbName,
+	];
+}

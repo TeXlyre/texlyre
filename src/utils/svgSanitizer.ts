@@ -146,7 +146,18 @@ function sanitize(svg: string, opts: ResolvedOptions): string {
 		output += rebuildTag(rawName, rawAttrs ?? '', /\/\s*>$/.test(tag), opts);
 	}
 
-	output += svg.slice(cursor);
+	const tail = svg.slice(cursor);
+
+	if (skipUntil) {
+		return output;
+	}
+
+	if (tail.includes('<')) {
+		output += tail.replace(/<[^>]*$/, '');
+	} else {
+		output += tail;
+	}
+
 	return output;
 }
 
