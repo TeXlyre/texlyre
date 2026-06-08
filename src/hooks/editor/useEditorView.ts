@@ -960,7 +960,10 @@ export const useEditorView = (
 		return () => {
 			const autoSaveKey = isEditingFile ? currentFileId : documentId;
 			if (autoSaveKey) {
-				autoSaveService.flushPendingSaves().catch(console.error);
+				const content = viewRef.current?.state?.doc?.toString();
+				if (content) {
+					autoSaveService.flushPendingSaves().catch(console.error);
+				}
 				autoSaveService.clearAutoSaver(autoSaveKey);
 			}
 		};

@@ -257,23 +257,25 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 	useEffect(() => {
 		if (!fileId) return;
 
+		const saveFileId = fileId;
+
 		autoSaveRef.current = autoSaveService.createAutoSaver(
-			fileId,
+			saveFileId,
 			() => getCurrentContent(),
 			{
 				enabled: autoSaveEnabled,
 				delay: autoSaveDelay,
 				onSave: async (_saveKey, content) => {
+					if (!content) return;
 					const bytes = new TextEncoder().encode(content).buffer;
-					await fileStorageService.updateFileContent(fileId, bytes);
+					await fileStorageService.updateFileContent(saveFileId, bytes);
 				},
 				onError: (error) => console.error('Auto-save failed:', error),
 			},
 		);
 
 		return () => {
-			autoSaveService.flushPendingSaves().catch(console.error);
-			autoSaveService.clearAutoSaver(fileId);
+			autoSaveService.clearAutoSaver(saveFileId);
 			autoSaveRef.current = null;
 		};
 	}, [fileId, autoSaveEnabled, autoSaveDelay, getCurrentContent]);
