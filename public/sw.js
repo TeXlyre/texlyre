@@ -1,6 +1,6 @@
 // These constants are automatically generated. Do not edit directly.
-// Generated on: 2026-06-07T21:53:13.902Z
-const CACHE_NAME = `texlyre-v0.8.9`;
+// Generated on: 2026-06-08T15:33:18.284Z
+const CACHE_NAME = `texlyre-v0.8.10`;
 const BASE_PATH = '/texlyre/';
 const FONTS_CACHE_NAME = 'fonts-cache-v1';
 const AIRGAP_ALLOWED_DOMAINS = [

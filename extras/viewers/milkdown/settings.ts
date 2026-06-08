@@ -44,8 +44,17 @@ export const getMilkdownViewerSettings = (): Setting[] => [
 		category: t('Viewers'),
 		subcategory: t('Markdown Editor'),
 		type: 'checkbox',
-		label: t('Code block with math'),
-		description: t('Enable code blocks and LaTeX math rendering'),
+		label: t('Code blocks'),
+		description: t('Enable code blocks'),
+		defaultValue: true,
+	},
+	{
+		id: 'milkdown-plugin-math-inline',
+		category: t('Viewers'),
+		subcategory: t('Markdown Editor'),
+		type: 'checkbox',
+		label: t('Inline math'),
+		description: t('Render inline LaTeX math'),
 		defaultValue: true,
 	},
 ];
@@ -60,11 +69,14 @@ export const getEnabledMilkdownPluginIds = (
 		'table-block',
 		'link-tooltip',
 		'code-block',
+		'math-inline',
 	];
+
 	for (const id of ids) {
 		if ((getSetting(`milkdown-plugin-${id}`)?.value as boolean) ?? true) {
 			enabled.add(id);
 		}
 	}
+
 	return enabled;
 };

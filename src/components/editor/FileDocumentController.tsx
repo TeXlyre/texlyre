@@ -170,7 +170,10 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	>('files');
 	const lastOpenedFilePathRef = useRef<string | null>(null);
 	const lastOpenedDocIdRef = useRef<string | null>(null);
-	const [fileContent, setFileContent] = useState<string | ArrayBuffer>('');
+	const [loadedFile, setLoadedFile] = useState<{
+		fileId: string;
+		content: string | ArrayBuffer;
+	} | null>(null);
 	const [currentEditorContent, setCurrentEditorContent] = useState<string>('');
 	const [isEditingFile, setIsEditingFile] = useState(false);
 	const [isBinaryFile, setIsBinaryFile] = useState(false);
@@ -323,7 +326,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 			);
 
 			flushSync(() => {
-				setFileContent(loadedContent);
+				setLoadedFile({ fileId: file.id, content: loadedContent });
 				setFileName(file.name);
 				setMimeType(file.mimeType);
 				setIsBinaryFile(isBinary || isViewerHandledRef.current);
@@ -523,7 +526,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 			setCurrentEditorContent(newContent);
 			return;
 		}
-		if (newContent !== fileContent) {
+		if (newContent !== loadedFile?.content) {
 			onUpdateContent(newContent);
 		}
 	};
@@ -1004,13 +1007,17 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		);
 	}, [isEditingFile, fileName, linkedFileInfo?.fileName, content]);
 
+	const fileContentReady =
+		isEditingFile && loadedFile?.fileId === (selectedFileId || '');
+
 	useEffect(() => {
 		if (isEditingFile) {
-			if (typeof fileContent === 'string') {
-				setCurrentEditorContent(fileContent);
-			} else if (fileContent instanceof ArrayBuffer) {
+			const loaded = fileContentReady ? loadedFile?.content : undefined;
+			if (typeof loaded === 'string') {
+				setCurrentEditorContent(loaded);
+			} else if (loaded instanceof ArrayBuffer) {
 				try {
-					setCurrentEditorContent(new TextDecoder().decode(fileContent));
+					setCurrentEditorContent(new TextDecoder().decode(loaded));
 				} catch {
 					setCurrentEditorContent('');
 				}
@@ -1020,7 +1027,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		} else {
 			setCurrentEditorContent(content || '');
 		}
-	}, [isEditingFile, content, fileContent]);
+	}, [isEditingFile, content, loadedFile, fileContentReady]);
 
 	return (
 		<div className='main-content'>
@@ -1203,11 +1210,18 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 						</div>
 					) : (
 						<Editor
-							content={isEditingFile ? fileContent : content}
+							content={
+								isEditingFile
+									? fileContentReady
+										? loadedFile?.content
+										: ''
+									: content
+							}
 							documentId={selectedDocId || ''}
 							onUpdateContent={handleUpdateContent}
 							isDocumentSelected={
-								bootstrapResolved && (isEditingFile || !!selectedDocId)
+								bootstrapResolved &&
+								(fileContentReady || (!isEditingFile && !!selectedDocId))
 							}
 							isBinaryFile={isEditingFile && isBinaryFile}
 							fileName={isEditingFile ? fileName : linkedFileInfo.fileName}

@@ -41,6 +41,31 @@ const run = (
 	return didRun;
 };
 
+const getSelectedText = (view: EditorView): string => {
+	const { from, to, empty } = view.state.selection;
+	return empty ? '' : view.state.doc.textBetween(from, to, '\n');
+};
+
+const insertNodeAtSelection = (
+	view: EditorView,
+	type: NodeType,
+	attrs?: Record<string, unknown>,
+): boolean => {
+	const node = type.createAndFill(attrs);
+	if (!node) return false;
+
+	const tr = view.state.tr.replaceSelectionWith(node, false);
+	const after = tr.selection.to;
+
+	tr.setSelection(
+		TextSelection.near(tr.doc.resolve(after), 1),
+	).scrollIntoView();
+	view.dispatch(tr);
+	view.focus();
+
+	return true;
+};
+
 export const toggleMarkByName = (
 	view: EditorView,
 	names: string[],
@@ -90,11 +115,25 @@ const insertCodeBlockNode = (
 	tr.setSelection(TextSelection.near(pos, -1)).scrollIntoView();
 	view.dispatch(tr);
 	view.focus();
+
 	return true;
 };
 
-export const insertMath = (view: EditorView): boolean =>
-	insertCodeBlockNode(view, { language: 'latex' });
+const insertMathNode = (view: EditorView, names: string[]): boolean => {
+	const type = getNode(view.state.schema, names);
+	if (!type) return false;
+
+	return insertNodeAtSelection(view, type, {
+		value: getSelectedText(view),
+		autofocus: true,
+	});
+};
+
+export const insertMathInline = (view: EditorView): boolean =>
+	insertMathNode(view, ['math_inline']);
+
+export const insertMathBlock = (view: EditorView): boolean =>
+	insertMathNode(view, ['math_block']);
 
 export const insertCodeBlock = (view: EditorView): boolean =>
 	insertCodeBlockNode(view);
@@ -105,10 +144,12 @@ const insertImageNode = (view: EditorView, src: string): void => {
 	const imageType = view.state.schema.nodes.image;
 	if (!imageType || !src) return;
 
-	const node = imageType.create({ src });
 	view.dispatch(
-		view.state.tr.replaceSelectionWith(node, false).scrollIntoView(),
+		view.state.tr
+			.replaceSelectionWith(imageType.create({ src }), false)
+			.scrollIntoView(),
 	);
+
 	view.focus();
 };
 
@@ -117,18 +158,18 @@ export const insertImage = (
 	getCurrentFilePath: () => string = () => '',
 ): boolean => {
 	const pending = getPendingMilkdownImagePath();
+
 	if (pending) {
 		insertImageNode(view, pending);
 		return true;
 	}
 
 	const toolbar = document.querySelector('.plugin-toolbar');
-	if (!toolbar) return false;
-
-	const button = toolbar.querySelector(
+	const button = toolbar?.querySelector(
 		'[data-item="image"]',
 	) as HTMLElement | null;
-	if (!button) return false;
+
+	if (!toolbar || !button) return false;
 
 	let picker = imagePickers.get(view);
 
@@ -139,7 +180,7 @@ export const insertImage = (
 	) {
 		picker.destroy();
 		imagePickers.delete(view);
-		picker = null;
+		picker = undefined;
 	}
 
 	if (!picker) {
@@ -213,22 +254,29 @@ export const setListType = (
 
 	const attrs = kind === 'task' ? { checked: false } : undefined;
 	const wrapped = run(view, wrapInList(listNode, attrs));
+
 	if (!wrapped || kind !== 'task') return wrapped;
 
 	const itemNode = getNode(view.state.schema, ['list_item', 'listItem']);
 	if (!itemNode) return wrapped;
 
 	const { tr } = view.state;
+
 	view.state.doc.nodesBetween(
 		view.state.selection.from,
 		view.state.selection.to,
 		(node, pos) => {
 			if (node.type === itemNode) {
-				tr.setNodeMarkup(pos, undefined, { ...node.attrs, checked: false });
+				tr.setNodeMarkup(pos, undefined, {
+					...node.attrs,
+					checked: false,
+				});
 			}
 		},
 	);
+
 	view.dispatch(tr);
+
 	return true;
 };
 
@@ -243,12 +291,11 @@ const insertSizedTable = (
 
 export const insertTable = (view: EditorView): boolean => {
 	const toolbar = document.querySelector('.plugin-toolbar');
-	if (!toolbar) return false;
-
-	const button = toolbar.querySelector(
+	const button = toolbar?.querySelector(
 		'[data-item="table"]',
 	) as HTMLElement | null;
-	if (!button) return false;
+
+	if (!toolbar || !button) return false;
 
 	let selector = tableSelectors.get(view);
 
@@ -259,7 +306,7 @@ export const insertTable = (view: EditorView): boolean => {
 	) {
 		selector.destroy();
 		tableSelectors.delete(view);
-		selector = null;
+		selector = undefined;
 	}
 
 	if (!selector) {

@@ -9,6 +9,7 @@ import { t } from '@/i18n';
 import {
 	DownloadIcon,
 	SaveIcon,
+	CopyIcon,
 	ToolbarShowIcon,
 	EditingViewIcon,
 } from '@/components/common/Icons';
@@ -23,6 +24,7 @@ import type { CollaborativeViewerProps } from '@/plugins/PluginInterface';
 import { fileStorageService } from '@/services/FileStorageService';
 import { collabService } from '@/services/CollabService';
 import { formatFileSize } from '@/utils/fileUtils';
+import { copyCleanTextToClipboard } from '@/utils/clipboardUtils';
 import MilkdownEditor from '../../viewers/milkdown/MilkdownEditor';
 import MilkdownTextPane from '../../viewers/milkdown/MilkdownTextPane';
 import { createImageResolver } from '../../viewers/milkdown/imageResolver';
@@ -448,6 +450,14 @@ const MilkdownCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 						<SaveIcon />
 					</button>
 				)}
+
+				<button
+					onClick={() => copyCleanTextToClipboard(currentContent())}
+					title={t('Copy Text')}
+					disabled={isLoadingContent}
+				>
+					<CopyIcon />
+				</button>
 
 				<button
 					onClick={handleExport}

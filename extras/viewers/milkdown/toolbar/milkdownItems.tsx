@@ -16,6 +16,7 @@ import {
 	ToolbarCodeBlockIcon,
 	ToolbarTableIcon,
 	ToolbarMathBlockIcon,
+	ToolbarMathInlineIcon,
 	ToolbarImageIcon,
 	ToolbarHyperlinkIcon,
 	UndoIcon,
@@ -26,7 +27,8 @@ import type { MilkdownToolbarEntry } from './types';
 import { split, space } from './types';
 import {
 	insertHorizontalRule,
-	insertMath,
+	insertMathBlock,
+	insertMathInline,
 	insertCodeBlock,
 	insertImage,
 	insertLink,
@@ -106,10 +108,16 @@ export const milkdownToolbarItems: MilkdownToolbarEntry[] = [
 	},
 	split,
 	{
-		key: 'math',
+		key: 'mathInline',
+		title: 'Inline Math',
+		label: renderToString(<ToolbarMathInlineIcon />),
+		command: insertMathInline,
+	},
+	{
+		key: 'mathBlock',
 		title: 'Display Math',
 		label: renderToString(<ToolbarMathBlockIcon />),
-		command: insertMath,
+		command: insertMathBlock,
 	},
 	split,
 	{

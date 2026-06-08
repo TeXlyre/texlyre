@@ -98,9 +98,6 @@ importers:
       '@milkdown/kit':
         specifier: ^7.21.2
         version: 7.21.2(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(typescript@6.0.2)
-      '@milkdown/plugin-prism':
-        specifier: ^7.21.2
-        version: 7.21.2
       '@milkdown/react':
         specifier: ^7.21.2
         version: 7.21.2(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)(prosemirror-model@1.25.7)(prosemirror-state@1.4.4)(prosemirror-view@1.41.8)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(typescript@6.0.2)
@@ -1780,9 +1777,6 @@ packages:
 
   '@milkdown/plugin-listener@7.21.2':
     resolution: {integrity: sha512-CyVNlB5uyQlH7aAX1kBKF3O+2zATGwXmjWZ7qFLNyII+31Wv4jshAzxHSIBi4qrIWbqBEbT72j2OQTOCdRNLOA==}
-
-  '@milkdown/plugin-prism@7.21.2':
-    resolution: {integrity: sha512-yA7y1GV2ciNEtqY3zPmDyTbBkfJMyGqRMc5eR6r4flYfkCWDHUpGV+noDiVvBXSwSEHFi3Kr5D2mIYJGY8rnwQ==}
 
   '@milkdown/plugin-slash@7.21.2':
     resolution: {integrity: sha512-da8UxNr73UC/32BQNZnWaalj0HjZIH2zIA6k7fHEgwwSXq3/aAgPc8x80/toHyVBMeeNA0hEcEobJLvEGFYV7g==}
@@ -7433,16 +7427,6 @@ snapshots:
       '@milkdown/prose': 7.21.2
       '@types/lodash-es': 4.17.12
       lodash-es: 4.18.1
-    transitivePeerDependencies:
-      - supports-color
-
-  '@milkdown/plugin-prism@7.21.2':
-    dependencies:
-      '@milkdown/ctx': 7.21.2
-      '@milkdown/prose': 7.21.2
-      '@milkdown/utils': 7.21.2
-      '@types/hast': 3.0.4
-      refractor: 5.0.0
     transitivePeerDependencies:
       - supports-color
 
