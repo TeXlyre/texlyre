@@ -304,12 +304,14 @@ const createMathView = (kind: MathKind, getType: () => NodeType) => {
 								const nextTarget = event.relatedTarget as Node | null;
 
 								if (nextTarget && dom.contains(nextTarget)) return false;
+								
+								event.preventDefault();
 
 								queueMicrotask(() => {
 									if (cm) closeEditor(true);
 								});
 
-								return false;
+								return true;
 							},
 						}),
 					],
