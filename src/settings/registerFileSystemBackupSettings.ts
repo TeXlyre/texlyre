@@ -45,14 +45,14 @@ export function useRegisterFileSystemBackupSettings() {
 			defaultValue: initialAutoBackup,
 		});
 
-		registerSetting({
-			id: 'file-system-backup-auto-sync',
-			category: t('Backup'),
-			subcategory: t('File System'),
-			type: 'checkbox',
-			label: t('Auto-sync on change'),
-			description: t('Automatically synchronize when project files change'),
-			defaultValue: initialAutoSync,
-		});
+		// registerSetting({
+		// 	id: 'file-system-backup-auto-sync',
+		// 	category: t('Backup'),
+		// 	subcategory: t('File System'),
+		// 	type: 'checkbox',
+		// 	label: t('Auto-sync on change'),
+		// 	description: t('Automatically synchronize when project files change'),
+		// 	defaultValue: initialAutoSync,
+		// });
 	}, [registerSetting, getSetting]);
 }
