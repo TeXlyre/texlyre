@@ -79,6 +79,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
 						{messages.length === 0 ? (
 							<div className='empty-chat'>
 								<p>{t('Welcome to the project chat!')}</p>
+								<br />
 								<p>{t('Start a conversation with your collaborators.')}</p>
 							</div>
 						) : (
