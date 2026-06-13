@@ -4,6 +4,7 @@ import type * as Y from 'yjs';
 
 interface WebrtcProviderOptions {
 	signaling?: string[];
+	password?: string;
 }
 
 class WebrtcProviderRegistry {

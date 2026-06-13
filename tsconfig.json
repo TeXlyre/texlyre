@@ -21,11 +21,13 @@
 		"paths": {
 			"@/*": ["./src/*"],
 			"@src/*": ["./src/*"],
+			"@chelys/*": ["./chelys/*"],
 			"@tests/*": ["./tests/*"]
 		}
 	},
 	"include": [
 		"src/**/*",
+		"chelys/**/*",
 		"scripts/**/*",
 		"extras/**/*",
 		"build.ts",

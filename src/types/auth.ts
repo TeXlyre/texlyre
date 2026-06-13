@@ -57,6 +57,7 @@ export interface User {
 	color?: string;
 	colorLight?: string;
 	isGuest?: boolean;
+	isChelysEnrolled?: boolean;
 	sessionId?: string;
 	expiresAt?: number;
 }

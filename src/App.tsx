@@ -33,6 +33,7 @@ import './styles/components/resizable-panel.css';
 import './styles/components/toast.css';
 import './styles/components/tooltip.css';
 import './styles/components/tags.css';
+import './styles/components/copy-field.css';
 import './styles/components/comments.css';
 import './styles/components/auth.css';
 import './styles/components/project.css';
@@ -63,6 +64,7 @@ import SplashScreen from './components/common/SplashScreen';
 import ConflictResolutionModal from './components/conflicts/ConflictResolutionModal';
 import FileConflictModal from './components/editor/FileConflictModal';
 import { AuthProvider } from './contexts/AuthContext';
+import { ChelysProvider } from './contexts/ChelysContext';
 import { EditorProvider } from './contexts/EditorContext';
 import { LSPConfigProvider } from './contexts/LSPConfigContext';
 import { FileSystemBackupProvider } from './contexts/FileSystemBackupContext';
@@ -125,25 +127,27 @@ function App() {
 				<LanguageProvider>
 					<OfflineProvider>
 						<AuthProvider>
-							<PropertiesProvider>
-								<RecordsProvider>
-									<ThemeProvider
-										defaultThemeId='texlyre-theme'
-										defaultVariant='system'
-									>
-										<AppBootstrap />
-										<SecretsProvider>
-											<FileSystemBackupProvider>
-												<LSPConfigProvider>
-													<EditorProvider>
-														<AppContent />
-													</EditorProvider>
-												</LSPConfigProvider>
-											</FileSystemBackupProvider>
-										</SecretsProvider>
-									</ThemeProvider>
-								</RecordsProvider>
-							</PropertiesProvider>
+							<ChelysProvider>
+								<PropertiesProvider>
+									<RecordsProvider>
+										<ThemeProvider
+											defaultThemeId='texlyre-theme'
+											defaultVariant='system'
+										>
+											<AppBootstrap />
+											<SecretsProvider>
+												<FileSystemBackupProvider>
+													<LSPConfigProvider>
+														<EditorProvider>
+															<AppContent />
+														</EditorProvider>
+													</LSPConfigProvider>
+												</FileSystemBackupProvider>
+											</SecretsProvider>
+										</ThemeProvider>
+									</RecordsProvider>
+								</PropertiesProvider>
+							</ChelysProvider>
 						</AuthProvider>
 					</OfflineProvider>
 				</LanguageProvider>

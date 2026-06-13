@@ -5,6 +5,15 @@ import { useState } from 'react';
 import { t } from '@/i18n';
 import PasswordInfo from './PasswordInfo';
 import { useAuth } from '../../hooks/useAuth';
+import { useChelys } from '../../hooks/useChelys';
+import {
+	validateEmail,
+	validatePassword,
+	validateUsername,
+} from '../../utils/authUtils';
+import CopyField from '../common/CopyField';
+import { PasskeyIcon } from '../common/Icons';
+
 
 interface RegisterProps {
 	onRegisterSuccess: () => void;
@@ -26,6 +35,7 @@ const Register: React.FC<RegisterProps> = ({
 	upgradeFunction,
 }) => {
 	const { register } = useAuth();
+	const { chelysRegister } = useChelys();
 
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
@@ -35,33 +45,27 @@ const Register: React.FC<RegisterProps> = ({
 	const [email, setEmail] = useState('');
 	const [error, setError] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
+	const [chelysPrfHex, setChelysPrfHex] = useState<string | null>(null);
 
-	const validateEmail = (email: string): boolean => {
-		return /\S+@\S+\.\S+/.test(email);
-	};
-
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-
-		if (!username || !password) {
-			setError(t('Please fill out all required fields'));
-			return;
+	const validate = (): boolean => {
+		const fieldError =
+			validateUsername(username) ||
+			validatePassword(password) ||
+			validateEmail(email);
+		if (fieldError) {
+			setError(fieldError);
+			return false;
 		}
-
 		if (password !== confirmPassword) {
 			setError(t('Passwords do not match'));
-			return;
+			return false;
 		}
+		return true;
+	};
 
-		if (password.length < 6) {
-			setError(t('Password must be at least 6 characters long'));
-			return;
-		}
-
-		if (email && !validateEmail(email)) {
-			setError(t('Please enter a valid email address'));
-			return;
-		}
+	const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
+		e.preventDefault();
+		if (!validate()) return;
 
 		setError(null);
 		setIsLoading(true);
@@ -78,13 +82,61 @@ const Register: React.FC<RegisterProps> = ({
 				error instanceof Error
 					? error.message
 					: t('An error occurred during {action}', {
-							action: isUpgrade ? t('upgrade') : t('registration'),
-						}),
+						action: isUpgrade ? t('upgrade') : t('registration'),
+					}),
 			);
 		} finally {
 			setIsLoading(false);
 		}
 	};
+
+	const handleChelysSubmit = async () => {
+		if (!validate()) return;
+
+		setError(null);
+		setIsLoading(true);
+
+		try {
+			const prfHex = await chelysRegister(username, password);
+			setChelysPrfHex(prfHex);
+		} catch (error) {
+			setError(
+				error instanceof Error
+					? error.message
+					: t('An error occurred during {action}', {
+						action: t('registration'),
+					}),
+			);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	if (chelysPrfHex) {
+		return (
+			<div className='auth-form-container'>
+				<h2>{t('Chelys Account Created')}</h2>
+				<p>
+					{t(
+						'Copy this key into your Chelys app and log in there with the same username and password.',
+					)}
+				</p>
+				<div className='form-group'>
+					<CopyField label={t('Chelys key')} value={chelysPrfHex} mono />
+				</div>
+				<button
+					type='button'
+					className='auth-button'
+					onClick={() => {
+						onRegisterSuccess();
+						window.location.reload();
+					}}
+				>
+					{t('Continue')}
+				</button>
+			</div>
+		);
+	}
 
 	return (
 		<div className='auth-form-container'>
@@ -167,8 +219,23 @@ const Register: React.FC<RegisterProps> = ({
 							: t('Creating Account...')
 						: isUpgrade
 							? t('Upgrade Account')
-							: t('Sign Up')}
+							: t('Sign up')}
 				</button>
+
+				{!isUpgrade && (
+					<button
+						type='button'
+						className={`auth-button chelys-button ${isLoading ? 'loading' : ''}`}
+						onClick={handleChelysSubmit}
+						disabled={!ageConfirmed || !privacyAccepted || isLoading}
+					>
+						<span>{isLoading ? t('Creating Account...') : t('Sign up with Chelys')}</span>
+						<span className='passkey-badge'>
+							<PasskeyIcon size={24} />
+							{t('Passkey')}
+						</span>
+					</button>
+				)}
 			</form>
 
 			<div className='form-group'>
@@ -214,7 +281,7 @@ const Register: React.FC<RegisterProps> = ({
 						onClick={onSwitchToLogin}
 						disabled={isLoading}
 					>
-						{t('Login')}
+						{t('Log in')}
 					</button>
 				</div>
 			)}

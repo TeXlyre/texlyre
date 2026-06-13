@@ -1,0 +1,56 @@
+.copy-field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.copy-field label {
+	font-weight: 500;
+	color: var(--text-color);
+	font-size: 0.9rem;
+}
+
+.copy-field-input-group {
+	display: flex;
+	gap: var(--space-sm);
+	align-items: stretch;
+	height: 2.75rem;
+}
+
+.copy-field-input {
+	flex: 1;
+	padding: var(--space-sm);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	background-color: var(--pico-secondary-background);
+	color: var(--text-color);
+	font-size: 0.85rem;
+	box-sizing: border-box;
+	height: 100% !important;
+}
+
+.copy-field-input.mono {
+	font-family: monospace;
+}
+
+.copy-field-input:focus {
+	outline: 2px solid var(--pico-primary-focus);
+	border-color: var(--pico-primary);
+}
+
+.copy-field-button {
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
+	height: 100% !important;
+	box-sizing: border-box;
+	white-space: nowrap;
+	transition:
+		background-color var(--transition-normal),
+		color var(--transition-normal),
+		border-color var(--transition-normal);
+}
+
+.copy-field-button .copy-field-button-label {
+	display: inline-block;
+}

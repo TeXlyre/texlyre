@@ -238,6 +238,7 @@ class CollabService {
 		return collabWebrtc.getProvider(roomName, doc, {
 			signaling:
 				finalSignalingServers.length > 0 ? finalSignalingServers : undefined,
+			password: options?.password,
 		});
 	}
 

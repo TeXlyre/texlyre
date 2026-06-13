@@ -4,9 +4,11 @@ import { useState } from 'react';
 
 import { t } from '@/i18n';
 import { useAuth } from '../../hooks/useAuth';
-import { useTheme } from '../../hooks/useTheme';
+import { useChelys } from '../../hooks/useChelys';
+import { ChelysAccountNotFoundError } from '../../utils/chelysWebauthn';
 import GuestConsentModal from './GuestConsentModal';
 import PrivacyModal from '../common/PrivacyModal';
+import { PasskeyIcon } from '../common/Icons';
 
 interface LoginProps {
 	onLoginSuccess: () => void;
@@ -20,6 +22,7 @@ const Login: React.FC<LoginProps> = ({
 	onSwitchToImport,
 }) => {
 	const { login, createGuestAccount } = useAuth();
+	const { chelysLogin, confirmChelysRegister, logoutChelys } = useChelys();
 
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
@@ -27,8 +30,9 @@ const Login: React.FC<LoginProps> = ({
 	const [isLoading, setIsLoading] = useState(false);
 	const [showGuestModal, setShowGuestModal] = useState(false);
 	const [showPrivacy, setShowPrivacy] = useState(false);
+	const [confirmCreate, setConfirmCreate] = useState(false);
 
-	const handleSubmit = async (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
 		e.preventDefault();
 
 		if (!username || !password) {
@@ -41,16 +45,65 @@ const Login: React.FC<LoginProps> = ({
 
 		try {
 			await login(username, password);
+			logoutChelys();
 			onLoginSuccess();
 			window.location.reload();
 		} catch (error) {
 			setError(
 				error instanceof Error
 					? error.message
-					: t('An error occurred during {action}', { action: t('login') }),
+					: t('An error occurred during {action}', { action: t('log in') }),
 			);
 		} finally {
 			setIsLoading(false);
+		}
+	};
+
+	const handleChelysSubmit = async () => {
+		if (!username || !password) {
+			setError(t('Please enter both username and password'));
+			return;
+		}
+
+		setError(null);
+		setIsLoading(true);
+
+		try {
+			await chelysLogin(username, password);
+			onLoginSuccess();
+			window.location.reload();
+		} catch (error) {
+			if (error instanceof ChelysAccountNotFoundError) {
+				setConfirmCreate(true);
+			} else {
+				setError(
+					error instanceof Error
+						? error.message
+						: t('An error occurred during {action}', { action: t('log in') }),
+				);
+			}
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleConfirmCreate = async () => {
+		setError(null);
+		setIsLoading(true);
+
+		try {
+			await confirmChelysRegister(username, password);
+			onLoginSuccess();
+			window.location.reload();
+		} catch (error) {
+			setError(
+				error instanceof Error
+					? error.message
+					: t('An error occurred during {action}', { action: t('log in') }),
+			);
+		} finally {
+			setIsLoading(false);
+			setConfirmCreate(false);
 		}
 	};
 
@@ -87,7 +140,7 @@ const Login: React.FC<LoginProps> = ({
 	return (
 		<>
 			<div className='auth-form-container'>
-				<h2>{t('Login')}</h2>
+				<h2>{t('Log in')}</h2>
 
 				{error && <div className='auth-error'>{error}</div>}
 
@@ -98,7 +151,10 @@ const Login: React.FC<LoginProps> = ({
 							type='text'
 							id='username'
 							value={username}
-							onChange={(e) => setUsername(e.target.value)}
+							onChange={(e) => {
+								setUsername(e.target.value);
+								setConfirmCreate(false);
+							}}
 							disabled={isLoading}
 							autoComplete='username'
 						/>
@@ -121,8 +177,50 @@ const Login: React.FC<LoginProps> = ({
 						className={`auth-button ${isLoading ? 'loading' : ''}`}
 						disabled={isLoading}
 					>
-						{isLoading ? t('Logging in...') : t('Login')}
+						{isLoading ? t('Logging in...') : t('Log in')}
 					</button>
+
+					{!confirmCreate ? (
+						<button
+							type='button'
+							className={`auth-button chelys-button ${isLoading ? 'loading' : ''}`}
+							onClick={handleChelysSubmit}
+							disabled={isLoading}
+						>
+							<span>{t('Log in to Chelys')}</span>
+							<span className='passkey-badge'>
+								<PasskeyIcon size={24} />
+								{t('Passkey')}
+							</span>
+						</button>
+					) : (
+						<div className='chelys-confirm'>
+							<p>
+								{t(
+									'No "{username}" account in this browser yet. Check the spelling, or create it here.',
+									{ username },
+								)}
+							</p>
+							<div className='modal-actions'>
+								<button
+									type='button'
+									className='button secondary'
+									onClick={() => setConfirmCreate(false)}
+									disabled={isLoading}
+								>
+									{t('Back')}
+								</button>
+								<button
+									type='button'
+									className='button primary'
+									onClick={handleConfirmCreate}
+									disabled={isLoading}
+								>
+									{t('Create account')}
+								</button>
+							</div>
+						</div>
+					)}
 				</form>
 
 				<div className='guest-section'>

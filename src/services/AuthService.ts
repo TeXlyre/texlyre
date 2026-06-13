@@ -392,9 +392,13 @@ class AuthService {
 	}
 
 	async logout(): Promise<void> {
-		// If logging out a guest, clean up their data immediately
 		if (this.currentUser && this.isGuestUser(this.currentUser)) {
 			await this.cleanupExpiredGuest(this.currentUser);
+		}
+
+		if (this.currentUser) {
+			const { chelysService } = await import('./ChelysService');
+			chelysService.logoutChelys(this.currentUser.id);
 		}
 
 		this.currentUser = null;
@@ -437,6 +441,16 @@ class AuthService {
 	async getUserById(id: string): Promise<User | null> {
 		if (!this.db) await this.initialize();
 		return this.db?.get(this.USER_STORE, id);
+	}
+
+	async getUserByUsername(username: string): Promise<User | null> {
+		if (!this.db) await this.initialize();
+		const user = await this.db?.getFromIndex(
+			this.USER_STORE,
+			'username',
+			username,
+		);
+		return user && !this.isGuestUser(user) ? user : null;
 	}
 
 	async setCurrentUser(userId: string): Promise<User | null> {

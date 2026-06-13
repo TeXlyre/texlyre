@@ -97,10 +97,15 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 		const userSecretsKey = `texlyre-user-${userId}-secrets`;
 		const userRecordsKey = `texlyre-user-${userId}-records`;
 
+		const userChelysRoomKey = `texlyre-user-${userId}-chelys-room`;
+		const userChelysCredentialKey = `texlyre-user-${userId}-chelys-credential`;
+
 		localStorage.removeItem(userSettingsKey);
 		localStorage.removeItem(userPropertiesKey);
 		localStorage.removeItem(userSecretsKey);
 		localStorage.removeItem(userRecordsKey);
+		localStorage.removeItem(userChelysRoomKey);
+		localStorage.removeItem(userChelysCredentialKey);
 		localStorage.removeItem('texlyre-current-user');
 
 		console.log(
@@ -153,7 +158,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 						</li>
 						<li>
 							<strong>{t('Your user profile')}</strong>&nbsp;
-							{t('and login credentials')}
+							{t('and log in credentials')}
 						</li>
 					</ul>
 					<p>

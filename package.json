@@ -1,7 +1,7 @@
 {
 	"name": "texlyre",
 	"private": true,
-	"version": "0.8.10",
+	"version": "0.8.11",
 	"description": "A local-first LaTeX & Typst collaborative web editor ",
 	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
 	"license": "AGPL-3.0-or-later",
@@ -102,6 +102,7 @@
 		"detypify-service": "^0.3.0",
 		"file-saver": "^2.0.5",
 		"filepizza-client": "^2.1.2",
+		"hash-wasm": "^4.12.0",
 		"i18next": "^26.0.11",
 		"idb": "^8.0.3",
 		"jszip": "^3.10.1",
@@ -127,7 +128,7 @@
 		"texlyre-busytex": "^1.1.1",
 		"vite-plugin-wasm": "^3.6.0",
 		"wasm-latex-tools": "^0.1.1",
-		"workbox-build": "^7.4.0",
+		"workbox-build": "^7.4.1",
 		"y-codemirror.next": "=0.3.5",
 		"y-indexeddb": "^9.0.12",
 		"y-protocols": "^1.0.7",
@@ -168,7 +169,9 @@
 			"@babel/plugin-transform-modules-systemjs@>=7.12.0 <=7.29.3": "^7.29.4",
 			"@protobufjs/utf8@<=1.1.0": "^1.1.1",
 			"brace-expansion@>=5.0.0 <5.0.6": ">=5.0.6",
-			"ws@>=8.0.0 <8.20.1": ">=8.20.1"
+			"ws@>=8.0.0 <8.20.1": ">=8.20.1",
+			"esbuild@>=0.17.0 <0.28.1": ">=0.28.1",
+			"esbuild@>=0.27.3 <0.28.1": ">=0.28.1"
 		},
 		"peerDependencyRules": {
 			"allowedVersions": {
@@ -220,9 +223,9 @@
 		"tsx": "^4.21.0",
 		"typescript": "^6.0.2",
 		"typescript-eslint": "^8.58.1",
-		"vite": "^7.3.2",
-		"vite-plugin-pwa": "^1.2.0",
-		"vite-plugin-static-copy": "^4.0.1",
-		"workbox-window": "^7.4.0"
+		"vite": "^8.0.16",
+		"vite-plugin-pwa": "^1.3.0",
+		"vite-plugin-static-copy": "^4.1.1",
+		"workbox-window": "^7.4.1"
 	}
 }

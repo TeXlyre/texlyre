@@ -33,12 +33,45 @@ export default defineConfig({
 				main: path.resolve(__dirname, 'index.html'),
 			},
 			output: {
-				manualChunks: {
-					vendor: ['react', 'react-dom'],
-					pdfjs: ['pdfjs-dist'],
-					codemirror: ['@codemirror/state', '@codemirror/view'],
-					yjs: ['yjs', 'y-indexeddb', 'y-webrtc'],
-					typst: ['@myriaddreamin/typst.ts'],
+				manualChunks(id) {
+					const normalizedId = id.replace(/\\/g, '/');
+
+					if (!normalizedId.includes('node_modules')) {
+						return;
+					}
+
+					if (
+						normalizedId.includes('/react/') ||
+						normalizedId.includes('/react-dom/')
+					) {
+						return 'vendor';
+					}
+
+					if (normalizedId.includes('/pdfjs-dist/')) {
+						return 'pdfjs';
+					}
+
+					if (
+						normalizedId.includes('/@codemirror/state/') ||
+						normalizedId.includes('/@codemirror/view/')
+					) {
+						return 'codemirror';
+					}
+
+					if (
+						normalizedId.includes('/yjs/') ||
+						normalizedId.includes('/y-indexeddb/') ||
+						normalizedId.includes('/y-webrtc/')
+					) {
+						return 'yjs';
+					}
+
+					if (
+						normalizedId.includes('/@texlyre/typst.ts/') ||
+						normalizedId.includes('/@myriaddreamin/typst.ts/')
+					) {
+						return 'typst';
+					}
 				},
 			},
 		},
@@ -112,6 +145,7 @@ export default defineConfig({
 		alias: {
 			'@': path.resolve(__dirname, './src'),
 			'@src': path.resolve(__dirname, './src'),
+			'@chelys': path.resolve(__dirname, './chelys'),
 			'@tests': path.resolve(__dirname, './tests'),
 			'@codemirror/state': path.resolve('./node_modules/@codemirror/state'),
 			'@codemirror/view': path.resolve('./node_modules/@codemirror/view'),

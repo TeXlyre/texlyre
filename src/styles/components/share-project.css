@@ -16,51 +16,6 @@
 	font-size: 0.9rem;
 }
 
-.share-url-section {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-sm);
-}
-
-.share-url-section label {
-	font-weight: 500;
-	color: var(--text-color);
-	font-size: 0.9rem;
-}
-
-.share-url-input-group {
-	display: flex;
-	gap: var(--space-sm);
-	align-items: stretch;
-	height: 2.75rem;
-}
-
-.share-url-input {
-	flex: 1;
-	padding: var(--space-sm);
-	border: 1px solid var(--accent-border);
-	border-radius: var(--radius-sm);
-	background-color: var(--pico-secondary-background);
-	color: var(--text-color);
-	font-family: monospace;
-	font-size: 0.85rem;
-	box-sizing: border-box;
-	height: auto !important;
-}
-
-.share-url-input,
-.share-url-input-group button.secondary.icon-only,
-.share-url-input-group button.primary.smaller,
-.share-url-input-group button.danger.smaller {
-	height: 100% !important;
-	box-sizing: border-box;
-}
-
-.share-url-input:focus {
-	outline: 2px solid var(--pico-primary-focus);
-	border-color: var(--pico-primary);
-}
-
 .qr-code-section {
 	display: flex;
 	flex-direction: column;

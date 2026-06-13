@@ -17,6 +17,9 @@
             "@src/*": [
                 "./src/*"
             ],
+            "@chelys/*": [
+                "./chelys/*"
+            ],
             "@extras/*": [
                 "./extras/*"
             ],
@@ -28,7 +31,8 @@
     "include": [
         "extras/**/*",
         "tests/**/*",
-        "src/**/*"
+        "src/**/*",
+        "chelys/**/*",
     ],
     "exclude": [
         "node_modules",
