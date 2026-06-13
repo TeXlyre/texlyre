@@ -76,9 +76,9 @@ const GuestConsentModal: React.FC<GuestConsentModalProps> = ({
 						<h4>{t('\u26A0\uFE0F Session limitations:')}</h4>
 						<ul>
 							<li>
-								<strong>{t('Temporary: ')}</strong>
+								<strong>{t('Temporary: ')}</strong>&nbsp;
 								{t(
-									'Your session expires when you close the browser or after 24 hours',
+									'Your session expires after 24 hours',
 								)}
 							</li>
 							<li>
@@ -149,7 +149,7 @@ const GuestConsentModal: React.FC<GuestConsentModalProps> = ({
 
 				<div className='privacy-notice'>
 					<p>
-						<strong>{t('Privacy: ')}</strong>
+						<strong>{t('Privacy: ')}</strong>&nbsp;
 						{t(
 							'Guest sessions collect no personal data. Your projects are stored locally in your browser only. No tracking occurs across sessions.',
 						)}
