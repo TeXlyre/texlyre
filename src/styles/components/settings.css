@@ -1,11 +1,3 @@
-.settings-container {
-	display: flex;
-	height: 70vh;
-	max-height: 700px;
-	overflow: hidden;
-	position: relative;
-}
-
 .settings-sidebar {
 	width: var(--sidebar-width);
 	border-right: 1px solid var(--accent-border);
@@ -189,6 +181,16 @@
 	background-color: var(--pico-primary-focus);
 }
 
+.settings-container {
+	display: flex;
+	flex: 1;
+	height: 70vh;
+	max-height: 700px;
+	min-height: 0;
+	overflow: hidden;
+	position: relative;
+}
+
 .settings-container .save-indicator {
 	position: absolute !important;
 	bottom: var(--space-lg, 12px) !important;
@@ -216,13 +218,6 @@
 	flex-direction: column;
 	height: 100%;
 	position: relative;
-}
-
-.settings-container {
-	flex: 1;
-	display: flex;
-	overflow: hidden;
-	min-height: 0;
 }
 
 .pending-changes-bar {

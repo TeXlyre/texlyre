@@ -14,7 +14,6 @@ import {
 import CopyField from '../common/CopyField';
 import { PasskeyIcon } from '../common/Icons';
 
-
 interface RegisterProps {
 	onRegisterSuccess: () => void;
 	onSwitchToLogin: () => void;
@@ -82,8 +81,8 @@ const Register: React.FC<RegisterProps> = ({
 				error instanceof Error
 					? error.message
 					: t('An error occurred during {action}', {
-						action: isUpgrade ? t('upgrade') : t('registration'),
-					}),
+							action: isUpgrade ? t('upgrade') : t('registration'),
+						}),
 			);
 		} finally {
 			setIsLoading(false);
@@ -104,8 +103,8 @@ const Register: React.FC<RegisterProps> = ({
 				error instanceof Error
 					? error.message
 					: t('An error occurred during {action}', {
-						action: t('registration'),
-					}),
+							action: t('registration'),
+						}),
 			);
 		} finally {
 			setIsLoading(false);
@@ -229,7 +228,9 @@ const Register: React.FC<RegisterProps> = ({
 						onClick={handleChelysSubmit}
 						disabled={!ageConfirmed || !privacyAccepted || isLoading}
 					>
-						<span>{isLoading ? t('Creating Account...') : t('Sign up with Chelys')}</span>
+						<span>
+							{isLoading ? t('Creating Account...') : t('Sign up with Chelys')}
+						</span>
 						<span className='passkey-badge'>
 							<PasskeyIcon size={24} />
 							{t('Passkey')}

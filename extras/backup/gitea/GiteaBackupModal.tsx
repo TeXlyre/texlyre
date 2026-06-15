@@ -438,7 +438,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
 	const getDefaultCommitMessagePlaceholder = (): string => {
 		const template =
 			(getSetting('gitea-backup-default-commit-message')?.value as string) ||
-			'TeXlyre Backup: {date}';
+			t('Add commit message to push changes (e.g. "Backup on {date}")');
 		return replaceCommitMessageVariables(template);
 	};
 
@@ -494,7 +494,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
 									</div>
 									<br />
 									<a
-										href='https://texlyre.github.io/docs/integrations/gitea'
+										href='https://texlyre.org/docs/integrations/gitea'
 										target='_blank'
 										rel='noopener noreferrer'
 										className='dropdown-link'
@@ -665,7 +665,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
 												<div className='backup-toolbar'>
 													<div className='primary-actions'>
 														<button
-															className='button secondary'
+															className='button primary'
 															onClick={handleExport}
 															disabled={
 																status.status === 'syncing' ||
@@ -679,7 +679,7 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
 																: t('Push To Gitea')}
 														</button>
 														<button
-															className='button secondary'
+															className='button warn secondary'
 															onClick={handleImport}
 															disabled={
 																status.status === 'syncing' || isOperating
@@ -737,13 +737,22 @@ const GiteaBackupModal: React.FC<GiteaBackupModalProps> = ({
 										<div className='error-message'>{status.error}</div>
 									)}
 								</div>
+								<br />
+								<a
+									href='https://texlyre.org/docs/git-synchronization'
+									target='_blank'
+									rel='noopener noreferrer'
+									className='dropdown-link'
+								>
+									{t('Learn more about Git synchronization')}
+								</a>
 							</div>
 							{activities.length > 0 && (
 								<div className='backup-activities'>
 									<div className='activities-header'>
 										<h3>{t('Recent Activity')}</h3>
 										<button
-											className='button small secondary'
+											className='button danger small secondary'
 											onClick={() => giteaBackupService.clearAllActivities()}
 											title={t('Clear all activities')}
 											disabled={isOperating}

@@ -181,7 +181,7 @@ const ZoteroConnectionModal: React.FC<ZoteroConnectionModalProps> = ({
 						</div>
 						<br />
 						<a
-							href='https://texlyre.github.io/docs/integrations/zotero'
+							href='https://texlyre.org/docs/integrations/zotero'
 							target='_blank'
 							rel='noopener noreferrer'
 							className='dropdown-link'

@@ -443,7 +443,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 	const getDefaultCommitMessagePlaceholder = (): string => {
 		const template =
 			(getSetting('forgejo-backup-default-commit-message')?.value as string) ||
-			'TeXlyre Backup: {date}';
+			t('Add commit message to push changes (e.g. "Backup on {date}")');
 		return replaceCommitMessageVariables(template);
 	};
 
@@ -499,7 +499,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 									</div>
 									<br />
 									<a
-										href='https://texlyre.github.io/docs/integrations/codeberg'
+										href='https://texlyre.org/docs/integrations/codeberg'
 										target='_blank'
 										rel='noopener noreferrer'
 										className='dropdown-link'
@@ -670,7 +670,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 												<div className='backup-toolbar'>
 													<div className='primary-actions'>
 														<button
-															className='button secondary'
+															className='button primary'
 															onClick={handleExport}
 															disabled={
 																status.status === 'syncing' ||
@@ -684,7 +684,7 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 																: t('Push To Forgejo')}
 														</button>
 														<button
-															className='button secondary'
+															className='button warn secondary'
 															onClick={handleImport}
 															disabled={
 																status.status === 'syncing' || isOperating
@@ -742,13 +742,22 @@ const ForgejoBackupModal: React.FC<ForgejoBackupModalProps> = ({
 										<div className='error-message'>{status.error}</div>
 									)}
 								</div>
+								<br />
+								<a
+									href='https://texlyre.org/docs/git-synchronization'
+									target='_blank'
+									rel='noopener noreferrer'
+									className='dropdown-link'
+								>
+									{t('Learn more about Git synchronization')}
+								</a>
 							</div>
 							{activities.length > 0 && (
 								<div className='backup-activities'>
 									<div className='activities-header'>
 										<h3>{t('Recent Activity')}</h3>
 										<button
-											className='button small secondary'
+											className='button danger small secondary'
 											onClick={() => forgejoBackupService.clearAllActivities()}
 											title={t('Clear all activities')}
 											disabled={isOperating}

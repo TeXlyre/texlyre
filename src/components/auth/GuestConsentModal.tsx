@@ -77,9 +77,7 @@ const GuestConsentModal: React.FC<GuestConsentModalProps> = ({
 						<ul>
 							<li>
 								<strong>{t('Temporary: ')}</strong>&nbsp;
-								{t(
-									'Your session expires after 24 hours',
-								)}
+								{t('Your session expires after 24 hours')}
 							</li>
 							<li>
 								<strong>{t('No backup sync:')}</strong>&nbsp;

@@ -1661,7 +1661,8 @@ export class GitBackupService<TTarget> {
 
 	private getDefaultCommitMessage(): string {
 		const template =
-			this.settingsCache.defaultCommitMessage || 'TeXlyre Backup: {date}';
+			this.settingsCache.defaultCommitMessage ||
+			t('Add commit message to push changes (e.g. "Backup on {date}")');
 		const now = new Date();
 		return template
 			.replace('{date}', now.toLocaleDateString())
