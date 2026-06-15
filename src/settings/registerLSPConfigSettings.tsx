@@ -33,7 +33,7 @@ export function useRegisterLSPConfigSettings() {
 				<>
 					{t('Stored LSP server configurations (JSON array)')} <br />
 					<a
-						href='https://texlyre.github.io/docs/lsp-with-texlyre'
+						href='https://texlyre.org/docs/lsp-with-texlyre'
 						target='_blank'
 						rel='noopener noreferrer'
 					>
@@ -41,7 +41,7 @@ export function useRegisterLSPConfigSettings() {
 					</a>
 					<br />
 					<a
-						href='https://texlyre.github.io/docs/category/supported-lsp'
+						href='https://texlyre.org/docs/category/supported-lsp'
 						target='_blank'
 						rel='noopener noreferrer'
 					>

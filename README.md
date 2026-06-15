@@ -2,7 +2,7 @@
 
 A **[local-first](https://www.inkandswitch.com/essay/local-first/)** real-time [LaTeX](https://www.latex-project.org/) and [Typst](https://typst.app) collaboration platform with offline editing capabilities. Built with React, TypeScript, and Yjs for collaborative document editing.
 
-[![GitHub Pages](https://img.shields.io/badge/🟢%20Live-GitHub%20Pages-181717.svg?logo=github)](https://texlyre.github.io/texlyre)
+[![GitHub Pages](https://img.shields.io/badge/🟢%20Live-GitHub%20Pages-181717.svg?logo=github)](https://texlyre.org/texlyre)
 [![Tests](https://img.shields.io/github/actions/workflow/status/texlyre/texlyre/test.yml?label=tests)](https://github.com/texlyre/texlyre/actions)
 [![Deploy](https://img.shields.io/github/actions/workflow/status/texlyre/texlyre/deploy.yml?label=deploy)](https://github.com/texlyre/texlyre/actions)
 [![Crowdin](https://badges.crowdin.net/texlyre/localized.svg)](https://crowdin.com/project/texlyre)
@@ -94,7 +94,7 @@ Mathematical expressions can be edited interactively using inline previews power
 
 ### Language Server Protocol (LSP)
 
-TeXlyre offers limited LSP support over WebSocket. The CodeMirror editor acts as a client for LSP servers deployed locally. As an example, TeXlyre integrates with a locally-run Harper LS grammar and spell checker (see the [Harper LS recipe](https://texlyre.github.io/docs/supported-lsp/harper-ls) for instructions on how to deploy and integrate the server with TeXlyre).
+TeXlyre offers limited LSP support over WebSocket. The CodeMirror editor acts as a client for LSP servers deployed locally. As an example, TeXlyre integrates with a locally-run Harper LS grammar and spell checker (see the [Harper LS recipe](https://texlyre.org/docs/supported-lsp/harper-ls) for instructions on how to deploy and integrate the server with TeXlyre).
 
 <p align="center">
   <img src="showcase/harper_ls_zoomed.png"
@@ -104,9 +104,9 @@ TeXlyre offers limited LSP support over WebSocket. The CodeMirror editor acts as
 ## Quick Start
 
 
-For detailed installation instructions, advanced configuration, and development workflows, see the [installation documentation](https://texlyre.github.io/docs/installation). 
+For detailed installation instructions, advanced configuration, and development workflows, see the [installation documentation](https://texlyre.org/docs/installation). 
 
-For configuring TeXlyre's theme, properties, and supported plugins, see the [configuration documentation](https://texlyre.github.io/docs/configuration#configuration-files). 
+For configuring TeXlyre's theme, properties, and supported plugins, see the [configuration documentation](https://texlyre.org/docs/configuration#configuration-files). 
 
 Installation requires Node.js 20+ and a modern browser with File System Access API support:
 
@@ -163,7 +163,7 @@ Plugins can extend TeXlyre with custom file viewers, LaTeX/Typst log processors,
 
 Once a plugin is developed, it can be registered in the `plugins.config.ts` by simply adding its path (excluding the '/extras' prefix). All plugins must be placed in the 'extras' directory to be recognized by the system. 
 
-Configuration may be overriden by the `texlyre.config.ts` depending on your installation. **ALWAYS** set the plugin path as well in `texlyre.config.ts` for guaranteed persistence of the config (see the [configuration documentation](https://texlyre.github.io/docs/configuration#configuration-files))
+Configuration may be overriden by the `texlyre.config.ts` depending on your installation. **ALWAYS** set the plugin path as well in `texlyre.config.ts` for guaranteed persistence of the config (see the [configuration documentation](https://texlyre.org/docs/configuration#configuration-files))
 
 ## Browser Compatibility
 
@@ -269,6 +269,6 @@ See [LICENSE](LICENSE) for the complete license text.
 ---
 
 **Ready to start collaborating?** 
-[Get started with TeXlyre](https://texlyre.github.io/texlyre/) 
+[Get started with TeXlyre](https://texlyre.org/texlyre/) 
 **or** 
 [contribute to the project with bug fixes, new features, plugins, and translations](CONTRIBUTING.md).

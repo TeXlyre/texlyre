@@ -94,7 +94,7 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 				<p className='texlyre-info'>
 					<span className='footer-links'>
 						<a
-							href='https://texlyre.github.io/docs/intro'
+							href='https://texlyre.org/docs/intro'
 							target='_blank'
 							rel='noreferrer'
 						>
@@ -120,11 +120,7 @@ const AuthApp: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
 							{t('Privacy')}
 						</button>{' '}
 						•{/* {t('Built with TeXlyre')} */}
-						<a
-							href='https://texlyre.github.io'
-							target='_blank'
-							rel='noreferrer'
-						>
+						<a href='https://texlyre.org' target='_blank' rel='noreferrer'>
 							<img src={texlyreLogo} className='logo' alt={t('TeXlyre logo')} />
 						</a>{' '}
 						{`v${__APP_VERSION__}`}

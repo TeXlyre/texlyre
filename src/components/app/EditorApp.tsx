@@ -644,7 +644,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 						</button>{' '}
 						•{' '}
 						<a
-							href='https://texlyre.github.io/docs/intro'
+							href='https://texlyre.org/docs/intro'
 							target='_blank'
 							rel='noreferrer'
 						>
@@ -670,11 +670,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 							{t('Privacy')}
 						</button>{' '}
 						•{/* {t('Built with TeXlyre')} */}
-						<a
-							href='https://texlyre.github.io'
-							target='_blank'
-							rel='noreferrer'
-						>
+						<a href='https://texlyre.org' target='_blank' rel='noreferrer'>
 							<img src={texlyreLogo} className='logo' alt={t('TeXlyre logo')} />
 						</a>{' '}
 						{`v${__APP_VERSION__}`}

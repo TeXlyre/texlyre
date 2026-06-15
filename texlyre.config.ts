@@ -4,7 +4,7 @@ import type { TexlyreConfig } from '@/types/texlyre';
 const config: TexlyreConfig = {
     title: 'TeXlyre',
     tagline: 'A local-first LaTeX & Typst collaborative web editor',
-    url: 'https://texlyre.github.io',
+    url: 'https://texlyre.org',
     baseUrl: '/texlyre/',
     organizationName: 'texlyre',
     projectName: 'texlyre',
@@ -13,8 +13,8 @@ const config: TexlyreConfig = {
 
     airgap: {
         allowedDomains: [
-            'texlyre.org',
             'texlyre.github.io',
+            'texlyre.org',
             'typst.org',
         ],
         allowedProtocols: [
@@ -110,7 +110,7 @@ const config: TexlyreConfig = {
                 pdfViewerRenderingQuality: 'high',
                 repositoryProxyUrl: 'https://proxy.texlyre.org/?url=',
                 latexSourcemapEnabled: true,
-                templatesApiUrl: 'https://texlyre.github.io/texlyre-templates/api/templates.json',
+                templatesApiUrl: 'https://texlyre.org/texlyre-templates/api/templates.json',
                 themePlugin: 'texlyre-wide-theme',
                 themeVariant: 'atom_light',
                 typstAutoCompileOnOpen: false,

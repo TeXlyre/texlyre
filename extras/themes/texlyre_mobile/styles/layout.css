@@ -283,7 +283,7 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 [data-layout="texlyre-mobile"] .modal-container {
 	margin: var(--mobile-spacing-md);
 	width: calc(100vw - 2 * var(--mobile-spacing-md));
-	max-height: calc(100vh - 2 * var(--mobile-spacing-md));
+	max-height: calc(100vh - var(--mobile-nav-height));
 }
 
 [data-layout="texlyre-mobile"] .toast-container {

@@ -444,7 +444,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 				</div>
 
 				<div className='header-center'>
-					<a href='https://texlyre.github.io' target='_blank' rel='noreferrer'>
+					<a href='https://texlyre.org' target='_blank' rel='noreferrer'>
 						<img src={texlyreLogo} className='logo' alt={t('TeXlyre logo')} />
 					</a>
 				</div>
@@ -539,7 +539,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 				<p className='texlyre-info'>
 					<span className='footer-links'>
 						<a
-							href='https://texlyre.github.io/docs/intro'
+							href='https://texlyre.org/docs/intro'
 							target='_blank'
 							rel='noreferrer'
 						>
@@ -565,11 +565,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 							{t('Privacy')}
 						</button>{' '}
 						•{/* {t('Built with TeXlyre')} */}
-						<a
-							href='https://texlyre.github.io'
-							target='_blank'
-							rel='noreferrer'
-						>
+						<a href='https://texlyre.org' target='_blank' rel='noreferrer'>
 							<img src={texlyreLogo} className='logo' alt={t('TeXlyre logo')} />
 						</a>{' '}
 						{`v${__APP_VERSION__}`}
