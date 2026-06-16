@@ -279,6 +279,10 @@
 	border-radius: var(--mobile-radius-md);
 }
 
+[data-layout="texlyre-mobile"] input.toolbarField {
+	margin: 0;
+}
+
 [data-layout="texlyre-mobile"] .button,
 [data-layout="texlyre-mobile"] .action-button {
 	min-height: var(--mobile-min-touch-target);
