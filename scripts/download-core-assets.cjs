@@ -11,12 +11,20 @@ const execAsync = promisify(exec);
 const ASSETS = [
 	{
 		name: 'drawio-embed',
-		version: 'v29.7.9',
+		version: 'v30.2.2',
 		url: (version) =>
 			`https://github.com/TeXlyre/drawio-embed-mirror/archive/refs/tags/${version}.zip`,
 		dest: path.resolve(__dirname, '../public/core/drawio-embed'),
 		extractPath: (version) =>
 			`drawio-embed-mirror-${version.substring(1)}/drawio-embed/`,
+	},
+	{
+		name: 'tex-fmt',
+		version: 'v0.5.7',
+		url: (version) =>
+			`https://github.com/TeXlyre/tex-fmt/releases/download/wasm-${version}/tex-fmt-wasm-${version.substring(1)}.zip`,
+		dest: path.resolve(__dirname, '../public/core/texfmt'),
+		extractPath: () => 'pkg/',
 	},
 	{
 		name: 'texlyre-busytex',
