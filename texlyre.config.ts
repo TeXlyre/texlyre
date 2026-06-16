@@ -110,7 +110,7 @@ const config: TexlyreConfig = {
                 pdfViewerRenderingQuality: 'high',
                 repositoryProxyUrl: 'https://proxy.texlyre.org/?url=',
                 latexSourcemapEnabled: true,
-                templatesApiUrl: 'https://texlyre.org/texlyre-templates/api/templates.json',
+                templatesApiUrl: 'https://texlyre.github.io/texlyre-templates/api/templates.json',
                 themePlugin: 'texlyre-wide-theme',
                 themeVariant: 'atom_light',
                 typstAutoCompileOnOpen: false,

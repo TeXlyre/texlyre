@@ -47,7 +47,7 @@
     "pdf-viewer-rendering-quality": "high",
     "repository-proxy-url": "https://proxy.texlyre.org/?url=",
     "latex-sourcemap-enabled": true,
-    "templates-api-url": "https://texlyre.org/texlyre-templates/api/templates.json",
+    "templates-api-url": "https://texlyre.github.io/texlyre-templates/api/templates.json",
     "theme-plugin": "texlyre-wide-theme",
     "theme-variant": "atom_light",
     "typst-auto-compile-on-open": false,

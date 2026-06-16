@@ -1,6 +1,5 @@
 /* extras/themes/texlyre_wide/styles/layout.css */
 [data-layout="texlyre-wide"] {
-	--texlyre-sidebar-width: 320px;
 	--texlyre-header-height: 70px;
 	--texlyre-footer-height: 28px;
 }

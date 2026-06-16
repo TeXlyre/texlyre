@@ -283,7 +283,7 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 [data-layout="texlyre-mobile"] .modal-container {
 	margin: var(--mobile-spacing-md);
 	width: calc(100vw - 2 * var(--mobile-spacing-md));
-	max-height: calc(100vh - var(--mobile-nav-height));
+	max-height: calc(100vh - 2 * var(--mobile-nav-height));
 }
 
 [data-layout="texlyre-mobile"] .toast-container {
@@ -293,6 +293,10 @@ body:has([data-layout="texlyre-mobile"]) .texlyre-mobile-nav {
 	max-width: none;
 	position: fixed;
 	z-index: var(--mobile-z-toast);
+}
+
+[data-layout="texlyre-mobile"] .settings-sidebar {
+	width: var(--mobile-sidebar-width);
 }
 
 /* Hidden / mobile-only utilities */

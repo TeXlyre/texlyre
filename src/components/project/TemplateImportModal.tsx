@@ -71,7 +71,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 	const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
 
 	const [templatesApiUrl, setTemplatesApiUrl] = useState(
-		'https://texlyre.org/texlyre-templates/api/templates.json',
+		'https://texlyre.github.io/texlyre-templates/api/templates.json',
 	);
 	const [templatesPerPage, setTemplatesPerPage] = useState(12);
 
@@ -81,7 +81,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
 
 		const initialUrl =
 			(getSetting('templates-api-url')?.value as string) ??
-			'https://texlyre.org/texlyre-templates/api/templates.json';
+			'https://texlyre.github.io/texlyre-templates/api/templates.json';
 		const initialPerPage =
 			(getSetting('templates-per-page')?.value as number) ?? 12;
 
