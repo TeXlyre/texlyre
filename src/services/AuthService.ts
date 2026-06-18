@@ -680,6 +680,11 @@ class AuthService {
 		return this.getProjectsByUser();
 	}
 
+	async getAllProjects(): Promise<Project[]> {
+		if (!this.db) await this.initialize();
+		return (await this.db?.getAll(this.PROJECT_STORE)) ?? [];
+	}
+
 	async getProjectsByTag(tag: string): Promise<Project[]> {
 		if (!this.db) await this.initialize();
 

@@ -10,6 +10,10 @@ import {
 	conflictResolutionService,
 } from './ConflictResolutionService';
 import { fileConflictService } from './FileConflictService';
+import {
+	isQuotaExceededError,
+	storageQuotaService,
+} from './StorageQuotaService';
 import { createNamedLogger } from '@/logging';
 
 const moduleLog = createNamedLogger('FileStorageService');
@@ -94,6 +98,28 @@ class FileStorageService {
 			moduleLog.info(`Initialized for project: ${this.projectId}`);
 		} catch (error) {
 			moduleLog.error('Failed to initialize file storage:', error);
+			throw error;
+		}
+	}
+
+	private getContentSize(file: FileNode): number {
+		if (file.type !== 'file' || file.content === undefined) return 0;
+		if (typeof file.size === 'number') return file.size;
+		if (typeof file.content === 'string') return new Blob([file.content]).size;
+		if (file.content instanceof ArrayBuffer) return file.content.byteLength;
+		return 0;
+	}
+
+	private async guardWrite<T>(operation: () => Promise<T>): Promise<T> {
+		try {
+			const result = await operation();
+			storageQuotaService.markStale();
+			return result;
+		} catch (error) {
+			if (isQuotaExceededError(error)) {
+				storageQuotaService.markStale();
+				throw new Error(t('Not enough browser storage to save these files'));
+			}
 			throw error;
 		}
 	}
@@ -315,6 +341,8 @@ class FileStorageService {
 						: 0;
 		}
 
+		await storageQuotaService.ensureSpace(this.getContentSize(file));
+
 		if (!preserveTimestamp) {
 			file.lastModified = Date.now();
 		}
@@ -372,7 +400,9 @@ class FileStorageService {
 			}
 			await this.db?.delete(this.FILES_STORE, existingFile.id);
 		}
-		await this.db?.put(this.FILES_STORE, file);
+		await this.guardWrite(async () => {
+			await this.db?.put(this.FILES_STORE, file);
+		});
 		fileStorageEventEmitter.emitChange();
 		return file.id;
 	}
@@ -412,6 +442,10 @@ class FileStorageService {
 		},
 	): Promise<string[]> {
 		if (!this.db) await this.initialize();
+
+		await storageQuotaService.ensureSpace(
+			files.reduce((total, file) => total + this.getContentSize(file), 0),
+		);
 
 		const showDialog = options?.showConflictDialog ?? true;
 		const preserveTimestamp = options?.preserveTimestamp ?? false;
@@ -559,15 +593,17 @@ class FileStorageService {
 		}
 
 		if (filesToStore.length > 0) {
-			const tx = this.db?.transaction(this.FILES_STORE, 'readwrite');
-			const store = tx.objectStore(this.FILES_STORE);
+			await this.guardWrite(async () => {
+				const tx = this.db?.transaction(this.FILES_STORE, 'readwrite');
+				const store = tx.objectStore(this.FILES_STORE);
 
-			for (const file of filesToStore) {
-				await store.put(file);
-				storedIds.push(file.id);
-			}
+				for (const file of filesToStore) {
+					await store.put(file);
+					storedIds.push(file.id);
+				}
 
-			await tx.done;
+				await tx.done;
+			});
 			fileStorageEventEmitter.emitChange();
 		}
 

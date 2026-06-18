@@ -77,7 +77,9 @@ export function formatFileSize(size?: number): string {
 	if (size < 1024) return t('{count} bytes', { count: size });
 	if (size < 1024 * 1024)
 		return t('{size} KB', { size: (size / 1024).toFixed(1) });
-	return t('{size} MB', { size: (size / (1024 * 1024)).toFixed(1) });
+	if (size < 1024 * 1024 * 1024)
+		return t('{size} MB', { size: (size / (1024 * 1024)).toFixed(1) });
+	return t('{size} GB', { size: (size / (1024 * 1024 * 1024)).toFixed(1) });
 }
 
 export async function computeGitBlobSha(

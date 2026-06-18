@@ -45,7 +45,9 @@ import ExternalCompileButton from '../output/ExternalCompileButton';
 import ExternalExportButton from '../output/ExternalExportButton';
 import ExportAccountModal from '../profile/ExportAccountModal';
 import DeleteAccountModal from '../profile/DeleteAccountModal';
-import ProfileSettingsModal from '../profile/ProfileSettingsModal';
+import ProfileSettingsModal, {
+	type ProfileSettingsTab,
+} from '../profile/ProfileSettingsModal';
 import UserDropdown from '../profile/UserDropdown';
 import ProjectForm from '../project/ProjectForm';
 import ShareProjectButton from '../project/ShareProjectButton';
@@ -60,6 +62,7 @@ import { clickWhenReady } from '../../utils/editorNavigator';
 import { createNamedLogger } from '@/logging';
 import FooterLinks from '../common/FooterLinks';
 import ServiceStatusBanner from '../common/ServiceStatusBanner';
+import StorageBanner from '../common/StorageBanner';
 
 const moduleLog = createNamedLogger('EditorApp');
 
@@ -98,6 +101,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		changeDirectory,
 	} = useFileSystemBackup();
 	const [showProfileModal, setShowProfileModal] = useState(false);
+	const [profileTab, setProfileTab] = useState<ProfileSettingsTab>('account');
 	const [showAccountExportModal, setShowAccountExportModal] = useState(false);
 	const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] =
 		useState(false);
@@ -599,6 +603,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		<div className='app-container'>
 			{isOfflineMode && !hideOfflineBanner && <OfflineBanner />}
 			<ServiceStatusBanner />
+			<StorageBanner />
 			{isGuestUser(user) && (
 				<GuestUpgradeBanner
 					onOpenUpgradeModal={() => setShowGuestUpgradeModal(true)}
@@ -661,7 +666,10 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					<UserDropdown
 						username={user?.username || ''}
 						onLogout={onLogout}
-						onOpenProfile={() => setShowProfileModal(true)}
+						onOpenProfile={(tab) => {
+							setProfileTab(tab ?? 'account');
+							setShowProfileModal(true);
+						}}
 						onOpenExport={() => setShowAccountExportModal(true)}
 						onOpenDeleteAccount={() => setIsDeleteAccountModalOpen(true)}
 						onOpenUpgrade={() => setShowGuestUpgradeModal(true)}
@@ -757,6 +765,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 					<ProfileSettingsModal
 						isOpen={showProfileModal}
 						onClose={() => setShowProfileModal(false)}
+						initialTab={profileTab}
 					/>
 
 					<ExportAccountModal

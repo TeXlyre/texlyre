@@ -1,28 +1,37 @@
 // src/components/profile/ProfileSettingsModal.tsx
 import type React from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { t } from '@/i18n';
 import { useAuth } from '../../hooks/useAuth';
 import Modal from '../common/Modal';
 import { UserIcon } from '../common/Icons';
 import ProfileAccountIdentitySection from './ProfileAccountIdentitySection';
+import BrowserStorageSection from './ProfileBrowserStorageSection';
 import LocalStorageDataSection from './ProfileLocalStorageDataSection';
+
+export type ProfileSettingsTab = 'account' | 'data';
 
 interface ProfileSettingsModalProps {
 	isOpen: boolean;
 	onClose: () => void;
+	initialTab?: ProfileSettingsTab;
 }
 
 const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 	isOpen,
 	onClose,
+	initialTab = 'account',
 }) => {
 	const { user } = useAuth();
-	const [tab, setTab] = useState<'account' | 'data'>('account');
+	const [tab, setTab] = useState<ProfileSettingsTab>(initialTab);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+	useEffect(() => {
+		if (isOpen) setTab(initialTab);
+	}, [isOpen, initialTab]);
 
 	return (
 		<Modal
@@ -67,13 +76,21 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 				/>
 			) : (
 				user && (
-					<LocalStorageDataSection
-						user={user}
-						isSubmitting={isSubmitting}
-						setIsSubmitting={setIsSubmitting}
-						onError={setError}
-						onSuccess={setSuccessMessage}
-					/>
+					<>
+						<BrowserStorageSection
+							isSubmitting={isSubmitting}
+							setIsSubmitting={setIsSubmitting}
+							onError={setError}
+							onSuccess={setSuccessMessage}
+						/>
+						<LocalStorageDataSection
+							user={user}
+							isSubmitting={isSubmitting}
+							setIsSubmitting={setIsSubmitting}
+							onError={setError}
+							onSuccess={setSuccessMessage}
+						/>
+					</>
 				)
 			)}
 		</Modal>

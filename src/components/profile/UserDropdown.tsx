@@ -3,6 +3,9 @@ import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
+import { useStorageQuota } from '../../hooks/useStorageQuota';
+import { formatFileSize } from '../../utils/fileUtils';
+import type { ProfileSettingsTab } from './ProfileSettingsModal';
 import {
 	UserIcon,
 	UpgradeAccountIcon,
@@ -15,7 +18,7 @@ import {
 interface UserDropdownProps {
 	username: string;
 	onLogout: () => void;
-	onOpenProfile: () => void;
+	onOpenProfile: (tab?: ProfileSettingsTab) => void;
 	onOpenExport: () => void;
 	onOpenDeleteAccount: () => void;
 	onOpenUpgrade?: () => void;
@@ -33,6 +36,9 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
+	const { isSupported, isLow, usageBytes, quotaBytes, usedRatio } =
+		useStorageQuota();
+	const showStorageSummary = !isGuest && isSupported && quotaBytes > 0;
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
@@ -66,6 +72,32 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
 
 			{isOpen && (
 				<div className='user-dropdown-menu'>
+					{showStorageSummary && (
+						<button
+							type='button'
+							className='dropdown-item storage-summary'
+							onClick={() => {
+								setIsOpen(false);
+								onOpenProfile('data');
+							}}
+						>
+							<div className='storage-summary-labels'>
+								<span>{t('Storage')}</span>
+								<span>
+									{t('{used} of {total}', {
+										used: formatFileSize(usageBytes),
+										total: formatFileSize(quotaBytes),
+									})}
+								</span>
+							</div>
+							<div className={`storage-meter ${isLow ? 'low' : ''}`}>
+								<div
+									className='storage-meter-segment indexedDB'
+									style={{ width: `${usedRatio * 100}%` }}
+								/>
+							</div>
+						</button>
+					)}
 					{!isGuest && (
 						<>
 							<button

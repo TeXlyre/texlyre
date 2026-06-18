@@ -21,7 +21,9 @@ import BackupStatusIndicator from '../backup/BackupStatusIndicator';
 import Modal from '../common/Modal';
 import ResizablePanel from '../common/ResizablePanel';
 import ExportAccountModal from '../profile/ExportAccountModal';
-import ProfileSettingsModal from '../profile/ProfileSettingsModal';
+import ProfileSettingsModal, {
+	type ProfileSettingsTab,
+} from '../profile/ProfileSettingsModal';
 import UserDropdown from '../profile/UserDropdown';
 import ProjectExportModal from '../project/ProjectExportModal';
 import ProjectDeleteModal from '../project/ProjectDeleteModal';
@@ -38,6 +40,7 @@ import { NewProjectIcon } from '../common/Icons';
 import { createNamedLogger } from '@/logging';
 import FooterLinks from '../common/FooterLinks';
 import ServiceStatusBanner from '../common/ServiceStatusBanner';
+import StorageBanner from '../common/StorageBanner';
 
 const moduleLog = createNamedLogger('ProjectApp');
 
@@ -100,6 +103,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 	);
 
 	const [showProfileModal, setShowProfileModal] = useState(false);
+	const [profileTab, setProfileTab] = useState<ProfileSettingsTab>('account');
 	const [showAccountExportModal, setShowAccountExportModal] = useState(false);
 	const [showCreateModal, setShowCreateModal] = useState(false);
 	const [showEditModal, setShowEditModal] = useState(false);
@@ -463,6 +467,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 				/>
 			)}
 			<ServiceStatusBanner />
+			<StorageBanner />
 			<header>
 				<div className='header-left'>
 					<h1>{t('All Projects')}</h1>
@@ -482,7 +487,10 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 					<UserDropdown
 						username={user?.username || ''}
 						onLogout={onLogout}
-						onOpenProfile={() => setShowProfileModal(true)}
+						onOpenProfile={(tab) => {
+							setProfileTab(tab ?? 'account');
+							setShowProfileModal(true);
+						}}
 						onOpenExport={() => setShowAccountExportModal(true)}
 						onOpenDeleteAccount={() => setIsDeleteAccountModalOpen(true)}
 						onOpenUpgrade={() => setShowGuestUpgradeModal(true)}
@@ -663,6 +671,7 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 					<ProfileSettingsModal
 						isOpen={showProfileModal}
 						onClose={() => setShowProfileModal(false)}
+						initialTab={profileTab}
 					/>
 
 					<ExportAccountModal
