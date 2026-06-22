@@ -62,6 +62,20 @@ let compiler: any = null;
 let renderer: any = null;
 let initialized = false;
 
+function mergeDiagnostics(...groups: any[][]): any[] {
+	const seen = new Set<string>();
+	const out: any[] = [];
+	for (const group of groups) {
+		for (const diag of group) {
+			const key = `${diag.severity}|${diag.path ?? ''}|${diag.range ?? ''}|${diag.message}`;
+			if (seen.has(key)) continue;
+			seen.add(key);
+			out.push(diag);
+		}
+	}
+	return out;
+}
+
 const defaultFonts = [
 	'DejaVuSansMono-Bold.ttf',
 	'DejaVuSansMono-BoldOblique.ttf',
@@ -176,17 +190,6 @@ async function ensureInit() {
 	initialized = true;
 }
 
-function getFormatArg(format: string): number {
-	switch (format) {
-		case 'vector':
-			return 0;
-		case 'pdf':
-			return 1;
-		default:
-			throw new Error(`Unsupported format: ${format}`);
-	}
-}
-
 self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
 	const data = e.data;
 	const { id, type } = data;
@@ -230,20 +233,40 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
 				creation_timestamp: creationTimestamp,
 			});
 
-			const compileResult = await compiler.compile({
-				mainFilePath: absoluteMainPath,
-				format: getFormatArg('pdf'),
-			});
-			output = compileResult.result as Uint8Array;
-			diagnostics = compileResult.diagnostics || [];
+			const compiled = await compiler.runWithWorld(
+				{ mainFilePath: absoluteMainPath },
+				async (world: any) => {
+					const paged = await world.compile({ diagnostics: 'full' });
+					const res = await world.pdf({ diagnostics: 'full' });
+					return {
+						result: res.result,
+						diagnostics: mergeDiagnostics(
+							paged.diagnostics ?? [],
+							res.diagnostics ?? [],
+						),
+					};
+				},
+			);
+			output = compiled.result as Uint8Array;
+			diagnostics = compiled.diagnostics;
 		} else {
-			const compileResult = await compiler.compile({
-				mainFilePath: absoluteMainPath,
-				format: 'vector',
-			});
-			diagnostics = compileResult.diagnostics || [];
+			const compiled = await compiler.runWithWorld(
+				{ mainFilePath: absoluteMainPath },
+				async (world: any) => {
+					const paged = await world.compile({ diagnostics: 'full' });
+					const res = await world.vector({ diagnostics: 'full' });
+					return {
+						result: res.result,
+						diagnostics: mergeDiagnostics(
+							paged.diagnostics ?? [],
+							res.diagnostics ?? [],
+						),
+					};
+				},
+			);
+			diagnostics = compiled.diagnostics;
 
-			if (!compileResult.result || compileResult.result.byteLength === 0) {
+			if (!compiled.result || compiled.result.byteLength === 0) {
 				const resp: DoneResponse = {
 					id,
 					type: 'done',
@@ -254,14 +277,14 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
 			}
 
 			const rawSvg = await renderer.renderSvg({
-				artifactContent: compileResult.result,
+				artifactContent: compiled.result,
 			});
 
 			output = sanitizeSvg(String(rawSvg), {
 				baseUrl: self.location.href,
 				allowRemoteUrls,
 			});
-			const pageInfos = await retrievePageInfos(compileResult.result);
+			const pageInfos = await retrievePageInfos(compiled.result);
 
 			const resp: DoneResponse = {
 				id,

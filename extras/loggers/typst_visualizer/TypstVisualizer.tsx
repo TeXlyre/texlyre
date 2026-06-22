@@ -15,6 +15,7 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 		ParsedDiagnostic[]
 	>([]);
 	const [filter, setFilter] = useState<'all' | 'error' | 'warning'>('all');
+	const [expandedHints, setExpandedHints] = useState<Set<number>>(new Set());
 
 	useEffect(() => {
 		if (!log) {
@@ -39,6 +40,36 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 		if (diagnostic.line && onLineClick) {
 			onLineClick(diagnostic.line);
 		}
+	};
+
+	const toggleHints = (index: number) => {
+		setExpandedHints((current) => {
+			const next = new Set(current);
+			if (next.has(index)) {
+				next.delete(index);
+			} else {
+				next.add(index);
+			}
+			return next;
+		});
+	};
+
+	const renderHint = (text: string): React.ReactNode => {
+		return text.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
+			/^https?:\/\//.test(part) ? (
+				<a
+					key={i}
+					href={part}
+					target='_blank'
+					rel='noopener noreferrer'
+					onClick={(e) => e.stopPropagation()}
+				>
+					{part}
+				</a>
+			) : (
+				<span key={i}>{part}</span>
+			),
+		);
 	};
 
 	const getTypeIcon = (type: string) => {
@@ -162,12 +193,38 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 								</div>
 								{diagnostic.hints && diagnostic.hints.length > 0 && (
 									<div className='diagnostic-hints'>
-										{diagnostic.hints.map((hint, hintIndex) => (
-											<div key={hintIndex} className='diagnostic-hint'>
-												{t('\uD83D\uDCA1')}
-												{hint}
+										<button
+											type='button'
+											className='diagnostic-hints-toggle'
+											onClick={(e) => {
+												e.stopPropagation();
+												toggleHints(index);
+											}}
+										>
+											{t('\uD83D\uDCA1')}
+											{t('{count} hints', {
+												count: diagnostic.hints.length,
+											})}
+											<span className='diagnostic-hints-chevron'>
+												{expandedHints.has(index) ? '▾' : '▸'}
+											</span>
+										</button>
+										{expandedHints.has(index) && (
+											<div className='diagnostic-hints-body'>
+												{diagnostic.hints.map((hint, hintIndex) => (
+													<div key={hintIndex} className='diagnostic-hint'>
+														{hint.text && renderHint(hint.text)}
+														{hint.items && (
+															<ul className='diagnostic-hint-items'>
+																{hint.items.map((item, itemIndex) => (
+																	<li key={itemIndex}>{item}</li>
+																))}
+															</ul>
+														)}
+													</div>
+												))}
 											</div>
-										))}
+										)}
 									</div>
 								)}
 							</li>

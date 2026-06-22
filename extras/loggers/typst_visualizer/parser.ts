@@ -1,10 +1,15 @@
 // extras/loggers/typst_visualizer/parser.ts
+export interface ParsedHint {
+	text: string;
+	items?: string[];
+}
+
 export interface ParsedDiagnostic {
 	type: 'error' | 'warning' | 'info';
 	message: string;
 	line?: number;
 	file?: string;
-	hints?: string[];
+	hints?: ParsedHint[];
 	fullMessage?: string;
 }
 
@@ -17,6 +22,9 @@ const DIAGNOSTIC_PATTERNS: Array<{
 	{ type: 'info', regex: /^info(?:\[([^\]]+)\])?\s*:\s*(.+)$/ },
 ];
 
+const HEADER_PATTERN = /^(error|warning|info)(?:\[|:)/;
+const HINTS_MARKER = /,?\s*hints?:/i;
+
 export function parseTypstLog(log: string): ParsedDiagnostic[] {
 	const result: ParsedDiagnostic[] = [];
 	const lines = log.split('\n');
@@ -28,8 +36,8 @@ export function parseTypstLog(log: string): ParsedDiagnostic[] {
 		const diagnostic = matchDiagnosticHeader(line);
 		if (!diagnostic) continue;
 
-		const fullMessage = collectFollowupLines(lines, i, diagnostic);
-		diagnostic.fullMessage = fullMessage.replace(/\s+/g, ' ').trim();
+		const { message, listItems } = collectFollowupLines(lines, i, diagnostic);
+		buildHints(diagnostic, message, listItems);
 		result.push(diagnostic);
 	}
 
@@ -75,23 +83,76 @@ function collectFollowupLines(
 	lines: string[],
 	startIndex: number,
 	diagnostic: ParsedDiagnostic,
-): string {
-	let fullMessage = diagnostic.message;
+): { message: string; listItems: string[] } {
+	let message = diagnostic.message;
+	const listItems: string[] = [];
 
 	for (let j = startIndex + 1; j < lines.length; j++) {
 		const nextLine = lines[j].trim();
 
-		if (nextLine.startsWith('hint:')) {
-			diagnostic.hints?.push(nextLine.substring(5).trim());
+		if (HEADER_PATTERN.test(nextLine)) break;
+
+		if (nextLine.startsWith('-')) {
+			listItems.push(nextLine.replace(/^-\s*/, '').trim());
 			continue;
 		}
 
-		if (nextLine.match(/^(error|warning|info)(?:\[|:)/)) break;
-
-		if (nextLine && !nextLine.startsWith('hint:')) {
-			fullMessage += ` ${nextLine}`;
+		if (nextLine.startsWith('hint:')) {
+			diagnostic.hints?.push({ text: nextLine.substring(5).trim() });
+			continue;
 		}
+
+		if (nextLine) message += ` ${nextLine}`;
 	}
 
-	return fullMessage;
+	return { message, listItems };
+}
+
+function buildHints(
+	diagnostic: ParsedDiagnostic,
+	fullMessage: string,
+	listItems: string[],
+): void {
+	const marker = fullMessage.search(HINTS_MARKER);
+
+	if (marker === -1) {
+		diagnostic.fullMessage = normalize(fullMessage);
+		attachListItems(diagnostic, listItems);
+		return;
+	}
+
+	diagnostic.fullMessage = normalize(fullMessage.slice(0, marker));
+
+	const hintText = fullMessage.slice(marker).replace(HINTS_MARKER, '');
+	const inlineHints = hintText
+		.split(/\s*,(?=\s*see\b)\s*/)
+		.map((hint) => normalize(hint))
+		.filter(Boolean)
+		.map((text): ParsedHint => ({ text }));
+
+	diagnostic.hints = [...(diagnostic.hints ?? []), ...inlineHints];
+	attachListItems(diagnostic, listItems);
+}
+
+function attachListItems(
+	diagnostic: ParsedDiagnostic,
+	listItems: string[],
+): void {
+	if (listItems.length === 0) return;
+
+	const hints = diagnostic.hints ?? [];
+	const last = hints[hints.length - 1];
+
+	if (last && /:\s*$/.test(last.text)) {
+		last.text = last.text.replace(/:\s*$/, '');
+		last.items = listItems;
+	} else {
+		hints.push({ text: '', items: listItems });
+	}
+
+	diagnostic.hints = hints;
+}
+
+function normalize(text: string): string {
+	return text.replace(/\s+/g, ' ').trim();
 }

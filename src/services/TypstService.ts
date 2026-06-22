@@ -815,7 +815,7 @@ class TypstService {
 		let location = '';
 		if (diag.path) {
 			location = diag.path.replace(/^\//, '');
-			if (diag.range) location += `:${diag.range.split('-')[0]}`;
+			if (diag.range) location += `:${diag.range.split(/[:-]/)[0]}`;
 		} else if (diag.span) {
 			location = String(diag.span).replace(/^Span\(|\)$/g, '');
 		}
