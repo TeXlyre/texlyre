@@ -625,135 +625,140 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 							<option value='canvas-pdf'>{t('Canvas (PDF)')}</option>
 							<option value='canvas'>{t('Canvas (SVG)')}</option>
 						</select>
-						{(effectiveFormat === 'pdf' || effectiveFormat === 'canvas-pdf') && (
-							<button
-								className={`pdf-options-toggle ${isPdfOptionsOpen ? 'active' : ''}`}
-								onClick={() => setIsPdfOptionsOpen(!isPdfOptionsOpen)}
-								title={t('PDF Options')}
-								disabled={isCompiling}
-							>
-								<OptionsIcon />
-							</button>
-						)}
-					</div>
-					{(effectiveFormat === 'pdf' || effectiveFormat === 'canvas-pdf') && isPdfOptionsOpen && (
-						<div className='pdf-options-section'>
-							<div className='pdf-option'>
-								<label className='dropdown-title'>{t('PDF Standards:')}</label>
-								{getStandardGroups().map((group) => {
-									const isShared = useSharedSettings && !!projectFormat;
-									const current = isShared
-										? doc?.projectMetadata?.typstPdfOptions?.pdfStandard
-										: localPdfOptions.pdfStandard;
-									const selected = parseStandards(current);
-									return (
-										<div key={group.group} className='pdf-standard-group'>
-											<div className='dropdown-label'>{t(group.label)}</div>
-											{group.options.map((option) => {
-												const checked = selected.includes(option.value);
-												const enabled = isStandardEnabled(
-													option.value,
-													selected,
-												);
-												return (
-													<label
-														key={option.value}
-														className='dropdown-checkbox'
-													>
-														<input
-															type='checkbox'
-															checked={checked}
-															disabled={isCompiling || !enabled}
-															onChange={() => {
-																const next = serializeStandards(
-																	toggleStandard(option.value, selected),
-																);
-																if (isShared) {
-																	if (!changeDoc) return;
-																	changeDoc((d) => {
-																		if (!d.projectMetadata) {
-																			d.projectMetadata = {
-																				name: '',
-																				description: '',
-																			};
-																		}
-																		if (!d.projectMetadata.typstPdfOptions) {
-																			d.projectMetadata.typstPdfOptions = {};
-																		}
-																		d.projectMetadata.typstPdfOptions.pdfStandard =
-																			next;
-																	});
-																} else {
-																	setProperty('typst-pdf-standard', next, {
-																		scope: 'project',
-																		projectId,
-																	});
-																}
-															}}
-														/>
-														{t(option.label)}
-													</label>
-												);
-											})}
-										</div>
-									);
-								})}
-								<a
-									href='https://typst.app/docs/reference/pdf/'
-									target='_blank'
-									rel='noopener noreferrer'
-									className='dropdown-link'
-								>
-									{t('Learn more about PDF standards')}
-								</a>
-							</div>
-
-							<label className='dropdown-checkbox'>
-								<input
-									type='checkbox'
-									checked={
-										useSharedSettings && projectFormat
-											? doc?.projectMetadata?.typstPdfOptions?.pdfTags !== false
-											: localPdfOptions.pdfTags
-									}
-									onChange={(e) => {
-										if (useSharedSettings && projectFormat) {
-											if (!changeDoc) return;
-											changeDoc((d) => {
-												if (!d.projectMetadata) {
-													d.projectMetadata = { name: '', description: '' };
-												}
-												if (!d.projectMetadata.typstPdfOptions) {
-													d.projectMetadata.typstPdfOptions = {};
-												}
-												d.projectMetadata.typstPdfOptions.pdfTags =
-													e.target.checked;
-											});
-										} else {
-											setProperty('typst-pdf-tags', e.target.checked, {
-												scope: 'project',
-												projectId,
-											});
-										}
-									}}
+						{(effectiveFormat === 'pdf' ||
+							effectiveFormat === 'canvas-pdf') && (
+								<button
+									className={`pdf-options-toggle ${isPdfOptionsOpen ? 'active' : ''}`}
+									onClick={() => setIsPdfOptionsOpen(!isPdfOptionsOpen)}
+									title={t('PDF Options')}
 									disabled={isCompiling}
-								/>
+								>
+									<OptionsIcon />
+								</button>
+							)}
+					</div>
+					{(effectiveFormat === 'pdf' || effectiveFormat === 'canvas-pdf') &&
+						isPdfOptionsOpen && (
+							<div className='pdf-options-section'>
+								<div className='pdf-option'>
+									<label className='dropdown-title'>
+										{t('PDF Standards:')}
+									</label>
+									{getStandardGroups().map((group) => {
+										const isShared = useSharedSettings && !!projectFormat;
+										const current = isShared
+											? doc?.projectMetadata?.typstPdfOptions?.pdfStandard
+											: localPdfOptions.pdfStandard;
+										const selected = parseStandards(current);
+										return (
+											<div key={group.group} className='pdf-standard-group'>
+												<div className='dropdown-label'>{t(group.label)}</div>
+												{group.options.map((option) => {
+													const checked = selected.includes(option.value);
+													const enabled = isStandardEnabled(
+														option.value,
+														selected,
+													);
+													return (
+														<label
+															key={option.value}
+															className='dropdown-checkbox'
+														>
+															<input
+																type='checkbox'
+																checked={checked}
+																disabled={isCompiling || !enabled}
+																onChange={() => {
+																	const next = serializeStandards(
+																		toggleStandard(option.value, selected),
+																	);
+																	if (isShared) {
+																		if (!changeDoc) return;
+																		changeDoc((d) => {
+																			if (!d.projectMetadata) {
+																				d.projectMetadata = {
+																					name: '',
+																					description: '',
+																				};
+																			}
+																			if (!d.projectMetadata.typstPdfOptions) {
+																				d.projectMetadata.typstPdfOptions = {};
+																			}
+																			d.projectMetadata.typstPdfOptions.pdfStandard =
+																				next;
+																		});
+																	} else {
+																		setProperty('typst-pdf-standard', next, {
+																			scope: 'project',
+																			projectId,
+																		});
+																	}
+																}}
+															/>
+															{t(option.label)}
+														</label>
+													);
+												})}
+											</div>
+										);
+									})}
+									<a
+										href='https://typst.app/docs/reference/pdf/'
+										target='_blank'
+										rel='noopener noreferrer'
+										className='dropdown-link'
+									>
+										{t('Learn more about PDF standards')}
+									</a>
+								</div>
 
-								{t('Enable PDF tags (accessibility)')}
-							</label>
-						</div>
-					)}
+								<label className='dropdown-checkbox'>
+									<input
+										type='checkbox'
+										checked={
+											useSharedSettings && projectFormat
+												? doc?.projectMetadata?.typstPdfOptions?.pdfTags !==
+												false
+												: localPdfOptions.pdfTags
+										}
+										onChange={(e) => {
+											if (useSharedSettings && projectFormat) {
+												if (!changeDoc) return;
+												changeDoc((d) => {
+													if (!d.projectMetadata) {
+														d.projectMetadata = { name: '', description: '' };
+													}
+													if (!d.projectMetadata.typstPdfOptions) {
+														d.projectMetadata.typstPdfOptions = {};
+													}
+													d.projectMetadata.typstPdfOptions.pdfTags =
+														e.target.checked;
+												});
+											} else {
+												setProperty('typst-pdf-tags', e.target.checked, {
+													scope: 'project',
+													projectId,
+												});
+											}
+										}}
+										disabled={isCompiling}
+									/>
+
+									{t('Enable PDF tags (accessibility)')}
+								</label>
+							</div>
+						)}
 					{/* TODO (fabawi): disabled for now as it conflicts with the output setting from tabs*/}
 					{/* {useSharedSettings &&
-            <label className="dropdown-checkbox">
-              <input
-                type="checkbox"
-                checked={!!projectFormat}
-                onChange={(e) => handleShareFormat(e.target.checked)}
-                disabled={isCompiling} />
-              {t('Share with collaborators')}
-            </label>
-          } */}
+							<label className="dropdown-checkbox">
+							<input
+								type="checkbox"
+								checked={!!projectFormat}
+								onChange={(e) => handleShareFormat(e.target.checked)}
+								disabled={isCompiling} />
+							{t('Share with collaborators')}
+							</label>
+						} */}
 				</div>
 
 				<div className='dropdown-section'>

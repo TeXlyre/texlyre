@@ -355,9 +355,7 @@ const TypstExportButton: React.FC<TypstExportButtonProps> = ({
 							<div className='pdf-option'>
 								<label className='dropdown-title'>{t('PDF Standards:')}</label>
 								{getStandardGroups().map((group) => {
-									const selected = parseStandards(
-										localPdfOptions.pdfStandard,
-									);
+									const selected = parseStandards(localPdfOptions.pdfStandard);
 									return (
 										<div key={group.group} className='pdf-standard-group'>
 											<div className='dropdown-label'>{t(group.label)}</div>

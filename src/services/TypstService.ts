@@ -392,7 +392,7 @@ class TypstService {
 				} else {
 					try {
 						stringSources[path] = decoder.decode(content);
-					} catch { }
+					} catch {}
 				}
 			}
 			typstSourceMapService.loadFromSvg(

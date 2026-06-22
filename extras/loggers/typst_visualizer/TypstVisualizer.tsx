@@ -202,7 +202,7 @@ const TypstVisualizer: React.FC<LoggerProps> = ({ log, onLineClick }) => {
 											}}
 										>
 											{t('\uD83D\uDCA1')}
-											{t('{count} hints', {
+											{t('{count} hint', {
 												count: diagnostic.hints.length,
 											})}
 											<span className='diagnostic-hints-chevron'>

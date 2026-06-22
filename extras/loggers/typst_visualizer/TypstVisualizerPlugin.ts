@@ -3,7 +3,7 @@ import type { LoggerPlugin } from '@/plugins/PluginInterface';
 import TypstVisualizer from './TypstVisualizer';
 
 export const PLUGIN_NAME = 'Typst Log Parser';
-export const PLUGIN_VERSION = '0.1.0';
+export const PLUGIN_VERSION = '0.2.0';
 
 const typstVisualizerPlugin: LoggerPlugin = {
 	id: 'typst-visualizer',
