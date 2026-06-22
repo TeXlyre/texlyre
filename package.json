@@ -1,7 +1,7 @@
 {
 	"name": "texlyre",
 	"private": true,
-	"version": "0.8.14",
+	"version": "0.8.15",
 	"description": "A local-first LaTeX & Typst collaborative web editor ",
 	"author": "Fares Abawi <fares@abawi.me> (https://abawi.me)",
 	"license": "AGPL-3.0-or-later",
@@ -86,13 +86,13 @@
 		"@milkdown/crepe": "^7.21.2",
 		"@milkdown/kit": "^7.21.2",
 		"@milkdown/react": "^7.21.2",
-		"@myriaddreamin/typst-ts-renderer": "npm:@texlyre/typst-ts-renderer@0.7.0-rc4",
-		"@myriaddreamin/typst-ts-web-compiler": "npm:@texlyre/typst-ts-web-compiler@0.7.0-rc4",
-		"@myriaddreamin/typst.ts": "npm:@texlyre/typst.ts@0.7.0-rc4",
+		"@myriaddreamin/typst-ts-renderer": "npm:@texlyre/typst-ts-renderer@0.8.0-rc1",
+		"@myriaddreamin/typst-ts-web-compiler": "npm:@texlyre/typst-ts-web-compiler@0.8.0-rc1",
+		"@myriaddreamin/typst.ts": "npm:@texlyre/typst.ts@0.8.0-rc1",
 		"@picocss/pico": "^2.1.1",
 		"@replit/codemirror-vim": "^6.3.0",
-		"@typstyle/typstyle-wasm-bundler": "^0.14.4",
-		"@uiw/codemirror-themes-all": "^4.25.9",
+		"@typstyle/typstyle-wasm-bundler": "^0.15.0",
+		"@uiw/codemirror-themes-all": "^4.25.10",
 		"bib-editor": "^1.14.1",
 		"codemirror": "^6.0.2",
 		"codemirror-lang-bib": "^0.2.4",
@@ -179,12 +179,12 @@
 			"js-yaml@<=4.1.1": ">=4.2.0",
 			"@babel/core@<=7.29.0": ">=7.29.6",
 			"protobufjs@<=7.6.0": ">=7.6.1",
-			"dompurify@<3.4.9": ">=3.4.9"
+			"dompurify@<3.4.9": ">=3.4.11"
 		},
 		"peerDependencyRules": {
 			"allowedVersions": {
-				"@myriaddreamin/typst-ts-renderer": "0.7.0-rc4",
-				"@myriaddreamin/typst-ts-web-compiler": "0.7.0-rc4"
+				"@myriaddreamin/typst-ts-renderer": "0.8.0-rc1",
+				"@myriaddreamin/typst-ts-web-compiler": "0.8.0-rc1"
 			}
 		},
 		"onlyBuiltDependencies": [
@@ -235,5 +235,11 @@
 		"vite-plugin-pwa": "^1.3.0",
 		"vite-plugin-static-copy": "^4.1.1",
 		"workbox-window": "^7.4.1"
+	},
+	"allowScripts": {
+		"protobufjs@7.6.4": true,
+		"sharp@0.34.5": true,
+		"esbuild@0.28.1": true,
+		"unrs-resolver@1.12.2": true
 	}
 }

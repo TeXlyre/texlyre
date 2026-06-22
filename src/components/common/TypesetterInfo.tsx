@@ -115,18 +115,18 @@ const TypesetterInfo: React.FC<TypesetterInfoProps> = ({ type }) => {
 				<h4 className='typesetter-tooltip-title'>{t('Typst')}</h4>
 				<div className='typesetter-tooltip-section'>
 					<strong>{t('Typst Engine:')}</strong>{' '}
-					{t('@myriaddreamin/typst.ts v0.7.0-rc2')}
+					{t('@myriaddreamin/typst.ts v0.8.0-rc1')}
 				</div>
 				<div className='typesetter-tooltip-section'>
 					<strong>{t('Typst Renderer:')}</strong>{' '}
-					{t('@texlyre/typst-ts-renderer v0.7.0-rc2')}
+					{t('@texlyre/typst-ts-renderer v0.8.0-rc1')}
 				</div>
 				<div className='typesetter-tooltip-section'>
 					<strong>{t('Typst Compiler:')}</strong>{' '}
-					{t('@texlyre/typst-ts-compiler v0.7.0-rc2')}
+					{t('@texlyre/typst-ts-compiler v0.8.0-rc1')}
 				</div>
 				<div className='typesetter-tooltip-section'>
-					<strong>{t('Typst Version:')}</strong> {t('0.14.2 (12/12/2025)')}
+					<strong>{t('Typst Version:')}</strong> {t('0.15.0 (15/06/2026)')}
 				</div>
 				<div className='typesetter-tooltip-section'>
 					<strong>{t('Output Formats:')}</strong>

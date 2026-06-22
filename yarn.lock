@@ -2310,20 +2310,20 @@
   resolved "https://registry.npmjs.org/@msgpack/msgpack/-/msgpack-2.8.0.tgz"
   integrity sha512-h9u4u/jiIRKbq25PM+zymTyW6bhTzELvOoUd+AvYriWOAKpLGnIamaET3pnHYoI5iYphAHBI4ayx0MehR+VVPQ==
 
-"@myriaddreamin/typst-ts-renderer@npm:@texlyre/typst-ts-renderer@>=0.7.0-rc4", "@myriaddreamin/typst-ts-renderer@npm:@texlyre/typst-ts-renderer@0.7.0-rc4":
-  version "0.7.0-rc4"
-  resolved "https://registry.npmjs.org/@texlyre/typst-ts-renderer/-/typst-ts-renderer-0.7.0-rc4.tgz"
-  integrity sha512-thuK/Kx8gFRd83PHE7BRHzeuMYF3vspZOYbIjhyYhJyZEj90F/GbcH1+6T0UiNYWIL3XJ/naClh92mcFFz/oGw==
+"@myriaddreamin/typst-ts-renderer@npm:@texlyre/typst-ts-renderer@^0.8.0-rc1", "@myriaddreamin/typst-ts-renderer@npm:@texlyre/typst-ts-renderer@0.8.0-rc1":
+  version "0.8.0-rc1"
+  resolved "https://registry.npmjs.org/@texlyre/typst-ts-renderer/-/typst-ts-renderer-0.8.0-rc1.tgz"
+  integrity sha512-9rrQGMLOsI+BzSuNICpkvG0j6MV8/FW7tgL8UTc6cRvLzNQ5jBOgIIFR4ADWL4/0k7d4P1dY1WFOXdEBbV7oIg==
 
-"@myriaddreamin/typst-ts-web-compiler@npm:@texlyre/typst-ts-web-compiler@>=0.7.0-rc4", "@myriaddreamin/typst-ts-web-compiler@npm:@texlyre/typst-ts-web-compiler@0.7.0-rc4":
-  version "0.7.0-rc4"
-  resolved "https://registry.npmjs.org/@texlyre/typst-ts-web-compiler/-/typst-ts-web-compiler-0.7.0-rc4.tgz"
-  integrity sha512-skqq3IiH9SVYDFDa61r4HChwQIj2OzErlqR7yFPT8NEC0p4+cwKDT30yDra1A2zpHOB9Dhg+mFInmK/KoJcTQQ==
+"@myriaddreamin/typst-ts-web-compiler@npm:@texlyre/typst-ts-web-compiler@^0.8.0-rc1", "@myriaddreamin/typst-ts-web-compiler@npm:@texlyre/typst-ts-web-compiler@0.8.0-rc1":
+  version "0.8.0-rc1"
+  resolved "https://registry.npmjs.org/@texlyre/typst-ts-web-compiler/-/typst-ts-web-compiler-0.8.0-rc1.tgz"
+  integrity sha512-Cq9AIH0pKXBwR34JosX1yxZhgUpYeuiD7HRvOvgM+dDJYtSHnn9jJ8p55tC3XG3V7IxKR+rvs+zTs9j8lfNLpA==
 
-"@myriaddreamin/typst.ts@npm:@texlyre/typst.ts@0.7.0-rc4":
-  version "0.7.0-rc4"
-  resolved "https://registry.npmjs.org/@texlyre/typst.ts/-/typst.ts-0.7.0-rc4.tgz"
-  integrity sha512-4TSvFnNFgQU5tYK2sMF1MUd+xBQEbWNB3/ZvjfD/1r/B5Act4NcBl6JYWv63X3RX2naNwEncqOBpyWcIFRr1Bg==
+"@myriaddreamin/typst.ts@npm:@texlyre/typst.ts@0.8.0-rc1":
+  version "0.8.0-rc1"
+  resolved "https://registry.npmjs.org/@texlyre/typst.ts/-/typst.ts-0.8.0-rc1.tgz"
+  integrity sha512-Cr/gVzTNT3OL8DOeNYfU/XYzZQTWEGC5j7NSDA5rkvIIBYo53EZipXqt/3qoLWlZ9eA5DhW7e+FWanq22tLKOA==
   dependencies:
     idb "^7.1.1"
 
@@ -2896,302 +2896,302 @@
     "@typescript-eslint/types" "8.58.1"
     eslint-visitor-keys "^5.0.0"
 
-"@typstyle/typstyle-wasm-bundler@^0.14.4":
-  version "0.14.4"
-  resolved "https://registry.npmjs.org/@typstyle/typstyle-wasm-bundler/-/typstyle-wasm-bundler-0.14.4.tgz"
-  integrity sha512-/umkAkAgjMQEXN5TdpcpHSHt9DFZkMO6w5j13VsQK9toK/09AneBXSHOnhA+Mv9KOOiS/3h/DPBqLDdkBVPQcw==
+"@typstyle/typstyle-wasm-bundler@^0.15.0":
+  version "0.15.0"
+  resolved "https://registry.npmjs.org/@typstyle/typstyle-wasm-bundler/-/typstyle-wasm-bundler-0.15.0.tgz"
+  integrity sha512-SaonMGZsvpQDSbiqEbTQ4Af7Jbi8ug6vWABuJzbXhpqlsL+yymTOOkioDUpfgQjOGoRMMF7Vbj5gdOsVlpzVkA==
 
-"@uiw/codemirror-theme-abcdef@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-abcdef/-/codemirror-theme-abcdef-4.25.9.tgz"
-  integrity sha512-F6bZcm20N3r4ZeCMdyjjII/fYHqE17sbRk6pFWfU+NPxe522A/uaRKpEaBK/iDwYqpKZgI3XUz7j3KcYzA99Mg==
+"@uiw/codemirror-theme-abcdef@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-abcdef/-/codemirror-theme-abcdef-4.25.10.tgz"
+  integrity sha512-vgIqRgsNg/AmMHgMR6ERctyIYU9RD0z0fwMPk5gTpH7lQXk6mxvaGPN1AkNpFp2b6RAJ/ufsL0wFIvd0dFDavA==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-abyss@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-abyss/-/codemirror-theme-abyss-4.25.9.tgz"
-  integrity sha512-zcMHX3abHsaV+IRhnHeWA5aYTP/9HTk/MR5Zh3pfwASv8YMsQlcjBva8vEZULV9pJDferW/9GXbKbbPdmceJeg==
+"@uiw/codemirror-theme-abyss@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-abyss/-/codemirror-theme-abyss-4.25.10.tgz"
+  integrity sha512-klPCrIFaYdRfxU/lKCRSKO5KvRY4ndf+i/uoyYtJ5rkhkhpyDhkwEMGuM8KqmDWH74Z50kfsy9V5C4PxudAEOg==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-androidstudio@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-androidstudio/-/codemirror-theme-androidstudio-4.25.9.tgz"
-  integrity sha512-HPIWpEC9ElhpJ2NZUKB6z+eStQzFDrkIGW9pTJxYHSCv2Los7FgD/R6eGqjTS4LVlBf9FR+KU/5E6dLT8DQHlw==
+"@uiw/codemirror-theme-androidstudio@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-androidstudio/-/codemirror-theme-androidstudio-4.25.10.tgz"
+  integrity sha512-wsQP4tLNEnZc+r+L9cT1b1spg44BKsyFHVMapUjzvnbWNRKjXJsgLd1cToHb2C/y2fCrCJLwIo3dUPgq9mGJLA==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-andromeda@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-andromeda/-/codemirror-theme-andromeda-4.25.9.tgz"
-  integrity sha512-JSqK8/sVFbFfTyv/okaT4c8suulf9zasqd4YBuTSkPZo+Sd/50blxMSVe5IWwDSiW5hkiupb7FC2IP1siHhncw==
+"@uiw/codemirror-theme-andromeda@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-andromeda/-/codemirror-theme-andromeda-4.25.10.tgz"
+  integrity sha512-iWSeFe8G5WS6QCoU93xRZ90QEjGhOX7UgfsfxafCBtog7UqycT34zkaalO4D8hjWBGNzT4jeQUUtByGNV/gLQA==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-atomone@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-atomone/-/codemirror-theme-atomone-4.25.9.tgz"
-  integrity sha512-EXG/+p+Y9j/StU2yAtz/+JZj/8WaSGqwjsad79CSBgpHrSU0ERzv4urYWXgEmLTKKkFimwTigy7qOJlLAwkN2A==
+"@uiw/codemirror-theme-atomone@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-atomone/-/codemirror-theme-atomone-4.25.10.tgz"
+  integrity sha512-yZXBg8p4OnNFvHMCgDL4ap9y+vGVF+OOt6opkXDl3dMj43/7Lvy0tKhO82yCroVIAPsIcnPN2ZxO7+k6gaqCMw==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-aura@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-aura/-/codemirror-theme-aura-4.25.9.tgz"
-  integrity sha512-cJyInS81wh0lWYs1XDiyFSxCCXrJ+4qifBsDHSYELdLgbnr441T3Kr6a9lyUobtL4DZVaIaCKE9rajrFdJIeAw==
+"@uiw/codemirror-theme-aura@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-aura/-/codemirror-theme-aura-4.25.10.tgz"
+  integrity sha512-FI40L+2MKHEwbpdWQq0upaSomEkMruU9XsaF1oTo237PFH4U3FXWPlQ+f3RTJR51jmmd1u3Tq5Rlk1dUvSY58g==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-basic@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-basic/-/codemirror-theme-basic-4.25.9.tgz"
-  integrity sha512-40x+anangMmPziZSeEcg6P5YDLn7fF1ioS5VxEPXMGUTbikv0au4PXVNsf7CtP0VwO4MmGt87zZI6rQIexEP3w==
+"@uiw/codemirror-theme-basic@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-basic/-/codemirror-theme-basic-4.25.10.tgz"
+  integrity sha512-kazRYG/rkTov3IEixpoKfNEknWw3YRX1SYIByRxdV7LLbqJoE921EYKG6ne5RI3tWy3j3dGysBs8LKJFe4sQbA==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-bbedit@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-bbedit/-/codemirror-theme-bbedit-4.25.9.tgz"
-  integrity sha512-SGXQ0tLsqcRvxXCrdeU/MiQ3liNKvr8DCxaSt4N5LP7EPGO94ebuvba0F+H/3LpeJJrn5Xq0FuhaPlMYJ10RXg==
+"@uiw/codemirror-theme-bbedit@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-bbedit/-/codemirror-theme-bbedit-4.25.10.tgz"
+  integrity sha512-NMccyWF1220AMrJxpVjhhQ4n5AzLPW9oa7iR0V5Qe4dYuove5yfddKpK494mrr+ysdZYdBkgpw6r6z7oFajf0Q==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-bespin@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-bespin/-/codemirror-theme-bespin-4.25.9.tgz"
-  integrity sha512-Zr35B1FpM+VMIoHot397GP/dQBWkFz6SlFqf3JSX6wlwgy2d4ot3YF9fBglGkM3C3ITmkBBQRnlvELwke+dXBg==
+"@uiw/codemirror-theme-bespin@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-bespin/-/codemirror-theme-bespin-4.25.10.tgz"
+  integrity sha512-zdVe10o9b6OXPqoMWZoHlzwmQ5vuRiCwJjsffPDYFOf5gu17wu3CCYlY6oBL/2Rm8lHeLExj6qJuWDTd4jeCQQ==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-console@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-console/-/codemirror-theme-console-4.25.9.tgz"
-  integrity sha512-vhN9QKStneKyiNzu+DuA5JOss9WfzecuDjvmEYApQL9zvRmNUAP6La0C2vpZCji1Y23OAFZUJvTU+eKbept3cw==
+"@uiw/codemirror-theme-console@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-console/-/codemirror-theme-console-4.25.10.tgz"
+  integrity sha512-VwfreXMA2qvm19ixXCSrF7jcI53l6TPaz+LfPiImZ3O/qyFKfvIlqn7G69pLIzeJkvvFXY1xwSq2orARKQz/LQ==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-copilot@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-copilot/-/codemirror-theme-copilot-4.25.9.tgz"
-  integrity sha512-MLBXBEp+jDQC+BbFUQxxwsOKvhbCsIpIjwBgNfR4KKKQxD6tF6u+CE7ERcrRWJ6cCV2lDrs1IZRZGPQCSpHMIA==
+"@uiw/codemirror-theme-copilot@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-copilot/-/codemirror-theme-copilot-4.25.10.tgz"
+  integrity sha512-CMzeaD5zVaVGbpqClpDLOXf8J7aG0sj2ADAjqiMCsQcyqx8wIlJJvG7zSOBZbgF6EVr2d1brXfTch6gQj9k9+g==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-darcula@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-darcula/-/codemirror-theme-darcula-4.25.9.tgz"
-  integrity sha512-lrex1DXg/mx2BX1UtnyFlat7w6c3RyE5GMvyR8uPfXNAXMUEKjYxNRdUuQ9WGlOMzQZ3x+UbKnUZd/r6AmXwsw==
+"@uiw/codemirror-theme-darcula@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-darcula/-/codemirror-theme-darcula-4.25.10.tgz"
+  integrity sha512-vdIGN/7jaxtwgEgpCbXTTKNHGgJWvID0DGN7P2ycza39fRabjwFhJRvcWIelAsJerLloN17iQqk3hPOEdMrc5A==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-dracula@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-dracula/-/codemirror-theme-dracula-4.25.9.tgz"
-  integrity sha512-0VTnpPCHPc+7LqYsQOX6nvW32XiiT+O6kJjReUbV7Eio3vPHsb+b9P4DKhz4AAvIIYMxmHkMuautHKuWktFXSg==
+"@uiw/codemirror-theme-dracula@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-dracula/-/codemirror-theme-dracula-4.25.10.tgz"
+  integrity sha512-YW3tsKfNOAQix7mH72AVj3Sb2QBk3Js7j4B0NStJifq1uPsm3hGc1TJ9a7UAht+xf8TNrUc1vlecrkUlfsL7yQ==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-duotone@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-duotone/-/codemirror-theme-duotone-4.25.9.tgz"
-  integrity sha512-6IPZncdrtcgnU1EtQ1/IzaULZ+Jw5uAeVeQCae+rFBnW/m6Q8nWB8+iVnk8kCevgjT5ScZmRd9h4yqtSeJbUwQ==
+"@uiw/codemirror-theme-duotone@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-duotone/-/codemirror-theme-duotone-4.25.10.tgz"
+  integrity sha512-OQzg73rlUnDQ1NDT2KR4Nt+67oMg5yRWXz60WoSATiLGhNoz8Af8hAKnY1TC+v4P8OmLoFnufFL7DQARX1wqQQ==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-eclipse@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-eclipse/-/codemirror-theme-eclipse-4.25.9.tgz"
-  integrity sha512-0pT0vRyLAotj5UjIZbHSmsZ8oz7l8IU5bhx5p7MDrTOdi73ZjyTsG4YsDzSXndERnfgkBbZJrlZiExBkXnhtUA==
+"@uiw/codemirror-theme-eclipse@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-eclipse/-/codemirror-theme-eclipse-4.25.10.tgz"
+  integrity sha512-KuabEwh0cTZNh7DW3tQY4vA7W6jlZFpf8NTan4fq8gHRtwX/uPe315OedlCFCrz9p8aOyYLrr13XfZfQ5GpdmA==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-github@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-github/-/codemirror-theme-github-4.25.9.tgz"
-  integrity sha512-AGpTamNiySKNzq3Jc7QjpwgQRVaHUaBtmOKiUDghYSfEGjsc5uW4NUW70sSU3BnkGv+lCTUnF3175KM24BWZbw==
+"@uiw/codemirror-theme-github@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-github/-/codemirror-theme-github-4.25.10.tgz"
+  integrity sha512-iMM2QT4FaebJMO4W7lXmxNkRPIjKzgY26wL0QG0Ugy0gzsnxoNz4zgNeFIblPA8rvrN3vOIhNNh4nk9UOlFKxA==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-gruvbox-dark@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-gruvbox-dark/-/codemirror-theme-gruvbox-dark-4.25.9.tgz"
-  integrity sha512-9qIa1z4zwubN2kHAs+lJvdrmMMMf69JeyVPAwSoNaImL8wUQ/J3291qcfuoZjv8RsqSzrKTgxqLHtkAhB7xcwg==
+"@uiw/codemirror-theme-gruvbox-dark@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-gruvbox-dark/-/codemirror-theme-gruvbox-dark-4.25.10.tgz"
+  integrity sha512-EtOzHohChmG10ceaeKBRUCj6GdBM1T/ayQTu/8H3BVXmvzIKUvaTWm6w7pxC5Lgj4duzJA6V1gg6mXKquZ/jXQ==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-kimbie@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-kimbie/-/codemirror-theme-kimbie-4.25.9.tgz"
-  integrity sha512-zLjT7MkotuT07rx4ZPZOM1/H+sa+kCmJr5BDu2ASNpF7Sj4w0cTNcAyxKHj+N6LcgIM8PICxqB97CJhlurNTBA==
+"@uiw/codemirror-theme-kimbie@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-kimbie/-/codemirror-theme-kimbie-4.25.10.tgz"
+  integrity sha512-aR2AKQ/QeeFp7y26XygTGbdYETDCDjB0diC9xO/5++CpZbCRnjcc6U1MbGOw4V8XA43CYvtvu1m6rBkeASJXhw==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-material@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-material/-/codemirror-theme-material-4.25.9.tgz"
-  integrity sha512-6f2x+gmj2hHagqy6VkpnPbK7SWyP6kKruGgqpyIy09/f9pAUCqkW8mRY5ZEr28tA+YEGQaSY0Z2IBCHl8OKJog==
+"@uiw/codemirror-theme-material@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-material/-/codemirror-theme-material-4.25.10.tgz"
+  integrity sha512-UP9Hokx8Kkm4EOXkqiHIXlC2wkqkPnMuz7/2E6Pqi3h5nCvtkUhSpvJ9fldWOPQRnuhX/suu6bi6a0H3LoFI1Q==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-monokai-dimmed@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-monokai-dimmed/-/codemirror-theme-monokai-dimmed-4.25.9.tgz"
-  integrity sha512-6/Z9tF4UFngaXifAKC4DI2l61G3rtcWOxvCwgs5zzNVMTciUI+Bl/K7eCvjf2y0LfLmK8Ovob8ODDBcVgwzp5g==
+"@uiw/codemirror-theme-monokai-dimmed@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-monokai-dimmed/-/codemirror-theme-monokai-dimmed-4.25.10.tgz"
+  integrity sha512-0MtPkK1q1xtnstCRF7FlK+10ZYxdq731Tfsy8d8I0GGbCYRKY0QUc+KfdcHn+kfHQ9WLsertm4PBf1p9PrJZVA==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-monokai@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-monokai/-/codemirror-theme-monokai-4.25.9.tgz"
-  integrity sha512-qKWRZOGpBCasZJdYU+SsXd92TjncF3QYHpraCPe29bxN22jeIxi2UC4MCuJHwa8hHljHOCSdx1XG/GuUMn7XiQ==
+"@uiw/codemirror-theme-monokai@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-monokai/-/codemirror-theme-monokai-4.25.10.tgz"
+  integrity sha512-H6MgopRmxHEtk0uxsk7LYePLTc1bWmIz2tQyLQotIsf9aYwCHb8hlTL6benrGKYlAatzPy6CADpw0Du0PjfHmA==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-noctis-lilac@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-noctis-lilac/-/codemirror-theme-noctis-lilac-4.25.9.tgz"
-  integrity sha512-HXjQutWsVYfiBM6ze4SomXmSJNzYYJ/fUYJ3TJLhnp5cjIPNBsMsgOAaWp3L64xUqqorb0+1y6kdmUKxTEp6rQ==
+"@uiw/codemirror-theme-noctis-lilac@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-noctis-lilac/-/codemirror-theme-noctis-lilac-4.25.10.tgz"
+  integrity sha512-bRpFntPxJqKQR9BqVc0sxLv3O6j+HCAtTgPK5TTP14yrh12Ixk5bcJRHRonB4ih9qqL3q/7LW1vvUfcjL6odvg==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-nord@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-nord/-/codemirror-theme-nord-4.25.9.tgz"
-  integrity sha512-5c568xmMidwICADxACB1zIhKoEgqbdVrdeOUZ2p5pE6NNKGR4ATzk9OSqhvr1ZhZPNOktxqSLLRzihFaZG0bDQ==
+"@uiw/codemirror-theme-nord@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-nord/-/codemirror-theme-nord-4.25.10.tgz"
+  integrity sha512-gTPczh7qHSJxMdUBvLMdN2BXkJ2AbJyRhcjY8m+tjp+Hpg3ClQvu4S2mH/57slCUOq0DS0BbSi9jXnu2hFbSdw==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-okaidia@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-okaidia/-/codemirror-theme-okaidia-4.25.9.tgz"
-  integrity sha512-lIJFUs/ws0prQz+dVo5ZIp0o6vxW7p6nf8iRFETN5S3KA3nJUR2cTF6u8mYLFwHMrFs2eReRsFyH94wjmuPWvg==
+"@uiw/codemirror-theme-okaidia@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-okaidia/-/codemirror-theme-okaidia-4.25.10.tgz"
+  integrity sha512-+gawy5f5ullggww/wUqyvI/DXJ3nTVPZsitm9QUSLDHUTTbbMK4QWJUUYjt6wd0EZ/aZ2v75OKoY+qs/9SGHkg==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-quietlight@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-quietlight/-/codemirror-theme-quietlight-4.25.9.tgz"
-  integrity sha512-BWFcFb3WHTCVROkjExh/TMMTJ5SNcDafaVEIwneKypiHoTJoIY6RlSRBj6GA3O5IgKdrGmhje87s0Gx2OLIndg==
+"@uiw/codemirror-theme-quietlight@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-quietlight/-/codemirror-theme-quietlight-4.25.10.tgz"
+  integrity sha512-eUBx9ZE6G5DzxsgRRGl29cf1qeQgn3APaRSMxqhNRopx7Rl4l4+XtPQCasre6CPtQLD2h13JK72fXSBKE+EHcQ==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-red@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-red/-/codemirror-theme-red-4.25.9.tgz"
-  integrity sha512-pSOs2ByCVGJXbABhfTEU4TlRh/Wa9BJlDUa219iq1jO3AUDUM/LIPNLhmQvMtOituMX8WKJprspBrDcveXsisg==
+"@uiw/codemirror-theme-red@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-red/-/codemirror-theme-red-4.25.10.tgz"
+  integrity sha512-3j/JEJjLjtOU/+rmfOluY5pSHjAgckgU9//nxCEhn7kPcBFqMbVLPYC+iqhraiyAeNeKpxQvlQPPnow2y1UCSQ==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-solarized@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-solarized/-/codemirror-theme-solarized-4.25.9.tgz"
-  integrity sha512-axUgU9+3JKXW83F+te454qcyTmQAm0+2Fxv0yoegiH6bdl7DjFq/lNVGGZtLwN47AQCj2Qwrheeet2t3GbY9VQ==
+"@uiw/codemirror-theme-solarized@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-solarized/-/codemirror-theme-solarized-4.25.10.tgz"
+  integrity sha512-mTP09g375qD86T09aRKQLHqkRSWDoot4dFUCtiyIsrvp1VeMBcA5ZSJHnI8A0lc8+hHRrvpL5fe3SnRFE+FoZg==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-sublime@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-sublime/-/codemirror-theme-sublime-4.25.9.tgz"
-  integrity sha512-/Ha1K3P0sqFWrsYtCu6Uih/t8C73dVY6m5rObjCnnokr//kOusKwlwt1fJiEFdIcSKlH2WBIvW5tb75tcYitnw==
+"@uiw/codemirror-theme-sublime@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-sublime/-/codemirror-theme-sublime-4.25.10.tgz"
+  integrity sha512-PCSQtplUwb85e6syMQcanezS2Bo157kSYDGJax7SIW4fMDbuiqHyeIf83ZHVqcoX1Z2c8KPwQXGu6U6fas+G+A==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-tokyo-night-day@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-tokyo-night-day/-/codemirror-theme-tokyo-night-day-4.25.9.tgz"
-  integrity sha512-1ziFletBO6tfRtX4FVWij1wYIf95uYi54dgnMz5CXe4A4u710rJ3uS3C4ijlnclRbwHjNTqtrMWNuicKDBMsPg==
+"@uiw/codemirror-theme-tokyo-night-day@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-tokyo-night-day/-/codemirror-theme-tokyo-night-day-4.25.10.tgz"
+  integrity sha512-n7SJGwAY5KCtikj8xru5OrT3maEtrYnjMI2LGTWjCO+yA5TTMFOTsVLtT7HMesGQ2db61iMHKEgn7Kkhqs6/8g==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-tokyo-night-storm@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-tokyo-night-storm/-/codemirror-theme-tokyo-night-storm-4.25.9.tgz"
-  integrity sha512-qz8Vg+ze12TuLk+fqwx3oga3H6rDE+81PpKMGLfbI1BwPDgg7GZGTGrWZoN1Bpf6EV0dA4WO8K6lbzFhlS6S1Q==
+"@uiw/codemirror-theme-tokyo-night-storm@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-tokyo-night-storm/-/codemirror-theme-tokyo-night-storm-4.25.10.tgz"
+  integrity sha512-I4RlotQ6LntiOTcZERxUCbBYd0oJpyDkSC+xzYGNX55LywZ4AS0x8IFzlq7OqCuW7QdLzTDTAW+s0BH/9s+/Cg==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-tokyo-night@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-tokyo-night/-/codemirror-theme-tokyo-night-4.25.9.tgz"
-  integrity sha512-NkSqguMpzRjsRBbTIfOrGS35tQkE3K8AAetZHlbRZC7fnI52RreZ11X41cOYrc/Dapt8xqUPlhlvclymGFgy8g==
+"@uiw/codemirror-theme-tokyo-night@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-tokyo-night/-/codemirror-theme-tokyo-night-4.25.10.tgz"
+  integrity sha512-nbW1szmpdlGdm9Nf03j0IU+Ecd2h/qp3vkPiHMcfEHOl3KEPPqek5UhTfpemQgdSTmohGQcY1NfUlysXsQ5y7A==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-tomorrow-night-blue@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-tomorrow-night-blue/-/codemirror-theme-tomorrow-night-blue-4.25.9.tgz"
-  integrity sha512-iG2wCXO/rkJIrvW7rJY7Ehh4yushw8X4vQnstjArxofR6uNrE9ay3Ut7M0cxrwY7z8YIU5f7NQFODE/h3HNmVA==
+"@uiw/codemirror-theme-tomorrow-night-blue@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-tomorrow-night-blue/-/codemirror-theme-tomorrow-night-blue-4.25.10.tgz"
+  integrity sha512-8C2IAJm3iO16m6BTbEjn+uQE/EsSLx/9ip4m/N9RLxSIWeXS/0hRE30ll2zyEg5+8d9VPrkhHWygGkwqbol/9Q==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-vscode@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-vscode/-/codemirror-theme-vscode-4.25.9.tgz"
-  integrity sha512-9KTnScHTSk97yGnyNYvDm6QZuBCdbO1OzMQ5bHtoBSPSVtH0LjY3bS6CXsBagb22v8OLPx/XwrBYOjKFp409CQ==
+"@uiw/codemirror-theme-vscode@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-vscode/-/codemirror-theme-vscode-4.25.10.tgz"
+  integrity sha512-5wyYu4/WBsdDVeHStWHnvgkaSQ4X97tdwXETsJQAt/ZSjHY4Gs+mzwMj9azJQnr9uA19yjFtU2PkAcXFQIFOsA==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-white@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-white/-/codemirror-theme-white-4.25.9.tgz"
-  integrity sha512-75PHfVejBvgF1EbponpEOgND/T6MJYZ673aODPuR7mKPZNfn8649qOSrp7wvMN/NEZ+W5CxV3U7tb9MQWPcM4A==
+"@uiw/codemirror-theme-white@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-white/-/codemirror-theme-white-4.25.10.tgz"
+  integrity sha512-iPOeZrLCXUeA5lridoEEM8s6HmNZKFQ287lZDSUDOnTX6sIpRzXHHuEJDwAcBaDXjx3eWERKgFE8z9pEH73LJg==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-theme-xcode@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-xcode/-/codemirror-theme-xcode-4.25.9.tgz"
-  integrity sha512-sMiDpOiW0iiNsLyqL1Vx6wZKOSoVUNfmWbBDtaYzlkRcKzkyJQp68cPIq5VG8Mhl2z+PX5cPbOA0nZEegNLicA==
+"@uiw/codemirror-theme-xcode@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-theme-xcode/-/codemirror-theme-xcode-4.25.10.tgz"
+  integrity sha512-wsvBm7t7DlCy0rDqgygxKg7CjtYmxJ+fAZ9IbJKY/RGce4/9F8vHeGBy1MRqNl//7PG1Y1txCIX77IaAQptjpg==
   dependencies:
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-themes-all@^4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-themes-all/-/codemirror-themes-all-4.25.9.tgz"
-  integrity sha512-OVcGb6dkgJ8NgcHFvSQkRLHHIRswZhBKK0XZZzRVMxDnCIXfmnDfeChNoKjuzwBr+C0jS7UAAqrWbcqrLj3mhg==
+"@uiw/codemirror-themes-all@^4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-themes-all/-/codemirror-themes-all-4.25.10.tgz"
+  integrity sha512-qbLjCyBgZyuuE49OfLWpr9V11+WsMk9FIzdJ2Zw80DJfazeunQkWoAwtPeCqy6yjqOIx7u5Ra/K4giO/B7qVdA==
   dependencies:
-    "@uiw/codemirror-theme-abcdef" "4.25.9"
-    "@uiw/codemirror-theme-abyss" "4.25.9"
-    "@uiw/codemirror-theme-androidstudio" "4.25.9"
-    "@uiw/codemirror-theme-andromeda" "4.25.9"
-    "@uiw/codemirror-theme-atomone" "4.25.9"
-    "@uiw/codemirror-theme-aura" "4.25.9"
-    "@uiw/codemirror-theme-basic" "4.25.9"
-    "@uiw/codemirror-theme-bbedit" "4.25.9"
-    "@uiw/codemirror-theme-bespin" "4.25.9"
-    "@uiw/codemirror-theme-console" "4.25.9"
-    "@uiw/codemirror-theme-copilot" "4.25.9"
-    "@uiw/codemirror-theme-darcula" "4.25.9"
-    "@uiw/codemirror-theme-dracula" "4.25.9"
-    "@uiw/codemirror-theme-duotone" "4.25.9"
-    "@uiw/codemirror-theme-eclipse" "4.25.9"
-    "@uiw/codemirror-theme-github" "4.25.9"
-    "@uiw/codemirror-theme-gruvbox-dark" "4.25.9"
-    "@uiw/codemirror-theme-kimbie" "4.25.9"
-    "@uiw/codemirror-theme-material" "4.25.9"
-    "@uiw/codemirror-theme-monokai" "4.25.9"
-    "@uiw/codemirror-theme-monokai-dimmed" "4.25.9"
-    "@uiw/codemirror-theme-noctis-lilac" "4.25.9"
-    "@uiw/codemirror-theme-nord" "4.25.9"
-    "@uiw/codemirror-theme-okaidia" "4.25.9"
-    "@uiw/codemirror-theme-quietlight" "4.25.9"
-    "@uiw/codemirror-theme-red" "4.25.9"
-    "@uiw/codemirror-theme-solarized" "4.25.9"
-    "@uiw/codemirror-theme-sublime" "4.25.9"
-    "@uiw/codemirror-theme-tokyo-night" "4.25.9"
-    "@uiw/codemirror-theme-tokyo-night-day" "4.25.9"
-    "@uiw/codemirror-theme-tokyo-night-storm" "4.25.9"
-    "@uiw/codemirror-theme-tomorrow-night-blue" "4.25.9"
-    "@uiw/codemirror-theme-vscode" "4.25.9"
-    "@uiw/codemirror-theme-white" "4.25.9"
-    "@uiw/codemirror-theme-xcode" "4.25.9"
-    "@uiw/codemirror-themes" "4.25.9"
+    "@uiw/codemirror-theme-abcdef" "4.25.10"
+    "@uiw/codemirror-theme-abyss" "4.25.10"
+    "@uiw/codemirror-theme-androidstudio" "4.25.10"
+    "@uiw/codemirror-theme-andromeda" "4.25.10"
+    "@uiw/codemirror-theme-atomone" "4.25.10"
+    "@uiw/codemirror-theme-aura" "4.25.10"
+    "@uiw/codemirror-theme-basic" "4.25.10"
+    "@uiw/codemirror-theme-bbedit" "4.25.10"
+    "@uiw/codemirror-theme-bespin" "4.25.10"
+    "@uiw/codemirror-theme-console" "4.25.10"
+    "@uiw/codemirror-theme-copilot" "4.25.10"
+    "@uiw/codemirror-theme-darcula" "4.25.10"
+    "@uiw/codemirror-theme-dracula" "4.25.10"
+    "@uiw/codemirror-theme-duotone" "4.25.10"
+    "@uiw/codemirror-theme-eclipse" "4.25.10"
+    "@uiw/codemirror-theme-github" "4.25.10"
+    "@uiw/codemirror-theme-gruvbox-dark" "4.25.10"
+    "@uiw/codemirror-theme-kimbie" "4.25.10"
+    "@uiw/codemirror-theme-material" "4.25.10"
+    "@uiw/codemirror-theme-monokai" "4.25.10"
+    "@uiw/codemirror-theme-monokai-dimmed" "4.25.10"
+    "@uiw/codemirror-theme-noctis-lilac" "4.25.10"
+    "@uiw/codemirror-theme-nord" "4.25.10"
+    "@uiw/codemirror-theme-okaidia" "4.25.10"
+    "@uiw/codemirror-theme-quietlight" "4.25.10"
+    "@uiw/codemirror-theme-red" "4.25.10"
+    "@uiw/codemirror-theme-solarized" "4.25.10"
+    "@uiw/codemirror-theme-sublime" "4.25.10"
+    "@uiw/codemirror-theme-tokyo-night" "4.25.10"
+    "@uiw/codemirror-theme-tokyo-night-day" "4.25.10"
+    "@uiw/codemirror-theme-tokyo-night-storm" "4.25.10"
+    "@uiw/codemirror-theme-tomorrow-night-blue" "4.25.10"
+    "@uiw/codemirror-theme-vscode" "4.25.10"
+    "@uiw/codemirror-theme-white" "4.25.10"
+    "@uiw/codemirror-theme-xcode" "4.25.10"
+    "@uiw/codemirror-themes" "4.25.10"
 
-"@uiw/codemirror-themes@4.25.9":
-  version "4.25.9"
-  resolved "https://registry.npmjs.org/@uiw/codemirror-themes/-/codemirror-themes-4.25.9.tgz"
-  integrity sha512-DAHKb/L9ELwjY4nCf/MP/mIllHOn4GQe7RR4x8AMJuNeh9nGRRoo1uPxrxMmUL/bKqe6kDmDbIZ2AlhlqyIJuw==
+"@uiw/codemirror-themes@4.25.10":
+  version "4.25.10"
+  resolved "https://registry.npmjs.org/@uiw/codemirror-themes/-/codemirror-themes-4.25.10.tgz"
+  integrity sha512-Fqiz1HIuDlDftcL+/O53V333UOH6MqQ84VbiQB5egn6u+uDwAqACp1FrdAoi4wgpR3b3TGW4Gr0wIYcrJSSz1A==
   dependencies:
     "@codemirror/language" "^6.0.0"
     "@codemirror/state" "^6.0.0"
@@ -4048,9 +4048,9 @@ dom-accessibility-api@^0.6.3:
   integrity sha512-7ZgogeTnjuHbo+ct10G9Ffp0mif17idi0IyWNVA/wcwcm7NPOD/WEHVP3n7n3MhXqxoIYm8d6MuZohYWIZ4T3w==
 
 dompurify@^3.2.5:
-  version "3.4.10"
-  resolved "https://registry.npmjs.org/dompurify/-/dompurify-3.4.10.tgz"
-  integrity sha512-0xzNv0e7oYC6yyuOGZIABPM4qtg3QxLFniDNPP4ZP90wR8Yq3zgwpRbrNiT4N3IKqDbbYFEJLV+JWEs19aZ//w==
+  version "3.4.11"
+  resolved "https://registry.npmjs.org/dompurify/-/dompurify-3.4.11.tgz"
+  integrity sha512-zhlUV12GsaRzMsf9q5M254YhA4+VuF0fG+QFqu6aYpoGlKtz+w8//jBcGVYBgQkR5GHjUomejY84AV+/uPbWdw==
   optionalDependencies:
     "@types/trusted-types" "^2.0.7"
 
