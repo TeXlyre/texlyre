@@ -153,14 +153,6 @@ async function ensureInit() {
 
 	compiler = createTypstCompiler();
 
-	// TODO (fabawi): this is hard-coded for now. **NOT NEEDED ANYMORE**
-	// Need to add mechanism for re-initializing when pdf options change
-	// compiler.setPdfOpts({
-	//     pdf_standard: '"2.0"',
-	//     pdf_tags: false,
-	//     creation_timestamp: Math.floor(Date.now() / 1000)
-	// });
-
 	await compiler.init({
 		getModule: () =>
 			`${BASE_PATH}/core/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm`,
@@ -227,15 +219,14 @@ self.addEventListener('message', async (e: MessageEvent<InboundMessage>) => {
 			const creationTimestamp =
 				pdfOptions?.creationTimestamp || Math.floor(Date.now() / 1000);
 
-			compiler.setPdfOptsForNextCompile({
-				pdf_standard: pdfStandard,
-				pdf_tags: pdfTags,
-				creation_timestamp: creationTimestamp,
-			});
-
 			const compiled = await compiler.runWithWorld(
 				{ mainFilePath: absoluteMainPath },
 				async (world: any) => {
+					world.setPdfOpts({
+						pdf_standard: pdfStandard,
+						pdf_tags: pdfTags,
+						creation_timestamp: creationTimestamp,
+					});
 					const paged = await world.compile({ diagnostics: 'full' });
 					const res = await world.pdf({ diagnostics: 'full' });
 					return {

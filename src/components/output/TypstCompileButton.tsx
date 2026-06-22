@@ -15,6 +15,13 @@ import type { DocumentList } from '../../types/documents';
 import type { TypstPdfOptions } from '../../types/typst';
 import type { FileNode } from '../../types/files';
 import type { TypstOutputFormat } from '../../types/typst';
+import {
+	getStandardGroups,
+	isStandardEnabled,
+	parseStandards,
+	serializeStandards,
+	toggleStandard,
+} from '../../utils/pdfStandardsUtils';
 import { isTypstFile, isTemporaryFile } from '../../utils/fileUtils';
 import { fileStorageService } from '../../services/FileStorageService';
 import {
@@ -254,7 +261,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 			if (!state.mainFile) return;
 
 			const pdfOptions =
-				state.format === 'pdf'
+				state.format === 'pdf' || state.format === 'canvas-pdf'
 					? state.shareFormat
 						? state.sharedPdfOptions
 						: state.pdfOptions
@@ -353,7 +360,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 
 			const shouldShareFormat = !!projectFormat;
 			const pdfOptions =
-				effectiveFormat === 'pdf'
+				effectiveFormat === 'pdf' || effectiveFormat === 'canvas-pdf'
 					? shouldShareFormat
 						? doc?.projectMetadata?.typstPdfOptions
 						: localPdfOptions
@@ -399,7 +406,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 
 		const shouldShareFormat = !!projectFormat;
 		const pdfOptions =
-			effectiveFormat === 'pdf'
+			effectiveFormat === 'pdf' || effectiveFormat === 'canvas-pdf'
 				? shouldShareFormat
 					? doc?.projectMetadata?.typstPdfOptions
 					: localPdfOptions
@@ -618,7 +625,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 							<option value='canvas-pdf'>{t('Canvas (PDF)')}</option>
 							<option value='canvas'>{t('Canvas (SVG)')}</option>
 						</select>
-						{effectiveFormat === 'pdf' && (
+						{(effectiveFormat === 'pdf' || effectiveFormat === 'canvas-pdf') && (
 							<button
 								className={`pdf-options-toggle ${isPdfOptionsOpen ? 'active' : ''}`}
 								onClick={() => setIsPdfOptionsOpen(!isPdfOptionsOpen)}
@@ -629,64 +636,68 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 							</button>
 						)}
 					</div>
-					{effectiveFormat === 'pdf' && isPdfOptionsOpen && (
+					{(effectiveFormat === 'pdf' || effectiveFormat === 'canvas-pdf') && isPdfOptionsOpen && (
 						<div className='pdf-options-section'>
 							<div className='pdf-option'>
-								<label className='dropdown-title'>{t('PDF Standard:')}</label>
-								<select
-									value={
-										useSharedSettings && projectFormat
-											? doc?.projectMetadata?.typstPdfOptions?.pdfStandard ||
-												'"1.7"'
-											: localPdfOptions.pdfStandard
-									}
-									onChange={(e) => {
-										if (useSharedSettings && projectFormat) {
-											if (!changeDoc) return;
-											changeDoc((d) => {
-												if (!d.projectMetadata) {
-													d.projectMetadata = { name: '', description: '' };
-												}
-												if (!d.projectMetadata.typstPdfOptions) {
-													d.projectMetadata.typstPdfOptions = {};
-												}
-												d.projectMetadata.typstPdfOptions.pdfStandard =
-													e.target.value;
-											});
-										} else {
-											setProperty('typst-pdf-standard', e.target.value, {
-												scope: 'project',
-												projectId,
-											});
-										}
-									}}
-									className='dropdown-select'
-									disabled={isCompiling}
-								>
-									<optgroup label={t('PDF Versions')}>
-										<option value='"1.4"'>{t('PDF 1.4')}</option>
-										<option value='"1.5"'>{t('PDF 1.5')}</option>
-										<option value='"1.6"'>{t('PDF 1.6')}</option>
-										<option value='"1.7"'>{t('PDF 1.7')}</option>
-										<option value='"2.0"'>{t('PDF 2.0')}</option>
-									</optgroup>
-									<optgroup label={t('PDF/A Standards')}>
-										<option value='"a-1b"'>{t('PDF/A-1b')}</option>
-										<option value='"a-1a"'>{t('PDF/A-1a')}</option>
-										<option value='"a-2b"'>{t('PDF/A-2b')}</option>
-										<option value='"a-2u"'>{t('PDF/A-2u')}</option>
-										<option value='"a-2a"'>{t('PDF/A-2a')}</option>
-										<option value='"a-3b"'>{t('PDF/A-3b')}</option>
-										<option value='"a-3u"'>{t('PDF/A-3u')}</option>
-										<option value='"a-3a"'>{t('PDF/A-3a')}</option>
-										<option value='"a-4"'>{t('PDF/A-4')}</option>
-										<option value='"a-4f"'>{t('PDF/A-4f')}</option>
-										<option value='"a-4e"'>{t('PDF/A-4e')}</option>
-									</optgroup>
-									<optgroup label={t('Accessibility Standards')}>
-										<option value='"ua-1"'>{t('PDF/UA-1 \u267F')}</option>
-									</optgroup>
-								</select>
+								<label className='dropdown-title'>{t('PDF Standards:')}</label>
+								{getStandardGroups().map((group) => {
+									const isShared = useSharedSettings && !!projectFormat;
+									const current = isShared
+										? doc?.projectMetadata?.typstPdfOptions?.pdfStandard
+										: localPdfOptions.pdfStandard;
+									const selected = parseStandards(current);
+									return (
+										<div key={group.group} className='pdf-standard-group'>
+											<div className='dropdown-label'>{t(group.label)}</div>
+											{group.options.map((option) => {
+												const checked = selected.includes(option.value);
+												const enabled = isStandardEnabled(
+													option.value,
+													selected,
+												);
+												return (
+													<label
+														key={option.value}
+														className='dropdown-checkbox'
+													>
+														<input
+															type='checkbox'
+															checked={checked}
+															disabled={isCompiling || !enabled}
+															onChange={() => {
+																const next = serializeStandards(
+																	toggleStandard(option.value, selected),
+																);
+																if (isShared) {
+																	if (!changeDoc) return;
+																	changeDoc((d) => {
+																		if (!d.projectMetadata) {
+																			d.projectMetadata = {
+																				name: '',
+																				description: '',
+																			};
+																		}
+																		if (!d.projectMetadata.typstPdfOptions) {
+																			d.projectMetadata.typstPdfOptions = {};
+																		}
+																		d.projectMetadata.typstPdfOptions.pdfStandard =
+																			next;
+																	});
+																} else {
+																	setProperty('typst-pdf-standard', next, {
+																		scope: 'project',
+																		projectId,
+																	});
+																}
+															}}
+														/>
+														{t(option.label)}
+													</label>
+												);
+											})}
+										</div>
+									);
+								})}
 								<a
 									href='https://typst.app/docs/reference/pdf/'
 									target='_blank'

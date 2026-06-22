@@ -54,8 +54,8 @@
 }
 
 .dropdown-title {
-	padding: var(--space-sm) var(--space-md);
-	font-size: 0.75rem;
+	padding: var(--space-sm) 0;
+	font-size: 0.85rem;
 	font-weight: 600;
 	color: var(--text-secondary-color);
 	text-transform: uppercase;
