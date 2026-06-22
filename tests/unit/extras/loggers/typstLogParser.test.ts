@@ -63,8 +63,33 @@ hint: or escape it`;
 
             expect(result).toHaveLength(1);
             expect(result[0].hints).toEqual([
-                'try removing the comma',
-                'or escape it',
+                { text: 'try removing the comma' },
+                { text: 'or escape it' },
+            ]);
+        });
+
+        it('should split an inline hints clause into separate hints', () => {
+            const log =
+                'warning: document did not converge, hints: see 1 additional warning, see https://typst.app/help';
+
+            const result = parseTypstLog(log);
+
+            expect(result[0].fullMessage).toBe('document did not converge');
+            expect(result[0].hints).toEqual([
+                { text: 'see 1 additional warning' },
+                { text: 'see https://typst.app/help' },
+            ]);
+        });
+
+        it('should attach list items to a colon-terminated hint', () => {
+            const log = `warning: counts did not stabilize, hints: the following were observed:
+- run 1: 0
+- run 2: 1`;
+
+            const result = parseTypstLog(log);
+
+            expect(result[0].hints).toEqual([
+                { text: 'the following were observed', items: ['run 1: 0', 'run 2: 1'] },
             ]);
         });
 

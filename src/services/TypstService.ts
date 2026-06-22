@@ -35,7 +35,7 @@ const OUTPUT_DIR = '/.texlyre_src/__output';
 const OUTPUT_DIRS = ['/.texlyre_src', OUTPUT_DIR];
 
 const DIAG_PATTERN =
-	/SourceDiagnostic\s*\{\s*severity:\s*(\w+),\s*span:\s*([^,]+),\s*message:\s*"([^"]+)"(?:[^}]*?)hints:\s*\[([^\]]*)\]/g;
+	/SourceDiagnostic\s*\{\s*severity:\s*(\w+),\s*span:\s*(.+?),\s*message:\s*"([^"]+)"(?:.*?)hints:\s*\[([^\]]*)\]/g;
 const HINT_PATTERN = /"([^"]+)"/g;
 
 class TypstService {
@@ -778,7 +778,7 @@ class TypstService {
 
 			diagnostics.push({
 				severity: match[1],
-				span: match[2].trim(),
+				// span: match[2].trim(),
 				message: match[3],
 				hints,
 			});
@@ -815,7 +815,7 @@ class TypstService {
 		let location = '';
 		if (diag.path) {
 			location = diag.path.replace(/^\//, '');
-			if (diag.range) location += `:${diag.range.split('-')[0]}`;
+			if (diag.range) location += `:${diag.range.split(/[:-]/)[0]}`;
 		} else if (diag.span) {
 			location = String(diag.span).replace(/^Span\(|\)$/g, '');
 		}

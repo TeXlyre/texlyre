@@ -36,6 +36,7 @@ const PositionedDropdown: React.FC<PositionedDropdownProps> = ({
 
 			const triggerRect = triggerElement.getBoundingClientRect();
 			const dropdownRect = dropdownRef.current.getBoundingClientRect();
+			const naturalHeight = dropdownRef.current.scrollHeight;
 
 			const viewportWidth = window.innerWidth;
 			const viewportHeight = window.innerHeight;
@@ -54,8 +55,8 @@ const PositionedDropdown: React.FC<PositionedDropdownProps> = ({
 			}
 
 			let maxHeight = 0;
-			if (top + dropdownRect.height > viewportHeight - padding) {
-				const flippedTop = triggerRect.top - dropdownRect.height - spacing;
+			if (top + naturalHeight > viewportHeight - padding) {
+				const flippedTop = triggerRect.top - naturalHeight - spacing;
 				if (flippedTop >= padding) {
 					top = flippedTop;
 				} else {
@@ -81,10 +82,14 @@ const PositionedDropdown: React.FC<PositionedDropdownProps> = ({
 			updatePosition();
 		};
 
+		const resizeObserver = new ResizeObserver(() => updatePosition());
+		resizeObserver.observe(dropdownRef.current);
+
 		window.addEventListener('scroll', handleScroll, true);
 		window.addEventListener('resize', updatePosition);
 
 		return () => {
+			resizeObserver.disconnect();
 			window.removeEventListener('scroll', handleScroll, true);
 			window.removeEventListener('resize', updatePosition);
 		};
@@ -93,6 +98,7 @@ const PositionedDropdown: React.FC<PositionedDropdownProps> = ({
 	useEffect(() => {
 		if (!isOpen) {
 			setIsPositioned(false);
+			setPosition({ top: 0, left: 0, maxHeight: 0 });
 			return;
 		}
 
