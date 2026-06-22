@@ -1,6 +1,6 @@
 .typesetter-tooltip {
 	position: fixed;
-	width: 320px;
+	width: max-content;
 	padding: var(--space-md);
 	background-color: var(--pico-background);
 	border: 1px solid var(--accent-border);
