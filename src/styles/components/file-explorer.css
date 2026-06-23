@@ -360,6 +360,71 @@
 	width: 100%;
 }
 
+.zip-handling-content .zip-file-info {
+	margin: var(--space-md) 0;
+}
+
+.zip-handling-options {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	margin: var(--space-lg) 0;
+}
+
+.zip-option {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-sm);
+	padding: var(--space-md);
+	border: 1px solid var(--accent-border);
+	border-radius: var(--radius-sm);
+	background-color: var(--pico-secondary-background);
+	cursor: pointer;
+	transition:
+		background-color var(--transition-normal),
+		border-color var(--transition-normal);
+}
+
+.zip-option:hover {
+	background-color: var(--pico-primary-focus);
+}
+
+.zip-option.selected {
+	background-color: var(--pico-primary-focus);
+	border-color: var(--pico-primary);
+	font-weight: 500;
+}
+
+.zip-option input {
+	flex-shrink: 0;
+	margin-top: 0.2rem;
+}
+
+.zip-option-content {
+	flex: 1;
+	min-width: 0;
+}
+
+.zip-option-header {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	margin-bottom: var(--space-xs);
+	color: var(--text-color);
+}
+
+.zip-option-header svg {
+	flex-shrink: 0;
+	color: var(--pico-secondary);
+}
+
+.zip-option p {
+	margin: 0;
+	font-size: 0.9rem;
+	font-weight: 400;
+	color: var(--pico-secondary);
+}
+
 .file-conflict-content {
 	padding: var(--space-sm) 0;
 }

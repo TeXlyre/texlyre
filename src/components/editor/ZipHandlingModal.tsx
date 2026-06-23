@@ -36,7 +36,7 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
 	};
 
 	const getTargetDisplayPath = () => {
-		return targetPath === '/' ? 'root folder' : targetPath;
+		return targetPath === '/' ? t('root folder') : targetPath;
 	};
 
 	if (!zipFile) return null;
@@ -48,128 +48,76 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
 			title={t('ZIP File Detected')}
 			size='medium'
 		>
-			<div className='zip-handling-modal'>
+			<div className='file-conflict-content zip-handling-content'>
 				<p>
-					{t('You\'re adding "')}
-					{zipFile.name}
-					{t('" to')}
-					{getTargetDisplayPath()}
-					{t('. How would you like to handle this ZIP file?')}
+					{t(
+						'You are adding "{fileName}" to {targetPath}. How would you like to handle this ZIP file?',
+						{
+							fileName: zipFile.name,
+							targetPath: getTargetDisplayPath(),
+						},
+					)}
 				</p>
 
-				<div className='zip-handling-options' style={{ margin: '1.5rem 0' }}>
-					<div
+				<div className='file-info zip-file-info'>
+					<div className='file-details'>
+						<strong>{zipFile.name}</strong>
+						<span>
+							{t('Target')}: {getTargetDisplayPath()}
+						</span>
+					</div>
+				</div>
+
+				<div className='zip-handling-options'>
+					<label
 						className={`zip-option ${selectedAction === 'extract' ? 'selected' : ''}`}
-						onClick={() => setSelectedAction('extract')}
-						style={{
-							border: '1px solid var(--border-color)',
-							borderRadius: '8px',
-							padding: '1rem',
-							marginBottom: 'var(--space-sd)',
-							cursor: 'pointer',
-							backgroundColor:
-								selectedAction === 'extract'
-									? 'rgba(var(--accent-color-rgb), 0.1)'
-									: 'transparent',
-							borderColor:
-								selectedAction === 'extract'
-									? 'var(--accent-color)'
-									: 'var(--border-color)',
-						}}
 					>
-						<label
-							style={{
-								display: 'flex',
-								alignItems: 'flex-start',
-								gap: 'var(--space-sd)',
-								cursor: 'pointer',
-							}}
-						>
-							<input
-								type='radio'
-								name='zipAction'
-								value='extract'
-								checked={selectedAction === 'extract'}
-								onChange={() => setSelectedAction('extract')}
-								style={{ marginTop: '0.125rem' }}
-							/>
+						<input
+							type='radio'
+							name='zipAction'
+							value='extract'
+							checked={selectedAction === 'extract'}
+							onChange={() => setSelectedAction('extract')}
+						/>
 
-							<div className='option-content'>
-								<div
-									className='option-header'
-									style={{
-										display: 'flex',
-										alignItems: 'center',
-										gap: '0.5rem',
-										marginBottom: '0.5rem',
-									}}
-								>
-									<FolderIcon />
-									<strong>{t('Extract contents')}</strong>
-								</div>
-								<p style={{ margin: '0', color: 'var(--text-secondary)' }}>
-									{t('Extract all files from the ZIP archive into')}{' '}
-									{getTargetDisplayPath()}
-								</p>
+						<div className='zip-option-content'>
+							<div className='zip-option-header'>
+								<FolderIcon />
+								<strong>{t('Extract contents')}</strong>
 							</div>
-						</label>
-					</div>
 
-					<div
+							<p>
+								{t('Extract all files from the ZIP archive into {targetPath}', {
+									targetPath: getTargetDisplayPath(),
+								})}
+							</p>
+						</div>
+					</label>
+
+					<label
 						className={`zip-option ${selectedAction === 'keep' ? 'selected' : ''}`}
-						onClick={() => setSelectedAction('keep')}
-						style={{
-							border: '1px solid var(--border-color)',
-							borderRadius: '8px',
-							padding: '1rem',
-							cursor: 'pointer',
-							backgroundColor:
-								selectedAction === 'keep'
-									? 'rgba(var(--accent-color-rgb), 0.1)'
-									: 'transparent',
-							borderColor:
-								selectedAction === 'keep'
-									? 'var(--accent-color)'
-									: 'var(--border-color)',
-						}}
 					>
-						<label
-							style={{
-								display: 'flex',
-								alignItems: 'flex-start',
-								gap: 'var(--space-sd)',
-								cursor: 'pointer',
-							}}
-						>
-							<input
-								type='radio'
-								name='zipAction'
-								value='keep'
-								checked={selectedAction === 'keep'}
-								onChange={() => setSelectedAction('keep')}
-								style={{ marginTop: '0.125rem' }}
-							/>
+						<input
+							type='radio'
+							name='zipAction'
+							value='keep'
+							checked={selectedAction === 'keep'}
+							onChange={() => setSelectedAction('keep')}
+						/>
 
-							<div className='option-content'>
-								<div
-									className='option-header'
-									style={{
-										display: 'flex',
-										alignItems: 'center',
-										gap: '0.5rem',
-										marginBottom: '0.5rem',
-									}}
-								>
-									<FileIcon />
-									<strong>{t('Keep as ZIP file')}</strong>
-								</div>
-								<p style={{ margin: '0', color: 'var(--text-secondary)' }}>
-									{t('Add the ZIP file as-is to')}
-									{getTargetDisplayPath()}
-								</p>
+						<div className='zip-option-content'>
+							<div className='zip-option-header'>
+								<FileIcon />
+								<strong>{t('Keep as ZIP file')}</strong>
 							</div>
-						</label>
-					</div>
+
+							<p>
+								{t('Add the ZIP file as-is to {targetPath}', {
+									targetPath: getTargetDisplayPath(),
+								})}
+							</p>
+						</div>
+					</label>
 				</div>
 
 				<div className='modal-actions'>
@@ -181,7 +129,7 @@ const ZipHandlingModal: React.FC<ZipHandlingModalProps> = ({
 						className='button primary'
 						onClick={handleConfirm}
 					>
-						{selectedAction === 'extract' ? 'Extract ZIP' : 'Keep as ZIP'}
+						{selectedAction === 'extract' ? t('Extract ZIP') : t('Keep as ZIP')}
 					</button>
 				</div>
 			</div>

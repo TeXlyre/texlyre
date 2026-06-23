@@ -295,7 +295,7 @@ const ConflictResolutionModal: React.FC = () => {
 											handleResolutionAction({ action: 'keep-local' })
 										}
 									>
-										{t('Keep Local')}
+										{request.labels?.keepLocal ?? t('Keep Local')}
 									</button>
 									<button
 										className={`button secondary${currentState.resolution?.action === 'keep-remote' ? ' active-resolution' : ''}`}
@@ -303,7 +303,7 @@ const ConflictResolutionModal: React.FC = () => {
 											handleResolutionAction({ action: 'keep-remote' })
 										}
 									>
-										{t('Keep Remote')}
+										{request.labels?.keepRemote ?? t('Keep Remote')}
 									</button>
 									{!current.isBinary && (
 										<>

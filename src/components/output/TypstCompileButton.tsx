@@ -627,15 +627,15 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 						</select>
 						{(effectiveFormat === 'pdf' ||
 							effectiveFormat === 'canvas-pdf') && (
-								<button
-									className={`pdf-options-toggle ${isPdfOptionsOpen ? 'active' : ''}`}
-									onClick={() => setIsPdfOptionsOpen(!isPdfOptionsOpen)}
-									title={t('PDF Options')}
-									disabled={isCompiling}
-								>
-									<OptionsIcon />
-								</button>
-							)}
+							<button
+								className={`pdf-options-toggle ${isPdfOptionsOpen ? 'active' : ''}`}
+								onClick={() => setIsPdfOptionsOpen(!isPdfOptionsOpen)}
+								title={t('PDF Options')}
+								disabled={isCompiling}
+							>
+								<OptionsIcon />
+							</button>
+						)}
 					</div>
 					{(effectiveFormat === 'pdf' || effectiveFormat === 'canvas-pdf') &&
 						isPdfOptionsOpen && (
@@ -718,7 +718,7 @@ const TypstCompileButton: React.FC<TypstCompileButtonProps> = ({
 										checked={
 											useSharedSettings && projectFormat
 												? doc?.projectMetadata?.typstPdfOptions?.pdfTags !==
-												false
+													false
 												: localPdfOptions.pdfTags
 										}
 										onChange={(e) => {
