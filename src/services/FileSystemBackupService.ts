@@ -17,6 +17,7 @@ import {
 
 class FileSystemBackupService {
 	private rootHandle: FileSystemDirectoryHandle | null = null;
+	private handleDb: IDBDatabase | null = null;
 	private isEnabled = false;
 	private status: BackupStatus = {
 		isConnected: false,
@@ -84,7 +85,7 @@ class FileSystemBackupService {
 		return this.rootHandle;
 	}
 
-	async requestAccess(isAutoStart = false): Promise<boolean> {
+	async requestAccess(isAutoStart = false, scope = 'global'): Promise<boolean> {
 		try {
 			if (!('showDirectoryPicker' in window)) {
 				throw new Error(t('File System Access API not supported'));
@@ -94,6 +95,7 @@ class FileSystemBackupService {
 				mode: 'readwrite',
 				id: 'texlyre-backup',
 			});
+			await this.saveHandle(scope, this.rootHandle);
 
 			this.updateStatus({
 				isConnected: true,
@@ -108,12 +110,30 @@ class FileSystemBackupService {
 		}
 	}
 
-	async changeDirectory(): Promise<boolean> {
+	async restoreAccess(scope = 'global'): Promise<boolean> {
+		const handle = await this.loadHandle(scope);
+		if (!handle) return false;
+
+		const opts = { mode: 'readwrite' } as const;
+		let permission = await (handle as any).queryPermission(opts);
+		if (permission !== 'granted') {
+			permission = await (handle as any).requestPermission(opts);
+		}
+		if (permission !== 'granted') return false;
+
+		this.rootHandle = handle;
+		this.updateStatus({ isConnected: true, status: 'idle', error: undefined });
+		this.performDiscoveryScan();
+		return true;
+	}
+
+	async changeDirectory(scope = 'global'): Promise<boolean> {
 		try {
 			this.rootHandle = await (window as any).showDirectoryPicker({
 				mode: 'readwrite',
 				id: 'texlyre-backup-new',
 			});
+			await this.saveHandle(scope, this.rootHandle);
 
 			this.updateStatus({
 				isConnected: true,
@@ -138,9 +158,10 @@ class FileSystemBackupService {
 		}
 	}
 
-	async disconnect(): Promise<void> {
+	async disconnect(scope = 'global'): Promise<void> {
 		this.rootHandle = null;
 		this.isEnabled = false;
+		await this.clearHandle(scope);
 		this.updateStatus({ isConnected: false, isEnabled: false });
 	}
 
@@ -497,6 +518,55 @@ class FileSystemBackupService {
 
 	private canSync(): boolean {
 		return this.rootHandle !== null && this.isEnabled;
+	}
+
+	private async getHandleDb(): Promise<IDBDatabase> {
+		if (this.handleDb) return this.handleDb;
+		this.handleDb = await new Promise<IDBDatabase>((resolve, reject) => {
+			const request = indexedDB.open('texlyre-backup-handles', 1);
+			request.onupgradeneeded = () =>
+				request.result.createObjectStore('handles');
+			request.onsuccess = () => resolve(request.result);
+			request.onerror = () => reject(request.error);
+		});
+		return this.handleDb;
+	}
+
+	private async saveHandle(
+		scope: string,
+		handle: FileSystemDirectoryHandle,
+	): Promise<void> {
+		const db = await this.getHandleDb();
+		await new Promise<void>((resolve, reject) => {
+			const tx = db.transaction('handles', 'readwrite');
+			tx.objectStore('handles').put(handle, scope);
+			tx.oncomplete = () => resolve();
+			tx.onerror = () => reject(tx.error);
+		});
+	}
+
+	private async loadHandle(
+		scope: string,
+	): Promise<FileSystemDirectoryHandle | null> {
+		const db = await this.getHandleDb();
+		return new Promise((resolve, reject) => {
+			const request = db
+				.transaction('handles', 'readonly')
+				.objectStore('handles')
+				.get(scope);
+			request.onsuccess = () => resolve(request.result ?? null);
+			request.onerror = () => reject(request.error);
+		});
+	}
+
+	private async clearHandle(scope: string): Promise<void> {
+		const db = await this.getHandleDb();
+		await new Promise<void>((resolve, reject) => {
+			const tx = db.transaction('handles', 'readwrite');
+			tx.objectStore('handles').delete(scope);
+			tx.oncomplete = () => resolve();
+			tx.onerror = () => reject(tx.error);
+		});
 	}
 
 	private notifyListeners(): void {

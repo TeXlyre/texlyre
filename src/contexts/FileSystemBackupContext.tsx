@@ -116,7 +116,8 @@ export const FileSystemBackupProvider: React.FC<
 	const requestAccess = useCallback(
 		async (isAutoStart = false): Promise<boolean> => {
 			const connected =
-				await fileSystemBackupService.requestAccess(isAutoStart);
+				(await fileSystemBackupService.restoreAccess()) ||
+				(await fileSystemBackupService.requestAccess(isAutoStart));
 			if (connected) {
 				setTempEnabled(true);
 				fileSystemBackupService.setEnabled(true);
@@ -229,6 +230,20 @@ export const FileSystemBackupProvider: React.FC<
 			unsubscribeDiscovery();
 		};
 	}, [tempEnabled, getEffectiveEnabled, autoBackupOnStartup]);
+
+	useEffect(() => {
+		let cancelled = false;
+		(async () => {
+			const restored = await fileSystemBackupService.restoreAccess();
+			if (!cancelled && restored) {
+				setTempEnabled(true);
+				fileSystemBackupService.setEnabled(true);
+			}
+		})();
+		return () => {
+			cancelled = true;
+		};
+	}, []);
 
 	useEffect(() => {
 		setShouldShowAutoBackupModal(autoBackupOnStartup && !status.isConnected);

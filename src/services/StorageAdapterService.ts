@@ -1,6 +1,7 @@
 // src/services/StorageAdapterService.ts
 import JSZip from 'jszip';
 
+import { t } from '@/i18n';
 import { UnifiedDataStructureService } from './DataStructureService';
 import { isBinaryFile, toArrayBuffer } from '../utils/fileUtils';
 
@@ -27,9 +28,27 @@ export class DirectoryAdapter implements FileSystemAdapter {
 		const fileHandle = await dirHandle.getFileHandle(fileName, {
 			create: true,
 		});
+		const blob = new Blob([toArrayBuffer(content)]);
 		const writable = await fileHandle.createWritable();
-		await writable.write(toArrayBuffer(content));
-		await writable.close();
+		try {
+			await writable.write(blob);
+			await this.withTimeout(writable.close(), 30000);
+		} catch (error) {
+			await writable.abort().catch(() => {});
+			throw error;
+		}
+	}
+
+	private withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+		return Promise.race([
+			promise,
+			new Promise<T>((_, reject) =>
+				setTimeout(
+					() => reject(new Error(t('File system write timed out'))),
+					ms,
+				),
+			),
+		]);
 	}
 
 	async readFile(path: string): Promise<string | ArrayBuffer> {
