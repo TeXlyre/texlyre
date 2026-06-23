@@ -1,4 +1,4 @@
-// src/components/editor/FileConflictModal.tsx (latest)
+// src/components/editor/FileConflictModal.tsx
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
@@ -267,6 +267,13 @@ const FileConflictModal: React.FC = () => {
 							</button>
 							<button
 								type='button'
+								className='button secondary'
+								onClick={() => handleResolution('merge')}
+							>
+								{t('Merge This')}
+							</button>
+							<button
+								type='button'
 								className='button primary'
 								onClick={() => handleResolution('overwrite')}
 							>
@@ -304,6 +311,13 @@ const FileConflictModal: React.FC = () => {
 									onClick={() => handleResolution('keep-both-all')}
 								>
 									{t('Keep Both (All)')}
+								</button>
+								<button
+									type='button'
+									className='button secondary small'
+									onClick={() => handleResolution('merge-all')}
+								>
+									{t('Merge All')}
 								</button>
 								<button
 									type='button'
@@ -837,6 +851,13 @@ const FileConflictModal: React.FC = () => {
 							onClick={() => handleResolution('keep-both')}
 						>
 							{t('Keep Both')}
+						</button>
+						<button
+							type='button'
+							className='button secondary'
+							onClick={() => handleResolution('merge')}
+						>
+							{t('Merge')}
 						</button>
 						<button
 							type='button'

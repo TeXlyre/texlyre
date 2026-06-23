@@ -1,12 +1,14 @@
 // src/services/FileConflictService.ts
 import type { FileNode } from '../types/files';
 
-export type ConflictResolution = 'overwrite' | 'keep-both' | 'cancel';
+export type ConflictResolution = 'overwrite' | 'merge' | 'keep-both' | 'cancel';
 export type BatchConflictResolution =
 	| 'overwrite'
+	| 'merge'
 	| 'keep-both'
 	| 'cancel'
 	| 'overwrite-all'
+	| 'merge-all'
 	| 'keep-both-all'
 	| 'cancel-all';
 export type DeleteConfirmation = 'confirm' | 'cancel';

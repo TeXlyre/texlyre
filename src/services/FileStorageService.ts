@@ -2,7 +2,13 @@
 import { type IDBPDatabase, openDB } from 'idb';
 import { nanoid } from 'nanoid';
 
+import { t } from '@/i18n';
 import type { FileNode } from '../types/files';
+import { isBinaryFile, toArrayBuffer } from '../utils/fileUtils';
+import {
+	type FileConflict,
+	conflictResolutionService,
+} from './ConflictResolutionService';
 import { fileConflictService } from './FileConflictService';
 
 type FileStorageListener = () => void;
@@ -55,7 +61,7 @@ class FileStorageService {
 			}
 
 			if (!this.projectId) {
-				throw new Error('Project ID not set');
+				throw new Error(t('Project ID not set'));
 			}
 
 			if (this.db && this.isConnectedToProject(this.projectId)) {
@@ -199,7 +205,7 @@ class FileStorageService {
 			);
 
 			if (confirmation === 'cancel') {
-				throw new Error('File operation cancelled by user');
+				throw new Error(t('File operation cancelled by user'));
 			}
 
 			if (confirmation === 'show-unlink-dialog') {
@@ -210,11 +216,79 @@ class FileStorageService {
 					await this.storeFile(file, { showConflictDialog: false });
 					return true;
 				}
-				throw new Error('File operation cancelled by user');
+				throw new Error(t('File operation cancelled by user'));
 			}
 		}
 
 		return true;
+	}
+
+	private async resolveMerge(
+		existingFile: FileNode,
+		newFile: FileNode,
+	): Promise<FileNode | null> {
+		const conflict: FileConflict = {
+			path: newFile.path,
+			isBinary: isBinaryFile(newFile.path),
+			baseContent: undefined,
+			localContent: newFile.content ?? '',
+			remoteContent: existingFile.content ?? '',
+		};
+		const resolutions = await conflictResolutionService.resolveConflicts(
+			[conflict],
+			{ keepLocal: t('Keep New'), keepRemote: t('Keep Existing') },
+		);
+		if (!resolutions) return null;
+
+		const resolution = resolutions.get(newFile.path);
+		if (!resolution || resolution.action === 'keep-remote') return null;
+
+		const merged: FileNode = { ...newFile, id: existingFile.id };
+		if (resolution.action === 'merged') {
+			merged.content = resolution.content;
+			merged.size =
+				typeof resolution.content === 'string'
+					? new Blob([resolution.content]).size
+					: toArrayBuffer(resolution.content).byteLength;
+		}
+		return merged;
+	}
+
+	private async resolveMergeAll(
+		pairs: { existing: FileNode; new: FileNode }[],
+	): Promise<Map<string, FileNode> | null> {
+		if (pairs.length === 0) return new Map();
+
+		const conflicts: FileConflict[] = pairs.map((p) => ({
+			path: p.new.path,
+			isBinary: isBinaryFile(p.new.path),
+			baseContent: undefined,
+			localContent: p.new.content ?? '',
+			remoteContent: p.existing.content ?? '',
+		}));
+
+		const resolutions = await conflictResolutionService.resolveConflicts(
+			conflicts,
+			{ keepLocal: t('Keep New'), keepRemote: t('Keep Existing') },
+		);
+		if (!resolutions) return null;
+
+		const results = new Map<string, FileNode>();
+		for (const { existing, new: newFile } of pairs) {
+			const resolution = resolutions.get(newFile.path);
+			if (!resolution || resolution.action === 'keep-remote') continue;
+
+			const merged: FileNode = { ...newFile, id: existing.id };
+			if (resolution.action === 'merged') {
+				merged.content = resolution.content;
+				merged.size =
+					typeof resolution.content === 'string'
+						? new Blob([resolution.content]).size
+						: toArrayBuffer(resolution.content).byteLength;
+			}
+			results.set(newFile.path, merged);
+		}
+		return results;
 	}
 
 	async storeFile(
@@ -246,7 +320,12 @@ class FileStorageService {
 		const existingFile = await this.getFileByPath(file.path, true);
 
 		if (showDialog) {
-			if (existingFile && !existingFile.isDeleted) {
+			if (
+				existingFile &&
+				!existingFile.isDeleted &&
+				existingFile.type === 'file' &&
+				file.type === 'file'
+			) {
 				if (existingFile.documentId) {
 					await this.validateLinkedFileOperation(existingFile, 'overwrite');
 				}
@@ -258,16 +337,28 @@ class FileStorageService {
 
 				switch (resolution) {
 					case 'cancel':
-						throw new Error('File operation cancelled by user');
+						throw new Error(t('File operation cancelled by user'));
 
 					case 'keep-both':
 						file = await this.createUniqueFile(file);
 						break;
 
+					case 'merge': {
+						const merged = await this.resolveMerge(existingFile, file);
+						if (!merged) {
+							throw new Error(t('File operation cancelled by user'));
+						}
+						file = merged;
+						await this.db?.delete(this.FILES_STORE, existingFile.id);
+						break;
+					}
+
 					case 'overwrite':
 						await this.db?.delete(this.FILES_STORE, existingFile.id);
 						break;
 				}
+			} else if (existingFile && !existingFile.isDeleted) {
+				file.id = existingFile.id;
 			} else if (existingFile?.isDeleted) {
 				file.id = existingFile.id;
 				file.isDeleted = false;
@@ -334,7 +425,9 @@ class FileStorageService {
 				if (
 					existingFile &&
 					!existingFile.isDeleted &&
-					existingFile.id !== file.id
+					existingFile.id !== file.id &&
+					existingFile.type === 'file' &&
+					file.type === 'file'
 				) {
 					conflicts.push({ existing: existingFile, new: file });
 				}
@@ -343,9 +436,11 @@ class FileStorageService {
 
 		let batchResolution:
 			| 'overwrite-all'
+			| 'merge-all'
 			| 'keep-both-all'
 			| 'cancel-all'
 			| null = null;
+		let mergeAllResults: Map<string, FileNode> | null = null;
 
 		for (let i = 0; i < files.length; i++) {
 			const file = files[i];
@@ -373,7 +468,9 @@ class FileStorageService {
 				if (
 					showDialog &&
 					!existingFile.isDeleted &&
-					existingFile.id !== file.id
+					existingFile.id !== file.id &&
+					existingFile.type === 'file' &&
+					file.type === 'file'
 				) {
 					if (existingFile.documentId) {
 						await this.validateLinkedFileOperation(existingFile, 'overwrite');
@@ -396,6 +493,7 @@ class FileStorageService {
 						if (batchResult.endsWith('-all')) {
 							batchResolution = batchResult as
 								| 'overwrite-all'
+								| 'merge-all'
 								| 'keep-both-all'
 								| 'cancel-all';
 							resolution = batchResult.replace('-all', '');
@@ -420,6 +518,24 @@ class FileStorageService {
 						case 'keep-both': {
 							const uniqueFile = await this.createUniqueFile(file);
 							filesToStore.push(uniqueFile);
+							break;
+						}
+
+						case 'merge': {
+							if (batchResolution === 'merge-all') {
+								if (!mergeAllResults) {
+									const resolved = await this.resolveMergeAll(conflicts);
+									if (!resolved) return storedIds;
+									mergeAllResults = resolved;
+								}
+								const merged = mergeAllResults.get(file.path);
+								if (!merged) continue;
+								filesToStore.push(merged);
+								break;
+							}
+							const merged = await this.resolveMerge(existingFile, file);
+							if (!merged) continue;
+							filesToStore.push(merged);
 							break;
 						}
 
@@ -498,7 +614,7 @@ class FileStorageService {
 			const confirmation =
 				await fileConflictService.confirmBatchDelete(filesToDelete);
 			if (confirmation === 'cancel') {
-				throw new Error('Delete operation cancelled by user');
+				throw new Error(t('Delete operation cancelled by user'));
 			}
 		}
 
@@ -996,7 +1112,7 @@ class FileStorageService {
 		if (showDialog && !file.documentId) {
 			const confirmation = await fileConflictService.confirmDelete(file);
 			if (confirmation === 'cancel') {
-				throw new Error('Delete operation cancelled by user');
+				throw new Error(t('Delete operation cancelled by user'));
 			}
 		}
 

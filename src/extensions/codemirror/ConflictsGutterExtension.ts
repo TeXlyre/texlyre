@@ -4,6 +4,8 @@ import { type Extension, RangeSetBuilder } from '@codemirror/state';
 import { gutter, GutterMarker } from '@codemirror/view';
 import type { MergeView } from '@codemirror/merge';
 
+import { t } from '@/i18n';
+
 class CopyChunkMarker extends GutterMarker {
 	constructor(
 		private readonly fromB: number,
@@ -15,7 +17,7 @@ class CopyChunkMarker extends GutterMarker {
 	toDOM(): HTMLElement {
 		const btn = document.createElement('button');
 		btn.className = 'cm-conflict-copy-btn';
-		btn.textContent = '←';
+		btn.textContent = t('←');
 		btn.title = 'Copy chunk to merged';
 		btn.addEventListener('mousedown', (e) => {
 			e.preventDefault();

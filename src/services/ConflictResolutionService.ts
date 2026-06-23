@@ -22,6 +22,7 @@ export type ConflictResolution =
 
 export interface ConflictResolutionRequest {
 	conflicts: FileConflict[];
+	labels?: { keepLocal?: string; keepRemote?: string };
 	resolve: (resolutions: Map<string, ConflictResolution> | null) => void;
 }
 
@@ -60,6 +61,7 @@ class ConflictResolutionService {
 
 	async resolveConflicts(
 		conflicts: FileConflict[],
+		labels?: { keepLocal?: string; keepRemote?: string },
 	): Promise<Map<string, ConflictResolution> | null> {
 		const metadataConflicts = conflicts.filter((c) =>
 			c.path.endsWith(FILES_METADATA),
@@ -105,6 +107,7 @@ class ConflictResolutionService {
 		return new Promise((resolve) => {
 			const request: ConflictResolutionRequest = {
 				conflicts: realConflicts,
+				labels,
 				resolve: async (resolutions) => {
 					if (resolutions === null) {
 						resolve(null);

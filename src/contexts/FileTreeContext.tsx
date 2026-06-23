@@ -10,6 +10,7 @@ import {
 	useState,
 } from 'react';
 
+import { t } from '@/i18n';
 import { useCollab } from '../hooks/useCollab';
 import { useSettings } from '../hooks/useSettings';
 import { collabService } from '../services/CollabService';
@@ -139,7 +140,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				} catch (error) {
 					if (
 						error instanceof Error &&
-						error.message === 'File operation cancelled by user'
+						error.message === t('File operation cancelled by user')
 					) {
 						return;
 					}
@@ -163,7 +164,9 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			try {
 				fileOperationNotificationService.showLoading(
 					operationId,
-					`Extracting ${zipFile.name}...`,
+					t('Extracting {fileName}...', {
+						fileName: zipFile.name,
+					}),
 				);
 
 				const { files: extractedFiles, directories } = await batchExtractZip(
@@ -173,7 +176,9 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 				fileOperationNotificationService.updateProgress(
 					operationId,
-					`Processing ${extractedFiles.length} files...`,
+					t('Processing {count} files...', {
+						count: extractedFiles.length,
+					}),
 				);
 
 				const allFiles = [...directories, ...extractedFiles];
@@ -181,14 +186,18 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 				fileOperationNotificationService.showSuccess(
 					operationId,
-					`Successfully extracted ${extractedFiles.length} files`,
+					t('Successfully extracted {count} files', {
+						count: extractedFiles.length,
+					}),
 				);
 
 				await refreshFileTree();
 			} catch (error) {
 				fileOperationNotificationService.showError(
 					operationId,
-					`Failed to extract ZIP: ${error.message}`,
+					t('Failed to extract ZIP: {error}', {
+						error: error.message,
+					}),
 				);
 				throw error;
 			}
@@ -223,7 +232,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			} catch (error) {
 				if (
 					error instanceof Error &&
-					error.message !== 'File operation cancelled by user'
+					error.message !== t('File operation cancelled by user')
 				) {
 					console.error('Failed to store ZIP file:', error);
 					throw error;
@@ -360,7 +369,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			} catch (error) {
 				if (
 					error instanceof Error &&
-					error.message === 'Link operation cancelled by user'
+					error.message === t('Link operation cancelled by user')
 				) {
 					return;
 				}
@@ -409,7 +418,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			} catch (error) {
 				if (
 					error instanceof Error &&
-					error.message === 'Unlink operation cancelled by user'
+					error.message === t('Unlink operation cancelled by user')
 				) {
 					return;
 				}
@@ -436,7 +445,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			} catch (error) {
 				if (
 					error instanceof Error &&
-					error.message !== 'File operation cancelled by user'
+					error.message !== t('File operation cancelled by user')
 				) {
 					console.error('Error creating directory:', error);
 				}
@@ -474,7 +483,9 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 						if (linkedFilesInDirectory.length > 0) {
 							throw new Error(
-								'Cannot delete directory containing linked files. Please unlink files first.',
+								t(
+									'Cannot delete directory containing linked files. Please unlink files first.',
+								),
 							);
 						}
 
@@ -501,7 +512,9 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 					const operationId = `batch-delete-${Date.now()}`;
 					fileOperationNotificationService.showError(
 						operationId,
-						`Failed to delete files: ${error.message}`,
+						t('Failed to delete files: {error}', {
+							error: error.message,
+						}),
 					);
 				}
 			}
@@ -516,7 +529,9 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 				fileOperationNotificationService.showLoading(
 					operationId,
-					`Moving ${moveOperations.length} files...`,
+					t('Moving {count} files...', {
+						count: moveOperations.length,
+					}),
 				);
 
 				const movedIds =
@@ -524,7 +539,9 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 				fileOperationNotificationService.showSuccess(
 					operationId,
-					`Successfully moved ${movedIds.length} files`,
+					t('Successfully moved {count} files', {
+						count: movedIds.length,
+					}),
 				);
 
 				await refreshFileTree();
@@ -533,12 +550,14 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				const operationId = `batch-move-${Date.now()}`;
 				fileOperationNotificationService.showError(
 					operationId,
-					`Failed to move files: ${error.message}`,
+					t('Failed to move files: {error}', {
+						error: error.message,
+					}),
 				);
 
 				if (
 					error instanceof Error &&
-					error.message !== 'File operation cancelled by user'
+					error.message !== t('File operation cancelled by user')
 				) {
 					console.error('Error in batch move:', error);
 				}
@@ -555,7 +574,9 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 				fileOperationNotificationService.showLoading(
 					operationId,
-					`Unlinking ${fileIds.length} files...`,
+					t('Unlinking {count} files...', {
+						count: fileIds.length,
+					}),
 				);
 
 				await fileStorageService.batchUnlinkFiles(fileIds);
@@ -583,7 +604,9 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 
 				fileOperationNotificationService.showSuccess(
 					operationId,
-					`Successfully unlinked ${fileIds.length} files`,
+					t('Successfully unlinked {count} files', {
+						count: fileIds.length,
+					}),
 				);
 
 				await refreshFileTree();
@@ -592,12 +615,14 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				const operationId = `batch-unlink-${Date.now()}`;
 				fileOperationNotificationService.showError(
 					operationId,
-					`Failed to unlink files: ${error.message}`,
+					t('Failed to unlink files: {error}', {
+						error: error.message,
+					}),
 				);
 
 				if (
 					error instanceof Error &&
-					error.message !== 'Unlink operation cancelled by user'
+					error.message !== t('Unlink operation cancelled by user')
 				) {
 					console.error('Error in batch unlink:', error);
 				}
@@ -661,7 +686,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				console.error('Error in moveFileOrDirectory:', error);
 				if (
 					error instanceof Error &&
-					error.message !== 'File operation cancelled by user'
+					error.message !== t('File operation cancelled by user')
 				) {
 					console.error('Error moving file or directory:', error);
 				}
@@ -675,7 +700,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 			try {
 				const originalFile = await fileStorageService.getFile(fileId);
 				if (!originalFile) {
-					throw new Error('Original file not found');
+					throw new Error(t('Original file not found'));
 				}
 
 				const oldPath = originalFile.path;
@@ -719,7 +744,7 @@ export const FileTreeProvider: React.FC<FileTreeProviderProps> = ({
 				console.error('Error in renameFile:', error);
 				if (
 					error instanceof Error &&
-					error.message === 'File operation cancelled by user'
+					error.message === t('File operation cancelled by user')
 				) {
 					throw error;
 				}
