@@ -12,6 +12,7 @@ import type { Editor } from '@milkdown/kit/core';
 import type { MilkdownPlugin } from '@milkdown/kit/ctx';
 import type { EditorView } from '@milkdown/kit/prose/view';
 
+import type { HighlightTheme } from '@/types/editor';
 import { navigateHref } from './linkClick';
 import { configureMilkdownEditor, replaceMarkdown } from './milkdownSetup';
 import MilkdownToolbar from './toolbar/MilkdownToolbar';
@@ -27,6 +28,8 @@ interface MilkdownEditorProps {
 	onPaste?: (view: EditorView, event: ClipboardEvent) => boolean;
 	getCurrentFilePath: () => string;
 	enabledPlugins?: Set<string>;
+	textDirection?: 'auto' | 'ltr' | 'rtl';
+	highlightTheme?: HighlightTheme;
 }
 
 const MilkdownInner: React.FC<MilkdownEditorProps> = ({
@@ -39,6 +42,8 @@ const MilkdownInner: React.FC<MilkdownEditorProps> = ({
 	onPaste,
 	getCurrentFilePath,
 	enabledPlugins,
+	textDirection,
+	highlightTheme,
 }) => {
 	const editableRef = useRef(editable);
 	const initialMarkdownRef = useRef(markdown);
@@ -48,6 +53,7 @@ const MilkdownInner: React.FC<MilkdownEditorProps> = ({
 	const onPasteRef = useRef(onPaste);
 	const pluginsRef = useRef(plugins);
 	const enabledPluginsRef = useRef(enabledPlugins);
+	const highlightThemeRef = useRef(highlightTheme);
 	const lastSyncedRef = useRef(markdown);
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const [loading, getInstance] = useInstance();
@@ -81,6 +87,7 @@ const MilkdownInner: React.FC<MilkdownEditorProps> = ({
 				plugins: pluginsRef.current,
 				getCurrentFilePath: () => getCurrentFilePathRef.current(),
 				enabledPlugins: enabledPluginsRef.current,
+				highlightTheme: highlightThemeRef.current,
 			}),
 		[],
 	);
@@ -181,7 +188,13 @@ const MilkdownInner: React.FC<MilkdownEditorProps> = ({
 	}, [loading, getInstance]);
 
 	return (
-		<div ref={scrollRef} className='milkdown-editor-scroll'>
+		<div
+			ref={scrollRef}
+			className='milkdown-editor-scroll'
+			dir={
+				textDirection && textDirection !== 'auto' ? textDirection : undefined
+			}
+		>
 			<Milkdown />
 		</div>
 	);

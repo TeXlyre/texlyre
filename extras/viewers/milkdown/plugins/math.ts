@@ -6,6 +6,7 @@ import type {
 	EditorView as ProseMirrorEditorView,
 	NodeView,
 } from '@milkdown/kit/prose/view';
+import { Selection } from '@milkdown/kit/prose/state';
 import { InputRule } from '@milkdown/kit/prose/inputrules';
 import { $inputRule, $nodeSchema, $remark, $view } from '@milkdown/kit/utils';
 import { EditorState } from '@codemirror/state';
@@ -226,6 +227,18 @@ const createMathView = (kind: MathKind, getType: () => NodeType) => {
 			}
 
 			renderPreview();
+
+			const pos = getPos(getNodePos);
+
+			if (pos !== null) {
+				const resolved = view.state.doc.resolve(
+					Math.min(pos + node.nodeSize, view.state.doc.content.size),
+				);
+				const selection = Selection.near(resolved, 1);
+
+				view.dispatch(view.state.tr.setSelection(selection).scrollIntoView());
+			}
+
 			view.focus();
 		};
 

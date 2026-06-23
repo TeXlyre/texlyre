@@ -18,6 +18,7 @@ import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
 import type { ViewerProps } from '@/plugins/PluginInterface';
 import { formatFileSize } from '@/utils/fileUtils';
+import { applyMediaKey } from '@/utils/mediaKeyboardUtils';
 import './styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './MediaViewerPlugin';
 
@@ -99,6 +100,39 @@ const CombinedMediaViewer: React.FC<ViewerProps> = ({
 		media.muted = isMuted;
 		media.playbackRate = playbackRate;
 	}, [volume, isMuted, playbackRate, mediaSrc]);
+
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			const active = document.activeElement;
+			const isTyping =
+				active instanceof HTMLInputElement ||
+				active instanceof HTMLTextAreaElement ||
+				active instanceof HTMLSelectElement ||
+				active?.getAttribute('contenteditable') === 'true';
+
+			if (isTyping) return;
+
+			const media = mediaRef.current;
+			if (!media) return;
+
+			if (event.key === ' ') {
+				event.preventDefault();
+				if (media.paused) media.play().catch(() => undefined);
+				else media.pause();
+				return;
+			}
+
+			if (applyMediaKey(media, event.key)) {
+				event.preventDefault();
+				setIsMuted(media.muted);
+				setVolume(media.volume);
+				setCurrentTime(media.currentTime);
+			}
+		};
+
+		window.addEventListener('keydown', handleKeyDown);
+		return () => window.removeEventListener('keydown', handleKeyDown);
+	}, []);
 
 	const handlePlayPause = () => {
 		const media = mediaRef.current;

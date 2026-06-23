@@ -193,6 +193,14 @@
 	background-color: var(--pico-background) !important;
 }
 
+.texlyre-milkdown .milkdown-code-block .cm-editor,
+.texlyre-milkdown .milkdown-code-block .cm-editor .cm-scroller,
+.texlyre-milkdown .milkdown-code-block .cm-content,
+.texlyre-milkdown .milkdown-code-block .cm-gutters {
+	background: transparent;
+	color: inherit;
+}
+
 .milkdown-table-block {
 	border: 1px solid var(--accent-color);
 }

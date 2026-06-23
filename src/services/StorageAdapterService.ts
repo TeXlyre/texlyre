@@ -25,30 +25,31 @@ export class DirectoryAdapter implements FileSystemAdapter {
 	): Promise<void> {
 		const { dir, fileName } = this.parsePath(path);
 		const dirHandle = await this.getOrCreateDirectory(dir);
-		const fileHandle = await dirHandle.getFileHandle(fileName, {
-			create: true,
-		});
-		const blob = new Blob([toArrayBuffer(content)]);
-		const writable = await fileHandle.createWritable();
+		const data = toArrayBuffer(content);
+
+		const attempt = async (): Promise<void> => {
+			const fileHandle = await dirHandle.getFileHandle(fileName, {
+				create: true,
+			});
+			const writable = await fileHandle.createWritable();
+			try {
+				await writable.write(data);
+				await writable.close();
+			} catch (error) {
+				await writable.abort().catch(() => {});
+				throw error;
+			}
+		};
+
 		try {
-			await writable.write(blob);
-			await this.withTimeout(writable.close(), 30000);
+			await attempt();
 		} catch (error) {
-			await writable.abort().catch(() => {});
+			if (error instanceof DOMException && error.name === 'InvalidStateError') {
+				await attempt();
+				return;
+			}
 			throw error;
 		}
-	}
-
-	private withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-		return Promise.race([
-			promise,
-			new Promise<T>((_, reject) =>
-				setTimeout(
-					() => reject(new Error(t('File system write timed out'))),
-					ms,
-				),
-			),
-		]);
 	}
 
 	async readFile(path: string): Promise<string | ArrayBuffer> {

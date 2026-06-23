@@ -24,6 +24,7 @@ import { autoSaveService } from '@/services/AutoSaveService';
 import { fileStorageService } from '@/services/FileStorageService';
 import { formatFileSize } from '@/utils/fileUtils';
 import { copyCleanTextToClipboard } from '@/utils/clipboardUtils';
+import type { HighlightTheme } from '@/types/editor';
 import MilkdownEditor from './MilkdownEditor';
 import MilkdownTextPane from './MilkdownTextPane';
 import { createImageResolver } from './imageResolver';
@@ -95,6 +96,12 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 		() => getEnabledMilkdownPluginIds(getSetting),
 		[getSetting],
 	);
+
+	const textDirection =
+		(getSetting('milkdown-text-direction')?.value as 'auto' | 'ltr' | 'rtl') ??
+		'auto';
+	const highlightTheme =
+		(getSetting('editor-theme-highlights')?.value as HighlightTheme) ?? 'auto';
 
 	/* biome-ignore lint/correctness/useExhaustiveDependencies: One-time registration guarded by ref. */
 	useEffect(() => {
@@ -378,7 +385,7 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 				) : viewMode === 'visual' ? (
 					<div className='milkdown-visual-pane'>
 						<MilkdownEditor
-							key={`visual-${fileId ?? fileName}`}
+							key={`visual-${fileId ?? fileName}-${highlightTheme}`}
 							markdown={markdown}
 							editable={true}
 							onChange={handleChange}
@@ -388,6 +395,8 @@ const MilkdownViewer: React.FC<ViewerProps> = ({
 							enabledPlugins={enabledPluginIds}
 							onPaste={handlePaste}
 							getCurrentFilePath={() => filePathRef.current}
+							textDirection={textDirection}
+							highlightTheme={highlightTheme}
 						/>
 					</div>
 				) : (

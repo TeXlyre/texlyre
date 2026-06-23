@@ -13,6 +13,7 @@ import { flushSync } from 'react-dom';
 
 import { PluginHeader } from '@/components/common/PluginHeader';
 import { formatFileSize } from '@/utils/fileUtils';
+import { applyMediaKey } from '@/utils/mediaKeyboardUtils';
 import {
 	ChevronLeftIcon,
 	ChevronRightIcon,
@@ -923,6 +924,16 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 		};
 	}, [commitZoom, computeFitScale, fitMode]);
 
+	const getActiveMedia = useCallback((): HTMLMediaElement | null => {
+		if (contentTypeRef.current !== 'svg') return null;
+
+		const textEl = textLayerRefs.current.get(lastStablePageRef.current);
+		const root = textEl?.shadowRoot;
+		if (!root) return null;
+
+		return root.querySelector('video, audio');
+	}, []);
+
 	useEffect(() => {
 		const handleKeyDown = (event: KeyboardEvent) => {
 			const active = document.activeElement;
@@ -937,7 +948,31 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 
 			if (!document.fullscreenElement && !pointerInsideRef.current) return;
 
-			if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+			const media = getActiveMedia();
+
+			if (media) {
+				if (event.key === ' ') {
+					event.preventDefault();
+					if (media.paused) {
+						media.play().catch(() => undefined);
+						(media as unknown as HTMLElement).focus?.();
+					} else {
+						media.pause();
+					}
+					return;
+				}
+
+				if (applyMediaKey(media, event.key)) {
+					event.preventDefault();
+					return;
+				}
+			}
+
+			if (
+				event.key === 'ArrowLeft' ||
+				event.key === 'ArrowUp' ||
+				event.key === 'PageUp'
+			) {
 				event.preventDefault();
 				goToPage(lastStablePageRef.current - 1);
 			}
@@ -945,19 +980,20 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 			if (
 				event.key === 'ArrowRight' ||
 				event.key === 'ArrowDown' ||
-				event.key === ' '
+				event.key === ' ' ||
+				event.key === 'PageDown'
 			) {
 				event.preventDefault();
 				goToPage(lastStablePageRef.current + 1);
 			}
 		};
 
-		window.addEventListener('keydown', handleKeyDown);
+		window.addEventListener('keydown', handleKeyDown, true);
 
 		return () => {
-			window.removeEventListener('keydown', handleKeyDown);
+			window.removeEventListener('keydown', handleKeyDown, true);
 		};
-	}, [goToPage]);
+	}, [goToPage, getActiveMedia]);
 
 	useEffect(() => {
 		return () => {

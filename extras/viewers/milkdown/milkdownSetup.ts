@@ -37,6 +37,8 @@ import { latex } from 'codemirror-lang-latex';
 import { bibtex } from 'codemirror-lang-bib';
 
 import { safeTypst as typst } from '@/extensions/codemirror/SafeTypstPatch';
+import { resolveHighlightTheme } from '@/extensions/codemirror/HighlightThemeExtension';
+import type { HighlightTheme } from '@/types/editor';
 import { createLinkClickHandler } from './linkClick';
 import {
 	mathBlockInputRule,
@@ -58,6 +60,7 @@ interface MilkdownConfigOptions {
 	plugins?: MilkdownPlugin[];
 	getCurrentFilePath: () => string;
 	enabledPlugins?: Set<string>;
+	highlightTheme?: HighlightTheme;
 }
 
 const codeBlockLanguages: LanguageDescription[] = [
@@ -126,7 +129,9 @@ export function configureMilkdownEditor(
 
 					extensions: [
 						...(defaultConfig.extensions ?? []),
-						syntaxHighlighting(defaultHighlightStyle),
+						options.highlightTheme
+							? resolveHighlightTheme(options.highlightTheme)
+							: syntaxHighlighting(defaultHighlightStyle),
 					],
 				}));
 			}
