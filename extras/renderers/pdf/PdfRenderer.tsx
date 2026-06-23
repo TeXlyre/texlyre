@@ -858,7 +858,11 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 			if (!document.fullscreenElement && !pointerInsideRef.current) return;
 
-			if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+			if (
+				event.key === 'ArrowLeft' ||
+				event.key === 'ArrowUp' ||
+				event.key === 'PageUp'
+			) {
 				event.preventDefault();
 				handlePreviousPage();
 			}
@@ -866,7 +870,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			if (
 				event.key === 'ArrowRight' ||
 				event.key === 'ArrowDown' ||
-				event.key === ' '
+				event.key === ' ' ||
+				event.key === 'PageDown'
 			) {
 				event.preventDefault();
 				handleNextPage();

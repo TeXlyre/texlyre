@@ -57,6 +57,20 @@ export const getMilkdownViewerSettings = (): Setting[] => [
 		description: t('Render inline LaTeX math'),
 		defaultValue: true,
 	},
+	{
+		id: 'milkdown-text-direction',
+		category: t('Viewers'),
+		subcategory: t('Markdown Editor'),
+		type: 'select',
+		label: t('Editor text direction'),
+		description: t('Control text direction within the editor'),
+		defaultValue: 'auto',
+		options: [
+			{ label: t('Auto (follows app language)'), value: 'auto' },
+			{ label: t('Left-to-Right (LTR)'), value: 'ltr' },
+			{ label: t('Right-to-Left (RTL)'), value: 'rtl' },
+		],
+	},
 ];
 
 export const getEnabledMilkdownPluginIds = (

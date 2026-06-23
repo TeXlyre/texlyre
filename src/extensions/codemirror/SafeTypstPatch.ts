@@ -5,23 +5,28 @@
 // and createParse() always rebuilds a fresh TypstWasmParser from the current doc.
 // edit() keeps returning a valid object so the package's update listener never
 // dereferences undefined. Incremental tree reuse is sacrificed; highlighting works.
-import { Language, type LanguageSupport } from '@codemirror/language';
+// The package has its own syntaxHighlighting(TypstHighlightSytle) into the
+// Language's extraExtensions, hardcoding colors that ignore the app theme. We
+// rebuild the Language with only the parser's update listener so Typst renders
+// through the host's resolveHighlightTheme like LaTeX does.
+import { Language, LanguageSupport } from '@codemirror/language';
+import type { Extension } from '@codemirror/state';
 import { typst } from 'codemirror-lang-typst';
 
 type WasmParser = { edit: (...a: unknown[]) => unknown } | null;
+
+type TypstParser = {
+	parser: WasmParser;
+	createParse: (input: unknown, fragments: unknown, ranges: unknown) => unknown;
+	updateListener: () => Extension;
+};
 
 const FULL_REPARSE = { full_update: true, edits: [] };
 
 export function safeTypst(): LanguageSupport {
 	const support = typst();
-	const ctx = support.language.parser as unknown as {
-		parser: WasmParser;
-		createParse: (
-			input: unknown,
-			fragments: unknown,
-			ranges: unknown,
-		) => unknown;
-	};
+	const original = support.language as Language;
+	const ctx = original.parser as unknown as TypstParser;
 
 	let backing: WasmParser = null;
 
@@ -45,5 +50,12 @@ export function safeTypst(): LanguageSupport {
 		return originalCreateParse(input, fragments, ranges);
 	};
 
-	return support;
+	const themedLanguage = new Language(
+		original.data,
+		ctx as unknown as ConstructorParameters<typeof Language>[1],
+		[ctx.updateListener()],
+		original.name,
+	);
+
+	return new LanguageSupport(themedLanguage);
 }

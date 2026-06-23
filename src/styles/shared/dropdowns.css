@@ -46,7 +46,7 @@
 }
 
 .dropdown-section {
-	padding: var(--space-sm) 0;
+	padding: var(--space-sm) var(--space-xs);
 }
 
 .dropdown-section:not(:last-child) {

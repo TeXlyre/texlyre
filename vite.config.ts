@@ -78,6 +78,16 @@ export default defineConfig({
 	},
 
 	plugins: [
+		{
+			name: 'pico-theme-attr',
+			enforce: 'pre',
+			transform(code, id) {
+				if (id.includes('@picocss/pico') && id.endsWith('.css')) {
+					return code.replace(/data-theme(?==|\])/g, 'data-theme-mode');
+				}
+				return null;
+			},
+		},
 		wasm(),
 		react(),
 		...(useHttps ? [basicSsl()] : []),
