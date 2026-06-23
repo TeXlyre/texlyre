@@ -5,6 +5,12 @@ module.exports = {
     latexCompletionSource: jest.fn(),
     typst: jest.fn(() => ({
         extension: [],
-        language: { parser: { parser: {}, createParse: jest.fn() } },
+        language: {
+            parser: {
+                parser: {},
+                createParse: jest.fn(),
+                updateListener: jest.fn(() => []),
+            },
+        },
     })),
 };
