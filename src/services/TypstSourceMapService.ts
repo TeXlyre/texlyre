@@ -222,7 +222,7 @@ class TypstSourceMapService implements SourceMapService {
 			: 'texlyre-settings';
 		try {
 			const settings = JSON.parse(localStorage.getItem(storageKey) || '{}');
-			return settings['typst-sourcemap-enabled'] !== false;
+			return settings['typst-sourcemap-enable'] !== false;
 		} catch {
 			return true;
 		}

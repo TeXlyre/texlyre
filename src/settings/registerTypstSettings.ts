@@ -19,7 +19,7 @@ export function useRegisterTypstSettings() {
 		const initialDefaultFormat =
 			(getSetting('typst-default-format')?.value as TypstOutputFormat) ?? 'pdf';
 		const initialSourceMap =
-			(getSetting('typst-sourcemap-enabled')?.value as boolean) ?? true;
+			(getSetting('typst-sourcemap-enable')?.value as boolean) ?? true;
 		const initialAutoNavigate =
 			(getSetting('typst-auto-navigate-to-main')?.value as string) ??
 			'conditional';
@@ -27,7 +27,7 @@ export function useRegisterTypstSettings() {
 			(getSetting('typst-allow-remote-content')?.value as boolean) ?? true;
 
 		registerSetting({
-			id: 'typst-sourcemap-enabled',
+			id: 'typst-sourcemap-enable',
 			category: t('Compilation'),
 			subcategory: t('Typst'),
 			type: 'checkbox',

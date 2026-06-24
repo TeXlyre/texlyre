@@ -13,14 +13,14 @@ export function useRegisterFileSystemBackupSettings() {
 		registered.current = true;
 
 		const initialBackupEnabled =
-			(getSetting('file-system-backup-enable')?.value as boolean) ?? false;
+			(getSetting('file-sys-backup-enable')?.value as boolean) ?? false;
 		const initialAutoBackup =
-			(getSetting('file-system-backup-auto-backup')?.value as boolean) ?? false;
-		const initialAutoSync =
-			(getSetting('file-system-backup-auto-sync')?.value as boolean) ?? false;
+			(getSetting('file-sys-backup-auto-backup')?.value as boolean) ?? false;
+		// const initialAutoSync =
+		// 	(getSetting('file-sys-backup-auto-sync')?.value as boolean) ?? false;
 
 		registerSetting({
-			id: 'file-system-backup-enable',
+			id: 'file-sys-backup-enable',
 			category: t('Backup'),
 			subcategory: t('File System'),
 			type: 'checkbox',
@@ -33,7 +33,7 @@ export function useRegisterFileSystemBackupSettings() {
 		});
 
 		registerSetting({
-			id: 'file-system-backup-auto-backup',
+			id: 'file-sys-backup-auto-backup',
 			category: t('Backup'),
 			subcategory: t('File System'),
 			type: 'checkbox',
@@ -46,7 +46,7 @@ export function useRegisterFileSystemBackupSettings() {
 		});
 
 		// registerSetting({
-		// 	id: 'file-system-backup-auto-sync',
+		// 	id: 'file-sys-backup-auto-sync',
 		// 	category: t('Backup'),
 		// 	subcategory: t('File System'),
 		// 	type: 'checkbox',

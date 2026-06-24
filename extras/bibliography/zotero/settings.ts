@@ -4,7 +4,7 @@ import type { Setting } from '@/contexts/SettingsContext';
 
 export const getZoteroSettings = (): Setting[] => [
 	{
-		id: 'zotero-bibliography-enabled',
+		id: 'zotero-bibliography-enable',
 		category: t('Bibliography'),
 		subcategory: t('Zotero'),
 		type: 'checkbox',

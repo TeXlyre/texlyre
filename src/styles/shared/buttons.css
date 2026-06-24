@@ -55,6 +55,7 @@
 .action-button.warn {
 	background-color: color-mix(in srgb, var(--color-warning) 20%, white);
 	border-color: var(--color-warning);
+	color: color-mix(in srgb, var(--pico-secondary) 80%, black);
 }
 
 .button.warn:hover,

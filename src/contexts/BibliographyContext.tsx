@@ -481,7 +481,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 		const providers = pluginRegistry.getAllBibliographyPlugins();
 		setAvailableProviders(
 			providers.filter((p) => {
-				const enabled = getSetting(`${p.id}-enabled`)?.value as boolean;
+				const enabled = getSetting(`${p.id}-enable`)?.value as boolean;
 				return enabled ?? true;
 			}),
 		);
@@ -523,7 +523,7 @@ export const BibliographyProvider: React.FC<BibliographyProviderProps> = ({
 	useEffect(() => {
 		if (availableProviders.length === 0) return;
 		availableProviders.forEach((provider) => {
-			const enabledSetting = getSetting(`${provider.id}-enabled`);
+			const enabledSetting = getSetting(`${provider.id}-enable`);
 			const isEnabled = (enabledSetting?.value as boolean) ?? true;
 			const serverUrlSetting = getSetting(`${provider.id}-server-url`);
 			const url = (serverUrlSetting?.value as string) || '';

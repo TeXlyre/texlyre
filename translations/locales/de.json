@@ -487,6 +487,7 @@
   "Connecting...": "Verbinden...",
   "Connecting... ({status})": "Verbinde... ({{status}})",
   "Connection failed": "Verbindung fehlgeschlagen",
+  "Connection provider": "Verbindungsanbieter",
   "Connection test failed": "Verbindungstest fehlgeschlagen.",
   "Connectivity": "Konnektivität",
   "Content formatted successfully": "Inhalt erfolgreich formatiert",

@@ -28,7 +28,7 @@ export function useRegisterEditorSettings() {
 			'editor-auto-save-delay',
 			'editor-vim-mode',
 			'editor-spell-check',
-			'editor-mathlive-enabled',
+			'editor-mathlive-enable',
 			'editor-mathlive-preview-mode',
 			'language',
 		]);
@@ -64,7 +64,7 @@ export function useRegisterEditorSettings() {
 			(batchedSettings['editor-spell-check'] as boolean) ??
 			defaultEditorSettings.spellCheck;
 		const initialMathLiveEnabled =
-			(batchedSettings['editor-mathlive-enabled'] as boolean) ??
+			(batchedSettings['editor-mathlive-enable'] as boolean) ??
 			defaultEditorSettings.mathLiveEnabled;
 		const initialMathLivePreviewMode =
 			(batchedSettings['editor-mathlive-preview-mode'] as string) ??
@@ -269,7 +269,7 @@ export function useRegisterEditorSettings() {
 		});
 
 		registerSetting({
-			id: 'editor-mathlive-enabled',
+			id: 'editor-mathlive-enable',
 			category: t('Viewers'),
 			subcategory: t('Text Editor'),
 			type: 'checkbox',

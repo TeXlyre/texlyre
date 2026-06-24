@@ -554,6 +554,7 @@
   "Connecting...": "Connecting...",
   "Connecting... ({status})": "Connecting... ({{status}})",
   "Connection failed": "Connection failed",
+  "Connection provider": "Connection provider",
   "Connection test failed": "Connection test failed",
   "Connectivity": "Connectivity",
   "Content formatted successfully": "Content formatted successfully",
