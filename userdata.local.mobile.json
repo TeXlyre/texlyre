@@ -26,8 +26,8 @@
     "file-sync-notifications": true,
     "file-sync-request-timeout": 60,
     "file-sync-server-url": "http://localhost:8080",
-    "file-system-backup-auto-backup": false,
-    "file-system-backup-enable": false,
+    "file-sys-backup-auto-backup": false,
+    "file-sys-backup-enable": false,
     "file-tree-filesystem-drag-drop": true,
     "file-tree-internal-drag-drop": true,
     "image-viewer-auto-center": true,
@@ -46,13 +46,13 @@
     "pdf-viewer-auto-scale": true,
     "pdf-viewer-rendering-quality": "high",
     "repository-proxy-url": "https://proxy.texlyre.org/?url=",
-    "latex-sourcemap-enabled": true,
+    "latex-sourcemap-enable": true,
     "templates-api-url": "https://texlyre.github.io/texlyre-templates/api/templates.json",
     "theme-plugin": "texlyre-mobile-theme",
     "theme-variant": "dark",
     "typst-auto-compile-on-open": false,
     "typst-default-format": "canvas",
-    "typst-sourcemap-enabled": true
+    "typst-sourcemap-enable": true
   },
   "properties": {
     "latex-output-collapsed:global": true,
@@ -66,6 +66,8 @@
     "sidebar-collapsed:global": false,
     "sidebar-width:global": 502,
     "sourcemap-show-floating-buttons:global": true,
+    "theme-toggle-light:global": "atom_light",
+    "theme-toggle-dark:global": "tomorrow_night_blue",
     "toolbar-visible:global": true,
     "project-list-view-mode:global": "list"
   },

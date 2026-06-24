@@ -4,7 +4,7 @@ import type { Setting } from '@/contexts/SettingsContext';
 
 export const getOpenAlexSettings = (): Setting[] => [
 	{
-		id: 'openalex-bibliography-enabled',
+		id: 'openalex-bibliography-enable',
 		category: t('Bibliography'),
 		subcategory: t('OpenAlex'),
 		type: 'checkbox',

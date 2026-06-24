@@ -4,7 +4,7 @@ import type { Setting } from '@/contexts/SettingsContext';
 
 export const getJabrefLSPSettings = (): Setting[] => [
 	{
-		id: 'jabref-lsp-enabled',
+		id: 'jabref-lsp-enable',
 		category: t('Bibliography'),
 		subcategory: t('JabRef'),
 		type: 'checkbox',

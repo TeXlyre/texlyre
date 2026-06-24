@@ -103,11 +103,11 @@ export const FileSystemBackupProvider: React.FC<
 	const { getSetting } = useSettings();
 
 	const backupEnabledSetting =
-		(getSetting('file-system-backup-enable')?.value as boolean) ?? false;
+		(getSetting('file-sys-backup-enable')?.value as boolean) ?? false;
 	const autoBackupOnStartup =
-		(getSetting('file-system-backup-auto-backup')?.value as boolean) ?? false;
+		(getSetting('file-sys-backup-auto-backup')?.value as boolean) ?? false;
 	const _autoSyncOnChange =
-		(getSetting('file-system-backup-auto-sync')?.value as boolean) ?? false;
+		(getSetting('file-sys-backup-auto-sync')?.value as boolean) ?? false;
 
 	const getEffectiveEnabled = useCallback(() => {
 		return backupEnabledSetting || tempEnabled;

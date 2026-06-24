@@ -24,7 +24,7 @@ export function useRegisterLatexSettings() {
 		const initialStoreWorkingDirectory =
 			(getSetting('latex-store-working-directory')?.value as boolean) ?? false;
 		const initialSourceMap =
-			(getSetting('latex-sourcemap-enabled')?.value as boolean) ?? true;
+			(getSetting('latex-sourcemap-enable')?.value as boolean) ?? true;
 		const initialAutoCompile =
 			(getSetting('latex-auto-compile-on-open')?.value as boolean) ?? false;
 		const initialDefaultFormat =
@@ -104,7 +104,7 @@ export function useRegisterLatexSettings() {
 		});
 
 		registerSetting({
-			id: 'latex-sourcemap-enabled',
+			id: 'latex-sourcemap-enable',
 			category: t('Compilation'),
 			subcategory: t('LaTeX'),
 			type: 'checkbox',

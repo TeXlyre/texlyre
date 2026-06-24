@@ -27,6 +27,7 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
 	const backupPlugins = pluginRegistry.getBackup();
+	const fileSystemEnabled = fileSystemBackup.status.isEnabled;
 
 	const getEnabledServices = () => {
 		const enabled = [];
@@ -67,9 +68,7 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 	}, []);
 
 	const handleMainButtonClick = () => {
-		if (enabledServices.length === 0) {
-			setIsDropdownOpen(!isDropdownOpen);
-		} else if (enabledServices.length === 1) {
+		if (enabledServices.length === 1) {
 			const service = enabledServices[0];
 			if (service.type === 'filesystem') {
 				setShowFileSystemModal(true);
@@ -178,13 +177,18 @@ const BackupStatusIndicator: React.FC<BackupStatusIndicatorProps> = ({
 					}
 					className='backup-dropdown'
 				>
-					<div className='backup-dropdown-item' onClick={handleFileSystemClick}>
-						<span className='service-indicator'>
-							{getServiceStatusIndicator('filesystem')}
-						</span>
-						<FileSystemIcon />
-						{t('File System')}
-					</div>
+					{fileSystemEnabled && (
+						<div
+							className='backup-dropdown-item'
+							onClick={handleFileSystemClick}
+						>
+							<span className='service-indicator'>
+								{getServiceStatusIndicator('filesystem')}
+							</span>
+							<FileSystemIcon />
+							{t('File System')}
+						</div>
+					)}
 
 					{backupPlugins.map((plugin) => {
 						const IconComponent = plugin.icon;

@@ -89,8 +89,8 @@ const config: TexlyreConfig = {
                 fileSyncNotifications: true,
                 fileSyncRequestTimeout: 60,
                 fileSyncServerUrl: 'https://filepizza.texlyre.org',
-                fileSystemBackupAutoBackup: false,
-                fileSystemBackupEnable: false,
+                fileSysBackupAutoBackup: false,
+                fileSysBackupEnable: true,
                 fileTreeFilesystemDragDrop: true,
                 fileTreeInternalDragDrop: true,
                 imageViewerAutoCenter: true,
@@ -109,13 +109,13 @@ const config: TexlyreConfig = {
                 pdfViewerAutoScale: true,
                 pdfViewerRenderingQuality: 'high',
                 repositoryProxyUrl: 'https://proxy.texlyre.org/?url=',
-                latexSourcemapEnabled: true,
+                latexSourcemapEnable: true,
                 templatesApiUrl: 'https://texlyre.github.io/texlyre-templates/api/templates.json',
                 themePlugin: 'texlyre-wide-theme',
                 themeVariant: 'atom_light',
                 typstAutoCompileOnOpen: false,
                 typstDefaultFormat: 'canvas',
-                typstSourcemapEnabled: true,
+                typstSourcemapEnable: true,
             },
             properties: {
                 global: {
@@ -130,6 +130,8 @@ const config: TexlyreConfig = {
                     sidebarCollapsed: false,
                     sidebarWidth: 502,
                     sourcemapShowFloatingButtons: true,
+                    themeToggleLight: "atom_light",
+                    themeToggleDark: "tomorrow_night_blue",
                     toolbarVisible: true,
                 },
             },
@@ -138,6 +140,7 @@ const config: TexlyreConfig = {
         },
         mobile: {
             settings: {
+                fileSysBackupEnable: false,
                 themePlugin: 'texlyre-mobile-theme',
                 imageViewerAutoCenter: true,
             },

@@ -534,6 +534,7 @@
   "Connecting...": "正在连接...",
   "Connecting... ({status})": "正在连接... ({{status}})",
   "Connection failed": "连接失败",
+  "Connection provider": "连接提供商",
   "Connection test failed": "连接测试失败。",
   "Connectivity": "连接",
   "Content formatted successfully": "内容格式化成功",

@@ -86,13 +86,13 @@ export const SourceMapProvider: React.FC<SourceMapProviderProps> = ({
 			defaultValue: false,
 		});
 		registerProperty({
-			id: 'sourcemap-reverse-click-enabled',
+			id: 'sourcemap-reverse-click-enable',
 			category: 'UI',
 			subcategory: 'Source Map',
 			defaultValue: true,
 		});
 		registerProperty({
-			id: 'sourcemap-forward-click-enabled',
+			id: 'sourcemap-forward-click-enable',
 			category: 'UI',
 			subcategory: 'Source Map',
 			defaultValue: true,
@@ -103,8 +103,8 @@ export const SourceMapProvider: React.FC<SourceMapProviderProps> = ({
 		const reverseMode = getProperty('sourcemap-reverse-click-mode');
 		const forwardMode = getProperty('sourcemap-forward-click-mode');
 		const floatingButtons = getProperty('sourcemap-show-floating-buttons');
-		const reverseEnabled = getProperty('sourcemap-reverse-click-enabled');
-		const forwardEnabled = getProperty('sourcemap-forward-click-enabled');
+		const reverseEnabled = getProperty('sourcemap-reverse-click-enable');
+		const forwardEnabled = getProperty('sourcemap-forward-click-enable');
 
 		if (reverseMode !== undefined)
 			setReverseClickMode(reverseMode as SourceMapClickMode);
@@ -145,7 +145,7 @@ export const SourceMapProvider: React.FC<SourceMapProviderProps> = ({
 	const updateReverseClickEnabled = useCallback(
 		(enabled: boolean) => {
 			setReverseClickEnabled(enabled);
-			setProperty('sourcemap-reverse-click-enabled', enabled);
+			setProperty('sourcemap-reverse-click-enable', enabled);
 		},
 		[setProperty],
 	);
@@ -153,18 +153,18 @@ export const SourceMapProvider: React.FC<SourceMapProviderProps> = ({
 	const updateForwardClickEnabled = useCallback(
 		(enabled: boolean) => {
 			setForwardClickEnabled(enabled);
-			setProperty('sourcemap-forward-click-enabled', enabled);
+			setProperty('sourcemap-forward-click-enable', enabled);
 		},
 		[setProperty],
 	);
 
 	const getSourceMapEnabled = useCallback(() => {
 		if (activeCompiler === 'latex') {
-			return getSetting('latex-sourcemap-enabled')?.value !== false;
+			return getSetting('latex-sourcemap-enable')?.value !== false;
 		}
 
 		if (activeCompiler === 'typst') {
-			return getSetting('typst-sourcemap-enabled')?.value !== false;
+			return getSetting('typst-sourcemap-enable')?.value !== false;
 		}
 
 		return false;

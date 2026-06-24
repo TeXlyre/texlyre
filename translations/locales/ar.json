@@ -542,6 +542,7 @@
   "Connecting...": "جاري الاتصال...",
   "Connecting... ({status})": "جارٍ الاتصال... ({{status}})",
   "Connection failed": "فشل الاتصال.",
+  "Connection provider": "مزود خدمة الاتصال",
   "Connection test failed": "فشل اختبار الاتصال.",
   "Connectivity": "الاتصال",
   "Content formatted successfully": "تم تنسيق المحتوى بنجاح",

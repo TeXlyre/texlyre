@@ -125,7 +125,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 				(getSetting('editor-spell-check')?.value as boolean) ??
 				defaultEditorSettings.spellCheck,
 			mathLiveEnabled:
-				(getSetting('editor-mathlive-enabled')?.value as boolean) ??
+				(getSetting('editor-mathlive-enable')?.value as boolean) ??
 				defaultEditorSettings.mathLiveEnabled,
 			mathLivePreviewMode:
 				(getSetting('editor-mathlive-preview-mode')
@@ -153,7 +153,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 				highlightTheme: 'editor-theme-highlights',
 				vimMode: 'editor-vim-mode',
 				spellCheck: 'editor-spell-check',
-				mathLiveEnabled: 'editor-mathlive-enabled',
+				mathLiveEnabled: 'editor-mathlive-enable',
 				mathLivePreviewMode: 'editor-mathlive-preview-mode',
 				language: 'language',
 				textDirection: 'editor-text-direction',
@@ -238,7 +238,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		const allLSPPlugins = pluginRegistry.getAllLSPPlugins();
 		return allLSPPlugins
 			.filter((plugin) => {
-				const enabledSetting = getSetting(`${plugin.id}-enabled`);
+				const enabledSetting = getSetting(`${plugin.id}-enable`);
 				return (enabledSetting?.value as boolean) ?? false;
 			})
 			.map((plugin) => plugin.id);

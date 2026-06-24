@@ -61,7 +61,7 @@ class LaTeXSourceMapService implements SourceMapService {
 			: 'texlyre-settings';
 		try {
 			const settings = JSON.parse(localStorage.getItem(storageKey) || '{}');
-			return settings['latex-sourcemap-enabled'] !== false;
+			return settings['latex-sourcemap-enable'] !== false;
 		} catch {
 			return true;
 		}
