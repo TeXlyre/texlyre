@@ -37,7 +37,9 @@ const versionedAdapter = (name: 'settings' | 'properties'): StoreAdapter => ({
 		} catch {
 			version = undefined;
 		}
-		return JSON.stringify({ ...entries, _version: version });
+		return version === undefined
+			? JSON.stringify({ ...entries })
+			: JSON.stringify({ ...entries, _version: version });
 	},
 });
 
@@ -116,9 +118,18 @@ const toPlain = (value: unknown): unknown =>
 const isEqual = (a: unknown, b: unknown): boolean =>
 	JSON.stringify(a) === JSON.stringify(b);
 
+const emitStoreChanged = (store: string): void => {
+	window.dispatchEvent(
+		new CustomEvent('chelys-account-store-changed', {
+			detail: { store },
+		}),
+	);
+};
+
 class ChelysAccountSyncService {
 	private doc: Y.Doc | null = null;
 	private roomId: string | null = null;
+	private roomKey: string | null = null;
 	private userId: string | null = null;
 	private pollIntervalId: ReturnType<typeof setInterval> | null = null;
 	private unobservers: Array<() => void> = [];
@@ -130,11 +141,24 @@ class ChelysAccountSyncService {
 
 		const { doc } = collabService.connect(roomId, COLLECTION_NAME, {
 			password: roomKey,
+			autoReconnect: true,
+			awarenessTimeout: 30000,
 			...readCollabOptions(userId),
 		});
 		this.doc = doc;
 		this.roomId = roomId;
+		this.roomKey = roomKey;
 		this.userId = userId;
+
+		collabService.setUserInfo(roomId, COLLECTION_NAME, {
+			id: userId,
+			username: userId,
+			name: userId,
+			color: '#7da8c4',
+			colorLight: '#a8c4dc',
+			passwordHash: '',
+			createdAt: 0,
+		});
 
 		const container = collabService.getDocContainer(roomId, COLLECTION_NAME);
 		if (container?.persistence && !container.persistence.synced) {
@@ -147,16 +171,15 @@ class ChelysAccountSyncService {
 			});
 		}
 
-		if (this.doc !== doc) return;
+		if (this.roomId !== roomId || this.userId !== userId) return;
 
 		for (const adapter of ADAPTERS) {
 			this.initializeStore(adapter, doc, userId);
 		}
 
-		this.pollIntervalId = setInterval(
-			() => this.pushLocalChanges(),
-			POLL_INTERVAL_MS,
-		);
+		this.pollIntervalId = setInterval(() => {
+			this.pushLocalChanges();
+		}, POLL_INTERVAL_MS);
 	}
 
 	stop(): void {
@@ -173,8 +196,18 @@ class ChelysAccountSyncService {
 		}
 		this.doc = null;
 		this.roomId = null;
+		this.roomKey = null;
 		this.userId = null;
 		this.snapshots.clear();
+	}
+
+	async reconnect(): Promise<void> {
+		const roomId = this.roomId;
+		const userId = this.userId;
+		const roomKey = this.roomKey;
+		if (!roomId || !userId || !roomKey) return;
+		this.stop();
+		await this.start(roomId, roomKey, userId);
 	}
 
 	private initializeStore(
@@ -187,24 +220,30 @@ class ChelysAccountSyncService {
 		const raw = localStorage.getItem(storageKey);
 		const local = adapter.read(raw);
 
-		const merged: Entries = { ...local };
+		const remote: Entries = {};
 		ymap.forEach((value, key) => {
-			merged[key] =
-				adapter.merge && key in local
-					? adapter.merge(local[key], value)
-					: value;
+			remote[key] = value;
 		});
 
+		const merged: Entries = { ...remote };
+		for (const [key, value] of Object.entries(local)) {
+			merged[key] =
+				adapter.merge && key in remote
+					? adapter.merge(value, remote[key])
+					: value;
+		}
+
 		doc.transact(() => {
-			for (const [key, value] of Object.entries(local)) {
-				if (!ymap.has(key)) ymap.set(key, toPlain(value));
+			for (const [key, value] of Object.entries(merged)) {
+				if (!(key in remote) || !isEqual(remote[key], value)) {
+					ymap.set(key, toPlain(value));
+				}
 			}
 		}, SYNC_ORIGIN);
 
-		if (!isEqual(merged, local)) {
-			localStorage.setItem(storageKey, adapter.write(merged, raw));
-		}
+		localStorage.setItem(storageKey, adapter.write(merged, raw));
 		this.snapshots.set(adapter.name, merged);
+		emitStoreChanged(adapter.name);
 
 		const observer = (
 			event: Y.YMapEvent<unknown>,
@@ -243,6 +282,7 @@ class ChelysAccountSyncService {
 
 		localStorage.setItem(storageKey, adapter.write(entries, raw));
 		this.snapshots.set(adapter.name, entries);
+		emitStoreChanged(adapter.name);
 	}
 
 	private pushLocalChanges(): void {
