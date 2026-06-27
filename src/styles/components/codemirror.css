@@ -446,9 +446,10 @@
    ============================================================ */
 .cm-tooltip {
 	min-width: min-content;
-	border: 1px solid var(--pico-muted-border-color);
+	border: 2px solid var(--pico-muted-border-color) !important;
 	border-radius: var(--radius-sm);
 	padding: var(--space-sm) !important;
+	background-color: var(--pico-secondary-background) !important;
 }
 
 .codemirror-editor-container .cm-tooltip.cm-tooltip-autocomplete > ul {
@@ -651,8 +652,68 @@
 	color: var(--pico-muted-color);
 	font-size: 11px;
 	font-weight: 600;
-	text-transform: uppercase;
-	padding: var(--space-xs) var(--space-sm) 0;
+	padding: var(--space-xs) var(--space-sm);
+	margin-bottom: var(--space-sm);
+	display: inline-flex;
+	align-items: center;
+	width: fit-content;
+	border: 1px solid var(--pico-muted-border-color);
+	border-radius: var(--radius-lg);
+	background-color: var(--pico-background);
+}
+
+.cm-tooltip-section {
+	width: fit-content;
+	overflow-y: auto;
+	max-height: 600px;
+	max-width: 800px;
+	font-size: small;
+}
+
+.cm-tooltip-section pre {
+	border: 1px solid var(--pico-muted-border-color);
+	border-radius: var(--radius-sm);
+}
+
+.cm-tooltip-section pre code {
+	background-color: var(--pico-background);
+}
+
+.cm-tooltip-section .cm-lsp-markdown h1 {
+	font-size: 1.4em;
+}
+
+.cm-tooltip-section .cm-lsp-markdown h2 {
+	font-size: 1.25em;
+}
+
+.cm-tooltip-section .cm-lsp-markdown h3 {
+	font-size: 1.1em;
+}
+
+.cm-tooltip-section .cm-lsp-markdown h4 {
+	font-size: 1em;
+}
+
+.cm-tooltip-section .cm-lsp-markdown h5 {
+	font-size: 0.9em;
+}
+
+.cm-tooltip-section .cm-lsp-markdown h6 {
+	font-size: 0.85em;
+}
+
+.cm-tooltip-section .cm-lsp-markdown :is(h1, h2, h3, h4, h5, h6) {
+	margin: 0.4em 0 0.2em;
+	font-weight: 600;
+	line-height: 1.2;
+}
+
+.cm-tooltip-section .cm-lsp-markdown hr {
+	border: none;
+	border-top: 1px solid currentColor;
+	opacity: 0.3;
+	margin: 0.5em 0;
 }
 
 .cm-code-actions-row {

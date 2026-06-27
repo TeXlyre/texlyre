@@ -86,7 +86,11 @@ function createLSPDiagnosticsExtension(fileName: string): Extension {
 				this.view = view;
 				this.unsubscribe = genericLSPService.onDiagnostics(
 					(configId, params) => {
-						if (params.uri !== fileUri) return;
+						const normalize = (u: string) =>
+							decodeURIComponent(u || '')
+								.replace(/^file:\/+/, '')
+								.replace(/^\/+/, '');
+						if (normalize(params.uri) !== normalize(fileUri)) return;
 
 						const doc = this.view.state.doc;
 						const mapped: Diagnostic[] = (params.diagnostics || []).map(
@@ -159,17 +163,93 @@ function createLSPDiagnosticsExtension(fileName: string): Extension {
 }
 
 function renderHoverContent(content: string): HTMLElement {
+	const escapeHtml = (t: string) =>
+		t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+	const inline = (t: string) =>
+		escapeHtml(t)
+			.replace(/`([^`]+)`/g, '<code>$1</code>')
+			.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+			.replace(/\*(.+?)\*/g, '<em>$1</em>')
+			.replace(
+				/\[([^\]]+)\]\(([^)]+)\)/g,
+				'<a href="$2" target="_blank" rel="noreferrer">$1</a>',
+			);
+
+	const lines = content.split('\n');
+	const out: string[] = [];
+	let inCode = false;
+	let code: string[] = [];
+	let list = false;
+	let para: string[] = [];
+	const flushPara = () => {
+		if (para.length) {
+			out.push(`<p>${inline(para.join(' '))}</p>`);
+			para = [];
+		}
+	};
+	const closeList = () => {
+		if (list) {
+			out.push('</ul>');
+			list = false;
+		}
+	};
+
+	for (const line of lines) {
+		if (/^```/.test(line)) {
+			if (inCode) {
+				out.push(`<pre><code>${escapeHtml(code.join('\n'))}</code></pre>`);
+				code = [];
+				inCode = false;
+			} else {
+				flushPara();
+				closeList();
+				inCode = true;
+			}
+			continue;
+		}
+		if (inCode) {
+			code.push(line);
+			continue;
+		}
+		const heading = line.match(/^(#{1,6})\s+(.*)$/);
+		if (heading) {
+			flushPara();
+			closeList();
+			const lvl = heading[1].length;
+			out.push(`<h${lvl}>${inline(heading[2])}</h${lvl}>`);
+			continue;
+		}
+		if (/^\s*([-*_])\1{2,}\s*$/.test(line)) {
+			flushPara();
+			closeList();
+			out.push('<hr>');
+			continue;
+		}
+		const item = line.match(/^\s*[-*+]\s+(.*)$/);
+		if (item) {
+			flushPara();
+			if (!list) {
+				out.push('<ul>');
+				list = true;
+			}
+			out.push(`<li>${inline(item[1])}</li>`);
+			continue;
+		}
+		if (line.trim() === '') {
+			flushPara();
+			closeList();
+			continue;
+		}
+		para.push(line);
+	}
+	if (inCode)
+		out.push(`<pre><code>${escapeHtml(code.join('\n'))}</code></pre>`);
+	flushPara();
+	closeList();
+
 	const container = document.createElement('div');
-	container.style.whiteSpace = 'pre-wrap';
-	container.innerHTML = content
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
-		.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-		.replace(/\*(.+?)\*/g, '<em>$1</em>')
-		.replace(/`([^`]+)`/g, '<code>$1</code>')
-		.replace(/\n/g, '<br>');
+	container.className = 'cm-lsp-markdown';
+	container.innerHTML = out.join('');
 	return container;
 }
 
@@ -356,13 +436,35 @@ export function getGenericLSPCompletionSources(fileName: string) {
 						continue;
 					}
 
-					const options = result.items.map((item: any) => ({
-						label: item.label,
-						type: item.kind === 1 ? 'text' : 'keyword',
-						detail: item.detail,
-						info: item.documentation,
-						apply: item.insertText || item.label,
-					}));
+					const options = result.items.map((item: any) => {
+						const range = item.textEdit?.range;
+						const insert =
+							item.textEdit?.newText || item.insertText || item.label;
+						return {
+							label: item.label,
+							type: item.kind === 1 ? 'text' : 'keyword',
+							detail: item.detail,
+							info: item.documentation,
+							apply: range
+								? (view: EditorView) => {
+										const from = Math.min(
+											doc.line(Math.min(range.start.line + 1, doc.lines)).from +
+												range.start.character,
+											doc.length,
+										);
+										const to = Math.min(
+											doc.line(Math.min(range.end.line + 1, doc.lines)).from +
+												range.end.character,
+											doc.length,
+										);
+										view.dispatch({
+											changes: { from, to, insert },
+											selection: { anchor: from + insert.length },
+										});
+									}
+								: insert,
+						};
+					});
 
 					return {
 						from: context.pos,
