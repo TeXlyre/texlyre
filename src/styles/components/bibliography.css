@@ -59,37 +59,6 @@
 	flex-shrink: 0;
 }
 
-.view-tabs {
-	display: flex;
-	gap: 0.25rem;
-}
-
-.tab-button {
-	padding: 0.375rem var(--space-sd);
-	border: 1px solid var(--accent-border);
-	background: var(--pico-background);
-	color: var(--text-color);
-	border-radius: 3px;
-	cursor: pointer;
-	font-size: var(--space-sd);
-	transition: all 0.2s ease;
-}
-
-.tab-button:hover:not(:disabled) {
-	background-color: var(--pico-primary-focus);
-}
-
-.tab-button.active {
-	background-color: var(--pico-primary);
-	color: var(--pico-primary-inverse);
-	border-color: var(--pico-primary);
-}
-
-.tab-button:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
-
 .bib-panel-content {
 	flex: 1;
 	overflow: hidden;

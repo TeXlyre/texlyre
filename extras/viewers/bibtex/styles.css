@@ -285,48 +285,6 @@
 	align-items: center;
 }
 
-.view-tabs {
-	display: flex;
-	gap: var(--space-xs);
-}
-
-.tab-button {
-	padding: 0.3rem var(--space-sd);
-	font-size: 0.8rem;
-	background-color: var(--pico-background);
-	border: none;
-	border-right: 1px solid var(--accent-border, #444);
-	color: var(--text-color);
-	cursor: pointer;
-	transition: all 0.2s ease;
-	min-width: 60px;
-}
-
-.tab-button:last-child {
-	border-right: none;
-}
-
-.tab-button:hover {
-	background-color: var(--pico-primary-focus);
-}
-
-.tab-button.active {
-	background-color: var(--pico-primary);
-	color: var(--pico-primary-inverse);
-}
-
-.tab-button:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-	background-color: var(--pico-background);
-	color: var(--pico-secondary);
-}
-
-.tab-button:disabled:hover {
-	background-color: var(--pico-background);
-	color: var(--pico-secondary);
-}
-
 .processing-indicator {
 	color: var(--pico-primary);
 	font-weight: normal;

@@ -113,6 +113,7 @@
 .view-tabs {
 	display: flex;
 	gap: var(--space-xs);
+	padding: var(--space-xs);
 }
 
 .tab-button {
@@ -121,14 +122,20 @@
 	background: none;
 	border: none;
 	cursor: pointer;
-	font-size: 0.65rem;
+	font-size: 0.8rem;
 	color: var(--text-color);
 	transition: background-color var(--transition-normal);
 }
 
 .tab-button.active {
 	background-color: var(--pico-primary-focus);
+	color: var(--pico-primary);
 	font-weight: 500;
+}
+
+.tab-button:hover:not(:disabled) {
+	background-color: var(--pico-primary-focus);
+	color: var(--pico-secondary);
 }
 
 .tab-button:disabled {
