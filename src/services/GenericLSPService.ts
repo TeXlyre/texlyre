@@ -52,6 +52,7 @@ class GenericLSPService {
 	private statusListeners: Set<StatusListener> = new Set();
 	private diagnosticListeners: Set<DiagnosticListener> = new Set();
 	private applyEditListeners: Set<ApplyEditListener> = new Set();
+	private lastDiagnostics: Map<string, string> = new Map();
 
 	registerConfig(config: LSPServerConfig) {
 		this.configs.set(config.id, config);
@@ -307,6 +308,13 @@ class GenericLSPService {
 					parsed.method === 'textDocument/publishDiagnostics' &&
 					parsed.params
 				) {
+					const fingerprintKey = `${configId}:${parsed.params.uri}`;
+					const fingerprint = JSON.stringify(parsed.params.diagnostics ?? []);
+					if (this.lastDiagnostics.get(fingerprintKey) === fingerprint) {
+						return;
+					}
+					this.lastDiagnostics.set(fingerprintKey, fingerprint);
+
 					this.diagnosticListeners.forEach((listener) => {
 						try {
 							listener(configId, parsed.params);
@@ -509,6 +517,15 @@ class GenericLSPService {
 		};
 	}
 
+	private clearDiagnosticsCacheForConfig(configId: string) {
+		const prefix = `${configId}:`;
+		for (const key of this.lastDiagnostics.keys()) {
+			if (key.startsWith(prefix)) {
+				this.lastDiagnostics.delete(key);
+			}
+		}
+	}
+
 	private disconnectClient(configId: string) {
 		const client = this.clients.get(configId);
 		if (client) {
@@ -522,6 +539,7 @@ class GenericLSPService {
 			}
 			this.clients.delete(configId);
 		}
+		this.clearDiagnosticsCacheForConfig(configId);
 		this.setConnectionStatus(configId, 'disconnected');
 	}
 
@@ -603,6 +621,7 @@ class GenericLSPService {
 		this.statusListeners.clear();
 		this.diagnosticListeners.clear();
 		this.applyEditListeners.clear();
+		this.lastDiagnostics.clear();
 	}
 }
 
