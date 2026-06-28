@@ -70,7 +70,12 @@ export const ChelysProvider: React.FC<ChelysProviderProps> = ({ children }) => {
 		const keys = chelysService.getRoomKeys(user.id);
 		setIsLoggedIn(keys !== null);
 		if (keys) {
-			void chelysAccountSyncService.start(keys.roomId, keys.roomKey, user.id);
+			void chelysAccountSyncService.start(
+				keys.roomId,
+				keys.roomKey,
+				user.id,
+				user.username,
+			);
 		}
 	}, [user, isGuestUser]);
 
