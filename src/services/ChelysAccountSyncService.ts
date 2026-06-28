@@ -131,11 +131,17 @@ class ChelysAccountSyncService {
 	private roomId: string | null = null;
 	private roomKey: string | null = null;
 	private userId: string | null = null;
+	private username: string | null = null;
 	private pollIntervalId: ReturnType<typeof setInterval> | null = null;
 	private unobservers: Array<() => void> = [];
 	private snapshots = new Map<string, Entries>();
 
-	async start(roomId: string, roomKey: string, userId: string): Promise<void> {
+	async start(
+		roomId: string,
+		roomKey: string,
+		userId: string,
+		username: string,
+	): Promise<void> {
 		if (this.doc && this.roomId === roomId && this.userId === userId) return;
 		this.stop();
 
@@ -149,11 +155,12 @@ class ChelysAccountSyncService {
 		this.roomId = roomId;
 		this.roomKey = roomKey;
 		this.userId = userId;
+		this.username = username;
 
 		collabService.setUserInfo(roomId, COLLECTION_NAME, {
 			id: userId,
-			username: userId,
-			name: userId,
+			username,
+			name: username,
 			color: '#7da8c4',
 			colorLight: '#a8c4dc',
 			passwordHash: '',
@@ -198,6 +205,7 @@ class ChelysAccountSyncService {
 		this.roomId = null;
 		this.roomKey = null;
 		this.userId = null;
+		this.username = null;
 		this.snapshots.clear();
 	}
 
@@ -205,9 +213,10 @@ class ChelysAccountSyncService {
 		const roomId = this.roomId;
 		const userId = this.userId;
 		const roomKey = this.roomKey;
-		if (!roomId || !userId || !roomKey) return;
+		const username = this.username;
+		if (!roomId || !userId || !roomKey || !username) return;
 		this.stop();
-		await this.start(roomId, roomKey, userId);
+		await this.start(roomId, roomKey, userId, username);
 	}
 
 	private initializeStore(

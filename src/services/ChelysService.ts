@@ -87,7 +87,7 @@ class ChelysService {
 			password,
 			prfOutput,
 		});
-		this.persistRoom(user.id, identity);
+		this.persistRoom(user.id, identity, username);
 		if (!user.isChelysEnrolled) {
 			await authService.updateUser({ ...user, isChelysEnrolled: true });
 		}
@@ -127,18 +127,23 @@ class ChelysService {
 			password,
 			prfOutput,
 		});
-		this.persistRoom(user.id, identity);
+		this.persistRoom(user.id, identity, user.username);
 		if (!user.isChelysEnrolled) {
 			await authService.updateUser({ ...user, isChelysEnrolled: true });
 		}
 	}
 
-	private persistRoom(userId: string, identity: DerivedIdentity): void {
+	private persistRoom(
+		userId: string,
+		identity: DerivedIdentity,
+		username: string,
+	): void {
 		localStorage.setItem(roomKey(userId), JSON.stringify(identity));
 		void chelysAccountSyncService.start(
 			identity.roomId,
 			identity.roomKey,
 			userId,
+			username,
 		);
 	}
 
