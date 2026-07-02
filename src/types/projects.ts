@@ -1,9 +1,11 @@
 // src/types/projects.ts
+export type ProjectType = 'latex' | 'typst' | (string & {});
+
 export interface Project {
 	id: string;
 	name: string;
 	description: string;
-	type: 'latex' | 'typst';
+	type: ProjectType;
 	docUrl: string;
 	createdAt: number;
 	updatedAt: number;
