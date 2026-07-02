@@ -1,5 +1,5 @@
 // src/services/AutoSaveService.ts
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 
 import { fileStorageService } from './FileStorageService';
 
