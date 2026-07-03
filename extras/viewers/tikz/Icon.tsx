@@ -1,4 +1,4 @@
-// Icon.tsx
+// extras/viewers/tikz/Icon.tsx
 import type React from 'react';
 
 export const TikzIcon: React.FC<{ className?: string }> = ({ className }) => (

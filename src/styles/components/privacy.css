@@ -53,17 +53,6 @@
 	color: var(--text-secondary);
 }
 
-.checkbox-control {
-	display: flex;
-	align-items: flex-start;
-	gap: 0.5rem;
-	cursor: pointer;
-}
-
-.checkbox-control input[type="checkbox"] {
-	margin-top: 0.125rem;
-}
-
 .gdpr-notice {
 	margin-top: 1.5rem;
 	padding: 1rem;

@@ -257,7 +257,12 @@ input[type="range"]:disabled::-moz-range-thumb {
 	flex-direction: row;
 	align-items: center;
 	gap: var(--space-sm);
+	cursor: pointer;
 }
+
+/* .checkbox-control input[type="checkbox"] {
+	margin-top: var(--space-xs);
+} */
 
 .required {
 	color: var(--color-error);
