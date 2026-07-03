@@ -446,7 +446,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 										className='dropdown-item'
 										onClick={(e) => {
 											e.stopPropagation();
-					اق				onCreateSubfolder(node.path);
+											onCreateSubfolder(node.path);
 										}}
 									>
 										<FolderPlusIcon />
