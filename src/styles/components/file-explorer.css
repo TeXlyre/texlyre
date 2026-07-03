@@ -132,6 +132,7 @@
 	color: var(--text-color);
 	padding: var(--space-xs) var(--space-sm);
 	margin-left: 1rem;
+	gap: var(--space-sm);
 }
 
 .file-node:hover {
@@ -186,11 +187,42 @@
 }
 
 .file-icon {
-	display: flex;
 	align-items: center;
-	margin-right: var(--space-sm);
 	color: var(--pico-secondary);
 	padding-top: var(--space-xs);
+	margin-top: var(--space-xs);
+	position: relative;
+	display: inline-flex;
+	justify-content: center;
+	width: 0.8rem;
+	height: 0.8rem;
+	flex: 0 0 0.8rem;
+	line-height: 1;
+}
+
+.file-icon > svg {
+	width: 0.8rem;
+	height: 0.8rem;
+	max-width: 0.8rem;
+	max-height: 0.8rem;
+	flex-shrink: 0;
+}
+
+.file-icon .file-linked-indicator {
+	position: absolute;
+	top: -0.18rem;
+	right: -0.18rem;
+	display: block;
+	width: 0.4rem;
+	height: 0.4rem;
+	margin: 0;
+	border-radius: 999px;
+	background-color: var(--pico-primary);
+	box-shadow: 0 0 0 1px var(--pico-background);
+	color: transparent;
+	font-size: 0;
+	line-height: 0;
+	pointer-events: none;
 }
 
 .file-name {

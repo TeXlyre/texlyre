@@ -18,6 +18,11 @@
 	background-color: var(--pico-secondary-background);
 }
 
+.plugin-header .file-info .file-icon {
+	padding: 0;
+	margin: 0;
+}
+
 .plugin-header .file-info h3 {
 	margin: 0;
 	font-size: 0.85rem;

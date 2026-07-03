@@ -15,7 +15,6 @@ import {
 	FileIcon,
 	UnknownFileIcon,
 	FilePlusIcon,
-	FileTextIcon,
 	FolderIcon,
 	FolderOpenIcon,
 	FolderPlusIcon,
@@ -146,6 +145,18 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 		return viewer?.icon || null;
 	};
 
+	const renderFileIcon = (node: FileNode) => {
+		const ViewerIcon = getViewerIcon(node);
+		const Icon = ViewerIcon ?? (node.isBinary ? UnknownFileIcon : FileIcon);
+
+		return (
+			<>
+				<Icon />
+				{hasDocument && <span className='file-linked-indicator'>•</span>}
+			</>
+		);
+	};
+
 	const shouldShowLinkButton =
 		node.type === 'file' &&
 		(!node.isBinary ||
@@ -217,16 +228,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 					{node.type === 'directory' ? (
 						<FolderIcon isOpen={isExpanded} />
 					) : (
-						(() => {
-							if (hasDocument) {
-								return <FileTextIcon />;
-							}
-							const ViewerIcon = getViewerIcon(node);
-							if (ViewerIcon) {
-								return <ViewerIcon />;
-							}
-							return node.isBinary ? <UnknownFileIcon /> : <FileIcon />;
-						})()
+						renderFileIcon(node)
 					)}
 				</span>
 
@@ -264,7 +266,6 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 					<>
 						<span className='file-name'>
 							{node.name}
-							{hasDocument && <span className='file-linked-indicator'>•</span>}
 							{hasViewer && (
 								<span
 									className='file-viewer-indicator'
@@ -311,7 +312,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({
 							>
 								<LinkIcon />
 								{isTemporaryFile(node.path) && (
-									<span className='warning-indicator'>{t('\u26A0\uFE0F')}</span>
+									<span className='warning-indicator'>{t('⚠️')}</span>
 								)}
 							</button>
 						) : (
