@@ -463,6 +463,17 @@ class AuthService {
 		return !!this.currentUser;
 	}
 
+	private async hashPasswordOld(password: string): Promise<string> {
+		const msgBuffer = new TextEncoder().encode(password);
+		const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+		const hashArray = Array.from(new Uint8Array(hashBuffer));
+		return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+	}
+
+	private async verifyPasswordHashOld(passwordHash: string, password: string): Promise<boolean> {
+		return passwordHash === await this.hashPasswordOld(password);
+	}
+
 	async hashPassword(password: string): Promise<string> {
 		const salt = new Uint8Array(16);
 		window.crypto.getRandomValues(salt);
@@ -484,8 +495,16 @@ class AuthService {
 	async verifyPassword(userId: string, password: string): Promise<boolean> {
 		if (!this.db) await this.initialize();
 
-		const user = await this.getUserById(userId);
+		let user = await this.getUserById(userId);
 		if (!user) return false;
+
+		// update user.passwordHash if old hashing method is used
+		if (!user.passwordHash.startsWith("$argon2")) {
+			const isValid = await this.verifyPasswordHashOld(user.passwordHash, password);
+			if (isValid) {
+				user = await this.updatePassword(user.id, password);
+			}
+		}
 
 		return this.verifyPasswordHash(user.passwordHash, password);
 	}
