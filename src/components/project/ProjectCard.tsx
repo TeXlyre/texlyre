@@ -3,6 +3,7 @@ import type React from 'react';
 import { useRef, useState, useEffect } from 'react';
 
 import { t } from '@/i18n';
+import { pluginRegistry } from '../../plugins/PluginRegistry';
 import type { Project } from '../../types/projects.ts';
 import ProjectBackupControls from '../backup/ProjectBackupControls';
 import {
@@ -93,6 +94,21 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 		};
 	}, []);
 
+	const getViewerIcon = (fileName?: string): React.ComponentType => {
+		if (!fileName) return FileIcon;
+		return pluginRegistry.getViewerForFile(fileName)?.icon ?? FileIcon;
+	};
+
+	const renderOpenIcon = (
+		Icon: React.ComponentType,
+		isCollaborative = false,
+	) => (
+		<span className='file-icon'>
+			<Icon />
+			{isCollaborative && <span className='file-linked-indicator'>•</span>}
+		</span>
+	);
+
 	const getDropdownDisplayText = () => {
 		if (project.lastOpenedFilePath) {
 			const fileName =
@@ -109,16 +125,18 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 	const getDropdownContent = () => {
 		const displayText = getDropdownDisplayText();
 		if (project.lastOpenedFilePath) {
+			const fileName = project.lastOpenedFilePath.split('/').pop();
+			const FileViewerIcon = getViewerIcon(fileName);
 			return (
 				<>
-					<FileIcon />
+					{renderOpenIcon(FileViewerIcon, !!project.lastOpenedDocId)}
 					<span>{displayText}</span>
 				</>
 			);
 		} else if (project.lastOpenedDocId) {
 			return (
 				<>
-					<FileTextIcon />
+					{renderOpenIcon(FileTextIcon, true)}
 					<span>{displayText}</span>
 				</>
 			);
