@@ -19,6 +19,7 @@ import './styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './TikzViewerPlugin';
 
 const BASE_PATH = __BASE_PATH__;
+const TIKZ_STORAGE_KEY = 'texlyre:tikz-editor:storage';
 
 const DEFAULT_TIKZ_SOURCE = `\begin{tikzpicture}
   \draw[thick, blue] (0,0) circle (1cm);
@@ -46,6 +47,8 @@ type TikzEmbedMessage = {
 	modified?: boolean;
 	version?: string;
 	settings?: TikzHostSettings;
+	key?: string;
+	value?: string;
 	[key: string]: unknown;
 };
 
@@ -141,7 +144,10 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		() => new URL(baseUrl, window.location.origin).origin,
 		[baseUrl],
 	);
-	const embedUrl = useMemo(() => `${baseUrl}/index.html`, [baseUrl]);
+	const embedUrl = useMemo(() => {
+		const storage = window.localStorage.getItem(TIKZ_STORAGE_KEY);
+		return `${baseUrl}/index.html${storage ? `#storage=${encodeURIComponent(storage)}` : ''}`;
+	}, [baseUrl]);
 	const tikzHostSettings = useMemo<TikzHostSettings>(
 		() => ({ general: { colorScheme: tikzColorScheme } }),
 		[tikzColorScheme],
@@ -258,6 +264,16 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 
 			try {
 				const message = JSON.parse(event.data) as TikzEmbedMessage;
+				if (
+					message.event === 'persistence-save' &&
+					typeof message.key === 'string' &&
+					typeof message.value === 'string'
+				) {
+					const storage = JSON.parse(window.localStorage.getItem(TIKZ_STORAGE_KEY) || '{}') as Record<string, string>;
+					storage[message.key] = message.value;
+					window.localStorage.setItem(TIKZ_STORAGE_KEY, JSON.stringify(storage));
+					return;
+				}
 				if (message.error) {
 					if (pendingExportRef.current) {
 						pendingExportRef.current.reject(new Error(String(message.error)));
