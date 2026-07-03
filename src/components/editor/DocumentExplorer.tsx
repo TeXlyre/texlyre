@@ -3,6 +3,7 @@ import type React from 'react';
 import { useRef, useState } from 'react';
 
 import { t } from '@/i18n';
+import { pluginRegistry } from '../../plugins/PluginRegistry';
 import { useCollab } from '../../hooks/useCollab';
 import CollaboratorAvatars from '../common/CollaboratorAvatars';
 import type { Document } from '../../types/documents';
@@ -64,6 +65,19 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 
 	const [syncSession, setSyncSession] = useState<string | null>(null);
 	const [syncProgress, setSyncProgress] = useState({ current: 0, total: 0 });
+
+	const getDocumentIcon = (docName: string): React.ComponentType =>
+		pluginRegistry.getViewerForFile(docName)?.icon ?? FileTextIcon;
+
+	const renderDocumentIcon = (docName: string) => {
+		const DocumentIcon = getDocumentIcon(docName);
+		return (
+			<>
+				<DocumentIcon />
+				<span className='file-linked-indicator'>•</span>
+			</>
+		);
+	};
 
 	const handleStartRename = (docId: string) => {
 		setEditingDocId(docId);
@@ -140,9 +154,6 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 			);
 
 			setSyncSession(sessionId);
-			console.log(
-				'[DocumentExplorer] All documents connected for real-time sync',
-			);
 		} catch (error) {
 			console.error('Error starting document sync:', error);
 		}
@@ -155,7 +166,6 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 			collabService.stopSyncAllDocuments(syncSession);
 			setSyncSession(null);
 			setSyncProgress({ current: 0, total: 0 });
-			console.log('[DocumentExplorer] Document sync stopped');
 		} catch (error) {
 			console.error('Error stopping document sync:', error);
 		}
@@ -213,7 +223,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 							backgroundColor: 'var(--accent-color)',
 						}}
 					>
-						{t('\uD83D\uDD04')}
+						{t('🔄')}
 
 						{getSyncButtonText()}
 						{t('- Real-time sync active')}
@@ -227,9 +237,7 @@ const DocumentExplorer: React.FC<FileViewerProps> = ({
 							className={`file-node ${selectedDocId === doc.id ? 'selected' : ''}`}
 							onClick={() => handleDocumentSelect(doc.id)}
 						>
-							<span className='file-icon'>
-								<FileTextIcon />
-							</span>
+							<span className='file-icon'>{renderDocumentIcon(doc.name)}</span>
 							{editingDocId === doc.id ? (
 								<input
 									type='text'
