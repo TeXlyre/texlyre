@@ -57,6 +57,7 @@ import './styles/components/typesetter.css';
 import './styles/components/splash-screen.css';
 import './styles/components/keyboard-shortcuts.css';
 import './styles/components/privacy.css';
+import './styles/components/collaborative-icons.css';
 import AppRouter from './components/app/AppRouter';
 import AppBootstrap from './components/app/AppSettingBootrap';
 import PasswordModal from './components/auth/PasswordModal';
@@ -121,61 +122,35 @@ function App() {
 	}
 
 	return (
-		<>
-			<SplashScreen isVisible={isInitializing} />
-			<SettingsProvider>
-				<LanguageProvider>
-					<OfflineProvider>
-						<AuthProvider>
-							<ChelysProvider>
-								<PropertiesProvider>
-									<RecordsProvider>
-										<ThemeProvider
-											defaultThemeId='texlyre-theme'
-											defaultVariant='system'
-										>
-											<AppBootstrap />
-											<SecretsProvider>
-												<FileSystemBackupProvider>
-													<LSPConfigProvider>
-														<EditorProvider>
-															<AppContent />
-														</EditorProvider>
-													</LSPConfigProvider>
-												</FileSystemBackupProvider>
-											</SecretsProvider>
-										</ThemeProvider>
-									</RecordsProvider>
-								</PropertiesProvider>
-							</ChelysProvider>
-						</AuthProvider>
-					</OfflineProvider>
-				</LanguageProvider>
-			</SettingsProvider>
-		</>
-	);
-}
-
-function AppContent() {
-	const {
-		isPasswordModalOpen,
-		passwordModalMessage,
-		hidePasswordModal,
-		submitPassword,
-	} = useContext(SecretsContext);
-
-	return (
-		<>
-			<AppRouter />
-			<ConflictResolutionModal />
-			<FileConflictModal />
-			<PasswordModal
-				isOpen={isPasswordModalOpen}
-				onClose={hidePasswordModal}
-				onPasswordSubmit={submitPassword}
-				message={passwordModalMessage}
-			/>
-		</>
+		<ThemeProvider>
+			<LanguageProvider>
+				<SettingsProvider>
+					<PropertiesProvider>
+						<RecordsProvider>
+							<SecretsProvider>
+								<OfflineProvider>
+									<AuthProvider>
+										<EditorProvider>
+											<ChelysProvider>
+												<LSPConfigProvider>
+													<FileSystemBackupProvider>
+														<AppBootstrap />
+														<FileConflictModal />
+														<PasswordModal />
+														<ConflictResolutionModal />
+														<AppRouter />
+													</FileSystemBackupProvider>
+												</LSPConfigProvider>
+											</ChelysProvider>
+										</EditorProvider>
+									</AuthProvider>
+								</OfflineProvider>
+							</SecretsProvider>
+						</RecordsProvider>
+					</PropertiesProvider>
+				</SettingsProvider>
+			</LanguageProvider>
+		</ThemeProvider>
 	);
 }
 
