@@ -139,17 +139,6 @@ export const SecretsProvider: React.FC<SecretsProviderProps> = ({
 		[],
 	);
 
-	const _hashWithPassword = useCallback(
-		async (data: string, password: string): Promise<string> => {
-			const encoder = new TextEncoder();
-			const combined = encoder.encode(data + password);
-			const hashBuffer = await crypto.subtle.digest('SHA-256', combined);
-			const hashArray = Array.from(new Uint8Array(hashBuffer));
-			return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-		},
-		[],
-	);
-
 	const encryptWithPassword = useCallback(
 		async (data: string, password: string): Promise<string> => {
 			const encoder = new TextEncoder();
