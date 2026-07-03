@@ -28,7 +28,7 @@ TeXlyre provides comment and chat features for real-time exchanges, reviews, and
 <img src="showcase/chat_zoomed.png" alt="Collaborators using the chat panel to discuss progress">
 </p>
 
-TeXlyre also includes an embedded diagram editor powered by [Draw.io](https://www.drawio.com/), enabling collaborators to create and edit diagrams in real-time directly within a project.
+TeXlyre also includes embedded diagram editors including [Draw.io](https://www.drawio.com/) and [TikZ Editor](https://tikz.dev), enabling collaborators to create and edit diagrams in real-time directly within a project.
 
 <p align="center">
 <img src="showcase/collab_cursor_drawio.png" alt="Collaborators editing a draw.io diagram simultaneously within a TeXlyre project">
@@ -129,7 +129,7 @@ Moreover, you can start your project from a template and share the link with you
 
 TeXlyre's architecture emphasizes **local-first principles** while enabling real-time collaboration. The React frontend communicates with Yjs documents stored in IndexedDB, providing offline-first functionality. WebRTC establishes direct peer connections for real-time synchronization, while **[SwiftLaTeX](https://github.com/SwiftLaTeX/SwiftLaTeX),[texlyre-busytex](https://github.com/TeXlyre/texlyre-busytex)** and **[typst.ts](https://github.com/Myriad-Dreamin/typst.ts)** handle LaTeX and Typst compilation entirely in the browser.
 
-The **plugin system** allows extensibility through custom viewers, renderers, and backup providers. Core plugins handle PDF rendering, Bibliography cleaning, LaTeX and Typst log visualization, embedded **[Milkdown](https://milkdown.dev/)** markdown editor and **[Draw.io](https://drawio.com)** diagram editor with collaborative support, **[Zotero](https://www.zotero.org/)** and **[OpenAlex](https://www.openalex.org/)** reference search, import, and update panel, file system backups, and repository backups to/from GitHub, GitLab, Gitea, and Codeberg (Forgejo). Theme plugins also provide customizable layouts and visual styles.
+The **plugin system** allows extensibility through custom viewers, renderers, and backup providers. Core plugins handle PDF rendering, Bibliography cleaning, LaTeX and Typst log visualization, embedded **[Milkdown](https://milkdown.dev/)** markdown editor, **[TikZ](https://tikz.dev)** and **[Draw.io](https://drawio.com)** diagram editors with collaborative support, **[Zotero](https://www.zotero.org/)** and **[OpenAlex](https://www.openalex.org/)** reference search, import, and update panel, file system backups, and repository backups to/from GitHub, GitLab, Gitea, and Codeberg (Forgejo). Theme plugins also provide customizable layouts and visual styles.
 
 <p align="center">
   <img src="showcase/zotero_bib_panel.png"
@@ -243,6 +243,7 @@ TeXlyre builds upon several key technologies:
 
 ### Diagram & Visualization
 - **[Draw.io](https://github.com/jgraph/drawio)** - Diagramming tool for collaborative diagram editing
+- **[TikZ Editor](https://github.com/DominikPeters/tikz-editor)** - WYSIWYG editor for TikZ diagrams in LaTeX with collaborative editing support
 - **[MathLive](https://github.com/arnog/mathlive)** - Math rendering and full editing with built-in symbol and expression keyboard
 - **[Detypify](https://github.com/QuarticCat/detypify)** - Handwritten symbol recognition powered by a client-side ONNX model, used for draw-to-insert symbol search
 
