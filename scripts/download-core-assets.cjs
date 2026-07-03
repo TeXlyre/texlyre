@@ -19,6 +19,15 @@ const ASSETS = [
 			`drawio-embed-mirror-${version.substring(1)}/drawio-embed/`,
 	},
 	{
+		name: 'tikz-editor',
+		version: 'v0.5.2',
+		url: (version) =>
+			`https://github.com/TeXlyre/tikz-editor-embed-mirror/archive/refs/tags/${version}.zip`,
+		dest: path.resolve(__dirname, '../public/core/tikz-editor'),
+		extractPath: (version) =>
+			`tikz-editor-embed-mirror-${version.substring(1)}/tikz-editor/`,
+	},
+	{
 		name: 'tex-fmt',
 		version: 'v0.5.7',
 		url: (version) =>

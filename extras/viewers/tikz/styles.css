@@ -1,0 +1,62 @@
+/* extras/viewers/tikz/styles.css */
+.tikz-viewer-container {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+	background: var(--background-primary, #ffffff);
+}
+
+.tikz-viewer-content {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
+	background: var(--background-secondary, #f8f9fa);
+}
+
+.tikz-iframe {
+	width: 100%;
+	height: 100%;
+	border: 0;
+	background: white;
+	display: block;
+}
+
+.tikz-error-message {
+	position: absolute;
+	top: 0.75rem;
+	left: 0.75rem;
+	right: 0.75rem;
+	z-index: 20;
+	padding: 0.75rem 1rem;
+	border-radius: 0.5rem;
+}
+
+.tikz-splash-screen {
+	position: absolute;
+	inset: 0;
+	z-index: 10;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.75rem;
+	background: var(--background-primary, #ffffff);
+	color: var(--text-secondary, #6b7280);
+}
+
+.tikz-spinner {
+	width: 2rem;
+	height: 2rem;
+	border: 3px solid var(--border-color, #d1d5db);
+	border-top-color: var(--accent-color, #3b82f6);
+	border-radius: 50%;
+	animation: tikz-spin 0.9s linear infinite;
+}
+
+@keyframes tikz-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}

@@ -49,8 +49,8 @@ const config: TexlyreConfig = {
     },
 
     plugins: {
-        collaborative_viewers: ['bibtex', 'drawio', 'milkdown'],
-        viewers: ['bibtex', 'image', 'media', 'pdf', 'drawio', 'milkdown'],
+        collaborative_viewers: ['bibtex', 'drawio', 'tikz', 'milkdown'],
+        viewers: ['bibtex', 'image', 'media', 'pdf', 'drawio', 'tikz', 'milkdown'],
         renderers: ['pdf', 'canvas'],
         loggers: ['latex_visualizer', 'typst_visualizer'],
         bibliography: ['zotero', 'openalex'], // 'jabref' 
