@@ -1064,7 +1064,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 							className={activeView === 'documents' ? 'active' : ''}
 							onClick={handleSwitchToDocuments}
 						>
-							{t('Docs')}
+							{t('Collab')}
 						</button>
 
 						<button

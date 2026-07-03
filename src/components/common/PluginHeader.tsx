@@ -66,7 +66,8 @@ export const PluginHeader: React.FC<PluginHeaderProps> = ({
 	const formattedTooltip = tooltipInfo
 		? formatTooltipInfo(tooltipInfo, pluginName, pluginVersion)
 		: '';
-	const ViewerIcon = pluginRegistry.getViewerForFile(fileName)?.icon ?? FileIcon;
+	const ViewerIcon =
+		pluginRegistry.getViewerForFile(fileName)?.icon ?? FileIcon;
 	const isCollaborativeHeader =
 		!!linkedFileInfo || pluginName?.toLowerCase().includes('collaborative');
 
