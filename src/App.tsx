@@ -122,35 +122,61 @@ function App() {
 	}
 
 	return (
-		<ThemeProvider>
-			<LanguageProvider>
-				<SettingsProvider>
-					<PropertiesProvider>
-						<RecordsProvider>
-							<SecretsProvider>
-								<OfflineProvider>
-									<AuthProvider>
-										<EditorProvider>
-											<ChelysProvider>
-												<LSPConfigProvider>
-													<FileSystemBackupProvider>
-														<AppBootstrap />
-														<FileConflictModal />
-														<PasswordModal />
-														<ConflictResolutionModal />
-														<AppRouter />
-													</FileSystemBackupProvider>
-												</LSPConfigProvider>
-											</ChelysProvider>
-										</EditorProvider>
-									</AuthProvider>
-								</OfflineProvider>
-							</SecretsProvider>
-						</RecordsProvider>
-					</PropertiesProvider>
-				</SettingsProvider>
-			</LanguageProvider>
-		</ThemeProvider>
+		<>
+			<SplashScreen isVisible={isInitializing} />
+			<SettingsProvider>
+				<LanguageProvider>
+					<OfflineProvider>
+						<AuthProvider>
+							<ChelysProvider>
+								<PropertiesProvider>
+									<RecordsProvider>
+										<ThemeProvider
+											defaultThemeId='texlyre-theme'
+											defaultVariant='system'
+										>
+											<AppBootstrap />
+											<SecretsProvider>
+												<FileSystemBackupProvider>
+													<LSPConfigProvider>
+														<EditorProvider>
+															<AppContent />
+														</EditorProvider>
+													</LSPConfigProvider>
+												</FileSystemBackupProvider>
+											</SecretsProvider>
+										</ThemeProvider>
+									</RecordsProvider>
+								</PropertiesProvider>
+							</ChelysProvider>
+						</AuthProvider>
+					</OfflineProvider>
+				</LanguageProvider>
+			</SettingsProvider>
+		</>
+	);
+}
+
+function AppContent() {
+	const {
+		isPasswordModalOpen,
+		passwordModalMessage,
+		hidePasswordModal,
+		submitPassword,
+	} = useContext(SecretsContext);
+
+	return (
+		<>
+			<AppRouter />
+			<ConflictResolutionModal />
+			<FileConflictModal />
+			<PasswordModal
+				isOpen={isPasswordModalOpen}
+				onClose={hidePasswordModal}
+				onPasswordSubmit={submitPassword}
+				message={passwordModalMessage}
+			/>
+		</>
 	);
 }
 
