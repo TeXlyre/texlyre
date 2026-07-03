@@ -9,9 +9,7 @@ export const getTikzViewerSettings = (): Setting[] => [
 		subcategory: t('TikZ Editor'),
 		type: 'checkbox',
 		label: t('Auto-save in editor'),
-		description: t(
-			'Ask the embedded TikZ editor to emit autosave updates while editing',
-		),
+		description: t('Automatically save changes in the TikZ editor'),
 		defaultValue: true,
 	},
 	{
@@ -20,7 +18,21 @@ export const getTikzViewerSettings = (): Setting[] => [
 		subcategory: t('TikZ Editor'),
 		type: 'checkbox',
 		label: t('Auto-save to file'),
-		description: t('Automatically persist autosave updates to the file system'),
+		description: t('Automatically save changes to the file system'),
 		defaultValue: true,
+	},
+	{
+		id: 'tikz-viewer-theme',
+		category: t('Viewers'),
+		subcategory: t('TikZ Editor'),
+		type: 'select',
+		label: t('Theme'),
+		description: t('Theme for the TikZ editor'),
+		defaultValue: 'auto-app',
+		options: [
+			{ label: t('Auto (follows app theme)'), value: 'auto-app' },
+			{ label: t('Light'), value: 'light' },
+			{ label: t('Dark'), value: 'dark' },
+		],
 	},
 ];

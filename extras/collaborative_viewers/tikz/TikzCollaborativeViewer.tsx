@@ -13,6 +13,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
+import { useTheme } from '@/hooks/useTheme';
 import type { CollaborativeViewerProps } from '@/plugins/PluginInterface';
 import { collabService } from '@/services/CollabService';
 import { fileStorageService } from '@/services/FileStorageService';
@@ -22,12 +23,22 @@ import '../../viewers/tikz/styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './TikzCollaborativeViewerPlugin';
 
 const BASE_PATH = __BASE_PATH__;
+const TIKZ_STORAGE_KEY = '.tikz-editor-config';
 
 const DEFAULT_TIKZ_SOURCE = `\\begin{tikzpicture}
   \\draw[thick, blue] (0,0) circle (1cm);
   \\node at (0,0) {TikZ};
 \\end{tikzpicture}
 `;
+
+type TikzThemeSetting = 'auto-app' | 'light' | 'dark';
+type TikzColorScheme = 'light' | 'dark';
+
+type TikzHostSettings = {
+	general?: {
+		colorScheme?: TikzColorScheme;
+	};
+};
 
 type TikzEmbedMessage = {
 	event?: string;
@@ -40,6 +51,9 @@ type TikzEmbedMessage = {
 	fileName?: string;
 	modified?: boolean;
 	version?: string;
+	settings?: TikzHostSettings;
+	key?: string;
+	value?: string;
 	[key: string]: unknown;
 };
 
@@ -109,6 +123,7 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	onUpdateContent,
 }) => {
 	const { getSetting } = useSettings();
+	const { isCurrentVariantDark } = useTheme();
 	const { user } = useAuth();
 	const fileInfo = usePluginFileInfo(fileId, fileName);
 
@@ -116,6 +131,8 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		(getSetting('tikz-viewer-auto-save-editor')?.value as boolean) ?? true;
 	const autoSaveFile =
 		(getSetting('tikz-viewer-auto-save-file')?.value as boolean) ?? true;
+	const tikzTheme =
+		(getSetting('tikz-viewer-theme')?.value as TikzThemeSetting) ?? 'auto-app';
 
 	const [isLoading, setIsLoading] = useState(true);
 	const [isSaving, setIsSaving] = useState(false);
@@ -149,12 +166,26 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 	const projectId = useMemo(() => docUrl.split(':').pop() || '', [docUrl]);
 	const collectionName = useMemo(() => `yjs_${documentId}`, [documentId]);
 
+	const resolvedTikzColorScheme = useMemo<TikzColorScheme>(() => {
+		if (tikzTheme === 'auto-app') {
+			return isCurrentVariantDark ? 'dark' : 'light';
+		}
+		return tikzTheme;
+	}, [tikzTheme, isCurrentVariantDark]);
+
 	const baseUrl = `${BASE_PATH}/core/tikz-editor`;
 	const tikzOrigin = useMemo(
 		() => new URL(baseUrl, window.location.origin).origin,
 		[baseUrl],
 	);
-	const embedUrl = useMemo(() => `${baseUrl}/index.html`, [baseUrl]);
+	const embedUrl = useMemo(() => {
+		const storage = window.localStorage.getItem(TIKZ_STORAGE_KEY);
+		return `${baseUrl}/index.html${storage ? `#storage=${encodeURIComponent(storage)}` : ''}`;
+	}, [baseUrl]);
+	const tikzHostSettings = useMemo<TikzHostSettings>(
+		() => ({ general: { colorScheme: resolvedTikzColorScheme } }),
+		[resolvedTikzColorScheme],
+	);
 
 	useEffect(() => {
 		setIsPersistenceSynced(false);
@@ -279,6 +310,11 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		[iframeLoaded, tikzOrigin],
 	);
 
+	useEffect(() => {
+		if (!iframeLoaded) return;
+		sendMessageToTikz({ action: 'settings', settings: tikzHostSettings });
+	}, [iframeLoaded, sendMessageToTikz, tikzHostSettings]);
+
 	const handleSave = useCallback(
 		async (sourceToSave: string) => {
 			if (!fileId) return;
@@ -336,6 +372,7 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 				xml: nextSource,
 				autosave: autoSaveEditor ? 1 : 0,
 				fileName,
+				settings: tikzHostSettings,
 			});
 			window.setTimeout(() => {
 				applyingRemoteRef.current = false;
@@ -366,6 +403,7 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		fileName,
 		sendMessageToTikz,
 		user,
+		tikzHostSettings,
 	]);
 
 	const applyLocalSourceChange = useCallback(
@@ -401,6 +439,22 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			try {
 				const message = JSON.parse(event.data) as TikzEmbedMessage;
 
+				if (
+					message.event === 'persistence-save' &&
+					typeof message.key === 'string' &&
+					typeof message.value === 'string'
+				) {
+					const storage = JSON.parse(
+						window.localStorage.getItem(TIKZ_STORAGE_KEY) || '{}',
+					) as Record<string, string>;
+					storage[message.key] = message.value;
+					window.localStorage.setItem(
+						TIKZ_STORAGE_KEY,
+						JSON.stringify(storage),
+					);
+					return;
+				}
+
 				if (message.error) {
 					if (pendingExportRef.current) {
 						pendingExportRef.current.reject(new Error(String(message.error)));
@@ -418,6 +472,7 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 						xml: sourceRef.current || tikzSource || DEFAULT_TIKZ_SOURCE,
 						autosave: autoSaveEditor ? 1 : 0,
 						fileName,
+						settings: tikzHostSettings,
 					});
 					while (messageQueueRef.current.length > 0) {
 						const queuedMessage = messageQueueRef.current.shift();
@@ -470,6 +525,7 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 			fileId,
 			handleSave,
 			applyLocalSourceChange,
+			tikzHostSettings,
 		],
 	);
 
@@ -537,6 +593,7 @@ const TikzCollaborativeViewer: React.FC<CollaborativeViewerProps> = ({
 		t('Auto-save file: {status}', {
 			status: autoSaveFile ? t('enabled') : t('disabled'),
 		}),
+		t('TikZ theme: {theme}', { theme: t(resolvedTikzColorScheme) }),
 		t('Collaborative Mode: Active'),
 		t('Document ID: {documentId}', { documentId }),
 		t('MIME Type: {mimeType}', {

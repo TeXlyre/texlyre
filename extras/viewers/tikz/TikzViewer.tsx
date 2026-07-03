@@ -11,6 +11,7 @@ import {
 } from '@/components/common/PluginHeader';
 import { usePluginFileInfo } from '@/hooks/usePluginFileInfo';
 import { useSettings } from '@/hooks/useSettings';
+import { useTheme } from '@/hooks/useTheme';
 import type { ViewerProps } from '@/plugins/PluginInterface';
 import { fileStorageService } from '@/services/FileStorageService';
 import type { FileNode } from '@/types/files';
@@ -19,14 +20,15 @@ import './styles.css';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './TikzViewerPlugin';
 
 const BASE_PATH = __BASE_PATH__;
-const TIKZ_STORAGE_KEY = 'texlyre:tikz-editor:storage';
+const TIKZ_STORAGE_KEY = '.tikz-editor-config';
 
-const DEFAULT_TIKZ_SOURCE = `\begin{tikzpicture}
-  \draw[thick, blue] (0,0) circle (1cm);
-  \node at (0,0) {TikZ};
-\end{tikzpicture}
+const DEFAULT_TIKZ_SOURCE = `\\begin{tikzpicture}
+  \\draw[thick, blue] (0,0) circle (1cm);
+  \\node at (0,0) {TikZ};
+\\end{tikzpicture}
 `;
 
+type TikzThemeSetting = 'auto-app' | 'light' | 'dark';
 type TikzColorScheme = 'light' | 'dark';
 
 type TikzHostSettings = {
@@ -111,12 +113,15 @@ const makeSvgFile = (fileName: string, svgContent: string): FileNode => {
 
 const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	const { getSetting } = useSettings();
+	const { isCurrentVariantDark } = useTheme();
 	const fileInfo = usePluginFileInfo(fileId, fileName);
 
 	const autoSaveEditor =
 		(getSetting('tikz-viewer-auto-save-editor')?.value as boolean) ?? true;
 	const autoSaveFile =
 		(getSetting('tikz-viewer-auto-save-file')?.value as boolean) ?? true;
+	const tikzTheme =
+		(getSetting('tikz-viewer-theme')?.value as TikzThemeSetting) ?? 'auto-app';
 
 	const [isLoading, setIsLoading] = useState(true);
 	const [isSaving, setIsSaving] = useState(false);
@@ -125,8 +130,6 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	const [tikzSource, setTikzSource] = useState('');
 	const [iframeLoaded, setIframeLoaded] = useState(false);
 	const [showSaveIndicator, setShowSaveIndicator] = useState(false);
-	const [tikzColorScheme, setTikzColorScheme] =
-		useState<TikzColorScheme>('light');
 
 	const iframeRef = useRef<HTMLIFrameElement>(null);
 	const sourceRef = useRef('');
@@ -139,6 +142,13 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 	} | null>(null);
 	const saveIndicatorTimerRef = useRef<number | null>(null);
 
+	const resolvedTikzColorScheme = useMemo<TikzColorScheme>(() => {
+		if (tikzTheme === 'auto-app') {
+			return isCurrentVariantDark ? 'dark' : 'light';
+		}
+		return tikzTheme;
+	}, [tikzTheme, isCurrentVariantDark]);
+
 	const baseUrl = `${BASE_PATH}/core/tikz-editor`;
 	const tikzOrigin = useMemo(
 		() => new URL(baseUrl, window.location.origin).origin,
@@ -149,8 +159,8 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		return `${baseUrl}/index.html${storage ? `#storage=${encodeURIComponent(storage)}` : ''}`;
 	}, [baseUrl]);
 	const tikzHostSettings = useMemo<TikzHostSettings>(
-		() => ({ general: { colorScheme: tikzColorScheme } }),
-		[tikzColorScheme],
+		() => ({ general: { colorScheme: resolvedTikzColorScheme } }),
+		[resolvedTikzColorScheme],
 	);
 
 	useEffect(() => {
@@ -269,9 +279,14 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 					typeof message.key === 'string' &&
 					typeof message.value === 'string'
 				) {
-					const storage = JSON.parse(window.localStorage.getItem(TIKZ_STORAGE_KEY) || '{}') as Record<string, string>;
+					const storage = JSON.parse(
+						window.localStorage.getItem(TIKZ_STORAGE_KEY) || '{}',
+					) as Record<string, string>;
 					storage[message.key] = message.value;
-					window.localStorage.setItem(TIKZ_STORAGE_KEY, JSON.stringify(storage));
+					window.localStorage.setItem(
+						TIKZ_STORAGE_KEY,
+						JSON.stringify(storage),
+					);
 					return;
 				}
 				if (message.error) {
@@ -435,10 +450,6 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		sendMessageToTikz({ action: 'save' });
 	}, [sendMessageToTikz]);
 
-	const handleToggleTikzTheme = useCallback(() => {
-		setTikzColorScheme((scheme) => (scheme === 'light' ? 'dark' : 'light'));
-	}, []);
-
 	const tooltipInfo = [
 		t('Auto-save editor: {status}', {
 			status: autoSaveEditor ? t('enabled') : t('disabled'),
@@ -446,7 +457,7 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 		t('Auto-save file: {status}', {
 			status: autoSaveFile ? t('enabled') : t('disabled'),
 		}),
-		t('TikZ theme: {theme}', { theme: t(tikzColorScheme) }),
+		t('TikZ theme: {theme}', { theme: t(resolvedTikzColorScheme) }),
 		t('MIME Type: {mimeType}', {
 			mimeType: fileInfo.mimeType || 'text/x-tex',
 		}),
@@ -479,13 +490,6 @@ const TikzViewer: React.FC<ViewerProps> = ({ content, fileName, fileId }) => {
 					disabled={!iframeLoaded}
 				>
 					SVG
-				</button>
-				<button
-					onClick={handleToggleTikzTheme}
-					title={t('Toggle TikZ editor theme')}
-					disabled={!iframeLoaded}
-				>
-					{tikzColorScheme === 'light' ? t('Dark') : t('Light')}
 				</button>
 			</PluginControlGroup>
 		</>
