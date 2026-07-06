@@ -282,6 +282,7 @@ footer {
 }
 
 .loading-spinner {
+	position: relative;
 	border: 4px solid rgba(0, 0, 0, 0.1);
 	border-left-color: var(--pico-primary);
 	border-radius: 50%;
@@ -289,6 +290,36 @@ footer {
 	height: 30px;
 	animation: spin 1s linear infinite;
 	margin-bottom: var(--space-md);
+	--spinner-thickness: 4px;
+}
+
+.loading-spinner.has-progress {
+	border: none;
+	background: conic-gradient(
+		var(--pico-primary) calc(var(--progress) * 1%),
+		rgba(0, 0, 0, 0.1) 0
+	);
+	animation: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.loading-spinner.has-progress::before {
+	content: "";
+	position: absolute;
+	inset: var(--spinner-thickness);
+	border-radius: 50%;
+	background: var(--pico-background);
+}
+
+.loading-spinner-progress {
+	position: relative;
+	z-index: 1;
+	font-size: 0.55rem;
+	font-weight: 600;
+	line-height: 1;
+	color: var(--text-color);
 }
 
 @keyframes spin {

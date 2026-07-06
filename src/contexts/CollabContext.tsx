@@ -28,6 +28,54 @@ interface CollabProviderProps {
 	collectionName: string;
 }
 
+type ProviderWithConnectionState = ICollabProvider & {
+	connected?: boolean;
+	wsconnected?: boolean;
+	signalingConns?: unknown[] | Set<unknown> | Map<unknown, unknown>;
+};
+
+const getProviderConnectionState = (
+	provider: ICollabProvider | null | undefined,
+): boolean => {
+	const providerWithState = provider as ProviderWithConnectionState | undefined;
+	if (!providerWithState) return false;
+
+	const signalingConns = providerWithState.signalingConns;
+	if (signalingConns) {
+		const conns = Array.isArray(signalingConns)
+			? signalingConns
+			: Array.from(
+					signalingConns instanceof Map
+						? signalingConns.values()
+						: signalingConns,
+				);
+
+		return conns.some((conn) => {
+			const signalingConn = conn as {
+				connected?: boolean;
+				ws?: WebSocket;
+				wsconnected?: boolean;
+			};
+
+			return (
+				signalingConn.connected === true ||
+				signalingConn.wsconnected === true ||
+				signalingConn.ws?.readyState === WebSocket.OPEN
+			);
+		});
+	}
+
+	if (typeof providerWithState.wsconnected === 'boolean') {
+		return providerWithState.wsconnected;
+	}
+
+	if (typeof providerWithState.connected === 'boolean') {
+		return providerWithState.connected;
+	}
+
+	return false;
+};
+
 export const CollabProvider: React.FC<CollabProviderProps> = ({
 	children,
 	docUrl,
@@ -93,11 +141,35 @@ export const CollabProvider: React.FC<CollabProviderProps> = ({
 				}
 			};
 
+			const updateProviderStatus = () => {
+				setIsConnected(getProviderConnectionState(yprovider));
+			};
+
+			const handleProviderStatus = (event: {
+				connected?: boolean;
+				status?: string;
+			}) => {
+				if (providerType === 'webrtc') {
+					updateProviderStatus();
+					return;
+				}
+
+				setIsConnected(
+					event.connected === true || event.status === 'connected',
+				);
+			};
+
 			ymap.observe(observer);
 			setData(ymap.toJSON());
-			setIsConnected(true);
+			setIsConnected(false);
+			yprovider?.on('status', handleProviderStatus);
+
+			const statusInterval = window.setInterval(updateProviderStatus, 1000);
+			updateProviderStatus();
 
 			return () => {
+				window.clearInterval(statusInterval);
+				yprovider?.off?.('status', handleProviderStatus);
 				ymap.unobserve(observer);
 				collabService.disconnect(projectId, collectionName);
 				setIsConnected(false);
