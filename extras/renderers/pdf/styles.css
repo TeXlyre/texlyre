@@ -444,3 +444,61 @@
 		transform: scale(1);
 	}
 }
+
+.pdf-latex-ocg-enabled {
+	position: relative;
+}
+
+.pdf-latex-ocg-notice {
+	position: sticky;
+	top: 0;
+	z-index: 20;
+	margin: 0 auto 0.5rem;
+	padding: 0.35rem 0.65rem;
+	width: fit-content;
+	max-width: min(90%, 720px);
+	font-size: 0.75rem;
+	line-height: 1.25;
+	color: var(--text-color);
+	background: var(--pico-secondary-background);
+	border: 1px solid var(--accent-border, #444);
+	border-radius: 4px;
+	box-shadow: 0 2px 8px var(--color-shadow);
+}
+
+.pdf-latex-ocg-panel {
+	position: sticky;
+	top: 2.4rem;
+	z-index: 19;
+	margin: 0 auto 0.5rem;
+	padding: 0.5rem;
+	width: fit-content;
+	max-width: min(90%, 720px);
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.75rem;
+	color: var(--text-color);
+	background: var(--pico-background);
+	border: 1px solid var(--accent-border, #444);
+	border-radius: 4px;
+	box-shadow: 0 2px 8px var(--color-shadow);
+}
+
+.pdf-latex-ocg-title {
+	font-weight: 600;
+	margin-right: 0.25rem;
+}
+
+.pdf-latex-ocg-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	margin: 0;
+	cursor: pointer;
+}
+
+.pdf-latex-ocg-toggle input {
+	margin: 0;
+}

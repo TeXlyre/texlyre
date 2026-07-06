@@ -34,6 +34,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { useProperties } from '@/hooks/useProperties';
 import type { RendererProps } from '@/plugins/PluginInterface';
 import { PdfJsFullViewer } from './PdfJsFullViewer';
+import { detectLatexInteractivePdf } from './latexInteraction';
 import './styles.css';
 
 const BASE_PATH = __BASE_PATH__;
@@ -155,7 +156,7 @@ const pageAtOffsetFor = (
 
 async function detectInteractivePdf(pdfData: Uint8Array): Promise<boolean> {
 	const loadingTask = pdfjs.getDocument({
-		data: new Uint8Array(pdfData),
+		data: new Uint8Array(pdfData).slice(),
 		cMapUrl: `${BASE_PATH}/assets/cmaps/`,
 		cMapPacked: true,
 		isEvalSupported: true,
@@ -166,32 +167,9 @@ async function detectInteractivePdf(pdfData: Uint8Array): Promise<boolean> {
 
 	try {
 		pdfDocument = await loadingTask.promise;
+		const detection = await detectLatexInteractivePdf(pdfDocument);
 
-		const [fieldObjects, docActions] = await Promise.all([
-			pdfDocument.getFieldObjects?.().catch(() => null),
-			pdfDocument.getJSActions?.().catch(() => null),
-		]);
-
-		if (fieldObjects || docActions) return true;
-
-		for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
-			const page = await pdfDocument.getPage(pageNumber);
-			const annotations = await page.getAnnotations();
-
-			if (
-				annotations.some(
-					(annotation: any) =>
-						annotation.subtype === 'Widget' ||
-						annotation.action ||
-						annotation.actions ||
-						annotation.additionalActions,
-				)
-			) {
-				return true;
-			}
-		}
-
-		return false;
+		return detection.interactive;
 	} catch {
 		return false;
 	} finally {
@@ -275,7 +253,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	}, [scrollView]);
 
 	const fileData = useMemo(() => {
-		return pdfData ? { data: pdfData } : null;
+		return pdfData ? { data: pdfData.slice() } : null;
 	}, [pdfData]);
 
 	const documentOptions = useMemo(
