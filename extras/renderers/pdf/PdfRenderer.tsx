@@ -33,6 +33,7 @@ import { getPdfRendererSettings } from './settings';
 import { useSettings } from '@/hooks/useSettings';
 import { useProperties } from '@/hooks/useProperties';
 import type { RendererProps } from '@/plugins/PluginInterface';
+import { PdfJsFullViewer } from './PdfJsFullViewer';
 import './styles.css';
 
 const BASE_PATH = __BASE_PATH__;
@@ -152,6 +153,58 @@ const pageAtOffsetFor = (
 	return 1;
 };
 
+async function detectInteractivePdf(pdfData: Uint8Array): Promise<boolean> {
+	const loadingTask = pdfjs.getDocument({
+		data: new Uint8Array(pdfData),
+		cMapUrl: `${BASE_PATH}/assets/cmaps/`,
+		cMapPacked: true,
+		isEvalSupported: true,
+		enableXfa: true,
+	});
+
+	let pdfDocument: any = null;
+
+	try {
+		pdfDocument = await loadingTask.promise;
+
+		const [fieldObjects, docActions] = await Promise.all([
+			pdfDocument.getFieldObjects?.().catch(() => null),
+			pdfDocument.getJSActions?.().catch(() => null),
+		]);
+
+		if (fieldObjects || docActions) return true;
+
+		for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
+			const page = await pdfDocument.getPage(pageNumber);
+			const annotations = await page.getAnnotations();
+
+			if (
+				annotations.some(
+					(annotation: any) =>
+						annotation.subtype === 'Widget' ||
+						annotation.action ||
+						annotation.actions ||
+						annotation.additionalActions,
+				)
+			) {
+				return true;
+			}
+		}
+
+		return false;
+	} catch {
+		return false;
+	} finally {
+		try {
+			await pdfDocument?.destroy?.();
+		} catch {}
+
+		try {
+			await loadingTask?.destroy?.();
+		} catch {}
+	}
+}
+
 const PdfRenderer: React.FC<RendererProps> = ({
 	content,
 	fileName,
@@ -177,11 +230,10 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
+	const [isInteractivePdf, setIsInteractivePdf] = useState(false);
+	const [fullViewerFailed, setFullViewerFailed] = useState(false);
 	const [scrollView, setScrollView] = useState(false);
-	const [renderRange, setRenderRange] = useState<Range>({
-		start: 1,
-		end: 1,
-	});
+	const [renderRange, setRenderRange] = useState<Range>({ start: 1, end: 1 });
 	const [isFullscreen, setIsFullscreen] = useState(false);
 	const [fitMode, setFitMode] = useState<'fit-width' | 'fit-height'>(
 		'fit-width',
@@ -223,14 +275,20 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	}, [scrollView]);
 
 	const fileData = useMemo(() => {
-		return pdfData
-			? {
-					data: pdfData,
-					cMapUrl: `${BASE_PATH}/assets/cmaps/`,
-					cMapPacked: true,
-				}
-			: null;
+		return pdfData ? { data: pdfData } : null;
 	}, [pdfData]);
+
+	const documentOptions = useMemo(
+		() => ({
+			cMapUrl: `${BASE_PATH}/assets/cmaps/`,
+			cMapPacked: true,
+			isEvalSupported: true,
+			enableXfa: true,
+		}),
+		[],
+	);
+
+	const useFullPdfJsViewer = isInteractivePdf && !fullViewerFailed;
 
 	const tooltipInfo = useMemo(() => {
 		if (numPages <= 0) return undefined;
@@ -248,8 +306,9 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				height: firstHeight ?? '—',
 			}),
 			t('Size: {size}', { size: formatFileSize(fileSize) }),
+			useFullPdfJsViewer ? t('Interactive PDF mode') : t('Standard PDF mode'),
 		];
-	}, [numPages]);
+	}, [numPages, useFullPdfJsViewer]);
 
 	const suppressPageSync = useCallback(() => {
 		suppressPageSyncUntilRef.current = Date.now() + PAGE_SYNC_SUPPRESS_MS;
@@ -269,7 +328,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 	const syncScroll = useCallback(
 		(targetScale = scale) => {
-			if (!scrollView || !scrollContainerRef.current) return;
+			if (!scrollView || !scrollContainerRef.current || useFullPdfJsViewer)
+				return;
 
 			const container = scrollContainerRef.current;
 
@@ -300,7 +360,14 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				setPage(page);
 			}
 		},
-		[scrollView, numPages, scale, isEditingPageInput, setPage],
+		[
+			scrollView,
+			numPages,
+			scale,
+			isEditingPageInput,
+			setPage,
+			useFullPdfJsViewer,
+		],
 	);
 
 	const goToPage = useCallback(
@@ -310,7 +377,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			suppressPageSync();
 			setPage(target);
 
-			if (!scrollView || !scrollContainerRef.current) return;
+			if (useFullPdfJsViewer || !scrollView || !scrollContainerRef.current)
+				return;
 
 			const container = scrollContainerRef.current;
 			const top = pageTopFor(pageHeights.current, target, scale);
@@ -326,12 +394,21 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				),
 			);
 		},
-		[numPages, scrollView, scale, setPage, suppressPageSync],
+		[
+			numPages,
+			scrollView,
+			scale,
+			setPage,
+			suppressPageSync,
+			useFullPdfJsViewer,
+		],
 	);
 
 	const setPdfContent = useCallback((buffer: ArrayBuffer) => {
 		if (!buffer || buffer.byteLength === 0) {
 			setPdfData(null);
+			setIsInteractivePdf(false);
+			setFullViewerFailed(false);
 			originalContentRef.current = null;
 			contentHashRef.current = '';
 			setError(t('No PDF content available'));
@@ -359,6 +436,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			if (!hadDocument) setIsLoading(true);
 
 			setPdfData(dataCopy);
+			setIsInteractivePdf(false);
+			setFullViewerFailed(false);
 			setError(null);
 		} catch (error) {
 			console.error('Error creating PDF data:', error);
@@ -451,8 +530,23 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		}
 	}, [content, setPdfContent]);
 
-	const onDocumentLoadSuccess = useCallback(
-		({ numPages: loadedNumPages }: { numPages: number }) => {
+	useEffect(() => {
+		if (!pdfData) return;
+
+		let cancelled = false;
+
+		detectInteractivePdf(pdfData).then((interactive) => {
+			if (cancelled) return;
+			setIsInteractivePdf(interactive);
+		});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [pdfData]);
+
+	const handleDocumentReady = useCallback(
+		(loadedNumPages: number) => {
 			const pendingPage = pendingRestorePageRef.current;
 			const restorePage = clamp(
 				pendingPage || lastStablePageRef.current || 1,
@@ -476,7 +570,13 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			});
 
 			requestAnimationFrame(() => {
-				if (!scrollViewRef.current || !scrollContainerRef.current) return;
+				if (
+					useFullPdfJsViewer ||
+					!scrollViewRef.current ||
+					!scrollContainerRef.current
+				) {
+					return;
+				}
 
 				const container = scrollContainerRef.current;
 				const fallbackTop = pageTopFor(
@@ -513,7 +613,14 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				);
 			});
 		},
-		[isEditingPageInput, suppressPageSync],
+		[isEditingPageInput, suppressPageSync, useFullPdfJsViewer],
+	);
+
+	const onDocumentLoadSuccess = useCallback(
+		({ numPages: loadedNumPages }: { numPages: number }) => {
+			handleDocumentReady(loadedNumPages);
+		},
+		[handleDocumentReady],
 	);
 
 	const onDocumentLoadError = useCallback((err: Error) => {
@@ -536,8 +643,17 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		[syncScroll],
 	);
 
+	const onFullViewerPageSize = useCallback(
+		(page: number, width: number, height: number) => {
+			pageWidths.current.set(page, width);
+			pageHeights.current.set(page, height);
+		},
+		[],
+	);
+
 	useEffect(() => {
-		if (!scrollView || !scrollContainerRef.current) return;
+		if (!scrollView || !scrollContainerRef.current || useFullPdfJsViewer)
+			return;
 
 		const container = scrollContainerRef.current;
 		let rafId = 0;
@@ -558,7 +674,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			container.removeEventListener('scroll', onScroll);
 			cancelAnimationFrame(rafId);
 		};
-	}, [scrollView, syncScroll]);
+	}, [scrollView, syncScroll, useFullPdfJsViewer]);
 
 	useEffect(() => {
 		syncScroll();
@@ -611,12 +727,13 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 			suppressPageSync();
 
-			if (!scrollView || !scrollContainerRef.current) {
+			if (!scrollView || !scrollContainerRef.current || useFullPdfJsViewer) {
 				flushSync(() => {
 					if (nextFitMode) setFitMode(nextFitMode);
 					setScale(nextScale);
 				});
 
+				setPage(anchorPage);
 				setProperty('pdf-renderer-zoom', nextScale);
 				return;
 			}
@@ -676,6 +793,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			setPage,
 			syncScroll,
 			suppressPageSync,
+			useFullPdfJsViewer,
 		],
 	);
 
@@ -690,7 +808,6 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const handlePageInputKeyDown = useCallback(
 		(event: React.KeyboardEvent<HTMLInputElement>) => {
 			if (event.key !== 'Enter') return;
-
 			const page = Number.parseInt(pageInput, 10);
 
 			if (Number.isFinite(page)) {
@@ -707,14 +824,12 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 	const handleFitToggle = useCallback(() => {
 		const nextMode = fitMode === 'fit-width' ? 'fit-height' : 'fit-width';
-
 		commitZoom(computeFitScale(nextMode), nextMode);
 	}, [fitMode, computeFitScale, commitZoom]);
 
 	const handleZoomChange = useCallback(
 		(event: React.ChangeEvent<HTMLSelectElement>) => {
 			if (event.target.value === 'custom') return;
-
 			commitZoom(Number.parseFloat(event.target.value) / 100);
 		},
 		[commitZoom],
@@ -722,7 +837,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 	const handlePageClick = useCallback(
 		(page: number, event: React.MouseEvent<HTMLDivElement>) => {
-			if (!onLocationClick) return;
+			if (!onLocationClick || useFullPdfJsViewer) return;
 
 			const pageWidth = pageWidths.current.get(page);
 			const pageHeight = pageHeights.current.get(page);
@@ -745,7 +860,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				((event.clientY - rect.top) / rect.height) * pageHeight,
 			);
 		},
-		[onLocationClick],
+		[onLocationClick, useFullPdfJsViewer],
 	);
 
 	const handleToggleView = useCallback(() => {
@@ -755,7 +870,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		setScrollView(nextScrollView);
 		setProperty('pdf-renderer-scroll-view', nextScrollView);
 
-		if (!nextScrollView) return;
+		if (useFullPdfJsViewer || !nextScrollView) return;
 
 		requestAnimationFrame(() => {
 			if (!scrollContainerRef.current) return;
@@ -778,7 +893,14 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				),
 			);
 		});
-	}, [scrollView, numPages, scale, setProperty, suppressPageSync]);
+	}, [
+		scrollView,
+		numPages,
+		scale,
+		setProperty,
+		suppressPageSync,
+		useFullPdfJsViewer,
+	]);
 
 	const handleToggleFullscreen = useCallback(() => {
 		if (document.fullscreenElement === containerRef.current) {
@@ -855,7 +977,6 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				active?.getAttribute('contenteditable') === 'true';
 
 			if (isTyping) return;
-
 			if (!document.fullscreenElement && !pointerInsideRef.current) return;
 
 			if (
@@ -885,8 +1006,19 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		};
 	}, [handlePreviousPage, handleNextPage]);
 
+	const handleFullViewerError = useCallback((err: Error) => {
+		console.error(
+			'[PdfRenderer] Full PDF.js viewer failed; falling back to react-pdf:',
+			err,
+		);
+		setFullViewerFailed(true);
+		setError(null);
+		setIsLoading(false);
+	}, []);
+
 	const renderHighlight = (page: number) => {
-		if (!highlight || highlight.page !== page) return null;
+		if (!highlight || highlight.page !== page || useFullPdfJsViewer)
+			return null;
 
 		return highlight.rects.map((rect, index) => (
 			<div
@@ -995,6 +1127,9 @@ const PdfRenderer: React.FC<RendererProps> = ({
 								/>
 								<span>/</span>
 								<span>{numPages}</span>
+								{useFullPdfJsViewer && (
+									<span className='pdf-mode-badge'>{t('Interactive')}</span>
+								)}
 							</div>
 						</div>
 
@@ -1092,11 +1227,25 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 			<div
 				className={`pdf-renderer-content ${isFullscreen ? 'fullscreen' : ''}`}
-				ref={scrollView ? scrollContainerRef : contentElRef}
+				ref={
+					useFullPdfJsViewer || !scrollView ? contentElRef : scrollContainerRef
+				}
 			>
-				{fileData && (
+				{pdfData && useFullPdfJsViewer && (
+					<PdfJsFullViewer
+						pdfData={pdfData}
+						scale={scale}
+						currentPage={currentPage}
+						onDocumentReady={handleDocumentReady}
+						onPageChange={setPage}
+						onError={handleFullViewerError}
+					/>
+				)}
+
+				{fileData && !useFullPdfJsViewer && (
 					<Document
 						file={fileData}
+						options={documentOptions}
 						onLoadSuccess={onDocumentLoadSuccess}
 						onLoadError={onDocumentLoadError}
 						loading={
@@ -1139,6 +1288,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 													scale={scale}
 													renderTextLayer={pdfRendererTextSelection}
 													renderAnnotationLayer
+													renderForms
 													onLoadSuccess={onPageLoadSuccess}
 													loading={
 														<div className='pdf-page-loading'>
@@ -1164,6 +1314,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 										scale={scale}
 										renderTextLayer={pdfRendererTextSelection}
 										renderAnnotationLayer
+										renderForms
 										onLoadSuccess={onPageLoadSuccess}
 										loading={
 											<div className='pdf-page-loading'>

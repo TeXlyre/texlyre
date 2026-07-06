@@ -1,3 +1,4 @@
+/* extras/renderers/pdf/styles.css */
 .pdf-renderer-viewer,
 .pdf-renderer-viewer *,
 .pdf-renderer-viewer *::before,
@@ -395,6 +396,36 @@
 .annotationLayer .linkAnnotation > a,
 .annotationLayer .buttonWidgetAnnotation.pushButton > a {
 	pointer-events: auto;
+}
+
+.pdf-full-viewer-container {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	background-color: var(--pico-background);
+}
+
+.pdf-full-viewer-container .pdfViewer {
+	position: relative;
+}
+
+.pdf-full-viewer-container .pdfViewer .page {
+	margin: 10px auto;
+}
+
+.pdf-full-viewer-container .annotationLayer .buttonWidgetAnnotation,
+.pdf-full-viewer-container .annotationLayer .buttonWidgetAnnotation *,
+.pdf-full-viewer-container .annotationLayer .linkAnnotation,
+.pdf-full-viewer-container .annotationLayer .linkAnnotation * {
+	cursor: pointer;
+}
+
+.pdf-mode-badge {
+	margin-left: 0.5rem;
+	font-size: 0.75rem;
+	opacity: 0.75;
 }
 
 @keyframes source-map-highlight-pulse {
