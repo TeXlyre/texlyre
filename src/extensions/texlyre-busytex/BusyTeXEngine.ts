@@ -104,6 +104,13 @@ export class BusyTeXEngine {
 				engineMode: 'combined',
 				preloadDataPackages: this.selectedBundles,
 				catalogDataPackages: [],
+				onDownloadProgress: (progress) => {
+					document.dispatchEvent(
+						new CustomEvent('busytex-download-progress', {
+							detail: { percent: progress.percent },
+						}),
+					);
+				},
 			});
 
 			await this.runner.initialize(this.useWorker);

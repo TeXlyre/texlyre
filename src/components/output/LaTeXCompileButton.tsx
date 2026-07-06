@@ -112,6 +112,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		(getSetting('latex-default-format')?.value as LaTeXOutputFormat) ?? 'pdf';
 	const settingBundle =
 		(getSetting('latex-busytex-bundles')?.value as string) ?? 'recommended';
+	const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
 
 	const propMainFile = getProperty('latex-main-file', {
 		scope: 'project',
@@ -200,6 +201,26 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 		if (!propBundle) return;
 		latexService.setBusyTeXBundles([propBundle]);
 	}, [propBundle]);
+
+	useEffect(() => {
+		const handleDownloadProgress = (event: CustomEvent) => {
+			setDownloadProgress(event.detail.percent);
+		};
+		document.addEventListener(
+			'busytex-download-progress',
+			handleDownloadProgress as EventListener,
+		);
+		return () => {
+			document.removeEventListener(
+				'busytex-download-progress',
+				handleDownloadProgress as EventListener,
+			);
+		};
+	}, []);
+
+	useEffect(() => {
+		if (!isInitializing) setDownloadProgress(null);
+	}, [isInitializing]);
 
 	useEffect(() => {
 		const findTexFiles = (nodes: FileNode[]): string[] => {
@@ -628,7 +649,20 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 					{isCompiling ? (
 						<StopIcon />
 					) : isInitializing ? (
-						<div className='loading-spinner' />
+						<div
+							className={`loading-spinner${downloadProgress != null ? ' has-progress' : ''}`}
+							style={
+								downloadProgress != null
+									? ({ '--progress': downloadProgress } as React.CSSProperties)
+									: undefined
+							}
+						>
+							{downloadProgress != null && (
+								<span className='loading-spinner-progress'>
+									{downloadProgress}
+								</span>
+							)}
+						</div>
 					) : (
 						<PlayIcon />
 					)}

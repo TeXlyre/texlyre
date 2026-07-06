@@ -249,6 +249,13 @@ embed {
 	height: 14px;
 	border-width: 2px;
 	margin-bottom: 0;
+	--spinner-thickness: 2px;
+}
+
+.compile-button .loading-spinner.has-progress {
+	width: 22px;
+	height: 22px;
+	--spinner-thickness: 3px;
 }
 
 .shared-indicator {
