@@ -25,8 +25,6 @@ module.exports = {
 			'<rootDir>/tests/mocks/codemirror-lsp-client.js',
 		'^pdfjs-dist$': '<rootDir>/tests/mocks/pdfjs.js',
 		'^pdfjs-dist/build/pdf.worker.mjs\\?url$': '<rootDir>/tests/mocks/pdfjs.js',
-		'^react-pdf$': '<rootDir>/tests/mocks/react-pdf.js',
-		'^react-pdf/dist/esm/entry.webpack5$': '<rootDir>/tests/mocks/react-pdf.js',
 		'^filepizza-client$': '<rootDir>/tests/mocks/filepizza-client.js',
 		'^wasm-latex-tools$': '<rootDir>/tests/mocks/wasm-latex-tools.js',
 		'^mathlive$': '<rootDir>/tests/mocks/mathlive.js',

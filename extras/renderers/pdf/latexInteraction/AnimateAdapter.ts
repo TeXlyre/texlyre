@@ -79,12 +79,13 @@ function detectPlaybackOptions(
 ): PlaybackOptions {
 	const p = `a?${prefix}_`;
 	const scoped =
-		javascript
-			.match(new RegExp(`(?<!\\w)${p}[^\n;]*`, 'gi'))
-			?.join('\n') || javascript;
+		javascript.match(new RegExp(`(?<!\\w)${p}[^\n;]*`, 'gi'))?.join('\n') ||
+		javascript;
 
 	const fpsMatch = /_fps\s*=\s*(\d+(?:\.\d+)?)/i.exec(scoped);
-	const intervalMatch = /(?:interval|delay)\s*[=:]\s*(\d+(?:\.\d+)?)/i.exec(scoped);
+	const intervalMatch = /(?:interval|delay)\s*[=:]\s*(\d+(?:\.\d+)?)/i.exec(
+		scoped,
+	);
 	const milliseconds = intervalMatch ? Number(intervalMatch[1]) : 0;
 	const rawFps = fpsMatch
 		? Number(fpsMatch[1])
@@ -103,14 +104,19 @@ function detectPlaybackOptions(
 		'i',
 	).test(scoped);
 
-	const stopsAtEnd = new RegExp(`${p}(?:stopLast|pause)\\s*\\(`, 'i').test(scoped);
+	const stopsAtEnd = new RegExp(`${p}(?:stopLast|pause)\\s*\\(`, 'i').test(
+		scoped,
+	);
 	const loop = palindrome || !stopsAtEnd;
 
 	return {
 		autoplay,
 		loop,
 		palindrome,
-		fps: Math.max(1, Math.min(60, Number.isFinite(rawFps) ? rawFps : DEFAULT_FPS)),
+		fps: Math.max(
+			1,
+			Math.min(60, Number.isFinite(rawFps) ? rawFps : DEFAULT_FPS),
+		),
 	};
 }
 
@@ -166,7 +172,9 @@ function control(instance: Instance, suffix: string): HTMLElement | undefined {
 function setFrame(instance: Instance, nextIndex: number): void {
 	if (instance.frames.length === 0) return;
 	const clamped = Math.max(0, Math.min(instance.frames.length - 1, nextIndex));
-	instance.frames.forEach((frame, index) => setVisible(frame, index === clamped));
+	instance.frames.forEach((frame, index) =>
+		setVisible(frame, index === clamped),
+	);
 	instance.index = clamped;
 }
 
@@ -177,7 +185,8 @@ function refreshControls(instance: Instance): void {
 	setVisible(control(instance, 'PauseRight'), playing);
 	setVisible(control(instance, 'PauseLeft'), playing);
 
-	for (const suffix of CONTROL_SUFFIXES) makeClickable(control(instance, suffix));
+	for (const suffix of CONTROL_SUFFIXES)
+		makeClickable(control(instance, suffix));
 	makeClickable(instance.controls.get(`anm${instance.prefix}`));
 }
 
@@ -234,7 +243,10 @@ function play(instance: Instance, direction: 1 | -1): void {
 	instance.direction = direction;
 	instance.playing = true;
 	refreshControls(instance);
-	instance.timer = window.setInterval(() => tick(instance), 1000 / instance.fps);
+	instance.timer = window.setInterval(
+		() => tick(instance),
+		1000 / instance.fps,
+	);
 }
 
 function changeSpeed(instance: Instance, fps: number): void {
@@ -282,10 +294,8 @@ function installManifest(
 		play(instance, forward ? 1 : -1);
 	};
 
-	const bind = (
-		suffix: string,
-		handler: () => void,
-	): (() => void) => attachPdfButtonHandler(control(instance, suffix), handler);
+	const bind = (suffix: string, handler: () => void): (() => void) =>
+		attachPdfButtonHandler(control(instance, suffix), handler);
 
 	const disposers: Array<() => void> = [
 		bind('StepRight', () => {
