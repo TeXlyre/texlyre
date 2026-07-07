@@ -1,3 +1,4 @@
+// extras/renderers/pdf/latexInteraction/OcgAdapter.ts
 import type {
 	LatexPdfAdapterInstallResult,
 	LatexPdfInteractionAdapter,

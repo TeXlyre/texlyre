@@ -154,7 +154,7 @@ const pageAtOffsetFor = (
 	return 1;
 };
 
-async function detectInteractivePdf(pdfData: Uint8Array): Promise<boolean> {
+async function loadAndDetectInteractivePdf(pdfData: Uint8Array) {
 	const loadingTask = pdfjs.getDocument({
 		data: new Uint8Array(pdfData).slice(),
 		cMapUrl: `${BASE_PATH}/assets/cmaps/`,
@@ -163,23 +163,18 @@ async function detectInteractivePdf(pdfData: Uint8Array): Promise<boolean> {
 		enableXfa: true,
 	});
 
-	let pdfDocument: any = null;
-
 	try {
-		pdfDocument = await loadingTask.promise;
+		const pdfDocument: any = await loadingTask.promise;
 		const detection = await detectLatexInteractivePdf(pdfDocument);
 
-		return detection.interactive;
-	} catch {
-		return false;
-	} finally {
-		try {
-			await pdfDocument?.destroy?.();
-		} catch {}
+		if (!detection.interactive) {
+			pdfDocument.destroy?.();
+			return { interactive: false, pdfDocument: null as any };
+		}
 
-		try {
-			await loadingTask?.destroy?.();
-		} catch {}
+		return { interactive: true, pdfDocument };
+	} catch {
+		return { interactive: false, pdfDocument: null as any };
 	}
 }
 
@@ -230,6 +225,7 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const originalContentRef = useRef<ArrayBuffer | null>(null);
 	const pendingRestorePageRef = useRef<number | null>(null);
 	const pendingRestoreScrollTopRef = useRef<number | null>(null);
+	const interactivePdfDocumentRef = useRef<any>(null);
 
 	const numPagesRef = useRef(0);
 	const scaleRef = useRef(1);
@@ -239,6 +235,13 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	const containerRef = useRef<HTMLDivElement>(null);
 	const contentElRef = useRef<HTMLDivElement>(null);
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		return () => {
+			interactivePdfDocumentRef.current?.destroy?.();
+			interactivePdfDocumentRef.current = null;
+		};
+	}, []);
 
 	useEffect(() => {
 		numPagesRef.current = numPages;
@@ -253,18 +256,14 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	}, [scrollView]);
 
 	const fileData = useMemo(() => {
-		return pdfData ? { data: pdfData.slice() } : null;
+		return pdfData
+			? {
+					data: pdfData,
+					cMapUrl: `${BASE_PATH}/assets/cmaps/`,
+					cMapPacked: true,
+				}
+			: null;
 	}, [pdfData]);
-
-	const documentOptions = useMemo(
-		() => ({
-			cMapUrl: `${BASE_PATH}/assets/cmaps/`,
-			cMapPacked: true,
-			isEvalSupported: true,
-			enableXfa: true,
-		}),
-		[],
-	);
 
 	const useFullPdfJsViewer = isInteractivePdf && !fullViewerFailed;
 
@@ -284,9 +283,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				height: firstHeight ?? '—',
 			}),
 			t('Size: {size}', { size: formatFileSize(fileSize) }),
-			useFullPdfJsViewer ? t('Interactive PDF mode') : t('Standard PDF mode'),
 		];
-	}, [numPages, useFullPdfJsViewer]);
+	}, [numPages]);
 
 	const suppressPageSync = useCallback(() => {
 		suppressPageSyncUntilRef.current = Date.now() + PAGE_SYNC_SUPPRESS_MS;
@@ -384,6 +382,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 	const setPdfContent = useCallback((buffer: ArrayBuffer) => {
 		if (!buffer || buffer.byteLength === 0) {
+			interactivePdfDocumentRef.current?.destroy?.();
+			interactivePdfDocumentRef.current = null;
 			setPdfData(null);
 			setIsInteractivePdf(false);
 			setFullViewerFailed(false);
@@ -413,6 +413,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 			if (!hadDocument) setIsLoading(true);
 
+			interactivePdfDocumentRef.current?.destroy?.();
+			interactivePdfDocumentRef.current = null;
 			setPdfData(dataCopy);
 			setIsInteractivePdf(false);
 			setFullViewerFailed(false);
@@ -513,10 +515,17 @@ const PdfRenderer: React.FC<RendererProps> = ({
 
 		let cancelled = false;
 
-		detectInteractivePdf(pdfData).then((interactive) => {
-			if (cancelled) return;
-			setIsInteractivePdf(interactive);
-		});
+		loadAndDetectInteractivePdf(pdfData).then(
+			({ interactive, pdfDocument }) => {
+				if (cancelled) {
+					pdfDocument?.destroy?.();
+					return;
+				}
+
+				interactivePdfDocumentRef.current = pdfDocument;
+				setIsInteractivePdf(interactive);
+			},
+		);
 
 		return () => {
 			cancelled = true;
@@ -621,14 +630,6 @@ const PdfRenderer: React.FC<RendererProps> = ({
 		[syncScroll],
 	);
 
-	const onFullViewerPageSize = useCallback(
-		(page: number, width: number, height: number) => {
-			pageWidths.current.set(page, width);
-			pageHeights.current.set(page, height);
-		},
-		[],
-	);
-
 	useEffect(() => {
 		if (!scrollView || !scrollContainerRef.current || useFullPdfJsViewer)
 			return;
@@ -711,7 +712,6 @@ const PdfRenderer: React.FC<RendererProps> = ({
 					setScale(nextScale);
 				});
 
-				setPage(anchorPage);
 				setProperty('pdf-renderer-zoom', nextScale);
 				return;
 			}
@@ -989,6 +989,8 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			'[PdfRenderer] Full PDF.js viewer failed; falling back to react-pdf:',
 			err,
 		);
+		interactivePdfDocumentRef.current?.destroy?.();
+		interactivePdfDocumentRef.current = null;
 		setFullViewerFailed(true);
 		setError(null);
 		setIsLoading(false);
@@ -1105,9 +1107,6 @@ const PdfRenderer: React.FC<RendererProps> = ({
 								/>
 								<span>/</span>
 								<span>{numPages}</span>
-								{useFullPdfJsViewer && (
-									<span className='pdf-mode-badge'>{t('Interactive')}</span>
-								)}
 							</div>
 						</div>
 
@@ -1209,9 +1208,9 @@ const PdfRenderer: React.FC<RendererProps> = ({
 					useFullPdfJsViewer || !scrollView ? contentElRef : scrollContainerRef
 				}
 			>
-				{pdfData && useFullPdfJsViewer && (
+				{useFullPdfJsViewer && interactivePdfDocumentRef.current && (
 					<PdfJsFullViewer
-						pdfData={pdfData}
+						pdfDocument={interactivePdfDocumentRef.current}
 						scale={scale}
 						currentPage={currentPage}
 						onDocumentReady={handleDocumentReady}
@@ -1223,7 +1222,6 @@ const PdfRenderer: React.FC<RendererProps> = ({
 				{fileData && !useFullPdfJsViewer && (
 					<Document
 						file={fileData}
-						options={documentOptions}
 						onLoadSuccess={onDocumentLoadSuccess}
 						onLoadError={onDocumentLoadError}
 						loading={
@@ -1266,7 +1264,6 @@ const PdfRenderer: React.FC<RendererProps> = ({
 													scale={scale}
 													renderTextLayer={pdfRendererTextSelection}
 													renderAnnotationLayer
-													renderForms
 													onLoadSuccess={onPageLoadSuccess}
 													loading={
 														<div className='pdf-page-loading'>
@@ -1292,7 +1289,6 @@ const PdfRenderer: React.FC<RendererProps> = ({
 										scale={scale}
 										renderTextLayer={pdfRendererTextSelection}
 										renderAnnotationLayer
-										renderForms
 										onLoadSuccess={onPageLoadSuccess}
 										loading={
 											<div className='pdf-page-loading'>

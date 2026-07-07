@@ -1,3 +1,4 @@
+// extras/renderers/pdf/latexInteraction/dom.ts
 import type { PdfViewer } from './types';
 
 const CONTROL_EVENTS = [

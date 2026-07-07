@@ -1,3 +1,4 @@
+// extras/renderers/pdf/latexInteraction/AcroTexAdapter.ts
 import type {
 	LatexPdfAdapterInstallResult,
 	LatexPdfInteractionAdapter,

@@ -1,3 +1,4 @@
+// extras/renderers/pdf/latexInteraction/interactionDetection.ts
 import type { PdfAnnotation, PdfDocument } from './types';
 import { flattenActionStrings, getAnnotationName } from './dom';
 

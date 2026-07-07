@@ -1,3 +1,4 @@
+// extras/renderers/pdf/latexInteraction/index.ts
 export {
 	createLatexPdfInteractionManager,
 	LatexPdfInteractionManager,

@@ -1,24 +1,18 @@
+// extras/renderers/pdf/PdfJsFullViewer.tsx
 import type React from 'react';
 import { useEffect, useRef } from 'react';
-import { pdfjs } from 'react-pdf';
-
-// pdfjs-dist web viewer typings are incomplete/inconsistent across builds.
 import {
 	EventBus,
 	PDFViewer,
 	PDFLinkService,
 	PDFFindController,
 } from 'pdfjs-dist/web/pdf_viewer.mjs';
-
 import 'pdfjs-dist/web/pdf_viewer.css';
 
-import { createLatexPdfInteractionManager } from './latexInteraction';
-import type { LatexPdfInteractionManager } from './latexInteraction';
-
-const BASE_PATH = __BASE_PATH__;
+import { type  LatexPdfInteractionManager , createLatexPdfInteractionManager } from './latexInteraction';
 
 type Props = {
-	pdfData: Uint8Array;
+	pdfDocument: any;
 	scale: number;
 	currentPage: number;
 	onDocumentReady: (numPages: number) => void;
@@ -27,7 +21,7 @@ type Props = {
 };
 
 export const PdfJsFullViewer: React.FC<Props> = ({
-	pdfData,
+	pdfDocument,
 	scale,
 	currentPage,
 	onDocumentReady,
@@ -43,6 +37,10 @@ export const PdfJsFullViewer: React.FC<Props> = ({
 	const scaleRef = useRef(scale);
 	const currentPageRef = useRef(currentPage);
 
+	const onDocumentReadyRef = useRef(onDocumentReady);
+	const onPageChangeRef = useRef(onPageChange);
+	const onErrorRef = useRef(onError);
+
 	useEffect(() => {
 		scaleRef.current = scale;
 	}, [scale]);
@@ -52,17 +50,27 @@ export const PdfJsFullViewer: React.FC<Props> = ({
 	}, [currentPage]);
 
 	useEffect(() => {
+		onDocumentReadyRef.current = onDocumentReady;
+	}, [onDocumentReady]);
+
+	useEffect(() => {
+		onPageChangeRef.current = onPageChange;
+	}, [onPageChange]);
+
+	useEffect(() => {
+		onErrorRef.current = onError;
+	}, [onError]);
+
+	useEffect(() => {
 		let cancelled = false;
-		let loadingTask: any = null;
-		let pdfDocument: any = null;
+
+		const container = containerRef.current;
+		const viewerElement = viewerRef.current;
+
+		if (!container || !viewerElement) return;
 
 		const startLatexInteractions = () => {
-			if (
-				cancelled ||
-				interactionStartedRef.current ||
-				!pdfDocument ||
-				!pdfViewerRef.current
-			) {
+			if (cancelled || interactionStartedRef.current || !pdfViewerRef.current) {
 				return;
 			}
 
@@ -89,11 +97,6 @@ export const PdfJsFullViewer: React.FC<Props> = ({
 		};
 
 		try {
-			const container = containerRef.current;
-			const viewerElement = viewerRef.current;
-
-			if (!container || !viewerElement) return;
-
 			const eventBus = new EventBus();
 			const linkService = new PDFLinkService({ eventBus });
 			const findController = new PDFFindController({ eventBus, linkService });
@@ -119,7 +122,7 @@ export const PdfJsFullViewer: React.FC<Props> = ({
 
 			eventBus.on('pagesloaded', ({ pagesCount }: { pagesCount: number }) => {
 				if (cancelled) return;
-				onDocumentReady(pagesCount);
+				onDocumentReadyRef.current(pagesCount);
 				startLatexInteractions();
 			});
 
@@ -130,38 +133,20 @@ export const PdfJsFullViewer: React.FC<Props> = ({
 				if (cancelled) return;
 
 				internalPageChangeRef.current = true;
-				onPageChange(pageNumber);
+				onPageChangeRef.current(pageNumber);
 
 				requestAnimationFrame(() => {
 					internalPageChangeRef.current = false;
 				});
 			});
 
-			loadingTask = pdfjs.getDocument({
-				data: new Uint8Array(pdfData).slice(),
-				cMapUrl: `${BASE_PATH}/assets/cmaps/`,
-				cMapPacked: true,
-				isEvalSupported: true,
-				enableXfa: true,
-			});
-
-			loadingTask.promise
-				.then((doc: any) => {
-					if (cancelled) {
-						doc.destroy?.();
-						return;
-					}
-
-					pdfDocument = doc;
-					pdfViewer.setDocument(pdfDocument);
-					linkService.setDocument(pdfDocument, null);
-				})
-				.catch((error: Error) => {
-					if (!cancelled) onError(error);
-				});
+			linkService.setDocument(pdfDocument, null);
+			pdfViewer.setDocument(pdfDocument);
 		} catch (error) {
 			if (!cancelled) {
-				onError(error instanceof Error ? error : new Error(String(error)));
+				onErrorRef.current(
+					error instanceof Error ? error : new Error(String(error)),
+				);
 			}
 		}
 
@@ -175,17 +160,9 @@ export const PdfJsFullViewer: React.FC<Props> = ({
 				pdfViewerRef.current?.setDocument?.(null);
 			} catch {}
 
-			try {
-				pdfDocument?.destroy?.();
-			} catch {}
-
-			try {
-				loadingTask?.destroy?.();
-			} catch {}
-
 			pdfViewerRef.current = null;
 		};
-	}, [pdfData, onDocumentReady, onError, onPageChange]);
+	}, [pdfDocument]);
 
 	useEffect(() => {
 		const pdfViewer = pdfViewerRef.current;

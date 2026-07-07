@@ -1,3 +1,4 @@
+// extras/renderers/pdf/latexInteraction/types.ts
 export type PdfAnnotation = {
 	id?: string;
 	subtype?: string;

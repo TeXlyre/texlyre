@@ -1,3 +1,4 @@
+// extras/renderers/pdf/latexInteraction/LatexPdfInteractionManager.ts
 import { AcroTexAdapter } from './AcroTexAdapter';
 import { AnimateAdapter } from './AnimateAdapter';
 import { OcgAdapter } from './OcgAdapter';
