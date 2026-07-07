@@ -55,6 +55,7 @@ const PdfViewer: React.FC<ViewerProps> = ({
 	const [currentPage, setCurrentPage] = useState(1);
 	const [scale, setScale] = useState(1.0);
 
+	const loadingTaskRef = useRef<pdfjs.PDFDocumentLoadingTask | null>(null);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const pdfContainerRef = useRef<HTMLDivElement>(null);
 	const pdfDocRef = useRef<pdfjs.PDFDocumentProxy | null>(null);
@@ -76,10 +77,11 @@ const PdfViewer: React.FC<ViewerProps> = ({
 		let cancelled = false;
 
 		const load = async () => {
-			if (pdfDocRef.current) {
+			if (loadingTaskRef.current) {
 				try {
-					pdfDocRef.current.destroy();
+					await loadingTaskRef.current.destroy();
 				} catch (_e) {}
+				loadingTaskRef.current = null;
 				pdfDocRef.current = null;
 			}
 
@@ -94,9 +96,11 @@ const PdfViewer: React.FC<ViewerProps> = ({
 					standardFontDataUrl: `${BASE_PATH}/assets/standard_fonts/`,
 				});
 
+				loadingTaskRef.current = task;
+
 				const doc = await task.promise;
 				if (cancelled) {
-					doc.destroy();
+					await task.destroy();
 					return;
 				}
 
@@ -123,10 +127,11 @@ const PdfViewer: React.FC<ViewerProps> = ({
 				} catch (_e) {}
 				renderTaskRef.current = null;
 			}
-			if (pdfDocRef.current) {
+			if (loadingTaskRef.current) {
 				try {
-					pdfDocRef.current.destroy();
+					void loadingTaskRef.current.destroy();
 				} catch (_e) {}
+				loadingTaskRef.current = null;
 				pdfDocRef.current = null;
 			}
 		};

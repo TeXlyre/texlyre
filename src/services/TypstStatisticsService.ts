@@ -255,8 +255,9 @@ class TypstStatisticsService {
 
 	private async extractLastPageText(pdfBytes: Uint8Array): Promise<string> {
 		const pdfjsLib = await import('pdfjs-dist');
-		const pdf = await pdfjsLib.getDocument({ data: pdfBytes.slice().buffer })
-			.promise;
+		const task = pdfjsLib.getDocument({ data: pdfBytes.slice().buffer });
+		const pdf = await task.promise;
+
 		try {
 			const page = await pdf.getPage(pdf.numPages);
 			const textContent = await page.getTextContent();
@@ -264,7 +265,7 @@ class TypstStatisticsService {
 				.map((item) => item.str ?? '')
 				.join(' ');
 		} finally {
-			await pdf.destroy();
+			await task.destroy();
 		}
 	}
 

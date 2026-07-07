@@ -5030,10 +5030,10 @@ human-signals@^2.1.0:
   resolved "https://registry.npmjs.org/human-signals/-/human-signals-2.1.0.tgz"
   integrity sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==
 
-i18next@^26.0.11, "i18next@>= 26.0.10":
-  version "26.1.0"
-  resolved "https://registry.npmjs.org/i18next/-/i18next-26.1.0.tgz"
-  integrity sha512-dIU6td04DvQuIqVst5S9g0GviTmhZ0DYD4b9ociVGJmuCa5vZ2de/t+Enf4olvj87mF8Y2lwjNQBwC9QZsvzKQ==
+i18next@^26.3.4, "i18next@>= 26.2.0":
+  version "26.3.4"
+  resolved "https://registry.npmjs.org/i18next/-/i18next-26.3.4.tgz"
+  integrity sha512-pa7m0d7pBDqGHZxljT+WPFeyFgQ7P7SciPPo1tTqYuO0z4sqADYhwnBESmmGp/wEof1inwdls/k8ZgTg8rxFHA==
 
 iconv-lite@0.6.3:
   version "0.6.3"
@@ -7180,10 +7180,10 @@ react-dom@*, "react-dom@^18.0.0 || ^19.0.0", "react-dom@^18.2.0 || 19.0.0-rc-de6
   dependencies:
     scheduler "^0.27.0"
 
-react-i18next@^17.0.7:
-  version "17.0.7"
-  resolved "https://registry.npmjs.org/react-i18next/-/react-i18next-17.0.7.tgz"
-  integrity sha512-rwtPXsb/zwzDafN+gytcjF5YnqGQQIRmCQ6DctBC1VSipRB8GD/MWEVrFP42vjMyuYydxWxM8CZRt+yiNuuoHg==
+react-i18next@^17.0.8:
+  version "17.0.8"
+  resolved "https://registry.npmjs.org/react-i18next/-/react-i18next-17.0.8.tgz"
+  integrity sha512-0ooKbGLU8JXhe1zwpQUWIeXSgLPOfwJmgheWRIUpcoA0CpyabpGhayjdG+/eA5esC1AQ8h2jWpXjJfzQzeDOCw==
   dependencies:
     "@babel/runtime" "^7.29.2"
     html-parse-stringify "^3.0.1"

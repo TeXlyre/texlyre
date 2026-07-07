@@ -74,7 +74,6 @@ const loadPdfDocument = async (pdfData: Uint8Array) => {
 		data: new Uint8Array(pdfData).slice(),
 		cMapUrl: `${BASE_PATH}/assets/cmaps/`,
 		cMapPacked: true,
-		isEvalSupported: true,
 		enableXfa: true,
 		disableFontFace: false,
 		useSystemFonts: true,
