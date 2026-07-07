@@ -12,5 +12,5 @@ module.exports = {
             })),
         }),
     })),
-    version: '5.4.296',
+    version: '6.1.200',
 };
