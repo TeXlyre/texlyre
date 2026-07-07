@@ -1,4 +1,5 @@
 // extras/renderers/pdf/latexInteraction/OcgAdapter.ts
+import { t } from '@/i18n';
 import type {
 	LatexPdfAdapterInstallResult,
 	LatexPdfInteractionAdapter,
@@ -126,8 +127,8 @@ export const OcgAdapter: LatexPdfInteractionAdapter = {
 		const groups = getGroups(context.analysis.optionalContentConfig);
 		const names = groups.map((group) => group.name);
 		const message = names.length
-			? `PDF layers detected: ${names.join(', ')}`
-			: 'PDF optional content layers detected.';
+			? t('PDF layers detected: {names}', { names: names.join(', ') })
+			: t('PDF optional content layers detected.');
 		const disposers: Array<() => void> = [];
 
 		root.classList.add('pdf-latex-ocg-enabled');

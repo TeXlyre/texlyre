@@ -1615,6 +1615,8 @@
   "PDF 1.7": "PDF 1.7",
   "PDF 2.0": "PDF 2.0",
   "PDF HTML Output": "PDF HTML Output",
+  "PDF layers detected: {names}": "PDF layers detected: {{names}}",
+  "PDF optional content layers detected.": "PDF optional content layers detected.",
   "PDF Options": "PDF Options",
   "PDF Output": "PDF Output",
   "PDF Standards:": "PDF Standards:",

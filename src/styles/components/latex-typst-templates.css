@@ -39,7 +39,7 @@
 }
 
 .template-import-modal .template-search-controls .template-type-select {
-	padding: var(--space-md) !important;
+	padding: var(--space-md) calc(var(--space-lg) + var(--space-sm)) var(--space-md) var(--space-md);
 	border: 1px solid var(--accent-border) !important;
 	border-radius: var(--radius-sm) !important;
 	background-color: var(--pico-background) !important;

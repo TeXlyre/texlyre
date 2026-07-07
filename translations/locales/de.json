@@ -1494,6 +1494,8 @@
   "PDF 1.7": "PDF 1.7",
   "PDF 2.0": "PDF 2.0",
   "PDF HTML Output": "PDF HTML-Ausgabe",
+  "PDF layers detected: {names}": "PDF-Ebenen erkannt: {{names}}",
+  "PDF optional content layers detected.": "Optionale Inhaltsebenen im PDF erkannt.",
   "PDF Options": "PDF-Optionen",
   "PDF Output": "PDF-Ausgabe",
   "PDF Standards:": "PDF-Standards:",
