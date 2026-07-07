@@ -1,3 +1,4 @@
+// extras/renderers/pdf/latexInteraction/AnimateAdapter.ts
 import type {
 	LatexPdfAdapterInstallResult,
 	LatexPdfInteractionAdapter,

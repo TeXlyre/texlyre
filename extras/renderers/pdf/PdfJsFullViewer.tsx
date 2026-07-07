@@ -1,3 +1,4 @@
+// extras/renderers/pdf/PdfJsFullViewer.tsx
 import {
 	forwardRef,
 	useCallback,
@@ -190,12 +191,16 @@ export const PdfJsFullViewer = forwardRef<PdfJsFullViewerHandle, Props>(
 
 			const containerRect = container.getBoundingClientRect();
 			const pageRect = pageDiv.getBoundingClientRect();
-			const pageTop = container.scrollTop + pageRect.top - containerRect.top - 8;
+			const pageTop =
+				container.scrollTop + pageRect.top - containerRect.top - 8;
 			const pageHeight = pageDiv.offsetHeight || pageRect.height || 1;
 
 			return {
 				page,
-				ratio: Math.max(0, Math.min(1, (container.scrollTop - pageTop) / pageHeight)),
+				ratio: Math.max(
+					0,
+					Math.min(1, (container.scrollTop - pageTop) / pageHeight),
+				),
 			};
 		}, []);
 
