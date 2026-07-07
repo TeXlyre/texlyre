@@ -25,7 +25,7 @@ export function useRegisterLSPConfigSettings() {
 
 		registerSetting({
 			id: 'generic-lsp-configs',
-			category: t('LSP'),
+			category: t('External Tools'),
 			subcategory: t('Generic LSP'),
 			type: 'codemirror',
 			label: t('LSP Configurations'),
