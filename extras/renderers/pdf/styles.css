@@ -1,8 +1,19 @@
-.pdf-renderer-viewer,
-.pdf-renderer-viewer *,
-.pdf-renderer-viewer *::before,
-.pdf-renderer-viewer *::after {
-	box-sizing: content-box;
+/* extras/renderers/pdf/styles.css */
+/* Do not globally change box-sizing inside the PDF.js viewer. PDF.js positions
+   canvas, textLayer, and annotationLayer from its own CSS and expects those
+   boxes to remain untouched. */
+.pdf-renderer-container,
+.pdf-renderer-container *,
+.pdf-renderer-container *::before,
+.pdf-renderer-container *::after {
+	box-sizing: border-box;
+}
+
+.pdf-full-viewer-container,
+.pdf-full-viewer-container *,
+.pdf-full-viewer-container *::before,
+.pdf-full-viewer-container *::after {
+	box-sizing: revert;
 }
 
 .pdf-renderer-container {
@@ -169,36 +180,9 @@
 	line-height: 1;
 }
 
-.react-pdf__Document,
-.react-pdf__Document__container {
-	min-height: 100%;
-	width: 100%;
-}
-
-.react-pdf__Page .textLayer,
-.react-pdf__Page .annotationLayer {
-	inset: 0;
-	position: absolute;
-}
-
-.react-pdf__Page,
-.react-pdf__Page canvas,
-.react-pdf__Page .textLayer,
-.react-pdf__Page .annotationLayer {
-	box-sizing: content-box !important;
-	box-shadow: 0 2px 8px var(--color-shadow);
-}
-
-.react-pdf__Page {
-	background-color: white !important;
-	margin: 10px auto !important;
-	width: auto !important;
-	max-width: none !important;
-}
-
 .pdf-renderer-content {
 	flex: 1 1 auto;
-	overflow: auto;
+	overflow: hidden;
 	background-color: var(--pico-background);
 	position: relative;
 }
@@ -270,131 +254,36 @@
 	background: transparent;
 }
 
-.textLayer {
+/* PDF.js owns textLayer and annotationLayer geometry. Do not set position,
+   inset, dimensions, padding, font-size, or box-sizing on those layers here. */
+.pdf-full-viewer-container {
 	position: absolute;
-	left: 0;
-	top: 0;
-	right: 0;
-	bottom: 0;
-	overflow: hidden;
-	line-height: 1;
-	pointer-events: none;
-	z-index: 2;
-}
-
-.textLayer > span {
-	color: transparent;
-	position: absolute;
-	white-space: pre;
-	cursor: text;
-	transform-origin: 0% 0%;
-	user-select: text !important;
-	pointer-events: auto;
-}
-
-.textLayer .highlight {
-	margin: -1px;
-	padding: 1px;
-	background-color: rgba(180, 0, 255, 0.25);
-	border-radius: 4px;
-	pointer-events: none;
-}
-
-.textLayer .highlight.begin {
-	border-radius: 4px 0 0 4px;
-}
-
-.textLayer .highlight.end {
-	border-radius: 0 4px 4px 0;
-}
-
-.textLayer .highlight.middle {
-	border-radius: 0;
-}
-
-.textLayer .highlight.selected {
-	background-color: rgba(0, 100, 255, 0.25);
-}
-
-.annotationLayer {
-	position: absolute;
-	top: 0;
-	left: 0;
-	pointer-events: none;
-	z-index: 3;
-}
-
-.annotationLayer section {
-	position: absolute;
-	text-align: initial;
-	pointer-events: auto;
-	user-select: none !important;
-}
-
-.annotationLayer .buttonWidgetAnnotation.pushButton > a {
-	position: absolute;
-	font-size: 1em;
-	left: 0;
-	top: 0;
-	right: 0;
-	bottom: 0;
-}
-
-.annotationLayer .textWidgetAnnotation input,
-.annotationLayer .textWidgetAnnotation textarea,
-.annotationLayer .choiceWidgetAnnotation select,
-.annotationLayer .buttonWidgetAnnotation.pushButton > a {
-	background: rgba(0, 54, 255, 0.13);
-	border: 1px solid transparent;
-	box-sizing: border-box;
-	font-size: 9px;
-	height: 100%;
-	margin: 0;
-	padding: 0 3px;
-	vertical-align: top;
+	inset: 0;
 	width: 100%;
-}
-
-.annotationLayer .choiceWidgetAnnotation select option {
-	padding: 0;
-}
-
-.annotationLayer .buttonWidgetAnnotation.pushButton > a:hover,
-.annotationLayer .buttonWidgetAnnotation.pushButton > a:focus {
-	color: rgba(0, 0, 0, 1);
-	background: rgba(0, 54, 255, 0.13);
-}
-
-.annotationLayer .textWidgetAnnotation input:focus,
-.annotationLayer .textWidgetAnnotation textarea:focus,
-.annotationLayer .choiceWidgetAnnotation select:focus {
-	background: rgba(0, 54, 255, 0.13);
-	border: 1px solid transparent;
-}
-
-.annotationLayer .buttonWidgetAnnotation.checkBox input,
-.annotationLayer .buttonWidgetAnnotation.radioButton input {
-	background: rgba(0, 54, 255, 0.13);
-	border: 1px solid transparent;
-	box-sizing: border-box;
 	height: 100%;
-	margin: 0;
-	vertical-align: top;
-	width: 100%;
+	overflow: auto;
+	background-color: var(--pico-background);
 }
 
-.annotationLayer .choiceWidgetAnnotation select {
-	background: rgba(0, 54, 255, 0.13);
+.pdf-full-viewer-container .pdfViewer {
+	position: relative;
 }
 
-.annotationLayer .buttonWidgetAnnotation.checkBox input[disabled],
-.annotationLayer .buttonWidgetAnnotation.radioButton input[disabled] {
-	background: rgba(0, 0, 0, 0.2);
+.pdf-full-viewer-container .pdfViewer .page {
+	margin: 10px auto;
 }
 
-.annotationLayer .linkAnnotation > a,
-.annotationLayer .buttonWidgetAnnotation.pushButton > a {
-	pointer-events: auto;
+.pdf-full-viewer-container .annotationLayer .buttonWidgetAnnotation,
+.pdf-full-viewer-container .annotationLayer .buttonWidgetAnnotation *,
+.pdf-full-viewer-container .annotationLayer .linkAnnotation,
+.pdf-full-viewer-container .annotationLayer .linkAnnotation * {
+	cursor: pointer;
+}
+
+.pdf-mode-badge {
+	margin-left: 0.5rem;
+	font-size: 0.75rem;
+	opacity: 0.75;
 }
 
 @keyframes source-map-highlight-pulse {
@@ -412,4 +301,127 @@
 		opacity: 0.4;
 		transform: scale(1);
 	}
+}
+
+.pdf-latex-ocg-enabled {
+	position: relative;
+}
+
+.pdf-latex-ocg-notice {
+	position: sticky;
+	top: 0;
+	z-index: 20;
+	margin: 0 auto 0.5rem;
+	padding: 0.35rem 0.65rem;
+	width: fit-content;
+	max-width: min(90%, 720px);
+	font-size: 0.75rem;
+	line-height: 1.25;
+	color: var(--text-color);
+	background: var(--pico-secondary-background);
+	border: 1px solid var(--accent-border, #444);
+	border-radius: 4px;
+	box-shadow: 0 2px 8px var(--color-shadow);
+}
+
+.pdf-latex-ocg-panel {
+	position: sticky;
+	top: 2.4rem;
+	z-index: 19;
+	margin: 0 auto 0.5rem;
+	padding: 0.5rem;
+	width: fit-content;
+	max-width: min(90%, 720px);
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.75rem;
+	color: var(--text-color);
+	background: var(--pico-background);
+	border: 1px solid var(--accent-border, #444);
+	border-radius: 4px;
+	box-shadow: 0 2px 8px var(--color-shadow);
+}
+
+.pdf-latex-ocg-title {
+	font-weight: 600;
+	margin-right: 0.25rem;
+}
+
+.pdf-latex-ocg-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	margin: 0;
+	cursor: pointer;
+}
+
+.pdf-latex-ocg-toggle input {
+	margin: 0;
+}
+
+.pdf-page-highlight {
+	position: absolute;
+	pointer-events: none;
+	background-color: rgba(255, 235, 59, 0.4);
+	border: 2px solid rgba(255, 193, 7, 0.8);
+	border-radius: 2px;
+	animation: source-map-highlight-pulse 1.5s ease-out;
+	z-index: 6;
+}
+
+/* PDF.js full viewer layout. PDF.js BaseViewer requires the container itself to be absolutely positioned. */
+.pdf-renderer-content {
+	position: relative;
+	overflow: hidden;
+}
+
+.pdf-full-viewer-container {
+	position: absolute;
+	inset: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	background-color: var(--pico-background);
+}
+
+.pdf-full-viewer-container .pdfViewer {
+	position: relative;
+}
+
+.pdf-full-viewer-container .pdfViewer .page {
+	margin: 10px auto;
+	box-shadow: 0 2px 8px var(--color-shadow);
+}
+
+/* Keep PDF.js layer geometry pristine. These overrides intentionally only undo
+   broad app styles; pdf_viewer.css remains the source of truth. */
+.pdf-full-viewer-container .page,
+.pdf-full-viewer-container .canvasWrapper,
+.pdf-full-viewer-container canvas,
+.pdf-full-viewer-container .textLayer,
+.pdf-full-viewer-container .annotationLayer {
+	box-sizing: content-box;
+}
+
+.pdf-full-viewer-container .textLayer,
+.pdf-full-viewer-container .annotationLayer {
+	margin: 0 !important;
+	padding: 0 !important;
+	border: 0 !important;
+	transform-origin: 0 0;
+}
+
+.pdf-full-viewer-container .annotationLayer section,
+.pdf-full-viewer-container .textLayer span {
+	box-sizing: content-box;
+}
+
+.pdf-full-viewer-container .annotationLayer .buttonWidgetAnnotation,
+.pdf-full-viewer-container .annotationLayer .buttonWidgetAnnotation *,
+.pdf-full-viewer-container .annotationLayer .linkAnnotation,
+.pdf-full-viewer-container .annotationLayer .linkAnnotation * {
+	cursor: pointer;
 }

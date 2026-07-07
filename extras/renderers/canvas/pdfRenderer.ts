@@ -320,6 +320,12 @@ function createTextSpan(
 	return span;
 }
 
+function convertPdfRectToViewportRect(viewport: any, rect: number[]): number[] {
+	const [x1, y1] = viewport.convertToViewportPoint(rect[0], rect[1]);
+	const [x2, y2] = viewport.convertToViewportPoint(rect[2], rect[3]);
+	return [x1, y1, x2, y2];
+}
+
 export async function renderAnnotationLayer(
 	pdfDocRef: RefObject<any>,
 	pageNumber: number,
@@ -351,7 +357,7 @@ export async function renderAnnotationLayer(
 		const rect = annotation.rect;
 		if (!rect || rect.length < 4) continue;
 
-		const [x1, y1, x2, y2] = viewport.convertToViewportRectangle(rect);
+		const [x1, y1, x2, y2] = convertPdfRectToViewportRect(viewport, rect);
 		const left = Math.min(x1, x2);
 		const top = Math.min(y1, y2);
 		const width = Math.abs(x2 - x1);

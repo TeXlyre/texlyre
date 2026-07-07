@@ -3,8 +3,8 @@ import type { RendererPlugin } from '@/plugins/PluginInterface';
 import PdfRenderer from './PdfRenderer';
 import { getPdfRendererSettings } from './settings';
 
-export const PLUGIN_NAME = 'Enhanced PDF.js Viewer (pdfjs-dist 5.4.296)';
-export const PLUGIN_VERSION = '0.1.0';
+export const PLUGIN_NAME = 'Enhanced PDF.js Viewer (pdfjs-dist 6.1.200)';
+export const PLUGIN_VERSION = '0.2.0';
 
 const pdfRendererPlugin: RendererPlugin = {
 	id: 'pdf-renderer',

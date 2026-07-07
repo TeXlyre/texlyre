@@ -1584,6 +1584,8 @@
   "PDF 1.7": "PDF 1.7",
   "PDF 2.0": "PDF 2.0",
   "PDF HTML Output": "PDF HTML إخراج",
+  "PDF layers detected: {names}": "تم اكتشاف طبقات PDF التالية: {{names}}",
+  "PDF optional content layers detected.": "تم اكتشاف طبقات المحتوى الاختيارية في ملف PDF.",
   "PDF Options": "خيارات PDF",
   "PDF Output": "إخراج PDF",
   "PDF Standards:": "معايير PDF:",

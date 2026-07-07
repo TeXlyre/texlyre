@@ -278,7 +278,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 	const layout = useMemo(() => {
 		const offsets: number[] = [];
 		let height = 0;
-		let width = DEFAULT_WIDTH * scale;
+		let width = 0;
 
 		for (let page = 1; page <= numPages; page++) {
 			const size = pageSizeFor(pageMetadata, page, scale);
@@ -288,7 +288,7 @@ const CanvasRenderer: React.FC<RendererProps> = ({
 			width = Math.max(width, size.width);
 		}
 
-		return { offsets, height, width };
+		return { offsets, height, width: width || DEFAULT_WIDTH * scale };
 	}, [numPages, pageMetadata, scale]);
 
 	const svgCtx = useMemo<SvgRenderContext>(
