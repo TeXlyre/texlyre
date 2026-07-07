@@ -1,10 +1,8 @@
-// extras/renderers/pdf/PdfJsFullViewer.tsx
-import type React from 'react';
 import {
 	forwardRef,
+	useCallback,
 	useEffect,
 	useImperativeHandle,
-	useMemo,
 	useRef,
 } from 'react';
 import {
@@ -46,6 +44,7 @@ type Props = {
 export type PdfJsFullViewerHandle = {
 	goToPage: (page: number) => void;
 	setScale: (scale: number) => void;
+	applyFitScale: (mode: 'fit-width' | 'fit-height') => number | null;
 	getPageSize: (page: number) => PageSize | null;
 	getScrollTop: () => number;
 	setScrollTop: (scrollTop: number) => void;
@@ -61,6 +60,9 @@ const ANNOTATION_MODE = {
 	disabled: 0,
 	enabled: 2,
 } as const;
+
+const MAX_CANVAS_PIXELS = 2 ** 24;
+const SCALE_DEBOUNCE_MS = 120;
 
 const toNumber = (value: unknown, fallback = 1): number => {
 	const n = typeof value === 'number' ? value : Number(value);
@@ -87,9 +89,9 @@ function getPageDiv(pdfViewer: any, page: number): HTMLElement | null {
 }
 
 function clearHighlight(root: HTMLElement | null): void {
-	root
-		?.querySelectorAll('.pdf-page-highlight')
-		.forEach((element) => element.remove());
+	root?.querySelectorAll('.pdf-page-highlight').forEach((element) => {
+		element.remove();
+	});
 }
 
 function renderHighlight(pdfViewer: any, highlight: Highlight): void {
@@ -143,6 +145,8 @@ export const PdfJsFullViewer = forwardRef<PdfJsFullViewerHandle, Props>(
 		const readyRef = useRef(false);
 		const pendingPageRef = useRef<number | null>(null);
 		const pendingScaleRef = useRef<number | null>(null);
+		const scrollCorrectionPageRef = useRef<number | null>(null);
+		const scaleDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 		const pageSizesRef = useRef<Map<number, PageSize>>(new Map());
 
 		const propsRef = useRef({
@@ -178,79 +182,121 @@ export const PdfJsFullViewer = forwardRef<PdfJsFullViewerHandle, Props>(
 			onError,
 		]);
 
-		const viewerKey = useMemo(
-			() =>
-				`${scrollView ? 'scroll' : 'single'}-${textSelection}-${annotations}`,
-			[scrollView, textSelection, annotations],
-		);
-
-		const scrollToPageDom = (page: number): void => {
+		const scrollToPageDom = useCallback((page: number): void => {
 			const container = containerRef.current;
 			const pageDiv = getPageDiv(pdfViewerRef.current, page);
 			if (!container || !pageDiv) return;
 
-			const containerRect = container.getBoundingClientRect();
-			const pageRect = pageDiv.getBoundingClientRect();
-			container.scrollTop += pageRect.top - containerRect.top - 8;
-		};
+			const delta =
+				pageDiv.getBoundingClientRect().top -
+				container.getBoundingClientRect().top -
+				8;
 
-		const setViewerPage = (page: unknown): void => {
-			const pdfViewer = pdfViewerRef.current;
-			const count =
-				getPagesCount(pdfViewer, pdfDocument) || pdfDocument?.numPages || 1;
-			const target = toPageNumber(page, count);
+			if (Math.abs(delta) > 1) container.scrollTop += delta;
+		}, []);
 
-			if (
-				!pdfViewer ||
-				!readyRef.current ||
-				getPagesCount(pdfViewer, pdfDocument) < 1
-			) {
-				pendingPageRef.current = target;
-				return;
+		const isViewerReady = useCallback(
+			(): boolean =>
+				Boolean(pdfViewerRef.current) &&
+				readyRef.current &&
+				getPagesCount(pdfViewerRef.current, pdfDocument) >= 1,
+			[pdfDocument],
+		);
+
+		const cancelScaleDebounce = useCallback((): void => {
+			if (scaleDebounceRef.current) {
+				clearTimeout(scaleDebounceRef.current);
+				scaleDebounceRef.current = null;
 			}
+		}, []);
 
-			pendingPageRef.current = null;
+		const setViewerPage = useCallback(
+			(page: unknown): void => {
+				const pdfViewer = pdfViewerRef.current;
+				const count =
+					getPagesCount(pdfViewer, pdfDocument) || pdfDocument?.numPages || 1;
+				const target = toPageNumber(page, count);
 
-			try {
-				if (scrollView && typeof pdfViewer.scrollPageIntoView === 'function') {
-					pdfViewer.scrollPageIntoView({ pageNumber: target });
-					requestAnimationFrame(() => scrollToPageDom(target));
-				} else {
-					pdfViewer.currentPageNumber = target;
+				if (!isViewerReady()) {
+					pendingPageRef.current = target;
+					return;
 				}
-			} catch {
-				scrollToPageDom(target);
+
+				pendingPageRef.current = null;
+
 				try {
-					pdfViewer.currentPageNumber = target;
+					if (
+						scrollView &&
+						typeof pdfViewer.scrollPageIntoView === 'function'
+					) {
+						scrollCorrectionPageRef.current = target;
+						pdfViewer.scrollPageIntoView({ pageNumber: target });
+						requestAnimationFrame(() => {
+							scrollToPageDom(target);
+							requestAnimationFrame(() => scrollToPageDom(target));
+						});
+					} else {
+						pdfViewer.currentPageNumber = target;
+					}
 				} catch {
-					// Ignore best-effort page state sync failures.
+					scrollToPageDom(target);
+					try {
+						pdfViewer.currentPageNumber = target;
+					} catch {
+						// Ignore best-effort page state sync failures.
+					}
 				}
-			}
-		};
+			},
+			[pdfDocument, isViewerReady, scrollToPageDom, scrollView],
+		);
 
-		const setViewerScale = (nextScale: unknown): void => {
-			const pdfViewer = pdfViewerRef.current;
-			const scaleNumber = toNumber(nextScale, 1);
+		const setViewerScale = useCallback(
+			(nextScale: unknown): void => {
+				const scaleNumber = toNumber(nextScale, 1);
 
-			if (
-				!pdfViewer ||
-				!readyRef.current ||
-				getPagesCount(pdfViewer, pdfDocument) < 1
-			) {
-				pendingScaleRef.current = scaleNumber;
-				return;
-			}
+				if (!isViewerReady()) {
+					pendingScaleRef.current = scaleNumber;
+					return;
+				}
 
-			pendingScaleRef.current = null;
-			pdfViewer.currentScale = scaleNumber;
-			renderHighlight(pdfViewer, propsRef.current.highlight);
-		};
+				pendingScaleRef.current = null;
+				scrollCorrectionPageRef.current = null;
+
+				cancelScaleDebounce();
+
+				scaleDebounceRef.current = setTimeout(() => {
+					scaleDebounceRef.current = null;
+					const pdfViewer = pdfViewerRef.current;
+					if (!pdfViewer || !readyRef.current) return;
+
+					if (toNumber(pdfViewer.currentScale, 0) !== scaleNumber) {
+						pdfViewer.currentScale = scaleNumber;
+					}
+
+					renderHighlight(pdfViewer, propsRef.current.highlight);
+				}, SCALE_DEBOUNCE_MS);
+			},
+			[cancelScaleDebounce, isViewerReady],
+		);
 
 		useImperativeHandle(
 			ref,
 			() => ({
 				goToPage: (page: number) => setViewerPage(page),
 				setScale: (nextScale: number) => setViewerScale(nextScale),
+				applyFitScale: (mode: 'fit-width' | 'fit-height') => {
+					const pdfViewer = pdfViewerRef.current;
+					if (!isViewerReady()) return null;
+
+					cancelScaleDebounce();
+					scrollCorrectionPageRef.current = null;
+					pdfViewer.currentScaleValue =
+						mode === 'fit-width' ? 'page-width' : 'page-height';
+
+					const resolved = toNumber(pdfViewer.currentScale, 1);
+					renderHighlight(pdfViewer, propsRef.current.highlight);
+					return resolved;
+				},
 				getPageSize: (page: number) => pageSizesRef.current.get(page) || null,
 				getScrollTop: () => containerRef.current?.scrollTop || 0,
 				setScrollTop: (scrollTop: number) => {
@@ -263,7 +309,7 @@ export const PdfJsFullViewer = forwardRef<PdfJsFullViewerHandle, Props>(
 					renderHighlight(pdfViewer, propsRef.current.highlight);
 				},
 			}),
-			[pdfDocument],
+			[setViewerPage, setViewerScale, isViewerReady, cancelScaleDebounce],
 		);
 
 		useEffect(() => {
@@ -279,6 +325,8 @@ export const PdfJsFullViewer = forwardRef<PdfJsFullViewerHandle, Props>(
 				pdfDocument?.numPages || 1,
 			);
 			pendingScaleRef.current = propsRef.current.scale;
+			scrollCorrectionPageRef.current = null;
+			cancelScaleDebounce();
 			interactionStartedRef.current = false;
 			interactionManagerRef.current?.dispose();
 			interactionManagerRef.current = null;
@@ -340,6 +388,7 @@ export const PdfJsFullViewer = forwardRef<PdfJsFullViewerHandle, Props>(
 					eventBus,
 					linkService,
 					findController,
+					maxCanvasPixels: MAX_CANVAS_PIXELS,
 					textLayerMode: textSelection
 						? TEXT_LAYER_MODE.enabled
 						: TEXT_LAYER_MODE.disabled,
@@ -393,6 +442,12 @@ export const PdfJsFullViewer = forwardRef<PdfJsFullViewerHandle, Props>(
 						if (cancelled) return;
 						collectPageSize(pageNumber);
 						renderHighlight(pdfViewer, propsRef.current.highlight);
+
+						if (scrollCorrectionPageRef.current === pageNumber) {
+							scrollCorrectionPageRef.current = null;
+							scrollToPageDom(pageNumber);
+						}
+
 						startLatexInteractions();
 					},
 				);
@@ -423,6 +478,14 @@ export const PdfJsFullViewer = forwardRef<PdfJsFullViewerHandle, Props>(
 					({ pageNumber }: { pageNumber?: number }) => {
 						if (cancelled || internalPageChangeRef.current || !pageNumber)
 							return;
+
+						if (
+							scrollCorrectionPageRef.current !== null &&
+							pageNumber !== scrollCorrectionPageRef.current
+						) {
+							scrollCorrectionPageRef.current = null;
+						}
+
 						propsRef.current.onPageChange(
 							toPageNumber(pageNumber, getPagesCount(pdfViewer, pdfDocument)),
 						);
@@ -442,6 +505,8 @@ export const PdfJsFullViewer = forwardRef<PdfJsFullViewerHandle, Props>(
 			return () => {
 				cancelled = true;
 				readyRef.current = false;
+				scrollCorrectionPageRef.current = null;
+				cancelScaleDebounce();
 				interactionStartedRef.current = false;
 				interactionManagerRef.current?.dispose();
 				interactionManagerRef.current = null;
@@ -456,20 +521,37 @@ export const PdfJsFullViewer = forwardRef<PdfJsFullViewerHandle, Props>(
 				pdfViewerRef.current = null;
 				linkServiceRef.current = null;
 			};
-		}, [pdfDocument, viewerKey, scrollView, textSelection, annotations]);
+		}, [
+			pdfDocument,
+			scrollView,
+			textSelection,
+			annotations,
+			cancelScaleDebounce,
+			setViewerPage,
+			scrollToPageDom,
+		]);
 
 		useEffect(() => {
 			const pdfViewer = pdfViewerRef.current;
 			if (!pdfViewer) return;
 			setViewerScale(scale);
 			renderHighlight(pdfViewer, highlight);
-		}, [scale, highlight]);
+		}, [scale, highlight, setViewerScale]);
 
 		useEffect(() => {
 			const pdfViewer = pdfViewerRef.current;
 			if (!pdfViewer || internalPageChangeRef.current) return;
+			if (
+				readyRef.current &&
+				toPageNumber(
+					pdfViewer.currentPageNumber,
+					getPagesCount(pdfViewer, pdfDocument),
+				) === currentPage
+			) {
+				return;
+			}
 			setViewerPage(currentPage);
-		}, [currentPage, pdfDocument]);
+		}, [currentPage, pdfDocument, setViewerPage]);
 
 		useEffect(() => {
 			const container = containerRef.current;

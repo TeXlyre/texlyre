@@ -1,4 +1,3 @@
-// extras/renderers/pdf/latexInteraction/AnimateAdapter.ts
 import type {
 	LatexPdfAdapterInstallResult,
 	LatexPdfInteractionAdapter,
@@ -73,6 +72,24 @@ function collectJavaScript(context: LatexPdfInteractionContext): string {
 	return sources.flatMap(flattenActionStrings).join('\n');
 }
 
+function extractFunctionBody(javascript: string, name: string): string {
+	const start = javascript.search(new RegExp(`${name}\\s*=\\s*function`, 'i'));
+	if (start < 0) return '';
+
+	const open = javascript.indexOf('{', start);
+	if (open < 0) return '';
+
+	let depth = 0;
+	for (let i = open; i < javascript.length; i++) {
+		const char = javascript[i];
+		if (char === '{') depth++;
+		else if (char === '}' && --depth === 0)
+			return javascript.slice(open, i + 1);
+	}
+
+	return '';
+}
+
 function detectPlaybackOptions(
 	prefix: string,
 	javascript: string,
@@ -93,21 +110,24 @@ function detectPlaybackOptions(
 			? 1000 / milliseconds
 			: DEFAULT_FPS;
 
-	const autoplay = new RegExp(
-		`${p}play(?:Right|Left|Fwd|Bwd|PauseFwd|PauseBwd)\\s*\\(`,
-		'i',
-	).test(javascript);
+	const gotoNext =
+		extractFunctionBody(javascript, `${p}gotoNext`) ||
+		extractFunctionBody(javascript, `${p}gotoFwd`);
+
+	const autoplay = new RegExp(`${p}play(?:Right|Fwd)\\s*\\(`, 'i').test(
+		javascript,
+	);
 
 	const palindrome = new RegExp(
-		`${p}playPause(?:Fwd|Right)\\b[\\s\\S]*?${p}playPause(?:Bwd|Left)\\b|` +
-			`${p}(?:playFwd|playRight)\\b[\\s\\S]*?${p}(?:playBwd|playLeft)\\b`,
+		`${p}(?:playsRight|playLeft|playBwd|gotoPrev)`,
 		'i',
-	).test(scoped);
+	).test(gotoNext);
 
-	const stopsAtEnd = new RegExp(`${p}(?:stopLast|pause)\\s*\\(`, 'i').test(
-		scoped,
-	);
-	const loop = palindrome || !stopsAtEnd;
+	const loop =
+		!palindrome &&
+		new RegExp(`${p}(?:seekFrame\\s*\\(\\s*0|gotoBegin|stopFirst)`, 'i').test(
+			gotoNext,
+		);
 
 	return {
 		autoplay,
@@ -172,9 +192,9 @@ function control(instance: Instance, suffix: string): HTMLElement | undefined {
 function setFrame(instance: Instance, nextIndex: number): void {
 	if (instance.frames.length === 0) return;
 	const clamped = Math.max(0, Math.min(instance.frames.length - 1, nextIndex));
-	instance.frames.forEach((frame, index) =>
-		setVisible(frame, index === clamped),
-	);
+	instance.frames.forEach((frame, index) => {
+		setVisible(frame, index === clamped);
+	});
 	instance.index = clamped;
 }
 
@@ -200,40 +220,28 @@ function stop(instance: Instance, resetDirection = false): void {
 	refreshControls(instance);
 }
 
-function tick(instance: Instance): void {
+function advance(instance: Instance): void {
 	const last = instance.frames.length - 1;
 	const next = instance.index + instance.direction;
 
-	if (next > last) {
-		if (instance.palindrome) {
-			instance.direction = -1;
-			setFrame(instance, last - 1);
-		} else if (instance.loop) {
-			setFrame(instance, 0);
-		} else {
-			setFrame(instance, last);
-			stop(instance);
-		}
+	if (next >= 0 && next <= last) {
+		setFrame(instance, next);
 		return;
 	}
 
-	if (next < 0) {
-		if (instance.palindrome && instance.loop) {
-			instance.direction = 1;
-			setFrame(instance, 1);
-		} else if (instance.palindrome) {
-			setFrame(instance, 0);
-			stop(instance);
-		} else if (instance.loop) {
-			setFrame(instance, last);
-		} else {
-			setFrame(instance, 0);
-			stop(instance);
-		}
+	if (instance.palindrome) {
+		instance.direction = instance.direction === 1 ? -1 : 1;
+		setFrame(instance, instance.index + instance.direction);
 		return;
 	}
 
-	setFrame(instance, next);
+	if (instance.loop) {
+		setFrame(instance, instance.direction === 1 ? 0 : last);
+		return;
+	}
+
+	setFrame(instance, next > last ? last : 0);
+	stop(instance);
 }
 
 function play(instance: Instance, direction: 1 | -1): void {
@@ -244,7 +252,7 @@ function play(instance: Instance, direction: 1 | -1): void {
 	instance.playing = true;
 	refreshControls(instance);
 	instance.timer = window.setInterval(
-		() => tick(instance),
+		() => advance(instance),
 		1000 / instance.fps,
 	);
 }

@@ -1,5 +1,4 @@
 // extras/renderers/pdf/PdfRenderer.tsx
-import { t } from '@/i18n';
 import type React from 'react';
 import {
 	useCallback,
@@ -13,6 +12,7 @@ import { flushSync } from 'react-dom';
 import * as pdfjs from 'pdfjs-dist';
 import 'pdfjs-dist/web/pdf_viewer.css';
 
+import { t } from '@/i18n';
 import { PluginHeader } from '@/components/common/PluginHeader';
 import { formatFileSize } from '@/utils/fileUtils';
 import {
@@ -339,6 +339,11 @@ const PdfRenderer: React.FC<RendererProps> = ({
 	}, []);
 
 	const computeFitScale = useCallback((mode: 'fit-width' | 'fit-height') => {
+		const resolved = fullViewerRef.current?.applyFitScale(mode);
+		if (resolved !== null && resolved !== undefined) {
+			return clamp(resolved, MIN_SCALE, MAX_SCALE);
+		}
+
 		const container = contentElRef.current;
 		const size = fullViewerRef.current?.getPageSize(
 			lastStablePageRef.current,
@@ -440,7 +445,9 @@ const PdfRenderer: React.FC<RendererProps> = ({
 			setIsFullscreen(active);
 
 			if (active) {
-				requestAnimationFrame(() => commitZoom(computeFitScale(fitMode)));
+				requestAnimationFrame(() =>
+					commitZoom(computeFitScale(fitMode), fitMode),
+				);
 			}
 		};
 
