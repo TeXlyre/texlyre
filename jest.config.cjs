@@ -18,6 +18,7 @@ module.exports = {
 		'\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/tests/mocks/fileMock.js',
 		'^nanoid$': '<rootDir>/tests/mocks/nanoid.js',
 		'^mime$': '<rootDir>/tests/mocks/mime.js',
+		'^codemirror-helix$': '<rootDir>/tests/mocks/codemirror.js',
 		'^codemirror-lang-bib$': '<rootDir>/tests/mocks/codemirror.js',
 		'^codemirror-lang-latex$': '<rootDir>/tests/mocks/codemirror.js',
 		'^codemirror-lang-typst$': '<rootDir>/tests/mocks/codemirror.js',
