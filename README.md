@@ -228,6 +228,8 @@ TeXlyre builds upon several key technologies:
 
 ### Editor Extensions
 - **[codemirror-vim](https://github.com/replit/codemirror-vim)** - Vim keybindings for CodeMirror
+- **[codemirror-helix](https://gitlab.com/_rvidal/codemirror-helix)** - Helix keybindings for CodeMirror
+- **[codemirror-emacs](https://github.com/replit/codemirror-emacs)** - Emacs keybindings for CodeMirror
 - **[codemirror-lang-typst](https://github.com/kxxt/codemirror-lang-typst)** - Typst language support for CodeMirror
 - **[uiw/codemirror-themes-all](https://github.com/uiwjs/react-codemirror/tree/master/themes/all)** - Collection of themes for CodeMirror
 - **[Milkdown](https://github.com/Milkdown/milkdown)** - A markdown editor built on top of [ProseMirror](https://prosemirror.net/) and [remark](https://github.com/remarkjs/remark)

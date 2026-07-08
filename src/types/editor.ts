@@ -10,6 +10,8 @@ export type FontFamily =
 
 export type FontSize = 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl';
 
+export type EditorKeymapMode = 'vim' | 'helix' | 'emacs' | null;
+
 export type HighlightTheme =
 	| 'auto'
 	| 'light'
@@ -65,7 +67,7 @@ export interface EditorSettings {
 	autoSaveEnabled: boolean;
 	autoSaveDelay: number;
 	highlightTheme: HighlightTheme;
-	vimMode: boolean;
+	keymapMode: EditorKeymapMode;
 	spellCheck: boolean;
 	mathLiveEnabled: boolean;
 	mathLivePreviewMode: 'hover-cursor' | 'hover' | 'cursor' | 'never';
