@@ -35,6 +35,8 @@ import { type ViewUpdate, keymap } from '@codemirror/view';
 import { lineNumbers } from '@codemirror/view';
 import { EditorView } from 'codemirror';
 import { vim } from '@replit/codemirror-vim';
+import { emacs } from '@replit/codemirror-emacs';
+import { helix } from 'codemirror-helix';
 import { bibtex, bibtexCompletionSource } from 'codemirror-lang-bib';
 import { latex, latexCompletionSource } from 'codemirror-lang-latex';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -141,7 +143,7 @@ export const useEditorView = (
 		getLineNumbersEnabled,
 		getSyntaxHighlightingEnabled,
 		getEditorTextDirection,
-		getVimModeEnabled,
+		getKeymapMode,
 		getSpellCheckEnabled,
 		getCollabOptions,
 		// getEnabledLSPPlugins,
@@ -342,7 +344,15 @@ export const useEditorView = (
 		}
 
 		if (getLineNumbersEnabled()) extensions.push(lineNumbers());
-		if (getVimModeEnabled()) extensions.push(vim());
+
+		const keymapMode = getKeymapMode();
+		if (keymapMode === 'vim') {
+			extensions.push(vim());
+		} else if (keymapMode === 'helix') {
+			extensions.push(helix());
+		} else if (keymapMode === 'emacs') {
+			extensions.push(emacs());
+		}
 
 		return extensions;
 	};

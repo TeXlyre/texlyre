@@ -171,22 +171,23 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
 
 					<div className='info-message'>
 						<p>
-							<strong>{t('Note: ')}</strong>
+							<strong>{t('Note: ')}&nbsp;</strong>
 							{t(
 								'Some shortcuts may vary depending on your operating system and browser.',
 							)}
 						</p>
 						<p>
+							{t('Use')}{' '}
 							<button
 								type='button'
 								className='inline-link-button'
 								onClick={() => setShowSettings(true)}
 							>
-								{t('Enable Vim keybindings')}&nbsp;
-							</button>
-							{t('to use Vim-style shortcuts. Vim mode uses')}
-							<kbd>{t('Ctrl')}</kbd> + <kbd>C</kbd>
-							{t('to switch between insert and normal mode.')}
+								{t('Editor keybindings')}
+							</button>{' '}
+							{t('to choose the editor keybinding mode.')} {t('In Vim mode,')}{' '}
+							<kbd>{t('Ctrl')}</kbd> + <kbd>C</kbd>{' '}
+							{t('switches between insert and normal mode.')}
 						</p>
 					</div>
 				</div>

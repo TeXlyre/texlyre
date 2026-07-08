@@ -1,6 +1,7 @@
 module.exports = {
     bibtex: jest.fn(() => ({ extension: [] })),
     bibtexCompletionSource: jest.fn(),
+    helix: jest.fn(),
     latex: jest.fn(() => ({ extension: [] })),
     latexCompletionSource: jest.fn(),
     typst: jest.fn(() => ({

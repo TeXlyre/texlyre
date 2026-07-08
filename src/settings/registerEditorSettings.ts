@@ -8,7 +8,12 @@ import {
 	fontSizeMap,
 } from '../contexts/EditorContext';
 import { useSettings } from '../hooks/useSettings';
-import type { FontFamily, FontSize, HighlightTheme } from '../types/editor';
+import type {
+	EditorKeymapMode,
+	FontFamily,
+	FontSize,
+	HighlightTheme,
+} from '../types/editor';
 
 export function useRegisterEditorSettings() {
 	const { batchGetSettings, registerSetting } = useSettings();
@@ -26,7 +31,7 @@ export function useRegisterEditorSettings() {
 			'editor-theme-highlights',
 			'editor-auto-save-enable',
 			'editor-auto-save-delay',
-			'editor-vim-mode',
+			'editor-keymap-mode',
 			'editor-spell-check',
 			'editor-mathlive-enable',
 			'editor-mathlive-preview-mode',
@@ -57,9 +62,9 @@ export function useRegisterEditorSettings() {
 		const initialAutoSaveDelay =
 			(batchedSettings['editor-auto-save-delay'] as number) ??
 			defaultEditorSettings.autoSaveDelay;
-		const initialVimMode =
-			(batchedSettings['editor-vim-mode'] as boolean) ??
-			defaultEditorSettings.vimMode;
+		const initialKeymapMode =
+			(batchedSettings['editor-keymap-mode'] as EditorKeymapMode) ??
+			defaultEditorSettings.keymapMode;
 		const initialSpellCheck =
 			(batchedSettings['editor-spell-check'] as boolean) ??
 			defaultEditorSettings.spellCheck;
@@ -247,13 +252,21 @@ export function useRegisterEditorSettings() {
 		});
 
 		registerSetting({
-			id: 'editor-vim-mode',
+			id: 'editor-keymap-mode',
 			category: t('Viewers'),
 			subcategory: t('Text Editor'),
-			type: 'checkbox',
-			label: t('Enable Vim keybindings'),
-			description: t('Enable Vim-style keybindings in the editor'),
-			defaultValue: initialVimMode,
+			type: 'select',
+			label: t('Editor keybindings'),
+			description: t(
+				'Choose the editor keybinding mode (Vim, Helix, and Emacs)',
+			),
+			defaultValue: initialKeymapMode,
+			options: [
+				{ label: t('Default'), value: null },
+				{ label: t('Vim'), value: 'vim' },
+				{ label: t('Helix'), value: 'helix' },
+				{ label: t('Emacs'), value: 'emacs' },
+			],
 		});
 
 		registerSetting({

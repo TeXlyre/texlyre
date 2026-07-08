@@ -9,6 +9,7 @@ import type {
 	FontFamily,
 	FontSize,
 	HighlightTheme,
+	EditorKeymapMode,
 } from '../types/editor';
 import type { CollabConnectOptions, CollabProviderType } from '../types/collab';
 
@@ -46,7 +47,7 @@ export const defaultEditorSettings: EditorSettings = {
 	autoSaveEnabled: false,
 	autoSaveDelay: 150,
 	highlightTheme: 'auto' as HighlightTheme,
-	vimMode: false,
+	keymapMode: null as EditorKeymapMode,
 	spellCheck: true,
 	mathLiveEnabled: true,
 	mathLivePreviewMode: 'cursor',
@@ -65,7 +66,7 @@ interface EditorContextType {
 	getEditorTextDirection: () => 'auto' | 'ltr' | 'rtl';
 	getAutoSaveEnabled: () => boolean;
 	getAutoSaveDelay: () => number;
-	getVimModeEnabled: () => boolean;
+	getKeymapMode: () => EditorKeymapMode;
 	getSpellCheckEnabled: () => boolean;
 	getCollabOptions: () => CollabConnectOptions | null;
 	getEnabledLSPPlugins: () => string[];
@@ -80,7 +81,7 @@ export const EditorContext = createContext<EditorContextType>({
 	getEditorTextDirection: () => 'auto',
 	getAutoSaveEnabled: () => false,
 	getAutoSaveDelay: () => 2000,
-	getVimModeEnabled: () => false,
+	getKeymapMode: () => null,
 	getSpellCheckEnabled: () => true,
 	getCollabOptions: () => null,
 	getEnabledLSPPlugins: () =>
@@ -118,9 +119,9 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 			highlightTheme:
 				(getSetting('editor-theme-highlights')?.value as HighlightTheme) ??
 				defaultEditorSettings.highlightTheme,
-			vimMode:
-				(getSetting('editor-vim-mode')?.value as boolean) ??
-				defaultEditorSettings.vimMode,
+			keymapMode:
+				(getSetting('editor-keymap-mode')?.value as EditorKeymapMode) ??
+				defaultEditorSettings.keymapMode,
 			spellCheck:
 				(getSetting('editor-spell-check')?.value as boolean) ??
 				defaultEditorSettings.spellCheck,
@@ -151,7 +152,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 				autoSaveEnabled: 'editor-auto-save-enable',
 				autoSaveDelay: 'editor-auto-save-delay',
 				highlightTheme: 'editor-theme-highlights',
-				vimMode: 'editor-vim-mode',
+				keymapMode: 'editor-keymap-mode',
 				spellCheck: 'editor-spell-check',
 				mathLiveEnabled: 'editor-mathlive-enable',
 				mathLivePreviewMode: 'editor-mathlive-preview-mode',
@@ -192,9 +193,9 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		[editorSettings.autoSaveDelay],
 	);
 
-	const getVimModeEnabled = useCallback(
-		() => editorSettings.vimMode,
-		[editorSettings.vimMode],
+	const getKeymapMode = useCallback(
+		() => editorSettings.keymapMode,
+		[editorSettings.keymapMode],
 	);
 
 	const getSpellCheckEnabled = useCallback(
@@ -270,7 +271,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({ children }) => {
 		getEditorTextDirection,
 		getAutoSaveEnabled,
 		getAutoSaveDelay,
-		getVimModeEnabled,
+		getKeymapMode,
 		getSpellCheckEnabled,
 		getCollabOptions,
 		getEnabledLSPPlugins,
