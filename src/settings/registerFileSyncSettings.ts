@@ -46,6 +46,8 @@ export function useRegisterFileSyncSettings() {
 			label: t('Auto-sync interval (seconds)'),
 			description: t('How often to check for file changes and sync'),
 			defaultValue: initialAutoInterval,
+			dependsOn: { id: 'file-sync-enable', value: true, nest: true },
+			disabledReason: t('Requires: File synchronization'),
 			min: 5,
 			max: 300,
 		});
@@ -58,6 +60,8 @@ export function useRegisterFileSyncSettings() {
 			label: t('Hold signal timeout (seconds)'),
 			description: t('How long to hold a peer before timeout'),
 			defaultValue: initialHoldTimeout,
+			dependsOn: { id: 'file-sync-enable', value: true, nest: true },
+			disabledReason: t('Requires: File synchronization'),
 			min: 10,
 			max: 120,
 		});
@@ -70,6 +74,8 @@ export function useRegisterFileSyncSettings() {
 			label: t('Request timeout (seconds)'),
 			description: t('How long to wait for file transfer completion'),
 			defaultValue: initialRequestTimeout,
+			dependsOn: { id: 'file-sync-enable', value: true, nest: true },
+			disabledReason: t('Requires: File synchronization'),
 			min: 30,
 			max: 300,
 		});
@@ -85,6 +91,8 @@ export function useRegisterFileSyncSettings() {
 			),
 
 			defaultValue: initialConflictResolution,
+			dependsOn: { id: 'file-sync-enable', value: true, nest: true },
+			disabledReason: t('Requires: File synchronization'),
 			options: [
 				{ label: t('Prefer Latest (Default)'), value: 'prefer-latest' },
 				{ label: t('Prefer Local (Do nothing)'), value: 'prefer-local' },
@@ -100,6 +108,8 @@ export function useRegisterFileSyncSettings() {
 			label: t('FilePizza server URL'),
 			description: t('Server URL for peer-to-peer file transfers'),
 			defaultValue: initialServerUrl,
+			dependsOn: { id: 'file-sync-enable', value: true, nest: true },
+			disabledReason: t('Requires: File synchronization'),
 		});
 
 		registerSetting({
@@ -110,6 +120,8 @@ export function useRegisterFileSyncSettings() {
 			label: t('Show sync notifications'),
 			description: t('Display notifications for file sync activities'),
 			defaultValue: initialNotifications,
+			dependsOn: { id: 'file-sync-enable', value: true, nest: true },
+			disabledReason: t('Requires: File synchronization'),
 		});
 	}, [registerSetting, getSetting]);
 }

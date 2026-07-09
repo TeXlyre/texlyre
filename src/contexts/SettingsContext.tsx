@@ -37,6 +37,14 @@ export interface SettingCodeMirrorOptions {
 	wordWrap?: boolean;
 }
 
+export interface SettingDependency {
+	id: string;
+	value?: unknown;
+	values?: unknown[];
+	invert?: boolean;
+	nest?: boolean;
+}
+
 export interface Setting {
 	id: string;
 	category: string;
@@ -56,6 +64,9 @@ export interface Setting {
 	liveUpdate?: boolean;
 	codeMirrorOptions?: SettingCodeMirrorOptions;
 	forceLTR?: boolean;
+	dependsOn?: SettingDependency;
+	disabledReason?: React.ReactNode;
+	disabled?: boolean;
 }
 
 export interface SettingsContextType {

@@ -247,6 +247,8 @@ export function useRegisterEditorSettings() {
 			label: t('Auto-save delay (milliseconds)'),
 			description: t('Delay in milliseconds before saving changes'),
 			defaultValue: initialAutoSaveDelay,
+			dependsOn: { id: 'editor-auto-save-enable', value: true, nest: true },
+			disabledReason: t('Requires: Auto-save on changes'),
 			min: 50,
 			max: 10000,
 		});
@@ -299,6 +301,8 @@ export function useRegisterEditorSettings() {
 			label: t('MathLive preview mode'),
 			description: t('When to show rendered math equations'),
 			defaultValue: initialMathLivePreviewMode,
+			dependsOn: { id: 'editor-mathlive-enable', value: true, nest: true },
+			disabledReason: t('Requires: Enable MathLive'),
 			options: [
 				{ label: t('On hover and cursor'), value: 'hover-cursor' },
 				{ label: t('On hover'), value: 'hover' },

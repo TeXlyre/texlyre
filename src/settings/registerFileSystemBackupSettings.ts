@@ -43,6 +43,8 @@ export function useRegisterFileSystemBackupSettings() {
 			),
 
 			defaultValue: initialAutoBackup,
+			dependsOn: { id: 'file-sys-backup-enable', value: true, nest: true },
+			disabledReason: t('Requires: File system backup'),
 		});
 
 		// registerSetting({

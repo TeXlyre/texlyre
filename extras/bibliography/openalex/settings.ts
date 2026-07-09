@@ -21,6 +21,8 @@ export const getOpenAlexSettings = (): Setting[] => [
 		label: t('Search mode'),
 		description: t('Whether to search as you type or on button click'),
 		defaultValue: 'on-demand',
+		dependsOn: { id: 'openalex-bibliography-enable', value: true, nest: true },
+		disabledReason: t('Requires: OpenAlex'),
 		options: [
 			{ label: t('On button click'), value: 'on-demand' },
 			{ label: t('As you type (instant)'), value: 'instant' },
@@ -34,6 +36,8 @@ export const getOpenAlexSettings = (): Setting[] => [
 		label: t('Results per search'),
 		description: t('Number of results to return per search query'),
 		defaultValue: 25,
+		dependsOn: { id: 'openalex-bibliography-enable', value: true, nest: true },
+		disabledReason: t('Requires: OpenAlex'),
 		min: 5,
 		max: 200,
 	},
@@ -45,6 +49,8 @@ export const getOpenAlexSettings = (): Setting[] => [
 		label: t('Duplicate handling'),
 		description: t('How to handle entries that already exist locally'),
 		defaultValue: 'keep-local',
+		dependsOn: { id: 'openalex-bibliography-enable', value: true, nest: true },
+		disabledReason: t('Requires: OpenAlex'),
 		options: [
 			{ label: t('Keep local version'), value: 'keep-local' },
 			{ label: t('Replace with external'), value: 'replace' },

@@ -20,6 +20,8 @@ export const getCanvasRendererSettings = (): Setting[] => [
 		label: t('Initial zoom level'),
 		description: t('Set the initial zoom level for canvas documents'),
 		defaultValue: '100',
+		dependsOn: { id: 'canvas-renderer-enable', value: true, nest: true },
+		disabledReason: t('Requires: Canvas Renderer'),
 		options: [
 			{ label: t('25%'), value: '25' },
 			{ label: t('50%'), value: '50' },
@@ -43,6 +45,8 @@ export const getCanvasRendererSettings = (): Setting[] => [
 			'Allow text selection in PDF output and interaction with embedded content in SVG output',
 		),
 		defaultValue: false,
+		dependsOn: { id: 'canvas-renderer-enable', value: true, nest: true },
+		disabledReason: t('Requires: Canvas Renderer'),
 	},
 	{
 		id: 'canvas-renderer-annotations',
@@ -54,5 +58,7 @@ export const getCanvasRendererSettings = (): Setting[] => [
 			'Allow interaction with PDF links, form fields, and annotations',
 		),
 		defaultValue: false,
+		dependsOn: { id: 'canvas-renderer-enable', value: true, nest: true },
+		disabledReason: t('Requires: Canvas Renderer'),
 	},
 ];

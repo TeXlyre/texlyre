@@ -62,6 +62,8 @@ export function useRegisterCollabSettings() {
 				'Comma-separated list of Yjs WebRTC signaling server URLs',
 			),
 			defaultValue: initialSignalingServers,
+			dependsOn: { id: 'collab-provider-type', value: 'webrtc', nest: true },
+			disabledReason: t('Available when: Connection provider is WebRTC'),
 		});
 
 		registerSetting({
@@ -74,6 +76,8 @@ export function useRegisterCollabSettings() {
 				'WebSocket server URL for Yjs y-websocket or y/hub connections',
 			),
 			defaultValue: initialWebsocketServer,
+			dependsOn: { id: 'collab-provider-type', value: 'websocket', nest: true },
+			disabledReason: t('Available when: Connection provider is WebSocket'),
 		});
 
 		registerSetting({

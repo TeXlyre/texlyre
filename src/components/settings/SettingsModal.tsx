@@ -25,6 +25,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
 	const {
 		getCategories,
+		getSetting,
 		getSettingsByCategory,
 		searchSettings,
 		hasUnsavedChanges,
@@ -174,6 +175,44 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
 	const settings = getSettingsByCategory(activeCategory, activeSubcategory);
 
+	const getDependencyValue = (setting: Setting) => {
+		const dependency = setting.dependsOn;
+		if (!dependency) return undefined;
+
+		if (pendingValues[dependency.id] !== undefined) {
+			return pendingValues[dependency.id];
+		}
+
+		const parent = getSetting(dependency.id);
+		return parent?.value !== undefined ? parent.value : parent?.defaultValue;
+	};
+
+	const isDependencyMet = (setting: Setting) => {
+		const dependency = setting.dependsOn;
+		if (!dependency) return true;
+
+		const parentValue = getDependencyValue(setting);
+		let matched: boolean;
+
+		if (dependency.values) {
+			matched = dependency.values.some((value) =>
+				Object.is(value, parentValue),
+			);
+		} else if ('value' in dependency) {
+			matched = Object.is(dependency.value, parentValue);
+		} else {
+			matched = Boolean(parentValue);
+		}
+
+		return dependency.invert ? !matched : matched;
+	};
+
+	const shouldNestSetting = (setting: Setting) =>
+		Boolean(
+			setting.dependsOn?.nest &&
+				settings.some((candidate) => candidate.id === setting.dependsOn?.id),
+		);
+
 	if (filteredData.categories.length === 0 && !searchQuery) {
 		return (
 			<Modal
@@ -267,29 +306,41 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 					<div className='settings-content'>
 						<h3>{renderTitle()}</h3>
 						<div className='settings-group'>
-							{settings.map((setting) => (
-								<div key={setting.id} className='setting-with-highlight'>
-									<SettingControl
-										setting={{
-											...setting,
-											value: getDisplayValue(setting),
-											label: searchQuery
-												? (highlightText(setting.label, searchQuery) as string)
-												: setting.label,
-											description: (typeof setting.description === 'string' &&
-											searchQuery
-												? (highlightText(
-														setting.description,
-														searchQuery,
-													) as string)
-												: setting.description) as string,
-										}}
-										onLocalUpdate={(value) =>
-											handleLocalUpdate(setting.id, value, setting)
-										}
-									/>
-								</div>
-							))}
+							{settings.map((setting) => {
+								const disabled = !isDependencyMet(setting);
+								const nested = shouldNestSetting(setting);
+
+								return (
+									<div
+										key={setting.id}
+										className={`setting-with-highlight${nested ? ' nested-setting' : ''}`}
+									>
+										<SettingControl
+											setting={{
+												...setting,
+												disabled,
+												value: getDisplayValue(setting),
+												label: searchQuery
+													? (highlightText(
+															setting.label,
+															searchQuery,
+														) as string)
+													: setting.label,
+												description: (typeof setting.description === 'string' &&
+												searchQuery
+													? (highlightText(
+															setting.description,
+															searchQuery,
+														) as string)
+													: setting.description) as string,
+											}}
+											onLocalUpdate={(value) =>
+												handleLocalUpdate(setting.id, value, setting)
+											}
+										/>
+									</div>
+								);
+							})}
 							{settings.length === 0 && (
 								<div className='no-settings'>
 									{t('No settings available in this category.')}
