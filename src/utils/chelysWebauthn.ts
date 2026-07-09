@@ -59,7 +59,7 @@ export async function enrollCredential(username: string): Promise<Uint8Array> {
 				],
 				authenticatorSelection: {
 					residentKey: 'required',
-					userVerification: 'preferred',
+					userVerification: 'required',
 				},
 				extensions: {
 					prf: { eval: { first: toArrayBuffer(WEBAUTHN_PRF_SALT) } },
@@ -77,25 +77,32 @@ export async function enrollCredential(username: string): Promise<Uint8Array> {
 	if (!credential) throw new Error('Credential creation returned null');
 
 	const extResults = credential.getClientExtensionResults() as {
-		prf?: { results?: { first?: ArrayBuffer } };
+		prf?: { enabled?: boolean; results?: { first?: ArrayBuffer } };
 	};
 	const prfFirst = extResults.prf?.results?.first;
-	if (!prfFirst) {
+	if (prfFirst) return new Uint8Array(prfFirst);
+
+	if (extResults.prf?.enabled === false) {
 		throw new Error('Authenticator does not support PRF extension');
 	}
 
-	return new Uint8Array(prfFirst);
+	// NOTE (fabawi): Re-attempt via assertion since some authenticators only evaluate PRF on get(), not create()
+	return retrievePrfOutput(credential.rawId);
 }
 
-export async function retrievePrfOutput(): Promise<Uint8Array> {
+export async function retrievePrfOutput(
+	credentialId?: BufferSource,
+): Promise<Uint8Array> {
 	const challenge = crypto.getRandomValues(new Uint8Array(32));
 
 	const assertion = (await navigator.credentials.get({
 		publicKey: {
 			challenge,
 			rpId: window.location.hostname,
-			allowCredentials: [],
-			userVerification: 'preferred',
+			allowCredentials: credentialId
+				? [{ type: 'public-key', id: credentialId }]
+				: [],
+			userVerification: 'required',
 			extensions: {
 				prf: { eval: { first: toArrayBuffer(WEBAUTHN_PRF_SALT) } },
 			} as AuthenticationExtensionsClientInputs,
