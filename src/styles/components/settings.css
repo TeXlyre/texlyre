@@ -60,6 +60,12 @@
 	position: relative;
 }
 
+.setting-with-highlight.nested-setting {
+	margin-left: var(--space-lg);
+	padding-left: var(--space-md);
+	border-left: 1px solid var(--accent-border);
+}
+
 .settings-content {
 	flex: 1;
 	padding: 0 var(--space-md);
@@ -118,6 +124,33 @@
 
 .setting-control {
 	margin-bottom: var(--space-md);
+}
+
+.setting-control.disabled {
+	opacity: 0.75;
+}
+
+.setting-dependency-badge {
+	display: inline-flex;
+	align-items: center;
+	width: fit-content;
+	margin-top: var(--space-xs);
+	padding: 0.1rem var(--space-sm);
+	border: 1px solid var(--color-warning);
+	border-radius: var(--radius-lg);
+	background-color: color-mix(
+		in srgb,
+		var(--color-warning) 16%,
+		var(--pico-background)
+	);
+	color:  var(--text-color);
+	font-size: 0.7rem;
+	font-weight: 500;
+	line-height: 1;
+}
+
+.setting-control.disabled .setting-description {
+	opacity: 0.8;
 }
 
 .select-control,

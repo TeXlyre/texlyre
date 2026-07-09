@@ -21,6 +21,8 @@ export const getZoteroSettings = (): Setting[] => [
 		label: t('Duplicate handling'),
 		description: t('How to handle entries that already exist locally'),
 		defaultValue: 'keep-local',
+		dependsOn: { id: 'zotero-bibliography-enable', value: true, nest: true },
+		disabledReason: t('Requires: Zotero'),
 		options: [
 			{ label: t('Keep local version'), value: 'keep-local' },
 			{ label: t('Replace with external'), value: 'replace' },

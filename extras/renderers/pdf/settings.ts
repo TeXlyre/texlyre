@@ -22,6 +22,8 @@ export const getPdfRendererSettings = (): Setting[] => [
 		label: t('Initial zoom level'),
 		description: t('Set the initial zoom level for PDF documents'),
 		defaultValue: '100',
+		dependsOn: { id: 'pdf-renderer-enable', value: true, nest: true },
+		disabledReason: t('Requires: Enhanced PDF Renderer'),
 		options: [
 			{ label: t('25%'), value: '25' },
 			{ label: t('50%'), value: '50' },
@@ -43,6 +45,8 @@ export const getPdfRendererSettings = (): Setting[] => [
 		label: t('Enable text selection'),
 		description: t('Allow text selection and copying from PDF documents'),
 		defaultValue: true,
+		dependsOn: { id: 'pdf-renderer-enable', value: true, nest: true },
+		disabledReason: t('Requires: Enhanced PDF Renderer'),
 	},
 	{
 		id: 'pdf-renderer-annotations',
@@ -54,5 +58,7 @@ export const getPdfRendererSettings = (): Setting[] => [
 			'Display interactive forms and annotations in PDF documents',
 		),
 		defaultValue: true,
+		dependsOn: { id: 'pdf-renderer-enable', value: true, nest: true },
+		disabledReason: t('Requires: Enhanced PDF Renderer'),
 	},
 ];

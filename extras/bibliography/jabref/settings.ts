@@ -23,6 +23,8 @@ export const getJabrefLSPSettings = (): Setting[] => [
 		label: t('LSP Server URL'),
 		description: t('WebSocket URL for the JabRef LSP server'),
 		defaultValue: 'ws://localhost:2087/',
+		dependsOn: { id: 'jabref-lsp-enable', value: true, nest: true },
+		disabledReason: t('Requires: JabRef LSP'),
 	},
 	{
 		id: 'jabref-lsp-max-completions',
@@ -32,6 +34,8 @@ export const getJabrefLSPSettings = (): Setting[] => [
 		label: t('Maximum completion items'),
 		description: t('Maximum number of citation suggestions to show'),
 		defaultValue: 20,
+		dependsOn: { id: 'jabref-lsp-enable', value: true, nest: true },
+		disabledReason: t('Requires: JabRef LSP'),
 		min: 5,
 		max: 100,
 	},
@@ -45,6 +49,8 @@ export const getJabrefLSPSettings = (): Setting[] => [
 			'Automatically import external bibliography entries when selected',
 		),
 		defaultValue: true,
+		dependsOn: { id: 'jabref-lsp-enable', value: true, nest: true },
+		disabledReason: t('Requires: JabRef LSP'),
 	},
 	// {
 	// 	id: "jabref-lsp-show-import-preview",
@@ -63,6 +69,8 @@ export const getJabrefLSPSettings = (): Setting[] => [
 		label: t('Duplicate handling'),
 		description: t('How to handle entries that already exist locally'),
 		defaultValue: 'keep-local',
+		dependsOn: { id: 'jabref-lsp-enable', value: true, nest: true },
+		disabledReason: t('Requires: JabRef LSP'),
 		options: [
 			{ label: t('Keep local version'), value: 'keep-local' },
 			{ label: t('Replace with external'), value: 'replace' },
