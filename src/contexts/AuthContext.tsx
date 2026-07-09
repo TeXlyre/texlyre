@@ -4,7 +4,7 @@ import { type ReactNode, createContext, useEffect, useState } from 'react';
 
 import { authService } from '../services/AuthService';
 import type { AuthContextType, User } from '../types/auth';
-import type { Project } from '../types/projects';
+import type { Project, ProjectType } from '../types/projects';
 
 export const AuthContext = createContext<AuthContextType>({
 	user: null,
@@ -49,7 +49,7 @@ export const AuthContext = createContext<AuthContextType>({
 	getProjectsByTag: async () => {
 		throw new Error('Not implemented');
 	},
-	getProjectsByType: async (type: 'latex' | 'typst') => {
+	getProjectsByType: async (type: ProjectType) => {
 		throw new Error('Not implemented');
 	},
 	searchProjects: async () => {
@@ -175,9 +175,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 		return authService.getProjectsByTag(tag);
 	};
 
-	const getProjectsByType = async (
-		type: 'latex' | 'typst',
-	): Promise<Project[]> => {
+	const getProjectsByType = async (type: ProjectType): Promise<Project[]> => {
 		return authService.getProjectsByType(type);
 	};
 

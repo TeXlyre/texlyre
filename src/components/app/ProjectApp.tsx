@@ -7,7 +7,7 @@ import texlyreLogo from '../../assets/images/TeXlyre_notext.png';
 import { useAuth } from '../../hooks/useAuth';
 import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
 import { useTheme } from '../../hooks/useTheme';
-import type { Project } from '../../types/projects';
+import type { Project, ProjectType } from '../../types/projects';
 import {
 	isValidYjsUrl,
 	buildUrlWithFragments,
@@ -40,7 +40,7 @@ interface ProjectManagerProps {
 		docUrl: string,
 		projectName?: string,
 		projectDescription?: string,
-		projectType?: 'latex' | 'typst',
+		projectType?: ProjectType,
 		projectId?: string,
 	) => void;
 	onLogout: () => void;
@@ -194,14 +194,14 @@ const ProjectApp: React.FC<ProjectManagerProps> = ({
 			return;
 		}
 
-		const results = await getProjectsByType(type as 'latex' | 'typst');
+		const results = await getProjectsByType(type as ProjectType);
 		setFilteredProjects(results);
 	};
 
 	const handleCreateProject = async (projectData: {
 		name: string;
 		description: string;
-		type: 'latex' | 'typst';
+		type: ProjectType;
 		tags: string[];
 		docUrl?: string;
 		isFavorite: boolean;

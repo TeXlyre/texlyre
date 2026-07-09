@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { compilerRegistryService } from '@src/services/CompilerRegistryService';
 import ProjectForm from '@src/components/project/ProjectForm';
 
 describe('ProjectForm Component', () => {
@@ -7,6 +8,10 @@ describe('ProjectForm Component', () => {
         onSubmit: jest.fn(),
         onCancel: jest.fn(),
     };
+
+    beforeAll(() => {
+        compilerRegistryService.registerBuiltins();
+    });
 
     beforeEach(() => {
         jest.clearAllMocks();

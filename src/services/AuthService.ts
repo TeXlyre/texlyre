@@ -5,7 +5,7 @@ import * as Y from 'yjs';
 
 import { t } from '@/i18n';
 import type { User } from '../types/auth';
-import type { Project } from '../types/projects';
+import type { Project, ProjectType } from '../types/projects';
 import { generateRandomColor } from '../utils/colorUtils';
 import { cleanupProjectDatabases } from '../utils/dbDeleteUtils';
 import { generateYjsProjectId } from '../utils/urlUtils';
@@ -500,7 +500,7 @@ class AuthService {
 		projectId: string = generateYjsProjectId(),
 		projectName = 'Untitled Project',
 		projectDescription = '',
-		projectType: 'latex' | 'typst' = 'latex',
+		projectType: ProjectType = 'latex',
 	): string {
 		try {
 			const dbName = `texlyre-project-${projectId}`;
@@ -685,7 +685,7 @@ class AuthService {
 		);
 	}
 
-	async getProjectsByType(type: 'latex' | 'typst'): Promise<Project[]> {
+	async getProjectsByType(type: ProjectType): Promise<Project[]> {
 		if (!this.db) await this.initialize();
 
 		if (!this.currentUser) {

@@ -1,9 +1,10 @@
-// src/components/projects/ProjectForm.tsx
+// src/components/project/ProjectForm.tsx
 import type React from 'react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { t } from '@/i18n';
-import type { Project } from '../../types/projects.ts';
+import { compilerRegistryService } from '../../services/CompilerRegistryService';
+import type { Project, ProjectType } from '../../types/projects.ts';
 import { TagInput } from '../common/TagInput';
 
 interface ProjectFormProps {
@@ -11,7 +12,7 @@ interface ProjectFormProps {
 	onSubmit: (projectData: {
 		name: string;
 		description: string;
-		type: 'latex' | 'typst';
+		type: ProjectType;
 		tags: string[];
 		docUrl?: string;
 		isFavorite: boolean;
@@ -20,6 +21,23 @@ interface ProjectFormProps {
 	isSubmitting?: boolean;
 	simpleMode?: boolean;
 	disableNameAndDescription?: boolean;
+}
+
+type ProjectTypeOption = [value: string, label: string];
+
+function getProjectTypeOptions(): ProjectTypeOption[] {
+	return Array.from(
+		new Map(
+			compilerRegistryService
+				.list()
+				.map(
+					(provider): ProjectTypeOption => [
+						provider.projectType,
+						provider.label,
+					],
+				),
+		).entries(),
+	);
 }
 
 const ProjectForm: React.FC<ProjectFormProps> = ({
@@ -32,21 +50,36 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 }) => {
 	const [name, setName] = useState('');
 	const [description, setDescription] = useState('');
-	const [type, setType] = useState<'latex' | 'typst'>('latex');
+	const [type, setType] = useState<ProjectType>('latex');
+	const [projectTypeOptions, setProjectTypeOptions] = useState<
+		ProjectTypeOption[]
+	>(getProjectTypeOptions);
 	const [tags, setTags] = useState<string[]>([]);
 	const [docUrl, setDocUrl] = useState('');
 	const [isFavorite, setIsFavorite] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
+	const refreshProjectTypeOptions = useCallback(() => {
+		setProjectTypeOptions(getProjectTypeOptions());
+	}, []);
+
 	useEffect(() => {
-		if (project) {
-			setName(project.name);
-			setDescription(project.description || '');
-			setType(project.type);
-			setTags(project.tags || []);
-			setDocUrl(project.docUrl || '');
-			setIsFavorite(project.isFavorite);
+		refreshProjectTypeOptions();
+
+		return compilerRegistryService.onChange(refreshProjectTypeOptions);
+	}, [refreshProjectTypeOptions]);
+
+	useEffect(() => {
+		if (!project) {
+			return;
 		}
+
+		setName(project.name);
+		setDescription(project.description || '');
+		setType(project.type);
+		setTags(project.tags || []);
+		setDocUrl(project.docUrl || '');
+		setIsFavorite(project.isFavorite);
 	}, [project]);
 
 	const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
@@ -76,6 +109,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 					{t('Project Name')}
 					<span className='required'>*</span>
 				</label>
+
 				{disableNameAndDescription ? (
 					<div className='disabled-field'>
 						<span>{name}</span>
@@ -97,6 +131,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 
 			<div className='form-group'>
 				<label htmlFor='project-description'>{t('Description')}</label>
+
 				{disableNameAndDescription ? (
 					<div className='disabled-field'>
 						<span>{description || 'No description'}</span>
@@ -117,9 +152,13 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 
 			<div className='form-group'>
 				<label htmlFor='project-type'>{t('Typesetter Type')}</label>
+
 				{disableNameAndDescription ? (
 					<div className='disabled-field'>
-						<span>{type === 'latex' ? 'LaTeX' : 'Typst'}</span>
+						<span>
+							{projectTypeOptions.find(([value]) => value === type)?.[1] ??
+								type}
+						</span>
 						<div className='field-note'>
 							{t('Open the project to edit its typesetter type')}
 						</div>
@@ -128,11 +167,14 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 					<select
 						id='project-type'
 						value={type}
-						onChange={(e) => setType(e.target.value as 'latex' | 'typst')}
+						onChange={(e) => setType(e.target.value as ProjectType)}
 						disabled={isSubmitting}
 					>
-						<option value='latex'>{t('LaTeX')}</option>
-						<option value='typst'>{t('Typst')}</option>
+						{projectTypeOptions.map(([value, label]) => (
+							<option key={value} value={value}>
+								{label}
+							</option>
+						))}
 					</select>
 				)}
 			</div>
@@ -174,6 +216,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 				>
 					{t('Cancel')}
 				</button>
+
 				<button
 					type='submit'
 					className='button primary'

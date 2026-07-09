@@ -1,7 +1,7 @@
 // src/services/DataStructureService.ts
 import type { User } from '../types/auth';
 import type { FileNode } from '../types/files';
-import type { Project } from '../types/projects';
+import type { Project, ProjectType } from '../types/projects';
 import type { TypstPdfOptions, TypstOutputFormat } from '../types/typst';
 import type { LaTeXEngine } from '../types/latex';
 
@@ -15,7 +15,7 @@ export interface ProjectMetadata {
 	id: string;
 	name: string;
 	description: string;
-	type?: 'latex' | 'typst';
+	type?: ProjectType;
 	mainFile?: string;
 	latexEngine?: LaTeXEngine;
 	typstEngine?: string;
