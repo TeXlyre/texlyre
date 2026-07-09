@@ -77,14 +77,16 @@ export async function enrollCredential(username: string): Promise<Uint8Array> {
 	if (!credential) throw new Error('Credential creation returned null');
 
 	const extResults = credential.getClientExtensionResults() as {
-		prf?: { results?: { first?: ArrayBuffer } };
+		prf?: { enabled?: boolean; results?: { first?: ArrayBuffer } };
 	};
 	const prfFirst = extResults.prf?.results?.first;
-	if (!prfFirst) {
+	if (prfFirst) return new Uint8Array(prfFirst);
+
+	if (extResults.prf?.enabled === false) {
 		throw new Error('Authenticator does not support PRF extension');
 	}
 
-	return new Uint8Array(prfFirst);
+	return retrievePrfOutput();
 }
 
 export async function retrievePrfOutput(): Promise<Uint8Array> {
