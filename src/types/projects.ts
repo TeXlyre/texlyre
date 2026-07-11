@@ -15,6 +15,15 @@ export interface Project {
 	lastOpenedFilePath?: string;
 }
 
+export interface TemplateVersion {
+	version: string;
+	downloadUrl: string;
+	previewImage?: string;
+	lastUpdated: string;
+	compile?: string;
+	file?: string;
+}
+
 export interface TemplateProject {
 	id: string;
 	name: string;
@@ -29,4 +38,5 @@ export interface TemplateProject {
 	type?: 'latex' | 'typst';
 	compile?: string;
 	file?: string;
+	versions?: TemplateVersion[];
 }
