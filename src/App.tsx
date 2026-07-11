@@ -67,6 +67,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ChelysProvider } from './contexts/ChelysContext';
 import { EditorProvider } from './contexts/EditorContext';
 import { LSPConfigProvider } from './contexts/LSPConfigContext';
+import { TypesetterConfigProvider } from './contexts/TypesetterConfigContext';
+import { registerBuiltinCompilers } from './services/registerBuiltinCompilers';
 import { FileSystemBackupProvider } from './contexts/FileSystemBackupContext';
 import { OfflineProvider } from './contexts/OfflineContext';
 import { PropertiesProvider } from './contexts/PropertiesContext';
@@ -75,6 +77,8 @@ import { SecretsContext, SecretsProvider } from './contexts/SecretsContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+
+registerBuiltinCompilers();
 
 function App() {
 	const [isInitializing, setIsInitializing] = useState(true);
@@ -138,9 +142,11 @@ function App() {
 											<SecretsProvider>
 												<FileSystemBackupProvider>
 													<LSPConfigProvider>
-														<EditorProvider>
-															<AppContent />
-														</EditorProvider>
+														<TypesetterConfigProvider>
+															<EditorProvider>
+																<AppContent />
+															</EditorProvider>
+														</TypesetterConfigProvider>
 													</LSPConfigProvider>
 												</FileSystemBackupProvider>
 											</SecretsProvider>

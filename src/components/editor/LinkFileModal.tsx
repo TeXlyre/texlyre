@@ -6,6 +6,7 @@ import { t } from '@/i18n';
 import { useFileTree } from '../../hooks/useFileTree';
 import { fileStorageService } from '../../services/FileStorageService';
 import type { FileNode } from '../../types/files';
+import type { ProjectType } from '../../types/projects';
 import { isTemporaryFile } from '../../utils/fileUtils';
 import { FolderIcon } from '../common/Icons';
 import Modal from '../common/Modal';
@@ -16,7 +17,7 @@ interface LinkFileModalProps {
 	documentId: string;
 	documentName: string;
 	onLinked: () => void;
-	projectType?: 'latex' | 'typst';
+	projectType?: ProjectType;
 }
 
 const LinkFileModal: React.FC<LinkFileModalProps> = ({

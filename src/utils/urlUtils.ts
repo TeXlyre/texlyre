@@ -66,6 +66,19 @@ export function buildUrlWithFragments(
 	return url;
 }
 
+export function getProjectName(fallback = 'TeXlyre'): string {
+	if (document.title && document.title !== 'TeXlyre') {
+		return document.title;
+	}
+
+	const { yjsUrl } = parseUrlFragments(window.location.hash.substring(1));
+	if (yjsUrl) {
+		return `Project ${yjsUrl.slice(4).substring(0, 8)}`;
+	}
+
+	return fallback;
+}
+
 export function pushHash(hash: string): void {
 	const target = hash
 		? `#${hash}`

@@ -3,6 +3,7 @@ import type React from 'react';
 import { useRef } from 'react';
 
 import { t } from '@/i18n';
+import type { ProjectType } from '../../types/projects';
 import { pluginRegistry } from '../../plugins/PluginRegistry';
 import { FilePlusIcon } from '../common/Icons';
 import DropdownMenu from '../common/DropdownMenu';
@@ -12,7 +13,7 @@ interface FileCreationMenuProps {
 	onClose: () => void;
 	onCreate: (fileName: string, extension: string) => void;
 	triggerElement: HTMLElement | null;
-	projectType: 'latex' | 'typst';
+	projectType: ProjectType;
 	parentPath?: string;
 	mode?: 'dropdown' | 'submenu';
 }

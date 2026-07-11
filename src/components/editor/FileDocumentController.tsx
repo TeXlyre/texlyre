@@ -17,7 +17,7 @@ import { fileStorageService } from '../../services/FileStorageService';
 import { popoutViewerService } from '../../services/PopoutViewerService';
 import type { Document } from '../../types/documents';
 import type { FileNode } from '../../types/files';
-import type { Project } from '../../types/projects';
+import type { Project, ProjectType } from '../../types/projects';
 import {
 	isLatexFile,
 	isTypstFile,
@@ -25,6 +25,8 @@ import {
 	isTypstContent,
 } from '../../utils/fileUtils';
 import { buildUrlWithFragments, parseUrlFragments } from '../../utils/urlUtils';
+import { compilerRegistryService } from '../../services/CompilerRegistryService';
+import type { CompilerProvider } from '../../types/compilation';
 import { gotoEditor } from '../../utils/editorNavigator';
 import type { YjsDocUrl } from '../../types/yjs';
 import { EditorTabsProvider } from '../../contexts/EditorTabsContext';
@@ -35,6 +37,7 @@ import LaTeXOutline from './LaTeXOutline';
 import TypstOutline from './TypstOutline';
 import LaTeXOutput from '../output/LaTeXOutput';
 import TypstOutput from '../output/TypstOutput';
+import ExternalCompilerOutput from '../output/ExternalCompilerOutput';
 import ProjectExportModal from '../project/ProjectExportModal';
 import DocumentExplorer from './DocumentExplorer';
 import Editor from './Editor';
@@ -162,7 +165,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		docsWithPeers,
 		setLocalOpenDocument,
 	} = usePeerDocumentTracking(docUrl);
-	const [projectType, setProjectType] = useState<'latex' | 'typst'>('latex');
+	const [projectType, setProjectType] = useState<ProjectType>('latex');
 	const propertiesRegistered = useRef(false);
 	const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 	const [activeView, setActiveView] = useState<
@@ -194,13 +197,18 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 	const [explorerHeight, setOutlineHeight] = useState(600);
 	const [latexOutputWidth, setLatexOutputWidth] = useState(550);
 	const [typstOutputWidth, setTypstOutputWidth] = useState(550);
+	const [externalOutputWidth, setExternalOutputWidth] = useState(550);
 	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 	const [latexOutputCollapsed, setLatexOutputCollapsed] = useState(false);
 	const [typstOutputCollapsed, setTypstOutputCollapsed] = useState(false);
+	const [externalOutputCollapsed, setExternalOutputCollapsed] = useState(false);
 	const [showLatexOutput, setShowLatexOutput] = useState(false);
+	const [activeExternalProvider, setActiveExternalProvider] =
+		useState<CompilerProvider | null>(null);
 	const [showTypstOutput, setShowTypstOutput] = useState(false);
 	const [temporaryLatexExpand, setTemporaryLatexExpand] = useState(false);
 	const [temporaryTypstExpand, setTemporaryTypstExpand] = useState(false);
+	const [temporaryExternalExpand, setTemporaryExternalExpand] = useState(false);
 	const [toolbarVisible, setToolbarVisible] = useState(true);
 	const [documentSelectionChange, setDocumentSelectionChange] = useState(0);
 	const [fileSelectionChange, setFileSelectionChange] = useState(0);
@@ -252,18 +260,24 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		[openTab],
 	);
 
-	const setOutputForFileName = useCallback((name?: string) => {
-		if (name && isLatexFile(name)) {
-			setShowLatexOutput(true);
-			setShowTypstOutput(false);
-		} else if (name && isTypstFile(name)) {
-			setShowTypstOutput(true);
-			setShowLatexOutput(false);
-		} else {
-			setShowLatexOutput(false);
-			setShowTypstOutput(false);
-		}
-	}, []);
+	const setOutputForFileName = useCallback(
+		(name?: string) => {
+			const extension = name?.split('.').pop() ?? '';
+			const byExtension = name
+				? compilerRegistryService.getForExtension(extension)
+				: undefined;
+			const provider =
+				byExtension ?? compilerRegistryService.getForProjectType(projectType);
+			const effectiveType = provider?.projectType ?? projectType;
+
+			setShowLatexOutput(effectiveType === 'latex');
+			setShowTypstOutput(effectiveType === 'typst');
+			setActiveExternalProvider(
+				provider && provider.source === 'chelys' ? provider : null,
+			);
+		},
+		[projectType],
+	);
 
 	const openDocumentById = useCallback(
 		(docId: string, view: 'documents' | 'files', preserveView = false) => {
@@ -590,6 +604,24 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		setTemporaryTypstExpand(true);
 	}, [showTypstOutput]);
 
+	const handleExternalOutputWidthResize = (width: number) => {
+		setExternalOutputWidth(width);
+		setProperty('external-output-width', width);
+	};
+
+	const handleExternalOutputCollapse = (collapsed: boolean) => {
+		setExternalOutputCollapsed(collapsed);
+		setProperty('external-output-collapsed', collapsed);
+
+		if (collapsed) {
+			setTemporaryExternalExpand(false);
+		}
+	};
+
+	const handleExternalOutputExpand = useCallback(() => {
+		setTemporaryExternalExpand(true);
+	}, []);
+
 	const handleToolbarToggle = (visible: boolean) => {
 		setToolbarVisible(visible);
 		setProperty('toolbar-visible', visible);
@@ -621,6 +653,13 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		});
 
 		registerProperty({
+			id: 'external-output-width',
+			category: 'UI',
+			subcategory: 'Layout',
+			defaultValue: externalOutputWidth,
+		});
+
+		registerProperty({
 			id: 'latex-output-width',
 			category: 'UI',
 			subcategory: 'Layout',
@@ -636,6 +675,13 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
 		registerProperty({
 			id: 'sidebar-collapsed',
+			category: 'UI',
+			subcategory: 'Layout',
+			defaultValue: false,
+		});
+
+		registerProperty({
+			id: 'external-output-collapsed',
 			category: 'UI',
 			subcategory: 'Layout',
 			defaultValue: false,
@@ -674,9 +720,11 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		if (!arePropertiesReady || propertiesLoaded) return;
 
 		const storedSidebarWidth = getProperty('sidebar-width');
+		const storedExternalWidth = getProperty('external-output-width');
 		const storedLatexWidth = getProperty('latex-output-width');
 		const storedTypstWidth = getProperty('typst-output-width');
 		const storedSidebarCollapsed = getProperty('sidebar-collapsed');
+		const storedExternalCollapsed = getProperty('external-output-collapsed');
 		const storedLatexCollapsed = getProperty('latex-output-collapsed');
 		const storedTypstCollapsed = getProperty('typst-output-collapsed');
 		const storedOutlineHeight = getProperty('explorer-height');
@@ -684,12 +732,16 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 
 		if (storedSidebarWidth !== undefined)
 			setSidebarWidth(Number(storedSidebarWidth));
+		if (storedExternalWidth !== undefined)
+			setExternalOutputWidth(Number(storedExternalWidth));
 		if (storedLatexWidth !== undefined)
 			setLatexOutputWidth(Number(storedLatexWidth));
 		if (storedTypstWidth !== undefined)
 			setTypstOutputWidth(Number(storedTypstWidth));
 		if (storedSidebarCollapsed !== undefined)
 			setSidebarCollapsed(Boolean(storedSidebarCollapsed));
+		if (storedExternalCollapsed !== undefined)
+			setExternalOutputCollapsed(Boolean(storedExternalCollapsed));
 		if (storedLatexCollapsed !== undefined)
 			setLatexOutputCollapsed(Boolean(storedLatexCollapsed));
 		if (storedTypstCollapsed !== undefined)
@@ -827,6 +879,10 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		);
 		document.addEventListener('expand-latex-output', handleLatexOutputExpand);
 		document.addEventListener('expand-typst-output', handleTypstOutputExpand);
+		document.addEventListener(
+			'expand-external-output',
+			handleExternalOutputExpand,
+		);
 
 		return () => {
 			document.removeEventListener(
@@ -845,6 +901,10 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 				'expand-typst-output',
 				handleTypstOutputExpand,
 			);
+			document.removeEventListener(
+				'expand-external-output',
+				handleExternalOutputExpand,
+			);
 		};
 	}, [
 		fileTree,
@@ -854,6 +914,7 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 		pushEditorRoute,
 		handleLatexOutputExpand,
 		handleTypstOutputExpand,
+		handleExternalOutputExpand,
 	]);
 
 	useEffect(() => {
@@ -1305,6 +1366,29 @@ const FileDocumentControllerContent: React.FC<FileDocumentControllerProps> = ({
 								popoutViewerService.isWindowOpen()
 									? undefined
 									: handleTypstOutputExpand
+							}
+							linkedFileInfo={linkedFileInfo}
+						/>
+					</ResizablePanel>
+				)}
+				{activeExternalProvider && (
+					<ResizablePanel
+						direction='horizontal'
+						width={externalOutputWidth}
+						minWidth={540}
+						maxWidth='80%'
+						alignment='start'
+						onResize={handleExternalOutputWidthResize}
+						collapsed={externalOutputCollapsed && !temporaryExternalExpand}
+						onCollapse={handleExternalOutputCollapse}
+						className='external-output-container'
+					>
+						<ExternalCompilerOutput
+							provider={activeExternalProvider}
+							onExpandExternalOutput={
+								popoutViewerService.isWindowOpen()
+									? undefined
+									: handleExternalOutputExpand
 							}
 							linkedFileInfo={linkedFileInfo}
 						/>

@@ -10,6 +10,7 @@ import { FileSyncProvider } from '../../contexts/FileSyncContext';
 import { FileTreeProvider } from '../../contexts/FileTreeContext';
 import { LaTeXProvider } from '../../contexts/LaTeXContext';
 import { TypstProvider } from '../../contexts/TypstContext';
+import { ExternalCompilerProvider } from '../../contexts/ExternalCompilerContext';
 import { SourceMapProvider } from '../../contexts/SourceMapContext';
 import { ContentFormatterProvider } from '../../contexts/ContentFormatterContext';
 import { useAuth } from '../../hooks/useAuth';
@@ -20,11 +21,13 @@ import { useGlobalKeyboard } from '../../hooks/useGlobalKeyboard';
 import { useFileSystemBackup } from '../../hooks/useFileSystemBackup';
 import { useOffline } from '../../hooks/useOffline';
 import { fileStorageService } from '../../services/FileStorageService';
+import { compilerRegistryService } from '../../services/CompilerRegistryService';
 import { popoutViewerService } from '../../services/PopoutViewerService';
 import type { DocumentList } from '../../types/documents';
 import type { YjsDocUrl } from '../../types/yjs';
 import type { TypstOutputFormat } from '../../types/typst';
 import type { LaTeXEngine } from '../../types/latex';
+import type { ProjectType } from '../../types/projects';
 import BackupModal from '../backup/BackupModal';
 import BackupStatusIndicator from '../backup/BackupStatusIndicator';
 import ChatPanel from '../chat/ChatPanel';
@@ -39,6 +42,8 @@ import LaTeXCompileButton from '../output/LaTeXCompileButton';
 import LaTeXExportButton from '../output/LaTeXExportButton';
 import TypstCompileButton from '../output/TypstCompileButton';
 import TypstExportButton from '../output/TypstExportButton';
+import ExternalCompileButton from '../output/ExternalCompileButton';
+import ExternalExportButton from '../output/ExternalExportButton';
 import ExportAccountModal from '../profile/ExportAccountModal';
 import DeleteAccountModal from '../profile/DeleteAccountModal';
 import ProfileSettingsModal from '../profile/ProfileSettingsModal';
@@ -106,7 +111,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const lastSyncedMetadata = useRef({
 		name: '',
 		description: '',
-		type: 'latex' as 'latex' | 'typst',
+		type: 'latex' as ProjectType,
 		mainFile: undefined as string | undefined,
 		latexEngine: undefined as LaTeXEngine | undefined,
 		typstEngine: undefined as string | undefined,
@@ -128,6 +133,8 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
 	const projectType = doc?.projectMetadata?.type || 'latex';
 	const projectTypeKnown = doc?.projectMetadata?.type !== undefined;
+	const activeCompilerProvider =
+		compilerRegistryService.getForProjectType(projectType);
 
 	useGlobalKeyboard();
 
@@ -191,7 +198,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const handleUpdateProjectMetadata = (projectData: {
 		name: string;
 		description: string;
-		type?: 'latex' | 'typst';
+		type?: ProjectType;
 	}) => {
 		setIsSubmitting(true);
 		changeDoc((d) => {
@@ -233,6 +240,12 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const handleExpandTypstOutput = () => {
 		if (!popoutViewerService.isWindowOpen()) {
 			document.dispatchEvent(new CustomEvent('expand-typst-output'));
+		}
+	};
+
+	const handleExpandExternalOutput = () => {
+		if (!popoutViewerService.isWindowOpen()) {
+			document.dispatchEvent(new CustomEvent('expand-external-output'));
 		}
 	};
 
@@ -509,17 +522,43 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 			/>,
 		];
 
-		return projectType === 'typst' ? (
-			<>
-				{typstButtons[0]}
-				{typstButtons[1]}
-			</>
-		) : (
-			<>
-				{latexButtons[0]}
-				{latexButtons[1]}
-			</>
-		);
+		if (activeCompilerProvider?.source === 'chelys') {
+			return (
+				<>
+					<ExternalCompileButton
+						provider={activeCompilerProvider}
+						className='header-compile-button'
+						onExpandExternalOutput={handleExpandExternalOutput}
+						linkedFileInfo={linkedFileInfo}
+					/>
+					<ExternalExportButton
+						provider={activeCompilerProvider}
+						className='output-export-button'
+						linkedFileInfo={linkedFileInfo}
+					/>
+				</>
+			);
+		}
+
+		if (projectType === 'typst') {
+			return (
+				<>
+					{typstButtons[0]}
+					{typstButtons[1]}
+				</>
+			);
+		}
+
+		if (projectType === 'latex') {
+			return (
+				<>
+					{latexButtons[0]}
+					{latexButtons[1]}
+				</>
+			);
+		}
+
+		return null;
 	};
 
 	if (!isConnected && !doc) {
@@ -624,7 +663,15 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 
 			<footer>
 				<div className='project-type-badge'>
-					{t('Typesetter: ')} <TypesetterInfo type={projectType} />
+					{t('Typesetter: ')}{' '}
+					<TypesetterInfo
+						type={projectType}
+						provider={
+							activeCompilerProvider?.source === 'chelys'
+								? activeCompilerProvider
+								: null
+						}
+					/>
 				</div>
 
 				<p className='texlyre-info'>
@@ -790,11 +837,13 @@ const EditorApp: React.FC<EditorAppProps> = (props) => {
 					<FileSyncProvider docUrl={props.docUrl}>
 						<LaTeXProvider>
 							<TypstProvider>
-								<SourceMapProvider>
-									<ContentFormatterProvider>
-										<EditorAppView {...props} />
-									</ContentFormatterProvider>
-								</SourceMapProvider>
+								<ExternalCompilerProvider>
+									<SourceMapProvider>
+										<ContentFormatterProvider>
+											<EditorAppView {...props} />
+										</ContentFormatterProvider>
+									</SourceMapProvider>
+								</ExternalCompilerProvider>
 							</TypstProvider>
 						</LaTeXProvider>
 					</FileSyncProvider>

@@ -5,6 +5,7 @@ import { type DragEvent, useEffect, useRef, useState } from 'react';
 import { t } from '@/i18n';
 import { useFileTree } from '../../hooks/useFileTree';
 import type { FileNode } from '../../types/files';
+import type { ProjectType } from '../../types/projects';
 import { validateFileName } from '../../utils/fileUtils';
 import {
 	buildUrlWithFragments,
@@ -35,7 +36,7 @@ interface FileExplorerProps {
 	initialExpandedPaths?: string[];
 	currentProjectId?: string | null;
 	onExportCurrentProject?: (projectId: string) => void;
-	projectType?: 'latex' | 'typst';
+	projectType?: ProjectType;
 	collabProjectId?: string;
 	docsWithPeers?: Set<string>;
 }

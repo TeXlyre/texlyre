@@ -12,6 +12,7 @@ import { useRegisterFileTreeSettings } from '../../settings/registerFileTreeSett
 import { useRegisterLatexSettings } from '../../settings/registerLatexSettings';
 import { useRegisterTypstSettings } from '../../settings/registerTypstSettings';
 import { useRegisterLSPConfigSettings } from '../../settings/registerLSPConfigSettings';
+import { useRegisterTypesetterConfigSettings } from '../../settings/registerTypesetterConfigSettings';
 import { useRegisterOfflineSettings } from '../../settings/registerOfflineSettings';
 
 const AppBootstrap: React.FC = () => {
@@ -24,6 +25,7 @@ const AppBootstrap: React.FC = () => {
 	useRegisterLatexSettings();
 	useRegisterTypstSettings();
 	useRegisterLSPConfigSettings();
+	useRegisterTypesetterConfigSettings();
 	useRegisterLanguageSettings();
 	useRegisterThemeSettings();
 	useRegisterOfflineSettings();

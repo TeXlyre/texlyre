@@ -48,6 +48,13 @@ export function toArrayBuffer(
 	throw new Error('Unsupported binary content type');
 }
 
+export function toBytes(content: string | ArrayBuffer): Uint8Array {
+	if (typeof content === 'string') {
+		return new TextEncoder().encode(content);
+	}
+	return new Uint8Array(content);
+}
+
 export function toBase64(content: string | Uint8Array | ArrayBuffer): string {
 	const uint8Array =
 		typeof content === 'string'
@@ -90,9 +97,9 @@ export async function computeGitBlobSha(
 		.join('');
 }
 
-export function getFilenameFromPath(path: string): string {
-	const parts = path.split('/');
-	return parts[parts.length - 1];
+export function getFilenameFromPath(path?: string, extension?: string): string {
+	if (!path) return t('No {extension} file', { extension: extension });
+	return path ? path.split('/').pop() || path : '';
 }
 
 export function getParentPath(path: string): string {
