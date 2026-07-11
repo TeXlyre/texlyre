@@ -36,7 +36,9 @@ interface UrlProjectParams {
 	newProjectDescription?: string;
 	newProjectType?: string;
 	newProjectTags?: string;
-	files?: string;
+	newProjectFiles?: string;
+	compile?: string;
+	file?: string;
 }
 
 const parseUrlProjectParams = (hashUrl: string): UrlProjectParams | null => {
@@ -53,8 +55,12 @@ const parseUrlProjectParams = (hashUrl: string): UrlProjectParams | null => {
 				params.newProjectType = decodeURIComponent(part.slice(15));
 			} else if (part.startsWith('newProjectTags:')) {
 				params.newProjectTags = decodeURIComponent(part.slice(15));
-			} else if (part.startsWith('files:')) {
-				params.files = decodeURIComponent(part.slice(6));
+			} else if (part.startsWith('newProjectFiles:')) {
+				params.newProjectFiles = decodeURIComponent(part.slice(16));
+			} else if (part.startsWith('compile:')) {
+				params.compile = decodeURIComponent(part.slice(8));
+			} else if (part.startsWith('file:')) {
+				params.file = decodeURIComponent(part.slice(5));
 			}
 		}
 
@@ -168,8 +174,8 @@ const AppRouter: React.FC = () => {
 					? newProject.docUrl.slice(4)
 					: newProject.docUrl;
 
-				if (params.files) {
-					await downloadAndExtractZip(params.files, projectId);
+				if (params.newProjectFiles) {
+					await downloadAndExtractZip(params.newProjectFiles, projectId);
 				}
 
 				return newProject.docUrl;
@@ -240,9 +246,23 @@ const AppRouter: React.FC = () => {
 
 			createProjectFromUrl(urlProjectParams).then((createdDocUrl) => {
 				if (createdDocUrl) {
+					const hashSuffixes = [
+						urlProjectParams.file
+							? `file:${encodeURIComponent(urlProjectParams.file)}`
+							: null,
+						urlProjectParams.compile
+							? `compile:${encodeURIComponent(urlProjectParams.compile)}`
+							: null,
+					].filter((part): part is string => part !== null);
+					const finalHash =
+						hashSuffixes.length > 0
+							? `${createdDocUrl}&${hashSuffixes.join('&')}`
+							: createdDocUrl;
+
 					setDocUrl(createdDocUrl);
+					setTargetFilePath(urlProjectParams.file || null);
 					setCurrentView('editor');
-					replaceHash(createdDocUrl);
+					replaceHash(finalHash);
 				} else {
 					setCurrentView('projects');
 					replaceHash('');

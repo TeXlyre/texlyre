@@ -143,7 +143,7 @@
 		var(--color-warning) 16%,
 		var(--pico-background)
 	);
-	color:  var(--text-color);
+	color: var(--text-color);
 	font-size: 0.7rem;
 	font-weight: 500;
 	line-height: 1;

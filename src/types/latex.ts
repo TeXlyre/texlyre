@@ -10,12 +10,15 @@ declare global {
 
 export type LaTeXOutputFormat = 'pdf' | 'canvas-pdf';
 
-export type LaTeXEngine =
-	| 'pdftex'
-	| 'xetex'
-	| 'busytex-pdftex'
-	| 'busytex-xetex'
-	| 'busytex-luatex';
+export const LATEX_ENGINES = [
+	'pdftex',
+	'xetex',
+	'busytex-pdftex',
+	'busytex-xetex',
+	'busytex-luatex',
+] as const;
+
+export type LaTeXEngine = (typeof LATEX_ENGINES)[number];
 
 export interface LaTeXContextType {
 	isCompiling: boolean;

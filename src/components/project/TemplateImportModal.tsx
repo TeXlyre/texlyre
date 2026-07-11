@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import { useSettings } from '../../hooks/useSettings';
+import { type TemplateProject } from '../../types/projects';
 import Modal from '../common/Modal';
 import SettingsModal from '../settings/SettingsModal';
 import TypesetterInfo from '../common/TypesetterInfo';
@@ -14,20 +15,6 @@ import {
 	TemplatesIcon,
 	SettingsIcon,
 } from '../common/Icons';
-
-interface TemplateProject {
-	id: string;
-	name: string;
-	description: string;
-	category: string;
-	tags: string[];
-	downloadUrl: string;
-	previewImage?: string;
-	author?: string;
-	version?: string;
-	lastUpdated: string;
-	type?: 'latex' | 'typst';
-}
 
 interface TemplateCategory {
 	id: string;
