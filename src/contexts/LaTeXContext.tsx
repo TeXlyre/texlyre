@@ -17,6 +17,7 @@ import type {
 	LaTeXOutputFormat,
 	LaTeXEngine,
 } from '../types/latex';
+import { LATEX_ENGINES } from '../types/latex';
 import { parseUrlFragments, replaceHash } from '../utils/urlUtils';
 import { popoutViewerService } from '../services/PopoutViewerService';
 
@@ -207,27 +208,17 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 	const triggerAutoCompile = useCallback(() => {
 		const hashUrl = window.location.hash.substring(1);
 		const fragments = parseUrlFragments(hashUrl);
+		const engine = fragments.compile as LaTeXEngine;
+		const isLatexEngine = LATEX_ENGINES.includes(engine);
 
-		if (fragments.compile) {
+		if (isLatexEngine) {
 			const cleanUrl = hashUrl.replace(/&compile:[^&]*/, '');
 			replaceHash(cleanUrl);
-
-			const engine = fragments.compile as LaTeXEngine;
-			if (
-				[
-					'pdftex',
-					'xetex',
-					'busytex-pdftex',
-					'busytex-xetex',
-					'busytex-luatex',
-				].includes(engine)
-			) {
-				handleSetLatexEngine(engine).then(() => {
-					document.dispatchEvent(new CustomEvent('trigger-compile'));
-				});
-				setHasAutoCompiled(true);
-				return;
-			}
+			document.dispatchEvent(
+				new CustomEvent('trigger-compile-with-engine', { detail: { engine } }),
+			);
+			setHasAutoCompiled(true);
+			return;
 		}
 
 		const autoCompileEnabled =
@@ -236,7 +227,7 @@ export const LaTeXProvider: React.FC<LaTeXProviderProps> = ({ children }) => {
 			document.dispatchEvent(new CustomEvent('trigger-compile'));
 			setHasAutoCompiled(true);
 		}
-	}, [getSetting, hasAutoCompiled, handleSetLatexEngine]);
+	}, [getSetting, hasAutoCompiled]);
 
 	const stopCompilation = () => {
 		if (isCompiling && latexService.isCompiling()) {

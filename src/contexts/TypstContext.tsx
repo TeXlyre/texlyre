@@ -227,8 +227,9 @@ export const TypstProvider: React.FC<TypstProviderProps> = ({ children }) => {
 	const triggerAutoCompile = useCallback(() => {
 		const hashUrl = window.location.hash.substring(1);
 		const fragments = parseUrlFragments(hashUrl);
+		const isTypstCompile = fragments.compile === 'typst';
 
-		if (fragments.compile === 'typst') {
+		if (isTypstCompile) {
 			const cleanUrl = hashUrl.replace(/&compile:[^&]*/, '');
 			replaceHash(cleanUrl);
 			document.dispatchEvent(new CustomEvent('trigger-typst-compile'));

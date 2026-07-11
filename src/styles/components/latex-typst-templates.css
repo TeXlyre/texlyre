@@ -39,8 +39,7 @@
 }
 
 .template-import-modal .template-search-controls .template-type-select {
-	padding: var(--space-md) calc(var(--space-lg) + var(--space-sm))
-		var(--space-md) var(--space-md);
+	padding: var(--space-md) calc(var(--space-lg) + var(--space-sm)) var(--space-md) var(--space-md);
 	border: 1px solid var(--accent-border) !important;
 	border-radius: var(--radius-sm) !important;
 	background-color: var(--pico-background) !important;
@@ -138,7 +137,7 @@
 }
 
 .template-import-modal .template-preview,
-.template-import-modal .template-detail-preview > div {
+.template-import-modal .template-detail-preview>div {
 	position: relative;
 }
 
@@ -350,7 +349,6 @@
 .template-actions {
 	display: flex;
 	gap: var(--space-md);
-	margin-top: var(--space-lg);
 }
 
 .template-actions .button {

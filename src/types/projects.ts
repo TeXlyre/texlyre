@@ -14,3 +14,29 @@ export interface Project {
 	lastOpenedDocId?: string;
 	lastOpenedFilePath?: string;
 }
+
+export interface TemplateVersion {
+	version: string;
+	downloadUrl: string;
+	previewImage?: string;
+	lastUpdated: string;
+	compile?: string;
+	file?: string;
+}
+
+export interface TemplateProject {
+	id: string;
+	name: string;
+	description: string;
+	category: string;
+	tags: string[];
+	downloadUrl: string;
+	previewImage?: string;
+	author?: string;
+	version?: string;
+	lastUpdated: string;
+	type?: 'latex' | 'typst';
+	compile?: string;
+	file?: string;
+	versions?: TemplateVersion[];
+}

@@ -37,7 +37,7 @@ const ASSETS = [
 	},
 	{
 		name: 'texlyre-busytex',
-		version: 'v1.1.1',
+		version: 'v1.2.3',
 		url: (version) =>
 			`https://github.com/TeXlyre/texlyre-busytex/releases/download/assets-${version}/busytex-assets.tar.gz`,
 		dest: path.resolve(__dirname, '../public/core/busytex'),

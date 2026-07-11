@@ -8,6 +8,7 @@ import {
 	type ImportableProject,
 	projectImportService,
 } from '../../services/ProjectImportService';
+import type { TemplateProject } from '../../types/projects';
 import { formatDate } from '../../utils/dateUtils';
 import {
 	GlobeIcon,
@@ -20,20 +21,6 @@ import Modal from '../common/Modal';
 import TemplateImportModal from './TemplateImportModal';
 import UrlImportModal from './UrlImportModal';
 import YjsLinkImportModal from './YjsLinkImportModal';
-
-interface TemplateProject {
-	id: string;
-	name: string;
-	description: string;
-	type: 'latex' | 'typst';
-	category: string;
-	tags: string[];
-	downloadUrl: string;
-	previewImage?: string;
-	author?: string;
-	version?: string;
-	lastUpdated: string;
-}
 
 interface ProjectImportModalProps {
 	isOpen: boolean;
@@ -95,7 +82,7 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 			setIsImporting(true);
 			setError(null);
 
-			const templateUrl = `${window.location.origin}${window.location.pathname}#newProjectName:${encodeURIComponent(data.name)}&newProjectDescription:${encodeURIComponent(data.description)}&newProjectType:${encodeURIComponent(data.type)}&newProjectTags:${encodeURIComponent(data.tags.join(','))}&files:${encodeURIComponent(data.zipUrl)}`;
+			const templateUrl = `${window.location.origin}${window.location.pathname}#newProjectName:${encodeURIComponent(data.name)}&newProjectDescription:${encodeURIComponent(data.description)}&newProjectType:${encodeURIComponent(data.type)}&newProjectTags:${encodeURIComponent(data.tags.join(','))}&newProjectFiles:${encodeURIComponent(data.zipUrl)}`;
 
 			window.location.replace(templateUrl);
 			window.location.reload();
@@ -113,7 +100,13 @@ const ProjectImportModal: React.FC<ProjectImportModalProps> = ({
 			setIsImporting(true);
 			setError(null);
 
-			const templateUrl = `${window.location.origin}${window.location.pathname}#newProjectName:${encodeURIComponent(template.name)}&newProjectDescription:${encodeURIComponent(template.description)}&newProjectType:${encodeURIComponent(template.type)}&newProjectTags:${encodeURIComponent(template.tags.join(','))}&files:${encodeURIComponent(template.downloadUrl)}`;
+			const fileSuffix = template.file
+				? `&file:${encodeURIComponent(template.file)}`
+				: '';
+			const compileSuffix = template.compile
+				? `&compile:${encodeURIComponent(template.compile)}`
+				: '';
+			const templateUrl = `${window.location.origin}${window.location.pathname}#newProjectName:${encodeURIComponent(template.name)}&newProjectDescription:${encodeURIComponent(template.description)}&newProjectType:${encodeURIComponent(template.type)}&newProjectTags:${encodeURIComponent(template.tags.join(','))}&newProjectFiles:${encodeURIComponent(template.downloadUrl)}${fileSuffix}${compileSuffix}`;
 
 			window.location.replace(templateUrl);
 			window.location.reload();

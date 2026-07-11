@@ -336,6 +336,49 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 	]);
 
 	useEffect(() => {
+		if (!useSharedSettings) return;
+
+		const handleCompileWithEngine = async (
+			event: CustomEvent<{ engine: LaTeXEngine }>,
+		) => {
+			const requestedEngine = event.detail?.engine;
+
+			if (!requestedEngine || compileStateRef.current.isCompiling) return;
+
+			if (projectEngine) {
+				changeDoc((d) => {
+					if (!d.projectMetadata) {
+						d.projectMetadata = { name: '', description: '' };
+					}
+					d.projectMetadata.latexEngine = requestedEngine;
+				});
+			} else {
+				setProperty('latex-engine', requestedEngine, {
+					scope: 'project',
+					projectId,
+				});
+			}
+
+			if (requestedEngine !== latexService.getCurrentEngineType()) {
+				await latexService.setEngine(requestedEngine);
+			}
+
+			document.dispatchEvent(new CustomEvent('trigger-compile'));
+		};
+
+		document.addEventListener(
+			'trigger-compile-with-engine',
+			handleCompileWithEngine as EventListener,
+		);
+		return () => {
+			document.removeEventListener(
+				'trigger-compile-with-engine',
+				handleCompileWithEngine as EventListener,
+			);
+		};
+	}, [useSharedSettings, projectEngine, projectId, changeDoc, setProperty]);
+
+	useEffect(() => {
 		if (!isBusyTeX || !isCacheOptionsOpen) return;
 
 		const checkBundleCache = async () => {
