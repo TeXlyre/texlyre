@@ -8,7 +8,7 @@ import {
 	type ImportableProject,
 	projectImportService,
 } from '../../services/ProjectImportService';
-import { type TemplateProject } from '../../types/projects';
+import type { TemplateProject } from '../../types/projects';
 import { formatDate } from '../../utils/dateUtils';
 import {
 	GlobeIcon,

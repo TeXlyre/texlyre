@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { t } from '@/i18n';
 import { useSettings } from '../../hooks/useSettings';
-import { type TemplateProject } from '../../types/projects';
+import type { TemplateProject } from '../../types/projects';
 import Modal from '../common/Modal';
 import SettingsModal from '../settings/SettingsModal';
 import TypesetterInfo from '../common/TypesetterInfo';
