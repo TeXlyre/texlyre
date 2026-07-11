@@ -52,6 +52,7 @@ import PrivacyModal from '../common/PrivacyModal';
 import GuestUpgradeBanner from '../auth/GuestUpgradeBanner';
 import GuestUpgradeModal from '../auth/GuestUpgradeModal';
 import { isValidYjsUrl, pushHash } from '../../utils/urlUtils';
+import { clickWhenReady } from '../../utils/editorNavigator';
 
 interface EditorAppProps {
 	docUrl: YjsDocUrl;
@@ -73,6 +74,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		changeData: changeDoc,
 		isConnected,
 	} = useCollab<DocumentList>();
+	const hasDoc = !!doc;
 
 	const { user, updateProject, getProjectById, isGuestUser } = useAuth();
 	const {
@@ -125,6 +127,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	const projectDescription = doc?.projectMetadata?.description || '';
 
 	const projectType = doc?.projectMetadata?.type || 'latex';
+	const projectTypeKnown = doc?.projectMetadata?.type !== undefined;
 
 	useGlobalKeyboard();
 
@@ -248,13 +251,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 							'.header-typst-compile-button .compile-button',
 						];
 
-			for (const selector of buttonSelectors) {
-				const button = document.querySelector(selector) as HTMLButtonElement;
-				if (button && !button.disabled) {
-					button.click();
-					return;
-				}
-			}
+			clickWhenReady(buttonSelectors);
 		};
 
 		const handleCompileClean = () => {
@@ -297,12 +294,7 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 		const handleTypstCompile = () => {
 			if (isTypstCompiling) return;
 
-			const typstCompileButton = document.querySelector(
-				'.header-typst-compile-button .compile-button',
-			) as HTMLButtonElement;
-			if (typstCompileButton && !typstCompileButton.disabled) {
-				typstCompileButton.click();
-			}
+			clickWhenReady(['.header-typst-compile-button .compile-button']);
 		};
 
 		document.addEventListener('trigger-compile', handleCompile);
@@ -325,15 +317,15 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	}, [isCompiling, isTypstCompiling, projectType]);
 
 	useEffect(() => {
-		if (doc && isConnected) {
-			const timer = setTimeout(() => {
-				triggerAutoCompile();
-				triggerTypstAutoCompile();
-			}, 1000);
+		if (!hasDoc) return;
 
-			return () => clearTimeout(timer);
-		}
-	}, [doc, isConnected, triggerAutoCompile, triggerTypstAutoCompile]);
+		const timer = setTimeout(() => {
+			triggerAutoCompile();
+			triggerTypstAutoCompile();
+		}, 1000);
+
+		return () => clearTimeout(timer);
+	}, [hasDoc, triggerAutoCompile, triggerTypstAutoCompile]);
 
 	useEffect(() => {
 		if (doc) {
@@ -467,6 +459,8 @@ const EditorAppView: React.FC<EditorAppProps> = ({
 	}, [localDocId, doc?.documents]);
 
 	const CompileButtons = () => {
+		if (!projectTypeKnown) return null;
+
 		const latexButtons = [
 			<LaTeXCompileButton
 				key='latex'

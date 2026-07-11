@@ -62,3 +62,42 @@ export function gotoEditor(
 
 	document.addEventListener('editor-ready', handler);
 }
+
+export function clickWhenReady(
+	selectors: string[],
+	options?: { timeoutMs?: number; intervalMs?: number },
+): Promise<boolean> {
+	const timeoutMs = options?.timeoutMs ?? 30000;
+	const intervalMs = options?.intervalMs ?? 100;
+	const deadline = Date.now() + timeoutMs;
+
+	const tryClick = (): boolean => {
+		for (const selector of selectors) {
+			const element = document.querySelector(
+				selector,
+			) as HTMLButtonElement | null;
+			if (element && !element.disabled) {
+				element.click();
+				return true;
+			}
+		}
+		return false;
+	};
+
+	return new Promise((resolve) => {
+		if (tryClick()) {
+			resolve(true);
+			return;
+		}
+
+		const interval = setInterval(() => {
+			if (tryClick()) {
+				clearInterval(interval);
+				resolve(true);
+			} else if (Date.now() >= deadline) {
+				clearInterval(interval);
+				resolve(false);
+			}
+		}, intervalMs);
+	});
+}

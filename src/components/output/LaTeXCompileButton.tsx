@@ -342,9 +342,8 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 			event: CustomEvent<{ engine: LaTeXEngine }>,
 		) => {
 			const requestedEngine = event.detail?.engine;
-			const state = compileStateRef.current;
 
-			if (!requestedEngine || state.isCompiling || !state.mainFile) return;
+			if (!requestedEngine || compileStateRef.current.isCompiling) return;
 
 			if (projectEngine) {
 				changeDoc((d) => {
@@ -364,7 +363,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 				await latexService.setEngine(requestedEngine);
 			}
 
-			await compileDocument(state.mainFile, state.format);
+			document.dispatchEvent(new CustomEvent('trigger-compile'));
 		};
 
 		document.addEventListener(
@@ -377,14 +376,7 @@ const LaTeXCompileButton: React.FC<LaTeXCompileButtonProps> = ({
 				handleCompileWithEngine as EventListener,
 			);
 		};
-	}, [
-		useSharedSettings,
-		projectEngine,
-		projectId,
-		changeDoc,
-		setProperty,
-		compileDocument,
-	]);
+	}, [useSharedSettings, projectEngine, projectId, changeDoc, setProperty]);
 
 	useEffect(() => {
 		if (!isBusyTeX || !isCacheOptionsOpen) return;
